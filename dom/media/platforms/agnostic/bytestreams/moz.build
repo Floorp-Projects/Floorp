@@ -26,7 +26,7 @@ LOCAL_INCLUDES += [
 FINAL_LIBRARY = 'xul'
 
 # Suppress warnings in third-party code.
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+if CONFIG['CC_TYPE'] == 'clang-cl':
     CFLAGS += [
         '-wd4013', # 'function' undefined; assuming extern returning int
         '-wd4101', # unreferenced local variable

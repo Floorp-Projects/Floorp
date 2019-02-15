@@ -100,9 +100,7 @@ XDRResult js::XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp) {
     SCRIPT_OBJECT,
     SCRIPT_VOID,
     SCRIPT_HOLE,
-#ifdef ENABLE_BIGINT
     SCRIPT_BIGINT
-#endif
   };
 
   ConstTag tag;
@@ -123,13 +121,9 @@ XDRResult js::XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp) {
       tag = SCRIPT_OBJECT;
     } else if (vp.isMagic(JS_ELEMENTS_HOLE)) {
       tag = SCRIPT_HOLE;
-    }
-#ifdef ENABLE_BIGINT
-    else if (vp.isBigInt()) {
+    } else if (vp.isBigInt()) {
       tag = SCRIPT_BIGINT;
-    }
-#endif
-    else {
+    } else {
       MOZ_ASSERT(vp.isUndefined());
       tag = SCRIPT_VOID;
     }
@@ -209,7 +203,6 @@ XDRResult js::XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp) {
         vp.setMagic(JS_ELEMENTS_HOLE);
       }
       break;
-#ifdef ENABLE_BIGINT
     case SCRIPT_BIGINT: {
       RootedBigInt bi(cx);
       if (mode == XDR_ENCODE) {
@@ -223,7 +216,6 @@ XDRResult js::XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp) {
       }
       break;
     }
-#endif
     default:
       // Fail in debug, but only soft-fail in release
       MOZ_ASSERT(false, "Bad XDR value kind");
@@ -4064,9 +4056,7 @@ bool js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
       val = elem.get();
       if (val.isDouble()) {
         clone = val;
-      }
-#ifdef ENABLE_BIGINT
-      else if (val.isBigInt()) {
+      } else if (val.isBigInt()) {
         if (cx->zone() == val.toBigInt()->zone()) {
           clone.setBigInt(val.toBigInt());
         } else {
@@ -4077,9 +4067,7 @@ bool js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
           }
           clone.setBigInt(copy);
         }
-      }
-#endif
-      else {
+      } else {
         MOZ_ASSERT_UNREACHABLE("bad script consts() element");
       }
 

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<head>
+  <title>Test for W3C Web Authentication isExternalCTAP2SecurityKeySupported</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="u2futil.js"></script>
+  <script type="text/javascript" src="pkijs/common.js"></script>
+  <script type="text/javascript" src="pkijs/asn1.js"></script>
+  <script type="text/javascript" src="pkijs/x509_schema.js"></script>
+  <script type="text/javascript" src="pkijs/x509_simpl.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<h1>Test for W3C Web Authentication isExternalCTAP2SecurityKeySupported</h1>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1526023">Mozilla Bug 1526023</a>
+
+<script class="testbody" type="text/javascript">
+"use strict";
+
+// Execute the full-scope test
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv({"set": [["security.webauth.webauthn", true],
+                                   ["security.webauth.webauthn_enable_softtoken", true],
+                                   ["security.webauth.webauthn_enable_usbtoken", false]]},
+function() {
+  PublicKeyCredential.isExternalCTAP2SecurityKeySupported()
+  .then(aResult => ok(true, `Should always return either true or false: ${aResult}`))
+  .catch(aProblem => ok(false, `We shouldn't get here: ${aProblem}`))
+  .then(() => SimpleTest.finish());
+});
+
+</script>
+
+</body>
+</html>

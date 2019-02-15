@@ -391,6 +391,7 @@ pub struct TextureCacheProfileCounters {
     pub pages_a16_linear: ResourceProfileCounter,
     pub pages_rgba8_linear: ResourceProfileCounter,
     pub pages_rgba8_nearest: ResourceProfileCounter,
+    pub pages_picture: ResourceProfileCounter,
 }
 
 impl TextureCacheProfileCounters {
@@ -400,6 +401,7 @@ impl TextureCacheProfileCounters {
             pages_a16_linear: ResourceProfileCounter::new("Texture A16 cached pages"),
             pages_rgba8_linear: ResourceProfileCounter::new("Texture RGBA8 cached pages (L)"),
             pages_rgba8_nearest: ResourceProfileCounter::new("Texture RGBA8 cached pages (N)"),
+            pages_picture: ResourceProfileCounter::new("Picture cached pages"),
         }
     }
 }

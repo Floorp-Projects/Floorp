@@ -1478,10 +1478,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       break;
     }
 
-#  ifdef ENABLE_BIGINT
     case JOF_BIGINT:
-      // Fallthrough.
-#  endif
     case JOF_DOUBLE: {
       RootedValue v(cx, script->getConst(GET_UINT32_INDEX(pc)));
       UniqueChars bytes = ToDisassemblySource(cx, v);

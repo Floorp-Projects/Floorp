@@ -2042,12 +2042,10 @@ bool BaselineInterpreterCodeGen::emit_JSOP_DOUBLE() {
   MOZ_CRASH("NYI: interpreter JSOP_DOUBLE");
 }
 
-#ifdef ENABLE_BIGINT
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_BIGINT() {
   return emit_JSOP_DOUBLE();
 }
-#endif
 
 template <>
 bool BaselineCompilerCodeGen::emit_JSOP_STRING() {

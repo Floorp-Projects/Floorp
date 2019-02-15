@@ -81,7 +81,7 @@ DEFINES['IMPL_MFBT'] = True
 
 DisableStlWrapping()
 
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+if CONFIG['CC_TYPE'] == 'clang-cl':
   CXXFLAGS += [
     '-wd4275', # non dll-interface class used as base for dll-interface class
     '-wd4530', # C++ exception handler used, but unwind semantics are not enabled

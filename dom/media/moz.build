@@ -304,8 +304,7 @@ SOURCES += [
 
 # Some codec-related code uses multi-character constants, which GCC and clang
 # warn about. Suppress turning this warning into an error.
-if CONFIG['CC_TYPE'] in ('clang', 'clang-cl', 'gcc'):
-  SOURCES['DecoderTraits.cpp'].flags += ['-Wno-error=multichar']
+SOURCES['DecoderTraits.cpp'].flags += ['-Wno-error=multichar']
 
 if CONFIG['MOZ_WEBRTC']:
     XPCOM_MANIFESTS += [

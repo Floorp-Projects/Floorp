@@ -870,11 +870,11 @@ MOZ_ALWAYS_INLINE bool GetPrototypeFromBuiltinConstructor(
 // Specialized call for constructing |this| with a known function callee,
 // and a known prototype.
 extern JSObject* CreateThisForFunctionWithProto(
-    JSContext* cx, js::HandleObject callee, HandleObject newTarget,
+    JSContext* cx, js::HandleFunction callee, HandleObject newTarget,
     HandleObject proto, NewObjectKind newKind = GenericObject);
 
 // Specialized call for constructing |this| with a known function callee.
-extern JSObject* CreateThisForFunction(JSContext* cx, js::HandleObject callee,
+extern JSObject* CreateThisForFunction(JSContext* cx, js::HandleFunction callee,
                                        js::HandleObject newTarget,
                                        NewObjectKind newKind);
 

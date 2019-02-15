@@ -1090,7 +1090,6 @@ static JSAtom* ToAtomSlow(
     }
     return nullptr;
   }
-#ifdef ENABLE_BIGINT
   if (v.isBigInt()) {
     RootedBigInt i(cx, v.toBigInt());
     JSAtom* atom = BigIntToAtom<allowGC>(cx, i);
@@ -1099,7 +1098,6 @@ static JSAtom* ToAtomSlow(
     }
     return atom;
   }
-#endif
   MOZ_ASSERT(v.isUndefined());
   return cx->names().undefined;
 }

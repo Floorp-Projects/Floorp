@@ -7,7 +7,7 @@
 # ICU pkg-config flags
 CXXFLAGS += CONFIG['MOZ_ICU_CFLAGS']
 
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+if CONFIG['CC_TYPE'] == 'clang-cl':
     # C4805 warns mixing bool with other integral types in computation.
     # But given the conversion from bool is specified, and this is a
     # pattern widely used in code in js/src, suppress this warning here.

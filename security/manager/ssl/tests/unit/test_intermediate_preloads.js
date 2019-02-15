@@ -10,6 +10,7 @@ do_get_profile(); // must be called before getting nsIX509CertDB
 const {RemoteSecuritySettings} = ChromeUtils.import("resource://gre/modules/psm/RemoteSecuritySettings.jsm");
 const {RemoteSettings} = ChromeUtils.import("resource://services-settings/remote-settings.js");
 const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+const {TelemetryTestUtils} = ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm");
 
 let remoteSecSetting = new RemoteSecuritySettings();
 let server;
@@ -42,6 +43,22 @@ function getHash(aStr) {
 
   // convert the binary hash data to a hex string.
   return hexify(hasher.finish(false));
+}
+
+function countTelemetryReports(histogram) {
+  let count = 0;
+  for (let x in histogram.values) {
+    count += histogram.values[x];
+  }
+  return count;
+}
+
+function clearTelemetry() {
+  Services.telemetry.getHistogramById("INTERMEDIATE_PRELOADING_ERRORS")
+    .clear();
+  Services.telemetry.getHistogramById("INTERMEDIATE_PRELOADING_UPDATE_TIME_MS")
+    .clear();
+  Services.telemetry.clearScalars();
 }
 
 function syncAndPromiseUpdate() {
@@ -248,7 +265,17 @@ add_task(async function test_preload_invalid_hash() {
     }
   );
 
+  clearTelemetry();
+
   equal(await syncAndPromiseUpdate(), "success", "Preloading update should have run");
+
+  let errors_histogram = Services.telemetry
+                          .getHistogramById("INTERMEDIATE_PRELOADING_ERRORS")
+                          .snapshot();
+
+  equal(countTelemetryReports(errors_histogram), 2, "There should be two error reports");
+  equal(errors_histogram.values[7], 1, "There should be one invalid hash error");
+  equal(errors_histogram.values[1], 1, "There should be one generic download error");
 
   equal(countDownloadAttempts, 1, "There should have been one download attempt");
 
@@ -278,7 +305,17 @@ add_task(async function test_preload_invalid_length() {
     }
   );
 
+  clearTelemetry();
+
   equal(await syncAndPromiseUpdate(), "success", "Preloading update should have run");
+
+  let errors_histogram = Services.telemetry
+                          .getHistogramById("INTERMEDIATE_PRELOADING_ERRORS")
+                          .snapshot();
+
+  equal(countTelemetryReports(errors_histogram), 2, "There should be only two error reports");
+  equal(errors_histogram.values[8], 1, "There should be one invalid length error");
+  equal(errors_histogram.values[1], 1, "There should be one generic download error");
 
   equal(countDownloadAttempts, 1, "There should have been one download attempt");
 
@@ -361,15 +398,33 @@ add_task(async function test_preload_200() {
     }
   );
 
+  clearTelemetry();
+
   equal(await syncAndPromiseUpdate(), "success", "Preloading update should have run");
 
   equal(countMissingAttachments, 0, "There should have been no missing attachments");
   equal(countDownloadedAttachments, 100, "There should have been only 100 downloaded");
 
+  const scalars = TelemetryTestUtils.getProcessScalars("parent");
+  TelemetryTestUtils.assertScalar(scalars, "security.intermediate_preloading_num_preloaded",
+                                  102, "Should have preloaded 102 certs (2 from earlier test)");
+  TelemetryTestUtils.assertScalar(scalars, "security.intermediate_preloading_num_pending",
+                                  98, "Should report 98 pending");
+
+  let time_histogram = Services.telemetry
+                         .getHistogramById("INTERMEDIATE_PRELOADING_UPDATE_TIME_MS")
+                         .snapshot();
+  let errors_histogram = Services.telemetry
+                           .getHistogramById("INTERMEDIATE_PRELOADING_ERRORS")
+                           .snapshot();
+  equal(countTelemetryReports(time_histogram), 1, "Should report time once");
+  equal(countTelemetryReports(errors_histogram), 0, "There should be no error reports");
+
   equal(await syncAndPromiseUpdate(), "success", "Preloading update should have run");
 
   equal(countMissingAttachments, 0, "There should have been no missing attachments");
-  equal(countDownloadedAttachments, 198, "There should have been now 198 downloaded, because 2 existed in an earlier test");
+  equal(countDownloadedAttachments, 198,
+        "There should have been now 198 downloaded, because 2 existed in an earlier test");
 });
 
 

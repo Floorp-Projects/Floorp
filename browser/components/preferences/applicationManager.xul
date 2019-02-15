@@ -8,6 +8,7 @@
 
 <dialog id="appManager"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         buttons="accept,cancel"
         onload="gAppManagerDialog.onLoad();"
         ondialogaccept="gAppManagerDialog.onOK();"
@@ -17,7 +18,7 @@
         persist="screenX screenY">
 
   <linkset>
-    <link rel="localization" href="browser/preferences/applicationManager.ftl"/>
+    <html:link rel="localization" href="browser/preferences/applicationManager.ftl"/>
   </linkset>
 
   <script type="application/javascript"

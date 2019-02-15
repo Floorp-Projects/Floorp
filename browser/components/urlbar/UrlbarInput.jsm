@@ -217,43 +217,54 @@ class UrlbarInput {
       return;
     }
 
-    // TODO: Hook up one-off button handling.
     // Determine whether to use the selected one-off search button.  In
     // one-off search buttons parlance, "selected" means that the button
     // has been navigated to via the keyboard.  So we want to use it if
     // the triggering event is not a mouse click -- i.e., it's a Return
     // key -- or if the one-off was mouse-clicked.
-    // let selectedOneOff = this.popup.oneOffSearchButtons.selectedButton;
-    // if (selectedOneOff &&
-    //     isMouseEvent &&
-    //     event.originalTarget != selectedOneOff) {
-    //   selectedOneOff = null;
-    // }
-    //
-    // // Do the command of the selected one-off if it's not an engine.
-    // if (selectedOneOff && !selectedOneOff.engine) {
-    //   selectedOneOff.doCommand();
-    //   return;
-    // }
+    let selectedOneOff;
+    if (this.view.isOpen) {
+      selectedOneOff = this.view.oneOffSearchButtons.selectedButton;
+      if (selectedOneOff &&
+          isMouseEvent &&
+          event.target != selectedOneOff) {
+        selectedOneOff = null;
+      }
+      // Do the command of the selected one-off if it's not an engine.
+      if (selectedOneOff && !selectedOneOff.engine) {
+        selectedOneOff.doCommand();
+        return;
+      }
+    }
 
-    // Use the selected result if we have one; this should always be the case
+    // Use the selected result if we have one; this is usually the case
     // when the view is open.
-    let result = this.view.selectedResult;
+    let result = !selectedOneOff && this.view.selectedResult;
     if (result) {
       this.pickResult(event, result);
       return;
     }
 
-    // Use the current value if we don't have a UrlbarResult e.g. because the
-    // view is closed.
-    let url = this.value;
+    let url;
+    if (selectedOneOff) {
+      // If there's a selected one-off button then load a search using
+      // the button's engine.
+      [url, openParams.postData] = UrlbarUtils.getSearchQueryUrl(
+        selectedOneOff.engine, this._lastSearchString);
+      this._recordSearch(selectedOneOff.engine, event);
+    } else {
+      // Use the current value if we don't have a UrlbarResult e.g. because the
+      // view is closed.
+      url = this.value;
+      openParams.postData = null;
+    }
+
     if (!url) {
       return;
     }
 
     let where = openWhere || this._whereToOpen(event);
 
-    openParams.postData = null;
     openParams.allowInheritPrincipal = false;
 
     // TODO: Work out how we get the user selection behavior, probably via passing

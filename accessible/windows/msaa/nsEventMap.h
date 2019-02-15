@@ -101,5 +101,6 @@ static const uint32_t gWinEventMap[] = {
   kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent::EVENT_VIRTUALCURSOR_CHANGED
   EVENT_OBJECT_VALUECHANGE,                          // nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE
   kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent::EVENT_SCROLLING
+  kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent::EVENT_ANNOUNCEMENT
     // clang-format on
 };

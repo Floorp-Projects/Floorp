@@ -1010,7 +1010,7 @@ WebConsoleActor.prototype =
     const helperResult = evalInfo.helperResult;
 
     let result, errorDocURL, errorMessage, errorNotes = null, errorGrip = null,
-      frame = null, awaitResult;
+      frame = null, awaitResult, errorMessageName;
     if (evalResult) {
       if ("return" in evalResult) {
         result = evalResult.return;
@@ -1058,6 +1058,7 @@ WebConsoleActor.prototype =
         // object and retrieve its errorMessageName.
         try {
           errorDocURL = ErrorDocs.GetURL(error);
+          errorMessageName = error.errorMessageName;
         } catch (ex) {
           // ignored
         }
@@ -1131,6 +1132,7 @@ WebConsoleActor.prototype =
       exception: errorGrip,
       exceptionMessage: this._createStringGrip(errorMessage),
       exceptionDocURL: errorDocURL,
+      errorMessageName,
       frame,
       helperResult: helperResult,
       notes: errorNotes,

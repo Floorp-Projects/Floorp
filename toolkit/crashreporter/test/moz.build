@@ -36,7 +36,7 @@ if CONFIG['CC_TYPE'] == 'clang-cl':
         '-Xclang',
         '-fcxx-exceptions',
     ]
-elif CONFIG['CC_TYPE'] not in ('msvc', 'clang-cl'):
+else:
     SOURCES['ExceptionThrower.cpp'].flags += [
         '-fexceptions',
     ]
@@ -57,5 +57,5 @@ include('/toolkit/crashreporter/crashreporter.mozbuild')
 NO_PGO = True
 
 # Temporary workaround for an issue in upstream breakpad
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+if CONFIG['CC_TYPE'] == 'clang-cl':
     CXXFLAGS += ['-wd4334']

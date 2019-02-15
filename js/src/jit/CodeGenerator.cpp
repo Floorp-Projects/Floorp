@@ -786,7 +786,7 @@ void CodeGenerator::testValueTruthyKernel(
   bool mightBeString = valueMIR->mightBeType(MIRType::String);
   bool mightBeSymbol = valueMIR->mightBeType(MIRType::Symbol);
   bool mightBeDouble = valueMIR->mightBeType(MIRType::Double);
-  bool mightBeBigInt = IF_BIGINT(valueMIR->mightBeType(MIRType::BigInt), false);
+  bool mightBeBigInt = valueMIR->mightBeType(MIRType::BigInt);
   int tagCount = int(mightBeUndefined) + int(mightBeNull) +
                  int(mightBeBoolean) + int(mightBeInt32) + int(mightBeObject) +
                  int(mightBeString) + int(mightBeSymbol) + int(mightBeDouble) +
@@ -904,7 +904,6 @@ void CodeGenerator::testValueTruthyKernel(
     --tagCount;
   }
 
-#ifdef ENABLE_BIGINT
   if (mightBeBigInt) {
     MOZ_ASSERT(tagCount != 0);
     Label notBigInt;
@@ -921,7 +920,6 @@ void CodeGenerator::testValueTruthyKernel(
     masm.bind(&notBigInt);
     --tagCount;
   }
-#endif
 
   if (mightBeSymbol) {
     // All symbols are truthy.
@@ -1265,13 +1263,11 @@ void CodeGenerator::visitValueToString(LValueToString* lir) {
     bailoutFrom(&bail, lir->snapshot());
   }
 
-#ifdef ENABLE_BIGINT
   // BigInt
   if (lir->mir()->input()->mightBeType(MIRType::BigInt)) {
     // No fastpath currently implemented.
     masm.branchTestBigInt(Assembler::Equal, tag, ool->entry());
   }
-#endif
 
 #ifdef DEBUG
   masm.assumeUnreachable("Unexpected type for MValueToString.");
@@ -4009,10 +4005,8 @@ void CodeGenerator::visitToNumeric(LToNumeric* lir) {
   bool maybeInt32 = lir->mir()->mightBeType(MIRType::Int32);
   bool maybeDouble = lir->mir()->mightBeType(MIRType::Double);
   bool maybeNumber = maybeInt32 || maybeDouble;
-#ifdef ENABLE_BIGINT
   bool maybeBigInt = lir->mir()->mightBeType(MIRType::BigInt);
-#endif
-  int checks = int(maybeNumber) + IF_BIGINT(int(maybeBigInt), 0);
+  int checks = int(maybeNumber) + int(maybeBigInt);
 
   OutOfLineCode* ool =
       oolCallVM(ToNumericInfo, lir, ArgList(operand), StoreValueTo(output));
@@ -4031,14 +4025,12 @@ void CodeGenerator::visitToNumeric(LToNumeric* lir) {
       Label* target = checks ? &done : ool->entry();
       masm.branchTestNumber(cond, operand, target);
     }
-#ifdef ENABLE_BIGINT
     if (maybeBigInt) {
       checks--;
       Condition cond = checks ? Equal : NotEqual;
       Label* target = checks ? &done : ool->entry();
       masm.branchTestBigInt(cond, operand, target);
     }
-#endif
 
     MOZ_ASSERT(checks == 0);
     masm.bind(&done);
@@ -5676,7 +5668,7 @@ void CodeGenerator::emitAssertGCThingResult(Register input, MIRType type,
                                             const TemporaryTypeSet* typeset) {
   MOZ_ASSERT(type == MIRType::Object || type == MIRType::ObjectOrNull ||
              type == MIRType::String || type == MIRType::Symbol ||
-             IF_BIGINT(type == MIRType::BigInt, false));
+             type == MIRType::BigInt);
 
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
   regs.take(input);
@@ -5734,11 +5726,9 @@ void CodeGenerator::emitAssertGCThingResult(Register input, MIRType type,
       case MIRType::Symbol:
         callee = JS_FUNC_TO_DATA_PTR(void*, AssertValidSymbolPtr);
         break;
-#  ifdef ENABLE_BIGINT
       case MIRType::BigInt:
         callee = JS_FUNC_TO_DATA_PTR(void*, AssertValidBigIntPtr);
         break;
-#  endif
       default:
         MOZ_CRASH();
     }
@@ -5853,9 +5843,7 @@ void CodeGenerator::emitDebugResultChecks(LInstruction* ins) {
     case MIRType::ObjectOrNull:
     case MIRType::String:
     case MIRType::Symbol:
-#  ifdef ENABLE_BIGINT
     case MIRType::BigInt:
-#  endif
       emitGCThingResultChecks(ins, mir);
       break;
     case MIRType::Value:
@@ -6808,25 +6796,20 @@ void CodeGenerator::visitCreateThis(LCreateThis* lir) {
   callVM(CreateThisInfoCodeGen, lir);
 }
 
-static JSObject* CreateThisForFunctionWithProtoWrapper(JSContext* cx,
-                                                       HandleObject callee,
-                                                       HandleObject newTarget,
-                                                       HandleObject proto) {
-  return CreateThisForFunctionWithProto(cx, callee, newTarget, proto);
-}
-
-typedef JSObject* (*CreateThisWithProtoFn)(JSContext* cx, HandleObject callee,
+typedef JSObject* (*CreateThisWithProtoFn)(JSContext* cx, HandleFunction callee,
                                            HandleObject newTarget,
-                                           HandleObject proto);
+                                           HandleObject proto,
+                                           NewObjectKind newKind);
 static const VMFunction CreateThisWithProtoInfo =
-    FunctionInfo<CreateThisWithProtoFn>(
-        CreateThisForFunctionWithProtoWrapper,
-        "CreateThisForFunctionWithProtoWrapper");
+    FunctionInfo<CreateThisWithProtoFn>(CreateThisForFunctionWithProto,
+                                        "CreateThisForFunctionWithProto");
 
 void CodeGenerator::visitCreateThisWithProto(LCreateThisWithProto* lir) {
   const LAllocation* callee = lir->getCallee();
   const LAllocation* newTarget = lir->getNewTarget();
   const LAllocation* proto = lir->getPrototype();
+
+  pushArg(Imm32(GenericObject));
 
   if (proto->isConstant()) {
     pushArg(ImmGCPtr(&proto->toConstant()->toObject()));
@@ -6849,13 +6832,18 @@ void CodeGenerator::visitCreateThisWithProto(LCreateThisWithProto* lir) {
   callVM(CreateThisWithProtoInfo, lir);
 }
 
+typedef JSObject* (*CreateThisWithTemplateFn)(JSContext*, HandleObject);
+static const VMFunction CreateThisWithTemplateInfo =
+    FunctionInfo<CreateThisWithTemplateFn>(CreateThisWithTemplate,
+                                           "CreateThisWithTemplate");
+
 void CodeGenerator::visitCreateThisWithTemplate(LCreateThisWithTemplate* lir) {
   JSObject* templateObject = lir->mir()->templateObject();
   Register objReg = ToRegister(lir->output());
   Register tempReg = ToRegister(lir->temp());
 
   OutOfLineCode* ool =
-      oolCallVM(NewInitObjectWithTemplateInfo, lir,
+      oolCallVM(CreateThisWithTemplateInfo, lir,
                 ArgList(ImmGCPtr(templateObject)), StoreRegisterTo(objReg));
 
   // Allocate. If the FreeList is empty, call to VM, which may GC.
@@ -11254,14 +11242,12 @@ void CodeGenerator::visitTypeOfV(LTypeOfV* lir) {
   bool testNull = input->mightBeType(MIRType::Null);
   bool testString = input->mightBeType(MIRType::String);
   bool testSymbol = input->mightBeType(MIRType::Symbol);
-#ifdef ENABLE_BIGINT
   bool testBigInt = input->mightBeType(MIRType::BigInt);
-#endif
 
   unsigned numTests = unsigned(testObject) + unsigned(testNumber) +
                       unsigned(testBoolean) + unsigned(testUndefined) +
                       unsigned(testNull) + unsigned(testString) +
-                      unsigned(testSymbol) + unsigned(IF_BIGINT(testBigInt, 0));
+                      unsigned(testSymbol) + unsigned(testBigInt);
 
   MOZ_ASSERT_IF(!input->emptyResultTypeSet(), numTests > 0);
 
@@ -11372,7 +11358,6 @@ void CodeGenerator::visitTypeOfV(LTypeOfV* lir) {
     numTests--;
   }
 
-#ifdef ENABLE_BIGINT
   if (testBigInt) {
     Label notBigInt;
     if (numTests > 1) {
@@ -11385,7 +11370,6 @@ void CodeGenerator::visitTypeOfV(LTypeOfV* lir) {
     masm.bind(&notBigInt);
     numTests--;
   }
-#endif
 
   MOZ_ASSERT(numTests == 0);
 

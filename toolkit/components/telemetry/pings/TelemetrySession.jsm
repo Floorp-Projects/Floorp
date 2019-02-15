@@ -88,21 +88,12 @@ function generateUUID() {
   return str.substring(1, str.length - 1);
 }
 
-function getMsSinceProcessStart() {
-  try {
-    return Telemetry.msSinceProcessStart();
-  } catch (ex) {
-    // If this fails return a special value.
-    return -1;
-  }
-}
-
 /**
  * This is a policy object used to override behavior for testing.
  */
 var Policy = {
   now: () => new Date(),
-  monotonicNow: getMsSinceProcessStart,
+  monotonicNow: Utils.monotonicNow,
   generateSessionUUID: () => generateUUID(),
   generateSubsessionUUID: () => generateUUID(),
   setSchedulerTickTimeout: (callback, delayMs) => setTimeout(callback, delayMs),

@@ -191,6 +191,7 @@ EXPORTS.js += [
 UNIFIED_SOURCES += [
     'builtin/Array.cpp',
     'builtin/AtomicsObject.cpp',
+    'builtin/BigInt.cpp',
     'builtin/Boolean.cpp',
     'builtin/DataViewObject.cpp',
     'builtin/Eval.cpp',
@@ -258,6 +259,7 @@ UNIFIED_SOURCES += [
     'vm/ArrayBufferViewObject.cpp',
     'vm/AsyncFunction.cpp',
     'vm/AsyncIteration.cpp',
+    'vm/BigIntType.cpp',
     'vm/BuildId.cpp',
     'vm/BytecodeUtil.cpp',
     'vm/Caches.cpp',
@@ -346,12 +348,6 @@ SOURCES += [
     'vm/ProfilingStack.cpp',
 ]
 
-if CONFIG['ENABLE_BIGINT']:
-    SOURCES += [
-        'builtin/BigInt.cpp',
-        'vm/BigIntType.cpp',
-    ]
-
 if CONFIG['JS_POSIX_NSPR']:
     UNIFIED_SOURCES += [
         'vm/PosixNSPR.cpp',
@@ -397,8 +393,7 @@ if CONFIG['MOZ_VTUNE']:
         'vtune/jitprofiling.c',
         'vtune/VTuneWrapper.cpp',
     ]
-    if CONFIG['CC_TYPE'] != 'msvc':
-        SOURCES['vtune/ittnotify_static.c'].flags += ['-Wno-varargs', '-Wno-unknown-pragmas']
+    SOURCES['vtune/ittnotify_static.c'].flags += ['-Wno-varargs', '-Wno-unknown-pragmas']
 
 if CONFIG['HAVE_LINUX_PERF_EVENT_H']:
     SOURCES += [

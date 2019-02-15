@@ -155,6 +155,64 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         }
 
         /**
+         * Set whether or not font sizes in web content should be automatically scaled according to
+         * the device's current system font scale setting.
+         *
+         * @param enabled A flag determining whether or not font sizes should be scaled automatically
+         *                to match the device's system font scale.
+         * @return The builder instance.
+         */
+        public @NonNull Builder automaticFontSizeAdjustment(boolean enabled) {
+            getSettings().setAutomaticFontSizeAdjustment(enabled);
+            return this;
+        }
+
+        /**
+         * Set a font size factor that will operate as a global text zoom. All font sizes will be
+         * multiplied by this factor.
+         *
+         * <p>The default factor is 1.0.
+         *
+         * <p>This setting cannot be modified if
+         * {@link Builder#automaticFontSizeAdjustment automatic font size adjustment}
+         * has already been enabled.
+         *
+         * @param fontSizeFactor The factor to be used for scaling all text. Setting a value of 0
+         *                       disables both this feature and
+         *                       {@link Builder#fontInflation font inflation}.
+         * @return The builder instance.
+         */
+        public @NonNull Builder fontSizeFactor(float fontSizeFactor) {
+            getSettings().setFontSizeFactor(fontSizeFactor);
+            return this;
+        }
+
+        /**
+         * Set whether or not font inflation for non mobile-friendly pages should be enabled. The
+         * default value of this setting is <code>false</code>.
+         *
+         * <p>When enabled, font sizes will be increased on all pages that are lacking a
+         * &lt;meta&gt; viewport tag and have been loaded in a session using
+         * {@link GeckoSessionSettings#VIEWPORT_MODE_MOBILE}. To improve readability, the font
+         * inflation logic will attempt to increase font sizes for the main text content of the page
+         * only.
+         *
+         * <p>The magnitude of font inflation applied depends on the
+         * {@link Builder#fontSizeFactor font size factor} currently in use.
+         *
+         * <p>This setting cannot be modified if
+         * {@link Builder#automaticFontSizeAdjustment automatic font size adjustment}
+         * has already been enabled.
+         *
+         * @param enabled A flag determining whether or not font inflation should be enabled.
+         * @return The builder instance.
+         */
+        public @NonNull Builder fontInflation(boolean enabled) {
+            getSettings().setFontInflationEnabled(enabled);
+            return this;
+        }
+
+        /**
          * Set the display density override.
          *
          * @param density The display density value to use for overriding the system default.
@@ -277,6 +335,10 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         "geckoview.console.enabled", false);
     /* package */ final Pref<Integer> mAutoplayDefault = new Pref<Integer>(
         "media.autoplay.default", AUTOPLAY_DEFAULT_BLOCKED);
+    /* package */ final Pref<Integer> mFontSizeFactor = new Pref<>(
+        "font.size.systemFontScale", 100);
+    /* package */ final Pref<Integer> mFontInflationMinTwips = new Pref<>(
+        "font.size.inflation.minTwips", 0);
 
     /* package */ boolean mDebugPause;
     /* package */ boolean mUseMaxScreenDepth;
@@ -538,6 +600,32 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         return mConsoleOutput.get();
     }
 
+    /**
+     * Set whether or not font sizes in web content should be automatically scaled according to
+     * the device's current system font scale setting.
+     * Disabling this setting will restore the previously used values for
+     * {@link GeckoRuntimeSettings#getFontSizeFactor()} and
+     * {@link GeckoRuntimeSettings#getFontInflationEnabled()}.
+     *
+     * @param enabled A flag determining whether or not font sizes should be scaled automatically
+     *                to match the device's system font scale.
+     * @return This GeckoRuntimeSettings instance.
+     */
+    public @NonNull GeckoRuntimeSettings setAutomaticFontSizeAdjustment(boolean enabled) {
+        GeckoFontScaleListener.getInstance().setEnabled(enabled);
+        return this;
+    }
+
+    /**
+     * Get whether or not the font sizes for web content are automatically adjusted to match the
+     * device's system font scale setting.
+     *
+     * @return True if font sizes are automatically adjusted.
+     */
+    public boolean getAutomaticFontSizeAdjustment() {
+        return GeckoFontScaleListener.getInstance().getEnabled();
+    }
+
     // Sync values with dom/media/nsIAutoplay.idl.
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({ AUTOPLAY_DEFAULT_ALLOWED, AUTOPLAY_DEFAULT_BLOCKED })
@@ -571,6 +659,99 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
      */
     public @AutoplayDefault int getAutoplayDefault() {
         return mAutoplayDefault.get();
+    }
+
+    private static int FONT_INFLATION_BASE_VALUE = 120;
+
+    /**
+     * Set a font size factor that will operate as a global text zoom. All font sizes will be
+     * multiplied by this factor.
+     *
+     * <p>The default factor is 1.0.
+     *
+     * <p>Currently, any changes only take effect after a reload of the session.
+     *
+     * <p>This setting cannot be modified while
+     * {@link GeckoRuntimeSettings#setAutomaticFontSizeAdjustment automatic font size adjustment}
+     * is enabled.
+     *
+     * @param fontSizeFactor The factor to be used for scaling all text. Setting a value of 0
+     *                       disables both this feature and
+     *                       {@link GeckoRuntimeSettings#setFontInflationEnabled font inflation}.
+     * @return This GeckoRuntimeSettings instance.
+     */
+    public @NonNull GeckoRuntimeSettings setFontSizeFactor(float fontSizeFactor) {
+        if (getAutomaticFontSizeAdjustment()) {
+            throw new IllegalStateException("Not allowed when automatic font size adjustment is enabled");
+        }
+        return setFontSizeFactorInternal(fontSizeFactor);
+    }
+
+    /* package */ @NonNull GeckoRuntimeSettings setFontSizeFactorInternal(float fontSizeFactor) {
+        if (fontSizeFactor < 0) {
+            throw new IllegalArgumentException("fontSizeFactor cannot be < 0");
+        }
+
+        final int fontSizePercentage = Math.round(fontSizeFactor * 100);
+        mFontSizeFactor.commit(Math.round(fontSizePercentage));
+        if (getFontInflationEnabled()) {
+            final int scaledFontInflation = Math.round(FONT_INFLATION_BASE_VALUE * fontSizeFactor);
+            mFontInflationMinTwips.commit(scaledFontInflation);
+        }
+        return this;
+    }
+
+    /**
+     * Gets the currently applied font size factor.
+     *
+     * @return The currently applied font size factor.
+     */
+    public float getFontSizeFactor() {
+        return mFontSizeFactor.get() / 100f;
+    }
+
+    /**
+     * Set whether or not font inflation for non mobile-friendly pages should be enabled. The
+     * default value of this setting is <code>false</code>.
+     *
+     * <p>When enabled, font sizes will be increased on all pages that are lacking a &lt;meta&gt;
+     * viewport tag and have been loaded in a session using
+     * {@link GeckoSessionSettings#VIEWPORT_MODE_MOBILE}. To improve readability, the font inflation
+     * logic will attempt to increase font sizes for the main text content of the page only.
+     *
+     * <p>The magnitude of font inflation applied depends on the
+     * {@link GeckoRuntimeSettings#setFontSizeFactor font size factor} currently in use.
+     *
+     * <p>Currently, any changes only take effect after a reload of the session.
+     *
+     * <p>This setting cannot be modified while
+     * {@link GeckoRuntimeSettings#setAutomaticFontSizeAdjustment automatic font size adjustment}
+     * is enabled.
+     *
+     * @param enabled A flag determining whether or not font inflation should be enabled.
+     * @return This GeckoRuntimeSettings instance.
+     */
+    public @NonNull GeckoRuntimeSettings setFontInflationEnabled(boolean enabled) {
+        if (getAutomaticFontSizeAdjustment()) {
+            throw new IllegalStateException("Not allowed when automatic font size adjustment is enabled");
+        }
+        return setFontInflationEnabledInternal(enabled);
+    }
+
+    /* package */ @NonNull GeckoRuntimeSettings setFontInflationEnabledInternal(boolean enabled) {
+        final int minTwips =
+                enabled ? Math.round(FONT_INFLATION_BASE_VALUE * getFontSizeFactor()) : 0;
+        mFontInflationMinTwips.commit(minTwips);
+        return this;
+    }
+
+    /**
+     * Get whether or not font inflation for non mobile-friendly pages is currently enabled.
+     *
+     * @return True if font inflation is enabled.
+     */
+    public boolean getFontInflationEnabled() {
+        return mFontInflationMinTwips.get() > 0;
     }
 
     @Override // Parcelable

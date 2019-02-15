@@ -939,11 +939,9 @@ MConstant::MConstant(TempAllocator& alloc, const js::Value& vp,
     case MIRType::Symbol:
       payload_.sym = vp.toSymbol();
       break;
-#ifdef ENABLE_BIGINT
     case MIRType::BigInt:
       payload_.bi = vp.toBigInt();
       break;
-#endif
     case MIRType::Object:
       payload_.obj = &vp.toObject();
       // Create a singleton type set for the object. This isn't necessary for
@@ -1021,9 +1019,7 @@ void MConstant::assertInitializedPayload() const {
     case MIRType::String:
     case MIRType::Object:
     case MIRType::Symbol:
-#  ifdef ENABLE_BIGINT
     case MIRType::BigInt:
-#  endif
 #  if MOZ_LITTLE_ENDIAN
       MOZ_ASSERT_IF(JS_BITS_PER_WORD == 32, (payload_.asBits >> 32) == 0);
 #  else
@@ -1115,11 +1111,9 @@ void MConstant::printOpcode(GenericPrinter& out) const {
     case MIRType::Symbol:
       out.printf("symbol at %p", (void*)toSymbol());
       break;
-#  ifdef ENABLE_BIGINT
     case MIRType::BigInt:
       out.printf("BigInt at %p", (void*)toBigInt());
       break;
-#  endif
     case MIRType::String:
       out.printf("string %p", (void*)toString());
       break;
@@ -1181,10 +1175,8 @@ Value MConstant::toJSValue() const {
       return StringValue(toString());
     case MIRType::Symbol:
       return SymbolValue(toSymbol());
-#ifdef ENABLE_BIGINT
     case MIRType::BigInt:
       return BigIntValue(toBigInt());
-#endif
     case MIRType::Object:
       return ObjectValue(toObject());
     case MIRType::MagicOptimizedArguments:
@@ -1226,11 +1218,9 @@ bool MConstant::valueToBoolean(bool* res) const {
     case MIRType::Symbol:
       *res = true;
       return true;
-#ifdef ENABLE_BIGINT
     case MIRType::BigInt:
       *res = !toBigInt()->isZero();
       return true;
-#endif
     case MIRType::String:
       *res = toString()->length() != 0;
       return true;
@@ -1772,11 +1762,9 @@ void MUnbox::printOpcode(GenericPrinter& out) const {
     case MIRType::Symbol:
       out.printf("to Symbol");
       break;
-#  ifdef ENABLE_BIGINT
     case MIRType::BigInt:
       out.printf("to BigInt");
       break;
-#  endif
     case MIRType::Object:
       out.printf("to Object");
       break;
@@ -2255,9 +2243,7 @@ bool jit::TypeSetIncludes(TypeSet* types, MIRType input, TypeSet* inputTypes) {
     case MIRType::Float32:
     case MIRType::String:
     case MIRType::Symbol:
-#ifdef ENABLE_BIGINT
     case MIRType::BigInt:
-#endif
     case MIRType::MagicOptimizedArguments:
       return types->hasType(
           TypeSet::PrimitiveType(ValueTypeFromMIRType(input)));
@@ -2518,10 +2504,10 @@ MDefinition* MBinaryBitwiseInstruction::foldUnnecessaryBitop() {
 void MBinaryBitwiseInstruction::infer(BaselineInspector*, jsbytecode*) {
   if (getOperand(0)->mightBeType(MIRType::Object) ||
       getOperand(0)->mightBeType(MIRType::Symbol) ||
-      IF_BIGINT(getOperand(0)->mightBeType(MIRType::BigInt), false) ||
+      getOperand(0)->mightBeType(MIRType::BigInt) ||
       getOperand(1)->mightBeType(MIRType::Object) ||
       getOperand(1)->mightBeType(MIRType::Symbol) ||
-      IF_BIGINT(getOperand(1)->mightBeType(MIRType::BigInt), false)) {
+      getOperand(1)->mightBeType(MIRType::BigInt)) {
     specialization_ = MIRType::None;
     setResultType(MIRType::Value);
   } else {
@@ -2546,8 +2532,8 @@ void MShiftInstruction::infer(BaselineInspector*, jsbytecode*) {
       getOperand(1)->mightBeType(MIRType::Object) ||
       getOperand(0)->mightBeType(MIRType::Symbol) ||
       getOperand(1)->mightBeType(MIRType::Symbol) ||
-      IF_BIGINT(getOperand(0)->mightBeType(MIRType::BigInt), false) ||
-      IF_BIGINT(getOperand(1)->mightBeType(MIRType::BigInt), false)) {
+      getOperand(0)->mightBeType(MIRType::BigInt) ||
+      getOperand(1)->mightBeType(MIRType::BigInt)) {
     specialization_ = MIRType::None;
     setResultType(MIRType::Value);
   } else {
@@ -2561,8 +2547,8 @@ void MUrsh::infer(BaselineInspector* inspector, jsbytecode* pc) {
       getOperand(1)->mightBeType(MIRType::Object) ||
       getOperand(0)->mightBeType(MIRType::Symbol) ||
       getOperand(1)->mightBeType(MIRType::Symbol) ||
-      IF_BIGINT(getOperand(0)->mightBeType(MIRType::BigInt), false) ||
-      IF_BIGINT(getOperand(1)->mightBeType(MIRType::BigInt), false)) {
+      getOperand(0)->mightBeType(MIRType::BigInt) ||
+      getOperand(1)->mightBeType(MIRType::BigInt)) {
     specialization_ = MIRType::None;
     setResultType(MIRType::Value);
     return;
@@ -3603,11 +3589,9 @@ MDefinition* MTypeOf::foldsTo(TempAllocator& alloc) {
     case MIRType::Symbol:
       type = JSTYPE_SYMBOL;
       break;
-#ifdef ENABLE_BIGINT
     case MIRType::BigInt:
       type = JSTYPE_BIGINT;
       break;
-#endif
     case MIRType::Null:
       type = JSTYPE_OBJECT;
       break;
@@ -4225,16 +4209,12 @@ bool MCompare::tryFoldTypeOf(bool* result) {
       *result = (jsop() == JSOP_STRICTNE || jsop() == JSOP_NE);
       return true;
     }
-  }
-#ifdef ENABLE_BIGINT
-  else if (constant->toString() == TypeName(JSTYPE_BIGINT, names)) {
+  } else if (constant->toString() == TypeName(JSTYPE_BIGINT, names)) {
     if (!typeOf->input()->mightBeType(MIRType::BigInt)) {
       *result = (jsop() == JSOP_STRICTNE || jsop() == JSOP_NE);
       return true;
     }
-  }
-#endif
-  else if (constant->toString() == TypeName(JSTYPE_OBJECT, names)) {
+  } else if (constant->toString() == TypeName(JSTYPE_OBJECT, names)) {
     if (!typeOf->input()->mightBeType(MIRType::Object) &&
         !typeOf->input()->mightBeType(MIRType::Null)) {
       *result = (jsop() == JSOP_STRICTNE || jsop() == JSOP_NE);
@@ -5481,10 +5461,8 @@ bool MConstant::appendRoots(MRootList& roots) const {
       return roots.append(toString());
     case MIRType::Symbol:
       return roots.append(toSymbol());
-#ifdef ENABLE_BIGINT
     case MIRType::BigInt:
       return roots.append(toBigInt());
-#endif
     case MIRType::Object:
       return roots.append(&toObject());
     case MIRType::Undefined:
@@ -6222,10 +6200,7 @@ static bool TryAddTypeBarrierForWrite(TempAllocator& alloc,
     case MIRType::Double:
     case MIRType::String:
     case MIRType::Symbol:
-#ifdef ENABLE_BIGINT
-    case MIRType::BigInt:
-#endif
-    {
+    case MIRType::BigInt: {
       // The property is a particular primitive type, guard by unboxing the
       // value before the write.
       if (!(*pvalue)->mightBeType(propertyType)) {

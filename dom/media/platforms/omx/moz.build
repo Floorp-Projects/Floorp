@@ -31,9 +31,6 @@ FINAL_LIBRARY = 'xul'
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
 
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
-    # Avoid warnings from third-party code that we can not modify.
-    if CONFIG['CC_TYPE'] == 'clang-cl':
-        CXXFLAGS += ['-Wno-invalid-source-encoding']
-    else:
-        CXXFLAGS += ['-validate-charset-']
+# Avoid warnings from third-party code that we can not modify.
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    CXXFLAGS += ['-Wno-invalid-source-encoding']

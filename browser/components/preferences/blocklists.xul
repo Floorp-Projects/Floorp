@@ -19,8 +19,8 @@
         onkeypress="gBlocklistManager.onWindowKeyPress(event);">
 
   <linkset>
-    <link rel="localization" href="branding/brand.ftl"/>
-    <link rel="localization" href="browser/preferences/blocklists.ftl"/>
+    <html:link rel="localization" href="branding/brand.ftl"/>
+    <html:link rel="localization" href="browser/preferences/blocklists.ftl"/>
   </linkset>
 
   <script src="chrome://browser/content/preferences/blocklists.js"/>

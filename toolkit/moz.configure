@@ -425,16 +425,9 @@ imply_option('--enable-fmp4', ffmpeg, '--enable-ffmpeg')
 option('--disable-av1',
         help='Disable av1 video support')
 
-@depends('--enable-av1', target, c_compiler)
-def av1(value, target, c_compiler):
-    enabled = bool(value)
-    if value.origin == 'default':
-        if target.os == 'WINNT' and target.cpu == 'x86' and \
-                c_compiler and c_compiler.type == 'msvc':
-            enabled = False
-        else:
-            enabled = True
-    if enabled:
+@depends('--enable-av1')
+def av1(value):
+    if value:
         return True
 
 @depends(target, nasm_version, when=av1 & compile_environment)
@@ -1141,23 +1134,20 @@ midl = check_prog('MIDL', midl_names, when=check_for_midl, allow_missing=True,
          when=depends(midl, target)(lambda m, t: m and t.kernel == 'WINNT'))
 @imports(_from='mozbuild.shellutil', _import='quote')
 def midl_flags(c_compiler, target, toolchain_search_path):
-    if c_compiler and c_compiler.type in ('msvc', 'clang-cl'):
+    if c_compiler and c_compiler.type == 'clang-cl':
         env = {
             'x86': 'win32',
             'x86_64': 'x64',
             'aarch64': 'arm64',
         }[target.cpu]
         flags = ['-env', env]
-        if c_compiler.type == 'msvc':
-            flags += ['-cpp_cmd', c_compiler.compiler]
-        else:
-            # Ideally, we'd use the same flags setup as for msvc, but clang-cl
-            # currently doesn't work as a preprocessor for midl, so we need to
-            # find cl. https://bugs.llvm.org/show_bug.cgi?id=40140
-            cl = find_program('cl', paths=toolchain_search_path)
-            if not cl:
-                die('Could not find Microsoft Visual C/C++ compiler for MIDL')
-            flags += ['-cpp_cmd', cl]
+        # Ideally, we'd use ['-cpp_cmd', c_compiler.compiler], but clang-cl
+        # currently doesn't work as a preprocessor for midl, so we need to
+        # find cl. https://bugs.llvm.org/show_bug.cgi?id=40140
+        cl = find_program('cl', paths=toolchain_search_path)
+        if not cl:
+            die('Could not find Microsoft Visual C/C++ compiler for MIDL')
+        flags += ['-cpp_cmd', cl]
         return flags
 
     # mingw
@@ -1242,18 +1232,6 @@ def launcher(value, target):
 
 set_config('MOZ_LAUNCHER_PROCESS', launcher)
 set_define('MOZ_LAUNCHER_PROCESS', launcher)
-
-# Prio
-# ==============================================================
-@depends(c_compiler)
-def libprio(info):
-    if info:
-      # MSVC is not supported by libprio.
-      if info.type in ('msvc',):
-        return None
-    return True
-
-set_config('MOZ_LIBPRIO', libprio)
 
 # Maintenance service (Windows only)
 # ==============================================================

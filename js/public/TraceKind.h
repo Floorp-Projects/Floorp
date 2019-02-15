@@ -62,9 +62,7 @@ enum class TraceKind {
   LazyScript = 0x2F,
   Scope = 0x3F,
   RegExpShared = 0x4F,
-#ifdef ENABLE_BIGINT
   BigInt = 0x5F
-#endif
 };
 const static uintptr_t OutOfLineTraceKindMask = 0x07;
 
@@ -113,7 +111,7 @@ struct MapTypeToTraceKind {
   D(Shape, js::Shape, true)                               \
   D(String, JSString, false)                              \
   D(Symbol, JS::Symbol, false)                            \
-  IF_BIGINT(D(BigInt, JS::BigInt, false), )               \
+  D(BigInt, JS::BigInt, false)                            \
   D(RegExpShared, js::RegExpShared, true)
 
 // Map from all public types to their trace kind.

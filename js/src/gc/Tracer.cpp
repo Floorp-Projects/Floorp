@@ -15,9 +15,7 @@
 #include "gc/PublicIterators.h"
 #include "gc/Zone.h"
 #include "util/Text.h"
-#ifdef ENABLE_BIGINT
-#  include "vm/BigIntType.h"
-#endif
+#include "vm/BigIntType.h"
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
 #include "vm/Shape.h"
@@ -334,11 +332,9 @@ JS_PUBLIC_API void JS_GetTraceThingInfo(char* buf, size_t bufsize,
       name = "symbol";
       break;
 
-#ifdef ENABLE_BIGINT
     case JS::TraceKind::BigInt:
       name = "BigInt";
       break;
-#endif
 
     default:
       name = "INVALID";

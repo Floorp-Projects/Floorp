@@ -169,11 +169,9 @@ void ParseNode::dump(GenericPrinter& out, int indent) {
     case PN_NUMBER:
       as<NumericLiteral>().dump(out, indent);
       return;
-#  ifdef ENABLE_BIGINT
     case PN_BIGINT:
       as<BigIntLiteral>().dump(out, indent);
       return;
-#  endif
     case PN_REGEXP:
       as<RegExpLiteral>().dump(out, indent);
       return;
@@ -220,11 +218,9 @@ void NumericLiteral::dump(GenericPrinter& out, int indent) {
   }
 }
 
-#  ifdef ENABLE_BIGINT
 void BigIntLiteral::dump(GenericPrinter& out, int indent) {
   out.printf("(%s)", parseNodeNames[size_t(getKind())]);
 }
-#  endif
 
 void RegExpLiteral::dump(GenericPrinter& out, int indent) {
   out.printf("(%s)", parseNodeNames[size_t(getKind())]);
@@ -432,22 +428,18 @@ TraceListNode::TraceListNode(js::gc::Cell* gcThing, TraceListNode* traceLink)
   MOZ_ASSERT(gcThing->isTenured());
 }
 
-#ifdef ENABLE_BIGINT
 BigIntBox* TraceListNode::asBigIntBox() {
   MOZ_ASSERT(isBigIntBox());
   return static_cast<BigIntBox*>(this);
 }
-#endif
 
 ObjectBox* TraceListNode::asObjectBox() {
   MOZ_ASSERT(isObjectBox());
   return static_cast<ObjectBox*>(this);
 }
 
-#ifdef ENABLE_BIGINT
 BigIntBox::BigIntBox(BigInt* bi, TraceListNode* traceLink)
     : TraceListNode(bi, traceLink) {}
-#endif
 
 ObjectBox::ObjectBox(JSObject* obj, TraceListNode* traceLink)
     : TraceListNode(obj, traceLink), emitLink(nullptr) {

@@ -540,6 +540,7 @@ JSObject* NewObjectOperation(JSContext* cx, HandleScript script, jsbytecode* pc,
 
 JSObject* NewObjectOperationWithTemplate(JSContext* cx,
                                          HandleObject templateObject);
+JSObject* CreateThisWithTemplate(JSContext* cx, HandleObject templateObject);
 
 JSObject* NewArrayOperation(JSContext* cx, HandleScript script, jsbytecode* pc,
                             uint32_t length,

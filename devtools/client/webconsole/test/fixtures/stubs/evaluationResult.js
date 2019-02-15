@@ -67,6 +67,7 @@ stubPreparedMessages.set(`asdf()`, new ConsoleMessage({
     "column": 1
   },
   "groupId": null,
+  "errorMessageName": "JSMSG_NOT_DEFINED",
   "exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
   "userProvidedStyles": null,
   "notes": null,
@@ -96,6 +97,7 @@ stubPreparedMessages.set(`1 + @`, new ConsoleMessage({
     "column": 4
   },
   "groupId": null,
+  "errorMessageName": "JSMSG_ILLEGAL_CHARACTER",
   "exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Illegal_character?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
   "userProvidedStyles": null,
   "notes": null,
@@ -320,6 +322,7 @@ stubPackets.set(`asdf()`, {
   },
   "exceptionMessage": "ReferenceError: asdf is not defined",
   "exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
+  "errorMessageName": "JSMSG_NOT_DEFINED",
   "frame": {
     "source": "debugger eval code",
     "line": 1,
@@ -356,6 +359,7 @@ stubPackets.set(`1 + @`, {
   },
   "exceptionMessage": "SyntaxError: illegal character",
   "exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Illegal_character?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
+  "errorMessageName": "JSMSG_ILLEGAL_CHARACTER",
   "frame": {
     "source": "debugger eval code",
     "line": 1,

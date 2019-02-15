@@ -465,6 +465,7 @@ static const char kEventTypeNames[][40] = {
     "virtual cursor changed",           // EVENT_VIRTUALCURSOR_CHANGED
     "text value change",                // EVENT_TEXT_VALUE_CHANGE
     "scrolling",                        // EVENT_SCROLLING
+    "announcement",                     // EVENT_ANNOUNCEMENT
 };
 
 #endif

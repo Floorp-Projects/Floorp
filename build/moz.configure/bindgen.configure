@@ -273,7 +273,7 @@ def basic_bindgen_cflags(target, is_unix, compiler_info, android_cflags, clang_p
         ],
     }.get(target.os, [])
 
-    if compiler_info.type in ('msvc', 'clang-cl'):
+    if compiler_info.type == 'clang-cl':
         args += [
             # To enable the builtin __builtin_offsetof so that CRT wouldn't
             # use reinterpret_cast in offsetof() which is not allowed inside

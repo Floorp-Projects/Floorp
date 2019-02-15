@@ -557,10 +557,11 @@ bool CreateThis(JSContext* cx, HandleObject callee, HandleObject newTarget,
       if (!script) {
         return false;
       }
-      AutoRealm ar(cx, script);
       if (!js::CreateThis(cx, fun, script, newTarget, GenericObject, rval)) {
         return false;
       }
+      MOZ_ASSERT_IF(rval.isObject(),
+                    fun->realm() == rval.toObject().nonCCWRealm());
     }
   }
 
@@ -1263,7 +1264,6 @@ void AssertValidSymbolPtr(JSContext* cx, JS::Symbol* sym) {
   MOZ_ASSERT(sym->getAllocKind() == gc::AllocKind::SYMBOL);
 }
 
-#ifdef ENABLE_BIGINT
 void AssertValidBigIntPtr(JSContext* cx, JS::BigInt* bi) {
   AutoUnsafeCallWithABI unsafe;
   // FIXME: check runtime?
@@ -1272,7 +1272,6 @@ void AssertValidBigIntPtr(JSContext* cx, JS::BigInt* bi) {
   MOZ_ASSERT(bi->isTenured());
   MOZ_ASSERT(bi->getAllocKind() == gc::AllocKind::BIGINT);
 }
-#endif
 
 void AssertValidValue(JSContext* cx, Value* v) {
   AutoUnsafeCallWithABI unsafe;
@@ -1283,11 +1282,9 @@ void AssertValidValue(JSContext* cx, Value* v) {
   } else if (v->isSymbol()) {
     AssertValidSymbolPtr(cx, v->toSymbol());
   }
-#ifdef ENABLE_BIGINT
   else if (v->isBigInt()) {
     AssertValidBigIntPtr(cx, v->toBigInt());
   }
-#endif
 }
 
 bool ObjectIsCallable(JSObject* obj) {
@@ -1873,27 +1870,23 @@ const VMFunction GetSparseElementHelperInfo =
     FunctionInfo<GetSparseElementHelperFn>(GetSparseElementHelper,
                                            "getSparseElementHelper");
 
-#ifdef ENABLE_BIGINT
-template <bool allowBigInt = false>
-#endif
+static bool DoToNumber(JSContext* cx, HandleValue arg,
+                       MutableHandleValue ret) {
+  ret.set(arg);
+  return ToNumber(cx, ret);
+}
+
 static bool DoToNumeric(JSContext* cx, HandleValue arg,
                         MutableHandleValue ret) {
   ret.set(arg);
-#ifdef ENABLE_BIGINT
-  if (allowBigInt) {
-    return ToNumeric(cx, ret);
-  }
-#endif
-  return ToNumber(cx, ret);
+  return ToNumeric(cx, ret);
 }
 
 typedef bool (*ToNumericFn)(JSContext*, HandleValue, MutableHandleValue);
 const VMFunction ToNumberInfo =
-    FunctionInfo<ToNumericFn>(DoToNumeric, "ToNumber");
-#ifdef ENABLE_BIGINT
+    FunctionInfo<ToNumericFn>(DoToNumber, "ToNumber");
 const VMFunction ToNumericInfo =
-    FunctionInfo<ToNumericFn>(DoToNumeric<true>, "ToNumeric");
-#endif
+    FunctionInfo<ToNumericFn>(DoToNumeric, "ToNumeric");
 
 }  // namespace jit
 }  // namespace js

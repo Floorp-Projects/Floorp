@@ -423,6 +423,30 @@ security:
     release_channel_collection: opt-out
     record_in_processes:
       - main
+  intermediate_preloading_num_preloaded:
+    bug_numbers:
+      - 1519273
+    description: >
+      Number of intermediate certificates pre-loaded.
+    expires: "70"
+    kind: uint
+    notification_emails:
+      - seceng-telemetry@mozilla.com
+      - jjones@mozilla.com
+    record_in_processes:
+      - main
+  intermediate_preloading_num_pending:
+    bug_numbers:
+      - 1519273
+    description: >
+      Number of intermediate certificates pending pre-load.
+    expires: "70"
+    kind: uint
+    notification_emails:
+      - seceng-telemetry@mozilla.com
+      - jjones@mozilla.com
+    record_in_processes:
+      - main
   client_cert:
     bug_numbers:
       - 1255120
@@ -1805,6 +1829,20 @@ telemetry:
     release_channel_collection: opt-out
     record_in_processes:
       - 'main'
+
+  process_creation_timestamp_inconsistent:
+    bug_numbers:
+      - 1514392
+    description: >
+      The number of times ProcessCreation saw an inconsistent value.
+    expires: "72"
+    kind: uint
+    notification_emails:
+      - jrediger@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+      - 'content'
 
 telemetry.discarded:
   accumulations:

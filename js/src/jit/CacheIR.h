@@ -109,13 +109,11 @@ class SymbolOperandId : public OperandId {
   explicit SymbolOperandId(uint16_t id) : OperandId(id) {}
 };
 
-#ifdef ENABLE_BIGINT
 class BigIntOperandId : public OperandId {
  public:
   BigIntOperandId() = default;
   explicit BigIntOperandId(uint16_t id) : OperandId(id) {}
 };
-#endif
 
 class Int32OperandId : public OperandId {
  public:
@@ -133,10 +131,8 @@ class TypedOperandId : public OperandId {
       : OperandId(id.id()), type_(JSVAL_TYPE_STRING) {}
   MOZ_IMPLICIT TypedOperandId(SymbolOperandId id)
       : OperandId(id.id()), type_(JSVAL_TYPE_SYMBOL) {}
-#ifdef ENABLE_BIGINT
   MOZ_IMPLICIT TypedOperandId(BigIntOperandId id)
       : OperandId(id.id()), type_(JSVAL_TYPE_BIGINT) {}
-#endif
   MOZ_IMPLICIT TypedOperandId(Int32OperandId id)
       : OperandId(id.id()), type_(JSVAL_TYPE_INT32) {}
   MOZ_IMPLICIT TypedOperandId(ValueTagOperandId val)
@@ -187,7 +183,7 @@ extern const char* const CacheKindNames[];
   _(GuardIsBoolean)                                                    \
   _(GuardIsString)                                                     \
   _(GuardIsSymbol)                                                     \
-  IF_BIGINT(_(GuardIsBigInt), )                                        \
+  _(GuardIsBigInt)                                                     \
   _(GuardIsNumber)                                                     \
   _(GuardIsInt32)                                                      \
   _(GuardIsInt32Index)                                                 \
@@ -608,12 +604,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOpWithOperandId(CacheOp::GuardIsSymbol, val);
     return SymbolOperandId(val.id());
   }
-#ifdef ENABLE_BIGINT
   BigIntOperandId guardIsBigInt(ValOperandId val) {
     writeOpWithOperandId(CacheOp::GuardIsBigInt, val);
     return BigIntOperandId(val.id());
   }
-#endif
   Int32OperandId guardIsInt32(ValOperandId val) {
     Int32OperandId res(nextOperandId_++);
     writeOpWithOperandId(CacheOp::GuardIsInt32, val);

@@ -481,7 +481,7 @@ if CONFIG['OS_TARGET'] in ['Darwin', 'Linux', 'WINNT']:
         if CONFIG['CC_TYPE'] == 'clang':
             CXXFLAGS += ['-Wno-comma']
 
-    if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+    if CONFIG['CC_TYPE'] == 'clang-cl':
         # This is intended as a temporary workaround to enable warning free building
         # with VS2015.
         # reinterpret_cast': conversion from 'DWORD' to 'HANDLE' of greater size

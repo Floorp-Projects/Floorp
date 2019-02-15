@@ -185,7 +185,7 @@ class Parameters(ReadOnlyDict):
         return release_level(self['project'])
 
 
-def load_parameters_file(filename, strict=True, overrides=None):
+def load_parameters_file(filename, strict=True, overrides=None, trust_domain=None):
     """
     Load parameters from a path, url, decision task-id or project.
 
@@ -212,7 +212,13 @@ def load_parameters_file(filename, strict=True, overrides=None):
         if filename.startswith("task-id="):
             task_id = filename.split("=")[1]
         elif filename.startswith("project="):
-            index = "gecko.v2.{project}.latest.taskgraph.decision".format(
+            if trust_domain is None:
+                raise ValueError(
+                    "Can't specify parameters by project "
+                    "if trust domain isn't supplied.",
+                )
+            index = "{trust_domain}.v2.{project}.latest.taskgraph.decision".format(
+                trust_domain=trust_domain,
                 project=filename.split("=")[1],
             )
             task_id = find_task_id(index)
@@ -231,3 +237,16 @@ def load_parameters_file(filename, strict=True, overrides=None):
     kwargs.update(overrides)
 
     return Parameters(strict=strict, **kwargs)
+
+
+def parameters_loader(filename, strict=True, overrides=None):
+    def get_parameters(graph_config):
+        parameters = load_parameters_file(
+            filename,
+            strict=strict,
+            overrides=overrides,
+            trust_domain=graph_config["trust-domain"],
+        )
+        parameters.check()
+        return parameters
+    return get_parameters

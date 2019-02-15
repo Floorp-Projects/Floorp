@@ -21,7 +21,7 @@ if CONFIG['CC_TYPE'] == 'clang-cl':
         '-Xclang',
         '-fcxx-exceptions',
     ]
-elif CONFIG['CC_TYPE'] not in ('msvc', 'clang-cl'):
+elif CONFIG['CC_TYPE'] != 'clang-cl':
     CXXFLAGS += [
         '-fexceptions',
     ]
@@ -32,7 +32,7 @@ DisableStlWrapping()
 Library('jsoncpp')
 
 # Suppress warnings in third-party code.
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+if CONFIG['CC_TYPE'] == 'clang-cl':
     CXXFLAGS += [
         '-wd4005', # macro redefinition
     ]
@@ -47,10 +47,9 @@ if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
         '-Wno-c++11-narrowing',
     ]
 
-if CONFIG['CC_TYPE'] in ('clang', 'clang-cl', 'gcc'):
-    CXXFLAGS += [
-        '-Wno-implicit-fallthrough',
-    ]
+CXXFLAGS += [
+    '-Wno-implicit-fallthrough',
+]
 
 if CONFIG['CC_TYPE'] == 'clang-cl':
     AllowCompilerWarnings()  # workaround for bug 1090497

@@ -49,7 +49,6 @@ inline bool JS::Compartment::wrap(JSContext* cx, JS::MutableHandleValue vp) {
     return true;
   }
 
-#ifdef ENABLE_BIGINT
   if (vp.isBigInt()) {
     JS::RootedBigInt bi(cx, vp.toBigInt());
     if (!wrap(cx, &bi)) {
@@ -58,7 +57,6 @@ inline bool JS::Compartment::wrap(JSContext* cx, JS::MutableHandleValue vp) {
     vp.setBigInt(bi);
     return true;
   }
-#endif
 
   MOZ_ASSERT(vp.isObject());
 

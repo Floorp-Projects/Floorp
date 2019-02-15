@@ -483,9 +483,7 @@ class JS::Compartment {
   MOZ_MUST_USE inline bool wrap(JSContext* cx, JS::MutableHandleValue vp);
 
   MOZ_MUST_USE bool wrap(JSContext* cx, js::MutableHandleString strp);
-#ifdef ENABLE_BIGINT
   MOZ_MUST_USE bool wrap(JSContext* cx, js::MutableHandle<JS::BigInt*> bi);
-#endif
   MOZ_MUST_USE bool wrap(JSContext* cx, JS::MutableHandleObject obj);
   MOZ_MUST_USE bool wrap(JSContext* cx,
                          JS::MutableHandle<JS::PropertyDescriptor> desc);

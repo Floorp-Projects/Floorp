@@ -173,6 +173,14 @@ mpfr-3.1.5:
       sig-url: "{url}.asc"
       key-path: build/unix/build-gcc/07F3DBBECC1A39605078094D980C197698C3739D.key
 
+nasm-2.14.02:
+  description: nasm 2.14.02 source code
+  fetch:
+    type: static-url
+    url: https://ftp.halifax.rwth-aachen.de/gentoo/distfiles/nasm-2.14.02.tar.xz
+    sha256: e24ade3e928f7253aa8c14aa44726d1edf3f98643f87c9d72ec1df44b26be8f5
+    size: 827620
+
 wix-3.1.1:
   description: wix 3.1.1 binary release
   # WIX doesn't use a wrapping toplevel DIR, so we should really repackage it when

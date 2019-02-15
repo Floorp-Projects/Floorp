@@ -25,9 +25,7 @@ struct ClearEdgesTracer : public JS::CallbackTracer {
   void onObjectEdge(JSObject** objp) override;
   void onStringEdge(JSString** strp) override;
   void onSymbolEdge(JS::Symbol** symp) override;
-#ifdef ENABLE_BIGINT
   void onBigIntEdge(JS::BigInt** bip) override;
-#endif
   void onScriptEdge(JSScript** scriptp) override;
   void onShapeEdge(js::Shape** shapep) override;
   void onObjectGroupEdge(js::ObjectGroup** groupp) override;
