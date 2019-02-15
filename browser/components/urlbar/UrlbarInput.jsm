@@ -240,9 +240,9 @@ class UrlbarInput {
 
     // Use the selected result if we have one; this is usually the case
     // when the view is open.
-    let result = !selectedOneOff && this.view.selectedResult;
-    if (result) {
-      this.pickResult(event, result);
+    let index = this.view.selectedIndex;
+    if (!selectedOneOff && index != -1) {
+      this.pickResult(event, index);
       return;
     }
 
@@ -307,17 +307,19 @@ class UrlbarInput {
    * Called by the view when a result is picked.
    *
    * @param {Event} event The event that picked the result.
-   * @param {UrlbarResult} result The result that was picked.
+   * @param {resultIndex} resultIndex The index of the result that was picked.
    */
-  pickResult(event, result) {
+  pickResult(event, resultIndex) {
+    let result = this.view.getResult(resultIndex);
     this.setValueFromResult(result);
 
     this.view.close();
 
-    // TODO: Work out how we get the user selection behavior, probably via passing
+    // TODO Bug 1500476: Work out how we get the user selection behavior, probably via passing
     // it in, since we don't have the old autocomplete controller to work with.
     // BrowserUsageTelemetry.recordUrlbarSelectedResultMethod(
     //   event, this.userSelectionBehavior);
+    this.controller.recordSelectedResult(event, result, resultIndex);
 
     let where = this._whereToOpen(event);
     let {url, postData} = UrlbarUtils.getUrlFromResult(result);
