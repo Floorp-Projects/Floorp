@@ -2732,13 +2732,18 @@ static nsTextFrame* GetTextFrameForContent(nsIContent* aContent,
     return nullptr;
   }
 
-  const bool frameWillBeUnsuppressed =
-      presShell->FrameConstructor()->EnsureFrameForTextNodeIsCreatedAfterFlush(
-          static_cast<CharacterData*>(aContent));
+  // Try to un-suppress whitespace if needed, but only if we'll be able to flush
+  // to immediately see the results of the un-suppression. If we can't flush
+  // here, then calling EnsureFrameForTextNodeIsCreatedAfterFlush would be
+  // pointless anyway.
   if (aFlushLayout) {
-    doc->FlushPendingNotifications(FlushType::Layout);
-  } else if (frameWillBeUnsuppressed) {
-    doc->FlushPendingNotifications(FlushType::Frames);
+    const bool frameWillBeUnsuppressed =
+        presShell->FrameConstructor()
+            ->EnsureFrameForTextNodeIsCreatedAfterFlush(
+                static_cast<CharacterData*>(aContent));
+    if (frameWillBeUnsuppressed) {
+      doc->FlushPendingNotifications(FlushType::Layout);
+    }
   }
 
   nsIFrame* frame = aContent->GetPrimaryFrame();
