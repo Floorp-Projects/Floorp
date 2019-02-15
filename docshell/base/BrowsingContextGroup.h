@@ -8,6 +8,7 @@
 #define mozilla_dom_BrowsingContextGroup_h
 
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/StaticPtr.h"
 #include "nsHashKeys.h"
 #include "nsTArray.h"
@@ -31,12 +32,18 @@ class BrowsingContextGroup final : public nsWrapperCache {
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(BrowsingContextGroup)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(BrowsingContextGroup)
 
-  static void Init();
+  typedef nsTHashtable<nsRefPtrHashKey<ContentParent>> ContentParents;
 
   // Interact with the list of BrowsingContexts.
   bool Contains(BrowsingContext* aContext);
   void Register(BrowsingContext* aContext);
   void Unregister(BrowsingContext* aContext);
+
+  // Interact with the list of ContentParents
+  void Subscribe(ContentParent* aOriginProcess);
+  void Unsubscribe(ContentParent* aOriginProcess);
+
+  ContentParents::Iterator ContentParentsIter() { return mSubscribers.Iter(); }
 
   // Get a reference to the list of toplevel contexts in this
   // BrowsingContextGroup.
@@ -49,14 +56,12 @@ class BrowsingContextGroup final : public nsWrapperCache {
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  BrowsingContextGroup();
+  BrowsingContextGroup() = default;
 
  private:
   friend class CanonicalBrowsingContext;
 
   ~BrowsingContextGroup();
-
-  static StaticAutoPtr<nsTArray<RefPtr<BrowsingContextGroup>>> sAllGroups;
 
   // A BrowsingContextGroup contains a series of BrowsingContext objects. They
   // are addressed using a hashtable to avoid linear lookup when adding or
@@ -65,6 +70,8 @@ class BrowsingContextGroup final : public nsWrapperCache {
 
   // The set of toplevel browsing contexts in the current BrowsingContextGroup.
   BrowsingContext::Children mToplevels;
+
+  ContentParents mSubscribers;
 };
 
 }  // namespace dom
