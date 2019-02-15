@@ -168,25 +168,84 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     }
   }
 
+  /**
+   * buildFeedPromise - Adds the promise result to newFeeds and
+   *                    pushes a promise to newsFeedsPromises.
+   * @param {Object} Has both newFeedsPromises (Array) and newFeeds (Object)
+   * @param {Boolean} isStartup We have different cache handling for startup.
+   * @returns {Function} We return a function so we can contain
+   *                     the scope for isStartup and the promises object.
+   *                     Combines feed results and promises for each component with a feed.
+   */
+  buildFeedPromise({newFeedsPromises, newFeeds}, isStartup) {
+    return component => {
+      const {url} = component.feed;
+
+      if (!newFeeds[url]) {
+        // We initially stub this out so we don't fetch dupes,
+        // we then fill in with the proper object inside the promise.
+        newFeeds[url] = {};
+
+        const feedPromise = this.getComponentFeed(url, isStartup);
+
+        feedPromise.then(data => {
+          newFeeds[url] = data;
+        }).catch(/* istanbul ignore next */ error => {
+          Cu.reportError(`Error trying to load component feed ${url}: ${error}`);
+        });
+
+        newFeedsPromises.push(feedPromise);
+      }
+    };
+  }
+
+  /**
+   * reduceFeedComponents - Filters out components with no feeds, and combines
+   *                        all feeds on this component with the feeds from other components.
+   * @param {Boolean} isStartup We have different cache handling for startup.
+   * @returns {Function} We return a function so we can contain the scope for isStartup.
+   *                     Reduces feeds into promises and feed data.
+   */
+  reduceFeedComponents(isStartup) {
+    return (accumulator, row) => {
+      row.components
+        .filter(component => component && component.feed)
+        .forEach(this.buildFeedPromise(accumulator, isStartup));
+      return accumulator;
+    };
+  }
+
+  /**
+   * buildFeedPromises - Filters out rows with no components,
+   *                     and gets us a promise for each unique feed.
+   * @param {Object} layout This is the Discovery Stream layout object.
+   * @param {Boolean} isStartup We have different cache handling for startup.
+   * @returns {Object} An object with newFeedsPromises (Array) and newFeeds (Object),
+   *                   we can Promise.all newFeedsPromises to get completed data in newFeeds.
+   */
+  buildFeedPromises(layout, isStartup) {
+    const initialData = {
+      newFeedsPromises: [],
+      newFeeds: {},
+    };
+    return layout
+      .filter(row => row && row.components)
+      .reduce(this.reduceFeedComponents(isStartup), initialData);
+  }
+
   async loadComponentFeeds(sendUpdate, isStartup) {
     const {DiscoveryStream} = this.store.getState();
-    const newFeeds = {};
-    if (DiscoveryStream && DiscoveryStream.layout) {
-      for (let row of DiscoveryStream.layout) {
-        if (!row || !row.components) {
-          continue;
-        }
-        for (let component of row.components) {
-          if (component && component.feed) {
-            const {url} = component.feed;
-            newFeeds[url] = await this.getComponentFeed(url, isStartup);
-          }
-        }
-      }
 
-      await this.cache.set("feeds", newFeeds);
-      sendUpdate({type: at.DISCOVERY_STREAM_FEEDS_UPDATE, data: newFeeds});
+    if (!DiscoveryStream || !DiscoveryStream.layout) {
+      return;
     }
+
+    const {newFeedsPromises, newFeeds} = this.buildFeedPromises(DiscoveryStream.layout, isStartup);
+
+    // Each promise has a catch already built in, so no need to catch here.
+    await Promise.all(newFeedsPromises);
+    await this.cache.set("feeds", newFeeds);
+    sendUpdate({type: at.DISCOVERY_STREAM_FEEDS_UPDATE, data: newFeeds});
   }
 
   async loadSpocs(sendUpdate, isStartup) {
