@@ -116,7 +116,19 @@ class HistoryAdapter(
         view: View,
         private val actionEmitter: Observer<HistoryAction>
     ) : RecyclerView.ViewHolder(view) {
-        private val button = view.findViewById<View>(R.id.delete_history_button)
+        private lateinit var mode: HistoryState.Mode
+
+        private val button = view.findViewById<View>(R.id.delete_history_button).apply {
+            setOnClickListener {
+                val mode = mode
+                if (mode is HistoryState.Mode.Editing && mode.selectedItems.isNotEmpty()) {
+                    actionEmitter.onNext(HistoryAction.Delete.Some(mode.selectedItems))
+                } else {
+                    actionEmitter.onNext(HistoryAction.Delete.All)
+                }
+            }
+        }
+
         private val text = view.findViewById<TextView>(R.id.delete_history_button_text).apply {
             val color = ContextCompat.getColor(context, R.color.photonRed60)
             val drawable = ContextCompat.getDrawable(context, R.drawable.ic_delete)
@@ -125,6 +137,8 @@ class HistoryAdapter(
         }
 
         fun bind(mode: HistoryState.Mode) {
+            this.mode = mode
+
             val text = if (mode is HistoryState.Mode.Editing && mode.selectedItems.isNotEmpty()) {
                 text.context.resources.getString(R.string.delete_history_items, mode.selectedItems.size)
             } else {

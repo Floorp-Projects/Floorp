@@ -81,6 +81,11 @@ sealed class HistoryAction : Action {
     object BackPressed : HistoryAction()
     data class AddItemForRemoval(val item: HistoryItem) : HistoryAction()
     data class RemoveItemForRemoval(val item: HistoryItem) : HistoryAction()
+
+    sealed class Delete : HistoryAction() {
+        object All : Delete()
+        data class Some(val items: List<HistoryItem>) : Delete()
+    }
 }
 
 sealed class HistoryChange : Change {
