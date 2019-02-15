@@ -610,7 +610,7 @@ void js::Nursery::renderProfileJSON(JSONPrinter& json) const {
                 stats().getStat(gcstats::STAT_STRINGS_TENURED));
   json.property("bytes_used", previousGC.nurseryUsedBytes);
   json.property("cur_capacity", previousGC.nurseryCapacity);
-  const size_t newCapacity = spaceToEnd(maxChunkCount());
+  const size_t newCapacity = capacity();
   if (newCapacity != previousGC.nurseryCapacity) {
     json.property("new_capacity", newCapacity);
   }
@@ -755,8 +755,8 @@ void js::Nursery::collect(JS::GCReason reason) {
     doCollection(reason, tenureCounts);
   } else {
     previousGC.nurseryUsedBytes = 0;
-    previousGC.nurseryCapacity = spaceToEnd(maxChunkCount());
-    previousGC.nurseryLazyCapacity = spaceToEnd(allocatedChunkCount());
+    previousGC.nurseryCapacity = capacity();
+    previousGC.nurseryLazyCapacity = lazyCapacity();
     previousGC.tenuredBytes = 0;
     previousGC.tenuredCells = 0;
   }
@@ -884,8 +884,8 @@ void js::Nursery::doCollection(JS::GCReason reason,
   AutoDisableProxyCheck disableStrictProxyChecking;
   mozilla::DebugOnly<AutoEnterOOMUnsafeRegion> oomUnsafeRegion;
 
-  const size_t initialNurseryCapacity = spaceToEnd(maxChunkCount());
-  const size_t initialNurseryUsedBytes = initialNurseryCapacity - freeSpace();
+  const size_t initialNurseryCapacity = capacity();
+  const size_t initialNurseryUsedBytes = usedSpace();
 
   // Move objects pointed to by roots from the nursery to the major heap.
   TenuringTracer mover(rt, this);
