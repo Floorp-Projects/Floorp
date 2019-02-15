@@ -8,6 +8,17 @@ apply plugin: 'kotlin-android-extensions'
 apply from: "$project.rootDir/automation/gradle/versionCode.gradle"
 apply plugin: 'androidx.navigation.safeargs'
 
+apply plugin: 'org.mozilla.appservices'
+
+appservices {
+    defaultConfig {
+        megazord = 'fenix'
+        // Necessary to allow for local dependency substitutions.
+        // See https://github.com/mozilla-mobile/reference-browser/pull/356#issuecomment-449190236
+        unitTestingEnabled = false
+    }
+}
+
 android {
     compileSdkVersion 28
     defaultConfig {
@@ -183,6 +194,7 @@ dependencies {
     implementation Deps.mozilla_service_glean
 
     implementation Deps.mozilla_support_ktx
+    implementation Deps.mozilla_support_rustlog
 
     implementation Deps.mozilla_ui_colors
     implementation Deps.mozilla_ui_icons

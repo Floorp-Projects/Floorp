@@ -21,6 +21,7 @@ private object Versions {
     const val androidx_fragment = "1.1.0-alpha04"
     const val androidx_safeargs = "1.0.0-beta01"
 
+    const val appservices_gradle_plugin = "0.3.1"
     const val mozilla_android_components = "0.45.0-SNAPSHOT"
 
     const val test_tools = "1.0.2"
@@ -40,6 +41,7 @@ private object Versions {
 object Deps {
     const val tools_androidgradle = "com.android.tools.build:gradle:${Versions.android_gradle_plugin}"
     const val tools_kotlingradle = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
+    const val tools_appservicesgradle = "org.mozilla.appservices:gradle-plugin:${Versions.appservices_gradle_plugin}"
     const val kotlin_stdlib = "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${Versions.kotlin}"
 
     const val allopen =  "org.jetbrains.kotlin:kotlin-allopen:${Versions.kotlin}"
@@ -97,6 +99,7 @@ object Deps {
 
     const val mozilla_support_base = "org.mozilla.components:support-base:${Versions.mozilla_android_components}"
     const val mozilla_support_ktx = "org.mozilla.components:support-ktx:${Versions.mozilla_android_components}"
+    const val mozilla_support_rustlog = "org.mozilla.components:support-rustlog:${Versions.mozilla_android_components}"
 
     const val sentry = "io.sentry:sentry-android:${Versions.sentry}"
     const val leakcanary = "com.squareup.leakcanary:leakcanary-android:${Versions.leakcanary}"
