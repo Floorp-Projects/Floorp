@@ -441,7 +441,7 @@ Instance::memCopy(Instance* instance, uint32_t dstByteOffset,
     uint64_t highestSrcOffset = uint64_t(srcByteOffset) + uint64_t(len - 1);
 
     bool copyDown =
-      srcByteOffset < dstByteOffset && dstByteOffset < highestSrcOffset;
+        srcByteOffset < dstByteOffset && dstByteOffset < highestSrcOffset;
 
     if (highestDstOffset >= memLen || highestSrcOffset >= memLen) {
       // We would read past the end of the source or write past the end of the
@@ -468,9 +468,8 @@ Instance::memCopy(Instance* instance, uint32_t dstByteOffset,
       // operation.  So memmove is good enough to handle overlaps.
       SharedMem<uint8_t*> dataPtr = mem->buffer().dataPointerEither();
       if (mem->isShared()) {
-        AtomicOperations::memmoveSafeWhenRacy(dataPtr + dstByteOffset,
-                                              dataPtr + srcByteOffset,
-                                              size_t(len));
+        AtomicOperations::memmoveSafeWhenRacy(
+            dataPtr + dstByteOffset, dataPtr + srcByteOffset, size_t(len));
       } else {
         uint8_t* rawBuf = dataPtr.unwrap(/*Unshared*/);
         memmove(rawBuf + dstByteOffset, rawBuf + srcByteOffset, size_t(len));
@@ -617,9 +616,7 @@ Instance::memInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
       SharedMem<uint8_t*> dataPtr = mem->buffer().dataPointerEither();
       if (mem->isShared()) {
         AtomicOperations::memcpySafeWhenRacy(
-          dataPtr + dstOffset,
-          (uint8_t*)seg.bytes.begin() + srcOffset,
-          len);
+            dataPtr + dstOffset, (uint8_t*)seg.bytes.begin() + srcOffset, len);
       } else {
         uint8_t* rawBuf = dataPtr.unwrap(/*Unshared*/);
         memcpy(rawBuf + dstOffset, (const char*)seg.bytes.begin() + srcOffset,
@@ -662,8 +659,7 @@ Instance::tableCopy(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
     uint64_t highestDstOffset = uint64_t(dstOffset) + (len - 1);
     uint64_t highestSrcOffset = uint64_t(srcOffset) + (len - 1);
 
-    bool copyDown =
-      srcOffset < dstOffset && dstOffset < highestSrcOffset;
+    bool copyDown = srcOffset < dstOffset && dstOffset < highestSrcOffset;
 
     if (highestDstOffset >= dstTableLen || highestSrcOffset >= srcTableLen) {
       // We would read past the end of the source or write past the end of the
@@ -675,8 +671,10 @@ Instance::tableCopy(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
       } else {
         // Compute what we have space for in target and what's available in the
         // source and pick the lowest value as the new len.
-        uint64_t srcAvail = srcTableLen < srcOffset ? 0 : srcTableLen - srcOffset;
-        uint64_t dstAvail = dstTableLen < dstOffset ? 0 : dstTableLen - dstOffset;
+        uint64_t srcAvail =
+            srcTableLen < srcOffset ? 0 : srcTableLen - srcOffset;
+        uint64_t dstAvail =
+            dstTableLen < dstOffset ? 0 : dstTableLen - dstOffset;
         MOZ_ASSERT(len > Min(srcAvail, dstAvail));
         len = uint32_t(Min(srcAvail, dstAvail));
       }
@@ -1481,7 +1479,8 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
     return false;
   }
 
-  DebugCodegen(DebugChannel::Function, "wasm-function[%d]; arguments ", funcIndex);
+  DebugCodegen(DebugChannel::Function, "wasm-function[%d]; arguments ",
+               funcIndex);
   RootedValue v(cx);
   for (unsigned i = 0; i < func.funcType().args().length(); ++i) {
     v = i < args.length() ? args[i] : UndefinedValue();
@@ -1491,23 +1490,27 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
           DebugCodegen(DebugChannel::Function, "call to ToInt32 failed!\n");
           return false;
         }
-        DebugCodegen(DebugChannel::Function, "i32(%d) ", *(int32_t*)&exportArgs[i]);
+        DebugCodegen(DebugChannel::Function, "i32(%d) ",
+                     *(int32_t*)&exportArgs[i]);
         break;
       case ValType::I64:
         MOZ_CRASH("unexpected i64 flowing into callExport");
       case ValType::F32:
         if (!RoundFloat32(cx, v, (float*)&exportArgs[i])) {
-          DebugCodegen(DebugChannel::Function, "call to RoundFloat32 failed!\n");
+          DebugCodegen(DebugChannel::Function,
+                       "call to RoundFloat32 failed!\n");
           return false;
         }
-        DebugCodegen(DebugChannel::Function, "f32(%f) ", *(float*)&exportArgs[i]);
+        DebugCodegen(DebugChannel::Function, "f32(%f) ",
+                     *(float*)&exportArgs[i]);
         break;
       case ValType::F64:
         if (!ToNumber(cx, v, (double*)&exportArgs[i])) {
           DebugCodegen(DebugChannel::Function, "call to ToNumber failed!\n");
           return false;
         }
-        DebugCodegen(DebugChannel::Function, "f64(%lf) ", *(double*)&exportArgs[i]);
+        DebugCodegen(DebugChannel::Function, "f64(%lf) ",
+                     *(double*)&exportArgs[i]);
         break;
       case ValType::Ref:
         MOZ_CRASH("temporarily unsupported Ref type in callExport");
@@ -1518,7 +1521,8 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
           return false;
         }
         *(void**)&exportArgs[i] = ar.get().forCompiledCode();
-        DebugCodegen(DebugChannel::Function, "ptr(%p) ", *(void**)&exportArgs[i]);
+        DebugCodegen(DebugChannel::Function, "ptr(%p) ",
+                     *(void**)&exportArgs[i]);
         break;
       }
       case ValType::NullRef: {
@@ -1561,7 +1565,8 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
 
   void* retAddr = &exportArgs[0];
 
-  DebugCodegen(DebugChannel::Function, "wasm-function[%d]; returns ", funcIndex);
+  DebugCodegen(DebugChannel::Function, "wasm-function[%d]; returns ",
+               funcIndex);
   switch (func.funcType().ret().code()) {
     case ExprType::Void:
       args.rval().set(UndefinedValue());

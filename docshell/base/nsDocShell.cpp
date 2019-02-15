@@ -8656,9 +8656,9 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState,
   if ((!targetDocShell || targetDocShell == static_cast<nsIDocShell*>(this))) {
     bool handled;
     rv = MaybeHandleLoadDelegate(aLoadState,
-                                 targetDocShell ?
-                                 nsIBrowserDOMWindow::OPEN_CURRENTWINDOW :
-                                 nsIBrowserDOMWindow::OPEN_NEWWINDOW,
+                                 targetDocShell
+                                     ? nsIBrowserDOMWindow::OPEN_CURRENTWINDOW
+                                     : nsIBrowserDOMWindow::OPEN_NEWWINDOW,
                                  &handled);
     if (NS_FAILED(rv)) {
       return rv;
@@ -8687,7 +8687,7 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState,
     Document* doc = mContentViewer->GetDocument();
 
     const bool isDocumentAuxSandboxed =
-      doc && (doc->GetSandboxFlags() & SANDBOXED_AUXILIARY_NAVIGATION);
+        doc && (doc->GetSandboxFlags() & SANDBOXED_AUXILIARY_NAVIGATION);
 
     if (isDocumentAuxSandboxed) {
       return NS_ERROR_DOM_INVALID_ACCESS_ERR;

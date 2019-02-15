@@ -962,8 +962,7 @@ void wasm::Log(JSContext* cx, const char* fmt, ...) {
 }
 
 #ifdef WASM_CODEGEN_DEBUG
-bool wasm::IsCodegenDebugEnabled(DebugChannel channel)
-{
+bool wasm::IsCodegenDebugEnabled(DebugChannel channel) {
   switch (channel) {
     case DebugChannel::Function:
       return JitOptions.enableWasmFuncCallSpew;

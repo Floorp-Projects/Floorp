@@ -40,8 +40,8 @@ mozilla::ipc::IPCResult CompositorWidgetParent::RecvNotifyClientSizeChanged(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult CompositorWidgetParent::RecvRequestsUpdatingEGLSurface()
-{
+mozilla::ipc::IPCResult
+CompositorWidgetParent::RecvRequestsUpdatingEGLSurface() {
 #ifdef MOZ_WAYLAND
   RequestsUpdatingEGLSurface();
 #endif

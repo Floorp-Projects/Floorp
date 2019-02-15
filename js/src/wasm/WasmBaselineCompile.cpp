@@ -1227,8 +1227,8 @@ class BaseStackFrameAllocator {
     if (logicalHeight <= fixedAllocSize()) {
       return fixedAllocSize();
     }
-    return fixedAllocSize() + AlignBytes(logicalHeight - fixedAllocSize(),
-                                         ChunkSize);
+    return fixedAllocSize() +
+           AlignBytes(logicalHeight - fixedAllocSize(), ChunkSize);
   }
 #endif
 

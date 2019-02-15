@@ -445,7 +445,7 @@ nsresult ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
   nsCOMPtr<nsIChannel> channel = NS_NewSimpleChannel(
       aURI, aLoadInfo, *result,
       [](nsIStreamListener* listener, nsIChannel* channel,
-                     nsIChannel* origChannel) -> RequestOrReason {
+         nsIChannel* origChannel) -> RequestOrReason {
         nsresult rv;
         nsCOMPtr<nsIStreamConverterService> convService =
             do_GetService(NS_STREAMCONVERTERSERVICE_CONTRACTID, &rv);

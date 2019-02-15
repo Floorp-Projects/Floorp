@@ -1889,7 +1889,7 @@ gboolean nsWindow::OnExposeEvent(cairo_t *cr) {
 
   if (GetLayerManager()->AsKnowsCompositor() && mCompositorSession) {
 #ifdef MOZ_WAYLAND
-    if(mCompositorWidgetDelegate && WaylandRequestsUpdatingEGLSurface()) {
+    if (mCompositorWidgetDelegate && WaylandRequestsUpdatingEGLSurface()) {
       mCompositorWidgetDelegate->RequestsUpdatingEGLSurface();
     }
 #endif

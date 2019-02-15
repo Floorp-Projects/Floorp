@@ -18,8 +18,7 @@ NS_IMPL_CLASSINFO(ReferrerInfo, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
 
 NS_IMPL_ISUPPORTS_CI(ReferrerInfo, nsIReferrerInfo, nsISerializable)
 
-ReferrerInfo::ReferrerInfo(nsIURI* aOriginalReferrer,
-                           uint32_t aPolicy,
+ReferrerInfo::ReferrerInfo(nsIURI* aOriginalReferrer, uint32_t aPolicy,
                            bool aSendReferrer)
     : mOriginalReferrer(aOriginalReferrer),
       mPolicy(aPolicy),
@@ -57,8 +56,7 @@ ReferrerInfo::SetSendReferrer(bool aSendReferrer) {
 }
 
 NS_IMETHODIMP
-ReferrerInfo::Init(uint32_t aReferrerPolicy,
-                   bool aSendReferrer,
+ReferrerInfo::Init(uint32_t aReferrerPolicy, bool aSendReferrer,
                    nsIURI* aOriginalReferrer) {
   mPolicy = aReferrerPolicy;
   mSendReferrer = aSendReferrer;

@@ -21,7 +21,6 @@ namespace wr {
 
 /* static */ UniquePtr<RenderCompositor> RenderCompositorEGL::Create(
     RefPtr<widget::CompositorWidget> aWidget) {
-
   if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
     return nullptr;
   }
@@ -40,7 +39,7 @@ RenderCompositorEGL::CreateGLContext(RefPtr<widget::CompositorWidget> aWidget) {
 
   // Create GLContext with dummy EGLSurface.
   RefPtr<gl::GLContext> gl =
-      //XXX headless context did not work.
+      // XXX headless context did not work.
       gl::GLContextProviderEGL::CreateForCompositorWidget(aWidget, true);
   if (!gl) {
     gfxCriticalNote << "Failed GL context creation for WebRender: "
@@ -70,17 +69,17 @@ RenderCompositorEGL::CreateGLContext(RefPtr<widget::CompositorWidget> aWidget) {
 
 RenderCompositorEGL::RenderCompositorEGL(
     RefPtr<gl::GLContext> aGL, RefPtr<widget::CompositorWidget> aWidget)
-    : RenderCompositor(std::move(aWidget)), mGL(aGL), mEGLSurface(EGL_NO_SURFACE) {
+    : RenderCompositor(std::move(aWidget)),
+      mGL(aGL),
+      mEGLSurface(EGL_NO_SURFACE) {
   MOZ_ASSERT(mGL);
 }
 
-RenderCompositorEGL::~RenderCompositorEGL() {
-  DestroyEGLSurface();
-}
+RenderCompositorEGL::~RenderCompositorEGL() { DestroyEGLSurface(); }
 
 bool RenderCompositorEGL::BeginFrame() {
-
-  if (mWidget->AsX11() && mWidget->AsX11()->WaylandRequestsUpdatingEGLSurface()) {
+  if (mWidget->AsX11() &&
+      mWidget->AsX11()->WaylandRequestsUpdatingEGLSurface()) {
     mEGLSurface = CreateEGLSurface(mWidget);
     gl::GLContextEGL::Cast(gl())->SetEGLSurfaceOverride(mEGLSurface);
   }
@@ -93,8 +92,7 @@ bool RenderCompositorEGL::BeginFrame() {
   return true;
 }
 
-void RenderCompositorEGL::EndFrame()
-{
+void RenderCompositorEGL::EndFrame() {
   if (mEGLSurface != EGL_NO_SURFACE) {
     mGL->SwapBuffers();
   }
@@ -104,9 +102,7 @@ void RenderCompositorEGL::WaitForGPU() {}
 
 void RenderCompositorEGL::Pause() {}
 
-bool RenderCompositorEGL::Resume() {
-  return true;
-}
+bool RenderCompositorEGL::Resume() { return true; }
 
 bool RenderCompositorEGL::MakeCurrent() {
   gl::GLContextEGL::Cast(gl())->SetEGLSurfaceOverride(mEGLSurface);

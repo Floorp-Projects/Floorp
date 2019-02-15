@@ -2380,7 +2380,6 @@ HttpChannelChild::GetSecurityInfo(nsISupports** aSecurityInfo) {
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
 HttpChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   nsCOMPtr<nsIStreamListener> listener = aListener;

@@ -841,7 +841,6 @@ nsJARChannel::Open(nsIInputStream **aStream) {
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
 nsJARChannel::AsyncOpen(nsIStreamListener *aListener) {
   LOG(("nsJARChannel::AsyncOpen [this=%p]\n", this));

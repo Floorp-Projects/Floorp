@@ -346,7 +346,8 @@ nsresult TLSFilterTransaction::ReadSegments(nsAHttpSegmentReader *aReader,
   nsresult rv = mTransaction->ReadSegments(this, aCount, outCountRead);
   LOG(("TLSFilterTransaction %p called trans->ReadSegments rv=%" PRIx32 " %d\n",
        this, static_cast<uint32_t>(rv), *outCountRead));
-  if (NS_SUCCEEDED(rv) && (mReadSegmentReturnValue == NS_BASE_STREAM_WOULD_BLOCK)) {
+  if (NS_SUCCEEDED(rv) &&
+      (mReadSegmentReturnValue == NS_BASE_STREAM_WOULD_BLOCK)) {
     LOG(("TLSFilterTransaction %p read segment blocked found rv=%" PRIx32 "\n",
          this, static_cast<uint32_t>(rv)));
     Unused << Connection()->ForceSend();

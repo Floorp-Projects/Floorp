@@ -177,14 +177,15 @@ nsChangeHint ComputedStyle::CalcStyleDifference(const ComputedStyle& aNewStyle,
     // due to change being true already or due to the old style not having a
     // style-if-visited), but not the other way around.
 #define STYLE_FIELD(name_) thisVisStruct->name_ != otherVisStruct->name_
-#define STYLE_STRUCT(name_, fields_) {                                       \
-  const nsStyle##name_* thisVisStruct = thisVis->Style##name_();             \
-  const nsStyle##name_* otherVisStruct = otherVis->Style##name_();           \
-  if (MOZ_FOR_EACH_SEPARATED(STYLE_FIELD, (||), (), fields_)) {              \
-    *aEqualStructs &= ~STYLE_STRUCT_BIT(name_);                              \
-    change = true;                                                           \
-  }                                                                          \
-}
+#define STYLE_STRUCT(name_, fields_)                                 \
+  {                                                                  \
+    const nsStyle##name_* thisVisStruct = thisVis->Style##name_();   \
+    const nsStyle##name_* otherVisStruct = otherVis->Style##name_(); \
+    if (MOZ_FOR_EACH_SEPARATED(STYLE_FIELD, (||), (), fields_)) {    \
+      *aEqualStructs &= ~STYLE_STRUCT_BIT(name_);                    \
+      change = true;                                                 \
+    }                                                                \
+  }
 #include "nsCSSVisitedDependentPropList.h"
 #undef STYLE_STRUCT
 #undef STYLE_FIELD

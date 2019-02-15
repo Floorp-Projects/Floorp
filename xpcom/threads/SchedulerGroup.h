@@ -96,8 +96,7 @@ class SchedulerGroup : public LinkedListElement<SchedulerGroup> {
     return mEventCount == 0 ? NoLongerQueued : StillQueued;
   }
 
-  class Runnable final : public mozilla::Runnable,
-                         public nsIRunnablePriority {
+  class Runnable final : public mozilla::Runnable, public nsIRunnablePriority {
    public:
     Runnable(already_AddRefed<nsIRunnable>&& aRunnable, SchedulerGroup* aGroup,
              dom::DocGroup* aDocGroup);

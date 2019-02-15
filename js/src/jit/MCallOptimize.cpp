@@ -4143,12 +4143,11 @@ IonBuilder::InliningResult IonBuilder::inlineWasmCall(CallInfo& callInfo,
   // Check that the function doesn't take or return non-compatible JS
   // argument types before adding nodes to the MIR graph, otherwise they'd be
   // dead code.
-  if (sig.hasI64ArgOrRet() ||
-      sig.temporarilyUnsupportedAnyRef()
+  if (sig.hasI64ArgOrRet() || sig.temporarilyUnsupportedAnyRef()
 #ifdef WASM_CODEGEN_DEBUG
       || !JitOptions.enableWasmIonFastCalls
 #endif
-     ) {
+  ) {
     return InliningStatus_NotInlined;
   }
 

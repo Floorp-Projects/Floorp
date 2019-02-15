@@ -63,9 +63,13 @@ T DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name) {
   }
   return *thingp;
 }
-template JS::Value DoCallback<JS::Value>(JS::CallbackTracer*, JS::Value*, const char*);
-template JS::PropertyKey DoCallback<JS::PropertyKey>(JS::CallbackTracer*, JS::PropertyKey*, const char*);
-template TaggedProto DoCallback<TaggedProto>(JS::CallbackTracer*, TaggedProto*, const char*);
+template JS::Value DoCallback<JS::Value>(JS::CallbackTracer*, JS::Value*,
+                                         const char*);
+template JS::PropertyKey DoCallback<JS::PropertyKey>(JS::CallbackTracer*,
+                                                     JS::PropertyKey*,
+                                                     const char*);
+template TaggedProto DoCallback<TaggedProto>(JS::CallbackTracer*, TaggedProto*,
+                                             const char*);
 
 void JS::CallbackTracer::getTracingEdgeName(char* buffer, size_t bufferSize) {
   MOZ_ASSERT(bufferSize > 0);
@@ -91,7 +95,7 @@ void js::TraceChildren(JSTracer* trc, void* thing, JS::TraceKind kind) {
   ApplyGCThingTyped(thing, kind, [trc](auto t) {
     MOZ_ASSERT_IF(t->runtimeFromAnyThread() != trc->runtime(),
                   ThingIsPermanentAtomOrWellKnownSymbol(t) ||
-                  t->zoneFromAnyThread()->isSelfHostingZone());
+                      t->zoneFromAnyThread()->isSelfHostingZone());
     t->traceChildren(trc);
   });
 }
