@@ -207,6 +207,8 @@ class LoadInfo final : public nsILoadInfo {
   // browsing context container.
   // See nsILoadInfo.isFromProcessingFrameAttributes
   bool mIsFromProcessingFrameAttributes;
+
+  nsILoadInfo::CrossOriginOpenerPolicy mOpenerPolicy;
 };
 
 }  // namespace net

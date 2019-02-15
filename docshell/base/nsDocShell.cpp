@@ -9805,6 +9805,8 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
     securityFlags |= nsILoadInfo::SEC_SANDBOXED;
   }
 
+  // TODO: pass openerPolicy through loadInfo?
+
   RefPtr<LoadInfo> loadInfo =
       (contentPolicyType == nsIContentPolicy::TYPE_DOCUMENT)
           ? new LoadInfo(loadingWindow, aLoadState->TriggeringPrincipal(),
