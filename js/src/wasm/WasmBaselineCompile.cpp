@@ -2093,15 +2093,15 @@ struct StackMapGenerator {
   // --- These are constant once we've completed beginFunction() ---
 
   // The number of words of arguments passed to this function in memory.
-  size_t numStackArgWords_;
+  size_t numStackArgWords;
 
-  MachineStackTracker mst_;  // tracks machine stack pointerness
+  MachineStackTracker machineStackTracker;  // tracks machine stack pointerness
 
   // This holds masm.framePushed at entry to the function's body.  It is a
   // Maybe because createStackMap needs to know whether or not we're still
   // in the prologue.  It makes a Nothing-to-Some transition just once per
   // function.
-  Maybe<uint32_t> framePushedAtEntryToBody_;
+  Maybe<uint32_t> framePushedAtEntryToBody;
 
   // --- These can change at any point ---
 
@@ -2122,16 +2122,16 @@ struct StackMapGenerator {
   // When not inside a function call setup/teardown sequence, it is Nothing.
   // It can make Nothing-to/from-Some transitions arbitrarily as we progress
   // through the function body.
-  Maybe<uint32_t> framePushedExcludingOutboundCallArgs_;
+  Maybe<uint32_t> framePushedExcludingOutboundCallArgs;
 
   // The number of memory-resident, ref-typed entries on the containing
   // BaseCompiler::stk_.
-  size_t memRefsOnStk_;
+  size_t memRefsOnStk;
 
-  // This is a copy of mst_ that is used only within individual calls to
-  // createStackMap.  It is here only to avoid possible heap allocation costs
-  // resulting from making it local to createStackMap().
-  MachineStackTracker augmentedMst_;
+  // This is a copy of machineStackTracker that is used only within individual
+  // calls to createStackMap. It is here only to avoid possible heap allocation
+  // costs resulting from making it local to createStackMap().
+  MachineStackTracker augmentedMst;
 
   StackMapGenerator(StackMaps* stackMaps, const MachineState& trapExitLayout,
                     const size_t trapExitLayoutNumWords,
@@ -2140,8 +2140,8 @@ struct StackMapGenerator {
         trapExitLayoutNumWords_(trapExitLayoutNumWords),
         stackMaps_(stackMaps),
         masm_(masm),
-        numStackArgWords_(0),
-        memRefsOnStk_(0) {}
+        numStackArgWords(0),
+        memRefsOnStk(0) {}
 
   // At the beginning of a function, we may have live roots in registers (as
   // arguments) at the point where we perform a stack overflow check.  This
@@ -2200,7 +2200,7 @@ struct StackMapGenerator {
                                    uint32_t assemblerOffset,
                                    HasRefTypedDebugFrame refDebugFrame,
                                    const StkVector& stk) {
-    size_t countedPointers = mst_.numPtrs() + memRefsOnStk_;
+    size_t countedPointers = machineStackTracker.numPtrs() + memRefsOnStk;
 #ifndef DEBUG
     // An important optimization.  If there are obviously no pointers, as
     // we expect in the majority of cases, exit quickly.
@@ -2220,10 +2220,10 @@ struct StackMapGenerator {
 #endif
 
     // Start with the frame-setup map, and add operand-stack information to
-    // that.  augmentedMst_ holds live data only within individual calls to
+    // that.  augmentedMst holds live data only within individual calls to
     // createStackMap.
-    augmentedMst_.clear();
-    if (!mst_.cloneTo(&augmentedMst_)) {
+    augmentedMst.clear();
+    if (!machineStackTracker.cloneTo(&augmentedMst)) {
       return false;
     }
 
@@ -2238,28 +2238,28 @@ struct StackMapGenerator {
     // this function.
     //
     // That padding is taken into account at the point where
-    // framePushedExcludingOutboundCallArgs_ is set, viz, in startCallArgs(),
+    // framePushedExcludingOutboundCallArgs is set, viz, in startCallArgs(),
     // and comprises two components:
     //
     // * call->frameAlignAdjustment
     // * the padding applied to the stack arg area itself.  That is:
     //   StackArgAreaSize(argTys) - StackArgAreaSizeUnpadded(argTys)
     Maybe<uint32_t> framePushedExcludingArgs;
-    if (framePushedAtEntryToBody_.isNothing()) {
+    if (framePushedAtEntryToBody.isNothing()) {
       // Still in the prologue.  framePushedExcludingArgs remains Nothing.
-      MOZ_ASSERT(framePushedExcludingOutboundCallArgs_.isNothing());
+      MOZ_ASSERT(framePushedExcludingOutboundCallArgs.isNothing());
     } else {
       // In the body.
-      MOZ_ASSERT(masm_.framePushed() >= framePushedAtEntryToBody_.value());
-      if (framePushedExcludingOutboundCallArgs_.isSome()) {
+      MOZ_ASSERT(masm_.framePushed() >= framePushedAtEntryToBody.value());
+      if (framePushedExcludingOutboundCallArgs.isSome()) {
         // In the body, and we've potentially pushed some args onto the stack.
         // We must ignore them when sizing the stackmap.
         MOZ_ASSERT(masm_.framePushed() >=
-                   framePushedExcludingOutboundCallArgs_.value());
-        MOZ_ASSERT(framePushedExcludingOutboundCallArgs_.value() >=
-                   framePushedAtEntryToBody_.value());
+                   framePushedExcludingOutboundCallArgs.value());
+        MOZ_ASSERT(framePushedExcludingOutboundCallArgs.value() >=
+                   framePushedAtEntryToBody.value());
         framePushedExcludingArgs =
-            Some(framePushedExcludingOutboundCallArgs_.value());
+            Some(framePushedExcludingOutboundCallArgs.value());
       } else {
         // In the body, but not with call args on the stack.  The stackmap
         // must be sized so as to extend all the way "down" to
@@ -2270,16 +2270,16 @@ struct StackMapGenerator {
 
     if (framePushedExcludingArgs.isSome()) {
       uint32_t bodyPushedBytes =
-          framePushedExcludingArgs.value() - framePushedAtEntryToBody_.value();
+          framePushedExcludingArgs.value() - framePushedAtEntryToBody.value();
       MOZ_ASSERT(0 == bodyPushedBytes % sizeof(void*));
-      if (!augmentedMst_.pushNonGCPointers(bodyPushedBytes / sizeof(void*))) {
+      if (!augmentedMst.pushNonGCPointers(bodyPushedBytes / sizeof(void*))) {
         return false;
       }
     }
 
     // Scan the operand stack, marking pointers in the just-added new
     // section.
-    MOZ_ASSERT_IF(framePushedAtEntryToBody_.isNothing(), stk.empty());
+    MOZ_ASSERT_IF(framePushedAtEntryToBody.isNothing(), stk.empty());
     MOZ_ASSERT_IF(framePushedExcludingArgs.isNothing(), stk.empty());
 
     for (const Stk& v : stk) {
@@ -2312,7 +2312,7 @@ struct StackMapGenerator {
           // These also have uninteresting type.  Check that they live in the
           // section of stack set up by beginFunction().  The unguarded use of
           // |value()| here is safe due to the assertion above this loop.
-          MOZ_ASSERT(v.offs() <= framePushedAtEntryToBody_.value());
+          MOZ_ASSERT(v.offs() <= framePushedAtEntryToBody.value());
           continue;
         case Stk::RegisterI32:
         case Stk::RegisterI64:
@@ -2329,8 +2329,9 @@ struct StackMapGenerator {
           break;
         case Stk::LocalRef:
           // We need the stackmap to mention this pointer, but it should
-          // already be in the mst_ section created by beginFunction().
-          MOZ_ASSERT(v.offs() <= framePushedAtEntryToBody_.value());
+          // already be in the machineStackTracker section created by
+          // beginFunction().
+          MOZ_ASSERT(v.offs() <= framePushedAtEntryToBody.value());
           continue;
         case Stk::ConstRef:
           // This can currently only be a null pointer.
@@ -2349,13 +2350,13 @@ struct StackMapGenerator {
       MOZ_ASSERT(v.offs() <= framePushedExcludingArgs.value());
       uint32_t offsFromMapLowest = framePushedExcludingArgs.value() - v.offs();
       MOZ_ASSERT(0 == offsFromMapLowest % sizeof(void*));
-      augmentedMst_.setGCPointer(offsFromMapLowest / sizeof(void*));
+      augmentedMst.setGCPointer(offsFromMapLowest / sizeof(void*));
     }
 
     // Create the final StackMap.  The initial map is zeroed out, so there's
     // no need to write zero bits in it.
     const uint32_t extraWords = extras.length();
-    const uint32_t augmentedMstWords = augmentedMst_.length();
+    const uint32_t augmentedMstWords = augmentedMst.length();
     const uint32_t numMappedWords = extraWords + augmentedMstWords;
     StackMap* stackMap = StackMap::create(numMappedWords);
     if (!stackMap) {
@@ -2374,7 +2375,7 @@ struct StackMapGenerator {
     }
     // Followed by the "main" part of the map.
     for (uint32_t i = 0; i < augmentedMstWords; i++) {
-      if (augmentedMst_.isGCPointer(i)) {
+      if (augmentedMst.isGCPointer(i)) {
         stackMap->setBit(numMappedWords - 1 - i);
       }
     }
@@ -2384,7 +2385,7 @@ struct StackMapGenerator {
     // Record in the map, how far down from the highest address the Frame* is.
     // Take the opportunity to check that we haven't marked any part of the
     // Frame itself as a pointer.
-    stackMap->setFrameOffsetFromTop(numStackArgWords_ +
+    stackMap->setFrameOffsetFromTop(numStackArgWords +
                                     sizeof(Frame) / sizeof(void*));
 #ifdef DEBUG
     for (uint32_t i = 0; i < sizeof(Frame) / sizeof(void*); i++) {
@@ -2571,7 +2572,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   BaseRegAlloc ra;       // Ditto
   BaseStackFrame fr;
 
-  StackMapGenerator smgen_;
+  StackMapGenerator stackMapGenerator_;
 
   BaseStackFrame::LocalVector localInfo_;
   Vector<OutOfLineCode*, 8, SystemAllocPolicy> outOfLine_;
@@ -2913,7 +2914,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   template <typename T>
   void push(T item) {
     // None of the single-arg Stk constructors create a Stk::MemRef, so
-    // there's no need to increment smgen_.memRefsOnStk_ here.
+    // there's no need to increment stackMapGenerator_.memRefsOnStk here.
     stk_.infallibleEmplaceBack(Stk(item));
   }
 
@@ -3246,14 +3247,14 @@ class BaseCompiler final : public BaseCompilerInterface {
           loadLocalRef(v, scratch);
           uint32_t offs = fr.pushPtr(scratch);
           v.setOffs(Stk::MemRef, offs);
-          smgen_.memRefsOnStk_++;
+          stackMapGenerator_.memRefsOnStk++;
           break;
         }
         case Stk::RegisterRef: {
           uint32_t offs = fr.pushPtr(v.refReg());
           freeRef(v.refReg());
           v.setOffs(Stk::MemRef, offs);
-          smgen_.memRefsOnStk_++;
+          stackMapGenerator_.memRefsOnStk++;
           break;
         }
         default: { break; }
@@ -3271,16 +3272,17 @@ class BaseCompiler final : public BaseCompilerInterface {
   // Create a vanilla stack map.
   MOZ_MUST_USE bool createStackMap(const char* who) {
     const ExitStubMapVector noExtras;
-    return smgen_.createStackMap(who, noExtras, masm.currentOffset(),
-                                 HasRefTypedDebugFrame::No, stk_);
+    return stackMapGenerator_.createStackMap(
+        who, noExtras, masm.currentOffset(), HasRefTypedDebugFrame::No, stk_);
   }
 
   // Create a stack map as vanilla, but for a custom assembler offset.
   MOZ_MUST_USE bool createStackMap(const char* who,
                                    CodeOffset assemblerOffset) {
     const ExitStubMapVector noExtras;
-    return smgen_.createStackMap(who, noExtras, assemblerOffset.offset(),
-                                 HasRefTypedDebugFrame::No, stk_);
+    return stackMapGenerator_.createStackMap(who, noExtras,
+                                             assemblerOffset.offset(),
+                                             HasRefTypedDebugFrame::No, stk_);
   }
 
   // Create a stack map as vanilla, and note the presence of a ref-typed
@@ -3288,8 +3290,8 @@ class BaseCompiler final : public BaseCompilerInterface {
   MOZ_MUST_USE bool createStackMap(const char* who,
                                    HasRefTypedDebugFrame refDebugFrame) {
     const ExitStubMapVector noExtras;
-    return smgen_.createStackMap(who, noExtras, masm.currentOffset(),
-                                 refDebugFrame, stk_);
+    return stackMapGenerator_.createStackMap(
+        who, noExtras, masm.currentOffset(), refDebugFrame, stk_);
   }
 
   // The most general stack map construction.
@@ -3297,8 +3299,8 @@ class BaseCompiler final : public BaseCompilerInterface {
                                    const ExitStubMapVector& extras,
                                    uint32_t assemblerOffset,
                                    HasRefTypedDebugFrame refDebugFrame) {
-    return smgen_.createStackMap(who, extras, assemblerOffset, refDebugFrame,
-                                 stk_);
+    return stackMapGenerator_.createStackMap(who, extras, assemblerOffset,
+                                             refDebugFrame, stk_);
   }
 
   // This is an optimization used to avoid calling sync() for
@@ -3538,7 +3540,7 @@ class BaseCompiler final : public BaseCompilerInterface {
 
     stk_.popBack();
     if (v.kind() == Stk::MemRef) {
-      smgen_.memRefsOnStk_--;
+      stackMapGenerator_.memRefsOnStk--;
     }
     return specific;
   }
@@ -3553,7 +3555,7 @@ class BaseCompiler final : public BaseCompilerInterface {
     }
     stk_.popBack();
     if (v.kind() == Stk::MemRef) {
-      smgen_.memRefsOnStk_--;
+      stackMapGenerator_.memRefsOnStk--;
     }
     return r;
   }
@@ -3931,7 +3933,7 @@ class BaseCompiler final : public BaseCompilerInterface {
           freeRef(v.refReg());
           break;
         case Stk::MemRef:
-          smgen_.memRefsOnStk_--;
+          stackMapGenerator_.memRefsOnStk--;
           break;
         default:
           break;
@@ -4064,16 +4066,17 @@ class BaseCompiler final : public BaseCompilerInterface {
 
     // Make a start on the stack map for this function.  Inspect the args so
     // as to determine which of them are both in-memory and pointer-typed, and
-    // add entries to mst_ as appropriate.
+    // add entries to machineStackTracker as appropriate.
 
     const ValTypeVector& argTys = env_.funcTypes[func_.index]->args();
 
     size_t nInboundStackArgBytes = StackArgAreaSizeUnaligned(argTys);
     MOZ_ASSERT(nInboundStackArgBytes % sizeof(void*) == 0);
-    smgen_.numStackArgWords_ = nInboundStackArgBytes / sizeof(void*);
+    stackMapGenerator_.numStackArgWords = nInboundStackArgBytes / sizeof(void*);
 
-    MOZ_ASSERT(smgen_.mst_.length() == 0);
-    if (!smgen_.mst_.pushNonGCPointers(smgen_.numStackArgWords_)) {
+    MOZ_ASSERT(stackMapGenerator_.machineStackTracker.length() == 0);
+    if (!stackMapGenerator_.machineStackTracker.pushNonGCPointers(
+            stackMapGenerator_.numStackArgWords)) {
       return false;
     }
 
@@ -4087,7 +4090,8 @@ class BaseCompiler final : public BaseCompilerInterface {
       uint32_t offset = argLoc.offsetFromArgBase();
       MOZ_ASSERT(offset < nInboundStackArgBytes);
       MOZ_ASSERT(offset % sizeof(void*) == 0);
-      smgen_.mst_.setGCPointer(offset / sizeof(void*));
+      stackMapGenerator_.machineStackTracker.setGCPointer(offset /
+                                                          sizeof(void*));
     }
 
     GenerateFunctionPrologue(
@@ -4097,7 +4101,8 @@ class BaseCompiler final : public BaseCompilerInterface {
 
     // GenerateFunctionPrologue pushes exactly one wasm::Frame's worth of
     // stuff, and none of the values are GC pointers.  Hence:
-    if (!smgen_.mst_.pushNonGCPointers(sizeof(Frame) / sizeof(void*))) {
+    if (!stackMapGenerator_.machineStackTracker.pushNonGCPointers(
+            sizeof(Frame) / sizeof(void*))) {
       return false;
     }
 
@@ -4110,8 +4115,8 @@ class BaseCompiler final : public BaseCompilerInterface {
                     "aligned");
 #endif
       masm.reserveStack(DebugFrame::offsetOfFrame());
-      if (!smgen_.mst_.pushNonGCPointers(DebugFrame::offsetOfFrame() /
-                                         sizeof(void*))) {
+      if (!stackMapGenerator_.machineStackTracker.pushNonGCPointers(
+              DebugFrame::offsetOfFrame() / sizeof(void*))) {
         return false;
       }
 
@@ -4142,7 +4147,7 @@ class BaseCompiler final : public BaseCompilerInterface {
 
     const ValTypeVector& args = funcType().args();
     ExitStubMapVector extras;
-    if (!smgen_.generateStackmapEntriesForTrapExit(args, extras)) {
+    if (!stackMapGenerator_.generateStackmapEntriesForTrapExit(args, extras)) {
       return false;
     }
     if (!createStackMap("stack check", extras, masm.currentOffset(),
@@ -4155,7 +4160,8 @@ class BaseCompiler final : public BaseCompilerInterface {
 
     masm.reserveStack(reservedBytes);
     fr.onFixedStackAllocated();
-    if (!smgen_.mst_.pushNonGCPointers(reservedBytes / sizeof(void*))) {
+    if (!stackMapGenerator_.machineStackTracker.pushNonGCPointers(
+            reservedBytes / sizeof(void*))) {
       return false;
     }
 
@@ -4176,7 +4182,8 @@ class BaseCompiler final : public BaseCompilerInterface {
           uint32_t offs = fr.localOffset(l);
           MOZ_ASSERT(0 == (offs % sizeof(void*)));
           fr.storeLocalPtr(RegPtr(i->gpr()), l);
-          smgen_.mst_.setGCPointer(offs / sizeof(void*));
+          stackMapGenerator_.machineStackTracker.setGCPointer(offs /
+                                                              sizeof(void*));
           break;
         }
         case MIRType::Double:
@@ -4202,8 +4209,8 @@ class BaseCompiler final : public BaseCompilerInterface {
     JitSpew(JitSpew_Codegen,
             "# beginFunction: enter body with masm.framePushed = %u",
             masm.framePushed());
-    MOZ_ASSERT(smgen_.framePushedAtEntryToBody_.isNothing());
-    smgen_.framePushedAtEntryToBody_.emplace(masm.framePushed());
+    MOZ_ASSERT(stackMapGenerator_.framePushedAtEntryToBody.isNothing());
+    stackMapGenerator_.framePushedAtEntryToBody.emplace(masm.framePushed());
 
     return true;
   }
@@ -4396,8 +4403,9 @@ class BaseCompiler final : public BaseCompilerInterface {
     size_t adjustment = call.stackArgAreaSize + call.frameAlignAdjustment;
     fr.freeArgAreaAndPopBytes(adjustment, stackSpace);
 
-    MOZ_ASSERT(smgen_.framePushedExcludingOutboundCallArgs_.isSome());
-    smgen_.framePushedExcludingOutboundCallArgs_.reset();
+    MOZ_ASSERT(
+        stackMapGenerator_.framePushedExcludingOutboundCallArgs.isSome());
+    stackMapGenerator_.framePushedExcludingOutboundCallArgs.reset();
 
     if (call.isInterModule) {
       masm.loadWasmTlsRegFromFrame();
@@ -4422,8 +4430,9 @@ class BaseCompiler final : public BaseCompilerInterface {
     // for the call, but including the alignment space placed above the args.
     // This defines the lower limit of the stackmap that will be created for
     // this call.
-    MOZ_ASSERT(smgen_.framePushedExcludingOutboundCallArgs_.isNothing());
-    smgen_.framePushedExcludingOutboundCallArgs_.emplace(
+    MOZ_ASSERT(
+        stackMapGenerator_.framePushedExcludingOutboundCallArgs.isNothing());
+    stackMapGenerator_.framePushedExcludingOutboundCallArgs.emplace(
         // However much we've pushed so far
         masm.framePushed() +
         // Extra space we'll push to get the frame aligned
@@ -10795,7 +10804,7 @@ bool BaseCompiler::emitStructNarrow() {
 }
 
 bool BaseCompiler::emitBody() {
-  MOZ_ASSERT(smgen_.framePushedAtEntryToBody_.isSome());
+  MOZ_ASSERT(stackMapGenerator_.framePushedAtEntryToBody.isSome());
 
   if (!iter_.readFunctionStart(funcType().ret())) {
     return false;
@@ -10842,9 +10851,9 @@ bool BaseCompiler::emitBody() {
 #ifdef DEBUG
     // Check that the number of ref-typed entries in the operand stack matches
     // reality.
-#  define CHECK_POINTER_COUNT                                  \
-    do {                                                       \
-      MOZ_ASSERT(countMemRefsOnStk() == smgen_.memRefsOnStk_); \
+#  define CHECK_POINTER_COUNT                                             \
+    do {                                                                  \
+      MOZ_ASSERT(countMemRefsOnStk() == stackMapGenerator_.memRefsOnStk); \
     } while (0)
 #else
 #  define CHECK_POINTER_COUNT \
@@ -10902,13 +10911,15 @@ bool BaseCompiler::emitBody() {
       }
     }
 
-    // Going below framePushedAtEntryToBody_ would imply that we've
+    // Going below framePushedAtEntryToBody would imply that we've
     // popped off the machine stack, part of the frame created by
     // beginFunction().
-    MOZ_ASSERT(masm.framePushed() >= smgen_.framePushedAtEntryToBody_.value());
+    MOZ_ASSERT(masm.framePushed() >=
+               stackMapGenerator_.framePushedAtEntryToBody.value());
 
     // At this point we're definitely not generating code for a function call.
-    MOZ_ASSERT(smgen_.framePushedExcludingOutboundCallArgs_.isNothing());
+    MOZ_ASSERT(
+        stackMapGenerator_.framePushedExcludingOutboundCallArgs.isNothing());
 
     switch (op.b0) {
       case uint16_t(Op::End):
@@ -11854,7 +11865,8 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
       masm(*masm),
       ra(*this),
       fr(*masm),
-      smgen_(stackMaps, trapExitLayout, trapExitLayoutNumWords, *masm),
+      stackMapGenerator_(stackMaps, trapExitLayout, trapExitLayoutNumWords,
+                         *masm),
       joinRegI32_(RegI32(ReturnReg)),
       joinRegI64_(RegI64(ReturnReg64)),
       joinRegPtr_(RegPtr(ReturnReg)),
@@ -11930,7 +11942,7 @@ FuncOffsets BaseCompiler::finish() {
   MOZ_ASSERT(func_.callSiteLineNums.length() == lastReadCallSite_);
 
   MOZ_ASSERT(stk_.empty());
-  MOZ_ASSERT(smgen_.memRefsOnStk_ == 0);
+  MOZ_ASSERT(stackMapGenerator_.memRefsOnStk == 0);
 
   masm.flushBuffer();
 
