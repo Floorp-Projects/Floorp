@@ -76,7 +76,22 @@ add_task(async function test_search() {
 
 add_task(async function test_search_delayed() {
   await AboutConfigTest.withNewTab(async function() {
-    // Prepare the table and the search field for the test.
+    // Start with the initial empty page.
+    this.search("");
+
+    // We need to wait more than the search typing timeout to make sure that
+    // nothing happens when entering a short string.
+    EventUtils.synthesizeKey("t");
+    EventUtils.synthesizeKey("e");
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    await new Promise(resolve => setTimeout(resolve, 500));
+    Assert.equal(this.rows.length, 0);
+
+    // Pressing Enter will force a search to occur anyways.
+    EventUtils.sendKey("return");
+    Assert.greater(this.rows.length, 0);
+
+    // Prepare the table and the search field for the next test.
     this.search("test.aboutconfig.a");
     Assert.equal(this.rows.length, 2);
 
