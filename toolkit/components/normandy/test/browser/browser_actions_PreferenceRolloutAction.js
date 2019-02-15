@@ -55,10 +55,8 @@ decorate_task(
       "Rollout should be stored in db"
     );
 
-    Assert.deepEqual(
-      sendEventStub.args,
-      [["enroll", "preference_rollout", recipe.arguments.slug, {}]],
-      "an enrollment event should be sent"
+    sendEventStub.assertEvents(
+      [["enroll", "preference_rollout", recipe.arguments.slug]]
     );
     Assert.deepEqual(
       setExperimentActiveStub.args,
@@ -149,13 +147,11 @@ decorate_task(
       "Rollout should be updated in db"
     );
 
-    Assert.deepEqual(
-      sendEventStub.args,
+    sendEventStub.assertEvents(
       [
-        ["enroll", "preference_rollout", "test-rollout", {}],
+        ["enroll", "preference_rollout", "test-rollout"],
         ["update", "preference_rollout", "test-rollout", {previousState: "active"}],
-      ],
-      "update event was sent"
+      ]
     );
 
     // Cleanup
@@ -204,12 +200,10 @@ decorate_task(
       "Rollout should be updated in db"
     );
 
-    Assert.deepEqual(
-      sendEventStub.args,
+    sendEventStub.assertEvents(
       [
         ["update", "preference_rollout", "test-rollout", {previousState: "graduated"}],
-      ],
-      "correct events was sent"
+      ]
     );
 
     // Cleanup
@@ -279,10 +273,9 @@ decorate_task(
       "Only recipe1's rollout should be stored in db",
     );
 
-    Assert.deepEqual(
-      sendEventStub.args,
+    sendEventStub.assertEvents(
       [
-        ["enroll", "preference_rollout", recipe1.arguments.slug, {}],
+        ["enroll", "preference_rollout", recipe1.arguments.slug],
         ["enrollFailed", "preference_rollout", recipe2.arguments.slug, {reason: "conflict", preference: "test.pref1"}],
         ["enrollFailed", "preference_rollout", recipe2.arguments.slug, {reason: "conflict", preference: "test.pref1"}],
       ]
@@ -318,10 +311,8 @@ decorate_task(
     is(Services.prefs.getPrefType("app.normandy.startupRolloutPrefs.test.pref"), Services.prefs.PREF_INVALID, "startup pref is not set");
 
     Assert.deepEqual(await PreferenceRollouts.getAll(), [], "no rollout is stored in the db");
-    Assert.deepEqual(
-      sendEventStub.args,
-      [["enrollFailed", "preference_rollout", recipe.arguments.slug, {reason: "invalid type", preference: "test.pref"}]],
-      "an enrollment failed event should be sent",
+    sendEventStub.assertEvents(
+      [["enrollFailed", "preference_rollout", recipe.arguments.slug, {reason: "invalid type", preference: "test.pref"}]]
     );
 
     // Cleanup
@@ -422,10 +413,8 @@ decorate_task(
     await action.finalize();
     is(action.lastError, null, "lastError should be null");
 
-    Assert.deepEqual(
-      sendEventStub.args,
-      [["enroll", "preference_rollout", "test-rollout", {}]],
-      "only an enrollment event should be generated",
+    sendEventStub.assertEvents(
+      [["enroll", "preference_rollout", "test-rollout"]]
     );
 
     Assert.deepEqual(
@@ -473,10 +462,8 @@ decorate_task(
     // rollout was not stored
     Assert.deepEqual(await PreferenceRollouts.getAll(), [], "Rollout should not be stored in db");
 
-    Assert.deepEqual(
-      sendEventStub.args,
-      [["enrollFailed", "preference_rollout", recipe.arguments.slug, {reason: "would-be-no-op"}]],
-      "an enrollment failure event should be sent"
+    sendEventStub.assertEvents(
+      [["enrollFailed", "preference_rollout", recipe.arguments.slug, {reason: "would-be-no-op"}]]
     );
     Assert.deepEqual(setExperimentActiveStub.args, [], "a telemetry experiment should not be activated");
 
