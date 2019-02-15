@@ -102,6 +102,8 @@
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description">Get your tabs, bookmarks, logins,
         history and more on all your devices</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">Firefox Account</string>
     <!-- Preference for language -->
     <string name="preferences_language">Language</string>
     <!-- Preference for data choices -->

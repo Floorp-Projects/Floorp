@@ -22,6 +22,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 import java.io.File
+import mozilla.components.service.fxa.AccountObserver
+import mozilla.components.service.fxa.FirefoxAccountShaped
+import mozilla.components.service.fxa.FxaUnauthorizedException
+import mozilla.components.service.fxa.Profile
 import mozilla.components.support.ktx.android.graphics.toDataUri
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.FenixApplication
@@ -38,10 +42,11 @@ import org.mozilla.fenix.R.string.pref_key_accessibility
 import org.mozilla.fenix.R.string.pref_key_language
 import org.mozilla.fenix.R.string.pref_key_data_choices
 import org.mozilla.fenix.R.string.pref_key_about
+import org.mozilla.fenix.R.string.pref_key_sign_in
+import org.mozilla.fenix.R.string.pref_key_account
 
-@Suppress("TooManyFunctions")
-class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope {
-
+@SuppressWarnings("TooManyFunctions")
+class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObserver {
     private lateinit var job: Job
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main + job
@@ -49,6 +54,7 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         job = Job()
+        setupAccountUI()
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -101,6 +107,46 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope {
     override fun onDestroy() {
         super.onDestroy()
         job.cancel()
+    }
+
+    private fun setupAccountUI() {
+        val signIn = context?.getPreferenceKey(pref_key_sign_in)
+        val firefoxAccountKey = context?.getPreferenceKey(pref_key_account)
+
+        val preferenceSignIn = findPreference<Preference>(signIn)
+        val preferenceFirefoxAccount = findPreference<Preference>(firefoxAccountKey)
+
+        preferenceSignIn.isVisible = true
+        preferenceFirefoxAccount.isVisible = false
+        preferenceSignIn.onPreferenceClickListener = getClickListenerForSignIn()
+
+        val accountManager = requireComponents.backgroundServices.accountManager
+        // Observe account changes to keep the UI up-to-date.
+        accountManager.register(this, owner = this)
+
+        // TODO an authenticated state will mark 'preferenceSignIn' as invisible; currently that behaviour is non-ideal:
+        // a "sign in" UI will be displayed at first, and then quickly animate away.
+        // Ideally we don't want it to be displayed at all.
+        accountManager.authenticatedAccount()?.let { setIsAuthenticated(it) }
+        accountManager.accountProfile()?.let { updateAccountProfile(it) }
+    }
+
+    private fun getClickListenerForSignIn(): OnPreferenceClickListener {
+        return OnPreferenceClickListener {
+            requireComponents.services.accountsAuthFeature.beginAuthentication()
+            // TODO the "back button" behaviour here is pretty poor. The sign-in web content populates session history,
+            // so pressing "back" after signing in won't take us back into the settings screen, but rather up the
+            // session history stack.
+            // We could auto-close this tab once we get to the end of the authentication process?
+            // Via an interceptor, perhaps.
+            view?.let {
+                Navigation.findNavController(it)
+                    .navigate(
+                        SettingsFragmentDirections.actionGlobalBrowser(null)
+                    )
+            }
+            true
+        }
     }
 
     /**
@@ -187,6 +233,53 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope {
             Navigation.findNavController(it)
                 .navigate(SettingsFragmentDirections.actionGlobalBrowser(newSession))
         }
+    }
+
+    // --- AccountObserver interfaces ---
+    override fun onAuthenticated(account: FirefoxAccountShaped) {
+        setIsAuthenticated(account)
+    }
+
+    override fun onError(error: Exception) {
+        // TODO we could display some error states in this UI.
+        when (error) {
+            is FxaUnauthorizedException -> {}
+        }
+    }
+
+    override fun onLoggedOut() {
+        setIsLoggedOut()
+    }
+
+    override fun onProfileUpdated(profile: Profile) {
+        updateAccountProfile(profile)
+    }
+
+    // --- Account UI helpers ---
+    private fun setIsAuthenticated(account: FirefoxAccountShaped) {
+        val preferenceSignIn = findPreference<Preference>(context?.getPreferenceKey(pref_key_sign_in))
+        val preferenceFirefoxAccount = findPreference<Preference>(context?.getPreferenceKey(pref_key_account))
+
+        preferenceSignIn.isVisible = false
+        preferenceSignIn.onPreferenceClickListener = null
+        preferenceFirefoxAccount.isVisible = true
+    }
+
+    private fun setIsLoggedOut() {
+        val preferenceSignIn = findPreference<Preference>(context?.getPreferenceKey(pref_key_sign_in))
+        val preferenceFirefoxAccount = findPreference<Preference>(context?.getPreferenceKey(pref_key_account))
+
+        preferenceSignIn.isVisible = true
+
+        // TODO this isn't quite right, as we'll have an "Account" preference category title still visible on the screen
+        preferenceFirefoxAccount.isVisible = false
+        preferenceSignIn.onPreferenceClickListener = getClickListenerForSignIn()
+    }
+
+    private fun updateAccountProfile(profile: Profile) {
+        val preferenceFirefoxAccount = findPreference<Preference>(context?.getPreferenceKey(pref_key_account))
+        preferenceFirefoxAccount.title = profile.displayName.orEmpty()
+        preferenceFirefoxAccount.summary = profile.email.orEmpty()
     }
 
     companion object {

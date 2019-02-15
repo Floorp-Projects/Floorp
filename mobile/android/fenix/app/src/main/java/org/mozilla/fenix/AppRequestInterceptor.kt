@@ -9,6 +9,7 @@ import mozilla.components.browser.errorpages.ErrorPages
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.settings.AboutPage
 import org.mozilla.fenix.settings.SettingsFragment
 
@@ -23,7 +24,7 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
                 return RequestInterceptor.InterceptionResponse.Content(page, encoding = base64)
             }
 
-            else -> null
+            else -> context.components.services.accountsAuthFeature.interceptor.onLoadRequest(session, uri)
         }
     }
 

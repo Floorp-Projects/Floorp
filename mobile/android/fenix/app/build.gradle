@@ -178,6 +178,7 @@ dependencies {
     implementation Deps.mozilla_browser_storage_sync
     implementation Deps.mozilla_browser_toolbar
 
+    implementation Deps.mozilla_feature_accounts
     implementation Deps.mozilla_feature_awesomebar
     implementation Deps.mozilla_feature_contextmenu
     implementation Deps.mozilla_feature_customtabs
@@ -190,6 +191,7 @@ dependencies {
     implementation Deps.mozilla_feature_findinpage
     implementation Deps.mozilla_feature_session_bundling
 
+    implementation Deps.mozilla_service_firefox_accounts
     implementation Deps.mozilla_service_fretboard
     implementation Deps.mozilla_service_glean
 

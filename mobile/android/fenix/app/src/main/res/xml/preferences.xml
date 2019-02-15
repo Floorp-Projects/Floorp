@@ -18,8 +18,7 @@
         <androidx.preference.Preference
             android:icon="@drawable/ic_shortcuts"
             android:key="@string/pref_key_account"
-            android:summary="user@email.com"
-            android:title="User Name" />
+            android:title="@string/preferences_account_default_name" />
     </androidx.preference.PreferenceCategory>
 
     <androidx.preference.PreferenceCategory
