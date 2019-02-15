@@ -28,7 +28,7 @@ class ReverseSearchInput extends Component {
   static get propTypes() {
     return {
       dispatch: PropTypes.func.isRequired,
-      hud: PropTypes.object.isRequired,
+      webConsoleUI: PropTypes.object.isRequired,
       reverseSearchResult: PropTypes.string,
       reverseSearchTotalResults: PropTypes.number,
       reverseSearchResultPosition: PropTypes.number,
@@ -44,7 +44,7 @@ class ReverseSearchInput extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    const {jsterm} = this.props.hud;
+    const {jsterm} = this.props.webConsoleUI;
     if (
       prevProps.reverseSearchResult !== this.props.reverseSearchResult
       && this.props.visible
@@ -76,7 +76,7 @@ class ReverseSearchInput extends Component {
 
     const {
       dispatch,
-      hud,
+      webConsoleUI,
       reverseSearchTotalResults,
     } = this.props;
 
@@ -84,7 +84,7 @@ class ReverseSearchInput extends Component {
     if (keyCode === KeyCodes.DOM_VK_RETURN) {
       event.stopPropagation();
       dispatch(actions.reverseSearchInputToggle());
-      hud.jsterm.execute();
+      webConsoleUI.jsterm.execute();
       return;
     }
 

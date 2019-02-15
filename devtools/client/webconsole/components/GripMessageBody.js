@@ -28,7 +28,6 @@ GripMessageBody.propTypes = {
   ]).isRequired,
   serviceContainer: PropTypes.shape({
     createElement: PropTypes.func.isRequired,
-    hudProxy: PropTypes.object.isRequired,
     onViewSourceInDebugger: PropTypes.func.isRequired,
   }),
   userProvidedStyle: PropTypes.string,

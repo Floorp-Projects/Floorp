@@ -52,9 +52,7 @@ registerCleanupFunction(async function() {
   });
   const browserConsole = HUDService.getBrowserConsole();
   if (browserConsole) {
-    if (browserConsole.jsterm) {
-      browserConsole.jsterm.hud.clearOutput(true);
-    }
+    browserConsole.ui.clearOutput(true);
     await HUDService.toggleBrowserConsole();
   }
 });

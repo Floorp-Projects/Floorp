@@ -435,7 +435,7 @@ async function generateNetworkEventStubs() {
 
     const onNetworkUpdate = new Promise(resolve => {
       let i = 0;
-      ui.jsterm.hud.on("network-message-updated", function onNetworkUpdated(res) {
+      ui.on("network-message-updated", function onNetworkUpdated(res) {
         const updateKey = `${keys[i++]} update`;
         // We cannot ensure the form of the network update packet, some properties
         // might be in another order than in the original packet.
@@ -453,7 +453,7 @@ async function generateNetworkEventStubs() {
         stubs.packets.push(formatPacket(updateKey, packet));
         stubs.preparedMessages.push(formatNetworkEventStub(updateKey, res));
         if (i === keys.length) {
-          ui.jsterm.hud.off("network-message-updated", onNetworkUpdated);
+          ui.off("network-message-updated", onNetworkUpdated);
           resolve();
         }
       });
