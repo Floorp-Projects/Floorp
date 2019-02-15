@@ -27,6 +27,7 @@ $card-header-in-hero-line-height: 20;
 
   .ds-card {
     border: 0;
+    padding-bottom: 20px;
 
     p {
       margin-top: 4px;
@@ -40,11 +41,6 @@ $card-header-in-hero-line-height: 20;
 
     .meta {
       padding: 0;
-
-      .title {
-        // show only 2 lines of copy
-        @include limit-visibile-lines(2, $card-header-in-hero-line-height, $card-header-in-hero-font-size);
-      }
     }
 
     .img-wrapper {
@@ -98,16 +94,13 @@ $card-header-in-hero-line-height: 20;
         color: $grey-90;
       }
 
-      p {
-        font-size: 14px;
-
-        &.context {
-          color: $teal-70;
-        }
+      .context {
+        color: $teal-70;
       }
 
       .source {
         font-size: 13px;
+        color: $teal-80;
         margin-bottom: 0;
         overflow-x: hidden;
         text-overflow: ellipsis;
@@ -158,10 +151,10 @@ $card-header-in-hero-line-height: 20;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     grid-column-gap: 24px;
-    padding: 20px 0;
 
     &.ds-hero-border {
       border-top: $border-secondary;
+      padding: 20px 0;
 
       .ds-card:nth-child(-n+2) {
         border-bottom: $border-secondary;
@@ -173,7 +166,9 @@ $card-header-in-hero-line-height: 20;
       border-top: 0;
       border-bottom: 0;
       margin: 0;
-      padding: 0;
+      padding: 0 0 20px;
+      display: flex;
+      flex-direction: column;
 
       .img-wrapper {
         margin: 0;
@@ -186,6 +181,7 @@ $card-header-in-hero-line-height: 20;
       }
 
       .meta {
+        flex-grow: 1;
         display: flex;
         padding: 0 24px 0 0;
 
@@ -195,7 +191,7 @@ $card-header-in-hero-line-height: 20;
         }
 
         .source {
-          margin: 0;
+          margin-bottom: 0;
         }
       }
     }
@@ -204,6 +200,10 @@ $card-header-in-hero-line-height: 20;
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       grid-column-gap: 24px;
+
+      .title {
+        @include limit-visibile-lines(3, 20, 14);
+      }
     }
   }
 }

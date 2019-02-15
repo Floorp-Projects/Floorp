@@ -4,6 +4,7 @@ $col4-header-font-size: 14;
 .ds-card-grid {
   display: grid;
   grid-gap: 24px;
+  margin: 16px 0;
 
   .ds-card {
     background: $white;
@@ -51,10 +52,6 @@ $col4-header-font-size: 14;
   .ds-column-12 & {
     grid-template-columns: repeat(4, 1fr);
 
-    .meta .title {
-      @include limit-visibile-lines(2, $col4-header-line-height, $col4-header-font-size);
-    }
-
     &.ds-card-grid-divisible-by-3 {
       grid-template-columns: repeat(3, 1fr);
 
@@ -62,6 +59,10 @@ $col4-header-font-size: 14;
         font-size: 17px;
         line-height: 24px;
       }
+    }
+
+    &.ds-card-grid-divisible-by-4 .title {
+      @include limit-visibile-lines(3, 20, 14);
     }
   }
 }

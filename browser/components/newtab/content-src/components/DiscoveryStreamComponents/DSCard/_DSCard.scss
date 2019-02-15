@@ -41,19 +41,20 @@ $excerpt-line-height: 20;
     }
 
     .title {
-      // show only 2 lines of copy
-      @include limit-visibile-lines(2, $header-line-height, $header-font-size);
+      // show only 3 lines of copy
+      @include limit-visibile-lines(3, $header-line-height, $header-font-size);
       font-weight: 600;
     }
 
     .excerpt {
-      // show only 4 lines of copy
-      @include limit-visibile-lines(4, $excerpt-line-height, $excerpt-font-size);
+      // show only 3 lines of copy
+      @include limit-visibile-lines(3, $excerpt-line-height, $excerpt-font-size);
     }
 
     .context,
     .source {
       font-size: 13px;
+      color: $teal-80;
     }
   }
 
