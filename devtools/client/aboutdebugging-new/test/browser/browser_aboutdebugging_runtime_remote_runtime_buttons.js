@@ -14,7 +14,8 @@ add_task(async function() {
     name: "Lorem ipsum",
   });
 
-  const { document, tab } = await openAboutDebugging();
+  const { document, tab, window } = await openAboutDebugging();
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   info("Checking This Firefox");
   ok(!document.querySelector(".js-connection-prompt-toggle-button"),

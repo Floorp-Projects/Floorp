@@ -35,7 +35,9 @@ const EMPTY_WORKERS_RESPONSE = {
 add_task(async function() {
   const mocks = new Mocks();
 
-  const { document, tab } = await openAboutDebugging({ enableWorkerUpdates: true });
+  const { document, tab, window } =
+    await openAboutDebugging({ enableWorkerUpdates: true });
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   info("Prepare USB client mock");
   const usbClient = mocks.createUSBRuntime(USB_RUNTIME_ID, {

@@ -7,7 +7,8 @@ Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-addons.js", this);
 
 // Test that the reload button updates the addon list with the correct metadata.
 add_task(async function() {
-  const { document, tab } = await openAboutDebugging();
+  const { document, tab, window } = await openAboutDebugging();
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   const ORIGINAL_EXTENSION_NAME = "Temporary web extension (original)";
   const UPDATED_EXTENSION_NAME = "Temporary web extension (updated)";
@@ -53,7 +54,8 @@ add_task(async function() {
   const PACKAGED_EXTENSION_ID = "packaged-extension@tests";
   const PACKAGED_EXTENSION_NAME = "Packaged extension";
 
-  const { document, tab } = await openAboutDebugging();
+  const { document, tab, window } = await openAboutDebugging();
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   await installRegularExtension("resources/packaged-extension/packaged-extension.xpi");
 

@@ -35,7 +35,9 @@ async function testDebuggingSW(enableMultiE10sFn, disableMultiE10sFn) {
   // enable service workers
   await pushPref("dom.serviceWorkers.testing.enabled", true);
 
-  const { document, tab } = await openAboutDebugging({ enableWorkerUpdates: true });
+  const { document, tab, window } =
+    await openAboutDebugging({ enableWorkerUpdates: true });
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   // disable multi e10s
   info("Disabling multi e10s");

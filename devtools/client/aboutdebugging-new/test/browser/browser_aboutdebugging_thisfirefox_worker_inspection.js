@@ -43,7 +43,8 @@ add_task(async function() {
     gDevToolsBrowser.openWorkerToolbox = originalOpenWorkerForToolbox;
   });
 
-  const { document, tab } = await openAboutDebugging();
+  const { document, tab, window } = await openAboutDebugging();
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   const workerTarget = findDebugTargetByText(testWorker.name, document);
   ok(workerTarget, "Worker target appeared for the test worker");
