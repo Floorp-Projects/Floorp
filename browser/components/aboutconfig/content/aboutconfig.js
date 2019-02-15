@@ -6,7 +6,8 @@ const {DeferredTask} = ChromeUtils.import("resource://gre/modules/DeferredTask.j
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
-const SEARCH_TIMEOUT_MS = 500;
+const SEARCH_TIMEOUT_MS = 100;
+const SEARCH_AUTO_MIN_CRARACTERS = 3;
 
 const GETTERS_BY_PREF_TYPE = {
   [Ci.nsIPrefBranch.PREF_BOOL]: "getBoolPref",
@@ -21,7 +22,7 @@ const STRINGS_ADD_BY_TYPE = {
 };
 
 let gDefaultBranch = Services.prefs.getDefaultBranch("");
-let gFilterPrefsTask = new DeferredTask(() => filterPrefs(), SEARCH_TIMEOUT_MS);
+let gFilterPrefsTask = new DeferredTask(() => filterPrefs(), SEARCH_TIMEOUT_MS, 0);
 
 /**
  * Maps the name of each preference in the back-end to its PrefRow object,
@@ -381,21 +382,23 @@ function loadPrefs() {
   }
 
   search.addEventListener("keypress", event => {
-    switch (event.key) {
-      case "Escape":
-        search.value = "";
-        // Fall through.
-      case "Enter":
-        gFilterPrefsTask.disarm();
-        filterPrefs();
+    if (event.key == "Escape") {
+      // The ESC key returns immediately to the initial empty page.
+      search.value = "";
+      gFilterPrefsTask.disarm();
+      filterPrefs();
+    } else if (event.key == "Enter") {
+      // The Enter key filters immediately even if the search string is short.
+      gFilterPrefsTask.disarm();
+      filterPrefs({ shortString: true });
     }
   });
 
   search.addEventListener("input", () => {
     // We call "disarm" to restart the timer at every input.
     gFilterPrefsTask.disarm();
-    if (!search.value.trim().length) {
-      // Return immediately to the empty page if the search string is empty.
+    if (search.value.trim().length < SEARCH_AUTO_MIN_CRARACTERS) {
+      // Return immediately to the empty page if the search string is short.
       filterPrefs();
     } else {
       gFilterPrefsTask.arm();
@@ -442,6 +445,10 @@ function filterPrefs(options = {}) {
   gDeletedPrefs.clear();
 
   let searchName = gSearchInput.value.trim();
+  if (searchName.length < SEARCH_AUTO_MIN_CRARACTERS && !options.shortString) {
+    searchName = "";
+  }
+
   gFilterString = searchName.toLowerCase();
   gFilterShowAll = !!options.showAll;
 
