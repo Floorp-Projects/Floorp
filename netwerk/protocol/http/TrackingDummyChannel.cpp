@@ -541,6 +541,11 @@ TrackingDummyChannel::SetTopWindowURIIfUnknown(nsIURI* aTopWindowURI) {
 }
 
 NS_IMETHODIMP
+TrackingDummyChannel::SetTopWindowPrincipal(nsIPrincipal* aTopWindowPrincipal) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 TrackingDummyChannel::GetProxyURI(nsIURI** aProxyURI) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

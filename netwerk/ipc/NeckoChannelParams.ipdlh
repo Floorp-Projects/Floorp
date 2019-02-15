@@ -14,6 +14,7 @@ include URIParams;
 include IPCServiceWorkerDescriptor;
 include IPCStream;
 include PBackgroundSharedTypes;
+include DOMTypes;
 
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
@@ -213,6 +214,7 @@ struct HttpChannelOpenArgs
   uint32_t                    referrerPolicy;
   OptionalURIParams           apiRedirectTo;
   OptionalURIParams           topWindowURI;
+  nsIPrincipal                topWindowPrincipal;
   uint32_t                    loadFlags;
   RequestHeaderTuples         requestHeaders;
   nsCString                   requestMethod;
