@@ -152,5 +152,5 @@
 
     <!-- Text for the button to clear selected history items. The first parameter
         is the number of items you have selected -->
-    <string name="delete_history_items">Delete %1$s Items</string>
+    <string name="delete_history_items">Delete %1$d Items</string>
 </resources>

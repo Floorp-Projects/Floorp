@@ -4,9 +4,12 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/delete_history_button"
+    android:foreground="?android:attr/selectableItemBackground"
     android:background="@drawable/delete_history_background"
     android:layout_margin="16dp"
     android:padding="6dp"
+    android:clickable="true"
+    android:focusable="true"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -19,5 +22,7 @@
         android:drawablePadding="8dp"
         android:textSize="16sp"
         android:gravity="center"
+        android:clickable="false"
+        android:focusable="false"
         android:layout_gravity="center" />
 </FrameLayout>

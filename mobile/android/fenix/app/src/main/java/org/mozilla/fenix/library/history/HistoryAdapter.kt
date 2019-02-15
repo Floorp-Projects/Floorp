@@ -125,12 +125,14 @@ class HistoryAdapter(
         }
 
         fun bind(mode: HistoryState.Mode) {
-            when(mode) {
-                is HistoryState.Mode.Normal ->
-                    text.text = text.context.resources.getText(R.string.delete_history)
-                is HistoryState.Mode.Editing ->
-                    text.text = text.context.resources.getString(R.string.delete_history_items, mode.selectedItems.size)
+            val text = if (mode is HistoryState.Mode.Editing && mode.selectedItems.isNotEmpty()) {
+                text.context.resources.getString(R.string.delete_history_items, mode.selectedItems.size)
+            } else {
+                text.context.resources.getString(R.string.delete_history)
             }
+
+            button.contentDescription = text
+            this.text.text = text
         }
 
         companion object {
