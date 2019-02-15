@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "İnternet etrafından mükemmel muhteva, siziñ içün şahsiyleştirilgen",
   "prefs_topstories_options_sponsored_label": "Sponsorlı Hikâyeler",
   "prefs_topstories_sponsored_learn_more": "Daha çoq ögren",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Saqlağan yaki ziyaret etken olğanıñız saytlarnıñ bir saylamı",
   "prefs_highlights_options_visited_label": "Ziyaret etilgen saifeler",
   "prefs_highlights_options_download_label": "Eñ Deminki Endirme",

@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Webeko eduki baliotsua, zuretzat pertsonalizatuta",
   "prefs_topstories_options_sponsored_label": "Babesleen istorioak",
   "prefs_topstories_sponsored_learn_more": "Argibide gehiago",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Gorde edo bisitatu dituzun guneen hautapena",
   "prefs_highlights_options_visited_label": "Bisitatutako orriak",
   "prefs_highlights_options_download_label": "Azken deskarga",

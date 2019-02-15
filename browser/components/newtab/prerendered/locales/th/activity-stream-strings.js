@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "เนื้อหาที่ยอดเยี่ยมจากเว็บต่าง ๆ ปรับแต่งให้เป็นส่วนบุคคลเพื่อคุณ",
   "prefs_topstories_options_sponsored_label": "เรื่องราวที่ได้รับการสนับสนุน",
   "prefs_topstories_sponsored_learn_more": "เรียนรู้เพิ่มเติม",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "การคัดเลือกไซต์ที่คุณได้บันทึกไว้หรือเยี่ยมชม",
   "prefs_highlights_options_visited_label": "หน้าที่เยี่ยมชมแล้ว",
   "prefs_highlights_options_download_label": "การดาวน์โหลดล่าสุด",

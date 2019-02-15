@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Εξαιρετικό περιεχόμενο από το διαδίκτυο, εξατομικευμένο για εσάς",
   "prefs_topstories_options_sponsored_label": "Χορηγούμενες ιστορίες",
   "prefs_topstories_sponsored_learn_more": "Μάθετε περισσότερα",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Μια συλλογή ιστοσελίδων που έχετε αποθηκεύσει ή επισκεφθεί",
   "prefs_highlights_options_visited_label": "Σελίδες που έχετε επισκεφθεί",
   "prefs_highlights_options_download_label": "Πιο πρόσφατες λήψεις",

@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Hyvää sisältöä kaikkialta verkosta, juuri sinulle",
   "prefs_topstories_options_sponsored_label": "Sponsoroidut tarinat",
   "prefs_topstories_sponsored_learn_more": "Lue lisää",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Valikoima sivustoja, joilla olet käynyt tai jotka olet tallentanut",
   "prefs_highlights_options_visited_label": "Vieraillut sivustot",
   "prefs_highlights_options_download_label": "Viimeisimmät lataukset",

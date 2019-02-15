@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Danvez eus an dibab eus pep lec'h er web, personelaet evidoc'h",
   "prefs_topstories_options_sponsored_label": "Istorioù kevelet",
   "prefs_topstories_sponsored_learn_more": "Gouzout hiroc'h",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Un dibab a lec'hiennoù ho peus enrollet pe gweladennet",
   "prefs_highlights_options_visited_label": "Pajennoù gweladennet",
   "prefs_highlights_options_download_label": "Pellgargadurioù nevez",

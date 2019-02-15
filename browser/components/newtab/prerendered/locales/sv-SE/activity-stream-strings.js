@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Bra innehåll från hela webben, anpassat för dig",
   "prefs_topstories_options_sponsored_label": "Sponsrade nyheter",
   "prefs_topstories_sponsored_learn_more": "Läs mer",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Ett urval av sidor du har sparat eller besökt",
   "prefs_highlights_options_visited_label": "Besökta sidor",
   "prefs_highlights_options_download_label": "Senaste nedladdning",

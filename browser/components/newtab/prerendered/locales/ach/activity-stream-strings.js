@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Jami mabeco loyo ki ii kakube, kiyubo piri",
   "prefs_topstories_options_sponsored_label": "Lok ma kicwako",
   "prefs_topstories_sponsored_learn_more": "Nong ngec mapol",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Yer me kakube ma igwoko nyo ilimo",
   "prefs_highlights_options_visited_label": "Potbuk ma kilimo",
   "prefs_highlights_options_download_label": "Gam ma cokcoki loyo",

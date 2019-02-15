@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "網路上的各種超棒內容，為您量身打造",
   "prefs_topstories_options_sponsored_label": "贊助內容",
   "prefs_topstories_sponsored_learn_more": "了解更多",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "您儲存或造訪過的網站精選",
   "prefs_highlights_options_visited_label": "造訪過的頁面",
   "prefs_highlights_options_download_label": "最新下載",

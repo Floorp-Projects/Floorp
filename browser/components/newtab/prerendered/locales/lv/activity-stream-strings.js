@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Saņemiet sev pielāgotu saturu no visas pasaules",
   "prefs_topstories_options_sponsored_label": "Sponsorētie stāsti",
   "prefs_topstories_sponsored_learn_more": "Uzzināt vairāk",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Jūsu apmeklēto vai saglabāto lapu izlase",
   "prefs_highlights_options_visited_label": "Apmeklētās lapas",
   "prefs_highlights_options_download_label": "Nesenās lejupielādes",

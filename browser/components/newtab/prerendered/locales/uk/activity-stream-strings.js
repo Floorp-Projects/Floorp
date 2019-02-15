@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Чудові матеріали з усього інтернету, відібрані спеціально для вас",
   "prefs_topstories_options_sponsored_label": "Матеріали від спонсорів",
   "prefs_topstories_sponsored_learn_more": "Докладніше",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Відібрані веб-сайти, які ви зберегли чи відвідали",
   "prefs_highlights_options_visited_label": "Відвідані сторінки",
   "prefs_highlights_options_download_label": "Останні завантаження",

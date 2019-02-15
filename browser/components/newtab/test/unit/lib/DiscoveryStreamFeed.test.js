@@ -731,6 +731,20 @@ describe("DiscoveryStreamFeed", () => {
     });
   });
 
+  describe("#onAction: PREF_SHOW_SPONSORED", () => {
+    it("should call loadSpocs when preference changes", async () => {
+      sandbox.stub(feed, "loadSpocs").resolves();
+      sandbox.stub(feed.store, "dispatch");
+
+      await feed.onAction({type: at.PREF_CHANGED, data: {name: "showSponsored"}});
+
+      assert.calledOnce(feed.loadSpocs);
+      const [dispatchFn] = feed.loadSpocs.firstCall.args;
+      dispatchFn({});
+      assert.calledWith(feed.store.dispatch, ac.BroadcastToContent({}));
+    });
+  });
+
   describe("#isExpired", () => {
     it("should throw if the key is not valid", () => {
       assert.throws(() => {

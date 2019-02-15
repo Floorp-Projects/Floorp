@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Great content from around the web, personalized for you",
   "prefs_topstories_options_sponsored_label": "Sponsored Stories",
   "prefs_topstories_sponsored_learn_more": "ស្វែងយល់​បន្ថែម",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "ការជ្រើសរើស​គេហទំព័រ​ដែល​អ្នក​បាន​រក្សាទុក ឬ​មើល",
   "prefs_highlights_options_visited_label": "ទំព័រ​ដែល​បាន​ទស្សនា",
   "prefs_highlights_options_download_label": "Most Recent Download",

@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "ウェブ上の様々な場所から集められた、あなたにピッタリの優れたコンテンツ",
   "prefs_topstories_options_sponsored_label": "広告記事",
   "prefs_topstories_sponsored_learn_more": "詳しくはこちら",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "保存したり訪れたりしたサイトうち主なもの",
   "prefs_highlights_options_visited_label": "訪れたページ",
   "prefs_highlights_options_download_label": "最近のダウンロード",

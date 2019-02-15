@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Бүкіл Интернеттен алынған тамаша контент, талғамыңызға сай таңдалған",
   "prefs_topstories_options_sponsored_label": "Демеушілер мақалалары",
   "prefs_topstories_sponsored_learn_more": "Көбірек білу",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Сіз сақтаған немесе шолған таңдамалы сайттар",
   "prefs_highlights_options_visited_label": "Қаралған беттер",
   "prefs_highlights_options_download_label": "Ең соңғы жүктеме",

@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Contenius interesants de tot lo web, personalizau pa tu",
   "prefs_topstories_options_sponsored_label": "Articlos esponsorizaus",
   "prefs_topstories_sponsored_learn_more": "Saber-ne mas",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Una tría d'os puestos que has alzau u vesitau",
   "prefs_highlights_options_visited_label": "Pachinas visitadas",
   "prefs_highlights_options_download_label": "Descarga mas recient",

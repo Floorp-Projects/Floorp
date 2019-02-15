@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "वेब सँ बढियाँ कंटेंट पाबू, अहाँ खातिर पर्सनलाइज कएल गेल ",
   "prefs_topstories_options_sponsored_label": "स्पोंसर कएल स्टोरी",
   "prefs_topstories_sponsored_learn_more": "आओर जानू",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "जे साइट अहाँ विजिट कएलहुँ अथवा सहेजलहुँ ओकर चयन",
   "prefs_highlights_options_visited_label": "विजिट कएल पेज",
   "prefs_highlights_options_download_label": "हालुक डाउनलोड",

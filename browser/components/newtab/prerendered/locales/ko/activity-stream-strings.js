@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "여러분에게 맞춰진 웹에서 제공되는 훌륭한 컨텐츠",
   "prefs_topstories_options_sponsored_label": "후원된 스토리",
   "prefs_topstories_sponsored_learn_more": "자세히 보기",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "저장하거나 방문한 사이트 모음",
   "prefs_highlights_options_visited_label": "방문한 페이지",
   "prefs_highlights_options_download_label": "가장 최근 다운로드",

@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Tev dalāgōts saturs nu vysa interneta",
   "prefs_topstories_options_sponsored_label": "Sponsorāti roksti",
   "prefs_topstories_sponsored_learn_more": "Vaira",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Tevis apmaklātū voi saglobōtū lopu izlase",
   "prefs_highlights_options_visited_label": "Apmaklātōs lopys",
   "prefs_highlights_options_download_label": "Nasanōs lejupīlōdes",
