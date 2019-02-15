@@ -2164,12 +2164,18 @@ main {
     overflow: hidden;
     color: var(--newtab-text-secondary-color);
     margin: 4px 0 8px; }
-  .ds-list-item .ds-list-item-info {
+  .ds-list-item p {
+    font-size: 14px;
+    line-height: 20px;
+    margin: 8px 0 0; }
+  .ds-list-item .ds-list-item-info,
+  .ds-list-item .ds-list-item-context {
     font-size: 14px;
     line-height: 20px;
     max-height: 1.42857em;
     overflow: hidden;
-    color: var(--newtab-text-secondary-color);
+    color: #737373;
+    font-size: 13px;
     text-overflow: ellipsis; }
   .ds-list-item .ds-list-item-title {
     font-weight: 600;

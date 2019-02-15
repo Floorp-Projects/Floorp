@@ -170,9 +170,17 @@ $item-line-height: 20;
     margin: 4px 0 8px;
   }
 
-  .ds-list-item-info {
+  p {
+    font-size: $item-font-size * 1px;
+    line-height: $item-line-height * 1px;
+    margin: 8px 0 0;
+  }
+
+  .ds-list-item-info,
+  .ds-list-item-context {
     @include limit-visibile-lines(1, $item-line-height, $item-font-size);
-    color: var(--newtab-text-secondary-color);
+    color: $grey-50;
+    font-size: 13px;
     text-overflow: ellipsis;
   }
 
