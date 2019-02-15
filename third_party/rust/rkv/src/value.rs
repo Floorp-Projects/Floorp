@@ -168,15 +168,15 @@ impl<'s> Value<'s> {
 
     pub fn to_bytes(&self) -> Result<Vec<u8>, DataError> {
         match self {
-            Value::Bool(ref v) => serialize(&(Type::Bool.to_tag(), *v)),
-            Value::U64(ref v) => serialize(&(Type::U64.to_tag(), *v)),
-            Value::I64(ref v) => serialize(&(Type::I64.to_tag(), *v)),
-            Value::F64(ref v) => serialize(&(Type::F64.to_tag(), v.0)),
-            Value::Instant(ref v) => serialize(&(Type::Instant.to_tag(), *v)),
-            Value::Str(ref v) => serialize(&(Type::Str.to_tag(), v)),
-            Value::Json(ref v) => serialize(&(Type::Json.to_tag(), v)),
-            Value::Blob(ref v) => serialize(&(Type::Blob.to_tag(), v)),
-            Value::Uuid(ref v) => {
+            Value::Bool(v) => serialize(&(Type::Bool.to_tag(), *v)),
+            Value::U64(v) => serialize(&(Type::U64.to_tag(), *v)),
+            Value::I64(v) => serialize(&(Type::I64.to_tag(), *v)),
+            Value::F64(v) => serialize(&(Type::F64.to_tag(), v.0)),
+            Value::Instant(v) => serialize(&(Type::Instant.to_tag(), *v)),
+            Value::Str(v) => serialize(&(Type::Str.to_tag(), v)),
+            Value::Json(v) => serialize(&(Type::Json.to_tag(), v)),
+            Value::Blob(v) => serialize(&(Type::Blob.to_tag(), v)),
+            Value::Uuid(v) => {
                 // Processed above to avoid verbose duplication of error transforms.
                 serialize(&(Type::Uuid.to_tag(), v))
             },
@@ -188,15 +188,31 @@ impl<'s> Value<'s> {
 impl<'s> From<&'s Value<'s>> for OwnedValue {
     fn from(value: &Value) -> OwnedValue {
         match value {
-            Value::Bool(ref v) => OwnedValue::Bool(*v),
-            Value::U64(ref v) => OwnedValue::U64(*v),
-            Value::I64(ref v) => OwnedValue::I64(*v),
-            Value::F64(ref v) => OwnedValue::F64(**v),
-            Value::Instant(ref v) => OwnedValue::Instant(*v),
-            Value::Uuid(ref v) => OwnedValue::Uuid(Uuid::from_bytes(**v)),
-            Value::Str(ref v) => OwnedValue::Str(v.to_string()),
-            Value::Json(ref v) => OwnedValue::Json(v.to_string()),
-            Value::Blob(ref v) => OwnedValue::Blob(v.to_vec()),
+            Value::Bool(v) => OwnedValue::Bool(*v),
+            Value::U64(v) => OwnedValue::U64(*v),
+            Value::I64(v) => OwnedValue::I64(*v),
+            Value::F64(v) => OwnedValue::F64(**v),
+            Value::Instant(v) => OwnedValue::Instant(*v),
+            Value::Uuid(v) => OwnedValue::Uuid(Uuid::from_bytes(**v)),
+            Value::Str(v) => OwnedValue::Str(v.to_string()),
+            Value::Json(v) => OwnedValue::Json(v.to_string()),
+            Value::Blob(v) => OwnedValue::Blob(v.to_vec()),
+        }
+    }
+}
+
+impl<'s> From<&'s OwnedValue> for Value<'s> {
+    fn from(value: &OwnedValue) -> Value {
+        match value {
+            OwnedValue::Bool(v) => Value::Bool(*v),
+            OwnedValue::U64(v) => Value::U64(*v),
+            OwnedValue::I64(v) => Value::I64(*v),
+            OwnedValue::F64(v) => Value::F64(OrderedFloat::from(*v)),
+            OwnedValue::Instant(v) => Value::Instant(*v),
+            OwnedValue::Uuid(v) => Value::Uuid(v.as_bytes()),
+            OwnedValue::Str(v) => Value::Str(v),
+            OwnedValue::Json(v) => Value::Json(v),
+            OwnedValue::Blob(v) => Value::Blob(v),
         }
     }
 }
