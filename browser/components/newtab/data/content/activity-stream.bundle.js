@@ -7177,11 +7177,11 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
 
   render() {
     return external_React_default.a.createElement(
-      SpocIntersectionObserver["SpocIntersectionObserver"],
-      { campaignId: this.props.campaignId, dispatch: this.props.dispatch },
+      SafeAnchor_SafeAnchor,
+      { url: this.props.url, className: "ds-card", onLinkClick: this.onLinkClick },
       external_React_default.a.createElement(
-        SafeAnchor_SafeAnchor,
-        { url: this.props.url, className: "ds-card", onLinkClick: this.onLinkClick },
+        SpocIntersectionObserver["SpocIntersectionObserver"],
+        { campaignId: this.props.campaignId, dispatch: this.props.dispatch },
         external_React_default.a.createElement(
           "div",
           { className: "img-wrapper" },
