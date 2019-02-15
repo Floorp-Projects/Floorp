@@ -347,35 +347,12 @@ this.studyEndObserved = function(recipeId) {
 
 this.withSendEventStub = function(testFunction) {
   return async function wrappedTestFunction(...args) {
-    /* Checks that calls match the event schema. */
-    function checkEventMatchesSchema(method, object, value, extra) {
-      let match = true;
-      const spec = Array.from(Object.values(TelemetryEvents.eventSchema))
-        .filter(spec => spec.methods.includes(method))[0];
-
-      if (spec) {
-        if (!spec.objects.includes(object)) {
-          match = false;
-        }
-
-        for (const key of Object.keys(extra)) {
-          if (!spec.extra_keys.includes(key)) {
-            match = false;
-          }
-        }
-      } else {
-        match = false;
-      }
-
-      ok(match, `sendEvent(${method}, ${object}, ${value}, ${JSON.stringify(extra)}) should match spec`);
-    }
-
-    const stub = sinon.stub(TelemetryEvents, "sendEvent");
-    stub.callsFake(checkEventMatchesSchema);
+    const stub = sinon.spy(TelemetryEvents, "sendEvent");
     try {
       await testFunction(...args, stub);
     } finally {
       stub.restore();
+      Assert.ok(!stub.threw(), "some telemetry call failed");
     }
   };
 };
