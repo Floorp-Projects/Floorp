@@ -12,7 +12,6 @@ extern crate log;
 extern crate moz_task;
 extern crate nserror;
 extern crate nsstring;
-extern crate ordered_float;
 extern crate rkv;
 extern crate storage_variant;
 #[macro_use]
@@ -28,8 +27,8 @@ use libc::c_void;
 use moz_task::{create_thread, TaskRunnable};
 use nserror::{nsresult, NS_ERROR_FAILURE, NS_ERROR_NO_AGGREGATION, NS_OK};
 use nsstring::{nsACString, nsCString};
-use owned_value::{owned_to_variant, variant_to_owned, OwnedValue};
-use rkv::{Rkv, SingleStore};
+use owned_value::{owned_to_variant, variant_to_owned};
+use rkv::{OwnedValue, Rkv, SingleStore};
 use std::{
     ptr,
     sync::{Arc, RwLock},
@@ -328,6 +327,6 @@ impl KeyValuePair {
     }
 
     fn get_value(&self) -> Result<RefPtr<nsIVariant>, KeyValueError> {
-        Ok(owned_to_variant(self.value.clone()))
+        Ok(owned_to_variant(self.value.clone())?)
     }
 }
