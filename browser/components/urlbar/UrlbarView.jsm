@@ -410,7 +410,7 @@ class UrlbarView {
         }
         break;
       default:
-        if (resultIndex == 0) {
+        if (result.heuristic) {
           setAction(bundle.GetStringFromName("visit"));
         } else {
           setURL();

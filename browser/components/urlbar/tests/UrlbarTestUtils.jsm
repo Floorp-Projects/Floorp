@@ -375,7 +375,7 @@ class UrlbarAbstraction {
       details.postData = postData;
       details.type = context.results[index].type;
       details.heuristic = context.results[index].heuristic;
-      details.autofill = index == 0 && context.results[index].autofill;
+      details.autofill = !!context.results[index].autofill;
       details.image = element.getElementsByClassName("urlbarView-favicon")[0].src;
       details.title = context.results[index].title;
       details.tags = "tags" in context.results[index].payload ?
@@ -407,12 +407,12 @@ class UrlbarAbstraction {
       details.autofill = style.includes("autofill");
       details.image = element.getAttribute("image");
       details.title = element.getAttribute("title");
-      details.tags = [...element.getElementsByClassName("ac-tags")].map(e =>
-        e.textContent);
+      details.tags = style.includes("tag") ?
+        [...element.getElementsByClassName("ac-tags")].map(e => e.textContent) : [];
       let typeIconStyle = this.window.getComputedStyle(element._typeIcon);
       details.displayed = {
         title: element._titleText.textContent,
-        action: element._actionText.textContent,
+        action: action ? element._actionText.textContent : "",
         typeIcon: typeIconStyle.listStyleImage,
       };
       if (details.type == UrlbarUtils.RESULT_TYPE.SEARCH) {

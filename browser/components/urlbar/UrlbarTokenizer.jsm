@@ -173,7 +173,7 @@ var UrlbarTokenizer = {
   tokenize(queryContext) {
     logger.info("Tokenizing", queryContext);
     let searchString = queryContext.searchString;
-    if (searchString.length == 0) {
+    if (!searchString.trim()) {
       queryContext.tokens = [];
       return queryContext;
     }
