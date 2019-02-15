@@ -104,6 +104,8 @@ nsView::~nsView() {
   // Destroy and release the widget
   DestroyWidget();
 
+  MOZ_RELEASE_ASSERT(!mFrame);
+
   delete mDirtyRegion;
 }
 
