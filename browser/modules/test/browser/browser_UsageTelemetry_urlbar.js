@@ -1,3 +1,11 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
+
+/**
+ * This file tests urlbar telemetry with search related actions.
+ */
+
 "use strict";
 
 const SCALAR_URLBAR = "browser.engagement.navigation.urlbar";
