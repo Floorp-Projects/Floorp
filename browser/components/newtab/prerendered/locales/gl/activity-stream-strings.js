@@ -49,7 +49,6 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Os mellores contidos dispoñíbeis na web, personalizados para vostede",
   "prefs_topstories_options_sponsored_label": "Historias patrocinadas",
   "prefs_topstories_sponsored_learn_more": "Máis información",
-  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Unha selección de sitios que gardou ou visitou",
   "prefs_highlights_options_visited_label": "Páxinas visitadas",
   "prefs_highlights_options_download_label": "A descarga máis recente",

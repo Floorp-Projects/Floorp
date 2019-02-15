@@ -49,7 +49,6 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "De contengut interessant de tot lo web, personalizat per vos",
   "prefs_topstories_options_sponsored_label": "Articles pairinejats",
   "prefs_topstories_sponsored_learn_more": "Ne saber mai",
-  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Una seleccion de sites qu’avètz enregistrats o visitats",
   "prefs_highlights_options_visited_label": "Paginas visitadas",
   "prefs_highlights_options_download_label": "Telecargament mai recent",

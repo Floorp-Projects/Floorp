@@ -49,7 +49,6 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Отлично съдържание от цялата Мрежа, подбрано лично за вас",
   "prefs_topstories_options_sponsored_label": "Платени публикации",
   "prefs_topstories_sponsored_learn_more": "Научете повече",
-  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Избрани страници, които сте запазили или посетили",
   "prefs_highlights_options_visited_label": "Посетени страници",
   "prefs_highlights_options_download_label": "Последни изтегляния",

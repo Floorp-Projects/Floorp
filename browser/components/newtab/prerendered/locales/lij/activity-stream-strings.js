@@ -49,7 +49,6 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "I megio contegnui pigiæ in gio pe-a ræ, personalizæ pe ti",
   "prefs_topstories_options_sponsored_label": "Stöie sponsorizæ",
   "prefs_topstories_sponsored_learn_more": "Atre informaçioin",
-  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "'Na seleçion di sciti che t'ê sarvou ò vixitou",
   "prefs_highlights_options_visited_label": "Pagine vixitæ",
   "prefs_highlights_options_download_label": "Urtimi descaregamenti",

@@ -275,7 +275,7 @@ this.AboutPreferences = class AboutPreferences {
 
     if (discoveryStreamConfig.enabled) {
       // If Discovery Stream is enabled hide Home Content options
-      contentsGroup.style.visibility = "hidden";
+      contentsGroup.style.visibility = "collapse";
 
       const discoveryGroup = homeGroup.insertAdjacentElement("afterend", homeGroup.cloneNode());
       discoveryGroup.id = "discoveryContentsGroup";
@@ -305,7 +305,7 @@ this.AboutPreferences = class AboutPreferences {
         // If there is no element to reuse create one
         const discoveryDetails = createAppend("vbox", discoveryGroup);
         const subcheck = createAppend("checkbox", discoveryDetails);
-        subcheck.setAttribute("label", formatString("prefs_sponsored_stories_status_label"));
+        subcheck.setAttribute("label", formatString("prefs_topstories_options_sponsored_label"));
         linkPref(subcheck, PREF_SHOW_SPONSORED, "bool");
       }
 
@@ -320,7 +320,7 @@ this.AboutPreferences = class AboutPreferences {
           // Unconditionally update the UI for a fast user response and in
           // order to help with testing
           discoveryGroup.style.display = "none";
-          contentsGroup.style.visibility = "visible";
+          contentsGroup.style.visibility = "";
           if (sponsoredStoriesCheckbox) {
             // If we reused the checkbox element we need to restore it
             sponsoredStoriesCheckbox.remove();

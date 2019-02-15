@@ -49,7 +49,6 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Great content from around the web, personalized for you",
   "prefs_topstories_options_sponsored_label": "Mga Na-sponsor na Kwento",
   "prefs_topstories_sponsored_learn_more": "Matuto ng higit pa",
-  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Ang isang seleksyon ng mga site na iyong nai-save o binisita",
   "prefs_highlights_options_visited_label": "Mga pahinang binisita",
   "prefs_highlights_options_download_label": "Pinakabagong Nai-download",

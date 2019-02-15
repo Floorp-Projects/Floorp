@@ -49,7 +49,6 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Agbur meqqren seg umaḍal, yettwag i kečč",
   "prefs_topstories_options_sponsored_label": "Tiqṣidin yettwarefden",
   "prefs_topstories_sponsored_learn_more": "Issin ugar",
-  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Tafrant n yismal i teskelseḍ neɣ i twalaḍ",
   "prefs_highlights_options_visited_label": "isebtar yettwarzan",
   "prefs_highlights_options_download_label": "Isidar imaynuten",
