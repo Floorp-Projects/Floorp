@@ -76,27 +76,8 @@ class SETA(object):
                     if type(low_value_tasks[0]) == list:
                         low_value_tasks = [self._get_task_string(x) for x in low_value_tasks]
 
-            # hack seta tasks to run 'opt' jobs on 'pgo' builds - see Bug 1522111
-            def opt_to_pgo(label):
-                opt = ['test-windows10-64/opt',
-                       'test-windows7-32/opt',
-                       'test-linux64/opt',
-                       'test-windows10-64-qr/opt',
-                       'test-windows7-32-qr/opt',
-                       'test-linux64-qr/opt']
-                pgo = ['test-windows10-64-pgo/opt',
-                       'test-windows7-32-pgo/opt',
-                       'test-linux64-pgo/opt',
-                       'test-windows10-64-pgo-qr/opt',
-                       'test-windows7-32-pgo-qr/opt',
-                       'test-linux64-pgo-qr/opt']
-                for iter in range(0, len(opt)):
-                    if label.startswith(opt[iter]):
-                        label = label.replace(opt[iter], pgo[iter])
-                return label
-
             # ensure no build tasks slipped in, we never want to optimize out those
-            low_value_tasks = [opt_to_pgo(x) for x in low_value_tasks if 'build' not in x]
+            low_value_tasks = [x for x in low_value_tasks if 'build' not in x.lower()]
 
         # In the event of request times out, requests will raise a TimeoutError.
         except exceptions.Timeout:
