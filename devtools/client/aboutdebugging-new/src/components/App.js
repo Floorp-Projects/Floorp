@@ -137,17 +137,12 @@ class App extends PureComponent {
         path: "/runtime/:runtimeId",
         render: routeProps => this.renderRuntime(routeProps),
       }),
+      // default route when there's no match which includes "/"
+      // TODO: the url does not match "/" means invalid URL,
+      // in this case maybe we'd like to do something else than a redirect.
+      // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1509897
       Route({
-        path: "/",
-        exact: true,
-        // will redirect to This Firefox
-        render: routeProps => this.renderRuntime(routeProps),
-      }),
-      // default route when there's no match
-      // TODO: maybe we'd like to do something else than a redirect. See:
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=1509897
-      Route({
-        render: () => Redirect({ to: "/"}),
+        render: () => Redirect({ to: "/connect"}),
       })
     );
   }

@@ -4,12 +4,12 @@
 "use strict";
 
 /**
- * Test that the initial route is /runtime/this-firefox
+ * Test that the initial route is /connect
  */
 add_task(async function() {
-  info("Check root route redirects to 'This Firefox'");
+  info("Check root route redirects to connect page");
   const { document, tab } = await openAboutDebugging();
-  is(document.location.hash, "#/runtime/this-firefox");
+  is(document.location.hash, "#/connect");
 
   await removeTab(tab);
 });
@@ -34,7 +34,7 @@ add_task(async function() {
       document.title,
       "Debugging - Runtime / this-firefox",
       "Checking title for 'runtime' page"
-    );
+  );
 
   info("Check 'Connect' page");
   document.location.hash = "#/connect";
@@ -44,7 +44,7 @@ add_task(async function() {
       document.title,
       "Debugging - Connect",
       "Checking title for 'connect' page"
-    );
+  );
 
   info("Check 'USB device runtime' page");
   // connect to a mocked USB runtime
@@ -62,7 +62,7 @@ add_task(async function() {
       document.title,
       "Debugging - Runtime / 1337id",
       "Checking title for 'runtime' page with USB device"
-    );
+  );
   ok(runtimeLabel.includes("Lorem ipsum"), "Runtime is displayed with the mocked name");
 
   await removeTab(tab);
@@ -75,19 +75,19 @@ add_task(async function() {
   info("Check an invalid route redirects to root");
   const { document, tab } = await openAboutDebugging();
 
-  info("Waiting for a non-runtime page to load");
-  document.location.hash = "#/connect";
-  await waitUntil(() => document.querySelector(".js-connect-page"));
-
-  info("Update hash & wait for a redirect to root ('This Firefox')");
-  document.location.hash = "#/lorem-ipsum";
+  info("Waiting for a non connect page to load");
+  document.location.hash = "#/runtime/this-firefox";
   await waitUntil(() => document.querySelector(".js-runtime-page"));
+
+  info("Update hash & wait for a redirect to root (connect page)");
+  document.location.hash = "#/lorem-ipsum";
+  await waitUntil(() => document.querySelector(".js-connect-page"));
   is(
       document.title,
-      "Debugging - Runtime / this-firefox",
-      "Checking title for 'runtime' page after redirect to root"
-    );
-  is(document.location.hash, "#/runtime/this-firefox", "Redirected to root");
+      "Debugging - Connect",
+      "Checking title for 'connect' page"
+  );
+  is(document.location.hash, "#/connect", "Redirected to root");
 
   await removeTab(tab);
 });

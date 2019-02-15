@@ -37,12 +37,7 @@ add_task(async function() {
 
   await promiseAutocompleteResultPopup("moz open a search");
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
-  if (UrlbarPrefs.get("quantumbar")) {
-    Assert.equal(result.image, UrlbarUtils.ICON.SEARCH_GLASS,
-      "Should have the search icon image");
-  } else {
-    Assert.equal(result.image, ICON_URI, "Should have the correct image");
-  }
+  Assert.equal(result.image, ICON_URI, "Should have the correct image");
 
   let tabPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   EventUtils.synthesizeKey("KEY_Enter");

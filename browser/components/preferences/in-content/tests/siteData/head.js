@@ -127,66 +127,29 @@ function assertSitesListed(doc, hosts) {
   is(removeAllBtn.disabled, false, "Should enable the removeAllBtn button");
 }
 
-const mockSiteDataManager = {
+async function addTestData(data) {
+  let hosts = [];
 
-  _SiteDataManager: null,
-  _originalQMS: null,
-  _originalRemoveQuotaUsage: null,
-
-  getUsage(onUsageResult) {
-    let result = this.fakeSites.map(site => ({
-      origin: site.principal.origin,
-      usage: site.usage,
-      persisted: site.persisted,
-      lastAccessed: site.lastAccessed,
-    }));
-    onUsageResult({ result, resultCode: Cr.NS_OK });
-  },
-
-  _removeQuotaUsage(site) {
-    var target = site.principals[0].URI.host;
-    this.fakeSites = this.fakeSites.filter(fakeSite => {
-      return fakeSite.principal.URI.host != target;
-    });
-  },
-
-  register(siteDataManager, fakeSites) {
-    this._SiteDataManager = siteDataManager;
-    this._originalQMS = this._SiteDataManager._qms;
-    this._SiteDataManager._qms = this;
-    this._originalRemoveQuotaUsage = this._SiteDataManager._removeQuotaUsage;
-    this._SiteDataManager._removeQuotaUsage = this._removeQuotaUsage.bind(this);
-    // Add some fake data.
-    this.fakeSites = fakeSites;
-    for (let site of fakeSites) {
-      if (!site.principal) {
-        site.principal = Services.scriptSecurityManager
-          .createCodebasePrincipalFromOrigin(site.origin);
-      }
-
-      let uri = site.principal.URI;
-      try {
-        site.baseDomain = Services.eTLD.getBaseDomainFromHost(uri.host);
-      } catch (e) {
-        site.baseDomain = uri.host;
-      }
-
-      // Add some cookies if needed.
-      for (let i = 0; i < (site.cookies || 0); i++) {
-        Services.cookies.add(uri.host, uri.pathQueryRef, Cu.now(), i,
-          false, false, false, Date.now() + 1000 * 60 * 60, {},
-          Ci.nsICookie2.SAMESITE_UNSET);
-      }
+  for (let site of data) {
+    is(typeof site.origin, "string", "Passed an origin string into addTestData.");
+    if (site.persisted) {
+      await SiteDataTestUtils.persist(site.origin);
     }
-  },
 
-  async unregister() {
-    await this._SiteDataManager.removeAll();
-    this.fakeSites = null;
-    this._SiteDataManager._qms = this._originalQMS;
-    this._SiteDataManager._removeQuotaUsage = this._originalRemoveQuotaUsage;
-  },
-};
+    if (site.usage) {
+      await SiteDataTestUtils.addToIndexedDB(site.origin, site.usage);
+    }
+
+    for (let i = 0; i < (site.cookies || 0); i++) {
+      SiteDataTestUtils.addToCookies(site.origin, Cu.now());
+    }
+
+    let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(site.origin);
+    hosts.push(principal.URI.host);
+  }
+
+  return hosts;
+}
 
 function promiseCookiesCleared() {
   return TestUtils.topicObserved("cookie-changed", (subj, data) => {

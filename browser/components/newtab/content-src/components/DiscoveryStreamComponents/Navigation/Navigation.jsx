@@ -1,9 +1,10 @@
 import React from "react";
+import {SafeAnchor} from "../SafeAnchor/SafeAnchor";
 
 export class Topic extends React.PureComponent {
   render() {
     const {url, name} = this.props;
-    return (<li><a key={name} href={url}>{name}</a></li>);
+    return (<li><SafeAnchor key={name} url={url}>{name}</SafeAnchor></li>);
   }
 }
 

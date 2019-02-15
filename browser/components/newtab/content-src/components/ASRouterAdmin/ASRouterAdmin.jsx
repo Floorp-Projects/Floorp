@@ -25,10 +25,21 @@ function relativeTime(timestamp) {
   return new Date(timestamp).toLocaleString();
 }
 
+const OPT_OUT_PREF = "discoverystream.optOut.0";
+const LAYOUT_VARIANTS = {
+  "basic": "Basic default layout (on by default in nightly)",
+  "dev-test-all": "A little bit of everything. Good layout for testing all components",
+  "dev-test-feeds": "Stress testing for slow feeds",
+};
 class DiscoveryStreamAdmin extends React.PureComponent {
   constructor(props) {
     super(props);
     this.onEnableToggle = this.onEnableToggle.bind(this);
+    this.changeEndpointVariant = this.changeEndpointVariant.bind(this);
+  }
+
+  get isOptedOut() {
+    return this.props.otherPrefs[OPT_OUT_PREF];
   }
 
   setConfigValue(name, value) {
@@ -37,6 +48,13 @@ class DiscoveryStreamAdmin extends React.PureComponent {
 
   onEnableToggle(event) {
     this.setConfigValue("enabled", event.target.checked);
+  }
+
+  changeEndpointVariant(event) {
+    const endpoint = this.props.state.config.layout_endpoint;
+    if (endpoint) {
+      this.setConfigValue("layout_endpoint", endpoint.replace(/layout_variant=.+/, `layout_variant=${event.target.value}`));
+    }
   }
 
   renderComponent(width, component) {
@@ -53,6 +71,12 @@ class DiscoveryStreamAdmin extends React.PureComponent {
         {component.feed && this.renderFeed(component.feed)}
       </tbody></table>
     );
+  }
+
+  isCurrentVariant(id) {
+    const endpoint = this.props.state.config.layout_endpoint;
+    const isMatch = endpoint && !!endpoint.match(`layout_variant=${id}`);
+    return isMatch;
   }
 
   renderFeed(feed) {
@@ -75,13 +99,27 @@ class DiscoveryStreamAdmin extends React.PureComponent {
   }
 
   render() {
+    const {isOptedOut} = this;
+
     const {config, lastUpdated, layout} = this.props.state;
     return (<div>
-      <div className="dsEnabled"><input type="checkbox" checked={config.enabled} onChange={this.onEnableToggle} /> enabled</div>
 
+      <div className="dsEnabled"><input type="checkbox" checked={config.enabled} onChange={this.onEnableToggle} /> enabled
+        {isOptedOut ? (<span className="optOutNote">(Note: User has opted-out. Check this box to reset)</span>) : ""}</div>
+
+      <h3>Endpoint variant</h3>
+      <p>You can also change this manually by changing this pref: <code>browser.newtabpage.activity-stream.discoverystream.config</code></p>
+      <table style={config.enabled ? null : {opacity: 0.5}}><tbody>
+        {Object.keys(LAYOUT_VARIANTS).map(id => (<Row key={id}>
+          <td className="min"><input type="radio" value={id} checked={this.isCurrentVariant(id)} onChange={this.changeEndpointVariant} /></td>
+          <td className="min">{id}</td>
+          <td>{LAYOUT_VARIANTS[id]}</td>
+        </Row>))}
+      </tbody></table>
+
+      <h3>Caching info</h3>
       <table style={config.enabled ? null : {opacity: 0.5}}><tbody>
         <Row><td className="min">Data last fetched</td><td>{relativeTime(lastUpdated) || "(no data)"}</td></Row>
-        <Row><td className="min">Endpoint</td><td>{config.layout_endpoint || "(empty)"}</td></Row>
       </tbody></table>
 
       <h3>Layout</h3>
@@ -542,7 +580,7 @@ export class ASRouterAdminInner extends React.PureComponent {
       case "ds":
         return (<React.Fragment>
           <h2>Discovery Stream</h2>
-          <DiscoveryStreamAdmin state={this.props.DiscoveryStream} dispatch={this.props.dispatch} />
+          <DiscoveryStreamAdmin state={this.props.DiscoveryStream} otherPrefs={this.props.Prefs.values} dispatch={this.props.dispatch} />
         </React.Fragment>);
       default:
         return (<React.Fragment>
@@ -584,4 +622,4 @@ export class ASRouterAdminInner extends React.PureComponent {
 }
 
 export const _ASRouterAdmin = props => (<SimpleHashRouter><ASRouterAdminInner {...props} /></SimpleHashRouter>);
-export const ASRouterAdmin = connect(state => ({Sections: state.Sections, DiscoveryStream: state.DiscoveryStream}))(_ASRouterAdmin);
+export const ASRouterAdmin = connect(state => ({Sections: state.Sections, DiscoveryStream: state.DiscoveryStream, Prefs: state.Prefs}))(_ASRouterAdmin);
