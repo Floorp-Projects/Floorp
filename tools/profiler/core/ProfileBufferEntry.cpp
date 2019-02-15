@@ -25,47 +25,92 @@ using namespace mozilla;
 ////////////////////////////////////////////////////////////////////////
 // BEGIN ProfileBufferEntry
 
-ProfileBufferEntry::ProfileBufferEntry() : mKind(Kind::INVALID) {
-  u.mString = nullptr;
-}
+ProfileBufferEntry::ProfileBufferEntry()
+    : mKind(Kind::INVALID), mStorage{0, 0, 0, 0, 0, 0, 0, 0} {}
 
 // aString must be a static string.
 ProfileBufferEntry::ProfileBufferEntry(Kind aKind, const char* aString)
     : mKind(aKind) {
-  u.mString = aString;
+  memcpy(mStorage, &aString, sizeof(aString));
 }
 
 ProfileBufferEntry::ProfileBufferEntry(Kind aKind, char aChars[kNumChars])
     : mKind(aKind) {
-  memcpy(u.mChars, aChars, kNumChars);
+  memcpy(mStorage, aChars, kNumChars);
 }
 
 ProfileBufferEntry::ProfileBufferEntry(Kind aKind, void* aPtr) : mKind(aKind) {
-  u.mPtr = aPtr;
+  memcpy(mStorage, &aPtr, sizeof(aPtr));
 }
 
 ProfileBufferEntry::ProfileBufferEntry(Kind aKind, ProfilerMarker* aMarker)
     : mKind(aKind) {
-  u.mMarker = aMarker;
+  memcpy(mStorage, &aMarker, sizeof(aMarker));
 }
 
 ProfileBufferEntry::ProfileBufferEntry(Kind aKind, double aDouble)
     : mKind(aKind) {
-  u.mDouble = aDouble;
+  memcpy(mStorage, &aDouble, sizeof(aDouble));
 }
 
 ProfileBufferEntry::ProfileBufferEntry(Kind aKind, int aInt) : mKind(aKind) {
-  u.mInt = aInt;
+  memcpy(mStorage, &aInt, sizeof(aInt));
 }
 
 ProfileBufferEntry::ProfileBufferEntry(Kind aKind, int64_t aInt64)
     : mKind(aKind) {
-  u.mInt64 = aInt64;
+  memcpy(mStorage, &aInt64, sizeof(aInt64));
 }
 
 ProfileBufferEntry::ProfileBufferEntry(Kind aKind, uint64_t aUint64)
     : mKind(aKind) {
-  u.mUint64 = aUint64;
+  memcpy(mStorage, &aUint64, sizeof(aUint64));
+}
+
+const char* ProfileBufferEntry::GetString() const {
+  const char* result;
+  memcpy(&result, mStorage, sizeof(result));
+  return result;
+}
+
+void* ProfileBufferEntry::GetPtr() const {
+  void* result;
+  memcpy(&result, mStorage, sizeof(result));
+  return result;
+}
+
+ProfilerMarker* ProfileBufferEntry::GetMarker() const {
+  ProfilerMarker* result;
+  memcpy(&result, mStorage, sizeof(result));
+  return result;
+}
+
+double ProfileBufferEntry::GetDouble() const {
+  double result;
+  memcpy(&result, mStorage, sizeof(result));
+  return result;
+}
+
+int ProfileBufferEntry::GetInt() const {
+  int result;
+  memcpy(&result, mStorage, sizeof(result));
+  return result;
+}
+
+int64_t ProfileBufferEntry::GetInt64() const {
+  int64_t result;
+  memcpy(&result, mStorage, sizeof(result));
+  return result;
+}
+
+uint64_t ProfileBufferEntry::GetUint64() const {
+  uint64_t result;
+  memcpy(&result, mStorage, sizeof(result));
+  return result;
+}
+
+void ProfileBufferEntry::CopyCharsInto(char (&aOutArray)[kNumChars]) const {
+  memcpy(aOutArray, mStorage, kNumChars);
 }
 
 // END ProfileBufferEntry
@@ -906,7 +951,7 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
     }
 
     if (e.Get().IsThreadId()) {
-      int threadId = e.Get().u.mInt;
+      int threadId = e.Get().GetInt();
       e.Next();
 
       // Ignore samples that are for the wrong thread.
@@ -922,7 +967,7 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
     ProfileSample sample;
 
     if (e.Has() && e.Get().IsTime()) {
-      sample.mTime = e.Get().u.mDouble;
+      sample.mTime = e.Get().GetDouble();
       e.Next();
 
       // Ignore samples that are too old.
@@ -943,7 +988,7 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
 
         // Bug 753041: We need a double cast here to tell GCC that we don't
         // want to sign extend 32-bit addresses starting with 0xFXXXXXX.
-        unsigned long long pc = (unsigned long long)(uintptr_t)e.Get().u.mPtr;
+        unsigned long long pc = (unsigned long long)(uintptr_t)e.Get().GetPtr();
         char buf[20];
         SprintfLiteral(buf, "%#llx", pc);
         stack = aUniqueStacks.AppendFrame(stack, UniqueStacks::FrameKey(buf));
@@ -952,13 +997,13 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
       } else if (e.Get().IsLabel()) {
         numFrames++;
 
-        const char* label = e.Get().u.mString;
+        const char* label = e.Get().GetString();
         e.Next();
 
         using FrameFlags = js::ProfilingStackFrame::Flags;
         uint32_t frameFlags = 0;
         if (e.Has() && e.Get().IsFrameFlags()) {
-          frameFlags = uint32_t(e.Get().u.mUint64);
+          frameFlags = uint32_t(e.Get().GetUint64());
           e.Next();
         }
 
@@ -970,8 +1015,9 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
         dynStrBuf[0] = '\0';
         while (e.Has()) {
           if (e.Get().IsDynamicStringFragment()) {
+            char chars[ProfileBufferEntry::kNumChars];
+            e.Get().CopyCharsInto(chars);
             for (size_t j = 0; j < ProfileBufferEntry::kNumChars; j++) {
-              const char* chars = e.Get().u.mChars;
               if (i < kMaxFrameKeyLength) {
                 dynStrBuf[i] = chars[j];
                 i++;
@@ -1006,19 +1052,19 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
 
         Maybe<unsigned> line;
         if (e.Has() && e.Get().IsLineNumber()) {
-          line = Some(unsigned(e.Get().u.mInt));
+          line = Some(unsigned(e.Get().GetInt()));
           e.Next();
         }
 
         Maybe<unsigned> column;
         if (e.Has() && e.Get().IsColumnNumber()) {
-          column = Some(unsigned(e.Get().u.mInt));
+          column = Some(unsigned(e.Get().GetInt()));
           e.Next();
         }
 
         Maybe<unsigned> category;
         if (e.Has() && e.Get().IsCategory()) {
-          category = Some(unsigned(e.Get().u.mInt));
+          category = Some(unsigned(e.Get().GetInt()));
           e.Next();
         }
 
@@ -1030,7 +1076,7 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
         numFrames++;
 
         // A JIT frame may expand to multiple frames due to inlining.
-        void* pc = e.Get().u.mPtr;
+        void* pc = e.Get().GetPtr();
         const Maybe<nsTArray<UniqueStacks::FrameKey>>& frameKeys =
             aUniqueStacks.LookupFramesForJITAddressFromBufferPos(pc,
                                                                  e.CurPos());
@@ -1067,17 +1113,17 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
     }
 
     if (e.Has() && e.Get().IsResponsiveness()) {
-      sample.mResponsiveness = Some(e.Get().u.mDouble);
+      sample.mResponsiveness = Some(e.Get().GetDouble());
       e.Next();
     }
 
     if (e.Has() && e.Get().IsResidentMemory()) {
-      sample.mRSS = Some(e.Get().u.mDouble);
+      sample.mRSS = Some(e.Get().GetDouble());
       e.Next();
     }
 
     if (e.Has() && e.Get().IsUnsharedMemory()) {
-      sample.mUSS = Some(e.Get().u.mDouble);
+      sample.mUSS = Some(e.Get().GetDouble());
       e.Next();
     }
 
@@ -1109,7 +1155,7 @@ void ProfileBuffer::AddJITInfoForRange(uint64_t aRangeStart, int aThreadId,
           }
 
           MOZ_ASSERT(e.Get().IsThreadId());
-          int threadId = e.Get().u.mInt;
+          int threadId = e.Get().GetInt();
           e.Next();
 
           // Ignore samples that are for a different thread.
@@ -1119,7 +1165,7 @@ void ProfileBuffer::AddJITInfoForRange(uint64_t aRangeStart, int aThreadId,
 
           while (e.Has() && !e.Get().IsThreadId()) {
             if (e.Get().IsJitReturnAddr()) {
-              aJITAddressConsumer(e.Get().u.mPtr);
+              aJITAddressConsumer(e.Get().GetPtr());
             }
             e.Next();
           }
@@ -1142,7 +1188,7 @@ void ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
   // samples.
   while (e.Has()) {
     if (e.Get().IsMarker()) {
-      const ProfilerMarker* marker = e.Get().u.mMarker;
+      const ProfilerMarker* marker = e.Get().GetMarker();
       if (marker->GetTime() >= aSinceTime &&
           marker->GetThreadId() == aThreadId) {
         marker->StreamJSON(aWriter, aProcessStartTime, aUniqueStacks);
@@ -1200,7 +1246,7 @@ void ProfileBuffer::StreamProfilerOverheadToJSON(
   while (e.Has()) {
     // valid sequence: ProfilerOverheadTime, ProfilerOverheadDuration * 4
     if (e.Get().IsProfilerOverheadTime()) {
-      double time = e.Get().u.mDouble;
+      double time = e.Get().GetDouble();
       if (time >= aSinceTime) {
         e.Next();
         if (!e.Has() || !e.Get().IsProfilerOverheadDuration()) {
@@ -1208,28 +1254,28 @@ void ProfileBuffer::StreamProfilerOverheadToJSON(
               "expected a ProfilerOverheadDuration entry after "
               "ProfilerOverheadTime");
         }
-        double locking = e.Get().u.mDouble;
+        double locking = e.Get().GetDouble();
         e.Next();
         if (!e.Has() || !e.Get().IsProfilerOverheadDuration()) {
           ERROR_AND_CONTINUE(
               "expected a ProfilerOverheadDuration entry after "
               "ProfilerOverheadTime,ProfilerOverheadDuration");
         }
-        double cleaning = e.Get().u.mDouble;
+        double cleaning = e.Get().GetDouble();
         e.Next();
         if (!e.Has() || !e.Get().IsProfilerOverheadDuration()) {
           ERROR_AND_CONTINUE(
               "expected a ProfilerOverheadDuration entry after "
               "ProfilerOverheadTime,ProfilerOverheadDuration*2");
         }
-        double counter = e.Get().u.mDouble;
+        double counter = e.Get().GetDouble();
         e.Next();
         if (!e.Has() || !e.Get().IsProfilerOverheadDuration()) {
           ERROR_AND_CONTINUE(
               "expected a ProfilerOverheadDuration entry after "
               "ProfilerOverheadTime,ProfilerOverheadDuration*3");
         }
-        double thread = e.Get().u.mDouble;
+        double thread = e.Get().GetDouble();
 
         if (firstTime == 0.0) {
           firstTime = time;
@@ -1345,29 +1391,29 @@ void ProfileBuffer::StreamCountersToJSON(SpliceableJSONWriter& aWriter,
   while (e.Has()) {
     // skip all non-Counters, including if we start in the middle of a counter
     if (e.Get().IsCounterId()) {
-      void* id = e.Get().u.mPtr;
+      void* id = e.Get().GetPtr();
       CounterMap& counter = counters.GetOrInsert(id);
       e.Next();
       if (!e.Has() || !e.Get().IsTime()) {
         ERROR_AND_CONTINUE("expected a Time entry");
       }
-      double time = e.Get().u.mDouble;
+      double time = e.Get().GetDouble();
       if (time >= aSinceTime) {
         e.Next();
         while (e.Has() && e.Get().IsCounterKey()) {
-          uint64_t key = e.Get().u.mUint64;
+          uint64_t key = e.Get().GetUint64();
           CounterKeyedSamples& data = counter.GetOrInsert(key);
           e.Next();
           if (!e.Has() || !e.Get().IsCount()) {
             ERROR_AND_CONTINUE("expected a Count entry");
           }
-          int64_t count = e.Get().u.mUint64;
+          int64_t count = e.Get().GetUint64();
           e.Next();
           uint64_t number;
           if (!e.Has() || !e.Get().IsNumber()) {
             number = 0;
           } else {
-            number = e.Get().u.mInt64;
+            number = e.Get().GetInt64();
           }
           CounterKeyedSample sample = {time, number, count};
           data.AppendElement(sample);
@@ -1475,19 +1521,19 @@ void ProfileBuffer::StreamMemoryToJSON(SpliceableJSONWriter& aWriter,
   while (e.Has()) {
     // valid sequence: Resident, Unshared?, Time
     if (e.Get().IsResidentMemory()) {
-      int64_t rss = e.Get().u.mInt64;
+      int64_t rss = e.Get().GetInt64();
       int64_t uss = 0;
       e.Next();
       if (e.Has()) {
         if (e.Get().IsUnsharedMemory()) {
-          uss = e.Get().u.mDouble;
+          uss = e.Get().GetDouble();
           e.Next();
           if (!e.Has()) {
             break;
           }
         }
         if (e.Get().IsTime()) {
-          double time = e.Get().u.mDouble;
+          double time = e.Get().GetDouble();
           if (time >= aSinceTime &&
               (previous_rss != rss || previous_uss != uss)) {
             AutoArraySchemaWriter writer(aWriter);
@@ -1539,16 +1585,16 @@ void ProfileBuffer::StreamPausedRangesToJSON(SpliceableJSONWriter& aWriter,
 
   while (e.Has()) {
     if (e.Get().IsPause()) {
-      currentPauseStartTime = Some(e.Get().u.mDouble);
+      currentPauseStartTime = Some(e.Get().GetDouble());
     } else if (e.Get().IsResume()) {
       AddPausedRange(aWriter, "profiler-paused", currentPauseStartTime,
-                     Some(e.Get().u.mDouble));
+                     Some(e.Get().GetDouble()));
       currentPauseStartTime = Nothing();
     } else if (e.Get().IsCollectionStart()) {
-      currentCollectionStartTime = Some(e.Get().u.mDouble);
+      currentCollectionStartTime = Some(e.Get().GetDouble());
     } else if (e.Get().IsCollectionEnd()) {
       AddPausedRange(aWriter, "collecting", currentCollectionStartTime,
-                     Some(e.Get().u.mDouble));
+                     Some(e.Get().GetDouble()));
       currentCollectionStartTime = Nothing();
     }
     e.Next();
@@ -1580,7 +1626,7 @@ bool ProfileBuffer::DuplicateLastSample(int aThreadId,
   uint64_t lastSampleStartPos = *aLastSample;
 
   MOZ_RELEASE_ASSERT(GetEntry(lastSampleStartPos).IsThreadId() &&
-                     GetEntry(lastSampleStartPos).u.mInt == aThreadId);
+                     GetEntry(lastSampleStartPos).GetInt() == aThreadId);
 
   aLastSample = Some(AddThreadIdEntry(aThreadId));
 
@@ -1696,7 +1742,7 @@ void ProfileBuffer::DiscardSamplesBeforeTime(double aTime) {
     e.Next();
 
     if (e.Has() && e.Get().IsTime()) {
-      double sampleTime = e.Get().u.mDouble;
+      double sampleTime = e.Get().GetDouble();
 
       if (sampleTime >= aTime) {
         // This is the first sample within the window of time that we want to
