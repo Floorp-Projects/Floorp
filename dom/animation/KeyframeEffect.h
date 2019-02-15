@@ -361,7 +361,12 @@ class KeyframeEffect : public AnimationEffect {
   // context. That's because calling GetComputedStyle when we are in the process
   // of building a ComputedStyle may trigger various forms of infinite
   // recursion.
-  already_AddRefed<ComputedStyle> GetTargetComputedStyle() const;
+  enum class Flush {
+    Style,
+    None,
+  };
+  already_AddRefed<ComputedStyle> GetTargetComputedStyle(
+      Flush aFlushType) const;
 
   // A wrapper for marking cascade update according to the current
   // target and its effectSet.
