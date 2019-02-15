@@ -895,7 +895,7 @@ nsTArray<MediaStream*> AudioContext::GetAllStreams() const {
     if (!audioParams.IsEmpty()) {
       for (auto& param : audioParams) {
         s = param->GetStream();
-        if (s) {
+        if (s && !streams.Contains(s)) {
           streams.AppendElement(s);
         }
       }
