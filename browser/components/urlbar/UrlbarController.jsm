@@ -17,6 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
+  URLBAR_SELECTED_RESULT_TYPES: "resource:///modules/BrowserUsageTelemetry.jsm",
 });
 
 const TELEMETRY_1ST_RESULT = "PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS";
@@ -311,6 +312,64 @@ class UrlbarController {
       default: {
         throw new Error("Invalid speculative connection reason");
       }
+    }
+  }
+
+  /**
+   * Records details of the selected result in telemetry. We only record the
+   * type and index here,
+   * @param {Event} event The event which triggered the result to be selected.
+   * @param {UrlbarResult} result The result that was selected.
+   * @param {number} index The index of the result.
+   */
+  recordSelectedResult(event, result, index) {
+    let telemetryType;
+    switch (result.type) {
+      case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
+        telemetryType = "switchtab";
+        break;
+      case UrlbarUtils.RESULT_TYPE.SEARCH:
+        telemetryType = result.payload.suggestion ? "searchsuggestion" : "searchengine";
+        break;
+      case UrlbarUtils.RESULT_TYPE.URL:
+        if (result.autofill) {
+          telemetryType = "autofill";
+        } else if (result.source == UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL &&
+                   result.heuristic) {
+          telemetryType = "visiturl";
+        } else {
+          telemetryType = result.source == UrlbarUtils.RESULT_SOURCE.BOOKMARKS ? "bookmark" : "history";
+        }
+        break;
+      case UrlbarUtils.RESULT_TYPE.KEYWORD:
+        telemetryType = "keyword";
+        break;
+      case UrlbarUtils.RESULT_TYPE.OMNIBOX:
+        telemetryType = "extension";
+        break;
+      case UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
+        telemetryType = "remotetab";
+        break;
+      default:
+        Cu.reportError(`Unknown Result Type ${result.type}`);
+        return;
+    }
+
+    Services.telemetry
+            .getHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX")
+            .add(index);
+    // You can add values but don't change any of the existing values.
+    // Otherwise you'll break our data.
+    if (telemetryType in URLBAR_SELECTED_RESULT_TYPES) {
+      Services.telemetry
+              .getHistogramById("FX_URLBAR_SELECTED_RESULT_TYPE")
+              .add(URLBAR_SELECTED_RESULT_TYPES[telemetryType]);
+      Services.telemetry
+              .getKeyedHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE")
+              .add(telemetryType, index);
+    } else {
+      Cu.reportError("Unknown FX_URLBAR_SELECTED_RESULT_TYPE type: " +
+                     telemetryType);
     }
   }
 
