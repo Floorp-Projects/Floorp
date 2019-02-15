@@ -10,8 +10,12 @@ var EXPORTED_SYMBOLS = ["UptakeTelemetry"];
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 
-// Telemetry report results.
+// Telemetry histogram id (see Histograms.json).
 const TELEMETRY_HISTOGRAM_ID = "UPTAKE_REMOTE_CONTENT_RESULT_1";
+
+// Telemetry events id (see Events.yaml).
+const TELEMETRY_EVENTS_ID = "uptake.remotecontent.result";
+
 
 /**
  * A Telemetry helper to report uptake of remote content.
@@ -79,10 +83,30 @@ class UptakeTelemetry {
   /**
    * Reports the uptake status for the specified source.
    *
-   * @param {string} source  the identifier of the update source.
-   * @param {string} status  the uptake status.
+   * @param {string} component     the component reporting the uptake (eg. "normandy").
+   * @param {string} status        the uptake status (eg. "network_error")
+   * @param {Object} extra         extra values to report
+   * @param {string} extra.source  the update source (eg. "recipe-42").
    */
-  static report(source, status) {
+  static report(component, status, extra = {}) {
+    const { source } = extra;
+
+    if (!source) {
+      throw new Error("`source` value is mandatory.");
+    }
+
+    // Report event for real-time monitoring. See Events.yaml for registration.
+    // Contrary to histograms, Telemetry Events are not enabled by default.
+    // Enable them on first call to `report()`.
+    if (!this._eventsEnabled) {
+      Services.telemetry.setEventRecordingEnabled(TELEMETRY_EVENTS_ID, true);
+      this._eventsEnabled = true;
+    }
+    Services.telemetry
+      .recordEvent(TELEMETRY_EVENTS_ID, "uptake", component, status, extra);
+
+    // Report via histogram in main ping.
+    // Note: this is the legacy equivalent of the above event. We keep it for continuity.
     Services.telemetry
       .getKeyedHistogramById(TELEMETRY_HISTOGRAM_ID)
       .add(source, status);

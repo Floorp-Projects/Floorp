@@ -74,6 +74,8 @@ Only ``value`` and the values of ``extra`` will be truncated if over the specifi
 Any other ``String`` going over its limit will be reported as an error and the operation
 aborted.
 
+.. _eventdefinition:
+
 The YAML definition file
 ========================
 
