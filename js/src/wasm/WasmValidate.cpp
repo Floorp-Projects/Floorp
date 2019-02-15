@@ -2276,7 +2276,8 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
           return d.fail("expected type form");
         }
         if (form != uint8_t(TypeCode::AnyFunc)) {
-          return d.fail("passive segments can only contain function references");
+          return d.fail(
+              "passive segments can only contain function references");
         }
         break;
       }

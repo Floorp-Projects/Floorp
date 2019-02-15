@@ -323,7 +323,7 @@ function expandXhrMessage(node) {
  */
 async function waitForLazyRequests(toolbox) {
   const {ui} = toolbox.getCurrentPanel().hud;
-  const proxy = ui.jsterm.hud.proxy;
+  const proxy = ui.proxy;
   return waitUntil(() => {
     return !proxy.networkDataProvider.lazyRequestData.size;
   });

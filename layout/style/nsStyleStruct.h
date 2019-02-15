@@ -1091,7 +1091,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList {
   const static bool kHasTriggerImageLoads = true;
 
   nsChangeHint CalcDifference(const nsStyleList& aNewData,
-                              const nsStyleDisplay* aOldDisplay) const;
+                              const nsStyleDisplay& aOldDisplay) const;
 
   imgRequestProxy* GetListStyleImage() const {
     return mListStyleImage ? mListStyleImage->get() : nullptr;
@@ -1244,7 +1244,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
 
   nsChangeHint CalcDifference(
       const nsStylePosition& aNewData,
-      const nsStyleVisibility* aOldStyleVisibility) const;
+      const nsStyleVisibility& aOldStyleVisibility) const;
 
   /**
    * Return the used value for 'align-self' given our parent ComputedStyle

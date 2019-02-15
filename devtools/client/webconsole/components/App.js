@@ -39,9 +39,9 @@ const isMacOS = Services.appinfo.OS === "Darwin";
 class App extends Component {
   static get propTypes() {
     return {
-      attachRefToHud: PropTypes.func.isRequired,
+      attachRefToWebConsoleUI: PropTypes.func.isRequired,
       dispatch: PropTypes.func.isRequired,
-      hud: PropTypes.object.isRequired,
+      webConsoleUI: PropTypes.object.isRequired,
       notifications: PropTypes.object,
       onFirstMeaningfulPaint: PropTypes.func.isRequired,
       serviceContainer: PropTypes.object.isRequired,
@@ -64,14 +64,14 @@ class App extends Component {
   onKeyDown(event) {
     const {
       dispatch,
-      hud,
+      webConsoleUI,
     } = this.props;
 
     if (
       (!isMacOS && event.key === "F9") ||
       (isMacOS && event.key === "r" && event.ctrlKey === true)
     ) {
-      const initialValue = hud.jsterm && hud.jsterm.getSelectedText();
+      const initialValue = webConsoleUI.jsterm && webConsoleUI.jsterm.getSelectedText();
       dispatch(actions.reverseSearchInputToggle({initialValue}));
       event.stopPropagation();
     }
@@ -82,7 +82,7 @@ class App extends Component {
     const {
       reverseSearchInputVisible,
       dispatch,
-      hud,
+      webConsoleUI,
     } = this.props;
 
     if (reverseSearchInputVisible === true && !target.closest(".reverse-search")) {
@@ -119,20 +119,20 @@ class App extends Component {
     }
 
     // Do not focus if something is selected
-    const selection = hud.document.defaultView.getSelection();
+    const selection = webConsoleUI.document.defaultView.getSelection();
     if (selection && !selection.isCollapsed) {
       return;
     }
 
-    if (hud && hud.jsterm) {
-      hud.jsterm.focus();
+    if (webConsoleUI && webConsoleUI.jsterm) {
+      webConsoleUI.jsterm.focus();
     }
   }
 
   onPaste(event) {
     const {
       dispatch,
-      hud,
+      webConsoleUI,
       notifications,
     } = this.props;
 
@@ -142,7 +142,7 @@ class App extends Component {
     } = WebConsoleUtils;
 
     // Bail out if self-xss notification is suppressed.
-    if (hud.isBrowserConsole || usageCount >= CONSOLE_ENTRY_THRESHOLD) {
+    if (webConsoleUI.isBrowserConsole || usageCount >= CONSOLE_ENTRY_THRESHOLD) {
       return;
     }
 
@@ -192,8 +192,8 @@ class App extends Component {
 
   render() {
     const {
-      attachRefToHud,
-      hud,
+      attachRefToWebConsoleUI,
+      webConsoleUI,
       notifications,
       onFirstMeaningfulPaint,
       serviceContainer,
@@ -225,10 +225,8 @@ class App extends Component {
         }},
         div({className: "webconsole-flex-wrapper"},
           FilterBar({
-            hidePersistLogsCheckbox: hud.isBrowserConsole,
-            serviceContainer: {
-              attachRefToHud,
-            },
+            hidePersistLogsCheckbox: webConsoleUI.isBrowserConsole,
+            attachRefToWebConsoleUI,
             closeSplitConsole,
           }),
           ConsoleOutput({
@@ -240,13 +238,13 @@ class App extends Component {
             notifications,
           }),
           JSTerm({
-            hud,
+            webConsoleUI,
             serviceContainer,
             onPaste: this.onPaste,
             codeMirrorEnabled: jstermCodeMirror,
           }),
           ReverseSearchInput({
-            hud,
+            webConsoleUI,
             initialValue: reverseSearchInitialValue,
           })
         ),
@@ -254,7 +252,7 @@ class App extends Component {
           serviceContainer,
         }),
         ConfirmDialog({
-          hud,
+          webConsoleUI,
           serviceContainer,
           codeMirrorEnabled: jstermCodeMirror,
         }),

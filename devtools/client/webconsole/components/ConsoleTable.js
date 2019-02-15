@@ -22,7 +22,7 @@ class ConsoleTable extends Component {
       dispatch: PropTypes.func.isRequired,
       parameters: PropTypes.array.isRequired,
       serviceContainer: PropTypes.shape({
-        hudProxy: PropTypes.object.isRequired,
+        proxy: PropTypes.object.isRequired,
       }),
       id: PropTypes.string.isRequired,
       tableData: PropTypes.object,
@@ -42,7 +42,7 @@ class ConsoleTable extends Component {
       return;
     }
 
-    const client = new ObjectClient(serviceContainer.hudProxy.client, parameters[0]);
+    const client = new ObjectClient(serviceContainer.proxy.client, parameters[0]);
     const dataType = getParametersDataType(parameters);
 
     // Get all the object properties.

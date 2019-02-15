@@ -66,8 +66,7 @@ struct GraphNodeBase {
 template <typename Node>
 class ComponentFinder {
  public:
-  explicit ComponentFinder(uintptr_t sl)
-      : stackLimit(sl) {}
+  explicit ComponentFinder(uintptr_t sl) : stackLimit(sl) {}
 
   ~ComponentFinder() {
     MOZ_ASSERT(!stack);

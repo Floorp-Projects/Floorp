@@ -242,7 +242,7 @@ test_description_schema = Schema({
     # unit tests on linux platforms and false otherwise
     Optional('allow-software-gl-layers'): bool,
 
-    # For tasks that will run in docker-worker or docker-engine, this is the
+    # For tasks that will run in docker-worker, this is the
     # name of the docker image or in-tree docker image to run the task in.  If
     # in-tree, then a dependency will be created automatically.  This is
     # generally `desktop-test`, or an image that acts an awful lot like it.

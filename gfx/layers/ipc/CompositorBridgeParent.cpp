@@ -1732,11 +1732,11 @@ PWebRenderBridgeParent* CompositorBridgeParent::AllocPWebRenderBridgeParent(
   MOZ_ASSERT(!mCompositorScheduler);
   MOZ_ASSERT(mWidget);
 
-#  ifdef XP_WIN
+#ifdef XP_WIN
   if (mWidget && DeviceManagerDx::Get()->CanUseDComp()) {
     mWidget->AsWindows()->EnsureCompositorWindow();
   }
-#  endif
+#endif
 
   RefPtr<widget::CompositorWidget> widget = mWidget;
   wr::WrWindowId windowId = wr::NewWindowId();

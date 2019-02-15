@@ -274,7 +274,8 @@ class FindLastHitPhase final : public NavigationPhase {
              bool aIncludeEnd);
 
   void ToString(nsAutoCString& aStr) override {
-    aStr.AppendPrintf("FindLastHit #%zu:%zu", mStart.mNormal, mStart.mTemporary);
+    aStr.AppendPrintf("FindLastHit #%zu:%zu", mStart.mNormal,
+                      mStart.mTemporary);
     mEnd.ToString(aStr);
   }
 
@@ -409,9 +410,7 @@ class NavigationState {
     return mPhase->CurrentExecutionPoint();
   }
 
-  bool ShouldSendPaintMessage() {
-    return mPhase->ShouldSendPaintMessage();
-  }
+  bool ShouldSendPaintMessage() { return mPhase->ShouldSendPaintMessage(); }
 
   void SetRecordingEndpoint(size_t aIndex, const ExecutionPoint& aEndpoint) {
     // Ignore endpoints older than the last one we know about.
@@ -468,9 +467,8 @@ static NavigationState* gNavigation;
 // temporary checkpoints associated with old normal checkpoints. We don't
 // remember what execution points these old temporary checkpoints are
 // associated with.
-static CheckpointId
-SkipUnknownTemporaryCheckpoints(const CheckpointId& aCheckpoint)
-{
+static CheckpointId SkipUnknownTemporaryCheckpoints(
+    const CheckpointId& aCheckpoint) {
   CheckpointId rval = aCheckpoint;
   while (rval.mTemporary &&
          rval.mNormal != gNavigation->LastCheckpoint().mNormal) {
@@ -561,7 +559,8 @@ void PausedPhase::Resume(bool aForward) {
   }
 
   start = SkipUnknownTemporaryCheckpoints(start);
-  gNavigation->mFindLastHitPhase.Enter(start, mPoint, /* aIncludeEnd = */ false);
+  gNavigation->mFindLastHitPhase.Enter(start, mPoint,
+                                       /* aIncludeEnd = */ false);
   Unreachable();
 }
 
@@ -789,11 +788,7 @@ void ForwardPhase::HitRecordingEndpoint(const ExecutionPoint& aPoint) {
                                   /* aRecordingEndpoint = */ true);
 }
 
-bool
-ForwardPhase::ShouldSendPaintMessage()
-{
-  return true;
-}
+bool ForwardPhase::ShouldSendPaintMessage() { return true; }
 
 ///////////////////////////////////////////////////////////////////////////////
 // ReachBreakpointPhase
@@ -869,9 +864,7 @@ void ReachBreakpointPhase::PositionHit(const ExecutionPoint& aPoint) {
   }
 }
 
-bool
-ReachBreakpointPhase::ShouldSendPaintMessage()
-{
+bool ReachBreakpointPhase::ShouldSendPaintMessage() {
   // We don't need to send paint messages when reaching the breakpoint, as we
   // will be pausing at the breakpoint and doing a repaint of the state there.
   return false;
@@ -961,9 +954,7 @@ void FindLastHitPhase::HitRecordingEndpoint(const ExecutionPoint& aPoint) {
   Unreachable();
 }
 
-bool
-FindLastHitPhase::ShouldSendPaintMessage()
-{
+bool FindLastHitPhase::ShouldSendPaintMessage() {
   // If the region we're searching contains multiple normal checkpoints, we
   // only want to send paint messages for the first one. We won't pause at the
   // later checkpoints, and sending paint messages for them will clobber the
@@ -1197,9 +1188,7 @@ bool MaybeDivergeFromRecording() {
   return gNavigation->MaybeDivergeFromRecording();
 }
 
-bool ShouldSendPaintMessage() {
-  return gNavigation->ShouldSendPaintMessage();
-}
+bool ShouldSendPaintMessage() { return gNavigation->ShouldSendPaintMessage(); }
 
 }  // namespace navigation
 }  // namespace recordreplay

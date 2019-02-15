@@ -23,7 +23,8 @@ Timeout::Timeout()
       mNestingLevel(0),
       mCleared(false),
       mRunning(false),
-      mIsInterval(false) {}
+      mIsInterval(false) {
+}
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(Timeout)
 

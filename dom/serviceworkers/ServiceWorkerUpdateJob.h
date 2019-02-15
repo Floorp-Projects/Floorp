@@ -30,7 +30,6 @@ class ServiceWorkerUpdateJob : public ServiceWorkerJob {
   // Construct an update job to be used only for updates.
   ServiceWorkerUpdateJob(nsIPrincipal* aPrincipal, const nsACString& aScope,
                          const nsACString& aScriptSpec,
-                         nsILoadGroup* aLoadGroup,
                          ServiceWorkerUpdateViaCache aUpdateViaCache);
 
   already_AddRefed<ServiceWorkerRegistrationInfo> GetRegistration() const;
@@ -40,7 +39,6 @@ class ServiceWorkerUpdateJob : public ServiceWorkerJob {
   ServiceWorkerUpdateJob(Type aType, nsIPrincipal* aPrincipal,
                          const nsACString& aScope,
                          const nsACString& aScriptSpec,
-                         nsILoadGroup* aLoadGroup,
                          ServiceWorkerUpdateViaCache aUpdateViaCache);
 
   virtual ~ServiceWorkerUpdateJob();
@@ -90,7 +88,6 @@ class ServiceWorkerUpdateJob : public ServiceWorkerJob {
   void ContinueAfterInstallEvent(bool aInstallEventSuccess);
 
   RefPtr<ServiceWorkerRegistrationInfo> mRegistration;
-  nsCOMPtr<nsILoadGroup> mLoadGroup;
   ServiceWorkerUpdateViaCache mUpdateViaCache;
   serviceWorkerScriptCache::OnFailure mOnFailure;
 };

@@ -32,18 +32,15 @@
 
   SimpleTest.waitForExplicitFinish();
 
-  function sendAKeyEvent()
-  {
+  function sendAKeyEvent() {
     synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_A, {}, "a", "a");
   }
 
-  function isFocused(aElement)
-  {
+  function isFocused(aElement) {
     return (SpecialPowers.focusManager.focusedElement == aElement);
   }
 
-  function runTest()
-  {
+  function runTest() {
     sendAKeyEvent();
     ok(true, "Not crashed: input on the document");
     $("input_text").focus();
@@ -80,7 +77,7 @@
     sendAKeyEvent();
     ok(true, "Not crashed: input on <input type=\"text\"> changed from type=\"password\"");
 
-    otherWindow =
+    var otherWindow =
       window.open("file_secure_input.html",
                   "_blank", "chrome,width=100,height=100");
     ok(otherWindow, "failed to open other window");
@@ -92,7 +89,7 @@
     $("input_text").focus();
     otherWindow.focus();
 
-    SimpleTest.waitForFocus(function () {
+    SimpleTest.waitForFocus(function() {
       window.focus();
       sendAKeyEvent();
       ok(isFocused($("input_text")), "focused element isn't <input type=\"text\">");
@@ -138,7 +135,6 @@
       ok(true, "Not crashed: input on <input type=\"password\"> after the other document's <input type=\"password\"> has focus");
 
       SimpleTest.finish();
-
     }, otherWindow);
   }
 

@@ -1709,7 +1709,7 @@ void gfxFontFamily::FindFontForChar(GlobalFontMatch* aMatchData) {
                                         LAYOUT, charAndName);
 #endif
 
-  AutoTArray<gfxFontEntry*,4> entries;
+  AutoTArray<gfxFontEntry*, 4> entries;
   FindAllFontsForStyle(aMatchData->mStyle, entries,
                        /*aIgnoreSizeTolerance*/ true);
   if (entries.IsEmpty()) {
@@ -1736,8 +1736,7 @@ void gfxFontFamily::FindFontForChar(GlobalFontMatch* aMatchData) {
         MOZ_LOG(log, LogLevel::Debug,
                 ("(textrun-systemfallback-fonts) char: u+%6.6x "
                  "unicode-range: %d script: %d match: [%s]\n",
-                 aMatchData->mCh, unicodeRange, int(script),
-                 e->Name().get()));
+                 aMatchData->mCh, unicodeRange, int(script), e->Name().get()));
       }
 
       fe = e;

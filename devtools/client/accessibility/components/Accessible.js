@@ -398,7 +398,7 @@ const isNode = value => value && value.typeName === "domnode";
 const isAccessible = value => value && value.typeName === "accessible";
 
 /**
- * While waiting for a reps fix in https://github.com/devtools-html/reps/issues/92,
+ * While waiting for a reps fix in https://github.com/firefox-devtools/reps/issues/92,
  * translate accessibleFront to a grip-like object that can be used with an Accessible
  * rep.
  *

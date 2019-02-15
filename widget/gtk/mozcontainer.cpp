@@ -561,7 +561,7 @@ gboolean moz_container_surface_needs_clear(MozContainer *container) {
   return state;
 }
 
-gboolean moz_container_egl_surface_needs_update(MozContainer *container){
+gboolean moz_container_egl_surface_needs_update(MozContainer *container) {
   gboolean state = container->egl_surface_needs_update;
   container->egl_surface_needs_update = false;
   return state;

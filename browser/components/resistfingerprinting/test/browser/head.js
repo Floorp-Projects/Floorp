@@ -205,6 +205,16 @@ async function testWindowSizeSetting(aBrowser, aSettingWidth, aSettingHeight,
         }
       });
 
+      win.close();
+      // Open a new window and wait until it loads.
+      await new Promise(resolve => {
+        // Given a initial window size which should be different from target
+        // size. We need this to trigger 'onresize' event.
+        let initWinFeatures = "width=" + input.initWidth + ",height=" + input.initHeight;
+        win = content.open("http://example.net/", "", initWinFeatures);
+        win.onload = () => resolve();
+      });
+
       // Test inner/outerHeight.
       await new Promise(resolve => {
         win.addEventListener("resize", () => {

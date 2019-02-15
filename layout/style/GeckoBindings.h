@@ -220,6 +220,7 @@ size_t Gecko_GetAnimationEffectCount(RawGeckoElementBorrowed aElementOrPseudo);
 bool Gecko_ElementHasAnimations(RawGeckoElementBorrowed aElementOrPseudo);
 bool Gecko_ElementHasCSSAnimations(RawGeckoElementBorrowed aElementOrPseudo);
 bool Gecko_ElementHasCSSTransitions(RawGeckoElementBorrowed aElementOrPseudo);
+bool Gecko_ElementHasWebAnimations(RawGeckoElementBorrowed aElementOrPseudo);
 size_t Gecko_ElementTransitions_Length(
     RawGeckoElementBorrowed aElementOrPseudo);
 

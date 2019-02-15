@@ -74,7 +74,7 @@ class GridItem extends PureComponent {
     const originalTarget = e.nativeEvent && e.nativeEvent.explicitOriginalTarget;
     if (originalTarget && originalTarget.namespaceURI === "http://www.w3.org/2000/svg") {
       // We should be able to cancel the click event propagation after the following reps
-      // issue is implemented : https://github.com/devtools-html/reps/issues/95 .
+      // issue is implemented : https://github.com/firefox-devtools/reps/issues/95 .
       e.preventDefault();
       return;
     }

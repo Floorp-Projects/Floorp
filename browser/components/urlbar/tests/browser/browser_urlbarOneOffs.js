@@ -2,6 +2,10 @@ const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
 let gMaxResults;
 
+XPCOMUtils.defineLazyGetter(this, "oneOffSearchButtons", () => {
+  return UrlbarTestUtils.getOneOffSearchButtons(window);
+});
+
 add_task(async function init() {
   Services.prefs.setBoolPref("browser.urlbar.oneOffSearches", true);
   gMaxResults = Services.prefs.getIntPref("browser.urlbar.maxRichResults");
@@ -34,11 +38,14 @@ add_task(async function init() {
 // Keys up and down through the history panel, i.e., the panel that's shown when
 // there's no text in the textbox.
 add_task(async function history() {
-  gURLBar.popup.toggleOneOffSearches(true);
+  if (!UrlbarPrefs.get("quantumbar")) {
+    gURLBar.popup.toggleOneOffSearches(true);
+  }
 
   gURLBar.focus();
-  EventUtils.synthesizeKey("KEY_ArrowDown");
-  await promisePopupShown(gURLBar.popup);
+  await UrlbarTestUtils.promisePopupOpen(window, () => {
+    EventUtils.synthesizeKey("KEY_ArrowDown");
+  });
   await waitForAutocompleteResultAt(gMaxResults - 1);
 
   assertState(-1, -1, "");
@@ -51,8 +58,7 @@ add_task(async function history() {
   }
 
   // Key down through each one-off.
-  let numButtons =
-    gURLBar.popup.oneOffSearchButtons.getSelectableButtons(true).length;
+  let numButtons = oneOffSearchButtons.getSelectableButtons(true).length;
   for (let i = 0; i < numButtons; i++) {
     EventUtils.synthesizeKey("KEY_ArrowDown");
     assertState(-1, i, "");
@@ -125,8 +131,7 @@ add_task(async function() {
   }
 
   // Key down through each one-off.
-  let numButtons =
-    gURLBar.popup.oneOffSearchButtons.getSelectableButtons(true).length;
+  let numButtons = oneOffSearchButtons.getSelectableButtons(true).length;
   for (let i = 0; i < numButtons; i++) {
     EventUtils.synthesizeKey("KEY_ArrowDown");
     assertState(-1, i, typedValue);
@@ -160,13 +165,16 @@ add_task(async function() {
 // Checks that "Search with Current Search Engine" items are updated to "Search
 // with One-Off Engine" when a one-off is selected.
 add_task(async function searchWith() {
+  // TODO Bug 1527947: Implement "search with" change with button change.
+  if (UrlbarPrefs.get("quantumbar")) {
+    return;
+  }
   let typedValue = "foo";
   await promiseAutocompleteResultPopup(typedValue);
-  await waitForAutocompleteResultAt(0);
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   assertState(0, -1, typedValue);
 
-  let item = gURLBar.popup.richlistbox.firstElementChild;
-  Assert.equal(item._actionText.textContent,
+  Assert.equal(result.displayed.action,
                "Search with " + (await Services.search.getDefault()).name,
                "Sanity check: first result's action text");
 
@@ -175,11 +183,12 @@ add_task(async function searchWith() {
   EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
   assertState(0, 0, typedValue);
 
-  let engineName = gURLBar.popup.oneOffSearchButtons.selectedButton.engine.name;
+  let engineName = oneOffSearchButtons.selectedButton.engine.name;
   Assert.notEqual(engineName, (await Services.search.getDefault()).name,
                   "Sanity check: First one-off engine should not be " +
                   "the current engine");
-  Assert.equal(item._actionText.textContent,
+  result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
+  Assert.equal(result.displayed.action,
                "Search with " + engineName,
                "First result's action text should be updated");
 
@@ -197,7 +206,7 @@ add_task(async function oneOffClick() {
   await waitForAutocompleteResultAt(1);
   assertState(0, -1, typedValue);
 
-  let oneOffs = gURLBar.popup.oneOffSearchButtons.getSelectableButtons(true);
+  let oneOffs = oneOffSearchButtons.getSelectableButtons(true);
   let resultsPromise =
     BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false,
                                    "http://mochi.test:8888/?terms=foo.bar");
@@ -244,7 +253,7 @@ add_task(async function collapsedOneOffs() {
   await promiseAutocompleteResultPopup(typedValue, window, true);
   await waitForAutocompleteResultAt(0);
   assertState(0, -1);
-  Assert.ok(gURLBar.popup.oneOffSearchButtons.buttons.collapsed,
+  Assert.ok(oneOffSearchButtons.buttons.collapsed,
     "The one-off buttons should be collapsed");
   EventUtils.synthesizeKey("KEY_ArrowUp");
   assertState(1, -1);
@@ -255,39 +264,42 @@ add_task(async function collapsedOneOffs() {
 // The one-offs should be hidden when searching with an "@engine" search engine
 // alias.
 add_task(async function hiddenWhenUsingSearchAlias() {
+  // TODO Bug 1527934: Implement this for QuantumBar.
+  if (UrlbarPrefs.get("quantumbar")) {
+    return;
+  }
   let typedValue = "@example";
   await promiseAutocompleteResultPopup(typedValue, window, true);
   await waitForAutocompleteResultAt(0);
-  Assert.equal(gURLBar.popup.oneOffSearchesEnabled, false);
-  Assert.equal(
-    window.getComputedStyle(gURLBar.popup.oneOffSearchButtons.container).display,
-    "none"
-  );
+  Assert.equal(UrlbarTestUtils.getOneOffSearchButtonsVisible(window), false,
+    "Should not be showing the one-off buttons");
   await hidePopup();
 
   typedValue = "not an engine alias";
   await promiseAutocompleteResultPopup(typedValue, window, true);
   await waitForAutocompleteResultAt(0);
-  Assert.equal(gURLBar.popup.oneOffSearchesEnabled, true);
-  Assert.equal(
-    window.getComputedStyle(gURLBar.popup.oneOffSearchButtons.container).display,
-    "-moz-box"
-  );
+  Assert.equal(UrlbarTestUtils.getOneOffSearchButtonsVisible(window), true,
+    "Should be showing the one-off buttons");
   await hidePopup();
 });
 
 
 function assertState(result, oneOff, textValue = undefined) {
-  Assert.equal(gURLBar.popup.selectedIndex, result,
-               "Expected result should be selected");
-  Assert.equal(gURLBar.popup.oneOffSearchButtons.selectedButtonIndex, oneOff,
-               "Expected one-off should be selected");
+  Assert.equal(UrlbarTestUtils.getSelectedIndex(window), result,
+    "Expected result should be selected");
+  Assert.equal(oneOffSearchButtons.selectedButtonIndex,
+    oneOff, "Expected one-off should be selected");
+  // TODO Bug 1527946: Fix textValue differences for QuantumBar
+  if (UrlbarPrefs.get("quantumbar")) {
+    return;
+  }
   if (textValue !== undefined) {
     Assert.equal(gURLBar.textValue, textValue, "Expected textValue");
   }
 }
 
-async function hidePopup() {
-  EventUtils.synthesizeKey("KEY_Escape");
-  await promisePopupHidden(gURLBar.popup);
+function hidePopup() {
+  return UrlbarTestUtils.promisePopupClose(window, () => {
+    EventUtils.synthesizeKey("KEY_Escape");
+  });
 }

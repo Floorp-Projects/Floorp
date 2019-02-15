@@ -212,8 +212,8 @@ void GPUProcessHost::DestroyProcess() {
     mTaskFactory.RevokeAll();
   }
 
-  MessageLoop::current()->PostTask(NS_NewRunnableFunction(
-      "DestroyProcessRunnable", [this] { Destroy(); }));
+  MessageLoop::current()->PostTask(
+      NS_NewRunnableFunction("DestroyProcessRunnable", [this] { Destroy(); }));
 }
 
 }  // namespace gfx

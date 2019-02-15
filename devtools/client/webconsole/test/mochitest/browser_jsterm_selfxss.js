@@ -28,8 +28,8 @@ add_task(async function() {
 
 async function performTest() {
   await pushPref("devtools.selfxss.count", 0);
-  const {jsterm} = await openNewTabAndConsole(TEST_URI);
-  const {document} = jsterm.hud;
+  const {jsterm, ui} = await openNewTabAndConsole(TEST_URI);
+  const {document} = ui;
 
   info("Self-xss paste tests");
   WebConsoleUtils.usageCount = 0;
