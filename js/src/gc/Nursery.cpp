@@ -613,8 +613,8 @@ void js::Nursery::renderProfileJSON(JSONPrinter& json) const {
   if (newCapacity != previousGC.nurseryCapacity) {
     json.property("new_capacity", newCapacity);
   }
-  if (previousGC.nurseryLazyCapacity != previousGC.nurseryCapacity) {
-    json.property("lazy_capacity", previousGC.nurseryLazyCapacity);
+  if (previousGC.nurseryCommitted != previousGC.nurseryCapacity) {
+    json.property("lazy_capacity", previousGC.nurseryCommitted);
   }
   if (!timeInChunkAlloc_.IsZero()) {
     json.property("chunk_alloc_us", timeInChunkAlloc_, json.MICROSECONDS);
@@ -755,7 +755,7 @@ void js::Nursery::collect(JS::GCReason reason) {
   } else {
     previousGC.nurseryUsedBytes = 0;
     previousGC.nurseryCapacity = capacity();
-    previousGC.nurseryLazyCapacity = lazyCapacity();
+    previousGC.nurseryCommitted = committed();
     previousGC.tenuredBytes = 0;
     previousGC.tenuredCells = 0;
   }
@@ -847,7 +847,7 @@ void js::Nursery::collect(JS::GCReason reason) {
   if (totalTime.ToMilliseconds() > 1.0) {
     rt->addTelemetry(JS_TELEMETRY_GC_MINOR_REASON_LONG, uint32_t(reason));
   }
-  rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_BYTES, sizeOfHeapCommitted());
+  rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_BYTES, committed());
   rt->addTelemetry(JS_TELEMETRY_GC_PRETENURE_COUNT, pretenureCount);
   rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_PROMOTION_RATE, promotionRate * 100);
 
@@ -984,7 +984,7 @@ void js::Nursery::doCollection(JS::GCReason reason,
 
   previousGC.reason = reason;
   previousGC.nurseryCapacity = initialNurseryCapacity;
-  previousGC.nurseryLazyCapacity = spaceToEnd(allocatedChunkCount());
+  previousGC.nurseryCommitted = spaceToEnd(allocatedChunkCount());
   previousGC.nurseryUsedBytes = initialNurseryUsedBytes;
   previousGC.tenuredBytes = mover.tenuredSize;
   previousGC.tenuredCells = mover.tenuredCells;
@@ -1046,6 +1046,10 @@ void js::Nursery::clear() {
 }
 
 size_t js::Nursery::spaceToEnd(unsigned chunkCount) const {
+  if (chunkCount == 0) {
+    return 0;
+  }
+
   unsigned lastChunk = chunkCount - 1;
 
   MOZ_ASSERT(lastChunk >= currentStartChunk_);
