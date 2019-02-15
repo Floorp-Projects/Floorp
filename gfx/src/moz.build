@@ -68,6 +68,7 @@ UNIFIED_SOURCES += [
     'nsRect.cpp',
     'nsRegion.cpp',
     'nsThebesFontEnumerator.cpp',
+    'nsThebesGfxFactory.cpp',
     'nsTransform2D.cpp',
     'TiledRegion.cpp',
 ]
@@ -75,10 +76,6 @@ UNIFIED_SOURCES += [
 # nsDeviceContext.cpp cannot be built in unified mode because it pulls in OS X system headers.
 SOURCES += [
     'nsDeviceContext.cpp',
-]
-
-XPCOM_MANIFESTS += [
-    'components.conf',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
