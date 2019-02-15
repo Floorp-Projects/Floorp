@@ -2962,7 +2962,7 @@ void RestyleManager::ClearSnapshots() {
 }
 
 ServoElementSnapshot& RestyleManager::SnapshotFor(Element& aElement) {
-  MOZ_ASSERT(!mInStyleRefresh);
+  MOZ_RELEASE_ASSERT(!mInStyleRefresh);
 
   // NOTE(emilio): We can handle snapshots from a one-off restyle of those that
   // we do to restyle stuff for reconstruction, for example.
@@ -2987,6 +2987,7 @@ ServoElementSnapshot& RestyleManager::SnapshotFor(Element& aElement) {
 
 void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
   nsPresContext* presContext = PresContext();
+  nsIPresShell* shell = presContext->PresShell();
 
   MOZ_ASSERT(presContext->Document(), "No document?  Pshaw!");
   // FIXME(emilio): In the "flush animations" case, ideally, we should only
@@ -2998,9 +2999,9 @@ void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
                  !presContext->HasPendingMediaQueryUpdates(),
              "Someone forgot to update media queries?");
   MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript(), "Missing a script blocker!");
-  MOZ_ASSERT(!mInStyleRefresh, "Reentrant call?");
+  MOZ_RELEASE_ASSERT(!mInStyleRefresh, "Reentrant call?");
 
-  if (MOZ_UNLIKELY(!presContext->PresShell()->DidInitialize())) {
+  if (MOZ_UNLIKELY(!shell->DidInitialize())) {
     // PresShell::FlushPendingNotifications doesn't early-return in the case
     // where the PresShell hasn't yet been initialized (and therefore we haven't
     // yet done the initial style traversal of the DOM tree). We should arguably
@@ -3008,6 +3009,9 @@ void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
     // handle it for now.
     return;
   }
+
+  // It'd be bad!
+  nsIPresShell::AutoAssertNoFlush noReentrantFlush(*shell);
 
   // Create a AnimationsWithDestroyedFrame during restyling process to
   // stop animations and transitions on elements that have no frame at the end
@@ -3174,7 +3178,7 @@ void RestyleManager::UpdateOnlyAnimationStyles() {
 
 void RestyleManager::ContentStateChanged(nsIContent* aContent,
                                          EventStates aChangedBits) {
-  MOZ_ASSERT(!mInStyleRefresh);
+  MOZ_RELEASE_ASSERT(!mInStyleRefresh);
 
   if (!aContent->IsElement()) {
     return;
@@ -3292,7 +3296,7 @@ void RestyleManager::ClassAttributeWillBeChangedBySMIL(Element* aElement) {
 void RestyleManager::TakeSnapshotForAttributeChange(Element& aElement,
                                                     int32_t aNameSpaceID,
                                                     nsAtom* aAttribute) {
-  MOZ_ASSERT(!mInStyleRefresh);
+  MOZ_RELEASE_ASSERT(!mInStyleRefresh);
 
   if (!aElement.HasServoData()) {
     return;
