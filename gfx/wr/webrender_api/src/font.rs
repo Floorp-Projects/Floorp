@@ -16,10 +16,7 @@ use std::hash::{Hash, Hasher};
 #[cfg(not(target_os = "macos"))]
 use std::path::PathBuf;
 use std::sync::Arc;
-
-use api::IdNamespace;
-use color::ColorU;
-use units::LayoutPoint;
+use {ColorU, IdNamespace, LayoutPoint};
 
 
 #[cfg(not(target_os = "macos"))]
