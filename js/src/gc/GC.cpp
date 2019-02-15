@@ -3405,9 +3405,11 @@ void GCRuntime::startDecommit() {
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
   MOZ_ASSERT(!decommitTask.isRunning());
 
-  // If we are allocating heavily enough to trigger "high freqency" GC, then
-  // skip decommit so that we do not compete with the mutator.
-  if (schedulingState.inHighFrequencyGCMode()) {
+  // If we are allocating heavily enough to trigger "high frequency" GC, then
+  // skip decommit so that we do not compete with the mutator. However if we're
+  // doing a shrinking GC we always decommit to release as much memory as
+  // possible.
+  if (schedulingState.inHighFrequencyGCMode() && !cleanUpEverything) {
     return;
   }
 
