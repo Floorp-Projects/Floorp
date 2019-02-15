@@ -336,6 +336,11 @@ void KeyframeEffect::UpdateProperties(const ComputedStyle* aStyle) {
     if (baseStylesChanged) {
       RequestRestyle(EffectCompositor::RestyleType::Layer);
     }
+    // Check if we need to update the cumulative change hint because we now have
+    // style data.
+    if (mNeedsStyleData && mTarget && mTarget->mElement->HasServoData()) {
+      CalculateCumulativeChangeHint(aStyle);
+    }
     return;
   }
 
@@ -1479,6 +1484,7 @@ KeyframeEffect::CreateComputedStyleForAnimationValue(
 void KeyframeEffect::CalculateCumulativeChangeHint(
     const ComputedStyle* aComputedStyle) {
   mCumulativeChangeHint = nsChangeHint(0);
+  mNeedsStyleData = false;
 
   nsPresContext* presContext =
       nsContentUtils::GetContextForContent(mTarget->mElement);
@@ -1486,6 +1492,7 @@ void KeyframeEffect::CalculateCumulativeChangeHint(
     // Change hints make no sense if we're not rendered.
     //
     // Actually, we cannot even post them anywhere.
+    mNeedsStyleData = true;
     return;
   }
 
@@ -1526,6 +1533,7 @@ void KeyframeEffect::CalculateCumulativeChangeHint(
           property.mProperty, segment.mFromValue, presContext, aComputedStyle);
       if (!fromContext) {
         mCumulativeChangeHint = ~nsChangeHint_Hints_CanIgnoreIfNotVisible;
+        mNeedsStyleData = true;
         return;
       }
 
@@ -1533,6 +1541,7 @@ void KeyframeEffect::CalculateCumulativeChangeHint(
           property.mProperty, segment.mToValue, presContext, aComputedStyle);
       if (!toContext) {
         mCumulativeChangeHint = ~nsChangeHint_Hints_CanIgnoreIfNotVisible;
+        mNeedsStyleData = true;
         return;
       }
 
