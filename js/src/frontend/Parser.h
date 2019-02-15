@@ -372,7 +372,8 @@ class MOZ_STACK_CLASS ParserBase : private JS::AutoGCRooter,
    */
   JSFunction* newFunction(HandleAtom atom, FunctionSyntaxKind kind,
                           GeneratorKind generatorKind,
-                          FunctionAsyncKind asyncKind, HandleObject proto);
+                          FunctionAsyncKind asyncKind,
+                          HandleObject proto = nullptr);
 
   // A Parser::Mark is the extension of the LifoAlloc::Mark to the entire
   // Parser's state. Note: clients must still take care that any ParseContext
@@ -1293,6 +1294,11 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   ClassNodeType classDefinition(YieldHandling yieldHandling,
                                 ClassContext classContext,
                                 DefaultHandling defaultHandling);
+
+  FunctionNodeType fieldInitializer(YieldHandling yieldHandling,
+                                    HandleAtom atom);
+  FunctionNodeType synthesizeConstructor(HandleAtom className,
+                                         uint32_t classNameOffset);
 
   bool checkBindingIdentifier(PropertyName* ident, uint32_t offset,
                               YieldHandling yieldHandling,
