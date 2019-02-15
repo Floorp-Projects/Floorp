@@ -28,6 +28,7 @@ import org.mozilla.fenix.mvi.UIView
 class TabsUIView(
     container: ViewGroup,
     actionEmitter: Observer<TabsAction>,
+    isPrivate: Boolean,
     changesObservable: Observable<TabsChange>
 ) :
     UIView<TabsState, TabsAction, TabsChange>(container, actionEmitter, changesObservable) {
@@ -50,7 +51,8 @@ class TabsUIView(
         }
         header.add_tab_button.increaseTapArea(HomeFragment.addTabButtonIncreaseDps)
         header.add_tab_button.setOnClickListener {
-            val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null)
+            val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null,
+                isPrivate)
             Navigation.findNavController(it).navigate(directions)
         }
         header.tabs_overflow_button.increaseTapArea(HomeFragment.overflowButtonIncreaseDps)

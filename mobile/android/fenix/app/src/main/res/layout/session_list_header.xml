@@ -5,8 +5,8 @@
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
           android:id="@+id/header_text"
           android:layout_marginBottom="8dp"
-          android:textSize="12dp"
-          android:textColor="@color/session_list_header"
+          android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+          android:textColor="?attr/toolbarTextColor"
           android:layout_width="match_parent"
           android:layout_height="wrap_content">
 </TextView>

@@ -17,6 +17,7 @@ import org.mozilla.fenix.mvi.UIView
 class SessionsUIView(
     container: ViewGroup,
     actionEmitter: Observer<SessionsAction>,
+    isPrivate: Boolean,
     changesObservable: Observable<SessionsChange>
 ) :
     UIView<SessionsState, SessionsAction, SessionsChange>(container, actionEmitter, changesObservable) {
@@ -30,6 +31,8 @@ class SessionsUIView(
     init {
         view.apply {
             layoutManager = LinearLayoutManager(container.context)
+            sessionsAdapter.isPrivate = isPrivate
+            sessionsAdapter.context = context
             adapter = sessionsAdapter
         }
     }

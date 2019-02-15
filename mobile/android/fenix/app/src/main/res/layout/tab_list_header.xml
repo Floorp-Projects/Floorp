@@ -16,7 +16,7 @@
             android:layout_height="wrap_content"
             android:text="@string/tabs_header_title"
             android:textSize="24sp"
-            android:textColor="@android:color/black"
+            android:textColor="?attr/toolbarTextColor"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"/>
     <ImageView
@@ -25,6 +25,7 @@
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
             android:src="@drawable/ic_new"
+            android:tint="?attr/toolbarTextColor"
             android:baselineAlignBottom="true"
             app:layout_constraintBaseline_toBaselineOf="@id/header_text"
             app:layout_constraintEnd_toStartOf="@id/tabs_overflow_button"/>
@@ -33,6 +34,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
+            android:tint="?attr/toolbarTextColor"
             android:src="@drawable/ic_menu"
             android:baselineAlignBottom="true"
             app:layout_constraintBaseline_toBaselineOf="@id/header_text"

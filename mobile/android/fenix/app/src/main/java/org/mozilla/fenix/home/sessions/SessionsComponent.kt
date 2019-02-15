@@ -15,6 +15,7 @@ import org.mozilla.fenix.mvi.ViewState
 class SessionsComponent(
     private val container: ViewGroup,
     bus: ActionBusFactory,
+    private val isPrivate: Boolean,
     override var initialState: SessionsState = SessionsState(emptyList())
 ) :
     UIComponent<SessionsState, SessionsAction, SessionsChange>(
@@ -28,19 +29,19 @@ class SessionsComponent(
         }
     }
 
-    override fun initView() = SessionsUIView(container, actionEmitter, changesObservable)
+    override fun initView() = SessionsUIView(container, actionEmitter, isPrivate, changesObservable)
 
     init {
         render(reducer)
     }
 }
 
-data class SessionsState(val sessions: List<Session>) : ViewState
+data class SessionsState(val sessions: List<Session>, val isPrivate: Boolean = false) : ViewState
 
 sealed class SessionsAction : Action {
     object Select : SessionsAction()
 }
 
 sealed class SessionsChange : Change {
-    object Changed : SessionsChange()
+    data class Changed(val isPrivate: Boolean) : SessionsChange()
 }

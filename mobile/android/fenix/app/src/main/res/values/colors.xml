@@ -21,6 +21,7 @@
     <color name="off_white">#f9f9fa</color>
     <color name="url_box_view">#E9E9ED</color>
     <color name="icons">#20233E</color>
+    <color name="session_border_color">#2f26c1</color>
 
     <color name="session_list_empty_bg">#1A665BFD</color>
     <color name="session_list_empty_fg">#544CD9</color>

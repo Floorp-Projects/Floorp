@@ -15,6 +15,7 @@ import org.mozilla.fenix.mvi.ViewState
 class TabsComponent(
     private val container: ViewGroup,
     bus: ActionBusFactory,
+    private val isPrivate: Boolean,
     override var initialState: TabsState = TabsState(listOf())
 ) :
     UIComponent<TabsState, TabsAction, TabsChange>(
@@ -28,7 +29,7 @@ class TabsComponent(
         }
     }
 
-    override fun initView() = TabsUIView(container, actionEmitter, changesObservable)
+    override fun initView() = TabsUIView(container, actionEmitter, isPrivate, changesObservable)
 
     init {
         render(reducer)

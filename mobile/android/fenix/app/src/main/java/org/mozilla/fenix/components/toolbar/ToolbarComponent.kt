@@ -21,6 +21,7 @@ class ToolbarComponent(
     private val container: ViewGroup,
     bus: ActionBusFactory,
     private val sessionId: String?,
+    private val isPrivate: Boolean,
     override var initialState: SearchState = SearchState("", false)
 ) :
     UIComponent<SearchState, SearchAction, SearchChange>(
@@ -34,7 +35,7 @@ class ToolbarComponent(
         }
     }
 
-    override fun initView() = ToolbarUIView(sessionId, container, actionEmitter, changesObservable)
+    override fun initView() = ToolbarUIView(sessionId, isPrivate, container, actionEmitter, changesObservable)
     init {
         render(reducer)
         applyTheme()

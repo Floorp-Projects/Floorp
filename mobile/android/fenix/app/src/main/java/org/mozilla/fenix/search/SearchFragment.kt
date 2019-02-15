@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_search.view.*
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getManagedEmitter
@@ -36,11 +37,13 @@ class SearchFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val sessionId = SearchFragmentArgs.fromBundle(arguments!!).sessionId
+        val isPrivate = SearchFragmentArgs.fromBundle(arguments!!).isPrivateTab
         val view = inflater.inflate(R.layout.fragment_search, container, false)
         toolbarComponent = ToolbarComponent(
             view.toolbar_wrapper,
             ActionBusFactory.get(this),
             sessionId,
+            isPrivate,
             SearchState("", isEditing = true)
         )
         awesomeBarComponent = AwesomeBarComponent(
@@ -83,7 +86,9 @@ class SearchFragment : Fragment() {
 
     private fun transitionToBrowser() {
         val sessionId = SearchFragmentArgs.fromBundle(arguments!!).sessionId
-        val directions = SearchFragmentDirections.actionSearchFragmentToBrowserFragment(sessionId)
+        val directions = SearchFragmentDirections.actionSearchFragmentToBrowserFragment(sessionId,
+            (activity as HomeActivity).browsingModeManager.isPrivate)
+
         Navigation.findNavController(view!!.search_layout).navigate(directions)
     }
 }

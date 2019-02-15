@@ -21,6 +21,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.mvi.ActionBusFactory
@@ -57,7 +58,8 @@ class HistoryFragment : Fragment(), CoroutineScope {
                 if (it is HistoryAction.Select) {
                     Navigation.findNavController(requireActivity(), R.id.container).apply {
                         navigate(
-                            HistoryFragmentDirections.actionGlobalBrowser(null),
+                            HistoryFragmentDirections.actionGlobalBrowser(null,
+                                (activity as HomeActivity).browsingModeManager.isPrivate),
                             NavOptions.Builder().setPopUpTo(R.id.homeFragment, false).build()
                         )
                     }

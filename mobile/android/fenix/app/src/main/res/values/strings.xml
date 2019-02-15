@@ -21,7 +21,8 @@
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode -->
     <string name="private_browsing_explanation">Fenix clears your search and browsing history when you close all
         Private Sessions tabs. While this doesn\'t make you anonymous to websites or your internet service provider,
-        it makes it easier to keep what you do online private from anyone else who uses this device.</string>
+        it makes it easier to keep what you do online private from anyone else who uses this device.\n\nCommon myths
+        about private browsing</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Delete Session</string>
 

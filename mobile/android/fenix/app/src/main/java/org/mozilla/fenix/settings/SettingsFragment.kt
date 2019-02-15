@@ -88,7 +88,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 Navigation.findNavController(it)
                     .navigate(
                         SettingsFragmentDirections.actionGlobalBrowser(
-                            null
+                            null, false
                         )
                     )
             }

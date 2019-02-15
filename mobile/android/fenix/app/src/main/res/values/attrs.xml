@@ -23,6 +23,7 @@
     <attr name="toolbarTextColor" format="reference"/>
     <attr name="navigationBarColorHome" format="reference"/>
     <attr name="homeDividerColor" format="reference" />
+    <attr name="sessionBorderColor" format="reference"/>
 
     <!-- Search fragment -->
     <attr name="searchBackground" format="reference"/>

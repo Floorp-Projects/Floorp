@@ -9,6 +9,7 @@ import android.graphics.PorterDuff
 import androidx.core.content.ContextCompat
 import androidx.navigation.Navigation
 import mozilla.components.browser.domains.autocomplete.DomainAutocompleteProvider
+import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.runWithSession
 import mozilla.components.browser.toolbar.BrowserToolbar
@@ -28,7 +29,8 @@ class ToolbarIntegration(
     domainAutocompleteProvider: DomainAutocompleteProvider,
     historyStorage: HistoryStorage,
     sessionManager: SessionManager,
-    sessionId: String? = null
+    sessionId: String? = null,
+    isPrivate: Boolean
 ) : LifecycleAwareFeature {
     init {
         toolbar.setMenuBuilder(toolbarMenu.menuBuilder)
@@ -68,10 +70,15 @@ class ToolbarIntegration(
         toolbar,
         context.components.core.sessionManager,
         if (sessionId == null) {
-            context.components.useCases.tabsUseCases.addTab
+            if (isPrivate) {
+                context.components.useCases.tabsUseCases.addPrivateTab
+            } else {
+                context.components.useCases.tabsUseCases.addTab
+            }
         } else context.components.useCases.sessionUseCases.loadUrl,
         { searchTerms -> if (sessionId == null) {
-            context.components.useCases.searchUseCases.newTabSearch.invoke(searchTerms)
+            context.components.useCases.searchUseCases.newTabSearch
+                .invoke(searchTerms, Session.Source.USER_ENTERED, true, isPrivate)
         } else context.components.useCases.searchUseCases.defaultSearch.invoke(searchTerms) },
         sessionId
     )

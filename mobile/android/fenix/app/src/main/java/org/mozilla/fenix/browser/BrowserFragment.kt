@@ -8,7 +8,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.preference.PreferenceManager
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -31,6 +30,7 @@ import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import org.mozilla.fenix.BrowsingModeManager
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -56,6 +56,7 @@ class BrowserFragment : Fragment(), BackHandler {
     private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
     private val customTabsToolbarFeature = ViewBoundFeatureWrapper<CustomTabsToolbarFeature>()
     private val toolbarIntegration = ViewBoundFeatureWrapper<ToolbarIntegration>()
+    private var isPrivate = false
     var sessionId: String? = null
 
     override fun onCreateView(
@@ -63,12 +64,16 @@ class BrowserFragment : Fragment(), BackHandler {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        require(arguments != null)
         sessionId = BrowserFragmentArgs.fromBundle(arguments!!).sessionId
+        isPrivate = BrowserFragmentArgs.fromBundle(arguments!!).isPrivateTab
+
         val view = inflater.inflate(R.layout.fragment_browser, container, false)
 
         toolbarComponent = ToolbarComponent(
             view.browserLayout,
             ActionBusFactory.get(this), sessionId,
+            isPrivate,
             SearchState("", isEditing = false)
         )
 
@@ -105,7 +110,8 @@ class BrowserFragment : Fragment(), BackHandler {
                 when (it) {
                     is SearchAction.ToolbarTapped -> Navigation.findNavController(toolbar)
                         .navigate(BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
-                            requireComponents.core.sessionManager.selectedSession?.id
+                            requireComponents.core.sessionManager.selectedSession?.id,
+                            (activity as HomeActivity).browsingModeManager.isPrivate
                         ))
                     is SearchAction.ToolbarMenuItemTapped -> handleToolbarItemInteraction(it)
                 }
@@ -224,12 +230,11 @@ class BrowserFragment : Fragment(), BackHandler {
             ToolbarMenu.Item.Share -> requireComponents.core.sessionManager
                 .selectedSession?.url?.apply { requireContext().share(this) }
             ToolbarMenu.Item.NewPrivateTab -> {
-                PreferenceManager.getDefaultSharedPreferences(context)
-                    .edit().putBoolean(
-                        context!!.getString(R.string.pref_key_private_mode),
-                        !PreferenceManager.getDefaultSharedPreferences(context)
-                            .getBoolean(context!!.getString(R.string.pref_key_private_mode), false)
-                    ).apply()
+                val directions = BrowserFragmentDirections
+                    .actionBrowserFragmentToSearchFragment(requireComponents.core.sessionManager.selectedSession?.id,
+                        (activity as HomeActivity).browsingModeManager.isPrivate)
+                Navigation.findNavController(view!!).navigate(directions)
+                (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Private
             }
             ToolbarMenu.Item.FindInPage -> FindInPageIntegration.launch?.invoke()
             ToolbarMenu.Item.ReportIssue -> requireComponents.core.sessionManager
@@ -241,9 +246,11 @@ class BrowserFragment : Fragment(), BackHandler {
                 // TODO Help
             }
             ToolbarMenu.Item.NewTab -> {
-                val directions =
-                    BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(null)
+                val directions = BrowserFragmentDirections
+                    .actionBrowserFragmentToSearchFragment(null,
+                        (activity as HomeActivity).browsingModeManager.isPrivate)
                 Navigation.findNavController(view!!).navigate(directions)
+                (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Normal
             }
         }
     }
