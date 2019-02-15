@@ -1242,11 +1242,11 @@ WebConsoleActor.prototype =
 
       // Sort the results in order to display lowercased item first (e.g. we want to
       // display `document` then `Document` as we loosely match the user input if the
-      // first letter they typed was lowercase).
+      // first letter was lowercase).
+      const firstMeaningfulCharIndex = isElementAccess ? 1 : 0;
       matches = Array.from(matches).sort((a, b) => {
-        const startingQuoteRegex = /^('|"|`)/;
-        const aFirstMeaningfulChar = startingQuoteRegex.test(a) ? a[1] : a[0];
-        const bFirstMeaningfulChar = startingQuoteRegex.test(b) ? b[1] : b[0];
+        const aFirstMeaningfulChar = a[firstMeaningfulCharIndex];
+        const bFirstMeaningfulChar = b[firstMeaningfulCharIndex];
         const lA = aFirstMeaningfulChar.toLocaleLowerCase() === aFirstMeaningfulChar;
         const lB = bFirstMeaningfulChar.toLocaleLowerCase() === bFirstMeaningfulChar;
         if (lA === lB) {
