@@ -2,4 +2,8 @@ UNIFIED_SOURCES += [
     'test_reduceprecision.cpp',
 ]
 
+MOCHITEST_CHROME_MANIFESTS += [
+    'chrome.ini',
+]
+
 FINAL_LIBRARY = "xul-gtest"
