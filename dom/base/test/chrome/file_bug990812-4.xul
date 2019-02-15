@@ -46,9 +46,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=990812
       var promise1 = promiseMessage("frame2", getGroupMessageManager("test1"));
       var promise2 = promiseMessage("frame1", getGroupMessageManager("test2"));
 
-      var flo1 = browser1.QueryInterface(Ci.nsIFrameLoaderOwner);
-      var flo2 = browser2.QueryInterface(Ci.nsIFrameLoaderOwner);
-      flo1.swapFrameLoaders(flo2);
+      browser1.swapFrameLoaders(browser2);
       messageManager.broadcastAsyncMessage("test");
 
       Promise.all([promise1, promise2]).then(function () {

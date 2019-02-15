@@ -66,7 +66,6 @@ function runTest() {
   iframeOuter.addEventListener("mozbrowserloadend", function(e) {
     if (createEmbededFrame) {
       var contentWin = SpecialPowers.wrap(iframeOuter)
-                             .QueryInterface(SpecialPowers.Ci.nsIFrameLoaderOwner)
                              .frameLoader.docShell.contentViewer.DOMDocument.defaultView;
       var contentDoc = contentWin.document;
       iframeInner = contentDoc.createElement('iframe');

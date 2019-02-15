@@ -19,7 +19,6 @@ function runTest() {
   // We need to make sure the event coordinates are actually inside the iframe,
   // relative to the chome window.
   var tabParent = SpecialPowers.wrap(iframe)
-                  .QueryInterface(SpecialPowers.Ci.nsIFrameLoaderOwner)
                   .frameLoader.tabParent;
   if (tabParent) {
     let offsetX = {};
