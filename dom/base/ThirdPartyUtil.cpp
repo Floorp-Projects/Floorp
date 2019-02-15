@@ -83,30 +83,18 @@ nsresult ThirdPartyUtil::IsThirdPartyInternal(const nsCString& aFirstDomain,
   return NS_OK;
 }
 
+// Get the URI associated with a window.
 NS_IMETHODIMP
-ThirdPartyUtil::GetPrincipalFromWindow(mozIDOMWindowProxy* aWin,
-                                       nsIPrincipal** result) {
+ThirdPartyUtil::GetURIFromWindow(mozIDOMWindowProxy* aWin, nsIURI** result) {
+  nsresult rv;
   nsCOMPtr<nsIScriptObjectPrincipal> scriptObjPrin = do_QueryInterface(aWin);
   if (!scriptObjPrin) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsCOMPtr<nsIPrincipal> prin = scriptObjPrin->GetPrincipal();
+  nsIPrincipal* prin = scriptObjPrin->GetPrincipal();
   if (!prin) {
     return NS_ERROR_INVALID_ARG;
-  }
-
-  prin.forget(result);
-  return NS_OK;
-}
-
-// Get the URI associated with a window.
-NS_IMETHODIMP
-ThirdPartyUtil::GetURIFromWindow(mozIDOMWindowProxy* aWin, nsIURI** result) {
-  nsCOMPtr<nsIPrincipal> prin;
-  nsresult rv = GetPrincipalFromWindow(aWin, getter_AddRefs(prin));
-  if (NS_FAILED(rv)) {
-    return rv;
   }
 
   if (prin->GetIsNullPrincipal()) {

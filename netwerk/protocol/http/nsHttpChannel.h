@@ -162,7 +162,6 @@ class nsHttpChannel final : public HttpBaseChannel,
   NS_IMETHOD GetEncodedBodySize(uint64_t *aEncodedBodySize) override;
   NS_IMETHOD SwitchProcessTo(mozilla::dom::Promise *aTabParent,
                              uint64_t aIdentifier) override;
-  NS_IMETHOD HasCrossOriginOpenerPolicyMismatch(bool *aMismatch) override;
   // nsIHttpChannelInternal
   NS_IMETHOD SetupFallbackChannel(const char *aFallbackKey) override;
   NS_IMETHOD SetChannelIsForDownload(bool aChannelIsForDownload) override;

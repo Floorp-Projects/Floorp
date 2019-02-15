@@ -32,7 +32,6 @@
 #include "nsExceptionHandler.h"
 #include "nsHashKeys.h"
 #include "nsID.h"
-#include "nsILoadInfo.h"
 #include "nsIWidget.h"
 #include "nsMemory.h"
 #include "nsString.h"
@@ -1073,21 +1072,6 @@ struct ParamTraits<mozilla::dom::Optional<T>> {
     return true;
   }
 };
-
-struct CrossOriginOpenerPolicyValidator {
-  static bool IsLegalValue(nsILoadInfo::CrossOriginOpenerPolicy e) {
-    return e == nsILoadInfo::OPENER_POLICY_NULL ||
-           e == nsILoadInfo::OPENER_POLICY_SAME_ORIGIN ||
-           e == nsILoadInfo::OPENER_POLICY_SAME_SITE ||
-           e == nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_ALLOW_OUTGOING ||
-           e == nsILoadInfo::OPENER_POLICY_SAME_SITE_ALLOW_OUTGOING;
-  }
-};
-
-template <>
-struct ParamTraits<nsILoadInfo::CrossOriginOpenerPolicy>
-    : EnumSerializer<nsILoadInfo::CrossOriginOpenerPolicy,
-                     CrossOriginOpenerPolicyValidator> {};
 
 } /* namespace IPC */
 
