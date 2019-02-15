@@ -1027,4 +1027,87 @@ mod tests {
         let thread_sum: u64 = read_handles.into_iter().map(|handle| handle.join().expect("value")).sum();
         assert_eq!(thread_sum, (0..num_threads).sum());
     }
+
+    #[test]
+    fn test_use_value_as_key() {
+        let root = Builder::new().prefix("test_use_value_as_key").tempdir().expect("tempdir");
+        let rkv = Rkv::new(root.path()).expect("new succeeded");
+        let store = rkv.open_single("store", StoreOptions::create()).expect("opened");
+
+        {
+            let mut writer = rkv.write().expect("writer");
+            store.put(&mut writer, "foo", &Value::Str("bar")).expect("wrote");
+            store.put(&mut writer, "bar", &Value::Str("baz")).expect("wrote");
+            writer.commit().expect("committed");
+        }
+
+        // It's possible to retrieve a value with a Reader and then use it
+        // as a key with a Writer.
+        {
+            let reader = &rkv.read().unwrap();
+            if let Some(Value::Str(key)) = store.get(reader, "foo").expect("read") {
+                let mut writer = rkv.write().expect("writer");
+                store.delete(&mut writer, key).expect("deleted");
+                writer.commit().expect("committed");
+            }
+        }
+
+        {
+            let mut writer = rkv.write().expect("writer");
+            store.put(&mut writer, "bar", &Value::Str("baz")).expect("wrote");
+            writer.commit().expect("committed");
+        }
+
+        // You can also retrieve a Value with a Writer and then use it as a key
+        // with the same Writer if you copy the value to an owned type
+        // so the Writer isn't still being borrowed by the retrieved value
+        // when you try to borrow the Writer again to modify that value.
+        {
+            let mut writer = rkv.write().expect("writer");
+            if let Some(Value::Str(value)) = store.get(&writer, "foo").expect("read") {
+                let key = value.to_owned();
+                store.delete(&mut writer, key).expect("deleted");
+                writer.commit().expect("committed");
+            }
+        }
+
+        {
+            let name1 = rkv.open_single("name1", StoreOptions::create()).expect("opened");
+            let name2 = rkv.open_single("name2", StoreOptions::create()).expect("opened");
+            let mut writer = rkv.write().expect("writer");
+            name1.put(&mut writer, "key1", &Value::Str("bar")).expect("wrote");
+            name1.put(&mut writer, "bar", &Value::Str("baz")).expect("wrote");
+            name2.put(&mut writer, "key2", &Value::Str("bar")).expect("wrote");
+            name2.put(&mut writer, "bar", &Value::Str("baz")).expect("wrote");
+            writer.commit().expect("committed");
+        }
+
+        // You can also iterate (store, key) pairs to retrieve foreign keys,
+        // then iterate those foreign keys to modify/delete them.
+        //
+        // You need to open the stores in advance, since opening a store
+        // uses a write transaction internally, so opening them while a writer
+        // is extant will hang.
+        //
+        // And you need to copy the values to an owned type so the Writer isn't
+        // still being borrowed by a retrieved value when you try to borrow
+        // the Writer again to modify another value.
+        let fields = vec![
+            (rkv.open_single("name1", StoreOptions::create()).expect("opened"), "key1"),
+            (rkv.open_single("name2", StoreOptions::create()).expect("opened"), "key2"),
+        ];
+        {
+            let mut foreignkeys = Vec::new();
+            let mut writer = rkv.write().expect("writer");
+            for (store, key) in fields.iter() {
+                if let Some(Value::Str(value)) = store.get(&writer, key).expect("read") {
+                    foreignkeys.push((store, value.to_owned()));
+                }
+            }
+            for (store, key) in foreignkeys.iter() {
+                store.delete(&mut writer, key).expect("deleted");
+            }
+            writer.commit().expect("committed");
+        }
+    }
 }
