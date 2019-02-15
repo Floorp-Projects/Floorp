@@ -14,10 +14,9 @@ namespace dom {
 
 ServiceWorkerRegisterJob::ServiceWorkerRegisterJob(
     nsIPrincipal* aPrincipal, const nsACString& aScope,
-    const nsACString& aScriptSpec, nsILoadGroup* aLoadGroup,
-    ServiceWorkerUpdateViaCache aUpdateViaCache)
+    const nsACString& aScriptSpec, ServiceWorkerUpdateViaCache aUpdateViaCache)
     : ServiceWorkerUpdateJob(Type::Register, aPrincipal, aScope, aScriptSpec,
-                             aLoadGroup, aUpdateViaCache) {}
+                             aUpdateViaCache) {}
 
 void ServiceWorkerRegisterJob::AsyncExecute() {
   MOZ_ASSERT(NS_IsMainThread());
