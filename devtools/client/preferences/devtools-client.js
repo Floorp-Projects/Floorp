@@ -56,12 +56,6 @@ pref("devtools.inspector.fonthighlighter.enabled", true);
 pref("devtools.inspector.changes.enabled", true);
 // Enable the new Rules View
 pref("devtools.inspector.new-rulesview.enabled", false);
-// Enable the 'scrollable' markup-badges in nightly only for now
-#if defined(NIGHTLY_BUILD)
-pref("devtools.inspector.scrollable-badges.enabled", true);
-#else
-pref("devtools.inspector.scrollable-badges.enabled", false);
-#endif
 
 // Flexbox preferences
 // Whether or not to show the combined flexbox and box model highlighter.

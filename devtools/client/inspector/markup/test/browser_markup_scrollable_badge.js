@@ -26,9 +26,6 @@ const TEST_URI = `
 `;
 
 add_task(async function() {
-  info("Enable the scrollable badge feature");
-  await pushPref("devtools.inspector.scrollable-badges.enabled", true);
-
   const { inspector } = await openInspectorForURL(
     "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 

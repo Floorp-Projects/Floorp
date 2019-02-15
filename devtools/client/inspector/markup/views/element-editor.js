@@ -297,10 +297,6 @@ ElementEditor.prototype = {
   },
 
   updateScrollableBadge: function() {
-    if (!this.markup.isScrollableBadgesEnabled) {
-      return;
-    }
-
     if (this.node.isScrollable && !this._scrollableBadge) {
       this._createScrollableBadge();
     } else if (this._scrollableBadge && !this.node.isScrollable) {
