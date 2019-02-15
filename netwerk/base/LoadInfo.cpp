@@ -80,7 +80,6 @@ LoadInfo::LoadInfo(
       mTopOuterWindowID(0),
       mFrameOuterWindowID(0),
       mBrowsingContextID(0),
-      mFrameBrowsingContextID(0),
       mInitialSecurityCheckDone(false),
       mIsThirdPartyContext(false),
       mIsDocshellReload(false),
@@ -231,9 +230,6 @@ LoadInfo::LoadInfo(
         nsCOMPtr<nsPIDOMWindowOuter> outerWindow = do_GetInterface(docShell);
         if (outerWindow) {
           mFrameOuterWindowID = outerWindow->WindowID();
-
-          RefPtr<dom::BrowsingContext> bc = outerWindow->GetBrowsingContext();
-          mFrameBrowsingContextID = bc ? bc->Id() : 0;
         }
       }
     }
@@ -366,7 +362,6 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
       mTopOuterWindowID(0),
       mFrameOuterWindowID(0),
       mBrowsingContextID(0),
-      mFrameBrowsingContextID(0),
       mInitialSecurityCheckDone(false),
       mIsThirdPartyContext(false),  // NB: TYPE_DOCUMENT implies !third-party.
       mIsDocshellReload(false),
@@ -505,7 +500,7 @@ LoadInfo::LoadInfo(
     bool aForceInheritPrincipalDropped, uint64_t aInnerWindowID,
     uint64_t aOuterWindowID, uint64_t aParentOuterWindowID,
     uint64_t aTopOuterWindowID, uint64_t aFrameOuterWindowID,
-    uint64_t aBrowsingContextID, uint64_t aFrameBrowsingContextID,
+    uint64_t aBrowsingContextID,
     bool aInitialSecurityCheckDone, bool aIsThirdPartyContext,
     bool aIsDocshellReload, bool aSendCSPViolationEvents,
     const OriginAttributes& aOriginAttributes,
@@ -548,7 +543,6 @@ LoadInfo::LoadInfo(
       mTopOuterWindowID(aTopOuterWindowID),
       mFrameOuterWindowID(aFrameOuterWindowID),
       mBrowsingContextID(aBrowsingContextID),
-      mFrameBrowsingContextID(aFrameBrowsingContextID),
       mInitialSecurityCheckDone(aInitialSecurityCheckDone),
       mIsThirdPartyContext(aIsThirdPartyContext),
       mIsDocshellReload(aIsDocshellReload),
@@ -1000,20 +994,8 @@ LoadInfo::GetBrowsingContextID(uint64_t* aResult) {
 }
 
 NS_IMETHODIMP
-LoadInfo::GetFrameBrowsingContextID(uint64_t* aResult) {
-  *aResult = mFrameBrowsingContextID;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 LoadInfo::GetBrowsingContext(dom::BrowsingContext** aResult) {
   *aResult = BrowsingContext::Get(mBrowsingContextID).take();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetFrameBrowsingContext(dom::BrowsingContext** aResult) {
-  *aResult = BrowsingContext::Get(mFrameBrowsingContextID).take();
   return NS_OK;
 }
 
