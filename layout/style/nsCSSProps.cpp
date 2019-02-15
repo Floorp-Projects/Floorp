@@ -419,28 +419,6 @@ const KTableEntry nsCSSProps::kVerticalAlignKTable[] = {
     {eCSSKeyword_text_bottom, NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM},
     {eCSSKeyword_UNKNOWN, -1}};
 
-const KTableEntry nsCSSProps::kWidthKTable[] = {
-    {eCSSKeyword_max_content, NS_STYLE_WIDTH_MAX_CONTENT},
-    {eCSSKeyword_min_content, NS_STYLE_WIDTH_MIN_CONTENT},
-    {eCSSKeyword__moz_fit_content, NS_STYLE_WIDTH_FIT_CONTENT},
-    {eCSSKeyword__moz_available, NS_STYLE_WIDTH_AVAILABLE},
-    {eCSSKeyword_UNKNOWN, -1}};
-
-// This must be the same as kWidthKTable, but just with 'content' added:
-const KTableEntry nsCSSProps::kFlexBasisKTable[] = {
-    {eCSSKeyword_max_content, NS_STYLE_WIDTH_MAX_CONTENT},
-    {eCSSKeyword_min_content, NS_STYLE_WIDTH_MIN_CONTENT},
-    {eCSSKeyword__moz_fit_content, NS_STYLE_WIDTH_FIT_CONTENT},
-    {eCSSKeyword__moz_available, NS_STYLE_WIDTH_AVAILABLE},
-    {eCSSKeyword_content, NS_STYLE_FLEX_BASIS_CONTENT},
-    {eCSSKeyword_UNKNOWN, -1}};
-static_assert(ArrayLength(nsCSSProps::kFlexBasisKTable) ==
-                  ArrayLength(nsCSSProps::kWidthKTable) + 1,
-              "kFlexBasisKTable should have the same entries as "
-              "kWidthKTable, plus one more for 'content'");
-
-// Specific keyword tables for XUL.properties
-
 // keyword tables for SVG properties
 
 const KTableEntry nsCSSProps::kShapeRadiusKTable[] = {

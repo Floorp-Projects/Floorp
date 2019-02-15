@@ -286,9 +286,11 @@ bool nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
     // and bsize is a length or bsize and bend are auto and bstart is not auto,
     // then our frame bsize does not depend on the parent bsize.
     // Note that borders never depend on the parent bsize.
+    //
+    // FIXME(emilio): Should the BSize(wm).IsAuto() check also for the extremum
+    // lengths?
     if ((pos->BSizeDependsOnContainer(wm) &&
-         !(pos->BSize(wm).GetUnit() == eStyleUnit_Auto &&
-           pos->mOffset.GetBEnd(wm).IsAuto() &&
+         !(pos->BSize(wm).IsAuto() && pos->mOffset.GetBEnd(wm).IsAuto() &&
            !pos->mOffset.GetBStart(wm).IsAuto())) ||
         pos->MinBSizeDependsOnContainer(wm) ||
         pos->MaxBSizeDependsOnContainer(wm) ||

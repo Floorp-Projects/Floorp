@@ -1241,7 +1241,7 @@ nsresult FetchAndConvertUnsupportedPayloads::ConvertPayload(
   // For non-square images, pick the largest side.
   int32_t originalSize = std::max(width, height);
   int32_t size = originalSize;
-  for (uint16_t supportedSize : sFaviconSizes) {
+  for (uint16_t supportedSize : gFaviconSizes) {
     if (supportedSize <= originalSize) {
       size = supportedSize;
       break;

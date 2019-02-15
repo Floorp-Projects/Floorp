@@ -1263,26 +1263,14 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetImageLayerPosition(
   return valueList.forget();
 }
 
-void nsComputedDOMStyle::SetValueToPositionCoord(
-    const Position::Coord& aCoord, nsROCSSPrimitiveValue* aValue) {
-  if (!aCoord.mHasPercent) {
-    MOZ_ASSERT(aCoord.mPercent == 0.0f, "Shouldn't have mPercent!");
-    aValue->SetAppUnits(aCoord.mLength);
-  } else if (aCoord.mLength == 0) {
-    aValue->SetPercent(aCoord.mPercent);
-  } else {
-    SetValueToCalc(&aCoord, aValue);
-  }
-}
-
 void nsComputedDOMStyle::SetValueToPosition(const Position& aPosition,
                                             nsDOMCSSValueList* aValueList) {
   RefPtr<nsROCSSPrimitiveValue> valX = new nsROCSSPrimitiveValue;
-  SetValueToPositionCoord(aPosition.mXPosition, valX);
+  SetValueToLengthPercentage(valX, aPosition.horizontal, false);
   aValueList->AppendCSSValue(valX.forget());
 
   RefPtr<nsROCSSPrimitiveValue> valY = new nsROCSSPrimitiveValue;
-  SetValueToPositionCoord(aPosition.mYPosition, valY);
+  SetValueToLengthPercentage(valY, aPosition.vertical, false);
   aValueList->AppendCSSValue(valY.forget());
 }
 
@@ -2338,8 +2326,12 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetFlexBasis() {
   //     }
   //   }
 
-  SetValueToCoord(val, StylePosition()->mFlexBasis, true, nullptr,
-                  nsCSSProps::kFlexBasisKTable);
+  const auto& basis = StylePosition()->mFlexBasis;
+  if (basis.IsContent()) {
+    val->SetIdent(eCSSKeyword_content);
+    return val.forget();
+  }
+  SetValueToSize(val, basis.AsSize());
   return val.forget();
 }
 
@@ -2464,8 +2456,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetHeight() {
         positionData->mMaxHeight, &nsComputedDOMStyle::GetCBContentHeight,
         nscoord_MAX, true);
 
-    SetValueToCoord(val, positionData->mHeight, true, nullptr,
-                    nsCSSProps::kWidthKTable, minHeight, maxHeight);
+    SetValueToSize(val, positionData->mHeight, minHeight, maxHeight);
   }
 
   return val.forget();
@@ -2504,8 +2495,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetWidth() {
         positionData->mMaxWidth, &nsComputedDOMStyle::GetCBContentWidth,
         nscoord_MAX, true);
 
-    SetValueToCoord(val, positionData->mWidth, true, nullptr,
-                    nsCSSProps::kWidthKTable, minWidth, maxWidth);
+    SetValueToSize(val, positionData->mWidth, minWidth, maxWidth);
   }
 
   return val.forget();
@@ -2513,15 +2503,13 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetWidth() {
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMaxHeight() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueToCoord(val, StylePosition()->mMaxHeight, true, nullptr,
-                  nsCSSProps::kWidthKTable);
+  SetValueToMaxSize(val, StylePosition()->mMaxHeight);
   return val.forget();
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMaxWidth() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueToCoord(val, StylePosition()->mMaxWidth, true, nullptr,
-                  nsCSSProps::kWidthKTable);
+  SetValueToMaxSize(val, StylePosition()->mMaxWidth);
   return val.forget();
 }
 
@@ -2544,28 +2532,26 @@ bool nsComputedDOMStyle::ShouldHonorMinSizeAutoInAxis(PhysicalAxis aAxis) {
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMinHeight() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  nsStyleCoord minHeight = StylePosition()->mMinHeight;
+  StyleSize minHeight = StylePosition()->mMinHeight;
 
-  if (eStyleUnit_Auto == minHeight.GetUnit() &&
-      !ShouldHonorMinSizeAutoInAxis(eAxisVertical)) {
-    minHeight.SetCoordValue(0);
+  if (minHeight.IsAuto() && !ShouldHonorMinSizeAutoInAxis(eAxisVertical)) {
+    minHeight = StyleSize::LengthPercentage(LengthPercentage::Zero());
   }
 
-  SetValueToCoord(val, minHeight, true, nullptr, nsCSSProps::kWidthKTable);
+  SetValueToSize(val, minHeight);
   return val.forget();
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMinWidth() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 
-  nsStyleCoord minWidth = StylePosition()->mMinWidth;
+  StyleSize minWidth = StylePosition()->mMinWidth;
 
-  if (eStyleUnit_Auto == minWidth.GetUnit() &&
-      !ShouldHonorMinSizeAutoInAxis(eAxisHorizontal)) {
-    minWidth.SetCoordValue(0);
+  if (minWidth.IsAuto() && !ShouldHonorMinSizeAutoInAxis(eAxisHorizontal)) {
+    minWidth = StyleSize::LengthPercentage(LengthPercentage::Zero());
   }
 
-  SetValueToCoord(val, minWidth, true, nullptr, nsCSSProps::kWidthKTable);
+  SetValueToSize(val, minWidth);
   return val.forget();
 }
 
@@ -2614,32 +2600,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetOffsetWidthFor(
       return nullptr;
   }
 }
-// FIXME(emilio): Remove these when nsStyleCoord is gone.
-static nsStyleCoord ToCoord(const LengthPercentage& aLength) {
-  nsStyleCoord ret;
-  if (aLength.was_calc) {
-    auto* calc = new nsStyleCoord::Calc();
-    calc->mLength = CSSPixel::ToAppUnits(aLength.LengthInCSSPixels());
-    calc->mPercent = aLength.Percentage();
-    calc->mHasPercent = aLength.HasPercent();
-    ret.SetCalcValue(calc);  // takes ownership.
-    return ret;
-  }
-
-  if (aLength.HasPercent()) {
-    ret.SetPercentValue(aLength.Percentage());
-  } else {
-    ret.SetCoordValue(aLength.ToLength());
-  }
-  return ret;
-}
-
-static nsStyleCoord ToCoord(const LengthPercentageOrAuto& aLength) {
-  if (aLength.IsAuto()) {
-    return nsStyleCoord(eStyleUnit_Auto);
-  }
-  return ToCoord(aLength.AsLengthPercentage());
-}
 
 static_assert(eSideTop == 0 && eSideRight == 1 && eSideBottom == 2 &&
                   eSideLeft == 3,
@@ -2668,8 +2628,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetNonStaticPositionOffset(
                                         ? aWidthGetter
                                         : aHeightGetter;
 
-  val->SetAppUnits(sign *
-                   StyleCoordToNSCoord(ToCoord(coord), baseGetter, 0, false));
+  val->SetAppUnits(sign * StyleCoordToNSCoord(coord, baseGetter, 0, false));
   return val.forget();
 }
 
@@ -2749,7 +2708,8 @@ nscoord nsComputedDOMStyle::GetUsedAbsoluteOffset(mozilla::Side aSide) {
 already_AddRefed<CSSValue> nsComputedDOMStyle::GetStaticOffset(
     mozilla::Side aSide) {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueToCoord(val, ToCoord(StylePosition()->mOffset.Get(aSide)), false);
+  SetValueToLengthPercentageOrAuto(val, StylePosition()->mOffset.Get(aSide),
+                                   false);
   return val.forget();
 }
 
@@ -2758,7 +2718,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetPaddingWidthFor(
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 
   if (!mInnerFrame) {
-    SetValueToCoord(val, ToCoord(StylePadding()->mPadding.Get(aSide)), true);
+    SetValueToLengthPercentage(val, StylePadding()->mPadding.Get(aSide), true);
   } else {
     AssertFlushedPendingReflows();
 
@@ -2833,7 +2793,8 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetMarginWidthFor(
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 
   if (!mInnerFrame) {
-    SetValueToCoord(val, ToCoord(StyleMargin()->mMargin.Get(aSide)), false);
+    SetValueToLengthPercentageOrAuto(val, StyleMargin()->mMargin.Get(aSide),
+                                     false);
   } else {
     AssertFlushedPendingReflows();
 
@@ -2846,6 +2807,94 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetMarginWidthFor(
   }
 
   return val.forget();
+}
+
+void nsComputedDOMStyle::SetValueToExtremumLength(nsROCSSPrimitiveValue* aValue,
+                                                  StyleExtremumLength aSize) {
+  switch (aSize) {
+    case StyleExtremumLength::MaxContent:
+      return aValue->SetIdent(eCSSKeyword_max_content);
+    case StyleExtremumLength::MinContent:
+      return aValue->SetIdent(eCSSKeyword_min_content);
+    case StyleExtremumLength::MozAvailable:
+      return aValue->SetIdent(eCSSKeyword__moz_available);
+    case StyleExtremumLength::MozFitContent:
+      return aValue->SetIdent(eCSSKeyword__moz_fit_content);
+  }
+  MOZ_ASSERT_UNREACHABLE("Unknown extremum length?");
+}
+
+void nsComputedDOMStyle::SetValueToSize(nsROCSSPrimitiveValue* aValue,
+                                        const StyleSize& aSize, nscoord aMin,
+                                        nscoord aMax) {
+  if (aSize.IsAuto()) {
+    return aValue->SetIdent(eCSSKeyword_auto);
+  }
+  if (aSize.IsExtremumLength()) {
+    return SetValueToExtremumLength(aValue, aSize.AsExtremumLength());
+  }
+  MOZ_ASSERT(aSize.IsLengthPercentage());
+  SetValueToLengthPercentage(aValue, aSize.AsLengthPercentage(), true, aMin,
+                             aMax);
+}
+
+void nsComputedDOMStyle::SetValueToMaxSize(nsROCSSPrimitiveValue* aValue,
+                                           const StyleMaxSize& aSize) {
+  if (aSize.IsNone()) {
+    return aValue->SetIdent(eCSSKeyword_none);
+  }
+  if (aSize.IsExtremumLength()) {
+    return SetValueToExtremumLength(aValue, aSize.AsExtremumLength());
+  }
+  MOZ_ASSERT(aSize.IsLengthPercentage());
+  SetValueToLengthPercentage(aValue, aSize.AsLengthPercentage(), true);
+}
+
+void nsComputedDOMStyle::SetValueToLengthPercentageOrAuto(
+    nsROCSSPrimitiveValue* aValue, const LengthPercentageOrAuto& aSize,
+    bool aClampNegativeCalc) {
+  if (aSize.IsAuto()) {
+    return aValue->SetIdent(eCSSKeyword_auto);
+  }
+  SetValueToLengthPercentage(aValue, aSize.AsLengthPercentage(),
+                             aClampNegativeCalc);
+}
+
+void nsComputedDOMStyle::SetValueToLengthPercentage(
+    nsROCSSPrimitiveValue* aValue, const mozilla::LengthPercentage& aLength,
+    bool aClampNegativeCalc, nscoord aMin, nscoord aMax) {
+  if (aLength.ConvertsToLength()) {
+    nscoord result = aLength.ToLength();
+    if (aClampNegativeCalc) {
+      result = std::max(result, 0);
+    }
+    // TODO(emilio, bug 1527392): It's wrong to clamp here.
+    return aValue->SetAppUnits(std::max(aMin, std::min(result, aMax)));
+  }
+  if (aLength.ConvertsToPercentage()) {
+    float result = aLength.ToPercentage();
+    if (aClampNegativeCalc) {
+      result = std::max(result, 0.0f);
+    }
+    return aValue->SetPercent(result);
+  }
+
+  // TODO(emilio): This intentionally matches the serialization of
+  // SetValueToCalc, but goes against the spec. Update this when possible.
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  nsAutoString tmp, result;
+  result.AppendLiteral("calc(");
+  val->SetAppUnits(CSSPixel::ToAppUnits(aLength.LengthInCSSPixels()));
+  val->GetCssText(tmp);
+  result.Append(tmp);
+  if (aLength.HasPercent()) {
+    result.AppendLiteral(" + ");
+    val->SetPercent(aLength.Percentage());
+    val->GetCssText(tmp);
+    result.Append(tmp);
+  }
+  result.Append(')');
+  aValue->SetString(result);
 }
 
 void nsComputedDOMStyle::SetValueToCoord(
@@ -2943,33 +2992,29 @@ void nsComputedDOMStyle::SetValueToCoord(
 }
 
 nscoord nsComputedDOMStyle::StyleCoordToNSCoord(
-    const nsStyleCoord& aCoord, PercentageBaseGetter aPercentageBaseGetter,
+    const LengthPercentage& aCoord, PercentageBaseGetter aPercentageBaseGetter,
     nscoord aDefaultValue, bool aClampNegativeCalc) {
   MOZ_ASSERT(aPercentageBaseGetter, "Must have a percentage base getter");
-  if (aCoord.GetUnit() == eStyleUnit_Coord) {
-    return aCoord.GetCoordValue();
+  if (aCoord.ConvertsToLength()) {
+    return aCoord.ToLength();
   }
-  if (aCoord.GetUnit() == eStyleUnit_Percent || aCoord.IsCalcUnit()) {
-    nscoord percentageBase;
-    if ((this->*aPercentageBaseGetter)(percentageBase)) {
-      nscoord result = aCoord.ComputeCoordPercentCalc(percentageBase);
-      if (aClampNegativeCalc && result < 0) {
-        // It's expected that we can get a negative value here with calc().
-        // We can also get a negative value with a percentage value if
-        // percentageBase is negative; this isn't expected, but can happen
-        // when large length values overflow.
-        NS_WARNING_ASSERTION(percentageBase >= 0,
-                             "percentage base value overflowed to become "
-                             "negative for a property "
-                             "that disallows negative values");
-        MOZ_ASSERT(
-            aCoord.IsCalcUnit() || (aCoord.HasPercent() && percentageBase < 0),
-            "parser should have rejected value");
-        result = 0;
-      }
-      return result;
+  nscoord percentageBase;
+  if ((this->*aPercentageBaseGetter)(percentageBase)) {
+    nscoord result = aCoord.Resolve(percentageBase);
+    if (aClampNegativeCalc && result < 0) {
+      // It's expected that we can get a negative value here with calc().
+      // We can also get a negative value with a percentage value if
+      // percentageBase is negative; this isn't expected, but can happen
+      // when large length values overflow.
+      NS_WARNING_ASSERTION(percentageBase >= 0,
+                           "percentage base value overflowed to become "
+                           "negative for a property "
+                           "that disallows negative values");
+      MOZ_ASSERT(aCoord.was_calc || (aCoord.HasPercent() && percentageBase < 0),
+                 "parser should have rejected value");
+      result = 0;
     }
-    // Fall through to returning aDefaultValue if we have no percentage base.
+    return result;
   }
 
   return aDefaultValue;

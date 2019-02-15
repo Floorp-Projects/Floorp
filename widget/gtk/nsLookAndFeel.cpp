@@ -767,18 +767,15 @@ static void GetSystemFontInfo(GtkStyleContext* aStyle, nsString* aFontName,
     // |size| is in pango-points, so convert to pixels.
     size *= float(gfxPlatformGtk::GetFontScaleDPI()) / POINTS_PER_INCH_FLOAT;
   }
-  // |size| is now pixels but not scaled for the hidpi displays,
-  // this needs to be done in GetFontImpl where the aDevPixPerCSSPixel
-  // parameter is provided.
 
+  // |size| is now pixels but not scaled for the hidpi displays,
   aFontStyle->size = size;
 
   pango_font_description_free(desc);
 }
 
 bool nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName,
-                                gfxFontStyle& aFontStyle,
-                                float aDevPixPerCSSPixel) {
+                                gfxFontStyle& aFontStyle) {
   switch (aID) {
     case eFont_Menu:          // css2
     case eFont_PullDownMenu:  // css3
@@ -815,17 +812,17 @@ bool nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName,
       aFontStyle = mDefaultFontStyle;
       break;
   }
+
   // Scale the font for the current monitor
   double scaleFactor = nsIWidget::DefaultScaleOverride();
   if (scaleFactor > 0) {
     aFontStyle.size *=
-        mozilla::widget::ScreenHelperGTK::GetGTKMonitorScaleFactor();
+        widget::ScreenHelperGTK::GetGTKMonitorScaleFactor() / scaleFactor;
   } else {
-    // Remove effect of font scale because it has been already applied in
-    // GetSystemFontInfo
-    aFontStyle.size *=
-        aDevPixPerCSSPixel / gfxPlatformGtk::GetFontScaleFactor();
+    // Convert gdk pixels to CSS pixels.
+    aFontStyle.size /= gfxPlatformGtk::GetFontScaleFactor();
   }
+
   return true;
 }
 

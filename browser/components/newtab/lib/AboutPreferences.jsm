@@ -136,8 +136,8 @@ this.AboutPreferences = class AboutPreferences {
    */
   renderPreferences({document, Preferences, gHomePane}, strings, prefStructure, discoveryStreamConfig) {
     // Helper to create a new element and append it
-    const createAppend = (tag, parent) => parent.appendChild(
-      document.createXULElement(tag));
+    const createAppend = (tag, parent, options) => parent.appendChild(
+      document.createXULElement(tag, options));
 
     // Helper to get strings and format with values if necessary
     const formatString = id => {
@@ -225,9 +225,8 @@ this.AboutPreferences = class AboutPreferences {
         sponsoredHbox.appendChild(checkbox);
         checkbox.classList.add("tail-with-learn-more");
 
-        const link = createAppend("label", sponsoredHbox);
+        const link = createAppend("label", sponsoredHbox, {is: "text-link"});
         link.classList.add("learn-sponsored");
-        link.classList.add("text-link");
         link.setAttribute("href", sectionData.learnMore.link.href);
         link.textContent = formatString(sectionData.learnMore.link.id);
       }

@@ -10,13 +10,13 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'toolkit_cleardata'
 
-EXTRA_COMPONENTS += [
-    'ClearDataService.js',
-    'ClearDataService.manifest',
+EXTRA_JS_MODULES += [
+    'ClearDataService.jsm',
+    'ServiceWorkerCleanUp.jsm',
 ]
 
-EXTRA_JS_MODULES += [
-    'ServiceWorkerCleanUp.jsm',
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']

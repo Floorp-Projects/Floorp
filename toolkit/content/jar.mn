@@ -78,6 +78,7 @@ toolkit.jar:
    content/global/bindings/spinner.js          (widgets/spinner.js)
    content/global/bindings/tabbox.xml          (widgets/tabbox.xml)
    content/global/bindings/text.xml            (widgets/text.xml)
+   content/global/elements/text.js             (widgets/text.js)
 *  content/global/bindings/textbox.xml         (widgets/textbox.xml)
    content/global/bindings/timekeeper.js       (widgets/timekeeper.js)
    content/global/bindings/timepicker.js       (widgets/timepicker.js)

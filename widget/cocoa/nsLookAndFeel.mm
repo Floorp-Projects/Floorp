@@ -628,8 +628,7 @@ bool nsLookAndFeel::SystemWantsDarkTheme() {
   return false;
 }
 
-bool nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName, gfxFontStyle& aFontStyle,
-                                float aDevPixPerCSSPixel) {
+bool nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName, gfxFontStyle& aFontStyle) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   // hack for now
@@ -637,7 +636,7 @@ bool nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName, gfxFontStyle& a
     aFontStyle.style = mozilla::FontSlantStyle::Normal();
     aFontStyle.weight = mozilla::FontWeight::Normal();
     aFontStyle.stretch = mozilla::FontStretch::Normal();
-    aFontStyle.size = 14 * aDevPixPerCSSPixel;
+    aFontStyle.size = 14;
     aFontStyle.systemFont = true;
 
     aFontName.AssignLiteral("sans-serif");
@@ -645,7 +644,7 @@ bool nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName, gfxFontStyle& a
   }
 
   nsAutoCString name;
-  gfxPlatformMac::LookupSystemFont(aID, name, aFontStyle, aDevPixPerCSSPixel);
+  gfxPlatformMac::LookupSystemFont(aID, name, aFontStyle);
   aFontName.Append(NS_ConvertUTF8toUTF16(name));
 
   return true;

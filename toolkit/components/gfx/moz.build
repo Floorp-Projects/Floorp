@@ -7,9 +7,12 @@
 with Files('**'):
     BUG_COMPONENT = ('Core', 'Graphics')
 
-EXTRA_COMPONENTS += [
-    'GfxSanityTest.manifest',
-    'SanityTest.js',
+EXTRA_JS_MODULES += [
+    'SanityTest.jsm',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 JAR_MANIFESTS += ['jar.mn']

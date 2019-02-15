@@ -14,26 +14,26 @@ if CONFIG['MOZ_TOOLKIT_SEARCH']:
 XPIDL_MODULE = 'toolkit_search'
 
 EXTRA_COMPONENTS += [
-    'nsSearchService.js',
-    'nsSearchSuggestions.js',
 ]
 
 if CONFIG['MOZ_BUILD_APP'] in ['browser', 'mobile/android', 'xulrunner']:
-    DEFINES['HAVE_SIDEBAR'] = True
-    EXTRA_COMPONENTS += [
-    'nsSidebar.js',
+    EXTRA_JS_MODULES += [
+        'Sidebar.jsm',
     ]
 
 EXTRA_JS_MODULES += [
+    'SearchService.jsm',
+    'SearchStaticData.jsm',
     'SearchSuggestionController.jsm',
+    'SearchSuggestions.jsm',
 ]
 
-EXTRA_PP_COMPONENTS += [
+EXTRA_COMPONENTS += [
     'toolkitsearch.manifest',
 ]
 
-EXTRA_JS_MODULES += [
-    'SearchStaticData.jsm',
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 with Files('**'):

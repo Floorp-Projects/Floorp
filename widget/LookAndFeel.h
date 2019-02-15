@@ -650,13 +650,13 @@ class LookAndFeel {
    * if the system theme specifies this font, false if a default should
    * be used.  In the latter case neither aName nor aStyle is modified.
    *
+   * Size of the font should be in CSS pixels, not device pixels.
+   *
    * @param aID    Which system-theme font is wanted.
    * @param aName  The name of the font to use.
    * @param aStyle Styling to apply to the font.
-   * @param aDevPixPerCSSPixel  Ratio of device pixels to CSS pixels
    */
-  static bool GetFont(FontID aID, nsString& aName, gfxFontStyle& aStyle,
-                      float aDevPixPerCSSPixel);
+  static bool GetFont(FontID aID, nsString& aName, gfxFontStyle& aStyle);
 
   /**
    * GetPasswordCharacter() returns a unicode character which should be used

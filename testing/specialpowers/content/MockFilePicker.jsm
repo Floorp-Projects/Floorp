@@ -17,7 +17,7 @@ const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 Cu.forcePermissiveCOWs();
 
 var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
-var oldClassID, oldFactory;
+var oldClassID;
 var newClassID = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID();
 var newFactory = function(window) {
   return {
@@ -59,8 +59,6 @@ var MockFilePicker = {
     this.factory = newFactory(window);
     if (!registrar.isCIDRegistered(newClassID)) {
       oldClassID = registrar.contractIDToCID(CONTRACT_ID);
-      oldFactory = Cm.getClassObject(Cc[CONTRACT_ID], Ci.nsIFactory);
-      registrar.unregisterFactory(oldClassID, oldFactory);
       registrar.registerFactory(newClassID, "", CONTRACT_ID, this.factory);
     }
   },
@@ -84,9 +82,9 @@ var MockFilePicker = {
     var previousFactory = this.factory;
     this.reset();
     this.factory = null;
-    if (oldFactory) {
+    if (oldClassID) {
       registrar.unregisterFactory(newClassID, previousFactory);
-      registrar.registerFactory(oldClassID, "", CONTRACT_ID, oldFactory);
+      registrar.registerFactory(oldClassID, "", CONTRACT_ID, null);
     }
   },
 

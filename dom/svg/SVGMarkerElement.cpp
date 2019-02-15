@@ -53,35 +53,8 @@ SVGEnumMapping SVGMarkerElement::sUnitsMap[] = {
 SVGElement::EnumInfo SVGMarkerElement::sEnumInfo[1] = {
     {nsGkAtoms::markerUnits, sUnitsMap, SVG_MARKERUNITS_STROKEWIDTH}};
 
-SVGElement::AngleInfo SVGMarkerElement::sAngleInfo[1] = {
-    {nsGkAtoms::orient, 0, SVG_ANGLETYPE_UNSPECIFIED}};
-
 //----------------------------------------------------------------------
 // Implementation
-
-nsresult nsSVGOrientType::SetBaseValue(uint16_t aValue,
-                                       SVGElement* aSVGElement) {
-  if (aValue == SVG_MARKER_ORIENT_AUTO || aValue == SVG_MARKER_ORIENT_ANGLE ||
-      aValue == SVG_MARKER_ORIENT_AUTO_START_REVERSE) {
-    SetBaseValue(aValue);
-    aSVGElement->SetAttr(kNameSpaceID_None, nsGkAtoms::orient, nullptr,
-                         (aValue == SVG_MARKER_ORIENT_AUTO
-                              ? NS_LITERAL_STRING("auto")
-                              : aValue == SVG_MARKER_ORIENT_ANGLE
-                                    ? NS_LITERAL_STRING("0")
-                                    : NS_LITERAL_STRING("auto-start-reverse")),
-                         true);
-    return NS_OK;
-  }
-  return NS_ERROR_DOM_TYPE_ERR;
-}
-
-already_AddRefed<SVGAnimatedEnumeration> nsSVGOrientType::ToDOMAnimatedEnum(
-    SVGElement* aSVGElement) {
-  RefPtr<SVGAnimatedEnumeration> toReturn =
-      new DOMAnimatedEnum(this, aSVGElement);
-  return toReturn.forget();
-}
 
 SVGMarkerElement::SVGMarkerElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
@@ -126,16 +99,15 @@ already_AddRefed<SVGAnimatedLength> SVGMarkerElement::MarkerHeight() {
 }
 
 already_AddRefed<SVGAnimatedEnumeration> SVGMarkerElement::OrientType() {
-  return mOrientType.ToDOMAnimatedEnum(this);
+  return mOrient.ToDOMAnimatedEnum(this);
 }
 
 already_AddRefed<SVGAnimatedAngle> SVGMarkerElement::OrientAngle() {
-  return mAngleAttributes[ORIENT].ToDOMAnimatedAngle(this);
+  return mOrient.ToDOMAnimatedAngle(this);
 }
 
 void SVGMarkerElement::SetOrientToAuto() {
-  SetAttr(kNameSpaceID_None, nsGkAtoms::orient, nullptr,
-          NS_LITERAL_STRING("auto"), true);
+  mOrient.SetBaseType(SVG_MARKER_ORIENT_AUTO, this);
 }
 
 void SVGMarkerElement::SetOrientToAngle(DOMSVGAngle& angle, ErrorResult& rv) {
@@ -144,8 +116,7 @@ void SVGMarkerElement::SetOrientToAngle(DOMSVGAngle& angle, ErrorResult& rv) {
     rv.Throw(NS_ERROR_DOM_SVG_WRONG_TYPE_ERR);
     return;
   }
-  mOrientType.SetBaseValue(SVG_MARKER_ORIENT_ANGLE);
-  mAngleAttributes[ORIENT].SetBaseValue(f, angle.UnitType(), this, true);
+  mOrient.SetBaseValue(f, angle.UnitType(), this, true);
 }
 
 //----------------------------------------------------------------------
@@ -172,48 +143,6 @@ SVGMarkerElement::IsAttributeMapped(const nsAtom* name) const {
 //----------------------------------------------------------------------
 // SVGElement methods
 
-bool SVGMarkerElement::ParseAttribute(int32_t aNameSpaceID, nsAtom* aName,
-                                      const nsAString& aValue,
-                                      nsIPrincipal* aMaybeScriptedPrincipal,
-                                      nsAttrValue& aResult) {
-  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::orient) {
-    if (aValue.EqualsLiteral("auto")) {
-      mOrientType.SetBaseValue(SVG_MARKER_ORIENT_AUTO);
-      aResult.SetTo(aValue);
-      mAngleAttributes[ORIENT].SetBaseValue(0.f, SVG_ANGLETYPE_UNSPECIFIED,
-                                            this, false);
-      return true;
-    }
-    if (aValue.EqualsLiteral("auto-start-reverse")) {
-      mOrientType.SetBaseValue(SVG_MARKER_ORIENT_AUTO_START_REVERSE);
-      aResult.SetTo(aValue);
-      mAngleAttributes[ORIENT].SetBaseValue(0.f, SVG_ANGLETYPE_UNSPECIFIED,
-                                            this, false);
-      return true;
-    }
-    mOrientType.SetBaseValue(SVG_MARKER_ORIENT_ANGLE);
-  }
-  return SVGMarkerElementBase::ParseAttribute(aNameSpaceID, aName, aValue,
-                                              aMaybeScriptedPrincipal, aResult);
-}
-
-nsresult SVGMarkerElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                        const nsAttrValue* aValue,
-                                        const nsAttrValue* aOldValue,
-                                        nsIPrincipal* aMaybeScriptedPrincipal,
-                                        bool aNotify) {
-  if (!aValue && aNamespaceID == kNameSpaceID_None &&
-      aName == nsGkAtoms::orient) {
-    mOrientType.SetBaseValue(SVG_MARKER_ORIENT_ANGLE);
-  }
-
-  return SVGMarkerElementBase::AfterSetAttr(
-      aNamespaceID, aName, aValue, aOldValue, aMaybeScriptedPrincipal, aNotify);
-}
-
-//----------------------------------------------------------------------
-// SVGElement methods
-
 void SVGMarkerElement::SetParentCoordCtxProvider(SVGViewportElement* aContext) {
   mCoordCtx = aContext;
   mViewBoxToViewportTransform = nullptr;
@@ -231,14 +160,11 @@ SVGElement::LengthAttributesInfo SVGMarkerElement::GetLengthInfo() {
                               ArrayLength(sLengthInfo));
 }
 
-SVGElement::AngleAttributesInfo SVGMarkerElement::GetAngleInfo() {
-  return AngleAttributesInfo(mAngleAttributes, sAngleInfo,
-                             ArrayLength(sAngleInfo));
-}
-
 SVGElement::EnumAttributesInfo SVGMarkerElement::GetEnumInfo() {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo, ArrayLength(sEnumInfo));
 }
+
+SVGOrient* SVGMarkerElement::GetOrient() { return &mOrient; }
 
 SVGViewBox* SVGMarkerElement::GetViewBox() { return &mViewBox; }
 
@@ -257,7 +183,7 @@ gfx::Matrix SVGMarkerElement::GetMarkerTransform(float aStrokeWidth,
           : 1.0f;
 
   float angle;
-  switch (mOrientType.GetAnimValueInternal()) {
+  switch (mOrient.GetAnimType()) {
     case SVG_MARKER_ORIENT_AUTO:
       angle = aMark.angle;
       break;
@@ -265,7 +191,7 @@ gfx::Matrix SVGMarkerElement::GetMarkerTransform(float aStrokeWidth,
       angle = aMark.angle + (aMark.type == SVGMark::eStart ? M_PI : 0.0f);
       break;
     default:  // SVG_MARKER_ORIENT_ANGLE
-      angle = mAngleAttributes[ORIENT].GetAnimValue() * M_PI / 180.0f;
+      angle = mOrient.GetAnimValue() * M_PI / 180.0f;
       break;
   }
 

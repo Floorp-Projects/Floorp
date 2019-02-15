@@ -101,9 +101,9 @@ class nsAttrValue {
     eAtomArray,
     eDoubleValue,
     eIntMarginValue,
-    eSVGAngle,
-    eSVGTypesBegin = eSVGAngle,
     eSVGIntegerPair,
+    eSVGTypesBegin = eSVGIntegerPair,
+    eSVGOrient,
     eSVGLength,
     eSVGLengthList,
     eSVGNumberList,
@@ -151,7 +151,7 @@ class nsAttrValue {
              const nsAString* aSerialized);
   void SetTo(nsIURI* aValue, const nsAString* aSerialized);
   void SetTo(const nsIntMargin& aValue);
-  void SetTo(const mozilla::SVGAngle& aValue, const nsAString* aSerialized);
+  void SetTo(const mozilla::SVGOrient& aValue, const nsAString* aSerialized);
   void SetTo(const mozilla::SVGIntegerPair& aValue,
              const nsAString* aSerialized);
   void SetTo(const nsSVGLength2& aValue, const nsAString* aSerialized);

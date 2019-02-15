@@ -1973,16 +1973,16 @@ nsRect nsTreeBodyFrame::GetImageSize(int32_t aRowIndex, nsTreeColumn* aCol,
     r.y += myList->mImageRegion.y;
   }
 
-  if (myPosition->mWidth.GetUnit() == eStyleUnit_Coord) {
-    int32_t val = myPosition->mWidth.GetCoordValue();
+  if (myPosition->mWidth.ConvertsToLength()) {
+    int32_t val = myPosition->mWidth.ToLength();
     r.width += val;
   } else if (useImageRegion && myList->mImageRegion.width > 0)
     r.width += myList->mImageRegion.width;
   else
     needWidth = true;
 
-  if (myPosition->mHeight.GetUnit() == eStyleUnit_Coord) {
-    int32_t val = myPosition->mHeight.GetCoordValue();
+  if (myPosition->mHeight.ConvertsToLength()) {
+    int32_t val = myPosition->mHeight.ToLength();
     r.height += val;
   } else if (useImageRegion && myList->mImageRegion.height > 0)
     r.height += myList->mImageRegion.height;
@@ -2035,17 +2035,17 @@ nsSize nsTreeBodyFrame::GetImageDestSize(ComputedStyle* aComputedStyle,
   // destination width/height.
   const nsStylePosition* myPosition = aComputedStyle->StylePosition();
 
-  if (myPosition->mWidth.GetUnit() == eStyleUnit_Coord) {
+  if (myPosition->mWidth.ConvertsToLength()) {
     // CSS has specified the destination width.
-    size.width = myPosition->mWidth.GetCoordValue();
+    size.width = myPosition->mWidth.ToLength();
   } else {
     // We'll need to get the width of the image/region.
     needWidth = true;
   }
 
-  if (myPosition->mHeight.GetUnit() == eStyleUnit_Coord) {
+  if (myPosition->mHeight.ConvertsToLength()) {
     // CSS has specified the destination height.
-    size.height = myPosition->mHeight.GetCoordValue();
+    size.height = myPosition->mHeight.ToLength();
   } else {
     // We'll need to get the height of the image/region.
     needHeight = true;
@@ -2143,12 +2143,14 @@ int32_t nsTreeBodyFrame::GetRowHeight() {
     const nsStylePosition* myPosition = rowContext->StylePosition();
 
     nscoord minHeight = 0;
-    if (myPosition->mMinHeight.GetUnit() == eStyleUnit_Coord)
-      minHeight = myPosition->mMinHeight.GetCoordValue();
+    if (myPosition->mMinHeight.ConvertsToLength()) {
+      minHeight = myPosition->mMinHeight.ToLength();
+    }
 
     nscoord height = 0;
-    if (myPosition->mHeight.GetUnit() == eStyleUnit_Coord)
-      height = myPosition->mHeight.GetCoordValue();
+    if (myPosition->mHeight.ConvertsToLength()) {
+      height = myPosition->mHeight.ToLength();
+    }
 
     if (height < minHeight) height = minHeight;
 
@@ -2179,9 +2181,8 @@ int32_t nsTreeBodyFrame::GetIndentation() {
       GetPseudoComputedStyle(nsCSSAnonBoxes::mozTreeIndentation());
   if (indentContext) {
     const nsStylePosition* myPosition = indentContext->StylePosition();
-    if (myPosition->mWidth.GetUnit() == eStyleUnit_Coord) {
-      nscoord val = myPosition->mWidth.GetCoordValue();
-      return val;
+    if (myPosition->mWidth.ConvertsToLength()) {
+      return myPosition->mWidth.ToLength();
     }
   }
 
@@ -2888,9 +2889,9 @@ ImgDrawResult nsTreeBodyFrame::PaintSeparator(int32_t aRowIndex,
 
     // Obtain the height for the separator or use the default value.
     nscoord height;
-    if (stylePosition->mHeight.GetUnit() == eStyleUnit_Coord)
-      height = stylePosition->mHeight.GetCoordValue();
-    else {
+    if (stylePosition->mHeight.ConvertsToLength()) {
+      height = stylePosition->mHeight.ToLength();
+    } else {
       // Use default height 2px.
       height = nsPresContext::CSSPixelsToAppUnits(2);
     }
@@ -3633,18 +3634,18 @@ ImgDrawResult nsTreeBodyFrame::PaintDropFeedback(
 
     // Obtain the width for the drop feedback or use default value.
     nscoord width;
-    if (stylePosition->mWidth.GetUnit() == eStyleUnit_Coord)
-      width = stylePosition->mWidth.GetCoordValue();
-    else {
+    if (stylePosition->mWidth.ConvertsToLength()) {
+      width = stylePosition->mWidth.ToLength();
+    } else {
       // Use default width 50px.
       width = nsPresContext::CSSPixelsToAppUnits(50);
     }
 
     // Obtain the height for the drop feedback or use default value.
     nscoord height;
-    if (stylePosition->mHeight.GetUnit() == eStyleUnit_Coord)
-      height = stylePosition->mHeight.GetCoordValue();
-    else {
+    if (stylePosition->mHeight.ConvertsToLength()) {
+      height = stylePosition->mHeight.ToLength();
+    } else {
       // Use default height 2px.
       height = nsPresContext::CSSPixelsToAppUnits(2);
     }

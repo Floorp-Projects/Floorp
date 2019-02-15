@@ -93,9 +93,9 @@ if CONFIG['MOZ_GECKO_PROFILER']:
       'other/KeyedStackCapturer.cpp'
     ]
 
-EXTRA_COMPONENTS += [
-    'TelemetryStartup.js',
-    'TelemetryStartup.manifest'
+XPCOM_MANIFESTS += [
+    'components.conf',
+    'core/components.conf',
 ]
 
 EXTRA_JS_MODULES += [
@@ -116,6 +116,7 @@ EXTRA_JS_MODULES += [
     'pings/TelemetrySession.jsm',
     'pings/UntrustedModulesPing.jsm',
     'pings/UpdatePing.jsm',
+    'TelemetryStartup.jsm',
 ]
 
 TESTING_JS_MODULES += [

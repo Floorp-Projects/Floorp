@@ -12,6 +12,7 @@
 interface nsIFile;
 interface nsIFactory;
 interface nsIArray;
+interface nsIUTF8StringEnumerator;
 
 [scriptable, uuid(d604ffc3-1ba3-4f6c-b65f-1ed4199364c3)]
 interface nsIComponentManager : nsISupports
@@ -96,6 +97,12 @@ interface nsIComponentManager : nsISupports
      * Get an array of nsIURIs of all registered and builtin manifest locations.
      */
     nsIArray getManifestLocations();
+
+    /**
+     * Returns a list of JSM URLs which are used to create components. This
+     * should only be used in automation.
+     */
+    nsIUTF8StringEnumerator getComponentJSMs();
 };
 
 

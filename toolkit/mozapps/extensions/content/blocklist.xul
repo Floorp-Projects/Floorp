@@ -39,7 +39,7 @@
       <description id="hardBlockMessage" hidden="true" class="bold">&blocklist.hardblocked;</description>
       <description id="softBlockMessage" hidden="true" class="bold">&blocklist.softblocked;</description>
       <hbox pack="start">
-        <label id="moreInfo" class="text-link" value="&blocklist.moreinfo;"/>
+        <label id="moreInfo" value="&blocklist.moreinfo;" is="text-link"/>
       </hbox>
     </vbox>
   </hbox>

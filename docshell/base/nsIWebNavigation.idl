@@ -342,10 +342,6 @@ interface nsIWebNavigation : nsISupports
 
   /**
    * Resume a load which has been redirected from another process.
-   *
-   * A negative |aHistoryIndex| value corresponds to a non-history load being
-   * resumed.
    */
-  void resumeRedirectedLoad(in unsigned long long aLoadIdentifier,
-                            in long aHistoryIndex);
+  void resumeRedirectedLoad(in unsigned long long aLoadIdentifier);
 };

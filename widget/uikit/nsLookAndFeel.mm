@@ -372,14 +372,13 @@ nsLookAndFeel::GetFloatImpl(FloatID aID, float &aResult) {
   return res;
 }
 
-bool nsLookAndFeel::GetFontImpl(FontID aID, nsString &aFontName, gfxFontStyle &aFontStyle,
-                                float aDevPixPerCSSPixel) {
+bool nsLookAndFeel::GetFontImpl(FontID aID, nsString &aFontName, gfxFontStyle &aFontStyle) {
   // hack for now
   if (aID == eFont_Window || aID == eFont_Document) {
     aFontStyle.style = FontSlantStyle::Normal();
     aFontStyle.weight = FontWeight::Normal();
     aFontStyle.stretch = FontStretch::Normal();
-    aFontStyle.size = 14 * aDevPixPerCSSPixel;
+    aFontStyle.size = 14;
     aFontStyle.systemFont = true;
 
     aFontName.AssignLiteral("sans-serif");
