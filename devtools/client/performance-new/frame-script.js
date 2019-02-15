@@ -62,7 +62,7 @@ function getSymbolTable(debugName, breakpadId) {
 // The following functions handle the security of cloning the object into the page.
 // The code was taken from the original Gecko Profiler Add-on to maintain
 // compatibility with the existing profile importing mechanism:
-// See: https://github.com/devtools-html/Gecko-Profiler-Addon/blob/78138190b42565f54ce4022a5b28583406489ed2/data/tab-framescript.js
+// See: https://github.com/firefox-devtools/Gecko-Profiler-Addon/blob/78138190b42565f54ce4022a5b28583406489ed2/data/tab-framescript.js
 
 /**
  * Create a promise that can be used in the page.
