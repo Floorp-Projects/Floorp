@@ -80,6 +80,41 @@ function synthesizeTouchEnd(aTarget, aId, aOffsetX, aOffsetY) {
 var target0 = document.getElementById("target0");
 var target1 = document.getElementById("target1");
 
+function WaitExpectedEvents(aListenEvents, aExpectedEvents, aEventGenerator) {
+  let promise = new Promise(function(aResolve) {
+    let index = 0;
+    let checkReceivedEvents = function(aEvent) {
+      if (aExpectedEvents.length === 0) {
+        ok(false, `receive unexpected ${aEvent.type} event from ${aEvent.target}`);
+        return;
+      }
+      index++;
+      let expectedResult = aExpectedEvents.shift();
+      isDeeply(expectedResult, [aEvent.target, aEvent.type], `${index}. expect receive ${expectedResult[1]} event from ${expectedResult[0]}`);
+      if (aExpectedEvents.length === 0) {
+        // Wait a bit to see if there is any additional unexpected event fired.
+        setTimeout(function() {
+          // Clean up
+          aListenEvents.forEach((aElem) => {
+            target0.removeEventListener(aElem, checkReceivedEvents);
+            target1.removeEventListener(aElem, checkReceivedEvents);
+          });
+          aResolve();
+        }, 0);
+      }
+    };
+
+    aListenEvents.forEach((aElem) => {
+      target0.addEventListener(aElem, checkReceivedEvents);
+      target1.addEventListener(aElem, checkReceivedEvents);
+    });
+  });
+
+  aEventGenerator();
+
+  return promise;
+}
+
 add_task(async function setup() {
   await SimpleTest.promiseFocus();
   await SpecialPowers.pushPrefEnv({
@@ -90,43 +125,22 @@ add_task(async function setup() {
 
 // Test for bug 1521082
 add_task(async function ShouldNotSendDuplicatedPointerDown() {
-  let expectedEvents = [
-    // [index, target, event type]
-    ["target0", "pointerdown"],
-    ["target1", "pointerdown"],
-    ["target1", "pointerup"],
-    ["target0", "pointerup"],
-  ];
-
-  let promise = new Promise(function(aResolve) {
-    let index = 0;
-    let checkReceivedEvents = function(aTarget, aEventType) {
-      if (expectedEvents.length === 0) {
-        ok(false, `receive unexpected ${aEventType} event from ${aTarget}`);
-        aResolve();
-        return;
-      }
-      index++;
-      let expectedResult = expectedEvents.shift();
-      isDeeply(expectedResult, [aTarget, aEventType], `${index}. expect receive ${expectedResult[1]} event from ${expectedResult[0]}`);
-      if (expectedEvents.length === 0) {
-        aResolve();
-      }
-    };
-
-    ["pointerup", "pointerdown"].forEach((aElem) => {
-      target0.addEventListener(aElem, (e) => { checkReceivedEvents("target0", event.type); });
-      target1.addEventListener(aElem, (e) => { checkReceivedEvents("target1", event.type); });
-    });
-  });
-
-  var defaultId = SpecialPowers.Ci.nsIDOMWindowUtils.DEFAULT_TOUCH_POINTER_ID;
-  synthesizeTouchStart(target0, defaultId, 10, 10);
-  synthesizeTouchStart(target1, defaultId + 1, 10, 10);
-  synthesizeTouchEnd(target1, defaultId + 1, 10, 10);
-  synthesizeTouchEnd(target0, defaultId, 10, 10);
-
-  return promise;
+  return WaitExpectedEvents(
+    ["pointerup", "pointerdown"],
+    [ // [event target, event type]
+      [target0, "pointerdown"],
+      [target1, "pointerdown"],
+      [target1, "pointerup"],
+      [target0, "pointerup"],
+    ],
+    function() {
+      var defaultId = SpecialPowers.Ci.nsIDOMWindowUtils.DEFAULT_TOUCH_POINTER_ID;
+      synthesizeTouchStart(target0, defaultId, 10, 10);
+      synthesizeTouchStart(target1, defaultId + 1, 10, 10);
+      synthesizeTouchEnd(target1, defaultId + 1, 10, 10);
+      synthesizeTouchEnd(target0, defaultId, 10, 10);
+    }
+  );
 });
 
 </script>
