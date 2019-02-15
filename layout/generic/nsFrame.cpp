@@ -1099,7 +1099,7 @@ void nsIFrame::MarkNeedsDisplayItemRebuild() {
         container->InvalidateAnchor();
       }
       if (nsIScrollableFrame* scrollableFrame = do_QueryFrame(this)) {
-        scrollableFrame->GetAnchor()->InvalidateAnchor();
+        scrollableFrame->Anchor()->InvalidateAnchor();
       }
     }
 
