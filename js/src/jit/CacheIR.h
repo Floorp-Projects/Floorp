@@ -187,7 +187,9 @@ enum ArgType {
   UInt32,
   Word,
 };
-}
+
+extern const uint32_t OpLengths[];
+}  // namespace CacheIROpFormat
 
 #define CACHE_IR_OPS(_)                                                    \
   _(GuardIsObject, Id)                                                     \
@@ -516,8 +518,8 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     operandLastUsed_[opId.id()] = nextInstructionId_ - 1;
   }
 
-  void writeInt32Immediate(int32_t i32) { buffer_.writeSigned(i32); }
-  void writeUint32Immediate(uint32_t u32) { buffer_.writeUnsigned(u32); }
+  void writeInt32Immediate(int32_t i32) { buffer_.writeFixedUint32_t(i32); }
+  void writeUint32Immediate(uint32_t u32) { buffer_.writeFixedUint32_t(u32); }
   void writePointer(void* ptr) { buffer_.writeRawPointer(ptr); }
 
   void writeOpWithOperandId(CacheOp op, OperandId opId) {
@@ -1495,8 +1497,8 @@ class MOZ_RAII CacheIRReader {
   uint32_t typeDescrKey() { return buffer_.readByte(); }
   JSWhyMagic whyMagic() { return JSWhyMagic(buffer_.readByte()); }
   JSOp jsop() { return JSOp(buffer_.readByte()); }
-  int32_t int32Immediate() { return buffer_.readSigned(); }
-  uint32_t uint32Immediate() { return buffer_.readUnsigned(); }
+  int32_t int32Immediate() { return int32_t(buffer_.readFixedUint32_t()); }
+  uint32_t uint32Immediate() { return buffer_.readFixedUint32_t(); }
   void* pointer() { return buffer_.readRawPointer(); }
 
   ReferenceType referenceTypeDescrType() {
@@ -1535,6 +1537,7 @@ class MOZ_RAII CacheIRReader {
     buffer_.seek(pos, 0);
     return false;
   }
+  const uint8_t* currentPosition() const { return buffer_.currentPosition(); }
 };
 
 class MOZ_RAII IRGenerator {
