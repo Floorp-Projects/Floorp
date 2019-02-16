@@ -2,8 +2,8 @@
 <html>
 <head>
   <title>Notification Basics</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="MockServices.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="NotificationTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -35,7 +35,7 @@
 
       // Create a new notification to make sure
       // Notification.get() works while creating
-      var notification = new Notification("this is a test");
+      new Notification("this is a test");
 
       promise.then(function() {
         ok(true, "promise should be fulfilled");
@@ -55,18 +55,18 @@
       promise.then(function(notifications) {
         ok(notifications.length, "should return notifications");
         for (var i = 0; i < notifications.length; i++) {
-          var notification = notifications[i];
-          if (notification.tag === options.tag) {
+          var currentNotification = notifications[i];
+          if (currentNotification.tag === options.tag) {
             ok(true, "should contain newly created notification");
             for (var key in options) {
               if (key === "data") {
-                ok(NotificationTest.customDataMatches(notification.data),
+                ok(NotificationTest.customDataMatches(currentNotification.data),
                    "data property should match");
                 continue;
               }
-              is(notification[key], options[key], key + " property should match");
+              is(currentNotification[key], options[key], key + " property should match");
             }
-            notification.close();
+            currentNotification.close();
             return;
           }
         }
@@ -85,8 +85,8 @@
       promise.then(function(notifications) {
         var notification = notifications[0];
         is(notifications.length, 1, "should return 1 notification");
-        is(notifications[0].title, "title3", "titles should match");
-        is(notifications[0].tag, "tag3", "tags should match");
+        is(notification.title, "title3", "titles should match");
+        is(notification.tag, "tag3", "tags should match");
         var closeCount = 0;
         var waitForAll = function() {
           if (++closeCount >= 3) {

@@ -9,15 +9,10 @@ var EXPORTED_SYMBOLS = [];
 const DEBUG = false;
 function debug(s) { dump("-*- NotificationDB component: " + s + "\n"); }
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
-
-XPCOMUtils.defineLazyServiceGetter(this, "notificationStorage",
-                                   "@mozilla.org/notificationStorage;1",
-                                   "nsINotificationStorage");
 
 const NOTIFICATION_STORE_DIR = OS.Constants.Path.profileDir;
 const NOTIFICATION_STORE_PATH =
@@ -258,15 +253,16 @@ var NotificationDB = {
       switch (task.operation) {
         case "getall":
           return this.taskGetAll(task.data);
-          break;
 
         case "save":
           return this.taskSave(task.data);
-          break;
 
         case "delete":
           return this.taskDelete(task.data);
-          break;
+
+        default:
+          return Promise.reject(
+            new Error(`Found a task with unknown operation ${task.operation}`));
       }
     })
     .then(payload => {
@@ -279,7 +275,7 @@ var NotificationDB = {
       if (DEBUG) {
         debug("Error while running " + this.runningTask.operation + ": " + err);
       }
-      this.runningTask.defer.reject(new String(err));
+      this.runningTask.defer.reject(err);
     })
     .then(() => {
       this.runNextTask();
