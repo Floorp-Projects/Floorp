@@ -197,6 +197,10 @@ def windows_toolchain(config, job, taskdesc):
     }]
     worker['chain-of-trust'] = True
 
+    # There were no caches on generic-worker before bug 1519472, and they cause
+    # all sorts of problems with toolchain tasks, disable them until
+    # tasks are ready.
+    run['use-caches'] = False
     support_vcs_checkout(config, job, taskdesc)
 
     env = worker['env']
