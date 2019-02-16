@@ -448,6 +448,7 @@ class NameResolver {
         MOZ_ASSERT(cur->is<ContinueStatement>());
         break;
 
+      case ParseNodeKind::Name:
       case ParseNodeKind::ObjectPropertyName:
       case ParseNodeKind::PrivateName:  // TODO(khyperia): Implement private
                                         // field access.
@@ -471,7 +472,6 @@ class NameResolver {
       case ParseNodeKind::TypeOfNameExpr:
       case ParseNodeKind::SuperBase:
         MOZ_ASSERT(cur->as<UnaryNode>().kid()->isKind(ParseNodeKind::Name));
-        MOZ_ASSERT(!cur->as<UnaryNode>().kid()->as<NameNode>().initializer());
         break;
 
       case ParseNodeKind::NewTargetExpr:
@@ -714,12 +714,10 @@ class NameResolver {
           ClassNames* names = classNode->names();
           if (NameNode* outerBinding = names->outerBinding()) {
             MOZ_ASSERT(outerBinding->isKind(ParseNodeKind::Name));
-            MOZ_ASSERT(!outerBinding->initializer());
           }
 
           NameNode* innerBinding = names->innerBinding();
           MOZ_ASSERT(innerBinding->isKind(ParseNodeKind::Name));
-          MOZ_ASSERT(!innerBinding->initializer());
         }
 #endif
         if (ParseNode* heritage = classNode->heritage()) {
@@ -900,9 +898,7 @@ class NameResolver {
           MOZ_ASSERT(spec->isKind(isImport ? ParseNodeKind::ImportSpec
                                            : ParseNodeKind::ExportSpec));
           MOZ_ASSERT(spec->left()->isKind(ParseNodeKind::Name));
-          MOZ_ASSERT(!spec->left()->as<NameNode>().initializer());
           MOZ_ASSERT(spec->right()->isKind(ParseNodeKind::Name));
-          MOZ_ASSERT(!spec->right()->as<NameNode>().initializer());
         }
 #endif
         break;
@@ -931,14 +927,6 @@ class NameResolver {
       case ParseNodeKind::LabelStmt:
         if (!resolve(cur->as<LabeledStatement>().statement(), prefix)) {
           return false;
-        }
-        break;
-
-      case ParseNodeKind::Name:
-        if (ParseNode* init = cur->as<NameNode>().initializer()) {
-          if (!resolve(init, prefix)) {
-            return false;
-          }
         }
         break;
 
