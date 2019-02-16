@@ -40,6 +40,8 @@ respectively (see also [setOnTextChangeListener](set-on-text-change-listener.md)
 
 | Name | Summary |
 |---|---|
+| [autoCompleteBackgroundColor](auto-complete-background-color.md) | `var autoCompleteBackgroundColor: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>The background color used for the autocomplete suggestion. |
+| [autoCompleteForegroundColor](auto-complete-foreground-color.md) | `var autoCompleteForegroundColor: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`?`<br>The Foreground color used for the autocomplete suggestion. |
 | [autocompleteResult](autocomplete-result.md) | `var autocompleteResult: `[`AutocompleteResult`](-autocomplete-result/index.md)`?` |
 | [nonAutocompleteText](non-autocomplete-text.md) | `val nonAutocompleteText: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [originalText](original-text.md) | `open val originalText: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Current text. |
@@ -72,8 +74,6 @@ respectively (see also [setOnTextChangeListener](set-on-text-change-listener.md)
 
 | Name | Summary |
 |---|---|
-| [AUTOCOMPLETE_SPAN](-a-u-t-o-c-o-m-p-l-e-t-e_-s-p-a-n.md) | `val AUTOCOMPLETE_SPAN: `[`Concrete`](https://developer.android.com/reference/android/text/NoCopySpan/Concrete.html) |
-| [DEFAULT_AUTOCOMPLETE_BACKGROUND_COLOR](-d-e-f-a-u-l-t_-a-u-t-o-c-o-m-p-l-e-t-e_-b-a-c-k-g-r-o-u-n-d_-c-o-l-o-r.md) | `val DEFAULT_AUTOCOMPLETE_BACKGROUND_COLOR: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 | [INPUT_METHOD_AMAZON_ECHO_SHOW](-i-n-p-u-t_-m-e-t-h-o-d_-a-m-a-z-o-n_-e-c-h-o_-s-h-o-w.md) | `const val INPUT_METHOD_AMAZON_ECHO_SHOW: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [INPUT_METHOD_SONY](-i-n-p-u-t_-m-e-t-h-o-d_-s-o-n-y.md) | `const val INPUT_METHOD_SONY: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 

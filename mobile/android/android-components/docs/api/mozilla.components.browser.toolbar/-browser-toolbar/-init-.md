@@ -11,15 +11,14 @@ URL and controls for navigation. In edit mode the current URL can be edited. Tho
 implemented by the DisplayToolbar and EditToolbar classes.
 
 ```
-    +----------------+
-    | BrowserToolbar |
-    +--------+-------+
-             +
-     +-------+-------+
-     |               |
+             +----------------+
+             | BrowserToolbar |
+             +--------+-------+
+                      +
+              +-------+-------+
+              |               |
+    +---------v------+ +-------v--------+
+    | DisplayToolbar | |   EditToolbar  |
+    +----------------+ +----------------+
 ```
-
-+---------v------+ +-------v--------+
-| DisplayToolbar | |   EditToolbar  |
-+----------------+ +----------------+
 

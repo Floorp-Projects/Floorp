@@ -2,7 +2,7 @@
 
 # ByteBufferInputStream
 
-`class ByteBufferInputStream : `[`InputStream`](https://developer.android.com/reference/java/io/InputStream.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-nightly/src/main/java/mozilla/components/browser/engine/gecko/fetch/GeckoViewFetchClient.kt#L121)
+`class ByteBufferInputStream : `[`InputStream`](https://developer.android.com/reference/java/io/InputStream.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-nightly/src/main/java/mozilla/components/browser/engine/gecko/fetch/GeckoViewFetchClient.kt#L124)
 
 ### Constructors
 

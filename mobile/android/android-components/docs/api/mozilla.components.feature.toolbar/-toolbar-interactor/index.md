@@ -17,4 +17,3 @@ Connects a toolbar instance to the browser engine via use cases
 | Name | Summary |
 |---|---|
 | [start](start.md) | `fun start(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Starts this interactor. Makes sure this interactor is listening to relevant UI changes and triggers the corresponding use-cases in response. |
-| [stop](stop.md) | `fun stop(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Stops this interactor. |
