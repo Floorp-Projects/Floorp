@@ -63,7 +63,7 @@ def test_alert_unsupported_operation(session):
     assert_error(response, "unsupported operation")
 
 
-@pytest.mark.parametrize("text", ["", "Federer", " Fed erer "])
+@pytest.mark.parametrize("text", ["", "Federer", " Fed erer ", "Fed\terer"])
 def test_send_alert_text(session, page, text):
     send_response = send_alert_text(session, text)
     assert_success(send_response)
