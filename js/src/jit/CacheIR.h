@@ -669,15 +669,13 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     addStubField(uintptr_t(group), StubField::Type::ObjectGroup);
   }
 
- private:
+ public:
   // Use (or create) a specialization below to clarify what constaint the
   // group guard is implying.
   void guardGroup(ObjOperandId obj, ObjectGroup* group) {
     writeOpWithOperandId(CacheOp::GuardGroup, obj);
     addStubField(uintptr_t(group), StubField::Type::ObjectGroup);
   }
-
- public:
   void guardGroupForProto(ObjOperandId obj, ObjectGroup* group) {
     MOZ_ASSERT(!group->hasUncacheableProto());
     guardGroup(obj, group);
@@ -1768,6 +1766,7 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator {
   HandleValue idVal_;
   HandleValue rhsVal_;
   bool* isTemporarilyUnoptimizable_;
+  bool* canAddSlot_;
   PropertyTypeCheckInfo typeCheckInfo_;
 
   enum class PreliminaryObjectAction { None, Unlink, NotePreliminary };
@@ -1837,11 +1836,13 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator {
   bool tryAttachMegamorphicSetElement(HandleObject obj, ObjOperandId objId,
                                       ValOperandId rhsId);
 
+  bool canAttachAddSlotStub(HandleObject obj, HandleId id);
+
  public:
   SetPropIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
                      CacheKind cacheKind, ICState::Mode mode,
-                     bool* isTemporarilyUnoptimizable, HandleValue lhsVal,
-                     HandleValue idVal, HandleValue rhsVal,
+                     bool* isTemporarilyUnoptimizable, bool* canAddSlot,
+                     HandleValue lhsVal, HandleValue idVal, HandleValue rhsVal,
                      bool needsTypeBarrier = true,
                      bool maybeHasExtraIndexedProps = true);
 
