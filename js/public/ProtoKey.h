@@ -129,8 +129,8 @@
   IMAGINARY(WasmTable, dummy, dummy)                                         \
   IMAGINARY(WasmGlobal, dummy, dummy)
 
-#define JS_FOR_PROTOTYPES(REAL, IMAGINARY)                               \
-  JS_FOR_PROTOTYPES_(REAL, IMAGINARY, IF_INTL(REAL, IMAGINARY),          \
+#define JS_FOR_PROTOTYPES(REAL, IMAGINARY)                      \
+  JS_FOR_PROTOTYPES_(REAL, IMAGINARY, IF_INTL(REAL, IMAGINARY), \
                      IF_TYPEDOBJ(REAL, IMAGINARY), IF_SAB(REAL, IMAGINARY))
 
 #define JS_FOR_EACH_PROTOTYPE(MACRO) JS_FOR_PROTOTYPES(MACRO, MACRO)

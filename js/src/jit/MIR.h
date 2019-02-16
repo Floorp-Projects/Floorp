@@ -11928,9 +11928,7 @@ class MWasmCall final : public MVariadicInstruction, public NoTypePolicy::Data {
   ABIArg instanceArg_;
 
   MWasmCall(const wasm::CallSiteDesc& desc, const wasm::CalleeDesc& callee)
-      : MVariadicInstruction(classOpcode),
-        desc_(desc),
-        callee_(callee) {}
+      : MVariadicInstruction(classOpcode), desc_(desc), callee_(callee) {}
 
  public:
   INSTRUCTION_HEADER(WasmCall)

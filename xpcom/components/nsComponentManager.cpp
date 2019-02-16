@@ -2014,10 +2014,10 @@ nsComponentManagerImpl::RemoveBootstrappedManifestLocation(nsIFile* aLocation) {
   return rv;
 }
 
-
 NS_IMETHODIMP
 nsComponentManagerImpl::GetComponentJSMs(nsIUTF8StringEnumerator** aJSMs) {
-  nsCOMPtr<nsIUTF8StringEnumerator> result = StaticComponents::GetComponentJSMs();
+  nsCOMPtr<nsIUTF8StringEnumerator> result =
+      StaticComponents::GetComponentJSMs();
   result.forget(aJSMs);
   return NS_OK;
 }

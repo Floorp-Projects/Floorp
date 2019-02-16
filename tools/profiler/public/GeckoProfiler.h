@@ -750,10 +750,9 @@ class MOZ_RAII AutoProfilerTextMarker {
   const mozilla::Maybe<uint32_t> mDocShellHistoryId;
 };
 
-#  define AUTO_PROFILER_TEXT_MARKER_CAUSE(markerName, text, category,    \
-                                          cause)                         \
-    AutoProfilerTextMarker PROFILER_RAII(                                \
-        markerName, text, js::ProfilingStackFrame::Category::category,   \
+#  define AUTO_PROFILER_TEXT_MARKER_CAUSE(markerName, text, category, cause) \
+    AutoProfilerTextMarker PROFILER_RAII(                                    \
+        markerName, text, js::ProfilingStackFrame::Category::category,       \
         Nothing(), Nothing(), cause)
 
 #  define AUTO_PROFILER_TEXT_MARKER_DOCSHELL(markerName, text, category, \

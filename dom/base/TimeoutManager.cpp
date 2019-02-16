@@ -798,11 +798,12 @@ void TimeoutManager::RunTimeout(const TimeStamp& aNow,
     }
   }
   if (aProcessIdle) {
-    MOZ_LOG(gTimeoutLog, LogLevel::Debug,
-            ("Running %u deferred timeouts on idle (TimeoutManager=%p), "
-             "nextDeadline = %gms from now",
-             numTimersToRun, this,
-             nextDeadline.IsNull() ? 0.0 : (nextDeadline - now).ToMilliseconds()));
+    MOZ_LOG(
+        gTimeoutLog, LogLevel::Debug,
+        ("Running %u deferred timeouts on idle (TimeoutManager=%p), "
+         "nextDeadline = %gms from now",
+         numTimersToRun, this,
+         nextDeadline.IsNull() ? 0.0 : (nextDeadline - now).ToMilliseconds()));
   }
 
   now = TimeStamp::Now();

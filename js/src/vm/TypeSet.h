@@ -90,10 +90,9 @@ enum : uint32_t {
   /* Mask containing all primitives */
   TYPE_FLAG_PRIMITIVE = TYPE_FLAG_UNDEFINED | TYPE_FLAG_NULL |
                         TYPE_FLAG_BOOLEAN | TYPE_FLAG_INT32 | TYPE_FLAG_DOUBLE |
-                        TYPE_FLAG_STRING | TYPE_FLAG_SYMBOL |
-                        TYPE_FLAG_BIGINT,
+                        TYPE_FLAG_STRING | TYPE_FLAG_SYMBOL | TYPE_FLAG_BIGINT,
 
-/* Mask/shift for the number of objects in objectSet */
+  /* Mask/shift for the number of objects in objectSet */
   TYPE_FLAG_OBJECT_COUNT_MASK = 0x3c00,
   TYPE_FLAG_OBJECT_COUNT_SHIFT = 10,
   TYPE_FLAG_OBJECT_COUNT_LIMIT = 7,
