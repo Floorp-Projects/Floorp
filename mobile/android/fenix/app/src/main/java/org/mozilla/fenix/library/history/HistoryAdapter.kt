@@ -7,15 +7,14 @@ package org.mozilla.fenix.library.history
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.CheckBox
 import android.widget.CompoundButton
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
 import org.mozilla.fenix.R
 import androidx.core.content.ContextCompat
+import kotlinx.android.synthetic.main.history_delete.view.*
+import kotlinx.android.synthetic.main.history_header.view.*
+import kotlinx.android.synthetic.main.history_list_item.view.*
 import mozilla.components.browser.menu.BrowserMenu
 
 class HistoryAdapter(
@@ -26,11 +25,11 @@ class HistoryAdapter(
         private val actionEmitter: Observer<HistoryAction>
     ) : RecyclerView.ViewHolder(view) {
 
-        private val checkbox = view.findViewById<CheckBox>(R.id.should_remove_checkbox)
-        private val favicon = view.findViewById<ImageView>(R.id.history_favicon)
-        private val title = view.findViewById<TextView>(R.id.history_title)
-        private val url = view.findViewById<TextView>(R.id.history_url)
-        private val menuButton = view.findViewById<ImageButton>(R.id.history_item_overflow)
+        private val checkbox = view.should_remove_checkbox
+        private val favicon = view.history_favicon
+        private val title = view.history_title
+        private val url = view.history_url
+        private val menuButton = view.history_item_overflow
 
         private var item: HistoryItem? = null
         private lateinit var historyMenu: HistoryItemMenu
@@ -124,7 +123,7 @@ class HistoryAdapter(
     class HistoryHeaderViewHolder(
         view: View
     ) : RecyclerView.ViewHolder(view) {
-        private val title = view.findViewById<TextView>(R.id.history_header_title)
+        private val title = view.history_header_title
 
         fun bind(title: String) {
             this.title.text = title
@@ -141,7 +140,7 @@ class HistoryAdapter(
     ) : RecyclerView.ViewHolder(view) {
         private lateinit var mode: HistoryState.Mode
 
-        private val button = view.findViewById<View>(R.id.delete_history_button).apply {
+        private val button = view.delete_history_button.apply {
             setOnClickListener {
                 val mode = mode
                 if (mode is HistoryState.Mode.Editing && mode.selectedItems.isNotEmpty()) {
@@ -152,7 +151,7 @@ class HistoryAdapter(
             }
         }
 
-        private val text = view.findViewById<TextView>(R.id.delete_history_button_text).apply {
+        private val text = view.delete_history_button_text.apply {
             val color = ContextCompat.getColor(context, R.color.photonRed60)
             val drawable = ContextCompat.getDrawable(context, R.drawable.ic_delete)
             drawable?.setTint(color)
