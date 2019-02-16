@@ -24,20 +24,19 @@ class nsFrameLoader;
 // This class is considered an XPCOM mixin. This means that while we inherit
 // from ISupports in order to be QI'able, we expect the classes that inherit
 // nsFrameLoaderOwner to actually implement ISupports for us.
-class nsFrameLoaderOwner : public nsISupports
-{
-public:
-
+class nsFrameLoaderOwner : public nsISupports {
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_FRAMELOADEROWNER_IID)
 
   nsFrameLoaderOwner() = default;
   already_AddRefed<nsFrameLoader> GetFrameLoader();
   void SetFrameLoader(nsFrameLoader* aNewFrameLoader);
-protected:
+
+ protected:
   virtual ~nsFrameLoaderOwner() = default;
   RefPtr<nsFrameLoader> mFrameLoader;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsFrameLoaderOwner, NS_FRAMELOADEROWNER_IID)
 
-#endif //nsFrameLoaderOwner_h_
+#endif  // nsFrameLoaderOwner_h_

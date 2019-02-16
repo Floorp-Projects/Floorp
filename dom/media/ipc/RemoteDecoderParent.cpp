@@ -47,8 +47,7 @@ mozilla::ipc::IPCResult RemoteDecoderParent::RecvInit() {
                                       aTrack == TrackInfo::kVideoTrack);
                            if (self->mDecoder) {
                              Unused << self->SendInitComplete(
-                                 aTrack,
-                                 self->mDecoder->GetDescriptionName(),
+                                 aTrack, self->mDecoder->GetDescriptionName(),
                                  self->mDecoder->NeedsConversion());
                            }
                          },

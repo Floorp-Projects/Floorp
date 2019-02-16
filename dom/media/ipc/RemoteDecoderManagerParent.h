@@ -28,8 +28,7 @@ class RemoteDecoderManagerParent final : public PRemoteDecoderManagerParent {
  protected:
   PRemoteDecoderParent* AllocPRemoteDecoderParent(
       const RemoteDecoderInfoIPDL& aRemoteDecoderInfo,
-      const CreateDecoderParams::OptionSet& aOptions,
-      bool* aSuccess,
+      const CreateDecoderParams::OptionSet& aOptions, bool* aSuccess,
       nsCString* aErrorDescription);
   bool DeallocPRemoteDecoderParent(PRemoteDecoderParent* actor);
 

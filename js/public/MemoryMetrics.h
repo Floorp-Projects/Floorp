@@ -560,18 +560,18 @@ struct RuntimeSizes {
 };
 
 struct UnusedGCThingSizes {
-#define FOR_EACH_SIZE(MACRO)                      \
-  MACRO(Other, GCHeapUnused, object)              \
-  MACRO(Other, GCHeapUnused, script)              \
-  MACRO(Other, GCHeapUnused, lazyScript)          \
-  MACRO(Other, GCHeapUnused, shape)               \
-  MACRO(Other, GCHeapUnused, baseShape)           \
-  MACRO(Other, GCHeapUnused, objectGroup)         \
-  MACRO(Other, GCHeapUnused, string)              \
-  MACRO(Other, GCHeapUnused, symbol)              \
-  MACRO(Other, GCHeapUnused, bigInt)              \
-  MACRO(Other, GCHeapUnused, jitcode)             \
-  MACRO(Other, GCHeapUnused, scope)               \
+#define FOR_EACH_SIZE(MACRO)              \
+  MACRO(Other, GCHeapUnused, object)      \
+  MACRO(Other, GCHeapUnused, script)      \
+  MACRO(Other, GCHeapUnused, lazyScript)  \
+  MACRO(Other, GCHeapUnused, shape)       \
+  MACRO(Other, GCHeapUnused, baseShape)   \
+  MACRO(Other, GCHeapUnused, objectGroup) \
+  MACRO(Other, GCHeapUnused, string)      \
+  MACRO(Other, GCHeapUnused, symbol)      \
+  MACRO(Other, GCHeapUnused, bigInt)      \
+  MACRO(Other, GCHeapUnused, jitcode)     \
+  MACRO(Other, GCHeapUnused, scope)       \
   MACRO(Other, GCHeapUnused, regExpShared)
 
   UnusedGCThingSizes() : FOR_EACH_SIZE(ZERO_SIZE) dummy() {}

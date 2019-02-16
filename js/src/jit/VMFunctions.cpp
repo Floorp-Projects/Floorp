@@ -1281,8 +1281,7 @@ void AssertValidValue(JSContext* cx, Value* v) {
     AssertValidStringPtr(cx, v->toString());
   } else if (v->isSymbol()) {
     AssertValidSymbolPtr(cx, v->toSymbol());
-  }
-  else if (v->isBigInt()) {
+  } else if (v->isBigInt()) {
     AssertValidBigIntPtr(cx, v->toBigInt());
   }
 }
@@ -1870,8 +1869,7 @@ const VMFunction GetSparseElementHelperInfo =
     FunctionInfo<GetSparseElementHelperFn>(GetSparseElementHelper,
                                            "getSparseElementHelper");
 
-static bool DoToNumber(JSContext* cx, HandleValue arg,
-                       MutableHandleValue ret) {
+static bool DoToNumber(JSContext* cx, HandleValue arg, MutableHandleValue ret) {
   ret.set(arg);
   return ToNumber(cx, ret);
 }

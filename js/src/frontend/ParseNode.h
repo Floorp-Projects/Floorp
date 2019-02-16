@@ -1543,9 +1543,9 @@ class BigIntLiteral : public ParseNode {
     return true;
   }
 
-#  ifdef DEBUG
+#ifdef DEBUG
   void dump(GenericPrinter& out, int indent);
-#  endif
+#endif
 
   BigIntBox* box() const { return box_; }
 };

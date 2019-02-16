@@ -66,8 +66,7 @@ void WebRenderBackgroundData::AddWebRenderCommands(
 }
 
 WebRenderUserData::WebRenderUserData(RenderRootStateManager* aManager,
-                                     uint32_t aDisplayItemKey,
-                                     nsIFrame* aFrame)
+                                     uint32_t aDisplayItemKey, nsIFrame* aFrame)
     : mManager(aManager),
       mFrame(aFrame),
       mDisplayItemKey(aDisplayItemKey),
@@ -324,11 +323,11 @@ WebRenderImageData* WebRenderFallbackData::PaintIntoImage() {
     return mImageData.get();
   }
 
-  mImageData = MakeAndAddRef<WebRenderImageData>(mManager.get(), mDisplayItemKey, mFrame);
+  mImageData = MakeAndAddRef<WebRenderImageData>(mManager.get(),
+                                                 mDisplayItemKey, mFrame);
 
   return mImageData.get();
 }
-
 
 WebRenderAnimationData::WebRenderAnimationData(RenderRootStateManager* aManager,
                                                nsDisplayItem* aItem)

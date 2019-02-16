@@ -384,9 +384,10 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
       nsSize(std::max(0, layoutSize.width - vScrollbarDesiredWidth),
              std::max(0, layoutSize.height - hScrollbarDesiredHeight));
   if (mHelper.mIsUsingMinimumScaleSize) {
-    mHelper.mICBSize =
-        nsSize(std::max(0, aState->mInsideBorderSize.width - vScrollbarDesiredWidth),
-               std::max(0, aState->mInsideBorderSize.height - hScrollbarDesiredHeight));
+    mHelper.mICBSize = nsSize(
+        std::max(0, aState->mInsideBorderSize.width - vScrollbarDesiredWidth),
+        std::max(0,
+                 aState->mInsideBorderSize.height - hScrollbarDesiredHeight));
   }
 
   nsSize visualViewportSize = scrollPortSize;
