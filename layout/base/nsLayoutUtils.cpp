@@ -3534,7 +3534,7 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
   PartialUpdateResult updateState = PartialUpdateResult::Failed;
 
   {
-    AUTO_PROFILER_LABEL("nsLayoutUtils::PaintFrame:BuildDisplayList", GRAPHICS);
+    AUTO_PROFILER_LABEL_CATEGORY_PAIR(GRAPHICS_DisplayListBuilding);
     AUTO_PROFILER_TRACING("Paint", "DisplayList", GRAPHICS);
 
     PaintTelemetry::AutoRecord record(PaintTelemetry::Metric::DisplayList);
@@ -6761,7 +6761,8 @@ static ImgDrawResult DrawImageInternal(
     SamplingFilter aSamplingFilter, const nsRect& aDest, const nsRect& aFill,
     const nsSize& aRepeatSize, const nsPoint& aAnchor, const nsRect& aDirty,
     uint32_t aImageFlags, ExtendMode aExtendMode, float aOpacity) {
-  AUTO_PROFILER_LABEL("nsLayoutUtils::DrawBackgroundImage", GRAPHICS);
+  AUTO_PROFILER_LABEL("nsLayoutUtils::DrawBackgroundImage",
+                      GRAPHICS_Rasterization);
 
   Maybe<SVGImageContext> svgContext(Some(SVGImageContext(Some(aImageSize))));
   SVGImageContext::MaybeStoreContextPaint(svgContext, aForFrame, aImage);

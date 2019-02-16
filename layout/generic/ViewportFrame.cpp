@@ -51,7 +51,8 @@ void ViewportFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
 void ViewportFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                      const nsDisplayListSet& aLists) {
-  AUTO_PROFILER_LABEL("ViewportFrame::BuildDisplayList", GRAPHICS);
+  AUTO_PROFILER_LABEL("ViewportFrame::BuildDisplayList",
+                      GRAPHICS_DisplayListBuilding);
 
   if (nsIFrame* kid = mFrames.FirstChild()) {
     // make the kid's BorderBackground our own. This ensures that the canvas

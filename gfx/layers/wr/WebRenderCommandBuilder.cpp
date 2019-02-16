@@ -1426,6 +1426,8 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
     wr::IpcResourceUpdateQueue& aResourceUpdates, nsDisplayList* aDisplayList,
     nsDisplayListBuilder* aDisplayListBuilder, WebRenderScrollData& aScrollData,
     wr::LayoutSize& aContentSize, nsTArray<wr::FilterOp>&& aFilters) {
+  AUTO_PROFILER_LABEL_CATEGORY_PAIR(GRAPHICS_WRDisplayList);
+
   StackingContextHelper sc;
   aScrollData = WebRenderScrollData(mManager);
   MOZ_ASSERT(mLayerScrollData.empty());
