@@ -16,11 +16,7 @@
 
 #include "entropy_coding.h"
 
-#if defined(_MSC_VER) && !defined(__clang__)
-#include <arm64_neon.h>
-#else
 #include <arm_neon.h>
-#endif
 #include <stddef.h>
 
 #include "signal_processing_library.h"

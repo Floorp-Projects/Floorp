@@ -46,21 +46,21 @@ function setScale(win, scale)
 
 function shown()
 {
+  var popup = $("popup");
   if (screenTest) {
-    var box = $("popup").boxObject;
-    is(box.screenX, screenx, "screen left position");
-    is(box.screenY, screeny, "screen top position");
+    is(popup.screenX, screenx, "screen left position");
+    is(popup.screenY, screeny, "screen top position");
   }
   else {
     var anchor = $("frame").contentDocument.getElementById("two");
 
     is(Math.round(anchor.getBoundingClientRect().left * 2),
-       Math.round($("popup").getBoundingClientRect().left), "anchored left position");
+       Math.round(popup.getBoundingClientRect().left), "anchored left position");
     is(Math.round(anchor.getBoundingClientRect().bottom * 2),
-       Math.round($("popup").getBoundingClientRect().top), "anchored top position");
+       Math.round(popup.getBoundingClientRect().top), "anchored top position");
   }
 
-  $("popup").hidePopup();
+  popup.hidePopup();
 }
 
 function nextTest()
@@ -71,13 +71,13 @@ function nextTest()
   }
   else {
     screenTest = true;
-    var box = document.documentElement.boxObject;
+    var rootElement = document.documentElement;
 
     // - the iframe is at 4×, but out here css pixels are only 2× device pixels
     // - the popup manager rounds off (or truncates) the coordinates to
     //   integers, so ensure we pass in even numbers to openPopupAtScreen
-    screenx = (x = even(box.screenX + 120))/2;
-    screeny = (y = even(box.screenY + 120))/2;
+    screenx = (x = even(rootElement.screenX + 120))/2;
+    screeny = (y = even(rootElement.screenY + 120))/2;
     setScale(window, 2);
     $("popup").openPopupAtScreen(x, y);
   }

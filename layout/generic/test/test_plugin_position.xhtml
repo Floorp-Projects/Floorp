@@ -6,7 +6,7 @@
 </head>
 <body>
 
-<!-- Use a XUL element here so we can get its boxObject.screenX/Y -->
+<!-- Use a XUL element here so we can get its screenX/Y -->
 <hbox style="height:10px; position:absolute; left:0; top:0; z-index:-100;" id="h1"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <hbox style="width:100px;"></hbox><hbox id="h2"/>
@@ -41,7 +41,7 @@ function checkGeometry(id, x, y, w, h) {
 function runTests() {
   var h1 = document.getElementById("h1");
   var h2 = document.getElementById("h2");
-  var hwidth = h2.boxObject.screenX - h1.boxObject.screenX;
+  var hwidth = h2.screenX - h1.screenX;
   if (hwidth != 100) {
     // Maybe it's a DPI issue
     todo(false, "Unexpected DPI?");
@@ -56,8 +56,8 @@ function runTests() {
   }
 
   var bounds = h1.getBoundingClientRect();
-  windowFrameX = h1.boxObject.screenX - bounds.left - window.screenX;
-  windowFrameY = h1.boxObject.screenY - bounds.top - window.screenY;
+  windowFrameX = h1.screenX - bounds.left - window.screenX;
+  windowFrameY = h1.screenY - bounds.top - window.screenY;
 
   checkGeometry("p", 0, 0, 200, 200);
   // This one tests widget positioning in the presence of borders and padding
