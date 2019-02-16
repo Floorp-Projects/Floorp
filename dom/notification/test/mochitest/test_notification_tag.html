@@ -23,20 +23,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=782211
   const ALERTS_SERVICE_CONTRACT_ID = "@mozilla.org/alerts-service;1";
 
   var mockAlertsService = {
-    showAlert: function(alert, alertListener) {
+    showAlert(alert, alertListener) {
       notificationsCreated.push(alert.name);
       if (notificationsCreated.length == 3) {
         checkNotifications();
       }
     },
 
-    showAlertNotification: function(imageUrl, title, text, textClickable,
-                                    cookie, alertListener, name, dir,
-                                    lang, data) {
-      this.showAlert({ name: name });
+    showAlertNotification(imageUrl, title, text, textClickable,
+                          cookie, alertListener, name, dir,
+                          lang, data) {
+      this.showAlert({ name });
     },
 
-    QueryInterface: function(aIID) {
+    QueryInterface(aIID) {
       if (SpecialPowers.wrap(aIID).equals(SpecialPowers.Ci.nsISupports) ||
           SpecialPowers.wrap(aIID).equals(SpecialPowers.Ci.nsIAlertsService)) {
         return this;
@@ -44,12 +44,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=782211
       throw SpecialPowers.Components.results.NS_ERROR_NO_INTERFACE;
     },
 
-    createInstance: function(aOuter, aIID) {
+    createInstance(aOuter, aIID) {
       if (aOuter != null) {
         throw SpecialPowers.Components.results.NS_ERROR_NO_AGGREGATION;
       }
       return this.QueryInterface(aIID);
-    }
+    },
   };
   mockAlertsService = SpecialPowers.wrapCallbackObject(mockAlertsService);
 
@@ -91,14 +91,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=782211
       // Load two frames with the same origin that create notification with the same tag.
       // Both pages should generate notifications with the same name, and thus the second
       // notification should replace the first.
-      frames["sameDomain"].location.href = "http://test1.example.org:80/tests/dom/notification/test/mochitest/create_notification.html";
-      frames["anotherSameDomain"].location.href = "http://test1.example.org:80/tests/dom/notification/test/mochitest/create_notification.html";
+      frames.sameDomain.location.href = "http://test1.example.org:80/tests/dom/notification/test/mochitest/create_notification.html";
+      frames.anotherSameDomain.location.href = "http://test1.example.org:80/tests/dom/notification/test/mochitest/create_notification.html";
       // Load a frame with a different origin that creates a notification with the same tag.
       // The notification name should be different and thus no notifications should be replaced.
-      frames["crossDomain"].location.href = "http://test2.example.org:80/tests/dom/notification/test/mochitest/create_notification.html";
+      frames.crossDomain.location.href = "http://test2.example.org:80/tests/dom/notification/test/mochitest/create_notification.html";
     }
 
-    SpecialPowers.pushPrefEnv({'set': [["notification.prompt.testing", true],
+    SpecialPowers.pushPrefEnv({"set": [["notification.prompt.testing", true],
                                        ["notification.prompt.testing.allow", true]]},
                               showNotifications);
   } else {
