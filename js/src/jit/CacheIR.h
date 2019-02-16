@@ -377,6 +377,12 @@ enum class CacheOp {
 #undef DEFINE_OP
 };
 
+const char* const CacheIrOpNames[] = {
+#define OPNAME(op, ...) #op,
+    CACHE_IR_OPS(OPNAME)
+#undef OPNAME
+};
+
 class StubField {
  public:
   enum class Type : uint8_t {
