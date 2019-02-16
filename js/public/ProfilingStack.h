@@ -157,7 +157,7 @@ class ProfilingStackFrame {
                   mozilla::recordreplay::Behavior::DontPreserve>
       pcOffsetIfJS_;
 
-  // Bits 0...7 hold the Flags. Bits 8...31 hold the category pair.
+  // Bits 0...8 hold the Flags. Bits 9...31 hold the category pair.
   mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire,
                   mozilla::recordreplay::Behavior::DontPreserve>
       flagsAndCategoryPair_;
@@ -178,8 +178,8 @@ class ProfilingStackFrame {
     return *this;
   }
 
-  // 8 bits for the flags.
-  // That leaves 32 - 8 = 25 bits for the category pair.
+  // 9 bits for the flags.
+  // That leaves 32 - 9 = 23 bits for the category pair.
   enum class Flags : uint32_t {
     // The first three flags describe the kind of the frame and are
     // mutually exclusive. (We still give them individual bits for
@@ -217,7 +217,11 @@ class ProfilingStackFrame {
     // tree view.
     RELEVANT_FOR_JS = 1 << 7,
 
-    FLAGS_BITCOUNT = 8,
+    // If set, causes the label on this ProfilingStackFrame to be ignored
+    // and to be replaced by the subcategory's label.
+    LABEL_DETERMINED_BY_CATEGORY_PAIR = 1 << 8,
+
+    FLAGS_BITCOUNT = 9,
     FLAGS_MASK = (1 << FLAGS_BITCOUNT) - 1
   };
 
@@ -254,8 +258,16 @@ class ProfilingStackFrame {
     }
   }
 
-  void setLabel(const char* aLabel) { label_ = aLabel; }
-  const char* label() const { return label_; }
+  const char* label() const {
+    uint32_t flagsAndCategoryPair = flagsAndCategoryPair_;
+    if (flagsAndCategoryPair &
+        uint32_t(Flags::LABEL_DETERMINED_BY_CATEGORY_PAIR)) {
+      auto categoryPair = JS::ProfilingCategoryPair(
+          flagsAndCategoryPair >> uint32_t(Flags::FLAGS_BITCOUNT));
+      return JS::GetProfilingCategoryPairInfo(categoryPair).mLabel;
+    }
+    return label_;
+  }
 
   const char* dynamicString() const { return dynamicString_; }
 
