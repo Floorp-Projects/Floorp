@@ -115,7 +115,7 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler {
     stubJitCodeOffset_.emplace(masm.PushWithPatch(ImmPtr((void*)-1)));
   }
 
-#define DEFINE_OP(op) MOZ_MUST_USE bool emit##op();
+#define DEFINE_OP(op, ...) MOZ_MUST_USE bool emit##op();
   CACHE_IR_OPS(DEFINE_OP)
 #undef DEFINE_OP
 };
@@ -588,7 +588,7 @@ JitCode* IonCacheIRCompiler::compile() {
 
   do {
     switch (reader.readOp()) {
-#define DEFINE_OP(op)                \
+#define DEFINE_OP(op, ...)           \
   case CacheOp::op:                  \
     if (!emit##op()) return nullptr; \
     break;
