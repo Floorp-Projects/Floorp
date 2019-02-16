@@ -46,8 +46,9 @@ this.PrefsFeed = class PrefsFeed {
   }
 
   onPrefChanged(name, value) {
-    if (this._prefMap.has(name)) {
-      this.store.dispatch(ac.BroadcastToContent({type: at.PREF_CHANGED, data: {name, value}}));
+    const prefItem = this._prefMap.get(name);
+    if (prefItem) {
+      this.store.dispatch(ac[prefItem.skipBroadcast ? "OnlyToMain" : "BroadcastToContent"]({type: at.PREF_CHANGED, data: {name, value}}));
     }
 
     this._checkPrerender(name);
