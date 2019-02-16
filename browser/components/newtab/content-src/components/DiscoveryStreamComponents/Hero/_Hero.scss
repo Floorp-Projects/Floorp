@@ -2,6 +2,8 @@ $card-header-in-hero-font-size: 14;
 $card-header-in-hero-line-height: 20;
 
 .ds-hero {
+  position: relative;
+
   .img {
     @include image-as-background;
   }
@@ -92,6 +94,7 @@ $card-header-in-hero-line-height: 20;
       header {
         @include limit-visibile-lines(4, 28, 22);
         color: $grey-90;
+        margin-bottom: 8px;
       }
 
       .context {
@@ -187,7 +190,6 @@ $card-header-in-hero-line-height: 20;
 
         header {
           @include limit-visibile-lines(3, 28, 22);
-          margin: 0 0 8px;
         }
 
         .source {
