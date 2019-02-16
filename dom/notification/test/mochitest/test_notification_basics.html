@@ -19,7 +19,7 @@
   SimpleTest.requestFlakyTimeout("untriaged");
 
   var steps = [
-    function () {
+    function() {
       info("Test notification spec");
       ok(Notification, "Notification constructor exists");
       ok(Notification.permission, "Notification.permission exists");
@@ -27,12 +27,12 @@
       ok(Notification.get, "Notification.get exists");
     },
 
-    function () {
+    function() {
       info("Test requestPermission without callback");
       Notification.requestPermission();
     },
 
-    function (done) {
+    function(done) {
       info("Test requestPermission deny");
       function assertPermissionDenied(perm) {
         is(perm, "denied", "Permission should be denied.");
@@ -48,7 +48,7 @@
         .then(done);
     },
 
-    function (done) {
+    function(done) {
       info("Test requestPermission grant");
       function assertPermissionGranted(perm) {
         is(perm, "granted", "Permission should be granted.");
@@ -64,7 +64,7 @@
         .then(done);
     },
 
-    function (done) {
+    function(done) {
       info("Test invalid requestPermission");
       Notification.requestPermission({})
         .then(_ => {
@@ -75,7 +75,7 @@
         .then(done);
     },
 
-    function (done) {
+    function(done) {
       info("Test create notification");
 
       options = NotificationTest.payload;
@@ -101,27 +101,27 @@
       // store notification in test context
       this.notification = notification;
 
-      notification.onshow = function () {
+      notification.onshow = function() {
         ok(true, "onshow handler should be called");
         done();
       };
     },
 
-    function (done) {
+    function(done) {
       info("Test closing a notification");
       var notification = this.notification;
 
-      notification.onclose = function () {
+      notification.onclose = function() {
         ok(true, "onclose handler should be called");
         done();
       };
 
       notification.close();
-    }
+    },
   ];
 
   MockServices.register();
-  NotificationTest.run(steps, function () {
+  NotificationTest.run(steps, function() {
     MockServices.unregister();
   });
 </script>

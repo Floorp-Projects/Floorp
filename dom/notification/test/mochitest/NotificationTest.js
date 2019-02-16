@@ -1,4 +1,4 @@
-var NotificationTest = (function () {
+var NotificationTest = (function() {
   "use strict";
 
   function info(msg, name) {
@@ -43,7 +43,7 @@ var NotificationTest = (function () {
     })(tests);
   }
 
-  var fakeCustomData = (function () {
+  var fakeCustomData = (function() {
     var buffer = new ArrayBuffer(2);
     var dv = new DataView(buffer).setInt16(0, 42, true);
     var canvas = document.createElement("canvas");
@@ -60,53 +60,53 @@ var NotificationTest = (function () {
         a: 123,
         b: "test",
         c: true,
-        d: [1, 2, 3]
+        d: [1, 2, 3],
       },
       date: new Date(2013, 2, 1, 1, 10),
       regexp: new RegExp("[^.]+"),
       arrayBuffer: buffer,
       imageData: context.createImageData(100, 100),
-      map: map,
-      set: set
+      map,
+      set,
     };
   })();
 
   // NotificationTest API
   return {
-    run: function (tests, callback) {
+    run(tests, callback) {
       setup_testing_env();
 
-      addLoadEvent(function () {
-        executeTests(tests, function () {
+      addLoadEvent(function() {
+        executeTests(tests, function() {
           teardown_testing_env();
           callback && callback();
         });
       });
     },
 
-    allowNotifications: function () {
+    allowNotifications() {
       SpecialPowers.setBoolPref("notification.prompt.testing.allow", true);
     },
 
-    denyNotifications: function () {
+    denyNotifications() {
       SpecialPowers.setBoolPref("notification.prompt.testing.allow", false);
     },
 
-    clickNotification: function (notification) {
+    clickNotification(notification) {
       // TODO: how??
     },
 
-    fireCloseEvent: function (title) {
+    fireCloseEvent(title) {
       window.dispatchEvent(new CustomEvent("mock-notification-close-event", {
         detail: {
-          title: title
-        }
+          title,
+        },
       }));
     },
 
-    info: info,
+    info,
 
-    customDataMatches: function(dataObj) {
+    customDataMatches(dataObj) {
       var url = "http://www.domain.com";
       try {
         return (JSON.stringify(dataObj.primitives) ===
@@ -119,7 +119,7 @@ var NotificationTest = (function () {
                 JSON.stringify(fakeCustomData.imageData.data)) &&
                (dataObj.map.get("test") == 42) &&
                (dataObj.set.has(4) && dataObj.set.has(2));
-      } catch(e) {
+      } catch (e) {
         return false;
       }
     },
@@ -130,7 +130,7 @@ var NotificationTest = (function () {
       icon: "icon.jpg",
       lang: "en-US",
       dir: "ltr",
-      data: fakeCustomData
-    }
+      data: fakeCustomData,
+    },
   };
 })();
