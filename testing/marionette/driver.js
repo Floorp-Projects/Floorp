@@ -37,6 +37,7 @@ const {
   WebElement,
 } = ChromeUtils.import("chrome://marionette/content/element.js");
 const {
+  ElementNotInteractableError,
   InsecureCertificateError,
   InvalidArgumentError,
   InvalidCookieDomainError,
@@ -3226,6 +3227,19 @@ GeckoDriver.prototype.sendKeysToDialog = async function(cmd) {
   this._checkIfAlertIsPresent();
 
   let text = assert.string(cmd.parameters.text);
+  let promptType = this.dialog.args.promptType;
+
+  switch (promptType) {
+    case "alert":
+    case "confirm":
+      throw new ElementNotInteractableError(
+          `User prompt of type ${promptType} is not interactable`);
+    case "prompt":
+      break;
+    default:
+      throw new UnsupportedOperationError(
+          `User prompt of type ${promptType} is not supported`);
+  }
 
   // see toolkit/components/prompts/content/commonDialog.js
   let {loginTextbox} = this.dialog.ui;
