@@ -77,16 +77,16 @@ function openContextMenu() {
     var mouseY = 10;
 
     menu = win.document.getElementById("menu");
-    var screenX = menu.boxObject.screenX;
-    var screenY = menu.boxObject.screenY;
+    var screenX = menu.screenX;
+    var screenY = menu.screenY;
     var utils = win.windowUtils;
 
     utils.sendMouseEvent("contextmenu", mouseX, mouseY, 2, 0, 0);
 
     var interval = setInterval(checkMoved, 200);
     function checkMoved() {
-        if (menu.boxObject.screenX != screenX ||
-            menu.boxObject.screenY != screenY) {
+        if (menu.screenX != screenX ||
+            menu.screenY != screenY) {
             clearInterval(interval);
             // Wait further to check that the window does not move again.
             setTimeout(checkPosition, 1000);
@@ -94,12 +94,11 @@ function openContextMenu() {
     }
 
     function checkPosition() {
-        var menubox = menu.boxObject;
-        var winbox = win.document.documentElement.boxObject;
+        var rootElement = win.document.documentElement;
         var platformIsMac = navigator.userAgent.indexOf("Mac") > -1;
 
-        var x = menubox.screenX - winbox.screenX;
-        var y = menubox.screenY - winbox.screenY;
+        var x = menu.screenX - rootElement.screenX;
+        var y = menu.screenY - rootElement.screenY;
 
         if (platformIsMac)
         {
@@ -122,7 +121,7 @@ function openContextMenu() {
 
         ok(x < mouseX,
            "menu left " + x + " should be left of click point " + mouseX);
-        var right = x + menubox.width;
+        var right = x + menu.boxObject.width;
 
         if (platformIsMac) {
           // Rather than be constrained by the right hand screen edge, OSX menus flip

@@ -6532,13 +6532,15 @@ class BaseCompiler final : public BaseCompilerInterface {
 #ifdef JS_64BIT
     pushI64(RegI64(Register64(valueAddr)));
     if (!emitInstanceCall(bytecodeOffset, SigPL_, ExprType::Void,
-                          SymbolicAddress::PostBarrier)) {
+                          SymbolicAddress::PostBarrier,
+                          /*pushReturnedValue=*/false)) {
       return false;
     }
 #else
     pushI32(RegI32(valueAddr));
     if (!emitInstanceCall(bytecodeOffset, SigPI_, ExprType::Void,
-                          SymbolicAddress::PostBarrier)) {
+                          SymbolicAddress::PostBarrier,
+                          /*pushReturnedValue=*/false)) {
       return false;
     }
 #endif
@@ -6758,7 +6760,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   void endIfThenElse(ExprType type);
 
   void doReturn(ExprType returnType, bool popStack);
-  void pushReturnedIfNonVoid(const FunctionCall& call, ExprType type);
+  void pushReturnValueOfCall(const FunctionCall& call, ExprType type);
 
   void emitCompareI32(Assembler::Condition compareOp, ValType compareType);
   void emitCompareI64(Assembler::Condition compareOp, ValType compareType);
@@ -6876,7 +6878,8 @@ class BaseCompiler final : public BaseCompilerInterface {
   void emitRound(RoundingMode roundingMode, ValType operandType);
   MOZ_MUST_USE bool emitInstanceCall(uint32_t lineOrBytecode,
                                      const MIRTypeVector& sig, ExprType retType,
-                                     SymbolicAddress builtin);
+                                     SymbolicAddress builtin,
+                                     bool pushReturnedValue=true);
   MOZ_MUST_USE bool emitGrowMemory();
   MOZ_MUST_USE bool emitCurrentMemory();
 
@@ -8627,12 +8630,9 @@ bool BaseCompiler::emitCallArgs(const ValTypeVector& argTypes,
   return true;
 }
 
-void BaseCompiler::pushReturnedIfNonVoid(const FunctionCall& call,
+void BaseCompiler::pushReturnValueOfCall(const FunctionCall& call,
                                          ExprType type) {
   switch (type.code()) {
-    case ExprType::Void:
-      // There's no return value.  Do nothing.
-      break;
     case ExprType::I32: {
       RegI32 rv = captureReturnedI32();
       pushI32(rv);
@@ -8662,6 +8662,8 @@ void BaseCompiler::pushReturnedIfNonVoid(const FunctionCall& call,
     case ExprType::NullRef:
       MOZ_CRASH("NullRef not expressible");
     default:
+      // In particular, passing |type| == ExprType::Void to this function is
+      // an error.
       MOZ_CRASH("Function return type");
   }
 }
@@ -8724,7 +8726,9 @@ bool BaseCompiler::emitCall() {
 
   popValueStackBy(numArgs);
 
-  pushReturnedIfNonVoid(baselineCall, funcType.ret());
+  if (funcType.ret() != ExprType::Void) {
+    pushReturnValueOfCall(baselineCall, funcType.ret());
+  }
 
   return true;
 }
@@ -8776,7 +8780,9 @@ bool BaseCompiler::emitCallIndirect() {
 
   popValueStackBy(numArgs);
 
-  pushReturnedIfNonVoid(baselineCall, funcType.ret());
+  if (funcType.ret() != ExprType::Void) {
+    pushReturnValueOfCall(baselineCall, funcType.ret());
+  }
 
   return true;
 }
@@ -8839,7 +8845,8 @@ bool BaseCompiler::emitUnaryMathBuiltinCall(SymbolicAddress callee,
 
   popValueStackBy(numArgs);
 
-  pushReturnedIfNonVoid(baselineCall, retType);
+  // We know retType isn't ExprType::Void here, so there's no need to check it.
+  pushReturnValueOfCall(baselineCall, retType);
 
   return true;
 }
@@ -9768,7 +9775,8 @@ void BaseCompiler::emitCompareRef(Assembler::Condition compareOp,
 
 bool BaseCompiler::emitInstanceCall(uint32_t lineOrBytecode,
                                     const MIRTypeVector& sig, ExprType retType,
-                                    SymbolicAddress builtin) {
+                                    SymbolicAddress builtin,
+                                    bool pushReturnedValue/*=true*/) {
   MOZ_ASSERT(sig[0] == MIRType::Pointer);
 
   sync();
@@ -9819,7 +9827,10 @@ bool BaseCompiler::emitInstanceCall(uint32_t lineOrBytecode,
   // a return value.  Examples include memory and table operations that are
   // implemented as callouts.
 
-  pushReturnedIfNonVoid(baselineCall, retType);
+  if (pushReturnedValue) {
+    MOZ_ASSERT(retType != ExprType::Void);
+    pushReturnValueOfCall(baselineCall, retType);
+  }
   return true;
 }
 
@@ -10235,15 +10246,17 @@ bool BaseCompiler::emitMemOrTableCopy(bool isMem) {
   if (isMem) {
     MOZ_ASSERT(srcMemOrTableIndex == 0);
     MOZ_ASSERT(dstMemOrTableIndex == 0);
-    if (!emitInstanceCall(lineOrBytecode, SigPIII_, ExprType::Void,
-                          SymbolicAddress::MemCopy)) {
+    if (!emitInstanceCall(lineOrBytecode, SigPIII_, ExprType::I32,
+                          SymbolicAddress::MemCopy,
+                          /*pushReturnedValue=*/false)) {
       return false;
     }
   } else {
     pushI32(dstMemOrTableIndex);
     pushI32(srcMemOrTableIndex);
-    if (!emitInstanceCall(lineOrBytecode, SigPIIIII_, ExprType::Void,
-                          SymbolicAddress::TableCopy)) {
+    if (!emitInstanceCall(lineOrBytecode, SigPIIIII_, ExprType::I32,
+                          SymbolicAddress::TableCopy,
+                          /*pushReturnedValue=*/false)) {
       return false;
     }
   }
@@ -10274,7 +10287,8 @@ bool BaseCompiler::emitDataOrElemDrop(bool isData) {
   pushI32(int32_t(segIndex));
   SymbolicAddress callee =
       isData ? SymbolicAddress::DataDrop : SymbolicAddress::ElemDrop;
-  if (!emitInstanceCall(lineOrBytecode, SigPI_, ExprType::Void, callee)) {
+  if (!emitInstanceCall(lineOrBytecode, SigPI_, ExprType::Void, callee,
+                        /*pushReturnedValue=*/false)) {
     return false;
   }
 
@@ -10300,7 +10314,8 @@ bool BaseCompiler::emitMemFill() {
 
   // Returns -1 on trap, otherwise 0.
   if (!emitInstanceCall(lineOrBytecode, SigPIII_, ExprType::Void,
-                        SymbolicAddress::MemFill)) {
+                        SymbolicAddress::MemFill,
+                        /*pushReturnedValue=*/false)) {
     return false;
   }
 
@@ -10331,13 +10346,15 @@ bool BaseCompiler::emitMemOrTableInit(bool isMem) {
   pushI32(int32_t(segIndex));
   if (isMem) {
     if (!emitInstanceCall(lineOrBytecode, SigPIIII_, ExprType::Void,
-                          SymbolicAddress::MemInit)) {
+                          SymbolicAddress::MemInit,
+                          /*pushReturnedValue=*/false)) {
       return false;
     }
   } else {
     pushI32(dstTableIndex);
     if (!emitInstanceCall(lineOrBytecode, SigPIIIII_, ExprType::Void,
-                          SymbolicAddress::TableInit)) {
+                          SymbolicAddress::TableInit,
+                          /*pushReturnedValue=*/false)) {
       return false;
     }
   }
@@ -10415,8 +10432,9 @@ bool BaseCompiler::emitTableSet() {
   //
   // Returns -1 on range error, otherwise 0 (which is then ignored).
   pushI32(tableIndex);
-  if (!emitInstanceCall(lineOrBytecode, SigPIRI_, ExprType::Void,
-                        SymbolicAddress::TableSet)) {
+  if (!emitInstanceCall(lineOrBytecode, SigPIRI_, ExprType::I32,
+                        SymbolicAddress::TableSet,
+                        /*pushReturnedValue=*/false)) {
     return false;
   }
   Label noTrap;
