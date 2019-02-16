@@ -1736,9 +1736,7 @@ class nsDisplayListBuilder {
   bool ShouldBuildAsyncZoomContainer() const {
     return mBuildAsyncZoomContainer;
   }
-  void SetBuildAsyncZoomContainer(bool aBuildAsyncZoomContainer) {
-    mBuildAsyncZoomContainer = aBuildAsyncZoomContainer;
-  }
+  void UpdateShouldBuildAsyncZoomContainer();
 
   /**
    * Represents a region composed of frame/rect pairs.

@@ -3895,7 +3895,6 @@ bool ScrollFrameHelper::DecideScrollableLayer(
       mWillBuildScrollableLayer && mIsRoot) {
     mIsScrollableLayerInRootContainer = true;
   }
-
   return mWillBuildScrollableLayer;
 }
 
