@@ -52,7 +52,7 @@ function popupshown()
   popup.moveToAnchor($("button2"), "after_start", 5, 4);
   checkCoords(popup, button2rect.left + 5, button2rect.bottom + 4, "move button2 left + 5, top + 4");
 
-  popup.moveTo($("button1").boxObject.screenX + 10, $("button1").boxObject.screenY + 12);
+  popup.moveTo($("button1").screenX + 10, $("button1").screenY + 12);
   checkCoords(popup, button1rect.left + 10, button1rect.top + 12, "move to button1 screen with offset");
 
   popup.moveToAnchor($("button1"), "after_start", 1, 2);
