@@ -293,7 +293,7 @@ static const ClassOps ArrayBufferObjectClassOps = {
     nullptr, /* call        */
     nullptr, /* hasInstance */
     nullptr, /* construct   */
-    ArrayBufferObject::trace,
+    nullptr, /* trace */
 };
 
 static const JSFunctionSpec arraybuffer_functions[] = {
@@ -1392,14 +1392,6 @@ ArrayBufferObject::externalizeContents(JSContext* cx,
 
   memcpy(toBuffer->dataPointer() + toIndex,
          fromBuffer->dataPointer() + fromIndex, count);
-}
-
-/* static */ void ArrayBufferObject::trace(JSTracer* trc, JSObject* obj) {
-  // Previously buffers could be associated with an inline typed object, and
-  // such buffers' data pointers required an update if the inline typed object
-  // was moved.  Now that typed objects' buffers cannot be reified or accessed,
-  // this function does nothing.
-  MOZ_ASSERT(obj->is<ArrayBufferObject>());
 }
 
 /* static */ size_t ArrayBufferObject::objectMoved(JSObject* obj,
