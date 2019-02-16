@@ -3893,10 +3893,9 @@ bool ScrollFrameHelper::DecideScrollableLayer(
     aBuilder->RecomputeCurrentAnimatedGeometryRoot();
   }
 
-  if (gfxPrefs::LayoutUseContainersForRootFrames() &&
-      mWillBuildScrollableLayer && mIsRoot) {
-    mIsScrollableLayerInRootContainer = true;
-  }
+  mIsScrollableLayerInRootContainer =
+      gfxPrefs::LayoutUseContainersForRootFrames() &&
+      mWillBuildScrollableLayer && mIsRoot;
   return mWillBuildScrollableLayer;
 }
 
