@@ -1177,7 +1177,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
             profiler_add_marker(
                 (priority != EventQueuePriority::Idle) ? "LongTask"
                                                        : "LongIdleTask",
-                js::ProfilingStackFrame::Category::OTHER,
+                JS::ProfilingCategoryPair::OTHER,
                 MakeUnique<LongTaskMarkerPayload>(mCurrentEventStart, now));
           }
 #endif

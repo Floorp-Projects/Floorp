@@ -147,6 +147,7 @@ EXPORTS.js += [
     '../public/OffThreadScriptCompilation.h',
     '../public/Principals.h',
     '../public/Printf.h',
+    '../public/ProfilingCategory.h',
     '../public/ProfilingFrameIterator.h',
     '../public/ProfilingStack.h',
     '../public/Promise.h',

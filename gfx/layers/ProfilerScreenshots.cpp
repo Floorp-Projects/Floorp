@@ -105,7 +105,7 @@ void ProfilerScreenshots::SubmitScreenshot(
           if (NS_SUCCEEDED(rv)) {
             // Add a marker with the data URL.
             profiler_add_marker_for_thread(
-                sourceThread, js::ProfilingStackFrame::Category::GRAPHICS,
+                sourceThread, JS::ProfilingCategoryPair::GRAPHICS,
                 "CompositorScreenshot",
                 MakeUnique<ScreenshotPayload>(timeStamp, std::move(dataURL),
                                               originalSize, windowIdentifier));

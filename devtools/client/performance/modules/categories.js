@@ -7,7 +7,7 @@ const { L10N } = require("devtools/client/performance/modules/global");
 
 /**
  * Details about each label stack frame category.
- * To be kept in sync with the js::ProfilingStackFrame::Category in ProfilingStack.h
+ * To be kept in sync with the JS::ProfilingCategory enum in ProfilingCategory.h
  */
 const CATEGORIES = [{
   color: "#d99b28",

@@ -177,8 +177,7 @@ class MOZ_NONHEAP_CLASS AutoGeckoProfilerEntry {
  public:
   explicit MOZ_ALWAYS_INLINE AutoGeckoProfilerEntry(
       JSContext* cx, const char* label,
-      ProfilingStackFrame::Category category =
-          ProfilingStackFrame::Category::JS,
+      JS::ProfilingCategoryPair categoryPair = JS::ProfilingCategoryPair::JS,
       uint32_t flags = 0 MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
   MOZ_ALWAYS_INLINE ~AutoGeckoProfilerEntry();
 
