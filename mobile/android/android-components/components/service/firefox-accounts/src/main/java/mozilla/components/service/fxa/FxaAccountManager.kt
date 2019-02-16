@@ -331,8 +331,6 @@ open class FxaAccountManager(
                     Event.AccountNotFound -> {
                         account = createAccount(config)
 
-                        notifyObservers { onLoggedOut() }
-
                         null
                     }
                     Event.Authenticate -> {

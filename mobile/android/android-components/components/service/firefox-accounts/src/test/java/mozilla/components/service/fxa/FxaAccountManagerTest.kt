@@ -121,13 +121,11 @@ class FxaAccountManagerTest {
             accountStorage
         )
 
-        var onLoggedOutCalled = false
         var onErrorCalled = false
 
         val accountObserver = object : AccountObserver {
             override fun onLoggedOut() {
-                assertFalse(onLoggedOutCalled)
-                onLoggedOutCalled = true
+                fail()
             }
 
             override fun onAuthenticated(account: OAuthAccount) {
@@ -153,7 +151,6 @@ class FxaAccountManagerTest {
         }
 
         assertTrue(onErrorCalled)
-        assertTrue(onLoggedOutCalled)
     }
 
     @Test
@@ -177,7 +174,7 @@ class FxaAccountManagerTest {
         verify(accountObserver, never()).onError(any())
         verify(accountObserver, never()).onAuthenticated(any())
         verify(accountObserver, never()).onProfileUpdated(any())
-        verify(accountObserver, times(1)).onLoggedOut()
+        verify(accountObserver, never()).onLoggedOut()
 
         verify(accountStorage, times(1)).read()
         verify(accountStorage, never()).write(any())
@@ -284,8 +281,9 @@ class FxaAccountManagerTest {
             manager.initAsync().await()
         }
 
-        // We start off as logged-out.
-        verify(accountObserver, times(1)).onLoggedOut()
+        // We start off as logged-out, but the event won't be called (initial default state is assumed).
+        verify(accountObserver, never()).onLoggedOut()
+        verify(accountObserver, never()).onAuthenticated(any())
 
         reset(accountObserver)
         runBlocking {
@@ -358,8 +356,9 @@ class FxaAccountManagerTest {
             manager.initAsync().await()
         }
 
-        // We start off as logged-out.
-        verify(accountObserver, times(1)).onLoggedOut()
+        // We start off as logged-out, but the event won't be called (initial default state is assumed).
+        verify(accountObserver, never()).onLoggedOut()
+        verify(accountObserver, never()).onAuthenticated(any())
 
         reset(accountObserver)
         runBlocking {
@@ -445,8 +444,9 @@ class FxaAccountManagerTest {
             manager.initAsync().await()
         }
 
-        // We start off as logged-out.
-        verify(accountObserver, times(1)).onLoggedOut()
+        // We start off as logged-out, but the event won't be called (initial default state is assumed).
+        verify(accountObserver, never()).onLoggedOut()
+        verify(accountObserver, never()).onAuthenticated(any())
 
         reset(accountObserver)
         runBlocking {
