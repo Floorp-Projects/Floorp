@@ -192,6 +192,72 @@ void CacheIRSpewer::opcodeProperty(const char* name, const JSOp op) {
   j.endStringProperty();
 }
 
+void CacheIRSpewer::CacheIRArgs(JSONPrinter& j, CacheIRReader& r,
+                                CacheIROpFormat::ArgType arg) {
+  j.beginObject();
+  switch (arg) {
+    case CacheIROpFormat::None:
+      break;
+    case CacheIROpFormat::Id:
+      j.property("Id", r.readByte());
+      break;
+    case CacheIROpFormat::Field:
+      j.property("Field", r.readByte());
+      break;
+    case CacheIROpFormat::Byte:
+      j.property("Byte", r.readByte());
+      break;
+    case CacheIROpFormat::Int32:
+      j.property("Int32", r.int32Immediate());
+      break;
+    case CacheIROpFormat::UInt32:
+      j.property("Uint32", r.uint32Immediate());
+      break;
+    case CacheIROpFormat::Word:
+      j.property("Word", uintptr_t(r.pointer()));
+      break;
+  }
+  j.endObject();
+}
+template <typename... Args>
+void CacheIRSpewer::CacheIRArgs(JSONPrinter& j, CacheIRReader& r,
+                                CacheIROpFormat::ArgType arg, Args... args) {
+  using namespace js::jit::CacheIROpFormat;
+
+  CacheIRArgs(j, r, arg);
+  CacheIRArgs(j, r, args...);
+}
+
+void CacheIRSpewer::cacheIRSequence(CacheIRReader& reader) {
+  using namespace js::jit::CacheIROpFormat;
+
+  MOZ_ASSERT(enabled());
+  JSONPrinter& j = json_.ref();
+
+  j.beginListProperty("cacheIR");
+  while (reader.more()) {
+    j.beginObject();
+    CacheOp op = reader.readOp();
+    j.property("op", CacheIrOpNames[uint32_t(op)]);
+    j.beginListProperty("args");
+
+    switch (op) {
+#  define DEFINE_OP(op, ...)               \
+    case CacheOp::op:                      \
+      CacheIRArgs(j, reader, __VA_ARGS__); \
+      break;
+      CACHE_IR_OPS(DEFINE_OP)
+#  undef DEFINE_OP
+      default:
+        MOZ_CRASH("unreachable");
+    }
+
+    j.endList();
+    j.endObject();
+  }
+  j.endList();
+}
+
 void CacheIRSpewer::attached(const char* name) {
   MOZ_ASSERT(enabled());
   json_.ref().property("attached", name);
