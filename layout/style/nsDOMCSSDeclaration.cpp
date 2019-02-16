@@ -272,6 +272,8 @@ nsresult nsDOMCSSDeclaration::ModifyDeclaration(
 nsresult nsDOMCSSDeclaration::ParsePropertyValue(
     const nsCSSPropertyID aPropID, const nsAString& aPropValue,
     bool aIsImportant, nsIPrincipal* aSubjectPrincipal) {
+  AUTO_PROFILER_LABEL_CATEGORY_PAIR(LAYOUT_CSSParsing);
+
   DeclarationBlockMutationClosure closure = {};
   MutationClosureData closureData;
   GetPropertyChangeClosure(&closure, &closureData);

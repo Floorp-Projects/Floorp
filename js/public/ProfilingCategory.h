@@ -39,6 +39,11 @@
   END_CATEGORY                                                                \
   BEGIN_CATEGORY(LAYOUT, "Layout", "purple")                                  \
     SUBCATEGORY(LAYOUT, LAYOUT, "Other")                                      \
+    SUBCATEGORY(LAYOUT, LAYOUT_FrameConstruction, "Frame construction")       \
+    SUBCATEGORY(LAYOUT, LAYOUT_Reflow, "Reflow")                              \
+    SUBCATEGORY(LAYOUT, LAYOUT_CSSParsing, "CSS parsing")                     \
+    SUBCATEGORY(LAYOUT, LAYOUT_SelectorQuery, "Selector query")               \
+    SUBCATEGORY(LAYOUT, LAYOUT_StyleComputation, "Style computation")         \
   END_CATEGORY                                                                \
   BEGIN_CATEGORY(JS, "JavaScript", "yellow")                                  \
     SUBCATEGORY(JS, JS, "Other")                                              \
