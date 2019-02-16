@@ -99,6 +99,7 @@ user_pref("toolkit.telemetry.server", "https://%(server)s/telemetry-dummy/");
 user_pref("ui.caretBlinkTime", -1);
 user_pref("ui.caretWidth", 1);
 user_pref("ui.prefersReducedMotion", 0);
+user_pref("ui.systemUsesDarkTheme", 0);
 // Turn off the Push service.
 user_pref("dom.push.serverURL", "");
 // Disable intermittent telemetry collection

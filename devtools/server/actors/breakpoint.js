@@ -99,16 +99,14 @@ BreakpointActor.prototype = {
         for (const offset of offsets) {
           const { lineNumber, columnNumber } = script.getOffsetLocation(offset);
           script.replayVirtualConsoleLog(offset, newLogValue, (point, rv) => {
-            const packet = {
-              from: this.actorID,
-              type: "virtualConsoleLog",
-              url: script.url,
-              line: lineNumber,
-              column: columnNumber,
+            const message = {
+              filename: script.url,
+              lineNumber,
+              columnNumber,
               executionPoint: point,
-              message: "return" in rv ? "" + rv.return : "" + rv.throw,
+              "arguments": ["return" in rv ? rv.return : rv.throw],
             };
-            this.conn.send(packet);
+            this.threadActor._parent._consoleActor.onConsoleAPICall(message);
           });
         }
       }

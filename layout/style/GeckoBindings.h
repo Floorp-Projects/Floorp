@@ -799,6 +799,8 @@ void Gecko_MediaFeatures_GetDeviceSize(mozilla::dom::Document*, nscoord* width,
 
 float Gecko_MediaFeatures_GetResolution(mozilla::dom::Document*);
 bool Gecko_MediaFeatures_PrefersReducedMotion(mozilla::dom::Document*);
+mozilla::StylePrefersColorScheme Gecko_MediaFeatures_PrefersColorScheme(
+    mozilla::dom::Document*);
 
 mozilla::PointerCapabilities Gecko_MediaFeatures_PrimaryPointerCapabilities(
     mozilla::dom::Document*);

@@ -876,11 +876,6 @@ void gfxContext::SetDeviceOffset(const Point& aOffset) {
   CurrentState().deviceOffset = aOffset;
 }
 
-Matrix gfxContext::GetDeviceTransform() const {
-  return Matrix::Translation(-CurrentState().deviceOffset.x,
-                             -CurrentState().deviceOffset.y);
-}
-
 Matrix gfxContext::GetDTTransform() const {
   Matrix mat = mTransform;
   mat._31 -= CurrentState().deviceOffset.x;

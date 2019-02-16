@@ -131,7 +131,7 @@ checkClipRegionNoBounds = function checkClipRegionNoBounds(id, rects) {
 function loaded() {
   var h1 = document.getElementById("h1");
   var h2 = document.getElementById("h2");
-  var hwidth = h2.boxObject.screenX - h1.boxObject.screenX;
+  var hwidth = h2.screenX - h1.screenX;
   if (hwidth != 100) {
     // Maybe it's a DPI issue
     todo(false, "Unexpected DPI?");
@@ -148,8 +148,8 @@ function loaded() {
   }
 
   var bounds = h1.getBoundingClientRect();
-  windowFrameX = h1.boxObject.screenX - bounds.left - window.screenX;
-  windowFrameY = h1.boxObject.screenY - bounds.top - window.screenY;
+  windowFrameX = h1.screenX - bounds.left - window.screenX;
+  windowFrameY = h1.screenY - bounds.top - window.screenY;
 
   // Run actual test code
   runTests();
