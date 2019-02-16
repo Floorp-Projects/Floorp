@@ -19,7 +19,7 @@ void ProfilerIOInterposeObserver::Observe(Observation& aObservation) {
   nsString filename;
   aObservation.Filename(filename);
   profiler_add_marker(
-      "DiskIO", js::ProfilingStackFrame::Category::OTHER,
+      "DiskIO", JS::ProfilingCategoryPair::OTHER,
       MakeUnique<DiskIOMarkerPayload>(
           aObservation.ObservedOperationString(), aObservation.Reference(),
           NS_ConvertUTF16toUTF8(filename).get(), aObservation.Start(),

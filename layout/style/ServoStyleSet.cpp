@@ -860,6 +860,7 @@ already_AddRefed<ComputedStyle> ServoStyleSet::ProbePseudoElementStyle(
 }
 
 bool ServoStyleSet::StyleDocument(ServoTraversalFlags aFlags) {
+  AUTO_PROFILER_LABEL_CATEGORY_PAIR(LAYOUT_StyleComputation);
   MOZ_ASSERT(GetPresContext(), "Styling a document without a shell?");
 
   if (!mDocument->GetServoRestyleRoot()) {

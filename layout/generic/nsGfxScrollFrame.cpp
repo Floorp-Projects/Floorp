@@ -5574,21 +5574,35 @@ void ScrollFrameHelper::UpdateMinimumScaleSize(
   }
 
   nsViewportInfo viewportInfo = doc->GetViewportInfo(displaySize);
-  nsSize maximumPossibleSize =
-      CSSSize::ToAppUnits(ScreenSize(displaySize) / viewportInfo.GetMinZoom());
 
-  mMinimumScaleSize =
-      Min(maximumPossibleSize,
-          nsSize(aScrollableOverflow.XMost(), aScrollableOverflow.YMost()));
-  mMinimumScaleSize = Max(aICBSize, mMinimumScaleSize);
+  // The intrinsic minimum scale is the scale that fits the entire content
+  // width into the visual viewport.
+  CSSToScreenScale intrinsicMinScale(
+      displaySize.width / CSSRect::FromAppUnits(aScrollableOverflow).XMost());
 
-  // Chrome doesn't allow overflow-y:hidden region reachable if there is no
-  // overflow-x:hidden region.
+  // The scale used to compute the minimum-scale size is the larger of the
+  // intrinsic minimum and the min-scale from the meta viewport tag.
+  CSSToScreenScale minScale =
+      std::max(intrinsicMinScale, viewportInfo.GetMinZoom());
+
+  // The minimum-scale size is the size of the visual viewport when zoomed
+  // to be the minimum scale.
+  mMinimumScaleSize = CSSSize::ToAppUnits(ScreenSize(displaySize) / minScale);
+
+  // Clamp the min-scale size so it's not taller than the content height.
   // TODO: Bug 1508177: We can drop this condition once after we shrink the
   // content even if no content area gets visible.
-  if (mMinimumScaleSize.width != aICBSize.width) {
-    mIsUsingMinimumScaleSize = true;
-  }
+  mMinimumScaleSize =
+      Min(mMinimumScaleSize,
+          nsSize(aScrollableOverflow.XMost(), aScrollableOverflow.YMost()));
+
+  // Ensure the minimum-scale size is never smaller than the ICB size.
+  // That could happen if a page has a meta viewport tag with large explicitly
+  // specified viewport dimensions (making the ICB large) and also a large
+  // minimum scale (making the min-scale size small).
+  mMinimumScaleSize = Max(aICBSize, mMinimumScaleSize);
+
+  mIsUsingMinimumScaleSize = true;
 }
 
 bool ScrollFrameHelper::ReflowFinished() {

@@ -51,7 +51,7 @@ function tabWithRequest(task, permission) {
     url: TEST_URL,
   }, async function(browser) {
     let requestPromise = ContentTask.spawn(browser, {
-      permission
+      permission,
     }, async function({permission}) {
       function requestCallback(perm) {
         is(perm, permission,

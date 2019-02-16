@@ -10,6 +10,7 @@
 #include "ProfileJSONWriter.h"
 
 #include "gtest/MozGtestFriend.h"
+#include "js/ProfilingCategory.h"
 #include "js/ProfilingFrameIterator.h"
 #include "js/TrackedOptimizationInfo.h"
 #include "mozilla/HashFunctions.h"
@@ -27,7 +28,7 @@ class ProfilerMarker;
 // NOTE!  If you add entries, you need to verify if they need to be added to the
 // switch statement in DuplicateLastSample!
 #define FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(MACRO)                   \
-  MACRO(Category, int)                                              \
+  MACRO(CategoryPair, int)                                          \
   MACRO(CollectionStart, double)                                    \
   MACRO(CollectionEnd, double)                                      \
   MACRO(Label, const char*)                                         \
@@ -224,9 +225,9 @@ class UniqueStacks {
     FrameKey(nsCString&& aLocation, bool aRelevantForJS,
              const mozilla::Maybe<unsigned>& aLine,
              const mozilla::Maybe<unsigned>& aColumn,
-             const mozilla::Maybe<unsigned>& aCategory)
+             const mozilla::Maybe<JS::ProfilingCategoryPair>& aCategoryPair)
         : mData(NormalFrameData{aLocation, aRelevantForJS, aLine, aColumn,
-                                aCategory}) {}
+                                aCategoryPair}) {}
 
     FrameKey(void* aJITAddress, uint32_t aJITDepth, uint32_t aRangeIndex)
         : mData(JITFrameData{aJITAddress, aJITDepth, aRangeIndex}) {}
@@ -245,7 +246,7 @@ class UniqueStacks {
       bool mRelevantForJS;
       mozilla::Maybe<unsigned> mLine;
       mozilla::Maybe<unsigned> mColumn;
-      mozilla::Maybe<unsigned> mCategory;
+      mozilla::Maybe<JS::ProfilingCategoryPair> mCategoryPair;
     };
     struct JITFrameData {
       bool operator==(const JITFrameData& aOther) const;
