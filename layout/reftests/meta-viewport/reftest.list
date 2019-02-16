@@ -22,3 +22,4 @@ skip-if(winWidget||webrender) == vertical-overflow-hidden-region.html about:blan
 skip-if(winWidget||webrender) == scroll-to-unreachable-area.html scroll-to-unreachable-area-ref.html
 skip-if(winWidget||webrender) == wrapped-text-at-icb.html wrapped-text-at-icb-ref.html
 skip-if(winWidget||webrender) == not-able-to-scrollTo.html about:blank
+skip-if(winWidget||webrender) == min-scale-aspect-ratio.html about:blank
