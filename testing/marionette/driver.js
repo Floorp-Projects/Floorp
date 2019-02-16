@@ -3225,12 +3225,14 @@ GeckoDriver.prototype.sendKeysToDialog = async function(cmd) {
   assert.open(this.getCurrentWindow());
   this._checkIfAlertIsPresent();
 
+  let text = assert.string(cmd.parameters.text);
+
   // see toolkit/components/prompts/content/commonDialog.js
   let {loginTextbox} = this.dialog.ui;
   loginTextbox.value = "";
 
   await interaction.sendKeysToElement(
-      loginTextbox, cmd.parameters.text, this.a11yChecks);
+      loginTextbox, text, this.a11yChecks);
 };
 
 GeckoDriver.prototype._checkIfAlertIsPresent = function() {
