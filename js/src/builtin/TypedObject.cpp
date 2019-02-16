@@ -1490,23 +1490,6 @@ bool TypedObject::isAttached() const {
   return true;
 }
 
-/* static */ bool TypedObject::GetBuffer(JSContext* cx, unsigned argc,
-                                         Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  JSObject& obj = args[0].toObject();
-  ArrayBufferObject* buffer;
-  if (obj.is<OutlineTransparentTypedObject>()) {
-    buffer = obj.as<OutlineTransparentTypedObject>().getOrCreateBuffer(cx);
-  } else {
-    buffer = obj.as<InlineTransparentTypedObject>().getOrCreateBuffer(cx);
-  }
-  if (!buffer) {
-    return false;
-  }
-  args.rval().setObject(*buffer);
-  return true;
-}
-
 /* static */ bool TypedObject::GetByteOffset(JSContext* cx, unsigned argc,
                                              Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
