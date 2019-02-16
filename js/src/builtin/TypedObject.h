@@ -619,7 +619,6 @@ class TypedObject : public ShapedObject {
   static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
 
   /* Accessors for self hosted code. */
-  static MOZ_MUST_USE bool GetBuffer(JSContext* cx, unsigned argc, Value* vp);
   static MOZ_MUST_USE bool GetByteOffset(JSContext* cx, unsigned argc,
                                          Value* vp);
 
