@@ -22,7 +22,8 @@ var NotificationTest = (function() {
 
     (function executeRemainingTests(remainingTests) {
       if (!remainingTests.length) {
-        return callback();
+        callback();
+        return;
       }
 
       var nextTest = remainingTests.shift();
@@ -45,7 +46,7 @@ var NotificationTest = (function() {
 
   var fakeCustomData = (function() {
     var buffer = new ArrayBuffer(2);
-    var dv = new DataView(buffer).setInt16(0, 42, true);
+    new DataView(buffer).setInt16(0, 42, true);
     var canvas = document.createElement("canvas");
     canvas.width = canvas.height = 100;
     var context = canvas.getContext("2d");
