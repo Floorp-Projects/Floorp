@@ -307,8 +307,6 @@ bool ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
                                                const nsIntPoint& aTileOrigin,
                                                nsIntRegion& aDirtyRegion,
                                                TilePaintFlags aFlags) {
-  AUTO_PROFILER_LABEL("ClientMultiTiledLayerBuffer::ValidateTile", GRAPHICS);
-
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
   if (aDirtyRegion.IsComplex()) {
     printf_stderr("Complex region\n");

@@ -51,6 +51,14 @@
   END_CATEGORY                                                                \
   BEGIN_CATEGORY(GRAPHICS, "Graphics", "green")                               \
     SUBCATEGORY(GRAPHICS, GRAPHICS, "Other")                                  \
+    SUBCATEGORY(GRAPHICS, GRAPHICS_DisplayListBuilding, "DisplayList building") \
+    SUBCATEGORY(GRAPHICS, GRAPHICS_DisplayListMerging, "DisplayList merging") \
+    SUBCATEGORY(GRAPHICS, GRAPHICS_LayerBuilding, "Layer building")           \
+    SUBCATEGORY(GRAPHICS, GRAPHICS_TileAllocation, "Tile allocation")         \
+    SUBCATEGORY(GRAPHICS, GRAPHICS_WRDisplayList, "WebRender display list")   \
+    SUBCATEGORY(GRAPHICS, GRAPHICS_Rasterization, "Rasterization")            \
+    SUBCATEGORY(GRAPHICS, GRAPHICS_FlushingAsyncPaints, "Flushing async paints") \
+    SUBCATEGORY(GRAPHICS, GRAPHICS_ImageDecoding, "Image decoding")           \
   END_CATEGORY                                                                \
   BEGIN_CATEGORY(DOM, "DOM", "blue")                                          \
     SUBCATEGORY(DOM, DOM, "Other")                                            \
