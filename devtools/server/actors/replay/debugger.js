@@ -382,8 +382,9 @@ ReplayDebugger.prototype = {
                 type: "frameEvaluate",
                 index: frameData.index,
                 text,
+                convertOptions: { snapshot: true },
               });
-              evaluateResult = this._convertCompletionValue(rv, { forSearch: true });
+              evaluateResult = this._convertCompletionValue(rv);
             }
           }
           results.push(point);
@@ -530,21 +531,12 @@ ReplayDebugger.prototype = {
   // Object methods
   /////////////////////////////////////////////////////////
 
-  _getObject(id, options) {
-    if (options && options.forSearch) {
-      // Returning objects through searches is NYI.
-      return "<UnknownSearchObject>";
-    }
-    const forConsole = options && options.forConsole;
-
+  _getObject(id) {
     if (id && !this._objects[id]) {
       const data = this._sendRequest({ type: "getObject", id });
       switch (data.kind) {
       case "Object":
-        // Objects which |forConsole| is set are objects that were logged in
-        // console messages, and had their properties recorded so that they can
-        // be inspected without switching to a replaying child.
-        this._objects[id] = new ReplayDebuggerObject(this, data, forConsole);
+        this._objects[id] = new ReplayDebuggerObject(this, data);
         break;
       case "Environment":
         this._objects[id] = new ReplayDebuggerEnvironment(this, data);
@@ -553,18 +545,17 @@ ReplayDebugger.prototype = {
         ThrowError("Unknown object kind");
       }
     }
-    const rv = this._objects[id];
-    if (forConsole) {
-      rv._forConsole = true;
-    }
-    return rv;
+    return this._objects[id];
   },
 
   // Convert a value we received from the child.
-  _convertValue(value, options) {
+  _convertValue(value) {
     if (isNonNullObject(value)) {
       if (value.object) {
-        return this._getObject(value.object, options);
+        return this._getObject(value.object);
+      }
+      if (value.snapshot) {
+        return new ReplayDebuggerObjectSnapshot(this, value.snapshot);
       }
       switch (value.special) {
       case "undefined": return undefined;
@@ -577,12 +568,12 @@ ReplayDebugger.prototype = {
     return value;
   },
 
-  _convertCompletionValue(value, options) {
+  _convertCompletionValue(value) {
     if ("return" in value) {
-      return { return: this._convertValue(value.return, options) };
+      return { return: this._convertValue(value.return) };
     }
     if ("throw" in value) {
-      return { throw: this._convertValue(value.throw, options) };
+      return { throw: this._convertValue(value.throw) };
     }
     ThrowError("Unexpected completion value");
     return null; // For eslint
@@ -647,8 +638,7 @@ ReplayDebugger.prototype = {
     // other contents of the message can be left alone.
     if (message.messageType == "ConsoleAPI" && message.arguments) {
       for (let i = 0; i < message.arguments.length; i++) {
-        message.arguments[i] = this._convertValue(message.arguments[i],
-                                                  { forConsole: true });
+        message.arguments[i] = this._convertValue(message.arguments[i]);
       }
     }
     return message;
@@ -902,10 +892,9 @@ ReplayDebuggerFrame.prototype = {
 // ReplayDebuggerObject
 ///////////////////////////////////////////////////////////////////////////////
 
-function ReplayDebuggerObject(dbg, data, forConsole) {
+function ReplayDebuggerObject(dbg, data) {
   this._dbg = dbg;
   this._data = data;
-  this._forConsole = forConsole;
   this._properties = null;
   this._proxyData = null;
 }
@@ -933,17 +922,11 @@ ReplayDebuggerObject.prototype = {
   get boundArguments() { return this.isBoundFunction ? NYI() : undefined; },
   get global() { return this._dbg._getObject(this._data.global); },
   get isProxy() { return this._data.isProxy; },
+  get proto() { return this._dbg._getObject(this._data.proto); },
 
   isExtensible() { return this._data.isExtensible; },
   isSealed() { return this._data.isSealed; },
   isFrozen() { return this._data.isFrozen; },
-
-  get proto() {
-    // Don't allow inspection of the prototypes of objects logged to the
-    // console. This is a hack that prevents the object inspector from crawling
-    // the object's prototype chain.
-    return this._forConsole ? null : this._dbg._getObject(this._data.proto);
-  },
 
   unsafeDereference() {
     // Direct access to the referent is not currently available.
@@ -969,9 +952,8 @@ ReplayDebuggerObject.prototype = {
   _ensureProperties() {
     if (!this._properties) {
       const id = this._data.id;
-      const properties = this._forConsole
-        ? this._dbg._sendRequest({ type: "getObjectPropertiesForConsole", id })
-        : this._dbg._sendRequestAllowDiverge({ type: "getObjectProperties", id });
+      const properties =
+        this._dbg._sendRequestAllowDiverge({ type: "getObjectProperties", id });
       this._properties = Object.create(null);
       properties.forEach(({name, desc}) => { this._properties[name] = desc; });
     }
@@ -1058,6 +1040,23 @@ ReplayDebuggerObject.prototype = {
   deleteProperty: NotAllowed,
   forceLexicalInitializationByName: NotAllowed,
 };
+
+///////////////////////////////////////////////////////////////////////////////
+// ReplayDebuggerObjectSnapshot
+///////////////////////////////////////////////////////////////////////////////
+
+// Create an object based on snapshot data which can be consulted without
+// communicating with the child process. This uses data provided by the child
+// process in the same format as for normal ReplayDebuggerObjects, except that
+// it does not contain references to any other objects.
+function ReplayDebuggerObjectSnapshot(dbg, data) {
+  this._dbg = dbg;
+  this._data = data;
+  this._properties = Object.create(null);
+  data.properties.forEach(({name, desc}) => { this._properties[name] = desc; });
+}
+
+ReplayDebuggerObjectSnapshot.prototype = ReplayDebuggerObject.prototype;
 
 ///////////////////////////////////////////////////////////////////////////////
 // ReplayDebuggerEnvironment

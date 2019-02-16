@@ -257,9 +257,9 @@ var TestRunner = {
       }
 
       // Calculate box region, convert to Rect
-      let box = element.ownerDocument.getBoxObjectFor(element);
-      let rect = new Rect(box.screenX * scale, box.screenY * scale,
-                             box.width * scale, box.height * scale);
+      let elementRect = element.getBoundingClientRect();
+      let rect = new Rect(element.screenX * scale, element.screenY * scale,
+                             elementRect.width * scale, elementRect.height * scale);
       rect.inflateFixed(this.croppingPadding * scale);
       rect.left = Math.max(rect.left, windowLeft);
       rect.top = Math.max(rect.top, windowTop);

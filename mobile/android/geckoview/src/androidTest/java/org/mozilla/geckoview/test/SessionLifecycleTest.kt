@@ -27,6 +27,7 @@ import android.util.Log
 import android.util.SparseArray
 
 import org.hamcrest.Matchers.*
+import org.junit.Assume.assumeThat
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
@@ -149,6 +150,8 @@ class SessionLifecycleTest : BaseSessionTest() {
     }
 
     @Test fun readFromParcel_closedSessionAfterReadParcel() {
+        // disable test on opt for frequently failing Bug 1519591
+        assumeThat(sessionRule.env.isDebugBuild, equalTo(true))
         val session = sessionRule.createOpenSession()
 
         session.toParcel { parcel ->

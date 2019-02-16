@@ -454,7 +454,7 @@ TimeoutManager::TimeoutManager(nsGlobalWindowInner& aWindow,
       mTimeouts(*this),
       mTimeoutIdCounter(1),
       mNextFiringId(InvalidFiringId + 1),
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
       mFiringIndex(0),
       mLastFiringIndex(-1),
 #endif
@@ -563,6 +563,9 @@ nsresult TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
   }
 
   RefPtr<Timeout> timeout = new Timeout();
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  timeout->mFiringIndex = -1;
+#endif
   timeout->mWindow = &mWindow;
   timeout->mIsInterval = aIsInterval;
   timeout->mInterval = TimeDuration::FromMilliseconds(interval);
@@ -798,7 +801,8 @@ void TimeoutManager::RunTimeout(const TimeStamp& aNow,
     MOZ_LOG(gTimeoutLog, LogLevel::Debug,
             ("Running %u deferred timeouts on idle (TimeoutManager=%p), "
              "nextDeadline = %gms from now",
-             numTimersToRun, this, (nextDeadline - now).ToMilliseconds()));
+             numTimersToRun, this,
+             nextDeadline.IsNull() ? 0.0 : (nextDeadline - now).ToMilliseconds()));
   }
 
   now = TimeStamp::Now();
@@ -894,7 +898,7 @@ void TimeoutManager::RunTimeout(const TimeStamp& aNow,
       // ("Wait until any invocations of this algorithm that had the same
       // method context, that started before this one, and whose timeout is
       // equal to or less than this one's, have completed.").
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
       if (timeout->mFiringIndex == -1) {
         timeout->mFiringIndex = mFiringIndex++;
       }
@@ -934,8 +938,8 @@ void TimeoutManager::RunTimeout(const TimeStamp& aNow,
           continue;
         }
 
-#ifdef DEBUG
-        MOZ_ASSERT(timeout->mFiringIndex > mLastFiringIndex);
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+        MOZ_DIAGNOSTIC_ASSERT(timeout->mFiringIndex > mLastFiringIndex);
         mLastFiringIndex = timeout->mFiringIndex;
 #endif
         // This timeout is good to run
@@ -1063,7 +1067,7 @@ bool TimeoutManager::RescheduleTimeout(Timeout* aTimeout,
   TimeStamp firingTime = aLastCallbackTime + nextInterval;
   TimeDuration delay = firingTime - aCurrentNow;
 
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   aTimeout->mFiringIndex = -1;
 #endif
   // And make sure delay is nonnegative; that might happen if the timer
