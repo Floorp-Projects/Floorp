@@ -1514,11 +1514,6 @@ bool TypedObject::isAttached() const {
 }
 
 void OutlineTypedObject::setOwnerAndData(JSObject* owner, uint8_t* data) {
-  // Make sure we don't associate with array buffers whose data is from an
-  // inline typed object, see obj_trace.
-  MOZ_ASSERT_IF(owner && owner->is<ArrayBufferObject>(),
-                !owner->as<ArrayBufferObject>().forInlineTypedObject());
-
   // Typed objects cannot move from one owner to another, so don't worry
   // about pre barriers during this initialization.
   owner_ = owner;
@@ -1576,14 +1571,6 @@ void OutlineTypedObject::attach(JSContext* cx, ArrayBufferObject& buffer,
   MOZ_ASSERT(!isAttached());
   MOZ_ASSERT(offset <= buffer.byteLength());
   MOZ_ASSERT(size() <= buffer.byteLength() - offset);
-
-  // If the owner's data is from an inline typed object, associate this with
-  // the inline typed object instead, to simplify tracing.
-  if (buffer.forInlineTypedObject()) {
-    InlineTypedObject& realOwner = buffer.firstView()->as<InlineTypedObject>();
-    attach(cx, realOwner, offset);
-    return;
-  }
 
   buffer.setHasTypedObjectViews();
 
@@ -1694,11 +1681,7 @@ void OutlineTypedObject::attach(JSContext* cx, TypedObject& typedObj,
   uint8_t* newData = oldData;
 
   // Update the data pointer if the owner moved and the owner's data is
-  // inline with it. Note that an array buffer pointing to data in an inline
-  // typed object will never be used as an owner for another outline typed
-  // object. In such cases, the owner will be the inline typed object itself.
-  MOZ_ASSERT_IF(owner->is<ArrayBufferObject>(),
-                !owner->as<ArrayBufferObject>().forInlineTypedObject());
+  // inline with it.
   if (owner != oldOwner && (owner->is<InlineTypedObject>() ||
                             owner->as<ArrayBufferObject>().hasInlineData())) {
     newData += reinterpret_cast<uint8_t*>(owner) -

@@ -468,8 +468,6 @@ static void NoteViewBufferWasDetached(
   // When detaching buffers where we don't know all views, the new data must
   // match the old data. All missing views are typed objects, which do not
   // expect their data to ever change.
-  MOZ_ASSERT_IF(buffer->forInlineTypedObject(),
-                newContents.data() == buffer->dataPointer());
 
   // When detaching a buffer with typed object views, any jitcode accessing
   // such views must be deoptimized so that detachment checks are performed.
@@ -503,8 +501,6 @@ static void NoteViewBufferWasDetached(
     innerViews.removeViews(buffer);
   }
   if (JSObject* view = buffer->firstView()) {
-    MOZ_ASSERT(!buffer->forInlineTypedObject(),
-               "Typed object buffers cannot be detached");
     NoteViewBufferWasDetached(&view->as<ArrayBufferViewObject>(), newContents,
                               cx);
     buffer->setFirstView(nullptr);
@@ -561,7 +557,6 @@ void ArrayBufferObject::changeContents(JSContext* cx,
                                        BufferContents newContents,
                                        OwnsState ownsState) {
   MOZ_RELEASE_ASSERT(!isWasm());
-  MOZ_ASSERT(!forInlineTypedObject());
 
   // Change buffer contents.
   uint8_t* oldDataPointer = dataPointer();
@@ -930,10 +925,6 @@ bool js::CreateWasmBuffer(JSContext* cx, const wasm::Limits& memory,
   MOZ_ASSERT(buffer->byteLength() % wasm::PageSize == 0);
   // Don't assert cx->wasmHaveSignalHandlers because (1) they aren't needed
   // for asm.js, (2) they are only installed for WebAssembly, not asm.js.
-
-  if (buffer->forInlineTypedObject()) {
-    return false;
-  }
 
   if (!buffer->isWasm() && buffer->isPreparedForAsmJS()) {
     return true;
@@ -1404,22 +1395,11 @@ ArrayBufferObject::externalizeContents(JSContext* cx,
 }
 
 /* static */ void ArrayBufferObject::trace(JSTracer* trc, JSObject* obj) {
-  // If this buffer is associated with an inline typed object,
-  // fix up the data pointer if the typed object was moved.
-  ArrayBufferObject& buf = obj->as<ArrayBufferObject>();
-
-  if (!buf.forInlineTypedObject()) {
-    return;
-  }
-
-  JSObject* view = MaybeForwarded(buf.firstView());
-  MOZ_ASSERT(view && view->is<InlineTransparentTypedObject>());
-
-  TraceManuallyBarrieredEdge(trc, &view,
-                             "array buffer inline typed object owner");
-  buf.setFixedSlot(
-      DATA_SLOT,
-      PrivateValue(view->as<InlineTransparentTypedObject>().inlineTypedMem()));
+  // Previously buffers could be associated with an inline typed object, and
+  // such buffers' data pointers required an update if the inline typed object
+  // was moved.  Now that typed objects' buffers cannot be reified or accessed,
+  // this function does nothing.
+  MOZ_ASSERT(obj->is<ArrayBufferObject>());
 }
 
 /* static */ size_t ArrayBufferObject::objectMoved(JSObject* obj,

@@ -201,18 +201,12 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     // directly to the typed object's storage.
     OWNS_DATA = 0x8,
 
-    // This array buffer was created lazily for a typed object with inline
-    // data. This implies both that the typed object owns the buffer's data
-    // and that the list of views sharing this buffer's data might be
-    // incomplete. Any missing views will be typed objects.
-    FOR_INLINE_TYPED_OBJECT = 0x10,
-
     // Views of this buffer might include typed objects.
-    TYPED_OBJECT_VIEWS = 0x20,
+    TYPED_OBJECT_VIEWS = 0x10,
 
     // This PLAIN or WASM buffer has been prepared for asm.js and cannot
     // henceforth be transferred/detached.
-    FOR_ASMJS = 0x40
+    FOR_ASMJS = 0x20
   };
 
   static_assert(JS_ARRAYBUFFER_DETACHED_FLAG == DETACHED,
@@ -409,14 +403,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   static size_t offsetOfFlagsSlot() { return getFixedSlotOffset(FLAGS_SLOT); }
   static size_t offsetOfDataSlot() { return getFixedSlotOffset(DATA_SLOT); }
 
-  void setForInlineTypedObject() {
-    setFlags(flags() | FOR_INLINE_TYPED_OBJECT);
-  }
   void setHasTypedObjectViews() { setFlags(flags() | TYPED_OBJECT_VIEWS); }
-
-  bool forInlineTypedObject() const {
-    return flags() & FOR_INLINE_TYPED_OBJECT;
-  }
 
  protected:
   void setDataPointer(BufferContents contents, OwnsState ownsState);
