@@ -700,8 +700,6 @@ class OutlineTypedObject : public TypedObject {
 class OutlineTransparentTypedObject : public OutlineTypedObject {
  public:
   static const Class class_;
-
-  ArrayBufferObject* getOrCreateBuffer(JSContext* cx);
 };
 
 // Class for an opaque typed object whose owner may be either an array buffer
@@ -758,8 +756,6 @@ class InlineTypedObject : public TypedObject {
 class InlineTransparentTypedObject : public InlineTypedObject {
  public:
   static const Class class_;
-
-  ArrayBufferObject* getOrCreateBuffer(JSContext* cx);
 
   uint8_t* inlineTypedMem() const {
     return InlineTypedObject::inlineTypedMem();
