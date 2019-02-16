@@ -236,6 +236,12 @@ const PREFS_CONFIG = new Map([
   }],
   ["discoverystream.spoc.impressions", {
     title: "Track spoc impressions",
+    skipBroadcast: true,
+    value: "{}",
+  }],
+  ["discoverystream.rec.impressions", {
+    title: "Track rec impressions",
+    skipBroadcast: true,
     value: "{}",
   }],
   ["darkModeMessage", {
