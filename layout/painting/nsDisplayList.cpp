@@ -1053,6 +1053,8 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
 
   mBuildCompositorHitTestInfo = mAsyncPanZoomEnabled && IsForPainting();
 
+  UpdateShouldBuildAsyncZoomContainer();
+
   static_assert(
       static_cast<uint32_t>(DisplayItemType::TYPE_MAX) < (1 << TYPE_BITS),
       "Check TYPE_MAX should not overflow");
@@ -1190,6 +1192,11 @@ AnimatedGeometryRoot* nsDisplayListBuilder::FindAnimatedGeometryRootFor(
     }
   }
   return FindAnimatedGeometryRootFor(aItem->Frame());
+}
+
+void nsDisplayListBuilder::UpdateShouldBuildAsyncZoomContainer() {
+  mBuildAsyncZoomContainer = gfxPrefs::APZAllowZooming() &&
+                             !gfxPrefs::LayoutUseContainersForRootFrames();
 }
 
 bool nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,

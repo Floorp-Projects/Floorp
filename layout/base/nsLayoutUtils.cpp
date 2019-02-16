@@ -3605,9 +3605,7 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
       // (manually by the user, or during test setup).
       bool shouldAttemptPartialUpdate = useRetainedBuilder;
       bool didBuildAsyncZoomContainer = builder.ShouldBuildAsyncZoomContainer();
-      builder.SetBuildAsyncZoomContainer(
-          gfxPrefs::APZAllowZooming() &&
-          !gfxPrefs::LayoutUseContainersForRootFrames());
+      builder.UpdateShouldBuildAsyncZoomContainer();
       if (builder.ShouldBuildAsyncZoomContainer() !=
           didBuildAsyncZoomContainer) {
         shouldAttemptPartialUpdate = false;
