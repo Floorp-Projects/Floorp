@@ -2508,7 +2508,8 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
 }
 
 nsIFrame* nsCSSFrameConstructor::ConstructRootFrame() {
-  AUTO_PROFILER_LABEL("nsCSSFrameConstructor::ConstructRootFrame", LAYOUT);
+  AUTO_PROFILER_LABEL("nsCSSFrameConstructor::ConstructRootFrame",
+                      LAYOUT_FrameConstruction);
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
 
   ServoStyleSet* styleSet = mPresShell->StyleSet();
@@ -6617,7 +6618,8 @@ void nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
   MOZ_ASSERT(aInsertionKind == InsertionKind::Sync ||
              !RestyleManager()->IsInStyleRefresh());
 
-  AUTO_PROFILER_LABEL("nsCSSFrameConstructor::ContentAppended", LAYOUT);
+  AUTO_PROFILER_LABEL("nsCSSFrameConstructor::ContentAppended",
+                      LAYOUT_FrameConstruction);
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
 
 #ifdef DEBUG
@@ -6915,7 +6917,8 @@ void nsCSSFrameConstructor::ContentRangeInserted(
   MOZ_ASSERT(aInsertionKind == InsertionKind::Sync ||
              !RestyleManager()->IsInStyleRefresh());
 
-  AUTO_PROFILER_LABEL("nsCSSFrameConstructor::ContentRangeInserted", LAYOUT);
+  AUTO_PROFILER_LABEL("nsCSSFrameConstructor::ContentRangeInserted",
+                      LAYOUT_FrameConstruction);
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
 
   MOZ_ASSERT(aStartChild, "must always pass a child");
@@ -7364,7 +7367,8 @@ bool nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
   MOZ_ASSERT(aChild);
   MOZ_ASSERT(!aChild->IsRootOfAnonymousSubtree() || !aOldNextSibling,
              "Anonymous roots don't have siblings");
-  AUTO_PROFILER_LABEL("nsCSSFrameConstructor::ContentRemoved", LAYOUT);
+  AUTO_PROFILER_LABEL("nsCSSFrameConstructor::ContentRemoved",
+                      LAYOUT_FrameConstruction);
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
   nsPresContext* presContext = mPresShell->GetPresContext();
   MOZ_ASSERT(presContext, "Our presShell should have a valid presContext");
@@ -7754,7 +7758,8 @@ bool nsCSSFrameConstructor::EnsureFrameForTextNodeIsCreatedAfterFlush(
 
 void nsCSSFrameConstructor::CharacterDataChanged(
     nsIContent* aContent, const CharacterDataChangeInfo& aInfo) {
-  AUTO_PROFILER_LABEL("nsCSSFrameConstructor::CharacterDataChanged", LAYOUT);
+  AUTO_PROFILER_LABEL("nsCSSFrameConstructor::CharacterDataChanged",
+                      LAYOUT_FrameConstruction);
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
 
   if ((aContent->HasFlag(NS_CREATE_FRAME_IF_NON_WHITESPACE) &&
