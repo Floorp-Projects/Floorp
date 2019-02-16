@@ -202,7 +202,9 @@ JitCode* BaselineCacheIRCompiler::compile() {
       default:
         MOZ_CRASH("Invalid op");
     }
-
+#ifdef DEBUG
+    assertAllArgumentsConsumed();
+#endif
     allocator.nextOp();
   } while (reader.more());
 
