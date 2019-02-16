@@ -81,7 +81,7 @@ function popupShown(event)
   var panel = event.target;
 
   if (waitSteps > 0 && navigator.platform.includes("Linux") &&
-      panel.boxObject.screenY == 210) {
+      panel.screenY == 210) {
     waitSteps--;
     setTimeout(popupShown, 10, event);
     return;
@@ -213,7 +213,7 @@ var tests = [
       {
         is(event.clientY, panelrect.top + 10,
            "popup clientY");
-        is(event.screenY, panel.boxObject.screenY + 10,
+        is(event.screenY, panel.screenY + 10,
            "popup screenY");
         is(event.originalTarget, panel.firstChild, "popup target");
         gotMouseEvent = true;

@@ -203,7 +203,7 @@ class TimeoutManager final {
   Timeouts mTimeouts;
   uint32_t mTimeoutIdCounter;
   uint32_t mNextFiringId;
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   int64_t mFiringIndex;
   int64_t mLastFiringIndex;
 #endif

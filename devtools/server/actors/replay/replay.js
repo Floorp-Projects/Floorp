@@ -191,24 +191,48 @@ dbg.onNewScript = function(script) {
   installPendingHandlers();
 };
 
-const gConsoleObjectProperties = new Map();
+///////////////////////////////////////////////////////////////////////////////
+// Object Snapshots
+///////////////////////////////////////////////////////////////////////////////
 
-function shouldSaveConsoleProperty({ desc }) {
-  // When logging an object to the console, only properties captured here will
-  // be shown. We limit this to non-object data properties, as more complex
-  // properties have two problems: A) to inspect them we will need to switch to
-  // a replaying child process, which is very slow when there are many console
-  // messages, and B) trying to access objects transitively referred to by
-  // logged console objects will fail when unpaused, and depends on the current
-  // state of the process otherwise.
-  return "value" in desc && !isNonNullObject(desc.value);
+// Snapshots are generated for objects that might be inspected at times when we
+// are not paused at the point where the snapshot was originally taken. The
+// snapshot data is provided to the server, which can use it to provide limited
+// answers to the client about the object's contents, without having to consult
+// a child process.
+
+function snapshotObjectProperty({ name, desc }) {
+  // Only capture primitive properties in object snapshots.
+  if ("value" in desc && !convertedValueIsObject(desc.value)) {
+    return { name, desc };
+  }
+  return { name, desc: { value: "<unavailable>" } };
 }
 
-function saveConsoleObjectProperties(obj) {
-  if (obj instanceof Debugger.Object) {
-    const properties = getObjectProperties(obj).filter(shouldSaveConsoleProperty);
-    gConsoleObjectProperties.set(obj, properties);
-  }
+function makeObjectSnapshot(object) {
+  assert(object instanceof Debugger.Object);
+
+  // Include properties that would be included in a normal object's data packet,
+  // except do not allow inspection of any other referenced objects.
+  // In particular, don't set the prototype so that the object inspector will
+  // not attempt to crawl the object's prototype chain.
+  return {
+    kind: "Object",
+    callable: object.callable,
+    isBoundFunction: object.isBoundFunction,
+    isArrowFunction: object.isArrowFunction,
+    isGeneratorFunction: object.isGeneratorFunction,
+    isAsyncFunction: object.isAsyncFunction,
+    class: object.class,
+    name: object.name,
+    displayName: object.displayName,
+    parameterNames: object.parameterNames,
+    isProxy: object.isProxy,
+    isExtensible: object.isExtensible(),
+    isSealed: object.isSealed(),
+    isFrozen: object.isFrozen(),
+    properties: getObjectProperties(object).map(snapshotObjectProperty),
+  };
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -281,26 +305,14 @@ Services.obs.addObserver({
 
     // Message arguments are preserved as debuggee values.
     if (apiMessage.arguments) {
-      contents.arguments = apiMessage.arguments.map(makeDebuggeeValue);
-      contents.arguments.forEach(saveConsoleObjectProperties);
+      contents.arguments = apiMessage.arguments.map(v => {
+        return convertValue(makeDebuggeeValue(v), { snapshot: true });
+      });
     }
 
     newConsoleMessage("ConsoleAPI", null, contents);
   },
 }, "console-api-log-event");
-
-function convertConsoleMessage(contents) {
-  const result = {};
-  for (const id in contents) {
-    if (id == "arguments" && contents.messageType == "ConsoleAPI") {
-      // Copy arguments over as debuggee values.
-      result.arguments = contents.arguments.map(convertValue);
-    } else {
-      result[id] = contents[id];
-    }
-  }
-  return result;
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Position Handler State
@@ -469,25 +481,33 @@ function getObjectId(obj) {
 }
 
 // Convert a value for sending to the parent.
-function convertValue(value) {
+function convertValue(value, options) {
   if (value instanceof Debugger.Object) {
-    return { object: getObjectId(value) };
-  } else if (value === undefined ||
-             value == Infinity ||
-             value == -Infinity ||
-             Object.is(value, NaN) ||
-             Object.is(value, -0)) {
-      return { special: "" + value };
+    if (options && options.snapshot) {
+      return { snapshot: makeObjectSnapshot(value) };
     }
+    return { object: getObjectId(value) };
+  }
+  if (value === undefined ||
+      value == Infinity ||
+      value == -Infinity ||
+      Object.is(value, NaN) ||
+      Object.is(value, -0)) {
+    return { special: "" + value };
+  }
   return value;
 }
 
-function convertCompletionValue(value) {
+function convertedValueIsObject(value) {
+  return isNonNullObject(value) && "object" in value;
+}
+
+function convertCompletionValue(value, options) {
   if ("return" in value) {
-    return { return: convertValue(value.return) };
+    return { return: convertValue(value.return, options) };
   }
   if ("throw" in value) {
-    return { throw: convertValue(value.throw) };
+    return { throw: convertValue(value.throw, options) };
   }
   throw new Error("Unexpected completion value");
 }
@@ -693,15 +713,6 @@ const gRequestHandlers = {
     return getObjectProperties(object);
   },
 
-  getObjectPropertiesForConsole(request) {
-    const object = gPausedObjects.getObject(request.id);
-    const properties = gConsoleObjectProperties.get(object);
-    if (!properties) {
-      throw new Error("Console object properties not saved");
-    }
-    return properties;
-  },
-
   objectProxyData(request) {
     if (!RecordReplayControl.maybeDivergeFromRecording()) {
       return { exception: "Recording divergence in unwrapObject" };
@@ -794,7 +805,7 @@ const gRequestHandlers = {
 
     const frame = scriptFrameForIndex(request.index);
     const rv = frame.eval(request.text, request.options);
-    return convertCompletionValue(rv);
+    return convertCompletionValue(rv, request.convertOptions);
   },
 
   popFrameResult(request) {
@@ -802,11 +813,11 @@ const gRequestHandlers = {
   },
 
   findConsoleMessages(request) {
-    return gConsoleMessages.map(convertConsoleMessage);
+    return gConsoleMessages;
   },
 
   getNewConsoleMessage(request) {
-    return convertConsoleMessage(gConsoleMessages[gConsoleMessages.length - 1]);
+    return gConsoleMessages[gConsoleMessages.length - 1];
   },
 
   currentExecutionPoint(request) {

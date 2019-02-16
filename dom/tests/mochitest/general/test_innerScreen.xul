@@ -40,10 +40,10 @@ function doTests()
 
   is(window.devicePixelRatio, devPxPerCSSPx, "window.devicePixelRatio");
 
-  var windowBO = document.documentElement.boxObject;
-  isRounded(window.mozInnerScreenX*devPxPerCSSPx, windowBO.screenX,
+  var rootElement = document.documentElement;
+  isRounded(window.mozInnerScreenX*devPxPerCSSPx, rootElement.screenX,
             "window screen X");
-  isRounded(window.mozInnerScreenY*devPxPerCSSPx, windowBO.screenY,
+  isRounded(window.mozInnerScreenY*devPxPerCSSPx, rootElement.screenY,
             "window screen Y");
 
   var f = document.getElementById("f");

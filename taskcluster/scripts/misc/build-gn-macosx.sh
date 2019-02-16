@@ -13,7 +13,7 @@ CROSS_SYSROOT=$WORKSPACE/build/src/MacOSX10.11.sdk
 export LD_LIBRARY_PATH=$WORKSPACE/build/src/clang/lib
 export CC=$WORKSPACE/build/src/clang/bin/clang
 export CXX=$WORKSPACE/build/src/clang/bin/clang++
-export AR=$WORKSPACE/build/src/clang/bin/clang
+export AR=$WORKSPACE/build/src/clang/bin/llvm-ar
 export CFLAGS="-target x86_64-darwin11 -mlinker-version=137 -B ${CROSS_CCTOOLS_PATH}/bin -isysroot ${CROSS_SYSROOT} -I${CROSS_SYSROOT}/usr/include -iframework ${CROSS_SYSROOT}/System/Library/Frameworks"
 export CXXFLAGS="-stdlib=libc++ ${CFLAGS}"
 export LDFLAGS="${CXXFLAGS} -Wl,-syslibroot,${CROSS_SYSROOT} -Wl,-dead_strip"

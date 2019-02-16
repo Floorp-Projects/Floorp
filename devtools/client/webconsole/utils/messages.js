@@ -335,6 +335,7 @@ function getRepeatId(message) {
     userProvidedStyles: message.userProvidedStyles,
     private: message.private,
     stacktrace: message.stacktrace,
+    executionPoint: message.executionPoint,
   });
 }
 
