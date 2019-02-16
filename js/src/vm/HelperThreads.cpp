@@ -57,9 +57,9 @@ GlobalHelperThreadState* gHelperThreadState = nullptr;
 #define PROFILER_RAII_PASTE(id, line) id##line
 #define PROFILER_RAII_EXPAND(id, line) PROFILER_RAII_PASTE(id, line)
 #define PROFILER_RAII PROFILER_RAII_EXPAND(raiiObject, __LINE__)
-#define AUTO_PROFILER_LABEL(label, category)     \
+#define AUTO_PROFILER_LABEL(label, categoryPair) \
   HelperThread::AutoProfilerLabel PROFILER_RAII( \
-      this, label, js::ProfilingStackFrame::Category::category)
+      this, label, JS::ProfilingCategoryPair::categoryPair)
 
 bool js::CreateHelperThreadsState() {
   MOZ_ASSERT(!gHelperThreadState);
@@ -2410,10 +2410,10 @@ const HelperThread::TaskSpec HelperThread::taskSpecs[] = {
 
 HelperThread::AutoProfilerLabel::AutoProfilerLabel(
     HelperThread* helperThread, const char* label,
-    ProfilingStackFrame::Category category)
+    JS::ProfilingCategoryPair categoryPair)
     : profilingStack(helperThread->profilingStack) {
   if (profilingStack) {
-    profilingStack->pushLabelFrame(label, nullptr, this, category);
+    profilingStack->pushLabelFrame(label, nullptr, this, categoryPair);
   }
 }
 

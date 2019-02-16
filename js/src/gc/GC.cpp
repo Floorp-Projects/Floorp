@@ -6712,7 +6712,7 @@ AutoHeapSession::AutoHeapSession(JSRuntime* rt, JS::HeapState heapState)
       prevState(rt->heapState_),
       profilingStackFrame(rt->mainContextFromOwnThread(),
                           HeapStateToLabel(heapState),
-                          ProfilingStackFrame::Category::GCCC) {
+                          JS::ProfilingCategoryPair::GCCC) {
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
   MOZ_ASSERT(prevState == JS::HeapState::Idle);
   MOZ_ASSERT(heapState != JS::HeapState::Idle);

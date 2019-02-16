@@ -20,9 +20,9 @@
 //
 // Note that this class is slightly slower than the other AutoProfilerLabel,
 // and it lacks the macro wrappers. It also is effectively hardwired to use
-// js::ProfilingStackFrame::Category::OTHER as the category, because that's what
-// the callbacks provided by the profiler use. (Specifying the category in
-// this file would require #including ProfilingStack.h in mozglue, which we
+// JS::ProfilingCategory::OTHER as the category pair, because that's what
+// the callbacks provided by the profiler use. (Specifying the categories in
+// this file would require #including ProfilingCategory.h in mozglue, which we
 // don't want to do.)
 
 class ProfilingStack;

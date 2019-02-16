@@ -164,8 +164,7 @@ void LayerManager::PayloadPresented() {
             "Payload Presented, type: %d latency: %dms\n",
             int32_t(payload.mType),
             int32_t((presented - payload.mTimeStamp).ToMilliseconds()));
-        profiler_add_marker(marker.get(),
-                            js::ProfilingStackFrame::Category::GRAPHICS);
+        profiler_add_marker(marker.get(), JS::ProfilingCategoryPair::GRAPHICS);
       }
 #endif
 
