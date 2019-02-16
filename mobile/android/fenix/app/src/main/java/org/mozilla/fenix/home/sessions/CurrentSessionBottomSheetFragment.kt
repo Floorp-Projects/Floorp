@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.current_session_bottom_sheet.view.*
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
 
@@ -26,8 +27,11 @@ class CurrentSessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutCon
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.current_session_bottom_sheet, container, false)
+        val sessions = requireComponents.core.sessionManager.sessions.filter {
+            (activity as HomeActivity).browsingModeManager.isPrivate == it.private
+        }
 
-        view.current_session_card_tab_list.text = requireComponents.core.sessionManager.sessions.joinToString(", ") {
+        view.current_session_card_tab_list.text = sessions.joinToString(", ") {
             if (it.title.length > maxTitleLength) it.title.substring(0, maxTitleLength) + "..." else it.title
         }
 
