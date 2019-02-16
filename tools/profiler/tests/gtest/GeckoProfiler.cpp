@@ -459,28 +459,27 @@ TEST(GeckoProfiler, Markers) {
   profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL, features,
                  filters, MOZ_ARRAY_LENGTH(filters));
 
-  profiler_tracing("A", "B", js::ProfilingStackFrame::Category::OTHER,
-                   TRACING_EVENT);
+  profiler_tracing("A", "B", JS::ProfilingCategoryPair::OTHER, TRACING_EVENT);
   PROFILER_TRACING("A", "C", OTHER, TRACING_INTERVAL_START);
   PROFILER_TRACING("A", "C", OTHER, TRACING_INTERVAL_END);
 
   UniqueProfilerBacktrace bt = profiler_get_backtrace();
-  profiler_tracing("B", "A", js::ProfilingStackFrame::Category::OTHER,
-                   TRACING_EVENT, std::move(bt));
+  profiler_tracing("B", "A", JS::ProfilingCategoryPair::OTHER, TRACING_EVENT,
+                   std::move(bt));
 
   { AUTO_PROFILER_TRACING("C", "A", OTHER); }
 
-  profiler_add_marker("M1", js::ProfilingStackFrame::Category::OTHER);
-  profiler_add_marker("M2", js::ProfilingStackFrame::Category::OTHER,
+  profiler_add_marker("M1", JS::ProfilingCategoryPair::OTHER);
+  profiler_add_marker("M2", JS::ProfilingCategoryPair::OTHER,
                       MakeUnique<TracingMarkerPayload>("C", TRACING_EVENT));
   PROFILER_ADD_MARKER("M3", OTHER);
-  profiler_add_marker("M4", js::ProfilingStackFrame::Category::OTHER,
+  profiler_add_marker("M4", JS::ProfilingCategoryPair::OTHER,
                       MakeUnique<TracingMarkerPayload>(
                           "C", TRACING_EVENT, mozilla::Nothing(),
                           mozilla::Nothing(), profiler_get_backtrace()));
 
   for (int i = 0; i < 10; i++) {
-    profiler_add_marker("M5", js::ProfilingStackFrame::Category::OTHER,
+    profiler_add_marker("M5", JS::ProfilingCategoryPair::OTHER,
                         MakeUnique<GTestMarkerPayload>(i));
   }
 
@@ -539,7 +538,7 @@ TEST(GeckoProfiler, Markers) {
   ASSERT_TRUE(GTestMarkerPayload::sNumDestroyed == 10);
 
   for (int i = 0; i < 10; i++) {
-    profiler_add_marker("M5", js::ProfilingStackFrame::Category::OTHER,
+    profiler_add_marker("M5", JS::ProfilingCategoryPair::OTHER,
                         MakeUnique<GTestMarkerPayload>(i));
   }
 
@@ -569,10 +568,10 @@ TEST(GeckoProfiler, DurationLimit) {
   GTestMarkerPayload::sNumStreamed = 0;
   GTestMarkerPayload::sNumDestroyed = 0;
 
-  profiler_add_marker("M1", js::ProfilingStackFrame::Category::OTHER,
+  profiler_add_marker("M1", JS::ProfilingCategoryPair::OTHER,
                       MakeUnique<GTestMarkerPayload>(1));
   PR_Sleep(PR_MillisecondsToInterval(1100));
-  profiler_add_marker("M2", js::ProfilingStackFrame::Category::OTHER,
+  profiler_add_marker("M2", JS::ProfilingCategoryPair::OTHER,
                       MakeUnique<GTestMarkerPayload>(2));
   PR_Sleep(PR_MillisecondsToInterval(500));
 
@@ -785,10 +784,9 @@ TEST(GeckoProfiler, ProfilingStack) {
     ASSERT_TRUE(profiler_get_backtrace());
   }
 
-  AutoProfilerLabel label1("A", nullptr,
-                           js::ProfilingStackFrame::Category::DOM);
+  AutoProfilerLabel label1("A", nullptr, JS::ProfilingCategoryPair::DOM);
   AutoProfilerLabel label2("A", dynamic.get(),
-                           js::ProfilingStackFrame::Category::NETWORK);
+                           JS::ProfilingCategoryPair::NETWORK);
   ASSERT_TRUE(profiler_get_backtrace());
 
   profiler_stop();

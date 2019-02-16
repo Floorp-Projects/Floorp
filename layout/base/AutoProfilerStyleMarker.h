@@ -39,7 +39,7 @@ class MOZ_RAII AutoProfilerStyleMarker {
       return;
     }
     ServoTraversalStatistics::sActive = false;
-    profiler_add_marker("Styles", js::ProfilingStackFrame::Category::LAYOUT,
+    profiler_add_marker("Styles", JS::ProfilingCategoryPair::LAYOUT,
                         MakeUnique<StyleMarkerPayload>(
                             mStartTime, TimeStamp::Now(), std::move(mCause),
                             ServoTraversalStatistics::sSingleton, mDocShellId,

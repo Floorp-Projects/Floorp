@@ -8881,7 +8881,7 @@ bool nsIPresShell::DoReflow(nsIFrame* target, bool aInterruptible,
 #ifdef MOZ_GECKO_PROFILER
   DECLARE_DOCSHELL_AND_HISTORY_ID(docShell);
   AutoProfilerTracing tracingLayoutFlush(
-      "Paint", "Reflow", js::ProfilingStackFrame::Category::LAYOUT,
+      "Paint", "Reflow", JS::ProfilingCategoryPair::LAYOUT,
       std::move(mReflowCause), docShellId, docShellHistoryId);
   mReflowCause = nullptr;
 #endif

@@ -21,7 +21,7 @@ class ProfilerMarker {
 
  public:
   explicit ProfilerMarker(
-      const char* aMarkerName, js::ProfilingStackFrame::Category aCategory,
+      const char* aMarkerName, JS::ProfilingCategoryPair aCategoryPair,
       int aThreadId,
       mozilla::UniquePtr<ProfilerMarkerPayload> aPayload = nullptr,
       double aTime = 0)
@@ -31,7 +31,7 @@ class ProfilerMarker {
         mTime(aTime),
         mPositionInBuffer{0},
         mThreadId{aThreadId},
-        mCategory{aCategory} {}
+        mCategoryPair{aCategoryPair} {}
 
   void SetPositionInBuffer(uint64_t aPosition) {
     mPositionInBuffer = aPosition;
@@ -55,7 +55,9 @@ class ProfilerMarker {
     {
       aUniqueStacks.mUniqueStrings->WriteElement(aWriter, mMarkerName.get());
       aWriter.DoubleElement(mTime);
-      aWriter.IntElement(unsigned(mCategory));
+      const JS::ProfilingCategoryPairInfo& info =
+          JS::GetProfilingCategoryPairInfo(mCategoryPair);
+      aWriter.IntElement(unsigned(info.mCategory));
       // TODO: Store the callsite for this marker if available:
       // if have location data
       //   b.NameValue(marker, "location", ...);
@@ -75,7 +77,7 @@ class ProfilerMarker {
   double mTime;
   uint64_t mPositionInBuffer;
   int mThreadId;
-  js::ProfilingStackFrame::Category mCategory;
+  JS::ProfilingCategoryPair mCategoryPair;
 };
 
 template <typename T>
