@@ -1025,7 +1025,7 @@ static bool ShouldClearTargets(WidgetEvent* aEvent) {
           docShell = nsContentUtils::GetDocShellForEventTarget(aEvent->mTarget);
           DECLARE_DOCSHELL_AND_HISTORY_ID(docShell);
           profiler_add_marker(
-              "DOMEvent", js::ProfilingStackFrame::Category::DOM,
+              "DOMEvent", JS::ProfilingCategoryPair::DOM,
               MakeUnique<DOMEventMarkerPayload>(
                   typeStr, aEvent->mTimeStamp, "DOMEvent",
                   TRACING_INTERVAL_START, docShellId, docShellHistoryId));
@@ -1034,7 +1034,7 @@ static bool ShouldClearTargets(WidgetEvent* aEvent) {
                                                        aCallback, cd);
 
           profiler_add_marker(
-              "DOMEvent", js::ProfilingStackFrame::Category::DOM,
+              "DOMEvent", JS::ProfilingCategoryPair::DOM,
               MakeUnique<DOMEventMarkerPayload>(
                   typeStr, aEvent->mTimeStamp, "DOMEvent", TRACING_INTERVAL_END,
                   docShellId, docShellHistoryId));

@@ -61,7 +61,6 @@
 /* Menu */
 #placesMenu > menu {
   padding-inline-start: 4px;
-  -moz-binding: url("chrome://browser/skin/places/organizer.xml#toolbarbutton-dropdown");
   -moz-appearance: toolbarbutton;
 }
 
@@ -71,7 +70,9 @@
   color: ButtonText;
 }
 
-#placesMenu > menu > .menubar-right {
+#placesMenu > menu::after {
+  content: "";
+  display: -moz-box;
   -moz-appearance: toolbarbutton-dropdown;
   width: 12px;
   height: 12px;

@@ -173,190 +173,214 @@ enum class CacheKind : uint8_t {
 
 extern const char* const CacheKindNames[];
 
-#define CACHE_IR_OPS(_)                                                \
-  _(GuardIsObject)                                                     \
-  _(GuardIsObjectOrNull)                                               \
-  _(GuardIsNullOrUndefined)                                            \
-  _(GuardIsNotNullOrUndefined)                                         \
-  _(GuardIsNull)                                                       \
-  _(GuardIsUndefined)                                                  \
-  _(GuardIsBoolean)                                                    \
-  _(GuardIsString)                                                     \
-  _(GuardIsSymbol)                                                     \
-  _(GuardIsBigInt)                                                     \
-  _(GuardIsNumber)                                                     \
-  _(GuardIsInt32)                                                      \
-  _(GuardIsInt32Index)                                                 \
-  _(GuardType)                                                         \
-  _(GuardShape)                                                        \
-  _(GuardGroup)                                                        \
-  _(GuardProto)                                                        \
-  _(GuardClass)    /* Guard an object class, per GuardClassKind */     \
-  _(GuardAnyClass) /* Guard an arbitrary class for an object */        \
-  _(GuardCompartment)                                                  \
-  _(GuardIsExtensible)                                                 \
-  _(GuardIsNativeFunction)                                             \
-  _(GuardIsNativeObject)                                               \
-  _(GuardIsProxy)                                                      \
-  _(GuardHasProxyHandler)                                              \
-  _(GuardNotDOMProxy)                                                  \
-  _(GuardSpecificObject)                                               \
-  _(GuardSpecificAtom)                                                 \
-  _(GuardSpecificSymbol)                                               \
-  _(GuardSpecificInt32Immediate)                                       \
-  _(GuardNoDetachedTypedObjects)                                       \
-  _(GuardMagicValue)                                                   \
-  _(GuardFrameHasNoArgumentsObject)                                    \
-  _(GuardNoDenseElements)                                              \
-  _(GuardNoUnboxedExpando)                                             \
-  _(GuardAndLoadUnboxedExpando)                                        \
-  _(GuardAndGetIndexFromString)                                        \
-  _(GuardAndGetNumberFromString)                                       \
-  _(GuardAndGetIterator)                                               \
-  _(GuardHasGetterSetter)                                              \
-  _(GuardGroupHasUnanalyzedNewScript)                                  \
-  _(GuardIndexIsNonNegative)                                           \
-  _(GuardIndexGreaterThanDenseCapacity)                                \
-  _(GuardIndexGreaterThanArrayLength)                                  \
-  _(GuardIndexIsValidUpdateOrAdd)                                      \
-  _(GuardIndexGreaterThanDenseInitLength)                              \
-  _(GuardTagNotEqual)                                                  \
-  _(GuardXrayExpandoShapeAndDefaultProto)                              \
-  _(GuardFunctionPrototype)                                            \
-  _(GuardNoAllocationMetadataBuilder)                                  \
-  _(GuardObjectGroupNotPretenured)                                     \
-  _(LoadStackValue)                                                    \
-  _(LoadObject)                                                        \
-  _(LoadProto)                                                         \
-  _(LoadEnclosingEnvironment)                                          \
-  _(LoadWrapperTarget)                                                 \
-  _(LoadValueTag)                                                      \
-                                                                       \
-  _(TruncateDoubleToUInt32)                                            \
-                                                                       \
-  _(MegamorphicLoadSlotResult)                                         \
-  _(MegamorphicLoadSlotByValueResult)                                  \
-  _(MegamorphicStoreSlot)                                              \
-  _(MegamorphicSetElement)                                             \
-  _(MegamorphicHasPropResult)                                          \
-                                                                       \
-  /* See CacheIR.cpp 'DOM proxies' comment. */                         \
-  _(LoadDOMExpandoValue)                                               \
-  _(LoadDOMExpandoValueGuardGeneration)                                \
-  _(LoadDOMExpandoValueIgnoreGeneration)                               \
-  _(GuardDOMExpandoMissingOrGuardShape)                                \
-                                                                       \
-  _(StoreFixedSlot)                                                    \
-  _(StoreDynamicSlot)                                                  \
-  _(AddAndStoreFixedSlot)                                              \
-  _(AddAndStoreDynamicSlot)                                            \
-  _(AllocateAndStoreDynamicSlot)                                       \
-  _(StoreTypedObjectReferenceProperty)                                 \
-  _(StoreTypedObjectScalarProperty)                                    \
-  _(StoreUnboxedProperty)                                              \
-  _(StoreDenseElement)                                                 \
-  _(StoreDenseElementHole)                                             \
-  _(ArrayPush)                                                         \
-  _(ArrayJoinResult)                                                   \
-  _(StoreTypedElement)                                                 \
-  _(CallNativeSetter)                                                  \
-  _(CallScriptedSetter)                                                \
-  _(CallSetArrayLength)                                                \
-  _(CallProxySet)                                                      \
-  _(CallProxySetByValue)                                               \
-  _(CallAddOrUpdateSparseElementHelper)                                \
-  _(CallInt32ToString)                                                 \
-  _(CallNumberToString)                                                \
-                                                                       \
-  /* The *Result ops load a value into the cache's result register. */ \
-  _(LoadFixedSlotResult)                                               \
-  _(LoadDynamicSlotResult)                                             \
-  _(LoadUnboxedPropertyResult)                                         \
-  _(LoadTypedObjectResult)                                             \
-  _(LoadDenseElementResult)                                            \
-  _(LoadDenseElementHoleResult)                                        \
-  _(CallGetSparseElementResult)                                        \
-  _(LoadDenseElementExistsResult)                                      \
-  _(LoadTypedElementExistsResult)                                      \
-  _(LoadDenseElementHoleExistsResult)                                  \
-  _(LoadTypedElementResult)                                            \
-  _(LoadInt32ArrayLengthResult)                                        \
-  _(LoadArgumentsObjectArgResult)                                      \
-  _(LoadArgumentsObjectLengthResult)                                   \
-  _(LoadFunctionLengthResult)                                          \
-  _(LoadStringCharResult)                                              \
-  _(LoadStringLengthResult)                                            \
-  _(LoadFrameCalleeResult)                                             \
-  _(LoadFrameNumActualArgsResult)                                      \
-  _(LoadFrameArgumentResult)                                           \
-  _(LoadEnvironmentFixedSlotResult)                                    \
-  _(LoadEnvironmentDynamicSlotResult)                                  \
-  _(LoadObjectResult)                                                  \
-  _(CallScriptedGetterResult)                                          \
-  _(CallNativeGetterResult)                                            \
-  _(CallProxyGetResult)                                                \
-  _(CallProxyGetByValueResult)                                         \
-  _(CallProxyHasPropResult)                                            \
-  _(CallObjectHasSparseElementResult)                                  \
-  _(CallNativeGetElementResult)                                        \
-  _(LoadUndefinedResult)                                               \
-  _(LoadBooleanResult)                                                 \
-  _(LoadStringResult)                                                  \
-  _(LoadInstanceOfObjectResult)                                        \
-  _(LoadTypeOfObjectResult)                                            \
-  _(DoubleAddResult)                                                   \
-  _(DoubleSubResult)                                                   \
-  _(DoubleMulResult)                                                   \
-  _(DoubleDivResult)                                                   \
-  _(DoubleModResult)                                                   \
-  _(Int32AddResult)                                                    \
-  _(Int32SubResult)                                                    \
-  _(Int32MulResult)                                                    \
-  _(Int32DivResult)                                                    \
-  _(Int32ModResult)                                                    \
-  _(Int32BitOrResult)                                                  \
-  _(Int32BitXorResult)                                                 \
-  _(Int32BitAndResult)                                                 \
-  _(Int32LeftShiftResult)                                              \
-  _(Int32RightShiftResult)                                             \
-  _(Int32URightShiftResult)                                            \
-  _(Int32NotResult)                                                    \
-  _(Int32NegationResult)                                               \
-  _(DoubleNegationResult)                                              \
-  _(Int32IncResult)                                                    \
-  _(Int32DecResult)                                                    \
-  _(DoubleIncResult)                                                   \
-  _(DoubleDecResult)                                                   \
-  _(LoadInt32TruthyResult)                                             \
-  _(LoadDoubleTruthyResult)                                            \
-  _(LoadStringTruthyResult)                                            \
-  _(LoadObjectTruthyResult)                                            \
-  _(LoadValueResult)                                                   \
-  _(LoadNewObjectFromTemplateResult)                                   \
-                                                                       \
-  _(CallStringSplitResult)                                             \
-  _(CallStringConcatResult)                                            \
-  _(CallStringObjectConcatResult)                                      \
-  _(CallIsSuspendedGeneratorResult)                                    \
-                                                                       \
-  _(CompareStringResult)                                               \
-  _(CompareObjectResult)                                               \
-  _(CompareSymbolResult)                                               \
-  _(CompareInt32Result)                                                \
-  _(CompareDoubleResult)                                               \
-  _(CompareObjectUndefinedNullResult)                                  \
-                                                                       \
-  _(CallPrintString)                                                   \
-  _(Breakpoint)                                                        \
-                                                                       \
-  _(TypeMonitorResult)                                                 \
-  _(ReturnFromIC)                                                      \
-  _(WrapResult)
+// This namespace exists to make it possible to use unqualified
+// argument types in CACHE_IR_OPS without letting the symbols escape
+// into the global namespace. Any code that consumes the argument
+// information must have CacheIROpFormat in scope.
+namespace CacheIROpFormat {
+enum ArgType {
+  None,
+  Id,
+  Field,
+  Byte,
+  Int32,
+  UInt32,
+  Word,
+};
+
+extern const uint32_t OpLengths[];
+}  // namespace CacheIROpFormat
+
+#define CACHE_IR_OPS(_)                                                    \
+  _(GuardIsObject, Id)                                                     \
+  _(GuardIsObjectOrNull, Id)                                               \
+  _(GuardIsNullOrUndefined, Id)                                            \
+  _(GuardIsNotNullOrUndefined, Id)                                         \
+  _(GuardIsNull, Id)                                                       \
+  _(GuardIsUndefined, Id)                                                  \
+  _(GuardIsBoolean, Id, Id)                                                \
+  _(GuardIsString, Id)                                                     \
+  _(GuardIsSymbol, Id)                                                     \
+  _(GuardIsBigInt, Id)                                                     \
+  _(GuardIsNumber, Id)                                                     \
+  _(GuardIsInt32, Id, Id)                                                  \
+  _(GuardIsInt32Index, Id, Id)                                             \
+  _(GuardType, Id, Byte)                                                   \
+  _(GuardShape, Id, Field)                                                 \
+  _(GuardGroup, Id, Field)                                                 \
+  _(GuardProto, Id, Field)                                                 \
+  _(GuardClass, Id, Byte)     /* Guard per GuardClassKind */               \
+  _(GuardAnyClass, Id, Field) /* Guard an arbitrary class */               \
+  _(GuardCompartment, Id, Field, Field)                                    \
+  _(GuardIsExtensible, Id)                                                 \
+  _(GuardIsNativeFunction, Id, Word)                                       \
+  _(GuardIsNativeObject, Id)                                               \
+  _(GuardIsProxy, Id)                                                      \
+  _(GuardHasProxyHandler, Id, Field)                                       \
+  _(GuardNotDOMProxy, Id)                                                  \
+  _(GuardSpecificObject, Id, Field)                                        \
+  _(GuardSpecificAtom, Id, Field)                                          \
+  _(GuardSpecificSymbol, Id, Field)                                        \
+  _(GuardSpecificInt32Immediate, Id, Int32, Byte)                          \
+  _(GuardNoDetachedTypedObjects, None)                                     \
+  _(GuardMagicValue, Id, Byte)                                             \
+  _(GuardFrameHasNoArgumentsObject, None)                                  \
+  _(GuardNoDenseElements, Id)                                              \
+  _(GuardNoUnboxedExpando, Id)                                             \
+  _(GuardAndLoadUnboxedExpando, Id, Id)                                    \
+  _(GuardAndGetIndexFromString, Id, Id)                                    \
+  _(GuardAndGetNumberFromString, Id, Id)                                   \
+  _(GuardAndGetIterator, Id, Id, Field, Field)                             \
+  _(GuardHasGetterSetter, Id, Field)                                       \
+  _(GuardGroupHasUnanalyzedNewScript, Field)                               \
+  _(GuardIndexIsNonNegative, Id)                                           \
+  _(GuardIndexGreaterThanDenseCapacity, Id, Id)                            \
+  _(GuardIndexGreaterThanArrayLength, Id, Id)                              \
+  _(GuardIndexIsValidUpdateOrAdd, Id, Id)                                  \
+  _(GuardIndexGreaterThanDenseInitLength, Id, Id)                          \
+  _(GuardTagNotEqual, Id, Id)                                              \
+  _(GuardXrayExpandoShapeAndDefaultProto, Id, Byte, Field)                 \
+  _(GuardFunctionPrototype, Id, Id, Field)                                 \
+  _(GuardNoAllocationMetadataBuilder, None)                                \
+  _(GuardObjectGroupNotPretenured, Field)                                  \
+  _(LoadStackValue, Id, UInt32)                                            \
+  _(LoadObject, Id, Field)                                                 \
+  _(LoadProto, Id, Id)                                                     \
+  _(LoadEnclosingEnvironment, Id, Id)                                      \
+  _(LoadWrapperTarget, Id, Id)                                             \
+  _(LoadValueTag, Id, Id)                                                  \
+                                                                           \
+  _(TruncateDoubleToUInt32, Id, Id)                                        \
+                                                                           \
+  _(MegamorphicLoadSlotResult, Id, Field, Byte)                            \
+  _(MegamorphicLoadSlotByValueResult, Id, Id, Byte)                        \
+  _(MegamorphicStoreSlot, Id, Field, Id, Byte)                             \
+  _(MegamorphicSetElement, Id, Id, Id, Byte)                               \
+  _(MegamorphicHasPropResult, Id, Id, Byte)                                \
+                                                                           \
+  /* See CacheIR.cpp 'DOM proxies' comment. */                             \
+  _(LoadDOMExpandoValue, Id, Id)                                           \
+  _(LoadDOMExpandoValueGuardGeneration, Id, Field, Field, Id)              \
+  _(LoadDOMExpandoValueIgnoreGeneration, Id, Id)                           \
+  _(GuardDOMExpandoMissingOrGuardShape, Id, Field)                         \
+                                                                           \
+  _(StoreFixedSlot, Id, Field, Id)                                         \
+  _(StoreDynamicSlot, Id, Field, Id)                                       \
+  _(AddAndStoreFixedSlot, Id, Field, Id, Byte, Field, Field)               \
+  _(AddAndStoreDynamicSlot, Id, Field, Id, Byte, Field, Field)             \
+  _(AllocateAndStoreDynamicSlot, Id, Field, Id, Byte, Field, Field, Field) \
+  _(StoreTypedObjectReferenceProperty, Id, Field, Byte, Byte, Id)          \
+  _(StoreTypedObjectScalarProperty, Id, Field, Byte, Byte, Id)             \
+  _(StoreUnboxedProperty, Id, Byte, Field, Id)                             \
+  _(StoreDenseElement, Id, Id, Id)                                         \
+  _(StoreDenseElementHole, Id, Id, Id, Byte)                               \
+  _(ArrayPush, Id, Id)                                                     \
+  _(ArrayJoinResult, Id)                                                   \
+  _(StoreTypedElement, Id, Id, Id, Byte, Byte, Byte)                       \
+  _(CallNativeSetter, Id, Id, Field)                                       \
+  _(CallScriptedSetter, Id, Field, Id, Byte)                               \
+  _(CallSetArrayLength, Id, Byte, Id)                                      \
+  _(CallProxySet, Id, Id, Field, Byte)                                     \
+  _(CallProxySetByValue, Id, Id, Id, Byte)                                 \
+  _(CallAddOrUpdateSparseElementHelper, Id, Id, Id, Byte)                  \
+  _(CallInt32ToString, Id, Id)                                             \
+  _(CallNumberToString, Id, Id)                                            \
+                                                                           \
+  /* The *Result ops load a value into the cache's result register. */     \
+  _(LoadFixedSlotResult, Id, Field)                                        \
+  _(LoadDynamicSlotResult, Id, Field)                                      \
+  _(LoadUnboxedPropertyResult, Id, Byte, Field)                            \
+  _(LoadTypedObjectResult, Id, Byte, Byte, Field)                          \
+  _(LoadDenseElementResult, Id, Id)                                        \
+  _(LoadDenseElementHoleResult, Id, Id)                                    \
+  _(CallGetSparseElementResult, Id, Id)                                    \
+  _(LoadDenseElementExistsResult, Id, Id)                                  \
+  _(LoadTypedElementExistsResult, Id, Id, Byte)                            \
+  _(LoadDenseElementHoleExistsResult, Id, Id)                              \
+  _(LoadTypedElementResult, Id, Id, Byte, Byte)                            \
+  _(LoadInt32ArrayLengthResult, Id)                                        \
+  _(LoadArgumentsObjectArgResult, Id, Id)                                  \
+  _(LoadArgumentsObjectLengthResult, Id)                                   \
+  _(LoadFunctionLengthResult, Id)                                          \
+  _(LoadStringCharResult, Id, Id)                                          \
+  _(LoadStringLengthResult, Id)                                            \
+  _(LoadFrameCalleeResult, None)                                           \
+  _(LoadFrameNumActualArgsResult, None)                                    \
+  _(LoadFrameArgumentResult, Id)                                           \
+  _(LoadEnvironmentFixedSlotResult, Id, Field)                             \
+  _(LoadEnvironmentDynamicSlotResult, Id, Field)                           \
+  _(LoadObjectResult, Id)                                                  \
+  _(CallScriptedGetterResult, Id, Field, Byte)                             \
+  _(CallNativeGetterResult, Id, Field)                                     \
+  _(CallProxyGetResult, Id, Field)                                         \
+  _(CallProxyGetByValueResult, Id, Id)                                     \
+  _(CallProxyHasPropResult, Id, Id, Byte)                                  \
+  _(CallObjectHasSparseElementResult, Id, Id)                              \
+  _(CallNativeGetElementResult, Id, Id)                                    \
+  _(LoadUndefinedResult, None)                                             \
+  _(LoadBooleanResult, Byte)                                               \
+  _(LoadStringResult, Field)                                               \
+  _(LoadInstanceOfObjectResult, Id, Id)                                    \
+  _(LoadTypeOfObjectResult, Id)                                            \
+  _(DoubleAddResult, Id, Id)                                               \
+  _(DoubleSubResult, Id, Id)                                               \
+  _(DoubleMulResult, Id, Id)                                               \
+  _(DoubleDivResult, Id, Id)                                               \
+  _(DoubleModResult, Id, Id)                                               \
+  _(Int32AddResult, Id, Id)                                                \
+  _(Int32SubResult, Id, Id)                                                \
+  _(Int32MulResult, Id, Id)                                                \
+  _(Int32DivResult, Id, Id)                                                \
+  _(Int32ModResult, Id, Id)                                                \
+  _(Int32BitOrResult, Id, Id)                                              \
+  _(Int32BitXorResult, Id, Id)                                             \
+  _(Int32BitAndResult, Id, Id)                                             \
+  _(Int32LeftShiftResult, Id, Id)                                          \
+  _(Int32RightShiftResult, Id, Id)                                         \
+  _(Int32URightShiftResult, Id, Id, Byte)                                  \
+  _(Int32NotResult, Id)                                                    \
+  _(Int32NegationResult, Id)                                               \
+  _(DoubleNegationResult, Id)                                              \
+  _(Int32IncResult, Id)                                                    \
+  _(Int32DecResult, Id)                                                    \
+  _(DoubleIncResult, Id)                                                   \
+  _(DoubleDecResult, Id)                                                   \
+  _(LoadInt32TruthyResult, Id)                                             \
+  _(LoadDoubleTruthyResult, Id)                                            \
+  _(LoadStringTruthyResult, Id)                                            \
+  _(LoadObjectTruthyResult, Id)                                            \
+  _(LoadValueResult, Field)                                                \
+  _(LoadNewObjectFromTemplateResult, Field, UInt32, UInt32)                \
+                                                                           \
+  _(CallStringSplitResult, Id, Id, Field)                                  \
+  _(CallStringConcatResult, Id, Id)                                        \
+  _(CallStringObjectConcatResult, Id, Id)                                  \
+  _(CallIsSuspendedGeneratorResult, Id)                                    \
+                                                                           \
+  _(CompareStringResult, Id, Id, Byte)                                     \
+  _(CompareObjectResult, Id, Id, Byte)                                     \
+  _(CompareSymbolResult, Id, Id, Byte)                                     \
+  _(CompareInt32Result, Id, Id, Byte)                                      \
+  _(CompareDoubleResult, Id, Id, Byte)                                     \
+  _(CompareObjectUndefinedNullResult, Id, Byte)                            \
+                                                                           \
+  _(CallPrintString, Word)                                                 \
+  _(Breakpoint, None)                                                      \
+                                                                           \
+  _(TypeMonitorResult, None)                                               \
+  _(ReturnFromIC, None)                                                    \
+  _(WrapResult, None)
 
 enum class CacheOp {
-#define DEFINE_OP(op) op,
+#define DEFINE_OP(op, ...) op,
   CACHE_IR_OPS(DEFINE_OP)
 #undef DEFINE_OP
+};
+
+const char* const CacheIrOpNames[] = {
+#define OPNAME(op, ...) #op,
+    CACHE_IR_OPS(OPNAME)
+#undef OPNAME
 };
 
 class StubField {
@@ -500,8 +524,8 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     operandLastUsed_[opId.id()] = nextInstructionId_ - 1;
   }
 
-  void writeInt32Immediate(int32_t i32) { buffer_.writeSigned(i32); }
-  void writeUint32Immediate(uint32_t u32) { buffer_.writeUnsigned(u32); }
+  void writeInt32Immediate(int32_t i32) { buffer_.writeFixedUint32_t(i32); }
+  void writeUint32Immediate(uint32_t u32) { buffer_.writeFixedUint32_t(u32); }
   void writePointer(void* ptr) { buffer_.writeRawPointer(ptr); }
 
   void writeOpWithOperandId(CacheOp op, OperandId opId) {
@@ -757,8 +781,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   void guardSpecificInt32Immediate(
       Int32OperandId operand, int32_t expected,
       Assembler::Condition cond = Assembler::Equal) {
-    writeOp(CacheOp::GuardSpecificInt32Immediate);
-    writeOperandId(operand);
+    writeOpWithOperandId(CacheOp::GuardSpecificInt32Immediate, operand);
     writeInt32Immediate(expected);
     buffer_.writeByte(uint32_t(cond));
   }
@@ -1344,8 +1367,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   }
   void loadInstanceOfObjectResult(ValOperandId lhs, ObjOperandId protoId,
                                   uint32_t slot) {
-    writeOp(CacheOp::LoadInstanceOfObjectResult);
-    writeOperandId(lhs);
+    writeOpWithOperandId(CacheOp::LoadInstanceOfObjectResult, lhs);
     writeOperandId(protoId);
   }
   void loadTypeOfObjectResult(ObjOperandId obj) {
@@ -1387,8 +1409,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   }
   void callStringSplitResult(StringOperandId str, StringOperandId sep,
                              ObjectGroup* group) {
-    writeOp(CacheOp::CallStringSplitResult);
-    writeOperandId(str);
+    writeOpWithOperandId(CacheOp::CallStringSplitResult, str);
     writeOperandId(sep);
     addStubField(uintptr_t(group), StubField::Type::ObjectGroup);
   }
@@ -1482,8 +1503,8 @@ class MOZ_RAII CacheIRReader {
   uint32_t typeDescrKey() { return buffer_.readByte(); }
   JSWhyMagic whyMagic() { return JSWhyMagic(buffer_.readByte()); }
   JSOp jsop() { return JSOp(buffer_.readByte()); }
-  int32_t int32Immediate() { return buffer_.readSigned(); }
-  uint32_t uint32Immediate() { return buffer_.readUnsigned(); }
+  int32_t int32Immediate() { return int32_t(buffer_.readFixedUint32_t()); }
+  uint32_t uint32Immediate() { return buffer_.readFixedUint32_t(); }
   void* pointer() { return buffer_.readRawPointer(); }
 
   ReferenceType referenceTypeDescrType() {
@@ -1522,6 +1543,7 @@ class MOZ_RAII CacheIRReader {
     buffer_.seek(pos, 0);
     return false;
   }
+  const uint8_t* currentPosition() const { return buffer_.currentPosition(); }
 };
 
 class MOZ_RAII IRGenerator {

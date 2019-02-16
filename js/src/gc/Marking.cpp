@@ -3590,9 +3590,9 @@ static bool UnmarkGrayGCThing(JSRuntime* rt, JS::GCCellPtr thing) {
   // replay, so disallow recorded events from occurring in the tracer.
   mozilla::recordreplay::AutoDisallowThreadEvents d;
 
-  AutoGeckoProfilerEntry profilingStackFrame(
-      rt->mainContextFromOwnThread(), "UnmarkGrayGCThing",
-      ProfilingStackFrame::Category::GCCC);
+  AutoGeckoProfilerEntry profilingStackFrame(rt->mainContextFromOwnThread(),
+                                             "UnmarkGrayGCThing",
+                                             JS::ProfilingCategoryPair::GCCC);
 
   UnmarkGrayTracer unmarker(rt);
   gcstats::AutoPhase innerPhase(rt->gc.stats(),

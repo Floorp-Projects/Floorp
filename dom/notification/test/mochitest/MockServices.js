@@ -1,4 +1,5 @@
-var MockServices = (function () {
+/* eslint-disable mozilla/use-chromeutils-generateqi */
+var MockServices = (function() {
   "use strict";
 
   const MOCK_ALERTS_CID = SpecialPowers.wrap(SpecialPowers.Components)
@@ -16,7 +17,7 @@ var MockServices = (function () {
 
   var activeAppNotifications = Object.create(null);
 
-  window.addEventListener('mock-notification-close-event', function(e) {
+  window.addEventListener("mock-notification-close-event", function(e) {
     for (var alertName in activeAlertNotifications) {
       var notif = activeAlertNotifications[alertName];
       if (notif.title === e.detail.title) {
@@ -29,39 +30,39 @@ var MockServices = (function () {
   });
 
   var mockAlertsService = {
-    showPersistentNotification: function(persistentData, alert, alertListener) {
+    showPersistentNotification(persistentData, alert, alertListener) {
       this.showAlert(alert, alertListener);
     },
 
-    showAlert: function(alert, alertListener) {
+    showAlert(alert, alertListener) {
       var listener = SpecialPowers.wrap(alertListener);
       activeAlertNotifications[alert.name] = {
-        listener: listener,
+        listener,
         cookie: alert.cookie,
-        title: alert.title
+        title: alert.title,
       };
 
       // fake async alert show event
       if (listener) {
-        setTimeout(function () {
+        setTimeout(function() {
           listener.observe(null, "alertshow", alert.cookie);
         }, 100);
-        setTimeout(function () {
+        setTimeout(function() {
           listener.observe(null, "alertclickcallback", alert.cookie);
         }, 100);
       }
     },
 
-    showAlertNotification: function(imageUrl, title, text, textClickable,
+    showAlertNotification(imageUrl, title, text, textClickable,
                                     cookie, alertListener, name) {
       this.showAlert({
-        name: name,
-        cookie: cookie,
-        title: title
+        name,
+        cookie,
+        title,
       }, alertListener);
     },
 
-    closeAlert: function(name) {
+    closeAlert(name) {
       var alertNotification = activeAlertNotifications[name];
       if (alertNotification) {
         if (alertNotification.listener) {
@@ -76,7 +77,7 @@ var MockServices = (function () {
       }
     },
 
-    QueryInterface: function(aIID) {
+    QueryInterface(aIID) {
       if (SpecialPowers.wrap(aIID).equals(SpecialPowers.Ci.nsISupports) ||
           SpecialPowers.wrap(aIID).equals(SpecialPowers.Ci.nsIAlertsService)) {
         return this;
@@ -84,18 +85,18 @@ var MockServices = (function () {
       throw SpecialPowers.Components.results.NS_ERROR_NO_INTERFACE;
     },
 
-    createInstance: function(aOuter, aIID) {
+    createInstance(aOuter, aIID) {
       if (aOuter != null) {
         throw SpecialPowers.Components.results.NS_ERROR_NO_AGGREGATION;
       }
       return this.QueryInterface(aIID);
-    }
+    },
   };
   mockAlertsService = SpecialPowers.wrapCallbackObject(mockAlertsService);
 
   // MockServices API
   return {
-    register: function () {
+    register() {
       registrar.registerFactory(MOCK_ALERTS_CID, "alerts service",
           ALERTS_SERVICE_CONTRACT_ID,
           mockAlertsService);
@@ -105,13 +106,13 @@ var MockServices = (function () {
           mockAlertsService);
     },
 
-    unregister: function () {
+    unregister() {
       registrar.unregisterFactory(MOCK_ALERTS_CID, mockAlertsService);
       registrar.unregisterFactory(MOCK_SYSTEM_ALERTS_CID, mockAlertsService);
     },
 
-    activeAlertNotifications: activeAlertNotifications,
+    activeAlertNotifications,
 
-    activeAppNotifications: activeAppNotifications,
+    activeAppNotifications,
   };
 })();

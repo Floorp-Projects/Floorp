@@ -578,6 +578,7 @@ Maybe<AcquiredBackBuffer> TileClient::AcquireBackBuffer(
     CompositableClient& aCompositable, const nsIntRegion& aDirtyRegion,
     const nsIntRegion& aVisibleRegion, gfxContentType aContent,
     SurfaceMode aMode, TilePaintFlags aFlags) {
+  AUTO_PROFILER_LABEL("TileClient::AcquireBackBuffer", GRAPHICS_TileAllocation);
   if (!mAllocator) {
     gfxCriticalError() << "[TileClient] Missing TextureClientAllocator.";
     return Nothing();

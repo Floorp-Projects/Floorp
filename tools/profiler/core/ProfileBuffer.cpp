@@ -58,7 +58,7 @@ void ProfileBuffer::AddStoredMarker(ProfilerMarker* aStoredMarker) {
 void ProfileBuffer::CollectCodeLocation(
     const char* aLabel, const char* aStr, uint32_t aFrameFlags,
     const Maybe<uint32_t>& aLineNumber, const Maybe<uint32_t>& aColumnNumber,
-    const Maybe<js::ProfilingStackFrame::Category>& aCategory) {
+    const Maybe<JS::ProfilingCategoryPair>& aCategoryPair) {
   AddEntry(ProfileBufferEntry::Label(aLabel));
   AddEntry(ProfileBufferEntry::FrameFlags(uint64_t(aFrameFlags)));
 
@@ -87,8 +87,8 @@ void ProfileBuffer::CollectCodeLocation(
     AddEntry(ProfileBufferEntry::ColumnNumber(*aColumnNumber));
   }
 
-  if (aCategory.isSome()) {
-    AddEntry(ProfileBufferEntry::Category(int(*aCategory)));
+  if (aCategoryPair.isSome()) {
+    AddEntry(ProfileBufferEntry::CategoryPair(int(*aCategoryPair)));
   }
 }
 
@@ -186,5 +186,5 @@ void ProfileBufferCollector::CollectProfilingStackFrame(
   }
 
   mBuf.CollectCodeLocation(label, dynamicString, aFrame.flags(), line, column,
-                           Some(aFrame.category()));
+                           Some(aFrame.categoryPair()));
 }

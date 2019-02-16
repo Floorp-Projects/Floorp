@@ -426,7 +426,7 @@ struct HelperThread {
  private:
   struct AutoProfilerLabel {
     AutoProfilerLabel(HelperThread* helperThread, const char* label,
-                      ProfilingStackFrame::Category category);
+                      JS::ProfilingCategoryPair categoryPair);
     ~AutoProfilerLabel();
 
    private:
