@@ -1,0 +1,41 @@
+<html class="reftest-wait">
+<meta name="viewport" content="width=device-width minimum-scale=0.25 initial-scale=1.0">
+<style>
+  html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    scrollbar-width: none;
+  }
+  div {
+    position: absolute;
+  }
+  .B {
+    width: 200%;
+    height: 400%;
+    background: white;
+  }
+  .C {
+    width: 200%;
+    height: 200%;
+    background: green;
+  }
+</style>
+<div class="B"></div>
+<div class="C"></div>
+<script>
+document.addEventListener('MozReftestInvalidate', () => {
+  // The page here is twice the width of the ICB, and four times the height.
+  // We want the layout viewport to be expanded to be twice the width and
+  // height of the ICB (to maintain aspect ratio), rather than four times the
+  // height.
+  // To test this, scroll to the end of the layout scroll range.
+  // If the layout viewport is expanded too much, we have no layout scroll
+  // range, so nothing will happen, and a green area will remain in view.
+  // If the layout viewport is expanded to the desired size, a white area
+  // will be scrolled into view, matching the reference page.
+  window.scrollTo(window.scrollMaxX, window.scrollMaxY);
+  document.documentElement.classList.remove('reftest-wait');
+});
+</script>
+</html>

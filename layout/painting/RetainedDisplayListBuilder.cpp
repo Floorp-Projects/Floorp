@@ -658,6 +658,8 @@ bool RetainedDisplayListBuilder::MergeDisplayLists(
     RetainedDisplayList* aOutList,
     mozilla::Maybe<const mozilla::ActiveScrolledRoot*>& aOutContainerASR,
     nsDisplayItem* aOuterItem) {
+  AUTO_PROFILER_LABEL_CATEGORY_PAIR(GRAPHICS_DisplayListMerging);
+
   MergeState merge(this, *aOldList,
                    aOuterItem ? aOuterItem->GetPerFrameKey() : 0);
 

@@ -434,7 +434,7 @@ CompositorBridgeChild* ClientLayerManager::GetCompositorBridgeChild() {
 }
 
 void ClientLayerManager::FlushAsyncPaints() {
-  AUTO_PROFILER_LABEL("ClientLayerManager::FlushAsyncPaints", GRAPHICS);
+  AUTO_PROFILER_LABEL_CATEGORY_PAIR(GRAPHICS_FlushingAsyncPaints);
 
   CompositorBridgeChild* cbc = GetCompositorBridgeChild();
   if (cbc) {

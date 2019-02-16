@@ -55,6 +55,8 @@ using dom::Promise;
 #define OBS_TOPIC_PRELOAD_SCRIPT "web-extension-preload-content-script"
 #define OBS_TOPIC_LOAD_SCRIPT "web-extension-load-content-script"
 
+static const char kDocElementInserted[] = "initial-document-element-inserted";
+
 static mozIExtensionProcessScript& ProcessScript() {
   static nsCOMPtr<mozIExtensionProcessScript> sProcessScript;
 
@@ -235,8 +237,7 @@ ExtensionPolicyService::CollectReports(nsIHandleReportCallback* aHandleReport,
  *****************************************************************************/
 
 void ExtensionPolicyService::RegisterObservers() {
-  mObs->AddObserver(this, "content-document-global-created", false);
-  mObs->AddObserver(this, "document-element-inserted", false);
+  mObs->AddObserver(this, kDocElementInserted, false);
   mObs->AddObserver(this, "tab-content-frameloader-created", false);
   if (XRE_IsContentProcess()) {
     mObs->AddObserver(this, "http-on-opening-request", false);
@@ -244,8 +245,7 @@ void ExtensionPolicyService::RegisterObservers() {
 }
 
 void ExtensionPolicyService::UnregisterObservers() {
-  mObs->RemoveObserver(this, "content-document-global-created");
-  mObs->RemoveObserver(this, "document-element-inserted");
+  mObs->RemoveObserver(this, kDocElementInserted);
   mObs->RemoveObserver(this, "tab-content-frameloader-created");
   if (XRE_IsContentProcess()) {
     mObs->RemoveObserver(this, "http-on-opening-request");
@@ -255,12 +255,7 @@ void ExtensionPolicyService::UnregisterObservers() {
 nsresult ExtensionPolicyService::Observe(nsISupports* aSubject,
                                          const char* aTopic,
                                          const char16_t* aData) {
-  if (!strcmp(aTopic, "content-document-global-created")) {
-    nsCOMPtr<nsPIDOMWindowOuter> win = do_QueryInterface(aSubject);
-    if (win) {
-      CheckWindow(win);
-    }
-  } else if (!strcmp(aTopic, "document-element-inserted")) {
+  if (!strcmp(aTopic, kDocElementInserted)) {
     nsCOMPtr<Document> doc = do_QueryInterface(aSubject);
     if (doc) {
       CheckDocument(doc);
@@ -474,34 +469,6 @@ void ExtensionPolicyService::CheckDocument(Document* aDocument) {
       bool privileged = IsExtensionProcess() && CheckParentFrames(win, *policy);
 
       ProcessScript().InitExtensionDocument(policy, aDocument, privileged);
-    }
-  }
-}
-
-// Checks for loads of about:blank into new window globals, and loads any
-// matching content scripts. about:blank loads do not trigger document element
-// inserted events, so they're the only load type that are special cased this
-// way.
-void ExtensionPolicyService::CheckWindow(nsPIDOMWindowOuter* aWindow) {
-  // We only care about non-initial document loads here. The initial
-  // about:blank document will usually be re-used to load another document.
-  RefPtr<Document> doc = aWindow->GetExtantDoc();
-  if (!doc || doc->IsInitialDocument() ||
-      doc->GetReadyStateEnum() == Document::READYSTATE_UNINITIALIZED) {
-    return;
-  }
-
-  nsCOMPtr<nsIURI> docUri = doc->GetDocumentURI();
-  nsCOMPtr<nsIURI> uri;
-  if (!docUri || NS_FAILED(NS_GetURIWithoutRef(docUri, getter_AddRefs(uri))) ||
-      !NS_IsAboutBlank(uri)) {
-    return;
-  }
-
-  nsIDocShell* docShell = aWindow->GetDocShell();
-  if (RefPtr<ContentFrameMessageManager> mm = docShell->GetMessageManager()) {
-    if (mMessageManagers.Contains(mm)) {
-      CheckContentScripts(aWindow, false);
     }
   }
 }

@@ -267,7 +267,7 @@ browser.Context = class {
    * Retrieves the current tabmodal UI object.  According to the browser
    * associated with the currently selected tab.
    */
-  getTabModalUI() {
+  getTabModal() {
     let br = this.contentBrowser;
     if (!br.hasAttribute("tabmodalPromptShowing")) {
       return null;
@@ -278,7 +278,7 @@ browser.Context = class {
     let modalElements = br.parentNode.getElementsByTagNameNS(
         XUL_NS, "tabmodalprompt");
 
-    return br.tabModalPromptBox.prompts.get(modalElements[0]).ui;
+    return br.tabModalPromptBox.prompts.get(modalElements[0]);
   }
 
   /**

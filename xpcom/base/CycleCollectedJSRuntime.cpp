@@ -798,13 +798,13 @@ void CycleCollectedJSRuntime::TraverseNativeRoots(
   if (profiler_thread_is_being_profiled()) {
     if (aProgress == JS::GC_CYCLE_END) {
       profiler_add_marker(
-          "GCMajor", js::ProfilingStackFrame::Category::GCCC,
+          "GCMajor", JS::ProfilingCategoryPair::GCCC,
           MakeUnique<GCMajorMarkerPayload>(aDesc.startTime(aContext),
                                            aDesc.endTime(aContext),
                                            aDesc.formatJSONProfiler(aContext)));
     } else if (aProgress == JS::GC_SLICE_END) {
       profiler_add_marker(
-          "GCSlice", js::ProfilingStackFrame::Category::GCCC,
+          "GCSlice", JS::ProfilingCategoryPair::GCCC,
           MakeUnique<GCSliceMarkerPayload>(
               aDesc.lastSliceStart(aContext), aDesc.lastSliceEnd(aContext),
               aDesc.sliceToJSONProfiler(aContext)));
@@ -885,7 +885,7 @@ class MinorGCMarker : public TimelineMarker {
 #ifdef MOZ_GECKO_PROFILER
   else if (aProgress == JS::GCNurseryProgress::GC_NURSERY_COLLECTION_END &&
            profiler_thread_is_being_profiled()) {
-    profiler_add_marker("GCMinor", js::ProfilingStackFrame::Category::GCCC,
+    profiler_add_marker("GCMinor", JS::ProfilingCategoryPair::GCCC,
                         MakeUnique<GCMinorMarkerPayload>(
                             self->mLatestNurseryCollectionStart,
                             TimeStamp::Now(), JS::MinorGcToJSON(aContext)));

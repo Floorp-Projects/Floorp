@@ -856,6 +856,7 @@ nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter* aOuterWindow)
       mHasFocus(false),
       mShowFocusRingForContent(false),
       mFocusByKeyOccurred(false),
+      mDidFireDocElemInserted(false),
       mHasGamepad(false),
       mHasVREvents(false),
       mHasVRDisplayActivateEvents(false),

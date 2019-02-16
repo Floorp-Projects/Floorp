@@ -357,7 +357,7 @@ bool UniqueStacks::FrameKey::NormalFrameData::operator==(
     const NormalFrameData& aOther) const {
   return mLocation == aOther.mLocation &&
          mRelevantForJS == aOther.mRelevantForJS && mLine == aOther.mLine &&
-         mColumn == aOther.mColumn && mCategory == aOther.mCategory;
+         mColumn == aOther.mColumn && mCategoryPair == aOther.mCategoryPair;
 }
 
 bool UniqueStacks::FrameKey::JITFrameData::operator==(
@@ -380,8 +380,8 @@ uint32_t UniqueStacks::FrameKey::Hash() const {
     if (data.mColumn.isSome()) {
       hash = AddToHash(hash, *data.mColumn);
     }
-    if (data.mCategory.isSome()) {
-      hash = AddToHash(hash, *data.mCategory);
+    if (data.mCategoryPair.isSome()) {
+      hash = AddToHash(hash, uint32_t(*data.mCategoryPair));
     }
   } else {
     const JITFrameData& data = mData.as<JITFrameData>();
@@ -527,8 +527,10 @@ void UniqueStacks::StreamNonJITFrame(const FrameKey& aFrame) {
   if (data.mColumn.isSome()) {
     writer.IntElement(COLUMN, *data.mColumn);
   }
-  if (data.mCategory.isSome()) {
-    writer.IntElement(CATEGORY, *data.mCategory);
+  if (data.mCategoryPair.isSome()) {
+    const JS::ProfilingCategoryPairInfo& info =
+        JS::GetProfilingCategoryPairInfo(*data.mCategoryPair);
+    writer.IntElement(CATEGORY, uint32_t(info.mCategory));
   }
 }
 
@@ -785,7 +787,7 @@ class EntryGetter {
 //     ThreadId
 //     Time
 //     ( NativeLeafAddr
-//     | Label FrameFlags? DynamicStringFragment* LineNumber? Category?
+//     | Label FrameFlags? DynamicStringFragment* LineNumber? CategoryPair?
 //     | JitReturnAddr
 //     )+
 //     Marker*
@@ -821,15 +823,15 @@ class EntryGetter {
 // - ProfilingStack frames without a dynamic string:
 //
 //     Label("js::RunScript")
-//     Category(ProfilingStackFrame::Category::JS)
+//     CategoryPair(JS::ProfilingCategoryPair::JS)
 //
 //     Label("XREMain::XRE_main")
 //     LineNumber(4660)
-//     Category(ProfilingStackFrame::Category::OTHER)
+//     CategoryPair(JS::ProfilingCategoryPair::OTHER)
 //
 //     Label("ElementRestyler::ComputeStyleChangeFor")
 //     LineNumber(3003)
-//     Category(ProfilingStackFrame::Category::CSS)
+//     CategoryPair(JS::ProfilingCategoryPair::CSS)
 //
 // - ProfilingStack frames with a dynamic string:
 //
@@ -838,7 +840,7 @@ class EntryGetter {
 //     DynamicStringFragment("domwindo")
 //     DynamicStringFragment("wopened")
 //     LineNumber(291)
-//     Category(ProfilingStackFrame::Category::OTHER)
+//     CategoryPair(JS::ProfilingCategoryPair::OTHER)
 //
 //     Label("")
 //     FrameFlags(uint64_t(ProfilingStackFrame::Flags::IS_JS_FRAME))
@@ -851,7 +853,7 @@ class EntryGetter {
 //     DynamicStringFragment("ay.js:5)")
 //     DynamicStringFragment("")          # this string holds the closing '\0'
 //     LineNumber(25)
-//     Category(ProfilingStackFrame::Category::JS)
+//     CategoryPair(JS::ProfilingCategoryPair::JS)
 //
 //     Label("")
 //     FrameFlags(uint64_t(ProfilingStackFrame::Flags::IS_JS_FRAME))
@@ -859,7 +861,7 @@ class EntryGetter {
 //     DynamicStringFragment("elf-host")
 //     DynamicStringFragment("ed:914)")
 //     LineNumber(945)
-//     Category(ProfilingStackFrame::Category::JS)
+//     CategoryPair(JS::ProfilingCategoryPair::JS)
 //
 // - A profiling stack frame with a dynamic string, but with privacy enabled:
 //
@@ -868,7 +870,7 @@ class EntryGetter {
 //     DynamicStringFragment("(private")
 //     DynamicStringFragment(")")
 //     LineNumber(291)
-//     Category(ProfilingStackFrame::Category::OTHER)
+//     CategoryPair(JS::ProfilingCategoryPair::OTHER)
 //
 // - A profiling stack frame with an overly long dynamic string:
 //
@@ -877,7 +879,7 @@ class EntryGetter {
 //     DynamicStringFragment("(too lon")
 //     DynamicStringFragment("g)")
 //     LineNumber(100)
-//     Category(ProfilingStackFrame::Category::NETWORK)
+//     CategoryPair(JS::ProfilingCategoryPair::NETWORK)
 //
 // - A wasm JIT frame:
 //
@@ -1062,15 +1064,16 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
           e.Next();
         }
 
-        Maybe<unsigned> category;
-        if (e.Has() && e.Get().IsCategory()) {
-          category = Some(unsigned(e.Get().GetInt()));
+        Maybe<JS::ProfilingCategoryPair> categoryPair;
+        if (e.Has() && e.Get().IsCategoryPair()) {
+          categoryPair =
+              Some(JS::ProfilingCategoryPair(uint32_t(e.Get().GetInt())));
           e.Next();
         }
 
         stack = aUniqueStacks.AppendFrame(
             stack, UniqueStacks::FrameKey(std::move(frameLabel), relevantForJS,
-                                          line, column, category));
+                                          line, column, categoryPair));
 
       } else if (e.Get().IsJitReturnAddr()) {
         numFrames++;

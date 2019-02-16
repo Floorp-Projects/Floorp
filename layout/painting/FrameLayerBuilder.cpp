@@ -4393,7 +4393,8 @@ static void ProcessDisplayItemMarker(DisplayItemEntryType aMarker,
  * of ContainerState::Finish.
  */
 void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
-  AUTO_PROFILER_LABEL("ContainerState::ProcessDisplayItems", GRAPHICS);
+  AUTO_PROFILER_LABEL("ContainerState::ProcessDisplayItems",
+                      GRAPHICS_LayerBuilding);
 
   nsPoint topLeft(0, 0);
 
@@ -6941,10 +6942,11 @@ void FrameLayerBuilder::PaintItems(std::vector<AssignedDisplayItem>& aItems,
     }
 
 #ifdef MOZ_DUMP_PAINTING
-    AUTO_PROFILER_LABEL_DYNAMIC_CSTR("FrameLayerBuilder::PaintItems", GRAPHICS,
-                                     item->Name());
+    AUTO_PROFILER_LABEL_DYNAMIC_CSTR("FrameLayerBuilder::PaintItems",
+                                     GRAPHICS_Rasterization, item->Name());
 #else
-    AUTO_PROFILER_LABEL("FrameLayerBuilder::PaintItems", GRAPHICS);
+    AUTO_PROFILER_LABEL("FrameLayerBuilder::PaintItems",
+                        GRAPHICS_Rasterization);
 #endif
 
     MOZ_ASSERT((opacityLevel == 0 && !cdi.mHasOpacity) ||
@@ -7117,7 +7119,8 @@ static void DrawForcedBackgroundColor(DrawTarget& aDrawTarget,
     void* aCallbackData) {
   DrawTarget& aDrawTarget = *aContext->GetDrawTarget();
 
-  AUTO_PROFILER_LABEL("FrameLayerBuilder::DrawPaintedLayer", GRAPHICS);
+  AUTO_PROFILER_LABEL("FrameLayerBuilder::DrawPaintedLayer",
+                      GRAPHICS_Rasterization);
 
   nsDisplayListBuilder* builder =
       static_cast<nsDisplayListBuilder*>(aCallbackData);

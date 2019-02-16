@@ -19,7 +19,7 @@ const kMessages = [
   kMessageNotificationGetAllOk,
   kMessageNotificationGetAllKo,
   kMessageNotificationSaveKo,
-  kMessageNotificationDeleteKo
+  kMessageNotificationDeleteKo,
 ];
 
 function NotificationStorage() {
@@ -34,19 +34,19 @@ function NotificationStorage() {
 
 NotificationStorage.prototype = {
 
-  registerListeners: function() {
+  registerListeners() {
     for (let message of kMessages) {
       Services.cpmm.addMessageListener(message, this);
     }
   },
 
-  unregisterListeners: function() {
+  unregisterListeners() {
     for (let message of kMessages) {
       Services.cpmm.removeMessageListener(message, this);
     }
   },
 
-  observe: function(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic, aData) {
     if (DEBUG) debug("Topic: " + aTopic);
     if (aTopic === "xpcom-shutdown") {
       Services.obs.removeObserver(this, "xpcom-shutdown");
@@ -54,37 +54,37 @@ NotificationStorage.prototype = {
     }
   },
 
-  put: function(origin, id, title, dir, lang, body, tag, icon, alertName,
+  put(origin, id, title, dir, lang, body, tag, icon, alertName,
                 data, behavior, serviceWorkerRegistrationScope) {
     if (DEBUG) { debug("PUT: " + origin + " " + id + ": " + title); }
     var notification = {
-      id: id,
-      title: title,
-      dir: dir,
-      lang: lang,
-      body: body,
-      tag: tag,
-      icon: icon,
-      alertName: alertName,
+      id,
+      title,
+      dir,
+      lang,
+      body,
+      tag,
+      icon,
+      alertName,
       timestamp: new Date().getTime(),
-      origin: origin,
-      data: data,
+      origin,
+      data,
       mozbehavior: behavior,
-      serviceWorkerRegistrationScope: serviceWorkerRegistrationScope,
+      serviceWorkerRegistrationScope,
     };
 
     Services.cpmm.sendAsyncMessage("Notification:Save", {
-      origin: origin,
-      notification: notification
+      origin,
+      notification,
     });
   },
 
-  get: function(origin, tag, callback) {
+  get(origin, tag, callback) {
     if (DEBUG) { debug("GET: " + origin + " " + tag); }
     this._fetchFromDB(origin, tag, callback);
   },
 
-  getByID: function(origin, id, callback) {
+  getByID(origin, id, callback) {
     if (DEBUG) { debug("GETBYID: " + origin + " " + id); }
     var GetByIDProxyCallback = function(id, originalCallback) {
       this.searchID = id;
@@ -103,15 +103,15 @@ NotificationStorage.prototype = {
     return this.get(origin, "", new GetByIDProxyCallback(id, callback));
   },
 
-  delete: function(origin, id) {
+  delete(origin, id) {
     if (DEBUG) { debug("DELETE: " + id); }
     Services.cpmm.sendAsyncMessage("Notification:Delete", {
-      origin: origin,
-      id: id
+      origin,
+      id,
     });
   },
 
-  receiveMessage: function(message) {
+  receiveMessage(message) {
     var request = this._requests[message.data.requestID];
 
     switch (message.name) {
@@ -142,7 +142,7 @@ NotificationStorage.prototype = {
     }
   },
 
-  _fetchFromDB: function(origin, tag, callback) {
+  _fetchFromDB(origin, tag, callback) {
     var request = {
       origin,
       tag,
@@ -157,7 +157,7 @@ NotificationStorage.prototype = {
     });
   },
 
-  _returnNotifications: function(notifications, origin, tag, callback) {
+  _returnNotifications(notifications, origin, tag, callback) {
     // Pass each notification back separately.
     // The callback is called asynchronously to match the behaviour when
     // fetching from the database.

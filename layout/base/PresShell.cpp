@@ -8850,7 +8850,7 @@ bool nsIPresShell::DoReflow(nsIFrame* target, bool aInterruptible,
 #ifdef MOZ_GECKO_PROFILER
   nsIURI* uri = mDocument->GetDocumentURI();
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(
-      "PresShell::DoReflow", LAYOUT,
+      "Reflow", LAYOUT_Reflow,
       uri ? uri->GetSpecOrDefault() : NS_LITERAL_CSTRING("N/A"));
 #endif
 
@@ -8881,7 +8881,7 @@ bool nsIPresShell::DoReflow(nsIFrame* target, bool aInterruptible,
 #ifdef MOZ_GECKO_PROFILER
   DECLARE_DOCSHELL_AND_HISTORY_ID(docShell);
   AutoProfilerTracing tracingLayoutFlush(
-      "Paint", "Reflow", js::ProfilingStackFrame::Category::LAYOUT,
+      "Paint", "Reflow", JS::ProfilingCategoryPair::LAYOUT,
       std::move(mReflowCause), docShellId, docShellHistoryId);
   mReflowCause = nullptr;
 #endif

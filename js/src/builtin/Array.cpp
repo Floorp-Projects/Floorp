@@ -1382,7 +1382,7 @@ bool js::array_join(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   AutoGeckoProfilerEntry pseudoFrame(
-      cx, "Array.prototype.join", ProfilingStackFrame::Category::JS,
+      cx, "Array.prototype.join", JS::ProfilingCategoryPair::JS,
       uint32_t(ProfilingStackFrame::Flags::RELEVANT_FOR_JS));
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -1657,7 +1657,7 @@ static DenseElementResult ArrayReverseDenseKernel(JSContext* cx,
 // 22.1.3.21 Array.prototype.reverse ( )
 bool js::array_reverse(JSContext* cx, unsigned argc, Value* vp) {
   AutoGeckoProfilerEntry pseudoFrame(
-      cx, "Array.prototype.reverse", ProfilingStackFrame::Category::JS,
+      cx, "Array.prototype.reverse", JS::ProfilingCategoryPair::JS,
       uint32_t(ProfilingStackFrame::Flags::RELEVANT_FOR_JS));
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -2381,7 +2381,7 @@ bool js::NewbornArrayPush(JSContext* cx, HandleObject obj, const Value& v) {
 // 22.1.3.18 Array.prototype.push ( ...items )
 bool js::array_push(JSContext* cx, unsigned argc, Value* vp) {
   AutoGeckoProfilerEntry pseudoFrame(
-      cx, "Array.prototype.push", ProfilingStackFrame::Category::JS,
+      cx, "Array.prototype.push", JS::ProfilingCategoryPair::JS,
       uint32_t(ProfilingStackFrame::Flags::RELEVANT_FOR_JS));
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -2442,7 +2442,7 @@ bool js::array_push(JSContext* cx, unsigned argc, Value* vp) {
 // 22.1.3.17 Array.prototype.pop ( )
 bool js::array_pop(JSContext* cx, unsigned argc, Value* vp) {
   AutoGeckoProfilerEntry pseudoFrame(
-      cx, "Array.prototype.pop", ProfilingStackFrame::Category::JS,
+      cx, "Array.prototype.pop", JS::ProfilingCategoryPair::JS,
       uint32_t(ProfilingStackFrame::Flags::RELEVANT_FOR_JS));
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -2562,7 +2562,7 @@ static DenseElementResult ArrayShiftDenseKernel(JSContext* cx, HandleObject obj,
 // 22.1.3.22 Array.prototype.shift ( )
 bool js::array_shift(JSContext* cx, unsigned argc, Value* vp) {
   AutoGeckoProfilerEntry pseudoFrame(
-      cx, "Array.prototype.shift", ProfilingStackFrame::Category::JS,
+      cx, "Array.prototype.shift", JS::ProfilingCategoryPair::JS,
       uint32_t(ProfilingStackFrame::Flags::RELEVANT_FOR_JS));
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -2648,7 +2648,7 @@ bool js::array_shift(JSContext* cx, unsigned argc, Value* vp) {
 // 22.1.3.29 Array.prototype.unshift ( ...items )
 bool js::array_unshift(JSContext* cx, unsigned argc, Value* vp) {
   AutoGeckoProfilerEntry pseudoFrame(
-      cx, "Array.prototype.unshift", ProfilingStackFrame::Category::JS,
+      cx, "Array.prototype.unshift", JS::ProfilingCategoryPair::JS,
       uint32_t(ProfilingStackFrame::Flags::RELEVANT_FOR_JS));
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -2908,7 +2908,7 @@ static bool CopyArrayElements(JSContext* cx, HandleObject obj, uint64_t begin,
 static bool array_splice_impl(JSContext* cx, unsigned argc, Value* vp,
                               bool returnValueIsUsed) {
   AutoGeckoProfilerEntry pseudoFrame(
-      cx, "Array.prototype.splice", ProfilingStackFrame::Category::JS,
+      cx, "Array.prototype.splice", JS::ProfilingCategoryPair::JS,
       uint32_t(ProfilingStackFrame::Flags::RELEVANT_FOR_JS));
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -3504,7 +3504,7 @@ static bool ArraySliceOrdinary(JSContext* cx, HandleObject obj, uint64_t begin,
 /* ES 2016 draft Mar 25, 2016 22.1.3.23. */
 bool js::array_slice(JSContext* cx, unsigned argc, Value* vp) {
   AutoGeckoProfilerEntry pseudoFrame(
-      cx, "Array.prototype.slice", ProfilingStackFrame::Category::JS,
+      cx, "Array.prototype.slice", JS::ProfilingCategoryPair::JS,
       uint32_t(ProfilingStackFrame::Flags::RELEVANT_FOR_JS));
   CallArgs args = CallArgsFromVp(argc, vp);
 
