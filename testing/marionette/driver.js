@@ -3243,10 +3243,7 @@ GeckoDriver.prototype.sendKeysToDialog = async function(cmd) {
 
   // see toolkit/components/prompts/content/commonDialog.js
   let {loginTextbox} = this.dialog.ui;
-  loginTextbox.value = "";
-
-  await interaction.sendKeysToElement(
-      loginTextbox, text, this.a11yChecks);
+  loginTextbox.value = text;
 };
 
 GeckoDriver.prototype._checkIfAlertIsPresent = function() {
