@@ -17,16 +17,12 @@ namespace mozilla {
 namespace mscom {
 namespace detail {
 
-MFBT_API bool&
-BeginProcessRuntimeInit() {
+MFBT_API bool& BeginProcessRuntimeInit() {
   gLock.LockExclusive();
   return gIsProcessInitialized;
 }
 
-MFBT_API void
-EndProcessRuntimeInit() {
-  gLock.UnlockExclusive();
-}
+MFBT_API void EndProcessRuntimeInit() { gLock.UnlockExclusive(); }
 
 }  //  namespace detail
 }  // namespace mscom

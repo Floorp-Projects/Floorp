@@ -776,8 +776,7 @@ class ActivePS {
 
 #if !defined(RELEASE_OR_BETA)
   static void UnregisterIOInterposer(PSLockRef) {
-    if (!sInstance->mInterposeObserver)
-      return;
+    if (!sInstance->mInterposeObserver) return;
 
     IOInterposer::Unregister(IOInterposeObserver::OpAll,
                              sInstance->mInterposeObserver);

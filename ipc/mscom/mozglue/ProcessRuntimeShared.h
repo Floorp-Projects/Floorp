@@ -23,16 +23,11 @@ MFBT_API void EndProcessRuntimeInit();
 class MOZ_RAII ProcessInitLock final {
  public:
   ProcessInitLock()
-    : mIsProcessInitialized(detail::BeginProcessRuntimeInit()) {
-  }
+      : mIsProcessInitialized(detail::BeginProcessRuntimeInit()) {}
 
-  ~ProcessInitLock() {
-    detail::EndProcessRuntimeInit();
-  }
+  ~ProcessInitLock() { detail::EndProcessRuntimeInit(); }
 
-  bool IsInitialized() const {
-    return mIsProcessInitialized;
-  }
+  bool IsInitialized() const { return mIsProcessInitialized; }
 
   void SetInitialized() {
     MOZ_ASSERT(!mIsProcessInitialized);
