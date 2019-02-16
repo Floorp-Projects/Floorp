@@ -38,11 +38,15 @@ class TestableFxaAccountManager(
     context: Context,
     config: Config,
     scopes: Array<String>,
-    accountStorage: AccountStorage = SharedPrefAccountStorage(context),
+    private val storage: AccountStorage,
     val block: () -> OAuthAccount = { mock() }
-) : FxaAccountManager(context, config, scopes, null, accountStorage) {
+) : FxaAccountManager(context, config, scopes, null) {
     override fun createAccount(config: Config): OAuthAccount {
         return block()
+    }
+
+    override fun getAccountStorage(): AccountStorage {
+        return storage
     }
 }
 

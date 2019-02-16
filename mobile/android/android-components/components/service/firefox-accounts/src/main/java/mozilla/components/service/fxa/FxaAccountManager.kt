@@ -108,8 +108,7 @@ open class FxaAccountManager(
     private val context: Context,
     private val config: Config,
     private val scopes: Array<String>,
-    syncManager: SyncManager? = null,
-    private val accountStorage: AccountStorage = SharedPrefAccountStorage(context)
+    syncManager: SyncManager? = null
 ) : Closeable, Observable<AccountObserver> by ObserverRegistry() {
     private val logTag = "FirefoxAccountStateMachine"
 
@@ -290,7 +289,7 @@ open class FxaAccountManager(
                     Event.Init -> {
                         // Locally corrupt accounts are simply treated as 'absent'.
                         val savedAccount = try {
-                            accountStorage.read()
+                            getAccountStorage().read()
                         } catch (e: FxaException) {
                             Log.log(
                                 tag = logTag,
@@ -321,7 +320,7 @@ open class FxaAccountManager(
                         profile = null
                         account.close()
                         // Delete persisted state.
-                        accountStorage.clear()
+                        getAccountStorage().clear()
                         // Re-initialize account.
                         account = createAccount(config)
 
@@ -353,7 +352,7 @@ open class FxaAccountManager(
                 when (via) {
                     is Event.Authenticated -> {
                         account.completeOAuthFlow(via.code, via.state).await()
-                        accountStorage.write(account)
+                        getAccountStorage().write(account)
 
                         notifyObservers { onAuthenticated(account) }
 
@@ -404,6 +403,11 @@ open class FxaAccountManager(
     @VisibleForTesting
     open fun createAccount(config: Config): OAuthAccount {
         return FirefoxAccount(config)
+    }
+
+    @VisibleForTesting
+    open fun getAccountStorage(): AccountStorage {
+        return SharedPrefAccountStorage(context)
     }
 
     private class SyncManagerIntegration(private val syncManager: SyncManager) : AccountObserver {
