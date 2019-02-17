@@ -19,6 +19,7 @@ remote.jar:
   content/Sync.jsm (Sync.jsm)
   content/Target.jsm (Target.jsm)
   content/TargetListener.jsm (TargetListener.jsm)
+  content/Targets.jsm (Targets.jsm)
   content/WindowManager.jsm (WindowManager.jsm)
 
   # Frame scripts
