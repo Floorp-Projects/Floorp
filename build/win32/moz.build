@@ -32,6 +32,3 @@ if CONFIG['LLVM_SYMBOLIZER'] and CONFIG['WIN_DIA_SDK_BIN_DIR']:
     FINAL_TARGET_FILES += [
         '%%%s/msdia140.dll' % CONFIG['WIN_DIA_SDK_BIN_DIR']
     ]
-
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    AllowCompilerWarnings()  # workaround for bug 1090497

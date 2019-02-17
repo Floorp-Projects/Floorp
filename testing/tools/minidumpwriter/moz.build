@@ -17,6 +17,3 @@ if CONFIG['ENABLE_TESTS'] and CONFIG['OS_ARCH'] == 'WINNT':
         WIN32_EXE_LDFLAGS += ['-municode']
 
 NO_PGO = True
-
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    AllowCompilerWarnings()  # workaround for bug 1090497
