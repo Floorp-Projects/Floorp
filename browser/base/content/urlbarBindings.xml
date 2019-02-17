@@ -683,7 +683,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             return;
           }
 
-          BrowserUsageTelemetry.recordUrlbarSelectedResultMethod(
+          BrowserUsageTelemetry.recordLegacyUrlbarSelectedResultMethod(
             event, this.userSelectionBehavior);
 
           let mayInheritPrincipal = false;
