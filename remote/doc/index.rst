@@ -20,6 +20,7 @@ and debug JavaScript execution.
   Debugging.md
   Testing.md
   Prefs.md
+  CodeStyle.md
 
 
 Bugs
