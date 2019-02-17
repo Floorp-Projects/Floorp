@@ -21,8 +21,7 @@ class nsOpenURIInFrameParams final : public nsIOpenURIInFrameParams {
   NS_DECL_NSIOPENURIINFRAMEPARAMS
 
   explicit nsOpenURIInFrameParams(
-      const mozilla::OriginAttributes& aOriginAttributes,
-      Element* aOpener);
+      const mozilla::OriginAttributes& aOriginAttributes, Element* aOpener);
 
  private:
   ~nsOpenURIInFrameParams();

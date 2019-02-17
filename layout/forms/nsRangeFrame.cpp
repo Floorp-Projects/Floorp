@@ -725,11 +725,10 @@ nscoord nsRangeFrame::AutoCrossSize(nscoord aEm) {
     bool unused;
     LayoutDeviceIntSize size;
     nsPresContext* pc = PresContext();
-    pc->GetTheme()->GetMinimumWidgetSize(pc, this,
-                                         StyleAppearance::RangeThumb,
+    pc->GetTheme()->GetMinimumWidgetSize(pc, this, StyleAppearance::RangeThumb,
                                          &size, &unused);
-    minCrossSize = pc->DevPixelsToAppUnits(IsHorizontal() ? size.height
-                                                          : size.width);
+    minCrossSize =
+        pc->DevPixelsToAppUnits(IsHorizontal() ? size.height : size.width);
   }
   return std::max(minCrossSize, NSToCoordRound(CROSS_AXIS_EM_SIZE * aEm));
 }
@@ -770,8 +769,7 @@ nscoord nsRangeFrame::GetMinISize(gfxContext* aRenderingContext) {
 nscoord nsRangeFrame::GetPrefISize(gfxContext* aRenderingContext) {
   bool isInline = IsInlineOriented();
   auto em = StyleFont()->mFont.size * nsLayoutUtils::FontSizeInflationFor(this);
-  return isInline ? NSToCoordRound(em * MAIN_AXIS_EM_SIZE)
-                  : AutoCrossSize(em);
+  return isInline ? NSToCoordRound(em * MAIN_AXIS_EM_SIZE) : AutoCrossSize(em);
 }
 
 bool nsRangeFrame::IsHorizontal() const {

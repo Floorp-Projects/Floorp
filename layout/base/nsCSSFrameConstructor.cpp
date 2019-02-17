@@ -2969,8 +2969,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructSelectFrame(
     // dropdown list frame.
     nsFrameItems popupItems;
     popupItems.AddChild(listFrame);
-    comboboxFrame->SetInitialChildList(nsIFrame::kSelectPopupList,
-                                       popupItems);
+    comboboxFrame->SetInitialChildList(nsIFrame::kSelectPopupList, popupItems);
 
     aState.mFrameState = historyState;
     if (aState.mFrameState) {

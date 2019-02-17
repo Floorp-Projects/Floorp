@@ -267,17 +267,19 @@ ProcessRuntime::InitializeSecurity() {
 
 #if defined(MOZILLA_INTERNAL_API)
 
-/* static */ bool
-ProcessRuntime::IsWin32kLockedDown() {
-  static const DynamicallyLinkedFunctionPtr<decltype(&::GetProcessMitigationPolicy)>
-    pGetProcessMitigationPolicy(L"kernel32.dll", "GetProcessMitigationPolicy");
+/* static */ bool ProcessRuntime::IsWin32kLockedDown() {
+  static const DynamicallyLinkedFunctionPtr<decltype(
+      &::GetProcessMitigationPolicy)>
+      pGetProcessMitigationPolicy(L"kernel32.dll",
+                                  "GetProcessMitigationPolicy");
   if (!pGetProcessMitigationPolicy) {
     return false;
   }
 
   PROCESS_MITIGATION_SYSTEM_CALL_DISABLE_POLICY polInfo;
   if (!pGetProcessMitigationPolicy(::GetCurrentProcess(),
-      ProcessSystemCallDisablePolicy, &polInfo, sizeof(polInfo))) {
+                                   ProcessSystemCallDisablePolicy, &polInfo,
+                                   sizeof(polInfo))) {
     return false;
   }
 

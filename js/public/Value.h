@@ -722,11 +722,11 @@ union alignas(8) Value {
 
   JS::BigInt* toBigInt() const {
     MOZ_ASSERT(isBigInt());
-#  if defined(JS_NUNBOX32)
+#if defined(JS_NUNBOX32)
     return s_.payload_.bi_;
-#  elif defined(JS_PUNBOX64)
+#elif defined(JS_PUNBOX64)
     return reinterpret_cast<JS::BigInt*>(asBits_ ^ JSVAL_SHIFTED_TAG_BIGINT);
-#  endif
+#endif
   }
 
   JSObject& toObject() const {
