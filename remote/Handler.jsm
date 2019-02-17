@@ -88,7 +88,7 @@ class JSONWriter {
       this._response.write(json);
     } catch (e) {
       log.error(`Unable to serialise JSON: ${e.message}`, e);
-      this._response.write("");
+      this._response.setStatusLine("1.1", 500, "Internal Server Error");
     }
   }
 }
