@@ -4422,8 +4422,8 @@ class BaseCompiler final : public BaseCompilerInterface {
   }
 
   void startCallArgs(size_t stackArgAreaSizeUnaligned, FunctionCall* call) {
-    size_t stackArgAreaSizeAligned
-        = AlignStackArgAreaSize(stackArgAreaSizeUnaligned);
+    size_t stackArgAreaSizeAligned =
+        AlignStackArgAreaSize(stackArgAreaSizeUnaligned);
     MOZ_ASSERT(stackArgAreaSizeUnaligned <= stackArgAreaSizeAligned);
 
     // Record the masm.framePushed() value at this point, before we push args
@@ -6879,7 +6879,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   MOZ_MUST_USE bool emitInstanceCall(uint32_t lineOrBytecode,
                                      const MIRTypeVector& sig, ExprType retType,
                                      SymbolicAddress builtin,
-                                     bool pushReturnedValue=true);
+                                     bool pushReturnedValue = true);
   MOZ_MUST_USE bool emitGrowMemory();
   MOZ_MUST_USE bool emitCurrentMemory();
 
@@ -9776,7 +9776,7 @@ void BaseCompiler::emitCompareRef(Assembler::Condition compareOp,
 bool BaseCompiler::emitInstanceCall(uint32_t lineOrBytecode,
                                     const MIRTypeVector& sig, ExprType retType,
                                     SymbolicAddress builtin,
-                                    bool pushReturnedValue/*=true*/) {
+                                    bool pushReturnedValue /*=true*/) {
   MOZ_ASSERT(sig[0] == MIRType::Pointer);
 
   sync();

@@ -111,6 +111,7 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
   already_AddRefed<nsFrameLoader> GetFrameLoader() override {
     return nsFrameLoaderOwner::GetFrameLoader();
   }
+
  protected:
   virtual ~nsGenericHTMLFrameElement();
 

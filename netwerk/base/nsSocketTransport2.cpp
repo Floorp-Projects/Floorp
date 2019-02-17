@@ -2944,7 +2944,7 @@ nsSocketTransport::GetInterface(const nsIID &iid, void **result) {
 }
 
 NS_IMETHODIMP
-nsSocketTransport::GetInterfaces(nsTArray<nsIID>& array) {
+nsSocketTransport::GetInterfaces(nsTArray<nsIID> &array) {
   return NS_CI_INTERFACE_GETTER_NAME(nsSocketTransport)(array);
 }
 

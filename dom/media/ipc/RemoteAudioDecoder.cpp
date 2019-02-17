@@ -30,11 +30,8 @@ mozilla::ipc::IPCResult RemoteAudioDecoderChild::RecvOutput(
       new AudioData(aData.base().offset(),
                     media::TimeUnit::FromMicroseconds(aData.base().time()),
                     media::TimeUnit::FromMicroseconds(aData.base().duration()),
-                    aData.base().frames(),
-                    std::move(alignedAudioBuffer),
-                    aData.channels(),
-                    aData.rate(),
-                    aData.channelMap());
+                    aData.base().frames(), std::move(alignedAudioBuffer),
+                    aData.channels(), aData.rate(), aData.channelMap());
 
   mDecodedData.AppendElement(std::move(audio));
   return IPC_OK();
@@ -62,11 +59,8 @@ MediaResult RemoteAudioDecoderChild::InitIPDL(
   mIPDLSelfRef = this;
   bool success = false;
   nsCString errorDescription;
-  if (manager->SendPRemoteDecoderConstructor(this,
-                                             aAudioInfo,
-                                             aOptions,
-                                             &success,
-                                             &errorDescription)) {
+  if (manager->SendPRemoteDecoderConstructor(this, aAudioInfo, aOptions,
+                                             &success, &errorDescription)) {
     mCanSend = true;
   }
 
@@ -75,12 +69,9 @@ MediaResult RemoteAudioDecoderChild::InitIPDL(
 }
 
 RemoteAudioDecoderParent::RemoteAudioDecoderParent(
-    RemoteDecoderManagerParent* aParent,
-    const AudioInfo& aAudioInfo,
+    RemoteDecoderManagerParent* aParent, const AudioInfo& aAudioInfo,
     const CreateDecoderParams::OptionSet& aOptions,
-    TaskQueue* aManagerTaskQueue,
-    TaskQueue* aDecodeTaskQueue,
-    bool* aSuccess,
+    TaskQueue* aManagerTaskQueue, TaskQueue* aDecodeTaskQueue, bool* aSuccess,
     nsCString* aErrorDescription)
     : RemoteDecoderParent(aParent, aManagerTaskQueue, aDecodeTaskQueue),
       mAudioInfo(aAudioInfo) {
@@ -124,16 +115,11 @@ void RemoteAudioDecoderParent::ProcessDecodedData(
     }
 
     RemoteAudioDataIPDL output(
-        MediaDataIPDL(data->mOffset,
-                      data->mTime.ToMicroseconds(),
+        MediaDataIPDL(data->mOffset, data->mTime.ToMicroseconds(),
                       data->mTimecode.ToMicroseconds(),
-                      data->mDuration.ToMicroseconds(),
-                      data->mFrames,
+                      data->mDuration.ToMicroseconds(), data->mFrames,
                       data->mKeyframe),
-        audio->mChannels,
-        audio->mRate,
-        audio->mChannelMap,
-        buffer);
+        audio->mChannels, audio->mRate, audio->mChannelMap, buffer);
 
     Unused << SendOutput(output);
   }
