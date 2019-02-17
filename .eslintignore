@@ -289,6 +289,7 @@ remote/server/HTTPD.jsm
 remote/server/Packet.jsm
 remote/server/Socket.jsm
 remote/server/Stream.jsm
+remote/test/browser/chrome-remote-interface.js
 remote/test/demo.js
 
 # security/ exclusions (pref files).
