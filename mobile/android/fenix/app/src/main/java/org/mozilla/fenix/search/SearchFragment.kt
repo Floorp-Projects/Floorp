@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.search
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -15,17 +14,17 @@ import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_search.view.*
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.mvi.ActionBusFactory
-import org.mozilla.fenix.mvi.getManagedEmitter
-import org.mozilla.fenix.mvi.getSafeManagedObservable
-import org.mozilla.fenix.search.awesomebar.AwesomeBarAction
-import org.mozilla.fenix.search.awesomebar.AwesomeBarChange
-import org.mozilla.fenix.search.awesomebar.AwesomeBarComponent
-import org.mozilla.fenix.search.awesomebar.AwesomeBarState
 import org.mozilla.fenix.components.toolbar.SearchAction
 import org.mozilla.fenix.components.toolbar.SearchState
 import org.mozilla.fenix.components.toolbar.ToolbarComponent
 import org.mozilla.fenix.components.toolbar.ToolbarUIView
+import org.mozilla.fenix.mvi.ActionBusFactory
+import org.mozilla.fenix.mvi.getAutoDisposeObservable
+import org.mozilla.fenix.mvi.getManagedEmitter
+import org.mozilla.fenix.search.awesomebar.AwesomeBarAction
+import org.mozilla.fenix.search.awesomebar.AwesomeBarChange
+import org.mozilla.fenix.search.awesomebar.AwesomeBarComponent
+import org.mozilla.fenix.search.awesomebar.AwesomeBarState
 
 class SearchFragment : Fragment() {
     private lateinit var toolbarComponent: ToolbarComponent
@@ -54,7 +53,6 @@ class SearchFragment : Fragment() {
         return view
     }
 
-    @SuppressLint("CheckResult")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -66,7 +64,7 @@ class SearchFragment : Fragment() {
 
         view.toolbar_wrapper.clipToOutline = false
 
-        getSafeManagedObservable<SearchAction>()
+        getAutoDisposeObservable<SearchAction>()
             .subscribe {
                 when (it) {
                     is SearchAction.UrlCommitted -> transitionToBrowser()
@@ -76,7 +74,7 @@ class SearchFragment : Fragment() {
                 }
             }
 
-        getSafeManagedObservable<AwesomeBarAction>()
+        getAutoDisposeObservable<AwesomeBarAction>()
             .subscribe {
                 when (it) {
                     is AwesomeBarAction.ItemSelected -> transitionToBrowser()

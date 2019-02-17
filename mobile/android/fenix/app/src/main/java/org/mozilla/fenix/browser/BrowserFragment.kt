@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.browser
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -35,16 +34,16 @@ import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FindInPageIntegration
-import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.ext.share
-import org.mozilla.fenix.mvi.ActionBusFactory
-import org.mozilla.fenix.mvi.getSafeManagedObservable
 import org.mozilla.fenix.components.toolbar.SearchAction
 import org.mozilla.fenix.components.toolbar.SearchState
 import org.mozilla.fenix.components.toolbar.ToolbarComponent
 import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.components.toolbar.ToolbarMenu
 import org.mozilla.fenix.components.toolbar.ToolbarUIView
+import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.share
+import org.mozilla.fenix.mvi.ActionBusFactory
+import org.mozilla.fenix.mvi.getAutoDisposeObservable
 
 class BrowserFragment : Fragment(), BackHandler {
     private lateinit var toolbarComponent: ToolbarComponent
@@ -101,11 +100,10 @@ class BrowserFragment : Fragment(), BackHandler {
         return view
     }
 
-    @SuppressLint("CheckResult")
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-        getSafeManagedObservable<SearchAction>()
+        getAutoDisposeObservable<SearchAction>()
             .subscribe {
                 when (it) {
                     is SearchAction.ToolbarTapped -> Navigation.findNavController(toolbar)
@@ -116,10 +114,6 @@ class BrowserFragment : Fragment(), BackHandler {
                     is SearchAction.ToolbarMenuItemTapped -> handleToolbarItemInteraction(it)
                 }
             }
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
 
         sessionId = BrowserFragmentArgs.fromBundle(arguments!!).sessionId
 

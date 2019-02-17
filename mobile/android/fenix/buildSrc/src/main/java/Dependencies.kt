@@ -28,6 +28,8 @@ private object Versions {
     const val espresso_core = "2.2.2"
 
     const val android_arch_navigation = "1.0.0-beta02"
+
+    const val autodispose = "1.1.0"
 }
 
 @Suppress("unused")
@@ -109,5 +111,9 @@ object Deps {
     const val android_arch_navigation = "android.arch.navigation:navigation-fragment:${Versions.android_arch_navigation}"
     const val android_arch_navigation_ui = "android.arch.navigation:navigation-ui:${Versions.android_arch_navigation}"
 
+    const val autodispose = "com.uber.autodispose:autodispose:${Versions.autodispose}"
+    const val autodispose_android = "com.uber.autodispose:autodispose-android:${Versions.autodispose}"
+    const val autodispose_android_aac = "com.uber.autodispose:autodispose-android-archcomponents:${Versions.autodispose}"
+    const val autodispose_android_aac_test = "com.uber.autodispose:autodispose-android-archcomponents-test:${Versions.autodispose}"
 }
 

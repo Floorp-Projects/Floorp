@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.home
 
-import android.annotation.SuppressLint
 import android.content.res.Resources
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
@@ -20,8 +19,8 @@ import kotlinx.android.synthetic.main.fragment_home.view.*
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.BrowsingModeManager
+import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
@@ -32,8 +31,8 @@ import org.mozilla.fenix.home.tabs.TabsComponent
 import org.mozilla.fenix.home.tabs.TabsState
 import org.mozilla.fenix.isPrivate
 import org.mozilla.fenix.mvi.ActionBusFactory
+import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
-import org.mozilla.fenix.mvi.getSafeManagedObservable
 import kotlin.math.roundToInt
 
 class HomeFragment : Fragment() {
@@ -57,14 +56,13 @@ class HomeFragment : Fragment() {
         return view
     }
 
-    @SuppressLint("CheckResult")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         (activity as AppCompatActivity).supportActionBar?.hide()
         setupHomeMenu()
 
-        getSafeManagedObservable<TabsAction>()
+        getAutoDisposeObservable<TabsAction>()
             .subscribe {
                 when (it) {
                     is TabsAction.Select -> {

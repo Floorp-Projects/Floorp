@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.library.history
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
@@ -21,13 +20,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import org.mozilla.fenix.HomeActivity
 import mozilla.components.support.base.feature.BackHandler
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.mvi.ActionBusFactory
+import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
-import org.mozilla.fenix.mvi.getSafeManagedObservable
 import kotlin.coroutines.CoroutineContext
 
 class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
@@ -45,32 +44,15 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_history, container, false)
         historyComponent = HistoryComponent(view.history_layout, ActionBusFactory.get(this))
-
         return view
     }
 
-    @SuppressLint("CheckResult")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         job = Job()
 
         setHasOptionsMenu(true)
         (activity as AppCompatActivity).supportActionBar?.show()
-
-        getSafeManagedObservable<HistoryAction>()
-            .subscribe {
-                when (it) {
-                    is HistoryAction.Select -> selectItem(it.item)
-                    is HistoryAction.EnterEditMode -> getManagedEmitter<HistoryChange>()
-                        .onNext(HistoryChange.EnterEditMode(it.item))
-                    is HistoryAction.AddItemForRemoval -> getManagedEmitter<HistoryChange>()
-                        .onNext(HistoryChange.AddItemForRemoval(it.item))
-                    is HistoryAction.RemoveItemForRemoval -> getManagedEmitter<HistoryChange>()
-                        .onNext(HistoryChange.RemoveItemForRemoval(it.item))
-                    is HistoryAction.BackPressed -> getManagedEmitter<HistoryChange>()
-                        .onNext(HistoryChange.ExitEditMode)
-                }
-            }
     }
 
     private fun selectItem(item: HistoryItem) {
@@ -97,14 +79,27 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val eventEmitter = ActionBusFactory.get(this)
+        getAutoDisposeObservable<HistoryAction>()
+            .subscribe {
+                when (it) {
+                    is HistoryAction.Select -> selectItem(it.item)
+                    is HistoryAction.EnterEditMode -> getManagedEmitter<HistoryChange>()
+                        .onNext(HistoryChange.EnterEditMode(it.item))
+                    is HistoryAction.AddItemForRemoval -> getManagedEmitter<HistoryChange>()
+                        .onNext(HistoryChange.AddItemForRemoval(it.item))
+                    is HistoryAction.RemoveItemForRemoval -> getManagedEmitter<HistoryChange>()
+                        .onNext(HistoryChange.RemoveItemForRemoval(it.item))
+                    is HistoryAction.BackPressed -> getManagedEmitter<HistoryChange>()
+                        .onNext(HistoryChange.ExitEditMode)
+                }
+            }
 
         launch(Dispatchers.IO) {
             val items = requireComponents.core.historyStorage.getVisited()
                 .mapIndexed { id, item -> HistoryItem(id, item) }
 
             launch(Dispatchers.Main) {
-                eventEmitter.emit(HistoryChange::class.java, HistoryChange.Change(items))
+                getManagedEmitter<HistoryChange>().onNext(HistoryChange.Change(items))
             }
         }
     }

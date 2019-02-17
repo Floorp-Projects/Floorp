@@ -165,6 +165,8 @@ dependencies {
     implementation Deps.androidx_fragment
     implementation Deps.android_arch_navigation
     implementation Deps.android_arch_navigation_ui
+
+    implementation Deps.autodispose
 }
 
 

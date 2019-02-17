@@ -26,6 +26,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.OnLifecycleEvent
+import com.uber.autodispose.AutoDispose.autoDisposable
+import com.uber.autodispose.ObservableSubscribeProxy
+import com.uber.autodispose.android.lifecycle.AndroidLifecycleScopeProvider
 import io.reactivex.Observable
 import io.reactivex.Observer
 import io.reactivex.rxkotlin.merge
@@ -103,6 +106,11 @@ class ActionBusFactory private constructor(val owner: LifecycleOwner) {
         return if (map[clazz] != null) map[clazz] as Observable<T> else create(clazz)
     }
 
+    fun <T : Action> getAutoDisposeObservable(clazz: Class<T>): ObservableSubscribeProxy<T> {
+        return getSafeManagedObservable(clazz)
+            .`as`(autoDisposable(AndroidLifecycleScopeProvider.from(owner)))
+    }
+
     fun <T : Action> getManagedEmitter(clazz: Class<T>): Observer<T> {
         return if (map[clazz] != null) map[clazz] as Observer<T> else create(clazz)
     }
@@ -134,6 +142,9 @@ inline fun <reified T : Action> LifecycleOwner.emit(event: T) =
  */
 inline fun <reified T : Action> LifecycleOwner.getSafeManagedObservable(): Observable<T> =
     ActionBusFactory.get(this).getSafeManagedObservable(T::class.java)
+
+inline fun <reified T : Action> LifecycleOwner.getAutoDisposeObservable(): ObservableSubscribeProxy<T> =
+    ActionBusFactory.get(this).getAutoDisposeObservable(T::class.java)
 
 inline fun <reified T : Action> LifecycleOwner.getManagedEmitter(): Observer<T> =
     ActionBusFactory.get(this).getManagedEmitter(T::class.java)
