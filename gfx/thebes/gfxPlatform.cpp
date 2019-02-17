@@ -11,6 +11,7 @@
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/ISurfaceAllocator.h"  // for GfxMemoryImageReporter
 #include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/layers/TiledContentClient.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/webrender/webrender_ffi.h"
@@ -147,12 +148,6 @@ class mozilla::gl::SkiaGLGlue : public GenericAtomicRefCounted {};
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/layers/MemoryReportingMLGPU.h"
 #include "prsystem.h"
-
-namespace mozilla {
-namespace layers {
-void ShutdownTileCache();
-}  // namespace layers
-}  // namespace mozilla
 
 using namespace mozilla;
 using namespace mozilla::layers;
