@@ -24,7 +24,7 @@ using mozilla::gfx::SyncObject;
 
 // Artificially cause threads to yield randomly in an attempt to make racy
 // things more apparent (if any).
-void MaybeYieldThread() {
+static void MaybeYieldThread() {
 #ifndef WIN32
   if (rand() % 5 == 0) {
     sched_yield();
@@ -112,7 +112,7 @@ class TestJob : public Job {
 /// The main thread is only blocked when waiting for the completion of the
 /// entire task stream (it doesn't have to wait at the filter's sync points to
 /// orchestrate it).
-void TestSchedulerJoin(uint32_t aNumThreads, uint32_t aNumCmdBuffers) {
+static void TestSchedulerJoin(uint32_t aNumThreads, uint32_t aNumCmdBuffers) {
   JoinTestSanityCheck check(aNumCmdBuffers);
 
   RefPtr<SyncObject> beforeFilter = new SyncObject(aNumCmdBuffers);
@@ -150,7 +150,7 @@ void TestSchedulerJoin(uint32_t aNumThreads, uint32_t aNumCmdBuffers) {
 /// executed sequentially, and chains are exectuted in parallel. This simulates
 /// the typical scenario where we want to process sequences of drawing commands
 /// for several tiles in parallel.
-void TestSchedulerChain(uint32_t aNumThreads, uint32_t aNumCmdBuffers) {
+static void TestSchedulerChain(uint32_t aNumThreads, uint32_t aNumCmdBuffers) {
   SanityChecker check(aNumCmdBuffers);
 
   RefPtr<SyncObject> completion = new SyncObject(aNumCmdBuffers);
