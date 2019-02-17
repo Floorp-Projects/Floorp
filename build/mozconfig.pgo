@@ -1,0 +1,7 @@
+case "$PERFHERDER_EXTRA_OPTIONS" in
+base-toolchains*)
+    ;;
+*)
+    export MOZ_PGO=1
+    ;;
+esac
