@@ -34,6 +34,7 @@ class Handler {
 class JSONHandler extends Handler {
   register(server) {
     server.registerPathHandler(this.path, (req, resp) => {
+      resp.setHeader("content-type", "application/json");
       this.rawHandle(req, new JSONWriter(resp));
     });
   }
