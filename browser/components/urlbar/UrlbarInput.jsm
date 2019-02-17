@@ -268,10 +268,7 @@ class UrlbarInput {
 
     openParams.allowInheritPrincipal = false;
 
-    // TODO: Work out how we get the user selection behavior, probably via passing
-    // it in, since we don't have the old autocomplete controller to work with.
-    // BrowserUsageTelemetry.recordUrlbarSelectedResultMethod(
-    //   event, this.userSelectionBehavior);
+    this.controller.recordSelectedResult(event, index);
 
     url = this._maybeCanonizeURL(event, url) || url.trim();
 
@@ -315,11 +312,7 @@ class UrlbarInput {
 
     this.view.close();
 
-    // TODO Bug 1500476: Work out how we get the user selection behavior, probably via passing
-    // it in, since we don't have the old autocomplete controller to work with.
-    // BrowserUsageTelemetry.recordUrlbarSelectedResultMethod(
-    //   event, this.userSelectionBehavior);
-    this.controller.recordSelectedResult(event, result, resultIndex);
+    this.controller.recordSelectedResult(event, resultIndex);
 
     let where = this._whereToOpen(event);
     let {url, postData} = UrlbarUtils.getUrlFromResult(result);

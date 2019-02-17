@@ -268,6 +268,7 @@ class UrlbarView {
     if (this.isOpen) {
       return;
     }
+    this.controller.userSelectionBehavior = "none";
 
     this.panel.removeAttribute("hidden");
     this.panel.removeAttribute("actionoverride");

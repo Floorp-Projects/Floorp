@@ -477,6 +477,10 @@ add_task(async function test_suggestion_enterSelection() {
 
 // Selects through mouse right button and press the Return (Enter) key.
 add_task(async function test_suggestion_rightclick() {
+  // TODO Bug 1528250: Decide on support within QuantumBar.
+  if (UrlbarPrefs.get("quantumbar")) {
+    return;
+  }
   Services.telemetry.clearScalars();
   let resultMethodHist = TelemetryTestUtils.getAndClearHistogram("FX_URLBAR_SELECTED_RESULT_METHOD");
 
