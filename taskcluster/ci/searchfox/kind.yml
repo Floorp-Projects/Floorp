@@ -117,3 +117,4 @@ jobs:
             - win64-node
             - win64-rust
             - win64-cbindgen
+            - win64-nasm

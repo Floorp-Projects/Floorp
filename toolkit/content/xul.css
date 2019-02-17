@@ -442,8 +442,6 @@ tree > treechildren {
 
 tree {
   -moz-box-orient: vertical;
-  min-width: 0px;
-  min-height: 0px;
   width: 10px;
   height: 10px;
 }
