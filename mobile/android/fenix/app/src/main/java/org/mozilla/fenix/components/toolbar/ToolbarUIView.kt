@@ -66,11 +66,14 @@ class ToolbarUIView(
         }
 
         with(view.context) {
+            val session = sessionId?.let { components.core.sessionManager.findSessionById(sessionId) }
+                ?: components.core.sessionManager.selectedSession
+
             toolbarIntegration = ToolbarIntegration(
                 this,
                 view,
                 ToolbarMenu(this,
-                    requestDesktopStateProvider = { components.core.sessionManager.selectedSessionOrThrow.desktopMode },
+                    requestDesktopStateProvider = { session?.desktopMode ?: false },
                     onItemTapped = { actionEmitter.onNext(SearchAction.ToolbarMenuItemTapped(it)) }
                 ),
                 ShippedDomainsProvider().also { it.initialize(this) },
