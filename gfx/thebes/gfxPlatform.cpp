@@ -556,7 +556,7 @@ void RecordingPrefChanged(const char* aPrefName, void* aClosure) {
 
 #define WR_DEBUG_PREF "gfx.webrender.debug"
 
-void WebRenderDebugPrefChangeCallback(const char* aPrefName, void*) {
+static void WebRenderDebugPrefChangeCallback(const char* aPrefName, void*) {
   int32_t flags = 0;
 #define GFX_WEBRENDER_DEBUG(suffix, bit)                   \
   if (Preferences::GetBool(WR_DEBUG_PREF suffix, false)) { \
@@ -1084,7 +1084,7 @@ void gfxPlatform::Init() {
   }
 }
 
-bool IsFeatureSupported(long aFeature) {
+static bool IsFeatureSupported(long aFeature) {
   nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
   nsCString blockId;
   int32_t status;
@@ -1352,7 +1352,7 @@ struct SourceSurfaceUserData {
   BackendType mBackendType;
 };
 
-void SourceBufferDestroy(void* srcSurfUD) {
+static void SourceBufferDestroy(void* srcSurfUD) {
   delete static_cast<SourceSurfaceUserData*>(srcSurfUD);
 }
 
@@ -1362,7 +1362,7 @@ struct DependentSourceSurfaceUserData {
   RefPtr<gfxASurface> mSurface;
 };
 
-void SourceSurfaceDestroyed(void* aData) {
+static void SourceSurfaceDestroyed(void* aData) {
   delete static_cast<DependentSourceSurfaceUserData*>(aData);
 }
 
@@ -2432,7 +2432,7 @@ static bool sBufferRotationCheckPref = true;
 
 static mozilla::Atomic<bool> sLayersAccelerationPrefsInitialized(false);
 
-void VideoDecodingFailedChangedCallback(const char* aPref, void*) {
+static void VideoDecodingFailedChangedCallback(const char* aPref, void*) {
   sLayersHardwareVideoDecodingFailed = Preferences::GetBool(aPref, false);
   gfxPlatform::GetPlatform()->UpdateCanUseHardwareVideoDecoding();
 }
