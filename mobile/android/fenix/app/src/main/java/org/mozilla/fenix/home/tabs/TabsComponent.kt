@@ -36,13 +36,18 @@ class TabsComponent(
     }
 }
 
-data class TabsState(val sessions: List<Session>) : ViewState
+data class TabsState(val sessions: List<SessionViewState>) : ViewState
+data class SessionViewState(val id: String, val url: String, val selected: Boolean)
+
+fun Session.toSessionViewState(selected: Boolean): SessionViewState {
+    return SessionViewState(this.id, this.url, selected)
+}
 
 sealed class TabsAction : Action {
-    data class Select(val session: Session) : TabsAction()
-    data class Close(val session: Session) : TabsAction()
+    data class Select(val sessionId: String) : TabsAction()
+    data class Close(val sessionId: String) : TabsAction()
 }
 
 sealed class TabsChange : Change {
-    data class Changed(val sessions: List<Session>) : TabsChange()
+    data class Changed(val sessions: List<SessionViewState>) : TabsChange()
 }

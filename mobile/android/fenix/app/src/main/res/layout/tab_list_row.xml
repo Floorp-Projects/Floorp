@@ -25,6 +25,7 @@
                    android:tint="@android:color/black"
                    android:paddingStart="10dp"
                    android:paddingEnd="10dp"
+                   android:paddingTop="4dp"
                    app:layout_constraintStart_toStartOf="parent"
                    app:layout_constraintTop_toTopOf="parent"
                    android:contentDescription="@string/favicon_content_description"/>

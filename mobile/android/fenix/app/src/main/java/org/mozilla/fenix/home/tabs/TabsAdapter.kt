@@ -13,14 +13,13 @@ import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.tab_list_row.*
-import mozilla.components.browser.session.Session
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.increaseTapArea
 
 class TabsAdapter(private val actionEmitter: Observer<TabsAction>) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    var sessions = listOf<Session>()
+    var sessions = listOf<SessionViewState>()
         set(value) {
             val diffResult = DiffUtil.calculateDiff(TabsDiffCallback(field, value), true)
             field = value
@@ -44,31 +43,50 @@ class TabsAdapter(private val actionEmitter: Observer<TabsAction>) :
         }
     }
 
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int, payloads: MutableList<Any>) {
+        if (payloads.isEmpty()) onBindViewHolder(holder, position)
+        else if (holder is TabViewHolder) {
+            val bundle = payloads[0] as Bundle
+            bundle.getString(tab_url)?.apply(holder::updateUrl)
+            bundle.getBoolean(tab_selected).apply(holder::updateSelected)
+        }
+    }
+
     private class TabViewHolder(
-        view: View,
+        val view: View,
         actionEmitter: Observer<TabsAction>,
         override val containerView: View? = view
     ) :
         RecyclerView.ViewHolder(view), LayoutContainer {
 
-        var session: Session? = null
+        var session: SessionViewState? = null
 
         init {
             item_tab.setOnClickListener {
-                actionEmitter.onNext(TabsAction.Select(session!!))
+                actionEmitter.onNext(TabsAction.Select(session?.id!!))
             }
 
             close_tab_button?.run {
                 increaseTapArea(closeButtonIncreaseDps)
                 setOnClickListener {
-                    actionEmitter.onNext(TabsAction.Close(session!!))
+                    actionEmitter.onNext(TabsAction.Close(session?.id!!))
                 }
             }
         }
 
-        fun bindSession(session: Session) {
+        fun bindSession(session: SessionViewState) {
             this.session = session
-            text_url.text = session.url
+            updateUrl(session.url)
+            updateSelected(session.selected)
+        }
+
+        fun updateUrl(url: String) {
+            text_url.text = url
+        }
+
+        fun updateSelected(selected: Boolean) {
+            item_tab.background = if (selected)
+                view.context.getDrawable(R.drawable.session_border) else null
         }
 
         companion object {
@@ -76,11 +94,16 @@ class TabsAdapter(private val actionEmitter: Observer<TabsAction>) :
             const val LAYOUT_ID = R.layout.tab_list_row
         }
     }
+
+    companion object {
+        const val tab_url = "url"
+        const val tab_selected = "selected"
+    }
 }
 
 class TabsDiffCallback(
-    private val oldList: List<Session>,
-    private val newList: List<Session>
+    private val oldList: List<SessionViewState>,
+    private val newList: List<SessionViewState>
 ) : DiffUtil.Callback() {
 
     override fun getOldListSize(): Int = oldList.size
@@ -99,7 +122,10 @@ class TabsDiffCallback(
         val newSession = newList[newItemPosition]
         val diffBundle = Bundle()
         if (oldSession.url != newSession.url) {
-            diffBundle.putString("url", newSession.url)
+            diffBundle.putString(TabsAdapter.tab_url, newSession.url)
+        }
+        if (oldSession.selected != newSession.selected) {
+            diffBundle.putBoolean(TabsAdapter.tab_selected, newSession.selected)
         }
         return if (diffBundle.size() == 0) null else diffBundle
     }
