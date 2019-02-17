@@ -238,7 +238,8 @@ bool Gecko_MediaFeatures_PrefersReducedMotion(Document* aDocument) {
   return LookAndFeel::GetInt(LookAndFeel::eIntID_PrefersReducedMotion, 0) == 1;
 }
 
-StylePrefersColorScheme Gecko_MediaFeatures_PrefersColorScheme(Document* aDocument) {
+StylePrefersColorScheme Gecko_MediaFeatures_PrefersColorScheme(
+    Document* aDocument) {
   if (nsContentUtils::ShouldResistFingerprinting(aDocument)) {
     return StylePrefersColorScheme::Light;
   }
@@ -247,13 +248,18 @@ StylePrefersColorScheme Gecko_MediaFeatures_PrefersColorScheme(Document* aDocume
       return StylePrefersColorScheme::Light;
     }
   }
-  // If LookAndFeel::eIntID_SystemUsesDarkTheme fails then return 2 (no-preference)
+  // If LookAndFeel::eIntID_SystemUsesDarkTheme fails then return 2
+  // (no-preference)
   switch (LookAndFeel::GetInt(LookAndFeel::eIntID_SystemUsesDarkTheme, 2)) {
-    case 0: return StylePrefersColorScheme::Light;
-    case 1: return StylePrefersColorScheme::Dark;
-    case 2: return StylePrefersColorScheme::NoPreference;
+    case 0:
+      return StylePrefersColorScheme::Light;
+    case 1:
+      return StylePrefersColorScheme::Dark;
+    case 2:
+      return StylePrefersColorScheme::NoPreference;
     default:
-      // This only occurs if the user has set the ui.systemUsesDarkTheme pref to an invalid value.
+      // This only occurs if the user has set the ui.systemUsesDarkTheme pref to
+      // an invalid value.
       return StylePrefersColorScheme::Light;
   }
 }

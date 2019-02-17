@@ -41,8 +41,7 @@ mozilla::ipc::IPCResult RemoteDecoderChild::RecvError(const nsresult& aError) {
 }
 
 mozilla::ipc::IPCResult RemoteDecoderChild::RecvInitComplete(
-    const TrackInfo::TrackType& trackType,
-    const nsCString& aDecoderDescription,
+    const TrackInfo::TrackType& trackType, const nsCString& aDecoderDescription,
     const ConversionRequired& aConversion) {
   AssertOnManagerThread();
   mInitPromise.ResolveIfExists(trackType, __func__);
@@ -113,11 +112,9 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDecoderChild::Decode(
   memcpy(buffer.get<uint8_t>(), aSample->Data(), aSample->Size());
 
   MediaRawDataIPDL sample(
-      MediaDataIPDL(aSample->mOffset,
-                    aSample->mTime.ToMicroseconds(),
+      MediaDataIPDL(aSample->mOffset, aSample->mTime.ToMicroseconds(),
                     aSample->mTimecode.ToMicroseconds(),
-                    aSample->mDuration.ToMicroseconds(),
-                    aSample->mFrames,
+                    aSample->mDuration.ToMicroseconds(), aSample->mFrames,
                     aSample->mKeyframe),
       buffer);
   SendInput(sample);

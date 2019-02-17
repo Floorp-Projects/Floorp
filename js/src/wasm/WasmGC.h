@@ -42,7 +42,7 @@ template <class T>
 static inline size_t StackArgAreaSizeUnaligned(const T& argTypes) {
   ABIArgIter<const T> i(argTypes);
   while (!i.done()) {
-     i++;
+    i++;
   }
   return i.stackBytesConsumedSoFar();
 }

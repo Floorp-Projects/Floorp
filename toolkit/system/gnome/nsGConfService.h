@@ -10,8 +10,8 @@
 #include "mozilla/Attributes.h"
 
 extern "C" {
-  struct _GConfClient;
-  typedef struct _GConfClient GConfClient;
+struct _GConfClient;
+typedef struct _GConfClient GConfClient;
 }
 
 class nsGConfService final : public nsIGConfService {
