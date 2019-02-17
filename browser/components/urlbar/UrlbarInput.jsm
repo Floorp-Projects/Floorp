@@ -357,6 +357,14 @@ class UrlbarInput {
           url = canonizedUrl;
           break;
         }
+        if (result.payload.isKeywordOffer) {
+          // Picking a keyword offer just fills it in the input and doesn't
+          // visit anything.  The user can then type a search string.  Also
+          // start a new search so that the offer appears in the view by itself
+          // to make it even clearer to the user what's going on.
+          this.startQuery();
+          return;
+        }
         const actionDetails = {
           isSuggestion: !!result.payload.suggestion,
           alias: result.payload.keyword,
