@@ -121,10 +121,6 @@ function assertSearchSuggestionsNotificationVisible(visible) {
  *        True if they should be visible, false if not.
  */
 function assertOneOffButtonsVisible(visible) {
-  // TODO Bug 1527934: Not implemented for QuantumBar.
-  if (UrlbarPrefs.get("quantumbar")) {
-    return;
-  }
   Assert.equal(UrlbarTestUtils.getOneOffSearchButtonsVisible(window), visible,
     "Should show or not the one-off search buttons");
 }
