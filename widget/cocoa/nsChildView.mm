@@ -1938,7 +1938,7 @@ static CGContextRef CreateCGContext(const LayoutDeviceIntSize& aSize) {
   return ctx;
 }
 
-LayoutDeviceIntSize TextureSizeForSize(const LayoutDeviceIntSize& aSize) {
+static LayoutDeviceIntSize TextureSizeForSize(const LayoutDeviceIntSize& aSize) {
   return LayoutDeviceIntSize(RoundUpPow2(aSize.width), RoundUpPow2(aSize.height));
 }
 
