@@ -12,6 +12,17 @@ execution of documents running in web content, instrument Gecko in
 interesting ways, simulate user interaction for automation purposes,
 and debug JavaScript execution.
 
+Users
+=====
+
+.. toctree::
+  :maxdepth: 1
+
+  Usage.md
+  Prefs.md
+
+Developers
+==========
 
 .. toctree::
   :maxdepth: 1
