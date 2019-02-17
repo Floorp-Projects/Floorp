@@ -6,9 +6,10 @@ To build it, put this in your [mozconfig]:
 
 	ac_add_options --enable-cdp
 
-This exposes a --debug flag you can use to start the remote agent:
+This exposes a `--remote-debugger` flag you can use to start the
+remote agent:
 
-	% ./mach run --setpref "browser.fission.simulate=true" -- --debug
+	% ./mach run --setpref "browser.fission.simulate=true" -- --remote-debugger
 
 When you make changes to the XPCOM component you need to rebuild
 in order for the changes to take effect.  The most efficient way to
