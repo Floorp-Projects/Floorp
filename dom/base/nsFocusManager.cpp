@@ -2844,7 +2844,8 @@ nsresult nsFocusManager::DetermineElementToMoveFocus(
 }
 
 static bool IsHostOrSlot(const nsIContent* aContent) {
-  return aContent->GetShadowRoot() || aContent->IsHTMLElement(nsGkAtoms::slot);
+  return aContent && (aContent->GetShadowRoot() ||
+                      aContent->IsHTMLElement(nsGkAtoms::slot));
 }
 
 // Helper class to iterate contents in scope by traversing flattened tree
