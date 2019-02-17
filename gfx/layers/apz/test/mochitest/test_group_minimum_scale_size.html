@@ -30,13 +30,6 @@ const prefs = [
   // Pinch-zooming currently requires meta viewport support (this requirement
   // will eventually be removed).
   ["dom.meta-viewport.enabled", true],
-  // Pinch-zooming currently requires container scrolling (this requirement
-  // will eventually be removed).
-  ["layout.scroll.root-frame-containers", 1],
-  // Retained displaylists don't work well with container scrolling, so
-  // they too need to be disabled for now.
-  ["layout.display-list.retain", false],
-  ["layout.display-list.retain.chrome", false],
   // We use the Visual Viewport API to tell the visual viewport offset.
   ["dom.visualviewport.enabled", true],
 ];
