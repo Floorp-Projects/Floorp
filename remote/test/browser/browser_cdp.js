@@ -3,6 +3,8 @@
 
 "use strict";
 
+/* global getCDP */
+
 // Test very basic CDP features.
 
 const TEST_URI = "data:text/html;charset=utf-8,default-test-page";
@@ -26,7 +28,7 @@ add_task(async function() {
       return list.find(target => {
         return target.url == TEST_URI;
       });
-    }
+    },
   });
   ok(true, "CDP client has been instantiated");
 
@@ -41,7 +43,7 @@ add_task(async function() {
 
   Log.entryAdded(({entry}) => {
     const {timestamp, level, text, args} = entry;
-    const msg = text || args.join(" ");
+    const msg = text || args.join(" ");
     console.log(`${new Date(timestamp)}\t${level.toUpperCase()}\t${msg}`);
   });
 
