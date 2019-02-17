@@ -18,6 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   RecommendedPreferences: "chrome://remote/content/Prefs.jsm",
   TabObserver: "chrome://remote/content/WindowManager.jsm",
   Target: "chrome://remote/content/Target.jsm",
+  Targets: "chrome://remote/content/Targets.jsm",
   TargetListHandler: "chrome://remote/content/Handler.jsm",
 });
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
@@ -191,72 +192,6 @@ class ParentRemoteAgent {
 
   get QueryInterface() {
     return ChromeUtils.generateQI([Ci.nsICommandLineHandler]);
-  }
-}
-
-class Targets {
-  constructor() {
-    // browser context ID -> Target<XULElement>
-    this._targets = new Map();
-  }
-
-  /** @param BrowserElement browser */
-  async connect(browser) {
-    // The tab may just have been created and not fully initialized yet.
-    // Target class expects BrowserElement.browsingContext to be defined
-    // whereas it is asynchronously set by the custom element class.
-    // At least ensure that this property is set before instantiating the target.
-    if (!browser.browsingContext) {
-      await new Promise(resolve => {
-        const onInit = () => {
-          browser.messageManager.removeMessageListener("Browser:Init", onInit);
-          resolve();
-        };
-        browser.messageManager.addMessageListener("Browser:Init", onInit);
-      });
-    }
-    const target = new Target(browser);
-
-    target.connect();
-    this._targets.set(target.id, target);
-  }
-
-  /** @param BrowserElement browser */
-  disconnect(browser) {
-    // Ignore the browsers that haven't had time to initialize.
-    if (!browser.browsingContext) {
-      return;
-    }
-    let target = this._targets.get(browser.browsingContext.id);
-
-    if (target) {
-      target.disconnect();
-      this._targets.delete(target.id);
-    }
-  }
-
-  clear() {
-    for (const target of this) {
-      this.disconnect(target.browser);
-    }
-  }
-
-  get size() {
-    return this._targets.size;
-  }
-
-  * [Symbol.iterator]() {
-    for (const target of this._targets.values()) {
-      yield target;
-    }
-  }
-
-  toJSON() {
-    return [...this];
-  }
-
-  toString() {
-    return `[object Targets ${this.size}]`;
   }
 }
 
