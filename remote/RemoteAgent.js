@@ -131,27 +131,40 @@ class ParentRemoteAgent {
   // nsICommandLineHandler
 
   async handle(cmdLine) {
-    let flag;
-    try {
-      flag = cmdLine.handleFlagWithParam("debug", false);
-    } catch (e) {
-      flag = cmdLine.handleFlag("debug", false);
+    function flag(name) {
+      const caseSensitive = true;
+      try {
+        return cmdLine.handleFlagWithParam(name, caseSensitive);
+      } catch (e) {
+        return cmdLine.handleFlag(name, caseSensitive);
+      }
     }
 
-    if (!flag) {
+    const remoteDebugger = flag("remote-debugger");
+    const remoteDebuggingPort = flag("remote-debugging-port");
+
+    if (remoteDebugger && remoteDebuggingPort) {
+      log.fatal("Conflicting flags --remote-debugger and --remote-debugging-port");
+      cmdLine.preventDefault = true;
+      return;
+    }
+
+    if (!remoteDebugger && !remoteDebuggingPort) {
       return;
     }
 
     let host, port;
-    if (typeof flag == "string") {
-      [host, port] = flag.split(":");
+    if (typeof remoteDebugger == "string") {
+      [host, port] = remoteDebugger.split(":");
+    } else if (typeof remoteDebuggingPort == "string") {
+      port = remoteDebuggingPort;
     }
 
     let addr;
     try {
       addr = NetUtil.newURI(`http://${host || DEFAULT_HOST}:${port || DEFAULT_PORT}/`);
     } catch (e) {
-      log.fatal(`Expected address syntax [<host>]:<port>: ${flag}`);
+      log.fatal(`Expected address syntax [<host>]:<port>: ${remoteDebugger || remoteDebuggingPort}`);
       cmdLine.preventDefault = true;
       return;
     }
@@ -169,17 +182,15 @@ class ParentRemoteAgent {
   }
 
   get helpInfo() {
-    return "  --debug [<host>][:<port>] Start the Firefox remote agent, which is a low-level\n" +
-           "                     debugging interface based on the CDP protocol.  Defaults to\n" +
-           "                     listen on port 9222.\n";
+    return "  --remote-debugger [<host>][:<port>] Start the Firefox remote agent, which is \n" +
+           "                     a low-level debugging interface based on the CDP protocol.\n" +
+           "                     Defaults to listen on port 9222.\n";
   }
 
   // XPCOM
 
   get QueryInterface() {
-    return ChromeUtils.generateQI([
-      Ci.nsICommandLineHandler,
-    ]);
+    return ChromeUtils.generateQI([Ci.nsICommandLineHandler]);
   }
 }
 
