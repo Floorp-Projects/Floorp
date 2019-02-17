@@ -1,7 +1,7 @@
 # This make file should be identical to the beta mozconfig, apart from the
 # safeguard below
 
-export MOZ_PGO=1
+. "$topsrcdir/build/mozconfig.pgo"
 
 . "$topsrcdir/browser/config/mozconfigs/linux64/common-opt"
 
