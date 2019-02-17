@@ -9,7 +9,7 @@
 namespace mozilla {
 namespace layers {
 
-void TryCircle(double centerX, double centerY, double radius) {
+static void TryCircle(double centerX, double centerY, double radius) {
   printf("TestCairo:TryArcs centerY %f, radius %f\n", centerY, radius);
 
   cairo_surface_t *surf =
