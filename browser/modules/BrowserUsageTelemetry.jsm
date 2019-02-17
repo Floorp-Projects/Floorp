@@ -96,7 +96,6 @@ const URLBAR_SELECTED_RESULT_METHODS = {
   rightClickEnter: 5,
 };
 
-
 const MINIMUM_TAB_COUNT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes, in ms
 
 function getOpenTabsAndWinsCounts() {
@@ -578,7 +577,8 @@ let BrowserUsageTelemetry = {
   },
 
   /**
-   * Records the method by which the user selected a urlbar result.
+   * Records the method by which the user selected a urlbar result for the
+   * legacy urlbar.
    *
    * @param {Event} event
    *        The event that triggered the selection.
@@ -586,7 +586,7 @@ let BrowserUsageTelemetry = {
    *        How the user cycled through results before picking the current match.
    *        Could be one of "tab", "arrow" or "none".
    */
-  recordUrlbarSelectedResultMethod(event, userSelectionBehavior = "none") {
+  recordLegacyUrlbarSelectedResultMethod(event, userSelectionBehavior = "none") {
     // The reason this method relies on urlbarListener instead of having the
     // caller pass in an index is that by the time the urlbar handles a
     // selection, the selection in its popup has been cleared, so it's not easy
@@ -596,6 +596,34 @@ let BrowserUsageTelemetry = {
 
     this._recordUrlOrSearchbarSelectedResultMethod(
       event, urlbarListener.selectedIndex,
+      "FX_URLBAR_SELECTED_RESULT_METHOD",
+      userSelectionBehavior
+    );
+  },
+
+  /**
+   * Records the method by which the user selected a urlbar result for the
+   * legacy urlbar.
+   *
+   * @param {Event} event
+   *        The event that triggered the selection.
+   * @param {number} index
+   *        The index that the user chose in the popup, or -1 if there wasn't a
+   *        selection.
+   * @param {string} userSelectionBehavior
+   *        How the user cycled through results before picking the current match.
+   *        Could be one of "tab", "arrow" or "none".
+   */
+  recordUrlbarSelectedResultMethod(event, index, userSelectionBehavior = "none") {
+    // The reason this method relies on urlbarListener instead of having the
+    // caller pass in an index is that by the time the urlbar handles a
+    // selection, the selection in its popup has been cleared, so it's not easy
+    // to tell which popup index was selected.  Fortunately this file already
+    // has urlbarListener, which gets notified of selections in the urlbar
+    // before the popup selection is cleared, so just use that.
+
+    this._recordUrlOrSearchbarSelectedResultMethod(
+      event, index,
       "FX_URLBAR_SELECTED_RESULT_METHOD",
       userSelectionBehavior
     );
