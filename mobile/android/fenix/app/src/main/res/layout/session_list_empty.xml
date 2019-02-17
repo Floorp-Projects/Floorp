@@ -12,9 +12,8 @@
 
     <ImageView
         android:id="@+id/imageView"
-        android:layout_width="44dp"
-        android:layout_height="60dp"
-        android:gravity="center_vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:src="@drawable/ic_sessions_intro"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -24,13 +23,13 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="23dp"
         android:ellipsize="none"
-        android:gravity="center_vertical"
         android:scrollHorizontally="false"
         android:text="@string/sessions_intro_description"
         android:textColor="@color/session_list_empty_fg"
         android:textSize="16sp"
-        app:layout_constraintBottom_toBottomOf="@id/imageView"
+        app:layout_constraintVertical_bias="0"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/imageView"
-        app:layout_constraintTop_toTopOf="@id/imageView" />
+        app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>
