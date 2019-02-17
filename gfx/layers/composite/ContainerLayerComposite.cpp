@@ -25,10 +25,11 @@
 #include "mozilla/layers/TextureHost.h"      // for CompositingRenderTarget
 #include "mozilla/layers/AsyncCompositionManager.h"  // for ViewTransform
 #include "mozilla/layers/LayerMetricsWrapper.h"      // for LayerMetricsWrapper
-#include "mozilla/mozalloc.h"                        // for operator delete, etc
-#include "mozilla/RefPtr.h"                          // for nsRefPtr
-#include "nsDebug.h"                                 // for NS_ASSERTION
-#include "nsISupportsImpl.h"                         // for MOZ_COUNT_CTOR, etc
+#include "mozilla/layers/LayersHelpers.h"
+#include "mozilla/mozalloc.h"  // for operator delete, etc
+#include "mozilla/RefPtr.h"    // for nsRefPtr
+#include "nsDebug.h"           // for NS_ASSERTION
+#include "nsISupportsImpl.h"   // for MOZ_COUNT_CTOR, etc
 #include "nsISupportsUtils.h"  // for NS_ADDREF, NS_RELEASE
 #include "nsRegion.h"          // for nsIntRegion
 #include "nsTArray.h"          // for AutoTArray
