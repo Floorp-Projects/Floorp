@@ -107,9 +107,9 @@ add_task(async function inputDoesntMatchHeuristicResult() {
     () => EventUtils.synthesizeKey("KEY_Escape"));
 
   // Manually set the urlbar value to a string that contains the alias at the
-  // beginning but is not the same as the search string.
-  let value = `${ALIAS} xxx`;
-  gURLBar.value = `${ALIAS} xxx`;
+  // beginning but is not the alias.
+  let value = `${ALIAS}xxx`;
+  gURLBar.value = `${ALIAS}xxx`;
 
   // The alias substring should not be highlighted.
   Assert.equal(gURLBar.value, value);
@@ -215,7 +215,7 @@ add_task(async function nonTokenAlias() {
 
 // Clicking on an @ alias in the popup should fill it in the urlbar input.
 add_task(async function clickAndFillAlias() {
-  // TODO Bug 1524714 - This currently isn't working correctly in QuantumBar.
+  // TODO Bug 1525487 - This currently isn't working correctly in QuantumBar.
   if (UrlbarPrefs.get("quantumbar")) {
     return;
   }
@@ -337,10 +337,6 @@ async function assertFirstResultIsAlias(isAlias, expectedAlias) {
 }
 
 function assertHighlighted(highlighted, expectedAlias) {
-  // TODO Bug 1499648 - These tests don't currently work in QuantumBar.
-  if (UrlbarPrefs.get("quantumbar")) {
-    return;
-  }
   let selection = gURLBar.editor.selectionController.getSelection(
     Ci.nsISelectionController.SELECTION_FIND
   );

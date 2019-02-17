@@ -174,8 +174,10 @@ class UrlbarView {
       fragment.appendChild(this._createRow(resultIndex));
     }
 
+    let isFirstPreselectedResult = false;
     if (queryContext.lastResultCount == 0) {
       if (queryContext.preselected) {
+        isFirstPreselectedResult = true;
         this._selectItem(fragment.firstElementChild, false);
       } else {
         // Clear the selection when we get a new set of results.
@@ -204,6 +206,13 @@ class UrlbarView {
     this._rows.appendChild(fragment);
 
     this._openPanel();
+
+    if (isFirstPreselectedResult) {
+      // The first, preselected result may be a search alias result, so apply
+      // formatting if necessary.  Conversely, the first result of the previous
+      // query may have been an alias, so remove formatting if necessary.
+      this.input.formatValue();
+    }
   }
 
   /**
