@@ -55,7 +55,8 @@ void do_test_finished() {
 void disable_idle_service() {
   (void)fprintf(stderr, TEST_INFO_STR "Disabling Idle Service.\n");
 
-  nsCOMPtr<nsIIdleService> idle = do_GetService("@mozilla.org/widget/idleservice;1");
+  nsCOMPtr<nsIIdleService> idle =
+      do_GetService("@mozilla.org/widget/idleservice;1");
   idle->SetDisabled(true);
 }
 

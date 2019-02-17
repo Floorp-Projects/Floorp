@@ -104,43 +104,43 @@ using JS::IsAcceptableThis;
 using JS::NativeImpl;
 
 using JS::Rooted;
+using JS::RootedBigInt;
 using JS::RootedFunction;
 using JS::RootedId;
 using JS::RootedObject;
 using JS::RootedScript;
 using JS::RootedString;
 using JS::RootedSymbol;
-using JS::RootedBigInt;
 using JS::RootedValue;
 
 using JS::PersistentRooted;
+using JS::PersistentRootedBigInt;
 using JS::PersistentRootedFunction;
 using JS::PersistentRootedId;
 using JS::PersistentRootedObject;
 using JS::PersistentRootedScript;
 using JS::PersistentRootedString;
 using JS::PersistentRootedSymbol;
-using JS::PersistentRootedBigInt;
 using JS::PersistentRootedValue;
 
 using JS::Handle;
+using JS::HandleBigInt;
 using JS::HandleFunction;
 using JS::HandleId;
 using JS::HandleObject;
 using JS::HandleScript;
 using JS::HandleString;
 using JS::HandleSymbol;
-using JS::HandleBigInt;
 using JS::HandleValue;
 
 using JS::MutableHandle;
+using JS::MutableHandleBigInt;
 using JS::MutableHandleFunction;
 using JS::MutableHandleId;
 using JS::MutableHandleObject;
 using JS::MutableHandleScript;
 using JS::MutableHandleString;
 using JS::MutableHandleSymbol;
-using JS::MutableHandleBigInt;
 using JS::MutableHandleValue;
 
 using JS::FalseHandleValue;

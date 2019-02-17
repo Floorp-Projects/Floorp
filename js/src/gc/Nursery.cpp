@@ -1103,8 +1103,10 @@ MOZ_ALWAYS_INLINE void js::Nursery::setCurrentChunk(unsigned chunkno,
 }
 
 MOZ_ALWAYS_INLINE void js::Nursery::setCurrentEnd() {
-  MOZ_ASSERT_IF(isSubChunkMode(), currentChunk_ == 0 && currentEnd_ <= chunk(0).end());
-  currentEnd_ = chunk(currentChunk_).start() + Min(capacity_, NurseryChunkUsableSize);
+  MOZ_ASSERT_IF(isSubChunkMode(),
+                currentChunk_ == 0 && currentEnd_ <= chunk(0).end());
+  currentEnd_ =
+      chunk(currentChunk_).start() + Min(capacity_, NurseryChunkUsableSize);
   if (canAllocateStrings_) {
     currentStringEnd_ = currentEnd_;
   }
@@ -1168,7 +1170,8 @@ void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
     if (maxChunkCount() > newMaxNurseryChunks) {
       /* We need to shrink the nursery */
       static_assert(NurseryChunkUsableSize < ChunkSize,
-          "Usable size must be smaller than total size or this calculation might overflow");
+                    "Usable size must be smaller than total size or this "
+                    "calculation might overflow");
       shrinkAllocableSpace(newMaxNurseryChunks * NurseryChunkUsableSize);
       return;
     }
@@ -1195,10 +1198,12 @@ void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
   // seeking says the current size is ideal.
   if (maxChunkCount() < chunkCountLimit() && promotionRate > GrowThreshold) {
     unsigned lowLimit = capacity() + SubChunkStep;
-    unsigned highLimit = Min(chunkCountLimit() * NurseryChunkUsableSize, capacity() * 2);
+    unsigned highLimit =
+        Min(chunkCountLimit() * NurseryChunkUsableSize, capacity() * 2);
 
     growAllocableSpace(mozilla::Clamp(newCapacity, lowLimit, highLimit));
-  } else if (capacity() >= SubChunkLimit + SubChunkStep && promotionRate < ShrinkThreshold) {
+  } else if (capacity() >= SubChunkLimit + SubChunkStep &&
+             promotionRate < ShrinkThreshold) {
     unsigned lowLimit = Max(SubChunkLimit, capacity() / 2);
     unsigned highLimit = capacity() - SubChunkStep;
 
@@ -1207,14 +1212,17 @@ void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
 
   // Assert that the limits are set such that we can shrink the nursery below
   // one chunk.
-  static_assert(SubChunkLimit + SubChunkStep < NurseryChunkUsableSize,
+  static_assert(
+      SubChunkLimit + SubChunkStep < NurseryChunkUsableSize,
       "Nursery limit must be at least one step from the full chunk size");
 }
 
 void js::Nursery::growAllocableSpace(unsigned newCapacity) {
-  MOZ_ASSERT_IF(!isSubChunkMode(), newCapacity > currentChunk_ * NurseryChunkUsableSize);
+  MOZ_ASSERT_IF(!isSubChunkMode(),
+                newCapacity > currentChunk_ * NurseryChunkUsableSize);
   if (isSubChunkMode()) {
-    capacity_ = Min(JS_ROUNDUP(newCapacity, SubChunkStep), NurseryChunkUsableSize);
+    capacity_ =
+        Min(JS_ROUNDUP(newCapacity, SubChunkStep), NurseryChunkUsableSize);
   } else {
     capacity_ = JS_ROUNDUP(newCapacity, NurseryChunkUsableSize);
   }
@@ -1240,8 +1248,9 @@ void js::Nursery::shrinkAllocableSpace(unsigned newCapacity) {
   }
 #endif
 
-  unsigned stepSize = newCapacity < NurseryChunkUsableSize ? SubChunkStep :
-    NurseryChunkUsableSize;
+  unsigned stepSize = newCapacity < NurseryChunkUsableSize
+                          ? SubChunkStep
+                          : NurseryChunkUsableSize;
   newCapacity -= newCapacity % stepSize;
   // Don't shrink the nursery to zero (use Nursery::disable() instead)
   // This can't happen due to the rounding-down performed above because of the

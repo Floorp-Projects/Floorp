@@ -211,10 +211,10 @@ void loopy() {
 }
 
 namespace mozilla {
-template<typename T>
-class UniquePtr
-{
+template <typename T>
+class UniquePtr {
   T* val;
+
  public:
   UniquePtr() : val(nullptr) { asm(""); }
   UniquePtr(T* p) : val(p) {}
@@ -223,7 +223,7 @@ class UniquePtr
   T* get() { return val; }
   void reset() { val = nullptr; }
 } ANNOTATE("moz_inherit_type_annotations_from_template_args");
-} // namespace mozilla
+}  // namespace mozilla
 
 extern void consume(mozilla::UniquePtr<Cell> uptr);
 

@@ -7,12 +7,10 @@
 #include "nsFrameLoaderOwner.h"
 #include "nsFrameLoader.h"
 
-already_AddRefed<nsFrameLoader> nsFrameLoaderOwner::GetFrameLoader()
-{
+already_AddRefed<nsFrameLoader> nsFrameLoaderOwner::GetFrameLoader() {
   return do_AddRef(mFrameLoader);
 }
 
-void nsFrameLoaderOwner::SetFrameLoader(nsFrameLoader* aNewFrameLoader)
-{
+void nsFrameLoaderOwner::SetFrameLoader(nsFrameLoader* aNewFrameLoader) {
   mFrameLoader = aNewFrameLoader;
 }

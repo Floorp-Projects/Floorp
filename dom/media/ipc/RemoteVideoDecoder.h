@@ -23,8 +23,7 @@ class RemoteVideoDecoderChild final : public RemoteDecoderChild {
   explicit RemoteVideoDecoderChild();
 
   MOZ_IS_CLASS_INIT
-  MediaResult InitIPDL(const VideoInfo& aVideoInfo,
-                       float aFramerate,
+  MediaResult InitIPDL(const VideoInfo& aVideoInfo, float aFramerate,
                        const CreateDecoderParams::OptionSet& aOptions);
 
   IPCResult RecvOutput(const DecodedOutputIPDL& aDecodedData) override;
@@ -39,12 +38,10 @@ class RemoteVideoDecoderChild final : public RemoteDecoderChild {
 class RemoteVideoDecoderParent final : public RemoteDecoderParent {
  public:
   RemoteVideoDecoderParent(RemoteDecoderManagerParent* aParent,
-                           const VideoInfo& aVideoInfo,
-                           float aFramerate,
+                           const VideoInfo& aVideoInfo, float aFramerate,
                            const CreateDecoderParams::OptionSet& aOptions,
                            TaskQueue* aManagerTaskQueue,
-                           TaskQueue* aDecodeTaskQueue,
-                           bool* aSuccess,
+                           TaskQueue* aDecodeTaskQueue, bool* aSuccess,
                            nsCString* aErrorDescription);
 
  protected:

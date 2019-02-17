@@ -1032,9 +1032,8 @@ class FunctionCompiler {
     }
 
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Dynamic);
-    auto* ins =
-        MWasmCall::New(alloc(), desc, callee, call.regArgs_,
-                       ToMIRType(funcType.ret()), index);
+    auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_,
+                               ToMIRType(funcType.ret()), index);
     if (!ins) {
       return false;
     }
@@ -1075,8 +1074,8 @@ class FunctionCompiler {
 
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Symbolic);
     auto callee = CalleeDesc::builtin(builtin);
-    auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_,
-                               ToMIRType(ret));
+    auto* ins =
+        MWasmCall::New(alloc(), desc, callee, call.regArgs_, ToMIRType(ret));
     if (!ins) {
       return false;
     }
@@ -2759,8 +2758,8 @@ static bool EmitWake(FunctionCompiler& f) {
   }
 
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(SymbolicAddress::Wake, lineOrBytecode,
-                                   args, ValType::I32, &ret)) {
+  if (!f.builtinInstanceMethodCall(SymbolicAddress::Wake, lineOrBytecode, args,
+                                   ValType::I32, &ret)) {
     return false;
   }
 

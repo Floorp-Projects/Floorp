@@ -1747,7 +1747,7 @@ mozilla::ipc::IPCResult TabParent::RecvShowTooltip(const uint32_t& aX,
   // BoxObject). However, to get it to JS, we need to make sure we're a
   // nsFrameLoaderOwner, which implies we're a XULFrameElement. We can then
   // safely pass Element into JS.
-  RefPtr<nsFrameLoaderOwner> flo  = do_QueryObject(mFrameElement);
+  RefPtr<nsFrameLoaderOwner> flo = do_QueryObject(mFrameElement);
   if (!flo) return IPC_OK();
 
   nsCOMPtr<Element> el = do_QueryInterface(flo);
@@ -2468,8 +2468,7 @@ already_AddRefed<nsFrameLoader> TabParent::GetFrameLoader(
     RefPtr<nsFrameLoader> fl = mFrameLoader;
     return fl.forget();
   }
-  RefPtr<nsFrameLoaderOwner> frameLoaderOwner =
-      do_QueryObject(mFrameElement);
+  RefPtr<nsFrameLoaderOwner> frameLoaderOwner = do_QueryObject(mFrameElement);
   return frameLoaderOwner ? frameLoaderOwner->GetFrameLoader() : nullptr;
 }
 
@@ -3453,7 +3452,7 @@ mozilla::ipc::IPCResult TabParent::RecvGetSystemFont(nsCString* aFontName) {
 }
 
 mozilla::ipc::IPCResult TabParent::RecvRootBrowsingContext(
-  BrowsingContext* aBrowsingContext) {
+    BrowsingContext* aBrowsingContext) {
   MOZ_ASSERT(!mBrowsingContext, "May only set browsing context once!");
   mBrowsingContext = CanonicalBrowsingContext::Cast(aBrowsingContext);
   MOZ_ASSERT(mBrowsingContext, "Invalid ID!");

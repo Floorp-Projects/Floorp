@@ -19,7 +19,5 @@
 #include "wasm/WasmGC.h"
 
 namespace js {
-namespace wasm {
-
-}  // namespace wasm
+namespace wasm {}  // namespace wasm
 }  // namespace js

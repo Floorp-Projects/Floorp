@@ -167,7 +167,7 @@ END_TEST(testGCRootedHashMap)
 // Repeat of the test above, but without rooting. This is a rooting hazard. The
 // JS_EXPECT_HAZARDS annotation will cause the hazard taskcluster job to fail
 // if the hazard below is *not* detected.
-BEGIN_TEST_WITH_ATTRIBUTES(testUnrootedGCHashMap,JS_EXPECT_HAZARDS) {
+BEGIN_TEST_WITH_ATTRIBUTES(testUnrootedGCHashMap, JS_EXPECT_HAZARDS) {
   MyHashMap map(cx, 15);
 
   for (size_t i = 0; i < 10; ++i) {
@@ -426,9 +426,9 @@ BEGIN_TEST(testGCHandleVector) {
 END_TEST(testGCHandleVector)
 
 class Foo {
-  public:
-   Foo(int, int) {}
-   void trace(JSTracer*) {}
+ public:
+  Foo(int, int) {}
+  void trace(JSTracer*) {}
 };
 
 using FooVector = JS::GCVector<Foo>;

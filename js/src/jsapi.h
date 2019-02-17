@@ -965,8 +965,7 @@ class JS_PUBLIC_API RealmCreationOptions {
         streams_(false),
         bigint_(false),
         secureContext_(false),
-        clampAndJitterTime_(true) {
-  }
+        clampAndJitterTime_(true) {}
 
   JSTraceOp getTrace() const { return traceGlobal_; }
   RealmCreationOptions& setTrace(JSTraceOp op) {

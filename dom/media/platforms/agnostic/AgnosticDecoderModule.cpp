@@ -25,7 +25,8 @@ bool AgnosticDecoderModule::SupportsMimeType(
   bool supports =
       VPXDecoder::IsVPX(aMimeType) || OpusDataDecoder::IsOpus(aMimeType) ||
       WaveDataDecoder::IsWave(aMimeType) || TheoraDecoder::IsTheora(aMimeType);
-  if (!StaticPrefs::MediaRddVorbisEnabled() || !StaticPrefs::MediaRddProcessEnabled()) {
+  if (!StaticPrefs::MediaRddVorbisEnabled() ||
+      !StaticPrefs::MediaRddProcessEnabled()) {
     supports |= VorbisDataDecoder::IsVorbis(aMimeType);
   }
 #ifdef MOZ_AV1

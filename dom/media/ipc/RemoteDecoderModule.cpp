@@ -45,8 +45,8 @@ bool RemoteDecoderModule::SupportsMimeType(
   return supports;
 }
 
-already_AddRefed<MediaDataDecoder>
-RemoteDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams) {
+already_AddRefed<MediaDataDecoder> RemoteDecoderModule::CreateAudioDecoder(
+    const CreateDecoderParams& aParams) {
   if (XRE_IsContentProcess()) {
     ContentChild* contentChild = ContentChild::GetSingleton();
     contentChild->LaunchRDDProcess();

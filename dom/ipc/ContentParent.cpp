@@ -4755,8 +4755,7 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
     nsCOMPtr<Element> frameElement =
         TabParent::GetFrom(aNewTabParent)->GetOwnerElement();
     MOZ_ASSERT(frameElement);
-    RefPtr<nsFrameLoaderOwner> frameLoaderOwner =
-        do_QueryObject(frameElement);
+    RefPtr<nsFrameLoaderOwner> frameLoaderOwner = do_QueryObject(frameElement);
     MOZ_ASSERT(frameLoaderOwner);
     RefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
     MOZ_ASSERT(frameLoader);
