@@ -153,10 +153,10 @@ bool TiledContentHost::UseTiledLayerBuffer(
   return true;
 }
 
-void UseTileTexture(CompositableTextureHostRef& aTexture,
-                    CompositableTextureSourceRef& aTextureSource,
-                    const IntRect& aUpdateRect,
-                    TextureSourceProvider* aProvider) {
+static void UseTileTexture(CompositableTextureHostRef& aTexture,
+                           CompositableTextureSourceRef& aTextureSource,
+                           const IntRect& aUpdateRect,
+                           TextureSourceProvider* aProvider) {
   MOZ_ASSERT(aTexture);
   if (!aTexture) {
     return;

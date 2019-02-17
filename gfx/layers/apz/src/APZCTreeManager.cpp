@@ -1760,7 +1760,7 @@ nsEventStatus APZCTreeManager::ProcessTouchInput(
   return result;
 }
 
-MouseInput::MouseType MultiTouchTypeToMouseType(
+static MouseInput::MouseType MultiTouchTypeToMouseType(
     MultiTouchInput::MultiTouchType aType) {
   switch (aType) {
     case MultiTouchInput::MULTITOUCH_START:
