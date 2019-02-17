@@ -36,7 +36,9 @@ class CurrentSessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutCon
         }
 
         view.delete_session_button.setOnClickListener {
-            requireComponents.core.sessionManager.removeAll()
+            sessions.forEach {
+                requireComponents.core.sessionManager.remove(it)
+            }
             dismiss()
         }
         return view
