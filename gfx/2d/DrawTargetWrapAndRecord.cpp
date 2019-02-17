@@ -23,7 +23,7 @@ struct WrapAndRecordSourceSurfaceUserData {
   RefPtr<DrawEventRecorderPrivate> recorder;
 };
 
-void WrapAndRecordSourceSurfaceUserDataFunc(void *aUserData) {
+static void WrapAndRecordSourceSurfaceUserDataFunc(void *aUserData) {
   WrapAndRecordSourceSurfaceUserData *userData =
       static_cast<WrapAndRecordSourceSurfaceUserData *>(aUserData);
 
@@ -355,7 +355,7 @@ struct WrapAndRecordFontUserData {
   RefPtr<DrawEventRecorderPrivate> recorder;
 };
 
-void WrapAndRecordFontUserDataDestroyFunc(void *aUserData) {
+static void WrapAndRecordFontUserDataDestroyFunc(void *aUserData) {
   WrapAndRecordFontUserData *userData =
       static_cast<WrapAndRecordFontUserData *>(aUserData);
 
