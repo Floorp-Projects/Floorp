@@ -184,7 +184,7 @@ class ParentRemoteAgent {
   get helpInfo() {
     return "  --remote-debugger [<host>][:<port>] Start the Firefox remote agent, which is \n" +
            "                     a low-level debugging interface based on the CDP protocol.\n" +
-           "                     Defaults to listen on port 9222.\n";
+           "                     Defaults to listen on localhost:9222.\n";
   }
 
   // XPCOM
