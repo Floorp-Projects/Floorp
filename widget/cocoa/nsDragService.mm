@@ -36,8 +36,6 @@ using namespace mozilla::gfx;
 
 extern mozilla::LazyLogModule sCocoaLog;
 
-extern void EnsureLogInitialized();
-
 extern NSPasteboard* globalDragPboard;
 extern ChildView* gLastDragView;
 extern NSEvent* gLastDragMouseDownEvent;
@@ -56,7 +54,6 @@ NSString* const kMozFileUrlsPboardType = @"org.mozilla.file-urls";
 
 nsDragService::nsDragService()
     : mNativeDragView(nil), mNativeDragEvent(nil), mDragImageChanged(false) {
-  EnsureLogInitialized();
 }
 
 nsDragService::~nsDragService() {}
