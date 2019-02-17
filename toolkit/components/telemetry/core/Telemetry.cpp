@@ -2113,9 +2113,7 @@ void SetEventRecordingEnabled(const nsACString& aCategory, bool aEnabled) {
   TelemetryEvent::SetEventRecordingEnabled(aCategory, aEnabled);
 }
 
-void ShutdownTelemetry() {
-  TelemetryImpl::ShutdownTelemetry();
-}
+void ShutdownTelemetry() { TelemetryImpl::ShutdownTelemetry(); }
 
 }  // namespace Telemetry
 }  // namespace mozilla
