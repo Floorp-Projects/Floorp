@@ -32,7 +32,7 @@ const PORT = `${HTTPD}.port`;
 
 const DEFAULT_HOST = "localhost";
 const DEFAULT_PORT = 9222;
-const LOOPBACKS = ["localhost", "127.0.0.1", "::1"];
+const LOOPBACKS = ["localhost", "127.0.0.1", "[::1]"];
 
 class ParentRemoteAgent {
   constructor() {
