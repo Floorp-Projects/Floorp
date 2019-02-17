@@ -19,6 +19,14 @@ add_task(async function init() {
     gURLBar.handleRevert();
     await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
   });
+
+  // Search results aren't shown in quantumbar unless search suggestions are
+  // enabled.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.suggest.searches", true],
+    ],
+  });
 });
 
 
@@ -165,14 +173,6 @@ add_task(async function nonHeuristicAliases() {
   info("Got token alias engines: " +
        tokenEngines.map(({ engine }) => engine.name));
 
-  // Search results, including these search alias results, aren't shown in
-  // quantumbar unless search suggestions are enabled.
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.suggest.searches", true],
-    ],
-  });
-
   // Populate the results with the list of token alias engines by searching for
   // "@".
   gURLBar.search("@");
@@ -188,8 +188,6 @@ add_task(async function nonHeuristicAliases() {
 
   await UrlbarTestUtils.promisePopupClose(window,
     () => EventUtils.synthesizeKey("KEY_Escape"));
-
-  await SpecialPowers.popPrefEnv();
 });
 
 
@@ -215,22 +213,17 @@ add_task(async function nonTokenAlias() {
 
 // Clicking on an @ alias in the popup should fill it in the urlbar input.
 add_task(async function clickAndFillAlias() {
-  // TODO Bug 1525487 - This currently isn't working correctly in QuantumBar.
-  if (UrlbarPrefs.get("quantumbar")) {
-    return;
-  }
   // Do a search for "@" to show all the @ aliases.
   gURLBar.search("@");
   await promiseSearchComplete();
 
-  // Find our test engine in the results.  It's probably last, but for test
+  // Find our test engine in the results.  It's probably last, but for
   // robustness don't assume it is.
   let testEngineItem;
   for (let i = 0; !testEngineItem; i++) {
-    let item = await waitForAutocompleteResultAt(i);
-    let action = PlacesUtils.parseActionUrl(item.getAttribute("url"));
-    if (action && action.params.alias == ALIAS) {
-      testEngineItem = item;
+    let details = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
+    if (details.searchParams && details.searchParams.keyword == ALIAS) {
+      testEngineItem = await waitForAutocompleteResultAt(i);
     }
   }
 
@@ -239,10 +232,9 @@ add_task(async function clickAndFillAlias() {
     EventUtils.synthesizeMouseAtCenter(testEngineItem, {});
   });
 
-  // The popup will close and then open again with the new search string, which
-  // should be the test alias.
+  // A new search will start and its result should be the alias.
   await promiseSearchComplete();
-  await promisePopupShown(gURLBar.popup);
+  await waitForAutocompleteResultAt(0);
   await assertAlias(true);
 
   // The urlbar input value should be the alias followed by a space so that it's
