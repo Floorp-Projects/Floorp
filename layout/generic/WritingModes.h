@@ -1983,7 +1983,8 @@ inline nsStyleCoord nsStyleSides::GetBEnd(mozilla::WritingMode aWM) const {
 inline const mozilla::StyleSize& nsStylePosition::ISize(WritingMode aWM) const {
   return aWM.IsVertical() ? mHeight : mWidth;
 }
-inline const mozilla::StyleSize& nsStylePosition::MinISize(WritingMode aWM) const {
+inline const mozilla::StyleSize& nsStylePosition::MinISize(
+    WritingMode aWM) const {
   return aWM.IsVertical() ? mMinHeight : mMinWidth;
 }
 inline const mozilla::StyleMaxSize& nsStylePosition::MaxISize(

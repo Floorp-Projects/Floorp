@@ -122,9 +122,10 @@ class TracingMarkerPayload : public ProfilerMarkerPayload {
 class DiskIOMarkerPayload : public ProfilerMarkerPayload {
  public:
   DiskIOMarkerPayload(const char* aOperation, const char* aSource,
-                  const char* aFilename, const mozilla::TimeStamp& aStartTime,
-                  const mozilla::TimeStamp& aEndTime,
-                  UniqueProfilerBacktrace aStack)
+                      const char* aFilename,
+                      const mozilla::TimeStamp& aStartTime,
+                      const mozilla::TimeStamp& aEndTime,
+                      UniqueProfilerBacktrace aStack)
       : ProfilerMarkerPayload(aStartTime, aEndTime, mozilla::Nothing(),
                               mozilla::Nothing(), std::move(aStack)),
         mSource(aSource),

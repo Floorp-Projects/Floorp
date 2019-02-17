@@ -147,11 +147,9 @@ void RemoteDecoderManagerParent::ActorDestroy(
   mThreadHolder = nullptr;
 }
 
-PRemoteDecoderParent*
-RemoteDecoderManagerParent::AllocPRemoteDecoderParent(
+PRemoteDecoderParent* RemoteDecoderManagerParent::AllocPRemoteDecoderParent(
     const RemoteDecoderInfoIPDL& aRemoteDecoderInfo,
-    const CreateDecoderParams::OptionSet& aOptions,
-    bool* aSuccess,
+    const CreateDecoderParams::OptionSet& aOptions, bool* aSuccess,
     nsCString* aErrorDescription) {
   RefPtr<TaskQueue> decodeTaskQueue =
       new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
@@ -161,22 +159,15 @@ RemoteDecoderManagerParent::AllocPRemoteDecoderParent(
       RemoteDecoderInfoIPDL::TVideoDecoderInfoIPDL) {
     const VideoDecoderInfoIPDL& decoderInfo =
         aRemoteDecoderInfo.get_VideoDecoderInfoIPDL();
-    return new RemoteVideoDecoderParent(this,
-                                        decoderInfo.videoInfo(),
-                                        decoderInfo.framerate(),
-                                        aOptions,
-                                        sRemoteDecoderManagerTaskQueue,
-                                        decodeTaskQueue,
-                                        aSuccess,
-                                        aErrorDescription);
+    return new RemoteVideoDecoderParent(
+        this, decoderInfo.videoInfo(), decoderInfo.framerate(), aOptions,
+        sRemoteDecoderManagerTaskQueue, decodeTaskQueue, aSuccess,
+        aErrorDescription);
   } else if (aRemoteDecoderInfo.type() == RemoteDecoderInfoIPDL::TAudioInfo) {
-    return new RemoteAudioDecoderParent(this,
-                                        aRemoteDecoderInfo.get_AudioInfo(),
-                                        aOptions,
-                                        sRemoteDecoderManagerTaskQueue,
-                                        decodeTaskQueue,
-                                        aSuccess,
-                                        aErrorDescription);
+    return new RemoteAudioDecoderParent(
+        this, aRemoteDecoderInfo.get_AudioInfo(), aOptions,
+        sRemoteDecoderManagerTaskQueue, decodeTaskQueue, aSuccess,
+        aErrorDescription);
   }
 
   MOZ_CRASH("unrecognized type of RemoteDecoderInfoIPDL union");
@@ -185,8 +176,7 @@ RemoteDecoderManagerParent::AllocPRemoteDecoderParent(
 
 bool RemoteDecoderManagerParent::DeallocPRemoteDecoderParent(
     PRemoteDecoderParent* actor) {
-  RemoteDecoderParent* parent =
-      static_cast<RemoteDecoderParent*>(actor);
+  RemoteDecoderParent* parent = static_cast<RemoteDecoderParent*>(actor);
   parent->Destroy();
   return true;
 }

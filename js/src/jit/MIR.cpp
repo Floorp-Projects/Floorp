@@ -5518,8 +5518,8 @@ MWasmCall* MWasmCall::NewBuiltinInstanceMethodCall(
     const wasm::SymbolicAddress builtin, const ABIArg& instanceArg,
     const Args& args, MIRType resultType) {
   auto callee = wasm::CalleeDesc::builtinInstanceMethod(builtin);
-  MWasmCall* call = MWasmCall::New(alloc, desc, callee, args, resultType,
-                                   nullptr);
+  MWasmCall* call =
+      MWasmCall::New(alloc, desc, callee, args, resultType, nullptr);
   if (!call) {
     return nullptr;
   }

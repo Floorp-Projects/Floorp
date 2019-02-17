@@ -1322,8 +1322,7 @@ nsresult Loader::LoadSheet(SheetLoadData* aLoadData,
 
     // snapshot the nonce at load start time for performing CSP checks
     if (contentPolicyType == nsIContentPolicy::TYPE_INTERNAL_STYLESHEET) {
-      nsCOMPtr<Element> element =
-          do_QueryInterface(aLoadData->mRequestingNode);
+      nsCOMPtr<Element> element = do_QueryInterface(aLoadData->mRequestingNode);
       if (element && element->IsHTMLElement()) {
         nsAutoString cspNonce;
         element->GetAttribute(NS_LITERAL_STRING("nonce"), cspNonce);
