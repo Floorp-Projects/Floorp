@@ -36,12 +36,23 @@ class ToolbarPresenter(
         initializeView()
     }
 
-    internal fun initializeView() {
-        activeSession?.let { session ->
-            toolbar.url = session.url
+    override fun onAllSessionsRemoved() {
+        initializeView()
+    }
 
-            updateToolbarSecurity(session.securityInfo)
+    override fun onSessionRemoved(session: Session) {
+        if (sessionManager.selectedSession == null) {
+            initializeView()
         }
+    }
+
+    internal fun initializeView() {
+        val session = sessionId?.let { sessionManager.findSessionById(sessionId) }
+            ?: sessionManager.selectedSession
+
+        toolbar.url = session?.url ?: ""
+        toolbar.displayProgress(session?.progress ?: 0)
+        updateToolbarSecurity(session?.securityInfo ?: Session.SecurityInfo())
     }
 
     override fun onUrlChanged(session: Session, url: String) {

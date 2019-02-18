@@ -15,6 +15,9 @@ permalink: /changelog/
 * **browser-toolbar**
   * Added option to configure fading edge length by using `browserToolbarFadingEdgeSize` XML attribute.
 
+* **feature-toolbar**
+  * `ToolbarPresenter` now handles situations where no `Session` is selected.
+
 # 0.43.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.42.0...v0.43.0)

@@ -13,6 +13,8 @@ import mozilla.components.support.test.mock
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.anyString
+import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 
 import org.mockito.Mockito.verify
@@ -74,5 +76,88 @@ class ToolbarPresenterTest {
         toolbarPresenter.onSecurityChanged(session, Session.SecurityInfo(false))
 
         verify(toolbar).siteSecure = Toolbar.SiteSecurity.INSECURE
+    }
+
+    @Test
+    fun `Toolbar displays empty state on start`() {
+        val toolbar: Toolbar = mock()
+        val sessionManager: SessionManager = mock()
+
+        val presenter = ToolbarPresenter(toolbar, sessionManager)
+        presenter.start()
+
+        verify(toolbar).url = ""
+        verify(toolbar).displayProgress(0)
+    }
+
+    @Test
+    fun `Toolbar gets cleared when all sessions get removed`() {
+        val toolbar: Toolbar = mock()
+
+        val sessionManager: SessionManager = mock()
+
+        val session = Session("https://www.mozilla.org")
+        doReturn(session).`when`(sessionManager).selectedSession
+
+        val presenter = ToolbarPresenter(toolbar, sessionManager)
+        presenter.start()
+
+        verify(toolbar).url = "https://www.mozilla.org"
+
+        doReturn(null).`when`(sessionManager).selectedSession
+        presenter.onAllSessionsRemoved()
+
+        verify(toolbar).url = ""
+    }
+
+    @Test
+    fun `Toolbar gets cleared when selected session gets removed`() {
+        val toolbar: Toolbar = mock()
+
+        val sessionManager: SessionManager = mock()
+
+        val session = Session("https://www.mozilla.org")
+        doReturn(session).`when`(sessionManager).selectedSession
+
+        val presenter = ToolbarPresenter(toolbar, sessionManager)
+        presenter.start()
+
+        verify(toolbar).url = "https://www.mozilla.org"
+
+        doReturn(null).`when`(sessionManager).selectedSession
+        presenter.onSessionRemoved(session)
+
+        verify(toolbar).url = ""
+    }
+
+    @Test
+    fun `Search terms get forwarded to toolbar`() {
+        val toolbar: Toolbar = mock()
+        val sessionManager: SessionManager = mock()
+
+        val presenter = ToolbarPresenter(toolbar, sessionManager)
+        presenter.onSearch(Session("https://www.mozilla.org"), "hello world")
+
+        verify(toolbar).setSearchTerms("hello world")
+    }
+
+    @Test
+    fun `Toolbar gets not cleared if a background session gets removed`() {
+        val toolbar: Toolbar = mock()
+
+        val sessionManager: SessionManager = mock()
+
+        val session = Session("https://www.mozilla.org")
+        doReturn(session).`when`(sessionManager).selectedSession
+
+        val presenter = ToolbarPresenter(toolbar, sessionManager)
+        presenter.start()
+
+        verify(toolbar).url = "https://www.mozilla.org"
+
+        presenter.onSessionRemoved(Session("https://www.firefox.com"))
+
+        verify(toolbar, never()).url = ""
+        verify(toolbar, never()).url = "https://www.firefox.com"
     }
 }

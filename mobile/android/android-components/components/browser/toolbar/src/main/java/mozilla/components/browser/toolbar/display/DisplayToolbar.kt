@@ -189,7 +189,7 @@ internal class DisplayToolbar(
     fun updateProgress(progress: Int) {
         progressView.progress = progress
 
-        progressView.visibility = if (progress < progressView.max) View.VISIBLE else View.GONE
+        progressView.visibility = if (progress < progressView.max && progress > 0) View.VISIBLE else View.GONE
     }
 
     /**
