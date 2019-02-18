@@ -773,6 +773,45 @@
       testElm("input_url", obj);
 
       // ////////////////////////////////////////////////////////////////////////
+      // input @type="text" with placeholder attribute
+
+      // First: Label and placeholder, text is the same, no attribute.
+      obj = {
+        role: ROLE_ENTRY,
+        name: "Your name",
+        extraStates: EXT_STATE_EDITABLE | EXT_STATE_SINGLE_LINE,
+        actions: "activate",
+        absentAttributes: { placeholder: "Your name" },
+        interfaces: [ nsIAccessibleText, nsIAccessibleEditableText ],
+        children: [],
+      };
+      testElm("input_placeholder_same", obj);
+
+      // Second: Label and placeholder, text is different, attribute.
+      obj = {
+        role: ROLE_ENTRY,
+        name: "First name:",
+        extraStates: EXT_STATE_EDITABLE | EXT_STATE_SINGLE_LINE,
+        actions: "activate",
+        attributes: { placeholder: "Enter your first name" },
+        interfaces: [ nsIAccessibleText, nsIAccessibleEditableText ],
+        children: [],
+      };
+      testElm("input_placeholder_different", obj);
+
+      // Third: placeholder only, text is name, no attribute.
+      obj = {
+        role: ROLE_ENTRY,
+        name: "Date of birth",
+        extraStates: EXT_STATE_EDITABLE | EXT_STATE_SINGLE_LINE,
+        actions: "activate",
+        absentAttributes: { placeholder: "Date of birth" },
+        interfaces: [ nsIAccessibleText, nsIAccessibleEditableText ],
+        children: [],
+      };
+      testElm("input_placeholder_only", obj);
+
+      // ////////////////////////////////////////////////////////////////////////
       // HTML:input@type="password"
 
       obj = {
@@ -1621,6 +1660,13 @@
   </form>
   <input id="input_number" type="number" value="44">
   <input id="input_text" type="text" value="hi">
+  <form>
+    <label for="input_placeholder_same">Your name</label>
+    <input id="input_placeholder_same" placeholder="Your name"/>
+    <label for="input_placeholder_different">First name:</label>
+    <input id="input_placeholder_different" placeholder="Enter your first name"/>
+    <input id="input_placeholder_only" placeholder="Date of birth"/>
+  </form>
   <input id="input_search" type="search" value="cats">
   <input id="input_email" type="email" value="me@mozilla.com">
   <input id="input_tel" type="tel" value="111.111.1111">
