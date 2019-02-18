@@ -526,7 +526,7 @@ static int8_t GetClass(uint32_t u) {
   static_assert(U_LB_COUNT == mozilla::ArrayLength(sUnicodeLineBreakToClass),
                 "Gecko vs ICU LineBreak class mismatch");
 
-  auto cls = mozilla::unicode::GetLineBreakClass(u);
+  auto cls = GetLineBreakClass(u);
   MOZ_ASSERT(cls < mozilla::ArrayLength(sUnicodeLineBreakToClass));
   return sUnicodeLineBreakToClass[cls];
 }
@@ -890,16 +890,35 @@ void LineBreaker::GetJISx4051Breaks(const char16_t* aChars, uint32_t aLength,
       cl = GetClass(ch);
     }
 
+    // To implement word-break:break-all, we overwrite the line-break class of
+    // alphanumeric characters so they are treated the same as ideographic.
+    // The relevant characters will have been assigned CLASS_CHARACTER or
+    // CLASS_CLOSE by GetClass(), but those classes also include others that
+    // we don't want to touch here, so we re-check the Unicode line-break class
+    // to determine which ones to modify.
+    if (aWordBreak == LineBreaker::kWordBreak_BreakAll &&
+        (cl == CLASS_CHARACTER || cl == CLASS_CLOSE)) {
+      auto cls = GetLineBreakClass(ch);
+      if (cls == U_LB_ALPHABETIC || cls == U_LB_NUMERIC ||
+          cls == U_LB_AMBIGUOUS || cls == U_LB_COMPLEX_CONTEXT ||
+          /* Additional Japanese and Korean LB classes; CSS Text spec doesn't
+             explicitly mention these, but this appears to give expected
+             behavior (spec issue?) */
+          cls == U_LB_CONDITIONAL_JAPANESE_STARTER ||
+          (cls >= U_LB_H2 && cls <= U_LB_JV)) {
+        cl = CLASS_BREAKABLE;
+      }
+    }
+
     bool allowBreak = false;
     if (cur > 0) {
       NS_ASSERTION(CLASS_COMPLEX != lastClass || CLASS_COMPLEX != cl,
                    "Loop should have prevented adjacent complex chars here");
-      if (aWordBreak == LineBreaker::kWordBreak_Normal) {
+      if (aWordBreak == LineBreaker::kWordBreak_Normal ||
+          aWordBreak == LineBreaker::kWordBreak_BreakAll) {
         allowBreak = (state.UseConservativeBreaking())
                          ? GetPairConservative(lastClass, cl)
                          : GetPair(lastClass, cl);
-      } else if (aWordBreak == LineBreaker::kWordBreak_BreakAll) {
-        allowBreak = true;
       }
     }
     aBreakBefore[cur] = allowBreak;
@@ -919,18 +938,20 @@ void LineBreaker::GetJISx4051Breaks(const char16_t* aChars, uint32_t aLength,
         }
       }
 
-      NS_GetComplexLineBreaks(aChars + cur, end - cur, aBreakBefore + cur);
-
-      // We have to consider word-break value again for complex characters
-      if (aWordBreak != LineBreaker::kWordBreak_Normal) {
-        // Respect word-break property
-        for (uint32_t i = cur; i < end; i++)
-          aBreakBefore[i] = (aWordBreak == LineBreaker::kWordBreak_BreakAll);
+      if (aWordBreak == LineBreaker::kWordBreak_BreakAll) {
+        // For break-all, we don't need to run a dictionary-based breaking
+        // algorithm, we just allow breaks between all grapheme clusters.
+        ClusterIterator ci(aChars + cur, end - cur);
+        while (!ci.AtEnd()) {
+          ci.Next();
+          aBreakBefore[ci - aChars] = true;
+        }
+      } else {
+        NS_GetComplexLineBreaks(aChars + cur, end - cur, aBreakBefore + cur);
+        // restore breakability at chunk begin, which was always set to false
+        // by the complex line breaker
+        aBreakBefore[cur] = allowBreak;
       }
-
-      // restore breakability at chunk begin, which was always set to false
-      // by the complex line breaker
-      aBreakBefore[cur] = allowBreak;
 
       cur = end - 1;
     }
@@ -964,15 +985,23 @@ void LineBreaker::GetJISx4051Breaks(const uint8_t* aChars, uint32_t aLength,
       state.NotifyNonHyphenCharacter(ch);
       cl = GetClass(ch);
     }
+    if (aWordBreak == LineBreaker::kWordBreak_BreakAll &&
+        (cl == CLASS_CHARACTER || cl == CLASS_CLOSE)) {
+      auto cls = GetLineBreakClass(ch);
+      // Don't need to check additional Japanese/Korean classes in 8-bit
+      if (cls == U_LB_ALPHABETIC || cls == U_LB_NUMERIC ||
+          cls == U_LB_COMPLEX_CONTEXT) {
+        cl = CLASS_BREAKABLE;
+      }
+    }
 
     bool allowBreak = false;
     if (cur > 0) {
-      if (aWordBreak == LineBreaker::kWordBreak_Normal) {
+      if (aWordBreak == LineBreaker::kWordBreak_Normal ||
+          aWordBreak == LineBreaker::kWordBreak_BreakAll) {
         allowBreak = (state.UseConservativeBreaking())
                          ? GetPairConservative(lastClass, cl)
                          : GetPair(lastClass, cl);
-      } else if (aWordBreak == LineBreaker::kWordBreak_BreakAll) {
-        allowBreak = true;
       }
     }
     aBreakBefore[cur] = allowBreak;
