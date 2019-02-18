@@ -30,8 +30,8 @@ add_task(async function test_showWarningNextTime() {
       Assert.ok(!this.prefsTable.firstElementChild);
       Assert.equal(this.document.activeElement, this.searchInput);
 
-      // Pressing ESC shows all results immediately.
-      EventUtils.sendKey("escape");
+      // The show all button should be present and show all results immediately.
+      this.showAll();
       Assert.ok(this.prefsTable.firstElementChild);
     }, { dontBypassWarning: true });
   }
