@@ -165,10 +165,6 @@ add_task(async function() {
 // Checks that "Search with Current Search Engine" items are updated to "Search
 // with One-Off Engine" when a one-off is selected.
 add_task(async function searchWith() {
-  // TODO Bug 1527947: Implement "search with" change with button change.
-  if (UrlbarPrefs.get("quantumbar")) {
-    return;
-  }
   let typedValue = "foo";
   await promiseAutocompleteResultPopup(typedValue);
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
