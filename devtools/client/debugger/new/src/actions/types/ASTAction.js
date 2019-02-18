@@ -5,7 +5,7 @@
 // @flow
 
 import type { SymbolDeclarations, AstLocation } from "../../workers/parser";
-import type { PausePoints, SourceMetaDataType } from "../../reducers/types";
+import type { SourceMetaDataType } from "../../reducers/types";
 import type { PromiseAction } from "../utils/middleware/promise";
 
 export type ASTAction =
@@ -16,12 +16,6 @@ export type ASTAction =
       |},
       SymbolDeclarations
     >
-  | {|
-      +type: "SET_PAUSE_POINTS",
-      +sourceText: string,
-      +sourceId: string,
-      +pausePoints: PausePoints
-    |}
   | {|
       +type: "OUT_OF_SCOPE_LOCATIONS",
       +locations: ?(AstLocation[])

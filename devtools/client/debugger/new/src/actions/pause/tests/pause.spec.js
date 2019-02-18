@@ -32,7 +32,6 @@ const mockThreadClient = {
   evaluateExpressions: async () => {},
 
   getFrameScopes: async frame => frame.scope,
-  setPausePoints: async () => {},
   setBreakpoint: () => new Promise(_resolve => {}),
   sourceContents: ({ source }) => {
     return new Promise((resolve, reject) => {

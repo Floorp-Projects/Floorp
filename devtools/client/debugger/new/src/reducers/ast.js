@@ -11,12 +11,11 @@
 
 import * as I from "immutable";
 import makeRecord from "../utils/makeRecord";
-import { findEmptyLines } from "../utils/ast";
 
 import type { AstLocation, SymbolDeclarations } from "../workers/parser";
 
 import type { Map } from "immutable";
-import type { SourceLocation, Source, Position } from "../types";
+import type { Source } from "../types";
 import type { Action, DonePromiseAction } from "../actions/types";
 import type { Record } from "../utils/makeRecord";
 
@@ -31,18 +30,6 @@ export type SourceMetaDataType = {
 };
 
 export type SourceMetaDataMap = Map<string, SourceMetaDataType>;
-
-export type PausePoint = {
-  location: Position,
-  generatedLocation: SourceLocation,
-  types: { break: boolean, step: boolean }
-};
-
-export type PausePointsMap = {
-  [line: string]: { [column: string]: PausePoint }
-};
-export type PausePoints = PausePoint[];
-export type PausePointsState = Map<string, PausePoint[]>;
 
 export type Preview =
   | {| updating: true |}
@@ -62,7 +49,6 @@ export type ASTState = {
   outOfScopeLocations: ?Array<AstLocation>,
   inScopeLines: ?Array<Number>,
   preview: Preview,
-  pausePoints: PausePointsState,
   sourceMetaData: SourceMetaDataMap
 };
 
@@ -73,7 +59,6 @@ export function initialASTState(): Record<ASTState> {
     outOfScopeLocations: null,
     inScopeLines: null,
     preview: null,
-    pausePoints: I.Map(),
     sourceMetaData: I.Map()
   })();
 }
@@ -91,15 +76,6 @@ function update(
 
       const value = ((action: any): DonePromiseAction).value;
       return state.setIn(["symbols", sourceId], value);
-    }
-
-    case "SET_PAUSE_POINTS": {
-      const { sourceText, sourceId, pausePoints } = action;
-      const emptyLines = findEmptyLines(sourceText, pausePoints);
-
-      return state
-        .setIn(["pausePoints", sourceId], pausePoints)
-        .setIn(["emptyLines", sourceId], emptyLines);
     }
 
     case "OUT_OF_SCOPE_LOCATIONS": {
@@ -195,43 +171,6 @@ export function isEmptyLineInSource(
   return emptyLines && emptyLines.includes(line);
 }
 
-export function getEmptyLines(state: OuterState, sourceId: string) {
-  if (!sourceId) {
-    return null;
-  }
-
-  return state.ast.emptyLines.get(sourceId);
-}
-
-export function getPausePoints(
-  state: OuterState,
-  sourceId: string
-): ?PausePoints {
-  return state.ast.pausePoints.get(sourceId);
-}
-
-export function getPausePoint(
-  state: OuterState,
-  location: ?SourceLocation
-): ?PausePoint {
-  if (!location) {
-    return;
-  }
-
-  const { column, line, sourceId } = location;
-  const pausePoints = getPausePoints(state, sourceId);
-  if (!pausePoints) {
-    return;
-  }
-
-  for (const point of pausePoints) {
-    const { location: pointLocation } = point;
-    if (pointLocation.line == line && pointLocation.column == column) {
-      return point;
-    }
-  }
-}
-
 export function getOutOfScopeLocations(state: OuterState) {
   return state.ast.get("outOfScopeLocations");
 }
@@ -256,6 +195,14 @@ export function getInScopeLines(state: OuterState) {
 export function isLineInScope(state: OuterState, line: number) {
   const linesInScope = state.ast.get("inScopeLines");
   return linesInScope && linesInScope.includes(line);
+}
+
+export function getEmptyLines(state: OuterState, sourceId: string) {
+  if (!sourceId) {
+    return null;
+  }
+
+  return state.ast.emptyLines.get(sourceId);
 }
 
 export default update;

@@ -12,7 +12,6 @@ import findOutOfScopeLocations from "./findOutOfScopeLocations";
 import { getNextStep } from "./steps";
 import { hasSyntaxError } from "./validate";
 import { getFramework } from "./frameworks";
-import { getPausePoints } from "./pausePoints";
 import mapExpression from "./mapExpression";
 
 import { workerUtils } from "devtools-utils";
@@ -31,6 +30,5 @@ self.onmessage = workerHandler({
   getNextStep,
   hasSyntaxError,
   getFramework,
-  getPausePoints,
   mapExpression
 });

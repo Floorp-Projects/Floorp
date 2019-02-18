@@ -57,6 +57,7 @@ describe("when adding breakpoints", () => {
 
     const csr = makeOriginalSource("foo.js");
     await dispatch(actions.newSource(csr));
+    await dispatch(actions.newSource(makeSource("foo.js")));
     await dispatch(actions.loadSourceText(csr.source));
 
     const bp = generateBreakpoint("foo.js");
@@ -91,6 +92,9 @@ describe("when adding breakpoints", () => {
       const csr1 = makeOriginalSource("foo");
       const csr2 = makeOriginalSource("foo2");
 
+      await dispatch(actions.newSource(makeSource("foo")));
+      await dispatch(actions.newSource(makeSource("foo2")));
+
       await dispatch(actions.newSource(csr1));
       await dispatch(actions.newSource(csr2));
 
@@ -112,6 +116,7 @@ describe("when adding breakpoints", () => {
       );
 
       const csr = makeOriginalSource("foo");
+      await dispatch(actions.newSource(makeSource("foo")));
       await dispatch(actions.newSource(csr));
       await dispatch(actions.loadSourceText(csr.source));
 
@@ -130,6 +135,7 @@ describe("when adding breakpoints", () => {
       );
 
       await dispatch(actions.newSource(makeSource("foo")));
+      await dispatch(actions.newSource(makeSource("foo2")));
 
       const csr1 = makeOriginalSource("foo");
       const csr2 = makeOriginalSource("foo2");
@@ -162,6 +168,7 @@ describe("when changing an existing breakpoint", () => {
 
     const csr = makeOriginalSource("foo");
     await dispatch(actions.newSource(csr));
+    await dispatch(actions.newSource(makeSource("foo")));
     await dispatch(actions.loadSourceText(csr.source));
 
     await dispatch(actions.addBreakpoint(bp.location));
@@ -203,6 +210,7 @@ describe("when changing an existing breakpoint", () => {
 
     const csr = makeOriginalSource("foo.js");
     await dispatch(actions.newSource(csr));
+    await dispatch(actions.newSource(makeSource("foo.js")));
     await dispatch(actions.loadSourceText(csr.source));
 
     const id = makePendingLocationId(bp.location);
@@ -255,6 +263,7 @@ describe("initializing when pending breakpoints exist in prefs", () => {
 
     const csr = makeOriginalSource("foo.js");
     await dispatch(actions.newSource(csr));
+    await dispatch(actions.newSource(makeSource("foo.js")));
     await dispatch(actions.loadSourceText(csr.source));
 
     await dispatch(actions.addBreakpoint(bp.location));
@@ -349,6 +358,7 @@ describe("adding sources", () => {
     const csr1 = makeOriginalSource("bar.js");
     const csr2 = makeOriginalSource("foo.js");
     await dispatch(actions.newSource(makeSource("bar.js")));
+    await dispatch(actions.newSource(makeSource("foo.js")));
     await dispatch(actions.newSources([csr1, csr2]));
     await dispatch(actions.loadSourceText(csr1.source));
     await dispatch(actions.loadSourceText(csr2.source));
