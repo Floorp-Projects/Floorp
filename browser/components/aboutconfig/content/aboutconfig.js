@@ -48,6 +48,11 @@ let gPrefInEdit = null;
  */
 let gFilterString = null;
 
+/**
+ * True if we were requested to show all preferences.
+ */
+let gFilterShowAll = false;
+
 class PrefRow {
   constructor(name) {
     this.name = name;
@@ -114,7 +119,8 @@ class PrefRow {
   }
 
   get matchesFilter() {
-    return !gFilterString || this.name.toLowerCase().includes(gFilterString);
+    return gFilterShowAll ||
+           (gFilterString && this.name.toLowerCase().includes(gFilterString));
   }
 
   /**
@@ -367,6 +373,7 @@ function loadPrefs() {
 
   let search = gSearchInput = document.getElementById("about-config-search");
   let prefs = gPrefsTable = document.getElementById("prefs");
+  let showAll = document.getElementById("show-all");
   search.focus();
 
   for (let name of Services.prefs.getChildList("")) {
@@ -387,7 +394,19 @@ function loadPrefs() {
   search.addEventListener("input", () => {
     // We call "disarm" to restart the timer at every input.
     gFilterPrefsTask.disarm();
-    gFilterPrefsTask.arm();
+    if (!search.value.trim().length) {
+      // Return immediately to the empty page if the search string is empty.
+      filterPrefs();
+    } else {
+      gFilterPrefsTask.arm();
+    }
+  });
+
+  showAll.addEventListener("click", event => {
+    search.focus();
+    search.value = "";
+    gFilterPrefsTask.disarm();
+    filterPrefs({ showAll: true });
   });
 
   prefs.addEventListener("click", event => {
@@ -416,7 +435,7 @@ function loadPrefs() {
   });
 }
 
-function filterPrefs() {
+function filterPrefs(options = {}) {
   if (gPrefInEdit) {
     gPrefInEdit.endEdit();
   }
@@ -424,10 +443,18 @@ function filterPrefs() {
 
   let searchName = gSearchInput.value.trim();
   gFilterString = searchName.toLowerCase();
+  gFilterShowAll = !!options.showAll;
 
-  if (!gSortedExistingPrefs) {
-    gSortedExistingPrefs = [...gExistingPrefs.values()];
-    gSortedExistingPrefs.sort((a, b) => a.name > b.name);
+  let showResults = gFilterString || gFilterShowAll;
+  document.getElementById("show-all").classList.toggle("hidden", showResults);
+
+  let prefArray = [];
+  if (showResults) {
+    if (!gSortedExistingPrefs) {
+      gSortedExistingPrefs = [...gExistingPrefs.values()];
+      gSortedExistingPrefs.sort((a, b) => a.name > b.name);
+    }
+    prefArray = gSortedExistingPrefs;
   }
 
   // The slowest operations tend to be the addition and removal of DOM nodes, so
@@ -439,9 +466,9 @@ function filterPrefs() {
   let indexInArray = 0;
   let elementInTable = gPrefsTable.firstElementChild;
   let odd = false;
-  while (indexInArray < gSortedExistingPrefs.length || elementInTable) {
+  while (indexInArray < prefArray.length || elementInTable) {
     // For efficiency, filter the array while we are iterating.
-    let prefInArray = gSortedExistingPrefs[indexInArray];
+    let prefInArray = prefArray[indexInArray];
     if (prefInArray) {
       if (!prefInArray.matchesFilter) {
         indexInArray++;
