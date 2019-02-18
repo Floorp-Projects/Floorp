@@ -49,7 +49,7 @@ void RenderTextureHostWrapper::ClearCachedResources() {
 
 void RenderTextureHostWrapper::UpdateRenderTextureHost(
     RenderTextureHost* aTextureHost) {
-  MOZ_ASSERT(!mInited || RenderThread::IsInRenderThread());
+  MOZ_ASSERT(RenderThread::IsInRenderThread());
   MOZ_RELEASE_ASSERT(!mLocked);
 
   mInited = true;

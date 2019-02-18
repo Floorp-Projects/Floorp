@@ -4,13 +4,12 @@
 
 "use strict";
 
-const { debugTarget } = require("./debug-target");
-const { runtime, runtimeDetails } = require("./runtime");
-const ui = require("./ui");
+const debugTargetTypes = require("./debug-target");
+const runtimeTypes = require("./runtime");
+const uiTypes = require("./ui");
 
 module.exports = Object.assign({}, {
-  debugTarget,
-  runtime,
-  runtimeDetails,
-  ...ui,
+  ...debugTargetTypes,
+  ...runtimeTypes,
+  ...uiTypes,
 });

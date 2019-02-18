@@ -383,7 +383,7 @@ class InnerWindowReference {
     // If invalidate() is called while the inner window is in the bfcache, then
     // we are unable to remove the event listener, and handleEvent will be
     // called once more if the page is revived from the bfcache.
-    if (this.contentWindow) {
+    if (this.contentWindow && !Cu.isDeadWrapper(this.contentWindow)) {
       this.contentWindow.removeEventListener("pagehide", this, {mozSystemGroup: true});
       this.contentWindow.removeEventListener("pageshow", this, {mozSystemGroup: true});
     }

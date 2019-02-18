@@ -7,6 +7,7 @@ package org.mozilla.gecko.activitystream.homepanel.stream;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.support.annotation.NonNull;
 import android.support.annotation.UiThread;
 import android.text.TextUtils;
 import android.view.View;
@@ -14,8 +15,11 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.activitystream.Utils;
 import org.mozilla.gecko.activitystream.homepanel.model.WebpageRowModel;
+import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.util.DrawableUtil;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.TouchTargetUtil;
@@ -27,13 +31,14 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.UUID;
 
-public class WebpageItemRow extends StreamViewHolder {
+public class WebpageItemRow extends StreamViewHolder implements Tabs.OnTabsChangedListener {
     private static final String LOGTAG = "GeckoWebpageItemRow";
 
     public static final int LAYOUT_ID = R.layout.activity_stream_webpage_item_row;
     private static final double SIZE_RATIO = 0.75;
 
     private WebpageRowModel webpageModel;
+    private OnContentChangedListener contentChangedListener;
     private int position;
 
     private final StreamOverridablePageIconLayout pageIconLayout;
@@ -42,15 +47,21 @@ public class WebpageItemRow extends StreamViewHolder {
     private final ImageView pageSourceIconView;
     private final TextView pageSourceView;
     private final ImageView menuButton;
+    private final TextView switchToTabHint;
 
-    public WebpageItemRow(final View itemView, final OnMenuButtonClickListener onMenuButtonClickListener) {
+    public WebpageItemRow(final View itemView,
+                          final OnMenuButtonClickListener onMenuButtonClickListener,
+                          final OnContentChangedListener contentChangedListener) {
         super(itemView);
+
+        this.contentChangedListener = contentChangedListener;
 
         pageTitleView = (TextView) itemView.findViewById(R.id.page_title);
         pageIconLayout = (StreamOverridablePageIconLayout) itemView.findViewById(R.id.page_icon);
         pageSourceView = (TextView) itemView.findViewById(R.id.page_source);
         pageDomainView = (TextView) itemView.findViewById(R.id.page_domain);
         pageSourceIconView = (ImageView) itemView.findViewById(R.id.page_source_icon);
+        switchToTabHint = (TextView) itemView.findViewById(R.id.switch_tab_hint);
 
         menuButton = (ImageView) itemView.findViewById(R.id.menu);
         menuButton.setImageDrawable(
@@ -83,6 +94,17 @@ public class WebpageItemRow extends StreamViewHolder {
         updateUiForSource(model.getSource());
         updatePageDomain();
         pageIconLayout.updateIcon(model.getUrl(), model.getImageUrl());
+
+        final boolean isTabOpenedForItem = isTabOpenedForItem();
+        switchToTabHint.setVisibility(isTabOpenedForItem ? View.VISIBLE : View.GONE);
+    }
+
+    public void initResources() {
+        Tabs.registerOnTabsChangedListener(this);
+    }
+
+    public void doCleanup() {
+        Tabs.unregisterOnTabsChangedListener(this);
     }
 
     public void updateUiForSource(Utils.HighlightSource source) {
@@ -172,11 +194,71 @@ public class WebpageItemRow extends StreamViewHolder {
         }
     }
 
+    @Override
+    public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
+        final String itemUrl = webpageModel.getUrl();
+        if (itemUrl == null || tab == null) {
+            return;
+        }
+
+        // Only interested if a matching tab has been opened/closed/switched to a different page
+        final boolean validEvent = msg.equals(Tabs.TabEvents.ADDED) ||
+                msg.equals(Tabs.TabEvents.CLOSED) ||
+                msg.equals(Tabs.TabEvents.LOCATION_CHANGE);
+        if (!validEvent) {
+            return;
+        }
+
+        // Actually check for any tab change regarding any of the currently displayed stream URLs
+        //
+        // "data" is an empty String for ADDED/CLOSED, and contains the previous/old URL during
+        // LOCATION_CHANGE (the new URL is retrieved using tab.getURL()).
+        //
+        // Normalized tabUrl and data using "ReaderModeUtils.stripAboutReaderUrl"
+        // because they can be about:reader URLs if the current or old tab page was a reader view
+        final String tabUrl = ReaderModeUtils.stripAboutReaderUrl(tab.getURL());
+        final String previousTabUrl = ReaderModeUtils.stripAboutReaderUrl(data);
+        if (itemUrl.equals(tabUrl) || itemUrl.equals(previousTabUrl)) {
+            notifyListenerAboutContentChange();
+        }
+    }
+
     public View getTabletContextMenuAnchor() {
         return menuButton;
     }
 
+    /**
+     * @return true if there is an opened tab for this item's {@link #webpageModel} Url.
+     */
+    private boolean isTabOpenedForItem() {
+        Tab tab = Tabs.getInstance().getFirstTabForUrl(webpageModel.getUrl(), isCurrentTabInPrivateMode());
+
+        return tab != null;
+    }
+
+    /**
+     * @return true if this view is shown inside a private tab, independent of whether
+     * a private mode theme is applied via <code>setPrivateMode(true)</code>.
+     */
+    private boolean isCurrentTabInPrivateMode() {
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        return tab != null && tab.isPrivate();
+    }
+
+    private void notifyListenerAboutContentChange() {
+        if (contentChangedListener != null) {
+            contentChangedListener.onContentChanged(getAdapterPosition());
+        }
+    }
+
     public interface OnMenuButtonClickListener {
         void onMenuButtonClicked(WebpageItemRow row, int position);
+    }
+
+    /**
+     * Informs upstream about changes regarding this row's content.
+     */
+    public interface OnContentChangedListener {
+        void onContentChanged(int itemPosition);
     }
 }

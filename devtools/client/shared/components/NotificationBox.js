@@ -7,7 +7,6 @@
 const { Component } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const Immutable = require("devtools/client/shared/vendor/immutable");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
 const l10n = new LocalizationHelper("devtools/client/locales/components.properties");
@@ -43,49 +42,34 @@ class NotificationBox extends Component {
     return {
       // Optional box ID (used for mounted node ID attribute)
       id: PropTypes.string,
-
-      // List of notifications appended into the box.
-      // Use `PropTypes.arrayOf` validation (see below) as soon as
-      // ImmutableJS is removed. See bug 1461678 for more details.
-      notifications: PropTypes.object,
-      /* notifications: PropTypes.arrayOf(PropTypes.shape({
-        // label to appear on the notification.
-        label: PropTypes.string.isRequired,
-
-        // Value used to identify the notification
-        value: PropTypes.string.isRequired,
-
-        // URL of image to appear on the notification. If "" then an icon
-        // appropriate for the priority level is used.
-        image: PropTypes.string.isRequired,
-
-        // Notification priority; see Priority Levels.
-        priority: PropTypes.number.isRequired,
-
-        // Array of button descriptions to appear on the notification.
-        buttons: PropTypes.arrayOf(PropTypes.shape({
-          // Function to be called when the button is activated.
-          // This function is passed three arguments:
-          // 1) the NotificationBox component the button is associated with
-          // 2) the button description as passed to appendNotification.
-          // 3) the element which was the target of the button press event.
-          // If the return value from this function is not True, then the
-          // notification is closed. The notification is also not closed
-          // if an error is thrown.
-          callback: PropTypes.func.isRequired,
-
-          // The label to appear on the button.
-          label: PropTypes.string.isRequired,
-
-          // The accesskey attribute set on the <button> element.
-          accesskey: PropTypes.string,
-        })),
-
-        // A function to call to notify you of interesting things that happen
-        // with the notification box.
-        eventCallback: PropTypes.func,
-      })),*/
-
+      /**
+       * List of notifications appended into the box. Each item of the map is an object
+       * of the following shape:
+       *   - {String} label: Label to appear on the notification.
+       *   - {String} value: Value used to identify the notification.
+       *   - {String} image: URL of image to appear on the notification. If "" then an
+       *                     appropriate icon for the priority level is used.
+       *   - {Number} priority: Notification priority; see Priority Levels.
+       *   - {Function} eventCallback: A function to call to notify you of interesting
+                                       things that happen with the notification box.
+       *   - {Array<Object>} buttons: Array of button descriptions to appear on the
+       *                              notification. Should be of the following shape:
+       *                     - {Function} callback: This function is passed 3 arguments:
+                                                    1) the NotificationBox component
+                                                       the button is associated with.
+                                                    2) the button description as passed
+                                                       to appendNotification.
+                                                    3) the element which was the target
+                                                       of the button press event.
+                                                    If the return value from this function
+                                                    is not true, then the notification is
+                                                    closed. The notification is also not
+                                                    closed if an error is thrown.
+                             - {String} label: The label to appear on the button.
+                             - {String} accesskey: The accesskey attribute set on the
+                                                   <button> element.
+      */
+      notifications: PropTypes.instanceOf(Map),
       // Message that should be shown when hovering over the close button
       closeButtonTooltip: PropTypes.string,
     };
@@ -101,7 +85,7 @@ class NotificationBox extends Component {
     super(props);
 
     this.state = {
-      notifications: new Immutable.OrderedMap(),
+      notifications: new Map(),
     };
 
     this.appendNotification = this.appendNotification.bind(this);
@@ -160,7 +144,7 @@ class NotificationBox extends Component {
   }
 
   getCurrentNotification() {
-    return this.state.notifications.first();
+    return getHighestPriorityNotification(this.state.notifications);
   }
 
   /**
@@ -179,8 +163,10 @@ class NotificationBox extends Component {
       return;
     }
 
+    const newNotifications = new Map(this.state.notifications);
+    newNotifications.delete(notification.value);
     this.setState({
-      notifications: this.state.notifications.remove(notification.value),
+      notifications: newNotifications,
     });
   }
 
@@ -251,16 +237,15 @@ class NotificationBox extends Component {
    */
   render() {
     const notifications = this.props.notifications || this.state.notifications;
-    const notification = notifications ? notifications.first() : null;
-    const content = notification ?
-      this.renderNotification(notification) :
-      null;
+    const notification = getHighestPriorityNotification(notifications);
+    const content = notification
+      ? this.renderNotification(notification)
+      : null;
 
     return div({
       className: "notificationbox",
-      id: this.props.id},
-      content
-    );
+      id: this.props.id,
+    }, content);
   }
 }
 
@@ -301,26 +286,22 @@ function appendNotification(state, props) {
   }
 
   if (!state.notifications) {
-    state.notifications = new Immutable.OrderedMap();
+    state.notifications = new Map();
   }
 
-  let notifications = state.notifications.set(value, {
-    label: label,
-    value: value,
-    image: image,
-    priority: priority,
-    type: type,
+  const notifications = new Map(state.notifications);
+  notifications.set(value, {
+    label,
+    value,
+    image,
+    priority,
+    type,
     buttons: Array.isArray(buttons) ? buttons : [],
-    eventCallback: eventCallback,
-  });
-
-  // High priorities must be on top.
-  notifications = notifications.sortBy((val, key) => {
-    return -val.priority;
+    eventCallback,
   });
 
   return {
-    notifications: notifications,
+    notifications,
   };
 }
 
@@ -329,9 +310,28 @@ function getNotificationWithValue(notifications, value) {
 }
 
 function removeNotificationWithValue(notifications, value) {
+  const newNotifications = new Map(notifications);
+  newNotifications.delete(value);
+
   return {
-    notifications: notifications.remove(value),
+    notifications: newNotifications,
   };
+}
+
+function getHighestPriorityNotification(notifications) {
+  if (!notifications) {
+    return null;
+  }
+
+  let currentNotification = null;
+  // High priorities must be on top.
+  for (const [, notification] of notifications) {
+    if (!currentNotification || notification.priority > currentNotification.priority) {
+      currentNotification = notification;
+    }
+  }
+
+  return currentNotification;
 }
 
 module.exports.NotificationBox = NotificationBox;

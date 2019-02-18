@@ -4,6 +4,9 @@
 
 "use strict";
 
+const { checkVersionCompatibility } =
+  require("devtools/client/shared/remote-debugging/version-checker");
+
 const { RUNTIME_PREFERENCE } = require("../constants");
 const { WorkersListener } = require("./workers-listener");
 
@@ -72,16 +75,19 @@ class ClientWrapper {
 
   async getDeviceDescription() {
     const deviceFront = await this.getFront("device");
-    const { brandName, channel, deviceName, isMultiE10s, version } =
-      await deviceFront.getDescription();
+    const description = await deviceFront.getDescription();
     // Only expose a specific set of properties.
     return {
-      channel,
-      deviceName,
-      isMultiE10s,
-      name: brandName,
-      version,
+      channel: description.channel,
+      deviceName: description.deviceName,
+      isMultiE10s: description.isMultiE10s,
+      name: description.brandName,
+      version: description.version,
     };
+  }
+
+  async checkVersionCompatibility() {
+    return checkVersionCompatibility(this.client);
   }
 
   async setPreference(prefName, value) {

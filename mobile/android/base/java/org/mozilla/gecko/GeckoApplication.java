@@ -59,6 +59,7 @@ import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.HardwareUtils;
+import org.mozilla.gecko.util.IntentUtils;
 import org.mozilla.gecko.util.PRNGFixes;
 import org.mozilla.gecko.util.ShortcutUtils;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -692,14 +693,22 @@ public class GeckoApplication extends Application
             final boolean safeForPwa = PwaUtils.shouldAddPwaShortcut(selectedTab);
             if (!safeForPwa) {
                 final String message = "This page is not safe for PWA";
+
                 // For release and beta, we record an error message
                 if (AppConstants.RELEASE_OR_BETA) {
                     Log.e(LOG_TAG, message);
                 } else {
-                    // For nightly and local build, we'll throw an exception here.
-                    throw new IllegalStateException(message);
-                }
+                    final Activity currentActivity =
+                            GeckoActivityMonitor.getInstance().getCurrentActivity();
+                    final SafeIntent safeIntent = new SafeIntent(currentActivity.getIntent());
+                    final boolean isInAutomation = IntentUtils.getIsInAutomationFromEnvironment(safeIntent);
 
+                    if (isInAutomation) {
+                        // For nightly automated tests, we'll throw an exception here
+                        // in order to fast fail.
+                        throw new IllegalStateException(message);
+                    }
+                }
             }
 
             final GeckoBundle message = new GeckoBundle();

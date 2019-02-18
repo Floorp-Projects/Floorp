@@ -1085,10 +1085,12 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    */
   get metadata() {
     const data = {};
+    data.id = this.actorID;
     // Collect information about the rule's ancestors (@media, @supports, @keyframes).
     // Used to show context for this change in the UI and to match the rule for undo/redo.
     data.ancestors = this.ancestorRules.map(rule => {
       return {
+        id: rule.actorID,
         // Rule type as number defined by CSSRule.type (ex: 4, 7, 12)
         // @see https://developer.mozilla.org/en-US/docs/Web/API/CSSRule
         type: rule.rawRule.type,
@@ -1106,7 +1108,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     });
 
     // For changes in element style attributes, generate a unique selector.
-    if (this.type === ELEMENT_STYLE) {
+    if (this.type === ELEMENT_STYLE && this.rawNode) {
       // findCssSelector() fails on XUL documents. Catch and silently ignore that error.
       try {
         data.selector = findCssSelector(this.rawNode);
@@ -1122,6 +1124,12 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         // Whether the element lives in a different frame than the host document.
         isFramed: this.rawNode.ownerGlobal !== this.pageStyle.ownerWindow,
       };
+
+      const nodeActor = this.pageStyle.walker.getNode(this.rawNode);
+      if (nodeActor) {
+        data.source.id = nodeActor.actorID;
+      }
+
       data.ruleIndex = 0;
     } else {
       data.selector = (this.type === CSSRule.KEYFRAME_RULE)
@@ -1131,6 +1139,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         // Inline stylesheets have a null href; Use window URL instead.
         type: this.sheetActor.href ? "stylesheet" : "inline",
         href: this.sheetActor.href || this.sheetActor.window.location.toString(),
+        id: this.sheetActor.actorID,
         index: this.sheetActor.styleSheetIndex,
         // Whether the stylesheet lives in a different frame than the host document.
         isFramed: this.sheetActor.ownerWindow !== this.sheetActor.window,

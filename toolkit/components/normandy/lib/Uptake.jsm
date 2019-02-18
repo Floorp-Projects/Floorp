@@ -9,7 +9,7 @@ ChromeUtils.defineModuleGetter(
 
 var EXPORTED_SYMBOLS = ["Uptake"];
 
-const SOURCE_PREFIX = "normandy";
+const COMPONENT = "normandy";
 
 var Uptake = {
   // Action uptake
@@ -32,14 +32,14 @@ var Uptake = {
   RUNNER_SUCCESS: UptakeTelemetry.STATUS.SUCCESS,
 
   reportRunner(status) {
-    UptakeTelemetry.report(`${SOURCE_PREFIX}/runner`, status);
+    UptakeTelemetry.report(COMPONENT, status, { source: `${COMPONENT}/runner` });
   },
 
   reportRecipe(recipeId, status) {
-    UptakeTelemetry.report(`${SOURCE_PREFIX}/recipe/${recipeId}`, status);
+    UptakeTelemetry.report(COMPONENT, status, { source: `${COMPONENT}/recipe/${recipeId}` });
   },
 
   reportAction(actionName, status) {
-    UptakeTelemetry.report(`${SOURCE_PREFIX}/action/${actionName}`, status);
+    UptakeTelemetry.report(COMPONENT, status, { source: `${COMPONENT}/action/${actionName}` });
   },
 };
