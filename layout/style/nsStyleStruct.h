@@ -719,6 +719,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleMargin {
   inline bool HasInlineAxisAuto(mozilla::WritingMode aWM) const;
 
   mozilla::StyleRect<mozilla::LengthPercentageOrAuto> mMargin;
+  mozilla::StyleRect<mozilla::StyleLength> mScrollMargin;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePadding {
@@ -731,6 +732,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePadding {
   nsChangeHint CalcDifference(const nsStylePadding& aNewData) const;
 
   mozilla::StyleRect<mozilla::NonNegativeLengthPercentage> mPadding;
+  mozilla::StyleRect<mozilla::NonNegativeLengthPercentageOrAuto> mScrollPadding;
 
   inline bool IsWidthDependent() const {
     return !mPadding.All(
