@@ -289,11 +289,6 @@ nsTArray<unsigned int>* Gecko_AppendFeatureValueHashEntry(
     gfxFontFeatureValueSet* value_set, nsAtom* family, uint32_t alternate,
     nsAtom* name);
 
-void Gecko_nsFont_SetFontFeatureValuesLookup(
-    nsFont* font, const RawGeckoPresContext* pres_context);
-
-void Gecko_nsFont_ResetFontFeatureValuesLookup(nsFont* font);
-
 // Font variant alternates
 void Gecko_ClearAlternateValues(nsFont* font, size_t length);
 
