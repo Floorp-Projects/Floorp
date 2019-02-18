@@ -189,12 +189,13 @@ static StyleRect<T> StyleRectWithAllSides(const T& aSide) {
 
 nsStyleMargin::nsStyleMargin(const Document& aDocument)
     : mMargin(StyleRectWithAllSides(
-          LengthPercentageOrAuto::LengthPercentage(LengthPercentage::Zero()))) {
+          LengthPercentageOrAuto::LengthPercentage(LengthPercentage::Zero()))),
+      mScrollMargin(StyleRectWithAllSides(StyleLength{0.})) {
   MOZ_COUNT_CTOR(nsStyleMargin);
 }
 
 nsStyleMargin::nsStyleMargin(const nsStyleMargin& aSrc)
-    : mMargin(aSrc.mMargin) {
+    : mMargin(aSrc.mMargin), mScrollMargin(aSrc.mScrollMargin) {
   MOZ_COUNT_CTOR(nsStyleMargin);
 }
 
