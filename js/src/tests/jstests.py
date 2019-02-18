@@ -380,6 +380,7 @@ def load_wpt_tests(xul_tester, requested_paths, excluded_paths, update_manifest=
                                     "firefox",
                                     debug=xul_tester.test("isDebugBuild"),
                                     extras=run_info_extras)
+    run_info["release_or_beta"] = xul_tester.test("getBuildConfiguration().release_or_beta")
 
     path_filter = testloader.TestFilter(test_manifests,
                                         include=requested_paths,
