@@ -211,12 +211,13 @@ nsChangeHint nsStyleMargin::CalcDifference(
 }
 
 nsStylePadding::nsStylePadding(const Document& aDocument)
-    : mPadding(StyleRectWithAllSides(LengthPercentage::Zero())) {
+    : mPadding(StyleRectWithAllSides(LengthPercentage::Zero())),
+      mScrollPadding(StyleRectWithAllSides(LengthPercentageOrAuto::Auto())) {
   MOZ_COUNT_CTOR(nsStylePadding);
 }
 
 nsStylePadding::nsStylePadding(const nsStylePadding& aSrc)
-    : mPadding(aSrc.mPadding) {
+    : mPadding(aSrc.mPadding), mScrollPadding(aSrc.mScrollPadding) {
   MOZ_COUNT_CTOR(nsStylePadding);
 }
 
