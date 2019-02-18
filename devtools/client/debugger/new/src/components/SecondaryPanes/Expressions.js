@@ -249,7 +249,6 @@ class Expressions extends Component<Props, State> {
             roots={[root]}
             autoExpandDepth={0}
             disableWrap={true}
-            focusable={false}
             openLink={openLink}
             createObjectClient={grip => createObjectClient(grip)}
             onDOMNodeClick={grip => openElementInInspector(grip)}

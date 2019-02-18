@@ -75,6 +75,7 @@ class ObjectInspector extends Component<Props> {
     self.isNodeExpandable = this.isNodeExpandable.bind(this);
     self.setExpanded = this.setExpanded.bind(this);
     self.focusItem = this.focusItem.bind(this);
+    self.activateItem = this.activateItem.bind(this);
     self.getRoots = this.getRoots.bind(this);
     self.getNodeKey = this.getNodeKey.bind(this);
   }
@@ -82,6 +83,7 @@ class ObjectInspector extends Component<Props> {
   componentWillMount() {
     this.roots = this.props.roots;
     this.focusedItem = this.props.focusedItem;
+    this.activeItem = this.props.activeItem;
   }
 
   componentWillUpdate(nextProps) {
@@ -92,6 +94,7 @@ class ObjectInspector extends Component<Props> {
       // so we need to cleanup the component internal state.
       this.roots = nextProps.roots;
       this.focusedItem = nextProps.focusedItem;
+      this.activeItem = nextProps.activeItem;
       if (this.props.rootsChanged) {
         this.props.rootsChanged();
       }
@@ -128,6 +131,7 @@ class ObjectInspector extends Component<Props> {
     // - OR the expanded paths number did not changed, but old and new sets
     //      differ
     // - OR the focused node changed.
+    // - OR the active node changed.
     return (
       loadedProperties.size !== nextProps.loadedProperties.size ||
       evaluations.size !== nextProps.evaluations.size ||
@@ -138,6 +142,7 @@ class ObjectInspector extends Component<Props> {
       (expandedPaths.size === nextProps.expandedPaths.size &&
         [...nextProps.expandedPaths].some(key => !expandedPaths.has(key))) ||
       this.focusedItem !== nextProps.focusedItem ||
+      this.activeItem !== nextProps.activeItem ||
       this.roots !== nextProps.roots
     );
   }
@@ -219,6 +224,19 @@ class ObjectInspector extends Component<Props> {
     }
   }
 
+  activateItem(item: Node) {
+    const { focusable = true, onActivate } = this.props;
+
+    if (focusable && this.activeItem !== item) {
+      this.activeItem = item;
+      this.forceUpdate();
+
+      if (onActivate) {
+        onActivate(item);
+      }
+    }
+  }
+
   render() {
     const {
       autoExpandAll = true,
@@ -242,6 +260,7 @@ class ObjectInspector extends Component<Props> {
       isExpanded: item => expandedPaths && expandedPaths.has(item.path),
       isExpandable: this.isNodeExpandable,
       focused: this.focusedItem,
+      active: this.activeItem,
 
       getRoots: this.getRoots,
       getParent,
@@ -251,6 +270,7 @@ class ObjectInspector extends Component<Props> {
       onExpand: item => this.setExpanded(item, true),
       onCollapse: item => this.setExpanded(item, false),
       onFocus: focusable ? this.focusItem : null,
+      onActivate: focusable ? this.activateItem : null,
 
       renderItem: (item, depth, focused, arrow, expanded) =>
         ObjectInspectorItem({
