@@ -322,7 +322,8 @@ class ZoneCellIter<TenuredCell> {
 // explicitly by passing in a trailing AutoAssertEmptyNursery argument.
 //
 // NOTE: This class can return items that are about to be swept/finalized.
-//       You shouldn't keep pointers to such items across GCs.
+//       You must not keep pointers to such items across GCs.  Use
+//       SafeZoneCellIter below to filter these out.
 //
 /* clang-format on */
 template <typename GCType>
@@ -361,6 +362,47 @@ class ZoneCellIter : public ZoneCellIter<TenuredCell> {
   GCType* get() const { return ZoneCellIter<TenuredCell>::get<GCType>(); }
   operator GCType*() const { return get(); }
   GCType* operator->() const { return get(); }
+};
+
+// Like the above class but filter out cells that are about to be finalized.
+template <typename T>
+class SafeZoneCellIter : public ZoneCellIter<T> {
+ public:
+  /*
+   * The same constructors as above.
+   */
+  explicit SafeZoneCellIter(JS::Zone* zone) : ZoneCellIter<T>(zone) {
+    skipDying();
+  }
+  SafeZoneCellIter(JS::Zone* zone, const js::gc::AutoAssertEmptyNursery& empty)
+      : ZoneCellIter<T>(zone, empty) {
+    skipDying();
+  }
+  SafeZoneCellIter(JS::Zone* zone, AllocKind kind)
+      : ZoneCellIter<T>(zone, kind) {
+    skipDying();
+  }
+  SafeZoneCellIter(JS::Zone* zone, AllocKind kind,
+                   const js::gc::AutoAssertEmptyNursery& empty)
+      : ZoneCellIter<T>(zone, kind, empty) {
+    skipDying();
+  }
+
+  void next() {
+    ZoneCellIter<T>::next();
+    skipDying();
+  }
+
+ private:
+  void skipDying() {
+    while (!ZoneCellIter<T>::done()) {
+      T* current = ZoneCellIter<T>::get();
+      if (!IsAboutToBeFinalizedUnbarriered(&current)) {
+        return;
+      }
+      ZoneCellIter<T>::next();
+    }
+  }
 };
 
 } /* namespace gc */
