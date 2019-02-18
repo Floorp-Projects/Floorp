@@ -20,7 +20,7 @@ export function createFrame(thread: ThreadId, frame: FramePacket): ?Frame {
   if (!frame) {
     return null;
   }
-  
+
   const location = {
     sourceId: clientCommands.getSourceForActor(frame.where.actor),
     line: frame.where.line,

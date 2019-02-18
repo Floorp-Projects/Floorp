@@ -4,9 +4,8 @@
 
 // @flow
 
-import { getSourceFromId, getSourceActors } from "../../selectors";
+import { getSourceFromId } from "../../selectors";
 import * as parser from "../../workers/parser";
-import { isGenerated } from "../../utils/source";
 import { convertToList } from "../../utils/pause/pausePoints";
 import { features } from "../../utils/prefs";
 import { getGeneratedLocation } from "../../utils/source-maps";
