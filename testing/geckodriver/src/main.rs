@@ -20,9 +20,11 @@ extern crate zip;
 #[macro_use]
 extern crate log;
 
-use std::io::Write;
+use std::fmt;
+use std::io::{self, Write};
 use std::net::{IpAddr, SocketAddr};
 use std::path::PathBuf;
+use std::result;
 use std::str::FromStr;
 
 use clap::{App, Arg};
@@ -54,7 +56,58 @@ const EXIT_SUCCESS: i32 = 0;
 const EXIT_USAGE: i32 = 64;
 const EXIT_UNAVAILABLE: i32 = 69;
 
-type ProgramResult = std::result::Result<(), (i32, String)>;
+enum FatalError {
+    Parsing(clap::Error),
+    Usage(String),
+    Server(io::Error),
+}
+
+impl FatalError {
+    fn exit_code(&self) -> i32 {
+        use FatalError::*;
+        match *self {
+            Parsing(_) | Usage(_) => EXIT_USAGE,
+            Server(_) => EXIT_UNAVAILABLE,
+        }
+    }
+}
+
+impl From<clap::Error> for FatalError {
+    fn from(err: clap::Error) -> FatalError {
+        FatalError::Parsing(err)
+    }
+}
+
+impl From<io::Error> for FatalError {
+    fn from(err: io::Error) -> FatalError {
+        FatalError::Server(err)
+    }
+}
+
+// harmonise error message from clap to avoid duplicate "error:" prefix
+impl fmt::Display for FatalError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use FatalError::*;
+        let s = match *self {
+            Parsing(ref err) => err.to_string(),
+            Usage(ref s) => format!("error: {}", s),
+            Server(ref err) => format!("error: {}", err.to_string()),
+        };
+        write!(f, "{}", s)
+    }
+}
+
+macro_rules! usage {
+    ($msg:expr) => {
+        return Err(FatalError::Usage($msg.to_string()));
+    };
+
+    ($fmt:expr, $($arg:tt)+) => {
+        return Err(FatalError::Usage(format!($fmt, $($arg)+)));
+    };
+}
+
+type ProgramResult<T> = result::Result<T, FatalError>;
 
 fn app<'a, 'b>() -> App<'a, 'b> {
     App::new(format!("geckodriver {}", build::BuildInfo))
@@ -135,7 +188,7 @@ fn app<'a, 'b>() -> App<'a, 'b> {
         )
 }
 
-fn run() -> ProgramResult {
+fn run() -> ProgramResult<()> {
     let matches = app().get_matches();
 
     if matches.is_present("version") {
@@ -151,11 +204,11 @@ fn run() -> ProgramResult {
             .unwrap(),
     ) {
         Ok(x) => x,
-        Err(_) => return Err((EXIT_USAGE, "invalid WebDriver port".into())),
+        Err(_) => usage!("invalid WebDriver port"),
     };
     let addr = match IpAddr::from_str(host) {
         Ok(addr) => SocketAddr::new(addr, port),
-        Err(_) => return Err((EXIT_USAGE, "invalid host address".into())),
+        Err(_) => usage!("invalid host address"),
     };
 
     let binary = matches.value_of("binary").map(PathBuf::from);
@@ -164,7 +217,7 @@ fn run() -> ProgramResult {
     let marionette_port = match matches.value_of("marionette_port") {
         Some(x) => match u16::from_str(x) {
             Ok(x) => Some(x),
-            Err(_) => return Err((EXIT_USAGE, "invalid Marionette port".into())),
+            Err(_) => usage!("invalid Marionette port"),
         },
         None => None,
     };
@@ -192,8 +245,7 @@ fn run() -> ProgramResult {
         jsdebugger: matches.is_present("jsdebugger"),
     };
     let handler = MarionetteHandler::new(settings);
-    let listening = webdriver::server::start(addr, handler, &extension_routes()[..])
-        .map_err(|err| (EXIT_UNAVAILABLE, err.to_string()))?;
+    let listening = webdriver::server::start(addr, handler, &extension_routes()[..])?;
     debug!("Listening on {}", listening.socket);
 
     Ok(())
@@ -202,9 +254,10 @@ fn run() -> ProgramResult {
 fn main() {
     let exit_code = match run() {
         Ok(_) => EXIT_SUCCESS,
-        Err((exit_code, reason)) => {
-            error!("{}", reason);
-            exit_code
+
+        Err(e) => {
+            error!("{}", e);
+            e.exit_code()
         }
     };
 
