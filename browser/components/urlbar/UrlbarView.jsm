@@ -52,9 +52,12 @@ class UrlbarView {
   }
 
   get oneOffSearchButtons() {
-    return this._oneOffSearchButtons ||
-      (this._oneOffSearchButtons =
-         new this.window.SearchOneOffs(this.panel.querySelector(".search-one-offs")));
+    if (!this._oneOffSearchButtons) {
+      this._oneOffSearchButtons =
+        new this.window.SearchOneOffs(this.panel.querySelector(".search-one-offs"));
+      this._oneOffSearchButtons.addEventListener("SelectedOneOffButtonChanged", this);
+    }
+    return this._oneOffSearchButtons;
   }
 
   /**
@@ -519,6 +522,51 @@ class UrlbarView {
       this.oneOffSearchButtons.style.display = "none";
       this.oneOffSearchButtons.textbox = null;
       this.oneOffSearchButtons.view = null;
+    }
+  }
+
+  _on_SelectedOneOffButtonChanged() {
+    if (!this._queryContext) {
+      return;
+    }
+
+    // Update all search suggestion results to use the newly selected engine, or
+    // if no engine is selected, revert to their original engines.
+    let engine =
+      this._oneOffSearchButtons.selectedButton &&
+      this._oneOffSearchButtons.selectedButton.engine;
+    for (let i = 0; i < this._queryContext.results.length; i++) {
+      let result = this._queryContext.results[i];
+      if (result.type != UrlbarUtils.RESULT_TYPE.SEARCH ||
+          (!result.heuristic && !result.payload.suggestion)) {
+        continue;
+      }
+      if (engine) {
+        if (!result.payload.originalEngine) {
+          result.payload.originalEngine = result.payload.engine;
+        }
+        result.payload.engine = engine.name;
+      } else if (result.payload.originalEngine) {
+        result.payload.engine = result.payload.originalEngine;
+        delete result.payload.originalEngine;
+      }
+      let item = this._rows.children[i];
+      let action = item.querySelector(".urlbarView-action");
+      action.textContent =
+        bundle.formatStringFromName("searchWithEngine",
+          [(engine && engine.name) || result.payload.engine], 1);
+      // If we just changed the engine from the original engine and it had an
+      // icon, then make sure the result now uses the new engine's icon or
+      // failing that the default icon.  If we changed it back to the original
+      // engine, go back to the original or default icon.
+      let favicon = item.querySelector(".urlbarView-favicon");
+      if (engine && result.payload.icon) {
+        favicon.src =
+          (engine.iconURI && engine.iconURI.spec) ||
+          UrlbarUtils.ICON.SEARCH_GLASS;
+      } else if (!engine) {
+        favicon.src = result.payload.icon || UrlbarUtils.ICON.SEARCH_GLASS;
+      }
     }
   }
 
