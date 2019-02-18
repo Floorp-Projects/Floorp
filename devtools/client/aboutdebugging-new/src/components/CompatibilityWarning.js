@@ -34,9 +34,14 @@ class CompatibilityWarning extends PureComponent {
       return null;
     }
 
-    const localizationId = status === COMPATIBILITY_STATUS.TOO_OLD ?
+    const isTooOld = status === COMPATIBILITY_STATUS.TOO_OLD;
+    const localizationId = isTooOld ?
       "about-debugging-runtime-version-too-old" :
       "about-debugging-runtime-version-too-recent";
+
+    const statusClassName = isTooOld ?
+      "js-compatibility-warning-too-old" :
+      "js-compatibility-warning-too-recent";
 
     return Message(
       {
@@ -56,7 +61,9 @@ class CompatibilityWarning extends PureComponent {
           $runtimeVersion: runtimeVersion,
         },
         dom.p(
-          {},
+          {
+            className: `js-compatibility-warning ${statusClassName}`,
+          },
           localizationId,
         ),
       )
