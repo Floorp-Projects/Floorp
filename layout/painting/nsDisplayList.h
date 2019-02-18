@@ -1083,6 +1083,12 @@ class nsDisplayListBuilder {
     AutoBuildingDisplayList(nsDisplayListBuilder* aBuilder, nsIFrame* aForChild,
                             const nsRect& aVisibleRect,
                             const nsRect& aDirtyRect)
+        : AutoBuildingDisplayList(aBuilder, aForChild, aVisibleRect, aDirtyRect,
+                                  aForChild->IsTransformed()) {}
+
+    AutoBuildingDisplayList(nsDisplayListBuilder* aBuilder, nsIFrame* aForChild,
+                            const nsRect& aVisibleRect,
+                            const nsRect& aDirtyRect, const bool aIsTransformed)
         : mBuilder(aBuilder),
           mPrevFrame(aBuilder->mCurrentFrame),
           mPrevReferenceFrame(aBuilder->mCurrentReferenceFrame),
@@ -1096,7 +1102,7 @@ class nsDisplayListBuilder {
               aBuilder->mAncestorHasApzAwareEventHandler),
           mPrevBuildingInvisibleItems(aBuilder->mBuildingInvisibleItems),
           mPrevInInvalidSubtree(aBuilder->mInInvalidSubtree) {
-      if (aForChild->IsTransformed()) {
+      if (aIsTransformed) {
         aBuilder->mCurrentOffsetToReferenceFrame = nsPoint();
         aBuilder->mCurrentReferenceFrame = aForChild;
       } else if (aBuilder->mCurrentFrame == aForChild->GetParent()) {
@@ -1105,17 +1111,20 @@ class nsDisplayListBuilder {
         aBuilder->mCurrentReferenceFrame = aBuilder->FindReferenceFrameFor(
             aForChild, &aBuilder->mCurrentOffsetToReferenceFrame);
       }
+
       bool isAsync;
       mCurrentAGRState = aBuilder->IsAnimatedGeometryRoot(aForChild, isAsync);
+
       if (aBuilder->mCurrentFrame == aForChild->GetParent()) {
         if (mCurrentAGRState == AGR_YES) {
           aBuilder->mCurrentAGR = aBuilder->WrapAGRForFrame(
               aForChild, isAsync, aBuilder->mCurrentAGR);
         }
-      } else if (aForChild != aBuilder->mCurrentFrame) {
+      } else if (aBuilder->mCurrentFrame != aForChild) {
         aBuilder->mCurrentAGR =
             aBuilder->FindAnimatedGeometryRootFor(aForChild);
       }
+
       MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(
           aBuilder->RootReferenceFrame(), *aBuilder->mCurrentAGR));
       aBuilder->mInInvalidSubtree =
