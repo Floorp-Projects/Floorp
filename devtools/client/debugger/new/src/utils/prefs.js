@@ -10,7 +10,6 @@ import Services from "devtools-services";
 import { asyncStoreHelper } from "./asyncStoreHelper";
 
 const prefsSchemaVersion = "1.0.8";
-
 const pref = Services.pref;
 
 if (isDevelopment()) {
