@@ -44,4 +44,13 @@ add_task(async function test_empty() {
                        `Comparing result at index ${i}`);
     }
   }
+  await UrlbarTestUtils.promisePopupClose(window);
+});
+
+add_task(async function test_backspace_empty() {
+  info("Testing that deleting the input value via backspace closes the popup");
+  await promiseAutocompleteResultPopup(" ", window, true);
+  await UrlbarTestUtils.promisePopupClose(window, () => {
+    EventUtils.synthesizeKey("KEY_Backspace");
+  });
 });

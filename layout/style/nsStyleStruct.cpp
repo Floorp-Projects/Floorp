@@ -189,12 +189,13 @@ static StyleRect<T> StyleRectWithAllSides(const T& aSide) {
 
 nsStyleMargin::nsStyleMargin(const Document& aDocument)
     : mMargin(StyleRectWithAllSides(
-          LengthPercentageOrAuto::LengthPercentage(LengthPercentage::Zero()))) {
+          LengthPercentageOrAuto::LengthPercentage(LengthPercentage::Zero()))),
+      mScrollMargin(StyleRectWithAllSides(StyleLength{0.})) {
   MOZ_COUNT_CTOR(nsStyleMargin);
 }
 
 nsStyleMargin::nsStyleMargin(const nsStyleMargin& aSrc)
-    : mMargin(aSrc.mMargin) {
+    : mMargin(aSrc.mMargin), mScrollMargin(aSrc.mScrollMargin) {
   MOZ_COUNT_CTOR(nsStyleMargin);
 }
 
@@ -210,12 +211,13 @@ nsChangeHint nsStyleMargin::CalcDifference(
 }
 
 nsStylePadding::nsStylePadding(const Document& aDocument)
-    : mPadding(StyleRectWithAllSides(LengthPercentage::Zero())) {
+    : mPadding(StyleRectWithAllSides(LengthPercentage::Zero())),
+      mScrollPadding(StyleRectWithAllSides(LengthPercentageOrAuto::Auto())) {
   MOZ_COUNT_CTOR(nsStylePadding);
 }
 
 nsStylePadding::nsStylePadding(const nsStylePadding& aSrc)
-    : mPadding(aSrc.mPadding) {
+    : mPadding(aSrc.mPadding), mScrollPadding(aSrc.mScrollPadding) {
   MOZ_COUNT_CTOR(nsStylePadding);
 }
 

@@ -972,6 +972,11 @@ class UrlbarInput {
     }
     this.removeAttribute("actiontype");
 
+    if (!value && this.view.isOpen) {
+      this.view.close();
+      return;
+    }
+
     // XXX Fill in lastKey, and add anything else we need.
     this.startQuery({
       lastKey: null,
