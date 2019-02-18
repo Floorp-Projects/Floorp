@@ -29,6 +29,8 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 // IndexedDB name.
 const DB_NAME = "remote-settings";
 
+const TELEMETRY_COMPONENT = "remotesettings";
+
 const INVALID_SIGNATURE = "Invalid content signature";
 const MISSING_SIGNATURE = "Missing signature";
 
@@ -383,7 +385,7 @@ class RemoteSettingsClient extends EventEmitter {
         reportStatus = UptakeTelemetry.STATUS.SUCCESS;
       }
       // Report success/error status to Telemetry.
-      UptakeTelemetry.report(this.identifier, reportStatus);
+      UptakeTelemetry.report(TELEMETRY_COMPONENT, reportStatus, { source: this.identifier });
     }
   }
 

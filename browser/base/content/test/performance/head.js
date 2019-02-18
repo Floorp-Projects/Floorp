@@ -263,7 +263,7 @@ async function ensureFocusedUrlbar() {
   await BrowserTestUtils.waitForCondition(() =>
     !gURLBar.hasAttribute("switchingtabs"));
 
-  let dropmarker = document.getAnonymousElementByAttribute(gURLBar, "anonid",
+  let dropmarker = document.getAnonymousElementByAttribute(gURLBar.textbox, "anonid",
                                                            "historydropmarker");
   let opacityPromise = BrowserTestUtils.waitForEvent(dropmarker, "transitionend",
                                                      false, e => e.propertyName === "opacity");

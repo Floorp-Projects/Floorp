@@ -59,14 +59,14 @@
   <groupbox>
     <label><html:h2 data-l10n-id="data-section-label"/></label>
     <hbox>
-      <box data-l10n-id="sanitize-prefs-style" data-l10n-attrs="style">
+      <vbox data-l10n-id="sanitize-prefs-style" data-l10n-attrs="style">
         <checkbox data-l10n-id="item-site-preferences"
                   preference="privacy.clearOnShutdown.siteSettings"/>
-      </box>
-      <box>
+      </vbox>
+      <vbox>
         <checkbox data-l10n-id="item-offline-apps"
                   preference="privacy.clearOnShutdown.offlineApps"/>
-      </box>
+      </vbox>
     </hbox>
   </groupbox>
 </dialog>

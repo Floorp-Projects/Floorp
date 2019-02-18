@@ -547,8 +547,7 @@ void nsVideoFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       nsDisplayListBuilder::AutoBuildingDisplayList buildingForChild(
           aBuilder, child,
           aBuilder->GetVisibleRect() - child->GetOffsetTo(this),
-          aBuilder->GetDirtyRect() - child->GetOffsetTo(this),
-          aBuilder->IsAtRootOfPseudoStackingContext());
+          aBuilder->GetDirtyRect() - child->GetOffsetTo(this));
 
       child->BuildDisplayListForStackingContext(aBuilder, aLists.Content());
     }

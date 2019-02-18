@@ -37,12 +37,12 @@ except NameError:
 def extract_tarball(src, dest):
     """extract a .tar file"""
 
-    bundle = tarfile.open(src)
-    namelist = bundle.getnames()
+    with tarfile.open(src) as bundle:
+        namelist = bundle.getnames()
 
-    for name in namelist:
-        bundle.extract(name, path=dest)
-    bundle.close()
+        for name in namelist:
+            bundle.extract(name, path=dest)
+
     return namelist
 
 

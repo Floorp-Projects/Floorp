@@ -197,9 +197,10 @@ var BookmarkPropertiesPanel = {
             if ("URIList" in dialogInfo) {
               this._title = this._strings.getString("bookmarkAllTabsDefault");
               this._URIs = dialogInfo.URIList;
-            } else
+            } else {
               this._title = this._strings.getString("newFolderDefault");
               this._dummyItem = true;
+            }
           }
           break;
       }
