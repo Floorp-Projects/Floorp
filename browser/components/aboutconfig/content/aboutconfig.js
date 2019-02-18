@@ -6,7 +6,8 @@ const {DeferredTask} = ChromeUtils.import("resource://gre/modules/DeferredTask.j
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
-const SEARCH_TIMEOUT_MS = 500;
+const SEARCH_TIMEOUT_MS = 100;
+const SEARCH_AUTO_MIN_CRARACTERS = 3;
 
 const GETTERS_BY_PREF_TYPE = {
   [Ci.nsIPrefBranch.PREF_BOOL]: "getBoolPref",
@@ -21,7 +22,7 @@ const STRINGS_ADD_BY_TYPE = {
 };
 
 let gDefaultBranch = Services.prefs.getDefaultBranch("");
-let gFilterPrefsTask = new DeferredTask(() => filterPrefs(), SEARCH_TIMEOUT_MS);
+let gFilterPrefsTask = new DeferredTask(() => filterPrefs(), SEARCH_TIMEOUT_MS, 0);
 
 /**
  * Maps the name of each preference in the back-end to its PrefRow object,
@@ -47,6 +48,11 @@ let gPrefInEdit = null;
  * Lowercase substring that should be contained in the preference name.
  */
 let gFilterString = null;
+
+/**
+ * True if we were requested to show all preferences.
+ */
+let gFilterShowAll = false;
 
 class PrefRow {
   constructor(name) {
@@ -114,7 +120,8 @@ class PrefRow {
   }
 
   get matchesFilter() {
-    return !gFilterString || this.name.toLowerCase().includes(gFilterString);
+    return gFilterShowAll ||
+           (gFilterString && this.name.toLowerCase().includes(gFilterString));
   }
 
   /**
@@ -367,6 +374,7 @@ function loadPrefs() {
 
   let search = gSearchInput = document.getElementById("about-config-search");
   let prefs = gPrefsTable = document.getElementById("prefs");
+  let showAll = document.getElementById("show-all");
   search.focus();
 
   for (let name of Services.prefs.getChildList("")) {
@@ -374,20 +382,34 @@ function loadPrefs() {
   }
 
   search.addEventListener("keypress", event => {
-    switch (event.key) {
-      case "Escape":
-        search.value = "";
-        // Fall through.
-      case "Enter":
-        gFilterPrefsTask.disarm();
-        filterPrefs();
+    if (event.key == "Escape") {
+      // The ESC key returns immediately to the initial empty page.
+      search.value = "";
+      gFilterPrefsTask.disarm();
+      filterPrefs();
+    } else if (event.key == "Enter") {
+      // The Enter key filters immediately even if the search string is short.
+      gFilterPrefsTask.disarm();
+      filterPrefs({ shortString: true });
     }
   });
 
   search.addEventListener("input", () => {
     // We call "disarm" to restart the timer at every input.
     gFilterPrefsTask.disarm();
-    gFilterPrefsTask.arm();
+    if (search.value.trim().length < SEARCH_AUTO_MIN_CRARACTERS) {
+      // Return immediately to the empty page if the search string is short.
+      filterPrefs();
+    } else {
+      gFilterPrefsTask.arm();
+    }
+  });
+
+  showAll.addEventListener("click", event => {
+    search.focus();
+    search.value = "";
+    gFilterPrefsTask.disarm();
+    filterPrefs({ showAll: true });
   });
 
   prefs.addEventListener("click", event => {
@@ -416,18 +438,30 @@ function loadPrefs() {
   });
 }
 
-function filterPrefs() {
+function filterPrefs(options = {}) {
   if (gPrefInEdit) {
     gPrefInEdit.endEdit();
   }
   gDeletedPrefs.clear();
 
   let searchName = gSearchInput.value.trim();
-  gFilterString = searchName.toLowerCase();
+  if (searchName.length < SEARCH_AUTO_MIN_CRARACTERS && !options.shortString) {
+    searchName = "";
+  }
 
-  if (!gSortedExistingPrefs) {
-    gSortedExistingPrefs = [...gExistingPrefs.values()];
-    gSortedExistingPrefs.sort((a, b) => a.name > b.name);
+  gFilterString = searchName.toLowerCase();
+  gFilterShowAll = !!options.showAll;
+
+  let showResults = gFilterString || gFilterShowAll;
+  document.getElementById("show-all").classList.toggle("hidden", showResults);
+
+  let prefArray = [];
+  if (showResults) {
+    if (!gSortedExistingPrefs) {
+      gSortedExistingPrefs = [...gExistingPrefs.values()];
+      gSortedExistingPrefs.sort((a, b) => a.name > b.name);
+    }
+    prefArray = gSortedExistingPrefs;
   }
 
   // The slowest operations tend to be the addition and removal of DOM nodes, so
@@ -439,9 +473,9 @@ function filterPrefs() {
   let indexInArray = 0;
   let elementInTable = gPrefsTable.firstElementChild;
   let odd = false;
-  while (indexInArray < gSortedExistingPrefs.length || elementInTable) {
+  while (indexInArray < prefArray.length || elementInTable) {
     // For efficiency, filter the array while we are iterating.
-    let prefInArray = gSortedExistingPrefs[indexInArray];
+    let prefInArray = prefArray[indexInArray];
     if (prefInArray) {
       if (!prefInArray.matchesFilter) {
         indexInArray++;

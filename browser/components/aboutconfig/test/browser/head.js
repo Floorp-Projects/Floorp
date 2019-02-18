@@ -98,7 +98,7 @@ class AboutConfigTest {
     await this.document.l10n.ready;
     if (!options.dontBypassWarning) {
       this.bypassWarningButton.click();
-      this.search();
+      this.showAll();
     }
   }
 
@@ -135,10 +135,18 @@ class AboutConfigTest {
   }
 
   /**
+   * Shows all preferences using the dedicated button.
+   */
+  showAll() {
+    this.search("");
+    this.document.getElementById("show-all").click();
+  }
+
+  /**
    * Performs a new search using the dedicated textbox. This also makes sure
    * that the list of preferences displayed is up to date.
    */
-  search(value = "") {
+  search(value) {
     this.searchInput.value = value;
     this.searchInput.focus();
     EventUtils.sendKey("return");

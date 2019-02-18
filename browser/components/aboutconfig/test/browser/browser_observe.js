@@ -56,9 +56,9 @@ add_task(async function test_observe_add_user_pref() {
       Assert.equal(row.value, "" + value);
       Assert.ok(Preferences.get(PREF_NEW) === value);
 
-      // Searching again after deleting should remove the row.
+      // Filtering again after deleting should remove the row.
       Preferences.reset(PREF_NEW);
-      this.search();
+      this.showAll();
       Assert.ok(!this.getRow(PREF_NEW));
 
       // Searching for the preference name should give the ability to add it.
@@ -79,12 +79,12 @@ add_task(async function test_observe_add_user_pref() {
       Assert.ok(!this.getRow(PREF_NEW));
 
       // Resetting the filter should display the new preference.
-      this.search("");
+      this.showAll();
       Assert.equal(this.getRow(PREF_NEW).value, "" + value);
 
       // Reset the preference, then continue by adding a different value.
       Preferences.reset(PREF_NEW);
-      this.search("");
+      this.showAll();
     }
   });
 });
@@ -98,8 +98,8 @@ add_task(async function test_observe_delete_user_pref() {
       Preferences.reset(PREF_NEW);
       Assert.ok(row.hasClass("deleted"));
 
-      // Searching again should remove the row.
-      this.search();
+      // Filtering again should remove the row.
+      this.showAll();
       Assert.ok(!this.getRow(PREF_NEW));
     });
   }
