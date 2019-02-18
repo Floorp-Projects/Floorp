@@ -47,6 +47,7 @@ mod prefs;
 pub mod test;
 
 use crate::command::extension_routes;
+use crate::logging::Level;
 use crate::marionette::{MarionetteHandler, MarionetteSettings};
 
 const EXIT_SUCCESS: i32 = 0;
@@ -169,13 +170,13 @@ fn run() -> ProgramResult {
     };
 
     let log_level = if matches.is_present("log_level") {
-        logging::Level::from_str(matches.value_of("log_level").unwrap()).ok()
+        Level::from_str(matches.value_of("log_level").unwrap()).ok()
     } else {
-        match matches.occurrences_of("verbosity") {
-            0 => Some(logging::Level::Info),
-            1 => Some(logging::Level::Debug),
-            _ => Some(logging::Level::Trace),
-        }
+        Some(match matches.occurrences_of("verbosity") {
+            0 => Level::Info,
+            1 => Level::Debug,
+            _ => Level::Trace,
+        })
     };
     if let Some(ref level) = log_level {
         logging::init_with_level(*level).unwrap();
