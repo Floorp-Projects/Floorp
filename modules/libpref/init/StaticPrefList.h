@@ -950,6 +950,13 @@ VARCACHE_PREF(
   bool, false
 )
 
+// Is the CSS Scroll Snap Module Level 1 enabled?
+VARCACHE_PREF(
+  "layout.css.scroll-snap-v1.enabled",
+   layout_css_scroll_snap_v1_enabled,
+  RelaxedAtomicBool, false
+)
+
 //---------------------------------------------------------------------------
 // JavaScript prefs
 //---------------------------------------------------------------------------

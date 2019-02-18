@@ -1661,25 +1661,33 @@ fn static_assert() {
     }
 </%self:impl_trait>
 
+<% skip_scroll_margin_longhands = " ".join(["scroll-margin-%s" % x.ident for x in SIDES]) %>
 <% skip_margin_longhands = " ".join(["margin-%s" % x.ident for x in SIDES]) %>
 <%self:impl_trait style_struct_name="Margin"
-                  skip_longhands="${skip_margin_longhands}">
+                  skip_longhands="${skip_margin_longhands}
+                                  ${skip_scroll_margin_longhands}">
 
     % for side in SIDES:
     <% impl_split_style_coord("margin_%s" % side.ident,
                               "mMargin",
                               side.index) %>
+    <% impl_split_style_coord("scroll_margin_%s" % side.ident,
+                              "mScrollMargin",
+                              side.index) %>
     % endfor
 </%self:impl_trait>
 
+<% skip_scroll_padding_longhands = " ".join(["scroll-padding-%s" % x.ident for x in SIDES]) %>
 <% skip_padding_longhands = " ".join(["padding-%s" % x.ident for x in SIDES]) %>
 <%self:impl_trait style_struct_name="Padding"
-                  skip_longhands="${skip_padding_longhands}">
+                  skip_longhands="${skip_padding_longhands}
+                                  ${skip_scroll_padding_longhands}">
 
     % for side in SIDES:
     <% impl_split_style_coord("padding_%s" % side.ident,
                               "mPadding",
                               side.index) %>
+    <% impl_split_style_coord("scroll_padding_%s" % side.ident, "mScrollPadding", side.index) %>
     % endfor
 </%self:impl_trait>
 
