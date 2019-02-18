@@ -1,3 +1,6 @@
+/* eslint-env webextensions */
+"use strict";
+
 const {E10SUtils} = ChromeUtils.import("resource://gre/modules/E10SUtils.jsm");
 
 let PREF_NAME = "browser.tabs.remote.useHTTPResponseProcessSelection";
@@ -15,10 +18,32 @@ const EXTENSION_DATA = {
     "version": "1.0",
     "manifest_version": 2,
     "description": "",
+
+    permissions: [
+      "proxy",
+      "webRequest",
+      "webRequestBlocking",
+      "<all_urls>",
+    ],
   },
 
   files: {
     "dummy.html": "<html>webext dummy</html>",
+  },
+
+  async background() {
+    browser.test.log("background script running");
+    browser.webRequest.onAuthRequired.addListener(async (details) => {
+      browser.test.log("webRequest onAuthRequired");
+
+      // A blocking request that returns a promise exercises a codepath that
+      // sets the notificationCallbacks on the channel to a JS object that we
+      // can't do directly QueryObject on with expected results.
+      // This triggered a crash which was fixed in bug 1528188.
+      return new Promise(async (resolve, reject) => {
+        setTimeout(resolve, 0);
+      });
+    }, {urls: ["*://*/*"]}, ["blocking"]);
   },
 };
 
