@@ -147,3 +147,24 @@ tbody.collapsible td {
   white-space: pre;
   direction: ltr;
 }
+
+/*
+ * The Active tab has two messages: one for when the policy service
+ * is inactive and another for when the there are no specified
+ * policies. The three classes below control which message to display
+ * or to show the policy table.
+ */
+.no-specified-policies > table,
+.inactive-service > table {
+  display: none;
+}
+
+:not(.no-specified-policies) > .no-specified-policies-message,
+:not(.inactive-service) > .inactive-service-message {
+  display: none;
+}
+
+.no-specified-policies-message,
+.inactive-service-message {
+  padding: 1rem;
+}

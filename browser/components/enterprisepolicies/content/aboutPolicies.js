@@ -91,6 +91,15 @@ function generateActivePolicies(data) {
     }
   }
 
+  if (policy_count < 1) {
+    let current_tab = document.querySelector(".active");
+    if (Services.policies.status == Services.policies.ACTIVE) {
+      current_tab.classList.add("no-specified-policies");
+    } else {
+      current_tab.classList.add("inactive-service");
+    }
+  }
+
   addMissingColumns();
 }
 
@@ -206,7 +215,6 @@ function generateErrors() {
       new_cont.appendChild(row);
     }
   }
-
   if (!flag) {
     let errors_tab = document.getElementById("category-errors");
     errors_tab.style.display = "none";
