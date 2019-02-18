@@ -80,13 +80,20 @@ class SETA(object):
             def opt_to_pgo(label):
                 opt = ['test-windows10-64/opt',
                        'test-windows7-32/opt',
-                       'test-linux64/opt']
+                       'test-linux64/opt',
+                       'test-windows10-64-qr/opt',
+                       'test-windows7-32-qr/opt',
+                       'test-linux64-qr/opt']
                 pgo = ['test-windows10-64-pgo/opt',
                        'test-windows7-32-pgo/opt',
-                       'test-linux64-pgo/opt']
+                       'test-linux64-pgo/opt',
+                       'test-windows10-64-pgo-qr/opt',
+                       'test-windows7-32-pgo-qr/opt',
+                       'test-linux64-pgo-qr/opt']
                 for iter in range(0, len(opt)):
                     if label.startswith(opt[iter]):
                         label = label.replace(opt[iter], pgo[iter])
+                return label
 
             # ensure no build tasks slipped in, we never want to optimize out those
             low_value_tasks = [opt_to_pgo(x) for x in low_value_tasks if 'build' not in x]
