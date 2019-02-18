@@ -66,36 +66,17 @@ gfxHarfBuzzShaper::gfxHarfBuzzShaper(gfxFont *aFont)
       mLocaLongOffsets(false) {}
 
 gfxHarfBuzzShaper::~gfxHarfBuzzShaper() {
-  if (mCmapTable) {
-    hb_blob_destroy(mCmapTable);
-  }
-  if (mHmtxTable) {
-    hb_blob_destroy(mHmtxTable);
-  }
-  if (mKernTable) {
-    hb_blob_destroy(mKernTable);
-  }
-  if (mVmtxTable) {
-    hb_blob_destroy(mVmtxTable);
-  }
-  if (mVORGTable) {
-    hb_blob_destroy(mVORGTable);
-  }
-  if (mLocaTable) {
-    hb_blob_destroy(mLocaTable);
-  }
-  if (mGlyfTable) {
-    hb_blob_destroy(mGlyfTable);
-  }
-  if (mHBFont) {
-    hb_font_destroy(mHBFont);
-  }
-  if (mHBFace) {
-    hb_face_destroy(mHBFace);
-  }
-  if (mBuffer) {
-    hb_buffer_destroy(mBuffer);
-  }
+  // hb_*_destroy functions are safe to call on nullptr
+  hb_blob_destroy(mCmapTable);
+  hb_blob_destroy(mHmtxTable);
+  hb_blob_destroy(mKernTable);
+  hb_blob_destroy(mVmtxTable);
+  hb_blob_destroy(mVORGTable);
+  hb_blob_destroy(mLocaTable);
+  hb_blob_destroy(mGlyfTable);
+  hb_font_destroy(mHBFont);
+  hb_face_destroy(mHBFace);
+  hb_buffer_destroy(mBuffer);
 }
 
 #define UNICODE_BMP_LIMIT 0x10000
