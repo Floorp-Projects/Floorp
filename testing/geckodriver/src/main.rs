@@ -128,7 +128,6 @@ fn app<'a, 'b>() -> App<'a, 'b> {
                 .default_value("4444")
                 .help("Port to use for WebDriver server")
                 .takes_value(true)
-                .alias("webdriver-port"),
         )
         .arg(
             Arg::with_name("binary")
@@ -197,12 +196,7 @@ fn run() -> ProgramResult<()> {
     }
 
     let host = matches.value_of("webdriver_host").unwrap();
-    let port = match u16::from_str(
-        matches
-            .value_of("webdriver_port")
-            .or(matches.value_of("webdriver_port_alias"))
-            .unwrap(),
-    ) {
+    let port = match u16::from_str(matches.value_of("webdriver_port").unwrap()) {
         Ok(x) => x,
         Err(_) => usage!("invalid WebDriver port"),
     };
