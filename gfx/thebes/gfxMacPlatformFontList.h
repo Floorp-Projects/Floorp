@@ -40,9 +40,7 @@ class MacOSFontEntry : public gfxFontEntry {
                  SlantStyleRange aStyle, bool aIsDataUserFont, bool aIsLocal);
 
   virtual ~MacOSFontEntry() {
-    if (mTrakTable) {
-      hb_blob_destroy(mTrakTable);
-    }
+    hb_blob_destroy(mTrakTable);
     ::CGFontRelease(mFontRef);
   }
 

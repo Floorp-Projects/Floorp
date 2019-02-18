@@ -118,13 +118,8 @@ gfxFontEntry::gfxFontEntry(const nsACString& aName, bool aIsStandardFace)
 gfxFontEntry::~gfxFontEntry() {
   // Should not be dropped by stylo
   MOZ_ASSERT(NS_IsMainThread());
-  if (mCOLR) {
-    hb_blob_destroy(mCOLR);
-  }
-
-  if (mCPAL) {
-    hb_blob_destroy(mCPAL);
-  }
+  hb_blob_destroy(mCOLR);
+  hb_blob_destroy(mCPAL);
 
   // For downloaded fonts, we need to tell the user font cache that this
   // entry is being deleted.
@@ -468,7 +463,7 @@ void gfxFontEntry::FontTableHashEntry::Clear() {
   if (mSharedBlobData) {
     mSharedBlobData->ForgetHashEntry();
     mSharedBlobData = nullptr;
-  } else if (mBlob) {
+  } else {
     hb_blob_destroy(mBlob);
   }
   mBlob = nullptr;
