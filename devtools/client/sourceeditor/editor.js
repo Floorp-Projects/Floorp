@@ -433,6 +433,19 @@ Editor.prototype = {
 
     if (!this.config.disableSearchAddon) {
       this._initSearchShortcuts(win);
+    } else {
+      // Hotfix for Bug 1527898. We should remove those overrides as part of Bug 1527903.
+      Object.assign(win.CodeMirror.commands, {
+        find: null,
+        findPersistent: null,
+        findPersistentNext: null,
+        findPersistentPrev: null,
+        findNext: null,
+        findPrev: null,
+        clearSearch: null,
+        replace: null,
+        replaceAll: null,
+      });
     }
 
     editors.set(this, cm);
