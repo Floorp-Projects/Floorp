@@ -894,6 +894,7 @@ parent:
     async PPSMContentDownloader(uint32_t aCertType);
 
     async PExternalHelperApp(OptionalURIParams uri,
+                             OptionalLoadInfoArgs loadInfoArgs,
                              nsCString aMimeContentType,
                              nsCString aContentDisposition,
                              uint32_t aContentDispositionHint,
