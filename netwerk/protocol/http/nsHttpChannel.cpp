@@ -6557,8 +6557,11 @@ nsresult nsHttpChannel::BeginConnect() {
 
   // We are about to do an async lookup to check if the URI is a
   // tracker. If yes, this channel will be canceled by channel classifier.
+  // Chances are the lookup is not needed so CheckIsTrackerWithLocalTable()
+  // will return an error and then we can BeginConnectActual() right away.
   RefPtr<nsHttpChannel> self = this;
-  return AsyncUrlChannelClassifier::CheckChannel(this, [self]() -> void {
+  bool willCallback = NS_SUCCEEDED(
+      AsyncUrlChannelClassifier::CheckChannel(this, [self]() -> void {
         nsresult rv = self->BeginConnectActual();
         if (NS_FAILED(rv)) {
           // Since this error is thrown asynchronously so that the caller
@@ -6567,7 +6570,17 @@ nsresult nsHttpChannel::BeginConnect() {
           self->CloseCacheEntry(false);
           Unused << self->AsyncAbort(rv);
         }
-  });
+      }));
+
+  if (!willCallback) {
+    // We can do BeginConnectActual immediately if CheckIsTrackerWithLocalTable
+    // is failed. Note that we don't need to handle the failure because
+    // BeginConnect() will return synchronously and the caller will be
+    // responsible for handling it.
+    return BeginConnectActual();
+  }
+
+  return NS_OK;
 }
 
 void nsHttpChannel::MaybeStartDNSPrefetch() {
