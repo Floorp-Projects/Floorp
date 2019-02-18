@@ -645,6 +645,11 @@ static AtkAttributeSet* ConvertToAtkAttributeSet(
     rv = propElem->GetValue(value);
     NS_ENSURE_SUCCESS(rv, objAttributeSet);
 
+    // On ATK, the placeholder attribute is called placeholder-text.
+    if (name.Equals("placeholder")) {
+      name.AssignLiteral("placeholder-text");
+    }
+
     AtkAttribute* objAttr = (AtkAttribute*)g_malloc(sizeof(AtkAttribute));
     objAttr->name = g_strdup(name.get());
     objAttr->value = g_strdup(NS_ConvertUTF16toUTF8(value).get());
@@ -676,6 +681,10 @@ AtkAttributeSet* getAttributesCB(AtkObject* aAtkObj) {
   AtkAttributeSet* objAttributeSet = nullptr;
   for (uint32_t i = 0; i < attrs.Length(); i++) {
     AtkAttribute* objAttr = (AtkAttribute*)g_malloc(sizeof(AtkAttribute));
+    // On ATK, the placeholder attribute is called placeholder-text.
+    if (attrs[i].Name().Equals("placeholder")) {
+      attrs[i].Name().AssignLiteral("placeholder-text");
+    }
     objAttr->name = g_strdup(attrs[i].Name().get());
     objAttr->value = g_strdup(NS_ConvertUTF16toUTF8(attrs[i].Value()).get());
     objAttributeSet = g_slist_prepend(objAttributeSet, objAttr);
