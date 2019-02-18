@@ -356,7 +356,7 @@ ProxyMessenger = {
 
     let extension = GlobalManager.extensionMap.get(sender.extensionId);
 
-    if (extension.wakeupBackground) {
+    if (extension && extension.wakeupBackground) {
       await extension.wakeupBackground();
     }
 
