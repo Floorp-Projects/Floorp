@@ -16,17 +16,19 @@
     // We add the iframe during onload to be sure that the observer is registered
     // in time for it to observe the element timing.
     // TODO(npm): change observer to use buffered flag.
-    window.onload = () => {
+    window.onload = t.step_func(() => {
       // Add a cross origin iframe with an image.
       const iframe = document.createElement('iframe');
-      iframe.src =
-        'http://localhost:8000/performance-timing/element-resources/iframe-with-square.html';
+      iframe.src = 'http://{{domains[www]}}:{{ports[http][1]}}'
+          + '/element-timing/resources/iframe-with-square.html';
       document.body.appendChild(iframe);
-    };
-    t.step_timeout( () => {
-      // After some wait, assume observer did not receive the entry, so the test passes.
-      t.done();
-    }, 300);
+      iframe.onload = t.step_func(() => {
+        t.step_timeout( () => {
+          // After some wait, assume observer did not receive the entry, so the test passes.
+          t.done();
+        }, 100);
+      });
+    });
   }, 'Element from cross origin iframe is NOT observable.');
 </script>
 
