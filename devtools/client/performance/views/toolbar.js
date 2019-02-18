@@ -1,15 +1,22 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* import-globals-from ../performance-controller.js */
-/* import-globals-from ../performance-view.js */
-/* globals document */
+/* globals $, $$, PerformanceController */
 "use strict";
+
+const EVENTS = require("../events");
+const { TIMELINE_BLUEPRINT } = require("../modules/markers");
+const { MarkerBlueprintUtils } = require("../modules/marker-blueprint-utils");
+
+const { OptionsView } = require("devtools/client/shared/options-view");
+const EventEmitter = require("devtools/shared/event-emitter");
+
+const BRANCH_NAME = "devtools.performance.ui.";
 
 /**
  * View handler for toolbar events (mostly option toggling and triggering)
  */
-var ToolbarView = {
+const ToolbarView = {
   /**
    * Sets up the view with event binding.
    */
@@ -158,3 +165,5 @@ var ToolbarView = {
 };
 
 EventEmitter.decorate(ToolbarView);
+
+exports.ToolbarView = window.ToolbarView = ToolbarView;

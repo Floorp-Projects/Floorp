@@ -1,9 +1,25 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* import-globals-from performance-controller.js */
-/* globals OverviewView, window */
+/* globals $, $$, PerformanceController */
 "use strict";
+
+const EventEmitter = require("devtools/shared/event-emitter");
+
+const React = require("devtools/client/shared/vendor/react");
+const ReactDOM = require("devtools/client/shared/vendor/react-dom");
+
+const RecordingControls = React.createFactory(require("devtools/client/performance/components/RecordingControls"));
+const RecordingButton = React.createFactory(require("devtools/client/performance/components/RecordingButton"));
+
+const EVENTS = require("./events");
+const PerformanceUtils = require("./modules/utils");
+const { DetailsView } = require("./views/details");
+const { OverviewView } = require("./views/overview");
+const { RecordingsView } = require("./views/recordings");
+const { ToolbarView } = require("./views/toolbar");
+
+const { L10N } = require("./modules/global");
 /**
  * Master view handler for the performance tool.
  */
@@ -412,3 +428,5 @@ var PerformanceView = {
  * Convenient way of emitting events from the view.
  */
 EventEmitter.decorate(PerformanceView);
+
+exports.PerformanceView = PerformanceView;

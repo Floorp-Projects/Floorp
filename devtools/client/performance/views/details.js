@@ -1,17 +1,25 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* import-globals-from ../performance-controller.js */
-/* import-globals-from ../performance-view.js */
-/* globals WaterfallView, JsCallTreeView, JsFlameGraphView, MemoryCallTreeView,
-           MemoryFlameGraphView */
+/* globals $, $$, PerformanceController */
+
 "use strict";
+
+const EVENTS = require("../events");
+
+const { WaterfallView } = require("./details-waterfall");
+const { JsCallTreeView } = require("./details-js-call-tree");
+const { JsFlameGraphView } = require("./details-js-flamegraph");
+const { MemoryCallTreeView } = require("./details-memory-call-tree");
+const { MemoryFlameGraphView } = require("./details-memory-flamegraph");
+
+const EventEmitter = require("devtools/shared/event-emitter");
 
 /**
  * Details view containing call trees, flamegraphs and markers waterfall.
  * Manages subviews and toggles visibility between them.
  */
-var DetailsView = {
+const DetailsView = {
   /**
    * Name to (node id, view object, actor requirements, pref killswitch)
    * mapping of subviews.
@@ -261,3 +269,6 @@ var DetailsView = {
  * Convenient way of emitting events from the view.
  */
 EventEmitter.decorate(DetailsView);
+
+exports.DetailsView = DetailsView;
+

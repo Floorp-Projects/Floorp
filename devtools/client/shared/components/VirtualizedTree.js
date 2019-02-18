@@ -816,7 +816,7 @@ class TreeNodeClass extends Component {
     return {
       id: PropTypes.any.isRequired,
       focused: PropTypes.bool.isRequired,
-      active: PropTypes.boool.isRequired,
+      active: PropTypes.bool.isRequired,
       item: PropTypes.any.isRequired,
       expanded: PropTypes.bool.isRequired,
       hasChildren: PropTypes.bool.isRequired,

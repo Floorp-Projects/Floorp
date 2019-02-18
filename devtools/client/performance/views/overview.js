@@ -1,13 +1,17 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* import-globals-from ../performance-controller.js */
-/* import-globals-from ../performance-view.js */
+/* globals $, $$, PerformanceController */
 "use strict";
 
 // No sense updating the overview more often than receiving data from the
 // backend. Make sure this isn't lower than DEFAULT_TIMELINE_DATA_PULL_TIMEOUT
 // in devtools/server/actors/timeline.js
+
+const EVENTS = require("../events");
+const { GraphsController } = require("../modules/widgets/graphs");
+
+const EventEmitter = require("devtools/shared/event-emitter");
 
 // The following units are in milliseconds.
 const OVERVIEW_UPDATE_INTERVAL = 200;
@@ -29,8 +33,7 @@ const GRAPH_REQUIREMENTS = {
  * View handler for the overview panel's time view, displaying
  * framerate, timeline and memory over time.
  */
-var OverviewView = {
-
+const OverviewView = {
   /**
    * How frequently we attempt to render the graphs. Overridden
    * in tests.
@@ -420,3 +423,6 @@ function OverviewViewOnStateChange(fn) {
 
 // Decorates the OverviewView as an EventEmitter
 EventEmitter.decorate(OverviewView);
+
+exports.OverviewView = OverviewView;
+

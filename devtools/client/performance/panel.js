@@ -29,8 +29,6 @@ PerformancePanel.prototype = {
       return this._opening;
     }
 
-    this.panelWin.gToolbox = this.toolbox;
-    this.panelWin.gTarget = this.target;
     this._checkRecordingStatus = this._checkRecordingStatus.bind(this);
 
     // Actor is already created in the toolbox; reuse
@@ -39,6 +37,11 @@ PerformancePanel.prototype = {
     // in the case of the front still being in the process of opening.
     const front = await this.target.getFront("performance");
 
+    // Keep references on window for toolbox, target and front for tests.
+    this.panelWin.gToolbox = this.toolbox;
+    this.panelWin.gTarget = this.target;
+    this.panelWin.gFront = front;
+
     // This should only happen if this is completely unsupported (when profiler
     // does not exist), and in that case, the tool shouldn't be available,
     // so let's ensure this assertion.
@@ -46,11 +49,10 @@ PerformancePanel.prototype = {
       console.error("No PerformanceFront found in toolbox.");
     }
 
-    this.panelWin.gFront = front;
-    const { PerformanceController, EVENTS } = this.panelWin;
+    const { startupPerformance, PerformanceController, EVENTS } = this.panelWin;
     PerformanceController.on(EVENTS.RECORDING_ADDED, this._checkRecordingStatus);
     PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE, this._checkRecordingStatus);
-    await this.panelWin.startupPerformance();
+    await startupPerformance(this.toolbox, this.target, front);
 
     // Fire this once incase we have an in-progress recording (console profile)
     // that caused this start up, and no state change yet, so we can highlight the
@@ -78,10 +80,11 @@ PerformancePanel.prototype = {
       return;
     }
 
-    const { PerformanceController, EVENTS } = this.panelWin;
+    const { shutdownPerformance, PerformanceController, EVENTS } = this.panelWin;
     PerformanceController.off(EVENTS.RECORDING_ADDED, this._checkRecordingStatus);
     PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE, this._checkRecordingStatus);
-    await this.panelWin.shutdownPerformance();
+    await shutdownPerformance();
+
     this.emit("destroyed");
     this._destroyed = true;
   },

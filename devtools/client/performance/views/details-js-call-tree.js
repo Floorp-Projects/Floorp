@@ -1,15 +1,27 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* import-globals-from ../performance-controller.js */
-/* import-globals-from ../performance-view.js */
-/* globals DetailsSubview */
+/* globals $, $$, PerformanceController */
 "use strict";
+
+const { extend } = require("devtools/shared/extend");
+
+const React = require("devtools/client/shared/vendor/react");
+const ReactDOM = require("devtools/client/shared/vendor/react-dom");
+
+const EVENTS = require("../events");
+const { CallView } = require("../modules/widgets/tree-view");
+const { ThreadNode } = require("../modules/logic/tree-model");
+const { DetailsSubview } = require("./details-abstract-subview");
+
+const JITOptimizationsView = React.createFactory(require("../components/JITOptimizations"));
+
+const EventEmitter = require("devtools/shared/event-emitter");
 
 /**
  * CallTree view containing profiler call tree, controlled by DetailsView.
  */
-var JsCallTreeView = extend(DetailsSubview, {
+const JsCallTreeView = extend(DetailsSubview, {
 
   rerenderPrefs: [
     "invert-call-tree",
@@ -102,7 +114,7 @@ var JsCallTreeView = extend(DetailsSubview, {
       frameData,
       optimizationSites,
       onViewSourceInDebugger: (url, line) => {
-        gToolbox.viewSourceInDebugger(url, line).then(success => {
+        PerformanceController.toolbox.viewSourceInDebugger(url, line).then(success => {
           if (success) {
             this.emit(EVENTS.SOURCE_SHOWN_IN_JS_DEBUGGER);
           } else {
@@ -122,7 +134,7 @@ var JsCallTreeView = extend(DetailsSubview, {
    */
   _onLink: function(treeItem) {
     const { url, line } = treeItem.frame.getInfo();
-    gToolbox.viewSourceInDebugger(url, line).then(success => {
+    PerformanceController.toolbox.viewSourceInDebugger(url, line).then(success => {
       if (success) {
         this.emit(EVENTS.SOURCE_SHOWN_IN_JS_DEBUGGER);
       } else {
@@ -192,3 +204,5 @@ var JsCallTreeView = extend(DetailsSubview, {
 });
 
 EventEmitter.decorate(JsCallTreeView);
+
+exports.JsCallTreeView = JsCallTreeView;
