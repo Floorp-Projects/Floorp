@@ -34,7 +34,7 @@ add_task(async function() {
   let firstTabLabelRect =
     document.getAnonymousElementByAttribute(gBrowser.selectedTab, "anonid", "tab-label")
             .getBoundingClientRect();
-  let textBoxRect = document.getAnonymousElementByAttribute(gURLBar,
+  let textBoxRect = document.getAnonymousElementByAttribute(gURLBar.textbox,
     "anonid", "moz-input-box").getBoundingClientRect();
   let inRange = (val, min, max) => min <= val && val <= max;
 

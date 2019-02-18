@@ -40,7 +40,7 @@ add_task(async function() {
   Assert.equal(EXPECTED_REFLOWS.length, 0,
     "We shouldn't have added any new expected reflows for window close.");
 
-  let dropmarkerRect = document.getAnonymousElementByAttribute(gURLBar,
+  let dropmarkerRect = document.getAnonymousElementByAttribute(gURLBar.textbox,
     "anonid", "historydropmarker").getBoundingClientRect();
 
   await withPerfObserver(async function() {
