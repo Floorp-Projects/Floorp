@@ -1018,7 +1018,6 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mRetainingDisplayList(aRetainingDisplayList),
       mPartialUpdate(false),
       mIgnoreSuppression(false),
-      mIsAtRootOfPseudoStackingContext(false),
       mIncludeAllOutOfFlows(false),
       mDescendIntoSubdocuments(true),
       mSelectedFramesOnly(false),
@@ -3696,7 +3695,7 @@ static bool SpecialCutoutRegionCase(nsDisplayListBuilder* aBuilder,
       auto* displayData = aBuilder->GetCurrentFixedBackgroundDisplayData();
       nsDisplayListBuilder::AutoBuildingDisplayList buildingDisplayList(
           aBuilder, aFrame, aBuilder->GetVisibleRect(),
-          aBuilder->GetDirtyRect(), false);
+          aBuilder->GetDirtyRect());
 
       nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter asrSetter(
           aBuilder);

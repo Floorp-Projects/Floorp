@@ -716,8 +716,7 @@ void nsSimplePageSequenceFrame::BuildDisplayList(
       if (child->GetVisualOverflowRectRelativeToParent().Intersects(visible)) {
         nsDisplayListBuilder::AutoBuildingDisplayList buildingForChild(
             aBuilder, child, visible - child->GetPosition(),
-            visible - child->GetPosition(),
-            aBuilder->IsAtRootOfPseudoStackingContext());
+            visible - child->GetPosition());
         child->BuildDisplayListForStackingContext(aBuilder, &content);
         aBuilder->ResetMarkedFramesForDisplayList(this);
       }
