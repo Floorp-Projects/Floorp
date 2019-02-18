@@ -3439,7 +3439,7 @@ static nscoord ContentContribution(
     // The next two variables are MinSizeClamp values in the child's axes.
     nscoord iMinSizeClamp = NS_MAXSIZE;
     nscoord bMinSizeClamp = NS_MAXSIZE;
-    LogicalSize cbSize(childWM, 0, NS_UNCONSTRAINEDSIZE);
+    LogicalSize cbSize(childWM, 0, 0);
     if (aState.mCols.mCanResolveLineRangeSize) {
       nscoord sz = aState.mCols.ResolveSize(aGridItem.mArea.mCols);
       if (isOrthogonal) {
