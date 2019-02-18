@@ -359,10 +359,6 @@ export function getPauseCommand(state: OuterState): Command {
   return getCurrentPauseState(state).command;
 }
 
-export function getLastCommand(state: OuterState, thread: string) {
-  return getThreadPauseState(state.pause, thread).lastCommand;
-}
-
 export function wasStepping(state: OuterState): boolean {
   return getCurrentPauseState(state).wasStepping;
 }

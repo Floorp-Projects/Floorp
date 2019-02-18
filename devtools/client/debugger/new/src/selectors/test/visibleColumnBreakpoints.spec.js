@@ -9,8 +9,8 @@ import { makeMockSource, makeMockBreakpoint } from "../../utils/test-mockup";
 
 function pp(line, column) {
   return {
-    location: { sourceId: "", line, column },
-    generatedLocation: { sourceId: "", line, column },
+    location: { sourceId: "foo", line, column },
+    generatedLocation: { sourceId: "foo", line, column },
     types: { break: true, step: false }
   };
 }
@@ -32,13 +32,7 @@ describe("visible column breakpoints", () => {
     const pausePoints = [pp(1, 1), pp(1, 5), pp(3, 1)];
     const breakpoints = [bp(1, 1), bp(4, 0), bp(4, 3)];
 
-    const selectedSource = defaultSource();
-    const columnBps = getColumnBreakpoints(
-      pausePoints,
-      breakpoints,
-      viewport,
-      selectedSource
-    );
+    const columnBps = getColumnBreakpoints(pausePoints, breakpoints, viewport);
     expect(columnBps).toMatchSnapshot();
   });
 
@@ -49,13 +43,8 @@ describe("visible column breakpoints", () => {
     };
     const pausePoints = [pp(1, 1), pp(1, 1), pp(1, 3)];
     const breakpoints = [bp(1, 1)];
-    const selectedSource = defaultSource();
-    const columnBps = getColumnBreakpoints(
-      pausePoints,
-      breakpoints,
-      viewport,
-      selectedSource
-    );
+
+    const columnBps = getColumnBreakpoints(pausePoints, breakpoints, viewport);
     expect(columnBps).toMatchSnapshot();
   });
 
@@ -66,13 +55,7 @@ describe("visible column breakpoints", () => {
     };
     const pausePoints = [pp(1, 1), pp(1, 3), pp(2, 1)];
     const breakpoints = [bp(1, 1)];
-    const selectedSource = defaultSource();
-    const columnBps = getColumnBreakpoints(
-      pausePoints,
-      breakpoints,
-      viewport,
-      selectedSource
-    );
+    const columnBps = getColumnBreakpoints(pausePoints, breakpoints, viewport);
     expect(columnBps).toMatchSnapshot();
   });
 
@@ -83,14 +66,8 @@ describe("visible column breakpoints", () => {
     };
     const pausePoints = [pp(1, 1), pp(1, 3), pp(20, 1)];
     const breakpoints = [bp(1, 1)];
-    const selectedSource = defaultSource();
 
-    const columnBps = getColumnBreakpoints(
-      pausePoints,
-      breakpoints,
-      viewport,
-      selectedSource
-    );
+    const columnBps = getColumnBreakpoints(pausePoints, breakpoints, viewport);
     expect(columnBps).toMatchSnapshot();
   });
 });

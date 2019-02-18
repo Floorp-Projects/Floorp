@@ -8,7 +8,7 @@ const {
   workerUtils: { WorkerDispatcher }
 } = require("devtools-utils");
 
-import type { SourceLocation, Source, SourceId } from "debugger-html";
+import type { SourceLocation, Source, SourceId } from "../../../src/types";
 import type { SourceMapConsumer } from "source-map";
 import type { locationOptions } from "./source-map";
 

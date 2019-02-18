@@ -32,7 +32,6 @@ const threadClient = {
     source: sourceTexts[source],
     contentType: "text/javascript"
   }),
-  setPausePoints: async () => {},
   getFrameScopes: async () => {},
   evaluate: async expression => ({ result: evaluationResult[expression] }),
   evaluateExpressions: async expressions =>

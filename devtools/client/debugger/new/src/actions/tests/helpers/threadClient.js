@@ -49,7 +49,6 @@ export const simpleMockThreadClient = {
     _options: BreakpointOptions,
     _noSliding: boolean
   ) => Promise.resolve({ sourceId: "a", line: 5 }),
-  setPausePoints: () => Promise.resolve({}),
   sourceContents: ({
     source
   }: SourceActor): Promise<{| source: any, contentType: ?string |}> =>
@@ -77,6 +76,5 @@ export const sourceThreadClient = {
   },
   threadClient: async () => {},
   getFrameScopes: async () => {},
-  setPausePoints: async () => {},
   evaluateExpressions: async () => {}
 };
