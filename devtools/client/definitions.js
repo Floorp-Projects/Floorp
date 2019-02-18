@@ -79,7 +79,8 @@ Tools.inspector = {
       return l10n("inspector.mac.tooltip", cmdShiftC, cmdOptC);
     }
 
-    return l10n("inspector.tooltip2", "Ctrl+Shift+") + l10n("inspector.commandkey");
+    const ctrlShiftC = "Ctrl+Shift+" + l10n("inspector.commandkey");
+    return l10n("inspector.tooltip2", ctrlShiftC);
   },
   inMenu: true,
 
