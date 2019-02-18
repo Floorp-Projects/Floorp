@@ -40,10 +40,10 @@ bool wasm::CraneliftCanCompile() {
 
 static inline SymbolicAddress ToSymbolicAddress(BD_SymbolicAddress bd) {
   switch (bd) {
-    case BD_SymbolicAddress::GrowMemory:
-      return SymbolicAddress::GrowMemory;
-    case BD_SymbolicAddress::CurrentMemory:
-      return SymbolicAddress::CurrentMemory;
+    case BD_SymbolicAddress::MemoryGrow:
+      return SymbolicAddress::MemoryGrow;
+    case BD_SymbolicAddress::MemorySize:
+      return SymbolicAddress::MemorySize;
     case BD_SymbolicAddress::FloorF32:
       return SymbolicAddress::FloorF;
     case BD_SymbolicAddress::FloorF64:

@@ -8,7 +8,7 @@ const v2vSigSection = sigSection([{args:[], ret:VoidCode}]);
 
 function checkInvalid(body, errorMessage) {
     assertErrorMessage(() => new WebAssembly.Module(
-        moduleWithSections([gcFeatureOptInSection(2),
+        moduleWithSections([gcFeatureOptInSection(3),
                             v2vSigSection,
                             declSection([0]),
                             bodySection([body])])),
@@ -22,7 +22,7 @@ function checkInvalid(body, errorMessage) {
 {
     let bin = wasmTextToBinary(
         `(module
-          (gc_feature_opt_in 2)
+          (gc_feature_opt_in 3)
 
           (import $print_lp "" "print_lp" (func))
           (import $print_rp "" "print_rp" (func))
@@ -119,7 +119,7 @@ function checkInvalid(body, errorMessage) {
 
 wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (type $node (struct (field (mut (ref $node)))))
       (type $nix (struct (field (mut (ref $node))) (field i32)))
       (func $f (param $p (ref $node)) (param $q (ref $nix))
@@ -129,7 +129,7 @@ wasmEvalText(
 
 assertEq(wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (type $node (struct (field i32)))
       (type $node2 (struct (field i32) (field f32)))
       (func $f (param $p (ref $node)) (result (ref $node2))
@@ -142,7 +142,7 @@ assertEq(wasmEvalText(
 
 assertEq(wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (type $node (struct (field i32)))
       (type $node2 (struct (field i32) (field f32)))
       (func $f (param $p (ref $node)) (result (ref $node2))
@@ -157,7 +157,7 @@ assertEq(wasmEvalText(
 
 assertEq(wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (type $node (struct (field (mut i32))))
       (type $node2 (struct (field (mut i32)) (field f32)))
       (func $f (param $p (ref $node)) (result (ref $node2))
@@ -179,7 +179,7 @@ assertEq(wasmEvalText(
 
 assertEq(wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
 
       (type $node (struct (field i32)))
       (type $node2a (struct (field i32) (field (ref $node))))
@@ -196,7 +196,7 @@ assertEq(wasmEvalText(
 
 assertEq(wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
 
       (type $node (struct (field i32)))
       (type $nodeCopy (struct (field i32)))
@@ -217,7 +217,7 @@ assertEq(wasmEvalText(
 
 assertEq(wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (type $node (struct (field i32)))
       (type $node2 (struct (field i32) (field f32)))
       (type $node3 (struct (field i32) (field f32) (field f64)))
@@ -233,7 +233,7 @@ assertEq(wasmEvalText(
 
 assertEq(wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (type $node (struct (field i32)))
       (type $node2 (struct (field i32) (field f32)))
       (type $snort (struct (field i32) (field f64)))
@@ -248,7 +248,7 @@ assertEq(wasmEvalText(
 
 assertEq(wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (type $node (struct (field i32)))
       (func $f (param $p anyref) (result (ref $node))
        (struct.narrow anyref (ref $node) (get_local $p)))
@@ -262,7 +262,7 @@ assertEq(wasmEvalText(
 
 assertEq(wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (type $node (struct (field i32)))
       (func (export "test") (param $p anyref) (result anyref)
        (struct.narrow anyref (ref $node) (get_local $p))))`).exports.test({hi:37}),
@@ -273,7 +273,7 @@ assertEq(wasmEvalText(
 {
     let txt =
         `(module
-          (gc_feature_opt_in 2)
+          (gc_feature_opt_in 3)
           (type $node (struct (field i32)))
           (func (export "make") (param $n i32) (result anyref)
            (struct.new $node (get_local $n)))
@@ -293,7 +293,7 @@ assertEq(wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (type $node (struct (field i32)))
       (func $f (param $p (ref $node))
        (struct.set $node 0 (get_local $p) (i32.const 37))))`),
@@ -304,7 +304,7 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (type $node (struct (field (mut i32))))
       (func $f (param $p (ref $node))
        (struct.set $node 0 (get_local $p) (f32.const 37))))`),
@@ -315,7 +315,7 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (type $node (struct (field i32)))
       (func $f (param $p (ref $node)) (result i32)
        (struct.get $node 1 (get_local $p))))`),
@@ -326,7 +326,7 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (type $node (struct (field (mut i32))))
       (func $f (param $p (ref $node))
        (struct.set $node 1 (get_local $p) (i32.const 37))))`),
@@ -337,7 +337,7 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (type $node (struct (field i32)))
       (type $snort (struct (field f64)))
       (func $f (param $p (ref $snort)) (result i32)
@@ -349,7 +349,7 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (type $node (struct (field (mut i32))))
       (type $snort (struct (field f64)))
       (func $f (param $p (ref $snort)) (result i32)
@@ -361,7 +361,7 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (type $node (struct (field i32)))
       (type $node2 (struct (field i32) (field f32)))
       (type $snort (struct (field f64)))
@@ -374,7 +374,7 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (type $node (struct (field i32)))
       (type $node2 (struct (field (mut i32)) (field f32)))
       (func $f (param $p (ref $node)) (result (ref $node2))
@@ -384,7 +384,7 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (type $node (struct (field (mut i32))))
       (type $node2 (struct (field i32) (field f32)))
       (func $f (param $p (ref $node)) (result (ref $node2))
@@ -396,7 +396,7 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (type $node (struct (field i32)))
       (func $f (param $p (ref $node)) (result anyref)
        (struct.narrow i32 anyref (get_local 0))))`),
@@ -405,7 +405,7 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (type $node (struct (field i32)))
       (func $f (param $p (ref $node)) (result anyref)
        (struct.narrow anyref i32 (get_local 0))))`),
@@ -416,7 +416,7 @@ assertErrorMessage(() => wasmEvalText(
 
 checkInvalid(funcBody({locals:[],
                        body:[
-                           RefNull,
+                           RefNullCode,
                            MiscPrefix, StructNarrow, I32Code, AnyrefCode,
                            DropCode
                        ]}),
@@ -424,7 +424,7 @@ checkInvalid(funcBody({locals:[],
 
 checkInvalid(funcBody({locals:[],
                        body:[
-                           RefNull,
+                           RefNullCode,
                            MiscPrefix, StructNarrow, AnyrefCode, I32Code,
                            DropCode
                        ]}),
@@ -434,7 +434,7 @@ checkInvalid(funcBody({locals:[],
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (type $node (struct (field i32)))
       (func $f (param $p (ref $node)) (result anyref)
        (struct.narrow (ref $node) anyref (get_local 0))))`),
@@ -445,7 +445,7 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (type $node (struct (field i32)))
       (type $node2 (struct (field i32) (field f32)))
       (func $f (param $p (ref $node2)) (result anyref)
@@ -458,7 +458,7 @@ assertErrorMessage(() => wasmEvalText(
 assertErrorMessage(function() {
     let ins = wasmEvalText(
         `(module
-          (gc_feature_opt_in 2)
+          (gc_feature_opt_in 3)
           (type $node (struct (field i32)))
           (func (export "test")
            (drop (call $f (ref.null))))
@@ -474,7 +474,7 @@ assertErrorMessage(function() {
 assertErrorMessage(function() {
     let ins = wasmEvalText(
         `(module
-          (gc_feature_opt_in 2)
+          (gc_feature_opt_in 3)
           (type $node (struct (field (mut i32))))
           (func (export "test")
            (call $f (ref.null)))

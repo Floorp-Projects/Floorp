@@ -4,7 +4,7 @@
 
 {
     let ins = wasmEvalText(`(module
-                             (gc_feature_opt_in 2)
+                             (gc_feature_opt_in 3)
 
                              (type $p (struct (field f64) (field (mut i32))))
 
@@ -24,7 +24,7 @@
 
 {
     let ins = wasmEvalText(`(module
-                             (gc_feature_opt_in 2)
+                             (gc_feature_opt_in 3)
 
                              (type $p (struct (field f64)))
 
@@ -44,7 +44,7 @@
 
 {
     let ins = wasmEvalText(`(module
-                             (gc_feature_opt_in 2)
+                             (gc_feature_opt_in 3)
 
                              (type $q (struct (field (mut f64))))
                              (type $p (struct (field (mut (ref $q)))))
@@ -74,7 +74,7 @@
 
 {
     let ins = wasmEvalText(`(module
-                             (gc_feature_opt_in 2)
+                             (gc_feature_opt_in 3)
 
                              (type $q (struct (field (mut f64))))
                              (type $p (struct (field (mut (ref $q))) (field (mut anyref))))
@@ -104,7 +104,7 @@
 
 {
     let ins = wasmEvalText(`(module
-                             (gc_feature_opt_in 2)
+                             (gc_feature_opt_in 3)
                              (type $p (struct (field (mut i64))))
                              (func (export "mkp") (result anyref)
                               (struct.new $p (i64.const 0x1234567887654321))))`).exports;
@@ -133,7 +133,7 @@
 {
     let ins = wasmEvalText(
         `(module
-          (gc_feature_opt_in 2)
+          (gc_feature_opt_in 3)
           (type $p (struct (field i64)))
           (type $q (struct (field i32) (field i32)))
           (func $f (param anyref) (result i32)
