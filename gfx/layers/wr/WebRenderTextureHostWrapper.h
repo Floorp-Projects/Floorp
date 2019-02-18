@@ -21,7 +21,8 @@ class WebRenderTextureHostWrapper {
  public:
   explicit WebRenderTextureHostWrapper(AsyncImagePipelineManager* aManager);
 
-  void UpdateWebRenderTextureHost(WebRenderTextureHost* aTextureHost);
+  void UpdateWebRenderTextureHost(wr::TransactionBuilder& aTxn,
+                                  WebRenderTextureHost* aTextureHost);
 
   wr::ExternalImageId GetExternalImageKey() { return mExternalImageId; }
 

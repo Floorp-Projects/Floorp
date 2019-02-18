@@ -594,6 +594,7 @@ void RenderThread::UnregisterExternalImage(uint64_t aExternalImageId) {
 void RenderThread::UpdateRenderTextureHost(uint64_t aSrcExternalImageId,
                                            uint64_t aWrappedExternalImageId) {
   MOZ_ASSERT(aSrcExternalImageId != aWrappedExternalImageId);
+  MOZ_ASSERT(RenderThread::IsInRenderThread());
 
   MutexAutoLock lock(mRenderTextureMapLock);
   if (mHasShutdown) {
@@ -611,14 +612,7 @@ void RenderThread::UpdateRenderTextureHost(uint64_t aSrcExternalImageId,
     MOZ_ASSERT_UNREACHABLE("unexpected to happen");
     return;
   }
-  if (!wrapper->IsInited()) {
-    wrapper->UpdateRenderTextureHost(wrapped->second);
-    MOZ_ASSERT(wrapper->IsInited());
-  } else {
-    Loop()->PostTask(NewRunnableMethod<RenderTextureHost*>(
-        "RenderTextureHostWrapper::UpdateRenderTextureHost", wrapper,
-        &RenderTextureHostWrapper::UpdateRenderTextureHost, wrapped->second));
-  }
+  wrapper->UpdateRenderTextureHost(wrapped->second);
 }
 
 void RenderThread::UnregisterExternalImageDuringShutdown(
