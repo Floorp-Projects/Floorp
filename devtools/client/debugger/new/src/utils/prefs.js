@@ -35,6 +35,7 @@ if (isDevelopment()) {
   pref("devtools.debugger.end-panel-size", 300);
   pref("devtools.debugger.tabs", "[]");
   pref("devtools.debugger.tabsBlackBoxed", "[]");
+  pref("devtools.debugger.ui.editor-wrapping", false);
   pref("devtools.debugger.ui.framework-grouping-on", true);
   pref("devtools.debugger.pending-selected-location", "{}");
   pref("devtools.debugger.pending-breakpoints", "{}");
@@ -69,6 +70,7 @@ if (isDevelopment()) {
 
 export const prefs = new PrefsHelper("devtools", {
   logging: ["Bool", "debugger.logging"],
+  editorWrapping: ["Bool", "debugger.ui.editor-wrapping"],
   alphabetizeOutline: ["Bool", "debugger.alphabetize-outline"],
   autoPrettyPrint: ["Bool", "debugger.auto-pretty-print"],
   clientSourceMapsEnabled: ["Bool", "source-map.client-service.enabled"],
