@@ -124,7 +124,7 @@ enum Operation {
         log_level: Option<Level>,
         address: SocketAddr,
         settings: MarionetteSettings,
-    }
+    },
 }
 
 fn parse_args(app: &mut App) -> ProgramResult<Operation> {
@@ -325,10 +325,10 @@ fn print_help(app: &mut App) {
 
 fn print_version() {
     println!("geckodriver {}", build::BuildInfo);
-    println!("");
+    println!();
     println!("The source code of this program is available from");
     println!("testing/geckodriver in https://hg.mozilla.org/mozilla-central.");
-    println!("");
+    println!();
     println!("This program is subject to the terms of the Mozilla Public License 2.0.");
     println!("You can obtain a copy of the license at https://mozilla.org/MPL/2.0/.");
 }
