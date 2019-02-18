@@ -417,10 +417,8 @@ class nsDisplayListBuilder {
    * A frame can be in one of three states of AGR.
    * AGR_NO     means the frame is not an AGR for now.
    * AGR_YES    means the frame is an AGR for now.
-   * AGR_MAYBE  means the frame is not an AGR for now, but a transition
-   *            to AGR_YES without restyling is possible.
    */
-  enum AGRState { AGR_NO, AGR_YES, AGR_MAYBE };
+  enum AGRState { AGR_NO, AGR_YES };
 
  public:
   typedef mozilla::FrameLayerBuilder FrameLayerBuilder;
@@ -1135,10 +1133,6 @@ class nsDisplayListBuilder {
     }
 
     bool IsAnimatedGeometryRoot() const { return mCurrentAGRState == AGR_YES; }
-
-    bool MaybeAnimatedGeometryRoot() const {
-      return mCurrentAGRState == AGR_MAYBE;
-    }
 
     void RestoreBuildingInvisibleItemsValue() {
       mBuilder->mBuildingInvisibleItems = mPrevBuildingInvisibleItems;
