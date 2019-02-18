@@ -1045,11 +1045,6 @@ nsTArray<unsigned int>* Gecko_AppendFeatureValueHashEntry(
       nsAtomCString(aFamily), nsDependentAtomString(aName), aAlternate);
 }
 
-void Gecko_nsFont_SetFontFeatureValuesLookup(
-    nsFont* aFont, const RawGeckoPresContext* aPresContext) {
-  aFont->featureValueLookup = aPresContext->GetFontFeatureValuesLookup();
-}
-
 float Gecko_FontStretch_ToFloat(mozilla::FontStretch aStretch) {
   // Servo represents percentages with 1. being 100%.
   return aStretch.Percentage() / 100.0f;
@@ -1093,10 +1088,6 @@ void Gecko_FontWeight_SetFloat(mozilla::FontWeight* aWeight, float aFloat) {
   *aWeight = mozilla::FontWeight(aFloat);
 }
 
-void Gecko_nsFont_ResetFontFeatureValuesLookup(nsFont* aFont) {
-  aFont->featureValueLookup = nullptr;
-}
-
 void Gecko_ClearAlternateValues(nsFont* aFont, size_t aLength) {
   aFont->alternateValues.Clear();
   aFont->alternateValues.SetCapacity(aLength);
@@ -1111,7 +1102,6 @@ void Gecko_AppendAlternateValues(nsFont* aFont, uint32_t aAlternateName,
 void Gecko_CopyAlternateValuesFrom(nsFont* aDest, const nsFont* aSrc) {
   aDest->alternateValues.Clear();
   aDest->alternateValues.AppendElements(aSrc->alternateValues);
-  aDest->featureValueLookup = aSrc->featureValueLookup;
 }
 
 void Gecko_SetCounterStyleToName(CounterStylePtr* aPtr, nsAtom* aName) {
