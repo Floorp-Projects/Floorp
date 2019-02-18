@@ -135,6 +135,7 @@ SERIALIZED_PREDEFINED_TYPES = [
     "OverscrollBehavior",
     "OverflowAnchor",
     "OverflowClipBox",
+    "ScrollSnapAlign",
     "ScrollSnapType",
     "Float",
     "Overflow",
