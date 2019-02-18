@@ -4,8 +4,8 @@
 
 .column-breakpoint {
   display: inline;
-  padding: 0;
-  padding-inline-end: 4px;
+  padding-inline-start: 1px;
+  padding-inline-end: 3px;
 }
 
 .column-breakpoint:hover {
@@ -13,10 +13,10 @@
 }
 
 .column-breakpoint svg {
-  display: inline;
+  display: inline-block;
   cursor: pointer;
-  height: 12px;
-  width: 9px;
+  height: 13px;
+  width: 11px;
   vertical-align: top;
 }
 
