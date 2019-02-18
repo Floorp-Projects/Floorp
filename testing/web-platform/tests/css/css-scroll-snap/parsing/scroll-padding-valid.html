@@ -53,7 +53,8 @@ test_valid_value("scroll-padding", "1px 2px");
 test_valid_value("scroll-padding", "1px 2px 3%");
 test_valid_value("scroll-padding", "1px 2px 3% 4px");
 test_valid_value("scroll-padding", "1px auto");
-test_valid_value("scroll-padding", "auto auto auto auto");
+test_valid_value("scroll-padding", "0 0 0 0", "0px");
+test_valid_value("scroll-padding", "auto auto auto auto", "auto");
 </script>
 </body>
 </html>
