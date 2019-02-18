@@ -44,23 +44,10 @@ const {
   WATCH_RUNTIME_SUCCESS,
 } = require("../constants");
 
-async function getRuntimeInfo(runtime, clientWrapper) {
-  const { type } = runtime;
-  const { name, channel, deviceName, isMultiE10s, version } =
-    await clientWrapper.getDeviceDescription();
-  const icon =
-    (channel === "release" || channel === "beta" || channel === "aurora")
-      ? `chrome://devtools/skin/images/aboutdebugging-firefox-${ channel }.svg`
-      : "chrome://devtools/skin/images/aboutdebugging-firefox-nightly.svg";
-
-  return {
-    deviceName,
-    icon,
-    isMultiE10s,
-    name,
-    type,
-    version,
-  };
+async function getRuntimeIcon(channel) {
+  return (channel === "release" || channel === "beta" || channel === "aurora")
+    ? `chrome://devtools/skin/images/aboutdebugging-firefox-${ channel }.svg`
+    : "chrome://devtools/skin/images/aboutdebugging-firefox-nightly.svg";
 }
 
 function onRemoteDebuggerClientClosed() {
@@ -78,19 +65,18 @@ function connectRuntime(id) {
     try {
       const runtime = findRuntimeById(id, getState().runtimes);
       const clientWrapper = await createClientForRuntime(runtime);
-      const info = await getRuntimeInfo(runtime, clientWrapper);
-      const { isMultiE10s } = info;
-      delete info.isMultiE10s;
+
+      const deviceDescription = await clientWrapper.getDeviceDescription();
+      const compatibilityReport = await clientWrapper.checkVersionCompatibility();
+      const icon = await getRuntimeIcon(deviceDescription.channel);
 
       const {
         CONNECTION_PROMPT,
         PERMANENT_PRIVATE_BROWSING,
         SERVICE_WORKERS_ENABLED,
       } = RUNTIME_PREFERENCE;
-
       const connectionPromptEnabled =
         await clientWrapper.getPreference(CONNECTION_PROMPT, false);
-
       const privateBrowsing =
         await clientWrapper.getPreference(PERMANENT_PRIVATE_BROWSING, false);
       const serviceWorkersEnabled =
@@ -99,9 +85,16 @@ function connectRuntime(id) {
 
       const runtimeDetails = {
         clientWrapper,
+        compatibilityReport,
         connectionPromptEnabled,
-        info,
-        isMultiE10s,
+        info: {
+          deviceName: deviceDescription.deviceName,
+          icon,
+          name: deviceDescription.name,
+          type: runtime.type,
+          version: deviceDescription.version,
+        },
+        isMultiE10s: deviceDescription.isMultiE10s,
         serviceWorkersAvailable,
       };
 

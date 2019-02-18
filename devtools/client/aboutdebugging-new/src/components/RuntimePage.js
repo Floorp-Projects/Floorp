@@ -12,6 +12,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
+const CompatibilityWarning = createFactory(require("./CompatibilityWarning"));
 const ConnectionPromptSetting = createFactory(require("./ConnectionPromptSetting"));
 const DebugTargetPane = createFactory(require("./debugtarget/DebugTargetPane"));
 const ExtensionDetail = createFactory(require("./debugtarget/ExtensionDetail"));
@@ -145,6 +146,7 @@ class RuntimePage extends PureComponent {
     }
 
     const { type } = runtimeDetails.info;
+    const { compatibilityReport } = runtimeDetails;
     return dom.article(
       {
         className: "page js-runtime-page",
@@ -152,6 +154,7 @@ class RuntimePage extends PureComponent {
       RuntimeInfo(runtimeDetails.info),
       this.renderRemoteRuntimeActions(),
       runtimeDetails.serviceWorkersAvailable ? null : ServiceWorkersWarning(),
+      CompatibilityWarning({ compatibilityReport }),
       isSupportedDebugTargetPane(type, DEBUG_TARGET_PANE.TEMPORARY_EXTENSION)
         ? TemporaryExtensionInstaller({
             dispatch,
