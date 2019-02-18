@@ -82,8 +82,15 @@ function _handleMessage(message) {
 }
 
 function _trackWindowOrder(window) {
-  _trackedWindows.splice(window.windowState == window.STATE_MINIMIZED ?
-    _trackedWindows.length - 1 : 0, 0, window);
+  if (window.windowState == window.STATE_MINIMIZED) {
+    let firstMinimizedWindow = _trackedWindows.findIndex(w => w.windowState == w.STATE_MINIMIZED);
+    if (firstMinimizedWindow == -1) {
+      firstMinimizedWindow = _trackedWindows.length;
+    }
+    _trackedWindows.splice(firstMinimizedWindow, 0, window);
+  } else {
+    _trackedWindows.unshift(window);
+  }
 }
 
 function _untrackWindowOrder(window) {
@@ -140,9 +147,9 @@ var WindowHelper = {
 
   onSizemodeChange(window) {
     if (window.windowState == window.STATE_MINIMIZED) {
-      // Make sure to have the minimized window at the end of the list.
+      // Make sure to have the minimized window behind unminimized windows.
       _untrackWindowOrder(window);
-      _trackedWindows.push(window);
+      _trackWindowOrder(window);
     }
   },
 };
