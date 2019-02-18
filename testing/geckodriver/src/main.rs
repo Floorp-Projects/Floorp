@@ -118,6 +118,7 @@ macro_rules! usage {
 type ProgramResult<T> = result::Result<T, FatalError>;
 
 enum Operation {
+    Help,
     Version,
     Server {
         log_level: Option<Level>,
@@ -160,7 +161,9 @@ fn parse_args(app: &mut App) -> ProgramResult<Operation> {
         None => None,
     };
 
-    let op = if matches.is_present("version") {
+    let op = if matches.is_present("help") {
+        Operation::Help
+    } else if matches.is_present("version") {
         Operation::Version
     } else {
         let settings = MarionetteSettings {
@@ -182,6 +185,7 @@ fn parse_args(app: &mut App) -> ProgramResult<Operation> {
 
 fn inner_main(app: &mut App) -> ProgramResult<()> {
     match parse_args(app)? {
+        Operation::Help => print_help(app),
         Operation::Version => print_version(),
 
         Operation::Server {
@@ -292,6 +296,12 @@ fn make_app<'a, 'b>() -> App<'a, 'b> {
                 .value_name("LEVEL")
                 .possible_values(&["fatal", "error", "warn", "info", "config", "debug", "trace"])
                 .help("Set Gecko log level"),
+        )
+        .arg(
+            Arg::with_name("help")
+                .short("h")
+                .long("help")
+                .help("Prints this message"),
         )
         .arg(
             Arg::with_name("version")
