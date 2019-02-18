@@ -109,6 +109,7 @@ SERIALIZED_PREDEFINED_TYPES = [
     "LengthPercentage",
     "NonNegativeLength",
     "NonNegativeLengthPercentage",
+    "NonNegativeLengthPercentageOrAuto",
     "ListStyleType",
     "OffsetPath",
     "Opacity",

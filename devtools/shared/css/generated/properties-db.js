@@ -2859,6 +2859,10 @@ exports.CSS_PROPERTIES = {
       "padding-block-end",
       "padding-inline-start",
       "padding-inline-end",
+      "scroll-padding-block-start",
+      "scroll-padding-block-end",
+      "scroll-padding-inline-start",
+      "scroll-padding-inline-end",
       "inset-block-start",
       "inset-block-end",
       "inset-inline-start",
@@ -3082,6 +3086,10 @@ exports.CSS_PROPERTIES = {
       "padding-right",
       "padding-bottom",
       "padding-left",
+      "scroll-padding-top",
+      "scroll-padding-right",
+      "scroll-padding-bottom",
+      "scroll-padding-left",
       "top",
       "right",
       "bottom",
@@ -9824,6 +9832,38 @@ exports.PREFERENCES = [
     "layout.css.moz-binding.content.enabled"
   ],
   [
+    "scroll-padding-block-end",
+    "layout.css.scroll-snap-v1.enabled"
+  ],
+  [
+    "scroll-padding-block-start",
+    "layout.css.scroll-snap-v1.enabled"
+  ],
+  [
+    "scroll-padding-bottom",
+    "layout.css.scroll-snap-v1.enabled"
+  ],
+  [
+    "scroll-padding-inline-end",
+    "layout.css.scroll-snap-v1.enabled"
+  ],
+  [
+    "scroll-padding-inline-start",
+    "layout.css.scroll-snap-v1.enabled"
+  ],
+  [
+    "scroll-padding-left",
+    "layout.css.scroll-snap-v1.enabled"
+  ],
+  [
+    "scroll-padding-right",
+    "layout.css.scroll-snap-v1.enabled"
+  ],
+  [
+    "scroll-padding-top",
+    "layout.css.scroll-snap-v1.enabled"
+  ],
+  [
     "scroll-margin-block-end",
     "layout.css.scroll-snap-v1.enabled"
   ],
@@ -9893,6 +9933,18 @@ exports.PREFERENCES = [
   ],
   [
     "scroll-margin-inline",
+    "layout.css.scroll-snap-v1.enabled"
+  ],
+  [
+    "scroll-padding",
+    "layout.css.scroll-snap-v1.enabled"
+  ],
+  [
+    "scroll-padding-block",
+    "layout.css.scroll-snap-v1.enabled"
+  ],
+  [
+    "scroll-padding-inline",
     "layout.css.scroll-snap-v1.enabled"
   ],
   [

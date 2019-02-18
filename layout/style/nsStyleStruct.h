@@ -732,6 +732,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePadding {
   nsChangeHint CalcDifference(const nsStylePadding& aNewData) const;
 
   mozilla::StyleRect<mozilla::NonNegativeLengthPercentage> mPadding;
+  mozilla::StyleRect<mozilla::NonNegativeLengthPercentageOrAuto> mScrollPadding;
 
   inline bool IsWidthDependent() const {
     return !mPadding.All(
