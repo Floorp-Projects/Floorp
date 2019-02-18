@@ -1316,7 +1316,17 @@ async function hoverAtPos(dbg, { line, ch }) {
   await waitForScrolling(cm);
 
   const coords = getCoordsFromPosition(cm, { line: line - 1, ch });
-  const tokenEl = dbg.win.document.elementFromPoint(coords.left, coords.top);
+
+  const { left, top } = coords;
+
+  // Adds a vertical offset due to increased line height
+  // https://github.com/devtools-html/debugger.html/pull/7934
+  const lineHeightOffset = 3;
+
+  const tokenEl = dbg.win.document.elementFromPoint(
+    left,
+    top + lineHeightOffset
+  );
 
   if (!tokenEl) {
     return false;
