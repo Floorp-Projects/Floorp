@@ -42,6 +42,8 @@ enum LogicalCorner {
 using LengthPercentage = StyleLengthPercentage;
 using LengthPercentageOrAuto = StyleLengthPercentageOrAuto;
 using NonNegativeLengthPercentage = StyleNonNegativeLengthPercentage;
+using NonNegativeLengthPercentageOrAuto =
+    StyleNonNegativeLengthPercentageOrAuto;
 
 constexpr LengthPercentage LengthPercentage::Zero() {
   return {{0.}, {0.}, StyleAllowedNumericType::All, false, false};
