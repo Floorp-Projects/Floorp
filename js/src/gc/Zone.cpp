@@ -140,7 +140,7 @@ void Zone::sweepBreakpoints(FreeOp* fop) {
    */
 
   MOZ_ASSERT(isGCSweepingOrCompacting());
-  for (auto iter = cellIter<JSScript>(); !iter.done(); iter.next()) {
+  for (auto iter = cellIterUnsafe<JSScript>(); !iter.done(); iter.next()) {
     JSScript* script = iter;
     if (!script->hasAnyBreakpointsOrStepMode()) {
       continue;
@@ -223,7 +223,8 @@ void Zone::discardJitCode(FreeOp* fop,
   // Invalidate all Ion code in this zone.
   jit::InvalidateAll(fop, this);
 
-  for (auto script = cellIter<JSScript>(); !script.done(); script.next()) {
+  for (auto script = cellIterUnsafe<JSScript>(); !script.done();
+       script.next()) {
     jit::FinishInvalidation(fop, script);
 
     // Discard baseline script if it's not marked as active.

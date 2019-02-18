@@ -2464,11 +2464,11 @@ void GCRuntime::sweepTypesAfterCompacting(Zone* zone) {
 
   AutoClearTypeInferenceStateOnOOM oom(zone);
 
-  for (auto script = zone->cellIter<JSScript>(); !script.done();
+  for (auto script = zone->cellIterUnsafe<JSScript>(); !script.done();
        script.next()) {
     AutoSweepTypeScript sweep(script);
   }
-  for (auto group = zone->cellIter<ObjectGroup>(); !group.done();
+  for (auto group = zone->cellIterUnsafe<ObjectGroup>(); !group.done();
        group.next()) {
     AutoSweepObjectGroup sweep(group);
   }
@@ -4053,8 +4053,8 @@ void GCRuntime::checkForCompartmentMismatches() {
   for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
     trc.zone = zone;
     for (auto thingKind : AllAllocKinds()) {
-      for (auto i = zone->cellIter<TenuredCell>(thingKind, empty); !i.done();
-           i.next()) {
+      for (auto i = zone->cellIterUnsafe<TenuredCell>(thingKind, empty);
+           !i.done(); i.next()) {
         trc.src = i.getCell();
         trc.srcKind = MapAllocToTraceKind(thingKind);
         trc.compartment = MapGCThingTyped(
@@ -4073,7 +4073,8 @@ static void RelazifyFunctions(Zone* zone, AllocKind kind) {
   JSRuntime* rt = zone->runtimeFromMainThread();
   AutoAssertEmptyNursery empty(rt->mainContextFromOwnThread());
 
-  for (auto i = zone->cellIter<JSObject>(kind, empty); !i.done(); i.next()) {
+  for (auto i = zone->cellIterUnsafe<JSObject>(kind, empty); !i.done();
+       i.next()) {
     JSFunction* fun = &i->as<JSFunction>();
     if (fun->hasScript()) {
       fun->maybeRelazify(rt);
@@ -4219,7 +4220,7 @@ static void PurgeShapeCachesForShrinkingGC(JSRuntime* rt) {
     if (!CanRelocateZone(zone) || zone->keepShapeCaches()) {
       continue;
     }
-    for (auto baseShape = zone->cellIter<BaseShape>(); !baseShape.done();
+    for (auto baseShape = zone->cellIterUnsafe<BaseShape>(); !baseShape.done();
          baseShape.next()) {
       baseShape->maybePurgeCache();
     }
@@ -7998,7 +7999,7 @@ void GCRuntime::mergeRealms(Realm* source, Realm* target) {
   // Fixup realm pointers in source to refer to target, and make sure
   // type information generations are in sync.
 
-  for (auto script = source->zone()->cellIter<JSScript>(); !script.done();
+  for (auto script = source->zone()->cellIterUnsafe<JSScript>(); !script.done();
        script.next()) {
     MOZ_ASSERT(script->realm() == source);
     script->realm_ = target;
@@ -8008,8 +8009,8 @@ void GCRuntime::mergeRealms(Realm* source, Realm* target) {
   GlobalObject* global = target->maybeGlobal();
   MOZ_ASSERT(global);
 
-  for (auto group = source->zone()->cellIter<ObjectGroup>(); !group.done();
-       group.next()) {
+  for (auto group = source->zone()->cellIterUnsafe<ObjectGroup>();
+       !group.done(); group.next()) {
     // Replace placeholder object prototypes with the correct prototype in
     // the target realm.
     TaggedProto proto(group->proto());
