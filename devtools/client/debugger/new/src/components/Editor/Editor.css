@@ -78,20 +78,6 @@ html[dir="rtl"] .editor-mount {
   color: var(--grey-50);
 }
 
-:not(.empty-line):not(.new-breakpoint)
-  > .CodeMirror-gutter-wrapper:hover
-  > .CodeMirror-linenumber {
-  height: 13px;
-  color: var(--theme-body-color);
-  /* Add 1px offset to the background to match it
-    with the actual breakpoint image dimensions */
-  background: linear-gradient(
-    to bottom,
-    transparent 1px,
-    var(--gutter-hover-background-color) 0
-  );
-}
-
 .new-breakpoint .CodeMirror-linenumber {
   pointer-events: none;
 }
@@ -101,12 +87,16 @@ html[dir="rtl"] .editor-mount {
   > .CodeMirror-linenumber::after {
   content: "";
   position: absolute;
-  top: 1px;
-  height: 12px;
-  width: 9px;
+  /* paint below the number */
+  z-index: -1;
+  top: 0;
+  left: 0;
+  right: -7px;
+  bottom: 0;
+  height: 15px;
   background-color: var(--gutter-hover-background-color);
   mask: url(/images/breakpoint.svg) no-repeat;
-  mask-size: auto 12px;
+  mask-size: auto 15px;
   mask-position: right;
 }
 
@@ -126,7 +116,7 @@ html[dir="rtl"] .editor-mount {
 }
 
 .editor.hit-marker {
-  height: 14px;
+  height: 15px;
 }
 
 .editor-wrapper .highlight-lines {
@@ -137,7 +127,7 @@ html[dir="rtl"] .editor-mount {
   fill: var(--breakpoint-fill);
   stroke: var(--breakpoint-stroke);
   width: 60px;
-  height: 14px;
+  height: 15px;
   position: absolute;
   top: 0px;
   right: -4px;
@@ -182,7 +172,7 @@ html[dir="rtl"] .editor-mount {
   fill: var(--theme-selection-background);
   vertical-align: middle;
   width: 17px;
-  height: 14px;
+  height: 15px;
 }
 
 .editor.column-breakpoint.breakpoint-disabled svg {
@@ -197,11 +187,8 @@ html[dir="rtl"] .editor-mount {
 .editor-wrapper .editor-mount {
   width: 100%;
   background-color: var(--theme-body-background);
-}
-
-.CodeMirror-linenumber {
-  font-size: 11px;
-  line-height: 14px;
+  font-size: var(--theme-code-font-size);
+  line-height: var(--theme-code-line-height);
 }
 
 .folding-enabled .CodeMirror-linenumber {
@@ -220,10 +207,6 @@ html[dir="rtl"] .editor-mount {
 /* move the breakpoint below the other gutter elements */
 .new-breakpoint .CodeMirror-gutter-elt:nth-child(2) {
   z-index: 0;
-}
-
-.editor-wrapper .CodeMirror-line {
-  font-size: 11px;
 }
 
 .theme-dark .editor-wrapper .CodeMirror-line .cm-comment {
