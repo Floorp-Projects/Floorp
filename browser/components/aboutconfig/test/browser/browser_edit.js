@@ -77,9 +77,9 @@ add_task(async function test_delete_user_pref() {
       Assert.ok(!row.hasClass("deleted"));
       Assert.ok(Preferences.get(PREF_NEW) === testValue);
 
-      // Searching again after deleting should remove the row.
+      // Filtering again after deleting should remove the row.
       row.resetColumnButton.click();
-      this.search();
+      this.showAll();
       Assert.ok(!this.getRow(PREF_NEW));
     });
   }
@@ -103,8 +103,8 @@ add_task(async function test_reset_user_pref() {
     Assert.ok(!Services.prefs.prefHasUserValue(PREF_BOOLEAN_DEFAULT_TRUE));
     Assert.equal(this.getRow(PREF_BOOLEAN_DEFAULT_TRUE).value, "true");
 
-    // Search for nothing to test gPrefArray
-    this.search();
+    // Filter again to test the preference cache.
+    this.showAll();
     row = this.getRow(PREF_BOOLEAN_DEFAULT_TRUE);
     Assert.ok(!row.hasClass("has-user-value"));
     Assert.ok(!row.resetColumnButton);

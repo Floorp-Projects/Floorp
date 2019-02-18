@@ -1587,8 +1587,9 @@ static bool DecodeTableTypeAndLimits(Decoder& d, bool gcTypesEnabled,
   // we don't repeat it here.
   if (limits.initial > MaxTableInitialLength ||
       ((limits.maximum.isSome() &&
-        limits.maximum.value() > MaxTableMaximumLength)))
+        limits.maximum.value() > MaxTableLength))) {
     return d.fail("too many table elements");
+  }
 
   if (tables->length() >= MaxTables) {
     return d.fail("too many tables");
