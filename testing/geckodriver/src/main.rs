@@ -20,6 +20,7 @@ extern crate zip;
 #[macro_use]
 extern crate log;
 
+use std::env;
 use std::fmt;
 use std::io::{self, Write};
 use std::net::{IpAddr, SocketAddr};
@@ -249,13 +250,17 @@ fn main() {
         Ok(_) => EXIT_SUCCESS,
 
         Err(e) => {
-            error!("{}", e);
+            eprintln!("{}: {}", get_program_name(), e);
             e.exit_code()
         }
     };
 
     std::io::stdout().flush().unwrap();
     std::process::exit(exit_code);
+}
+
+fn get_program_name() -> String {
+    env::args().next().unwrap()
 }
 
 fn print_version() {
