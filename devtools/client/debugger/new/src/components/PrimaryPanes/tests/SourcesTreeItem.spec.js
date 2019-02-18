@@ -25,12 +25,12 @@ describe("SourceTreeItem", () => {
 
   it("should show menu on contextmenu of an item", async () => {
     const { instance, component } = render();
-    const { item, source } = instance.props;
+    const { item } = instance.props;
     instance.onContextMenu = jest.fn(() => {});
 
     const event = { event: "contextmenu" };
     component.simulate("contextmenu", event);
-    expect(instance.onContextMenu).toHaveBeenCalledWith(event, item, source);
+    expect(instance.onContextMenu).toHaveBeenCalledWith(event, item);
   });
 
   describe("onContextMenu of the tree", () => {
