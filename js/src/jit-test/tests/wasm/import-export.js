@@ -528,26 +528,112 @@ var m = new Module(wasmTextToBinary(`
         (export "g" $g))
 `));
 
+// Active segments are applied in order (this is observable if they overlap).
+//
+// Without bulk memory, all range checking for tables and memory happens before
+// any writes happen, and any OOB will force no writing to happen at all.
+//
+// With bulk memory, active segments are applied first for tables and then for
+// memories.  Bounds checking happens for each byte or table element written.
+// The first OOB aborts the initialization process, leaving written data in
+// place.  Notably, any OOB in table initialization will prevent any memory
+// initialization from happening at all.
+
 var npages = 2;
 var mem = new Memory({initial:npages});
 var mem8 = new Uint8Array(mem.buffer);
 var tbl = new Table({initial:2, element:"anyfunc"});
 
-assertErrorMessage(() => new Instance(m, {a:{mem, tbl, memOff:1, tblOff:2}}), LinkError, /elem segment does not fit/);
+assertErrorMessage(() => new Instance(m, {a:{mem, tbl, memOff:1, tblOff:2}}),
+                   LinkError,
+                   /elem segment does not fit/);
+if (wasmBulkMemSupported()) {
+    // The first active element segment is applied, but the second active
+    // element segment is completely OOB.
+    assertEq(typeof tbl.get(0), "function");
+    assertEq(tbl.get(1), null);
+} else {
+    assertEq(tbl.get(0), null);
+    assertEq(tbl.get(1), null);
+}
 assertEq(mem8[0], 0);
 assertEq(mem8[1], 0);
-assertEq(tbl.get(0), null);
 
-assertErrorMessage(() => new Instance(m, {a:{mem, tbl, memOff:npages*64*1024, tblOff:1}}), LinkError, /data segment does not fit/);
-assertEq(mem8[0], 0);
-assertEq(tbl.get(0), null);
-assertEq(tbl.get(1), null);
+tbl.set(0, null);
+tbl.set(1, null);
+
+assertErrorMessage(() => new Instance(m, {a:{mem, tbl, memOff:npages*64*1024, tblOff:1}}),
+                   LinkError,
+                   /data segment does not fit/);
+if (wasmBulkMemSupported()) {
+    // The first and second active element segments are applied fully.  The
+    // first active data segment applies, but the second one is completely OOB.
+    assertEq(typeof tbl.get(0), "function");
+    assertEq(typeof tbl.get(1), "function");
+    assertEq(mem8[0], 1);
+} else {
+    assertEq(tbl.get(0), null);
+    assertEq(tbl.get(1), null);
+    assertEq(mem8[0], 0);
+}
+
+tbl.set(0, null);
+tbl.set(1, null);
+mem8[0] = 0;
+
+// Both element and data segments apply successfully without OOB
 
 var i = new Instance(m, {a:{mem, tbl, memOff:npages*64*1024-1, tblOff:1}});
 assertEq(mem8[0], 1);
 assertEq(mem8[npages*64*1024-1], 2);
 assertEq(tbl.get(0), i.exports.f);
 assertEq(tbl.get(1), i.exports.g);
+
+// Element segment applies partially and prevents subsequent elem segment and
+// data segment from being applied.
+
+if (wasmBulkMemSupported()) {
+    let m = new Module(wasmTextToBinary(
+        `(module
+           (import "" "mem" (memory 1))
+           (import "" "tbl" (table 3 anyfunc))
+           (elem (i32.const 1) $f $g $h) ;; fails after $f and $g
+           (elem (i32.const 0) $f)       ;; is not applied
+           (data (i32.const 0) "\\01")   ;; is not applied
+           (func $f)
+           (func $g)
+           (func $h))`));
+    let mem = new Memory({initial:1});
+    let tbl = new Table({initial:3, element:"anyfunc"});
+    assertErrorMessage(() => new Instance(m, {"":{mem, tbl}}),
+                       LinkError,
+                       /elem segment does not fit/);
+    assertEq(tbl.get(0), null);
+    assertEq(typeof tbl.get(1), "function");
+    assertEq(typeof tbl.get(2), "function");
+    let v = new Uint8Array(mem.buffer);
+    assertEq(v[0], 0);
+}
+
+// Data segment applies partially and prevents subsequent data segment from
+// being applied.
+
+if (wasmBulkMemSupported()) {
+    let m = new Module(wasmTextToBinary(
+        `(module
+           (import "" "mem" (memory 1))
+           (data (i32.const 65534) "\\01\\02\\03") ;; fails after 1 and 2
+           (data (i32.const 0) "\\04")             ;; is not applied
+         )`));
+    let mem = new Memory({initial:1});
+    assertErrorMessage(() => new Instance(m, {"":{mem}}),
+                       LinkError,
+                       /data segment does not fit/);
+    let v = new Uint8Array(mem.buffer);
+    assertEq(v[65534], 1);
+    assertEq(v[65535], 2);
+    assertEq(v[0], 0);
+}
 
 // Elem segments on imported tables
 
@@ -730,7 +816,7 @@ assertEq(e.call(), 1090);
     g.evaluate("function f1() { assertCorrectRealm(); return 123; }");
     g.mem = new Memory({initial:8});
 
-    // The current_memory builtin asserts cx->realm matches instance->realm so
+    // The memory.size builtin asserts cx->realm matches instance->realm so
     // we call it here.
     var i1 = new Instance(new Module(wasmTextToBinary(`
         (module
@@ -740,8 +826,8 @@ assertEq(e.call(), 1090);
             (func $test (result i32)
                 (i32.add
                     (i32.add
-                        (i32.add (current_memory) (call $imp1))
-                        (current_memory))
+                        (i32.add (memory.size) (call $imp1))
+                        (memory.size))
                     (call $imp2)))
             (export "impstub" $imp1)
             (export "test" $test))
@@ -757,7 +843,7 @@ assertEq(e.call(), 1090);
         (module
             (import $imp "a" "othertest" (result i32))
             (import "a" "m" (memory 1))
-            (func (result i32) (i32.add (call $imp) (current_memory)))
+            (func (result i32) (i32.add (call $imp) (memory.size)))
             (export "test" 1))
     `;
     g.i1 = i1;

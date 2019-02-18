@@ -3,7 +3,7 @@
 // ref.eq is part of the gc feature, not the reftypes feature.
 
 let { exports } = wasmEvalText(`(module
-    (gc_feature_opt_in 2)
+    (gc_feature_opt_in 3)
 
     (func (export "ref_eq") (param $a anyref) (param $b anyref) (result i32)
         (ref.eq (get_local $a) (get_local $b)))

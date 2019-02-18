@@ -8,7 +8,7 @@
 {
     let ins = wasmEvalText(
         `(module
-           (gc_feature_opt_in 2)
+           (gc_feature_opt_in 3)
            (table (export "t") 10 anyref)
            (type $dummy (struct (field i32)))
            (func (export "set_anyref") (param i32) (param anyref)
@@ -37,7 +37,7 @@
 {
     let ins = wasmEvalText(
         `(module
-          (gc_feature_opt_in 2)
+          (gc_feature_opt_in 3)
           (type $S (struct (field i32) (field f64)))
           (table (export "t") 2 anyref)
           (func (export "f") (result i32)

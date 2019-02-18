@@ -43,7 +43,7 @@ assertEq(ins.g(1, 10), 14);
 
 var ins = wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (table $t0 (import "m" "t") 2 anyfunc)
       (table $t1 (export "t1") 2 anyfunc)
       (table 1 anyref)
@@ -64,7 +64,7 @@ var exp = {m:{t0: new WebAssembly.Table({element:"anyfunc", initial:2}),
               t3: new WebAssembly.Table({element:"anyref", initial:5})}};
 var ins = wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
 
       (table $t0 (import "m" "t0") 2 anyfunc)
       (type $id_i32_t (func (param i32) (result i32)))
@@ -113,7 +113,7 @@ var exp = {m:{t0: new WebAssembly.Table({element:"anyref", initial:2}),
               t1: new WebAssembly.Table({element:"anyref", initial:3})}};
 var ins = wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
 
       (table $t0 (import "m" "t0") 2 anyref)
       (table $t1 (import "m" "t1") 3 anyref)
@@ -136,7 +136,7 @@ var exp = {m:{t0: new WebAssembly.Table({element:"anyref", initial:2}),
               t1: new WebAssembly.Table({element:"anyref", initial:3})}};
 var ins = wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
 
       (table $t0 (import "m" "t0") 2 anyref)
       (table $t1 (import "m" "t1") 3 anyref)
@@ -154,7 +154,7 @@ assertEq(exp.m.t1.get(2), exp.m.t0.get(1));
 
 var ins = wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (table $t0 2 anyref)
       (table $t1 2 anyref)
       (func (export "copy") (param $dest i32) (param $src i32) (param $len i32)
@@ -229,7 +229,7 @@ var exp = {m: {t0: tbl, t1:tbl}};
 
 var ins = wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (import $t0 "m" "t0" (table 1 anyref))
       (import $t1 "m" "t1" (table 1 anyref))
       (table $t2 (export "t2") 1 anyfunc)
@@ -333,7 +333,7 @@ assertErrorMessage(() => ins2.exports.do1(12, 2.0),
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (table $t0 2 anyref)
       (table $t1 2 anyref)
       (func $f (result anyref)
@@ -343,7 +343,7 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (table $t0 2 anyref)
       (table $t1 2 anyref)
       (func $f (param anyref)
@@ -353,7 +353,7 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (table $t0 2 anyref)
       (table $t1 2 anyref)
       (func $f (param anyref)
@@ -363,7 +363,7 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (table $t0 2 anyref)
       (table $t1 2 anyref)
       (func $f (param anyref)
@@ -373,7 +373,7 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (table $t0 2 anyref)
       (table $t1 2 anyref)
       (func $f (result i32)
@@ -383,7 +383,7 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (gc_feature_opt_in 2)
+      (gc_feature_opt_in 3)
       (table $t0 2 anyref)
       (table $t1 2 anyref)
       (func $f (result i32)

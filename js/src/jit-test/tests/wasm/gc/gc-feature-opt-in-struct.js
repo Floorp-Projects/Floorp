@@ -2,7 +2,7 @@
 //
 // Struct types are only available if we opt in, so test that.
 
-let CURRENT_VERSION = 2;
+let CURRENT_VERSION = 3;
 
 new WebAssembly.Module(wasmTextToBinary(
     `(module
