@@ -14255,7 +14255,7 @@ MInstruction* IonBuilder::setInitializedLength(MDefinition* obj, size_t count) {
 
   // MSetInitializedLength takes the index of the last element, rather
   // than the count itself.
-  MInstruction* elements = MElements::New(alloc(), obj, /* unboxed = */ false);
+  MInstruction* elements = MElements::New(alloc(), obj);
   current->add(elements);
   MInstruction* res = MSetInitializedLength::New(
       alloc(), elements, constant(Int32Value(count - 1)));
