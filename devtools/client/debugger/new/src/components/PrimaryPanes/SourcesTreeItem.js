@@ -22,7 +22,8 @@ import actions from "../../actions";
 import {
   isOriginal as isOriginalSource,
   getSourceQueryString,
-  isUrlExtension
+  isUrlExtension,
+  shouldBlackbox
 } from "../../utils/source";
 import { isDirectory } from "../../utils/sources-tree";
 import { copyToTheClipboard } from "../../utils/clipboard";
@@ -46,7 +47,8 @@ type Props = {
   selectItem: TreeNode => void,
   setExpanded: (TreeNode, boolean, boolean) => void,
   clearProjectDirectoryRoot: typeof actions.clearProjectDirectoryRoot,
-  setProjectDirectoryRoot: typeof actions.setProjectDirectoryRoot
+  setProjectDirectoryRoot: typeof actions.setProjectDirectoryRoot,
+  toggleBlackBox: typeof actions.toggleBlackBox
 };
 
 type State = {};
@@ -107,7 +109,7 @@ class SourceTreeItem extends Component<Props, State> {
     }
   };
 
-  onContextMenu = (event: Event, item: TreeNode) => {
+  onContextMenu = (event: Event, item: TreeNode, source: Source) => {
     const copySourceUri2Label = L10N.getStr("copySourceUri2");
     const copySourceUri2Key = L10N.getStr("copySourceUri2.accesskey");
     const setDirectoryRootLabel = L10N.getStr("setDirectoryRoot.label");
@@ -132,7 +134,17 @@ class SourceTreeItem extends Component<Props, State> {
           click: () => copyToTheClipboard(contents.url)
         };
 
-        menuOptions.push(copySourceUri2);
+        const blackBoxMenuItem = {
+          id: "node-menu-blackbox",
+          label: source.isBlackBoxed
+            ? L10N.getStr("sourceFooter.unblackbox")
+            : L10N.getStr("sourceFooter.blackbox"),
+          accesskey: L10N.getStr("sourceFooter.blackbox.accesskey"),
+          disabled: !shouldBlackbox(source),
+          click: () => this.props.toggleBlackBox(source)
+        };
+
+        menuOptions.push(copySourceUri2, blackBoxMenuItem);
       }
     }
 
@@ -234,7 +246,7 @@ class SourceTreeItem extends Component<Props, State> {
         className={classnames("node", { focused })}
         key={item.path}
         onClick={this.onClick}
-        onContextMenu={e => this.onContextMenu(e, item)}
+        onContextMenu={e => source && this.onContextMenu(e, item, source)}
       >
         {this.renderItemArrow()}
         {this.getIcon(item, depth)}
@@ -269,6 +281,7 @@ export default connect(
   mapStateToProps,
   {
     setProjectDirectoryRoot: actions.setProjectDirectoryRoot,
-    clearProjectDirectoryRoot: actions.clearProjectDirectoryRoot
+    clearProjectDirectoryRoot: actions.clearProjectDirectoryRoot,
+    toggleBlackBox: actions.toggleBlackBox
   }
 )(SourceTreeItem);
