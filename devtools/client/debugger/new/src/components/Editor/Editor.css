@@ -40,7 +40,7 @@
 
 /**
  * There's a known codemirror flex issue with chrome that this addresses.
- * BUG https://github.com/devtools-html/debugger.html/issues/63
+ * BUG https://github.com/firefox-devtools/debugger.html/issues/63
  */
 .editor-wrapper {
   position: absolute;

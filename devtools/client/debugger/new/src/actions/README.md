@@ -22,5 +22,5 @@ in the UI:
 * disable/hide the pretty print button
 * show a progress ui
 
-[req]: https://github.com/devtools-html/debugger.html/blob/master/src/actions/sources/loadSourceText.js
-[state]: https://github.com/devtools-html/debugger.html/blob/master/src/reducers/sources.js
+[req]: https://github.com/firefox-devtools/debugger.html/blob/master/src/actions/sources/loadSourceText.js
+[state]: https://github.com/firefox-devtools/debugger.html/blob/master/src/reducers/sources.js

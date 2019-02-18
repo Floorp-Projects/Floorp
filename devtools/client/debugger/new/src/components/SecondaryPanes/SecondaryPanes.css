@@ -17,7 +17,7 @@
   This allows the commandbar to remain fixed when scrolling
   until the content completely ends. Not just the height of
   the wrapper.
-  Ref: https://github.com/devtools-html/debugger.html/issues/3426
+  Ref: https://github.com/firefox-devtools/debugger.html/issues/3426
 */
 
 .secondary-panes-wrapper {

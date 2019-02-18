@@ -37,7 +37,7 @@ export default class OutlineFilter extends Component<Props, State> {
       this.props.updateFilter("");
     } else if (e.key === "Enter") {
       // We must prevent the form submission from taking any action
-      // https://github.com/devtools-html/debugger.html/pull/7308
+      // https://github.com/firefox-devtools/debugger.html/pull/7308
       e.preventDefault();
     }
   };
