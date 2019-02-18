@@ -9,15 +9,14 @@ const AUTOCOMPLETION_PREF = "devtools.editor.autocomplete";
 // Test to make sure that different autocompletion modes can be created,
 // switched, and destroyed.  This doesn't test the actual autocompletion
 // popups, only their integration with the editor.
-function test() {
+async function test() {
   waitForExplicitFinish();
-  setup((ed, win) => {
-    const edWin = ed.container.contentWindow.wrappedJSObject;
-    testJS(ed, edWin);
-    testCSS(ed, edWin);
-    testPref(ed, edWin);
-    teardown(ed, win);
-  });
+  const {ed, win} = await setup();
+  const edWin = ed.container.contentWindow.wrappedJSObject;
+  testJS(ed, edWin);
+  testCSS(ed, edWin);
+  testPref(ed, edWin);
+  teardown(ed, win);
 }
 
 function testJS(ed, win) {

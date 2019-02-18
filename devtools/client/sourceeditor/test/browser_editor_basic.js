@@ -4,60 +4,59 @@
 
 "use strict";
 
-function test() {
+async function test() {
   waitForExplicitFinish();
-  setup((ed, win) => {
-    // appendTo
-    const cmFrame = win.document.querySelector("iframe");
-    const cmStyle = cmFrame.contentDocument.getElementById("cmBaseStyle");
-    ok(~cmStyle.innerHTML.indexOf(".CodeMirror"), "correct iframe is there");
+  const {ed, win} = await setup();
+  // appendTo
+  const cmFrame = win.document.querySelector("iframe");
+  const cmStyle = cmFrame.contentDocument.getElementById("cmBaseStyle");
+  ok(~cmStyle.innerHTML.indexOf(".CodeMirror"), "correct iframe is there");
 
-    // getOption/setOption
-    ok(ed.getOption("styleActiveLine"), "getOption works");
-    ed.setOption("styleActiveLine", false);
-    ok(!ed.getOption("styleActiveLine"), "setOption works");
+  // getOption/setOption
+  ok(ed.getOption("styleActiveLine"), "getOption works");
+  ed.setOption("styleActiveLine", false);
+  ok(!ed.getOption("styleActiveLine"), "setOption works");
 
-    // Language modes
-    is(ed.getMode(), Editor.modes.text, "getMode");
-    ed.setMode(Editor.modes.js);
-    is(ed.getMode(), Editor.modes.js, "setMode");
+  // Language modes
+  is(ed.getMode(), Editor.modes.text, "getMode");
+  ed.setMode(Editor.modes.js);
+  is(ed.getMode(), Editor.modes.js, "setMode");
 
-    // Content
-    is(ed.getText(), "Hello.", "getText");
-    ed.setText("Hi.\nHow are you?");
-    is(ed.getText(), "Hi.\nHow are you?", "setText");
-    is(ed.getText(1), "How are you?", "getText(num)");
-    is(ed.getText(5), "", "getText(num) when num is out of scope");
+  // Content
+  is(ed.getText(), "Hello.", "getText");
+  ed.setText("Hi.\nHow are you?");
+  is(ed.getText(), "Hi.\nHow are you?", "setText");
+  is(ed.getText(1), "How are you?", "getText(num)");
+  is(ed.getText(5), "", "getText(num) when num is out of scope");
 
-    ed.replaceText("YOU", { line: 1, ch: 8 }, { line: 1, ch: 11 });
-    is(ed.getText(1), "How are YOU?", "replaceText(str, from, to)");
-    ed.replaceText("you?", { line: 1, ch: 8 });
-    is(ed.getText(1), "How are you?", "replaceText(str, from)");
-    ed.replaceText("Hello.");
-    is(ed.getText(), "Hello.", "replaceText(str)");
+  ed.replaceText("YOU", { line: 1, ch: 8 }, { line: 1, ch: 11 });
+  is(ed.getText(1), "How are YOU?", "replaceText(str, from, to)");
+  ed.replaceText("you?", { line: 1, ch: 8 });
+  is(ed.getText(1), "How are you?", "replaceText(str, from)");
+  ed.replaceText("Hello.");
+  is(ed.getText(), "Hello.", "replaceText(str)");
 
-    ed.insertText(", sir/madam", { line: 0, ch: 5});
-    is(ed.getText(), "Hello, sir/madam.", "insertText");
+  ed.insertText(", sir/madam", { line: 0, ch: 5});
+  is(ed.getText(), "Hello, sir/madam.", "insertText");
 
-    // Add-ons
-    ed.extend({ whoami: () => "Anton", whereami: () => "Mozilla" });
-    is(ed.whoami(), "Anton", "extend/1");
-    is(ed.whereami(), "Mozilla", "extend/2");
+  // Add-ons
+  ed.extend({ whoami: () => "Anton", whereami: () => "Mozilla" });
+  is(ed.whoami(), "Anton", "extend/1");
+  is(ed.whereami(), "Mozilla", "extend/2");
 
-    // Line classes
-    ed.setText("Hello!\nHow are you?");
-    ok(!ed.hasLineClass(0, "test"), "no test line class");
-    ed.addLineClass(0, "test");
-    ok(ed.hasLineClass(0, "test"), "test line class is there");
-    ed.removeLineClass(0, "test");
-    ok(!ed.hasLineClass(0, "test"), "test line class is gone");
+  // Line classes
+  ed.setText("Hello!\nHow are you?");
+  ok(!ed.hasLineClass(0, "test"), "no test line class");
+  ed.addLineClass(0, "test");
+  ok(ed.hasLineClass(0, "test"), "test line class is there");
+  ed.removeLineClass(0, "test");
+  ok(!ed.hasLineClass(0, "test"), "test line class is gone");
 
-    // Font size
-    const size = ed.getFontSize();
-    is("number", typeof size, "we have the default font size");
-    ed.setFontSize(ed.getFontSize() + 1);
-    is(ed.getFontSize(), size + 1, "new font size was set");
+  // Font size
+  const size = ed.getFontSize();
+  is("number", typeof size, "we have the default font size");
+  ed.setFontSize(ed.getFontSize() + 1);
+  is(ed.getFontSize(), size + 1, "new font size was set");
 
-    teardown(ed, win);
-  });
+  teardown(ed, win);
 }
