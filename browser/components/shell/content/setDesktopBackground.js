@@ -2,8 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+/* import-globals-from ../../../base/content/utilityOverlay.js */
 
 var gSetBackground = {
   _position: AppConstants.platform == "macosx" ? "STRETCH" : "",
