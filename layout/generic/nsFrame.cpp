@@ -2913,7 +2913,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
                            BuilderHasScrolledClip(aBuilder));
 
   nsDisplayListBuilder::AutoBuildingDisplayList buildingDisplayList(
-      aBuilder, this, visibleRect, dirtyRect);
+      aBuilder, this, visibleRect, dirtyRect, isTransformed);
 
   // Depending on the effects that are applied to this frame, we can create
   // multiple container display items and wrap them around our contents.
@@ -3452,8 +3452,9 @@ void nsIFrame::BuildDisplayListForSimpleChild(nsDisplayListBuilder* aBuilder,
     return;
   }
 
+  // Child cannot be transformed since it is not a stacking context.
   nsDisplayListBuilder::AutoBuildingDisplayList buildingForChild(
-      aBuilder, aChild, visible, dirty);
+      aBuilder, aChild, visible, dirty, false);
 
   CheckForApzAwareEventHandlers(aBuilder, aChild);
 
