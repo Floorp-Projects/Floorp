@@ -129,14 +129,14 @@ const WASMPAGE = 65536;
 }
 
 
-// basic current_memory and grow_memory operation, with bounds checking near the
+// basic memory.size and memory.grow operation, with bounds checking near the
 // valid/invalid boundary
 
 {
     let text = `(module
 		 (memory (export "memory") 2 4 shared)
-		 (func (export "c") (result i32) current_memory)
-		 (func (export "g") (result i32) (grow_memory (i32.const 1)))
+		 (func (export "c") (result i32) memory.size)
+		 (func (export "g") (result i32) (memory.grow (i32.const 1)))
 		 (func (export "l") (param i32) (result i32) (i32.load (get_local 0)))
 		 (func (export "s") (param i32) (param i32) (i32.store (get_local 0) (get_local 1))))`;
     let mod = new WebAssembly.Module(wasmTextToBinary(text));
@@ -147,7 +147,7 @@ const WASMPAGE = 65536;
     let b1 = mem.buffer;
     assertEq(exp.c(), 2);
     assertEq(b1.byteLength, WASMPAGE*2);
-    assertEq(mem.buffer === b1, true);   // current_memory does not affect buffer
+    assertEq(mem.buffer === b1, true);   // memory.size does not affect buffer
     exp.s(WASMPAGE*2-4, 0x12345678)	 // access near end
     assertEq(exp.l(WASMPAGE*2-4), 0x12345678);
     assertErrorMessage(() => exp.l(WASMPAGE*2), // beyond current end (but below max)

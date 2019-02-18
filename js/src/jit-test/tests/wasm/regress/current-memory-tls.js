@@ -1,7 +1,7 @@
 // Bug 1341650:
-// - when compiled with Ion, pass the TLS register to current_memory;
+// - when compiled with Ion, pass the TLS register to memory.size;
 // - when compiled with Baseline, don't clobber the last stack slot when
-// calling into current_memory/grow_memory;
+// calling into memory.size/memory.grow;
 
 // This toy module starts with an empty memory, then tries to set values at different
 // indexes, automatically growing memory when that would trigger an out of
@@ -12,11 +12,11 @@ let i = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 (module
     (memory $mem (export "mem") 0 65535)
 
-    (func (export "cur_mem") (result i32) (current_memory))
+    (func (export "cur_mem") (result i32) (memory.size))
 
     (func $maybeGrow (param $i i32) (local $smem i32)
-     ;; get current_memory in number of bytes, not pages.
-     current_memory
+     ;; get memory.size in number of bytes, not pages.
+     memory.size
      i64.extend_u/i32
      i64.const 65536
      i64.mul
@@ -39,7 +39,7 @@ let i = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
          ;; subtract to that the size of the current memory in pages;
          ;; that's the amount of pages we want to grow, minus one.
-         current_memory
+         memory.size
          i64.extend_u/i32
 
          i64.sub
@@ -50,7 +50,7 @@ let i = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 
          ;; get back to i32 and grow memory.
          i32.wrap/i64
-         grow_memory
+         memory.grow
          drop
      end
     )

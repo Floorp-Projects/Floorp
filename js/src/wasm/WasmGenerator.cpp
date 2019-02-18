@@ -352,6 +352,9 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
           return false;
         }
         for (uint32_t funcIndex : seg->elemFuncIndices) {
+          if (funcIndex == NullFuncIndex) {
+            continue;
+          }
           exportedFuncs.infallibleEmplaceBack(funcIndex, false);
         }
         break;
