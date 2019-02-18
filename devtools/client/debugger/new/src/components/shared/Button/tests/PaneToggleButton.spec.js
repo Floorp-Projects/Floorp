@@ -14,7 +14,7 @@ describe("PaneToggleButton", () => {
     <PaneToggleButton
       handleClick={handleClickSpy}
       collapsed={false}
-      position={""}
+      position="start"
     />
   );
 
@@ -44,7 +44,7 @@ describe("PaneToggleButton", () => {
   });
 
   it("handleClick is called", () => {
-    const position = "testPosition";
+    const position = "end";
     const collapsed = false;
     wrapper.setProps({ position, collapsed });
     wrapper.simulate("click");
