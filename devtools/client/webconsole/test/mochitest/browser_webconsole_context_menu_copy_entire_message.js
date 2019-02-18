@@ -25,6 +25,7 @@ httpServer.registerPathHandler("/test.js", function(request, response) {
       }
       wrapper();
     };
+    z.bar = "baz";
   `);
 });
 
@@ -41,7 +42,6 @@ add_task(async function() {
   await pushPref(PREF_MESSAGE_TIMESTAMP, true);
 
   const hud = await openNewTabAndConsole(TEST_URI);
-  hud.ui.clearOutput();
 
   info("Call the log function defined in the test page");
   await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
@@ -119,6 +119,23 @@ async function testMessagesCopy(hud, timestamp) {
     "Error Stacktrace first line has the expected text");
   is(lines[2], `    logStuff ${TEST_URI}test.js:8`,
     "Error Stacktrace second line has the expected text");
+
+  info("Test copy menu item for the reference error message");
+  message = await waitFor(() => findMessage(hud, "ReferenceError:"));
+  clipboardText = await copyMessageContent(hud, message);
+  ok(true, "Clipboard text was found and saved");
+  lines = clipboardText.split(newLineString);
+  is(lines[0], (timestamp ? getTimestampText(message) + " " : "") +
+    "ReferenceError: z is not defined test.js:10:5",
+    "ReferenceError first line has expected text");
+  if (timestamp) {
+    ok(LOG_FORMAT_WITH_TIMESTAMP.test(lines[0]),
+      "Log line has the right format:\n" + lines[0]);
+  }
+  ok(!!message.querySelector(".learn-more-link"),
+    "There is a Learn More link in the ReferenceError message");
+  is(clipboardText.toLowerCase().includes("Learn More"), false,
+    "The Learn More text wasn't put in the clipboard");
 }
 
 function getTimestampText(messageEl) {
