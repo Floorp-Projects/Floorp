@@ -29,6 +29,9 @@ object Versions {
     const val sentry = "1.7.14"
     const val okhttp = "3.12.1"
 
+    const val room = "1.1.1"
+    const val paging = "1.0.1"
+
     const val mozilla_appservices = "0.15.0"
     const val servo = "0.0.1.20181017.aa95911"
 }
@@ -60,7 +63,13 @@ object Dependencies {
     const val support_compat = "com.android.support:support-compat:${Versions.support_libraries}"
 
     const val arch_lifecycle = "android.arch.lifecycle:extensions:${Versions.lifecycle}"
+    const val arch_lifecycl_compiler = "android.arch.lifecycle:compiler:${Versions.lifecycle}"
     const val arch_workmanager = "android.arch.work:work-runtime-ktx:${Versions.workmanager}"
+    const val arch_paging = "android.arch.paging:runtime:${Versions.paging}"
+
+    const val room_runtime = "android.arch.persistence.room:runtime:${Versions.room}"
+    const val room_compiler = "android.arch.persistence.room:compiler:${Versions.room}"
+    const val room_testing = "android.arch.persistence.room:testing:${Versions.room}"
 
     const val tools_dokka = "org.jetbrains.dokka:dokka-android-gradle-plugin:${Versions.dokka}"
     const val tools_androidgradle = "com.android.tools.build:gradle:${Versions.android_gradle_plugin}"

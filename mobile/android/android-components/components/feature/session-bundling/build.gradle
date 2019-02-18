@@ -33,25 +33,27 @@ dependencies {
 
     implementation project(':browser-session')
 
-    implementation "android.arch.paging:runtime:1.0.1"
+    implementation project(':support-base')
 
-    implementation "android.arch.persistence.room:runtime:1.1.1"
-    kapt "android.arch.persistence.room:compiler:1.1.1"
-    androidTestImplementation "android.arch.persistence.room:testing:1.1.1"
+    implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.kotlin_coroutines
 
-    implementation "android.arch.lifecycle:extensions:1.1.1"
-    kapt "android.arch.lifecycle:compiler:1.1.1"
+    implementation Dependencies.arch_paging
+    implementation Dependencies.arch_lifecycle
+    kapt Dependencies.arch_lifecycl_compiler
+
+    implementation Dependencies.room_runtime
+    kapt Dependencies.room_compiler
 
     testImplementation project(':support-test')
 
-    implementation Dependencies.kotlin_stdlib
-
     testImplementation Dependencies.androidx_test_core
-
     testImplementation Dependencies.testing_junit
     testImplementation Dependencies.testing_mockito
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.kotlin_coroutines
+
+    androidTestImplementation Dependencies.room_testing
 }
 
 apply from: '../../../publish.gradle'

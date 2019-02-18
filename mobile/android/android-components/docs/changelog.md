@@ -35,6 +35,9 @@ permalink: /changelog/
 )  
 ```
 
+* **feature-session-bundling**
+  * Added `SessionBundleStorage.autoClose()`: When "auto close" is enabled the currently active `SessionBundle` will automatically be closed and a new `SessionBundle`  will be started if the bundle lifetime expires while the app is in the background.
+
 # 0.43.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.42.0...v0.43.0)

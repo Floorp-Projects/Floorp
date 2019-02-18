@@ -5,6 +5,7 @@
 package mozilla.components.feature.session.bundling
 
 import android.arch.lifecycle.LiveData
+import android.arch.lifecycle.ProcessLifecycleOwner
 import android.arch.lifecycle.Transformations
 import android.arch.paging.DataSource
 import android.content.Context
@@ -29,7 +30,7 @@ import java.util.concurrent.TimeUnit
 @Suppress("TooManyFunctions")
 class SessionBundleStorage(
     context: Context,
-    private val bundleLifetime: Pair<Long, TimeUnit>
+    internal val bundleLifetime: Pair<Long, TimeUnit>
 ) : AutoSave.Storage {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var databaseInitializer = {
@@ -119,6 +120,15 @@ class SessionBundleStorage(
     }
 
     /**
+     * Clear the currently used, active [SessionBundle] and use a new one the next time a [SessionManager.Snapshot] is
+     * saved.
+     */
+    @Synchronized
+    fun new() {
+        lastBundle = null
+    }
+
+    /**
      * Returns the last saved [SessionBundle] instances (up to [limit]) as a [LiveData] list.
      */
     fun bundles(limit: Int = 20): LiveData<List<SessionBundle>> {
@@ -157,6 +167,18 @@ class SessionBundleStorage(
         unit: TimeUnit = TimeUnit.MILLISECONDS
     ): AutoSave {
         return AutoSave(sessionManager, this, unit.toMillis(interval))
+    }
+
+    /**
+     * Automatically clears the current bundle and starts a new bundle if the lifetime has expired while the app was in
+     * the background.
+     */
+    @Synchronized
+    fun autoClose(
+        sessionManager: SessionManager
+    ) {
+        ProcessLifecycleOwner.get().lifecycle.addObserver(
+            SessionBundleLifecycleObserver(this, sessionManager))
     }
 
     /**
