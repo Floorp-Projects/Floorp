@@ -1,15 +1,25 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* import-globals-from ../performance-controller.js */
-/* import-globals-from ../performance-view.js */
-/* globals document, window */
+/* globals $, $$, PerformanceController */
 "use strict";
+
+const EVENTS = require("../events");
+const { L10N } = require("../modules/global");
+
+const PerformanceUtils = require("../modules/utils");
+
+const React = require("devtools/client/shared/vendor/react");
+const ReactDOM = require("devtools/client/shared/vendor/react-dom");
+const RecordingList = React.createFactory(require("../components/RecordingList"));
+const RecordingListItem = React.createFactory(require("../components/RecordingListItem"));
+
+const EventEmitter = require("devtools/shared/event-emitter");
 
 /**
  * Functions handling the recordings UI.
  */
-var RecordingsView = {
+const RecordingsView = {
   /**
    * Initialization function, called when the tool is started.
    */
@@ -200,3 +210,5 @@ var RecordingsView = {
  * Convenient way of emitting events from the RecordingsView.
  */
 EventEmitter.decorate(RecordingsView);
+
+exports.RecordingsView = window.RecordingsView = RecordingsView;

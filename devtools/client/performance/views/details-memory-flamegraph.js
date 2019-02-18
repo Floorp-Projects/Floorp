@@ -1,16 +1,23 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* import-globals-from ../performance-controller.js */
-/* import-globals-from ../performance-view.js */
-/* globals DetailsSubview */
+/* globals $, $$, PerformanceController, OverviewView */
 "use strict";
+
+const { FlameGraph, FlameGraphUtils } = require("devtools/client/shared/widgets/FlameGraph");
+const { extend } = require("devtools/shared/extend");
+const RecordingUtils = require("devtools/shared/performance/recording-utils");
+const EventEmitter = require("devtools/shared/event-emitter");
+
+const EVENTS = require("../events");
+const { DetailsSubview } = require("./details-abstract-subview");
+const { L10N } = require("../modules/global");
 
 /**
  * FlameGraph view containing a pyramid-like visualization of memory allocation
  * sites, controlled by DetailsView.
  */
-var MemoryFlameGraphView = extend(DetailsSubview, {
+const MemoryFlameGraphView = extend(DetailsSubview, {
 
   shouldUpdateWhileMouseIsActive: true,
 
@@ -120,3 +127,5 @@ var MemoryFlameGraphView = extend(DetailsSubview, {
 });
 
 EventEmitter.decorate(MemoryFlameGraphView);
+
+exports.MemoryFlameGraphView = MemoryFlameGraphView;

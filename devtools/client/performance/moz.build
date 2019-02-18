@@ -7,11 +7,15 @@ DIRS += [
     'components',
     'modules',
     'test',
+    'views',
 ]
 
 DevToolsModules(
     'events.js',
-    'panel.js'
+    'initializer.js',
+    'panel.js',
+    'performance-controller.js',
+    'performance-view.js',
 )
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']

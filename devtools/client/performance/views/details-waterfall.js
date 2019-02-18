@@ -1,21 +1,32 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* import-globals-from ../performance-controller.js */
-/* import-globals-from ../performance-view.js */
-/* globals window, DetailsSubview */
+/* globals $, $$, PerformanceController, OverviewView, DetailsView */
 "use strict";
+
+const { extend } = require("devtools/shared/extend");
+const EventEmitter = require("devtools/shared/event-emitter");
+const { setNamedTimeout, clearNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
+
+const React = require("devtools/client/shared/vendor/react");
+const ReactDOM = require("devtools/client/shared/vendor/react-dom");
+
+const EVENTS = require("../events");
+const WaterfallUtils = require("../modules/logic/waterfall-utils");
+const { TickUtils } = require("../modules/waterfall-ticks");
+const { MarkerDetails } = require("../modules/widgets/marker-details");
+const { DetailsSubview } = require("./details-abstract-subview");
+
+const Waterfall = React.createFactory(require("../components/Waterfall"));
 
 const MARKER_DETAILS_WIDTH = 200;
 // Units are in milliseconds.
 const WATERFALL_RESIZE_EVENTS_DRAIN = 100;
 
-const { TickUtils } = require("devtools/client/performance/modules/waterfall-ticks");
-
 /**
  * Waterfall view containing the timeline markers, controlled by DetailsView.
  */
-var WaterfallView = extend(DetailsSubview, {
+const WaterfallView = extend(DetailsSubview, {
 
   // Smallest unit of time between two markers. Larger by 10x^3 than Number.EPSILON.
   MARKER_EPSILON: 0.000000000001,
@@ -146,7 +157,7 @@ var WaterfallView = extend(DetailsSubview, {
    * Called when MarkerDetails view emits an event to view source.
    */
   _onViewSource: function(data) {
-    gToolbox.viewSourceInDebugger(data.url, data.line);
+    PerformanceController.toolbox.viewSourceInDebugger(data.url, data.line);
   },
 
   /**
@@ -250,3 +261,5 @@ var WaterfallView = extend(DetailsSubview, {
 });
 
 EventEmitter.decorate(WaterfallView);
+
+exports.WaterfallView = WaterfallView;

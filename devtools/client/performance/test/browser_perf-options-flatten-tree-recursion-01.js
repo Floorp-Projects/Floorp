@@ -23,8 +23,8 @@ add_task(async function() {
     PerformanceController,
     DetailsView,
     JsFlameGraphView,
-    FlameGraphUtils,
   } = panel.panelWin;
+  const { FlameGraphUtils } = require("devtools/client/shared/widgets/FlameGraph");
 
   Services.prefs.setBoolPref(UI_FLATTEN_RECURSION_PREF, true);
 
