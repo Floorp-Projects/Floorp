@@ -15,6 +15,10 @@ Unreleased
   initially used for backwards compatibility with clients
   prior to Selenium 3.0.0.
 
+### Changed
+
+- Improved error messages for incorrect command-line usage
+
 ### Fixed
 
 - Errors related to incorrect command-line usage no longer hidden

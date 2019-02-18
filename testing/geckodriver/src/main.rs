@@ -141,22 +141,25 @@ fn parse_args(app: &mut App) -> ProgramResult<Operation> {
     };
 
     let host = matches.value_of("webdriver_host").unwrap();
-    let port = match u16::from_str(matches.value_of("webdriver_port").unwrap()) {
-        Ok(x) => x,
-        Err(_) => usage!("invalid WebDriver port"),
+    let port = {
+        let s = matches.value_of("webdriver_port").unwrap();
+        match u16::from_str(s) {
+            Ok(n) => n,
+            Err(e) => usage!("invalid --port: {}: {}", e, s),
+        }
     };
     let address = match IpAddr::from_str(host) {
         Ok(addr) => SocketAddr::new(addr, port),
-        Err(_) => usage!("invalid host address"),
+        Err(e) => usage!("{}: {}:{}", e, host, port),
     };
 
     let binary = matches.value_of("binary").map(PathBuf::from);
 
     let marionette_host = matches.value_of("marionette_host").unwrap();
     let marionette_port = match matches.value_of("marionette_port") {
-        Some(x) => match u16::from_str(x) {
-            Ok(x) => Some(x),
-            Err(_) => usage!("invalid Marionette port"),
+        Some(s) => match u16::from_str(s) {
+            Ok(n) => Some(n),
+            Err(e) => usage!("invalid --marionette-port: {}", e),
         },
         None => None,
     };
