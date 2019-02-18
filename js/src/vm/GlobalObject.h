@@ -604,6 +604,14 @@ class GlobalObject : public NativeObject {
                                                initArrayIteratorProto));
   }
 
+  NativeObject* maybeGetArrayIteratorPrototype() {
+    Value v = getSlotRef(ARRAY_ITERATOR_PROTO);
+    if (v.isObject()) {
+      return &v.toObject().as<NativeObject>();
+    }
+    return nullptr;
+  }
+
   static NativeObject* getOrCreateStringIteratorPrototype(
       JSContext* cx, Handle<GlobalObject*> global) {
     return MaybeNativeObject(getOrCreateObject(
