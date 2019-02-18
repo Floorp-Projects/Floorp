@@ -312,7 +312,7 @@ Instance::callImport_anyref(Instance* instance, int32_t funcImportIndex,
 }
 
 /* static */ uint32_t /* infallible */
-Instance::growMemory_i32(Instance* instance, uint32_t delta) {
+Instance::memoryGrow_i32(Instance* instance, uint32_t delta) {
   MOZ_ASSERT(!instance->isAsmJS());
 
   JSContext* cx = TlsContext.get();
@@ -328,7 +328,7 @@ Instance::growMemory_i32(Instance* instance, uint32_t delta) {
 }
 
 /* static */ uint32_t /* infallible */
-Instance::currentMemory_i32(Instance* instance) {
+Instance::memorySize_i32(Instance* instance) {
   // This invariant must hold when running Wasm code. Assert it here so we can
   // write tests for cross-realm calls.
   MOZ_ASSERT(TlsContext.get()->realm() == instance->realm());
@@ -747,31 +747,35 @@ void Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   uint8_t* codeBaseTier = codeBase(tier);
   for (uint32_t i = 0; i < len; i++) {
     uint32_t funcIndex = elemFuncIndices[srcOffset + i];
-    if (funcIndex < funcImports.length()) {
-      FuncImportTls& import = funcImportTls(funcImports[funcIndex]);
-      JSFunction* fun = import.fun;
-      if (IsExportedWasmFunction(fun)) {
-        // This element is a wasm function imported from another
-        // instance. To preserve the === function identity required by
-        // the JS embedding spec, we must set the element to the
-        // imported function's underlying CodeRange.funcTableEntry and
-        // Instance so that future Table.get()s produce the same
-        // function object as was imported.
-        WasmInstanceObject* calleeInstanceObj =
+    if (funcIndex == NullFuncIndex) {
+      table.setNull(dstOffset + i);
+    } else {
+      if (funcIndex < funcImports.length()) {
+        FuncImportTls& import = funcImportTls(funcImports[funcIndex]);
+        JSFunction* fun = import.fun;
+        if (IsExportedWasmFunction(fun)) {
+          // This element is a wasm function imported from another
+          // instance. To preserve the === function identity required by
+          // the JS embedding spec, we must set the element to the
+          // imported function's underlying CodeRange.funcTableEntry and
+          // Instance so that future Table.get()s produce the same
+          // function object as was imported.
+          WasmInstanceObject* calleeInstanceObj =
             ExportedFunctionToInstanceObject(fun);
-        Instance& calleeInstance = calleeInstanceObj->instance();
-        Tier calleeTier = calleeInstance.code().bestTier();
-        const CodeRange& calleeCodeRange =
+          Instance& calleeInstance = calleeInstanceObj->instance();
+          Tier calleeTier = calleeInstance.code().bestTier();
+          const CodeRange& calleeCodeRange =
             calleeInstanceObj->getExportedFunctionCodeRange(fun, calleeTier);
-        void* code = calleeInstance.codeBase(calleeTier) +
-                     calleeCodeRange.funcTableEntry();
-        table.setAnyFunc(dstOffset + i, code, &calleeInstance);
-        continue;
+          void* code = calleeInstance.codeBase(calleeTier) +
+            calleeCodeRange.funcTableEntry();
+          table.setAnyFunc(dstOffset + i, code, &calleeInstance);
+          continue;
+        }
       }
-    }
-    void* code =
+      void* code =
         codeBaseTier + codeRanges[funcToCodeRange[funcIndex]].funcTableEntry();
-    table.setAnyFunc(dstOffset + i, code, this);
+      table.setAnyFunc(dstOffset + i, code, this);
+    }
   }
 }
 

@@ -160,8 +160,8 @@ struct BD_ValType {
 // enum is hardcoded in wasm2clif.rs.
 
 enum class BD_SymbolicAddress {
-  GrowMemory,
-  CurrentMemory,
+  MemoryGrow,
+  MemorySize,
   FloorF32,
   FloorF64,
   CeilF32,

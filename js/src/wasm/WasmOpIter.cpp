@@ -252,6 +252,10 @@ OpKind wasm::Classify(OpBytes op) {
       return OpKind::GetGlobal;
     case Op::SetGlobal:
       return OpKind::SetGlobal;
+    case Op::TableGet:
+      WASM_TABLE_OP(OpKind::TableGet);
+    case Op::TableSet:
+      WASM_TABLE_OP(OpKind::TableSet);
     case Op::Call:
       return OpKind::Call;
     case Op::CallIndirect:
@@ -266,14 +270,16 @@ OpKind wasm::Classify(OpBytes op) {
       return OpKind::Else;
     case Op::End:
       return OpKind::End;
-    case Op::CurrentMemory:
-      return OpKind::CurrentMemory;
-    case Op::GrowMemory:
-      return OpKind::GrowMemory;
+    case Op::MemorySize:
+      return OpKind::MemorySize;
+    case Op::MemoryGrow:
+      return OpKind::MemoryGrow;
     case Op::RefNull:
       WASM_REF_OP(OpKind::RefNull);
     case Op::RefIsNull:
       WASM_REF_OP(OpKind::Conversion);
+    case Op::RefFunc:
+      WASM_REF_OP(OpKind::RefFunc);
     case Op::RefEq:
       WASM_GC_OP(OpKind::Comparison);
     case Op::MiscPrefix: {
@@ -301,12 +307,8 @@ OpKind wasm::Classify(OpBytes op) {
         case MiscOp::MemInit:
         case MiscOp::TableInit:
           WASM_BULK_OP(OpKind::MemOrTableInit);
-        case MiscOp::TableGet:
-          WASM_TABLE_OP(OpKind::TableGet);
         case MiscOp::TableGrow:
           WASM_TABLE_OP(OpKind::TableGrow);
-        case MiscOp::TableSet:
-          WASM_TABLE_OP(OpKind::TableSet);
         case MiscOp::TableSize:
           WASM_TABLE_OP(OpKind::TableSize);
         case MiscOp::StructNew:

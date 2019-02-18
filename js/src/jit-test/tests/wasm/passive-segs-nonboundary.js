@@ -311,7 +311,7 @@ function checkPassiveElemSegment(mangle, err) {
                body.push(1);           // Flag: Passive
                body.push(AnyFuncCode + (mangle == "type" ? 1 : 0)); // always anyfunc
                body.push(1);           // Element count
-               body.push(PlaceholderRefFunc + (mangle == "ref.func" ? 1 : 0)); // always ref.func
+               body.push(RefFuncCode + (mangle == "ref.func" ? 1 : 0)); // always ref.func
                body.push(0);           // func index
                body.push(EndCode + (mangle == "end" ? 1 : 0));
                return body;
@@ -332,8 +332,41 @@ function checkPassiveElemSegment(mangle, err) {
 
 checkPassiveElemSegment("");
 checkPassiveElemSegment("type", /passive segments can only contain function references/);
-checkPassiveElemSegment("ref.func", /failed to read ref.func operation/);
-checkPassiveElemSegment("end", /failed to read end of ref.func expression/);
+checkPassiveElemSegment("ref.func", /failed to read initializer operation/);
+checkPassiveElemSegment("end", /failed to read end of initializer expression/);
+
+// Passive element segments can contain literal null values.
+
+{
+    let txt =
+        `(module
+           (table (export "t") 10 anyfunc)
+           (elem (i32.const 1) $m)
+           (elem (i32.const 3) $m)
+           (elem (i32.const 6) $m)
+           (elem (i32.const 8) $m)
+           (elem passive $f ref.null $g ref.null $h)
+           (func $m)
+           (func $f)
+           (func $g)
+           (func $h)
+           (func (export "doit") (param $idx i32)
+             (table.init 4 (get_local $idx) (i32.const 0) (i32.const 5))))`;
+    let ins = wasmEvalText(txt);
+    ins.exports.doit(0);
+    ins.exports.doit(5);
+    assertEq(typeof ins.exports.t.get(0), "function");
+    assertEq(ins.exports.t.get(1), null);
+    assertEq(typeof ins.exports.t.get(2), "function");
+    assertEq(ins.exports.t.get(0) == ins.exports.t.get(2), false);
+    assertEq(ins.exports.t.get(3), null);
+    assertEq(typeof ins.exports.t.get(4), "function");
+    assertEq(typeof ins.exports.t.get(5), "function");
+    assertEq(ins.exports.t.get(6), null);
+    assertEq(typeof ins.exports.t.get(7), "function");
+    assertEq(ins.exports.t.get(8), null);
+    assertEq(typeof ins.exports.t.get(9), "function");
+}
 
 //---------------------------------------------------------------------//
 //---------------------------------------------------------------------//

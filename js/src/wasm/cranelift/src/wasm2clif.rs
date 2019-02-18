@@ -690,10 +690,10 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
         _heap: ir::Heap,
         val: ir::Value,
     ) -> WasmResult<ir::Value> {
-        // We emit a call to `uint32_t growMemory_i32(Instance* instance, uint32_t delta)` via a
+        // We emit a call to `uint32_t memoryGrow_i32(Instance* instance, uint32_t delta)` via a
         // stub.
         let (fnref, sigref) =
-            self.symbolic_funcref(pos.func, bd::SymbolicAddress::GrowMemory, || {
+            self.symbolic_funcref(pos.func, bd::SymbolicAddress::MemoryGrow, || {
                 let mut sig = ir::Signature::new(CallConv::Baldrdash);
                 sig.params.push(ir::AbiParam::new(native_pointer_type()));
                 sig.params.push(ir::AbiParam::new(ir::types::I32).uext());
@@ -705,7 +705,7 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
                 sig
             });
 
-        // Get the instance pointer needed by `growMemory_i32`.
+        // Get the instance pointer needed by `memoryGrow_i32`.
         let instance = self.load_instance(&mut pos);
         let vmctx = pos
             .func
@@ -727,9 +727,9 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
         _index: MemoryIndex,
         _heap: ir::Heap,
     ) -> WasmResult<ir::Value> {
-        // We emit a call to `uint32_t currentMemory_i32(Instance* instance)` via a stub.
+        // We emit a call to `uint32_t memorySize_i32(Instance* instance)` via a stub.
         let (fnref, sigref) =
-            self.symbolic_funcref(pos.func, bd::SymbolicAddress::CurrentMemory, || {
+            self.symbolic_funcref(pos.func, bd::SymbolicAddress::MemorySize, || {
                 let mut sig = ir::Signature::new(CallConv::Baldrdash);
                 sig.params.push(ir::AbiParam::new(native_pointer_type()));
                 sig.params.push(ir::AbiParam::special(
@@ -740,7 +740,7 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
                 sig
             });
 
-        // Get the instance pointer needed by `currentMemory_i32`.
+        // Get the instance pointer needed by `memorySize_i32`.
         let instance = self.load_instance(&mut pos);
         let vmctx = pos
             .func

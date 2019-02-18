@@ -572,8 +572,13 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
                           Handle<FunctionVector> funcImports,
                           HandleWasmMemoryObject memoryObj,
                           HandleValVector globalImportValues) const {
+  MOZ_ASSERT_IF(!memoryObj, dataSegments_.empty());
+
   Instance& instance = instanceObj->instance();
   const SharedTableVector& tables = instance.tables();
+
+#ifndef ENABLE_WASM_BULKMEM_OPS
+  // Bulk memory changes the error checking behavior: we may write partial data.
 
   // Perform all error checks up front so that this function does not perform
   // partial initialization if an error is reported.
@@ -609,21 +614,44 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
         return false;
       }
     }
-  } else {
-    MOZ_ASSERT(dataSegments_.empty());
   }
 
   // Now that initialization can't fail partway through, write data/elem
   // segments into memories/tables.
+#endif
 
   for (const ElemSegment* seg : elemSegments_) {
     if (seg->active()) {
       uint32_t offset = EvaluateInitExpr(globalImportValues, seg->offset());
-      instance.initElems(seg->tableIndex, *seg, offset, 0, seg->length());
+      uint32_t count = seg->length();
+#ifdef ENABLE_WASM_BULKMEM_OPS
+      uint32_t tableLength = tables[seg->tableIndex]->length();
+      bool fail = false;
+      if (offset > tableLength) {
+        fail = true;
+        count = 0;
+      } else if (tableLength - offset < count) {
+        fail = true;
+        count = tableLength - offset;
+      }
+#endif
+      if (count) {
+        instance.initElems(seg->tableIndex, *seg, offset, 0, count);
+      }
+#ifdef ENABLE_WASM_BULKMEM_OPS
+      if (fail) {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_FIT,
+                                 "elem", "table");
+        return false;
+      }
+#endif
     }
   }
 
   if (memoryObj) {
+#ifdef ENABLE_WASM_BULKMEM_OPS
+    uint32_t memoryLength = memoryObj->volatileMemoryLength();
+#endif
     uint8_t* memoryBase =
         memoryObj->buffer().dataPointerEither().unwrap(/* memcpy */);
 
@@ -632,12 +660,29 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
         continue;
       }
 
-      // But apply active segments right now.
       uint32_t offset = EvaluateInitExpr(globalImportValues, seg->offset());
-      memcpy(memoryBase + offset, seg->bytes.begin(), seg->bytes.length());
+      uint32_t count = seg->bytes.length();
+#ifdef ENABLE_WASM_BULKMEM_OPS
+      bool fail = false;
+      if (offset > memoryLength) {
+        fail = true;
+        count = 0;
+      } else if (memoryLength - offset < count) {
+        fail = true;
+        count = memoryLength - offset;
+      }
+#endif
+      if (count) {
+        memcpy(memoryBase + offset, seg->bytes.begin(), count);
+      }
+#ifdef ENABLE_WASM_BULKMEM_OPS
+      if (fail) {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                                 JSMSG_WASM_BAD_FIT, "data", "memory");
+        return false;
+      }
+#endif
     }
-  } else {
-    MOZ_ASSERT(dataSegments_.empty());
   }
 
   return true;
