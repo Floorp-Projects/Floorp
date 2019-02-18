@@ -88,14 +88,39 @@ pub struct RenderTaskTree {
     frame_id: FrameId,
 }
 
+#[derive(Debug)]
+pub struct RenderTaskTreeCounters {
+    tasks_len: usize,
+    task_data_len: usize,
+    cacheable_render_tasks_len: usize,
+}
+
+impl RenderTaskTreeCounters {
+    pub fn new() -> Self {
+        RenderTaskTreeCounters {
+            tasks_len: 0,
+            task_data_len: 0,
+            cacheable_render_tasks_len: 0,
+        }
+    }
+}
+
 impl RenderTaskTree {
-    pub fn new(frame_id: FrameId) -> Self {
+    pub fn new(frame_id: FrameId, counters: &RenderTaskTreeCounters) -> Self {
         RenderTaskTree {
-            tasks: Vec::new(),
-            task_data: Vec::new(),
-            cacheable_render_tasks: Vec::new(),
+            tasks: Vec::with_capacity(counters.tasks_len),
+            task_data: Vec::with_capacity(counters.task_data_len),
+            cacheable_render_tasks: Vec::with_capacity(counters.cacheable_render_tasks_len),
             next_saved: SavedTargetIndex(0),
             frame_id,
+        }
+    }
+
+    pub fn counters(&self) -> RenderTaskTreeCounters {
+        RenderTaskTreeCounters {
+            tasks_len: self.tasks.len(),
+            task_data_len: self.task_data.len(),
+            cacheable_render_tasks_len: self.cacheable_render_tasks.len(),
         }
     }
 
