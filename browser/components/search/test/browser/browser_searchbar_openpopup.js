@@ -1,11 +1,6 @@
 // Tests that the suggestion popup appears at the right times in response to
 // focus and user events (mouse, keyboard, drop).
 
-// Instead of loading EventUtils.js into the test scope in browser-test.js for all tests,
-// we only need EventUtils.js for a few files which is why we are using loadSubScript.
-var EventUtils = {};
-Services.scriptloader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
-
 const searchPopup = document.getElementById("PopupSearchAutoComplete");
 const kValues = ["long text", "long text 2", "long text 3"];
 
@@ -446,7 +441,7 @@ add_task(async function dont_consume_clicks() {
   is(textbox.selectionEnd, 3, "Should have selected all of the text");
 
   promise = promiseEvent(searchPopup, "popuphidden");
-  await synthesizeNativeMouseClick(gURLBar);
+  await synthesizeNativeMouseClick(gURLBar.inputField);
   await promise;
 
   is(Services.focus.focusedElement, gURLBar.inputField, "Should have focused the URL bar");
