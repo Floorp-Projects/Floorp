@@ -148,12 +148,20 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
             return new StreamTitleRow(inflater.inflate(StreamTitleRow.LAYOUT_ID, parent, false), R.string.activity_stream_topstories, R.string.activity_stream_link_more, LINK_MORE_POCKET, onUrlOpenListener);
         } else if (type == RowItemType.TOP_STORIES_ITEM.getViewType() ||
                 type == RowItemType.HIGHLIGHT_ITEM.getViewType()) {
-            return new WebpageItemRow(inflater.inflate(WebpageItemRow.LAYOUT_ID, parent, false), new WebpageItemRow.OnMenuButtonClickListener() {
-                @Override
-                public void onMenuButtonClicked(final WebpageItemRow row, final int position) {
-                    openContextMenuForWebpageItemRow(row, position, parent, ActivityStreamTelemetry.Contract.INTERACTION_MENU_BUTTON);
-                }
-            });
+            return new WebpageItemRow(inflater.inflate(WebpageItemRow.LAYOUT_ID, parent, false),
+                    new WebpageItemRow.OnMenuButtonClickListener() {
+                        @Override
+                        public void onMenuButtonClicked(final WebpageItemRow row, final int position) {
+                            openContextMenuForWebpageItemRow(
+                                    row, position, parent, ActivityStreamTelemetry.Contract.INTERACTION_MENU_BUTTON);
+                        }
+                    }, new WebpageItemRow.OnContentChangedListener() {
+                        @Override
+                        public void onContentChanged(int itemPosition) {
+                            notifyItemChanged(itemPosition);
+                        }
+                    }
+            );
         } else if (type == RowItemType.HIGHLIGHTS_TITLE.getViewType()) {
             return new StreamTitleRow(inflater.inflate(StreamTitleRow.LAYOUT_ID, parent, false), R.string.activity_stream_highlights);
         } else if (type == RowItemType.HIGHLIGHTS_EMPTY_STATE.getViewType()) {
@@ -213,6 +221,24 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
             final Context context = holder.itemView.getContext();
             final boolean pocketEnabled = ActivityStreamConfiguration.isPocketRecommendingTopSites(context);
             setViewVisible(pocketEnabled, holder.itemView);
+        }
+    }
+
+    @Override
+    public void onViewAttachedToWindow(StreamViewHolder holder) {
+        super.onViewAttachedToWindow(holder);
+
+        if (holder instanceof WebpageItemRow) {
+            ((WebpageItemRow) holder).initResources();
+        }
+    }
+
+    @Override
+    public void onViewDetachedFromWindow(StreamViewHolder holder) {
+        super.onViewDetachedFromWindow(holder);
+
+        if (holder instanceof WebpageItemRow) {
+            ((WebpageItemRow) holder).doCleanup();
         }
     }
 
