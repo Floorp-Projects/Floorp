@@ -21,8 +21,14 @@
   background: var(--arrowpanel-background);
   color: var(--arrowpanel-color);
   border: 1px solid var(--arrowpanel-border-color);
-  border-radius: 3.5px;
   margin-top: -4px;
+}
+
+/* Add border-radius on Windows 7 */
+@media (-moz-os-version: windows-win7) {
+  #BMB_bookmarksPopup menupopup[placespopup=true] > hbox {
+    border-radius: 3.5px;
+  }
 }
 
 /* Add some space at the top because there are no headers: */
@@ -41,17 +47,6 @@ menuitem.subviewbutton[disabled]:not(.menuitem-iconic) {
   /* This is 16px for an icon + 3px for its margins + 1px for its padding +
    * 2px for its border, see above */
   min-height: 22px;
-}
-
-/* Win8 and beyond. */
-@media not (-moz-os-version: windows-win7) {
-  #BMB_bookmarksPopup menupopup[placespopup=true] > hbox,
-  #edit-controls@inAnyPanel@,
-  #zoom-controls@inAnyPanel@,
-  #edit-controls@inAnyPanel@ > toolbarbutton,
-  #zoom-controls@inAnyPanel@ > toolbarbutton {
-    border-radius: 0;
-  }
 }
 
 /* Anchor the bookmark menu drop down panel at the same height as other
