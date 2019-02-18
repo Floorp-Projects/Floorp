@@ -3596,14 +3596,15 @@ bool ContentParent::DeallocPPSMContentDownloaderParent(
 }
 
 PExternalHelperAppParent* ContentParent::AllocPExternalHelperAppParent(
-    const OptionalURIParams& uri, const nsCString& aMimeContentType,
-    const nsCString& aContentDisposition,
+    const OptionalURIParams& uri,
+    const mozilla::net::OptionalLoadInfoArgs& aLoadInfoArgs,
+    const nsCString& aMimeContentType, const nsCString& aContentDisposition,
     const uint32_t& aContentDispositionHint,
     const nsString& aContentDispositionFilename, const bool& aForceSave,
     const int64_t& aContentLength, const bool& aWasFileChannel,
     const OptionalURIParams& aReferrer, PBrowserParent* aBrowser) {
   ExternalHelperAppParent* parent = new ExternalHelperAppParent(
-      uri, aContentLength, aWasFileChannel, aContentDisposition,
+      uri, aLoadInfoArgs, aContentLength, aWasFileChannel, aContentDisposition,
       aContentDispositionHint, aContentDispositionFilename);
   parent->AddRef();
   parent->Init(this, aMimeContentType, aForceSave, aReferrer, aBrowser);

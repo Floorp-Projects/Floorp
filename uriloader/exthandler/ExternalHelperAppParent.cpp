@@ -33,8 +33,10 @@ NS_IMPL_ISUPPORTS_INHERITED(ExternalHelperAppParent, nsHashPropertyBag,
                             nsIStreamListener, nsIExternalHelperAppParent)
 
 ExternalHelperAppParent::ExternalHelperAppParent(
-    const OptionalURIParams& uri, const int64_t& aContentLength,
-    const bool& aWasFileChannel, const nsCString& aContentDispositionHeader,
+    const OptionalURIParams& uri,
+    const mozilla::net::OptionalLoadInfoArgs& aLoadInfoArgs,
+    const int64_t& aContentLength, const bool& aWasFileChannel,
+    const nsCString& aContentDispositionHeader,
     const uint32_t& aContentDispositionHint,
     const nsString& aContentDispositionFilename)
     : mURI(DeserializeURI(uri)),
@@ -59,6 +61,8 @@ ExternalHelperAppParent::ExternalHelperAppParent(
     mContentDisposition = aContentDispositionHint;
     mContentDispositionFilename = aContentDispositionFilename;
   }
+  mozilla::ipc::LoadInfoArgsToLoadInfo(aLoadInfoArgs,
+                                       getter_AddRefs(mLoadInfo));
 }
 
 already_AddRefed<nsIInterfaceRequestor> GetWindowFromTabParent(
@@ -322,7 +326,7 @@ ExternalHelperAppParent::SetOwner(nsISupports* aOwner) {
 
 NS_IMETHODIMP
 ExternalHelperAppParent::GetLoadInfo(nsILoadInfo** aLoadInfo) {
-  *aLoadInfo = nullptr;
+  NS_IF_ADDREF(*aLoadInfo = mLoadInfo);
   return NS_OK;
 }
 
