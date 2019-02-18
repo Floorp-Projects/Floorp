@@ -62,7 +62,6 @@ pref("devtools.debugger.features.workers", true);
 pref("devtools.debugger.features.code-coverage", false);
 pref("devtools.debugger.features.code-folding", false);
 pref("devtools.debugger.features.outline", true);
-pref("devtools.debugger.features.pause-points", true);
 pref("devtools.debugger.features.component-pane", false);
 pref("devtools.debugger.features.async-stepping", true);
 pref("devtools.debugger.features.skip-pausing", true);

@@ -243,8 +243,7 @@ function waitForSelectedSource(dbg, url) {
         state,
         source.id
       );
-      const hasPausePoints = dbg.selectors.hasPausePoints(state, source.id);
-      return hasSymbols && hasSourceMetaData && hasPausePoints;
+      return hasSymbols && hasSourceMetaData;
     },
     "selected source"
   );
