@@ -20,9 +20,12 @@ extern crate zip;
 #[macro_use]
 extern crate log;
 
-use std::io::Write;
+use std::env;
+use std::fmt;
+use std::io;
 use std::net::{IpAddr, SocketAddr};
 use std::path::PathBuf;
+use std::result;
 use std::str::FromStr;
 
 use clap::{App, Arg};
@@ -46,68 +49,230 @@ mod prefs;
 #[cfg(test)]
 pub mod test;
 
-use crate::build::BuildInfo;
 use crate::command::extension_routes;
+use crate::logging::Level;
 use crate::marionette::{MarionetteHandler, MarionetteSettings};
 
-type ProgramResult = std::result::Result<(), (ExitCode, String)>;
+const EXIT_SUCCESS: i32 = 0;
+const EXIT_USAGE: i32 = 64;
+const EXIT_UNAVAILABLE: i32 = 69;
 
-enum ExitCode {
-    Ok = 0,
-    Usage = 64,
-    Unavailable = 69,
+enum FatalError {
+    Parsing(clap::Error),
+    Usage(String),
+    Server(io::Error),
 }
 
-fn print_version() {
-    println!("geckodriver {}", BuildInfo);
-    println!("");
-    println!("The source code of this program is available from");
-    println!("testing/geckodriver in https://hg.mozilla.org/mozilla-central.");
-    println!("");
-    println!("This program is subject to the terms of the Mozilla Public License 2.0.");
-    println!("You can obtain a copy of the license at https://mozilla.org/MPL/2.0/.");
+impl FatalError {
+    fn exit_code(&self) -> i32 {
+        use FatalError::*;
+        match *self {
+            Parsing(_) | Usage(_) => EXIT_USAGE,
+            Server(_) => EXIT_UNAVAILABLE,
+        }
+    }
+
+    fn help_included(&self) -> bool {
+        match *self {
+            FatalError::Parsing(_) => true,
+            _ => false,
+        }
+    }
 }
 
-fn app<'a, 'b>() -> App<'a, 'b> {
-    App::new(format!("geckodriver {}", crate_version!()))
-        .about("WebDriver implementation for Firefox.")
+impl From<clap::Error> for FatalError {
+    fn from(err: clap::Error) -> FatalError {
+        FatalError::Parsing(err)
+    }
+}
+
+impl From<io::Error> for FatalError {
+    fn from(err: io::Error) -> FatalError {
+        FatalError::Server(err)
+    }
+}
+
+// harmonise error message from clap to avoid duplicate "error:" prefix
+impl fmt::Display for FatalError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use FatalError::*;
+        let s = match *self {
+            Parsing(ref err) => err.to_string(),
+            Usage(ref s) => format!("error: {}", s),
+            Server(ref err) => format!("error: {}", err.to_string()),
+        };
+        write!(f, "{}", s)
+    }
+}
+
+macro_rules! usage {
+    ($msg:expr) => {
+        return Err(FatalError::Usage($msg.to_string()));
+    };
+
+    ($fmt:expr, $($arg:tt)+) => {
+        return Err(FatalError::Usage(format!($fmt, $($arg)+)));
+    };
+}
+
+type ProgramResult<T> = result::Result<T, FatalError>;
+
+enum Operation {
+    Help,
+    Version,
+    Server {
+        log_level: Option<Level>,
+        address: SocketAddr,
+        settings: MarionetteSettings,
+    },
+}
+
+fn parse_args(app: &mut App) -> ProgramResult<Operation> {
+    let matches = app.get_matches_from_safe_borrow(env::args())?;
+
+    let log_level = if matches.is_present("log_level") {
+        Level::from_str(matches.value_of("log_level").unwrap()).ok()
+    } else {
+        Some(match matches.occurrences_of("verbosity") {
+            0 => Level::Info,
+            1 => Level::Debug,
+            _ => Level::Trace,
+        })
+    };
+
+    let host = matches.value_of("webdriver_host").unwrap();
+    let port = {
+        let s = matches.value_of("webdriver_port").unwrap();
+        match u16::from_str(s) {
+            Ok(n) => n,
+            Err(e) => usage!("invalid --port: {}: {}", e, s),
+        }
+    };
+    let address = match IpAddr::from_str(host) {
+        Ok(addr) => SocketAddr::new(addr, port),
+        Err(e) => usage!("{}: {}:{}", e, host, port),
+    };
+
+    let binary = matches.value_of("binary").map(PathBuf::from);
+
+    let marionette_host = matches.value_of("marionette_host").unwrap();
+    let marionette_port = match matches.value_of("marionette_port") {
+        Some(s) => match u16::from_str(s) {
+            Ok(n) => Some(n),
+            Err(e) => usage!("invalid --marionette-port: {}", e),
+        },
+        None => None,
+    };
+
+    let op = if matches.is_present("help") {
+        Operation::Help
+    } else if matches.is_present("version") {
+        Operation::Version
+    } else {
+        let settings = MarionetteSettings {
+            host: marionette_host.to_string(),
+            port: marionette_port,
+            binary,
+            connect_existing: matches.is_present("connect_existing"),
+            jsdebugger: matches.is_present("jsdebugger"),
+        };
+        Operation::Server {
+            log_level,
+            address,
+            settings,
+        }
+    };
+
+    Ok(op)
+}
+
+fn inner_main(app: &mut App) -> ProgramResult<()> {
+    match parse_args(app)? {
+        Operation::Help => print_help(app),
+        Operation::Version => print_version(),
+
+        Operation::Server {
+            log_level,
+            address,
+            settings,
+        } => {
+            if let Some(ref level) = log_level {
+                logging::init_with_level(*level).unwrap();
+            } else {
+                logging::init().unwrap();
+            }
+
+            let handler = MarionetteHandler::new(settings);
+            let listening = webdriver::server::start(address, handler, &extension_routes()[..])?;
+            debug!("Listening on {}", listening.socket);
+        }
+    }
+
+    Ok(())
+}
+
+fn main() {
+    use std::process::exit;
+
+    let mut app = make_app();
+
+    // use std::process:Termination when it graduates
+    exit(match inner_main(&mut app) {
+        Ok(_) => EXIT_SUCCESS,
+
+        Err(e) => {
+            eprintln!("{}: {}", get_program_name(), e);
+            if !e.help_included() {
+                print_help(&mut app);
+            }
+
+            e.exit_code()
+        }
+    });
+}
+
+fn make_app<'a, 'b>() -> App<'a, 'b> {
+    App::new(format!("geckodriver {}", build::BuildInfo))
+        .about("WebDriver implementation for Firefox")
         .arg(
             Arg::with_name("webdriver_host")
                 .long("host")
+                .takes_value(true)
                 .value_name("HOST")
-                .help("Host ip to use for WebDriver server (default: 127.0.0.1)")
-                .takes_value(true),
+                .default_value("127.0.0.1")
+                .help("Host IP to use for WebDriver server"),
         )
         .arg(
             Arg::with_name("webdriver_port")
                 .short("p")
                 .long("port")
-                .value_name("PORT")
-                .help("Port to use for WebDriver server (default: 4444)")
                 .takes_value(true)
-                .alias("webdriver-port"),
+                .value_name("PORT")
+                .default_value("4444")
+                .help("Port to use for WebDriver server"),
         )
         .arg(
             Arg::with_name("binary")
                 .short("b")
                 .long("binary")
+                .takes_value(true)
                 .value_name("BINARY")
-                .help("Path to the Firefox binary")
-                .takes_value(true),
+                .help("Path to the Firefox binary"),
         )
         .arg(
             Arg::with_name("marionette_host")
                 .long("marionette-host")
-                .value_name("HOST")
-                .help("Host to use to connect to Gecko (default: 127.0.0.1)")
                 .takes_value(true)
+                .value_name("HOST")
+                .default_value("127.0.0.1")
+                .help("Host to use to connect to Gecko"),
         )
         .arg(
             Arg::with_name("marionette_port")
                 .long("marionette-port")
+                .takes_value(true)
                 .value_name("PORT")
-                .help("Port to use to connect to Gecko (default: system-allocated port)")
-                .takes_value(true),
+                .help("Port to use to connect to Gecko [default: system-allocated port]"),
         )
         .arg(
             Arg::with_name("connect_existing")
@@ -118,14 +283,13 @@ fn app<'a, 'b>() -> App<'a, 'b> {
         .arg(
             Arg::with_name("jsdebugger")
                 .long("jsdebugger")
-                .takes_value(false)
                 .help("Attach browser toolbox debugger for Firefox"),
         )
         .arg(
             Arg::with_name("verbosity")
-                .short("v")
                 .multiple(true)
                 .conflicts_with("log_level")
+                .short("v")
                 .help("Log level verbosity (-v for debug and -vv for trace level)"),
         )
         .arg(
@@ -137,6 +301,12 @@ fn app<'a, 'b>() -> App<'a, 'b> {
                 .help("Set Gecko log level"),
         )
         .arg(
+            Arg::with_name("help")
+                .short("h")
+                .long("help")
+                .help("Prints this message"),
+        )
+        .arg(
             Arg::with_name("version")
                 .short("V")
                 .long("version")
@@ -144,80 +314,21 @@ fn app<'a, 'b>() -> App<'a, 'b> {
         )
 }
 
-fn run() -> ProgramResult {
-    let matches = app().get_matches();
-
-    if matches.is_present("version") {
-        print_version();
-        return Ok(());
-    }
-
-    let host = matches.value_of("webdriver_host").unwrap_or("127.0.0.1");
-    let port = match u16::from_str(
-        matches
-            .value_of("webdriver_port")
-            .or(matches.value_of("webdriver_port_alias"))
-            .unwrap_or("4444"),
-    ) {
-        Ok(x) => x,
-        Err(_) => return Err((ExitCode::Usage, "invalid WebDriver port".into())),
-    };
-    let addr = match IpAddr::from_str(host) {
-        Ok(addr) => SocketAddr::new(addr, port),
-        Err(_) => return Err((ExitCode::Usage, "invalid host address".into())),
-    };
-
-    let binary = matches.value_of("binary").map(PathBuf::from);
-
-    let marionette_host = matches.value_of("marionette_host")
-        .unwrap_or("127.0.0.1").to_string();
-    let marionette_port = match matches.value_of("marionette_port") {
-        Some(x) => match u16::from_str(x) {
-            Ok(x) => Some(x),
-            Err(_) => return Err((ExitCode::Usage, "invalid Marionette port".into())),
-        },
-        None => None,
-    };
-
-    let log_level = if matches.is_present("log_level") {
-        logging::Level::from_str(matches.value_of("log_level").unwrap()).ok()
-    } else {
-        match matches.occurrences_of("verbosity") {
-            0 => Some(logging::Level::Info),
-            1 => Some(logging::Level::Debug),
-            _ => Some(logging::Level::Trace),
-        }
-    };
-    if let Some(ref level) = log_level {
-        logging::init_with_level(*level).unwrap();
-    } else {
-        logging::init().unwrap();
-    }
-
-    let settings = MarionetteSettings {
-        host: marionette_host,
-        port: marionette_port,
-        binary,
-        connect_existing: matches.is_present("connect_existing"),
-        jsdebugger: matches.is_present("jsdebugger"),
-    };
-    let handler = MarionetteHandler::new(settings);
-    let listening = webdriver::server::start(addr, handler, &extension_routes()[..])
-        .map_err(|err| (ExitCode::Unavailable, err.to_string()))?;
-    debug!("Listening on {}", listening.socket);
-
-    Ok(())
+fn get_program_name() -> String {
+    env::args().next().unwrap()
 }
 
-fn main() {
-    let exit_code = match run() {
-        Ok(_) => ExitCode::Ok,
-        Err((exit_code, reason)) => {
-            error!("{}", reason);
-            exit_code
-        }
-    };
+fn print_help(app: &mut App) {
+    app.print_help().ok();
+    println!();
+}
 
-    std::io::stdout().flush().unwrap();
-    std::process::exit(exit_code as i32);
+fn print_version() {
+    println!("geckodriver {}", build::BuildInfo);
+    println!();
+    println!("The source code of this program is available from");
+    println!("testing/geckodriver in https://hg.mozilla.org/mozilla-central.");
+    println!();
+    println!("This program is subject to the terms of the Mozilla Public License 2.0.");
+    println!("You can obtain a copy of the license at https://mozilla.org/MPL/2.0/.");
 }

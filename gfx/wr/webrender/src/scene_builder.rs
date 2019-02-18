@@ -580,6 +580,7 @@ impl SceneBuilder {
 
         let scene_swap_start_time = precise_time_ns();
         let has_resources_updates = !txn.resource_updates.is_empty();
+        let invalidate_rendered_frame = txn.invalidate_rendered_frame;
 
         self.tx.send(SceneBuilderResult::Transaction(txn, result_tx)).unwrap();
 
@@ -597,7 +598,7 @@ impl SceneBuilder {
                 },
                 _ => (),
             };
-        } else if has_resources_updates {
+        } else if has_resources_updates || invalidate_rendered_frame {
             if let &Some(ref hooks) = &self.hooks {
                 hooks.post_resource_update();
             }

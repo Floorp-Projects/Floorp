@@ -87,15 +87,14 @@
         tools:text="Descriptive title of a page that is veeeeeeery long - maybe even too long?" />
 
     <LinearLayout
+        android:id="@+id/page_source_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
         android:layout_below="@id/page_title"
         android:layout_toEndOf="@id/icon_wrapper"
         android:layout_toRightOf="@id/icon_wrapper"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingBottom="@dimen/activity_stream_base_margin"
         android:paddingEnd="@dimen/activity_stream_base_margin"
         android:paddingLeft="@dimen/activity_stream_base_margin"
         android:paddingRight="@dimen/activity_stream_base_margin"
@@ -126,4 +125,34 @@
             tools:text="Bookmarked" />
 
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/switch_tab_hint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/page_source_layout"
+        android:layout_toEndOf="@id/icon_wrapper"
+        android:layout_toRightOf="@id/icon_wrapper"
+        android:drawableStart="@drawable/ic_url_bar_tab"
+        android:drawableLeft="@drawable/ic_url_bar_tab"
+        android:paddingStart="6dp"
+        android:paddingLeft="6dp"
+        android:paddingEnd="0dp"
+        android:paddingRight="0dp"
+        android:text="@string/switch_to_tab"
+        android:textColor="@color/activity_stream_subtitle"
+        android:textSize="12sp"
+        tools:drawableLeft="@drawable/ic_url_bar_tab"
+        tools:drawableStart="@drawable/ic_url_bar_tab"
+        tools:text="@string/switch_to_tab" />
+
+    <!-- Empty bottom space added irrespective of "switch_tab_hint" or "page_source_layout"
+         being the bottom view. ("switch_tab_hint" can have visibility="gone") -->
+    <View
+        android:id="@+id/layout_bottom_margin"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/activity_stream_base_margin"
+        android:layout_alignParentBottom="true"
+        android:layout_below="@id/switch_tab_hint" />
+
 </RelativeLayout>

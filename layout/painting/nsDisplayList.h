@@ -417,10 +417,8 @@ class nsDisplayListBuilder {
    * A frame can be in one of three states of AGR.
    * AGR_NO     means the frame is not an AGR for now.
    * AGR_YES    means the frame is an AGR for now.
-   * AGR_MAYBE  means the frame is not an AGR for now, but a transition
-   *            to AGR_YES without restyling is possible.
    */
-  enum AGRState { AGR_NO, AGR_YES, AGR_MAYBE };
+  enum AGRState { AGR_NO, AGR_YES };
 
  public:
   typedef mozilla::FrameLayerBuilder FrameLayerBuilder;
@@ -535,16 +533,6 @@ class nsDisplayListBuilder {
     NS_ASSERTION(mPresShellStates.Length() > 0,
                  "don't call this if we're not in a presshell");
     return CurrentPresShellState()->mIsBackgroundOnly;
-  }
-  /**
-   * @return true if the currently active BuildDisplayList call is being
-   * applied to a frame at the root of a pseudo stacking context. A pseudo
-   * stacking context is either a real stacking context or basically what
-   * CSS2.1 appendix E refers to with "treat the element as if it created
-   * a new stacking context
-   */
-  bool IsAtRootOfPseudoStackingContext() const {
-    return mIsAtRootOfPseudoStackingContext;
   }
 
   /**
@@ -1086,16 +1074,21 @@ class nsDisplayListBuilder {
   nsDisplayItem* MergeItems(nsTArray<nsDisplayItem*>& aMergedItems);
 
   /**
-   * A helper class to temporarily set the value of
-   * mIsAtRootOfPseudoStackingContext, and temporarily
-   * set mCurrentFrame and related state. Also temporarily sets mDirtyRect.
-   * aDirtyRect is relative to aForChild.
+   * A helper class used to temporarily set nsDisplayListBuilder properties for
+   * building display items.
+   * aVisibleRect and aDirtyRect are relative to aForChild.
    */
   class AutoBuildingDisplayList {
    public:
     AutoBuildingDisplayList(nsDisplayListBuilder* aBuilder, nsIFrame* aForChild,
                             const nsRect& aVisibleRect,
-                            const nsRect& aDirtyRect, bool aIsRoot)
+                            const nsRect& aDirtyRect)
+        : AutoBuildingDisplayList(aBuilder, aForChild, aVisibleRect, aDirtyRect,
+                                  aForChild->IsTransformed()) {}
+
+    AutoBuildingDisplayList(nsDisplayListBuilder* aBuilder, nsIFrame* aForChild,
+                            const nsRect& aVisibleRect,
+                            const nsRect& aDirtyRect, const bool aIsTransformed)
         : mBuilder(aBuilder),
           mPrevFrame(aBuilder->mCurrentFrame),
           mPrevReferenceFrame(aBuilder->mCurrentReferenceFrame),
@@ -1105,13 +1098,11 @@ class nsDisplayListBuilder {
           mPrevVisibleRect(aBuilder->mVisibleRect),
           mPrevDirtyRect(aBuilder->mDirtyRect),
           mPrevAGR(aBuilder->mCurrentAGR),
-          mPrevIsAtRootOfPseudoStackingContext(
-              aBuilder->mIsAtRootOfPseudoStackingContext),
           mPrevAncestorHasApzAwareEventHandler(
               aBuilder->mAncestorHasApzAwareEventHandler),
           mPrevBuildingInvisibleItems(aBuilder->mBuildingInvisibleItems),
           mPrevInInvalidSubtree(aBuilder->mInInvalidSubtree) {
-      if (aForChild->IsTransformed()) {
+      if (aIsTransformed) {
         aBuilder->mCurrentOffsetToReferenceFrame = nsPoint();
         aBuilder->mCurrentReferenceFrame = aForChild;
       } else if (aBuilder->mCurrentFrame == aForChild->GetParent()) {
@@ -1120,17 +1111,20 @@ class nsDisplayListBuilder {
         aBuilder->mCurrentReferenceFrame = aBuilder->FindReferenceFrameFor(
             aForChild, &aBuilder->mCurrentOffsetToReferenceFrame);
       }
+
       bool isAsync;
       mCurrentAGRState = aBuilder->IsAnimatedGeometryRoot(aForChild, isAsync);
+
       if (aBuilder->mCurrentFrame == aForChild->GetParent()) {
         if (mCurrentAGRState == AGR_YES) {
           aBuilder->mCurrentAGR = aBuilder->WrapAGRForFrame(
               aForChild, isAsync, aBuilder->mCurrentAGR);
         }
-      } else if (aForChild != aBuilder->mCurrentFrame) {
+      } else if (aBuilder->mCurrentFrame != aForChild) {
         aBuilder->mCurrentAGR =
             aBuilder->FindAnimatedGeometryRootFor(aForChild);
       }
+
       MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(
           aBuilder->RootReferenceFrame(), *aBuilder->mCurrentAGR));
       aBuilder->mInInvalidSubtree =
@@ -1139,7 +1133,6 @@ class nsDisplayListBuilder {
       aBuilder->mVisibleRect = aVisibleRect;
       aBuilder->mDirtyRect =
           aBuilder->mInInvalidSubtree ? aVisibleRect : aDirtyRect;
-      aBuilder->mIsAtRootOfPseudoStackingContext = aIsRoot;
     }
 
     void SetReferenceFrameAndCurrentOffset(const nsIFrame* aFrame,
@@ -1149,10 +1142,6 @@ class nsDisplayListBuilder {
     }
 
     bool IsAnimatedGeometryRoot() const { return mCurrentAGRState == AGR_YES; }
-
-    bool MaybeAnimatedGeometryRoot() const {
-      return mCurrentAGRState == AGR_MAYBE;
-    }
 
     void RestoreBuildingInvisibleItemsValue() {
       mBuilder->mBuildingInvisibleItems = mPrevBuildingInvisibleItems;
@@ -1167,8 +1156,6 @@ class nsDisplayListBuilder {
       mBuilder->mVisibleRect = mPrevVisibleRect;
       mBuilder->mDirtyRect = mPrevDirtyRect;
       mBuilder->mCurrentAGR = mPrevAGR;
-      mBuilder->mIsAtRootOfPseudoStackingContext =
-          mPrevIsAtRootOfPseudoStackingContext;
       mBuilder->mAncestorHasApzAwareEventHandler =
           mPrevAncestorHasApzAwareEventHandler;
       mBuilder->mBuildingInvisibleItems = mPrevBuildingInvisibleItems;
@@ -1186,7 +1173,6 @@ class nsDisplayListBuilder {
     nsRect mPrevVisibleRect;
     nsRect mPrevDirtyRect;
     RefPtr<AnimatedGeometryRoot> mPrevAGR;
-    bool mPrevIsAtRootOfPseudoStackingContext;
     bool mPrevAncestorHasApzAwareEventHandler;
     bool mPrevBuildingInvisibleItems;
     bool mPrevInInvalidSubtree;
@@ -1959,7 +1945,6 @@ class nsDisplayListBuilder {
   bool mRetainingDisplayList;
   bool mPartialUpdate;
   bool mIgnoreSuppression;
-  bool mIsAtRootOfPseudoStackingContext;
   bool mIncludeAllOutOfFlows;
   bool mDescendIntoSubdocuments;
   bool mSelectedFramesOnly;

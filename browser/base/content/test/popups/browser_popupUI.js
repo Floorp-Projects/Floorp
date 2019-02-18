@@ -20,7 +20,7 @@ add_task(async function toolbar_ui_visibility() {
   isnot(doc.getElementById("Browser:OpenLocation").getAttribute("disabled"), "true",
      "'open location' command is not disabled in the popup");
 
-  let historyButton = doc.getAnonymousElementByAttribute(win.gURLBar, "anonid",
+  let historyButton = doc.getAnonymousElementByAttribute(win.gURLBar.textbox, "anonid",
                                                          "historydropmarker");
   is(historyButton.clientWidth, 0, "history dropdown button is hidden in the popup");
 

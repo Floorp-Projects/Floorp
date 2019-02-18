@@ -1,10 +1,14 @@
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { UptakeTelemetry } = ChromeUtils.import("resource://services-common/uptake-telemetry.js");
+
+const COMPONENT = "remotesettings";
+
 
 add_task(async function test_unknown_status_is_not_reported() {
   const source = "update-source";
   const startHistogram = getUptakeTelemetrySnapshot(source);
 
-  UptakeTelemetry.report(source, "unknown-status");
+  UptakeTelemetry.report(COMPONENT, "unknown-status", { source });
 
   const endHistogram = getUptakeTelemetrySnapshot(source);
   const expectedIncrements = {};
@@ -18,7 +22,7 @@ add_task(async function test_each_status_can_be_caught_in_snapshot() {
   const expectedIncrements = {};
   for (const label of Object.keys(UptakeTelemetry.STATUS)) {
     const status = UptakeTelemetry.STATUS[label];
-    UptakeTelemetry.report(source, status);
+    UptakeTelemetry.report(COMPONENT, status, { source });
     expectedIncrements[status] = 1;
   }
 

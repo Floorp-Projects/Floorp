@@ -858,6 +858,31 @@ security.ui.identitypopup:
       cr: Whether Cookie Restrictions was active while the user interacted with the UI
     products:
       - firefox
+uptake.remotecontent.result:
+  uptake:
+    description: >
+      Was the remote content successfully pulled?
+      This uptake telemetry allows to monitor the behaviour of our clients when it comes
+      to fetching data from remote servers. This helps defect-detection and allow observation of
+      the proportion of success among clients and sources, the distribution of error causes, and
+      its evolution over time.
+    methods:
+      - uptake
+    objects:
+      - remotesettings
+      - normandy
+    extra_keys:
+      source: >
+        A label to distinguish what is being pulled or updated in the component (eg. recipe id,
+        settings collection name, ...).
+    bug_numbers:
+      - 1517469
+    record_in_processes: ["main"]
+    release_channel_collection: opt-out
+    expiry_version: never
+    notification_emails:
+      - mleplatre@mozilla.com
+      - bens-directs@mozilla.com
 
 intl.ui.browserLanguage:
   action:

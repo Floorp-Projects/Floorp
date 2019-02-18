@@ -1293,7 +1293,7 @@ function runTestPasswordFieldOnDialog() {
 
   ok(true, "password dialog was closed");
 
-  Services.obs.addObserver(observer, "domwindowopened");
+  Services.obs.removeObserver(observer, "domwindowopened");
 
   var passwordField;
 

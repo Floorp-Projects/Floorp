@@ -40,8 +40,10 @@ const PREF_SETTINGS_CLOCK_SKEW_SECONDS = "clock_skew_seconds";
 const PREF_SETTINGS_LOAD_DUMP          = "load_dump";
 
 
-// Telemetry update source identifier.
-const TELEMETRY_HISTOGRAM_KEY = "settings-changes-monitoring";
+// Telemetry identifiers.
+const TELEMETRY_COMPONENT = "remotesettings";
+const TELEMETRY_SOURCE = "settings-changes-monitoring";
+
 // Push broadcast id.
 const BROADCAST_ID = "remote-settings/monitor_changes";
 
@@ -160,8 +162,9 @@ function remoteSettingsFunction() {
       const remainingMilliseconds = parseInt(backoffReleaseTime, 10) - Date.now();
       if (remainingMilliseconds > 0) {
         // Backoff time has not elapsed yet.
-        UptakeTelemetry.report(TELEMETRY_HISTOGRAM_KEY,
-                               UptakeTelemetry.STATUS.BACKOFF);
+        UptakeTelemetry.report(TELEMETRY_COMPONENT,
+                               UptakeTelemetry.STATUS.BACKOFF,
+                               { source: TELEMETRY_SOURCE });
         throw new Error(`Server is asking clients to back off; retry in ${Math.ceil(remainingMilliseconds / 1000)}s.`);
       } else {
         gPrefs.clearUserPref(PREF_SETTINGS_SERVER_BACKOFF);
@@ -177,15 +180,15 @@ function remoteSettingsFunction() {
       pollResult = await Utils.fetchLatestChanges(remoteSettings.pollingEndpoint, { expectedTimestamp, lastEtag });
     } catch (e) {
       // Report polling error to Uptake Telemetry.
-      let report;
+      let reportStatus;
       if (/Server/.test(e.message)) {
-        report = UptakeTelemetry.STATUS.SERVER_ERROR;
+        reportStatus = UptakeTelemetry.STATUS.SERVER_ERROR;
       } else if (/NetworkError/.test(e.message)) {
-        report = UptakeTelemetry.STATUS.NETWORK_ERROR;
+        reportStatus = UptakeTelemetry.STATUS.NETWORK_ERROR;
       } else {
-        report = UptakeTelemetry.STATUS.UNKNOWN_ERROR;
+        reportStatus = UptakeTelemetry.STATUS.UNKNOWN_ERROR;
       }
-      UptakeTelemetry.report(TELEMETRY_HISTOGRAM_KEY, report);
+      UptakeTelemetry.report(TELEMETRY_COMPONENT, reportStatus, { source: TELEMETRY_SOURCE });
       // No need to go further.
       throw new Error(`Polling for changes failed: ${e.message}.`);
     }
@@ -193,9 +196,9 @@ function remoteSettingsFunction() {
     const {serverTimeMillis, changes, currentEtag, backoffSeconds} = pollResult;
 
     // Report polling success to Uptake Telemetry.
-    const report = changes.length == 0 ? UptakeTelemetry.STATUS.UP_TO_DATE
-                                       : UptakeTelemetry.STATUS.SUCCESS;
-    UptakeTelemetry.report(TELEMETRY_HISTOGRAM_KEY, report);
+    const reportStatus = changes.length === 0 ? UptakeTelemetry.STATUS.UP_TO_DATE
+                                              : UptakeTelemetry.STATUS.SUCCESS;
+    UptakeTelemetry.report(TELEMETRY_COMPONENT, reportStatus, { source: TELEMETRY_SOURCE });
 
     // Check if the server asked the clients to back off (for next poll).
     if (backoffSeconds) {

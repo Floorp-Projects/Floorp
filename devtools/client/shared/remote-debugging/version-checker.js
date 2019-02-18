@@ -137,6 +137,7 @@ function _compareVersionCompatibility(localDescription, deviceDescription) {
 
   return {
     localID,
+    localVersion,
     minVersion,
     runtimeID,
     runtimeVersion,
