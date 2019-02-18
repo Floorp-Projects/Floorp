@@ -53,6 +53,7 @@
 #endif
 
 #ifdef XP_WIN
+#  include "mozilla/layers/TextureD3D11.h"
 #  include "mozilla/layers/TextureDIB.h"
 #endif
 
@@ -162,21 +163,6 @@ void TextureHost::SetLastFwdTransactionId(uint64_t aTransactionId) {
   MOZ_ASSERT(mFwdTransactionId <= aTransactionId);
   mFwdTransactionId = aTransactionId;
 }
-
-// implemented in TextureHostOGL.cpp
-already_AddRefed<TextureHost> CreateTextureHostOGL(
-    const SurfaceDescriptor& aDesc, ISurfaceAllocator* aDeallocator,
-    LayersBackend aBackend, TextureFlags aFlags);
-
-// implemented in TextureHostBasic.cpp
-already_AddRefed<TextureHost> CreateTextureHostBasic(
-    const SurfaceDescriptor& aDesc, ISurfaceAllocator* aDeallocator,
-    LayersBackend aBackend, TextureFlags aFlags);
-
-// implemented in TextureD3D11.cpp
-already_AddRefed<TextureHost> CreateTextureHostD3D11(
-    const SurfaceDescriptor& aDesc, ISurfaceAllocator* aDeallocator,
-    LayersBackend aBackend, TextureFlags aFlags);
 
 already_AddRefed<TextureHost> TextureHost::Create(
     const SurfaceDescriptor& aDesc, const ReadLockDescriptor& aReadLock,
