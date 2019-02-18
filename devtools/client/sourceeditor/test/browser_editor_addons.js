@@ -3,24 +3,23 @@
 
 "use strict";
 
-function test() {
+async function test() {
   waitForExplicitFinish();
 
-  setup((ed, win) => {
-    const doc = win.document.querySelector("iframe").contentWindow.document;
+  const {ed, win} = await setup();
+  const doc = win.document.querySelector("iframe").contentWindow.document;
 
-    // trailingspace.js
-    ed.setText("Hello   ");
-    ed.setOption("showTrailingSpace", false);
-    ok(!doc.querySelector(".cm-trailingspace"));
-    ed.setOption("showTrailingSpace", true);
-    ok(doc.querySelector(".cm-trailingspace"));
+  // trailingspace.js
+  ed.setText("Hello   ");
+  ed.setOption("showTrailingSpace", false);
+  ok(!doc.querySelector(".cm-trailingspace"));
+  ed.setOption("showTrailingSpace", true);
+  ok(doc.querySelector(".cm-trailingspace"));
 
-    // foldcode.js and foldgutter.js
-    ed.setMode(Editor.modes.js);
-    ed.setText("function main() {\nreturn 'Hello, World!';\n}");
-    executeSoon(() => testFold(doc, ed, win));
-  });
+  // foldcode.js and foldgutter.js
+  ed.setMode(Editor.modes.js);
+  ed.setText("function main() {\nreturn 'Hello, World!';\n}");
+  executeSoon(() => testFold(doc, ed, win));
 }
 
 function testFold(doc, ed, win) {

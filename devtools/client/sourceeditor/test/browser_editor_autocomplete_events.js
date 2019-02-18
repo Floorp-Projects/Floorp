@@ -17,7 +17,7 @@ async function runTests() {
   await target.attach();
   const inspector = await target.getInspector();
   const walker = inspector.walker;
-  const {ed, win, edWin} = await setup(null, {
+  const {ed, win, edWin} = await setup({
     autocomplete: true,
     mode: Editor.modes.css,
     autocompleteOpts: {walker: walker, cssProperties: getClientCssProperties()},

@@ -8,7 +8,7 @@ const URI = "chrome://mochitests/content/browser/devtools/client/" +
             "sourceeditor/test/codemirror/codemirror.html";
 loadHelperScript("helper_codemirror_runner.js");
 
-function test() {
+async function test() {
   requestLongerTimeout(3);
   waitForExplicitFinish();
 
@@ -24,12 +24,9 @@ function test() {
    * In theory we don't need to set the pref for all of CodeMirror, in practice
    * it seems very difficult to set a pref for just one of the tests.
    */
-  SpecialPowers.pushPrefEnv(
-    { set: [["privacy.reduceTimerPrecision", true],
-            ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", 2000]]},
-    function() {
-      addTab(URI).then(function(tab) {
-        runCodeMirrorTest(tab.linkedBrowser);
-      });
-    });
+  await pushPref("privacy.reduceTimerPrecision", true);
+  await pushPref("privacy.resistFingerprinting.reduceTimerPrecision.microseconds", 2000);
+
+  const tab = await addTab(URI);
+  runCodeMirrorTest(tab.linkedBrowser);
 }
