@@ -2015,6 +2015,12 @@ void HttpChannelParent::CancelChildCrossProcessRedirect() {
   }
 }
 
+already_AddRefed<HttpChannelParentListener>
+HttpChannelParent::GetParentListener() {
+  RefPtr<HttpChannelParentListener> listener = mParentListener;
+  return listener.forget();
+}
+
 NS_IMETHODIMP
 HttpChannelParent::CompleteRedirect(bool succeeded) {
   LOG(("HttpChannelParent::CompleteRedirect [this=%p succeeded=%d]\n", this,
