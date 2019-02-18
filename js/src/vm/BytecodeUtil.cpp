@@ -179,12 +179,8 @@ static MOZ_MUST_USE bool DumpPCCounts(JSContext* cx, HandleScript script,
 
 bool js::DumpRealmPCCounts(JSContext* cx) {
   Rooted<GCVector<JSScript*>> scripts(cx, GCVector<JSScript*>(cx));
-  for (auto iter = cx->zone()->cellIter<JSScript>(); !iter.done();
-       iter.next()) {
-    JSScript* script = iter;
-    if (gc::IsAboutToBeFinalizedUnbarriered(&script)) {
-      continue;
-    }
+  for (auto script = cx->zone()->cellIter<JSScript>(); !script.done();
+       script.next()) {
     if (script->realm() != cx->realm()) {
       continue;
     }
@@ -2550,11 +2546,8 @@ JS_FRIEND_API void js::StopPCCountProfiling(JSContext* cx) {
   }
 
   for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
-    for (auto iter = zone->cellIter<JSScript>(); !iter.done(); iter.next()) {
-      JSScript* script = iter;
-      if (gc::IsAboutToBeFinalizedUnbarriered(&script)) {
-        continue;
-      }
+    for (auto script = zone->cellIter<JSScript>(); !script.done();
+         script.next()) {
       if (script->hasScriptCounts() && script->types()) {
         if (!vec->append(script)) {
           return;
@@ -2855,11 +2848,8 @@ static bool GenerateLcovInfo(JSContext* cx, JS::Realm* realm,
 
   Rooted<ScriptVector> queue(cx, ScriptVector(cx));
   for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
-    for (auto iter = zone->cellIter<JSScript>(); !iter.done(); iter.next()) {
-      JSScript* script = iter;
-      if (gc::IsAboutToBeFinalizedUnbarriered(&script)) {
-        continue;
-      }
+    for (auto script = zone->cellIter<JSScript>(); !script.done();
+         script.next()) {
       if (script->realm() != realm || !script->filename()) {
         continue;
       }
