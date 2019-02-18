@@ -71,7 +71,7 @@ type URL = string;
 export type FramePacket = {
   actor: ActorId,
   arguments: any[],
-  callee: any,
+  displayName: string,
   environment: any,
   this: any,
   depth?: number,
