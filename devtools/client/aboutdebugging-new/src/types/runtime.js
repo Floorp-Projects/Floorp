@@ -6,6 +6,7 @@
 
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { ClientWrapper } = require("../modules/client-wrapper");
+const { COMPATIBILITY_STATUS } = require("devtools/client/shared/remote-debugging/version-checker");
 
 const runtimeInfo = {
   // device name which is running the runtime,
@@ -22,9 +23,34 @@ const runtimeInfo = {
   version: PropTypes.string.isRequired,
 };
 
+const compatibilityReport = {
+  // build ID for the current runtime (date formatted as yyyyMMdd eg "20193101")
+  localID: PropTypes.string.isRequired,
+
+  // "platform" version for the current runtime (eg "67.0a1")
+  localVersion: PropTypes.string.isRequired,
+
+  // minimum "platform" version supported for remote debugging by the current runtime
+  minVersion: PropTypes.string.isRequired,
+
+  // build ID for the target runtime (date formatted as yyyyMMdd eg "20193101")
+  runtimeID: PropTypes.string.isRequired,
+
+  // "platform" version for the target runtime (eg "67.0a1")
+  runtimeVersion: PropTypes.string.isRequired,
+
+  // report result, either COMPATIBLE, TOO_OLD or TOO_RECENT
+  status: PropTypes.oneOf(Object.values(COMPATIBILITY_STATUS)).isRequired,
+};
+exports.compatibilityReport = PropTypes.shape(compatibilityReport);
+
 const runtimeDetails = {
   // ClientWrapper built using a DebuggerClient for the runtime
   clientWrapper: PropTypes.instanceOf(ClientWrapper).isRequired,
+
+  // compatibility report to check if the target runtime is in range of the backward
+  // compatibility policy for DevTools remote debugging.
+  compatibilityReport: PropTypes.shape(compatibilityReport).isRequired,
 
   // reflect devtools.debugger.prompt-connection preference of this runtime
   connectionPromptEnabled: PropTypes.bool.isRequired,
