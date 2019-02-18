@@ -42,7 +42,7 @@ add_task(async function() {
   // which promises get resolved. The problem seems to indicate a coverage gap
   // in waitUntilService(). Workaround this by only waiting for one dispatch,
   // though this is fragile and could break again in the future.
-  let dispatched = waitForDispatch(dbg, "DISABLE_BREAKPOINT", /* 3*/ 1);
+  let dispatched = waitForDispatch(dbg, "DISABLE_BREAKPOINT", /* 2*/ 1);
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.disableOthers);
   await waitForState(dbg, state =>
     dbg.selectors
