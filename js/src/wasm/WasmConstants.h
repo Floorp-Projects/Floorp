@@ -132,8 +132,6 @@ enum class MemoryTableFlags {
   Default = 0x0,
   HasMaximum = 0x1,
   IsShared = 0x2,
-  HasTableIndex =
-      0x4,  // UNOFFICIAL.  There will be a separate flag for memory.
 };
 
 enum class MemoryMasks { AllowUnshared = 0x1, AllowShared = 0x3 };
@@ -172,6 +170,8 @@ enum class Op {
   TeeLocal = 0x22,
   GetGlobal = 0x23,
   SetGlobal = 0x24,
+  TableGet = 0x25,              // Generalized table ops,
+  TableSet = 0x26,              //   per proposal as of February 2019
 
   // Memory-related operators
   I32Load = 0x28,
@@ -197,8 +197,8 @@ enum class Op {
   I64Store8 = 0x3c,
   I64Store16 = 0x3d,
   I64Store32 = 0x3e,
-  CurrentMemory = 0x3f,
-  GrowMemory = 0x40,
+  MemorySize = 0x3f,
+  MemoryGrow = 0x40,
 
   // Constants
   I32Const = 0x41,
@@ -347,7 +347,9 @@ enum class Op {
   // GC ops
   RefNull = 0xd0,
   RefIsNull = 0xd1,
-  RefEq = 0xd2,  // Unofficial
+  RefFunc = 0xd2,
+
+  RefEq = 0xf0,  // Unofficial + experimental
 
   FirstPrefix = 0xfc,
   MiscPrefix = 0xfc,
@@ -356,11 +358,6 @@ enum class Op {
 
   Limit = 0x100
 };
-
-// TODO: RefFunc can't be incorporated into the opcode table until we're willing
-// to handle it generally and we've renumbered RefEq, but we need it to express
-// passive element segments.
-constexpr uint16_t PlaceholderRefFunc = 0xd2;
 
 inline bool IsPrefixByte(uint8_t b) { return b >= uint8_t(Op::FirstPrefix); }
 
@@ -376,8 +373,7 @@ enum class MiscOp {
   I64TruncSSatF64 = 0x06,
   I64TruncUSatF64 = 0x07,
 
-  // Bulk memory operations.  Note, these are unofficial, but in accordance
-  // with the proposal as of June 2018.
+  // Bulk memory operations, per proposal as of February 2019.
   MemInit = 0x08,
   DataDrop = 0x09,
   MemCopy = 0x0a,
@@ -386,11 +382,10 @@ enum class MiscOp {
   ElemDrop = 0x0d,
   TableCopy = 0x0e,
 
-  // Generalized tables (reftypes proposal).  Note, these are unofficial.
+  // Generalized table operations, per proposal as of February 2019.
   TableGrow = 0x0f,
-  TableGet = 0x10,
-  TableSet = 0x11,
-  TableSize = 0x12,
+  TableSize = 0x10,
+  // TableFill = 0x11, // reserved
 
   // Structure operations.  Note, these are unofficial.
   StructNew = 0x50,

@@ -621,12 +621,12 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
     case SymbolicAddress::ATan2D:
       *abiType = Args_Double_DoubleDouble;
       return FuncCast(ecmaAtan2, *abiType);
-    case SymbolicAddress::GrowMemory:
+    case SymbolicAddress::MemoryGrow:
       *abiType = Args_General2;
-      return FuncCast(Instance::growMemory_i32, *abiType);
-    case SymbolicAddress::CurrentMemory:
+      return FuncCast(Instance::memoryGrow_i32, *abiType);
+    case SymbolicAddress::MemorySize:
       *abiType = Args_General1;
-      return FuncCast(Instance::currentMemory_i32, *abiType);
+      return FuncCast(Instance::memorySize_i32, *abiType);
     case SymbolicAddress::WaitI32:
       *abiType = Args_Int_GeneralGeneralGeneralInt64;
       return FuncCast(Instance::wait_i32, *abiType);
@@ -767,8 +767,8 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::LogD:
     case SymbolicAddress::PowD:
     case SymbolicAddress::ATan2D:
-    case SymbolicAddress::GrowMemory:
-    case SymbolicAddress::CurrentMemory:
+    case SymbolicAddress::MemoryGrow:
+    case SymbolicAddress::MemorySize:
     case SymbolicAddress::WaitI32:
     case SymbolicAddress::WaitI64:
     case SymbolicAddress::Wake:

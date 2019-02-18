@@ -42,8 +42,12 @@ body.config-warning {
   background-repeat: no-repeat;
   background-position: 9px center;
   background-size: 12px 12px;
-  padding-left: 30px;
+  padding-inline-start: 30px;
   z-index: 1;
+}
+
+#about-config-search:dir(rtl) {
+  background-position-x: right 9px;
 }
 
 #prefs {
@@ -79,6 +83,10 @@ body.config-warning {
   background-repeat: no-repeat;
   background-position: 9px center;
   background-size: 16px 16px;
+}
+
+#prefs > tr.locked:dir(rtl) {
+  background-position-x: right 9px;
 }
 
 #prefs > tr > td,

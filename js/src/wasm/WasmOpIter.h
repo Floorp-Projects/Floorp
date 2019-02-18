@@ -131,8 +131,8 @@ enum class OpKind {
   Load,
   Store,
   TeeStore,
-  CurrentMemory,
-  GrowMemory,
+  MemorySize,
+  MemoryGrow,
   Select,
   GetLocal,
   SetLocal,
@@ -173,6 +173,7 @@ enum class OpKind {
   TableSet,
   TableSize,
   RefNull,
+  RefFunc,
   StructNew,
   StructGet,
   StructSet,
@@ -416,8 +417,8 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                  LinearMemoryAddress<Value>* addr,
                                  Value* value);
   MOZ_MUST_USE bool readNop();
-  MOZ_MUST_USE bool readCurrentMemory();
-  MOZ_MUST_USE bool readGrowMemory(Value* input);
+  MOZ_MUST_USE bool readMemorySize();
+  MOZ_MUST_USE bool readMemoryGrow(Value* input);
   MOZ_MUST_USE bool readSelect(StackType* type, Value* trueValue,
                                Value* falseValue, Value* condition);
   MOZ_MUST_USE bool readGetLocal(const ValTypeVector& locals, uint32_t* id);
@@ -1292,8 +1293,8 @@ inline bool OpIter<Policy>::readNop() {
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readCurrentMemory() {
-  MOZ_ASSERT(Classify(op_) == OpKind::CurrentMemory);
+inline bool OpIter<Policy>::readMemorySize() {
+  MOZ_ASSERT(Classify(op_) == OpKind::MemorySize);
 
   if (!env_.usesMemory()) {
     return fail("can't touch memory without memory");
@@ -1312,8 +1313,8 @@ inline bool OpIter<Policy>::readCurrentMemory() {
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readGrowMemory(Value* input) {
-  MOZ_ASSERT(Classify(op_) == OpKind::GrowMemory);
+inline bool OpIter<Policy>::readMemoryGrow(Value* input) {
+  MOZ_ASSERT(Classify(op_) == OpKind::MemoryGrow);
 
   if (!env_.usesMemory()) {
     return fail("can't touch memory without memory");
@@ -1572,18 +1573,9 @@ inline bool OpIter<Policy>::readCallIndirect(uint32_t* funcTypeIndex,
     return fail("signature index out of range");
   }
 
-  uint8_t flags;
-  if (!readFixedU8(&flags)) {
+  if (!readVarU32(tableIndex)) {
     return false;
   }
-
-  *tableIndex = 0;
-  if (flags == uint8_t(MemoryTableFlags::HasTableIndex)) {
-    if (!readVarU32(tableIndex)) return false;
-  } else if (flags != uint8_t(MemoryTableFlags::Default)) {
-    return fail("unexpected flags");
-  }
-
   if (*tableIndex >= env_.tables.length()) {
     // Special case this for improved user experience.
     if (!env_.tables.length()) {
@@ -1591,7 +1583,6 @@ inline bool OpIter<Policy>::readCallIndirect(uint32_t* funcTypeIndex,
     }
     return fail("table index out of range for call_indirect");
   }
-
   if (env_.tables[*tableIndex].kind != TableKind::AnyFunction) {
     return fail("indirect calls must go through a table of 'anyfunc'");
   }
@@ -2012,28 +2003,18 @@ inline bool OpIter<Policy>::readTableGet(uint32_t* tableIndex, Value* index) {
     return false;
   }
 
-  *tableIndex = 0;
-
-  uint8_t tableFlags;
-  if (!readFixedU8(&tableFlags)) {
-    return fail("unable to read table flags");
-  }
-  if (tableFlags & uint8_t(MemoryTableFlags::HasTableIndex)) {
-    if (!readVarU32(tableIndex)) {
-      return false;
-    }
-    tableFlags ^= uint8_t(MemoryTableFlags::HasTableIndex);
-  }
-  if (tableFlags != uint8_t(MemoryTableFlags::Default)) {
-    return fail("unrecognized table flags");
+  if (!readVarU32(tableIndex)) {
+    return false;
   }
 
   if (*tableIndex >= env_.tables.length()) {
     return fail("table index out of range for table.get");
   }
+
   if (env_.tables[*tableIndex].kind != TableKind::AnyRef) {
     return fail("table.get only on tables of anyref");
   }
+
   if (!env_.gcTypesEnabled()) {
     return fail("anyref support not enabled");
   }
@@ -2054,28 +2035,16 @@ inline bool OpIter<Policy>::readTableGrow(uint32_t* tableIndex, Value* delta,
     return false;
   }
 
-  *tableIndex = 0;
-
-  uint8_t tableFlags;
-  if (!readFixedU8(&tableFlags)) {
-    return fail("unable to read table flags");
+  if (!readVarU32(tableIndex)) {
+    return false;
   }
-  if (tableFlags & uint8_t(MemoryTableFlags::HasTableIndex)) {
-    if (!readVarU32(tableIndex)) {
-      return false;
-    }
-    tableFlags ^= uint8_t(MemoryTableFlags::HasTableIndex);
-  }
-  if (tableFlags != uint8_t(MemoryTableFlags::Default)) {
-    return fail("unrecognized table flags");
-  }
-
   if (*tableIndex >= env_.tables.length()) {
     return fail("table index out of range for table.grow");
   }
   if (env_.tables[*tableIndex].kind != TableKind::AnyRef) {
     return fail("table.grow only on tables of anyref");
   }
+
   if (!env_.gcTypesEnabled()) {
     return fail("anyref support not enabled");
   }
@@ -2096,28 +2065,16 @@ inline bool OpIter<Policy>::readTableSet(uint32_t* tableIndex, Value* index,
     return false;
   }
 
-  *tableIndex = 0;
-
-  uint8_t tableFlags;
-  if (!readFixedU8(&tableFlags)) {
-    return fail("unable to read table flags");
+  if (!readVarU32(tableIndex)) {
+    return false;
   }
-  if (tableFlags & uint8_t(MemoryTableFlags::HasTableIndex)) {
-    if (!readVarU32(tableIndex)) {
-      return false;
-    }
-    tableFlags ^= uint8_t(MemoryTableFlags::HasTableIndex);
-  }
-  if (tableFlags != uint8_t(MemoryTableFlags::Default)) {
-    return fail("unrecognized table flags");
-  }
-
   if (*tableIndex >= env_.tables.length()) {
     return fail("table index out of range for table.set");
   }
   if (env_.tables[*tableIndex].kind != TableKind::AnyRef) {
     return fail("table.set only on tables of anyref");
   }
+
   if (!env_.gcTypesEnabled()) {
     return fail("anyref support not enabled");
   }
@@ -2131,20 +2088,9 @@ inline bool OpIter<Policy>::readTableSize(uint32_t* tableIndex) {
 
   *tableIndex = 0;
 
-  uint8_t tableFlags;
-  if (!readFixedU8(&tableFlags)) {
-    return fail("unable to read table flags");
+  if (!readVarU32(tableIndex)) {
+    return false;
   }
-  if (tableFlags & uint8_t(MemoryTableFlags::HasTableIndex)) {
-    if (!readVarU32(tableIndex)) {
-      return false;
-    }
-    tableFlags ^= uint8_t(MemoryTableFlags::HasTableIndex);
-  }
-  if (tableFlags != uint8_t(MemoryTableFlags::Default)) {
-    return fail("unrecognized table flags");
-  }
-
   if (*tableIndex >= env_.tables.length()) {
     return fail("table index out of range for table.size");
   }
