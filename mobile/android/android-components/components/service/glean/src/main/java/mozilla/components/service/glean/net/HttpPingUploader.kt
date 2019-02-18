@@ -6,6 +6,7 @@ package mozilla.components.service.glean.net
 
 import android.support.annotation.VisibleForTesting
 import mozilla.components.service.glean.BuildConfig
+import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.support.base.log.logger.Logger
 import java.io.IOException
@@ -21,8 +22,7 @@ import org.json.JSONObject
  * A simple ping Uploader, which implements a "send once" policy, never
  * storing or attempting to send the ping again.
  */
-internal class HttpPingUploader(configuration: Configuration) : PingUploader {
-    private val config = configuration
+internal class HttpPingUploader : PingUploader {
     private val logger = Logger("glean/HttpPingUploader")
 
     /**
@@ -33,17 +33,17 @@ internal class HttpPingUploader(configuration: Configuration) : PingUploader {
      * @param data the serialized text data to send
      */
     private fun logPing(path: String, data: String) {
-        if (config.logPings) {
+        if (Glean.configuration.logPings == true) {
             // Parse and reserialize the JSON so it has indentation and is human-readable.
-            var indented = try {
-                var json = JSONObject(data)
+            val indented = try {
+                val json = JSONObject(data)
                 json.toString(2)
             } catch (e: JSONException) {
                 logger.debug("Exception parsing ping as JSON: $e") // $COVERAGE-IGNORE$
                 null // $COVERAGE-IGNORE$
             }
             indented?.let {
-                logger.debug("Glean ping to URL: ${path}\n$it")
+                logger.debug("Glean ping to URL: $path\n$it")
             }
         }
     }
@@ -62,7 +62,7 @@ internal class HttpPingUploader(configuration: Configuration) : PingUploader {
      *         error callers can deal with.
      */
     @Suppress("ReturnCount", "MagicNumber")
-    override fun upload(path: String, data: String): Boolean {
+    override fun upload(path: String, data: String, config: Configuration): Boolean {
         logPing(path, data)
 
         var connection: HttpURLConnection? = null

@@ -37,6 +37,7 @@ open class GleanInternalAPI internal constructor () {
     private lateinit var storageEngineManager: StorageEngineManager
     private lateinit var pingMaker: PingMaker
     internal lateinit var configuration: Configuration
+
     // `internal` so this can be modified for testing
     internal lateinit var httpPingUploader: HttpPingUploader
 
@@ -83,7 +84,7 @@ open class GleanInternalAPI internal constructor () {
         storageEngineManager = StorageEngineManager(applicationContext = applicationContext)
         pingMaker = PingMaker(storageEngineManager, applicationContext)
         this.configuration = configuration
-        httpPingUploader = HttpPingUploader(configuration)
+        httpPingUploader = HttpPingUploader()
         initialized = true
         applicationId = sanitizeApplicationId(applicationContext.packageName)
 
@@ -182,7 +183,7 @@ open class GleanInternalAPI internal constructor () {
             val path = makePath(docType, uuid)
             // Asynchronously perform the HTTP upload off the main thread.
             GlobalScope.launch(Dispatchers.IO) {
-                httpPingUploader.upload(path = path, data = pingContent)
+                httpPingUploader.upload(path = path, data = pingContent, config = configuration)
             }
         }
     }

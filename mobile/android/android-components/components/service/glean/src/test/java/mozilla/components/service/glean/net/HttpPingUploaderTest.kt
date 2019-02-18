@@ -8,10 +8,10 @@ import mozilla.components.service.glean.BuildConfig
 import mozilla.components.service.glean.config.Configuration
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import org.junit.Test
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Test
 
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
@@ -46,12 +46,12 @@ class HttpPingUploaderTest {
     fun `connection timeouts must be properly set`() {
         val connection = mock<HttpURLConnection>(HttpURLConnection::class.java)
 
-        val client = spy<HttpPingUploader>(HttpPingUploader(testDefaultConfig))
+        val client = spy<HttpPingUploader>(HttpPingUploader())
 
         doReturn(connection).`when`(client).openConnection(anyString(), anyString())
         doReturn(200).`when`(client).doUpload(connection, testPing)
 
-        client.upload(testPath, testPing)
+        client.upload(testPath, testPing, testDefaultConfig)
 
         verify<HttpURLConnection>(connection).readTimeout = 7050
         verify<HttpURLConnection>(connection).connectTimeout = 3050
@@ -62,12 +62,12 @@ class HttpPingUploaderTest {
     fun `user-agent must be properly set`() {
         val connection = mock(HttpURLConnection::class.java)
 
-        val client = spy<HttpPingUploader>(HttpPingUploader(testDefaultConfig))
+        val client = spy<HttpPingUploader>(HttpPingUploader())
 
         doReturn(connection).`when`(client).openConnection(anyString(), anyString())
         doReturn(200).`when`(client).doUpload(connection, testPing)
 
-        client.upload(testPath, testPing)
+        client.upload(testPath, testPing, testDefaultConfig)
 
         verify(connection).setRequestProperty("User-Agent", testDefaultConfig.userAgent)
         verify<HttpURLConnection>(connection, times(1)).disconnect()
@@ -77,12 +77,12 @@ class HttpPingUploaderTest {
     fun `X-Client-* headers must be properly set`() {
         val connection = mock(HttpURLConnection::class.java)
 
-        val client = spy<HttpPingUploader>(HttpPingUploader(testDefaultConfig))
+        val client = spy<HttpPingUploader>(HttpPingUploader())
 
         doReturn(connection).`when`(client).openConnection(anyString(), anyString())
         doReturn(200).`when`(client).doUpload(connection, testPing)
 
-        client.upload(testPath, testPing)
+        client.upload(testPath, testPing, testDefaultConfig)
 
         verify(connection).setRequestProperty("X-Client-Type", "Glean")
         verify(connection).setRequestProperty("X-Client-Version", BuildConfig.LIBRARY_VERSION)
@@ -96,10 +96,10 @@ class HttpPingUploaderTest {
         doReturn(200).`when`(connection).responseCode
         doReturn(mock(OutputStream::class.java)).`when`(connection).outputStream
 
-        val client = spy<HttpPingUploader>(HttpPingUploader(testDefaultConfig))
+        val client = spy<HttpPingUploader>(HttpPingUploader())
         doReturn(connection).`when`(client).openConnection(anyString(), anyString())
 
-        assertTrue(client.upload(testPath, testPing))
+        assertTrue(client.upload(testPath, testPing, testDefaultConfig))
         verify<HttpURLConnection>(connection, times(1)).disconnect()
     }
 
@@ -111,10 +111,10 @@ class HttpPingUploaderTest {
             doReturn(responseCode).`when`(connection).responseCode
             doReturn(mock(OutputStream::class.java)).`when`(connection).outputStream
 
-            val client = spy<HttpPingUploader>(HttpPingUploader(testDefaultConfig))
+            val client = spy<HttpPingUploader>(HttpPingUploader())
             doReturn(connection).`when`(client).openConnection(anyString(), anyString())
 
-            assertFalse(client.upload(testPath, testPing))
+            assertFalse(client.upload(testPath, testPing, testDefaultConfig))
             verify<HttpURLConnection>(connection, times(1)).disconnect()
         }
     }
@@ -127,10 +127,10 @@ class HttpPingUploaderTest {
             doReturn(responseCode).`when`(connection).responseCode
             doReturn(mock(OutputStream::class.java)).`when`(connection).outputStream
 
-            val client = spy<HttpPingUploader>(HttpPingUploader(testDefaultConfig))
+            val client = spy<HttpPingUploader>(HttpPingUploader())
             doReturn(connection).`when`(client).openConnection(anyString(), anyString())
 
-            assertTrue(client.upload(testPath, testPing))
+            assertTrue(client.upload(testPath, testPing, testDefaultConfig))
             verify<HttpURLConnection>(connection, times(1)).disconnect()
         }
     }
@@ -143,10 +143,10 @@ class HttpPingUploaderTest {
             doReturn(responseCode).`when`(connection).responseCode
             doReturn(mock(OutputStream::class.java)).`when`(connection).outputStream
 
-            val client = spy<HttpPingUploader>(HttpPingUploader(testDefaultConfig))
+            val client = spy<HttpPingUploader>(HttpPingUploader())
             doReturn(connection).`when`(client).openConnection(anyString(), anyString())
 
-            assertTrue(client.upload(testPath, testPing))
+            assertTrue(client.upload(testPath, testPing, testDefaultConfig))
             verify<HttpURLConnection>(connection, times(1)).disconnect()
         }
     }
@@ -161,8 +161,8 @@ class HttpPingUploaderTest {
             serverEndpoint = "http://" + server.hostName + ":" + server.port
         )
 
-        val client = HttpPingUploader(testConfig)
-        assertTrue(client.upload(testPath, testPing))
+        val client = HttpPingUploader()
+        assertTrue(client.upload(testPath, testPing, testConfig))
 
         val request = server.takeRequest()
         assertEquals(testPath, request.path)
@@ -176,7 +176,7 @@ class HttpPingUploaderTest {
 
     @Test
     fun `removeCookies() must not throw for malformed URLs`() {
-        val client = HttpPingUploader(testDefaultConfig)
+        val client = HttpPingUploader()
         CookieHandler.setDefault(CookieManager())
         client.removeCookies("lolprotocol://definitely-not-valid,")
     }
@@ -218,8 +218,8 @@ class HttpPingUploaderTest {
         cookieManager.cookieStore.add(URI("http://localhost:${server.port}/test"), cookie3)
 
         // Trigger the connection.
-        val client = HttpPingUploader(testConfig)
-        assertTrue(client.upload(testPath, testPing))
+        val client = HttpPingUploader()
+        assertTrue(client.upload(testPath, testPing, testConfig))
 
         val request = server.takeRequest()
         assertEquals(testPath, request.path)
@@ -238,12 +238,12 @@ class HttpPingUploaderTest {
 
     @Test
     fun `upload() returns true on malformed URLs`() {
-        val client = spy<HttpPingUploader>(HttpPingUploader(testDefaultConfig))
+        val client = spy<HttpPingUploader>(HttpPingUploader())
         doThrow(MalformedURLException()).`when`(client).openConnection(anyString(), anyString())
 
         // If the URL is malformed then there's nothing we can do to recover. Therefore this is treated
         // like a successful upload.
-        assertTrue(client.upload("path", "ping"))
+        assertTrue(client.upload("path", "ping", testDefaultConfig))
     }
 
     @Test
@@ -254,12 +254,12 @@ class HttpPingUploaderTest {
         val connection = mock(HttpURLConnection::class.java)
         doReturn(stream).`when`(connection).outputStream
 
-        val client = spy<HttpPingUploader>(HttpPingUploader(testDefaultConfig))
+        val client = spy<HttpPingUploader>(HttpPingUploader())
         doReturn(connection).`when`(client).openConnection(anyString(), anyString())
 
         // And IOException during upload is a failed upload that we should retry. The client should
         // return false in this case.
-        assertFalse(client.upload("path", "ping"))
+        assertFalse(client.upload("path", "ping", testDefaultConfig))
         verify<HttpURLConnection>(connection, times(1)).disconnect()
     }
 }

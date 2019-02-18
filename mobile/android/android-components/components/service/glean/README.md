@@ -9,6 +9,8 @@ A client-side telemetry SDK for collecting metrics and sending them to Mozilla's
     - [Integrating with the build system](#integrating-with-the-build-system)
     - [Initializing glean](#initializing-glean)
     - [Defining metrics](#defining-metrics)
+    - [Providing UI to enable / disable metrics](#providing-ui-to-enable--disable-metrics)
+- [Debugging products using glean](#debugging-products-using-glean)
 - [License](#license)
 
 ## Before using the library
@@ -100,6 +102,27 @@ by glean.
 Every application must provide a way to disable and re-enable data collection and upload. This is
 controlled with the `glean.setUploadEnabled()` method. The application should
 provide some form of user interface to call this method.
+
+## Debugging products using glean
+Glean exports the [`GleanDebugActivity`](src/main/java/mozilla/components/service/glean/debug/GleanDebugActivity.kt)
+that can be used to toggle debugging features on or off. Users can invoke this special activity, at
+run-time, using the following [`adb`](https://developer.android.com/studio/command-line/adb) command:
+
+`adb shell am start -n [package.name]/mozilla.components.service.glean.debug.GleanDebugActivity [extra keys]`
+
+Where the `[package.name]` is the product's package name as exported in the manifest file (e.g.
+`org.mozilla.samples.glean` for the glean sample application) and `[extra keys]` is a list of
+extra keys to be passed to the debug activity. See the [documentation](https://developer.android.com/studio/command-line/adb#IntentSpec)
+for the command line switches used to pass the extra keys. These are the currently supported keys:
+
+|key|type|description|
+|---|----|-----------|
+| logPings | boolean | if set to `true`, glean dumps pings to logcat; defaults to `false`|
+
+For example, to start the glean sample application with the option to dump pings to logcat turned on,
+the following command can be used:
+
+`adb shell am start -n org.mozilla.samples.glean/mozilla.components.service.glean.debug.GleanDebugActivity --ez logPings true`
 
 ## Contact
 

@@ -4,6 +4,7 @@
 
 package mozilla.components.service.glean.net
 
+import mozilla.components.service.glean.config.Configuration
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -13,7 +14,7 @@ import java.util.TimeZone
  * The interface defining how to send pings.
  */
 internal interface PingUploader {
-    fun upload(path: String, data: String): Boolean
+    fun upload(path: String, data: String, config: Configuration): Boolean
 
     fun createDateHeaderValue(): String {
         val calendar = Calendar.getInstance()
