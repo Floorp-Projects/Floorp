@@ -15,6 +15,13 @@ Unreleased
   initially used for backwards compatibility with clients
   prior to Selenium 3.0.0.
 
+### Fixed
+
+- Errors related to incorrect command-line usage no longer hidden
+
+  By mistake, earlier versions of geckodriver failed to print incorrect
+  flag use.  With this release problems are again written to stderr.
+
 
 0.24.0 (2019-01-28, `917474f3473e`)
 -----------------------------------
