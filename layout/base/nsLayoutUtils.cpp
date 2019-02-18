@@ -3253,7 +3253,7 @@ void nsLayoutUtils::AddExtraBackgroundItems(nsDisplayListBuilder& aBuilder,
     nsRect bounds =
         nsRect(aBuilder.ToReferenceFrame(aFrame), aFrame->GetSize());
     nsDisplayListBuilder::AutoBuildingDisplayList buildingDisplayList(
-        &aBuilder, aFrame, bounds, bounds, false);
+        &aBuilder, aFrame, bounds, bounds);
     presShell->AddPrintPreviewBackgroundItem(aBuilder, aList, aFrame, bounds);
   } else if (frameType != LayoutFrameType::Page) {
     // For printing, this function is first called on an nsPageFrame, which
@@ -3268,7 +3268,7 @@ void nsLayoutUtils::AddExtraBackgroundItems(nsDisplayListBuilder& aBuilder,
     nsRect canvasArea = aVisibleRegion.GetBounds();
     canvasArea.IntersectRect(aCanvasArea, canvasArea);
     nsDisplayListBuilder::AutoBuildingDisplayList buildingDisplayList(
-        &aBuilder, aFrame, canvasArea, canvasArea, false);
+        &aBuilder, aFrame, canvasArea, canvasArea);
     presShell->AddCanvasBackgroundColorItem(aBuilder, aList, aFrame, canvasArea,
                                             aBackstop);
   }
