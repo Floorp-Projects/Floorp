@@ -6,6 +6,10 @@ html {
   height: 100%;
 }
 
+.hidden {
+  display: none;
+}
+
 body.config-background {
   min-height: 100%;
   background-image: url("chrome://browser/content/aboutconfig/background.svg");
@@ -50,6 +54,17 @@ body.config-warning {
   background-position-x: right 9px;
 }
 
+#show-all:not(.hidden) {
+  display: block;
+  margin: 10px auto;
+}
+
+/* Ghost the button when it's not selected. */
+#show-all:not(:focus):not(:hover):not(:active) {
+  background-color: transparent;
+  opacity: .7;
+}
+
 #prefs {
   background-color: var(--in-content-box-background);
   color: var(--in-content-text-color);
@@ -59,10 +74,6 @@ body.config-warning {
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 2px;
   border-spacing: 0;
-}
-
-#prefs > tr.hidden {
-  display: none;
 }
 
 #prefs > tr.odd {
