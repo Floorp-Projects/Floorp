@@ -64,7 +64,8 @@ fn app<'a, 'b>() -> App<'a, 'b> {
             Arg::with_name("webdriver_host")
                 .long("host")
                 .value_name("HOST")
-                .help("Host ip to use for WebDriver server (default: 127.0.0.1)")
+                .default_value("127.0.0.1")
+                .help("Host IP to use for WebDriver server")
                 .takes_value(true),
         )
         .arg(
@@ -72,7 +73,8 @@ fn app<'a, 'b>() -> App<'a, 'b> {
                 .short("p")
                 .long("port")
                 .value_name("PORT")
-                .help("Port to use for WebDriver server (default: 4444)")
+                .default_value("4444")
+                .help("Port to use for WebDriver server")
                 .takes_value(true)
                 .alias("webdriver-port"),
         )
@@ -88,14 +90,15 @@ fn app<'a, 'b>() -> App<'a, 'b> {
             Arg::with_name("marionette_host")
                 .long("marionette-host")
                 .value_name("HOST")
-                .help("Host to use to connect to Gecko (default: 127.0.0.1)")
+                .default_value("127.0.0.1")
+                .help("Host to use to connect to Gecko")
                 .takes_value(true)
         )
         .arg(
             Arg::with_name("marionette_port")
                 .long("marionette-port")
                 .value_name("PORT")
-                .help("Port to use to connect to Gecko (default: system-allocated port)")
+                .help("Port to use to connect to Gecko [default: system-allocated port]")
                 .takes_value(true),
         )
         .arg(
@@ -141,12 +144,12 @@ fn run() -> ProgramResult {
         return Ok(());
     }
 
-    let host = matches.value_of("webdriver_host").unwrap_or("127.0.0.1");
+    let host = matches.value_of("webdriver_host").unwrap();
     let port = match u16::from_str(
         matches
             .value_of("webdriver_port")
             .or(matches.value_of("webdriver_port_alias"))
-            .unwrap_or("4444"),
+            .unwrap(),
     ) {
         Ok(x) => x,
         Err(_) => return Err((ExitCode::Usage, "invalid WebDriver port".into())),
@@ -158,8 +161,7 @@ fn run() -> ProgramResult {
 
     let binary = matches.value_of("binary").map(PathBuf::from);
 
-    let marionette_host = matches.value_of("marionette_host")
-        .unwrap_or("127.0.0.1").to_string();
+    let marionette_host = matches.value_of("marionette_host").unwrap().to_string();
     let marionette_port = match matches.value_of("marionette_port") {
         Some(x) => match u16::from_str(x) {
             Ok(x) => Some(x),
