@@ -2695,7 +2695,11 @@ class StaticAnalysis(MachCommandBase):
 
     def _get_clang_format_diff_command(self, commit):
         if self.repository.name == 'hg':
-            args = ["hg", "diff", "-U0", "-r", commit if commit else ".^"]
+            args = ["hg", "diff", "-U0"]
+            if commit:
+                args += ["-c", commit]
+            else:
+                args += ["-r", ".^"]
             for dot_extension in self._format_include_extensions:
                 args += ['--include', 'glob:**{0}'.format(dot_extension)]
             args += ['--exclude', 'listfile:{0}'.format(self._format_ignore_file)]
