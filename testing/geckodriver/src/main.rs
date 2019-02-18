@@ -49,13 +49,11 @@ pub mod test;
 use crate::command::extension_routes;
 use crate::marionette::{MarionetteHandler, MarionetteSettings};
 
-type ProgramResult = std::result::Result<(), (ExitCode, String)>;
+const EXIT_SUCCESS: i32 = 0;
+const EXIT_USAGE: i32 = 64;
+const EXIT_UNAVAILABLE: i32 = 69;
 
-enum ExitCode {
-    Ok = 0,
-    Usage = 64,
-    Unavailable = 69,
-}
+type ProgramResult = std::result::Result<(), (i32, String)>;
 
 fn app<'a, 'b>() -> App<'a, 'b> {
     App::new(format!("geckodriver {}", build::BuildInfo))
@@ -152,11 +150,11 @@ fn run() -> ProgramResult {
             .unwrap(),
     ) {
         Ok(x) => x,
-        Err(_) => return Err((ExitCode::Usage, "invalid WebDriver port".into())),
+        Err(_) => return Err((EXIT_USAGE, "invalid WebDriver port".into())),
     };
     let addr = match IpAddr::from_str(host) {
         Ok(addr) => SocketAddr::new(addr, port),
-        Err(_) => return Err((ExitCode::Usage, "invalid host address".into())),
+        Err(_) => return Err((EXIT_USAGE, "invalid host address".into())),
     };
 
     let binary = matches.value_of("binary").map(PathBuf::from);
@@ -165,7 +163,7 @@ fn run() -> ProgramResult {
     let marionette_port = match matches.value_of("marionette_port") {
         Some(x) => match u16::from_str(x) {
             Ok(x) => Some(x),
-            Err(_) => return Err((ExitCode::Usage, "invalid Marionette port".into())),
+            Err(_) => return Err((EXIT_USAGE, "invalid Marionette port".into())),
         },
         None => None,
     };
@@ -194,7 +192,7 @@ fn run() -> ProgramResult {
     };
     let handler = MarionetteHandler::new(settings);
     let listening = webdriver::server::start(addr, handler, &extension_routes()[..])
-        .map_err(|err| (ExitCode::Unavailable, err.to_string()))?;
+        .map_err(|err| (EXIT_UNAVAILABLE, err.to_string()))?;
     debug!("Listening on {}", listening.socket);
 
     Ok(())
@@ -202,7 +200,7 @@ fn run() -> ProgramResult {
 
 fn main() {
     let exit_code = match run() {
-        Ok(_) => ExitCode::Ok,
+        Ok(_) => EXIT_SUCCESS,
         Err((exit_code, reason)) => {
             error!("{}", reason);
             exit_code
@@ -210,7 +208,7 @@ fn main() {
     };
 
     std::io::stdout().flush().unwrap();
-    std::process::exit(exit_code as i32);
+    std::process::exit(exit_code);
 }
 
 fn print_version() {
