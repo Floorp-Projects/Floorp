@@ -143,6 +143,8 @@
   MACRO(firstDayOfWeek, firstDayOfWeek, "firstDayOfWeek")                      \
   MACRO(fix, fix, "fix")                                                       \
   MACRO(flags, flags, "flags")                                                 \
+  MACRO(flat, flat, "flat")                                                    \
+  MACRO(flatMap, flatMap, "flatMap")                                           \
   MACRO(float32, float32, "float32")                                           \
   MACRO(Float32x4, Float32x4, "Float32x4")                                     \
   MACRO(float64, float64, "float64")                                           \
