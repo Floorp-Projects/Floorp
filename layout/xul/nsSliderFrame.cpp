@@ -325,7 +325,7 @@ void nsSliderFrame::BuildDisplayListForChildren(
           aBuilder->GetVisibleRect(), overflow, refSize);
 
       nsDisplayListBuilder::AutoBuildingDisplayList buildingDisplayList(
-          aBuilder, this, dirty, dirty, false);
+          aBuilder, this, dirty, dirty);
 
       // Clip the thumb layer to the slider track. This is necessary to ensure
       // FrameLayerBuilder is able to merge content before and after the

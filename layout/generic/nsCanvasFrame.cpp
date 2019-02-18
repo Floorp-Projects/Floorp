@@ -529,7 +529,7 @@ void nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         auto* displayData = aBuilder->GetCurrentFixedBackgroundDisplayData();
         nsDisplayListBuilder::AutoBuildingDisplayList buildingDisplayList(
             aBuilder, this, aBuilder->GetVisibleRect(),
-            aBuilder->GetDirtyRect(), false);
+            aBuilder->GetDirtyRect());
 
         DisplayListClipState::AutoSaveRestore clipState(aBuilder);
         nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter asrSetter(
