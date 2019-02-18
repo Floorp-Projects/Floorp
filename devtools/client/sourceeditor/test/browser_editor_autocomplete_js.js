@@ -5,14 +5,12 @@
 "use strict";
 
 // Test to make sure that JS autocompletion is opening popups.
-function test() {
+async function test() {
   waitForExplicitFinish();
-  setup((ed, win) => {
-    const edWin = ed.container.contentWindow.wrappedJSObject;
-    testJS(ed, edWin).then(() => {
-      teardown(ed, win);
-    });
-  });
+  const {ed, win} = await setup();
+  const edWin = ed.container.contentWindow.wrappedJSObject;
+  await testJS(ed, edWin);
+  teardown(ed, win);
 }
 
 function testJS(ed, win) {

@@ -4,29 +4,28 @@
 
 "use strict";
 
-function test() {
+async function test() {
   waitForExplicitFinish();
-  setup((ed, win) => {
-    ok(ed.isClean(), "default isClean");
-    ok(!ed.canUndo(), "default canUndo");
-    ok(!ed.canRedo(), "default canRedo");
+  const {ed, win} = await setup();
+  ok(ed.isClean(), "default isClean");
+  ok(!ed.canUndo(), "default canUndo");
+  ok(!ed.canRedo(), "default canRedo");
 
-    ed.setText("Hello, World!");
-    ok(!ed.isClean(), "isClean");
-    ok(ed.canUndo(), "canUndo");
-    ok(!ed.canRedo(), "canRedo");
+  ed.setText("Hello, World!");
+  ok(!ed.isClean(), "isClean");
+  ok(ed.canUndo(), "canUndo");
+  ok(!ed.canRedo(), "canRedo");
 
-    ed.undo();
-    ok(ed.isClean(), "isClean after undo");
-    ok(!ed.canUndo(), "canUndo after undo");
-    ok(ed.canRedo(), "canRedo after undo");
+  ed.undo();
+  ok(ed.isClean(), "isClean after undo");
+  ok(!ed.canUndo(), "canUndo after undo");
+  ok(ed.canRedo(), "canRedo after undo");
 
-    ed.setText("What's up?");
-    ed.setClean();
-    ok(ed.isClean(), "isClean after setClean");
-    ok(ed.canUndo(), "canUndo after setClean");
-    ok(!ed.canRedo(), "canRedo after setClean");
+  ed.setText("What's up?");
+  ed.setClean();
+  ok(ed.isClean(), "isClean after setClean");
+  ok(ed.canUndo(), "canUndo after setClean");
+  ok(!ed.canRedo(), "canRedo after setClean");
 
-    teardown(ed, win);
-  });
+  teardown(ed, win);
 }

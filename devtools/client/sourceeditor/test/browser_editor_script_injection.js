@@ -15,7 +15,7 @@ async function runTest() {
     "chrome://mochitests/content/browser/devtools/client/sourceeditor/test";
   const injectedText = "Script successfully injected!";
 
-  const {ed, win} = await setup(null, {
+  const {ed, win} = await setup({
     mode: "ruby",
     externalScripts: [`${baseURL}/cm_script_injection_test.js`,
                       `${baseURL}/cm_mode_ruby.js`],

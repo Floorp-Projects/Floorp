@@ -16,47 +16,40 @@ const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
 const Editor = require("devtools/client/sourceeditor/editor");
 const {getClientCssProperties} = require("devtools/shared/fronts/css-properties");
 
-function promiseWaitForFocus() {
-  return new Promise(resolve =>
-    waitForFocus(resolve));
+function promiseWaitForFocus(el) {
+  return new Promise(resolve => waitForFocus(resolve, el));
 }
 
-function setup(cb, additionalOpts = {}) {
-  cb = cb || function() {};
-  return new Promise(resolve => {
+async function setup(additionalOpts = {}) {
+  try {
     const opt = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
-
     const win = Services.ww.openWindow(null, CHROME_URL_ROOT + "head.xul", "_blank", opt,
-                                     null);
+                                      null);
     const opts = {
       value: "Hello.",
       lineNumbers: true,
       foldGutter: true,
       gutters: ["CodeMirror-linenumbers", "breakpoints", "CodeMirror-foldgutter"],
       cssProperties: getClientCssProperties(),
+      ...additionalOpts,
     };
 
-    for (const o in additionalOpts) {
-      opts[o] = additionalOpts[o];
-    }
+    await once(win, "load");
+    await promiseWaitForFocus(win);
 
-    win.addEventListener("load", function() {
-      waitForFocus(function() {
-        const box = win.document.querySelector("box");
-        const editor = new Editor(opts);
+    const box = win.document.querySelector("box");
+    const editor = new Editor(opts);
+    await editor.appendTo(box);
 
-        editor.appendTo(box)
-          .then(() => {
-            resolve({
-              ed: editor,
-              win: win,
-              edWin: editor.container.contentWindow.wrappedJSObject,
-            });
-            cb(editor, win);
-          }, err => ok(false, err.message));
-      }, win);
-    }, {once: true});
-  });
+    return {
+      ed: editor,
+      win: win,
+      edWin: editor.container.contentWindow.wrappedJSObject,
+    };
+  } catch (o_O) {
+    ok(false, o_O.message);
+    return null;
+  }
 }
 
 function ch(exp, act, label) {
