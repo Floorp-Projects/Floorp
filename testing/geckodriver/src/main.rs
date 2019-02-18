@@ -115,42 +115,42 @@ fn app<'a, 'b>() -> App<'a, 'b> {
         .arg(
             Arg::with_name("webdriver_host")
                 .long("host")
+                .takes_value(true)
                 .value_name("HOST")
                 .default_value("127.0.0.1")
-                .help("Host IP to use for WebDriver server")
-                .takes_value(true),
+                .help("Host IP to use for WebDriver server"),
         )
         .arg(
             Arg::with_name("webdriver_port")
                 .short("p")
                 .long("port")
+                .takes_value(true)
                 .value_name("PORT")
                 .default_value("4444")
-                .help("Port to use for WebDriver server")
-                .takes_value(true)
+                .help("Port to use for WebDriver server"),
         )
         .arg(
             Arg::with_name("binary")
                 .short("b")
                 .long("binary")
+                .takes_value(true)
                 .value_name("BINARY")
-                .help("Path to the Firefox binary")
-                .takes_value(true),
+                .help("Path to the Firefox binary"),
         )
         .arg(
             Arg::with_name("marionette_host")
                 .long("marionette-host")
+                .takes_value(true)
                 .value_name("HOST")
                 .default_value("127.0.0.1")
-                .help("Host to use to connect to Gecko")
-                .takes_value(true)
+                .help("Host to use to connect to Gecko"),
         )
         .arg(
             Arg::with_name("marionette_port")
                 .long("marionette-port")
+                .takes_value(true)
                 .value_name("PORT")
-                .help("Port to use to connect to Gecko [default: system-allocated port]")
-                .takes_value(true),
+                .help("Port to use to connect to Gecko [default: system-allocated port]"),
         )
         .arg(
             Arg::with_name("connect_existing")
@@ -161,14 +161,13 @@ fn app<'a, 'b>() -> App<'a, 'b> {
         .arg(
             Arg::with_name("jsdebugger")
                 .long("jsdebugger")
-                .takes_value(false)
                 .help("Attach browser toolbox debugger for Firefox"),
         )
         .arg(
             Arg::with_name("verbosity")
-                .short("v")
                 .multiple(true)
                 .conflicts_with("log_level")
+                .short("v")
                 .help("Log level verbosity (-v for debug and -vv for trace level)"),
         )
         .arg(
