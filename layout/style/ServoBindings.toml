@@ -412,6 +412,7 @@ cbindgen-types = [
     { gecko = "StyleTextAlign", servo = "values::computed::TextAlign" },
     { gecko = "StyleOverflow", servo = "values::computed::Overflow" },
     { gecko = "StyleOverflowAnchor", servo = "values::computed::OverflowAnchor" },
+    { gecko = "StyleLength", servo = "values::computed::CSSPixelLength" },
     { gecko = "StyleLengthPercentage", servo = "values::computed::LengthPercentage" },
     { gecko = "StyleNonNegativeLengthPercentage", servo = "values::computed::NonNegativeLengthPercentage" },
     { gecko = "StyleGenericLengthPercentageOrAuto", servo = "values::generics::length::LengthPercentageOrAuto" },
