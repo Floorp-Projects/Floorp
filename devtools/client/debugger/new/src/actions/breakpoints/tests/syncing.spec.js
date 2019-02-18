@@ -129,6 +129,7 @@ describe("loading the debugger", () => {
     // add a source without the breakpoints
     const reloadedSource = makeSource("magic.js");
     await dispatch(actions.newSource(reloadedSource));
+    await dispatch(actions.newSource(makeSource("gen.js")));
 
     expect(selectors.getBreakpointCount(getState())).toEqual(0);
     // manually sync
@@ -160,6 +161,7 @@ describe("loading the debugger", () => {
     // add a source without the breakpoints
     const reloadedSource = makeSource("magic.js");
     await dispatch(actions.newSource(reloadedSource));
+    await dispatch(actions.newSource(makeSource("gen.js")));
 
     expect(selectors.getBreakpointCount(getState())).toEqual(0);
     // manually sync
