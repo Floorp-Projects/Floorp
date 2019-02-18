@@ -77,17 +77,17 @@ EXPECTED_REFLOWS_FIRST_OPEN.push(
 if (AppConstants.RELEASE_OR_BETA) {
   EXPECTED_REFLOWS_FIRST_OPEN.push({
     stack: [
-      "_handleOverflow@chrome://global/content/bindings/autocomplete.xml",
-      "_onUnderflow@chrome://global/content/bindings/autocomplete.xml",
-      "onunderflow@chrome://browser/content/browser.xul",
+      "_handleOverflow@chrome://global/content/elements/autocomplete-richlistitem.js",
+      "_onUnderflow@chrome://global/content/elements/autocomplete-richlistitem.js",
+      "MozAutocompleteRichlistitem/<@chrome://global/content/elements/autocomplete-richlistitem.js",
     ],
     maxCount: 6,
   },
   {
     stack: [
-      "_handleOverflow@chrome://global/content/bindings/autocomplete.xml",
-      "_onOverflow@chrome://global/content/bindings/autocomplete.xml",
-      "onoverflow@chrome://browser/content/browser.xul",
+      "_handleOverflow@chrome://global/content/elements/autocomplete-richlistitem.js",
+      "_onOverflow@chrome://global/content/elements/autocomplete-richlistitem.js",
+      "MozAutocompleteRichlistitem/<@chrome://global/content/elements/autocomplete-richlistitem.js",
     ],
     maxCount: 6,
   },

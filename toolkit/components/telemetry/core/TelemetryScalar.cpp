@@ -1864,6 +1864,7 @@ void internal_DynamicScalarToIPC(
     stubDefinition.expired = info.mDynamicExpiration;
     stubDefinition.keyed = info.keyed;
     stubDefinition.name = info.mDynamicName;
+    stubDefinition.builtin = info.builtin;
     aIPCDefs.AppendElement(stubDefinition);
   }
 }
@@ -3678,7 +3679,7 @@ void TelemetryScalar::AddDynamicScalarDefinitions(
                                                  def.expired,
                                                  def.name,
                                                  def.keyed,
-                                                 false /* builtin */,
+                                                 def.builtin,
                                                  {} /* stores */});
   }
 

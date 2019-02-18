@@ -6644,31 +6644,11 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
       return NS_OK;
     }
 
-    eventTargetData.SetContentForEventFromFrame(aGUIEvent);
-
-    // If there is no content for this frame, target it anyway.  Some
-    // frames can be targeted but do not have content, particularly
-    // windows with scrolling off.
-    if (eventTargetData.mContent) {
-      // Bug 103055, bug 185889: mouse events apply to *elements*, not all
-      // nodes.  Thus we get the nearest element parent here.
-      // XXX we leave the frame the same even if we find an element
-      // parent, so that the text frame will receive the event (selection
-      // and friends are the ones who care about that anyway)
-      //
-      // We use weak pointers because during this tight loop, the node
-      // will *not* go away.  And this happens on every mousemove.
-      while (eventTargetData.mContent &&
-             !eventTargetData.mContent->IsElement()) {
-        eventTargetData.mContent =
-            eventTargetData.mContent->GetFlattenedTreeParent();
-      }
-
-      // If we found an element, target it.  Otherwise, target *nothing*.
-      if (!eventTargetData.mContent) {
-        return NS_OK;
-      }
+    if (!eventTargetData.ComputeElementFromFrame(aGUIEvent)) {
+      return NS_OK;
     }
+    // Note that even if ComputeElementFromFrame() returns true,
+    // eventTargetData.mContent can be nullptr here.
 
     nsCOMPtr<nsIContent> overrideClickTarget;
     if (PointerEventHandler::IsPointerEventEnabled()) {
@@ -10798,4 +10778,38 @@ bool PresShell::EventHandler::EventTargetData::MaybeRetargetToActiveDocument(
   SetPresShellAndFrame(static_cast<PresShell*>(activePresShell),
                        activePresShell->GetRootFrame());
   return true;
+}
+
+bool PresShell::EventHandler::EventTargetData::ComputeElementFromFrame(
+    WidgetGUIEvent* aGUIEvent) {
+  MOZ_ASSERT(aGUIEvent);
+  MOZ_ASSERT(aGUIEvent->IsUsingCoordinates());
+  MOZ_ASSERT(mPresShell);
+  MOZ_ASSERT(mFrame);
+
+  SetContentForEventFromFrame(aGUIEvent);
+
+  // If there is no content for this frame, target it anyway.  Some frames can
+  // be targeted but do not have content, particularly windows with scrolling
+  // off.
+  if (!mContent) {
+    return true;
+  }
+
+  // Bug 103055, bug 185889: mouse events apply to *elements*, not all nodes.
+  // Thus we get the nearest element parent here.
+  // XXX we leave the frame the same even if we find an element parent, so that
+  // the text frame will receive the event (selection and friends are the ones
+  // who care about that anyway)
+  //
+  // We use weak pointers because during this tight loop, the node
+  // will *not* go away.  And this happens on every mousemove.
+  nsIContent* content = mContent;
+  while (content && !content->IsElement()) {
+    content = content->GetFlattenedTreeParent();
+  }
+  mContent = content;
+
+  // If we found an element, target it.  Otherwise, target *nothing*.
+  return !!mContent;
 }

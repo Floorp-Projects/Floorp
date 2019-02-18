@@ -626,6 +626,19 @@ class PresShell final : public nsIPresShell,
        */
       bool MaybeRetargetToActiveDocument(WidgetGUIEvent* aGUIEvent);
 
+      /**
+       * ComputeElementFromFrame() computes mContent for aGUIEvent.  If
+       * mContent is set by this method, mContent is always nullptr or an
+       * Element.
+       *
+       * @param aGUIEvent       The handling event.
+       * @return                true if caller can keep handling the event.
+       *                        Otherwise, false.
+       *                        Note that even if this returns true, mContent
+       *                        may be nullptr.
+       */
+      bool ComputeElementFromFrame(WidgetGUIEvent* aGUIEvent);
+
       RefPtr<PresShell> mPresShell;
       nsIFrame* mFrame;
       nsCOMPtr<nsIContent> mContent;

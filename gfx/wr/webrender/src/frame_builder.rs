@@ -19,7 +19,7 @@ use prim_store::{PrimitiveStore, SpaceMapper, PictureIndex, PrimitiveDebugId, Pr
 use prim_store::{PrimitiveStoreStats};
 use profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
 use render_backend::{DataStores, FrameStamp};
-use render_task::{RenderTask, RenderTaskId, RenderTaskLocation, RenderTaskTree};
+use render_task::{RenderTask, RenderTaskId, RenderTaskLocation, RenderTaskTree, RenderTaskTreeCounters};
 use resource_cache::{ResourceCache};
 use scene::{ScenePipeline, SceneProperties};
 use segment::SegmentBuilder;
@@ -503,6 +503,7 @@ impl FrameBuilder {
         scene_properties: &SceneProperties,
         data_stores: &mut DataStores,
         scratch: &mut PrimitiveScratchBuffer,
+        render_task_counters: &mut RenderTaskTreeCounters,
         debug_flags: DebugFlags,
     ) -> Frame {
         profile_scope!("build");
@@ -530,7 +531,10 @@ impl FrameBuilder {
         );
         self.clip_store.clear_old_instances();
 
-        let mut render_tasks = RenderTaskTree::new(stamp.frame_id());
+        let mut render_tasks = RenderTaskTree::new(
+            stamp.frame_id(),
+            render_task_counters,
+        );
         let mut surfaces = Vec::new();
 
         let screen_size = self.screen_rect.size.to_i32();
@@ -640,7 +644,7 @@ impl FrameBuilder {
         let gpu_cache_frame_id = gpu_cache.end_frame(gpu_cache_profile).frame_id();
 
         render_tasks.write_task_data(device_pixel_scale);
-
+        *render_task_counters = render_tasks.counters();
         resource_cache.end_frame(texture_cache_profile);
 
         Frame {
