@@ -21,7 +21,8 @@ import type {
   Frame,
   SourceId,
   Worker,
-  SourceActor
+  SourceActor,
+  Range
 } from "../../types";
 
 type URL = string;
@@ -314,10 +315,7 @@ export type SourceClient = {
   source: () => { source: any, contentType?: string },
   _activeThread: ThreadClient,
   actor: string,
-  getBreakpointPositionsCompressed: (range: {
-    start: { line: number },
-    end: { line: number }
-  }) => Promise<any>,
+  getBreakpointPositionsCompressed: (range: ?Range) => Promise<any>,
   prettyPrint: number => Promise<*>,
   disablePrettyPrint: () => Promise<*>,
   blackBox: (range?: Range) => Promise<*>,

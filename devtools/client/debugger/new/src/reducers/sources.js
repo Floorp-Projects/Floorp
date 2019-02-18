@@ -413,11 +413,19 @@ export function getSource(state: OuterState, id: SourceId) {
 }
 
 export function getSourceFromId(state: OuterState, id: string): Source {
-  return getSourcesState(state).sources[id];
+  const source = getSourcesState(state).sources[id];
+  if (!source) {
+    throw new Error(`source ${id} does not exist`);
+  }
+  return source;
 }
 
 export function getSourceActors(state: OuterState, id: SourceId) {
   return getSourcesState(state).sourceActors[id] || [];
+}
+
+export function getSourceActor(state: OuterState, id: SourceId) {
+  return getSourceActors(state, id)[0];
 }
 
 export function hasSourceActor(state: OuterState, sourceActor: SourceActor) {

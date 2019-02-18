@@ -9,7 +9,7 @@
  * @module reducers/breakpoints
  */
 
-import { isGeneratedId } from "devtools-source-map";
+import { isGeneratedId, isOriginalId } from "devtools-source-map";
 import { isEqual } from "lodash";
 
 import { makeBreakpointId } from "../utils/breakpoint";
@@ -19,18 +19,17 @@ import type {
   Breakpoint,
   BreakpointId,
   SourceLocation,
-  BreakpointPositions,
-  BreakpointLinePositions,
-  BreakpointSourcePositions
+  BreakpointPositions
 } from "../types";
 import type { Action, DonePromiseAction } from "../actions/types";
 
 export type BreakpointsMap = { [BreakpointId]: Breakpoint };
 export type XHRBreakpointsList = $ReadOnlyArray<XHRBreakpoint>;
+export type BreakpointPositionsMap = { [string]: BreakpointPositions };
 
 export type BreakpointsState = {
   breakpoints: BreakpointsMap,
-  breakpointPositions: BreakpointPositions,
+  breakpointPositions: BreakpointPositionsMap,
   xhrBreakpoints: XHRBreakpointsList,
   breakpointsDisabled: boolean
 };
@@ -113,15 +112,14 @@ function update(
 
     case "ADD_BREAKPOINT_POSITIONS": {
       const {
-        location: { sourceId, line },
+        location: { sourceId },
         positions
       } = action;
-      const sourcePositions = state.breakpointPositions[sourceId] || {};
       return {
         ...state,
         breakpointPositions: {
           ...state.breakpointPositions,
-          [sourceId]: { ...sourcePositions, [line]: positions }
+          [sourceId]: positions
         }
       };
     }
@@ -354,14 +352,14 @@ export function getHiddenBreakpoint(state: OuterState): ?Breakpoint {
 
 export function getBreakpointPositions(
   state: OuterState
-): ?BreakpointPositions {
+): BreakpointPositionsMap {
   return state.breakpoints.breakpointPositions;
 }
 
 export function getBreakpointPositionsForSource(
   state: OuterState,
   sourceId: string
-): ?BreakpointSourcePositions {
+): ?BreakpointPositions {
   const positions = getBreakpointPositions(state);
   return positions && positions[sourceId];
 }
@@ -370,9 +368,15 @@ export function getBreakpointPositionsForLine(
   state: OuterState,
   sourceId: string,
   line: number
-): ?BreakpointLinePositions {
+): ?BreakpointPositions {
   const positions = getBreakpointPositionsForSource(state, sourceId);
-  return positions ? positions[line] : null;
+  if (!positions) {
+    return [];
+  }
+  return positions.filter(({ location, generatedLocation }) => {
+    const loc = isOriginalId(sourceId) ? location : generatedLocation;
+    return loc.line == line;
+  });
 }
 
 export default update;
