@@ -98,16 +98,16 @@
   <groupbox>
     <label><html:h2 data-l10n-id="data-section-label"/></label>
     <hbox>
-      <box data-l10n-id="sanitize-prefs-style" data-l10n-attrs="style">
+      <vbox data-l10n-id="sanitize-prefs-style" data-l10n-attrs="style">
         <checkbox data-l10n-id="item-site-preferences"
                   preference="privacy.cpd.siteSettings"
                   onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-      </box>
-      <box flex="1">
+      </vbox>
+      <vbox flex="1">
         <checkbox data-l10n-id="item-offline-apps"
                   preference="privacy.cpd.offlineApps"
                   onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-      </box>
+      </vbox>
     </hbox>
   </groupbox>
 </dialog>
