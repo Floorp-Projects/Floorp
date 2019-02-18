@@ -1,0 +1,10 @@
+[android-components](../../index.md) / [mozilla.components.support.utils](../index.md) / [Browsers](index.md) / [firefoxBrandedBrowser](./firefox-branded-browser.md)
+
+# firefoxBrandedBrowser
+
+`val firefoxBrandedBrowser: `[`ActivityInfo`](https://developer.android.com/reference/android/content/pm/ActivityInfo.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L111)
+
+The [ActivityInfo](https://developer.android.com/reference/android/content/pm/ActivityInfo.html) of the installed Firefox browser (or null if none could be found).
+
+If multiple Firefox browsers are installed then this will
+

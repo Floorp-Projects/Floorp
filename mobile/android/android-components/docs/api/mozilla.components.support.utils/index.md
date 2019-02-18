@@ -6,6 +6,7 @@
 
 | Name | Summary |
 |---|---|
+| [Browsers](-browsers/index.md) | `class Browsers`<br>Helpful tools for dealing with other browsers on this device. |
 | [ColorUtils](-color-utils/index.md) | `object ColorUtils` |
 | [DomainMatch](-domain-match/index.md) | `data class DomainMatch` |
 | [DownloadUtils](-download-utils/index.md) | `object DownloadUtils` |
