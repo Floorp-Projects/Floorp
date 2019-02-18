@@ -138,7 +138,7 @@ function createRow(aPartId) {
   let checkbox = document.createXULElement("checkbox");
   checkbox.setAttribute("id", aPartId + "Def");
   checkbox.setAttribute("oncommand", "onCheckboxClick('" + aPartId + "');");
-  document.l10n.setAttributes(checkbox, "permissions-use-default");
+  checkbox.setAttribute("label", gBundle.getString("permissions.useDefault"));
   controls.appendChild(checkbox);
 
   let spacer = document.createXULElement("spacer");
