@@ -287,7 +287,7 @@ mozilla::ipc::IPCResult GMPChild::RecvPreloadLibs(const nsCString& aLibs) {
   return IPC_OK();
 }
 
-bool GMPChild::ResolveLinks(nsCOMPtr<nsIFile>& aPath) {
+static bool ResolveLinks(nsCOMPtr<nsIFile>& aPath) {
 #if defined(XP_WIN)
   return widget::WinUtils::ResolveJunctionPointsAndSymLinks(aPath);
 #elif defined(XP_MACOSX)
@@ -379,14 +379,9 @@ static nsCOMPtr<nsIFile> GetFirefoxAppPath(
   // xxxx/NightlyDebug.app/Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container
   nsCOMPtr<nsIFile> path = aPluginContainerPath;
   for (int i = 0; i < 4; i++) {
-    nsCOMPtr<nsIFile> parent;
-    if (NS_WARN_IF(NS_FAILED(path->GetParent(getter_AddRefs(parent))))) {
-      return nullptr;
-    }
-    path = parent;
+    path = GetParentFile(path);
   }
-  MOZ_ASSERT(path);
-  return aOutFirefoxAppPath
+  return path;
 #else
   nsCOMPtr<nsIFile> parent = GetParentFile(aPluginContainerPath);
 #  if XP_WIN
@@ -428,6 +423,41 @@ static bool GetSigPath(const int aRelativeLayers,
 }
 #endif
 
+static bool AppendHostPath(nsCOMPtr<nsIFile>& aFile,
+                           nsTArray<Pair<nsCString, nsCString>>& aPaths) {
+  nsString str;
+  if (!FileExists(aFile) || !ResolveLinks(aFile) ||
+      NS_FAILED(aFile->GetPath(str))) {
+    return false;
+  }
+
+  nsCString filePath = NS_ConvertUTF16toUTF8(str);
+  nsCString sigFilePath;
+#if defined(XP_MACOSX)
+  nsAutoString binary;
+  if (NS_FAILED(aFile->GetLeafName(binary))) {
+    return false;
+  }
+  binary.Append(NS_LITERAL_STRING(".sig"));
+  nsCOMPtr<nsIFile> sigFile;
+  if (GetSigPath(2, binary, aFile, sigFile) &&
+      NS_SUCCEEDED(sigFile->GetPath(str))) {
+    sigFilePath = NS_ConvertUTF16toUTF8(str);
+  } else {
+    // Cannot successfully get the sig file path.
+    // Assume it is located at the same place as plugin-container
+    // alternatively.
+    sigFilePath =
+        nsCString(NS_ConvertUTF16toUTF8(str) + NS_LITERAL_CSTRING(".sig"));
+  }
+#else
+  sigFilePath =
+      nsCString(NS_ConvertUTF16toUTF8(str) + NS_LITERAL_CSTRING(".sig"));
+#endif
+  aPaths.AppendElement(MakePair(std::move(filePath), std::move(sigFilePath)));
+  return true;
+}
+
 nsTArray<Pair<nsCString, nsCString>> GMPChild::MakeCDMHostVerificationPaths() {
   // Record the file path and its sig file path.
   nsTArray<Pair<nsCString, nsCString>> paths;
@@ -448,31 +478,9 @@ nsTArray<Pair<nsCString, nsCString>> GMPChild::MakeCDMHostVerificationPaths() {
       WideToUTF8(CommandLine::ForCurrentProcess()->program());
   path = nullptr;
   str = NS_ConvertUTF8toUTF16(nsDependentCString(pluginContainer.c_str()));
-  if (NS_SUCCEEDED(NS_NewLocalFile(str, true, /* aFollowLinks */
-                                   getter_AddRefs(path))) &&
-      FileExists(path) && ResolveLinks(path) &&
-      NS_SUCCEEDED(path->GetPath(str))) {
-    nsCString filePath = NS_ConvertUTF16toUTF8(str);
-    nsCString sigFilePath;
-#if defined(XP_MACOSX)
-    nsCOMPtr<nsIFile> sigFile;
-    if (GetSigPath(2, NS_LITERAL_STRING("plugin-container.sig"), path,
-                   sigFile) &&
-        NS_SUCCEEDED(sigFile->GetPath(str))) {
-      sigFilePath = NS_ConvertUTF16toUTF8(str);
-    } else {
-      // Cannot successfully get the sig file path.
-      // Assume it is located at the same place as plugin-container
-      // alternatively.
-      sigFilePath =
-          nsCString(NS_ConvertUTF16toUTF8(str) + NS_LITERAL_CSTRING(".sig"));
-    }
-#else
-    sigFilePath =
-        nsCString(NS_ConvertUTF16toUTF8(str) + NS_LITERAL_CSTRING(".sig"));
-#endif
-    paths.AppendElement(MakePair(std::move(filePath), std::move(sigFilePath)));
-  } else {
+  if (NS_FAILED(NS_NewLocalFile(str, true, /* aFollowLinks */
+                                getter_AddRefs(path))) ||
+      !AppendHostPath(path, paths)) {
     // Without successfully determining plugin-container's path, we can't
     // determine libxul's or Firefox's. So give up.
     return paths;
@@ -486,12 +494,8 @@ nsTArray<Pair<nsCString, nsCString>> GMPChild::MakeCDMHostVerificationPaths() {
   if (isWindowsOnARM64) {
     nsCOMPtr<nsIFile> x86XulPath =
         AppendFile(GetParentFile(path), XUL_LIB_FILE);
-    if (FileExists(x86XulPath) && ResolveLinks(x86XulPath) &&
-        NS_SUCCEEDED(x86XulPath->GetPath(str))) {
-      nsCString filePath = NS_ConvertUTF16toUTF8(str);
-      nsCString sigFilePath = filePath + NS_LITERAL_CSTRING(".sig");
-      paths.AppendElement(
-          MakePair(std::move(filePath), std::move(sigFilePath)));
+    if (!AppendHostPath(x86XulPath, paths)) {
+      return paths;
     }
   }
 #endif
@@ -499,53 +503,16 @@ nsTArray<Pair<nsCString, nsCString>> GMPChild::MakeCDMHostVerificationPaths() {
   // Firefox application binary path.
   nsCOMPtr<nsIFile> appDir = GetFirefoxAppPath(path);
   path = AppendFile(CloneFile(appDir), FIREFOX_FILE);
-  if (FileExists(path) && ResolveLinks(path) &&
-      NS_SUCCEEDED(path->GetPath(str))) {
-#if defined(XP_MACOSX)
-    nsCString filePath = NS_ConvertUTF16toUTF8(str);
-    nsCString sigFilePath;
-    nsCOMPtr<nsIFile> sigFile;
-    if (GetSigPath(2, NS_LITERAL_STRING("firefox.sig"), path, sigFile) &&
-        NS_SUCCEEDED(sigFile->GetPath(str))) {
-      sigFilePath = NS_ConvertUTF16toUTF8(str);
-    } else {
-      // Cannot successfully get the sig file path.
-      // Assume it is located at the same place as firefox alternatively.
-      sigFilePath =
-          nsCString(NS_ConvertUTF16toUTF8(str) + NS_LITERAL_CSTRING(".sig"));
-    }
-    paths.AppendElement(MakePair(std::move(filePath), std::move(sigFilePath)));
-#else
-    paths.AppendElement(MakePair(
-        nsCString(NS_ConvertUTF16toUTF8(str)),
-        nsCString(NS_ConvertUTF16toUTF8(str) + NS_LITERAL_CSTRING(".sig"))));
-#endif
+  if (!AppendHostPath(path, paths)) {
+    return paths;
   }
 
-  // Libxul path. Note: re-using 'path' var here, as we assume libxul is in
+  // Libxul path. Note: re-using 'appDir' var here, as we assume libxul is in
   // the same directory as Firefox executable.
   appDir->GetPath(str);
   path = AppendFile(CloneFile(appDir), XUL_LIB_FILE);
-  if (FileExists(path) && ResolveLinks(path) &&
-      NS_SUCCEEDED(path->GetPath(str))) {
-    nsCString filePath = NS_ConvertUTF16toUTF8(str);
-    nsCString sigFilePath;
-#if defined(XP_MACOSX)
-    nsCOMPtr<nsIFile> sigFile;
-    if (GetSigPath(2, NS_LITERAL_STRING("XUL.sig"), path, sigFile) &&
-        NS_SUCCEEDED(sigFile->GetPath(str))) {
-      sigFilePath = NS_ConvertUTF16toUTF8(str);
-    } else {
-      // Cannot successfully get the sig file path.
-      // Assume it is located at the same place as XUL alternatively.
-      sigFilePath =
-          nsCString(NS_ConvertUTF16toUTF8(str) + NS_LITERAL_CSTRING(".sig"));
-    }
-#else
-    sigFilePath =
-        nsCString(NS_ConvertUTF16toUTF8(str) + NS_LITERAL_CSTRING(".sig"));
-#endif
-    paths.AppendElement(MakePair(std::move(filePath), std::move(sigFilePath)));
+  if (!AppendHostPath(path, paths)) {
+    return paths;
   }
 
   return paths;
