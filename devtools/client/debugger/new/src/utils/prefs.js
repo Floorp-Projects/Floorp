@@ -5,7 +5,7 @@
 // @flow
 
 import { PrefsHelper } from "devtools-modules";
-import { isDevelopment } from "devtools-environment";
+import { isDevelopment, isTesting } from "devtools-environment";
 import Services from "devtools-services";
 import { asyncStoreHelper } from "./asyncStoreHelper";
 
@@ -135,7 +135,7 @@ export const asyncStore = asyncStoreHelper("debugger", {
   eventListenerBreakpoints: ["event-listener-breakpoints", []]
 });
 
-if (prefs.debuggerPrefsSchemaVersion !== prefsSchemaVersion) {
+if (!isTesting && prefs.debuggerPrefsSchemaVersion !== prefsSchemaVersion) {
   // clear pending Breakpoints
   asyncStore.pendingBreakpoints = {};
   asyncStore.tabs = [];

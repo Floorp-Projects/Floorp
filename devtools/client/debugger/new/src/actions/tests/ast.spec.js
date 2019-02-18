@@ -19,7 +19,6 @@ import readFixture from "./helpers/readFixture";
 const {
   getSource,
   getSymbols,
-  getEmptyLines,
   getOutOfScopeLocations,
   getSourceMetaData,
   getInScopeLines,
@@ -62,24 +61,6 @@ const evaluationResult = {
 };
 
 describe("ast", () => {
-  describe("setPausePoints", () => {
-    it("scopes", async () => {
-      const store = createStore(threadClient);
-      const { dispatch, getState } = store;
-      const csr = makeSource("scopes.js");
-      await dispatch(actions.newSource(csr));
-      await dispatch(actions.loadSourceText(csr.source));
-      await dispatch(actions.setPausePoints("scopes.js"));
-      await waitForState(store, state => {
-        const lines = getEmptyLines(state, csr.source.id);
-        return lines && lines.length > 0;
-      });
-
-      const emptyLines = getEmptyLines(getState(), csr.source.id);
-      expect(emptyLines).toMatchSnapshot();
-    });
-  });
-
   describe("setSourceMetaData", () => {
     it("should detect react components", async () => {
       const store = createStore(threadClient, {}, sourceMaps);
