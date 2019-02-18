@@ -60,6 +60,8 @@
   MACRO(callee, callee, "callee")                                              \
   MACRO(caller, caller, "caller")                                              \
   MACRO(callFunction, callFunction, "callFunction")                            \
+  MACRO(CallRegExpMethodIfWrapped, CallRegExpMethodIfWrapped,                  \
+        "CallRegExpMethodIfWrapped")                                           \
   MACRO(cancel, cancel, "cancel")                                              \
   MACRO(case, case_, "case")                                                   \
   MACRO(caseFirst, caseFirst, "caseFirst")                                     \
