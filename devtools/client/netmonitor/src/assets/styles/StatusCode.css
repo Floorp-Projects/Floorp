@@ -27,7 +27,8 @@
   background-color: var(--status-code-color-4xx);
 }
 
-.status-code[data-code^="5"] {
+.status-code[data-code^="5"], .status-code[data-code^="6"], .status-code[data-code^="7"],
+.status-code[data-code^="8"], .status-code[data-code^="9"] {
   background-color: var(--status-code-color-5xx);
 }
 
