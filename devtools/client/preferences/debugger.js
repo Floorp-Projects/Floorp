@@ -26,6 +26,7 @@ pref("devtools.debugger.ui.variables-sorting-enabled", true);
 pref("devtools.debugger.ui.variables-only-enum-visible", false);
 pref("devtools.debugger.ui.variables-searchbox-visible", false);
 pref("devtools.debugger.ui.framework-grouping-on", true);
+pref("devtools.debugger.ui.editor-wrapping", false);
 pref("devtools.debugger.call-stack-visible", true);
 pref("devtools.debugger.scopes-visible", true);
 pref("devtools.debugger.component-visible", true);
