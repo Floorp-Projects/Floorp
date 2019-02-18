@@ -74,10 +74,10 @@ class WasmToken {
     ComparisonOpcode,
     Const,
     ConversionOpcode,
-    CurrentMemory,
     Data,
 #ifdef ENABLE_WASM_BULKMEM_OPS
     DataCount,
+    DataDrop,
 #endif
     Drop,
     Elem,
@@ -97,7 +97,6 @@ class WasmToken {
     GetGlobal,
     GetLocal,
     Global,
-    GrowMemory,
     If,
     Import,
     Index,
@@ -108,10 +107,11 @@ class WasmToken {
     Loop,
 #ifdef ENABLE_WASM_BULKMEM_OPS
     MemCopy,
-    DataDrop,
     MemFill,
     MemInit,
 #endif
+    MemoryGrow,
+    MemorySize,
     Module,
     Mutable,
     Name,
@@ -310,20 +310,25 @@ class WasmToken {
       case Const:
       case ConversionOpcode:
       case ExtraConversionOpcode:
-      case CurrentMemory:
+#ifdef ENABLE_WASM_BULKMEM_OPS
+      case DataDrop:
+#endif
       case Drop:
+#ifdef ENABLE_WASM_BULKMEM_OPS
+      case ElemDrop:
+#endif
       case GetGlobal:
       case GetLocal:
-      case GrowMemory:
       case If:
       case Load:
       case Loop:
 #ifdef ENABLE_WASM_BULKMEM_OPS
       case MemCopy:
-      case DataDrop:
       case MemFill:
       case MemInit:
 #endif
+      case MemoryGrow:
+      case MemorySize:
 #ifdef ENABLE_WASM_GC
       case StructNew:
       case StructGet:
@@ -338,7 +343,6 @@ class WasmToken {
       case Store:
 #ifdef ENABLE_WASM_BULKMEM_OPS
       case TableCopy:
-      case ElemDrop:
       case TableInit:
 #endif
 #ifdef ENABLE_WASM_GENERALIZED_TABLES
@@ -984,7 +988,7 @@ WasmToken WasmTokenStream::next() {
         return WasmToken(WasmToken::Call, begin, cur_);
       }
       if (consume(u"current_memory")) {
-        return WasmToken(WasmToken::CurrentMemory, begin, cur_);
+        return WasmToken(WasmToken::MemorySize, begin, cur_);
       }
       break;
 
@@ -1342,7 +1346,7 @@ WasmToken WasmTokenStream::next() {
         return WasmToken(WasmToken::Global, begin, cur_);
       }
       if (consume(u"grow_memory")) {
-        return WasmToken(WasmToken::GrowMemory, begin, cur_);
+        return WasmToken(WasmToken::MemoryGrow, begin, cur_);
       }
       break;
 
@@ -2126,10 +2130,10 @@ WasmToken WasmTokenStream::next() {
         }
 #endif
         if (consume(u"grow")) {
-          return WasmToken(WasmToken::GrowMemory, begin, cur_);
+          return WasmToken(WasmToken::MemoryGrow, begin, cur_);
         }
         if (consume(u"size")) {
-          return WasmToken(WasmToken::CurrentMemory, begin, cur_);
+          return WasmToken(WasmToken::MemorySize, begin, cur_);
         }
         break;
       }
@@ -3622,13 +3626,13 @@ static AstBranchTable* ParseBranchTable(WasmParseContext& c, bool inParens) {
   return new (c.lifo) AstBranchTable(*index, def, std::move(table), value);
 }
 
-static AstGrowMemory* ParseGrowMemory(WasmParseContext& c, bool inParens) {
+static AstMemoryGrow* ParseMemoryGrow(WasmParseContext& c, bool inParens) {
   AstExpr* operand = ParseExpr(c, inParens);
   if (!operand) {
     return nullptr;
   }
 
-  return new (c.lifo) AstGrowMemory(operand);
+  return new (c.lifo) AstMemoryGrow(operand);
 }
 
 #ifdef ENABLE_WASM_BULKMEM_OPS
@@ -3997,10 +4001,10 @@ static AstExpr* ParseExprBody(WasmParseContext& c, WasmToken token,
       return ParseUnaryOperator(c, token.op(), inParens);
     case WasmToken::Nop:
       return new (c.lifo) AstNop();
-    case WasmToken::CurrentMemory:
-      return new (c.lifo) AstCurrentMemory();
-    case WasmToken::GrowMemory:
-      return ParseGrowMemory(c, inParens);
+    case WasmToken::MemorySize:
+      return new (c.lifo) AstMemorySize();
+    case WasmToken::MemoryGrow:
+      return ParseMemoryGrow(c, inParens);
 #ifdef ENABLE_WASM_BULKMEM_OPS
     case WasmToken::MemCopy:
       return ParseMemOrTableCopy(c, inParens, /*isMem=*/true);
@@ -4916,11 +4920,11 @@ static bool ParseTable(WasmParseContext& c, WasmToken token,
     if (name.empty()) return false;
   }
 
-  AstRefVector elems(c.lifo);
+  AstElemVector elems(c.lifo);
 
   AstRef elem;
   while (c.ts.getIfRef(&elem)) {
-    if (!elems.append(elem)) {
+    if (!elems.append(AstElem(elem))) {
       return false;
     }
   }
@@ -4951,9 +4955,9 @@ static bool ParseTable(WasmParseContext& c, WasmToken token,
 }
 
 static AstElemSegment* ParseElemSegment(WasmParseContext& c) {
-  // (elem table-name init-expr ref ...)
-  // (elem init-expr ref ...)
-  // (elem passive ref ...)
+  // (elem table-name init-expr fnref...)
+  // (elem init-expr fnref...)
+  // (elem passive (fnref|ref.null)...)
 
   AstRef targetTable = AstRef(0);
   bool hasTableName = c.ts.getIfRef(&targetTable);
@@ -4969,13 +4973,23 @@ static AstElemSegment* ParseElemSegment(WasmParseContext& c) {
     return nullptr;
   }
 
-  AstRefVector elems(c.lifo);
+  AstElemVector elems(c.lifo);
 
-  AstRef elem;
-  while (c.ts.getIfRef(&elem)) {
-    if (!elems.append(elem)) {
-      return nullptr;
+  for (;;) {
+    AstRef elemRef;
+    if (c.ts.getIfRef(&elemRef)) {
+      if (!elems.append(AstElem(elemRef))) {
+        return nullptr;
+      }
+      continue;
     }
+    if (!offsetIfActive && c.ts.getIf(WasmToken::RefNull)) {
+      if (!elems.append(AstElem(AstNullValue()))) {
+        return nullptr;
+      }
+      continue;
+    }
+    break;
   }
 
   return new (c.lifo)
@@ -5490,7 +5504,7 @@ static bool ResolveUnaryOperator(Resolver& r, AstUnaryOperator& b) {
   return ResolveExpr(r, *b.operand());
 }
 
-static bool ResolveGrowMemory(Resolver& r, AstGrowMemory& gm) {
+static bool ResolveMemoryGrow(Resolver& r, AstMemoryGrow& gm) {
   return ResolveExpr(r, *gm.operand());
 }
 
@@ -5697,7 +5711,7 @@ static bool ResolveExpr(Resolver& r, AstExpr& expr) {
     case AstExprKind::Nop:
     case AstExprKind::Pop:
     case AstExprKind::Unreachable:
-    case AstExprKind::CurrentMemory:
+    case AstExprKind::MemorySize:
       return true;
     case AstExprKind::RefNull:
       return ResolveRefNull(r, expr.as<AstRefNull>());
@@ -5748,8 +5762,8 @@ static bool ResolveExpr(Resolver& r, AstExpr& expr) {
       return ResolveTernaryOperator(r, expr.as<AstTernaryOperator>());
     case AstExprKind::UnaryOperator:
       return ResolveUnaryOperator(r, expr.as<AstUnaryOperator>());
-    case AstExprKind::GrowMemory:
-      return ResolveGrowMemory(r, expr.as<AstGrowMemory>());
+    case AstExprKind::MemoryGrow:
+      return ResolveMemoryGrow(r, expr.as<AstMemoryGrow>());
     case AstExprKind::AtomicCmpXchg:
       return ResolveAtomicCmpXchg(r, expr.as<AstAtomicCmpXchg>());
     case AstExprKind::AtomicLoad:
@@ -6018,9 +6032,15 @@ static bool ResolveModule(LifoAlloc& lifo, AstModule* module,
         !ResolveExpr(r, *segment->offsetIfActive())) {
       return false;
     }
-    for (AstRef& ref : segment->elems()) {
-      if (!r.resolveFunction(ref)) {
-        return false;
+    for (AstElem& elemRef : segment->elems()) {
+      if (elemRef.is<AstRef>()) {
+        if (!r.resolveFunction(elemRef.as<AstRef>())) {
+          return false;
+        }
+      } else if (elemRef.is<AstNullValue>()) {
+        // Nothing
+      } else {
+        MOZ_CRASH("Unexpected variant");
       }
     }
   }
@@ -6118,14 +6138,6 @@ static bool EncodeCall(Encoder& e, AstCall& c) {
   return true;
 }
 
-static bool EncodeOneTableIndex(Encoder& e, uint32_t index) {
-  if (index) {
-    return e.writeVarU32(uint32_t(MemoryTableFlags::HasTableIndex)) &&
-           e.writeVarU32(index);
-  }
-  return e.writeVarU32(uint32_t(MemoryTableFlags::Default));
-}
-
 static bool EncodeCallIndirect(Encoder& e, AstCallIndirect& c) {
   if (!EncodeArgs(e, c.args())) {
     return false;
@@ -6143,7 +6155,7 @@ static bool EncodeCallIndirect(Encoder& e, AstCallIndirect& c) {
     return false;
   }
 
-  return EncodeOneTableIndex(e, c.targetTable().index());
+  return e.writeVarU32(c.targetTable().index());
 }
 
 static bool EncodeConst(Encoder& e, AstConst& c) {
@@ -6308,8 +6320,8 @@ static bool EncodeBranchTable(Encoder& e, AstBranchTable& bt) {
   return true;
 }
 
-static bool EncodeCurrentMemory(Encoder& e, AstCurrentMemory& cm) {
-  if (!e.writeOp(Op::CurrentMemory)) {
+static bool EncodeMemorySize(Encoder& e, AstMemorySize& cm) {
+  if (!e.writeOp(Op::MemorySize)) {
     return false;
   }
 
@@ -6320,12 +6332,12 @@ static bool EncodeCurrentMemory(Encoder& e, AstCurrentMemory& cm) {
   return true;
 }
 
-static bool EncodeGrowMemory(Encoder& e, AstGrowMemory& gm) {
+static bool EncodeMemoryGrow(Encoder& e, AstMemoryGrow& gm) {
   if (!EncodeExpr(e, *gm.operand())) {
     return false;
   }
 
-  if (!e.writeOp(Op::GrowMemory)) {
+  if (!e.writeOp(Op::MemoryGrow)) {
     return false;
   }
 
@@ -6398,25 +6410,25 @@ static bool EncodeMemOrTableInit(Encoder& e, AstMemOrTableInit& s) {
 
 #ifdef ENABLE_WASM_GENERALIZED_TABLES
 static bool EncodeTableGet(Encoder& e, AstTableGet& s) {
-  return EncodeExpr(e, s.index()) && e.writeOp(MiscOp::TableGet) &&
-         EncodeOneTableIndex(e, s.targetTable().index());
+  return EncodeExpr(e, s.index()) && e.writeOp(Op::TableGet) &&
+         e.writeVarU32(s.targetTable().index());
 }
 
 static bool EncodeTableGrow(Encoder& e, AstTableGrow& s) {
   return EncodeExpr(e, s.delta()) && EncodeExpr(e, s.initValue()) &&
          e.writeOp(MiscOp::TableGrow) &&
-         EncodeOneTableIndex(e, s.targetTable().index());
+         e.writeVarU32(s.targetTable().index());
 }
 
 static bool EncodeTableSet(Encoder& e, AstTableSet& s) {
   return EncodeExpr(e, s.index()) && EncodeExpr(e, s.value()) &&
-         e.writeOp(MiscOp::TableSet) &&
-         EncodeOneTableIndex(e, s.targetTable().index());
+         e.writeOp(Op::TableSet) &&
+         e.writeVarU32(s.targetTable().index());
 }
 
 static bool EncodeTableSize(Encoder& e, AstTableSize& s) {
   return e.writeOp(MiscOp::TableSize) &&
-         EncodeOneTableIndex(e, s.targetTable().index());
+         e.writeVarU32(s.targetTable().index());
 }
 #endif
 
@@ -6550,10 +6562,10 @@ static bool EncodeExpr(Encoder& e, AstExpr& expr) {
       return EncodeTernaryOperator(e, expr.as<AstTernaryOperator>());
     case AstExprKind::UnaryOperator:
       return EncodeUnaryOperator(e, expr.as<AstUnaryOperator>());
-    case AstExprKind::CurrentMemory:
-      return EncodeCurrentMemory(e, expr.as<AstCurrentMemory>());
-    case AstExprKind::GrowMemory:
-      return EncodeGrowMemory(e, expr.as<AstGrowMemory>());
+    case AstExprKind::MemorySize:
+      return EncodeMemorySize(e, expr.as<AstMemorySize>());
+    case AstExprKind::MemoryGrow:
+      return EncodeMemoryGrow(e, expr.as<AstMemoryGrow>());
     case AstExprKind::AtomicCmpXchg:
       return EncodeAtomicCmpXchg(e, expr.as<AstAtomicCmpXchg>());
     case AstExprKind::AtomicLoad:
@@ -7182,17 +7194,28 @@ static bool EncodeElemSegment(Encoder& e, AstElemSegment& segment) {
     return false;
   }
 
-  for (const AstRef& elem : segment.elems()) {
-    // Passive segments have an initializer expression, for now restricted to a
-    // function index.
-    if (segment.isPassive() && !e.writeFixedU8(PlaceholderRefFunc)) {
-      return false;
-    }
-    if (!e.writeVarU32(elem.index())) {
-      return false;
-    }
-    if (segment.isPassive() && !e.writeFixedU8(uint8_t(Op::End))) {
-      return false;
+  for (const AstElem& elem : segment.elems()) {
+    if (elem.is<AstRef>()) {
+      const AstRef& ref = elem.as<AstRef>();
+      // Passive segments have an initializer expression, for now restricted to a
+      // function index.
+      if (segment.isPassive() && !e.writeFixedU8(uint8_t(Op::RefFunc))) {
+        return false;
+      }
+      if (!e.writeVarU32(ref.index())) {
+        return false;
+      }
+      if (segment.isPassive() && !e.writeFixedU8(uint8_t(Op::End))) {
+        return false;
+      }
+    } else if (elem.is<AstNullValue>()) {
+      MOZ_ASSERT(segment.isPassive());
+      if (!e.writeFixedU8(uint8_t(Op::RefNull)) ||
+          !e.writeFixedU8(uint8_t(Op::End))) {
+        return false;
+      }
+    } else {
+      MOZ_CRASH("Unexpected variant");
     }
   }
 

@@ -24,7 +24,7 @@ const DEBUG = false;
 
 let t =
   `(module
-     (gc_feature_opt_in 2)
+     (gc_feature_opt_in 3)
      (import $mkCons "" "mkCons" (func (result anyref)
                                        (param anyref) (param anyref)))
      (import $mkBoxedInt "" "mkBoxedInt" (func (result anyref)))

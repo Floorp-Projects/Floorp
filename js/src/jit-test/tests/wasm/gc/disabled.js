@@ -9,15 +9,15 @@ function assertValidateError(text) {
 }
 
 let simpleTests = [
-    "(module (gc_feature_opt_in 2) (func (drop (ref.null))))",
-    "(module (gc_feature_opt_in 2) (func $test (local anyref)))",
-    "(module (gc_feature_opt_in 2) (func $test (param anyref)))",
-    "(module (gc_feature_opt_in 2) (func $test (result anyref) (ref.null)))",
-    "(module (gc_feature_opt_in 2) (func $test (block anyref (unreachable)) unreachable))",
-    "(module (gc_feature_opt_in 2) (func $test (local anyref) (result i32) (ref.is_null (get_local 0))))",
-    `(module (gc_feature_opt_in 2) (import "a" "b" (param anyref)))`,
-    `(module (gc_feature_opt_in 2) (import "a" "b" (result anyref)))`,
-    `(module (gc_feature_opt_in 2) (type $s (struct)))`,
+    "(module (gc_feature_opt_in 3) (func (drop (ref.null))))",
+    "(module (gc_feature_opt_in 3) (func $test (local anyref)))",
+    "(module (gc_feature_opt_in 3) (func $test (param anyref)))",
+    "(module (gc_feature_opt_in 3) (func $test (result anyref) (ref.null)))",
+    "(module (gc_feature_opt_in 3) (func $test (block anyref (unreachable)) unreachable))",
+    "(module (gc_feature_opt_in 3) (func $test (local anyref) (result i32) (ref.is_null (get_local 0))))",
+    `(module (gc_feature_opt_in 3) (import "a" "b" (param anyref)))`,
+    `(module (gc_feature_opt_in 3) (import "a" "b" (result anyref)))`,
+    `(module (gc_feature_opt_in 3) (type $s (struct)))`,
 ];
 
 // Two distinct failure modes:
