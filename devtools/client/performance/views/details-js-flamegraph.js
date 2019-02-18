@@ -1,16 +1,24 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* import-globals-from ../performance-controller.js */
-/* import-globals-from ../performance-view.js */
-/* globals DetailsSubview */
+/* globals $, $$, PerformanceController, OverviewView */
 "use strict";
+
+const { extend } = require("devtools/shared/extend");
+
+const EVENTS = require("../events");
+const { L10N } = require("../modules/global");
+const { DetailsSubview } = require("./details-abstract-subview");
+
+const { FlameGraph, FlameGraphUtils } = require("devtools/client/shared/widgets/FlameGraph");
+
+const EventEmitter = require("devtools/shared/event-emitter");
 
 /**
  * FlameGraph view containing a pyramid-like visualization of a profile,
  * controlled by DetailsView.
  */
-var JsFlameGraphView = extend(DetailsSubview, {
+const JsFlameGraphView = extend(DetailsSubview, {
 
   shouldUpdateWhileMouseIsActive: true,
 
@@ -123,3 +131,5 @@ var JsFlameGraphView = extend(DetailsSubview, {
 });
 
 EventEmitter.decorate(JsFlameGraphView);
+
+exports.JsFlameGraphView = JsFlameGraphView;

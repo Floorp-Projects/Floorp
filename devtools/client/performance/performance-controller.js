@@ -1,114 +1,30 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* globals $, $$ */
 "use strict";
 
-/* globals window, document, PerformanceView, ToolbarView, RecordingsView, DetailsView */
-
-/* exported Cc, Ci, Cu, Cr, loader, Promise */
-var BrowserLoaderModule = {};
-ChromeUtils.import("resource://devtools/client/shared/browser-loader.js", BrowserLoaderModule);
-var { loader, require } = BrowserLoaderModule.BrowserLoader({
-  baseURI: "resource://devtools/client/performance/",
-  window,
-});
-/* exported ViewHelpers, WidgetMethods, setNamedTimeout, clearNamedTimeout */
-var { ViewHelpers, WidgetMethods, setNamedTimeout, clearNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
-var { PrefObserver } = require("devtools/client/shared/prefs");
-/* exported extend */
-const { extend } = require("devtools/shared/extend");
-// Use privileged promise in panel documents to prevent having them to freeze
-// during toolbox destruction. See bug 1402779.
-var Promise = require("Promise");
+const { PrefObserver } = require("devtools/client/shared/prefs");
 
 // Events emitted by various objects in the panel.
-var EVENTS = require("devtools/client/performance/events");
-Object.defineProperty(this, "EVENTS", {
-  value: EVENTS,
-  enumerable: true,
-  writable: false,
-});
+const EVENTS = require("devtools/client/performance/events");
 
-/* exported React, ReactDOM, JITOptimizationsView, RecordingControls, RecordingButton,
-   RecordingList, RecordingListItem, Services, Waterfall, promise, EventEmitter,
-   DevToolsUtils, system */
-var React = require("devtools/client/shared/vendor/react");
-var ReactDOM = require("devtools/client/shared/vendor/react-dom");
-var Waterfall = React.createFactory(require("devtools/client/performance/components/Waterfall"));
-var JITOptimizationsView = React.createFactory(require("devtools/client/performance/components/JITOptimizations"));
-var RecordingControls = React.createFactory(require("devtools/client/performance/components/RecordingControls"));
-var RecordingButton = React.createFactory(require("devtools/client/performance/components/RecordingButton"));
-var RecordingList = React.createFactory(require("devtools/client/performance/components/RecordingList"));
-var RecordingListItem = React.createFactory(require("devtools/client/performance/components/RecordingListItem"));
-
-var Services = require("Services");
-var promise = require("promise");
-var EventEmitter = require("devtools/shared/event-emitter");
-var DevToolsUtils = require("devtools/shared/DevToolsUtils");
-var flags = require("devtools/shared/flags");
-var system = require("devtools/shared/system");
+const Services = require("Services");
+const EventEmitter = require("devtools/shared/event-emitter");
+const flags = require("devtools/shared/flags");
 
 // Logic modules
-/* exported L10N, PerformanceTelemetry, TIMELINE_BLUEPRINT, RecordingUtils,
-   PerformanceUtils, OptimizationsGraph, GraphsController,
-   MarkerDetails, MarkerBlueprintUtils, WaterfallUtils, FrameUtils, CallView, ThreadNode,
-   FrameNode */
-var { L10N } = require("devtools/client/performance/modules/global");
-var { PerformanceTelemetry } = require("devtools/client/performance/modules/logic/telemetry");
-var { TIMELINE_BLUEPRINT } = require("devtools/client/performance/modules/markers");
-var RecordingUtils = require("devtools/shared/performance/recording-utils");
-var PerformanceUtils = require("devtools/client/performance/modules/utils");
-var { OptimizationsGraph, GraphsController } = require("devtools/client/performance/modules/widgets/graphs");
-var { MarkerDetails } = require("devtools/client/performance/modules/widgets/marker-details");
-var { MarkerBlueprintUtils } = require("devtools/client/performance/modules/marker-blueprint-utils");
-var WaterfallUtils = require("devtools/client/performance/modules/logic/waterfall-utils");
-var FrameUtils = require("devtools/client/performance/modules/logic/frame-utils");
-var { CallView } = require("devtools/client/performance/modules/widgets/tree-view");
-var { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
-var { FrameNode } = require("devtools/client/performance/modules/logic/tree-model");
-
-// Widgets modules
-
-/* exported OptionsView, FlameGraph, FlameGraphUtils, TreeWidget, SideMenuWidget */
-var { OptionsView } = require("devtools/client/shared/options-view");
-var { FlameGraph, FlameGraphUtils } = require("devtools/client/shared/widgets/FlameGraph");
-var { TreeWidget } = require("devtools/client/shared/widgets/TreeWidget");
-var { SideMenuWidget } = require("resource://devtools/client/shared/widgets/SideMenuWidget.jsm");
-
-/* exported BRANCH_NAME */
-var BRANCH_NAME = "devtools.performance.ui.";
-
-/**
- * The current target, toolbox and PerformanceFront, set by this tool's host.
- */
-/* exported gToolbox, gTarget, gFront */
-var gToolbox, gTarget, gFront;
-
-/* exported startupPerformance, shutdownPerformance, PerformanceController */
-
-/**
- * Initializes the profiler controller and views.
- */
-var startupPerformance = async function() {
-  await PerformanceController.initialize();
-  await PerformanceView.initialize();
-  PerformanceController.enableFrontEventListeners();
-};
-
-/**
- * Destroys the profiler controller and views.
- */
-var shutdownPerformance = async function() {
-  await PerformanceController.destroy();
-  await PerformanceView.destroy();
-  PerformanceController.disableFrontEventListeners();
-};
+const { PerformanceTelemetry } = require("devtools/client/performance/modules/logic/telemetry");
+const { PerformanceView } = require("./performance-view");
+const { DetailsView } = require("./views/details");
+const { RecordingsView } = require("./views/recordings");
+const { ToolbarView } = require("./views/toolbar");
 
 /**
  * Functions handling target-related lifetime events and
  * UI interaction.
  */
-var PerformanceController = {
+const PerformanceController = {
   _recordings: [],
   _currentRecording: null,
 
@@ -116,7 +32,11 @@ var PerformanceController = {
    * Listen for events emitted by the current tab target and
    * main UI events.
    */
-  async initialize() {
+  async initialize(toolbox, target, front) {
+    this.toolbox = toolbox;
+    this.target = target;
+    this.front = front;
+
     this._telemetry = new PerformanceTelemetry(this);
     this.startRecording = this.startRecording.bind(this);
     this.stopRecording = this.stopRecording.bind(this);
@@ -189,20 +109,20 @@ var PerformanceController = {
    * listeners are added too soon.
    */
   enableFrontEventListeners: function() {
-    gFront.on("profiler-status", this._onProfilerStatus);
-    gFront.on("recording-started", this._onRecordingStarted);
-    gFront.on("recording-stopping", this._onRecordingStopping);
-    gFront.on("recording-stopped", this._onRecordingStopped);
+    this.front.on("profiler-status", this._onProfilerStatus);
+    this.front.on("recording-started", this._onRecordingStarted);
+    this.front.on("recording-stopping", this._onRecordingStopping);
+    this.front.on("recording-stopped", this._onRecordingStopped);
   },
 
   /**
    * Disables front event listeners.
    */
   disableFrontEventListeners: function() {
-    gFront.off("profiler-status", this._onProfilerStatus);
-    gFront.off("recording-started", this._onRecordingStarted);
-    gFront.off("recording-stopping", this._onRecordingStopping);
-    gFront.off("recording-stopped", this._onRecordingStopped);
+    this.front.off("profiler-status", this._onProfilerStatus);
+    this.front.off("recording-started", this._onRecordingStarted);
+    this.front.off("recording-stopping", this._onRecordingStopping);
+    this.front.off("recording-stopped", this._onRecordingStopped);
   },
 
   /**
@@ -251,16 +171,16 @@ var PerformanceController = {
    * @return Promise:boolean
    */
   async canCurrentlyRecord() {
-    const hasActor = await gTarget.hasActor("performance");
+    const hasActor = await this.target.hasActor("performance");
     if (!hasActor) {
       return true;
     }
     const actorCanCheck =
-      await gTarget.actorHasMethod("performance", "canCurrentlyRecord");
+      await this.target.actorHasMethod("performance", "canCurrentlyRecord");
     if (!actorCanCheck) {
       return true;
     }
-    return (await gFront.canCurrentlyRecord()).success;
+    return (await this.front.canCurrentlyRecord()).success;
   },
 
   /**
@@ -280,7 +200,7 @@ var PerformanceController = {
       sampleFrequency: this.getPref("profiler-sample-frequency"),
     };
 
-    const recordingStarted = await gFront.startRecording(options);
+    const recordingStarted = await this.front.startRecording(options);
 
     // In some cases, like when the target has a private browsing tab,
     // recording is not currently supported because of the profiler module.
@@ -298,7 +218,7 @@ var PerformanceController = {
    */
   async stopRecording() {
     const recording = this.getLatestManualRecording();
-    await gFront.stopRecording(recording);
+    await this.front.stopRecording(recording);
     this.emit(EVENTS.BACKEND_READY_AFTER_RECORDING_STOP);
   },
 
@@ -356,7 +276,7 @@ var PerformanceController = {
    *        The file to import the data from.
    */
   async importRecording(file) {
-    const recording = await gFront.importRecording(file);
+    const recording = await this.front.importRecording(file);
     this._addRecordingIfUnknown(recording);
 
     this.emit(EVENTS.RECORDING_IMPORTED, recording);
@@ -447,7 +367,7 @@ var PerformanceController = {
    * of the buffer is used.
    */
   getBufferUsageForRecording: function(recording) {
-    return gFront.getBufferUsageForRecording(recording);
+    return this.front.getBufferUsageForRecording(recording);
   },
 
   /**
@@ -468,7 +388,7 @@ var PerformanceController = {
    * Returns traits from the front.
    */
   getTraits: function() {
-    return gFront.traits;
+    return this.front.traits;
   },
 
   /**
@@ -577,14 +497,4 @@ var PerformanceController = {
  * Convenient way of emitting events from the controller.
  */
 EventEmitter.decorate(PerformanceController);
-
-/**
- * DOM query helpers.
- */
-/* exported $, $$ */
-function $(selector, target = document) {
-  return target.querySelector(selector);
-}
-function $$(selector, target = document) {
-  return target.querySelectorAll(selector);
-}
+exports.PerformanceController = PerformanceController;

@@ -19,7 +19,8 @@ add_task(async function() {
     win: window,
   });
 
-  const { EVENTS, L10N, PerformanceController } = panel.panelWin;
+  const { EVENTS, PerformanceController } = panel.panelWin;
+  const { L10N } = require("devtools/client/performance/modules/global");
 
   await startRecording(panel);
 
