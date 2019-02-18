@@ -3963,7 +3963,10 @@ html[dir="rtl"] .command-bar {
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .event-listeners-content {
-	padding: 4px 20px;
+	padding-top: 4px;
+	padding-bottom: 4px;
+	padding-inline-start: 14px;
+	padding-inline-end: 20px;
 }
 
 .event-listeners-content ul {
@@ -3973,6 +3976,39 @@ html[dir="rtl"] .command-bar {
 
 .event-listener-group {
 	user-select: none;
+}
+
+.event-listener-header {
+	display: flex;
+	align-items: center;
+}
+
+.event-listener-expand {
+	border: none;
+	background: none;
+	padding: 4px 5px;
+	line-height: 12px;
+}
+
+.event-listener-expand:hover {
+	background: transparent;
+}
+
+.event-listener-group input[type="checkbox"] {
+	margin: 0px;
+	margin-inline-end: 4px;
+}
+
+.event-listener-label {
+	display: flex;
+	align-items: center;
+	padding-inline-start: 2px;
+	padding-inline-end: 10px;
+}
+
+.event-listener-category {
+	padding: 3px 0px;
+	line-height: 14px;
 }
 
 .event-listeners-content .arrow {
@@ -3993,9 +4029,16 @@ html[dir="rtl"] .event-listeners-content .arrow.expanded {
 	margin-inline-start: 30px;
 }
 
+.event-listener-name {
+	line-height: 14px;
+	padding: 3px 0px;
+}
+
 .event-listener-event input {
 	margin-inline-end: 4px;
 	margin-inline-start: 0px;
+	margin-top: 0px;
+	margin-bottom: 0px;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
