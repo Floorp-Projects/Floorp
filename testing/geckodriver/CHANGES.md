@@ -4,6 +4,18 @@ Change log
 All notable changes to this program is documented in this file.
 
 
+Unreleased
+----------
+
+### Removed
+
+- Removed `--webdriver-port` command-line option
+
+  `--webdriver-port <PORT>` was an undocumented alias for `--port`,
+  initially used for backwards compatibility with clients
+  prior to Selenium 3.0.0.
+
+
 0.24.0 (2019-01-28, `917474f3473e`)
 -----------------------------------
 
