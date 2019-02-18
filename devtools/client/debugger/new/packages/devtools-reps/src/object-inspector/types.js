@@ -103,6 +103,7 @@ export type Props = {
   createObjectClient: CreateObjectClient,
   createLongStringClient: CreateLongStringClient,
   onFocus: ?(Node) => any,
+  onActivate: ?(Node) => any,
   onDoubleClick: ?(
     item: Node,
     options: {
@@ -132,6 +133,7 @@ export type Props = {
   actors: Set<string>,
   expandedPaths: Set<Path>,
   focusedItem: ?Node,
+  activeItem: ?Node,
   loadedProperties: LoadedProperties,
   evaluations: Evaluations,
   loading: Map<Path, Array<Promise<GripProperties>>>
@@ -146,6 +148,7 @@ export type State = {
   actors: Set<string>,
   expandedPaths: Set<Path>,
   focusedItem: ?Node,
+  activeItem: ?Node,
   loadedProperties: LoadedProperties
 };
 
