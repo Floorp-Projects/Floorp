@@ -1148,7 +1148,7 @@ const selectors = {
   outlineItem: i =>
     `.outline-list__element:nth-child(${i}) .function-signature`,
   outlineItems: ".outline-list__element",
-  conditionalPanelInput: ".conditional-breakpoint-panel textarea",
+  conditionalPanelInput: ".conditional-breakpoint-panel input",
   searchField: ".search-field",
   blackbox: ".action.black-box",
   projectSearchCollapsed: ".project-text-search .arrow:not(.expanded)",
