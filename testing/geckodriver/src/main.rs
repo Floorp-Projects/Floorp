@@ -46,7 +46,6 @@ mod prefs;
 #[cfg(test)]
 pub mod test;
 
-use crate::build::BuildInfo;
 use crate::command::extension_routes;
 use crate::marionette::{MarionetteHandler, MarionetteSettings};
 
@@ -58,19 +57,9 @@ enum ExitCode {
     Unavailable = 69,
 }
 
-fn print_version() {
-    println!("geckodriver {}", BuildInfo);
-    println!("");
-    println!("The source code of this program is available from");
-    println!("testing/geckodriver in https://hg.mozilla.org/mozilla-central.");
-    println!("");
-    println!("This program is subject to the terms of the Mozilla Public License 2.0.");
-    println!("You can obtain a copy of the license at https://mozilla.org/MPL/2.0/.");
-}
-
 fn app<'a, 'b>() -> App<'a, 'b> {
-    App::new(format!("geckodriver {}", crate_version!()))
-        .about("WebDriver implementation for Firefox.")
+    App::new(format!("geckodriver {}", build::BuildInfo))
+        .about("WebDriver implementation for Firefox")
         .arg(
             Arg::with_name("webdriver_host")
                 .long("host")
@@ -220,4 +209,14 @@ fn main() {
 
     std::io::stdout().flush().unwrap();
     std::process::exit(exit_code as i32);
+}
+
+fn print_version() {
+    println!("geckodriver {}", build::BuildInfo);
+    println!("");
+    println!("The source code of this program is available from");
+    println!("testing/geckodriver in https://hg.mozilla.org/mozilla-central.");
+    println!("");
+    println!("This program is subject to the terms of the Mozilla Public License 2.0.");
+    println!("You can obtain a copy of the license at https://mozilla.org/MPL/2.0/.");
 }
