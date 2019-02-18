@@ -234,8 +234,7 @@ Maybe<TextureHost::ResourceUpdateOp> AsyncImagePipelineManager::UpdateImageKeys(
   // Use WebRenderTextureHostWrapper only for video.
   // And WebRenderTextureHostWrapper could be used only with
   // WebRenderTextureHost that supports NativeTexture
-  bool useWrTextureWrapper = aPipeline->mImageHost->GetAsyncRef() &&
-                             useExternalImage && wrTexture &&
+  bool useWrTextureWrapper = useExternalImage && wrTexture &&
                              wrTexture->SupportsWrNativeTexture();
 
   // The non-external image code path falls back to converting the texture into
@@ -280,13 +279,13 @@ Maybe<TextureHost::ResourceUpdateOp> AsyncImagePipelineManager::UpdateImageKeys(
     MOZ_ASSERT(canUpdate);
     // Reuse WebRenderTextureHostWrapper. With it, rendered frame could be
     // updated without batch re-creation.
-    aPipeline->mWrTextureWrapper->UpdateWebRenderTextureHost(wrTexture);
+    aPipeline->mWrTextureWrapper->UpdateWebRenderTextureHost(aMaybeFastTxn, wrTexture);
     // Ensure frame generation.
     SetWillGenerateFrame();
   } else {
     if (useWrTextureWrapper) {
       aPipeline->mWrTextureWrapper = new WebRenderTextureHostWrapper(this);
-      aPipeline->mWrTextureWrapper->UpdateWebRenderTextureHost(wrTexture);
+      aPipeline->mWrTextureWrapper->UpdateWebRenderTextureHost(aMaybeFastTxn, wrTexture);
     }
     Range<wr::ImageKey> keys(&aKeys[0], aKeys.Length());
     auto externalImageKey =
