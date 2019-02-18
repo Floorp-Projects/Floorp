@@ -345,6 +345,7 @@ a {
 }
 
 .message .learn-more-link {
+  -moz-user-select: none;
   color: var(--theme-highlight-blue);
   margin: 0 1ch;
 }
