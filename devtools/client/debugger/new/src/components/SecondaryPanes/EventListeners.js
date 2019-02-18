@@ -46,8 +46,6 @@ class EventListeners extends Component<Props, State> {
   }
 
   onCategoryToggle(category, event) {
-    event.preventDefault();
-
     const { expandedCategories } = this.state;
 
     if (expandedCategories.includes(category)) {
@@ -102,20 +100,24 @@ class EventListeners extends Component<Props, State> {
       );
 
     return (
-      <label>
-        <AccessibleImage
-          className={classnames("arrow", { expanded })}
+      <div className="event-listener-header">
+        <button
+          className="event-listener-expand"
           onClick={e => this.onCategoryToggle(category, e)}
-        />
-        <input
-          type="checkbox"
-          value={category}
-          onChange={e => this.onCategoryClick(category, e.target.checked)}
-          checked={checked}
-          ref={el => el && (el.indeterminate = indeterminate)}
-        />
-        <span className="event-listener-category">{category}</span>
-      </label>
+        >
+          <AccessibleImage className={classnames("arrow", { expanded })} />
+        </button>
+        <label className="event-listener-label">
+          <input
+            type="checkbox"
+            value={category}
+            onChange={e => this.onCategoryClick(category, e.target.checked)}
+            checked={checked}
+            ref={el => el && (el.indeterminate = indeterminate)}
+          />
+          <span className="event-listener-category">{category}</span>
+        </label>
+      </div>
     );
   }
 
@@ -134,14 +136,14 @@ class EventListeners extends Component<Props, State> {
           const key = getKey(category, eventType);
           return (
             <li className="event-listener-event" key={key}>
-              <label>
+              <label className="event-listener-label">
                 <input
                   type="checkbox"
                   value={key}
                   onChange={e => this.onEventTypeClick(key, e.target.checked)}
                   checked={activeEventListeners.includes(key)}
                 />
-                {eventType}
+                <span className="event-listener-name">{eventType}</span>
               </label>
             </li>
           );
