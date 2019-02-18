@@ -2962,7 +2962,10 @@ void RestyleManager::ClearSnapshots() {
 }
 
 ServoElementSnapshot& RestyleManager::SnapshotFor(Element& aElement) {
-  MOZ_RELEASE_ASSERT(!mInStyleRefresh);
+  // FIXME(emilio, bug 1528644): This can actually happen, and cause observable
+  // behavior differences. Upgrade to a release assert when bug 1528644 is
+  // fixed.
+  MOZ_ASSERT(!mInStyleRefresh);
 
   // NOTE(emilio): We can handle snapshots from a one-off restyle of those that
   // we do to restyle stuff for reconstruction, for example.
@@ -3178,7 +3181,10 @@ void RestyleManager::UpdateOnlyAnimationStyles() {
 
 void RestyleManager::ContentStateChanged(nsIContent* aContent,
                                          EventStates aChangedBits) {
-  MOZ_RELEASE_ASSERT(!mInStyleRefresh);
+  // FIXME(emilio, bug 1528644): This can actually happen, and cause observable
+  // behavior differences. Upgrade to a release assert when bug 1528644 is
+  // fixed.
+  MOZ_ASSERT(!mInStyleRefresh);
 
   if (!aContent->IsElement()) {
     return;
