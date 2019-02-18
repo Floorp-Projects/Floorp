@@ -3421,8 +3421,8 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-.frames ul .frames-group .group,
-.frames ul .frames-group .group .location {
+.frames [role="list"] .frames-group .group,
+.frames [role="list"] .frames-group .group .location {
   font-weight: 500;
   cursor: default;
   /*
@@ -3433,21 +3433,21 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   direction: ltr;
 }
 
-.frames ul .frames-group.expanded .group,
-.frames ul .frames-group.expanded .group .location {
+.frames [role="list"] .frames-group.expanded .group,
+.frames [role="list"] .frames-group.expanded .group .location {
   color: var(--theme-highlight-blue);
 }
 
-.frames ul .frames-group .frames-list li {
+.frames [role="list"] .frames-group .frames-list [role="listitem"] {
   padding-left: 30px;
 }
 
-.frames ul .frames-group .frames-list {
+.frames [role="list"] .frames-group .frames-list {
   border-top: 1px solid var(--theme-splitter-color);
   border-bottom: 1px solid var(--theme-splitter-color);
 }
 
-.frames ul .frames-group.expanded .badge {
+.frames [role="list"] .frames-group.expanded .badge {
   color: var(--theme-highlight-blue);
 }
 
