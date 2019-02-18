@@ -251,7 +251,7 @@ button.open-inspector {
   margin: 0 4px;
   padding: 0;
   border: none;
-  background-color: var(--comment-node-color);
+  background-color: var(--theme-icon-color);
   cursor: pointer;
 }
 
@@ -260,7 +260,7 @@ button.open-inspector {
 .objectBox-textNode:hover .open-inspector,
 .open-accessibility-inspector:hover,
 .open-inspector:hover {
-  background-color: var(--theme-highlight-blue);
+  background-color: var(--theme-icon-checked-color);
 }
 
 /******************************************************************************/
@@ -269,14 +269,14 @@ button.open-inspector {
 button.jump-definition {
   mask: url("resource://devtools/client/shared/components/reps/images/jump-definition.svg") no-repeat;
   display: inline-block;
-  background-color: var(--comment-node-color);
+  background-color: var(--theme-icon-color);
   height: 16px;
   margin-left: 0.25em;
   vertical-align: middle;
 }
 
 .jump-definition:hover {
-  background-color: var(--theme-highlight-blue);
+  background-color: var(--theme-icon-checked-color);
 }
 
 /******************************************************************************/
@@ -285,14 +285,14 @@ button.jump-definition {
 button.invoke-getter {
   mask: url("resource://devtools/client/shared/components/reps/images/input.svg") no-repeat;
   display: inline-block;
-  background-color: var(--comment-node-color);
+  background-color: var(--theme-icon-color);
   height: 10px;
   vertical-align: middle;
   border:none;
 }
 
 .invoke-getter:hover {
-  background-color: var(--theme-highlight-blue);
+  background-color: var(--theme-icon-checked-color);
 }
 
 /******************************************************************************/
@@ -357,30 +357,27 @@ button.invoke-getter {
 }
 
 .tree-node button.arrow {
-  background:url("resource://devtools/client/debugger/new/images/arrow.svg") no-repeat;
-  background-size:contain;
-  background-position:center center;
+  mask: url("resource://devtools/client/debugger/new/images/arrow.svg") no-repeat center;
+  mask-size: 10px;
+  vertical-align: -1px;
   width: 10px;
   height: 10px;
-  border:0;
-  padding:0;
+  border: 0;
+  padding: 0;
   margin-inline-start: 1px;
   margin-inline-end: 4px;
-  transform: rotate(-90deg);
   transform-origin: center center;
-  transition: transform 0.125s ease;
-  align-self: center;
-  -moz-context-properties: fill;
-  fill: var(--theme-splitter-color, #9B9B9B);
+  transition: transform 125ms var(--animation-curve);
+  background-color: var(--theme-icon-dimmed-color);
 }
 
-html[dir="rtl"] .tree-node button.arrow {
+.tree-node button.arrow:not(.expanded) {
+  transform: rotate(-90deg);
+}
+
+html[dir="rtl"] .tree-node button:not(.expanded) {
   transform: rotate(90deg);
 }
-
-.tree-node button.arrow.expanded.expanded {
-  transform: rotate(0deg);
- }
 
 .tree .tree-node.focused {
   color: white;
@@ -388,7 +385,7 @@ html[dir="rtl"] .tree-node button.arrow {
 }
 
 .tree-node.focused button.arrow {
-  fill: currentColor;
+  background-color: currentColor;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -2318,7 +2315,7 @@ menuseparator {
 }
 
 .source-footer > .commands > .blackboxed > .img.blackBox {
-  background-color: var(--theme-highlight-blue);
+  background-color: var(--theme-icon-checked-color);
 }
 
 .source-footer .blackbox-summary,
@@ -3831,7 +3828,7 @@ html[dir="rtl"] .command-bar {
 }
 
 .command-bar .active .disable-pausing {
-  background-color: var(--theme-highlight-blue);
+  background-color: var(--theme-icon-checked-color);
 }
 
 .bottom {
@@ -4498,7 +4495,7 @@ html .welcomebox .toggle-button-end.collapsed {
 }
 
 .result-list li .result-item-icon {
-  background-color: var(--theme-comment);
+  background-color: var(--theme-icon-dimmed-color);
 }
 
 .result-list li .icon {
