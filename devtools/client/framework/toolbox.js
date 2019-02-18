@@ -1373,7 +1373,7 @@ Toolbox.prototype = {
   _buildPickerButton() {
     this.pickerButton = this._createButtonState({
       id: "command-button-pick",
-      description: L10N.getStr("pickButton.tooltip"),
+      description: this._getPickerTooltip(),
       onClick: this._onPickerClick,
       isInStartContainer: true,
       isTargetSupported: target => {
@@ -1382,6 +1382,27 @@ Toolbox.prototype = {
     });
 
     return this.pickerButton;
+  },
+
+  /**
+   * Get the tooltip for the element picker button.
+   * It has multiple possible keyboard shortcuts for macOS.
+   *
+   * @return {String}
+   */
+  _getPickerTooltip() {
+    let shortcut = L10N.getStr("toolbox.elementPicker.key");
+    shortcut = KeyShortcuts.parseElectronKey(this.win, shortcut);
+    shortcut = KeyShortcuts.stringify(shortcut);
+    const shortcutMac = L10N.getStr("toolbox.elementPicker.mac.key");
+    const isMac = Services.appinfo.OS === "Darwin";
+    const label = isMac
+      ? "toolbox.elementPicker.mac.tooltip"
+      : "toolbox.elementPicker.tooltip";
+
+    return isMac
+      ? L10N.getFormatStr(label, shortcut, shortcutMac)
+      : L10N.getFormatStr(label, shortcut);
   },
 
   /**
@@ -1483,7 +1504,7 @@ Toolbox.prototype = {
     } else {
       // If the current panel doesn't define a custom updatePickerButton,
       // revert the button to its default state
-      button.description = L10N.getStr("pickButton.tooltip");
+      button.description = this._getPickerTooltip();
       button.className = null;
       button.disabled = null;
     }
