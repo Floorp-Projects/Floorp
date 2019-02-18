@@ -103,18 +103,6 @@ class BrowserFragment : Fragment(), BackHandler {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        getAutoDisposeObservable<SearchAction>()
-            .subscribe {
-                when (it) {
-                    is SearchAction.ToolbarTapped -> Navigation.findNavController(toolbar)
-                        .navigate(BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
-                            requireComponents.core.sessionManager.selectedSession?.id,
-                            (activity as HomeActivity).browsingModeManager.isPrivate
-                        ))
-                    is SearchAction.ToolbarMenuItemTapped -> handleToolbarItemInteraction(it)
-                }
-            }
-
         sessionId = BrowserFragmentArgs.fromBundle(arguments!!).sessionId
 
         (activity as AppCompatActivity).supportActionBar?.hide()
@@ -182,6 +170,23 @@ class BrowserFragment : Fragment(), BackHandler {
             feature = (toolbarComponent.uiView as ToolbarUIView).toolbarIntegration,
             owner = this,
             view = view)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        getAutoDisposeObservable<SearchAction>()
+            .subscribe {
+                when (it) {
+                    is SearchAction.ToolbarTapped -> Navigation.findNavController(toolbar)
+                        .navigate(
+                            BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
+                                requireComponents.core.sessionManager.selectedSession?.id,
+                                (activity as HomeActivity).browsingModeManager.isPrivate
+                            )
+                        )
+                    is SearchAction.ToolbarMenuItemTapped -> handleToolbarItemInteraction(it)
+                }
+            }
     }
 
     @SuppressWarnings("ReturnCount")

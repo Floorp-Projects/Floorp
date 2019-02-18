@@ -65,25 +65,6 @@ class HomeFragment : Fragment() {
         (activity as AppCompatActivity).supportActionBar?.hide()
         setupHomeMenu()
 
-        getAutoDisposeObservable<TabsAction>()
-            .subscribe {
-                when (it) {
-                    is TabsAction.Select -> {
-                        val session = requireComponents.core.sessionManager.findSessionById(it.sessionId)
-                        requireComponents.core.sessionManager.select(session!!)
-                        val directions = HomeFragmentDirections.actionHomeFragmentToBrowserFragment(
-                            it.sessionId,
-                            (activity as HomeActivity).browsingModeManager.isPrivate)
-                        Navigation.findNavController(view).navigate(directions)
-                    }
-                    is TabsAction.Close -> {
-                        requireComponents.core.sessionManager.findSessionById(it.sessionId)?.let { session ->
-                            requireComponents.core.sessionManager.remove(session)
-                        }
-                    }
-                }
-            }
-
         val searchIcon = requireComponents.search.searchEngineManager.getDefaultSearchEngine(requireContext()).let {
             BitmapDrawable(resources, it.icon)
         }
@@ -97,7 +78,7 @@ class HomeFragment : Fragment() {
         view.toolbar.setCompoundDrawablesWithIntrinsicBounds(searchIcon, null, null, null)
         val roundToInt = (toolbarPaddingDp * Resources.getSystem().displayMetrics.density).roundToInt()
         view.toolbar.compoundDrawablePadding = roundToInt
-        view.toolbar.setOnClickListener { it ->
+        view.toolbar.setOnClickListener {
             val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null,
                 (activity as HomeActivity).browsingModeManager.isPrivate)
             Navigation.findNavController(it).navigate(directions)
@@ -145,8 +126,30 @@ class HomeFragment : Fragment() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
+    override fun onStart() {
+        super.onStart()
+        if (isAdded) {
+            getAutoDisposeObservable<TabsAction>()
+                .subscribe {
+                    when (it) {
+                        is TabsAction.Select -> {
+                            val session = requireComponents.core.sessionManager.findSessionById(it.sessionId)
+                            requireComponents.core.sessionManager.select(session!!)
+                            val directions = HomeFragmentDirections.actionHomeFragmentToBrowserFragment(
+                                it.sessionId,
+                                (activity as HomeActivity).browsingModeManager.isPrivate
+                            )
+                            Navigation.findNavController(view!!).navigate(directions)
+                        }
+                        is TabsAction.Close -> {
+                            requireComponents.core.sessionManager.findSessionById(it.sessionId)?.let { session ->
+                                requireComponents.core.sessionManager.remove(session)
+                            }
+                        }
+                    }
+                }
+        }
+
         sessionObserver = subscribeToSessions()
         sessionObserver?.onSessionsRestored()
     }
@@ -174,66 +177,42 @@ class HomeFragment : Fragment() {
         val observer = object : SessionManager.Observer {
             override fun onSessionAdded(session: Session) {
                 super.onSessionAdded(session)
-                val sessionManager = requireComponents.core.sessionManager
-                getManagedEmitter<TabsChange>().onNext(
-                    TabsChange.Changed(
-                        sessionManager.sessions
-                            .filter { (activity as HomeActivity).browsingModeManager.isPrivate == it.private }
-                            .map { it.toSessionViewState(it == sessionManager.selectedSession) }
-                    )
-                )
+                emitSessionChanges()
             }
 
             override fun onSessionRemoved(session: Session) {
                 super.onSessionRemoved(session)
-                val sessionManager = requireComponents.core.sessionManager
-                getManagedEmitter<TabsChange>().onNext(
-                    TabsChange.Changed(
-                        sessionManager.sessions
-                            .filter { (activity as HomeActivity).browsingModeManager.isPrivate == it.private }
-                            .map { it.toSessionViewState(it == sessionManager.selectedSession) }
-                    )
-                )
+                emitSessionChanges()
             }
 
             override fun onSessionSelected(session: Session) {
                 super.onSessionSelected(session)
-                val sessionManager = requireComponents.core.sessionManager
-                getManagedEmitter<TabsChange>().onNext(
-                    TabsChange.Changed(
-                        sessionManager.sessions
-                            .filter { (activity as HomeActivity).browsingModeManager.isPrivate == it.private }
-                            .map { it.toSessionViewState(it == sessionManager.selectedSession) }
-                    )
-                )
+                emitSessionChanges()
             }
 
             override fun onSessionsRestored() {
                 super.onSessionsRestored()
-                val sessionManager = requireComponents.core.sessionManager
-                getManagedEmitter<TabsChange>().onNext(
-                    TabsChange.Changed(
-                        sessionManager.sessions
-                            .filter { (activity as HomeActivity).browsingModeManager.isPrivate == it.private }
-                            .map { it.toSessionViewState(it == sessionManager.selectedSession) }
-                    )
-                )
+                emitSessionChanges()
             }
 
             override fun onAllSessionsRemoved() {
                 super.onAllSessionsRemoved()
-                val sessionManager = requireComponents.core.sessionManager
-                getManagedEmitter<TabsChange>().onNext(
-                    TabsChange.Changed(
-                        sessionManager.sessions
-                            .filter { (activity as HomeActivity).browsingModeManager.isPrivate == it.private }
-                            .map { it.toSessionViewState(it == sessionManager.selectedSession) }
-                    )
-                )
+                emitSessionChanges()
             }
         }
         requireComponents.core.sessionManager.register(observer)
         return observer
+    }
+
+    private fun emitSessionChanges() {
+        val sessionManager = requireComponents.core.sessionManager
+        getManagedEmitter<TabsChange>().onNext(
+            TabsChange.Changed(
+                sessionManager.sessions
+                    .filter { (activity as HomeActivity).browsingModeManager.isPrivate == it.private }
+                    .map { it.toSessionViewState(it == sessionManager.selectedSession) }
+            )
+        )
     }
 
     companion object {

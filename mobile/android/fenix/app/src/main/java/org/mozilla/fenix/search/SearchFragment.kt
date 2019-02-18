@@ -63,7 +63,10 @@ class SearchFragment : Fragment() {
         lifecycle.addObserver((toolbarComponent.uiView as ToolbarUIView).toolbarIntegration)
 
         view.toolbar_wrapper.clipToOutline = false
+    }
 
+    override fun onStart() {
+        super.onStart()
         getAutoDisposeObservable<SearchAction>()
             .subscribe {
                 when (it) {

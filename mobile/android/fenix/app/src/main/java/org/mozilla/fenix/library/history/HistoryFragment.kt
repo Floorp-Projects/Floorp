@@ -79,6 +79,18 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        launch(Dispatchers.IO) {
+            val items = requireComponents.core.historyStorage.getVisited()
+                .mapIndexed { id, item -> HistoryItem(id, item) }
+
+            launch(Dispatchers.Main) {
+                getManagedEmitter<HistoryChange>().onNext(HistoryChange.Change(items))
+            }
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
         getAutoDisposeObservable<HistoryAction>()
             .subscribe {
                 when (it) {
@@ -93,15 +105,6 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
                         .onNext(HistoryChange.ExitEditMode)
                 }
             }
-
-        launch(Dispatchers.IO) {
-            val items = requireComponents.core.historyStorage.getVisited()
-                .mapIndexed { id, item -> HistoryItem(id, item) }
-
-            launch(Dispatchers.Main) {
-                getManagedEmitter<HistoryChange>().onNext(HistoryChange.Change(items))
-            }
-        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
