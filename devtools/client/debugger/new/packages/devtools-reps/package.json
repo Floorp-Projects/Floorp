@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node bin/dev-server.js",
     "lint-js": "eslint src",
-    "firefox": "./node_modules/.bin/start-firefox --start --location https://devtools-html.github.io/debugger-examples/",
+    "firefox": "./node_modules/.bin/start-firefox --start --location https://firefox-devtools.github.io/debugger-examples/",
     "chrome": "./node_modules/.bin/start-chrome",
     "license-check": "devtools-license-check",
     "test": "jest --projects jest.config.js"
@@ -14,7 +14,7 @@
   "author": "",
   "license": "MPL-2.0",
   "repository": {
-    "url": "git://github.com/devtools-html/reps.git",
+    "url": "git://github.com/firefox-devtools/reps.git",
     "type": "git"
   },
   "engineStrict": true,

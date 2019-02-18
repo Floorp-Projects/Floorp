@@ -2786,7 +2786,7 @@ menuseparator {
 
 /**
  * There's a known codemirror flex issue with chrome that this addresses.
- * BUG https://github.com/devtools-html/debugger.html/issues/63
+ * BUG https://github.com/firefox-devtools/debugger.html/issues/63
  */
 .editor-wrapper {
   position: absolute;
@@ -4076,7 +4076,7 @@ html[dir="rtl"] .object-node {
   This allows the commandbar to remain fixed when scrolling
   until the content completely ends. Not just the height of
   the wrapper.
-  Ref: https://github.com/devtools-html/debugger.html/issues/3426
+  Ref: https://github.com/firefox-devtools/debugger.html/issues/3426
 */
 
 .secondary-panes-wrapper {
