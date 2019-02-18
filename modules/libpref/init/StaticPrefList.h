@@ -915,7 +915,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
    "layout.dynamic-reflow-roots.enabled",
    layout_dynamic_reflow_roots_enabled,
-  bool, true
+  bool, false
 )
 
 // Pref to control enabling scroll anchoring.
