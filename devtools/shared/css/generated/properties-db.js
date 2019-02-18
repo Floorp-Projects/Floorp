@@ -2938,6 +2938,7 @@ exports.CSS_PROPERTIES = {
       "translate",
       "offset-path",
       "scroll-behavior",
+      "scroll-snap-align",
       "scroll-snap-type-x",
       "scroll-snap-type-y",
       "overscroll-behavior-x",
@@ -9746,6 +9747,10 @@ exports.PREFERENCES = [
   [
     "overflow-anchor",
     "layout.css.scroll-anchoring.enabled"
+  ],
+  [
+    "scroll-snap-align",
+    "layout.css.scroll-snap-v1.enabled"
   ],
   [
     "scrollbar-width",
