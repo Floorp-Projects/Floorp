@@ -251,8 +251,6 @@ static inline void FlipCocoaScreenCoordinate(NSPoint& inPoint) {
   inPoint.y = nsCocoaUtils::FlippedScreenY(inPoint.y);
 }
 
-void EnsureLogInitialized() {}
-
 namespace {
 
 // Used for OpenGL drawing from the compositor thread for OMTC BasicLayers.
@@ -337,7 +335,6 @@ nsChildView::nsChildView()
       mIsDispatchPaint(false),
       mPluginFocused{false},
       mCurrentPanGestureBelongsToSwipe{false} {
-  EnsureLogInitialized();
 }
 
 nsChildView::~nsChildView() {
@@ -1938,7 +1935,7 @@ static CGContextRef CreateCGContext(const LayoutDeviceIntSize& aSize) {
   return ctx;
 }
 
-LayoutDeviceIntSize TextureSizeForSize(const LayoutDeviceIntSize& aSize) {
+static LayoutDeviceIntSize TextureSizeForSize(const LayoutDeviceIntSize& aSize) {
   return LayoutDeviceIntSize(RoundUpPow2(aSize.width), RoundUpPow2(aSize.height));
 }
 

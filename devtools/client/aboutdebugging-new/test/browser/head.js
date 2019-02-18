@@ -91,11 +91,14 @@ async function openAboutDevtoolsToolbox(doc, tab, win) {
 }
 
 async function closeAboutDevtoolsToolbox(devtoolsTab, win) {
+  info("Close about:devtools-toolbox page");
+  const onToolboxDestroyed = gDevTools.once("toolbox-destroyed");
   await removeTab(devtoolsTab);
-  await Promise.all([
-    waitForRequestsToSettle(win.AboutDebugging.store),
-    gDevTools.once("toolbox-destroyed"),
-  ]);
+  await onToolboxDestroyed;
+  // Changing the tab will also trigger a request to list tabs, so wait until the selected
+  // tab has changed to wait for requests to settle.
+  await waitUntil(() => gBrowser.selectedTab !== devtoolsTab);
+  await waitForRequestsToSettle(win.AboutDebugging.store);
 }
 
 async function reloadAboutDebugging(tab) {

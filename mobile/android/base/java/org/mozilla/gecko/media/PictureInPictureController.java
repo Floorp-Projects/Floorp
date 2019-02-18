@@ -18,6 +18,8 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.BuildConfig;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
@@ -32,6 +34,12 @@ public class PictureInPictureController implements BundleEventListener {
 
     private final Activity pipActivity;
     private boolean isInPipMode;
+    private PlaybackState playbackState = PlaybackState.STOPPED;
+    private enum PlaybackState {
+        PLAYING,
+        PAUSED,
+        STOPPED
+    }
 
     public PictureInPictureController(Activity activity) {
         pipActivity = activity;
@@ -44,7 +52,7 @@ public class PictureInPictureController implements BundleEventListener {
      */
     public void tryEnteringPictureInPictureMode() throws IllegalStateException {
         if (shouldTryPipMode() &&
-                pipActivity.enterPictureInPictureMode(getPipParams(isMediaPlaying()))) {
+                pipActivity.enterPictureInPictureMode(getPipParams(isMediaPlayingForCurrentTab()))) {
             EventDispatcher.getInstance().registerUiThreadListener(this, "MediaControlService:MediaPlayingStatus");
             isInPipMode = true;
         }
@@ -59,6 +67,18 @@ public class PictureInPictureController implements BundleEventListener {
 
     public boolean isInPipMode() {
         return isInPipMode;
+    }
+
+    public boolean isMediaPlaying() {
+        return playbackState == PlaybackState.PLAYING;
+    }
+
+    public boolean isMediaPaused() {
+        return playbackState == PlaybackState.PAUSED;
+    }
+
+    public boolean isMediaStopped() {
+        return playbackState == PlaybackState.STOPPED;
     }
 
     private boolean shouldTryPipMode() {
@@ -93,7 +113,7 @@ public class PictureInPictureController implements BundleEventListener {
             return false;
         }
 
-        if (!isMediaPlaying()) {
+        if (!isMediaPlayingForCurrentTab()) {
             logDebugMessage("Will not enter Picture in Picture mode if no media is playing");
             return false;
         }
@@ -157,8 +177,10 @@ public class PictureInPictureController implements BundleEventListener {
         return new Intent(action, null, pipActivity, MediaControlService.class);
     }
 
-    private boolean isMediaPlaying() {
-        return GeckoMediaControlAgent.isMediaPlaying();
+    private boolean isMediaPlayingForCurrentTab() {
+        final Tab currentTab = Tabs.getInstance().getSelectedTab();
+
+        return currentTab != null && currentTab.isMediaPlaying();
     }
 
     /**
@@ -193,15 +215,27 @@ public class PictureInPictureController implements BundleEventListener {
             Log.w(LOGTAG, "Can't extract new media status");
             return;
         }
+
+        // Best hope scenario: we received this events for the current tab, for which we may allow PiP
+        // We check against `isMediaPlayingForCurrentTab()` to be sure.
         switch (newMediaStatus) {
             case "resumeMedia":
-                updatePictureInPictureActions(getPipParams(true));
+                if (isMediaPlayingForCurrentTab()) {
+                    updatePictureInPictureActions(getPipParams(true));
+                    playbackState = PlaybackState.PLAYING;
+                }
                 break;
             case "mediaControlPaused":
-                updatePictureInPictureActions(getPipParams(false));
+                if (!isMediaPlayingForCurrentTab()) {
+                    updatePictureInPictureActions(getPipParams(false));
+                    playbackState = PlaybackState.PAUSED;
+                }
                 break;
             case "mediaControlStopped":
-                updatePictureInPictureActions(getPipParams(false));
+                if (!isMediaPlayingForCurrentTab()) {
+                    updatePictureInPictureActions(getPipParams(false));
+                    playbackState = PlaybackState.STOPPED;
+                }
                 break;
             default:
                 Log.w(LOGTAG, String.format("Unknown new media status: %s", newMediaStatus));

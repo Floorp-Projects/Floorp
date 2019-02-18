@@ -143,6 +143,7 @@ def generate_JSON_definitions(output, *filenames):
             # use in local developer builds anyway. They will expire when rebuilding.
             'expired': False,
             'stores': scalar.record_into_store,
+            'expires': scalar.expires,
         })
 
     json.dump(scalar_definitions, output)
