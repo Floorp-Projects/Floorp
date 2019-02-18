@@ -117,34 +117,17 @@ macro_rules! usage {
 
 type ProgramResult<T> = result::Result<T, FatalError>;
 
-fn run(app: &mut App) -> ProgramResult<()> {
-    let matches = app.get_matches_from_safe_borrow(env::args())?;
-
-    if matches.is_present("version") {
-        print_version();
-        return Ok(());
+enum Operation {
+    Version,
+    Server {
+        log_level: Option<Level>,
+        address: SocketAddr,
+        settings: MarionetteSettings,
     }
+}
 
-    let host = matches.value_of("webdriver_host").unwrap();
-    let port = match u16::from_str(matches.value_of("webdriver_port").unwrap()) {
-        Ok(x) => x,
-        Err(_) => usage!("invalid WebDriver port"),
-    };
-    let addr = match IpAddr::from_str(host) {
-        Ok(addr) => SocketAddr::new(addr, port),
-        Err(_) => usage!("invalid host address"),
-    };
-
-    let binary = matches.value_of("binary").map(PathBuf::from);
-
-    let marionette_host = matches.value_of("marionette_host").unwrap().to_string();
-    let marionette_port = match matches.value_of("marionette_port") {
-        Some(x) => match u16::from_str(x) {
-            Ok(x) => Some(x),
-            Err(_) => usage!("invalid Marionette port"),
-        },
-        None => None,
-    };
+fn parse_args(app: &mut App) -> ProgramResult<Operation> {
+    let matches = app.get_matches_from_safe_borrow(env::args())?;
 
     let log_level = if matches.is_present("log_level") {
         Level::from_str(matches.value_of("log_level").unwrap()).ok()
@@ -155,22 +138,68 @@ fn run(app: &mut App) -> ProgramResult<()> {
             _ => Level::Trace,
         })
     };
-    if let Some(ref level) = log_level {
-        logging::init_with_level(*level).unwrap();
-    } else {
-        logging::init().unwrap();
-    }
 
-    let settings = MarionetteSettings {
-        host: marionette_host,
-        port: marionette_port,
-        binary,
-        connect_existing: matches.is_present("connect_existing"),
-        jsdebugger: matches.is_present("jsdebugger"),
+    let host = matches.value_of("webdriver_host").unwrap();
+    let port = match u16::from_str(matches.value_of("webdriver_port").unwrap()) {
+        Ok(x) => x,
+        Err(_) => usage!("invalid WebDriver port"),
     };
-    let handler = MarionetteHandler::new(settings);
-    let listening = webdriver::server::start(addr, handler, &extension_routes()[..])?;
-    debug!("Listening on {}", listening.socket);
+    let address = match IpAddr::from_str(host) {
+        Ok(addr) => SocketAddr::new(addr, port),
+        Err(_) => usage!("invalid host address"),
+    };
+
+    let binary = matches.value_of("binary").map(PathBuf::from);
+
+    let marionette_host = matches.value_of("marionette_host").unwrap();
+    let marionette_port = match matches.value_of("marionette_port") {
+        Some(x) => match u16::from_str(x) {
+            Ok(x) => Some(x),
+            Err(_) => usage!("invalid Marionette port"),
+        },
+        None => None,
+    };
+
+    let op = if matches.is_present("version") {
+        Operation::Version
+    } else {
+        let settings = MarionetteSettings {
+            host: marionette_host.to_string(),
+            port: marionette_port,
+            binary,
+            connect_existing: matches.is_present("connect_existing"),
+            jsdebugger: matches.is_present("jsdebugger"),
+        };
+        Operation::Server {
+            log_level,
+            address,
+            settings,
+        }
+    };
+
+    Ok(op)
+}
+
+fn inner_main(app: &mut App) -> ProgramResult<()> {
+    match parse_args(app)? {
+        Operation::Version => print_version(),
+
+        Operation::Server {
+            log_level,
+            address,
+            settings,
+        } => {
+            if let Some(ref level) = log_level {
+                logging::init_with_level(*level).unwrap();
+            } else {
+                logging::init().unwrap();
+            }
+
+            let handler = MarionetteHandler::new(settings);
+            let listening = webdriver::server::start(address, handler, &extension_routes()[..])?;
+            debug!("Listening on {}", listening.socket);
+        }
+    }
 
     Ok(())
 }
@@ -180,7 +209,8 @@ fn main() {
 
     let mut app = make_app();
 
-    exit(match run(&mut app) {
+    // use std::process:Termination when it graduates
+    exit(match inner_main(&mut app) {
         Ok(_) => EXIT_SUCCESS,
 
         Err(e) => {
