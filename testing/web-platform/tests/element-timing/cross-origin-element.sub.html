@@ -16,17 +16,20 @@
     // We add the image during onload to be sure that the observer is registered
     // in time for it to observe the element timing.
     // TODO(npm): change observer to use buffered flag.
-    window.onload = () => {
+    window.onload = t.step_func(() => {
       // Add a cross origin image resource.
       const img = document.createElement('img');
-      img.src =
-        'http://localhost:8000/resources/square100.png';
+      img.src = 'http://{{domains[www]}}:{{ports[http][1]}}'
+          + '/element-timing/resources/square100.png';
+      img.setAttribute('elementtiming', 'my_image');
+      img.onload = t.step_func(() => {
+        t.step_timeout( () => {
+          // After some wait, assume observer did not receive the entry, so the test passes.
+          t.done();
+        }, 100);
+      });
       document.body.appendChild(img);
-    };
-    t.step_timeout( () => {
-      // After some wait, assume observer did not receive the entry, so the test passes.
-      t.done();
-    }, 100);
+    });
   }, 'Cross-origin image element is NOT observable.');
 </script>
 
