@@ -232,11 +232,6 @@ export function getPausePoint(
   }
 }
 
-export function hasPausePoints(state: OuterState, sourceId: string): boolean {
-  const pausePoints = getPausePoints(state, sourceId);
-  return !!pausePoints;
-}
-
 export function getOutOfScopeLocations(state: OuterState) {
   return state.ast.get("outOfScopeLocations");
 }

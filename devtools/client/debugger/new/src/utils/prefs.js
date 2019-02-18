@@ -56,7 +56,6 @@ if (isDevelopment()) {
   pref("devtools.debugger.features.code-folding", false);
   pref("devtools.debugger.features.outline", true);
   pref("devtools.debugger.features.column-breakpoints", false);
-  pref("devtools.debugger.features.pause-points", true);
   pref("devtools.debugger.features.skip-pausing", true);
   pref("devtools.debugger.features.component-pane", false);
   pref("devtools.debugger.features.autocomplete-expressions", false);
