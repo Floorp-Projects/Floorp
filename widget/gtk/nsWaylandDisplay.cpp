@@ -14,7 +14,9 @@
 namespace mozilla {
 namespace widget {
 
-#define MAX_DISPLAY_CONNECTIONS 2
+// nsWaylandDisplay needs to be created for each calling thread(main thread,
+// compositor thread and render thread)
+#define MAX_DISPLAY_CONNECTIONS 3
 
 static nsWaylandDisplay *gWaylandDisplays[MAX_DISPLAY_CONNECTIONS];
 static StaticMutex gWaylandDisplaysMutex;
