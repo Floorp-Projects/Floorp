@@ -1918,7 +1918,7 @@ static bool CacheEntry_setBytecode(JSContext* cx, HandleObject cache,
 
   using BufferContents = ArrayBufferObject::BufferContents;
 
-  BufferContents contents = BufferContents::createPlainData(buffer);
+  BufferContents contents = BufferContents::createMalloced(buffer);
   Rooted<ArrayBufferObject*> arrayBuffer(
       cx, ArrayBufferObject::create(cx, length, contents));
   if (!arrayBuffer) {
