@@ -24,11 +24,11 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 StaticRefPtr<nsIWebVTTParserWrapper> TextTrackCue::sParserWrapper;
 
-// Set cue setting defaults based on step 19 & seq.
-// in http://dev.w3.org/html5/webvtt/#parsing
+// Set default value for cue, spec https://w3c.github.io/webvtt/#model-cues
 void TextTrackCue::SetDefaultCueSettings() {
   mPositionIsAutoKeyword = true;
-  mPositionAlign = PositionAlignSetting::Center;
+  // Spec https://www.w3.org/TR/webvtt1/#webvtt-cue-position-automatic-alignment
+  mPositionAlign = PositionAlignSetting::Auto;
   mSize = 100.0;
   mPauseOnExit = false;
   mSnapToLines = true;
