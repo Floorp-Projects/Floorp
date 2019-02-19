@@ -32,7 +32,7 @@ import type {
 import type { PendingSelectedLocation, Selector } from "./types";
 import type { Action, DonePromiseAction, FocusItem } from "../actions/types";
 import type { LoadSourceAction } from "../actions/types/SourceAction";
-import { omitBy, mapValues, uniqBy } from "lodash";
+import { mapValues, uniqBy } from "lodash";
 
 export type SourcesMap = { [SourceId]: Source };
 export type SourcesMapByThread = { [ThreadId]: SourcesMap };
@@ -263,7 +263,10 @@ function updateSource(state: SourcesState, source: Object) {
 function updateDisplayedSource(state: SourcesState, source: Source) {
   const root = state.projectDirectoryRoot;
 
-  if (!underRoot(source, root)) {
+  if (
+    !underRoot(source, root) ||
+    (!getChromeAndExtenstionsEnabled({ sources: state }) && source.isExtension)
+  ) {
     return;
   }
 
@@ -289,15 +292,12 @@ function updateWorkers(
   mainThread: ThreadId
 ) {
   // Filter out source actors for all removed threads.
-  const hasThread = thread => {
-    return thread == mainThread || workers.some(({ actor }) => actor == thread);
-  };
-  const sources: Source[] = Object.values(state.sources).map((source: any) => {
-    return {
-      ...source,
-      actors: source.actors.filter(({ thread }) => hasThread(thread))
-    };
-  });
+  const threads = [mainThread, ...workers.map(({ actor }) => actor)];
+  const updateActors = source =>
+    source.actors.filter(({ thread }) => threads.includes(thread));
+
+  const sources: Source[] = Object.values(state.sources)
+    .map((source: any) => ({ ...source, actors: updateActors(source) }))
 
   // Regenerate derived information from the updated sources.
   return updateSources({ ...state, ...emptySources }, sources);
@@ -541,13 +541,9 @@ export const getDisplayedSources: GetDisplayedSourcesSelector = createSelector(
   getChromeAndExtenstionsEnabled,
   getAllDisplayedSources,
   (sources, chromeAndExtenstionsEnabled, displayed) => {
-    return mapValues(displayed, threadSourceIds => {
-      const threadSources = mapValues(threadSourceIds, (_, id) => sources[id]);
-      if (chromeAndExtenstionsEnabled) {
-        return threadSources;
-      }
-      return omitBy(threadSources, source => source.isExtension);
-    });
+    return mapValues(displayed, threadSourceIds =>
+      mapValues(threadSourceIds, (_, id) => sources[id])
+    );
   }
 );
 
