@@ -3997,7 +3997,9 @@ static JSObject* CloneInnerInterpretedFunction(
   return clone;
 }
 
-bool js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
+bool js::detail::CopyScript(JSContext* cx, HandleScript src,
+                            HandleScriptSourceObject sourceObject,
+                            MutableHandleScript dst,
                             MutableHandle<GCVector<Scope*>> scopes) {
   // We don't copy the HideScriptFromDebugger flag and it's not clear what
   // should happen if it's set on the source script.
@@ -4010,8 +4012,21 @@ bool js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
 
   /* NB: Keep this in sync with XDRScript. */
 
-  /* Some embeddings are not careful to use ExposeObjectToActiveJS as needed. */
-  JS::AssertObjectIsNotGray(src->sourceObject());
+  // Some embeddings are not careful to use ExposeObjectToActiveJS as needed.
+  JS::AssertObjectIsNotGray(sourceObject);
+
+  CompileOptions options(cx);
+  options.setMutedErrors(src->mutedErrors())
+      .setSelfHostingMode(src->selfHosted())
+      .setNoScriptRval(src->noScriptRval());
+
+  // Create a new JSScript to fill in
+  dst.set(JSScript::Create(cx, options, sourceObject, src->sourceStart(),
+                           src->sourceEnd(), src->toStringStart(),
+                           src->toStringEnd()));
+  if (!dst) {
+    return false;
+  }
 
   uint32_t nscopes = src->scopes().size();
   uint32_t nconsts = src->hasConsts() ? src->consts().size() : 0;
@@ -4177,22 +4192,6 @@ bool js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
   return true;
 }
 
-static JSScript* CreateEmptyScriptForClone(
-    JSContext* cx, HandleScript src, Handle<ScriptSourceObject*> sourceObject) {
-  MOZ_ASSERT(cx->compartment() == sourceObject->compartment());
-  MOZ_ASSERT_IF(src->realm()->isSelfHostingRealm(),
-                sourceObject == cx->realm()->selfHostingScriptSource);
-
-  CompileOptions options(cx);
-  options.setMutedErrors(src->mutedErrors())
-      .setSelfHostingMode(src->selfHosted())
-      .setNoScriptRval(src->noScriptRval());
-
-  return JSScript::Create(cx, options, sourceObject, src->sourceStart(),
-                          src->sourceEnd(), src->toStringStart(),
-                          src->toStringEnd());
-}
-
 JSScript* js::CloneGlobalScript(JSContext* cx, ScopeKind scopeKind,
                                 HandleScript src) {
   MOZ_ASSERT(scopeKind == ScopeKind::Global ||
@@ -4206,11 +4205,6 @@ JSScript* js::CloneGlobalScript(JSContext* cx, ScopeKind scopeKind,
     }
   }
 
-  RootedScript dst(cx, CreateEmptyScriptForClone(cx, src, sourceObject));
-  if (!dst) {
-    return nullptr;
-  }
-
   MOZ_ASSERT(src->bodyScopeIndex() == 0);
   Rooted<GCVector<Scope*>> scopes(cx, GCVector<Scope*>(cx));
   Rooted<GlobalScope*> original(cx, &src->bodyScope()->as<GlobalScope>());
@@ -4219,7 +4213,8 @@ JSScript* js::CloneGlobalScript(JSContext* cx, ScopeKind scopeKind,
     return nullptr;
   }
 
-  if (!detail::CopyScript(cx, src, dst, &scopes)) {
+  RootedScript dst(cx);
+  if (!detail::CopyScript(cx, src, sourceObject, &dst, &scopes)) {
     return nullptr;
   }
 
@@ -4231,11 +4226,6 @@ JSScript* js::CloneScriptIntoFunction(
     HandleScript src, Handle<ScriptSourceObject*> sourceObject) {
   MOZ_ASSERT(fun->isInterpreted());
   MOZ_ASSERT(!fun->hasScript() || fun->hasUncompletedScript());
-
-  RootedScript dst(cx, CreateEmptyScriptForClone(cx, src, sourceObject));
-  if (!dst) {
-    return nullptr;
-  }
 
   // Clone the non-intra-body scopes.
   Rooted<GCVector<Scope*>> scopes(cx, GCVector<Scope*>(cx));
@@ -4266,7 +4256,8 @@ JSScript* js::CloneScriptIntoFunction(
 
   // Save flags in case we need to undo the early mutations.
   const int preservedFlags = fun->flags();
-  if (!detail::CopyScript(cx, src, dst, &scopes)) {
+  RootedScript dst(cx);
+  if (!detail::CopyScript(cx, src, sourceObject, &dst, &scopes)) {
     fun->setFlags(preservedFlags);
     return nullptr;
   }
