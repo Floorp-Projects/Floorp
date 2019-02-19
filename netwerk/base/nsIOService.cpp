@@ -924,8 +924,8 @@ nsresult nsIOService::NewChannelFromURIWithProxyFlagsInternal(
   nsCOMPtr<nsIChannel> channel;
   nsCOMPtr<nsIProxiedProtocolHandler> pph = do_QueryInterface(handler);
   if (pph) {
-    rv = pph->NewProxiedChannel2(aURI, nullptr, aProxyFlags, aProxyURI,
-                                 aLoadInfo, getter_AddRefs(channel));
+    rv = pph->NewProxiedChannel(aURI, nullptr, aProxyFlags, aProxyURI,
+                                aLoadInfo, getter_AddRefs(channel));
   } else {
     rv = handler->NewChannel(aURI, aLoadInfo, getter_AddRefs(channel));
   }
