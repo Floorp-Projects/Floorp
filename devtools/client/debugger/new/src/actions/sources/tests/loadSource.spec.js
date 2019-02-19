@@ -17,9 +17,9 @@ describe("loadSourceText", () => {
     const store = createStore(sourceThreadClient);
     const { dispatch, getState } = store;
 
-    const foo1CSR = makeSource("foo1");
-    await dispatch(actions.newSource(foo1CSR));
-    await dispatch(actions.loadSourceText(foo1CSR.source));
+    const foo1Source = makeSource("foo1");
+    await dispatch(actions.newSource(foo1Source));
+    await dispatch(actions.loadSourceText(foo1Source));
     const fooSource = selectors.getSource(getState(), "foo1");
 
     if (!fooSource || typeof fooSource.text != "string") {
@@ -27,9 +27,9 @@ describe("loadSourceText", () => {
     }
     expect(fooSource.text.indexOf("return foo1")).not.toBe(-1);
 
-    const foo2CSR = makeSource("foo2");
-    await dispatch(actions.newSource(foo2CSR));
-    await dispatch(actions.loadSourceText(foo2CSR.source));
+    const baseFoo2Source = makeSource("foo2");
+    await dispatch(actions.newSource(baseFoo2Source));
+    await dispatch(actions.loadSourceText(baseFoo2Source));
     const foo2Source = selectors.getSource(getState(), "foo2");
 
     if (!foo2Source || typeof foo2Source.text != "string") {
@@ -49,9 +49,9 @@ describe("loadSourceText", () => {
         })
     });
     const id = "foo";
-    const csr = makeSource(id, { loadedState: "unloaded" });
+    const baseSource = makeSource(id, { loadedState: "unloaded" });
 
-    await dispatch(actions.newSource(csr));
+    await dispatch(actions.newSource(baseSource));
 
     let source = selectors.getSource(getState(), id);
     dispatch(actions.loadSourceText(source));
@@ -81,9 +81,9 @@ describe("loadSourceText", () => {
         })
     });
     const id = "foo";
-    const csr = makeSource(id, { loadedState: "unloaded" });
+    const baseSource = makeSource(id, { loadedState: "unloaded" });
 
-    await dispatch(actions.newSource(csr));
+    await dispatch(actions.newSource(baseSource));
     let source = selectors.getSource(getState(), id);
     const loading = dispatch(actions.loadSourceText(source));
 
@@ -104,8 +104,8 @@ describe("loadSourceText", () => {
   it("should cache subsequent source text loads", async () => {
     const { dispatch, getState } = createStore(sourceThreadClient);
 
-    const csr = makeSource("foo1");
-    await dispatch(actions.loadSourceText(csr.source));
+    const source = makeSource("foo1");
+    await dispatch(actions.loadSourceText(source));
     const prevSource = selectors.getSource(getState(), "foo1");
 
     await dispatch(actions.loadSourceText(prevSource));
@@ -118,8 +118,8 @@ describe("loadSourceText", () => {
     const { dispatch, getState } = createStore(sourceThreadClient);
 
     // Don't block on this so we can check the loading state.
-    const csr = makeSource("foo1");
-    dispatch(actions.loadSourceText(csr.source));
+    const source = makeSource("foo1");
+    dispatch(actions.loadSourceText(source));
     const fooSource = selectors.getSource(getState(), "foo1");
     expect(fooSource && fooSource.loadedState).toEqual("loading");
   });
@@ -127,9 +127,9 @@ describe("loadSourceText", () => {
   it("should indicate an errored source text", async () => {
     const { dispatch, getState } = createStore(sourceThreadClient);
 
-    const csr = makeSource("bad-id");
-    await dispatch(actions.newSource(csr));
-    await dispatch(actions.loadSourceText(csr.source));
+    const source = makeSource("bad-id");
+    await dispatch(actions.newSource(source));
+    await dispatch(actions.loadSourceText(source));
     const badSource = selectors.getSource(getState(), "bad-id");
 
     if (!badSource || !badSource.error) {

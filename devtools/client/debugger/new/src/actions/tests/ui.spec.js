@@ -17,7 +17,7 @@ const {
   getPaneCollapse,
   getHighlightedLineRange,
   getProjectDirectoryRoot,
-  getRelativeSources
+  getDisplayedSources
 } = selectors;
 
 import type { Source } from "../../types";
@@ -119,7 +119,7 @@ describe("setProjectDirectoryRoot", () => {
 
     dispatch(actions.setProjectDirectoryRoot("localhost:8000/examples/js"));
 
-    const filteredSourcesByThread = getRelativeSources(getState());
+    const filteredSourcesByThread = getDisplayedSources(getState());
     const filteredSources = Object.values(filteredSourcesByThread)[0];
     const firstSource: Source = (Object.values(filteredSources)[0]: any);
 

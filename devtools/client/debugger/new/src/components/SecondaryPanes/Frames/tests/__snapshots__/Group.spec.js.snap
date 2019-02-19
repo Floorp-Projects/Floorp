@@ -41,6 +41,7 @@ exports[`Group displays a group 1`] = `
             "type": "block",
           },
           "source": Object {
+            "actors": Array [],
             "contentType": "text/javascript",
             "id": "source",
             "introductionUrl": null,
@@ -113,6 +114,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
             "type": "block",
           },
           "source": Object {
+            "actors": Array [],
             "contentType": "text/javascript",
             "id": "source",
             "introductionUrl": null,
@@ -176,6 +178,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
             "type": "block",
           },
           "source": Object {
+            "actors": Array [],
             "contentType": "text/javascript",
             "id": "source",
             "introductionUrl": null,
@@ -222,6 +225,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
             "type": "block",
           },
           "source": Object {
+            "actors": Array [],
             "contentType": "text/javascript",
             "id": "source",
             "introductionUrl": null,
@@ -273,6 +277,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
             "type": "block",
           },
           "source": Object {
+            "actors": Array [],
             "contentType": "text/javascript",
             "id": "source",
             "introductionUrl": null,
@@ -319,6 +324,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
             "type": "block",
           },
           "source": Object {
+            "actors": Array [],
             "contentType": "text/javascript",
             "id": "source",
             "introductionUrl": null,
@@ -370,6 +376,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
             "type": "block",
           },
           "source": Object {
+            "actors": Array [],
             "contentType": "text/javascript",
             "id": "source",
             "introductionUrl": null,
@@ -416,6 +423,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
             "type": "block",
           },
           "source": Object {
+            "actors": Array [],
             "contentType": "text/javascript",
             "id": "source",
             "introductionUrl": null,
@@ -480,6 +488,7 @@ exports[`Group renders group with anonymous functions 1`] = `
             "type": "block",
           },
           "source": Object {
+            "actors": Array [],
             "contentType": "text/javascript",
             "id": "source",
             "introductionUrl": null,
@@ -552,6 +561,7 @@ exports[`Group renders group with anonymous functions 2`] = `
             "type": "block",
           },
           "source": Object {
+            "actors": Array [],
             "contentType": "text/javascript",
             "id": "source",
             "introductionUrl": null,
@@ -615,6 +625,7 @@ exports[`Group renders group with anonymous functions 2`] = `
             "type": "block",
           },
           "source": Object {
+            "actors": Array [],
             "contentType": "text/javascript",
             "id": "source",
             "introductionUrl": null,
@@ -660,6 +671,7 @@ exports[`Group renders group with anonymous functions 2`] = `
             "type": "block",
           },
           "source": Object {
+            "actors": Array [],
             "contentType": "text/javascript",
             "id": "source",
             "introductionUrl": null,
@@ -711,6 +723,7 @@ exports[`Group renders group with anonymous functions 2`] = `
             "type": "block",
           },
           "source": Object {
+            "actors": Array [],
             "contentType": "text/javascript",
             "id": "source",
             "introductionUrl": null,
@@ -756,6 +769,7 @@ exports[`Group renders group with anonymous functions 2`] = `
             "type": "block",
           },
           "source": Object {
+            "actors": Array [],
             "contentType": "text/javascript",
             "id": "source",
             "introductionUrl": null,
@@ -807,6 +821,7 @@ exports[`Group renders group with anonymous functions 2`] = `
             "type": "block",
           },
           "source": Object {
+            "actors": Array [],
             "contentType": "text/javascript",
             "id": "source",
             "introductionUrl": null,
@@ -852,6 +867,7 @@ exports[`Group renders group with anonymous functions 2`] = `
             "type": "block",
           },
           "source": Object {
+            "actors": Array [],
             "contentType": "text/javascript",
             "id": "source",
             "introductionUrl": null,

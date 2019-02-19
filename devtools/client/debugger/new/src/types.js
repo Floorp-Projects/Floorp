@@ -327,6 +327,12 @@ export type Grip = {
   name?: string
 };
 
+export type SourceActor = {|
+  +actor: ActorId,
+  +source: SourceId,
+  +thread: ThreadId
+|};
+
 /**
  * BaseSource
  *
@@ -344,7 +350,8 @@ type BaseSource = {|
   +error?: string,
   +loadedState: "unloaded" | "loading" | "loaded",
   +relativeUrl: string,
-  introductionUrl: ?string
+  +introductionUrl: ?string,
+  +actors: SourceActor[]
 |};
 
 /**
@@ -374,12 +381,6 @@ export type WasmSource = {|
 |};
 
 export type Source = JsSource | WasmSource;
-
-export type SourceActor = {|
-  +actor: ActorId,
-  +source: SourceId,
-  +thread: ThreadId
-|};
 
 /**
  * Script

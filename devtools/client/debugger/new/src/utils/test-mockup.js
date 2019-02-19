@@ -39,6 +39,7 @@ function makeMockSource(
     loadedState: text ? "loaded" : "unloaded",
     relativeUrl: url,
     introductionUrl: null,
+    actors: [],
     isWasm: false,
     contentType,
     text
@@ -54,6 +55,7 @@ function makeMockWasmSource(text: {| binary: Object |}): WasmSource {
     loadedState: "unloaded",
     relativeUrl: "url",
     introductionUrl: null,
+    actors: [],
     isWasm: true,
     text
   };
