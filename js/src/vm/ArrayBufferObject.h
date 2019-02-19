@@ -168,6 +168,10 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   static const size_t MaxBufferByteLength = INT32_MAX;
 
+  /** The largest number of bytes that can be stored inline. */
+  static constexpr size_t MaxInlineBytes =
+    (NativeObject::MAX_FIXED_SLOTS - RESERVED_SLOTS) * sizeof(JS::Value);
+
  public:
   enum OwnsState {
     DoesntOwnData = 0,
@@ -175,25 +179,27 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   };
 
   enum BufferKind {
-    /** Malloced or inline data. */
-    PLAIN_DATA = 0b000,
+    /** Inline data kept in the repurposed slots of this ArrayBufferObject. */
+    INLINE_DATA = 0b000,
+
+    /* Data allocated using the SpiderMonkey allocator. */
+    MALLOCED = 0b001,
 
     /**
      * User-owned memory.  The associated buffer must be manually detached
      * before the user invalidates (deallocates, reuses the storage of, &c.)
      * the user-owned memory.
      */
-    USER_OWNED = 0b001,
+    USER_OWNED = 0b010,
 
-    WASM = 0b010,
-    MAPPED = 0b011,
-    EXTERNAL = 0b100,
+    WASM = 0b011,
+    MAPPED = 0b100,
+    EXTERNAL = 0b101,
 
     // These kind-values are currently invalid.  We intend to expand valid
     // BufferKinds in the future to either partly or fully use these values.
-    BAD1 = 0b101,
-    BAD2 = 0b110,
-    BAD3 = 0b111,
+    BAD1 = 0b110,
+    BAD2 = 0b111,
 
     KIND_MASK = 0b111
   };
@@ -219,9 +225,11 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     // Views of this buffer might include typed objects.
     TYPED_OBJECT_VIEWS = 0b10'0000,
 
-    // This PLAIN_DATA, MAPPED, or EXTERNAL buffer (only WASM and USER_OWNED
-    // are excluded) has been prepared for asm.js and cannot henceforth be
-    // transferred/detached.
+    // This MALLOCED, MAPPED, or EXTERNAL buffer has been prepared for asm.js
+    // and cannot henceforth be transferred/detached.  (WASM, USER_OWNED, and
+    // INLINE_DATA buffers can't be prepared for asm.js -- although if an
+    // INLINE_DATA buffer is used with asm.js, it's silently rewritten into a
+    // MALLOCED buffer which *can* be prepared.)
     FOR_ASMJS = 0b100'0000,
   };
 
@@ -258,8 +266,12 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
       return BufferContents(static_cast<uint8_t*>(data), Kind);
     }
 
-    static BufferContents createPlainData(void* data) {
-      return BufferContents(static_cast<uint8_t*>(data), PLAIN_DATA);
+    static BufferContents createInlineData(void* data) {
+      return BufferContents(static_cast<uint8_t*>(data), INLINE_DATA);
+    }
+
+    static BufferContents createMalloced(void* data) {
+      return BufferContents(static_cast<uint8_t*>(data), MALLOCED);
     }
 
     static BufferContents createUserOwned(void* data) {
@@ -274,7 +286,10 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     }
 
     static BufferContents createFailed() {
-      return BufferContents(nullptr, PLAIN_DATA);
+      // There's no harm in tagging this as MALLOCED, even tho obviously it
+      // isn't.  And adding an extra tag purely for this case is a complication
+      // that presently appears avoidable.
+      return BufferContents(nullptr, MALLOCED);
     }
 
     uint8_t* data() const { return data_; }
@@ -397,12 +412,14 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     return BufferKind(flags() & BUFFER_KIND_MASK);
   }
 
-  bool isPlainData() const { return bufferKind() == PLAIN_DATA; }
+  bool isInlineData() const { return bufferKind() == INLINE_DATA; }
+  bool isMalloced() const { return bufferKind() == MALLOCED; }
   bool hasUserOwnedData() const { return bufferKind() == USER_OWNED; }
 
   bool isWasm() const { return bufferKind() == WASM; }
   bool isMapped() const { return bufferKind() == MAPPED; }
   bool isExternal() const { return bufferKind() == EXTERNAL; }
+
   bool isDetached() const { return flags() & DETACHED; }
   bool isPreparedForAsmJS() const { return flags() & FOR_ASMJS; }
 
@@ -449,7 +466,8 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   void setIsPreparedForAsmJS() {
     MOZ_ASSERT(!isWasm());
     MOZ_ASSERT(!hasUserOwnedData());
-    MOZ_ASSERT(isPlainData() || isMapped() || isExternal());
+    MOZ_ASSERT(!isInlineData());
+    MOZ_ASSERT(isMalloced() || isMapped() || isExternal());
     setFlags(flags() | FOR_ASMJS);
   }
 

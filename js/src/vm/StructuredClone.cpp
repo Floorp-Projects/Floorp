@@ -1887,7 +1887,7 @@ bool JSStructuredCloneWriter::transferOwnership() {
         if (bufContents.kind() == ArrayBufferObject::MAPPED) {
           ownership = JS::SCTAG_TMO_MAPPED_DATA;
         } else {
-          MOZ_ASSERT(bufContents.kind() == ArrayBufferObject::PLAIN_DATA,
+          MOZ_ASSERT(bufContents.kind() == ArrayBufferObject::MALLOCED,
                      "failing to handle new ArrayBuffer kind?");
           ownership = JS::SCTAG_TMO_ALLOC_DATA;
         }
