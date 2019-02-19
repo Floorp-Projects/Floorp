@@ -9,7 +9,7 @@
 
 var EXPORTED_SYMBOLS = ["FxAccountsProfileClient", "FxAccountsProfileClientError"];
 
-const {ERRNO_NETWORK, ERRNO_PARSE, ERRNO_UNKNOWN_ERROR, ERROR_CODE_METHOD_NOT_ALLOWED, ERROR_MSG_METHOD_NOT_ALLOWED, ERROR_NETWORK, ERROR_PARSE, ERROR_UNKNOWN, log} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+const {ERRNO_NETWORK, ERRNO_PARSE, ERRNO_UNKNOWN_ERROR, ERROR_CODE_METHOD_NOT_ALLOWED, ERROR_MSG_METHOD_NOT_ALLOWED, ERROR_NETWORK, ERROR_PARSE, ERROR_UNKNOWN, log, SCOPE_PROFILE} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 const {fxAccounts} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
 const {RESTRequest} = ChromeUtils.import("resource://services-common/rest.js");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -47,7 +47,7 @@ var FxAccountsProfileClient = function(options) {
     throw new Error("Invalid 'serverURL'");
   }
   this.oauthOptions = {
-    scope: "profile",
+    scope: SCOPE_PROFILE,
   };
   log.debug("FxAccountsProfileClient: Initialized");
 };

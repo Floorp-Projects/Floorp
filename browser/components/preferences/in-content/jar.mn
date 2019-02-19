@@ -16,4 +16,6 @@ browser.jar:
    content/browser/preferences/in-content/sync.js
    content/browser/preferences/in-content/syncDisconnect.xul
    content/browser/preferences/in-content/syncDisconnect.js
+   content/browser/preferences/in-content/fxaPairDevice.xul
+   content/browser/preferences/in-content/fxaPairDevice.js
    content/browser/preferences/in-content/findInPage.js
