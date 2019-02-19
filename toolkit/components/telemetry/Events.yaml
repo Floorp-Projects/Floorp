@@ -808,7 +808,6 @@ security.ui.identitypopup:
     bug_numbers:
       - 1484251
       - 1522256
-      - 1522919
     description: >
       How many times the control center was opened.
       Keyed by the state of the content blocking shield, where the shield-showing key indicates
@@ -823,8 +822,6 @@ security.ui.identitypopup:
     record_in_processes:
       - main
     extra_keys:
-      fp: Whether Fingerprinter blocking was active while the user opened the popup
-      cm: Whether Cryptominer blocking was active while the user opened the popup
       tp: Whether Tracking Protection was active while the user opened the popup
       cr: Whether Cookie Restrictions was active while the user opened the popup
     products:
@@ -857,8 +854,6 @@ security.ui.identitypopup:
     record_in_processes:
       - main
     extra_keys:
-      fp: Whether Fingerprinter blocking was active while the user interacted with the UI
-      cm: Whether Cryptominer blocking was active while the user interacted with the UI
       tp: Whether Tracking Protection was active while the user interacted with the UI
       cr: Whether Cookie Restrictions was active while the user interacted with the UI
     products:
