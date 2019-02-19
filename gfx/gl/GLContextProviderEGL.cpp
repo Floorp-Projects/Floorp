@@ -337,11 +337,8 @@ GLContextEGL::~GLContextEGL() {
 }
 
 bool GLContextEGL::Init() {
-#if defined(ANDROID)
-  // We can't use LoadApitraceLibrary here because the GLContext
-  // expects its own handle to the GL library
-  if (!OpenLibrary(APITRACE_LIB))
-#endif
+  mLibrary = LoadApitraceLibrary();
+  if (!mLibrary) {
     if (!OpenLibrary(GLES2_LIB)) {
 #if defined(XP_UNIX)
       if (!OpenLibrary(GLES2_LIB2)) {
@@ -350,6 +347,7 @@ bool GLContextEGL::Init() {
       }
 #endif
     }
+  }
 
   SetupLookupFunction();
   if (!InitWithPrefix("gl", true)) return false;
