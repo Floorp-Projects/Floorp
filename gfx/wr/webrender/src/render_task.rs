@@ -108,10 +108,13 @@ impl RenderTaskTreeCounters {
 
 impl RenderTaskTree {
     pub fn new(frame_id: FrameId, counters: &RenderTaskTreeCounters) -> Self {
+        // Preallocate a little more than what we needed in the previous frame so that small variations
+        // in the number of items don't cause us to constantly reallocate.
+        let extra_items = 8;
         RenderTaskTree {
-            tasks: Vec::with_capacity(counters.tasks_len),
-            task_data: Vec::with_capacity(counters.task_data_len),
-            cacheable_render_tasks: Vec::with_capacity(counters.cacheable_render_tasks_len),
+            tasks: Vec::with_capacity(counters.tasks_len + extra_items),
+            task_data: Vec::with_capacity(counters.task_data_len + extra_items),
+            cacheable_render_tasks: Vec::with_capacity(counters.cacheable_render_tasks_len + extra_items),
             next_saved: SavedTargetIndex(0),
             frame_id,
         }
