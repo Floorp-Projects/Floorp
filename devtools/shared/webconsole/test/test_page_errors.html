@@ -153,26 +153,24 @@ function startTest() {
 
 function onAttach(state, response) {
   onPageError = onPageError.bind(null, state);
-  state.dbgClient.addListener("pageError", onPageError);
+  state.client.on("pageError", onPageError);
   doPageErrors();
 }
 
 let pageErrors = [];
 
-function onPageError(state, type, packet) {
+function onPageError(state, packet) {
   if (!packet.pageError.sourceName.includes("test_page_errors")) {
     info("Ignoring error from unknown source: " + packet.pageError.sourceName);
     return;
   }
-
-  is(packet.from, state.actor, "page error actor");
 
   pageErrors.push(packet.pageError);
   if (pageErrors.length != Object.keys(expectedPageErrors).length) {
     return;
   }
 
-  state.dbgClient.removeListener("pageError", onPageError);
+  state.client.off("pageError", onPageError);
 
   Object.values(expectedPageErrors).forEach(function(message, index) {
     info("checking received page error #" + index);
