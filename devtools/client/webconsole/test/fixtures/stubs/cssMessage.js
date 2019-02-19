@@ -66,8 +66,6 @@ stubPreparedMessages.set(`Error in parsing value for ‘padding-top’.  Declara
 }));
 
 stubPackets.set(`Unknown property ‘such-unknown-property’.  Declaration dropped.`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "pageError",
   "pageError": {
     "errorMessage": "Unknown property ‘such-unknown-property’.  Declaration dropped.",
     "errorMessageName": "",
@@ -85,12 +83,12 @@ stubPackets.set(`Unknown property ‘such-unknown-property’.  Declaration drop
     "private": false,
     "stacktrace": null,
     "notes": null
-  }
+  },
+  "type": "pageError",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`Error in parsing value for ‘padding-top’.  Declaration dropped.`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "pageError",
   "pageError": {
     "errorMessage": "Error in parsing value for ‘padding-top’.  Declaration dropped.",
     "errorMessageName": "",
@@ -108,7 +106,9 @@ stubPackets.set(`Error in parsing value for ‘padding-top’.  Declaration drop
     "private": false,
     "stacktrace": null,
     "notes": null
-  }
+  },
+  "type": "pageError",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 module.exports = {
