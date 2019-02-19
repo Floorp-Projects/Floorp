@@ -689,9 +689,6 @@ nsresult nsDocumentViewer::SyncParentSubDocMap() {
 NS_IMETHODIMP
 nsDocumentViewer::SetContainer(nsIDocShell* aContainer) {
   mContainer = static_cast<nsDocShell*>(aContainer);
-  if (mPresContext) {
-    mPresContext->SetContainer(mContainer);
-  }
 
   // We're loading a new document into the window where this document
   // viewer lives, sync the parent document's frame element -> sub
@@ -953,8 +950,6 @@ nsresult nsDocumentViewer::InitInternal(nsIWidget* aParentWidget,
       nsCOMPtr<nsILinkHandler> linkHandler;
       requestor->GetInterface(NS_GET_IID(nsILinkHandler),
                               getter_AddRefs(linkHandler));
-
-      mPresContext->SetContainer(mContainer);
       mPresContext->SetLinkHandler(linkHandler);
     }
 
@@ -1476,7 +1471,6 @@ static void AttachContainerRecurse(nsIDocShell* aShell) {
     }
     RefPtr<nsPresContext> pc = viewer->GetPresContext();
     if (pc) {
-      pc->SetContainer(static_cast<nsDocShell*>(aShell));
       nsCOMPtr<nsILinkHandler> handler = do_QueryInterface(aShell);
       pc->SetLinkHandler(handler);
     }
@@ -1501,7 +1495,9 @@ NS_IMETHODIMP
 nsDocumentViewer::Open(nsISupports* aState, nsISHEntry* aSHEntry) {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_INITIALIZED);
 
-  if (mDocument) mDocument->SetContainer(mContainer);
+  if (mDocument) {
+    mDocument->SetContainer(mContainer);
+  }
 
   nsresult rv = InitInternal(mParentWidget, aState, mBounds, false);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2171,8 +2167,6 @@ nsDocumentViewer::Show(void) {
       if (linkHandler) {
         mPresContext->SetLinkHandler(linkHandler);
       }
-
-      mPresContext->SetContainer(mContainer);
     }
 
     if (mPresContext) {
