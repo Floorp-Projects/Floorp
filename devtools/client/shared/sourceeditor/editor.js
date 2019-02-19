@@ -39,12 +39,7 @@ const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/sourceeditor.properties");
 
-const {
-  getWasmText,
-  isWasm,
-  lineToWasmOffset,
-  wasmOffsetToLine,
-} = require("./wasm");
+loader.lazyRequireGetter(this, "wasm", "./wasm");
 
 const { OS } = Services.appinfo;
 
@@ -545,15 +540,15 @@ Editor.prototype = {
   },
 
   get isWasm() {
-    return isWasm(this.getDoc());
+    return wasm.isWasm(this.getDoc());
   },
 
   wasmOffsetToLine: function(offset) {
-    return wasmOffsetToLine(this.getDoc(), offset);
+    return wasm.wasmOffsetToLine(this.getDoc(), offset);
   },
 
   lineToWasmOffset: function(number) {
-    return lineToWasmOffset(this.getDoc(), number);
+    return wasm.lineToWasmOffset(this.getDoc(), number);
   },
 
   toLineIfWasmOffset: function(maybeOffset) {
@@ -590,7 +585,7 @@ Editor.prototype = {
       for (let i = 0; i < data.length; i++) {
         data[i] = binary.charCodeAt(i);
       }
-      const { lines, done } = getWasmText(this.getDoc(), data);
+      const { lines, done } = wasm.getWasmText(this.getDoc(), data);
       const MAX_LINES = 10000000;
       if (lines.length > MAX_LINES) {
         lines.splice(MAX_LINES, lines.length - MAX_LINES);
