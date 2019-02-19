@@ -277,7 +277,7 @@ NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::SharedFontList, SharedFontList);
 // font_id is LookAndFeel::FontID
 void Gecko_nsFont_InitSystem(nsFont* dst, int32_t font_id,
                              const nsStyleFont* font,
-                             RawGeckoPresContextBorrowed pres_context);
+                             const mozilla::dom::Document*);
 
 void Gecko_nsFont_Destroy(nsFont* dst);
 
@@ -312,8 +312,7 @@ void Gecko_CopyImageOrientationFrom(nsStyleVisibility* aDst,
 
 // Counter style.
 // This function takes an already addrefed nsAtom
-void Gecko_SetCounterStyleToName(mozilla::CounterStylePtr* ptr, nsAtom* name,
-                                 RawGeckoPresContextBorrowed pres_context);
+void Gecko_SetCounterStyleToName(mozilla::CounterStylePtr* ptr, nsAtom* name);
 
 void Gecko_SetCounterStyleToSymbols(mozilla::CounterStylePtr* ptr,
                                     uint8_t symbols_type,
@@ -670,15 +669,15 @@ void Gecko_nsStyleFont_SetLang(nsStyleFont* font, nsAtom* atom);
 void Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont,
                                     const nsStyleFont* aSource);
 
-void Gecko_nsStyleFont_FixupNoneGeneric(
-    nsStyleFont* font, RawGeckoPresContextBorrowed pres_context);
+void Gecko_nsStyleFont_FixupNoneGeneric(nsStyleFont* font,
+                                        const mozilla::dom::Document*);
 
-void Gecko_nsStyleFont_PrefillDefaultForGeneric(
-    nsStyleFont* font, RawGeckoPresContextBorrowed pres_context,
-    uint8_t generic_id);
+void Gecko_nsStyleFont_PrefillDefaultForGeneric(nsStyleFont* font,
+                                                const mozilla::dom::Document*,
+                                                uint8_t generic_id);
 
-void Gecko_nsStyleFont_FixupMinFontSize(
-    nsStyleFont* font, RawGeckoPresContextBorrowed pres_context);
+void Gecko_nsStyleFont_FixupMinFontSize(nsStyleFont* font,
+                                        const mozilla::dom::Document*);
 
 mozilla::FontSizePrefs Gecko_GetBaseSize(nsAtom* lang);
 
@@ -701,9 +700,6 @@ GeckoFontMetrics Gecko_GetFontMetrics(RawGeckoPresContextBorrowed pres_context,
                                       nscoord font_size,
                                       bool use_user_font_set);
 
-int32_t Gecko_GetAppUnitsPerPhysicalInch(
-    RawGeckoPresContextBorrowed pres_context);
-
 mozilla::StyleSheet* Gecko_StyleSheet_Clone(
     const mozilla::StyleSheet* aSheet,
     const mozilla::StyleSheet* aNewParentSheet);
@@ -716,17 +712,17 @@ bool Gecko_IsDocumentBody(RawGeckoElementBorrowed element);
 
 // We use an int32_t here instead of a LookAndFeel::ColorID
 // because forward-declaring a nested enum/struct is impossible
-nscolor Gecko_GetLookAndFeelSystemColor(
-    int32_t color_id, RawGeckoPresContextBorrowed pres_context);
+nscolor Gecko_GetLookAndFeelSystemColor(int32_t color_id,
+                                        const mozilla::dom::Document*);
 
 void Gecko_AddPropertyToSet(nsCSSPropertyIDSetBorrowedMut, nsCSSPropertyID);
 
 // Style-struct management.
-#define STYLE_STRUCT(name)                                            \
-  void Gecko_Construct_Default_nsStyle##name(                         \
-      nsStyle##name* ptr, RawGeckoPresContextBorrowed pres_context);  \
-  void Gecko_CopyConstruct_nsStyle##name(nsStyle##name* ptr,          \
-                                         const nsStyle##name* other); \
+#define STYLE_STRUCT(name)                                                   \
+  void Gecko_Construct_Default_nsStyle##name(nsStyle##name* ptr,             \
+                                             const mozilla::dom::Document*); \
+  void Gecko_CopyConstruct_nsStyle##name(nsStyle##name* ptr,                 \
+                                         const nsStyle##name* other);        \
   void Gecko_Destroy_nsStyle##name(nsStyle##name* ptr);
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
@@ -735,7 +731,7 @@ void Gecko_RegisterProfilerThread(const char* name);
 void Gecko_UnregisterProfilerThread();
 
 bool Gecko_DocumentRule_UseForPresentation(
-    RawGeckoPresContextBorrowed, const nsACString* aPattern,
+    const mozilla::dom::Document*, const nsACString* aPattern,
     mozilla::css::DocumentMatchingFunction);
 
 // Allocator hinting.
@@ -789,32 +785,33 @@ bool Gecko_IsMainThread();
 //
 // Defined in nsMediaFeatures.cpp.
 mozilla::StyleDisplayMode Gecko_MediaFeatures_GetDisplayMode(
-    mozilla::dom::Document*);
+    const mozilla::dom::Document*);
 
-uint32_t Gecko_MediaFeatures_GetColorDepth(mozilla::dom::Document*);
+uint32_t Gecko_MediaFeatures_GetColorDepth(const mozilla::dom::Document*);
 
-void Gecko_MediaFeatures_GetDeviceSize(mozilla::dom::Document*, nscoord* width,
-                                       nscoord* height);
+void Gecko_MediaFeatures_GetDeviceSize(const mozilla::dom::Document*,
+                                       nscoord* width, nscoord* height);
 
-float Gecko_MediaFeatures_GetResolution(mozilla::dom::Document*);
-bool Gecko_MediaFeatures_PrefersReducedMotion(mozilla::dom::Document*);
+float Gecko_MediaFeatures_GetResolution(const mozilla::dom::Document*);
+bool Gecko_MediaFeatures_PrefersReducedMotion(const mozilla::dom::Document*);
 mozilla::StylePrefersColorScheme Gecko_MediaFeatures_PrefersColorScheme(
-    mozilla::dom::Document*);
+    const mozilla::dom::Document*);
 
 mozilla::PointerCapabilities Gecko_MediaFeatures_PrimaryPointerCapabilities(
-    mozilla::dom::Document*);
+    const mozilla::dom::Document*);
 
 mozilla::PointerCapabilities Gecko_MediaFeatures_AllPointerCapabilities(
-    mozilla::dom::Document*);
+    const mozilla::dom::Document*);
 
-float Gecko_MediaFeatures_GetDevicePixelRatio(mozilla::dom::Document*);
+float Gecko_MediaFeatures_GetDevicePixelRatio(const mozilla::dom::Document*);
 
-bool Gecko_MediaFeatures_HasSystemMetric(mozilla::dom::Document*,
+bool Gecko_MediaFeatures_HasSystemMetric(const mozilla::dom::Document*,
                                          nsAtom* metric,
                                          bool is_accessible_from_content);
 
-bool Gecko_MediaFeatures_IsResourceDocument(mozilla::dom::Document*);
-nsAtom* Gecko_MediaFeatures_GetOperatingSystemVersion(mozilla::dom::Document*);
+bool Gecko_MediaFeatures_IsResourceDocument(const mozilla::dom::Document*);
+nsAtom* Gecko_MediaFeatures_GetOperatingSystemVersion(
+    const mozilla::dom::Document*);
 
 }  // extern "C"
 

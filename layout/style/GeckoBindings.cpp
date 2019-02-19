@@ -101,14 +101,14 @@ ServoTraversalStatistics ServoTraversalStatistics::sSingleton;
 
 static RWLock* sServoFFILock = nullptr;
 
-static const nsFont* ThreadSafeGetDefaultFontHelper(
-    const nsPresContext* aPresContext, nsAtom* aLanguage, uint8_t aGenericId) {
+static const nsFont* ThreadSafeGetDefaultFontHelper(const Document& aDocument,
+                                                    nsAtom* aLanguage,
+                                                    uint8_t aGenericId) {
   bool needsCache = false;
   const nsFont* retval;
 
   auto GetDefaultFont = [&](bool* aNeedsToCache) {
-    auto* prefs =
-        aPresContext->Document()->GetFontPrefsForLang(aLanguage, aNeedsToCache);
+    auto* prefs = aDocument.GetFontPrefsForLang(aLanguage, aNeedsToCache);
     return prefs ? prefs->GetDefaultFont(aGenericId) : nullptr;
   };
 
@@ -701,9 +701,8 @@ bool Gecko_IsDocumentBody(RawGeckoElementBorrowed aElement) {
   return doc && doc->GetBodyElement() == aElement;
 }
 
-nscolor Gecko_GetLookAndFeelSystemColor(
-    int32_t aId, RawGeckoPresContextBorrowed aPresContext) {
-  bool useStandinsForNativeColors = aPresContext && !aPresContext->IsChrome();
+nscolor Gecko_GetLookAndFeelSystemColor(int32_t aId, const Document* aDoc) {
+  bool useStandinsForNativeColors = !nsContentUtils::IsChromeDoc(aDoc);
   nscolor result;
   LookAndFeel::ColorID colorId = static_cast<LookAndFeel::ColorID>(aId);
   AutoWriteLock guard(*sServoFFILock);
@@ -1004,17 +1003,15 @@ void Gecko_CopyFontFamilyFrom(nsFont* dst, const nsFont* src) {
 
 void Gecko_nsFont_InitSystem(nsFont* aDest, int32_t aFontId,
                              const nsStyleFont* aFont,
-                             RawGeckoPresContextBorrowed aPresContext) {
+                             const Document* aDocument) {
   const nsFont* defaultVariableFont = ThreadSafeGetDefaultFontHelper(
-      aPresContext, aFont->mLanguage, kPresContext_DefaultVariableFont_ID);
+      *aDocument, aFont->mLanguage, kPresContext_DefaultVariableFont_ID);
 
   // We have passed uninitialized memory to this function,
   // initialize it. We can't simply return an nsFont because then
   // we need to know its size beforehand. Servo cannot initialize nsFont
   // itself, so this will do.
-  nsFont* system = new (aDest) nsFont(*defaultVariableFont);
-
-  MOZ_RELEASE_ASSERT(system);
+  new (aDest) nsFont(*defaultVariableFont);
 
   *aDest = *defaultVariableFont;
   LookAndFeel::FontID fontID = static_cast<LookAndFeel::FontID>(aFontId);
@@ -1108,8 +1105,7 @@ void Gecko_CopyAlternateValuesFrom(nsFont* aDest, const nsFont* aSrc) {
   aDest->featureValueLookup = aSrc->featureValueLookup;
 }
 
-void Gecko_SetCounterStyleToName(CounterStylePtr* aPtr, nsAtom* aName,
-                                 RawGeckoPresContextBorrowed aPresContext) {
+void Gecko_SetCounterStyleToName(CounterStylePtr* aPtr, nsAtom* aName) {
   RefPtr<nsAtom> name = already_AddRefed<nsAtom>(aName);
   *aPtr = name.forget();
 }
@@ -1898,19 +1894,19 @@ void Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont,
   aFont->mLanguage = aSource->mLanguage;
 }
 
-void Gecko_nsStyleFont_FixupNoneGeneric(
-    nsStyleFont* aFont, RawGeckoPresContextBorrowed aPresContext) {
+void Gecko_nsStyleFont_FixupNoneGeneric(nsStyleFont* aFont,
+                                        const Document* aDocument) {
   const nsFont* defaultVariableFont = ThreadSafeGetDefaultFontHelper(
-      aPresContext, aFont->mLanguage, kPresContext_DefaultVariableFont_ID);
-  nsLayoutUtils::FixupNoneGeneric(&aFont->mFont, aPresContext,
-                                  aFont->mGenericID, defaultVariableFont);
+      *aDocument, aFont->mLanguage, kPresContext_DefaultVariableFont_ID);
+  nsLayoutUtils::FixupNoneGeneric(&aFont->mFont, aFont->mGenericID,
+                                  defaultVariableFont);
 }
 
-void Gecko_nsStyleFont_PrefillDefaultForGeneric(
-    nsStyleFont* aFont, RawGeckoPresContextBorrowed aPresContext,
-    uint8_t aGenericId) {
-  const nsFont* defaultFont = ThreadSafeGetDefaultFontHelper(
-      aPresContext, aFont->mLanguage, aGenericId);
+void Gecko_nsStyleFont_PrefillDefaultForGeneric(nsStyleFont* aFont,
+                                                const Document* aDocument,
+                                                uint8_t aGenericId) {
+  const nsFont* defaultFont =
+      ThreadSafeGetDefaultFontHelper(*aDocument, aFont->mLanguage, aGenericId);
   // In case of just the language changing, the parent could have had no
   // generic, which Gecko just does regular cascading with. Do the same. This
   // can only happen in the case where the language changed but the family did
@@ -1923,14 +1919,14 @@ void Gecko_nsStyleFont_PrefillDefaultForGeneric(
   }
 }
 
-void Gecko_nsStyleFont_FixupMinFontSize(
-    nsStyleFont* aFont, RawGeckoPresContextBorrowed aPresContext) {
+void Gecko_nsStyleFont_FixupMinFontSize(nsStyleFont* aFont,
+                                        const Document* aDocument) {
   nscoord minFontSize;
   bool needsCache = false;
 
   auto MinFontSize = [&](bool* aNeedsToCache) {
-    auto* prefs = aPresContext->Document()->GetFontPrefsForLang(
-        aFont->mLanguage, aNeedsToCache);
+    auto* prefs =
+        aDocument->GetFontPrefsForLang(aFont->mLanguage, aNeedsToCache);
     return prefs ? prefs->mMinimumFontSize : 0;
   };
 
@@ -1944,7 +1940,7 @@ void Gecko_nsStyleFont_FixupMinFontSize(
     minFontSize = MinFontSize(nullptr);
   }
 
-  nsLayoutUtils::ApplyMinFontSize(aFont, aPresContext, minFontSize);
+  nsLayoutUtils::ApplyMinFontSize(aFont, aDocument, minFontSize);
 }
 
 void FontSizePrefs::CopyFrom(const LangGroupFontPrefs& prefs) {
@@ -2047,12 +2043,6 @@ GeckoFontMetrics Gecko_GetFontMetrics(RawGeckoPresContextBorrowed aPresContext,
                            .zeroOrAveCharWidth;
   ret.mChSize = NS_round(aPresContext->AppUnitsPerDevPixel() * zeroWidth);
   return ret;
-}
-
-int32_t Gecko_GetAppUnitsPerPhysicalInch(
-    RawGeckoPresContextBorrowed aPresContext) {
-  nsPresContext* presContext = const_cast<nsPresContext*>(aPresContext);
-  return presContext->DeviceContext()->AppUnitsPerPhysicalInch();
 }
 
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(SheetLoadDataHolder, SheetLoadDataHolder);
@@ -2183,9 +2173,9 @@ NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsCSSValueSharedList, CSSValueSharedList);
 
 #define STYLE_STRUCT(name)                                             \
                                                                        \
-  void Gecko_Construct_Default_nsStyle##name(                          \
-      nsStyle##name* ptr, const nsPresContext* pres_context) {         \
-    new (ptr) nsStyle##name(*pres_context->Document());                \
+  void Gecko_Construct_Default_nsStyle##name(nsStyle##name* ptr,       \
+                                             const Document* doc) {    \
+    new (ptr) nsStyle##name(*doc);                                     \
   }                                                                    \
                                                                        \
   void Gecko_CopyConstruct_nsStyle##name(nsStyle##name* ptr,           \
@@ -2204,12 +2194,11 @@ void Gecko_RegisterProfilerThread(const char* name) {
 void Gecko_UnregisterProfilerThread() { PROFILER_UNREGISTER_THREAD(); }
 
 bool Gecko_DocumentRule_UseForPresentation(
-    RawGeckoPresContextBorrowed aPresContext, const nsACString* aPattern,
+    const Document* aDocument, const nsACString* aPattern,
     css::DocumentMatchingFunction aMatchingFunction) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  Document* doc = aPresContext->Document();
-  nsIURI* docURI = doc->GetDocumentURI();
+  nsIURI* docURI = aDocument->GetDocumentURI();
   nsAutoCString docURISpec;
   if (docURI) {
     // If GetSpec fails (due to OOM) just skip these URI-specific CSS rules.
@@ -2217,7 +2206,7 @@ bool Gecko_DocumentRule_UseForPresentation(
     NS_ENSURE_SUCCESS(rv, false);
   }
 
-  return CSSMozDocumentRule::Match(doc, docURI, docURISpec, *aPattern,
+  return CSSMozDocumentRule::Match(aDocument, docURI, docURISpec, *aPattern,
                                    aMatchingFunction);
 }
 
