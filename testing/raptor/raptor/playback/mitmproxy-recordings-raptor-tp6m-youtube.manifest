@@ -1,8 +1,8 @@
 [
   {
-    "size": 1040164,
+    "size": 1562206,
     "visibility": "public",
-    "digest": "6dbeaaa3174720de6080a812732b69514237c4cf802dac2752cc6cffe7ad2f6b340dd82194b9416f23b0a04be5f44f628e99f89ec162e30d31b13483f5e93912",
+    "digest": "3e1b16ad822ce0272161a579a43e5d8f96292bcc8b42ec861c89e2f776f563971d375f40a1f6e57fc58259330b9dc18663d701d897953f53d308018a6416ec14",
     "algorithm": "sha512",
     "filename": "mitmproxy-tp6m-youtube.zip",
     "unpack": true
