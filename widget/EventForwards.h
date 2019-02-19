@@ -139,6 +139,11 @@ inline bool IsDataAvailableOnTextEditor(EditorInputType aInputType) {
     case EditorInputType::eInsertText:
     case EditorInputType::eInsertCompositionText:
     case EditorInputType::eInsertFromComposition:  // Only level 2
+    case EditorInputType::eInsertFromPaste:
+    case EditorInputType::eInsertTranspose:
+    case EditorInputType::eInsertFromDrop:
+    case EditorInputType::eInsertReplacementText:
+    case EditorInputType::eInsertFromYank:
       return true;
     default:
       return false;

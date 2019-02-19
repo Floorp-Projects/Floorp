@@ -43,6 +43,8 @@ function handleInput(aEvent) {
      '"input" event should always bubble');
   is(aEvent.inputType, "insertReplacementText",
      'inputType should be "insertReplacementText"');
+  is(aEvent.data, expectedValue,
+     `data should be "${expectedValue}"`);
   input.removeEventListener("input", handleInput, true);
   SimpleTest.finish();
 }

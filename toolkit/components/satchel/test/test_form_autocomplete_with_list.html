@@ -467,6 +467,7 @@ function runTest() {
         ok(event.bubbles, "input event should bubble");
         ok(!event.cancelable, "input event should be cancelable");
         is(event.inputType, "insertReplacementText", 'inputType should be "insertReplacementText"');
+        is(event.data, "Google", 'data should be "Google"');
         checkForm("Google");
         input.blur();
         SimpleTest.finish();
