@@ -637,37 +637,13 @@ inline bool OpIter<Policy>::popStackType(StackType* type, Value* value) {
 // expected type which can either be a specific value type or a type variable.
 template <typename Policy>
 inline bool OpIter<Policy>::popWithType(ValType expectedType, Value* value) {
-  ControlStackEntry<ControlItem>& block = controlStack_.back();
-
-  MOZ_ASSERT(valueStack_.length() >= block.valueStackStart());
-  if (MOZ_UNLIKELY(valueStack_.length() == block.valueStackStart())) {
-    // If the base of this block's stack is polymorphic, then we can pop a
-    // dummy value of any expected type; it won't be used since we're in
-    // unreachable code.
-    if (block.polymorphicBase()) {
-      *value = Value();
-
-      // Maintain the invariant that, after a pop, there is always memory
-      // reserved to push a value infallibly.
-      return valueStack_.reserve(valueStack_.length() + 1);
-    }
-
-    return failEmptyStack();
-  }
-
-  TypeAndValue<Value> observed = valueStack_.popCopy();
-
-  if (observed.type() == StackType::TVar) {
-    *value = Value();
-    return true;
-  }
-
-  if (!checkIsSubtypeOf(NonTVarToValType(observed.type()), expectedType)) {
+  StackType stackType(expectedType);
+  if (!popStackType(&stackType, value)) {
     return false;
   }
 
-  *value = observed.value();
-  return true;
+  return stackType == StackType::TVar ||
+         checkIsSubtypeOf(NonTVarToValType(stackType), expectedType);
 }
 
 // This function pops as many types from the stack as determined by the given
