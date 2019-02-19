@@ -1760,7 +1760,7 @@ JS_PUBLIC_API void* JS_StealArrayBufferContents(JSContext* cx,
   CHECK_THREAD(cx);
   cx->check(objArg);
 
-  JSObject* obj = CheckedUnwrap(objArg);
+  JSObject* obj = CheckedUnwrapStatic(objArg);
   if (!obj) {
     ReportAccessDenied(cx);
     return nullptr;
