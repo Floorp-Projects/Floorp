@@ -35,6 +35,8 @@ struct RequestHeaderTuple {
 
 typedef nsTArray<RequestHeaderTuple> RequestHeaderTuples;
 
+typedef nsTArray<Tuple<nsCString, nsCString>> ArrayOfStringPairs;
+
 }  // namespace net
 }  // namespace mozilla
 

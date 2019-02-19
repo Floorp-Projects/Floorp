@@ -40,7 +40,6 @@
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
-#include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/Unused.h"
 
@@ -1445,7 +1444,7 @@ class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable,
       // TODO: the internal request probably needs all the preferred types.
       nsAutoCString alternativeDataType;
       alternativeDataType.Assign(
-          cic->PreferredAlternativeDataTypes()[0].type());
+          mozilla::Get<0>(cic->PreferredAlternativeDataTypes()[0]));
       internalReq->SetPreferredAlternativeDataType(alternativeDataType);
     }
 
