@@ -37,7 +37,7 @@ class ExtensionDebugSetting extends PureComponent {
       {
         type: "checkbox",
         id: "extension-debug-setting-input",
-        className: "default-checkbox",
+        className: "default-checkbox  js-extension-debug-checkbox",
         checked: extensionDebugEnabled,
         onChange: () => this.onToggle(),
       }
