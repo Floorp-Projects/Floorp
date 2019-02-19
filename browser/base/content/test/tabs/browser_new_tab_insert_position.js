@@ -6,9 +6,10 @@ ChromeUtils.defineModuleGetter(this, "SessionStore",
    "resource:///modules/sessionstore/SessionStore.jsm");
 ChromeUtils.defineModuleGetter(this, "TabStateFlusher",
    "resource:///modules/sessionstore/TabStateFlusher.jsm");
+ChromeUtils.defineModuleGetter(this, "E10SUtils",
+  "resource://gre/modules/E10SUtils.jsm");
 
-ChromeUtils.import("resource://gre/modules/sessionstore/Utils.jsm", this);
-const triggeringPrincipal_base64 = Utils.SERIALIZED_SYSTEMPRINCIPAL;
+const triggeringPrincipal_base64 = E10SUtils.SERIALIZED_SYSTEMPRINCIPAL;
 
 function promiseBrowserStateRestored(state) {
   if (typeof state != "string") {

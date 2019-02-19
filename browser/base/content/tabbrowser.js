@@ -2554,7 +2554,7 @@ window._gBrowser = {
           entries: [{
             url: lazyBrowserURI ? lazyBrowserURI.spec : "about:blank",
             title: lazyTabTitle,
-            triggeringPrincipal_base64: Utils.serializePrincipal(triggeringPrincipal),
+            triggeringPrincipal_base64: E10SUtils.serializePrincipal(triggeringPrincipal),
           }],
         });
       } else {
@@ -5599,7 +5599,7 @@ var TabContextMenu = {
         // from SessionStore
         let tabState = JSON.parse(SessionStore.getTabState(tab));
         try {
-          triggeringPrincipal = Utils.deserializePrincipal(tabState.triggeringPrincipal_base64);
+          triggeringPrincipal = E10SUtils.deserializePrincipal(tabState.triggeringPrincipal_base64);
         } catch (ex) {
           continue;
         }
