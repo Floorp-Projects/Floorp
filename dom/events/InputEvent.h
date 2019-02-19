@@ -32,6 +32,7 @@ class InputEvent : public UIEvent {
   }
 
   void GetInputType(nsAString& aInputType);
+  void GetData(nsAString& aData);
   bool IsComposing();
 
  protected:
