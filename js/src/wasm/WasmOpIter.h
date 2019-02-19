@@ -30,7 +30,7 @@ namespace js {
 namespace wasm {
 
 // The kind of a control-flow stack item.
-enum class LabelKind : uint8_t { Block, Loop, Then, Else };
+enum class LabelKind : uint8_t { Body, Block, Loop, Then, Else };
 
 // The type of values on the operand stack during validation. The Any type
 // represents the type of a value produced by an unconditional branch.
@@ -815,7 +815,7 @@ inline bool OpIter<Policy>::readFunctionStart(ExprType ret) {
   MOZ_ASSERT(controlStack_.empty());
   MOZ_ASSERT(op_.b0 == uint16_t(Op::Limit));
 
-  return pushControl(LabelKind::Block, ret);
+  return pushControl(LabelKind::Body, ret);
 }
 
 template <typename Policy>
@@ -840,7 +840,7 @@ inline bool OpIter<Policy>::readReturn(Value* value) {
   MOZ_ASSERT(Classify(op_) == OpKind::Return);
 
   ControlStackEntry<ControlItem>& body = controlStack_[0];
-  MOZ_ASSERT(body.kind() == LabelKind::Block);
+  MOZ_ASSERT(body.kind() == LabelKind::Body);
 
   if (!popWithType(body.resultType(), value)) {
     return false;
