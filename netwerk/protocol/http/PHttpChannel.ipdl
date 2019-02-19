@@ -97,6 +97,9 @@ parent:
   // Called to get the input stream when altData was delivered.
   async OpenOriginalCacheInputStream();
 
+  // Called to get the input stream when altData is available.
+  async OpenAltDataCacheInputStream(nsCString aType);
+
   // Tell the parent the amount bytes read by child for the e10s back pressure
   // flow control
   async BytesRead(int32_t count);
@@ -180,6 +183,9 @@ child:
   async CancelDiversion();
 
   async OriginalCacheInputStreamAvailable(OptionalIPCStream stream);
+
+  async AltDataCacheInputStreamAvailable(OptionalIPCStream stream);
+
 both:
   // After receiving this message, the parent also calls
   // SendFinishInterceptedRedirect, and makes sure not to send any more messages

@@ -34,6 +34,7 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/PerformanceStorage.h"
 #include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/Unused.h"
@@ -699,7 +700,7 @@ nsresult FetchDriver::HttpFetch(
     nsCOMPtr<nsICacheInfoChannel> cic = do_QueryInterface(chan);
     if (cic) {
       cic->PreferAlternativeDataType(aPreferredAlternativeDataType,
-                                     EmptyCString());
+                                     EmptyCString(), true);
       MOZ_ASSERT(!mAltDataListener);
       mAltDataListener = new AlternativeDataStreamListener(
           this, chan, aPreferredAlternativeDataType);
@@ -714,7 +715,7 @@ nsresult FetchDriver::HttpFetch(
       if (cic) {
         cic->PreferAlternativeDataType(
             NS_LITERAL_CSTRING(WASM_ALT_DATA_TYPE_V1),
-            NS_LITERAL_CSTRING(WASM_CONTENT_TYPE));
+            NS_LITERAL_CSTRING(WASM_CONTENT_TYPE), false);
       }
     }
 
@@ -947,10 +948,11 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
       }
     } else if (!cic->PreferredAlternativeDataTypes().IsEmpty()) {
       MOZ_ASSERT(cic->PreferredAlternativeDataTypes().Length() == 1);
-      MOZ_ASSERT(Get<0>(cic->PreferredAlternativeDataTypes()[0])
-                     .EqualsLiteral(WASM_ALT_DATA_TYPE_V1));
-      MOZ_ASSERT(Get<1>(cic->PreferredAlternativeDataTypes()[0])
-                     .EqualsLiteral(WASM_CONTENT_TYPE));
+      MOZ_ASSERT(cic->PreferredAlternativeDataTypes()[0].type().EqualsLiteral(
+          WASM_ALT_DATA_TYPE_V1));
+      MOZ_ASSERT(
+          cic->PreferredAlternativeDataTypes()[0].contentType().EqualsLiteral(
+              WASM_CONTENT_TYPE));
 
       if (contentType.EqualsLiteral(WASM_CONTENT_TYPE)) {
         // We want to attach the CacheInfoChannel to the response object such
