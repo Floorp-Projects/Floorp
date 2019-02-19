@@ -19,7 +19,8 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:src="@android:drawable/ic_menu_camera"
         android:importantForAccessibility="no"
-        android:tint="#000000" />
+        android:tint="?android:attr/textColorPrimary"
+        tools:tint="#000000" />
 
     <TextView
         android:id="@+id/title"
@@ -28,7 +29,7 @@
         android:layout_marginTop="4dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
-        android:textColor="#000000"
+        tools:textColor="#000000"
         android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
