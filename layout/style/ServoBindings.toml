@@ -440,7 +440,9 @@ cbindgen-types = [
     { gecko = "StyleNonNegativeNumber", servo = "values::computed::NonNegativeNumber" },
     { gecko = "StylePercentage", servo = "values::computed::Percentage" },
     { gecko = "StylePerspective", servo = "values::computed::Perspective" },
+    { gecko = "StyleGenericPerspective", servo = "values::generics::box_::Perspective" },
     { gecko = "StyleZIndex", servo = "values::computed::ZIndex" },
+    { gecko = "StyleGenericZIndex", servo = "values::generics::position::ZIndex" },
     { gecko = "StyleTransformOrigin", servo = "values::computed::TransformOrigin" },
 ]
 
