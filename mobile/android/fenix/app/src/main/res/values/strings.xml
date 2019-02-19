@@ -128,10 +128,6 @@
     <string name="library_title">Library</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Settings</string>
-    <string name="tabs_header_title">Current Session</string>
-    <string name="close_tab">Close tab</string>
-    <string name="favicon_content_description">Favorite icon</string>
-
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
     <string name="content_description_history_menu">History item menu</string>
 
@@ -141,13 +137,21 @@
 <p>%1$s is produced by Mozilla. Our mission is to foster a healthy, open Internet.<br/>
     ]]></string>
 
-    <!-- Current session overflow menu -->
+    <!-- Sessions -->
+    <!-- Title for the list of tabs in the current session -->
+    <string name="tabs_header_title">Current Session</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
+    <string name="close_tab">Close tab</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab button. Favicon for the session's site -->
+    <string name="favicon_content_description">Favorite icon</string>
+    <!-- Button in the current session menu. Deletes the session when pressed -->
     <string name="current_session_delete">Delete</string>
+    <!-- Button in the current session menu. Archives the session when pressed -->
     <string name="current_session_archive">Archive</string>
+    <!-- Button in the current session menu. Opens the share menu when pressed -->
     <string name="current_session_send_and_share">Send and Share</string>
+    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
     <string name="current_session_image">Current session image</string>
-
-
 
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Delete History</string>
