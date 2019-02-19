@@ -17,7 +17,7 @@ job-defaults:
       implementation: balrog
       balrog-action: submit-toplevel
       require-mirrors: false
-      platforms: ["linux", "linux64", "macosx64", "win32", "win64"]
+      platforms: ["linux", "linux64", "macosx64", "win32", "win64", "win64-aarch64"]
       archive-domain:
          by-release-level:
             production: archive.mozilla.org
