@@ -480,8 +480,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   void* initializeToInlineData(size_t byteLength) {
     void* data = inlineDataPointer();
-    initialize(byteLength, BufferContents::createInlineData(data),
-               DoesntOwnData);
+    initialize(byteLength, BufferContents::createInlineData(data), OwnsData);
     return data;
   }
 };
