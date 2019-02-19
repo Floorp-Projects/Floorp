@@ -531,14 +531,13 @@ class RaptorAndroid(Raptor):
         # proxy; we need to set prefs instead; note that the 'host' may be different
         # than '127.0.0.1' so we must set the prefs accordingly
         self.log.info("setting profile prefs to turn on the android app proxy")
-        no_proxies_on = "localhost, 127.0.0.1, %s" % self.config['host']
         proxy_prefs = {}
         proxy_prefs["network.proxy.type"] = 1
         proxy_prefs["network.proxy.http"] = self.config['host']
         proxy_prefs["network.proxy.http_port"] = 8080
         proxy_prefs["network.proxy.ssl"] = self.config['host']
         proxy_prefs["network.proxy.ssl_port"] = 8080
-        proxy_prefs["network.proxy.no_proxies_on"] = no_proxies_on
+        proxy_prefs["network.proxy.no_proxies_on"] = self.config['host']
         self.profile.set_preferences(proxy_prefs)
 
     def launch_firefox_android_app(self):

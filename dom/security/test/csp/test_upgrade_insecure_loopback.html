@@ -57,7 +57,7 @@ SimpleTest.waitForExplicitFinish();
 // By default, proxies don't apply to 127.0.0.1.
 // We need them to for this test (at least on android), though:
 SpecialPowers.pushPrefEnv({set: [
-  ["network.proxy.no_proxies_on", ""]
+  ["network.proxy.allow_hijacking_localhost", true]
 ]}).then(loadTest);
 
 </script>
