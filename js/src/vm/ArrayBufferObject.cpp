@@ -442,11 +442,12 @@ bool ArrayBufferObject::class_constructor(JSContext* cx, unsigned argc,
   return true;
 }
 
-static ArrayBufferObject::BufferContents AllocateArrayBufferContents(
-    JSContext* cx, uint32_t nbytes) {
-  uint8_t* p =
-      cx->pod_callocCanGC<uint8_t>(nbytes, js::ArrayBufferContentsArena);
-  return ArrayBufferObject::BufferContents::createMalloced(p);
+static uint8_t* AllocateArrayBufferContents(JSContext* cx, uint32_t nbytes) {
+  auto* p = cx->pod_callocCanGC<uint8_t>(nbytes, js::ArrayBufferContentsArena);
+  if (!p) {
+    ReportOutOfMemory(cx);
+  }
+  return p;
 }
 
 static void NoteViewBufferWasDetached(
@@ -962,13 +963,12 @@ bool js::CreateWasmBuffer(JSContext* cx, const wasm::Limits& memory,
   }
 
   if (!buffer->ownsData()) {
-    BufferContents contents =
-        AllocateArrayBufferContents(cx, buffer->byteLength());
-    if (!contents) {
+    uint8_t* data = AllocateArrayBufferContents(cx, buffer->byteLength());
+    if (!data) {
       return false;
     }
-    memcpy(contents.data(), buffer->dataPointer(), buffer->byteLength());
-    buffer->changeContents(cx, contents, OwnsData);
+    memcpy(data, buffer->dataPointer(), buffer->byteLength());
+    buffer->changeContents(cx, BufferContents::createMalloced(data), OwnsData);
   }
 
   buffer->setIsPreparedForAsmJS();
@@ -1244,11 +1244,12 @@ ArrayBufferObject* ArrayBufferObject::createForContents(
       nslots = reservedSlots + newSlots;
       contents = BufferContents::createInlineData(nullptr);
     } else {
-      contents = AllocateArrayBufferContents(cx, nbytes);
-      if (!contents) {
-        ReportOutOfMemory(cx);
+      uint8_t* data = AllocateArrayBufferContents(cx, nbytes);
+      if (!data) {
         return nullptr;
       }
+
+      contents = BufferContents::createMalloced(data);
       allocated = true;
     }
   }
@@ -1304,9 +1305,8 @@ ArrayBufferObject* ArrayBufferObject::createZeroed(
     nslots += newSlots;
     data = nullptr;
   } else {
-    data = AllocateArrayBufferContents(cx, nbytes).data();
+    data = AllocateArrayBufferContents(cx, nbytes);
     if (!data) {
-      ReportOutOfMemory(cx);
       return nullptr;
     }
   }
@@ -1401,17 +1401,16 @@ ArrayBufferObject* ArrayBufferObject::createFromNewRawBuffer(
 
   // Create a new chunk of memory to return since we cannot steal the
   // existing contents away from the buffer.
-  BufferContents contentsCopy =
-      AllocateArrayBufferContents(cx, buffer->byteLength());
-  if (!contentsCopy) {
+  uint8_t* dataCopy = AllocateArrayBufferContents(cx, buffer->byteLength());
+  if (!dataCopy) {
     return BufferContents::createFailed();
   }
 
   if (buffer->byteLength() > 0) {
-    memcpy(contentsCopy.data(), oldContents.data(), buffer->byteLength());
+    memcpy(dataCopy, oldContents.data(), buffer->byteLength());
   }
   ArrayBufferObject::detach(cx, buffer, oldContents);
-  return contentsCopy;
+  return BufferContents::createMalloced(dataCopy);
 }
 
 /* static */ void ArrayBufferObject::addSizeOfExcludingThis(
