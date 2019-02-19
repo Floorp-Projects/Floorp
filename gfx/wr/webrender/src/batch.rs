@@ -2539,12 +2539,11 @@ pub fn resolve_image(
     }
 }
 
-
-/// Batcher managing draw calls into the clip mask (in the RT cache).
+/// A list of clip instances to be drawn into a target.
 #[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct ClipBatcher {
+pub struct ClipBatchList {
     /// Rectangle draws fill up the rectangles with rounded corners.
     pub rectangles: Vec<ClipMaskInstance>,
     /// Image draws apply the image masking.
@@ -2552,12 +2551,40 @@ pub struct ClipBatcher {
     pub box_shadows: FastHashMap<TextureSource, Vec<ClipMaskInstance>>,
 }
 
-impl ClipBatcher {
-    pub fn new() -> Self {
-        ClipBatcher {
+impl ClipBatchList {
+    fn new() -> Self {
+        ClipBatchList {
             rectangles: Vec::new(),
             images: FastHashMap::default(),
             box_shadows: FastHashMap::default(),
+        }
+    }
+}
+
+/// Batcher managing draw calls into the clip mask (in the RT cache).
+#[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct ClipBatcher {
+    /// The first clip in each clip task. This will overwrite all pixels
+    /// in the clip region, so we can skip doing a clear and write with
+    /// blending disabled, which is a big performance win on Intel GPUs.
+    pub primary_clips: ClipBatchList,
+    /// Any subsequent clip masks (rare) for a clip task get drawn in
+    /// a second pass with multiplicative blending enabled.
+    pub secondary_clips: ClipBatchList,
+
+    gpu_supports_fast_clears: bool,
+}
+
+impl ClipBatcher {
+    pub fn new(
+        gpu_supports_fast_clears: bool,
+    ) -> Self {
+        ClipBatcher {
+            primary_clips: ClipBatchList::new(),
+            secondary_clips: ClipBatchList::new(),
+            gpu_supports_fast_clears,
         }
     }
 
@@ -2580,7 +2607,7 @@ impl ClipBatcher {
             snap_offsets: SnapOffsets::empty(),
         };
 
-        self.rectangles.push(instance);
+        self.primary_clips.rectangles.push(instance);
     }
 
     /// Where appropriate, draw a clip rectangle as a small series of tiles,
@@ -2595,6 +2622,7 @@ impl ClipBatcher {
         device_pixel_scale: DevicePixelScale,
         gpu_address: GpuCacheAddress,
         instance: &ClipMaskInstance,
+        clip_node_index: u32,
     ) -> bool {
         // Only try to draw in tiles if the clip mark is big enough.
         if mask_screen_rect.area() < CLIP_RECTANGLE_AREA_THRESHOLD {
@@ -2636,6 +2664,7 @@ impl ClipBatcher {
         // and only for rectangles (not rounded etc), the world_device_rect is not conservative - we know
         // that there is no inner_rect, and the world_device_rect should be the real, axis-aligned clip rect.
         let mask_origin = mask_screen_rect.origin.to_f32().to_vector();
+        let clip_list = self.get_batch_list(clip_node_index);
 
         for y in 0 .. y_tiles {
             for x in 0 .. x_tiles {
@@ -2660,7 +2689,7 @@ impl ClipBatcher {
                 // these pixels would be redundant - since this clip can't possibly
                 // affect the pixels in this tile, skip them!
                 if !world_device_rect.contains_rect(&world_sub_rect) {
-                    self.rectangles.push(ClipMaskInstance {
+                    clip_list.rectangles.push(ClipMaskInstance {
                         clip_data_address: gpu_address,
                         sub_rect: normalized_sub_rect,
                         ..*instance
@@ -2670,6 +2699,19 @@ impl ClipBatcher {
         }
 
         true
+    }
+
+    /// Retrieve the correct clip batch list to append to, depending
+    /// on whether this is the first clip mask for a clip task.
+    fn get_batch_list(
+        &mut self,
+        item_index: u32,
+    ) -> &mut ClipBatchList {
+        if item_index == 0 && !self.gpu_supports_fast_clears {
+            &mut self.primary_clips
+        } else {
+            &mut self.secondary_clips
+        }
     }
 
     pub fn add(
@@ -2739,7 +2781,9 @@ impl ClipBatcher {
                                 return;
                             }
                         };
-                        self.images
+
+                        self.get_batch_list(i)
+                            .images
                             .entry(cache_item.texture_id)
                             .or_insert(Vec::new())
                             .push(ClipMaskInstance {
@@ -2778,7 +2822,8 @@ impl ClipBatcher {
                         .get_texture_cache_item(&rt_cache_entry.handle);
                     debug_assert_ne!(cache_item.texture_id, TextureSource::Invalid);
 
-                    self.box_shadows
+                    self.get_batch_list(i)
+                        .box_shadows
                         .entry(cache_item.texture_id)
                         .or_insert(Vec::new())
                         .push(ClipMaskInstance {
@@ -2790,10 +2835,12 @@ impl ClipBatcher {
                 ClipItem::Rectangle(_, ClipMode::ClipOut) => {
                     let gpu_address =
                         gpu_cache.get_address(&clip_node.gpu_cache_handle);
-                    self.rectangles.push(ClipMaskInstance {
-                        clip_data_address: gpu_address,
-                        ..instance
-                    });
+                    self.get_batch_list(i)
+                        .rectangles
+                        .push(ClipMaskInstance {
+                            clip_data_address: gpu_address,
+                            ..instance
+                        });
                 }
                 ClipItem::Rectangle(clip_rect_size, ClipMode::Clip) => {
                     if !clip_instance.flags.contains(ClipNodeFlags::SAME_COORD_SYSTEM) {
@@ -2808,21 +2855,26 @@ impl ClipBatcher {
                             device_pixel_scale,
                             gpu_address,
                             &instance,
+                            i,
                         ) {
-                            self.rectangles.push(ClipMaskInstance {
-                                clip_data_address: gpu_address,
-                                ..instance
-                            });
+                            self.get_batch_list(i)
+                                .rectangles
+                                .push(ClipMaskInstance {
+                                    clip_data_address: gpu_address,
+                                    ..instance
+                                });
                         }
                     }
                 }
                 ClipItem::RoundedRectangle(..) => {
                     let gpu_address =
                         gpu_cache.get_address(&clip_node.gpu_cache_handle);
-                    self.rectangles.push(ClipMaskInstance {
-                        clip_data_address: gpu_address,
-                        ..instance
-                    });
+                    self.get_batch_list(i)
+                        .rectangles
+                        .push(ClipMaskInstance {
+                            clip_data_address: gpu_address,
+                            ..instance
+                        });
                 }
             }
         }
