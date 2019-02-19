@@ -87,10 +87,10 @@ class Element;
 }  // namespace mozilla
 
 // supported values for cached bool types
-//
-// FIXME(emilio): We have StaticPrefs now, probably all of these should be
-// migrated.
-enum nsPresContext_CachedBoolPrefType { kPresContext_UnderlineLinks = 1 };
+enum nsPresContext_CachedBoolPrefType {
+  kPresContext_UseDocumentFonts = 1,
+  kPresContext_UnderlineLinks
+};
 
 // supported values for cached integer pref types
 enum nsPresContext_CachedIntPrefType {
@@ -365,6 +365,8 @@ class nsPresContext : public nsISupports,
     // If called with a constant parameter, the compiler should optimize
     // this switch statement away.
     switch (aPrefType) {
+      case kPresContext_UseDocumentFonts:
+        return mUseDocumentFonts;
       case kPresContext_UnderlineLinks:
         return mUnderlineLinks;
       default:
@@ -1281,6 +1283,7 @@ class nsPresContext : public nsISupports,
   unsigned mHasPendingInterrupt : 1;
   unsigned mPendingInterruptFromTest : 1;
   unsigned mInterruptsEnabled : 1;
+  unsigned mUseDocumentFonts : 1;
   unsigned mUseDocumentColors : 1;
   unsigned mUnderlineLinks : 1;
   unsigned mSendAfterPaintToContent : 1;

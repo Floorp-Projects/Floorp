@@ -51,7 +51,8 @@ nsFont::MaxDifference nsFont::CalcDifference(const nsFont& aOther) const {
       (variantNumeric != aOther.variantNumeric) ||
       (variantPosition != aOther.variantPosition) ||
       (variantWidth != aOther.variantWidth) ||
-      (alternateValues != aOther.alternateValues)) {
+      (alternateValues != aOther.alternateValues) ||
+      (featureValueLookup != aOther.featureValueLookup)) {
     return MaxDifference::eLayoutAffecting;
   }
 
@@ -68,6 +69,7 @@ nsFont& nsFont::operator=(const nsFont& aOther) = default;
 void nsFont::CopyAlternates(const nsFont& aOther) {
   variantAlternates = aOther.variantAlternates;
   alternateValues = aOther.alternateValues;
+  featureValueLookup = aOther.featureValueLookup;
 }
 
 // mapping from bitflag to font feature tag/value pair
@@ -184,6 +186,7 @@ void nsFont::AddFontFeaturesToStyle(gfxFontStyle* aStyle,
   // -- copy font-specific alternate info into style
   //    (this will be resolved after font-matching occurs)
   aStyle->alternateValues.AppendElements(alternateValues);
+  aStyle->featureValueLookup = featureValueLookup;
 
   // -- caps
   aStyle->variantCaps = variantCaps;

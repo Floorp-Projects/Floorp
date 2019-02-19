@@ -98,7 +98,7 @@ pub mod system_colors {
             unsafe {
                 Gecko_GetLookAndFeelSystemColor(
                     *self as i32,
-                    cx.device().document(),
+                    cx.device().pres_context(),
                 )
             }
         }

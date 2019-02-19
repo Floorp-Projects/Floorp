@@ -22,7 +22,7 @@ class CSSMozDocumentRule final : public css::ConditionRule {
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  static bool Match(const Document*, nsIURI* aDocURI,
+  static bool Match(Document* aDoc, nsIURI* aDocURI,
                     const nsACString& aDocURISpec, const nsACString& aPattern,
                     css::DocumentMatchingFunction);
 

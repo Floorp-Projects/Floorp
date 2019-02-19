@@ -396,7 +396,7 @@ ${helpers.predefined_type(
                         &mut system,
                         id as i32,
                         cx.style().get_font().gecko(),
-                        cx.device().document()
+                        cx.device().pres_context()
                     )
                 }
                 let font_weight = longhands::font_weight::computed_value::T::from_gecko_weight(system.weight);
