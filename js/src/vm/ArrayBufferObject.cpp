@@ -996,6 +996,12 @@ void ArrayBufferObject::releaseData(FreeOp* fop) {
         freeInfo()->freeFunc(dataPointer(), freeInfo()->freeUserData);
       }
       break;
+    case BAD1:
+    case BAD2:
+    case BAD3:
+    case BAD4:
+      MOZ_CRASH("invalid BufferKind encountered");
+      break;
   }
 }
 
@@ -1369,7 +1375,13 @@ ArrayBufferObject::externalizeContents(JSContext* cx,
       MOZ_ASSERT(buffer.wasmMappedSize() >= buffer.byteLength());
       info->wasmGuardPages += buffer.wasmMappedSize() - buffer.byteLength();
       break;
-    case KIND_MASK:
+    case EXTERNAL:
+      MOZ_CRASH("external buffers not currently supported");
+      break;
+    case BAD1:
+    case BAD2:
+    case BAD3:
+    case BAD4:
       MOZ_CRASH("bad bufferKind()");
   }
 }

@@ -175,12 +175,19 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   };
 
   enum BufferKind {
-    PLAIN = 0,  // malloced or inline data
-    WASM = 1,
-    MAPPED = 2,
-    EXTERNAL = 3,
+    PLAIN = 0b000,  // malloced or inline data
+    WASM = 0b001,
+    MAPPED = 0b010,
+    EXTERNAL = 0b011,
 
-    KIND_MASK = 0x3
+    // These kind-values are currently invalid.  We intend to expand valid
+    // BufferKinds in the future to either partly or fully use these values.
+    BAD1 = 0b100,
+    BAD2 = 0b101,
+    BAD3 = 0b110,
+    BAD4 = 0b111,
+
+    KIND_MASK = 0b111
   };
 
  protected:
@@ -188,7 +195,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     // The flags also store the BufferKind
     BUFFER_KIND_MASK = BufferKind::KIND_MASK,
 
-    DETACHED = 0x4,
+    DETACHED = 0b1000,
 
     // The dataPointer() is owned by this buffer and should be released
     // when no longer in use. Releasing the pointer may be done by freeing,
@@ -199,14 +206,14 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     // allocate their data inline, and buffers that are created lazily for
     // typed objects with inline storage, in which case the buffer points
     // directly to the typed object's storage.
-    OWNS_DATA = 0x8,
+    OWNS_DATA = 0b1'0000,
 
     // Views of this buffer might include typed objects.
-    TYPED_OBJECT_VIEWS = 0x10,
+    TYPED_OBJECT_VIEWS = 0b10'0000,
 
     // This PLAIN or WASM buffer has been prepared for asm.js and cannot
     // henceforth be transferred/detached.
-    FOR_ASMJS = 0x20
+    FOR_ASMJS = 0b100'0000,
   };
 
   static_assert(JS_ARRAYBUFFER_DETACHED_FLAG == DETACHED,
