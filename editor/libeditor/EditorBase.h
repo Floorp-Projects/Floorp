@@ -652,6 +652,8 @@ class EditorBase : public nsIEditor,
     void SetData(const nsAString& aData) { mData = aData; }
     const nsString& GetData() const { return mData; }
 
+    void SetColorData(const nsAString& aData);
+
     void SetTopLevelEditSubAction(EditSubAction aEditSubAction,
                                   EDirection aDirection = eNone) {
       mTopLevelEditSubAction = aEditSubAction;

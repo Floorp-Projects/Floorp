@@ -269,6 +269,29 @@ void nsStyleUtil::AppendEscapedCSSString(const nsAString& aString,
   return rounded;
 }
 
+/* static */ void nsStyleUtil::GetSerializedColorValue(
+    nscolor aColor, nsAString& aSerializedColor) {
+  MOZ_ASSERT(aSerializedColor.IsEmpty());
+
+  const bool hasAlpha = NS_GET_A(aColor) != 255;
+  if (hasAlpha) {
+    aSerializedColor.AppendLiteral("rgba(");
+  } else {
+    aSerializedColor.AppendLiteral("rgb(");
+  }
+  aSerializedColor.AppendInt(NS_GET_R(aColor));
+  aSerializedColor.AppendLiteral(", ");
+  aSerializedColor.AppendInt(NS_GET_G(aColor));
+  aSerializedColor.AppendLiteral(", ");
+  aSerializedColor.AppendInt(NS_GET_B(aColor));
+  if (hasAlpha) {
+    aSerializedColor.AppendLiteral(", ");
+    float alpha = nsStyleUtil::ColorComponentToFloat(NS_GET_A(aColor));
+    nsStyleUtil::AppendCSSNumber(alpha, aSerializedColor);
+  }
+  aSerializedColor.AppendLiteral(")");
+}
+
 /* static */ bool nsStyleUtil::IsSignificantChild(
     nsIContent* aChild, bool aWhitespaceIsSignificant) {
   bool isText = aChild->IsText();

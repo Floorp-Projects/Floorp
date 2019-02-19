@@ -73,6 +73,10 @@ nsresult HTMLEditor::SetInlinePropertyAsAction(nsAtom& aProperty,
       // XXX Should we trim unnecessary whitespaces?
       editActionData.SetData(aValue);
       break;
+    case EditAction::eSetColorProperty:
+    case EditAction::eSetBackgroundColorPropertyInline:
+      editActionData.SetColorData(aValue);
+      break;
     default:
       break;
   }
@@ -119,6 +123,10 @@ HTMLEditor::SetInlineProperty(const nsAString& aProperty,
       MOZ_ASSERT(!aValue.IsVoid());
       // XXX Should we trim unnecessary whitespaces?
       editActionData.SetData(aValue);
+      break;
+    case EditAction::eSetColorProperty:
+    case EditAction::eSetBackgroundColorPropertyInline:
+      editActionData.SetColorData(aValue);
       break;
     default:
       break;
@@ -1246,6 +1254,10 @@ nsresult HTMLEditor::RemoveInlinePropertyAsAction(nsAtom& aProperty,
       MOZ_ASSERT(!EmptyString().IsVoid());
       editActionData.SetData(EmptyString());
       break;
+    case EditAction::eRemoveColorProperty:
+    case EditAction::eRemoveBackgroundColorPropertyInline:
+      editActionData.SetColorData(EmptyString());
+      break;
     default:
       break;
   }
@@ -1272,6 +1284,10 @@ HTMLEditor::RemoveInlineProperty(const nsAString& aProperty,
     case EditAction::eRemoveFontFamilyProperty:
       MOZ_ASSERT(!EmptyString().IsVoid());
       editActionData.SetData(EmptyString());
+      break;
+    case EditAction::eRemoveColorProperty:
+    case EditAction::eRemoveBackgroundColorPropertyInline:
+      editActionData.SetColorData(EmptyString());
       break;
     default:
       break;
