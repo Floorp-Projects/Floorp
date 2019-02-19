@@ -163,6 +163,7 @@ inline bool IsDataAvailableOnHTMLEditor(EditorInputType aInputType) {
     case EditorInputType::eInsertFromComposition:  // Only level 2
     case EditorInputType::eFormatSetBlockTextDirection:
     case EditorInputType::eFormatSetInlineTextDirection:
+    case EditorInputType::eInsertLink:
       return true;
     default:
       return false;

@@ -402,6 +402,32 @@ function runTests() {
     is(inputEvent.data, "ltr",
        aDescription + 'data should be "ltr" when dispatching cmd_switchTextDirection command #2');
 
+    // Inserting link
+    editTarget.innerHTML = "link";
+    editTarget.focus();
+    selection.selectAllChildren(editTarget);
+    inputEvent = null;
+    aDocument.execCommand("createLink", false, "https://example.com/foo/bar.html");
+    ok(inputEvent,
+       aDescription + 'input event should be fired by execCommand("createLink", false, "https://example.com/foo/bar.html")');
+    ok(inputEvent.isTrusted,
+       aDescription + 'input event should be trusted when execCommand("createLink", false, "https://example.com/foo/bar.html")');
+    is(inputEvent.inputType, "insertLink",
+       aDescription + 'inputType should be "insertLink" when execCommand("createLink", false, "https://example.com/foo/bar.html")');
+    is(inputEvent.data, "https://example.com/foo/bar.html",
+       aDescription + 'data should be "https://example.com/foo/bar.html" when execCommand("createLink", false, "https://example.com/foo/bar.html")');
+
+    selection.selectAllChildren(editTarget);
+    aDocument.execCommand("createLink", false, "foo/bar.html");
+    ok(inputEvent,
+       aDescription + 'input event should be fired by execCommand("createLink", false, "foo/bar.html")');
+    ok(inputEvent.isTrusted,
+       aDescription + 'input event should be trusted when execCommand("createLink", false, "foo/bar.html")');
+    is(inputEvent.inputType, "insertLink",
+       aDescription + 'inputType should be "insertLink" when execCommand("createLink", false, "foo/bar.html")');
+    is(inputEvent.data, "foo/bar.html",
+       aDescription + 'data should be "foo/bar.html" when execCommand("createLink", false, "foo/bar.html")');
+
     aWindow.removeEventListener("input", handler, true);
   }
 
