@@ -1,4 +1,4 @@
-<?xml version="1.0"?> 
+<?xml version="1.0"?>
 
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -6,15 +6,18 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://global/locale/printPreviewProgress.dtd">
-
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        title="&printWindow.title;"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        data-l10n-id="print-preview-window"
         style="width: 36em;"
         buttons="cancel"
         oncancel="onCancel()"
         onload="onLoad()"
         onunload="onUnload()">
+
+  <linkset>
+    <html:link rel="localization" href="toolkit/printing/printDialogs.ftl"/>
+  </linkset>
 
   <script type="application/javascript" src="chrome://global/content/printPreviewProgress.js"/>
 
@@ -23,19 +26,19 @@
         <column/>
         <column/>
       </columns>
-      
+
       <rows>
         <row>
           <hbox pack="end">
-            <label id="dialog.titleLabel" value="&title;"/>
+            <label id="dialog.titleLabel" data-l10n-id="print-title"/>
           </hbox>
           <label id="dialog.title"/>
         </row>
-        <row class="thin-separator">             
+        <row class="thin-separator">
           <hbox pack="end">
-            <label id="dialog.progressSpaces" value="&progress;"/>
+            <label id="dialog.progressSpaces" data-l10n-id="print-preparing"/>
           </hbox>
-            <label id="dialog.progressLabel" value="&preparing;"/>
+          <label id="dialog.progressLabel" data-l10n-id="print-progress"/>
         </row>
       </rows>
     </grid>
