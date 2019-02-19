@@ -1943,7 +1943,9 @@ extern JS_FRIEND_API JSObject* JS_GetArrayBufferViewBuffer(
  * Detach an ArrayBuffer, causing all associated views to no longer refer to
  * the ArrayBuffer's original attached memory.
  *
- * The |changeData| argument is obsolete and ignored.
+ * This function throws only if it is provided a non-ArrayBuffer object or if
+ * the provided ArrayBuffer is a WASM-backed ArrayBuffer or an ArrayBuffer used
+ * in asm.js code.
  */
 extern JS_FRIEND_API bool JS_DetachArrayBuffer(JSContext* cx,
                                                JS::HandleObject obj);
