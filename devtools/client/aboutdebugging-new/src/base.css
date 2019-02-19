@@ -123,6 +123,11 @@ p {
   font-family: var(--monospace-font-family);
 }
 
+/* Text that is not selectable */
+.unselectable-text {
+  -moz-user-select: none;
+}
+
 /*
 * Typography
 */
@@ -297,6 +302,13 @@ Form controls
   border-radius: 2px;
   color: var(--text-color);
   background-color: var(--box-background);
+}
+
+.default-checkbox {
+  /* Note: this styles are from Photon, not common.css */
+  height: calc(var(--base-unit) * 4);
+  margin-inline-end: var(--base-unit);
+  width: calc(var(--base-unit) * 4);
 }
 
 /*
