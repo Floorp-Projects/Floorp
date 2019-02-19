@@ -53,6 +53,8 @@ SimpleTest.waitForFocus(function() {
      '"input" event should always bubble after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor');
   is(inputEvents[0].inputType, "insertText",
      'inputType should be "insertText" after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor');
+  is(inputEvents[0].data, "this is quoted text\nAnd here is second line.",
+     "data should be the quoted text after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor");
 
   // Tests when the editor is in HTML editor mode.
   getEditor().flags &= ~SpecialPowers.Ci.nsIPlaintextEditor.eEditorPlaintextMask;
@@ -80,6 +82,8 @@ SimpleTest.waitForFocus(function() {
      '"input" event should always bubble after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext)');
   is(inputEvents[0].inputType, "",
      "inputType should be empty string after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext)");
+  is(inputEvents[0].data, null,
+     "data should be null after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext)");
 
   editor.innerHTML = "";
 
@@ -104,6 +108,8 @@ SimpleTest.waitForFocus(function() {
      '"input" event should always bubble after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source)');
   is(inputEvents[0].inputType, "",
      "inputType should be empty string after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source)");
+  is(inputEvents[0].data, null,
+     "data should be null after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source)");
 
   SimpleTest.finish();
 });

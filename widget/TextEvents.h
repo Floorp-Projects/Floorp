@@ -1140,7 +1140,9 @@ class WidgetSelectionEvent : public WidgetGUIEvent {
 class InternalEditorInputEvent : public InternalUIEvent {
  private:
   InternalEditorInputEvent()
-      : mInputType(EditorInputType::eUnknown), mIsComposing(false) {}
+      : mData(VoidString()),
+        mInputType(EditorInputType::eUnknown),
+        mIsComposing(false) {}
 
  public:
   virtual InternalEditorInputEvent* AsEditorInputEvent() override {
@@ -1150,6 +1152,7 @@ class InternalEditorInputEvent : public InternalUIEvent {
   InternalEditorInputEvent(bool aIsTrusted, EventMessage aMessage,
                            nsIWidget* aWidget = nullptr)
       : InternalUIEvent(aIsTrusted, aMessage, aWidget, eEditorInputEventClass),
+        mData(VoidString()),
         mInputType(EditorInputType::eUnknown) {}
 
   virtual WidgetEvent* Duplicate() const override {

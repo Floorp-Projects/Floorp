@@ -406,6 +406,8 @@ nsresult TextEditor::OnInputText(const nsAString& aStringToInsert) {
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
+  MOZ_ASSERT(!aStringToInsert.IsVoid());
+  editActionData.SetData(aStringToInsert);
 
   AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::TypingTxnName);
   nsresult rv = InsertTextAsSubAction(aStringToInsert);
@@ -982,6 +984,10 @@ nsresult TextEditor::InsertTextAsAction(const nsAString& aStringToInsert) {
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
+  // Note that we don't need to replace native line breaks with XP line breaks
+  // here because Chrome does not do it.
+  MOZ_ASSERT(!aStringToInsert.IsVoid());
+  editActionData.SetData(aStringToInsert);
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
   nsresult rv = InsertTextAsSubAction(aStringToInsert);
@@ -1284,10 +1290,6 @@ nsresult TextEditor::OnCompositionChange(
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  if (!EnsureComposition(aCompositionChangeEvent)) {
-    return NS_OK;
-  }
-
   // If:
   // - new composition string is not empty,
   // - there is no composition string in the DOM tree,
@@ -1296,6 +1298,21 @@ nsresult TextEditor::OnCompositionChange(
   if (aCompositionChangeEvent.mData.IsEmpty() &&
       mComposition->String().IsEmpty() && !SelectionRefPtr()->IsCollapsed()) {
     editActionData.UpdateEditAction(EditAction::eDeleteByComposition);
+  }
+
+  // If Input Events Level 2 is enabled, EditAction::eDeleteByComposition is
+  // mapped to EditorInputType::eDeleteByComposition and it requires null
+  // for InputEvent.data.  Therefore, only otherwise, we should set data.
+  if (ToInputType(editActionData.GetEditAction()) !=
+      EditorInputType::eDeleteByComposition) {
+    MOZ_ASSERT(ToInputType(editActionData.GetEditAction()) ==
+               EditorInputType::eInsertCompositionText);
+    MOZ_ASSERT(!aCompositionChangeEvent.mData.IsVoid());
+    editActionData.SetData(aCompositionChangeEvent.mData);
+  }
+
+  if (!EnsureComposition(aCompositionChangeEvent)) {
+    return NS_OK;
   }
 
   nsIPresShell* presShell = GetPresShell();
@@ -1360,6 +1377,16 @@ void TextEditor::OnCompositionEnd(
   AutoEditActionDataSetter editActionData(*this, editAction);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return;
+  }
+  // If Input Events Level 2 is enabled, EditAction::eCancelComposition is
+  // mapped to EditorInputType::eDeleteCompositionText and it requires null
+  // for InputEvent.data.  Therefore, only otherwise, we should set data.
+  if (ToInputType(editAction) != EditorInputType::eDeleteCompositionText) {
+    MOZ_ASSERT(
+        ToInputType(editAction) == EditorInputType::eInsertCompositionText ||
+        ToInputType(editAction) == EditorInputType::eInsertFromComposition);
+    MOZ_ASSERT(!aCompositionEndEvent.mData.IsVoid());
+    editActionData.SetData(aCompositionEndEvent.mData);
   }
 
   // commit the IME transaction..we can get at it via the transaction mgr.
