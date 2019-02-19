@@ -530,6 +530,33 @@ CompositorD3D11::CreateAsyncReadbackBuffer(const gfx::IntSize& aSize) {
   return MakeAndAddRef<AsyncReadbackBufferD3D11>(mContext, texture, aSize);
 }
 
+bool CompositorD3D11::BlitRenderTarget(CompositingRenderTarget* aSource,
+                                       const gfx::IntSize& aSourceSize,
+                                       const gfx::IntSize& aDestSize) {
+  RefPtr<CompositingRenderTargetD3D11> source =
+      static_cast<CompositingRenderTargetD3D11*>(aSource);
+
+  RefPtr<TexturedEffect> texturedEffect = CreateTexturedEffect(
+      SurfaceFormat::B8G8R8A8, source, SamplingFilter::LINEAR, true);
+  texturedEffect->mTextureCoords =
+      Rect(0, 0, Float(aSourceSize.width) / Float(source->GetSize().width),
+           Float(aSourceSize.height) / Float(source->GetSize().height));
+
+  EffectChain effect;
+  effect.mPrimaryEffect = texturedEffect;
+
+  const Float scaleX = Float(aDestSize.width) / Float(aSourceSize.width);
+  const Float scaleY = Float(aDestSize.height) / (aSourceSize.height);
+  const Matrix4x4 transform = Matrix4x4::Scaling(scaleX, scaleY, 1.0f);
+
+  const Rect sourceRect(0, 0, aSourceSize.width, aSourceSize.height);
+
+  DrawQuad(sourceRect, IntRect(0, 0, aDestSize.width, aDestSize.height), effect,
+           1.0f, transform, sourceRect);
+
+  return true;
+}
+
 bool CompositorD3D11::CopyBackdrop(const gfx::IntRect& aRect,
                                    RefPtr<ID3D11Texture2D>* aOutTexture,
                                    RefPtr<ID3D11ShaderResourceView>* aOutView) {

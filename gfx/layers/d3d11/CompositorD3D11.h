@@ -66,6 +66,10 @@ class CompositorD3D11 : public Compositor {
   virtual already_AddRefed<AsyncReadbackBuffer> CreateAsyncReadbackBuffer(
       const gfx::IntSize& aSize) override;
 
+  virtual bool BlitRenderTarget(CompositingRenderTarget* aSource,
+                                const gfx::IntSize& aSourceSize,
+                                const gfx::IntSize& aDestSize) override;
+
   virtual void SetDestinationSurfaceSize(const gfx::IntSize& aSize) override {}
 
   /**
