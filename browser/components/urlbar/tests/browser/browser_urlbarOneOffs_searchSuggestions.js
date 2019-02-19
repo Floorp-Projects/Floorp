@@ -97,12 +97,12 @@ add_task(async function overridden_engine_not_reused() {
     let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
     let label = result.displayed.action;
     // Run again the query, check the label has been replaced.
+    await UrlbarTestUtils.promisePopupClose(window);
     await promiseAutocompleteResultPopup(typedValue, window, true);
     await promiseSuggestionsPresent();
     assertState(0, -1, "foo");
     result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
     Assert.notEqual(result.displayed.action, label, "The label should have been updated");
-
     BrowserTestUtils.removeTab(tab);
 });
 
@@ -111,11 +111,7 @@ function assertState(result, oneOff, textValue = undefined) {
     "Expected result should be selected");
   Assert.equal(UrlbarTestUtils.getOneOffSearchButtons(window).selectedButtonIndex,
     oneOff, "Expected one-off should be selected");
-    // TODO Bug 1527946: Fix textValue differences for QuantumBar
-    if (UrlbarPrefs.get("quantumbar")) {
-      return;
-    }
-    if (textValue !== undefined) {
-      Assert.equal(gURLBar.textValue, textValue, "Expected textValue");
-    }
+  if (textValue !== undefined) {
+    Assert.equal(gURLBar.textValue, textValue, "Expected textValue");
+  }
 }
