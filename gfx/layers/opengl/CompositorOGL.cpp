@@ -45,6 +45,7 @@
 #include "nsRect.h"                 // for mozilla::gfx::IntRect
 #include "nsServiceManagerUtils.h"  // for do_GetService
 #include "nsString.h"               // for nsString, nsAutoCString, etc
+#include "OGLShaderProgram.h"       // for ShaderProgramOGL, etc
 #include "ScopedGLHelpers.h"
 #include "GLReadTexImageHelper.h"
 #include "GLBlitTextureImageHelper.h"
@@ -151,6 +152,16 @@ bool AsyncReadbackBufferOGL::MapAndCopyInto(DataSourceSurface* aSurface,
 
   return true;
 }
+
+
+PerUnitTexturePoolOGL::PerUnitTexturePoolOGL(gl::GLContext* aGL)
+    : mTextureTarget(0),  // zero is never a valid texture target
+      mGL(aGL) {}
+
+PerUnitTexturePoolOGL::~PerUnitTexturePoolOGL() {
+  DestroyTextures();
+}
+
 
 static void BindMaskForProgram(ShaderProgramOGL* aProgram,
                                TextureSourceOGL* aSourceMask, GLenum aTexUnit,

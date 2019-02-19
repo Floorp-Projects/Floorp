@@ -31,7 +31,6 @@
 #include "nsDebug.h"           // for NS_WARNING
 #include "nsISupportsImpl.h"   // for TextureImage::Release, etc
 #include "nsRegionFwd.h"       // for nsIntRegion
-#include "OGLShaderProgram.h"  // for ShaderProgramType, etc
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "GeneratedJNIWrappers.h"
@@ -50,16 +49,9 @@ class CompositorOGL;
 class TextureImageTextureSourceOGL;
 class GLTextureSource;
 
-inline void ApplySamplingFilterToBoundTexture(
+void ApplySamplingFilterToBoundTexture(
     gl::GLContext* aGL, gfx::SamplingFilter aSamplingFilter,
-    GLuint aTarget = LOCAL_GL_TEXTURE_2D) {
-  GLenum filter =
-      (aSamplingFilter == gfx::SamplingFilter::POINT ? LOCAL_GL_NEAREST
-                                                     : LOCAL_GL_LINEAR);
-
-  aGL->fTexParameteri(aTarget, LOCAL_GL_TEXTURE_MIN_FILTER, filter);
-  aGL->fTexParameteri(aTarget, LOCAL_GL_TEXTURE_MAG_FILTER, filter);
-}
+    GLuint aTarget = LOCAL_GL_TEXTURE_2D);
 
 /*
  * TextureHost implementations for the OpenGL backend.
