@@ -24,7 +24,7 @@ interface Toolbar {
     /**
      * Sets/Gets the URL to be displayed on the toolbar.
      */
-    var url: String
+    var url: CharSequence
 
     /**
      * Sets/gets private mode.

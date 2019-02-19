@@ -255,7 +255,7 @@ class BrowserToolbar @JvmOverloads constructor(
     private var searchTerms: String = ""
     private var urlCommitListener: ((String) -> Boolean)? = null
 
-    override var url: String = ""
+    override var url: CharSequence = ""
         set(value) {
             // We update the display toolbar immediately. We do not do that for the edit toolbar to not
             // mess with what the user is entering. Instead we will remember the value and update the
@@ -427,7 +427,7 @@ class BrowserToolbar @JvmOverloads constructor(
      */
     override fun editMode() {
         val urlValue = if (searchTerms.isEmpty()) url else searchTerms
-        editToolbar.updateUrl(urlValue)
+        editToolbar.updateUrl(urlValue.toString())
 
         updateState(State.EDIT)
 

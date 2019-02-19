@@ -179,7 +179,7 @@ internal class DisplayToolbar(
     /**
      * Updates the URL to be displayed.
      */
-    fun updateUrl(url: String) {
+    fun updateUrl(url: CharSequence) {
         urlView.text = url
     }
 

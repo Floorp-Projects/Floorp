@@ -30,7 +30,7 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class ToolbarAutocompleteFeatureTest {
     class TestToolbar : Toolbar {
-        override var url: String = ""
+        override var url: CharSequence = ""
         override var siteSecure: Toolbar.SiteSecurity = Toolbar.SiteSecurity.INSECURE
         override var private: Boolean = false
 
