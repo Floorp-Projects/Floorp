@@ -294,6 +294,9 @@ security/nss/**
 
 # services/ exclusions
 
+# Webpack-bundled library
+services/fxaccounts/FxAccountsPairingChannel.js
+
 # Uses `#filter substitution`
 services/sync/modules/constants.js
 services/sync/services-sync.js

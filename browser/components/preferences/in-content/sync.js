@@ -149,11 +149,11 @@ var gSyncPane = {
 
     // Links for mobile devices shown after the user is logged in.
     FxAccounts.config.promiseConnectDeviceURI(this._getEntryPoint()).then(connectURI => {
-      document.getElementById("mobilePromo-singledevice").setAttribute("href", connectURI);
+      document.getElementById("connect-another-device").setAttribute("href", connectURI);
     });
 
     FxAccounts.config.promiseManageDevicesURI(this._getEntryPoint()).then(manageURI => {
-      document.getElementById("mobilePromo-multidevice").setAttribute("href", manageURI);
+      document.getElementById("manage-devices").setAttribute("href", manageURI);
     });
 
     document.getElementById("tosPP-small-ToS").setAttribute("href", Weave.Svc.Prefs.get("fxa.termsURL"));
@@ -167,6 +167,12 @@ var gSyncPane = {
 
     // Notify observers that the UI is now ready
     Services.obs.notifyObservers(window, "sync-pane-loaded");
+
+    // document.location.search is empty, so we simply match on `action=pair`.
+    if (location.href.includes("action=pair") && location.hash == "#sync" &&
+        UIState.get().status == UIState.STATUS_SIGNED_IN) {
+      gSyncPane.pairAnotherDevice();
+    }
   },
 
   _toggleComputerNameControls(editMode) {
@@ -338,8 +344,8 @@ var gSyncPane = {
     let isUnverified = state.status == UIState.STATUS_NOT_VERIFIED;
     // The mobile promo links - which one is shown depends on the number of devices.
     let isMultiDevice = Weave.Service.clientsEngine.stats.numClients > 1;
-    document.getElementById("mobilePromo-singledevice").hidden = isUnverified || isMultiDevice;
-    document.getElementById("mobilePromo-multidevice").hidden = isUnverified || !isMultiDevice;
+    document.getElementById("connect-another-device").hidden = isUnverified;
+    document.getElementById("manage-devices").hidden = isUnverified || !isMultiDevice;
   },
 
   _getEntryPoint() {
@@ -466,6 +472,14 @@ var gSyncPane = {
       // we still disconnect via the SyncDisconnect module for consistency.
       SyncDisconnect.disconnect().finally(() => this.updateWeavePrefs());
     }
+  },
+
+  pairAnotherDevice() {
+    gSubDialog.open("chrome://browser/content/preferences/in-content/fxaPairDevice.xul",
+                    "resizable=no", /* aFeatures */
+                    null, /* aParams */
+                    null /* aClosingCallback */
+                    );
   },
 
   _populateComputerName(value) {
