@@ -7,7 +7,7 @@ job-defaults:
             default: false
     virtualization:
         by-test-platform:
-            windows10-64-qr/.*: virtual-with-gpu
+            windows10-64(?:-pgo)?-qr/.*: virtual-with-gpu
             default: virtual
     mozharness:
         script: web_platform_tests.py
@@ -107,7 +107,7 @@ web-platform-tests-reftests:
         by-test-platform:
             android.*: ['mozilla-central', 'try']
             windows10-aarch64/opt: ['try', 'mozilla-central']
-            linux64-qr/.*: ['release', 'try']  # skip on integration branches due to high load
+            linux64-pgo-qr/.*: ['release', 'try']  # skip on integration branches due to high load
             default: built-projects
     tier:
         by-test-platform:
@@ -192,6 +192,7 @@ test-verify-wpt:
             # do not run on ccov
             .*-ccov/.*: []
             .*-asan/.*: []
+            (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
             # do not run on beta or release: usually just confirms earlier results
             default: ['trunk', 'try']
     tier: 2
