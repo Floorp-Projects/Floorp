@@ -442,6 +442,7 @@ class WebConsoleClient extends FrontClassWithSpec(webconsoleSpec) {
 
   /**
    * Start the given Web Console listeners.
+   * TODO: remove once the front is retrieved via getFront, and we use form()
    *
    * @see this.LISTENERS
    * @param array listeners
@@ -450,8 +451,11 @@ class WebConsoleClient extends FrontClassWithSpec(webconsoleSpec) {
    * @return request
    *         Request object that implements both Promise and EventEmitter interfaces
    */
-  startListeners(listeners) {
-    return super.startListeners(listeners);
+  async startListeners(listeners) {
+    const response = await super.startListeners(listeners);
+    this.hasNativeConsoleAPI = response.nativeConsoleAPI;
+    this.traits = response.traits;
+    return response;
   }
 
   /**
