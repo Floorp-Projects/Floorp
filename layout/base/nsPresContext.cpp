@@ -194,6 +194,7 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mHasPendingInterrupt(false),
       mPendingInterruptFromTest(false),
       mInterruptsEnabled(false),
+      mUseDocumentFonts(true),
       mUseDocumentColors(true),
       mUnderlineLinks(true),
       mSendAfterPaintToContent(false),
@@ -516,6 +517,10 @@ void nsPresContext::GetUserPreferences() {
       Preferences::GetInt("browser.display.focus_ring_style", mFocusRingStyle);
 
   mBodyTextColor = mDefaultColor;
+
+  // * use fonts?
+  mUseDocumentFonts =
+      Preferences::GetInt("browser.display.use_document_fonts") != 0;
 
   mPrefScrollbarSide = Preferences::GetInt("layout.scrollbar.side");
 

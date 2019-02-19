@@ -549,12 +549,6 @@ VARCACHE_PREF(
 //---------------------------------------------------------------------------
 
 VARCACHE_PREF(
-  "browser.display.use_document_fonts",
-   browser_display_use_document_fonts,
-  RelaxedAtomicBool, true
-)
-
-VARCACHE_PREF(
   "gfx.font_rendering.opentype_svg.enabled",
    gfx_font_rendering_opentype_svg_enabled,
   bool, true

@@ -2946,7 +2946,8 @@ class nsLayoutUtils {
    * Appropriately add the correct font if we are using DocumentFonts or
    * overriding for XUL
    */
-  static void FixupNoneGeneric(nsFont* aFont, uint8_t aGenericFontID,
+  static void FixupNoneGeneric(nsFont* aFont, const nsPresContext* aPresContext,
+                               uint8_t aGenericFontID,
                                const nsFont* aDefaultVariableFont);
 
   /**
@@ -2954,7 +2955,7 @@ class nsLayoutUtils {
    * from preferences, as well as -moz-min-font-size-ratio.
    */
   static void ApplyMinFontSize(nsStyleFont* aFont,
-                               const mozilla::dom::Document*,
+                               const nsPresContext* aPresContext,
                                nscoord aMinFontSize);
 
   static void ComputeSystemFont(nsFont* aSystemFont,
