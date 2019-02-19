@@ -1700,11 +1700,11 @@ impl PrimitiveStore {
     /// Destroy an existing primitive store. This is called just before
     /// a primitive store is replaced with a newly built scene.
     pub fn destroy(
-        self,
+        mut self,
         retained_tiles: &mut RetainedTiles,
         clip_scroll_tree: &ClipScrollTree,
     ) {
-        for pic in self.pictures {
+        for pic in &mut self.pictures {
             pic.destroy(
                 retained_tiles,
                 clip_scroll_tree,
