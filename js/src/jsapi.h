@@ -2021,9 +2021,12 @@ JS_PUBLIC_API void JS_SetAllNonReservedSlotsToUndefined(JSContext* cx,
                                                         JSObject* objArg);
 
 /**
- * Create a new array buffer with the given contents. It must be legal to pass
- * these contents to JS_free(). On success, the ownership is transferred to the
- * new array buffer.
+ * Create a new array buffer with the given |contents|, which may be null only
+ * if |nbytes == 0|.  |contents| must be allocated compatible with deallocation
+ * by |JS_free|.
+ *
+ * If and only if an array buffer is successfully created and returned,
+ * ownership of |contents| is transferred to the new array buffer.
  */
 extern JS_PUBLIC_API JSObject* JS_NewArrayBufferWithContents(JSContext* cx,
                                                              size_t nbytes,
@@ -2066,9 +2069,22 @@ extern JS_PUBLIC_API JSObject* JS_NewExternalArrayBuffer(
     JS::BufferContentsFreeFunc freeFunc, void* freeUserData = nullptr);
 
 /**
- * Create a new array buffer with the given contents.  The array buffer does not
- * take ownership of contents.  JS_DetachArrayBuffer must be called before
- * the contents are disposed of by the user; this call will always succeed.
+ * Create a new ArrayBuffer with the given non-null |contents|.
+ *
+ * Ownership of |contents| remains with the caller: it isn't transferred to the
+ * returned ArrayBuffer.  Callers of this function *must* ensure that they
+ * perform these two steps, in this order, to properly relinquish ownership of
+ * |contents|:
+ *
+ *   1. Call |JS_DetachArrayBuffer| on the buffer returned by this function.
+ *      (|JS_DetachArrayBuffer| is generally fallible, but a call under these
+ *      circumstances is guaranteed to succeed.)
+ *   2. |contents| may be deallocated or discarded consistent with the manner
+ *      in which it was allocated.
+ *
+ * Do not simply allow the returned buffer to be garbage-collected before
+ * deallocating |contents|, because in general there is no way to know *when*
+ * an object is fully garbage-collected to the point where this would be safe.
  */
 extern JS_PUBLIC_API JSObject* JS_NewArrayBufferWithUserOwnedContents(
     JSContext* cx, size_t nbytes, void* contents);
