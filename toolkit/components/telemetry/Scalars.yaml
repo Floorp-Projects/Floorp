@@ -480,32 +480,6 @@ contentblocking:
     release_channel_collection: opt-out
     record_in_processes:
       - main
-  cryptomining_blocking_enabled:
-    bug_numbers:
-      - 1522919
-    description: >
-      True if cryptominer blocking is enabled globally at startup.
-    expires: never
-    kind: boolean
-    notification_emails:
-      - aedelstein@mozilla.com
-      - seceng-telemetry@mozilla.com
-    release_channel_collection: opt-out
-    record_in_processes:
-      - main
-  fingerprinting_blocking_enabled:
-    bug_numbers:
-      - 1522919
-    description: >
-      True if fingerprinter blocking is enabled globally at startup.
-    expires: never
-    kind: boolean
-    notification_emails:
-      - aedelstein@mozilla.com
-      - seceng-telemetry@mozilla.com
-    release_channel_collection: opt-out
-    record_in_processes:
-      - main
 
 sandbox:
   no_job:
