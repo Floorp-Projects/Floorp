@@ -35,7 +35,7 @@ POLICIES_CONTENT_ON = '''{
       "Mode": "manual",
       "HTTPProxy": "127.0.0.1:8080",
       "SSLProxy": "127.0.0.1:8080",
-      "Passthrough": "localhost, 127.0.0.1",
+      "Passthrough": "",
       "Locked": true
     }
   }
