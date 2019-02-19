@@ -43,11 +43,8 @@
 #endif
   locale/@AB_CD@/global/notification.dtd                (%chrome/global/notification.dtd)
 #ifndef MOZ_FENNEC
-  locale/@AB_CD@/global/printPageSetup.dtd              (%chrome/global/printPageSetup.dtd)
   locale/@AB_CD@/global/printPreview.dtd                (%chrome/global/printPreview.dtd)
-  locale/@AB_CD@/global/printPreviewProgress.dtd        (%chrome/global/printPreviewProgress.dtd)
   locale/@AB_CD@/global/printdialog.properties          (%chrome/global/printdialog.properties)
-  locale/@AB_CD@/global/printProgress.dtd               (%chrome/global/printProgress.dtd)
 #endif
   locale/@AB_CD@/global/resetProfile.dtd                (%chrome/global/resetProfile.dtd)
   locale/@AB_CD@/global/resetProfile.properties         (%chrome/global/resetProfile.properties)

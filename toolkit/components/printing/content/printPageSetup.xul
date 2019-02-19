@@ -6,87 +6,79 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://global/skin/printPageSetup.css" type="text/css"?>
-<!DOCTYPE dialog SYSTEM "chrome://global/locale/printPageSetup.dtd">
 
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml"
   id="printPageSetupDialog"
   onload="onLoad();"
   ondialogaccept="return onAccept();"
   oncancel="return onCancel();"
-  title="&printSetup.title;"
+  data-l10n-id="print-setup"
   persist="screenX screenY"
   screenX="24" screenY="24">
 
-  <script type="application/javascript" src="chrome://global/content/printPageSetup.js"/>
+  <linkset>
+    <html:link rel="localization" href="toolkit/printing/printDialogs.ftl"/>
+  </linkset>
 
-  <!-- Localizable strings manipulated at run-time. -->
-  <data id="marginUnits.inches">&marginUnits.inches;</data>
-  <data id="marginUnits.metric">&marginUnits.metric;</data>
-  <data id="customPrompt.title">&customPrompt.title;</data>
-  <data id="customPrompt.prompt">&customPrompt.prompt;</data>
+  <script type="application/javascript" src="chrome://global/content/printPageSetup.js"/>
 
   <tabbox flex="1">
     <tabs>
-      <tab label="&basic.tab;"/>
-      <tab label="&advanced.tab;"/>
+      <tab data-l10n-id="basic-tab"/>
+      <tab data-l10n-id="advanced-tab"/>
     </tabs>
     <tabpanels flex="1">
       <vbox>
         <groupbox>
-          <caption><label value="&formatGroup.label;"/></caption>
+          <caption><label data-l10n-id="format-group-label"/></caption>
           <vbox class="groupbox-body">
             <hbox align="center">
-              <label control="orientation" value="&orientation.label;"/>
+              <label control="orientation" data-l10n-id="orientation-label"/>
               <radiogroup id="orientation" oncommand="setOrientation()">
                 <hbox align="center">
                   <radio id="portrait"
                          class="portrait-page"
-                         label="&portrait.label;"
-                         accesskey="&portrait.accesskey;"/>
+                         data-l10n-id="portrait"/>
                   <radio id="landscape"
                          class="landscape-page"
-                         label="&landscape.label;"
-                         accesskey="&landscape.accesskey;"/>
+                         data-l10n-id="landscape"/>
                 </hbox>
               </radiogroup>
             </hbox>
             <separator/>
             <hbox align="center">
               <label control="scalingInput"
-                     value="&scale.label;"
-                     accesskey="&scale.accesskey;"/>
+                     data-l10n-id="scale"/>
               <textbox id="scalingInput" size="4" oninput="checkDouble(this)"/>
-              <label value="&scalePercent;"/>
+              <label data-l10n-id="scale-percent"/>
               <separator/>
               <checkbox id="shrinkToFit"
-                        label="&shrinkToFit.label;"
-                        accesskey="&shrinkToFit.accesskey;"
+                        data-l10n-id="shrink-to-fit"
                         oncommand="gDialog.scalingInput.disabled=gDialog.scalingLabel.disabled=this.checked"/>
             </hbox>
           </vbox>
         </groupbox>
         <groupbox>
-          <caption><label value="&optionsGroup.label;"/></caption>
+          <caption><label data-l10n-id="options-group-label"/></caption>
           <checkbox id="printBG"
                     class="groupbox-body"
-                    label="&printBG.label;"
-                    accesskey="&printBG.accesskey;"/>
+                    data-l10n-id="print-bg"/>
         </groupbox>
       </vbox>
       <vbox>
         <groupbox>
-          <caption><label id="marginGroup" value="&marginGroup.label;"/></caption>
+          <caption><label id="marginGroup" data-l10n-id="margin-group-label"/></caption>
           <vbox class="groupbox-body">
             <hbox align="center">
               <spacer flex="1"/>
               <label control="topInput"
-                     value="&marginTop.label;"
-                     accesskey="&marginTop.accesskey;"/>
+                     data-l10n-id="margin-top"/>
               <textbox id="topInput" size="5" oninput="changeMargin(this)"/>
               <!-- This invisible label (with same content as the visible one!) is used
                    to ensure that the <textbox> is centered above the page.  The same
                    technique is deployed for the bottom/left/right input fields, below. -->
-              <label value="&marginTop.label;" style="visibility: hidden;"/>
+              <label data-l10n-id="margin-top-invisible" style="visibility: hidden;"/>
               <spacer flex="1"/>
             </hbox>
             <hbox dir="ltr">
@@ -94,10 +86,9 @@
               <vbox>
                 <spacer flex="1"/>
                 <label control="leftInput"
-                       value="&marginLeft.label;"
-                       accesskey="&marginLeft.accesskey;"/>
+                       data-l10n-id="margin-left"/>
                 <textbox id="leftInput" size="5" oninput="changeMargin(this)"/>
-                <label value="&marginLeft.label;" style="visibility: hidden;"/>
+                <label data-l10n-id="margin-left-invisible" style="visibility: hidden;"/>
                 <spacer flex="1"/>
               </vbox>
               <!-- The "margin page" draws a simulated printout page with dashed lines
@@ -116,10 +107,9 @@
               <vbox>
                 <spacer flex="1"/>
                 <label control="rightInput"
-                       value="&marginRight.label;"
-                       accesskey="&marginRight.accesskey;"/>
+                       data-l10n-id="margin-right"/>
                 <textbox id="rightInput" size="5" oninput="changeMargin(this)"/>
-                <label value="&marginRight.label;" style="visibility: hidden;"/>
+                <label data-l10n-id="margin-right-invisible" style="visibility: hidden;"/>
                 <spacer flex="1"/>
               </vbox>
               <spacer flex="1"/>
@@ -127,16 +117,15 @@
             <hbox align="center">
               <spacer flex="1"/>
               <label control="bottomInput"
-                     value="&marginBottom.label;"
-                     accesskey="&marginBottom.accesskey;"/>
+                     data-l10n-id="margin-bottom"/>
               <textbox id="bottomInput" size="5" oninput="changeMargin(this)"/>
-              <label value="&marginBottom.label;" style="visibility: hidden;"/>
+              <label data-l10n-id="margin-bottom-invisible" style="visibility: hidden;"/>
               <spacer flex="1"/>
             </hbox>
           </vbox>
         </groupbox>
         <groupbox>
-          <caption><label value="&headerFooter.label;"/></caption>
+          <caption><label data-l10n-id="header-footer-label"/></caption>
           <grid class="groupbox-body">
             <columns>
               <column/>
@@ -145,86 +134,86 @@
             </columns>
             <rows>
               <row dir="ltr">
-                <menulist id="hLeftOption" oncommand="customize(this)" tooltiptext="&headerLeft.tip;">
+                <menulist id="hLeftOption" oncommand="customize(this)" data-l10n-id="header-left-tip">
                   <menupopup>
-                    <menuitem value="0" label="&hfBlank;"/>
-                    <menuitem value="1" label="&hfTitle;"/>
-                    <menuitem value="2" label="&hfURL;"/>
-                    <menuitem value="3" label="&hfDateAndTime;"/>
-                    <menuitem value="4" label="&hfPage;"/>
-                    <menuitem value="5" label="&hfPageAndTotal;"/>
-                    <menuitem value="6" label="&hfCustom;"/>
+                    <menuitem value="0" data-l10n-id="hf-blank"/>
+                    <menuitem value="1" data-l10n-id="hf-title"/>
+                    <menuitem value="2" data-l10n-id="hf-url"/>
+                    <menuitem value="3" data-l10n-id="hf-date-and-time"/>
+                    <menuitem value="4" data-l10n-id="hf-page"/>
+                    <menuitem value="5" data-l10n-id="hf-page-and-total"/>
+                    <menuitem value="6" data-l10n-id="hf-custom"/>
                   </menupopup>
                 </menulist>
-                <menulist id="hCenterOption" oncommand="customize(this)" tooltiptext="&headerCenter.tip;">
+                <menulist id="hCenterOption" oncommand="customize(this)" data-l10n-id="header-center-tip">
                   <menupopup>
-                    <menuitem value="0" label="&hfBlank;"/>
-                    <menuitem value="1" label="&hfTitle;"/>
-                    <menuitem value="2" label="&hfURL;"/>
-                    <menuitem value="3" label="&hfDateAndTime;"/>
-                    <menuitem value="4" label="&hfPage;"/>
-                    <menuitem value="5" label="&hfPageAndTotal;"/>
-                    <menuitem value="6" label="&hfCustom;"/>
+                    <menuitem value="0" data-l10n-id="hf-blank"/>
+                    <menuitem value="1" data-l10n-id="hf-title"/>
+                    <menuitem value="2" data-l10n-id="hf-url"/>
+                    <menuitem value="3" data-l10n-id="hf-date-and-time"/>
+                    <menuitem value="4" data-l10n-id="hf-page"/>
+                    <menuitem value="5" data-l10n-id="hf-page-and-total"/>
+                    <menuitem value="6" data-l10n-id="hf-custom"/>
                   </menupopup>
                 </menulist>
-                <menulist id="hRightOption" oncommand="customize(this)" tooltiptext="&headerRight.tip;">
+                <menulist id="hRightOption" oncommand="customize(this)" data-l10n-id="header-right-tip">
                   <menupopup>
-                    <menuitem value="0" label="&hfBlank;"/>
-                    <menuitem value="1" label="&hfTitle;"/>
-                    <menuitem value="2" label="&hfURL;"/>
-                    <menuitem value="3" label="&hfDateAndTime;"/>
-                    <menuitem value="4" label="&hfPage;"/>
-                    <menuitem value="5" label="&hfPageAndTotal;"/>
-                    <menuitem value="6" label="&hfCustom;"/>
+                    <menuitem value="0" data-l10n-id="hf-blank"/>
+                    <menuitem value="1" data-l10n-id="hf-title"/>
+                    <menuitem value="2" data-l10n-id="hf-url"/>
+                    <menuitem value="3" data-l10n-id="hf-date-and-time"/>
+                    <menuitem value="4" data-l10n-id="hf-page"/>
+                    <menuitem value="5" data-l10n-id="hf-page-and-total"/>
+                    <menuitem value="6" data-l10n-id="hf-custom"/>
                   </menupopup>
                 </menulist>
               </row>
               <row dir="ltr">
                 <vbox align="center">
-                  <label value="&hfLeft.label;"/>
+                  <label data-l10n-id="hf-left-label"/>
                 </vbox>
                 <vbox align="center">
-                  <label value="&hfCenter.label;"/>
+                  <label data-l10n-id="hf-center-label"/>
                 </vbox>
                 <vbox align="center">
-                  <label value="&hfRight.label;"/>
+                  <label data-l10n-id="hf-right-label"/>
                 </vbox>
               </row>
               <row dir="ltr">
-                <menulist id="fLeftOption" oncommand="customize(this)" tooltiptext="&footerLeft.tip;">
+                <menulist id="fLeftOption" oncommand="customize(this)" data-l10n-id="footer-left-tip">
                   <menupopup>
-                    <menuitem value="0" label="&hfBlank;"/>
-                    <menuitem value="1" label="&hfTitle;"/>
-                    <menuitem value="2" label="&hfURL;"/>
-                    <menuitem value="3" label="&hfDateAndTime;"/>
-                    <menuitem value="4" label="&hfPage;"/>
-                    <menuitem value="5" label="&hfPageAndTotal;"/>
-                    <menuitem value="6" label="&hfCustom;"/>
+                    <menuitem value="0" data-l10n-id="hf-blank"/>
+                    <menuitem value="1" data-l10n-id="hf-title"/>
+                    <menuitem value="2" data-l10n-id="hf-url"/>
+                    <menuitem value="3" data-l10n-id="hf-date-and-time"/>
+                    <menuitem value="4" data-l10n-id="hf-page"/>
+                    <menuitem value="5" data-l10n-id="hf-page-and-total"/>
+                    <menuitem value="6" data-l10n-id="hf-custom"/>
                   </menupopup>
                 </menulist>
-                <menulist id="fCenterOption" oncommand="customize(this)" tooltiptext="&footerCenter.tip;">
+                <menulist id="fCenterOption" oncommand="customize(this)" data-l10n-id="footer-center-tip">
                   <menupopup>
-                    <menuitem value="0" label="&hfBlank;"/>
-                    <menuitem value="1" label="&hfTitle;"/>
-                    <menuitem value="2" label="&hfURL;"/>
-                    <menuitem value="3" label="&hfDateAndTime;"/>
-                    <menuitem value="4" label="&hfPage;"/>
-                    <menuitem value="5" label="&hfPageAndTotal;"/>
-                    <menuitem value="6" label="&hfCustom;"/>
+                    <menuitem value="0" data-l10n-id="hf-blank"/>
+                    <menuitem value="1" data-l10n-id="hf-title"/>
+                    <menuitem value="2" data-l10n-id="hf-url"/>
+                    <menuitem value="3" data-l10n-id="hf-date-and-time"/>
+                    <menuitem value="4" data-l10n-id="hf-page"/>
+                    <menuitem value="5" data-l10n-id="hf-page-and-total"/>
+                    <menuitem value="6" data-l10n-id="hf-custom"/>
                   </menupopup>
                 </menulist>
-                <menulist id="fRightOption" oncommand="customize(this)" tooltiptext="&footerRight.tip;">
+                <menulist id="fRightOption" oncommand="customize(this)" data-l10n-id="footer-right-tip">
                   <menupopup>
-                    <menuitem value="0" label="&hfBlank;"/>
-                    <menuitem value="1" label="&hfTitle;"/>
-                    <menuitem value="2" label="&hfURL;"/>
-                    <menuitem value="3" label="&hfDateAndTime;"/>
-                    <menuitem value="4" label="&hfPage;"/>
-                    <menuitem value="5" label="&hfPageAndTotal;"/>
-                    <menuitem value="6" label="&hfCustom;"/>
+                    <menuitem value="0" data-l10n-id="hf-blank"/>
+                    <menuitem value="1" data-l10n-id="hf-title"/>
+                    <menuitem value="2" data-l10n-id="hf-url"/>
+                    <menuitem value="3" data-l10n-id="hf-date-and-time"/>
+                    <menuitem value="4" data-l10n-id="hf-page"/>
+                    <menuitem value="5" data-l10n-id="hf-page-and-total"/>
+                    <menuitem value="6" data-l10n-id="hf-custom"/>
                   </menupopup>
                 </menulist>
-              </row>  
+              </row>
             </rows>
           </grid>
         </groupbox>
