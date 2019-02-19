@@ -28,7 +28,7 @@ void brush_vs(
     int brush_flags,
     vec4 unused
 ) {
-    vec2 snapped_device_pos = snap_device_pos(vi, pic_task.common_data.device_pixel_scale);
+    vec2 snapped_device_pos = snap_device_pos(vi, pic_task.device_pixel_scale);
     vec2 texture_size = vec2(textureSize(sPrevPassColor, 0));
     vOp = user_data.x;
 

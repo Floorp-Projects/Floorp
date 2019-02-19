@@ -35,10 +35,9 @@ use crate::gecko_bindings::bindings::Gecko_SetListStyleImageNone;
 use crate::gecko_bindings::bindings::Gecko_SetListStyleImageImageValue;
 use crate::gecko_bindings::bindings::Gecko_SetNullImageValue;
 use crate::gecko_bindings::bindings::{Gecko_ResetFilters, Gecko_CopyFiltersFrom};
-use crate::gecko_bindings::bindings::RawGeckoPresContextBorrowed;
 use crate::gecko_bindings::structs;
 use crate::gecko_bindings::structs::nsCSSPropertyID;
-use crate::gecko_bindings::structs::mozilla::CSSPseudoElementType;
+use crate::gecko_bindings::structs::mozilla::PseudoStyleType;
 use crate::gecko_bindings::sugar::ns_style_coord::{CoordDataValue, CoordData, CoordDataMut};
 use crate::gecko_bindings::sugar::refptr::RefPtr;
 use crate::gecko::values::convert_nscolor_to_rgba;
@@ -62,7 +61,6 @@ use crate::values::computed::font::FontSize;
 use crate::values::computed::effects::{BoxShadow, Filter, SimpleShadow};
 use crate::values::generics::column::ColumnCount;
 use crate::values::generics::position::ZIndex;
-use crate::values::generics::text::MozTabSize;
 use crate::values::generics::transform::TransformStyle;
 use crate::values::generics::url::UrlOrNone;
 
@@ -102,7 +100,7 @@ impl ComputedValues {
         ).to_outer(pseudo)
     }
 
-    pub fn default_values(pres_context: RawGeckoPresContextBorrowed) -> Arc<Self> {
+    pub fn default_values(doc: &structs::Document) -> Arc<Self> {
         ComputedValuesInner::new(
             /* custom_properties = */ None,
             /* writing_mode = */ WritingMode::empty(), // FIXME(bz): This seems dubious
@@ -110,31 +108,22 @@ impl ComputedValues {
             /* rules = */ None,
             /* visited_style = */ None,
             % for style_struct in data.style_structs:
-            style_structs::${style_struct.name}::default(pres_context),
+            style_structs::${style_struct.name}::default(doc),
             % endfor
         ).to_outer(None)
     }
 
+    #[inline]
     pub fn pseudo(&self) -> Option<PseudoElement> {
-        let atom = (self.0).mPseudoTag.mRawPtr;
-        if atom.is_null() {
+        if self.0.mPseudoType == PseudoStyleType::NotPseudo {
             return None;
         }
-
-        let atom = unsafe { Atom::from_raw(atom) };
-        PseudoElement::from_atom(&atom)
+        PseudoElement::from_pseudo_type(self.0.mPseudoType)
     }
 
     #[inline]
-    fn get_pseudo_type(&self) -> CSSPseudoElementType {
-        self.0.mPseudoType
-    }
-
-    #[inline]
-    pub fn is_anon_box(&self) -> bool {
-        let our_type = self.get_pseudo_type();
-        return our_type == CSSPseudoElementType::InheritingAnonBox ||
-               our_type == CSSPseudoElementType::NonInheritingAnonBox;
+    pub fn is_first_line_style(&self) -> bool {
+        self.pseudo() == Some(PseudoElement::FirstLine)
     }
 
     /// Returns true if the display property is changed from 'none' to others.
@@ -213,9 +202,9 @@ impl ComputedValuesInner {
         self,
         pseudo: Option<<&PseudoElement>,
     ) -> Arc<ComputedValues> {
-        let (pseudo_tag, pseudo_ty) = match pseudo {
-            Some(p) => p.pseudo_info(),
-            None => (ptr::null_mut(), structs::CSSPseudoElementType::NotPseudo),
+        let pseudo_ty = match pseudo {
+            Some(p) => p.pseudo_type(),
+            None => structs::PseudoStyleType::NotPseudo,
         };
         let arc = unsafe {
             let arc: Arc<ComputedValues> = Arc::new(uninitialized());
@@ -223,7 +212,6 @@ impl ComputedValuesInner {
                 &arc.0 as *const _ as *mut _,
                 &self,
                 pseudo_ty,
-                pseudo_tag
             );
             // We're simulating a move by having C++ do a memcpy and then forgetting
             // it on this end.
@@ -1257,11 +1245,13 @@ pub fn clone_transform_from_list(
 <%def name="impl_style_struct(style_struct)">
 impl ${style_struct.gecko_struct_name} {
     #[allow(dead_code, unused_variables)]
-    pub fn default(pres_context: RawGeckoPresContextBorrowed) -> Arc<Self> {
+    pub fn default(document: &structs::Document) -> Arc<Self> {
         let mut result = Arc::new(${style_struct.gecko_struct_name} { gecko: unsafe { zeroed() } });
         unsafe {
-            Gecko_Construct_Default_${style_struct.gecko_ffi_name}(&mut Arc::get_mut(&mut result).unwrap().gecko,
-                                                                   pres_context);
+            Gecko_Construct_Default_${style_struct.gecko_ffi_name}(
+                &mut Arc::get_mut(&mut result).unwrap().gecko,
+                document,
+            );
         }
         result
     }
@@ -1380,6 +1370,9 @@ impl Clone for ${style_struct.gecko_struct_name} {
         "MozScriptMinSize": impl_absolute_length,
         "MozScriptSizeMultiplier": impl_simple,
         "NonNegativeLengthPercentage": impl_simple,
+        "NonNegativeLengthOrNumber": impl_simple,
+        "NonNegativeLengthOrNumberRect": impl_simple,
+        "BorderImageSlice": impl_simple,
         "NonNegativeNumber": impl_simple,
         "Number": impl_simple,
         "Opacity": impl_simple,
@@ -1485,8 +1478,8 @@ fn static_assert() {
                                      for x in CORNERS]) %>
 
 <%self:impl_trait style_struct_name="Border"
-                  skip_longhands="${skip_border_longhands} border-image-source border-image-outset
-                                  border-image-repeat border-image-width border-image-slice">
+                  skip_longhands="${skip_border_longhands} border-image-source
+                                  border-image-repeat border-image-width">
     % for side in SIDES:
     pub fn set_border_${side.ident}_style(&mut self, v: BorderStyle) {
         self.gecko.mBorderStyle[${side.index}] = v;
@@ -1587,8 +1580,6 @@ fn static_assert() {
         }
     }
 
-    <% impl_style_sides("border_image_outset") %>
-
     <%
     border_image_repeat_keywords = ["Stretch", "Repeat", "Round", "Space"]
     %>
@@ -1630,36 +1621,6 @@ fn static_assert() {
     }
 
     <% impl_style_sides("border_image_width") %>
-
-    pub fn set_border_image_slice(&mut self, v: longhands::border_image_slice::computed_value::T) {
-        use crate::gecko_bindings::structs::{NS_STYLE_BORDER_IMAGE_SLICE_NOFILL, NS_STYLE_BORDER_IMAGE_SLICE_FILL};
-
-        v.offsets.to_gecko_rect(&mut self.gecko.mBorderImageSlice);
-
-        let fill = if v.fill {
-            NS_STYLE_BORDER_IMAGE_SLICE_FILL
-        } else {
-            NS_STYLE_BORDER_IMAGE_SLICE_NOFILL
-        };
-        self.gecko.mBorderImageFill = fill as u8;
-    }
-
-    <%self:copy_sides_style_coord ident="border_image_slice">
-        self.gecko.mBorderImageFill = other.gecko.mBorderImageFill;
-    </%self:copy_sides_style_coord>
-
-    pub fn clone_border_image_slice(&self) -> longhands::border_image_slice::computed_value::T {
-        use crate::gecko_bindings::structs::NS_STYLE_BORDER_IMAGE_SLICE_FILL;
-        use crate::values::computed::{BorderImageSlice, NonNegativeNumberOrPercentage};
-        type NumberOrPercentageRect = crate::values::generics::rect::Rect<NonNegativeNumberOrPercentage>;
-
-        BorderImageSlice {
-            offsets:
-                NumberOrPercentageRect::from_gecko_rect(&self.gecko.mBorderImageSlice)
-                    .expect("mBorderImageSlice[${side}] could not convert to NumberOrPercentageRect"),
-            fill: self.gecko.mBorderImageFill as u32 == NS_STYLE_BORDER_IMAGE_SLICE_FILL
-        }
-    }
 </%self:impl_trait>
 
 <% skip_scroll_margin_longhands = " ".join(["scroll-margin-%s" % x.ident for x in SIDES]) %>
@@ -2209,7 +2170,7 @@ fn static_assert() {
     pub fn fixup_none_generic(&mut self, device: &Device) {
         self.gecko.mFont.systemFont = false;
         unsafe {
-            bindings::Gecko_nsStyleFont_FixupNoneGeneric(&mut self.gecko, device.pres_context())
+            bindings::Gecko_nsStyleFont_FixupNoneGeneric(&mut self.gecko, device.document())
         }
     }
 
@@ -2325,7 +2286,7 @@ fn static_assert() {
     }
 
     pub fn fixup_font_min_size(&mut self, device: &Device) {
-        unsafe { bindings::Gecko_nsStyleFont_FixupMinFontSize(&mut self.gecko, device.pres_context()) }
+        unsafe { bindings::Gecko_nsStyleFont_FixupMinFontSize(&mut self.gecko, device.document()) }
     }
 
     pub fn apply_unconstrained_font_size(&mut self, v: NonNegativeLength) {
@@ -2647,12 +2608,11 @@ fn static_assert() {
     ${impl_simple("_moz_script_level", "mScriptLevel")}
     <% impl_simple_type_with_conversion("font_language_override", "mFont.languageOverride") %>
 
-    pub fn set_font_variant_alternates(&mut self,
-                                       v: values::computed::font::FontVariantAlternates,
-                                       device: &Device) {
+    pub fn set_font_variant_alternates(
+        &mut self,
+        v: values::computed::font::FontVariantAlternates,
+    ) {
         use crate::gecko_bindings::bindings::{Gecko_ClearAlternateValues, Gecko_AppendAlternateValues};
-        use crate::gecko_bindings::bindings::Gecko_nsFont_ResetFontFeatureValuesLookup;
-        use crate::gecko_bindings::bindings::Gecko_nsFont_SetFontFeatureValuesLookup;
         % for value in "normal swash stylistic ornaments annotation styleset character_variant historical".split():
             use crate::gecko_bindings::structs::NS_FONT_VARIANT_ALTERNATES_${value.upper()};
         % endfor
@@ -2664,7 +2624,6 @@ fn static_assert() {
 
         if v.0.is_empty() {
             self.gecko.mFont.variantAlternates = NS_FONT_VARIANT_ALTERNATES_NORMAL as u16;
-            unsafe { Gecko_nsFont_ResetFontFeatureValuesLookup(&mut self.gecko.mFont); }
             return;
         }
 
@@ -2696,10 +2655,6 @@ fn static_assert() {
                     self.gecko.mFont.variantAlternates |= NS_FONT_VARIANT_ALTERNATES_HISTORICAL as u16;
                 }
             }
-        }
-
-        unsafe {
-            Gecko_nsFont_SetFontFeatureValuesLookup(&mut self.gecko.mFont, device.pres_context());
         }
     }
 
@@ -3963,12 +3918,12 @@ fn static_assert() {
         }
     }
 
-    pub fn set_list_style_type(&mut self, v: longhands::list_style_type::computed_value::T, device: &Device) {
+    pub fn set_list_style_type(&mut self, v: longhands::list_style_type::computed_value::T) {
         use crate::gecko_bindings::bindings::Gecko_SetCounterStyleToString;
         use nsstring::{nsACString, nsCStr};
         use self::longhands::list_style_type::computed_value::T;
         match v {
-            T::CounterStyle(s) => s.to_gecko_value(&mut self.gecko.mCounterStyle, device),
+            T::CounterStyle(s) => s.to_gecko_value(&mut self.gecko.mCounterStyle),
             T::String(s) => unsafe {
                 Gecko_SetCounterStyleToString(&mut self.gecko.mCounterStyle,
                                               &nsCStr::from(&s) as &nsACString)
@@ -4392,7 +4347,7 @@ fn static_assert() {
 
 <%self:impl_trait style_struct_name="InheritedText"
                   skip_longhands="text-align text-emphasis-style text-shadow line-height letter-spacing word-spacing
-                                  -webkit-text-stroke-width text-emphasis-position -moz-tab-size">
+                                  -webkit-text-stroke-width text-emphasis-position">
 
     <% text_align_keyword = Keyword("text-align",
                                     "start end left right center justify -moz-center -moz-left -moz-right char",
@@ -4581,28 +4536,6 @@ fn static_assert() {
     ${impl_non_negative_length('_webkit_text_stroke_width',
                                'mWebkitTextStrokeWidth')}
 
-    #[allow(non_snake_case)]
-    pub fn set__moz_tab_size(&mut self, v: longhands::_moz_tab_size::computed_value::T) {
-        match v {
-            MozTabSize::Number(non_negative_number) => {
-                self.gecko.mTabSize.set_value(CoordDataValue::Factor(non_negative_number.0));
-            }
-            MozTabSize::Length(non_negative_length) => {
-                self.gecko.mTabSize.set(non_negative_length);
-            }
-        }
-    }
-
-    #[allow(non_snake_case)]
-    pub fn clone__moz_tab_size(&self) -> longhands::_moz_tab_size::computed_value::T {
-        match self.gecko.mTabSize.as_value() {
-            CoordDataValue::Coord(coord) => MozTabSize::Length(Au(coord).into()),
-            CoordDataValue::Factor(number) => MozTabSize::Number(From::from(number)),
-            _ => unreachable!(),
-        }
-    }
-
-    <%call expr="impl_coord_copy('_moz_tab_size', 'mTabSize')"></%call>
 </%self:impl_trait>
 
 <%self:impl_trait style_struct_name="Text"
@@ -5210,7 +5143,7 @@ clip-path
         self.gecko.mContents.is_empty()
     }
 
-    pub fn set_content(&mut self, v: longhands::content::computed_value::T, device: &Device) {
+    pub fn set_content(&mut self, v: longhands::content::computed_value::T) {
         use crate::values::CustomIdent;
         use crate::values::generics::counters::{Content, ContentItem};
         use crate::values::generics::CounterStyleOrNone;
@@ -5235,7 +5168,6 @@ clip-path
             name: &CustomIdent,
             sep: &str,
             style: CounterStyleOrNone,
-            device: &Device,
         ) {
             debug_assert!(content_type == StyleContentType::Counter ||
                           content_type == StyleContentType::Counters);
@@ -5246,7 +5178,7 @@ clip-path
             if content_type == StyleContentType::Counters {
                 counter_func.mSeparator.assign_str(sep);
             }
-            style.to_gecko_value(&mut counter_func.mCounterStyle, device);
+            style.to_gecko_value(&mut counter_func.mCounterStyle);
         }
 
         match v {
@@ -5321,7 +5253,6 @@ clip-path
                                 &name,
                                 "",
                                 style.clone(),
-                                device,
                             );
                         }
                         ContentItem::Counters(ref name, ref sep, ref style) => {
@@ -5331,7 +5262,6 @@ clip-path
                                 &name,
                                 &sep,
                                 style.clone(),
-                                device,
                             );
                         }
                         ContentItem::Url(ref url) => {

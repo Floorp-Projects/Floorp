@@ -2950,6 +2950,10 @@ HTMLEditor::InsertLinkAroundSelection(Element* aAnchorElement) {
     return NS_OK;
   }
 
+  nsAutoString rawHref;
+  anchor->GetAttr(kNameSpaceID_None, nsGkAtoms::href, rawHref);
+  editActionData.SetData(rawHref);
+
   nsAutoString href;
   anchor->GetHref(href);
   if (href.IsEmpty()) {

@@ -22,6 +22,7 @@
 #include "jstypes.h"
 
 #include "builtin/Array.h"
+#include "builtin/BigInt.h"
 #include "builtin/Eval.h"
 #include "builtin/Object.h"
 #include "builtin/SelfHostingDefines.h"
@@ -301,7 +302,7 @@ bool CallerGetterImpl(JSContext* cx, const CallArgs& args) {
   // caller is a function with strict mode code, throw a TypeError per ES5.
   // If we pass these checks, we can return the computed caller.
   {
-    JSObject* callerObj = CheckedUnwrap(caller);
+    JSObject* callerObj = CheckedUnwrapStatic(caller);
     if (!callerObj) {
       args.rval().setNull();
       return true;
@@ -2553,6 +2554,8 @@ void js::ReportIncompatibleMethod(JSContext* cx, const CallArgs& args,
     MOZ_ASSERT(clasp != &BooleanObject::class_);
   } else if (thisv.isSymbol()) {
     MOZ_ASSERT(clasp != &SymbolObject::class_);
+  } else if (thisv.isBigInt()) {
+    MOZ_ASSERT(clasp != &BigIntObject::class_);
   } else {
     MOZ_ASSERT(thisv.isUndefined() || thisv.isNull());
   }

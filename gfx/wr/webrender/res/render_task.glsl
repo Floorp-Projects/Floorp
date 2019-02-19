@@ -11,12 +11,11 @@ uniform HIGHP_SAMPLER_FLOAT sampler2D sRenderTasks;
 struct RenderTaskCommonData {
     RectWithSize task_rect;
     float texture_layer_index;
-    float device_pixel_scale;
 };
 
 struct RenderTaskData {
     RenderTaskCommonData common_data;
-    vec2 user_data;
+    vec3 user_data;
 };
 
 RenderTaskData fetch_render_task_data(int index) {
@@ -32,13 +31,12 @@ RenderTaskData fetch_render_task_data(int index) {
 
     RenderTaskCommonData common_data = RenderTaskCommonData(
         task_rect,
-        texel1.x,
-        texel1.y
+        texel1.x
     );
 
     RenderTaskData data = RenderTaskData(
         common_data,
-        texel1.zw
+        texel1.yzw
     );
 
     return data;
@@ -57,8 +55,7 @@ RenderTaskCommonData fetch_render_task_common_data(int index) {
 
     RenderTaskCommonData data = RenderTaskCommonData(
         task_rect,
-        texel1.x,
-        texel1.y
+        texel1.x
     );
 
     return data;
@@ -74,6 +71,7 @@ RenderTaskCommonData fetch_render_task_common_data(int index) {
  */
 struct PictureTask {
     RenderTaskCommonData common_data;
+    float device_pixel_scale;
     vec2 content_origin;
 };
 
@@ -82,7 +80,8 @@ PictureTask fetch_picture_task(int address) {
 
     PictureTask task = PictureTask(
         task_data.common_data,
-        task_data.user_data
+        task_data.user_data.x,
+        task_data.user_data.yz
     );
 
     return task;
@@ -92,6 +91,7 @@ PictureTask fetch_picture_task(int address) {
 
 struct ClipArea {
     RenderTaskCommonData common_data;
+    float device_pixel_scale;
     vec2 screen_origin;
 };
 
@@ -101,13 +101,15 @@ ClipArea fetch_clip_area(int index) {
     if (index >= CLIP_TASK_EMPTY) {
         RectWithSize rect = RectWithSize(vec2(0.0), vec2(0.0));
 
-        area.common_data = RenderTaskCommonData(rect, 0.0, 1.0);
+        area.common_data = RenderTaskCommonData(rect, 0.0);
+        area.device_pixel_scale = 0.0;
         area.screen_origin = vec2(0.0);
     } else {
         RenderTaskData task_data = fetch_render_task_data(index);
 
         area.common_data = task_data.common_data;
-        area.screen_origin = task_data.user_data;
+        area.device_pixel_scale = task_data.user_data.x;
+        area.screen_origin = task_data.user_data.yz;
     }
 
     return area;

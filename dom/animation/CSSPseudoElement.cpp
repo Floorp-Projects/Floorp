@@ -18,13 +18,12 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CSSPseudoElement, mParentElement)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(CSSPseudoElement, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(CSSPseudoElement, Release)
 
-CSSPseudoElement::CSSPseudoElement(Element* aElement,
-                                   CSSPseudoElementType aType)
+CSSPseudoElement::CSSPseudoElement(Element* aElement, PseudoStyleType aType)
     : mParentElement(aElement), mPseudoType(aType) {
   MOZ_ASSERT(aElement);
-  MOZ_ASSERT(aType == CSSPseudoElementType::after ||
-                 aType == CSSPseudoElementType::before,
-             "Unexpected Pseudo Type");
+  MOZ_ASSERT(
+      aType == PseudoStyleType::after || aType == PseudoStyleType::before,
+      "Unexpected Pseudo Type");
 }
 
 CSSPseudoElement::~CSSPseudoElement() {
@@ -71,7 +70,7 @@ already_AddRefed<Animation> CSSPseudoElement::Animate(
 
 /* static */ already_AddRefed<CSSPseudoElement>
 CSSPseudoElement::GetCSSPseudoElement(Element* aElement,
-                                      CSSPseudoElementType aType) {
+                                      PseudoStyleType aType) {
   if (!aElement) {
     return nullptr;
   }
@@ -97,12 +96,12 @@ CSSPseudoElement::GetCSSPseudoElement(Element* aElement,
 }
 
 /* static */ nsAtom* CSSPseudoElement::GetCSSPseudoElementPropertyAtom(
-    CSSPseudoElementType aType) {
+    PseudoStyleType aType) {
   switch (aType) {
-    case CSSPseudoElementType::before:
+    case PseudoStyleType::before:
       return nsGkAtoms::cssPseudoElementBeforeProperty;
 
-    case CSSPseudoElementType::after:
+    case PseudoStyleType::after:
       return nsGkAtoms::cssPseudoElementAfterProperty;
 
     default:

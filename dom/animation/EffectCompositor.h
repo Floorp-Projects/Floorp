@@ -87,7 +87,7 @@ class EffectCompositor {
   // (pseudo-)element at the specified cascade level needs to be updated.
   // The specified steps taken to update the animation rule depend on
   // |aRestyleType| whose values are described above.
-  void RequestRestyle(dom::Element* aElement, CSSPseudoElementType aPseudoType,
+  void RequestRestyle(dom::Element* aElement, PseudoStyleType aPseudoType,
                       RestyleType aRestyleType, CascadeLevel aCascadeLevel);
 
   // Schedule an animation restyle. This is called automatically by
@@ -95,7 +95,7 @@ class EffectCompositor {
   // need to perform this step when triggering transitions *without* also
   // invalidating the animation style rule (which RequestRestyle would do).
   void PostRestyleForAnimation(dom::Element* aElement,
-                               CSSPseudoElementType aPseudoType,
+                               PseudoStyleType aPseudoType,
                                CascadeLevel aCascadeLevel);
 
   // Posts an animation restyle for any elements whose animation style rule
@@ -113,7 +113,7 @@ class EffectCompositor {
   // can be re-resolved to computed values.
   void UpdateEffectProperties(const ComputedStyle* aStyle,
                               dom::Element* aElement,
-                              CSSPseudoElementType aPseudoType);
+                              PseudoStyleType aPseudoType);
 
   // Get animation rule for stylo. This is an equivalent of GetAnimationRule
   // and will be called from servo side.
@@ -121,7 +121,7 @@ class EffectCompositor {
   // We need to be careful while doing any modification because it may cause
   // some thread-safe issues.
   bool GetServoAnimationRule(
-      const dom::Element* aElement, CSSPseudoElementType aPseudoType,
+      const dom::Element* aElement, PseudoStyleType aPseudoType,
       CascadeLevel aCascadeLevel,
       RawServoAnimationValueMapBorrowedMut aAnimationValues);
 
@@ -144,7 +144,7 @@ class EffectCompositor {
   // This method does NOT detect if other styles that apply above the
   // animation level of the cascade have changed.
   static void MaybeUpdateCascadeResults(dom::Element* aElement,
-                                        CSSPseudoElementType aPseudoType);
+                                        PseudoStyleType aPseudoType);
 
   // Update the mPropertiesWithImportantRules and
   // mPropertiesForAnimationsLevel members of the given EffectSet, and also
@@ -160,7 +160,7 @@ class EffectCompositor {
   // of a follow-up sequential task.
   static void UpdateCascadeResults(EffectSet& aEffectSet,
                                    dom::Element* aElement,
-                                   CSSPseudoElementType aPseudoType);
+                                   PseudoStyleType aPseudoType);
 
   // Helper to fetch the corresponding element and pseudo-type from a frame.
   //
@@ -188,7 +188,7 @@ class EffectCompositor {
   bool PreTraverse(ServoTraversalFlags aFlags);
 
   // Similar to the above but only for the (pseudo-)element.
-  bool PreTraverse(dom::Element* aElement, CSSPseudoElementType aPseudoType);
+  bool PreTraverse(dom::Element* aElement, PseudoStyleType aPseudoType);
 
   // Similar to the above but for all elements in the subtree rooted
   // at aElement.
@@ -198,10 +198,10 @@ class EffectCompositor {
   //
   // If |aPseudoType| is ::after or ::before, returns the generated content
   // element of which |aElement| is the parent. If |aPseudoType| is any other
-  // pseudo type (other thant CSSPseudoElementType::NotPseudo) returns nullptr.
+  // pseudo type (other than PseudoStyleType::NotPseudo) returns nullptr.
   // Otherwise, returns |aElement|.
   static dom::Element* GetElementToRestyle(dom::Element* aElement,
-                                           CSSPseudoElementType aPseudoType);
+                                           PseudoStyleType aPseudoType);
 
   // Returns true if any type of compositor animations on |aFrame| allow
   // runnning on the compositor.
@@ -218,7 +218,7 @@ class EffectCompositor {
   // than the animations level.
   static nsCSSPropertyIDSet GetOverriddenProperties(
       EffectSet& aEffectSet, dom::Element* aElement,
-      CSSPseudoElementType aPseudoType);
+      PseudoStyleType aPseudoType);
 
   static nsPresContext* GetPresContext(dom::Element* aElement);
 

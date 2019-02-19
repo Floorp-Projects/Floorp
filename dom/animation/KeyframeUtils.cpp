@@ -27,7 +27,7 @@
 #include "nsContentUtils.h"  // For GetContextForContent
 #include "nsCSSPropertyIDSet.h"
 #include "nsCSSProps.h"
-#include "nsCSSPseudoElements.h"  // For CSSPseudoElementType
+#include "nsCSSPseudoElements.h"  // For PseudoStyleType
 #include "nsIScriptError.h"
 #include "nsTArray.h"
 #include <algorithm>  // For std::stable_sort, std::min

@@ -13,12 +13,12 @@
 #include "nsCOMPtr.h"
 
 namespace mozilla {
-enum class CSSPseudoElementType : uint8_t;
+enum class PseudoStyleType : uint8_t;
 }  // namespace mozilla
 
 class nsProgressFrame final : public nsContainerFrame,
                               public nsIAnonymousContentCreator {
-  typedef mozilla::CSSPseudoElementType CSSPseudoElementType;
+  typedef mozilla::PseudoStyleType PseudoStyleType;
   typedef mozilla::dom::Element Element;
 
  public:

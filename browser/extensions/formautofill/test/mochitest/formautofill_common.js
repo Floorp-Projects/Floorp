@@ -119,6 +119,10 @@ function triggerAutofillAndCheckProfile(profile) {
              `"input" event should be dispatched with InputEvent interface on ${element.tagName}`);
           is(event.inputType, "insertReplacementText",
              "inputType value should be \"insertReplacementText\"");
+          is(event.data, String(value),
+             `data value should be "${value}"`);
+          is(event.dataTransfer, null,
+             "dataTransfer should be null");
         } else {
           ok(event instanceof Event && !(event instanceof UIEvent),
              `"input" event should be dispatched with Event interface on ${element.tagName}`);

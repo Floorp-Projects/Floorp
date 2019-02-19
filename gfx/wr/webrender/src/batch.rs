@@ -1203,7 +1203,7 @@ impl AlphaBatchBuilder {
                                             .dirty_rects
                                             .iter()
                                             .map(|dirty_rect| {
-                                                (dirty_rect.world_rect * ctx.device_pixel_scale).round().to_i32()
+                                                (dirty_rect.world_rect * ctx.global_device_pixel_scale).round().to_i32()
                                             })
                                             .collect();
 

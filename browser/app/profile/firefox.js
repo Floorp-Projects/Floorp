@@ -1547,8 +1547,8 @@ pref("browser.contentblocking.rejecttrackers.control-center.ui.enabled", true);
 pref("browser.contentblocking.control-center.ui.showBlockedLabels", true);
 pref("browser.contentblocking.control-center.ui.showAllowedLabels", false);
 
-pref("browser.contentblocking.cryptomining.preferences.ui.enabled", false);
-pref("browser.contentblocking.fingerprinting.preferences.ui.enabled", false);
+pref("browser.contentblocking.cryptomining.preferences.ui.enabled", true);
+pref("browser.contentblocking.fingerprinting.preferences.ui.enabled", true);
 
 // Enable the Report Breakage UI on Nightly and Beta but not on Release yet.
 #ifdef EARLY_BETA_OR_EARLIER

@@ -8,7 +8,7 @@
 const BrowserLoaderModule = {};
 ChromeUtils.import("resource://devtools/client/shared/browser-loader.js", BrowserLoaderModule);
 const { require } = BrowserLoaderModule.BrowserLoader({
-  baseURI: "resource://devtools/client/memory/",
+  baseURI: "resource://devtools/client/performance-new/",
   window,
 });
 const Perf = require("devtools/client/performance-new/components/Perf");

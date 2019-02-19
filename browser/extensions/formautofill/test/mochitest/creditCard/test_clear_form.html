@@ -74,6 +74,10 @@ async function confirmClear(selector) {
          '"input" event should always bubble');
       is(event.inputType, "insertReplacementText",
          'inputType value should be "insertReplacementText"');
+      is(event.data, "",
+         "data value should be empty string");
+      is(event.dataTransfer, null,
+         "dataTransfer value should be null");
       resolve();
     }, {once: true})
   );

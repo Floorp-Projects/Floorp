@@ -1066,7 +1066,7 @@ MOZ_MUST_USE static bool EnqueuePromiseReactionJob(
   Rooted<GlobalObject*> global(cx);
   if (JSObject* objectFromIncumbentGlobal =
           reaction->getAndClearIncumbentGlobalObject()) {
-    objectFromIncumbentGlobal = CheckedUnwrap(objectFromIncumbentGlobal);
+    objectFromIncumbentGlobal = CheckedUnwrapStatic(objectFromIncumbentGlobal);
     MOZ_ASSERT(objectFromIncumbentGlobal);
     global = &objectFromIncumbentGlobal->nonCCWGlobal();
   }
@@ -1357,7 +1357,7 @@ static MOZ_MUST_USE bool RejectMaybeWrappedPromise(JSContext* cx,
     if (!cx->compartment()->wrap(cx, &reason)) {
       return false;
     }
-    if (reason.isObject() && !CheckedUnwrap(&reason.toObject())) {
+    if (reason.isObject() && !CheckedUnwrapStatic(&reason.toObject())) {
       // Report the existing reason, so we don't just drop it on the
       // floor.
       JSObject* realReason = UncheckedUnwrap(&reason.toObject());
@@ -1805,7 +1805,7 @@ static MOZ_MUST_USE bool EnqueuePromiseResolveThenableJob(
   // That guarantees that the embedding ends up with the right entry global.
   // This is relevant for some html APIs like fetch that derive information
   // from said global.
-  RootedObject then(cx, CheckedUnwrap(&thenVal.toObject()));
+  RootedObject then(cx, CheckedUnwrapStatic(&thenVal.toObject()));
   AutoRealm ar(cx, then);
 
   // Wrap the `promiseToResolve` and `thenable` arguments.
@@ -2071,7 +2071,7 @@ static bool PromiseConstructor(JSContext* cx, unsigned argc, Value* vp) {
   bool needsWrapping = false;
   RootedObject proto(cx);
   if (IsWrapper(newTarget)) {
-    JSObject* unwrappedNewTarget = CheckedUnwrap(newTarget);
+    JSObject* unwrappedNewTarget = CheckedUnwrapStatic(newTarget);
     MOZ_ASSERT(unwrappedNewTarget);
     MOZ_ASSERT(unwrappedNewTarget != newTarget);
 
@@ -2135,7 +2135,7 @@ static bool PromiseConstructor(JSContext* cx, unsigned argc, Value* vp) {
   // See the comment in PromiseConstructor for details.
   if (needsWrapping) {
     MOZ_ASSERT(proto);
-    usedProto = CheckedUnwrap(proto);
+    usedProto = CheckedUnwrapStatic(proto);
     if (!usedProto) {
       ReportAccessDenied(cx);
       return nullptr;
@@ -2748,7 +2748,7 @@ static MOZ_MUST_USE bool CommonPerformPromiseAllRace(
 
       mozilla::Maybe<AutoRealm> ar;
       if (IsProxy(nextPromiseObj)) {
-        nextPromiseObj = CheckedUnwrap(nextPromiseObj);
+        nextPromiseObj = CheckedUnwrapStatic(nextPromiseObj);
         if (!nextPromiseObj) {
           ReportAccessDenied(cx);
           return false;
@@ -2814,7 +2814,8 @@ static MOZ_MUST_USE bool PerformPromiseAll(
   RootedArrayObject valuesArray(cx);
   RootedValue valuesArrayVal(cx);
   if (IsWrapper(resultCapability.promise())) {
-    JSObject* unwrappedPromiseObj = CheckedUnwrap(resultCapability.promise());
+    JSObject* unwrappedPromiseObj =
+        CheckedUnwrapStatic(resultCapability.promise());
     MOZ_ASSERT(unwrappedPromiseObj);
 
     {
@@ -3109,8 +3110,7 @@ static MOZ_MUST_USE JSObject* CommonStaticResolveRejectImpl(
       // outcome, so instead of unwrapping and then performing the
       // GetProperty, just check here and then operate on the original
       // object again.
-      JSObject* unwrappedObject = CheckedUnwrap(xObj);
-      if (unwrappedObject && unwrappedObject->is<PromiseObject>()) {
+      if (xObj->canUnwrapAs<PromiseObject>()) {
         isPromise = true;
       }
     }
@@ -4141,7 +4141,7 @@ static bool Promise_then_impl(JSContext* cx, HandleValue promiseVal,
   RootedObject promiseObj(cx, &promiseVal.toObject());
 
   if (!promiseObj->is<PromiseObject>()) {
-    JSObject* unwrappedPromiseObj = CheckedUnwrap(promiseObj);
+    JSObject* unwrappedPromiseObj = CheckedUnwrapStatic(promiseObj);
     if (!unwrappedPromiseObj) {
       ReportAccessDenied(cx);
       return false;

@@ -8,75 +8,111 @@
 <body>
 <div id="display"></div>
 <textarea id="textarea">abc abx abc</textarea>
+<div id="contenteditable" contenteditable>abc abx abc</div>
 <pre id="test">
 </pre>
 
 <script class="testbody" type="application/javascript">
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(() => {
+SimpleTest.waitForFocus(async function doTests() {
   let textarea = document.getElementById("textarea");
-  let editor = SpecialPowers.wrap(textarea).editor;
+  let textEditor = SpecialPowers.wrap(textarea).editor;
+  let contenteditable = document.getElementById("contenteditable");
+  let htmlEditor = SpecialPowers.wrap(window).docShell.editingSession.getEditorForWindow(window);
 
-  let inlineSpellChecker = editor.getInlineSpellChecker(true);
+  function doTest(aElement, aRootElement, aEditor, aDescription) {
+    return new Promise(resolve => {
+      let inlineSpellChecker = aEditor.getInlineSpellChecker(true);
 
-  textarea.focus();
+      aElement.focus();
 
-  function checkInputEvent(aEvent, aInputType, aDescription) {
-    ok(aEvent instanceof InputEvent,
-       `"input" event should be dispatched with InputEvent interface ${aDescription}`);
-    is(aEvent.cancelable, false,
-       `"input" event should be never cancelable ${aDescription}`);
-    is(aEvent.bubbles, true,
-       `"input" event should always bubble ${aDescription}`);
-    is(aEvent.inputType, aInputType,
-       `inputType should be "${aInputType}" ${aDescription}`);
-  }
+      function checkInputEvent(aEvent, aInputType, aData, aDataTransfer, aDescriptionInner) {
+        ok(aEvent instanceof InputEvent,
+           `${aDescription}"input" event should be dispatched with InputEvent interface ${aDescriptionInner}`);
+        is(aEvent.cancelable, false,
+           `${aDescription}"input" event should be never cancelable ${aDescriptionInner}`);
+        is(aEvent.bubbles, true,
+           `${aDescription}"input" event should always bubble ${aDescriptionInner}`);
+        is(aEvent.inputType, aInputType,
+           `${aDescription}inputType should be "${aInputType}" ${aDescriptionInner}`);
+        is(aEvent.data, aData,
+           `${aDescription}data should be ${aData} ${aDescriptionInner}`);
+        if (aDataTransfer === null) {
+          is(aEvent.dataTransfer, null,
+             `${aDescription}dataTransfer should be null ${aDescriptionInner}`);
+        } else {
+          for (let item of aDataTransfer) {
+            is(aEvent.dataTransfer.getData(item.type), item.data,
+               `${aDescription}dataTransfer should have ${item.data} as ${item.type} ${aDescriptionInner}`);
+          }
+        }
+      }
 
-  let inputEvents = [];
-  function onInput(aEvent) {
-    inputEvents.push(aEvent);
-  }
+      let inputEvents = [];
+      function onInput(aEvent) {
+        inputEvents.push(aEvent);
+      }
 
-  SpecialPowers.Cu.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
-  .onSpellCheck(textarea, () => {
-    SimpleTest.executeSoon(() => {
-      textarea.addEventListener("input", onInput);
+      function getValue() {
+        return aElement === textarea ? aElement.value : aElement.innerHTML;
+      }
 
-      let misspelledWord = inlineSpellChecker.getMisspelledWord(editor.rootElement.firstChild, 5);
-      is(misspelledWord.startOffset, 4,
-         "Misspelled word should start from 4");
-      is(misspelledWord.endOffset, 7,
-         "Misspelled word should end at 7");
-      inputEvents = [];
-      inlineSpellChecker.replaceWord(editor.rootElement.firstChild, 5, "aux");
-      is(textarea.value, "abc aux abc",
-         "'abx' should be replaced with 'aux'");
-      is(inputEvents.length, 1,
-         'Only one "input" event should be fired when replacing a word with spellchecker');
-      checkInputEvent(inputEvents[0], "insertReplacementText", "when replacing a word with spellchecker");
 
-      inputEvents = [];
-      synthesizeKey("z", { accelKey: true });
-      is(textarea.value, "abc abx abc",
-         "'abx' should be restored by undo");
-      is(inputEvents.length, 1,
-         'Only one "input" event should be fired when undoing the replacing word');
-      checkInputEvent(inputEvents[0], "historyUndo", "when undoing the replacing word");
+      SpecialPowers.Cu.import(
+        "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
+      .onSpellCheck(aElement, () => {
+        SimpleTest.executeSoon(() => {
+          aElement.addEventListener("input", onInput);
 
-      inputEvents = [];
-      synthesizeKey("z", { accelKey: true, shiftKey: true });
-      is(textarea.value, "abc aux abc",
-         "'aux' should be restored by redo");
-      is(inputEvents.length, 1,
-         'Only one "input" event should be fired when redoing the replacing word');
-      checkInputEvent(inputEvents[0], "historyRedo", "when redoing the replacing word");
+          let misspelledWord = inlineSpellChecker.getMisspelledWord(aRootElement.firstChild, 5);
+          is(misspelledWord.startOffset, 4,
+             `${aDescription}Misspelled word should start from 4`);
+          is(misspelledWord.endOffset, 7,
+             `${aDescription}Misspelled word should end at 7`);
+          inputEvents = [];
+          inlineSpellChecker.replaceWord(aRootElement.firstChild, 5, "aux");
+          is(getValue(), "abc aux abc",
+             `${aDescription}'abx' should be replaced with 'aux'`);
+          is(inputEvents.length, 1,
+             `${aDescription}Only one "input" event should be fired when replacing a word with spellchecker`);
+          if (aElement === textarea) {
+            checkInputEvent(inputEvents[0], "insertReplacementText", "aux", null,
+                            "when replacing a word with spellchecker");
+          } else {
+            checkInputEvent(inputEvents[0], "insertReplacementText", null, [{type: "text/plain", data: "aux"}],
+                            "when replacing a word with spellchecker");
+          }
 
-      textarea.removeEventListener("input", onInput);
+          inputEvents = [];
+          synthesizeKey("z", { accelKey: true });
+          is(getValue(), "abc abx abc",
+             `${aDescription}'abx' should be restored by undo`);
+          is(inputEvents.length, 1,
+             `${aDescription}Only one "input" event should be fired when undoing the replacing word`);
+          checkInputEvent(inputEvents[0], "historyUndo", null, null,
+                          "when undoing the replacing word");
 
-      SimpleTest.finish();
+          inputEvents = [];
+          synthesizeKey("z", { accelKey: true, shiftKey: true });
+          is(getValue(), "abc aux abc",
+             `${aDescription}'aux' should be restored by redo`);
+          is(inputEvents.length, 1,
+             `${aDescription}Only one "input" event should be fired when redoing the replacing word`);
+          checkInputEvent(inputEvents[0], "historyRedo", null, null,
+                          "when redoing the replacing word");
+
+          aElement.removeEventListener("input", onInput);
+
+          resolve();
+        });
+      });
     });
-  });
+  }
+
+  await doTest(textarea, textEditor.rootElement, textEditor, "<textarea>: ");
+  await doTest(contenteditable, contenteditable, htmlEditor, "<div contenteditable>: ");
+
+  SimpleTest.finish();
 });
 </script>
 </body>

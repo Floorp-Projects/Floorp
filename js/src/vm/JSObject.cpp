@@ -122,6 +122,9 @@ JS_PUBLIC_API const char* JS::InformalValueTypeName(const Value& v) {
   if (v.isSymbol()) {
     return "symbol";
   }
+  if (v.isBigInt()) {
+    return "bigint";
+  }
   if (v.isNumber()) {
     return "number";
   }
@@ -1185,7 +1188,7 @@ bool js::GetPrototypeFromConstructor(JSContext* cx, HandleObject newTarget,
     proto.set(nullptr);
   } else {
     // Step 4.a: Let realm be ? GetFunctionRealm(constructor);
-    JSObject* unwrappedConstructor = CheckedUnwrap(newTarget);
+    JSObject* unwrappedConstructor = CheckedUnwrapStatic(newTarget);
     if (!unwrappedConstructor) {
       ReportAccessDenied(cx);
       return false;

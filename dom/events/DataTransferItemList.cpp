@@ -40,8 +40,7 @@ JSObject* DataTransferItemList::WrapObject(JSContext* aCx,
 
 already_AddRefed<DataTransferItemList> DataTransferItemList::Clone(
     DataTransfer* aDataTransfer) const {
-  RefPtr<DataTransferItemList> list =
-      new DataTransferItemList(aDataTransfer, mIsExternal);
+  RefPtr<DataTransferItemList> list = new DataTransferItemList(aDataTransfer);
 
   // We need to clone the mItems and mIndexedItems lists while keeping the same
   // correspondences between the mIndexedItems and mItems lists (namely, if an

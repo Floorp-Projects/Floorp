@@ -1963,10 +1963,10 @@ class HTMLEditor final : public TextEditor,
    * this editor.  Don't use this method for other purposes.
    */
   MOZ_CAN_RUN_SCRIPT
-  virtual nsresult InsertFromDataTransfer(dom::DataTransfer* aDataTransfer,
-                                          int32_t aIndex, Document* aSourceDoc,
-                                          const EditorDOMPoint& aDroppedAt,
-                                          bool aDoDeleteSelection) override;
+  nsresult InsertFromDataTransfer(dom::DataTransfer* aDataTransfer,
+                                  int32_t aIndex, Document* aSourceDoc,
+                                  const EditorDOMPoint& aDroppedAt,
+                                  bool aDoDeleteSelection);
 
   bool HavePrivateHTMLFlavor(nsIClipboard* clipboard);
   nsresult ParseCFHTML(nsCString& aCfhtml, char16_t** aStuffToPaste,

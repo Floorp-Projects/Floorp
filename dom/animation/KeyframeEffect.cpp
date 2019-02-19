@@ -28,7 +28,7 @@
 #include "nsContentUtils.h"
 #include "nsCSSPropertyIDSet.h"
 #include "nsCSSProps.h"             // For nsCSSProps::PropHasFlags
-#include "nsCSSPseudoElements.h"    // For CSSPseudoElementType
+#include "nsCSSPseudoElements.h"    // For PseudoStyleType
 #include "nsDOMMutationObserver.h"  // For nsAutoAnimationMutationBatch
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
@@ -781,7 +781,7 @@ already_AddRefed<ComputedStyle> KeyframeEffect::GetTargetComputedStyle(
              "Should only have a document when we have a target element");
 
   nsAtom* pseudo =
-      mTarget->mPseudoType < CSSPseudoElementType::Count
+      PseudoStyle::IsPseudoElement(mTarget->mPseudoType)
           ? nsCSSPseudoElements::GetPseudoAtom(mTarget->mPseudoType)
           : nullptr;
 
@@ -866,14 +866,14 @@ void KeyframeEffect::GetTarget(
   }
 
   switch (mTarget->mPseudoType) {
-    case CSSPseudoElementType::before:
-    case CSSPseudoElementType::after:
+    case PseudoStyleType::before:
+    case PseudoStyleType::after:
       aRv.SetValue().SetAsCSSPseudoElement() =
           CSSPseudoElement::GetCSSPseudoElement(mTarget->mElement,
                                                 mTarget->mPseudoType);
       break;
 
-    case CSSPseudoElementType::NotPseudo:
+    case PseudoStyleType::NotPseudo:
       aRv.SetValue().SetAsElement() = mTarget->mElement;
       break;
 
@@ -1313,13 +1313,13 @@ nsIFrame* KeyframeEffect::GetPrimaryFrame() const {
     return frame;
   }
 
-  if (mTarget->mPseudoType == CSSPseudoElementType::before) {
+  if (mTarget->mPseudoType == PseudoStyleType::before) {
     frame = nsLayoutUtils::GetBeforeFrame(mTarget->mElement);
-  } else if (mTarget->mPseudoType == CSSPseudoElementType::after) {
+  } else if (mTarget->mPseudoType == PseudoStyleType::after) {
     frame = nsLayoutUtils::GetAfterFrame(mTarget->mElement);
   } else {
     frame = mTarget->mElement->GetPrimaryFrame();
-    MOZ_ASSERT(mTarget->mPseudoType == CSSPseudoElementType::NotPseudo,
+    MOZ_ASSERT(mTarget->mPseudoType == PseudoStyleType::NotPseudo,
                "unknown mTarget->mPseudoType");
   }
 

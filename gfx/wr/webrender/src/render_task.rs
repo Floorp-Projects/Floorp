@@ -182,9 +182,9 @@ impl RenderTaskTree {
         RenderTaskAddress(id.index)
     }
 
-    pub fn write_task_data(&mut self, device_pixel_scale: DevicePixelScale) {
+    pub fn write_task_data(&mut self) {
         for task in &self.tasks {
-            self.task_data.push(task.write_task_data(device_pixel_scale));
+            self.task_data.push(task.write_task_data());
         }
     }
 
@@ -265,6 +265,7 @@ pub struct CacheMaskTask {
     pub root_spatial_node_index: SpatialNodeIndex,
     pub clip_node_range: ClipNodeRange,
     pub snap_offsets: SnapOffsets,
+    pub device_pixel_scale: DevicePixelScale,
 }
 
 #[derive(Debug)]
@@ -273,6 +274,7 @@ pub struct CacheMaskTask {
 pub struct ClipRegionTask {
     pub clip_data_address: GpuCacheAddress,
     pub local_pos: LayoutPoint,
+    device_pixel_scale: DevicePixelScale,
 }
 
 #[derive(Debug)]
@@ -295,6 +297,7 @@ pub struct PictureTask {
     pub uv_rect_handle: GpuCacheHandle,
     pub root_spatial_node_index: SpatialNodeIndex,
     uv_rect_kind: UvRectKind,
+    device_pixel_scale: DevicePixelScale,
 }
 
 #[derive(Debug)]
@@ -456,6 +459,7 @@ impl RenderTask {
         children: Vec<RenderTaskId>,
         uv_rect_kind: UvRectKind,
         root_spatial_node_index: SpatialNodeIndex,
+        device_pixel_scale: DevicePixelScale,
     ) -> Self {
         let size = match location {
             RenderTaskLocation::Dynamic(_, size) => size,
@@ -478,6 +482,7 @@ impl RenderTask {
                 uv_rect_handle: GpuCacheHandle::new(),
                 uv_rect_kind,
                 root_spatial_node_index,
+                device_pixel_scale,
             }),
             clear_mode: ClearMode::Transparent,
             saved_index: None,
@@ -560,6 +565,7 @@ impl RenderTask {
         render_tasks: &mut RenderTaskTree,
         clip_data_store: &mut ClipDataStore,
         snap_offsets: SnapOffsets,
+        device_pixel_scale: DevicePixelScale,
     ) -> Self {
         // Step through the clip sources that make up this mask. If we find
         // any box-shadow clip sources, request that image from the render
@@ -599,6 +605,7 @@ impl RenderTask {
                                 cache_size,
                                 clip_data_address,
                                 info.minimal_shadow_rect.origin,
+                                device_pixel_scale,
                             );
 
                             let mask_task_id = render_tasks.add(mask_task);
@@ -630,6 +637,7 @@ impl RenderTask {
                 clip_node_range,
                 root_spatial_node_index,
                 snap_offsets,
+                device_pixel_scale,
             }),
             ClearMode::One,
         )
@@ -639,6 +647,7 @@ impl RenderTask {
         size: DeviceIntSize,
         clip_data_address: GpuCacheAddress,
         local_pos: LayoutPoint,
+        device_pixel_scale: DevicePixelScale,
     ) -> Self {
         RenderTask::with_dynamic_location(
             size,
@@ -646,6 +655,7 @@ impl RenderTask {
             RenderTaskKind::ClipRegion(ClipRegionTask {
                 clip_data_address,
                 local_pos,
+                device_pixel_scale,
             }),
             ClearMode::One,
         )
@@ -842,7 +852,7 @@ impl RenderTask {
     // Write (up to) 8 floats of data specific to the type
     // of render task that is provided to the GPU shaders
     // via a vertex texture.
-    pub fn write_task_data(&self, device_pixel_scale: DevicePixelScale) -> RenderTaskData {
+    pub fn write_task_data(&self) -> RenderTaskData {
         // NOTE: The ordering and layout of these structures are
         //       required to match both the GPU structures declared
         //       in prim_shared.glsl, and also the uses in submit_batch()
@@ -855,14 +865,23 @@ impl RenderTask {
             RenderTaskKind::Picture(ref task) => {
                 // Note: has to match `PICTURE_TYPE_*` in shaders
                 [
+                    task.device_pixel_scale.0,
                     task.content_origin.x as f32,
                     task.content_origin.y as f32,
                 ]
             }
             RenderTaskKind::CacheMask(ref task) => {
                 [
+                    task.device_pixel_scale.0,
                     task.actual_rect.origin.x as f32,
                     task.actual_rect.origin.y as f32,
+                ]
+            }
+            RenderTaskKind::ClipRegion(ref task) => {
+                [
+                    task.device_pixel_scale.0,
+                    0.0,
+                    0.0,
                 ]
             }
             RenderTaskKind::VerticalBlur(ref task) |
@@ -870,18 +889,18 @@ impl RenderTask {
                 [
                     task.blur_std_deviation,
                     0.0,
+                    0.0,
                 ]
             }
             RenderTaskKind::Glyph(_) => {
-                [1.0, 0.0]
+                [0.0, 1.0, 0.0]
             }
-            RenderTaskKind::ClipRegion(..) |
             RenderTaskKind::Readback(..) |
             RenderTaskKind::Scaling(..) |
             RenderTaskKind::Border(..) |
             RenderTaskKind::LineDecoration(..) |
             RenderTaskKind::Blit(..) => {
-                [0.0; 2]
+                [0.0; 3]
             }
         };
 
@@ -900,9 +919,9 @@ impl RenderTask {
                 target_rect.size.width as f32,
                 target_rect.size.height as f32,
                 target_index.0 as f32,
-                device_pixel_scale.0,
                 data[0],
                 data[1],
+                data[2],
             ]
         }
     }

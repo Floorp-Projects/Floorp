@@ -1448,7 +1448,7 @@ static bool CaptureFirstSubsumedFrame(JSContext* cx, unsigned argc,
   }
 
   RootedObject obj(cx, &args[0].toObject());
-  obj = CheckedUnwrap(obj);
+  obj = CheckedUnwrapStatic(obj);
   if (!obj) {
     JS_ReportErrorASCII(cx, "Denied permission to object.");
     return false;
@@ -3346,7 +3346,7 @@ static bool SharedAddress(JSContext* cx, unsigned argc, Value* vp) {
 #  ifdef JS_MORE_DETERMINISTIC
   args.rval().setString(cx->staticStrings().getUint(0));
 #  else
-  RootedObject obj(cx, CheckedUnwrap(&args[0].toObject()));
+  RootedObject obj(cx, CheckedUnwrapStatic(&args[0].toObject()));
   if (!obj) {
     ReportAccessDenied(cx);
     return false;
@@ -3907,7 +3907,7 @@ static bool EvalReturningScope(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   if (global) {
-    global = CheckedUnwrap(global);
+    global = CheckedUnwrapDynamic(global, cx);
     if (!global) {
       JS_ReportErrorASCII(cx, "Permission denied to access global");
       return false;
@@ -4010,7 +4010,7 @@ static bool ShellCloneAndExecuteScript(JSContext* cx, unsigned argc,
     return false;
   }
 
-  global = CheckedUnwrap(global);
+  global = CheckedUnwrapDynamic(global, cx);
   if (!global) {
     JS_ReportErrorASCII(cx, "Permission denied to access global");
     return false;
@@ -4383,7 +4383,7 @@ static bool GetLcovInfo(JSContext* cx, unsigned argc, Value* vp) {
       JS_ReportErrorASCII(cx, "Permission denied to access global");
       return false;
     }
-    global = CheckedUnwrap(global);
+    global = CheckedUnwrapDynamic(global, cx);
     if (!global) {
       ReportAccessDenied(cx);
       return false;

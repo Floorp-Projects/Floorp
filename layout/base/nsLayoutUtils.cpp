@@ -1928,7 +1928,7 @@ nsRect nsLayoutUtils::GetScrolledRect(nsIFrame* aScrolledFrame,
 // static
 bool nsLayoutUtils::HasPseudoStyle(nsIContent* aContent,
                                    ComputedStyle* aComputedStyle,
-                                   CSSPseudoElementType aPseudoElement,
+                                   PseudoStyleType aPseudoElement,
                                    nsPresContext* aPresContext) {
   MOZ_ASSERT(aPresContext, "Must have a prescontext");
 
@@ -3970,9 +3970,9 @@ bool nsLayoutUtils::BinarySearchForPosition(
 
 void nsLayoutUtils::AddBoxesForFrame(nsIFrame* aFrame,
                                      nsLayoutUtils::BoxCallback* aCallback) {
-  nsAtom* pseudoType = aFrame->Style()->GetPseudo();
+  auto pseudoType = aFrame->Style()->GetPseudoType();
 
-  if (pseudoType == nsCSSAnonBoxes::tableWrapper()) {
+  if (pseudoType == PseudoStyleType::tableWrapper) {
     AddBoxesForFrame(aFrame->PrincipalChildList().FirstChild(), aCallback);
     if (aCallback->mIncludeCaptionBoxForTable) {
       nsIFrame* kid = aFrame->GetChildList(nsIFrame::kCaptionList).FirstChild();
@@ -3980,9 +3980,9 @@ void nsLayoutUtils::AddBoxesForFrame(nsIFrame* aFrame,
         AddBoxesForFrame(kid, aCallback);
       }
     }
-  } else if (pseudoType == nsCSSAnonBoxes::mozBlockInsideInlineWrapper() ||
-             pseudoType == nsCSSAnonBoxes::mozMathMLAnonymousBlock() ||
-             pseudoType == nsCSSAnonBoxes::mozXULAnonymousBlock()) {
+  } else if (pseudoType == PseudoStyleType::mozBlockInsideInlineWrapper ||
+             pseudoType == PseudoStyleType::mozMathMLAnonymousBlock ||
+             pseudoType == PseudoStyleType::mozXULAnonymousBlock) {
     for (nsIFrame* kid : aFrame->PrincipalChildList()) {
       AddBoxesForFrame(kid, aCallback);
     }
@@ -4001,9 +4001,9 @@ void nsLayoutUtils::GetAllInFlowBoxes(nsIFrame* aFrame,
 
 nsIFrame* nsLayoutUtils::GetFirstNonAnonymousFrame(nsIFrame* aFrame) {
   while (aFrame) {
-    nsAtom* pseudoType = aFrame->Style()->GetPseudo();
+    auto pseudoType = aFrame->Style()->GetPseudoType();
 
-    if (pseudoType == nsCSSAnonBoxes::tableWrapper()) {
+    if (pseudoType == PseudoStyleType::tableWrapper) {
       nsIFrame* f =
           GetFirstNonAnonymousFrame(aFrame->PrincipalChildList().FirstChild());
       if (f) {
@@ -4016,9 +4016,9 @@ nsIFrame* nsLayoutUtils::GetFirstNonAnonymousFrame(nsIFrame* aFrame) {
           return f;
         }
       }
-    } else if (pseudoType == nsCSSAnonBoxes::mozBlockInsideInlineWrapper() ||
-               pseudoType == nsCSSAnonBoxes::mozMathMLAnonymousBlock() ||
-               pseudoType == nsCSSAnonBoxes::mozXULAnonymousBlock()) {
+    } else if (pseudoType == PseudoStyleType::mozBlockInsideInlineWrapper ||
+               pseudoType == PseudoStyleType::mozMathMLAnonymousBlock ||
+               pseudoType == PseudoStyleType::mozXULAnonymousBlock) {
       for (nsIFrame* kid : aFrame->PrincipalChildList()) {
         nsIFrame* f = GetFirstNonAnonymousFrame(kid);
         if (f) {
@@ -4451,6 +4451,7 @@ already_AddRefed<nsFontMetrics> nsLayoutUtils::GetFontMetricsForComputedStyle(
   // pass along to CreateFontGroup
   params.userFontSet = aPresContext->GetUserFontSet();
   params.textPerf = aPresContext->GetTextPerfMetrics();
+  params.featureValueLookup = aPresContext->GetFontFeatureValuesLookup();
 
   // When aInflation is 1.0 and we don't require width variant, avoid
   // making a local copy of the nsFont.
@@ -9555,14 +9556,13 @@ already_AddRefed<nsFontMetrics> nsLayoutUtils::GetMetricsFor(
   params.userFontSet =
       aUseUserFontSet ? aPresContext->GetUserFontSet() : nullptr;
   params.textPerf = aPresContext->GetTextPerfMetrics();
+  params.featureValueLookup = aPresContext->GetFontFeatureValuesLookup();
   return aPresContext->DeviceContext()->GetMetricsFor(font, params);
 }
 
 /* static */ void nsLayoutUtils::FixupNoneGeneric(
-    nsFont* aFont, const nsPresContext* aPresContext, uint8_t aGenericFontID,
-    const nsFont* aDefaultVariableFont) {
-  bool useDocumentFonts =
-      aPresContext->GetCachedBoolPref(kPresContext_UseDocumentFonts);
+    nsFont* aFont, uint8_t aGenericFontID, const nsFont* aDefaultVariableFont) {
+  bool useDocumentFonts = StaticPrefs::browser_display_use_document_fonts();
   if (aGenericFontID == kGenericFont_NONE ||
       (!useDocumentFonts && (aGenericFontID == kGenericFont_cursive ||
                              aGenericFontID == kGenericFont_fantasy))) {
@@ -9587,9 +9587,9 @@ already_AddRefed<nsFontMetrics> nsLayoutUtils::GetMetricsFor(
   }
 }
 
-/* static */ void nsLayoutUtils::ApplyMinFontSize(
-    nsStyleFont* aFont, const nsPresContext* aPresContext,
-    nscoord aMinFontSize) {
+/* static */ void nsLayoutUtils::ApplyMinFontSize(nsStyleFont* aFont,
+                                                  const Document* aDocument,
+                                                  nscoord aMinFontSize) {
   nscoord fontSize = aFont->mSize;
 
   // enforce the user' specified minimum font-size on the value that we expose
@@ -9600,7 +9600,7 @@ already_AddRefed<nsFontMetrics> nsLayoutUtils::GetMetricsFor(
     } else {
       aMinFontSize = (aMinFontSize * aFont->mMinFontSizeRatio) / 100;
     }
-    if (fontSize < aMinFontSize && !aPresContext->IsChrome()) {
+    if (fontSize < aMinFontSize && !nsContentUtils::IsChromeDoc(aDocument)) {
       // override the minimum font-size constraint
       fontSize = aMinFontSize;
     }
