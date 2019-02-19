@@ -339,17 +339,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   static size_t objectMoved(JSObject* obj, JSObject* old);
 
-  // Convert this ArrayBuffer's storage to memory allocated using the standard
-  // SpiderMonkey allocator (if the storage *is* memory so allocated, this will
-  // be a no-op), then return a pointer to that memory *that the caller now
-  // owns*, for same-thread manipulation by the caller.  The caller must at a
-  // later time call |JS_DetachArrayBuffer| on |buffer|, then free the
-  // SpiderMonkey-allocated pointer in the usual way.
-  //
-  // Returns null leaving |buffer| unaltered on failure.
-  static void* exposeMallocedContents(JSContext* cx,
-                                      Handle<ArrayBufferObject*> buffer);
-
   static BufferContents stealContents(JSContext* cx,
                                       Handle<ArrayBufferObject*> buffer,
                                       bool hasStealableContents);
