@@ -315,9 +315,6 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   already_AddRefed<CSSValue> DoGetOutlineRadiusTopLeft();
   already_AddRefed<CSSValue> DoGetOutlineRadiusTopRight();
 
-  /* z-index */
-  already_AddRefed<CSSValue> DoGetZIndex();
-
   /* Text Properties */
   already_AddRefed<CSSValue> DoGetInitialLetter();
   already_AddRefed<CSSValue> DoGetLineHeight();
@@ -341,7 +338,6 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   already_AddRefed<CSSValue> DoGetTouchAction();
   already_AddRefed<CSSValue> DoGetTransform();
   already_AddRefed<CSSValue> DoGetTransformOrigin();
-  already_AddRefed<CSSValue> DoGetPerspective();
   already_AddRefed<CSSValue> DoGetPerspectiveOrigin();
   already_AddRefed<CSSValue> DoGetScrollSnapPointsX();
   already_AddRefed<CSSValue> DoGetScrollSnapPointsY();

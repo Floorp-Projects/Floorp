@@ -142,6 +142,8 @@ SERIALIZED_PREDEFINED_TYPES = [
     "BorderImageSlice",
     "NonNegativeLengthOrNumberRect",
     "NonNegativeLengthOrNumber",
+    "ZIndex",
+    "Perspective",
 ]
 
 def serialized_by_servo(prop):
