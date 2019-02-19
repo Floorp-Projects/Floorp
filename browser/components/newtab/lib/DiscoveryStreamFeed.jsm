@@ -18,6 +18,8 @@ const COMPONENT_FEEDS_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
 const SPOCS_FEEDS_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
 const CONFIG_PREF_NAME = "browser.newtabpage.activity-stream.discoverystream.config";
 const SPOC_IMPRESSION_TRACKING_PREF = "browser.newtabpage.activity-stream.discoverystream.spoc.impressions";
+const REC_IMPRESSION_TRACKING_PREF = "browser.newtabpage.activity-stream.discoverystream.rec.impressions";
+const DEFAULT_RECS_EXPIRE_TIME = 60 * 60 * 1000; // 1 hour
 const MAX_LIFETIME_CAP = 500; // Guard against misconfiguration on the server
 
 this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
@@ -265,6 +267,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     // Each promise has a catch already built in, so no need to catch here.
     await Promise.all(newFeedsPromises);
     if (this.componentFeedFetched) {
+      this.cleanUpTopRecImpressionPref(newFeeds);
       this.componentFeedRequestTime = Math.round(perfService.absNow() - start);
     }
     await this.cache.set("feeds", newFeeds);
@@ -375,7 +378,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         this.componentFeedFetched = true;
         feed = {
           lastUpdated: Date.now(),
-          data: feedResponse,
+          data: this.rotate(feedResponse),
         };
       } else {
         Cu.reportError("No response for feed");
@@ -427,6 +430,26 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     }
 
     this.loaded = true;
+  }
+
+  // We have to rotate stories on the client so that
+  // active stories are at the front of the list, followed by stories that have expired
+  // impressions i.e. have been displayed for longer than recsExpireTime.
+  rotate(feedResponse) {
+    const {recommendations} = feedResponse;
+
+    const maxImpressionAge = Math.max(feedResponse.settings.recsExpireTime * 1000 || DEFAULT_RECS_EXPIRE_TIME, DEFAULT_RECS_EXPIRE_TIME);
+    const impressions = this.readImpressionsPref(REC_IMPRESSION_TRACKING_PREF);
+    const expired = [];
+    const active = [];
+    for (const item of recommendations) {
+      if (impressions[item.id] && Date.now() - impressions[item.id] >= maxImpressionAge) {
+        expired.push(item);
+      } else {
+        active.push(item);
+      }
+    }
+    return {...feedResponse, recommendations: active.concat(expired)};
   }
 
   /**
@@ -530,7 +553,13 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     await this.cache.set("spocs", {});
   }
 
+  clearImpressionPrefs() {
+    this.writeImpressionsPref(SPOC_IMPRESSION_TRACKING_PREF, {});
+    this.writeImpressionsPref(REC_IMPRESSION_TRACKING_PREF, {});
+  }
+
   async onPrefChange() {
+    this.clearImpressionPrefs();
     if (this.config.enabled) {
       // We always want to clear the cache if the pref has changed
       await this.clearCache();
@@ -554,11 +583,30 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     this.writeImpressionsPref(SPOC_IMPRESSION_TRACKING_PREF, impressions);
   }
 
+  recordTopRecImpressions(recId) {
+    let impressions = this.readImpressionsPref(REC_IMPRESSION_TRACKING_PREF);
+    if (!impressions[recId]) {
+      impressions = {...impressions, [recId]: Date.now()};
+      this.writeImpressionsPref(REC_IMPRESSION_TRACKING_PREF, impressions);
+    }
+  }
+
   cleanUpCampaignImpressionPref(data) {
     if (data.spocs && data.spocs.length) {
       const campaignIds = data.spocs.map(s => `${s.campaign_id}`);
       this.cleanUpImpressionPref(id => !campaignIds.includes(id), SPOC_IMPRESSION_TRACKING_PREF);
     }
+  }
+
+  // Clean up rec impression pref by removing all stories that are no
+  // longer part of the response.
+  cleanUpTopRecImpressionPref(newFeeds) {
+    // Need to build a single list of stories.
+    const activeStories = Object.keys(newFeeds).reduce((accumulator, currentValue) => {
+      const {recommendations} = newFeeds[currentValue].data;
+      return accumulator.concat(recommendations.map(i => `${i.id}`));
+    }, []);
+    this.cleanUpImpressionPref(id => !activeStories.includes(id), REC_IMPRESSION_TRACKING_PREF);
   }
 
   writeImpressionsPref(pref, impressions) {
@@ -611,6 +659,11 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       case at.DISCOVERY_STREAM_CONFIG_CHANGE:
         // When the config pref changes, load or unload data as needed.
         await this.onPrefChange();
+        break;
+      case at.DISCOVERY_STREAM_IMPRESSION_STATS:
+        if (action.data.tiles && action.data.tiles[0] && action.data.tiles[0].id) {
+          this.recordTopRecImpressions(action.data.tiles[0].id);
+        }
         break;
       case at.DISCOVERY_STREAM_SPOC_IMPRESSION:
         if (this.showSpocs) {
