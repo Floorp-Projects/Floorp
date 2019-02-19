@@ -1134,9 +1134,6 @@ parent:
       Principal aTriggeringPrincipal,
       uint32_t aReferrerPolicy);
 
-    sync GetAndroidSystemInfo()
-        returns (AndroidSystemInfo info);
-
     /**
      * Tells the parent to ungrab the pointer on the default display.
      *
