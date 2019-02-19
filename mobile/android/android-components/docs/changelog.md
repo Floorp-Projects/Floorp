@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **browser-toolbar**
+  * Added option to configure fading edge length by using `browserToolbarFadingEdgeSize` XML attribute.
+
 # 0.43.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.42.0...v0.43.0)

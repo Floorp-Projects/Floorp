@@ -89,8 +89,6 @@ internal class DisplayToolbar(
         id = R.id.mozac_browser_toolbar_url_view
         gravity = Gravity.CENTER_VERTICAL
         textSize = URL_TEXT_SIZE
-        setFadingEdgeLength(URL_FADING_EDGE_SIZE_DP)
-        isHorizontalFadingEdgeEnabled = true
 
         setSingleLine(true)
         isClickable = true
@@ -449,10 +447,11 @@ internal class DisplayToolbar(
     }
 
     companion object {
+        internal const val URL_FADING_EDGE_SIZE_DP = 24
+
         private const val ICON_PADDING_DP = 16
         private const val MENU_PADDING_DP = 16
         private const val URL_TEXT_SIZE = 15f
-        private const val URL_FADING_EDGE_SIZE_DP = 24
         private const val PROGRESS_BAR_HEIGHT_DP = 3
     }
 }

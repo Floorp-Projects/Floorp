@@ -91,7 +91,6 @@ class BrowserToolbar @JvmOverloads constructor(
      * model based on what the user typed.
      */
     override var private: Boolean
-        //  = 0x1000000
         get() = (editToolbar.urlView.imeOptions and EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING) != 0
         set(value) {
             editToolbar.urlView.imeOptions = if (value) {
@@ -310,6 +309,12 @@ class BrowserToolbar @JvmOverloads constructor(
                     displayToolbar.securityIconColor.second
                 )
                 siteSecurityColor = Pair(inSecure, secure)
+                val fadingEdgeLength = getDimensionPixelSize(
+                    R.styleable.BrowserToolbar_browserToolbarFadingEdgeSize,
+                    resources.pxToDp(DisplayToolbar.URL_FADING_EDGE_SIZE_DP)
+                )
+                displayToolbar.urlView.setFadingEdgeLength(fadingEdgeLength)
+                displayToolbar.urlView.isHorizontalFadingEdgeEnabled = fadingEdgeLength > 0
             }
             recycle()
         }
