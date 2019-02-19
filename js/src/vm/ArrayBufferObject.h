@@ -399,12 +399,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   void releaseData(FreeOp* fop);
 
-  /*
-   * Check if the arrayBuffer contains any data. This will return false for
-   * ArrayBuffer.prototype and detached ArrayBuffers.
-   */
-  bool hasData() const { return getClass() == &class_; }
-
   BufferKind bufferKind() const {
     return BufferKind(flags() & BUFFER_KIND_MASK);
   }
