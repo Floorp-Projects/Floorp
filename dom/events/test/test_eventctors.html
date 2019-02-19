@@ -886,14 +886,26 @@ is(e.isTrusted, false, "Event shouldn't be trusted!");
 is(e.eventPhase, Event.NONE, "Wrong event phase");
 
 // InputEvent
-e = new InputEvent("hello", {data: "something data", inputType: "invalid input type", isComposing: true});
+let dataTransfer = new DataTransfer();
+dataTransfer.setData("text/plain", "foo");
+e = new InputEvent("hello", {data: "something data", dataTransfer: dataTransfer, inputType: "invalid input type", isComposing: true});
 is(e.type, "hello", "InputEvent should set type attribute");
 is(e.data, "something data", "InputEvent should have data attribute");
+is(e.dataTransfer, dataTransfer, "InputEvent should have the dataTransfer");
+is(e.dataTransfer.getData("text/plain"), "foo", "InputEvent.dataTransfer should keep handling its data");
+try {
+  e.dataTransfer.setData("text/plain", "bar");
+} catch (ex) {
+  ok(false, `InputEvent.dataTransfer.setData("text/plain", "bar") shouldn't fail (${ex})`);
+}
+is(e.dataTransfer.getData("text/plain"), "bar", "InputEvent.dataTransfer should be modified by a call of its setData()");
 is(e.inputType, "invalid input type", "InputEvent should have inputType attribute");
 is(e.isComposing, true, "InputEvent should have isComposing attribute");
 
-e = new InputEvent("hello", {data: "", inputType: "insertText"});
+dataTransfer = new DataTransfer();
+e = new InputEvent("hello", {data: "", dataTransfer: dataTransfer, inputType: "insertText"});
 is(e.data, "", "InputEvent.data should be empty string when empty string is specified explicitly");
+is(e.dataTransfer, dataTransfer, "InputEvent.dataTransfer should have the empty dataTransfer");
 is(e.inputType, "insertText", "InputEvent.inputType should return valid inputType from EditorInputType enum");
 e = new InputEvent("hello", {data: "foo", inputType: "deleteWordBackward"});
 is(e.data, "foo", "InputEvent.data should be the specified string");
@@ -903,6 +915,7 @@ is(e.inputType, "formatFontName", "InputEvent.inputType should return valid inpu
 
 e = new InputEvent("input", {});
 is(e.data, null, "InputEvent.data should be null in default");
+is(e.dataTransfer, null, "InputEvent.dataTransfer should be null in default");
 is(e.inputType, "", "InputEvent.inputType should be empty string in default");
 is(e.isComposing, false, "InputEvent.isComposing should be false in default");
 
