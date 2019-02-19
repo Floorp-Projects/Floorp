@@ -7,7 +7,7 @@
 #include "EffectSet.h"
 #include "mozilla/dom/Element.h"  // For Element
 #include "mozilla/RestyleManager.h"
-#include "nsCSSPseudoElements.h"         // For CSSPseudoElementType
+#include "nsCSSPseudoElements.h"         // For PseudoStyleType
 #include "nsCycleCollectionNoteChild.h"  // For CycleCollectionNoteChild
 #include "nsPresContext.h"
 #include "nsLayoutUtils.h"
@@ -33,8 +33,8 @@ void EffectSet::Traverse(nsCycleCollectionTraversalCallback& aCallback) {
   }
 }
 
-/* static */ EffectSet* EffectSet::GetEffectSet(
-    const dom::Element* aElement, CSSPseudoElementType aPseudoType) {
+/* static */ EffectSet* EffectSet::GetEffectSet(const dom::Element* aElement,
+                                                PseudoStyleType aPseudoType) {
   if (!aElement->MayHaveAnimations()) {
     return nullptr;
   }
@@ -55,7 +55,7 @@ void EffectSet::Traverse(nsCycleCollectionTraversalCallback& aCallback) {
 }
 
 /* static */ EffectSet* EffectSet::GetOrCreateEffectSet(
-    dom::Element* aElement, CSSPseudoElementType aPseudoType) {
+    dom::Element* aElement, PseudoStyleType aPseudoType) {
   EffectSet* effectSet = GetEffectSet(aElement, aPseudoType);
   if (effectSet) {
     return effectSet;
@@ -79,8 +79,8 @@ void EffectSet::Traverse(nsCycleCollectionTraversalCallback& aCallback) {
   return effectSet;
 }
 
-/* static */ void EffectSet::DestroyEffectSet(
-    dom::Element* aElement, CSSPseudoElementType aPseudoType) {
+/* static */ void EffectSet::DestroyEffectSet(dom::Element* aElement,
+                                              PseudoStyleType aPseudoType) {
   nsAtom* propName = GetEffectSetPropertyAtom(aPseudoType);
   EffectSet* effectSet =
       static_cast<EffectSet*>(aElement->GetProperty(propName));
@@ -110,15 +110,15 @@ void EffectSet::UpdateAnimationGeneration(nsPresContext* aPresContext) {
 }
 
 /* static */ nsAtom* EffectSet::GetEffectSetPropertyAtom(
-    CSSPseudoElementType aPseudoType) {
+    PseudoStyleType aPseudoType) {
   switch (aPseudoType) {
-    case CSSPseudoElementType::NotPseudo:
+    case PseudoStyleType::NotPseudo:
       return nsGkAtoms::animationEffectsProperty;
 
-    case CSSPseudoElementType::before:
+    case PseudoStyleType::before:
       return nsGkAtoms::animationEffectsForBeforeProperty;
 
-    case CSSPseudoElementType::after:
+    case PseudoStyleType::after:
       return nsGkAtoms::animationEffectsForAfterProperty;
 
     default:

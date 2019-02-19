@@ -57,7 +57,7 @@ nsresult nsColorControlFrame::CreateAnonymousContent(
     nsTArray<ContentInfo>& aElements) {
   RefPtr<Document> doc = mContent->GetComposedDoc();
   mColorContent = doc->CreateHTMLElement(nsGkAtoms::div);
-  mColorContent->SetPseudoElementType(CSSPseudoElementType::mozColorSwatch);
+  mColorContent->SetPseudoElementType(PseudoStyleType::mozColorSwatch);
 
   // Mark the element to be native anonymous before setting any attributes.
   mColorContent->SetIsNativeAnonymousRoot();

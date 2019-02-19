@@ -185,10 +185,9 @@ const nsTArray<RefPtr<nsINode>>* Gecko_GetAssignedNodes(
 
 void Gecko_ComputedStyle_Init(ComputedStyle* aStyle,
                               const ServoComputedData* aValues,
-                              CSSPseudoElementType aPseudoType,
-                              nsAtom* aPseudoTag) {
-  new (KnownNotNull, aStyle) ComputedStyle(aPseudoTag, aPseudoType,
-                                           ServoComputedDataForgotten(aValues));
+                              PseudoStyleType aPseudoType) {
+  new (KnownNotNull, aStyle)
+      ComputedStyle(aPseudoType, ServoComputedDataForgotten(aValues));
 }
 
 ServoComputedData::ServoComputedData(const ServoComputedDataForgotten aValue) {
@@ -310,8 +309,7 @@ bool Gecko_AnimationNameMayBeReferencedFromStyle(
   return aPresContext->AnimationManager()->AnimationMayBeReferenced(aName);
 }
 
-CSSPseudoElementType Gecko_GetImplementedPseudo(
-    RawGeckoElementBorrowed aElement) {
+PseudoStyleType Gecko_GetImplementedPseudo(RawGeckoElementBorrowed aElement) {
   return aElement->GetPseudoElementType();
 }
 
@@ -469,19 +467,19 @@ Gecko_GetActiveLinkAttrDeclarationBlock(RawGeckoElementBorrowed aElement) {
   return AsRefRawStrong(sheet->GetServoActiveLinkDecl());
 }
 
-static CSSPseudoElementType GetPseudoTypeFromElementForAnimation(
+static PseudoStyleType GetPseudoTypeFromElementForAnimation(
     const Element*& aElementOrPseudo) {
   if (aElementOrPseudo->IsGeneratedContentContainerForBefore()) {
     aElementOrPseudo = aElementOrPseudo->GetParent()->AsElement();
-    return CSSPseudoElementType::before;
+    return PseudoStyleType::before;
   }
 
   if (aElementOrPseudo->IsGeneratedContentContainerForAfter()) {
     aElementOrPseudo = aElementOrPseudo->GetParent()->AsElement();
-    return CSSPseudoElementType::after;
+    return PseudoStyleType::after;
   }
 
-  return CSSPseudoElementType::NotPseudo;
+  return PseudoStyleType::NotPseudo;
 }
 
 bool Gecko_GetAnimationRule(
@@ -500,8 +498,7 @@ bool Gecko_GetAnimationRule(
     return false;
   }
 
-  CSSPseudoElementType pseudoType =
-      GetPseudoTypeFromElementForAnimation(aElement);
+  PseudoStyleType pseudoType = GetPseudoTypeFromElementForAnimation(aElement);
 
   return presContext->EffectCompositor()->GetServoAnimationRule(
       aElement, pseudoType, aCascadeLevel, aAnimationValues);
@@ -546,8 +543,7 @@ void Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
 
   nsAutoAnimationMutationBatch mb(aElement->OwnerDoc());
 
-  CSSPseudoElementType pseudoType =
-      GetPseudoTypeFromElementForAnimation(aElement);
+  PseudoStyleType pseudoType = GetPseudoTypeFromElementForAnimation(aElement);
 
   if (aTasks & UpdateAnimationsTasks::CSSAnimations) {
     presContext->AnimationManager()->UpdateAnimations(
@@ -601,7 +597,7 @@ void Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
 }
 
 size_t Gecko_GetAnimationEffectCount(RawGeckoElementBorrowed aElementOrPseudo) {
-  CSSPseudoElementType pseudoType =
+  PseudoStyleType pseudoType =
       GetPseudoTypeFromElementForAnimation(aElementOrPseudo);
 
   EffectSet* effectSet = EffectSet::GetEffectSet(aElementOrPseudo, pseudoType);
@@ -609,15 +605,13 @@ size_t Gecko_GetAnimationEffectCount(RawGeckoElementBorrowed aElementOrPseudo) {
 }
 
 bool Gecko_ElementHasAnimations(RawGeckoElementBorrowed aElement) {
-  CSSPseudoElementType pseudoType =
-      GetPseudoTypeFromElementForAnimation(aElement);
+  PseudoStyleType pseudoType = GetPseudoTypeFromElementForAnimation(aElement);
 
   return !!EffectSet::GetEffectSet(aElement, pseudoType);
 }
 
 bool Gecko_ElementHasCSSAnimations(RawGeckoElementBorrowed aElement) {
-  CSSPseudoElementType pseudoType =
-      GetPseudoTypeFromElementForAnimation(aElement);
+  PseudoStyleType pseudoType = GetPseudoTypeFromElementForAnimation(aElement);
   nsAnimationManager::CSSAnimationCollection* collection =
       nsAnimationManager::CSSAnimationCollection ::GetAnimationCollection(
           aElement, pseudoType);
@@ -626,8 +620,7 @@ bool Gecko_ElementHasCSSAnimations(RawGeckoElementBorrowed aElement) {
 }
 
 bool Gecko_ElementHasCSSTransitions(RawGeckoElementBorrowed aElement) {
-  CSSPseudoElementType pseudoType =
-      GetPseudoTypeFromElementForAnimation(aElement);
+  PseudoStyleType pseudoType = GetPseudoTypeFromElementForAnimation(aElement);
   nsTransitionManager::CSSTransitionCollection* collection =
       nsTransitionManager::CSSTransitionCollection ::GetAnimationCollection(
           aElement, pseudoType);
@@ -636,8 +629,7 @@ bool Gecko_ElementHasCSSTransitions(RawGeckoElementBorrowed aElement) {
 }
 
 size_t Gecko_ElementTransitions_Length(RawGeckoElementBorrowed aElement) {
-  CSSPseudoElementType pseudoType =
-      GetPseudoTypeFromElementForAnimation(aElement);
+  PseudoStyleType pseudoType = GetPseudoTypeFromElementForAnimation(aElement);
   nsTransitionManager::CSSTransitionCollection* collection =
       nsTransitionManager::CSSTransitionCollection ::GetAnimationCollection(
           aElement, pseudoType);
@@ -647,8 +639,7 @@ size_t Gecko_ElementTransitions_Length(RawGeckoElementBorrowed aElement) {
 
 static CSSTransition* GetCurrentTransitionAt(RawGeckoElementBorrowed aElement,
                                              size_t aIndex) {
-  CSSPseudoElementType pseudoType =
-      GetPseudoTypeFromElementForAnimation(aElement);
+  PseudoStyleType pseudoType = GetPseudoTypeFromElementForAnimation(aElement);
   nsTransitionManager::CSSTransitionCollection* collection =
       nsTransitionManager::CSSTransitionCollection ::GetAnimationCollection(
           aElement, pseudoType);

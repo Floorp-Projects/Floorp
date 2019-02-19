@@ -37,7 +37,7 @@ class CSSPseudoElement final : public nsWrapperCache {
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  CSSPseudoElementType GetType() const { return mPseudoType; }
+  PseudoStyleType GetType() const { return mPseudoType; }
   void GetType(nsString& aRetVal) const {
     MOZ_ASSERT(nsCSSPseudoElements::GetPseudoAtom(mPseudoType),
                "All pseudo-types allowed by this class should have a"
@@ -66,19 +66,19 @@ class CSSPseudoElement final : public nsWrapperCache {
   // pseudo-type on element, a new CSSPseudoElement will be created and stored
   // on the element.
   static already_AddRefed<CSSPseudoElement> GetCSSPseudoElement(
-      Element* aElement, CSSPseudoElementType aType);
+      Element* aElement, PseudoStyleType aType);
 
  private:
   // Only ::before and ::after are supported.
-  CSSPseudoElement(Element* aElement, CSSPseudoElementType aType);
+  CSSPseudoElement(Element* aElement, PseudoStyleType aType);
 
-  static nsAtom* GetCSSPseudoElementPropertyAtom(CSSPseudoElementType aType);
+  static nsAtom* GetCSSPseudoElementPropertyAtom(PseudoStyleType aType);
 
   // mParentElement needs to be an owning reference since if script is holding
   // on to the pseudo-element, it needs to continue to be able to refer to
   // the parent element.
   RefPtr<Element> mParentElement;
-  CSSPseudoElementType mPseudoType;
+  PseudoStyleType mPseudoType;
 };
 
 }  // namespace dom

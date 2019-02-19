@@ -170,8 +170,9 @@ void nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,
   MOZ_ASSERT(firstKid, "Button should have a child frame for its contents");
   MOZ_ASSERT(!firstKid->GetNextSibling(),
              "Button should have exactly one child frame");
-  MOZ_ASSERT(firstKid->Style()->GetPseudo() == nsCSSAnonBoxes::buttonContent(),
-             "Button's child frame has unexpected pseudo type!");
+  MOZ_ASSERT(
+      firstKid->Style()->GetPseudoType() == PseudoStyleType::buttonContent,
+      "Button's child frame has unexpected pseudo type!");
 
   // XXXbz Eventually we may want to check-and-bail if
   // !aReflowInput.ShouldReflowAllKids() &&

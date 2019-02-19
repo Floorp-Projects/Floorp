@@ -21,7 +21,7 @@ class EditorInitializerEntryTracker;
 class nsTextEditorState;
 namespace mozilla {
 class TextEditor;
-enum class CSSPseudoElementType : uint8_t;
+enum class PseudoStyleType : uint8_t;
 namespace dom {
 class Element;
 }  // namespace dom

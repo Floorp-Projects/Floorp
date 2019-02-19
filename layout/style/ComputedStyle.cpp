@@ -42,11 +42,9 @@ namespace mozilla {
 
 //----------------------------------------------------------------------
 
-ComputedStyle::ComputedStyle(nsAtom* aPseudoTag,
-                             CSSPseudoElementType aPseudoType,
+ComputedStyle::ComputedStyle(PseudoStyleType aPseudoType,
                              ServoComputedDataForgotten aComputedValues)
     : mSource(aComputedValues),
-      mPseudoTag(aPseudoTag),
       mBits(static_cast<Bit>(Servo_ComputedValues_GetStyleBits(this))),
       mPseudoType(aPseudoType) {}
 
@@ -260,11 +258,8 @@ void ComputedStyle::List(FILE* out, int32_t aIndent) {
     str.AppendLiteral("  ");
   }
   str.Append(nsPrintfCString("%p(%d) parent=%p ", (void*)this, 0, nullptr));
-  if (mPseudoTag) {
-    nsAutoString buffer;
-    mPseudoTag->ToString(buffer);
-    AppendUTF16toUTF8(buffer, str);
-    str.Append(' ');
+  if (mPseudoType != PseudoStyleType::NotPseudo) {
+    str.Append(nsPrintfCString("pseudo-%d ", static_cast<int>(mPseudoType)));
   }
 
   fprintf_stderr(out, "%s{ServoComputedData}\n", str.get());
@@ -367,10 +362,8 @@ static const ColorIndexSet gVisitedIndices[2] = {{0, 0}, {1, 0}};
 #endif  // DEBUG
 
 ComputedStyle* ComputedStyle::GetCachedLazyPseudoStyle(
-    CSSPseudoElementType aPseudo) const {
-  MOZ_ASSERT(aPseudo != CSSPseudoElementType::NotPseudo &&
-             aPseudo != CSSPseudoElementType::InheritingAnonBox &&
-             aPseudo != CSSPseudoElementType::NonInheritingAnonBox);
+    PseudoStyleType aPseudo) const {
+  MOZ_ASSERT(PseudoStyle::IsPseudoElement(aPseudo));
   MOZ_ASSERT(!IsLazilyCascadedPseudoElement(),
              "Lazy pseudos can't inherit lazy pseudos");
 
@@ -378,8 +371,7 @@ ComputedStyle* ComputedStyle::GetCachedLazyPseudoStyle(
     return nullptr;
   }
 
-  return mCachedInheritingStyles.Lookup(
-      nsCSSPseudoElements::GetPseudoAtom(aPseudo));
+  return mCachedInheritingStyles.Lookup(aPseudo);
 }
 
 MOZ_DEFINE_MALLOC_ENCLOSING_SIZE_OF(ServoComputedValuesMallocEnclosingSizeOf)

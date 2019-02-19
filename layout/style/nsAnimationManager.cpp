@@ -529,7 +529,7 @@ static nsAnimationManager::OwningCSSAnimationPtrArray BuildAnimations(
 }
 
 void nsAnimationManager::UpdateAnimations(dom::Element* aElement,
-                                          CSSPseudoElementType aPseudoType,
+                                          PseudoStyleType aPseudoType,
                                           const ComputedStyle* aComputedStyle) {
   MOZ_ASSERT(mPresContext->IsDynamic(),
              "Should not update animations for print or print preview");
