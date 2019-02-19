@@ -16,6 +16,7 @@
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
 #include "nsUrlClassifierStreamUpdater.h"
+#include "nsUrlClassifierUtils.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/Logging.h"
@@ -326,8 +327,10 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
     return rv;
   }
 
-  nsCOMPtr<nsIUrlClassifierUtils> urlUtil =
-      mozilla::components::UrlClassifierUtils::Service();
+  nsUrlClassifierUtils *urlUtil = nsUrlClassifierUtils::GetInstance();
+  if (NS_WARN_IF(!urlUtil)) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsTArray<nsCString> tables;
   mozilla::safebrowsing::Classifier::SplitTables(aRequestTables, tables);

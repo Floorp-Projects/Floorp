@@ -13,7 +13,9 @@
 #include "nsReadableUtils.h"
 #include "plbase64.h"
 #include "nsPrintfCString.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/Mutex.h"
 #include "nsIRedirectHistoryEntry.h"
 #include "nsIHttpChannelInternal.h"
@@ -41,6 +43,8 @@
 
 using namespace mozilla;
 using namespace mozilla::safebrowsing;
+
+static mozilla::StaticRefPtr<nsUrlClassifierUtils> gUrlClassifierUtils;
 
 static char int_to_hex_digit(int32_t i) {
   NS_ASSERTION((i >= 0) && (i <= 15), "int too big in int_to_hex_digit");
@@ -184,8 +188,42 @@ static bool IsAllowedOnCurrentPlatform(uint32_t aThreatType) {
 }  // end of namespace safebrowsing.
 }  // end of namespace mozilla.
 
+// static
+already_AddRefed<nsUrlClassifierUtils>
+nsUrlClassifierUtils::GetXPCOMSingleton() {
+  if (gUrlClassifierUtils) {
+    return do_AddRef(gUrlClassifierUtils);
+  }
+
+  RefPtr<nsUrlClassifierUtils> utils = new nsUrlClassifierUtils();
+  if (NS_WARN_IF(NS_FAILED(utils->Init()))) {
+    return nullptr;
+  }
+
+  // Note: This is cleared in the nsUrlClassifierUtils destructor.
+  gUrlClassifierUtils = utils.get();
+  ClearOnShutdown(&gUrlClassifierUtils);
+  return utils.forget();
+}
+
+// static
+nsUrlClassifierUtils* nsUrlClassifierUtils::GetInstance() {
+  if (!gUrlClassifierUtils) {
+    RefPtr<nsUrlClassifierUtils> utils = GetXPCOMSingleton();
+  }
+
+  return gUrlClassifierUtils;
+}
+
 nsUrlClassifierUtils::nsUrlClassifierUtils()
     : mProviderDictLock("nsUrlClassifierUtils.mProviderDictLock") {}
+
+nsUrlClassifierUtils::~nsUrlClassifierUtils() {
+  if (gUrlClassifierUtils) {
+    MOZ_ASSERT(gUrlClassifierUtils == this);
+    gUrlClassifierUtils = nullptr;
+  }
+}
 
 nsresult nsUrlClassifierUtils::Init() {
   // nsIUrlClassifierUtils is a thread-safe service so it's
