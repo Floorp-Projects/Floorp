@@ -53,14 +53,9 @@
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
-#  include "AndroidBridge.h"
-#  include "mozilla/dom/ContentChild.h"
-#endif
-
-#ifdef ANDROID
-extern "C" {
-NS_EXPORT int android_sdk_version;
-}
+#  include "AndroidBuild.h"
+#  include "GeneratedJNIWrappers.h"
+#  include "mozilla/jni/Utils.h"
 #endif
 
 #ifdef XP_MACOSX
@@ -876,16 +871,8 @@ nsresult nsSystemInfo::Init() {
 
 #ifdef MOZ_WIDGET_ANDROID
   AndroidSystemInfo info;
-  if (XRE_IsContentProcess()) {
-    dom::ContentChild* child = dom::ContentChild::GetSingleton();
-    if (child) {
-      child->SendGetAndroidSystemInfo(&info);
-      SetupAndroidInfo(info);
-    }
-  } else {
-    GetAndroidSystemInfo(&info);
-    SetupAndroidInfo(info);
-  }
+  GetAndroidSystemInfo(&info);
+  SetupAndroidInfo(info);
 #endif
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
@@ -926,45 +913,36 @@ nsresult nsSystemInfo::Init() {
 
 /* static */
 void nsSystemInfo::GetAndroidSystemInfo(AndroidSystemInfo* aInfo) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-
-  if (!mozilla::AndroidBridge::Bridge()) {
+  if (!jni::IsAvailable()) {
+    // called from xpcshell etc.
     aInfo->sdk_version() = 0;
     return;
   }
 
-  nsAutoString str;
-  if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build",
-                                                             "MODEL", str)) {
-    aInfo->device() = str;
+  jni::String::LocalRef model = java::sdk::Build::MODEL();
+  aInfo->device() = model->ToString();
+
+  jni::String::LocalRef manufacturer =
+      mozilla::java::sdk::Build::MANUFACTURER();
+  aInfo->manufacturer() = manufacturer->ToString();
+
+  jni::String::LocalRef hardware = java::sdk::Build::HARDWARE();
+  aInfo->hardware() = hardware->ToString();
+
+  jni::String::LocalRef release = java::sdk::VERSION::RELEASE();
+  nsString str(release->ToString());
+  int major_version;
+  int minor_version;
+  int bugfix_version;
+  int num_read = sscanf(NS_ConvertUTF16toUTF8(str).get(), "%d.%d.%d",
+                        &major_version, &minor_version, &bugfix_version);
+  if (num_read == 0) {
+    aInfo->release_version() = NS_LITERAL_STRING(DEFAULT_ANDROID_VERSION);
+  } else {
+    aInfo->release_version() = str;
   }
-  if (mozilla::AndroidBridge::Bridge()->GetStaticStringField(
-          "android/os/Build", "MANUFACTURER", str)) {
-    aInfo->manufacturer() = str;
-  }
-  if (mozilla::AndroidBridge::Bridge()->GetStaticStringField(
-          "android/os/Build$VERSION", "RELEASE", str)) {
-    int major_version;
-    int minor_version;
-    int bugfix_version;
-    int num_read = sscanf(NS_ConvertUTF16toUTF8(str).get(), "%d.%d.%d",
-                          &major_version, &minor_version, &bugfix_version);
-    if (num_read == 0) {
-      aInfo->release_version() = NS_LITERAL_STRING(DEFAULT_ANDROID_VERSION);
-    } else {
-      aInfo->release_version() = str;
-    }
-  }
-  if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build",
-                                                             "HARDWARE", str)) {
-    aInfo->hardware() = str;
-  }
-  int32_t sdk_version;
-  if (!mozilla::AndroidBridge::Bridge()->GetStaticIntField(
-          "android/os/Build$VERSION", "SDK_INT", &sdk_version)) {
-    sdk_version = 0;
-  }
-  aInfo->sdk_version() = sdk_version;
+
+  aInfo->sdk_version() = jni::GetAPIVersion();
   aInfo->isTablet() = java::GeckoAppShell::IsTablet();
 }
 
@@ -989,14 +967,12 @@ void nsSystemInfo::SetupAndroidInfo(const AndroidSystemInfo& aInfo) {
   if (NS_SUCCEEDED(rv)) {
     SetPropertyAsAString(NS_LITERAL_STRING("kernel_version"), str);
   }
-  // When AndroidBridge is not available (eg. in xpcshell tests), sdk_version is
-  // 0.
+  // When JNI is not available (eg. in xpcshell tests), sdk_version is 0.
   if (aInfo.sdk_version() != 0) {
-    android_sdk_version = aInfo.sdk_version();
-    if (android_sdk_version >= 8 && !aInfo.hardware().IsEmpty()) {
+    if (!aInfo.hardware().IsEmpty()) {
       SetPropertyAsAString(NS_LITERAL_STRING("hardware"), aInfo.hardware());
     }
-    SetPropertyAsInt32(NS_LITERAL_STRING("version"), android_sdk_version);
+    SetPropertyAsInt32(NS_LITERAL_STRING("version"), aInfo.sdk_version());
   }
 }
 #endif  // MOZ_WIDGET_ANDROID
