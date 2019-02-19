@@ -19,7 +19,8 @@ describe("sources", () => {
       isBlackBoxed: false,
       isPrettyPrinted: false,
       isWasm: false,
-      loadedState: "loaded"
+      loadedState: "loaded",
+      actors: []
     };
 
     expect(hasSource(sourceId)).toEqual(false);

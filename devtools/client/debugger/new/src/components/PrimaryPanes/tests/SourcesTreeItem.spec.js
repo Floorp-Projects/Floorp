@@ -9,7 +9,7 @@ import { shallow } from "enzyme";
 import { showMenu } from "devtools-contextmenu";
 
 import SourcesTreeItem from "../SourcesTreeItem";
-import { createSource } from "../../../reducers/sources";
+import { makeMockSource } from "../../../utils/test-mockup";
 import { copyToTheClipboard } from "../../../utils/clipboard";
 
 jest.mock("devtools-contextmenu", () => ({ showMenu: jest.fn() }));
@@ -341,10 +341,10 @@ describe("SourceTreeItem", () => {
 });
 
 function generateDefaults(overrides) {
-  const source = createSource({
-    id: "server1.conn13.child1/39",
-    url: "http://mdn.com/one.js"
-  });
+  const source = makeMockSource(
+    "http://mdn.com/one.js",
+    "server1.conn13.child1/39"
+  );
 
   const item = {
     name: "one.js",
@@ -390,10 +390,10 @@ function createMockDirectory(path = "folder/", name = "folder", contents = []) {
 function createMockItem(overrides = {}) {
   overrides = {
     ...overrides,
-    contents: createSource({
-      id: "server1.conn13.child1/39",
+    contents: {
+      ...makeMockSource(undefined, "server1.conn13.child1/39"),
       ...(overrides.contents || {})
-    })
+    }
   };
 
   return {

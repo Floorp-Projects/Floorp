@@ -29,7 +29,7 @@ function generateDefaults(overrides) {
       }
     },
     endPanelCollapsed: false,
-    selectedSource: makeSource("foo").source,
+    selectedSource: makeSource("foo"),
     ...overrides
   };
 }

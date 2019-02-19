@@ -66,11 +66,11 @@ describe("project text search", () => {
   it("should search all the loaded sources based on the query", async () => {
     const { dispatch, getState } = createStore(threadClient);
     const mockQuery = "foo";
-    const csr1 = makeSource("foo1");
-    const csr2 = makeSource("foo2");
+    const source1 = makeSource("foo1");
+    const source2 = makeSource("foo2");
 
-    await dispatch(actions.newSource(csr1));
-    await dispatch(actions.newSource(csr2));
+    await dispatch(actions.newSource(source1));
+    await dispatch(actions.newSource(source2));
 
     await dispatch(actions.searchSources(mockQuery));
 
@@ -79,22 +79,22 @@ describe("project text search", () => {
   });
 
   it("should ignore sources with minified versions", async () => {
-    const csr1 = makeSource("bar", { sourceMapURL: "bar:formatted" });
-    const csr2 = makeSource("bar:formatted");
+    const source1 = makeSource("bar", { sourceMapURL: "bar:formatted" });
+    const source2 = makeSource("bar:formatted");
 
     const mockMaps = {
       getOriginalSourceText: async () => ({
         source: "function bla(x, y) {\n const bar = 4; return 2;\n}",
         contentType: "text/javascript"
       }),
-      getOriginalURLs: async () => [csr2.source.url]
+      getOriginalURLs: async () => [source2.url]
     };
 
     const { dispatch, getState } = createStore(threadClient, {}, mockMaps);
     const mockQuery = "bla";
 
-    await dispatch(actions.newSource(csr1));
-    await dispatch(actions.newSource(csr2));
+    await dispatch(actions.newSource(source1));
+    await dispatch(actions.newSource(source2));
 
     await dispatch(actions.searchSources(mockQuery));
 
@@ -105,9 +105,9 @@ describe("project text search", () => {
   it("should search a specific source", async () => {
     const { dispatch, getState } = createStore(threadClient);
 
-    const csr = makeSource("bar");
-    await dispatch(actions.newSource(csr));
-    await dispatch(actions.loadSourceText(csr.source));
+    const source = makeSource("bar");
+    await dispatch(actions.newSource(source));
+    await dispatch(actions.loadSourceText(source));
 
     dispatch(actions.addSearchQuery("bla"));
 

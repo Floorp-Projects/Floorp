@@ -10,8 +10,7 @@ import type {
   PausedPacket,
   FramesResponse,
   FramePacket,
-  SourcePayload,
-  CreateSourceResult
+  SourcePayload
 } from "./types";
 
 import { clientCommands } from "./commands";
@@ -47,9 +46,15 @@ export function createSource(
   thread: string,
   source: SourcePayload,
   { supportsWasm }: { supportsWasm: boolean }
-): CreateSourceResult {
+): Source {
+  const id = makeSourceId(source);
+  const sourceActor = {
+    actor: source.actor,
+    source: id,
+    thread
+  };
   const createdSource: any = {
-    id: makeSourceId(source),
+    id,
     url: source.url,
     relativeUrl: source.url,
     isPrettyPrinted: false,
@@ -57,15 +62,11 @@ export function createSource(
     introductionUrl: source.introductionUrl,
     isBlackBoxed: false,
     loadedState: "unloaded",
-    isWasm: supportsWasm && source.introductionType === "wasm"
-  };
-  const sourceActor = {
-    actor: source.actor,
-    source: createdSource.id,
-    thread
+    isWasm: supportsWasm && source.introductionType === "wasm",
+    actors: [sourceActor]
   };
   clientCommands.registerSourceActor(sourceActor);
-  return { sourceActor, source: (createdSource: Source) };
+  return createdSource;
 }
 
 export function createPause(

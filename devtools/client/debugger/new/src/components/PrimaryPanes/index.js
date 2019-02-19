@@ -10,7 +10,7 @@ import { Tab, Tabs, TabList, TabPanels } from "react-aria-components/src/tabs";
 
 import actions from "../../actions";
 import {
-  getRelativeSources,
+  getDisplayedSources,
   getActiveSearch,
   getProjectDirectoryRoot,
   getSelectedPrimaryPaneTab,
@@ -165,7 +165,7 @@ class PrimaryPanes extends Component<Props, State> {
 
 const mapStateToProps = state => ({
   selectedTab: getSelectedPrimaryPaneTab(state),
-  sources: getRelativeSources(state),
+  sources: getDisplayedSources(state),
   sourceSearchOn: getActiveSearch(state) === "source",
   threads: getThreads(state),
   projectRoot: getProjectDirectoryRoot(state)

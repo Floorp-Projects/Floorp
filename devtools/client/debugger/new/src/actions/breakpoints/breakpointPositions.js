@@ -7,7 +7,6 @@
 import { isOriginalId, originalToGeneratedId } from "devtools-source-map";
 
 import {
-  getSourceActor,
   getSourceFromId,
   getBreakpointPositionsForSource
 } from "../../selectors";
@@ -58,8 +57,10 @@ export function setBreakpointPositions(location: SourceLocation) {
       source = getSourceFromId(getState(), sourceId);
     }
 
-    const sourceActor = getSourceActor(getState(), sourceId);
-    const results = await client.getBreakpointPositions(sourceActor, range);
+    const results = await client.getBreakpointPositions(
+      source.actors[0],
+      range
+    );
 
     let positions = convertToList(results, sourceId);
     positions = await mapLocations(positions, getState(), source, sourceMaps);
