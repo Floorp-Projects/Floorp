@@ -8395,6 +8395,12 @@ bool BaseCompiler::emitEnd() {
   }
 
   switch (kind) {
+    case LabelKind::Body:
+      endBlock(type);
+      iter_.popEnd();
+      MOZ_ASSERT(iter_.controlStackEmpty());
+      doReturn(type, PopStack(false));
+      return iter_.readFunctionEnd(iter_.end());
     case LabelKind::Block:
       endBlock(type);
       break;
@@ -8558,6 +8564,9 @@ bool BaseCompiler::emitDrop() {
 }
 
 void BaseCompiler::doReturn(ExprType type, bool popStack) {
+  if (deadCode_) {
+    return;
+  }
   switch (type.code()) {
     case ExprType::Void: {
       returnCleanup(popStack);
@@ -10944,12 +10953,8 @@ bool BaseCompiler::emitBody() {
         if (!emitEnd()) {
           return false;
         }
-
         if (iter_.controlStackEmpty()) {
-          if (!deadCode_) {
-            doReturn(funcType().ret(), PopStack(false));
-          }
-          return iter_.readFunctionEnd(iter_.end());
+          return true;
         }
         NEXT();
 
