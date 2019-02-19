@@ -90,6 +90,14 @@ class nsStyleUtil {
    */
   static float ColorComponentToFloat(uint8_t aAlpha);
 
+  /**
+   * GetSerializedColorValue() computes serialized color value of aColor and
+   * returns it with aSerializedColor.
+   * https://drafts.csswg.org/cssom/#serialize-a-css-component-value
+   */
+  static void GetSerializedColorValue(nscolor aColor,
+                                      nsAString& aSerializedColor);
+
   /*
    * Does this child count as significant for selector matching?
    */

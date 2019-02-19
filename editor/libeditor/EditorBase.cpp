@@ -44,6 +44,7 @@
 #include "mozilla/RangeBoundary.h"      // for RawRangeBoundary, RangeBoundary
 #include "mozilla/dom/Selection.h"      // for Selection, etc.
 #include "mozilla/Services.h"           // for GetObserverService
+#include "mozilla/ServoCSSParser.h"     // for ServoCSSParser
 #include "mozilla/TextComposition.h"    // for TextComposition
 #include "mozilla/TextInputListener.h"  // for TextInputListener
 #include "mozilla/TextServicesDocument.h"  // for TextServicesDocument
@@ -103,6 +104,7 @@
 #include "nsStyleConsts.h"     // for NS_STYLE_DIRECTION_RTL, etc.
 #include "nsStyleStruct.h"     // for nsStyleDisplay, nsStyleText, etc.
 #include "nsStyleStructFwd.h"  // for nsIFrame::StyleUIReset, etc.
+#include "nsStyleUtil.h"       // for nsStyleUtil
 #include "nsTextNode.h"        // for nsTextNode
 #include "nsThreadUtils.h"     // for nsRunnable
 #include "prtime.h"            // for PR_Now
@@ -4865,6 +4867,40 @@ EditorBase::AutoEditActionDataSetter::~AutoEditActionDataSetter() {
     return;
   }
   mEditorBase.mEditActionData = mParentData;
+}
+
+void EditorBase::AutoEditActionDataSetter::SetColorData(
+    const nsAString& aData) {
+  if (aData.IsEmpty()) {
+    // When removing color/background-color, let's use empty string.
+    MOZ_ASSERT(!EmptyString().IsVoid());
+    mData = EmptyString();
+    return;
+  }
+
+  bool wasCurrentColor = false;
+  nscolor color = NS_RGB(0, 0, 0);
+  if (!ServoCSSParser::ComputeColor(nullptr, NS_RGB(0, 0, 0), aData, &color,
+                                    &wasCurrentColor)) {
+    // If we cannot parse aData, let's set original value as-is.  It could be
+    // new format defined by newer spec.
+    MOZ_ASSERT(!aData.IsVoid());
+    mData = aData;
+    return;
+  }
+
+  // If it's current color, we cannot resolve actual current color here.
+  // So, let's return "currentcolor" keyword, but let's use it as-is because
+  // there is no agreement between browser vendors.
+  if (wasCurrentColor) {
+    MOZ_ASSERT(!aData.IsVoid());
+    mData = aData;
+    return;
+  }
+
+  // Get serialized color value (i.e., "rgb()" or "rgba()").
+  nsStyleUtil::GetSerializedColorValue(color, mData);
+  MOZ_ASSERT(!mData.IsVoid());
 }
 
 }  // namespace mozilla
