@@ -19,7 +19,7 @@ loader.lazyRequireGetter(this, "Authentication", "devtools/shared/security/auth"
 loader.lazyRequireGetter(this, "DebuggerSocket", "devtools/shared/security/socket", true);
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
-loader.lazyRequireGetter(this, "WebConsoleClient", "devtools/shared/webconsole/client", true);
+loader.lazyRequireGetter(this, "WebConsoleFront", "devtools/shared/fronts/webconsole", true);
 loader.lazyRequireGetter(this, "RootFront", "devtools/shared/fronts/root", true);
 loader.lazyRequireGetter(this, "BrowsingContextTargetFront", "devtools/shared/fronts/targets/browsing-context", true);
 loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-client");
@@ -308,7 +308,7 @@ DebuggerClient.prototype = {
     if (this._clients.has(consoleActor)) {
       consoleClient = this._clients.get(consoleActor);
     } else {
-      consoleClient = new WebConsoleClient(this, { from: consoleActor });
+      consoleClient = new WebConsoleFront(this, { from: consoleActor });
       this.registerClient(consoleClient);
     }
     const response = await consoleClient.startListeners(listeners);

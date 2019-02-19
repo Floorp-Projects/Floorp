@@ -8,7 +8,7 @@
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const LongStringClient = require("devtools/shared/client/long-string-client");
-const { FrontClassWithSpec } = require("devtools/shared/protocol");
+const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
 const { webconsoleSpec } = require("devtools/shared/specs/webconsole");
 
 /**
@@ -21,7 +21,7 @@ const { webconsoleSpec } = require("devtools/shared/specs/webconsole");
  *        The response packet received from the "startListeners" request sent to
  *        the WebConsoleActor.
  */
-class WebConsoleClient extends FrontClassWithSpec(webconsoleSpec) {
+class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
   constructor(client, form) {
     super(client);
     this.actorID = form.from;
@@ -537,4 +537,5 @@ class WebConsoleClient extends FrontClassWithSpec(webconsoleSpec) {
   }
 }
 
-exports.WebConsoleClient = WebConsoleClient;
+exports.WebConsoleFront = WebConsoleFront;
+registerFront(WebConsoleFront);
