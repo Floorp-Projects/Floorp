@@ -15,6 +15,7 @@ const Localized = createFactory(FluentReact.Localized);
 const CompatibilityWarning = createFactory(require("./CompatibilityWarning"));
 const ConnectionPromptSetting = createFactory(require("./ConnectionPromptSetting"));
 const DebugTargetPane = createFactory(require("./debugtarget/DebugTargetPane"));
+const ExtensionDebugSetting = createFactory(require("./ExtensionDebugSetting"));
 const ExtensionDetail = createFactory(require("./debugtarget/ExtensionDetail"));
 const InspectAction = createFactory(require("./debugtarget/InspectAction"));
 const ProfilerDialog = createFactory(require("./ProfilerDialog"));
@@ -33,7 +34,10 @@ const { DEBUG_TARGET_PANE, PAGE_TYPES, RUNTIMES } = require("../constants");
 const Types = require("../types/index");
 
 const { getCurrentRuntimeDetails } = require("../modules/runtimes-state-helper");
-const { isSupportedDebugTargetPane } = require("../modules/debug-target-support");
+const {
+  isExtensionDebugSettingNeeded,
+  isSupportedDebugTargetPane,
+} = require("../modules/debug-target-support");
 
 class RuntimePage extends PureComponent {
   static get propTypes() {
@@ -125,6 +129,12 @@ class RuntimePage extends PureComponent {
     );
   }
 
+  renderExtensionDebugSetting() {
+    const { runtimeDetails, dispatch } = this.props;
+    const { extensionDebugEnabled } = runtimeDetails;
+    return ExtensionDebugSetting({ extensionDebugEnabled, dispatch });
+  }
+
   render() {
     const {
       dispatch,
@@ -155,6 +165,10 @@ class RuntimePage extends PureComponent {
       this.renderRemoteRuntimeActions(),
       runtimeDetails.serviceWorkersAvailable ? null : ServiceWorkersWarning(),
       CompatibilityWarning({ compatibilityReport }),
+      // show component to enable/disable extension debugging.
+      isExtensionDebugSettingNeeded(type)
+        ? this.renderExtensionDebugSetting()
+        : null,
       isSupportedDebugTargetPane(type, DEBUG_TARGET_PANE.TEMPORARY_EXTENSION)
         ? TemporaryExtensionInstaller({
             dispatch,
