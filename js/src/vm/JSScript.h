@@ -85,7 +85,8 @@ namespace detail {
 
 // Do not call this directly! It is exposed for the friend declarations in
 // this file.
-bool CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
+bool CopyScript(JSContext* cx, HandleScript src,
+                HandleScriptSourceObject sourceObject, MutableHandleScript dst,
                 MutableHandle<GCVector<Scope*>> scopes);
 
 }  // namespace detail
@@ -1837,7 +1838,8 @@ class JSScript : public js::gc::TenuredCell {
       js::HandleScope scriptEnclosingScope, js::HandleFunction fun);
 
   friend bool js::detail::CopyScript(
-      JSContext* cx, js::HandleScript src, js::HandleScript dst,
+      JSContext* cx, js::HandleScript src,
+      js::HandleScriptSourceObject sourceObject, js::MutableHandleScript dst,
       js::MutableHandle<JS::GCVector<js::Scope*>> scopes);
 
  private:
