@@ -513,93 +513,12 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
   class CueStyleBox extends StyleBoxBase {
     constructor(window, cue, styleOptions) {
       super();
-      var color = "rgba(255, 255, 255, 1)";
-      var backgroundColor = "rgba(0, 0, 0, 0.8)";
-
       this.cue = cue;
-
-      // Parse our cue's text into a DOM tree rooted at 'cueDiv'. This div will
-      // have inline positioning and will function as the cue background box.
-      if (supportPseudo) {
-        this.cueDiv = parseContent(window, cue.text, PARSE_CONTENT_MODE.PSUEDO_CUE);
-      } else {
-        this.cueDiv = parseContent(window, cue.text, PARSE_CONTENT_MODE.NORMAL_CUE);
-      }
-      var styles = {
-        color: color,
-        backgroundColor: backgroundColor,
-        display: "inline",
-        font: styleOptions.font,
-        whiteSpace: "pre-line",
-      };
-      if (supportPseudo) {
-        delete styles.color;
-        delete styles.backgroundColor;
-        delete styles.font;
-        delete styles.whiteSpace;
-      }
-
-      styles.writingMode = cue.vertical === "" ? "horizontal-tb"
-                                               : cue.vertical === "lr" ? "vertical-lr"
-                                                                       : "vertical-rl";
-      styles.unicodeBidi = "plaintext";
-
-      this.applyStyles(styles, this.cueDiv);
-
-      // Create an absolutely positioned div that will be used to position the cue
-      // div.
-      styles = {
-        position: "absolute",
-        textAlign: cue.align,
-        font: styleOptions.font,
-      };
-
       this.div = window.document.createElement("div");
-      this.applyStyles(styles);
-
+      this.cueDiv = parseContent(window, cue.text, supportPseudo ?
+        PARSE_CONTENT_MODE.PSUEDO_CUE : PARSE_CONTENT_MODE.NORMAL_CUE);
       this.div.appendChild(this.cueDiv);
-
-      // Calculate the distance from the reference edge of the viewport to the text
-      // position of the cue box. The reference edge will be resolved later when
-      // the box orientation styles are applied.
-      function convertCuePostionToPercentage(cuePosition) {
-        if (cuePosition === "auto") {
-          return 50;
-        }
-        return cuePosition;
-      }
-      var textPos = 0;
-      let postionPercentage = convertCuePostionToPercentage(cue.position);
-      switch (cue.computedPositionAlign) {
-        // TODO : modify these fomula to follow the spec, see bug 1277437.
-        case "line-left":
-          textPos = postionPercentage;
-          break;
-        case "center":
-          textPos = postionPercentage - (cue.size / 2);
-          break;
-        case "line-right":
-          textPos = postionPercentage - cue.size;
-          break;
-      }
-
-      // Horizontal box orientation; textPos is the distance from the left edge of the
-      // area to the left edge of the box and cue.size is the distance extending to
-      // the right from there.
-      if (cue.vertical === "") {
-        this.applyStyles({
-          left:  this.formatStyle(textPos, "%"),
-          width: this.formatStyle(cue.size, "%")
-        });
-      // Vertical box orientation; textPos is the distance from the top edge of the
-      // area to the top edge of the box and cue.size is the height extending
-      // downwards from there.
-      } else {
-        this.applyStyles({
-          top: this.formatStyle(textPos, "%"),
-          height: this.formatStyle(cue.size, "%")
-        });
-      }
+      this.applyStyles(this._getNodeDefaultStyles(cue, styleOptions));
     }
 
     move(box) {
@@ -611,6 +530,126 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
         height: this.formatStyle(box.height, "px"),
         width: this.formatStyle(box.width, "px")
       });
+    }
+
+    /**
+     * Following methods are private functions, should not use them outside this
+     * class.
+     */
+
+    // spec https://www.w3.org/TR/webvtt1/#applying-css-properties
+    _getNodeDefaultStyles(cue, styleOptions) {
+      let styles = {
+        "position": "absolute",
+        "unicode-bidi": "plaintext",
+        "overflow-wrap": "break-word",
+        // "text-wrap": "balance", (we haven't supported this CSS attribute yet)
+        "font": styleOptions.font,
+        "color": "rgba(255,255,255,1)",
+        "white-space": "pre-line",
+        "text-align": cue.align,
+      }
+
+      this._processCueSetting(cue, styles);
+      return styles;
+    }
+
+    // spec https://www.w3.org/TR/webvtt1/#processing-cue-settings
+    _processCueSetting(cue, styles) {
+      // spec 7.2.1, calculate 'writing-mode'.
+      styles["writing-mode"] = this._getCueWritingMode(cue);
+
+      // spec 7.2.2 ~ 7.2.4, calculate 'width' and 'height'.
+      const {width, height} = this._getCueWidthAndHeight(cue);
+      styles["width"] = width;
+      styles["height"] = height;
+
+      // spec 7.2.5 ~ 7.2.7, calculate 'left' and 'top'.
+      const {left, top} = this._getCueLeftAndTop(cue);
+      styles["left"] = left;
+      styles["top"] = top;
+    }
+
+    _getCueWritingMode(cue) {
+      if (cue.vertical == "") {
+        return "horizontal-tb";
+      }
+      return cue.vertical == "lr" ? "vertical-lr" : "vertical-rl";
+    }
+
+    _getCueWidthAndHeight(cue) {
+      // spec 7.2.2, determine the value of maximum size for cue as per the
+      // appropriate rules from the following list.
+      let maximumSize;
+      let computedPosition = cue.computedPosition;
+      switch (cue.computedPositionAlign) {
+        case "line-left":
+          maximumSize = 100 - computedPosition;
+          break;
+        case "line-right":
+          maximumSize = computedPosition;
+          break;
+        case "center":
+          maximumSize = computedPosition <= 50 ?
+            computedPosition * 2 : (100 - computedPosition) * 2;
+          break;
+      }
+      const size = Math.min(cue.size, maximumSize);
+      return cue.vertical == "" ? {
+        width: size + "%",
+        height: "auto",
+      } : {
+        width: "auto",
+        height: size + "%",
+      };
+    }
+
+    _getCueLeftAndTop(cue) {
+      // spec 7.2.5, determine the value of x-position or y-position for cue as
+      // per the appropriate rules from the following list.
+      let xPosition = 0.0, yPosition = 0.0;
+      const isWritingDirectionHorizontal = cue.vertical == "";
+      switch (cue.computedPositionAlign) {
+        case "line-left":
+          if (isWritingDirectionHorizontal) {
+            xPosition = cue.computedPosition;
+          } else {
+            yPosition = cue.computedPosition;
+          }
+          break;
+        case "center":
+          if (isWritingDirectionHorizontal) {
+            xPosition = cue.computedPosition - (cue.size / 2);
+          } else {
+            yPosition = cue.computedPosition - (cue.size / 2);
+          }
+          break;
+        case "line-right":
+          if (isWritingDirectionHorizontal) {
+            xPosition = cue.computedPosition - cue.size;
+          } else {
+            yPosition = cue.computedPosition - cue.size;
+          }
+          break;
+      }
+
+      // spec 7.2.6, determine the value of whichever of x-position or
+      // y-position is not yet calculated for cue as per the appropriate rules
+      // from the following list.
+      if (!cue.snapToLines) {
+        if (isWritingDirectionHorizontal) {
+          yPosition = cue.computedPosition;
+        } else {
+          xPosition = cue.computedPosition;
+        }
+      } else {
+        if (isWritingDirectionHorizontal) {
+          yPosition = 0;
+        } else {
+          xPosition = 0;
+        }
+      }
+      return { left: xPosition + "%", top: yPosition + "%"};
     }
   }
 
