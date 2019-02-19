@@ -50,7 +50,7 @@ const TEXTURE_DIMENSION_MASK: i32 = 0xFF;
 pub struct RenderTargetIndex(pub usize);
 
 pub struct RenderTargetContext<'a, 'rc> {
-    pub device_pixel_scale: DevicePixelScale,
+    pub global_device_pixel_scale: DevicePixelScale,
     pub prim_store: &'a PrimitiveStore,
     pub resource_cache: &'rc mut ResourceCache,
     pub use_dual_source_blending: bool,
@@ -657,7 +657,7 @@ impl RenderTarget for AlphaRenderTarget {
                     &ctx.data_stores.clip,
                     task_info.actual_rect,
                     &ctx.screen_world_rect,
-                    ctx.device_pixel_scale,
+                    task_info.device_pixel_scale,
                     task_info.snap_offsets,
                 );
             }
@@ -1096,7 +1096,6 @@ pub struct Frame {
     pub inner_rect: DeviceIntRect,
     pub background_color: Option<ColorF>,
     pub layer: DocumentLayer,
-    pub device_pixel_ratio: f32,
     pub passes: Vec<RenderPass>,
     #[cfg_attr(any(feature = "capture", feature = "replay"), serde(default = "FrameProfileCounters::new", skip))]
     pub profile_counters: FrameProfileCounters,

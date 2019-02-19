@@ -4026,7 +4026,6 @@ impl Renderer {
 
     fn bind_frame_data(&mut self, frame: &mut Frame) {
         let _timer = self.gpu_profile.start_timer(GPU_TAG_SETUP_DATA);
-        self.device.set_device_pixel_ratio(frame.device_pixel_ratio);
 
         self.prim_header_f_texture.update(
             &mut self.device,
