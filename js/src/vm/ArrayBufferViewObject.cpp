@@ -193,17 +193,16 @@ JS_FRIEND_API JSObject* JS_GetArrayBufferViewBuffer(JSContext* cx,
   CHECK_THREAD(cx);
   cx->check(obj);
 
-  JSObject* unwrappedObj = CheckedUnwrap(obj);
-  if (!unwrappedObj) {
+  Rooted<ArrayBufferViewObject*> unwrappedView(
+      cx, obj->maybeUnwrapAs<ArrayBufferViewObject>());
+  if (!unwrappedView) {
     ReportAccessDenied(cx);
     return nullptr;
   }
 
-  Rooted<ArrayBufferViewObject*> unwrappedView(
-      cx, &unwrappedObj->as<ArrayBufferViewObject>());
   ArrayBufferObjectMaybeShared* unwrappedBuffer;
   {
-    AutoRealm ar(cx, unwrappedObj);
+    AutoRealm ar(cx, unwrappedView);
     unwrappedBuffer = ArrayBufferViewObject::bufferObject(cx, unwrappedView);
     if (!unwrappedBuffer) {
       return nullptr;

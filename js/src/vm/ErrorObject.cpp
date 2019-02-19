@@ -206,7 +206,7 @@ static bool FindErrorInstanceOrPrototype(JSContext* cx, HandleObject obj,
   //   (new NYI).stack
   // to continue returning stacks that are useless, but at least don't throw.
 
-  RootedObject target(cx, CheckedUnwrap(obj));
+  RootedObject target(cx, CheckedUnwrapStatic(obj));
   if (!target) {
     ReportAccessDenied(cx);
     return false;
@@ -227,7 +227,7 @@ static bool FindErrorInstanceOrPrototype(JSContext* cx, HandleObject obj,
       return false;
     }
 
-    target = CheckedUnwrap(proto);
+    target = CheckedUnwrapStatic(proto);
     if (!target) {
       ReportAccessDenied(cx);
       return false;
