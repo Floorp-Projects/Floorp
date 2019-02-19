@@ -1699,9 +1699,9 @@ JS_PUBLIC_API JSObject* JS_NewExternalArrayBuffer(
                                    /* proto = */ nullptr, TenuredObject);
 }
 
-JS_PUBLIC_API JSObject* JS_NewArrayBufferWithExternalContents(JSContext* cx,
-                                                              size_t nbytes,
-                                                              void* data) {
+JS_PUBLIC_API JSObject* JS_NewArrayBufferWithUserOwnedContents(JSContext* cx,
+                                                               size_t nbytes,
+                                                               void* data) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   MOZ_ASSERT_IF(!data, nbytes == 0);
