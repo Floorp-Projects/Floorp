@@ -40,12 +40,12 @@ class nsSVGMaskFrame final : public nsSVGContainerFrame {
     const gfxMatrix& toUserSpace;
     float opacity;
     Matrix* maskTransform;
-    uint8_t maskMode;
+    mozilla::StyleMaskMode maskMode;
     imgDrawingParams& imgParams;
 
     explicit MaskParams(gfxContext* aCtx, nsIFrame* aMaskedFrame,
                         const gfxMatrix& aToUserSpace, float aOpacity,
-                        Matrix* aMaskTransform, uint8_t aMaskMode,
+                        Matrix* aMaskTransform, mozilla::StyleMaskMode aMaskMode,
                         imgDrawingParams& aImgParams)
         : ctx(aCtx),
           maskedFrame(aMaskedFrame),

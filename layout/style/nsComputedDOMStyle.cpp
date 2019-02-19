@@ -3508,7 +3508,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMask() {
       firstLayer.mClip != StyleGeometryBox::BorderBox ||
       firstLayer.mOrigin != StyleGeometryBox::BorderBox ||
       firstLayer.mComposite != NS_STYLE_MASK_COMPOSITE_ADD ||
-      firstLayer.mMaskMode != NS_STYLE_MASK_MODE_MATCH_SOURCE ||
+      firstLayer.mMaskMode != StyleMaskMode::MatchSource ||
       !nsStyleImageLayers::IsInitialPositionForLayerType(
           firstLayer.mPosition, nsStyleImageLayers::LayerType::Mask) ||
       !firstLayer.mRepeat.IsInitialValue() ||

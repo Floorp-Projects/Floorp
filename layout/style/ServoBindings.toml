@@ -144,6 +144,7 @@ rusty-enums = [
     "nsStyleTransformMatrix::MatrixTransformOperator",
     "mozilla::StyleGeometryBox",
     "mozilla::SystemColor",
+    "mozilla::StyleMaskMode",
 ]
 whitelist-vars = [
     "NS_AUTHOR_SPECIFIED_.*",

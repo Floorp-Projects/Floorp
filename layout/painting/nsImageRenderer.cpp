@@ -61,7 +61,7 @@ nsImageRenderer::nsImageRenderer(nsIFrame* aForFrame,
       mSize(0, 0),
       mFlags(aFlags),
       mExtendMode(ExtendMode::CLAMP),
-      mMaskOp(NS_STYLE_MASK_MODE_MATCH_SOURCE) {}
+      mMaskOp(StyleMaskMode::MatchSource) {}
 
 static bool ShouldTreatAsCompleteDueToSyncDecode(const nsStyleImage* aImage,
                                                  uint32_t aFlags) {
@@ -428,7 +428,7 @@ ImgDrawResult nsImageRenderer::Draw(nsPresContext* aPresContext,
   IntRect tmpDTRect;
 
   if (ctx->CurrentOp() != CompositionOp::OP_OVER ||
-      mMaskOp == NS_STYLE_MASK_MODE_LUMINANCE) {
+      mMaskOp == StyleMaskMode::Luminance) {
     gfxRect clipRect = ctx->GetClipExtents(gfxContext::eDeviceSpace);
     tmpDTRect = RoundedOut(ToRect(clipRect));
     if (tmpDTRect.IsEmpty()) {
@@ -493,7 +493,7 @@ ImgDrawResult nsImageRenderer::Draw(nsPresContext* aPresContext,
     DrawTarget* dt = aRenderingContext.GetDrawTarget();
     Matrix oldTransform = dt->GetTransform();
     dt->SetTransform(Matrix());
-    if (mMaskOp == NS_STYLE_MASK_MODE_LUMINANCE) {
+    if (mMaskOp == StyleMaskMode::Luminance) {
       RefPtr<SourceSurface> surf = ctx->GetDrawTarget()->IntoLuminanceSource(
           LuminanceType::LUMINANCE, 1.0f);
       dt->MaskSurface(ColorPattern(Color(0, 0, 0, 1.0f)), surf,
