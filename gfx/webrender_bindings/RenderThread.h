@@ -20,7 +20,6 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/layers/SynchronousTask.h"
-#include "GLContext.h"
 #include "mozilla/VsyncDispatcher.h"
 
 #include <list>
@@ -28,6 +27,9 @@
 #include <unordered_map>
 
 namespace mozilla {
+namespace gl {
+class GLContext;
+} // namespace gl
 namespace wr {
 
 typedef MozPromise<MemoryReport, bool, true> MemoryReportPromise;
