@@ -11,7 +11,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const InspectAction = createFactory(require("./InspectAction"));
+const ExtensionAction = createFactory(require("./ExtensionAction"));
 
 const Actions = require("../../actions/index");
 const Types = require("../../types/index");
@@ -44,7 +44,7 @@ class TemporaryExtensionAction extends PureComponent {
       {
         className: "toolbar",
       },
-      InspectAction({ dispatch, target }),
+      ExtensionAction({ dispatch, target }),
       Localized(
         {
           id: "about-debugging-tmp-extension-reload-button",

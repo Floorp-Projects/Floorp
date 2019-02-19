@@ -15,6 +15,7 @@ const Localized = createFactory(FluentReact.Localized);
 const CompatibilityWarning = createFactory(require("./CompatibilityWarning"));
 const ConnectionPromptSetting = createFactory(require("./ConnectionPromptSetting"));
 const DebugTargetPane = createFactory(require("./debugtarget/DebugTargetPane"));
+const ExtensionAction = createFactory(require("./debugtarget/ExtensionAction"));
 const ExtensionDebugSetting = createFactory(require("./ExtensionDebugSetting"));
 const ExtensionDetail = createFactory(require("./debugtarget/ExtensionDetail"));
 const InspectAction = createFactory(require("./debugtarget/InspectAction"));
@@ -232,7 +233,7 @@ class RuntimePage extends PureComponent {
                                  "about-debugging-runtime-temporary-extensions"),
       this.renderDebugTargetPane("Extensions",
                                  installedExtensions,
-                                 InspectAction,
+                                 ExtensionAction,
                                  ExtensionDetail,
                                  DEBUG_TARGET_PANE.INSTALLED_EXTENSION,
                                  "about-debugging-runtime-extensions"),
