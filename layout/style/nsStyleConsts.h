@@ -385,10 +385,12 @@ enum class StyleContent : uint8_t {
 #define NS_STYLE_JUSTIFY_ALL_SHIFT NS_STYLE_ALIGN_ALL_SHIFT
 
 // See nsStylePosition
-#define NS_STYLE_FLEX_DIRECTION_ROW 0
-#define NS_STYLE_FLEX_DIRECTION_ROW_REVERSE 1
-#define NS_STYLE_FLEX_DIRECTION_COLUMN 2
-#define NS_STYLE_FLEX_DIRECTION_COLUMN_REVERSE 3
+enum class StyleFlexDirection : uint8_t {
+	Row,
+	RowReverse,
+	Column,
+	ColumnReverse,
+};
 
 // See nsStylePosition
 #define NS_STYLE_FLEX_WRAP_NOWRAP 0

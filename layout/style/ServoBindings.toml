@@ -134,6 +134,7 @@ rusty-enums = [
     "mozilla::StyleWhiteSpace",
     "mozilla::StyleTextRendering",
     "mozilla::StyleColorAdjust",
+    "mozilla::StyleFlexDirection",
     "nsStyleImageType",
     "nsStyleSVGPaintType",
     "nsStyleSVGFallbackType",
