@@ -511,14 +511,21 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
   // Constructs the computed display state of the cue (a div). Places the div
   // into the overlay which should be a block level element (usually a div).
   class CueStyleBox extends StyleBoxBase {
-    constructor(window, cue, styleOptions) {
+    constructor(window, cue, containerBox) {
       super();
       this.cue = cue;
       this.div = window.document.createElement("div");
       this.cueDiv = parseContent(window, cue.text, supportPseudo ?
         PARSE_CONTENT_MODE.PSUEDO_CUE : PARSE_CONTENT_MODE.NORMAL_CUE);
       this.div.appendChild(this.cueDiv);
-      this.applyStyles(this._getNodeDefaultStyles(cue, styleOptions));
+
+      this.fontSize = this._getFontSize(containerBox.height);
+      // As pseudo element won't inherit the parent div's style, so we have to
+      // set the font size explicitly.
+      if (supportPseudo) {
+        this.cueDiv.style.setProperty("--cue-font-size", this.fontSize);
+      }
+      this.applyStyles(this._getNodeDefaultStyles(cue));
     }
 
     move(box) {
@@ -536,15 +543,23 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
      * Following methods are private functions, should not use them outside this
      * class.
      */
+    _getFontSize(renderingAreaHeight) {
+      // In https://www.w3.org/TR/webvtt1/#applying-css-properties, the spec
+      // said the font size is '5vh', which means 5% of the viewport height.
+      // However, if we use 'vh' as a basic unit, it would eventually become
+      // 5% of screen height, instead of video's viewport height. Therefore, we
+      // have to use 'px' here to make sure we have the correct font size.
+      return renderingAreaHeight * 0.05 + "px";
+    }
 
     // spec https://www.w3.org/TR/webvtt1/#applying-css-properties
-    _getNodeDefaultStyles(cue, styleOptions) {
+    _getNodeDefaultStyles(cue) {
       let styles = {
         "position": "absolute",
         "unicode-bidi": "plaintext",
         "overflow-wrap": "break-word",
         // "text-wrap": "balance", (we haven't supported this CSS attribute yet)
-        "font": styleOptions.font,
+        "font": this.fontSize + " sans-serif",
         "color": "rgba(255,255,255,1)",
         "white-space": "pre-line",
         "text-align": cue.align,
@@ -1032,9 +1047,6 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
     return parseContent(window, cuetext, PARSE_CONTENT_MODE.DOCUMENT_FRAGMENT);
   };
 
-  var FONT_SIZE_PERCENT = 0.05;
-  var FONT_STYLE = "sans-serif";
-
   // Runs the processing model over the cues and regions passed to it.
   // @param overlay A block level element (usually a div) that the computed cues
   //                and regions will be placed into.
@@ -1092,11 +1104,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
     overlay.appendChild(rootOfCues);
 
     var boxPositions = [],
-        containerBox = BoxPosition.getSimpleBoxPosition(rootOfCues),
-        fontSize = Math.round(containerBox.height * FONT_SIZE_PERCENT * 100) / 100;
-    var styleOptions = {
-      font: fontSize + "px " + FONT_STYLE
-    };
+        containerBox = BoxPosition.getSimpleBoxPosition(rootOfCues);
 
     (function() {
       var styleBox, cue, controlBarBox;
@@ -1146,8 +1154,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
           boxPositions.push(BoxPosition.getSimpleBoxPosition(currentRegionBox));
         } else {
           // Compute the intial position and styles of the cue div.
-          styleBox = new CueStyleBox(window, cue, styleOptions);
-          styleBox.cueDiv.style.setProperty("--cue-font-size", fontSize + "px");
+          styleBox = new CueStyleBox(window, cue, containerBox);
           rootOfCues.appendChild(styleBox.div);
 
           // Move the cue div to it's correct line position.
