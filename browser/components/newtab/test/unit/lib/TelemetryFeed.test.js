@@ -1,5 +1,5 @@
 /* global Services */
-import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
+import {actionCreators as ac, actionTypes as at, actionUtils as au} from "common/Actions.jsm";
 import {
   ASRouterEventPing,
   BasePing,
@@ -462,7 +462,7 @@ describe("TelemetryFeed", () => {
     it("should create a valid impression stats ping", async () => {
       const tiles = [{id: 10001}, {id: 10002}, {id: 10003}];
       const action = ac.ImpressionStats({source: "POCKET", tiles});
-      const ping = await instance.createImpressionStats(action);
+      const ping = await instance.createImpressionStats(au.getPortIdOfSender(action), action.data);
 
       assert.validate(ping, ImpressionStatsPing);
       assert.propertyVal(ping, "source", "POCKET");
@@ -471,7 +471,7 @@ describe("TelemetryFeed", () => {
     it("should create a valid click ping", async () => {
       const tiles = [{id: 10001, pos: 2}];
       const action = ac.ImpressionStats({source: "POCKET", tiles, click: 0});
-      const ping = await instance.createImpressionStats(action);
+      const ping = await instance.createImpressionStats(au.getPortIdOfSender(action), action.data);
 
       assert.validate(ping, ImpressionStatsPing);
       assert.propertyVal(ping, "click", 0);
@@ -480,7 +480,7 @@ describe("TelemetryFeed", () => {
     it("should create a valid block ping", async () => {
       const tiles = [{id: 10001, pos: 2}];
       const action = ac.ImpressionStats({source: "POCKET", tiles, block: 0});
-      const ping = await instance.createImpressionStats(action);
+      const ping = await instance.createImpressionStats(au.getPortIdOfSender(action), action.data);
 
       assert.validate(ping, ImpressionStatsPing);
       assert.propertyVal(ping, "block", 0);
@@ -489,7 +489,7 @@ describe("TelemetryFeed", () => {
     it("should create a valid pocket ping", async () => {
       const tiles = [{id: 10001, pos: 2}];
       const action = ac.ImpressionStats({source: "POCKET", tiles, pocket: 0});
-      const ping = await instance.createImpressionStats(action);
+      const ping = await instance.createImpressionStats(au.getPortIdOfSender(action), action.data);
 
       assert.validate(ping, ImpressionStatsPing);
       assert.propertyVal(ping, "pocket", 0);
@@ -919,11 +919,12 @@ describe("TelemetryFeed", () => {
     it("should send an event on a TELEMETRY_IMPRESSION_STATS action", () => {
       const sendEvent = sandbox.stub(instance, "sendEvent");
       const eventCreator = sandbox.stub(instance, "createImpressionStats");
-      const action = {type: at.TELEMETRY_IMPRESSION_STATS, data: {}};
+      const tiles = [{id: 10001}, {id: 10002}, {id: 10003}];
+      const action = ac.ImpressionStats({source: "POCKET", tiles});
 
       instance.onAction(action);
 
-      assert.calledWith(eventCreator, action);
+      assert.calledWith(eventCreator, au.getPortIdOfSender(action), action.data);
       assert.calledWith(sendEvent, eventCreator.returnValue);
     });
     it("should call .handlePagePrerendered on a PAGE_PRERENDERED action", () => {
@@ -935,6 +936,17 @@ describe("TelemetryFeed", () => {
 
       assert.calledOnce(instance.handlePagePrerendered);
       assert.ok(session.perf.is_prerendered);
+    });
+    it("should call .handleDiscoveryStreamImpressionStats on a DISCOVERY_STREAM_IMPRESSION_STATS action", () => {
+      const session = {};
+      sandbox.stub(instance.sessions, "get").returns(session);
+      const data = {source: "foo", tiles: [{id: 1}]};
+      const action = {type: at.DISCOVERY_STREAM_IMPRESSION_STATS, data};
+      sandbox.spy(instance, "handleDiscoveryStreamImpressionStats");
+
+      instance.onAction(ac.AlsoToMain(action, "port123"));
+
+      assert.calledWith(instance.handleDiscoveryStreamImpressionStats, "port123", data);
     });
   });
   describe("#handlePagePrerendered", () => {
@@ -1036,6 +1048,53 @@ describe("TelemetryFeed", () => {
         newtab_extension_id: ID,
       });
       assert.validate(sendEvent.firstCall.args[0], UserEventPing);
+    });
+  });
+  describe("#sendDiscoveryStreamImpressions", () => {
+    it("should not send impression pings if there is no impression data", () => {
+      const spy = sandbox.spy(instance, "sendEvent");
+      const session = {};
+      instance.sendDiscoveryStreamImpressions("foo", session);
+
+      assert.notCalled(spy);
+    });
+    it("should send impression pings if there is impression data", () => {
+      const spy = sandbox.spy(instance, "sendEvent");
+      const session = {
+        impressionSets: {
+          source_foo: [{id: 1}, {id: 2}],
+          source_bar: [{id: 3}, {id: 4}],
+        },
+      };
+      instance.sendDiscoveryStreamImpressions("foo", session);
+
+      assert.calledTwice(spy);
+    });
+  });
+  describe("#handleDiscoveryStreamImpressionStats", () => {
+    it("should throw for a missing session", () => {
+      assert.throws(() => {
+        instance.handleDiscoveryStreamImpressionStats("a_missing_port", {});
+      }, "Session does not exist.");
+    });
+    it("should store impression to impressionSets", () => {
+      const session = instance.addSession("new_session", "about:newtab");
+      instance.handleDiscoveryStreamImpressionStats("new_session", {source: "foo", tiles: [{id: 1}]});
+
+      assert.equal(Object.keys(session.impressionSets).length, 1);
+      assert.deepEqual(session.impressionSets.foo, [{id: 1}]);
+
+      // Add another ping with the same source
+      instance.handleDiscoveryStreamImpressionStats("new_session", {source: "foo", tiles: [{id: 2}]});
+
+      assert.deepEqual(session.impressionSets.foo, [{id: 1}, {id: 2}]);
+
+      // Add another ping with a different source
+      instance.handleDiscoveryStreamImpressionStats("new_session", {source: "bar", tiles: [{id: 3}]});
+
+      assert.equal(Object.keys(session.impressionSets).length, 2);
+      assert.deepEqual(session.impressionSets.foo, [{id: 1}, {id: 2}]);
+      assert.deepEqual(session.impressionSets.bar, [{id: 3}]);
     });
   });
 });

@@ -43,6 +43,7 @@ for (const type of [
   "DISCOVERY_STREAM_CONFIG_SETUP",
   "DISCOVERY_STREAM_CONFIG_SET_VALUE",
   "DISCOVERY_STREAM_FEEDS_UPDATE",
+  "DISCOVERY_STREAM_IMPRESSION_STATS",
   "DISCOVERY_STREAM_LAYOUT_RESET",
   "DISCOVERY_STREAM_LAYOUT_UPDATE",
   "DISCOVERY_STREAM_SPOCS_ENDPOINT",
@@ -333,6 +334,21 @@ function ImpressionStats(data, importContext = globalImportContext) {
   return importContext === UI_CODE ? AlsoToMain(action) : action;
 }
 
+/**
+ * DiscoveryStreamImpressionStats - A telemetry ping indicating an impression stats in Discovery Stream.
+ *
+ * @param  {object} data Fields to include in the ping
+ * @param  {int} importContext (For testing) Override the import context for testing.
+ * #return {object} An action. For UI code, a AlsoToMain action.
+ */
+function DiscoveryStreamImpressionStats(data, importContext = globalImportContext) {
+  const action = {
+    type: actionTypes.DISCOVERY_STREAM_IMPRESSION_STATS,
+    data,
+  };
+  return importContext === UI_CODE ? AlsoToMain(action) : action;
+}
+
 function SetPref(name, value, importContext = globalImportContext) {
   const action = {type: actionTypes.SET_PREF, data: {name, value}};
   return importContext === UI_CODE ? AlsoToMain(action) : action;
@@ -363,6 +379,7 @@ this.actionCreators = {
   AlsoToPreloaded,
   SetPref,
   WebExtEvent,
+  DiscoveryStreamImpressionStats,
 };
 
 // These are helpers to test for certain kinds of actions
