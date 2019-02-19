@@ -84,7 +84,7 @@ function asyncOpen()
   var chan = make_channel(URL);
 
   var cc = chan.QueryInterface(Ci.nsICacheInfoChannel);
-  cc.preferAlternativeDataType(altContentType, "", true);
+  cc.preferAlternativeDataType(altContentType, "");
 
   chan.asyncOpen(new ChannelListener(readServerContent, null));
 }
@@ -119,7 +119,7 @@ function flushAndOpenAltChannel()
 function openAltChannel() {
   var chan = make_channel(URL);
   var cc = chan.QueryInterface(Ci.nsICacheInfoChannel);
-  cc.preferAlternativeDataType(altContentType, "", true);
+  cc.preferAlternativeDataType(altContentType, "");
 
   chan.asyncOpen(new ChannelListener(readAltContent, null));
 }

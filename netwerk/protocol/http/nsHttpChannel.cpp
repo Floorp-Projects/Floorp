@@ -122,7 +122,6 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/net/AsyncUrlChannelClassifier.h"
-#include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "nsIWebNavigation.h"
 
@@ -4905,33 +4904,27 @@ nsresult nsHttpChannel::OpenCacheInputStream(nsICacheEntry *cacheEntry,
   mCachedResponseHead->ContentType(contentType);
 
   bool foundAltData = false;
-  bool deliverAltData = true;
   if (!altDataType.IsEmpty() && !mPreferredCachedAltDataTypes.IsEmpty() &&
       altDataFromChild == mAltDataForChild) {
     for (auto &pref : mPreferredCachedAltDataTypes) {
-      if (pref.type() == altDataType &&
-          (pref.contentType().IsEmpty() || pref.contentType() == contentType)) {
+      if (mozilla::Get<0>(pref) == altDataType &&
+          (mozilla::Get<1>(pref).IsEmpty() ||
+           mozilla::Get<1>(pref) == contentType)) {
         foundAltData = true;
-        deliverAltData = pref.deliverAltData();
         break;
       }
     }
   }
-
-  nsCOMPtr<nsIInputStream> altData;
-  int64_t altDataSize;
   if (foundAltData) {
     rv = cacheEntry->OpenAlternativeInputStream(altDataType,
-                                                getter_AddRefs(altData));
+                                                getter_AddRefs(stream));
     if (NS_SUCCEEDED(rv)) {
       LOG(("Opened alt-data input stream type=%s", altDataType.get()));
       // We have succeeded.
       mAvailableCachedAltDataType = altDataType;
-
-      if (deliverAltData) {
-        // Set the correct data size on the channel.
-        Unused << cacheEntry->GetAltDataSize(&altDataSize);
-        stream = altData;
+      // Set the correct data size on the channel.
+      int64_t altDataSize;
+      if (NS_SUCCEEDED(cacheEntry->GetAltDataSize(&altDataSize))) {
         mAltDataLength = altDataSize;
       }
     }
@@ -8348,15 +8341,14 @@ nsHttpChannel::GetAllowStaleCacheContent(bool *aAllowStaleCacheContent) {
 
 NS_IMETHODIMP
 nsHttpChannel::PreferAlternativeDataType(const nsACString &aType,
-                                         const nsACString &aContentType,
-                                         bool aDeliverAltData) {
+                                         const nsACString &aContentType) {
   ENSURE_CALLED_BEFORE_ASYNC_OPEN();
-  mPreferredCachedAltDataTypes.AppendElement(PreferredAlternativeDataTypeParams(
-      nsCString(aType), nsCString(aContentType), aDeliverAltData));
+  mPreferredCachedAltDataTypes.AppendElement(
+      MakePair(nsCString(aType), nsCString(aContentType)));
   return NS_OK;
 }
 
-const nsTArray<PreferredAlternativeDataTypeParams>
+const nsTArray<mozilla::Tuple<nsCString, nsCString>>
     &nsHttpChannel::PreferredAlternativeDataTypes() {
   return mPreferredCachedAltDataTypes;
 }
@@ -8404,26 +8396,6 @@ nsHttpChannel::GetOriginalInputStream(nsIInputStreamReceiver *aReceiver) {
   if (cacheEntry) {
     cacheEntry->OpenInputStream(0, getter_AddRefs(inputStream));
   }
-  aReceiver->OnInputStreamReady(inputStream);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetAltDataInputStream(const nsACString &aType,
-                                     nsIInputStreamReceiver *aReceiver) {
-  if (aReceiver == nullptr) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  nsCOMPtr<nsIInputStream> inputStream;
-
-  nsCOMPtr<nsICacheEntry> cacheEntry =
-      mCacheEntry ? mCacheEntry : mAltDataCacheEntry;
-  if (cacheEntry) {
-    nsresult rv = cacheEntry->OpenAlternativeInputStream(
-        aType, getter_AddRefs(inputStream));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   aReceiver->OnInputStreamReady(inputStream);
   return NS_OK;
 }

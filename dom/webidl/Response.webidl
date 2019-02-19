@@ -29,9 +29,6 @@ interface Response {
    NewObject] Response clone();
 
   [ChromeOnly, NewObject, Throws] Response cloneUnfiltered();
-
-  // For testing only.
-  [ChromeOnly] readonly attribute boolean hasCacheInfoChannel;
 };
 Response implements Body;
 

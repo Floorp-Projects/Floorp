@@ -163,8 +163,7 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
       const uint32_t& aCorsMode, const uint32_t& aRedirectMode,
       const uint64_t& aChannelId, const nsString& aIntegrityMetadata,
       const uint64_t& aContentWindowId,
-      const nsTArray<PreferredAlternativeDataTypeParams>&
-          aPreferredAlternativeTypes,
+      const ArrayOfStringPairs& aPreferredAlternativeTypes,
       const uint64_t& aTopLevelOuterContentWindowId,
       const TimeStamp& aLaunchServiceWorkerStart,
       const TimeStamp& aLaunchServiceWorkerEnd,
@@ -208,8 +207,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
       const mozilla::ipc::PrincipalInfo& requestingPrincipal) override;
   virtual mozilla::ipc::IPCResult RecvBytesRead(const int32_t& aCount) override;
   virtual mozilla::ipc::IPCResult RecvOpenOriginalCacheInputStream() override;
-  virtual mozilla::ipc::IPCResult RecvOpenAltDataCacheInputStream(
-      const nsCString& aType) override;
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
   // Supporting function for ADivertableParentChannel.
