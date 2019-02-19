@@ -1794,7 +1794,7 @@ extern JS_FRIEND_API bool JS_IsArrayBufferObject(JSObject* obj);
 extern JS_FRIEND_API bool JS_IsSharedArrayBufferObject(JSObject* obj);
 
 /**
- * Return the available byte length of an array buffer.
+ * Return the available byte length of an ArrayBuffer.
  *
  * |obj| must have passed a JS_IsArrayBufferObject test, or somehow be known
  * that it would pass such a test: it is an ArrayBuffer or a wrapper of an
@@ -1849,7 +1849,7 @@ extern JS_FRIEND_API bool JS_IsMappedArrayBufferObject(JSObject* obj);
 extern JS_FRIEND_API uint32_t JS_GetTypedArrayLength(JSObject* obj);
 
 /**
- * Return the byte offset from the start of an array buffer to the start of a
+ * Return the byte offset from the start of an ArrayBuffer to the start of a
  * typed array view.
  *
  * |obj| must have passed a JS_IsTypedArrayObject/JS_Is*Array test, or somehow
