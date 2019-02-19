@@ -27,6 +27,12 @@ InputEvent::InputEvent(EventTarget* aOwner, nsPresContext* aPresContext,
   }
 }
 
+void InputEvent::GetData(nsAString& aData) {
+  InternalEditorInputEvent* editorInputEvent = mEvent->AsEditorInputEvent();
+  MOZ_ASSERT(editorInputEvent);
+  aData = editorInputEvent->mData;
+}
+
 void InputEvent::GetInputType(nsAString& aInputType) {
   InternalEditorInputEvent* editorInputEvent = mEvent->AsEditorInputEvent();
   MOZ_ASSERT(editorInputEvent);
@@ -55,6 +61,7 @@ already_AddRefed<InputEvent> InputEvent::Constructor(
   if (internalEvent->mInputType == EditorInputType::eUnknown) {
     e->mInputTypeValue = aParam.mInputType;
   }
+  internalEvent->mData = aParam.mData;
   internalEvent->mIsComposing = aParam.mIsComposing;
   e->SetTrusted(trusted);
   e->SetComposed(aParam.mComposed);

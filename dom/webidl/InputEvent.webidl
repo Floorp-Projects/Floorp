@@ -11,10 +11,19 @@ interface InputEvent : UIEvent
 
   [Pref="dom.inputevent.inputtype.enabled"]
   readonly attribute DOMString inputType;
+
+  [Pref="dom.inputevent.data.enabled"]
+  readonly attribute DOMString? data;
 };
 
 dictionary InputEventInit : UIEventInit
 {
   boolean isComposing = false;
   DOMString inputType = "";
+  // NOTE:  Currently, default value of `data` attribute is declared as empty
+  //        string by UI Events.  However, both Chrome and Safari uses `null`,
+  //        and there is a spec issue about this:
+  //        https://github.com/w3c/uievents/issues/139
+  //        So, we take `null` for compatibility with them.
+  DOMString? data = null;
 };
