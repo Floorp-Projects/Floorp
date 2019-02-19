@@ -1720,6 +1720,11 @@ JS_PUBLIC_API JSObject* JS_NewArrayBufferWithContents(JSContext* cx,
   CHECK_THREAD(cx);
   MOZ_ASSERT_IF(!data, nbytes == 0);
 
+  if (!data) {
+    // Don't pass nulled contents to |createForContents|.
+    return ArrayBufferObject::createZeroed(cx, 0);
+  }
+
   using BufferContents = ArrayBufferObject::BufferContents;
 
   BufferContents contents = BufferContents::createMalloced(data);
@@ -1736,9 +1741,10 @@ JS_PUBLIC_API JSObject* JS_NewExternalArrayBuffer(
   MOZ_ASSERT(data);
   MOZ_ASSERT(nbytes > 0);
 
-  ArrayBufferObject::BufferContents contents =
-      ArrayBufferObject::BufferContents::createExternal(data, freeFunc,
-                                                        freeUserData);
+  using BufferContents = ArrayBufferObject::BufferContents;
+
+  BufferContents contents =
+      BufferContents::createExternal(data, freeFunc, freeUserData);
   return ArrayBufferObject::createForContents(cx, nbytes, contents,
                                               ArrayBufferObject::OwnsData);
 }
@@ -1748,7 +1754,8 @@ JS_PUBLIC_API JSObject* JS_NewArrayBufferWithUserOwnedContents(JSContext* cx,
                                                                void* data) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  MOZ_ASSERT_IF(!data, nbytes == 0);
+
+  MOZ_ASSERT(data);
 
   using BufferContents = ArrayBufferObject::BufferContents;
 
@@ -1829,9 +1836,11 @@ JS_PUBLIC_API JSObject* JS_NewMappedArrayBufferWithContents(JSContext* cx,
   CHECK_THREAD(cx);
 
   MOZ_ASSERT(data);
-  ArrayBufferObject::BufferContents contents =
-      ArrayBufferObject::BufferContents::create<ArrayBufferObject::MAPPED>(
-          data);
+
+  using BufferContents = ArrayBufferObject::BufferContents;
+
+  BufferContents contents =
+      BufferContents::create<ArrayBufferObject::MAPPED>(data);
   return ArrayBufferObject::createForContents(cx, nbytes, contents,
                                               ArrayBufferObject::OwnsData);
 }
