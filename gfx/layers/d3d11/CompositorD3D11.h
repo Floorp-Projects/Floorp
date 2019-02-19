@@ -61,6 +61,11 @@ class CompositorD3D11 : public Compositor {
   virtual already_AddRefed<CompositingRenderTarget> GetWindowRenderTarget()
       const override;
 
+  virtual bool ReadbackRenderTarget(CompositingRenderTarget* aSource,
+                                    AsyncReadbackBuffer* aDest) override;
+  virtual already_AddRefed<AsyncReadbackBuffer> CreateAsyncReadbackBuffer(
+      const gfx::IntSize& aSize) override;
+
   virtual void SetDestinationSurfaceSize(const gfx::IntSize& aSize) override {}
 
   /**
