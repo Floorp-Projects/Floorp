@@ -588,6 +588,7 @@ void nsFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                   NS_FRAME_MAY_BE_TRANSFORMED |
                   NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN));
   } else {
+    mComputedStyle->StartImageLoads(*PresContext()->Document());
     PresContext()->ConstructedFrame();
   }
   if (GetParent()) {
@@ -846,9 +847,11 @@ static void CompareLayers(
 }
 
 static void AddAndRemoveImageAssociations(
-    ImageLoader& aImageLoader,
     nsFrame* aFrame, const nsStyleImageLayers* aOldLayers,
     const nsStyleImageLayers* aNewLayers) {
+  ImageLoader* imageLoader =
+      aFrame->PresContext()->Document()->StyleImageLoader();
+
   // If the old context had a background-image image, or mask-image image,
   // and new context does not have the same image, clear the image load
   // notifier (which keeps the image loading, if it still is) for the frame.
@@ -859,14 +862,14 @@ static void AddAndRemoveImageAssociations(
   // interval.)
   if (aOldLayers && aFrame->HasImageRequest()) {
     CompareLayers(aOldLayers, aNewLayers,
-                  [&](imgRequestProxy* aReq) {
-                    aImageLoader.DisassociateRequestFromFrame(aReq, aFrame);
+                  [&imageLoader, aFrame](imgRequestProxy* aReq) {
+                    imageLoader->DisassociateRequestFromFrame(aReq, aFrame);
                   });
   }
 
   CompareLayers(aNewLayers, aOldLayers,
-                [&](imgRequestProxy* aReq) {
-                  aImageLoader.AssociateRequestToFrame(aReq, aFrame, 0);
+                [&imageLoader, aFrame](imgRequestProxy* aReq) {
+                  imageLoader->AssociateRequestToFrame(aReq, aFrame, 0);
                 });
 }
 
@@ -1039,32 +1042,16 @@ void nsIFrame::MarkNeedsDisplayItemRebuild() {
     }
   }
 
-  Document* doc = PresContext()->Document();
-  ImageLoader* imageLoader = doc->StyleImageLoader();
-  // Continuing text frame doesn't initialize its continuation pointer before
-  // reaching here for the first time, so we have to exclude text frames. This
-  // doesn't affect correctness because text can't match selectors.
-  //
-  // FIXME(emilio): We should consider fixing that.
-  const bool isNonTextFirstContinuation =
-    !IsTextFrame() && !GetPrevContinuation();
-  if (isNonTextFirstContinuation) {
-    mComputedStyle->StartImageLoads(*doc);
-  }
-
-  // TODO(emilio): Can we avoid doing some / all of this when
-  // isNonTextFirstContinuation is false? We should consider doing this just for
-  // primary frames and pseudos.
   const nsStyleImageLayers* oldLayers =
       aOldComputedStyle ? &aOldComputedStyle->StyleBackground()->mImage
                         : nullptr;
   const nsStyleImageLayers* newLayers = &StyleBackground()->mImage;
-  AddAndRemoveImageAssociations(*imageLoader, this, oldLayers, newLayers);
+  AddAndRemoveImageAssociations(this, oldLayers, newLayers);
 
   oldLayers =
       aOldComputedStyle ? &aOldComputedStyle->StyleSVGReset()->mMask : nullptr;
   newLayers = &StyleSVGReset()->mMask;
-  AddAndRemoveImageAssociations(*imageLoader, this, oldLayers, newLayers);
+  AddAndRemoveImageAssociations(this, oldLayers, newLayers);
 
   if (aOldComputedStyle) {
     // Detect style changes that should trigger a scroll anchor adjustment
@@ -1139,6 +1126,7 @@ void nsIFrame::MarkNeedsDisplayItemRebuild() {
     }
   }
 
+  ImageLoader* imageLoader = PresContext()->Document()->StyleImageLoader();
   imgIRequest* oldBorderImage =
       aOldComputedStyle
           ? aOldComputedStyle->StyleBorder()->GetBorderImageRequest()
@@ -1186,8 +1174,11 @@ void nsIFrame::MarkNeedsDisplayItemRebuild() {
   }
 
   // SVGObserverUtils::GetEffectProperties() asserts that we only invoke it with
-  // the first continuation so we need to check that in advance.
-  if (isNonTextFirstContinuation) {
+  // the first continuation so we need to check that in advance. Continuing text
+  // frame doesn't initialize its continuation pointer before reaching here for
+  // the first time, so we have to exclude text frames. This doesn't affect
+  // correctness because text nodes themselves shouldn't have effects applied.
+  if (!IsTextFrame() && !GetPrevContinuation()) {
     // Kick off loading of external SVG resources referenced from properties if
     // any. This currently includes filter, clip-path, and mask.
     SVGObserverUtils::InitiateResourceDocLoads(this);

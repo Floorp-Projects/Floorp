@@ -2811,6 +2811,13 @@ bool RestyleManager::ProcessPostTraversal(Element* aElement,
   if (wasRestyled && oldOrDisplayContentsStyle) {
     MOZ_ASSERT(styleFrame || isDisplayContents);
 
+    // Note that upToDateContext could be the same as oldOrDisplayContentsStyle,
+    // but it doesn't matter, since the only point of it is calling
+    // TriggerImageLoads on the relevant structs, and those don't matter for
+    // display: contents.
+    upToDateContext->StartImageLoads(*mPresContext->Document(),
+                                     oldOrDisplayContentsStyle);
+
     // We want to walk all the continuations here, even the ones with different
     // styles.  In practice, the only reason we get continuations with different
     // styles here is ::first-line (::first-letter never affects element
