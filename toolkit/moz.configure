@@ -1525,7 +1525,8 @@ with only_when(compile_environment):
 
 # FFmpeg's ffvpx configuration
 # ==============================================================
-with only_when(compile_environment):
+# Artifact builds need MOZ_FFVPX defined as if compilation happened.
+with only_when(compile_environment | artifact_builds):
     @depends_if(yasm_version)
     def yasm_has_avx2(yasm_version):
         return yasm_version >= '1.2'
@@ -1561,7 +1562,8 @@ with only_when(compile_environment):
         elif target.cpu in ('arm', 'aarch64') and \
                 target.kernel not in ('WINNT', 'Darwin'):
             enable = flac_only = True
-            flags.extend(vpx_as_flags)
+            if vpx_as_flags:
+                flags.extend(vpx_as_flags)
 
         if use_yasm:
             # default disabled components

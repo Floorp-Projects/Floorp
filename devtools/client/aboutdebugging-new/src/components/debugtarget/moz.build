@@ -9,6 +9,7 @@ DevToolsModules(
     'DebugTargetList.js',
     'DebugTargetPane.css',
     'DebugTargetPane.js',
+    'ExtensionAction.js',
     'ExtensionDetail.css',
     'ExtensionDetail.js',
     'FieldPair.js',
