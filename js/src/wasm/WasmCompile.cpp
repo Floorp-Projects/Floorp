@@ -551,7 +551,7 @@ SharedModule wasm::CompileBuffer(const CompileArgs& args,
                                  const ShareableBytes& bytecode,
                                  UniqueChars* error,
                                  UniqueCharsVector* warnings,
-                                 UniqueLinkData* maybeLinkData) {
+                                 JS::OptimizedEncodingListener* listener) {
   Decoder d(bytecode.bytes, 0, error, warnings);
 
   CompilerEnvironment compilerEnv(args);
@@ -575,7 +575,7 @@ SharedModule wasm::CompileBuffer(const CompileArgs& args,
     return nullptr;
   }
 
-  return mg.finishModule(bytecode, nullptr, maybeLinkData);
+  return mg.finishModule(bytecode, listener);
 }
 
 void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
