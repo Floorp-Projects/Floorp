@@ -653,7 +653,7 @@ int32_t nsTableCellFrame::GetRowSpan() {
   int32_t rowSpan = 1;
 
   // Don't look at the content's rowspan if we're a pseudo cell
-  if (!Style()->GetPseudo()) {
+  if (!Style()->IsPseudoOrAnonBox()) {
     dom::Element* elem = mContent->AsElement();
     const nsAttrValue* attr = elem->GetParsedAttr(nsGkAtoms::rowspan);
     // Note that we don't need to check the tag name, because only table cells
@@ -670,7 +670,7 @@ int32_t nsTableCellFrame::GetColSpan() {
   int32_t colSpan = 1;
 
   // Don't look at the content's colspan if we're a pseudo cell
-  if (!Style()->GetPseudo()) {
+  if (!Style()->IsPseudoOrAnonBox()) {
     dom::Element* elem = mContent->AsElement();
     const nsAttrValue* attr = elem->GetParsedAttr(
         MOZ_UNLIKELY(elem->IsMathMLElement()) ? nsGkAtoms::columnspan_

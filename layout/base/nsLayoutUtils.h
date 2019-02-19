@@ -63,7 +63,7 @@ struct nsOverflowAreas;
 
 namespace mozilla {
 class ComputedStyle;
-enum class CSSPseudoElementType : uint8_t;
+enum class PseudoStyleType : uint8_t;
 class EventListenerManager;
 enum class LayoutFrameType : uint8_t;
 struct IntrinsicSize;
@@ -684,7 +684,7 @@ class nsLayoutUtils {
    */
   static bool HasPseudoStyle(nsIContent* aContent,
                              ComputedStyle* aComputedStyle,
-                             mozilla::CSSPseudoElementType aPseudoElement,
+                             mozilla::PseudoStyleType aPseudoElement,
                              nsPresContext* aPresContext);
 
   /**

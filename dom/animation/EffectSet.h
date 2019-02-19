@@ -23,7 +23,7 @@ namespace dom {
 class Element;
 }  // namespace dom
 
-enum class CSSPseudoElementType : uint8_t;
+enum class PseudoStyleType : uint8_t;
 
 // A wrapper around a hashset of AnimationEffect objects to handle
 // storing the set as a property of an element.
@@ -58,12 +58,12 @@ class EffectSet {
   void Traverse(nsCycleCollectionTraversalCallback& aCallback);
 
   static EffectSet* GetEffectSet(const dom::Element* aElement,
-                                 CSSPseudoElementType aPseudoType);
+                                 PseudoStyleType aPseudoType);
   static EffectSet* GetEffectSet(const nsIFrame* aFrame);
   static EffectSet* GetOrCreateEffectSet(dom::Element* aElement,
-                                         CSSPseudoElementType aPseudoType);
+                                         PseudoStyleType aPseudoType);
   static void DestroyEffectSet(dom::Element* aElement,
-                               CSSPseudoElementType aPseudoType);
+                               PseudoStyleType aPseudoType);
 
   void AddEffect(dom::KeyframeEffect& aEffect);
   void RemoveEffect(dom::KeyframeEffect& aEffect);
@@ -189,7 +189,7 @@ class EffectSet {
   }
 
  private:
-  static nsAtom* GetEffectSetPropertyAtom(CSSPseudoElementType aPseudoType);
+  static nsAtom* GetEffectSetPropertyAtom(PseudoStyleType aPseudoType);
 
   OwningEffectSet mEffects;
 

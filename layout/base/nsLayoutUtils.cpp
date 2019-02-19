@@ -1928,7 +1928,7 @@ nsRect nsLayoutUtils::GetScrolledRect(nsIFrame* aScrolledFrame,
 // static
 bool nsLayoutUtils::HasPseudoStyle(nsIContent* aContent,
                                    ComputedStyle* aComputedStyle,
-                                   CSSPseudoElementType aPseudoElement,
+                                   PseudoStyleType aPseudoElement,
                                    nsPresContext* aPresContext) {
   MOZ_ASSERT(aPresContext, "Must have a prescontext");
 
@@ -3970,9 +3970,9 @@ bool nsLayoutUtils::BinarySearchForPosition(
 
 void nsLayoutUtils::AddBoxesForFrame(nsIFrame* aFrame,
                                      nsLayoutUtils::BoxCallback* aCallback) {
-  nsAtom* pseudoType = aFrame->Style()->GetPseudo();
+  auto pseudoType = aFrame->Style()->GetPseudoType();
 
-  if (pseudoType == nsCSSAnonBoxes::tableWrapper()) {
+  if (pseudoType == PseudoStyleType::tableWrapper) {
     AddBoxesForFrame(aFrame->PrincipalChildList().FirstChild(), aCallback);
     if (aCallback->mIncludeCaptionBoxForTable) {
       nsIFrame* kid = aFrame->GetChildList(nsIFrame::kCaptionList).FirstChild();
@@ -3980,9 +3980,9 @@ void nsLayoutUtils::AddBoxesForFrame(nsIFrame* aFrame,
         AddBoxesForFrame(kid, aCallback);
       }
     }
-  } else if (pseudoType == nsCSSAnonBoxes::mozBlockInsideInlineWrapper() ||
-             pseudoType == nsCSSAnonBoxes::mozMathMLAnonymousBlock() ||
-             pseudoType == nsCSSAnonBoxes::mozXULAnonymousBlock()) {
+  } else if (pseudoType == PseudoStyleType::mozBlockInsideInlineWrapper ||
+             pseudoType == PseudoStyleType::mozMathMLAnonymousBlock ||
+             pseudoType == PseudoStyleType::mozXULAnonymousBlock) {
     for (nsIFrame* kid : aFrame->PrincipalChildList()) {
       AddBoxesForFrame(kid, aCallback);
     }
@@ -4001,9 +4001,9 @@ void nsLayoutUtils::GetAllInFlowBoxes(nsIFrame* aFrame,
 
 nsIFrame* nsLayoutUtils::GetFirstNonAnonymousFrame(nsIFrame* aFrame) {
   while (aFrame) {
-    nsAtom* pseudoType = aFrame->Style()->GetPseudo();
+    auto pseudoType = aFrame->Style()->GetPseudoType();
 
-    if (pseudoType == nsCSSAnonBoxes::tableWrapper()) {
+    if (pseudoType == PseudoStyleType::tableWrapper) {
       nsIFrame* f =
           GetFirstNonAnonymousFrame(aFrame->PrincipalChildList().FirstChild());
       if (f) {
@@ -4016,9 +4016,9 @@ nsIFrame* nsLayoutUtils::GetFirstNonAnonymousFrame(nsIFrame* aFrame) {
           return f;
         }
       }
-    } else if (pseudoType == nsCSSAnonBoxes::mozBlockInsideInlineWrapper() ||
-               pseudoType == nsCSSAnonBoxes::mozMathMLAnonymousBlock() ||
-               pseudoType == nsCSSAnonBoxes::mozXULAnonymousBlock()) {
+    } else if (pseudoType == PseudoStyleType::mozBlockInsideInlineWrapper ||
+               pseudoType == PseudoStyleType::mozMathMLAnonymousBlock ||
+               pseudoType == PseudoStyleType::mozXULAnonymousBlock) {
       for (nsIFrame* kid : aFrame->PrincipalChildList()) {
         nsIFrame* f = GetFirstNonAnonymousFrame(kid);
         if (f) {

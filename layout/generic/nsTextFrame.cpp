@@ -5151,7 +5151,7 @@ void nsTextFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 static nsIFrame* GetGeneratedContentOwner(nsIFrame* aFrame, bool* aIsBefore) {
   *aIsBefore = false;
   while (aFrame && (aFrame->GetStateBits() & NS_FRAME_GENERATED_CONTENT)) {
-    if (aFrame->Style()->GetPseudo() == nsCSSPseudoElements::before()) {
+    if (aFrame->Style()->GetPseudoType() == PseudoStyleType::before) {
       *aIsBefore = true;
     }
     aFrame = aFrame->GetParent();
