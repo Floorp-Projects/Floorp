@@ -226,9 +226,9 @@ nsresult SubstitutingProtocolHandler::NewURI(const nsACString& aSpec,
       .Finalize(result);
 }
 
-nsresult SubstitutingProtocolHandler::NewChannel2(nsIURI* uri,
-                                                  nsILoadInfo* aLoadInfo,
-                                                  nsIChannel** result) {
+nsresult SubstitutingProtocolHandler::NewChannel(nsIURI* uri,
+                                                 nsILoadInfo* aLoadInfo,
+                                                 nsIChannel** result) {
   NS_ENSURE_ARG_POINTER(uri);
   NS_ENSURE_ARG_POINTER(aLoadInfo);
 
@@ -257,11 +257,6 @@ nsresult SubstitutingProtocolHandler::NewChannel2(nsIURI* uri,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return SubstituteChannel(uri, aLoadInfo, result);
-}
-
-nsresult SubstitutingProtocolHandler::NewChannel(nsIURI* uri,
-                                                 nsIChannel** result) {
-  return NewChannel2(uri, nullptr, result);
 }
 
 nsresult SubstitutingProtocolHandler::AllowPort(int32_t port,

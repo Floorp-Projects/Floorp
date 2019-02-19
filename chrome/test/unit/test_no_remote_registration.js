@@ -30,7 +30,6 @@ ProtocolHandler.prototype =
     }
     return mutator.finalize();
   },
-  newChannel2() { throw Cr.NS_ERROR_NOT_IMPLEMENTED; },
   newChannel() { throw Cr.NS_ERROR_NOT_IMPLEMENTED; },
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsIProtocolHandler,

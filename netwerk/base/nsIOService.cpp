@@ -921,21 +921,13 @@ nsresult nsIOService::NewChannelFromURIWithProxyFlagsInternal(
   rv = handler->DoGetProtocolFlags(aURI, &protoFlags);
   if (NS_FAILED(rv)) return rv;
 
-  // Ideally we are creating new channels by calling NewChannel2
-  // (NewProxiedChannel2). Keep in mind that Addons can implement their own
-  // Protocolhandlers, hence NewChannel2() might *not* be implemented. We do not
-  // want to break those addons, therefore we first try to create a channel
-  // calling NewChannel2(); if that fails:
-  // * we fall back to creating a channel by calling NewChannel()
-  // * wrap the addon channel
-  // * and attach the loadInfo to the channel wrapper
   nsCOMPtr<nsIChannel> channel;
   nsCOMPtr<nsIProxiedProtocolHandler> pph = do_QueryInterface(handler);
   if (pph) {
     rv = pph->NewProxiedChannel2(aURI, nullptr, aProxyFlags, aProxyURI,
                                  aLoadInfo, getter_AddRefs(channel));
   } else {
-    rv = handler->NewChannel2(aURI, aLoadInfo, getter_AddRefs(channel));
+    rv = handler->NewChannel(aURI, aLoadInfo, getter_AddRefs(channel));
   }
   NS_ENSURE_SUCCESS(rv, rv);
 

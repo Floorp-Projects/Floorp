@@ -159,8 +159,8 @@ nsAboutProtocolHandler::NewURI(const nsACString &aSpec,
 }
 
 NS_IMETHODIMP
-nsAboutProtocolHandler::NewChannel2(nsIURI *uri, nsILoadInfo *aLoadInfo,
-                                    nsIChannel **result) {
+nsAboutProtocolHandler::NewChannel(nsIURI *uri, nsILoadInfo *aLoadInfo,
+                                   nsIChannel **result) {
   NS_ENSURE_ARG_POINTER(uri);
 
   // about:what you ask?
@@ -262,11 +262,6 @@ nsAboutProtocolHandler::NewChannel2(nsIURI *uri, nsILoadInfo *aLoadInfo,
 }
 
 NS_IMETHODIMP
-nsAboutProtocolHandler::NewChannel(nsIURI *uri, nsIChannel **result) {
-  return NewChannel2(uri, nullptr, result);
-}
-
-NS_IMETHODIMP
 nsAboutProtocolHandler::AllowPort(int32_t port, const char *scheme,
                                   bool *_retval) {
   // don't override anything.
@@ -315,14 +310,8 @@ nsSafeAboutProtocolHandler::NewURI(const nsACString &aSpec,
 }
 
 NS_IMETHODIMP
-nsSafeAboutProtocolHandler::NewChannel2(nsIURI *uri, nsILoadInfo *aLoadInfo,
-                                        nsIChannel **result) {
-  *result = nullptr;
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
-NS_IMETHODIMP
-nsSafeAboutProtocolHandler::NewChannel(nsIURI *uri, nsIChannel **result) {
+nsSafeAboutProtocolHandler::NewChannel(nsIURI *uri, nsILoadInfo *aLoadInfo,
+                                       nsIChannel **result) {
   *result = nullptr;
   return NS_ERROR_NOT_AVAILABLE;
 }

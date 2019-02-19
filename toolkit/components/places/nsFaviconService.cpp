@@ -519,7 +519,7 @@ nsFaviconService::ReplaceFaviconDataFromDataURL(
       nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON);
 
   nsCOMPtr<nsIChannel> channel;
-  rv = protocolHandler->NewChannel2(dataURI, loadInfo, getter_AddRefs(channel));
+  rv = protocolHandler->NewChannel(dataURI, loadInfo, getter_AddRefs(channel));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Blocking stream is OK for data URIs.
