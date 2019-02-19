@@ -1282,7 +1282,6 @@ WebConsoleActor.prototype =
     if (this.parentActor.isRootActor) {
       Services.console.reset();
     }
-    return {};
   },
 
   /**

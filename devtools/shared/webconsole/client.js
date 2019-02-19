@@ -163,20 +163,6 @@ class WebConsoleClient extends FrontClassWithSpec(webconsoleSpec) {
   }
 
   /**
-   * Retrieve the cached messages from the server.
-   *
-   * @see this.CACHED_MESSAGES
-   * @param array types
-   *        The array of message types you want from the server. See
-   *        this.CACHED_MESSAGES for known types.
-   * @return request
-   *         Request object that implements both Promise and EventEmitter interfaces
-   */
-  getCachedMessages(messageTypes) {
-    return super.getCachedMessages({ messageTypes });
-  }
-
-  /**
    * Evaluate a JavaScript expression.
    *
    * @param string string
@@ -272,74 +258,6 @@ class WebConsoleClient extends FrontClassWithSpec(webconsoleSpec) {
         "No response handler for an evaluateJSAsync result (resultID: " +
                                     packet.resultID + ")");
     }
-  }
-
-  /**
-   * Autocomplete a JavaScript expression.
-   *
-   * @param {String} string
-   *        The code you want to autocomplete.
-   * @param {Number} cursor
-   *        Cursor location inside the string. Index starts from 0.
-   * @param {String} frameActor
-   *        The id of the frame actor that made the call.
-   * @param {String} selectedNodeActor: Actor id of the selected node in the inspector.
-   * @param {Array} authorizedEvaluations
-   *        Array of the properties access which can be executed by the engine.
-   *        Example: [["x", "myGetter"], ["x", "myGetter", "y", "anotherGetter"]] to
-   *        retrieve properties of `x.myGetter.` and `x.myGetter.y.anotherGetter`.
-   * @return request
-   *         Request object that implements both Promise and EventEmitter interfaces
-   */
-  autocomplete(
-    string,
-    cursor,
-    frameActor,
-    selectedNodeActor,
-    authorizedEvaluations
-  ) {
-    const options = {
-      text: string,
-      cursor,
-      frameActor,
-      selectedNodeActor,
-      authorizedEvaluations,
-    };
-    return super.autocomplete(options);
-  }
-
-  /**
-   * Clear the cache of messages (page errors and console API calls).
-   *
-   * @return request
-   *         Request object that implements both Promise and EventEmitter interfaces
-   */
-  clearMessagesCache() {
-    return super.clearMessagesCache();
-  }
-
-  /**
-   * Get Web Console-related preferences on the server.
-   *
-   * @param array preferences
-   *        An array with the preferences you want to retrieve.
-   * @return request
-   *         Request object that implements both Promise and EventEmitter interfaces
-   */
-  getPreferences(preferences) {
-    return super.getPreferences({ preferences });
-  }
-
-  /**
-   * Set Web Console-related preferences on the server.
-   *
-   * @param object preferences
-   *        An object with the preferences you want to change.
-   * @return request
-   *         Request object that implements both Promise and EventEmitter interfaces
-   */
-  setPreferences(preferences) {
-    return super.setPreferences({ preferences });
   }
 
   /**
@@ -523,18 +441,6 @@ class WebConsoleClient extends FrontClassWithSpec(webconsoleSpec) {
   }
 
   /**
-   * Send a HTTP request with the given data.
-   *
-   * @param string data
-   *        The details of the HTTP request.
-   * @return request
-   *         Request object that implements both Promise and EventEmitter interfaces
-   */
-  sendHTTPRequest(data) {
-    return super.sendHTTPRequest({ request: data });
-  }
-
-  /**
    * Start the given Web Console listeners.
    *
    * @see this.LISTENERS
@@ -545,21 +451,7 @@ class WebConsoleClient extends FrontClassWithSpec(webconsoleSpec) {
    *         Request object that implements both Promise and EventEmitter interfaces
    */
   startListeners(listeners) {
-    return super.startListeners({ listeners });
-  }
-
-  /**
-   * Stop the given Web Console listeners.
-   *
-   * @see this.LISTENERS
-   * @param array listeners
-   *        Array of listeners you want to stop. See this.LISTENERS for
-   *        known listeners.
-   * @return request
-   *         Request object that implements both Promise and EventEmitter interfaces
-   */
-  stopListeners(listeners) {
-    return super.stopListeners({ listeners });
+    return super.startListeners(listeners);
   }
 
   /**
