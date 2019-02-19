@@ -74,7 +74,6 @@ async function doSimpleEval() {
   info("test eval '2+2'");
   let response = await evaluateJS("2+2");
   checkObject(response, {
-    from: gState.actor,
     input: "2+2",
     result: 4,
   });
@@ -89,7 +88,6 @@ async function doWindowEval() {
   info("test eval 'document'");
   let response = await evaluateJS("document");
   checkObject(response, {
-    from: gState.actor,
     input: "document",
     result: {
       type: "object",
@@ -108,7 +106,6 @@ async function doEvalWithException() {
   info("test eval with exception");
   let response = await evaluateJS("window.doTheImpossible()");
   checkObject(response, {
-    from: gState.actor,
     input: "window.doTheImpossible()",
     result: {
       type: "undefined",
@@ -126,7 +123,6 @@ async function doEvalWithHelper() {
   info("test eval with helper");
   let response = await evaluateJS("clear()");
   checkObject(response, {
-    from: gState.actor,
     input: "clear()",
     result: {
       type: "undefined",
@@ -142,7 +138,6 @@ async function doEvalWithHelper() {
 async function doEvalString() {
   let response = await evaluateJS("window.foobarObject.strfoo");
   checkObject(response, {
-    from: gState.actor,
     input: "window.foobarObject.strfoo",
     result: "foobarz",
   });
@@ -156,7 +151,6 @@ async function doEvalLongString() {
   let initial = str.substring(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH);
 
   checkObject(response, {
-    from: gState.actor,
     input: "window.foobarObject.omgstr",
     result: {
       type: "longString",
@@ -265,7 +259,6 @@ async function forceLexicalInit() {
   for (let data of testData) {
       let response = await evaluateJS(data.stmt);
       checkObject(response, {
-        from: gState.actor,
         input: data.stmt,
         result: undefined,
       });
@@ -273,7 +266,6 @@ async function forceLexicalInit() {
       for (let varName of data.vars) {
           let response2 = await evaluateJS(varName);
           checkObject(response2, {
-            from: gState.actor,
             input: varName,
             result: undefined,
           });
