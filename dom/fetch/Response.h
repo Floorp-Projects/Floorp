@@ -74,6 +74,10 @@ class Response final : public nsISupports,
     return mInternalResponse->GetPrincipalInfo();
   }
 
+  bool HasCacheInfoChannel() const {
+    return mInternalResponse->HasCacheInfoChannel();
+  }
+
   Headers* Headers_();
 
   void GetBody(nsIInputStream** aStream, int64_t* aBodyLength = nullptr) {

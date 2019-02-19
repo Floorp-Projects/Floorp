@@ -489,7 +489,7 @@ bool FetchUtil::StreamResponseToJS(JSContext* aCx, JS::HandleObject aObj,
   const char* requiredMimeType = nullptr;
   switch (aMimeType) {
     case JS::MimeType::Wasm:
-      requiredMimeType = "application/wasm";
+      requiredMimeType = WASM_CONTENT_TYPE;
       break;
   }
 

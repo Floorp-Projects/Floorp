@@ -708,8 +708,19 @@ nsresult FetchDriver::HttpFetch(
       rv = chan->AsyncOpen(this);
     }
   } else {
+    // Integrity check cannot be done on alt-data yet.
+    if (mRequest->GetIntegrity().IsEmpty()) {
+      nsCOMPtr<nsICacheInfoChannel> cic = do_QueryInterface(chan);
+      if (cic) {
+        cic->PreferAlternativeDataType(
+            NS_LITERAL_CSTRING(WASM_ALT_DATA_TYPE_V1),
+            NS_LITERAL_CSTRING(WASM_CONTENT_TYPE));
+      }
+    }
+
     rv = chan->AsyncOpen(this);
   }
+
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -812,6 +823,9 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
 
   bool foundOpaqueRedirect = false;
 
+  nsAutoCString contentType;
+  channel->GetContentType(contentType);
+
   int64_t contentLength = InternalResponse::UNKNOWN_BODY_SIZE;
   rv = channel->GetContentLength(&contentLength);
   MOZ_ASSERT_IF(NS_FAILED(rv),
@@ -866,16 +880,14 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
   } else {
     response = new InternalResponse(200, NS_LITERAL_CSTRING("OK"));
 
-    ErrorResult result;
-    nsAutoCString contentType;
-    rv = channel->GetContentType(contentType);
-    if (NS_SUCCEEDED(rv) && !contentType.IsEmpty()) {
+    if (!contentType.IsEmpty()) {
       nsAutoCString contentCharset;
       channel->GetContentCharset(contentCharset);
       if (NS_SUCCEEDED(rv) && !contentCharset.IsEmpty()) {
         contentType += NS_LITERAL_CSTRING(";charset=") + contentCharset;
       }
 
+      IgnoredErrorResult result;
       response->Headers()->Append(NS_LITERAL_CSTRING("Content-Type"),
                                   contentType, result);
       MOZ_ASSERT(!result.Failed());
@@ -884,6 +896,8 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
     if (contentLength > 0) {
       nsAutoCString contentLenStr;
       contentLenStr.AppendInt(contentLength);
+
+      IgnoredErrorResult result;
       response->Headers()->Append(NS_LITERAL_CSTRING("Content-Length"),
                                   contentLenStr, result);
       MOZ_ASSERT(!result.Failed());
@@ -891,42 +905,65 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
   }
 
   nsCOMPtr<nsICacheInfoChannel> cic = do_QueryInterface(aRequest);
-  if (cic && mAltDataListener) {
-    // Skip the case that mAltDataListener->Status() equals to FALLBACK, that
-    // means the opened channel for alternative data loading is reused for
-    // loading the main data.
-    if (mAltDataListener->Status() != AlternativeDataStreamListener::FALLBACK) {
-      // Verify the cache ID is the same with from alternative data cache.
-      // If the cache ID is different, droping the alternative data loading,
-      // otherwise setup the response's alternative body and cacheInfoChannel.
-      uint64_t cacheEntryId = 0;
-      if (NS_SUCCEEDED(cic->GetCacheEntryId(&cacheEntryId)) &&
-          cacheEntryId != mAltDataListener->GetAlternativeDataCacheEntryId()) {
-        mAltDataListener->Cancel();
-      } else {
-        // AlternativeDataStreamListener::OnStartRequest had already been
-        // called, the alternative data input stream and cacheInfo channel must
-        // be created.
-        nsCOMPtr<nsICacheInfoChannel> cacheInfo =
-            mAltDataListener->GetCacheInfoChannel();
-        nsCOMPtr<nsIInputStream> altInputStream =
-            mAltDataListener->GetAlternativeInputStream();
-        MOZ_ASSERT(altInputStream && cacheInfo);
-        response->SetAlternativeBody(altInputStream);
+  if (cic) {
+    if (mAltDataListener) {
+      // Skip the case that mAltDataListener->Status() equals to FALLBACK, that
+      // means the opened channel for alternative data loading is reused for
+      // loading the main data.
+      if (mAltDataListener->Status() !=
+          AlternativeDataStreamListener::FALLBACK) {
+        // Verify the cache ID is the same with from alternative data cache.
+        // If the cache ID is different, droping the alternative data loading,
+        // otherwise setup the response's alternative body and cacheInfoChannel.
+        uint64_t cacheEntryId = 0;
+        if (NS_SUCCEEDED(cic->GetCacheEntryId(&cacheEntryId)) &&
+            cacheEntryId !=
+                mAltDataListener->GetAlternativeDataCacheEntryId()) {
+          mAltDataListener->Cancel();
+        } else {
+          // AlternativeDataStreamListener::OnStartRequest had already been
+          // called, the alternative data input stream and cacheInfo channel
+          // must be created.
+          nsCOMPtr<nsICacheInfoChannel> cacheInfo =
+              mAltDataListener->GetCacheInfoChannel();
+          nsCOMPtr<nsIInputStream> altInputStream =
+              mAltDataListener->GetAlternativeInputStream();
+          MOZ_ASSERT(altInputStream && cacheInfo);
+          response->SetAlternativeBody(altInputStream);
+          nsMainThreadPtrHandle<nsICacheInfoChannel> handle(
+              new nsMainThreadPtrHolder<nsICacheInfoChannel>(
+                  "nsICacheInfoChannel", cacheInfo, false));
+          response->SetCacheInfoChannel(handle);
+        }
+      } else if (!mAltDataListener->GetAlternativeDataType().IsEmpty()) {
+        // If the status is FALLBACK and the
+        // mAltDataListener::mAlternativeDataType is not empty, that means the
+        // data need to be saved into cache, setup the response's
+        // nsICacheInfoChannel for caching the data after loading.
         nsMainThreadPtrHandle<nsICacheInfoChannel> handle(
             new nsMainThreadPtrHolder<nsICacheInfoChannel>(
-                "nsICacheInfoChannel", cacheInfo, false));
+                "nsICacheInfoChannel", cic, false));
         response->SetCacheInfoChannel(handle);
       }
-    } else if (!mAltDataListener->GetAlternativeDataType().IsEmpty()) {
-      // If the status is FALLBACK and the
-      // mAltDataListener::mAlternativeDataType is not empty, that means the
-      // data need to be saved into cache, setup the response's
-      // nsICacheInfoChannel for caching the data after loading.
-      nsMainThreadPtrHandle<nsICacheInfoChannel> handle(
-          new nsMainThreadPtrHolder<nsICacheInfoChannel>("nsICacheInfoChannel",
-                                                         cic, false));
-      response->SetCacheInfoChannel(handle);
+    } else if (!cic->PreferredAlternativeDataTypes().IsEmpty()) {
+      MOZ_ASSERT(cic->PreferredAlternativeDataTypes().Length() == 1);
+      MOZ_ASSERT(Get<0>(cic->PreferredAlternativeDataTypes()[0])
+                     .EqualsLiteral(WASM_ALT_DATA_TYPE_V1));
+      MOZ_ASSERT(Get<1>(cic->PreferredAlternativeDataTypes()[0])
+                     .EqualsLiteral(WASM_CONTENT_TYPE));
+
+      if (contentType.EqualsLiteral(WASM_CONTENT_TYPE)) {
+        // We want to attach the CacheInfoChannel to the response object such
+        // that we can track its origin when the Response object is manipulated
+        // by JavaScript code. This is important for WebAssembly, which uses
+        // fetch to query its sources in JavaScript and transfer the Response
+        // object to other function responsible for storing the alternate data
+        // using the CacheInfoChannel.
+        nsMainThreadPtrHandle<nsICacheInfoChannel> handle(
+            new nsMainThreadPtrHolder<nsICacheInfoChannel>(
+                "nsICacheInfoChannel", cic, false));
+        response->SetCacheInfoChannel(handle);
+      }
     }
   }
 
