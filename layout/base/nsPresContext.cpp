@@ -222,14 +222,11 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mFontFeatureValuesDirty(true),
       mSuppressResizeReflow(false),
       mIsVisual(false),
-      mIsChrome(false),
-      mIsChromeOriginImage(false),
       mPaintFlashing(false),
       mPaintFlashingInitialized(false),
       mHasWarnedAboutPositionedTableParts(false),
       mHasWarnedAboutTooLargeDashedOrDottedRadius(false),
       mQuirkSheetAdded(false),
-      mNeedsPrefUpdate(false),
       mHadNonBlankPaint(false),
       mHadContentfulPaint(false),
       mHadContentfulPaintComposite(false)
@@ -359,6 +356,15 @@ static bool sLookAndFeelChanged;
 // one prescontext.
 static bool sThemeChanged;
 
+bool nsPresContext::IsChrome() const {
+  return Document()->IsInChromeDocShell();
+}
+
+bool nsPresContext::IsChromeOriginImage() const {
+  return Document()->IsBeingUsedAsImage() &&
+         Document()->IsDocumentURISchemeChrome();
+}
+
 void nsPresContext::GetDocumentColorPreferences() {
   // Make sure the preferences are initialized.  In the normal run,
   // they would already be, because gfxPlatform would have been created,
@@ -367,7 +373,6 @@ void nsPresContext::GetDocumentColorPreferences() {
 
   int32_t useAccessibilityTheme = 0;
   bool usePrefColors = true;
-  bool isChromeDocShell = false;
   static int32_t sDocumentColorsSetting;
   static bool sDocumentColorsSettingPrefCached = false;
   if (!sDocumentColorsSettingPrefCached) {
@@ -376,22 +381,7 @@ void nsPresContext::GetDocumentColorPreferences() {
                                 "browser.display.document_color_use", 0);
   }
 
-  dom::Document* doc = mDocument->GetDisplayDocument();
-  if (doc && doc->GetDocShell()) {
-    isChromeDocShell =
-        nsIDocShellTreeItem::typeChrome == doc->GetDocShell()->ItemType();
-  } else {
-    nsCOMPtr<nsIDocShellTreeItem> docShell(mContainer);
-    if (docShell) {
-      isChromeDocShell =
-          nsIDocShellTreeItem::typeChrome == docShell->ItemType();
-    }
-  }
-
-  mIsChromeOriginImage = mDocument->IsBeingUsedAsImage() &&
-                         IsChromeURI(mDocument->GetDocumentURI());
-
-  if (isChromeDocShell || mIsChromeOriginImage) {
+  if (IsChrome() || IsChromeOriginImage()) {
     usePrefColors = false;
   } else {
     useAccessibilityTheme =
@@ -441,11 +431,10 @@ void nsPresContext::GetDocumentColorPreferences() {
   if (sDocumentColorsSetting == 1 || mDocument->IsBeingUsedAsImage()) {
     mUseDocumentColors = true;
   } else if (sDocumentColorsSetting == 2) {
-    mUseDocumentColors = isChromeDocShell || mIsChromeOriginImage;
+    mUseDocumentColors = IsChrome() || IsChromeOriginImage();
   } else {
-    MOZ_ASSERT(
-        !useAccessibilityTheme || !(isChromeDocShell || mIsChromeOriginImage),
-        "The accessibility theme should only be on for non-chrome");
+    MOZ_ASSERT(!useAccessibilityTheme || !(IsChrome() || IsChromeOriginImage()),
+               "The accessibility theme should only be on for non-chrome");
     mUseDocumentColors = !useAccessibilityTheme;
   }
 }
@@ -678,14 +667,7 @@ void nsPresContext::UpdateAfterPreferencesChanged() {
     return;
   }
 
-  if (!mContainer) {
-    // Delay updating until there is a container
-    mNeedsPrefUpdate = true;
-    return;
-  }
-
-  nsCOMPtr<nsIDocShellTreeItem> docShell(mContainer);
-  if (docShell && nsIDocShellTreeItem::typeChrome == docShell->ItemType()) {
+  if (mDocument->IsInChromeDocShell()) {
     return;
   }
 
@@ -753,7 +735,6 @@ nsresult nsPresContext::Init(nsDeviceContext* aDeviceContext) {
                  "How did we end up with a presshell if our parent doesn't "
                  "have one?");
     if (parent && parent->GetPresContext()) {
-      // We don't have our container set yet at this point
       nsCOMPtr<nsIDocShellTreeItem> ourItem = mDocument->GetDocShell();
       if (ourItem) {
         nsCOMPtr<nsIDocShellTreeItem> parentItem;
@@ -812,32 +793,28 @@ void nsPresContext::AttachShell(nsIPresShell* aShell) {
   mCounterStyleManager = new mozilla::CounterStyleManager(this);
 
   dom::Document* doc = mShell->GetDocument();
-  NS_ASSERTION(doc, "expect document here");
-  if (doc) {
-    // Have to update PresContext's mDocument before calling any other methods.
-    mDocument = doc;
-  }
+  MOZ_ASSERT(doc);
+  // Have to update PresContext's mDocument before calling any other methods.
+  mDocument = doc;
   // Initialize our state from the user preferences, now that we
   // have a presshell, and hence a document.
   GetUserPreferences();
 
-  if (doc) {
-    nsIURI* docURI = doc->GetDocumentURI();
+  nsIURI* docURI = doc->GetDocumentURI();
 
-    if (IsDynamic() && docURI) {
-      bool isChrome = false;
-      bool isRes = false;
-      docURI->SchemeIs("chrome", &isChrome);
-      docURI->SchemeIs("resource", &isRes);
+  if (IsDynamic() && docURI) {
+    bool isChrome = false;
+    bool isRes = false;
+    docURI->SchemeIs("chrome", &isChrome);
+    docURI->SchemeIs("resource", &isRes);
 
-      if (!isChrome && !isRes)
-        mImageAnimationMode = mImageAnimationModePref;
-      else
-        mImageAnimationMode = imgIContainer::kNormalAnimMode;
-    }
-
-    UpdateCharSet(doc->GetDocumentCharacterSet());
+    if (!isChrome && !isRes)
+      mImageAnimationMode = mImageAnimationModePref;
+    else
+      mImageAnimationMode = imgIContainer::kNormalAnimMode;
   }
+
+  UpdateCharSet(doc->GetDocumentCharacterSet());
 }
 
 void nsPresContext::DetachShell() {
@@ -1302,45 +1279,17 @@ bool nsPresContext::ElementWouldPropagateScrollStyles(const Element& aElement) {
   return GetPropagatedScrollStylesForViewport(this, &dummy) == &aElement;
 }
 
-void nsPresContext::SetContainer(nsIDocShell* aDocShell) {
-  if (aDocShell) {
-    NS_ASSERTION(!(mContainer && mNeedsPrefUpdate),
-                 "Should only need pref update if mContainer is null.");
-    mContainer = static_cast<nsDocShell*>(aDocShell);
-    if (mNeedsPrefUpdate) {
-      DispatchPrefChangedRunnableIfNeeded();
-      mNeedsPrefUpdate = false;
-    }
-  } else {
-    mContainer = WeakPtr<nsDocShell>();
-  }
-  UpdateIsChrome();
-  if (mContainer) {
-    GetDocumentColorPreferences();
-  }
+nsISupports* nsPresContext::GetContainerWeak() const { return GetDocShell(); }
+
+nsIDocShell* nsPresContext::GetDocShell() const {
+  return mDocument->GetDocShell();
 }
 
-nsISupports* nsPresContext::GetContainerWeak() const {
-  return static_cast<nsIDocShell*>(mContainer);
-}
-
-nsIDocShell* nsPresContext::GetDocShell() const { return mContainer; }
-
-/* virtual */ void nsPresContext::Detach() {
-  SetContainer(nullptr);
-  SetLinkHandler(nullptr);
-}
+/* virtual */ void nsPresContext::Detach() { SetLinkHandler(nullptr); }
 
 bool nsPresContext::BidiEnabled() const { return Document()->GetBidiEnabled(); }
 
-void nsPresContext::SetBidiEnabled() const {
-  if (mShell) {
-    dom::Document* doc = mShell->GetDocument();
-    if (doc) {
-      doc->SetBidiEnabled();
-    }
-  }
-}
+void nsPresContext::SetBidiEnabled() const { Document()->SetBidiEnabled(); }
 
 void nsPresContext::SetBidi(uint32_t aSource) {
   // Don't do all this stuff unless the options have changed.
@@ -1358,10 +1307,7 @@ void nsPresContext::SetBidi(uint32_t aSource) {
   } else if (IBMBIDI_TEXTTYPE_LOGICAL == GET_BIDI_OPTION_TEXTTYPE(aSource)) {
     SetVisualMode(false);
   } else {
-    dom::Document* doc = mShell->GetDocument();
-    if (doc) {
-      SetVisualMode(IsVisualCharset(doc->GetDocumentCharacterSet()));
-    }
+    SetVisualMode(IsVisualCharset(Document()->GetDocumentCharacterSet()));
   }
 }
 
@@ -1790,20 +1736,19 @@ void nsPresContext::SetPrintSettings(nsIPrintSettings* aPrintSettings) {
 }
 
 bool nsPresContext::EnsureVisible() {
-  nsCOMPtr<nsIDocShell> docShell(mContainer);
-  if (docShell) {
-    nsCOMPtr<nsIContentViewer> cv;
-    docShell->GetContentViewer(getter_AddRefs(cv));
-    // Make sure this is the content viewer we belong with
-    if (cv && cv->GetPresContext() == this) {
-      // OK, this is us.  We want to call Show() on the content viewer.
-      nsresult result = cv->Show();
-      if (NS_SUCCEEDED(result)) {
-        return true;
-      }
-    }
+  nsCOMPtr<nsIDocShell> docShell(GetDocShell());
+  if (!docShell) {
+    return false;
   }
-  return false;
+  nsCOMPtr<nsIContentViewer> cv;
+  docShell->GetContentViewer(getter_AddRefs(cv));
+  // Make sure this is the content viewer we belong with
+  if (!cv || cv->GetPresContext() != this) {
+    return false;
+  }
+  // OK, this is us.  We want to call Show() on the content viewer.
+  nsresult result = cv->Show();
+  return NS_SUCCEEDED(result);
 }
 
 #ifdef MOZ_REFLOW_PERF
@@ -1813,11 +1758,6 @@ void nsPresContext::CountReflows(const char* aName, nsIFrame* aFrame) {
   }
 }
 #endif
-
-void nsPresContext::UpdateIsChrome() {
-  mIsChrome =
-      mContainer && nsIDocShellTreeItem::typeChrome == mContainer->ItemType();
-}
 
 bool nsPresContext::HasAuthorSpecifiedRules(const nsIFrame* aFrame,
                                             uint32_t aRuleTypeMask) const {
@@ -2592,12 +2532,8 @@ nscoord nsPresContext::PhysicalMillimetersToAppUnits(float aMM) const {
 }
 
 bool nsPresContext::IsDeviceSizePageSize() {
-  bool isDeviceSizePageSize = false;
-  nsCOMPtr<nsIDocShell> docShell(mContainer);
-  if (docShell) {
-    isDeviceSizePageSize = docShell->GetDeviceSizeIsPageSize();
-  }
-  return isDeviceSizePageSize;
+  nsIDocShell* docShell = GetDocShell();
+  return docShell && docShell->GetDeviceSizeIsPageSize();
 }
 
 uint64_t nsPresContext::GetRestyleGeneration() const {

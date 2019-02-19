@@ -1227,7 +1227,9 @@ class nsContentUtils {
   /**
    * Returns true if aDocument is a chrome document
    */
-  static bool IsChromeDoc(const Document* aDocument);
+  static bool IsChromeDoc(const Document* aDocument) {
+    return aDocument && aDocument->NodePrincipal() == sSystemPrincipal;
+  }
 
   /**
    * Returns true if aDocument is in a docshell whose parent is the same type
@@ -1250,7 +1252,9 @@ class nsContentUtils {
    * display purposes.  Returns false for null documents or documents
    * which do not belong to a docshell.
    */
-  static bool IsInChromeDocshell(Document* aDocument);
+  static bool IsInChromeDocshell(const Document* aDocument) {
+    return aDocument && aDocument->IsInChromeDocShell();
+  }
 
   /**
    * Return the content policy service
