@@ -4167,6 +4167,7 @@ bool js::detail::CopyScript(JSContext* cx, HandleScript src,
 
   // Copy POD fields
   dst->lineno_ = src->lineno();
+  dst->column_ = src->column();
   dst->mainOffset_ = src->mainOffset();
   dst->nfixed_ = src->nfixed();
   dst->nslots_ = src->nslots();
