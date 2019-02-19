@@ -37,13 +37,13 @@ HarCollector.prototype = {
   // Connection
 
   start: function() {
-    this.debuggerClient.addListener("networkEvent", this.onNetworkEvent);
+    this.debuggerClient.addListener("serverNetworkEvent", this.onNetworkEvent);
     this.debuggerClient.addListener("networkEventUpdate",
       this.onNetworkEventUpdate);
   },
 
   stop: function() {
-    this.debuggerClient.removeListener("networkEvent", this.onNetworkEvent);
+    this.debuggerClient.removeListener("serverNetworkEvent", this.onNetworkEvent);
     this.debuggerClient.removeListener("networkEventUpdate",
       this.onNetworkEventUpdate);
   },
