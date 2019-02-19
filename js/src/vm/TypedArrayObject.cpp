@@ -79,7 +79,7 @@ using mozilla::IsAsciiDigit;
 
   AutoRealm ar(cx, tarray);
   Rooted<ArrayBufferObject*> buffer(
-      cx, ArrayBufferObject::create(cx, tarray->byteLength()));
+      cx, ArrayBufferObject::createZeroed(cx, tarray->byteLength()));
   if (!buffer) {
     return false;
   }
@@ -907,7 +907,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     }
 
     ArrayBufferObject* buf =
-        ArrayBufferObject::create(cx, byteLength, nonDefaultProto);
+        ArrayBufferObject::createZeroed(cx, byteLength, nonDefaultProto);
     if (!buf) {
       return false;
     }
