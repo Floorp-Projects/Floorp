@@ -55,6 +55,10 @@ const runtimeDetails = {
   // reflect devtools.debugger.prompt-connection preference of this runtime
   connectionPromptEnabled: PropTypes.bool.isRequired,
 
+  // In case that runtime is this-firefox, reflects devtools.chrome.enabled and
+  // devtools.debugger.remote-enabled preference. Otherwise, this sould be true.
+  extensionDebugEnabled: PropTypes.bool.isRequired,
+
   // runtime information
   info: PropTypes.shape(runtimeInfo).isRequired,
 
