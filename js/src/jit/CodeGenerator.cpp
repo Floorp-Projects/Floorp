@@ -5706,7 +5706,9 @@ void CodeGenerator::emitAssertGCThingResult(Register input, MIRType type,
   }
 
   // Check that we have a valid GC pointer.
-  if (JitOptions.fullDebugChecks) {
+  // Disable for wasm because we don't have a context on wasm compilation threads
+  // and this needs a context.
+  if (JitOptions.fullDebugChecks && !IsCompilingWasm()) {
     saveVolatile();
     masm.setupUnalignedABICall(temp);
     masm.loadJSContext(temp);
@@ -7389,6 +7391,10 @@ void CodeGenerator::visitWasmStoreSlot(LWasmStoreSlot* ins) {
 void CodeGenerator::visitWasmDerivedPointer(LWasmDerivedPointer* ins) {
   masm.movePtr(ToRegister(ins->base()), ToRegister(ins->output()));
   masm.addPtr(Imm32(int32_t(ins->offset())), ToRegister(ins->output()));
+}
+
+void CodeGenerator::visitWasmLoadRef(LWasmLoadRef* lir) {
+  masm.loadPtr(Address(ToRegister(lir->ptr()), 0), ToRegister(lir->output()));
 }
 
 void CodeGenerator::visitWasmStoreRef(LWasmStoreRef* ins) {
@@ -13684,6 +13690,15 @@ void CodeGenerator::visitIonToWasmCall(LIonToWasmCall* lir) {
 }
 void CodeGenerator::visitIonToWasmCallV(LIonToWasmCallV* lir) {
   emitIonToWasmCallBase(lir);
+}
+
+void CodeGenerator::visitWasmNullConstant(LWasmNullConstant* lir) {
+  masm.xorPtr(ToRegister(lir->output()), ToRegister(lir->output()));
+}
+
+void CodeGenerator::visitIsNullPointer(LIsNullPointer* lir) {
+  masm.cmpPtrSet(Assembler::Equal, ToRegister(lir->value()), ImmWord(0),
+                 ToRegister(lir->output()));
 }
 
 static_assert(!std::is_polymorphic<CodeGenerator>::value,
