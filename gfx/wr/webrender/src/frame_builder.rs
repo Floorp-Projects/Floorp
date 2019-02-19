@@ -112,7 +112,7 @@ pub struct FrameBuilder {
 pub struct FrameVisibilityContext<'a> {
     pub clip_scroll_tree: &'a ClipScrollTree,
     pub screen_world_rect: WorldRect,
-    pub device_pixel_scale: DevicePixelScale,
+    pub global_device_pixel_scale: DevicePixelScale,
     pub surfaces: &'a [SurfaceInfo],
     pub debug_flags: DebugFlags,
     pub scene_properties: &'a SceneProperties,
@@ -131,7 +131,7 @@ pub struct FrameVisibilityState<'a> {
 }
 
 pub struct FrameBuildingContext<'a> {
-    pub device_pixel_scale: DevicePixelScale,
+    pub global_device_pixel_scale: DevicePixelScale,
     pub scene_properties: &'a SceneProperties,
     pub pipelines: &'a FastHashMap<PipelineId, Arc<ScenePipeline>>,
     pub screen_world_rect: WorldRect,
@@ -307,7 +307,7 @@ impl FrameBuilder {
         gpu_cache: &mut GpuCache,
         render_tasks: &mut RenderTaskTree,
         profile_counters: &mut FrameProfileCounters,
-        device_pixel_scale: DevicePixelScale,
+        global_device_pixel_scale: DevicePixelScale,
         scene_properties: &SceneProperties,
         transform_palette: &mut TransformPalette,
         data_stores: &mut DataStores,
@@ -328,7 +328,7 @@ impl FrameBuilder {
         const MAX_CLIP_COORD: f32 = 1.0e9;
 
         let frame_context = FrameBuildingContext {
-            device_pixel_scale,
+            global_device_pixel_scale,
             scene_properties,
             pipelines,
             screen_world_rect,
@@ -348,6 +348,7 @@ impl FrameBuilder {
             0.0,
             screen_world_rect,
             clip_scroll_tree,
+            global_device_pixel_scale,
         );
         surfaces.push(root_surface);
 
@@ -377,7 +378,7 @@ impl FrameBuilder {
             profile_marker!("UpdateVisibility");
 
             let visibility_context = FrameVisibilityContext {
-                device_pixel_scale,
+                global_device_pixel_scale,
                 clip_scroll_tree,
                 screen_world_rect,
                 surfaces,
@@ -477,6 +478,7 @@ impl FrameBuilder {
             child_tasks,
             UvRectKind::Rect,
             root_spatial_node_index,
+            global_device_pixel_scale,
         );
 
         let render_task_id = frame_state.render_tasks.add(root_render_task);
@@ -495,7 +497,7 @@ impl FrameBuilder {
         stamp: FrameStamp,
         clip_scroll_tree: &mut ClipScrollTree,
         pipelines: &FastHashMap<PipelineId, Arc<ScenePipeline>>,
-        device_pixel_scale: DevicePixelScale,
+        global_device_pixel_scale: DevicePixelScale,
         layer: DocumentLayer,
         pan: WorldPoint,
         texture_cache_profile: &mut TextureCacheProfileCounters,
@@ -538,7 +540,7 @@ impl FrameBuilder {
         let mut surfaces = Vec::new();
 
         let screen_size = self.screen_rect.size.to_i32();
-        let screen_world_rect = (self.screen_rect.to_f32() / device_pixel_scale).round_out();
+        let screen_world_rect = (self.screen_rect.to_f32() / global_device_pixel_scale).round_out();
 
         let main_render_task_id = self.build_layer_screen_rects_and_cull_layers(
             screen_world_rect,
@@ -548,7 +550,7 @@ impl FrameBuilder {
             gpu_cache,
             &mut render_tasks,
             &mut profile_counters,
-            device_pixel_scale,
+            global_device_pixel_scale,
             scene_properties,
             &mut transform_palette,
             data_stores,
@@ -606,7 +608,7 @@ impl FrameBuilder {
 
             for pass in &mut passes {
                 let mut ctx = RenderTargetContext {
-                    device_pixel_scale,
+                    global_device_pixel_scale,
                     prim_store: &self.prim_store,
                     resource_cache,
                     use_dual_source_blending,
@@ -643,14 +645,13 @@ impl FrameBuilder {
 
         let gpu_cache_frame_id = gpu_cache.end_frame(gpu_cache_profile).frame_id();
 
-        render_tasks.write_task_data(device_pixel_scale);
+        render_tasks.write_task_data();
         *render_task_counters = render_tasks.counters();
         resource_cache.end_frame(texture_cache_profile);
 
         Frame {
             window_size: self.window_size,
             inner_rect: self.screen_rect,
-            device_pixel_ratio: device_pixel_scale.0,
             background_color: self.background_color,
             layer,
             profile_counters,

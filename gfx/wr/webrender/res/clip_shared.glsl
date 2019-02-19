@@ -76,7 +76,7 @@ ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
 
     device_pos -= snap_offset;
 
-    vec2 world_pos = device_pos / area.common_data.device_pixel_scale;
+    vec2 world_pos = device_pos / area.device_pixel_scale;
 
     vec4 pos = prim_transform.m * vec4(world_pos, 0.0, 1.0);
     pos.xyz /= pos.w;
