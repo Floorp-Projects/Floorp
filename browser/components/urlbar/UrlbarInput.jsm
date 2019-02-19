@@ -10,6 +10,7 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
+  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   ExtensionSearchHandler: "resource://gre/modules/ExtensionSearchHandler.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ReaderMode: "resource://gre/modules/ReaderMode.jsm",
@@ -112,7 +113,7 @@ class UrlbarInput {
 
     const inputFieldEvents = [
       "focus", "input", "keyup", "mouseover", "paste", "scrollend", "select",
-      "overflow", "underflow",
+      "overflow", "underflow", "dragstart", "dragover", "drop",
     ];
     for (let name of inputFieldEvents) {
       this.inputField.addEventListener(name, this);
@@ -1037,14 +1038,14 @@ class UrlbarInput {
     }
 
     let oldValue = this.inputField.value;
-    let oldStart = oldValue.substring(0, this.inputField.selectionStart);
+    let oldStart = oldValue.substring(0, this.selectionStart);
     // If there is already non-whitespace content in the URL bar
     // preceding the pasted content, it's not necessary to check
     // protocols used by the pasted content:
     if (oldStart.trim()) {
       return;
     }
-    let oldEnd = oldValue.substring(this.inputField.selectionEnd);
+    let oldEnd = oldValue.substring(this.selectionEnd);
 
     let pasteData = UrlbarUtils.stripUnsafeProtocolOnPaste(originalPasteData);
     if (originalPasteData != pasteData) {
@@ -1056,8 +1057,8 @@ class UrlbarInput {
       this.inputField.value = oldStart + pasteData + oldEnd;
       // Fix up cursor/selection:
       let newCursorPos = oldStart.length + pasteData.length;
-      this.inputField.selectionStart = newCursorPos;
-      this.inputField.selectionEnd = newCursorPos;
+      this.selectionStart = newCursorPos;
+      this.selectionEnd = newCursorPos;
     }
   }
 
@@ -1085,6 +1086,109 @@ class UrlbarInput {
   _on_popuphidden() {
     this.removeAttribute("open");
   }
+
+  _on_dragstart(event) {
+    // Drag only if the gesture starts from the input field.
+    let nodePosition = this.inputField.compareDocumentPosition(event.originalTarget);
+    if (this.inputField != event.originalTarget &&
+        !(nodePosition & Node.DOCUMENT_POSITION_CONTAINED_BY)) {
+      return;
+    }
+
+    // Drag only if the entire value is selected and it's a loaded URI.
+    if (this.selectionStart != 0 ||
+        this.selectionEnd != this.inputField.textLength ||
+        this.getAttribute("pageproxystate") != "valid") {
+      return;
+    }
+
+    let href = this.window.gBrowser.currentURI.displaySpec;
+    let title = this.window.gBrowser.contentTitle || href;
+
+    event.dataTransfer.setData("text/x-moz-url", `${href}\n${title}`);
+    event.dataTransfer.setData("text/unicode", href);
+    event.dataTransfer.setData("text/html", `<a href="${href}">${title}</a>`);
+    event.dataTransfer.effectAllowed = "copyLink";
+    event.stopPropagation();
+  }
+
+  _on_dragover(event) {
+    if (!getDroppableData(event)) {
+      event.dataTransfer.dropEffect = "none";
+    }
+  }
+
+  _on_drop(event) {
+    let droppedItem = getDroppableData(event);
+    if (!droppedItem) {
+      return;
+    }
+    let principal = Services.droppedLinkHandler.getTriggeringPrincipal(event);
+    this.value = droppedItem instanceof URL ? droppedItem.href : droppedItem;
+    this.window.SetPageProxyState("invalid");
+    this.focus();
+    this.handleCommand(null, undefined, undefined, principal);
+    // For safety reasons, in the drop case we don't want to immediately show
+    // the the dropped value, instead we want to keep showing the current page
+    // url until an onLocationChange happens.
+    // See the handling in URLBarSetURI for further details.
+    this.window.gBrowser.userTypedValue = null;
+    this.window.URLBarSetURI(null, true);
+  }
+}
+
+/**
+ * Tries to extract droppable data from a DND event.
+ * @param {Event} event The DND event to examine.
+ * @returns {URL|string|null}
+ *          null if there's a security reason for which we should do nothing.
+ *          A URL object if it's a value we can load.
+ *          A string value otherwise.
+ */
+function getDroppableData(event) {
+  let links;
+  try {
+    links = Services.droppedLinkHandler.dropLinks(event);
+  } catch (ex) {
+    // This is either an unexpected failure or a security exception; in either
+    // case we should always return null.
+    return null;
+  }
+  // The URL bar automatically handles inputs with newline characters,
+  // so we can get away with treating text/x-moz-url flavours as text/plain.
+  if (links.length > 0 && links[0].url) {
+    event.preventDefault();
+    let href = links[0].url;
+    if (UrlbarUtils.stripUnsafeProtocolOnPaste(href) != href) {
+      // We may have stripped an unsafe protocol like javascript: and if so
+      // there's no point in handling a partial drop.
+      event.stopImmediatePropagation();
+      return null;
+    }
+
+    try {
+      // If this throws, urlSecurityCheck would also throw, as that's what it
+      // does with things that don't pass the IO service's newURI constructor
+      // without fixup. It's conceivable we may want to relax this check in
+      // the future (so e.g. www.foo.com gets fixed up), but not right now.
+      let url = new URL(href);
+      // If we succeed, try to pass security checks. If this works, return the
+      // URL object. If the *security checks* fail, return null.
+      try {
+        let principal = Services.droppedLinkHandler.getTriggeringPrincipal(event);
+        BrowserUtils.urlSecurityCheck(url,
+                                      principal,
+                                      Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
+        return url;
+      } catch (ex) {
+        return null;
+      }
+    } catch (ex) {
+      // We couldn't make a URL out of this. Continue on, and return text below.
+    }
+  }
+  // Handle as text.
+  return event.dataTransfer.getData("text/unicode");
 }
 
 /**
