@@ -67,6 +67,15 @@ nsresult HTMLEditor::SetInlinePropertyAsAction(nsAtom& aProperty,
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
+  switch (editActionData.GetEditAction()) {
+    case EditAction::eSetFontFamilyProperty:
+      MOZ_ASSERT(!aValue.IsVoid());
+      // XXX Should we trim unnecessary whitespaces?
+      editActionData.SetData(aValue);
+      break;
+    default:
+      break;
+  }
 
   AutoTransactionBatch treatAsOneTransaction(*this);
 
@@ -104,6 +113,15 @@ HTMLEditor::SetInlineProperty(const nsAString& aProperty,
       HTMLEditUtils::GetEditActionForFormatText(*property, attribute, true));
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
+  }
+  switch (editActionData.GetEditAction()) {
+    case EditAction::eSetFontFamilyProperty:
+      MOZ_ASSERT(!aValue.IsVoid());
+      // XXX Should we trim unnecessary whitespaces?
+      editActionData.SetData(aValue);
+      break;
+    default:
+      break;
   }
   return SetInlinePropertyInternal(*property, attribute, aValue);
 }
@@ -1223,7 +1241,14 @@ nsresult HTMLEditor::RemoveInlinePropertyAsAction(nsAtom& aProperty,
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-
+  switch (editActionData.GetEditAction()) {
+    case EditAction::eRemoveFontFamilyProperty:
+      MOZ_ASSERT(!EmptyString().IsVoid());
+      editActionData.SetData(EmptyString());
+      break;
+    default:
+      break;
+  }
   nsresult rv = RemoveInlinePropertyInternal(&aProperty, aAttribute);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -1243,7 +1268,14 @@ HTMLEditor::RemoveInlineProperty(const nsAString& aProperty,
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-
+  switch (editActionData.GetEditAction()) {
+    case EditAction::eRemoveFontFamilyProperty:
+      MOZ_ASSERT(!EmptyString().IsVoid());
+      editActionData.SetData(EmptyString());
+      break;
+    default:
+      break;
+  }
   return RemoveInlinePropertyInternal(property, attribute);
 }
 
