@@ -1115,6 +1115,9 @@ nsresult TextEditor::ReplaceTextAsAction(
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
+  if (!AsHTMLEditor()) {
+    editActionData.SetData(aString);
+  }
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
 
@@ -2010,6 +2013,7 @@ nsresult TextEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
   if (nsCOMPtr<nsISupportsString> text = do_QueryInterface(genericDataObj)) {
     nsAutoString stuffToPaste;
     text->GetData(stuffToPaste);
+    editActionData.SetData(stuffToPaste);
     if (!stuffToPaste.IsEmpty()) {
       AutoPlaceholderBatch treatAsOneTransaction(*this);
       rv = InsertWithQuotationsAsSubAction(stuffToPaste);
