@@ -2176,7 +2176,7 @@ function BrowserHome(aEvent) {
       aEvent.button == 2) // right-click: do nothing
     return;
 
-  var homePage = HomePage.get();
+  var homePage = HomePage.get(window);
   var where = whereToOpenLink(aEvent, false, true);
   var urls;
   var notifyObservers;
