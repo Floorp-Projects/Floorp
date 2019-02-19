@@ -847,6 +847,11 @@ Instance::tableInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
   return -1;
 }
 
+// The return convention for tableGet() is awkward but avoids a situation where
+// Ion code has to hold a value that may or may not be a pointer to GC'd
+// storage, or where Ion has to pass in a pointer to storage where a return
+// value can be written.
+
 /* static */ void* /* nullptr to signal trap; pointer to table location
                       otherwise */
 Instance::tableGet(Instance* instance, uint32_t index, uint32_t tableIndex) {
