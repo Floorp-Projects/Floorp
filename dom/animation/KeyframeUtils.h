@@ -19,7 +19,7 @@ struct RawServoDeclarationBlock;
 
 namespace mozilla {
 struct AnimationProperty;
-enum class CSSPseudoElementType : uint8_t;
+enum class PseudoStyleType : uint8_t;
 class ErrorResult;
 struct Keyframe;
 struct PropertyStyleAnimationValuePair;

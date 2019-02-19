@@ -71,7 +71,8 @@ nsRect nsFieldSetFrame::VisualBorderRectRelativeToSelf() const {
 
 nsIFrame* nsFieldSetFrame::GetInner() const {
   nsIFrame* last = mFrames.LastChild();
-  if (last && last->Style()->GetPseudo() == nsCSSAnonBoxes::fieldsetContent()) {
+  if (last &&
+      last->Style()->GetPseudoType() == PseudoStyleType::fieldsetContent) {
     return last;
   }
   MOZ_ASSERT(mFrames.LastChild() == mFrames.FirstChild());

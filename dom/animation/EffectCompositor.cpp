@@ -210,7 +210,7 @@ bool FindAnimationsForCompositor(
 }
 
 void EffectCompositor::RequestRestyle(dom::Element* aElement,
-                                      CSSPseudoElementType aPseudoType,
+                                      PseudoStyleType aPseudoType,
                                       RestyleType aRestyleType,
                                       CascadeLevel aCascadeLevel) {
   if (!mPresContext) {
@@ -257,7 +257,7 @@ void EffectCompositor::RequestRestyle(dom::Element* aElement,
 }
 
 void EffectCompositor::PostRestyleForAnimation(dom::Element* aElement,
-                                               CSSPseudoElementType aPseudoType,
+                                               PseudoStyleType aPseudoType,
                                                CascadeLevel aCascadeLevel) {
   if (!mPresContext) {
     return;
@@ -318,20 +318,20 @@ void EffectCompositor::ClearRestyleRequestsFor(Element* aElement) {
 
   auto& elementsToRestyle = mElementsToRestyle[CascadeLevel::Animations];
 
-  CSSPseudoElementType pseudoType = aElement->GetPseudoElementType();
-  if (pseudoType == CSSPseudoElementType::NotPseudo) {
-    PseudoElementHashEntry::KeyType notPseudoKey = {
-        aElement, CSSPseudoElementType::NotPseudo};
-    PseudoElementHashEntry::KeyType beforePseudoKey = {
-        aElement, CSSPseudoElementType::before};
-    PseudoElementHashEntry::KeyType afterPseudoKey = {
-        aElement, CSSPseudoElementType::after};
+  PseudoStyleType pseudoType = aElement->GetPseudoElementType();
+  if (pseudoType == PseudoStyleType::NotPseudo) {
+    PseudoElementHashEntry::KeyType notPseudoKey = {aElement,
+                                                    PseudoStyleType::NotPseudo};
+    PseudoElementHashEntry::KeyType beforePseudoKey = {aElement,
+                                                       PseudoStyleType::before};
+    PseudoElementHashEntry::KeyType afterPseudoKey = {aElement,
+                                                      PseudoStyleType::after};
 
     elementsToRestyle.Remove(notPseudoKey);
     elementsToRestyle.Remove(beforePseudoKey);
     elementsToRestyle.Remove(afterPseudoKey);
-  } else if (pseudoType == CSSPseudoElementType::before ||
-             pseudoType == CSSPseudoElementType::after) {
+  } else if (pseudoType == PseudoStyleType::before ||
+             pseudoType == PseudoStyleType::after) {
     Element* parentElement = aElement->GetParentElement();
     MOZ_ASSERT(parentElement);
     PseudoElementHashEntry::KeyType key = {parentElement, pseudoType};
@@ -339,9 +339,9 @@ void EffectCompositor::ClearRestyleRequestsFor(Element* aElement) {
   }
 }
 
-void EffectCompositor::UpdateEffectProperties(
-    const ComputedStyle* aStyle, Element* aElement,
-    CSSPseudoElementType aPseudoType) {
+void EffectCompositor::UpdateEffectProperties(const ComputedStyle* aStyle,
+                                              Element* aElement,
+                                              PseudoStyleType aPseudoType) {
   EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);
   if (!effectSet) {
     return;
@@ -376,7 +376,7 @@ class EffectCompositeOrderComparator {
 }  // namespace
 
 bool EffectCompositor::GetServoAnimationRule(
-    const dom::Element* aElement, CSSPseudoElementType aPseudoType,
+    const dom::Element* aElement, PseudoStyleType aPseudoType,
     CascadeLevel aCascadeLevel,
     RawServoAnimationValueMapBorrowedMut aAnimationValues) {
   MOZ_ASSERT(aAnimationValues);
@@ -417,16 +417,16 @@ bool EffectCompositor::GetServoAnimationRule(
 }
 
 /* static */ dom::Element* EffectCompositor::GetElementToRestyle(
-    dom::Element* aElement, CSSPseudoElementType aPseudoType) {
-  if (aPseudoType == CSSPseudoElementType::NotPseudo) {
+    dom::Element* aElement, PseudoStyleType aPseudoType) {
+  if (aPseudoType == PseudoStyleType::NotPseudo) {
     return aElement;
   }
 
-  if (aPseudoType == CSSPseudoElementType::before) {
+  if (aPseudoType == PseudoStyleType::before) {
     return nsLayoutUtils::GetBeforePseudo(aElement);
   }
 
-  if (aPseudoType == CSSPseudoElementType::after) {
+  if (aPseudoType == PseudoStyleType::after) {
     return nsLayoutUtils::GetAfterPseudo(aElement);
   }
 
@@ -479,7 +479,7 @@ EffectCompositor::GetAnimationsForCompositor(const nsIFrame* aFrame,
 }
 
 /* static */ void EffectCompositor::MaybeUpdateCascadeResults(
-    Element* aElement, CSSPseudoElementType aPseudoType) {
+    Element* aElement, PseudoStyleType aPseudoType) {
   EffectSet* effects = EffectSet::GetEffectSet(aElement, aPseudoType);
   if (!effects || !effects->CascadeNeedsUpdate()) {
     return;
@@ -495,11 +495,11 @@ EffectCompositor::GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame) {
   // Always return the same object to benefit from return-value optimization.
   Maybe<NonOwningAnimationTarget> result;
 
-  CSSPseudoElementType pseudoType = aFrame->Style()->GetPseudoType();
+  PseudoStyleType pseudoType = aFrame->Style()->GetPseudoType();
 
-  if (pseudoType != CSSPseudoElementType::NotPseudo &&
-      pseudoType != CSSPseudoElementType::before &&
-      pseudoType != CSSPseudoElementType::after) {
+  if (pseudoType != PseudoStyleType::NotPseudo &&
+      pseudoType != PseudoStyleType::before &&
+      pseudoType != PseudoStyleType::after) {
     return result;
   }
 
@@ -508,8 +508,8 @@ EffectCompositor::GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame) {
     return result;
   }
 
-  if (pseudoType == CSSPseudoElementType::before ||
-      pseudoType == CSSPseudoElementType::after) {
+  if (pseudoType == PseudoStyleType::before ||
+      pseudoType == PseudoStyleType::after) {
     content = content->GetParent();
     if (!content) {
       return result;
@@ -526,8 +526,7 @@ EffectCompositor::GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame) {
 }
 
 /* static */ nsCSSPropertyIDSet EffectCompositor::GetOverriddenProperties(
-    EffectSet& aEffectSet, Element* aElement,
-    CSSPseudoElementType aPseudoType) {
+    EffectSet& aEffectSet, Element* aElement, PseudoStyleType aPseudoType) {
   MOZ_ASSERT(aElement, "Should have an element to get style data from");
 
   nsCSSPropertyIDSet result;
@@ -569,8 +568,7 @@ EffectCompositor::GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame) {
 }
 
 /* static */ void EffectCompositor::UpdateCascadeResults(
-    EffectSet& aEffectSet, Element* aElement,
-    CSSPseudoElementType aPseudoType) {
+    EffectSet& aEffectSet, Element* aElement, PseudoStyleType aPseudoType) {
   MOZ_ASSERT(EffectSet::GetEffectSet(aElement, aPseudoType) == &aEffectSet,
              "Effect set should correspond to the specified (pseudo-)element");
   if (aEffectSet.IsEmpty()) {
@@ -828,7 +826,7 @@ bool EffectCompositor::PreTraverseInSubtree(ServoTraversalFlags aFlags,
 }
 
 bool EffectCompositor::PreTraverse(dom::Element* aElement,
-                                   CSSPseudoElementType aPseudoType) {
+                                   PseudoStyleType aPseudoType) {
   MOZ_ASSERT(NS_IsMainThread());
 
   // If |aElement|'s document does not have a pres shell, e.g. it is document
@@ -839,9 +837,9 @@ bool EffectCompositor::PreTraverse(dom::Element* aElement,
   }
 
   bool found = false;
-  if (aPseudoType != CSSPseudoElementType::NotPseudo &&
-      aPseudoType != CSSPseudoElementType::before &&
-      aPseudoType != CSSPseudoElementType::after) {
+  if (aPseudoType != PseudoStyleType::NotPseudo &&
+      aPseudoType != PseudoStyleType::before &&
+      aPseudoType != PseudoStyleType::after) {
     return found;
   }
 

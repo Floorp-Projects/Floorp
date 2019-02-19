@@ -675,7 +675,7 @@ bool SMILAnimationController::PreTraverseInSubtree(Element* aRoot) {
     }
 
     context->RestyleManager()->PostRestyleEventForAnimations(
-        key.mElement, CSSPseudoElementType::NotPseudo,
+        key.mElement, PseudoStyleType::NotPseudo,
         eRestyle_StyleAttribute_Animations);
 
     foundElementsNeedingRestyle = true;

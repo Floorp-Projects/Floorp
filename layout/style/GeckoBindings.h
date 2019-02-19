@@ -32,7 +32,7 @@ class ServoElementSnapshot;
 class ServoElementSnapshotTable;
 class SharedFontList;
 class StyleSheet;
-enum class CSSPseudoElementType : uint8_t;
+enum class PseudoStyleType : uint8_t;
 enum class PointerCapabilities : uint8_t;
 enum class UpdateAnimationsTasks : uint8_t;
 struct FontFamilyName;
@@ -89,8 +89,7 @@ void Gecko_DestroyAnonymousContentList(nsTArray<nsIContent*>* anon_content);
 
 void Gecko_ComputedStyle_Init(mozilla::ComputedStyle* context,
                               ServoComputedDataBorrowed values,
-                              mozilla::CSSPseudoElementType pseudo_type,
-                              nsAtom* pseudo_tag);
+                              mozilla::PseudoStyleType pseudo_type);
 
 void Gecko_ComputedStyle_Destroy(mozilla::ComputedStyle* context);
 
@@ -385,7 +384,7 @@ bool Gecko_AnimationNameMayBeReferencedFromStyle(
     RawGeckoPresContextBorrowed pres_context, nsAtom* name);
 
 // Incremental restyle.
-mozilla::CSSPseudoElementType Gecko_GetImplementedPseudo(
+mozilla::PseudoStyleType Gecko_GetImplementedPseudo(
     RawGeckoElementBorrowed element);
 
 // We'd like to return `nsChangeHint` here, but bindgen bitfield enums don't

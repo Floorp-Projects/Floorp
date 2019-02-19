@@ -79,6 +79,15 @@ ComputedStyle* nsTreeStyleCache::GetComputedStyle(
     // pokes at list-style-image.
     newResult->StartImageLoads(*aPresContext->Document());
 
+    // Even though xul-tree pseudos are defined in nsCSSAnonBoxList, nothing has
+    // ever treated them as an anon box, and they don't ever get boxes anyway.
+    //
+    // This is really weird, and probably nothing really relies on the result of
+    // these assert, but it's here just to avoid changing them accidentally.
+    MOZ_ASSERT(newResult->GetPseudoType() == PseudoStyleType::XULTree);
+    MOZ_ASSERT(!newResult->IsAnonBox());
+    MOZ_ASSERT(!newResult->IsPseudoElement());
+
     // Put the ComputedStyle in our table, transferring the owning reference to
     // the table.
     if (!mCache) {

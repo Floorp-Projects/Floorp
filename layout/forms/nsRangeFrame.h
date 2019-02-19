@@ -33,7 +33,7 @@ class nsRangeFrame final : public nsContainerFrame,
   explicit nsRangeFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
   virtual ~nsRangeFrame();
 
-  typedef mozilla::CSSPseudoElementType CSSPseudoElementType;
+  typedef mozilla::PseudoStyleType PseudoStyleType;
   typedef mozilla::dom::Element Element;
 
  public:
@@ -147,7 +147,7 @@ class nsRangeFrame final : public nsContainerFrame,
   // to the direction of movement of the thumb).
   nscoord AutoCrossSize(nscoord aEm);
 
-  nsresult MakeAnonymousDiv(Element** aResult, CSSPseudoElementType aPseudoType,
+  nsresult MakeAnonymousDiv(Element** aResult, PseudoStyleType aPseudoType,
                             nsTArray<ContentInfo>& aElements);
 
   // Helper function which reflows the anonymous div frames.

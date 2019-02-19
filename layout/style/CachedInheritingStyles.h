@@ -15,6 +15,7 @@ class nsWindowSizes;
 
 namespace mozilla {
 
+enum class PseudoStyleType : uint8_t;
 class ComputedStyle;
 
 // Cache of anonymous box and lazy pseudo styles that inherit from a given
@@ -27,7 +28,7 @@ class ComputedStyle;
 class CachedInheritingStyles {
  public:
   void Insert(ComputedStyle* aStyle);
-  ComputedStyle* Lookup(nsAtom* aPseudoTag) const;
+  ComputedStyle* Lookup(PseudoStyleType) const;
 
   CachedInheritingStyles() : mBits(0) {}
   ~CachedInheritingStyles() {

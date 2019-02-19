@@ -146,7 +146,7 @@ class ServoStyleSet {
   // contexts for such content nodes, when text-combine-upright is not
   // present.  However, not doing any rule matching for them is a first step.)
   already_AddRefed<ComputedStyle> ResolveStyleForText(
-      nsIContent* aTextNode, ComputedStyle* aParentContext);
+      nsIContent* aTextNode, ComputedStyle* aParentStyle);
 
   // Get a ComputedStyle for a first-letter continuation (which no rules will
   // match).
@@ -159,7 +159,7 @@ class ServoStyleSet {
   // any rule matching for them is a first step.  And right now we do use this
   // ComputedStyle for some things)
   already_AddRefed<ComputedStyle> ResolveStyleForFirstLetterContinuation(
-      ComputedStyle* aParentContext);
+      ComputedStyle* aParentStyle);
 
   // Get a ComputedStyle for a placeholder frame (which no rules will match).
   //
@@ -172,38 +172,36 @@ class ServoStyleSet {
   already_AddRefed<ComputedStyle> ResolveStyleForPlaceholder();
 
   // Get a ComputedStyle for a pseudo-element.  aParentElement must be
-  // non-null.  aPseudoID is the CSSPseudoElementType for the
+  // non-null.  aPseudoID is the PseudoStyleType for the
   // pseudo-element.  aPseudoElement must be non-null if the pseudo-element
   // type is one that allows user action pseudo-classes after it or allows
   // style attributes; otherwise, it is ignored.
   already_AddRefed<ComputedStyle> ResolvePseudoElementStyle(
-      dom::Element* aOriginatingElement, CSSPseudoElementType aType,
-      ComputedStyle* aParentContext, dom::Element* aPseudoElement);
+      dom::Element* aOriginatingElement, PseudoStyleType aType,
+      ComputedStyle* aParentStyle, dom::Element* aPseudoElement);
 
   // Resolves style for a (possibly-pseudo) Element without assuming that the
   // style has been resolved. If the element was unstyled and a new style
   // context was resolved, it is not stored in the DOM. (That is, the element
   // remains unstyled.)
   already_AddRefed<ComputedStyle> ResolveStyleLazily(
-      dom::Element* aElement, CSSPseudoElementType aPseudoType,
+      dom::Element* aElement, PseudoStyleType,
       StyleRuleInclusion aRules = StyleRuleInclusion::All);
 
-  // Get a ComputedStyle for an anonymous box.  aPseudoTag is the pseudo-tag to
-  // use and must be non-null.  It must be an anon box, and must be one that
-  // inherits style from the given aParentContext.
+  // Get a ComputedStyle for an anonymous box. The pseudo type must be an
+  // inheriting anon box.
   already_AddRefed<ComputedStyle> ResolveInheritingAnonymousBoxStyle(
-      nsAtom* aPseudoTag, ComputedStyle* aParentContext);
+      PseudoStyleType, ComputedStyle* aParentStyle);
 
-  // Get a ComputedStyle for an anonymous box that does not inherit style from
-  // anything.  aPseudoTag is the pseudo-tag to use and must be non-null.  It
-  // must be an anon box, and must be a non-inheriting one.
+  // Get a ComputedStyle for an anonymous box. The pseudo type must be
+  // a non-inheriting anon box.
   already_AddRefed<ComputedStyle> ResolveNonInheritingAnonymousBoxStyle(
-      nsAtom* aPseudoTag);
+      PseudoStyleType);
 
 #ifdef MOZ_XUL
   already_AddRefed<ComputedStyle> ResolveXULTreePseudoStyle(
       dom::Element* aParentElement, nsCSSAnonBoxPseudoStaticAtom* aPseudoTag,
-      ComputedStyle* aParentContext, const AtomArray& aInputWord);
+      ComputedStyle* aParentStyle, const AtomArray& aInputWord);
 #endif
 
   // manage the set of style sheets in the style set
@@ -231,7 +229,7 @@ class ServoStyleSet {
 
   // check whether there is ::before/::after style for an element
   already_AddRefed<ComputedStyle> ProbePseudoElementStyle(
-      const dom::Element& aOriginatingElement, CSSPseudoElementType aType,
+      const dom::Element& aOriginatingElement, PseudoStyleType aType,
       ComputedStyle* aParentStyle);
 
   /**
@@ -494,7 +492,7 @@ class ServoStyleSet {
   void UpdateStylist();
 
   already_AddRefed<ComputedStyle> ResolveStyleLazilyInternal(
-      dom::Element* aElement, CSSPseudoElementType aPseudoType,
+      dom::Element* aElement, PseudoStyleType aPseudoType,
       StyleRuleInclusion aRules = StyleRuleInclusion::All);
 
   void RunPostTraversalTasks();
