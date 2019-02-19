@@ -64,8 +64,8 @@ nsIconProtocolHandler::NewURI(const nsACString& aSpec,
 }
 
 NS_IMETHODIMP
-nsIconProtocolHandler::NewChannel2(nsIURI* url, nsILoadInfo* aLoadInfo,
-                                   nsIChannel** result) {
+nsIconProtocolHandler::NewChannel(nsIURI* url, nsILoadInfo* aLoadInfo,
+                                  nsIChannel** result) {
   NS_ENSURE_ARG_POINTER(url);
   nsIconChannel* channel = new nsIconChannel;
   if (!channel) {
@@ -88,11 +88,6 @@ nsIconProtocolHandler::NewChannel2(nsIURI* url, nsILoadInfo* aLoadInfo,
 
   *result = channel;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIconProtocolHandler::NewChannel(nsIURI* url, nsIChannel** result) {
-  return NewChannel2(url, nullptr, result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

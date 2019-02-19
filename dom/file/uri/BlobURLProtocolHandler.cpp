@@ -765,8 +765,8 @@ BlobURLProtocolHandler::NewURI(const nsACString& aSpec, const char* aCharset,
 }
 
 NS_IMETHODIMP
-BlobURLProtocolHandler::NewChannel2(nsIURI* aURI, nsILoadInfo* aLoadInfo,
-                                    nsIChannel** aResult) {
+BlobURLProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
+                                   nsIChannel** aResult) {
   RefPtr<BlobURLChannel> channel = new BlobURLChannel(aURI, aLoadInfo);
 
   auto raii = MakeScopeExit([&] {
@@ -812,11 +812,6 @@ BlobURLProtocolHandler::NewChannel2(nsIURI* aURI, nsILoadInfo* aLoadInfo,
   channel->Initialize(info->mBlobImpl);
   channel.forget(aResult);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-BlobURLProtocolHandler::NewChannel(nsIURI* uri, nsIChannel** result) {
-  return NewChannel2(uri, nullptr, result);
 }
 
 NS_IMETHODIMP
