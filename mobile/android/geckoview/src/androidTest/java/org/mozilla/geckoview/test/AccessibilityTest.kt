@@ -229,7 +229,7 @@ class AccessibilityTest : BaseSessionTest() {
     }
 
     @Test fun testTextEntryNode() {
-        sessionRule.session.loadString("<input aria-label='Name' value='Tobias'>", "text/html")
+        sessionRule.session.loadString("<input aria-label='Name' aria-describedby='desc' value='Tobias'><div id='desc'>description</div>", "text/html")
         waitForInitialFocus()
 
         mainSession.evaluateJS("$('input').focus()")
@@ -244,7 +244,7 @@ class AccessibilityTest : BaseSessionTest() {
                 if (Build.VERSION.SDK_INT >= 19) {
                     assertThat("Hint has field name",
                             node.extras.getString("AccessibilityNodeInfo.hint"),
-                            equalTo("Name"))
+                            equalTo("Name description"))
                 }
             }
         })
@@ -514,7 +514,7 @@ class AccessibilityTest : BaseSessionTest() {
 
     @Test fun testCheckbox() {
         var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID;
-        sessionRule.session.loadString("<label><input type='checkbox'>many option</label>", "text/html")
+        sessionRule.session.loadString("<label><input type='checkbox' aria-describedby='desc'>many option</label><div id='desc'>description</div>", "text/html")
         waitForInitialFocus(true)
 
         sessionRule.waitUntilCalled(object : EventDelegate {
@@ -527,6 +527,9 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat("Checkbox node is focusable", node.isFocusable, equalTo(true))
                 assertThat("Checkbox node is not checked", node.isChecked, equalTo(false))
                 assertThat("Checkbox node has correct role", node.text.toString(), equalTo("many option"))
+                assertThat("Hint has description", node.extras.getString("AccessibilityNodeInfo.hint"),
+                        equalTo("description"))
+
             }
         })
 
