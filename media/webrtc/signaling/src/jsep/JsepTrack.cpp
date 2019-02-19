@@ -184,9 +184,6 @@ void JsepTrack::AddToMsection(
     } else {
       for (const std::string& streamId : mStreamIds) {
         msection->AddMsid(streamId, encodeTrackId ? mTrackId : "");
-        // TODO(bug 1402912) Interop hack; older Firefox barfs if there is more
-        // than one msid. Remove when safe.
-        break;
       }
     }
   }
