@@ -445,7 +445,7 @@ static ArrayBufferObject::BufferContents AllocateArrayBufferContents(
     JSContext* cx, uint32_t nbytes) {
   uint8_t* p =
       cx->pod_callocCanGC<uint8_t>(nbytes, js::ArrayBufferContentsArena);
-  return ArrayBufferObject::BufferContents::createPlainData(p);
+  return ArrayBufferObject::BufferContents::createMalloced(p);
 }
 
 static void NoteViewBufferWasDetached(
@@ -922,7 +922,16 @@ bool js::CreateWasmBuffer(JSContext* cx, const wasm::Limits& memory,
 // will recompile as non-asm.js.
 /* static */ bool ArrayBufferObject::prepareForAsmJS(
     JSContext* cx, Handle<ArrayBufferObject*> buffer) {
-  MOZ_ASSERT(buffer->byteLength() % wasm::PageSize == 0);
+  MOZ_ASSERT(buffer->byteLength() % wasm::PageSize == 0,
+             "prior size checking should have guaranteed page-size multiple");
+  MOZ_ASSERT(buffer->byteLength() > 0,
+             "prior size checking should have excluded empty buffers");
+
+  static_assert(wasm::PageSize > MaxInlineBytes,
+                "inline data must be too small to be a page size multiple");
+  MOZ_ASSERT(!buffer->isInlineData(),
+             "inline-data buffers are implicitly excluded by size checks");
+
   // Don't assert cx->wasmHaveSignalHandlers because (1) they aren't needed
   // for asm.js, (2) they are only installed for WebAssembly, not asm.js.
 
@@ -943,7 +952,7 @@ bool js::CreateWasmBuffer(JSContext* cx, const wasm::Limits& memory,
     return false;
   }
 
-  MOZ_ASSERT(buffer->isPlainData() || buffer->isMapped() ||
+  MOZ_ASSERT(buffer->isMalloced() || buffer->isMapped() ||
              buffer->isExternal());
 
   // Buffers already prepared for asm.js need no further work.
@@ -993,7 +1002,10 @@ void ArrayBufferObject::releaseData(FreeOp* fop) {
   MOZ_ASSERT(ownsData());
 
   switch (bufferKind()) {
-    case PLAIN_DATA:
+    case INLINE_DATA:
+      MOZ_ASSERT_UNREACHABLE("inline data should never be owned");
+      break;
+    case MALLOCED:
       fop->free_(dataPointer());
       break;
     case USER_OWNED:
@@ -1017,7 +1029,6 @@ void ArrayBufferObject::releaseData(FreeOp* fop) {
       break;
     case BAD1:
     case BAD2:
-    case BAD3:
       MOZ_CRASH("invalid BufferKind encountered");
       break;
   }
@@ -1139,7 +1150,7 @@ Maybe<uint32_t> js::WasmArrayBufferMaxSize(
 
   memcpy(newBuf->dataPointer(), oldBuf->dataPointer(), oldBuf->byteLength());
   ArrayBufferObject::detach(cx, oldBuf,
-                            BufferContents::createPlainData(nullptr));
+                            BufferContents::createMalloced(nullptr));
   return true;
 }
 
@@ -1218,12 +1229,11 @@ ArrayBufferObject* ArrayBufferObject::create(
     }
   } else {
     MOZ_ASSERT(ownsState == OwnsData);
-    size_t usableSlots = NativeObject::MAX_FIXED_SLOTS - reservedSlots;
-    if (nbytes <= usableSlots * sizeof(Value)) {
+    if (nbytes <= MaxInlineBytes) {
       int newSlots = JS_HOWMANY(nbytes, sizeof(Value));
       MOZ_ASSERT(int(nbytes) <= newSlots * int(sizeof(Value)));
       nslots = reservedSlots + newSlots;
-      contents = BufferContents::createPlainData(nullptr);
+      contents = BufferContents::createInlineData(nullptr);
     } else {
       contents = AllocateArrayBufferContents(cx, nbytes);
       if (!contents) {
@@ -1251,9 +1261,10 @@ ArrayBufferObject* ArrayBufferObject::create(
   MOZ_ASSERT(!gc::IsInsideNursery(obj));
 
   if (!contents) {
+    MOZ_ASSERT(contents.kind() == ArrayBufferObject::INLINE_DATA);
     void* data = obj->inlineDataPointer();
     memset(data, 0, nbytes);
-    obj->initialize(nbytes, BufferContents::createPlainData(data),
+    obj->initialize(nbytes, BufferContents::createInlineData(data),
                     DoesntOwnData);
   } else {
     obj->initialize(nbytes, contents, ownsState);
@@ -1264,7 +1275,10 @@ ArrayBufferObject* ArrayBufferObject::create(
 
 ArrayBufferObject* ArrayBufferObject::create(
     JSContext* cx, uint32_t nbytes, HandleObject proto /* = nullptr */) {
-  return create(cx, nbytes, BufferContents::createPlainData(nullptr),
+  // The contents supplied here are not used other than for a nullity-check, so
+  // the choice to pass |createMalloced()| contents is arbitrary.  (Hopefully
+  // in time we can eliminate this internal wart.)
+  return create(cx, nbytes, BufferContents::createMalloced(nullptr),
                 OwnsState::OwnsData, proto);
 }
 
@@ -1278,7 +1292,7 @@ ArrayBufferObject* ArrayBufferObject::createEmpty(JSContext* cx) {
   obj->setByteLength(0);
   obj->setFlags(0);
   obj->setFirstView(nullptr);
-  obj->setDataPointer(BufferContents::createPlainData(nullptr), DoesntOwnData);
+  obj->setDataPointer(BufferContents::createMalloced(nullptr), DoesntOwnData);
 
   return obj;
 }
@@ -1308,8 +1322,9 @@ ArrayBufferObject* ArrayBufferObject::createFromNewRawBuffer(
 ArrayBufferObject::externalizeContents(JSContext* cx,
                                        Handle<ArrayBufferObject*> buffer,
                                        bool hasStealableContents) {
-  MOZ_ASSERT(buffer->isPlainData(),
-             "only support doing this on ABOs containing plain data");
+  MOZ_ASSERT(buffer->isInlineData() || buffer->isMalloced(),
+             "only support doing this on ABOs containing inline or malloced "
+             "data");
   MOZ_ASSERT(!buffer->isDetached(), "must have contents to externalize");
   MOZ_ASSERT_IF(hasStealableContents, buffer->hasStealableContents());
 
@@ -1348,7 +1363,7 @@ ArrayBufferObject::externalizeContents(JSContext* cx,
   if (hasStealableContents) {
     // Return the old contents and reset the detached buffer's data
     // pointer. This pointer should never be accessed.
-    auto newContents = BufferContents::createPlainData(nullptr);
+    auto newContents = BufferContents::createMalloced(nullptr);
     buffer->setOwnsData(DoesntOwnData);  // Do not free the stolen data.
     ArrayBufferObject::detach(cx, buffer, newContents);
     buffer->setOwnsData(DoesntOwnData);  // Do not free the nullptr.
@@ -1379,7 +1394,11 @@ ArrayBufferObject::externalizeContents(JSContext* cx,
   }
 
   switch (buffer.bufferKind()) {
-    case PLAIN_DATA:
+    case INLINE_DATA:
+      MOZ_ASSERT_UNREACHABLE("inline data should never be owned and should be "
+                             "accounted for in |this|'s memory");
+      break;
+    case MALLOCED:
       if (buffer.isPreparedForAsmJS()) {
         info->objectsMallocHeapElementsAsmJS +=
             mallocSizeOf(buffer.dataPointer());
@@ -1406,7 +1425,6 @@ ArrayBufferObject::externalizeContents(JSContext* cx,
       break;
     case BAD1:
     case BAD2:
-    case BAD3:
       MOZ_CRASH("bad bufferKind()");
   }
 }
@@ -1643,7 +1661,7 @@ JS_FRIEND_API bool JS_DetachArrayBuffer(JSContext* cx, HandleObject obj) {
 
   ArrayBufferObject::BufferContents newContents =
       buffer->hasStealableContents()
-          ? ArrayBufferObject::BufferContents::createPlainData(nullptr)
+          ? ArrayBufferObject::BufferContents::createMalloced(nullptr)
           : buffer->contents();
 
   ArrayBufferObject::detach(cx, buffer, newContents);
@@ -1676,7 +1694,7 @@ JS_PUBLIC_API JSObject* JS_NewArrayBufferWithContents(JSContext* cx,
 
   using BufferContents = ArrayBufferObject::BufferContents;
 
-  BufferContents contents = BufferContents::createPlainData(data);
+  BufferContents contents = BufferContents::createMalloced(data);
   return ArrayBufferObject::create(cx, nbytes, contents,
                                    ArrayBufferObject::OwnsData,
                                    /* proto = */ nullptr, TenuredObject);
@@ -1743,9 +1761,24 @@ JS_PUBLIC_API void* JS_ExternalizeArrayBufferContents(JSContext* cx,
   }
 
   Handle<ArrayBufferObject*> buffer = obj.as<ArrayBufferObject>();
-  if (!buffer->isPlainData()) {
-    // This operation isn't supported on mapped or wasm ArrayBufferObjects, or
-    // on ArrayBufferObjects with user-provided data.
+  if (!buffer->isMalloced() && !buffer->isInlineData()) {
+    // This operation is supported only for malloced or inline data, because
+    // this function is documented to return only JS_free-able memory.
+    //
+    // Mapped and wasm ArrayBufferObjects' memory is not so allocated, and we
+    // can't blithely allocate a copy of the data and swap it into |buffer|
+    // because JIT code may hold pointers into the mapped/wasm data.
+    //
+    // We also don't support replacing user-provided data (with malloced data)
+    // because such ArrayBuffers must be passed to JS_DetachArrayBuffer before
+    // the associated memory is freed, and that call is guaranteed to succeed
+    // -- but malloced data can be used with asm.js, and JS_DetachArrayBuffer
+    // will fail on an ArrayBuffer used with asm.js.
+    //
+    // These restrictions are very hoary.  Possibly, in a future where
+    // ArrayBuffer's contents are not represented so trickily, we might want to
+    // relax them -- maybe by returning something that has the ability to
+    // release the returned memory.
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TYPED_ARRAY_BAD_ARGS);
     return nullptr;
@@ -1757,9 +1790,6 @@ JS_PUBLIC_API void* JS_ExternalizeArrayBufferContents(JSContext* cx,
   }
 
   // The caller assumes that a plain malloc'd buffer is returned.
-  // hasStealableContents is true for mapped buffers, so we must additionally
-  // require that the buffer is plain. In the future, we could consider
-  // returning something that handles releasing the memory.
   bool hasStealableContents = buffer->hasStealableContents();
 
   return ArrayBufferObject::externalizeContents(cx, buffer,
@@ -1800,14 +1830,16 @@ JS_PUBLIC_API void* JS_StealArrayBufferContents(JSContext* cx,
 
   // The caller assumes that a plain malloc'd buffer is returned.  To steal
   // actual contents, then, we must have |hasStealableContents()| *and* the
-  // contents must be |isPlainData()|.  (Mapped data would not be malloc'd;
+  // contents must be |isMalloced()|.  (Mapped data would not be malloc'd;
   // user-provided data we flat-out know nothing about at all -- although it
-  // *should* have not passed the |hasStealableContents()| check anyway.)
+  // *should* have not passed the |hasStealableContents()| check anyway; inline
+  // data would not be malloc'd *and* shouldn't pass |hasStealableContents()|
+  // either.)
   //
   // In the future, we could consider returning something that handles
   // releasing the memory, in the mapped-data case.
   bool hasStealableContents =
-      buffer->hasStealableContents() && buffer->isPlainData();
+      buffer->hasStealableContents() && buffer->isMalloced();
 
   AutoRealm ar(cx, buffer);
   return ArrayBufferObject::stealContents(cx, buffer, hasStealableContents)
