@@ -430,11 +430,14 @@ class UrlbarInput {
 
     let searchString = this.textValue;
 
-    // If the user has deleted text at the end of the input since the last
-    // query, then we don't want to autofill because doing so would autofill the
-    // very text the user just deleted.
+    // We should autofill only when all of the following are true:
+    // * The pref is enabled.
+    // * The end of the selection is at the end of the input.
+    // * The user hasn't deleted text at the end of the input since the last
+    //   query.  Do a simple prefix comparison to guess whether that happened.
     let enableAutofill =
       UrlbarPrefs.get("autoFill") &&
+      this.selectionEnd == searchString.length &&
       (!this._lastSearchString ||
        !this._lastSearchString.startsWith(searchString));
     this._lastSearchString = searchString;
