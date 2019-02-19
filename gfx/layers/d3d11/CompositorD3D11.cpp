@@ -50,6 +50,7 @@ const FLOAT sBlendFactor[] = {0, 0, 0, 0};
 CompositorD3D11::CompositorD3D11(CompositorBridgeParent* aParent,
                                  widget::CompositorWidget* aWidget)
     : Compositor(aWidget, aParent),
+      mWindowRTCopy(nullptr),
       mAttachments(nullptr),
       mHwnd(nullptr),
       mDisableSequenceForNextFrame(false),
@@ -395,6 +396,55 @@ CompositorD3D11::CreateRenderTargetFromSource(
   rt->SetSize(aRect.Size());
 
   return rt.forget();
+}
+
+already_AddRefed<CompositingRenderTarget>
+CompositorD3D11::GetWindowRenderTarget() const {
+#ifndef MOZ_GECKO_PROFILER
+  return nullptr;
+#else
+  if (!profiler_feature_active(ProfilerFeature::Screenshots)) {
+    return nullptr;
+  }
+
+  if (!mDefaultRT) {
+    return nullptr;
+  }
+
+  const IntSize size = mDefaultRT->GetSize();
+
+  RefPtr<ID3D11Texture2D> rtTexture;
+
+  if (!mWindowRTCopy || mWindowRTCopy->GetSize() != size) {
+    /*
+     * The compositor screenshots infrastructure is going to scale down the
+     * render target returned by this method. However, mDefaultRT does not
+     * contain a texture created wth the D3D11_BIND_SHADER_RESOURCE flag, so if
+     * we were to simply return mDefaultRT then scaling would fail.
+     */
+    CD3D11_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, size.width,
+                               size.height, 1, 1, D3D11_BIND_SHADER_RESOURCE);
+
+    HRESULT hr =
+        mDevice->CreateTexture2D(&desc, nullptr, getter_AddRefs(rtTexture));
+    if (FAILED(hr)) {
+      return nullptr;
+    }
+
+    mWindowRTCopy = MakeRefPtr<CompositingRenderTargetD3D11>(
+        rtTexture, IntPoint(0, 0), DXGI_FORMAT_B8G8R8A8_UNORM);
+    mWindowRTCopy->SetSize(size);
+  } else {
+    rtTexture = mWindowRTCopy->GetD3D11Texture();
+  }
+
+  const RefPtr<ID3D11Texture2D> sourceTexture = mDefaultRT->GetD3D11Texture();
+  mContext->CopyResource(rtTexture, sourceTexture);
+
+  return RefPtr<CompositingRenderTarget>(
+             static_cast<CompositingRenderTarget*>(mWindowRTCopy))
+      .forget();
+#endif
 }
 
 bool CompositorD3D11::CopyBackdrop(const gfx::IntRect& aRect,
@@ -1050,6 +1100,10 @@ void CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
 void CompositorD3D11::NormalDrawingDone() { mDiagnostics->End(); }
 
 void CompositorD3D11::EndFrame() {
+  if (!profiler_feature_active(ProfilerFeature::Screenshots) && mWindowRTCopy) {
+    mWindowRTCopy = nullptr;
+  }
+
   if (!mDefaultRT) {
     Compositor::EndFrame();
     return;
@@ -1281,6 +1335,7 @@ bool CompositorD3D11::VerifyBufferSize() {
     if (mCurrentRT == mDefaultRT) {
       mCurrentRT = nullptr;
     }
+
     MOZ_ASSERT(mDefaultRT->hasOneRef());
     mDefaultRT = nullptr;
 
