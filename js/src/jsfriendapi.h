@@ -1805,8 +1805,8 @@ extern JS_FRIEND_API uint32_t JS_GetArrayBufferByteLength(JSObject* obj);
 extern JS_FRIEND_API uint32_t JS_GetSharedArrayBufferByteLength(JSObject* obj);
 
 /**
- * Return true if the arrayBuffer contains any data. This will return false for
- * ArrayBuffer.prototype and detached ArrayBuffers.
+ * Return true if the ArrayBuffer |obj| contains any data, i.e. it is not a
+ * detached ArrayBuffer.  (ArrayBuffer.prototype is not an ArrayBuffer.)
  *
  * |obj| must have passed a JS_IsArrayBufferObject test, or somehow be known
  * that it would pass such a test: it is an ArrayBuffer or a wrapper of an
