@@ -25,17 +25,15 @@ function startTest()
 function onAttach(aState, aResponse)
 {
   onConsoleCall = onConsoleCall.bind(null, aState);
-  aState.dbgClient.addListener("consoleAPICall", onConsoleCall);
+  aState.client.on("consoleAPICall", onConsoleCall);
 
   let docAsProto = Object.create(document);
 
   top.console.log("hello", docAsProto);
 }
 
-function onConsoleCall(aState, aType, aPacket)
+function onConsoleCall(aState, aPacket)
 {
-  is(aPacket.from, aState.actor, "console API call actor");
-
   info("checking the console API call packet");
 
   checkConsoleAPICall(aPacket.message, {
@@ -48,7 +46,7 @@ function onConsoleCall(aState, aType, aPacket)
     }],
   });
 
-  aState.dbgClient.removeListener("consoleAPICall", onConsoleCall);
+  aState.client.off("consoleAPICall", onConsoleCall);
 
   info("inspecting object properties");
   let args = aPacket.message.arguments;

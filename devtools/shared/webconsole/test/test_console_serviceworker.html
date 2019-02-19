@@ -116,7 +116,7 @@ addEventListener("load", startTest);
 
 let onAttach = async function (state, response) {
   onConsoleAPICall = onConsoleAPICall.bind(null, state);
-  state.dbgClient.addListener("consoleAPICall", onConsoleAPICall);
+  state.client.on("consoleAPICall", onConsoleAPICall);
 
   let currentFrame;
   try {
@@ -174,7 +174,7 @@ let onAttach = async function (state, response) {
     await unregisterServiceWorker(currentFrame.contentWindow);
 
     info('Service worker unregistered.  Checking console calls.');
-    state.dbgClient.removeListener("consoleAPICall", onConsoleAPICall);
+    state.client.off("consoleAPICall", onConsoleAPICall);
     checkConsoleAPICalls(consoleCalls, expectedConsoleCalls);
   } catch(error) {
     ok(false, 'unexpected error: ' + error);
@@ -190,9 +190,8 @@ let onAttach = async function (state, response) {
   }
 };
 
-function onConsoleAPICall(state, type, packet) {
+function onConsoleAPICall(state, packet) {
   info("received message level: " + packet.message.level);
-  is(packet.from, state.actor, "console API call actor");
   consoleCalls.push(packet.message);
 }
 </script>

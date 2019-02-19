@@ -61,16 +61,15 @@ let testCachedMessages = async function (state) {
 let testConsoleAPI = async function (state) {
   info("testConsoleAPI entered");
   return new Promise(resolve => {
-    let onConsoleAPICall = (type, packet) => {
+    let onConsoleAPICall = (packet) => {
       info("received message level: " + packet.message.level);
-      is(packet.from, state.actor, "console API call actor");
       checkConsoleAPICalls([packet.message], expectedConsoleAPICalls);
-      state.dbgClient.removeListener("consoleAPICall", onConsoleAPICall);
+      state.client.off("consoleAPICall", onConsoleAPICall);
       resolve();
     }
 
     info("testConsoleAPI: adding listener for consoleAPICall");
-    state.dbgClient.addListener("consoleAPICall", onConsoleAPICall);
+    state.client.on("consoleAPICall", onConsoleAPICall);
 
     state.client.evaluateJS("console.log('Log was requested from worker')",
       () => { });
