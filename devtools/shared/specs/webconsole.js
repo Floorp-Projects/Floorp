@@ -70,6 +70,7 @@ const webconsoleSpecPrototype = {
         url: Option(0, "string"),
         selectedNodeActor: Option(0, "string"),
         selectedObjectActor: Option(0, "string"),
+        mapped: Option(0, "nullable:json"),
       },
       response: RetVal("json"),
     },
@@ -81,24 +82,25 @@ const webconsoleSpecPrototype = {
         url: Option(0, "string"),
         selectedNodeActor: Option(0, "string"),
         selectedObjectActor: Option(0, "string"),
+        mapped: Option(0, "nullable:json"),
       },
       response: RetVal("console.evaluatejsasync"),
     },
     autocomplete: {
       request: {
-        frameActor: Option(0, "string"),
         text: Option(0, "string"),
-        cursor: Option(0, "number"),
+        cursor: Option(0, "nullable:number"),
+        frameActor: Option(0, "nullable:string"),
+        selectedNodeActor: Option(0, "nullable:string"),
       },
       response: RetVal("console.autocomplete"),
     },
     clearMessagesCache: {
-      request: {},
-      response: {},
+      oneway: true,
     },
     getPreferences: {
       request: {
-        preferences: Option(0, "json"),
+        preferences: Option(0, "array:string"),
       },
       response: RetVal("json"),
     },
