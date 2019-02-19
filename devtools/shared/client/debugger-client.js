@@ -303,23 +303,16 @@ DebuggerClient.prototype = {
    * @param array listeners
    *        The console listeners you want to start.
    */
-  attachConsole: function(consoleActor, listeners) {
-    const packet = {
-      to: consoleActor,
-      type: "startListeners",
-      listeners: listeners,
-    };
-
-    return this.request(packet).then(response => {
-      let consoleClient;
-      if (this._clients.has(consoleActor)) {
-        consoleClient = this._clients.get(consoleActor);
-      } else {
-        consoleClient = new WebConsoleClient(this, response);
-        this.registerClient(consoleClient);
-      }
-      return [response, consoleClient];
-    });
+  attachConsole: async function(consoleActor, listeners) {
+    let consoleClient;
+    if (this._clients.has(consoleActor)) {
+      consoleClient = this._clients.get(consoleActor);
+    } else {
+      consoleClient = new WebConsoleClient(this, { from: consoleActor });
+      this.registerClient(consoleClient);
+    }
+    const response = await consoleClient.startListeners(listeners);
+    return [response, consoleClient];
   },
 
   /**
