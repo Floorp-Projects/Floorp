@@ -281,8 +281,9 @@ class ContentChild final : public PContentChild,
       PPSMContentDownloaderChild* aDownloader);
 
   PExternalHelperAppChild* AllocPExternalHelperAppChild(
-      const OptionalURIParams& uri, const nsCString& aMimeContentType,
-      const nsCString& aContentDisposition,
+      const OptionalURIParams& uri,
+      const mozilla::net::OptionalLoadInfoArgs& aLoadInfoArgs,
+      const nsCString& aMimeContentType, const nsCString& aContentDisposition,
       const uint32_t& aContentDispositionHint,
       const nsString& aContentDispositionFilename, const bool& aForceSave,
       const int64_t& aContentLength, const bool& aWasFileChannel,
