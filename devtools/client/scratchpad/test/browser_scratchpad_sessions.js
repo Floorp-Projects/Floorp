@@ -2,8 +2,8 @@
     http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const {Utils} = ChromeUtils.import("resource://gre/modules/sessionstore/Utils.jsm");
-const triggeringPrincipal_base64 = Utils.SERIALIZED_SYSTEMPRINCIPAL;
+const {E10SUtils} = ChromeUtils.import("resource://gre/modules/E10SUtils.jsm");
+const triggeringPrincipal_base64 = E10SUtils.SERIALIZED_SYSTEMPRINCIPAL;
 
 const testState = {
   windows: [{
