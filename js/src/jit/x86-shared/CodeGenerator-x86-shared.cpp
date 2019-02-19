@@ -307,11 +307,11 @@ void CodeGenerator::visitWasmSelect(LWasmSelect* ins) {
 
   masm.test32(cond, cond);
 
-  if (mirType == MIRType::Int32) {
+  if (mirType == MIRType::Int32 || mirType == MIRType::RefOrNull) {
     Register out = ToRegister(ins->output());
     MOZ_ASSERT(ToRegister(ins->trueExpr()) == out,
                "true expr input is reused for output");
-    masm.cmovzl(falseExpr, out);
+    masm.cmovz(falseExpr, out);
     return;
   }
 
