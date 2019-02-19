@@ -55,6 +55,10 @@ registerCleanupFunction(async function() {
     browserConsole.ui.clearOutput(true);
     await HUDService.toggleBrowserConsole();
   }
+
+  // Bug 1517210 - jsterm tests are crashing with OOM as GC isn't triggerred.
+  // Forcing a GC after each test to prevent these crashes.
+  Cu.forceShrinkingGC();
 });
 
 /**
