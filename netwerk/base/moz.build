@@ -217,7 +217,6 @@ UNIFIED_SOURCES += [
     'nsProxyInfo.cpp',
     'nsRedirectHistoryEntry.cpp',
     'nsRequestObserverProxy.cpp',
-    'nsSecCheckWrapChannel.cpp',
     'nsSerializationHelper.cpp',
     'nsServerSocket.cpp',
     'nsSimpleNestedURI.cpp',
@@ -301,6 +300,3 @@ LOCAL_INCLUDES += [
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
-
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    AllowCompilerWarnings()  # workaround for bug 1090497
