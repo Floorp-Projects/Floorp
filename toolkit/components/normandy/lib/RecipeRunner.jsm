@@ -14,6 +14,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "timerManager",
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   RemoteSettings: "resource://services-settings/remote-settings.js",
+  FeatureGate: "resource://featuregates/FeatureGate.jsm",
   Storage: "resource://normandy/lib/Storage.jsm",
   FilterExpressions: "resource://gre/modules/components-utils/FilterExpressions.jsm",
   NormandyApi: "resource://normandy/lib/NormandyApi.jsm",
@@ -39,7 +40,6 @@ const SHIELD_ENABLED_PREF = `${PREF_PREFIX}.enabled`;
 const DEV_MODE_PREF = `${PREF_PREFIX}.dev_mode`;
 const API_URL_PREF = `${PREF_PREFIX}.api_url`;
 const LAZY_CLASSIFY_PREF = `${PREF_PREFIX}.experiments.lazy_classify`;
-const REMOTE_SETTINGS_ENABLED_PREF = `${PREF_PREFIX}.remotesettings.enabled`;
 
 const PREFS_TO_WATCH = [
   RUN_INTERVAL_PREF,
@@ -243,7 +243,7 @@ var RecipeRunner = {
   async loadRecipes() {
     // If RemoteSettings is enabled, we read the list of recipes from there.
     // The JEXL filtering is done via the provided callback.
-    if (Services.prefs.getBoolPref(REMOTE_SETTINGS_ENABLED_PREF, false)) {
+    if (await FeatureGate.isEnabled("normandy-remote-settings")) {
       return gRemoteSettingsClient.get();
     }
     // Obtain the recipes from the Normandy server (legacy).
