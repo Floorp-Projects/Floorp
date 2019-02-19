@@ -211,8 +211,8 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     // Views of this buffer might include typed objects.
     TYPED_OBJECT_VIEWS = 0b10'0000,
 
-    // This PLAIN or WASM buffer has been prepared for asm.js and cannot
-    // henceforth be transferred/detached.
+    // This PLAIN, MAPPED, or EXTERNAL buffer (only WASM is excluded) has been
+    // prepared for asm.js and cannot henceforth be transferred/detached.
     FOR_ASMJS = 0b100'0000,
   };
 
@@ -426,7 +426,11 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   bool hasTypedObjectViews() const { return flags() & TYPED_OBJECT_VIEWS; }
 
   void setIsDetached() { setFlags(flags() | DETACHED); }
-  void setIsPreparedForAsmJS() { setFlags(flags() | FOR_ASMJS); }
+  void setIsPreparedForAsmJS() {
+    MOZ_ASSERT(!isWasm());
+    MOZ_ASSERT(isPlain() || isMapped() || isExternal());
+    setFlags(flags() | FOR_ASMJS);
+  }
 
   void initialize(size_t byteLength, BufferContents contents,
                   OwnsState ownsState) {
