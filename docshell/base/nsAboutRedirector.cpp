@@ -150,6 +150,7 @@ nsAboutRedirector::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
 
   if (path.EqualsASCII("crashparent") || path.EqualsASCII("crashcontent")) {
     nsCOMPtr<nsIChannel> channel = new CrashChannel(aURI);
+    channel->SetLoadInfo(aLoadInfo);
     channel.forget(aResult);
     return NS_OK;
   }
