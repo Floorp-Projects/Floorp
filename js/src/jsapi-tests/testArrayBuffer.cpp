@@ -3,8 +3,9 @@
  */
 
 #include "jsfriendapi.h"
-#include "js/MemoryFunctions.h"
 
+#include "builtin/TestingFunctions.h"
+#include "js/MemoryFunctions.h"
 #include "jsapi-tests/tests.h"
 
 BEGIN_TEST(testArrayBuffer_bug720949_steal) {
@@ -306,3 +307,61 @@ BEGIN_TEST(testArrayBuffer_stealDetachExternal) {
   return true;
 }
 END_TEST(testArrayBuffer_stealDetachExternal)
+
+BEGIN_TEST(testArrayBuffer_serializeExternal) {
+  JS::RootedValue serializeValue(cx);
+
+  {
+    JS::RootedFunction serialize(cx);
+    serialize = JS_NewFunction(cx, js::testingFunc_serialize, 1, 0, "serialize");
+    CHECK(serialize);
+
+    serializeValue.setObject(*JS_GetFunctionObject(serialize));
+  }
+
+  ExternalData data("One two three four");
+  JS::RootedObject externalBuffer(
+      cx, JS_NewExternalArrayBuffer(cx, data.len(), data.contents(),
+                                    &ExternalData::freeCallback, &data));
+  CHECK(externalBuffer);
+  CHECK(!data.wasFreed());
+
+  JS::RootedValue v(cx, JS::ObjectValue(*externalBuffer));
+  JS::RootedObject transferMap(cx, JS_NewArrayObject(cx, JS::HandleValueArray(v)));
+  CHECK(transferMap);
+
+  JS::AutoValueArray<2> args(cx);
+  args[0].setObject(*externalBuffer);
+  args[1].setObject(*transferMap);
+
+  // serialize(externalBuffer, [externalBuffer]) should throw for an unhandled
+  // BufferContents kind.
+  CHECK(!JS::Call(cx, JS::UndefinedHandleValue, serializeValue,
+                  JS::HandleValueArray(args), &v));
+
+  JS::RootedValue exn(cx);
+  CHECK(JS_GetPendingException(cx, &exn));
+  JS_ClearPendingException(cx);
+
+  js::ErrorReport report(cx);
+  CHECK(report.init(cx, exn, js::ErrorReport::NoSideEffects));
+
+  CHECK_EQUAL(report.report()->errorNumber,
+              static_cast<unsigned int>(JSMSG_SC_NOT_TRANSFERABLE));
+
+  // Data should have been left alone.
+  CHECK(!data.wasFreed());
+
+  v.setNull();
+  transferMap = nullptr;
+  args[0].setNull();
+  args[1].setNull();
+  externalBuffer = nullptr;
+
+  JS_GC(cx);
+  JS_GC(cx);
+  CHECK(data.wasFreed());
+
+  return true;
+}
+END_TEST(testArrayBuffer_serializeExternal)
