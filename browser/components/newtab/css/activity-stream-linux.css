@@ -2099,8 +2099,8 @@ main {
     max-height: 4.28571em;
     overflow: hidden; }
   .ds-list:not(.ds-list-full-width) .ds-list-image {
-    min-width: 72px;
-    width: 72px; }
+    min-width: 80px;
+    width: 80px; }
   .ds-column-5 .ds-list:not(.ds-list-full-width),
   .ds-column-6 .ds-list:not(.ds-list-full-width),
   .ds-column-7 .ds-list:not(.ds-list-full-width),
@@ -2180,8 +2180,8 @@ main {
   overflow: hidden; }
 
 .ds-list-full-width .ds-list-image {
-  min-width: 144px;
-  width: 144px; }
+  min-width: 160px;
+  width: 160px; }
 
 .ds-list-item {
   display: block;
@@ -2189,7 +2189,8 @@ main {
   .ds-list-item .ds-list-item-link {
     mix-blend-mode: normal;
     display: flex;
-    justify-content: space-between; }
+    justify-content: space-between;
+    height: 100%; }
   .ds-list-item .ds-list-item-excerpt {
     font-size: 14px;
     line-height: 20px;
@@ -2200,7 +2201,7 @@ main {
   .ds-list-item p {
     font-size: 14px;
     line-height: 20px;
-    margin: 8px 0 0; }
+    margin: 0; }
   .ds-list-item .ds-list-item-info,
   .ds-list-item .ds-list-item-context {
     font-size: 14px;
@@ -2215,7 +2216,8 @@ main {
     margin-bottom: 4px; }
   .ds-list-item .ds-list-item-text {
     display: flex;
-    flex-direction: column; }
+    flex-direction: column;
+    justify-content: space-between; }
   .ds-list-item .ds-list-image {
     background-color: var(--newtab-card-placeholder-color);
     background-position: center;
@@ -2223,9 +2225,9 @@ main {
     background-size: cover;
     border-radius: 4px;
     box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.15);
-    height: 72px;
+    height: 80px;
     margin-inline-start: 14px;
-    min-height: 72px; }
+    min-height: 80px; }
   .ds-list-item:hover .ds-list-item-title {
     color: var(--newtab-link-primary-color); }
   .ds-list-item:active .ds-list-item-title {
