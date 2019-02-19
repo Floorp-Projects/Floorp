@@ -594,14 +594,14 @@ void SandboxBroker::SetSecurityLevelForGPUProcess(int32_t aSandboxLevel) {
   // The setting of these levels is pretty arbitrary, but they are a useful (if
   // crude) tool while we are tightening the policy. Gaps are left to try and
   // avoid changing their meaning.
-  MOZ_RELEASE_ASSERT(aSandboxLevel >= 1,
-                     "Should not be called with aSandboxLevel < 1");
   if (aSandboxLevel >= 2) {
     jobLevel = sandbox::JOB_NONE;
     accessTokenLevel = sandbox::USER_LIMITED;
     initialIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
     delayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
-  } else if (aSandboxLevel == 1) {
+  } else {
+    MOZ_RELEASE_ASSERT(aSandboxLevel >= 1,
+                       "Should not be called with aSandboxLevel < 1");
     jobLevel = sandbox::JOB_NONE;
     accessTokenLevel = sandbox::USER_NON_ADMIN;
     initialIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
