@@ -187,10 +187,19 @@ mozilla::gfx::Matrix4x4 ReadTransforms(
     float aAppUnitsPerMatrixUnit);
 
 /**
- * Given two nsStyleCoord values, compute the 2d position with respect to the
- * given TransformReferenceBox that these values describe, in device pixels.
+ * Given the x and y values, compute the 2d position with respect to the given
+ * TransformReferenceBox that these values describe, in CSS pixels.
  */
-mozilla::gfx::Point Convert2DPosition(nsStyleCoord const (&aValue)[2],
+mozilla::CSSPoint Convert2DPosition(const mozilla::LengthPercentage& aX,
+                                    const mozilla::LengthPercentage& aY,
+                                    TransformReferenceBox& aRefBox);
+
+/**
+ * Given the x and y values, compute the 2d position with respect to the given
+ * TransformReferenceBox that these values describe, in device pixels.
+ */
+mozilla::gfx::Point Convert2DPosition(const mozilla::LengthPercentage& aX,
+                                      const mozilla::LengthPercentage& aY,
                                       TransformReferenceBox& aRefBox,
                                       int32_t aAppUnitsPerDevPixel);
 
