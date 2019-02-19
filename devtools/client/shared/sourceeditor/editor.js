@@ -48,12 +48,11 @@ const {
 
 const { OS } = Services.appinfo;
 
-// CM_SCRIPTS and CM_IFRAME represent the HTML and JavaScript that is
+// CM_BUNDLE and CM_IFRAME represent the HTML and JavaScript that is
 // injected into an iframe in order to initialize a CodeMirror instance.
 
-const CM_SCRIPTS = [
-  "chrome://devtools/content/shared/sourceeditor/codemirror/codemirror.bundle.js",
-];
+const CM_BUNDLE =
+  "chrome://devtools/content/shared/sourceeditor/codemirror/codemirror.bundle.js";
 
 const CM_IFRAME = "chrome://devtools/content/shared/sourceeditor/codemirror/cmiframe.html";
 
@@ -217,11 +216,6 @@ function Editor(config) {
     cm.replaceSelection(" ".repeat(num), "end", "+input");
   };
 
-  // Allow add-ons to inject scripts for their editor instances
-  if (!this.config.externalScripts) {
-    this.config.externalScripts = [];
-  }
-
   if (this.config.cssProperties) {
     // Ensure that autocompletion has cssProperties if it's passed in via the options.
     this.config.autocompleteOpts.cssProperties = this.config.cssProperties;
@@ -326,12 +320,7 @@ Editor.prototype = {
     doc = doc || el.ownerDocument;
     const win = el.ownerDocument.defaultView;
 
-    const scriptsToInject = CM_SCRIPTS.concat(this.config.externalScripts);
-    scriptsToInject.forEach(url => {
-      if (url.startsWith("chrome://")) {
-        Services.scriptloader.loadSubScript(url, win);
-      }
-    });
+    Services.scriptloader.loadSubScript(CM_BUNDLE, win);
 
     // Replace the propertyKeywords, colorKeywords and valueKeywords
     // properties of the CSS MIME type with the values provided by the CSS properties
