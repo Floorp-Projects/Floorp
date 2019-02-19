@@ -1200,8 +1200,7 @@ static MOZ_MUST_USE bool CheckArrayBufferTooLarge(JSContext* cx,
 
 ArrayBufferObject* ArrayBufferObject::createForContents(
     JSContext* cx, uint32_t nbytes, BufferContents contents,
-    OwnsState ownsState /* = OwnsData */, HandleObject proto /* = nullptr */,
-    NewObjectKind newKind /* = GenericObject */) {
+    OwnsState ownsState /* = OwnsData */) {
   MOZ_ASSERT_IF(contents.kind() == MAPPED, contents);
 
   // 24.1.1.1, step 3 (Inlined 6.2.6.1 CreateByteDataBlock, step 2).
@@ -1258,8 +1257,9 @@ ArrayBufferObject* ArrayBufferObject::createForContents(
   gc::AllocKind allocKind = gc::GetGCObjectKind(nslots);
 
   AutoSetNewObjectMetadata metadata(cx);
-  Rooted<ArrayBufferObject*> obj(cx, NewObjectWithClassProto<ArrayBufferObject>(
-                                         cx, proto, allocKind, newKind));
+  Rooted<ArrayBufferObject*> obj(
+      cx, NewObjectWithClassProto<ArrayBufferObject>(cx, nullptr, allocKind,
+                                                     TenuredObject));
   if (!obj) {
     if (allocated) {
       js_free(contents.data());
@@ -1724,9 +1724,8 @@ JS_PUBLIC_API JSObject* JS_NewArrayBufferWithContents(JSContext* cx,
   using BufferContents = ArrayBufferObject::BufferContents;
 
   BufferContents contents = BufferContents::createMalloced(data);
-  return ArrayBufferObject::createForContents(
-      cx, nbytes, contents, ArrayBufferObject::OwnsData,
-      /* proto = */ nullptr, TenuredObject);
+  return ArrayBufferObject::createForContents(cx, nbytes, contents,
+                                              ArrayBufferObject::OwnsData);
 }
 
 JS_PUBLIC_API JSObject* JS_NewExternalArrayBuffer(
@@ -1741,9 +1740,8 @@ JS_PUBLIC_API JSObject* JS_NewExternalArrayBuffer(
   ArrayBufferObject::BufferContents contents =
       ArrayBufferObject::BufferContents::createExternal(data, freeFunc,
                                                         freeUserData);
-  return ArrayBufferObject::createForContents(
-      cx, nbytes, contents, ArrayBufferObject::OwnsData,
-      /* proto = */ nullptr, TenuredObject);
+  return ArrayBufferObject::createForContents(cx, nbytes, contents,
+                                              ArrayBufferObject::OwnsData);
 }
 
 JS_PUBLIC_API JSObject* JS_NewArrayBufferWithUserOwnedContents(JSContext* cx,
@@ -1756,9 +1754,8 @@ JS_PUBLIC_API JSObject* JS_NewArrayBufferWithUserOwnedContents(JSContext* cx,
   using BufferContents = ArrayBufferObject::BufferContents;
 
   BufferContents contents = BufferContents::createUserOwned(data);
-  return ArrayBufferObject::createForContents(
-      cx, nbytes, contents, ArrayBufferObject::DoesntOwnData,
-      /* proto = */ nullptr, TenuredObject);
+  return ArrayBufferObject::createForContents(cx, nbytes, contents,
+                                              ArrayBufferObject::DoesntOwnData);
 }
 
 JS_FRIEND_API bool JS_IsArrayBufferObject(JSObject* obj) {
@@ -1836,9 +1833,8 @@ JS_PUBLIC_API JSObject* JS_NewMappedArrayBufferWithContents(JSContext* cx,
   ArrayBufferObject::BufferContents contents =
       ArrayBufferObject::BufferContents::create<ArrayBufferObject::MAPPED>(
           data);
-  return ArrayBufferObject::createForContents(
-      cx, nbytes, contents, ArrayBufferObject::OwnsData,
-      /* proto = */ nullptr, TenuredObject);
+  return ArrayBufferObject::createForContents(cx, nbytes, contents,
+                                              ArrayBufferObject::OwnsData);
 }
 
 JS_PUBLIC_API void* JS_CreateMappedArrayBufferContents(int fd, size_t offset,
