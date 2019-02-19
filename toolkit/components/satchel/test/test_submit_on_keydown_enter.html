@@ -45,6 +45,8 @@ function handleInput(aEvent) {
      'inputType should be "insertReplacementText"');
   is(aEvent.data, expectedValue,
      `data should be "${expectedValue}"`);
+  is(aEvent.dataTransfer, null,
+     "dataTransfer should be null");
   input.removeEventListener("input", handleInput, true);
   SimpleTest.finish();
 }

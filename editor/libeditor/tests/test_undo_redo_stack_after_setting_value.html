@@ -40,6 +40,8 @@ SimpleTest.waitForFocus(function() {
          `inputType should be "${aInputType}" ${aDescription}`);
       is(aEvent.data, aData,
          `data should be ${aData} ${aDescription}`);
+      is(aEvent.dataTransfer, null,
+         `dataTransfer should be null ${aDescription}`);
     }
 
     let inputEvents = [];

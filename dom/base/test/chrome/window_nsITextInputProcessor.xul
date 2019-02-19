@@ -69,6 +69,7 @@ function checkInputEvent(aEvent, aIsComposing, aInputType, aData, aDescription) 
   is(aEvent.isComposing, aIsComposing, `${aDescription}isComposing should be ${aIsComposing}`);
   is(aEvent.inputType, aInputType, `${aDescription}inputType should be "${aInputType}"`);
   is(aEvent.data, aData, `${aDescription}data should be "${aData}"`);
+  is(aEvent.dataTransfer, null, `${aDescription}dataTransfer should be null`);
 }
 
 const kIsMac = (navigator.platform.indexOf("Mac") == 0);

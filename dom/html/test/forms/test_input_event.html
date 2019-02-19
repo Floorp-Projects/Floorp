@@ -55,6 +55,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
          `inputType should be "${expectedInputType}" ${aDescription}`);
       is(aEvent.data, expectedData,
          `data should be ${expectedData} ${aDescription}`);
+      is(aEvent.dataTransfer, null,
+         `dataTransfer should be null ${aDescription}`);
     }
     is(aEvent.cancelable, false,
        `"input" event should be never cancelable ${aDescription}`);

@@ -51,6 +51,7 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/TransactionManager.h"  // for TransactionManager
 #include "mozilla/dom/CharacterData.h"   // for CharacterData
+#include "mozilla/dom/DataTransfer.h"    // for DataTransfer
 #include "mozilla/dom/Element.h"         // for Element, nsINode::AsElement
 #include "mozilla/dom/EventTarget.h"     // for EventTarget
 #include "mozilla/dom/HTMLBodyElement.h"
@@ -91,6 +92,7 @@
 #include "nsISelectionDisplay.h"       // for nsISelectionDisplay, etc.
 #include "nsISupportsBase.h"           // for nsISupports
 #include "nsISupportsUtils.h"          // for NS_ADDREF, NS_IF_ADDREF
+#include "nsITransferable.h"           // for nsITransferable
 #include "nsITransaction.h"            // for nsITransaction
 #include "nsITransactionManager.h"
 #include "nsIWeakReference.h"  // for nsISupportsWeakReference
@@ -2032,8 +2034,13 @@ void EditorBase::NotifyEditorObservers(
   }
 }
 
-void EditorBase::FireInputEvent(EditAction aEditAction,
-                                const nsAString& aData) {
+void EditorBase::FireInputEvent() {
+  RefPtr<DataTransfer> dataTransfer = GetInputEventDataTransfer();
+  FireInputEvent(GetEditAction(), GetInputEventData(), dataTransfer);
+}
+
+void EditorBase::FireInputEvent(EditAction aEditAction, const nsAString& aData,
+                                DataTransfer* aDataTransfer) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   // We don't need to dispatch multiple input events if there is a pending
@@ -2051,7 +2058,8 @@ void EditorBase::FireInputEvent(EditAction aEditAction,
   RefPtr<TextEditor> textEditor = AsTextEditor();
   DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(
       targetElement, ToInputType(aEditAction), textEditor,
-      nsContentUtils::InputEventOptions(aData));
+      aDataTransfer ? nsContentUtils::InputEventOptions(aDataTransfer)
+                    : nsContentUtils::InputEventOptions(aData));
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "Failed to dispatch input event");
 }
@@ -4901,6 +4909,48 @@ void EditorBase::AutoEditActionDataSetter::SetColorData(
   // Get serialized color value (i.e., "rgb()" or "rgba()").
   nsStyleUtil::GetSerializedColorValue(color, mData);
   MOZ_ASSERT(!mData.IsVoid());
+}
+
+void EditorBase::AutoEditActionDataSetter::InitializeDataTransfer(
+    DataTransfer* aDataTransfer) {
+  MOZ_ASSERT(aDataTransfer);
+  MOZ_ASSERT(aDataTransfer->IsReadOnly());
+  mDataTransfer = aDataTransfer;
+}
+
+void EditorBase::AutoEditActionDataSetter::InitializeDataTransfer(
+    nsITransferable* aTransferable) {
+  MOZ_ASSERT(aTransferable);
+
+  Document* document = mEditorBase.GetDocument();
+  nsIGlobalObject* scopeObject =
+      document ? document->GetScopeObject() : nullptr;
+  // TODO: Implement DataTransfer constructor which takes nsITransferable.
+  mDataTransfer =
+      new DataTransfer(scopeObject, ePaste, true /* is external */, 1);
+}
+
+void EditorBase::AutoEditActionDataSetter::InitializeDataTransfer(
+    const nsAString& aString) {
+  Document* document = mEditorBase.GetDocument();
+  nsIGlobalObject* scopeObject =
+      document ? document->GetScopeObject() : nullptr;
+  // TODO: Implement DataTransfer constructor which takes nsAString.
+  mDataTransfer =
+      new DataTransfer(scopeObject, ePaste, true /* is external */, 1);
+}
+
+void EditorBase::AutoEditActionDataSetter::InitializeDataTransferWithClipboard(
+    SettingDataTransfer aSettingDataTransfer, int32_t aClipboardType) {
+  Document* document = mEditorBase.GetDocument();
+  nsIGlobalObject* scopeObject =
+      document ? document->GetScopeObject() : nullptr;
+  mDataTransfer =
+      new DataTransfer(scopeObject,
+                       aSettingDataTransfer == SettingDataTransfer::eWithFormat
+                           ? ePaste
+                           : ePasteNoFormatting,
+                       true /* is external */, aClipboardType);
 }
 
 }  // namespace mozilla

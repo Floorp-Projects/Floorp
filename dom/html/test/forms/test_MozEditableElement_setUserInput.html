@@ -166,6 +166,8 @@ SimpleTest.waitForFocus(() => {
              `inputType should be "insertReplacementText" when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
           is(inputEvents[0].data, test.input.before,
              `data should be "${test.input.before}" when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
+          is(inputEvents[0].dataTransfer, null,
+             `dataTransfer should be null when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
         }
       } else {
         ok(inputEvents[0] instanceof Event && !(inputEvents[0] instanceof UIEvent),
@@ -226,6 +228,8 @@ SimpleTest.waitForFocus(() => {
              `inputType should be "insertReplacementText" when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
           is(inputEvents[0].data, test.input.after,
              `data should be "${test.input.after}" when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
+          is(inputEvents[0].dataTransfer, null,
+             `dataTransfer should be null when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
         }
       } else {
         ok(inputEvents[0] instanceof Event && !(inputEvents[0] instanceof UIEvent),

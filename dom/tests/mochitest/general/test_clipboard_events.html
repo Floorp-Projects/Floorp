@@ -218,10 +218,13 @@ add_task(async function test_input_oncut() {
   var oncut_fired = false;
   var oninput_count = 0;
   var inputType = "";
+  var data, dataTransfer;
   contentInput.oncut = function() { oncut_fired = true; };
   contentInput.oninput = function (aEvent) {
     oninput_count++;
     inputType = aEvent.inputType;
+    data = aEvent.data;
+    dataTransfer = aEvent.dataTransfer;
   };
   try {
     await putOnClipboard("INPUT TEXT", () => {
@@ -230,6 +233,8 @@ add_task(async function test_input_oncut() {
     ok(oncut_fired, "cut event firing on plaintext editor");
     is(oninput_count, 1, "input event should be fired once by cut");
     is(inputType, "deleteByCut", "inputType of the input event should be \"deleteByCut\"");
+    is(data, null, "data of the input event should be null when inputType is \"deleteByCut\"");
+    is(dataTransfer, null, "dataTransfer of the input event should be null when inputType is \"deleteByCut\"");
     is(contentInput.value, "",
       "cut on plaintext editor emptied editor");
   } finally {
@@ -248,12 +253,13 @@ add_task(async function test_input_onpaste() {
   var onpaste_fired = false;
   var oninput_count = 0;
   var inputType = "";
-  var data;
+  var data, dataTransfer;
   contentInput.onpaste = function() { onpaste_fired = true; };
   contentInput.oninput = function(aEvent) {
     oninput_count++;
     inputType = aEvent.inputType;
     data = aEvent.data;
+    dataTransfer = aEvent.dataTransfer;
   };
 
   try {
@@ -264,6 +270,7 @@ add_task(async function test_input_onpaste() {
     is(oninput_count, 1, "input event should be fired once by cut");
     is(inputType, "insertFromPaste", "inputType of the input event should be \"insertFromPaste\"");
     is(data, clipboardInitialValue, `data of the input event should be ${clipboardInitialValue}`);
+    is(dataTransfer, null, "dataTransfer of the input event should be null even when inputType is \"insertFromPaste\"");
     is(contentInput.value, clipboardInitialValue,
       "paste on plaintext editor did modify editor value");
   } finally {

@@ -653,6 +653,7 @@ function checkInputEvent(aEvent, aIsComposing, aInputType, aData, aDescription) 
   is(aEvent.isComposing, aIsComposing, `isComposing should be ${aIsComposing}: ${aDescription}`);
   is(aEvent.inputType, aInputType, `inputType should be "${aInputType}": ${aDescription}`);
   is(aEvent.data, aData, `data should be ${aData}: ${aDescription}`);
+  is(aEvent.dataTransfer, null, `dataTransfer should be null: ${aDescription}`);
 }
 
 function runCompositionCommitAsIsTest()
