@@ -1308,7 +1308,7 @@ ArrayBufferObject::externalizeContents(JSContext* cx,
   BufferContents newContents =
       AllocateArrayBufferContents(cx, buffer->byteLength());
   if (!newContents) {
-    return BufferContents::createPlain(nullptr);
+    return BufferContents::createFailed();
   }
   memcpy(newContents.data(), contents.data(), buffer->byteLength());
   buffer->changeContents(cx, newContents, DoesntOwnData);
@@ -1343,7 +1343,7 @@ ArrayBufferObject::externalizeContents(JSContext* cx,
   BufferContents contentsCopy =
       AllocateArrayBufferContents(cx, buffer->byteLength());
   if (!contentsCopy) {
-    return BufferContents::createPlain(nullptr);
+    return BufferContents::createFailed();
   }
 
   if (buffer->byteLength() > 0) {
