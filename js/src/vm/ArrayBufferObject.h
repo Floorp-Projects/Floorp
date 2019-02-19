@@ -260,6 +260,10 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
                             freeUserData);
     }
 
+    static BufferContents createFailed() {
+      return BufferContents(nullptr, PLAIN);
+    }
+
     uint8_t* data() const { return data_; }
     BufferKind kind() const { return kind_; }
     JS::BufferContentsFreeFunc freeFunc() const { return free_; }
