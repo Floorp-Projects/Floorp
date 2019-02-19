@@ -352,6 +352,7 @@ class Assembler : public AssemblerX86Shared {
   void mov(Register src, Register dest) { movl(src, dest); }
   void xchg(Register src, Register dest) { xchgl(src, dest); }
   void lea(const Operand& src, Register dest) { return leal(src, dest); }
+  void cmovz(const Operand& src, Register dest) { return cmovzl(src, dest); }
 
   void fstp32(const Operand& src) {
     switch (src.kind()) {
