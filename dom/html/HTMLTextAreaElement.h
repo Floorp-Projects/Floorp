@@ -99,8 +99,7 @@ class HTMLTextAreaElement final : public nsGenericHTMLFormElementWithState,
   NS_IMETHOD_(void) EnablePreview() override;
   NS_IMETHOD_(bool) IsPreviewEnabled() override;
   NS_IMETHOD_(void) InitializeKeyboardEventListeners() override;
-  NS_IMETHOD_(void)
-  OnValueChanged(bool aNotify, bool aWasInteractiveUserChange) override;
+  NS_IMETHOD_(void) OnValueChanged(bool aNotify, ValueChangeKind) override;
   virtual void GetValueFromSetRangeText(nsAString& aValue) override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual nsresult SetValueFromSetRangeText(const nsAString& aValue) override;

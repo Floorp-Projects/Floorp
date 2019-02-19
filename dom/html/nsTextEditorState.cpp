@@ -51,6 +51,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using ValueChangeKind = nsITextControlElement::ValueChangeKind;
 
 inline nsresult SetEditorFlagsIfNecessary(EditorBase& aEditorBase,
                                           uint32_t aFlags) {
@@ -987,7 +988,7 @@ void TextInputListener::HandleValueChanged(nsTextControlFrame* aFrame) {
 
   if (!mSettingValue) {
     mTxtCtrlElement->OnValueChanged(/* aNotify = */ true,
-                                    /* aWasInteractiveUserChange = */ true);
+                                    ValueChangeKind::UserInteraction);
   }
 }
 
@@ -2456,11 +2457,15 @@ bool nsTextEditorState::SetValue(const nsAString& aValue,
     ValueWasChanged(!!mBoundFrame);
   }
 
+  // TODO(emilio): It seems wrong to pass ValueChangeKind::Script if
+  // BySetUserInput is in aFlags.
+  auto changeKind = (aFlags & eSetValue_Internal)
+    ? ValueChangeKind::Internal
+    : ValueChangeKind::Script;
+
   // XXX Should we stop notifying "value changed" if mTextCtrlElement has
   //     been cleared?
-  textControlElement->OnValueChanged(/* aNotify = */ !!mBoundFrame,
-                                     /* aWasInteractiveUserChange = */ false);
-
+  textControlElement->OnValueChanged(/* aNotify = */ !!mBoundFrame, changeKind);
   return true;
 }
 

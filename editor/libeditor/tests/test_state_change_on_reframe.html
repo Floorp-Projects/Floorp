@@ -1,0 +1,29 @@
+<!doctype html>
+<title>Test for state change not bogusly changing during reframe (bug 1528644)</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<style>
+  .reframe { display: table }
+  input:invalid { color: red; }
+  input:valid { color: green; }
+</style>
+<form>
+  <input type="text" required minlength="4" onkeypress="this.classList.toggle('reframe')">
+</form>
+<script>
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  let input = document.querySelector("input");
+  input.focus();
+  requestAnimationFrame(() => {
+    synthesizeKey("a");
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        ok(!input.validity.valid);
+        is(getComputedStyle(input).display, "table");
+        SimpleTest.finish();
+      });
+    });
+  });
+});
+</script>
