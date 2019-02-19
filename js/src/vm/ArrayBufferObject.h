@@ -260,11 +260,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     }
 
    public:
-    template <BufferKind Kind>
-    static BufferContents create(void* data) {
-      return BufferContents(static_cast<uint8_t*>(data), Kind);
-    }
-
     static BufferContents createInlineData(void* data) {
       return BufferContents(static_cast<uint8_t*>(data), INLINE_DATA);
     }
@@ -275,6 +270,14 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
     static BufferContents createUserOwned(void* data) {
       return BufferContents(static_cast<uint8_t*>(data), USER_OWNED);
+    }
+
+    static BufferContents createWasm(void* data) {
+      return BufferContents(static_cast<uint8_t*>(data), WASM);
+    }
+
+    static BufferContents createMapped(void* data) {
+      return BufferContents(static_cast<uint8_t*>(data), MAPPED);
     }
 
     static BufferContents createExternal(void* data,
