@@ -39,6 +39,17 @@ namespace layers {
 
 class Compositor;
 
+inline void ApplySamplingFilterToBoundTexture(
+    gl::GLContext* aGL, gfx::SamplingFilter aSamplingFilter,
+    GLuint aTarget) {
+  GLenum filter =
+      (aSamplingFilter == gfx::SamplingFilter::POINT ? LOCAL_GL_NEAREST
+                                                     : LOCAL_GL_LINEAR);
+
+  aGL->fTexParameteri(aTarget, LOCAL_GL_TEXTURE_MIN_FILTER, filter);
+  aGL->fTexParameteri(aTarget, LOCAL_GL_TEXTURE_MAG_FILTER, filter);
+}
+
 already_AddRefed<TextureHost> CreateTextureHostOGL(
     const SurfaceDescriptor& aDesc, ISurfaceAllocator* aDeallocator,
     LayersBackend aBackend, TextureFlags aFlags) {
