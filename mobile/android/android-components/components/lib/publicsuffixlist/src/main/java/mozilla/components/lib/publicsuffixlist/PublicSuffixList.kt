@@ -59,7 +59,7 @@ class PublicSuffixList(
     }
 
     /**
-     * Returns the public suffix and one more level; known as the effective top-level domain (eTLD). Returns `null` if
+     * Returns the public suffix and one more level; known as the registrable domain. Returns `null` if
      * [domain] is a public suffix itself.
      *
      * E.g.:
@@ -80,7 +80,8 @@ class PublicSuffixList(
     }
 
     /**
-     * Returns the public suffix of the given [domain]. Returns `null` if the [domain] is a public suffix itself.
+     * Returns the public suffix of the given [domain]; known as the effective top-level domain (eTLD). Returns `null`
+     * if the [domain] is a public suffix itself.
      *
      * E.g.:
      * ```
