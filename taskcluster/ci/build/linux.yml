@@ -242,7 +242,6 @@ linux64-devedition-nightly/opt:
         - linux64-rust
         - linux64-rust-size
         - linux64-cbindgen
-        - linux64-sccache
         - linux64-node
 
 linux64-base-toolchains/opt:
@@ -590,7 +589,6 @@ linux-devedition-nightly/opt:
         - linux64-rust
         - linux64-rust-size
         - linux64-cbindgen
-        - linux64-sccache
         - linux64-node
 
 linux-nightly/opt:
@@ -628,7 +626,6 @@ linux-nightly/opt:
         - linux64-rust
         - linux64-rust-size
         - linux64-cbindgen
-        - linux64-sccache
         - linux64-node
 
 linux64-asan/opt:
@@ -808,7 +805,6 @@ linux64-asan-reporter-nightly/opt:
         - linux64-rust
         - linux64-rust-size
         - linux64-cbindgen
-        - linux64-sccache
         - linux64-node
 
 linux64-asan/debug:
@@ -879,7 +875,6 @@ linux64-nightly/opt:
         - linux64-rust
         - linux64-rust-size
         - linux64-cbindgen
-        - linux64-sccache
         - linux64-node
 
 linux64-noopt/debug:
