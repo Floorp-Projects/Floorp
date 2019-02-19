@@ -77,7 +77,6 @@ const FILE_MAINTENANCE_SERVICE_INSTALLER_BIN = "maintenanceservice_installer.exe
 const FILE_OLD_VERSION_MAR = "old_version.mar";
 const FILE_PARTIAL_EXE = "partial.exe";
 const FILE_UPDATER_BIN = "updater" + mozinfo.bin_suffix;
-const FILE_WRONG_CHANNEL_MAR = "wrong_product_channel.mar";
 
 const PERFORMING_STAGED_UPDATE = "Performing a staged update";
 const CALL_QUIT = "calling QuitProgressUI";
@@ -2798,15 +2797,6 @@ function setupUpdaterTest(aMarFile, aPostUpdateAsync,
 
   debugDump("finish - updater test setup");
   setupAppFilesAsync();
-}
-
-/**
- * Helper function for updater binary tests that creates the update-settings.ini
- * file.
- */
-function createUpdateSettingsINI() {
-  let ini = getApplyDirFile(DIR_RESOURCES + FILE_UPDATE_SETTINGS_INI);
-  writeFile(ini, UPDATE_SETTINGS_CONTENTS);
 }
 
 /**
