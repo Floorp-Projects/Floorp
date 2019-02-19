@@ -301,7 +301,7 @@ bool CallerGetterImpl(JSContext* cx, const CallArgs& args) {
   // caller is a function with strict mode code, throw a TypeError per ES5.
   // If we pass these checks, we can return the computed caller.
   {
-    JSObject* callerObj = CheckedUnwrap(caller);
+    JSObject* callerObj = CheckedUnwrapStatic(caller);
     if (!callerObj) {
       args.rval().setNull();
       return true;

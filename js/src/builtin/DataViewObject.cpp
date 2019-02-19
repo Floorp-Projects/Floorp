@@ -170,7 +170,7 @@ bool DataViewObject::constructWrapped(JSContext* cx, HandleObject bufobj,
   MOZ_ASSERT(args.isConstructing());
   MOZ_ASSERT(bufobj->is<WrapperObject>());
 
-  RootedObject unwrapped(cx, CheckedUnwrap(bufobj));
+  RootedObject unwrapped(cx, CheckedUnwrapStatic(bufobj));
   if (!unwrapped) {
     ReportAccessDenied(cx);
     return false;
