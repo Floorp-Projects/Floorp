@@ -191,6 +191,8 @@ class StorageUI {
 
     this._refreshButton = this._panelDoc.getElementById("refresh-button");
     this._refreshButton.addEventListener("command", this.onRefreshTable);
+    this._refreshButton.setAttribute("tooltiptext",
+    L10N.getFormatStr("storage.popupMenu.refreshItemLabel"));
 
     this._addButton = this._panelDoc.getElementById("add-button");
     this._addButton.addEventListener("command", this.onAddItem);
