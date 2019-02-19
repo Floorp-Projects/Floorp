@@ -1966,6 +1966,8 @@ XRE_AddStaticComponent(const mozilla::Module* aComponent) {
 
 NS_IMETHODIMP
 nsComponentManagerImpl::AddBootstrappedManifestLocation(nsIFile* aLocation) {
+  NS_ENSURE_ARG_POINTER(aLocation);
+
   nsString path;
   nsresult rv = aLocation->GetPath(path);
   if (NS_FAILED(rv)) {
@@ -1983,6 +1985,8 @@ nsComponentManagerImpl::AddBootstrappedManifestLocation(nsIFile* aLocation) {
 
 NS_IMETHODIMP
 nsComponentManagerImpl::RemoveBootstrappedManifestLocation(nsIFile* aLocation) {
+  NS_ENSURE_ARG_POINTER(aLocation);
+
   nsCOMPtr<nsIChromeRegistry> cr =
       mozilla::services::GetChromeRegistryService();
   if (!cr) {
