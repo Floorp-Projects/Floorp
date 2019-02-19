@@ -218,3 +218,11 @@ def verify_always_optimized(task, taskgraph, scratch_pad, graph_config):
         return
     if task.task.get('workerType') == 'always-optimized':
         raise Exception('Could not optimize the task {!r}'.format(task.label))
+
+
+@verifications.add('full_task_graph')
+def verify_nightly_no_sccache(task, taskgraph, scratch_pad, graph_config):
+    if task and task.attributes.get('nightly'):
+        if task.task.get('payload', {}).get('env', {}).get('USE_SCCACHE'):
+            raise Exception(
+                'Nightly job {} cannot use sccache'.format(task.label))
