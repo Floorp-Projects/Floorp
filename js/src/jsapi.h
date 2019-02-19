@@ -2086,6 +2086,8 @@ extern JS_PUBLIC_API void* JS_StealArrayBufferContents(JSContext* cx,
  * Returns a pointer to the ArrayBuffer |obj|'s data.  |obj| and its views will
  * store and expose the data in the returned pointer: assigning into the
  * returned pointer will affect values exposed by views of |obj| and vice versa.
+ * Writes into the pointer must be synchronized with the current thread,
+ * typically by occurring *only on* the current thread.
  *
  * The caller must ultimately deallocate the returned pointer to avoid leaking.
  * The memory is *not* garbage-collected with |obj|.  These steps must be
