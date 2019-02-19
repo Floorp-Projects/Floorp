@@ -19,14 +19,10 @@
 #ifndef wasm_module_h
 #define wasm_module_h
 
-#include "jit/shared/Assembler-shared.h"
-#include "js/TypeDecls.h"
-#include "threading/ConditionVariable.h"
-#include "threading/Mutex.h"
-#include "vm/MutexIDs.h"
+#include "js/BuildId.h"
+
 #include "wasm/WasmCode.h"
 #include "wasm/WasmTable.h"
-#include "wasm/WasmValidate.h"
 
 namespace js {
 namespace wasm {
