@@ -851,7 +851,7 @@ impl AlphaBatchBuilder {
                             [
                                 (run.reference_frame_relative_offset.x * 256.0) as i32,
                                 (run.reference_frame_relative_offset.y * 256.0) as i32,
-                                run.raster_space as i32,
+                                (run.inverse_raster_scale * 65535.0).round() as i32,
                             ],
                         );
                         let key = BatchKey::new(kind, blend_mode, textures);
@@ -866,7 +866,8 @@ impl AlphaBatchBuilder {
 
                         for glyph in glyphs {
                             batch.push(base_instance.build(
-                                glyph.index_in_text_run,
+                                glyph.index_in_text_run |
+                                (run.raster_space as i32) << 16,
                                 glyph.uv_rect_address.as_int(),
                                 (subpx_dir as u32 as i32) << 16 |
                                 (color_mode as u32 as i32),

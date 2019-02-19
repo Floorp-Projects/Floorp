@@ -161,14 +161,13 @@ VertexInfo write_text_vertex(RectWithSize local_clip_rect,
 
 void main(void) {
     int prim_header_address = aData.x;
-    int glyph_index = aData.y;
+    int glyph_index = aData.y & 0xffff;
+    int raster_space = aData.y >> 16;
     int resource_address = aData.z;
     int subpx_dir = aData.w >> 16;
     int color_mode = aData.w & 0xffff;
 
     PrimitiveHeader ph = fetch_prim_header(prim_header_address);
-    int raster_space = ph.user_data.z;
-
     Transform transform = fetch_transform(ph.transform_id);
     ClipArea clip_area = fetch_clip_area(ph.clip_task_index);
     PictureTask task = fetch_picture_task(ph.render_task_index);
@@ -193,8 +192,10 @@ void main(void) {
     RectWithSize glyph_rect = RectWithSize(res.offset + glyph_transform * (text_offset + glyph.offset),
                                            res.uv_rect.zw - res.uv_rect.xy);
 #else
+    float inverse_raster_scale = float(ph.user_data.z) / 65535.0;
+
     // Scale from glyph space to local space.
-    float scale = res.scale / task.device_pixel_scale;
+    float scale = inverse_raster_scale * res.scale / task.device_pixel_scale;
 
     // Compute the glyph rect in local space.
     RectWithSize glyph_rect = RectWithSize(scale * res.offset + text_offset + glyph.offset,
