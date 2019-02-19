@@ -1937,6 +1937,7 @@ this.PlacesPanelview = class extends PlacesViewBase {
   }
 
   _onCommand(event) {
+    event = getRootEvent(event);
     let button = event.originalTarget;
     if (!button._placesNode)
       return;

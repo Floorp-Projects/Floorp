@@ -2059,6 +2059,8 @@ function HandleAppCommandEvent(evt) {
 }
 
 function gotoHistoryIndex(aEvent) {
+  aEvent = getRootEvent(aEvent);
+
   let index = aEvent.target.getAttribute("index");
   if (!index)
     return false;
@@ -2135,6 +2137,7 @@ function BrowserStop() {
 }
 
 function BrowserReloadOrDuplicate(aEvent) {
+  aEvent = getRootEvent(aEvent);
   let metaKeyPressed = AppConstants.platform == "macosx"
                        ? aEvent.metaKey
                        : aEvent.ctrlKey;
