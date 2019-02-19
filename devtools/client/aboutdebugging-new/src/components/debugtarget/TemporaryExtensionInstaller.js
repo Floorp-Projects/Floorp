@@ -11,10 +11,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const Message = createFactory(require("../shared/Message"));
-
 const Actions = require("../../actions/index");
-const { MESSAGE_LEVEL } = require("../../constants");
 
 /**
  * This component provides an installer for temporary extension.
@@ -22,8 +19,8 @@ const { MESSAGE_LEVEL } = require("../../constants");
 class TemporaryExtensionInstaller extends PureComponent {
   static get propTypes() {
     return {
+      className: PropTypes.string,
       dispatch: PropTypes.func.isRequired,
-      temporaryInstallError: PropTypes.string,
     };
   }
 
@@ -32,41 +29,20 @@ class TemporaryExtensionInstaller extends PureComponent {
   }
 
   render() {
-    const { temporaryInstallError } = this.props;
-    return dom.div(
-      {},
-      Localized(
+    const { className } = this.props;
+
+    return Localized(
+      {
+        id: "about-debugging-tmp-extension-install-button",
+      },
+      dom.button(
         {
-          id: "about-debugging-tmp-extension-install-button",
+          className:
+            `${ className } default-button js-temporary-extension-install-button`,
+          onClick: e => this.install(),
         },
-        dom.button(
-          {
-            className: "default-button js-temporary-extension-install-button",
-            onClick: e => this.install(),
-          },
-          "Load Temporary Add-on…"
-        )
-      ),
-      temporaryInstallError ? Message(
-        {
-          level: MESSAGE_LEVEL.ERROR,
-        },
-        dom.div(
-          {},
-          Localized(
-            {
-              id: "about-debugging-tmp-extension-install-error",
-            },
-            dom.span({}, "There was an error during the temporary add-on installation")
-          ),
-          dom.div(
-            {
-              className: "technical-text",
-            },
-            temporaryInstallError
-          )
-        )
-      ) : null
+        "Load Temporary Add-on…"
+      )
     );
   }
 }
