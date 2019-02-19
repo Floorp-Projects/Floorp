@@ -1884,8 +1884,13 @@ bool JSStructuredCloneWriter::transferOwnership() {
         //     replaced with wasm contents).  But it seems better to play it
         //     safe and deal with *all* states, not just the ones that appear
         //     possible here.
+        //
+        // Inline data obviously has to be copied.  So too user-owned data
         bool hasStealableContents =
-          arrayBuffer->ownsData() && !arrayBuffer->isNoData();
+          arrayBuffer->ownsData() &&
+          !arrayBuffer->isInlineData() &&
+          !arrayBuffer->isNoData() &&
+          !arrayBuffer->hasUserOwnedData();
 
         ArrayBufferObject::BufferContents bufContents =
             ArrayBufferObject::stealContents(cx, arrayBuffer,
