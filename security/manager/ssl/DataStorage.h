@@ -57,12 +57,14 @@ class DataStorageItem;
  *   pending persistent data changes. However, those changes will cause the
  *   timer to be reinitialized and another "data-storage-written" event will
  *   be sent.
- * - When DataStorage observes the topic "profile-before-change" in
- *   anticipation of shutdown, all persistent data is synchronously written to
- *   the backing file. The worker thread responsible for these writes is then
- *   disabled to prevent further writes to that file (the delayed-write timer
- *   is cancelled when this happens). Note that the "worker thread" is actually
- *   a single thread shared between all DataStorage instances.
+ * - When any DataStorage observes the topic "profile-before-change" in
+ *   anticipation of shutdown, all persistent data for all DataStorage instances
+ *   is synchronously written to the appropriate backing file. The worker thread
+ *   responsible for these writes is then disabled to prevent further writes to
+ *   that file (the delayed-write timer is cancelled when this happens). Note
+ *   that the "worker thread" is actually a single thread shared between all
+ *   DataStorage instances. If "profile-before-change" is not observed, this
+ *   happens upon observing "xpcom-shutdown-threads".
  * - For testing purposes, the preference "test.datastorage.write_timer_ms" can
  *   be set to cause the asynchronous writing of data to happen more quickly.
  * - To prevent unbounded memory and disk use, the number of entries in each
@@ -108,7 +110,6 @@ class DataStorage : public nsIObserver {
   // If there is a profile directory, there is or will eventually be a file
   // by the name specified by aFilename there.
   static already_AddRefed<DataStorage> Get(DataStorageClass aFilename);
-  static already_AddRefed<DataStorage> GetIfExists(DataStorageClass aFilename);
 
   // Initializes the DataStorage. Must be called before using.
   // aDataWillPersist returns whether or not data can be persistently saved.
