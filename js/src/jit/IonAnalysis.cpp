@@ -3422,6 +3422,14 @@ static MathSpace ExtractMathSpace(MDefinition* ins) {
   MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unknown TruncateKind");
 }
 
+static bool MonotoneAdd(int32_t lhs, int32_t rhs) {
+  return (lhs >= 0 && rhs >= 0) || (lhs <= 0 && rhs <= 0);
+}
+
+static bool MonotoneSub(int32_t lhs, int32_t rhs) {
+  return (lhs >= 0 && rhs <= 0) || (lhs <= 0 && rhs >= 0);
+}
+
 // Extract a linear sum from ins, if possible (otherwise giving the
 // sum 'ins + 0').
 SimpleLinearSum jit::ExtractLinearSum(MDefinition* ins, MathSpace space) {
@@ -3471,7 +3479,8 @@ SimpleLinearSum jit::ExtractLinearSum(MDefinition* ins, MathSpace space) {
     int32_t constant;
     if (space == MathSpace::Modulo) {
       constant = uint32_t(lsum.constant) + uint32_t(rsum.constant);
-    } else if (!SafeAdd(lsum.constant, rsum.constant, &constant)) {
+    } else if (!SafeAdd(lsum.constant, rsum.constant, &constant) ||
+               !MonotoneAdd(lsum.constant, rsum.constant)) {
       return SimpleLinearSum(ins, 0);
     }
     return SimpleLinearSum(lsum.term ? lsum.term : rsum.term, constant);
@@ -3483,7 +3492,8 @@ SimpleLinearSum jit::ExtractLinearSum(MDefinition* ins, MathSpace space) {
     int32_t constant;
     if (space == MathSpace::Modulo) {
       constant = uint32_t(lsum.constant) - uint32_t(rsum.constant);
-    } else if (!SafeSub(lsum.constant, rsum.constant, &constant)) {
+    } else if (!SafeSub(lsum.constant, rsum.constant, &constant) ||
+               !MonotoneSub(lsum.constant, rsum.constant)) {
       return SimpleLinearSum(ins, 0);
     }
     return SimpleLinearSum(lsum.term, constant);
