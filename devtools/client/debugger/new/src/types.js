@@ -351,6 +351,7 @@ type BaseSource = {|
   +loadedState: "unloaded" | "loading" | "loaded",
   +relativeUrl: string,
   +introductionUrl: ?string,
+  +isExtension: boolean,
   +actors: SourceActor[]
 |};
 

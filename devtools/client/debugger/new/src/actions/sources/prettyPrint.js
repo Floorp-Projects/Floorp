@@ -43,6 +43,7 @@ export function createPrettySource(sourceId: string) {
       contentType: "text/javascript",
       loadedState: "loading",
       introductionUrl: null,
+      isExtension: false,
       actors: []
     };
 
