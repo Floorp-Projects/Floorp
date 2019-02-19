@@ -4181,9 +4181,6 @@ bool js::detail::CopyScript(JSContext* cx, HandleScript src,
 
   if (src->argumentsHasVarBinding()) {
     dst->setArgumentsHasVarBinding();
-    if (src->analyzedArgsUsage()) {
-      dst->setNeedsArgsObj(src->needsArgsObj());
-    }
   }
 
   // Clone the PrivateScriptData into dst
