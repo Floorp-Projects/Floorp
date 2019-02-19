@@ -22,6 +22,7 @@
 #include "jstypes.h"
 
 #include "builtin/Array.h"
+#include "builtin/BigInt.h"
 #include "builtin/Eval.h"
 #include "builtin/Object.h"
 #include "builtin/SelfHostingDefines.h"
@@ -2553,6 +2554,8 @@ void js::ReportIncompatibleMethod(JSContext* cx, const CallArgs& args,
     MOZ_ASSERT(clasp != &BooleanObject::class_);
   } else if (thisv.isSymbol()) {
     MOZ_ASSERT(clasp != &SymbolObject::class_);
+  } else if (thisv.isBigInt()) {
+    MOZ_ASSERT(clasp != &BigIntObject::class_);
   } else {
     MOZ_ASSERT(thisv.isUndefined() || thisv.isNull());
   }
