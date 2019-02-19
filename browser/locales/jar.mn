@@ -14,7 +14,7 @@
 % locale browser @AB_CD@ %locale/browser/
 # bookmarks.html is produced by LOCALIZED_GENERATED_FILES.
     locale/browser/bookmarks.html                  (bookmarks.html)
-    locale/browser/aboutPrivateBrowsing.dtd        (%chrome/browser/aboutPrivateBrowsing.dtd)
+
     locale/browser/accounts.properties             (%chrome/browser/accounts.properties)
     locale/browser/browser.dtd                     (%chrome/browser/browser.dtd)
     locale/browser/baseMenuOverlay.dtd             (%chrome/browser/baseMenuOverlay.dtd)
