@@ -772,9 +772,12 @@ nsresult ProtocolParserProtobuf::ProcessOneResponse(
     return NS_ERROR_UC_PARSER_MISSING_PARAM;
   }
 
+  nsUrlClassifierUtils* urlUtil = nsUrlClassifierUtils::GetInstance();
+  if (NS_WARN_IF(!urlUtil)) {
+    return NS_ERROR_FAILURE;
+  }
+
   // Convert threat type to list name.
-  nsCOMPtr<nsIUrlClassifierUtils> urlUtil =
-      components::UrlClassifierUtils::Service();
   nsCString possibleListNames;
   nsresult rv = urlUtil->ConvertThreatTypeToListNames(aResponse.threat_type(),
                                                       possibleListNames);

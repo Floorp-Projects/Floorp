@@ -91,16 +91,10 @@ void ApplyUpdate(TableUpdateArray& updates) {
   RefPtr<Classifier> classifier = new Classifier();
   classifier->Open(*file);
 
-  {
-    // Force nsIUrlClassifierUtils loading on main thread
-    // because nsIUrlClassifierDBService will not run in advance
-    // in gtest.
-    nsresult rv;
-    nsCOMPtr<nsIUrlClassifierUtils> dummy =
-        mozilla::components::UrlClassifierUtils::Service(&rv);
-    Unused << dummy;
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
-  }
+  // Force nsUrlClassifierUtils loading on main thread
+  // because nsIUrlClassifierDBService will not run in advance
+  // in gtest.
+  nsUrlClassifierUtils::GetInstance();
 
   SyncApplyUpdates(classifier, updates);
 }

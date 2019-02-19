@@ -187,16 +187,10 @@ static void testUpdate(TableUpdateArray& tableUpdates,
   nsCOMPtr<nsIFile> file;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
 
-  {
-    // Force nsIUrlClassifierUtils loading on main thread
-    // because nsIUrlClassifierDBService will not run in advance
-    // in gtest.
-    nsresult rv;
-    nsCOMPtr<nsIUrlClassifierUtils> dummy =
-        components::UrlClassifierUtils::Service(&rv);
-    Unused << dummy;
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
-  }
+  // Force nsUrlClassifierUtils loading on main thread
+  // because nsIUrlClassifierDBService will not run in advance
+  // in gtest.
+  nsUrlClassifierUtils::GetInstance();
 
   RefPtr<Classifier> classifier = new Classifier();
   classifier->Open(*file);

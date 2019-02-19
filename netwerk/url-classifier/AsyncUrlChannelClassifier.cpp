@@ -16,13 +16,13 @@
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIURIClassifier.h"
-#include "nsIUrlClassifierUtils.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
 #include "nsProxyRelease.h"
 #include "nsServiceManagerUtils.h"
 #include "nsUrlClassifierDBService.h"
+#include "nsUrlClassifierUtils.h"
 
 namespace mozilla {
 namespace net {
@@ -92,8 +92,7 @@ class URIData {
   RefPtr<URIData> data = new URIData();
   data->mURI = aURI;
 
-  nsCOMPtr<nsIUrlClassifierUtils> utilsService =
-      components::UrlClassifierUtils::Service();
+  nsUrlClassifierUtils* utilsService = nsUrlClassifierUtils::GetInstance();
   if (NS_WARN_IF(!utilsService)) {
     return NS_ERROR_FAILURE;
   }

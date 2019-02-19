@@ -37,8 +37,7 @@ Base64EncodedStringArray MakeBase64EncodedStringArray(nsCString (&aArray)[N]) {
 }  // end of unnamed namespace.
 
 TEST(UrlClassifierFindFullHash, Request) {
-  nsCOMPtr<nsIUrlClassifierUtils> urlUtil =
-      do_GetService("@mozilla.org/url-classifier/utils;1");
+  nsUrlClassifierUtils* urlUtil = nsUrlClassifierUtils::GetInstance();
 
   const char* listNames[] = {"test-phish-proto", "test-unwanted-proto"};
 
@@ -163,8 +162,8 @@ class MyParseCallback final : public nsIUrlClassifierParseFindFullHashCallback {
     ASSERT_TRUE(aCompleteHash.Equals(expected.mCompleteHash));
 
     // Verify aTableNames
-    nsCOMPtr<nsIUrlClassifierUtils> urlUtil =
-        do_GetService("@mozilla.org/url-classifier/utils;1");
+    nsUrlClassifierUtils* urlUtil = nsUrlClassifierUtils::GetInstance();
+
     nsCString tableNames;
     nsresult rv =
         urlUtil->ConvertThreatTypeToListNames(expected.mThreatType, tableNames);
@@ -216,8 +215,7 @@ TEST(UrlClassifierFindFullHash, ParseRequest) {
   nsCOMPtr<nsIUrlClassifierParseFindFullHashCallback> callback =
       new MyParseCallback(callbackCount);
 
-  nsCOMPtr<nsIUrlClassifierUtils> urlUtil =
-      do_GetService("@mozilla.org/url-classifier/utils;1");
+  nsUrlClassifierUtils* urlUtil = nsUrlClassifierUtils::GetInstance();
   nsresult rv = urlUtil->ParseFindFullHashResponseV4(
       nsCString(s.c_str(), s.size()), callback);
   NS_ENSURE_SUCCESS_VOID(rv);
