@@ -624,6 +624,11 @@ enum class CompileMode { Once, Tier1, Tier2 };
 
 enum class DebugEnabled { False, True };
 
+// A wasm module can either use no memory, a unshared memory (ArrayBuffer) or
+// shared memory (SharedArrayBuffer).
+
+enum class MemoryUsage { None = false, Unshared = 1, Shared = 2 };
+
 // Iterator over tiers present in a tiered data structure.
 
 class Tiers {
