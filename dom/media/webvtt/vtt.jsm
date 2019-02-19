@@ -30,6 +30,9 @@ var EXPORTED_SYMBOLS = ["WebVTT"];
 const {Services} = ChromeUtils.import('resource://gre/modules/Services.jsm');
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
+                                      "media.webvtt.pseudo.enabled", false);
+
 (function(global) {
 
   var _objCreate = Object.create || (function() {
@@ -493,99 +496,113 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
   XPCOMUtils.defineLazyPreferenceGetter(StyleBox.prototype, "supportPseudo",
                                         "media.webvtt.pseudo.enabled", false);
 
+  // TODO(alwu): remove StyleBox and change other style box to class-based.
+  class StyleBoxBase {
+    applyStyles(styles, div) {
+      div = div || this.div;
+      Object.assign(div.style, styles);
+    }
+
+    formatStyle(val, unit) {
+      return val === 0 ? 0 : val + unit;
+    }
+  }
+
   // Constructs the computed display state of the cue (a div). Places the div
   // into the overlay which should be a block level element (usually a div).
-  function CueStyleBox(window, cue, styleOptions) {
-    var color = "rgba(255, 255, 255, 1)";
-    var backgroundColor = "rgba(0, 0, 0, 0.8)";
+  class CueStyleBox extends StyleBoxBase {
+    constructor(window, cue, styleOptions) {
+      super();
+      var color = "rgba(255, 255, 255, 1)";
+      var backgroundColor = "rgba(0, 0, 0, 0.8)";
 
-    StyleBox.call(this);
-    this.cue = cue;
+      this.cue = cue;
 
-    // Parse our cue's text into a DOM tree rooted at 'cueDiv'. This div will
-    // have inline positioning and will function as the cue background box.
-    if (this.supportPseudo) {
-      this.cueDiv = parseContent(window, cue.text, PARSE_CONTENT_MODE.PSUEDO_CUE);
-    } else {
-      this.cueDiv = parseContent(window, cue.text, PARSE_CONTENT_MODE.NORMAL_CUE);
-    }
-    var styles = {
-      color: color,
-      backgroundColor: backgroundColor,
-      display: "inline",
-      font: styleOptions.font,
-      whiteSpace: "pre-line",
-    };
-    if (this.supportPseudo) {
-      delete styles.color;
-      delete styles.backgroundColor;
-      delete styles.font;
-      delete styles.whiteSpace;
-    }
-
-    styles.writingMode = cue.vertical === "" ? "horizontal-tb"
-                                             : cue.vertical === "lr" ? "vertical-lr"
-                                                                     : "vertical-rl";
-    styles.unicodeBidi = "plaintext";
-
-    this.applyStyles(styles, this.cueDiv);
-
-    // Create an absolutely positioned div that will be used to position the cue
-    // div.
-    styles = {
-      position: "absolute",
-      textAlign: cue.align,
-      font: styleOptions.font,
-    };
-
-    this.div = window.document.createElement("div");
-    this.applyStyles(styles);
-
-    this.div.appendChild(this.cueDiv);
-
-    // Calculate the distance from the reference edge of the viewport to the text
-    // position of the cue box. The reference edge will be resolved later when
-    // the box orientation styles are applied.
-    function convertCuePostionToPercentage(cuePosition) {
-      if (cuePosition === "auto") {
-        return 50;
+      // Parse our cue's text into a DOM tree rooted at 'cueDiv'. This div will
+      // have inline positioning and will function as the cue background box.
+      if (supportPseudo) {
+        this.cueDiv = parseContent(window, cue.text, PARSE_CONTENT_MODE.PSUEDO_CUE);
+      } else {
+        this.cueDiv = parseContent(window, cue.text, PARSE_CONTENT_MODE.NORMAL_CUE);
       }
-      return cuePosition;
-    }
-    var textPos = 0;
-    let postionPercentage = convertCuePostionToPercentage(cue.position);
-    switch (cue.computedPositionAlign) {
-      // TODO : modify these fomula to follow the spec, see bug 1277437.
-      case "line-left":
-        textPos = postionPercentage;
-        break;
-      case "center":
-        textPos = postionPercentage - (cue.size / 2);
-        break;
-      case "line-right":
-        textPos = postionPercentage - cue.size;
-        break;
+      var styles = {
+        color: color,
+        backgroundColor: backgroundColor,
+        display: "inline",
+        font: styleOptions.font,
+        whiteSpace: "pre-line",
+      };
+      if (supportPseudo) {
+        delete styles.color;
+        delete styles.backgroundColor;
+        delete styles.font;
+        delete styles.whiteSpace;
+      }
+
+      styles.writingMode = cue.vertical === "" ? "horizontal-tb"
+                                               : cue.vertical === "lr" ? "vertical-lr"
+                                                                       : "vertical-rl";
+      styles.unicodeBidi = "plaintext";
+
+      this.applyStyles(styles, this.cueDiv);
+
+      // Create an absolutely positioned div that will be used to position the cue
+      // div.
+      styles = {
+        position: "absolute",
+        textAlign: cue.align,
+        font: styleOptions.font,
+      };
+
+      this.div = window.document.createElement("div");
+      this.applyStyles(styles);
+
+      this.div.appendChild(this.cueDiv);
+
+      // Calculate the distance from the reference edge of the viewport to the text
+      // position of the cue box. The reference edge will be resolved later when
+      // the box orientation styles are applied.
+      function convertCuePostionToPercentage(cuePosition) {
+        if (cuePosition === "auto") {
+          return 50;
+        }
+        return cuePosition;
+      }
+      var textPos = 0;
+      let postionPercentage = convertCuePostionToPercentage(cue.position);
+      switch (cue.computedPositionAlign) {
+        // TODO : modify these fomula to follow the spec, see bug 1277437.
+        case "line-left":
+          textPos = postionPercentage;
+          break;
+        case "center":
+          textPos = postionPercentage - (cue.size / 2);
+          break;
+        case "line-right":
+          textPos = postionPercentage - cue.size;
+          break;
+      }
+
+      // Horizontal box orientation; textPos is the distance from the left edge of the
+      // area to the left edge of the box and cue.size is the distance extending to
+      // the right from there.
+      if (cue.vertical === "") {
+        this.applyStyles({
+          left:  this.formatStyle(textPos, "%"),
+          width: this.formatStyle(cue.size, "%")
+        });
+      // Vertical box orientation; textPos is the distance from the top edge of the
+      // area to the top edge of the box and cue.size is the height extending
+      // downwards from there.
+      } else {
+        this.applyStyles({
+          top: this.formatStyle(textPos, "%"),
+          height: this.formatStyle(cue.size, "%")
+        });
+      }
     }
 
-    // Horizontal box orientation; textPos is the distance from the left edge of the
-    // area to the left edge of the box and cue.size is the distance extending to
-    // the right from there.
-    if (cue.vertical === "") {
-      this.applyStyles({
-        left:  this.formatStyle(textPos, "%"),
-        width: this.formatStyle(cue.size, "%")
-      });
-    // Vertical box orientation; textPos is the distance from the top edge of the
-    // area to the top edge of the box and cue.size is the height extending
-    // downwards from there.
-    } else {
-      this.applyStyles({
-        top: this.formatStyle(textPos, "%"),
-        height: this.formatStyle(cue.size, "%")
-      });
-    }
-
-    this.move = function(box) {
+    move(box) {
       this.applyStyles({
         top: this.formatStyle(box.top, "px"),
         bottom: this.formatStyle(box.bottom, "px"),
@@ -594,10 +611,8 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
         height: this.formatStyle(box.height, "px"),
         width: this.formatStyle(box.width, "px")
       });
-    };
+    }
   }
-  CueStyleBox.prototype = _objCreate(StyleBox.prototype);
-  CueStyleBox.prototype.constructor = CueStyleBox;
 
   function RegionNodeBox(window, region, container) {
     StyleBox.call(this);
