@@ -4128,13 +4128,14 @@ nsresult nsContentUtils::DispatchEvent(Document* aDoc, nsISupports* aTarget,
 nsresult nsContentUtils::DispatchInputEvent(Element* aEventTargetElement) {
   RefPtr<TextEditor> textEditor;  // See bug 1506439
   return DispatchInputEvent(aEventTargetElement, EditorInputType::eUnknown,
-                            textEditor);
+                            textEditor, InputEventOptions());
 }
 
 // static
 nsresult nsContentUtils::DispatchInputEvent(Element* aEventTargetElement,
                                             EditorInputType aEditorInputType,
-                                            TextEditor* aTextEditor) {
+                                            TextEditor* aTextEditor,
+                                            const InputEventOptions& aOptions) {
   if (NS_WARN_IF(!aEventTargetElement)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -4230,6 +4231,31 @@ nsresult nsContentUtils::DispatchInputEvent(Element* aEventTargetElement,
   // composition without editor.
   inputEvent.mIsComposing =
       aTextEditor ? !!aTextEditor->GetComposition() : false;
+
+  if (!aTextEditor || !aTextEditor->AsHTMLEditor()) {
+    if (IsDataAvailableOnTextEditor(aEditorInputType)) {
+      inputEvent.mData = aOptions.mData;
+      MOZ_ASSERT(!inputEvent.mData.IsVoid(),
+                 "inputEvent.mData shouldn't be void");
+    }
+#ifdef DEBUG
+    else {
+      MOZ_ASSERT(inputEvent.mData.IsVoid(), "inputEvent.mData should be void");
+    }
+#endif  // #ifdef DEBUG
+  } else {
+    MOZ_ASSERT(aTextEditor->AsHTMLEditor());
+    if (IsDataAvailableOnHTMLEditor(aEditorInputType)) {
+      inputEvent.mData = aOptions.mData;
+      MOZ_ASSERT(!inputEvent.mData.IsVoid(),
+                 "inputEvent.mData shouldn't be void");
+    }
+#ifdef DEBUG
+    else {
+      MOZ_ASSERT(inputEvent.mData.IsVoid(), "inputEvent.mData should be void");
+    }
+#endif  // #ifdef DEBUG
+  }
 
   inputEvent.mInputType = aEditorInputType;
 

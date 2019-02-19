@@ -643,7 +643,7 @@ function runUndoRedoTest()
   }
 }
 
-function checkInputEvent(aEvent, aIsComposing, aInputType, aDescription) {
+function checkInputEvent(aEvent, aIsComposing, aInputType, aData, aDescription) {
   if (aEvent.type != "input") {
     return;
   }
@@ -652,6 +652,7 @@ function checkInputEvent(aEvent, aIsComposing, aInputType, aDescription) {
   is(aEvent.bubbles, true, `"input" event should always bubble: ${aDescription}`);
   is(aEvent.isComposing, aIsComposing, `isComposing should be ${aIsComposing}: ${aDescription}`);
   is(aEvent.inputType, aInputType, `inputType should be "${aInputType}": ${aDescription}`);
+  is(aEvent.data, aData, `data should be ${aData}: ${aDescription}`);
 }
 
 function runCompositionCommitAsIsTest()
@@ -700,7 +701,7 @@ function runCompositionCommitAsIsTest()
      "runCompositionCommitAsIsTest: compositionend should be fired after dispatching compositioncommitasis #1");
   is(result[2].type, "input",
      "runCompositionCommitAsIsTest: input should be fired after dispatching compositioncommitasis #1");
-  checkInputEvent(result[2], false, "insertCompositionText",
+  checkInputEvent(result[2], false, "insertCompositionText", "\u3042",
                   "runCompositionCommitAsIsTest: after dispatching compositioncommitasis #1");
   is(textarea.value, "\u3042", "runCompositionCommitAsIsTest: textarea doesn't have committed string #1");
 
@@ -740,7 +741,7 @@ function runCompositionCommitAsIsTest()
      "runCompositionCommitAsIsTest: compositionend should be fired after dispatching compositioncommitasis #2");
   is(result[1].type, "input",
      "runCompositionCommitAsIsTest: input should be fired after dispatching compositioncommitasis #2");
-  checkInputEvent(result[1], false, "insertCompositionText",
+  checkInputEvent(result[1], false, "insertCompositionText", "\u3042",
                   "runCompositionCommitAsIsTest: after dispatching compositioncommitasis #2");
   is(textarea.value, "\u3042", "runCompositionCommitAsIsTest: textarea doesn't have committed string #2");
 
@@ -780,7 +781,7 @@ function runCompositionCommitAsIsTest()
      "runCompositionCommitAsIsTest: compositionend shouldn't be fired after dispatching compositioncommitasis #3");
   is(result[1].type, "input",
      "runCompositionCommitAsIsTest: input should be fired after dispatching compositioncommitasis #3");
-  checkInputEvent(result[1], false, "insertCompositionText",
+  checkInputEvent(result[1], false, "insertCompositionText", "",
                   "runCompositionCommitAsIsTest: after dispatching compositioncommitasis #3");
   is(textarea.value, "", "runCompositionCommitAsIsTest: textarea doesn't have committed string #3");
 
@@ -838,7 +839,7 @@ function runCompositionCommitTest()
      "runCompositionCommitTest: compositionend should be fired after dispatching compositioncommit #1");
   is(result[3].type, "input",
      "runCompositionCommitTest: input should be fired after dispatching compositioncommit #1");
-  checkInputEvent(result[3], false, "insertCompositionText",
+  checkInputEvent(result[3], false, "insertCompositionText", "\u3043",
                   "runCompositionCommitTest: after dispatching compositioncommit #1");
   is(textarea.value, "\u3043", "runCompositionCommitTest: textarea doesn't have committed string #1");
 
@@ -882,7 +883,7 @@ function runCompositionCommitTest()
      "runCompositionCommitTest: compositionend should be fired after dispatching compositioncommit #2");
   is(result[3].type, "input",
      "runCompositionCommitTest: input should be fired after dispatching compositioncommit #2");
-  checkInputEvent(result[3], false, "insertCompositionText",
+  checkInputEvent(result[3], false, "insertCompositionText", "\u3043",
                   "runCompositionCommitTest: after dispatching compositioncommit #2");
   is(textarea.value, "\u3043", "runCompositionCommitTest: textarea doesn't have committed string #2");
 
@@ -926,7 +927,7 @@ function runCompositionCommitTest()
      "runCompositionCommitTest: compositionend should be fired after dispatching compositioncommit #3");
   is(result[3].type, "input",
      "runCompositionCommitTest: input should be fired after dispatching compositioncommit #3");
-  checkInputEvent(result[3], false, "insertCompositionText",
+  checkInputEvent(result[3], false, "insertCompositionText", "\u3043",
                   "runCompositionCommitTest: after dispatching compositioncommit #3");
   is(textarea.value, "\u3043", "runCompositionCommitTest: textarea doesn't have committed string #3");
 
@@ -946,7 +947,7 @@ function runCompositionCommitTest()
      "runCompositionCommitTest: compositionend should be fired when inserting empty string with composition");
   is(result[2].type, "input",
      "runCompositionCommitTest: input should be fired when inserting empty string with composition");
-  checkInputEvent(result[2], false, "insertCompositionText",
+  checkInputEvent(result[2], false, "insertCompositionText", "",
                   "runCompositionCommitTest: when inserting empty string with composition");
   is(textarea.value, "abc",
      "runCompositionCommitTest: textarea should keep original value when inserting empty string with composition");
@@ -967,7 +968,7 @@ function runCompositionCommitTest()
      "runCompositionCommitTest: compositionend should be fired when replacing with empty string with composition");
   is(result[2].type, "input",
      "runCompositionCommitTest: input should be fired when replacing with empty string with composition");
-  checkInputEvent(result[2], false, "insertCompositionText",
+  checkInputEvent(result[2], false, "insertCompositionText", "",
                   "runCompositionCommitTest: when replacing with empty string with composition");
   is(textarea.value, "",
      "runCompositionCommitTest: textarea should become empty when replacing selection with empty string with composition");
@@ -990,7 +991,7 @@ function runCompositionCommitTest()
      "runCompositionCommitTest: compositionend should be fired when replacing selection with same string with composition");
   is(result[3].type, "input",
      "runCompositionCommitTest: input should be fired when replacing selection with same string with composition");
-  checkInputEvent(result[3], false, "insertCompositionText",
+  checkInputEvent(result[3], false, "insertCompositionText", "abc",
                   "runCompositionCommitTest: when replacing selection with same string with composition");
   is(textarea.value, "abc",
      "runCompositionCommitTest: textarea should keep same value when replacing selection with same string with composition");
@@ -1023,7 +1024,7 @@ function runCompositionCommitTest()
      "runCompositionCommitTest: compositionend should be fired after dispatching compositioncommit #4");
   is(result[3].type, "input",
      "runCompositionCommitTest: input should be fired after dispatching compositioncommit #4");
-  checkInputEvent(result[3], false, "insertCompositionText",
+  checkInputEvent(result[3], false, "insertCompositionText", "",
                   "runCompositionCommitTest: after dispatching compositioncommit #4");
   is(textarea.value, "", "runCompositionCommitTest: textarea should be empty #4");
 
@@ -1043,7 +1044,7 @@ function runCompositionCommitTest()
      "runCompositionCommitTest: compositionend should be fired after dispatching compositioncommit #5");
   is(result[3].type, "input",
      "runCompositionCommitTest: input should be fired after dispatching compositioncommit #5");
-  checkInputEvent(result[3], false, "insertCompositionText",
+  checkInputEvent(result[3], false, "insertCompositionText", "\u3042",
                   "runCompositionCommitTest: after dispatching compositioncommit #5");
   is(textarea.value, "\u3042", "runCompositionCommitTest: textarea should be empty #5");
 
@@ -1073,7 +1074,7 @@ function runCompositionCommitTest()
      "runCompositionCommitTest: compositionend should be fired after dispatching compositioncommit #6");
   is(result[2].type, "input",
      "runCompositionCommitTest: input should be fired after dispatching compositioncommit #6");
-  checkInputEvent(result[2], false, "insertCompositionText",
+  checkInputEvent(result[2], false, "insertCompositionText", "\u3042",
                   "runCompositionCommitTest: after dispatching compositioncommit #6");
   is(textarea.value, "\u3042", "runCompositionCommitTest: textarea should have committed string #6");
 
@@ -1114,7 +1115,7 @@ function runCompositionCommitTest()
      "runCompositionCommitTest: compositionend should be fired after dispatching compositioncommit #7");
   is(result[1].type, "input",
      "runCompositionCommitTest: input should be fired after dispatching compositioncommit #7");
-  checkInputEvent(result[1], false, "insertCompositionText",
+  checkInputEvent(result[1], false, "insertCompositionText", "\u3042",
                   "runCompositionCommitTest: after dispatching compositioncommit #7");
   is(textarea.value, "\u3042", "runCompositionCommitTest: textarea should have committed string #6");
 
@@ -5055,7 +5056,8 @@ function runForceCommitTest()
      "runForceCommitTest: the 3rd event must be text #1");
   is(events[3].type, "input",
      "runForceCommitTest: the 4th event must be input #1");
-  checkInputEvent(events[3], true, "insertCompositionText", "runForceCommitTest #1");
+  checkInputEvent(events[3], true, "insertCompositionText", "\u306E",
+                  "runForceCommitTest #1");
 
   events = [];
   synthesizeMouseAtCenter(textarea, {});
@@ -5068,7 +5070,8 @@ function runForceCommitTest()
      "runForceCommitTest: the 2nd event must be compositionend #2");
   is(events[2].type, "input",
      "runForceCommitTest: the 3rd event must be input #2");
-  checkInputEvent(events[2], false, "insertCompositionText", "runForceCommitTest #2");
+  checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
+                  "runForceCommitTest #2");
   is(events[1].data, "\u306E",
      "runForceCommitTest: compositionend has wrong data #2");
   is(events[0].target, textarea,
@@ -5109,7 +5112,8 @@ function runForceCommitTest()
      "runForceCommitTest: the 2nd event must be compositionend #3");
   is(events[2].type, "input",
      "runForceCommitTest: the 3rd event must be input #3");
-  checkInputEvent(events[2], false, "insertCompositionText", "runForceCommitTest #3");
+  checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
+                  "runForceCommitTest #3");
   is(events[1].data, "\u306E",
      "runForceCommitTest: compositionend has wrong data #3");
   is(events[0].target, textarea,
@@ -5153,7 +5157,8 @@ function runForceCommitTest()
      "runForceCommitTest: the 2nd event must be compositionend #4");
   is(events[2].type, "input",
      "runForceCommitTest: the 3rd event must be input #4");
-  checkInputEvent(events[2], false, "insertCompositionText", "runForceCommitTest #4");
+  checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
+                  "runForceCommitTest #4");
   is(events[1].data, "\u306E",
      "runForceCommitTest: compositionend has wrong data #4");
   is(events[0].target, textarea,
@@ -5194,7 +5199,8 @@ function runForceCommitTest()
      "runForceCommitTest: the 2nd event must be compositionend #5");
   is(events[2].type, "input",
      "runForceCommitTest: the 3rd event must be input #5");
-  checkInputEvent(events[2], false, "insertCompositionText", "runForceCommitTest #5");
+  checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
+                  "runForceCommitTest #5");
   is(events[1].data, "\u306E",
      "runForceCommitTest: compositionend has wrong data #5");
   is(events[0].target, textarea,
@@ -5239,7 +5245,8 @@ function runForceCommitTest()
      "runForceCommitTest: the 2nd event must be compositionend #6");
   is(events[2].type, "input",
      "runForceCommitTest: the 3rd event must be input #6");
-  checkInputEvent(events[2], false, "insertCompositionText", "runForceCommitTest #6");
+  checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
+                  "runForceCommitTest #6");
   is(events[1].data, "\u306E",
      "runForceCommitTest: compositionend has wrong data #6");
   is(events[0].target, textarea,
@@ -5284,7 +5291,8 @@ function runForceCommitTest()
      "runForceCommitTest: the 2nd event must be compositionend #7");
   is(events[2].type, "input",
      "runForceCommitTest: the 3rd event must be input #7");
-  checkInputEvent(events[2], false, "insertCompositionText", "runForceCommitTest #7");
+  checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
+                  "runForceCommitTest #7");
   is(events[1].data, "\u306E",
      "runForceCommitTest: compositionend has wrong data #7");
   is(events[0].target, textarea,
@@ -5330,7 +5338,8 @@ function runForceCommitTest()
      "runForceCommitTest: the 2nd event must be compositionend #8");
   is(events[2].type, "input",
      "runForceCommitTest: the 3rd event must be input #8");
-  checkInputEvent(events[2], false, "insertCompositionText", "runForceCommitTest #8");
+  checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
+                  "runForceCommitTest #8");
   is(events[1].data, "\u306E",
      "runForceCommitTest: compositionend has wrong data #8");
   is(events[0].target, textarea,
@@ -5375,7 +5384,8 @@ function runForceCommitTest()
      "runForceCommitTest: the 2nd event must be compositionend #9");
   is(events[2].type, "input",
      "runForceCommitTest: the 3rd event must be input #9");
-  checkInputEvent(events[2], false, "insertCompositionText", "runForceCommitTest #9");
+  checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
+                  "runForceCommitTest #9");
   is(events[1].data, "\u306E",
      "runForceCommitTest: compositionend has wrong data #9");
   is(events[0].target, iframe2.contentDocument.body,
@@ -5418,7 +5428,8 @@ function runForceCommitTest()
      "runForceCommitTest: the 2nd event must be compositionend #10");
   is(events[2].type, "input",
      "runForceCommitTest: the 3rd event must be input #10");
-  checkInputEvent(events[2], false, "insertCompositionText", "runForceCommitTest #10");
+  checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
+                  "runForceCommitTest #10");
   is(events[1].data, "\u306E",
      "runForceCommitTest: compositionend has wrong data #10");
   is(events[0].target, iframe2.contentDocument.body,
@@ -5466,7 +5477,8 @@ function runForceCommitTest()
      "runForceCommitTest: the 2nd event must be compositionend #11");
   is(events[2].type, "input",
      "runForceCommitTest: the 3rd event must be input #11");
-  checkInputEvent(events[2], false, "insertCompositionText", "runForceCommitTest #11");
+  checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
+                  "runForceCommitTest #11");
   is(events[1].data, "\u306E",
      "runForceCommitTest: compositionend has wrong data #11");
   is(events[0].target, iframe2.contentDocument.body,
@@ -5510,7 +5522,8 @@ function runForceCommitTest()
      "runForceCommitTest: the 2nd event must be compositionend #12");
   is(events[2].type, "input",
      "runForceCommitTest: the 3rd event must be input #12");
-  checkInputEvent(events[2], false, "insertCompositionText", "runForceCommitTest #12");
+  checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
+                  "runForceCommitTest #12");
   is(events[1].data, "\u306E",
      "runForceCommitTest: compositionend has wrong data #12");
   is(events[0].target, input,
@@ -5549,7 +5562,8 @@ function runForceCommitTest()
      "runForceCommitTest: the 2nd event must be compositionend #13");
   is(events[2].type, "input",
      "runForceCommitTest: the 3rd event must be input #13");
-  checkInputEvent(events[2], false, "insertCompositionText", "runForceCommitTest #13");
+  checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
+                  "runForceCommitTest #13");
   is(events[1].data, "\u306E",
      "runForceCommitTest: compositionend has wrong data #13");
   is(events[0].target, textarea,
@@ -5588,7 +5602,8 @@ function runForceCommitTest()
      "runForceCommitTest: the 2nd event must be compositionend #14");
   is(events[2].type, "input",
      "runForceCommitTest: the 3rd event must be input #14");
-  checkInputEvent(events[2], false, "insertCompositionText", "runForceCommitTest #14");
+  checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
+                  "runForceCommitTest #14");
   is(events[1].data, "\u306E",
      "runForceCommitTest: compositionend has wrong data #14");
   is(events[0].target, input,
@@ -5701,7 +5716,8 @@ function runNestedSettingValue()
      "runNestedSettingValue: the 2nd event must be compositionend #1");
   is(events[2].type, "input",
      "runNestedSettingValue: the 3rd event must be input #1");
-  checkInputEvent(events[2], false, "insertCompositionText", "runNestedSettingValue #1");
+  checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
+                  "runNestedSettingValue #1");
   is(events[1].data, "\u306E",
      "runNestedSettingValue: compositionend has wrong data #1");
   is(events[0].target, textarea,
@@ -5742,7 +5758,8 @@ function runNestedSettingValue()
      "runNestedSettingValue: the 2nd event must be compositionend #2");
   is(events[2].type, "input",
      "runNestedSettingValue: the 3rd event must be input #2");
-  checkInputEvent(events[2], false, "insertCompositionText", "runNestedSettingValue #2");
+  checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
+                  "runNestedSettingValue #2");
   is(events[1].data, "\u306E",
      "runNestedSettingValue: compositionend has wrong data #2");
   is(events[0].target, input,
@@ -5783,7 +5800,8 @@ function runNestedSettingValue()
      "runNestedSettingValue: the 2nd event must be compositionend #3");
   is(events[2].type, "input",
      "runNestedSettingValue: the 3rd event must be input #3");
-  checkInputEvent(events[2], false, "insertCompositionText", "runNestedSettingValue #3");
+  checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
+                  "runNestedSettingValue #3");
   is(events[1].data, "\u306E",
      "runNestedSettingValue: compositionend has wrong data #3");
   is(events[0].target, textarea,
@@ -5824,7 +5842,8 @@ function runNestedSettingValue()
      "runNestedSettingValue: the 2nd event must be compositionend #4");
   is(events[2].type, "input",
      "runNestedSettingValue: the 3rd event must be input #4");
-  checkInputEvent(events[2], false, "insertCompositionText", "runNestedSettingValue #4");
+  checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
+                  "runNestedSettingValue #4");
   is(events[1].data, "\u306E",
      "runNestedSettingValue: compositionend has wrong data #4");
   is(events[0].target, input,
@@ -5917,7 +5936,8 @@ function runAsyncForceCommitTest()
      "runAsyncForceCommitTest: the 3rd event must be text #1");
   is(events[3].type, "input",
      "runAsyncForceCommitTest: the 4th event must be input #1");
-  checkInputEvent(events[3], true, "insertCompositionText", "runAsyncForceCommitTest #1");
+  checkInputEvent(events[3], true, "insertCompositionText", "\u306E",
+                  "runAsyncForceCommitTest #1");
 
   events = [];
   commitRequested = false;
@@ -5933,7 +5953,8 @@ function runAsyncForceCommitTest()
      "runAsyncForceCommitTest: the 2nd event must be compositionend #2");
   is(events[2].type, "input",
      "runAsyncForceCommitTest: the 3rd event must be input #2");
-  checkInputEvent(events[2], false, "insertCompositionText", "runAsyncForceCommitTest #2");
+  checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
+                  "runAsyncForceCommitTest #2");
   is(events[1].data, "\u306E",
      "runAsyncForceCommitTest: compositionend has wrong data #2");
   is(events[0].target, textarea,
@@ -5985,7 +6006,8 @@ function runIsComposingTest()
       is(aEvent.isComposing, false,
          "runIsComposingTest: " + description + " (type=" + aEvent.type + ")");
     } else {
-      checkInputEvent(aEvent, expectedIsComposing, "insertCompositionText", `runIsComposingTest: ${description}`);
+      checkInputEvent(aEvent, expectedIsComposing, "insertCompositionText", "\u3042",
+                      `runIsComposingTest: ${description}`);
     }
   }
 
@@ -6095,7 +6117,7 @@ function runRedundantChangeTest()
      "runRedundantChangeTest: text should be fired after synthesizing composition change because it's dispatched when there is composing string #1");
   is(result[2].type, "input",
      "runRedundantChangeTest: input should be fired after synthesizing composition change #1");
-  checkInputEvent(result[2], true, "insertCompositionText",
+  checkInputEvent(result[2], true, "insertCompositionText", "\u3042",
                   "runRedundantChangeTest: after synthesizing composition change #1");
   is(textarea.value, "\u3042", "runRedundantChangeTest: textarea has uncommitted string #1");
 
@@ -6120,7 +6142,7 @@ function runRedundantChangeTest()
      "runRedundantChangeTest: text should be fired after synthesizing composition change because it's dispatched when there is composing string #2");
   is(result[2].type, "input",
      "runRedundantChangeTest: input should be fired after synthesizing composition change #2");
-  checkInputEvent(result[2], true, "insertCompositionText",
+  checkInputEvent(result[2], true, "insertCompositionText", "\u3042\u3044",
                   "runRedundantChangeTest: after synthesizing composition change #2");
   is(textarea.value, "\u3042\u3044", "runRedundantChangeTest: textarea has uncommitted string #2");
 
@@ -6151,7 +6173,7 @@ function runRedundantChangeTest()
      "runRedundantChangeTest: compositionend should be fired after synthesizing composition commit-as-is");
   is(result[2].type, "input",
      "runRedundantChangeTest: input shouldn't be fired before compositionend at synthesizing commit-as-is");
-  checkInputEvent(result[2], false, "insertCompositionText",
+  checkInputEvent(result[2], false, "insertCompositionText", "\u3042\u3044",
                   "runRedundantChangeTest: at synthesizing commit-as-is");
   is(textarea.value, "\u3042\u3044", "runRedundantChangeTest: textarea has the commit string");
 
@@ -6204,7 +6226,7 @@ function runNotRedundantChangeTest()
      "runNotRedundantChangeTest: text should be fired after synthesizing composition change because it's dispatched when there is composing string with non-null ranges");
   is(result[2].type, "input",
      "runNotRedundantChangeTest: input should be fired after synthesizing composition change with non-null ranges");
-  checkInputEvent(result[2], true, "insertCompositionText",
+  checkInputEvent(result[2], true, "insertCompositionText", "ABCDE",
                   "runNotRedundantChangeTest: after synthesizing composition change with non-null ranges");
   is(textarea.value, "abcdeABCDE", "runNotRedundantChangeTest: textarea has uncommitted string #1");
 
@@ -6225,7 +6247,7 @@ function runNotRedundantChangeTest()
      "runNotRedundantChangeTest: text should be fired after synthesizing composition change because it's dispatched when there is composing string with null ranges after non-null ranges");
   is(result[1].type, "input",
      "runNotRedundantChangeTest: input should be fired after synthesizing composition change with null ranges after non-null ranges");
-  checkInputEvent(result[1], true, "insertCompositionText",
+  checkInputEvent(result[1], true, "insertCompositionText", "ABCDE",
                   "runNotRedundantChangeTest: after synthesizing composition change with null ranges after non-null ranges");
   is(textarea.value, "abcdeABCDE", "runNotRedundantChangeTest: textarea has uncommitted string #2");
 
@@ -6248,7 +6270,7 @@ function runNotRedundantChangeTest()
      "runNotRedundantChangeTest: text should be fired after synthesizing composition change because it's dispatched when there is composing string with non-null ranges after null ranges");
   is(result[1].type, "input",
      "runNotRedundantChangeTest: input should be fired after synthesizing composition change with non-null ranges after null ranges");
-  checkInputEvent(result[1], true, "insertCompositionText",
+  checkInputEvent(result[1], true, "insertCompositionText", "ABCDE",
                   "runNotRedundantChangeTest: after synthesizing composition change with non-null ranges after null ranges");
   is(textarea.value, "abcdeABCDE", "runNotRedundantChangeTest: textarea has uncommitted string #3");
 
@@ -6271,7 +6293,7 @@ function runNotRedundantChangeTest()
      "runNotRedundantChangeTest: text should be fired after synthesizing composition change because it's dispatched when there is composing string with empty data and null ranges after non-null ranges");
   is(result[2].type, "input",
      "runNotRedundantChangeTest: input should be fired after synthesizing composition change with empty data and null ranges after non-null ranges");
-  checkInputEvent(result[2], true, "insertCompositionText",
+  checkInputEvent(result[2], true, "insertCompositionText", "",
                   "runNotRedundantChangeTest: after synthesizing composition change with empty data and null ranges after non-null ranges");
   is(textarea.value, "abcde", "runNotRedundantChangeTest: textarea doesn't have uncommitted string #1");
 
@@ -6296,7 +6318,7 @@ function runNotRedundantChangeTest()
      "runNotRedundantChangeTest: text should be fired after synthesizing composition change because it's dispatched when there is composing string with non-null ranges after empty data and null ranges");
   is(result[2].type, "input",
      "runNotRedundantChangeTest: input should be fired after synthesizing composition change with non-null ranges after empty data and null ranges");
-  checkInputEvent(result[2], true, "insertCompositionText",
+  checkInputEvent(result[2], true, "insertCompositionText", "ABCDE",
                   "runNotRedundantChangeTest: after synthesizing composition change with non-null ranges after empty data and null ranges");
   is(textarea.value, "abcdeABCDE", "runNotRedundantChangeTest: textarea has uncommitted string #4");
 
@@ -6313,7 +6335,7 @@ function runNotRedundantChangeTest()
      "runNotRedundantChangeTest: compositionend should be fired after synthesizing composition commit with empty data after non-empty data");
   is(result[3].type, "input",
      "runNotRedundantChangeTest: input should be fired after compositionend after synthesizing composition change with empty data after non-empty data");
-  checkInputEvent(result[3], false, "insertCompositionText",
+  checkInputEvent(result[3], false, "insertCompositionText", "",
                   "runNotRedundantChangeTest: after synthesizing composition change with empty data after non-empty data");
   is(textarea.value, "abcde", "runNotRedundantChangeTest: textarea doesn't have uncommitted string #2");
 

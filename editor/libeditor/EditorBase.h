@@ -649,6 +649,9 @@ class EditorBase : public nsIEditor,
     const RefPtr<Selection>& SelectionRefPtr() const { return mSelection; }
     EditAction GetEditAction() const { return mEditAction; }
 
+    void SetData(const nsAString& aData) { mData = aData; }
+    const nsString& GetData() const { return mData; }
+
     void SetTopLevelEditSubAction(EditSubAction aEditSubAction,
                                   EDirection aDirection = eNone) {
       mTopLevelEditSubAction = aEditSubAction;
@@ -756,6 +759,9 @@ class EditorBase : public nsIEditor,
     // Utility class object for maintaining preserved ranges.
     RangeUpdater mRangeUpdater;
 
+    // The data should be set to InputEvent.data.
+    nsString mData;
+
     EditAction mEditAction;
     EditSubAction mTopLevelEditSubAction;
     EDirection mDirectionOfTopLevelEditSubAction;
@@ -798,6 +804,14 @@ class EditorBase : public nsIEditor,
   EditAction GetEditAction() const {
     return mEditActionData ? mEditActionData->GetEditAction()
                            : EditAction::eNone;
+  }
+
+  /**
+   * GetInputEventData() returns inserting or inserted text value with
+   * current edit action.  The result is proper for InputEvent.data value.
+   */
+  const nsString& GetInputEventData() const {
+    return mEditActionData ? mEditActionData->GetData() : VoidString();
   }
 
   /**
@@ -1786,9 +1800,11 @@ class EditorBase : public nsIEditor,
    * asynchronously if it's not safe to dispatch.
    */
   MOZ_CAN_RUN_SCRIPT
-  void FireInputEvent() { FireInputEvent(GetEditAction()); }
+  void FireInputEvent() {
+    FireInputEvent(GetEditAction(), GetInputEventData());
+  }
   MOZ_CAN_RUN_SCRIPT
-  void FireInputEvent(EditAction aEditAction);
+  void FireInputEvent(EditAction aEditAction, const nsAString& aData);
 
   /**
    * Called after a transaction is done successfully.

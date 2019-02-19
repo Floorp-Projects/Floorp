@@ -41,6 +41,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
   const isDesktop = !/Mobile|Tablet/.test(navigator.userAgent);
 
   let expectedInputType = "";
+  let expectedData = null;
   function checkIfInputIsInputEvent(aEvent, aToDo, aDescription) {
     if (aToDo) {
       // Probably, key operation should fire "input" event with InputEvent interface.
@@ -52,6 +53,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
          `"input" event should be dispatched with InputEvent interface ${aDescription}`);
       is(aEvent.inputType, expectedInputType,
          `inputType should be "${expectedInputType}" ${aDescription}`);
+      is(aEvent.data, expectedData,
+         `data should be ${expectedData} ${aDescription}`);
     }
     is(aEvent.cancelable, false,
        `"input" event should be never cancelable ${aDescription}`);
@@ -132,17 +135,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
       input = document.getElementById("input_" + textTypes[i]);
       input.focus();
       expectedInputType = "insertLineBreak";
+      expectedData = null;
       synthesizeKey("KEY_Enter");
       is(textInput[i], 0, "input event shouldn't be dispatched on " + textTypes[i] + " input element");
 
       expectedInputType = "insertText";
+      expectedData = "m";
       sendString("m");
       is(textInput[i], 1, textTypes[i] + " input element should have dispatched input event.");
       expectedInputType = "insertLineBreak";
+      expectedData = null;
       synthesizeKey("KEY_Enter");
       is(textInput[i], 1, "input event shouldn't be dispatched on " + textTypes[i] + " input element");
 
       expectedInputType = "deleteContentBackward";
+      expectedData = null;
       synthesizeKey("KEY_Backspace");
       is(textInput[i], 2, textTypes[i] + " input element should have dispatched input event.");
     }
@@ -151,13 +158,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
     input = document.getElementById("input_text");
     input.focus();
     expectedInputType = "insertText";
+    expectedData = "f";
     sendString("f");
     is(textInput[0], 3, "input event should have been dispatched");
     input.blur();
     is(textInput[0], 3, "input event should not have been dispatched");
 
     input.focus();
-    expectedInputType = "insertText";
     input.value = 'foo';
     is(textInput[0], 3, "input event should not have been dispatched");
     input.blur();
@@ -165,6 +172,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
 
     input.focus();
     expectedInputType = "insertText";
+    expectedData = "f";
     sendString("f");
     is(textInput[0], 4, "input event should have been dispatched");
     input.value = 'bar';
@@ -176,6 +184,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
     var textarea = document.getElementById("textarea");
     textarea.focus();
     expectedInputType = "insertText";
+    expectedData = "f";
     sendString("f");
     is(textareaInput, 1, "input event should have been dispatched");
     textarea.blur();
@@ -189,11 +198,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
 
     textarea.focus();
     expectedInputType = "insertText";
+    expectedData = "f";
     sendString("f");
     is(textareaInput, 2, "input event should have been dispatched");
     textarea.value = 'bar';
     is(textareaInput, 2, "input event should not have been dispatched");
     expectedInputType = "deleteContentBackward";
+    expectedData = null;
     synthesizeKey("KEY_Backspace");
     is(textareaInput, 3, "input event should have been dispatched");
     textarea.blur();
@@ -277,6 +288,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
       // <input type="number">'s inputType value hasn't been decided, see
       // https://github.com/w3c/input-events/issues/88
       expectedInputType = "";
+      expectedData = null;
       synthesizeKey("KEY_ArrowUp");
       is(numberInput, 1, "input event should be dispatched for up/down arrow key keypress");
       is(number.value, "1", "sanity check value of number control after keypress");
