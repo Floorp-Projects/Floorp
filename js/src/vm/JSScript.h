@@ -1504,6 +1504,9 @@ class SharedScriptData {
   static MOZ_MUST_USE XDRResult XDR(js::XDRState<mode>* xdr,
                                     js::HandleScript script);
 
+  // Mark this SharedScriptData for use in a new zone
+  void markForCrossZone(JSContext* cx);
+
  private:
   SharedScriptData() = delete;
   SharedScriptData(const SharedScriptData&) = delete;
