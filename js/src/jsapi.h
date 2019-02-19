@@ -2070,7 +2070,7 @@ extern JS_PUBLIC_API JSObject* JS_NewExternalArrayBuffer(
  * take ownership of contents.  JS_DetachArrayBuffer must be called before
  * the contents are disposed of by the user; this call will always succeed.
  */
-extern JS_PUBLIC_API JSObject* JS_NewArrayBufferWithExternalContents(
+extern JS_PUBLIC_API JSObject* JS_NewArrayBufferWithUserOwnedContents(
     JSContext* cx, size_t nbytes, void* contents);
 
 /**
