@@ -25,7 +25,6 @@ ReservedWordsGenerated.script = 'GenerateReservedWordsJS.py'
 ReservedWordsGenerated.inputs = ['/js/src/frontend/ReservedWords.h']
 
 DevToolsModules(
-    'client.js',
     'js-property-provider.js',
     'network-helper.js',
     'throttle.js',
