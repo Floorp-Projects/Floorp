@@ -16,7 +16,7 @@ job-defaults:
                 windows.*:
                     - web_platform_tests/prod_config_windows_taskcluster.py
                 macosx.*:
-                    - web_platform_tests/prod_config.py
+                    - web_platform_tests/prod_config_mac.py
                 android-em.*:
                     - android/androidx86_7_0.py
                     - web_platform_tests/prod_config_android.py

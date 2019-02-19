@@ -7,7 +7,7 @@
 import os
 
 # OS Specifics
-DISABLE_SCREEN_SAVER = True
+DISABLE_SCREEN_SAVER = False
 ADJUST_MOUSE_AND_SCREEN = False
 #####
 
