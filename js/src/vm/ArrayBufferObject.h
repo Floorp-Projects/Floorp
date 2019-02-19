@@ -355,19 +355,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
                                       Handle<ArrayBufferObject*> buffer,
                                       bool hasStealableContents);
 
-  bool hasStealableContents() const {
-    // Inline data is always DoesntOwnData and so will fail the first test.
-    if (ownsData()) {
-      MOZ_ASSERT(!isInlineData(), "inline data is always DoesntOwnData");
-
-      // Making no data stealable is tricky, because it'd be null and usually
-      // that signals failure, so directly exclude it here.
-      return !isPreparedForAsmJS() && !isNoData() && !isWasm();
-    }
-
-    return false;
-  }
-
   static void addSizeOfExcludingThis(JSObject* obj,
                                      mozilla::MallocSizeOf mallocSizeOf,
                                      JS::ClassInfo* info);
@@ -459,6 +446,8 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   void setHasTypedObjectViews() { setFlags(flags() | TYPED_OBJECT_VIEWS); }
 
+  bool ownsData() const { return flags() & OWNS_DATA; }
+
  protected:
   void setDataPointer(BufferContents contents, OwnsState ownsState);
   void setByteLength(uint32_t length);
@@ -466,7 +455,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   uint32_t flags() const;
   void setFlags(uint32_t flags);
 
-  bool ownsData() const { return flags() & OWNS_DATA; }
   void setOwnsData(OwnsState owns) {
     setFlags(owns ? (flags() | OWNS_DATA) : (flags() & ~OWNS_DATA));
   }

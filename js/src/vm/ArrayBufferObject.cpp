@@ -1683,7 +1683,7 @@ JS_FRIEND_API bool JS_DetachArrayBuffer(JSContext* cx, HandleObject obj) {
   using BufferContents = ArrayBufferObject::BufferContents;
 
   BufferContents newContents =
-      buffer->hasStealableContents()
+      buffer->ownsData()
           ? BufferContents::createNoData()
           : buffer->contents();
 
@@ -1806,20 +1806,12 @@ JS_PUBLIC_API void* JS_StealArrayBufferContents(JSContext* cx,
     return nullptr;
   }
 
-  // The caller assumes that a plain malloc'd buffer is returned.  To steal
-  // actual contents, then, we must have |hasStealableContents()| *and* the
-  // contents must be |isMalloced()|.  (Inline data would not be malloc'd and
-  // shouldn't pass |hasStealableContents()| anyway; no-data would be nullptr
-  // and would signal failure if we returned it, plus |hasStealableContents()|
-  // specifically excludes it; user-provided data we know nothing about at all
-  // -- although it *should* have not passed the |hasStealableContents()| check
-  // anyway because it's not owned; mapped data wouldn't be malloc'd; external
-  // data has to be freed using a provided function.)
+  // This function returns a plain malloc'd buffer for the user to own, so
+  // stealing actual contents requires |ownsData() && isMalloced()|.
   //
-  // In the future, we could consider returning something that handles
-  // releasing the memory, in the mapped-data case.
-  bool hasStealableContents =
-      buffer->hasStealableContents() && buffer->isMalloced();
+  // We might consider returning something that handles releasing data of more
+  // exotic kind at some point.
+  bool hasStealableContents = buffer->ownsData() && buffer->isMalloced();
 
   AutoRealm ar(cx, buffer);
   return ArrayBufferObject::stealContents(cx, buffer, hasStealableContents)

@@ -1874,7 +1874,18 @@ bool JSStructuredCloneWriter::transferOwnership() {
           return false;
         }
       } else {
-        bool hasStealableContents = arrayBuffer->hasStealableContents();
+        // No data isn't stealable because it would fail |!bufContents|: actual
+        // malloc'd data must be created to return.
+        //
+        // XXX This extra caution *may* not actually be necessary: no-data
+        //     ArrayBuffers exist only as the result of detaching ArrayBuffers
+        //     (but these are excluded by the test above) or as the result of a
+        //     wasm memory.grow operation (but contents are then immediately
+        //     replaced with wasm contents).  But it seems better to play it
+        //     safe and deal with *all* states, not just the ones that appear
+        //     possible here.
+        bool hasStealableContents =
+          arrayBuffer->ownsData() && !arrayBuffer->isNoData();
 
         ArrayBufferObject::BufferContents bufContents =
             ArrayBufferObject::stealContents(cx, arrayBuffer,
