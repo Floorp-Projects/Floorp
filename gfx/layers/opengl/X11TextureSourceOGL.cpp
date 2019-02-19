@@ -7,7 +7,6 @@
 #include "X11TextureSourceOGL.h"
 #include "gfxXlibSurface.h"
 #include "gfx2DGlue.h"
-#include "GLContext.h"
 
 namespace mozilla {
 namespace layers {
