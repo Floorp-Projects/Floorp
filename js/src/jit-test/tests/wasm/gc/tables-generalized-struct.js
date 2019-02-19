@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmGeneralizedTables() || !wasmGcEnabled()
+// |jit-test| skip-if: !wasmGeneralizedTables() || !wasmGcEnabled() || wasmCompileMode() != 'baseline'
 
 // table.set in bounds with i32 x anyref - works, no value generated
 // table.set with (ref T) - works
