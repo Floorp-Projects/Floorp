@@ -1707,7 +1707,7 @@ JS_FRIEND_API bool JS_IsArrayBufferObject(JSObject* obj) {
 }
 
 JS_FRIEND_API bool JS_ArrayBufferHasData(JSObject* obj) {
-  return obj->unwrapAs<ArrayBufferObject>().hasData();
+  return !obj->unwrapAs<ArrayBufferObject>().isDetached();
 }
 
 JS_FRIEND_API JSObject* js::UnwrapArrayBuffer(JSObject* obj) {
