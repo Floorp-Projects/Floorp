@@ -548,6 +548,14 @@ VARCACHE_PREF(
 // Graphics prefs
 //---------------------------------------------------------------------------
 
+// In theory: 0 = never, 1 = quick, 2 = always, though we always just use it as
+// a bool!
+VARCACHE_PREF(
+  "browser.display.use_document_fonts",
+   browser_display_use_document_fonts,
+  RelaxedAtomicInt32, 1
+)
+
 VARCACHE_PREF(
   "gfx.font_rendering.opentype_svg.enabled",
    gfx_font_rendering_opentype_svg_enabled,

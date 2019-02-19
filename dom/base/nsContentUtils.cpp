@@ -2090,7 +2090,7 @@ bool nsContentUtils::ShouldResistFingerprinting(nsIDocShell* aDocShell) {
 }
 
 /* static */
-bool nsContentUtils::ShouldResistFingerprinting(Document* aDoc) {
+bool nsContentUtils::ShouldResistFingerprinting(const Document* aDoc) {
   if (!aDoc) {
     return false;
   }
@@ -6515,7 +6515,8 @@ nsContentUtils::FindInternalContentViewer(const nsACString& aType,
 }
 
 static void ReportPatternCompileFailure(nsAString& aPattern,
-                                        Document* aDocument, JSContext* cx) {
+                                        const Document* aDocument,
+                                        JSContext* cx) {
   MOZ_ASSERT(JS_IsExceptionPending(cx));
 
   JS::RootedValue exn(cx);
@@ -6554,7 +6555,7 @@ static void ReportPatternCompileFailure(nsAString& aPattern,
 
 // static
 bool nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
-                                       Document* aDocument) {
+                                       const Document* aDocument) {
   NS_ASSERTION(aDocument, "aDocument should be a valid pointer (not null)");
 
   // The fact that we're using a JS regexp under the hood should not be visible
