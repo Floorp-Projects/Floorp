@@ -165,8 +165,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   // The length of an ArrayBuffer or SharedArrayBuffer can be at most
   // INT32_MAX, and much code must change if this changes.
-
-  static const size_t MaxBufferByteLength = INT32_MAX;
+  static constexpr size_t MaxBufferByteLength = INT32_MAX;
 
   /** The largest number of bytes that can be stored inline. */
   static constexpr size_t MaxInlineBytes =
@@ -314,13 +313,13 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   static bool class_constructor(JSContext* cx, unsigned argc, Value* vp);
 
-  static ArrayBufferObject* create(JSContext* cx, uint32_t nbytes,
-                                   BufferContents contents,
-                                   OwnsState ownsState = OwnsData,
-                                   HandleObject proto = nullptr,
-                                   NewObjectKind newKind = GenericObject);
-  static ArrayBufferObject* create(JSContext* cx, uint32_t nbytes,
-                                   HandleObject proto = nullptr);
+  static ArrayBufferObject* createForContents(
+      JSContext* cx, uint32_t nbytes, BufferContents contents,
+      OwnsState ownsState = OwnsData, HandleObject proto = nullptr,
+      NewObjectKind newKind = GenericObject);
+
+  static ArrayBufferObject* createZeroed(JSContext* cx, uint32_t nbytes,
+                                         HandleObject proto = nullptr);
 
   // Create an ArrayBufferObject that is safely finalizable and can later be
   // initialize()d to become a real, content-visible ArrayBufferObject.
