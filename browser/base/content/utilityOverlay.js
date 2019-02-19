@@ -86,6 +86,7 @@ function doGetProtocolFlags(aURI) {
  */
 function openUILink(url, event, aIgnoreButton, aIgnoreAlt, aAllowThirdPartyFixup,
                     aPostData, aReferrerURI) {
+  event = getRootEvent(event);
   let params;
 
   if (aIgnoreButton && typeof aIgnoreButton == "object") {
@@ -114,6 +115,26 @@ function openUILink(url, event, aIgnoreButton, aIgnoreAlt, aAllowThirdPartyFixup
   openUILinkIn(url, where, params);
 }
 
+
+// Utility function to check command events for potential middle-click events
+// from checkForMiddleClick and unwrap them.
+function getRootEvent(aEvent) {
+  // Part of the fix for Bug 1523813.
+  // Middle-click events arrive here wrapped in different numbers (1-2) of
+  // command events, depending on the button originally clicked.
+  if (!aEvent) {
+    return aEvent;
+  }
+  let tempEvent = aEvent;
+  while (tempEvent.sourceEvent) {
+    if (tempEvent.sourceEvent.button == 1) {
+      aEvent = tempEvent.sourceEvent;
+      break;
+    }
+    tempEvent = tempEvent.sourceEvent;
+  }
+  return aEvent;
+}
 
 /**
  * whereToOpenLink() looks at an event to decide where to open a link.
@@ -146,6 +167,8 @@ function whereToOpenLink(e, ignoreButton, ignoreAlt) {
   // for compatibility purposes.
   if (!e)
     return "current";
+
+  e = getRootEvent(e);
 
   var shift = e.shiftKey;
   var ctrl =  e.ctrlKey;
@@ -592,13 +615,13 @@ function checkForMiddleClick(node, event) {
 
   if (event.button == 1) {
     /* Execute the node's oncommand or command.
-     *
-     * XXX: we should use node.oncommand(event) once bug 246720 is fixed.
      */
-    var target = node.hasAttribute("oncommand") ? node :
-                 node.ownerDocument.getElementById(node.getAttribute("command"));
-    var fn = new Function("event", target.getAttribute("oncommand"));
-    fn.call(target, event);
+
+    let cmdEvent = document.createEvent("xulcommandevent");
+    cmdEvent.initCommandEvent("command", true, true, window, 0,
+                         event.ctrlKey, event.altKey, event.shiftKey,
+                         event.metaKey, event, event.mozInputSource);
+    node.dispatchEvent(cmdEvent);
 
     // If the middle-click was on part of a menu, close the menu.
     // (Menus close automatically with left-click but not with middle-click.)
