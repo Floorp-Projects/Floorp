@@ -1,7 +1,7 @@
 // Type sizes
 $bordered-spacing: 16px;
 $item-font-size: 14;
-$item-image-size: 72px;
+$item-image-size: 80px;
 $item-line-height: 20;
 
 // XXX this is gross, and attaches the bottom-border to the item above.
@@ -163,6 +163,7 @@ $item-line-height: 20;
 
     display: flex;
     justify-content: space-between;
+    height: 100%;
   }
 
   .ds-list-item-excerpt {
@@ -174,7 +175,7 @@ $item-line-height: 20;
   p {
     font-size: $item-font-size * 1px;
     line-height: $item-line-height * 1px;
-    margin: 8px 0 0;
+    margin: 0;
   }
 
   .ds-list-item-info,
@@ -193,6 +194,7 @@ $item-line-height: 20;
   .ds-list-item-text {
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
   }
 
   .ds-list-image {
