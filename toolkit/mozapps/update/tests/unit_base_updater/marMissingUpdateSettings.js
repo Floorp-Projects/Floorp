@@ -3,10 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/* Test product/channel MAR security check */
-
-const STATE_AFTER_STAGE = STATE_FAILED;
-gStagingRemovedUpdate = true;
+/* Test update-settings.ini missing channel MAR security check */
 
 function run_test() {
   if (!MOZ_VERIFY_MAR_SIGNATURE) {
@@ -17,8 +14,7 @@ function run_test() {
     return;
   }
   gTestFiles = gTestFilesCompleteSuccess;
-  gTestFiles[gTestFiles.length - 2].originalContents =
-    UPDATE_SETTINGS_CONTENTS.replace("xpcshell-test", "wrong-channel");
+  gTestFiles[gTestFiles.length - 2].originalContents = null;
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();
   setupUpdaterTest(FILE_COMPLETE_MAR, false);
@@ -28,16 +24,20 @@ function run_test() {
  * Called after the call to setupUpdaterTest finishes.
  */
 function setupUpdaterTestFinished() {
-  stageUpdate(true);
+  // If execv is used the updater process will turn into the callback process
+  // and the updater's return code will be that of the callback process.
+  runUpdate(STATE_FAILED_UPDATE_SETTINGS_FILE_CHANNEL, false, (USE_EXECV ? 0 : 1),
+            false);
 }
 
 /**
- * Called after the call to stageUpdate finishes.
+ * Called after the call to runUpdateUsingUpdater finishes.
  */
-function stageUpdateFinished() {
+function runUpdateFinished() {
+  standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
-  checkUpdateLogContains(STATE_FAILED_MAR_CHANNEL_MISMATCH_ERROR);
+  checkUpdateLogContains(STATE_FAILED_UPDATE_SETTINGS_FILE_CHANNEL);
   executeSoon(waitForUpdateXMLFiles);
 }
 
@@ -46,6 +46,6 @@ function stageUpdateFinished() {
  */
 function waitForUpdateXMLFilesFinished() {
   checkUpdateManager(STATE_NONE, false, STATE_FAILED,
-                     MAR_CHANNEL_MISMATCH_ERROR, 1);
+                     UPDATE_SETTINGS_FILE_CHANNEL, 1);
   waitForFilesInUse();
 }
