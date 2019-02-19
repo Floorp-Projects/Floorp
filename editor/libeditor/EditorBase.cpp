@@ -4925,9 +4925,7 @@ void EditorBase::AutoEditActionDataSetter::InitializeDataTransfer(
   Document* document = mEditorBase.GetDocument();
   nsIGlobalObject* scopeObject =
       document ? document->GetScopeObject() : nullptr;
-  // TODO: Implement DataTransfer constructor which takes nsITransferable.
-  mDataTransfer =
-      new DataTransfer(scopeObject, ePaste, true /* is external */, 1);
+  mDataTransfer = new DataTransfer(scopeObject, eEditorInput, aTransferable);
 }
 
 void EditorBase::AutoEditActionDataSetter::InitializeDataTransfer(
@@ -4935,9 +4933,7 @@ void EditorBase::AutoEditActionDataSetter::InitializeDataTransfer(
   Document* document = mEditorBase.GetDocument();
   nsIGlobalObject* scopeObject =
       document ? document->GetScopeObject() : nullptr;
-  // TODO: Implement DataTransfer constructor which takes nsAString.
-  mDataTransfer =
-      new DataTransfer(scopeObject, ePaste, true /* is external */, 1);
+  mDataTransfer = new DataTransfer(scopeObject, eEditorInput, aString);
 }
 
 void EditorBase::AutoEditActionDataSetter::InitializeDataTransferWithClipboard(
@@ -4945,6 +4941,9 @@ void EditorBase::AutoEditActionDataSetter::InitializeDataTransferWithClipboard(
   Document* document = mEditorBase.GetDocument();
   nsIGlobalObject* scopeObject =
       document ? document->GetScopeObject() : nullptr;
+  // mDataTransfer will be used for eEditorInput event, but we can keep
+  // using ePaste and ePasteNoFormatting here.  If we need to use eEditorInput,
+  // we need to create eEditorInputNoFormatting or something...
   mDataTransfer =
       new DataTransfer(scopeObject,
                        aSettingDataTransfer == SettingDataTransfer::eWithFormat

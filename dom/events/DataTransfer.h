@@ -12,6 +12,7 @@
 #include "nsIVariant.h"
 #include "nsIPrincipal.h"
 #include "nsIDragService.h"
+#include "nsITransferable.h"
 #include "nsCycleCollectionParticipant.h"
 
 #include "mozilla/ArrayUtils.h"
@@ -87,14 +88,19 @@ class DataTransfer final : public nsISupports, public nsWrapperCache {
   // Constructor for DataTransfer.
   //
   // aIsExternal must only be true when used to create a dataTransfer for a
-  // paste or a drag that was started without using a data transfer. The
-  // latter will occur when an external drag occurs, that is, a drag where the
-  // source is another application, or a drag is started by calling the drag
-  // service directly. For clipboard operations, aClipboardType indicates
-  // which clipboard to use, from nsIClipboard, or -1 for non-clipboard
-  // operations, or if access to the system clipboard should not be allowed.
+  // paste, a drag or an input that was started without using a data transfer.
+  // The case of a drag will occur when an external drag occurs, that is, a
+  // drag where the source is another application, or a drag is started by
+  // calling the drag service directly. For clipboard operations,
+  // aClipboardType indicates which clipboard to use, from nsIClipboard, or -1
+  // for non-clipboard operations, or if access to the system clipboard should
+  // not be allowed.
   DataTransfer(nsISupports* aParent, EventMessage aEventMessage,
                bool aIsExternal, int32_t aClipboardType);
+  DataTransfer(nsISupports* aParent, EventMessage aEventMessage,
+               nsITransferable* aTransferable);
+  DataTransfer(nsISupports* aParent, EventMessage aEventMessage,
+               const nsAString& aString);
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
@@ -288,6 +294,7 @@ class DataTransfer final : public nsISupports, public nsWrapperCache {
   // that DataTransfer type information may be read, but data may not be.
   bool IsProtected() const { return mMode == Mode::Protected; }
 
+  nsITransferable* GetTransferable() const { return mTransferable; }
   int32_t ClipboardType() const { return mClipboardType; }
   EventMessage GetEventMessage() const { return mEventMessage; }
   bool IsCrossDomainSubFrameDrop() const { return mIsCrossDomainSubFrameDrop; }
@@ -373,6 +380,14 @@ class DataTransfer final : public nsISupports, public nsWrapperCache {
                                           const bool& aPlainTextOnly,
                                           nsTArray<nsCString>* aResult);
 
+  // Retrieve a list of supporting formats in aTransferable.
+  //
+  // If kFileMime is supported, then it will be placed either at
+  // index 0 or at index 1 in aResult
+  static void GetExternalTransferableFormats(nsITransferable* aTransferable,
+                                             bool aPlainTextOnly,
+                                             nsTArray<nsCString>* aResult);
+
   // Returns true if moz* APIs should be exposed (true for chrome code or if
   // dom.datatransfer.moz pref is enabled).
   // The affected moz* APIs are mozItemCount, mozTypesAt, mozClearDataAt,
@@ -391,6 +406,13 @@ class DataTransfer final : public nsISupports, public nsWrapperCache {
 
   // caches the formats that exist in the clipboard
   void CacheExternalClipboardFormats(bool aPlainTextOnly);
+
+  // caches the formats that exist in mTransferable
+  void CacheTransferableFormats();
+
+  // caches the formats specified by aTypes.
+  void CacheExternalData(const nsTArray<nsCString>& aTypes,
+                         nsIPrincipal* aPrincipal);
 
   FileList* GetFilesInternal(ErrorResult& aRv, nsIPrincipal* aSubjectPrincipal);
   nsresult GetDataAtInternal(const nsAString& aFormat, uint32_t aIndex,
@@ -415,6 +437,11 @@ class DataTransfer final : public nsISupports, public nsWrapperCache {
                             mozilla::ErrorResult& aRv);
 
   nsCOMPtr<nsISupports> mParent;
+
+  // If DataTransfer is initialized with an instance of nsITransferable, it's
+  // grabbed with this member **until** the constructor fills all data of all
+  // items.
+  nsCOMPtr<nsITransferable> mTransferable;
 
   // the drop effect and effect allowed
   uint32_t mDropEffect;
