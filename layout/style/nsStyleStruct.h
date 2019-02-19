@@ -1297,7 +1297,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
   int32_t mOrder;
   float mFlexGrow;
   float mFlexShrink;
-  nsStyleCoord mZIndex;  // integer, auto
+  mozilla::StyleZIndex mZIndex;
   mozilla::UniquePtr<nsStyleGridTemplate> mGridTemplateColumns;
   mozilla::UniquePtr<nsStyleGridTemplate> mGridTemplateRows;
 
@@ -1903,7 +1903,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
 
   nsStyleCoord mTransformOrigin[3];    // percent, coord, calc, 3rd param is
                                        // coord, calc only
-  nsStyleCoord mChildPerspective;      // none, coord
+  mozilla::StylePerspective mChildPerspective;
   nsStyleCoord mPerspectiveOrigin[2];  // percent, coord, calc
 
   nsStyleCoord mVerticalAlign;  // coord, percent, calc, enum
@@ -2144,9 +2144,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
     return mSpecifiedRotate || mSpecifiedTranslate || mSpecifiedScale;
   }
 
-  bool HasPerspectiveStyle() const {
-    return mChildPerspective.GetUnit() == eStyleUnit_Coord;
-  }
+  bool HasPerspectiveStyle() const { return !mChildPerspective.IsNone(); }
 
   bool BackfaceIsHidden() const {
     return mBackfaceVisibility == NS_STYLE_BACKFACE_VISIBILITY_HIDDEN;

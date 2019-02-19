@@ -3005,9 +3005,8 @@ static void AppendToTop(nsDisplayListBuilder* aBuilder,
       zIndex = Some(INT32_MAX);
     } else if (aFlags & APPEND_OVERLAY) {
       zIndex = MaxZIndexInList(aLists.PositionedDescendants(), aBuilder);
-    } else if (aSourceFrame->StylePosition()->mZIndex.GetUnit() ==
-               eStyleUnit_Integer) {
-      zIndex = Some(aSourceFrame->StylePosition()->mZIndex.GetIntValue());
+    } else if (aSourceFrame->StylePosition()->mZIndex.IsInteger()) {
+      zIndex = Some(aSourceFrame->StylePosition()->mZIndex.integer._0);
     }
     AppendInternalItemToTop(aLists, newItem, zIndex);
   } else {
