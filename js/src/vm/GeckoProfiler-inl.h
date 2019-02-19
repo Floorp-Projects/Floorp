@@ -52,9 +52,6 @@ GeckoProfilerEntryMarker::GeckoProfilerEntryMarker(
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   if (MOZ_LIKELY(!profiler_->infraInstalled())) {
     profiler_ = nullptr;
-#ifdef DEBUG
-    spBefore_ = nullptr;
-#endif
     return;
   }
 #ifdef DEBUG
@@ -88,9 +85,6 @@ AutoGeckoProfilerEntry::AutoGeckoProfilerEntry(
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   if (MOZ_LIKELY(!profiler_->infraInstalled())) {
     profiler_ = nullptr;
-#ifdef DEBUG
-    spBefore_ = nullptr;
-#endif
     return;
   }
 #ifdef DEBUG
