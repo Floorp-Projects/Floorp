@@ -489,6 +489,13 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     setFirstView(nullptr);
     setDataPointer(contents, ownsState);
   }
+
+  void* initializeToInlineData(size_t byteLength) {
+    void* data = inlineDataPointer();
+    initialize(byteLength, BufferContents::createInlineData(data),
+               DoesntOwnData);
+    return data;
+  }
 };
 
 typedef Rooted<ArrayBufferObject*> RootedArrayBufferObject;
