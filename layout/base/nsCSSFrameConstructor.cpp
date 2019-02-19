@@ -770,6 +770,9 @@ class MOZ_STACK_CLASS nsFrameConstructorState {
 
   ~nsFrameConstructorState();
 
+  // Process the frame insertions for all the out-of-flow nsAbsoluteItems.
+  void ProcessFrameInsertionsForAllLists();
+
   // Function to push the existing absolute containing block state and
   // create a new scope. Code that uses this function should get matching
   // logic in GetAbsoluteContainingBlock.
@@ -967,14 +970,7 @@ nsFrameConstructorState::nsFrameConstructorState(
 
 nsFrameConstructorState::~nsFrameConstructorState() {
   MOZ_COUNT_DTOR(nsFrameConstructorState);
-  ProcessFrameInsertions(mTopLayerFixedItems, nsIFrame::kFixedList);
-  ProcessFrameInsertions(mTopLayerAbsoluteItems, nsIFrame::kAbsoluteList);
-  ProcessFrameInsertions(mFloatedItems, nsIFrame::kFloatList);
-  ProcessFrameInsertions(mAbsoluteItems, nsIFrame::kAbsoluteList);
-  ProcessFrameInsertions(mFixedItems, nsIFrame::kFixedList);
-#ifdef MOZ_XUL
-  ProcessFrameInsertions(mPopupItems, nsIFrame::kPopupList);
-#endif
+  ProcessFrameInsertionsForAllLists();
   for (int32_t i = mGeneratedTextNodesWithInitializer.Count() - 1; i >= 0;
        --i) {
     mGeneratedTextNodesWithInitializer[i]->DeleteProperty(
@@ -989,6 +985,17 @@ nsFrameConstructorState::~nsFrameConstructorState() {
     } while (!mPendingBindings.isEmpty());
     mCurrentPendingBindingInsertionPoint = nullptr;
   }
+}
+
+void nsFrameConstructorState::ProcessFrameInsertionsForAllLists() {
+  ProcessFrameInsertions(mTopLayerFixedItems, nsIFrame::kFixedList);
+  ProcessFrameInsertions(mTopLayerAbsoluteItems, nsIFrame::kAbsoluteList);
+  ProcessFrameInsertions(mFloatedItems, nsIFrame::kFloatList);
+  ProcessFrameInsertions(mAbsoluteItems, nsIFrame::kAbsoluteList);
+  ProcessFrameInsertions(mFixedItems, nsIFrame::kFixedList);
+#ifdef MOZ_XUL
+  ProcessFrameInsertions(mPopupItems, nsIFrame::kPopupList);
+#endif
 }
 
 void nsFrameConstructorState::PushAbsoluteContainingBlock(
@@ -10912,6 +10919,11 @@ bool nsCSSFrameConstructor::MaybeRecreateForColumnSpan(
     PROFILER_TRACING("Layout",
                      "Reframe multi-column after constructing frame list",
                      LAYOUT, TRACING_EVENT);
+
+    // aFrameList can contain placeholder frames. In order to destroy their
+    // associated out-of-flow frames properly, we need to manually flush all the
+    // out-of-flow frames in aState to their container frames.
+    aState.ProcessFrameInsertionsForAllLists();
     aFrameList.DestroyFrames();
     RecreateFramesForContent(
         GetMultiColumnContainingBlockFor(aParentFrame)->GetContent(),

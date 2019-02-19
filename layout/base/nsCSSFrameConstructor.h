@@ -1896,6 +1896,10 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   // to insert aFrameList into aParentFrame immediately after aPrevSibling but
   // cannot fix the frame tree because aFrameList contains some column-spans.
   //
+  // Note: This method is intended to be called as a helper in ContentAppended()
+  // and ContentRangeInserted(). It assumes aState was set up locally and wasn't
+  // used to construct any ancestors of aParentFrame in aFrameList.
+  //
   // @param aParentFrame the to-be parent frame for aFrameList.
   // @param aFrameList the frames to be inserted. It will be cleared if we need
   //        reconstruction.
