@@ -519,6 +519,12 @@ static void NoteViewBufferWasDetached(
 void ArrayBufferObject::setNewData(FreeOp* fop, BufferContents newContents,
                                    OwnsState ownsState) {
   if (ownsData()) {
+    // XXX As data kinds gradually transition to *all* being owned, this
+    //     assertion could become troublesome.  But right *now*, it isn't --
+    //     the call just above in ABO::detach occurs only if this assertion is
+    //     true, and the call in ABO::changeContents happens only if
+    //     ABO::prepareForAsmJS calls ABO::changeContents, but *that* call is
+    //     guarded by an owns-data check.  So no need to touch this right now.
     MOZ_ASSERT(newContents.data() != dataPointer());
     releaseData(fop);
   }
@@ -964,6 +970,9 @@ bool js::CreateWasmBuffer(JSContext* cx, const wasm::Limits& memory,
     return true;
   }
 
+  // XXX User-owned, no-data, and is-inline were excluded above, so
+  //     |ownsData()| having changed semantics in this patch doesn't matter
+  //     here.
   if (!buffer->ownsData()) {
     uint8_t* data = AllocateArrayBufferContents(cx, buffer->byteLength());
     if (!data) {
@@ -1006,16 +1015,17 @@ void ArrayBufferObject::releaseData(FreeOp* fop) {
 
   switch (bufferKind()) {
     case INLINE_DATA:
-      MOZ_ASSERT_UNREACHABLE("inline data should never be owned");
+      // Inline data doesn't require releasing.
       break;
     case MALLOCED:
       fop->free_(dataPointer());
       break;
     case NO_DATA:
+      // There's nothing to release if there's no data.
       MOZ_ASSERT(dataPointer() == nullptr);
       break;
     case USER_OWNED:
-      MOZ_ASSERT_UNREACHABLE("user-owned data should never be owned by this");
+      // User-owned data is released by, well, the user.
       break;
     case MAPPED:
       gc::DeallocateMappedContent(dataPointer(), byteLength());
@@ -1221,7 +1231,9 @@ ArrayBufferObject* ArrayBufferObject::createForContents(
 
   size_t nslots = reservedSlots;
   if (ownsState == OwnsData) {
-    if (contents.kind() == EXTERNAL) {
+    if (contents.kind() == USER_OWNED) {
+      // No accounting to do in this case.
+    } else if (contents.kind() == EXTERNAL) {
       // Store the FreeInfo in the inline data slots so that we
       // don't use up slots for it in non-refcounted array buffers.
       size_t freeInfoSlots = JS_HOWMANY(sizeof(FreeInfo), sizeof(Value));
@@ -1362,7 +1374,7 @@ ArrayBufferObject* ArrayBufferObject::createFromNewRawBuffer(
 #ifdef DEBUG
   if (hasStealableContents) {
     MOZ_ASSERT(!buffer->isInlineData(),
-               "inline data is DoesntOwnData and isn't malloc-allocated");
+               "inline data is OwnsData, but it isn't malloc-allocated");
     MOZ_ASSERT(!buffer->isNoData(),
                "null |dataPointer()| for the no-data case isn't stealable "
                "because it would be confused with failure");
@@ -1414,8 +1426,8 @@ ArrayBufferObject* ArrayBufferObject::createFromNewRawBuffer(
 
   switch (buffer.bufferKind()) {
     case INLINE_DATA:
-      MOZ_ASSERT_UNREACHABLE("inline data should never be owned and should be "
-                             "accounted for in |this|'s memory");
+      // Inline data's size should be reported by this object's size-class
+      // reporting.
       break;
     case MALLOCED:
       if (buffer.isPreparedForAsmJS()) {
@@ -1427,12 +1439,11 @@ ArrayBufferObject* ArrayBufferObject::createFromNewRawBuffer(
       }
       break;
     case NO_DATA:
+      // No data is no memory.
       MOZ_ASSERT(buffer.dataPointer() == nullptr);
       break;
     case USER_OWNED:
-      MOZ_ASSERT_UNREACHABLE(
-          "user-owned data should never be owned by this, and such memory "
-          "should be accounted for by the code that provided it");
+      // User-owned data should be accounted for by the user.
       break;
     case MAPPED:
       info->objectsNonHeapElementsNormal += buffer.byteLength();
@@ -1682,6 +1693,37 @@ JS_FRIEND_API bool JS_DetachArrayBuffer(JSContext* cx, HandleObject obj) {
 
   using BufferContents = ArrayBufferObject::BufferContents;
 
+  // This patch makes NO_DATA, INLINE_DATA, and USER_OWNED all be owned.  I
+  // argue this change should be safe.  First, the easy NO_DATA case:
+  //
+  //   * NO_DATA in ABO::detach will see that no data pointer change occurs, so
+  //     it won't call ABO::setNewData and will leave this exactly as it was
+  //     (save for view-notification and byte length and detachment changing).
+  //     This is trivially fine.
+  //
+  // Making INLINE_DATA and USER_OWNED be owned, if we keep doing the same
+  // steps, *will* change stuff.  These pre-states
+  //
+  //   (user-owned pointer, OwnsData, USER_OWNED | remaining)
+  //   (inline data pointer, OwnsData, INLINE_DATA | remaining)
+  //
+  // will change to
+  //
+  //   (nullptr, OwnsData, NO_DATA | remaining)
+  //
+  // This changes the behavior of JS_GetArrayBufferData, but the calling code
+  // already has to be cognizant of byte length if it might index into that
+  // pointer, so all that changes is the pointer's plain identity, and it seems
+  // okay to say "don't do that".  Ownership state is unchanged.  And the
+  // kind-change shouldn't matter because we only test
+  // |buffer->hasUserOwnedData()| in ABO::prepareForAsmJS -- but only *after*
+  // anything length-zero would have been filtered out, so no change there.
+  // Nothing tests for |isInlineData()| except assertions.
+  //
+  // With |ownsData()| becoming increasingly true for everything (at present
+  // there's only one way to have |!ownsData()|, soon this can just be
+  // |BufferContents::createNoData()| in all cases.  (And, of course, this
+  // comment and a few others like it can then die.  XXX)
   BufferContents newContents =
       buffer->ownsData()
           ? BufferContents::createNoData()
@@ -1756,7 +1798,7 @@ JS_PUBLIC_API JSObject* JS_NewArrayBufferWithUserOwnedContents(JSContext* cx,
 
   BufferContents contents = BufferContents::createUserOwned(data);
   return ArrayBufferObject::createForContents(cx, nbytes, contents,
-                                              ArrayBufferObject::DoesntOwnData);
+                                              ArrayBufferObject::OwnsData);
 }
 
 JS_FRIEND_API bool JS_IsArrayBufferObject(JSObject* obj) {
@@ -1811,6 +1853,9 @@ JS_PUBLIC_API void* JS_StealArrayBufferContents(JSContext* cx,
   //
   // We might consider returning something that handles releasing data of more
   // exotic kind at some point.
+  //
+  // XXX The three kinds made |ownsData()| in this patch would all fail the
+  //     second test here, so the line below isn't broken by this patch.
   bool hasStealableContents = buffer->ownsData() && buffer->isMalloced();
 
   AutoRealm ar(cx, buffer);
