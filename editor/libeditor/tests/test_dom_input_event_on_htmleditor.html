@@ -378,6 +378,30 @@ function runTests() {
     is(inputEvent.data, null,
        aDescription + "data should be null when deleting to next visual line boundary with non-collapsed selection");
 
+    // Toggling text direction
+    editTarget.focus();
+    inputEvent = null;
+    SpecialPowers.doCommand(window, "cmd_switchTextDirection");
+    ok(inputEvent,
+       aDescription + "input event should be fired by dispatching cmd_switchTextDirection command #1");
+    ok(inputEvent.isTrusted,
+       aDescription + "input event should be trusted when dispatching cmd_switchTextDirection command #1");
+    is(inputEvent.inputType, "formatSetBlockTextDirection",
+       aDescription + 'inputType should be "formatSetBlockTextDirection" when dispatching cmd_switchTextDirection command #1');
+    is(inputEvent.data, "rtl",
+       aDescription + 'data should be "rtl" when dispatching cmd_switchTextDirection command #1');
+
+    inputEvent = null;
+    SpecialPowers.doCommand(window, "cmd_switchTextDirection");
+    ok(inputEvent,
+       aDescription + "input event should be fired by dispatching cmd_switchTextDirection command #2");
+    ok(inputEvent.isTrusted,
+       aDescription + "input event should be trusted when dispatching cmd_switchTextDirection command #2");
+    is(inputEvent.inputType, "formatSetBlockTextDirection",
+       aDescription + 'inputType should be "formatSetBlockTextDirection" when dispatching cmd_switchTextDirection command #2');
+    is(inputEvent.data, "ltr",
+       aDescription + 'data should be "ltr" when dispatching cmd_switchTextDirection command #2');
+
     aWindow.removeEventListener("input", handler, true);
   }
 
