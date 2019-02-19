@@ -4,6 +4,7 @@
 
 var Fingerprinting = {
   PREF_ENABLED: "privacy.trackingprotection.fingerprinting.enabled",
+  telemetryIdentifier: "fp",
 
   strings: {
     get subViewBlocked() {
@@ -114,6 +115,7 @@ var Fingerprinting = {
 
 var Cryptomining = {
   PREF_ENABLED: "privacy.trackingprotection.cryptomining.enabled",
+  telemetryIdentifier: "cm",
 
   strings: {
     get subViewBlocked() {
