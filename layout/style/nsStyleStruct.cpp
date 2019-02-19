@@ -2671,7 +2671,7 @@ nsStyleImageLayers::Layer::Layer()
       mAttachment(StyleImageLayerAttachment::Scroll),
       mBlendMode(NS_STYLE_BLEND_NORMAL),
       mComposite(NS_STYLE_MASK_COMPOSITE_ADD),
-      mMaskMode(NS_STYLE_MASK_MODE_MATCH_SOURCE) {
+      mMaskMode(StyleMaskMode::MatchSource) {
   mImage.SetNull();
 }
 
