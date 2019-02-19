@@ -178,7 +178,7 @@ decorate_task(
 decorate_task(
   withPrefEnv({
     set: [
-      ["app.normandy.remotesettings.enabled", true],
+      ["features.normandy-remote-settings.enabled", true],
     ],
   }),
   withStub(ActionsManager.prototype, "runRecipe"),
