@@ -63,7 +63,7 @@ if (isDevelopment()) {
   pref("devtools.debugger.features.map-await-expression", true);
   pref("devtools.debugger.features.xhr-breakpoints", true);
   pref("devtools.debugger.features.original-blackbox", true);
-  pref("devtools.debugger.features.windowless-workers", false);
+  pref("devtools.debugger.features.windowless-workers", true);
   pref("devtools.debugger.features.event-listeners-breakpoints", true);
   pref("devtools.debugger.features.log-points", true);
 }
@@ -116,7 +116,6 @@ export const features = new PrefsHelper("devtools.debugger.features", {
   windowlessWorkers: ["Bool", "windowless-workers"],
   outline: ["Bool", "outline"],
   codeFolding: ["Bool", "code-folding"],
-  pausePoints: ["Bool", "pause-points"],
   skipPausing: ["Bool", "skip-pausing"],
   autocompleteExpression: ["Bool", "autocomplete-expressions"],
   mapExpressionBindings: ["Bool", "map-expression-bindings"],

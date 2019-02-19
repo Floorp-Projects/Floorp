@@ -42,6 +42,7 @@ function makeMockSource(
     actors: [],
     isWasm: false,
     contentType,
+    isExtension: false,
     text
   };
 }
@@ -57,6 +58,7 @@ function makeMockWasmSource(text: {| binary: Object |}): WasmSource {
     introductionUrl: null,
     actors: [],
     isWasm: true,
+    isExtension: false,
     text
   };
 }

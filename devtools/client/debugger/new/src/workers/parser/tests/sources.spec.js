@@ -20,6 +20,7 @@ describe("sources", () => {
       isPrettyPrinted: false,
       isWasm: false,
       loadedState: "loaded",
+      isExtension: false,
       actors: []
     };
 
