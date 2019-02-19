@@ -4134,17 +4134,16 @@ static JSObject* CloneInnerInterpretedFunction(
   return true;
 }
 
-bool js::detail::CopyScript(JSContext* cx, HandleScript src,
-                            HandleScriptSourceObject sourceObject,
-                            MutableHandleScript dst,
-                            MutableHandle<GCVector<Scope*>> scopes) {
+JSScript* js::detail::CopyScript(JSContext* cx, HandleScript src,
+                                 HandleScriptSourceObject sourceObject,
+                                 MutableHandle<GCVector<Scope*>> scopes) {
   // We don't copy the HideScriptFromDebugger flag and it's not clear what
   // should happen if it's set on the source script.
   MOZ_ASSERT(!src->hideScriptFromDebugger());
 
   if (src->treatAsRunOnce() && !src->functionNonDelazifying()) {
     JS_ReportErrorASCII(cx, "No cloning toplevel run-once scripts");
-    return false;
+    return nullptr;
   }
 
   /* NB: Keep this in sync with XDRScript. */
@@ -4158,11 +4157,12 @@ bool js::detail::CopyScript(JSContext* cx, HandleScript src,
       .setNoScriptRval(src->noScriptRval());
 
   // Create a new JSScript to fill in
-  dst.set(JSScript::Create(cx, options, sourceObject, src->sourceStart(),
+  RootedScript dst(
+      cx, JSScript::Create(cx, options, sourceObject, src->sourceStart(),
                            src->sourceEnd(), src->toStringStart(),
                            src->toStringEnd()));
   if (!dst) {
-    return false;
+    return nullptr;
   }
 
   // Copy POD fields
@@ -4185,7 +4185,7 @@ bool js::detail::CopyScript(JSContext* cx, HandleScript src,
 
   // Clone the PrivateScriptData into dst
   if (!PrivateScriptData::Clone(cx, src, dst, scopes)) {
-    return false;
+    return nullptr;
   }
 
   // The SharedScriptData can be reused by any zone in the Runtime as long as
@@ -4195,7 +4195,7 @@ bool js::detail::CopyScript(JSContext* cx, HandleScript src,
   }
   dst->setScriptData(src->scriptData());
 
-  return true;
+  return dst;
 }
 
 JSScript* js::CloneGlobalScript(JSContext* cx, ScopeKind scopeKind,
@@ -4219,12 +4219,7 @@ JSScript* js::CloneGlobalScript(JSContext* cx, ScopeKind scopeKind,
     return nullptr;
   }
 
-  RootedScript dst(cx);
-  if (!detail::CopyScript(cx, src, sourceObject, &dst, &scopes)) {
-    return nullptr;
-  }
-
-  return dst;
+  return detail::CopyScript(cx, src, sourceObject, &scopes);
 }
 
 JSScript* js::CloneScriptIntoFunction(
@@ -4262,8 +4257,8 @@ JSScript* js::CloneScriptIntoFunction(
 
   // Save flags in case we need to undo the early mutations.
   const int preservedFlags = fun->flags();
-  RootedScript dst(cx);
-  if (!detail::CopyScript(cx, src, sourceObject, &dst, &scopes)) {
+  RootedScript dst(cx, detail::CopyScript(cx, src, sourceObject, &scopes));
+  if (!dst) {
     fun->setFlags(preservedFlags);
     return nullptr;
   }
