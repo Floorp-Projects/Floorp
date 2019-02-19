@@ -151,6 +151,7 @@ const POLICIES_TESTS = [
     },
     lockedPrefs: {
       "xpinstall.enabled": false,
+      "browser.newtabpage.activity-stream.asrouter.userprefs.cfr": false,
     },
   },
 
@@ -222,6 +223,16 @@ const POLICIES_TESTS = [
     lockedPrefs: {
       "security.tls.version.min": 3,
       "security.tls.version.max": 4,
+    },
+  },
+
+  // POLICY: DisableShield
+  {
+    policies: {
+      "DisableFirefoxStudies": true,
+    },
+    lockedPrefs: {
+      "browser.newtabpage.activity-stream.asrouter.userprefs.cfr": false,
     },
   },
 ];
