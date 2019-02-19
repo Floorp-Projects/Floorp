@@ -18,18 +18,6 @@
 #include <bitset>
 #include <vector>
 
-#ifdef ANDROID
-// We only need to explicitly dlopen egltrace
-// on android as we can use LD_PRELOAD or other tricks
-// on other platforms. We look for it in /data/local
-// as that's writeable by all users
-//
-// This should really go in GLLibraryEGL.cpp but we currently reference
-// APITRACE_LIB in GLContextProviderEGL.cpp. Further refactoring
-// will come in subsequent patches on Bug 732865
-#  define APITRACE_LIB "/data/local/tmp/egltrace.so"
-#endif
-
 #if defined(MOZ_X11)
 #  define EGL_DEFAULT_DISPLAY ((EGLNativeDisplayType)mozilla::DefaultXDisplay())
 #else
@@ -51,6 +39,7 @@ class DataSourceSurface;
 namespace gl {
 
 class GLContext;
+PRLibrary* LoadApitraceLibrary();
 
 void BeforeEGLCall(const char* funcName);
 void AfterEGLCall(const char* funcName);
