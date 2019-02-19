@@ -4531,15 +4531,20 @@ nsresult EditorBase::ToggleTextDirection() {
   }
 
   if (IsRightToLeft()) {
+    editActionData.SetData(NS_LITERAL_STRING("ltr"));
     nsresult rv = SetTextDirectionTo(TextDirection::eLTR);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   } else if (IsLeftToRight()) {
+    editActionData.SetData(NS_LITERAL_STRING("rtl"));
     nsresult rv = SetTextDirectionTo(TextDirection::eRTL);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+  } else {
+    MOZ_ASSERT_UNREACHABLE(
+        "Why did DetermineCurrentDirection() not determine current direction?");
   }
 
   // XXX When we don't change the text direction, do we really need to
@@ -4563,14 +4568,24 @@ void EditorBase::SwitchTextDirectionTo(TextDirection aTextDirection) {
     return;
   }
 
-  if (aTextDirection == TextDirection::eLTR && IsRightToLeft()) {
-    if (NS_WARN_IF(NS_FAILED(SetTextDirectionTo(aTextDirection)))) {
-      return;
-    }
-  } else if (aTextDirection == TextDirection::eRTL && IsLeftToRight()) {
-    if (NS_WARN_IF(NS_FAILED(SetTextDirectionTo(aTextDirection)))) {
-      return;
-    }
+  switch (aTextDirection) {
+    case TextDirection::eLTR:
+      editActionData.SetData(NS_LITERAL_STRING("ltr"));
+      if (IsRightToLeft() &&
+          NS_WARN_IF(NS_FAILED(SetTextDirectionTo(aTextDirection)))) {
+        return;
+      }
+      break;
+    case TextDirection::eRTL:
+      editActionData.SetData(NS_LITERAL_STRING("rtl"));
+      if (IsLeftToRight() &&
+          NS_WARN_IF(NS_FAILED(SetTextDirectionTo(aTextDirection)))) {
+        return;
+      }
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid aTextDirection value");
+      break;
   }
 
   // XXX When we don't change the text direction, do we really need to
