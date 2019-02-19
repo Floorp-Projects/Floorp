@@ -160,3 +160,18 @@ JSObject* js::NewDeadProxyObject(JSContext* cx, JSObject* origObj) {
   return NewProxyObject(cx, &DeadObjectProxy::singleton, target, nullptr,
                         ProxyOptions());
 }
+
+JSObject* js::NewDeadProxyObject(JSContext* cx, IsCallableFlag isCallable,
+                                 IsConstructorFlag isConstructor) {
+  int32_t flags = 0;
+  if (isCallable == IsCallableFlag::True) {
+    flags |= DeadObjectProxyIsCallable;
+  }
+  if (isConstructor == IsConstructorFlag::True) {
+    flags |= DeadObjectProxyIsConstructor;
+  }
+
+  RootedValue target(cx, Int32Value(flags));
+  return NewProxyObject(cx, &DeadObjectProxy::singleton, target, nullptr,
+                        ProxyOptions());
+}
