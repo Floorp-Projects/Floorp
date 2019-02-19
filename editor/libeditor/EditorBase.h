@@ -770,6 +770,10 @@ class EditorBase : public nsIEditor,
     AutoEditActionDataSetter(const AutoEditActionDataSetter& aOther) = delete;
   };
 
+  void UpdateEditActionData(const nsAString& aData) {
+    mEditActionData->SetData(aData);
+  }
+
  protected:  // May be called by friends.
   /****************************************************************************
    * Some classes like TextEditRules, HTMLEditRules, WSRunObject which are

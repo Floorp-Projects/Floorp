@@ -1001,6 +1001,8 @@ function runTest() { // eslint-disable-line complexity
         ok(!event.cancelable, testNum + " input event shouldn't be cancelable");
         is(event.inputType, "insertReplacementText",
            testNum + ' inputType should be "insertReplacementText"');
+        is(event.data, "value1",
+           testNum + ' data should be "value1"');
       }, {once: true});
 
       synthesizeKey("KEY_ArrowDown");

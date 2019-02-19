@@ -54,6 +54,8 @@ function checkElementFilled(element, expectedvalue) {
              `"input" event should be dispatched with InputEvent interface on ${element.name}`);
           is(event.inputType, "insertReplacementText",
              "inputType value should be \"insertReplacementText\"");
+          is(event.data, element.value,
+             "data value should be same as value of the input element");
         } else {
           ok(event instanceof Event && !(event instanceof UIEvent),
              `"input" event should be dispatched with Event interface on ${element.name}`);

@@ -114,6 +114,9 @@ nsresult TextEditor::InsertTextAt(const nsAString& aStringToInsert,
 
 nsresult TextEditor::InsertTextFromTransferable(
     nsITransferable* aTransferable) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(!AsHTMLEditor());
+
   nsAutoCString bestFlavor;
   nsCOMPtr<nsISupports> genericDataObj;
   if (NS_SUCCEEDED(aTransferable->GetAnyTransferData(
@@ -126,6 +129,11 @@ nsresult TextEditor::InsertTextFromTransferable(
     if (nsCOMPtr<nsISupportsString> text = do_QueryInterface(genericDataObj)) {
       text->GetData(stuffToPaste);
     }
+    MOZ_ASSERT(GetEditAction() == EditAction::ePaste);
+    // Use native line breaks for compatibility with Chrome.
+    // XXX Although, somebody has already converted native line breaks to
+    //     XP line breaks.
+    UpdateEditActionData(stuffToPaste);
 
     if (!stuffToPaste.IsEmpty()) {
       // Sanitize possible carriage returns in the string to be inserted
@@ -143,32 +151,6 @@ nsresult TextEditor::InsertTextFromTransferable(
   ScrollSelectionIntoView(false);
 
   return NS_OK;
-}
-
-nsresult TextEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
-                                            int32_t aIndex,
-                                            Document* aSourceDoc,
-                                            const EditorDOMPoint& aDroppedAt,
-                                            bool aDoDeleteSelection) {
-  MOZ_ASSERT(GetEditAction() == EditAction::eDrop);
-  MOZ_ASSERT(
-      mPlaceholderBatch,
-      "TextEditor::InsertFromDataTransfer() should be called only by OnDrop() "
-      "and there should've already been placeholder transaction");
-  MOZ_ASSERT(aDroppedAt.IsSet());
-
-  nsCOMPtr<nsIVariant> data;
-  aDataTransfer->GetDataAtNoSecurityCheck(NS_LITERAL_STRING("text/plain"),
-                                          aIndex, getter_AddRefs(data));
-  if (!data) {
-    return NS_OK;
-  }
-
-  nsAutoString insertText;
-  data->GetAsAString(insertText);
-  nsContentUtils::PlatformToDOMLineBreaks(insertText);
-
-  return InsertTextAt(insertText, aDroppedAt, aDoDeleteSelection);
 }
 
 nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
@@ -316,10 +298,57 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
     //     should we update |droppedAt|?
   }
 
-  for (uint32_t i = 0; i < numItems; ++i) {
-    InsertFromDataTransfer(dataTransfer, i, srcdoc, droppedAt, false);
+  if (!AsHTMLEditor()) {
+    // For "beforeinput", we need to create data first.
+    AutoTArray<nsString, 5> textArray;
+    textArray.SetCapacity(numItems);
+    uint32_t textLength = 0;
+    for (uint32_t i = 0; i < numItems; ++i) {
+      nsCOMPtr<nsIVariant> data;
+      dataTransfer->GetDataAtNoSecurityCheck(NS_LITERAL_STRING("text/plain"), i,
+                                             getter_AddRefs(data));
+      if (!data) {
+        continue;
+      }
+      // Use nsString to avoid copying its storage to textArray.
+      nsString insertText;
+      data->GetAsAString(insertText);
+      if (insertText.IsEmpty()) {
+        continue;
+      }
+      textArray.AppendElement(insertText);
+      textLength += insertText.Length();
+    }
+    // Use nsString to avoid copying its storage to editActionData.
+    nsString data;
+    data.SetCapacity(textLength);
+    // Join the text array from end to start because we insert each items
+    // in the dataTransfer at same point from start to end.  Although I
+    // don't know whether this is intentional behavior.
+    for (nsString& text : Reversed(textArray)) {
+      data.Append(text);
+    }
+    // Use native line breaks for compatibility with Chrome.
+    // XXX Although, somebody has already converted native line breaks to
+    //     XP line breaks.
+    editActionData.SetData(data);
+
+    // Then, insert the text.  Note that we shouldn't need to walk the array
+    // anymore because nobody should listen to mutation events of anonymous
+    // text node in <input>/<textarea>.
+    nsContentUtils::PlatformToDOMLineBreaks(data);
+    InsertTextAt(data, droppedAt, false);
     if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
+    }
+  } else {
+    RefPtr<HTMLEditor> htmlEditor(AsHTMLEditor());
+    for (uint32_t i = 0; i < numItems; ++i) {
+      htmlEditor->InsertFromDataTransfer(dataTransfer, i, srcdoc, droppedAt,
+                                         false);
+      if (NS_WARN_IF(Destroyed())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
     }
   }
 

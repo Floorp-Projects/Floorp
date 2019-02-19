@@ -403,23 +403,6 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
                         bool aDoDeleteSelection);
 
   /**
-   * InsertFromDataTransfer() inserts the data in aDataTransfer at aIndex.
-   * This is intended to handle "drop" event.
-   *
-   * @param aDataTransfer       Dropped data transfer.
-   * @param aIndex              Index of the data which should be inserted.
-   * @param aSourceDoc          The document which the source comes from.
-   * @param aDroppedAt          The dropped position.
-   * @param aDoDeleteSelection  true if this should delete selected content.
-   *                            false otherwise.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  virtual nsresult InsertFromDataTransfer(dom::DataTransfer* aDataTransfer,
-                                          int32_t aIndex, Document* aSourceDoc,
-                                          const EditorDOMPoint& aDroppedAt,
-                                          bool aDoDeleteSelection);
-
-  /**
    * InsertWithQuotationsAsSubAction() inserts aQuotedText with appending ">"
    * to start of every line.
    *

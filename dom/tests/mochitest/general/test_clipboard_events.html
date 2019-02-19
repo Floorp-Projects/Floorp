@@ -248,10 +248,12 @@ add_task(async function test_input_onpaste() {
   var onpaste_fired = false;
   var oninput_count = 0;
   var inputType = "";
+  var data;
   contentInput.onpaste = function() { onpaste_fired = true; };
   contentInput.oninput = function(aEvent) {
     oninput_count++;
     inputType = aEvent.inputType;
+    data = aEvent.data;
   };
 
   try {
@@ -261,6 +263,7 @@ add_task(async function test_input_onpaste() {
       "paste on plaintext editor did not modify clipboard contents");
     is(oninput_count, 1, "input event should be fired once by cut");
     is(inputType, "insertFromPaste", "inputType of the input event should be \"insertFromPaste\"");
+    is(data, clipboardInitialValue, `data of the input event should be ${clipboardInitialValue}`);
     is(contentInput.value, clipboardInitialValue,
       "paste on plaintext editor did modify editor value");
   } finally {
