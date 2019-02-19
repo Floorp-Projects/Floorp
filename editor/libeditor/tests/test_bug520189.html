@@ -582,7 +582,14 @@ function runTest(test) {
       win = window;
     }
     editor = SpecialPowers.wrap(win).docShell.editor;
+    let inputEvent = null;
+    win.addEventListener("input", aEvent => { inputEvent = aEvent; }, {once: true});
     editor.pasteTransferable(trans);
+    is(inputEvent.type, "input", "input event should be fired");
+    is(inputEvent.inputType, "insertFromPaste", "inputType should be insertFromPaste");
+    is(inputEvent.data, null, "data should be null");
+    is(inputEvent.dataTransfer.getData("text/html"), test.payload, "dataTransfer should have the HTML data");
+    is(inputEvent.dataTransfer.getData("text/plain"), "", "dataTransfer shouldn't have plain text");
   } else {
     var clipboard = SpecialPowers.Services.clipboard;
 
