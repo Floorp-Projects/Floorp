@@ -926,13 +926,17 @@ bool js::CreateWasmBuffer(JSContext* cx, const wasm::Limits& memory,
   // Don't assert cx->wasmHaveSignalHandlers because (1) they aren't needed
   // for asm.js, (2) they are only installed for WebAssembly, not asm.js.
 
-  if (!buffer->isWasm() && buffer->isPreparedForAsmJS()) {
-    return true;
+  // wasm buffers can be detached at any time.
+  if (buffer->isWasm()) {
+    MOZ_ASSERT(!buffer->isPreparedForAsmJS());
+    return false;
   }
 
-  // Non-prepared-for-asm.js wasm buffers can be detached at any time.
-  if (buffer->isWasm()) {
-    return false;
+  MOZ_ASSERT(buffer->isPlain() || buffer->isMapped() || buffer->isExternal());
+
+  // Buffers already prepared for asm.js need no further work.
+  if (buffer->isPreparedForAsmJS()) {
+    return true;
   }
 
   if (!buffer->ownsData()) {
