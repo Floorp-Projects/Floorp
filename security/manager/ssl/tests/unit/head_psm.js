@@ -134,7 +134,8 @@ function readFile(file) {
   let fstream = Cc["@mozilla.org/network/file-input-stream;1"]
                   .createInstance(Ci.nsIFileInputStream);
   fstream.init(file, -1, 0, 0);
-  let data = NetUtil.readInputStreamToString(fstream, fstream.available());
+  let available = fstream.available();
+  let data = available > 0 ? NetUtil.readInputStreamToString(fstream, available) : "";
   fstream.close();
   return data;
 }
