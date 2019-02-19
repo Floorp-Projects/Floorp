@@ -96,6 +96,8 @@ function runTests() {
     ok(inputEvent.isTrusted, aDescription + "input event by 'a' key wasn't trusted event");
     is(inputEvent.inputType, "insertText",
        aDescription + 'inputType should be "insertText" when typing "a"');
+    is(inputEvent.data, "a",
+       aDescription + 'data should be "a" when typing "a"');
 
     inputEvent = null;
     synthesizeKey("KEY_Backspace", { }, aWindow);
@@ -103,6 +105,8 @@ function runTests() {
     ok(inputEvent.isTrusted, aDescription + "input event by BackSpace key wasn't trusted event");
     is(inputEvent.inputType, "deleteContentBackward",
        aDescription + 'inputType should be "deleteContentBackward" when pressing "Backspace" with collapsed selection');
+    is(inputEvent.data, null,
+       aDescription + 'data should be null when pressing "Backspace" with collapsed selection');
 
     inputEvent = null;
     synthesizeKey("B", { shiftKey: true }, aWindow);
@@ -110,6 +114,8 @@ function runTests() {
     ok(inputEvent.isTrusted, aDescription + "input event by 'B' key wasn't trusted event");
     is(inputEvent.inputType, "insertText",
        aDescription + 'inputType should be "insertText" when typing "B"');
+    is(inputEvent.data, "B",
+       aDescription + 'data should be "B" when typing "B"');
 
     inputEvent = null;
     synthesizeKey("KEY_Enter", { }, aWindow);
@@ -117,6 +123,8 @@ function runTests() {
     ok(inputEvent.isTrusted, aDescription + "input event by Enter key wasn't trusted event");
     is(inputEvent.inputType, "insertParagraph",
        aDescription + 'inputType should be "insertParagraph" when pressing "Enter"');
+    is(inputEvent.data, null,
+       aDescription + 'data should be null when pressing "Enter"');
 
     inputEvent = null;
     synthesizeKey("C", { shiftKey: true }, aWindow);
@@ -124,6 +132,8 @@ function runTests() {
     ok(inputEvent.isTrusted, aDescription + "input event by 'C' key wasn't trusted event");
     is(inputEvent.inputType, "insertText",
        aDescription + 'inputType should be "insertText" when typing "C"');
+    is(inputEvent.data, "C",
+       aDescription + 'data should be "C" when typing "C"');
 
     inputEvent = null;
     synthesizeKey("KEY_Enter", { }, aWindow);
@@ -131,6 +141,8 @@ function runTests() {
     ok(inputEvent.isTrusted, aDescription + "input event by Enter key (again) wasn't trusted event");
     is(inputEvent.inputType, "insertParagraph",
        aDescription + 'inputType should be "insertParagraph" when pressing "Enter" again');
+    is(inputEvent.data, null,
+       aDescription + 'data should be null when pressing "Enter" again');
 
     inputEvent = null;
     editTarget.innerHTML = "foo-bar";
@@ -146,6 +158,8 @@ function runTests() {
     ok(inputEvent.isTrusted, aDescription + "input event by Space key wasn't trusted event");
     is(inputEvent.inputType, "insertText",
        aDescription + 'inputType should be "insertText" when typing " "');
+    is(inputEvent.data, " ",
+       aDescription + 'data should be " " when typing " "');
 
     inputEvent = null;
     synthesizeKey("KEY_Delete", { }, aWindow);
@@ -161,6 +175,8 @@ function runTests() {
     ok(inputEvent.isTrusted, aDescription + "input event by Delete key wasn't trusted event");
     is(inputEvent.inputType, "deleteContentForward",
        aDescription + 'inputType should be "deleteContentForward" when pressing "Delete" with collapsed selection');
+    is(inputEvent.data, null,
+       aDescription + 'data should be null when pressing "Delete" with collapsed selection');
 
     inputEvent = null;
     synthesizeKey("z", { accelKey: true }, aWindow);
@@ -168,6 +184,8 @@ function runTests() {
     ok(inputEvent.isTrusted, aDescription + "input event by Undo wasn't trusted event");
     is(inputEvent.inputType, "historyUndo",
        aDescription + 'inputType should be "historyUndo" when doing "Undo"');
+    is(inputEvent.data, null,
+       aDescription + 'data should be null when doing "Undo"');
 
     inputEvent = null;
     synthesizeKey("z", { accelKey: true, shiftKey: true }, aWindow);
@@ -175,6 +193,8 @@ function runTests() {
     ok(inputEvent.isTrusted, aDescription + "input event by Redo wasn't trusted event");
     is(inputEvent.inputType, "historyRedo",
        aDescription + 'inputType should be "historyRedo" when doing "Redo"');
+    is(inputEvent.data, null,
+       aDescription + 'data should be null when doing "Redo"');
 
     inputEvent = null;
     synthesizeKey("KEY_Enter", {shiftKey: true}, aWindow);
@@ -182,6 +202,8 @@ function runTests() {
     ok(inputEvent.isTrusted, aDescription + "input event by Shift + Enter key wasn't trusted event");
     is(inputEvent.inputType, "insertLineBreak",
        aDescription + 'inputType should be "insertLineBreak" when pressing Shift + "Enter"');
+    is(inputEvent.data, null,
+       aDescription + 'data should be null when pressing Shift + "Enter"');
 
     // Backspace/Delete with non-collapsed selection.
     editTarget.innerHTML = "a";
@@ -195,6 +217,8 @@ function runTests() {
        aDescription + 'input event should be trusted when pressing "Backspace" with non-collapsed selection');
     is(inputEvent.inputType, "deleteContentBackward",
        aDescription + 'inputType should be "deleteContentBackward" when pressing "Backspace" with non-collapsed selection');
+    is(inputEvent.data, null,
+       aDescription + 'data should be null when pressing "Backspace" with non-collapsed selection');
 
     editTarget.innerHTML = "a";
     editTarget.focus();
@@ -207,6 +231,8 @@ function runTests() {
        aDescription + 'input event should be trusted when pressing "Delete" with non-collapsed selection');
     is(inputEvent.inputType, "deleteContentForward",
        aDescription + 'inputType should be "deleteContentBackward" when Delete "Backspace" with non-collapsed selection');
+    is(inputEvent.data, null,
+       aDescription + 'data should be null when Delete "Backspace" with non-collapsed selection');
 
     // Delete to previous/next word boundary with collapsed selection.
     editTarget.innerHTML = "a";
@@ -221,6 +247,8 @@ function runTests() {
        aDescription + "input event should be trusted when deleting to previous word boundary with collapsed selection");
     is(inputEvent.inputType, "deleteWordBackward",
        aDescription + 'inputType should be "deleteWordBackward" when deleting to previous word boundary with collapsed selection');
+    is(inputEvent.data, null,
+       aDescription + "data should be null when deleting to previous word boundary with collapsed selection");
 
     editTarget.innerHTML = "a";
     editTarget.focus();
@@ -234,6 +262,8 @@ function runTests() {
        aDescription + "input event should be trusted when deleting to next word boundary with collapsed selection");
     is(inputEvent.inputType, "deleteWordForward",
        aDescription + 'inputType should be "deleteWordForward" when deleting to next word boundary with collapsed selection');
+    is(inputEvent.data, null,
+       aDescription + "data should be null when deleting to next word boundary with collapsed selection");
 
     // Delete to previous/next word boundary with non-collapsed selection.
     editTarget.innerHTML = "abc";
@@ -253,6 +283,8 @@ function runTests() {
       is(inputEvent.inputType, "deleteContentBackward",
          aDescription + 'inputType should be "deleteContentBackward" when deleting to previous word boundary with non-collapsed selection');
     }
+    is(inputEvent.data, null,
+       aDescription + "data should be null when deleting to previous word boundary with non-collapsed selection");
 
     editTarget.innerHTML = "abc";
     editTarget.focus();
@@ -271,6 +303,8 @@ function runTests() {
       is(inputEvent.inputType, "deleteContentForward",
          aDescription + 'inputType should be "deleteContentForward" when deleting to next word boundary with non-collapsed selection');
     }
+    is(inputEvent.data, null,
+       aDescription + "data should be null when deleting to next word boundary with non-collapsed selection");
 
     // Delete to previous/next visual line boundary with collapsed selection.
     editTarget.innerHTML = "a";
@@ -285,6 +319,8 @@ function runTests() {
        aDescription + "input event should be trusted when deleting to previous visual line boundary with collapsed selection");
     is(inputEvent.inputType, "deleteSoftLineBackward",
        aDescription + 'inputType should be "deleteSoftLineBackward" when deleting to previous visual line boundary with collapsed selection');
+    is(inputEvent.data, null,
+       aDescription + "data should be null when deleting to previous visual line boundary with collapsed selection");
 
     editTarget.innerHTML = "a";
     editTarget.focus();
@@ -298,6 +334,8 @@ function runTests() {
        aDescription + "input event should be trusted when deleting to next visual line boundary with collapsed selection");
     is(inputEvent.inputType, "deleteSoftLineForward",
        aDescription + 'inputType should be "deleteSoftLineForward" when deleting to visual line boundary with collapsed selection');
+    is(inputEvent.data, null,
+       aDescription + "data should be null when deleting to visual line boundary with collapsed selection");
 
     // Delete to previous/next visual line boundary with non-collapsed selection.
     editTarget.innerHTML = "abc";
@@ -317,6 +355,8 @@ function runTests() {
       is(inputEvent.inputType, "deleteContentBackward",
          aDescription + 'inputType should be "deleteContentBackward" when deleting to previous visual line boundary with non-collapsed selection');
     }
+    is(inputEvent.data, null,
+       aDescription + "data should be null when deleting to previous visual line boundary with non-collapsed selection");
 
     editTarget.innerHTML = "abc";
     editTarget.focus();
@@ -335,6 +375,8 @@ function runTests() {
       is(inputEvent.inputType, "deleteContentForward",
          aDescription + 'inputType should be "deleteContentForward" when deleting to next visual line boundary with non-collapsed selection');
     }
+    is(inputEvent.data, null,
+       aDescription + "data should be null when deleting to next visual line boundary with non-collapsed selection");
 
     aWindow.removeEventListener("input", handler, true);
   }

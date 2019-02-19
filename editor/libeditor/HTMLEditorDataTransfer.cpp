@@ -1814,6 +1814,8 @@ nsresult HTMLEditor::InsertTextWithQuotations(
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
+  MOZ_ASSERT(!aStringToInsert.IsVoid());
+  editActionData.SetData(aStringToInsert);
 
   // The whole operation should be undoable in one transaction:
   // XXX Why isn't enough to use only AutoPlaceholderBatch here?
@@ -1924,6 +1926,8 @@ nsresult HTMLEditor::InsertAsQuotation(const nsAString& aQuotedText,
     if (NS_WARN_IF(!editActionData.CanHandle())) {
       return NS_ERROR_NOT_INITIALIZED;
     }
+    MOZ_ASSERT(!aQuotedText.IsVoid());
+    editActionData.SetData(aQuotedText);
     AutoPlaceholderBatch treatAsOneTransaction(*this);
     nsresult rv = InsertAsPlaintextQuotation(aQuotedText, true, aNodeInserted);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2112,6 +2116,8 @@ HTMLEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
     if (NS_WARN_IF(!editActionData.CanHandle())) {
       return NS_ERROR_NOT_INITIALIZED;
     }
+    MOZ_ASSERT(!aQuotedText.IsVoid());
+    editActionData.SetData(aQuotedText);
 
     AutoPlaceholderBatch treatAsOneTransaction(*this);
     nsresult rv = InsertAsPlaintextQuotation(aQuotedText, true, aNodeInserted);

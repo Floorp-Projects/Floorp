@@ -2434,7 +2434,8 @@ bool nsTextEditorState::SetValue(const nsAString& aValue,
         MOZ_ASSERT(element);
         RefPtr<TextEditor> textEditor;  // See bug 1506439
         DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(
-            element, EditorInputType::eInsertReplacementText, textEditor);
+            element, EditorInputType::eInsertReplacementText, textEditor,
+            nsContentUtils::InputEventOptions());
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                              "Failed to dispatch input event");
       }
