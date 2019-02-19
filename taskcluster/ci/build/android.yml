@@ -272,7 +272,6 @@ android-x86-nightly/opt:
         - linux64-rust-android
         - linux64-rust-size
         - linux64-cbindgen
-        - linux64-sccache
         - linux64-node
 
 android-api-16/opt:
@@ -436,7 +435,6 @@ android-api-16-nightly/opt:
         - linux64-rust-android
         - linux64-rust-size
         - linux64-cbindgen
-        - linux64-sccache
         - linux64-node
 
 android-aarch64/opt:
@@ -602,7 +600,6 @@ android-aarch64-nightly/opt:
         - linux64-clang
         - linux64-rust-android
         - linux64-rust-size
-        - linux64-sccache
         - linux64-cbindgen
         - linux64-node
 
@@ -715,7 +712,6 @@ android-x86_64-nightly/opt:
         - linux64-clang
         - linux64-rust-android
         - linux64-rust-size
-        - linux64-sccache
         - linux64-cbindgen
         - linux64-node
 
