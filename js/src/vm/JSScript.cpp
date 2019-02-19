@@ -355,10 +355,6 @@ static inline uint32_t FindScopeIndex(mozilla::Span<const GCPtrScope> scopes,
   MOZ_CRASH("Scope not found");
 }
 
-static inline uint32_t FindScopeIndex(JSScript* script, Scope& scope) {
-  return FindScopeIndex(script->scopes(), scope);
-}
-
 template <XDRMode mode>
 static XDRResult XDRInnerObject(XDRState<mode>* xdr,
                                 js::PrivateScriptData* data,
@@ -3347,19 +3343,6 @@ bool JSScript::initScriptName(JSContext* cx) {
   return true;
 }
 
-static inline uint8_t* AllocScriptData(JSContext* cx, size_t size) {
-  if (!size) {
-    return nullptr;
-  }
-
-  uint8_t* data = cx->pod_calloc<uint8_t>(JS_ROUNDUP(size, sizeof(Value)));
-  if (!data) {
-    return nullptr;
-  }
-  MOZ_ASSERT(size_t(data) % sizeof(Value) == 0);
-  return data;
-}
-
 /* static */ bool JSScript::createPrivateScriptData(
     JSContext* cx, HandleScript script, uint32_t nscopes, uint32_t nconsts,
     uint32_t nobjects, uint32_t ntrynotes, uint32_t nscopenotes,
@@ -4000,17 +3983,15 @@ static JSObject* CloneInnerInterpretedFunction(
 /* static */ bool PrivateScriptData::Clone(
     JSContext* cx, HandleScript src, HandleScript dst,
     MutableHandle<GCVector<Scope*>> scopes) {
-  uint32_t nscopes = src->scopes().size();
-  uint32_t nconsts = src->hasConsts() ? src->consts().size() : 0;
-  uint32_t nobjects = src->hasObjects() ? src->objects().size() : 0;
-
-  /* Script data */
-
-  size_t size = src->dataSize();
-  UniquePtr<uint8_t, JS::FreePolicy> data(AllocScriptData(cx, size));
-  if (!data) {
-    return false;
-  }
+  PrivateScriptData* srcData = src->data_;
+  uint32_t nscopes = srcData->scopes().size();
+  uint32_t nconsts = srcData->hasConsts() ? srcData->consts().size() : 0;
+  uint32_t nobjects = srcData->hasObjects() ? srcData->objects().size() : 0;
+  uint32_t ntrynotes = srcData->hasTryNotes() ? srcData->tryNotes().size() : 0;
+  uint32_t nscopenotes =
+      srcData->hasScopeNotes() ? srcData->scopeNotes().size() : 0;
+  uint32_t nresumeoffsets =
+      srcData->hasResumeOffsets() ? srcData->resumeOffsets().size() : 0;
 
   /* Scopes */
 
@@ -4023,10 +4004,11 @@ static JSObject* CloneInnerInterpretedFunction(
     MOZ_ASSERT(src->bodyScopeIndex() + 1 == scopes.length());
     RootedScope original(cx);
     RootedScope clone(cx);
-    for (const GCPtrScope& elem : src->scopes().From(scopes.length())) {
+    for (const GCPtrScope& elem : srcData->scopes().From(scopes.length())) {
       original = elem.get();
-      clone = Scope::clone(cx, original,
-                           scopes[FindScopeIndex(src, *original->enclosing())]);
+      uint32_t scopeIndex =
+          FindScopeIndex(srcData->scopes(), *original->enclosing());
+      clone = Scope::clone(cx, original, scopes[scopeIndex]);
       if (!clone || !scopes.append(clone)) {
         return false;
       }
@@ -4039,7 +4021,7 @@ static JSObject* CloneInnerInterpretedFunction(
   if (nconsts != 0) {
     RootedValue val(cx);
     RootedValue clone(cx);
-    for (const GCPtrValue& elem : src->consts()) {
+    for (const GCPtrValue& elem : srcData->consts()) {
       val = elem.get();
       if (val.isDouble()) {
         clone = val;
@@ -4071,7 +4053,7 @@ static JSObject* CloneInnerInterpretedFunction(
     RootedObject obj(cx);
     RootedObject clone(cx);
     Rooted<ScriptSourceObject*> sourceObject(cx, dst->sourceObject());
-    for (const GCPtrObject& elem : src->objects()) {
+    for (const GCPtrObject& elem : srcData->objects()) {
       obj = elem.get();
       clone = nullptr;
       if (obj->is<RegExpObject>()) {
@@ -4095,8 +4077,8 @@ static JSObject* CloneInnerInterpretedFunction(
           }
 
           Scope* enclosing = innerFun->nonLazyScript()->enclosingScope();
-          RootedScope enclosingClone(cx,
-                                     scopes[FindScopeIndex(src, *enclosing)]);
+          uint32_t scopeIndex = FindScopeIndex(srcData->scopes(), *enclosing);
+          RootedScope enclosingClone(cx, scopes[scopeIndex]);
           clone = CloneInnerInterpretedFunction(cx, enclosingClone, innerFun,
                                                 sourceObject);
         }
@@ -4110,27 +4092,43 @@ static JSObject* CloneInnerInterpretedFunction(
     }
   }
 
-  dst->data_ = reinterpret_cast<js::PrivateScriptData*>(data.release());
-  dst->dataSize_ = size;
-  memcpy(dst->data_, src->data_, size);
+  // Create the new PrivateScriptData on |dst| and fill it in.
+  if (!JSScript::createPrivateScriptData(cx, dst, nscopes, nconsts, nobjects,
+                                         ntrynotes, nscopenotes,
+                                         nresumeoffsets)) {
+    return false;
+  }
 
+  PrivateScriptData* dstData = dst->data_;
   {
-    auto array = dst->data_->scopes();
+    auto array = dstData->scopes();
     for (uint32_t i = 0; i < nscopes; ++i) {
       array[i].init(scopes[i]);
     }
   }
   if (nconsts) {
-    auto array = dst->data_->consts();
+    auto array = dstData->consts();
     for (unsigned i = 0; i < nconsts; ++i) {
       array[i].init(consts[i]);
     }
   }
   if (nobjects) {
-    auto array = dst->data_->objects();
+    auto array = dstData->objects();
     for (unsigned i = 0; i < nobjects; ++i) {
       array[i].init(objects[i]);
     }
+  }
+  if (ntrynotes) {
+    std::copy_n(srcData->tryNotes().begin(), ntrynotes,
+                dstData->tryNotes().begin());
+  }
+  if (nscopenotes) {
+    std::copy_n(srcData->scopeNotes().begin(), nscopenotes,
+                dstData->scopeNotes().begin());
+  }
+  if (nresumeoffsets) {
+    std::copy_n(srcData->resumeOffsets().begin(), nresumeoffsets,
+                dstData->resumeOffsets().begin());
   }
 
   return true;
