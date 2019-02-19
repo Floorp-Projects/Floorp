@@ -1,0 +1,94 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#fxaPairDeviceDialog {
+  padding: 0.5em;
+}
+
+.pairHeading {
+  padding-bottom: 1em;
+  text-align: center;
+}
+
+#qrWrapper {
+  position: relative;
+}
+
+#qrContainer {
+  height: 300px;
+  width: 300px;
+  background-size: contain;
+  image-rendering: -moz-crisp-edges;
+  transition: filter 250ms cubic-bezier(.07,.95,0,1);
+}
+
+#qrWrapper:not([pairing-status="ready"]) #qrContainer {
+  opacity: 0.05;
+  filter: blur(3px);
+}
+
+#qrWrapper:not([pairing-status="loading"]) #qrSpinner {
+  opacity: 0;
+}
+
+#qrSpinner {
+	background-image: url("chrome://browser/skin/fxa/fxa-spinner.svg");
+	animation: 0.9s spin infinite linear;
+	background-size: 36px;
+	background-repeat: no-repeat;
+	background-position: center;
+	width: 100%;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+  transition: opacity 250ms cubic-bezier(.07,.95,0,1);
+}
+
+#qrWrapper:not([pairing-status="error"]) #qrError {
+  display: none;
+}
+
+#qrError {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  width: 300px; /* Same as #qrContainer */
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+  right: 0;
+  margin-left: auto;
+  margin-right: auto;
+  transition: opacity 250ms cubic-bezier(.07,.95,0,1);
+  cursor: pointer;
+}
+
+.qr-error-text {
+  text-align: center;
+  -moz-user-select: none;
+  display: block;
+  color: #2484C6;
+  cursor: pointer;
+}
+
+#refresh-qr {
+  width: 36px;
+  height: 36px;
+  background-image: url("chrome://browser/skin/reload.svg");
+  background-size: contain;
+  -moz-context-properties: fill;
+  fill: #2484C6;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
