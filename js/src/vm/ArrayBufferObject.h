@@ -185,20 +185,27 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     MALLOCED = 0b001,
 
     /**
+     * No bytes are associated with this buffer.  (This could be because the
+     * buffer is detached, because it's an internal, newborn buffer not yet
+     * overwritten with user-exposable semantics, or some other reason.  The
+     * point is, don't read precise language semantics into this kind.)
+     */
+    NO_DATA = 0b010,
+
+    /**
      * User-owned memory.  The associated buffer must be manually detached
      * before the user invalidates (deallocates, reuses the storage of, &c.)
      * the user-owned memory.
      */
-    USER_OWNED = 0b010,
+    USER_OWNED = 0b011,
 
-    WASM = 0b011,
-    MAPPED = 0b100,
-    EXTERNAL = 0b101,
+    WASM = 0b100,
+    MAPPED = 0b101,
+    EXTERNAL = 0b110,
 
     // These kind-values are currently invalid.  We intend to expand valid
     // BufferKinds in the future to either partly or fully use these values.
-    BAD1 = 0b110,
-    BAD2 = 0b111,
+    BAD1 = 0b111,
 
     KIND_MASK = 0b111
   };
@@ -266,6 +273,10 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
     static BufferContents createMalloced(void* data) {
       return BufferContents(static_cast<uint8_t*>(data), MALLOCED);
+    }
+
+    static BufferContents createNoData() {
+      return BufferContents(nullptr, NO_DATA);
     }
 
     static BufferContents createUserOwned(void* data) {
@@ -345,8 +356,16 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
                                       bool hasStealableContents);
 
   bool hasStealableContents() const {
-    // Inline elements strictly adhere to the corresponding buffer.
-    return ownsData() && !isPreparedForAsmJS() && !isWasm();
+    // Inline data is always DoesntOwnData and so will fail the first test.
+    if (ownsData()) {
+      MOZ_ASSERT(!isInlineData(), "inline data is always DoesntOwnData");
+
+      // Making no data stealable is tricky, because it'd be null and usually
+      // that signals failure, so directly exclude it here.
+      return !isPreparedForAsmJS() && !isNoData() && !isWasm();
+    }
+
+    return false;
   }
 
   static void addSizeOfExcludingThis(JSObject* obj,
@@ -406,6 +425,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   bool isInlineData() const { return bufferKind() == INLINE_DATA; }
   bool isMalloced() const { return bufferKind() == MALLOCED; }
+  bool isNoData() const { return bufferKind() == NO_DATA; }
   bool hasUserOwnedData() const { return bufferKind() == USER_OWNED; }
 
   bool isWasm() const { return bufferKind() == WASM; }
