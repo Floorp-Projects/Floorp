@@ -405,8 +405,7 @@ bool HttpChannelParent::DoAsyncOpen(
     const uint32_t& aCorsMode, const uint32_t& aRedirectMode,
     const uint64_t& aChannelId, const nsString& aIntegrityMetadata,
     const uint64_t& aContentWindowId,
-    const nsTArray<PreferredAlternativeDataTypeParams>&
-        aPreferredAlternativeTypes,
+    const ArrayOfStringPairs& aPreferredAlternativeTypes,
     const uint64_t& aTopLevelOuterContentWindowId,
     const TimeStamp& aLaunchServiceWorkerStart,
     const TimeStamp& aLaunchServiceWorkerEnd,
@@ -571,9 +570,9 @@ bool HttpChannelParent::DoAsyncOpen(
       do_QueryInterface(static_cast<nsIChannel*>(httpChannel.get()));
   if (cacheChannel) {
     cacheChannel->SetCacheKey(aCacheKey);
-    for (auto& data : aPreferredAlternativeTypes) {
-      cacheChannel->PreferAlternativeDataType(data.type(), data.contentType(),
-                                              data.deliverAltData());
+    for (auto& pair : aPreferredAlternativeTypes) {
+      cacheChannel->PreferAlternativeDataType(mozilla::Get<0>(pair),
+                                              mozilla::Get<1>(pair));
     }
 
     cacheChannel->SetAllowStaleCacheContent(aAllowStaleCacheContent);
@@ -1701,28 +1700,6 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvOpenOriginalCacheInputStream() {
   }
 
   Unused << SendOriginalCacheInputStreamAvailable(
-      autoStream.TakeOptionalValue());
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult HttpChannelParent::RecvOpenAltDataCacheInputStream(
-    const nsCString& aType) {
-  if (mIPCClosed) {
-    return IPC_OK();
-  }
-  AutoIPCStream autoStream;
-  if (mCacheEntry) {
-    nsCOMPtr<nsIInputStream> inputStream;
-    nsresult rv = mCacheEntry->OpenAlternativeInputStream(
-        aType, getter_AddRefs(inputStream));
-    if (NS_SUCCEEDED(rv)) {
-      PContentParent* pcp = Manager()->Manager();
-      Unused << autoStream.Serialize(inputStream,
-                                     static_cast<ContentParent*>(pcp));
-    }
-  }
-
-  Unused << SendAltDataCacheInputStreamAvailable(
       autoStream.TakeOptionalValue());
   return IPC_OK();
 }

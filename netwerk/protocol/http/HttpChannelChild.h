@@ -178,9 +178,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   mozilla::ipc::IPCResult RecvOriginalCacheInputStreamAvailable(
       const OptionalIPCStream& aStream) override;
 
-  mozilla::ipc::IPCResult RecvAltDataCacheInputStreamAvailable(
-      const OptionalIPCStream& aStream) override;
-
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual void DoNotifyListenerCleanup() override;
@@ -341,8 +338,7 @@ class HttpChannelChild final : public PHttpChannelChild,
   nsCOMPtr<nsICacheInfoChannel> mSynthesizedCacheInfo;
   RefPtr<ChannelEventQueue> mEventQ;
 
-  nsCOMPtr<nsIInputStreamReceiver> mOriginalInputStreamReceiver;
-  nsCOMPtr<nsIInputStreamReceiver> mAltDataInputStreamReceiver;
+  nsCOMPtr<nsIInputStreamReceiver> mInputStreamReceiver;
 
   // Used to ensure atomicity of mBgChild and mBgInitFailCallback
   Mutex mBgChildMutex;

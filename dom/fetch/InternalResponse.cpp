@@ -48,8 +48,6 @@ already_AddRefed<InternalResponse> InternalResponse::Clone(
   clone->mPaddingInfo = mPaddingInfo;
   clone->mPaddingSize = mPaddingSize;
 
-  clone->mCacheInfoChannel = mCacheInfoChannel;
-
   if (mWrappedResponse) {
     clone->mWrappedResponse = mWrappedResponse->Clone(aCloneType);
     MOZ_ASSERT(!mBody);
