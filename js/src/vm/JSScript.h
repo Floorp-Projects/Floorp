@@ -1427,6 +1427,10 @@ class alignas(JS::Value) PrivateScriptData final {
                                     js::HandleScope scriptEnclosingScope,
                                     js::HandleFunction fun);
 
+  // Clone src script data into dst script.
+  static bool Clone(JSContext* cx, js::HandleScript src, js::HandleScript dst,
+                    js::MutableHandle<JS::GCVector<js::Scope*>> scopes);
+
   void traceChildren(JSTracer* trc);
 };
 
@@ -1836,6 +1840,10 @@ class JSScript : public js::gc::TenuredCell {
       js::XDRState<mode>* xdr, js::HandleScript script,
       js::HandleScriptSourceObject sourceObject,
       js::HandleScope scriptEnclosingScope, js::HandleFunction fun);
+
+  friend bool js::PrivateScriptData::Clone(
+      JSContext* cx, js::HandleScript src, js::HandleScript dst,
+      js::MutableHandle<JS::GCVector<js::Scope*>> scopes);
 
   friend bool js::detail::CopyScript(
       JSContext* cx, js::HandleScript src,

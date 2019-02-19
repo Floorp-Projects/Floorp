@@ -3997,37 +3997,9 @@ static JSObject* CloneInnerInterpretedFunction(
   return clone;
 }
 
-bool js::detail::CopyScript(JSContext* cx, HandleScript src,
-                            HandleScriptSourceObject sourceObject,
-                            MutableHandleScript dst,
-                            MutableHandle<GCVector<Scope*>> scopes) {
-  // We don't copy the HideScriptFromDebugger flag and it's not clear what
-  // should happen if it's set on the source script.
-  MOZ_ASSERT(!src->hideScriptFromDebugger());
-
-  if (src->treatAsRunOnce() && !src->functionNonDelazifying()) {
-    JS_ReportErrorASCII(cx, "No cloning toplevel run-once scripts");
-    return false;
-  }
-
-  /* NB: Keep this in sync with XDRScript. */
-
-  // Some embeddings are not careful to use ExposeObjectToActiveJS as needed.
-  JS::AssertObjectIsNotGray(sourceObject);
-
-  CompileOptions options(cx);
-  options.setMutedErrors(src->mutedErrors())
-      .setSelfHostingMode(src->selfHosted())
-      .setNoScriptRval(src->noScriptRval());
-
-  // Create a new JSScript to fill in
-  dst.set(JSScript::Create(cx, options, sourceObject, src->sourceStart(),
-                           src->sourceEnd(), src->toStringStart(),
-                           src->toStringEnd()));
-  if (!dst) {
-    return false;
-  }
-
+/* static */ bool PrivateScriptData::Clone(
+    JSContext* cx, HandleScript src, HandleScript dst,
+    MutableHandle<GCVector<Scope*>> scopes) {
   uint32_t nscopes = src->scopes().size();
   uint32_t nconsts = src->hasConsts() ? src->consts().size() : 0;
   uint32_t nobjects = src->hasObjects() ? src->objects().size() : 0;
@@ -4142,6 +4114,64 @@ bool js::detail::CopyScript(JSContext* cx, HandleScript src,
   dst->dataSize_ = size;
   memcpy(dst->data_, src->data_, size);
 
+  {
+    auto array = dst->data_->scopes();
+    for (uint32_t i = 0; i < nscopes; ++i) {
+      array[i].init(scopes[i]);
+    }
+  }
+  if (nconsts) {
+    auto array = dst->data_->consts();
+    for (unsigned i = 0; i < nconsts; ++i) {
+      array[i].init(consts[i]);
+    }
+  }
+  if (nobjects) {
+    auto array = dst->data_->objects();
+    for (unsigned i = 0; i < nobjects; ++i) {
+      array[i].init(objects[i]);
+    }
+  }
+
+  return true;
+}
+
+bool js::detail::CopyScript(JSContext* cx, HandleScript src,
+                            HandleScriptSourceObject sourceObject,
+                            MutableHandleScript dst,
+                            MutableHandle<GCVector<Scope*>> scopes) {
+  // We don't copy the HideScriptFromDebugger flag and it's not clear what
+  // should happen if it's set on the source script.
+  MOZ_ASSERT(!src->hideScriptFromDebugger());
+
+  if (src->treatAsRunOnce() && !src->functionNonDelazifying()) {
+    JS_ReportErrorASCII(cx, "No cloning toplevel run-once scripts");
+    return false;
+  }
+
+  /* NB: Keep this in sync with XDRScript. */
+
+  // Some embeddings are not careful to use ExposeObjectToActiveJS as needed.
+  JS::AssertObjectIsNotGray(sourceObject);
+
+  CompileOptions options(cx);
+  options.setMutedErrors(src->mutedErrors())
+      .setSelfHostingMode(src->selfHosted())
+      .setNoScriptRval(src->noScriptRval());
+
+  // Create a new JSScript to fill in
+  dst.set(JSScript::Create(cx, options, sourceObject, src->sourceStart(),
+                           src->sourceEnd(), src->toStringStart(),
+                           src->toStringEnd()));
+  if (!dst) {
+    return false;
+  }
+
+  // Clone the PrivateScriptData into dst
+  if (!PrivateScriptData::Clone(cx, src, dst, scopes)) {
+    return false;
+  }
+
   if (cx->zone() != src->zoneFromAnyThread()) {
     for (size_t i = 0; i < src->scriptData()->natoms(); i++) {
       cx->markAtom(src->scriptData()->atoms()[i]);
@@ -4167,25 +4197,6 @@ bool js::detail::CopyScript(JSContext* cx, HandleScript src,
     dst->setArgumentsHasVarBinding();
     if (src->analyzedArgsUsage()) {
       dst->setNeedsArgsObj(src->needsArgsObj());
-    }
-  }
-
-  {
-    auto array = dst->data_->scopes();
-    for (uint32_t i = 0; i < nscopes; ++i) {
-      array[i].init(scopes[i]);
-    }
-  }
-  if (nconsts) {
-    auto array = dst->data_->consts();
-    for (unsigned i = 0; i < nconsts; ++i) {
-      array[i].init(consts[i]);
-    }
-  }
-  if (nobjects) {
-    auto array = dst->data_->objects();
-    for (unsigned i = 0; i < nobjects; ++i) {
-      array[i].init(objects[i]);
     }
   }
 
