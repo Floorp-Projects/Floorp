@@ -24,11 +24,15 @@ add_task(async function test_correct_errors_are_thrown() {
   ExtensionSearchHandler.registerKeyword(anotherKeyword, { emit: () => {} });
 
   // Try calling handleSearch for an unregistered keyword.
-  Assert.throws(() => ExtensionSearchHandler.handleSearch(unregisteredKeyword, `${unregisteredKeyword} `, () => {}),
+  let searchData = {
+    keyword: unregisteredKeyword,
+    text: `${unregisteredKeyword} `,
+  };
+  Assert.throws(() => ExtensionSearchHandler.handleSearch(searchData, () => {}),
     /The keyword provided is not registered/);
 
   // Try calling handleSearch without a callback.
-  Assert.throws(() => ExtensionSearchHandler.handleSearch(unregisteredKeyword, `${unregisteredKeyword} `),
+  Assert.throws(() => ExtensionSearchHandler.handleSearch(searchData),
     /The keyword provided is not registered/);
 
   // Try getting the description for a keyword which isn't registered.
@@ -48,7 +52,11 @@ add_task(async function test_correct_errors_are_thrown() {
     /There is no active input session/);
 
   // Start a session by calling handleSearch with the registered keyword.
-  ExtensionSearchHandler.handleSearch(keyword, `${keyword} test`, () => {});
+  searchData = {
+    keyword,
+    text: `${keyword} test`,
+  };
+  ExtensionSearchHandler.handleSearch(searchData, () => {});
 
   // Try providing suggestions for an unregistered keyword.
   Assert.throws(() => ExtensionSearchHandler.addSuggestions(unregisteredKeyword, 0, []),
@@ -59,7 +67,11 @@ add_task(async function test_correct_errors_are_thrown() {
     /The keyword provided is not apart of an active input session/);
 
   // Try calling handleSearch for an inactive keyword.
-  Assert.throws(() => ExtensionSearchHandler.handleSearch(anotherKeyword, `${anotherKeyword} `, () => {}),
+  searchData = {
+    keyword: anotherKeyword,
+    text: `${anotherKeyword} `,
+  };
+  Assert.throws(() => ExtensionSearchHandler.handleSearch(searchData, () => {}),
     /A different input session is already ongoing/);
 
   // Try calling addSuggestions with an old callback ID.
@@ -84,15 +96,27 @@ add_task(async function test_correct_errors_are_thrown() {
     /There is no active input sessio/);
 
   // Try calling handleSearch that doesn't have a space after the keyword.
-  Assert.throws(() => ExtensionSearchHandler.handleSearch(anotherKeyword, `${anotherKeyword}`, () => {}),
+  searchData = {
+    keyword: anotherKeyword,
+    text: `${anotherKeyword}`,
+  };
+  Assert.throws(() => ExtensionSearchHandler.handleSearch(searchData, () => {}),
     /The text provided must start with/);
 
   // Try calling handleSearch with text starting with the wrong keyword.
-  Assert.throws(() => ExtensionSearchHandler.handleSearch(anotherKeyword, `${keyword} test`, () => {}),
+  searchData = {
+    keyword: anotherKeyword,
+    text: `${keyword} test`,
+  };
+  Assert.throws(() => ExtensionSearchHandler.handleSearch(searchData, () => {}),
     /The text provided must start with/);
 
   // Start a new session by calling handleSearch with a different keyword
-  ExtensionSearchHandler.handleSearch(anotherKeyword, `${anotherKeyword} test`, () => {});
+  searchData = {
+    keyword: anotherKeyword,
+    text: `${anotherKeyword} test`,
+  };
+  ExtensionSearchHandler.handleSearch(searchData, () => {});
 
   // Try adding suggestions again with the same callback ID now that the input session has ended.
   Assert.throws(() => ExtensionSearchHandler.addSuggestions(keyword, 1, []),
@@ -139,7 +163,11 @@ add_task(async function test_correct_errors_are_thrown() {
     /The keyword provided is not registered/);
 
   // Try handling a search with the unregistered keyword.
-  Assert.throws(() => ExtensionSearchHandler.handleSearch(keyword, `${keyword} test`, () => {}),
+  searchData = {
+    keyword,
+    text: `${keyword} test`,
+  };
+  Assert.throws(() => ExtensionSearchHandler.handleSearch(searchData, () => {}),
     /The keyword provided is not registered/);
 
   // Try unregistering the keyword again.
@@ -160,6 +188,33 @@ add_task(async function test_correct_errors_are_thrown() {
   await cleanup();
 });
 
+add_task(async function test_extension_private_browsing() {
+  let events = [];
+  let mockExtension = {
+    emit: message => events.push(message),
+    privateBrowsingAllowed: false,
+  };
+
+  let keyword = "foo";
+
+  ExtensionSearchHandler.registerKeyword(keyword, mockExtension);
+
+  let searchData = {
+    keyword,
+    text: `${keyword} test`,
+    inPrivateWindow: true,
+  };
+  let result = await ExtensionSearchHandler.handleSearch(searchData);
+  Assert.equal(result, false, "unable to handle search for private window");
+
+  // Try calling handleInputEntered after the session has ended.
+  Assert.throws(() => ExtensionSearchHandler.handleInputEntered(keyword, `${keyword} test`, "tab"),
+    /There is no active input session/);
+
+  ExtensionSearchHandler.unregisterKeyword(keyword);
+  await cleanup();
+});
+
 add_task(async function test_correct_events_are_emitted() {
   let events = [];
   function checkEvents(expectedEvents) {
@@ -176,16 +231,21 @@ add_task(async function test_correct_events_are_emitted() {
   ExtensionSearchHandler.registerKeyword(keyword, mockExtension);
   ExtensionSearchHandler.registerKeyword(anotherKeyword, mockExtension);
 
-  ExtensionSearchHandler.handleSearch(keyword, `${keyword} `, () => {});
+  let searchData = {
+    keyword,
+    text: `${keyword} `,
+  };
+  ExtensionSearchHandler.handleSearch(searchData, () => {});
   checkEvents([ExtensionSearchHandler.MSG_INPUT_STARTED]);
 
-  ExtensionSearchHandler.handleSearch(keyword, `${keyword} f`, () => {});
+  searchData.text = `${keyword} f`;
+  ExtensionSearchHandler.handleSearch(searchData, () => {});
   checkEvents([ExtensionSearchHandler.MSG_INPUT_CHANGED]);
 
-  ExtensionSearchHandler.handleInputEntered(keyword, `${keyword} f`, "tab");
+  ExtensionSearchHandler.handleInputEntered(keyword, searchData.text, "tab");
   checkEvents([ExtensionSearchHandler.MSG_INPUT_ENTERED]);
 
-  ExtensionSearchHandler.handleSearch(keyword, `${keyword} f`, () => {});
+  ExtensionSearchHandler.handleSearch(searchData, () => {});
   checkEvents([
     ExtensionSearchHandler.MSG_INPUT_STARTED,
     ExtensionSearchHandler.MSG_INPUT_CHANGED,
@@ -194,7 +254,10 @@ add_task(async function test_correct_events_are_emitted() {
   ExtensionSearchHandler.handleInputCancelled();
   checkEvents([ExtensionSearchHandler.MSG_INPUT_CANCELLED]);
 
-  ExtensionSearchHandler.handleSearch(anotherKeyword, `${anotherKeyword} baz`, () => {});
+  ExtensionSearchHandler.handleSearch({
+    keyword: anotherKeyword,
+    text: `${anotherKeyword} baz`,
+  }, () => {});
   checkEvents([
     ExtensionSearchHandler.MSG_INPUT_STARTED,
     ExtensionSearchHandler.MSG_INPUT_CHANGED,
@@ -302,7 +365,7 @@ add_task(async function test_extension_results_should_come_first() {
   ExtensionSearchHandler.registerKeyword(keyword, mockExtension);
 
   // Start an input session before testing MSG_INPUT_CHANGED.
-  ExtensionSearchHandler.handleSearch(keyword, `${keyword} `, () => {});
+  ExtensionSearchHandler.handleSearch({keyword, text: `${keyword} `}, () => {});
 
   await check_autocomplete({
     search: `${keyword} -`,
@@ -399,7 +462,7 @@ add_task(async function test_maximum_number_of_suggestions_is_enforced() {
   ExtensionSearchHandler.registerKeyword(keyword, mockExtension);
 
   // Start an input session before testing MSG_INPUT_CHANGED.
-  ExtensionSearchHandler.handleSearch(keyword, `${keyword} `, () => {});
+  ExtensionSearchHandler.handleSearch({keyword, text: `${keyword} `}, () => {});
 
   await check_autocomplete({
     search: `${keyword} #`,
