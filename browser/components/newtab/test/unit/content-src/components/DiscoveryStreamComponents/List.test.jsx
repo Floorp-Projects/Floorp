@@ -4,7 +4,7 @@ import React from "react";
 import {shallow} from "enzyme";
 
 describe("<List> presentation component", () => {
-  const ValidRecommendations = [{url: 1}, {url: 2}, {campaign_id: 11, context: "test spoc", url: 3}];
+  const ValidRecommendations = [{url: 1}, {url: 2}, {context: "test spoc", url: 3}];
   const ValidListProps = {
     data: {
       recommendations: ValidRecommendations,
@@ -64,9 +64,6 @@ describe("<List> presentation component", () => {
 
   it("should return expected spoc ListItem", () => {
     const wrapper = shallow(<List {...ValidListProps} items={3} recStartingPoint={0} />);
-
-    const listItemCampaigns = wrapper.find(ListItem).map(i => i.prop("campaignId"));
-    assert.sameOrderedMembers(listItemCampaigns, [undefined, undefined, ValidRecommendations[2].campaign_id]);
 
     const listItemContext = wrapper.find(ListItem).map(i => i.prop("context"));
     assert.sameOrderedMembers(listItemContext, [undefined, undefined, ValidRecommendations[2].context]);
