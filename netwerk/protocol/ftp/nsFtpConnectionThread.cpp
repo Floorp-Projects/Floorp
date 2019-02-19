@@ -1889,7 +1889,7 @@ static nsresult CreateHTTPProxiedChannel(nsIChannel *channel, nsIProxyInfo *pi,
   nsCOMPtr<nsILoadInfo> loadInfo;
   channel->GetLoadInfo(getter_AddRefs(loadInfo));
 
-  return pph->NewProxiedChannel2(uri, pi, 0, nullptr, loadInfo, newChannel);
+  return pph->NewProxiedChannel(uri, pi, 0, nullptr, loadInfo, newChannel);
 }
 
 NS_IMETHODIMP
