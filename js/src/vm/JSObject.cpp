@@ -122,6 +122,9 @@ JS_PUBLIC_API const char* JS::InformalValueTypeName(const Value& v) {
   if (v.isSymbol()) {
     return "symbol";
   }
+  if (v.isBigInt()) {
+    return "bigint";
+  }
   if (v.isNumber()) {
     return "number";
   }
