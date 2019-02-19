@@ -1,4 +1,4 @@
-<?xml version="1.0"?> 
+<?xml version="1.0"?>
 
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -6,31 +6,20 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://global/locale/printProgress.dtd">
-
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
         buttons="cancel"
-        title="&printWindow.title;"
+        data-l10n-id="print-window"
         style="width: 36em;"
         ondialogcancel="onCancel()"
         onload="onLoad()"
         onunload="onUnload()">
 
-  <script type="application/javascript" src="chrome://global/content/printProgress.js"/>
+  <linkset>
+    <html:link rel="localization" href="toolkit/printing/printDialogs.ftl"/>
+  </linkset>
 
-    <!-- This is non-visible content that simply adds translatable string
-         into the document so that it is accessible to JS code.
-         
-         XXX-TODO: 
-          convert to use string bundles. 
-    -->
-  
-    <data id="dialog.strings.dialogCloseLabel">&dialogClose.label;</data>
-    <data id="dialog.strings.printComplete">&printComplete;</data>
-    <data id="dialog.strings.progressText">&percentPrint;</data>
-    <data id="dialog.strings.progressLabel">&progress;</data>
-    <data id="dialog.strings.preparing">&preparing;</data>
+  <script type="application/javascript" src="chrome://global/content/printProgress.js"/>
 
     <grid flex="1">
       <columns>
@@ -38,20 +27,20 @@
         <column/>
         <column/>
       </columns>
-      
+
       <rows>
         <row>
           <hbox pack="end">
-            <label id="dialog.titleLabel" value="&title;"/>
+            <label id="dialog.titleLabel" data-l10n-id="print-title"/>
           </hbox>
             <label id="dialog.title"/>
         </row>
-        <row class="thin-separator">             
+        <row class="thin-separator">
           <hbox pack="end">
             <html:label id="dialog.progressLabel" for="dialog.progress"
-                        style="margin-right: 1em;">&progress;</html:label>
+                        style="margin-right: 1em;" data-l10n-id="progress"></html:label>
           </hbox>
-          <label id="dialog.tempLabel" value="&preparing;"/>
+          <label id="dialog.tempLabel" data-l10n-id="print-preparing"/>
           <vbox pack="center" id="dialog.progressBox">
             <html:progress id="dialog.progress" value="0" max="100"></html:progress>
           </vbox>
