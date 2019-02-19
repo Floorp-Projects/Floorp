@@ -28,7 +28,7 @@ module.exports.CHANGES_STATE = {
     "isFramed": false,
     "rules": {
       "rule1": {
-        "selector": "@media (min-width: 50em)",
+        "selectors": ["@media (min-width: 50em)"],
         "ruleId": "rule1",
         "add": [],
         "remove": [],
@@ -37,7 +37,7 @@ module.exports.CHANGES_STATE = {
         ]
       },
       "rule2": {
-        "selector": "@supports (display: grid)",
+        "selectors": ["@supports (display: grid)"],
         "ruleId": "rule2",
         "add": [],
         "remove": [],
@@ -47,7 +47,7 @@ module.exports.CHANGES_STATE = {
         "parent": "rule1"
       },
       "rule3": {
-        "selector": "body",
+        "selectors": ["body"],
         "ruleId": "rule3",
         "add": [
           {
