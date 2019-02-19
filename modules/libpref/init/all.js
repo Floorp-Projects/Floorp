@@ -234,6 +234,9 @@ pref("dom.keyboardevent.keypress.hack.use_legacy_keycode_and_charcode", "");
 // Whether InputEvent.data is enabled.
 pref("dom.inputevent.data.enabled", true);
 
+// Whether InputEvent.dataTransfer is enabled.
+pref("dom.inputevent.datatransfer.enabled", true);
+
 // Whether InputEvent.inputType is enabled.
 pref("dom.inputevent.inputtype.enabled", true);
 

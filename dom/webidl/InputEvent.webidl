@@ -27,3 +27,16 @@ dictionary InputEventInit : UIEventInit
   //        So, we take `null` for compatibility with them.
   DOMString? data = null;
 };
+
+// https://w3c.github.io/input-events/#interface-InputEvent
+// https://rawgit.com/w3c/input-events/v1/index.html#interface-InputEvent
+partial interface InputEvent
+{
+  [Pref="dom.inputevent.datatransfer.enabled"]
+  readonly attribute DataTransfer? dataTransfer;
+};
+
+partial dictionary InputEventInit
+{
+  DataTransfer? dataTransfer = null;
+};
