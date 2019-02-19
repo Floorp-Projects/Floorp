@@ -1406,6 +1406,12 @@ BrowserGlue.prototype = {
       }
     }
     Services.telemetry.scalarSet("contentblocking.exceptions", exceptions);
+
+    let fpEnabled = Services.prefs.getBoolPref("privacy.trackingprotection.fingerprinting.enabled");
+    let cmEnabled = Services.prefs.getBoolPref("privacy.trackingprotection.cryptomining.enabled");
+
+    Services.telemetry.scalarSet("contentblocking.fingerprinting_blocking_enabled", fpEnabled);
+    Services.telemetry.scalarSet("contentblocking.cryptomining_blocking_enabled", cmEnabled);
   },
 
   _sendMediaTelemetry() {
