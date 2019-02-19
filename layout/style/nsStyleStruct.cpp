@@ -2933,13 +2933,11 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mBackfaceVisibility(NS_STYLE_BACKFACE_VISIBILITY_VISIBLE),
       mTransformStyle(NS_STYLE_TRANSFORM_STYLE_FLAT),
       mTransformBox(StyleGeometryBox::BorderBox),
-      mTransformOrigin{
-          {0.5f, eStyleUnit_Percent},  // Transform is centered on origin
-          {0.5f, eStyleUnit_Percent},
-          {0, nsStyleCoord::CoordConstructor}},
+      mTransformOrigin{LengthPercentage::FromPercentage(0.5),
+                       LengthPercentage::FromPercentage(0.5),
+                       {0.}},
       mChildPerspective(StylePerspective::None()),
-      mPerspectiveOrigin{{0.5f, eStyleUnit_Percent},
-                         {0.5f, eStyleUnit_Percent}},
+      mPerspectiveOrigin(Position::FromPercentage(0.5f)),
       mVerticalAlign(NS_STYLE_VERTICAL_ALIGN_BASELINE, eStyleUnit_Enumerated),
       mTransitions(
           nsStyleAutoArray<StyleTransition>::WITH_SINGLE_INITIAL_ELEMENT),
@@ -3009,11 +3007,9 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
       // appropriate.
       mMotion(aSource.mMotion ? MakeUnique<StyleMotion>(*aSource.mMotion)
                               : nullptr),
-      mTransformOrigin{aSource.mTransformOrigin[0], aSource.mTransformOrigin[1],
-                       aSource.mTransformOrigin[2]},
+      mTransformOrigin(aSource.mTransformOrigin),
       mChildPerspective(aSource.mChildPerspective),
-      mPerspectiveOrigin{aSource.mPerspectiveOrigin[0],
-                         aSource.mPerspectiveOrigin[1]},
+      mPerspectiveOrigin(aSource.mPerspectiveOrigin),
       mVerticalAlign(aSource.mVerticalAlign),
       mTransitions(aSource.mTransitions),
       mTransitionTimingFunctionCount(aSource.mTransitionTimingFunctionCount),
@@ -3246,26 +3242,15 @@ nsChangeHint nsStyleDisplay::CalcDifference(
         CompareTransformValues(mSpecifiedScale, aNewData.mSpecifiedScale);
     transformHint |= CompareMotionValues(mMotion.get(), aNewData.mMotion.get());
 
-    const nsChangeHint kUpdateOverflowAndRepaintHint =
-        nsChangeHint_UpdateOverflow | nsChangeHint_RepaintFrame;
-    for (uint8_t index = 0; index < 3; ++index) {
-      if (mTransformOrigin[index] != aNewData.mTransformOrigin[index]) {
-        transformHint |= nsChangeHint_UpdateTransformLayer |
-                         nsChangeHint_UpdatePostTransformOverflow;
-        break;
-      }
+    if (mTransformOrigin != aNewData.mTransformOrigin) {
+      transformHint |= nsChangeHint_UpdateTransformLayer |
+                       nsChangeHint_UpdatePostTransformOverflow;
     }
 
-    for (uint8_t index = 0; index < 2; ++index) {
-      if (mPerspectiveOrigin[index] != aNewData.mPerspectiveOrigin[index]) {
-        transformHint |= kUpdateOverflowAndRepaintHint;
-        break;
-      }
-    }
-
-    if (mTransformStyle != aNewData.mTransformStyle ||
+    if (mPerspectiveOrigin != aNewData.mPerspectiveOrigin ||
+        mTransformStyle != aNewData.mTransformStyle ||
         mTransformBox != aNewData.mTransformBox) {
-      transformHint |= kUpdateOverflowAndRepaintHint;
+      transformHint |= nsChangeHint_UpdateOverflow | nsChangeHint_RepaintFrame;
     }
 
     if (mBackfaceVisibility != aNewData.mBackfaceVisibility) {
@@ -4003,9 +3988,9 @@ nsStyleUIReset::nsStyleUIReset(const Document& aDocument)
       mWindowShadow(NS_STYLE_WINDOW_SHADOW_DEFAULT),
       mWindowOpacity(1.0),
       mSpecifiedWindowTransform(nullptr),
-      mWindowTransformOrigin{
-          {0.5f, eStyleUnit_Percent},  // Transform is centered on origin
-          {0.5f, eStyleUnit_Percent}} {
+      mWindowTransformOrigin{LengthPercentage::FromPercentage(0.5),
+                             LengthPercentage::FromPercentage(0.5),
+                             {0.}} {
   MOZ_COUNT_CTOR(nsStyleUIReset);
 }
 
@@ -4018,8 +4003,7 @@ nsStyleUIReset::nsStyleUIReset(const nsStyleUIReset& aSource)
       mWindowShadow(aSource.mWindowShadow),
       mWindowOpacity(aSource.mWindowOpacity),
       mSpecifiedWindowTransform(aSource.mSpecifiedWindowTransform),
-      mWindowTransformOrigin{aSource.mWindowTransformOrigin[0],
-                             aSource.mWindowTransformOrigin[1]} {
+      mWindowTransformOrigin(aSource.mWindowTransformOrigin) {
   MOZ_COUNT_CTOR(nsStyleUIReset);
 }
 
@@ -4060,16 +4044,9 @@ nsChangeHint nsStyleUIReset::CalcDifference(
   if (mWindowOpacity != aNewData.mWindowOpacity ||
       !mSpecifiedWindowTransform != !aNewData.mSpecifiedWindowTransform ||
       (mSpecifiedWindowTransform &&
-       *mSpecifiedWindowTransform != *aNewData.mSpecifiedWindowTransform)) {
+       *mSpecifiedWindowTransform != *aNewData.mSpecifiedWindowTransform) ||
+      mWindowTransformOrigin != aNewData.mWindowTransformOrigin) {
     hint |= nsChangeHint_UpdateWidgetProperties;
-  } else {
-    for (uint8_t index = 0; index < 2; ++index) {
-      if (mWindowTransformOrigin[index] !=
-          aNewData.mWindowTransformOrigin[index]) {
-        hint |= nsChangeHint_UpdateWidgetProperties;
-        break;
-      }
-    }
   }
 
   if (!hint && mIMEMode != aNewData.mIMEMode) {
