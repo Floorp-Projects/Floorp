@@ -979,7 +979,7 @@ ArrayBufferObject::BufferContents ArrayBufferObject::createMappedContents(
     int fd, size_t offset, size_t length) {
   void* data =
       gc::AllocateMappedContent(fd, offset, length, ARRAY_BUFFER_ALIGNMENT);
-  return BufferContents::create<MAPPED>(data);
+  return BufferContents::createMapped(data);
 }
 
 uint8_t* ArrayBufferObject::inlineDataPointer() const {
@@ -1146,7 +1146,7 @@ Maybe<uint32_t> js::WasmArrayBufferMaxSize(
     return false;
   }
   BufferContents contents =
-      BufferContents::create<WASM>(newRawBuf->dataPointer());
+      BufferContents::createWasm(newRawBuf->dataPointer());
   newBuf->initialize(newSize, contents, OwnsData);
 
   memcpy(newBuf->dataPointer(), oldBuf->dataPointer(), oldBuf->byteLength());
@@ -1333,24 +1333,24 @@ ArrayBufferObject* ArrayBufferObject::createEmpty(JSContext* cx) {
 }
 
 ArrayBufferObject* ArrayBufferObject::createFromNewRawBuffer(
-    JSContext* cx, WasmArrayRawBuffer* buffer, uint32_t initialSize) {
+    JSContext* cx, WasmArrayRawBuffer* rawBuffer, uint32_t initialSize) {
   AutoSetNewObjectMetadata metadata(cx);
-  ArrayBufferObject* obj = NewBuiltinClassInstance<ArrayBufferObject>(cx);
-  if (!obj) {
-    WasmArrayRawBuffer::Release(buffer->dataPointer());
+  ArrayBufferObject* buffer = NewBuiltinClassInstance<ArrayBufferObject>(cx);
+  if (!buffer) {
+    WasmArrayRawBuffer::Release(rawBuffer->dataPointer());
     return nullptr;
   }
 
-  obj->setByteLength(initialSize);
-  obj->setFlags(0);
-  obj->setFirstView(nullptr);
+  buffer->setByteLength(initialSize);
+  buffer->setFlags(0);
+  buffer->setFirstView(nullptr);
 
-  auto contents = BufferContents::create<WASM>(buffer->dataPointer());
-  obj->setDataPointer(contents, OwnsData);
+  auto contents = BufferContents::createWasm(rawBuffer->dataPointer());
+  buffer->setDataPointer(contents, OwnsData);
 
   cx->updateMallocCounter(initialSize);
 
-  return obj;
+  return buffer;
 }
 
 /* static */ ArrayBufferObject::BufferContents ArrayBufferObject::stealContents(
@@ -1815,8 +1815,7 @@ JS_PUBLIC_API JSObject* JS_NewMappedArrayBufferWithContents(JSContext* cx,
 
   using BufferContents = ArrayBufferObject::BufferContents;
 
-  BufferContents contents =
-      BufferContents::create<ArrayBufferObject::MAPPED>(data);
+  BufferContents contents = BufferContents::createMapped(data);
   return ArrayBufferObject::createForContents(cx, nbytes, contents,
                                               ArrayBufferObject::OwnsData);
 }
