@@ -7376,49 +7376,21 @@ bool nsDisplayTransform::ShouldFlattenAway(nsDisplayListBuilder* aBuilder) {
     refBox.Init(aFrame);
   }
 
-  /* Allows us to access dimension getters by index. */
-  float transformOrigin[2];
-  TransformReferenceBox::DimensionGetter dimensionGetter[] = {
-      &TransformReferenceBox::Width, &TransformReferenceBox::Height};
-  TransformReferenceBox::DimensionGetter offsetGetter[] = {
-      &TransformReferenceBox::X, &TransformReferenceBox::Y};
+  const StyleTransformOrigin& transformOrigin = display->mTransformOrigin;
+  CSSPoint origin = nsStyleTransformMatrix::Convert2DPosition(
+      transformOrigin.horizontal, transformOrigin.vertical, refBox);
 
-  for (uint8_t index = 0; index < 2; ++index) {
-    /* If the transform-origin specifies a percentage, take the percentage
-     * of the size of the box.
-     */
-    const nsStyleCoord& originValue = display->mTransformOrigin[index];
-    if (originValue.GetUnit() == eStyleUnit_Calc) {
-      const nsStyleCoord::Calc* calc = originValue.GetCalcValue();
-      transformOrigin[index] =
-          NSAppUnitsToFloatPixels((refBox.*dimensionGetter[index])(),
-                                  aAppUnitsPerPixel) *
-              calc->mPercent +
-          NSAppUnitsToFloatPixels(calc->mLength, aAppUnitsPerPixel);
-    } else if (originValue.GetUnit() == eStyleUnit_Percent) {
-      transformOrigin[index] =
-          NSAppUnitsToFloatPixels((refBox.*dimensionGetter[index])(),
-                                  aAppUnitsPerPixel) *
-          originValue.GetPercentValue();
-    } else {
-      MOZ_ASSERT(originValue.GetUnit() == eStyleUnit_Coord, "unexpected unit");
-      transformOrigin[index] = NSAppUnitsToFloatPixels(
-          originValue.GetCoordValue(), aAppUnitsPerPixel);
-    }
-
-    if (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
-      // SVG frames (unlike other frames) have a reference box that can be (and
-      // typically is) offset from the TopLeft() of the frame. We need to
-      // account for that here.
-      transformOrigin[index] += NSAppUnitsToFloatPixels(
-          (refBox.*offsetGetter[index])(), aAppUnitsPerPixel);
-    }
+  if (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
+    // SVG frames (unlike other frames) have a reference box that can be (and
+    // typically is) offset from the TopLeft() of the frame. We need to account
+    // for that here.
+    origin.x += CSSPixel::FromAppUnits(refBox.X());
+    origin.y += CSSPixel::FromAppUnits(refBox.Y());
   }
 
-  return Point3D(
-      transformOrigin[0], transformOrigin[1],
-      NSAppUnitsToFloatPixels(display->mTransformOrigin[2].GetCoordValue(),
-                              aAppUnitsPerPixel));
+  float scale = mozilla::AppUnitsPerCSSPixel() / float(aAppUnitsPerPixel);
+  float z = transformOrigin.depth._0;
+  return Point3D(origin.x * scale, origin.y * scale, z * scale);
 }
 
 /* static */ bool nsDisplayTransform::ComputePerspectiveMatrix(
@@ -7462,7 +7434,8 @@ bool nsDisplayTransform::ShouldFlattenAway(nsDisplayListBuilder* aBuilder) {
   TransformReferenceBox refBox(cbFrame);
 
   Point perspectiveOrigin = nsStyleTransformMatrix::Convert2DPosition(
-      cbDisplay->mPerspectiveOrigin, refBox, aAppUnitsPerPixel);
+      cbDisplay->mPerspectiveOrigin.horizontal,
+      cbDisplay->mPerspectiveOrigin.vertical, refBox, aAppUnitsPerPixel);
 
   /* GetOffsetTo computes the offset required to move from 0,0 in cbFrame to 0,0
    * in aFrame. Although we actually want the inverse of this, it's faster to

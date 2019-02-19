@@ -1901,10 +1901,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   RefPtr<nsCSSValueSharedList> mIndividualTransform;
   mozilla::UniquePtr<mozilla::StyleMotion> mMotion;
 
-  nsStyleCoord mTransformOrigin[3];    // percent, coord, calc, 3rd param is
-                                       // coord, calc only
+  mozilla::StyleTransformOrigin mTransformOrigin;
   mozilla::StylePerspective mChildPerspective;
-  nsStyleCoord mPerspectiveOrigin[2];  // percent, coord, calc
+  mozilla::Position mPerspectiveOrigin;
 
   nsStyleCoord mVerticalAlign;  // coord, percent, calc, enum
                                 // (NS_STYLE_VERTICAL_ALIGN_*)
@@ -2484,7 +2483,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset {
   uint8_t mWindowShadow;
   float mWindowOpacity;
   RefPtr<nsCSSValueSharedList> mSpecifiedWindowTransform;
-  nsStyleCoord mWindowTransformOrigin[2];  // percent, coord, calc
+  mozilla::StyleTransformOrigin mWindowTransformOrigin;
 };
 
 struct nsCursorImage {

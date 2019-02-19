@@ -441,6 +441,7 @@ cbindgen-types = [
     { gecko = "StylePercentage", servo = "values::computed::Percentage" },
     { gecko = "StylePerspective", servo = "values::computed::Perspective" },
     { gecko = "StyleZIndex", servo = "values::computed::ZIndex" },
+    { gecko = "StyleTransformOrigin", servo = "values::computed::TransformOrigin" },
 ]
 
 mapped-generic-types = [

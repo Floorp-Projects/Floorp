@@ -475,8 +475,6 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   bool GetCBPaddingRectHeight(nscoord& aHeight);
   bool GetScrollFrameContentWidth(nscoord& aWidth);
   bool GetScrollFrameContentHeight(nscoord& aHeight);
-  bool GetFrameBoundsWidthForTransform(nscoord& aWidth);
-  bool GetFrameBoundsHeightForTransform(nscoord& aHeight);
   bool GetFrameBorderRectWidth(nscoord& aWidth);
   bool GetFrameBorderRectHeight(nscoord& aHeight);
 
