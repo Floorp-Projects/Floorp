@@ -2270,10 +2270,6 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
          aPO.get(), aPO->mPresShell.get(), gFrameTypesStr[aPO->mFrameType],
          adjSize.width, adjSize.height));
 
-  // This docshell stuff is weird; will go away when we stop having multiple
-  // presentations per document
-  aPO->mPresContext->SetContainer(aPO->mDocShell);
-
   aPO->mPresShell->BeginObservingDocument();
 
   aPO->mPresContext->SetPageSize(adjSize);
