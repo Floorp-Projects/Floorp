@@ -287,7 +287,12 @@ const MozElementMixin = Base => class MozElement extends Base {
     let nodeIterator = doc.createNodeIterator(doc, NodeFilter.SHOW_TEXT);
     let currentNode = nodeIterator.nextNode();
     while (currentNode) {
-      currentNode.remove();
+      // Remove whitespace-only nodes. Regex is taken from:
+      // https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Whitespace_in_the_DOM
+      if (!(/[^\t\n\r ]/.test(currentNode.textContent))) {
+        currentNode.remove();
+      }
+
       currentNode = nodeIterator.nextNode();
     }
     // We use a range here so that we don't access the inner DOM elements from

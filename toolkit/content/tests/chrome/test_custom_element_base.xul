@@ -87,6 +87,12 @@
     is(deck.id, "foo", "attribute set");
     is(deck.selectedIndex, "0", "Custom Element is property attached");
     deck.remove();
+
+    info("Checking that whitespace text is removed but non-whitespace text isn't");
+    let boxWithWhitespaceText = MozXULElement.parseXULToFragment(`<box> </box>`).querySelector("box");
+    is(boxWithWhitespaceText.textContent, "", "Whitespace removed");
+    let boxWithNonWhitespaceText = MozXULElement.parseXULToFragment(`<box>foo</box>`).querySelector("box");
+    is(boxWithNonWhitespaceText.textContent, "foo", "Non-whitespace not removed");
   }
 
   function testInheritAttributes() {
