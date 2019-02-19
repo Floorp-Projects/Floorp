@@ -4131,6 +4131,13 @@ nsresult nsContentUtils::DispatchInputEvent(Element* aEventTargetElement) {
                             textEditor, InputEventOptions());
 }
 
+nsContentUtils::InputEventOptions::InputEventOptions(
+    DataTransfer* aDataTransfer)
+    : mDataTransfer(aDataTransfer) {
+  MOZ_ASSERT(mDataTransfer);
+  MOZ_ASSERT(mDataTransfer->IsReadOnly());
+}
+
 // static
 nsresult nsContentUtils::DispatchInputEvent(Element* aEventTargetElement,
                                             EditorInputType aEditorInputType,
@@ -4249,12 +4256,22 @@ nsresult nsContentUtils::DispatchInputEvent(Element* aEventTargetElement,
       inputEvent.mData = aOptions.mData;
       MOZ_ASSERT(!inputEvent.mData.IsVoid(),
                  "inputEvent.mData shouldn't be void");
-    }
-#ifdef DEBUG
-    else {
+    } else {
       MOZ_ASSERT(inputEvent.mData.IsVoid(), "inputEvent.mData should be void");
-    }
+      if (IsDataTransferAvailableOnHTMLEditor(aEditorInputType)) {
+        inputEvent.mDataTransfer = aOptions.mDataTransfer;
+        MOZ_ASSERT(inputEvent.mDataTransfer,
+                   "inputEvent.mDataTransfer shouldn't be nullptr");
+        MOZ_ASSERT(inputEvent.mDataTransfer->IsReadOnly(),
+                   "inputEvent.mDataTransfer should be read only");
+      }
+#ifdef DEBUG
+      else {
+        MOZ_ASSERT(!inputEvent.mDataTransfer,
+                   "inputEvent.mDataTransfer should be nullptr");
+      }
 #endif  // #ifdef DEBUG
+    }
   }
 
   inputEvent.mInputType = aEditorInputType;

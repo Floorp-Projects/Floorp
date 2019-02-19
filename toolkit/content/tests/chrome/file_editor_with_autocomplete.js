@@ -100,6 +100,8 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
                this._description + ", " + aTest.description + ': inputType of "input" event should be "${aTest.inputEvents[i].inputType}"');
       this._is(aInputEvents[i].data, aTest.inputEvents[i].data,
                this._description + ", " + aTest.description + ': data of "input" event should be ${aTest.inputEvents[i].data}');
+      this._is(aInputEvents[i].dataTransfer, null,
+               this._description + ", " + aTest.description + ': dataTransfer of "input" event should be null');
     }
   },
 

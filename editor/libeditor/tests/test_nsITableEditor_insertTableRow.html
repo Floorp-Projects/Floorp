@@ -28,6 +28,10 @@ SimpleTest.waitForFocus(function() {
        `"input" event should always bubble ${aDescription}`);
     is(aEvent.inputType, "",
        `inputType should be empty string ${aDescription}`);
+    is(aEvent.data, null,
+       `data should be null ${aDescription}`);
+    is(aEvent.dataTransfer, null,
+       `data should be null ${aDescription}`);
   }
 
   let inputEvents = [];
