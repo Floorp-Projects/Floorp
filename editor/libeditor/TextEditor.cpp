@@ -1117,6 +1117,8 @@ nsresult TextEditor::ReplaceTextAsAction(
   }
   if (!AsHTMLEditor()) {
     editActionData.SetData(aString);
+  } else {
+    editActionData.InitializeDataTransfer(aString);
   }
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);

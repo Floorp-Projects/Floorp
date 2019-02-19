@@ -132,6 +132,7 @@ class TextEditor;
 namespace dom {
 class ContentFrameMessageManager;
 struct CustomElementDefinition;
+class DataTransfer;
 class DocumentFragment;
 class Element;
 class Event;
@@ -1423,9 +1424,12 @@ class nsContentUtils {
   static nsresult DispatchInputEvent(Element* aEventTarget);
   struct MOZ_STACK_CLASS InputEventOptions final {
     InputEventOptions() = default;
-    explicit InputEventOptions(const nsAString& aData) : mData(aData) {}
+    explicit InputEventOptions(const nsAString& aData)
+        : mData(aData), mDataTransfer(nullptr) {}
+    explicit InputEventOptions(mozilla::dom::DataTransfer* aDataTransfer);
 
     nsString mData;
+    mozilla::dom::DataTransfer* mDataTransfer;
   };
   MOZ_CAN_RUN_SCRIPT
   static nsresult DispatchInputEvent(Element* aEventTarget,

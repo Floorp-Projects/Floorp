@@ -173,6 +173,23 @@ inline bool IsDataAvailableOnHTMLEditor(EditorInputType aInputType) {
   }
 }
 
+/**
+ * IsDataTransferAvailableOnHTMLEditor() returns true if aInputType on
+ * HTMLEditor should have non-null InputEvent.dataTransfer value.
+ */
+inline bool IsDataTransferAvailableOnHTMLEditor(EditorInputType aInputType) {
+  switch (aInputType) {
+    case EditorInputType::eInsertFromPaste:
+    case EditorInputType::eInsertFromDrop:
+    case EditorInputType::eInsertTranspose:
+    case EditorInputType::eInsertReplacementText:
+    case EditorInputType::eInsertFromYank:
+      return true;
+    default:
+      return false;
+  }
+}
+
 #define NS_DEFINE_COMMAND(aName, aCommandStr) , Command##aName
 #define NS_DEFINE_COMMAND_NO_EXEC_COMMAND(aName) , Command##aName
 

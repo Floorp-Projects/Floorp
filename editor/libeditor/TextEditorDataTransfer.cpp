@@ -288,7 +288,8 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
 
     // Let's fire "input" event for the deletion now.
     if (mDispatchInputEvent) {
-      FireInputEvent(EditAction::eDeleteByDrag, VoidString());
+      RefPtr<DataTransfer> dataTransfer;  // Required due to bug 1506439
+      FireInputEvent(EditAction::eDeleteByDrag, VoidString(), dataTransfer);
       if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -342,6 +343,7 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
   } else {
+    editActionData.InitializeDataTransfer(dataTransfer);
     RefPtr<HTMLEditor> htmlEditor(AsHTMLEditor());
     for (uint32_t i = 0; i < numItems; ++i) {
       htmlEditor->InsertFromDataTransfer(dataTransfer, i, srcdoc, droppedAt,
@@ -365,6 +367,8 @@ nsresult TextEditor::PasteAsAction(int32_t aClipboardType,
   }
 
   if (AsHTMLEditor()) {
+    editActionData.InitializeDataTransferWithClipboard(
+        SettingDataTransfer::eWithFormat, aClipboardType);
     nsresult rv =
         AsHTMLEditor()->PasteInternal(aClipboardType, aDispatchPasteEvent);
     if (NS_WARN_IF(NS_FAILED(rv))) {

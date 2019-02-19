@@ -1003,6 +1003,8 @@ function runTest() { // eslint-disable-line complexity
            testNum + ' inputType should be "insertReplacementText"');
         is(event.data, "value1",
            testNum + ' data should be "value1"');
+        is(event.dataTransfer, null,
+           testNum + " dataTransfer should be null");
       }, {once: true});
 
       synthesizeKey("KEY_ArrowDown");
