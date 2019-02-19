@@ -9559,10 +9559,8 @@ already_AddRefed<nsFontMetrics> nsLayoutUtils::GetMetricsFor(
 }
 
 /* static */ void nsLayoutUtils::FixupNoneGeneric(
-    nsFont* aFont, const nsPresContext* aPresContext, uint8_t aGenericFontID,
-    const nsFont* aDefaultVariableFont) {
-  bool useDocumentFonts =
-      aPresContext->GetCachedBoolPref(kPresContext_UseDocumentFonts);
+    nsFont* aFont, uint8_t aGenericFontID, const nsFont* aDefaultVariableFont) {
+  bool useDocumentFonts = StaticPrefs::browser_display_use_document_fonts();
   if (aGenericFontID == kGenericFont_NONE ||
       (!useDocumentFonts && (aGenericFontID == kGenericFont_cursive ||
                              aGenericFontID == kGenericFont_fantasy))) {
@@ -9587,9 +9585,9 @@ already_AddRefed<nsFontMetrics> nsLayoutUtils::GetMetricsFor(
   }
 }
 
-/* static */ void nsLayoutUtils::ApplyMinFontSize(
-    nsStyleFont* aFont, const nsPresContext* aPresContext,
-    nscoord aMinFontSize) {
+/* static */ void nsLayoutUtils::ApplyMinFontSize(nsStyleFont* aFont,
+                                                  const Document* aDocument,
+                                                  nscoord aMinFontSize) {
   nscoord fontSize = aFont->mSize;
 
   // enforce the user' specified minimum font-size on the value that we expose
@@ -9600,7 +9598,7 @@ already_AddRefed<nsFontMetrics> nsLayoutUtils::GetMetricsFor(
     } else {
       aMinFontSize = (aMinFontSize * aFont->mMinFontSizeRatio) / 100;
     }
-    if (fontSize < aMinFontSize && !aPresContext->IsChrome()) {
+    if (fontSize < aMinFontSize && !nsContentUtils::IsChromeDoc(aDocument)) {
       // override the minimum font-size constraint
       fontSize = aMinFontSize;
     }

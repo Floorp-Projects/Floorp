@@ -293,7 +293,6 @@ pref("ui.popup.disable_autohide", false);
 pref("ui.touchbar.layout", "Back,Reload,OpenOrFocus,AddBookmark,NewTab,Share");
 #endif
 
-pref("browser.display.use_document_fonts",  1);  // 0 = never, 1 = quick, 2 = always
 // 0 = default: always, except in high contrast mode
 // 1 = always
 // 2 = never
