@@ -214,8 +214,6 @@ stubPreparedMessages.set(`throw "tomato"`, new ConsoleMessage({
 }));
 
 stubPackets.set(`ReferenceError: asdf is not defined`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "pageError",
   "pageError": {
     "errorMessage": "ReferenceError: asdf is not defined",
     "errorMessageName": "JSMSG_NOT_DEFINED",
@@ -265,12 +263,12 @@ stubPackets.set(`ReferenceError: asdf is not defined`, {
       }
     ],
     "notes": null
-  }
+  },
+  "type": "pageError",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`SyntaxError: redeclaration of let a`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "pageError",
   "pageError": {
     "errorMessage": "SyntaxError: redeclaration of let a",
     "errorMessageName": "JSMSG_REDECLARED_VAR",
@@ -310,12 +308,12 @@ stubPackets.set(`SyntaxError: redeclaration of let a`, {
         }
       }
     ]
-  }
+  },
+  "type": "pageError",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`TypeError longString message`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "pageError",
   "pageError": {
     "errorMessage": {
       "type": "longString",
@@ -357,12 +355,12 @@ stubPackets.set(`TypeError longString message`, {
       }
     ],
     "notes": null
-  }
+  },
+  "type": "pageError",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`throw ""`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "pageError",
   "pageError": {
     "errorMessage": "uncaught exception: ",
     "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
@@ -380,12 +378,12 @@ stubPackets.set(`throw ""`, {
     "private": false,
     "stacktrace": null,
     "notes": null
-  }
+  },
+  "type": "pageError",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`throw "tomato"`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "pageError",
   "pageError": {
     "errorMessage": "uncaught exception: tomato",
     "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
@@ -403,7 +401,9 @@ stubPackets.set(`throw "tomato"`, {
     "private": false,
     "stacktrace": null,
     "notes": null
-  }
+  },
+  "type": "pageError",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 module.exports = {

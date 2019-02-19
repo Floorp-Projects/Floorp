@@ -1925,8 +1925,6 @@ stubPreparedMessages.set(`console.countReset | counterDoesntExist`, new ConsoleM
 }));
 
 stubPackets.set(`console.log('foobar', 'test')`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -1947,12 +1945,12 @@ stubPackets.set(`console.log('foobar', 'test')`, {
     "timer": null,
     "workerType": "none",
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.log(undefined)`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -1974,12 +1972,12 @@ stubPackets.set(`console.log(undefined)`, {
     "timer": null,
     "workerType": "none",
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.warn('danger, will robinson!')`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -1999,12 +1997,12 @@ stubPackets.set(`console.warn('danger, will robinson!')`, {
     "timer": null,
     "workerType": "none",
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.log(NaN)`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -2026,12 +2024,12 @@ stubPackets.set(`console.log(NaN)`, {
     "timer": null,
     "workerType": "none",
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.log(null)`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -2053,12 +2051,12 @@ stubPackets.set(`console.log(null)`, {
     "timer": null,
     "workerType": "none",
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.log('鼬')`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -2078,12 +2076,12 @@ stubPackets.set(`console.log('鼬')`, {
     "timer": null,
     "workerType": "none",
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.clear()`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [],
@@ -2101,12 +2099,12 @@ stubPackets.set(`console.clear()`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.count('bar')`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -2129,12 +2127,12 @@ stubPackets.set(`console.count('bar')`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.assert(false, {message: 'foobar'})`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -2185,12 +2183,12 @@ stubPackets.set(`console.assert(false, {message: 'foobar'})`, {
     ],
     "workerType": "none",
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.log('hello \nfrom \rthe \"string world!')`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -2210,12 +2208,12 @@ stubPackets.set(`console.log('hello \nfrom \rthe \"string world!')`, {
     "timer": null,
     "workerType": "none",
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.log('úṇĩçödê țĕșť')`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -2235,12 +2233,12 @@ stubPackets.set(`console.log('úṇĩçödê țĕșť')`, {
     "timer": null,
     "workerType": "none",
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.dirxml(window)`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -2272,12 +2270,12 @@ stubPackets.set(`console.dirxml(window)`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.log('myarray', ['red', 'green', 'blue'])`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -2315,12 +2313,12 @@ stubPackets.set(`console.log('myarray', ['red', 'green', 'blue'])`, {
     "timer": null,
     "workerType": "none",
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.log('myregex', /a.b.c/)`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -2350,12 +2348,12 @@ stubPackets.set(`console.log('myregex', /a.b.c/)`, {
     "timer": null,
     "workerType": "none",
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.table(['red', 'green', 'blue']);`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -2392,12 +2390,12 @@ stubPackets.set(`console.table(['red', 'green', 'blue']);`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.log('myobject', {red: 'redValue', green: 'greenValue', blue: 'blueValue'});`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -2453,12 +2451,12 @@ stubPackets.set(`console.log('myobject', {red: 'redValue', green: 'greenValue', 
     "timer": null,
     "workerType": "none",
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.debug('debug message');`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -2478,12 +2476,12 @@ stubPackets.set(`console.debug('debug message');`, {
     "timer": null,
     "workerType": "none",
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.info('info message');`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -2503,12 +2501,12 @@ stubPackets.set(`console.info('info message');`, {
     "timer": null,
     "workerType": "none",
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.error('error message');`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -2536,12 +2534,12 @@ stubPackets.set(`console.error('error message');`, {
     ],
     "workerType": "none",
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.log('mymap')`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -2584,12 +2582,12 @@ stubPackets.set(`console.log('mymap')`, {
     "timer": null,
     "workerType": "none",
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.log('myset')`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -2626,12 +2624,12 @@ stubPackets.set(`console.log('myset')`, {
     "timer": null,
     "workerType": "none",
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.trace()`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [],
@@ -2669,12 +2667,12 @@ stubPackets.set(`console.trace()`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.trace('bar', {'foo': 'bar'}, [1,2,3])`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -2756,12 +2754,12 @@ stubPackets.set(`console.trace('bar', {'foo': 'bar'}, [1,2,3])`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.time('bar')`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -2783,12 +2781,12 @@ stubPackets.set(`console.time('bar')`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`timerAlreadyExists`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -2811,12 +2809,12 @@ stubPackets.set(`timerAlreadyExists`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.timeLog('bar') - 1`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -2839,12 +2837,12 @@ stubPackets.set(`console.timeLog('bar') - 1`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.timeLog('bar') - 2`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -2892,12 +2890,12 @@ stubPackets.set(`console.timeLog('bar') - 2`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.timeEnd('bar')`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -2920,12 +2918,12 @@ stubPackets.set(`console.timeEnd('bar')`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`timeEnd.timerDoesntExist`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -2948,12 +2946,12 @@ stubPackets.set(`timeEnd.timerDoesntExist`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`timeLog.timerDoesntExist`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -2976,12 +2974,12 @@ stubPackets.set(`timeLog.timerDoesntExist`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.table('bar')`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -3001,12 +2999,12 @@ stubPackets.set(`console.table('bar')`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.table(['a', 'b', 'c'])`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -3043,12 +3041,12 @@ stubPackets.set(`console.table(['a', 'b', 'c'])`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.group('bar')`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -3068,12 +3066,12 @@ stubPackets.set(`console.group('bar')`, {
     "timer": null,
     "workerType": "none",
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.groupEnd('bar')`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [],
@@ -3091,12 +3089,12 @@ stubPackets.set(`console.groupEnd('bar')`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.groupCollapsed('foo')`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -3116,12 +3114,12 @@ stubPackets.set(`console.groupCollapsed('foo')`, {
     "timer": null,
     "workerType": "none",
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.groupEnd('foo')`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [],
@@ -3139,12 +3137,12 @@ stubPackets.set(`console.groupEnd('foo')`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.group()`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [],
@@ -3162,12 +3160,12 @@ stubPackets.set(`console.group()`, {
     "timer": null,
     "workerType": "none",
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.groupEnd()`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [],
@@ -3185,12 +3183,12 @@ stubPackets.set(`console.groupEnd()`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.log(%cfoobar)`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -3214,12 +3212,12 @@ stubPackets.set(`console.log(%cfoobar)`, {
     "timer": null,
     "workerType": "none",
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.log("%cHello%c|%cWorld")`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -3245,12 +3243,12 @@ stubPackets.set(`console.log("%cHello%c|%cWorld")`, {
     "timer": null,
     "workerType": "none",
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.group(%cfoo%cbar)`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -3274,12 +3272,12 @@ stubPackets.set(`console.group(%cfoo%cbar)`, {
     "timer": null,
     "workerType": "none",
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.groupEnd(%cfoo%cbar)`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [],
@@ -3297,12 +3295,12 @@ stubPackets.set(`console.groupEnd(%cfoo%cbar)`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.groupCollapsed(%cfoo%cbaz)`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -3326,12 +3324,12 @@ stubPackets.set(`console.groupCollapsed(%cfoo%cbaz)`, {
     "timer": null,
     "workerType": "none",
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.groupEnd(%cfoo%cbaz)`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [],
@@ -3349,12 +3347,12 @@ stubPackets.set(`console.groupEnd(%cfoo%cbaz)`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.dir({C, M, Y, K})`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -3415,12 +3413,12 @@ stubPackets.set(`console.dir({C, M, Y, K})`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.count | default: 1`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -3443,12 +3441,12 @@ stubPackets.set(`console.count | default: 1`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.count | default: 2`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -3471,12 +3469,12 @@ stubPackets.set(`console.count | default: 2`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.count | test counter: 1`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -3499,12 +3497,12 @@ stubPackets.set(`console.count | test counter: 1`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.count | test counter: 2`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -3527,12 +3525,12 @@ stubPackets.set(`console.count | test counter: 2`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.count | default: 3`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -3555,12 +3553,12 @@ stubPackets.set(`console.count | default: 3`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.count | clear`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [],
@@ -3578,12 +3576,12 @@ stubPackets.set(`console.count | clear`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.count | default: 4`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -3606,12 +3604,12 @@ stubPackets.set(`console.count | default: 4`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.count | test counter: 3`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -3634,12 +3632,12 @@ stubPackets.set(`console.count | test counter: 3`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.countReset | test counter: 0`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -3662,12 +3660,12 @@ stubPackets.set(`console.countReset | test counter: 0`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`console.countReset | counterDoesntExist`, {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "consoleAPICall",
   "message": {
     "addonId": "",
     "arguments": [
@@ -3690,7 +3688,9 @@ stubPackets.set(`console.countReset | counterDoesntExist`, {
     "workerType": "none",
     "styles": [],
     "category": "webdev"
-  }
+  },
+  "type": "consoleAPICall",
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 module.exports = {

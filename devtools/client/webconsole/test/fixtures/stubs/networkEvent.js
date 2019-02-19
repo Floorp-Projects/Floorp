@@ -15,7 +15,6 @@ const stubPreparedMessages = new Map();
 const stubPackets = new Map();
 stubPreparedMessages.set("GET request", new NetworkEventMessage({
   "id": "1",
-  "actor": "server1.conn0.child1/netEvent30",
   "level": "log",
   "isXHR": false,
   "request": {
@@ -26,7 +25,6 @@ stubPreparedMessages.set("GET request", new NetworkEventMessage({
   "source": "network",
   "type": "log",
   "groupId": null,
-  "timeStamp": 1487022056850,
   "indent": 0,
   "updates": [],
   "openedOnce": false,
@@ -92,7 +90,6 @@ stubPreparedMessages.set("GET request update", new NetworkEventMessage({
 
 stubPreparedMessages.set("XHR GET request", new NetworkEventMessage({
   "id": "1",
-  "actor": "server1.conn1.child1/netEvent30",
   "level": "log",
   "isXHR": true,
   "request": {
@@ -103,7 +100,6 @@ stubPreparedMessages.set("XHR GET request", new NetworkEventMessage({
   "source": "network",
   "type": "log",
   "groupId": null,
-  "timeStamp": 1487022057746,
   "indent": 0,
   "updates": [],
   "openedOnce": false,
@@ -169,7 +165,6 @@ stubPreparedMessages.set("XHR GET request update", new NetworkEventMessage({
 
 stubPreparedMessages.set("XHR POST request", new NetworkEventMessage({
   "id": "1",
-  "actor": "server1.conn2.child1/netEvent30",
   "level": "log",
   "isXHR": true,
   "request": {
@@ -180,7 +175,6 @@ stubPreparedMessages.set("XHR POST request", new NetworkEventMessage({
   "source": "network",
   "type": "log",
   "groupId": null,
-  "timeStamp": 1487022058414,
   "indent": 0,
   "updates": [],
   "openedOnce": false,
@@ -246,12 +240,9 @@ stubPreparedMessages.set("XHR POST request update", new NetworkEventMessage({
 
 stubPackets.set(`GET request`, {
   "_type": "NetworkEvent",
-  "timeStamp": 1487022056850,
   "node": null,
-  "actor": "server1.conn0.child1/netEvent30",
   "discardRequestBody": true,
   "discardResponseBody": true,
-  "startedDateTime": "2017-02-13T21:40:56.850Z",
   "request": {
     "url": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/inexistent.html",
     "method": "GET"
@@ -299,12 +290,9 @@ stubPackets.set(`GET request update`, {
 
 stubPackets.set(`XHR GET request`, {
   "_type": "NetworkEvent",
-  "timeStamp": 1487022057746,
   "node": null,
-  "actor": "server1.conn1.child1/netEvent30",
   "discardRequestBody": true,
   "discardResponseBody": true,
-  "startedDateTime": "2017-02-13T21:40:57.746Z",
   "request": {
     "url": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/inexistent.html",
     "method": "GET"
@@ -352,12 +340,9 @@ stubPackets.set(`XHR GET request update`, {
 
 stubPackets.set(`XHR POST request`, {
   "_type": "NetworkEvent",
-  "timeStamp": 1487022058414,
   "node": null,
-  "actor": "server1.conn2.child1/netEvent30",
   "discardRequestBody": true,
   "discardResponseBody": true,
-  "startedDateTime": "2017-02-13T21:40:58.414Z",
   "request": {
     "url": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/inexistent.html",
     "method": "POST"
