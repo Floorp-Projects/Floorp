@@ -320,7 +320,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "0818c28e58fa"
+        "revision": "8ed7ec4ea411"
     },
     "dsb": {
         "platforms": [
@@ -694,7 +694,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "e36a7aeb2238"
+        "revision": "bb834f5858c2"
     },
     "he": {
         "platforms": [
@@ -796,7 +796,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "28b70ff0b3d7"
+        "revision": "04b48b030339"
     },
     "ia": {
         "platforms": [
@@ -864,7 +864,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "4245998a0ed3"
+        "revision": "5fe8dead46ed"
     },
     "ja": {
         "platforms": [
@@ -879,14 +879,14 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "1d0d69548027"
+        "revision": "0845a73a5baa"
     },
     "ja-JP-mac": {
         "platforms": [
             "macosx64",
             "macosx64-devedition"
         ],
-        "revision": "953118f79649"
+        "revision": "6f5c31c7ab2c"
     },
     "ka": {
         "platforms": [
@@ -920,7 +920,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "c48bc80d72c1"
+        "revision": "e6c1e5c804e3"
     },
     "kk": {
         "platforms": [
@@ -1447,7 +1447,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "54ce76d8d1ed"
+        "revision": "13876ed0bb27"
     },
     "sr": {
         "platforms": [
@@ -1549,7 +1549,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "2eff3acacd78"
+        "revision": "4d38c1160238"
     },
     "uk": {
         "platforms": [
@@ -1617,7 +1617,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "330908758fd0"
+        "revision": "cadf9adac690"
     },
     "xh": {
         "platforms": [
