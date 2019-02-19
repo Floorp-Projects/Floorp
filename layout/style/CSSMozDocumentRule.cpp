@@ -19,7 +19,7 @@ using namespace mozilla::css;
   return CSSMozDocumentRule_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-bool CSSMozDocumentRule::Match(Document* aDoc, nsIURI* aDocURI,
+bool CSSMozDocumentRule::Match(const Document* aDoc, nsIURI* aDocURI,
                                const nsACString& aDocURISpec,
                                const nsACString& aPattern,
                                DocumentMatchingFunction aMatchingFunction) {
