@@ -11,6 +11,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/dom/DataTransfer.h"
 #include "mozilla/EventForwards.h"  // for KeyNameIndex, temporarily
 #include "mozilla/FontRange.h"
 #include "mozilla/Maybe.h"
@@ -1167,6 +1168,7 @@ class InternalEditorInputEvent : public InternalUIEvent {
   }
 
   nsString mData;
+  RefPtr<dom::DataTransfer> mDataTransfer;
 
   EditorInputType mInputType;
 
@@ -1177,6 +1179,7 @@ class InternalEditorInputEvent : public InternalUIEvent {
     AssignUIEventData(aEvent, aCopyTargets);
 
     mData = aEvent.mData;
+    mDataTransfer = aEvent.mDataTransfer;
     mInputType = aEvent.mInputType;
     mIsComposing = aEvent.mIsComposing;
   }
