@@ -1318,34 +1318,71 @@ ArrayBufferObject* ArrayBufferObject::createFromNewRawBuffer(
   return obj;
 }
 
-/* static */ ArrayBufferObject::BufferContents
-ArrayBufferObject::externalizeContents(JSContext* cx,
-                                       Handle<ArrayBufferObject*> buffer,
-                                       bool hasStealableContents) {
-  MOZ_ASSERT(buffer->isInlineData() || buffer->isMalloced(),
-             "only support doing this on ABOs containing inline or malloced "
-             "data");
-  MOZ_ASSERT(!buffer->isDetached(), "must have contents to externalize");
-  MOZ_ASSERT_IF(hasStealableContents, buffer->hasStealableContents());
+/* static */ void*
+ArrayBufferObject::exposeMallocedContents(JSContext* cx,
+                                          Handle<ArrayBufferObject*> buffer) {
+  // A detached ArrayBuffer lacks contents to expose.
+  if (buffer->isDetached()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TYPED_ARRAY_DETACHED);
+    return nullptr;
+  }
+
+  // The contents must be malloc'd or stored inline, because this function
+  // returns a JS_free-able pointer.
+  //
+  // Mapped and wasm ArrayBufferObjects' memory is not so allocated, and we
+  // can't blithely allocate a copy of the data and swap it into |buffer|
+  // because JIT code may hold pointers into the mapped/wasm data.
+  //
+  // We also don't support replacing user-owned data (with malloced data)
+  // because such ArrayBuffers must be passed to JS_DetachArrayBuffer before
+  // the associated memory is freed, and that call is guaranteed to succeed
+  // -- but malloced data can be used with asm.js, and JS_DetachArrayBuffer
+  // will fail on an ArrayBuffer used with asm.js.
+  //
+  // These restrictions are very hoary.  Possibly, in a future where
+  // ArrayBuffer's contents are not represented so trickily, we might relax
+  // them -- maybe by returning something that has the ability to release the
+  // returned memory.
+  if (!buffer->isMalloced() && !buffer->isInlineData()) {
+    MOZ_ASSERT(buffer->hasUserOwnedData() || buffer->isWasm() ||
+               buffer->isMapped() || buffer->isExternal());
+
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TYPED_ARRAY_BAD_ARGS);
+    return nullptr;
+  }
+
+  MOZ_ASSERT_IF(buffer->isInlineData(), !buffer->ownsData());
+  MOZ_ASSERT_IF(buffer->ownsData(), buffer->isMalloced());
 
   BufferContents contents = buffer->contents();
 
-  if (hasStealableContents) {
+  // If the buffer owns its data and the data isn't needed for an asm.js
+  // compilation, we can just mark the data as unowned and return it -- no need
+  // to actively replace.
+  if (buffer->ownsData() && !buffer->isPreparedForAsmJS()) {
+    MOZ_ASSERT(buffer->hasStealableContents());
     buffer->setOwnsData(DoesntOwnData);
-    return contents;
+    return contents.data();
   }
 
-  // Create a new chunk of memory to return since we cannot steal the
-  // existing contents away from the buffer.
+  MOZ_ASSERT(!buffer->hasStealableContents());
+
+  // Otherwise we must allocate new contents, fill them with the old contents,
+  // slot them into place as unowned contents (freeing the old contents in the
+  // process), then return an owning pointer to the new contents.
   BufferContents newContents =
       AllocateArrayBufferContents(cx, buffer->byteLength());
   if (!newContents) {
-    return BufferContents::createFailed();
+    return nullptr;
   }
+
   memcpy(newContents.data(), contents.data(), buffer->byteLength());
   buffer->changeContents(cx, newContents, DoesntOwnData);
 
-  return newContents;
+  return newContents.data();
 }
 
 /* static */ ArrayBufferObject::BufferContents ArrayBufferObject::stealContents(
@@ -1761,40 +1798,7 @@ JS_PUBLIC_API void* JS_ExternalizeArrayBufferContents(JSContext* cx,
   }
 
   Handle<ArrayBufferObject*> buffer = obj.as<ArrayBufferObject>();
-  if (!buffer->isMalloced() && !buffer->isInlineData()) {
-    // This operation is supported only for malloced or inline data, because
-    // this function is documented to return only JS_free-able memory.
-    //
-    // Mapped and wasm ArrayBufferObjects' memory is not so allocated, and we
-    // can't blithely allocate a copy of the data and swap it into |buffer|
-    // because JIT code may hold pointers into the mapped/wasm data.
-    //
-    // We also don't support replacing user-provided data (with malloced data)
-    // because such ArrayBuffers must be passed to JS_DetachArrayBuffer before
-    // the associated memory is freed, and that call is guaranteed to succeed
-    // -- but malloced data can be used with asm.js, and JS_DetachArrayBuffer
-    // will fail on an ArrayBuffer used with asm.js.
-    //
-    // These restrictions are very hoary.  Possibly, in a future where
-    // ArrayBuffer's contents are not represented so trickily, we might want to
-    // relax them -- maybe by returning something that has the ability to
-    // release the returned memory.
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_TYPED_ARRAY_BAD_ARGS);
-    return nullptr;
-  }
-  if (buffer->isDetached()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_TYPED_ARRAY_DETACHED);
-    return nullptr;
-  }
-
-  // The caller assumes that a plain malloc'd buffer is returned.
-  bool hasStealableContents = buffer->hasStealableContents();
-
-  return ArrayBufferObject::externalizeContents(cx, buffer,
-                                                hasStealableContents)
-      .data();
+  return ArrayBufferObject::exposeMallocedContents(cx, buffer);
 }
 
 JS_PUBLIC_API void* JS_StealArrayBufferContents(JSContext* cx,
