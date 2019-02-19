@@ -1,7 +1,6 @@
 "use strict";
-
-const {Utils} = ChromeUtils.import("resource://gre/modules/sessionstore/Utils.jsm");
-const triggeringPrincipal_base64 = Utils.SERIALIZED_SYSTEMPRINCIPAL;
+const {E10SUtils} = ChromeUtils.import("resource://gre/modules/E10SUtils.jsm");
+const triggeringPrincipal_base64 = E10SUtils.SERIALIZED_SYSTEMPRINCIPAL;
 
 const MAX_CONCURRENT_TABS = "browser.engagement.max_concurrent_tab_count";
 const TAB_EVENT_COUNT = "browser.engagement.tab_open_event_count";
