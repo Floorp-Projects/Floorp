@@ -131,7 +131,7 @@ static sandbox::BrokerServices* InitializeBrokerServices() {
   // the process to swap its window station. During this time all the UI
   // will be broken. This has to run before threads and windows are created.
   scoped_refptr<sandbox::TargetPolicy> policy = brokerServices->CreatePolicy();
-  sandbox::ResultCode result = policy->CreateAlternateDesktop(true);
+  policy->CreateAlternateDesktop(true);
 
   return brokerServices;
 }

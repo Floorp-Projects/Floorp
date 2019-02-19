@@ -45,7 +45,6 @@
 #  include "NativeFontResourceDWrite.h"
 #  include <d3d10_1.h>
 #  include "HelpersD2D.h"
-#  include "HelpersWinFonts.h"
 #endif
 
 #include "DrawTargetCapture.h"
