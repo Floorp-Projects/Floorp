@@ -89,6 +89,12 @@ Value DeadProxyTargetValue(ProxyObject* obj);
 
 JSObject* NewDeadProxyObject(JSContext* cx, JSObject* origObj = nullptr);
 
+enum class IsCallableFlag : bool { False, True };
+enum class IsConstructorFlag : bool { False, True };
+
+JSObject* NewDeadProxyObject(JSContext* cx, IsCallableFlag isCallable,
+                             IsConstructorFlag isConstructor);
+
 } /* namespace js */
 
 #endif /* proxy_DeadObjectProxy_h */

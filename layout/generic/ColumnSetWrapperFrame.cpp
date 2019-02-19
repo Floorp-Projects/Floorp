@@ -162,7 +162,7 @@ void ColumnSetWrapperFrame::MarkIntrinsicISizesDirty() {
   }
 
   MOZ_ASSERT(
-      aFrame->Style()->GetPseudo() == nsCSSAnonBoxes::columnSpanWrapper(),
+      aFrame->Style()->GetPseudoType() == PseudoStyleType::columnSpanWrapper,
       "aFrame should be ::-moz-column-span-wrapper");
 
   MOZ_ASSERT(!aFrame->HasAnyStateBits(NS_FRAME_OWNS_ANON_BOXES),

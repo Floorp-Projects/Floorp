@@ -8,38 +8,43 @@
  */
 
 const TEST_URL = "data:text/html,a test page";
-const DRAG_URL = "http://www.example.com/";
-const DRAG_FORBIDDEN_URL = "chrome://browser/content/aboutDialog.xul";
-const DRAG_TEXT = "Firefox is awesome";
-const DRAG_TEXT_URL = "http://example.com/?q=Firefox+is+awesome";
-const DRAG_WORD = "Firefox";
-const DRAG_WORD_URL = "http://example.com/?q=Firefox";
 
-registerCleanupFunction(async function cleanup() {
-  while (gBrowser.tabs.length > 1) {
-    BrowserTestUtils.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
-  }
-  await Services.search.setDefault(originalEngine);
-  let engine = Services.search.getEngineByName("MozSearch");
-  await Services.search.removeEngine(engine);
-});
-
-let originalEngine;
 add_task(async function test_setup() {
-  // Stop search-engine loads from hitting the network
+  // Stop search-engine loads from hitting the network.
   await Services.search.addEngineWithDetails("MozSearch", "", "", "", "GET",
     "http://example.com/?q={searchTerms}");
+  let originalEngine = await Services.search.getDefault();
   let engine = Services.search.getEngineByName("MozSearch");
-  originalEngine = await Services.search.getDefault();
   await Services.search.setDefault(engine);
+
+  registerCleanupFunction(async function cleanup() {
+    while (gBrowser.tabs.length > 1) {
+      BrowserTestUtils.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
+    }
+    await Services.search.setDefault(originalEngine);
+    await Services.search.removeEngine(engine);
+  });
 });
+
+/**
+ * Simulates a drop on the URL bar input field.
+ * The drag source must be something different from the URL bar, so we pick the
+ * home button somewhat arbitrarily.
+ * @param {object} content a {type, data} object representing the DND content.
+ */
+function simulateURLBarDrop(content) {
+  EventUtils.synthesizeDrop(
+    document.getElementById("home-button"), // Dragstart element.
+    gURLBar.inputField, // Drop element.
+    [[content]], // Drag data.
+    "copy", window);
+}
 
 add_task(async function checkDragURL() {
   await BrowserTestUtils.withNewTab(TEST_URL, function(browser) {
-    // Have to use something other than the URL bar as a source, so picking the
-    // home button somewhat arbitrarily:
-    EventUtils.synthesizeDrop(document.getElementById("home-button"), gURLBar.inputField,
-                              [[{type: "text/plain", data: DRAG_URL}]], "copy", window);
+    info("Check dragging a normal url to the urlbar");
+    const DRAG_URL = "http://www.example.com/";
+    simulateURLBarDrop({type: "text/plain", data: DRAG_URL});
     Assert.equal(gURLBar.value, TEST_URL,
       "URL bar value should not have changed");
     Assert.equal(gBrowser.selectedBrowser.userTypedValue, null,
@@ -49,23 +54,42 @@ add_task(async function checkDragURL() {
 
 add_task(async function checkDragForbiddenURL() {
   await BrowserTestUtils.withNewTab(TEST_URL, function(browser) {
-    EventUtils.synthesizeDrop(document.getElementById("home-button"), gURLBar.inputField,
-                              [[{type: "text/plain", data: DRAG_FORBIDDEN_URL}]], "copy", window);
-    Assert.notEqual(gURLBar.value, DRAG_FORBIDDEN_URL,
-      "Shouldn't be allowed to drop forbidden URL on URL bar");
+    // See also browser_removeUnsafeProtocolsFromURLBarPaste.js for other
+    // examples. In general we trust that function, we pick some testcases to
+    // ensure we disallow dropping trimmed text.
+    for (let url of [
+      "chrome://browser/content/aboutDialog.xul",
+      "file:///",
+      "javascript:",
+      "javascript:void(0)",
+      "java\r\ns\ncript:void(0)",
+      " javascript:void(0)",
+      "\u00A0java\nscript:void(0)",
+      "javascript:document.domain",
+      "javascript:javascript:alert('hi!')",
+    ]) {
+      info(`Check dragging "{$url}" to the URL bar`);
+      simulateURLBarDrop({type: "text/plain", data: url});
+      Assert.notEqual(gURLBar.value, url,
+        `Shouldn't be allowed to drop ${url} on URL bar`);
+    }
   });
 });
 
 add_task(async function checkDragText() {
   await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
-    let promiseLoad = BrowserTestUtils.browserLoaded(browser, false, DRAG_TEXT_URL);
-    EventUtils.synthesizeDrop(document.getElementById("home-button"), gURLBar.inputField,
-                              [[{type: "text/plain", data: DRAG_TEXT}]], "copy", window);
+    info("Check dragging multi word text to the urlbar");
+    const TEXT = "Firefox is awesome";
+    const TEXT_URL = "http://example.com/?q=Firefox+is+awesome";
+    let promiseLoad = BrowserTestUtils.browserLoaded(browser, false, TEXT_URL);
+    simulateURLBarDrop({type: "text/plain", data: TEXT});
     await promiseLoad;
 
-    promiseLoad = BrowserTestUtils.browserLoaded(browser, false, DRAG_WORD_URL);
-    EventUtils.synthesizeDrop(document.getElementById("home-button"), gURLBar.inputField,
-                              [[{type: "text/plain", data: DRAG_WORD}]], "copy", window);
+    info("Check dragging single word text to the urlbar");
+    const WORD = "Firefox";
+    const WORD_URL = "http://example.com/?q=Firefox";
+    promiseLoad = BrowserTestUtils.browserLoaded(browser, false, WORD_URL);
+    simulateURLBarDrop({type: "text/plain", data: WORD});
     await promiseLoad;
   });
 });

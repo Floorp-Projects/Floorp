@@ -81,17 +81,8 @@
   word-wrap: break-word;
 }
 
-#sidebar-panel-changes .rule .bracket-open {
-  display: inline-block;
-  margin-left: 5px;
-}
-
 #sidebar-panel-changes .declaration-name {
   margin-left: 10px;
-}
-
-#sidebar-panel-changes .declaration-value {
-  margin-left: 5px;
 }
 
 .diff-add,

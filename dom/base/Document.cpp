@@ -5167,13 +5167,13 @@ bool IsLowercaseASCII(const nsAString& aValue) {
 }
 
 // We only support pseudo-elements with two colons in this function.
-static CSSPseudoElementType GetPseudoElementType(const nsString& aString,
-                                                 ErrorResult& aRv) {
+static PseudoStyleType GetPseudoElementType(const nsString& aString,
+                                            ErrorResult& aRv) {
   MOZ_ASSERT(!aString.IsEmpty(),
              "GetPseudoElementType aString should be non-null");
   if (aString.Length() <= 2 || aString[0] != ':' || aString[1] != ':') {
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-    return CSSPseudoElementType::NotPseudo;
+    return PseudoStyleType::NotPseudo;
   }
   RefPtr<nsAtom> pseudo = NS_Atomize(Substring(aString, 1));
   return nsCSSPseudoElements::GetPseudoType(pseudo,
@@ -5195,7 +5195,7 @@ already_AddRefed<Element> Document::CreateElement(
   }
 
   const nsString* is = nullptr;
-  CSSPseudoElementType pseudoType = CSSPseudoElementType::NotPseudo;
+  PseudoStyleType pseudoType = PseudoStyleType::NotPseudo;
   if (aOptions.IsElementCreationOptions()) {
     const ElementCreationOptions& options =
         aOptions.GetAsElementCreationOptions();
@@ -5208,7 +5208,7 @@ already_AddRefed<Element> Document::CreateElement(
     // with CSS_PSEUDO_ELEMENT_IS_JS_CREATED_NAC.
     if (options.mPseudo.WasPassed()) {
       pseudoType = GetPseudoElementType(options.mPseudo.Value(), rv);
-      if (rv.Failed() || pseudoType == CSSPseudoElementType::NotPseudo ||
+      if (rv.Failed() || pseudoType == PseudoStyleType::NotPseudo ||
           !nsCSSPseudoElements::PseudoElementIsJSCreatedNAC(pseudoType)) {
         rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
         return nullptr;
@@ -5219,7 +5219,7 @@ already_AddRefed<Element> Document::CreateElement(
   RefPtr<Element> elem = CreateElem(needsLowercase ? lcTagName : aTagName,
                                     nullptr, mDefaultElementType, is);
 
-  if (pseudoType != CSSPseudoElementType::NotPseudo) {
+  if (pseudoType != PseudoStyleType::NotPseudo) {
     elem->SetPseudoElementType(pseudoType);
   }
 

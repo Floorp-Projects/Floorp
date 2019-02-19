@@ -33,6 +33,8 @@ SimpleTest.waitForFocus(function() {
     is(aEvent.cancelable, false, `${aDescription}"input" event should be never cancelable`);
     is(aEvent.bubbles, true, `${aDescription}"input" event should always bubble`);
     is(aEvent.inputType, aInputType, `${aDescription}inputType should be ${aInputType}`);
+    is(aEvent.data, null, `${aDescription}data should be null`);
+    is(aEvent.dataTransfer, null, `${aDescription}dataTransfer should be null`);
   }
 
   function selectFromTextSiblings(aNode) {

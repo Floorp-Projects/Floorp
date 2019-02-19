@@ -17,6 +17,7 @@
 #include "mozilla/StyleSheet.h"          // for StyleSheet
 #include "mozilla/TransactionManager.h"  // for TransactionManager
 #include "mozilla/WeakPtr.h"             // for WeakPtr
+#include "mozilla/dom/DataTransfer.h"    // for dom::DataTransfer
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Text.h"
 #include "nsCOMPtr.h"  // for already_AddRefed, nsCOMPtr
@@ -46,6 +47,7 @@ class nsIEditorObserver;
 class nsINode;
 class nsIPresShell;
 class nsISupports;
+class nsITransferable;
 class nsITransaction;
 class nsITransactionListener;
 class nsIWidget;
@@ -631,6 +633,17 @@ class EditorBase : public nsIEditor,
 
  protected:  // AutoEditActionDataSetter, this shouldn't be accessed by friends.
   /**
+   * SettingDataTransfer enum class is used to specify whether DataTransfer
+   * should be initialized with or without format.  For example, when user
+   * uses Accel + Shift + V to paste text without format, DataTransfer should
+   * have only plain/text data to make web apps treat it without format.
+   */
+  enum class SettingDataTransfer {
+    eWithFormat,
+    eWithoutFormat,
+  };
+
+  /**
    * AutoEditActionDataSetter grabs some necessary objects for handling any
    * edit actions and store the edit action what we're handling.  When this is
    * created, its pointer is set to the mEditActionData, and this guarantees
@@ -648,6 +661,37 @@ class EditorBase : public nsIEditor,
 
     const RefPtr<Selection>& SelectionRefPtr() const { return mSelection; }
     EditAction GetEditAction() const { return mEditAction; }
+
+    void SetData(const nsAString& aData) { mData = aData; }
+    const nsString& GetData() const { return mData; }
+
+    void SetColorData(const nsAString& aData);
+
+    /**
+     * InitializeDataTransfer(DataTransfer*) sets mDataTransfer to
+     * aDataTransfer.  In this case, aDataTransfer should not be read/write
+     * because it'll be set to InputEvent.dataTransfer and which should be
+     * read-only.
+     */
+    void InitializeDataTransfer(dom::DataTransfer* aDataTransfer);
+    /**
+     * InitializeDataTransfer(nsITransferable*) creates new DataTransfer
+     * instance, initializes it with aTransferable and sets mDataTransfer to
+     * it.
+     */
+    void InitializeDataTransfer(nsITransferable* aTransferable);
+    /**
+     * InitializeDataTransfer(const nsAString&) creates new DataTransfer
+     * instance, initializes it with aString and sets mDataTransfer to it.
+     */
+    void InitializeDataTransfer(const nsAString& aString);
+    /**
+     * InitializeDataTransferWithClipboard() creates new DataTransfer instance,
+     * initializes it with clipboard and sets mDataTransfer to it.
+     */
+    void InitializeDataTransferWithClipboard(
+        SettingDataTransfer aSettingDataTransfer, int32_t aClipboardType);
+    dom::DataTransfer* GetDataTransfer() const { return mDataTransfer; }
 
     void SetTopLevelEditSubAction(EditSubAction aEditSubAction,
                                   EDirection aDirection = eNone) {
@@ -756,6 +800,12 @@ class EditorBase : public nsIEditor,
     // Utility class object for maintaining preserved ranges.
     RangeUpdater mRangeUpdater;
 
+    // The data should be set to InputEvent.data.
+    nsString mData;
+
+    // The dataTransfer should be set to InputEvent.dataTransfer.
+    RefPtr<dom::DataTransfer> mDataTransfer;
+
     EditAction mEditAction;
     EditSubAction mTopLevelEditSubAction;
     EDirection mDirectionOfTopLevelEditSubAction;
@@ -763,6 +813,10 @@ class EditorBase : public nsIEditor,
     AutoEditActionDataSetter() = delete;
     AutoEditActionDataSetter(const AutoEditActionDataSetter& aOther) = delete;
   };
+
+  void UpdateEditActionData(const nsAString& aData) {
+    mEditActionData->SetData(aData);
+  }
 
  protected:  // May be called by friends.
   /****************************************************************************
@@ -798,6 +852,23 @@ class EditorBase : public nsIEditor,
   EditAction GetEditAction() const {
     return mEditActionData ? mEditActionData->GetEditAction()
                            : EditAction::eNone;
+  }
+
+  /**
+   * GetInputEventData() returns inserting or inserted text value with
+   * current edit action.  The result is proper for InputEvent.data value.
+   */
+  const nsString& GetInputEventData() const {
+    return mEditActionData ? mEditActionData->GetData() : VoidString();
+  }
+
+  /**
+   * GetInputEventDataTransfer() returns inserting or inserted transferable
+   * content with current edit action.  The result is proper for
+   * InputEvent.dataTransfer value.
+   */
+  dom::DataTransfer* GetInputEventDataTransfer() const {
+    return mEditActionData ? mEditActionData->GetDataTransfer() : nullptr;
   }
 
   /**
@@ -1786,9 +1857,10 @@ class EditorBase : public nsIEditor,
    * asynchronously if it's not safe to dispatch.
    */
   MOZ_CAN_RUN_SCRIPT
-  void FireInputEvent() { FireInputEvent(GetEditAction()); }
+  void FireInputEvent();
   MOZ_CAN_RUN_SCRIPT
-  void FireInputEvent(EditAction aEditAction);
+  void FireInputEvent(EditAction aEditAction, const nsAString& aData,
+                      dom::DataTransfer* aDataTransfer);
 
   /**
    * Called after a transaction is done successfully.

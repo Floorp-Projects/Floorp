@@ -3440,14 +3440,15 @@ static bool CanAddSpacingAfter(const gfxTextRun* aTextRun, uint32_t aOffset) {
 
 static gfxFloat ComputeTabWidthAppUnits(const nsIFrame* aFrame,
                                         gfxTextRun* aTextRun) {
-  const nsStyleText* textStyle = aFrame->StyleText();
-  if (textStyle->mTabSize.GetUnit() != eStyleUnit_Factor) {
-    nscoord w = textStyle->mTabSize.GetCoordValue();
+  const auto& tabSize = aFrame->StyleText()->mMozTabSize;
+  if (tabSize.IsLength()) {
+    nscoord w = tabSize.length._0.ToAppUnits();
     MOZ_ASSERT(w >= 0);
     return w;
   }
 
-  gfxFloat spaces = textStyle->mTabSize.GetFactorValue();
+  MOZ_ASSERT(tabSize.IsNumber());
+  gfxFloat spaces = tabSize.number._0;
   MOZ_ASSERT(spaces >= 0);
 
   // Round the space width when converting to appunits the same way
@@ -5151,7 +5152,7 @@ void nsTextFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 static nsIFrame* GetGeneratedContentOwner(nsIFrame* aFrame, bool* aIsBefore) {
   *aIsBefore = false;
   while (aFrame && (aFrame->GetStateBits() & NS_FRAME_GENERATED_CONTENT)) {
-    if (aFrame->Style()->GetPseudo() == nsCSSPseudoElements::before()) {
+    if (aFrame->Style()->GetPseudoType() == PseudoStyleType::before) {
       *aIsBefore = true;
     }
     aFrame = aFrame->GetParent();

@@ -12,14 +12,14 @@
 #include "nsIAnonymousContentCreator.h"
 
 namespace mozilla {
-enum class CSSPseudoElementType : uint8_t;
+enum class PseudoStyleType : uint8_t;
 }  // namespace mozilla
 
 // Class which implements the input type=color
 
 class nsColorControlFrame final : public nsHTMLButtonControlFrame,
                                   public nsIAnonymousContentCreator {
-  typedef mozilla::CSSPseudoElementType CSSPseudoElementType;
+  typedef mozilla::PseudoStyleType PseudoStyleType;
   typedef mozilla::dom::Element Element;
 
  public:

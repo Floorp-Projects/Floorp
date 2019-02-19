@@ -24,12 +24,28 @@ SimpleTest.waitForExplicitFinish();
 var shouldClear = false;
 window.addEventListener("dragstart", function(event) { if (shouldClear) event.dataTransfer.clearData(); }, true);
 
-function checkInputEvent(aEvent, aExpectedTarget, aDescription) {
+function checkInputEvent(aEvent, aExpectedTarget, aData, aDataTransfer, aDescription) {
   ok(aEvent instanceof InputEvent, `"input" event should be dispatched with InputEvent interface ${aDescription}`);
   is(aEvent.cancelable, false, `"input" event should be never cancelable ${aDescription}`);
   is(aEvent.bubbles, true, `"input" event should always bubble ${aDescription}`);
   is(aEvent.target, aExpectedTarget, `"input" event should be fired on the <${aExpectedTarget.tagName.toLowerCase()}> element ${aDescription}`);
   is(aEvent.inputType, "insertFromDrop", `inputType should be "insertFromDrop" on the <${aExpectedTarget.tagName.toLowerCase()}> element ${aDescription}`);
+  is(aEvent.data, aData, `data should be ${aData} on the <${aExpectedTarget.tagName.toLowerCase()}> element ${aDescription}`);
+  if (aDataTransfer === null) {
+    is(aEvent.dataTransfer, null, `dataTransfer should be null on the <${aExpectedTarget.tagName.toLowerCase()}> element ${aDescription}`);
+  } else {
+    for (let dataTransfer of aDataTransfer) {
+      let description = `on the <${aExpectedTarget.tagName.toLowerCase()}> element ${aDescription}`;
+      if (dataTransfer.todo) {
+        // XXX It seems that synthesizeDrop() don't emulate perfectly if caller specifies the data directly.
+        todo_is(aEvent.dataTransfer.getData(dataTransfer.type), dataTransfer.data,
+                `dataTransfer should have "${dataTransfer.data}" whose type is "${dataTransfer.type}" ${description}`);
+      } else {
+        is(aEvent.dataTransfer.getData(dataTransfer.type), dataTransfer.data,
+           `dataTransfer should have "${dataTransfer.data}" whose type is "${dataTransfer.type}" ${description}`);
+      }
+    }
+  }
 }
 
 function doTest() {
@@ -102,7 +118,8 @@ function doTest() {
   is(input.value, "Some Text", "Drag text/html onto input");
   is(inputEvents.length, 1,
      'Only one "input" events should be fired when dropping text/html into empty <input> element');
-  checkInputEvent(inputEvents[0], input, "when dropping text/html into empty <input> element");
+  checkInputEvent(inputEvents[0], input, "Some Text", null,
+                  "when dropping text/html into empty <input> element");
 
   // -------- Test dragging regular text of text/html to disabled <input>
 
@@ -150,7 +167,8 @@ function doTest() {
   is(input.value, "Some Plain Text", "Drag text/html and text/plain onto input");
   is(inputEvents.length, 1,
      'Only one "input" events should be fired when dropping text/plain into empty <input> element');
-  checkInputEvent(inputEvents[0], input, "when dropping text/plain into empty <input> element");
+  checkInputEvent(inputEvents[0], input, "Some Plain Text", null,
+                  "when dropping text/plain into empty <input> element");
 
   // -------- Test dragging regular text of text/plain to <textarea>
 
@@ -178,7 +196,9 @@ function doTest() {
                                   "Drag text/plain onto contenteditable text");
   is(inputEvents.length, 1,
      'Only one "input" events should be fired when dropping text/plain into contenteditable element');
-  checkInputEvent(inputEvents[0], contenteditable, "when dropping text/plain into contenteditable element");
+  checkInputEvent(inputEvents[0], contenteditable, null,
+                  [{todo: true, type: "text/plain", data: "Sample Text"}],
+                  "when dropping text/plain into contenteditable element");
 
   // -------- Test dragging regular text of text/html to contenteditable
 
@@ -190,7 +210,9 @@ function doTest() {
   is(contenteditable.childNodes[4].textContent, "Italic", "Drag text/html onto contenteditable italic text");
   is(inputEvents.length, 1,
      'Only one "input" events should be fired when dropping text/html into contenteditable element');
-  checkInputEvent(inputEvents[0], contenteditable, "when dropping text/html into contenteditable element");
+  checkInputEvent(inputEvents[0], contenteditable, null,
+                  [{todo: true, type: "text/html", data: "Sample <i>Italic</i> Text"}],
+                  "when dropping text/html into contenteditable element");
 
   // -------- Test dragging contenteditable to <input>
 
@@ -201,7 +223,8 @@ function doTest() {
   is(input.value, "Some Plain Texteditable", "Copy text/html and text/plain from contenteditable onto input");
   is(inputEvents.length, 1,
      'Only one "input" events should be fired when dragging from contenteditable to <input> element');
-  checkInputEvent(inputEvents[0], input, "when dragging from contenteditable to <input> element");
+  checkInputEvent(inputEvents[0], input, "editable", null,
+                  "when dragging from contenteditable to <input> element");
 
   // -------- Test dragging contenteditable to contenteditable
 
@@ -215,7 +238,10 @@ function doTest() {
   is(contenteditable.childNodes[6].textContent, "Italic", "Move text/html and text/plain from contenteditable onto itself text");
   is(inputEvents.length, 1,
      'Only one "input" events should be fired when dragging (copy) in a contentediable element');
-  checkInputEvent(inputEvents[0], contenteditable, "when dragging (copy) in a contentediable element");
+  checkInputEvent(inputEvents[0], contenteditable, null,
+                  [{type: "text/html", data: "<i>Italic</i>"},
+                   {type: "text/plain", data: "Italic"}],
+                  "when dragging (copy) in a contentediable element");
 
   // We'd test 'move' here as well as 'copy', but that requires knowledge of
   // the source of the drag which drag simulation doesn't provide.
@@ -234,7 +260,11 @@ function doTest() {
   todo_is(inputEvents.length, 1,
      'Only one "input" events should be fired when dragging from inner non-editable element to a contentediable element');
   if (inputEvents.length > 0) {
-    checkInputEvent(inputEvents[0], document.getElementById("nestedce"), "when dragging from inner non-editable element to a contentediable element");
+    // XXX I'm not sure about dataTransfer value of text/html.
+    checkInputEvent(inputEvents[0], document.getElementById("nestedce"), null,
+                    [{type: "text/html", data: "Middle"},
+                     {type: "text/plain", data: "Middle"}],
+                    "when dragging from inner non-editable element to a contentediable element");
   }
 
   document.removeEventListener("input", onInput);

@@ -45,6 +45,25 @@ using NonNegativeLengthPercentage = StyleNonNegativeLengthPercentage;
 using NonNegativeLengthPercentageOrAuto =
     StyleNonNegativeLengthPercentageOrAuto;
 
+nscoord StyleCSSPixelLength::ToAppUnits() const {
+  // We want to resolve the length part of the calc() expression rounding 0.5
+  // away from zero, instead of the default behavior of NSToCoordRoundWithClamp
+  // which is floor(x + 0.5).
+  //
+  // This is what the rust code in the app_units crate does, and not doing this
+  // would regress bug 1323735, for example.
+  //
+  // FIXME(emilio, bug 1528114): Probably we should do something smarter.
+  float length = _0 * float(mozilla::AppUnitsPerCSSPixel());
+  if (length >= nscoord_MAX) {
+    return nscoord_MAX;
+  }
+  if (length <= nscoord_MIN) {
+    return nscoord_MIN;
+  }
+  return roundf(length);
+}
+
 constexpr LengthPercentage LengthPercentage::Zero() {
   return {{0.}, {0.}, StyleAllowedNumericType::All, false, false};
 }
@@ -69,28 +88,9 @@ bool LengthPercentage::HasPercent() const { return has_percentage; }
 
 bool LengthPercentage::ConvertsToLength() const { return !HasPercent(); }
 
-nscoord LengthPercentage::LengthComponent() const {
-  // We want to resolve the length part of the calc() expression rounding 0.5
-  // away from zero, instead of the default behavior of NSToCoordRoundWithClamp
-  // which is floor(x + 0.5).
-  //
-  // This is what the rust code in the app_units crate does, and not doing this
-  // would regress bug 1323735, for example.
-  //
-  // FIXME(emilio, bug 1528114): Probably we should do something smarter.
-  float length = LengthInCSSPixels() * float(mozilla::AppUnitsPerCSSPixel());
-  if (length >= nscoord_MAX) {
-    return nscoord_MAX;
-  }
-  if (length <= nscoord_MIN) {
-    return nscoord_MIN;
-  }
-  return roundf(length);
-}
-
 nscoord LengthPercentage::ToLength() const {
   MOZ_ASSERT(ConvertsToLength());
-  return LengthComponent();
+  return length.ToAppUnits();
 }
 
 bool LengthPercentage::ConvertsToPercentage() const {
@@ -133,7 +133,7 @@ nscoord LengthPercentage::Resolve(T aPercentageGetter,
   }
   nscoord basis = aPercentageGetter();
   NS_WARNING_ASSERTION(basis >= 0, "nscoord overflow?");
-  return LengthComponent() + aPercentageRounder(basis * Percentage());
+  return length.ToAppUnits() + aPercentageRounder(basis * Percentage());
 }
 
 nscoord LengthPercentage::Resolve(nscoord aPercentageBasis) const {

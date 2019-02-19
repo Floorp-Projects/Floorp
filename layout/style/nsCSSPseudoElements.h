@@ -12,6 +12,7 @@
 #include "nsGkAtoms.h"
 #include "mozilla/CSSEnabledState.h"
 #include "mozilla/Compiler.h"
+#include "mozilla/PseudoStyleType.h"
 
 // Is this pseudo-element a CSS2 pseudo-element that can be specified
 // with the single colon syntax (in addition to the double-colon syntax,
@@ -55,41 +56,14 @@
 // grid containers) and thus needs parent display-based style fixup?
 #define CSS_PSEUDO_ELEMENT_IS_FLEX_OR_GRID_ITEM (1 << 7)
 
-namespace mozilla {
-
-// The total count of CSSPseudoElement is less than 256,
-// so use uint8_t as its underlying type.
-typedef uint8_t CSSPseudoElementTypeBase;
-enum class CSSPseudoElementType : CSSPseudoElementTypeBase {
-// If the actual pseudo-elements stop being first here, change
-// GetPseudoType.
-#define CSS_PSEUDO_ELEMENT(_name, _value, _flags) _name,
-#include "nsCSSPseudoElementList.h"
-#undef CSS_PSEUDO_ELEMENT
-  Count,
-  InheritingAnonBox = Count,  // pseudo from nsCSSAnonBoxes,
-                              // IsNonInheritingAnonBox false.
-  NonInheritingAnonBox,  // from nsCSSAnonBoxes, IsNonInheritingAnonBox true.
-#ifdef MOZ_XUL
-  XULTree,
-#endif
-  NotPseudo,
-  MAX
-};
-
-}  // namespace mozilla
-
 class nsCSSPseudoElements {
-  typedef mozilla::CSSPseudoElementType Type;
+  typedef mozilla::PseudoStyleType Type;
   typedef mozilla::CSSEnabledState EnabledState;
 
  public:
   static bool IsPseudoElement(nsAtom* aAtom);
 
   static bool IsCSS2PseudoElement(nsAtom* aAtom);
-
-  // This must match EAGER_PSEUDO_COUNT in Rust code.
-  static const size_t kEagerPseudoCount = 4;
 
   static bool IsEagerlyCascadedInServo(const Type aType) {
     return PseudoElementHasFlags(aType, CSS_PSEUDO_ELEMENT_IS_CSS2);
@@ -112,7 +86,8 @@ class nsCSSPseudoElements {
 
   static Type GetPseudoType(nsAtom* aAtom, EnabledState aEnabledState);
 
-  // Get the atom for a given Type. aType must be < CSSPseudoElementType::Count.
+  // Get the atom for a given Type. aType must be <
+  // PseudoType::CSSPseudoElementsEnd.
   // This only ever returns static atoms, so it's fine to return a raw pointer.
   static nsAtom* GetPseudoAtom(Type aType);
 
@@ -126,7 +101,7 @@ class nsCSSPseudoElements {
   }
 
   static bool PseudoElementSupportsStyleAttribute(const Type aType) {
-    MOZ_ASSERT(aType < Type::Count);
+    MOZ_ASSERT(aType < Type::CSSPseudoElementsEnd);
     return PseudoElementHasFlags(aType,
                                  CSS_PSEUDO_ELEMENT_SUPPORTS_STYLE_ATTRIBUTE);
   }
@@ -166,16 +141,16 @@ class nsCSSPseudoElements {
  private:
   // Does the given pseudo-element have all of the flags given?
   static bool PseudoElementHasFlags(const Type aType, uint32_t aFlags) {
-    MOZ_ASSERT(aType < Type::Count);
+    MOZ_ASSERT(aType < Type::CSSPseudoElementsEnd);
     return (kPseudoElementFlags[size_t(aType)] & aFlags) == aFlags;
   }
 
   static bool PseudoElementHasAnyFlag(const Type aType, uint32_t aFlags) {
-    MOZ_ASSERT(aType < Type::Count);
+    MOZ_ASSERT(aType < Type::CSSPseudoElementsEnd);
     return (kPseudoElementFlags[size_t(aType)] & aFlags) != 0;
   }
 
-  static const uint32_t kPseudoElementFlags[size_t(Type::Count)];
+  static const uint32_t kPseudoElementFlags[size_t(Type::CSSPseudoElementsEnd)];
 };
 
 #endif /* nsCSSPseudoElements_h___ */

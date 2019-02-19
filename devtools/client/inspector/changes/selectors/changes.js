@@ -155,6 +155,36 @@ function getChangesStylesheet(state, filter) {
   const { indentUnit, indentWithTabs } = getTabPrefs();
   const indentChar = indentWithTabs ? "\t".repeat(indentUnit) : " ".repeat(indentUnit);
 
+  /**
+   * If the rule has just one item in its array of selector versions, return it as-is.
+   * If it has more than one, build a string using the first selector commented-out
+   * and the last selector as-is. This indicates that a rule's selector has changed.
+   *
+   * @param  {Array} selectors
+   *         History of selector versions if changed over time.
+   *         Array with a single item (the original selector) if never changed.
+   * @param  {Number} level
+   *         Level of nesting within a CSS rule tree.
+   * @return {String}
+   */
+  function writeSelector(selectors = [], level) {
+    const indent = indentChar.repeat(level);
+    let selectorText;
+    switch (selectors.length) {
+      case 0:
+        selectorText = "";
+        break;
+      case 1:
+        selectorText = `${indent}${selectors[0]}`;
+        break;
+      default:
+        selectorText = `${indent}/* ${selectors[0]} { */\n` +
+                       `${indent}${selectors[selectors.length - 1]}`;
+    }
+
+    return selectorText;
+  }
+
   function writeRule(ruleId, rule, level) {
     // Write nested rules, if any.
     let ruleBody = rule.children.reduce((str, childRule) => {
@@ -166,7 +196,8 @@ function getChangesStylesheet(state, filter) {
     ruleBody += writeDeclarations(rule.remove, rule.add, level + 1);
 
     const indent = indentChar.repeat(level);
-    return `\n${indent}${rule.selector} {${ruleBody}\n${indent}}`;
+    const selectorText = writeSelector(rule.selectors, level);
+    return `\n${selectorText} {${ruleBody}\n${indent}}`;
   }
 
   function writeDeclarations(remove = [], add = [], level) {

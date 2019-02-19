@@ -26,14 +26,14 @@ JSObject* nsXMLElement::WrapNode(JSContext* aCx,
 }
 
 void nsXMLElement::UnbindFromTree(bool aDeep, bool aNullParent) {
-  CSSPseudoElementType pseudoType = GetPseudoElementType();
-  bool isBefore = pseudoType == CSSPseudoElementType::before;
+  PseudoStyleType pseudoType = GetPseudoElementType();
+  bool isBefore = pseudoType == PseudoStyleType::before;
   nsAtom* property = isBefore ? nsGkAtoms::beforePseudoProperty
                               : nsGkAtoms::afterPseudoProperty;
 
   switch (pseudoType) {
-    case CSSPseudoElementType::before:
-    case CSSPseudoElementType::after: {
+    case PseudoStyleType::before:
+    case PseudoStyleType::after: {
       MOZ_ASSERT(GetParent());
       MOZ_ASSERT(GetParent()->IsElement());
       GetParent()->DeleteProperty(property);

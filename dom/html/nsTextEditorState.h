@@ -163,24 +163,24 @@ class nsTextEditorState : public mozilla::SupportsWeakPtr<nsTextEditorState> {
 
   enum SetValueFlags {
     // The call is for internal processing.
-    eSetValue_Internal = 0,
+    eSetValue_Internal = 1 << 0,
     // The value is changed by a call of setUserInput() from chrome.
-    eSetValue_BySetUserInput = 1 << 0,
+    eSetValue_BySetUserInput = 1 << 1,
     // The value is changed by changing value attribute of the element or
     // something like setRangeText().
-    eSetValue_ByContent = 1 << 1,
+    eSetValue_ByContent = 1 << 2,
     // Whether the value change should be notified to the frame/contet nor not.
-    eSetValue_Notify = 1 << 2,
+    eSetValue_Notify = 1 << 3,
     // Whether to move the cursor to end of the value (in the case when we have
     // cached selection offsets), in the case when the value has changed.  If
     // this is not set, the cached selection offsets will simply be clamped to
     // be within the length of the new value.  In either case, if the value has
     // not changed the cursor won't move.
-    eSetValue_MoveCursorToEndIfValueChanged = 1 << 3,
+    eSetValue_MoveCursorToEndIfValueChanged = 1 << 4,
     // The value is changed for a XUL text control as opposed to for an HTML
     // text control.  Such value changes are different in that they preserve the
     // undo history.
-    eSetValue_ForXUL = 1 << 4,
+    eSetValue_ForXUL = 1 << 5,
   };
   MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE bool SetValue(const nsAString& aValue,

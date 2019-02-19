@@ -14,6 +14,8 @@
 namespace mozilla {
 namespace dom {
 
+class DataTransfer;
+
 class InputEvent : public UIEvent {
  public:
   InputEvent(EventTarget* aOwner, nsPresContext* aPresContext,
@@ -32,6 +34,8 @@ class InputEvent : public UIEvent {
   }
 
   void GetInputType(nsAString& aInputType);
+  void GetData(nsAString& aData);
+  DataTransfer* GetDataTransfer();
   bool IsComposing();
 
  protected:

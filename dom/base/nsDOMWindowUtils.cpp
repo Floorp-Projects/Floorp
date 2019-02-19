@@ -99,7 +99,7 @@
 #include "mozilla/Preferences.h"
 #include "nsIStyleSheetService.h"
 #include "nsContentPermissionHelper.h"
-#include "nsCSSPseudoElements.h"  // for CSSPseudoElementType
+#include "nsCSSPseudoElements.h"  // for PseudoStyleType
 #include "nsNetUtil.h"
 #include "HTMLImageElement.h"
 #include "HTMLCanvasElement.h"

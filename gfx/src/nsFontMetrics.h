@@ -54,6 +54,7 @@ class nsFontMetrics final {
     gfxFont::Orientation orientation = gfxFont::eHorizontal;
     gfxUserFontSet* userFontSet = nullptr;
     gfxTextPerfMetrics* textPerf = nullptr;
+    gfxFontFeatureValueSet* featureValueLookup = nullptr;
   };
 
   nsFontMetrics(const nsFont& aFont, const Params& aParams,

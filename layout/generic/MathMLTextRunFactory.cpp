@@ -640,6 +640,7 @@ void MathMLTextRunFactory::RebuildTextRun(
     params.explicitLanguage = styles[0]->mExplicitLanguage;
     params.userFontSet = pc->GetUserFontSet();
     params.textPerf = pc->GetTextPerfMetrics();
+    params.featureValueLookup = pc->GetFontFeatureValuesLookup();
     RefPtr<nsFontMetrics> metrics =
         pc->DeviceContext()->GetMetricsFor(font, params);
     newFontGroup = metrics->GetThebesFontGroup();

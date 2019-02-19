@@ -96,6 +96,12 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
                this._description + ", " + aTest.description + ': "input" event should be never cancelable');
       this._is(aInputEvents[i].bubbles, true,
                this._description + ", " + aTest.description + ': "input" event should always bubble');
+      this._is(aInputEvents[i].inputType, aTest.inputEvents[i].inputType,
+               this._description + ", " + aTest.description + ': inputType of "input" event should be "${aTest.inputEvents[i].inputType}"');
+      this._is(aInputEvents[i].data, aTest.inputEvents[i].data,
+               this._description + ", " + aTest.description + ': data of "input" event should be ${aTest.inputEvents[i].data}');
+      this._is(aInputEvents[i].dataTransfer, null,
+               this._description + ", " + aTest.description + ': dataTransfer of "input" event should be null');
     }
   },
 
@@ -108,8 +114,8 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: true, value: "Mo", searchString: "Mo",
       inputEvents: [
-        {inputType: "insertText"},
-        {inputType: "insertText"},
+        {inputType: "insertText", data: "M"},
+        {inputType: "insertText", data: "o"},
       ],
     },
     { description: "Undo/Redo behavior check when typed text exactly matches the case: select 'Mozilla' to complete the word",
@@ -120,7 +126,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: false, value: "Mozilla", searchString: "Mozilla",
       inputEvents: [
-        {inputType: "insertReplacementText"},
+        {inputType: "insertReplacementText", data: "Mozilla"},
       ],
     },
     { description: "Undo/Redo behavior check when typed text exactly matches the case: undo the word, but typed text shouldn't be canceled",
@@ -130,7 +136,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: true, value: "Mo", searchString: "Mo",
       inputEvents: [
-        {inputType: "historyUndo"},
+        {inputType: "historyUndo", data: null},
       ],
     },
     { description: "Undo/Redo behavior check when typed text exactly matches the case: undo the typed text",
@@ -140,7 +146,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: false, value: "", searchString: "",
       inputEvents: [
-        {inputType: "historyUndo"},
+        {inputType: "historyUndo", data: null},
       ],
     },
     { description: "Undo/Redo behavior check when typed text exactly matches the case: redo the typed text",
@@ -150,7 +156,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: true, value: "Mo", searchString: "Mo",
       inputEvents: [
-        {inputType: "historyRedo"},
+        {inputType: "historyRedo", data: null},
       ],
     },
     { description: "Undo/Redo behavior check when typed text exactly matches the case: redo the word",
@@ -160,7 +166,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: true, value: "Mozilla", searchString: "Mozilla",
       inputEvents: [
-        {inputType: "historyRedo"},
+        {inputType: "historyRedo", data: null},
       ],
     },
     { description: "Undo/Redo behavior check when typed text exactly matches the case: removing all text for next test...",
@@ -171,7 +177,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: false, value: "", searchString: "",
       inputEvents: [
-        {inputType: "deleteContentBackward"},
+        {inputType: "deleteContentBackward", data: null},
       ],
     },
 
@@ -183,8 +189,8 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: true, value: "mo", searchString: "mo",
       inputEvents: [
-        {inputType: "insertText"},
-        {inputType: "insertText"},
+        {inputType: "insertText", data: "m"},
+        {inputType: "insertText", data: "o"},
       ],
     },
     { description: "Undo/Redo behavior check when typed text does not match the case: select 'Mozilla' to complete the word",
@@ -195,7 +201,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: false, value: "Mozilla", searchString: "Mozilla",
       inputEvents: [
-        {inputType: "insertReplacementText"},
+        {inputType: "insertReplacementText", data: "Mozilla"},
       ],
     },
     { description: "Undo/Redo behavior check when typed text does not match the case: undo the word, but typed text shouldn't be canceled",
@@ -205,7 +211,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: true, value: "mo", searchString: "mo",
       inputEvents: [
-        {inputType: "historyUndo"},
+        {inputType: "historyUndo", data: null},
       ],
     },
     { description: "Undo/Redo behavior check when typed text does not match the case: undo the typed text",
@@ -215,7 +221,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: false, value: "", searchString: "",
       inputEvents: [
-        {inputType: "historyUndo"},
+        {inputType: "historyUndo", data: null},
       ],
     },
     { description: "Undo/Redo behavior check when typed text does not match the case: redo the typed text",
@@ -225,7 +231,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: true, value: "mo", searchString: "mo",
       inputEvents: [
-        {inputType: "historyRedo"},
+        {inputType: "historyRedo", data: null},
       ],
     },
     { description: "Undo/Redo behavior check when typed text does not match the case: redo the word",
@@ -235,7 +241,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: true, value: "Mozilla", searchString: "Mozilla",
       inputEvents: [
-        {inputType: "historyRedo"},
+        {inputType: "historyRedo", data: null},
       ],
     },
     { description: "Undo/Redo behavior check when typed text does not match the case: removing all text for next test...",
@@ -246,7 +252,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: false, value: "", searchString: "",
       inputEvents: [
-        {inputType: "deleteContentBackward"},
+        {inputType: "deleteContentBackward", data: null},
       ],
     },
 
@@ -263,9 +269,9 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: true, value: "Mozilla", searchString: "Mo",
       inputEvents: [
-        {inputType: "insertText"},
-        {inputType: "insertText"},
-        {inputType: "insertReplacementText"},
+        {inputType: "insertText", data: "M"},
+        {inputType: "insertText", data: "o"},
+        {inputType: "insertReplacementText", data: "Mozilla"},
       ],
     },
     { description: "Undo/Redo behavior check when typed text exactly matches the case (completeDefaultIndex is true): select 'Mozilla' to complete the word",
@@ -293,7 +299,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: true, value: "Mo", searchString: "Mo",
       inputEvents: [
-        {inputType: "historyUndo"},
+        {inputType: "historyUndo", data: null},
       ],
     },
     { description: "Undo/Redo behavior check when typed text exactly matches the case (completeDefaultIndex is true): undo the typed text",
@@ -307,7 +313,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: false, value: "", searchString: "",
       inputEvents: [
-        {inputType: "historyUndo"},
+        {inputType: "historyUndo", data: null},
       ],
     },
     { description: "Undo/Redo behavior check when typed text exactly matches the case (completeDefaultIndex is true): redo the typed text",
@@ -321,8 +327,8 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: true, value: "Mozilla", searchString: "Mo",
       inputEvents: [
-        {inputType: "historyRedo"},
-        {inputType: "insertReplacementText"},
+        {inputType: "historyRedo", data: null},
+        {inputType: "insertReplacementText", data: "Mozilla"},
       ],
     },
     { description: "Undo/Redo behavior check when typed text exactly matches the case (completeDefaultIndex is true): redo the word",
@@ -350,7 +356,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: false, value: "", searchString: "",
       inputEvents: [
-        {inputType: "deleteContentBackward"},
+        {inputType: "deleteContentBackward", data: null},
       ],
     },
 
@@ -366,9 +372,9 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: true, value: "mozilla", searchString: "mo",
       inputEvents: [
-        {inputType: "insertText"},
-        {inputType: "insertText"},
-        {inputType: "insertReplacementText"},
+        {inputType: "insertText", data: "m"},
+        {inputType: "insertText", data: "o"},
+        {inputType: "insertReplacementText", data: "mozilla"},
       ],
     },
     { description: "Undo/Redo behavior check when typed text does not match the case (completeDefaultIndex is true): select 'Mozilla' to complete the word",
@@ -383,7 +389,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: false, value: "Mozilla", searchString: "Mozilla",
       inputEvents: [
-        {inputType: "insertReplacementText"},
+        {inputType: "insertReplacementText", data: "Mozilla"},
       ],
     },
     // Different from "exactly matches the case" case, modifying the case causes one additional transaction.
@@ -399,7 +405,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: true, value: "mozilla", searchString: "mozilla",
       inputEvents: [
-        {inputType: "historyUndo"},
+        {inputType: "historyUndo", data: null},
       ],
     },
     { description: "Undo/Redo behavior check when typed text does not match the case (completeDefaultIndex is true): undo the word, but typed text shouldn't be canceled",
@@ -413,7 +419,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: true, value: "mo", searchString: "mo",
       inputEvents: [
-        {inputType: "historyUndo"},
+        {inputType: "historyUndo", data: null},
       ],
     },
     { description: "Undo/Redo behavior check when typed text does not match the case (completeDefaultIndex is true): undo the typed text",
@@ -427,7 +433,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: false, value: "", searchString: "",
       inputEvents: [
-        {inputType: "historyUndo"},
+        {inputType: "historyUndo", data: null},
       ],
     },
     // XXX This is odd case.  Consistency with undo behavior, this should restore "mo".
@@ -445,8 +451,8 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: true, value: "mozilla", searchString: "mo",
       inputEvents: [
-        {inputType: "historyRedo"},
-        {inputType: "insertReplacementText"},
+        {inputType: "historyRedo", data: null},
+        {inputType: "insertReplacementText", data: "mozilla"},
       ],
     },
     { description: "Undo/Redo behavior check when typed text does not match the case (completeDefaultIndex is true): redo the default index word",
@@ -487,7 +493,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: false, value: "", searchString: "",
       inputEvents: [
-        {inputType: "deleteContentBackward"},
+        {inputType: "deleteContentBackward", data: null},
       ],
     },
   ],

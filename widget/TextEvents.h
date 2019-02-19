@@ -11,6 +11,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/dom/DataTransfer.h"
 #include "mozilla/EventForwards.h"  // for KeyNameIndex, temporarily
 #include "mozilla/FontRange.h"
 #include "mozilla/Maybe.h"
@@ -1140,7 +1141,9 @@ class WidgetSelectionEvent : public WidgetGUIEvent {
 class InternalEditorInputEvent : public InternalUIEvent {
  private:
   InternalEditorInputEvent()
-      : mInputType(EditorInputType::eUnknown), mIsComposing(false) {}
+      : mData(VoidString()),
+        mInputType(EditorInputType::eUnknown),
+        mIsComposing(false) {}
 
  public:
   virtual InternalEditorInputEvent* AsEditorInputEvent() override {
@@ -1150,6 +1153,7 @@ class InternalEditorInputEvent : public InternalUIEvent {
   InternalEditorInputEvent(bool aIsTrusted, EventMessage aMessage,
                            nsIWidget* aWidget = nullptr)
       : InternalUIEvent(aIsTrusted, aMessage, aWidget, eEditorInputEventClass),
+        mData(VoidString()),
         mInputType(EditorInputType::eUnknown) {}
 
   virtual WidgetEvent* Duplicate() const override {
@@ -1163,6 +1167,9 @@ class InternalEditorInputEvent : public InternalUIEvent {
     return result;
   }
 
+  nsString mData;
+  RefPtr<dom::DataTransfer> mDataTransfer;
+
   EditorInputType mInputType;
 
   bool mIsComposing;
@@ -1171,6 +1178,8 @@ class InternalEditorInputEvent : public InternalUIEvent {
                                   bool aCopyTargets) {
     AssignUIEventData(aEvent, aCopyTargets);
 
+    mData = aEvent.mData;
+    mDataTransfer = aEvent.mDataTransfer;
     mInputType = aEvent.mInputType;
     mIsComposing = aEvent.mIsComposing;
   }
