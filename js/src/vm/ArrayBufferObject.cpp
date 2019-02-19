@@ -1312,10 +1312,8 @@ ArrayBufferObject* ArrayBufferObject::createZeroed(
   if (data) {
     buffer->initialize(nbytes, BufferContents::createMalloced(data), OwnsData);
   } else {
-    void* inlineData = buffer->inlineDataPointer();
+    void* inlineData = buffer->initializeToInlineData(nbytes);
     memset(inlineData, 0, nbytes);
-    buffer->initialize(nbytes, BufferContents::createInlineData(inlineData),
-                       DoesntOwnData);
   }
 
   return buffer;
@@ -1328,11 +1326,7 @@ ArrayBufferObject* ArrayBufferObject::createEmpty(JSContext* cx) {
     return nullptr;
   }
 
-  obj->setByteLength(0);
-  obj->setFlags(0);
-  obj->setFirstView(nullptr);
-  obj->setDataPointer(BufferContents::createNoData(), OwnsData);
-
+  obj->initialize(0, BufferContents::createNoData(), OwnsData);
   return obj;
 }
 
