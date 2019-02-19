@@ -65,6 +65,7 @@ var UrlbarTestUtils = {
    * related to the previous query, this methods ensures the result is current.
    * @param {object} win The window containing the urlbar
    * @param {number} index The index to look for
+   * @returns {HtmlElement|XulElement} the result's element.
    */
   async waitForAutocompleteResultAt(win, index) {
     let urlbar = getUrlbarAbstraction(win);
@@ -84,7 +85,7 @@ var UrlbarTestUtils = {
   /**
    * Returns true if the oneOffSearchButtons are visible.
    * @param {object} win The window containing the urlbar
-   * @returns {boolena} True if the buttons are visible.
+   * @returns {boolean} True if the buttons are visible.
    */
   getOneOffSearchButtonsVisible(win) {
     let urlbar = getUrlbarAbstraction(win);
@@ -93,8 +94,10 @@ var UrlbarTestUtils = {
 
   /**
    * Gets an abstracted rapresentation of the result at an index.
+   * @see See the implementation of UrlbarAbstraction.getDetailsOfResultAt.
    * @param {object} win The window containing the urlbar
    * @param {number} index The index to look for
+   * @returns {object} An object with numerous properties describing the result.
    */
   async getDetailsOfResultAt(win, index) {
     let urlbar = getUrlbarAbstraction(win);
