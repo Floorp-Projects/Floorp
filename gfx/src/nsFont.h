@@ -56,6 +56,9 @@ struct nsFont {
   // -- list of value tags for font-specific alternate features
   nsTArray<gfxAlternateValue> alternateValues;
 
+  // -- object used to look these up once the font is matched
+  RefPtr<gfxFontFeatureValueSet> featureValueLookup;
+
   // The logical size of the font, in nscoord units
   nscoord size = 0;
 

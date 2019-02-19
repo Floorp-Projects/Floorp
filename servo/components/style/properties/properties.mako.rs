@@ -3507,11 +3507,14 @@ impl<'a> StyleBuilder<'a> {
         self.modified_reset = true;
         % endif
 
+        <% props_need_device = ["content", "list_style_type", "font_variant_alternates"] %>
         self.${property.style_struct.ident}.mutate()
             .set_${property.ident}(
                 value,
                 % if property.logical:
                 self.writing_mode,
+                % elif product == "gecko" and property.ident in props_need_device:
+                self.device,
                 % endif
             );
     }
