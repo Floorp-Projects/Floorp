@@ -164,6 +164,7 @@ inline bool IsDataAvailableOnHTMLEditor(EditorInputType aInputType) {
     case EditorInputType::eFormatSetBlockTextDirection:
     case EditorInputType::eFormatSetInlineTextDirection:
     case EditorInputType::eInsertLink:
+    case EditorInputType::eFormatFontName:
       return true;
     default:
       return false;
