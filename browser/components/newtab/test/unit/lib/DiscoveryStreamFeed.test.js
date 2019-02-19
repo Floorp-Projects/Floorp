@@ -5,6 +5,7 @@ import {reducers} from "common/Reducers.jsm";
 
 const CONFIG_PREF_NAME = "browser.newtabpage.activity-stream.discoverystream.config";
 const SPOC_IMPRESSION_TRACKING_PREF = "browser.newtabpage.activity-stream.discoverystream.spoc.impressions";
+const REC_IMPRESSION_TRACKING_PREF = "browser.newtabpage.activity-stream.discoverystream.rec.impressions";
 const THIRTY_MINUTES = 30 * 60 * 1000;
 const ONE_WEEK = 7 * 24 * 60 * 60 * 1000; // 1 week
 
@@ -256,6 +257,7 @@ describe("DiscoveryStreamFeed", () => {
     it("should fetch fresh data if cache is empty", async () => {
       const fakeCache = {};
       sandbox.stub(feed.cache, "get").returns(Promise.resolve(fakeCache));
+      sandbox.stub(feed, "rotate").callsFake(val => val);
       sandbox.stub(feed, "fetchFromEndpoint").resolves("data");
 
       const feedResp = await feed.getComponentFeed("foo.com");
@@ -266,6 +268,7 @@ describe("DiscoveryStreamFeed", () => {
       const fakeCache = {feeds: {"foo.com": {lastUpdated: Date.now()}}};
       sandbox.stub(feed.cache, "get").returns(Promise.resolve(fakeCache));
       sandbox.stub(feed, "fetchFromEndpoint").resolves("data");
+      sandbox.stub(feed, "rotate").callsFake(val => val);
       clock.tick(THIRTY_MINUTES + 1);
 
       const feedResp = await feed.getComponentFeed("foo.com");
@@ -373,6 +376,40 @@ describe("DiscoveryStreamFeed", () => {
       sandbox.stub(feed, "loadSpocs").returns(Promise.resolve());
       await feed.onAction({type: at.PREF_CHANGED, data: {name: "showSponsored"}});
       assert.calledOnce(feed.loadSpocs);
+    });
+  });
+
+  describe("#rotate", () => {
+    it("should move seen first story to the back of the response", () => {
+      const recsExpireTime = 5600;
+      const feedResponse = {
+        recommendations: [
+          {
+            id: "first",
+          },
+          {
+            id: "second",
+          },
+          {
+            id: "third",
+          },
+          {
+            id: "fourth",
+          },
+        ],
+        settings: {
+          recsExpireTime,
+        },
+      };
+      const fakeImpressions = {
+        "first": Date.now() - (recsExpireTime * 1000),
+        "third": Date.now(),
+      };
+      sandbox.stub(feed, "readImpressionsPref").returns(fakeImpressions);
+
+      const result = feed.rotate(feedResponse);
+
+      assert.equal(result.recommendations[3].id, "first");
     });
   });
 
@@ -557,6 +594,67 @@ describe("DiscoveryStreamFeed", () => {
     });
   });
 
+  describe("#recordTopRecImpressions", () => {
+    it("should add a rec id to the rec impression pref", () => {
+      sandbox.stub(feed, "readImpressionsPref").returns({});
+      sandbox.stub(feed, "writeImpressionsPref");
+
+      feed.recordTopRecImpressions("rec");
+
+      assert.calledWith(feed.writeImpressionsPref, REC_IMPRESSION_TRACKING_PREF, {rec: 0});
+    });
+    it("should not add an impression if it already exists", () => {
+      sandbox.stub(feed, "readImpressionsPref").returns({"rec": 4});
+      sandbox.stub(feed, "writeImpressionsPref");
+
+      feed.recordTopRecImpressions("rec");
+
+      assert.notCalled(feed.writeImpressionsPref);
+    });
+  });
+
+  describe("#cleanUpTopRecImpressionPref", () => {
+    it("should remove recs no longer being used", () => {
+      const newFeeds = {
+        "https://foo.com": {
+          data: {
+            recommendations: [
+              {
+                id: "rec1",
+              },
+              {
+                id: "rec2",
+              },
+            ],
+          },
+        },
+        "https://bar.com": {
+          data: {
+            recommendations: [
+              {
+                id: "rec3",
+              },
+              {
+                id: "rec4",
+              },
+            ],
+          },
+        },
+      };
+      const fakeImpressions = {
+        "rec2": Date.now() - 1,
+        "rec3": Date.now() - 1,
+        "rec5": Date.now() - 1,
+      };
+      sandbox.stub(feed, "readImpressionsPref").returns(fakeImpressions);
+      sandbox.stub(feed, "writeImpressionsPref").returns();
+
+      feed.cleanUpTopRecImpressionPref(newFeeds);
+
+      assert.calledWith(feed.writeImpressionsPref, REC_IMPRESSION_TRACKING_PREF, {rec2: -1, rec3: -1});
+    });
+  });
+
   describe("#writeImpressionsPref", () => {
     it("should call Services.prefs.setStringPref", () => {
       sandbox.stub(global.Services.prefs, "setStringPref").returns();
@@ -582,6 +680,15 @@ describe("DiscoveryStreamFeed", () => {
       const result = feed.readImpressionsPref(SPOC_IMPRESSION_TRACKING_PREF);
 
       assert.deepEqual(result, fakeImpressions);
+    });
+  });
+
+  describe("#onAction: DISCOVERY_STREAM_IMPRESSION_STATS", () => {
+    it("should call recordTopRecImpressions from DISCOVERY_STREAM_IMPRESSION_STATS", async () => {
+      sandbox.stub(feed, "recordTopRecImpressions").returns();
+      await feed.onAction({type: at.DISCOVERY_STREAM_IMPRESSION_STATS, data: {tiles: [{id: "seen"}]}});
+
+      assert.calledWith(feed.recordTopRecImpressions, "seen");
     });
   });
 
@@ -992,6 +1099,8 @@ describe("DiscoveryStreamFeed", () => {
         const fakeLayout = [fakeComponents];
         const fakeDiscoveryStream = {DiscoveryStream: {layout: fakeLayout}};
         sandbox.stub(feed.store, "getState").returns(fakeDiscoveryStream);
+        sandbox.stub(feed, "rotate").callsFake(val => val);
+        sandbox.stub(feed, "cleanUpTopRecImpressionPref").callsFake(val => val);
 
         const fakeCache = {feeds: {"foo.com": {lastUpdated: Date.now(), data: "data"}}};
         sandbox.stub(feed.cache, "get").resolves(fakeCache);
