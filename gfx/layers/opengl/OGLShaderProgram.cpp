@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "OGLShaderProgram.h"
+
 #include <stdint.h>  // for uint32_t
 #include <sstream>   // for ostringstream
 #include "gfxEnv.h"

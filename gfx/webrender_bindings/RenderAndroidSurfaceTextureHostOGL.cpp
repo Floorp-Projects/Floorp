@@ -7,6 +7,7 @@
 #include "RenderAndroidSurfaceTextureHostOGL.h"
 
 #include "mozilla/gfx/Logging.h"
+#include "GLContext.h"
 
 namespace mozilla {
 namespace wr {
