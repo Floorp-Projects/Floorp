@@ -144,6 +144,8 @@ inline bool IsDataAvailableOnTextEditor(EditorInputType aInputType) {
     case EditorInputType::eInsertFromDrop:
     case EditorInputType::eInsertReplacementText:
     case EditorInputType::eInsertFromYank:
+    case EditorInputType::eFormatSetBlockTextDirection:
+    case EditorInputType::eFormatSetInlineTextDirection:
       return true;
     default:
       return false;
@@ -159,6 +161,8 @@ inline bool IsDataAvailableOnHTMLEditor(EditorInputType aInputType) {
     case EditorInputType::eInsertText:
     case EditorInputType::eInsertCompositionText:
     case EditorInputType::eInsertFromComposition:  // Only level 2
+    case EditorInputType::eFormatSetBlockTextDirection:
+    case EditorInputType::eFormatSetInlineTextDirection:
       return true;
     default:
       return false;
