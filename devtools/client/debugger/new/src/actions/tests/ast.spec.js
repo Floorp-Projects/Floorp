@@ -64,23 +64,21 @@ describe("ast", () => {
     it("should detect react components", async () => {
       const store = createStore(threadClient, {}, sourceMaps);
       const { dispatch, getState } = store;
-      const csr = makeOriginalSource("reactComponent.js");
+      const source = makeOriginalSource("reactComponent.js");
 
       await dispatch(actions.newSource(makeSource("reactComponent.js")));
 
-      await dispatch(actions.newSource(csr));
+      await dispatch(actions.newSource(source));
 
-      await dispatch(
-        actions.loadSourceText(getSource(getState(), csr.source.id))
-      );
-      await dispatch(actions.setSourceMetaData(csr.source.id));
+      await dispatch(actions.loadSourceText(getSource(getState(), source.id)));
+      await dispatch(actions.setSourceMetaData(source.id));
 
       await waitForState(store, state => {
-        const metaData = getSourceMetaData(state, csr.source.id);
+        const metaData = getSourceMetaData(state, source.id);
         return metaData && metaData.framework;
       });
 
-      const sourceMetaData = getSourceMetaData(getState(), csr.source.id);
+      const sourceMetaData = getSourceMetaData(getState(), source.id);
       expect(sourceMetaData.framework).toBe("React");
     });
 
@@ -89,10 +87,10 @@ describe("ast", () => {
       const { dispatch, getState } = store;
       const base = makeSource("base.js");
       await dispatch(actions.newSource(base));
-      await dispatch(actions.loadSourceText(base.source));
+      await dispatch(actions.loadSourceText(base));
       await dispatch(actions.setSourceMetaData("base.js"));
 
-      const sourceMetaData = getSourceMetaData(getState(), base.source.id);
+      const sourceMetaData = getSourceMetaData(getState(), base.id);
       expect(sourceMetaData.framework).toBe(undefined);
     });
   });
@@ -104,14 +102,11 @@ describe("ast", () => {
         const { dispatch, getState } = store;
         const base = makeSource("base.js");
         await dispatch(actions.newSource(base));
-        await dispatch(actions.loadSourceText(base.source));
+        await dispatch(actions.loadSourceText(base));
         await dispatch(actions.setSymbols("base.js"));
-        await waitForState(
-          store,
-          state => !isSymbolsLoading(state, base.source)
-        );
+        await waitForState(store, state => !isSymbolsLoading(state, base));
 
-        const baseSymbols = getSymbols(getState(), base.source);
+        const baseSymbols = getSymbols(getState(), base);
         expect(baseSymbols).toMatchSnapshot();
       });
     });
@@ -122,7 +117,7 @@ describe("ast", () => {
         const base = makeSource("base.js");
         await dispatch(actions.newSource(base));
 
-        const baseSymbols = getSymbols(getState(), base.source);
+        const baseSymbols = getSymbols(getState(), base);
         expect(baseSymbols).toEqual(null);
       });
     });
@@ -144,8 +139,8 @@ describe("ast", () => {
     it("with selected line", async () => {
       const store = createStore(threadClient);
       const { dispatch, getState } = store;
-      const csr = makeSource("scopes.js");
-      await dispatch(actions.newSource(csr));
+      const source = makeSource("scopes.js");
+      await dispatch(actions.newSource(source));
 
       await dispatch(
         actions.selectLocation({ sourceId: "scopes.js", line: 5 })

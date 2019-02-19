@@ -158,9 +158,9 @@ describe("pause", () => {
         column: 0
       });
 
-      const csr = makeSource("await");
-      await dispatch(actions.newSource(csr));
-      await dispatch(actions.loadSourceText(csr.source));
+      const source = makeSource("await");
+      await dispatch(actions.newSource(source));
+      await dispatch(actions.loadSourceText(source));
 
       await dispatch(actions.paused(mockPauseInfo));
       const getNextStepSpy = jest.spyOn(parser, "getNextStep");
@@ -178,9 +178,9 @@ describe("pause", () => {
         column: 6
       });
 
-      const csr = makeSource("await");
-      await dispatch(actions.newSource(csr));
-      await dispatch(actions.loadSourceText(csr.source));
+      const source = makeSource("await");
+      await dispatch(actions.newSource(source));
+      await dispatch(actions.loadSourceText(source));
 
       await dispatch(actions.paused(mockPauseInfo));
       const getNextStepSpy = jest.spyOn(parser, "getNextStep");
@@ -204,10 +204,10 @@ describe("pause", () => {
         }
       });
 
-      const csr = makeSource("foo");
-      await dispatch(actions.newSource(csr));
+      const source = makeSource("foo");
+      await dispatch(actions.newSource(source));
       await dispatch(actions.newSource(makeOriginalSource("foo")));
-      await dispatch(actions.loadSourceText(csr.source));
+      await dispatch(actions.loadSourceText(source));
 
       await dispatch(actions.paused(mockPauseInfo));
       expect(selectors.getFrames(getState())).toEqual([
@@ -266,12 +266,12 @@ describe("pause", () => {
       const { dispatch, getState } = store;
       const mockPauseInfo = createPauseInfo(generatedLocation);
 
-      const fooCSR = makeSource("foo");
-      const fooOriginalCSR = makeSource("foo-original");
-      await dispatch(actions.newSource(fooCSR));
-      await dispatch(actions.newSource(fooOriginalCSR));
-      await dispatch(actions.loadSourceText(fooCSR.source));
-      await dispatch(actions.loadSourceText(fooOriginalCSR.source));
+      const fooSource = makeSource("foo");
+      const fooOriginalSource = makeSource("foo-original");
+      await dispatch(actions.newSource(fooSource));
+      await dispatch(actions.newSource(fooOriginalSource));
+      await dispatch(actions.loadSourceText(fooSource));
+      await dispatch(actions.loadSourceText(fooOriginalSource));
       await dispatch(actions.setSymbols("foo-original"));
 
       await dispatch(actions.paused(mockPauseInfo));
@@ -327,13 +327,13 @@ describe("pause", () => {
       const { dispatch, getState } = store;
       const mockPauseInfo = createPauseInfo(generatedLocation);
 
-      const csr = makeSource("foo-wasm", { isWasm: true });
-      const originalCSR = makeOriginalSource("foo-wasm");
+      const source = makeSource("foo-wasm", { isWasm: true });
+      const originalSource = makeOriginalSource("foo-wasm");
 
-      await dispatch(actions.newSource(csr));
-      await dispatch(actions.newSource(originalCSR));
-      await dispatch(actions.loadSourceText(csr.source));
-      await dispatch(actions.loadSourceText(originalCSR.source));
+      await dispatch(actions.newSource(source));
+      await dispatch(actions.newSource(originalSource));
+      await dispatch(actions.loadSourceText(source));
+      await dispatch(actions.loadSourceText(originalSource));
 
       await dispatch(actions.paused(mockPauseInfo));
       expect(selectors.getFrames(getState())).toEqual([

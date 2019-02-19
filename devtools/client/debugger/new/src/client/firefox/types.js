@@ -21,7 +21,6 @@ import type {
   Frame,
   SourceId,
   Worker,
-  SourceActor,
   Range
 } from "../../types";
 
@@ -120,11 +119,6 @@ export type SourcesPacket = {
   from: ActorId,
   sources: SourcePayload[]
 };
-
-export type CreateSourceResult = {|
-  sourceActor?: SourceActor,
-  +source: Source
-|};
 
 /**
  * Pause Packet sent when the server is in a "paused" state

@@ -4,7 +4,7 @@
 
 // @flow
 
-import { createSource } from "../../../reducers/sources";
+import { makeMockSource } from "../../../utils/test-mockup";
 
 import { getDirectories, createTree } from "../index";
 
@@ -16,7 +16,7 @@ function formatDirectories(source, tree) {
 function createSources(urls) {
   return urls.reduce((sources, url, index) => {
     const id = `a${index}`;
-    sources[id] = createSource({ url, id });
+    sources[id] = makeMockSource(url, id);
     return sources;
   }, {});
 }
