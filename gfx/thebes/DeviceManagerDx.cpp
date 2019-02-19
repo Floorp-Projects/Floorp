@@ -102,8 +102,7 @@ bool DeviceManagerDx::LoadD3D11() {
 }
 
 bool DeviceManagerDx::LoadDcomp() {
-  FeatureState& d3d11 = gfxConfig::GetFeature(Feature::D3D11_COMPOSITING);
-  MOZ_ASSERT(d3d11.IsEnabled());
+  MOZ_ASSERT(gfxConfig::GetFeature(Feature::D3D11_COMPOSITING).IsEnabled());
   MOZ_ASSERT(gfxVars::UseWebRender());
   MOZ_ASSERT(gfxVars::UseWebRenderANGLE());
   MOZ_ASSERT(gfxVars::UseWebRenderDCompWin());
@@ -168,11 +167,13 @@ nsTArray<DXGI_OUTPUT_DESC1> DeviceManagerDx::EnumerateOutputs() {
   return outputs;
 }
 
+#ifdef DEBUG
 static inline bool ProcessOwnsCompositor() {
   return XRE_GetProcessType() == GeckoProcessType_GPU ||
          XRE_GetProcessType() == GeckoProcessType_VR ||
          (XRE_IsParentProcess() && !gfxConfig::IsEnabled(Feature::GPU_PROCESS));
 }
+#endif
 
 bool DeviceManagerDx::CreateCompositorDevices() {
   MOZ_ASSERT(ProcessOwnsCompositor());
