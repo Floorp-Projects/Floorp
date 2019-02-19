@@ -95,7 +95,7 @@ double EstimateCompiledCodeSize(Tier tier, size_t bytecodeSize);
 SharedModule CompileBuffer(const CompileArgs& args,
                            const ShareableBytes& bytecode, UniqueChars* error,
                            UniqueCharsVector* warnings,
-                           UniqueLinkData* maybeLinkData = nullptr);
+                           JS::OptimizedEncodingListener* listener = nullptr);
 
 // Attempt to compile the second tier of the given wasm::Module.
 

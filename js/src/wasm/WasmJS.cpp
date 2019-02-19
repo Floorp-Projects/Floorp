@@ -452,6 +452,24 @@ bool wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code,
                              globalObjs.get(), nullptr, instanceObj);
 }
 
+struct MOZ_STACK_CLASS SerializeListener : JS::OptimizedEncodingListener {
+  // MOZ_STACK_CLASS means these can be nops.
+  MozExternalRefCountType MOZ_XPCOM_ABI AddRef() override { return 0; }
+  MozExternalRefCountType MOZ_XPCOM_ABI Release() override { return 0; }
+
+  DebugOnly<bool> called = false;
+  Bytes* serialized;
+  explicit SerializeListener(Bytes* serialized) : serialized(serialized) {}
+
+  void storeOptimizedEncoding(const uint8_t* bytes, size_t length) override {
+    MOZ_ASSERT(!called);
+    called = true;
+    if (serialized->resize(length)) {
+      memcpy(serialized->begin(), bytes, length);
+    }
+  }
+};
+
 bool wasm::CompileAndSerialize(const ShareableBytes& bytecode,
                                Bytes* serialized) {
   MutableCompileArgs compileArgs = js_new<CompileArgs>(ScriptedCaller());
@@ -459,28 +477,26 @@ bool wasm::CompileAndSerialize(const ShareableBytes& bytecode,
     return false;
   }
 
-  // The caller has ensured HasCachingSupport().
+  // The caller has ensured HasCachingSupport(). Moreover, we want to ensure
+  // we go straight to tier-2 so that we synchronously call
+  // JS::OptimizedEncodingListener::storeOptimizedEncoding().
+  compileArgs->baselineEnabled = false;
   compileArgs->ionEnabled = true;
+
+  SerializeListener listener(serialized);
 
   UniqueChars error;
   UniqueCharsVector warnings;
-  UniqueLinkData linkData;
   SharedModule module =
-      CompileBuffer(*compileArgs, bytecode, &error, &warnings, &linkData);
+      CompileBuffer(*compileArgs, bytecode, &error, &warnings, &listener);
   if (!module) {
     fprintf(stderr, "Compilation error: %s\n", error ? error.get() : "oom");
     return false;
   }
 
   MOZ_ASSERT(module->code().hasTier(Tier::Serialized));
-
-  size_t serializedSize = module->serializedSize(*linkData);
-  if (!serialized->resize(serializedSize)) {
-    return false;
-  }
-
-  module->serialize(*linkData, serialized->begin(), serialized->length());
-  return true;
+  MOZ_ASSERT(listener.called);
+  return !listener.serialized->empty();
 }
 
 bool wasm::DeserializeModule(JSContext* cx, const Bytes& serialized,

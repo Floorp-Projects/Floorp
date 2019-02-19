@@ -64,7 +64,8 @@ RefPtr<mozilla::layers::Image> RemoteVideoDecoderChild::DeserializeImage(
   // images coming from AOMDecoder are RecyclingPlanarYCbCrImages.
   RefPtr<RecyclingPlanarYCbCrImage> image =
       new RecyclingPlanarYCbCrImage(mBufferRecycleBin);
-  image->CopyData(pData);
+  bool setData = image->CopyData(pData);
+  MOZ_ASSERT(setData);
 
   switch (memOrShmem.type()) {
     case MemoryOrShmem::Tuintptr_t:
@@ -75,6 +76,10 @@ RefPtr<mozilla::layers::Image> RemoteVideoDecoderChild::DeserializeImage(
       break;
     default:
       MOZ_ASSERT(false, "Unknown MemoryOrShmem type");
+  }
+
+  if (!setData) {
+    return nullptr;
   }
 
   return image;
