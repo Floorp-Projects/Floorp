@@ -4171,9 +4171,7 @@ bool js::detail::CopyScript(JSContext* cx, HandleScript src,
   }
 
   if (cx->zone() != src->zoneFromAnyThread()) {
-    for (size_t i = 0; i < src->scriptData()->natoms(); i++) {
-      cx->markAtom(src->scriptData()->atoms()[i]);
-    }
+    src->scriptData()->markForCrossZone(cx);
   }
 
   /* Script filenames, bytecodes and atoms are runtime-wide. */
@@ -4470,6 +4468,12 @@ void SharedScriptData::traceChildren(JSTracer* trc) {
   MOZ_ASSERT(refCount() != 0);
   for (uint32_t i = 0; i < natoms(); ++i) {
     TraceNullableEdge(trc, &atoms()[i], "atom");
+  }
+}
+
+void SharedScriptData::markForCrossZone(JSContext* cx) {
+  for (uint32_t i = 0; i < natoms(); ++i) {
+    cx->markAtom(atoms()[i]);
   }
 }
 
