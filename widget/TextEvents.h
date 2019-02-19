@@ -1163,6 +1163,8 @@ class InternalEditorInputEvent : public InternalUIEvent {
     return result;
   }
 
+  nsString mData;
+
   EditorInputType mInputType;
 
   bool mIsComposing;
@@ -1171,6 +1173,7 @@ class InternalEditorInputEvent : public InternalUIEvent {
                                   bool aCopyTargets) {
     AssignUIEventData(aEvent, aCopyTargets);
 
+    mData = aEvent.mData;
     mInputType = aEvent.mInputType;
     mIsComposing = aEvent.mIsComposing;
   }
