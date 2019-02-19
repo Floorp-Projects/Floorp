@@ -21,6 +21,7 @@ $item-line-height: 20;
     // XXX see if we really want absolute units, maybe hoist somewhere central?
     font-size: $font-size * 1px;
     line-height: $line-height * 1px;
+    position: relative;
   }
 
   .ds-list-item-title {

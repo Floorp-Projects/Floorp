@@ -267,6 +267,8 @@ this.TelemetryFeed = class TelemetryFeed {
       return;
     }
 
+    this.sendDiscoveryStreamImpressions(portID, session);
+
     if (session.perf.visibility_event_rcvd_ts) {
       session.session_duration = Math.round(perfService.absNow() - session.perf.visibility_event_rcvd_ts);
     }
@@ -275,6 +277,27 @@ this.TelemetryFeed = class TelemetryFeed {
     this.sendEvent(sessionEndEvent);
     this.sendUTEvent(sessionEndEvent, this.utEvents.sendSessionEndEvent);
     this.sessions.delete(portID);
+  }
+
+  /**
+   * Send impression pings for Discovery Stream for a given session.
+   *
+   * @note the impression reports are stored in session.impressionSets for different
+   * sources, and will be sent separately accordingly.
+   *
+   * @param {String} port  The session port with which this is associated
+   * @param {Object} session  The session object
+   */
+  sendDiscoveryStreamImpressions(port, session) {
+    const {impressionSets} = session;
+
+    if (!impressionSets) {
+      return;
+    }
+
+    Object.keys(impressionSets).forEach(source => {
+      this.sendEvent(this.createImpressionStats(port, {source, tiles: impressionSets[source]}));
+    });
   }
 
   /**
@@ -332,14 +355,14 @@ this.TelemetryFeed = class TelemetryFeed {
   /**
    * createImpressionStats - Create a ping for an impression stats
    *
-   * @param  {ob} action The object with data to be included in the ping.
-   *                     For some user interactions.
+   * @param  {string} portID The portID of the open session
+   * @param  {ob} data The data object to be included in the ping.
    * @return {obj}    A telemetry ping
    */
-  createImpressionStats(action) {
+  createImpressionStats(portID, data) {
     return Object.assign(
-      this.createPing(au.getPortIdOfSender(action)),
-      action.data,
+      this.createPing(portID),
+      data,
       {
         action: "activity_stream_impression_stats",
         impression_id: this._impressionId,
@@ -473,7 +496,7 @@ this.TelemetryFeed = class TelemetryFeed {
   }
 
   handleImpressionStats(action) {
-    this.sendEvent(this.createImpressionStats(action));
+    this.sendEvent(this.createImpressionStats(au.getPortIdOfSender(action), action.data));
   }
 
   handleUserEvent(action) {
@@ -571,6 +594,9 @@ this.TelemetryFeed = class TelemetryFeed {
       case at.TELEMETRY_IMPRESSION_STATS:
         this.handleImpressionStats(action);
         break;
+      case at.DISCOVERY_STREAM_IMPRESSION_STATS:
+        this.handleDiscoveryStreamImpressionStats(au.getPortIdOfSender(action), action.data);
+        break;
       case at.TELEMETRY_UNDESIRED_EVENT:
         this.handleUndesiredEvent(action);
         break;
@@ -587,6 +613,33 @@ this.TelemetryFeed = class TelemetryFeed {
         this.uninit();
         break;
     }
+  }
+
+  /**
+   * Handle impression stats actions from Discovery Stream. The data will be
+   * stored into the session.impressionSets object for the given port, so that
+   * it is sent to the server when the session ends.
+   *
+   * @note session.impressionSets will be keyed on `source` of the `data`,
+   * all the data will be appended to an array for the same source.
+   *
+   * @param {String} port  The session port with which this is associated
+   * @param {Object} data  The impression data structured as {source: "SOURCE", tiles: [{id: 123}]}
+   *
+   */
+  handleDiscoveryStreamImpressionStats(port, data) {
+    let session = this.sessions.get(port);
+
+    if (!session) {
+      throw new Error("Session does not exist.");
+    }
+
+    const impressionSets = session.impressionSets || {};
+    const impressions = impressionSets[data.source] || [];
+    // The payload might contain other properties, we only need `id` here.
+    data.tiles.forEach(tile => impressions.push({id: tile.id}));
+    impressionSets[data.source] = impressions;
+    session.impressionSets = impressionSets;
   }
 
   /**

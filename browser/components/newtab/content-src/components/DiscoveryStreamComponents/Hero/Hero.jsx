@@ -1,5 +1,6 @@
 import {actionCreators as ac} from "common/Actions.jsm";
 import {DSCard} from "../DSCard/DSCard.jsx";
+import {ImpressionStats} from "../../DiscoveryStreamImpressionStats/ImpressionStats";
 import {List} from "../List/List.jsx";
 import React from "react";
 import {SafeAnchor} from "../SafeAnchor/SafeAnchor";
@@ -42,7 +43,6 @@ export class Hero extends React.PureComponent {
     // Note that `{index + 1}` is necessary below for telemetry since we treat heroRec as index 0.
     let cards = otherRecs.map((rec, index) => (
       <DSCard
-        campaignId={rec.campaign_id}
         key={`dscard-${index}`}
         image_src={rec.image_src}
         title={rec.title}
@@ -84,6 +84,11 @@ export class Hero extends React.PureComponent {
                 <p className="source">{heroRec.domain}</p>
               )}
             </div>
+            <ImpressionStats
+              campaignId={heroRec.campaignId}
+              rows={[{id: heroRec.id}]}
+              dispatch={this.props.dispatch}
+              source={this.props.type} />
           </SafeAnchor>
           <div className={`${this.props.subComponentType}`}>
             { this.props.subComponentType === `cards` ? cards : list }

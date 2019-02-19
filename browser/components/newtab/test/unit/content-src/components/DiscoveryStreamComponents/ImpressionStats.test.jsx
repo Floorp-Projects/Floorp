@@ -1,14 +1,35 @@
+"use strict";
+
+import {ImpressionStats, INTERSECTION_RATIO} from "content-src/components/DiscoveryStreamImpressionStats/ImpressionStats";
 import {actionTypes as at} from "common/Actions.jsm";
-import {ImpressionStats} from "content-src/components/DiscoveryStreamImpressionStats/ImpressionStats";
 import React from "react";
 import {shallow} from "enzyme";
 
-const SOURCE = "TEST_SOURCE";
-
 describe("<ImpressionStats>", () => {
+  const SOURCE = "TEST_SOURCE";
+  const FullIntersectEntries = [{isIntersecting: true, intersectionRatio: INTERSECTION_RATIO}];
+  const ZeroIntersectEntries = [{isIntersecting: false, intersectionRatio: 0}];
+  const PartialIntersectEntries = [{isIntersecting: true, intersectionRatio: INTERSECTION_RATIO / 2}];
+
+  // Build IntersectionObserver class with the arg `entries` for the intersect callback.
+  function buildIntersectionObserver(entries) {
+    return class {
+      constructor(callback) {
+        this.callback = callback;
+      }
+
+      observe() {
+        this.callback(entries);
+      }
+
+      unobserve() {}
+    };
+  }
+
   const DEFAULT_PROPS = {
     rows: [{id: 1}, {id: 2}, {id: 3}],
     source: SOURCE,
+    IntersectionObserver: buildIntersectionObserver(FullIntersectEntries),
     document: {
       visibilityState: "visible",
       addEventListener: sinon.stub(),
@@ -28,64 +49,76 @@ describe("<ImpressionStats>", () => {
     const wrapper = renderImpressionStats();
     assert.ok(wrapper.contains(<InnerEl />));
   });
-  it("should send impression with the right stats when the page loads", () => {
+  it("should not send impression when the wrapped item is not visbible", () => {
     const dispatch = sinon.spy();
-    const props = {dispatch};
+    const props = {dispatch, IntersectionObserver: buildIntersectionObserver(ZeroIntersectEntries)};
+    renderImpressionStats(props);
+
+    assert.notCalled(dispatch);
+  });
+  it("should not send impression when the wrapped item is visbible but below the ratio", () => {
+    const dispatch = sinon.spy();
+    const props = {dispatch, IntersectionObserver: buildIntersectionObserver(PartialIntersectEntries)};
+    renderImpressionStats(props);
+
+    assert.notCalled(dispatch);
+  });
+  it("should not send impression when the page is not visible", () => {
+    const dispatch = sinon.spy();
+    const props = {
+      dispatch,
+      document: {
+        visibilityState: "hidden",
+        addEventListener: sinon.spy(),
+        removeEventListener: sinon.spy(),
+      },
+    };
+    renderImpressionStats(props);
+
+    assert.notCalled(dispatch);
+  });
+  it("should send an impression when the page is visible and the wrapped item meets the visibility ratio", () => {
+    const dispatch = sinon.spy();
+    const props = {dispatch, IntersectionObserver: buildIntersectionObserver(FullIntersectEntries)};
     renderImpressionStats(props);
 
     assert.calledOnce(dispatch);
 
     const [action] = dispatch.firstCall.args;
-    assert.equal(action.type, at.TELEMETRY_IMPRESSION_STATS);
+    assert.equal(action.type, at.DISCOVERY_STREAM_IMPRESSION_STATS);
     assert.equal(action.data.source, SOURCE);
     assert.deepEqual(action.data.tiles, [{id: 1}, {id: 2}, {id: 3}]);
   });
-  it("should send 1 impression when the page becomes visibile after loading", () => {
-    const props = {
-      document: {
-        visibilityState: "hidden",
-        addEventListener: sinon.spy(),
-        removeEventListener: sinon.spy(),
-      },
-      dispatch: sinon.spy(),
-    };
-
+  it("should send a DISCOVERY_STREAM_SPOC_IMPRESSION when the wrapped item has a campaignId", () => {
+    const dispatch = sinon.spy();
+    const campaignId = "a_campaign_id";
+    const props = {dispatch, campaignId, IntersectionObserver: buildIntersectionObserver(FullIntersectEntries)};
     renderImpressionStats(props);
 
-    // Was the event listener added?
-    assert.calledWith(props.document.addEventListener, "visibilitychange");
+    assert.calledTwice(dispatch);
 
-    // Make sure dispatch wasn't called yet
-    assert.notCalled(props.dispatch);
-
-    // Simulate a visibilityChange event
-    const [, listener] = props.document.addEventListener.firstCall.args;
-    props.document.visibilityState = "visible";
-    listener();
-
-    // Did we actually dispatch an event?
-    assert.calledOnce(props.dispatch);
-    assert.equal(props.dispatch.firstCall.args[0].type, at.TELEMETRY_IMPRESSION_STATS);
-
-    // Did we remove the event listener?
-    assert.calledWith(props.document.removeEventListener, "visibilitychange", listener);
+    const [action] = dispatch.firstCall.args;
+    assert.equal(action.type, at.DISCOVERY_STREAM_SPOC_IMPRESSION);
+    assert.deepEqual(action.data, {campaignId});
   });
-  it("should remove visibility change listener when wrapper is removed", () => {
-    const props = {
-      dispatch: sinon.spy(),
-      document: {
-        visibilityState: "hidden",
-        addEventListener: sinon.spy(),
-        removeEventListener: sinon.spy(),
-      },
-    };
-
+  it("should send an impression when the wrapped item transiting from invisible to visible", () => {
+    const dispatch = sinon.spy();
+    const props = {dispatch, IntersectionObserver: buildIntersectionObserver(ZeroIntersectEntries, false)};
     const wrapper = renderImpressionStats(props);
-    assert.calledWith(props.document.addEventListener, "visibilitychange");
-    const [, listener] = props.document.addEventListener.firstCall.args;
 
-    wrapper.unmount();
-    assert.calledWith(props.document.removeEventListener, "visibilitychange", listener);
+    assert.notCalled(dispatch);
+
+    // Simulating the full intersection change with a row change
+    wrapper.setProps({
+      ...props,
+      ...{rows: [{id: 1}, {id: 2}, {id: 3}]},
+      ...{IntersectionObserver: buildIntersectionObserver(FullIntersectEntries)},
+    });
+
+    assert.calledOnce(dispatch);
+
+    const [action] = dispatch.firstCall.args;
+    assert.deepEqual(action.data.tiles, [{id: 1}, {id: 2}, {id: 3}]);
   });
   it("should send an impression if props are updated and props.rows are different", () => {
     const props = {dispatch: sinon.spy()};
@@ -105,6 +138,34 @@ describe("<ImpressionStats>", () => {
     wrapper.setProps(DEFAULT_PROPS);
 
     assert.notCalled(props.dispatch);
+  });
+  it("should remove visibility change listener when the wrapper is removed", () => {
+    const props = {
+      dispatch: sinon.spy(),
+      document: {
+        visibilityState: "hidden",
+        addEventListener: sinon.spy(),
+        removeEventListener: sinon.spy(),
+      },
+      IntersectionObserver,
+    };
+
+    const wrapper = renderImpressionStats(props);
+    assert.calledWith(props.document.addEventListener, "visibilitychange");
+    const [, listener] = props.document.addEventListener.firstCall.args;
+
+    wrapper.unmount();
+    assert.calledWith(props.document.removeEventListener, "visibilitychange", listener);
+  });
+  it("should unobserve the intersection observer when the wrapper is removed", () => {
+    const IntersectionObserver = buildIntersectionObserver(ZeroIntersectEntries);
+    const spy = sinon.spy(IntersectionObserver.prototype, "unobserve");
+    const props = {dispatch: sinon.spy(), IntersectionObserver};
+
+    const wrapper = renderImpressionStats(props);
+    wrapper.unmount();
+
+    assert.calledOnce(spy);
   });
   it("should only send the latest impression on a visibility change", () => {
     const listeners = new Set();
