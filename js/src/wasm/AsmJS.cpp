@@ -2074,7 +2074,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
                       str);
   }
 
-  SharedModule finish(UniqueLinkData* linkData) {
+  SharedModule finish() {
     MOZ_ASSERT(env_.funcTypes.empty());
     if (!env_.funcTypes.resize(funcImportMap_.count() + funcDefs_.length())) {
       return nullptr;
@@ -2167,7 +2167,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
       return nullptr;
     }
 
-    return mg.finishModule(*bytes, nullptr, linkData);
+    return mg.finishModule(*bytes);
   }
 };
 
@@ -6350,8 +6350,7 @@ static bool CheckModuleEnd(ModuleValidator<Unit>& m) {
 
 template <typename Unit>
 static SharedModule CheckModule(JSContext* cx, AsmJSParser<Unit>& parser,
-                                ParseNode* stmtList, UniqueLinkData* linkData,
-                                unsigned* time) {
+                                ParseNode* stmtList, unsigned* time) {
   int64_t before = PRMJ_Now();
 
   FunctionNode* moduleFunctionNode = parser.pc->functionBox()->functionNode;
@@ -6401,7 +6400,7 @@ static SharedModule CheckModule(JSContext* cx, AsmJSParser<Unit>& parser,
     return nullptr;
   }
 
-  SharedModule module = m.finish(linkData);
+  SharedModule module = m.finish();
   if (!module) {
     return nullptr;
   }
@@ -7068,18 +7067,12 @@ static bool DoCompileAsmJS(JSContext* cx, AsmJSParser<Unit>& parser,
     return NoExceptionPending(cx);
   }
 
-  // Validate and generate code in a single linear pass over the chars of the
-  // asm.js module.
-  SharedModule module;
+  // "Checking" parses, validates and compiles, producing a fully compiled
+  // WasmModuleObject as result.
   unsigned time;
-  {
-    // "Checking" parses, validates and compiles, producing a fully compiled
-    // WasmModuleObject as result.
-    UniqueLinkData linkData;
-    module = CheckModule(cx, parser, stmtList, &linkData, &time);
-    if (!module) {
-      return NoExceptionPending(cx);
-    }
+  SharedModule module = CheckModule(cx, parser, stmtList, &time);
+  if (!module) {
+    return NoExceptionPending(cx);
   }
 
   // Hand over ownership to a GC object wrapper which can then be referenced
