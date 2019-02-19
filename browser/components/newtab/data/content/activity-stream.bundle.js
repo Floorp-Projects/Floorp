@@ -7352,13 +7352,17 @@ class List_ListItem extends external_React_default.a.PureComponent {
           { className: "ds-list-item-text" },
           external_React_default.a.createElement(
             "div",
-            { className: "ds-list-item-title" },
-            this.props.title
-          ),
-          this.props.excerpt && external_React_default.a.createElement(
-            "div",
-            { className: "ds-list-item-excerpt" },
-            this.props.excerpt
+            null,
+            external_React_default.a.createElement(
+              "div",
+              { className: "ds-list-item-title" },
+              this.props.title
+            ),
+            this.props.excerpt && external_React_default.a.createElement(
+              "div",
+              { className: "ds-list-item-excerpt" },
+              this.props.excerpt
+            )
           ),
           external_React_default.a.createElement(
             "p",

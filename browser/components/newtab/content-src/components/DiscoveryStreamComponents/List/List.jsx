@@ -36,8 +36,10 @@ export class ListItem extends React.PureComponent {
       <li className="ds-list-item">
         <SafeAnchor url={this.props.url} className="ds-list-item-link" onLinkClick={this.onLinkClick}>
           <div className="ds-list-item-text">
-            <div className="ds-list-item-title">{this.props.title}</div>
-            {this.props.excerpt && <div className="ds-list-item-excerpt">{this.props.excerpt}</div>}
+            <div>
+              <div className="ds-list-item-title">{this.props.title}</div>
+              {this.props.excerpt && <div className="ds-list-item-excerpt">{this.props.excerpt}</div>}
+            </div>
             <p>
               {this.props.context && (
                 <span>
