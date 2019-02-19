@@ -785,6 +785,33 @@ class ActivePS {
   }
 #endif
 
+  static void ClearExpiredExitProfiles(PSLockRef) {
+    uint64_t bufferRangeStart = sInstance->mBuffer->mRangeStart;
+    // Discard exit profiles that were gathered before our buffer RangeStart.
+    sInstance->mExitProfiles.RemoveElementsBy(
+        [bufferRangeStart](const ExitProfile& aExitProfile) {
+          return aExitProfile.mBufferPositionAtGatherTime < bufferRangeStart;
+        });
+  }
+
+  static void AddExitProfile(PSLockRef aLock, const nsCString& aExitProfile) {
+    ClearExpiredExitProfiles(aLock);
+
+    sInstance->mExitProfiles.AppendElement(
+        ExitProfile{aExitProfile, sInstance->mBuffer->mRangeEnd});
+  }
+
+  static nsTArray<nsCString> MoveExitProfiles(PSLockRef aLock) {
+    ClearExpiredExitProfiles(aLock);
+
+    nsTArray<nsCString> profiles(sInstance->mExitProfiles.Length());
+    for (auto& profile : sInstance->mExitProfiles) {
+      profiles.AppendElement(std::move(profile.mJSON));
+    }
+    sInstance->mExitProfiles.Clear();
+    return profiles;
+  }
+
  private:
   // The singleton instance.
   static ActivePS* sInstance;
@@ -858,6 +885,12 @@ class ActivePS {
   // at all times except just before/after forking.
   bool mWasPaused;
 #endif
+
+  struct ExitProfile {
+    nsCString mJSON;
+    uint64_t mBufferPositionAtGatherTime;
+  };
+  nsTArray<ExitProfile> mExitProfiles;
 };
 
 ActivePS* ActivePS::sInstance = nullptr;
@@ -2278,6 +2311,8 @@ void SamplerThread::Run() {
         return;
       }
 
+      ActivePS::ClearExpiredExitProfiles(lock);
+
       ActivePS::Buffer(lock).DeleteExpiredStoredMarkers();
       TimeStamp expiredMarkersCleaned = TimeStamp::Now();
 
@@ -2988,6 +3023,25 @@ void GetProfilerEnvVarsForChildProcess(
 
 }  // namespace mozilla
 
+void profiler_received_exit_profile(const nsCString& aExitProfile) {
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+  PSAutoLock lock(gPSMutex);
+  if (!ActivePS::Exists(lock)) {
+    return;
+  }
+  ActivePS::AddExitProfile(lock, aExitProfile);
+}
+
+nsTArray<nsCString> profiler_move_exit_profiles() {
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+  PSAutoLock lock(gPSMutex);
+  nsTArray<nsCString> profiles;
+  if (ActivePS::Exists(lock)) {
+    profiles = ActivePS::MoveExitProfiles(lock);
+  }
+  return profiles;
+}
+
 static void locked_profiler_save_profile_to_file(PSLockRef aLock,
                                                  const char* aFilename,
                                                  bool aIsShuttingDown = false) {
@@ -3004,9 +3058,13 @@ static void locked_profiler_save_profile_to_file(PSLockRef aLock,
       locked_profiler_stream_json_for_this_process(aLock, w, /* sinceTime */ 0,
                                                    aIsShuttingDown);
 
-      // Don't include profiles from other processes because this is a
-      // synchronous function.
       w.StartArrayProperty("processes");
+      nsTArray<nsCString> exitProfiles = ActivePS::MoveExitProfiles(aLock);
+      for (auto& exitProfile : exitProfiles) {
+        if (!exitProfile.IsEmpty()) {
+          w.Splice(exitProfile.get());
+        }
+      }
       w.EndArray();
     }
     w.End();

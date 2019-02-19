@@ -129,7 +129,6 @@ nsProfiler::StopProfiler() {
   if (mPromiseHolder.isSome()) {
     mPromiseHolder->RejectIfExists(NS_ERROR_DOM_ABORT_ERR, __func__);
   }
-  mExitProfiles.Clear();
   ResetGathering();
 
   profiler_stop();
@@ -563,21 +562,7 @@ void nsProfiler::GatheredOOPProfile(const nsACString& aProfile) {
 
 void nsProfiler::ReceiveShutdownProfile(const nsCString& aProfile) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-  Maybe<ProfilerBufferInfo> bufferInfo = profiler_get_buffer_info();
-  if (!bufferInfo) {
-    // The profiler is not running. Discard the profile.
-    return;
-  }
-
-  // Append the exit profile to mExitProfiles so that it can be picked up when
-  // a profile is requested.
-  uint64_t bufferPosition = bufferInfo->mRangeEnd;
-  mExitProfiles.AppendElement(ExitProfile{aProfile, bufferPosition});
-
-  // This is a good time to clear out exit profiles whose time ranges have no
-  // overlap with this process's profile buffer contents any more.
-  ClearExpiredExitProfiles();
+  profiler_received_exit_profile(aProfile);
 }
 
 RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
@@ -616,12 +601,11 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
 
   mWriter->StartArrayProperty("processes");
 
-  ClearExpiredExitProfiles();
-
   // If we have any process exit profiles, add them immediately.
-  for (auto& exitProfile : mExitProfiles) {
-    if (!exitProfile.mJSON.IsEmpty()) {
-      mWriter->Splice(exitProfile.mJSON.get());
+  nsTArray<nsCString> exitProfiles = profiler_move_exit_profiles();
+  for (auto& exitProfile : exitProfiles) {
+    if (!exitProfile.IsEmpty()) {
+      mWriter->Splice(exitProfile.get());
     }
   }
 
@@ -719,15 +703,4 @@ void nsProfiler::ResetGathering() {
   mPendingProfiles = 0;
   mGathering = false;
   mWriter.reset();
-}
-
-void nsProfiler::ClearExpiredExitProfiles() {
-  Maybe<ProfilerBufferInfo> bufferInfo = profiler_get_buffer_info();
-  MOZ_RELEASE_ASSERT(bufferInfo,
-                     "the profiler should be running at the moment");
-  uint64_t bufferRangeStart = bufferInfo->mRangeStart;
-  // Discard any exit profiles that were gathered before bufferRangeStart.
-  mExitProfiles.RemoveElementsBy([bufferRangeStart](ExitProfile& aExitProfile) {
-    return aExitProfile.mBufferPositionAtGatherTime < bufferRangeStart;
-  });
 }
