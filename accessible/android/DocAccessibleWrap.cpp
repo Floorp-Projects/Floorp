@@ -140,11 +140,13 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
       accessible->Value(textValue);
       nsAutoString nodeID;
       static_cast<AccessibleWrap*>(accessible)->WrapperDOMNodeID(nodeID);
+      nsAutoString description;
+      accessible->Description(description);
 
       cacheData.AppendElement(
           BatchData(accessible->Document()->IPCDoc(), uid, accessible->State(),
                     accessible->Bounds(), accessible->ActionCount(), name,
-                    textValue, nodeID, UnspecifiedNaN<double>(),
+                    textValue, nodeID, description, UnspecifiedNaN<double>(),
                     UnspecifiedNaN<double>(), UnspecifiedNaN<double>(),
                     UnspecifiedNaN<double>(), nsTArray<Attribute>()));
     }
@@ -205,13 +207,16 @@ void DocAccessibleWrap::CacheFocusPath(AccessibleWrap* aAccessible) {
       acc->Value(textValue);
       nsAutoString nodeID;
       acc->WrapperDOMNodeID(nodeID);
+      nsAutoString description;
+      acc->Description(description);
       nsCOMPtr<nsIPersistentProperties> props = acc->Attributes();
       nsTArray<Attribute> attributes;
       nsAccUtils::PersistentPropertiesToArray(props, &attributes);
-      cacheData.AppendElement(BatchData(
-          acc->Document()->IPCDoc(), uid, acc->State(), acc->Bounds(),
-          acc->ActionCount(), name, textValue, nodeID, acc->CurValue(),
-          acc->MinValue(), acc->MaxValue(), acc->Step(), attributes));
+      cacheData.AppendElement(
+          BatchData(acc->Document()->IPCDoc(), uid, acc->State(), acc->Bounds(),
+                    acc->ActionCount(), name, textValue, nodeID, description,
+                    acc->CurValue(), acc->MinValue(), acc->MaxValue(),
+                    acc->Step(), attributes));
       mFocusPath.Put(acc->UniqueID(), acc);
     }
 
@@ -247,11 +252,12 @@ void DocAccessibleWrap::UpdateFocusPathBounds() {
       auto uid = accessible->IsDoc() && accessible->AsDoc()->IPCDoc()
                      ? 0
                      : reinterpret_cast<uint64_t>(accessible->UniqueID());
-      boundsData.AppendElement(BatchData(
-          accessible->Document()->IPCDoc(), uid, 0, accessible->Bounds(), 0,
-          nsString(), nsString(), nsString(), UnspecifiedNaN<double>(),
-          UnspecifiedNaN<double>(), UnspecifiedNaN<double>(),
-          UnspecifiedNaN<double>(), nsTArray<Attribute>()));
+      boundsData.AppendElement(
+          BatchData(accessible->Document()->IPCDoc(), uid, 0,
+                    accessible->Bounds(), 0, nsString(), nsString(), nsString(),
+                    nsString(), UnspecifiedNaN<double>(),
+                    UnspecifiedNaN<double>(), UnspecifiedNaN<double>(),
+                    UnspecifiedNaN<double>(), nsTArray<Attribute>()));
     }
 
     ipcDoc->SendBatch(eBatch_BoundsUpdate, boundsData);
