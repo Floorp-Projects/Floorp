@@ -1126,12 +1126,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetPerspectiveOrigin() {
   return valueList.forget();
 }
 
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetPerspective() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueToCoord(val, StyleDisplay()->mChildPerspective, false);
-  return val.forget();
-}
-
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTransform() {
   const nsStyleDisplay* display = StyleDisplay();
   return GetTransformValue(display->mSpecifiedTransform);
@@ -1998,12 +1992,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetCSSShadowArray(
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetBoxShadow() {
   return GetCSSShadowArray(StyleEffects()->mBoxShadow, true);
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetZIndex() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueToCoord(val, StylePosition()->mZIndex, false);
-  return val.forget();
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetInitialLetter() {

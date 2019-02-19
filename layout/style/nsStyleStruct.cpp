@@ -1317,7 +1317,7 @@ nsStylePosition::nsStylePosition(const Document& aDocument)
       mOrder(NS_STYLE_ORDER_INITIAL),
       mFlexGrow(0.0f),
       mFlexShrink(1.0f),
-      mZIndex(eStyleUnit_Auto),
+      mZIndex(StyleZIndex::Auto()),
       mColumnGap(eStyleUnit_Normal),
       mRowGap(eStyleUnit_Normal) {
   MOZ_COUNT_CTOR(nsStylePosition);
@@ -2937,7 +2937,7 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
           {0.5f, eStyleUnit_Percent},  // Transform is centered on origin
           {0.5f, eStyleUnit_Percent},
           {0, nsStyleCoord::CoordConstructor}},
-      mChildPerspective(eStyleUnit_None),
+      mChildPerspective(StylePerspective::None()),
       mPerspectiveOrigin{{0.5f, eStyleUnit_Percent},
                          {0.5f, eStyleUnit_Percent}},
       mVerticalAlign(NS_STYLE_VERTICAL_ALIGN_BASELINE, eStyleUnit_Enumerated),
