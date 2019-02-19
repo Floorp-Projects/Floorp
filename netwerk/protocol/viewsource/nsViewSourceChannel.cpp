@@ -1045,7 +1045,7 @@ nsViewSourceChannel::LogMimeTypeMismatch(const nsACString &aMessageName,
                                            aContentType);
 }
 
-const nsTArray<mozilla::Tuple<nsCString, nsCString>>
+const nsTArray<mozilla::net::PreferredAlternativeDataTypeParams>
     &nsViewSourceChannel::PreferredAlternativeDataTypes() {
   if (mCacheInfoChannel) {
     return mCacheInfoChannel->PreferredAlternativeDataTypes();
