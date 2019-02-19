@@ -552,8 +552,8 @@ struct nsStyleImageLayers {
 
     // mask-only property. This property is used for mask layer only. For a
     // background layer, it should always be the initial value, which is
-    // NS_STYLE_MASK_MODE_MATCH_SOURCE.
-    uint8_t mMaskMode;  // NS_STYLE_MASK_MODE_*
+    // StyleMaskMode::MatchSource.
+    mozilla::StyleMaskMode mMaskMode;
 
     Repeat mRepeat;
 

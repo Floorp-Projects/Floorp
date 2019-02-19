@@ -274,9 +274,11 @@ enum class StyleImageLayerRepeat : uint8_t {
 };
 
 // Mask mode
-#define NS_STYLE_MASK_MODE_ALPHA 0
-#define NS_STYLE_MASK_MODE_LUMINANCE 1
-#define NS_STYLE_MASK_MODE_MATCH_SOURCE 2
+enum class StyleMaskMode : uint8_t {
+  Alpha = 0,
+  Luminance,
+  MatchSource
+};
 
 // See nsStyleTable
 #define NS_STYLE_BORDER_COLLAPSE 0
