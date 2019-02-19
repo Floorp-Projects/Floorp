@@ -1078,7 +1078,7 @@ bool js::IsCrossRealmArrayConstructor(JSContext* cx, const Value& v,
 
   JSObject* obj = &v.toObject();
   if (obj->is<WrapperObject>()) {
-    obj = CheckedUnwrap(obj);
+    obj = CheckedUnwrapDynamic(obj, cx);
     if (!obj) {
       ReportAccessDenied(cx);
       return false;

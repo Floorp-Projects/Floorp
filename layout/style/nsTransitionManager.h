@@ -22,7 +22,7 @@ class nsCSSPropertyIDSet;
 
 namespace mozilla {
 class ComputedStyle;
-enum class CSSPseudoElementType : uint8_t;
+enum class PseudoStyleType : uint8_t;
 struct Keyframe;
 struct StyleTransition;
 }  // namespace mozilla
@@ -296,7 +296,7 @@ class nsTransitionManager final
    * Update transitions for stylo.
    */
   bool UpdateTransitions(mozilla::dom::Element* aElement,
-                         mozilla::CSSPseudoElementType aPseudoType,
+                         mozilla::PseudoStyleType aPseudoType,
                          const mozilla::ComputedStyle& aOldStyle,
                          const mozilla::ComputedStyle& aNewStyle);
 
@@ -311,7 +311,7 @@ class nsTransitionManager final
   // could be a nullptr if we don't have any transitions.
   bool DoUpdateTransitions(const nsStyleDisplay& aDisp,
                            mozilla::dom::Element* aElement,
-                           mozilla::CSSPseudoElementType aPseudoType,
+                           mozilla::PseudoStyleType aPseudoType,
                            CSSTransitionCollection*& aElementTransitions,
                            const mozilla::ComputedStyle& aOldStyle,
                            const mozilla::ComputedStyle& aNewStyle);
@@ -320,7 +320,7 @@ class nsTransitionManager final
   bool ConsiderInitiatingTransition(
       nsCSSPropertyID aProperty, const nsStyleDisplay& aStyleDisplay,
       uint32_t transitionIdx, mozilla::dom::Element* aElement,
-      mozilla::CSSPseudoElementType aPseudoType,
+      mozilla::PseudoStyleType aPseudoType,
       CSSTransitionCollection*& aElementTransitions,
       const mozilla::ComputedStyle& aOldStyle,
       const mozilla::ComputedStyle& aNewStyle,

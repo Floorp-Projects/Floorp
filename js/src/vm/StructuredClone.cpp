@@ -1056,7 +1056,7 @@ bool JSStructuredCloneWriter::parseTransferable() {
     }
     tObj = &v.toObject();
 
-    RootedObject unwrappedObj(cx, CheckedUnwrap(tObj));
+    RootedObject unwrappedObj(cx, CheckedUnwrapStatic(tObj));
     if (!unwrappedObj) {
       ReportAccessDenied(cx);
       return false;
@@ -3036,7 +3036,7 @@ JS_PUBLIC_API bool JS_StructuredClone(
   {
     if (value.isObject()) {
       RootedObject obj(cx, &value.toObject());
-      obj = CheckedUnwrap(obj);
+      obj = CheckedUnwrapStatic(obj);
       if (!obj) {
         ReportAccessDenied(cx);
         return false;

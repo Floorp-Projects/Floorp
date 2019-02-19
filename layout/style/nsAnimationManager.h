@@ -30,7 +30,7 @@ namespace dom {
 class Promise;
 } /* namespace dom */
 
-enum class CSSPseudoElementType : uint8_t;
+enum class PseudoStyleType : uint8_t;
 struct NonOwningAnimationTarget;
 
 namespace dom {
@@ -278,7 +278,7 @@ class nsAnimationManager final
    * but with servo's computed values.
    */
   void UpdateAnimations(mozilla::dom::Element* aElement,
-                        mozilla::CSSPseudoElementType aPseudoType,
+                        mozilla::PseudoStyleType aPseudoType,
                         const mozilla::ComputedStyle* aComputedValues);
 
   // Utility function to walk through |aIter| to find the Keyframe with

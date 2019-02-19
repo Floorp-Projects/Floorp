@@ -19,7 +19,7 @@ class Element;
 }  // namespace dom
 
 struct OwningAnimationTarget {
-  OwningAnimationTarget(dom::Element* aElement, CSSPseudoElementType aType)
+  OwningAnimationTarget(dom::Element* aElement, PseudoStyleType aType)
       : mElement(aElement), mPseudoType(aType) {}
 
   explicit OwningAnimationTarget(dom::Element* aElement) : mElement(aElement) {}
@@ -31,13 +31,13 @@ struct OwningAnimationTarget {
   // mElement represents the parent element of a pseudo-element, not the
   // generated content element.
   RefPtr<dom::Element> mElement;
-  CSSPseudoElementType mPseudoType = CSSPseudoElementType::NotPseudo;
+  PseudoStyleType mPseudoType = PseudoStyleType::NotPseudo;
 };
 
 struct NonOwningAnimationTarget {
   NonOwningAnimationTarget() = default;
 
-  NonOwningAnimationTarget(dom::Element* aElement, CSSPseudoElementType aType)
+  NonOwningAnimationTarget(dom::Element* aElement, PseudoStyleType aType)
       : mElement(aElement), mPseudoType(aType) {}
 
   explicit NonOwningAnimationTarget(const OwningAnimationTarget& aOther)
@@ -50,7 +50,7 @@ struct NonOwningAnimationTarget {
   // mElement represents the parent element of a pseudo-element, not the
   // generated content element.
   dom::Element* MOZ_NON_OWNING_REF mElement = nullptr;
-  CSSPseudoElementType mPseudoType = CSSPseudoElementType::NotPseudo;
+  PseudoStyleType mPseudoType = PseudoStyleType::NotPseudo;
 };
 
 // Helper functions for cycle-collecting Maybe<OwningAnimationTarget>

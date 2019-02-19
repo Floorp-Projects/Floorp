@@ -57,7 +57,7 @@ class FlattenedChildIterator;
 class nsCSSFrameConstructor final : public nsFrameManager {
  public:
   typedef mozilla::ComputedStyle ComputedStyle;
-  typedef mozilla::CSSPseudoElementType CSSPseudoElementType;
+  typedef mozilla::PseudoStyleType PseudoStyleType;
   typedef mozilla::dom::Element Element;
   typedef mozilla::dom::Text Text;
 
@@ -447,7 +447,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   void CreateGeneratedContentItem(nsFrameConstructorState& aState,
                                   nsContainerFrame* aParentFrame,
                                   Element& aOriginatingElement, ComputedStyle&,
-                                  CSSPseudoElementType aPseudoElement,
+                                  PseudoStyleType aPseudoElement,
                                   FrameConstructionItemList& aItems);
 
   // This method is called by ContentAppended() and ContentRangeInserted() when
@@ -721,7 +721,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
     FrameFullConstructor mFullConstructor;
     // For cases when FCDATA_CREATE_BLOCK_WRAPPER_FOR_ALL_KIDS is set, the
     // anonymous box type to use for that wrapper.
-    nsCSSAnonBoxPseudoStaticAtom* const mAnonBoxPseudo;
+    PseudoStyleType const mAnonBoxPseudo;
   };
 
   /* Structure representing a mapping of an atom to a FrameConstructionData.
@@ -760,7 +760,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
      for a table pseudo-frame */
   struct PseudoParentData {
     const FrameConstructionData mFCData;
-    nsCSSAnonBoxPseudoStaticAtom* const mPseudoType;
+    mozilla::PseudoStyleType const mPseudoType;
   };
   /* Array of such structures that we use to properly construct table
      pseudo-frames as needed */
@@ -1552,7 +1552,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
       nsContainerFrame* aParentFrame, nsFrameItems& aFrameItems,
       ContainerFrameCreationFunc aConstructor,
       ContainerFrameCreationFunc aInnerConstructor,
-      nsCSSAnonBoxPseudoStaticAtom* aInnerPseudo, bool aCandidateRootFrame);
+      mozilla::PseudoStyleType aInnerPseudo, bool aCandidateRootFrame);
 
   /**
    * Construct an nsSVGOuterSVGFrame.
@@ -1697,7 +1697,8 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   already_AddRefed<ComputedStyle> BeginBuildingScrollFrame(
       nsFrameConstructorState& aState, nsIContent* aContent,
       ComputedStyle* aContentStyle, nsContainerFrame* aParentFrame,
-      nsAtom* aScrolledPseudo, bool aIsRoot, nsContainerFrame*& aNewFrame);
+      mozilla::PseudoStyleType aScrolledPseudo, bool aIsRoot,
+      nsContainerFrame*& aNewFrame);
 
   // Completes the building of the scrollframe:
   // Creates a view for the scrolledframe and makes it the child of the

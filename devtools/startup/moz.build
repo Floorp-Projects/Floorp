@@ -24,7 +24,7 @@ if CONFIG['MOZ_DEVTOOLS'] == 'all':
     ]
 
 if CONFIG['NIGHTLY_BUILD']:
-    EXTRA_COMPONENTS += [
+    EXTRA_JS_MODULES += [
         'AboutDebuggingNewRegistration.jsm',
     ]
 

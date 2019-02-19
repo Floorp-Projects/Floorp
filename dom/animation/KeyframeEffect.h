@@ -39,7 +39,7 @@ class nsIPresShell;
 namespace mozilla {
 
 class AnimValuesStyleRule;
-enum class CSSPseudoElementType : uint8_t;
+enum class PseudoStyleType : uint8_t;
 class ErrorResult;
 struct AnimationRule;
 struct TimingParams;

@@ -1775,10 +1775,10 @@ nsresult Element::BindToTree(Document* aDocument, nsIContent* aParent,
   // Also, if this _is_ needed, then it's wrong and should use GetComposedDoc()
   // to account for Shadow DOM.
   if (aDocument && MayHaveAnimations()) {
-    CSSPseudoElementType pseudoType = GetPseudoElementType();
-    if ((pseudoType == CSSPseudoElementType::NotPseudo ||
-         pseudoType == CSSPseudoElementType::before ||
-         pseudoType == CSSPseudoElementType::after) &&
+    PseudoStyleType pseudoType = GetPseudoElementType();
+    if ((pseudoType == PseudoStyleType::NotPseudo ||
+         pseudoType == PseudoStyleType::before ||
+         pseudoType == PseudoStyleType::after) &&
         EffectSet::GetEffectSet(this, pseudoType)) {
       if (nsPresContext* presContext = aDocument->GetPresContext()) {
         presContext->EffectCompositor()->RequestRestyle(
@@ -3484,23 +3484,23 @@ void Element::GetAnimations(const AnimationFilter& filter,
   }
 
   Element* elem = this;
-  CSSPseudoElementType pseudoType = CSSPseudoElementType::NotPseudo;
+  PseudoStyleType pseudoType = PseudoStyleType::NotPseudo;
   // For animations on generated-content elements, the animations are stored
   // on the parent element.
   if (IsGeneratedContentContainerForBefore()) {
     elem = GetParentElement();
-    pseudoType = CSSPseudoElementType::before;
+    pseudoType = PseudoStyleType::before;
   } else if (IsGeneratedContentContainerForAfter()) {
     elem = GetParentElement();
-    pseudoType = CSSPseudoElementType::after;
+    pseudoType = PseudoStyleType::after;
   }
 
   if (!elem) {
     return;
   }
 
-  if (!filter.mSubtree || pseudoType == CSSPseudoElementType::before ||
-      pseudoType == CSSPseudoElementType::after) {
+  if (!filter.mSubtree || pseudoType == PseudoStyleType::before ||
+      pseudoType == PseudoStyleType::after) {
     GetAnimationsUnsorted(elem, pseudoType, aAnimations);
   } else {
     for (nsIContent* node = this; node; node = node->GetNextNode(this)) {
@@ -3508,11 +3508,11 @@ void Element::GetAnimations(const AnimationFilter& filter,
         continue;
       }
       Element* element = node->AsElement();
-      Element::GetAnimationsUnsorted(element, CSSPseudoElementType::NotPseudo,
+      Element::GetAnimationsUnsorted(element, PseudoStyleType::NotPseudo,
                                      aAnimations);
-      Element::GetAnimationsUnsorted(element, CSSPseudoElementType::before,
+      Element::GetAnimationsUnsorted(element, PseudoStyleType::before,
                                      aAnimations);
-      Element::GetAnimationsUnsorted(element, CSSPseudoElementType::after,
+      Element::GetAnimationsUnsorted(element, PseudoStyleType::after,
                                      aAnimations);
     }
   }
@@ -3520,11 +3520,11 @@ void Element::GetAnimations(const AnimationFilter& filter,
 }
 
 /* static */ void Element::GetAnimationsUnsorted(
-    Element* aElement, CSSPseudoElementType aPseudoType,
+    Element* aElement, PseudoStyleType aPseudoType,
     nsTArray<RefPtr<Animation>>& aAnimations) {
-  MOZ_ASSERT(aPseudoType == CSSPseudoElementType::NotPseudo ||
-                 aPseudoType == CSSPseudoElementType::after ||
-                 aPseudoType == CSSPseudoElementType::before,
+  MOZ_ASSERT(aPseudoType == PseudoStyleType::NotPseudo ||
+                 aPseudoType == PseudoStyleType::after ||
+                 aPseudoType == PseudoStyleType::before,
              "Unsupported pseudo type");
   MOZ_ASSERT(aElement, "Null element");
 
@@ -4117,7 +4117,7 @@ void Element::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
         sc->AddSizeOfIncludingThis(aSizes, &aSizes.mLayoutComputedValuesDom);
       }
 
-      for (size_t i = 0; i < nsCSSPseudoElements::kEagerPseudoCount; i++) {
+      for (size_t i = 0; i < PseudoStyle::kEagerPseudoCount; i++) {
         if (Servo_Element_HasPseudoComputedValues(this, i)) {
           sc = Servo_Element_GetPseudoComputedValues(this, i).Consume();
           if (!aSizes.mState.HaveSeenPtr(sc.get())) {

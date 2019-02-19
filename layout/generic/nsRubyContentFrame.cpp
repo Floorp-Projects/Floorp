@@ -27,9 +27,9 @@ using namespace mozilla;
 }
 
 bool nsRubyContentFrame::IsIntraLevelWhitespace() const {
-  nsAtom* pseudoType = Style()->GetPseudo();
-  if (pseudoType != nsCSSAnonBoxes::rubyBase() &&
-      pseudoType != nsCSSAnonBoxes::rubyText()) {
+  auto pseudoType = Style()->GetPseudoType();
+  if (pseudoType != PseudoStyleType::rubyBase &&
+      pseudoType != PseudoStyleType::rubyText) {
     return false;
   }
 

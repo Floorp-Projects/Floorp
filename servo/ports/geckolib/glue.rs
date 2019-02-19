@@ -136,7 +136,7 @@ use style::gecko_bindings::structs::nsTArray;
 use style::gecko_bindings::structs::nsTimingFunction;
 use style::gecko_bindings::structs::nsresult;
 use style::gecko_bindings::structs::AtomArray;
-use style::gecko_bindings::structs::CSSPseudoElementType;
+use style::gecko_bindings::structs::PseudoStyleType;
 use style::gecko_bindings::structs::CallerType;
 use style::gecko_bindings::structs::CompositeOperation;
 use style::gecko_bindings::structs::ComputedStyleStrong;
@@ -2131,7 +2131,7 @@ pub extern "C" fn Servo_StyleRule_SelectorMatchesElement(
     rule: RawServoStyleRuleBorrowed,
     element: RawGeckoElementBorrowed,
     index: u32,
-    pseudo_type: CSSPseudoElementType,
+    pseudo_type: PseudoStyleType,
 ) -> bool {
     read_locked_arc(rule, |rule: &StyleRule| {
         let index = index as usize;
@@ -3128,15 +3128,15 @@ counter_style_descriptors! {
 #[no_mangle]
 pub unsafe extern "C" fn Servo_ComputedValues_GetForAnonymousBox(
     parent_style_or_null: ComputedStyleBorrowedOrNull,
-    pseudo_tag: *mut nsAtom,
+    pseudo: PseudoStyleType,
     raw_data: RawServoStyleSetBorrowed,
 ) -> ComputedStyleStrong {
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
     let guards = StylesheetGuards::same(&guard);
     let data = PerDocumentStyleData::from_ffi(raw_data).borrow_mut();
-    let atom = Atom::from_raw(pseudo_tag);
-    let pseudo = PseudoElement::from_anon_box_atom(&atom).expect("Not an anon box pseudo?");
+    let pseudo = PseudoElement::from_pseudo_type(pseudo).unwrap();
+    debug_assert!(pseudo.is_anon_box());
 
     let metrics = get_metrics_provider_for_product();
 
@@ -3182,7 +3182,7 @@ pub unsafe extern "C" fn Servo_ComputedValues_GetForAnonymousBox(
 #[no_mangle]
 pub extern "C" fn Servo_ResolvePseudoStyle(
     element: RawGeckoElementBorrowed,
-    pseudo_type: CSSPseudoElementType,
+    pseudo_type: PseudoStyleType,
     is_probe: bool,
     inherited_style: ComputedStyleBorrowedOrNull,
     raw_data: RawServoStyleSetBorrowed,
@@ -3331,7 +3331,7 @@ pub extern "C" fn Servo_SetExplicitStyle(
 pub extern "C" fn Servo_HasAuthorSpecifiedRules(
     style: ComputedStyleBorrowed,
     element: RawGeckoElementBorrowed,
-    pseudo_type: CSSPseudoElementType,
+    pseudo_type: PseudoStyleType,
     rule_type_mask: u32,
     author_colors_allowed: bool,
 ) -> bool {
@@ -3454,15 +3454,15 @@ fn get_pseudo_style(
 #[no_mangle]
 pub unsafe extern "C" fn Servo_ComputedValues_Inherit(
     raw_data: RawServoStyleSetBorrowed,
-    pseudo_tag: *mut nsAtom,
+    pseudo: PseudoStyleType,
     parent_style_context: ComputedStyleBorrowedOrNull,
     target: structs::InheritTarget,
 ) -> ComputedStyleStrong {
     let data = PerDocumentStyleData::from_ffi(raw_data).borrow();
 
     let for_text = target == structs::InheritTarget::Text;
-    let atom = Atom::from_raw(pseudo_tag);
-    let pseudo = PseudoElement::from_anon_box_atom(&atom).expect("Not an anon-box? Gah!");
+    let pseudo = PseudoElement::from_pseudo_type(pseudo).unwrap();
+    debug_assert!(pseudo.is_anon_box());
 
     let mut style =
         StyleBuilder::for_inheritance(data.stylist.device(), parent_style_context, Some(&pseudo));
@@ -4840,7 +4840,7 @@ pub extern "C" fn Servo_ResolveStyle(
 #[no_mangle]
 pub extern "C" fn Servo_ResolveStyleLazily(
     element: RawGeckoElementBorrowed,
-    pseudo_type: CSSPseudoElementType,
+    pseudo_type: PseudoStyleType,
     rule_inclusion: StyleRuleInclusion,
     snapshots: *const ServoElementSnapshotTable,
     raw_data: RawServoStyleSetBorrowed,

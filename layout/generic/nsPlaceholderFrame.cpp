@@ -217,8 +217,9 @@ ComputedStyle* nsPlaceholderFrame::GetLayoutParentStyleForOutOfFlow(
   // Lie about our pseudo so we can step out of all anon boxes and
   // pseudo-elements.  The other option would be to reimplement the
   // {ib} split gunk here.
-  *aProviderFrame =
-      CorrectStyleParentFrame(GetParent(), nsGkAtoms::placeholderFrame);
+  //
+  // See the hack in CorrectStyleParentFrame for why we pass `MAX`.
+  *aProviderFrame = CorrectStyleParentFrame(GetParent(), PseudoStyleType::MAX);
   return *aProviderFrame ? (*aProviderFrame)->Style() : nullptr;
 }
 

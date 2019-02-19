@@ -2090,7 +2090,7 @@ bool nsContentUtils::ShouldResistFingerprinting(nsIDocShell* aDocShell) {
 }
 
 /* static */
-bool nsContentUtils::ShouldResistFingerprinting(Document* aDoc) {
+bool nsContentUtils::ShouldResistFingerprinting(const Document* aDoc) {
   if (!aDoc) {
     return false;
   }
@@ -4128,13 +4128,21 @@ nsresult nsContentUtils::DispatchEvent(Document* aDoc, nsISupports* aTarget,
 nsresult nsContentUtils::DispatchInputEvent(Element* aEventTargetElement) {
   RefPtr<TextEditor> textEditor;  // See bug 1506439
   return DispatchInputEvent(aEventTargetElement, EditorInputType::eUnknown,
-                            textEditor);
+                            textEditor, InputEventOptions());
+}
+
+nsContentUtils::InputEventOptions::InputEventOptions(
+    DataTransfer* aDataTransfer)
+    : mDataTransfer(aDataTransfer) {
+  MOZ_ASSERT(mDataTransfer);
+  MOZ_ASSERT(mDataTransfer->IsReadOnly());
 }
 
 // static
 nsresult nsContentUtils::DispatchInputEvent(Element* aEventTargetElement,
                                             EditorInputType aEditorInputType,
-                                            TextEditor* aTextEditor) {
+                                            TextEditor* aTextEditor,
+                                            const InputEventOptions& aOptions) {
   if (NS_WARN_IF(!aEventTargetElement)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -4230,6 +4238,41 @@ nsresult nsContentUtils::DispatchInputEvent(Element* aEventTargetElement,
   // composition without editor.
   inputEvent.mIsComposing =
       aTextEditor ? !!aTextEditor->GetComposition() : false;
+
+  if (!aTextEditor || !aTextEditor->AsHTMLEditor()) {
+    if (IsDataAvailableOnTextEditor(aEditorInputType)) {
+      inputEvent.mData = aOptions.mData;
+      MOZ_ASSERT(!inputEvent.mData.IsVoid(),
+                 "inputEvent.mData shouldn't be void");
+    }
+#ifdef DEBUG
+    else {
+      MOZ_ASSERT(inputEvent.mData.IsVoid(), "inputEvent.mData should be void");
+    }
+#endif  // #ifdef DEBUG
+  } else {
+    MOZ_ASSERT(aTextEditor->AsHTMLEditor());
+    if (IsDataAvailableOnHTMLEditor(aEditorInputType)) {
+      inputEvent.mData = aOptions.mData;
+      MOZ_ASSERT(!inputEvent.mData.IsVoid(),
+                 "inputEvent.mData shouldn't be void");
+    } else {
+      MOZ_ASSERT(inputEvent.mData.IsVoid(), "inputEvent.mData should be void");
+      if (IsDataTransferAvailableOnHTMLEditor(aEditorInputType)) {
+        inputEvent.mDataTransfer = aOptions.mDataTransfer;
+        MOZ_ASSERT(inputEvent.mDataTransfer,
+                   "inputEvent.mDataTransfer shouldn't be nullptr");
+        MOZ_ASSERT(inputEvent.mDataTransfer->IsReadOnly(),
+                   "inputEvent.mDataTransfer should be read only");
+      }
+#ifdef DEBUG
+      else {
+        MOZ_ASSERT(!inputEvent.mDataTransfer,
+                   "inputEvent.mDataTransfer should be nullptr");
+      }
+#endif  // #ifdef DEBUG
+    }
+  }
 
   inputEvent.mInputType = aEditorInputType;
 
@@ -6472,7 +6515,8 @@ nsContentUtils::FindInternalContentViewer(const nsACString& aType,
 }
 
 static void ReportPatternCompileFailure(nsAString& aPattern,
-                                        Document* aDocument, JSContext* cx) {
+                                        const Document* aDocument,
+                                        JSContext* cx) {
   MOZ_ASSERT(JS_IsExceptionPending(cx));
 
   JS::RootedValue exn(cx);
@@ -6511,7 +6555,7 @@ static void ReportPatternCompileFailure(nsAString& aPattern,
 
 // static
 bool nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
-                                       Document* aDocument) {
+                                       const Document* aDocument) {
   NS_ASSERTION(aDocument, "aDocument should be a valid pointer (not null)");
 
   // The fact that we're using a JS regexp under the hood should not be visible

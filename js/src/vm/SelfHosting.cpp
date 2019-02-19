@@ -224,7 +224,7 @@ static bool intrinsic_IsWrappedInstanceOfBuiltin(JSContext* cx, unsigned argc,
     return true;
   }
 
-  JSObject* unwrapped = CheckedUnwrap(obj);
+  JSObject* unwrapped = CheckedUnwrapDynamic(obj, cx);
   if (!unwrapped) {
     ReportAccessDenied(cx);
     return false;
@@ -242,7 +242,7 @@ static bool intrinsic_IsPossiblyWrappedInstanceOfBuiltin(JSContext* cx,
   MOZ_ASSERT(args.length() == 1);
   MOZ_ASSERT(args[0].isObject());
 
-  JSObject* obj = CheckedUnwrap(&args[0].toObject());
+  JSObject* obj = CheckedUnwrapDynamic(&args[0].toObject(), cx);
   if (!obj) {
     ReportAccessDenied(cx);
     return false;

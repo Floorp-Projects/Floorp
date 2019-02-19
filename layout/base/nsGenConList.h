@@ -67,12 +67,12 @@ struct nsGenConNode : public mozilla::LinkedListElement<nsGenConNode> {
     // We allow negative values of mContentIndex for 'counter-reset' and
     // 'counter-increment'.
 
-    NS_ASSERTION(
-        mContentIndex < 0 ||
-            mPseudoFrame->Style()->GetPseudo() ==
-                nsCSSPseudoElements::before() ||
-            mPseudoFrame->Style()->GetPseudo() == nsCSSPseudoElements::after(),
-        "not :before/:after generated content and not counter change");
+    NS_ASSERTION(mContentIndex < 0 ||
+                     mPseudoFrame->Style()->GetPseudoType() ==
+                         mozilla::PseudoStyleType::before ||
+                     mPseudoFrame->Style()->GetPseudoType() ==
+                         mozilla::PseudoStyleType::after,
+                 "not :before/:after generated content and not counter change");
     NS_ASSERTION(mContentIndex < 0 ||
                      mPseudoFrame->GetStateBits() & NS_FRAME_GENERATED_CONTENT,
                  "not generated content and not counter change");

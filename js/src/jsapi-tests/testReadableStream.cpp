@@ -453,7 +453,8 @@ struct ReadFromExternalSourceFixture : public StreamTestFixture {
     CHECK(
         !StubExternalUnderlyingSource::instance.writeIntoRequestBufferCBCalled);
     CHECK(rval.isObject());
-    RootedObject unwrappedPromise(cx, js::CheckedUnwrap(&rval.toObject()));
+    RootedObject unwrappedPromise(cx,
+                                  js::CheckedUnwrapStatic(&rval.toObject()));
     CHECK(unwrappedPromise);
     CHECK(IsPromiseObject(unwrappedPromise));
     CHECK(GetPromiseState(unwrappedPromise) == PromiseState::Pending);
@@ -529,7 +530,8 @@ struct ReadFromExternalSourceFixture : public StreamTestFixture {
     CHECK(
         StubExternalUnderlyingSource::instance.writeIntoRequestBufferCBCalled);
     CHECK(rval.isObject());
-    RootedObject unwrappedPromise(cx, js::CheckedUnwrap(&rval.toObject()));
+    RootedObject unwrappedPromise(cx,
+                                  js::CheckedUnwrapStatic(&rval.toObject()));
     CHECK(unwrappedPromise);
     CHECK(IsPromiseObject(unwrappedPromise));
     CHECK(GetPromiseState(unwrappedPromise) == PromiseState::Fulfilled);

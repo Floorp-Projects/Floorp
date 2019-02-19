@@ -591,10 +591,10 @@ static EventStates GetStatesForPseudoClass(const nsAString& aStatePseudo) {
 
 /* static */ void InspectorUtils::GetCSSPseudoElementNames(
     GlobalObject& aGlobalObject, nsTArray<nsString>& aResult) {
-  const CSSPseudoElementTypeBase pseudoCount =
-      static_cast<CSSPseudoElementTypeBase>(CSSPseudoElementType::Count);
-  for (CSSPseudoElementTypeBase i = 0; i < pseudoCount; ++i) {
-    CSSPseudoElementType type = static_cast<CSSPseudoElementType>(i);
+  const auto kPseudoCount =
+      static_cast<size_t>(PseudoStyleType::CSSPseudoElementsEnd);
+  for (size_t i = 0; i < kPseudoCount; ++i) {
+    PseudoStyleType type = static_cast<PseudoStyleType>(i);
     if (nsCSSPseudoElements::IsEnabled(type, CSSEnabledState::eForAllContent)) {
       nsAtom* atom = nsCSSPseudoElements::GetPseudoAtom(type);
       aResult.AppendElement(nsDependentAtomString(atom));

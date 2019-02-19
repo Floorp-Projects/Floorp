@@ -68,6 +68,10 @@ function runTests() {
     ok(inputEvent.isTrusted, aDescription + "input event by 'a' key wasn't trusted event");
     is(inputEvent.inputType, "insertText",
        aDescription + 'inputType should be "insertText" when typing "a"');
+    is(inputEvent.data, "a",
+       aDescription + 'data should be "a" when typing "a"');
+    is(inputEvent.dataTransfer, null,
+       aDescription + 'dataTransfer should be null when typing "a"');
 
     inputEvent = null;
     synthesizeKey("KEY_Backspace");
@@ -76,6 +80,10 @@ function runTests() {
     ok(inputEvent.isTrusted, aDescription + "input event by BackSpace key wasn't trusted event");
     is(inputEvent.inputType, "deleteContentBackward",
        aDescription + 'inputType should be "deleteContentBackward" when pressing "Backspace" with collapsed selection');
+    is(inputEvent.data, null,
+       aDescription + 'data should be null when pressing "Backspace" with collapsed selection');
+    is(inputEvent.dataTransfer, null,
+       aDescription + 'dataTransfer should be null when pressing "Backspace" with collapsed selection');
 
     if (aIsTextarea) {
       inputEvent = null;
@@ -85,6 +93,10 @@ function runTests() {
       ok(inputEvent.isTrusted, aDescription + "input event by Enter key wasn't trusted event");
       is(inputEvent.inputType, "insertLineBreak",
          aDescription + 'inputType should be "insertLineBreak" when pressing "Enter"');
+      is(inputEvent.data, null,
+         aDescription + 'data should be null when pressing "Enter"');
+      is(inputEvent.dataTransfer, null,
+         aDescription + 'dataTransfer should be null when pressing "Enter"');
     }
 
     inputEvent = null;
@@ -104,6 +116,10 @@ function runTests() {
     ok(inputEvent.isTrusted, aDescription + "input event by Space key wasn't trusted event");
     is(inputEvent.inputType, "insertText",
        aDescription + 'inputType should be "insertText" when typing " "');
+    is(inputEvent.data, " ",
+       aDescription + 'data should be " " when typing " "');
+    is(inputEvent.dataTransfer, null,
+       aDescription + 'dataTransfer should be null when typing " "');
 
     inputEvent = null;
     synthesizeKey("KEY_Delete");
@@ -122,6 +138,10 @@ function runTests() {
     ok(inputEvent.isTrusted, aDescription + "input event by Delete key wasn't trusted event");
     is(inputEvent.inputType, "deleteContentForward",
        aDescription + 'inputType should be "deleteContentForward" when pressing "Delete" with collapsed selection');
+    is(inputEvent.data, null,
+       aDescription + 'data should be null when pressing "Delete" with collapsed selection');
+    is(inputEvent.dataTransfer, null,
+       aDescription + 'dataTransfer should be null when pressing "Delete" with collapsed selection');
 
     inputEvent = null;
     synthesizeKey("z", {accelKey: true});
@@ -130,6 +150,10 @@ function runTests() {
     ok(inputEvent.isTrusted, aDescription + "input event by Undo wasn't trusted event");
     is(inputEvent.inputType, "historyUndo",
        aDescription + 'inputType should be "historyUndo" when doing "Undo"');
+    is(inputEvent.data, null,
+       aDescription + 'data should be null when doing "Undo"');
+    is(inputEvent.dataTransfer, null,
+       aDescription + 'dataTransfer should be null when doing "Undo"');
 
     inputEvent = null;
     synthesizeKey("Z", {accelKey: true, shiftKey: true});
@@ -138,6 +162,10 @@ function runTests() {
     ok(inputEvent.isTrusted, aDescription + "input event by Redo wasn't trusted event");
     is(inputEvent.inputType, "historyRedo",
        aDescription + 'inputType should be "historyRedo" when doing "Redo"');
+    is(inputEvent.data, null,
+       aDescription + 'data should be null when doing "Redo"');
+    is(inputEvent.dataTransfer, null,
+       aDescription + 'dataTransfer should be null when doing "Redo"');
 
     // Backspace/Delete with non-collapsed selection.
     aElement.value = "a";
@@ -150,6 +178,10 @@ function runTests() {
        aDescription + 'input event should be trusted when pressing "Backspace" with non-collapsed selection');
     is(inputEvent.inputType, "deleteContentBackward",
        aDescription + 'inputType should be "deleteContentBackward" when pressing "Backspace" with non-collapsed selection');
+    is(inputEvent.data, null,
+       aDescription + 'data should be null when pressing "Backspace" with non-collapsed selection');
+    is(inputEvent.dataTransfer, null,
+       aDescription + 'dataTransfer should be null when pressing "Backspace" with non-collapsed selection');
 
     aElement.value = "a";
     aElement.select();
@@ -161,6 +193,38 @@ function runTests() {
        aDescription + 'input event should be trusted when pressing "Delete" with non-collapsed selection');
     is(inputEvent.inputType, "deleteContentForward",
        aDescription + 'inputType should be "deleteContentBackward" when Delete "Backspace" with non-collapsed selection');
+    is(inputEvent.data, null,
+       aDescription + 'data should be null when Delete "Backspace" with non-collapsed selection');
+    is(inputEvent.dataTransfer, null,
+       aDescription + 'dataTransfer should be null when Delete "Backspace" with non-collapsed selection');
+
+    // Toggling text direction
+    aElement.focus();
+    inputEvent = null;
+    SpecialPowers.doCommand(window, "cmd_switchTextDirection");
+    ok(inputEvent,
+       aDescription + "input event should be fired by dispatching cmd_switchTextDirection command #1");
+    ok(inputEvent.isTrusted,
+       aDescription + "input event should be trusted when dispatching cmd_switchTextDirection command #1");
+    is(inputEvent.inputType, "formatSetBlockTextDirection",
+       aDescription + 'inputType should be "formatSetBlockTextDirection" when dispatching cmd_switchTextDirection command #1');
+    is(inputEvent.data, "rtl",
+       aDescription + 'data should be "rtl" when dispatching cmd_switchTextDirection command #1');
+    is(inputEvent.dataTransfer, null,
+       aDescription + "dataTransfer should be null when dispatching cmd_switchTextDirection command #1");
+
+    inputEvent = null;
+    SpecialPowers.doCommand(window, "cmd_switchTextDirection");
+    ok(inputEvent,
+       aDescription + "input event should be fired by dispatching cmd_switchTextDirection command #2");
+    ok(inputEvent.isTrusted,
+       aDescription + "input event should be trusted when dispatching cmd_switchTextDirection command #2");
+    is(inputEvent.inputType, "formatSetBlockTextDirection",
+       aDescription + 'inputType should be "formatSetBlockTextDirection" when dispatching cmd_switchTextDirection command #2');
+    is(inputEvent.data, "ltr",
+       aDescription + 'data should be "ltr" when dispatching cmd_switchTextDirection command #2');
+    is(inputEvent.dataTransfer, null,
+       aDescription + "dataTransfer should be null when dispatching cmd_switchTextDirection command #2");
 
     aElement.removeEventListener("input", handler, true);
   }

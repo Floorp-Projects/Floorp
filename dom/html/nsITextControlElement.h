@@ -181,11 +181,17 @@ class nsITextControlElement : public nsISupports {
    */
   NS_IMETHOD_(bool) GetPreviewVisibility() = 0;
 
+  enum class ValueChangeKind {
+    Internal,
+    Script,
+    UserInteraction,
+  };
+
   /**
    * Callback called whenever the value is changed.
    */
   NS_IMETHOD_(void)
-  OnValueChanged(bool aNotify, bool aWasInteractiveUserChange) = 0;
+  OnValueChanged(bool aNotify, ValueChangeKind) = 0;
 
   /**
    * Helpers for value manipulation from SetRangeText.

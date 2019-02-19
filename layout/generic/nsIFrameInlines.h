@@ -30,7 +30,8 @@ bool nsIFrame::IsFlexOrGridItem() const {
 
 bool nsIFrame::IsTableCaption() const {
   return StyleDisplay()->mDisplay == mozilla::StyleDisplay::TableCaption &&
-         GetParent()->Style()->GetPseudo() == nsCSSAnonBoxes::tableWrapper();
+         GetParent()->Style()->GetPseudoType() ==
+             mozilla::PseudoStyleType::tableWrapper;
 }
 
 bool nsIFrame::IsFloating() const { return StyleDisplay()->IsFloating(this); }
@@ -78,8 +79,8 @@ bool nsIFrame::IsColumnSpanInMulticolSubtree() const {
          (HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR) ||
           // A frame other than inline and block won't have
           // NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR. We instead test its parent.
-          (GetParent() && GetParent()->Style()->GetPseudo() ==
-                              nsCSSAnonBoxes::columnSpanWrapper()));
+          (GetParent() && GetParent()->Style()->GetPseudoType() ==
+                              mozilla::PseudoStyleType::columnSpanWrapper));
 }
 
 mozilla::StyleDisplay nsIFrame::GetDisplay() const {

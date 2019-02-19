@@ -883,6 +883,7 @@ bool nsMathMLChar::SetFontFamily(nsPresContext* aPresContext,
     params.explicitLanguage = styleFont->mExplicitLanguage;
     params.userFontSet = aPresContext->GetUserFontSet();
     params.textPerf = aPresContext->GetTextPerfMetrics();
+    params.featureValueLookup = aPresContext->GetFontFeatureValuesLookup();
     RefPtr<nsFontMetrics> fm =
         aPresContext->DeviceContext()->GetMetricsFor(font, params);
     // Set the font if it is an unicode table

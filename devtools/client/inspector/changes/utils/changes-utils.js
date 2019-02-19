@@ -36,8 +36,8 @@ function getSourceHash(source) {
 * @param {Object} ruleData
 *        Information about a CSS rule:
 *        {
-*          selector:  {String}
-*                     CSS selector text
+*          selectors: {Array}
+*                     Array of CSS selector text
 *          ancestors: {Array}
 *                     Flattened CSS rule tree of the rule's ancestors with the root rule
 *                     at the beginning of the array and the leaf rule at the end.
@@ -47,13 +47,13 @@ function getSourceHash(source) {
 * @return {String}
 */
 function getRuleHash(ruleData) {
-  const { selector = "", ancestors = [], ruleIndex } = ruleData;
+  const { selectors = [], ancestors = [], ruleIndex } = ruleData;
   const atRules = ancestors.reduce((acc, rule) => {
     acc += `${rule.typeName} ${(rule.conditionText || rule.name || rule.keyText)}`;
     return acc;
   }, "");
 
-  return `${atRules}${selector}${ruleIndex}`;
+  return `${atRules}${selectors}${ruleIndex}`;
 }
 
 /**

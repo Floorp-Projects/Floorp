@@ -26,8 +26,7 @@ function searchInAwesomebar(inputText, win = window) {
 
 function assertSearchTelemetryEmpty(search_hist) {
   const scalars = TelemetryTestUtils.getProcessScalars("parent", true, false);
-  Assert.equal(Object.keys(scalars).length, 0,
-    `Should not have recorded ${SCALAR_URLBAR}`);
+  Assert.ok(!(SCALAR_URLBAR in scalars), `Should not have recorded ${SCALAR_URLBAR}`);
 
   // Make sure SEARCH_COUNTS contains identical values.
   TelemetryTestUtils.assertKeyedHistogramSum(search_hist, "other-MozSearch.urlbar", undefined);
@@ -36,7 +35,7 @@ function assertSearchTelemetryEmpty(search_hist) {
   // Also check events.
   let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
   events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
-  Assert.equal(events.length, 0, "Should not have recorded any events");
+  Assert.deepEqual(events, [], "Should not have recorded any navigation search events");
 }
 
 function snapshotHistograms() {

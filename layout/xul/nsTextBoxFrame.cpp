@@ -888,6 +888,8 @@ void nsTextBoxFrame::RecomputeTitle() {
 }
 
 void nsTextBoxFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
+  nsLeafBoxFrame::DidSetComputedStyle(aOldComputedStyle);
+
   if (!aOldComputedStyle) {
     // We're just being initialized
     return;

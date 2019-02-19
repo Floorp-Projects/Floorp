@@ -61,15 +61,6 @@ class ChangesApp extends PureComponent {
   }
 
   renderRule(ruleId, rule, level = 0) {
-    const selector = rule.selector;
-
-    let diffClass = "";
-    if (rule.changeType === "rule-add") {
-      diffClass = "diff-add";
-    } else if (rule.changeType === "rule-remove") {
-      diffClass = "diff-remove";
-    }
-
     return dom.div(
       {
         key: ruleId,
@@ -79,26 +70,53 @@ class ChangesApp extends PureComponent {
           "--diff-level": level,
         },
       },
-      dom.div(
-        {
-          className: `level selector ${diffClass}`,
-          title: selector,
-        },
-        getDiffMarker(diffClass),
-        selector,
-        dom.span({ className: "bracket-open" }, " {")
-      ),
+      this.renderSelectors(rule.selectors),
       // Render any nested child rules if they exist.
       rule.children.map(childRule => {
         return this.renderRule(childRule.ruleId, childRule, level + 1);
       }),
       // Render any changed CSS declarations.
       this.renderDeclarations(rule.remove, rule.add),
-      dom.div({ className: `level bracket-close ${diffClass}` },
-        getDiffMarker(diffClass),
-        "}"
-      )
+      dom.div({ className: `level` }, "}")
     );
+  }
+
+  /**
+   * Return an array of React elements for the rule's selector.
+   *
+   * @param  {Array} selectors
+   *         List of strings as versions of this rule's selector over time.
+   * @return {Array}
+   */
+  renderSelectors(selectors) {
+    const selectorDiffClassMap = new Map();
+
+    // The selectors array has just one item if it hasn't changed. Render it as-is.
+    // If it has two or more items, the first item was the original selector (mark as
+    // removed) and the last item is the current selector (mark as added).
+    if (selectors.length === 1) {
+      selectorDiffClassMap.set(selectors[0], "");
+    } else if (selectors.length >= 2) {
+      selectorDiffClassMap.set(selectors[0], "diff-remove");
+      selectorDiffClassMap.set(selectors[selectors.length - 1], "diff-add");
+    }
+
+    const elements = [];
+
+    for (const [selector, diffClass] of selectorDiffClassMap) {
+      elements.push(dom.div(
+        {
+          key: selector,
+          className: `level selector ${diffClass}`,
+          title: selector,
+        },
+        getDiffMarker(diffClass),
+        selector,
+        dom.span({}, " {")
+      ));
+    }
+
+    return elements;
   }
 
   renderDiff(changes = {}) {

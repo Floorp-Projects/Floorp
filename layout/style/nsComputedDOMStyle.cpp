@@ -128,11 +128,11 @@ static bool DocumentNeedsRestyle(const Document* aDocument, Element* aElement,
   // If the pseudo-element is animating, make sure to flush.
   if (aElement->MayHaveAnimations() && aPseudo) {
     if (aPseudo == nsCSSPseudoElements::before()) {
-      if (EffectSet::GetEffectSet(aElement, CSSPseudoElementType::before)) {
+      if (EffectSet::GetEffectSet(aElement, PseudoStyleType::before)) {
         return true;
       }
     } else if (aPseudo == nsCSSPseudoElements::after()) {
-      if (EffectSet::GetEffectSet(aElement, CSSPseudoElementType::after)) {
+      if (EffectSet::GetEffectSet(aElement, PseudoStyleType::after)) {
         return true;
       }
     }
@@ -471,12 +471,12 @@ static bool MustReresolveStyle(const mozilla::ComputedStyle* aStyle) {
 
   // TODO(emilio): We may want to avoid re-resolving pseudo-element styles
   // more often.
-  return aStyle->HasPseudoElementData() && !aStyle->GetPseudo();
+  return aStyle->HasPseudoElementData() && !aStyle->IsPseudoElement();
 }
 
-static inline CSSPseudoElementType GetPseudoType(nsAtom* aPseudo) {
+static inline PseudoStyleType GetPseudoType(nsAtom* aPseudo) {
   if (!aPseudo) {
-    return CSSPseudoElementType::NotPseudo;
+    return PseudoStyleType::NotPseudo;
   }
   return nsCSSPseudoElements::GetPseudoType(aPseudo,
                                             CSSEnabledState::eForAllContent);
@@ -502,8 +502,8 @@ already_AddRefed<ComputedStyle> nsComputedDOMStyle::DoGetComputedStyleNoFlush(
     }
   }
 
-  CSSPseudoElementType pseudoType = GetPseudoType(aPseudo);
-  if (aPseudo && pseudoType >= CSSPseudoElementType::Count) {
+  PseudoStyleType pseudoType = GetPseudoType(aPseudo);
+  if (aPseudo && !PseudoStyle::IsPseudoElement(pseudoType)) {
     return nullptr;
   }
 
@@ -563,7 +563,7 @@ nsComputedDOMStyle::GetUnanimatedComputedStyleNoFlush(Element* aElement,
     return nullptr;
   }
 
-  CSSPseudoElementType pseudoType = GetPseudoType(aPseudo);
+  PseudoStyleType pseudoType = GetPseudoType(aPseudo);
   nsIPresShell* shell = aElement->OwnerDoc()->GetShell();
   MOZ_ASSERT(shell, "How in the world did we get a style a few lines above?");
 
@@ -1021,23 +1021,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetBottom() {
 /* static */ void nsComputedDOMStyle::SetToRGBAColor(
     nsROCSSPrimitiveValue* aValue, nscolor aColor) {
   nsAutoString string;
-  const bool hasAlpha = NS_GET_A(aColor) != 255;
-  if (hasAlpha) {
-    string.AppendLiteral("rgba(");
-  } else {
-    string.AppendLiteral("rgb(");
-  }
-  string.AppendInt(NS_GET_R(aColor));
-  string.AppendLiteral(", ");
-  string.AppendInt(NS_GET_G(aColor));
-  string.AppendLiteral(", ");
-  string.AppendInt(NS_GET_B(aColor));
-  if (hasAlpha) {
-    string.AppendLiteral(", ");
-    float alpha = nsStyleUtil::ColorComponentToFloat(NS_GET_A(aColor));
-    nsStyleUtil::AppendCSSNumber(alpha, string);
-  }
-  string.AppendLiteral(")");
+  nsStyleUtil::GetSerializedColorValue(aColor, string);
   aValue->SetString(string);
 }
 
@@ -2218,12 +2202,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTextShadow() {
   return GetCSSShadowArray(StyleText()->mTextShadow, false);
 }
 
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTabSize() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueToCoord(val, StyleText()->mTabSize, true);
-  return val.forget();
-}
-
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetLetterSpacing() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   SetValueToCoord(val, StyleText()->mLetterSpacing, false);
@@ -2283,32 +2261,10 @@ void nsComputedDOMStyle::AppendFourSideCoordValues(
   }
 }
 
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetBorderImageSlice() {
-  const nsStyleBorder* border = StyleBorder();
-  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
-  AppendFourSideCoordValues(valueList, border->mBorderImageSlice);
-
-  // Fill keyword.
-  if (NS_STYLE_BORDER_IMAGE_SLICE_FILL == border->mBorderImageFill) {
-    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    val->SetIdent(eCSSKeyword_fill);
-    valueList->AppendCSSValue(val.forget());
-  }
-
-  return valueList.forget();
-}
-
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetBorderImageWidth() {
   const nsStyleBorder* border = StyleBorder();
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
   AppendFourSideCoordValues(valueList, border->mBorderImageWidth);
-  return valueList.forget();
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetBorderImageOutset() {
-  const nsStyleBorder* border = StyleBorder();
-  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
-  AppendFourSideCoordValues(valueList, border->mBorderImageOutset);
   return valueList.forget();
 }
 

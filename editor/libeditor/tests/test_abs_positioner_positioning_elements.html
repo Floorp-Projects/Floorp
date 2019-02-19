@@ -86,6 +86,10 @@ SimpleTest.waitForFocus(async function() {
            '"input" event should always bubble');
         is(aEvent.inputType, "",
            "inputType should be empty string when an element is moved");
+        is(aEvent.data, null,
+           "data should be null when an element is moved");
+        is(aEvent.dataTransfer, null,
+           "dataTransfer should be null when an element is moved");
       }
 
       content.addEventListener("input", onInput);

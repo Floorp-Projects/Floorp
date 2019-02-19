@@ -296,7 +296,7 @@ class nsCSSBorderImageRenderer final {
   nsRect mClip;
   mozilla::StyleBorderImageRepeat mRepeatModeHorizontal;
   mozilla::StyleBorderImageRepeat mRepeatModeVertical;
-  uint8_t mFill;
+  bool mFill;
 
   friend class nsDisplayBorder;
   friend struct nsCSSRendering;
