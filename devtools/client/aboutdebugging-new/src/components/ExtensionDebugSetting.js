@@ -19,6 +19,7 @@ const DOC_URL =
 class ExtensionDebugSetting extends PureComponent {
   static get propTypes() {
     return {
+      className: PropTypes.string,
       dispatch: PropTypes.func.isRequired,
       extensionDebugEnabled: PropTypes.bool.isRequired,
     };
@@ -63,8 +64,10 @@ class ExtensionDebugSetting extends PureComponent {
   }
 
   render() {
+    const { className } = this.props;
+
     return dom.aside(
-      {},
+      { className },
       this.renderCheckbox(),
       this.renderLabel(),
     );
