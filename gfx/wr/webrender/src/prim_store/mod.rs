@@ -946,6 +946,7 @@ impl BrushSegment {
         root_spatial_node_index: SpatialNodeIndex,
         surface_index: SurfaceIndex,
         pic_state: &mut PictureState,
+        frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
         clip_data_store: &mut ClipDataStore,
         unclipped: &DeviceRect,
@@ -996,6 +997,7 @@ impl BrushSegment {
                     clip_data_store,
                     snap_offsets,
                     device_pixel_scale,
+                    frame_context.fb_config,
                 );
 
                 let clip_task_id = frame_state.render_tasks.add(clip_task);
@@ -3297,6 +3299,7 @@ impl PrimitiveInstance {
                 root_spatial_node_index,
                 pic_context.surface_index,
                 pic_state,
+                frame_context,
                 frame_state,
                 &mut data_stores.clip,
                 unclipped,
@@ -3337,6 +3340,7 @@ impl PrimitiveInstance {
                     root_spatial_node_index,
                     pic_context.surface_index,
                     pic_state,
+                    frame_context,
                     frame_state,
                     &mut data_stores.clip,
                     unclipped,
@@ -3439,6 +3443,7 @@ impl PrimitiveInstance {
                     &mut data_stores.clip,
                     snap_offsets,
                     device_pixel_scale,
+                    frame_context.fb_config,
                 );
 
                 let clip_task_id = frame_state.render_tasks.add(clip_task);
