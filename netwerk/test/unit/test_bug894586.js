@@ -34,11 +34,8 @@ ProtocolHandler.prototype = {
   newURI: function(aSpec, aOriginCharset, aBaseURI) {
     return this.uri;
   },
-  newChannel2: function(aURI, aLoadInfo) {
+  newChannel: function(aURI, aLoadInfo) {
     this.loadInfo = aLoadInfo;
-    return this;
-  },
-  newChannel: function(aURI) {
     return this;
   },
   allowPort: function(port, scheme) {

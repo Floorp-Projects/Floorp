@@ -58,13 +58,8 @@ FontTableURIProtocolHandler::GetFlagsForURI(nsIURI *aURI, uint32_t *aResult) {
 }
 
 NS_IMETHODIMP
-FontTableURIProtocolHandler::NewChannel2(nsIURI *uri, nsILoadInfo *aLoadInfo,
-                                         nsIChannel **result) {
-  return NS_ERROR_DOM_BAD_URI;
-}
-
-NS_IMETHODIMP
-FontTableURIProtocolHandler::NewChannel(nsIURI *uri, nsIChannel **result) {
+FontTableURIProtocolHandler::NewChannel(nsIURI *uri, nsILoadInfo *aLoadInfo,
+                                        nsIChannel **result) {
   return NS_ERROR_DOM_BAD_URI;
 }
 

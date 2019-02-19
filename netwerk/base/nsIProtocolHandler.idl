@@ -113,12 +113,7 @@ interface nsIProtocolHandler : nsISupports
      * Constructs a new channel from the given URI for this protocol handler and
      * sets the loadInfo for the constructed channel.
      */
-    nsIChannel newChannel2(in nsIURI aURI, in nsILoadInfo aLoadinfo);
-
-    /**
-     * Constructs a new channel from the given URI for this protocol handler.
-     */
-    nsIChannel newChannel(in nsIURI aURI);
+    nsIChannel newChannel(in nsIURI aURI, in nsILoadInfo aLoadinfo);
 
     /**
      * Allows a protocol to override blacklisted ports.
