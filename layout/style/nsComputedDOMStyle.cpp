@@ -1021,23 +1021,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetBottom() {
 /* static */ void nsComputedDOMStyle::SetToRGBAColor(
     nsROCSSPrimitiveValue* aValue, nscolor aColor) {
   nsAutoString string;
-  const bool hasAlpha = NS_GET_A(aColor) != 255;
-  if (hasAlpha) {
-    string.AppendLiteral("rgba(");
-  } else {
-    string.AppendLiteral("rgb(");
-  }
-  string.AppendInt(NS_GET_R(aColor));
-  string.AppendLiteral(", ");
-  string.AppendInt(NS_GET_G(aColor));
-  string.AppendLiteral(", ");
-  string.AppendInt(NS_GET_B(aColor));
-  if (hasAlpha) {
-    string.AppendLiteral(", ");
-    float alpha = nsStyleUtil::ColorComponentToFloat(NS_GET_A(aColor));
-    nsStyleUtil::AppendCSSNumber(alpha, string);
-  }
-  string.AppendLiteral(")");
+  nsStyleUtil::GetSerializedColorValue(aColor, string);
   aValue->SetString(string);
 }
 
