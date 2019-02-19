@@ -2,7 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.connection-prompt-setting {
-  margin-block-end: var(--base-unit);
-  text-align: right;
+.runtime-actions {
+  column-gap: var(--base-unit);
+  display: grid;
+  grid-template-areas: "start center end";
+  grid-template-columns: max-content 1fr max-content;
+}
+
+.runtime-actions__end {
+  grid-area: end;
+}
+
+.runtime-actions__start {
+  grid-area: start;
 }
