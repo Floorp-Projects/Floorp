@@ -199,7 +199,7 @@ function run_test()
                          .getService(Ci.nsIPrefBranch);
   prefs.setCharPref("network.proxy.http", "localhost");
   prefs.setIntPref("network.proxy.http_port", httpserv.identity.primaryPort);
-  prefs.setCharPref("network.proxy.no_proxies_on", "");
+  prefs.setBoolPref("network.proxy.allow_hijacking_localhost", true);
   prefs.setIntPref("network.proxy.type", 1);
   prefs.setBoolPref("network.http.rcwn.enabled", false);
 

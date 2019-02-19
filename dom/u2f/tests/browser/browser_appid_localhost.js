@@ -20,7 +20,7 @@ function promiseU2FRegister(tab, app_id) {
 
 add_task(async function () {
   // By default, proxies don't apply to localhost. We need them to for this test, though:
-  await SpecialPowers.pushPrefEnv({set: [["network.proxy.no_proxies_on", ""]]});
+  await SpecialPowers.pushPrefEnv({set: [["network.proxy.allow_hijacking_localhost", true],]});
   // Enable the soft token.
   Services.prefs.setBoolPref("security.webauth.u2f", true);
   Services.prefs.setBoolPref("security.webauth.webauthn_enable_softtoken", true);
