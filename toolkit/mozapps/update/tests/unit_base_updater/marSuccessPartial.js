@@ -13,9 +13,6 @@ function run_test() {
   gTestFiles[gTestFiles.length - 1].originalContents = null;
   gTestFiles[gTestFiles.length - 1].compareContents = "FromPartial\n";
   gTestFiles[gTestFiles.length - 1].comparePerms = 0o644;
-  gTestFiles[gTestFiles.length - 2].originalContents = null;
-  gTestFiles[gTestFiles.length - 2].compareContents = "FromPartial\n";
-  gTestFiles[gTestFiles.length - 2].comparePerms = 0o644;
   gTestDirs = gTestDirsPartialSuccess;
   // The third parameter will test that a relative path that contains a
   // directory traversal to the post update binary doesn't execute.

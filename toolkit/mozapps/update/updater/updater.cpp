@@ -2448,14 +2448,11 @@ static void UpdateThreadFunc(void *param) {
                      gInstallDirPath);
         MARChannelStringTable MARStrings;
         if (ReadMARChannelIDs(updateSettingsPath, &MARStrings) != OK) {
-          // If we can't read from update-settings.ini then we shouldn't impose
-          // a MAR restriction.  Some installations won't even include this
-          // file.
-          MARStrings.MARChannelID[0] = '\0';
+          rv = UPDATE_SETTINGS_FILE_CHANNEL;
+        } else {
+          rv = gArchiveReader.VerifyProductInformation(MARStrings.MARChannelID,
+                                                       MOZ_APP_VERSION);
         }
-
-        rv = gArchiveReader.VerifyProductInformation(MARStrings.MARChannelID,
-                                                     MOZ_APP_VERSION);
       }
     }
 #endif

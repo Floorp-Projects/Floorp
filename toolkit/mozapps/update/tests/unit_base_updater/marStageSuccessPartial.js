@@ -12,9 +12,9 @@ function run_test() {
     return;
   }
   gTestFiles = gTestFilesPartialSuccess;
-  gTestFiles[gTestFiles.length - 2].originalContents = null;
-  gTestFiles[gTestFiles.length - 2].compareContents = "FromPartial\n";
-  gTestFiles[gTestFiles.length - 2].comparePerms = 0o644;
+  gTestFiles[gTestFiles.length - 1].originalContents = null;
+  gTestFiles[gTestFiles.length - 1].compareContents = "FromPartial\n";
+  gTestFiles[gTestFiles.length - 1].comparePerms = 0o644;
   gTestDirs = gTestDirsPartialSuccess;
   preventDistributionFiles();
   setupUpdaterTest(FILE_PARTIAL_MAR, true);
