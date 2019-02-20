@@ -446,8 +446,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   void setHasTypedObjectViews() { setFlags(flags() | TYPED_OBJECT_VIEWS); }
 
-  bool ownsData() const { return flags() & OWNS_DATA; }
-
  protected:
   void setDataPointer(BufferContents contents);
   void setByteLength(uint32_t length);
