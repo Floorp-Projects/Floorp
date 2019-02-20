@@ -1449,6 +1449,59 @@ ArrayBufferObject* ArrayBufferObject::createFromNewRawBuffer(
   return nullptr;
 }
 
+/* static */ ArrayBufferObject::BufferContents
+ArrayBufferObject::extractStructuredCloneContents(
+    JSContext* cx, Handle<ArrayBufferObject*> buffer) {
+  CheckStealPreconditions(buffer, cx);
+
+  BufferContents contents = buffer->contents();
+
+  switch (contents.kind()) {
+    case INLINE_DATA:
+    case NO_DATA:
+    case USER_OWNED: {
+      uint8_t* copiedData = NewCopiedBufferContents(cx, buffer);
+      if (!copiedData) {
+        return BufferContents::createFailed();
+      }
+
+      ArrayBufferObject::detach(cx, buffer, BufferContents::createNoData());
+      return BufferContents::createMalloced(copiedData);
+    }
+
+    case MALLOCED:
+    case MAPPED: {
+      MOZ_ASSERT(contents);
+
+      // Overwrite the old data pointer *without* releasing old data.
+      BufferContents newContents = BufferContents::createNoData();
+      buffer->setDataPointer(newContents, OwnsData);
+
+      // Detach |buffer| now that doing so won't release |oldContents|.
+      ArrayBufferObject::detach(cx, buffer, newContents);
+      return contents;
+    }
+
+    case WASM:
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_WASM_NO_TRANSFER);
+      return BufferContents::createFailed();
+
+    case EXTERNAL:
+      MOZ_ASSERT_UNREACHABLE(
+          "external ArrayBuffer shouldn't have passed the "
+          "structured-clone preflighting");
+      break;
+
+    case BAD1:
+      MOZ_ASSERT_UNREACHABLE("bad kind when stealing malloc'd data");
+      break;
+  }
+
+  MOZ_ASSERT_UNREACHABLE("garbage kind computed");
+  return BufferContents::createFailed();
+}
+
 /* static */ ArrayBufferObject::BufferContents ArrayBufferObject::stealContents(
     JSContext* cx, Handle<ArrayBufferObject*> buffer,
     bool hasStealableContents) {

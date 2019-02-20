@@ -1833,17 +1833,9 @@ bool JSStructuredCloneWriter::transferOwnership() {
         return false;
       }
 
-      size_t nbytes = arrayBuffer->byteLength();
-
-      if (arrayBuffer->isWasm() || arrayBuffer->isPreparedForAsmJS()) {
+      if (arrayBuffer->isPreparedForAsmJS()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                   JSMSG_WASM_NO_TRANSFER);
-        return false;
-      }
-
-      if (arrayBuffer->isDetached()) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_TYPED_ARRAY_DETACHED);
         return false;
       }
 
@@ -1874,27 +1866,12 @@ bool JSStructuredCloneWriter::transferOwnership() {
           return false;
         }
       } else {
-        // No data isn't stealable because it would fail |!bufContents|: actual
-        // malloc'd data must be created to return.
-        //
-        // XXX This extra caution *may* not actually be necessary: no-data
-        //     ArrayBuffers exist only as the result of detaching ArrayBuffers
-        //     (but these are excluded by the test above) or as the result of a
-        //     wasm memory.grow operation (but contents are then immediately
-        //     replaced with wasm contents).  But it seems better to play it
-        //     safe and deal with *all* states, not just the ones that appear
-        //     possible here.
-        //
-        // Inline data obviously has to be copied.  So too user-owned data
-        bool hasStealableContents =
-          arrayBuffer->ownsData() &&
-          !arrayBuffer->isInlineData() &&
-          !arrayBuffer->isNoData() &&
-          !arrayBuffer->hasUserOwnedData();
+        size_t nbytes = arrayBuffer->byteLength();
 
-        ArrayBufferObject::BufferContents bufContents =
-            ArrayBufferObject::stealContents(cx, arrayBuffer,
-                                             hasStealableContents);
+        using BufferContents = ArrayBufferObject::BufferContents;
+
+        BufferContents bufContents =
+            ArrayBufferObject::extractStructuredCloneContents(cx, arrayBuffer);
         if (!bufContents) {
           return false;  // out of memory
         }
