@@ -5,16 +5,14 @@
 
 from __future__ import absolute_import
 
+from abc import ABCMeta, abstractproperty
 import os
 import subprocess
-import sys
 import traceback
-from abc import ABCMeta, abstractproperty
+import sys
 
 from mozlog import get_default_logger
 from mozprocess import ProcessHandler
-from six import string_types
-
 try:
     import mozcrash
 except ImportError:
@@ -45,7 +43,7 @@ class BaseRunner(object):
                  dump_save_path=None, addons=None):
         self.app_ctx = app_ctx or DefaultContext()
 
-        if isinstance(profile, string_types):
+        if isinstance(profile, basestring):
             self.profile = self.app_ctx.profile_class(profile=profile,
                                                       addons=addons)
         else:
