@@ -195,6 +195,11 @@ const styleRuleSpec = generateActorSpec({
   },
 
   methods: {
+    getRuleText: {
+      response: {
+        text: RetVal("string"),
+      },
+    },
     setRuleText: {
       request: {
         newText: Arg(0, "string"),
