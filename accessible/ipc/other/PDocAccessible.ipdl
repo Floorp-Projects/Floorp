@@ -40,7 +40,6 @@ struct BatchData
   nsString Name;
   nsString TextValue;
   nsString DOMNodeID;
-  nsString Description;
   double CurValue;
   double MinValue;
   double MaxValue;

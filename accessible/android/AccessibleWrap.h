@@ -39,7 +39,6 @@ class AccessibleWrap : public Accessible {
       const uint64_t aState, const nsIntRect& aBounds,
       const uint8_t aActionCount, const nsString& aName,
       const nsString& aTextValue, const nsString& aDOMNodeID,
-      const nsString& aDescription,
       const double& aCurVal = UnspecifiedNaN<double>(),
       const double& aMinVal = UnspecifiedNaN<double>(),
       const double& aMaxVal = UnspecifiedNaN<double>(),
