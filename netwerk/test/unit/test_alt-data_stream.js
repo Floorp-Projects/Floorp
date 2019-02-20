@@ -18,9 +18,12 @@ XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpServer.identity.primaryPort + "/content";
 });
 
+ChromeUtils.defineModuleGetter(this, "NetUtil",
+  "resource://gre/modules/NetUtil.jsm");
+
 var httpServer = null;
 
-function make_channel(url, callback, ctx) {
+function make_channel(url) {
   return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
 }
 
@@ -90,10 +93,10 @@ function openAltChannel()
   var cc = chan.QueryInterface(Ci.nsICacheInfoChannel);
   cc.preferAlternativeDataType(altContentType, "", true);
 
-  chan.asyncOpen(listener);
+  chan.asyncOpen(altDataListener);
 }
 
-var listener = {
+var altDataListener = {
   buffer: "",
   onStartRequest: function(request, context) { },
   onDataAvailable: function(request, context, stream, offset, count) {
@@ -114,6 +117,41 @@ var listener = {
     Assert.equal(cc.alternativeDataType, altContentType);
     Assert.equal(this.buffer.length, altContent.length);
     Assert.equal(this.buffer, altContent);
-    httpServer.stop(do_test_finished);
+    openAltChannelWithOriginalContent();
   },
 };
+
+function openAltChannelWithOriginalContent()
+{
+  var chan = make_channel(URL);
+  var cc = chan.QueryInterface(Ci.nsICacheInfoChannel);
+  cc.preferAlternativeDataType(altContentType, "", false);
+
+  chan.asyncOpen(originalListener);
+}
+
+var originalListener = {
+  buffer: "",
+  onStartRequest: function(request, context) { },
+  onDataAvailable: function(request, context, stream, offset, count) {
+    let string = NetUtil.readInputStreamToString(stream, count);
+    this.buffer += string;
+  },
+  onStopRequest: function(request, context, status) {
+    var cc = request.QueryInterface(Ci.nsICacheInfoChannel);
+    Assert.equal(cc.alternativeDataType, altContentType);
+    Assert.equal(this.buffer.length, responseContent.length);
+    Assert.equal(this.buffer, responseContent);
+    testAltDataStream(cc);
+  },
+};
+
+function testAltDataStream(cc)
+{
+  cc.getAltDataInputStream(altContentType, {
+    onInputStreamReady: function(aInputStream) {
+      Assert.ok(!!aInputStream);
+      httpServer.stop(do_test_finished);
+    }
+  });
+}
