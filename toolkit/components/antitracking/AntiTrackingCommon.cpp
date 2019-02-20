@@ -1272,12 +1272,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
       ("Computing whether channel %p has access to URI %s", aChannel, _spec),
       channelURI);
 
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-  if (!loadInfo) {
-    LOG(("No loadInfo, bail out early"));
-    return true;
-  }
-
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   // We need to find the correct principal to check the cookie permission. For
   // third-party contexts, we want to check if the top-level window has a custom
   // cookie permission.

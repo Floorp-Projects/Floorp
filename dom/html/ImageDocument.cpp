@@ -87,7 +87,7 @@ ImageListener::OnStartRequest(nsIRequest* request, nsISupports* ctxt) {
   nsAutoCString mimeType;
   channel->GetContentType(mimeType);
 
-  nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
+  nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
   // query the corresponding arguments for the channel loadinfo and pass
   // it on to the temporary loadinfo used for content policy checks.
   nsCOMPtr<nsINode> requestingNode = domWindow->GetFrameElementInternal();
@@ -100,8 +100,8 @@ ImageListener::OnStartRequest(nsIRequest* request, nsISupports* ctxt) {
   }
 
   nsCOMPtr<nsILoadInfo> secCheckLoadInfo = new net::LoadInfo(
-      loadingPrincipal, loadInfo ? loadInfo->TriggeringPrincipal() : nullptr,
-      requestingNode, nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
+      loadingPrincipal, loadInfo->TriggeringPrincipal(), requestingNode,
+      nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
       nsIContentPolicy::TYPE_INTERNAL_IMAGE);
 
   int16_t decision = nsIContentPolicy::ACCEPT;

@@ -661,8 +661,8 @@ static nsresult AddTabThreatSources(ThreatHit& aHit, nsIChannel* aChannel) {
   bool isTopUri = false;
   rv = topUri->Equals(uri, &isTopUri);
   if (NS_SUCCEEDED(rv) && !isTopUri) {
-    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-    if (loadInfo && loadInfo->RedirectChain().Length()) {
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+    if (loadInfo->RedirectChain().Length()) {
       AddThreatSourceFromRedirectEntry(aHit, loadInfo->RedirectChain()[0],
                                        ThreatHit_ThreatSourceType_TAB_RESOURCE);
     }
@@ -674,11 +674,7 @@ static nsresult AddTabThreatSources(ThreatHit& aHit, nsIChannel* aChannel) {
   Unused << NS_WARN_IF(NS_FAILED(rv));
 
   // Set tab_redirect threat sources if there's any
-  nsCOMPtr<nsILoadInfo> topLoadInfo = topChannel->GetLoadInfo();
-  if (!topLoadInfo) {
-    return NS_OK;
-  }
-
+  nsCOMPtr<nsILoadInfo> topLoadInfo = topChannel->LoadInfo();
   nsIRedirectHistoryEntry* redirectEntry;
   size_t length = topLoadInfo->RedirectChain().Length();
   for (size_t i = 0; i < length; i++) {

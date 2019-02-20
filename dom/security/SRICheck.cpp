@@ -327,8 +327,7 @@ nsresult SRICheckDataVerifier::Verify(const SRIMetadata& aMetadata,
   nsresult rv = Finish();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-  NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   LoadTainting tainting = loadInfo->GetTainting();
 
   if (NS_FAILED(IsEligible(aChannel, tainting, aSourceFileURI, aReporter))) {

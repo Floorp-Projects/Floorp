@@ -444,10 +444,6 @@ bool HttpChannelParent::DoAsyncOpen(
     return SendFailedAsyncOpen(rv);
   }
 
-  if (!loadInfo) {
-    return SendFailedAsyncOpen(NS_ERROR_UNEXPECTED);
-  }
-
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannelInternal(getter_AddRefs(channel), uri, loadInfo, nullptr,
                              nullptr, nullptr, aLoadFlags, ios);

@@ -240,7 +240,7 @@ ThirdPartyUtil::IsThirdPartyChannel(nsIChannel* aChannel, nsIURI* aURI,
   if (NS_FAILED(rv)) return rv;
 
   if (!doForce) {
-    if (nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo()) {
+    if (nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo()) {
       parentIsThird = loadInfo->GetIsInThirdPartyContext();
       if (!parentIsThird && loadInfo->GetExternalContentPolicyType() !=
                                 nsIContentPolicy::TYPE_DOCUMENT) {

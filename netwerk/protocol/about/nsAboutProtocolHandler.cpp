@@ -204,22 +204,20 @@ nsAboutProtocolHandler::NewChannel(nsIURI *uri, nsILoadInfo *aLoadInfo,
       // set the LoadInfo on the newly created channel yet, as
       // an interim solution we set the LoadInfo here if not
       // available on the channel. Bug 1087720
-      nsCOMPtr<nsILoadInfo> loadInfo = (*result)->GetLoadInfo();
+      nsCOMPtr<nsILoadInfo> loadInfo = (*result)->LoadInfo();
       if (aLoadInfo != loadInfo) {
-        if (loadInfo) {
-          NS_ASSERTION(false,
-                       "nsIAboutModule->newChannel(aURI, aLoadInfo) needs to "
-                       "set LoadInfo");
-          const char16_t *params[] = {
-              u"nsIAboutModule->newChannel(aURI)",
-              u"nsIAboutModule->newChannel(aURI, aLoadInfo)"};
-          nsContentUtils::ReportToConsole(
-              nsIScriptError::warningFlag,
-              NS_LITERAL_CSTRING("Security by Default"),
-              nullptr,  // aDocument
-              nsContentUtils::eNECKO_PROPERTIES, "APIDeprecationWarning",
-              params, mozilla::ArrayLength(params));
-        }
+        NS_ASSERTION(false,
+                     "nsIAboutModule->newChannel(aURI, aLoadInfo) needs to "
+                     "set LoadInfo");
+        const char16_t *params[] = {
+            u"nsIAboutModule->newChannel(aURI)",
+            u"nsIAboutModule->newChannel(aURI, aLoadInfo)"};
+        nsContentUtils::ReportToConsole(
+            nsIScriptError::warningFlag,
+            NS_LITERAL_CSTRING("Security by Default"),
+            nullptr,  // aDocument
+            nsContentUtils::eNECKO_PROPERTIES, "APIDeprecationWarning", params,
+            mozilla::ArrayLength(params));
         (*result)->SetLoadInfo(aLoadInfo);
       }
 

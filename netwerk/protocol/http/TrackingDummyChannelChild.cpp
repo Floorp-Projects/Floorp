@@ -32,11 +32,7 @@ namespace net {
   nsresult topWindowURIResult =
       httpChannelInternal->GetTopWindowURI(getter_AddRefs(topWindowURI));
 
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-  if (!loadInfo) {
-    return false;
-  }
-
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   OptionalLoadInfoArgs loadInfoArgs;
   mozilla::ipc::LoadInfoToLoadInfoArgs(loadInfo, &loadInfoArgs);
 

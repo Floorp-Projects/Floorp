@@ -74,8 +74,8 @@ nsresult nsAsyncRedirectVerifyHelper::Init(
 
   if (!(flags & (nsIChannelEventSink::REDIRECT_INTERNAL |
                  nsIChannelEventSink::REDIRECT_STS_UPGRADE))) {
-    nsCOMPtr<nsILoadInfo> loadInfo = oldChan->GetLoadInfo();
-    if (loadInfo && loadInfo->GetDontFollowRedirects()) {
+    nsCOMPtr<nsILoadInfo> loadInfo = oldChan->LoadInfo();
+    if (loadInfo->GetDontFollowRedirects()) {
       ExplicitCallback(NS_BINDING_ABORTED);
       return NS_OK;
     }
