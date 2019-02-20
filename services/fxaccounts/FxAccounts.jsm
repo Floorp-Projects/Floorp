@@ -10,7 +10,7 @@ const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {clearTimeout, setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 const {FxAccountsStorageManager} = ChromeUtils.import("resource://gre/modules/FxAccountsStorage.jsm");
-const {ASSERTION_LIFETIME, ASSERTION_USE_PERIOD, CERT_LIFETIME, COMMAND_SENDTAB, DERIVED_KEYS_NAMES, ERRNO_DEVICE_SESSION_CONFLICT, ERRNO_INVALID_AUTH_TOKEN, ERRNO_UNKNOWN_DEVICE, ERROR_AUTH_ERROR, ERROR_INVALID_PARAMETER, ERROR_NO_ACCOUNT, ERROR_OFFLINE, ERROR_TO_GENERAL_ERROR_CLASS, ERROR_UNKNOWN, ERROR_UNVERIFIED_ACCOUNT, FXA_PWDMGR_MEMORY_FIELDS, FXA_PWDMGR_PLAINTEXT_FIELDS, FXA_PWDMGR_REAUTH_WHITELIST, FXA_PWDMGR_SECURE_FIELDS, FX_OAUTH_CLIENT_ID, KEY_LIFETIME, ONLOGIN_NOTIFICATION, ONLOGOUT_NOTIFICATION, ONVERIFIED_NOTIFICATION, ON_DEVICE_DISCONNECTED_NOTIFICATION, ON_NEW_DEVICE_ID, POLL_SESSION, PREF_LAST_FXA_USER, SERVER_ERRNO_TO_ERROR, SCOPE_OLD_SYNC, log, logPII} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+const {ASSERTION_LIFETIME, ASSERTION_USE_PERIOD, CERT_LIFETIME, COMMAND_SENDTAB, DERIVED_KEYS_NAMES, ERRNO_DEVICE_SESSION_CONFLICT, ERRNO_INVALID_AUTH_TOKEN, ERRNO_UNKNOWN_DEVICE, ERROR_AUTH_ERROR, ERROR_INVALID_PARAMETER, ERROR_NO_ACCOUNT, ERROR_OFFLINE, ERROR_TO_GENERAL_ERROR_CLASS, ERROR_UNKNOWN, ERROR_UNVERIFIED_ACCOUNT, FXA_PWDMGR_MEMORY_FIELDS, FXA_PWDMGR_PLAINTEXT_FIELDS, FXA_PWDMGR_REAUTH_WHITELIST, FXA_PWDMGR_SECURE_FIELDS, FX_OAUTH_CLIENT_ID, KEY_LIFETIME, ONLOGIN_NOTIFICATION, ONLOGOUT_NOTIFICATION, ONVERIFIED_NOTIFICATION, ON_DEVICE_DISCONNECTED_NOTIFICATION, ON_NEW_DEVICE_ID, POLL_SESSION, PREF_LAST_FXA_USER, SERVER_ERRNO_TO_ERROR, log, logPII} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 
 ChromeUtils.defineModuleGetter(this, "FxAccountsClient",
   "resource://gre/modules/FxAccountsClient.jsm");
@@ -48,11 +48,9 @@ var publicProperties = [
   "getDeviceId",
   "getDeviceList",
   "getKeys",
-  "authorizeOAuthCode",
   "getOAuthToken",
   "getProfileCache",
   "getPushSubscription",
-  "getScopedKeys",
   "getSignedInUser",
   "getSignedInUserProfile",
   "handleAccountDestroyed",
@@ -418,18 +416,6 @@ FxAccountsInternal.prototype = {
       this._commands = new FxAccountsCommands(this);
     }
     return this._commands;
-  },
-
-  _oauthClient: null,
-  get oauthClient() {
-    if (!this._oauthClient) {
-      const serverURL = Services.urlFormatter.formatURLPref("identity.fxaccounts.remote.oauth.uri");
-      this._oauthClient = new FxAccountsOAuthGrantClient({
-        serverURL,
-        client_id: FX_OAUTH_CLIENT_ID,
-      });
-    }
-    return this._oauthClient;
   },
 
   // A hook-point for tests who may want a mocked AccountState or mocked storage.
@@ -1253,41 +1239,6 @@ FxAccountsInternal.prototype = {
     };
   },
 
-  /**
-   * @param {String} scope Single key bearing scope
-   */
-  async getKeyForScope(scope, {keyRotationTimestamp}) {
-    if (scope !== SCOPE_OLD_SYNC) {
-      throw new Error(`Unavailable key material for ${scope}`);
-    }
-    let {kSync, kXCS} = await this.getKeys();
-    if (!kSync || !kXCS) {
-      throw new Error("Could not find requested key.");
-    }
-    kXCS = ChromeUtils.base64URLEncode(CommonUtils.hexToArrayBuffer(kXCS), {pad: false});
-    kSync = ChromeUtils.base64URLEncode(CommonUtils.hexToArrayBuffer(kSync), {pad: false});
-    const kid = `${keyRotationTimestamp}-${kXCS}`;
-    return {
-      scope,
-      kid,
-      k: kSync,
-      kty: "oct",
-    };
-  },
-
-  /**
-   * @param {String} scopes Space separated requested scopes
-   */
-  async getScopedKeys(scopes, clientId) {
-    const {sessionToken} = await this._getVerifiedAccountOrReject();
-    const keyData = await this.fxAccountsClient.getScopedKeyData(sessionToken, clientId, scopes);
-    const scopedKeys = {};
-    for (const [scope, data] of Object.entries(keyData)) {
-      scopedKeys[scope] = await this.getKeyForScope(scope, data);
-    }
-    return scopedKeys;
-  },
-
   getUserAccountData() {
     return this.currentAccountState.getUserAccountData();
   },
@@ -1504,7 +1455,19 @@ FxAccountsInternal.prototype = {
 
     // We are going to hit the server - this is the string we pass to it.
     let scopeString = scope.join(" ");
-    let client = options.client || this.oauthClient;
+    let client = options.client;
+
+    if (!client) {
+      try {
+        let defaultURL = Services.urlFormatter.formatURLPref("identity.fxaccounts.remote.oauth.uri");
+        client = new FxAccountsOAuthGrantClient({
+          serverURL: defaultURL,
+          client_id: FX_OAUTH_CLIENT_ID,
+        });
+      } catch (e) {
+        throw this._error(ERROR_INVALID_PARAMETER, e);
+      }
+    }
     let oAuthURL = client.serverURL.href;
 
     try {
@@ -1528,49 +1491,6 @@ FxAccountsInternal.prototype = {
         currentState.setCachedToken(scope, entry);
       }
       return token;
-    } catch (err) {
-      throw this._errorToErrorClass(err);
-    }
-  },
-
-  /**
-   *
-   * @param {String} clientId
-   * @param {String} scope Space separated requested scopes
-   * @param {Object} jwk
-   */
-  async createKeysJWE(clientId, scope, jwk) {
-    let scopedKeys = await this.getScopedKeys(scope, clientId);
-    scopedKeys = new TextEncoder().encode(JSON.stringify(scopedKeys));
-    return jwcrypto.generateJWE(jwk, scopedKeys);
-  },
-
-  /**
-   * Retrieves an OAuth authorization code
-   *
-   * @param {Object} options
-   * @param options.client_id
-   * @param options.state
-   * @param options.scope
-   * @param options.access_type
-   * @param options.code_challenge_method
-   * @param options.code_challenge
-   * @param [options.keys_jwe]
-   * @returns {Promise<Object>} Object containing "code" and "state" properties.
-   */
-  async authorizeOAuthCode(options) {
-    await this._getVerifiedAccountOrReject();
-    const client = this.oauthClient;
-    const oAuthURL = client.serverURL.href;
-    const params = {...options};
-    if (params.keys_jwk) {
-      const jwk = JSON.parse(new TextDecoder().decode(ChromeUtils.base64URLDecode(params.keys_jwk, {padding: "reject"})));
-      params.keys_jwe = await this.createKeysJWE(params.client_id, params.scope, jwk);
-      delete params.keys_jwk;
-    }
-    try {
-      const assertion = await this.getAssertion(oAuthURL);
-      return client.authorizeCodeFromAssertion(assertion, params);
     } catch (err) {
       throw this._errorToErrorClass(err);
     }

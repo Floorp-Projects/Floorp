@@ -13,7 +13,7 @@
 var EXPORTED_SYMBOLS = ["EnsureFxAccountsWebChannel"];
 
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {COMMAND_PROFILE_CHANGE, COMMAND_LOGIN, COMMAND_LOGOUT, COMMAND_DELETE, COMMAND_CAN_LINK_ACCOUNT, COMMAND_SYNC_PREFERENCES, COMMAND_CHANGE_PASSWORD, COMMAND_FXA_STATUS, COMMAND_PAIR_HEARTBEAT, COMMAND_PAIR_SUPP_METADATA, COMMAND_PAIR_AUTHORIZE, COMMAND_PAIR_DECLINE, COMMAND_PAIR_COMPLETE, COMMAND_PAIR_PREFERENCES, ON_PROFILE_CHANGE_NOTIFICATION, PREF_LAST_FXA_USER, WEBCHANNEL_ID, log, logPII} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+const {ON_PROFILE_CHANGE_NOTIFICATION, PREF_LAST_FXA_USER, WEBCHANNEL_ID, log, logPII} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
@@ -29,10 +29,15 @@ ChromeUtils.defineModuleGetter(this, "Weave",
                                "resource://services-sync/main.js");
 ChromeUtils.defineModuleGetter(this, "CryptoUtils",
                                "resource://services-crypto/utils.js");
-ChromeUtils.defineModuleGetter(this, "FxAccountsPairingFlow",
-  "resource://gre/modules/FxAccountsPairing.jsm");
-XPCOMUtils.defineLazyPreferenceGetter(this, "pairingEnabled",
-  "identity.fxaccounts.pairing.enabled");
+
+const COMMAND_PROFILE_CHANGE       = "profile:change";
+const COMMAND_CAN_LINK_ACCOUNT     = "fxaccounts:can_link_account";
+const COMMAND_LOGIN                = "fxaccounts:login";
+const COMMAND_LOGOUT               = "fxaccounts:logout";
+const COMMAND_DELETE               = "fxaccounts:delete";
+const COMMAND_SYNC_PREFERENCES     = "fxaccounts:sync_preferences";
+const COMMAND_CHANGE_PASSWORD      = "fxaccounts:change_password";
+const COMMAND_FXA_STATUS           = "fxaccounts:fxa_status";
 
 // These engines were added years after Sync had been introduced, they need
 // special handling since they are system add-ons and are un-available on
@@ -140,7 +145,8 @@ this.FxAccountsWebChannel.prototype = {
   },
 
   _receiveMessage(message, sendingContext) {
-    const {command, data} = message;
+    let command = message.command;
+    let data = message.data;
 
     switch (command) {
       case COMMAND_PROFILE_CHANGE:
@@ -170,13 +176,6 @@ this.FxAccountsWebChannel.prototype = {
       case COMMAND_SYNC_PREFERENCES:
         this._helpers.openSyncPreferences(sendingContext.browser, data.entryPoint);
         break;
-      case COMMAND_PAIR_PREFERENCES:
-        if (pairingEnabled) {
-          sendingContext.browser.loadURI("about:preferences?action=pair#sync", {
-            triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-          });
-        }
-        break;
       case COMMAND_CHANGE_PASSWORD:
         this._helpers.changePassword(data).catch(error =>
           this._sendError(error, message, sendingContext));
@@ -197,31 +196,8 @@ this.FxAccountsWebChannel.prototype = {
             this._sendError(error, message, sendingContext)
           );
         break;
-      case COMMAND_PAIR_HEARTBEAT:
-      case COMMAND_PAIR_SUPP_METADATA:
-      case COMMAND_PAIR_AUTHORIZE:
-      case COMMAND_PAIR_DECLINE:
-      case COMMAND_PAIR_COMPLETE:
-        log.debug(`Pairing command ${command} received`);
-        const {channel_id: channelId} = data;
-        delete data.channel_id;
-        const flow = FxAccountsPairingFlow.get(channelId);
-        if (!flow) {
-          log.warn(`Could not find a pairing flow for ${channelId}`);
-          return;
-        }
-        flow.onWebChannelMessage(command, data).then(replyData => {
-          this._channel.send({
-            command,
-            messageId: message.messageId,
-            data: replyData,
-          }, sendingContext);
-        });
-        break;
       default:
         log.warn("Unrecognized FxAccountsWebChannel command", command);
-        // As a safety measure we also terminate any pending FxA pairing flow.
-        FxAccountsPairingFlow.finalizeAll();
         break;
     }
   },
@@ -424,7 +400,6 @@ this.FxAccountsWebChannelHelpers.prototype = {
     return {
       signedInUser,
       capabilities: {
-        pairing: pairingEnabled,
         engines: this._getAvailableExtraEngines(),
       },
     };
@@ -504,9 +479,7 @@ this.FxAccountsWebChannelHelpers.prototype = {
     }
     uri += "#sync";
 
-    browser.loadURI(uri, {
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    });
+    browser.loadURI(uri);
   },
 
   /**

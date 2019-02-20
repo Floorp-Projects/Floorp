@@ -185,10 +185,10 @@
       </hbox>
     </groupbox>
     <vbox align="start">
-      <label id="connect-another-device" is="text-link"
-             class="fxaMobilePromo" data-l10n-id="sync-connect-another-device"/>
-      <label id="manage-devices" is="text-link"
-             class="fxaMobilePromo" data-l10n-id="sync-manage-devices"/>
+      <label id="mobilePromo-singledevice" is="text-link"
+             class="fxaMobilePromo" data-l10n-id="sync-mobilepromo-single"/>
+      <label id="mobilePromo-multidevice" is="text-link"
+             class="fxaMobilePromo" data-l10n-id="sync-mobilepromo-multi"/>
     </vbox>
     <vbox id="tosPP-small" align="start">
       <label id="tosPP-small-ToS" is="text-link" data-l10n-id="sync-tos-link"/>
