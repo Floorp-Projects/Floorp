@@ -201,32 +201,6 @@ this.FxAccountsClient.prototype = {
   },
 
   /**
-   * Query for the information required to derive
-   * scoped encryption keys requested by the specified OAuth client.
-   *
-   * @param sessionTokenHex
-   *        The session token encoded in hex
-   * @param clientId
-   * @param scope
-   *        Space separated list of scopes
-   * @return Promise
-   */
-  async getScopedKeyData(sessionTokenHex, clientId, scope) {
-    if (!clientId) {
-      throw new Error("Missing 'clientId' parameter");
-    }
-    if (!scope) {
-      throw new Error("Missing 'scope' parameter");
-    }
-    const params = {
-      client_id: clientId,
-      scope,
-    };
-    const credentials = await deriveHawkCredentials(sessionTokenHex, "sessionToken");
-    return this._request("/account/scoped-key-data", "POST", credentials, params);
-  },
-
-  /**
    * Destroy the current session with the Firefox Account API server and its
    * associated device.
    *
