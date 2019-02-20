@@ -13,6 +13,7 @@ CPPSRCS = \
       pk11_ecdsa_unittest.cc \
       pk11_encrypt_derive_unittest.cc \
       pk11_export_unittest.cc \
+      pk11_import_unittest.cc \
       pk11_pbkdf2_unittest.cc \
       pk11_prf_unittest.cc \
       pk11_prng_unittest.cc \
@@ -33,4 +34,3 @@ EXTRA_LIBS = $(DIST)/lib/$(LIB_PREFIX)gtest.$(LIB_SUFFIX) \
              $(DIST)/lib/$(LIB_PREFIX)cpputil.$(LIB_SUFFIX) \
              $(DIST)/lib/$(LIB_PREFIX)gtestutil.$(LIB_SUFFIX) \
              $(NULL)
-

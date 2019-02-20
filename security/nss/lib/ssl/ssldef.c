@@ -84,7 +84,7 @@ ssl_DefRecv(sslSocket *ss, unsigned char *buf, int len, int flags)
  * For blocking sockets, always returns len or SECFailure, no short writes.
  * For non-blocking sockets:
  *   Returns positive count if any data was written, else returns SECFailure.
- *   Short writes may occur.  Does not return SECWouldBlock.
+ *   Short writes may occur.
  */
 int
 ssl_DefSend(sslSocket *ss, const unsigned char *buf, int len, int flags)

@@ -389,7 +389,6 @@ dtls_GatherData(sslSocket *ss, sslGather *gs, int flags)
  *                 application data is available.
  * Returns  0 if ssl3_GatherData hits EOF.
  * Returns -1 on read error, or PR_WOULD_BLOCK_ERROR, or handleRecord error.
- * Returns -2 on SECWouldBlock return from ssl3_HandleRecord.
  *
  * Called from ssl_GatherRecord1stHandshake       in sslcon.c,
  *    and from SSL_ForceHandshake in sslsecur.c
@@ -422,12 +421,18 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
     PORT_Assert(ss->opt.noLocks || ssl_HaveRecvBufLock(ss));
 
     do {
-        PRBool handleRecordNow = PR_FALSE;
         PRBool processingEarlyData;
 
         ssl_GetSSL3HandshakeLock(ss);
 
         processingEarlyData = ss->ssl3.hs.zeroRttState == ssl_0rtt_accepted;
+
+        /* If we have a detached record layer, don't ever gather. */
+        if (ss->recordWriteCallback) {
+            ssl_ReleaseSSL3HandshakeLock(ss);
+            PORT_SetError(PR_WOULD_BLOCK_ERROR);
+            return (int)SECFailure;
+        }
 
         /* Without this, we may end up wrongly reporting
          * SSL_ERROR_RX_UNEXPECTED_* errors if we receive any records from the
@@ -439,93 +444,68 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
             return (int)SECFailure;
         }
 
-        /* Treat an empty msgState like a NULL msgState. (Most of the time
-         * when ssl3_HandleHandshake returns SECWouldBlock, it leaves
-         * behind a non-NULL but zero-length msgState).
-         * Test: async_cert_restart_server_sends_hello_request_first_in_separate_record
-         */
-        if (ss->ssl3.hs.msgState.buf) {
-            if (ss->ssl3.hs.msgState.len == 0) {
-                ss->ssl3.hs.msgState.buf = NULL;
-            } else {
-                handleRecordNow = PR_TRUE;
+        ssl_ReleaseSSL3HandshakeLock(ss);
+
+        /* State for SSLv2 client hello support. */
+        ssl2Gather ssl2gs = { PR_FALSE, 0 };
+        ssl2Gather *ssl2gs_ptr = NULL;
+
+        /* If we're a server and waiting for a client hello, accept v2. */
+        if (ss->sec.isServer && ss->opt.enableV2CompatibleHello &&
+            ss->ssl3.hs.ws == wait_client_hello) {
+            ssl2gs_ptr = &ssl2gs;
+        }
+
+        /* bring in the next sslv3 record. */
+        if (ss->recvdCloseNotify) {
+            /* RFC 5246 Section 7.2.1:
+             *   Any data received after a closure alert is ignored.
+             */
+            return 0;
+        }
+
+        if (!IS_DTLS(ss)) {
+            /* If we're a server waiting for a ClientHello then pass
+             * ssl2gs to support SSLv2 ClientHello messages. */
+            rv = ssl3_GatherData(ss, &ss->gs, flags, ssl2gs_ptr);
+        } else {
+            rv = dtls_GatherData(ss, &ss->gs, flags);
+
+            /* If we got a would block error, that means that no data was
+             * available, so we check the timer to see if it's time to
+             * retransmit */
+            if (rv == SECFailure &&
+                (PORT_GetError() == PR_WOULD_BLOCK_ERROR)) {
+                dtls_CheckTimer(ss);
+                /* Restore the error in case something succeeded */
+                PORT_SetError(PR_WOULD_BLOCK_ERROR);
             }
         }
 
-        ssl_ReleaseSSL3HandshakeLock(ss);
+        if (rv <= 0) {
+            return rv;
+        }
 
-        if (handleRecordNow) {
-            /* ssl3_HandleHandshake previously returned SECWouldBlock and the
-             * as-yet-unprocessed plaintext of that previous handshake record.
-             * We need to process it now before we overwrite it with the next
-             * handshake record.
-             */
-            SSL_DBG(("%d: SSL3[%d]: resuming handshake",
-                     SSL_GETPID(), ss->fd));
-            PORT_Assert(!IS_DTLS(ss));
-            rv = ssl3_HandleNonApplicationData(ss, ssl_ct_handshake,
-                                               0, 0, &ss->gs.buf);
-        } else {
-            /* State for SSLv2 client hello support. */
-            ssl2Gather ssl2gs = { PR_FALSE, 0 };
-            ssl2Gather *ssl2gs_ptr = NULL;
-
-            if (ss->sec.isServer && ss->opt.enableV2CompatibleHello &&
-                ss->ssl3.hs.ws == wait_client_hello) {
-                ssl2gs_ptr = &ssl2gs;
-            }
-
-            /* bring in the next sslv3 record. */
-            if (ss->recvdCloseNotify) {
-                /* RFC 5246 Section 7.2.1:
-                 *   Any data received after a closure alert is ignored.
-                 */
-                return 0;
-            }
-
-            if (!IS_DTLS(ss)) {
-                /* Passing a non-NULL ssl2gs here enables detection of
-                 * SSLv2-compatible ClientHello messages. */
-                rv = ssl3_GatherData(ss, &ss->gs, flags, ssl2gs_ptr);
-            } else {
-                rv = dtls_GatherData(ss, &ss->gs, flags);
-
-                /* If we got a would block error, that means that no data was
-                 * available, so we check the timer to see if it's time to
-                 * retransmit */
-                if (rv == SECFailure &&
-                    (PORT_GetError() == PR_WOULD_BLOCK_ERROR)) {
-                    dtls_CheckTimer(ss);
-                    /* Restore the error in case something succeeded */
-                    PORT_SetError(PR_WOULD_BLOCK_ERROR);
-                }
-            }
-
-            if (rv <= 0) {
+        if (ssl2gs.isV2) {
+            rv = ssl3_HandleV2ClientHello(ss, ss->gs.inbuf.buf,
+                                          ss->gs.inbuf.len,
+                                          ssl2gs.padding);
+            if (rv < 0) {
                 return rv;
             }
-
-            if (ssl2gs.isV2) {
-                rv = ssl3_HandleV2ClientHello(ss, ss->gs.inbuf.buf,
-                                              ss->gs.inbuf.len,
-                                              ssl2gs.padding);
-                if (rv < 0) {
-                    return rv;
-                }
-            } else {
-                /* decipher it, and handle it if it's a handshake.
-                 * If it's application data, ss->gs.buf will not be empty upon return.
-                 * If it's a change cipher spec, alert, or handshake message,
-                 * ss->gs.buf.len will be 0 when ssl3_HandleRecord returns SECSuccess.
-                 *
-                 * cText only needs to be valid for this next function call, so
-                 * it can borrow gs.hdr.
-                 */
-                cText.hdr = ss->gs.hdr;
-                cText.hdrLen = ss->gs.hdrLen;
-                cText.buf = &ss->gs.inbuf;
-                rv = ssl3_HandleRecord(ss, &cText);
-            }
+        } else {
+            /* decipher it, and handle it if it's a handshake.
+             * If it's application data, ss->gs.buf will not be empty upon return.
+             * If it's a change cipher spec, alert, or handshake message,
+             * ss->gs.buf.len will be 0 when ssl3_HandleRecord returns SECSuccess.
+             *
+             * cText only needs to be valid for this next function call, so
+             * it can borrow gs.hdr.
+             */
+            cText.hdr = ss->gs.hdr;
+            cText.hdrLen = ss->gs.hdrLen;
+            cText.buf = &ss->gs.inbuf;
+            rv = ssl3_HandleRecord(ss, &cText);
         }
         if (rv < 0) {
             return ss->recvdCloseNotify ? 0 : rv;
@@ -575,7 +555,7 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
              * delivered to the application before the handshake completes. */
             ssl_ReleaseSSL3HandshakeLock(ss);
             PORT_SetError(PR_WOULD_BLOCK_ERROR);
-            return SECWouldBlock;
+            return -1;
         }
         ssl_ReleaseSSL3HandshakeLock(ss);
     } while (keepGoing);
@@ -596,7 +576,6 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
  * Returns  1 when application data is available.
  * Returns  0 if ssl3_GatherData hits EOF.
  * Returns -1 on read error, or PR_WOULD_BLOCK_ERROR, or handleRecord error.
- * Returns -2 on SECWouldBlock return from ssl3_HandleRecord.
  *
  * Called from DoRecv in sslsecur.c
  * Caller must hold the recv buf lock.
@@ -615,4 +594,109 @@ ssl3_GatherAppDataRecord(sslSocket *ss, int flags)
     } while (rv > 0 && ss->gs.buf.len == 0);
 
     return rv;
+}
+
+SECStatus
+SSLExp_RecordLayerData(PRFileDesc *fd, PRUint16 epoch,
+                       SSLContentType contentType,
+                       const PRUint8 *data, unsigned int len)
+{
+    SECStatus rv;
+    sslSocket *ss = ssl_FindSocket(fd);
+    if (!ss) {
+        return SECFailure;
+    }
+    if (IS_DTLS(ss) || data == NULL || len == 0) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    /* Run any handshake function.  If SSL_RecordLayerData is the only way that
+     * the handshake is driven, then this is necessary to ensure that
+     * ssl_BeginClientHandshake or ssl_BeginServerHandshake is called. Note that
+     * the other function that might be set to ss->handshake,
+     * ssl3_GatherCompleteHandshake, does nothing when this function is used. */
+    ssl_Get1stHandshakeLock(ss);
+    rv = ssl_Do1stHandshake(ss);
+    if (rv != SECSuccess && PORT_GetError() != PR_WOULD_BLOCK_ERROR) {
+        goto early_loser; /* Rely on the existing code. */
+    }
+
+    /* Don't allow application data before handshake completion. */
+    if (contentType == ssl_ct_application_data && !ss->firstHsDone) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        goto early_loser;
+    }
+
+    /* Then we can validate the epoch. */
+    PRErrorCode epochError;
+    ssl_GetSpecReadLock(ss);
+    if (epoch < ss->ssl3.crSpec->epoch) {
+        epochError = SEC_ERROR_INVALID_ARGS; /* Too c/old. */
+    } else if (epoch > ss->ssl3.crSpec->epoch) {
+        epochError = PR_WOULD_BLOCK_ERROR; /* Too warm/new. */
+    } else {
+        epochError = 0; /* Just right. */
+    }
+    ssl_ReleaseSpecReadLock(ss);
+    if (epochError) {
+        PORT_SetError(epochError);
+        goto early_loser;
+    }
+
+    /* If the handshake is still running, we need to run that. */
+    ssl_Get1stHandshakeLock(ss);
+    rv = ssl_Do1stHandshake(ss);
+    if (rv != SECSuccess && PORT_GetError() != PR_WOULD_BLOCK_ERROR) {
+        ssl_Release1stHandshakeLock(ss);
+        return SECFailure;
+    }
+
+    /* Finally, save the data... */
+    ssl_GetRecvBufLock(ss);
+    rv = sslBuffer_Append(&ss->gs.buf, data, len);
+    if (rv != SECSuccess) {
+        goto loser;
+    }
+
+    /* ...and process it.  Just saving application data is enough for it to be
+     * available to PR_Read(). */
+    if (contentType != ssl_ct_application_data) {
+        rv = ssl3_HandleNonApplicationData(ss, contentType, 0, 0, &ss->gs.buf);
+        if (rv != SECSuccess) {
+            goto loser;
+        }
+    }
+
+    ssl_ReleaseRecvBufLock(ss);
+    ssl_Release1stHandshakeLock(ss);
+    return SECSuccess;
+
+loser:
+    /* Make sure that any data is not used again. */
+    ss->gs.buf.len = 0;
+    ssl_ReleaseRecvBufLock(ss);
+early_loser:
+    ssl_Release1stHandshakeLock(ss);
+    return SECFailure;
+}
+
+SECStatus
+SSLExp_GetCurrentEpoch(PRFileDesc *fd, PRUint16 *readEpoch,
+                       PRUint16 *writeEpoch)
+{
+    sslSocket *ss = ssl_FindSocket(fd);
+    if (!ss) {
+        return SECFailure;
+    }
+
+    ssl_GetSpecReadLock(ss);
+    if (readEpoch) {
+        *readEpoch = ss->ssl3.crSpec->epoch;
+    }
+    if (writeEpoch) {
+        *writeEpoch = ss->ssl3.cwSpec->epoch;
+    }
+    ssl_ReleaseSpecReadLock(ss);
+    return SECSuccess;
 }
