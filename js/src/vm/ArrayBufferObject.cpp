@@ -1111,9 +1111,22 @@ Maybe<uint32_t> js::WasmArrayBufferMaxSize(
   return buf->as<SharedArrayBufferObject>().wasmMaxSize();
 }
 
+static void CheckStealPreconditions(Handle<ArrayBufferObject*> buffer,
+                                    JSContext* cx) {
+  cx->check(buffer);
+
+  MOZ_ASSERT(!buffer->isDetached(), "can't steal from a detached buffer");
+  MOZ_ASSERT(!buffer->isPreparedForAsmJS(),
+             "asm.js-prepared buffers don't have detachable/stealable data");
+}
+
 /* static */ bool ArrayBufferObject::wasmGrowToSizeInPlace(
     uint32_t newSize, HandleArrayBufferObject oldBuf,
     MutableHandleArrayBufferObject newBuf, JSContext* cx) {
+  CheckStealPreconditions(oldBuf, cx);
+
+  MOZ_ASSERT(oldBuf->isWasm());
+
   // On failure, do not throw and ensure that the original buffer is
   // unmodified and valid. After WasmArrayRawBuffer::growToSizeInPlace(), the
   // wasm-visible length of the buffer has been increased so it must be the
@@ -1129,16 +1142,25 @@ Maybe<uint32_t> js::WasmArrayBufferMaxSize(
     return false;
   }
 
+  MOZ_ASSERT(newBuf->isNoData());
+
   if (!oldBuf->contents().wasmBuffer()->growToSizeInPlace(oldBuf->byteLength(),
                                                           newSize)) {
     return false;
   }
 
-  bool hasStealableContents = true;
-  BufferContents contents =
-      ArrayBufferObject::stealContents(cx, oldBuf, hasStealableContents);
-  MOZ_ASSERT(contents);
-  newBuf->initialize(newSize, contents, OwnsData);
+  // Extract the grown contents from |oldBuf|.
+  BufferContents oldContents = oldBuf->contents();
+
+  // Overwrite |oldBuf|'s data pointer *without* releasing old data.
+  BufferContents detachedContents = BufferContents::createNoData();
+  oldBuf->setDataPointer(detachedContents, OwnsData);
+
+  // Detach |oldBuf| now that doing so won't release |oldContents|.
+  ArrayBufferObject::detach(cx, oldBuf, detachedContents);
+
+  // Set |newBuf|'s contents to |oldBuf|'s original contents.
+  newBuf->initialize(newSize, oldContents, OwnsData);
   return true;
 }
 
@@ -1371,15 +1393,6 @@ ArrayBufferObject* ArrayBufferObject::createFromNewRawBuffer(
   cx->updateMallocCounter(initialSize);
 
   return buffer;
-}
-
-static void CheckStealPreconditions(Handle<ArrayBufferObject*> buffer,
-                                    JSContext* cx) {
-  cx->check(buffer);
-
-  MOZ_ASSERT(!buffer->isDetached(), "can't steal from a detached buffer");
-  MOZ_ASSERT(!buffer->isPreparedForAsmJS(),
-             "asm.js-prepared buffers don't have detachable/stealable data");
 }
 
 /* static */ uint8_t* ArrayBufferObject::stealMallocedContents(
