@@ -559,7 +559,7 @@ function cleanUp() {
   postToControlServer("status", "__raptor_shutdownBrowser");
 }
 
-function runner() {
+function raptorRunner() {
   let config = getTestConfig();
   console.log("test name is: " + config.test_name);
   console.log("test settings url is: " + config.test_settings_url);
@@ -615,4 +615,13 @@ function runner() {
   });
 }
 
-window.onload = runner();
+// we do not wish to overwrite any window.onload that may exist in the pageload site itself
+var existing_onload = window.onload;
+if (existing_onload && typeof(existing_onload) == "function") {
+  window.onload = function() {
+    existing_onload();
+    raptorRunner();
+  };
+} else {
+  window.onload = raptorRunner();
+}
