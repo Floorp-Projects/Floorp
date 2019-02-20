@@ -149,6 +149,13 @@ add_task(async function test_get_does_not_sync_if_empty_dump_is_provided() {
   Assert.ok(await Utils.hasLocalData(clientWithEmptyDump));
 });
 
+add_task(async function test_get_synchronization_can_be_disabled() {
+  const data = await client.get({ syncIfEmpty: false });
+
+  equal(data.length, 0);
+});
+add_task(clear_state);
+
 add_task(async function test_get_triggers_synchronization_when_database_is_empty() {
   // The "password-fields" collection has no local dump, and no local data.
   // Therefore a synchronization will happen.
