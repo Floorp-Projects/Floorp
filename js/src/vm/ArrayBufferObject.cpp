@@ -517,23 +517,12 @@ static uint8_t* NewCopiedBufferContents(JSContext* cx,
   }
 
   if (buffer->dataPointer()) {
-    buffer->setNewData(cx->runtime()->defaultFreeOp(),
-                       BufferContents::createNoData());
+    buffer->releaseData(cx->runtime()->defaultFreeOp());
+    buffer->setDataPointer(BufferContents::createNoData());
   }
 
   buffer->setByteLength(0);
   buffer->setIsDetached();
-}
-
-void ArrayBufferObject::setNewData(FreeOp* fop, BufferContents newContents) {
-  // XXX All callers of this check are changing data pointer, so this assertion
-  //     is fine.  But we might consider just inlining these steps into the
-  //     callers, making the release-operation for changing data pointer
-  //     explicit everywhere it occurs.
-  MOZ_ASSERT(newContents.data() != dataPointer());
-  releaseData(fop);
-
-  setDataPointer(newContents);
 }
 
 /*
