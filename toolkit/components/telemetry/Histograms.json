@@ -10620,16 +10620,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "How often are secure cookies set from non-secure origins, and vice-versa? 0=nonsecure/http, 1=nonsecure/https, 2=secure/http, 3=secure/https"
   },
-  "COOKIE_LEAVE_SECURE_ALONE": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["seceng-telemetry@mozilla.com"],
-    "bug_numbers": [976073, 1325909],
-    "expires_in_version": "60",
-    "kind": "enumerated",
-    "n_values": 10,
-    "releaseChannelCollection": "opt-out",
-    "description": "Strict Secure Cookies: 0=blocked secure cookie from http; 1=blocked shadowing secure cookie from http; 2=shadowing secure cookie from https; 3=evicted newer insecure cookie; 4=evicted oldest insecure cookie; 5=evicted secure cookie; 6=evicting secure cookie blocked; 7=blocked downgrading secure cookie from http; 8=downgraded secure cookie from https"
-  },
   "COOKIE_SCHEME_HTTPS": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["cpeterson@mozilla.com", "seceng-telemetry@mozilla.com"],
