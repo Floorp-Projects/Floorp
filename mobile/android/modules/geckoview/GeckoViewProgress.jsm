@@ -259,3 +259,5 @@ class GeckoViewProgress extends GeckoViewModule {
     }
   }
 }
+
+const {debug, warn} = GeckoViewProgress.initLogging("GeckoViewProgress"); // eslint-disable-line no-unused-vars

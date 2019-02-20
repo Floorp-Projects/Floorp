@@ -8,13 +8,13 @@ var EXPORTED_SYMBOLS = ["GeckoViewChildModule"];
 
 const {GeckoViewUtils} = ChromeUtils.import("resource://gre/modules/GeckoViewUtils.jsm");
 
-GeckoViewUtils.initLogging("Module[C]", this);
+const {debug, warn} = GeckoViewUtils.initLogging("Module[C]"); // eslint-disable-line no-unused-vars
 
 class GeckoViewChildModule {
   static initLogging(aModuleName) {
     this._moduleName = aModuleName;
     const tag = aModuleName.replace("GeckoView", "") + "[C]";
-    return GeckoViewUtils.initLogging(tag, {});
+    return GeckoViewUtils.initLogging(tag);
   }
 
   static create(aGlobal, aModuleName) {
