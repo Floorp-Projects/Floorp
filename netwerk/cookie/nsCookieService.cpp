@@ -135,17 +135,6 @@ static const char kPrefThirdPartySession[] =
 static const char kPrefThirdPartyNonsecureSession[] =
     "network.cookie.thirdparty.nonsecureSessionOnly";
 
-// For telemetry COOKIE_LEAVE_SECURE_ALONE
-#define BLOCKED_SECURE_SET_FROM_HTTP 0
-#define BLOCKED_DOWNGRADE_SECURE_INEXACT 1
-#define DOWNGRADE_SECURE_FROM_SECURE_INEXACT 2
-#define EVICTED_NEWER_INSECURE 3
-#define EVICTED_OLDEST_COOKIE 4
-#define EVICTED_PREFERRED_COOKIE 5
-#define EVICTING_SECURE_BLOCKED 6
-#define BLOCKED_DOWNGRADE_SECURE_EXACT 7
-#define DOWNGRADE_SECURE_FROM_SECURE_EXACT 8
-
 static void bindCookieParameters(mozIStorageBindingParamsArray *aParamsArray,
                                  const nsCookieKey &aKey,
                                  const nsCookie *aCookie);
@@ -3367,8 +3356,6 @@ bool nsCookieService::CanSetCookie(nsIURI *aHostURI, const nsCookieKey &aKey,
   if (aCookieAttributes.isSecure && !isSecure) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
                       "non-https cookie can't set secure flag");
-    Telemetry::Accumulate(Telemetry::COOKIE_LEAVE_SECURE_ALONE,
-                          BLOCKED_SECURE_SET_FROM_HTTP);
     return newCookie;
   }
 
@@ -3500,29 +3487,11 @@ void nsCookieService::AddInternal(const nsCookieKey &aKey, nsCookie *aCookie,
   // then ignore the new cookie.
   // (draft-ietf-httpbis-cookie-alone section 3.2)
   if (!aCookie->IsSecure() &&
-      (foundSecureExact || FindSecureCookie(aKey, aCookie))) {
-    if (!isSecure) {
-      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
-                        "cookie can't save because older cookie is secure "
-                        "cookie but newer cookie is non-secure cookie");
-      if (foundSecureExact) {
-        Telemetry::Accumulate(Telemetry::COOKIE_LEAVE_SECURE_ALONE,
-                              BLOCKED_DOWNGRADE_SECURE_EXACT);
-      } else {
-        Telemetry::Accumulate(Telemetry::COOKIE_LEAVE_SECURE_ALONE,
-                              BLOCKED_DOWNGRADE_SECURE_INEXACT);
-      }
-      return;
-    }
-    // A secure site is allowed to downgrade a secure cookie
-    // but we want to measure anyway.
-    if (foundSecureExact) {
-      Telemetry::Accumulate(Telemetry::COOKIE_LEAVE_SECURE_ALONE,
-                            DOWNGRADE_SECURE_FROM_SECURE_EXACT);
-    } else {
-      Telemetry::Accumulate(Telemetry::COOKIE_LEAVE_SECURE_ALONE,
-                            DOWNGRADE_SECURE_FROM_SECURE_INEXACT);
-    }
+      (foundSecureExact || FindSecureCookie(aKey, aCookie)) && !isSecure) {
+    COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
+                      "cookie can't save because older cookie is secure "
+                      "cookie but newer cookie is non-secure cookie");
+    return;
   }
 
   RefPtr<nsCookie> oldCookie;
@@ -3620,8 +3589,6 @@ void nsCookieService::AddInternal(const nsCookieKey &aKey, nsCookie *aCookie,
           // It's valid to evict a secure cookie for another secure cookie.
           FindStaleCookies(entry, currentTime, true, removedIterList, limit);
         } else {
-          Telemetry::Accumulate(Telemetry::COOKIE_LEAVE_SECURE_ALONE,
-                                EVICTING_SECURE_BLOCKED);
           COOKIE_LOGEVICTED(aCookie,
                             "Too many cookies for this domain and the new "
                             "cookie is not a secure cookie");
@@ -3636,10 +3603,6 @@ void nsCookieService::AddInternal(const nsCookieKey &aKey, nsCookie *aCookie,
       for (auto it = removedIterList.rbegin(); it != removedIterList.rend();
            it++) {
         RefPtr<nsCookie> evictedCookie = (*it).Cookie();
-        if (evictedCookie->Expiry() <= currentTime) {
-          TelemetryForEvictingStaleCookie(evictedCookie,
-                                          evictedCookie->LastAccessed());
-        }
         COOKIE_LOGEVICTED(evictedCookie, "Too many cookies for this domain");
         RemoveCookieFromList(*it);
         CreateOrUpdatePurgeList(getter_AddRefs(purgedList), evictedCookie);
@@ -4590,23 +4553,6 @@ void nsCookieService::FindStaleCookies(nsCookieEntry *aEntry,
   while (!queue.IsEmpty() && count < aLimit) {
     aOutput.AppendElement(queue.Pop());
     count++;
-  }
-}
-
-void nsCookieService::TelemetryForEvictingStaleCookie(
-    nsCookie *aEvicted, int64_t oldestCookieTime) {
-  // We need to record the evicting cookie to telemetry.
-  if (!aEvicted->IsSecure()) {
-    if (aEvicted->LastAccessed() > oldestCookieTime) {
-      Telemetry::Accumulate(Telemetry::COOKIE_LEAVE_SECURE_ALONE,
-                            EVICTED_NEWER_INSECURE);
-    } else {
-      Telemetry::Accumulate(Telemetry::COOKIE_LEAVE_SECURE_ALONE,
-                            EVICTED_OLDEST_COOKIE);
-    }
-  } else {
-    Telemetry::Accumulate(Telemetry::COOKIE_LEAVE_SECURE_ALONE,
-                          EVICTED_PREFERRED_COOKIE);
   }
 }
 
