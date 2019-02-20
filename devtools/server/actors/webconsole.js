@@ -1528,12 +1528,9 @@ WebConsoleActor.prototype =
    *        The console API call we need to send to the remote client.
    */
   onConsoleAPICall: function(message) {
-    const packet = {
-      from: this.actorID,
-      type: "consoleAPICall",
+    this.conn.sendActorEvent(this.actorID, "consoleAPICall", {
       message: this.prepareConsoleMessageForRemote(message),
-    };
-    this.conn.send(packet);
+    });
   },
 
   /**
@@ -1606,8 +1603,10 @@ WebConsoleActor.prototype =
 
     channel.requestMethod = method;
 
-    for (const {name, value} of headers) {
-      channel.setRequestHeader(name, value, false);
+    if (headers) {
+      for (const {name, value} of headers) {
+        channel.setRequestHeader(name, value, false);
+      }
     }
 
     if (body) {
