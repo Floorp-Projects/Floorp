@@ -481,6 +481,9 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
    *
    */
   destroy() {
+    if (!this._client) {
+      return null;
+    }
     this.off("evaluationResult", this.onEvaluationResult);
     this.off("serverNetworkEvent", this.onNetworkEvent);
     this._client.removeListener("networkEventUpdate",
@@ -491,7 +494,7 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
     this.pendingEvaluationResults = null;
     this.clearNetworkRequests();
     this._networkRequests = null;
-    super.destroy();
+    return super.destroy();
   }
 
   clearNetworkRequests() {
