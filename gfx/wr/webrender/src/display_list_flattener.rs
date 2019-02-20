@@ -217,6 +217,7 @@ impl<'a> DisplayListFlattener<'a> {
             &mut root_pipeline.display_list.iter(),
             root_pipeline.pipeline_id,
             LayoutVector2D::zero(),
+            true,
         );
 
         flattener.pop_stacking_context();
@@ -470,6 +471,7 @@ impl<'a> DisplayListFlattener<'a> {
         traversal: &mut BuiltDisplayListIter<'a>,
         pipeline_id: PipelineId,
         reference_frame_relative_offset: LayoutVector2D,
+        apply_pipeline_clip: bool,
     ) {
         loop {
             let subtraversal = {
@@ -488,6 +490,7 @@ impl<'a> DisplayListFlattener<'a> {
                     item,
                     pipeline_id,
                     reference_frame_relative_offset,
+                    apply_pipeline_clip,
                 )
             };
 
@@ -567,6 +570,7 @@ impl<'a> DisplayListFlattener<'a> {
         origin: LayoutPoint,
         reference_frame: &ReferenceFrame,
         reference_frame_relative_offset: LayoutVector2D,
+        apply_pipeline_clip: bool,
     ) {
         self.push_reference_frame(
             reference_frame.id,
@@ -578,7 +582,7 @@ impl<'a> DisplayListFlattener<'a> {
             reference_frame_relative_offset + origin.to_vector(),
         );
 
-        self.flatten_items(traversal, pipeline_id, LayoutVector2D::zero());
+        self.flatten_items(traversal, pipeline_id, LayoutVector2D::zero(), apply_pipeline_clip);
     }
 
 
@@ -592,6 +596,7 @@ impl<'a> DisplayListFlattener<'a> {
         filters: ItemRange<FilterOp>,
         reference_frame_relative_offset: &LayoutVector2D,
         is_backface_visible: bool,
+        apply_pipeline_clip: bool,
     ) {
         // Avoid doing unnecessary work for empty stacking contexts.
         if traversal.current_stacking_context_empty() {
@@ -624,10 +629,30 @@ impl<'a> DisplayListFlattener<'a> {
             stacking_context.raster_space,
         );
 
+        if cfg!(debug_assertions) && apply_pipeline_clip && clip_chain_id != ClipChainId::NONE {
+            // This is the rootmost stacking context in this pipeline that has
+            // a clip set. Check that the clip chain includes the pipeline clip
+            // as well, because this where we recurse with `apply_pipeline_clip`
+            // set to false and stop explicitly adding the pipeline clip to
+            // individual items.
+            let pipeline_clip = self.pipeline_clip_chain_stack.last().unwrap();
+            let mut found_root = *pipeline_clip == ClipChainId::NONE;
+            let mut cur_clip = clip_chain_id.clone();
+            while cur_clip != ClipChainId::NONE {
+                if cur_clip == *pipeline_clip {
+                    found_root = true;
+                    break;
+                }
+                cur_clip = self.clip_store.get_clip_chain(cur_clip).parent_clip_chain_id;
+            }
+            debug_assert!(found_root);
+        }
+
         self.flatten_items(
             traversal,
             pipeline_id,
             *reference_frame_relative_offset + origin.to_vector(),
+            apply_pipeline_clip && clip_chain_id == ClipChainId::NONE,
         );
 
         self.pop_stacking_context();
@@ -687,6 +712,7 @@ impl<'a> DisplayListFlattener<'a> {
             &mut pipeline.display_list.iter(),
             pipeline.pipeline_id,
             LayoutVector2D::zero(),
+            true,
         );
 
         self.pipeline_clip_chain_stack.pop();
@@ -697,11 +723,14 @@ impl<'a> DisplayListFlattener<'a> {
         item: DisplayItemRef<'a, 'b>,
         pipeline_id: PipelineId,
         reference_frame_relative_offset: LayoutVector2D,
+        apply_pipeline_clip: bool,
     ) -> Option<BuiltDisplayListIter<'a>> {
         let space_and_clip = item.space_and_clip_info();
         let clip_and_scroll = ScrollNodeAndClipChain::new(
             self.id_to_index_mapper.get_spatial_node_index(space_and_clip.spatial_id),
-            if space_and_clip.clip_id.is_valid() {
+            if !apply_pipeline_clip && space_and_clip.clip_id.is_root() {
+                ClipChainId::NONE
+            } else if space_and_clip.clip_id.is_valid() {
                 self.id_to_index_mapper.get_clip_chain_id(space_and_clip.clip_id)
             } else {
                 ClipChainId::INVALID
@@ -855,6 +884,7 @@ impl<'a> DisplayListFlattener<'a> {
                     item.filters(),
                     &reference_frame_relative_offset,
                     prim_info.is_backface_visible,
+                    apply_pipeline_clip,
                 );
                 return Some(subtraversal);
             }
@@ -867,6 +897,7 @@ impl<'a> DisplayListFlattener<'a> {
                     item.rect().origin,
                     &info.reference_frame,
                     reference_frame_relative_offset,
+                    apply_pipeline_clip,
                 );
                 return Some(subtraversal);
             }
