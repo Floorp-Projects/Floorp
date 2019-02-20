@@ -15,8 +15,6 @@ import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.SearchResult
-import mozilla.components.concept.sync.SyncError
-import mozilla.components.concept.sync.SyncOk
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.concept.storage.VisitType
@@ -107,9 +105,9 @@ open class PlacesHistoryStorage(context: Context) : HistoryStorage, SyncableStor
         return RustPlacesConnection.newConnection(storageDir).use {
             try {
                 it.sync(authInfo.into())
-                SyncOk
+                SyncStatus.Ok
             } catch (e: PlacesException) {
-                SyncError(e)
+                SyncStatus.Error(e)
             }
         }
     }

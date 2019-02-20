@@ -14,8 +14,6 @@ import mozilla.appservices.logins.DatabaseLoginsStorage
 import mozilla.appservices.logins.LoginsStorage
 import mozilla.appservices.logins.MemoryLoginsStorage
 import mozilla.components.concept.sync.AuthInfo
-import mozilla.components.concept.sync.SyncError
-import mozilla.components.concept.sync.SyncOk
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncableStore
 
@@ -375,10 +373,10 @@ data class SyncableLoginsStore(
         return try {
             withUnlocked {
                 it.sync(authInfo.into()).await()
-                SyncOk
+                SyncStatus.Ok
             }
         } catch (e: LoginsStorageException) {
-            SyncError(e)
+            SyncStatus.Error(e)
         }
     }
 

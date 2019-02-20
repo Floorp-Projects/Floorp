@@ -10,8 +10,6 @@ import mozilla.components.concept.sync.AccessTokenInfo
 import mozilla.components.concept.sync.AuthInfo
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.OAuthScopedKey
-import mozilla.components.concept.sync.SyncError
-import mozilla.components.concept.sync.SyncOk
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncStatusObserver
 import mozilla.components.concept.sync.SyncableStore
@@ -52,16 +50,16 @@ class StorageSyncTest {
         val testStore: SyncableStore = mock()
         val feature = StorageSync(mapOf("testStore" to testStore), "sync-scope")
 
-        `when`(testStore.sync(any())).thenReturn(SyncOk)
+        `when`(testStore.sync(any())).thenReturn(SyncStatus.Ok)
         var results = feature.sync(mockAccount)
-        assertTrue(results.getValue("testStore").status is SyncOk)
+        assertTrue(results.getValue("testStore").status is SyncStatus.Ok)
         assertEquals(1, results.size)
 
-        `when`(testStore.sync(any())).thenReturn(SyncError(Exception("test")))
+        `when`(testStore.sync(any())).thenReturn(SyncStatus.Error(Exception("test")))
         results = feature.sync(mockAccount)
         var error = results.getValue("testStore").status
-        assertTrue(error is SyncError)
-        assertEquals("test", (error as SyncError).exception.message)
+        assertTrue(error is SyncStatus.Error)
+        assertEquals("test", (error as SyncStatus.Error).exception.message)
         assertEquals(1, results.size)
 
         // Multiple stores, different result types.
@@ -72,14 +70,14 @@ class StorageSyncTest {
                 "sync-scope"
         )
 
-        `when`(anotherStore.sync(any())).thenReturn(SyncOk)
+        `when`(anotherStore.sync(any())).thenReturn(SyncStatus.Ok)
 
         results = anotherFeature.sync(mockAccount)
         assertEquals(2, results.size)
         error = results.getValue("testStore").status
-        assertTrue(error is SyncError)
-        assertEquals("test", (error as SyncError).exception.message)
-        assertTrue(results.getValue("goodStore").status is SyncOk)
+        assertTrue(error is SyncStatus.Error)
+        assertEquals("test", (error as SyncStatus.Error).exception.message)
+        assertTrue(results.getValue("goodStore").status is SyncStatus.Ok)
     }
 
     @Test
@@ -108,7 +106,7 @@ class StorageSyncTest {
         val testStore = object : SyncableStore {
             override suspend fun sync(authInfo: AuthInfo): SyncStatus {
                 verifier.verify()
-                return SyncOk
+                return SyncStatus.Ok
             }
         }
         val syncStatusObserver: SyncStatusObserver = mock()

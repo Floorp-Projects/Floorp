@@ -5,40 +5,73 @@
 package mozilla.components.concept.sync
 
 import mozilla.components.support.base.observer.Observable
-import java.io.Closeable
 import java.lang.Exception
 
+/**
+ * Results of running a sync via [SyncableStore.sync].
+ */
+sealed class SyncStatus {
+    /**
+     * Sync succeeded successfully.
+     */
+    object Ok : SyncStatus()
+
+    /**
+     * Sync completed with an error.
+     */
+    data class Error(val exception: Exception) : SyncStatus()
+}
+
+/**
+ * Describes a "sync" entry point for a storage layer.
+ */
+interface SyncableStore {
+    /**
+     * Performs a sync.
+     *
+     * @param authInfo Auth information necessary for syncing this store.
+     * @return [SyncStatus] A status object describing how sync went.
+     */
+    suspend fun sync(authInfo: AuthInfo): SyncStatus
+}
+
+/**
+ * Describes a "sync" entry point for an application.
+ */
 interface SyncManager : Observable<SyncStatusObserver> {
+    /**
+     * An authenticated account is now available.
+     */
     fun authenticated(account: OAuthAccount)
+
+    /**
+     * Previously authenticated account has been logged-out.
+     */
     fun loggedOut()
 
-    fun addStore(name: String, store: SyncableStore)
+    /**
+     * Add a store, by [name], to a set of synchronization stores.
+     * Implementation is expected to be able to either access or instantiate concrete
+     * [SyncableStore] instances given this name.
+     */
+    fun addStore(name: String)
 
+    /**
+     * Remove a store previously specified via [addStore] from a set of synchronization stores.
+     */
     fun removeStore(name: String)
 
     /**
-     * Kick-off an immediate sync.
+     * Request an immediate synchronization of all configured stores.
      *
      * @param startup Boolean flag indicating if sync is being requested in a startup situation.
      */
     fun syncNow(startup: Boolean = false)
-
-    fun createDispatcher(stores: Map<String, SyncableStore>, account: OAuthAccount): SyncDispatcher
-}
-
-interface SyncDispatcher : Closeable, Observable<SyncStatusObserver> {
-    fun isSyncActive(): Boolean
 
     /**
-     * Kick-off an immediate sync.
-     *
-     * @param startup Boolean flag indicating if sync is being requested in a startup situation.
+     * Indicates if synchronization is currently active.
      */
-    fun syncNow(startup: Boolean = false)
-
-    fun startPeriodicSync()
-
-    fun stopPeriodicSync()
+    fun isSyncRunning(): Boolean
 }
 
 /**
