@@ -55,7 +55,7 @@ class GLContext;
 void BeforeEGLCall(const char* funcName);
 void AfterEGLCall(const char* funcName);
 
-class GLLibraryEGL {
+class GLLibraryEGL final {
  protected:
   ~GLLibraryEGL() {}
 
@@ -112,10 +112,6 @@ class GLLibraryEGL {
   std::bitset<Extensions_Max> mAvailableExtensions;
 
  public:
-  GLLibraryLoader::PlatformLookupFunction GetLookupFunction() const {
-    return (GLLibraryLoader::PlatformLookupFunction)mSymbols.fGetProcAddress;
-  }
-
   ////
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -419,6 +415,8 @@ class GLLibraryEGL {
   void DumpEGLConfig(EGLConfig cfg);
   void DumpEGLConfigs();
 
+  Maybe<SymbolLoader> GetSymbolLoader() const;
+
  private:
   struct {
     EGLCastToRelevantPtr(GLAPIENTRY* fGetProcAddress)(const char* procname);
@@ -538,12 +536,14 @@ class GLLibraryEGL {
   } mSymbols = {};
 
  private:
+  bool DoEnsureInitialized();
   bool DoEnsureInitialized(bool forceAccel, nsACString* const out_failureId);
   EGLDisplay CreateDisplay(bool forceAccel, const nsCOMPtr<nsIGfxInfo>& gfxInfo,
                            nsACString* const out_failureId);
 
   bool mInitialized = false;
   PRLibrary* mEGLLibrary = nullptr;
+  mutable PRLibrary* mGLLibrary = nullptr;
   EGLDisplay mEGLDisplay = EGL_NO_DISPLAY;
   RefPtr<GLContext> mReadbackGL;
 
