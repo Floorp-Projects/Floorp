@@ -449,7 +449,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   bool ownsData() const { return flags() & OWNS_DATA; }
 
  protected:
-  void setDataPointer(BufferContents contents, OwnsState ownsState);
+  void setDataPointer(BufferContents contents);
   void setByteLength(uint32_t length);
 
   uint32_t flags() const;
@@ -474,7 +474,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     setByteLength(byteLength);
     setFlags(0);
     setFirstView(nullptr);
-    setDataPointer(contents, OwnsData);
+    setDataPointer(contents);
   }
 
   void* initializeToInlineData(size_t byteLength) {
