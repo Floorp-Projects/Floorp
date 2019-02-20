@@ -5,12 +5,11 @@
 // @flow
 
 import { PrefsHelper } from "devtools-modules";
-import { isDevelopment } from "devtools-environment";
+import { isDevelopment, isTesting } from "devtools-environment";
 import Services from "devtools-services";
 import { asyncStoreHelper } from "./asyncStoreHelper";
 
 const prefsSchemaVersion = "1.0.8";
-
 const pref = Services.pref;
 
 if (isDevelopment()) {
@@ -36,6 +35,7 @@ if (isDevelopment()) {
   pref("devtools.debugger.end-panel-size", 300);
   pref("devtools.debugger.tabs", "[]");
   pref("devtools.debugger.tabsBlackBoxed", "[]");
+  pref("devtools.debugger.ui.editor-wrapping", false);
   pref("devtools.debugger.ui.framework-grouping-on", true);
   pref("devtools.debugger.pending-selected-location", "{}");
   pref("devtools.debugger.pending-breakpoints", "{}");
@@ -56,7 +56,6 @@ if (isDevelopment()) {
   pref("devtools.debugger.features.code-folding", false);
   pref("devtools.debugger.features.outline", true);
   pref("devtools.debugger.features.column-breakpoints", false);
-  pref("devtools.debugger.features.pause-points", true);
   pref("devtools.debugger.features.skip-pausing", true);
   pref("devtools.debugger.features.component-pane", false);
   pref("devtools.debugger.features.autocomplete-expressions", false);
@@ -64,13 +63,14 @@ if (isDevelopment()) {
   pref("devtools.debugger.features.map-await-expression", true);
   pref("devtools.debugger.features.xhr-breakpoints", true);
   pref("devtools.debugger.features.original-blackbox", true);
-  pref("devtools.debugger.features.windowless-workers", false);
+  pref("devtools.debugger.features.windowless-workers", true);
   pref("devtools.debugger.features.event-listeners-breakpoints", true);
   pref("devtools.debugger.features.log-points", true);
 }
 
 export const prefs = new PrefsHelper("devtools", {
   logging: ["Bool", "debugger.logging"],
+  editorWrapping: ["Bool", "debugger.ui.editor-wrapping"],
   alphabetizeOutline: ["Bool", "debugger.alphabetize-outline"],
   autoPrettyPrint: ["Bool", "debugger.auto-pretty-print"],
   clientSourceMapsEnabled: ["Bool", "source-map.client-service.enabled"],
@@ -116,7 +116,6 @@ export const features = new PrefsHelper("devtools.debugger.features", {
   windowlessWorkers: ["Bool", "windowless-workers"],
   outline: ["Bool", "outline"],
   codeFolding: ["Bool", "code-folding"],
-  pausePoints: ["Bool", "pause-points"],
   skipPausing: ["Bool", "skip-pausing"],
   autocompleteExpression: ["Bool", "autocomplete-expressions"],
   mapExpressionBindings: ["Bool", "map-expression-bindings"],
@@ -135,7 +134,7 @@ export const asyncStore = asyncStoreHelper("debugger", {
   eventListenerBreakpoints: ["event-listener-breakpoints", []]
 });
 
-if (prefs.debuggerPrefsSchemaVersion !== prefsSchemaVersion) {
+if (!isTesting && prefs.debuggerPrefsSchemaVersion !== prefsSchemaVersion) {
   // clear pending Breakpoints
   asyncStore.pendingBreakpoints = {};
   asyncStore.tabs = [];

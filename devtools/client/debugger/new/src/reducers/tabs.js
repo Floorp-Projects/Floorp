@@ -19,7 +19,7 @@ import {
   getSources,
   getUrls,
   getSpecificSourceByURL,
-  getSpecificSourceByUrlInSources
+  getSpecificSourceByURLInSources
 } from "./sources";
 
 import type { Action } from "../actions/types";
@@ -167,9 +167,8 @@ export function getNewSelectedSourceId(
   const availableTab = availableTabs[newSelectedTabIndex];
 
   if (availableTab) {
-    const tabSource = getSpecificSourceByUrlInSources(
-      getSources(state),
-      getUrls(state),
+    const tabSource = getSpecificSourceByURL(
+      state,
       availableTab.url,
       availableTab.isOriginal
     );
@@ -213,7 +212,7 @@ export const getSourcesForTabs: Selector<Source[]> = createSelector(
 
 function getTabWithOrWithoutUrl(tab, sources, urls) {
   if (tab.url) {
-    return getSpecificSourceByUrlInSources(
+    return getSpecificSourceByURLInSources(
       sources,
       urls,
       tab.url,

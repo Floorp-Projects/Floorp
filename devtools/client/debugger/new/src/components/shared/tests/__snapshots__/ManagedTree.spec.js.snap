@@ -223,6 +223,7 @@ exports[`ManagedTree sets expanded items 1`] = `
         tabIndex="0"
       >
         <TreeNode
+          active={false}
           depth={0}
           expanded={true}
           focused={false}
@@ -230,7 +231,7 @@ exports[`ManagedTree sets expanded items 1`] = `
           index={0}
           isExpandable={false}
           item="a"
-          key="a-$"
+          key="a-$-inactive"
           onClick={[Function]}
           onCollapse={[Function]}
           onExpand={[Function]}
@@ -243,6 +244,7 @@ exports[`ManagedTree sets expanded items 1`] = `
             data-expandable={false}
             id="a-$"
             onClick={[Function]}
+            onKeyDownCapture={null}
             role="treeitem"
           >
             <div>
@@ -251,6 +253,7 @@ exports[`ManagedTree sets expanded items 1`] = `
           </div>
         </TreeNode>
         <TreeNode
+          active={false}
           depth={0}
           expanded={true}
           focused={false}
@@ -258,7 +261,7 @@ exports[`ManagedTree sets expanded items 1`] = `
           index={1}
           isExpandable={false}
           item="b"
-          key="1"
+          key="1-inactive"
           onClick={[Function]}
           onCollapse={[Function]}
           onExpand={[Function]}
@@ -271,6 +274,7 @@ exports[`ManagedTree sets expanded items 1`] = `
             data-expandable={false}
             id="1"
             onClick={[Function]}
+            onKeyDownCapture={null}
             role="treeitem"
           >
             <div>
@@ -279,6 +283,7 @@ exports[`ManagedTree sets expanded items 1`] = `
           </div>
         </TreeNode>
         <TreeNode
+          active={false}
           depth={0}
           expanded={true}
           focused={false}
@@ -286,7 +291,7 @@ exports[`ManagedTree sets expanded items 1`] = `
           index={2}
           isExpandable={false}
           item="c"
-          key="2"
+          key="2-inactive"
           onClick={[Function]}
           onCollapse={[Function]}
           onExpand={[Function]}
@@ -299,6 +304,7 @@ exports[`ManagedTree sets expanded items 1`] = `
             data-expandable={false}
             id="2"
             onClick={[Function]}
+            onKeyDownCapture={null}
             role="treeitem"
           >
             <div>
@@ -442,6 +448,7 @@ exports[`ManagedTree sets expanded items 2`] = `
         tabIndex="0"
       >
         <TreeNode
+          active={false}
           depth={0}
           expanded={false}
           focused={false}
@@ -449,7 +456,7 @@ exports[`ManagedTree sets expanded items 2`] = `
           index={0}
           isExpandable={false}
           item="a"
-          key="a-$"
+          key="a-$-inactive"
           onClick={[Function]}
           onCollapse={[Function]}
           onExpand={[Function]}
@@ -461,6 +468,7 @@ exports[`ManagedTree sets expanded items 2`] = `
             data-expandable={false}
             id="a-$"
             onClick={[Function]}
+            onKeyDownCapture={null}
             role="treeitem"
           >
             <div>
@@ -469,6 +477,7 @@ exports[`ManagedTree sets expanded items 2`] = `
           </div>
         </TreeNode>
         <TreeNode
+          active={false}
           depth={0}
           expanded={true}
           focused={false}
@@ -476,7 +485,7 @@ exports[`ManagedTree sets expanded items 2`] = `
           index={1}
           isExpandable={false}
           item="b"
-          key="1"
+          key="1-inactive"
           onClick={[Function]}
           onCollapse={[Function]}
           onExpand={[Function]}
@@ -489,6 +498,7 @@ exports[`ManagedTree sets expanded items 2`] = `
             data-expandable={false}
             id="1"
             onClick={[Function]}
+            onKeyDownCapture={null}
             role="treeitem"
           >
             <div>
@@ -497,6 +507,7 @@ exports[`ManagedTree sets expanded items 2`] = `
           </div>
         </TreeNode>
         <TreeNode
+          active={false}
           depth={0}
           expanded={true}
           focused={false}
@@ -504,7 +515,7 @@ exports[`ManagedTree sets expanded items 2`] = `
           index={2}
           isExpandable={false}
           item="c"
-          key="2"
+          key="2-inactive"
           onClick={[Function]}
           onCollapse={[Function]}
           onExpand={[Function]}
@@ -517,6 +528,7 @@ exports[`ManagedTree sets expanded items 2`] = `
             data-expandable={false}
             id="2"
             onClick={[Function]}
+            onKeyDownCapture={null}
             role="treeitem"
           >
             <div>

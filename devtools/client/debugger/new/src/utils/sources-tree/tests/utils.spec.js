@@ -5,8 +5,6 @@
 
 // @flow
 
-import { createSource } from "../../../reducers/sources";
-
 import { makeMockSource } from "../../test-mockup";
 
 import {
@@ -44,14 +42,8 @@ describe("sources tree", () => {
   describe("isDirectory", () => {
     it("identifies directories correctly", () => {
       const sources = [
-        createSource({
-          url: "http://example.com/a.js",
-          id: "actor1"
-        }),
-        createSource({
-          url: "http://example.com/b/c/d.js",
-          id: "actor2"
-        })
+        makeMockSource("http://example.com/a.js", "actor1"),
+        makeMockSource("http://example.com/b/c/d.js", "actor2")
       ];
 
       const tree = createDirectoryNode("root", "", []);

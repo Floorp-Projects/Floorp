@@ -18,10 +18,10 @@ describe("closing tabs", () => {
   it("closing a tab", async () => {
     const { dispatch, getState } = createStore(threadClient);
 
-    const fooCSR = makeSource("foo.js");
-    await dispatch(actions.newSource(fooCSR));
+    const fooSource = makeSource("foo.js");
+    await dispatch(actions.newSource(fooSource));
     await dispatch(actions.selectLocation({ sourceId: "foo.js", line: 1 }));
-    dispatch(actions.closeTab(fooCSR.source));
+    dispatch(actions.closeTab(fooSource));
 
     expect(getSelectedSource(getState())).toBe(undefined);
     expect(getSourceTabs(getState())).toHaveLength(0);
@@ -30,12 +30,12 @@ describe("closing tabs", () => {
   it("closing the inactive tab", async () => {
     const { dispatch, getState } = createStore(threadClient);
 
-    const fooCSR = makeSource("foo.js");
-    await dispatch(actions.newSource(fooCSR));
+    const fooSource = makeSource("foo.js");
+    await dispatch(actions.newSource(fooSource));
     await dispatch(actions.newSource(makeSource("bar.js")));
     await dispatch(actions.selectLocation({ sourceId: "foo.js", line: 1 }));
     await dispatch(actions.selectLocation({ sourceId: "bar.js", line: 1 }));
-    dispatch(actions.closeTab(fooCSR.source));
+    dispatch(actions.closeTab(fooSource));
 
     const selected = getSelectedSource(getState());
     expect(selected && selected.id).toBe("bar.js");
@@ -45,10 +45,10 @@ describe("closing tabs", () => {
   it("closing the only tab", async () => {
     const { dispatch, getState } = createStore(threadClient);
 
-    const fooCSR = makeSource("foo.js");
-    await dispatch(actions.newSource(fooCSR));
+    const fooSource = makeSource("foo.js");
+    await dispatch(actions.newSource(fooSource));
     await dispatch(actions.selectLocation({ sourceId: "foo.js", line: 1 }));
-    dispatch(actions.closeTab(fooCSR.source));
+    dispatch(actions.closeTab(fooSource));
 
     expect(getSelectedSource(getState())).toBe(undefined);
     expect(getSourceTabs(getState())).toHaveLength(0);
@@ -57,12 +57,12 @@ describe("closing tabs", () => {
   it("closing the active tab", async () => {
     const { dispatch, getState } = createStore(threadClient);
 
-    const barCSR = makeSource("bar.js");
+    const barSource = makeSource("bar.js");
     await dispatch(actions.newSource(makeSource("foo.js")));
-    await dispatch(actions.newSource(barCSR));
+    await dispatch(actions.newSource(barSource));
     await dispatch(actions.selectLocation({ sourceId: "foo.js", line: 1 }));
     await dispatch(actions.selectLocation({ sourceId: "bar.js", line: 1 }));
-    await dispatch(actions.closeTab(barCSR.source));
+    await dispatch(actions.closeTab(barSource));
 
     const selected = getSelectedSource(getState());
     expect(selected && selected.id).toBe("foo.js");
@@ -72,10 +72,10 @@ describe("closing tabs", () => {
   it("closing many inactive tabs", async () => {
     const { dispatch, getState } = createStore(threadClient);
 
-    const fooCSR = makeSource("foo.js");
-    const barCSR = makeSource("bar.js");
-    await dispatch(actions.newSource(fooCSR));
-    await dispatch(actions.newSource(barCSR));
+    const fooSource = makeSource("foo.js");
+    const barSource = makeSource("bar.js");
+    await dispatch(actions.newSource(fooSource));
+    await dispatch(actions.newSource(barSource));
     await dispatch(actions.newSource(makeSource("bazz.js")));
     await dispatch(actions.selectLocation({ sourceId: "foo.js", line: 1 }));
     await dispatch(actions.selectLocation({ sourceId: "bar.js", line: 1 }));

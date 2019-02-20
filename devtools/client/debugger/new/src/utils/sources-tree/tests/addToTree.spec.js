@@ -6,7 +6,7 @@
 
 /* eslint max-nested-callbacks: ["error", 4]*/
 
-import { createSource } from "../../../reducers/sources";
+import { makeMockSource } from "../../../utils/test-mockup";
 
 import {
   addToTree,
@@ -21,15 +21,15 @@ type RawSource = {| url: string, id: string |};
 
 function createSourcesMap(sources: RawSource[]) {
   const sourcesMap = sources.reduce((map, source) => {
-    map[source.id] = createSource(source);
+    map[source.id] = makeMockSource(source.url, source.id);
     return map;
   }, {});
 
   return sourcesMap;
 }
 
-function createSourcesList(sources) {
-  return sources.map((s, i) => createSource(s));
+function createSourcesList(sources: { url: string, id?: string }[]) {
+  return sources.map((s, i) => makeMockSource(s.url, s.id));
 }
 
 function getChildNode(tree, ...path) {
@@ -39,10 +39,7 @@ function getChildNode(tree, ...path) {
 describe("sources-tree", () => {
   describe("addToTree", () => {
     it("should provide node API", () => {
-      const source = createSource({
-        url: "http://example.com/a/b/c.js",
-        id: "actor1"
-      });
+      const source = makeMockSource("http://example.com/a/b/c.js", "actor1");
 
       const root = createDirectoryNode("root", "", [
         createSourceNode("foo", "/foo", source)
@@ -60,10 +57,10 @@ describe("sources-tree", () => {
     });
 
     it("builds a path-based tree", () => {
-      const source1 = createSource({
-        url: "http://example.com/foo/source1.js",
-        id: "actor1"
-      });
+      const source1 = makeMockSource(
+        "http://example.com/foo/source1.js",
+        "actor1"
+      );
       const tree = createDirectoryNode("root", "", []);
 
       addToTree(tree, source1, "http://example.com/", "");
@@ -85,10 +82,10 @@ describe("sources-tree", () => {
       const sourceName = // eslint-disable-next-line max-len
         "B9724220.131821496;dc_ver=42.111;sz=468x60;u_sd=2;dc_adk=2020465299;ord=a53rpc;dc_rfl=1,https%3A%2F%2Fdavidwalsh.name%2F$0;xdt=1";
 
-      const source1 = createSource({
-        url: `https://example.com/foo/${sourceName}`,
-        id: "actor1"
-      });
+      const source1 = makeMockSource(
+        `https://example.com/foo/${sourceName}`,
+        "actor1"
+      );
 
       const tree = createDirectoryNode("root", "", []);
 
@@ -101,10 +98,10 @@ describe("sources-tree", () => {
     it("name does not include query params", () => {
       const sourceName = "name.js?bar=3";
 
-      const source1 = createSource({
-        url: `https://example.com/foo/${sourceName}`,
-        id: "actor1"
-      });
+      const source1 = makeMockSource(
+        `https://example.com/foo/${sourceName}`,
+        "actor1"
+      );
 
       const tree = createDirectoryNode("root", "", []);
 
@@ -178,18 +175,15 @@ describe("sources-tree", () => {
     });
 
     it("excludes javascript: URLs from the tree", () => {
-      const source1 = createSource({
-        url: "javascript:alert('Hello World')",
-        id: "actor1"
-      });
-      const source2 = createSource({
-        url: "http://example.com/source1.js",
-        id: "actor2"
-      });
-      const source3 = createSource({
-        url: "javascript:let i = 10; while (i > 0) i--; console.log(i);",
-        id: "actor3"
-      });
+      const source1 = makeMockSource(
+        "javascript:alert('Hello World')",
+        "actor1"
+      );
+      const source2 = makeMockSource("http://example.com/source1.js", "actor2");
+      const source3 = makeMockSource(
+        "javascript:let i = 10; while (i > 0) i--; console.log(i);",
+        "actor3"
+      );
       const tree = createDirectoryNode("root", "", []);
 
       addToTree(tree, source1, "http://example.com/", "");
@@ -205,10 +199,7 @@ describe("sources-tree", () => {
     });
 
     it("correctly parses file sources", () => {
-      const source = createSource({
-        url: "file:///a/b.js",
-        id: "actor1"
-      });
+      const source = makeMockSource("file:///a/b.js", "actor1");
       const tree = createDirectoryNode("root", "", []);
 
       addToTree(tree, source, "file:///a/index.html", "");

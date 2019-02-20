@@ -16,9 +16,9 @@ describe("blackbox", () => {
     const store = createStore({ blackBox: async () => true });
     const { dispatch, getState } = store;
 
-    const foo1CSR = makeSource("foo1");
-    await dispatch(actions.newSource(foo1CSR));
-    await dispatch(actions.toggleBlackBox(foo1CSR.source));
+    const foo1Source = makeSource("foo1");
+    await dispatch(actions.newSource(foo1Source));
+    await dispatch(actions.toggleBlackBox(foo1Source));
 
     const fooSource = selectors.getSource(getState(), "foo1");
 
@@ -26,13 +26,13 @@ describe("blackbox", () => {
       throw new Error("foo should exist");
     }
 
-    const thread = (foo1CSR.sourceActor: any).thread;
-    const relativeSources = selectors.getRelativeSourcesForThread(
+    const thread = foo1Source.actors[0].thread;
+    const displayedSources = selectors.getDisplayedSourcesForThread(
       getState(),
       thread
     );
 
-    expect(relativeSources[fooSource.id].isBlackBoxed).toEqual(true);
+    expect(displayedSources[fooSource.id].isBlackBoxed).toEqual(true);
     expect(fooSource.isBlackBoxed).toEqual(true);
   });
 });

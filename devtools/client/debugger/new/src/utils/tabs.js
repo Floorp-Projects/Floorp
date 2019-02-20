@@ -95,6 +95,12 @@ export function getTabMenuItems() {
       accesskey: L10N.getStr("copySourceUri2.accesskey"),
       disabled: false
     },
+    toggleBlackBox: {
+      id: "node-menu-blackbox",
+      label: L10N.getStr("sourceFooter.blackbox"),
+      accesskey: L10N.getStr("sourceFooter.blackbox.accesskey"),
+      disabled: false
+    },
     prettyPrint: {
       id: "node-menu-pretty-print",
       label: L10N.getStr("sourceTabs.prettyPrint"),

@@ -46,14 +46,14 @@ describe("sources - new sources", () => {
 
   it("should automatically select a pending source", async () => {
     const { dispatch, getState } = createStore(threadClient);
-    const baseCSR = makeSource("base.js");
-    await dispatch(actions.selectSourceURL(baseCSR.source.url));
+    const baseSource = makeSource("base.js");
+    await dispatch(actions.selectSourceURL(baseSource.url));
 
     expect(getSelectedSource(getState())).toBe(undefined);
-    await dispatch(actions.newSource(baseCSR));
+    await dispatch(actions.newSource(baseSource));
 
     const selected = getSelectedSource(getState());
-    expect(selected && selected.url).toBe(baseCSR.source.url);
+    expect(selected && selected.url).toBe(baseSource.url);
   });
 
   it("should add original sources", async () => {
@@ -65,8 +65,8 @@ describe("sources - new sources", () => {
       }
     );
 
-    const baseCSR = makeSource("base.js", { sourceMapURL: "base.js.map" });
-    await dispatch(actions.newSource(baseCSR));
+    const baseSource = makeSource("base.js", { sourceMapURL: "base.js.map" });
+    await dispatch(actions.newSource(baseSource));
     const magic = getSourceByURL(getState(), "magic.js");
     expect(magic && magic.url).toEqual("magic.js");
   });
@@ -95,8 +95,8 @@ describe("sources - new sources", () => {
         getOriginalURLs: async () => new Promise(_ => {})
       }
     );
-    const baseCSR = makeSource("base.js", { sourceMapURL: "base.js.map" });
-    await dispatch(actions.newSource(baseCSR));
+    const baseSource = makeSource("base.js", { sourceMapURL: "base.js.map" });
+    await dispatch(actions.newSource(baseSource));
     expect(getSourceCount(getState())).toEqual(1);
     const base = getSource(getState(), "base.js");
     expect(base && base.id).toEqual("base.js");

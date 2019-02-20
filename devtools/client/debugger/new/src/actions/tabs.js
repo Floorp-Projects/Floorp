@@ -15,8 +15,8 @@ import { removeDocument } from "../utils/editor";
 import { selectSource } from "./sources";
 
 import {
-  getSourcesByURLs,
   getSourceTabs,
+  getSourceByURL,
   getNewSelectedSourceId,
   removeSourceFromTabList,
   removeSourcesFromTabList
@@ -81,7 +81,9 @@ export function closeTab(source: Source) {
  */
 export function closeTabs(urls: string[]) {
   return ({ dispatch, getState, client }: ThunkArgs) => {
-    const sources = getSourcesByURLs(getState(), urls);
+    const sources = urls
+      .map(url => getSourceByURL(getState(), url))
+      .filter(Boolean);
     sources.map(source => removeDocument(source.id));
 
     const tabs = removeSourcesFromTabList(getSourceTabs(getState()), sources);

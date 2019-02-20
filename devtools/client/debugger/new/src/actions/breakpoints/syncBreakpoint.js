@@ -35,6 +35,17 @@ type BreakpointSyncData = {
   breakpoint: ?Breakpoint
 };
 
+async function isPossiblePosition(location, dispatch) {
+  if (features.columnBreakpoints && location.column != undefined) {
+    const { positions } = await dispatch(setBreakpointPositions(location));
+    if (!positions.some(({ generatedLocation }) => generatedLocation.column)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 async function makeScopedLocation(
   { name, offset, index }: ASTLocation,
   location: SourceLocation,
@@ -136,15 +147,10 @@ export async function syncBreakpointPromise(
     generatedLocation
   );
 
-  let possiblePosition = true;
-  if (features.columnBreakpoints && generatedLocation.column != undefined) {
-    const { positions } = await dispatch(
-      setBreakpointPositions(generatedLocation)
-    );
-    if (!positions.includes(generatedLocation.column)) {
-      possiblePosition = false;
-    }
-  }
+  const possiblePosition = await isPossiblePosition(
+    generatedLocation,
+    dispatch
+  );
 
   /** ******* CASE 1: No server change ***********/
   // early return if breakpoint is disabled or we are in the sameLocation

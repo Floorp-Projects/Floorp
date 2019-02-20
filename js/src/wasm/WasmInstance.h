@@ -21,7 +21,6 @@
 
 #include "builtin/TypedObject.h"
 #include "gc/Barrier.h"
-#include "jit/shared/Assembler-shared.h"
 #include "vm/SharedMem.h"
 #include "wasm/WasmCode.h"
 #include "wasm/WasmDebug.h"
@@ -45,9 +44,9 @@ namespace wasm {
 class Instance {
   JS::Realm* const realm_;
   ReadBarrieredWasmInstanceObject object_;
-  jit::TrampolinePtr jsJitArgsRectifier_;
-  jit::TrampolinePtr jsJitExceptionHandler_;
-  jit::TrampolinePtr preBarrierCode_;
+  void* jsJitArgsRectifier_;
+  void* jsJitExceptionHandler_;
+  void* preBarrierCode_;
   const SharedCode code_;
   const UniqueTlsData tlsData_;
   GCPtrWasmMemoryObject memory_;

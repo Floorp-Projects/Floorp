@@ -7,42 +7,43 @@ declare var describe: (name: string, func: () => void) => void;
 declare var it: (desc: string, func: () => void) => void;
 declare var expect: (value: any) => any;
 
-import update, { initialSourcesState, getRelativeSources } from "../sources";
+import update, { initialSourcesState, getDisplayedSources } from "../sources";
 import { foobar } from "../../test/fixtures";
 import type { Source } from "../../types";
 import { prefs } from "../../utils/prefs";
 
 const fakeSources = foobar.sources.sources;
 
-const extenstionSource = {
-  id: "extenstionId",
-  url: "http://example.com/script.js"
+const extensionSource = {
+  id: "extensionId",
+  url: "http://example.com/script.js",
+  actors: [{ actor: "extensionId-actor", source: "extensionId", thread: "foo" }]
 };
 
 const firefoxExtensionSource = {
   id: "firefoxExtension",
-  url: "moz-extension://id/js/content.js"
+  url: "moz-extension://id/js/content.js",
+  actors: [
+    {
+      actor: "firefoxExtension-actor",
+      source: "firefoxExtension",
+      thread: "foo"
+    }
+  ]
 };
 
 const chromeExtensionSource = {
   id: "chromeExtension",
-  url: "chrome-extension://id/js/content.js"
+  url: "chrome-extension://id/js/content.js",
+  actors: [
+    { actor: "chromeExtension-actor", source: "chromeExtension", thread: "foo" }
+  ]
 };
 
 const mockedSources = [
-  extenstionSource,
+  extensionSource,
   firefoxExtensionSource,
   chromeExtensionSource
-];
-
-const mockedSourceActors = [
-  { actor: "extensionId-actor", source: "extenstionId", thread: "foo" },
-  {
-    actor: "firefoxExtension-actor",
-    source: "firefoxExtension",
-    thread: "foo"
-  },
-  { actor: "chromeExtension-actor", source: "chromeExtension", thread: "foo" }
 ];
 
 describe("sources reducer", () => {
@@ -65,12 +66,11 @@ describe("sources selectors", () => {
       sources: update(state, {
         type: "ADD_SOURCES",
         // coercing to a Source for the purpose of this test
-        sources: ((mockedSources: any): Source[]),
-        sourceActors: mockedSourceActors
+        sources: ((mockedSources: any): Source[])
       })
     };
-    const selectedRelativeSources = getRelativeSources(state);
-    const threadSources = selectedRelativeSources.foo;
+    const selectedDisplayedSources = getDisplayedSources(state);
+    const threadSources = selectedDisplayedSources.foo;
     expect(Object.values(threadSources)).toHaveLength(3);
   });
 
@@ -81,12 +81,11 @@ describe("sources selectors", () => {
       sources: update(state, {
         type: "ADD_SOURCES",
         // coercing to a Source for the purpose of this test
-        sources: ((mockedSources: any): Source[]),
-        sourceActors: mockedSourceActors
+        sources: ((mockedSources: any): Source[])
       })
     };
-    const selectedRelativeSources = getRelativeSources(state);
-    const threadSources = selectedRelativeSources.foo;
+    const selectedDisplayedSources = getDisplayedSources(state);
+    const threadSources = selectedDisplayedSources.foo;
     expect(Object.values(threadSources)).toHaveLength(1);
   });
 });

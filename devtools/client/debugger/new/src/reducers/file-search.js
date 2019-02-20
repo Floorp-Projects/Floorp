@@ -98,7 +98,7 @@ function update(
 }
 
 // NOTE: we'd like to have the app state fully typed
-// https://github.com/devtools-html/debugger.html/blob/master/src/reducers/sources.js#L179-L185
+// https://github.com/firefox-devtools/debugger.html/blob/master/src/reducers/sources.js#L179-L185
 type OuterState = { fileSearch: Record<FileSearchState> };
 
 export function getFileSearchQuery(state: OuterState): string {
