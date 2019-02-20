@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 ChromeUtils.defineModuleGetter(this, "OS",
                                "resource://gre/modules/osfile.jsm");
 
-GeckoViewUtils.initLogging("ContentCrashHandler", this);
+const {debug, warn} = GeckoViewUtils.initLogging("ContentCrashHandler"); // eslint-disable-line no-unused-vars
 
 function getDir(name) {
   let uAppDataPath = Services.dirsvc.get("UAppData", Ci.nsIFile).path;

@@ -350,3 +350,5 @@ class GeckoViewContent extends GeckoViewModule {
     finder.highlight(true, finder.searchString, linksOnly, !!aData.drawOutline);
   }
 }
+
+const {debug, warn} = GeckoViewContent.initLogging("GeckoViewContent"); // eslint-disable-line no-unused-vars

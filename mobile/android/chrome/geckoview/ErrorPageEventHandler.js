@@ -7,8 +7,7 @@ const {GeckoViewUtils} = ChromeUtils.import("resource://gre/modules/GeckoViewUti
 var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-/* global debug:false, warn:false */
-GeckoViewUtils.initLogging("ErrorPageEventHandler", this);
+const {debug, warn} = GeckoViewUtils.initLogging("ErrorPageEventHandler"); // eslint-disable-line no-unused-vars
 
 ChromeUtils.defineModuleGetter(this, "SSLExceptions",
                                "resource://gre/modules/SSLExceptions.jsm");

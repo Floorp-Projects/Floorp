@@ -152,5 +152,5 @@ class GeckoViewSettingsChild extends GeckoViewChildModule {
   }
 }
 
-let {debug, warn} = GeckoViewSettingsChild.initLogging("GeckoViewSettings");
-let module = GeckoViewSettingsChild.create(this);
+const {debug, warn} = GeckoViewSettingsChild.initLogging("GeckoViewSettings"); // eslint-disable-line no-unused-vars
+const module = GeckoViewSettingsChild.create(this);

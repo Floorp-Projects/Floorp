@@ -31,3 +31,5 @@ class GeckoViewMedia extends GeckoViewModule {
     this.messageManager.sendAsyncMessage(aEvent, aData);
   }
 }
+
+const {debug, warn} = GeckoViewMedia.initLogging("GeckoViewMedia"); // eslint-disable-line no-unused-vars

@@ -28,7 +28,7 @@ XPCOMUtils.defineLazyGetter(this, "SocketListener", () => {
   return SocketListener;
 });
 
-GeckoViewUtils.initLogging("RemoteDebugger", this);
+const {debug, warn} = GeckoViewUtils.initLogging("RemoteDebugger"); // eslint-disable-line no-unused-vars
 
 var GeckoViewRemoteDebugger = {
   observe(aSubject, aTopic, aData) {

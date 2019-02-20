@@ -60,3 +60,5 @@ class GeckoViewTab extends GeckoViewModule {
     };
   }
 }
+
+const {debug, warn} = GeckoViewTab.initLogging("GeckoViewTab"); // eslint-disable-line no-unused-vars

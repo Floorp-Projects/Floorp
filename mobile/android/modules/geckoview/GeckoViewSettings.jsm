@@ -119,3 +119,5 @@ class GeckoViewSettings extends GeckoViewModule {
     this.window.docShell.displayMode = aMode;
   }
 }
+
+const {debug, warn} = GeckoViewSettings.initLogging("GeckoViewSettings"); // eslint-disable-line no-unused-vars
