@@ -69,8 +69,6 @@ sealed class Permission(open val id: String? = "", open val desc: String? = "") 
     @Parcelize
     data class ContentAudioOther(override val id: String? = "", override val desc: String? = "") : Permission(id)
     @Parcelize
-    data class ContentAutoplayMedia(override val id: String? = "", override val desc: String? = "") : Permission(id)
-    @Parcelize
     data class ContentGeoLocation(override val id: String? = "", override val desc: String? = "") : Permission(id)
     @Parcelize
     data class ContentNotification(override val id: String? = "", override val desc: String? = "") : Permission(id)

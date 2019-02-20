@@ -6,7 +6,6 @@ package mozilla.components.browser.engine.gecko.permission
 
 import android.Manifest
 import mozilla.components.concept.engine.permission.Permission
-import mozilla.components.concept.engine.permission.Permission.ContentAutoplayMedia
 import mozilla.components.support.test.mock
 import mozilla.components.test.ReflectionUtils
 import org.junit.Assert.assertEquals
@@ -18,7 +17,6 @@ import org.mozilla.geckoview.GeckoSession
 import org.robolectric.RobolectricTestRunner
 
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource
-import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_AUTOPLAY_MEDIA
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_GEOLOCATION
 
@@ -30,11 +28,7 @@ class GeckoPermissionRequestTest {
         val callback: GeckoSession.PermissionDelegate.Callback = mock()
         val uri = "https://mozilla.org"
 
-        var request = GeckoPermissionRequest.Content(uri, PERMISSION_AUTOPLAY_MEDIA, callback)
-        assertEquals(uri, request.uri)
-        assertEquals(listOf(ContentAutoplayMedia()), request.permissions)
-
-        request = GeckoPermissionRequest.Content(uri, PERMISSION_DESKTOP_NOTIFICATION, callback)
+        var request = GeckoPermissionRequest.Content(uri, PERMISSION_DESKTOP_NOTIFICATION, callback)
         assertEquals(uri, request.uri)
         assertEquals(listOf(Permission.ContentNotification()), request.permissions)
 
@@ -52,7 +46,7 @@ class GeckoPermissionRequestTest {
         val callback: GeckoSession.PermissionDelegate.Callback = mock()
         val uri = "https://mozilla.org"
 
-        var request = GeckoPermissionRequest.Content(uri, PERMISSION_AUTOPLAY_MEDIA, callback)
+        var request = GeckoPermissionRequest.Content(uri, PERMISSION_GEOLOCATION, callback)
         request.grant()
         verify(callback).grant()
     }
@@ -62,7 +56,7 @@ class GeckoPermissionRequestTest {
         val callback: GeckoSession.PermissionDelegate.Callback = mock()
         val uri = "https://mozilla.org"
 
-        var request = GeckoPermissionRequest.Content(uri, PERMISSION_AUTOPLAY_MEDIA, callback)
+        var request = GeckoPermissionRequest.Content(uri, PERMISSION_GEOLOCATION, callback)
         request.reject()
         verify(callback).reject()
     }

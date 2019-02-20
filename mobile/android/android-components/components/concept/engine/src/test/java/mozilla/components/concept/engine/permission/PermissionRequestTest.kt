@@ -44,8 +44,6 @@ class PermissionRequestTest {
         assertNotEquals(Permission.ContentAudioOther(), Permission.ContentAudioOther("id"))
         assertNotEquals(Permission.ContentAudioOther("id"), Permission.ContentAudioOther("id", "desc"))
 
-        assertNotEquals(Permission.ContentAutoplayMedia(), Permission.ContentAutoplayMedia("id"))
-        assertNotEquals(Permission.ContentAutoplayMedia("id"), Permission.ContentAutoplayMedia("id", "desc"))
         assertNotEquals(Permission.ContentProtectedMediaId(), Permission.ContentProtectedMediaId("id"))
         assertNotEquals(Permission.ContentProtectedMediaId("id"), Permission.ContentProtectedMediaId("id", "desc"))
         assertNotEquals(Permission.ContentGeoLocation(), Permission.ContentGeoLocation("id"))

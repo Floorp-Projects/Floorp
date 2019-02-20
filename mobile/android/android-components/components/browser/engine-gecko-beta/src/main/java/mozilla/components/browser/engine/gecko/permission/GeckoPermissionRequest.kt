@@ -9,7 +9,6 @@ import mozilla.components.concept.engine.permission.PermissionRequest
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_GEOLOCATION
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION
-import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_AUTOPLAY_MEDIA
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource.SOURCE_AUDIOCAPTURE
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource.SOURCE_APPLICATION
@@ -53,7 +52,6 @@ sealed class GeckoPermissionRequest constructor(
     ) {
         companion object {
             val permissionsMap = mapOf(
-                PERMISSION_AUTOPLAY_MEDIA to Permission.ContentAutoplayMedia(),
                 PERMISSION_DESKTOP_NOTIFICATION to Permission.ContentNotification(),
                 PERMISSION_GEOLOCATION to Permission.ContentGeoLocation()
             )
