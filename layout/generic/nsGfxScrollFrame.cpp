@@ -5574,6 +5574,10 @@ void ScrollFrameHelper::UpdateMinimumScaleSize(
   }
 
   nsViewportInfo viewportInfo = doc->GetViewportInfo(displaySize);
+  if (!viewportInfo.IsZoomAllowed()) {
+    // Don't apply the minimum scale size if user-scalable=no is specified.
+    return;
+  }
 
   // The intrinsic minimum scale is the scale that fits the entire content
   // width into the visual viewport.
