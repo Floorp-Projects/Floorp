@@ -531,11 +531,7 @@ nsresult FetchDriver::HttpFetch(
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mCSPEventListener) {
-    nsCOMPtr<nsILoadInfo> loadInfo = chan->GetLoadInfo();
-    if (NS_WARN_IF(!loadInfo)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
+    nsCOMPtr<nsILoadInfo> loadInfo = chan->LoadInfo();
     rv = loadInfo->SetCspEventListener(mCSPEventListener);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -588,7 +584,7 @@ nsresult FetchDriver::HttpFetch(
     // If request’s referrer policy is the empty string,
     // then set request’s referrer policy to the user-set default policy.
     if (mRequest->ReferrerPolicy_() == ReferrerPolicy::_empty) {
-      nsCOMPtr<nsILoadInfo> loadInfo = httpChan->GetLoadInfo();
+      nsCOMPtr<nsILoadInfo> loadInfo = httpChan->LoadInfo();
       bool isPrivate = loadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
       net::ReferrerPolicy referrerPolicy = static_cast<net::ReferrerPolicy>(
           NS_GetDefaultReferrerPolicy(isPrivate));
@@ -673,10 +669,8 @@ nsresult FetchDriver::HttpFetch(
   if (mRequest->Mode() == RequestMode::Cors) {
     AutoTArray<nsCString, 5> unsafeHeaders;
     mRequest->Headers()->GetUnsafeHeaders(unsafeHeaders);
-    nsCOMPtr<nsILoadInfo> loadInfo = chan->GetLoadInfo();
-    if (loadInfo) {
-      loadInfo->SetCorsPreflightInfo(unsafeHeaders, false);
-    }
+    nsCOMPtr<nsILoadInfo> loadInfo = chan->LoadInfo();
+    loadInfo->SetCorsPreflightInfo(unsafeHeaders, false);
   }
 
   if (mIsTrackingFetch && nsContentUtils::IsTailingEnabled() && cos) {
@@ -981,13 +975,7 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
     return rv;
   }
 
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  rv = channel->GetLoadInfo(getter_AddRefs(loadInfo));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    FailWithNetworkError(rv);
-    return rv;
-  }
-
+  nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
   // Propagate any tainting from the channel back to our response here.  This
   // step is not reflected in the spec because the spec is written such that
   // FetchEvent.respondWith() just passes the already-tainted Response back to

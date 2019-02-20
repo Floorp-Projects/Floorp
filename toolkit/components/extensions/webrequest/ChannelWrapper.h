@@ -180,7 +180,7 @@ class ChannelWrapper final : public DOMEventTargetHelper,
   already_AddRefed<nsILoadInfo> GetLoadInfo() const {
     nsCOMPtr<nsIChannel> chan = MaybeChannel();
     if (chan) {
-      return chan->GetLoadInfo();
+      return chan->LoadInfo();
     }
     return nullptr;
   }

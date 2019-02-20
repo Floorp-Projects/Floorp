@@ -898,7 +898,7 @@ nsresult nsIOService::NewChannelFromURIWithProxyFlagsInternal(
                             aLoadingNode, aSecurityFlags, aContentPolicyType,
                             aLoadingClientInfo, aController);
   }
-  NS_ASSERTION(loadInfo, "Please pass security info when creating a channel");
+  MOZ_ASSERT(loadInfo, "Please pass security info when creating a channel");
   return NewChannelFromURIWithProxyFlagsInternal(aURI, aProxyURI, aProxyFlags,
                                                  loadInfo, result);
 }
@@ -935,7 +935,7 @@ nsresult nsIOService::NewChannelFromURIWithProxyFlagsInternal(
   if (aLoadInfo) {
     // make sure we have the same instance of loadInfo on the newly created
     // channel
-    nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
+    nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
     if (aLoadInfo != loadInfo) {
       MOZ_ASSERT(false, "newly created channel must have a loadinfo attached");
       return NS_ERROR_UNEXPECTED;
@@ -1709,11 +1709,8 @@ IOServiceProxyCallback::OnProxyAvailable(nsICancelable *request,
       do_QueryInterface(handler);
   if (!speculativeHandler) return NS_OK;
 
-  nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
-  nsCOMPtr<nsIPrincipal> principal;
-  if (loadInfo) {
-    principal = loadInfo->LoadingPrincipal();
-  }
+  nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+  nsCOMPtr<nsIPrincipal> principal = loadInfo->LoadingPrincipal();
 
   nsLoadFlags loadFlags = 0;
   channel->GetLoadFlags(&loadFlags);

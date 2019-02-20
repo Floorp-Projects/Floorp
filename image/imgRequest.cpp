@@ -1200,7 +1200,7 @@ imgRequest::OnRedirectVerifyCallback(nsresult result) {
     // to upgrade all requests from http to https before any data is fetched
     // from the network. Do not pollute mHadInsecureRedirect in case of such an
     // internal redirect.
-    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
+    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
     bool upgradeInsecureRequests =
         loadInfo ? loadInfo->GetUpgradeInsecureRequests() ||
                        loadInfo->GetBrowserUpgradeInsecureRequests()

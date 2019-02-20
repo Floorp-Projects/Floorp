@@ -271,10 +271,7 @@ OCSPRequest::Run() {
     attrs.mFirstPartyDomain = mOriginAttributes.mFirstPartyDomain;
     attrs.mPrivateBrowsingId = mOriginAttributes.mPrivateBrowsingId;
 
-    nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
-    if (!loadInfo) {
-      return NotifyDone(NS_ERROR_FAILURE, lock);
-    }
+    nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
     rv = loadInfo->SetOriginAttributes(attrs);
     if (NS_FAILED(rv)) {
       return NotifyDone(rv, lock);

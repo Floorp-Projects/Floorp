@@ -272,9 +272,9 @@ class StartResponse final : public Runnable {
     nsresult rv = mChannel->GetChannel(getter_AddRefs(underlyingChannel));
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_TRUE(underlyingChannel, NS_ERROR_UNEXPECTED);
-    nsCOMPtr<nsILoadInfo> loadInfo = underlyingChannel->GetLoadInfo();
+    nsCOMPtr<nsILoadInfo> loadInfo = underlyingChannel->LoadInfo();
 
-    if (!loadInfo || !CSPPermitsResponse(loadInfo)) {
+    if (!CSPPermitsResponse(loadInfo)) {
       mChannel->CancelInterception(NS_ERROR_CONTENT_BLOCKED);
       return NS_OK;
     }
