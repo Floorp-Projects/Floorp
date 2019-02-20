@@ -155,7 +155,7 @@ class Browsers private constructor(
                 info.packageName != KnownBrowser.FIREFOX.packageName &&
                 info.packageName != packageName
             ) {
-                // There's at least one browser that is not Focus or Firefox and also not the
+                // There's at least one browser that is not *this app* or Firefox and also not the
                 // default browser.
                 return true
             }
@@ -208,7 +208,7 @@ class Browsers private constructor(
         intent.data = uri
 
         for (info in packageManager.queryIntentActivities(intent, 0)) {
-            if (context.packageName != info.activityInfo.packageName) {
+            if (context.packageName != info.activityInfo.packageName && info.activityInfo.exported) {
                 browsers[info.activityInfo.packageName] = info.activityInfo
             }
         }
