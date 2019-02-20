@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "💾 Savind and restoring browser session state"
+title: "💾 Saving and restoring browser session state"
 date: 2019-02-18 14:35:00 +0200
 author: sebastian
 ---
