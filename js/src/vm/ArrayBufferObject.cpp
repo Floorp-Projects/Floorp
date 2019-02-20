@@ -537,59 +537,6 @@ void ArrayBufferObject::setNewData(FreeOp* fop, BufferContents newContents) {
   setDataPointer(newContents);
 }
 
-// This is called *only* from changeContents(), below.
-// By construction, every view parameter will be mapping unshared memory (an
-// ArrayBuffer). Hence no reason to worry about shared memory here.
-
-void ArrayBufferObject::changeViewContents(JSContext* cx,
-                                           ArrayBufferViewObject* view,
-                                           uint8_t* oldDataPointer,
-                                           BufferContents newContents) {
-  MOZ_ASSERT(!view->isSharedMemory());
-
-  // Watch out for NULL data pointers in views. This means that the view
-  // is not fully initialized (in which case it'll be initialized later
-  // with the correct pointer).
-  JS::AutoCheckCannotGC nogc;
-  uint8_t* viewDataPointer = view->dataPointerUnshared(nogc);
-  if (viewDataPointer) {
-    MOZ_ASSERT(newContents);
-    ptrdiff_t offset = viewDataPointer - oldDataPointer;
-    viewDataPointer = static_cast<uint8_t*>(newContents.data()) + offset;
-    view->setDataPointerUnshared(viewDataPointer);
-  }
-
-  // Notify compiled jit code that the base pointer has moved.
-  MarkObjectStateChange(cx, view);
-}
-
-// BufferContents is specific to ArrayBuffer, hence it will not represent shared
-// memory.
-
-void ArrayBufferObject::changeContents(JSContext* cx,
-                                       BufferContents newContents) {
-  MOZ_RELEASE_ASSERT(!isWasm());
-
-  // Change buffer contents.
-  uint8_t* oldDataPointer = dataPointer();
-  setNewData(cx->runtime()->defaultFreeOp(), newContents);
-
-  // Update all views.
-  auto& innerViews = ObjectRealm::get(this).innerViews.get();
-  if (InnerViewTable::ViewVector* views =
-          innerViews.maybeViewsUnbarriered(this)) {
-    for (size_t i = 0; i < views->length(); i++) {
-      JSObject* view = (*views)[i];
-      changeViewContents(cx, &view->as<ArrayBufferViewObject>(), oldDataPointer,
-                         newContents);
-    }
-  }
-  if (JSObject* view = firstView()) {
-    changeViewContents(cx, &view->as<ArrayBufferViewObject>(), oldDataPointer,
-                       newContents);
-  }
-}
-
 /*
  * [SMDOC] WASM Linear Memory structure
  *
