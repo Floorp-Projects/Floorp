@@ -31,6 +31,11 @@ exclude: true
 
 - Added `scrollBy()` and `scrollTo()` to `PanZoomController`.
 
+- Added [`GeckoSession.getDefaultUserAgent`][67.1] to expose the build-time
+  default user agent synchronously.
+
+[67.1]: ../GeckoSession.html#getDefaultUserAgent--
+
 ## v66
 - Removed redundant field `GeckoSession.ProgressDelegate.SecurityInformation.trackingMode`.
   Use `GeckoSession.TrackingProtectionDelegate.onTrackerBlocked` for
@@ -140,4 +145,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: f318744a2a5bd8058977a5709a3e9a3b73d5202b
+[api-version]: 0b19e298c556966ca0821bc2be8b015ccd014fa9

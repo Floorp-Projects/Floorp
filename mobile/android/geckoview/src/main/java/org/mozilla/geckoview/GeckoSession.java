@@ -887,6 +887,19 @@ public class GeckoSession implements Parcelable {
     }
 
     /**
+     * Get the default user agent for this GeckoView build.
+     *
+     * This method does not account for any override that might have been
+     * applied to the user agent string.
+     *
+     * @return the default user agent string
+     */
+    @AnyThread
+    public static @NonNull String getDefaultUserAgent() {
+        return BuildConfig.USER_AGENT_GECKOVIEW_MOBILE;
+    }
+
+    /**
      * Get the current prompt delegate for this GeckoSession.
      * @return PromptDelegate instance or null if using default delegate.
      */
