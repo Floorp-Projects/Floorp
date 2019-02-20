@@ -359,7 +359,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   bool addView(JSContext* cx, JSObject* view);
 
   void setNewData(FreeOp* fop, BufferContents newContents);
-  void changeContents(JSContext* cx, BufferContents newContents);
 
   // Detach this buffer from its original memory.  (This necessarily makes
   // views of this buffer unusable for modifying that original memory.)
@@ -367,8 +366,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
                      BufferContents newContents);
 
  private:
-  void changeViewContents(JSContext* cx, ArrayBufferViewObject* view,
-                          uint8_t* oldDataPointer, BufferContents newContents);
   void setFirstView(JSObject* view);
 
   uint8_t* inlineDataPointer() const;
