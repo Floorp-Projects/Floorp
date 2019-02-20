@@ -641,8 +641,12 @@ class Marionette(object):
             return self.instance.profile.profile
 
     def start_binary(self, timeout):
-        if not self.is_port_available(self.port, host=self.host):
-            raise IOError("Port {0}:{1} is unavailable.".format(self.host, self.port))
+        try:
+            self.check_port_available(self.port, host=self.host)
+        except socket.error:
+            _, value, tb = sys.exc_info()
+            msg = "Port {}:{} is unavailable ({})".format(self.host, self.port, value)
+            reraise(IOError, msg, tb)
 
         try:
             self.instance.start()
@@ -677,15 +681,16 @@ class Marionette(object):
         self.cleanup()
 
     @staticmethod
-    def is_port_available(port, host=''):
+    def check_port_available(port, host=''):
+        """Check if "host:port" is available.
+
+        Raise socket.error if port is not available.
+        """
         port = int(port)
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             s.bind((host, port))
-            return True
-        except socket.error:
-            return False
         finally:
             s.close()
 
