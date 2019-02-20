@@ -8,6 +8,8 @@
 #include "vm/ArrayBufferObject.h"
 
 #include "mozilla/Alignment.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Likely.h"
@@ -1371,13 +1373,73 @@ ArrayBufferObject* ArrayBufferObject::createFromNewRawBuffer(
   return buffer;
 }
 
+static void CheckStealPreconditions(Handle<ArrayBufferObject*> buffer,
+                                    JSContext* cx) {
+  cx->check(buffer);
+
+  MOZ_ASSERT(!buffer->isDetached(), "can't steal from a detached buffer");
+  MOZ_ASSERT(!buffer->isPreparedForAsmJS(),
+             "asm.js-prepared buffers don't have detachable/stealable data");
+}
+
+/* static */ uint8_t* ArrayBufferObject::stealMallocedContents(
+    JSContext* cx, Handle<ArrayBufferObject*> buffer) {
+  CheckStealPreconditions(buffer, cx);
+
+  switch (buffer->bufferKind()) {
+    case MALLOCED:
+      if (buffer->ownsData()) {
+        uint8_t* stolenData = buffer->dataPointer();
+        MOZ_ASSERT(stolenData);
+
+        // Overwrite the old data pointer *without* releasing the contents
+        // being stolen.
+        BufferContents newContents = BufferContents::createNoData();
+        buffer->setDataPointer(newContents, OwnsData);
+
+        // Detach |buffer| now that doing so won't free |stolenData|.
+        ArrayBufferObject::detach(cx, buffer, newContents);
+        return stolenData;
+      }
+      MOZ_FALLTHROUGH;
+
+    case INLINE_DATA:
+    case NO_DATA:
+    case USER_OWNED:
+    case MAPPED:
+    case EXTERNAL: {
+      // We can't use these data types directly.  Make a copy to return.
+      uint8_t* copiedData = NewCopiedBufferContents(cx, buffer);
+      if (!copiedData) {
+        return nullptr;
+      }
+
+      // Detach |buffer|.  This immediately releases the currently owned
+      // contents, freeing or unmapping data in the MAPPED and EXTERNAL cases.
+      ArrayBufferObject::detach(cx, buffer, BufferContents::createNoData());
+      return copiedData;
+    }
+
+    case WASM:
+      MOZ_ASSERT_UNREACHABLE(
+          "wasm buffers aren't stealable except by a "
+          "memory.grow operation that shouldn't call this "
+          "function");
+      return nullptr;
+
+    case BAD1:
+      MOZ_ASSERT_UNREACHABLE("bad kind when stealing malloc'd data");
+      return nullptr;
+  }
+
+  MOZ_ASSERT_UNREACHABLE("garbage kind computed");
+  return nullptr;
+}
+
 /* static */ ArrayBufferObject::BufferContents ArrayBufferObject::stealContents(
     JSContext* cx, Handle<ArrayBufferObject*> buffer,
     bool hasStealableContents) {
-  cx->check(buffer);
-
-  MOZ_ASSERT(!buffer->isPreparedForAsmJS(),
-             "asm.js-prepared buffers don't have detachable/stealable data");
+  CheckStealPreconditions(buffer, cx);
 
 #ifdef DEBUG
   if (hasStealableContents) {
@@ -1853,19 +1915,8 @@ JS_PUBLIC_API void* JS_StealArrayBufferContents(JSContext* cx,
     return nullptr;
   }
 
-  // This function returns a plain malloc'd buffer for the user to own, so
-  // stealing actual contents requires |ownsData() && isMalloced()|.
-  //
-  // We might consider returning something that handles releasing data of more
-  // exotic kind at some point.
-  //
-  // XXX The three kinds made |ownsData()| in this patch would all fail the
-  //     second test here, so the line below isn't broken by this patch.
-  bool hasStealableContents = buffer->ownsData() && buffer->isMalloced();
-
   AutoRealm ar(cx, buffer);
-  return ArrayBufferObject::stealContents(cx, buffer, hasStealableContents)
-      .data();
+  return ArrayBufferObject::stealMallocedContents(cx, buffer);
 }
 
 JS_PUBLIC_API JSObject* JS_NewMappedArrayBufferWithContents(JSContext* cx,
