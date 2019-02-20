@@ -43,6 +43,7 @@ stl_headers = [
     'map',
     'memory',
     'ostream',
+    'regex',
     'set',
     'stack',
     'string',
