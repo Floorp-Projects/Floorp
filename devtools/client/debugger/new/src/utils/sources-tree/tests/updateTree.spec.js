@@ -4,14 +4,14 @@
 
 // @flow
 
-import { createSource } from "../../../reducers/sources";
+import { makeMockSource } from "../../../utils/test-mockup";
 import { updateTree, createTree } from "../index";
 
 type RawSource = {| url: string, id: string |};
 
 function createSourcesMap(sources: RawSource[]) {
   const sourcesMap = sources.reduce((map, source) => {
-    map[source.id] = createSource(source);
+    map[source.id] = makeMockSource(source.url, source.id);
     return map;
   }, {});
 

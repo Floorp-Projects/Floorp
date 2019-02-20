@@ -4,7 +4,7 @@
 
 // @flow
 
-import type { Source, SourceActor, SourceLocation } from "../../types";
+import type { Source, SourceLocation } from "../../types";
 import type { PromiseAction } from "../utils/middleware/promise";
 
 export type LoadSourceAction = PromiseAction<
@@ -22,8 +22,7 @@ export type SourceAction =
     |}
   | {|
       +type: "ADD_SOURCES",
-      +sources: Array<Source>,
-      +sourceActors: SourceActor[]
+      +sources: Array<Source>
     |}
   | {|
       +type: "UPDATE_SOURCE",

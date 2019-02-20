@@ -18,11 +18,11 @@ describe("sources - pretty print", () => {
 
   it("returns a pretty source for a minified file", async () => {
     const url = "base.js";
-    const csr = makeSource(url);
-    await dispatch(actions.newSource(csr));
-    await dispatch(createPrettySource(csr.source.id));
+    const source = makeSource(url);
+    await dispatch(actions.newSource(source));
+    await dispatch(createPrettySource(source.id));
 
-    const prettyURL = `${csr.source.url}:formatted`;
+    const prettyURL = `${source.url}:formatted`;
     const pretty = selectors.getSourceByURL(getState(), prettyURL);
     expect(pretty && pretty.contentType).toEqual("text/javascript");
     expect(pretty && pretty.url.includes(prettyURL)).toEqual(true);
@@ -30,16 +30,16 @@ describe("sources - pretty print", () => {
   });
 
   it("should create a source when first toggling pretty print", async () => {
-    const csr = makeSource("foobar.js", { loadedState: "loaded" });
-    await dispatch(actions.togglePrettyPrint(csr.source.id));
+    const source = makeSource("foobar.js", { loadedState: "loaded" });
+    await dispatch(actions.togglePrettyPrint(source.id));
     expect(selectors.getSourceCount(getState())).toEqual(2);
   });
 
   it("should not make a second source when toggling pretty print", async () => {
-    const csr = makeSource("foobar.js", { loadedState: "loaded" });
-    await dispatch(actions.togglePrettyPrint(csr.source.id));
+    const source = makeSource("foobar.js", { loadedState: "loaded" });
+    await dispatch(actions.togglePrettyPrint(source.id));
     expect(selectors.getSourceCount(getState())).toEqual(2);
-    await dispatch(actions.togglePrettyPrint(csr.source.id));
+    await dispatch(actions.togglePrettyPrint(source.id));
     expect(selectors.getSourceCount(getState())).toEqual(2);
   });
 });

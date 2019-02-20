@@ -11,7 +11,5 @@ DIRS += [
 
 DebuggerModules(
     'index.js',
-    'pausePoints.js',
-    'stepping.js',
     'why.js',
 )

@@ -6,9 +6,10 @@
 
 import { isOriginalId } from "devtools-source-map";
 import { getSource } from "../selectors";
+import { isGenerated } from "../utils/source";
 
 import type { SourceLocation, MappedLocation, Source } from "../types";
-import { isGenerated } from "../utils/source";
+import typeof SourceMaps from "../../packages/devtools-source-map/src";
 
 export async function getGeneratedLocation(
   state: Object,
@@ -27,7 +28,7 @@ export async function getGeneratedLocation(
 
   const generatedSource = getSource(state, sourceId);
   if (!generatedSource) {
-    return location;
+    throw new Error(`Could not find generated source ${sourceId}`);
   }
 
   return {
@@ -36,6 +37,18 @@ export async function getGeneratedLocation(
     column: column === 0 ? undefined : column,
     sourceUrl: generatedSource.url
   };
+}
+
+export async function getOriginalLocation(
+  generatedLocation: SourceLocation,
+  source: Source,
+  sourceMaps: SourceMaps
+) {
+  if (isOriginalId(generatedLocation.sourceId)) {
+    return location;
+  }
+
+  return sourceMaps.getOriginalLocation(generatedLocation);
 }
 
 export async function getMappedLocation(

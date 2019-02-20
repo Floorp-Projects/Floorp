@@ -60,7 +60,7 @@
 }
 
 .result-list li .result-item-icon {
-  background-color: var(--theme-comment);
+  background-color: var(--theme-icon-dimmed-color);
 }
 
 .result-list li .icon {

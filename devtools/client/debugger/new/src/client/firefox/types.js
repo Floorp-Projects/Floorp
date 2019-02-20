@@ -21,7 +21,7 @@ import type {
   Frame,
   SourceId,
   Worker,
-  SourceActor
+  Range
 } from "../../types";
 
 type URL = string;
@@ -71,7 +71,7 @@ type URL = string;
 export type FramePacket = {
   actor: ActorId,
   arguments: any[],
-  callee: any,
+  displayName: string,
   environment: any,
   this: any,
   depth?: number,
@@ -119,11 +119,6 @@ export type SourcesPacket = {
   from: ActorId,
   sources: SourcePayload[]
 };
-
-export type CreateSourceResult = {|
-  sourceActor?: SourceActor,
-  +source: Source
-|};
 
 /**
  * Pause Packet sent when the server is in a "paused" state
@@ -314,10 +309,7 @@ export type SourceClient = {
   source: () => { source: any, contentType?: string },
   _activeThread: ThreadClient,
   actor: string,
-  getBreakpointPositionsCompressed: (range: {
-    start: { line: number },
-    end: { line: number }
-  }) => Promise<any>,
+  getBreakpointPositionsCompressed: (range: ?Range) => Promise<any>,
   prettyPrint: number => Promise<*>,
   disablePrettyPrint: () => Promise<*>,
   blackBox: (range?: Range) => Promise<*>,

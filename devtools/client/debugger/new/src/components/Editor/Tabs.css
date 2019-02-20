@@ -8,7 +8,6 @@
   height: var(--editor-header-height);
   border-bottom: 1px solid var(--theme-splitter-color);
   background-color: var(--theme-toolbar-background);
-  --overflow-button-width: 28px;
 }
 
 .source-header * {

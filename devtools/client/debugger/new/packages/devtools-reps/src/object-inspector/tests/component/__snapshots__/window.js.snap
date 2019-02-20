@@ -19,6 +19,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders collapsed top-level window 
     data-expandable={true}
     id="Symbol(window)"
     onClick={[Function]}
+    onKeyDownCapture={null}
     role="treeitem"
   >
     <div
@@ -73,6 +74,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders sub-level window 1`] = `
     data-expandable={true}
     id="Symbol(root)"
     onClick={[Function]}
+    onKeyDownCapture={null}
     role="treeitem"
   >
     <div
@@ -96,6 +98,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders sub-level window 1`] = `
     data-expandable={true}
     id="Symbol(window)"
     onClick={[Function]}
+    onKeyDownCapture={null}
     role="treeitem"
   >
     <span
@@ -154,6 +157,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
     data-expandable={true}
     id="Symbol(window)"
     onClick={[Function]}
+    onKeyDownCapture={null}
     role="treeitem"
   >
     <div
@@ -208,6 +212,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
     data-expandable={true}
     id="Symbol(window)"
     onClick={[Function]}
+    onKeyDownCapture={null}
     role="treeitem"
   >
     <div
@@ -245,6 +250,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
     data-expandable={false}
     id="Symbol(window/<prototype>)"
     onClick={[Function]}
+    onKeyDownCapture={null}
     role="treeitem"
   >
     <span

@@ -35,6 +35,7 @@ add_task(async function() {
 
   // There are 5 nodes: the root, a, b, c, and proto.
   await waitFor(() => objectInspector.querySelectorAll(".node").length === 5);
+  objectInspector.focus();
 
   const [
     root,
