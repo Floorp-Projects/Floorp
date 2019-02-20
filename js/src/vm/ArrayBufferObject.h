@@ -354,10 +354,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   static uint8_t* stealMallocedContents(JSContext* cx,
                                         Handle<ArrayBufferObject*> buffer);
 
-  static BufferContents stealContents(JSContext* cx,
-                                      Handle<ArrayBufferObject*> buffer,
-                                      bool hasStealableContents);
-
   static BufferContents extractStructuredCloneContents(
       JSContext* cx, Handle<ArrayBufferObject*> buffer);
 
