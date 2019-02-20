@@ -354,8 +354,6 @@ class nsCookieService final : public nsICookieService,
   void FindStaleCookies(nsCookieEntry *aEntry, int64_t aCurrentTime,
                         bool aIsSecure, nsTArray<nsListIter> &aOutput,
                         uint32_t aLimit);
-  void TelemetryForEvictingStaleCookie(nsCookie *aEvicted,
-                                       int64_t oldestCookieTime);
   void NotifyAccepted(nsIChannel *aChannel);
   void NotifyRejected(nsIURI *aHostURI, nsIChannel *aChannel,
                       uint32_t aRejectedReason, CookieOperation aOperation);
