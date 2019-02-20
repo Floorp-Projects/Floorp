@@ -110,7 +110,7 @@ class DllServicesBase : public Authenticode {
     return mAuthenticode->GetBinaryOrgName(aFilePath);
   }
 
-  void Disable() { DllBlocklist_SetDllServices(nullptr); }
+  void DisableFull() { DllBlocklist_SetFullDllServices(nullptr); }
 
   DllServicesBase(const DllServicesBase&) = delete;
   DllServicesBase(DllServicesBase&&) = delete;
@@ -122,7 +122,8 @@ class DllServicesBase : public Authenticode {
 
   virtual ~DllServicesBase() = default;
 
-  void Enable() { DllBlocklist_SetDllServices(this); }
+  void EnableFull() { DllBlocklist_SetFullDllServices(this); }
+  void EnableBasic() { DllBlocklist_SetBasicDllServices(this); }
 
  private:
   Authenticode* mAuthenticode;
@@ -166,14 +167,17 @@ class DllServices : public detail::DllServicesBase {
 
 #else
 
-class BasicDllServices : public detail::DllServicesBase {
+class BasicDllServices final : public detail::DllServicesBase {
  public:
-  BasicDllServices() { Enable(); }
-
-  ~BasicDllServices() { Disable(); }
-
-  virtual void DispatchDllLoadNotification(PCUNICODE_STRING aDllName) override {
+  BasicDllServices() {
+    EnableBasic();
   }
+
+  ~BasicDllServices() = default;
+
+  // Not useful in this class, so provide a default implementation
+  virtual void DispatchDllLoadNotification(PCUNICODE_STRING aDllName) override
+      {}
 
   virtual void NotifyUntrustedModuleLoads(
       const Vector<glue::ModuleLoadEvent, 0, InfallibleAllocPolicy>& aEvents)
