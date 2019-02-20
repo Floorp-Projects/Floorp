@@ -38,6 +38,7 @@ class EditToolbar(
     private val toolbar: BrowserToolbar
 ) : ViewGroup(context) {
     internal val urlView = InlineAutocompleteEditText(context).apply {
+        id = R.id.mozac_browser_toolbar_edit_url_view
         imeOptions = EditorInfo.IME_ACTION_GO or EditorInfo.IME_FLAG_NO_EXTRACT_UI or EditorInfo.IME_FLAG_NO_FULLSCREEN
         gravity = Gravity.CENTER_VERTICAL
         background = null
@@ -60,6 +61,7 @@ class EditToolbar(
     }
 
     private val cancelView = ImageView(context).apply {
+        id = R.id.mozac_browser_toolbar_cancel_view
         val padding = resources.pxToDp(CANCEL_PADDING_DP)
         setPadding(padding, padding, padding, padding)
         setImageResource(mozilla.components.ui.icons.R.drawable.mozac_ic_close)

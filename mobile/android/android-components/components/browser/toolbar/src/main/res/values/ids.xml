@@ -7,4 +7,6 @@
 
 <resources>
     <item name="mozac_browser_toolbar_url_view" type="id"/>
+    <item name="mozac_browser_toolbar_edit_url_view" type="id"/>
+    <item name="mozac_browser_toolbar_cancel_view" type="id"/>
 </resources>
