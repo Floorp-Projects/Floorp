@@ -20,6 +20,10 @@ projects:
     path: components/concept/engine
     description: 'An abstract layer hiding the actual browser engine implementation.'
     publish: true
+  concept-push:
+    path: components/concept/push
+    description: 'An abstract definition of a push service component.'
+    publish: true
   concept-storage:
     path: components/concept/storage
     description: 'An abstract definition of a browser storage layer.'

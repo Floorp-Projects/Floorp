@@ -92,6 +92,8 @@ _API contracts and abstraction layers for browser components._
 
 * ⚪ [**Fetch**](components/concept/fetch/README.md) - An abstract definition of an HTTP client for fetching resources.
 
+* 🔴 [**Push**](components/concept/push/README.md) - An abstract definition of a push service component.
+
 * 🔴 [**Storage**](components/concept/storage/README.md) - Abstract definition of a browser storage component.
 
 * 🔴 [**Tabstray**](components/concept/tabstray/README.md) - Abstract definition of a tabs tray component.
