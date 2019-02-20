@@ -1502,53 +1502,6 @@ ArrayBufferObject::extractStructuredCloneContents(
   return BufferContents::createFailed();
 }
 
-/* static */ ArrayBufferObject::BufferContents ArrayBufferObject::stealContents(
-    JSContext* cx, Handle<ArrayBufferObject*> buffer,
-    bool hasStealableContents) {
-  CheckStealPreconditions(buffer, cx);
-
-#ifdef DEBUG
-  if (hasStealableContents) {
-    MOZ_ASSERT(!buffer->isInlineData(),
-               "inline data is OwnsData, but it isn't malloc-allocated");
-    MOZ_ASSERT(!buffer->isNoData(),
-               "null |dataPointer()| for the no-data case isn't stealable "
-               "because it would be confused with failure");
-    MOZ_ASSERT(!buffer->hasUserOwnedData(),
-               "user-owned data isn't stealable or necessarily malloc'd");
-
-    // wasm buffers can't be stolen by |JS_StealArrayBufferContents|, but
-    // but *this* function is used internally by the impl of memory growth, so
-    // we can't assert |!buffer->isWasm()|.
-
-    // Mapped buffers can't be stolen by |JS_StealArrayBufferContents| which
-    // only can steal malloc'd data.  But they *can* be stolen when structured
-    // clone code calls this function, so they can appear here.
-
-    MOZ_ASSERT(!buffer->isExternal(),
-               "external data isn't necessarily malloc-allocated");
-  }
-#endif
-
-  BufferContents oldContents = buffer->contents();
-
-  if (hasStealableContents) {
-    buffer->setOwnsData(DoesntOwnData);  // Do not free the stolen data.
-    ArrayBufferObject::detach(cx, buffer, BufferContents::createNoData());
-    return oldContents;
-  }
-
-  // Create a new chunk of memory to return since we cannot steal the
-  // existing contents away from the buffer.
-  uint8_t* dataCopy = NewCopiedBufferContents(cx, buffer);
-  if (!dataCopy) {
-    return BufferContents::createFailed();
-  }
-
-  ArrayBufferObject::detach(cx, buffer, oldContents);
-  return BufferContents::createMalloced(dataCopy);
-}
-
 /* static */ void ArrayBufferObject::addSizeOfExcludingThis(
     JSObject* obj, mozilla::MallocSizeOf mallocSizeOf, JS::ClassInfo* info) {
   ArrayBufferObject& buffer = AsArrayBuffer(obj);
