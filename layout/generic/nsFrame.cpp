@@ -10096,7 +10096,7 @@ void nsFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
     // The one exception are block frames, because we need to know their
     // natural height excluding any overflow area which may be caused by
     // various CSS effects such as shadow or outline.
-    if (!IsFrameOfType(eBlockFrame)) {
+    if (!IsBlockFrameOrSubclass()) {
       if (aHeight != NS_INTRINSICSIZE) {
         nscoord computedHeight =
             aHeight - reflowInput.ComputedPhysicalBorderPadding().TopBottom();
@@ -10247,8 +10247,7 @@ void nsIFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
 
   // We do need to handle block pseudo-elements here, though.  Especially list
   // bullets.
-  if (aChildFrame->IsFrameOfType(nsIFrame::eBlockFrame)) {
-    auto block = static_cast<nsBlockFrame*>(aChildFrame);
+  if (nsBlockFrame* block = do_QueryFrame(aChildFrame)) {
     block->UpdatePseudoElementStyles(childrenState);
   }
 }

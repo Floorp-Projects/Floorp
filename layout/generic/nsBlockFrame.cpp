@@ -7081,7 +7081,7 @@ bool nsBlockFrame::BlockNeedsFloatManager(nsIFrame* aBlock) {
 
 /* static */
 bool nsBlockFrame::BlockCanIntersectFloats(nsIFrame* aFrame) {
-  return aFrame->IsFrameOfType(nsIFrame::eBlockFrame) &&
+  return aFrame->IsBlockFrameOrSubclass() &&
          !aFrame->IsFrameOfType(nsIFrame::eReplaced) &&
          !(aFrame->GetStateBits() & NS_BLOCK_FLOAT_MGR);
 }
