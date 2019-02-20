@@ -31,8 +31,7 @@ WebRenderImageHost::WebRenderImageHost(const TextureInfo& aTextureInfo)
     : CompositableHost(aTextureInfo),
       ImageComposite(),
       mWrBridge(nullptr),
-      mWrBridgeBindings(0),
-      mUseAsyncImagePipeline(false) {}
+      mWrBridgeBindings(0) {}
 
 WebRenderImageHost::~WebRenderImageHost() { MOZ_ASSERT(!mWrBridge); }
 

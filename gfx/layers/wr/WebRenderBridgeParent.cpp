@@ -1354,7 +1354,6 @@ void WebRenderBridgeParent::AddPipelineIdForCompositable(
   }
 
   wrHost->SetWrBridge(this);
-  wrHost->EnableUseAsyncImagePipeline();
   mAsyncCompositables.emplace(wr::AsUint64(aPipelineId), wrHost);
   mAsyncImageManager->AddAsyncImagePipeline(aPipelineId, wrHost);
 
