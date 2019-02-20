@@ -994,7 +994,7 @@ namespace mozilla {
 Authenticode* GetAuthenticode();
 }  // namespace mozilla
 
-MFBT_API void DllBlocklist_SetDllServices(
+MFBT_API void DllBlocklist_SetFullDllServices(
     mozilla::glue::detail::DllServicesBase* aSvc) {
   glue::AutoExclusiveLock lock(gDllServicesLock);
   if (aSvc) {
@@ -1022,4 +1022,13 @@ MFBT_API void DllBlocklist_SetDllServices(
       gDllServices->NotifyUntrustedModuleLoads(events);
     }
   }
+}
+
+MFBT_API void DllBlocklist_SetBasicDllServices(
+    mozilla::glue::detail::DllServicesBase* aSvc) {
+  if (!aSvc) {
+    return;
+  }
+
+  aSvc->SetAuthenticodeImpl(GetAuthenticode());
 }
