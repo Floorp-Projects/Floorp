@@ -4,17 +4,6 @@
 
 %include ../shared/compacttheme.inc.css
 
-@media (-moz-windows-default-theme) and (-moz-windows-accent-color-in-titlebar) {
-  :root[tabsintitlebar]:not(:-moz-window-inactive) {
-    background-color: -moz-win-accentcolor;
-    color: -moz-win-accentcolortext;
-  }
-  :root[tabsintitlebar] #titlebar {
-    --lwt-toolbarbutton-icon-fill: currentColor;
-    --toolbarbutton-icon-fill-opacity: .7;
-  }
-}
-
 /* The window background is white due to no accentcolor in the lightweight
    theme. It can't be changed to transparent when there is no compositor
    (Win 7 in classic / basic theme), or else dragging and focus become

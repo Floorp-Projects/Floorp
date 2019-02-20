@@ -102,6 +102,14 @@ var LightweightThemeManager = {
     return this._builtInThemes.has(theme.id);
   },
 
+  get selectedThemeID() {
+    return _prefs.getStringPref("selectedThemeID") || DEFAULT_THEME_ID;
+  },
+
+  get defaultDarkThemeID() {
+    return _defaultDarkThemeID;
+  },
+
   get usedThemes() {
     let themes = [];
     try {
