@@ -7,12 +7,7 @@
 // from the js debugger.
 
 "use strict";
-
-// Import helpers for the new debugger
-/* import-globals-from ../../../debugger/new/test/mochitest/helpers.js */
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/debugger/new/test/mochitest/helpers.js",
-  this);
+/* import-globals-from head.js*/
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/mochitest/test-eval-in-stackframe.html";
@@ -63,7 +58,7 @@ add_task(async function() {
   info("select the debugger and select the frame (1)");
   await openDebugger();
 
-  await dbg.actions.selectFrame(stackFrames[1]);
+  await selectFrame(dbg, stackFrames[1]);
 
   await openConsole();
 
@@ -84,11 +79,3 @@ add_task(async function() {
     ok(!content.wrappedJSObject.foo3, "`foo3` was not added to the content window");
   });
 });
-
-async function pauseDebugger(dbg) {
-  info("Waiting for debugger to pause");
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
-    content.wrappedJSObject.firstCall();
-  });
-  await waitForPaused(dbg);
-}

@@ -7,12 +7,7 @@
 // stackframe from the js debugger.
 
 "use strict";
-
-// Import helpers for the new debugger
-/* import-globals-from ../../../debugger/new/test/mochitest/helpers.js */
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/debugger/new/test/mochitest/helpers.js",
-  this);
+/* import-globals-from head.js*/
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/mochitest/test-autocomplete-in-stackframe.html";
@@ -84,7 +79,7 @@ async function performTests() {
   await openDebugger();
 
   // Select the frame for the `firstCall` function.
-  await dbg.actions.selectFrame(stackFrames[1]);
+  await selectFrame(dbg, stackFrames[1]);
 
   info("openConsole");
   await toolbox.selectTool("webconsole");
@@ -114,12 +109,4 @@ async function performTests() {
 
 function getPopupLabels(popup) {
   return popup.getItems().map(item => item.label);
-}
-
-async function pauseDebugger(dbg) {
-  info("Waiting for debugger to pause");
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
-    content.wrappedJSObject.firstCall();
-  });
-  await waitForPaused(dbg);
 }
