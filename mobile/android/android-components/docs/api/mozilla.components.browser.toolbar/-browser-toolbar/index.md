@@ -54,7 +54,7 @@ implemented by the DisplayToolbar and EditToolbar classes.
 | [textColor](text-color.md) | `var textColor: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Sets the colour of the text for the URL/search term displayed in the toolbar. |
 | [textSize](text-size.md) | `var textSize: `[`Float`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-float/index.html)<br>Sets the size of the text for the URL/search term displayed in the toolbar. |
 | [typeface](typeface.md) | `var typeface: `[`Typeface`](https://developer.android.com/reference/android/graphics/Typeface.html)<br>Sets the typeface of the text for the URL/search term displayed in the toolbar. |
-| [url](url.md) | `var url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Sets/Gets the URL to be displayed on the toolbar. |
+| [url](url.md) | `var url: `[`CharSequence`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-char-sequence/index.html)<br>Sets/Gets the URL to be displayed on the toolbar. |
 | [urlBoxMargin](url-box-margin.md) | `var urlBoxMargin: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Gets/Sets horizontal margin of the URL box (surrounding URL and page actions) in display mode. |
 | [urlBoxView](url-box-view.md) | `var urlBoxView: `[`View`](https://developer.android.com/reference/android/view/View.html)`?`<br>Gets/Sets a custom view that will be drawn as behind the URL and page actions in display mode. |
 

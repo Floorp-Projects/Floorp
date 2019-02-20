@@ -91,6 +91,7 @@
 | [mozilla.components.service.fxa](mozilla.components.service.fxa/index.md) |  |
 | [mozilla.components.service.glean](mozilla.components.service.glean/index.md) |  |
 | [mozilla.components.service.glean.config](mozilla.components.service.glean.config/index.md) |  |
+| [mozilla.components.service.glean.debug](mozilla.components.service.glean.debug/index.md) |  |
 | [mozilla.components.service.glean.storages](mozilla.components.service.glean.storages/index.md) |  |
 | [mozilla.components.service.sync.logins](mozilla.components.service.sync.logins/index.md) |  |
 | [mozilla.components.support.base.android](mozilla.components.support.base.android/index.md) |  |

@@ -4,7 +4,7 @@
 
 `fun getPublicSuffixPlusOne(domain: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): Deferred<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/publicsuffixlist/src/main/java/mozilla/components/lib/publicsuffixlist/PublicSuffixList.kt#L72)
 
-Returns the public suffix and one more level; known as the effective top-level domain (eTLD). Returns `null` if
+Returns the public suffix and one more level; known as the registrable domain. Returns `null` if
 [domain](get-public-suffix-plus-one.md#mozilla.components.lib.publicsuffixlist.PublicSuffixList$getPublicSuffixPlusOne(kotlin.String)/domain) is a public suffix itself.
 
 E.g.:

@@ -2,9 +2,10 @@
 
 # getPublicSuffix
 
-`fun getPublicSuffix(domain: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/publicsuffixlist/src/main/java/mozilla/components/lib/publicsuffixlist/PublicSuffixList.kt#L92)
+`fun getPublicSuffix(domain: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/publicsuffixlist/src/main/java/mozilla/components/lib/publicsuffixlist/PublicSuffixList.kt#L93)
 
-Returns the public suffix of the given [domain](get-public-suffix.md#mozilla.components.lib.publicsuffixlist.PublicSuffixList$getPublicSuffix(kotlin.String)/domain). Returns `null` if the [domain](get-public-suffix.md#mozilla.components.lib.publicsuffixlist.PublicSuffixList$getPublicSuffix(kotlin.String)/domain) is a public suffix itself.
+Returns the public suffix of the given [domain](get-public-suffix.md#mozilla.components.lib.publicsuffixlist.PublicSuffixList$getPublicSuffix(kotlin.String)/domain); known as the effective top-level domain (eTLD). Returns `null`
+if the [domain](get-public-suffix.md#mozilla.components.lib.publicsuffixlist.PublicSuffixList$getPublicSuffix(kotlin.String)/domain) is a public suffix itself.
 
 E.g.:
 

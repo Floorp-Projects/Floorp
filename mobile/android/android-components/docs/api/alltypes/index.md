@@ -167,6 +167,7 @@
 | [mozilla.components.browser.engine.gecko.permission.GeckoPermissionRequest](../mozilla.components.browser.engine.gecko.permission/-gecko-permission-request/index.md) | Gecko-based implementation of [PermissionRequest](../mozilla.components.concept.engine.permission/-permission-request/index.md). |
 | [mozilla.components.browser.engine.gecko.fetch.GeckoViewFetchClient](../mozilla.components.browser.engine.gecko.fetch/-gecko-view-fetch-client/index.md) | GeckoView ([GeckoWebExecutor](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoWebExecutor.html)) based implementation of [Client](../mozilla.components.concept.fetch/-client/index.md). |
 | [mozilla.components.service.glean.Glean](../mozilla.components.service.glean/-glean/index.md) |  |
+| [mozilla.components.service.glean.debug.GleanDebugActivity](../mozilla.components.service.glean.debug/-glean-debug-activity/index.md) | Debugging activity exported by glean to allow easier debugging. For example, invoking debug mode in the glean sample application can be done via adb using the following command: |
 | [mozilla.components.service.glean.GleanInternalAPI](../mozilla.components.service.glean/-glean-internal-a-p-i/index.md) |  |
 | [mozilla.components.lib.jexl.grammar.Grammar](../mozilla.components.lib.jexl.grammar/-grammar/index.md) | Grammar of the JEXL language. |
 | [mozilla.components.lib.jexl.grammar.GrammarElement](../mozilla.components.lib.jexl.grammar/-grammar-element/index.md) |  |
