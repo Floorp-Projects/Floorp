@@ -82,7 +82,7 @@ add_task(async function() {
 
 async function checkTextBox(textBox, toolbox) {
   let textboxContextMenu = toolbox.doc.getElementById("toolbox-menu");
-  ok(!textboxContextMenu, "The menu is  closed");
+  ok(!textboxContextMenu, "The menu is closed");
 
   info("Simulating context click on the textbox and expecting the menu to open");
   const onContextMenu = toolbox.once("menu-open");
