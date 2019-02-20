@@ -1277,6 +1277,7 @@ void Channel::OnRtpPacket(const RtpPacketReceived& packet) {
       rtp_payload_registry_->GetPayloadTypeFrequency(header.payloadType);
   if (header.payload_type_frequency >= 0) {
     bool in_order = IsPacketInOrder(header);
+    statistics_proxy_->OnSendCodecFrequencyChanged(header.payload_type_frequency);
     rtp_receive_statistics_->IncomingPacket(
         header, packet.size(), IsPacketRetransmitted(header, in_order));
     rtp_payload_registry_->SetIncomingPayloadType(header);
