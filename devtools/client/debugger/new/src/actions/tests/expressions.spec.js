@@ -126,6 +126,8 @@ describe("expressions", () => {
     const { dispatch, getState } = createStore(mockThreadClient);
     await createFrames(dispatch);
 
+    await dispatch(actions.newSource(makeSource("source")));
+
     await dispatch(actions.addExpression("foo"));
     await dispatch(actions.addExpression("bar"));
 

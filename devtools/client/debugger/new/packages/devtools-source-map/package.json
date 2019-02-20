@@ -5,9 +5,9 @@
   "license": "MPL-2.0",
   "author": "Jason Laster <jlaster@mozilla.com>",
   "repository": "github:devtools-html/debugger.html",
-  "bugs": "https://github.com/devtools-html/debugger.html/issues",
+  "bugs": "https://github.com/firefox-devtools/debugger.html/issues",
   "homepage":
-    "https://github.com/devtools-html/debugger.html/tree/master/packages/source-maps#readme",
+    "https://github.com/firefox-devtools/debugger.html/tree/master/packages/source-maps#readme",
   "main": "src/index.js",
   "browser": {
     "./src/utils/wasmAsset.js": "./src/utils/wasmAssetBrowser.js"

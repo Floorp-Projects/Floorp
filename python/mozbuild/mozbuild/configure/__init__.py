@@ -41,6 +41,10 @@ from mozbuild.util import (
 import mozpack.path as mozpath
 
 
+# TRACE logging level, below (thus more verbose than) DEBUG
+TRACE = 5
+
+
 class ConfigureError(Exception):
     pass
 
@@ -149,8 +153,7 @@ class DependsFunction(object):
         return self._func(*resolved_args)
 
     def __repr__(self):
-        return '<%s.%s %s(%s)>' % (
-            self.__class__.__module__,
+        return '<%s %s(%s)>' % (
             self.__class__.__name__,
             self.name,
             ', '.join(repr(d) for d in self.dependencies),
@@ -333,6 +336,7 @@ class ConfigureSandbox(dict):
         assert isinstance(config, dict)
         self._config = config
 
+        logging.addLevelName(TRACE, 'TRACE')
         if logger is None:
             logger = moz_logger = logging.getLogger('moz.configure')
             logger.setLevel(logging.DEBUG)
@@ -511,7 +515,9 @@ class ConfigureSandbox(dict):
 
     @memoize
     def _value_for_depends(self, obj):
-        return obj.result()
+        value = obj.result()
+        self._logger.log(TRACE, '%r = %r', obj, value)
+        return value
 
     @memoize
     def _value_for_option(self, option):
@@ -572,8 +578,10 @@ class ConfigureSandbox(dict):
                 raise InvalidOptionError(
                     '%s is not available in this configuration'
                     % option_string.split('=', 1)[0])
+            self._logger.log(TRACE, '%r = None', option)
             return None
 
+        self._logger.log(TRACE, '%r = %r', option, value)
         return value
 
     def _dependency(self, arg, callee_name, arg_name=None):
@@ -906,6 +914,11 @@ class ConfigureSandbox(dict):
                 "exists" % name)
         value = self._resolve(value)
         if value is not None:
+            if self._logger.isEnabledFor(TRACE):
+                if data is self._config:
+                    self._logger.log(TRACE, 'set_config(%s, %r)', name, value)
+                elif data is self._config.get('DEFINES'):
+                    self._logger.log(TRACE, 'set_define(%s, %r)', name, value)
             data[name] = value
 
     def set_config_impl(self, name, value, when=None):

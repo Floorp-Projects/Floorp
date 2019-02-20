@@ -1784,6 +1784,17 @@ static bool EmitEnd(FunctionCompiler& f) {
 
   MDefinition* def = nullptr;
   switch (kind) {
+    case LabelKind::Body:
+      MOZ_ASSERT(f.iter().controlStackEmpty());
+      if (!f.finishBlock(&def)) {
+        return false;
+      }
+      if (f.inDeadCode() || IsVoid(type)) {
+        f.returnVoid();
+      } else {
+        f.returnExpr(def);
+      }
+      return f.iter().readFunctionEnd(f.iter().end());
     case LabelKind::Block:
       if (!f.finishBlock(&def)) {
         return false;
@@ -3109,14 +3120,8 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
         if (!EmitEnd(f)) {
           return false;
         }
-
         if (f.iter().controlStackEmpty()) {
-          if (f.inDeadCode() || IsVoid(f.funcType().ret())) {
-            f.returnVoid();
-          } else {
-            f.returnExpr(f.iter().getResult());
-          }
-          return f.iter().readFunctionEnd(f.iter().end());
+          return true;
         }
         break;
 

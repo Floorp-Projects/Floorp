@@ -21,7 +21,6 @@
 
 #include "mozilla/TypeTraits.h"
 
-#include "wasm/WasmCode.h"
 #include "wasm/WasmTypes.h"
 
 namespace js {

@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.1.266';
-const pdfjsBuild = '81f5835c';
+const pdfjsVersion = '2.2.15';
+const pdfjsBuild = 'ece6a31a';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -375,7 +375,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.1.266';
+    let workerVersion = '2.2.15';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -3007,7 +3007,7 @@ class PDFDocument {
         this.xfa = this.acroForm.get('XFA');
         const fields = this.acroForm.get('Fields');
 
-        if ((!fields || !Array.isArray(fields) || fields.length === 0) && !this.xfa) {
+        if ((!Array.isArray(fields) || fields.length === 0) && !this.xfa) {
           this.acroForm = null;
         }
       }
@@ -3018,6 +3018,20 @@ class PDFDocument {
 
       (0, _util.info)('Cannot fetch AcroForm entry; assuming no AcroForms are present');
       this.acroForm = null;
+    }
+
+    try {
+      const collection = this.catalog.catDict.get('Collection');
+
+      if ((0, _primitives.isDict)(collection) && collection.getKeys().length > 0) {
+        this.collection = collection;
+      }
+    } catch (ex) {
+      if (ex instanceof _util.MissingDataException) {
+        throw ex;
+      }
+
+      (0, _util.info)('Cannot fetch Collection dictionary.');
     }
   }
 
@@ -3147,7 +3161,8 @@ class PDFDocument {
       PDFFormatVersion: this.pdfFormatVersion,
       IsLinearized: !!this.linearization,
       IsAcroFormPresent: !!this.acroForm,
-      IsXFAPresent: !!this.xfa
+      IsXFAPresent: !!this.xfa,
+      IsCollectionPresent: !!this.collection
     };
     let infoDict;
 

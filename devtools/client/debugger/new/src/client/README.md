@@ -38,7 +38,7 @@ We want to do these interrupts transparently, so we've decided that the client
 should not notify the application that the thread has been paused or resumed.
 
 [protocol]: https://searchfox.org/mozilla-central/source/devtools/docs/backend/protocol.md
-[dt-connect]: https://github.com/devtools-html/devtools-core/tree/master/packages/devtools-connection
+[dt-connect]: https://github.com/firefox-devtools/devtools-core/tree/master/packages/devtools-connection
 [devtools-client.js]: https://searchfox.org/mozilla-central/source/devtools/shared/client/debugger-client.js
 
 ## Chrome

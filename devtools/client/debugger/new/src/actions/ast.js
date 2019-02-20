@@ -18,8 +18,6 @@ import { updateTab } from "./tabs";
 import { PROMISE } from "./utils/middleware/promise";
 
 import { setInScopeLines } from "./ast/setInScopeLines";
-import { setPausePoints } from "./ast/setPausePoints";
-export { setPausePoints };
 
 import * as parser from "../workers/parser";
 
@@ -70,7 +68,6 @@ export function setSymbols(sourceId: SourceId) {
       await dispatch(mapFrames());
     }
 
-    await dispatch(setPausePoints(sourceId));
     await dispatch(setSourceMetaData(sourceId));
   };
 }

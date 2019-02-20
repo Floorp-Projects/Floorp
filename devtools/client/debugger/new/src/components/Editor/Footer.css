@@ -58,7 +58,7 @@
 }
 
 .source-footer > .commands > .blackboxed > .img.blackBox {
-  background-color: var(--theme-highlight-blue);
+  background-color: var(--theme-icon-checked-color);
 }
 
 .source-footer .blackbox-summary,

@@ -327,6 +327,12 @@ export type Grip = {
   name?: string
 };
 
+export type SourceActor = {|
+  +actor: ActorId,
+  +source: SourceId,
+  +thread: ThreadId
+|};
+
 /**
  * BaseSource
  *
@@ -344,7 +350,9 @@ type BaseSource = {|
   +error?: string,
   +loadedState: "unloaded" | "loading" | "loaded",
   +relativeUrl: string,
-  introductionUrl: ?string
+  +introductionUrl: ?string,
+  +isExtension: boolean,
+  +actors: SourceActor[]
 |};
 
 /**
@@ -374,12 +382,6 @@ export type WasmSource = {|
 |};
 
 export type Source = JsSource | WasmSource;
-
-export type SourceActor = {|
-  +actor: ActorId,
-  +source: SourceId,
-  +thread: ThreadId
-|};
 
 /**
  * Script
@@ -453,7 +455,5 @@ export type EventListenerBreakpoints = string[];
 
 export type SourceDocuments = { [string]: Object };
 
-export type BreakpointPosition = { line: number, string: number };
-export type BreakpointLinePositions = Array<BreakpointPosition>;
-export type BreakpointSourcePositions = { [number]: BreakpointLinePositions };
-export type BreakpointPositions = { [string]: BreakpointSourcePositions };
+export type BreakpointPosition = MappedLocation;
+export type BreakpointPositions = BreakpointPosition[];

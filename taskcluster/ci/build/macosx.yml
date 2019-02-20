@@ -154,7 +154,6 @@ macosx64-devedition-nightly/opt:
         - linux64-rust-macos
         - linux64-rust-size
         - linux64-cbindgen
-        - linux64-sccache
         - linux64-node
 
 macosx64-noopt/debug:
@@ -273,7 +272,6 @@ macosx64-nightly/opt:
         - linux64-rust-macos
         - linux64-rust-size
         - linux64-cbindgen
-        - linux64-sccache
         - linux64-node
 
 macosx64-ccov/debug:
