@@ -2,6 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/**
+ * Module doing most of the content process work for the password manager.
+ */
+
+// Disable use-ownerGlobal since FormLike don't have it.
+/* eslint-disable mozilla/use-ownerGlobal */
+
 "use strict";
 
 var EXPORTED_SYMBOLS = [ "LoginManagerContent",
@@ -236,10 +243,10 @@ var LoginManagerContent = {
     return deferred.promise;
   },
 
-  receiveMessage(msg, window) {
+  receiveMessage(msg, topWindow) {
     if (msg.name == "RemoteLogins:fillForm") {
       this.fillForm({
-        topDocument: window.document,
+        topDocument: topWindow.document,
         loginFormOrigin: msg.data.loginFormOrigin,
         loginsFound: LoginHelper.vanillaObjectsToLogins(msg.data.logins),
         recipes: msg.data.recipes,
@@ -261,8 +268,7 @@ var LoginManagerContent = {
       }
 
       case "RemoteLogins:loginsAutoCompleted": {
-        let loginsFound =
-          LoginHelper.vanillaObjectsToLogins(msg.data.logins);
+        let loginsFound = LoginHelper.vanillaObjectsToLogins(msg.data.logins);
         let messageManager = msg.target;
         request.promise.resolve({ logins: loginsFound, messageManager });
         break;
@@ -333,7 +339,7 @@ var LoginManagerContent = {
 
   setupEventListeners(global) {
     global.addEventListener("pageshow", (event) => {
-      this.onPageShow(event, global.content);
+      this.onPageShow(event);
     });
     global.addEventListener("blur", (event) => {
       this.onUsernameInput(event);
@@ -357,7 +363,7 @@ var LoginManagerContent = {
     }
   },
 
-  onDOMFormHasPassword(event, window) {
+  onDOMFormHasPassword(event) {
     if (!event.isTrusted) {
       return;
     }
@@ -365,10 +371,10 @@ var LoginManagerContent = {
     let form = event.target;
     let formLike = LoginFormFactory.createFromForm(form);
     log("onDOMFormHasPassword:", form, formLike);
-    this._fetchLoginsFromParentAndFillForm(formLike, window);
+    this._fetchLoginsFromParentAndFillForm(formLike);
   },
 
-  onDOMInputPasswordAdded(event, window) {
+  onDOMInputPasswordAdded(event) {
     if (!event.isTrusted) {
       return;
     }
@@ -379,6 +385,7 @@ var LoginManagerContent = {
       return;
     }
 
+    let window = pwField.ownerGlobal;
     // Only setup the listener for formless inputs.
     // Capture within a <form> but without a submit event is bug 1287202.
     this.setupProgressListener(window);
@@ -397,7 +404,7 @@ var LoginManagerContent = {
         let formLike2 = this._formLikeByRootElement.get(formLike.rootElement);
         log("Running deferred processing of onDOMInputPasswordAdded", formLike2);
         this._deferredPasswordAddedTasksByRootElement.delete(formLike2.rootElement);
-        this._fetchLoginsFromParentAndFillForm(formLike2, window);
+        this._fetchLoginsFromParentAndFillForm(formLike2);
       }, PASSWORD_INPUT_ADDED_COALESCING_THRESHOLD_MS, 0);
 
       this._deferredPasswordAddedTasksByRootElement.set(formLike.rootElement, deferredTask);
@@ -423,10 +430,10 @@ var LoginManagerContent = {
    * Fetch logins from the parent for a given form and then attempt to fill it.
    *
    * @param {FormLike} form to fetch the logins for then try autofill.
-   * @param {Window} window
    */
-  _fetchLoginsFromParentAndFillForm(form, window) {
-    this._detectInsecureFormLikes(window);
+  _fetchLoginsFromParentAndFillForm(form) {
+    let window = form.ownerDocument.defaultView;
+    this._detectInsecureFormLikes(window.top);
 
     let messageManager = window.docShell.messageManager;
     messageManager.sendAsyncMessage("LoginStats:LoginEncountered");
@@ -440,7 +447,8 @@ var LoginManagerContent = {
         .catch(Cu.reportError);
   },
 
-  onPageShow(event, window) {
+  onPageShow(event) {
+    let window = event.target.ownerGlobal;
     this._detectInsecureFormLikes(window);
   },
 
@@ -525,7 +533,7 @@ var LoginManagerContent = {
     if (LoginHelper.getLoginOrigin(topDocument.documentURI) != loginFormOrigin) {
       if (!inputElement ||
           LoginHelper.getLoginOrigin(inputElement.ownerDocument.documentURI) != loginFormOrigin) {
-        log("fillForm: The requested origin doesn't match the one form the",
+        log("fillForm: The requested origin doesn't match the one from the",
             "document. This may mean we navigated to a document from a different",
             "site before we had a chance to indicate this change in the user",
             "interface.");
