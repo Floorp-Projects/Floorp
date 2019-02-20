@@ -36,7 +36,7 @@ const StructuredSpewer::NameArray StructuredSpewer::names_ = {
 #    endif
 #  endif
 
-void StructuredSpewer::ensureInitializationAttempted() {
+bool StructuredSpewer::ensureInitializationAttempted() {
   if (!outputInitializationAttempted_) {
     // We cannot call getenv during record replay, so disable
     // the spewer.
@@ -57,6 +57,8 @@ void StructuredSpewer::ensureInitializationAttempted() {
     // we track the attempt separately.
     outputInitializationAttempted_ = true;
   }
+
+  return json_.isSome();
 }
 
 void StructuredSpewer::tryToInitializeOutput(const char* path) {
@@ -145,7 +147,9 @@ void StructuredSpewer::startObject(JSContext* cx, const JSScript* script,
     return;
   }
 
-  cx->spewer().ensureInitializationAttempted();
+  if (!cx->spewer().ensureInitializationAttempted()) {
+    return;
+  }
 
   va_list ap;
   va_start(ap, fmt);
@@ -220,7 +224,9 @@ AutoStructuredSpewer::AutoStructuredSpewer(JSContext* cx, SpewChannel channel,
     return;
   }
 
-  cx->spewer().ensureInitializationAttempted();
+  if (!cx->spewer().ensureInitializationAttempted()) {
+    return;
+  }
 
   cx->spewer().startObject(cx, script, channel);
   printer_.emplace(&cx->spewer().json_.ref());
