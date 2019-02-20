@@ -362,8 +362,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   // Detach this buffer from its original memory.  (This necessarily makes
   // views of this buffer unusable for modifying that original memory.)
-  static void detach(JSContext* cx, Handle<ArrayBufferObject*> buffer,
-                     BufferContents newContents);
+  static void detach(JSContext* cx, Handle<ArrayBufferObject*> buffer);
 
  private:
   void setFirstView(JSObject* view);

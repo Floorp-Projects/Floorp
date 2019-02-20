@@ -52,14 +52,14 @@ bool JSObject::is<js::ArrayBufferViewObject>() const {
   return is<DataViewObject>() || is<TypedArrayObject>();
 }
 
-void ArrayBufferViewObject::notifyBufferDetached(void* newData) {
+void ArrayBufferViewObject::notifyBufferDetached() {
   MOZ_ASSERT(!isSharedMemory());
   MOZ_ASSERT(hasBuffer());
 
   setFixedSlot(LENGTH_SLOT, Int32Value(0));
   setFixedSlot(BYTEOFFSET_SLOT, Int32Value(0));
 
-  setPrivate(newData);
+  setPrivate(nullptr);
 }
 
 uint8_t* ArrayBufferViewObject::dataPointerUnshared(
