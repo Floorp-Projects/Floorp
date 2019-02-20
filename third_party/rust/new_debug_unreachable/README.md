@@ -16,6 +16,13 @@ with the rest of your dependencies:
 new_debug_unreachable = "1.0"
 ```
 
+In your Rust code, the library name is still `debug_unreachable`:
+
+```rust
+#[macro_use]
+extern crate debug_unreachable;
+```
+
 ## Author
 
 [Jonathan Reem](https://medium.com/@jreem) is the original author of debug-unreachable.
