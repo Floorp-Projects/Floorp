@@ -132,6 +132,14 @@ MOZ_THROW_NORETURN MOZ_THROW_EXPORT MOZ_THROW_INLINE void __throw_system_error(
   mozalloc_abort(error);
 }
 
+MOZ_THROW_NORETURN MOZ_EXPORT MOZ_ALWAYS_INLINE void __throw_regex_error(
+    int err) {
+  char error[128];
+  snprintf(error, sizeof(error) - 1, "fatal: STL threw regex_error: %s (%d)",
+           strerror(err), err);
+  mozalloc_abort(error);
+}
+
 }  // namespace std
 
 #undef MOZ_THROW_NORETURN
