@@ -1,7 +1,12 @@
 "use strict";
 
 const {AddonManager} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+const {ExtensionParent} = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
 const {ExtensionPermissions} = ChromeUtils.import("resource://gre/modules/ExtensionPermissions.jsm");
+
+const {
+  StartupCache,
+} = ExtensionParent;
 
 const BROWSER_PROPERTIES = "chrome://browser/locale/browser.properties";
 
@@ -23,13 +28,62 @@ const observer = {
   },
 };
 
-add_task(function setup() {
+add_task(async function setup() {
   Services.prefs.setBoolPref("extensions.webextOptionalPermissionPrompts", true);
   Services.obs.addObserver(observer, "webextension-optional-permission-prompt");
   registerCleanupFunction(() => {
     Services.obs.removeObserver(observer, "webextension-optional-permission-prompt");
     Services.prefs.clearUserPref("extensions.webextOptionalPermissionPrompts");
   });
+  await AddonTestUtils.promiseStartupManager();
+  AddonTestUtils.usePrivilegedSignatures = false;
+});
+
+
+add_task(async function test_permissions_on_startup() {
+  let extensionId = "@permissionTest";
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {
+        gecko: {id: extensionId},
+      },
+      permissions: ["tabs"],
+    },
+    useAddonManager: "permanent",
+    async background() {
+      let perms = await browser.permissions.getAll();
+      browser.test.sendMessage("permissions", perms);
+    },
+  });
+  let adding = {permissions: ["internal:privateBrowsingAllowed"], origins: []};
+  await extension.startup();
+  let perms = await extension.awaitMessage("permissions");
+  equal(perms.permissions.length, 1, "one permission");
+  equal(perms.permissions[0], "tabs", "internal permission not present");
+  // StartupCache.permissions will not contain the extension permissions.
+  let manifestData = await StartupCache.permissions.get(extensionId, () => { return {permissions: [], origins: []}; });
+  equal(manifestData.permissions.length, 0, "no permission");
+
+  perms = await ExtensionPermissions.get(extensionId);
+  equal(perms.permissions.length, 0, "no permissions");
+  await ExtensionPermissions.add(extensionId, adding);
+
+  // Restart the extension and re-test the permissions.
+  await ExtensionPermissions._uninit();
+  await AddonTestUtils.promiseRestartManager();
+  let restarted = extension.awaitMessage("permissions");
+  await extension.awaitStartup();
+  perms = await restarted;
+
+  manifestData = await StartupCache.permissions.get(extensionId, () => { return {permissions: [], origins: []}; });
+  deepEqual(manifestData.permissions, adding.permissions, "StartupCache.permissions contains permission");
+
+  equal(perms.permissions.length, 1, "one permission");
+  equal(perms.permissions[0], "tabs", "internal permission not present");
+  let added = await ExtensionPermissions._get(extensionId);
+  deepEqual(added, adding, "permissions were retained");
+
+  await extension.unload();
 });
 
 add_task(async function test_permissions() {
@@ -40,8 +94,6 @@ add_task(async function test_permissions() {
   const OPTIONAL_PERMISSIONS = ["idle", "clipboardWrite"];
   const OPTIONAL_ORIGINS = ["http://optionalsite.com/", "https://*.optionaldomain.com/"];
   const OPTIONAL_ORIGINS_NORMALIZED = ["http://optionalsite.com/*", "https://*.optionaldomain.com/*"];
-
-  await AddonTestUtils.promiseStartupManager();
 
   function background() {
     browser.test.onMessage.addListener(async (method, arg) => {
