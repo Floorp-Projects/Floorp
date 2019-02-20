@@ -87,12 +87,8 @@ UniquePtr<GLScreenBuffer> GLScreenBuffer::Create(GLContext* gl,
     factory = MakeUnique<SurfaceFactory_GLTexture>(mGLContext, caps, ipcChannel,
                                                    mFlags);
 #elif defined(MOZ_WIDGET_ANDROID)
-    if (XRE_IsParentProcess() && !gfxPrefs::WebGLSurfaceTextureEnabled()) {
-      factory = SurfaceFactory_EGLImage::Create(gl, caps, ipcChannel, flags);
-    } else {
-      factory =
-          SurfaceFactory_SurfaceTexture::Create(gl, caps, ipcChannel, flags);
-    }
+    factory =
+        SurfaceFactory_SurfaceTexture::Create(gl, caps, ipcChannel, flags);
 #else
     if (gl->GetContextType() == GLContextType::EGL) {
       if (XRE_IsParentProcess()) {
