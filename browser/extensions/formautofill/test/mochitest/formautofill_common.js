@@ -83,18 +83,26 @@ function _getAdaptedProfile(profile) {
 
 // We could not get ManuallyManagedState of element now, so directly check if
 // filter and text color style are applied.
-function checkFieldHighlighted(elem, expectedValue) {
-  const computedStyle = window.getComputedStyle(elem);
-  const isHighlighteApplied = computedStyle.getPropertyValue("filter") !== "none";
+async function checkFieldHighlighted(elem, expectedValue) {
+  let isHighlightApplied;
+  await SimpleTest.promiseWaitForCondition(function checkHighlight() {
+    const computedStyle = window.getComputedStyle(elem);
+    isHighlightApplied = computedStyle.getPropertyValue("filter") !== "none";
+    return isHighlightApplied === expectedValue;
+  }, `Checking #${elem.id} highlight style`);
 
-  is(isHighlighteApplied, expectedValue, `Checking #${elem.id} highlight style`);
+  is(isHighlightApplied, expectedValue, `Checking #${elem.id} highlight style`);
 }
 
-function checkFieldPreview(elem, expectedValue) {
-  const computedStyle = window.getComputedStyle(elem);
-  const isTextColorApplied = computedStyle.getPropertyValue("color") !== defaultTextColor;
-
+async function checkFieldPreview(elem, expectedValue) {
   is(SpecialPowers.wrap(elem).previewValue, expectedValue, `Checking #${elem.id} previewValue`);
+  let isTextColorApplied;
+  await SimpleTest.promiseWaitForCondition(function checkPreview() {
+    const computedStyle = window.getComputedStyle(elem);
+    isTextColorApplied = computedStyle.getPropertyValue("color") !== defaultTextColor;
+    return isTextColorApplied === !!expectedValue;
+  }, `Checking #${elem.id} preview style`);
+
   is(isTextColorApplied, !!expectedValue, `Checking #${elem.id} preview style`);
 }
 
