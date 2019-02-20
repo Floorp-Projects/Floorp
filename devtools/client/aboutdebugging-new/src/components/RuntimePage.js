@@ -153,13 +153,12 @@ class RuntimePage extends PureComponent {
   }
 
   renderTemporaryExtensionInstaller() {
-    const { dispatch, runtimeDetails, temporaryInstallError } = this.props;
+    const { dispatch, runtimeDetails } = this.props;
     const { type } = runtimeDetails.info;
     return isSupportedDebugTargetPane(type, DEBUG_TARGET_PANE.TEMPORARY_EXTENSION)
              ? TemporaryExtensionInstaller({
                  className: "runtime-actions__end",
                  dispatch,
-                 temporaryInstallError,
              })
              : null;
   }
