@@ -303,8 +303,8 @@ void ObjectRealm::trace(JSTracer* trc) {
 void Realm::traceRoots(JSTracer* trc,
                        js::gc::GCRuntime::TraceOrMarkRuntime traceOrMark) {
   if (objectMetadataState_.is<PendingMetadata>()) {
-    TraceRoot(trc, &objectMetadataState_.as<PendingMetadata>(),
-              "on-stack object pending metadata");
+    GCPolicy<NewObjectMetadataState>::trace(trc, &objectMetadataState_,
+                                            "on-stack object pending metadata");
   }
 
   if (!JS::RuntimeHeapIsMinorCollecting()) {
@@ -924,9 +924,8 @@ mozilla::HashCodeScrambler Realm::randomHashCodeScrambler() {
 
 AutoSetNewObjectMetadata::AutoSetNewObjectMetadata(
     JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-    : CustomAutoRooter(cx),
-      cx_(cx->helperThread() ? nullptr : cx),
-      prevState_(cx->realm()->objectMetadataState_) {
+    : cx_(cx->helperThread() ? nullptr : cx),
+      prevState_(cx, cx->realm()->objectMetadataState_) {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   if (cx_) {
     cx_->realm()->objectMetadataState_ =
