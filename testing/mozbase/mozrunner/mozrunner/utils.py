@@ -8,16 +8,17 @@
 
 from __future__ import absolute_import, print_function
 
-import mozinfo
 import os
 import sys
 
-__all__ = ['findInPath', 'get_metadata_from_egg']
+import mozinfo
 
+__all__ = ['findInPath', 'get_metadata_from_egg']
 
 # python package method metadata by introspection
 try:
     import pkg_resources
+
 
     def get_metadata_from_egg(module):
         ret = {}
