@@ -1158,7 +1158,7 @@ static void CheckStealPreconditions(Handle<ArrayBufferObject*> buffer,
   ArrayBufferObject::detach(cx, oldBuf, detachedContents);
 
   // Set |newBuf|'s contents to |oldBuf|'s original contents.
-  newBuf->initialize(newSize, oldContents, OwnsData);
+  newBuf->initialize(newSize, oldContents);
   return true;
 }
 
@@ -1191,7 +1191,7 @@ static void CheckStealPreconditions(Handle<ArrayBufferObject*> buffer,
   }
   BufferContents contents =
       BufferContents::createWasm(newRawBuf->dataPointer());
-  newBuf->initialize(newSize, contents, OwnsData);
+  newBuf->initialize(newSize, contents);
 
   memcpy(newBuf->dataPointer(), oldBuf->dataPointer(), oldBuf->byteLength());
   ArrayBufferObject::detach(cx, oldBuf, BufferContents::createNoData());
@@ -1300,7 +1300,7 @@ ArrayBufferObject* ArrayBufferObject::createForContents(
              "ArrayBufferObject has a finalizer that must be called to not "
              "leak in some cases, so it can't be nursery-allocated");
 
-  buffer->initialize(nbytes, contents, OwnsData);
+  buffer->initialize(nbytes, contents);
 
   return buffer;
 }
@@ -1349,7 +1349,7 @@ ArrayBufferObject* ArrayBufferObject::createZeroed(
              "leak in some cases, so it can't be nursery-allocated");
 
   if (data) {
-    buffer->initialize(nbytes, BufferContents::createMalloced(data), OwnsData);
+    buffer->initialize(nbytes, BufferContents::createMalloced(data));
   } else {
     void* inlineData = buffer->initializeToInlineData(nbytes);
     memset(inlineData, 0, nbytes);
@@ -1365,7 +1365,7 @@ ArrayBufferObject* ArrayBufferObject::createEmpty(JSContext* cx) {
     return nullptr;
   }
 
-  obj->initialize(0, BufferContents::createNoData(), OwnsData);
+  obj->initialize(0, BufferContents::createNoData());
   return obj;
 }
 
