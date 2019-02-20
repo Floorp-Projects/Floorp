@@ -55,7 +55,7 @@ ProcessRuntime::ProcessRuntime(GeckoProcessType aProcessType)
   // window, which implicitly requires user32 and Win32k, which are blocked.
   // Instead we start a multi-threaded apartment and conduct our process-wide
   // COM initialization on that MTA background thread.
-  if (IsWin32kLockedDown()) {
+  if (!mIsParentProcess && IsWin32kLockedDown()) {
     // It is possible that we're running so early that we might need to start
     // the thread manager ourselves.
     nsresult rv = nsThreadManager::get().Init();
@@ -87,6 +87,7 @@ void ProcessRuntime::InitInsideApartment() {
   ProcessInitLock lock;
   if (lock.IsInitialized()) {
     // COM has already been initialized by a previous ProcessRuntime instance
+    mInitResult = S_OK;
     return;
   }
 
