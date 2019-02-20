@@ -39,7 +39,7 @@ class SharedGL {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedGL);
 
-  SharedGL(AndroidNativeWindow& window) {
+  explicit SharedGL(AndroidNativeWindow& window) {
     MutexAutoLock lock(sMutex);
 
     if (!sContext) {
