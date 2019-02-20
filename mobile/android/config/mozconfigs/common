@@ -12,9 +12,11 @@ MOZ_AUTOMATION_L10N_CHECK=0
 
 # For Android builds in TaskCluster, the system image is Debian, and
 # we use the Java JRE/JDK from the system.  We use a custom clang for
-# the host compiler.
-HOST_CC="$topsrcdir/clang/bin/clang"
-HOST_CXX="$topsrcdir/clang/bin/clang++"
+# the host compiler. Make sure clang uses the c++ headers included with
+# clang, rather than the system headers which leads to incompatibility
+# later (when linking against the clang-provided libstdc++).
+HOST_CC="$topsrcdir/clang/bin/clang --gcc-toolchain=$topsrcdir/clang"
+HOST_CXX="$topsrcdir/clang/bin/clang++ --gcc-toolchain=$topsrcdir/clang"
 
 # Build Fennec
 ac_add_options --enable-application=mobile/android
@@ -28,6 +30,8 @@ if [ -z "$NO_NDK" ]; then
     CC="$topsrcdir/clang/bin/clang"
     CXX="$topsrcdir/clang/bin/clang++"
     ac_add_options --with-android-ndk="$topsrcdir/android-ndk"
+    # Enable static analysis plugin
+    export ENABLE_CLANG_PLUGIN=1
 fi
 
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
