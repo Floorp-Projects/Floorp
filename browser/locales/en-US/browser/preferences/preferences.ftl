@@ -664,11 +664,9 @@ sync-device-name-save =
     .label = Save
     .accesskey = v
 
-sync-connect-another-device = Connect another device
+sync-mobilepromo-single = Connect another device
 
-sync-manage-devices = Manage devices
-
-sync-fxa-begin-pairing = Pair a device
+sync-mobilepromo-multi = Manage devices
 
 sync-tos-link = Terms of Service
 
