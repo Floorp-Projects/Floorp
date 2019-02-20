@@ -23,7 +23,7 @@ add_task(async function() {
 
   info("Follow the link and wait for the style-editor to open");
   const onStyleEditorReady = toolbox.once("styleeditor-ready");
-  inspector.onFollowLink();
+  inspector.markup.contextMenu._onFollowLink();
   await onStyleEditorReady;
 
   // No real need to test that the editor opened on the right file here as this
@@ -44,7 +44,7 @@ add_task(async function() {
 
   info("Follow the link and wait for the debugger to open");
   const onDebuggerReady = toolbox.once("jsdebugger-ready");
-  inspector.onFollowLink();
+  inspector.markup.contextMenu._onFollowLink();
   await onDebuggerReady;
 
   // No real need to test that the debugger opened on the right file here as
