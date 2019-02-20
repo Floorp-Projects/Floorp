@@ -20,6 +20,41 @@ function setupTelemetryTest() {
 /* exported setupTelemetryTest */
 
 /**
+ * Check that the logged telemetry events exactly match the array of expected events.
+ * Will compare the number of events, the event methods, and the event extras including
+ * the about:debugging session id.
+ */
+function checkTelemetryEvents(expectedEvents, expectedSessionId) {
+  const evts = readAboutDebuggingEvents();
+  is(evts.length, expectedEvents.length, "Expected number of events");
+
+  function _eventHasExpectedExtras(e, expectedEvent) {
+    const expectedExtras = Object.keys(expectedEvent.extras);
+    return expectedExtras.every(extra => {
+      return e.extras[extra] === expectedEvent.extras[extra];
+    });
+  }
+
+  for (const expectedEvent of expectedEvents) {
+    const sameMethodEvents = evts.filter(e => e.method === expectedEvent.method);
+    ok(sameMethodEvents.length > 0, "Found event for method: " + expectedEvent.method);
+
+    const sameExtrasEvents =
+      sameMethodEvents.filter(e => _eventHasExpectedExtras(e, expectedEvent));
+    ok(sameExtrasEvents.length === 1,
+      "Found exactly one event matching the expected extras");
+    if (sameExtrasEvents.length === 0) {
+      info(JSON.stringify(sameMethodEvents));
+    }
+    is(sameExtrasEvents[0].extras.session_id, expectedSessionId,
+      "Select page event has the expected session");
+  }
+
+  return evts;
+}
+/* exported checkTelemetryEvents */
+
+/**
  * Retrieve the session id from an "open" event.
  * Note that calling this will "clear" all the events.
  */
