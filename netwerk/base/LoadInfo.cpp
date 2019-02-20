@@ -269,10 +269,8 @@ LoadInfo::LoadInfo(
     // if owner doc has content signature, we enforce SRI
     nsCOMPtr<nsIChannel> channel = aLoadingContext->OwnerDoc()->GetChannel();
     if (channel) {
-      nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
-      if (loadInfo) {
-        mEnforceSRI = loadInfo->GetVerifySignedContent();
-      }
+      nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+      mEnforceSRI = loadInfo->GetVerifySignedContent();
     }
   }
 

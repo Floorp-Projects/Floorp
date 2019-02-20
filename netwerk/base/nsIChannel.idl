@@ -356,11 +356,11 @@ interface nsIChannel : nsIRequest
     return false;
   }
 
-  inline already_AddRefed<nsILoadInfo> GetLoadInfo()
+  inline already_AddRefed<nsILoadInfo> LoadInfo()
   {
     nsCOMPtr<nsILoadInfo> result;
     mozilla::DebugOnly<nsresult> rv = GetLoadInfo(getter_AddRefs(result));
-    MOZ_ASSERT(NS_SUCCEEDED(rv) || !result);
+    MOZ_ASSERT(NS_SUCCEEDED(rv) && result);
     return result.forget();
   }
 %}

@@ -331,7 +331,7 @@ bool nsNodeInfoManager::InternalSVGEnabled() {
     nsCOMPtr<nsIChannel> channel = mDocument->GetChannel();
     // We don't have a channel for SVGs constructed inside a SVG script
     if (channel) {
-      loadInfo = channel->GetLoadInfo();
+      loadInfo = channel->LoadInfo();
     }
   }
   bool conclusion =

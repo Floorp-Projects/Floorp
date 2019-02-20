@@ -167,7 +167,7 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest* request,
   if (NS_FAILED(rv)) return rv;
 
   // Check ShouldProcess with content policy
-  nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
+  nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
 
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
   rv = NS_CheckContentProcessPolicy(mURL, loadInfo, contentType, &shouldLoad);
