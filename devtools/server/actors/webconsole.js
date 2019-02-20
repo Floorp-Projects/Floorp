@@ -1663,28 +1663,6 @@ WebConsoleActor.prototype =
     this.conn.send(packet);
   },
 
-  /**
-   * Handler for reflow activity. This method forwards reflow events to the
-   * remote Web Console client.
-   *
-   * @see ConsoleReflowListener
-   * @param Object reflowInfo
-   */
-  onReflowActivity: function(reflowInfo) {
-    const packet = {
-      from: this.actorID,
-      type: "reflowActivity",
-      interruptible: reflowInfo.interruptible,
-      start: reflowInfo.start,
-      end: reflowInfo.end,
-      sourceURL: reflowInfo.sourceURL,
-      sourceLine: reflowInfo.sourceLine,
-      functionName: reflowInfo.functionName,
-    };
-
-    this.conn.send(packet);
-  },
-
   // End of event handlers for various listeners.
 
   /**
