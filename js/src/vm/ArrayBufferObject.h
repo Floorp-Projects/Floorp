@@ -328,8 +328,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   static bool class_constructor(JSContext* cx, unsigned argc, Value* vp);
 
   static ArrayBufferObject* createForContents(JSContext* cx, uint32_t nbytes,
-                                              BufferContents contents,
-                                              OwnsState ownsState = OwnsData);
+                                              BufferContents contents);
 
   static ArrayBufferObject* createZeroed(JSContext* cx, uint32_t nbytes,
                                          HandleObject proto = nullptr);
