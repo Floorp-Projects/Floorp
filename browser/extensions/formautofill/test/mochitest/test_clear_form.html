@@ -53,14 +53,14 @@ add_task(async function setup_storage() {
 });
 
 
-function checkIsFormCleared(patch = {}) {
+async function checkIsFormCleared(patch = {}) {
   const form = document.getElementById("form1");
 
   for (const elem of form.elements) {
     const expectedValue = patch[elem.id] || "";
     checkFieldValue(elem, expectedValue);
-    checkFieldHighlighted(elem, false);
-    checkFieldPreview(elem, "");
+    await checkFieldHighlighted(elem, false);
+    await checkFieldPreview(elem, "");
   }
 }
 
@@ -89,7 +89,7 @@ add_task(async function simple_clear() {
 
   await triggerPopupAndHoverItem("#tel", 0);
   await confirmClear("#tel");
-  checkIsFormCleared();
+  await checkIsFormCleared();
 });
 
 add_task(async function clear_adapted_record() {
@@ -98,7 +98,7 @@ add_task(async function clear_adapted_record() {
 
   await triggerPopupAndHoverItem("#street-address", 0);
   await confirmClear("#street-address");
-  checkIsFormCleared();
+  await checkIsFormCleared();
 });
 
 add_task(async function clear_modified_form() {
@@ -109,7 +109,7 @@ add_task(async function clear_modified_form() {
 
   await triggerPopupAndHoverItem("#street-address", 0);
   await confirmClear("#street-address");
-  checkIsFormCleared({tel: "+1111111111"});
+  await checkIsFormCleared({tel: "+1111111111"});
 });
 
 add_task(async function clear_distinct_section() {
@@ -135,12 +135,12 @@ add_task(async function clear_distinct_section() {
       return;
     }
     checkFieldValue(element, val);
-    checkFieldHighlighted(element, true);
+    await checkFieldHighlighted(element, true);
   }
 
   await triggerPopupAndHoverItem("#cc-name", 0);
   await confirmClear("#cc-name");
-  checkIsFormCleared();
+  await checkIsFormCleared();
 });
 
 </script>
