@@ -12,6 +12,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_search.view.*
+import mozilla.components.browser.session.Session
+import mozilla.components.support.ktx.kotlin.isUrl
+import mozilla.components.support.ktx.kotlin.toNormalizedUrl
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.SearchAction
@@ -77,7 +80,10 @@ class SearchFragment : Fragment() {
         getAutoDisposeObservable<SearchAction>()
             .subscribe {
                 when (it) {
-                    is SearchAction.UrlCommitted -> transitionToBrowser()
+                    is SearchAction.UrlCommitted -> {
+                        transitionToBrowser()
+                        load(it.url)
+                    }
                     is SearchAction.TextChanged -> {
                         getManagedEmitter<AwesomeBarChange>().onNext(AwesomeBarChange.UpdateQuery(it.query))
                     }
@@ -90,6 +96,32 @@ class SearchFragment : Fragment() {
                     is AwesomeBarAction.ItemSelected -> transitionToBrowser()
                 }
             }
+    }
+
+    private fun load(text: String) {
+        val sessionId = SearchFragmentArgs.fromBundle(arguments!!).sessionId
+        val isPrivate = SearchFragmentArgs.fromBundle(arguments!!).isPrivateTab
+
+        val loadUrlUseCase = if (sessionId == null) {
+            if (isPrivate) {
+                requireComponents.useCases.tabsUseCases.addPrivateTab
+            } else {
+                requireComponents.useCases.tabsUseCases.addTab
+            }
+        } else requireComponents.useCases.sessionUseCases.loadUrl
+
+        val searchUseCase: (String) -> Unit = { searchTerms ->
+            if (sessionId == null) {
+                requireComponents.useCases.searchUseCases.newTabSearch
+                    .invoke(searchTerms, Session.Source.USER_ENTERED, true, isPrivate)
+            } else requireComponents.useCases.searchUseCases.defaultSearch.invoke(searchTerms)
+        }
+
+        if (text.isUrl()) {
+            loadUrlUseCase.invoke(text.toNormalizedUrl())
+        } else {
+            searchUseCase.invoke(text)
+        }
     }
 
     private fun transitionToBrowser() {

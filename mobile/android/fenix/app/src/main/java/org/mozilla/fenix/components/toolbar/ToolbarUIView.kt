@@ -39,7 +39,7 @@ class ToolbarUIView(
         view.apply {
             setOnUrlCommitListener {
                 actionEmitter.onNext(SearchAction.UrlCommitted(it))
-            true
+            false
             }
             onUrlClicked = {
                 actionEmitter.onNext(SearchAction.ToolbarTapped)
@@ -60,7 +60,7 @@ class ToolbarUIView(
                 }
 
                 override fun onStopEditing() {
-                    actionEmitter.onNext(SearchAction.UrlCommitted(url))
+//                    actionEmitter.onNext(SearchAction.UrlCommitted(url))
                 }
             })
         }
