@@ -40,8 +40,6 @@ static const char kPrefThirdPartySession[] =
     "network.cookie.thirdparty.sessionOnly";
 static const char kPrefThirdPartyNonsecureSession[] =
     "network.cookie.thirdparty.nonsecureSessionOnly";
-static const char kCookieLeaveSecurityAlone[] =
-    "network.cookie.leave-secure-alone";
 static const char kCookieMoveIntervalSecs[] =
     "network.cookie.move.interval_sec";
 
@@ -64,7 +62,6 @@ CookieServiceChild::CookieServiceChild()
     : mCookieBehavior(nsICookieService::BEHAVIOR_ACCEPT),
       mThirdPartySession(false),
       mThirdPartyNonsecureSession(false),
-      mLeaveSecureAlone(true),
       mIPCOpen(false) {
   NS_ASSERTION(IsNeckoChild(), "not a child process");
 
@@ -94,7 +91,6 @@ CookieServiceChild::CookieServiceChild()
     prefBranch->AddObserver(kPrefCookieBehavior, this, true);
     prefBranch->AddObserver(kPrefThirdPartySession, this, true);
     prefBranch->AddObserver(kPrefThirdPartyNonsecureSession, this, true);
-    prefBranch->AddObserver(kCookieLeaveSecurityAlone, this, true);
     prefBranch->AddObserver(kCookieMoveIntervalSecs, this, true);
     PrefChanged(prefBranch);
   }
@@ -270,10 +266,6 @@ void CookieServiceChild::PrefChanged(nsIPrefBranch *aPrefBranch) {
   if (NS_SUCCEEDED(
           aPrefBranch->GetBoolPref(kPrefThirdPartyNonsecureSession, &boolval)))
     mThirdPartyNonsecureSession = boolval;
-
-  if (NS_SUCCEEDED(
-          aPrefBranch->GetBoolPref(kCookieLeaveSecurityAlone, &boolval)))
-    mLeaveSecureAlone = !!boolval;
 
   if (!mThirdPartyUtil && RequireThirdPartyCheck()) {
     mThirdPartyUtil = do_GetService(THIRDPARTYUTIL_CONTRACTID);
@@ -607,8 +599,8 @@ nsresult CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
     bool canSetCookie = false;
     moreCookies = nsCookieService::CanSetCookie(
         aHostURI, key, cookieAttributes, requireHostMatch, cookieStatus,
-        cookieString, serverTime, aFromHttp, aChannel, mLeaveSecureAlone,
-        canSetCookie, mThirdPartyUtil);
+        cookieString, serverTime, aFromHttp, aChannel, canSetCookie,
+        mThirdPartyUtil);
 
     // We need to see if the cookie we're setting would overwrite an httponly
     // one. This would not affect anything we send over the net (those come from
