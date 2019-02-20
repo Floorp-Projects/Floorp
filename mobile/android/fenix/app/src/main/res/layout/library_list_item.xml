@@ -5,19 +5,18 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout"
     android:layout_width="match_parent"
     android:layout_height="@dimen/library_item_height"
-    android:background="?android:attr/selectableItemBackground"
-    android:clickable="true"
-    android:focusable="true">
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
 
     <ImageView
         android:id="@+id/libraryIcon"
         android:layout_width="@dimen/library_item_icon_height"
         android:layout_height="@dimen/library_item_icon_height"
-        android:layout_margin="8dp"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="@dimen/library_item_icon_margin_horizontal"
+        android:layout_marginTop="@dimen/library_item_icon_margin_vertical"
+        android:layout_marginEnd="@dimen/library_item_icon_margin_horizontal"
+        android:layout_marginBottom="@dimen/library_item_icon_margin_vertical"
         android:background="@drawable/library_icon_logins_circle_background"
         android:clickable="false"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -27,20 +26,12 @@
     <TextView
         android:id="@+id/libraryItemTitle"
         android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:layout_marginStart="16dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/library_item_icon_margin_horizontal"
+        android:clickable="false"
         android:gravity="center_vertical"
         android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-        android:clickable="false"
-        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/libraryIcon" />
-
-    <View
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:background="@drawable/library_separator"
-        android:clickable="false"
-        app:layout_constraintStart_toStartOf="@id/libraryItemTitle"
-        app:layout_constraintTop_toBottomOf="@id/libraryIcon" />
+        app:layout_constraintStart_toEndOf="@id/libraryIcon"
+        app:layout_constraintTop_toTopOf="parent" />
 </merge>

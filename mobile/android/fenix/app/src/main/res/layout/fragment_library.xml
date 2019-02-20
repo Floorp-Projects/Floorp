@@ -14,7 +14,10 @@
         android:id="@+id/librarySessions"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
         android:contentDescription="@string/library_sessions"
+        android:focusable="true"
         app:listItemIcon="@drawable/library_icon_sessions_circle_background"
         app:listItemTitle="@string/library_sessions" />
 
@@ -22,7 +25,10 @@
         android:id="@+id/libraryScreenshots"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
         android:contentDescription="@string/library_screenshots"
+        android:focusable="true"
         app:listItemIcon="@drawable/library_icon_screenshots_circle_background"
         app:listItemTitle="@string/library_screenshots" />
 
@@ -30,7 +36,10 @@
         android:id="@+id/libraryDownloads"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
         android:contentDescription="@string/library_downloads"
+        android:focusable="true"
         app:listItemIcon="@drawable/library_icon_downloads_circle_background"
         app:listItemTitle="@string/library_downloads" />
 
@@ -38,7 +47,10 @@
         android:id="@+id/libraryFavorites"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
         android:contentDescription="@string/library_favorites"
+        android:focusable="true"
         app:listItemIcon="@drawable/library_icon_favorites_circle_background"
         app:listItemTitle="@string/library_favorites" />
 
@@ -46,6 +58,9 @@
         android:id="@+id/libraryHistory"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
         app:listItemIcon="@drawable/library_icon_history_circle_background"
         app:listItemTitle="@string/library_history" />
 
@@ -53,7 +68,10 @@
         android:id="@+id/libraryLogins"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
         android:contentDescription="@string/library_logins"
+        android:focusable="true"
         app:listItemIcon="@drawable/library_icon_logins_circle_background"
         app:listItemTitle="@string/library_logins" />
 
