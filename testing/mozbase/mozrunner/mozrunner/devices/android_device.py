@@ -8,7 +8,6 @@ import fileinput
 import glob
 import os
 import platform
-import psutil
 import re
 import shutil
 import signal
@@ -16,12 +15,13 @@ import subprocess
 import sys
 import telnetlib
 import time
-import urlparse
-import urllib2
 from distutils.spawn import find_executable
 
+import psutil
+import six.moves.urllib as urllib
 from mozdevice import ADBHost, ADBDevice
 from mozprocess import ProcessHandler
+from six.moves.urllib.parse import urlparse
 
 EMULATOR_HOME_DIR = os.path.join(os.path.expanduser('~'), '.mozbuild', 'android-device')
 
@@ -431,7 +431,6 @@ def grant_runtime_permissions(build_obj, app, device_serial=None):
 
 
 class AndroidEmulator(object):
-
     """
         Support running the Android emulator with an AVD from Mozilla
         test automation.
@@ -547,6 +546,7 @@ class AndroidEmulator(object):
             self.emulator_log.write("<%s>\n" % line)
             if "Invalid value for -gpu" in line or "Invalid GPU mode" in line:
                 self.gpu = False
+
         env = os.environ
         env['ANDROID_AVD_HOME'] = os.path.join(EMULATOR_HOME_DIR, "avd")
         command = [self.emulator_path, "-avd", self.avd_info.name]
@@ -692,7 +692,7 @@ class AndroidEmulator(object):
     def _verify_emulator(self):
         telnet_ok = False
         tn = None
-        while(not telnet_ok):
+        while (not telnet_ok):
             try:
                 tn = telnetlib.Telnet('localhost', 5554, 10)
                 if tn is not None:
@@ -827,7 +827,7 @@ def _log_info(text):
 
 def _download_file(url, filename, path):
     _log_debug("Download %s to %s/%s..." % (url, path, filename))
-    f = urllib2.urlopen(url)
+    f = urllib.urlopen(url)
     if not os.path.isdir(path):
         try:
             os.makedirs(path)
@@ -863,6 +863,7 @@ def _get_tooltool_manifest(substs, src_path, dst_path, filename):
 def _tooltool_fetch():
     def outputHandler(line):
         _log_debug(line)
+
     _download_file(TOOLTOOL_URL, 'tooltool.py', EMULATOR_HOME_DIR)
     command = [sys.executable, 'tooltool.py',
                'fetch', '-o', '-m', 'releng.manifest']
