@@ -19,7 +19,7 @@
 
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&window.title;" onload="init()" style="&window.style;"
-        buttonlabelextra1="&window.create;" ondialogextra1="createProfile()"
+        buttonlabelextra1="&window.create;"
 #ifdef XP_WIN
         buttonlabelaccept="&window.quit-win;"
 #else

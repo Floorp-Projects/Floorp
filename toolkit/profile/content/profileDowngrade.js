@@ -21,8 +21,9 @@ function init() {
     document.getElementById("sync").hidden = !hasSync;
     document.getElementById("nosync").hidden = hasSync;
   }
-}
 
+  document.addEventListener("dialogextra1", createProfile);
+}
 function quit() {
   gParams.SetInt(1, Ci.nsIToolkitProfileService.quit);
 }
