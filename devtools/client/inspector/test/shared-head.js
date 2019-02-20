@@ -660,6 +660,6 @@ function openStyleContextMenuAndGetAllItems(view, target) {
  * @return An array of MenuItems
  */
 function openContextMenuAndGetAllItems(inspector, options) {
-  const menu = inspector._openMenu(options);
+  const menu = inspector.markup.contextMenu._openMenu(options);
   return buildContextMenuItems(menu);
 }

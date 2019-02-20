@@ -11,6 +11,7 @@ const promise = require("promise");
 loader.lazyRequireGetter(this, "KeyCodes", "devtools/client/shared/keycodes", true);
 loader.lazyRequireGetter(this, "getCSSLexer", "devtools/shared/css/lexer", true);
 loader.lazyRequireGetter(this, "parseDeclarations", "devtools/shared/css/parsing-utils", true);
+loader.lazyRequireGetter(this, "clipboardHelper", "devtools/shared/platform/clipboard");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -83,6 +84,21 @@ function blurOnMultipleProperties(cssProperties) {
 }
 
 /**
+ * Copy the content of a longString (via a promise resolving a
+ * LongStringActor) to the clipboard.
+ *
+ * @param  {Promise} longStringActorPromise
+ *         promise expected to resolve a LongStringActor instance
+ * @return {Promise} promise resolving (with no argument) when the
+ *         string is sent to the clipboard
+ */
+function copyLongString(longStringActorPromise) {
+  return getLongString(longStringActorPromise).then(string => {
+    clipboardHelper.copyString(string);
+  }).catch(console.error);
+}
+
+/**
  * Create a child element with a set of attributes.
  *
  * @param {Element} parent
@@ -107,6 +123,22 @@ function createChild(parent, tagName, attributes = {}) {
   }
   parent.appendChild(elt);
   return elt;
+}
+
+/**
+ * Retrieve the content of a longString (via a promise resolving a LongStringActor).
+ *
+ * @param  {Promise} longStringActorPromise
+ *         promise expected to resolve a LongStringActor instance
+ * @return {Promise} promise resolving with the retrieved string as argument
+ */
+function getLongString(longStringActorPromise) {
+  return longStringActorPromise.then(longStringActor => {
+    return longStringActor.string().then(string => {
+      longStringActor.release().catch(console.error);
+      return string;
+    });
+  }).catch(console.error);
 }
 
 /**
@@ -196,7 +228,9 @@ function translateNodeFrontToGrip(nodeFront) {
 exports.advanceValidate = advanceValidate;
 exports.appendText = appendText;
 exports.blurOnMultipleProperties = blurOnMultipleProperties;
+exports.copyLongString = copyLongString;
 exports.createChild = createChild;
+exports.getLongString = getLongString;
 exports.getSelectorFromGrip = getSelectorFromGrip;
 exports.promiseWarn = promiseWarn;
 exports.translateNodeFrontToGrip = translateNodeFrontToGrip;

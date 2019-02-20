@@ -45,9 +45,12 @@ add_task(async function() {
   await selectNode(divContainer.node, inspector);
 
   info("Check the copied values for the various copy*Path helpers");
-  await waitForClipboardPromise(() => inspector.copyXPath(), '//*[@id="el1"]');
-  await waitForClipboardPromise(() => inspector.copyCssPath(), "div#el1");
-  await waitForClipboardPromise(() => inspector.copyUniqueSelector(), "#el1");
+  await waitForClipboardPromise(() => inspector.markup.contextMenu._copyXPath(),
+    '//*[@id="el1"]');
+  await waitForClipboardPromise(() => inspector.markup.contextMenu._copyCssPath(),
+    "div#el1");
+  await waitForClipboardPromise(() => inspector.markup.contextMenu._copyUniqueSelector(),
+    "#el1");
 
   info("Expand the div");
   await expandContainer(inspector, divContainer);
@@ -57,8 +60,10 @@ add_task(async function() {
   await selectNode(spanContainer.node, inspector);
 
   info("Check the copied values for the various copy*Path helpers");
-  await waitForClipboardPromise(() => inspector.copyXPath(), "/div/span[3]");
-  await waitForClipboardPromise(() => inspector.copyCssPath(), "div#el1 span");
-  await waitForClipboardPromise(() => inspector.copyUniqueSelector(),
+  await waitForClipboardPromise(() => inspector.markup.contextMenu._copyXPath(),
+    "/div/span[3]");
+  await waitForClipboardPromise(() => inspector.markup.contextMenu._copyCssPath(),
+    "div#el1 span");
+  await waitForClipboardPromise(() => inspector.markup.contextMenu._copyUniqueSelector(),
     "#el1 > span:nth-child(3)");
 });
