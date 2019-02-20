@@ -9,8 +9,8 @@ var EXPORTED_SYMBOLS = ["SessionMigration"];
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 
-ChromeUtils.defineModuleGetter(this, "Utils",
-  "resource://gre/modules/sessionstore/Utils.jsm");
+ChromeUtils.defineModuleGetter(this, "E10SUtils",
+  "resource://gre/modules/E10SUtils.jsm");
 
 // An encoder to UTF-8.
 XPCOMUtils.defineLazyGetter(this, "gEncoder", function() {
@@ -63,7 +63,7 @@ var SessionMigrationInternal = {
     });
     let url = "about:welcomeback";
     let formdata = {id: {sessionData: state}, url};
-    let entry = { url, triggeringPrincipal_base64: Utils.SERIALIZED_SYSTEMPRINCIPAL };
+    let entry = { url, triggeringPrincipal_base64: E10SUtils.SERIALIZED_SYSTEMPRINCIPAL };
     return { windows: [{ tabs: [{ entries: [ entry ], formdata}]}]};
   },
   /**

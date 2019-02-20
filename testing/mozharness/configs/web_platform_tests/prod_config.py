@@ -6,6 +6,10 @@
 
 import os
 
+# OS Specifics
+DISABLE_SCREEN_SAVER = True
+ADJUST_MOUSE_AND_SCREEN = False
+#####
 
 config = {
     "options": [
@@ -22,4 +26,28 @@ config = {
     "geckodriver": os.path.join("%(abs_test_bin_dir)s", "geckodriver"),
 
     "per_test_category": "web-platform",
+
+    "run_cmd_checks_enabled": True,
+    "preflight_run_cmd_suites": [
+        # NOTE 'enabled' is only here while we have unconsolidated configs
+        {
+            "name": "disable_screen_saver",
+            "cmd": ["xset", "s", "off", "s", "reset"],
+            "halt_on_failure": False,
+            "architectures": ["32bit", "64bit"],
+            "enabled": DISABLE_SCREEN_SAVER
+        },
+        {
+            "name": "run mouse & screen adjustment script",
+            "cmd": [
+                # when configs are consolidated this python path will only show
+                # for windows.
+                "python", "../scripts/external_tools/mouse_and_screen_resolution.py",
+                "--configuration-file",
+                "../scripts/external_tools/machine-configuration.json"],
+            "architectures": ["32bit"],
+            "halt_on_failure": True,
+            "enabled": ADJUST_MOUSE_AND_SCREEN
+        },
+    ],
 }

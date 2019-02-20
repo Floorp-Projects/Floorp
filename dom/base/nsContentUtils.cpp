@@ -3851,10 +3851,6 @@ void nsContentUtils::LogMessageToConsole(const char* aMsg) {
   sConsoleService->LogStringMessage(NS_ConvertUTF8toUTF16(aMsg).get());
 }
 
-bool nsContentUtils::IsChromeDoc(const Document* aDocument) {
-  return aDocument && aDocument->NodePrincipal() == sSystemPrincipal;
-}
-
 bool nsContentUtils::IsChildOfSameType(Document* aDoc) {
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(aDoc->GetDocShell());
   nsCOMPtr<nsIDocShellTreeItem> sameTypeParent;
@@ -3886,24 +3882,6 @@ bool nsContentUtils::IsUtf8OnlyPlainTextType(const nsACString& aContentType) {
          aContentType.EqualsLiteral(APPLICATION_JSON) ||
          aContentType.EqualsLiteral(TEXT_JSON) ||
          aContentType.EqualsLiteral(TEXT_VTT);
-}
-
-// static
-bool nsContentUtils::IsInChromeDocshell(Document* aDocument) {
-  if (!aDocument) {
-    return false;
-  }
-
-  if (aDocument->GetDisplayDocument()) {
-    return IsInChromeDocshell(aDocument->GetDisplayDocument());
-  }
-
-  nsCOMPtr<nsIDocShellTreeItem> docShell = aDocument->GetDocShell();
-  if (!docShell) {
-    return false;
-  }
-
-  return docShell->ItemType() == nsIDocShellTreeItem::typeChrome;
 }
 
 // static

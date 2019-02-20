@@ -111,23 +111,6 @@ function onUnload() {
   } catch (e) {}
 }
 
-function getString(stringId) {
-  // Check if we've fetched this string already.
-  if (!(stringId in dialog.strings)) {
-    // Try to get it.
-    var elem = document.getElementById( "dialog.strings." + stringId);
-    try {
-      if (elem && elem.childNodes && elem.childNodes[0] &&
-          elem.childNodes[0].nodeValue)
-        dialog.strings[stringId] = elem.childNodes[0].nodeValue;
-      // If unable to fetch string, use an empty string.
-      else
-        dialog.strings[stringId] = "";
-    } catch (e) { dialog.strings[stringId] = ""; }
-  }
-  return dialog.strings[stringId];
-}
-
 // If the user presses cancel, tell the app launcher and close the dialog...
 function onCancel() {
   // Cancel app launcher.

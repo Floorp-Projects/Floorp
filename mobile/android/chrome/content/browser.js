@@ -108,7 +108,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "FontEnumerator",
   "@mozilla.org/gfx/fontenumerator;1",
   "nsIFontEnumerator");
 
-ChromeUtils.defineModuleGetter(this, "Utils", "resource://gre/modules/sessionstore/Utils.jsm");
+ChromeUtils.defineModuleGetter(this, "E10SUtils", "resource://gre/modules/E10SUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "FormLikeFactory",
                                "resource://gre/modules/FormLikeFactory.jsm");
@@ -3841,7 +3841,7 @@ Tab.prototype = {
     // Always initialise new tabs with basic session store data to avoid
     // problems with functions that always expect it to be present
     let triggeringPrincipal_base64 = aParams.triggeringPrincipal ?
-      Utils.serializePrincipal(aParams.triggeringPrincipal) : Utils.SERIALIZED_SYSTEMPRINCIPAL;
+      E10SUtils.serializePrincipal(aParams.triggeringPrincipal) : E10SUtils.SERIALIZED_SYSTEMPRINCIPAL;
     this.browser.__SS_data = {
       entries: [{
         url: uri,

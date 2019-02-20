@@ -69,21 +69,21 @@ add_task(async function testLazyTabs() {
   }
 
   let tabsMoved = new Promise(resolve => {
-    // Tab tabs in the new window will be about:blank before swapping the docshells.
-    // The "EndSwapDocShells" event is not dispatched for lazy tabs, so listen for
-    // "TabClose" instead and await a tick.
     let numTabsMoved = 0;
     window.addEventListener("TabClose", async function listener(event) {
-      let tab = event.target;
-      let i = oldTabs.indexOf(tab);
+      let oldTab = event.target;
+      let i = oldTabs.indexOf(oldTab);
       if (i == 0) {
-        isnot(tab.linkedPanel, "", `Old tab ${i} should continue not being lazy`);
+        isnot(oldTab.linkedPanel, "", `Old tab ${i} should continue not being lazy`);
       } else if (i > 0) {
-        is(tab.linkedPanel, "", `Old tab ${i} should continue being lazy`);
+        is(oldTab.linkedPanel, "", `Old tab ${i} should continue being lazy`);
       } else {
         return;
       }
-      await Promise.resolve();
+      let newTab = event.detail.adoptedBy;
+      await TestUtils.waitForCondition(() => {
+        return newTab.linkedBrowser.currentURI.spec != "about:blank";
+      }, `Wait for the new tab to finish the adoption of the old tab`);
       if (++numTabsMoved == numTabs) {
         window.removeEventListener("TabClose", listener);
         resolve();

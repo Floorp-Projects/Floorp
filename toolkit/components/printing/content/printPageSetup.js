@@ -53,12 +53,6 @@ function initDialog() {
   gDialog.scalingInput    = document.getElementById("scalingInput");
 
   gDialog.enabled         = false;
-
-  gDialog.strings                        = [];
-  gDialog.strings["marginUnits.inches"]  = document.getElementById("marginUnits.inches").childNodes[0].nodeValue;
-  gDialog.strings["marginUnits.metric"]  = document.getElementById("marginUnits.metric").childNodes[0].nodeValue;
-  gDialog.strings["customPrompt.title"]  = document.getElementById("customPrompt.title").childNodes[0].nodeValue;
-  gDialog.strings["customPrompt.prompt"] = document.getElementById("customPrompt.prompt").childNodes[0].nodeValue;
 }
 
 // ---------------------------------------------------
@@ -141,11 +135,13 @@ function changeMargins() {
 }
 
 // ---------------------------------------------------
-function customize( node ) {
+async function customize( node ) {
   // If selection is now "Custom..." then prompt user for custom setting.
   if ( node.value == 6 ) {
-    var title      = gDialog.strings["customPrompt.title"];
-    var promptText = gDialog.strings["customPrompt.prompt"];
+    let [title, promptText] = await document.l10n.formatValues([
+      {id: "custom-prompt-title"},
+      {id: "custom-prompt-prompt"},
+    ]);
     var result = { value: node.custom };
     var ok = Services.prompt.prompt(window, title, promptText, result, null, { value: false } );
     if ( ok ) {
@@ -254,18 +250,16 @@ function loadDialog() {
 
   gDialog.scalingLabel.disabled = gDialog.scalingInput.disabled = gDialog.shrinkToFit.checked;
 
-  var marginGroupLabel = gDialog.marginGroup.getAttribute("value");
   if (gPrintSettings.paperSizeUnit == gPrintSettingsInterface.kPaperSizeInches) {
-    marginGroupLabel = marginGroupLabel.replace(/#1/, gDialog.strings["marginUnits.inches"]);
+    document.l10n.setAttributes(gDialog.marginGroup, "margin-group-label-inches");
     gDoingMetric = false;
   } else {
-    marginGroupLabel = marginGroupLabel.replace(/#1/, gDialog.strings["marginUnits.metric"]);
+    document.l10n.setAttributes(gDialog.marginGroup, "margin-group-label-metric");
     // Also, set global page dimensions for A4 paper, in millimeters (assumes portrait at this point).
     gPageWidth = 2100;
     gPageHeight = 2970;
     gDoingMetric = true;
   }
-  gDialog.marginGroup.setAttribute("value", marginGroupLabel);
 
   print_orientation   = gPrintSettings.orientation;
   print_margin_top    = convertMarginInchesToUnits(gPrintSettings.marginTop, gDoingMetric);

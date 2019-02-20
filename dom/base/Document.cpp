@@ -1227,6 +1227,8 @@ Document::Document(const char* aContentType)
       mInUnlinkOrDeletion(false),
       mHasHadScriptHandlingObject(false),
       mIsBeingUsedAsImage(false),
+      mDocURISchemeIsChrome(false),
+      mInChromeDocShell(false),
       mIsSyntheticDocument(false),
       mHasLinksToUpdateRunnable(false),
       mFlushingPendingLinkUpdates(false),
@@ -2835,6 +2837,8 @@ void Document::SetDocumentURI(nsIURI* aURI) {
   mDocumentURI = aURI;
   nsIURI* newBase = GetDocBaseURI();
 
+  mDocURISchemeIsChrome = aURI && IsChromeURI(aURI);
+
   bool equalBases = false;
   // Changing just the ref of a URI does not change how relative URIs would
   // resolve wrt to it, so we can treat the bases as equal as long as they're
@@ -4300,6 +4304,9 @@ void Document::SetContainer(nsDocShell* aContainer) {
   } else {
     mDocumentContainer = WeakPtr<nsDocShell>();
   }
+
+  mInChromeDocShell =
+      aContainer && aContainer->ItemType() == nsIDocShellTreeItem::typeChrome;
 
   EnumerateActivityObservers(NotifyActivityChanged, nullptr);
 

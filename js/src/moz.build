@@ -219,7 +219,6 @@ UNIFIED_SOURCES += [
     'builtin/TypedObject.cpp',
     'builtin/WeakMapObject.cpp',
     'builtin/WeakSetObject.cpp',
-    'devtools/sharkctl.cpp',
     'ds/Bitmap.cpp',
     'ds/LifoAlloc.cpp',
     'ds/MemoryProtectionExceptionHandler.cpp',

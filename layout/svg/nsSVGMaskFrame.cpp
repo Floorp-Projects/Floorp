@@ -74,10 +74,10 @@ already_AddRefed<SourceSurface> nsSVGMaskFrame::GetMaskForMaskedFrame(
   }
 
   uint8_t maskType;
-  if (aParams.maskMode == NS_STYLE_MASK_MODE_MATCH_SOURCE) {
+  if (aParams.maskMode == StyleMaskMode::MatchSource) {
     maskType = StyleSVGReset()->mMaskType;
   } else {
-    maskType = aParams.maskMode == NS_STYLE_MASK_MODE_LUMINANCE
+    maskType = aParams.maskMode == StyleMaskMode::Luminance
                    ? NS_STYLE_MASK_TYPE_LUMINANCE
                    : NS_STYLE_MASK_TYPE_ALPHA;
   }

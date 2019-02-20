@@ -77,7 +77,10 @@ pub struct RenderTargetContext<'a, 'rc> {
 /// and sometimes on its parameters. See `RenderTask::target_kind`.
 pub trait RenderTarget {
     /// Creates a new RenderTarget of the given type.
-    fn new(screen_size: DeviceIntSize) -> Self;
+    fn new(
+        screen_size: DeviceIntSize,
+        gpu_supports_fast_clears: bool,
+    ) -> Self;
 
     /// Optional hook to provide additional processing for the target at the
     /// end of the build phase.
@@ -170,12 +173,14 @@ pub struct RenderTargetList<T> {
     pub targets: Vec<T>,
     pub saved_index: Option<SavedTargetIndex>,
     pub alloc_tracker: ArrayAllocationTracker,
+    gpu_supports_fast_clears: bool,
 }
 
 impl<T: RenderTarget> RenderTargetList<T> {
     fn new(
         screen_size: DeviceIntSize,
         format: ImageFormat,
+        gpu_supports_fast_clears: bool,
     ) -> Self {
         RenderTargetList {
             screen_size,
@@ -184,6 +189,7 @@ impl<T: RenderTarget> RenderTargetList<T> {
             targets: Vec::new(),
             saved_index: None,
             alloc_tracker: ArrayAllocationTracker::new(),
+            gpu_supports_fast_clears,
         }
     }
 
@@ -236,7 +242,7 @@ impl<T: RenderTarget> RenderTargetList<T> {
                 assert!(alloc_size.width <= allocator_dimensions.width &&
                     alloc_size.height <= allocator_dimensions.height);
                 let slice = FreeRectSlice(self.targets.len() as u32);
-                self.targets.push(T::new(self.screen_size));
+                self.targets.push(T::new(self.screen_size, self.gpu_supports_fast_clears));
 
                 self.alloc_tracker.extend(
                     slice,
@@ -250,7 +256,7 @@ impl<T: RenderTarget> RenderTargetList<T> {
 
         if alloc_size.is_empty_or_negative() && self.targets.is_empty() {
             // push an unused target here, only if we don't have any
-            self.targets.push(T::new(self.screen_size));
+            self.targets.push(T::new(self.screen_size, self.gpu_supports_fast_clears));
         }
 
         self.targets[free_rect_slice.0 as usize]
@@ -356,7 +362,10 @@ pub struct ColorRenderTarget {
 }
 
 impl RenderTarget for ColorRenderTarget {
-    fn new(screen_size: DeviceIntSize) -> Self {
+    fn new(
+        screen_size: DeviceIntSize,
+        _: bool,
+    ) -> Self {
         ColorRenderTarget {
             alpha_batch_containers: Vec::new(),
             vertical_blurs: Vec::new(),
@@ -391,6 +400,7 @@ impl RenderTarget for ColorRenderTarget {
                 ClearMode::Zero => {
                     panic!("bug: invalid clear mode for color task");
                 }
+                ClearMode::DontCare |
                 ClearMode::Transparent => {}
             }
 
@@ -578,6 +588,7 @@ pub struct AlphaRenderTarget {
     pub horizontal_blurs: Vec<BlurInstance>,
     pub scalings: Vec<ScalingInstance>,
     pub zero_clears: Vec<RenderTaskId>,
+    pub one_clears: Vec<RenderTaskId>,
     // Track the used rect of the render target, so that
     // we can set a scissor rect and only clear to the
     // used portion of the target as an optimization.
@@ -585,13 +596,17 @@ pub struct AlphaRenderTarget {
 }
 
 impl RenderTarget for AlphaRenderTarget {
-    fn new(_screen_size: DeviceIntSize) -> Self {
+    fn new(
+        _screen_size: DeviceIntSize,
+        gpu_supports_fast_clears: bool,
+    ) -> Self {
         AlphaRenderTarget {
-            clip_batcher: ClipBatcher::new(),
+            clip_batcher: ClipBatcher::new(gpu_supports_fast_clears),
             vertical_blurs: Vec::new(),
             horizontal_blurs: Vec::new(),
             scalings: Vec::new(),
             zero_clears: Vec::new(),
+            one_clears: Vec::new(),
             used_rect: DeviceIntRect::zero(),
         }
     }
@@ -612,7 +627,10 @@ impl RenderTarget for AlphaRenderTarget {
             ClearMode::Zero => {
                 self.zero_clears.push(task_id);
             }
-            ClearMode::One => {}
+            ClearMode::One => {
+                self.one_clears.push(task_id);
+            }
+            ClearMode::DontCare => {}
             ClearMode::Transparent => {
                 panic!("bug: invalid clear mode for alpha task");
             }
@@ -858,8 +876,11 @@ pub struct RenderPass {
 impl RenderPass {
     /// Creates a pass for the main framebuffer. There is only one of these, and
     /// it is always the last pass.
-    pub fn new_main_framebuffer(screen_size: DeviceIntSize) -> Self {
-        let target = ColorRenderTarget::new(screen_size);
+    pub fn new_main_framebuffer(
+        screen_size: DeviceIntSize,
+        gpu_supports_fast_clears: bool,
+    ) -> Self {
+        let target = ColorRenderTarget::new(screen_size, gpu_supports_fast_clears);
         RenderPass {
             kind: RenderPassKind::MainFramebuffer(target),
             tasks: vec![],
@@ -867,11 +888,22 @@ impl RenderPass {
     }
 
     /// Creates an intermediate off-screen pass.
-    pub fn new_off_screen(screen_size: DeviceIntSize) -> Self {
+    pub fn new_off_screen(
+        screen_size: DeviceIntSize,
+        gpu_supports_fast_clears: bool,
+    ) -> Self {
         RenderPass {
             kind: RenderPassKind::OffScreen {
-                color: RenderTargetList::new(screen_size, ImageFormat::BGRA8),
-                alpha: RenderTargetList::new(screen_size, ImageFormat::R8),
+                color: RenderTargetList::new(
+                    screen_size,
+                    ImageFormat::BGRA8,
+                    gpu_supports_fast_clears,
+                ),
+                alpha: RenderTargetList::new(
+                    screen_size,
+                    ImageFormat::R8,
+                    gpu_supports_fast_clears,
+                ),
                 texture_cache: FastHashMap::default(),
             },
             tasks: vec![],

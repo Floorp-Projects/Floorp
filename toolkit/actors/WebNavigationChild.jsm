@@ -12,8 +12,6 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
 
 ChromeUtils.defineModuleGetter(this, "AppConstants",
                                "resource://gre/modules/AppConstants.jsm");
-ChromeUtils.defineModuleGetter(this, "Utils",
-                               "resource://gre/modules/sessionstore/Utils.jsm");
 ChromeUtils.defineModuleGetter(this, "E10SUtils",
                                "resource://gre/modules/E10SUtils.jsm");
 
@@ -100,14 +98,14 @@ class WebNavigationChild extends ActorChild {
       CrashReporter.annotateCrashReport("URL", annotation);
     }
     if (postData)
-      postData = Utils.makeInputStream(postData);
+      postData = E10SUtils.makeInputStream(postData);
     if (headers)
-      headers = Utils.makeInputStream(headers);
+      headers = E10SUtils.makeInputStream(headers);
     if (baseURI)
       baseURI = Services.io.newURI(baseURI);
     this._assert(triggeringPrincipal, "We need a triggering principal to continue loading", new Error().lineNumber);
     if (triggeringPrincipal)
-      triggeringPrincipal = Utils.deserializePrincipal(triggeringPrincipal);
+      triggeringPrincipal = E10SUtils.deserializePrincipal(triggeringPrincipal);
     this._assert(triggeringPrincipal, "Unable to deserialize passed triggering principal", new Error().lineNumber);
     if (!triggeringPrincipal) {
       triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal({});

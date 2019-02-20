@@ -57,8 +57,6 @@ class nsProfiler final : public nsIProfiler, public nsIObserver {
   void FinishGathering();
   void ResetGathering();
 
-  void ClearExpiredExitProfiles();
-
   RefPtr<SymbolTablePromise> GetSymbolTableMozPromise(
       const nsACString& aDebugPath, const nsACString& aBreakpadID);
 

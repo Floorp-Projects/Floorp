@@ -5,8 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GLManager.h"
-#include "CompositorOGL.h"              // for CompositorOGL
-#include "GLContext.h"                  // for GLContext
+#include "CompositorOGL.h"  // for CompositorOGL
+#include "GLContext.h"      // for GLContext
+#include "OGLShaderProgram.h"
 #include "mozilla/Attributes.h"         // for override
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/layers/Compositor.h"  // for Compositor

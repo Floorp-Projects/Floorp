@@ -1686,7 +1686,12 @@ Search.prototype = {
   },
 
   _matchExtensionSuggestions() {
-    let promise = ExtensionSearchHandler.handleSearch(this._heuristicToken, this._originalSearchString,
+    let data = {
+      keyword: this._heuristicToken,
+      text: this._originalSearchString,
+      inPrivateWindow: this._inPrivateWindow,
+    };
+    let promise = ExtensionSearchHandler.handleSearch(data,
       suggestions => {
         for (let suggestion of suggestions) {
           let content = `${this._heuristicToken} ${suggestion.content}`;

@@ -2246,7 +2246,7 @@ void LIRGenerator::visitToString(MToString* ins) {
     }
 
     default:
-      // Float32, symbols, and objects are not supported.
+      // Float32, symbols, bigint, and objects are not supported.
       MOZ_CRASH("unexpected type");
   }
 }
@@ -3166,6 +3166,7 @@ void LIRGenerator::visitLoadElementFromState(MLoadElementFromState* ins) {
       case MIRType::Object:
       case MIRType::String:
       case MIRType::Symbol:
+      case MIRType::BigInt:
         lir->setOperand(1 + BOX_PIECES * i, use(elem));
 #ifdef JS_NUNBOX32
         // Bogus second operand.

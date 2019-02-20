@@ -8,8 +8,8 @@ const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var EXPORTED_SYMBOLS = ["BlockedSiteChild"];
 
 const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
-ChromeUtils.defineModuleGetter(this, "Utils",
-  "resource://gre/modules/sessionstore/Utils.jsm");
+ChromeUtils.defineModuleGetter(this, "E10SUtils",
+  "resource://gre/modules/E10SUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "SafeBrowsing",
                                "resource://gre/modules/SafeBrowsing.jsm");
@@ -31,7 +31,7 @@ function getSiteBlockedErrorDetails(docShell) {
                              .finalize();
       }
 
-      let triggeringPrincipal = docShell.failedChannel.loadInfo ? Utils.serializePrincipal(docShell.failedChannel.loadInfo.triggeringPrincipal) : null;
+      let triggeringPrincipal = docShell.failedChannel.loadInfo ? E10SUtils.serializePrincipal(docShell.failedChannel.loadInfo.triggeringPrincipal) : null;
       blockedInfo = { list: classifiedChannel.matchedList,
                       triggeringPrincipal,
                       provider: classifiedChannel.matchedProvider,

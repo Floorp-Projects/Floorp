@@ -40,6 +40,7 @@ EXPORTS += [
     'LayersTypes.h',
     'LayerTreeInvalidation.h',
     'LayerUserData.h',
+    'opengl/OGLShaderConfig.h',
     'opengl/OGLShaderProgram.h',
     'protobuf/LayerScopePacket.pb.h',
     'ReadbackLayer.h',

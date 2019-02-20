@@ -467,6 +467,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mTopOuterWindowID(rhs.mTopOuterWindowID),
       mFrameOuterWindowID(rhs.mFrameOuterWindowID),
       mBrowsingContextID(rhs.mBrowsingContextID),
+      mFrameBrowsingContextID(rhs.mFrameBrowsingContextID),
       mInitialSecurityCheckDone(rhs.mInitialSecurityCheckDone),
       mIsThirdPartyContext(rhs.mIsThirdPartyContext),
       mIsDocshellReload(rhs.mIsDocshellReload),

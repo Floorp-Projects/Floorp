@@ -55,6 +55,7 @@ pub struct FrameBuilderConfig {
     pub enable_picture_caching: bool,
     /// True if we're running tests (i.e. via wrench).
     pub testing: bool,
+    pub gpu_supports_fast_clears: bool,
 }
 
 /// A set of common / global resources that are retained between
@@ -138,6 +139,7 @@ pub struct FrameBuildingContext<'a> {
     pub clip_scroll_tree: &'a ClipScrollTree,
     pub max_local_clip: LayoutRect,
     pub debug_flags: DebugFlags,
+    pub fb_config: &'a FrameBuilderConfig,
 }
 
 pub struct FrameBuildingState<'a> {
@@ -234,6 +236,7 @@ impl FrameBuilder {
                 chase_primitive: ChasePrimitive::Nothing,
                 enable_picture_caching: false,
                 testing: false,
+                gpu_supports_fast_clears: false,
             },
         }
     }
@@ -338,6 +341,7 @@ impl FrameBuilder {
                 LayoutSize::new(2.0 * MAX_CLIP_COORD, 2.0 * MAX_CLIP_COORD),
             ),
             debug_flags,
+            fb_config: &self.config,
         };
 
         // Construct a dummy root surface, that represents the
@@ -577,13 +581,14 @@ impl FrameBuilder {
 
             // Add passes as required for our cached render tasks.
             if !render_tasks.cacheable_render_tasks.is_empty() {
-                passes.push(RenderPass::new_off_screen(screen_size));
+                passes.push(RenderPass::new_off_screen(screen_size, self.config.gpu_supports_fast_clears));
                 for cacheable_render_task in &render_tasks.cacheable_render_tasks {
                     render_tasks.assign_to_passes(
                         *cacheable_render_task,
                         0,
                         screen_size,
                         &mut passes,
+                        self.config.gpu_supports_fast_clears,
                     );
                 }
                 passes.reverse();
@@ -591,12 +596,13 @@ impl FrameBuilder {
 
             if let Some(main_render_task_id) = main_render_task_id {
                 let passes_start = passes.len();
-                passes.push(RenderPass::new_main_framebuffer(screen_size));
+                passes.push(RenderPass::new_main_framebuffer(screen_size, self.config.gpu_supports_fast_clears));
                 render_tasks.assign_to_passes(
                     main_render_task_id,
                     passes_start,
                     screen_size,
                     &mut passes,
+                    self.config.gpu_supports_fast_clears,
                 );
                 passes[passes_start..].reverse();
             }
