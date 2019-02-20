@@ -158,12 +158,11 @@ static void* MapAlignedPagesLastDitch(size_t length, size_t alignment);
 
 #ifdef JS_64BIT
 static void* MapAlignedPagesRandom(size_t length, size_t alignment);
-void* TestMapAlignedPagesLastDitch(size_t, size_t) { return nullptr; }
-#else
+#endif
+
 void* TestMapAlignedPagesLastDitch(size_t length, size_t alignment) {
   return MapAlignedPagesLastDitch(length, alignment);
 }
-#endif
 
 /*
  * We can only decommit unused pages if the hardcoded Arena
@@ -425,28 +424,45 @@ void* MapAlignedPages(size_t length, size_t alignment) {
   }
 #endif
 
+  // Try to allocate the region. If the returned address is aligned,
+  // either we OOMed (region is nullptr) or we're done.
   void* region = MapMemory(length);
   if (OffsetFromAligned(region, alignment) == 0) {
     return region;
   }
 
+  // Try to align the region. On success, TryToAlignChunk() returns
+  // true and we can return the aligned region immediately.
   void* retainedRegion;
-  TryToAlignChunk(&region, &retainedRegion, length, alignment);
+  if (TryToAlignChunk(&region, &retainedRegion, length, alignment)) {
+    MOZ_ASSERT(region && OffsetFromAligned(region, alignment) == 0);
+    MOZ_ASSERT(!retainedRegion);
+    return region;
+  }
+
+  // On failure, the unaligned region is retained unless we OOMed. We don't
+  // use the retained region on this path (see the last ditch allocator).
   if (retainedRegion) {
     UnmapInternal(retainedRegion, length);
   }
+
+  // If it fails to align the given region, TryToAlignChunk() returns the
+  // next valid region that we might be able to align (unless we OOMed).
   if (region) {
-    if (OffsetFromAligned(region, alignment) == 0) {
-      return region;
-    }
+    MOZ_ASSERT(OffsetFromAligned(region, alignment) != 0);
     UnmapInternal(region, length);
   }
 
+  // Since we couldn't align the first region, fall back to allocating a
+  // region large enough that we can definitely align it.
   region = MapAlignedPagesSlow(length, alignment);
   if (!region) {
+    // If there wasn't enough contiguous address space left for that,
+    // try to find an alignable region using the last ditch allocator.
     region = MapAlignedPagesLastDitch(length, alignment);
   }
 
+  // At this point we should either have an aligned region or nullptr.
   MOZ_ASSERT(OffsetFromAligned(region, alignment) == 0);
   return region;
 }
@@ -510,6 +526,7 @@ static void* MapAlignedPagesRandom(size_t length, size_t alignment) {
     }
     void* retainedRegion = nullptr;
     if (TryToAlignChunk<false>(&region, &retainedRegion, length, alignment)) {
+      MOZ_ASSERT(region && OffsetFromAligned(region, alignment) == 0);
       MOZ_ASSERT(!retainedRegion);
       return region;
     }
@@ -590,6 +607,7 @@ static void* MapAlignedPagesLastDitch(size_t length, size_t alignment) {
   }
   for (; attempt < MaxLastDitchAttempts; ++attempt) {
     if (TryToAlignChunk(&region, tempMaps + attempt, length, alignment)) {
+      MOZ_ASSERT(region && OffsetFromAligned(region, alignment) == 0);
       MOZ_ASSERT(!tempMaps[attempt]);
       break;  // Success!
     }
@@ -705,6 +723,12 @@ static bool TryToAlignChunk(void** aRegion, void** aRetainedRegion,
     // If our current chunk cannot be aligned, just get a new one.
     retainedRegion = regionStart;
     regionStart = MapMemory(length);
+    // Our new region might happen to already be aligned.
+    result = OffsetFromAligned(regionStart, alignment) == 0;
+    if (result) {
+      UnmapInternal(retainedRegion, length);
+      retainedRegion = nullptr;
+    }
   }
 
   *aRegion = regionStart;
