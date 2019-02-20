@@ -200,6 +200,26 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
   },
 
   /**
+   * Get the StyleRuleActor matching the given rule id or null if no match is found.
+   *
+   * @param  {String} ruleId
+   *         Actor ID of the StyleRuleActor
+   * @return {StyleRuleActor|null}
+   */
+  getRule: function(ruleId) {
+    let match = null;
+
+    for (const actor of this.refMap.values()) {
+      if (actor.actorID === ruleId) {
+        match = actor;
+        continue;
+      }
+    }
+
+    return match;
+  },
+
+  /**
    * Get the computed style for a node.
    *
    * @param NodeActor node

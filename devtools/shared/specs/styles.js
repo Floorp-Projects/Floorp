@@ -150,6 +150,14 @@ const pageStyleSpec = generateActorSpec({
         matched: "array:matchedselector",
       })),
     },
+    getRule: {
+      request: {
+        ruleId: Arg(0, "string"),
+      },
+      response: {
+        rule: RetVal("nullable:domstylerule"),
+      },
+    },
     getApplied: {
       request: {
         node: Arg(0, "domnode"),
