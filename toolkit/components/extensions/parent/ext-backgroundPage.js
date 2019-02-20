@@ -38,9 +38,17 @@ class BackgroundPage extends HiddenExtensionPage {
 
     extensions.emit("extension-browser-inserted", this.browser);
 
+    let contextPromise = promiseExtensionViewLoaded(this.browser);
     this.browser.loadURI(this.url, {triggeringPrincipal: extension.principal});
 
-    let context = await promiseExtensionViewLoaded(this.browser);
+    let context;
+    try {
+      context = await contextPromise;
+    } catch (e) {
+      // Extension was down before the background page has loaded.
+      ExtensionTelemetry.backgroundPageLoad.stopwatchCancel(extension, this);
+      return;
+    }
 
     ExtensionTelemetry.backgroundPageLoad.stopwatchFinish(extension, this);
 
