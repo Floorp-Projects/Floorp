@@ -78,9 +78,9 @@ WINDOWS_WORKER_TYPES = {
       'hardware': 'releng-hardware/gecko-t-win10-64-hw',
     },
     'windows10-aarch64': {
-      'virtual': 'test-provisioner/bitbar',
-      'virtual-with-gpu': 'test-provisioner/bitbar',
-      'hardware': 'test-provisioner/bitbar',
+      'virtual': 'bitbar/gecko-t-win64-aarch64-laptop',
+      'virtual-with-gpu': 'bitbar/gecko-t-win64-aarch64-laptop',
+      'hardware': 'bitbar/gecko-t-win64-aarch64-laptop',
     },
     'windows10-64-ccov': {
       'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
