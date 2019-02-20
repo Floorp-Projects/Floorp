@@ -20,22 +20,13 @@ const ThreadStateTypes = {
  * by the client.
  */
 const UnsolicitedNotifications = {
-  "consoleAPICall": "consoleAPICall",
-  "fileActivity": "fileActivity",
-  "lastPrivateContextExited": "lastPrivateContextExited",
-  "logMessage": "logMessage",
-  "networkEvent": "networkEvent",
   "networkEventUpdate": "networkEventUpdate",
-  "documentEvent": "documentEvent",
   "tabDetached": "tabDetached",
   "tabListChanged": "tabListChanged",
   "addonListChanged": "addonListChanged",
   "workerListChanged": "workerListChanged",
   "serviceWorkerRegistrationListChanged": "serviceWorkerRegistrationList",
-  "pageError": "pageError",
-  "evaluationResult": "evaluationResult",
   "updatedSource": "updatedSource",
-  "inspectObject": "inspectObject",
 
   // newSource is still emitted on the ThreadActor, in addition to the
   // BrowsingContextActor we have to keep it here until ThreadClient is converted to
