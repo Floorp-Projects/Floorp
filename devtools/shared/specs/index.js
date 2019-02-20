@@ -276,7 +276,7 @@ const Types = exports.__TypesForTests = [
   {
     types: ["console"],
     spec: "devtools/shared/specs/webconsole",
-    front: null,
+    front: "devtools/shared/fronts/webconsole",
   },
   {
     types: ["gl-shader", "gl-program", "webgl"],

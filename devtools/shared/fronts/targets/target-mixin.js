@@ -356,9 +356,8 @@ function TargetMixin(parentClass) {
 
     // Attach the console actor
     async attachConsole() {
-      const [, consoleClient] = await this._client.attachConsole(
-        this.targetForm.consoleActor, []);
-      this.activeConsole = consoleClient;
+      this.activeConsole = await this.getFront("console");
+      await this.activeConsole.startListeners([]);
 
       this._onInspectObject = packet => this.emit("inspect-object", packet);
       this.activeConsole.on("inspectObject", this._onInspectObject);
