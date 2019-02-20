@@ -209,13 +209,7 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
 
     this._networkEventActorsByURL.set(actor._request.url, actor);
 
-    const packet = {
-      from: this.parentID,
-      type: "networkEvent",
-      eventActor: actor.form(),
-    };
-
-    this.conn.send(packet);
+    this.conn.sendActorEvent(this.parentID, "networkEvent", { eventActor: actor.form() });
     return actor;
   },
 
