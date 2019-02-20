@@ -149,7 +149,7 @@ bool InspectorUtils::IsIgnorableWhitespace(CharacterData& aDataNode) {
 
 /* static */ void InspectorUtils::GetCSSStyleRules(
     GlobalObject& aGlobalObject, Element& aElement, const nsAString& aPseudo,
-    nsTArray<RefPtr<css::Rule>>& aResult) {
+    nsTArray<RefPtr<BindingStyleRule>>& aResult) {
   RefPtr<nsAtom> pseudoElt;
   if (!aPseudo.IsEmpty()) {
     pseudoElt = NS_Atomize(aPseudo);
