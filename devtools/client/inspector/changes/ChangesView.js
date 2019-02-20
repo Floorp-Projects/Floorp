@@ -10,6 +10,7 @@ const { createFactory, createElement } = require("devtools/client/shared/vendor/
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
 loader.lazyRequireGetter(this, "ChangesContextMenu", "devtools/client/inspector/changes/ChangesContextMenu");
+loader.lazyRequireGetter(this, "prettifyCSS", "devtools/shared/inspector/css-logic", true);
 loader.lazyRequireGetter(this, "clipboardHelper", "devtools/shared/platform/clipboard");
 
 const ChangesApp = createFactory(require("./components/ChangesApp"));
@@ -132,6 +133,21 @@ class ChangesView {
 
     const text = getChangesStylesheet(state, filter);
     clipboardHelper.copyString(text);
+  }
+
+  /**
+   * Handler for the "Copy Rule" option from the context menu.
+   * Gets the full content of the target CSS rule (including any changes applied)
+   * and copies it to the clipboard.
+   *
+   * @param {String} ruleId
+   *        Rule id of the target CSS rule.
+   */
+  async copyRule(ruleId) {
+    const rule = await this.inspector.pageStyle.getRule(ruleId);
+    const text = await rule.getRuleText();
+    const prettyCSS = prettifyCSS(text);
+    clipboardHelper.copyString(prettyCSS);
   }
 
   /**
