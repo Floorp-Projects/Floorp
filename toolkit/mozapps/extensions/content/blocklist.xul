@@ -6,7 +6,6 @@
 
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://mozapps/skin/extensions/blocklist.css"?>
-<?xml-stylesheet href="chrome://mozapps/content/extensions/blocklist.css"?>
 
 <!DOCTYPE dialog [
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
