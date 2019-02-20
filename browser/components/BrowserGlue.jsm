@@ -244,6 +244,16 @@ let ACTORS = {
     },
   },
 
+  RFPHelper: {
+    child: {
+      module: "resource:///actors/RFPHelperChild.jsm",
+      group: "browsers",
+      events: {
+        "resize": {},
+      },
+    },
+  },
+
   SearchTelemetry: {
     child: {
       module: "resource:///actors/SearchTelemetryChild.jsm",

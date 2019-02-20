@@ -7,14 +7,24 @@
 var EXPORTED_SYMBOLS = ["RFPHelper"];
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const kPrefResistFingerprinting = "privacy.resistFingerprinting";
 const kPrefSpoofEnglish = "privacy.spoof_english";
 const kTopicHttpOnModifyRequest = "http-on-modify-request";
 
+const kPrefLetterboxing = "privacy.resistFingerprinting.letterboxing";
+const kPrefLetterboxingDimensions =
+  "privacy.resistFingerprinting.letterboxing.dimensions";
+const kTopicDOMWindowOpened = "domwindowopened";
+const kEventLetterboxingSizeUpdate = "Letterboxing:ContentSizeUpdated";
+
+const kDefaultWidthStepping = 200;
+const kDefaultHeightStepping = 100;
+
 class _RFPHelper {
   // ============================================================================
-  // Setup
+  // Shared Setup
   // ============================================================================
   constructor() {
     this._initialized = false;
@@ -28,8 +38,13 @@ class _RFPHelper {
 
     // Add unconditional observers
     Services.prefs.addObserver(kPrefResistFingerprinting, this);
-    // Add RFP observers if the pref is enabled
+    Services.prefs.addObserver(kPrefLetterboxing, this);
+    XPCOMUtils.defineLazyPreferenceGetter(this, "_letterboxingDimensions",
+      kPrefLetterboxingDimensions, "", null, this._parseLetterboxingDimensions);
+
+    // Add RFP and Letterboxing observers if prefs are enabled
     this._handleResistFingerprintingChanged();
+    this._handleLetterboxingPrefChanged();
   }
 
   uninit() {
@@ -40,6 +55,7 @@ class _RFPHelper {
 
     // Remove unconditional observers
     Services.prefs.removeObserver(kPrefResistFingerprinting, this);
+    Services.prefs.removeObserver(kPrefLetterboxing, this);
     // Remove the RFP observers, swallowing exceptions if they weren't present
     this._removeRFPObservers();
   }
@@ -51,6 +67,36 @@ class _RFPHelper {
         break;
       case kTopicHttpOnModifyRequest:
         this._handleHttpOnModifyRequest(subject, data);
+        break;
+      case kTopicDOMWindowOpened:
+        // We attach to the newly created window by adding tabsProgressListener
+        // and event listener on it. We listen for new tabs being added or
+        // the change of the content principal and apply margins accordingly.
+        this._handleDOMWindowOpened(subject);
+        break;
+      default:
+        break;
+    }
+  }
+
+  handleEvent(aMessage) {
+    switch (aMessage.type) {
+      case "TabOpen":
+      {
+        let tab = aMessage.target;
+        this._addOrClearContentMargin(tab.linkedBrowser);
+        break;
+      }
+      default:
+        break;
+    }
+  }
+
+  receiveMessage(aMessage) {
+    switch (aMessage.name) {
+      case kEventLetterboxingSizeUpdate:
+        let win = aMessage.target.ownerGlobal;
+        this._updateMarginsForTabsInWindow(win);
         break;
       default:
         break;
@@ -64,6 +110,9 @@ class _RFPHelper {
         break;
       case kPrefSpoofEnglish:
         this._handleSpoofEnglishChanged();
+        break;
+      case kPrefLetterboxing:
+        this._handleLetterboxingPrefChanged();
         break;
       default:
         break;
@@ -209,6 +258,242 @@ class _RFPHelper {
       return null;
     }
     return httpChannel.getRequestHeader("Accept-Language");
+  }
+
+  // ==============================================================================
+  // Letterboxing
+  // ============================================================================
+  /**
+   * We use the TabsProgressListener to catch the change of the content
+   * principal. We would clear the margins around the content viewport if
+   * it is the system principal.
+   */
+  onLocationChange(aBrowser) {
+    this._addOrClearContentMargin(aBrowser);
+  }
+
+  _handleLetterboxingPrefChanged() {
+    if (Services.prefs.getBoolPref(kPrefLetterboxing, false)) {
+      Services.ww.registerNotification(this);
+      this._attachAllWindows();
+    } else {
+      this._detachAllWindows();
+      Services.ww.unregisterNotification(this);
+    }
+  }
+
+  // The function to parse the dimension set from the pref value. The pref value
+  // should be formated as 'width1xheight1, width2xheight2, ...'. For
+  // example, '100x100, 200x200, 400x200 ...'.
+  _parseLetterboxingDimensions(aPrefValue) {
+    if (!aPrefValue || !aPrefValue.match(/^(?:\d+x\d+,\s*)*(?:\d+x\d+)$/)) {
+      if (aPrefValue) {
+        Cu.reportError(`Invalid pref value for ${kPrefLetterboxingDimensions}: ${aPrefValue}`);
+      }
+      return [];
+    }
+
+    return aPrefValue.split(",").map(item => {
+      let sizes = item.split("x").map(size => parseInt(size, 10));
+
+      return {
+        width: sizes[0],
+        height: sizes[1],
+      };
+    });
+  }
+
+  _addOrClearContentMargin(aBrowser) {
+    let tab = aBrowser.getTabBrowser()
+                      .getTabForBrowser(aBrowser);
+
+    // We won't do anything for lazy browsers.
+    if (!aBrowser.isConnected) {
+      return;
+    }
+
+    // We should apply no margin around an empty tab or a tab with system
+    // principal.
+    if (tab.isEmpty || aBrowser.contentPrincipal.isSystemPrincipal) {
+      this._clearContentViewMargin(aBrowser);
+    } else {
+      this._roundContentView(aBrowser);
+    }
+  }
+
+  /**
+   * The function will round the given browser by adding margins around the
+   * content viewport.
+   */
+  async _roundContentView(aBrowser) {
+    let win = aBrowser.ownerGlobal;
+    let browserContainer = aBrowser.getTabBrowser()
+                                   .getBrowserContainer(aBrowser);
+
+    let {contentWidth, contentHeight, containerWidth, containerHeight} =
+      await win.promiseDocumentFlushed(() => {
+        let contentWidth = aBrowser.clientWidth;
+        let contentHeight = aBrowser.clientHeight;
+        let containerWidth = browserContainer.clientWidth;
+        let containerHeight = browserContainer.clientHeight;
+
+        return {
+          contentWidth,
+          contentHeight,
+          containerWidth,
+          containerHeight,
+        };
+      });
+
+    let calcMargins = (aWidth, aHeight) => {
+      // If the set is empty, we will round the content with the default
+      // stepping size.
+      if (!this._letterboxingDimensions.length) {
+        return {
+          width: (aWidth % kDefaultWidthStepping) / 2,
+          height: (aHeight % kDefaultHeightStepping) / 2,
+        };
+      }
+
+      let matchingArea = aWidth * aHeight;
+      let minWaste = Number.MAX_SAFE_INTEGER;
+      let targetDimensions = undefined;
+
+      // Find the desired dimensions which waste the least content area.
+      for (let dim of this._letterboxingDimensions) {
+        // We don't need to consider the dimensions which cannot fit into the
+        // real content size.
+        if (dim.width > aWidth || dim.height > aHeight) {
+          continue;
+        }
+
+        let waste = matchingArea - dim.width * dim.height;
+
+        if (waste >= 0 && waste < minWaste) {
+          targetDimensions = dim;
+          minWaste = waste;
+        }
+      }
+
+      let result;
+      // If we cannot find any dimensions match to the real content window, this
+      // means the content area is smaller the smallest size in the set. In this
+      // case, we won't apply any margins.
+      if (!targetDimensions) {
+        result = {
+          width: 0,
+          height: 0,
+        };
+      } else {
+        result = {
+          width: (aWidth - targetDimensions.width) / 2,
+          height: (aHeight - targetDimensions.height) / 2,
+        };
+      }
+
+      return result;
+    };
+
+    // Calculating the margins around the browser element in order to round the
+    // content viewport. We will use a 200x100 stepping if the dimension set
+    // is not given.
+    let margins = calcMargins(containerWidth, containerHeight);
+
+    // If the size of the content is already quantized, we do nothing.
+    if (aBrowser.style.margin == `${margins.height}px ${margins.width}px`) {
+      return;
+    }
+
+    win.requestAnimationFrame(() => {
+      // One cannot (easily) control the color of a margin unfortunately.
+      // An initial attempt to use a border instead of a margin resulted
+      // in offset event dispatching; so for now we use a colorless margin.
+      aBrowser.style.margin = `${margins.height}px ${margins.width}px`;
+    });
+  }
+
+  _clearContentViewMargin(aBrowser) {
+    aBrowser.ownerGlobal.requestAnimationFrame(() => {
+      aBrowser.style.margin = "";
+    });
+  }
+
+  _updateMarginsForTabsInWindow(aWindow) {
+    let tabBrowser = aWindow.gBrowser;
+
+    for (let tab of tabBrowser.tabs) {
+      let browser = tab.linkedBrowser;
+      this._addOrClearContentMargin(browser);
+    }
+  }
+
+  _attachWindow(aWindow) {
+    aWindow.gBrowser
+           .addTabsProgressListener(this);
+    aWindow.addEventListener("TabOpen", this);
+    aWindow.messageManager
+           .addMessageListener(kEventLetterboxingSizeUpdate, this);
+
+    // Rounding the content viewport.
+    this._updateMarginsForTabsInWindow(aWindow);
+  }
+
+  _attachAllWindows() {
+    let windowList = Services.wm.getEnumerator("navigator:browser");
+
+    while (windowList.hasMoreElements()) {
+      let win = windowList.getNext();
+
+      if (win.closed || !win.gBrowser) {
+        continue;
+      }
+
+      this._attachWindow(win);
+    }
+  }
+
+  _detachWindow(aWindow) {
+    let tabBrowser = aWindow.gBrowser;
+    tabBrowser.removeTabsProgressListener(this);
+    aWindow.removeEventListener("TabOpen", this);
+    aWindow.messageManager
+           .removeMessageListener(kEventLetterboxingSizeUpdate, this);
+
+    // Clear all margins and tooltip for all browsers.
+    for (let tab of tabBrowser.tabs) {
+      let browser = tab.linkedBrowser;
+      this._clearContentViewMargin(browser);
+    }
+  }
+
+  _detachAllWindows() {
+    let windowList = Services.wm.getEnumerator("navigator:browser");
+
+    while (windowList.hasMoreElements()) {
+      let win = windowList.getNext();
+
+      if (win.closed || !win.gBrowser) {
+        continue;
+      }
+
+      this._detachWindow(win);
+    }
+  }
+
+  _handleDOMWindowOpened(aSubject) {
+    let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+    let self = this;
+
+    win.addEventListener("load", () => {
+      // We attach to the new window when it has been loaded if the new loaded
+      // window is a browsing window.
+      if (win.document
+             .documentElement
+             .getAttribute("windowtype") !== "navigator:browser") {
+        return;
+      }
+      self._attachWindow(win);
+    }, {once: true});
   }
 }
 
