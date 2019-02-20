@@ -12,6 +12,19 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **browser-menu**
+  * Added option to set background color by overriding `mozac_browser_menu_background` color resource.
+  
+    ```xml
+    <color name="mozac_browser_menu_background">DESIRED_COLOR</color>
+    ```
+    **OR**
+      ```xml
+      <style name="Mozac.Browser.Menu" parent="" tools:ignore="UnusedResources">
+        <item name="cardBackgroundColor">YOUR_COLOR</item>
+      </style>
+    ```
+
 * **browser-toolbar**
   * Added option to configure fading edge length by using `browserToolbarFadingEdgeSize` XML attribute.
 
