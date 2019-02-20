@@ -3762,9 +3762,9 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
   // Pass the preferred alt-data type on to the new channel.
   nsCOMPtr<nsICacheInfoChannel> cacheInfoChan(do_QueryInterface(newChannel));
   if (cacheInfoChan) {
-    for (auto& pair : mPreferredCachedAltDataTypes) {
-      cacheInfoChan->PreferAlternativeDataType(mozilla::Get<0>(pair),
-                                               mozilla::Get<1>(pair));
+    for (auto& data : mPreferredCachedAltDataTypes) {
+      cacheInfoChan->PreferAlternativeDataType(data.type(), data.contentType(),
+                                               data.deliverAltData());
     }
   }
 

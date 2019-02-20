@@ -9,11 +9,13 @@ interface nsIInputStream;
 
 %{C++
 namespace mozilla {
-template<typename... Elements> class Tuple;
+namespace net {
+class PreferredAlternativeDataTypeParams;
+}
 } // namespace mozilla
 %}
 
-[ref] native ConstPreferenceArray(const nsTArray<mozilla::Tuple<nsCString, nsCString>>);
+[ref] native ConstPreferredAlternativeDataTypeArray(const nsTArray<mozilla::net::PreferredAlternativeDataTypeParams>);
 
 [scriptable, uuid(1fb8ccf2-5fa5-45ec-bc57-8c8022a5d0d3)]
 interface nsIInputStreamReceiver : nsISupports
@@ -99,12 +101,16 @@ interface nsICacheInfoChannel : nsISupports
    * @param contentType
    *        the contentType for which the preference applies.
    *        an empty contentType means the preference applies for ANY contentType
+   * @param deliverAltData
+   *        if false, also if alt-data is available, the channel will deliver
+   *        the original data.
    *
    * The method may be called several times, with different type and contentType.
    *
    * Must be called before AsyncOpen.
    */
-  void preferAlternativeDataType(in ACString type, in ACString contentType);
+  void preferAlternativeDataType(in ACString type, in ACString contentType,
+                                 in boolean deliverAltData);
 
   /**
    * Get the preferred alternative data type set by preferAlternativeDataType().
@@ -112,7 +118,7 @@ interface nsICacheInfoChannel : nsISupports
    * information retrieved from the network stack.
    */
   [noscript, notxpcom, nostdcall]
-  ConstPreferenceArray preferredAlternativeDataTypes();
+  ConstPreferredAlternativeDataTypeArray preferredAlternativeDataTypes();
 
   /**
    * Holds the type of the alternative data representation that the channel
@@ -122,6 +128,14 @@ interface nsICacheInfoChannel : nsISupports
    * Can only be called during or after OnStartRequest.
    */
   readonly attribute ACString alternativeDataType;
+
+  /**
+   * If preferAlternativeDataType() has been called passing deliverAltData
+   * equal to false, this method will expose the alt-data inputStream if
+   * aviable.
+   */
+  void getAltDataInputStream(in ACString type,
+                             in nsIInputStreamReceiver aReceiver);
 
   /**
    * Sometimes when the channel is delivering alt-data, we may want to somehow
