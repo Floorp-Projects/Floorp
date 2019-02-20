@@ -93,5 +93,11 @@ SECStatus tls13_ClientSendEsniXtn(const sslSocket *ss, TLSExtensionData *xtnData
 SECStatus tls13_ServerHandleEsniXtn(const sslSocket *ss, TLSExtensionData *xtnData,
                                     SECItem *data);
 SECStatus tls13_ClientCheckEsniXtn(sslSocket *ss);
+SECStatus tls13_ClientSendPostHandshakeAuthXtn(const sslSocket *ss,
+                                               TLSExtensionData *xtnData,
+                                               sslBuffer *buf, PRBool *added);
+SECStatus tls13_ServerHandlePostHandshakeAuthXtn(const sslSocket *ss,
+                                                 TLSExtensionData *xtnData,
+                                                 SECItem *data);
 
 #endif
