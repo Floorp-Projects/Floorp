@@ -3002,8 +3002,9 @@ class SystemAddonInstaller extends DirectoryInstaller {
     let addonSet = SystemAddonInstaller._loadAddonSet();
 
     // Remove any add-ons that are no longer part of the set.
+    const ids = aAddons.map(a => a.id);
     for (let addonID of Object.keys(addonSet.addons)) {
-      if (!aAddons.includes(addonID)) {
+      if (!ids.includes(addonID)) {
         AddonManager.getAddonByID(addonID).then(a => a.uninstall());
       }
     }
