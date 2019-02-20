@@ -415,7 +415,7 @@ static CRITICAL_SECTION* GetMutex() {
 #endif
   }
 
-  sRegistry->emplaceBack(aProxy);
+  MOZ_ALWAYS_TRUE(sRegistry->emplaceBack(aProxy));
 }
 
 /* static */ void RegisteredProxy::DeleteFromRegistry(RegisteredProxy* aProxy) {
@@ -449,7 +449,7 @@ void RegisterArrayData(const ArrayData* aArrayData, size_t aLength) {
     ClearOnShutdown(&sArrayData, ShutdownPhase::ShutdownThreads);
   }
 
-  sArrayData->emplaceBack(MakePair(aArrayData, aLength));
+  MOZ_ALWAYS_TRUE(sArrayData->emplaceBack(MakePair(aArrayData, aLength)));
 }
 
 const ArrayData* FindArrayData(REFIID aIid, ULONG aMethodIndex) {

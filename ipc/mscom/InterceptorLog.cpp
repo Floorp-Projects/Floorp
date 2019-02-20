@@ -435,7 +435,7 @@ void Logger::Flush() {
     uint32_t bytesWritten;
     nsCString& line = linesToWrite[i];
     nsresult rv = mLogFile->Write(line.get(), line.Length(), &bytesWritten);
-    NS_WARN_IF(NS_FAILED(rv));
+    Unused << NS_WARN_IF(NS_FAILED(rv));
   }
 }
 
