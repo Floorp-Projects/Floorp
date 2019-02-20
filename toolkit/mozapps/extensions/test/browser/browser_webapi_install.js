@@ -39,10 +39,6 @@ add_task(async function setup() {
 // with properties that the AddonInstall object is expected to have when
 // that event is triggered.
 async function testInstall(browser, args, steps, description) {
-  promisePopupNotificationShown("addon-webext-permissions").then(panel => {
-    panel.button.click();
-  });
-
   let success = await ContentTask.spawn(browser, {args, steps}, async function(opts) {
     let { args, steps } = opts;
     let install = await content.navigator.mozAddonManager.createInstall(args);
@@ -202,9 +198,16 @@ function makeRegularTest(options, what) {
       },
     ];
 
+    let installPromptPromise =
+      promisePopupNotificationShown("addon-webext-permissions").then(panel => {
+        panel.button.click();
+      });
+
     let promptPromise = acceptAppMenuNotificationWhenShown("addon-installed");
 
     await testInstall(browser, options, steps, what);
+
+    await installPromptPromise;
 
     await promptPromise;
 
