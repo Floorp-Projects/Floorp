@@ -70,9 +70,14 @@
           :root[sizemode=normal][tabsintitlebar] {
             border-top: 1px solid -moz-win-accentcolor;
           }
-          :root[tabsintitlebar]:not(:-moz-window-inactive):not(:-moz-lwtheme) {
+          :root[tabsintitlebar]:not(:-moz-window-inactive):not(:-moz-lwtheme),
+          :root[tabsintitlebar]:not(:-moz-window-inactive)[lwt-default-theme-in-dark-mode] {
             background-color: -moz-win-accentcolor;
             color: -moz-win-accentcolortext;
+          }
+          :root[tabsintitlebar][lwt-default-theme-in-dark-mode] #titlebar {
+            --lwt-toolbarbutton-icon-fill: currentColor;
+            --toolbarbutton-icon-fill-opacity: .7;
           }
         }
 
