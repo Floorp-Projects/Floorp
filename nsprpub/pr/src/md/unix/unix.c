@@ -3569,12 +3569,20 @@ PRStatus _MD_CreateFileMap(PRFileMap *fmap, PRInt64 size)
     }
     if (fmap->prot == PR_PROT_READONLY) {
         fmap->md.prot = PROT_READ;
-#ifdef OSF1V4_MAP_PRIVATE_BUG
+#if defined(OSF1V4_MAP_PRIVATE_BUG) || defined(DARWIN) || defined(ANDROID)
         /*
          * Use MAP_SHARED to work around a bug in OSF1 V4.0D
          * (QAR 70220 in the OSF_QAR database) that results in
          * corrupted data in the memory-mapped region.  This
          * bug is fixed in V5.0.
+         *
+         * This is also needed on OS X because its implementation of
+         * POSIX shared memory returns an error for MAP_PRIVATE, even
+         * when the mapping is read-only.
+         *
+         * And this is needed on Android, because mapping ashmem with
+         * MAP_PRIVATE creates a mapping of zeroed memory instead of
+         * the shm contents.
          */
         fmap->md.flags = MAP_SHARED;
 #else
