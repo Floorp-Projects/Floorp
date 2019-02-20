@@ -39,9 +39,11 @@ class DefaultThemeManager : ThemeManager {
         get() = temporaryThemeManagerStorage
 
     override fun setTheme(theme: ThemeManager.Theme) {
-        temporaryThemeManagerStorage = theme
+        if (temporaryThemeManagerStorage != theme) {
+            temporaryThemeManagerStorage = theme
 
-        onThemeChange?.invoke(currentTheme)
+            onThemeChange?.invoke(currentTheme)
+        }
     }
 
     companion object {
