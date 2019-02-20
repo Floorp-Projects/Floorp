@@ -389,6 +389,14 @@ class NavigationDelegateTest : BaseSessionTest() {
         })
     }
 
+    // Checks that the User Agent matches the user agent built in
+    // nsHttpHandler::BuildUserAgent
+    @Test fun defaultUserAgentMatchesActualUserAgent() {
+        var userAgent = sessionRule.waitForResult(sessionRule.session.userAgent)
+        assertThat("Mobile user agent should match the default user agent",
+                userAgent, equalTo(GeckoSession.getDefaultUserAgent()))
+    }
+
     @WithDevToolsAPI
     @Test fun desktopMode() {
         sessionRule.session.loadUri("https://example.com")
