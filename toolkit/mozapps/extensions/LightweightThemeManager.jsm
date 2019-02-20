@@ -102,14 +102,6 @@ var LightweightThemeManager = {
     return this._builtInThemes.has(theme.id);
   },
 
-  get selectedThemeID() {
-    return _prefs.getStringPref("selectedThemeID") || DEFAULT_THEME_ID;
-  },
-
-  get defaultDarkThemeID() {
-    return _defaultDarkThemeID;
-  },
-
   get usedThemes() {
     let themes = [];
     try {
@@ -128,8 +120,9 @@ var LightweightThemeManager = {
    * locally persisted resources.
    */
   get currentTheme() {
+    let selectedThemeID = _prefs.getStringPref("selectedThemeID", DEFAULT_THEME_ID);
+
     let data = null;
-    let selectedThemeID = this.selectedThemeID;
     if (selectedThemeID) {
       data = this.getUsedTheme(selectedThemeID);
     }
@@ -213,7 +206,7 @@ var LightweightThemeManager = {
 
     this._builtInThemes.set(theme.id, theme);
 
-    if (this.selectedThemeID == theme.id) {
+    if (_prefs.getStringPref("selectedThemeID", DEFAULT_THEME_ID) == theme.id) {
       this.currentTheme = theme;
     }
 
@@ -375,7 +368,7 @@ var LightweightThemeManager = {
       return;
     }
 
-    let selectedID = this.selectedThemeID;
+    let selectedID = _prefs.getStringPref("selectedThemeID", DEFAULT_THEME_ID);
     let newThemes = await Promise.all(allThemes.map(
       t => this._updateOneTheme(t, t.id == selectedID).catch(err => {})));
     newThemes = newThemes.filter(t => t);
@@ -508,7 +501,7 @@ var LightweightThemeManager = {
       return;
     }
 
-    if (this.selectedThemeID != DEFAULT_THEME_ID) {
+    if (_prefs.getStringPref("selectedThemeID", "") != DEFAULT_THEME_ID) {
       return;
     }
 
