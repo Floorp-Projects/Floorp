@@ -415,6 +415,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
+  RFPHelper: "resource://gre/modules/RFPHelper.jsm",
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
   SaveToPocket: "chrome://pocket/content/SaveToPocket.jsm",
@@ -1461,6 +1462,7 @@ BrowserGlue.prototype = {
     DateTimePickerParent.uninit();
 
     Normandy.uninit();
+    RFPHelper.uninit();
   },
 
   // Set up a listener to enable/disable the screenshots extension
@@ -1674,7 +1676,7 @@ BrowserGlue.prototype = {
     }
 
     Services.tm.idleDispatchToMainThread(() => {
-      LanguagePrompt.init();
+      RFPHelper.init();
     });
 
     Services.tm.idleDispatchToMainThread(() => {
