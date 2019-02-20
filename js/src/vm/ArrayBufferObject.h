@@ -351,6 +351,9 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   static size_t objectMoved(JSObject* obj, JSObject* old);
 
+  static uint8_t* stealMallocedContents(JSContext* cx,
+                                        Handle<ArrayBufferObject*> buffer);
+
   static BufferContents stealContents(JSContext* cx,
                                       Handle<ArrayBufferObject*> buffer,
                                       bool hasStealableContents);
