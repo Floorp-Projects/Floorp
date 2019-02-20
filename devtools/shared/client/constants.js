@@ -29,7 +29,6 @@ const UnsolicitedNotifications = {
   "documentEvent": "documentEvent",
   "tabDetached": "tabDetached",
   "tabListChanged": "tabListChanged",
-  "reflowActivity": "reflowActivity",
   "addonListChanged": "addonListChanged",
   "workerListChanged": "workerListChanged",
   "serviceWorkerRegistrationListChanged": "serviceWorkerRegistrationList",

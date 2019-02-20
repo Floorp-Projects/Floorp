@@ -42,14 +42,10 @@ class WebConsoleClient extends FrontClassWithSpec(webconsoleSpec) {
     this.onEvaluationResult = this.onEvaluationResult.bind(this);
     this.onNetworkEvent = this._onNetworkEvent.bind(this);
     this.onNetworkEventUpdate = this._onNetworkEventUpdate.bind(this);
-    this.onInspectObject = this._onInspectObject.bind(this);
-    this.onDocEvent = this._onDocEvent.bind(this);
 
     this._client.addListener("evaluationResult", this.onEvaluationResult);
     this._client.addListener("networkEvent", this.onNetworkEvent);
     this._client.addListener("networkEventUpdate", this.onNetworkEventUpdate);
-    this._client.addListener("inspectObject", this.onInspectObject);
-    this._client.addListener("documentEvent", this.onDocEvent);
     this.manage(this);
   }
 
@@ -166,34 +162,6 @@ class WebConsoleClient extends FrontClassWithSpec(webconsoleSpec) {
       packet: packet,
       networkInfo,
     });
-  }
-
-  /**
-   * The "inspectObject" message type handler. We just re-emit it so that
-   * the toolbox can listen to the event and decide how to handle it.
-   *
-   * @private
-   * @param string type
-   *        Message type.
-   * @param object packet
-   *        The message received from the server.
-   */
-  _onInspectObject(type, packet) {
-    this.emit("inspectObject", packet);
-  }
-
-  /**
-   * The "docEvent" message type handler. We just re-emit it so that
-   * the tools can listen for them on the console client.
-   *
-   * @private
-   * @param string type
-   *        Message type.
-   * @param object packet
-   *        The message received from the server.
-   */
-  _onDocEvent(type, packet) {
-    this.emit("documentEvent", packet);
   }
 
   /**
@@ -630,8 +598,6 @@ class WebConsoleClient extends FrontClassWithSpec(webconsoleSpec) {
     this._client.removeListener("networkEvent", this.onNetworkEvent);
     this._client.removeListener("networkEventUpdate",
                                 this.onNetworkEventUpdate);
-    this._client.removeListener("inspectObject", this.onInspectObject);
-    this._client.removeListener("documentEvent", this.onDocEvent);
     this._longStrings = null;
     this._client = null;
     this.pendingEvaluationResults.clear();
