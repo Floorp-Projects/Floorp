@@ -332,9 +332,9 @@ void SessionAccessibility::ReplaceViewportCache(
     AccessibleWrap* acc = aAccessibles.ElementAt(i);
     if (aData.Length() == aAccessibles.Length()) {
       const BatchData& data = aData.ElementAt(i);
-      auto bundle = acc->ToBundle(
-          data.State(), data.Bounds(), data.ActionCount(), data.Name(),
-          data.TextValue(), data.DOMNodeID(), data.Description());
+      auto bundle =
+          acc->ToBundle(data.State(), data.Bounds(), data.ActionCount(),
+                        data.Name(), data.TextValue(), data.DOMNodeID());
       infos->SetElement(i, bundle);
     } else {
       infos->SetElement(i, acc->ToBundle(true));
@@ -354,11 +354,10 @@ void SessionAccessibility::ReplaceFocusPathCache(
       const BatchData& data = aData.ElementAt(i);
       nsCOMPtr<nsIPersistentProperties> props =
           AccessibleWrap::AttributeArrayToProperties(data.Attributes());
-      auto bundle =
-          acc->ToBundle(data.State(), data.Bounds(), data.ActionCount(),
-                        data.Name(), data.TextValue(), data.DOMNodeID(),
-                        data.Description(), data.CurValue(), data.MinValue(),
-                        data.MaxValue(), data.Step(), props);
+      auto bundle = acc->ToBundle(
+          data.State(), data.Bounds(), data.ActionCount(), data.Name(),
+          data.TextValue(), data.DOMNodeID(), data.CurValue(), data.MinValue(),
+          data.MaxValue(), data.Step(), props);
       infos->SetElement(i, bundle);
     } else {
       infos->SetElement(i, acc->ToBundle());
@@ -381,9 +380,9 @@ void SessionAccessibility::UpdateCachedBounds(
 
     if (aData.Length() == aAccessibles.Length()) {
       const BatchData& data = aData.ElementAt(i);
-      auto bundle = acc->ToBundle(
-          data.State(), data.Bounds(), data.ActionCount(), data.Name(),
-          data.TextValue(), data.DOMNodeID(), data.Description());
+      auto bundle =
+          acc->ToBundle(data.State(), data.Bounds(), data.ActionCount(),
+                        data.Name(), data.TextValue(), data.DOMNodeID());
       infos->SetElement(i, bundle);
     } else {
       infos->SetElement(i, acc->ToBundle(true));
