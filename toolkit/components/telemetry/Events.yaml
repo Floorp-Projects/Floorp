@@ -505,6 +505,30 @@ devtools.main:
       host: "Toolbox host (positioning): bottom, side, window or other."
       width: Toolbox width rounded up to the nearest 50px.
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  device_added:
+    objects: ["aboutdebugging"]
+    bug_numbers: [1521507]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: A new device was detected in about:debugging
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      connection_type: Connection type
+      device_name: Device name
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  device_removed:
+    objects: ["aboutdebugging"]
+    bug_numbers: [1521507]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: A previously listed device was removed in about:debugging
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      connection_type: Connection type
+      device_name: Device name
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   edit_html:
     objects: ["inspector"]
     bug_numbers: [1463080]
@@ -704,6 +728,62 @@ devtools.main:
     release_channel_collection: opt-out
     expiry_version: never
     extra_keys:
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  runtime_added:
+    objects: ["aboutdebugging"]
+    bug_numbers: [1521507]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: A new remote runtime has been detected in about:debugging
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      connection_type: Connection type
+      device_name: Name of the device on which the runtime is running (optional)
+      runtime_id: Random id generated to track events related to a single runtime
+      runtime_name: Name of the runtime
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  runtime_connected:
+    objects: ["aboutdebugging"]
+    bug_numbers: [1521507]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: Connection was established with a remote runtime in about:debugging
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      connection_type: Connection type
+      device_name: Name of the device on which the runtime is running (optional)
+      runtime_id: Random id generated to track events related to a single runtime
+      runtime_name: Name of the runtime
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  runtime_disconnected:
+    objects: ["aboutdebugging"]
+    bug_numbers: [1521507]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: Connection was lost with a remote runtime in about debugging
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      connection_type: Connection type
+      device_name: Name of the device on which the runtime is running (optional)
+      runtime_id: Random id generated to track events related to a single runtime
+      runtime_name: Name of the runtime
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  runtime_removed:
+    objects: ["aboutdebugging"]
+    bug_numbers: [1521507]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: A previously listed runtime was removed in about:debugging
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      connection_type: Connection type
+      device_name: Name of the device on which the runtime is running (optional)
+      runtime_id: Random id generated to track events related to a single runtime
+      runtime_name: Name of the runtime
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   select_page:
     objects: ["aboutdebugging"]
