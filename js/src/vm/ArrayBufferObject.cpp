@@ -527,16 +527,12 @@ static uint8_t* NewCopiedBufferContents(JSContext* cx,
 }
 
 void ArrayBufferObject::setNewData(FreeOp* fop, BufferContents newContents) {
-  if (ownsData()) {
-    // XXX As data kinds gradually transition to *all* being owned, this
-    //     assertion could become troublesome.  But right *now*, it isn't --
-    //     the call just above in ABO::detach occurs only if this assertion is
-    //     true, and the call in ABO::changeContents happens only if
-    //     ABO::prepareForAsmJS calls ABO::changeContents, but *that* call is
-    //     guarded by an owns-data check.  So no need to touch this right now.
-    MOZ_ASSERT(newContents.data() != dataPointer());
-    releaseData(fop);
-  }
+  // XXX All callers of this check are changing data pointer, so this assertion
+  //     is fine.  But we might consider just inlining these steps into the
+  //     callers, making the release-operation for changing data pointer
+  //     explicit everywhere it occurs.
+  MOZ_ASSERT(newContents.data() != dataPointer());
+  releaseData(fop);
 
   setDataPointer(newContents);
 }
@@ -973,23 +969,7 @@ bool js::CreateWasmBuffer(JSContext* cx, const wasm::Limits& memory,
   MOZ_ASSERT(buffer->isMalloced() || buffer->isMapped() ||
              buffer->isExternal());
 
-  // Buffers already prepared for asm.js need no further work.
-  if (buffer->isPreparedForAsmJS()) {
-    return true;
-  }
-
-  // XXX User-owned, no-data, and is-inline were excluded above, so
-  //     |ownsData()| having changed semantics in this patch doesn't matter
-  //     here.
-  if (!buffer->ownsData()) {
-    uint8_t* data = NewCopiedBufferContents(cx, buffer);
-    if (!data) {
-      return false;
-    }
-
-    buffer->changeContents(cx, BufferContents::createMalloced(data));
-  }
-
+  // It's fine if this uselessly sets the flag a second time.
   buffer->setIsPreparedForAsmJS();
   return true;
 }
@@ -1019,8 +999,6 @@ ArrayBufferObject::FreeInfo* ArrayBufferObject::freeInfo() const {
 }
 
 void ArrayBufferObject::releaseData(FreeOp* fop) {
-  MOZ_ASSERT(ownsData());
-
   switch (bufferKind()) {
     case INLINE_DATA:
       // Inline data doesn't require releasing.
@@ -1394,21 +1372,19 @@ ArrayBufferObject* ArrayBufferObject::createFromNewRawBuffer(
   CheckStealPreconditions(buffer, cx);
 
   switch (buffer->bufferKind()) {
-    case MALLOCED:
-      if (buffer->ownsData()) {
-        uint8_t* stolenData = buffer->dataPointer();
-        MOZ_ASSERT(stolenData);
+    case MALLOCED: {
+      uint8_t* stolenData = buffer->dataPointer();
+      MOZ_ASSERT(stolenData);
 
-        // Overwrite the old data pointer *without* releasing the contents
-        // being stolen.
-        BufferContents newContents = BufferContents::createNoData();
-        buffer->setDataPointer(newContents);
+      // Overwrite the old data pointer *without* releasing the contents
+      // being stolen.
+      BufferContents newContents = BufferContents::createNoData();
+      buffer->setDataPointer(newContents);
 
-        // Detach |buffer| now that doing so won't free |stolenData|.
-        ArrayBufferObject::detach(cx, buffer, newContents);
-        return stolenData;
-      }
-      MOZ_FALLTHROUGH;
+      // Detach |buffer| now that doing so won't free |stolenData|.
+      ArrayBufferObject::detach(cx, buffer, newContents);
+      return stolenData;
+    }
 
     case INLINE_DATA:
     case NO_DATA:
@@ -1499,11 +1475,6 @@ ArrayBufferObject::extractStructuredCloneContents(
 /* static */ void ArrayBufferObject::addSizeOfExcludingThis(
     JSObject* obj, mozilla::MallocSizeOf mallocSizeOf, JS::ClassInfo* info) {
   ArrayBufferObject& buffer = AsArrayBuffer(obj);
-
-  if (!buffer.ownsData()) {
-    return;
-  }
-
   switch (buffer.bufferKind()) {
     case INLINE_DATA:
       // Inline data's size should be reported by this object's size-class
@@ -1542,11 +1513,7 @@ ArrayBufferObject::extractStructuredCloneContents(
 }
 
 /* static */ void ArrayBufferObject::finalize(FreeOp* fop, JSObject* obj) {
-  ArrayBufferObject& buffer = obj->as<ArrayBufferObject>();
-
-  if (buffer.ownsData()) {
-    buffer.releaseData(fop);
-  }
+  obj->as<ArrayBufferObject>().releaseData(fop);
 }
 
 /* static */ void ArrayBufferObject::copyData(
@@ -1771,46 +1738,8 @@ JS_FRIEND_API bool JS_DetachArrayBuffer(JSContext* cx, HandleObject obj) {
     return false;
   }
 
-  using BufferContents = ArrayBufferObject::BufferContents;
-
-  // This patch makes NO_DATA, INLINE_DATA, and USER_OWNED all be owned.  I
-  // argue this change should be safe.  First, the easy NO_DATA case:
-  //
-  //   * NO_DATA in ABO::detach will see that no data pointer change occurs, so
-  //     it won't call ABO::setNewData and will leave this exactly as it was
-  //     (save for view-notification and byte length and detachment changing).
-  //     This is trivially fine.
-  //
-  // Making INLINE_DATA and USER_OWNED be owned, if we keep doing the same
-  // steps, *will* change stuff.  These pre-states
-  //
-  //   (user-owned pointer, OwnsData, USER_OWNED | remaining)
-  //   (inline data pointer, OwnsData, INLINE_DATA | remaining)
-  //
-  // will change to
-  //
-  //   (nullptr, OwnsData, NO_DATA | remaining)
-  //
-  // This changes the behavior of JS_GetArrayBufferData, but the calling code
-  // already has to be cognizant of byte length if it might index into that
-  // pointer, so all that changes is the pointer's plain identity, and it seems
-  // okay to say "don't do that".  Ownership state is unchanged.  And the
-  // kind-change shouldn't matter because we only test
-  // |buffer->hasUserOwnedData()| in ABO::prepareForAsmJS -- but only *after*
-  // anything length-zero would have been filtered out, so no change there.
-  // Nothing tests for |isInlineData()| except assertions.
-  //
-  // With |ownsData()| becoming increasingly true for everything (at present
-  // there's only one way to have |!ownsData()|, soon this can just be
-  // |BufferContents::createNoData()| in all cases.  (And, of course, this
-  // comment and a few others like it can then die.  XXX)
-  BufferContents newContents =
-      buffer->ownsData()
-          ? BufferContents::createNoData()
-          : buffer->contents();
-
-  ArrayBufferObject::detach(cx, buffer, newContents);
-
+  ArrayBufferObject::detach(cx, buffer,
+                            ArrayBufferObject::BufferContents::createNoData());
   return true;
 }
 
