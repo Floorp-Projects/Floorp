@@ -243,6 +243,18 @@ var LoginHelper = {
     return realm;
   },
 
+  getFormActionOrigin(form) {
+    let uriString = form.action;
+
+    // A blank or missing action submits to where it came from.
+    if (uriString == "") {
+      // ala bug 297761
+      uriString = form.baseURI;
+    }
+
+    return this.getLoginOrigin(uriString, true);
+  },
+
   /**
    * @param {String} aLoginOrigin - An origin value from a stored login's
    *                                hostname or formSubmitURL properties.

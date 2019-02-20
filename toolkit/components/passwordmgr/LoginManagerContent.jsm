@@ -285,7 +285,7 @@ var LoginManagerContent = {
     if (!formOrigin) {
       return Promise.reject("_getLoginDataFromParent: A form origin is required");
     }
-    let actionOrigin = LoginUtils._getActionOrigin(form);
+    let actionOrigin = LoginHelper.getFormActionOrigin(form);
 
     let messageManager = win.docShell.messageManager;
 
@@ -307,7 +307,7 @@ var LoginManagerContent = {
     let win = doc.defaultView;
 
     let formOrigin = LoginHelper.getLoginOrigin(doc.documentURI);
-    let actionOrigin = LoginUtils._getActionOrigin(form);
+    let actionOrigin = LoginHelper.getFormActionOrigin(form);
 
     let messageManager = win.docShell.messageManager;
 
@@ -941,7 +941,7 @@ var LoginManagerContent = {
       return;
     }
 
-    let formSubmitURL = LoginUtils._getActionOrigin(form);
+    let formSubmitURL = LoginHelper.getFormActionOrigin(form);
     let messageManager = win.docShell.messageManager;
 
     let recipes = LoginRecipesContent.getRecipes(hostname, win);
@@ -1444,19 +1444,6 @@ var LoginManagerContent = {
   },
 };
 
-var LoginUtils = {
-  _getActionOrigin(form) {
-    var uriString = form.action;
-
-    // A blank or missing action submits to where it came from.
-    if (uriString == "") {
-      uriString = form.baseURI;
-    } // ala bug 297761
-
-    return LoginHelper.getLoginOrigin(uriString, true);
-  },
-};
-
 // nsIAutoCompleteResult implementation
 function UserAutoCompleteResult(aSearchString, matchingLogins, {isSecure, messageManager, isPasswordField}) {
   function loginSort(a, b) {
@@ -1636,7 +1623,7 @@ var LoginFormFactory = {
    */
   createFromForm(aForm) {
     let formLike = FormLikeFactory.createFromForm(aForm);
-    formLike.action = LoginUtils._getActionOrigin(aForm);
+    formLike.action = LoginHelper.getFormActionOrigin(aForm);
 
     let state = LoginManagerContent.stateForDocument(formLike.ownerDocument);
     state.loginFormRootElements.add(formLike.rootElement);
