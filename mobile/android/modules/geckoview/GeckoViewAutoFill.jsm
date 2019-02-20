@@ -15,7 +15,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   LoginManagerContent: "resource://gre/modules/LoginManagerContent.jsm",
 });
 
-GeckoViewUtils.initLogging("AutoFill", this);
+const {debug, warn} = GeckoViewUtils.initLogging("AutoFill"); // eslint-disable-line no-unused-vars
 
 class GeckoViewAutoFill {
   constructor(aEventDispatcher) {

@@ -13,7 +13,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryUtils: "resource://gre/modules/TelemetryUtils.jsm",
 });
 
-GeckoViewUtils.initLogging("GeckoView.TelemetryController", this);
+const {debug, warn} = GeckoViewUtils.initLogging("GeckoView.TelemetryController"); // eslint-disable-line no-unused-vars
 
 var EXPORTED_SYMBOLS = ["GeckoViewTelemetryController"];
 

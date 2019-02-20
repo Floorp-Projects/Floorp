@@ -13,7 +13,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
 
-GeckoViewUtils.initLogging("LoadURIDelegate", this);
+const {debug, warn} = GeckoViewUtils.initLogging("LoadURIDelegate"); // eslint-disable-line no-unused-vars
 
 const LoadURIDelegate = {
   // Delegate URI loading to the app.
