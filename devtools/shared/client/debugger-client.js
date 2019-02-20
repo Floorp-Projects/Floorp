@@ -19,7 +19,6 @@ loader.lazyRequireGetter(this, "Authentication", "devtools/shared/security/auth"
 loader.lazyRequireGetter(this, "DebuggerSocket", "devtools/shared/security/socket", true);
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
-loader.lazyRequireGetter(this, "WebConsoleFront", "devtools/shared/fronts/webconsole", true);
 loader.lazyRequireGetter(this, "RootFront", "devtools/shared/fronts/root", true);
 loader.lazyRequireGetter(this, "BrowsingContextTargetFront", "devtools/shared/fronts/targets/browsing-context", true);
 loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-client");
@@ -242,11 +241,6 @@ DebuggerClient.prototype = {
         client.detach(detachClients);
         return;
       }
-      if (client.destroy) {
-        client.destroy();
-        detachClients();
-        return;
-      }
       detachClients();
     };
     detachClients();
@@ -276,43 +270,6 @@ DebuggerClient.prototype = {
 
     const response = await front.attach();
     return [response, front];
-  },
-
-  /**
-   * Attach to a Web Console actor. Depending on the listeners being passed as second
-   * arguments, starts listening for:
-   * - PageError:
-   *   Javascript error happening in the debugged context
-   * - ConsoleAPI:
-   *   Calls made to console.* API
-   * - NetworkActivity:
-   *   Http requests made in the debugged context
-   * - FileActivity:
-   *   Any requests made for a file:// or ftp:// URL. It can be the document or any of
-   *   its resources, like images.
-   * - ReflowActivity:
-   *   Any reflow made by the document being debugged.
-   * - ContentProcessMessages:
-   *   When the console actor runs in the parent process, also fetch calls made to
-   *   console.* API in all the content processes.
-   * - DocumentEvents:
-   *   Listen for DOMContentLoaded and load events.
-   *
-   * @param string consoleActor
-   *        The ID for the console actor to attach to.
-   * @param array listeners
-   *        The console listeners you want to start.
-   */
-  attachConsole: async function(consoleActor, listeners) {
-    let consoleClient;
-    if (this._clients.has(consoleActor)) {
-      consoleClient = this._clients.get(consoleActor);
-    } else {
-      consoleClient = new WebConsoleFront(this, { from: consoleActor });
-      this.registerClient(consoleClient);
-    }
-    const response = await consoleClient.startListeners(listeners);
-    return [response, consoleClient];
   },
 
   /**
