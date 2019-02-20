@@ -80,6 +80,32 @@ inline std::ostream& operator<<(std::ostream& os, SSLProtocolVariant v) {
   return os << ((v == ssl_variant_stream) ? "TLS" : "DTLS");
 }
 
+inline std::ostream& operator<<(std::ostream& os, SSLContentType v) {
+  switch (v) {
+    case ssl_ct_change_cipher_spec:
+      return os << "CCS";
+    case ssl_ct_alert:
+      return os << "alert";
+    case ssl_ct_handshake:
+      return os << "handshake";
+    case ssl_ct_application_data:
+      return os << "application data";
+    case ssl_ct_ack:
+      return os << "ack";
+  }
+  return os << "UNKNOWN content type " << static_cast<int>(v);
+}
+
+inline std::ostream& operator<<(std::ostream& os, SSLSecretDirection v) {
+  switch (v) {
+    case ssl_secret_read:
+      return os << "read";
+    case ssl_secret_write:
+      return os << "write";
+  }
+  return os << "UNKNOWN secret direction " << static_cast<int>(v);
+}
+
 inline bool IsDtls(uint16_t version) { return (version & 0x8000) == 0x8000; }
 
 inline uint16_t NormalizeTlsVersion(uint16_t version) {
