@@ -398,6 +398,11 @@ class StorageUI {
       if (this.tree.isSelected(path)) {
         this.table.clear();
         this.hideSidebar();
+
+        // Reset itemOffset to 0 so that items added after local storate is
+        // cleared will be shown
+        this.itemOffset = 0;
+
         this.emit("store-objects-cleared");
         break;
       }
