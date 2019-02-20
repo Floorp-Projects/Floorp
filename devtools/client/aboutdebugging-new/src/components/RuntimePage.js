@@ -13,10 +13,8 @@ const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
 const CompatibilityWarning = createFactory(require("./CompatibilityWarning"));
-const ConnectionPromptSetting = createFactory(require("./ConnectionPromptSetting"));
 const DebugTargetPane = createFactory(require("./debugtarget/DebugTargetPane"));
 const ExtensionAction = createFactory(require("./debugtarget/ExtensionAction"));
-const ExtensionDebugSetting = createFactory(require("./ExtensionDebugSetting"));
 const ExtensionDetail = createFactory(require("./debugtarget/ExtensionDetail"));
 const InspectAction = createFactory(require("./debugtarget/InspectAction"));
 const Message = createFactory(require("./shared/Message"));
@@ -28,8 +26,6 @@ const ServiceWorkersWarning = createFactory(require("./ServiceWorkersWarning"));
 const TabDetail = createFactory(require("./debugtarget/TabDetail"));
 const TemporaryExtensionAction = createFactory(require("./debugtarget/TemporaryExtensionAction"));
 const TemporaryExtensionDetail = createFactory(require("./debugtarget/TemporaryExtensionDetail"));
-const TemporaryExtensionInstaller =
-  createFactory(require("./debugtarget/TemporaryExtensionInstaller"));
 const WorkerDetail = createFactory(require("./debugtarget/WorkerDetail"));
 
 const Actions = require("../actions/index");
