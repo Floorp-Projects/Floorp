@@ -358,6 +358,9 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
                                       Handle<ArrayBufferObject*> buffer,
                                       bool hasStealableContents);
 
+  static BufferContents extractStructuredCloneContents(
+      JSContext* cx, Handle<ArrayBufferObject*> buffer);
+
   static void addSizeOfExcludingThis(JSObject* obj,
                                      mozilla::MallocSizeOf mallocSizeOf,
                                      JS::ClassInfo* info);
