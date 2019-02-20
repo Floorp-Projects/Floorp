@@ -45,7 +45,7 @@ Supported types:
 You need to clone the debugger.html repository, then install dependencies, for which you'll need the [Yarn](https://yarnpkg.com/en/) tool:
 
 ```
-git clone https://github.com/devtools-html/debugger.html.git
+git clone https://github.com/firefox-devtools/debugger.html.git
 cd debugger.html
 yarn install
 ```
@@ -95,9 +95,9 @@ They were first moved to the [devtools-reps][gh-devtools-reps] repository, then 
 
 [history]: https://github.com/mozilla/gecko-dev/commits/master/devtools/client/shared/components/reps
 [gh-devtools-reps]:
-https://github.com/devtools-html/reps/commits/master
+https://github.com/firefox-devtools/reps/commits/master
 [gh-devtools-core]:
-https://github.com/devtools-html/devtools-core/commits/5ba3d6f6a44def9978a983edd6f2f89747dca2c7/packages/devtools-reps
+https://github.com/firefox-devtools/devtools-core/commits/5ba3d6f6a44def9978a983edd6f2f89747dca2c7/packages/devtools-reps
 
 ## License
 

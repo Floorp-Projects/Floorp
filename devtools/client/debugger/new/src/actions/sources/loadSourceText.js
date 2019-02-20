@@ -5,11 +5,7 @@
 // @flow
 
 import { PROMISE } from "../utils/middleware/promise";
-import {
-  getGeneratedSource,
-  getSource,
-  getSourceActors
-} from "../../selectors";
+import { getGeneratedSource, getSource } from "../../selectors";
 import * as parser from "../../workers/parser";
 import { isLoaded, isOriginal } from "../../utils/source";
 import { Telemetry } from "devtools-modules";
@@ -26,21 +22,19 @@ const loadSourceHistogram = "DEVTOOLS_DEBUGGER_LOAD_SOURCE_MS";
 const telemetry = new Telemetry();
 
 async function loadSource(state, source: Source, { sourceMaps, client }) {
-  const { id } = source;
   if (isOriginal(source)) {
     return sourceMaps.getOriginalSourceText(source);
   }
 
-  const sourceActors = getSourceActors(state, id);
-  if (!sourceActors.length) {
+  if (!source.actors.length) {
     throw new Error("No source actor for loadSource");
   }
 
-  const response = await client.sourceContents(sourceActors[0]);
+  const response = await client.sourceContents(source.actors[0]);
   telemetry.finish(loadSourceHistogram, source);
 
   return {
-    id,
+    id: source.id,
     text: response.source,
     contentType: response.contentType || "text/javascript"
   };

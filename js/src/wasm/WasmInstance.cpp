@@ -1212,9 +1212,9 @@ bool Instance::init(JSContext* cx, const DataSegmentVector& dataSegments,
   }
 
   JitRuntime* jitRuntime = cx->runtime()->jitRuntime();
-  jsJitArgsRectifier_ = jitRuntime->getArgumentsRectifier();
-  jsJitExceptionHandler_ = jitRuntime->getExceptionTail();
-  preBarrierCode_ = jitRuntime->preBarrier(MIRType::Object);
+  jsJitArgsRectifier_ = jitRuntime->getArgumentsRectifier().value;
+  jsJitExceptionHandler_ = jitRuntime->getExceptionTail().value;
+  preBarrierCode_ = jitRuntime->preBarrier(MIRType::Object).value;
 
   if (!passiveDataSegments_.resize(dataSegments.length())) {
     return false;

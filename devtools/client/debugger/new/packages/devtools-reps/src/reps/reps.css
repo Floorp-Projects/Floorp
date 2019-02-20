@@ -251,7 +251,7 @@ button.open-inspector {
   margin: 0 4px;
   padding: 0;
   border: none;
-  background-color: var(--comment-node-color);
+  background-color: var(--theme-icon-color);
   cursor: pointer;
 }
 
@@ -260,7 +260,7 @@ button.open-inspector {
 .objectBox-textNode:hover .open-inspector,
 .open-accessibility-inspector:hover,
 .open-inspector:hover {
-  background-color: var(--theme-highlight-blue);
+  background-color: var(--theme-icon-checked-color);
 }
 
 /******************************************************************************/
@@ -269,14 +269,14 @@ button.open-inspector {
 button.jump-definition {
   mask: url(/images/jump-definition.svg) no-repeat;
   display: inline-block;
-  background-color: var(--comment-node-color);
+  background-color: var(--theme-icon-color);
   height: 16px;
   margin-left: 0.25em;
   vertical-align: middle;
 }
 
 .jump-definition:hover {
-  background-color: var(--theme-highlight-blue);
+  background-color: var(--theme-icon-checked-color);
 }
 
 /******************************************************************************/
@@ -285,14 +285,14 @@ button.jump-definition {
 button.invoke-getter {
   mask: url(/images/input.svg) no-repeat;
   display: inline-block;
-  background-color: var(--comment-node-color);
+  background-color: var(--theme-icon-color);
   height: 10px;
   vertical-align: middle;
   border:none;
 }
 
 .invoke-getter:hover {
-  background-color: var(--theme-highlight-blue);
+  background-color: var(--theme-icon-checked-color);
 }
 
 /******************************************************************************/

@@ -40,18 +40,6 @@ Array [
 ]
 `;
 
-exports[`ast setPausePoints scopes 1`] = `
-Array [
-  1,
-  2,
-  6,
-  7,
-  10,
-  11,
-  12,
-]
-`;
-
 exports[`ast setSymbols when the source is loaded should be able to set symbols 1`] = `
 Object {
   "callExpressions": Array [],

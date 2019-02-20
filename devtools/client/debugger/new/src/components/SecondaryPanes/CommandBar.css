@@ -42,7 +42,7 @@ html[dir="rtl"] .command-bar {
 }
 
 .command-bar .active .disable-pausing {
-  background-color: var(--theme-highlight-blue);
+  background-color: var(--theme-icon-checked-color);
 }
 
 .bottom {

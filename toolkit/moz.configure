@@ -500,47 +500,44 @@ set_define('MOZ_OMX', openmax)
 
 # EME Support
 # ==============================================================
-# Widevine is enabled by default in desktop browser builds.
-@depends(build_project)
-def eme_default(build_project):
-    if build_project == 'browser':
-        return 'widevine'
-
-option('--enable-eme',
-       nargs='*',
-       choices=('widevine',),
-       default=eme_default,
-       help='{Enable|Disable} support for Encrypted Media Extensions')
-
-@depends('--enable-eme', target)
-def enable_eme(value, target):
-    # Widevine EME by default enabled on desktop Windows, MacOS and Linux,
-    # x86 and x64 builds.
+@depends(target)
+def eme_choices(target):
     if (target.kernel in ('Darwin', 'WINNT', 'Linux') and
         target.os not in ('Android', 'iOS') and
         target.cpu in ('x86', 'x86_64')):
-        return value
-    elif value and value.origin != 'default':
-        die('%s is not supported on %s' % (value.format('--enable-eme'), target.alias))
-    # Return the same type of OptionValue (Positive or Negative), with an empty tuple.
-    return value.__class__(())
+        return ('widevine',)
 
-@depends(enable_eme, fmp4)
-def eme(value, fmp4):
-    enabled = bool(value)
-    if value.origin == 'default':
-        enabled = enabled or fmp4
-    if enabled and not fmp4:
+
+# Widevine is enabled by default in desktop browser builds.
+@depends(build_project, eme_choices)
+def eme_default(build_project, choices):
+    if build_project == 'browser':
+        return choices
+
+
+option('--enable-eme',
+       nargs='+',
+       choices=eme_choices,
+       default=eme_default,
+       when=eme_choices,
+       help='{Enable|Disable} support for Encrypted Media Extensions')
+
+
+@depends('--enable-eme', fmp4, when=eme_choices)
+def eme(enabled, fmp4):
+    if enabled and enabled.origin != 'default' and not fmp4:
         die('Encrypted Media Extension support requires '
             'Fragmented MP4 support')
-    if enabled:
-        return True
 
-@depends(enable_eme)
+
+@depends('--enable-eme', when=eme_choices)
 def eme_modules(value):
     return value
 
-set_config('MOZ_EME_MODULES', eme_modules)
+
+# Fallback to an empty list when eme_choices is empty, setting eme_modules to
+# None.
+set_config('MOZ_EME_MODULES', eme_modules | dependable([]))
 
 option(name='--enable-chrome-format',
        help='Select FORMAT of chrome files during packaging.',

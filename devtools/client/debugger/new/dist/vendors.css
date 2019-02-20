@@ -55,30 +55,27 @@
 }
 
 .tree-node button.arrow {
-  background:url("resource://devtools/client/debugger/new/images/arrow.svg") no-repeat;
-  background-size:contain;
-  background-position:center center;
+  mask: url("resource://devtools/client/debugger/new/images/arrow.svg") no-repeat center;
+  mask-size: 10px;
+  vertical-align: -1px;
   width: 10px;
   height: 10px;
-  border:0;
-  padding:0;
+  border: 0;
+  padding: 0;
   margin-inline-start: 1px;
   margin-inline-end: 4px;
-  transform: rotate(-90deg);
   transform-origin: center center;
-  transition: transform 0.125s ease;
-  align-self: center;
-  -moz-context-properties: fill;
-  fill: var(--theme-splitter-color, #9B9B9B);
+  transition: transform 125ms var(--animation-curve);
+  background-color: var(--theme-icon-dimmed-color);
 }
 
-html[dir="rtl"] .tree-node button.arrow {
+.tree-node button.arrow:not(.expanded) {
+  transform: rotate(-90deg);
+}
+
+html[dir="rtl"] .tree-node button:not(.expanded) {
   transform: rotate(90deg);
 }
-
-.tree-node button.arrow.expanded.expanded {
-  transform: rotate(0deg);
- }
 
 .tree .tree-node.focused {
   color: white;
@@ -86,7 +83,7 @@ html[dir="rtl"] .tree-node button.arrow {
 }
 
 .tree-node.focused button.arrow {
-  fill: currentColor;
+  background-color: currentColor;
 }
 /* vim:set ts=2 sw=2 sts=2 et: */
 /* This Source Code Form is subject to the terms of the Mozilla Public

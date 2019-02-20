@@ -13,12 +13,10 @@ RUN apt-get update && \
       bzip2 \
       curl \
       libbz2-dev \
+      libglib2.0-dev \
       lsb-core \
-      sudo \
+      pkg-config \
       tar \
       unzip \
       wget \
       zip
-
-RUN adduser worker sudo
-RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers

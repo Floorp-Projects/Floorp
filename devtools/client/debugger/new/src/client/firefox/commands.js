@@ -18,8 +18,8 @@ import type {
   Script,
   SourceId,
   SourceActor,
-  SourceActorLocation,
-  Worker
+  Worker,
+  Range
 } from "../../types";
 
 import type {
@@ -30,8 +30,6 @@ import type {
   ObjectClient,
   SourcesPacket
 } from "./types";
-
-import type { PausePointsMap } from "../../workers/parser";
 
 let workerClients: Object;
 let threadClient: ThreadClient;
@@ -295,17 +293,6 @@ async function blackBox(
   }
 }
 
-async function setPausePoints(
-  sourceActor: SourceActor,
-  pausePoints: PausePointsMap
-) {
-  return sendPacket({
-    to: sourceActor.actor,
-    type: "setPausePoints",
-    pausePoints
-  });
-}
-
 async function setSkipPausing(thread: string, shouldSkip: boolean) {
   const client = lookupThreadClient(thread);
   return client.request({
@@ -404,20 +391,16 @@ function getMainThread() {
 }
 
 async function getBreakpointPositions(
-  location: SourceActorLocation
-): Promise<Array<Number>> {
-  const {
-    sourceActor: { thread, actor },
-    line
-  } = location;
+  sourceActor: SourceActor,
+  range: ?Range
+): Promise<{ [string]: number[] }> {
+  const { thread, actor } = sourceActor;
   const sourceThreadClient = lookupThreadClient(thread);
   const sourceClient = sourceThreadClient.source({ actor });
-  const { positions } = await sourceClient.getBreakpointPositionsCompressed({
-    start: { line },
-    end: { line }
-  });
-
-  return positions ? positions[line] : [];
+  const { positions } = await sourceClient.getBreakpointPositionsCompressed(
+    range
+  );
+  return positions;
 }
 
 const clientCommands = {
@@ -457,7 +440,6 @@ const clientCommands = {
   fetchWorkers,
   getMainThread,
   sendPacket,
-  setPausePoints,
   setSkipPausing,
   setEventListenerBreakpoints
 };

@@ -31,7 +31,7 @@ describe("Breakpoint", () => {
   it("paused at an original location", () => {
     const { component } = render(
       {
-        selectedSource: makeOriginalSource("foo").source,
+        selectedSource: makeOriginalSource("foo"),
         frame: { selectedLocation: location }
       },
       { location, options: {} }
@@ -72,9 +72,9 @@ function makeBreakpoint(overrides = {}) {
 }
 
 function generateDefaults(overrides = {}, breakpointOverrides = {}) {
-  const source = makeSource("foo").source;
+  const source = makeSource("foo");
   const breakpoint = makeBreakpoint(breakpointOverrides);
-  const selectedSource = makeSource("foo").source;
+  const selectedSource = makeSource("foo");
   return {
     source,
     breakpoint,
