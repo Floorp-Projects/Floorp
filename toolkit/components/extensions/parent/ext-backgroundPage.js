@@ -33,19 +33,23 @@ class BackgroundPage extends HiddenExtensionPage {
 
     ExtensionTelemetry.backgroundPageLoad.stopwatchStart(extension, this);
 
-    await this.createBrowserElement();
-    extension._backgroundPageFrameLoader = this.browser.frameLoader;
-
-    extensions.emit("extension-browser-inserted", this.browser);
-
-    let contextPromise = promiseExtensionViewLoaded(this.browser);
-    this.browser.loadURI(this.url, {triggeringPrincipal: extension.principal});
-
     let context;
     try {
+      await this.createBrowserElement();
+      if (!this.browser) {
+        throw new Error("Extension shut down before the background page was created");
+      }
+      extension._backgroundPageFrameLoader = this.browser.frameLoader;
+
+      extensions.emit("extension-browser-inserted", this.browser);
+
+      let contextPromise = promiseExtensionViewLoaded(this.browser);
+      this.browser.loadURI(this.url, {triggeringPrincipal: extension.principal});
+
       context = await contextPromise;
     } catch (e) {
       // Extension was down before the background page has loaded.
+      Cu.reportError(e);
       ExtensionTelemetry.backgroundPageLoad.stopwatchCancel(extension, this);
       return;
     }
