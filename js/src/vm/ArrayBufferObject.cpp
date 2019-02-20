@@ -519,15 +519,14 @@ static uint8_t* NewCopiedBufferContents(JSContext* cx,
   }
 
   if (newContents.data() != buffer->dataPointer()) {
-    buffer->setNewData(cx->runtime()->defaultFreeOp(), newContents, OwnsData);
+    buffer->setNewData(cx->runtime()->defaultFreeOp(), newContents);
   }
 
   buffer->setByteLength(0);
   buffer->setIsDetached();
 }
 
-void ArrayBufferObject::setNewData(FreeOp* fop, BufferContents newContents,
-                                   OwnsState ownsState) {
+void ArrayBufferObject::setNewData(FreeOp* fop, BufferContents newContents) {
   if (ownsData()) {
     // XXX As data kinds gradually transition to *all* being owned, this
     //     assertion could become troublesome.  But right *now*, it isn't --
@@ -539,7 +538,7 @@ void ArrayBufferObject::setNewData(FreeOp* fop, BufferContents newContents,
     releaseData(fop);
   }
 
-  setDataPointer(newContents, ownsState);
+  setDataPointer(newContents, OwnsData);
 }
 
 // This is called *only* from changeContents(), below.
@@ -577,7 +576,7 @@ void ArrayBufferObject::changeContents(JSContext* cx,
 
   // Change buffer contents.
   uint8_t* oldDataPointer = dataPointer();
-  setNewData(cx->runtime()->defaultFreeOp(), newContents, OwnsData);
+  setNewData(cx->runtime()->defaultFreeOp(), newContents);
 
   // Update all views.
   auto& innerViews = ObjectRealm::get(this).innerViews.get();
