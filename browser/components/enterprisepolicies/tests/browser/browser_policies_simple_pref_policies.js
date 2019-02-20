@@ -151,6 +151,7 @@ const POLICIES_TESTS = [
     },
     lockedPrefs: {
       "xpinstall.enabled": false,
+      "browser.newtabpage.activity-stream.asrouter.userprefs.cfr": false,
     },
   },
 
@@ -253,6 +254,16 @@ const POLICIES_TESTS = [
     },
     lockedPrefs: {
       "extensions.update.enabled": false,
+    },
+  },
+
+  // POLICY: DisableShield
+  {
+    policies: {
+      "DisableFirefoxStudies": true,
+    },
+    lockedPrefs: {
+      "browser.newtabpage.activity-stream.asrouter.userprefs.cfr": false,
     },
   },
 ];

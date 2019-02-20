@@ -4165,11 +4165,10 @@ class MToString : public MUnaryInstruction, public ToStringPolicy::Data {
     setResultType(MIRType::String);
     setMovable();
 
-    // Objects might override toString; Symbol and BigInts throw. We bailout in
-    // those cases and run side-effects in baseline instead.
+    // Objects might override toString; Symbol throws. We bailout in those cases
+    // and run side-effects in baseline instead.
     if (def->mightBeType(MIRType::Object) ||
-        def->mightBeType(MIRType::Symbol) ||
-        def->mightBeType(MIRType::BigInt)) {
+        def->mightBeType(MIRType::Symbol)) {
       setGuard();
     }
   }

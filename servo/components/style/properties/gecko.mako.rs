@@ -60,7 +60,6 @@ use crate::values::computed::BorderStyle;
 use crate::values::computed::font::FontSize;
 use crate::values::computed::effects::{BoxShadow, Filter, SimpleShadow};
 use crate::values::generics::column::ColumnCount;
-use crate::values::generics::position::ZIndex;
 use crate::values::generics::transform::TransformStyle;
 use crate::values::generics::url::UrlOrNone;
 
@@ -1189,55 +1188,6 @@ pub fn clone_transform_from_list(
     }
 </%def>
 
-<%def name="impl_transform_origin(ident, gecko_ffi_name)">
-    #[allow(non_snake_case)]
-    pub fn set_${ident}(&mut self, v: values::computed::TransformOrigin) {
-        self.gecko.${gecko_ffi_name}[0].set(v.horizontal);
-        self.gecko.${gecko_ffi_name}[1].set(v.vertical);
-        // transform-origin supports the third value for depth, while
-        // -moz-window-transform-origin doesn't. The following code is
-        // for handling this difference. If we can have more knowledge
-        // about the type here, we may want to check that the length is
-        // exactly either 2 or 3 in compile time.
-        if let Some(third) = self.gecko.${gecko_ffi_name}.get_mut(2) {
-            third.set(v.depth);
-        }
-    }
-
-    #[allow(non_snake_case)]
-    pub fn copy_${ident}_from(&mut self, other: &Self) {
-        self.gecko.${gecko_ffi_name}[0].copy_from(&other.gecko.${gecko_ffi_name}[0]);
-        self.gecko.${gecko_ffi_name}[1].copy_from(&other.gecko.${gecko_ffi_name}[1]);
-        if let (Some(self_third), Some(other_third)) =
-            (self.gecko.${gecko_ffi_name}.get_mut(2), other.gecko.${gecko_ffi_name}.get(2))
-        {
-            self_third.copy_from(other_third)
-        }
-    }
-
-    #[allow(non_snake_case)]
-    pub fn reset_${ident}(&mut self, other: &Self) {
-        self.copy_${ident}_from(other)
-    }
-
-    #[allow(non_snake_case)]
-    pub fn clone_${ident}(&self) -> values::computed::TransformOrigin {
-        use crate::values::computed::{Length, LengthPercentage, TransformOrigin};
-        TransformOrigin {
-            horizontal: LengthPercentage::from_gecko_style_coord(&self.gecko.${gecko_ffi_name}[0])
-                .expect("clone for LengthPercentage failed"),
-            vertical: LengthPercentage::from_gecko_style_coord(&self.gecko.${gecko_ffi_name}[1])
-                .expect("clone for LengthPercentage failed"),
-            depth: if let Some(third) = self.gecko.${gecko_ffi_name}.get(2) {
-                Length::from_gecko_style_coord(third)
-                    .expect("clone for Length failed")
-            } else {
-                Length::new(0.)
-            },
-        }
-    }
-</%def>
-
 <%def name="impl_logical(name, **kwargs)">
     ${helpers.logical_setter(name)}
 </%def>
@@ -1378,7 +1328,7 @@ impl Clone for ${style_struct.gecko_struct_name} {
         "Opacity": impl_simple,
         "OverflowWrap": impl_simple,
         "OverflowAnchor": impl_simple,
-        "Perspective": impl_style_coord,
+        "Perspective": impl_simple,
         "Position": impl_simple,
         "RGBAColor": impl_rgba_color,
         "SVGLength": impl_svg_length,
@@ -1386,9 +1336,10 @@ impl Clone for ${style_struct.gecko_struct_name} {
         "SVGPaint": impl_svg_paint,
         "SVGWidth": impl_svg_length,
         "Transform": impl_transform,
-        "TransformOrigin": impl_transform_origin,
+        "TransformOrigin": impl_simple,
         "UserSelect": impl_simple,
         "url::UrlOrNone": impl_css_url,
+        "ZIndex": impl_simple,
     }
 
     def longhand_method(longhand):
@@ -1655,7 +1606,7 @@ fn static_assert() {
 
 <% skip_position_longhands = " ".join(x.ident for x in SIDES + GRID_LINES) %>
 <%self:impl_trait style_struct_name="Position"
-                  skip_longhands="${skip_position_longhands} z-index order
+                  skip_longhands="${skip_position_longhands} order
                                   align-content justify-content align-self
                                   justify-self align-items justify-items
                                   grid-auto-rows grid-auto-columns
@@ -1664,38 +1615,6 @@ fn static_assert() {
     % for side in SIDES:
     <% impl_split_style_coord(side.ident, "mOffset", side.index) %>
     % endfor
-
-    pub fn set_z_index(&mut self, v: longhands::z_index::computed_value::T) {
-        match v {
-            ZIndex::Integer(n) => self.gecko.mZIndex.set_value(CoordDataValue::Integer(n)),
-            ZIndex::Auto => self.gecko.mZIndex.set_value(CoordDataValue::Auto),
-        }
-    }
-
-    pub fn copy_z_index_from(&mut self, other: &Self) {
-        use crate::gecko_bindings::structs::nsStyleUnit;
-        // z-index is never a calc(). If it were, we'd be leaking here, so
-        // assert that it isn't.
-        debug_assert_ne!(self.gecko.mZIndex.unit(), nsStyleUnit::eStyleUnit_Calc);
-        unsafe {
-            self.gecko.mZIndex.copy_from_unchecked(&other.gecko.mZIndex);
-        }
-    }
-
-    pub fn reset_z_index(&mut self, other: &Self) {
-        self.copy_z_index_from(other)
-    }
-
-    pub fn clone_z_index(&self) -> longhands::z_index::computed_value::T {
-        return match self.gecko.mZIndex.as_value() {
-            CoordDataValue::Integer(n) => ZIndex::Integer(n),
-            CoordDataValue::Auto => ZIndex::Auto,
-            _ => {
-                debug_assert!(false);
-                ZIndex::Integer(0)
-            }
-        }
-    }
 
     % for kind in ["align", "justify"]:
     ${impl_simple_type_with_conversion(kind + "_content")}
@@ -2945,10 +2864,8 @@ fn static_assert() {
                           clear transition-duration transition-delay
                           transition-timing-function transition-property
                           rotate scroll-snap-points-x scroll-snap-points-y
-                          scroll-snap-coordinate
-                          perspective-origin -moz-binding will-change
-                          offset-path perspective-origin -moz-binding
-                          will-change shape-outside contain touch-action
+                          scroll-snap-coordinate -moz-binding will-change
+                          offset-path shape-outside contain touch-action
                           translate scale""" %>
 <%self:impl_trait style_struct_name="Box" skip_longhands="${skip_box_longhands}">
     #[inline]
@@ -3299,31 +3216,6 @@ fn static_assert() {
     ${impl_copy_animation_value('iteration_count', 'IterationCount')}
 
     ${impl_animation_timing_function()}
-
-    pub fn set_perspective_origin(&mut self, v: longhands::perspective_origin::computed_value::T) {
-        self.gecko.mPerspectiveOrigin[0].set(v.horizontal);
-        self.gecko.mPerspectiveOrigin[1].set(v.vertical);
-    }
-
-    pub fn copy_perspective_origin_from(&mut self, other: &Self) {
-        self.gecko.mPerspectiveOrigin[0].copy_from(&other.gecko.mPerspectiveOrigin[0]);
-        self.gecko.mPerspectiveOrigin[1].copy_from(&other.gecko.mPerspectiveOrigin[1]);
-    }
-
-    pub fn reset_perspective_origin(&mut self, other: &Self) {
-        self.copy_perspective_origin_from(other)
-    }
-
-    pub fn clone_perspective_origin(&self) -> longhands::perspective_origin::computed_value::T {
-        use crate::properties::longhands::perspective_origin::computed_value::T;
-        use crate::values::computed::LengthPercentage;
-        T {
-            horizontal: LengthPercentage::from_gecko_style_coord(&self.gecko.mPerspectiveOrigin[0])
-                .expect("Expected length or percentage for horizontal value of perspective-origin"),
-            vertical: LengthPercentage::from_gecko_style_coord(&self.gecko.mPerspectiveOrigin[1])
-                .expect("Expected length or percentage for vertical value of perspective-origin"),
-        }
-    }
 
     ${impl_individual_transform('rotate', 'Rotate', 'mSpecifiedRotate')}
     ${impl_individual_transform('translate', 'Translate', 'mSpecifiedTranslate')}

@@ -249,7 +249,7 @@ class nsImageRenderer {
   bool IsReady() const { return mPrepareResult == ImgDrawResult::SUCCESS; }
   ImgDrawResult PrepareResult() const { return mPrepareResult; }
   void SetExtendMode(mozilla::gfx::ExtendMode aMode) { mExtendMode = aMode; }
-  void SetMaskOp(uint8_t aMaskOp) { mMaskOp = aMaskOp; }
+  void SetMaskOp(mozilla::StyleMaskMode aMaskOp) { mMaskOp = aMaskOp; }
   void PurgeCacheForViewportChange(
       const mozilla::Maybe<nsSize>& aSVGViewportSize, const bool aHasRatio);
   nsStyleImageType GetType() const { return mType; }
@@ -305,7 +305,7 @@ class nsImageRenderer {
   nsSize mSize;  // unscaled size of the image, in app units
   uint32_t mFlags;
   mozilla::gfx::ExtendMode mExtendMode;
-  uint8_t mMaskOp;
+  mozilla::StyleMaskMode mMaskOp;
 };
 
 }  // namespace mozilla

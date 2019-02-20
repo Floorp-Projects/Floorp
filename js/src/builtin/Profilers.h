@@ -5,8 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Functions for controlling profilers from within JS: Valgrind, Perf,
- * Shark, etc.
+ * Functions for controlling profilers from within JS: Valgrind, Perf, etc
  */
 #ifndef builtin_Profilers_h
 #define builtin_Profilers_h

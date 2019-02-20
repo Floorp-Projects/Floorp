@@ -1286,9 +1286,10 @@ void nsIFrame::SyncFrameViewProperties(nsView* aView) {
     // Make sure z-index is correct
     ComputedStyle* sc = Style();
     const nsStylePosition* position = sc->StylePosition();
-    if (position->mZIndex.GetUnit() == eStyleUnit_Integer) {
-      zIndex = position->mZIndex.GetIntValue();
-    } else if (position->mZIndex.GetUnit() == eStyleUnit_Auto) {
+    if (position->mZIndex.IsInteger()) {
+      zIndex = position->mZIndex.integer._0;
+    } else {
+      MOZ_ASSERT(position->mZIndex.IsAuto());
       autoZIndex = true;
     }
   } else {
@@ -10448,7 +10449,7 @@ bool nsIFrame::IsStackingContext(const nsStyleDisplay* aStyleDisplay,
          nsSVGIntegrationUtils::UsingEffectsForFrame(this) ||
          (aIsPositioned &&
           (aStyleDisplay->IsPositionForcingStackingContext() ||
-           aStylePosition->mZIndex.GetUnit() == eStyleUnit_Integer)) ||
+           aStylePosition->mZIndex.IsInteger())) ||
          (aStyleDisplay->mWillChangeBitField &
           NS_STYLE_WILL_CHANGE_STACKING_CONTEXT) ||
          aStyleDisplay->mIsolation != NS_STYLE_ISOLATION_AUTO;
@@ -10526,8 +10527,9 @@ gfx::Matrix nsIFrame::ComputeWidgetTransform() {
       float(appUnitsPerDevPixel));
 
   // Apply the -moz-window-transform-origin translation to the matrix.
+  const StyleTransformOrigin& origin = uiReset->mWindowTransformOrigin;
   Point transformOrigin = nsStyleTransformMatrix::Convert2DPosition(
-      uiReset->mWindowTransformOrigin, refBox, appUnitsPerDevPixel);
+      origin.horizontal, origin.vertical, refBox, appUnitsPerDevPixel);
   matrix.ChangeBasis(Point3D(transformOrigin.x, transformOrigin.y, 0));
 
   gfx::Matrix result2d;

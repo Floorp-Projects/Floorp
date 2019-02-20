@@ -32,7 +32,7 @@ use api::{channel};
 use api::DebugCommand;
 pub use api::DebugFlags;
 use api::channel::PayloadReceiverHelperMethods;
-use batch::{BatchKind, BatchTextures, BrushBatchKind};
+use batch::{BatchKind, BatchTextures, BrushBatchKind, ClipBatchList};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
 use debug_colors;
@@ -1829,6 +1829,7 @@ impl Renderer {
             chase_primitive: options.chase_primitive,
             enable_picture_caching: options.enable_picture_caching,
             testing: options.testing,
+            gpu_supports_fast_clears: options.gpu_supports_fast_clears,
         };
 
         let device_pixel_ratio = options.device_pixel_ratio;
@@ -2257,9 +2258,19 @@ impl Renderer {
             target.zero_clears.len(),
         );
         debug_target.add(
+            debug_server::BatchKind::Cache,
+            "One Clears",
+            target.one_clears.len(),
+        );
+        debug_target.add(
             debug_server::BatchKind::Clip,
-            "BoxShadows",
-            target.clip_batcher.box_shadows.len(),
+            "BoxShadows [p]",
+            target.clip_batcher.primary_clips.box_shadows.len(),
+        );
+        debug_target.add(
+            debug_server::BatchKind::Clip,
+            "BoxShadows [s]",
+            target.clip_batcher.secondary_clips.box_shadows.len(),
         );
         debug_target.add(
             debug_server::BatchKind::Cache,
@@ -2273,11 +2284,19 @@ impl Renderer {
         );
         debug_target.add(
             debug_server::BatchKind::Clip,
-            "Rectangles",
-            target.clip_batcher.rectangles.len(),
+            "Rectangles [p]",
+            target.clip_batcher.primary_clips.rectangles.len(),
         );
-        for (_, items) in target.clip_batcher.images.iter() {
-            debug_target.add(debug_server::BatchKind::Clip, "Image mask", items.len());
+        debug_target.add(
+            debug_server::BatchKind::Clip,
+            "Rectangles [s]",
+            target.clip_batcher.secondary_clips.rectangles.len(),
+        );
+        for (_, items) in target.clip_batcher.primary_clips.images.iter() {
+            debug_target.add(debug_server::BatchKind::Clip, "Image mask [p]", items.len());
+        }
+        for (_, items) in target.clip_batcher.secondary_clips.images.iter() {
+            debug_target.add(debug_server::BatchKind::Clip, "Image mask [s]", items.len());
         }
 
         debug_target
@@ -3265,7 +3284,12 @@ impl Renderer {
             }
         }
 
-        self.handle_scaling(&target.scalings, TextureSource::PrevPassColor, projection, stats);
+        self.handle_scaling(
+            &target.scalings,
+            TextureSource::PrevPassColor,
+            projection,
+            stats,
+        );
 
         // Small helper fn to iterate a regions list, also invoking the closure
         // if there are no regions.
@@ -3550,6 +3574,69 @@ impl Renderer {
         }
     }
 
+    /// Draw all the instances in a clip batcher list to the current target.
+    fn draw_clip_batch_list(
+        &mut self,
+        list: &ClipBatchList,
+        projection: &Transform3D<f32>,
+        stats: &mut RendererStats,
+    ) {
+        // draw rounded cornered rectangles
+        if !list.rectangles.is_empty() {
+            let _gm2 = self.gpu_profile.start_marker("clip rectangles");
+            self.shaders.borrow_mut().cs_clip_rectangle.bind(
+                &mut self.device,
+                projection,
+                &mut self.renderer_errors,
+            );
+            self.draw_instanced_batch(
+                &list.rectangles,
+                VertexArrayKind::Clip,
+                &BatchTextures::no_texture(),
+                stats,
+            );
+        }
+        // draw box-shadow clips
+        for (mask_texture_id, items) in list.box_shadows.iter() {
+            let _gm2 = self.gpu_profile.start_marker("box-shadows");
+            let textures = BatchTextures {
+                colors: [
+                    mask_texture_id.clone(),
+                    TextureSource::Invalid,
+                    TextureSource::Invalid,
+                ],
+            };
+            self.shaders.borrow_mut().cs_clip_box_shadow
+                .bind(&mut self.device, projection, &mut self.renderer_errors);
+            self.draw_instanced_batch(
+                items,
+                VertexArrayKind::Clip,
+                &textures,
+                stats,
+            );
+        }
+
+        // draw image masks
+        for (mask_texture_id, items) in list.images.iter() {
+            let _gm2 = self.gpu_profile.start_marker("clip images");
+            let textures = BatchTextures {
+                colors: [
+                    mask_texture_id.clone(),
+                    TextureSource::Invalid,
+                    TextureSource::Invalid,
+                ],
+            };
+            self.shaders.borrow_mut().cs_clip_image
+                .bind(&mut self.device, projection, &mut self.renderer_errors);
+            self.draw_instanced_batch(
+                items,
+                VertexArrayKind::Clip,
+                &textures,
+                stats,
+            );
+        }
+    }
+
     fn draw_alpha_target(
         &mut self,
         draw_target: DrawTarget,
@@ -3567,24 +3654,29 @@ impl Renderer {
             self.device.bind_draw_target(draw_target);
             self.device.disable_depth();
             self.device.disable_depth_write();
+            self.set_blend(false, FramebufferKind::Other);
 
             // TODO(gw): Applying a scissor rect and minimal clear here
             // is a very large performance win on the Intel and nVidia
             // GPUs that I have tested with. It's possible it may be a
             // performance penalty on other GPU types - we should test this
             // and consider different code paths.
-            let clear_color = [1.0, 1.0, 1.0, 0.0];
-            self.device.clear_target(
-                Some(clear_color),
-                None,
-                Some(target.used_rect()),
-            );
 
             let zero_color = [0.0, 0.0, 0.0, 0.0];
             for &task_id in &target.zero_clears {
                 let (rect, _) = render_tasks[task_id].get_target_rect();
                 self.device.clear_target(
                     Some(zero_color),
+                    None,
+                    Some(rect),
+                );
+            }
+
+            let one_color = [1.0, 1.0, 1.0, 1.0];
+            for &task_id in &target.one_clears {
+                let (rect, _) = render_tasks[task_id].get_target_rect();
+                self.device.clear_target(
+                    Some(one_color),
                     None,
                     Some(rect),
                 );
@@ -3600,7 +3692,6 @@ impl Renderer {
         if !target.vertical_blurs.is_empty() || !target.horizontal_blurs.is_empty() {
             let _timer = self.gpu_profile.start_timer(GPU_TAG_BLUR);
 
-            self.set_blend(false, FramebufferKind::Other);
             self.shaders.borrow_mut().cs_blur_a8
                 .bind(&mut self.device, projection, &mut self.renderer_errors);
 
@@ -3623,70 +3714,39 @@ impl Renderer {
             }
         }
 
-        self.handle_scaling(&target.scalings, TextureSource::PrevPassAlpha, projection, stats);
+        self.handle_scaling(
+            &target.scalings,
+            TextureSource::PrevPassAlpha,
+            projection,
+            stats,
+        );
 
         // Draw the clip items into the tiled alpha mask.
         {
             let _timer = self.gpu_profile.start_timer(GPU_TAG_CACHE_CLIP);
 
-            // switch to multiplicative blending
+            // TODO(gw): Consider grouping multiple clip masks per shader
+            //           invocation here to reduce memory bandwith further?
+
+            // Draw the primary clip mask - since this is the first mask
+            // for the task, we can disable blending, knowing that it will
+            // overwrite every pixel in the mask area.
+            self.set_blend(false, FramebufferKind::Other);
+            self.draw_clip_batch_list(
+                &target.clip_batcher.primary_clips,
+                projection,
+                stats,
+            );
+
+            // switch to multiplicative blending for secondary masks, using
+            // multiplicative blending to accumulate clips into the mask.
             self.set_blend(true, FramebufferKind::Other);
             self.set_blend_mode_multiply(FramebufferKind::Other);
-
-            // draw rounded cornered rectangles
-            if !target.clip_batcher.rectangles.is_empty() {
-                let _gm2 = self.gpu_profile.start_marker("clip rectangles");
-                self.shaders.borrow_mut().cs_clip_rectangle.bind(
-                    &mut self.device,
-                    projection,
-                    &mut self.renderer_errors,
-                );
-                self.draw_instanced_batch(
-                    &target.clip_batcher.rectangles,
-                    VertexArrayKind::Clip,
-                    &BatchTextures::no_texture(),
-                    stats,
-                );
-            }
-            // draw box-shadow clips
-            for (mask_texture_id, items) in target.clip_batcher.box_shadows.iter() {
-                let _gm2 = self.gpu_profile.start_marker("box-shadows");
-                let textures = BatchTextures {
-                    colors: [
-                        mask_texture_id.clone(),
-                        TextureSource::Invalid,
-                        TextureSource::Invalid,
-                    ],
-                };
-                self.shaders.borrow_mut().cs_clip_box_shadow
-                    .bind(&mut self.device, projection, &mut self.renderer_errors);
-                self.draw_instanced_batch(
-                    items,
-                    VertexArrayKind::Clip,
-                    &textures,
-                    stats,
-                );
-            }
-
-            // draw image masks
-            for (mask_texture_id, items) in target.clip_batcher.images.iter() {
-                let _gm2 = self.gpu_profile.start_marker("clip images");
-                let textures = BatchTextures {
-                    colors: [
-                        mask_texture_id.clone(),
-                        TextureSource::Invalid,
-                        TextureSource::Invalid,
-                    ],
-                };
-                self.shaders.borrow_mut().cs_clip_image
-                    .bind(&mut self.device, projection, &mut self.renderer_errors);
-                self.draw_instanced_batch(
-                    items,
-                    VertexArrayKind::Clip,
-                    &textures,
-                    stats,
-                );
-            }
+            self.draw_clip_batch_list(
+                &target.clip_batcher.secondary_clips,
+                projection,
+                stats,
+            );
         }
 
         self.gpu_profile.finish_sampler(alpha_sampler);
@@ -4934,6 +4994,11 @@ pub struct RendererOptions {
     pub namespace_alloc_by_client: bool,
     pub enable_picture_caching: bool,
     pub testing: bool,
+    /// Set to true if this GPU supports hardware fast clears as a performance
+    /// optimization. Likely requires benchmarking on various GPUs to see if
+    /// it is a performance win. The default is false, which tends to be best
+    /// performance on lower end / integrated GPUs.
+    pub gpu_supports_fast_clears: bool,
 }
 
 impl Default for RendererOptions {
@@ -4972,6 +5037,7 @@ impl Default for RendererOptions {
             namespace_alloc_by_client: false,
             enable_picture_caching: false,
             testing: false,
+            gpu_supports_fast_clears: false,
         }
     }
 }

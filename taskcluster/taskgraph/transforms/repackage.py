@@ -222,8 +222,7 @@ def make_job_description(config, jobs):
             treeherder.setdefault('symbol', 'Nr')
         else:
             treeherder.setdefault('symbol', 'Rpk')
-        dep_th_platform = dep_job.task.get('extra', {}).get(
-            'treeherder', {}).get('machine', {}).get('platform', '')
+        dep_th_platform = dep_job.task.get('extra', {}).get('treeherder-platform')
         treeherder.setdefault('platform', "{}/opt".format(dep_th_platform))
         treeherder.setdefault('tier', 1)
         treeherder.setdefault('kind', 'build')

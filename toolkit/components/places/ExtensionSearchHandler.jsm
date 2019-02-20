@@ -198,14 +198,24 @@ var ExtensionSearchHandler = Object.freeze({
    * used to provide suggestions to the urlbar while the callback ID is active.
    * The callback is invalidated when either the input changes or the urlbar blurs.
    *
-   * @param {string} keyword The keyword to handle.
-   * @param {string} text The search text in the urlbar.
+   * @param {object} data An object that contains
+   *                 {string} keyword The keyword to handle.
+   *                 {string} text The search text in the urlbar.
+   *                 {boolean} inPrivateWindow privateness of window search
+   *                           is occuring in.
    * @param {Function} callback The callback used to provide search suggestions.
    * @return {Promise} promise that resolves when the current search is complete.
    */
-  handleSearch(keyword, text, callback) {
-    if (!gKeywordMap.has(keyword)) {
+  handleSearch(data, callback) {
+    let {keyword, text} = data;
+    let keywordInfo = gKeywordMap.get(keyword);
+    if (!keywordInfo) {
       throw new Error(`The keyword provided is not registered: "${keyword}"`);
+    }
+
+    let {extension} = keywordInfo;
+    if (data.inPrivateWindow && !extension.privateBrowsingAllowed) {
+      return Promise.resolve(false);
     }
 
     if (gActiveInputSession && gActiveInputSession.keyword != keyword) {
@@ -229,7 +239,7 @@ var ExtensionSearchHandler = Object.freeze({
     // behavior, which always fires MSG_INPUT_STARTED right before MSG_INPUT_CHANGED
     // first fires, but this is a bug in Chrome according to https://crbug.com/258911.
     if (!gActiveInputSession) {
-      gActiveInputSession = new InputSession(keyword, gKeywordMap.get(keyword).extension);
+      gActiveInputSession = new InputSession(keyword, extension);
       gActiveInputSession.start(this.MSG_INPUT_STARTED);
 
       // Resolve early if there is no text to process. There can be text to process when

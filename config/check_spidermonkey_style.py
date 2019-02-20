@@ -56,7 +56,6 @@ ignored_js_src_dirs = [
 # We ignore #includes of these files, because they don't follow the usual rules.
 included_inclnames_to_ignore = set([
     'ffi.h',                    # generated in ctypes/libffi/
-    'devtools/sharkctl.h',      # we ignore devtools/ in general
     'devtools/Instruments.h',   # we ignore devtools/ in general
     'double-conversion/double-conversion.h',  # strange MFBT case
     'javascript-trace.h',       # generated in $OBJDIR if HAVE_DTRACE is defined

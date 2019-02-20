@@ -122,4 +122,11 @@ enum class JSSamplingFlags {
   TraceLogging = 0x4
 };
 
+// Record an exit profile from a child process.
+void profiler_received_exit_profile(const nsCString& aExitProfile);
+
+// Extract all received exit profiles that have not yet expired (i.e., they
+// still intersect with this process' buffer range).
+nsTArray<nsCString> profiler_move_exit_profiles();
+
 #endif /* ndef TOOLS_PLATFORM_H_ */

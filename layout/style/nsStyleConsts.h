@@ -274,9 +274,11 @@ enum class StyleImageLayerRepeat : uint8_t {
 };
 
 // Mask mode
-#define NS_STYLE_MASK_MODE_ALPHA 0
-#define NS_STYLE_MASK_MODE_LUMINANCE 1
-#define NS_STYLE_MASK_MODE_MATCH_SOURCE 2
+enum class StyleMaskMode : uint8_t {
+  Alpha = 0,
+  Luminance,
+  MatchSource
+};
 
 // See nsStyleTable
 #define NS_STYLE_BORDER_COLLAPSE 0
@@ -383,10 +385,12 @@ enum class StyleContent : uint8_t {
 #define NS_STYLE_JUSTIFY_ALL_SHIFT NS_STYLE_ALIGN_ALL_SHIFT
 
 // See nsStylePosition
-#define NS_STYLE_FLEX_DIRECTION_ROW 0
-#define NS_STYLE_FLEX_DIRECTION_ROW_REVERSE 1
-#define NS_STYLE_FLEX_DIRECTION_COLUMN 2
-#define NS_STYLE_FLEX_DIRECTION_COLUMN_REVERSE 3
+enum class StyleFlexDirection : uint8_t {
+	Row,
+	RowReverse,
+	Column,
+	ColumnReverse,
+};
 
 // See nsStylePosition
 #define NS_STYLE_FLEX_WRAP_NOWRAP 0
