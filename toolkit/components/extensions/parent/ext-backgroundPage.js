@@ -97,8 +97,16 @@ this.backgroundPage = class extends ExtensionAPI {
     EventManager.primeListeners(extension);
 
     extension.once("start-background-page", async () => {
+      if (!this.extension) {
+        // Extension was shut down. Don't build the background page.
+        // Primed listeners have been cleared in onShutdown.
+        return;
+      }
       await this.build();
-      EventManager.clearPrimedListeners(extension);
+      // |this.extension| may be null if the extension was shut down.
+      // In that case, we still want to clear the primed listeners,
+      // but not update the persistent listeners in the startupData.
+      EventManager.clearPrimedListeners(extension, !!this.extension);
     });
 
     // There are two ways to start the background page:
@@ -121,6 +129,8 @@ this.backgroundPage = class extends ExtensionAPI {
   onShutdown() {
     if (this.bgPage) {
       this.bgPage.shutdown();
+    } else {
+      EventManager.clearPrimedListeners(this.extension, false);
     }
   }
 };
