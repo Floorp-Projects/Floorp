@@ -1729,6 +1729,19 @@ def code_coverage(value):
 set_config('MOZ_CODE_COVERAGE', code_coverage)
 set_define('MOZ_CODE_COVERAGE', code_coverage)
 
+@depends(c_compiler, when=code_coverage)
+def coverage_cflags(c_compiler):
+    cflags = ['--coverage']
+
+    if c_compiler.type in ('clang', 'clang-cl'):
+        cflags += [
+            '-Xclang', '-coverage-no-function-names-in-data',
+        ]
+
+    return cflags
+
+set_config('COVERAGE_CFLAGS', coverage_cflags)
+
 # ==============================================================
 
 option(env='RUSTFLAGS',
