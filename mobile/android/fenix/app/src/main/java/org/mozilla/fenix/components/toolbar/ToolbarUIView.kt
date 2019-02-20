@@ -87,6 +87,7 @@ class ToolbarUIView(
 
     override fun updateView() = Consumer<SearchState> {
         if (it.isEditing) {
+            view.url = it.query
             view.editMode()
         } else {
             view.displayMode()

@@ -18,6 +18,7 @@ import org.mozilla.fenix.components.toolbar.SearchAction
 import org.mozilla.fenix.components.toolbar.SearchState
 import org.mozilla.fenix.components.toolbar.ToolbarComponent
 import org.mozilla.fenix.components.toolbar.ToolbarUIView
+import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
@@ -38,12 +39,18 @@ class SearchFragment : Fragment() {
         val sessionId = SearchFragmentArgs.fromBundle(arguments!!).sessionId
         val isPrivate = SearchFragmentArgs.fromBundle(arguments!!).isPrivateTab
         val view = inflater.inflate(R.layout.fragment_search, container, false)
+        val url = sessionId?.let {
+            requireComponents.core.sessionManager.findSessionById(it)?.let {
+                    session -> session.url
+            }
+        } ?: ""
+
         toolbarComponent = ToolbarComponent(
             view.toolbar_wrapper,
             ActionBusFactory.get(this),
             sessionId,
             isPrivate,
-            SearchState("", isEditing = true)
+            SearchState(url, isEditing = true)
         )
         awesomeBarComponent = AwesomeBarComponent(
             view.search_layout, ActionBusFactory.get(this),
