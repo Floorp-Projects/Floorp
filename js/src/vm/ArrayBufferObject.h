@@ -217,26 +217,15 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
     DETACHED = 0b1000,
 
-    // The dataPointer() is owned by this buffer and should be released
-    // when no longer in use. Releasing the pointer may be done by freeing,
-    // invoking a free callback function, or unmapping, as determined by the
-    // buffer's other flags.
-    //
-    // Array buffers which do not own their data include buffers that
-    // allocate their data inline, and buffers that are created lazily for
-    // typed objects with inline storage, in which case the buffer points
-    // directly to the typed object's storage.
-    OWNS_DATA = 0b1'0000,
-
     // Views of this buffer might include typed objects.
-    TYPED_OBJECT_VIEWS = 0b10'0000,
+    TYPED_OBJECT_VIEWS = 0b1'0000,
 
     // This MALLOCED, MAPPED, or EXTERNAL buffer has been prepared for asm.js
     // and cannot henceforth be transferred/detached.  (WASM, USER_OWNED, and
     // INLINE_DATA buffers can't be prepared for asm.js -- although if an
     // INLINE_DATA buffer is used with asm.js, it's silently rewritten into a
     // MALLOCED buffer which *can* be prepared.)
-    FOR_ASMJS = 0b100'0000,
+    FOR_ASMJS = 0b10'0000,
   };
 
   static_assert(JS_ARRAYBUFFER_DETACHED_FLAG == DETACHED,
@@ -452,10 +441,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   uint32_t flags() const;
   void setFlags(uint32_t flags);
-
-  void setOwnsData(OwnsState owns) {
-    setFlags(owns ? (flags() | OWNS_DATA) : (flags() & ~OWNS_DATA));
-  }
 
   bool hasTypedObjectViews() const { return flags() & TYPED_OBJECT_VIEWS; }
 
