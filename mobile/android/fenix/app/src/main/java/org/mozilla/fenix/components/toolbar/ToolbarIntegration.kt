@@ -9,13 +9,12 @@ import android.graphics.PorterDuff
 import androidx.core.content.ContextCompat
 import androidx.navigation.Navigation
 import mozilla.components.browser.domains.autocomplete.DomainAutocompleteProvider
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.runWithSession
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
-import mozilla.components.feature.toolbar.ToolbarFeature
+import mozilla.components.feature.toolbar.ToolbarPresenter
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
@@ -67,28 +66,17 @@ class ToolbarIntegration(
         }
     }
 
-    private val toolbarFeature: ToolbarFeature = ToolbarFeature(
+    private val toolbarPresenter: ToolbarPresenter = ToolbarPresenter(
         toolbar,
         context.components.core.sessionManager,
-        if (sessionId == null) {
-            if (isPrivate) {
-                context.components.useCases.tabsUseCases.addPrivateTab
-            } else {
-                context.components.useCases.tabsUseCases.addTab
-            }
-        } else context.components.useCases.sessionUseCases.loadUrl,
-        { searchTerms -> if (sessionId == null) {
-            context.components.useCases.searchUseCases.newTabSearch
-                .invoke(searchTerms, Session.Source.USER_ENTERED, true, isPrivate)
-        } else context.components.useCases.searchUseCases.defaultSearch.invoke(searchTerms) },
         sessionId
     )
 
     override fun start() {
-        toolbarFeature.start()
+        toolbarPresenter.start()
     }
 
     override fun stop() {
-        toolbarFeature.stop()
+        toolbarPresenter.stop()
     }
 }
