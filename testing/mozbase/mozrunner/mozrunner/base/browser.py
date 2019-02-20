@@ -87,7 +87,6 @@ class GeckoRuntimeRunner(BaseRunner):
 
 class BlinkRuntimeRunner(BaseRunner):
     """A base runner class for running apps like Google Chrome or Chromium."""
-
     def __init__(self, binary, cmdargs=None, **runner_args):
         super(BlinkRuntimeRunner, self).__init__(**runner_args)
         self.binary = binary
