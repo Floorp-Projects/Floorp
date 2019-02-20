@@ -55,11 +55,9 @@ function onExtra1() {
   if (defaultToReset) {
     // Continue in safe mode
     window.close();
-    return true;
   }
   // The reset dialog will handle starting the reset process if the user confirms.
   showResetDialog();
-  return false;
 }
 
 function onLoad() {
@@ -77,4 +75,5 @@ function onLoad() {
     document.documentElement.getButton("extra1").hidden = true;
     document.getElementById("resetProfileInstead").hidden = true;
   }
+  document.addEventListener("dialogextra1", onExtra1);
 }

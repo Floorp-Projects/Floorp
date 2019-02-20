@@ -16,8 +16,6 @@
         buttonidextra1="exception-mgr-extra-button"
         buttons="cancel,extra1,extra2"
         onload="initExceptionDialog();"
-        ondialogextra1="addException();"
-        ondialogextra2="checkCert();"
         defaultButton="extra2">
 
   <linkset>
