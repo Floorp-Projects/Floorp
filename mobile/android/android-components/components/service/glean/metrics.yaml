@@ -158,6 +158,6 @@ glean.internal.metrics:
     bugs:
       - 1525045
     data_reviews:
-      - NEEDED
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1525045#c18
     notification_emails:
       - telemetry-client-dev@mozilla.com
