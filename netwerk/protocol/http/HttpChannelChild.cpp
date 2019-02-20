@@ -536,6 +536,10 @@ void HttpChannelChild::OnStartRequest(
       !mDivertingToParent,
       "mDivertingToParent should be unset before OnStartRequest!");
 
+  if (mOnStartRequestCalled && !mIPCOpen) {
+    return;
+  }
+
   if (!mCanceled && NS_SUCCEEDED(mStatus)) {
     mStatus = channelStatus;
   }
@@ -666,6 +670,7 @@ void HttpChannelChild::DoOnStartRequest(nsIRequest* aRequest,
     Cancel(rv);
     return;
   }
+  mOnStartRequestCalled = true;
 
   if (mDivertingToParent) {
     mListener = nullptr;
@@ -1029,6 +1034,10 @@ void HttpChannelChild::OnStopRequest(
   LOG(("HttpChannelChild::OnStopRequest [this=%p status=%" PRIx32 "]\n", this,
        static_cast<uint32_t>(channelStatus)));
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (mOnStopRequestCalled && !mIPCOpen) {
+    return;
+  }
 
   if (mDivertingToParent) {
     MOZ_RELEASE_ASSERT(
@@ -3814,6 +3823,14 @@ void HttpChannelChild::ActorDestroy(ActorDestroyReason aWhy) {
   // and BackgroundChild might have pending IPC messages.
   // Clean up BackgroundChild at this time to prevent memleak.
   if (aWhy != Deletion) {
+    // Make sure all the messages are processed.
+    AutoEventEnqueuer ensureSerialDispatch(mEventQ);
+
+    mStatus = NS_ERROR_DOCSHELL_DYING;
+    HandleAsyncAbort();
+
+    // Cleanup the background channel before we resume the eventQ so we don't
+    // get any other events.
     CleanupBackgroundChannel();
   }
 }

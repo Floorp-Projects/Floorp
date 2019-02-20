@@ -3292,10 +3292,7 @@ void HttpBaseChannel::DoNotifyListener() {
     mAfterOnStartRequestBegun = true;
   }
 
-  if (mListener) {
-    MOZ_ASSERT(!mOnStartRequestCalled,
-               "We should not call OnStartRequest twice");
-
+  if (mListener && !mOnStartRequestCalled) {
     nsCOMPtr<nsIStreamListener> listener = mListener;
     listener->OnStartRequest(this, nullptr);
 
@@ -3307,9 +3304,7 @@ void HttpBaseChannel::DoNotifyListener() {
   // as not-pending.
   mIsPending = false;
 
-  if (mListener) {
-    MOZ_ASSERT(!mOnStopRequestCalled, "We should not call OnStopRequest twice");
-
+  if (mListener && !mOnStopRequestCalled) {
     nsCOMPtr<nsIStreamListener> listener = mListener;
     listener->OnStopRequest(this, nullptr, mStatus);
 
