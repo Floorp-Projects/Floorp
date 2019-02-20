@@ -135,6 +135,9 @@ bool testGCAllocatorUp(const size_t PageSize) {
   // Check that the last ditch allocator works as expected.
   CHECK(positionIsCorrect("x--xx--xx-oox---", stagingArea, chunkPool,
                           tempChunks, UseLastDitchAllocator));
+  // Check that the last ditch allocator can deal with naturally aligned chunks.
+  CHECK(positionIsCorrect("x--xx--xoo------", stagingArea, chunkPool,
+                          tempChunks, UseLastDitchAllocator));
 
   // Clean up.
   while (--tempChunks >= 0) {
@@ -184,6 +187,9 @@ bool testGCAllocatorDown(const size_t PageSize) {
                           tempChunks));
   // Check that the last ditch allocator works as expected.
   CHECK(positionIsCorrect("---xoo-xx--xx--x", stagingArea, chunkPool,
+                          tempChunks, UseLastDitchAllocator));
+  // Check that the last ditch allocator can deal with naturally aligned chunks.
+  CHECK(positionIsCorrect("------oox--xx--x", stagingArea, chunkPool,
                           tempChunks, UseLastDitchAllocator));
 
   // Clean up.
