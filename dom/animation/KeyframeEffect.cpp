@@ -290,9 +290,10 @@ nsCSSPropertyIDSet KeyframeEffect::GetPropertiesForCompositor(
   return properties;
 }
 
-bool KeyframeEffect::HasAnimationOfProperty(nsCSSPropertyID aProperty) const {
+bool KeyframeEffect::HasAnimationOfPropertySet(
+    const nsCSSPropertyIDSet& aPropertySet) const {
   for (const AnimationProperty& property : mProperties) {
-    if (property.mProperty == aProperty) {
+    if (aPropertySet.HasProperty(property.mProperty)) {
       return true;
     }
   }
@@ -1709,12 +1710,13 @@ void KeyframeEffect::UpdateEffectSet(EffectSet* aEffectSet) const {
   }
 
   nsIFrame* frame = GetStyleFrame();
-  if (HasAnimationOfProperty(eCSSProperty_opacity)) {
+  if (HasAnimationOfPropertySet(nsCSSPropertyIDSet::OpacityProperties())) {
     effectSet->SetMayHaveOpacityAnimation();
     EnumerateContinuationsOrIBSplitSiblings(
         frame, [](nsIFrame* aFrame) { aFrame->SetMayHaveOpacityAnimation(); });
   }
-  if (HasAnimationOfProperty(eCSSProperty_transform)) {
+  if (HasAnimationOfPropertySet(
+          nsCSSPropertyIDSet::TransformLikeProperties())) {
     effectSet->SetMayHaveTransformAnimation();
     EnumerateContinuationsOrIBSplitSiblings(frame, [](nsIFrame* aFrame) {
       aFrame->SetMayHaveTransformAnimation();

@@ -2278,18 +2278,20 @@ class nsLayoutUtils {
   static bool HasCurrentTransitions(const nsIFrame* aFrame);
 
   /**
-   * Returns true if |aFrame| has an animation of |aProperty| regardless of
-   * whether the property is overridden by !important rule.
+   * Returns true if |aFrame| has an animation of a property in |aPropertySet|
+   * regardless of whether any property in the set is overridden by !important
+   * rule.
    */
-  static bool HasAnimationOfProperty(const nsIFrame* aFrame,
-                                     nsCSSPropertyID aProperty);
+  static bool HasAnimationOfPropertySet(const nsIFrame* aFrame,
+                                        const nsCSSPropertyIDSet& aPropertySet);
 
   /**
-   * Returns true if |aEffectSet| has an animation of |aProperty| regardless of
-   * whether the property is overridden by !important rule.
+   * Returns true if |aEffectSet| has an animation of a property |aPropertySet|
+   * regardless of whether any property in the set is overridden by !important
+   * rule.
    */
-  static bool HasAnimationOfProperty(mozilla::EffectSet* aEffectSet,
-                                     nsCSSPropertyID aProperty);
+  static bool HasAnimationOfPropertySet(mozilla::EffectSet* aEffectSet,
+                                        const nsCSSPropertyIDSet& aPropertySet);
 
   /**
    * Returns true if |aFrame| has an animation of |aProperty| which is
