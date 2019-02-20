@@ -17,7 +17,7 @@
         <item name="homeBackgroundTopGradient">@color/off_white</item>
         <item name="homeBackgroundBottomGradient">@color/off_white</item>
         <item name="homeBackgroundGradient">@drawable/home_background_gradient</item>
-        <item name="privateBrowsingButtonBackground">@drawable/private_browsing_button_white_background</item>
+        <item name="privateBrowsingButtonBackground">?android:attr/selectableItemBackgroundBorderless</item>
         <item name="privateBrowsingButtonTint">@color/off_white</item>
         <item name="fenixLogo">@drawable/ic_logo_wordmark</item>
         <item name="menuButtonTint">@android:color/black</item>
@@ -89,17 +89,6 @@
     <style name="WindowAnimationTransition">
         <item name="android:windowEnterAnimation">@android:anim/fade_in</item>
         <item name="android:windowExitAnimation">@android:anim/fade_out</item>
-    </style>
-
-    <style name="SettingsThemeBase" parent="Theme.MaterialComponents.Light">
-        <item name="colorPrimary">@color/off_white</item>
-        <item name="colorPrimaryDark">@color/off_white</item>
-        <item name="colorAccent">@color/icons</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-    </style>
-
-    <style name="SettingsTheme" parent="SettingsThemeBase">
-
     </style>
 
     <style name="search_pill" parent="Widget.AppCompat.Button.Borderless">
