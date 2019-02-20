@@ -17,7 +17,6 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
-import kotlinx.android.synthetic.main.component_search.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import mozilla.components.browser.toolbar.behavior.BrowserToolbarBottomBehavior
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
@@ -160,7 +159,7 @@ class BrowserFragment : Fragment(), BackHandler {
         customTabsToolbarFeature.set(
             feature = CustomTabsToolbarFeature(
                 sessionManager,
-                toolbar,
+                toolbarComponent.getView(),
                 sessionId,
                 closeListener = { requireActivity().finish() }),
             owner = this,
@@ -177,7 +176,7 @@ class BrowserFragment : Fragment(), BackHandler {
         getAutoDisposeObservable<SearchAction>()
             .subscribe {
                 when (it) {
-                    is SearchAction.ToolbarTapped -> Navigation.findNavController(toolbar)
+                    is SearchAction.ToolbarTapped -> Navigation.findNavController(toolbarComponent.getView())
                         .navigate(
                             BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
                                 requireComponents.core.sessionManager.selectedSession?.id,
@@ -221,9 +220,9 @@ class BrowserFragment : Fragment(), BackHandler {
             ToolbarMenu.Item.Back -> sessionUseCases.goBack.invoke()
             ToolbarMenu.Item.Forward -> sessionUseCases.goForward.invoke()
             ToolbarMenu.Item.Reload -> sessionUseCases.reload.invoke()
-            ToolbarMenu.Item.Settings -> Navigation.findNavController(toolbar)
+            ToolbarMenu.Item.Settings -> Navigation.findNavController(toolbarComponent.getView())
                 .navigate(BrowserFragmentDirections.actionBrowserFragmentToSettingsFragment())
-            ToolbarMenu.Item.Library -> Navigation.findNavController(toolbar)
+            ToolbarMenu.Item.Library -> Navigation.findNavController(toolbarComponent.getView())
                 .navigate(BrowserFragmentDirections.actionBrowserFragmentToLibraryFragment())
             is ToolbarMenu.Item.RequestDesktop -> sessionUseCases.requestDesktopSite.invoke(action.item.isChecked)
             ToolbarMenu.Item.Share -> requireComponents.core.sessionManager
