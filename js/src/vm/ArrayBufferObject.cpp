@@ -1259,32 +1259,30 @@ ArrayBufferObject* ArrayBufferObject::createForContents(
   size_t reservedSlots = JSCLASS_RESERVED_SLOTS(&class_);
 
   size_t nslots = reservedSlots;
-  if (true) {
-    if (contents.kind() == USER_OWNED) {
-      // No accounting to do in this case.
-    } else if (contents.kind() == EXTERNAL) {
-      // Store the FreeInfo in the inline data slots so that we
-      // don't use up slots for it in non-refcounted array buffers.
-      size_t freeInfoSlots = JS_HOWMANY(sizeof(FreeInfo), sizeof(Value));
-      MOZ_ASSERT(reservedSlots + freeInfoSlots <= NativeObject::MAX_FIXED_SLOTS,
-                 "FreeInfo must fit in inline slots");
-      nslots += freeInfoSlots;
+  if (contents.kind() == USER_OWNED) {
+    // No accounting to do in this case.
+  } else if (contents.kind() == EXTERNAL) {
+    // Store the FreeInfo in the inline data slots so that we
+    // don't use up slots for it in non-refcounted array buffers.
+    size_t freeInfoSlots = JS_HOWMANY(sizeof(FreeInfo), sizeof(Value));
+    MOZ_ASSERT(reservedSlots + freeInfoSlots <= NativeObject::MAX_FIXED_SLOTS,
+               "FreeInfo must fit in inline slots");
+    nslots += freeInfoSlots;
+  } else {
+    // The ABO is taking ownership, so account the bytes against the zone.
+    size_t nAllocated = nbytes;
+    if (contents.kind() == MAPPED) {
+      nAllocated = JS_ROUNDUP(nbytes, js::gc::SystemPageSize());
     } else {
-      // The ABO is taking ownership, so account the bytes against the zone.
-      size_t nAllocated = nbytes;
-      if (contents.kind() == MAPPED) {
-        nAllocated = JS_ROUNDUP(nbytes, js::gc::SystemPageSize());
-      } else {
-        MOZ_ASSERT(contents.kind() == MALLOCED,
-                   "should have handled all possible callers' kinds");
-      }
-
-      // "mapped" bytes are fed into a "malloc" counter because (bug 1037358)
-      // this counter constitutes an input to the "when do we GC?" subsystem.
-      // Arguably it deserves renaming to something that doesn't narrowly cabin
-      // it to just "malloc" stuff, if we're going to use it this way.
-      cx->updateMallocCounter(nAllocated);
+      MOZ_ASSERT(contents.kind() == MALLOCED,
+                 "should have handled all possible callers' kinds");
     }
+
+    // "mapped" bytes are fed into a "malloc" counter because (bug 1037358) this
+    // counter constitutes an input to the "when do we GC?" subsystem.  Arguably
+    // it deserves renaming to something that doesn't narrowly cabin it to just
+    // "malloc" stuff, if we're going to use it this way.
+    cx->updateMallocCounter(nAllocated);
   }
 
   MOZ_ASSERT(!(class_.flags & JSCLASS_HAS_PRIVATE));
