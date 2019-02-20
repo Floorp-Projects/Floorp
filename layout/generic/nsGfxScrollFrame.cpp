@@ -784,8 +784,7 @@ void nsHTMLScrollFrame::PlaceScrollArea(ScrollReflowInput& aState,
 
   nsRect scrolledArea;
   // Preserve the width or height of empty rects
-  nsSize portSize =// mHelper.mScrollPort.Size();
-    nsSize(mHelper.mScrollPort.XMost(), mHelper.mScrollPort.YMost());
+  nsSize portSize = mHelper.mScrollPort.Size();
   nsRect scrolledRect = mHelper.GetUnsnappedScrolledRectInternal(
       aState.mContentsOverflowAreas.ScrollableOverflow(), portSize);
   scrolledArea.UnionRectEdges(scrolledRect, nsRect(nsPoint(0, 0), portSize));
@@ -5575,10 +5574,6 @@ void ScrollFrameHelper::UpdateMinimumScaleSize(
   }
 
   nsViewportInfo viewportInfo = doc->GetViewportInfo(displaySize);
-  if (!viewportInfo.IsZoomAllowed()) {
-    // Don't apply the minimum scale size if user-scalable=no is specified.
-    return;
-  }
 
   // The intrinsic minimum scale is the scale that fits the entire content
   // width into the visual viewport.
