@@ -18,6 +18,13 @@ transforms = TransformSequence()
 @transforms.add
 def run_profile_data(config, jobs):
     for job in jobs:
+        build_platform = job['attributes'].get('build_platform')
         instr = 'instrumented-build-{}'.format(job['name'])
-        job.setdefault('fetches', {})[instr] = ['target.tar.bz2']
+        if 'android' in build_platform:
+            artifact = 'target.apk'
+        elif 'macosx64' in build_platform:
+            artifact = 'target.dmg'
+        else:
+            artifact = 'target.tar.bz2'
+        job.setdefault('fetches', {})[instr] = [artifact]
         yield job
