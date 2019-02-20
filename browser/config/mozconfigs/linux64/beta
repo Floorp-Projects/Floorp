@@ -1,4 +1,4 @@
-export MOZ_PGO=1
+. "$topsrcdir/build/mozconfig.pgo"
 
 . "$topsrcdir/browser/config/mozconfigs/linux64/common-opt"
 

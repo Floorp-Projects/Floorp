@@ -7,7 +7,6 @@
 import * as timings from "./timings";
 import { prefs, asyncStore, features } from "./prefs";
 import { isDevelopment, isTesting } from "devtools-environment";
-import { formatPausePoints } from "./pause/pausePoints";
 
 function findSource(dbg: any, url: string) {
   const sources = dbg.selectors.getSourceList();
@@ -48,13 +47,6 @@ function getCM() {
   return cm && cm.CodeMirror;
 }
 
-function _formatPausePoints(dbg: Object, url: string) {
-  const source =
-    dbg.helpers.findSource(url) || dbg.selectors.getSelectedSource();
-  const pausePoints = dbg.selectors.getPausePoints(source.id);
-  console.log(formatPausePoints(source.text, pausePoints));
-}
-
 function _formatColumnBreapoints(dbg: Object) {
   console.log(
     dbg.selectors.formatColumnBreakpoints(
@@ -81,7 +73,6 @@ export function setupHelper(obj: Object) {
       sendPacket: (packet, cbk) => sendPacket(dbg, packet, cbk)
     },
     formatters: {
-      pausePoints: url => _formatPausePoints(dbg, url),
       visibleColumnBreakpoints: () => _formatColumnBreapoints(dbg)
     },
     _telemetry: {
@@ -93,7 +84,7 @@ export function setupHelper(obj: Object) {
 
   if (isDevelopment() && !isTesting()) {
     console.group("Development Notes");
-    const baseUrl = "https://devtools-html.github.io/debugger.html";
+    const baseUrl = "https://firefox-devtools.github.io/debugger.html";
     const localDevelopmentUrl = `${baseUrl}/docs/dbg.html`;
     console.log("Debugging Tips", localDevelopmentUrl);
     console.log("dbg", window.dbg);

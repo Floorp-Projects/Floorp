@@ -37,6 +37,13 @@ Array [
       },
     ],
     "source": Object {
+      "actors": Array [
+        Object {
+          "actor": "a-actor",
+          "source": "a",
+          "thread": "FakeThread",
+        },
+      ],
       "contentType": "text/javascript",
       "error": undefined,
       "id": "a",
@@ -45,6 +52,7 @@ Array [
       "isPrettyPrinted": false,
       "isWasm": false,
       "loadedState": "loaded",
+      "relativeUrl": "/examples/a",
       "sourceMapURL": undefined,
       "text": "function a() {
   return a 
@@ -129,6 +137,13 @@ Array [
       },
     ],
     "source": Object {
+      "actors": Array [
+        Object {
+          "actor": "a-actor",
+          "source": "a",
+          "thread": "FakeThread",
+        },
+      ],
       "contentType": "text/javascript",
       "error": undefined,
       "id": "a",
@@ -137,6 +152,7 @@ Array [
       "isPrettyPrinted": false,
       "isWasm": false,
       "loadedState": "loaded",
+      "relativeUrl": "/examples/a",
       "sourceMapURL": undefined,
       "text": "function a() {
   return a 

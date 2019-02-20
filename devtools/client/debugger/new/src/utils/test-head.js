@@ -17,6 +17,7 @@ import * as selectors from "../selectors";
 import { getHistory } from "../test/utils/history";
 import configureStore from "../actions/utils/create-store";
 import sourceQueue from "../utils/source-queue";
+import type { Source } from "../types";
 
 /**
  * This file contains older interfaces used by tests that have not been
@@ -64,7 +65,7 @@ function makeFrame({ id, sourceId }: Object, opts: Object = {}) {
   };
 }
 
-function makeSourceRaw(name: string, props: any = {}) {
+function makeSourceRaw(name: string, props: any = {}): Source {
   return {
     id: name,
     loadedState: "unloaded",
@@ -77,20 +78,26 @@ function makeSourceRaw(name: string, props: any = {}) {
  * @memberof utils/test-head
  * @static
  */
-function makeSource(name: string, props: any = {}) {
-  return {
-    source: makeSourceRaw(name, props),
-    sourceActor: {
-      actor: `${name}-actor`,
-      source: name,
-      thread: "FakeThread"
-    }
+function makeSource(name: string, props: any = {}): Source {
+  const rv = {
+    ...makeSourceRaw(name, props),
+    actors: [
+      {
+        actor: `${name}-actor`,
+        source: name,
+        thread: "FakeThread"
+      }
+    ]
   };
+  return (rv: any);
 }
 
-function makeOriginalSource(name: string, props?: Object) {
-  const source = makeSourceRaw(name, props);
-  return { source: { ...source, id: `${name}/originalSource` } };
+function makeOriginalSource(name: string, props?: Object): Source {
+  const rv = {
+    ...makeSourceRaw(name, props),
+    id: `${name}/originalSource`
+  };
+  return (rv: any);
 }
 
 function makeFuncLocation(startLine, endLine) {

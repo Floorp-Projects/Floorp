@@ -116,7 +116,6 @@ class Scopes extends PureComponent<Props, State> {
             autoExpandAll={false}
             autoExpandDepth={1}
             disableWrap={true}
-            focusable={false}
             dimTopLevelWindow={true}
             openLink={openLink}
             createObjectClient={grip => createObjectClient(grip)}

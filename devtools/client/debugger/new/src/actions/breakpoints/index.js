@@ -299,7 +299,6 @@ export function setBreakpointOptions(
       getState(),
       bp.generatedLocation
     );
-
     await client.setBreakpoint(breakpointLocation, options);
 
     const newBreakpoint = { ...bp, disabled: false, options };

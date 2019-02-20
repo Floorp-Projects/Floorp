@@ -5,11 +5,13 @@
 // @flow
 
 import { getURL } from "../getURL";
-import { createSource } from "../../../reducers/sources";
+import { makeMockSource } from "../../../utils/test-mockup";
+import type { Source } from "../../../types";
 
-function createMockSource(props) {
-  return createSource(
-    Object.assign(
+function createMockSource(props): Source {
+  const rv = {
+    ...makeMockSource(),
+    ...Object.assign(
       {
         id: "server1.conn13.child1/39",
         url: "",
@@ -24,7 +26,8 @@ function createMockSource(props) {
       },
       props
     )
-  );
+  };
+  return (rv: any);
 }
 
 describe("getUrl", () => {

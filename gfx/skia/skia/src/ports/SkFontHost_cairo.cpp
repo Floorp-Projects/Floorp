@@ -58,8 +58,6 @@ typedef enum FT_LcdFilter_
 #define SK_FONTHOST_CAIRO_STANDALONE 1
 #endif
 
-static cairo_user_data_key_t kSkTypefaceKey;
-
 static bool gFontHintingEnabled = true;
 static FT_Error (*gSetLcdFilter)(FT_Library, FT_LcdFilter) = nullptr;
 static void (*gGlyphSlotEmbolden)(FT_GlyphSlot) = nullptr;
@@ -259,7 +257,6 @@ public:
         , fFontFace(fontFace)
         , fPattern(pattern)
     {
-        cairo_font_face_set_user_data(fFontFace, &kSkTypefaceKey, this, nullptr);
         cairo_font_face_reference(fFontFace);
 #ifdef CAIRO_HAS_FC_FONT
         if (fPattern) {
@@ -268,10 +265,11 @@ public:
 #endif
     }
 
+    cairo_font_face_t* GetCairoFontFace() const { return fFontFace; }
+
 private:
     ~SkCairoFTTypeface()
     {
-        cairo_font_face_set_user_data(fFontFace, &kSkTypefaceKey, nullptr, nullptr);
         cairo_font_face_destroy(fFontFace);
 #ifdef CAIRO_HAS_FC_FONT
         if (fPattern) {
@@ -284,16 +282,18 @@ private:
     FcPattern* fPattern;
 };
 
+static bool FindByCairoFontFace(SkTypeface* typeface, void* context) {
+    return static_cast<SkCairoFTTypeface*>(typeface)->GetCairoFontFace() == static_cast<cairo_font_face_t*>(context);
+}
+
 SkTypeface* SkCreateTypefaceFromCairoFTFontWithFontconfig(cairo_scaled_font_t* scaledFont, FcPattern* pattern)
 {
     cairo_font_face_t* fontFace = cairo_scaled_font_get_font_face(scaledFont);
     SkASSERT(cairo_font_face_status(fontFace) == CAIRO_STATUS_SUCCESS);
     SkASSERT(cairo_font_face_get_type(fontFace) == CAIRO_FONT_TYPE_FT);
 
-    SkTypeface* typeface = reinterpret_cast<SkTypeface*>(cairo_font_face_get_user_data(fontFace, &kSkTypefaceKey));
-    if (typeface) {
-        typeface->ref();
-    } else {
+    SkTypeface* typeface = SkTypefaceCache::FindByProcAndRef(FindByCairoFontFace, fontFace);
+    if (!typeface) {
         typeface = new SkCairoFTTypeface(fontFace, pattern);
         SkTypefaceCache::Add(typeface);
     }

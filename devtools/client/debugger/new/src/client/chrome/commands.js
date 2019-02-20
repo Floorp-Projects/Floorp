@@ -114,8 +114,6 @@ function navigate(url: string) {
 
 function getBreakpointByLocation(location: SourceLocation) {}
 
-function setPausePoints() {}
-
 function getFrameScopes() {}
 function evaluateInFrame() {}
 function evaluateExpressions() {}
@@ -135,7 +133,6 @@ const clientCommands = {
   navigate,
   getProperties,
   getBreakpointByLocation,
-  setPausePoints,
   getFrameScopes,
   evaluateInFrame,
   evaluateExpressions

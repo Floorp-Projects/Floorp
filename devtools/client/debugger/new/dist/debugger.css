@@ -251,7 +251,7 @@ button.open-inspector {
   margin: 0 4px;
   padding: 0;
   border: none;
-  background-color: var(--comment-node-color);
+  background-color: var(--theme-icon-color);
   cursor: pointer;
 }
 
@@ -260,7 +260,7 @@ button.open-inspector {
 .objectBox-textNode:hover .open-inspector,
 .open-accessibility-inspector:hover,
 .open-inspector:hover {
-  background-color: var(--theme-highlight-blue);
+  background-color: var(--theme-icon-checked-color);
 }
 
 /******************************************************************************/
@@ -269,14 +269,14 @@ button.open-inspector {
 button.jump-definition {
   mask: url("resource://devtools/client/shared/components/reps/images/jump-definition.svg") no-repeat;
   display: inline-block;
-  background-color: var(--comment-node-color);
+  background-color: var(--theme-icon-color);
   height: 16px;
   margin-left: 0.25em;
   vertical-align: middle;
 }
 
 .jump-definition:hover {
-  background-color: var(--theme-highlight-blue);
+  background-color: var(--theme-icon-checked-color);
 }
 
 /******************************************************************************/
@@ -285,14 +285,14 @@ button.jump-definition {
 button.invoke-getter {
   mask: url("resource://devtools/client/shared/components/reps/images/input.svg") no-repeat;
   display: inline-block;
-  background-color: var(--comment-node-color);
+  background-color: var(--theme-icon-color);
   height: 10px;
   vertical-align: middle;
   border:none;
 }
 
 .invoke-getter:hover {
-  background-color: var(--theme-highlight-blue);
+  background-color: var(--theme-icon-checked-color);
 }
 
 /******************************************************************************/
@@ -357,30 +357,27 @@ button.invoke-getter {
 }
 
 .tree-node button.arrow {
-  background:url("resource://devtools/client/debugger/new/images/arrow.svg") no-repeat;
-  background-size:contain;
-  background-position:center center;
+  mask: url("resource://devtools/client/debugger/new/images/arrow.svg") no-repeat center;
+  mask-size: 10px;
+  vertical-align: -1px;
   width: 10px;
   height: 10px;
-  border:0;
-  padding:0;
+  border: 0;
+  padding: 0;
   margin-inline-start: 1px;
   margin-inline-end: 4px;
-  transform: rotate(-90deg);
   transform-origin: center center;
-  transition: transform 0.125s ease;
-  align-self: center;
-  -moz-context-properties: fill;
-  fill: var(--theme-splitter-color, #9B9B9B);
+  transition: transform 125ms var(--animation-curve);
+  background-color: var(--theme-icon-dimmed-color);
 }
 
-html[dir="rtl"] .tree-node button.arrow {
+.tree-node button.arrow:not(.expanded) {
+  transform: rotate(-90deg);
+}
+
+html[dir="rtl"] .tree-node button:not(.expanded) {
   transform: rotate(90deg);
 }
-
-.tree-node button.arrow.expanded.expanded {
-  transform: rotate(0deg);
- }
 
 .tree .tree-node.focused {
   color: white;
@@ -388,7 +385,7 @@ html[dir="rtl"] .tree-node button.arrow {
 }
 
 .tree-node.focused button.arrow {
-  fill: currentColor;
+  background-color: currentColor;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -555,6 +552,8 @@ html[dir="rtl"] .tree-node button.arrow {
   --editor-footer-height: 25px;
   /* searchbar height is 24px + 1px for its top border */
   --editor-searchbar-height: 25px;
+  /* Remove once https://bugzilla.mozilla.org/show_bug.cgi?id=1520440 lands */
+  --theme-code-line-height: calc(15 / 11);
 }
 
 :root.theme-light,
@@ -2318,7 +2317,7 @@ menuseparator {
 }
 
 .source-footer > .commands > .blackboxed > .img.blackBox {
-  background-color: var(--theme-highlight-blue);
+  background-color: var(--theme-icon-checked-color);
 }
 
 .source-footer .blackbox-summary,
@@ -2670,8 +2669,8 @@ menuseparator {
 
 .column-breakpoint {
   display: inline;
-  padding: 0;
-  padding-inline-end: 4px;
+  padding-inline-start: 1px;
+  padding-inline-end: 3px;
 }
 
 .column-breakpoint:hover {
@@ -2679,10 +2678,10 @@ menuseparator {
 }
 
 .column-breakpoint svg {
-  display: inline;
+  display: inline-block;
   cursor: pointer;
-  height: 12px;
-  width: 9px;
+  height: 13px;
+  width: 11px;
   vertical-align: top;
 }
 
@@ -2787,7 +2786,7 @@ menuseparator {
 
 /**
  * There's a known codemirror flex issue with chrome that this addresses.
- * BUG https://github.com/devtools-html/debugger.html/issues/63
+ * BUG https://github.com/firefox-devtools/debugger.html/issues/63
  */
 .editor-wrapper {
   position: absolute;
@@ -2825,20 +2824,6 @@ html[dir="rtl"] .editor-mount {
   color: var(--grey-50);
 }
 
-:not(.empty-line):not(.new-breakpoint)
-  > .CodeMirror-gutter-wrapper:hover
-  > .CodeMirror-linenumber {
-  height: 13px;
-  color: var(--theme-body-color);
-  /* Add 1px offset to the background to match it
-    with the actual breakpoint image dimensions */
-  background: linear-gradient(
-    to bottom,
-    transparent 1px,
-    var(--gutter-hover-background-color) 0
-  );
-}
-
 .new-breakpoint .CodeMirror-linenumber {
   pointer-events: none;
 }
@@ -2848,12 +2833,16 @@ html[dir="rtl"] .editor-mount {
   > .CodeMirror-linenumber::after {
   content: "";
   position: absolute;
-  top: 1px;
-  height: 12px;
-  width: 9px;
+  /* paint below the number */
+  z-index: -1;
+  top: 0;
+  left: 0;
+  right: -7px;
+  bottom: 0;
+  height: 15px;
   background-color: var(--gutter-hover-background-color);
   mask: url("resource://devtools/client/debugger/new/images/breakpoint.svg") no-repeat;
-  mask-size: auto 12px;
+  mask-size: auto 15px;
   mask-position: right;
 }
 
@@ -2873,7 +2862,7 @@ html[dir="rtl"] .editor-mount {
 }
 
 .editor.hit-marker {
-  height: 14px;
+  height: 15px;
 }
 
 .editor-wrapper .highlight-lines {
@@ -2884,7 +2873,7 @@ html[dir="rtl"] .editor-mount {
   fill: var(--breakpoint-fill);
   stroke: var(--breakpoint-stroke);
   width: 60px;
-  height: 14px;
+  height: 15px;
   position: absolute;
   top: 0px;
   right: -4px;
@@ -2929,7 +2918,7 @@ html[dir="rtl"] .editor-mount {
   fill: var(--theme-selection-background);
   vertical-align: middle;
   width: 17px;
-  height: 14px;
+  height: 15px;
 }
 
 .editor.column-breakpoint.breakpoint-disabled svg {
@@ -2944,11 +2933,8 @@ html[dir="rtl"] .editor-mount {
 .editor-wrapper .editor-mount {
   width: 100%;
   background-color: var(--theme-body-background);
-}
-
-.CodeMirror-linenumber {
-  font-size: 11px;
-  line-height: 14px;
+  font-size: var(--theme-code-font-size);
+  line-height: var(--theme-code-line-height);
 }
 
 .folding-enabled .CodeMirror-linenumber {
@@ -2967,10 +2953,6 @@ html[dir="rtl"] .editor-mount {
 /* move the breakpoint below the other gutter elements */
 .new-breakpoint .CodeMirror-gutter-elt:nth-child(2) {
   z-index: 0;
-}
-
-.editor-wrapper .CodeMirror-line {
-  font-size: 11px;
 }
 
 .theme-dark .editor-wrapper .CodeMirror-line .cm-comment {
@@ -3439,8 +3421,8 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-.frames ul .frames-group .group,
-.frames ul .frames-group .group .location {
+.frames [role="list"] .frames-group .group,
+.frames [role="list"] .frames-group .group .location {
   font-weight: 500;
   cursor: default;
   /*
@@ -3451,21 +3433,21 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   direction: ltr;
 }
 
-.frames ul .frames-group.expanded .group,
-.frames ul .frames-group.expanded .group .location {
+.frames [role="list"] .frames-group.expanded .group,
+.frames [role="list"] .frames-group.expanded .group .location {
   color: var(--theme-highlight-blue);
 }
 
-.frames ul .frames-group .frames-list li {
+.frames [role="list"] .frames-group .frames-list [role="listitem"] {
   padding-left: 30px;
 }
 
-.frames ul .frames-group .frames-list {
+.frames [role="list"] .frames-group .frames-list {
   border-top: 1px solid var(--theme-splitter-color);
   border-bottom: 1px solid var(--theme-splitter-color);
 }
 
-.frames ul .frames-group.expanded .badge {
+.frames [role="list"] .frames-group.expanded .badge {
   color: var(--theme-highlight-blue);
 }
 
@@ -3831,7 +3813,7 @@ html[dir="rtl"] .command-bar {
 }
 
 .command-bar .active .disable-pausing {
-  background-color: var(--theme-highlight-blue);
+  background-color: var(--theme-icon-checked-color);
 }
 
 .bottom {
@@ -3981,7 +3963,10 @@ html[dir="rtl"] .command-bar {
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .event-listeners-content {
-	padding: 4px 20px;
+	padding-top: 4px;
+	padding-bottom: 4px;
+	padding-inline-start: 14px;
+	padding-inline-end: 20px;
 }
 
 .event-listeners-content ul {
@@ -3991,6 +3976,39 @@ html[dir="rtl"] .command-bar {
 
 .event-listener-group {
 	user-select: none;
+}
+
+.event-listener-header {
+	display: flex;
+	align-items: center;
+}
+
+.event-listener-expand {
+	border: none;
+	background: none;
+	padding: 4px 5px;
+	line-height: 12px;
+}
+
+.event-listener-expand:hover {
+	background: transparent;
+}
+
+.event-listener-group input[type="checkbox"] {
+	margin: 0px;
+	margin-inline-end: 4px;
+}
+
+.event-listener-label {
+	display: flex;
+	align-items: center;
+	padding-inline-start: 2px;
+	padding-inline-end: 10px;
+}
+
+.event-listener-category {
+	padding: 3px 0px;
+	line-height: 14px;
 }
 
 .event-listeners-content .arrow {
@@ -4011,9 +4029,16 @@ html[dir="rtl"] .event-listeners-content .arrow.expanded {
 	margin-inline-start: 30px;
 }
 
+.event-listener-name {
+	line-height: 14px;
+	padding: 3px 0px;
+}
+
 .event-listener-event input {
 	margin-inline-end: 4px;
 	margin-inline-start: 0px;
+	margin-top: 0px;
+	margin-bottom: 0px;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -4094,7 +4119,7 @@ html[dir="rtl"] .object-node {
   This allows the commandbar to remain fixed when scrolling
   until the content completely ends. Not just the height of
   the wrapper.
-  Ref: https://github.com/devtools-html/debugger.html/issues/3426
+  Ref: https://github.com/firefox-devtools/debugger.html/issues/3426
 */
 
 .secondary-panes-wrapper {
@@ -4498,7 +4523,7 @@ html .welcomebox .toggle-button-end.collapsed {
 }
 
 .result-list li .result-item-icon {
-  background-color: var(--theme-comment);
+  background-color: var(--theme-icon-dimmed-color);
 }
 
 .result-list li .icon {
