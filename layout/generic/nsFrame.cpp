@@ -617,7 +617,8 @@ void nsFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   const nsStyleDisplay* disp = StyleDisplay();
   if (disp->HasTransform(this) ||
       (IsFrameOfType(eSupportsCSSTransforms) &&
-       nsLayoutUtils::HasAnimationOfProperty(this, eCSSProperty_transform))) {
+       nsLayoutUtils::HasAnimationOfPropertySet(
+           this, nsCSSPropertyIDSet::TransformLikeProperties()))) {
     // The frame gets reconstructed if we toggle the -moz-transform
     // property, so we can set this bit here and then ignore it.
     AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
@@ -1531,7 +1532,8 @@ bool nsIFrame::IsCSSTransformed(const nsStyleDisplay* aStyleDisplay) const {
 
 bool nsIFrame::HasAnimationOfTransform() const {
   return IsPrimaryFrame() &&
-         nsLayoutUtils::HasAnimationOfProperty(this, eCSSProperty_transform) &&
+         nsLayoutUtils::HasAnimationOfPropertySet(
+             this, nsCSSPropertyIDSet::TransformLikeProperties()) &&
          IsFrameOfType(eSupportsCSSTransforms);
 }
 
@@ -1563,7 +1565,8 @@ bool nsIFrame::HasOpacityInternal(float aThreshold,
   return ((IsPrimaryFrame() ||
            nsLayoutUtils::FirstContinuationOrIBSplitSibling(this)
                ->IsPrimaryFrame()) &&
-          nsLayoutUtils::HasAnimationOfProperty(effects, eCSSProperty_opacity));
+          nsLayoutUtils::HasAnimationOfPropertySet(
+              effects, nsCSSPropertyIDSet::OpacityProperties()));
 }
 
 bool nsIFrame::IsSVGTransformed(gfx::Matrix* aOwnTransforms,
@@ -2766,7 +2769,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
   bool opacityItemForEventsAndPluginsOnly = false;
   if (effects->mOpacity == 0.0 && aBuilder->IsForPainting() &&
       !(disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_OPACITY) &&
-      !nsLayoutUtils::HasAnimationOfProperty(effectSet, eCSSProperty_opacity)) {
+      !nsLayoutUtils::HasAnimationOfPropertySet(
+          effectSet, nsCSSPropertyIDSet::OpacityProperties())) {
     if (needHitTestInfo || aBuilder->WillComputePluginGeometry()) {
       opacityItemForEventsAndPluginsOnly = true;
     } else {
