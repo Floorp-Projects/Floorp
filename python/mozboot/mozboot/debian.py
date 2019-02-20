@@ -66,7 +66,6 @@ class DebianBootstrapper(NodeInstall, StyloInstall, ClangStaticAnalysisInstall,
         'libpulse-dev',
         'libx11-xcb-dev',
         'libxt-dev',
-        'nasm',
         'python-dbus',
         'xvfb',
         'yasm',
@@ -132,6 +131,9 @@ class DebianBootstrapper(NodeInstall, StyloInstall, ClangStaticAnalysisInstall,
     def ensure_browser_packages(self, artifact_mode=False):
         # TODO: Figure out what not to install for artifact mode
         self.apt_install(*self.browser_packages)
+        modern = self.is_nasm_modern()
+        if not modern:
+            self.apt_install('nasm')
 
     def ensure_mobile_android_packages(self, artifact_mode=False):
         # Multi-part process:
