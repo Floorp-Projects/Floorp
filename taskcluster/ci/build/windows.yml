@@ -323,7 +323,6 @@ win32-nightly/opt:
         - win64-rust
         - win64-rust-size
         - win64-cbindgen
-        - win64-sccache
         - win64-nasm
         - win64-node
 
@@ -363,7 +362,6 @@ win64-nightly/opt:
         - win64-rust
         - win64-rust-size
         - win64-cbindgen
-        - win64-sccache
         - win64-nasm
         - win64-node
 
@@ -825,7 +823,6 @@ win64-asan-reporter-nightly/opt:
         - win64-rust
         - win64-rust-size
         - win64-cbindgen
-        - win64-sccache
         - win64-nasm
         - win64-node
 
@@ -907,7 +904,6 @@ win32-devedition-nightly/opt:
         - win64-rust
         - win64-rust-size
         - win64-cbindgen
-        - win64-sccache
         - win64-nasm
         - win64-node
 
@@ -948,7 +944,6 @@ win64-devedition-nightly/opt:
         - win64-rust
         - win64-rust-size
         - win64-cbindgen
-        - win64-sccache
         - win64-nasm
         - win64-node
 
@@ -1060,7 +1055,6 @@ win64-aarch64-nightly/opt:
         - win64-clang-cl
         - win64-aarch64-rust
         - win64-cbindgen
-        - win64-sccache
         - win64-nasm
         - win64-node
 

@@ -643,7 +643,7 @@ def split_triplet(triplet, allow_unknown=False):
     elif len(parts) == 2:
         cpu, os = parts
     else:
-        die("Unexpected triplet string: %s" % triplet)
+        raise ValueError("Unexpected triplet string: %s" % triplet)
 
     # Autoconf uses config.sub to validate and canonicalize those triplets,
     # but the granularity of its results has never been satisfying to our
@@ -687,7 +687,7 @@ def split_triplet(triplet, allow_unknown=False):
     elif allow_unknown:
         canonical_os = canonical_kernel = os
     else:
-        die('Unknown OS: %s' % os)
+        raise ValueError('Unknown OS: %s' % os)
 
     # The CPU granularity is probably not enough. Moving more things from
     # old-configure will tell us if we need more
@@ -737,7 +737,7 @@ def split_triplet(triplet, allow_unknown=False):
         canonical_cpu = cpu
         endianness = 'unknown'
     else:
-        die('Unknown CPU type: %s' % cpu)
+        raise ValueError('Unknown CPU type: %s' % cpu)
 
     def sanitize(cls, value):
         try:
@@ -796,6 +796,7 @@ def config_sub(shell, triplet):
 @imports('os')
 @imports('subprocess')
 @imports('sys')
+@imports(_from='__builtin__', _import='ValueError')
 def real_host(value, shell):
     if not value and sys.platform == 'win32':
         arch = (os.environ.get('PROCESSOR_ARCHITEW6432') or
@@ -809,10 +810,19 @@ def real_host(value, shell):
         config_guess = os.path.join(os.path.dirname(__file__), '..',
                                     'autoconf', 'config.guess')
         host = subprocess.check_output([shell, config_guess]).strip()
+        try:
+            return split_triplet(host)
+        except ValueError:
+            pass
     else:
-        host = config_sub(shell, value[0])
+        host = value[0]
 
-    return split_triplet(host)
+    host = config_sub(shell, host)
+
+    try:
+        return split_triplet(host)
+    except ValueError as e:
+        die(e.message)
 
 
 host = help_host_target | real_host
@@ -820,6 +830,7 @@ host = help_host_target | real_host
 
 @depends('--target', real_host, shell, '--enable-project', '--enable-application')
 @checking('for target system type', lambda t: t.alias)
+@imports(_from='__builtin__', _import='ValueError')
 def real_target(value, host, shell, project, application):
     # Because --enable-project is implied by --enable-application, and
     # implied options are not currently handled during --help, which is
@@ -846,9 +857,16 @@ def real_target(value, host, shell, project, application):
                 rest += 'eabi'
         else:
             cpu, rest = host.alias.split('-', 1)
-        return split_triplet('-'.join((target, rest)))
+        target = '-'.join((target, rest))
+        try:
+            return split_triplet(target)
+        except ValueError:
+            pass
 
-    return split_triplet(config_sub(shell, target))
+    try:
+        return split_triplet(config_sub(shell, target))
+    except ValueError as e:
+        die(e.message)
 
 
 target = help_host_target | real_target

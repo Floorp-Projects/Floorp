@@ -21,7 +21,6 @@ import { getRawSourceURL, isPrettyURL, isOriginal } from "../../utils/source";
 import {
   getBlackBoxList,
   getSource,
-  hasSourceActor,
   getPendingSelectedLocation,
   getPendingBreakpointsForSource
 } from "../../selectors";
@@ -31,7 +30,6 @@ import sourceQueue from "../../utils/source-queue";
 
 import type { Source, SourceId } from "../../types";
 import type { Action, ThunkArgs } from "../types";
-import type { CreateSourceResult } from "../../client/firefox/types";
 
 function createOriginalSource(
   originalUrl,
@@ -46,7 +44,9 @@ function createOriginalSource(
     isWasm: false,
     isBlackBoxed: false,
     loadedState: "unloaded",
-    introductionUrl: null
+    introductionUrl: null,
+    isExtension: false,
+    actors: []
   };
 }
 
@@ -62,7 +62,7 @@ function loadSourceMaps(sources: Source[]) {
     const sourceList = await Promise.all(
       sources.map(async ({ id }) => {
         const originalSources = await dispatch(loadSourceMap(id));
-        sourceQueue.queueSources(originalSources.map(source => ({ source })));
+        sourceQueue.queueSources(originalSources);
         return originalSources;
       })
     );
@@ -203,35 +203,23 @@ function restoreBlackBoxedSources(sources: Source[]) {
  * @memberof actions/sources
  * @static
  */
-export function newSource(source: CreateSourceResult) {
+export function newSource(source: Source) {
   return async ({ dispatch }: ThunkArgs) => {
     await dispatch(newSources([source]));
   };
 }
 
-export function newSources(createdSources: CreateSourceResult[]) {
+export function newSources(foundSources: Source[]) {
   return async ({ dispatch, getState }: ThunkArgs) => {
-    // Find any sources we haven't seen before.
-    const sources = createdSources
-      .map(csr => csr.source)
-      .filter(source => !getSource(getState(), source.id));
-
-    // Find any source actors we haven't seen before.
-    const sourceActors = createdSources
-      .map(csr => csr.sourceActor)
-      .filter(
-        sourceActor => sourceActor && !hasSourceActor(getState(), sourceActor)
-      );
-
-    if (sources.length == 0 && sourceActors.length == 0) {
-      return;
-    }
-
-    dispatch({ type: "ADD_SOURCES", sources, sourceActors });
+    const sources = foundSources.filter(
+      source => !getSource(getState(), source.id)
+    );
 
     if (sources.length == 0) {
       return;
     }
+
+    dispatch({ type: "ADD_SOURCES", sources });
 
     for (const source of sources) {
       dispatch(checkSelectedSource(source.id));

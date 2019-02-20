@@ -8,7 +8,7 @@ import type {
   Breakpoint,
   SourceLocation,
   XHRBreakpoint,
-  BreakpointLinePositions
+  BreakpointPositions
 } from "../../types";
 
 import type { PromiseAction } from "../utils/middleware/promise";
@@ -94,6 +94,6 @@ export type BreakpointAction =
     |}
   | {|
       type: "ADD_BREAKPOINT_POSITIONS",
-      positions: BreakpointLinePositions,
+      positions: BreakpointPositions,
       location: SourceLocation
     |};

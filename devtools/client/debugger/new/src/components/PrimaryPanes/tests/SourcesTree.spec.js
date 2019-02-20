@@ -9,7 +9,7 @@ import { shallow } from "enzyme";
 import { showMenu } from "devtools-contextmenu";
 
 import SourcesTree from "../SourcesTree";
-import { createSource } from "../../../reducers/sources";
+import { makeMockSource } from "../../../utils/test-mockup";
 import { copyToTheClipboard } from "../../../utils/clipboard";
 
 jest.mock("devtools-contextmenu", () => ({ showMenu: jest.fn() }));
@@ -399,16 +399,11 @@ function createMockSource(
   sourceMapURL = null,
   thread = ""
 ) {
-  return createSource({
-    id: id,
-    thread,
-    url: url,
-    isPrettyPrinted: false,
-    isWasm: false,
-    sourceMapURL,
-    isBlackBoxed: isBlackBoxed,
-    loadedState: "unloaded"
-  });
+  return {
+    ...makeMockSource(url, id),
+    isBlackBoxed,
+    sourceMapURL
+  };
 }
 
 function createMockDirectory(path = "folder/", name = "folder", contents = []) {

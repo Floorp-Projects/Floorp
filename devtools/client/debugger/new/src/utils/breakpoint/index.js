@@ -6,7 +6,7 @@
 
 import { sortBy } from "lodash";
 
-import { getBreakpoint, getSource, getSourceActors } from "../../selectors";
+import { getBreakpoint, getSource } from "../../selectors";
 import { isGenerated } from "../source";
 
 import assert from "../assert";
@@ -84,8 +84,7 @@ export function makeBreakpointLocation(
   if (source.url) {
     breakpointLocation.sourceUrl = source.url;
   } else {
-    const sourceActors = getSourceActors(state, location.sourceId);
-    breakpointLocation.sourceId = sourceActors[0].actor;
+    breakpointLocation.sourceId = source.actors[0].actor;
   }
   return breakpointLocation;
 }

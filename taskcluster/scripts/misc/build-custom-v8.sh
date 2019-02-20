@@ -28,22 +28,12 @@ cd $HOME_DIR/src
 # Setup depot_tools
 git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
 export PATH=$PATH:$HOME_DIR/src/depot_tools
-gclient
 
-# Get v8 source code
-mkdir v8
-cd v8
+# Get v8 source code and dependencies
 fetch v8
 cd v8
 
-# Build dependencies
-gclient sync
-./build/install-build-deps.sh
-
 # Build v8
-git checkout master
-git pull && gclient sync
-
 gn gen out/release --args="$CONFIG"
 ninja -C out/release d8
 

@@ -1,11 +1,15 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Test hovering in a script that is paused on load
 // and doesn't have functions.
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html");
-  const { selectors: { getSelectedSource }, getState } = dbg;
+  const {
+    selectors: { getSelectedSource },
+    getState
+  } = dbg;
 
   navigate(dbg, "doc-on-load.html");
 

@@ -8,7 +8,7 @@ import assert from "../../utils/assert";
 import { recordEvent } from "../../utils/telemetry";
 import { remapBreakpoints } from "../breakpoints";
 
-import { setPausePoints, setSymbols } from "../ast";
+import { setSymbols } from "../ast";
 import { prettyPrint } from "../../workers/pretty-print";
 import { setSource } from "../../workers/parser";
 import { getPrettySourceURL, isLoaded } from "../../utils/source";
@@ -20,8 +20,7 @@ import {
   getSource,
   getSourceFromId,
   getSourceByURL,
-  getSelectedLocation,
-  getSourceActors
+  getSelectedLocation
 } from "../../selectors";
 
 import type { Action, ThunkArgs } from "../types";
@@ -43,7 +42,9 @@ export function createPrettySource(sourceId: string) {
       isWasm: false,
       contentType: "text/javascript",
       loadedState: "loading",
-      introductionUrl: null
+      introductionUrl: null,
+      isExtension: false,
+      actors: []
     };
 
     dispatch(({ type: "ADD_SOURCE", source: prettySource }: Action));
@@ -54,8 +55,7 @@ export function createPrettySource(sourceId: string) {
 
     // The source map URL service used by other devtools listens to changes to
     // sources based on their actor IDs, so apply the mapping there too.
-    const sourceActors = getSourceActors(getState(), sourceId);
-    for (const sourceActor of sourceActors) {
+    for (const sourceActor of source.actors) {
       await sourceMaps.applySourceMap(sourceActor.actor, url, code, mappings);
     }
 
@@ -125,7 +125,6 @@ export function togglePrettyPrint(sourceId: string) {
 
     await dispatch(remapBreakpoints(sourceId));
     await dispatch(mapFrames());
-    await dispatch(setPausePoints(newPrettySource.id));
     await dispatch(setSymbols(newPrettySource.id));
 
     dispatch(

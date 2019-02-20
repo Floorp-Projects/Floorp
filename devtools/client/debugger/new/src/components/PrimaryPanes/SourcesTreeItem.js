@@ -22,7 +22,8 @@ import actions from "../../actions";
 import {
   isOriginal as isOriginalSource,
   getSourceQueryString,
-  isUrlExtension
+  isUrlExtension,
+  shouldBlackbox
 } from "../../utils/source";
 import { isDirectory } from "../../utils/sources-tree";
 import { copyToTheClipboard } from "../../utils/clipboard";
@@ -46,7 +47,8 @@ type Props = {
   selectItem: TreeNode => void,
   setExpanded: (TreeNode, boolean, boolean) => void,
   clearProjectDirectoryRoot: typeof actions.clearProjectDirectoryRoot,
-  setProjectDirectoryRoot: typeof actions.setProjectDirectoryRoot
+  setProjectDirectoryRoot: typeof actions.setProjectDirectoryRoot,
+  toggleBlackBox: typeof actions.toggleBlackBox
 };
 
 type State = {};
@@ -132,7 +134,19 @@ class SourceTreeItem extends Component<Props, State> {
           click: () => copyToTheClipboard(contents.url)
         };
 
-        menuOptions.push(copySourceUri2);
+        const { source } = this.props;
+        if (source) {
+          const blackBoxMenuItem = {
+            id: "node-menu-blackbox",
+            label: source.isBlackBoxed
+              ? L10N.getStr("sourceFooter.unblackbox")
+              : L10N.getStr("sourceFooter.blackbox"),
+            accesskey: L10N.getStr("sourceFooter.blackbox.accesskey"),
+            disabled: !shouldBlackbox(source),
+            click: () => this.props.toggleBlackBox(source)
+          };
+          menuOptions.push(copySourceUri2, blackBoxMenuItem);
+        }
       }
     }
 
@@ -269,6 +283,7 @@ export default connect(
   mapStateToProps,
   {
     setProjectDirectoryRoot: actions.setProjectDirectoryRoot,
-    clearProjectDirectoryRoot: actions.clearProjectDirectoryRoot
+    clearProjectDirectoryRoot: actions.clearProjectDirectoryRoot,
+    toggleBlackBox: actions.toggleBlackBox
   }
 )(SourceTreeItem);

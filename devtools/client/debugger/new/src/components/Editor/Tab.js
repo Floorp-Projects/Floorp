@@ -23,7 +23,8 @@ import {
   getRawSourceURL,
   getSourceQueryString,
   getTruncatedFileName,
-  isPretty
+  isPretty,
+  shouldBlackbox
 } from "../../utils/source";
 import { shouldShowPrettyPrint } from "../../utils/editor";
 import { copyToTheClipboard } from "../../utils/clipboard";
@@ -51,7 +52,8 @@ type Props = {
   closeTab: typeof actions.closeTab,
   closeTabs: typeof actions.closeTabs,
   togglePrettyPrint: typeof actions.togglePrettyPrint,
-  showSource: typeof actions.showSource
+  showSource: typeof actions.showSource,
+  toggleBlackBox: typeof actions.toggleBlackBox
 };
 
 class Tab extends PureComponent<Props> {
@@ -66,6 +68,7 @@ class Tab extends PureComponent<Props> {
       closeTabs,
       tabSources,
       showSource,
+      toggleBlackBox,
       togglePrettyPrint,
       selectedSource,
       source
@@ -135,13 +138,25 @@ class Tab extends PureComponent<Props> {
       }
     ];
 
-    items.push({
-      item: {
-        ...tabMenuItems.prettyPrint,
-        click: () => togglePrettyPrint(tab),
-        disabled: !shouldShowPrettyPrint(source)
+    items.push(
+      {
+        item: {
+          ...tabMenuItems.toggleBlackBox,
+          label: source.isBlackBoxed
+            ? L10N.getStr("sourceFooter.unblackbox")
+            : L10N.getStr("sourceFooter.blackbox"),
+          disabled: !shouldBlackbox(source),
+          click: () => toggleBlackBox(source)
+        }
+      },
+      {
+        item: {
+          ...tabMenuItems.prettyPrint,
+          click: () => togglePrettyPrint(tab),
+          disabled: !shouldShowPrettyPrint(source)
+        }
       }
-    });
+    );
 
     showMenu(e, buildMenu(items));
   }
@@ -234,6 +249,7 @@ export default connect(
     closeTab: actions.closeTab,
     closeTabs: actions.closeTabs,
     togglePrettyPrint: actions.togglePrettyPrint,
-    showSource: actions.showSource
+    showSource: actions.showSource,
+    toggleBlackBox: actions.toggleBlackBox
   }
 )(Tab);

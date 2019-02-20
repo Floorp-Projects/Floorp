@@ -20,6 +20,8 @@ class TargetTest(BaseConfigureTest):
             platform = 'linux2'
         elif 'mingw' in self.HOST:
             platform = 'win32'
+        elif 'openbsd6' in self.HOST:
+            platform = 'openbsd6'
         else:
             raise Exception('Missing platform for HOST {}'.format(self.HOST))
         wrapped_sys = {}
@@ -120,6 +122,20 @@ class TestTargetAndroid(TargetTest):
         self.assertEqual(
             self.get_target(['--enable-project=mobile/android', '--target=arm']),
             'arm-unknown-linux-androideabi')
+
+
+class TestTargetOpenBSD(TargetTest):
+    # config.guess returns amd64 on OpenBSD, which we need to pass through to
+    # config.sub so that it canonicalizes to x86_64.
+    HOST = 'amd64-unknown-openbsd6.4'
+
+    def test_target(self):
+        self.assertEqual(self.get_target([]), 'x86_64-unknown-openbsd6.4')
+
+    def config_sub(self, stdin, args):
+        if args[0] == 'amd64-unknown-openbsd6.4':
+            return 0, 'x86_64-unknown-openbsd6.4', ''
+        return super(TestTargetOpenBSD, self).config_sub(stdin, args)
 
 
 class TestMozConfigure(BaseConfigureTest):
