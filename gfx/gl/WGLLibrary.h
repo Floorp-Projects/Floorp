@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GLContextTypes.h"
+#include "GLLibraryLoader.h"
 #include "mozilla/UniquePtr.h"
 #include <windows.h>
 
@@ -95,6 +96,7 @@ class WGLLibrary {
   bool IsInitialized() const { return mInitialized; }
   auto GetOGLLibrary() const { return mOGLLibrary; }
   auto RootDc() const { return mRootDc; }
+  SymbolLoader GetSymbolLoader() const;
 
  private:
   bool mInitialized = false;

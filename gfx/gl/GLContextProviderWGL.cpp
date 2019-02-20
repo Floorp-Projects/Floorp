@@ -68,6 +68,12 @@ static inline bool HasExtension(const char* aExtensions,
       reinterpret_cast<const GLubyte*>(aExtensions), aRequiredExtension);
 }
 
+SymbolLoader WGLLibrary::GetSymbolLoader() const {
+  auto ret = SymbolLoader(*mOGLLibrary);
+  ret.mPfn = SymbolLoader::GetProcAddressT(mSymbols.fGetProcAddress);
+  return ret;
+}
+
 bool WGLLibrary::EnsureInitialized() {
   if (mInitialized) return true;
 
@@ -88,24 +94,29 @@ bool WGLLibrary::EnsureInitialized() {
     }
   }
 
-#define SYMBOL(X)                                     \
-  {                                                   \
-    (PRFuncPtr*)&mSymbols.f##X, { "wgl" #X, nullptr } \
+#define SYMBOL(X)                 \
+  {                               \
+    (PRFuncPtr*)&mSymbols.f##X, { \
+      { "wgl" #X }                \
+    }                             \
   }
-#define END_OF_SYMBOLS   \
-  {                      \
-    nullptr, { nullptr } \
-  }
+#define END_OF_SYMBOLS {nullptr, {}}
 
-  const GLLibraryLoader::SymLoadStruct earlySymbols[] = {
-      SYMBOL(CreateContext), SYMBOL(MakeCurrent),       SYMBOL(GetProcAddress),
-      SYMBOL(DeleteContext), SYMBOL(GetCurrentContext), SYMBOL(GetCurrentDC),
-      END_OF_SYMBOLS};
+  {
+    const auto loader = SymbolLoader(*mOGLLibrary);
+    const SymLoadStruct earlySymbols[] = {SYMBOL(CreateContext),
+                                          SYMBOL(MakeCurrent),
+                                          SYMBOL(GetProcAddress),
+                                          SYMBOL(DeleteContext),
+                                          SYMBOL(GetCurrentContext),
+                                          SYMBOL(GetCurrentDC),
+                                          END_OF_SYMBOLS};
 
-  if (!GLLibraryLoader::LoadSymbols(mOGLLibrary, &earlySymbols[0])) {
-    NS_WARNING(
-        "Couldn't find required entry points in OpenGL DLL (early init)");
-    return false;
+    if (!loader.LoadSymbols(earlySymbols)) {
+      NS_WARNING(
+          "Couldn't find required entry points in OpenGL DLL (early init)");
+      return false;
+    }
   }
 
   mDummyWindow = CreateDummyWindow();
@@ -156,26 +167,30 @@ bool WGLLibrary::EnsureInitialized() {
   const auto resetContext =
       MakeScopeExit([&]() { mSymbols.fMakeCurrent(curDC, curCtx); });
 
-  const auto lookupFunc =
-      (GLLibraryLoader::PlatformLookupFunction)mSymbols.fGetProcAddress;
+  const auto loader = [&]() {
+    const auto pfn = SymbolLoader::GetProcAddressT(mSymbols.fGetProcAddress);
+    auto ret = SymbolLoader(pfn);
+    ret.mLib = mOGLLibrary;
+    return ret;
+  }();
 
   // Now we can grab all the other symbols that we couldn't without having
   // a context current.
   // clang-format off
-    const GLLibraryLoader::SymLoadStruct reqExtSymbols[] = {
-        { (PRFuncPtr*)&mSymbols.fCreatePbuffer, { "wglCreatePbufferARB", "wglCreatePbufferEXT", nullptr } },
-        { (PRFuncPtr*)&mSymbols.fDestroyPbuffer, { "wglDestroyPbufferARB", "wglDestroyPbufferEXT", nullptr } },
-        { (PRFuncPtr*)&mSymbols.fGetPbufferDC, { "wglGetPbufferDCARB", "wglGetPbufferDCEXT", nullptr } },
-        { (PRFuncPtr*)&mSymbols.fReleasePbufferDC, { "wglReleasePbufferDCARB", "wglReleasePbufferDCEXT", nullptr } },
-    //    { (PRFuncPtr*)&mSymbols.fBindTexImage, { "wglBindTexImageARB", "wglBindTexImageEXT", nullptr } },
-    //    { (PRFuncPtr*)&mSymbols.fReleaseTexImage, { "wglReleaseTexImageARB", "wglReleaseTexImageEXT", nullptr } },
-        { (PRFuncPtr*)&mSymbols.fChoosePixelFormat, { "wglChoosePixelFormatARB", "wglChoosePixelFormatEXT", nullptr } },
-    //    { (PRFuncPtr*)&mSymbols.fGetPixelFormatAttribiv, { "wglGetPixelFormatAttribivARB", "wglGetPixelFormatAttribivEXT", nullptr } },
+    const SymLoadStruct reqExtSymbols[] = {
+        { (PRFuncPtr*)&mSymbols.fCreatePbuffer, {{ "wglCreatePbufferARB", "wglCreatePbufferEXT" }} },
+        { (PRFuncPtr*)&mSymbols.fDestroyPbuffer, {{ "wglDestroyPbufferARB", "wglDestroyPbufferEXT" }} },
+        { (PRFuncPtr*)&mSymbols.fGetPbufferDC, {{ "wglGetPbufferDCARB", "wglGetPbufferDCEXT" }} },
+        { (PRFuncPtr*)&mSymbols.fReleasePbufferDC, {{ "wglReleasePbufferDCARB", "wglReleasePbufferDCEXT" }} },
+    //    { (PRFuncPtr*)&mSymbols.fBindTexImage, {{ "wglBindTexImageARB", "wglBindTexImageEXT" }} },
+    //    { (PRFuncPtr*)&mSymbols.fReleaseTexImage, {{ "wglReleaseTexImageARB", "wglReleaseTexImageEXT" }} },
+        { (PRFuncPtr*)&mSymbols.fChoosePixelFormat, {{ "wglChoosePixelFormatARB", "wglChoosePixelFormatEXT" }} },
+    //    { (PRFuncPtr*)&mSymbols.fGetPixelFormatAttribiv, {{ "wglGetPixelFormatAttribivARB", "wglGetPixelFormatAttribivEXT" }} },
         SYMBOL(GetExtensionsStringARB),
         END_OF_SYMBOLS
     };
   // clang-format on
-  if (!GLLibraryLoader::LoadSymbols(mOGLLibrary, reqExtSymbols, lookupFunc)) {
+  if (!loader.LoadSymbols(reqExtSymbols)) {
     NS_WARNING("reqExtSymbols missing");
     return false;
   }
@@ -189,10 +204,9 @@ bool WGLLibrary::EnsureInitialized() {
   // --
 
   if (HasExtension(extString, "WGL_ARB_create_context")) {
-    const GLLibraryLoader::SymLoadStruct createContextSymbols[] = {
+    const SymLoadStruct createContextSymbols[] = {
         SYMBOL(CreateContextAttribsARB), END_OF_SYMBOLS};
-    if (GLLibraryLoader::LoadSymbols(mOGLLibrary, createContextSymbols,
-                                     lookupFunc)) {
+    if (loader.LoadSymbols(createContextSymbols)) {
       if (HasExtension(extString, "WGL_ARB_create_context_robustness")) {
         mHasRobustness = true;
       }
@@ -211,7 +225,7 @@ bool WGLLibrary::EnsureInitialized() {
   }
 
   if (hasDXInterop2) {
-    const GLLibraryLoader::SymLoadStruct dxInteropSymbols[] = {
+    const SymLoadStruct dxInteropSymbols[] = {
         SYMBOL(DXSetResourceShareHandleNV),
         SYMBOL(DXOpenDeviceNV),
         SYMBOL(DXCloseDeviceNV),
@@ -221,8 +235,7 @@ bool WGLLibrary::EnsureInitialized() {
         SYMBOL(DXLockObjectsNV),
         SYMBOL(DXUnlockObjectsNV),
         END_OF_SYMBOLS};
-    if (!GLLibraryLoader::LoadSymbols(mOGLLibrary, dxInteropSymbols,
-                                      lookupFunc)) {
+    if (!loader.LoadSymbols(dxInteropSymbols)) {
       NS_ERROR(
           "WGL_NV_DX_interop2 announceed without supplying its functions.");
       ClearSymbols(dxInteropSymbols);
@@ -292,18 +305,6 @@ GLContextWGL::~GLContextWGL() {
   }
 }
 
-bool GLContextWGL::Init() {
-  if (!mDC || !mContext) return false;
-
-  // see bug 929506 comment 29. wglGetProcAddress requires a current context.
-  if (!sWGLLib.mSymbols.fMakeCurrent(mDC, mContext)) return false;
-
-  SetupLookupFunction();
-  if (!InitWithPrefix("gl", true)) return false;
-
-  return true;
-}
-
 bool GLContextWGL::MakeCurrentImpl() const {
   const bool succeeded = sWGLLib.mSymbols.fMakeCurrent(mDC, mContext);
   NS_ASSERTION(succeeded, "Failed to make GL context current!");
@@ -322,17 +323,6 @@ bool GLContextWGL::SwapBuffers() {
 void GLContextWGL::GetWSIInfo(nsCString* const out) const {
   out->AppendLiteral("wglGetExtensionsString: ");
   out->Append(sWGLLib.mSymbols.fGetExtensionsStringARB(mDC));
-}
-
-bool GLContextWGL::SetupLookupFunction() {
-  // Make sure that we have a ref to the OGL library;
-  // when run under CodeXL, wglGetProcAddress won't return
-  // the right thing for some core functions.
-  MOZ_ASSERT(mLibrary == nullptr);
-
-  mLibrary = sWGLLib.GetOGLLibrary();
-  mLookupFunc = (PlatformLookupFunction)sWGLLib.mSymbols.fGetProcAddress;
-  return true;
 }
 
 already_AddRefed<GLContext> GLContextProviderWGL::CreateWrappingExisting(
