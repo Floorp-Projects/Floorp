@@ -4829,14 +4829,20 @@ methodDefns."""
         if isinstance(stmt, MethodDefn) and not stmt.decl.force_inline:
             decl, defn = _splitMethodDefn(stmt, cls)
             cls.stmts[i] = StmtDecl(decl)
-            defns.addstmts([defn, Whitespace.NL])
+            if defn:
+                defns.addstmts([defn, Whitespace.NL])
 
     return cls, defns
 
 
 def _splitMethodDefn(md, cls):
+    # Pure methods have decls but no defns.
+    if md.decl.methodspec == MethodSpec.PURE:
+        return md.decl, None
+
     saveddecl = deepcopy(md.decl)
     md.decl.cls = cls
+    # Don't emit method specifiers on method defns.
     md.decl.methodspec = MethodSpec.NONE
     md.decl.warn_unused = False
     md.decl.only_for_definition = True
