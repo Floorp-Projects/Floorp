@@ -32,13 +32,16 @@ class GLContextWGL final : public GLContext {
     return GLContextType::WGL;
   }
 
-  bool Init() override;
   virtual bool MakeCurrentImpl() const override;
   virtual bool IsCurrentImpl() const override;
   virtual bool IsDoubleBuffered() const override { return mIsDoubleBuffered; }
   virtual bool SwapBuffers() override;
-  virtual bool SetupLookupFunction() override;
   virtual void GetWSIInfo(nsCString* const out) const override;
+
+  Maybe<SymbolLoader> GetSymbolLoader() const override {
+    return Some(sWGLLib.GetSymbolLoader());
+  }
+
   HGLRC Context() { return mContext; }
 
  protected:
