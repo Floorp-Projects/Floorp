@@ -1037,7 +1037,6 @@ void ArrayBufferObject::releaseData(FreeOp* fop) {
 
 void ArrayBufferObject::setDataPointer(BufferContents contents) {
   setFixedSlot(DATA_SLOT, PrivateValue(contents.data()));
-  setOwnsData(OwnsData);
   setFlags((flags() & ~KIND_MASK) | contents.kind());
 
   if (isExternal()) {
