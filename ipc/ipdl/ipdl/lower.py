@@ -4827,7 +4827,7 @@ methodDefns."""
 
     for i, stmt in enumerate(cls.stmts):
         if isinstance(stmt, MethodDefn) and not stmt.decl.force_inline:
-            decl, defn = _splitMethodDefn(stmt, cls)
+            decl, defn = _splitMethodDeclDefn(stmt, cls)
             cls.stmts[i] = StmtDecl(decl)
             if defn:
                 defns.addstmts([defn, Whitespace.NL])
@@ -4835,7 +4835,7 @@ methodDefns."""
     return cls, defns
 
 
-def _splitMethodDefn(md, cls):
+def _splitMethodDeclDefn(md, cls):
     # Pure methods have decls but no defns.
     if md.decl.methodspec == MethodSpec.PURE:
         return md.decl, None
