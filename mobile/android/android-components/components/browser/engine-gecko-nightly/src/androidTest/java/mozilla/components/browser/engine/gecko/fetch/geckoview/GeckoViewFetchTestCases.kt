@@ -105,7 +105,6 @@ class GeckoViewFetchTestCases : mozilla.components.tooling.fetch.tests.FetchTest
 
     @Test
     @UiThreadTest
-    @Ignore("Blocked on: https://bugzilla.mozilla.org/show_bug.cgi?id=1526322")
     override fun put201FileUpload() {
         super.put201FileUpload()
     }
