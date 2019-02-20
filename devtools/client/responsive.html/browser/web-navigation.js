@@ -8,9 +8,8 @@ const { Cc, Ci, Cu, Cr } = require("chrome");
 const ChromeUtils = require("ChromeUtils");
 const Services = require("Services");
 const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
-const { Utils } = require("resource://gre/modules/sessionstore/Utils.jsm");
-const Telemetry = require("devtools/client/shared/telemetry");
 const { E10SUtils } = require("resource://gre/modules/E10SUtils.jsm");
+const Telemetry = require("devtools/client/shared/telemetry");
 
 const telemetry = new Telemetry();
 
@@ -83,7 +82,7 @@ BrowserElementWebNavigation.prototype = {
       postData: postData ? readInputStreamToString(postData) : null,
       headers: headers ? readInputStreamToString(headers) : null,
       baseURI: baseURI ? baseURI.spec : null,
-      triggeringPrincipal: Utils.serializePrincipal(
+      triggeringPrincipal: E10SUtils.serializePrincipal(
                            triggeringPrincipal ||
                            Services.scriptSecurityManager.createNullPrincipal({})),
       requestTime: telemetry.msSystemNow(),

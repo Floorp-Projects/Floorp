@@ -251,8 +251,12 @@ class UrlbarInput {
     if (selectedOneOff) {
       // If there's a selected one-off button then load a search using
       // the button's engine.
+      let result = this._resultForCurrentValue;
+      let searchString =
+        (result && (result.payload.suggestion || result.payload.query)) ||
+        this._lastSearchString;
       [url, openParams.postData] = UrlbarUtils.getSearchQueryUrl(
-        selectedOneOff.engine, this._lastSearchString);
+        selectedOneOff.engine, searchString);
       this._recordSearch(selectedOneOff.engine, event);
     } else {
       // Use the current value if we don't have a UrlbarResult e.g. because the

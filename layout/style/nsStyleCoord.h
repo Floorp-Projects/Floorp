@@ -68,12 +68,12 @@ constexpr LengthPercentage LengthPercentage::Zero() {
   return {{0.}, {0.}, StyleAllowedNumericType::All, false, false};
 }
 
+LengthPercentage LengthPercentage::FromPixels(CSSCoord aCoord) {
+  return {{aCoord}, {0.}, StyleAllowedNumericType::All, false, false};
+}
+
 LengthPercentage LengthPercentage::FromAppUnits(nscoord aCoord) {
-  return {{CSSPixel::FromAppUnits(aCoord)},
-          {0.},
-          StyleAllowedNumericType::All,
-          false,
-          false};
+  return LengthPercentage::FromPixels(CSSPixel::FromAppUnits(aCoord));
 }
 
 LengthPercentage LengthPercentage::FromPercentage(float aPercentage) {

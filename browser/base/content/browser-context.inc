@@ -22,7 +22,7 @@
                   class="menuitem-iconic"
                   tooltip="dynamic-shortcut-tooltip"
                   aria-label="&reloadCmd.label;"
-                  oncommand="gContextMenu.reload(event);"
+                  command="Browser:ReloadOrDuplicate"
                   accesskey="&reloadCmd.accesskey;"
                   onclick="checkForMiddleClick(this, event);"/>
         <menuitem id="context-stop"

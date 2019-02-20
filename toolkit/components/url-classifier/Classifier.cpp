@@ -24,8 +24,8 @@
 #include "mozilla/Base64.h"
 #include "mozilla/Unused.h"
 #include "mozilla/UniquePtr.h"
-#include "nsIUrlClassifierUtils.h"
 #include "nsUrlClassifierDBService.h"
+#include "nsUrlClassifierUtils.h"
 
 // MOZ_LOG=UrlClassifierDbService:5
 extern mozilla::LazyLogModule gUrlClassifierDbServiceLog;
@@ -721,8 +721,10 @@ nsresult Classifier::ApplyUpdatesBackground(TableUpdateArray& aUpdates,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIUrlClassifierUtils> urlUtil =
-      components::UrlClassifierUtils::Service();
+  nsUrlClassifierUtils* urlUtil = nsUrlClassifierUtils::GetInstance();
+  if (NS_WARN_IF(!urlUtil)) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsCString provider;
   // Assume all TableUpdate objects should have the same provider.
@@ -1159,8 +1161,10 @@ bool Classifier::CheckValidUpdate(TableUpdateArray& aUpdates,
 }
 
 nsCString Classifier::GetProvider(const nsACString& aTableName) {
-  nsCOMPtr<nsIUrlClassifierUtils> urlUtil =
-      components::UrlClassifierUtils::Service();
+  nsUrlClassifierUtils* urlUtil = nsUrlClassifierUtils::GetInstance();
+  if (NS_WARN_IF(!urlUtil)) {
+    return EmptyCString();
+  }
 
   nsCString provider;
   nsresult rv = urlUtil->GetProvider(aTableName, provider);

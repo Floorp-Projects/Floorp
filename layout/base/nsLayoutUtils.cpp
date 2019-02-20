@@ -9718,26 +9718,6 @@ already_AddRefed<nsFontMetrics> nsLayoutUtils::GetMetricsFor(
   return style.get();
 }
 
-static float ResolveTransformOrigin(
-    const nsStyleCoord& aCoord, TransformReferenceBox& aRefBox,
-    TransformReferenceBox::DimensionGetter aGetter) {
-  float result = 0.0;
-  const float scale = mozilla::AppUnitsPerCSSPixel();
-  if (aCoord.GetUnit() == eStyleUnit_Calc) {
-    const nsStyleCoord::Calc* calc = aCoord.GetCalcValue();
-    result =
-        NSAppUnitsToFloatPixels((aRefBox.*aGetter)(), scale) * calc->mPercent +
-        NSAppUnitsToFloatPixels(calc->mLength, scale);
-  } else if (aCoord.GetUnit() == eStyleUnit_Percent) {
-    result = NSAppUnitsToFloatPixels((aRefBox.*aGetter)(), scale) *
-             aCoord.GetPercentValue();
-  } else {
-    MOZ_ASSERT(aCoord.GetUnit() == eStyleUnit_Coord, "unexpected unit");
-    result = NSAppUnitsToFloatPixels(aCoord.GetCoordValue(), scale);
-  }
-  return result;
-}
-
 /* static */ Maybe<MotionPathData> nsLayoutUtils::ResolveMotionPath(
     const nsIFrame* aFrame) {
   MOZ_ASSERT(aFrame);
@@ -9791,11 +9771,10 @@ static float ResolveTransformOrigin(
   // We need to resolve transform-origin here to calculate the correct path
   // translate. (i.e. Center transform-origin on the path.)
   TransformReferenceBox refBox(aFrame);
-  Point origin(ResolveTransformOrigin(display->mTransformOrigin[0], refBox,
-                                      &TransformReferenceBox::Width),
-               ResolveTransformOrigin(display->mTransformOrigin[1], refBox,
-                                      &TransformReferenceBox::Height));
+  auto& transformOrigin = display->mTransformOrigin;
+  CSSPoint origin = nsStyleTransformMatrix::Convert2DPosition(
+      transformOrigin.horizontal, transformOrigin.vertical, refBox);
   // Bug 1186329: the translate parameters will be adjusted more after we
   // implement offset-position and offset-anchor.
-  return Some(MotionPathData{point - origin, angle});
+  return Some(MotionPathData{point - origin.ToUnknownPoint(), angle});
 }

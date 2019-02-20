@@ -3081,9 +3081,9 @@ static int32_t ZIndexForFrame(nsIFrame* aFrame) {
     return 0;
 
   const nsStylePosition* position = aFrame->StylePosition();
-  if (position->mZIndex.GetUnit() == eStyleUnit_Integer)
-    return position->mZIndex.GetIntValue();
-
+  if (position->mZIndex.IsInteger())
+    return position->mZIndex.integer._0;
+  MOZ_ASSERT(position->mZIndex.IsAuto());
   // sort the auto and 0 elements together
   return 0;
 }
@@ -7376,49 +7376,21 @@ bool nsDisplayTransform::ShouldFlattenAway(nsDisplayListBuilder* aBuilder) {
     refBox.Init(aFrame);
   }
 
-  /* Allows us to access dimension getters by index. */
-  float transformOrigin[2];
-  TransformReferenceBox::DimensionGetter dimensionGetter[] = {
-      &TransformReferenceBox::Width, &TransformReferenceBox::Height};
-  TransformReferenceBox::DimensionGetter offsetGetter[] = {
-      &TransformReferenceBox::X, &TransformReferenceBox::Y};
+  const StyleTransformOrigin& transformOrigin = display->mTransformOrigin;
+  CSSPoint origin = nsStyleTransformMatrix::Convert2DPosition(
+      transformOrigin.horizontal, transformOrigin.vertical, refBox);
 
-  for (uint8_t index = 0; index < 2; ++index) {
-    /* If the transform-origin specifies a percentage, take the percentage
-     * of the size of the box.
-     */
-    const nsStyleCoord& originValue = display->mTransformOrigin[index];
-    if (originValue.GetUnit() == eStyleUnit_Calc) {
-      const nsStyleCoord::Calc* calc = originValue.GetCalcValue();
-      transformOrigin[index] =
-          NSAppUnitsToFloatPixels((refBox.*dimensionGetter[index])(),
-                                  aAppUnitsPerPixel) *
-              calc->mPercent +
-          NSAppUnitsToFloatPixels(calc->mLength, aAppUnitsPerPixel);
-    } else if (originValue.GetUnit() == eStyleUnit_Percent) {
-      transformOrigin[index] =
-          NSAppUnitsToFloatPixels((refBox.*dimensionGetter[index])(),
-                                  aAppUnitsPerPixel) *
-          originValue.GetPercentValue();
-    } else {
-      MOZ_ASSERT(originValue.GetUnit() == eStyleUnit_Coord, "unexpected unit");
-      transformOrigin[index] = NSAppUnitsToFloatPixels(
-          originValue.GetCoordValue(), aAppUnitsPerPixel);
-    }
-
-    if (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
-      // SVG frames (unlike other frames) have a reference box that can be (and
-      // typically is) offset from the TopLeft() of the frame. We need to
-      // account for that here.
-      transformOrigin[index] += NSAppUnitsToFloatPixels(
-          (refBox.*offsetGetter[index])(), aAppUnitsPerPixel);
-    }
+  if (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
+    // SVG frames (unlike other frames) have a reference box that can be (and
+    // typically is) offset from the TopLeft() of the frame. We need to account
+    // for that here.
+    origin.x += CSSPixel::FromAppUnits(refBox.X());
+    origin.y += CSSPixel::FromAppUnits(refBox.Y());
   }
 
-  return Point3D(
-      transformOrigin[0], transformOrigin[1],
-      NSAppUnitsToFloatPixels(display->mTransformOrigin[2].GetCoordValue(),
-                              aAppUnitsPerPixel));
+  float scale = mozilla::AppUnitsPerCSSPixel() / float(aAppUnitsPerPixel);
+  float z = transformOrigin.depth._0;
+  return Point3D(origin.x * scale, origin.y * scale, z * scale);
 }
 
 /* static */ bool nsDisplayTransform::ComputePerspectiveMatrix(
@@ -7446,12 +7418,15 @@ bool nsDisplayTransform::ShouldFlattenAway(nsDisplayListBuilder* aBuilder) {
   }
 
   /* Grab the values for perspective and perspective-origin (if present) */
-
   const nsStyleDisplay* cbDisplay = cbFrame->StyleDisplay();
-  if (cbDisplay->mChildPerspective.GetUnit() != eStyleUnit_Coord) {
+  if (cbDisplay->mChildPerspective.IsNone()) {
     return false;
   }
-  nscoord perspective = cbDisplay->mChildPerspective.GetCoordValue();
+
+  MOZ_ASSERT(cbDisplay->mChildPerspective.IsLength());
+  // TODO(emilio): Seems quite silly to go through app units just to convert to
+  // float pixels below.
+  nscoord perspective = cbDisplay->mChildPerspective.length._0.ToAppUnits();
   if (perspective < std::numeric_limits<Float>::epsilon()) {
     return true;
   }
@@ -7459,7 +7434,8 @@ bool nsDisplayTransform::ShouldFlattenAway(nsDisplayListBuilder* aBuilder) {
   TransformReferenceBox refBox(cbFrame);
 
   Point perspectiveOrigin = nsStyleTransformMatrix::Convert2DPosition(
-      cbDisplay->mPerspectiveOrigin, refBox, aAppUnitsPerPixel);
+      cbDisplay->mPerspectiveOrigin.horizontal,
+      cbDisplay->mPerspectiveOrigin.vertical, refBox, aAppUnitsPerPixel);
 
   /* GetOffsetTo computes the offset required to move from 0,0 in cbFrame to 0,0
    * in aFrame. Although we actually want the inverse of this, it's faster to

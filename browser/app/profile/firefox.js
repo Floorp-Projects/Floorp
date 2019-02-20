@@ -483,6 +483,9 @@ pref("browser.tabs.newanimations", false);
 pref("browser.tabs.remote.separatePrivilegedContentProcess", true);
 #endif
 
+// Turn on HTTP response process selection.
+pref("browser.tabs.remote.useHTTPResponseProcessSelection", true);
+
 pref("browser.ctrlTab.recentlyUsedOrder", true);
 
 // By default, do not export HTML at shutdown.
@@ -1759,7 +1762,7 @@ pref("app.normandy.first_run", true);
 pref("app.normandy.logging.level", 50); // Warn
 pref("app.normandy.run_interval_seconds", 21600); // 6 hours
 pref("app.normandy.shieldLearnMoreUrl", "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/shield");
-pref("app.normandy.remotesettings.enabled", false);
+pref("features.normandy-remote-settings.enabled", false);
 #ifdef MOZ_DATA_REPORTING
 pref("app.shield.optoutstudies.enabled", true);
 #else

@@ -85,8 +85,9 @@ namespace detail {
 
 // Do not call this directly! It is exposed for the friend declarations in
 // this file.
-bool CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
-                MutableHandle<GCVector<Scope*>> scopes);
+JSScript* CopyScript(JSContext* cx, HandleScript src,
+                     HandleScriptSourceObject sourceObject,
+                     MutableHandle<GCVector<Scope*>> scopes);
 
 }  // namespace detail
 
@@ -1426,6 +1427,10 @@ class alignas(JS::Value) PrivateScriptData final {
                                     js::HandleScope scriptEnclosingScope,
                                     js::HandleFunction fun);
 
+  // Clone src script data into dst script.
+  static bool Clone(JSContext* cx, js::HandleScript src, js::HandleScript dst,
+                    js::MutableHandle<JS::GCVector<js::Scope*>> scopes);
+
   void traceChildren(JSTracer* trc);
 };
 
@@ -1498,6 +1503,9 @@ class SharedScriptData {
   template <XDRMode mode>
   static MOZ_MUST_USE XDRResult XDR(js::XDRState<mode>* xdr,
                                     js::HandleScript script);
+
+  // Mark this SharedScriptData for use in a new zone
+  void markForCrossZone(JSContext* cx);
 
  private:
   SharedScriptData() = delete;
@@ -1836,8 +1844,13 @@ class JSScript : public js::gc::TenuredCell {
       js::HandleScriptSourceObject sourceObject,
       js::HandleScope scriptEnclosingScope, js::HandleFunction fun);
 
-  friend bool js::detail::CopyScript(
+  friend bool js::PrivateScriptData::Clone(
       JSContext* cx, js::HandleScript src, js::HandleScript dst,
+      js::MutableHandle<JS::GCVector<js::Scope*>> scopes);
+
+  friend JSScript* js::detail::CopyScript(
+      JSContext* cx, js::HandleScript src,
+      js::HandleScriptSourceObject sourceObject,
       js::MutableHandle<JS::GCVector<js::Scope*>> scopes);
 
  private:

@@ -69,10 +69,8 @@ var whitelist = [
   // See bug 1339424 for why this is hard to fix.
   {file: "chrome://global/locale/fallbackMenubar.properties",
    platforms: ["linux", "win"]},
-  {file: "chrome://global/locale/printPageSetup.dtd", platforms: ["linux", "macosx"]},
-  {file: "chrome://global/locale/printPreviewProgress.dtd",
+  {file: "resource://gre/localization/en-US/toolkit/printing/printDialogs.ftl",
    platforms: ["macosx"]},
-  {file: "chrome://global/locale/printProgress.dtd", platforms: ["macosx"]},
 
   // toolkit/content/aboutRights-unbranded.xhtml doesn't use aboutRights.css
   {file: "chrome://global/skin/aboutRights.css", skipUnofficial: true},

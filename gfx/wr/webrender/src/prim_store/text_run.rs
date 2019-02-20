@@ -68,6 +68,7 @@ impl AsInstanceKind<TextRunDataHandle> for TextRunKey {
             reference_frame_relative_offset,
             shadow: self.shadow,
             raster_space: RasterizationSpace::Screen,
+            inverse_raster_scale: 1.0,
         });
 
         PrimitiveInstanceKind::TextRun{ data_handle, run_index }
@@ -214,6 +215,7 @@ pub struct TextRunPrimitive {
     pub reference_frame_relative_offset: LayoutVector2D,
     pub shadow: bool,
     pub raster_space: RasterizationSpace,
+    pub inverse_raster_scale: f32,
 }
 
 impl TextRunPrimitive {
@@ -225,8 +227,20 @@ impl TextRunPrimitive {
         allow_subpixel_aa: bool,
         raster_space: RasterSpace,
     ) -> bool {
+        // If local raster space is specified, include that in the scale
+        // of the glyphs that get rasterized.
+        // TODO(gw): Once we support proper local space raster modes, this
+        //           will implicitly be part of the device pixel ratio for
+        //           the (cached) local space surface, and so this code
+        //           will no longer be required.
+        let raster_scale = match raster_space {
+            RasterSpace::Screen => 1.0,
+            RasterSpace::Local(scale) => scale.max(0.001),
+        };
+        self.inverse_raster_scale = 1.0 / raster_scale;
+
         // Get the current font size in device pixels
-        let device_font_size = specified_font.size.scale_by(device_pixel_scale.0);
+        let device_font_size = specified_font.size.scale_by(device_pixel_scale.0 * raster_scale);
 
         // Determine if rasterizing glyphs in local or screen space.
         // Only support transforms that can be coerced to simple 2D transforms.
@@ -337,5 +351,5 @@ fn test_struct_sizes() {
     assert_eq!(mem::size_of::<TextRun>(), 88, "TextRun size changed");
     assert_eq!(mem::size_of::<TextRunTemplate>(), 104, "TextRunTemplate size changed");
     assert_eq!(mem::size_of::<TextRunKey>(), 96, "TextRunKey size changed");
-    assert_eq!(mem::size_of::<TextRunPrimitive>(), 96, "TextRunPrimitive size changed");
+    assert_eq!(mem::size_of::<TextRunPrimitive>(), 104, "TextRunPrimitive size changed");
 }

@@ -1065,6 +1065,17 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetColumnRuleWidth() {
   return val.forget();
 }
 
+static Position MaybeResolvePositionForTransform(const LengthPercentage& aX,
+                                                 const LengthPercentage& aY,
+                                                 nsIFrame* aInnerFrame) {
+  if (!aInnerFrame) {
+    return {aX, aY};
+  }
+  nsStyleTransformMatrix::TransformReferenceBox refBox(aInnerFrame);
+  CSSPoint p = nsStyleTransformMatrix::Convert2DPosition(aX, aY, refBox);
+  return {LengthPercentage::FromPixels(p.x), LengthPercentage::FromPixels(p.y)};
+}
+
 /* Convert the stored representation into a list of two values and then hand
  * it back.
  */
@@ -1077,25 +1088,17 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTransformOrigin() {
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
 
   /* Now, get the values. */
-  const nsStyleDisplay* display = StyleDisplay();
+  const auto& origin = StyleDisplay()->mTransformOrigin;
 
   RefPtr<nsROCSSPrimitiveValue> width = new nsROCSSPrimitiveValue;
-  SetValueToCoord(width, display->mTransformOrigin[0], false,
-                  &nsComputedDOMStyle::GetFrameBoundsWidthForTransform);
-  valueList->AppendCSSValue(width.forget());
-
-  RefPtr<nsROCSSPrimitiveValue> height = new nsROCSSPrimitiveValue;
-  SetValueToCoord(height, display->mTransformOrigin[1], false,
-                  &nsComputedDOMStyle::GetFrameBoundsHeightForTransform);
-  valueList->AppendCSSValue(height.forget());
-
-  if (display->mTransformOrigin[2].GetUnit() != eStyleUnit_Coord ||
-      display->mTransformOrigin[2].GetCoordValue() != 0) {
+  auto position = MaybeResolvePositionForTransform(
+      origin.horizontal, origin.vertical, mInnerFrame);
+  SetValueToPosition(position, valueList);
+  if (origin.depth._0 != 0.0f) {
     RefPtr<nsROCSSPrimitiveValue> depth = new nsROCSSPrimitiveValue;
-    SetValueToCoord(depth, display->mTransformOrigin[2], false, nullptr);
+    depth->SetAppUnits(origin.depth.ToAppUnits());
     valueList->AppendCSSValue(depth.forget());
   }
-
   return valueList.forget();
 }
 
@@ -1111,25 +1114,12 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetPerspectiveOrigin() {
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
 
   /* Now, get the values. */
-  const nsStyleDisplay* display = StyleDisplay();
+  const auto& origin = StyleDisplay()->mPerspectiveOrigin;
 
-  RefPtr<nsROCSSPrimitiveValue> width = new nsROCSSPrimitiveValue;
-  SetValueToCoord(width, display->mPerspectiveOrigin[0], false,
-                  &nsComputedDOMStyle::GetFrameBoundsWidthForTransform);
-  valueList->AppendCSSValue(width.forget());
-
-  RefPtr<nsROCSSPrimitiveValue> height = new nsROCSSPrimitiveValue;
-  SetValueToCoord(height, display->mPerspectiveOrigin[1], false,
-                  &nsComputedDOMStyle::GetFrameBoundsHeightForTransform);
-  valueList->AppendCSSValue(height.forget());
-
+  auto position = MaybeResolvePositionForTransform(
+      origin.horizontal, origin.vertical, mInnerFrame);
+  SetValueToPosition(position, valueList);
   return valueList.forget();
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetPerspective() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueToCoord(val, StyleDisplay()->mChildPerspective, false);
-  return val.forget();
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTransform() {
@@ -1998,12 +1988,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetCSSShadowArray(
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetBoxShadow() {
   return GetCSSShadowArray(StyleEffects()->mBoxShadow, true);
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetZIndex() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueToCoord(val, StylePosition()->mZIndex, false);
-  return val.forget();
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetInitialLetter() {
@@ -3085,30 +3069,6 @@ bool nsComputedDOMStyle::GetFrameBorderRectHeight(nscoord& aHeight) {
   return true;
 }
 
-bool nsComputedDOMStyle::GetFrameBoundsWidthForTransform(nscoord& aWidth) {
-  // We need a frame to work with.
-  if (!mInnerFrame) {
-    return false;
-  }
-
-  AssertFlushedPendingReflows();
-
-  aWidth = nsStyleTransformMatrix::TransformReferenceBox(mInnerFrame).Width();
-  return true;
-}
-
-bool nsComputedDOMStyle::GetFrameBoundsHeightForTransform(nscoord& aHeight) {
-  // We need a frame to work with.
-  if (!mInnerFrame) {
-    return false;
-  }
-
-  AssertFlushedPendingReflows();
-
-  aHeight = nsStyleTransformMatrix::TransformReferenceBox(mInnerFrame).Height();
-  return true;
-}
-
 already_AddRefed<CSSValue> nsComputedDOMStyle::GetFallbackValue(
     const nsStyleSVGPaint* aPaint) {
   RefPtr<nsROCSSPrimitiveValue> fallback = new nsROCSSPrimitiveValue;
@@ -3508,7 +3468,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMask() {
       firstLayer.mClip != StyleGeometryBox::BorderBox ||
       firstLayer.mOrigin != StyleGeometryBox::BorderBox ||
       firstLayer.mComposite != NS_STYLE_MASK_COMPOSITE_ADD ||
-      firstLayer.mMaskMode != NS_STYLE_MASK_MODE_MATCH_SOURCE ||
+      firstLayer.mMaskMode != StyleMaskMode::MatchSource ||
       !nsStyleImageLayers::IsInitialPositionForLayerType(
           firstLayer.mPosition, nsStyleImageLayers::LayerType::Mask) ||
       !firstLayer.mRepeat.IsInitialValue() ||
