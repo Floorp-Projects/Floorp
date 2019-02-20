@@ -1,17 +1,16 @@
-#![cfg_attr(test, deny(warnings))]
-#![deny(missing_docs)]
+// Copyright 2017 Amanieu d'Antras
+//
+// Licensed under the Apache License, Version 2.0, <LICENSE-APACHE or
+// http://apache.org/licenses/LICENSE-2.0> or the MIT license <LICENSE-MIT or
+// http://opensource.org/licenses/MIT>, at your option. This file may not be
+// copied, modified, or distributed except according to those terms.
 
 //! # unreachable
+//! inlined from https://github.com/reem/rust-unreachable/
 //!
 //! An unreachable code optimization hint in stable rust, and some useful
 //! extension traits for `Option` and `Result`.
 //!
-
-#![no_std]
-
-extern crate void;
-
-use core::mem;
 
 /// Hint to the optimizer that any code path which calls this function is
 /// statically unreachable and can be removed.
@@ -21,8 +20,10 @@ use core::mem;
 /// suitable.
 #[inline]
 pub unsafe fn unreachable() -> ! {
-    let x: &void::Void = mem::transmute(1usize);
-    void::unreachable(*x)
+    /// The empty type for cases which can't occur.
+    enum Void { }
+    let x: &Void = ::std::mem::transmute(1usize);
+    match *x {}
 }
 
 /// An extension trait for `Option<T>` providing unchecked unwrapping methods.
@@ -52,10 +53,7 @@ impl<T> UncheckedOptionExt<T> for Option<T> {
     }
 
     unsafe fn unchecked_unwrap_none(self) {
-        match self {
-            Some(_) => unreachable(),
-            None => ()
-        }
+        if self.is_some() { unreachable() }
     }
 }
 
@@ -74,4 +72,3 @@ impl<T, E> UncheckedResultExt<T, E> for Result<T, E> {
         }
     }
 }
-
