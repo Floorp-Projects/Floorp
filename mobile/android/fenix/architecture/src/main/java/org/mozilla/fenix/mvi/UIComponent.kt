@@ -17,19 +17,22 @@ abstract class UIComponent<S : ViewState, A : Action, C : Change>(
 
     abstract var initialState: S
     abstract val reducer: Reducer<S, C>
-    val uiView: UIView<S, A, C> by lazy { initView() }
+
+    open val uiView: UIView<S, A, C> by lazy { initView() }
 
     abstract fun initView(): UIView<S, A, C>
     open fun getContainerId() = uiView.containerId
-
     /**
      * Render the ViewState to the View through the Reducer
      */
     fun render(reducer: Reducer<S, C>): Disposable =
+            internalRender(reducer)
+            .subscribe(uiView.updateView())
+
+    fun internalRender(reducer: Reducer<S, C>): Observable<S> =
         changesObservable
             .scan(initialState, reducer)
             .distinctUntilChanged()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(uiView.updateView())
 }

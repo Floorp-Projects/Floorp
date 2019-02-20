@@ -66,6 +66,16 @@ android {
 }
 
 android.applicationVariants.all { variant ->
+    boolean hasTest = gradle.startParameter.taskNames.find {it.contains("test") || it.contains("Test")} != null
+    if (hasTest) {
+        apply plugin: 'kotlin-allopen'
+        allOpen {
+            annotation("org.mozilla.fenix.test.Mockable")
+        }
+    }
+}
+
+android.applicationVariants.all { variant ->
     def buildType = variant.buildType.name
 
     if (buildType == "release" || buildType == "nightly") {
@@ -152,10 +162,6 @@ dependencies {
     debugImplementation Deps.leakcanary
     releaseImplementation Deps.leakcanary_noop
 
-    testImplementation Deps.junit
-    androidTestImplementation Deps.tools_test_runner
-    androidTestImplementation Deps.tools_espresso_core
-
     armImplementation Deps.geckoview_nightly_arm
     x86Implementation Deps.geckoview_nightly_x86
     aarch64Implementation Deps.geckoview_nightly_aarch64
@@ -167,6 +173,17 @@ dependencies {
     implementation Deps.android_arch_navigation_ui
 
     implementation Deps.autodispose
+
+    androidTestImplementation Deps.tools_test_runner
+    androidTestImplementation Deps.tools_espresso_core
+
+    testImplementation Deps.junit_jupiter_api
+    testImplementation Deps.junit_jupiter_params
+    testImplementation Deps.junit_jupiter_engine
+
+    testImplementation Deps.mockito_core
+    androidTestImplementation Deps.mockito_android
+    testImplementation Deps.mockk
 }
 
 

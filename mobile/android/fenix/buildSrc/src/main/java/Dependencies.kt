@@ -5,6 +5,7 @@
 private object Versions {
     const val kotlin = "1.3.11"
     const val android_gradle_plugin = "3.2.1"
+
     const val geckoNightly = "67.0.20190213102848"
     const val rxAndroid = "2.1.0"
     const val rxKotlin = "2.3.0"
@@ -23,13 +24,16 @@ private object Versions {
 
     const val mozilla_android_components = "0.43.0-SNAPSHOT"
 
-    const val junit = "4.12"
     const val test_tools = "1.0.2"
     const val espresso_core = "2.2.2"
 
     const val android_arch_navigation = "1.0.0-beta02"
 
     const val autodispose = "1.1.0"
+
+    const val junit_jupiter = "5.3.2"
+    const val mockito = "2.23.0"
+    const val mockk = "1.9.kotlin12"
 }
 
 @Suppress("unused")
@@ -37,6 +41,8 @@ object Deps {
     const val tools_androidgradle = "com.android.tools.build:gradle:${Versions.android_gradle_plugin}"
     const val tools_kotlingradle = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
     const val kotlin_stdlib = "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${Versions.kotlin}"
+
+    const val allopen =  "org.jetbrains.kotlin:kotlin-allopen:${Versions.kotlin}"
 
     const val rxKotlin = "io.reactivex.rxjava2:rxkotlin:${Versions.rxKotlin}"
     const val rxAndroid = "io.reactivex.rxjava2:rxandroid:${Versions.rxAndroid}"
@@ -96,7 +102,6 @@ object Deps {
     const val leakcanary = "com.squareup.leakcanary:leakcanary-android:${Versions.leakcanary}"
     const val leakcanary_noop = "com.squareup.leakcanary:leakcanary-android-no-op:${Versions.leakcanary}"
 
-    const val junit = "junit:junit:${Versions.junit}"
     const val tools_test_runner = "com.android.support.test:runner:${Versions.test_tools}"
     const val tools_espresso_core = "com.android.support.test.espresso:espresso-core:${Versions.espresso_core}"
 
@@ -115,5 +120,13 @@ object Deps {
     const val autodispose_android = "com.uber.autodispose:autodispose-android:${Versions.autodispose}"
     const val autodispose_android_aac = "com.uber.autodispose:autodispose-android-archcomponents:${Versions.autodispose}"
     const val autodispose_android_aac_test = "com.uber.autodispose:autodispose-android-archcomponents-test:${Versions.autodispose}"
+
+    const val junit_jupiter_api = "org.junit.jupiter:junit-jupiter-api:${Versions.junit_jupiter}"
+    const val junit_jupiter_params = "org.junit.jupiter:junit-jupiter-params:${Versions.junit_jupiter}"
+    const val junit_jupiter_engine = "org.junit.jupiter:junit-jupiter-engine:${Versions.junit_jupiter}"
+
+    const val mockito_core = "org.mockito:mockito-core:${Versions.mockito}"
+    const val mockito_android = "org.mockito:mockito-android:${Versions.mockito}"
+    const val mockk = "io.mockk:mockk:${Versions.mockk}"
 }
 

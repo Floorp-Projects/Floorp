@@ -4,6 +4,7 @@
 package org.mozilla.fenix.library.history
 
 import android.view.ViewGroup
+import org.mozilla.fenix.test.Mockable
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.Change
@@ -25,6 +26,7 @@ data class HistoryItem(val id: Int, val url: String) {
     }
 }
 
+@Mockable
 class HistoryComponent(
     private val container: ViewGroup,
     bus: ActionBusFactory,
