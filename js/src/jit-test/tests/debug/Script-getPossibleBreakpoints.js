@@ -259,13 +259,28 @@ assertBreakpoints(`
   }
 `);
 assertBreakpoints(`
-  var fn /*S*/= () => {
+  var fn = /*S*/() => {
     /*S*/console./*B*/log("fn");
     /*S*/return /*B*/new Proxy({ prop: 42 }, {
       deleteProperty() {
         /*S*/console./*B*/log("delete");
       /*B*/}
     });
+  /*B*/};
+`);
+assertBreakpoints(`
+  var fn = /*S*/async (arg) => {
+    /*S*/console./*B*/log("fn");
+  /*B*/};
+`);
+assertBreakpoints(`
+  var fn = /*S*/arg => {
+    /*S*/console./*B*/log("fn");
+  /*B*/};
+`);
+assertBreakpoints(`
+  var fn = /*S*/async arg => {
+    /*S*/console./*B*/log("fn");
   /*B*/};
 `);
 assertBreakpoints(`
