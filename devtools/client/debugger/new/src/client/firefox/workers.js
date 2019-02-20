@@ -37,15 +37,13 @@ export async function updateWorkerClients({
       addThreadEventListeners(workerThread);
       workerThread.resume();
 
-      const [, consoleClient] = await debuggerClient.attachConsole(
-        workerTargetFront.targetForm.consoleActor,
-        []
-      );
+      const consoleFront = await tabTarget.getFront("console");
+      await consoleFront.startListeners([]);
 
       newWorkerClients[workerThread.actor] = {
         url: workerTargetFront.url,
         thread: workerThread,
-        console: consoleClient
+        console: consoleFront
       };
     }
   }

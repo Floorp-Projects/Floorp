@@ -22,14 +22,15 @@ const { webconsoleSpec } = require("devtools/shared/specs/webconsole");
  *        the WebConsoleActor.
  */
 class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
-  constructor(client, form) {
+  constructor(client) {
     super(client);
-    this.actorID = form.from;
     this._client = client;
-    this.traits = form.traits || {};
+    this.traits = {};
     this._longStrings = {};
     this.events = [];
 
+    // Attribute name from which to retrieve the actorID out of the target actor's form
+    this.formAttributeName = "consoleActor";
     /**
      * Holds the network requests currently displayed by the Web Console. Each key
      * represents the connection ID and the value is network request information.
@@ -46,7 +47,6 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
     this.on("evaluationResult", this.onEvaluationResult);
     this.on("serverNetworkEvent", this.onNetworkEvent);
     this._client.addListener("networkEventUpdate", this.onNetworkEventUpdate);
-    this.manage(this);
   }
 
   getNetworkRequest(actorId) {
