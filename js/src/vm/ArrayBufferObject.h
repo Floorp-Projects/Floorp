@@ -470,17 +470,16 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     setFlags(flags() | FOR_ASMJS);
   }
 
-  void initialize(size_t byteLength, BufferContents contents,
-                  OwnsState ownsState) {
+  void initialize(size_t byteLength, BufferContents contents) {
     setByteLength(byteLength);
     setFlags(0);
     setFirstView(nullptr);
-    setDataPointer(contents, ownsState);
+    setDataPointer(contents, OwnsData);
   }
 
   void* initializeToInlineData(size_t byteLength) {
     void* data = inlineDataPointer();
-    initialize(byteLength, BufferContents::createInlineData(data), OwnsData);
+    initialize(byteLength, BufferContents::createInlineData(data));
     return data;
   }
 };
