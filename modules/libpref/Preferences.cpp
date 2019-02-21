@@ -17,13 +17,13 @@
 #include "mozilla/ArenaAllocator.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Components.h"
 #include "mozilla/dom/PContent.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/HashTable.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/ModuleUtils.h"
 #include "mozilla/Omnijar.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ResultExtensions.h"
@@ -5409,16 +5409,35 @@ static void InitVarCachePref(const nsACString& aName, float* aCache,
 // Module and factory stuff
 //===========================================================================
 
-NS_IMPL_COMPONENT_FACTORY(nsPrefLocalizedString) {
-  auto str = MakeRefPtr<nsPrefLocalizedString>();
-  if (NS_SUCCEEDED(str->Init())) {
-    return str.forget().downcast<nsISupports>();
-  }
-  return nullptr;
-}
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(Preferences,
+                                         Preferences::GetInstanceForService)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrefLocalizedString, Init)
 
-namespace mozilla {
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREFSERVICE_CID);
+static NS_DEFINE_CID(kPrefLocalizedStringCID, NS_PREFLOCALIZEDSTRING_CID);
 
-void UnloadPrefsModule() { Preferences::Shutdown(); }
+static mozilla::Module::CIDEntry kPrefCIDs[] = {
+    {&kPrefServiceCID, true, nullptr, PreferencesConstructor,
+     Module::ALLOW_IN_SOCKET_PROCESS},
+    {&kPrefLocalizedStringCID, false, nullptr,
+     nsPrefLocalizedStringConstructor},
+    {nullptr}};
 
-}
+static mozilla::Module::ContractIDEntry kPrefContracts[] = {
+    {NS_PREFSERVICE_CONTRACTID, &kPrefServiceCID,
+     Module::ALLOW_IN_SOCKET_PROCESS},
+    {NS_PREFLOCALIZEDSTRING_CONTRACTID, &kPrefLocalizedStringCID},
+    {nullptr}};
+
+static void UnloadPrefsModule() { Preferences::Shutdown(); }
+
+static const mozilla::Module kPrefModule = {mozilla::Module::kVersion,
+                                            kPrefCIDs,
+                                            kPrefContracts,
+                                            nullptr,
+                                            nullptr,
+                                            nullptr,
+                                            UnloadPrefsModule,
+                                            Module::ALLOW_IN_SOCKET_PROCESS};
+
+NSMODULE_DEFN(nsPrefModule) = &kPrefModule;

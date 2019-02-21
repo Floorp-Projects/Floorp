@@ -8,6 +8,7 @@
 #include "nsThreadUtils.h"
 #include "jsfriendapi.h"
 #include "mozilla/HoldDropJSObjects.h"
+#include "mozilla/ModuleUtils.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsServiceManagerUtils.h"
 #include "nsMemory.h"
@@ -25,6 +26,8 @@
 
 namespace mozilla {
 namespace jsinspector {
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsJSInspector)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsJSInspector)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
@@ -118,3 +121,18 @@ nsJSInspector::GetLastNestRequestor(JS::MutableHandle<JS::Value> out) {
 
 }  // namespace jsinspector
 }  // namespace mozilla
+
+NS_DEFINE_NAMED_CID(JSINSPECTOR_CID);
+
+static const mozilla::Module::CIDEntry kJSInspectorCIDs[] = {
+    {&kJSINSPECTOR_CID, false, nullptr,
+     mozilla::jsinspector::nsJSInspectorConstructor},
+    {nullptr}};
+
+static const mozilla::Module::ContractIDEntry kJSInspectorContracts[] = {
+    {JSINSPECTOR_CONTRACTID, &kJSINSPECTOR_CID}, {nullptr}};
+
+static const mozilla::Module kJSInspectorModule = {
+    mozilla::Module::kVersion, kJSInspectorCIDs, kJSInspectorContracts};
+
+NSMODULE_DEFN(jsinspector) = &kJSInspectorModule;

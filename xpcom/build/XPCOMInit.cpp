@@ -175,26 +175,6 @@ const mozilla::Module kXPCOMModule = {
     nullptr,
     Module::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS};
 
-// FIXME: Dummy modules to avoid Windows PGO bustage when we have too few
-// modules registered.
-static const mozilla::Module kDummy1 = {mozilla::Module::kVersion};
-static const mozilla::Module kDummy2 = {mozilla::Module::kVersion};
-static const mozilla::Module kDummy3 = {mozilla::Module::kVersion};
-static const mozilla::Module kDummy4 = {mozilla::Module::kVersion};
-static const mozilla::Module kDummy5 = {mozilla::Module::kVersion};
-static const mozilla::Module kDummy6 = {mozilla::Module::kVersion};
-static const mozilla::Module kDummy7 = {mozilla::Module::kVersion};
-static const mozilla::Module kDummy8 = {mozilla::Module::kVersion};
-
-NSMODULE_DEFN(Dummy1) = &kDummy1;
-NSMODULE_DEFN(Dummy2) = &kDummy2;
-NSMODULE_DEFN(Dummy3) = &kDummy3;
-NSMODULE_DEFN(Dummy4) = &kDummy4;
-NSMODULE_DEFN(Dummy5) = &kDummy5;
-NSMODULE_DEFN(Dummy6) = &kDummy6;
-NSMODULE_DEFN(Dummy7) = &kDummy7;
-NSMODULE_DEFN(Dummy8) = &kDummy8;
-
 // gDebug will be freed during shutdown.
 static nsIDebug2* gDebug = nullptr;
 
