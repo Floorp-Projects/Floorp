@@ -138,34 +138,30 @@ var security = {
     this.siteData = await SiteDataManager.getSites(
       SiteDataManager.getBaseDomainFromHost(this.uri.host));
 
-    let pageInfoBundle = document.getElementById("pageinfobundle");
     let clearSiteDataButton = document.getElementById("security-clear-sitedata");
     let siteDataLabel = document.getElementById("security-privacy-sitedata-value");
 
     if (!this.siteData.length) {
-      let noStr = pageInfoBundle.getString("securitySiteDataNo");
-      siteDataLabel.textContent = noStr;
+      document.l10n.setAttributes(siteDataLabel, "security-site-data-no");
       clearSiteDataButton.setAttribute("disabled", "true");
       return;
     }
 
-    let usageText;
     let usage = this.siteData.reduce((acc, site) => acc + site.usage, 0);
     if (usage > 0) {
       let size = DownloadUtils.convertByteUnits(usage);
       let hasCookies = this.siteData.some(site => site.cookies.length > 0);
       if (hasCookies) {
-        usageText = pageInfoBundle.getFormattedString("securitySiteDataCookies", size);
+        document.l10n.setAttributes(siteDataLabel, "security-site-data-cookies", {"value": size[0], "unit": size[1]});
       } else {
-        usageText = pageInfoBundle.getFormattedString("securitySiteDataOnly", size);
+         document.l10n.setAttributes(siteDataLabel, "security-site-data-only", {"value": size[0], "unit": size[1]});
       }
     } else {
       // We're storing cookies, else the list would have been empty.
-      usageText = pageInfoBundle.getString("securitySiteDataCookiesOnly");
+       document.l10n.setAttributes(siteDataLabel, "security-site-data-cookies-only");
     }
 
     clearSiteDataButton.removeAttribute("disabled");
-    siteDataLabel.textContent = usageText;
   },
 
   /**
@@ -200,12 +196,10 @@ function securityOnLoad(uri, windowInfo) {
   }
   document.getElementById("securityTab").hidden = false;
 
-  const pageInfoBundle = document.getElementById("pageinfobundle");
-
   /* Set Identity section text */
   setText("security-identity-domain-value", info.hostName);
 
-  var owner, verifier, validity;
+  var validity;
   if (info.cert && !info.isBroken) {
     validity = info.cert.validity.notAfterLocalDay;
 
@@ -213,25 +207,26 @@ function securityOnLoad(uri, windowInfo) {
     // so we'll employ fallbacks where appropriate.  The EV spec states that Org
     // fields must be specified for subject and issuer so that case is simpler.
     if (info.isEV) {
-      owner = info.cert.organization;
-      verifier = info.cAName;
+      setText("security-identity-owner-value", info.cert.organization);
+      setText("security-identity-verifier-value", info.cAName);
     } else {
       // Technically, a non-EV cert might specify an owner in the O field or not,
       // depending on the CA's issuing policies.  However we don't have any programmatic
       // way to tell those apart, and no policy way to establish which organization
       // vetting standards are good enough (that's what EV is for) so we default to
       // treating these certs as domain-validated only.
-      owner = pageInfoBundle.getString("securityNoOwner");
-      verifier = info.cAName || info.cert.issuerCommonName || info.cert.issuerName;
+      document.l10n.setAttributes(document.getElementById("security-identity-owner-value"),
+        "security-no-owner");
+      setText("security-identity-verifier-value", info.cAName || info.cert.issuerCommonName || info.cert.issuerName);
     }
   } else {
     // We don't have valid identity credentials.
-    owner = pageInfoBundle.getString("securityNoOwner");
-    verifier = pageInfoBundle.getString("notset");
+    document.l10n.setAttributes(document.getElementById("security-identity-owner-value"),
+                                "security-no-owner");
+    document.l10n.setAttributes(document.getElementById("security-identity-verifier-value"),
+                                "not-set-verified-by");
   }
 
-  setText("security-identity-owner-value", owner);
-  setText("security-identity-verifier-value", verifier);
   if (validity) {
     setText("security-identity-validity-value", validity);
   } else {
@@ -247,8 +242,6 @@ function securityOnLoad(uri, windowInfo) {
     viewCert.collapsed = true;
 
   /* Set Privacy & History section text */
-  var yesStr = pageInfoBundle.getString("yes");
-  var noStr = pageInfoBundle.getString("no");
 
   // Only show quota usage data for websites, not internal sites.
   if (uri.scheme == "http" || uri.scheme == "https") {
@@ -257,16 +250,16 @@ function securityOnLoad(uri, windowInfo) {
     document.getElementById("security-privacy-sitedata-row").hidden = true;
   }
 
-  setText("security-privacy-passwords-value",
-          realmHasPasswords(uri) ? yesStr : noStr);
+  if (realmHasPasswords(uri)) {
+    document.l10n.setAttributes(document.getElementById("security-privacy-passwords-value"),
+                                "saved-passwords-yes");
+  } else {
+    document.l10n.setAttributes(document.getElementById("security-privacy-passwords-value"),
+                                "saved-passwords-no");
+  }
 
-  var visitCount = previousVisitCount(info.hostName);
-
-  let visitCountStr = visitCount > 0
-    ? PluralForm.get(visitCount, pageInfoBundle.getString("securityVisitsNumber"))
-        .replace("#1", visitCount.toLocaleString())
-    : pageInfoBundle.getString("securityNoVisits");
-  setText("security-privacy-history-value", visitCountStr);
+  document.l10n.setAttributes(document.getElementById("security-privacy-history-value"),
+                              "security-visits-number", {"visits": previousVisitCount(info.hostName)});
 
   /* Set the Technical Detail section messages */
   const pkiBundle = document.getElementById("pkiBundle");
