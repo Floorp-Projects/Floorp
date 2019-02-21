@@ -5,6 +5,9 @@ AntiTracking.runTest("localStorage and Storage Access API",
 
     let shouldThrow = SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior") == SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT;
 
+    is(window.localStorage == null, shouldThrow,
+       shouldThrow ? "LocalStorage is null"
+                   : "LocalStorage is not null");
     let hasThrown;
     try {
       localStorage.foo = 42;
@@ -12,7 +15,7 @@ AntiTracking.runTest("localStorage and Storage Access API",
       is(localStorage.foo, "42", "The value matches");
       hasThrown = false;
     } catch (e) {
-      is(e.name, "SecurityError", "We want a security error message.");
+      is(e.name, "TypeError", "We want a type error message.");
       hasThrown = true;
     }
 
