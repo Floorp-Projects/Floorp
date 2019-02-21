@@ -10,8 +10,7 @@ const PREF_INT     = 64;
 const PREF_STRING  = 32;
 
 function run_test() {
-  var ps = Cc["@mozilla.org/preferences-service;1"].
-            getService(Ci.nsIPrefService);
+  const ps = Services.prefs;
 
   let defaultBranch = ps.getDefaultBranch("");
   let userBranch = ps.getBranch("");

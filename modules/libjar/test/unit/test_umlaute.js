@@ -1,7 +1,7 @@
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function run_test() {
-  var dirService = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-  var tmpDir = dirService.get("TmpD", Ci.nsIFile);
+  var tmpDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
 
   var zipfile = do_get_file("data/test_umlaute.zip");
 

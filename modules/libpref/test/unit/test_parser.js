@@ -2,12 +2,7 @@
  * http://creativecommons.org/licenses/publicdomain/  */
 
 function run_test() {
-  const PREF_NAME = "testPref";
-
-  var ps = Cc["@mozilla.org/preferences-service;1"]
-           .getService(Ci.nsIPrefService);
-  var defaultPrefs = ps.getDefaultBranch(null);
-  var prefs = ps.getBranch(null);
+  const ps = Services.prefs;
 
   ps.resetPrefs();
   ps.readDefaultPrefsFromFile(do_get_file("data/testParser.js"));
@@ -35,7 +30,7 @@ function run_test() {
   Assert.equal(ps.getIntPref("int.+  345"), 345);
   Assert.equal(ps.getIntPref("int.-0"), -0);
   Assert.equal(ps.getIntPref("int.-1"), -1);
-  Assert.equal(ps.getIntPref("int.- /* hmm */	456"), -456);
+  Assert.equal(ps.getIntPref("int.- /* hmm */\t456"), -456);
   Assert.equal(ps.getIntPref("int.-\n567"), -567);
   Assert.equal(ps.getIntPref("int.INT_MAX-1"), 2147483646);
   Assert.equal(ps.getIntPref("int.INT_MAX"), 2147483647);
@@ -49,7 +44,7 @@ function run_test() {
   Assert.equal(ps.getCharPref("string.single-quotes"), '"abc"');
   Assert.equal(ps.getCharPref("string.double-quotes"), "'abc'");
   Assert.equal(ps.getCharPref("string.weird-chars"),
-               "\x0d \x09 \x0b \x0c \x06 \x16");
+              "\x0d \x09 \x0b \x0c \x06 \x16");
   Assert.equal(ps.getCharPref("string.escapes"), "\" \' \\ \n \r");
 
   // This one is ASCII, so we can use getCharPref() and getStringPref

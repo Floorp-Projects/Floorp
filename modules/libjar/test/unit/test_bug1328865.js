@@ -4,15 +4,14 @@
 
 "use strict";
 
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 // Check that reading non existant inner jars results in the right error
 
 add_task(async function() {
   var file = do_get_file("data/test_bug597702.zip");
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-            getService(Ci.nsIIOService);
-  var outerJarBase = "jar:" + ios.newFileURI(file).spec + "!/";
+  var outerJarBase = "jar:" + Services.io.newFileURI(file).spec + "!/";
   var goodSpec = "jar:" + outerJarBase + "inner.jar!/hello#!/ignore%20this%20part";
   var goodChannel = NetUtil.newChannel({uri: goodSpec, loadUsingSystemPrincipal: true});
   var instr = goodChannel.open();
@@ -22,9 +21,7 @@ add_task(async function() {
 
 add_task(async function() {
   var file = do_get_file("data/test_bug597702.zip");
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-            getService(Ci.nsIIOService);
-  var outerJarBase = "jar:" + ios.newFileURI(file).spec + "!/";
+  var outerJarBase = "jar:" + Services.io.newFileURI(file).spec + "!/";
   var goodSpec = "jar:" + outerJarBase + "inner.jar!/hello?ignore%20this%20part!/";
   var goodChannel = NetUtil.newChannel({uri: goodSpec, loadUsingSystemPrincipal: true});
   var instr = goodChannel.open();
@@ -34,9 +31,7 @@ add_task(async function() {
 
 add_task(async function() {
   var file = do_get_file("data/test_bug597702.zip");
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-            getService(Ci.nsIIOService);
-  var outerJarBase = "jar:" + ios.newFileURI(file).spec + "!/";
+  var outerJarBase = "jar:" + Services.io.newFileURI(file).spec + "!/";
   var goodSpec = "jar:" + outerJarBase + "inner.jar!/hello?ignore#this!/part";
   var goodChannel = NetUtil.newChannel({uri: goodSpec, loadUsingSystemPrincipal: true});
   var instr = goodChannel.open();

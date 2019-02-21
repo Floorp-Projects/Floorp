@@ -6,22 +6,20 @@
 function run_test() {
   const PREF_NAME = "testPref";
 
-  var prefs = Cc["@mozilla.org/preferences-service;1"]
-              .getService(Ci.nsIPrefBranch);
   var observer = {
     QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
     observe: function observe(aSubject, aTopic, aState) {
-      prefs.removeObserver(PREF_NAME, observer);
+      Services.prefs.removeObserver(PREF_NAME, observer);
     },
   };
-  prefs.addObserver(PREF_NAME, observer);
+  Services.prefs.addObserver(PREF_NAME, observer);
 
-  prefs.setCharPref(PREF_NAME, "test0");
+  Services.prefs.setCharPref(PREF_NAME, "test0");
   // This second call isn't needed on a clean profile: it makes sure
   // the observer gets called even if the pref already had the value
   // "test0" before this test.
-  prefs.setCharPref(PREF_NAME, "test1");
+  Services.prefs.setCharPref(PREF_NAME, "test1");
 
   Assert.ok(true);
 }
