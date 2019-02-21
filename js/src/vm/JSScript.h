@@ -1725,11 +1725,15 @@ class JSScript : public js::gc::TenuredCell {
     // Script came from eval().
     IsForEval = 1 << 22,
 
+    // Whether the record/replay execution progress counter (see RecordReplay.h)
+    // should be updated as this script runs.
+    TrackRecordReplayProgress = 1 << 23,
+
     // Whether this is a top-level module script.
-    IsModule = 1 << 23,
+    IsModule = 1 << 24,
 
     // Whether this function needs a call object or named lambda environment.
-    NeedsFunctionEnvironmentObjects = 1 << 24,
+    NeedsFunctionEnvironmentObjects = 1 << 25,
   };
 
  private:
@@ -1750,11 +1754,7 @@ class JSScript : public js::gc::TenuredCell {
     // Script has been reused for a clone.
     HasBeenCloned = 1 << 2,
 
-    // Whether the record/replay execution progress counter (see RecordReplay.h)
-    // should be updated as this script runs.
-    TrackRecordReplayProgress = 1 << 3,
-
-    // (1 << 4) is unused.
+    // (1 << 3) and (1 << 4) are unused.
 
     // Script has an entry in Realm::scriptCountsMap.
     HasScriptCounts = 1 << 5,
@@ -2800,7 +2800,7 @@ class JSScript : public js::gc::TenuredCell {
   };
 
   bool trackRecordReplayProgress() const {
-    return hasFlag(MutableFlags::TrackRecordReplayProgress);
+    return hasFlag(ImmutableFlags::TrackRecordReplayProgress);
   }
 };
 
