@@ -147,14 +147,12 @@ class ArtifactJob(object):
     _test_zip_archive_suffix = '.common.tests.zip'
     _test_tar_archive_suffix = '.common.tests.tar.gz'
 
-    def __init__(self, package_re, tests_re, log=None,
+    def __init__(self, package_re, log=None,
                  download_symbols=False,
                  download_host_bins=False,
                  substs=None):
         self._package_re = re.compile(package_re)
-        self._tests_re = None
-        if tests_re:
-            self._tests_re = re.compile(tests_re)
+        self._tests_re = re.compile(r'public/build/target\.common\.tests\.(zip|tar\.gz)')
         self._host_bins_re = None
         if download_host_bins:
             self._host_bins_re = re.compile(r'public/build/host/bin/(mar|mbsdiff)(.exe)?')
@@ -536,52 +534,29 @@ class WinArtifactJob(ArtifactJob):
 # https://tools.taskcluster.net/index/artifacts/#gecko.v2.mozilla-central.latest/gecko.v2.mozilla-central.latest
 # The values correpsond to a pair of (<package regex>, <test archive regex>).
 JOB_DETAILS = {
-    'android-api-16-opt': (AndroidArtifactJob, (r'public/build/target\.apk',
-                                                r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'android-api-16-debug': (AndroidArtifactJob, (r'public/build/target\.apk',
-                                                  r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'android-x86-opt': (AndroidArtifactJob, (r'public/build/target\.apk',
-                                             r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'android-x86_64-opt': (AndroidArtifactJob, (r'public/build/target\.apk',
-                                                r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'android-x86_64-debug': (AndroidArtifactJob, (r'public/build/target\.apk',
-                                                  r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'android-aarch64-opt': (AndroidArtifactJob, (r'public/build/target\.apk',
-                                                 r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'android-aarch64-debug': (AndroidArtifactJob, (r'public/build/target\.apk',
-                                                   r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'linux-opt': (LinuxArtifactJob, (r'public/build/target\.tar\.bz2',
-                                     r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'linux-pgo': (LinuxArtifactJob, (r'public/build/target\.tar\.bz2',
-                                     r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'linux-debug': (LinuxArtifactJob, (r'public/build/target\.tar\.bz2',
-                                       r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'linux64-opt': (LinuxArtifactJob, (r'public/build/target\.tar\.bz2',
-                                       r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'linux64-pgo': (LinuxArtifactJob, (r'public/build/target\.tar\.bz2',
-                                       r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'linux64-debug': (LinuxArtifactJob, (r'public/build/target\.tar\.bz2',
-                                         r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'macosx64-opt': (MacArtifactJob, (r'public/build/target\.dmg',
-                                      r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'macosx64-debug': (MacArtifactJob, (r'public/build/target\.dmg',
-                                        r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'win32-opt': (WinArtifactJob, (r'public/build/target\.(zip|tar\.gz)',
-                                   r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'win32-pgo': (WinArtifactJob, (r'public/build/target\.(zip|tar\.gz)',
-                                   r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'win32-debug': (WinArtifactJob, (r'public/build/target\.(zip|tar\.gz)',
-                                     r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'win64-opt': (WinArtifactJob, (r'public/build/target\.(zip|tar\.gz)',
-                                   r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'win64-pgo': (WinArtifactJob, (r'public/build/target\.(zip|tar\.gz)',
-                                   r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'win64-debug': (WinArtifactJob, (r'public/build/target\.(zip|tar\.gz)',
-                                     r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'win64-aarch64-opt': (WinArtifactJob, (r'public/build/target\.(zip|tar\.gz)',
-                                           r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'win64-aarch64-debug': (WinArtifactJob, (r'public/build/target\.(zip|tar\.gz)',
-                                             r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
+    'android-api-16-opt': (AndroidArtifactJob, r'public/build/target\.apk'),
+    'android-api-16-debug': (AndroidArtifactJob, r'public/build/target\.apk'),
+    'android-x86-opt': (AndroidArtifactJob, r'public/build/target\.apk'),
+    'android-x86_64-opt': (AndroidArtifactJob, r'public/build/target\.apk'),
+    'android-x86_64-debug': (AndroidArtifactJob, r'public/build/target\.apk'),
+    'android-aarch64-opt': (AndroidArtifactJob, r'public/build/target\.apk'),
+    'android-aarch64-debug': (AndroidArtifactJob, r'public/build/target\.apk'),
+    'linux-opt': (LinuxArtifactJob, r'public/build/target\.tar\.bz2'),
+    'linux-pgo': (LinuxArtifactJob, r'public/build/target\.tar\.bz2'),
+    'linux-debug': (LinuxArtifactJob, r'public/build/target\.tar\.bz2'),
+    'linux64-opt': (LinuxArtifactJob, r'public/build/target\.tar\.bz2'),
+    'linux64-pgo': (LinuxArtifactJob, r'public/build/target\.tar\.bz2'),
+    'linux64-debug': (LinuxArtifactJob, r'public/build/target\.tar\.bz2'),
+    'macosx64-opt': (MacArtifactJob, r'public/build/target\.dmg'),
+    'macosx64-debug': (MacArtifactJob, r'public/build/target\.dmg'),
+    'win32-opt': (WinArtifactJob, r'public/build/target\.(zip|tar\.gz)'),
+    'win32-pgo': (WinArtifactJob, r'public/build/target\.(zip|tar\.gz)'),
+    'win32-debug': (WinArtifactJob, r'public/build/target\.(zip|tar\.gz)'),
+    'win64-opt': (WinArtifactJob, r'public/build/target\.(zip|tar\.gz)'),
+    'win64-pgo': (WinArtifactJob, r'public/build/target\.(zip|tar\.gz)'),
+    'win64-debug': (WinArtifactJob, r'public/build/target\.(zip|tar\.gz)'),
+    'win64-aarch64-opt': (WinArtifactJob, r'public/build/target\.(zip|tar\.gz)'),
+    'win64-aarch64-debug': (WinArtifactJob, r'public/build/target\.(zip|tar\.gz)'),
 }
 
 
@@ -590,8 +565,8 @@ def get_job_details(job, log=None,
                     download_symbols=False,
                     download_host_bins=False,
                     substs=None):
-    cls, (package_re, tests_re) = JOB_DETAILS[job]
-    return cls(package_re, tests_re, log=log,
+    cls, package_re = JOB_DETAILS[job]
+    return cls(package_re, log=log,
                download_symbols=download_symbols,
                download_host_bins=download_host_bins,
                substs=substs)
