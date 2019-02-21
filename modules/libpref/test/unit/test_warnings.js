@@ -2,14 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
-var cs = Cc["@mozilla.org/consoleservice;1"].
-  getService(Ci.nsIConsoleService);
-var ps = Cc["@mozilla.org/preferences-service;1"].
-  getService(Ci.nsIPrefService);
-
 function makeBuffer(length) {
-  return new Array(length + 1).join('x');
+  return new Array(length + 1).join("x");
 }
 
 /**
@@ -20,7 +14,7 @@ function checkWarning(pref, buffer) {
   return new Promise(resolve => {
     let complete = false;
     let listener = {
-      observe: function(event) {
+      observe(event) {
         let message = event.message;
         if (!(message.startsWith("Warning: attempting to write")
               && message.includes(pref))) {
@@ -31,9 +25,9 @@ function checkWarning(pref, buffer) {
         }
         complete = true;
         info("Warning while setting " + pref);
-        cs.unregisterListener(listener);
+        Services.console.unregisterListener(listener);
         resolve(true);
-      }
+      },
     };
     do_timeout(1000, function() {
       if (complete) {
@@ -41,16 +35,12 @@ function checkWarning(pref, buffer) {
       }
       complete = true;
       info("No warning while setting " + pref);
-      cs.unregisterListener(listener);
+      Services.console.unregisterListener(listener);
       resolve(false);
     });
-    cs.registerListener(listener);
-    ps.setCharPref(pref, buffer);
+    Services.console.registerListener(listener);
+    Services.prefs.setCharPref(pref, buffer);
   });
-}
-
-function run_test() {
-  run_next_test();
 }
 
 add_task(async function() {

@@ -32,8 +32,6 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREFSERVICE_CID);
 static const char kCookiesPermissions[] = "network.cookie.cookieBehavior";
 static const char kPrefCookieQuotaPerHost[] = "network.cookie.quotaPerHost";
 static const char kCookiesMaxPerHost[] = "network.cookie.maxPerHost";
-static const char kCookieLeaveSecurityAlone[] =
-    "network.cookie.leave-secure-alone";
 
 #define OFFSET_ONE_WEEK int64_t(604800) * PR_USEC_PER_SEC
 #define OFFSET_ONE_DAY int64_t(86400) * PR_USEC_PER_SEC
@@ -176,7 +174,6 @@ void InitPrefs(nsIPrefBranch *aPrefBranch) {
   // we use the most restrictive set of prefs we can;
   // however, we don't test third party blocking here.
   aPrefBranch->SetIntPref(kCookiesPermissions, 0);  // accept all
-  aPrefBranch->SetBoolPref(kCookieLeaveSecurityAlone, true);
   // Set quotaPerHost to maxPerHost - 1, so there is only one cookie
   // will be evicted everytime.
   aPrefBranch->SetIntPref(kPrefCookieQuotaPerHost, 49);
@@ -980,8 +977,6 @@ TEST(TestCookie, TestCookieMain) {
   GetACookie(cookieService, "http://creation.ordering.tests/", nullptr, cookie);
   EXPECT_TRUE(CheckResult(cookie.get(), MUST_EQUAL, expected.get()));
 
-  // *** eviction and creation ordering tests after enable
-  // network.cookie.leave-secure-alone reset cookie
   cookieMgr->RemoveAll();
 
   for (int32_t i = 0; i < 60; ++i) {

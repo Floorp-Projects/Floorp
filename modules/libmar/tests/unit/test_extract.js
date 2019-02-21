@@ -2,7 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function run_test() {
-
   /**
    * Extracts a MAR and makes sure each file matches the reference files.
    *
@@ -114,7 +113,7 @@ function run_test() {
       return extract_and_fail("manipulated_frontend_collision.mar");
     },
     // Test collision detection where file B ends in file A's indexes
-    test_collsion_b_onto_a: function test_collsion_b_onto_a()  {
+    test_collsion_b_onto_a: function test_collsion_b_onto_a() {
       return extract_and_fail("manipulated_backend_collision.mar");
     },
     // Test collision detection where file C shares indexes with both file A & B
@@ -137,7 +136,7 @@ function run_test() {
       if (outDir.exists()) {
         outDir.remove(true);
       }
-    }
+    },
   };
 
   // Run all the tests

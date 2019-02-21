@@ -7443,10 +7443,10 @@ gcstats::ZoneGCStats GCRuntime::scanZonesBeforeGC() {
     zoneStats.compartmentCount += zone->compartments().length();
     if (zone->canCollect()) {
       zoneStats.collectableZoneCount++;
-    }
-    if (zone->isGCScheduled()) {
-      zoneStats.collectedZoneCount++;
-      zoneStats.collectedCompartmentCount += zone->compartments().length();
+      if (zone->isGCScheduled()) {
+        zoneStats.collectedZoneCount++;
+        zoneStats.collectedCompartmentCount += zone->compartments().length();
+      }
     }
   }
 

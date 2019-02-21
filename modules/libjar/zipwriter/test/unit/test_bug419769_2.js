@@ -8,8 +8,7 @@ const FILENAME = "test.txt";
 const CRC = 0x00000000;
 const time = Date.now();
 
-function testpass(source)
-{
+function testpass(source) {
   // Should exist.
   Assert.ok(source.hasEntry(FILENAME));
 
@@ -28,8 +27,7 @@ function testpass(source)
   Assert.equal(entry.CRC32, CRC);
 }
 
-function run_test()
-{
+function run_test() {
   zipW.open(tmpFile, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
 
   // Shouldn't be there to start with.
