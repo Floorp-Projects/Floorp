@@ -706,6 +706,18 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
       aResult = enableAnimations ? 0 : 1;
       break;
     }
+    case eIntID_SystemUsesDarkTheme: {
+      // It seems GTK doesn't have an API to query if the current theme is
+      // "light" or "dark", so we synthesize it from the CSS2 Window/WindowText
+      // colors instead, by comparing their luminosity.
+      nscolor fg, bg;
+      if (NS_SUCCEEDED(NativeGetColor(eColorID_windowtext, fg)) &&
+          NS_SUCCEEDED(NativeGetColor(eColorID_window, bg))) {
+        aResult = NS_GetLuminosity(bg) < NS_GetLuminosity(fg) ? 1 : 0;
+        break;
+      }
+      MOZ_FALLTHROUGH;
+    }
     default:
       aResult = 0;
       res = NS_ERROR_FAILURE;
