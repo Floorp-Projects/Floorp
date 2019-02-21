@@ -25,7 +25,7 @@ struct ParamTraits<std::vector<T>> {
   typedef std::vector<T> paramType;
 
   static void Write(Message* aMsg, const paramType& aParam) {
-    aMsg->WriteSize(aParam.size());
+    aMsg->WriteUInt32(aParam.size());
     for (const T& elem : aParam) {
       WriteParam(aMsg, elem);
     }
@@ -33,8 +33,8 @@ struct ParamTraits<std::vector<T>> {
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
-    size_t size;
-    if (!aMsg->ReadSize(aIter, &size)) {
+    uint32_t size;
+    if (!aMsg->ReadUInt32(aIter, &size)) {
       return false;
     }
     while (size--) {
