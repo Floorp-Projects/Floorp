@@ -183,6 +183,18 @@ class nsPermissionManager final : public nsIPermissionManager,
                        DBOperationType aDBOperation,
                        const bool aIgnoreSessionPermissions = false);
 
+  // Similar to TestPermissionFromPrincipal, except that it is used only for
+  // permissions which can never have default values.
+  nsresult TestPermissionWithoutDefaultsFromPrincipal(nsIPrincipal* aPrincipal,
+                                                      const nsACString& aType,
+                                                      uint32_t* aPermission) {
+    MOZ_ASSERT(!HasDefaultPref(aType));
+
+    return CommonTestPermission(aPrincipal, -1, aType, aPermission,
+                                nsIPermissionManager::UNKNOWN_ACTION, true,
+                                false, true);
+  }
+
   /**
    * Initialize the "clear-origin-attributes-data" observing.
    * Will create a nsPermissionManager instance if needed.
