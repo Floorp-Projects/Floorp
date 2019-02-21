@@ -6,6 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["Targets"];
 
+const {MessagePromise} = ChromeUtils.import("chrome://remote/content/Sync.jsm");
 const {Target} = ChromeUtils.import("chrome://remote/content/Target.jsm");
 
 class Targets {
@@ -21,16 +22,10 @@ class Targets {
     // whereas it is asynchronously set by the custom element class.
     // At least ensure that this property is set before instantiating the target.
     if (!browser.browsingContext) {
-      await new Promise(resolve => {
-        const onInit = () => {
-          browser.messageManager.removeMessageListener("Browser:Init", onInit);
-          resolve();
-        };
-        browser.messageManager.addMessageListener("Browser:Init", onInit);
-      });
+      await new MessagePromise(browser.messageManager, "Browser:Init");
     }
-    const target = new Target(browser);
 
+    const target = new Target(browser);
     target.connect();
     this._targets.set(target.id, target);
   }
@@ -41,8 +36,8 @@ class Targets {
     if (!browser.browsingContext) {
       return;
     }
-    let target = this._targets.get(browser.browsingContext.id);
 
+    const target = this._targets.get(browser.browsingContext.id);
     if (target) {
       target.disconnect();
       this._targets.delete(target.id);
