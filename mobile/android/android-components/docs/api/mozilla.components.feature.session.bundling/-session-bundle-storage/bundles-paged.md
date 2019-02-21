@@ -2,7 +2,7 @@
 
 # bundlesPaged
 
-`fun bundlesPaged(): Factory<`[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, `[`SessionBundle`](../-session-bundle/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session-bundling/src/main/java/mozilla/components/feature/session/bundling/SessionBundleStorage.kt#L143)
+`fun bundlesPaged(): Factory<`[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, `[`SessionBundle`](../-session-bundle/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session-bundling/src/main/java/mozilla/components/feature/session/bundling/SessionBundleStorage.kt#L153)
 
 Returns all saved [SessionBundle](../-session-bundle/index.md) instances as a [DataSource.Factory](#).
 

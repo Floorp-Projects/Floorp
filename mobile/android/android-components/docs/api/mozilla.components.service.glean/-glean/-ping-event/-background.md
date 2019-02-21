@@ -2,7 +2,7 @@
 
 # Background
 
-`Background` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/Glean.kt#L306)
+`Background` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/Glean.kt#L307)
 
 When the application goes into the background
 

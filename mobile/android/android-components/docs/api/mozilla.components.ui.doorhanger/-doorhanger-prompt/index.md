@@ -37,6 +37,7 @@ Builder for creating a prompt [Doorhanger](../-doorhanger/index.md) providing a 
 | Name | Summary |
 |---|---|
 | [buttons](buttons.md) | `val buttons: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Button`](-button/index.md)`>`<br>A list of buttons to be displayed in the prompt. |
+| [controlGroups](control-groups.md) | `val controlGroups: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`ControlGroup`](-control-group/index.md)`>`<br>A list of control groups to be displayed in the prompt. |
 
 ### Functions
 

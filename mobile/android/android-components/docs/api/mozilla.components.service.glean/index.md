@@ -9,6 +9,7 @@
 | [BooleanMetricType](-boolean-metric-type/index.md) | `data class BooleanMetricType : `[`CommonMetricData`](-common-metric-data/index.md)<br>This implements the developer facing API for recording boolean metrics. |
 | [CommonMetricData](-common-metric-data/index.md) | `interface CommonMetricData`<br>This defines the common set of data shared across all the different metric types. |
 | [CounterMetricType](-counter-metric-type/index.md) | `data class CounterMetricType : `[`CommonMetricData`](-common-metric-data/index.md)<br>This implements the developer facing API for recording counter metrics. |
+| [DatetimeMetricType](-datetime-metric-type/index.md) | `data class DatetimeMetricType : `[`CommonMetricData`](-common-metric-data/index.md)<br>This implements the developer facing API for recording datetime metrics. |
 | [EventMetricType](-event-metric-type/index.md) | `data class EventMetricType : `[`CommonMetricData`](-common-metric-data/index.md)<br>This implements the developer facing API for recording events. |
 | [Glean](-glean/index.md) | `object Glean : `[`GleanInternalAPI`](-glean-internal-a-p-i/index.md) |
 | [GleanInternalAPI](-glean-internal-a-p-i/index.md) | `open class GleanInternalAPI` |

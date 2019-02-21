@@ -2,7 +2,7 @@
 
 # getExperiments
 
-`fun getExperiments(snapshot: `[`ExperimentsSnapshot`](../../mozilla.components.service.fretboard/-experiments-snapshot/index.md)`): `[`ExperimentsSnapshot`](../../mozilla.components.service.fretboard/-experiments-snapshot/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/fretboard/src/main/java/mozilla/components/service/fretboard/source/kinto/KintoExperimentSource.kt#L33)
+`fun getExperiments(snapshot: `[`ExperimentsSnapshot`](../../mozilla.components.service.fretboard/-experiments-snapshot/index.md)`): `[`ExperimentsSnapshot`](../../mozilla.components.service.fretboard/-experiments-snapshot/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/fretboard/src/main/java/mozilla/components/service/fretboard/source/kinto/KintoExperimentSource.kt#L36)
 
 Overrides [ExperimentSource.getExperiments](../../mozilla.components.service.fretboard/-experiment-source/get-experiments.md)
 

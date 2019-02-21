@@ -32,6 +32,7 @@ metric types.
 |---|---|
 | [BooleanMetricType](../-boolean-metric-type/index.md) | `data class BooleanMetricType : `[`CommonMetricData`](./index.md)<br>This implements the developer facing API for recording boolean metrics. |
 | [CounterMetricType](../-counter-metric-type/index.md) | `data class CounterMetricType : `[`CommonMetricData`](./index.md)<br>This implements the developer facing API for recording counter metrics. |
+| [DatetimeMetricType](../-datetime-metric-type/index.md) | `data class DatetimeMetricType : `[`CommonMetricData`](./index.md)<br>This implements the developer facing API for recording datetime metrics. |
 | [EventMetricType](../-event-metric-type/index.md) | `data class EventMetricType : `[`CommonMetricData`](./index.md)<br>This implements the developer facing API for recording events. |
 | [LabeledMetricType](../-labeled-metric-type/index.md) | `data class LabeledMetricType<T> : `[`CommonMetricData`](./index.md)<br>This implements the developer facing API for labeled metrics. |
 | [StringListMetricType](../-string-list-metric-type/index.md) | `data class StringListMetricType : `[`CommonMetricData`](./index.md)<br>This implements the developer facing API for recording string list metrics. |

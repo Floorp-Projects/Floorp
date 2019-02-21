@@ -2,7 +2,7 @@
 
 # KintoExperimentSource
 
-`class KintoExperimentSource : `[`ExperimentSource`](../../mozilla.components.service.fretboard/-experiment-source/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/fretboard/src/main/java/mozilla/components/service/fretboard/source/kinto/KintoExperimentSource.kt#L23)
+`class KintoExperimentSource : `[`ExperimentSource`](../../mozilla.components.service.fretboard/-experiment-source/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/fretboard/src/main/java/mozilla/components/service/fretboard/source/kinto/KintoExperimentSource.kt#L26)
 
 Class responsible for fetching and
 parsing experiments from a Kinto server
@@ -11,7 +11,7 @@ parsing experiments from a Kinto server
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `KintoExperimentSource(baseUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, bucketName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, collectionName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, validateSignature: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, client: `[`HttpClient`](../-http-client/index.md)` = HttpURLConnectionHttpClient())`<br>Class responsible for fetching and parsing experiments from a Kinto server |
+| [&lt;init&gt;](-init-.md) | `KintoExperimentSource(baseUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, bucketName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, collectionName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, httpClient: `[`Client`](../../mozilla.components.concept.fetch/-client/index.md)`, validateSignature: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false)`<br>Class responsible for fetching and parsing experiments from a Kinto server |
 
 ### Functions
 
