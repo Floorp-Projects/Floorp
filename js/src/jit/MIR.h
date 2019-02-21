@@ -115,9 +115,11 @@ static inline MIRType MIRTypeFromValue(const js::Value& vp) {
    */                                                                          \
   _(GuardRangeBailouts)                                                        \
                                                                                \
-  /* Keep the flagged instruction in resume points and do not substitute this  \
-   * instruction by an UndefinedValue. This might be used by call inlining     \
-   * when a function argument is not used by the inlined instructions.         \
+  /* Some instructions have uses that aren't directly represented in the graph,\
+   * and need to be handled specially. As an example, this is used to keep the \
+   * flagged instruction in resume points, not substituting with an            \
+   * UndefinedValue. This can be used by call inlining when a function argument\
+   * is not used by the inlined instructions.                                  \
    */                                                                          \
   _(ImplicitlyUsed)                                                            \
                                                                                \
