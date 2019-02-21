@@ -64,11 +64,11 @@ MOZ_THREAD_LOCAL(uintptr_t) GLContext::sCurrentContext;
 
 // If adding defines, don't forget to undefine symbols. See #undef block below.
 // clang-format off
-#define CORE_SYMBOL(x) { (PRFuncPtr*) &mSymbols.f##x, {{ "gl" #x }} }
-#define CORE_EXT_SYMBOL2(x,y,z) { (PRFuncPtr*) &mSymbols.f##x, {{ "gl" #x, "gl" #x #y, "gl" #x #z }} }
-#define EXT_SYMBOL2(x,y,z) { (PRFuncPtr*) &mSymbols.f##x, {{ "gl" #x #y, "gl" #x #z }} }
-#define EXT_SYMBOL3(x,y,z,w) { (PRFuncPtr*) &mSymbols.f##x, {{ "gl" #x #y, "gl" #x #z, "gl" #x #w }} }
-#define END_SYMBOLS { nullptr, {} }
+#define CORE_SYMBOL(x) { (PRFuncPtr*) &mSymbols.f##x, { #x, nullptr } }
+#define CORE_EXT_SYMBOL2(x,y,z) { (PRFuncPtr*) &mSymbols.f##x, { #x, #x #y, #x #z, nullptr } }
+#define EXT_SYMBOL2(x,y,z) { (PRFuncPtr*) &mSymbols.f##x, { #x #y, #x #z, nullptr } }
+#define EXT_SYMBOL3(x,y,z,w) { (PRFuncPtr*) &mSymbols.f##x, { #x #y, #x #z, #x #w, nullptr } }
+#define END_SYMBOLS { nullptr, { nullptr } }
 // clang-format on
 
 // should match the order of GLExtensions, and be null-terminated.
@@ -302,13 +302,20 @@ GLContext::~GLContext() {
   gl->DebugCallback(source, type, id, severity, length, message);
 }
 
-bool GLContext::Init() {
+static void ClearSymbols(const GLLibraryLoader::SymLoadStruct* symbols) {
+  while (symbols->symPointer) {
+    *symbols->symPointer = nullptr;
+    symbols++;
+  }
+}
+
+bool GLContext::InitWithPrefix(const char* prefix, bool trygl) {
   MOZ_RELEASE_ASSERT(!mSymbols.fBindFramebuffer,
-                     "GFX: GLContext::Init should only be called once.");
+                     "GFX: InitWithPrefix should only be called once.");
 
   ScopedGfxFeatureReporter reporter("GL Context");
 
-  if (!InitImpl()) {
+  if (!InitWithPrefixImpl(prefix, trygl)) {
     // If initialization fails, zero the symbols to avoid hard-to-understand
     // bugs.
     mSymbols = {};
@@ -320,10 +327,11 @@ bool GLContext::Init() {
   return true;
 }
 
-static bool LoadSymbolsWithDesc(const SymbolLoader& loader,
-                                const SymLoadStruct* list, const char* desc) {
+static bool LoadGLSymbols(GLContext* gl, const char* prefix, bool trygl,
+                          const GLLibraryLoader::SymLoadStruct* list,
+                          const char* desc) {
   const auto warnOnFailure = bool(desc);
-  if (loader.LoadSymbols(list, warnOnFailure)) return true;
+  if (gl->LoadSymbols(list, trygl, prefix, warnOnFailure)) return true;
 
   ClearSymbols(list);
 
@@ -334,178 +342,170 @@ static bool LoadSymbolsWithDesc(const SymbolLoader& loader,
   return false;
 }
 
-bool GLContext::LoadExtSymbols(const SymbolLoader& loader,
+bool GLContext::LoadExtSymbols(const char* prefix, bool trygl,
                                const SymLoadStruct* list, GLExtensions ext) {
   const char* extName = sExtensionNames[size_t(ext)];
-  if (!LoadSymbolsWithDesc(loader, list, extName)) {
+  if (!LoadGLSymbols(this, prefix, trygl, list, extName)) {
     MarkExtensionUnsupported(ext);
     return false;
   }
   return true;
 };
 
-bool GLContext::LoadFeatureSymbols(const SymbolLoader& loader,
+bool GLContext::LoadFeatureSymbols(const char* prefix, bool trygl,
                                    const SymLoadStruct* list,
                                    GLFeature feature) {
   const char* featureName = GetFeatureName(feature);
-  if (!LoadSymbolsWithDesc(loader, list, featureName)) {
+  if (!LoadGLSymbols(this, prefix, trygl, list, featureName)) {
     MarkUnsupported(feature);
     return false;
   }
   return true;
 };
 
-bool GLContext::InitImpl() {
+bool GLContext::InitWithPrefixImpl(const char* prefix, bool trygl) {
   if (!MakeCurrent(true)) return false;
-
-  const auto loader = GetSymbolLoader();
-  if (!loader) return false;
-
-  const auto fnLoadSymbols = [&](const SymLoadStruct* const list,
-                                 const char* const desc) {
-    return LoadSymbolsWithDesc(*loader, list, desc);
-  };
 
   // clang-format off
     const SymLoadStruct coreSymbols[] = {
-        { (PRFuncPtr*) &mSymbols.fActiveTexture, {{ "glActiveTexture", "glActiveTextureARB" }} },
-        { (PRFuncPtr*) &mSymbols.fAttachShader, {{ "glAttachShader", "glAttachShaderARB" }} },
-        { (PRFuncPtr*) &mSymbols.fBindAttribLocation, {{ "glBindAttribLocation", "glBindAttribLocationARB" }} },
-        { (PRFuncPtr*) &mSymbols.fBindBuffer, {{ "glBindBuffer", "glBindBufferARB" }} },
-        { (PRFuncPtr*) &mSymbols.fBindTexture, {{ "glBindTexture", "glBindTextureARB" }} },
-        { (PRFuncPtr*) &mSymbols.fBlendColor, {{ "glBlendColor" }} },
-        { (PRFuncPtr*) &mSymbols.fBlendEquation, {{ "glBlendEquation" }} },
-        { (PRFuncPtr*) &mSymbols.fBlendEquationSeparate, {{ "glBlendEquationSeparate", "glBlendEquationSeparateEXT" }} },
-        { (PRFuncPtr*) &mSymbols.fBlendFunc, {{ "glBlendFunc" }} },
-        { (PRFuncPtr*) &mSymbols.fBlendFuncSeparate, {{ "glBlendFuncSeparate", "glBlendFuncSeparateEXT" }} },
-        { (PRFuncPtr*) &mSymbols.fBufferData, {{ "glBufferData" }} },
-        { (PRFuncPtr*) &mSymbols.fBufferSubData, {{ "glBufferSubData" }} },
-        { (PRFuncPtr*) &mSymbols.fClear, {{ "glClear" }} },
-        { (PRFuncPtr*) &mSymbols.fClearColor, {{ "glClearColor" }} },
-        { (PRFuncPtr*) &mSymbols.fClearStencil, {{ "glClearStencil" }} },
-        { (PRFuncPtr*) &mSymbols.fColorMask, {{ "glColorMask" }} },
-        { (PRFuncPtr*) &mSymbols.fCompressedTexImage2D, {{ "glCompressedTexImage2D" }} },
-        { (PRFuncPtr*) &mSymbols.fCompressedTexSubImage2D, {{ "glCompressedTexSubImage2D" }} },
-        { (PRFuncPtr*) &mSymbols.fCullFace, {{ "glCullFace" }} },
-        { (PRFuncPtr*) &mSymbols.fDetachShader, {{ "glDetachShader", "glDetachShaderARB" }} },
-        { (PRFuncPtr*) &mSymbols.fDepthFunc, {{ "glDepthFunc" }} },
-        { (PRFuncPtr*) &mSymbols.fDepthMask, {{ "glDepthMask" }} },
-        { (PRFuncPtr*) &mSymbols.fDisable, {{ "glDisable" }} },
-        { (PRFuncPtr*) &mSymbols.fDisableVertexAttribArray, {{ "glDisableVertexAttribArray", "glDisableVertexAttribArrayARB" }} },
-        { (PRFuncPtr*) &mSymbols.fDrawArrays, {{ "glDrawArrays" }} },
-        { (PRFuncPtr*) &mSymbols.fDrawElements, {{ "glDrawElements" }} },
-        { (PRFuncPtr*) &mSymbols.fEnable, {{ "glEnable" }} },
-        { (PRFuncPtr*) &mSymbols.fEnableVertexAttribArray, {{ "glEnableVertexAttribArray", "glEnableVertexAttribArrayARB" }} },
-        { (PRFuncPtr*) &mSymbols.fFinish, {{ "glFinish" }} },
-        { (PRFuncPtr*) &mSymbols.fFlush, {{ "glFlush" }} },
-        { (PRFuncPtr*) &mSymbols.fFrontFace, {{ "glFrontFace" }} },
-        { (PRFuncPtr*) &mSymbols.fGetActiveAttrib, {{ "glGetActiveAttrib", "glGetActiveAttribARB" }} },
-        { (PRFuncPtr*) &mSymbols.fGetActiveUniform, {{ "glGetActiveUniform", "glGetActiveUniformARB" }} },
-        { (PRFuncPtr*) &mSymbols.fGetAttachedShaders, {{ "glGetAttachedShaders", "glGetAttachedShadersARB" }} },
-        { (PRFuncPtr*) &mSymbols.fGetAttribLocation, {{ "glGetAttribLocation", "glGetAttribLocationARB" }} },
-        { (PRFuncPtr*) &mSymbols.fGetIntegerv, {{ "glGetIntegerv" }} },
-        { (PRFuncPtr*) &mSymbols.fGetFloatv, {{ "glGetFloatv" }} },
-        { (PRFuncPtr*) &mSymbols.fGetBooleanv, {{ "glGetBooleanv" }} },
-        { (PRFuncPtr*) &mSymbols.fGetBufferParameteriv, {{ "glGetBufferParameteriv", "glGetBufferParameterivARB" }} },
-        { (PRFuncPtr*) &mSymbols.fGetError, {{ "glGetError" }} },
-        { (PRFuncPtr*) &mSymbols.fGetProgramiv, {{ "glGetProgramiv", "glGetProgramivARB" }} },
-        { (PRFuncPtr*) &mSymbols.fGetProgramInfoLog, {{ "glGetProgramInfoLog", "glGetProgramInfoLogARB" }} },
-        { (PRFuncPtr*) &mSymbols.fTexParameteri, {{ "glTexParameteri" }} },
-        { (PRFuncPtr*) &mSymbols.fTexParameteriv, {{ "glTexParameteriv" }} },
-        { (PRFuncPtr*) &mSymbols.fTexParameterf, {{ "glTexParameterf" }} },
-        { (PRFuncPtr*) &mSymbols.fGetString, {{ "glGetString" }} },
-        { (PRFuncPtr*) &mSymbols.fGetTexParameterfv, {{ "glGetTexParameterfv" }} },
-        { (PRFuncPtr*) &mSymbols.fGetTexParameteriv, {{ "glGetTexParameteriv" }} },
-        { (PRFuncPtr*) &mSymbols.fGetUniformfv, {{ "glGetUniformfv", "glGetUniformfvARB" }} },
-        { (PRFuncPtr*) &mSymbols.fGetUniformiv, {{ "glGetUniformiv", "glGetUniformivARB" }} },
-        { (PRFuncPtr*) &mSymbols.fGetUniformLocation, {{ "glGetUniformLocation", "glGetUniformLocationARB" }} },
-        { (PRFuncPtr*) &mSymbols.fGetVertexAttribfv, {{ "glGetVertexAttribfv", "glGetVertexAttribfvARB" }} },
-        { (PRFuncPtr*) &mSymbols.fGetVertexAttribiv, {{ "glGetVertexAttribiv", "glGetVertexAttribivARB" }} },
-        { (PRFuncPtr*) &mSymbols.fGetVertexAttribPointerv, {{ "glGetVertexAttribPointerv" }} },
-        { (PRFuncPtr*) &mSymbols.fHint, {{ "glHint" }} },
-        { (PRFuncPtr*) &mSymbols.fIsBuffer, {{ "glIsBuffer", "glIsBufferARB" }} },
-        { (PRFuncPtr*) &mSymbols.fIsEnabled, {{ "glIsEnabled" }} },
-        { (PRFuncPtr*) &mSymbols.fIsProgram, {{ "glIsProgram", "glIsProgramARB" }} },
-        { (PRFuncPtr*) &mSymbols.fIsShader, {{ "glIsShader", "glIsShaderARB" }} },
-        { (PRFuncPtr*) &mSymbols.fIsTexture, {{ "glIsTexture", "glIsTextureARB" }} },
-        { (PRFuncPtr*) &mSymbols.fLineWidth, {{ "glLineWidth" }} },
-        { (PRFuncPtr*) &mSymbols.fLinkProgram, {{ "glLinkProgram", "glLinkProgramARB" }} },
-        { (PRFuncPtr*) &mSymbols.fPixelStorei, {{ "glPixelStorei" }} },
-        { (PRFuncPtr*) &mSymbols.fPolygonOffset, {{ "glPolygonOffset" }} },
-        { (PRFuncPtr*) &mSymbols.fReadPixels, {{ "glReadPixels" }} },
-        { (PRFuncPtr*) &mSymbols.fSampleCoverage, {{ "glSampleCoverage" }} },
-        { (PRFuncPtr*) &mSymbols.fScissor, {{ "glScissor" }} },
-        { (PRFuncPtr*) &mSymbols.fStencilFunc, {{ "glStencilFunc" }} },
-        { (PRFuncPtr*) &mSymbols.fStencilFuncSeparate, {{ "glStencilFuncSeparate", "glStencilFuncSeparateEXT" }} },
-        { (PRFuncPtr*) &mSymbols.fStencilMask, {{ "glStencilMask" }} },
-        { (PRFuncPtr*) &mSymbols.fStencilMaskSeparate, {{ "glStencilMaskSeparate", "glStencilMaskSeparateEXT" }} },
-        { (PRFuncPtr*) &mSymbols.fStencilOp, {{ "glStencilOp" }} },
-        { (PRFuncPtr*) &mSymbols.fStencilOpSeparate, {{ "glStencilOpSeparate", "glStencilOpSeparateEXT" }} },
-        { (PRFuncPtr*) &mSymbols.fTexImage2D, {{ "glTexImage2D" }} },
-        { (PRFuncPtr*) &mSymbols.fTexSubImage2D, {{ "glTexSubImage2D" }} },
-        { (PRFuncPtr*) &mSymbols.fUniform1f, {{ "glUniform1f" }} },
-        { (PRFuncPtr*) &mSymbols.fUniform1fv, {{ "glUniform1fv" }} },
-        { (PRFuncPtr*) &mSymbols.fUniform1i, {{ "glUniform1i" }} },
-        { (PRFuncPtr*) &mSymbols.fUniform1iv, {{ "glUniform1iv" }} },
-        { (PRFuncPtr*) &mSymbols.fUniform2f, {{ "glUniform2f" }} },
-        { (PRFuncPtr*) &mSymbols.fUniform2fv, {{ "glUniform2fv" }} },
-        { (PRFuncPtr*) &mSymbols.fUniform2i, {{ "glUniform2i" }} },
-        { (PRFuncPtr*) &mSymbols.fUniform2iv, {{ "glUniform2iv" }} },
-        { (PRFuncPtr*) &mSymbols.fUniform3f, {{ "glUniform3f" }} },
-        { (PRFuncPtr*) &mSymbols.fUniform3fv, {{ "glUniform3fv" }} },
-        { (PRFuncPtr*) &mSymbols.fUniform3i, {{ "glUniform3i" }} },
-        { (PRFuncPtr*) &mSymbols.fUniform3iv, {{ "glUniform3iv" }} },
-        { (PRFuncPtr*) &mSymbols.fUniform4f, {{ "glUniform4f" }} },
-        { (PRFuncPtr*) &mSymbols.fUniform4fv, {{ "glUniform4fv" }} },
-        { (PRFuncPtr*) &mSymbols.fUniform4i, {{ "glUniform4i" }} },
-        { (PRFuncPtr*) &mSymbols.fUniform4iv, {{ "glUniform4iv" }} },
-        { (PRFuncPtr*) &mSymbols.fUniformMatrix2fv, {{ "glUniformMatrix2fv" }} },
-        { (PRFuncPtr*) &mSymbols.fUniformMatrix3fv, {{ "glUniformMatrix3fv" }} },
-        { (PRFuncPtr*) &mSymbols.fUniformMatrix4fv, {{ "glUniformMatrix4fv" }} },
-        { (PRFuncPtr*) &mSymbols.fUseProgram, {{ "glUseProgram" }} },
-        { (PRFuncPtr*) &mSymbols.fValidateProgram, {{ "glValidateProgram" }} },
-        { (PRFuncPtr*) &mSymbols.fVertexAttribPointer, {{ "glVertexAttribPointer" }} },
-        { (PRFuncPtr*) &mSymbols.fVertexAttrib1f, {{ "glVertexAttrib1f" }} },
-        { (PRFuncPtr*) &mSymbols.fVertexAttrib2f, {{ "glVertexAttrib2f" }} },
-        { (PRFuncPtr*) &mSymbols.fVertexAttrib3f, {{ "glVertexAttrib3f" }} },
-        { (PRFuncPtr*) &mSymbols.fVertexAttrib4f, {{ "glVertexAttrib4f" }} },
-        { (PRFuncPtr*) &mSymbols.fVertexAttrib1fv, {{ "glVertexAttrib1fv" }} },
-        { (PRFuncPtr*) &mSymbols.fVertexAttrib2fv, {{ "glVertexAttrib2fv" }} },
-        { (PRFuncPtr*) &mSymbols.fVertexAttrib3fv, {{ "glVertexAttrib3fv" }} },
-        { (PRFuncPtr*) &mSymbols.fVertexAttrib4fv, {{ "glVertexAttrib4fv" }} },
-        { (PRFuncPtr*) &mSymbols.fViewport, {{ "glViewport" }} },
-        { (PRFuncPtr*) &mSymbols.fCompileShader, {{ "glCompileShader" }} },
-        { (PRFuncPtr*) &mSymbols.fCopyTexImage2D, {{ "glCopyTexImage2D" }} },
-        { (PRFuncPtr*) &mSymbols.fCopyTexSubImage2D, {{ "glCopyTexSubImage2D" }} },
-        { (PRFuncPtr*) &mSymbols.fGetShaderiv, {{ "glGetShaderiv" }} },
-        { (PRFuncPtr*) &mSymbols.fGetShaderInfoLog, {{ "glGetShaderInfoLog" }} },
-        { (PRFuncPtr*) &mSymbols.fGetShaderSource, {{ "glGetShaderSource" }} },
-        { (PRFuncPtr*) &mSymbols.fShaderSource, {{ "glShaderSource" }} },
-        { (PRFuncPtr*) &mSymbols.fVertexAttribPointer, {{ "glVertexAttribPointer" }} },
+        { (PRFuncPtr*) &mSymbols.fActiveTexture, { "ActiveTexture", "ActiveTextureARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fAttachShader, { "AttachShader", "AttachShaderARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fBindAttribLocation, { "BindAttribLocation", "BindAttribLocationARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fBindBuffer, { "BindBuffer", "BindBufferARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fBindTexture, { "BindTexture", "BindTextureARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fBlendColor, { "BlendColor", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fBlendEquation, { "BlendEquation", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fBlendEquationSeparate, { "BlendEquationSeparate", "BlendEquationSeparateEXT", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fBlendFunc, { "BlendFunc", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fBlendFuncSeparate, { "BlendFuncSeparate", "BlendFuncSeparateEXT", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fBufferData, { "BufferData", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fBufferSubData, { "BufferSubData", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fClear, { "Clear", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fClearColor, { "ClearColor", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fClearStencil, { "ClearStencil", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fColorMask, { "ColorMask", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fCompressedTexImage2D, {"CompressedTexImage2D", nullptr} },
+        { (PRFuncPtr*) &mSymbols.fCompressedTexSubImage2D, {"CompressedTexSubImage2D", nullptr} },
+        { (PRFuncPtr*) &mSymbols.fCullFace, { "CullFace", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fDetachShader, { "DetachShader", "DetachShaderARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fDepthFunc, { "DepthFunc", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fDepthMask, { "DepthMask", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fDisable, { "Disable", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fDisableVertexAttribArray, { "DisableVertexAttribArray", "DisableVertexAttribArrayARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fDrawArrays, { "DrawArrays", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fDrawElements, { "DrawElements", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fEnable, { "Enable", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fEnableVertexAttribArray, { "EnableVertexAttribArray", "EnableVertexAttribArrayARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fFinish, { "Finish", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fFlush, { "Flush", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fFrontFace, { "FrontFace", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fGetActiveAttrib, { "GetActiveAttrib", "GetActiveAttribARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fGetActiveUniform, { "GetActiveUniform", "GetActiveUniformARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fGetAttachedShaders, { "GetAttachedShaders", "GetAttachedShadersARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fGetAttribLocation, { "GetAttribLocation", "GetAttribLocationARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fGetIntegerv, { "GetIntegerv", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fGetFloatv, { "GetFloatv", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fGetBooleanv, { "GetBooleanv", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fGetBufferParameteriv, { "GetBufferParameteriv", "GetBufferParameterivARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fGetError, { "GetError", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fGetProgramiv, { "GetProgramiv", "GetProgramivARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fGetProgramInfoLog, { "GetProgramInfoLog", "GetProgramInfoLogARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fTexParameteri, { "TexParameteri", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fTexParameteriv, { "TexParameteriv", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fTexParameterf, { "TexParameterf", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fGetString, { "GetString", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fGetTexParameterfv, { "GetTexParameterfv", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fGetTexParameteriv, { "GetTexParameteriv", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fGetUniformfv, { "GetUniformfv", "GetUniformfvARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fGetUniformiv, { "GetUniformiv", "GetUniformivARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fGetUniformLocation, { "GetUniformLocation", "GetUniformLocationARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fGetVertexAttribfv, { "GetVertexAttribfv", "GetVertexAttribfvARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fGetVertexAttribiv, { "GetVertexAttribiv", "GetVertexAttribivARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fGetVertexAttribPointerv, { "GetVertexAttribPointerv", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fHint, { "Hint", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fIsBuffer, { "IsBuffer", "IsBufferARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fIsEnabled, { "IsEnabled", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fIsProgram, { "IsProgram", "IsProgramARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fIsShader, { "IsShader", "IsShaderARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fIsTexture, { "IsTexture", "IsTextureARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fLineWidth, { "LineWidth", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fLinkProgram, { "LinkProgram", "LinkProgramARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fPixelStorei, { "PixelStorei", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fPolygonOffset, { "PolygonOffset", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fReadPixels, { "ReadPixels", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fSampleCoverage, { "SampleCoverage", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fScissor, { "Scissor", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fStencilFunc, { "StencilFunc", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fStencilFuncSeparate, { "StencilFuncSeparate", "StencilFuncSeparateEXT", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fStencilMask, { "StencilMask", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fStencilMaskSeparate, { "StencilMaskSeparate", "StencilMaskSeparateEXT", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fStencilOp, { "StencilOp", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fStencilOpSeparate, { "StencilOpSeparate", "StencilOpSeparateEXT", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fTexImage2D, { "TexImage2D", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fTexSubImage2D, { "TexSubImage2D", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fUniform1f, { "Uniform1f", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fUniform1fv, { "Uniform1fv", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fUniform1i, { "Uniform1i", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fUniform1iv, { "Uniform1iv", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fUniform2f, { "Uniform2f", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fUniform2fv, { "Uniform2fv", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fUniform2i, { "Uniform2i", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fUniform2iv, { "Uniform2iv", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fUniform3f, { "Uniform3f", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fUniform3fv, { "Uniform3fv", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fUniform3i, { "Uniform3i", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fUniform3iv, { "Uniform3iv", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fUniform4f, { "Uniform4f", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fUniform4fv, { "Uniform4fv", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fUniform4i, { "Uniform4i", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fUniform4iv, { "Uniform4iv", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fUniformMatrix2fv, { "UniformMatrix2fv", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fUniformMatrix3fv, { "UniformMatrix3fv", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fUniformMatrix4fv, { "UniformMatrix4fv", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fUseProgram, { "UseProgram", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fValidateProgram, { "ValidateProgram", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fVertexAttribPointer, { "VertexAttribPointer", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fVertexAttrib1f, { "VertexAttrib1f", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fVertexAttrib2f, { "VertexAttrib2f", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fVertexAttrib3f, { "VertexAttrib3f", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fVertexAttrib4f, { "VertexAttrib4f", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fVertexAttrib1fv, { "VertexAttrib1fv", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fVertexAttrib2fv, { "VertexAttrib2fv", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fVertexAttrib3fv, { "VertexAttrib3fv", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fVertexAttrib4fv, { "VertexAttrib4fv", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fViewport, { "Viewport", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fCompileShader, { "CompileShader", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fCopyTexImage2D, { "CopyTexImage2D", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fCopyTexSubImage2D, { "CopyTexSubImage2D", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fGetShaderiv, { "GetShaderiv", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fGetShaderInfoLog, { "GetShaderInfoLog", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fGetShaderSource, { "GetShaderSource", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fShaderSource, { "ShaderSource", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fVertexAttribPointer, { "VertexAttribPointer", nullptr } },
 
-        { (PRFuncPtr*) &mSymbols.fGenBuffers, {{ "glGenBuffers", "glGenBuffersARB" }} },
-        { (PRFuncPtr*) &mSymbols.fGenTextures, {{ "glGenTextures" }} },
-        { (PRFuncPtr*) &mSymbols.fCreateProgram, {{ "glCreateProgram", "glCreateProgramARB" }} },
-        { (PRFuncPtr*) &mSymbols.fCreateShader, {{ "glCreateShader", "glCreateShaderARB" }} },
+        { (PRFuncPtr*) &mSymbols.fGenBuffers, { "GenBuffers", "GenBuffersARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fGenTextures, { "GenTextures", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fCreateProgram, { "CreateProgram", "CreateProgramARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fCreateShader, { "CreateShader", "CreateShaderARB", nullptr } },
 
-        { (PRFuncPtr*) &mSymbols.fDeleteBuffers, {{ "glDeleteBuffers", "glDeleteBuffersARB" }} },
-        { (PRFuncPtr*) &mSymbols.fDeleteTextures, {{ "glDeleteTextures", "glDeleteTexturesARB" }} },
-        { (PRFuncPtr*) &mSymbols.fDeleteProgram, {{ "glDeleteProgram", "glDeleteProgramARB" }} },
-        { (PRFuncPtr*) &mSymbols.fDeleteShader, {{ "glDeleteShader", "glDeleteShaderARB" }} },
+        { (PRFuncPtr*) &mSymbols.fDeleteBuffers, { "DeleteBuffers", "DeleteBuffersARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fDeleteTextures, { "DeleteTextures", "DeleteTexturesARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fDeleteProgram, { "DeleteProgram", "DeleteProgramARB", nullptr } },
+        { (PRFuncPtr*) &mSymbols.fDeleteShader, { "DeleteShader", "DeleteShaderARB", nullptr } },
 
         END_SYMBOLS
     };
   // clang-format on
 
-  if (!fnLoadSymbols(coreSymbols, "GL")) return false;
+  if (!LoadGLSymbols(this, prefix, trygl, coreSymbols, "GL")) return false;
 
   {
     const SymLoadStruct symbols[] = {
         {(PRFuncPtr*)&mSymbols.fGetGraphicsResetStatus,
-         {{"glGetGraphicsResetStatus", "glGetGraphicsResetStatusARB",
-           "glGetGraphicsResetStatusKHR", "glGetGraphicsResetStatusEXT"}}},
+         {"GetGraphicsResetStatus", "GetGraphicsResetStatusARB",
+          "GetGraphicsResetStatusKHR", "GetGraphicsResetStatusEXT", nullptr}},
         END_SYMBOLS};
-    (void)fnLoadSymbols(symbols, nullptr);
+    (void)LoadGLSymbols(this, prefix, trygl, symbols, nullptr);
 
     auto err = fGetError();
     if (err == LOCAL_GL_CONTEXT_LOST) {
@@ -571,7 +571,7 @@ bool GLContext::InitImpl() {
                                      CORE_SYMBOL(ClearDepthf),
                                      CORE_SYMBOL(DepthRangef), END_SYMBOLS};
 
-    if (!fnLoadSymbols(symbols, "OpenGL ES")) return false;
+    if (!LoadGLSymbols(this, prefix, trygl, symbols, "OpenGL ES")) return false;
   } else {
     const SymLoadStruct symbols[] = {
         CORE_SYMBOL(ClearDepth), CORE_SYMBOL(DepthRange),
@@ -587,7 +587,8 @@ bool GLContext::InitImpl() {
         CORE_SYMBOL(TexGenf), CORE_SYMBOL(TexGenfv), CORE_SYMBOL(VertexPointer),
         END_SYMBOLS};
 
-    if (!fnLoadSymbols(symbols, "Desktop OpenGL")) return false;
+    if (!LoadGLSymbols(this, prefix, trygl, symbols, "Desktop OpenGL"))
+      return false;
   }
 
   ////////////////
@@ -652,9 +653,10 @@ bool GLContext::InitImpl() {
 
   if (mVersion >= 300) {  // Both GL3 and ES3.
     const SymLoadStruct symbols[] = {
-        {(PRFuncPtr*)&mSymbols.fGetStringi, {{"glGetStringi"}}}, END_SYMBOLS};
+        {(PRFuncPtr*)&mSymbols.fGetStringi, {"GetStringi", nullptr}},
+        END_SYMBOLS};
 
-    if (!fnLoadSymbols(symbols, "GetStringi")) {
+    if (!LoadGLSymbols(this, prefix, trygl, symbols, "GetStringi")) {
       MOZ_RELEASE_ASSERT(false, "GFX: GetStringi is required!");
       return false;
     }
@@ -729,9 +731,9 @@ bool GLContext::InitImpl() {
 
   ////////////////////////////////////////////////////////////////////////////
 
-  const auto fnLoadForFeature = [&](const SymLoadStruct* list,
-                                    GLFeature feature) {
-    return this->LoadFeatureSymbols(*loader, list, feature);
+  const auto fnLoadForFeature = [this, prefix, trygl](const SymLoadStruct* list,
+                                                      GLFeature feature) {
+    return this->LoadFeatureSymbols(prefix, trygl, list, feature);
   };
 
   // Check for ARB_framebuffer_objects
@@ -800,7 +802,7 @@ bool GLContext::InitImpl() {
         IsExtensionSupported(GLContext::NV_geometry_program4)) {
       const SymLoadStruct symbols[] = {
           EXT_SYMBOL2(FramebufferTextureLayer, ARB, EXT), END_SYMBOLS};
-      if (!fnLoadSymbols(symbols,
+      if (!LoadGLSymbols(this, prefix, trygl, symbols,
                          "ARB_geometry_shader4/NV_geometry_program4")) {
         MarkExtensionUnsupported(GLContext::ARB_geometry_shader4);
         MarkExtensionUnsupported(GLContext::NV_geometry_program4);
@@ -822,7 +824,7 @@ bool GLContext::InitImpl() {
   MOZ_RELEASE_ASSERT(!IsBadCallError(err));
   if (err) return false;
 
-  LoadMoreSymbols(*loader);
+  LoadMoreSymbols(prefix, trygl);
 
   ////////////////////////////////////////////////////////////////////////////
 
@@ -933,17 +935,19 @@ bool GLContext::InitImpl() {
   return true;
 }
 
-void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
-  const auto fnLoadForExt = [&](const SymLoadStruct* list, GLExtensions ext) {
-    return this->LoadExtSymbols(loader, list, ext);
+void GLContext::LoadMoreSymbols(const char* prefix, bool trygl) {
+  const auto fnLoadForExt = [this, prefix, trygl](const SymLoadStruct* list,
+                                                  GLExtensions ext) {
+    return this->LoadExtSymbols(prefix, trygl, list, ext);
   };
 
-  const auto fnLoadForFeature = [&](const SymLoadStruct* list,
-                                    GLFeature feature) {
-    return this->LoadFeatureSymbols(loader, list, feature);
+  const auto fnLoadForFeature = [this, prefix, trygl](const SymLoadStruct* list,
+                                                      GLFeature feature) {
+    return this->LoadFeatureSymbols(prefix, trygl, list, feature);
   };
 
-  const auto fnLoadFeatureByCore = [&](const SymLoadStruct* coreList,
+  const auto fnLoadFeatureByCore = [this, fnLoadForFeature](
+                                       const SymLoadStruct* coreList,
                                        const SymLoadStruct* extList,
                                        GLFeature feature) {
     const bool useCore = this->IsFeatureProvidedByCoreSymbols(feature);
@@ -980,9 +984,9 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
   if (IsExtensionSupported(OES_EGL_image)) {
     const SymLoadStruct symbols[] = {
         {(PRFuncPtr*)&mSymbols.fEGLImageTargetTexture2D,
-         {{"glEGLImageTargetTexture2DOES"}}},
+         {"EGLImageTargetTexture2DOES", nullptr}},
         {(PRFuncPtr*)&mSymbols.fEGLImageTargetRenderbufferStorage,
-         {{"glEGLImageTargetRenderbufferStorageOES"}}},
+         {"EGLImageTargetRenderbufferStorageOES", nullptr}},
         END_SYMBOLS};
     fnLoadForExt(symbols, OES_EGL_image);
   }
@@ -1003,17 +1007,17 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
 
     if (IsSupported(GLFeature::vertex_array_object)) {
         const SymLoadStruct coreSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fIsVertexArray, {{ "glIsVertexArray" }} },
-            { (PRFuncPtr*) &mSymbols.fGenVertexArrays, {{ "glGenVertexArrays" }} },
-            { (PRFuncPtr*) &mSymbols.fBindVertexArray, {{ "glBindVertexArray" }} },
-            { (PRFuncPtr*) &mSymbols.fDeleteVertexArrays, {{ "glDeleteVertexArrays" }} },
+            { (PRFuncPtr*) &mSymbols.fIsVertexArray, { "IsVertexArray", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGenVertexArrays, { "GenVertexArrays", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fBindVertexArray, { "BindVertexArray", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDeleteVertexArrays, { "DeleteVertexArrays", nullptr } },
             END_SYMBOLS
         };
         const SymLoadStruct extSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fIsVertexArray, {{ "glIsVertexArrayARB", "glIsVertexArrayOES", "glIsVertexArrayAPPLE" }} },
-            { (PRFuncPtr*) &mSymbols.fGenVertexArrays, {{ "glGenVertexArraysARB", "glGenVertexArraysOES", "glGenVertexArraysAPPLE" }} },
-            { (PRFuncPtr*) &mSymbols.fBindVertexArray, {{ "glBindVertexArrayARB", "glBindVertexArrayOES", "glBindVertexArrayAPPLE" }} },
-            { (PRFuncPtr*) &mSymbols.fDeleteVertexArrays, {{ "glDeleteVertexArraysARB", "glDeleteVertexArraysOES", "glDeleteVertexArraysAPPLE" }} },
+            { (PRFuncPtr*) &mSymbols.fIsVertexArray, { "IsVertexArrayARB", "IsVertexArrayOES", "IsVertexArrayAPPLE", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGenVertexArrays, { "GenVertexArraysARB", "GenVertexArraysOES", "GenVertexArraysAPPLE", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fBindVertexArray, { "BindVertexArrayARB", "BindVertexArrayOES", "BindVertexArrayAPPLE", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDeleteVertexArrays, { "DeleteVertexArraysARB", "DeleteVertexArraysOES", "DeleteVertexArraysAPPLE", nullptr } },
             END_SYMBOLS
         };
         fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::vertex_array_object);
@@ -1021,13 +1025,13 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
 
     if (IsSupported(GLFeature::draw_instanced)) {
         const SymLoadStruct coreSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fDrawArraysInstanced, {{ "glDrawArraysInstanced" }} },
-            { (PRFuncPtr*) &mSymbols.fDrawElementsInstanced, {{ "glDrawElementsInstanced" }} },
+            { (PRFuncPtr*) &mSymbols.fDrawArraysInstanced, { "DrawArraysInstanced", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDrawElementsInstanced, { "DrawElementsInstanced", nullptr } },
             END_SYMBOLS
         };
         const SymLoadStruct extSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fDrawArraysInstanced, {{ "glDrawArraysInstancedARB", "glDrawArraysInstancedEXT", "glDrawArraysInstancedNV", "glDrawArraysInstancedANGLE" }} },
-            { (PRFuncPtr*) &mSymbols.fDrawElementsInstanced, {{ "glDrawElementsInstancedARB", "glDrawElementsInstancedEXT", "glDrawElementsInstancedNV", "glDrawElementsInstancedANGLE" }}
+            { (PRFuncPtr*) &mSymbols.fDrawArraysInstanced, { "DrawArraysInstancedARB", "DrawArraysInstancedEXT", "DrawArraysInstancedNV", "DrawArraysInstancedANGLE", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDrawElementsInstanced, { "DrawElementsInstancedARB", "DrawElementsInstancedEXT", "DrawElementsInstancedNV", "DrawElementsInstancedANGLE", nullptr }
             },
             END_SYMBOLS
         };
@@ -1036,11 +1040,11 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
 
     if (IsSupported(GLFeature::instanced_arrays)) {
         const SymLoadStruct coreSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fVertexAttribDivisor, {{ "glVertexAttribDivisor" }} },
+            { (PRFuncPtr*) &mSymbols.fVertexAttribDivisor, { "VertexAttribDivisor", nullptr } },
             END_SYMBOLS
         };
         const SymLoadStruct extSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fVertexAttribDivisor, {{ "glVertexAttribDivisorARB", "glVertexAttribDivisorNV", "glVertexAttribDivisorANGLE" }} },
+            { (PRFuncPtr*) &mSymbols.fVertexAttribDivisor, { "VertexAttribDivisorARB", "VertexAttribDivisorNV", "VertexAttribDivisorANGLE", nullptr } },
             END_SYMBOLS
         };
         fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::instanced_arrays);
@@ -1048,13 +1052,13 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
 
     if (IsSupported(GLFeature::texture_storage)) {
         const SymLoadStruct coreSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fTexStorage2D, {{ "glTexStorage2D" }} },
-            { (PRFuncPtr*) &mSymbols.fTexStorage3D, {{ "glTexStorage3D" }} },
+            { (PRFuncPtr*) &mSymbols.fTexStorage2D, { "TexStorage2D", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fTexStorage3D, { "TexStorage3D", nullptr } },
             END_SYMBOLS
         };
         const SymLoadStruct extSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fTexStorage2D, {{ "glTexStorage2DEXT" }} },
-            { (PRFuncPtr*) &mSymbols.fTexStorage3D, {{ "glTexStorage3DEXT" }} },
+            { (PRFuncPtr*) &mSymbols.fTexStorage2D, { "TexStorage2DEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fTexStorage3D, { "TexStorage3DEXT", nullptr } },
             END_SYMBOLS
         };
         fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::texture_storage);
@@ -1062,16 +1066,16 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
 
     if (IsSupported(GLFeature::sampler_objects)) {
         const SymLoadStruct symbols[] = {
-            { (PRFuncPtr*) &mSymbols.fGenSamplers, {{ "glGenSamplers" }} },
-            { (PRFuncPtr*) &mSymbols.fDeleteSamplers, {{ "glDeleteSamplers" }} },
-            { (PRFuncPtr*) &mSymbols.fIsSampler, {{ "glIsSampler" }} },
-            { (PRFuncPtr*) &mSymbols.fBindSampler, {{ "glBindSampler" }} },
-            { (PRFuncPtr*) &mSymbols.fSamplerParameteri, {{ "glSamplerParameteri" }} },
-            { (PRFuncPtr*) &mSymbols.fSamplerParameteriv, {{ "glSamplerParameteriv" }} },
-            { (PRFuncPtr*) &mSymbols.fSamplerParameterf, {{ "glSamplerParameterf" }} },
-            { (PRFuncPtr*) &mSymbols.fSamplerParameterfv, {{ "glSamplerParameterfv" }} },
-            { (PRFuncPtr*) &mSymbols.fGetSamplerParameteriv, {{ "glGetSamplerParameteriv" }} },
-            { (PRFuncPtr*) &mSymbols.fGetSamplerParameterfv, {{ "glGetSamplerParameterfv" }} },
+            { (PRFuncPtr*) &mSymbols.fGenSamplers, { "GenSamplers", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDeleteSamplers, { "DeleteSamplers", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fIsSampler, { "IsSampler", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fBindSampler, { "BindSampler", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fSamplerParameteri, { "SamplerParameteri", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fSamplerParameteriv, { "SamplerParameteriv", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fSamplerParameterf, { "SamplerParameterf", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fSamplerParameterfv, { "SamplerParameterfv", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetSamplerParameteriv, { "GetSamplerParameteriv", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetSamplerParameterfv, { "GetSamplerParameterfv", nullptr } },
             END_SYMBOLS
         };
         fnLoadForFeature(symbols, GLFeature::sampler_objects);
@@ -1083,33 +1087,33 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
     // glResumeTransformFeedback, which are required for WebGL2.
     if (IsSupported(GLFeature::transform_feedback2)) {
         const SymLoadStruct coreSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fBindBufferBase, {{ "glBindBufferBase" }} },
-            { (PRFuncPtr*) &mSymbols.fBindBufferRange, {{ "glBindBufferRange" }} },
-            { (PRFuncPtr*) &mSymbols.fGenTransformFeedbacks, {{ "glGenTransformFeedbacks" }} },
-            { (PRFuncPtr*) &mSymbols.fBindTransformFeedback, {{ "glBindTransformFeedback" }} },
-            { (PRFuncPtr*) &mSymbols.fDeleteTransformFeedbacks, {{ "glDeleteTransformFeedbacks" }} },
-            { (PRFuncPtr*) &mSymbols.fIsTransformFeedback, {{ "glIsTransformFeedback" }} },
-            { (PRFuncPtr*) &mSymbols.fBeginTransformFeedback, {{ "glBeginTransformFeedback" }} },
-            { (PRFuncPtr*) &mSymbols.fEndTransformFeedback, {{ "glEndTransformFeedback" }} },
-            { (PRFuncPtr*) &mSymbols.fTransformFeedbackVaryings, {{ "glTransformFeedbackVaryings" }} },
-            { (PRFuncPtr*) &mSymbols.fGetTransformFeedbackVarying, {{ "glGetTransformFeedbackVarying" }} },
-            { (PRFuncPtr*) &mSymbols.fPauseTransformFeedback, {{ "glPauseTransformFeedback" }} },
-            { (PRFuncPtr*) &mSymbols.fResumeTransformFeedback, {{ "glResumeTransformFeedback" }} },
+            { (PRFuncPtr*) &mSymbols.fBindBufferBase, { "BindBufferBase", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fBindBufferRange, { "BindBufferRange", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGenTransformFeedbacks, { "GenTransformFeedbacks", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fBindTransformFeedback, { "BindTransformFeedback", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDeleteTransformFeedbacks, { "DeleteTransformFeedbacks", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fIsTransformFeedback, { "IsTransformFeedback", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fBeginTransformFeedback, { "BeginTransformFeedback", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fEndTransformFeedback, { "EndTransformFeedback", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fTransformFeedbackVaryings, { "TransformFeedbackVaryings", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetTransformFeedbackVarying, { "GetTransformFeedbackVarying", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fPauseTransformFeedback, { "PauseTransformFeedback", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fResumeTransformFeedback, { "ResumeTransformFeedback", nullptr } },
             END_SYMBOLS
         };
         const SymLoadStruct extSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fBindBufferBase, {{ "glBindBufferBaseEXT", "glBindBufferBaseNV" }} },
-            { (PRFuncPtr*) &mSymbols.fBindBufferRange, {{ "glBindBufferRangeEXT", "glBindBufferRangeNV" }} },
-            { (PRFuncPtr*) &mSymbols.fGenTransformFeedbacks, {{ "glGenTransformFeedbacksNV" }} },
-            { (PRFuncPtr*) &mSymbols.fBindTransformFeedback, {{ "glBindTransformFeedbackNV" }} },
-            { (PRFuncPtr*) &mSymbols.fDeleteTransformFeedbacks, {{ "glDeleteTransformFeedbacksNV" }} },
-            { (PRFuncPtr*) &mSymbols.fIsTransformFeedback, {{ "glIsTransformFeedbackNV" }} },
-            { (PRFuncPtr*) &mSymbols.fBeginTransformFeedback, {{ "glBeginTransformFeedbackEXT", "glBeginTransformFeedbackNV" }} },
-            { (PRFuncPtr*) &mSymbols.fEndTransformFeedback, {{ "glEndTransformFeedbackEXT", "glEndTransformFeedbackNV" }} },
-            { (PRFuncPtr*) &mSymbols.fTransformFeedbackVaryings, {{ "glTransformFeedbackVaryingsEXT", "glTransformFeedbackVaryingsNV" }} },
-            { (PRFuncPtr*) &mSymbols.fGetTransformFeedbackVarying, {{ "glGetTransformFeedbackVaryingEXT", "glGetTransformFeedbackVaryingNV" }} },
-            { (PRFuncPtr*) &mSymbols.fPauseTransformFeedback, {{ "glPauseTransformFeedbackNV" }} },
-            { (PRFuncPtr*) &mSymbols.fResumeTransformFeedback, {{ "glResumeTransformFeedbackNV" }} },
+            { (PRFuncPtr*) &mSymbols.fBindBufferBase, { "BindBufferBaseEXT", "BindBufferBaseNV", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fBindBufferRange, { "BindBufferRangeEXT", "BindBufferRangeNV", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGenTransformFeedbacks, { "GenTransformFeedbacksNV", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fBindTransformFeedback, { "BindTransformFeedbackNV", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDeleteTransformFeedbacks, { "DeleteTransformFeedbacksNV", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fIsTransformFeedback, { "IsTransformFeedbackNV", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fBeginTransformFeedback, { "BeginTransformFeedbackEXT", "BeginTransformFeedbackNV", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fEndTransformFeedback, { "EndTransformFeedbackEXT", "EndTransformFeedbackNV", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fTransformFeedbackVaryings, { "TransformFeedbackVaryingsEXT", "TransformFeedbackVaryingsNV", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetTransformFeedbackVarying, { "GetTransformFeedbackVaryingEXT", "GetTransformFeedbackVaryingNV", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fPauseTransformFeedback, { "PauseTransformFeedbackNV", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fResumeTransformFeedback, { "ResumeTransformFeedbackNV", nullptr } },
             END_SYMBOLS
         };
         if (!fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::texture_storage)) {
@@ -1120,12 +1124,12 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
 
     if (IsSupported(GLFeature::bind_buffer_offset)) {
         const SymLoadStruct coreSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fBindBufferOffset, {{ "glBindBufferOffset" }} },
+            { (PRFuncPtr*) &mSymbols.fBindBufferOffset, { "BindBufferOffset", nullptr } },
             END_SYMBOLS
         };
         const SymLoadStruct extSymbols[] = {
             { (PRFuncPtr*) &mSymbols.fBindBufferOffset,
-              {{ "glBindBufferOffsetEXT", "glBindBufferOffsetNV" }}
+              { "BindBufferOffsetEXT", "BindBufferOffsetNV", nullptr }
             },
             END_SYMBOLS
         };
@@ -1134,11 +1138,11 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
 
     if (IsSupported(GLFeature::query_counter)) {
         const SymLoadStruct coreSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fQueryCounter, {{ "glQueryCounter" }} },
+            { (PRFuncPtr*) &mSymbols.fQueryCounter, { "QueryCounter", nullptr } },
             END_SYMBOLS
         };
         const SymLoadStruct extSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fQueryCounter, {{ "glQueryCounterEXT", "glQueryCounterANGLE" }} },
+            { (PRFuncPtr*) &mSymbols.fQueryCounter, { "QueryCounterEXT", "QueryCounterANGLE", nullptr } },
             END_SYMBOLS
         };
         fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::query_counter);
@@ -1146,23 +1150,23 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
 
     if (IsSupported(GLFeature::query_objects)) {
         const SymLoadStruct coreSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fBeginQuery, {{ "glBeginQuery" }} },
-            { (PRFuncPtr*) &mSymbols.fGenQueries, {{ "glGenQueries" }} },
-            { (PRFuncPtr*) &mSymbols.fDeleteQueries, {{ "glDeleteQueries" }} },
-            { (PRFuncPtr*) &mSymbols.fEndQuery, {{ "glEndQuery" }} },
-            { (PRFuncPtr*) &mSymbols.fGetQueryiv, {{ "glGetQueryiv" }} },
-            { (PRFuncPtr*) &mSymbols.fGetQueryObjectuiv, {{ "glGetQueryObjectuiv" }} },
-            { (PRFuncPtr*) &mSymbols.fIsQuery, {{ "glIsQuery" }} },
+            { (PRFuncPtr*) &mSymbols.fBeginQuery, { "BeginQuery", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGenQueries, { "GenQueries", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDeleteQueries, { "DeleteQueries", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fEndQuery, { "EndQuery", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetQueryiv, { "GetQueryiv", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetQueryObjectuiv, { "GetQueryObjectuiv", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fIsQuery, { "IsQuery", nullptr } },
             END_SYMBOLS
         };
         const SymLoadStruct extSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fBeginQuery, {{ "glBeginQueryEXT", "glBeginQueryANGLE" }} },
-            { (PRFuncPtr*) &mSymbols.fGenQueries, {{ "glGenQueriesEXT", "glGenQueriesANGLE" }} },
-            { (PRFuncPtr*) &mSymbols.fDeleteQueries, {{ "glDeleteQueriesEXT", "glDeleteQueriesANGLE" }} },
-            { (PRFuncPtr*) &mSymbols.fEndQuery, {{ "glEndQueryEXT", "glEndQueryANGLE" }} },
-            { (PRFuncPtr*) &mSymbols.fGetQueryiv, {{ "glGetQueryivEXT", "glGetQueryivANGLE" }} },
-            { (PRFuncPtr*) &mSymbols.fGetQueryObjectuiv, {{ "glGetQueryObjectuivEXT", "glGetQueryObjectuivANGLE" }} },
-            { (PRFuncPtr*) &mSymbols.fIsQuery, {{ "glIsQueryEXT", "glIsQueryANGLE" }} },
+            { (PRFuncPtr*) &mSymbols.fBeginQuery, { "BeginQueryEXT", "BeginQueryANGLE", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGenQueries, { "GenQueriesEXT", "GenQueriesANGLE", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDeleteQueries, { "DeleteQueriesEXT", "DeleteQueriesANGLE", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fEndQuery, { "EndQueryEXT", "EndQueryANGLE", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetQueryiv, { "GetQueryivEXT", "GetQueryivANGLE", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetQueryObjectuiv, { "GetQueryObjectuivEXT", "GetQueryObjectuivANGLE", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fIsQuery, { "IsQueryEXT", "IsQueryANGLE", nullptr } },
             END_SYMBOLS
         };
         if (!fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::query_objects)) {
@@ -1176,13 +1180,13 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
 
     if (IsSupported(GLFeature::get_query_object_i64v)) {
         const SymLoadStruct coreSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fGetQueryObjecti64v, {{ "glGetQueryObjecti64v" }} },
-            { (PRFuncPtr*) &mSymbols.fGetQueryObjectui64v, {{ "glGetQueryObjectui64v" }} },
+            { (PRFuncPtr*) &mSymbols.fGetQueryObjecti64v, { "GetQueryObjecti64v", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetQueryObjectui64v, { "GetQueryObjectui64v", nullptr } },
             END_SYMBOLS
         };
         const SymLoadStruct extSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fGetQueryObjecti64v, {{ "glGetQueryObjecti64vEXT", "glGetQueryObjecti64vANGLE" }} },
-            { (PRFuncPtr*) &mSymbols.fGetQueryObjectui64v, {{ "glGetQueryObjectui64vEXT", "glGetQueryObjectui64vANGLE" }} },
+            { (PRFuncPtr*) &mSymbols.fGetQueryObjecti64v, { "GetQueryObjecti64vEXT", "GetQueryObjecti64vANGLE", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetQueryObjectui64v, { "GetQueryObjectui64vEXT", "GetQueryObjectui64vANGLE", nullptr } },
             END_SYMBOLS
         };
         if (!fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::get_query_object_i64v)) {
@@ -1192,11 +1196,11 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
 
     if (IsSupported(GLFeature::get_query_object_iv)) {
         const SymLoadStruct coreSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fGetQueryObjectiv, {{ "glGetQueryObjectiv" }} },
+            { (PRFuncPtr*) &mSymbols.fGetQueryObjectiv, { "GetQueryObjectiv", nullptr } },
             END_SYMBOLS
         };
         const SymLoadStruct extSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fGetQueryObjectiv, {{ "glGetQueryObjectivEXT", "glGetQueryObjectivANGLE" }} },
+            { (PRFuncPtr*) &mSymbols.fGetQueryObjectiv, { "GetQueryObjectivEXT", "GetQueryObjectivANGLE", nullptr } },
             END_SYMBOLS
         };
         fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::get_query_object_iv);
@@ -1204,10 +1208,10 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
 
     if (IsSupported(GLFeature::clear_buffers)) {
         const SymLoadStruct symbols[] = {
-            { (PRFuncPtr*) &mSymbols.fClearBufferfi,  {{ "glClearBufferfi",  }} },
-            { (PRFuncPtr*) &mSymbols.fClearBufferfv,  {{ "glClearBufferfv",  }} },
-            { (PRFuncPtr*) &mSymbols.fClearBufferiv,  {{ "glClearBufferiv",  }} },
-            { (PRFuncPtr*) &mSymbols.fClearBufferuiv, {{ "glClearBufferuiv" }} },
+            { (PRFuncPtr*) &mSymbols.fClearBufferfi,  { "ClearBufferfi",  nullptr } },
+            { (PRFuncPtr*) &mSymbols.fClearBufferfv,  { "ClearBufferfv",  nullptr } },
+            { (PRFuncPtr*) &mSymbols.fClearBufferiv,  { "ClearBufferiv",  nullptr } },
+            { (PRFuncPtr*) &mSymbols.fClearBufferuiv, { "ClearBufferuiv", nullptr } },
             END_SYMBOLS
         };
         fnLoadForFeature(symbols, GLFeature::clear_buffers);
@@ -1215,7 +1219,7 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
 
     if (IsSupported(GLFeature::copy_buffer)) {
         const SymLoadStruct symbols[] = {
-            { (PRFuncPtr*) &mSymbols.fCopyBufferSubData, {{ "glCopyBufferSubData" }} },
+            { (PRFuncPtr*) &mSymbols.fCopyBufferSubData, { "CopyBufferSubData", nullptr } },
             END_SYMBOLS
         };
         fnLoadForFeature(symbols, GLFeature::copy_buffer);
@@ -1223,11 +1227,11 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
 
     if (IsSupported(GLFeature::draw_buffers)) {
         const SymLoadStruct coreSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fDrawBuffers, {{ "glDrawBuffers" }} },
+            { (PRFuncPtr*) &mSymbols.fDrawBuffers, { "DrawBuffers", nullptr } },
             END_SYMBOLS
         };
         const SymLoadStruct extSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fDrawBuffers, {{ "glDrawBuffersARB", "glDrawBuffersEXT" }} },
+            { (PRFuncPtr*) &mSymbols.fDrawBuffers, { "DrawBuffersARB", "DrawBuffersEXT", nullptr } },
             END_SYMBOLS
         };
         fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::draw_buffers);
@@ -1235,11 +1239,11 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
 
     if (IsSupported(GLFeature::draw_range_elements)) {
         const SymLoadStruct coreSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fDrawRangeElements, {{ "glDrawRangeElements" }} },
+            { (PRFuncPtr*) &mSymbols.fDrawRangeElements, { "DrawRangeElements", nullptr } },
             END_SYMBOLS
         };
         const SymLoadStruct extSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fDrawRangeElements, {{ "glDrawRangeElementsEXT" }} },
+            { (PRFuncPtr*) &mSymbols.fDrawRangeElements, { "DrawRangeElementsEXT", nullptr } },
             END_SYMBOLS
         };
         fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::draw_range_elements);
@@ -1247,11 +1251,11 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
 
     if (IsSupported(GLFeature::get_integer_indexed)) {
         const SymLoadStruct coreSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fGetIntegeri_v, {{ "glGetIntegeri_v" }} },
+            { (PRFuncPtr*) &mSymbols.fGetIntegeri_v, { "GetIntegeri_v", nullptr } },
             END_SYMBOLS
         };
         const SymLoadStruct extSymbols[] ={
-            { (PRFuncPtr*) &mSymbols.fGetIntegeri_v, {{ "glGetIntegerIndexedvEXT" }} },
+            { (PRFuncPtr*) &mSymbols.fGetIntegeri_v, { "GetIntegerIndexedvEXT", nullptr } },
             END_SYMBOLS
         };
         fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::get_integer_indexed);
@@ -1259,7 +1263,7 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
 
     if (IsSupported(GLFeature::get_integer64_indexed)) {
         const SymLoadStruct symbols[] = {
-            { (PRFuncPtr*) &mSymbols.fGetInteger64i_v, {{ "glGetInteger64i_v" }} },
+            { (PRFuncPtr*) &mSymbols.fGetInteger64i_v, { "GetInteger64i_v", nullptr } },
             END_SYMBOLS
         };
         fnLoadForFeature(symbols, GLFeature::get_integer64_indexed);
@@ -1267,23 +1271,23 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
 
     if (IsSupported(GLFeature::gpu_shader4)) {
         const SymLoadStruct symbols[] = {
-            { (PRFuncPtr*) &mSymbols.fGetVertexAttribIiv, {{ "glGetVertexAttribIiv", "glGetVertexAttribIivEXT" }} },
-            { (PRFuncPtr*) &mSymbols.fGetVertexAttribIuiv, {{ "glGetVertexAttribIuiv", "glGetVertexAttribIuivEXT" }} },
-            { (PRFuncPtr*) &mSymbols.fVertexAttribI4i, {{ "glVertexAttribI4i", "glVertexAttribI4iEXT" }} },
-            { (PRFuncPtr*) &mSymbols.fVertexAttribI4iv, {{ "glVertexAttribI4iv", "glVertexAttribI4ivEXT" }} },
-            { (PRFuncPtr*) &mSymbols.fVertexAttribI4ui, {{ "glVertexAttribI4ui", "glVertexAttribI4uiEXT" }} },
-            { (PRFuncPtr*) &mSymbols.fVertexAttribI4uiv, {{ "glVertexAttribI4uiv", "glVertexAttribI4uivEXT" }} },
-            { (PRFuncPtr*) &mSymbols.fVertexAttribIPointer, {{ "glVertexAttribIPointer", "glVertexAttribIPointerEXT" }} },
-            { (PRFuncPtr*) &mSymbols.fUniform1ui,  {{ "glUniform1ui", "glUniform1uiEXT" }} },
-            { (PRFuncPtr*) &mSymbols.fUniform2ui,  {{ "glUniform2ui", "glUniform2uiEXT" }} },
-            { (PRFuncPtr*) &mSymbols.fUniform3ui,  {{ "glUniform3ui", "glUniform3uiEXT" }} },
-            { (PRFuncPtr*) &mSymbols.fUniform4ui,  {{ "glUniform4ui", "glUniform4uiEXT" }} },
-            { (PRFuncPtr*) &mSymbols.fUniform1uiv, {{ "glUniform1uiv", "glUniform1uivEXT" }} },
-            { (PRFuncPtr*) &mSymbols.fUniform2uiv, {{ "glUniform2uiv", "glUniform2uivEXT" }} },
-            { (PRFuncPtr*) &mSymbols.fUniform3uiv, {{ "glUniform3uiv", "glUniform3uivEXT" }} },
-            { (PRFuncPtr*) &mSymbols.fUniform4uiv, {{ "glUniform4uiv", "glUniform4uivEXT" }} },
-            { (PRFuncPtr*) &mSymbols.fGetFragDataLocation, {{ "glGetFragDataLocation", "glGetFragDataLocationEXT" }} },
-            { (PRFuncPtr*) &mSymbols.fGetUniformuiv, {{ "glGetUniformuiv", "glGetUniformuivEXT" }} },
+            { (PRFuncPtr*) &mSymbols.fGetVertexAttribIiv, { "GetVertexAttribIiv", "GetVertexAttribIivEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetVertexAttribIuiv, { "GetVertexAttribIuiv", "GetVertexAttribIuivEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fVertexAttribI4i, { "VertexAttribI4i", "VertexAttribI4iEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fVertexAttribI4iv, { "VertexAttribI4iv","VertexAttribI4ivEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fVertexAttribI4ui, { "VertexAttribI4ui", "VertexAttribI4uiEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fVertexAttribI4uiv, { "VertexAttribI4uiv", "VertexAttribI4uivEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fVertexAttribIPointer, { "VertexAttribIPointer", "VertexAttribIPointerEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUniform1ui,  { "Uniform1ui", "Uniform1uiEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUniform2ui,  { "Uniform2ui", "Uniform2uiEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUniform3ui,  { "Uniform3ui", "Uniform3uiEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUniform4ui,  { "Uniform4ui", "Uniform4uiEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUniform1uiv, { "Uniform1uiv", "Uniform1uivEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUniform2uiv, { "Uniform2uiv", "Uniform2uivEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUniform3uiv, { "Uniform3uiv", "Uniform3uivEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUniform4uiv, { "Uniform4uiv", "Uniform4uivEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetFragDataLocation, { "GetFragDataLocation", "GetFragDataLocationEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetUniformuiv, { "GetUniformuiv", "GetUniformuivEXT", nullptr } },
             END_SYMBOLS
         };
         fnLoadForFeature(symbols, GLFeature::gpu_shader4);
@@ -1291,9 +1295,9 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
 
     if (IsSupported(GLFeature::map_buffer_range)) {
         const SymLoadStruct symbols[] = {
-            { (PRFuncPtr*) &mSymbols.fMapBufferRange, {{ "glMapBufferRange" }} },
-            { (PRFuncPtr*) &mSymbols.fFlushMappedBufferRange, {{ "glFlushMappedBufferRange" }} },
-            { (PRFuncPtr*) &mSymbols.fUnmapBuffer, {{ "glUnmapBuffer" }} },
+            { (PRFuncPtr*) &mSymbols.fMapBufferRange, { "MapBufferRange", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fFlushMappedBufferRange, { "FlushMappedBufferRange", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUnmapBuffer, { "UnmapBuffer", nullptr } },
             END_SYMBOLS
         };
         fnLoadForFeature(symbols, GLFeature::map_buffer_range);
@@ -1301,12 +1305,12 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
 
     if (IsSupported(GLFeature::texture_3D)) {
         const SymLoadStruct coreSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fTexImage3D, {{ "glTexImage3D" }} },
-            { (PRFuncPtr*) &mSymbols.fTexSubImage3D, {{ "glTexSubImage3D" }} },
+            { (PRFuncPtr*) &mSymbols.fTexImage3D, { "TexImage3D", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fTexSubImage3D, { "TexSubImage3D", nullptr } },
             END_SYMBOLS
         };
         const SymLoadStruct extSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fTexSubImage3D, {{ "glTexSubImage3DEXT", "glTexSubImage3DOES" }} },
+            { (PRFuncPtr*) &mSymbols.fTexSubImage3D, { "TexSubImage3DEXT", "TexSubImage3DOES", nullptr } },
             END_SYMBOLS
         };
         fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::texture_3D);
@@ -1314,13 +1318,13 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
 
     if (IsSupported(GLFeature::texture_3D_compressed)) {
         const SymLoadStruct coreSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fCompressedTexImage3D, {{ "glCompressedTexImage3D" }} },
-            { (PRFuncPtr*) &mSymbols.fCompressedTexSubImage3D, {{ "glCompressedTexSubImage3D" }} },
+            { (PRFuncPtr*) &mSymbols.fCompressedTexImage3D, { "CompressedTexImage3D", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fCompressedTexSubImage3D, { "CompressedTexSubImage3D", nullptr } },
             END_SYMBOLS
         };
         const SymLoadStruct extSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fCompressedTexImage3D, {{ "glCompressedTexImage3DARB", "glCompressedTexImage3DOES" }} },
-            { (PRFuncPtr*) &mSymbols.fCompressedTexSubImage3D, {{ "glCompressedTexSubImage3DARB", "glCompressedTexSubImage3DOES" }} },
+            { (PRFuncPtr*) &mSymbols.fCompressedTexImage3D, { "CompressedTexImage3DARB", "CompressedTexImage3DOES", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fCompressedTexSubImage3D, { "CompressedTexSubImage3DARB", "CompressedTexSubImage3DOES", nullptr } },
             END_SYMBOLS
         };
         fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::texture_3D_compressed);
@@ -1328,11 +1332,11 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
 
     if (IsSupported(GLFeature::texture_3D_copy)) {
         const SymLoadStruct coreSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fCopyTexSubImage3D, {{ "glCopyTexSubImage3D" }} },
+            { (PRFuncPtr*) &mSymbols.fCopyTexSubImage3D, { "CopyTexSubImage3D", nullptr } },
             END_SYMBOLS
         };
         const SymLoadStruct extSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fCopyTexSubImage3D, {{ "glCopyTexSubImage3DEXT", "glCopyTexSubImage3DOES" }} },
+            { (PRFuncPtr*) &mSymbols.fCopyTexSubImage3D, { "CopyTexSubImage3DEXT", "CopyTexSubImage3DOES", nullptr } },
             END_SYMBOLS
         };
         fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::texture_3D_copy);
@@ -1342,12 +1346,12 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
         // Note: Don't query for glGetActiveUniformName because it is not
         // supported by GL ES 3.
         const SymLoadStruct symbols[] = {
-            { (PRFuncPtr*) &mSymbols.fGetUniformIndices, {{ "glGetUniformIndices" }} },
-            { (PRFuncPtr*) &mSymbols.fGetActiveUniformsiv, {{ "glGetActiveUniformsiv" }} },
-            { (PRFuncPtr*) &mSymbols.fGetUniformBlockIndex, {{ "glGetUniformBlockIndex" }} },
-            { (PRFuncPtr*) &mSymbols.fGetActiveUniformBlockiv, {{ "glGetActiveUniformBlockiv" }} },
-            { (PRFuncPtr*) &mSymbols.fGetActiveUniformBlockName, {{ "glGetActiveUniformBlockName" }} },
-            { (PRFuncPtr*) &mSymbols.fUniformBlockBinding, {{ "glUniformBlockBinding" }} },
+            { (PRFuncPtr*) &mSymbols.fGetUniformIndices, { "GetUniformIndices", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetActiveUniformsiv, { "GetActiveUniformsiv", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetUniformBlockIndex, { "GetUniformBlockIndex", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetActiveUniformBlockiv, { "GetActiveUniformBlockiv", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetActiveUniformBlockName, { "GetActiveUniformBlockName", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUniformBlockBinding, { "UniformBlockBinding", nullptr } },
             END_SYMBOLS
         };
         fnLoadForFeature(symbols, GLFeature::uniform_buffer_object);
@@ -1355,12 +1359,12 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
 
     if (IsSupported(GLFeature::uniform_matrix_nonsquare)) {
         const SymLoadStruct symbols[] = {
-            { (PRFuncPtr*) &mSymbols.fUniformMatrix2x3fv, {{ "glUniformMatrix2x3fv" }} },
-            { (PRFuncPtr*) &mSymbols.fUniformMatrix2x4fv, {{ "glUniformMatrix2x4fv" }} },
-            { (PRFuncPtr*) &mSymbols.fUniformMatrix3x2fv, {{ "glUniformMatrix3x2fv" }} },
-            { (PRFuncPtr*) &mSymbols.fUniformMatrix3x4fv, {{ "glUniformMatrix3x4fv" }} },
-            { (PRFuncPtr*) &mSymbols.fUniformMatrix4x2fv, {{ "glUniformMatrix4x2fv" }} },
-            { (PRFuncPtr*) &mSymbols.fUniformMatrix4x3fv, {{ "glUniformMatrix4x3fv" }} },
+            { (PRFuncPtr*) &mSymbols.fUniformMatrix2x3fv, { "UniformMatrix2x3fv", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUniformMatrix2x4fv, { "UniformMatrix2x4fv", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUniformMatrix3x2fv, { "UniformMatrix3x2fv", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUniformMatrix3x4fv, { "UniformMatrix3x4fv", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUniformMatrix4x2fv, { "UniformMatrix4x2fv", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUniformMatrix4x3fv, { "UniformMatrix4x3fv", nullptr } },
             END_SYMBOLS
         };
         fnLoadForFeature(symbols, GLFeature::uniform_matrix_nonsquare);
@@ -1376,8 +1380,8 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
 
     if (IsSupported(GLFeature::invalidate_framebuffer)) {
         const SymLoadStruct symbols[] = {
-            { (PRFuncPtr*) &mSymbols.fInvalidateFramebuffer,    {{ "glInvalidateFramebuffer" }} },
-            { (PRFuncPtr*) &mSymbols.fInvalidateSubFramebuffer, {{ "glInvalidateSubFramebuffer" }} },
+            { (PRFuncPtr*) &mSymbols.fInvalidateFramebuffer,    { "InvalidateFramebuffer", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fInvalidateSubFramebuffer, { "InvalidateSubFramebuffer", nullptr } },
             END_SYMBOLS
         };
         fnLoadForFeature(symbols, GLFeature::invalidate_framebuffer);
@@ -1385,7 +1389,7 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
 
     if (IsSupported(GLFeature::prim_restart)) {
         const SymLoadStruct symbols[] = {
-            { (PRFuncPtr*) &mSymbols.fPrimitiveRestartIndex,    {{ "glPrimitiveRestartIndex", "glPrimitiveRestartIndexNV" }} },
+            { (PRFuncPtr*) &mSymbols.fPrimitiveRestartIndex,    { "PrimitiveRestartIndex", "PrimitiveRestartIndexNV", nullptr } },
             END_SYMBOLS
         };
         fnLoadForFeature(symbols, GLFeature::prim_restart);
@@ -1393,17 +1397,17 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
 
     if (IsExtensionSupported(KHR_debug)) {
         const SymLoadStruct symbols[] = {
-            { (PRFuncPtr*) &mSymbols.fDebugMessageControl,  {{ "glDebugMessageControl",  "glDebugMessageControlKHR", }} },
-            { (PRFuncPtr*) &mSymbols.fDebugMessageInsert,   {{ "glDebugMessageInsert",   "glDebugMessageInsertKHR",  }} },
-            { (PRFuncPtr*) &mSymbols.fDebugMessageCallback, {{ "glDebugMessageCallback", "glDebugMessageCallbackKHR" }} },
-            { (PRFuncPtr*) &mSymbols.fGetDebugMessageLog,   {{ "glGetDebugMessageLog",   "glGetDebugMessageLogKHR",  }} },
-            { (PRFuncPtr*) &mSymbols.fGetPointerv,          {{ "glGetPointerv",          "glGetPointervKHR",         }} },
-            { (PRFuncPtr*) &mSymbols.fPushDebugGroup,       {{ "glPushDebugGroup",       "glPushDebugGroupKHR",      }} },
-            { (PRFuncPtr*) &mSymbols.fPopDebugGroup,        {{ "glPopDebugGroup",        "glPopDebugGroupKHR",       }} },
-            { (PRFuncPtr*) &mSymbols.fObjectLabel,          {{ "glObjectLabel",          "glObjectLabelKHR",         }} },
-            { (PRFuncPtr*) &mSymbols.fGetObjectLabel,       {{ "glGetObjectLabel",       "glGetObjectLabelKHR",      }} },
-            { (PRFuncPtr*) &mSymbols.fObjectPtrLabel,       {{ "glObjectPtrLabel",       "glObjectPtrLabelKHR",      }} },
-            { (PRFuncPtr*) &mSymbols.fGetObjectPtrLabel,    {{ "glGetObjectPtrLabel",    "glGetObjectPtrLabelKHR",   }} },
+            { (PRFuncPtr*) &mSymbols.fDebugMessageControl,  { "DebugMessageControl",  "DebugMessageControlKHR",  nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDebugMessageInsert,   { "DebugMessageInsert",   "DebugMessageInsertKHR",   nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDebugMessageCallback, { "DebugMessageCallback", "DebugMessageCallbackKHR", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetDebugMessageLog,   { "GetDebugMessageLog",   "GetDebugMessageLogKHR",   nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetPointerv,          { "GetPointerv",          "GetPointervKHR",          nullptr } },
+            { (PRFuncPtr*) &mSymbols.fPushDebugGroup,       { "PushDebugGroup",       "PushDebugGroupKHR",       nullptr } },
+            { (PRFuncPtr*) &mSymbols.fPopDebugGroup,        { "PopDebugGroup",        "PopDebugGroupKHR",        nullptr } },
+            { (PRFuncPtr*) &mSymbols.fObjectLabel,          { "ObjectLabel",          "ObjectLabelKHR",          nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetObjectLabel,       { "GetObjectLabel",       "GetObjectLabelKHR",       nullptr } },
+            { (PRFuncPtr*) &mSymbols.fObjectPtrLabel,       { "ObjectPtrLabel",       "ObjectPtrLabelKHR",       nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetObjectPtrLabel,    { "GetObjectPtrLabel",    "GetObjectPtrLabelKHR",    nullptr } },
             END_SYMBOLS
         };
         fnLoadForExt(symbols, KHR_debug);
@@ -1411,13 +1415,13 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
 
     if (IsExtensionSupported(NV_fence)) {
         const SymLoadStruct symbols[] = {
-            { (PRFuncPtr*) &mSymbols.fGenFences,    {{ "glGenFencesNV"    }} },
-            { (PRFuncPtr*) &mSymbols.fDeleteFences, {{ "glDeleteFencesNV" }} },
-            { (PRFuncPtr*) &mSymbols.fSetFence,     {{ "glSetFenceNV"     }} },
-            { (PRFuncPtr*) &mSymbols.fTestFence,    {{ "glTestFenceNV"    }} },
-            { (PRFuncPtr*) &mSymbols.fFinishFence,  {{ "glFinishFenceNV"  }} },
-            { (PRFuncPtr*) &mSymbols.fIsFence,      {{ "glIsFenceNV"      }} },
-            { (PRFuncPtr*) &mSymbols.fGetFenceiv,   {{ "glGetFenceivNV"   }} },
+            { (PRFuncPtr*) &mSymbols.fGenFences,    { "GenFencesNV",    nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDeleteFences, { "DeleteFencesNV", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fSetFence,     { "SetFenceNV",     nullptr } },
+            { (PRFuncPtr*) &mSymbols.fTestFence,    { "TestFenceNV",    nullptr } },
+            { (PRFuncPtr*) &mSymbols.fFinishFence,  { "FinishFenceNV",  nullptr } },
+            { (PRFuncPtr*) &mSymbols.fIsFence,      { "IsFenceNV",      nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetFenceiv,   { "GetFenceivNV",   nullptr } },
             END_SYMBOLS
         };
         fnLoadForExt(symbols, NV_fence);
@@ -1427,7 +1431,7 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
 
   if (IsExtensionSupported(NV_texture_barrier)) {
     const SymLoadStruct symbols[] = {
-        {(PRFuncPtr*)&mSymbols.fTextureBarrier, {{"glTextureBarrierNV"}}},
+        {(PRFuncPtr*)&mSymbols.fTextureBarrier, {"TextureBarrierNV", nullptr}},
         END_SYMBOLS};
     fnLoadForExt(symbols, NV_texture_barrier);
   }
@@ -1448,7 +1452,7 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
                                       CORE_SYMBOL(GetTexLevelParameteriv),
                                       END_SYMBOLS};
   const bool warnOnFailures = ShouldSpew();
-  loader.LoadSymbols(devSymbols, warnOnFailures);
+  LoadSymbols(devSymbols, trygl, prefix, warnOnFailures);
 }
 
 #undef CORE_SYMBOL

@@ -74,17 +74,20 @@ bool GLXLibrary::EnsureInitialized() {
   PR_SetEnv("force_s3tc_enable=true");
 
   if (!mOGLLibrary) {
+    const char* libGLfilename = nullptr;
+    bool forceFeatureReport = false;
+
     // see e.g. bug 608526: it is intrinsically interesting to know whether we
     // have dynamically linked to libGL.so.1 because at least the NVIDIA
     // implementation requires an executable stack, which causes mprotect calls,
     // which trigger glibc bug
     // http://sourceware.org/bugzilla/show_bug.cgi?id=12225
-    const char* libGLfilename = "libGL.so.1";
 #ifdef __OpenBSD__
     libGLfilename = "libGL.so";
+#else
+    libGLfilename = "libGL.so.1";
 #endif
 
-    const bool forceFeatureReport = false;
     ScopedGfxFeatureReporter reporter(libGLfilename, forceFeatureReport);
     mOGLLibrary = PR_LoadLibrary(libGLfilename);
     if (!mOGLLibrary) {
@@ -98,18 +101,16 @@ bool GLXLibrary::EnsureInitialized() {
     mDebug = true;
   }
 
-#define SYMBOL(X)                 \
-  {                               \
-    (PRFuncPtr*)&mSymbols.f##X, { \
-      { "glX" #X }                \
-    }                             \
+#define SYMBOL(X)                                     \
+  {                                                   \
+    (PRFuncPtr*)&mSymbols.f##X, { "glX" #X, nullptr } \
   }
-#define END_OF_SYMBOLS \
-  {                    \
-    nullptr, {}        \
+#define END_OF_SYMBOLS   \
+  {                      \
+    nullptr, { nullptr } \
   }
 
-  const SymLoadStruct symbols[] = {
+  const GLLibraryLoader::SymLoadStruct symbols[] = {
       /* functions that were in GLX 1.0 */
       SYMBOL(DestroyContext),
       SYMBOL(MakeCurrent),
@@ -136,17 +137,12 @@ bool GLXLibrary::EnsureInitialized() {
 
       // Core in GLX 1.4, ARB extension before.
       {(PRFuncPtr*)&mSymbols.fGetProcAddress,
-       {{"glXGetProcAddress", "glXGetProcAddressARB"}}},
+       {"glXGetProcAddress", "glXGetProcAddressARB", nullptr}},
       END_OF_SYMBOLS};
-
-  {
-    const SymbolLoader libLoader(*mOGLLibrary);
-    if (!libLoader.LoadSymbols(symbols)) {
-      NS_WARNING("Couldn't load required GLX symbols.");
-      return false;
-    }
+  if (!GLLibraryLoader::LoadSymbols(mOGLLibrary, symbols)) {
+    NS_WARNING("Couldn't load required GLX symbols.");
+    return false;
   }
-  const SymbolLoader pfnLoader(mSymbols.fGetProcAddress);
 
   Display* display = DefaultXDisplay();
   int screen = DefaultScreen(display);
@@ -159,24 +155,29 @@ bool GLXLibrary::EnsureInitialized() {
     }
   }
 
-  const SymLoadStruct symbols_texturefrompixmap[] = {
+  const GLLibraryLoader::SymLoadStruct symbols_texturefrompixmap[] = {
       SYMBOL(BindTexImageEXT), SYMBOL(ReleaseTexImageEXT), END_OF_SYMBOLS};
 
-  const SymLoadStruct symbols_createcontext[] = {
+  const GLLibraryLoader::SymLoadStruct symbols_createcontext[] = {
       SYMBOL(CreateContextAttribsARB), END_OF_SYMBOLS};
 
-  const SymLoadStruct symbols_videosync[] = {
+  const GLLibraryLoader::SymLoadStruct symbols_videosync[] = {
       SYMBOL(GetVideoSyncSGI), SYMBOL(WaitVideoSyncSGI), END_OF_SYMBOLS};
 
-  const SymLoadStruct symbols_swapcontrol[] = {SYMBOL(SwapIntervalEXT),
-                                               END_OF_SYMBOLS};
+  const GLLibraryLoader::SymLoadStruct symbols_swapcontrol[] = {
+      SYMBOL(SwapIntervalEXT), END_OF_SYMBOLS};
 
-  const auto fnLoadSymbols = [&](const SymLoadStruct* symbols) {
-    if (pfnLoader.LoadSymbols(symbols)) return true;
+  const auto lookupFunction =
+      (GLLibraryLoader::PlatformLookupFunction)mSymbols.fGetProcAddress;
 
-    ClearSymbols(symbols);
-    return false;
-  };
+  const auto fnLoadSymbols =
+      [&](const GLLibraryLoader::SymLoadStruct* symbols) {
+        if (GLLibraryLoader::LoadSymbols(mOGLLibrary, symbols, lookupFunction))
+          return true;
+
+        GLLibraryLoader::ClearSymbols(symbols);
+        return false;
+      };
 
   const char* clientVendor = fGetClientString(display, LOCAL_GLX_VENDOR);
   const char* serverVendor =
@@ -570,7 +571,8 @@ GLContextGLX::~GLContextGLX() {
 }
 
 bool GLContextGLX::Init() {
-  if (!GLContext::Init()) {
+  SetupLookupFunction();
+  if (!InitWithPrefix("gl", true)) {
     return false;
   }
 
@@ -607,9 +609,9 @@ bool GLContextGLX::IsCurrentImpl() const {
   return mGLX->fGetCurrentContext() == mContext;
 }
 
-Maybe<SymbolLoader> GLContextGLX::GetSymbolLoader() const {
-  const auto pfn = sGLXLibrary.GetGetProcAddress();
-  return Some(SymbolLoader(pfn));
+bool GLContextGLX::SetupLookupFunction() {
+  mLookupFunc = (PlatformLookupFunction)sGLXLibrary.GetGetProcAddress();
+  return true;
 }
 
 bool GLContextGLX::IsDoubleBuffered() const { return mDoubleBuffered; }
