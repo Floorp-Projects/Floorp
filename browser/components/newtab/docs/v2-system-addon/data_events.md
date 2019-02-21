@@ -362,6 +362,26 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
 }
 ```
 
+#### Pinning a tab
+
+```js
+{
+  "event": "TABPINNED",
+  "source": "TAB_CONTEXT_MENU",
+  "value": "{\"total_pinned_tabs\":2}",
+
+  // Basic metadata
+  "action": "activity_stream_user_event",
+  "client_id": "aabaace5-35f4-7345-a28e-5502147dc93c",
+  "version": "67.0a1",
+  "addon_version": "20190218094427",
+  "locale": "en-US",
+  "user_prefs": 59,
+  "page": "n/a",
+  "session_id": "n/a",
+}
+```
+
 #### Adding or editing a new TopSite
 
 ```js
