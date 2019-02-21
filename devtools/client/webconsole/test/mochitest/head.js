@@ -26,6 +26,12 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/debugger/new/test/mochitest/helpers/context.js",
   this);
 
+// Import helpers for the new debugger
+/* import-globals-from ../../../debugger/new/test/mochitest/helpers.js*/
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/debugger/new/test/mochitest/helpers.js",
+  this);
+
 var {HUDService} = require("devtools/client/webconsole/hudservice");
 var WCUL10n = require("devtools/client/webconsole/webconsole-l10n");
 const DOCS_GA_PARAMS = `?${new URLSearchParams({
@@ -1112,3 +1118,17 @@ function isConfirmDialogOpened(toolbox) {
   return tooltip.classList.contains("tooltip-visible");
 }
 
+async function selectFrame(dbg, frame) {
+  const onScopes = waitForDispatch(dbg, "ADD_SCOPES");
+  await dbg.actions.selectFrame(frame);
+  await onScopes;
+}
+
+async function pauseDebugger(dbg) {
+  info("Waiting for debugger to pause");
+  const onPaused = waitForPaused(dbg);
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
+    content.wrappedJSObject.firstCall();
+  });
+  await onPaused;
+}

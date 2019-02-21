@@ -21,11 +21,11 @@ window.onload = async function () {
       (consoleState, response) => resolve(consoleState)
     ));
     state = await onAttachConsole;
-    const debuggerClient = state.dbgClient;
+    const consoleFront = state.client;
 
     info("Testing console.log packet timestamp correctness");
     const clientLogTimestamp = Date.now();
-    const packet = await consoleAPICall(debuggerClient,
+    const packet = await consoleAPICall(consoleFront,
       () => top.console.log("test"));
     const packetReceivedTimestamp = Date.now();
 

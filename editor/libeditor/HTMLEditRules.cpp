@@ -2065,8 +2065,7 @@ EditActionResult HTMLEditRules::SplitMailCites() {
   if (previousNodeOfSplitPoint &&
       previousNodeOfSplitPoint->IsHTMLElement(nsGkAtoms::span) &&
       previousNodeOfSplitPoint->GetPrimaryFrame() &&
-      previousNodeOfSplitPoint->GetPrimaryFrame()->IsFrameOfType(
-          nsIFrame::eBlockFrame)) {
+      previousNodeOfSplitPoint->GetPrimaryFrame()->IsBlockFrameOrSubclass()) {
     nsCOMPtr<nsINode> lastChild = previousNodeOfSplitPoint->GetLastChild();
     if (lastChild && !lastChild->IsHTMLElement(nsGkAtoms::br)) {
       // We ignore the result here.

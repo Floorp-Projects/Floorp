@@ -456,11 +456,23 @@ var ExtensionsUI = {
   promisePrivateBrowsingNotification(window) {
     return new Promise(resolve => {
       let action = {
-        callback: resolve,
+        callback: () => {
+          resolve();
+          AMTelemetry.recordActionEvent({
+            object: "doorhanger",
+            action: "dismiss",
+            view: "privateBrowsing",
+          });
+        },
         dismiss: false,
       };
       let manage = {
         callback: () => {
+          AMTelemetry.recordActionEvent({
+            object: "doorhanger",
+            action: "manage",
+            view: "privateBrowsing",
+          });
           window.BrowserOpenAddonsMgr("addons://list/extension");
           resolve();
         },

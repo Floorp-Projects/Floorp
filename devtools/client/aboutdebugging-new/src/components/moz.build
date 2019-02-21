@@ -17,8 +17,9 @@ DevToolsModules(
     'ExtensionDebugSetting.js',
     'ProfilerDialog.css',
     'ProfilerDialog.js',
+    'RuntimeActions.css',
+    'RuntimeActions.js',
     'RuntimeInfo.js',
-    'RuntimePage.css',
     'RuntimePage.js',
     'ServiceWorkersWarning.js',
 )

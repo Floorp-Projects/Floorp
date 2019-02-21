@@ -137,5 +137,5 @@ class GeckoViewNavigationChild extends GeckoViewChildModule {
   }
 }
 
-let {debug, warn} = GeckoViewNavigationChild.initLogging("GeckoViewNavigation");
-let module = GeckoViewNavigationChild.create(this);
+const {debug, warn} = GeckoViewNavigationChild.initLogging("GeckoViewNavigation"); // eslint-disable-line no-unused-vars
+const module = GeckoViewNavigationChild.create(this);

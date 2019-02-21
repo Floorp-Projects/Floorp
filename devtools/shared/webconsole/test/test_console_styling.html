@@ -89,23 +89,22 @@ function startTest()
 function onAttach(aState, aResponse)
 {
   onConsoleAPICall = onConsoleAPICall.bind(null, aState);
-  aState.dbgClient.addListener("consoleAPICall", onConsoleAPICall);
+  aState.client.on("consoleAPICall", onConsoleAPICall);
   doConsoleCalls(aState.actor);
 }
 
 let consoleCalls = [];
 
-function onConsoleAPICall(aState, aType, aPacket)
+function onConsoleAPICall(aState, aPacket)
 {
   info("received message level: " + aPacket.message.level);
-  is(aPacket.from, aState.actor, "console API call actor");
 
   consoleCalls.push(aPacket.message);
   if (consoleCalls.length != expectedConsoleCalls.length) {
     return;
   }
 
-  aState.dbgClient.removeListener("consoleAPICall", onConsoleAPICall);
+  aState.client.off("consoleAPICall", onConsoleAPICall);
 
   expectedConsoleCalls.forEach(function(aMessage, aIndex) {
     info("checking received console call #" + aIndex);

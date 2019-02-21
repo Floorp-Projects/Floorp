@@ -28,7 +28,7 @@ function onAttach(aState, aResponse)
   info("test network POST request");
 
   onNetworkEvent = onNetworkEvent.bind(null, aState);
-  aState.dbgClient.addListener("networkEvent", onNetworkEvent);
+  aState.client.on("serverNetworkEvent", onNetworkEvent);
   onNetworkEventUpdate = onNetworkEventUpdate.bind(null, aState);
   aState.dbgClient.addListener("networkEventUpdate", onNetworkEventUpdate);
 
@@ -36,10 +36,8 @@ function onAttach(aState, aResponse)
   iframe.wrappedJSObject.testXhrPost();
 }
 
-function onNetworkEvent(aState, aType, aPacket)
+function onNetworkEvent(aState, aPacket)
 {
-  is(aPacket.from, aState.actor, "network event actor");
-
   info("checking the network event packet");
 
   let netActor = aPacket.eventActor;
@@ -53,7 +51,7 @@ function onNetworkEvent(aState, aType, aPacket)
 
   aState.netActor = netActor.actor;
 
-  aState.dbgClient.removeListener("networkEvent", onNetworkEvent);
+  aState.client.off("serverNetworkEvent", onNetworkEvent);
 }
 
 let updates = [];

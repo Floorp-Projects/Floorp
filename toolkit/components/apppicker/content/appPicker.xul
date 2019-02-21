@@ -14,7 +14,6 @@
     onload="g_dialog.appPickerLoad();"
     buttons="accept,cancel,extra2"
     buttonlabelextra2="&BrowseButton.label;"
-    ondialogextra2="g_dialog.appPickerBrowse();"
     defaultButton="cancel"
     ondialogaccept="return g_dialog.appPickerOK();"
     ondialogcancel="return g_dialog.appPickerCancel();"

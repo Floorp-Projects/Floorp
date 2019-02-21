@@ -262,7 +262,7 @@ class WebrtcVideoConduit
                             double* bitrateMean, double* bitrateStdDev,
                             uint32_t* discardedPackets,
                             uint32_t* framesDecoded) override;
-  bool GetRTPStats(unsigned int* jitterMs,
+  bool GetRTPReceiverStats(unsigned int* jitterMs,
                    unsigned int* cumulativeLost) override;
   bool GetRTCPReceiverReport(uint32_t* jitterMs, uint32_t* packetsReceived,
                              uint64_t* bytesReceived, uint32_t* cumulativeLost,

@@ -27,7 +27,7 @@ function startTest() {
 
 function onAttach(state, response) {
   onConsoleCall = onConsoleCall.bind(null, state);
-  state.dbgClient.addListener("consoleAPICall", onConsoleCall);
+  state.client.on("consoleAPICall", onConsoleCall);
 
   let longString = (new Array(DebuggerServer.LONG_STRING_LENGTH + 3)).join("\u0629");
 
@@ -133,9 +133,7 @@ function onAttach(state, response) {
   };
 }
 
-function onConsoleCall(state, aType, aPacket) {
-  is(aPacket.from, state.actor, "console API call actor");
-
+function onConsoleCall(state, aPacket) {
   info("checking the console API call packet");
 
   checkConsoleAPICall(aPacket.message, {
@@ -148,7 +146,7 @@ function onConsoleCall(state, aType, aPacket) {
     }],
   });
 
-  state.dbgClient.removeListener("consoleAPICall", onConsoleCall);
+  state.client.off("consoleAPICall", onConsoleCall);
 
   info("inspecting object properties");
   let args = aPacket.message.arguments;

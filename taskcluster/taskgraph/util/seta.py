@@ -90,19 +90,32 @@ class SETA(object):
                 if type(task_list.values()[0]) == list and len(task_list.values()[0]) > 0:
                     high_value_tasks = task_list.values()[0]
 
+            opt = ['test-windows10-64/opt',
+                   'test-windows7-32/opt',
+                   'test-linux64/opt',
+                   'test-windows10-64-qr/opt',
+                   'test-windows7-32-qr/opt',
+                   'test-linux64-qr/opt']
+            pgo = ['test-windows10-64-pgo/opt',
+                   'test-windows7-32-pgo/opt',
+                   'test-linux64-pgo/opt',
+                   'test-windows10-64-pgo-qr/opt',
+                   'test-windows7-32-pgo-qr/opt',
+                   'test-linux64-pgo-qr/opt']
+            # Now add pgo variants to the low-value set
+            for iter in range(0, len(opt)):
+                if any(t.startswith(opt[iter]) for t in low_value_tasks):
+                    low_value_tasks.extend(
+                        [t.replace(opt[iter], pgo[iter]) for t in low_value_tasks]
+                    )
+            # ... and the high value list
+            for iter in range(0, len(opt)):
+                if any(t.startswith(opt[iter]) for t in high_value_tasks):
+                    high_value_tasks.extend(
+                        [t.replace(opt[iter], pgo[iter]) for t in high_value_tasks]
+                    )
+
             def pgo_as_opt_is_high_value(label):
-                opt = ['test-windows10-64/opt',
-                       'test-windows7-32/opt',
-                       'test-linux64/opt',
-                       'test-windows10-64-qr/opt',
-                       'test-windows7-32-qr/opt',
-                       'test-linux64-qr/opt']
-                pgo = ['test-windows10-64-pgo/opt',
-                       'test-windows7-32-pgo/opt',
-                       'test-linux64-pgo/opt',
-                       'test-windows10-64-pgo-qr/opt',
-                       'test-windows7-32-pgo-qr/opt',
-                       'test-linux64-pgo-qr/opt']
                 for iter in range(0, len(opt)):
                     if label.startswith(pgo[iter]):
                         opt_label = label.replace(pgo[iter], opt[iter])

@@ -42,6 +42,9 @@ function commonDialogOnLoad() {
 
     Dialog = new CommonDialog(args, ui);
     Dialog.onLoad(dialog);
+
+    document.addEventListener("dialogextra1", function() { Dialog.onButton2(); window.close(); });
+    document.addEventListener("dialogextra2", function() { Dialog.onButton3(); window.close(); });
     // resize the window to the content
     window.sizeToContent();
     window.getAttention();

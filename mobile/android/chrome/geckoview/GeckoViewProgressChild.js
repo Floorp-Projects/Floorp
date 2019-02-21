@@ -333,5 +333,5 @@ const ProgressTracker = {
 };
 
 
-let {debug, warn} = GeckoViewProgressChild.initLogging("GeckoViewProgress");
-let module = GeckoViewProgressChild.create(this);
+const {debug, warn} = GeckoViewProgressChild.initLogging("GeckoViewProgress"); // eslint-disable-line no-unused-vars
+const module = GeckoViewProgressChild.create(this);

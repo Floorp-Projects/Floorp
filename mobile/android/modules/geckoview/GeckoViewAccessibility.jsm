@@ -25,3 +25,5 @@ class GeckoViewAccessibility extends GeckoViewModule {
     }, "GeckoView:AccessibilitySettings");
   }
 }
+
+const {debug, warn} = GeckoViewAccessibility.initLogging("GeckoViewAccessibility"); // eslint-disable-line no-unused-vars

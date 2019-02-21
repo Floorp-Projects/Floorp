@@ -451,5 +451,5 @@ class GeckoViewContentChild extends GeckoViewChildModule {
   }
 }
 
-let {debug, warn} = GeckoViewContentChild.initLogging("GeckoViewContent");
-let module = GeckoViewContentChild.create(this);
+const {debug, warn} = GeckoViewContentChild.initLogging("GeckoViewContent"); // eslint-disable-line no-unused-vars
+const module = GeckoViewContentChild.create(this);

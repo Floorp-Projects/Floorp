@@ -2448,14 +2448,11 @@ static void UpdateThreadFunc(void *param) {
                      gInstallDirPath);
         MARChannelStringTable MARStrings;
         if (ReadMARChannelIDs(updateSettingsPath, &MARStrings) != OK) {
-          // If we can't read from update-settings.ini then we shouldn't impose
-          // a MAR restriction.  Some installations won't even include this
-          // file.
-          MARStrings.MARChannelID[0] = '\0';
+          rv = UPDATE_SETTINGS_FILE_CHANNEL;
+        } else {
+          rv = gArchiveReader.VerifyProductInformation(MARStrings.MARChannelID,
+                                                       MOZ_APP_VERSION);
         }
-
-        rv = gArchiveReader.VerifyProductInformation(MARStrings.MARChannelID,
-                                                     MOZ_APP_VERSION);
       }
     }
 #endif
@@ -2474,10 +2471,10 @@ static void UpdateThreadFunc(void *param) {
         NS_tsnprintf(continueFilePath,
                      sizeof(continueFilePath) / sizeof(continueFilePath[0]),
                      NS_T("%s/continueStaging"), gInstallDirPath);
-        // Use 100 retries for staging requests to lessen the likelihood of
-        // tests intermittently failing on debug builds due to launching the
-        // updater. The total time to wait with the default interval of 100 ms
-        // is approximately 5 seconds. The total time for tests is longer to
+        // Use 50 retries for staging requests to lessen the likelihood of tests
+        // intermittently failing on verify tasks due to launching the updater.
+        // The total time to wait with the default interval of 100 ms is
+        // approximately 5 seconds. The total time for tests is longer to
         // account for the extra time it takes for the updater to launch.
         const int max_retries = 50;
         int retries = 0;
@@ -2487,10 +2484,9 @@ static void UpdateThreadFunc(void *param) {
 #  else
           usleep(100000);
 #  endif
-          // Continue after the continue file exists.
-          if (!NS_taccess(continueFilePath, F_OK)) {
-            // Remove the continue file.
-            NS_tremove(continueFilePath);
+          // Continue after the continue file exists and is removed.
+          if (!NS_taccess(continueFilePath, F_OK) &&
+              !NS_tremove(continueFilePath)) {
             break;
           }
         }

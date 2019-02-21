@@ -32,26 +32,44 @@ The ``get()`` method returns the list of entries for a specific key. Each entry 
     });
 
 .. note::
-    The data updates are managed internally, and ``.get()`` only returns the local data.
-    The data is pulled from the server only if this collection has no local data yet and no JSON dump
-    could be found (see :ref:`services/initial-data` below).
-
-.. note::
     The ``id`` and ``last_modified`` (timestamp) attributes are assigned by the server.
+
+
+Empty local database
+--------------------
+
+On new user profiles or for recently added use-cases, the local database will be empty until a synchronization with the server happens. Synchronizations are managed internally, and can sometimes be triggered minutes after browser starts.
+
+By default, if ``.get()`` is called before the local database had the chance to be synchronized, and if no initial data was provided (:ref:`see below <services/initial-data>`), then the settings will be pulled from the server in order to avoid returning an empty list. In that case, the first call to ``.get()`` will thus take longer than the following ones.
+
+This behaviour can be disabled using the ``syncIfEmpty`` option.
+
+.. important::
+
+    If the implicit synchronization fails (e.g network is not available) then errors are silent and an empty list is returned. :ref:`Uptake Telemetry <services/settings/uptake-telemetry>` status is sent though.
+
 
 Options
 -------
 
-The list can optionally be filtered or ordered:
+* ``filters``, ``order``: The list can optionally be filtered or ordered:
 
-.. code-block:: js
+    .. code-block:: js
 
-    const subset = await RemoteSettings("a-key").get({
-      filters: {
-        "property": "value"
-      },
-      order: "-weight"
-    });
+        const subset = await RemoteSettings("a-key").get({
+        filters: {
+            "property": "value"
+        },
+        order: "-weight"
+        });
+
+* ``syncIfEmpty``: implicit synchronization if local data is empty (default: ``true``).
+  Set it to ``false`` if your use-case can tolerate an empty list until the first synchronization happens.
+
+    .. code-block:: js
+
+        await RemoteSettings("a-key").get({ syncIfEmpty: false });
+
 
 Events
 ------
@@ -123,6 +141,7 @@ From the client API standpoint, this is completely transparent: the ``.get()`` m
 
     The remote settings targets follow the same approach as the :ref:`Normandy recipe client <components/normandy>` (ie. JEXL filter expressions),
 
+.. _services/settings/uptake-telemetry:
 
 Uptake Telemetry
 ================
