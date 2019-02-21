@@ -592,7 +592,6 @@ nsINode* ShadowRoot::CreateElementAndAppendChildAt(nsINode& aParentNode,
                                                    const nsAString& aTagName,
                                                    mozilla::ErrorResult& rv) {
   MOZ_ASSERT(mIsUAWidget);
-  MOZ_ASSERT(OwnerDoc());
 
   if (!aParentNode.IsInUAWidget()) {
     rv.Throw(NS_ERROR_INVALID_ARG);
