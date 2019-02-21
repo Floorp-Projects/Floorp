@@ -45,7 +45,7 @@ addEventListener("DOMFormHasPassword", function(event) {
   if (shouldIgnoreLoginManagerEvent(event)) {
     return;
   }
-  LoginManagerContent.onDOMFormHasPassword(event);
+  LoginManagerContent.onDOMFormHasPassword(event, content);
   let formLike = LoginFormFactory.createFromForm(event.originalTarget);
   InsecurePasswordUtils.reportInsecurePasswords(formLike);
 });
@@ -53,7 +53,7 @@ addEventListener("DOMInputPasswordAdded", function(event) {
   if (shouldIgnoreLoginManagerEvent(event)) {
     return;
   }
-  LoginManagerContent.onDOMInputPasswordAdded(event);
+  LoginManagerContent.onDOMInputPasswordAdded(event, content);
   let formLike = LoginFormFactory.createFromField(event.originalTarget);
   InsecurePasswordUtils.reportInsecurePasswords(formLike);
 });
