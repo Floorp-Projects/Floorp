@@ -2170,7 +2170,8 @@ pub extern "C" fn wr_dp_define_scroll_layer(state: &mut WrState,
                                             external_scroll_id: u64,
                                             parent: &WrSpaceAndClip,
                                             content_rect: LayoutRect,
-                                            clip_rect: LayoutRect)
+                                            clip_rect: LayoutRect,
+                                            scroll_offset: LayoutPoint)
                                             -> WrSpaceAndClip {
     assert!(unsafe { is_in_main_thread() });
 
@@ -2181,7 +2182,8 @@ pub extern "C" fn wr_dp_define_scroll_layer(state: &mut WrState,
         clip_rect,
         vec![],
         None,
-        ScrollSensitivity::Script
+        ScrollSensitivity::Script,
+        scroll_offset,
     );
 
     WrSpaceAndClip::from_webrender(space_and_clip)
