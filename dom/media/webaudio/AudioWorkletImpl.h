@@ -29,6 +29,9 @@ class AudioWorkletImpl final : public WorkletImpl {
 
   nsresult SendControlMessage(already_AddRefed<nsIRunnable> aRunnable) override;
 
+  // Any thread:
+  AudioNodeStream* DestinationStream() { return mDestinationStream; }
+
  protected:
   // Execution thread only.
   already_AddRefed<dom::WorkletGlobalScope> ConstructGlobalScope() override;
