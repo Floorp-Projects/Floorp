@@ -3482,8 +3482,6 @@ static void dumpValue(const Value& v, js::GenericPrinter& out) {
     v.toString()->dumpNoNewline(out);
   } else if (v.isSymbol()) {
     v.toSymbol()->dump(out);
-  } else if (v.isBigInt()) {
-    v.toBigInt()->dump(out);
   } else if (v.isObject() && v.toObject().is<JSFunction>()) {
     JSFunction* fun = &v.toObject().as<JSFunction>();
     if (fun->displayAtom()) {
