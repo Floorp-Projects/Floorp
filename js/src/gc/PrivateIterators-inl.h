@@ -40,15 +40,15 @@ class ArenaCellIterUnbarriered : public ArenaCellIterImpl {
       : ArenaCellIterImpl(arena, CellIterDoesntNeedBarrier) {}
 };
 
-class GrayObjectIter : public ZoneCellIter<js::gc::TenuredCell> {
+class GrayObjectIter : public ZoneAllCellIter<js::gc::TenuredCell> {
  public:
   explicit GrayObjectIter(JS::Zone* zone, AllocKind kind)
-      : ZoneCellIter<js::gc::TenuredCell>() {
+      : ZoneAllCellIter<js::gc::TenuredCell>() {
     initForTenuredIteration(zone, kind);
   }
 
   JSObject* get() const {
-    return ZoneCellIter<js::gc::TenuredCell>::get<JSObject>();
+    return ZoneAllCellIter<js::gc::TenuredCell>::get<JSObject>();
   }
   operator JSObject*() const { return get(); }
   JSObject* operator->() const { return get(); }

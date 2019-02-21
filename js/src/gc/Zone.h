@@ -41,10 +41,10 @@ using UniqueIdMap = GCHashMap<Cell*, uint64_t, PointerHasher<Cell*>,
 extern uint64_t NextCellUniqueId(JSRuntime* rt);
 
 template <typename T>
-class ZoneCellIter;
+class ZoneAllCellIter;
 
 template <typename T>
-class SafeZoneCellIter;
+class ZoneCellIter;
 
 }  // namespace gc
 
@@ -207,16 +207,16 @@ class Zone : public JS::shadow::Zone,
   // Iterate over all cells in the zone. See the definition of ZoneCellIter
   // in gc/GC-inl.h for the possible arguments and documentation.
   template <typename T, typename... Args>
-  js::gc::SafeZoneCellIter<T> cellIter(Args&&... args) {
-    return js::gc::SafeZoneCellIter<T>(const_cast<Zone*>(this),
-                                       std::forward<Args>(args)...);
+  js::gc::ZoneCellIter<T> cellIter(Args&&... args) {
+    return js::gc::ZoneCellIter<T>(const_cast<Zone*>(this),
+                                   std::forward<Args>(args)...);
   }
 
   // As above, but can return about-to-be-finalised things.
   template <typename T, typename... Args>
-  js::gc::ZoneCellIter<T> cellIterUnsafe(Args&&... args) {
-    return js::gc::ZoneCellIter<T>(const_cast<Zone*>(this),
-                                   std::forward<Args>(args)...);
+  js::gc::ZoneAllCellIter<T> cellIterUnsafe(Args&&... args) {
+    return js::gc::ZoneAllCellIter<T>(const_cast<Zone*>(this),
+                                      std::forward<Args>(args)...);
   }
 
   MOZ_MUST_USE void* onOutOfMemory(js::AllocFunction allocFunc,
