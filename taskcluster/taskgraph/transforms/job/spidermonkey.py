@@ -44,8 +44,7 @@ def docker_worker_spidermonkey(config, job, taskdesc):
     worker['artifacts'] = []
     worker.setdefault('caches', []).append({
         'type': 'persistent',
-        'name': 'level-{}-{}-build-spidermonkey-workspace'.format(
-            config.params['level'], config.params['project']),
+        'name': '{}-build-spidermonkey-workspace'.format(config.params['project']),
         'mount-point': "{workdir}/workspace".format(**run),
         'skip-untrusted': True,
     })

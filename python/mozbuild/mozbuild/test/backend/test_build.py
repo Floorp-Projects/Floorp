@@ -148,8 +148,8 @@ class TestBuild(unittest.TestCase):
 
     def validate(self, config):
         self.maxDiff = None
-        test_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                 'data', 'build') + os.sep
+        test_path = os.sep.join(('$SRCDIR', 'python', 'mozbuild', 'mozbuild',
+                                 'test', 'backend', 'data', 'build')) + os.sep
 
         # We want unicode instances out of the files, because having plain str
         # makes assertEqual diff output in case of error extra verbose because

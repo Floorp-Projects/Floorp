@@ -2,7 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function run_test() {
-
   /**
    * Creates MAR from the passed files, compares it to the reference MAR.
    *
@@ -102,7 +101,7 @@ function run_test() {
       if (outMAR.exists()) {
         outMAR.remove(false);
       }
-    }
+    },
   };
 
   // Run all the tests

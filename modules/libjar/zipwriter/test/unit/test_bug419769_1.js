@@ -9,8 +9,7 @@ const CRC = 0x00000000;
 // XXX Must use a constant time here away from DST changes. See bug 402434.
 const time = 1199145600000; // Jan 1st 2008
 
-function testpass(source)
-{
+function testpass(source) {
   // Should exist.
   Assert.ok(source.hasEntry(FILENAME));
 
@@ -31,8 +30,7 @@ function testpass(source)
   Assert.equal(entry.CRC32, CRC);
 }
 
-function run_test()
-{
+function run_test() {
   zipW.open(tmpFile, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
 
   // Shouldn't be there to start with.
@@ -41,10 +39,10 @@ function run_test()
   Assert.ok(!zipW.inQueue);
 
   var stream = Cc["@mozilla.org/io/string-input-stream;1"]
-                .createInstance(Ci.nsIStringInputStream);
+    .createInstance(Ci.nsIStringInputStream);
   stream.setData(DATA, DATA.length);
   zipW.addEntryStream(FILENAME, time * PR_USEC_PER_MSEC,
-                      Ci.nsIZipWriter.COMPRESSION_BEST, stream, false);
+    Ci.nsIZipWriter.COMPRESSION_BEST, stream, false);
 
   // Check that zip state is right at this stage.
   testpass(zipW);
@@ -59,8 +57,8 @@ function run_test()
   var zipR = new ZipReader(tmpFile);
   testpass(zipR);
   zipR.test(FILENAME);
-  var stream = Cc["@mozilla.org/scriptableinputstream;1"]
-                .createInstance(Ci.nsIScriptableInputStream);
+  stream = Cc["@mozilla.org/scriptableinputstream;1"]
+    .createInstance(Ci.nsIScriptableInputStream);
   stream.init(zipR.getInputStream(FILENAME));
   var result = stream.read(DATA.length);
   stream.close();

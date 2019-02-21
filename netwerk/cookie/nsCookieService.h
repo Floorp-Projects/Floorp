@@ -255,8 +255,7 @@ class nsCookieService final : public nsICookieService,
                            bool aRequireHostMatch, CookieStatus aStatus,
                            nsDependentCString &aCookieHeader,
                            int64_t aServerTime, bool aFromHttp,
-                           nsIChannel *aChannel, bool aLeaveSercureAlone,
-                           bool &aSetCookie,
+                           nsIChannel *aChannel, bool &aSetCookie,
                            mozIThirdPartyUtil *aThirdPartyUtil);
   static CookieStatus CheckPrefs(
       nsICookiePermission *aPermissionServices, uint8_t aCookieBehavior,
@@ -353,10 +352,8 @@ class nsCookieService final : public nsICookieService,
                   nsListIter &aIter);
   bool FindSecureCookie(const nsCookieKey &aKey, nsCookie *aCookie);
   void FindStaleCookies(nsCookieEntry *aEntry, int64_t aCurrentTime,
-                        const mozilla::Maybe<bool> &aIsSecure,
-                        nsTArray<nsListIter> &aOutput, uint32_t aLimit);
-  void TelemetryForEvictingStaleCookie(nsCookie *aEvicted,
-                                       int64_t oldestCookieTime);
+                        bool aIsSecure, nsTArray<nsListIter> &aOutput,
+                        uint32_t aLimit);
   void NotifyAccepted(nsIChannel *aChannel);
   void NotifyRejected(nsIURI *aHostURI, nsIChannel *aChannel,
                       uint32_t aRejectedReason, CookieOperation aOperation);
@@ -406,7 +403,6 @@ class nsCookieService final : public nsICookieService,
                             // LIMITFOREIGN}
   bool mThirdPartySession;
   bool mThirdPartyNonsecureSession;
-  bool mLeaveSecureAlone;
   uint16_t mMaxNumberOfCookies;
   uint16_t mMaxCookiesPerHost;
   uint16_t mCookieQuotaPerHost;
