@@ -1300,15 +1300,16 @@ class PackageFrontend(MachCommandBase):
     @CommandArgument('--no-tests', action='store_true', help="Don't install tests.")
     @CommandArgument('--symbols', action='store_true', help='Download symbols.')
     @CommandArgument('--host-bins', action='store_true', help='Download host binaries.')
+    @CommandArgument('--distdir', help='Where to install artifacts to.')
     def artifact_install(self, source=None, skip_cache=False, tree=None, job=None, verbose=False,
-                         no_tests=False, symbols=False, host_bins=False):
+                         no_tests=False, symbols=False, host_bins=False, distdir=None):
         self._set_log_level(verbose)
         artifacts = self._make_artifacts(tree=tree, job=job, skip_cache=skip_cache,
                                          download_tests=not no_tests,
                                          download_symbols=symbols,
                                          download_host_bins=host_bins)
 
-        return artifacts.install_from(source, self.distdir)
+        return artifacts.install_from(source, distdir or self.distdir)
 
     @ArtifactSubCommand('artifact', 'clear-cache',
         'Delete local artifacts and reset local artifact cache.')
