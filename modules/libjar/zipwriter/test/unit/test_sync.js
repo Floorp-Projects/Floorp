@@ -21,8 +21,8 @@ function run_test() {
   zipW.open(tmpFile, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
 
   var size = 0;
-  for (var i = 0; i < TESTS.length; i++) {
-    var source = do_get_file(DATA_DIR + TESTS[i].name);
+  for (let i = 0; i < TESTS.length; i++) {
+    let source = do_get_file(DATA_DIR + TESTS[i].name);
     zipW.addEntryFile(TESTS[i].name, Ci.nsIZipWriter.COMPRESSION_NONE, source,
                       false);
     size += ZIP_FILE_HEADER_SIZE + ZIP_CDS_HEADER_SIZE +
@@ -38,8 +38,8 @@ function run_test() {
   // Test the stored data with the zipreader
   var zipR = new ZipReader(tmpFile);
 
-  for (var i = 0; i < TESTS.length; i++) {
-    var source = do_get_file(DATA_DIR + TESTS[i].name);
+  for (let i = 0; i < TESTS.length; i++) {
+    let source = do_get_file(DATA_DIR + TESTS[i].name);
     Assert.ok(zipR.hasEntry(TESTS[i].name));
 
     var entry = zipR.getEntry(TESTS[i].name);

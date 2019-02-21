@@ -4,10 +4,8 @@
 function run_test() {
   const PREF_NAME = "testPref";
 
-  var ps = Cc["@mozilla.org/preferences-service;1"]
-           .getService(Ci.nsIPrefService);
-  var prefs = ps.getDefaultBranch(null);
-  var userprefs = ps.getBranch(null);
+  var prefs = Services.prefs.getDefaultBranch(null);
+  var userprefs = Services.prefs.getBranch(null);
 
   /* First, test to make sure we can parse a float from a string properly. */
   prefs.setCharPref(PREF_NAME, "9.674");

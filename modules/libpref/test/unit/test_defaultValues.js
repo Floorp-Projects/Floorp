@@ -5,10 +5,7 @@
 /* Tests for providing a default value to get{Bool,Char,Float,Int}Pref */
 
 function run_test() {
-  var ps = Cc["@mozilla.org/preferences-service;1"]
-             .getService(Ci.nsIPrefService)
-             .QueryInterface(Ci.nsIPrefBranch);
-
+  const ps = Services.prefs;
   let prefName = "test.default.values.bool";
   do_check_throws(function() { ps.getBoolPref(prefName); },
                   Cr.NS_ERROR_UNEXPECTED);

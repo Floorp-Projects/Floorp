@@ -152,7 +152,6 @@ const PREFS = [
 
 for (let {type, values} of PREFS) {
   let set = `set${type}Pref`;
-  let get = `get${type}Pref`;
 
   function prefTest(opts) {
     function check(pref, proc, val, {expectedVal, defaultVal = undefined, expectedDefault = defaultVal, expectedFlags = {}}) {
