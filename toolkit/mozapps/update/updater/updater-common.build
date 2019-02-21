@@ -45,6 +45,7 @@ elif CONFIG['OS_ARCH'] == 'Linux' and CONFIG['MOZ_VERIFY_MAR_SIGNATURE']:
         'signmar',
     ]
     OS_LIBS += CONFIG['NSPR_LIBS']
+    LDFLAGS += ['-Wl,-rpath=$ORIGIN']
 
 USE_LIBS += [
     'bspatch',

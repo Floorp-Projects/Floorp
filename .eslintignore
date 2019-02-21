@@ -22,7 +22,6 @@ extensions/spellcheck/**
 extensions/universalchardet/**
 image/**
 layout/**
-modules/**
 netwerk/cookie/test/browser/**
 netwerk/test/browser/**
 netwerk/test/mochitests/**

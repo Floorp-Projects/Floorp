@@ -8,8 +8,7 @@ const DIRNAME1_CORRECT = "test/";
 const DIRNAME2 = "test2/";
 const time = Date.now();
 
-function run_test()
-{
+function run_test() {
   zipW.open(tmpFile, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
 
   zipW.addEntryDirectory(DIRNAME1, time * PR_USEC_PER_MSEC, false);

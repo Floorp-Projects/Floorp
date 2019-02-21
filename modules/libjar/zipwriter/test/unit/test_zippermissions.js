@@ -16,7 +16,7 @@ function build_tests() {
       for (let o = 0; o <= 7; o++) {
         TESTS[id] = {
           name: "test" + u + g + o,
-          permission: (u << 6) + (g << 3) + o
+          permission: (u << 6) + (g << 3) + o,
         };
         id++;
       }

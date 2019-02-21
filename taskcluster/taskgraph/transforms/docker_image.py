@@ -218,7 +218,7 @@ def fill_template(config, tasks):
 
         worker['caches'] = [{
             'type': 'persistent',
-            'name': 'level-{}-{}'.format(config.params['level'], cache_name),
+            'name': cache_name,
             'mount-point': '/builds/worker/checkouts',
         }]
 

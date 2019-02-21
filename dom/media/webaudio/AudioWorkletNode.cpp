@@ -48,6 +48,17 @@ AudioWorkletNode::AudioWorkletNode(AudioContext* aAudioContext,
       }
     }
   }
+  /**
+   * 2. If nodeName does not exists as a key in the BaseAudioContext’s node
+   *    name to parameter descriptor map, throw a NotSupportedError exception
+   *    and abort these steps.
+   */
+  const AudioParamDescriptorMap* parameterDescriptors =
+      aAudioContext.GetParamMapForWorkletName(aName);
+  if (!parameterDescriptors) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
+  }
 
   RefPtr<AudioWorkletNode> audioWorkletNode =
       new AudioWorkletNode(&aAudioContext, aName);

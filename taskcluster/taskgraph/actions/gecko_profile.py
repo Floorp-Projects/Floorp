@@ -89,7 +89,7 @@ def geckoprofile_action(parameters, graph_config, input, task_group_id, task_id)
                 task.task['extra']['treeherder']['symbol'] += '-p'
                 return task
 
-            create_tasks([label], full_task_graph, label_to_taskid,
+            create_tasks(graph_config, [label], full_task_graph, label_to_taskid,
                          push_params, push_decision_task_id, push, modifier=modifier)
             backfill_pushes.append(push)
         else:
