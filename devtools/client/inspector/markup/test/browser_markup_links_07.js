@@ -99,7 +99,7 @@ async function followLinkWaitForNewNode(linkEl, isMetaClick, inspector) {
 }
 
 async function followLinkNoNewNode(linkEl, isMetaClick, inspector) {
-  const onFailed = inspector.once("idref-attribute-link-failed");
+  const onFailed = inspector.markup.once("idref-attribute-link-failed");
   performMouseDown(linkEl, isMetaClick);
   await onFailed;
 

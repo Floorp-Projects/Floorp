@@ -18,6 +18,7 @@
         'pk11_curve25519_unittest.cc',
         'pk11_ecdsa_unittest.cc',
         'pk11_encrypt_derive_unittest.cc',
+        'pk11_import_unittest.cc',
         'pk11_pbkdf2_unittest.cc',
         'pk11_prf_unittest.cc',
         'pk11_prng_unittest.cc',

@@ -62,7 +62,6 @@ TEST_P(TlsConnectGenericPre13, DamageServerSignature) {
   EnsureTlsSetup();
   auto filter = MakeTlsFilter<TlsLastByteDamager>(
       server_, kTlsHandshakeServerKeyExchange);
-  filter->EnableDecryption();
   ExpectAlert(client_, kTlsAlertDecryptError);
   ConnectExpectFail();
   client_->CheckErrorCode(SEC_ERROR_BAD_SIGNATURE);
@@ -84,7 +83,9 @@ TEST_P(TlsConnectGeneric, DamageClientSignature) {
   server_->RequestClientAuth(true);
   auto filter = MakeTlsFilter<TlsLastByteDamager>(
       client_, kTlsHandshakeCertificateVerify);
-  filter->EnableDecryption();
+  if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
+    filter->EnableDecryption();
+  }
   server_->ExpectSendAlert(kTlsAlertDecryptError);
   // Do these handshakes by hand to avoid race condition on
   // the client processing the server's alert.

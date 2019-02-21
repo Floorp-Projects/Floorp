@@ -11,6 +11,7 @@
 #include "cert.h"
 #include "keyhi.h"
 #include "p12.h"
+#include "pk11pqg.h"
 #include "pk11pub.h"
 #include "pkcs11uri.h"
 
@@ -41,6 +42,7 @@ struct ScopedDelete {
   void operator()(PLArenaPool* arena) { PORT_FreeArena(arena, PR_FALSE); }
   void operator()(PK11Context* context) { PK11_DestroyContext(context, true); }
   void operator()(PK11GenericObject* obj) { PK11_DestroyGenericObject(obj); }
+  void operator()(PQGParams* pqg) { PK11_PQG_DestroyParams(pqg); }
   void operator()(SEC_PKCS12DecoderContext* dcx) {
     SEC_PKCS12DecoderFinish(dcx);
   }
@@ -66,6 +68,7 @@ SCOPED(CERTName);
 SCOPED(CERTSubjectPublicKeyInfo);
 SCOPED(PK11SlotInfo);
 SCOPED(PK11SymKey);
+SCOPED(PQGParams);
 SCOPED(PRFileDesc);
 SCOPED(SECAlgorithmID);
 SCOPED(SECKEYEncryptedPrivateKeyInfo);
@@ -81,5 +84,10 @@ SCOPED(SEC_PKCS12DecoderContext);
 SCOPED(CERTDistNames);
 
 #undef SCOPED
+
+struct StackSECItem : public SECItem {
+  StackSECItem() : SECItem({siBuffer, nullptr, 0}) {}
+  ~StackSECItem() { SECITEM_FreeItem(this, PR_FALSE); }
+};
 
 #endif  // nss_scoped_ptrs_h__

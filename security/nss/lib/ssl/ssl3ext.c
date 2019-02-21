@@ -51,6 +51,7 @@ static const ssl3ExtensionHandler clientHelloHandlers[] = {
     { ssl_tls13_psk_key_exchange_modes_xtn, &tls13_ServerHandlePskModesXtn },
     { ssl_tls13_cookie_xtn, &tls13_ServerHandleCookieXtn },
     { ssl_tls13_encrypted_sni_xtn, &tls13_ServerHandleEsniXtn },
+    { ssl_tls13_post_handshake_auth_xtn, &tls13_ServerHandlePostHandshakeAuthXtn },
     { ssl_record_size_limit_xtn, &ssl_HandleRecordSizeLimitXtn },
     { 0, NULL }
 };
@@ -138,6 +139,7 @@ static const sslExtensionBuilder clientHelloSendersTLS[] =
       { ssl_tls13_cookie_xtn, &tls13_ClientSendHrrCookieXtn },
       { ssl_tls13_psk_key_exchange_modes_xtn, &tls13_ClientSendPskModesXtn },
       { ssl_tls13_encrypted_sni_xtn, &tls13_ClientSendEsniXtn },
+      { ssl_tls13_post_handshake_auth_xtn, &tls13_ClientSendPostHandshakeAuthXtn },
       { ssl_record_size_limit_xtn, &ssl_SendRecordSizeLimitXtn },
       /* The pre_shared_key extension MUST be last. */
       { ssl_tls13_pre_shared_key_xtn, &tls13_ClientSendPreSharedKeyXtn },

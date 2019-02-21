@@ -542,7 +542,6 @@ dtls_QueueMessage(sslSocket *ss, SSLContentType ct,
 
 /* Add DTLS handshake message to the pending queue
  * Empty the sendBuf buffer.
- * This function returns SECSuccess or SECFailure, never SECWouldBlock.
  * Always set sendBuf.len to 0, even when returning SECFailure.
  *
  * Called from:

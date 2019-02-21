@@ -564,7 +564,7 @@ MarkupContainer.prototype = {
       const type = target.dataset.type;
       // Make container tabbable descendants not tabbable (by default).
       this.canFocus = false;
-      this.markup.inspector.followAttributeLink(type, link);
+      this.markup.followAttributeLink(type, link);
       return;
     }
 

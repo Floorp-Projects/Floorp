@@ -36,7 +36,7 @@ add_task(async function() {
     const copyAttributeValue = getMenuItem("node-menu-copy-attribute");
 
     info("Triggering 'Copy Attribute Value' and waiting for clipboard to copy the value");
-    inspector.nodeMenuTriggerInfo = {
+    inspector.markup.contextMenu.nodeMenuTriggerInfo = {
       type: "attribute",
       name: "data-edit",
       value: "the",
@@ -53,7 +53,7 @@ add_task(async function() {
     "23456789012345678901234567890123456789012345678901234567890123456789012" +
     "34567890123456789012345678901234567890123456789012345678901234567890123";
 
-    inspector.nodeMenuTriggerInfo = {
+    inspector.markup.contextMenu.nodeMenuTriggerInfo = {
       type: "attribute",
       name: "data-edit",
       value: longAttribute,
@@ -67,7 +67,7 @@ add_task(async function() {
     const editAttribute = getMenuItem("node-menu-edit-attribute");
 
     info("Triggering 'Edit Attribute' and waiting for mutation to occur");
-    inspector.nodeMenuTriggerInfo = {
+    inspector.markup.contextMenu.nodeMenuTriggerInfo = {
       type: "attribute",
       name: "data-edit",
     };
@@ -87,7 +87,7 @@ add_task(async function() {
     const removeAttribute = getMenuItem("node-menu-remove-attribute");
 
     info("Triggering 'Remove Attribute' and waiting for mutation to occur");
-    inspector.nodeMenuTriggerInfo = {
+    inspector.markup.contextMenu.nodeMenuTriggerInfo = {
       type: "attribute",
       name: "data-remove",
     };

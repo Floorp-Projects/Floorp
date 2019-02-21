@@ -39,16 +39,7 @@ SECStatus SSLInt_AdvanceWriteSeqNum(PRFileDesc *fd, PRUint64 to);
 SECStatus SSLInt_AdvanceReadSeqNum(PRFileDesc *fd, PRUint64 to);
 SECStatus SSLInt_AdvanceWriteSeqByAWindow(PRFileDesc *fd, PRInt32 extra);
 SSLKEAType SSLInt_GetKEAType(SSLNamedGroup group);
-SECStatus SSLInt_GetEpochs(PRFileDesc *fd, PRUint16 *readEpoch,
-                           PRUint16 *writeEpoch);
-
-SECStatus SSLInt_SetCipherSpecChangeFunc(PRFileDesc *fd,
-                                         sslCipherSpecChangedFunc func,
-                                         void *arg);
-PRUint16 SSLInt_CipherSpecToEpoch(const ssl3CipherSpec *spec);
-PK11SymKey *SSLInt_CipherSpecToKey(const ssl3CipherSpec *spec);
-SSLCipherAlgorithm SSLInt_CipherSpecToAlgorithm(const ssl3CipherSpec *spec);
-const PRUint8 *SSLInt_CipherSpecToIv(const ssl3CipherSpec *spec);
+SECStatus SSLInt_HasPendingHandshakeData(PRFileDesc *fd, PRBool *pending);
 void SSLInt_SetTicketLifetime(uint32_t lifetime);
 SECStatus SSLInt_SetSocketMaxEarlyDataSize(PRFileDesc *fd, uint32_t size);
 void SSLInt_RolloverAntiReplay(void);

@@ -3119,8 +3119,8 @@ nsresult nsHttpChannel::AsyncDoReplaceWithProxy(nsIProxyInfo *pi) {
   nsresult rv;
 
   nsCOMPtr<nsIChannel> newChannel;
-  rv = gHttpHandler->NewProxiedChannel2(mURI, pi, mProxyResolveFlags, mProxyURI,
-                                        mLoadInfo, getter_AddRefs(newChannel));
+  rv = gHttpHandler->NewProxiedChannel(mURI, pi, mProxyResolveFlags, mProxyURI,
+                                       mLoadInfo, getter_AddRefs(newChannel));
   if (NS_FAILED(rv)) return rv;
 
   uint32_t flags = nsIChannelEventSink::REDIRECT_INTERNAL;
