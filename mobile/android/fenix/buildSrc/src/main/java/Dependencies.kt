@@ -34,6 +34,7 @@ private object Versions {
     const val junit_jupiter = "5.3.2"
     const val mockito = "2.23.0"
     const val mockk = "1.9.kotlin12"
+    const val glide = "4.9.0"
 }
 
 @Suppress("unused")
@@ -128,5 +129,8 @@ object Deps {
     const val mockito_core = "org.mockito:mockito-core:${Versions.mockito}"
     const val mockito_android = "org.mockito:mockito-android:${Versions.mockito}"
     const val mockk = "io.mockk:mockk:${Versions.mockk}"
+
+    const val glide = "com.github.bumptech.glide:glide:${Versions.glide}"
+    const val glideAnnotationProcessor = "com.github.bumptech.glide:compiler:${Versions.glide}"
 }
 
