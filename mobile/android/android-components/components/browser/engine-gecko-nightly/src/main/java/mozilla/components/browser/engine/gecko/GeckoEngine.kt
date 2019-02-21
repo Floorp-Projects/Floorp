@@ -15,6 +15,7 @@ import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import org.json.JSONObject
 import org.mozilla.geckoview.GeckoRuntime
+import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoWebExecutor
 
 /**
@@ -95,10 +96,7 @@ class GeckoEngine(
             set(value) { defaultSettings?.testingModeEnabled = value }
 
         override var userAgentString: String?
-            // TODO if no default user agent string is provided we should
-            // return the engine default here, but we can't get to it in
-            // a practical way right now: https://bugzilla.mozilla.org/show_bug.cgi?id=1512997
-            get() = defaultSettings?.userAgentString
+            get() = defaultSettings?.userAgentString ?: GeckoSession.getDefaultUserAgent()
             set(value) { defaultSettings?.userAgentString = value }
     }.apply {
         defaultSettings?.let {
