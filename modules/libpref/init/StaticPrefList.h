@@ -1220,11 +1220,19 @@ VARCACHE_PREF(
   RelaxedAtomicInt32, 5000
 )
 
+#if defined(XP_WIN) && !defined(_ARM64_)
+# define PREF_VALUE true
+#elif defined(XP_MACOSX)
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
 VARCACHE_PREF(
   "media.rdd-vorbis.enabled",
    MediaRddVorbisEnabled,
-  RelaxedAtomicBool, false
+  RelaxedAtomicBool, PREF_VALUE
 )
+#undef PREF_VALUE
 
 #ifdef ANDROID
 
