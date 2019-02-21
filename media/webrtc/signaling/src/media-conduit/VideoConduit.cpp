@@ -597,8 +597,6 @@ MediaConduitErrorCode WebrtcVideoConduit::CreateSendStream() {
 
   mSendStreamConfig.encoder_settings.encoder = encoder.get();
 
-  MOZ_RELEASE_ASSERT(mEncoderConfig.number_of_streams != 0,
-                     "mEncoderConfig - There are no configured streams!");
   MOZ_ASSERT(
       mSendStreamConfig.rtp.ssrcs.size() == mEncoderConfig.number_of_streams,
       "Each video substream must have a corresponding ssrc.");
@@ -787,6 +785,8 @@ MediaConduitErrorCode WebrtcVideoConduit::ConfigureSendMediaCodec(
 
   size_t streamCount = std::min(codecConfig->mEncodings.size(),
                                 (size_t)webrtc::kMaxSimulcastStreams);
+
+  MOZ_RELEASE_ASSERT(streamCount >= 1, "streamCount should be at least one");
 
   CSFLogDebug(LOGTAG, "%s for VideoConduit:%p stream count:%zu", __FUNCTION__,
               this, streamCount);
