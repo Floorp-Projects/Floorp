@@ -345,7 +345,7 @@ void nsPluginArray::EnsurePlugins() {
               nsIPrincipal* principal = topDoc->NodePrincipal();
               nsCOMPtr<nsIPermissionManager> permMgr =
                   services::GetPermissionManager();
-              permMgr->TestPermissionFromPrincipal(principal, permString.get(),
+              permMgr->TestPermissionFromPrincipal(principal, permString,
                                                    &permission);
             }
           }

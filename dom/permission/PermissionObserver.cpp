@@ -105,7 +105,7 @@ PermissionObserver::Observe(nsISupports* aSubject, const char* aTopic,
 
   nsAutoCString type;
   perm->GetType(type);
-  Maybe<PermissionName> permission = TypeToPermissionName(type.get());
+  Maybe<PermissionName> permission = TypeToPermissionName(type);
   if (permission) {
     Notify(permission.value(), *principal);
   }

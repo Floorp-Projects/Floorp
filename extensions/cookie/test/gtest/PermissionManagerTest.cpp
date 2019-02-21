@@ -47,6 +47,6 @@ MOZ_GTEST_BENCH_F(PermissionManager, TestNonExistentPermissionFromPrincipal,
                     for (unsigned i = 0; i < kNumIterations; ++i) {
                       uint32_t result = 0;
                       Unused << mPermissionManager->TestPermissionFromPrincipal(
-                          mPrincipal, mNonExistentType.get(), &result);
+                          mPrincipal, mNonExistentType, &result);
                     }
                   });
