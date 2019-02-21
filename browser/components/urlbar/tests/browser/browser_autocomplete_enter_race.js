@@ -18,8 +18,10 @@ add_task(async function setup() {
   registerCleanupFunction(async function() {
     await PlacesUtils.bookmarks.remove(bm);
   });
-  await PlacesUtils.keywords.insert({ keyword: "keyword",
-                                      url: "http://example.com/?q=%s" });
+  await PlacesUtils.keywords.insert({
+    keyword: "keyword",
+    url: "http://example.com/?q=%s",
+  });
   // Needs at least one success.
   ok(true, "Setup complete");
 });
@@ -31,7 +33,7 @@ add_task(taskWithNewTab(async function test_keyword() {
   EventUtils.synthesizeKey("KEY_Enter");
   info("wait for the page to load");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedTab.linkedBrowser,
-                                      false, "http://example.com/?q=beard");
+                                       false, "http://example.com/?q=beard");
 }));
 
 add_task(taskWithNewTab(async function test_sametext() {
@@ -103,22 +105,20 @@ add_task(taskWithNewTab(async function test_disabled_ac() {
 }));
 
 add_task(taskWithNewTab(async function test_delay() {
-  const TIMEOUT = 10000;
+  // This is needed to clear the current value, otherwise autocomplete may think
+  // the user removed text from the end.
+  await promiseAutocompleteResultPopup("");
+  await UrlbarTestUtils.promisePopupClose(window);
+
   // Set a large delay.
+  const TIMEOUT = 3000;
   let delay = Preferences.get("browser.urlbar.delay");
   Preferences.set("browser.urlbar.delay", TIMEOUT);
   registerCleanupFunction(function() {
     Preferences.set("browser.urlbar.delay", delay);
   });
 
-  // This is needed to clear the current value, otherwise autocomplete may think
-  // the user removed text from the end.
-  let start = Date.now();
-  await promiseAutocompleteResultPopup("");
-  Assert.ok((Date.now() - start) < TIMEOUT);
-
-  start = Date.now();
-  await UrlbarTestUtils.promisePopupClose(window);
+  let start = Cu.now();
   gURLBar.focus();
   gURLBar.value = "e";
   EventUtils.sendString("x");
@@ -126,9 +126,8 @@ add_task(taskWithNewTab(async function test_delay() {
   info("wait for the page to load");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedTab.linkedBrowser,
                                        false, "http://example.com/");
-  Assert.ok((Date.now() - start) < TIMEOUT);
+  Assert.ok((Cu.now() - start) < TIMEOUT);
 }));
-
 
 // The main reason for running each test task in a new tab that's closed when
 // the task finishes is to avoid switch-to-tab results.
