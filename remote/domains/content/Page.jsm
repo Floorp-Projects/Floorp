@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["Page"];
 
-const {Domain} = ChromeUtils.import("chrome://remote/content/Domain.jsm");
+const {Domain} = ChromeUtils.import("chrome://remote/content/domains/Domain.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {UnsupportedError} = ChromeUtils.import("chrome://remote/content/Error.jsm");
 
