@@ -209,6 +209,7 @@ UNIFIED_SOURCES += [
     'PaintWorkletImpl.cpp',
     'PostTraversalTask.cpp',
     'PreloadedStyleSheet.cpp',
+    'PseudoStyleType.cpp',
     'Rule.cpp',
     'ServoCSSParser.cpp',
     'ServoCSSRuleList.cpp',
