@@ -57,7 +57,6 @@ class EditorCommandBase : public nsIControllerCommand {
 // basic editor commands
 NS_DECL_EDITOR_COMMAND(UndoCommand)
 NS_DECL_EDITOR_COMMAND(RedoCommand)
-NS_DECL_EDITOR_COMMAND(ClearUndoCommand)
 
 NS_DECL_EDITOR_COMMAND(CutCommand)
 NS_DECL_EDITOR_COMMAND(CutOrDeleteCommand)

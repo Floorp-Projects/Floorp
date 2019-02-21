@@ -47,7 +47,6 @@ nsresult EditorController::RegisterEditingCommands(
 
   NS_REGISTER_ONE_COMMAND(UndoCommand, "cmd_undo");
   NS_REGISTER_ONE_COMMAND(RedoCommand, "cmd_redo");
-  NS_REGISTER_ONE_COMMAND(ClearUndoCommand, "cmd_clearUndo");
 
   NS_REGISTER_ONE_COMMAND(CutCommand, "cmd_cut");
   NS_REGISTER_ONE_COMMAND(CutOrDeleteCommand, "cmd_cutOrDelete");
