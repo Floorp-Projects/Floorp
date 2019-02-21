@@ -94,7 +94,8 @@ let test = this.runTest("my.test.name"); // `runTest` expects the test name as a
 
 // Once your action is completed, call `runTest` returned object's `done` method.
 // It will automatically record the action duration and appear in PerfHerder as a new subtest.
-// It also creates markers in the profiler so that you can better inspect this action in perf-html.
+// It also creates markers in the profiler so that you can better inspect this action in
+// profiler.firefox.com.
 test.done();
 ```
 
@@ -145,7 +146,7 @@ Once it is done executing, the profile lives in a zip file you have to uncompres
 ```
 unzip testing/mozharness/build/blobber_upload_dir/profile_damp.zip
 ```
-Then you have to open [https://perf-html.io/](https://perf-html.io/) and manually load the profile file that lives here: `profile_damp/page_0_pagecycle_1/cycle_0.profile`
+Then you have to open [https://profiler.firefox.com/](https://profiler.firefox.com/) and manually load the profile file that lives here: `profile_damp/page_0_pagecycle_1/cycle_0.profile`
 
 ## How to write a good performance test?
 

@@ -8,7 +8,7 @@ const TRANSFER_EVENT = "devtools:perf-html-transfer-profile";
 const SYMBOL_TABLE_REQUEST_EVENT = "devtools:perf-html-request-symbol-table";
 const SYMBOL_TABLE_RESPONSE_EVENT = "devtools:perf-html-reply-symbol-table";
 const UI_BASE_URL_PREF = "devtools.performance.recording.ui-base-url";
-const UI_BASE_URL_DEFAULT = "https://perf-html.io";
+const UI_BASE_URL_DEFAULT = "https://profiler.firefox.com";
 const OBJDIRS_PREF = "devtools.performance.recording.objdirs";
 
 /**
@@ -19,16 +19,16 @@ const OBJDIRS_PREF = "devtools.performance.recording.objdirs";
  */
 
 /**
- * Once a profile is received from the actor, it needs to be opened up in perf.html
- * to be analyzed. This function opens up perf.html into a new browser tab, and injects
- * the profile via a frame script.
+ * Once a profile is received from the actor, it needs to be opened up in
+ * profiler.firefox.com to be analyzed. This function opens up profiler.firefox.com
+ * into a new browser tab, and injects the profile via a frame script.
  *
  * @param {object} profile - The Gecko profile.
  * @param {function} getSymbolTableCallback - A callback function with the signature
  *   (debugName, breakpadId) => Promise<SymbolTableAsTuple>, which will be invoked
- *   when perf-html.io sends SYMBOL_TABLE_REQUEST_EVENT messages to us. This function
- *   should obtain a symbol table for the requested binary and resolve the returned
- *   promise with it.
+ *   when profiler.firefox.com sends SYMBOL_TABLE_REQUEST_EVENT messages to us. This
+ *   function should obtain a symbol table for the requested binary and resolve the
+ *   returned promise with it.
  */
 function receiveProfile(profile, getSymbolTableCallback) {
   // Find the most recently used window, as the DevTools client could be in a variety
