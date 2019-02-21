@@ -562,17 +562,6 @@ JOB_DETAILS = {
 
 
 
-def get_job_details(job, log=None,
-                    download_symbols=False,
-                    download_host_bins=False,
-                    substs=None):
-    cls = JOB_DETAILS[job]
-    return cls(log=log,
-               download_symbols=download_symbols,
-               download_host_bins=download_host_bins,
-               substs=substs)
-
-
 def cachedmethod(cachefunc):
     '''Decorator to wrap a class or instance method with a memoizing callable that
     saves results in a (possibly shared) cache.
@@ -932,10 +921,11 @@ class Artifacts(object):
         self._topsrcdir = topsrcdir
 
         try:
-            self._artifact_job = get_job_details(self._job, log=self._log,
-                                                 download_symbols=self._download_symbols,
-                                                 download_host_bins=self._download_host_bins,
-                                                 substs=self._substs)
+            cls = JOB_DETAILS[self._job]
+            self._artifact_job = cls(log=self._log,
+                                     download_symbols=self._download_symbols,
+                                     download_host_bins=self._download_host_bins,
+                                     substs=self._substs)
         except KeyError:
             self.log(logging.INFO, 'artifact',
                 {'job': self._job},
