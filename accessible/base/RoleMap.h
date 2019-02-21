@@ -958,7 +958,7 @@ ROLE(NON_NATIVE_DOCUMENT,
      "non-native document",
      ATK_ROLE_DOCUMENT_FRAME,
      NSAccessibilityGroupRole,
-     USE_ROLE_STRING,
+     ROLE_SYSTEM_DOCUMENT,
      ROLE_SYSTEM_DOCUMENT,
      java::SessionAccessibility::CLASSNAME_VIEW,
      eNoNameRule)
