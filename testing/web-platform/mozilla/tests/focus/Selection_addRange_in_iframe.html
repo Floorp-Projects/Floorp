@@ -4,6 +4,7 @@
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <body>
+<div style="height: 3000px;">Spacer to check whether or not page was scrolled down to focused editor</div>
 <iframe srcdoc="<div style='height: 1000px;'></div><div id='editor' contenteditable>editor</div>" style="height: 500px;"></iframe>
 <script>
 "use strict";
@@ -17,10 +18,13 @@ window.onload = ()=>{
     range.setStart(editorInFrame, 0);
     var selection = subDocument.getSelection();
     selection.removeAllRanges();
+    document.documentElement.scrollTop = 0;
+    subDocument.documentElement.scrollTop = 0;
     selection.addRange(range);
     assert_equals(document.activeElement, document.body);
-    assert_equals(subDocument.documentElement.scrollTop, 0);
+    assert_equals(document.documentElement.scrollTop, 0);
     assert_equals(subDocument.activeElement, editorInFrame);
+    assert_equals(subDocument.documentElement.scrollTop, 0);
   }, "Moving selection into inactive contenteditable element in non-focused document shouldn't cause scrolling");
 
   test(function() {
@@ -39,6 +43,7 @@ window.onload = ()=>{
 
     // Move focus to the <iframe>
     iframe.contentWindow.focus();
+    document.documentElement.scrollTop = 0;
     assert_equals(document.activeElement, iframe);
     assert_equals(subDocument.activeElement, subDocument.body);
     assert_equals(subDocument.documentElement.scrollTop, 0);
@@ -48,9 +53,10 @@ window.onload = ()=>{
     selection.removeAllRanges();
     selection.addRange(range);
     assert_equals(document.activeElement, iframe);
-    assert_not_equals(subDocument.documentElement.scrollTop, 0);
+    assert_equals(document.documentElement.scrollTop, 0);
     assert_equals(subDocument.activeElement, editorInFrame);
-  }, "Moving selection into inactive contenteditable element in focused document should cause scrolling");
+    assert_equals(subDocument.documentElement.scrollTop, 0);
+  }, "Moving selection into inactive contenteditable element in focused document shouldn't cause scrolling");
 
   done();
 };
