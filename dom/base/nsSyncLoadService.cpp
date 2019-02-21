@@ -135,14 +135,12 @@ nsresult nsSyncLoader::LoadDocument(nsIChannel *aChannel, bool aChannelIsSync,
             "text/xml,application/xml,application/xhtml+xml,*/*;q=0.1"),
         false);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-    if (loadInfo) {
-      nsCOMPtr<nsIURI> loaderUri;
-      loadInfo->TriggeringPrincipal()->GetURI(getter_AddRefs(loaderUri));
-      if (loaderUri) {
-        rv = http->SetReferrerWithPolicy(loaderUri, aReferrerPolicy);
-        MOZ_ASSERT(NS_SUCCEEDED(rv));
-      }
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+    nsCOMPtr<nsIURI> loaderUri;
+    loadInfo->TriggeringPrincipal()->GetURI(getter_AddRefs(loaderUri));
+    if (loaderUri) {
+      rv = http->SetReferrerWithPolicy(loaderUri, aReferrerPolicy);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
 

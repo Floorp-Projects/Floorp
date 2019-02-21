@@ -188,13 +188,11 @@ nsPrefetchNode::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) {
 
   // if the load is cross origin without CORS, or the CORS access is rejected,
   // always fire load event to avoid leaking site information.
-  nsCOMPtr<nsILoadInfo> loadInfo = httpChannel->GetLoadInfo();
-  if (loadInfo) {
-    mShouldFireLoadEvent =
-        loadInfo->GetTainting() == LoadTainting::Opaque ||
-        (loadInfo->GetTainting() == LoadTainting::CORS &&
-         (NS_FAILED(httpChannel->GetStatus(&rv)) || NS_FAILED(rv)));
-  }
+  nsCOMPtr<nsILoadInfo> loadInfo = httpChannel->LoadInfo();
+  mShouldFireLoadEvent =
+      loadInfo->GetTainting() == LoadTainting::Opaque ||
+      (loadInfo->GetTainting() == LoadTainting::CORS &&
+       (NS_FAILED(httpChannel->GetStatus(&rv)) || NS_FAILED(rv)));
 
   // no need to prefetch http error page
   bool requestSucceeded;

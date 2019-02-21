@@ -1923,8 +1923,7 @@ nsresult nsHTMLDocument::CreateAndAddWyciwygChannel(void) {
                      nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
                      nsIContentPolicy::TYPE_OTHER);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
-  NS_ENSURE_STATE(loadInfo);
+  nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
   loadInfo->SetPrincipalToInherit(NodePrincipal());
 
   mWyciwygChannel = do_QueryInterface(channel);

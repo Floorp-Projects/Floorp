@@ -515,8 +515,8 @@ NS_IMETHODIMP nsExternalProtocolHandler::NewURI(
 }
 
 NS_IMETHODIMP
-nsExternalProtocolHandler::NewChannel2(nsIURI *aURI, nsILoadInfo *aLoadInfo,
-                                       nsIChannel **aRetval) {
+nsExternalProtocolHandler::NewChannel(nsIURI *aURI, nsILoadInfo *aLoadInfo,
+                                      nsIChannel **aRetval) {
   NS_ENSURE_TRUE(aURI, NS_ERROR_UNKNOWN_PROTOCOL);
   NS_ENSURE_TRUE(aRetval, NS_ERROR_UNKNOWN_PROTOCOL);
 
@@ -531,11 +531,6 @@ nsExternalProtocolHandler::NewChannel2(nsIURI *aURI, nsILoadInfo *aLoadInfo,
   nsCOMPtr<nsIChannel> channel = new nsExtProtocolChannel(aURI, aLoadInfo);
   channel.forget(aRetval);
   return NS_OK;
-}
-
-NS_IMETHODIMP nsExternalProtocolHandler::NewChannel(nsIURI *aURI,
-                                                    nsIChannel **_retval) {
-  return NewChannel2(aURI, nullptr, _retval);
 }
 
 ///////////////////////////////////////////////////////////////////////

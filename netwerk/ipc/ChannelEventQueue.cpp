@@ -186,11 +186,7 @@ bool ChannelEventQueue::MaybeSuspendIfEventsAreSuppressed() {
     return false;
   }
 
-  nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
-  if (!loadInfo) {
-    return false;
-  }
-
+  nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
   // Figure out if this is for an XHR, if we haven't done so already.
   if (!mHasCheckedForXMLHttpRequest) {
     nsContentPolicyType contentType = loadInfo->InternalContentPolicyType();

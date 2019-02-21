@@ -77,8 +77,6 @@ static bool GetPdbInfo(uintptr_t aStart, nsID& aSignature, uint32_t& aAge,
   return true;
 }
 
-static bool IsDashOrBraces(char c) { return c == '-' || c == '{' || c == '}'; }
-
 static nsCString GetVersion(WCHAR* dllPath) {
   DWORD infoSize = GetFileVersionInfoSizeW(dllPath, nullptr);
   if (infoSize == 0) {

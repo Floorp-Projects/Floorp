@@ -2026,8 +2026,8 @@ nsHttpHandler::NewURI(const nsACString &aSpec, const char *aCharset,
 }
 
 NS_IMETHODIMP
-nsHttpHandler::NewChannel2(nsIURI *uri, nsILoadInfo *aLoadInfo,
-                           nsIChannel **result) {
+nsHttpHandler::NewChannel(nsIURI *uri, nsILoadInfo *aLoadInfo,
+                          nsIChannel **result) {
   LOG(("nsHttpHandler::NewChannel\n"));
 
   NS_ENSURE_ARG_POINTER(uri);
@@ -2048,11 +2048,6 @@ nsHttpHandler::NewChannel2(nsIURI *uri, nsILoadInfo *aLoadInfo,
   }
 
   return NewProxiedChannel2(uri, nullptr, 0, nullptr, aLoadInfo, result);
-}
-
-NS_IMETHODIMP
-nsHttpHandler::NewChannel(nsIURI *uri, nsIChannel **result) {
-  return NewChannel2(uri, nullptr, result);
 }
 
 NS_IMETHODIMP
@@ -2563,16 +2558,11 @@ nsHttpsHandler::NewURI(const nsACString &aSpec, const char *aOriginCharset,
 }
 
 NS_IMETHODIMP
-nsHttpsHandler::NewChannel2(nsIURI *aURI, nsILoadInfo *aLoadInfo,
-                            nsIChannel **_retval) {
+nsHttpsHandler::NewChannel(nsIURI *aURI, nsILoadInfo *aLoadInfo,
+                           nsIChannel **_retval) {
   MOZ_ASSERT(gHttpHandler);
   if (!gHttpHandler) return NS_ERROR_UNEXPECTED;
-  return gHttpHandler->NewChannel2(aURI, aLoadInfo, _retval);
-}
-
-NS_IMETHODIMP
-nsHttpsHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval) {
-  return NewChannel2(aURI, nullptr, _retval);
+  return gHttpHandler->NewChannel(aURI, aLoadInfo, _retval);
 }
 
 NS_IMETHODIMP

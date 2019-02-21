@@ -532,8 +532,8 @@ nsresult nsCORSListenerProxy::CheckRequestApproved(nsIRequest* aRequest) {
     return NS_ERROR_DOM_BAD_URI;
   }
 
-  nsCOMPtr<nsILoadInfo> loadInfo = http->GetLoadInfo();
-  if (loadInfo && loadInfo->GetServiceWorkerTaintingSynthesized()) {
+  nsCOMPtr<nsILoadInfo> loadInfo = http->LoadInfo();
+  if (loadInfo->GetServiceWorkerTaintingSynthesized()) {
     // For synthesized responses, we don't need to perform any checks.
     // Note: This would be unsafe if we ever changed our behavior to allow
     // service workers to intercept CORS preflights.
@@ -842,14 +842,7 @@ bool CheckUpgradeInsecureRequestsPreventsCORS(
     return false;
   }
 
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  rv = aChannel->GetLoadInfo(getter_AddRefs(loadInfo));
-  NS_ENSURE_SUCCESS(rv, false);
-
-  if (!loadInfo) {
-    return false;
-  }
-
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   // lets see if the loadInfo indicates that the request will
   // be upgraded before fetching any data from the netwerk.
   return loadInfo->GetUpgradeInsecureRequests() ||
@@ -865,7 +858,7 @@ nsresult nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
   rv = aChannel->GetOriginalURI(getter_AddRefs(originalURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
 
   // exempt data URIs from the same origin check.
   if (aAllowDataURI == DataURIHandling::Allow && originalURI == uri) {
@@ -875,7 +868,7 @@ nsresult nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
     if (dataScheme) {
       return NS_OK;
     }
-    if (loadInfo && loadInfo->GetAboutBlankInherits() && NS_IsAboutBlank(uri)) {
+    if (loadInfo->GetAboutBlankInherits() && NS_IsAboutBlank(uri)) {
       return NS_OK;
     }
   }
@@ -1001,9 +994,8 @@ nsresult nsCORSListenerProxy::CheckPreflightNeeded(nsIChannel* aChannel,
                                                    UpdateType aUpdateType) {
   // If this caller isn't using AsyncOpen, or if this *is* a preflight channel,
   // then we shouldn't initiate preflight for this channel.
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-  if (!loadInfo ||
-      loadInfo->GetSecurityMode() !=
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  if (loadInfo->GetSecurityMode() !=
           nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS ||
       loadInfo->GetIsPreflight()) {
     return NS_OK;
@@ -1223,7 +1215,7 @@ nsCORSPreflightListener::OnStartRequest(nsIRequest* aRequest,
 #ifdef DEBUG
   {
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
-    nsCOMPtr<nsILoadInfo> loadInfo = channel ? channel->GetLoadInfo() : nullptr;
+    nsCOMPtr<nsILoadInfo> loadInfo = channel ? channel->LoadInfo() : nullptr;
     MOZ_ASSERT(!loadInfo || !loadInfo->GetServiceWorkerTaintingSynthesized());
   }
 #endif
@@ -1398,13 +1390,7 @@ nsresult nsCORSListenerProxy::StartCORSPreflight(
   nsresult rv = NS_GetFinalChannelURI(aRequestChannel, getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsILoadInfo> originalLoadInfo = aRequestChannel->GetLoadInfo();
-  MOZ_ASSERT(originalLoadInfo,
-             "can not perform CORS preflight without a loadInfo");
-  if (!originalLoadInfo) {
-    return NS_ERROR_FAILURE;
-  }
-
+  nsCOMPtr<nsILoadInfo> originalLoadInfo = aRequestChannel->LoadInfo();
   MOZ_ASSERT(originalLoadInfo->GetSecurityMode() ==
                  nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS,
              "how did we end up here?");
