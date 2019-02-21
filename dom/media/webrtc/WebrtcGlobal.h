@@ -301,13 +301,17 @@ static void WriteRTCRtpStreamStats(
   WriteParam(aMsg, aParam.mBitrateMean);
   WriteParam(aMsg, aParam.mBitrateStdDev);
   WriteParam(aMsg, aParam.mCodecId);
+  WriteParam(aMsg, aParam.mFirCount);
   WriteParam(aMsg, aParam.mFramerateMean);
   WriteParam(aMsg, aParam.mFramerateStdDev);
+  WriteParam(aMsg, aParam.mKind);
+  WriteParam(aMsg, aParam.mLocalId);
   WriteParam(aMsg, aParam.mMediaTrackId);
   WriteParam(aMsg, aParam.mMediaType);
-  WriteParam(aMsg, aParam.mKind);
+  WriteParam(aMsg, aParam.mNackCount);
+  WriteParam(aMsg, aParam.mPliCount);
+  WriteParam(aMsg, aParam.mQpSum);
   WriteParam(aMsg, aParam.mRemoteId);
-  WriteParam(aMsg, aParam.mLocalId);
   WriteParam(aMsg, aParam.mSsrc);
   WriteParam(aMsg, aParam.mTransportId);
 }
@@ -317,13 +321,17 @@ static bool ReadRTCRtpStreamStats(const Message* aMsg, PickleIterator* aIter,
   if (!ReadParam(aMsg, aIter, &(aResult->mBitrateMean)) ||
       !ReadParam(aMsg, aIter, &(aResult->mBitrateStdDev)) ||
       !ReadParam(aMsg, aIter, &(aResult->mCodecId)) ||
+      !ReadParam(aMsg, aIter, &(aResult->mFirCount)) ||
       !ReadParam(aMsg, aIter, &(aResult->mFramerateMean)) ||
       !ReadParam(aMsg, aIter, &(aResult->mFramerateStdDev)) ||
+      !ReadParam(aMsg, aIter, &(aResult->mKind)) ||
+      !ReadParam(aMsg, aIter, &(aResult->mLocalId)) ||
       !ReadParam(aMsg, aIter, &(aResult->mMediaTrackId)) ||
       !ReadParam(aMsg, aIter, &(aResult->mMediaType)) ||
-      !ReadParam(aMsg, aIter, &(aResult->mKind)) ||
+      !ReadParam(aMsg, aIter, &(aResult->mNackCount)) ||
+      !ReadParam(aMsg, aIter, &(aResult->mPliCount)) ||
+      !ReadParam(aMsg, aIter, &(aResult->mQpSum)) ||
       !ReadParam(aMsg, aIter, &(aResult->mRemoteId)) ||
-      !ReadParam(aMsg, aIter, &(aResult->mLocalId)) ||
       !ReadParam(aMsg, aIter, &(aResult->mSsrc)) ||
       !ReadParam(aMsg, aIter, &(aResult->mTransportId))) {
     return false;
@@ -341,9 +349,9 @@ struct ParamTraits<mozilla::dom::RTCInboundRTPStreamStats> {
     WriteParam(aMsg, aParam.mDiscardedPackets);
     WriteParam(aMsg, aParam.mFramesDecoded);
     WriteParam(aMsg, aParam.mJitter);
-    WriteParam(aMsg, aParam.mRoundTripTime);
     WriteParam(aMsg, aParam.mPacketsLost);
     WriteParam(aMsg, aParam.mPacketsReceived);
+    WriteParam(aMsg, aParam.mRoundTripTime);
     WriteRTCRtpStreamStats(aMsg, aParam);
     WriteRTCStats(aMsg, aParam);
   }
@@ -354,9 +362,9 @@ struct ParamTraits<mozilla::dom::RTCInboundRTPStreamStats> {
         !ReadParam(aMsg, aIter, &(aResult->mDiscardedPackets)) ||
         !ReadParam(aMsg, aIter, &(aResult->mFramesDecoded)) ||
         !ReadParam(aMsg, aIter, &(aResult->mJitter)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mRoundTripTime)) ||
         !ReadParam(aMsg, aIter, &(aResult->mPacketsLost)) ||
         !ReadParam(aMsg, aIter, &(aResult->mPacketsReceived)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mRoundTripTime)) ||
         !ReadRTCRtpStreamStats(aMsg, aIter, aResult) ||
         !ReadRTCStats(aMsg, aIter, aResult)) {
       return false;
@@ -373,12 +381,9 @@ struct ParamTraits<mozilla::dom::RTCOutboundRTPStreamStats> {
   static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mBytesSent);
     WriteParam(aMsg, aParam.mDroppedFrames);
+    WriteParam(aMsg, aParam.mFramesEncoded);
     WriteParam(aMsg, aParam.mPacketsSent);
     WriteParam(aMsg, aParam.mTargetBitrate);
-    WriteParam(aMsg, aParam.mFramesEncoded);
-    WriteParam(aMsg, aParam.mFirCount);
-    WriteParam(aMsg, aParam.mNackCount);
-    WriteParam(aMsg, aParam.mPliCount);
     WriteRTCRtpStreamStats(aMsg, aParam);
     WriteRTCStats(aMsg, aParam);
   }
@@ -387,12 +392,9 @@ struct ParamTraits<mozilla::dom::RTCOutboundRTPStreamStats> {
                    paramType* aResult) {
     if (!ReadParam(aMsg, aIter, &(aResult->mBytesSent)) ||
         !ReadParam(aMsg, aIter, &(aResult->mDroppedFrames)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mFramesEncoded)) ||
         !ReadParam(aMsg, aIter, &(aResult->mPacketsSent)) ||
         !ReadParam(aMsg, aIter, &(aResult->mTargetBitrate)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mFramesEncoded)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mFirCount)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mNackCount)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mPliCount)) ||
         !ReadRTCRtpStreamStats(aMsg, aIter, aResult) ||
         !ReadRTCStats(aMsg, aIter, aResult)) {
       return false;
