@@ -34,6 +34,9 @@ exclude: true
 - Added [`GeckoSession.getDefaultUserAgent`][67.1] to expose the build-time
   default user agent synchronously.
 
+- Changed `WebResponse.body` from a `ByteBuffer` to an `InputStream`. Apps that want access
+  to the entire response body will now need to read the stream themselves.
+
 [67.1]: ../GeckoSession.html#getDefaultUserAgent--
 
 ## v66
@@ -145,4 +148,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: 0b19e298c556966ca0821bc2be8b015ccd014fa9
+[api-version]: 5655c3f6a74c860809e57a2d66499633ac23cfcc
