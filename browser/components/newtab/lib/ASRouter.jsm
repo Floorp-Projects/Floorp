@@ -874,6 +874,7 @@ class _ASRouter {
       });
 
       this._storage.set("messageBlockList", messageBlockList);
+      this._storage.set("messageImpressions", messageImpressions);
       return {messageBlockList, messageImpressions};
     });
   }
