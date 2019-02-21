@@ -702,7 +702,7 @@ void MediaPipeline::CheckTransportStates() {
   }
 }
 
-void MediaPipeline::SendPacket(MediaPacket& packet) {
+void MediaPipeline::SendPacket(MediaPacket&& packet) {
   ASSERT_ON_THREAD(mStsThread);
   MOZ_ASSERT(mRtpState == TransportLayer::TS_OPEN);
   MOZ_ASSERT(!mTransportId.empty());
@@ -1284,7 +1284,7 @@ void MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s(
           ("%s sending %s packet", mPipeline->mDescription.c_str(),
            (isRtp ? "RTP" : "RTCP")));
 
-  mPipeline->SendPacket(packet);
+  mPipeline->SendPacket(std::move(packet));
 }
 
 nsresult MediaPipeline::PipelineTransport::SendRtcpPacket(const uint8_t* aData,

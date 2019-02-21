@@ -44,6 +44,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <netinet/in.h>
 #endif
 
+#include "r_types.h"
+
 /* Length of a string  hex representation of a MD5 hash */
 #define MAXIFNAME 33
 
