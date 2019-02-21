@@ -1043,6 +1043,9 @@ class ContentParent final : public PContentParent,
  public:
   mozilla::ipc::IPCResult RecvPrivateDocShellsExist(const bool& aExist);
 
+  mozilla::ipc::IPCResult RecvCommitBrowsingContextTransaction(
+      BrowsingContext* aContext, BrowsingContext::Transaction&& aTransaction);
+
   mozilla::ipc::IPCResult RecvFirstIdle();
 
   mozilla::ipc::IPCResult RecvDeviceReset();
