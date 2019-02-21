@@ -57,9 +57,13 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
           }],
         [["--app"],
          {"default": "firefox",
-          "choices": ["firefox", "chrome", "geckoview", "fennec"],
+          "choices": ["firefox", "chrome", "geckoview", "fennec", "refbrow", "fenix"],
           "dest": "app",
           "help": "name of the application we are testing (default: firefox)"
+          }],
+        [["--activity"],
+         {"dest": "activity",
+          "help": "name of the android activity used to launch the android app"
           }],
         [["--is-release-build"],
          {"action": "store_true",
@@ -180,10 +184,16 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             # check each cmd line arg individually
             self.app = "firefox"
             if 'raptor_cmd_line_args' in self.config:
-                for app in ['chrome', 'geckoview', 'fennec']:
+                for app in ['chrome', 'geckoview', 'fennec', 'refbrow', 'fenix']:
                     for next_arg in self.config['raptor_cmd_line_args']:
                         if app in next_arg:
                             self.app = app
+                            break
+                # repeat and get 'activity' argument
+                for activity in ['GeckoViewActivity', 'BrowserTestActivity']:
+                    for next_arg in self.config['raptor_cmd_line_args']:
+                        if activity in next_arg:
+                            self.activity = activity
                             break
         else:
             # raptor initiated in production via mozharness
@@ -209,6 +219,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         self.power_test = self.config.get('power_test')
         self.is_release_build = self.config.get('is_release_build')
         self.debug_mode = self.config.get('debug_mode', False)
+        self.firefox_android_browsers = ["fennec", "geckoview", "refbrow", "fenix"]
 
     # We accept some configuration options from the try commit message in the
     # format mozharness: <options>. Example try commit message: mozharness:
@@ -332,12 +343,13 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         # binary path; if testing on firefox the binary path already came from mozharness/pro;
         # otherwise the binary path is forwarded from cmd line arg (raptor_cmd_line_args)
         kw_options['app'] = self.app
-        if self.app == "firefox" or (self.app in["geckoview", "fennec"] and not self.run_local):
+        if self.app == "firefox" or (self.app in self.firefox_android_browsers and
+                                     not self.run_local):
             binary_path = self.binary_path or self.config.get('binary_path')
             if not binary_path:
                 self.fatal("Raptor requires a path to the binary.")
             kw_options['binary'] = binary_path
-            if self.app in["geckoview", "fennec"]:
+            if self.app in self.firefox_android_browsers:
                 # in production ensure we have correct app name,
                 # i.e. fennec_aurora or fennec_release etc.
                 kw_options['binary'] = self.query_package_name()
@@ -461,7 +473,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             self._install_view_gecko_profile_req()
 
     def install(self):
-        if self.app in ["geckoview", "fennec"]:
+        if self.app in self.firefox_android_browsers:
             self.install_apk(self.installer_path)
         else:
             super(Raptor, self).install()
@@ -582,7 +594,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
 
             return bool(debug_opts.intersection(cmdline))
 
-        if self.app in ["geckoview", "fennec"]:
+        if self.app in self.firefox_android_browsers:
             self.logcat_start()
 
         command = [python, run_tests] + options + mozlog_opts
@@ -595,7 +607,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
                                                 output_parser=parser,
                                                 env=env)
 
-        if self.app in ["geckoview", "fennec"]:
+        if self.app in self.firefox_android_browsers:
             self.logcat_stop()
 
         if parser.minidump_output:

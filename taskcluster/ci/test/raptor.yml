@@ -382,6 +382,7 @@ raptor-tp6m-1-geckoview:
             - --test=raptor-tp6m-1
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
+            - --activity=GeckoViewActivity
 
 raptor-speedometer-firefox:
     description: "Raptor Speedometer on Firefox"
@@ -417,6 +418,7 @@ raptor-speedometer-geckoview:
             - --test=raptor-speedometer
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
+            - --activity=GeckoViewActivity
 
 raptor-speedometer-geckoview-power:
     description: "Raptor Speedometer Power on Geckoview"
@@ -435,6 +437,7 @@ raptor-speedometer-geckoview-power:
             - --power-test
             - --page-cycles 5
             - --host HOST_IP
+            - --activity=GeckoViewActivity
 
 raptor-speedometer-fennec:
     description: "Raptor Speedometer on Fennec"
@@ -658,6 +661,7 @@ raptor-unity-webgl-geckoview:
             - --test=raptor-unity-webgl
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
+            - --activity=GeckoViewActivity
     fetches:
         fetch:
             - unity-webgl
