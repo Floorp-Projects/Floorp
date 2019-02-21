@@ -578,7 +578,8 @@ static nsresult OfflineAppPermForPrincipal(nsIPrincipal *aPrincipal,
   }
 
   uint32_t perm;
-  const char *permName = pinned ? "pin-app" : "offline-app";
+  const nsLiteralCString permName = pinned ? NS_LITERAL_CSTRING("pin-app")
+                                           : NS_LITERAL_CSTRING("offline-app");
   permissionManager->TestExactPermissionFromPrincipal(aPrincipal, permName,
                                                       &perm);
 
@@ -667,8 +668,9 @@ nsOfflineCacheUpdateService::AllowOfflineApp(nsIPrincipal *aPrincipal) {
     if (!permissionManager) return NS_ERROR_NOT_AVAILABLE;
 
     rv = permissionManager->AddFromPrincipal(
-        aPrincipal, "offline-app", nsIPermissionManager::ALLOW_ACTION,
-        nsIPermissionManager::EXPIRE_NEVER, 0);
+        aPrincipal, NS_LITERAL_CSTRING("offline-app"),
+        nsIPermissionManager::ALLOW_ACTION, nsIPermissionManager::EXPIRE_NEVER,
+        0);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
