@@ -1435,13 +1435,23 @@ def pgo_flags(compiler, build_env, target):
             else:
                 gen_ldflags = None
         else:
-            gen_ldflags = ['-fprofile-instr-generate']
+            if target.os == 'Android':
+                gen_cflags = ['-fprofile-generate=/data/local/tmp']
+                gen_ldflags = ['-fprofile-generate=/data/local/tmp']
+            else:
+                gen_ldflags = ['-fprofile-instr-generate']
+                gen_cflags = ['-fprofile-instr-generate']
 
         if gen_ldflags:
+            if target.os == 'Android':
+                use_flag = '-fprofile-use'
+            else:
+                use_flag = '-fprofile-instr-use'
+
             return namespace(
-                gen_cflags=['-fprofile-instr-generate'],
+                gen_cflags=gen_cflags,
                 gen_ldflags=gen_ldflags,
-                use_cflags=['-fprofile-instr-use=%s' % profdata,
+                use_cflags=['%s=%s' % (use_flag, profdata),
                             '-Wno-error=profile-instr-out-of-date',
                             '-Wno-error=profile-instr-unprofiled'],
                 use_ldflags=[],
