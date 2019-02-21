@@ -2683,7 +2683,7 @@ int NS_main(int argc, NS_tchar **argv) {
   // need to initialize NSS at all there.
   // Otherwise, minimize the amount of NSS we depend on by avoiding all the NSS
   // databases.
-  if (NSS_NoDB_Init(NULL) != SECSuccess) {
+  if (NSS_NoDB_Init(nullptr) != SECSuccess) {
     PRErrorCode error = PR_GetError();
     fprintf(stderr, "Could not initialize NSS: %s (%d)", PR_ErrorToName(error),
             (int)error);

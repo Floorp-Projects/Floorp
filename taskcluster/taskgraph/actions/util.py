@@ -133,7 +133,7 @@ def update_parent(task, graph):
     return task
 
 
-def create_tasks(to_run, full_task_graph, label_to_taskid,
+def create_tasks(graph_config, to_run, full_task_graph, label_to_taskid,
                  params, decision_task_id=None, suffix='', modifier=lambda t: t):
     """Create new tasks.  The task definition will have {relative-datestamp':
     '..'} rendered just like in a decision task.  Action callbacks should use
@@ -173,7 +173,13 @@ def create_tasks(to_run, full_task_graph, label_to_taskid,
     write_artifact('task-graph{}.json'.format(suffix), optimized_task_graph.to_json())
     write_artifact('label-to-taskid{}.json'.format(suffix), label_to_taskid)
     write_artifact('to-run{}.json'.format(suffix), list(to_run))
-    create.create_tasks(optimized_task_graph, label_to_taskid, params, decision_task_id)
+    create.create_tasks(
+        graph_config,
+        optimized_task_graph,
+        label_to_taskid,
+        params,
+        decision_task_id,
+    )
     return label_to_taskid
 
 

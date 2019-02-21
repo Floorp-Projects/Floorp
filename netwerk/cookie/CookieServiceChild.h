@@ -110,7 +110,6 @@ class CookieServiceChild : public PCookieServiceChild,
   uint8_t mCookieBehavior;
   bool mThirdPartySession;
   bool mThirdPartyNonsecureSession;
-  bool mLeaveSecureAlone;
   bool mIPCOpen;
 };
 

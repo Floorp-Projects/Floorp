@@ -8,27 +8,26 @@ var TESTS = [
   {
     name: "test.txt",
     size: 232,
-    crc: 0x0373ac26
+    crc: 0x0373ac26,
   },
   {
     name: "test.png",
     size: 3402,
-    crc: 0x504a5c30
-  }
+    crc: 0x504a5c30,
+  },
 ];
 
-function run_test()
-{
+function run_test() {
   zipW.open(tmpFile, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
 
   var size = 0;
-  for (var i = 0; i < TESTS.length; i++) {
-    var source = do_get_file(DATA_DIR + TESTS[i].name);
+  for (let i = 0; i < TESTS.length; i++) {
+    let source = do_get_file(DATA_DIR + TESTS[i].name);
     zipW.addEntryFile(TESTS[i].name, Ci.nsIZipWriter.COMPRESSION_NONE, source,
                       false);
     size += ZIP_FILE_HEADER_SIZE + ZIP_CDS_HEADER_SIZE +
             (ZIP_EXTENDED_TIMESTAMP_SIZE * 2) +
-            (TESTS[i].name.length*2) + TESTS[i].size;
+            (TESTS[i].name.length * 2) + TESTS[i].size;
   }
 
   zipW.close();
@@ -39,8 +38,8 @@ function run_test()
   // Test the stored data with the zipreader
   var zipR = new ZipReader(tmpFile);
 
-  for (var i = 0; i < TESTS.length; i++) {
-    var source = do_get_file(DATA_DIR + TESTS[i].name);
+  for (let i = 0; i < TESTS.length; i++) {
+    let source = do_get_file(DATA_DIR + TESTS[i].name);
     Assert.ok(zipR.hasEntry(TESTS[i].name));
 
     var entry = zipR.getEntry(TESTS[i].name);

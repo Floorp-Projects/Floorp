@@ -4,6 +4,7 @@
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <body>
+<div style="height: 3000px;">Spacer to check whether or not page was scrolled down to focused editor</div>
 <p id="staticBefore">static text</p>
 <div id="editor" contenteditable><p>content of editor</p></div>
 <div id="outerEditor" contenteditable
@@ -63,41 +64,49 @@ function resetFocusAndSelectionRange(aFocus)
     } else {
         document.getSelection().collapse(staticBefore.textNode, 0);
     }
+    document.documentElement.scrollTop = 0;
 }
 
 test(function() {
     resetFocusAndSelectionRange(staticBefore);
     document.getSelection().removeRange(document.getSelection().getRangeAt(0));
     assert_equals(document.activeElement, document.body);
+    assert_equals(document.documentElement.scrollTop, 0);
 }, "Active element should be the <body> after Selection.removeRange() to remove selected range at the start of the first text node of 'staticBefore' when active element is the <body>");
 test(function() {
     resetFocusAndSelectionRange(editor);
     document.getSelection().removeRange(document.getSelection().getRangeAt(0));
     assert_equals(document.activeElement, editor.element);
+    assert_equals(document.documentElement.scrollTop, 0);
 }, "Active element should be 'editor' after Selection.removeRange() to remove selected range at the start of the first text node of 'editor' when active element is 'editor'");
 test(function() {
     resetFocusAndSelectionRange(outerEditor);
     document.getSelection().removeRange(document.getSelection().getRangeAt(0));
     assert_equals(document.activeElement, outerEditor.element);
+    assert_equals(document.documentElement.scrollTop, 0);
 }, "Active element should be 'outerEditor' after Selection.removeRange() to remove selected range at the start of the first text node of 'outerEditor' when active element is 'outerEditor'");
 test(function() {
     resetFocusAndSelectionRange(staticInEditor);
     document.getSelection().removeRange(document.getSelection().getRangeAt(0));
     assert_equals(document.activeElement, document.body);
+    assert_equals(document.documentElement.scrollTop, 0);
 }, "Active element should be the <body> after Selection.removeRange() to remove selected range at the start of the first text node of 'staticInEditor' when active element is the <body>");
 test(function() {
     resetFocusAndSelectionRange(innerEditor);
     document.getSelection().removeRange(document.getSelection().getRangeAt(0));
     assert_equals(document.activeElement, innerEditor.element);
+    assert_equals(document.documentElement.scrollTop, 0);
 }, "Active element should be 'innerEditor' after Selection.removeRange() to remove selected range at the start of the first text node of 'innerEditor' when active element is 'innerEditor'");
 test(function() {
     resetFocusAndSelectionRange(staticAfter);
     document.getSelection().removeRange(document.getSelection().getRangeAt(0));
     assert_equals(document.activeElement, document.body);
+    assert_equals(document.documentElement.scrollTop, 0);
 }, "Active element should be the <body> after Selection.removeRange() to remove selected range at the start of the first text node of 'staticAfter' when active element is the <body>");
 test(function() {
     resetFocusAndSelectionRange(anchor);
     document.getSelection().removeRange(document.getSelection().getRangeAt(0));
     assert_equals(document.activeElement, anchor.element);
+    assert_equals(document.documentElement.scrollTop, 0);
 }, "Active element should be 'anchor' after Selection.removeRange() to remove selected range at the start of the first text node of 'anchor' when active element is 'anchor'");
 </script>

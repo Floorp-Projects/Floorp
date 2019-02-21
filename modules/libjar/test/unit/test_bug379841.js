@@ -14,7 +14,7 @@ function run_test() {
                   createInstance(Ci.nsIZipReader);
   zipReader.open(file);
   var entry = zipReader.getEntry(ENTRY_NAME);
-  var diff = Math.abs(entry.lastModifiedTime - ENTRY_TIME.getTime()*1000);
+  var diff = Math.abs(entry.lastModifiedTime - ENTRY_TIME.getTime() * 1000);
   zipReader.close();
   if (diff >= MAX_TIME_DIFF)
     do_throw(diff);

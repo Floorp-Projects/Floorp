@@ -100,7 +100,7 @@ def docker_worker_run_task(config, job, taskdesc):
     if run.get('cache-dotcache'):
         worker['caches'].append({
             'type': 'persistent',
-            'name': 'level-{level}-{project}-dotcache'.format(**config.params),
+            'name': '{project}-dotcache'.format(**config.params),
             'mount-point': '{workdir}/.cache'.format(**run),
             'skip-untrusted': True,
         })
@@ -136,7 +136,7 @@ def generic_worker_run_task(config, job, taskdesc):
     worker.setdefault('mounts', [])
     if run.get('cache-dotcache'):
         worker['mounts'].append({
-            'cache-name': 'level-{level}-{project}-dotcache'.format(**config.params),
+            'cache-name': '{project}-dotcache'.format(**config.params),
             'directory': '{workdir}/.cache'.format(**run),
         })
     worker['mounts'].append({

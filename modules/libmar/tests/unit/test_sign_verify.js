@@ -2,7 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function run_test() {
-
   /**
    * Signs a MAR file.
    *
@@ -568,7 +567,7 @@ function run_test() {
     },
     // Between each test make sure the out MAR does not exist.
     cleanup_per_test: function _cleanup_per_test() {
-    }
+    },
   };
 
   cleanup();
