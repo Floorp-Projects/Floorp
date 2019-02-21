@@ -11,6 +11,7 @@ from taskgraph.loader.single_dep import loader as base_loader
 NON_NIGHTLY_LABELS_WHICH_SHOULD_SIGN_BUILDS = (
     'build-win32/debug', 'build-win32/opt', 'build-win32/pgo',
     'build-win64/debug', 'build-win64/opt', 'build-win64/pgo',
+    'build-win64-aarch64/opt', 'build-win64-aarch64/debug'
     'build-win32-devedition/opt', 'build-win64-devedition/opt',
     'build-win64-ccov/debug',
     'build-linux/opt', 'build-linux64/opt', 'build-linux64/pgo',
