@@ -282,7 +282,7 @@ gTests.push({
   async run() {
     // Open folder selector.
     var foldersExpander = this.window.document.getElementById("editBMPanel_foldersExpander");
-    var folderTree = this.window.document.getElementById("editBMPanel_folderTree");
+    var folderTree = this.window.gEditItemOverlay._folderTree;
     var self = this;
 
     let unloadPromise = new Promise(resolve => {
