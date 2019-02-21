@@ -59,7 +59,7 @@ add_task(async function test_asyncMessage() {
           ok(actorChild, "JSWindowActorChild should have value.");
 
           let promise = new Promise(resolve => {
-            actorChild.sendAsyncMessage("init", {});
+            actorChild.sendAsyncMessage("Test", "init", {});
             actorChild.done = (data) => resolve(data);
           }).then(data => {
             ok(data.initial, "Initial should be true.");
@@ -86,7 +86,7 @@ add_task(async function test_asyncMessage_without_both_side_actor() {
           ok(actorChild, "JSWindowActorChild should have value.");
 
           let promise = new Promise(resolve => {
-            actorChild.sendAsyncMessage("init", {});
+            actorChild.sendAsyncMessage("Test", "init", {});
             actorChild.done = (data) => resolve(data);
           }).then(data => {
             ok(data.initial, "Initial should be true.");
@@ -99,4 +99,3 @@ add_task(async function test_asyncMessage_without_both_side_actor() {
         ChromeUtils.unregisterWindowActor("Test");
     });
 });
-
