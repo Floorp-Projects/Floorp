@@ -179,17 +179,6 @@ void ClearSiteData::ClearDataFromChannel(nsIHttpChannel* aChannel) {
   nsresult rv;
   nsCOMPtr<nsIURI> uri;
 
-  uint32_t status;
-  rv = aChannel->GetResponseStatus(&status);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  // We just care about 2xx response status.
-  if (status < 200 || status >= 300) {
-    return;
-  }
-
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
   if (NS_WARN_IF(!ssm)) {
     return;
@@ -258,9 +247,18 @@ void ClearSiteData::ClearDataFromChannel(nsIHttpChannel* aChannel) {
     }
   }
 
+  // We consider eExecutionContexts only for 2xx response status.
   if (flags & eExecutionContexts) {
-    LogOpToConsole(aChannel, uri, eExecutionContexts);
-    BrowsingContextsReload(holder, principal);
+    uint32_t status;
+    rv = aChannel->GetResponseStatus(&status);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+
+    if (status >= 200 && status < 300) {
+      LogOpToConsole(aChannel, uri, eExecutionContexts);
+      BrowsingContextsReload(holder, principal);
+    }
   }
 }
 
