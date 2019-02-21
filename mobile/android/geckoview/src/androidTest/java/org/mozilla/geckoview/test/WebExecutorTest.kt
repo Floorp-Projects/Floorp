@@ -148,6 +148,15 @@ class WebExecutorTest {
     }
 
     @Test
+    fun testDisallowRedirect() {
+        val response = fetch(WebRequest("$TEST_ENDPOINT/redirect-to?url=/status/200"), GeckoWebExecutor.FETCH_FLAGS_NO_REDIRECTS)
+
+        assertThat("URI should match", response.uri, equalTo("$TEST_ENDPOINT/redirect-to?url=/status/200"))
+        assertThat("Redirected should match", response.redirected, equalTo(false))
+        assertThat("Status code should match", response.statusCode, equalTo(302))
+    }
+
+    @Test
     fun testRedirectLoop() {
         thrown.expect(equalTo(WebRequestError(WebRequestError.ERROR_REDIRECT_LOOP, WebRequestError.ERROR_CATEGORY_NETWORK)))
         fetch(WebRequest("$TEST_ENDPOINT/redirect/100"))

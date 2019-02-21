@@ -753,6 +753,7 @@ package org.mozilla.geckoview {
     method public void speculativeConnect(@android.support.annotation.NonNull java.lang.String);
     field public static final int FETCH_FLAGS_ANONYMOUS = 1;
     field public static final int FETCH_FLAGS_NONE = 0;
+    field public static final int FETCH_FLAGS_NO_REDIRECTS = 2;
   }
 
   public static interface GeckoWebExecutor.FetchFlags implements java.lang.annotation.Annotation {
