@@ -70,22 +70,6 @@ enum JSValueType : uint8_t {
   JSVAL_TYPE_MISSING = 0x21
 };
 
-namespace JS {
-enum class ValueType : uint8_t {
-  Double = JSVAL_TYPE_DOUBLE,
-  Int32 = JSVAL_TYPE_INT32,
-  Boolean = JSVAL_TYPE_BOOLEAN,
-  Undefined = JSVAL_TYPE_UNDEFINED,
-  Null = JSVAL_TYPE_NULL,
-  Magic = JSVAL_TYPE_MAGIC,
-  String = JSVAL_TYPE_STRING,
-  Symbol = JSVAL_TYPE_SYMBOL,
-  PrivateGCThing = JSVAL_TYPE_PRIVATE_GCTHING,
-  BigInt = JSVAL_TYPE_BIGINT,
-  Object = JSVAL_TYPE_OBJECT,
-};
-}
-
 static_assert(sizeof(JSValueType) == 1,
               "compiler typed enum support is apparently buggy");
 
@@ -806,16 +790,6 @@ union alignas(8) Value {
     return JSValueType(type);
   }
 
-  JS::ValueType type() const {
-    if (isDouble()) {
-      return JS::ValueType::Double;
-    }
-
-    JSValueType type = extractNonDoubleType();
-    MOZ_ASSERT(type <= JSVAL_TYPE_OBJECT);
-    return JS::ValueType(type);
-  }
-
   /*
    * Private API
    *
@@ -1210,7 +1184,6 @@ class WrappedPtrOperations<JS::Value, Wrapper> {
   JSValueType extractNonDoubleType() const {
     return value().extractNonDoubleType();
   }
-  JS::ValueType type() const { return value().type(); }
 
   JSWhyMagic whyMagic() const { return value().whyMagic(); }
   uint32_t magicUint32() const { return value().magicUint32(); }
@@ -1310,42 +1283,33 @@ class HeapBase<JS::Value, Wrapper>
 // type and return the result wrapped in a Maybe, otherwise return None().
 template <typename F>
 auto MapGCThingTyped(const JS::Value& val, F&& f) {
-  switch (val.type()) {
-    case JS::ValueType::String: {
-      JSString* str = val.toString();
-      MOZ_ASSERT(gc::IsCellPointerValid(str));
-      return mozilla::Some(f(str));
-    }
-    case JS::ValueType::Object: {
-      JSObject* obj = &val.toObject();
-      MOZ_ASSERT(gc::IsCellPointerValid(obj));
-      return mozilla::Some(f(obj));
-    }
-    case JS::ValueType::Symbol: {
-      JS::Symbol* sym = val.toSymbol();
-      MOZ_ASSERT(gc::IsCellPointerValid(sym));
-      return mozilla::Some(f(sym));
-    }
-    case JS::ValueType::BigInt: {
-      JS::BigInt* bi = val.toBigInt();
-      MOZ_ASSERT(gc::IsCellPointerValid(bi));
-      return mozilla::Some(f(bi));
-    }
-    case JS::ValueType::PrivateGCThing: {
-      MOZ_ASSERT(gc::IsCellPointerValid(val.toGCThing()));
-      return mozilla::Some(MapGCThingTyped(val.toGCCellPtr(), std::move(f)));
-    }
-    case JS::ValueType::Double:
-    case JS::ValueType::Int32:
-    case JS::ValueType::Boolean:
-    case JS::ValueType::Undefined:
-    case JS::ValueType::Null:
-    case JS::ValueType::Magic: {
-      MOZ_ASSERT(!val.isGCThing());
-      using ReturnType = decltype(f(static_cast<JSObject*>(nullptr)));
-      return mozilla::Maybe<ReturnType>();
-    }
+  if (val.isString()) {
+    JSString* str = val.toString();
+    MOZ_ASSERT(gc::IsCellPointerValid(str));
+    return mozilla::Some(f(str));
   }
+  if (val.isObject()) {
+    JSObject* obj = &val.toObject();
+    MOZ_ASSERT(gc::IsCellPointerValid(obj));
+    return mozilla::Some(f(obj));
+  }
+  if (val.isSymbol()) {
+    JS::Symbol* sym = val.toSymbol();
+    MOZ_ASSERT(gc::IsCellPointerValid(sym));
+    return mozilla::Some(f(sym));
+  }
+  if (val.isBigInt()) {
+    JS::BigInt* bi = val.toBigInt();
+    MOZ_ASSERT(gc::IsCellPointerValid(bi));
+    return mozilla::Some(f(bi));
+  }
+  if (MOZ_UNLIKELY(val.isPrivateGCThing())) {
+    MOZ_ASSERT(gc::IsCellPointerValid(val.toGCThing()));
+    return mozilla::Some(MapGCThingTyped(val.toGCCellPtr(), std::move(f)));
+  }
+  MOZ_ASSERT(!val.isGCThing());
+  using ReturnType = decltype(f(static_cast<JSObject*>(nullptr)));
+  return mozilla::Maybe<ReturnType>();
 }
 
 // If the Value is a GC pointer type, call |f| with the pointer cast to that

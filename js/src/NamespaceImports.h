@@ -69,7 +69,6 @@ using JS::PrivateValue;
 using JS::StringValue;
 using JS::UndefinedValue;
 using JS::Value;
-using JS::ValueType;
 
 using JS::ConstTwoByteChars;
 using JS::Latin1Char;
