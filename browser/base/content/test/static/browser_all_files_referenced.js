@@ -131,8 +131,6 @@ var whitelist = [
   {file: "resource://app/modules/translation/YandexTranslator.jsm"},
 
   // Starting from here, files in the whitelist are bugs that need fixing.
-  // Bug 1529127 (only string left referenced in widget/windows/nsDataObj.cpp)
-  {file: "chrome://browser/locale/pageInfo.properties"},
   // Bug 1339424 (wontfix?)
   {file: "chrome://browser/locale/taskbar.properties",
    platforms: ["linux", "macosx"]},
