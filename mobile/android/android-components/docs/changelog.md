@@ -27,6 +27,7 @@ permalink: /changelog/
 
 * **browser-toolbar**
   * Added option to configure fading edge length by using `browserToolbarFadingEdgeSize` XML attribute.
+  * Added `BrowserToolbar` attribute `browserToolbarCancelColor` to color the cancel icon.
 
 * **feature-toolbar**
   * `ToolbarPresenter` now handles situations where no `Session` is selected.

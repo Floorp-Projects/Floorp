@@ -6,6 +6,7 @@ package mozilla.components.browser.toolbar.edit
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.support.v4.content.ContextCompat
 import android.text.InputType
 import android.view.Gravity
 import android.view.ViewGroup
@@ -59,6 +60,14 @@ class EditToolbar(
             editListener?.onTextChanged(text)
         }
     }
+
+    private val defaultColor = ContextCompat.getColor(context, R.color.photonWhite)
+
+    internal var cancelViewColor = defaultColor
+        set(value) {
+            field = value
+            cancelView.setColorFilter(value)
+        }
 
     private val cancelView = ImageView(context).apply {
         id = R.id.mozac_browser_toolbar_cancel_view

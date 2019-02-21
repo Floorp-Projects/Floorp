@@ -9,6 +9,7 @@ import android.view.KeyEvent
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.toolbar.BrowserToolbar
+import mozilla.components.browser.toolbar.R
 import mozilla.components.concept.toolbar.AutocompleteDelegate
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
@@ -102,5 +103,14 @@ class EditToolbarTest {
             assertNull(fact.value)
             assertNull(fact.metadata)
         }
+    }
+
+    @Test
+    fun `cancelView changes image color filter on update`() {
+        val toolbar = BrowserToolbar(context)
+        val editToolbar = toolbar.editToolbar
+        editToolbar.cancelViewColor = R.color.photonBlue40
+
+        assertEquals(R.color.photonBlue40, editToolbar.cancelViewColor)
     }
 }

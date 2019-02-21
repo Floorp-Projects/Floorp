@@ -13,6 +13,7 @@
     <attr name="browserToolbarMenuColor" format="color"/>
     <attr name="browserToolbarSuggestionBackgroundColor" format="color" />
     <attr name="browserToolbarSuggestionForegroundColor" format="color" />
+    <attr name="browserToolbarCancelColor" format="color"/>
     <attr name="browserToolbarFadingEdgeSize" format="dimension" />
   </declare-styleable>
 </resources>

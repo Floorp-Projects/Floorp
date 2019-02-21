@@ -132,6 +132,13 @@ class BrowserToolbar @JvmOverloads constructor(
         set(value) { displayToolbar.menuViewColor = value }
 
     /**
+     * Gets/Sets the color tint of the cancel button.
+     */
+    var cancelViewColor: Int
+        get() = editToolbar.cancelViewColor
+        set(value) { editToolbar.cancelViewColor = value }
+
+    /**
      * Gets/Sets the margin to be used between browser actions.
      */
     var browserActionMargin: Int
@@ -289,6 +296,10 @@ class BrowserToolbar @JvmOverloads constructor(
                 menuViewColor = getColor(
                     R.styleable.BrowserToolbar_browserToolbarMenuColor,
                     displayToolbar.menuViewColor
+                )
+                cancelViewColor = getColor(
+                    R.styleable.BrowserToolbar_browserToolbarCancelColor,
+                    editToolbar.cancelViewColor
                 )
                 if (peekValue(R.styleable.BrowserToolbar_browserToolbarSuggestionForegroundColor) != null) {
                     suggestionForegroundColor = getColor(
