@@ -2623,7 +2623,7 @@ impl ClipBatcher {
         device_pixel_scale: DevicePixelScale,
         gpu_address: GpuCacheAddress,
         instance: &ClipMaskInstance,
-        clip_node_index: u32,
+        is_first_clip: bool,
     ) -> bool {
         // Only try to draw in tiles if the clip mark is big enough.
         if mask_screen_rect.area() < CLIP_RECTANGLE_AREA_THRESHOLD {
@@ -2665,7 +2665,7 @@ impl ClipBatcher {
         // and only for rectangles (not rounded etc), the world_device_rect is not conservative - we know
         // that there is no inner_rect, and the world_device_rect should be the real, axis-aligned clip rect.
         let mask_origin = mask_screen_rect.origin.to_f32().to_vector();
-        let clip_list = self.get_batch_list(clip_node_index);
+        let clip_list = self.get_batch_list(is_first_clip);
 
         for y in 0 .. y_tiles {
             for x in 0 .. x_tiles {
@@ -2706,9 +2706,9 @@ impl ClipBatcher {
     /// on whether this is the first clip mask for a clip task.
     fn get_batch_list(
         &mut self,
-        item_index: u32,
+        is_first_clip: bool,
     ) -> &mut ClipBatchList {
-        if item_index == 0 && !self.gpu_supports_fast_clears {
+        if is_first_clip && !self.gpu_supports_fast_clears {
             &mut self.primary_clips
         } else {
             &mut self.secondary_clips
@@ -2731,6 +2731,8 @@ impl ClipBatcher {
         device_pixel_scale: DevicePixelScale,
         snap_offsets: SnapOffsets,
     ) {
+        let mut is_first_clip = true;
+
         for i in 0 .. clip_node_range.count {
             let clip_instance = clip_store.get_instance_from_range(&clip_node_range, i);
             let clip_node = &clip_data_store[clip_instance.handle];
@@ -2762,7 +2764,7 @@ impl ClipBatcher {
                 snap_offsets,
             };
 
-            match clip_node.item {
+            let added_clip = match clip_node.item {
                 ClipItem::Image { image, size, .. } => {
                     let request = ImageRequest {
                         key: image,
@@ -2783,7 +2785,7 @@ impl ClipBatcher {
                             }
                         };
 
-                        self.get_batch_list(i)
+                        self.get_batch_list(is_first_clip)
                             .images
                             .entry(cache_item.texture_id)
                             .or_insert(Vec::new())
@@ -2809,6 +2811,8 @@ impl ClipBatcher {
                             add_image(request, mask_rect)
                         }
                     }
+
+                    true
                 }
                 ClipItem::BoxShadow(ref info) => {
                     let gpu_address =
@@ -2823,7 +2827,7 @@ impl ClipBatcher {
                         .get_texture_cache_item(&rt_cache_entry.handle);
                     debug_assert_ne!(cache_item.texture_id, TextureSource::Invalid);
 
-                    self.get_batch_list(i)
+                    self.get_batch_list(is_first_clip)
                         .box_shadows
                         .entry(cache_item.texture_id)
                         .or_insert(Vec::new())
@@ -2832,19 +2836,25 @@ impl ClipBatcher {
                             resource_address: gpu_cache.get_address(&cache_item.uv_rect_handle),
                             ..instance
                         });
+
+                    true
                 }
                 ClipItem::Rectangle(_, ClipMode::ClipOut) => {
                     let gpu_address =
                         gpu_cache.get_address(&clip_node.gpu_cache_handle);
-                    self.get_batch_list(i)
+                    self.get_batch_list(is_first_clip)
                         .rectangles
                         .push(ClipMaskInstance {
                             clip_data_address: gpu_address,
                             ..instance
                         });
+
+                    true
                 }
                 ClipItem::Rectangle(clip_rect_size, ClipMode::Clip) => {
-                    if !clip_instance.flags.contains(ClipNodeFlags::SAME_COORD_SYSTEM) {
+                    if clip_instance.flags.contains(ClipNodeFlags::SAME_COORD_SYSTEM) {
+                        false
+                    } else {
                         let gpu_address = gpu_cache.get_address(&clip_node.gpu_cache_handle);
 
                         if !self.add_tiled_clip_mask(
@@ -2856,28 +2866,34 @@ impl ClipBatcher {
                             device_pixel_scale,
                             gpu_address,
                             &instance,
-                            i,
+                            is_first_clip,
                         ) {
-                            self.get_batch_list(i)
+                            self.get_batch_list(is_first_clip)
                                 .rectangles
                                 .push(ClipMaskInstance {
                                     clip_data_address: gpu_address,
                                     ..instance
                                 });
                         }
+
+                        true
                     }
                 }
                 ClipItem::RoundedRectangle(..) => {
                     let gpu_address =
                         gpu_cache.get_address(&clip_node.gpu_cache_handle);
-                    self.get_batch_list(i)
+                    self.get_batch_list(is_first_clip)
                         .rectangles
                         .push(ClipMaskInstance {
                             clip_data_address: gpu_address,
                             ..instance
                         });
+
+                    true
                 }
-            }
+            };
+
+            is_first_clip &= !added_clip;
         }
     }
 }
