@@ -7,8 +7,14 @@
 #include "mediapacket.h"
 
 #include <cstring>
+#include "ipc/IPCMessageUtils.h"
 
 namespace mozilla {
+
+MediaPacket::MediaPacket(const MediaPacket& orig)
+    : sdp_level_(orig.sdp_level_), type_(orig.type_) {
+  Copy(orig.data(), orig.len(), orig.capacity_);
+}
 
 void MediaPacket::Copy(const uint8_t* data, size_t len, size_t capacity) {
   if (capacity < len) {
@@ -18,6 +24,70 @@ void MediaPacket::Copy(const uint8_t* data, size_t len, size_t capacity) {
   len_ = len;
   capacity_ = capacity;
   memcpy(data_.get(), data, len);
+}
+
+void MediaPacket::Serialize(IPC::Message* aMsg) const {
+  aMsg->WriteSize(len_);
+  aMsg->WriteSize(capacity_);
+  if (len_) {
+    aMsg->WriteBytes(data_.get(), len_);
+  }
+  aMsg->WriteSize(encrypted_len_);
+  if (encrypted_len_) {
+    aMsg->WriteBytes(encrypted_data_.get(), encrypted_len_);
+  }
+  aMsg->WriteInt32(sdp_level_.isSome() ? *sdp_level_ : -1);
+  aMsg->WriteInt32(type_);
+}
+
+bool MediaPacket::Deserialize(const IPC::Message* aMsg, PickleIterator* aIter) {
+  Reset();
+  size_t len;
+  if (!aMsg->ReadSize(aIter, &len)) {
+    return false;
+  }
+  size_t capacity;
+  if (!aMsg->ReadSize(aIter, &capacity)) {
+    return false;
+  }
+  if (len) {
+    MOZ_RELEASE_ASSERT(capacity >= len);
+    UniquePtr<uint8_t[]> data(new uint8_t[capacity]);
+    if (!aMsg->ReadBytesInto(aIter, data.get(), len)) {
+      return false;
+    }
+    data_ = std::move(data);
+    len_ = len;
+    capacity_ = capacity;
+  }
+
+  if (!aMsg->ReadSize(aIter, &len)) {
+    return false;
+  }
+  if (len) {
+    UniquePtr<uint8_t[]> data(new uint8_t[len]);
+    if (!aMsg->ReadBytesInto(aIter, data.get(), len)) {
+      return false;
+    }
+    encrypted_data_ = std::move(data);
+    encrypted_len_ = len;
+  }
+
+  int32_t sdp_level;
+  if (!aMsg->ReadInt32(aIter, &sdp_level)) {
+    return false;
+  }
+
+  if (sdp_level >= 0) {
+    sdp_level_ = Some(sdp_level);
+  }
+
+  int32_t type;
+  if (!aMsg->ReadInt32(aIter, &type)) {
+    return false;
+  }
+  type_ = static_cast<Type>(type);
+  return true;
 }
 
 static bool IsRtp(const uint8_t* data, size_t len) {
