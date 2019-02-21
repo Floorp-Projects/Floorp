@@ -10,9 +10,7 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 
 import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 /**
@@ -33,16 +31,10 @@ public class WebResponse extends WebMessage {
      */
     public final boolean redirected;
 
-    /**
-     * An {@link InputStream} containing the response body, if available.
-     */
-    public final @Nullable InputStream body;
-
     protected WebResponse(final @NonNull Builder builder) {
         super(builder);
         this.statusCode = builder.mStatusCode;
         this.redirected = builder.mRedirected;
-        this.body = builder.mBody;
     }
 
     /**
@@ -53,7 +45,6 @@ public class WebResponse extends WebMessage {
     public static class Builder extends WebMessage.Builder {
         /* package */ int mStatusCode;
         /* package */ boolean mRedirected;
-        /* package */ InputStream mBody;
 
         /**
          * Constructs a new Builder instance with the specified URI.
@@ -82,14 +73,9 @@ public class WebResponse extends WebMessage {
             return this;
         }
 
-        /**
-         * Sets the {@link InputStream} containing the body of this response.
-         *
-         * @param stream An {@link InputStream} with the body of the response.
-         * @return This Builder instance.
-         */
-        public @NonNull Builder body(final @NonNull InputStream stream) {
-            mBody = stream;
+        @Override
+        public @NonNull Builder body(final @NonNull ByteBuffer buffer) {
+            super.body(buffer);
             return this;
         }
 

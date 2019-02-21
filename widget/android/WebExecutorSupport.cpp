@@ -7,12 +7,10 @@
 
 #include "WebExecutorSupport.h"
 
-#include "nsIChannelEventSink.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIInputStream.h"
-#include "nsIInterfaceRequestor.h"
 #include "nsIStreamLoader.h"
 #include "nsINSSErrorsService.h"
 #include "nsIUploadChannel2.h"
@@ -136,136 +134,49 @@ class HeaderVisitor final : public nsIHttpHeaderVisitor {
 
 NS_IMPL_ISUPPORTS(HeaderVisitor, nsIHttpHeaderVisitor)
 
-class StreamSupport final
-    : public java::GeckoInputStream::Support::Natives<StreamSupport> {
- public:
-  typedef java::GeckoInputStream::Support::Natives<StreamSupport> Base;
-  using Base::AttachNative;
-  using Base::DisposeNative;
-  using Base::GetNative;
-
-  StreamSupport(nsIRequest* aRequest) : mRequest(aRequest) {}
-
-  void Resume() { mRequest->Resume(); }
-
- private:
-  nsCOMPtr<nsIRequest> mRequest;
-};
-
-class LoaderListener final : public nsIStreamListener,
-                             public nsIInterfaceRequestor,
-                             public nsIChannelEventSink {
+class LoaderListener final : public nsIStreamLoaderObserver,
+                             public nsIRequestObserver {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  explicit LoaderListener(java::GeckoResult::Param aResult,
-                          bool aAllowRedirects)
-      : mResult(aResult), mAllowRedirects(aAllowRedirects) {
+  explicit LoaderListener(java::GeckoResult::Param aResult) : mResult(aResult) {
     MOZ_ASSERT(mResult);
   }
 
   NS_IMETHOD
-  OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) override {
-    MOZ_ASSERT(!mStream);
-
-    nsresult status;
-    aRequest->GetStatus(&status);
-    if (NS_FAILED(status)) {
-      CompleteWithError(mResult, status);
-      return NS_OK;
-    }
-
-    StreamSupport::Init();
-
-    // We're expecting data later via OnDataAvailable, so create the stream now.
-    mSupport = java::GeckoInputStream::Support::New();
-    StreamSupport::AttachNative(mSupport,
-                                mozilla::MakeUnique<StreamSupport>(aRequest));
-
-    mStream = java::GeckoInputStream::New(mSupport);
-
-    // Suspend the request immediately. It will be resumed when (if) someone
-    // tries to read the Java stream.
-    aRequest->Suspend();
-
-    nsresult rv = HandleWebResponse(aRequest);
+  OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext,
+                   nsresult aStatus, uint32_t aResultLength,
+                   const uint8_t* aResult) override {
+    nsresult rv = HandleWebResponse(aLoader, aStatus, aResultLength, aResult);
     if (NS_FAILED(rv)) {
       CompleteWithError(mResult, rv);
-      return NS_OK;
     }
 
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) override {
     return NS_OK;
   }
 
   NS_IMETHOD
   OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
                 nsresult aStatusCode) override {
-    if (mStream) {
-      mStream->SendEof();
-    }
-    return NS_OK;
-  }
-
-  NS_IMETHOD
-  OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
-                  nsIInputStream* aInputStream, uint64_t aOffset,
-                  uint32_t aCount) override {
-    MOZ_ASSERT(mStream);
-
-    // We only need this for the ReadSegments call, the value is unused.
-    uint32_t countRead;
-    return aInputStream->ReadSegments(WriteSegment, this, aCount, &countRead);
-  }
-
-  NS_IMETHOD
-  GetInterface(const nsIID& aIID, void** aResultOut) override {
-    if (aIID.Equals(NS_GET_IID(nsIChannelEventSink))) {
-      *aResultOut = static_cast<nsIChannelEventSink*>(this);
-      NS_ADDREF_THIS();
-      return NS_OK;
-    }
-
-    return NS_ERROR_NO_INTERFACE;
-  }
-
-  NS_IMETHOD
-  AsyncOnChannelRedirect(nsIChannel* aOldChannel, nsIChannel* aNewChannel,
-                         uint32_t flags,
-                         nsIAsyncVerifyRedirectCallback* callback) override {
-    if (!mAllowRedirects) {
-      return NS_ERROR_ABORT;
-    }
-
-    callback->OnRedirectVerifyCallback(NS_OK);
     return NS_OK;
   }
 
  private:
-  static nsresult WriteSegment(nsIInputStream* aInputStream, void* aClosure,
-                               const char* aFromSegment, uint32_t aToOffset,
-                               uint32_t aCount, uint32_t* aWriteCount) {
-    LoaderListener* self = static_cast<LoaderListener*>(aClosure);
-    MOZ_ASSERT(self);
-    MOZ_ASSERT(self->mStream);
-
-    *aWriteCount = aCount;
-
-    jni::ByteArray::LocalRef buffer = jni::ByteArray::New(
-        reinterpret_cast<signed char*>(const_cast<char*>(aFromSegment)),
-        *aWriteCount);
-
-    if (NS_FAILED(self->mStream->AppendBuffer(buffer))) {
-      // The stream was closed or something, abort reading this channel.
-      return NS_ERROR_ABORT;
-    }
-
-    return NS_OK;
-  }
-
   NS_IMETHOD
-  HandleWebResponse(nsIRequest* aRequest) {
-    nsresult rv;
-    nsCOMPtr<nsIHttpChannel> channel = do_QueryInterface(aRequest, &rv);
+  HandleWebResponse(nsIStreamLoader* aLoader, nsresult aStatus,
+                    uint32_t aBodyLength, const uint8_t* aBody) {
+    NS_ENSURE_SUCCESS(aStatus, aStatus);
+
+    nsCOMPtr<nsIRequest> request;
+    nsresult rv = aLoader->GetRequest(getter_AddRefs(request));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIHttpChannel> channel = do_QueryInterface(request, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // URI
@@ -299,9 +210,18 @@ class LoaderListener final : public nsIStreamListener,
 
     builder->Redirected(!loadInfo->RedirectChain().IsEmpty());
 
-    // Body stream
-    if (mStream) {
-      builder->Body(mStream);
+    // Body
+    if (aBodyLength) {
+      jni::ByteBuffer::LocalRef buffer;
+
+      rv = java::GeckoWebExecutor::CreateByteBuffer(aBodyLength, &buffer);
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_OUT_OF_MEMORY);
+
+      MOZ_ASSERT(buffer->Address());
+      MOZ_ASSERT(buffer->Capacity() == aBodyLength);
+
+      memcpy(buffer->Address(), aBody, aBodyLength);
+      builder->Body(buffer);
     }
 
     mResult->Complete(builder->Build());
@@ -311,14 +231,9 @@ class LoaderListener final : public nsIStreamListener,
   virtual ~LoaderListener() {}
 
   const java::GeckoResult::GlobalRef mResult;
-  java::GeckoInputStream::GlobalRef mStream;
-  java::GeckoInputStream::Support::GlobalRef mSupport;
-
-  bool mAllowRedirects;
 };
 
-NS_IMPL_ISUPPORTS(LoaderListener, nsIStreamListener, nsIInterfaceRequestor,
-                  nsIChannelEventSink)
+NS_IMPL_ISUPPORTS(LoaderListener, nsIStreamLoaderObserver, nsIRequestObserver)
 
 class DNSListener final : public nsIDNSListener {
  public:
@@ -464,7 +379,7 @@ nsresult WebExecutorSupport::CreateStreamLoader(
   }
 
   // Body
-  const auto body = req->Body();
+  const auto body = reqBase->Body();
   if (body) {
     nsCOMPtr<nsIInputStream> stream = new ByteBufferStream(body);
 
@@ -503,17 +418,16 @@ nsresult WebExecutorSupport::CreateStreamLoader(
   rv = internalChannel->SetBlockAuthPrompt(true);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  const bool allowRedirects =
-      !(aFlags & java::GeckoWebExecutor::FETCH_FLAGS_NO_REDIRECTS);
+  // All done, set up the stream loader
+  RefPtr<LoaderListener> listener = new LoaderListener(aResult);
 
-  // All done, set up the listener
-  RefPtr<LoaderListener> listener = new LoaderListener(aResult, allowRedirects);
-
-  rv = channel->SetNotificationCallbacks(listener);
+  nsCOMPtr<nsIStreamLoader> loader;
+  rv = NS_NewStreamLoader(getter_AddRefs(loader), listener);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Finally, open the channel
-  rv = httpChannel->AsyncOpen(listener);
+  rv = httpChannel->AsyncOpen(loader);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
