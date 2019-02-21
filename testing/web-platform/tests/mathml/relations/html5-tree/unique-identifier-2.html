@@ -12,14 +12,13 @@
   window.addEventListener("DOMContentLoaded", function() {
     var mtext = document.getElementById("MTEXT");
     test(function() {
-      assert_equals(mtext, document.body.lastElementChild.lastElementChild);
+      assert_equals(mtext, document.body.firstElementChild.lastElementChild);
     }, "getElementById()");
     done();
   });
 </script>
 </head>
 <body>
-  <div id="log"></div>
   <math>
     <mtext id="MTEXT_"></mtext>
     <mtext id="MTEX"></mtext>

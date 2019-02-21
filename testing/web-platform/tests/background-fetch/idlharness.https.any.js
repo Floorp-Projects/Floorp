@@ -8,7 +8,7 @@
 
 idl_test(
   ['background-fetch'],
-  ['service-workers', 'html', 'dom'],
+  ['service-workers', 'dedicated-workers', 'dom'],
   idl_array => {
     const isServiceWorker = location.pathname.includes('.serviceworker.');
     if (isServiceWorker) {

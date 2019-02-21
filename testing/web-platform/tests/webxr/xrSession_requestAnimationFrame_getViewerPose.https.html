@@ -52,7 +52,7 @@
                 let pose = vrFrame.getViewerPose(referenceSpace);
                 assert_not_equals(pose, null);
 
-                let poseMatrix = pose.transform.matrix;
+                let poseMatrix = pose.poseModelMatrix;
                 assert_not_equals(poseMatrix, null);
 
                 for(let i = 0; i < poseMatrix.length; i++) {
