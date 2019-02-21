@@ -1640,7 +1640,9 @@ void nsTextEditorState::SetSelectionRange(
     if (aRv.Failed() || !self.get()) {
       return;
     }
-    rv = mBoundFrame->ScrollSelectionIntoView();
+    if (mBoundFrame) {
+      rv = mBoundFrame->ScrollSelectionIntoView();
+    }
     // Press on to firing the event even if that failed, like our old code did.
     // But is that really what we want?  Firing the event _and_ throwing from
     // here is weird.  Maybe we should just ignore ScrollSelectionIntoView
