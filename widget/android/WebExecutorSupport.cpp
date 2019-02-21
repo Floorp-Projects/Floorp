@@ -7,10 +7,12 @@
 
 #include "WebExecutorSupport.h"
 
+#include "nsIChannelEventSink.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIInputStream.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIStreamLoader.h"
 #include "nsINSSErrorsService.h"
 #include "nsIUploadChannel2.h"
@@ -150,11 +152,15 @@ class StreamSupport final
   nsCOMPtr<nsIRequest> mRequest;
 };
 
-class LoaderListener final : public nsIStreamListener {
+class LoaderListener final : public nsIStreamListener,
+                             public nsIInterfaceRequestor,
+                             public nsIChannelEventSink {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  explicit LoaderListener(java::GeckoResult::Param aResult) : mResult(aResult) {
+  explicit LoaderListener(java::GeckoResult::Param aResult,
+                          bool aAllowRedirects)
+      : mResult(aResult), mAllowRedirects(aAllowRedirects) {
     MOZ_ASSERT(mResult);
   }
 
@@ -209,6 +215,29 @@ class LoaderListener final : public nsIStreamListener {
     // We only need this for the ReadSegments call, the value is unused.
     uint32_t countRead;
     return aInputStream->ReadSegments(WriteSegment, this, aCount, &countRead);
+  }
+
+  NS_IMETHOD
+  GetInterface(const nsIID& aIID, void** aResultOut) override {
+    if (aIID.Equals(NS_GET_IID(nsIChannelEventSink))) {
+      *aResultOut = static_cast<nsIChannelEventSink*>(this);
+      NS_ADDREF_THIS();
+      return NS_OK;
+    }
+
+    return NS_ERROR_NO_INTERFACE;
+  }
+
+  NS_IMETHOD
+  AsyncOnChannelRedirect(nsIChannel* aOldChannel, nsIChannel* aNewChannel,
+                         uint32_t flags,
+                         nsIAsyncVerifyRedirectCallback* callback) override {
+    if (!mAllowRedirects) {
+      return NS_ERROR_ABORT;
+    }
+
+    callback->OnRedirectVerifyCallback(NS_OK);
+    return NS_OK;
   }
 
  private:
@@ -284,9 +313,12 @@ class LoaderListener final : public nsIStreamListener {
   const java::GeckoResult::GlobalRef mResult;
   java::GeckoInputStream::GlobalRef mStream;
   java::GeckoInputStream::Support::GlobalRef mSupport;
+
+  bool mAllowRedirects;
 };
 
-NS_IMPL_ISUPPORTS(LoaderListener, nsIStreamListener)
+NS_IMPL_ISUPPORTS(LoaderListener, nsIStreamListener, nsIInterfaceRequestor,
+                  nsIChannelEventSink)
 
 class DNSListener final : public nsIDNSListener {
  public:
@@ -471,8 +503,14 @@ nsresult WebExecutorSupport::CreateStreamLoader(
   rv = internalChannel->SetBlockAuthPrompt(true);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  const bool allowRedirects =
+      !(aFlags & java::GeckoWebExecutor::FETCH_FLAGS_NO_REDIRECTS);
+
   // All done, set up the listener
-  RefPtr<LoaderListener> listener = new LoaderListener(aResult);
+  RefPtr<LoaderListener> listener = new LoaderListener(aResult, allowRedirects);
+
+  rv = channel->SetNotificationCallbacks(listener);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Finally, open the channel
   rv = httpChannel->AsyncOpen(listener);
