@@ -7,6 +7,7 @@
 #ifndef AudioContext_h_
 #define AudioContext_h_
 
+#include "AudioParamDescriptorMap.h"
 #include "mozilla/dom/OfflineAudioContextBinding.h"
 #include "MediaBufferDecoder.h"
 #include "mozilla/Attributes.h"
@@ -311,6 +312,10 @@ class AudioContext final : public DOMEventTargetHelper,
 
   bool CheckClosed(ErrorResult& aRv);
 
+  // Steals from |aParamMap|
+  void SetParamMapForWorkletName(const nsAString& aName,
+                                 AudioParamDescriptorMap* aParamMap);
+
   void Dispatch(already_AddRefed<nsIRunnable>&& aRunnable);
 
  private:
@@ -371,6 +376,8 @@ class AudioContext final : public DOMEventTargetHelper,
   nsTHashtable<nsRefPtrHashKey<AudioNode>> mActiveNodes;
   // Raw (non-owning) references to all AudioNodes for this AudioContext.
   nsTHashtable<nsPtrHashKey<AudioNode>> mAllNodes;
+  nsDataHashtable<nsStringHashKey, AudioParamDescriptorMap>
+      mWorkletParamDescriptors;
   // Cache to avoid recomputing basic waveforms all the time.
   RefPtr<BasicWaveFormCache> mBasicWaveFormCache;
   // Number of channels passed in the OfflineAudioContext ctor.
