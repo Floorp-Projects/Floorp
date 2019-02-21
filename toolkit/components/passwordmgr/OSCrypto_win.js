@@ -170,20 +170,23 @@ OSCrypto.prototype = {
     let outData = new this._structs.DATA_BLOB();
     let entropyParam = this._getEntropyParam(entropy);
 
-    let status = this._functions.get("CryptUnprotectData")(inData.address(), null,
-                                                           entropyParam,
-                                                           null, null, FLAGS_NOT_SET,
-                                                           outData.address());
-    if (status === 0) {
-      throw new Error("decryptData failed: " + ctypes.winLastError);
+    try {
+      let status = this._functions.get("CryptUnprotectData")(inData.address(), null,
+                                                             entropyParam,
+                                                             null, null, FLAGS_NOT_SET,
+                                                             outData.address());
+      if (status === 0) {
+        throw new Error("decryptData failed: " + ctypes.winLastError);
+      }
+
+      let decrypted = this._convertWinArrayToJSArray(outData);
+      // Output that may include characters outside of the 0-255 (byte) range needs to use TextDecoder.
+      return (new TextDecoder()).decode(new Uint8Array(decrypted));
+    } finally {
+      if (outData.pbData) {
+        this._functions.get("LocalFree")(outData.pbData);
+      }
     }
-
-    let decrypted = this._convertWinArrayToJSArray(outData);
-    let decryptedData = (new TextDecoder()).decode(new Uint8Array(decrypted));
-    // Output that may include characters outside of the 0-255 (byte) range needs to use TextDecoder.
-
-    this._functions.get("LocalFree")(outData.pbData);
-    return decryptedData;
   },
 
   /**
@@ -202,18 +205,22 @@ OSCrypto.prototype = {
     let outData = new this._structs.DATA_BLOB();
     let entropyParam = this._getEntropyParam(entropy);
 
-    let status = this._functions.get("CryptProtectData")(inData.address(), null,
-                                                         entropyParam,
-                                                         null, null, FLAGS_NOT_SET,
-                                                         outData.address());
-    if (status === 0) {
-      throw new Error("encryptData failed: " + ctypes.winLastError);
-    }
+    try {
+      let status = this._functions.get("CryptProtectData")(inData.address(), null,
+                                                           entropyParam,
+                                                           null, null, FLAGS_NOT_SET,
+                                                           outData.address());
+      if (status === 0) {
+        throw new Error("encryptData failed: " + ctypes.winLastError);
+      }
 
-    let encrypted = this._convertWinArrayToJSArray(outData);
-    let encryptedData = this.arrayToString(encrypted);
-    this._functions.get("LocalFree")(outData.pbData);
-    return encryptedData;
+      let encrypted = this._convertWinArrayToJSArray(outData);
+      return this.arrayToString(encrypted);
+    } finally {
+      if (outData.pbData) {
+        this._functions.get("LocalFree")(outData.pbData);
+      }
+    }
   },
 
   /**
