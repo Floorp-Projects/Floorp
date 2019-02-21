@@ -672,6 +672,9 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
     case SymbolicAddress::PostBarrier:
       *abiType = Args_General2;
       return FuncCast(Instance::postBarrier, *abiType);
+    case SymbolicAddress::PostBarrierFiltering:
+      *abiType = Args_General2;
+      return FuncCast(Instance::postBarrierFiltering, *abiType);
     case SymbolicAddress::StructNew:
       *abiType = Args_General2;
       return FuncCast(Instance::structNew, *abiType);
@@ -786,6 +789,7 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::TableSet:
     case SymbolicAddress::TableSize:
     case SymbolicAddress::PostBarrier:
+    case SymbolicAddress::PostBarrierFiltering:
     case SymbolicAddress::StructNew:
     case SymbolicAddress::StructNarrow:
       return true;
