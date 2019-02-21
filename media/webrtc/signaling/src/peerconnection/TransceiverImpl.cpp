@@ -787,10 +787,10 @@ static nsresult NegotiatedDetailsToVideoCodecConfigs(
       for (size_t i = 0; i < aDetails.GetEncodingCount(); ++i) {
         const JsepTrackEncoding& jsepEncoding(aDetails.GetEncoding(i));
         if (jsepEncoding.HasFormat(codec->mDefaultPt)) {
-          VideoCodecConfig::SimulcastEncoding encoding;
+          VideoCodecConfig::Encoding encoding;
           encoding.rid = jsepEncoding.mRid;
           encoding.constraints = jsepEncoding.mConstraints;
-          config->mSimulcastEncodings.push_back(encoding);
+          config->mEncodings.push_back(encoding);
         }
       }
 

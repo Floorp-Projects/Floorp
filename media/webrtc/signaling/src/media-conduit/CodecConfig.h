@@ -82,14 +82,14 @@ class VideoCodecConfig {
 
   uint32_t mTias;
   EncodingConstraints mEncodingConstraints;
-  struct SimulcastEncoding {
+  struct Encoding {
     std::string rid;
     EncodingConstraints constraints;
-    bool operator==(const SimulcastEncoding& aOther) const {
+    bool operator==(const Encoding& aOther) const {
       return rid == aOther.rid && constraints == aOther.constraints;
     }
   };
-  std::vector<SimulcastEncoding> mSimulcastEncodings;
+  std::vector<Encoding> mEncodings;
   std::string mSpropParameterSets;
   uint8_t mProfile;
   uint8_t mConstraints;
@@ -106,7 +106,7 @@ class VideoCodecConfig {
         mREDPayloadType != aRhs.mREDPayloadType ||
         mREDRTXPayloadType != aRhs.mREDRTXPayloadType || mTias != aRhs.mTias ||
         !(mEncodingConstraints == aRhs.mEncodingConstraints) ||
-        !(mSimulcastEncodings == aRhs.mSimulcastEncodings) ||
+        !(mEncodings == aRhs.mEncodings) ||
         mSpropParameterSets != aRhs.mSpropParameterSets ||
         mProfile != aRhs.mProfile || mConstraints != aRhs.mConstraints ||
         mLevel != aRhs.mLevel ||
@@ -143,12 +143,12 @@ class VideoCodecConfig {
   }
 
   bool ResolutionEquals(const VideoCodecConfig& aConfig) const {
-    if (mSimulcastEncodings.size() != aConfig.mSimulcastEncodings.size()) {
+    if (mEncodings.size() != aConfig.mEncodings.size()) {
       return false;
     }
-    for (size_t i = 0; i < mSimulcastEncodings.size(); ++i) {
-      if (!mSimulcastEncodings[i].constraints.ResolutionEquals(
-              aConfig.mSimulcastEncodings[i].constraints)) {
+    for (size_t i = 0; i < mEncodings.size(); ++i) {
+      if (!mEncodings[i].constraints.ResolutionEquals(
+              aConfig.mEncodings[i].constraints)) {
         return false;
       }
     }
