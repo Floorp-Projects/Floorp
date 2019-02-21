@@ -4423,7 +4423,13 @@ Storage* nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError) {
   }
 
   if (access == nsContentUtils::StorageAccess::eDeny) {
-    aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    if (mDoc && (mDoc->GetSandboxFlags() & SANDBOXED_ORIGIN) != 0) {
+      // Only raise the exception if we are denying storage access due to
+      // sandbox restrictions.  If we're denying storage access due to other
+      // reasons (e.g. cookie policy enforcement), withhold raising the
+      // exception in an effort to achieve more web compatibility.
+      aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    }
     return nullptr;
   }
 
