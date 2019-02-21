@@ -30,15 +30,15 @@ const MOCK_STORAGE = [{
   tel: "+12223334444",
 }];
 
-function checkFormFieldsStyle(profile, isPreviewing = true) {
+async function checkFormFieldsStyle(profile, isPreviewing = true) {
   const elems = document.querySelectorAll("input, select");
 
   for (const elem of elems) {
     const fillableValue = profile && profile[elem.id];
     const previewValue = isPreviewing && fillableValue || "";
 
-    checkFieldHighlighted(elem, !!fillableValue);
-    checkFieldPreview(elem, previewValue);
+    await checkFieldHighlighted(elem, !!fillableValue);
+    await checkFieldPreview(elem, previewValue);
   }
 }
 
@@ -55,22 +55,22 @@ add_task(async function check_preview() {
 
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
-  checkFormFieldsStyle(null);
+  await checkFormFieldsStyle(null);
 
   for (let i = 0; i < MOCK_STORAGE.length; i++) {
     synthesizeKey("KEY_ArrowDown");
     await notifySelectedIndex(i);
-    checkFormFieldsStyle(MOCK_STORAGE[i]);
+    await checkFormFieldsStyle(MOCK_STORAGE[i]);
   }
 
   // Navigate to the footer
   synthesizeKey("KEY_ArrowDown");
   await notifySelectedIndex(MOCK_STORAGE.length);
-  checkFormFieldsStyle(null);
+  await checkFormFieldsStyle(null);
 
   synthesizeKey("KEY_ArrowDown");
   await notifySelectedIndex(-1);
-  checkFormFieldsStyle(null);
+  await checkFormFieldsStyle(null);
 
   focusedInput.blur();
 });
@@ -79,7 +79,7 @@ add_task(async function check_filled_highlight() {
   await triggerPopupAndHoverItem("#organization", 0);
   // filled 1st address
   await triggerAutofillAndCheckProfile(MOCK_STORAGE[0]);
-  checkFormFieldsStyle(MOCK_STORAGE[0], false);
+  await checkFormFieldsStyle(MOCK_STORAGE[0], false);
 });
 
 </script>

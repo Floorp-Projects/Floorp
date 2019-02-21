@@ -169,7 +169,7 @@ class MozBaseAssembler : public js::jit::AssemblerShared {
 
     bool hasTarget = target.valid;
     if (!hasTarget)
-      snprintf(labelBuf, sizeof(labelBuf), "-> (link-time target)");
+      SprintfLiteral(labelBuf, "-> (link-time target)");
 
     if (instr->IsImmBranch() && hasTarget) {
       // The target information in the instruction is likely garbage, so remove it.
@@ -182,7 +182,7 @@ class MozBaseAssembler : public js::jit::AssemblerShared {
 	;
       buffer[i] = 0;
 
-      snprintf(labelBuf, sizeof(labelBuf), "-> %d%s", target.doc, !target.bound ? "f" : "");
+      SprintfLiteral(labelBuf, "-> %d%s", target.doc, !target.bound ? "f" : "");
       hasTarget = false;
     }
 

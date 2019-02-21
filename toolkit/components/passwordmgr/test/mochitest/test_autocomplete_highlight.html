@@ -11,6 +11,8 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <script>
+let readyPromise = registerRunTests();
+
 runInParent(function initLogins() {
   const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
@@ -40,6 +42,11 @@ runInParent(function initLogins() {
 <pre id="test">
 <script>
 let {ContentTaskUtils} = SpecialPowers.Cu.import("resource://testing-common/ContentTaskUtils.jsm", {});
+
+add_task(async function setup() {
+  ok(readyPromise, "check promise is available");
+  await readyPromise;
+});
 
 add_task(async function test_field_highlight_on_autocomplete() {
   // Test username autocomplete.

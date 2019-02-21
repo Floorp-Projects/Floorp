@@ -8024,7 +8024,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
     if (!tokenStream.getToken(&next, TokenStream::Operand)) {
       return null();
     }
-    uint32_t toStringStart = pos().begin;
+    TokenPos startPos = pos();
+    uint32_t toStringStart = startPos.begin;
     anyChars.ungetToken();
 
     FunctionAsyncKind asyncKind = FunctionAsyncKind::SyncFunction;
@@ -8049,7 +8050,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
     }
 
     FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::Arrow;
-    FunctionNodeType funNode = handler.newFunction(syntaxKind, pos());
+    FunctionNodeType funNode = handler.newFunction(syntaxKind, startPos);
     if (!funNode) {
       return null();
     }

@@ -52,7 +52,7 @@ class ByteBufferStream final : public nsIInputStream {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  ByteBufferStream(jni::ByteBuffer::Param buffer)
+  explicit ByteBufferStream(jni::ByteBuffer::Param buffer)
       : mBuffer(buffer), mPosition(0), mClosed(false) {
     MOZ_ASSERT(mBuffer);
     MOZ_ASSERT(mBuffer->Address());
@@ -117,7 +117,7 @@ class HeaderVisitor final : public nsIHttpHeaderVisitor {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  HeaderVisitor(java::WebResponse::Builder::Param aBuilder)
+  explicit HeaderVisitor(java::WebResponse::Builder::Param aBuilder)
       : mBuilder(aBuilder) {}
 
   NS_IMETHOD
@@ -139,7 +139,7 @@ class LoaderListener final : public nsIStreamLoaderObserver,
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  LoaderListener(java::GeckoResult::Param aResult) : mResult(aResult) {
+  explicit LoaderListener(java::GeckoResult::Param aResult) : mResult(aResult) {
     MOZ_ASSERT(mResult);
   }
 

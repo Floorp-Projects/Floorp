@@ -212,7 +212,7 @@ void nsWindow::NativePtr<Impl>::Detach(const jni::Ref<Cls, T>& aInstance) {
     const uintptr_t mOldImpl;
 
    public:
-    ImplDisposer(const typename Cls::LocalRef& aInstance)
+    explicit ImplDisposer(const typename Cls::LocalRef& aInstance)
         : Runnable("nsWindow::NativePtr::Detach"),
           mInstance(aInstance.Env(), aInstance),
           mOldImpl(aInstance

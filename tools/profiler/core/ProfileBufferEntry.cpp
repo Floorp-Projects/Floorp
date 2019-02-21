@@ -15,6 +15,7 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/StackWalk.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 
@@ -988,13 +989,40 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
       if (e.Get().IsNativeLeafAddr()) {
         numFrames++;
 
+        void* pc = e.Get().GetPtr();
+        e.Next();
+
+        static const uint32_t BUF_SIZE = 256;
+        char buf[BUF_SIZE];
+
         // Bug 753041: We need a double cast here to tell GCC that we don't
         // want to sign extend 32-bit addresses starting with 0xFXXXXXX.
-        unsigned long long pc = (unsigned long long)(uintptr_t)e.Get().GetPtr();
-        char buf[20];
-        SprintfLiteral(buf, "%#llx", pc);
+        unsigned long long pcULL = (unsigned long long)(uintptr_t)pc;
+        SprintfLiteral(buf, "%#llx", pcULL);
+
+        // If the "MOZ_PROFILER_SYMBOLICATE" env-var is set, we add a local
+        // symbolication description to the PC address. This is off by default,
+        // and mainly intended for local development.
+        static const bool preSymbolicate = []() {
+          const char* symbolicate = getenv("MOZ_PROFILER_SYMBOLICATE");
+          return symbolicate && symbolicate[0] != '\0';
+        }();
+        if (preSymbolicate) {
+          MozCodeAddressDetails details;
+          if (MozDescribeCodeAddress(pc, &details)) {
+            // Replace \0 terminator with space.
+            const uint32_t pcLen = strlen(buf);
+            buf[pcLen] = ' ';
+            // Add description after space. Note: Using a frame number of 0,
+            // as using `numFrames` wouldn't help here, and would prevent
+            // combining same function calls that happen at different depths.
+            // TODO: Remove unsightly "#00: " if too annoying. :-)
+            MozFormatCodeAddressDetails(buf + pcLen + 1, BUF_SIZE - (pcLen + 1),
+                                        0, pc, &details);
+          }
+        }
+
         stack = aUniqueStacks.AppendFrame(stack, UniqueStacks::FrameKey(buf));
-        e.Next();
 
       } else if (e.Get().IsLabel()) {
         numFrames++;
