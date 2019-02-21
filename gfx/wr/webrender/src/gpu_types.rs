@@ -332,6 +332,8 @@ bitflags! {
         const SEGMENT_REPEAT_Y = 0x8;
         /// The extra segment data is a texel rect.
         const SEGMENT_TEXEL_RECT = 0x10;
+        /// Snap to the primitive rect instead of the visible rect.
+        const SNAP_TO_PRIMITIVE = 0x20;
     }
 }
 
