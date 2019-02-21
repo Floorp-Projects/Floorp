@@ -28,7 +28,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
   FormValidationHandler: "resource:///modules/FormValidationHandler.jsm",
-  LanguagePrompt: "resource://gre/modules/LanguagePrompt.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
   LightweightThemeConsumer: "resource://gre/modules/LightweightThemeConsumer.jsm",
   LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
@@ -50,6 +49,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   ReaderParent: "resource:///modules/ReaderParent.jsm",
+  RFPHelper: "resource://gre/modules/RFPHelper.jsm",
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
@@ -1947,8 +1947,6 @@ var gBrowserInit = {
     if (gToolbarKeyNavEnabled) {
       ToolbarKeyboardNavigator.uninit();
     }
-
-    LanguagePrompt.uninit();
 
     BrowserSearch.uninit();
 

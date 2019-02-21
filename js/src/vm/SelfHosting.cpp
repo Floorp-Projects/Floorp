@@ -2654,7 +2654,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     // See builtin/TypedObject.h for descriptors of the typedobj functions.
     JS_FN("NewOpaqueTypedObject", js::NewOpaqueTypedObject, 1, 0),
     JS_FN("NewDerivedTypedObject", js::NewDerivedTypedObject, 3, 0),
-    JS_FN("TypedObjectBuffer", TypedObject::GetBuffer, 1, 0),
     JS_FN("TypedObjectByteOffset", TypedObject::GetByteOffset, 1, 0),
     JS_FN("AttachTypedObject", js::AttachTypedObject, 3, 0),
     JS_FN("TypedObjectIsAttached", js::TypedObjectIsAttached, 1, 0),

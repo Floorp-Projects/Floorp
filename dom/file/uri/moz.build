@@ -20,6 +20,10 @@ UNIFIED_SOURCES += [
     'FontTableURIProtocolHandler.cpp',
 ]
 
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
+
 LOCAL_INCLUDES += [
     '/dom/file',
     '/netwerk/base',

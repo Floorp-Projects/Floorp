@@ -1196,10 +1196,6 @@ struct AssignSearchNodeTypesWithLastLeafAsNeedle {
   }
 };
 
-bool FindNeedle(SearchTestNode* aNode) {
-  return aNode->GetType() == SearchNodeType::Needle;
-}
-
 struct AssignSearchNodeTypesAllHay {
   void operator()(SearchTestNode* aNode) {
     aNode->SetType(SearchNodeType::Hay);
@@ -1248,8 +1244,6 @@ struct AllocateUnitRegionsToLeavesOnly {
     }
   }
 };
-
-void ForEachNodeDoNothing(ForEachTestNode* aNode) {}
 
 template <typename Node>
 static RefPtr<Node> DepthFirstSearchForwardRecursive(RefPtr<Node> aNode) {

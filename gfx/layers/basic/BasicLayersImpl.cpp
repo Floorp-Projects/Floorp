@@ -214,18 +214,5 @@ gfx::CompositionOp GetEffectiveOperator(Layer* aLayer) {
   return ToData(aLayer)->GetOperator();
 }
 
-ShadowableLayer* ToShadowable(Layer* aLayer) {
-  return aLayer->AsShadowableLayer();
-}
-
-bool ShouldShadow(Layer* aLayer) {
-  if (!ToShadowable(aLayer)) {
-    MOZ_ASSERT(aLayer->GetType() == Layer::TYPE_READBACK,
-               "Only expect not to shadow ReadbackLayers");
-    return false;
-  }
-  return true;
-}
-
 }  // namespace layers
 }  // namespace mozilla

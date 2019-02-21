@@ -23,7 +23,7 @@ struct RecordingSourceSurfaceUserData {
   RefPtr<DrawEventRecorderPrivate> recorder;
 };
 
-void RecordingSourceSurfaceUserDataFunc(void *aUserData) {
+static void RecordingSourceSurfaceUserDataFunc(void *aUserData) {
   RecordingSourceSurfaceUserData *userData =
       static_cast<RecordingSourceSurfaceUserData *>(aUserData);
 
@@ -269,7 +269,7 @@ struct RecordingFontUserData {
   RefPtr<DrawEventRecorderPrivate> recorder;
 };
 
-void RecordingFontUserDataDestroyFunc(void *aUserData) {
+static void RecordingFontUserDataDestroyFunc(void *aUserData) {
   RecordingFontUserData *userData =
       static_cast<RecordingFontUserData *>(aUserData);
 

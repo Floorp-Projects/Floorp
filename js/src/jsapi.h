@@ -2022,7 +2022,7 @@ JS_PUBLIC_API void JS_SetAllNonReservedSlotsToUndefined(JSContext* cx,
 
 /**
  * Create a new array buffer with the given contents. It must be legal to pass
- * these contents to free(). On success, the ownership is transferred to the
+ * these contents to JS_free(). On success, the ownership is transferred to the
  * new array buffer.
  */
 extern JS_PUBLIC_API JSObject* JS_NewArrayBufferWithContents(JSContext* cx,
@@ -2067,8 +2067,8 @@ extern JS_PUBLIC_API JSObject* JS_NewExternalArrayBuffer(
 
 /**
  * Create a new array buffer with the given contents.  The array buffer does not
- * take ownership of contents, and JS_DetachArrayBuffer must be called before
- * the contents are disposed of.
+ * take ownership of contents.  JS_DetachArrayBuffer must be called before
+ * the contents are disposed of by the user; this call will always succeed.
  */
 extern JS_PUBLIC_API JSObject* JS_NewArrayBufferWithExternalContents(
     JSContext* cx, size_t nbytes, void* contents);
