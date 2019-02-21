@@ -6,9 +6,12 @@
 
 UNIFIED_SOURCES += [
     'nsAutoConfig.cpp',
-    'nsConfigFactory.cpp',
     'nsJSConfigTriggers.cpp',
     'nsReadConfig.cpp',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 FINAL_LIBRARY = 'xul'
