@@ -2795,8 +2795,10 @@ var gDetailView = {
       let perms = {permissions: ["internal:privateBrowsingAllowed"], origins: []};
       if (this._privateBrowsing.value == "1") {
         await ExtensionPermissions.add(addon.id, perms, extension);
+        recordActionTelemetry({action: "privateBrowsingAllowed", value: "on", addon});
       } else {
         await ExtensionPermissions.remove(addon.id, perms, extension);
+        recordActionTelemetry({action: "privateBrowsingAllowed", value: "off", addon});
       }
 
       // Reload the extension if it is already enabled.  This ensures any change

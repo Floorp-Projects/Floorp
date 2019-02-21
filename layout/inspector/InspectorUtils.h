@@ -38,7 +38,7 @@ class InspectorUtils {
                                 nsTArray<RefPtr<StyleSheet>>& aResult);
   static void GetCSSStyleRules(GlobalObject& aGlobal, Element& aElement,
                                const nsAString& aPseudo,
-                               nsTArray<RefPtr<css::Rule>>& aResult);
+                               nsTArray<RefPtr<BindingStyleRule>>& aResult);
 
   /**
    * Get the line number of a rule.

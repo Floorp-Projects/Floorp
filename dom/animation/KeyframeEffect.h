@@ -179,9 +179,9 @@ class KeyframeEffect : public AnimationEffect {
   void SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
                     const ComputedStyle* aStyle);
 
-  // Returns true if the effect includes |aProperty| regardless of whether the
-  // property is overridden by !important rule.
-  bool HasAnimationOfProperty(nsCSSPropertyID aProperty) const;
+  // Returns true if the effect includes a property in |aPropertySet| regardless
+  // of whether any property in the set is overridden by !important rule.
+  bool HasAnimationOfPropertySet(const nsCSSPropertyIDSet& aPropertySet) const;
 
   // GetEffectiveAnimationOfProperty returns AnimationProperty corresponding
   // to a given CSS property if the effect includes the property and the

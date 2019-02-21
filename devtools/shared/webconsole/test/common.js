@@ -255,14 +255,14 @@ function withActiveServiceWorker(win, url, scope) {
 
 /**
  *
- * @param {DebuggerClient} debuggerClient
+ * @param {Front} consoleFront
  * @param {Function} consoleCall: A function which calls the consoleAPI, e.g. :
  *                         `() => top.console.log("test")`.
  * @returns {Promise} A promise that will be resolved with the packet sent by the server
  *                    in response to the consoleAPI call.
  */
-function consoleAPICall(debuggerClient, consoleCall) {
-  const onConsoleAPICall = debuggerClient.addOneTimeListener("consoleAPICall");
+function consoleAPICall(consoleFront, consoleCall) {
+  const onConsoleAPICall = consoleFront.once("consoleAPICall");
   consoleCall();
   return onConsoleAPICall;
 }

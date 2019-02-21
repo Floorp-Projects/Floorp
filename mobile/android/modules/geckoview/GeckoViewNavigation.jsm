@@ -340,3 +340,5 @@ class GeckoViewNavigation extends GeckoViewModule {
     this.eventDispatcher.sendRequest(message);
   }
 }
+
+const {debug, warn} = GeckoViewNavigation.initLogging("GeckoViewNavigation"); // eslint-disable-line no-unused-vars

@@ -2531,7 +2531,7 @@ static void UpdateBackdropIfNeeded(nsIFrame* aFrame, ServoStyleSet& aStyleSet,
 static void UpdateFirstLetterIfNeeded(nsIFrame* aFrame,
                                       ServoRestyleState& aRestyleState) {
   MOZ_ASSERT(
-      !aFrame->IsFrameOfType(nsIFrame::eBlockFrame),
+      !aFrame->IsBlockFrameOrSubclass(),
       "You're probably duplicating work with UpdatePseudoElementStyles!");
   if (!aFrame->HasFirstLetterChild()) {
     return;
@@ -2541,7 +2541,7 @@ static void UpdateFirstLetterIfNeeded(nsIFrame* aFrame,
   // find the right element for the first-letter's style resolution.  Might as
   // well just delegate the whole thing to that block.
   nsIFrame* block = aFrame->GetParent();
-  while (!block->IsFrameOfType(nsIFrame::eBlockFrame)) {
+  while (!block->IsBlockFrameOrSubclass()) {
     block = block->GetParent();
   }
 
@@ -2598,9 +2598,8 @@ static void UpdateAdditionalComputedStyles(nsIFrame* aFrame,
 
 static void UpdateFramePseudoElementStyles(nsIFrame* aFrame,
                                            ServoRestyleState& aRestyleState) {
-  if (aFrame->IsFrameOfType(nsIFrame::eBlockFrame)) {
-    static_cast<nsBlockFrame*>(aFrame)->UpdatePseudoElementStyles(
-        aRestyleState);
+  if (nsBlockFrame* blockFrame = do_QueryFrame(aFrame)) {
+    blockFrame->UpdatePseudoElementStyles(aRestyleState);
   } else {
     UpdateFirstLetterIfNeeded(aFrame, aRestyleState);
   }
@@ -2897,7 +2896,7 @@ bool RestyleManager::ProcessPostTraversal(Element* aElement,
     if (wasRestyled) {
       UpdateFramePseudoElementStyles(styleFrame, childrenRestyleState);
     } else if (traverseElementChildren &&
-               styleFrame->IsFrameOfType(nsIFrame::eBlockFrame)) {
+               styleFrame->IsBlockFrameOrSubclass()) {
       // Even if we were not restyled, if we're a block with a first-line and
       // one of our descendant elements which is on the first line was restyled,
       // we need to update the styles of things on the first line, because
@@ -3521,10 +3520,10 @@ void RestyleManager::DoReparentComputedStyleForFirstLine(
 
   ComputedStyle* newParentIgnoringFirstLine;
   if (newParent->GetPseudoType() == PseudoStyleType::firstLine) {
-    MOZ_ASSERT(providerFrame && providerFrame->GetParent()->IsFrameOfType(
-                                    nsIFrame::eBlockFrame),
-               "How could we get a ::first-line parent style without having "
-               "a ::first-line provider frame?");
+    MOZ_ASSERT(
+        providerFrame && providerFrame->GetParent()->IsBlockFrameOrSubclass(),
+        "How could we get a ::first-line parent style without having "
+        "a ::first-line provider frame?");
     // If newParent is a ::first-line style, get the parent blockframe, and then
     // correct it for our pseudo as needed (e.g. stepping out of anon boxes).
     // Use the resulting style for the "parent style ignoring ::first-line".

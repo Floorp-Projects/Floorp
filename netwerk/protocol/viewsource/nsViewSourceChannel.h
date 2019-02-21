@@ -17,6 +17,7 @@
 #include "nsIApplicationCacheChannel.h"
 #include "nsIFormPOSTActionChannel.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/net/NeckoChannelParams.h"
 
 class nsViewSourceChannel final : public nsIViewSourceChannel,
                                   public nsIStreamListener,
@@ -60,7 +61,7 @@ class nsViewSourceChannel final : public nsIViewSourceChannel,
 
  protected:
   ~nsViewSourceChannel() = default;
-  nsTArray<mozilla::Tuple<nsCString, nsCString>> mEmptyArray;
+  nsTArray<mozilla::net::PreferredAlternativeDataTypeParams> mEmptyArray;
 
   // Clones aURI and prefixes it with "view-source:" schema,
   nsresult BuildViewSourceURI(nsIURI* aURI, nsIURI** aResult);

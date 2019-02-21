@@ -13,33 +13,27 @@ const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
 const CompatibilityWarning = createFactory(require("./CompatibilityWarning"));
-const ConnectionPromptSetting = createFactory(require("./ConnectionPromptSetting"));
 const DebugTargetPane = createFactory(require("./debugtarget/DebugTargetPane"));
 const ExtensionAction = createFactory(require("./debugtarget/ExtensionAction"));
-const ExtensionDebugSetting = createFactory(require("./ExtensionDebugSetting"));
 const ExtensionDetail = createFactory(require("./debugtarget/ExtensionDetail"));
 const InspectAction = createFactory(require("./debugtarget/InspectAction"));
 const Message = createFactory(require("./shared/Message"));
 const ProfilerDialog = createFactory(require("./ProfilerDialog"));
+const RuntimeActions = createFactory(require("./RuntimeActions"));
 const RuntimeInfo = createFactory(require("./RuntimeInfo"));
 const ServiceWorkerAction = createFactory(require("./debugtarget/ServiceWorkerAction"));
 const ServiceWorkersWarning = createFactory(require("./ServiceWorkersWarning"));
 const TabDetail = createFactory(require("./debugtarget/TabDetail"));
 const TemporaryExtensionAction = createFactory(require("./debugtarget/TemporaryExtensionAction"));
 const TemporaryExtensionDetail = createFactory(require("./debugtarget/TemporaryExtensionDetail"));
-const TemporaryExtensionInstaller =
-  createFactory(require("./debugtarget/TemporaryExtensionInstaller"));
 const WorkerDetail = createFactory(require("./debugtarget/WorkerDetail"));
 
 const Actions = require("../actions/index");
-const { DEBUG_TARGET_PANE, MESSAGE_LEVEL, PAGE_TYPES, RUNTIMES } = require("../constants");
+const { DEBUG_TARGET_PANE, MESSAGE_LEVEL, PAGE_TYPES } = require("../constants");
 const Types = require("../types/index");
 
 const { getCurrentRuntimeDetails } = require("../modules/runtimes-state-helper");
-const {
-  isExtensionDebugSettingNeeded,
-  isSupportedDebugTargetPane,
-} = require("../modules/debug-target-support");
+const { isSupportedDebugTargetPane } = require("../modules/debug-target-support");
 
 class RuntimePage extends PureComponent {
   static get propTypes() {
@@ -66,23 +60,6 @@ class RuntimePage extends PureComponent {
     dispatch(Actions.selectPage(PAGE_TYPES.RUNTIME, runtimeId));
   }
 
-  onProfilerButtonClick() {
-    this.props.dispatch(Actions.showProfilerDialog());
-  }
-
-  renderConnectionPromptSetting() {
-    const { dispatch, runtimeDetails, runtimeId } = this.props;
-    const { connectionPromptEnabled } = runtimeDetails;
-    // do not show the connection prompt setting in 'This Firefox'
-    return runtimeId !== RUNTIMES.THIS_FIREFOX
-             ? ConnectionPromptSetting({
-               className: "runtime-actions__end",
-               connectionPromptEnabled,
-               dispatch,
-             })
-             : null;
-  }
-
   renderDebugTargetPane(name, targets, actionComponent,
                         detailComponent, paneKey, localizationId) {
     const { collapsibilities, dispatch, runtimeDetails } = this.props;
@@ -106,62 +83,6 @@ class RuntimePage extends PureComponent {
         targets,
       })
     );
-  }
-
-  renderExtensionDebugSetting() {
-    const { dispatch, runtimeDetails } = this.props;
-    const { extensionDebugEnabled, info } = runtimeDetails;
-    return isExtensionDebugSettingNeeded(info.type)
-             ? ExtensionDebugSetting({
-                 className: "runtime-actions__start",
-                 dispatch,
-                 extensionDebugEnabled,
-             })
-             : null;
-  }
-
-  renderProfileButton() {
-    const { runtimeId } = this.props;
-
-    return runtimeId !== RUNTIMES.THIS_FIREFOX
-         ? Localized(
-           {
-             id: "about-debugging-runtime-profile-button",
-           },
-           dom.button(
-             {
-               className: "default-button runtime-actions__start " +
-                          "js-profile-runtime-button",
-               onClick: () => this.onProfilerButtonClick(),
-             },
-             "Profile Runtime"
-           ),
-         )
-         : null;
-  }
-
-  renderRuntimeActions() {
-    return dom.div(
-      {
-        className: "runtime-actions",
-      },
-      this.renderConnectionPromptSetting(),
-      this.renderProfileButton(),
-      this.renderExtensionDebugSetting(),
-      this.renderTemporaryExtensionInstaller(),
-    );
-  }
-
-  renderTemporaryExtensionInstaller() {
-    const { dispatch, runtimeDetails, temporaryInstallError } = this.props;
-    const { type } = runtimeDetails.info;
-    return isSupportedDebugTargetPane(type, DEBUG_TARGET_PANE.TEMPORARY_EXTENSION)
-             ? TemporaryExtensionInstaller({
-                 className: "runtime-actions__end",
-                 dispatch,
-                 temporaryInstallError,
-             })
-             : null;
   }
 
   renderTemporaryExtensionInstallError() {
@@ -201,6 +122,7 @@ class RuntimePage extends PureComponent {
       installedExtensions,
       otherWorkers,
       runtimeDetails,
+      runtimeId,
       serviceWorkers,
       sharedWorkers,
       showProfilerDialog,
@@ -221,7 +143,7 @@ class RuntimePage extends PureComponent {
         className: "page js-runtime-page",
       },
       RuntimeInfo(runtimeDetails.info),
-      this.renderRuntimeActions(),
+      RuntimeActions({ dispatch, runtimeId, runtimeDetails }),
       runtimeDetails.serviceWorkersAvailable ? null : ServiceWorkersWarning(),
       CompatibilityWarning({ compatibilityReport }),
       this.renderTemporaryExtensionInstallError(),

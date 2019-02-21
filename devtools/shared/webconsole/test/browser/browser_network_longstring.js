@@ -33,7 +33,7 @@ add_task(async function() {
 
   info("test network POST request");
 
-  const onNetworkEvent = client.addOneTimeListener("networkEvent");
+  const onNetworkEvent = consoleClient.once("serverNetworkEvent");
   const updates = [];
   let netActor = null;
   const onAllNetworkEventUpdateReceived = new Promise(resolve => {
@@ -82,8 +82,6 @@ add_task(async function() {
 });
 
 function assertNetworkEvent(client, consoleClient, packet) {
-  is(packet.from, consoleClient.actor, "network event actor");
-
   info("checking the network event packet");
 
   const netActor = packet.eventActor;

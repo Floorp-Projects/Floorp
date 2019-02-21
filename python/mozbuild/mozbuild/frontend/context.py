@@ -472,6 +472,7 @@ class CompileFlags(BaseCompileFlags):
              ('CFLAGS', 'C_LDFLAGS')),
             ('MOZBUILD_CFLAGS', None, ('CFLAGS',)),
             ('MOZBUILD_CXXFLAGS', None, ('CXXFLAGS',)),
+            ('COVERAGE', context.config.substs.get('COVERAGE_CFLAGS'), ('CXXFLAGS', 'CFLAGS')),
         )
 
         BaseCompileFlags.__init__(self, context)

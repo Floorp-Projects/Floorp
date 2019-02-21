@@ -91,7 +91,7 @@ BrowserConsole.prototype = extend(WebConsole.prototype, {
       this._telemetry.toolClosed("browserconsole", -1, this);
 
       await this.$destroy();
-      await this.target.client.close();
+      await this.target.destroy();
       this.hudService._browserConsoleID = null;
       this.chromeWindow.close();
     })();

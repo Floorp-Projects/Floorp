@@ -17,7 +17,6 @@
             buttonidextra1="refresh-profile"
             ondialogaccept="return onDefaultButton()"
             ondialogcancel="onCancel();"
-            ondialogextra1="return onExtra1()"
             onload="onLoad()">
 
   <linkset>

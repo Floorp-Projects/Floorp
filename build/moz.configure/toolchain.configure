@@ -1729,6 +1729,42 @@ def code_coverage(value):
 set_config('MOZ_CODE_COVERAGE', code_coverage)
 set_define('MOZ_CODE_COVERAGE', code_coverage)
 
+@depends(target, c_compiler, vc_path, check_build_environment, when=code_coverage)
+@imports('re')
+@imports('mozpack.path')
+@imports(_from='__builtin__', _import='open')
+def coverage_cflags(target, c_compiler, vc_path, build_env):
+    cflags = ['--coverage']
+
+    if c_compiler.type in ('clang', 'clang-cl'):
+        cflags += [
+            '-Xclang', '-coverage-no-function-names-in-data',
+        ]
+
+    if target.os == 'WINNT' and c_compiler.type == 'clang-cl':
+        # The Visual Studio directory is the parent of the Visual C++ directory.
+        vs_path = os.path.dirname(vc_path)
+
+        # We need to get the real path of Visual Studio, which can be in a
+        # symlinked directory (for example, on automation).
+        vs_path = mozpack.path.readlink(vs_path)
+        # Since the -fprofile-exclude-files option in LLVM is a regex, we need to
+        # have the same path separators.
+        vs_path = vs_path.replace('/', '\\')
+
+        cflags += [
+            '-fprofile-exclude-files=^{}.*$'.format(re.escape(vs_path)),
+        ]
+
+    response_file_path = os.path.join(build_env.topobjdir, 'code_coverage_cflags')
+
+    with open(response_file_path, 'w') as f:
+        f.write(' '.join(cflags))
+
+    return ['@{}'.format(response_file_path)]
+
+set_config('COVERAGE_CFLAGS', coverage_cflags)
+
 # ==============================================================
 
 option(env='RUSTFLAGS',

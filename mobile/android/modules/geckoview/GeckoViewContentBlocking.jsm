@@ -54,3 +54,5 @@ class GeckoViewContentBlocking extends GeckoViewModule {
     this.eventDispatcher.sendRequest(message);
   }
 }
+
+const {debug, warn} = GeckoViewContentBlocking.initLogging("GeckoViewContentBlocking"); // eslint-disable-line no-unused-vars

@@ -15,8 +15,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
 
-/* global debug:false, warn:false */
-GeckoViewUtils.initLogging("Startup", this);
+const {debug, warn} = GeckoViewUtils.initLogging("Startup"); // eslint-disable-line no-unused-vars
 
 function GeckoViewStartup() {
 }

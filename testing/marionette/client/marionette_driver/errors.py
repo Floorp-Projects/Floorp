@@ -33,22 +33,26 @@ class MarionetteException(Exception):
         super(MarionetteException, self).__init__(message)
 
     def __str__(self):
-        msg = str(self.message)
+        return unicode(self).encode("utf-8")
+
+    def __unicode__(self):
+        msg = unicode(self.message)
         tb = None
 
         if self.cause:
             if type(self.cause) is tuple:
-                msg += ", caused by {0!r}".format(self.cause[0])
+                msg += u", caused by {0!r}".format(self.cause[0])
                 tb = self.cause[2]
             else:
-                msg += ", caused by {}".format(self.cause)
+                msg += u", caused by {}".format(self.cause)
+
         if self.stacktrace:
-            st = "".join(["\t{}\n".format(x)
-                          for x in self.stacktrace.splitlines()])
-            msg += "\nstacktrace:\n{}".format(st)
+            st = u"".join(["\t{}\n".format(x)
+                           for x in self.stacktrace.splitlines()])
+            msg += u"\nstacktrace:\n{}".format(st)
 
         if tb:
-            msg += ': ' + "".join(traceback.format_tb(tb))
+            msg += u": " + u"".join(traceback.format_tb(tb))
 
         return msg
 

@@ -59,15 +59,13 @@ function startTest()
 function onAttach(aState, aResponse)
 {
   gState = aState;
-  gState.dbgClient.addListener("fileActivity", onFileActivity);
+  gState.client.on("fileActivity", onFileActivity);
   doFileActivity();
 }
 
-function onFileActivity(aType, aPacket)
+function onFileActivity(aPacket)
 {
-  is(aPacket.from, gState.actor, "fileActivity actor");
-
-  gState.dbgClient.removeListener("fileActivity", onFileActivity);
+  gState.client.off("fileActivity", onFileActivity);
 
   info("aPacket.uri: " + aPacket.uri);
   ok(/\bbug798764\b.*\.html$/.test(aPacket.uri), "file URI match");
