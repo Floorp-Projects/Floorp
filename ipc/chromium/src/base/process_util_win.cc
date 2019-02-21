@@ -22,12 +22,6 @@
 
 namespace {
 
-// System pagesize. This value remains constant on x86/64 architectures.
-const int PAGESIZE_KB = 4;
-
-// HeapSetInformation function pointer.
-typedef BOOL(WINAPI* HeapSetFn)(HANDLE, HEAP_INFORMATION_CLASS, PVOID, SIZE_T);
-
 typedef BOOL(WINAPI* InitializeProcThreadAttributeListFn)(
     LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList, DWORD dwAttributeCount,
     DWORD dwFlags, PSIZE_T lpSize);

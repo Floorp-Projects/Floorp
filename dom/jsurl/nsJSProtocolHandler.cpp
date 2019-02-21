@@ -144,9 +144,8 @@ nsresult nsJSThunk::EvaluateScript(
   aChannel->GetOwner(getter_AddRefs(owner));
   nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(owner);
   if (!principal) {
-    nsCOMPtr<nsILoadInfo> loadInfo;
-    aChannel->GetLoadInfo(getter_AddRefs(loadInfo));
-    if (loadInfo && loadInfo->GetForceInheritPrincipal()) {
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+    if (loadInfo->GetForceInheritPrincipal()) {
       principal = loadInfo->FindPrincipalToInherit(aChannel);
     } else {
       // No execution without a principal!
@@ -509,7 +508,7 @@ nsJSChannel::AsyncOpen(nsIStreamListener* aListener) {
 
 #ifdef DEBUG
   {
-    nsCOMPtr<nsILoadInfo> loadInfo = nsIChannel::GetLoadInfo();
+    nsCOMPtr<nsILoadInfo> loadInfo = nsIChannel::LoadInfo();
     MOZ_ASSERT(!loadInfo || loadInfo->GetSecurityMode() == 0 ||
                    loadInfo->GetInitialSecurityCheckDone(),
                "security flags in loadInfo but asyncOpen() not called");
@@ -1123,8 +1122,8 @@ nsJSProtocolHandler::NewURI(const nsACString& aSpec, const char* aCharset,
 }
 
 NS_IMETHODIMP
-nsJSProtocolHandler::NewChannel2(nsIURI* uri, nsILoadInfo* aLoadInfo,
-                                 nsIChannel** result) {
+nsJSProtocolHandler::NewChannel(nsIURI* uri, nsILoadInfo* aLoadInfo,
+                                nsIChannel** result) {
   nsresult rv;
 
   NS_ENSURE_ARG_POINTER(uri);
@@ -1140,11 +1139,6 @@ nsJSProtocolHandler::NewChannel2(nsIURI* uri, nsILoadInfo* aLoadInfo,
     channel.forget(result);
   }
   return rv;
-}
-
-NS_IMETHODIMP
-nsJSProtocolHandler::NewChannel(nsIURI* uri, nsIChannel** result) {
-  return NewChannel2(uri, nullptr, result);
 }
 
 NS_IMETHODIMP

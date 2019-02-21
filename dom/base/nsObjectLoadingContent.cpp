@@ -2412,8 +2412,7 @@ nsresult nsObjectLoadingContent::OpenChannel() {
           nsIRequest::LOAD_HTML_OBJECT_DATA);
   NS_ENSURE_SUCCESS(rv, rv);
   if (inherit) {
-    nsCOMPtr<nsILoadInfo> loadinfo = chan->GetLoadInfo();
-    NS_ENSURE_STATE(loadinfo);
+    nsCOMPtr<nsILoadInfo> loadinfo = chan->LoadInfo();
     loadinfo->SetPrincipalToInherit(thisContent->NodePrincipal());
   }
 

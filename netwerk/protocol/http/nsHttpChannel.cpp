@@ -3668,7 +3668,7 @@ nsresult nsHttpChannel::ProcessFallback(bool *waitingForRedirectCallback) {
 
   // Create a new channel to load the fallback entry.
   RefPtr<nsIChannel> newChannel;
-  rv = gHttpHandler->NewChannel2(mURI, mLoadInfo, getter_AddRefs(newChannel));
+  rv = gHttpHandler->NewChannel(mURI, mLoadInfo, getter_AddRefs(newChannel));
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t redirectFlags = nsIChannelEventSink::REDIRECT_INTERNAL;

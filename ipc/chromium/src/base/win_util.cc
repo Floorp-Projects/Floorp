@@ -16,10 +16,10 @@ namespace win_util {
 
 std::wstring FormatMessage(unsigned messageid) {
   wchar_t* string_buffer = NULL;
-  unsigned string_length = ::FormatMessage(
-      FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-          FORMAT_MESSAGE_IGNORE_INSERTS,
-      NULL, messageid, 0, reinterpret_cast<wchar_t*>(&string_buffer), 0, NULL);
+  ::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+                      FORMAT_MESSAGE_IGNORE_INSERTS,
+                  NULL, messageid, 0,
+                  reinterpret_cast<wchar_t*>(&string_buffer), 0, NULL);
 
   std::wstring formatted_string;
   if (string_buffer) {
