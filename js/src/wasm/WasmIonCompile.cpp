@@ -868,13 +868,14 @@ class FunctionCompiler {
     return load;
   }
 
-  void storeGlobalVar(uint32_t globalDataOffset, bool isIndirect,
-                      MDefinition* v) {
+  MInstruction* storeGlobalVar(uint32_t globalDataOffset, bool isIndirect,
+                               MDefinition* v) {
     if (inDeadCode()) {
-      return;
+      return nullptr;
     }
 
     MInstruction* store;
+    MInstruction* valueAddr = nullptr;
     if (isIndirect) {
       // Pull a pointer to the value out of TlsData::globalArea, then
       // store through that pointer.
@@ -882,13 +883,31 @@ class FunctionCompiler {
           MWasmLoadGlobalVar::New(alloc(), MIRType::Pointer, globalDataOffset,
                                   /*isConst=*/true, tlsPointer_);
       curBlock_->add(cellPtr);
-      store = MWasmStoreGlobalCell::New(alloc(), v, cellPtr);
+      if (v->type() == MIRType::RefOrNull) {
+        valueAddr = cellPtr;
+        store = MWasmStoreRef::New(alloc(), tlsPointer_, valueAddr, v,
+                                   AliasSet::WasmGlobalCell);
+      } else {
+        store = MWasmStoreGlobalCell::New(alloc(), v, cellPtr);
+      }
     } else {
       // Store the value directly in TlsData::globalArea.
-      store =
-          MWasmStoreGlobalVar::New(alloc(), globalDataOffset, v, tlsPointer_);
+      if (v->type() == MIRType::RefOrNull) {
+        valueAddr =
+          MWasmDerivedPointer::New(alloc(), tlsPointer_,
+                                   offsetof(wasm::TlsData, globalArea) +
+                                   globalDataOffset);
+        curBlock_->add(valueAddr);
+        store = MWasmStoreRef::New(alloc(), tlsPointer_, valueAddr, v,
+                                   AliasSet::WasmGlobalVar);
+      } else {
+        store =
+            MWasmStoreGlobalVar::New(alloc(), globalDataOffset, v, tlsPointer_);
+      }
     }
     curBlock_->add(store);
+
+    return valueAddr;
   }
 
   void addInterruptCheck() {
@@ -2106,6 +2125,8 @@ static bool EmitGetGlobal(FunctionCompiler& f) {
 }
 
 static bool EmitSetGlobal(FunctionCompiler& f) {
+  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
   uint32_t id;
   MDefinition* value;
   if (!f.iter().readSetGlobal(&id, &value)) {
@@ -2114,7 +2135,33 @@ static bool EmitSetGlobal(FunctionCompiler& f) {
 
   const GlobalDesc& global = f.env().globals[id];
   MOZ_ASSERT(global.isMutable());
-  f.storeGlobalVar(global.offset(), global.isIndirect(), value);
+  MInstruction* barrierAddr =
+    f.storeGlobalVar(global.offset(), global.isIndirect(), value);
+
+  // We always call the C++ postbarrier because the location will never be in
+  // the nursery, and the value stored will very frequently be in the nursery.
+  // The C++ postbarrier performs any necessary filtering.
+
+  if (barrierAddr) {
+    CallCompileState args;
+    if (!f.passInstance(&args)) {
+      return false;
+    }
+    // TODO: The argument type here is MIRType::Pointer, Julian's fix will take
+    // care of this.
+    if (!f.passArg(barrierAddr, ValType::AnyRef, &args)) {
+        return false;
+    }
+    f.finishCall(&args);
+    MDefinition* ret;
+    // TODO: The return type here is void (ExprType::Void or MIRType::None),
+    // Julian's fix will take care of this.
+    if (!f.builtinInstanceMethodCall(SymbolicAddress::PostBarrierFiltering,
+                                     lineOrBytecode, args, ValType::I32, &ret)) {
+      return false;
+    }
+  }
+
   return true;
 }
 

@@ -902,6 +902,15 @@ Instance::postBarrier(Instance* instance, gc::Cell** location) {
   TlsContext.get()->runtime()->gc.storeBuffer().putCell(location);
 }
 
+/* static */ void /* infallible */
+Instance::postBarrierFiltering(Instance* instance, gc::Cell** location) {
+  MOZ_ASSERT(location);
+  if (*location == nullptr || !gc::IsInsideNursery(*location)) {
+    return;
+  }
+  TlsContext.get()->runtime()->gc.storeBuffer().putCell(location);
+}
+
 // The typeIndex is an index into the structTypeDescrs_ table in the instance.
 // That table holds TypeDescr objects.
 //
