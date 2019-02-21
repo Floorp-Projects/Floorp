@@ -81,7 +81,7 @@ class AddonTargetFront extends FrontClassWithSpec(addonTargetSpec) {
     this._attach = (async () => {
       const response = await super.attach();
 
-      this.threadActor = response.threadActor;
+      this._threadActor = response.threadActor;
 
       return this.attachConsole();
     })();
@@ -92,10 +92,6 @@ class AddonTargetFront extends FrontClassWithSpec(addonTargetSpec) {
     // Toolbox and options panel are calling this method but Addon Target can't be
     // reconfigured. So we ignore this call here.
     return Promise.resolve();
-  }
-
-  attachThread() {
-    return this.client.attachThread(this.threadActor);
   }
 }
 
