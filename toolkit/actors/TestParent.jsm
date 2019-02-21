@@ -15,11 +15,11 @@ class TestParent extends JSWindowActorParent {
     switch (aMessage.name) {
       case "init":
         aMessage.data.initial =  true;
-        this.sendAsyncMessage("Test", "toChild", aMessage.data);
+        this.sendAsyncMessage("toChild", aMessage.data);
         break;
       case "toParent":
         aMessage.data.toParent = true;
-        this.sendAsyncMessage("Test", "done", aMessage.data);
+        this.sendAsyncMessage("done", aMessage.data);
         break;
     }
   }
