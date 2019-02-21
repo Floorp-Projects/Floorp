@@ -8122,10 +8122,7 @@ bool nsContentUtils::IsNonSubresourceRequest(nsIChannel* aChannel) {
     return true;
   }
 
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-  if (!loadInfo) {
-    return false;
-  }
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   nsContentPolicyType type = loadInfo->InternalContentPolicyType();
   return IsNonSubresourceInternalPolicyType(type);
 }
@@ -9810,10 +9807,7 @@ nsContentUtils::LookupCustomElementDefinition(Document* aDoc, nsAtom* aNameAtom,
   rv = aChannel->GetReferrer(getter_AddRefs(referrer));
   NS_ENSURE_SUCCESS(rv, false);
 
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-  if (!loadInfo) {
-    return false;
-  }
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   nsCOMPtr<nsIPrincipal> triggeringPrincipal = loadInfo->TriggeringPrincipal();
 
   // Get the channel's load flags, and use them to generate nsIWebNavigation

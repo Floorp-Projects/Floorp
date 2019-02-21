@@ -111,10 +111,8 @@ mozilla::ipc::IPCResult WyciwygChannelParent::RecvInit(
     return IPC_OK();
   }
 
-  nsCOMPtr<nsILoadInfo> loadInfo = chan->GetLoadInfo();
-  if (loadInfo) {
-    rv = loadInfo->SetPrincipalToInherit(principalToInherit);
-  }
+  nsCOMPtr<nsILoadInfo> loadInfo = chan->LoadInfo();
+  rv = loadInfo->SetPrincipalToInherit(principalToInherit);
   if (NS_FAILED(rv)) {
     if (!SendCancelEarly(rv)) {
       return IPC_FAIL_NO_REASON(this);
@@ -212,7 +210,7 @@ mozilla::ipc::IPCResult WyciwygChannelParent::RecvAsyncOpen(
     return IPC_OK();
   }
 
-  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
+  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
   rv = mChannel->AsyncOpen(this);
 
   if (NS_FAILED(rv)) {

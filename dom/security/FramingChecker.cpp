@@ -184,10 +184,9 @@ static bool ShouldIgnoreFrameOptions(nsIChannel* aChannel,
   }
 
   // log warning to console that xfo is ignored because of CSP
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-  uint64_t innerWindowID = loadInfo ? loadInfo->GetInnerWindowID() : 0;
-  bool privateWindow =
-      loadInfo ? !!loadInfo->GetOriginAttributes().mPrivateBrowsingId : false;
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  uint64_t innerWindowID = loadInfo->GetInnerWindowID();
+  bool privateWindow = !!loadInfo->GetOriginAttributes().mPrivateBrowsingId;
   const char16_t* params[] = {u"x-frame-options", u"frame-ancestors"};
   CSP_LogLocalizedStr("IgnoringSrcBecauseOfDirective", params,
                       ArrayLength(params),
@@ -252,9 +251,7 @@ static bool ShouldIgnoreFrameOptions(nsIChannel* aChannel,
       if (aDocShell) {
         nsCOMPtr<nsIWebNavigation> webNav(do_QueryObject(aDocShell));
         if (webNav) {
-          nsCOMPtr<nsILoadInfo> loadInfo = httpChannel->GetLoadInfo();
-          MOZ_ASSERT(loadInfo);
-
+          nsCOMPtr<nsILoadInfo> loadInfo = httpChannel->LoadInfo();
           RefPtr<NullPrincipal> principal =
               NullPrincipal::CreateWithInheritedAttributes(
                   loadInfo->TriggeringPrincipal());

@@ -396,11 +396,7 @@ nsresult ExtensionPolicyService::InjectContentScripts(
 // Checks a request for matching content scripts, and begins pre-loading them
 // if necessary.
 void ExtensionPolicyService::CheckRequest(nsIChannel* aChannel) {
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-  if (!loadInfo) {
-    return;
-  }
-
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   auto loadType = loadInfo->GetExternalContentPolicyType();
   if (loadType != nsIContentPolicy::TYPE_DOCUMENT &&
       loadType != nsIContentPolicy::TYPE_SUBDOCUMENT) {

@@ -45,10 +45,7 @@ static mozilla::LazyLogModule sCSMLog("CSMLog");
   if (!mozilla::net::nsIOService::BlockToplevelDataUriNavigations()) {
     return true;
   }
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-  if (!loadInfo) {
-    return true;
-  }
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   if (loadInfo->GetExternalContentPolicyType() !=
       nsIContentPolicy::TYPE_DOCUMENT) {
     return true;
@@ -115,10 +112,7 @@ static mozilla::LazyLogModule sCSMLog("CSMLog");
 
 /* static */ bool nsContentSecurityManager::AllowInsecureRedirectToDataURI(
     nsIChannel* aNewChannel) {
-  nsCOMPtr<nsILoadInfo> loadInfo = aNewChannel->GetLoadInfo();
-  if (!loadInfo) {
-    return true;
-  }
+  nsCOMPtr<nsILoadInfo> loadInfo = aNewChannel->LoadInfo();
   if (loadInfo->GetExternalContentPolicyType() !=
       nsIContentPolicy::TYPE_SCRIPT) {
     return true;
@@ -170,11 +164,7 @@ static mozilla::LazyLogModule sCSMLog("CSMLog");
     return NS_OK;
   }
 
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-  if (!loadInfo) {
-    return NS_OK;
-  }
-
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   nsContentPolicyType type = loadInfo->GetExternalContentPolicyType();
 
   // Allow top-level FTP documents and save-as download of FTP files on
@@ -793,14 +783,7 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
 nsresult nsContentSecurityManager::doContentSecurityCheck(
     nsIChannel* aChannel, nsCOMPtr<nsIStreamListener>& aInAndOutListener) {
   NS_ENSURE_ARG(aChannel);
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-
-  if (!loadInfo) {
-    MOZ_ASSERT(false,
-               "channel needs to have loadInfo to perform security checks");
-    return NS_ERROR_UNEXPECTED;
-  }
-
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   if (MOZ_UNLIKELY(MOZ_LOG_TEST(sCSMLog, LogLevel::Debug))) {
     DebugDoContentSecurityCheck(aChannel, loadInfo);
   }
@@ -844,16 +827,14 @@ NS_IMETHODIMP
 nsContentSecurityManager::AsyncOnChannelRedirect(
     nsIChannel* aOldChannel, nsIChannel* aNewChannel, uint32_t aRedirFlags,
     nsIAsyncVerifyRedirectCallback* aCb) {
-  nsCOMPtr<nsILoadInfo> loadInfo = aOldChannel->GetLoadInfo();
-  if (loadInfo) {
-    nsresult rv = CheckChannel(aNewChannel);
-    if (NS_SUCCEEDED(rv)) {
-      rv = CheckFTPSubresourceLoad(aNewChannel);
-    }
-    if (NS_FAILED(rv)) {
-      aOldChannel->Cancel(rv);
-      return rv;
-    }
+  nsCOMPtr<nsILoadInfo> loadInfo = aOldChannel->LoadInfo();
+  nsresult rv = CheckChannel(aNewChannel);
+  if (NS_SUCCEEDED(rv)) {
+    rv = CheckFTPSubresourceLoad(aNewChannel);
+  }
+  if (NS_FAILED(rv)) {
+    aOldChannel->Cancel(rv);
+    return rv;
   }
 
   // Also verify that the redirecting server is allowed to redirect to the
@@ -876,7 +857,7 @@ nsContentSecurityManager::AsyncOnChannelRedirect(
   const uint32_t flags =
       nsIScriptSecurityManager::LOAD_IS_AUTOMATIC_DOCUMENT_REPLACEMENT |
       nsIScriptSecurityManager::DISALLOW_SCRIPT;
-  nsresult rv = nsContentUtils::GetSecurityManager()->CheckLoadURIWithPrincipal(
+  rv = nsContentUtils::GetSecurityManager()->CheckLoadURIWithPrincipal(
       oldPrincipal, newURI, flags);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -896,9 +877,7 @@ static void AddLoadFlags(nsIRequest* aRequest, nsLoadFlags aNewFlags) {
  * if this requesst should not be permitted.
  */
 nsresult nsContentSecurityManager::CheckChannel(nsIChannel* aChannel) {
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-  MOZ_ASSERT(loadInfo);
-
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);

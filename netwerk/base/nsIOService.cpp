@@ -898,7 +898,7 @@ nsresult nsIOService::NewChannelFromURIWithProxyFlagsInternal(
                             aLoadingNode, aSecurityFlags, aContentPolicyType,
                             aLoadingClientInfo, aController);
   }
-  NS_ASSERTION(loadInfo, "Please pass security info when creating a channel");
+  MOZ_ASSERT(loadInfo, "Please pass security info when creating a channel");
   return NewChannelFromURIWithProxyFlagsInternal(aURI, aProxyURI, aProxyFlags,
                                                  loadInfo, result);
 }
@@ -921,21 +921,13 @@ nsresult nsIOService::NewChannelFromURIWithProxyFlagsInternal(
   rv = handler->DoGetProtocolFlags(aURI, &protoFlags);
   if (NS_FAILED(rv)) return rv;
 
-  // Ideally we are creating new channels by calling NewChannel2
-  // (NewProxiedChannel2). Keep in mind that Addons can implement their own
-  // Protocolhandlers, hence NewChannel2() might *not* be implemented. We do not
-  // want to break those addons, therefore we first try to create a channel
-  // calling NewChannel2(); if that fails:
-  // * we fall back to creating a channel by calling NewChannel()
-  // * wrap the addon channel
-  // * and attach the loadInfo to the channel wrapper
   nsCOMPtr<nsIChannel> channel;
   nsCOMPtr<nsIProxiedProtocolHandler> pph = do_QueryInterface(handler);
   if (pph) {
     rv = pph->NewProxiedChannel2(aURI, nullptr, aProxyFlags, aProxyURI,
                                  aLoadInfo, getter_AddRefs(channel));
   } else {
-    rv = handler->NewChannel2(aURI, aLoadInfo, getter_AddRefs(channel));
+    rv = handler->NewChannel(aURI, aLoadInfo, getter_AddRefs(channel));
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -943,7 +935,7 @@ nsresult nsIOService::NewChannelFromURIWithProxyFlagsInternal(
   if (aLoadInfo) {
     // make sure we have the same instance of loadInfo on the newly created
     // channel
-    nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
+    nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
     if (aLoadInfo != loadInfo) {
       MOZ_ASSERT(false, "newly created channel must have a loadinfo attached");
       return NS_ERROR_UNEXPECTED;
@@ -1717,11 +1709,8 @@ IOServiceProxyCallback::OnProxyAvailable(nsICancelable *request,
       do_QueryInterface(handler);
   if (!speculativeHandler) return NS_OK;
 
-  nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
-  nsCOMPtr<nsIPrincipal> principal;
-  if (loadInfo) {
-    principal = loadInfo->LoadingPrincipal();
-  }
+  nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+  nsCOMPtr<nsIPrincipal> principal = loadInfo->LoadingPrincipal();
 
   nsLoadFlags loadFlags = 0;
   channel->GetLoadFlags(&loadFlags);

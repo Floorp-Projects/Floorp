@@ -1255,10 +1255,8 @@ nsresult Predictor::Prefetch(nsIURI *uri, nsIURI *referrer,
     return rv;
   }
 
-  nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
-  if (loadInfo) {
-    rv = loadInfo->SetOriginAttributes(originAttributes);
-  }
+  nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+  rv = loadInfo->SetOriginAttributes(originAttributes);
 
   if (NS_FAILED(rv)) {
     PREDICTOR_LOG(
