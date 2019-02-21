@@ -223,6 +223,14 @@ test_description_schema = Schema({
         'test-platform', 'project',
         Any(bool, 'both')),
 
+    # Whether to run this task with the socket process enabled (desktop-test
+    # only).  If 'both', run one task with and one task without.  Tasks with
+    # this enabled have have "-spi" appended to the test name and treeherder
+    # group.
+    Optional('socketprocess-e10s'): optionally_keyed_by(
+        'test-platform', 'project',
+        Any(bool, 'both')),
+
     # Whether the task should run with WebRender enabled or not.
     Optional('webrender'): bool,
 
@@ -484,6 +492,7 @@ def set_defaults(config, tests):
         test.setdefault('docker-image', {'in-tree': 'desktop1604-test'})
         test.setdefault('checkout', False)
         test.setdefault('serviceworker-e10s', False)
+        test.setdefault('socketprocess-e10s', False)
         test.setdefault('require-signed-extensions', False)
 
         test['mozharness'].setdefault('extra-options', [])
@@ -725,6 +734,7 @@ def handle_keyed_by(config, tests):
         'chunks',
         'serviceworker-e10s',
         'e10s',
+        'socketprocess-e10s',
         'suite',
         'run-on-projects',
         'os-groups',
@@ -854,6 +864,10 @@ def handle_run_on_projects(config, tests):
 @transforms.add
 def split_serviceworker_e10s(config, tests):
     for test in tests:
+        if test['attributes'].get('socketprocess_e10s'):
+            yield test
+            continue
+
         sw = test.pop('serviceworker-e10s')
 
         test['serviceworker-e10s'] = False
@@ -909,6 +923,39 @@ def split_e10s(config, tests):
                         test['mozharness']['extra-options'][i] += '-e10s'
             else:
                 test['mozharness']['extra-options'].append('--e10s')
+        yield test
+
+
+@transforms.add
+def split_socketprocess_e10s(config, tests):
+    for test in tests:
+        if test['attributes'].get('serviceworker_e10s'):
+            yield test
+            continue
+
+        sw = test.pop('socketprocess-e10s')
+
+        test['socketprocess-e10s'] = False
+        test['attributes']['socketprocess_e10s'] = False
+
+        if sw == 'both':
+            yield copy.deepcopy(test)
+            sw = True
+        if sw:
+            test['description'] += " with socket process enabled"
+            test['test-name'] += '-spi'
+            test['try-name'] += '-spi'
+            test['attributes']['socketprocess_e10s'] = True
+            group, symbol = split_symbol(test['treeherder-symbol'])
+            if group != '?':
+                group += '-spi'
+            else:
+                symbol += '-spi'
+            test['treeherder-symbol'] = join_symbol(group, symbol)
+            test['mozharness']['extra-options'].append(
+                '--setpref="media.peerconnection.mtransport_process=true"')
+            test['mozharness']['extra-options'].append(
+                '--setpref="network.process.enabled=true"')
         yield test
 
 
