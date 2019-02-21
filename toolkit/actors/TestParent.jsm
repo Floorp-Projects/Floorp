@@ -28,3 +28,4 @@ class TestParent extends JSWindowActorParent {
     return "TestParent";
   }
 }
+
