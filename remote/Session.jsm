@@ -60,21 +60,21 @@ class Session {
     }
   }
 
-  receiveMessage({ name, data }) {
+  receiveMessage({name, data}) {
+    const {id, result, event, error} = data;
+
     switch (name) {
-      case "remote-protocol:result":
-        this.connection.send({
-          id: data.id,
-          result: data.result,
-        });
-        break;
-      case "remote-protocol:event":
-        this.connection.send(data.event);
-        break;
-      case "remote-protocol:error":
-        const error = formatError(data.error, {stack: true});
-        this.connection.send({id: data.id, error});
-        break;
+    case "remote-protocol:result":
+      this.connection.send({id, result});
+      break;
+
+    case "remote-protocol:event":
+      this.connection.send(event);
+      break;
+
+    case "remote-protocol:error":
+      this.connection.send({id, error: formatError(error, {stack: true})});
+      break;
     }
   }
 }
