@@ -1786,8 +1786,45 @@ static bool InitializeLegacyNetscapeObject(JSContext* aCx,
   return JS_DefineFunctions(aCx, obj, EnablePrivilegeSpec);
 }
 
+struct MOZ_STACK_CLASS CompartmentFinderState {
+  explicit CompartmentFinderState(nsIPrincipal* aPrincipal)
+      : principal(aPrincipal), compartment(nullptr) {}
+
+  // Input: we look for a compartment which is same-origin with the
+  // given principal.
+  nsIPrincipal* principal;
+
+  // Output: We set this member if we find a compartment.
+  JS::Compartment* compartment;
+};
+
+static JS::CompartmentIterResult FindSameOriginCompartment(
+    JSContext* aCx, void* aData, JS::Compartment* aCompartment) {
+  auto* data = static_cast<CompartmentFinderState*>(aData);
+  MOZ_ASSERT(!data->compartment, "Why are we getting called?");
+
+  // If this compartment is not safe to share across globals, don't do
+  // anything with it; in particular we should not be getting a
+  // CompartmentPrivate from such a compartment, because it may be in
+  // the middle of being collected and its CompartmentPrivate may no
+  // longer be valid.
+  if (!js::IsSharableCompartment(aCompartment)) {
+    return JS::CompartmentIterResult::KeepGoing;
+  }
+
+  auto* compartmentPrivate = xpc::CompartmentPrivate::Get(aCompartment);
+  if (!compartmentPrivate->CanShareCompartmentWith(data->principal)) {
+    // Can't reuse this one, keep going.
+    return JS::CompartmentIterResult::KeepGoing;
+  }
+
+  // We have a winner!
+  data->compartment = aCompartment;
+  return JS::CompartmentIterResult::Stop;
+}
+
 static JS::RealmCreationOptions& SelectZone(
-    nsIPrincipal* aPrincipal, nsGlobalWindowInner* aNewInner,
+    JSContext* aCx, nsIPrincipal* aPrincipal, nsGlobalWindowInner* aNewInner,
     JS::RealmCreationOptions& aOptions) {
   // Use the shared system compartment for chrome windows.
   if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
@@ -1805,6 +1842,14 @@ static JS::RealmCreationOptions& SelectZone(
 
     // If we have a top-level window, use its zone.
     if (top && top->GetGlobalJSObject()) {
+      JS::Zone* zone = JS::GetObjectZone(top->GetGlobalJSObject());
+      // Now try to find an existing compartment that's same-origin
+      // with our principal.
+      CompartmentFinderState data(aPrincipal);
+      JS_IterateCompartmentsInZone(aCx, zone, &data, FindSameOriginCompartment);
+      if (data.compartment) {
+        return aOptions.setExistingCompartment(data.compartment);
+      }
       return aOptions.setNewCompartmentInExistingZone(top->GetGlobalJSObject());
     }
   }
@@ -1834,7 +1879,7 @@ static nsresult CreateNativeGlobalForInner(JSContext* aCx,
 
   JS::RealmOptions options;
 
-  SelectZone(aPrincipal, aNewInner, options.creationOptions());
+  SelectZone(aCx, aPrincipal, aNewInner, options.creationOptions());
 
   options.creationOptions().setSecureContext(aIsSecureContext);
 
