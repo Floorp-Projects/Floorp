@@ -148,11 +148,14 @@ class ArtifactJob(object):
     _test_tar_archive_suffix = '.common.tests.tar.gz'
 
     def __init__(self, log=None,
+                 download_tests=True,
                  download_symbols=False,
                  download_host_bins=False,
                  substs=None):
         self._package_re = re.compile(self.package_re)
-        self._tests_re = re.compile(r'public/build/target\.common\.tests\.(zip|tar\.gz)')
+        self._tests_re = None
+        if download_tests:
+            self._tests_re = re.compile(r'public/build/target\.common\.tests\.(zip|tar\.gz)')
         self._host_bins_re = None
         if download_host_bins:
             self._host_bins_re = re.compile(r'public/build/host/bin/(mar|mbsdiff)(.exe)?')
@@ -899,17 +902,12 @@ class Artifacts(object):
 
     def __init__(self, tree, substs, defines, job=None, log=None,
                  cache_dir='.', hg=None, git=None, skip_cache=False,
-                 topsrcdir=None):
+                 topsrcdir=None, download_tests=True, download_symbols=False,
+                 download_host_bins=False):
         if (hg and git) or (not hg and not git):
             raise ValueError("Must provide path to exactly one of hg and git")
 
         self._substs = substs
-        self._download_symbols = self._substs.get('MOZ_ARTIFACT_BUILD_SYMBOLS', False)
-        # Host binaries are not produced for macOS consumers: that is, there's
-        # no macOS-hosted job to produce them at this time.  Therefore we
-        # enable this only for automation builds, which only require Linux and
-        # Windows host binaries.
-        self._download_host_bins = self._substs.get('MOZ_AUTOMATION', False)
         self._defines = defines
         self._tree = tree
         self._job = job or self._guess_artifact_job()
@@ -923,8 +921,9 @@ class Artifacts(object):
         try:
             cls = JOB_DETAILS[self._job]
             self._artifact_job = cls(log=self._log,
-                                     download_symbols=self._download_symbols,
-                                     download_host_bins=self._download_host_bins,
+                                     download_tests=download_tests,
+                                     download_symbols=download_symbols,
+                                     download_host_bins=download_host_bins,
                                      substs=self._substs)
         except KeyError:
             self.log(logging.INFO, 'artifact',
