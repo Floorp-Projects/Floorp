@@ -6,10 +6,7 @@
 
 UNIFIED_SOURCES += [
     'nsContentBlocker.cpp',
-]
-
-XPCOM_MANIFESTS += [
-    'components.conf',
+    'nsModuleFactory.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'

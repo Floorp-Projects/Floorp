@@ -30,6 +30,7 @@ if CONFIG['MOZ_GECKO_PROFILER']:
         'core/ProfilerMarkerPayload.cpp',
         'core/RegisteredThread.cpp',
         'gecko/ChildProfilerController.cpp',
+        'gecko/nsProfilerFactory.cpp',
         'gecko/nsProfilerStartParams.cpp',
         'gecko/ProfilerChild.cpp',
         'gecko/ProfilerIOInterposeObserver.cpp',
@@ -40,10 +41,6 @@ if CONFIG['MOZ_GECKO_PROFILER']:
         SOURCES += [
             'core/memory_hooks.cpp', # conflicts with platform.h class Thread
         ]
-
-    XPCOM_MANIFESTS += [
-        'gecko/components.conf',
-    ]
 
     if CONFIG['OS_TARGET'] == 'Darwin':
         # This file cannot be built in unified mode because it includes
