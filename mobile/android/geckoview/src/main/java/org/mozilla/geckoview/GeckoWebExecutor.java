@@ -54,7 +54,7 @@ public class GeckoWebExecutor {
     }
 
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({FETCH_FLAGS_NONE, FETCH_FLAGS_ANONYMOUS, FETCH_FLAGS_NO_REDIRECTS})
+    @IntDef({FETCH_FLAGS_NONE, FETCH_FLAGS_ANONYMOUS})
     public @interface FetchFlags {};
 
     /**
@@ -67,12 +67,6 @@ public class GeckoWebExecutor {
      */
     @WrapForJNI
     public static final int FETCH_FLAGS_ANONYMOUS = 1;
-
-    /**
-     * Don't automatically follow redirects.
-     */
-    @WrapForJNI
-    public static final int FETCH_FLAGS_NO_REDIRECTS = 1 << 1;
 
     /**
      * Create a new GeckoWebExecutor instance.
