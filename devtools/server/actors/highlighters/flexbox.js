@@ -62,8 +62,6 @@ const JUSTIFY_CONTENT = "justify-content";
  *
  * @param {String} options.color
  *        The color that should be used to draw the highlighter for this flexbox.
- * @param {Boolean} options.showAlignment
- *        Shows the alignment in the flexbox highlighter.
  * @param {Boolean} options.noCountainerOutline
  *        Prevent drawing an outline around the flex container.
  *
@@ -419,100 +417,6 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     }
   }
 
-  renderAlignItemLine() {
-    if (!this.options.showAlignment || !this.flexData ||
-        !this.currentQuads.content || !this.currentQuads.content[0]) {
-      return;
-    }
-
-    this.setupCanvas({
-      lineDash: FLEXBOX_LINES_PROPERTIES.alignItems.lineDash,
-      lineWidthMultiplier: 3,
-    });
-
-    const { bounds } = this.currentQuads.content[0];
-    const isColumn = this.flexDirection.startsWith("column");
-    const options = { matrix: this.currentMatrix };
-
-    for (const flexLine of this.flexData.lines) {
-      const { crossStart, crossSize } = flexLine;
-
-      switch (this.alignItemsValue) {
-        case "baseline":
-        case "first baseline":
-          const { firstBaselineOffset } = flexLine;
-
-          if (firstBaselineOffset < 0) {
-            break;
-          }
-
-          if (isColumn) {
-            drawLine(this.ctx, crossStart + firstBaselineOffset, 0,
-              crossStart + firstBaselineOffset, bounds.height, options);
-          } else {
-            drawLine(this.ctx, 0, crossStart + firstBaselineOffset, bounds.width,
-              crossStart + firstBaselineOffset, options);
-          }
-
-          this.ctx.stroke();
-          break;
-        case "center":
-          if (isColumn) {
-            drawLine(this.ctx, crossStart + crossSize / 2, 0, crossStart + crossSize / 2,
-              bounds.height, options);
-          } else {
-            drawLine(this.ctx, 0, crossStart + crossSize / 2, bounds.width,
-              crossStart + crossSize / 2, options);
-          }
-
-          this.ctx.stroke();
-          break;
-        case "flex-start":
-        case "start":
-          if (isColumn) {
-            drawLine(this.ctx, crossStart, 0, crossStart, bounds.height, options);
-          } else {
-            drawLine(this.ctx, 0, crossStart, bounds.width, crossStart, options);
-          }
-
-          this.ctx.stroke();
-          break;
-        case "flex-end":
-        case "end":
-          if (isColumn) {
-            drawLine(this.ctx, crossStart + crossSize, 0, crossStart + crossSize,
-              bounds.height, options);
-          } else {
-            drawLine(this.ctx, 0, crossStart + crossSize, bounds.width,
-              crossStart + crossSize, options);
-          }
-
-          this.ctx.stroke();
-          break;
-        case "stretch":
-          if (isColumn) {
-            drawLine(this.ctx, crossStart, 0, crossStart, bounds.height, options);
-            this.ctx.stroke();
-            drawLine(this.ctx, crossStart + crossSize, 0, crossStart + crossSize,
-              bounds.height, options);
-            this.ctx.stroke();
-          } else {
-            drawLine(this.ctx, 0, crossStart, bounds.width, crossStart, options);
-            this.ctx.stroke();
-            drawLine(this.ctx, 0, crossStart + crossSize, bounds.width,
-              crossStart + crossSize, options);
-            this.ctx.stroke();
-          }
-
-          break;
-        default:
-          break;
-      }
-    }
-
-    this.ctx.restore();
-  }
-
   renderFlexContainer() {
     if (!this.currentQuads.content || !this.currentQuads.content[0]) {
       return;
@@ -830,7 +734,6 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     this.renderFlexLines();
     this.renderJustifyContent();
     this.renderFlexItems();
-    this.renderAlignItemLine();
 
     this._showFlexbox();
 
