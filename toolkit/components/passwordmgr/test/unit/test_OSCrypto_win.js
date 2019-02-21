@@ -54,6 +54,9 @@ add_task(function test_decryptData_encryptData() {
                                                        key),
                                     key),
                  "https://bugzilla.mozilla.org/page.cgi");
+
+    Assert.equal(crypto.decryptData(crypto.encryptData("新年快樂新年快樂", key), key),
+                 "新年快樂新年快樂");
   }
 
   let keys = [null, "a", "keys", "abcdedf", "pass", "https://bugzilla.mozilla.org/page.cgi",
