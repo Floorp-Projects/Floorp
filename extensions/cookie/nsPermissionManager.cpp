@@ -44,7 +44,6 @@
 #include "nsIObserverService.h"
 #include "nsPrintfCString.h"
 #include "mozilla/AbstractThread.h"
-#include "ExpandedPrincipal.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ClearOnShutdown.h"
 
@@ -2271,16 +2270,14 @@ nsPermissionManager::TestPermissionOriginNoSuffix(
   // CommonPrepareToTestPermission to compute it for us based on aType.
   auto preparationResult = CommonPrepareToTestPermission(
       nullptr, -1, aType, aPermission, nsIPermissionManager::UNKNOWN_ACTION,
-      false);
-  if (preparationResult.mShouldContinue == eDone) {
-    return NS_OK;
+      false, false, true);
+  if (preparationResult.is<nsresult>()) {
+    return preparationResult.as<nsresult>();
   }
 
-  MOZ_ASSERT(!preparationResult.mPrincipal);
-
-  return CommonTestPermissionInternal(
-      nullptr, nullptr, aOriginNoSuffix, preparationResult.mTypeIndex, aType,
-      aPermission, preparationResult.mDefaultPermission, false, true);
+  return CommonTestPermissionInternal(nullptr, nullptr, aOriginNoSuffix,
+                                      preparationResult.as<int32_t>(), aType,
+                                      aPermission, false, true);
 }
 
 NS_IMETHODIMP
@@ -2374,36 +2371,14 @@ nsPermissionManager::GetPermissionObject(nsIPrincipal* aPrincipal,
 }
 
 nsresult nsPermissionManager::CommonTestPermissionInternal(
-    BasePrincipal* aPrincipal, nsIURI* aURI, const nsACString& aOriginNoSuffix,
+    nsIPrincipal* aPrincipal, nsIURI* aURI, const nsACString& aOriginNoSuffix,
     int32_t aTypeIndex, const char* aType, uint32_t* aPermission,
-    uint32_t aDefaultPermission, bool aExactHostMatch, bool aIncludingSession) {
+    bool aExactHostMatch, bool aIncludingSession) {
   MOZ_ASSERT(aPrincipal || aURI || !aOriginNoSuffix.IsEmpty());
   MOZ_ASSERT_IF(aPrincipal, !aURI && aOriginNoSuffix.IsEmpty());
   MOZ_ASSERT_IF(aURI, !aPrincipal && aOriginNoSuffix.IsEmpty());
   NS_ENSURE_ARG_POINTER(aPrincipal || aURI || !aOriginNoSuffix.IsEmpty());
   NS_ENSURE_ARG_POINTER(aType);
-
-  // For expanded principals, we want to iterate over the allowlist and see
-  // if the permission is granted for any of them.
-  if (aPrincipal && aPrincipal->Is<ExpandedPrincipal>()) {
-    auto ep = aPrincipal->As<ExpandedPrincipal>();
-    for (auto& prin : ep->AllowList()) {
-      uint32_t perm;
-      nsresult rv = CommonTestPermission(prin, aTypeIndex, aType, &perm,
-                                         aDefaultPermission, true,
-                                         aExactHostMatch, aIncludingSession);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (perm == nsIPermissionManager::ALLOW_ACTION) {
-        *aPermission = perm;
-        return NS_OK;
-      } else if (perm == nsIPermissionManager::PROMPT_ACTION) {
-        // Store it, but keep going to see if we can do better.
-        *aPermission = perm;
-      }
-    }
-
-    return NS_OK;
-  }
 
 #ifdef DEBUG
   {
