@@ -25,7 +25,7 @@ LOCAL_INCLUDES += [
 UNIFIED_SOURCES += [
     'MediaTransportHandler.cpp',
     'MediaTransportHandlerIPC.cpp',
-    'MediaTransportHandlerParent.cpp',
+    'MediaTransportParent.cpp',
     'PacketDumper.cpp',
     'PeerConnectionCtx.cpp',
     'PeerConnectionImpl.cpp',
