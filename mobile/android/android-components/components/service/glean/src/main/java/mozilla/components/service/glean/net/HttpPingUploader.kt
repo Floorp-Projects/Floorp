@@ -6,7 +6,6 @@ package mozilla.components.service.glean.net
 
 import android.support.annotation.VisibleForTesting
 import mozilla.components.service.glean.BuildConfig
-import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.support.base.log.logger.Logger
 import java.io.IOException
@@ -27,13 +26,14 @@ internal class HttpPingUploader : PingUploader {
 
     /**
      * Log the contents of a ping to the console, if configured to do so in
-     * config.logPings.
+     * [Configuration.logPings].
      *
      * @param path the URL path to append to the server address
      * @param data the serialized text data to send
+     * @param config the glean configuration object
      */
-    private fun logPing(path: String, data: String) {
-        if (Glean.configuration.logPings == true) {
+    private fun logPing(path: String, data: String, config: Configuration) {
+        if (config.logPings) {
             // Parse and reserialize the JSON so it has indentation and is human-readable.
             val indented = try {
                 val json = JSONObject(data)
@@ -56,6 +56,7 @@ internal class HttpPingUploader : PingUploader {
      *
      * @param path the URL path to append to the server address
      * @param data the serialized text data to send
+     * @param config the glean configuration object
      *
      * @return true if the ping was correctly dealt with (sent successfully
      *         or faced an unrecoverable error), false if there was a recoverable
@@ -63,7 +64,7 @@ internal class HttpPingUploader : PingUploader {
      */
     @Suppress("ReturnCount", "MagicNumber")
     override fun upload(path: String, data: String, config: Configuration): Boolean {
-        logPing(path, data)
+        logPing(path, data, config)
 
         var connection: HttpURLConnection? = null
         try {
