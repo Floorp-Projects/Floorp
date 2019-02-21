@@ -16,17 +16,22 @@
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/PerformanceMetricsCollector.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ProcInfo.h"
+#include "mozilla/RDDProcessManager.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/IdleDeadline.h"
 #include "mozilla/dom/JSWindowActorService.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ReportingHeader.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/WindowBinding.h"  // For IdleRequestCallback/Options
+#include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "IOActivityMonitor.h"
+#include "nsIOService.h"
 #include "nsThreadUtils.h"
 #include "mozJSComponentLoader.h"
 #include "GeckoProfiler.h"
@@ -640,6 +645,175 @@ static bool DefineGetter(JSContext* aCx, JS::Handle<JSObject*> aTarget,
   runtime->ClearRecentDevError();
 }
 #endif  // NIGHTLY_BUILD
+
+/* static */
+already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
+                                                       ErrorResult& aRv) {
+  // This function will use IPDL to enable threads info on macOS
+  // see https://bugzilla.mozilla.org/show_bug.cgi?id=1529023
+  if (!XRE_IsParentProcess()) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+  // Creating a JS promise
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  MOZ_ASSERT(global);
+  RefPtr<Promise> domPromise = Promise::Create(global, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+  MOZ_ASSERT(domPromise);
+
+  base::ProcessId parentPid = base::GetCurrentProcId();
+  RefPtr<nsISerialEventTarget> target =
+      global->EventTargetFor(TaskCategory::Performance);
+
+  // Getting the parent proc info
+  mozilla::GetProcInfo(parentPid, 0, mozilla::ProcType::Browser)
+      ->Then(
+          target, __func__,
+          [target, domPromise, parentPid](ProcInfo aParentInfo) {
+            // Iterate over each child process to build an array of promises.
+            nsTArray<ContentParent*> parents;
+            ContentParent::GetAll(parents);
+            nsTArray<RefPtr<ProcInfoPromise>> promises;
+            for (ContentParent* contentParent : parents) {
+              // Getting the child process id.
+              int32_t childPid = contentParent->Pid();
+              if (childPid == -1) {
+                continue;
+              }
+              // Converting the Content Type into a ProcType
+              nsAutoString processType;
+              processType.Assign(contentParent->GetRemoteType());
+              mozilla::ProcType type = mozilla::ProcType::Unknown;
+              if (processType.EqualsLiteral(DEFAULT_REMOTE_TYPE)) {
+                type = mozilla::ProcType::Web;
+              } else if (processType.EqualsLiteral(FILE_REMOTE_TYPE)) {
+                type = mozilla::ProcType::File;
+              } else if (processType.EqualsLiteral(EXTENSION_REMOTE_TYPE)) {
+                type = mozilla::ProcType::Extension;
+              } else if (processType.EqualsLiteral(PRIVILEGED_REMOTE_TYPE)) {
+                type = mozilla::ProcType::Privileged;
+              } else if (processType.EqualsLiteral(
+                             LARGE_ALLOCATION_REMOTE_TYPE)) {
+                type = mozilla::ProcType::WebLargeAllocation;
+              }
+
+              promises.AppendElement(mozilla::GetProcInfo(
+                  (base::ProcessId)childPid, contentParent->ChildID(), type));
+            }
+
+            // Getting the Socket Process
+            int32_t SocketPid = net::gIOService->SocketProcessPid();
+            if (SocketPid != 0) {
+              promises.AppendElement(mozilla::GetProcInfo(
+                  (base::ProcessId)SocketPid, 0, mozilla::ProcType::Socket));
+            }
+
+            // Getting the GPU and RDD processes on supported platforms
+            gfx::GPUProcessManager* pm = gfx::GPUProcessManager::Get();
+            if (pm) {
+              base::ProcessId GpuPid = pm->GPUProcessPid();
+              if (GpuPid != -1) {
+                promises.AppendElement(
+                    mozilla::GetProcInfo(GpuPid, 0, mozilla::ProcType::Gpu));
+              }
+            }
+            RDDProcessManager* RDDPm = RDDProcessManager::Get();
+            if (RDDPm) {
+              base::ProcessId RDDPid = RDDPm->RDDProcessPid();
+              if (RDDPid != -1) {
+                promises.AppendElement(
+                    mozilla::GetProcInfo(RDDPid, 0, mozilla::ProcType::Rdd));
+              }
+            }
+
+            // two more processes to add: VR and GMP
+            // see https://bugzilla.mozilla.org/show_bug.cgi?id=1529022
+
+            auto ProcInfoResolver =
+                [domPromise, parentPid, parentInfo = aParentInfo](
+                    const nsTArray<ProcInfo>& aChildrenInfo) {
+                  mozilla::dom::ParentProcInfoDictionary procInfo;
+                  // parent, basic info.
+                  procInfo.mPid = parentPid;
+                  procInfo.mFilename.Assign(parentInfo.filename);
+                  procInfo.mType = mozilla::dom::ProcType::Browser;
+                  procInfo.mVirtualMemorySize = parentInfo.virtualMemorySize;
+                  procInfo.mResidentSetSize = parentInfo.residentSetSize;
+                  procInfo.mCpuUser = parentInfo.cpuUser;
+                  procInfo.mCpuKernel = parentInfo.cpuKernel;
+
+                  // parent, threads info.
+                  mozilla::dom::Sequence<mozilla::dom::ThreadInfoDictionary>
+                      threads;
+                  for (const ThreadInfo& entry : parentInfo.threads) {
+                    ThreadInfoDictionary* thread =
+                        threads.AppendElement(fallible);
+                    if (NS_WARN_IF(!thread)) {
+                      domPromise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
+                      return;
+                    }
+                    thread->mCpuUser = entry.cpuUser;
+                    thread->mCpuKernel = entry.cpuKernel;
+                    thread->mTid = entry.tid;
+                  }
+                  procInfo.mThreads = threads;
+
+                  mozilla::dom::Sequence<mozilla::dom::ChildProcInfoDictionary>
+                      children;
+                  for (const ProcInfo& info : aChildrenInfo) {
+                    ChildProcInfoDictionary* childProcInfo =
+                        children.AppendElement(fallible);
+                    if (NS_WARN_IF(!childProcInfo)) {
+                      domPromise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
+                      return;
+                    }
+                    // Basic info.
+                    childProcInfo->mChildID = info.childId;
+                    childProcInfo->mType = static_cast<ProcType>(info.type);
+                    childProcInfo->mPid = info.pid;
+                    childProcInfo->mFilename.Assign(info.filename);
+                    childProcInfo->mVirtualMemorySize = info.virtualMemorySize;
+                    childProcInfo->mResidentSetSize = info.residentSetSize;
+                    childProcInfo->mCpuUser = info.cpuUser;
+                    childProcInfo->mCpuKernel = info.cpuKernel;
+
+                    // Threads info.
+                    mozilla::dom::Sequence<mozilla::dom::ThreadInfoDictionary>
+                        threads;
+                    for (const ThreadInfo& entry : info.threads) {
+                      ThreadInfoDictionary* thread =
+                          threads.AppendElement(fallible);
+                      if (NS_WARN_IF(!thread)) {
+                        domPromise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
+                        return;
+                      }
+                      thread->mCpuUser = entry.cpuUser;
+                      thread->mCpuKernel = entry.cpuKernel;
+                      thread->mTid = entry.tid;
+                      thread->mName.Assign(entry.name);
+                    }
+                    childProcInfo->mThreads = threads;
+                  }
+                  procInfo.mChildren = children;
+                  domPromise->MaybeResolve(procInfo);
+                };  // end of ProcInfoResolver
+
+            ProcInfoPromise::All(target, promises)
+                ->Then(target, __func__, std::move(ProcInfoResolver),
+                       [domPromise](const nsresult aResult) {
+                         domPromise->MaybeReject(aResult);
+                       });  // end of ProcInfoPromise::All
+          },
+          [domPromise](nsresult aRv) {
+            domPromise->MaybeReject(aRv);
+          });  // end of mozilla::GetProcInfo
+
+  // sending back the promise instance
+  return domPromise.forget();
+}
 
 /* static */
 already_AddRefed<Promise> ChromeUtils::RequestPerformanceMetrics(
