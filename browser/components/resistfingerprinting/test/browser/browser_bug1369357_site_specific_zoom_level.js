@@ -25,6 +25,8 @@ add_task(async function() {
 
   isnot(tab3Zoom, tab1Zoom, "privacy.resistFingerprinting is true, site-specific zoom level should be disabled");
 
+  await FullZoom.reset();
+
   BrowserTestUtils.removeTab(tab1);
   BrowserTestUtils.removeTab(tab2);
   BrowserTestUtils.removeTab(tab3);

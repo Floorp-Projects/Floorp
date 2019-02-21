@@ -180,7 +180,8 @@ static int32_t NS_lround(double x) {
   return x >= 0.0 ? int32_t(x + 0.5) : int32_t(x - 0.5);
 }
 
-already_AddRefed<DataSourceSurface> CloneAligned(DataSourceSurface *aSource) {
+static already_AddRefed<DataSourceSurface> CloneAligned(
+    DataSourceSurface *aSource) {
   return CreateDataSourceSurfaceByCloning(aSource);
 }
 
@@ -1813,7 +1814,7 @@ static void TransferComponents(
   }
 }
 
-bool IsAllZero(uint8_t aLookupTable[256]) {
+static bool IsAllZero(const uint8_t aLookupTable[256]) {
   for (int32_t i = 0; i < 256; i++) {
     if (aLookupTable[i] != 0) {
       return false;

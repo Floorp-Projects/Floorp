@@ -439,7 +439,7 @@ using mozilla::gfx::IntSize;
 using mozilla::gfx::SourceSurface;
 using mozilla::gfx::SurfaceFormat;
 
-void MacIOSurfaceBufferDeallocator(void* aClosure) {
+static void MacIOSurfaceBufferDeallocator(void* aClosure) {
   MOZ_ASSERT(aClosure);
 
   delete[] static_cast<unsigned char*>(aClosure);

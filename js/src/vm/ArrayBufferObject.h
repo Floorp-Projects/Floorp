@@ -175,12 +175,27 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   };
 
   enum BufferKind {
-    PLAIN = 0,  // malloced or inline data
-    WASM = 1,
-    MAPPED = 2,
-    EXTERNAL = 3,
+    /** Malloced or inline data. */
+    PLAIN_DATA = 0b000,
 
-    KIND_MASK = 0x3
+    /**
+     * User-owned memory.  The associated buffer must be manually detached
+     * before the user invalidates (deallocates, reuses the storage of, &c.)
+     * the user-owned memory.
+     */
+    USER_OWNED = 0b001,
+
+    WASM = 0b010,
+    MAPPED = 0b011,
+    EXTERNAL = 0b100,
+
+    // These kind-values are currently invalid.  We intend to expand valid
+    // BufferKinds in the future to either partly or fully use these values.
+    BAD1 = 0b101,
+    BAD2 = 0b110,
+    BAD3 = 0b111,
+
+    KIND_MASK = 0b111
   };
 
  protected:
@@ -188,7 +203,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     // The flags also store the BufferKind
     BUFFER_KIND_MASK = BufferKind::KIND_MASK,
 
-    DETACHED = 0x4,
+    DETACHED = 0b1000,
 
     // The dataPointer() is owned by this buffer and should be released
     // when no longer in use. Releasing the pointer may be done by freeing,
@@ -199,20 +214,15 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     // allocate their data inline, and buffers that are created lazily for
     // typed objects with inline storage, in which case the buffer points
     // directly to the typed object's storage.
-    OWNS_DATA = 0x8,
-
-    // This array buffer was created lazily for a typed object with inline
-    // data. This implies both that the typed object owns the buffer's data
-    // and that the list of views sharing this buffer's data might be
-    // incomplete. Any missing views will be typed objects.
-    FOR_INLINE_TYPED_OBJECT = 0x10,
+    OWNS_DATA = 0b1'0000,
 
     // Views of this buffer might include typed objects.
-    TYPED_OBJECT_VIEWS = 0x20,
+    TYPED_OBJECT_VIEWS = 0b10'0000,
 
-    // This PLAIN or WASM buffer has been prepared for asm.js and cannot
-    // henceforth be transferred/detached.
-    FOR_ASMJS = 0x40
+    // This PLAIN_DATA, MAPPED, or EXTERNAL buffer (only WASM and USER_OWNED
+    // are excluded) has been prepared for asm.js and cannot henceforth be
+    // transferred/detached.
+    FOR_ASMJS = 0b100'0000,
   };
 
   static_assert(JS_ARRAYBUFFER_DETACHED_FLAG == DETACHED,
@@ -248,8 +258,12 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
       return BufferContents(static_cast<uint8_t*>(data), Kind);
     }
 
-    static BufferContents createPlain(void* data) {
-      return BufferContents(static_cast<uint8_t*>(data), PLAIN);
+    static BufferContents createPlainData(void* data) {
+      return BufferContents(static_cast<uint8_t*>(data), PLAIN_DATA);
+    }
+
+    static BufferContents createUserOwned(void* data) {
+      return BufferContents(static_cast<uint8_t*>(data), USER_OWNED);
     }
 
     static BufferContents createExternal(void* data,
@@ -257,6 +271,10 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
                                          void* freeUserData = nullptr) {
       return BufferContents(static_cast<uint8_t*>(data), EXTERNAL, freeFunc,
                             freeUserData);
+    }
+
+    static BufferContents createFailed() {
+      return BufferContents(nullptr, PLAIN_DATA);
     }
 
     uint8_t* data() const { return data_; }
@@ -304,7 +322,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
                        Handle<ArrayBufferObject*> fromBuffer,
                        uint32_t fromIndex, uint32_t count);
 
-  static void trace(JSTracer* trc, JSObject* obj);
   static size_t objectMoved(JSObject* obj, JSObject* old);
 
   static BufferContents externalizeContents(JSContext* cx,
@@ -379,7 +396,10 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   BufferKind bufferKind() const {
     return BufferKind(flags() & BUFFER_KIND_MASK);
   }
-  bool isPlain() const { return bufferKind() == PLAIN; }
+
+  bool isPlainData() const { return bufferKind() == PLAIN_DATA; }
+  bool hasUserOwnedData() const { return bufferKind() == USER_OWNED; }
+
   bool isWasm() const { return bufferKind() == WASM; }
   bool isMapped() const { return bufferKind() == MAPPED; }
   bool isExternal() const { return bufferKind() == EXTERNAL; }
@@ -409,14 +429,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   static size_t offsetOfFlagsSlot() { return getFixedSlotOffset(FLAGS_SLOT); }
   static size_t offsetOfDataSlot() { return getFixedSlotOffset(DATA_SLOT); }
 
-  void setForInlineTypedObject() {
-    setFlags(flags() | FOR_INLINE_TYPED_OBJECT);
-  }
   void setHasTypedObjectViews() { setFlags(flags() | TYPED_OBJECT_VIEWS); }
-
-  bool forInlineTypedObject() const {
-    return flags() & FOR_INLINE_TYPED_OBJECT;
-  }
 
  protected:
   void setDataPointer(BufferContents contents, OwnsState ownsState);
@@ -433,7 +446,12 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   bool hasTypedObjectViews() const { return flags() & TYPED_OBJECT_VIEWS; }
 
   void setIsDetached() { setFlags(flags() | DETACHED); }
-  void setIsPreparedForAsmJS() { setFlags(flags() | FOR_ASMJS); }
+  void setIsPreparedForAsmJS() {
+    MOZ_ASSERT(!isWasm());
+    MOZ_ASSERT(!hasUserOwnedData());
+    MOZ_ASSERT(isPlainData() || isMapped() || isExternal());
+    setFlags(flags() | FOR_ASMJS);
+  }
 
   void initialize(size_t byteLength, BufferContents contents,
                   OwnsState ownsState) {
