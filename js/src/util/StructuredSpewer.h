@@ -145,6 +145,7 @@ class StructuredSpewer {
   // just before any attempte to write. This will ensure the file open is
   // attemped in the right place.
   bool outputInitializationAttempted_;
+
   Fprinter output_;
   mozilla::Maybe<JSONPrinter> json_;
 
@@ -164,8 +165,10 @@ class StructuredSpewer {
 
   // Call just before writes to the output are expected.
   //
-  // Avoids opening files that will remain empty.
-  void ensureInitializationAttempted();
+  // Avoids opening files that will remain empty
+  //
+  // Returns true iff we are able to write now.
+  bool ensureInitializationAttempted();
 
   void tryToInitializeOutput(const char* path);
 

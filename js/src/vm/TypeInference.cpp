@@ -4805,11 +4805,9 @@ void TypeZone::endSweep(JSRuntime* rt) {
 }
 
 void TypeZone::clearAllNewScriptsOnOOM() {
-  for (auto iter = zone()->cellIter<ObjectGroup>(); !iter.done(); iter.next()) {
-    ObjectGroup* group = iter;
-    if (!IsAboutToBeFinalizedUnbarriered(&group)) {
-      group->maybeClearNewScriptOnOOM();
-    }
+  for (auto group = zone()->cellIter<ObjectGroup>(); !group.done();
+       group.next()) {
+    group->maybeClearNewScriptOnOOM();
   }
 }
 

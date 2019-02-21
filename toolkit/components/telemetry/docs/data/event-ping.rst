@@ -16,7 +16,7 @@ The :doc:`Telemetry Environment <../data/environment>` is submitted in this ping
       "environment": { ... },
       "payload": {
         "reason": {periodic, max, shutdown}, // Why the ping was submitted
-        "processCreationTimestamp": <UNIX Timestamp>, // Minute precision, for calculating absolute time across pings
+        "processStartTimestamp": <UNIX Timestamp>, // Minute precision, for calculating absolute time across pings
         "sessionId": <UUID>, // For linking to "main" pings
         "subsessionId": <UUID>, // For linking to "main" pings
         "lostEventsCount": <number>, // How many events we had to drop. Valid only for reasons "max" and "shutdown"
@@ -56,14 +56,14 @@ The ``reason`` field contains the information about why the "event" ping was sub
 * ``shutdown``: The event ping was submitted because Firefox is shutting down and some events
   have yet to be submitted.
 
-processCreationTimestamp
-~~~~~~~~~~~~~~~~~~~~~~~~
+processStartTimestamp
+~~~~~~~~~~~~~~~~~~~~~
 The minute the user's Firefox main process was created. Event record timestamps are recorded
 relative to Firefox's main process start. This provides the basis for reconstructing a user's full
 session of events in order, as well as offering a mechanism for grouping event pings.
 
 sessionId
-~~~~~~~~~~~~
+~~~~~~~~~
 The id of the session that was current when the ping was sent.
 
 subsessionId

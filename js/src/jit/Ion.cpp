@@ -535,7 +535,7 @@ uint8_t* jit::LazyLinkTopActivation(JSContext* cx,
   }
 
   Zone* zone = trc->runtime()->atomsZone(access);
-  for (auto i = zone->cellIter<JitCode>(); !i.done(); i.next()) {
+  for (auto i = zone->cellIterUnsafe<JitCode>(); !i.done(); i.next()) {
     JitCode* code = i;
     TraceRoot(trc, &code, "wrapper");
   }

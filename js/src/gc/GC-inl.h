@@ -194,17 +194,17 @@ class ArenaCellIter : public ArenaCellIterImpl {
 };
 
 template <typename T>
-class ZoneCellIter;
+class ZoneAllCellIter;
 
 template <>
-class ZoneCellIter<TenuredCell> {
+class ZoneAllCellIter<TenuredCell> {
   ArenaIter arenaIter;
   ArenaCellIterImpl cellIter;
   mozilla::Maybe<JS::AutoAssertNoGC> nogc;
 
  protected:
   // For use when a subclass wants to insert some setup before init().
-  ZoneCellIter() {}
+  ZoneAllCellIter() {}
 
   void init(JS::Zone* zone, AllocKind kind) {
     MOZ_ASSERT_IF(IsNurseryAllocable(kind),
@@ -219,7 +219,7 @@ class ZoneCellIter<TenuredCell> {
     // If called from outside a GC, ensure that the heap is in a state
     // that allows us to iterate.
     if (!JS::RuntimeHeapIsBusy()) {
-      // Assert that no GCs can occur while a ZoneCellIter is live.
+      // Assert that no GCs can occur while a ZoneAllCellIter is live.
       nogc.emplace();
     }
 
@@ -239,7 +239,7 @@ class ZoneCellIter<TenuredCell> {
   }
 
  public:
-  ZoneCellIter(JS::Zone* zone, AllocKind kind) {
+  ZoneAllCellIter(JS::Zone* zone, AllocKind kind) {
     // If we are iterating a nursery-allocated kind then we need to
     // evict first so that we can see all things.
     if (IsNurseryAllocable(kind)) {
@@ -249,8 +249,8 @@ class ZoneCellIter<TenuredCell> {
     init(zone, kind);
   }
 
-  ZoneCellIter(JS::Zone* zone, AllocKind kind,
-               const js::gc::AutoAssertEmptyNursery&) {
+  ZoneAllCellIter(JS::Zone* zone, AllocKind kind,
+                  const js::gc::AutoAssertEmptyNursery&) {
     // No need to evict the nursery. (This constructor is known statically
     // to not GC.)
     init(zone, kind);
@@ -299,10 +299,10 @@ class ZoneCellIter<TenuredCell> {
 //   }
 //
 // As this code demonstrates, you can use 'script' as if it were a JSScript*.
-// Its actual type is ZoneCellIter<JSScript>, but for most purposes it will
+// Its actual type is ZoneAllCellIter<JSScript>, but for most purposes it will
 // autoconvert to JSScript*.
 //
-// Note that in the JSScript case, ZoneCellIter is able to infer the AllocKind
+// Note that in the JSScript case, ZoneAllCellIter is able to infer the AllocKind
 // from the type 'JSScript', whereas in the JSObject case, the kind must be
 // given (because there are multiple AllocKinds for objects).
 //
@@ -322,11 +322,12 @@ class ZoneCellIter<TenuredCell> {
 // explicitly by passing in a trailing AutoAssertEmptyNursery argument.
 //
 // NOTE: This class can return items that are about to be swept/finalized.
-//       You shouldn't keep pointers to such items across GCs.
+//       You must not keep pointers to such items across GCs.  Use
+//       ZoneCellIter below to filter these out.
 //
 /* clang-format on */
 template <typename GCType>
-class ZoneCellIter : public ZoneCellIter<TenuredCell> {
+class ZoneAllCellIter : public ZoneAllCellIter<TenuredCell> {
  public:
   // Non-nursery allocated (equivalent to having an entry in
   // MapTypeToFinalizeKind). The template declaration here is to discard this
@@ -338,29 +339,70 @@ class ZoneCellIter : public ZoneCellIter<TenuredCell> {
   // If we later add a nursery allocable GCType with a single AllocKind, we
   // will want to add an overload of this constructor that does the right
   // thing (ie, it empties the nursery before iterating.)
-  explicit ZoneCellIter(JS::Zone* zone) : ZoneCellIter<TenuredCell>() {
+  explicit ZoneAllCellIter(JS::Zone* zone) : ZoneAllCellIter<TenuredCell>() {
     init(zone, MapTypeToFinalizeKind<GCType>::kind);
   }
 
   // Non-nursery allocated, nursery is known to be empty: same behavior as
   // above.
-  ZoneCellIter(JS::Zone* zone, const js::gc::AutoAssertEmptyNursery&)
-      : ZoneCellIter(zone) {}
+  ZoneAllCellIter(JS::Zone* zone, const js::gc::AutoAssertEmptyNursery&)
+      : ZoneAllCellIter(zone) {}
 
   // Arbitrary kind, which will be assumed to be nursery allocable (and
   // therefore the nursery will be emptied before iterating.)
-  ZoneCellIter(JS::Zone* zone, AllocKind kind)
-      : ZoneCellIter<TenuredCell>(zone, kind) {}
+  ZoneAllCellIter(JS::Zone* zone, AllocKind kind)
+      : ZoneAllCellIter<TenuredCell>(zone, kind) {}
 
   // Arbitrary kind, which will be assumed to be nursery allocable, but the
   // nursery is known to be empty already: same behavior as non-nursery types.
-  ZoneCellIter(JS::Zone* zone, AllocKind kind,
-               const js::gc::AutoAssertEmptyNursery& empty)
-      : ZoneCellIter<TenuredCell>(zone, kind, empty) {}
+  ZoneAllCellIter(JS::Zone* zone, AllocKind kind,
+                  const js::gc::AutoAssertEmptyNursery& empty)
+      : ZoneAllCellIter<TenuredCell>(zone, kind, empty) {}
 
-  GCType* get() const { return ZoneCellIter<TenuredCell>::get<GCType>(); }
+  GCType* get() const { return ZoneAllCellIter<TenuredCell>::get<GCType>(); }
   operator GCType*() const { return get(); }
   GCType* operator->() const { return get(); }
+};
+
+// Like the above class but filter out cells that are about to be finalized.
+template <typename T>
+class ZoneCellIter : public ZoneAllCellIter<T> {
+ public:
+  /*
+   * The same constructors as above.
+   */
+  explicit ZoneCellIter(JS::Zone* zone) : ZoneAllCellIter<T>(zone) {
+    skipDying();
+  }
+  ZoneCellIter(JS::Zone* zone, const js::gc::AutoAssertEmptyNursery& empty)
+      : ZoneAllCellIter<T>(zone, empty) {
+    skipDying();
+  }
+  ZoneCellIter(JS::Zone* zone, AllocKind kind)
+      : ZoneAllCellIter<T>(zone, kind) {
+    skipDying();
+  }
+  ZoneCellIter(JS::Zone* zone, AllocKind kind,
+               const js::gc::AutoAssertEmptyNursery& empty)
+      : ZoneAllCellIter<T>(zone, kind, empty) {
+    skipDying();
+  }
+
+  void next() {
+    ZoneAllCellIter<T>::next();
+    skipDying();
+  }
+
+ private:
+  void skipDying() {
+    while (!ZoneAllCellIter<T>::done()) {
+      T* current = ZoneAllCellIter<T>::get();
+      if (!IsAboutToBeFinalizedUnbarriered(&current)) {
+        return;
+      }
+      ZoneAllCellIter<T>::next();
+    }
+  }
 };
 
 } /* namespace gc */
