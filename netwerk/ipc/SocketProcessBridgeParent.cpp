@@ -8,9 +8,7 @@
 
 #include "mozilla/ipc/BackgroundParent.h"
 #include "SocketProcessChild.h"
-#ifdef MOZ_WEBRTC
-#include "signaling/src/peerconnection/MediaTransportHandlerParent.h"
-#endif
+#include "mozilla/dom/MediaTransportParent.h"
 
 namespace mozilla {
 namespace net {
@@ -62,7 +60,7 @@ void SocketProcessBridgeParent::DeferredDestroy() {
 dom::PMediaTransportParent*
 SocketProcessBridgeParent::AllocPMediaTransportParent() {
 #ifdef MOZ_WEBRTC
-  return new MediaTransportHandlerParent;
+  return new MediaTransportParent;
 #endif
   return nullptr;
 }
