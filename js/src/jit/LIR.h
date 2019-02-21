@@ -528,7 +528,6 @@ class LDefinition {
       case MIRType::BigInt:
       case MIRType::Object:
       case MIRType::ObjectOrNull:
-      case MIRType::RefOrNull:
         return LDefinition::OBJECT;
       case MIRType::Double:
         return LDefinition::DOUBLE;
