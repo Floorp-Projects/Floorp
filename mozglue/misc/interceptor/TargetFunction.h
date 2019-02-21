@@ -317,7 +317,7 @@ class MOZ_STACK_CLASS WritableTargetFunction final {
     mOffset += sizeof(int32_t);
   }
 
-#if defined(_M_X64)
+#if defined(_M_X64) || defined(_M_ARM64)
   void WriteLong(const uint32_t aValue) {
     if (!mLocalBytes.append(reinterpret_cast<const uint8_t*>(&aValue),
                             sizeof(uint32_t))) {
@@ -686,6 +686,18 @@ class MOZ_STACK_CLASS ReadOnlyTargetFunction final {
     return mTargetBytes->IsValidAtOffset(aOffset);
   }
 
+#if defined(_M_ARM64)
+
+  uint32_t ReadNextInstruction() {
+    mTargetBytes->EnsureLimit(mOffset + sizeof(uint32_t));
+    uint32_t instruction = *reinterpret_cast<const uint32_t*>(
+        mTargetBytes->GetLocalBytes() + mOffset);
+    mOffset += sizeof(uint32_t);
+    return instruction;
+  }
+
+#else
+
   uint8_t const& operator*() const {
     mTargetBytes->EnsureLimit(mOffset);
     return *(mTargetBytes->GetLocalBytes() + mOffset);
@@ -706,8 +718,6 @@ class MOZ_STACK_CLASS ReadOnlyTargetFunction final {
     return *this;
   }
 
-  uint32_t GetOffset() const { return mOffset; }
-
   uintptr_t ReadDisp32AsAbsolute() {
     mTargetBytes->EnsureLimit(mOffset + sizeof(int32_t));
     int32_t disp = *reinterpret_cast<const int32_t*>(
@@ -718,9 +728,15 @@ class MOZ_STACK_CLASS ReadOnlyTargetFunction final {
     return result;
   }
 
+#endif
+
+  uint32_t GetOffset() const { return mOffset; }
+
   uintptr_t OffsetToAbsolute(const uint8_t aOffset) const {
     return mTargetBytes->GetBase() + mOffset + aOffset;
   }
+
+  uintptr_t GetCurrentAbsolute() const { return OffsetToAbsolute(0); }
 
   /**
    * This method promotes the code referenced by this object to be writable.
