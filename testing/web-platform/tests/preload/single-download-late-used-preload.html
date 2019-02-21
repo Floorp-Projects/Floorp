@@ -9,11 +9,11 @@
     assert_equals(link.as, "image");
     link.addEventListener("load", () => {
         verifyPreloadAndRTSupport();
-        verifyNumberOfResourceTimingEntries("resources/square.png?pipe=trickle(d1)", 1);
+        verifyNumberOfDownloads("resources/square.png?pipe=trickle(d1)", 1);
         var img = document.createElement("img");
         img.src = "resources/square.png?pipe=trickle(d1)";
         img.onload = () => {
-            verifyLoadedAndNoDoubleDownload("resources/square.png?pipe=trickle(d1)");
+            verifyNumberOfDownloads("resources/square.png?pipe=trickle(d1)", 1);
             done();
         };
         document.body.appendChild(img);
