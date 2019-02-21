@@ -3638,7 +3638,6 @@ already_AddRefed<Promise> HTMLMediaElement::Play(ErrorResult& aRv) {
   if (AudioChannelAgentBlockedPlay()) {
     LOG(LogLevel::Debug, ("%p play blocked by AudioChannelAgent.", this));
     promise->MaybeReject(NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR);
-    DispatchEventsWhenPlayWasNotAllowed();
     return promise.forget();
   }
 
