@@ -85,10 +85,13 @@ INVALID_MANIFESTS = [{'apps': 'firefox',
                       'manifest': 'invalid_details_3'}]
 
 
-@pytest.mark.parametrize('app', ['firefox', 'chrome', 'geckoview'])
+@pytest.mark.parametrize('app', ['firefox', 'chrome', 'geckoview', 'refbrow', 'fenix'])
 def test_get_browser_test_list(app):
     test_list = get_browser_test_list(app)
-    assert len(test_list) > 0
+    if app != "fenix":
+        assert len(test_list) > 0
+    else:
+        assert len(test_list) == 0
 
 
 @pytest.mark.parametrize('test_details', VALID_MANIFESTS)
@@ -172,6 +175,24 @@ def test_get_raptor_test_list_override_page_timeout(create_args):
     assert len(test_list) == 1
     assert test_list[0]['name'] == 'raptor-tp6-google-firefox'
     assert test_list[0]['page_timeout'] == 9999
+
+
+def test_get_raptor_test_list_refbrow(create_args):
+    args = create_args(app="refbrow",
+                       test="raptor-speedometer")
+
+    test_list = get_raptor_test_list(args, mozinfo.os)
+    assert len(test_list) == 1
+    assert test_list[0]['name'] == 'raptor-speedometer-refbrow'
+
+
+def test_get_raptor_test_list_fenix(create_args):
+    args = create_args(app="fenix",
+                       test="raptor-speedometer")
+
+    test_list = get_raptor_test_list(args, mozinfo.os)
+    # we don't have any actual fenix tests yet
+    assert len(test_list) == 0
 
 
 if __name__ == '__main__':

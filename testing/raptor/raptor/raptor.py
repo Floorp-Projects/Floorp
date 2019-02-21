@@ -59,7 +59,7 @@ class Raptor(object):
     def __init__(self, app, binary, run_local=False, obj_path=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
                  symbols_path=None, host=None, power_test=False, is_release_build=False,
-                 debug_mode=False):
+                 debug_mode=False, activity=None):
 
         # Override the magic --host HOST_IP with the value of the environment variable.
         if host == 'HOST_IP':
@@ -88,6 +88,7 @@ class Raptor(object):
         self.post_startup_delay = 30000
         self.device = None
         self.profile_class = app
+        self.firefox_android_apps = ['fennec', 'geckoview', 'refbrow', 'fenix']
 
         # debug mode is currently only supported when running locally
         self.debug_mode = debug_mode if self.config['run_local'] else False
@@ -179,7 +180,7 @@ class Raptor(object):
         self.control_server.start()
 
         # for android we must make the control server available to the device
-        if self.config['app'] in ['geckoview', 'fennec'] and \
+        if self.config['app'] in self.firefox_android_apps and \
                 self.config['host'] in ('localhost', '127.0.0.1'):
             self.log.info("making the raptor control server port available to device")
             _tcp_port = "tcp:%s" % self.control_server.port
@@ -202,7 +203,7 @@ class Raptor(object):
         self.benchmark_port = int(self.benchmark.port)
 
         # for android we must make the benchmarks server available to the device
-        if self.config['app'] in ['geckoview', 'fennec'] and \
+        if self.config['app'] in self.firefox_android_apps and \
                 self.config['host'] in ('localhost', '127.0.0.1'):
             self.log.info("making the raptor benchmarks server port available to device")
             _tcp_port = "tcp:%s" % self.benchmark_port
@@ -218,13 +219,15 @@ class Raptor(object):
         self.profile.addons.install(self.raptor_webext)
 
         # on firefox we can get an addon id; chrome addon actually is just cmd line arg
-        if self.config['app'] in ['firefox', 'geckoview', 'fennec']:
+        try:
             self.webext_id = self.profile.addons.addon_details(self.raptor_webext)['id']
+        except AttributeError:
+            self.webext_id = None
 
     def remove_raptor_webext(self):
         # remove the raptor webext; as it must be reloaded with each subtest anyway
         self.log.info("removing webext %s" % self.raptor_webext)
-        if self.config['app'] in ['firefox', 'geckoview', 'fennec']:
+        if self.config['app'] in ['firefox', 'geckoview', 'fennec', 'refbrow', 'fenix']:
             self.profile.addons.remove_addon(self.webext_id)
 
         # for chrome the addon is just a list (appended to cmd line)
@@ -245,7 +248,7 @@ class Raptor(object):
         self.playback = get_playback(self.config, self.device)
 
         # for android we must make the playback server available to the device
-        if self.config['app'] == "geckoview" and self.config['host'] \
+        if self.config['app'] in self.firefox_android_apps and self.config['host'] \
                 in ('localhost', '127.0.0.1'):
             self.log.info("making the raptor playback server port available to device")
             _tcp_port = "tcp:8080"
@@ -313,9 +316,9 @@ class Raptor(object):
 
     def clean_up(self):
         self.control_server.stop()
-        if self.config['app'] not in ['geckoview', 'fennec']:
+        if self.config['app'] not in self.firefox_android_apps:
             self.runner.stop()
-        elif self.config['app'] in ['geckoview', 'fennec']:
+        elif self.config['app'] in self.firefox_android_apps:
             self.log.info('removing reverse socket connections')
             self.device.remove_socket_connections('reverse')
         else:
@@ -327,7 +330,7 @@ class RaptorDesktop(Raptor):
     def __init__(self, app, binary, run_local=False, obj_path=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
                  symbols_path=None, host=None, power_test=False, is_release_build=False,
-                 debug_mode=False):
+                 debug_mode=False, activity=None):
         Raptor.__init__(self, app, binary, run_local, obj_path, gecko_profile,
                         gecko_profile_interval, gecko_profile_entries, symbols_path,
                         host, power_test, is_release_build, debug_mode)
@@ -393,7 +396,7 @@ class RaptorDesktopFirefox(RaptorDesktop):
     def __init__(self, app, binary, run_local=False, obj_path=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
                  symbols_path=None, host=None, power_test=False, is_release_build=False,
-                 debug_mode=False):
+                 debug_mode=False, activity=None):
         RaptorDesktop.__init__(self, app, binary, run_local, obj_path, gecko_profile,
                                gecko_profile_interval, gecko_profile_entries, symbols_path,
                                host, power_test, is_release_build, debug_mode)
@@ -437,7 +440,7 @@ class RaptorDesktopChrome(RaptorDesktop):
     def __init__(self, app, binary, run_local=False, obj_path=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
                  symbols_path=None, host=None, power_test=False, is_release_build=False,
-                 debug_mode=False):
+                 debug_mode=False, activity=None):
         RaptorDesktop.__init__(self, app, binary, run_local, obj_path, gecko_profile,
                                gecko_profile_interval, gecko_profile_entries, symbols_path,
                                host, power_test, is_release_build, debug_mode)
@@ -473,13 +476,14 @@ class RaptorAndroid(Raptor):
     def __init__(self, app, binary, run_local=False, obj_path=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
                  symbols_path=None, host=None, power_test=False, is_release_build=False,
-                 debug_mode=False):
+                 debug_mode=False, activity=None):
         Raptor.__init__(self, app, binary, run_local, obj_path, gecko_profile,
                         gecko_profile_interval, gecko_profile_entries, symbols_path, host,
                         power_test, is_release_build, debug_mode)
 
         # on android, when creating the browser profile, we want to use a 'firefox' type profile
         self.profile_class = "firefox"
+        self.config['activity'] = activity
 
     def create_browser_handler(self):
         # create the android device handler; it gets initiated and sets up adb etc
@@ -552,7 +556,7 @@ class RaptorAndroid(Raptor):
             self.device.stop_application(self.config['binary'])
 
             self.device.launch_activity(self.config['binary'],
-                                        "GeckoViewActivity",
+                                        self.config['activity'],
                                         extra_args=extra_args,
                                         url='about:blank',
                                         e10s=True,
@@ -690,7 +694,8 @@ def main(args=sys.argv[1:]):
                           host=args.host,
                           power_test=args.power_test,
                           is_release_build=args.is_release_build,
-                          debug_mode=args.debug_mode)
+                          debug_mode=args.debug_mode,
+                          activity=args.activity)
 
     raptor.create_browser_profile()
     raptor.create_browser_handler()
