@@ -281,7 +281,7 @@ var LoginManagerContent = {
     let doc = form.ownerDocument;
     let win = doc.defaultView;
 
-    let formOrigin = LoginUtils._getPasswordOrigin(doc.documentURI);
+    let formOrigin = LoginHelper.getLoginOrigin(doc.documentURI);
     if (!formOrigin) {
       return Promise.reject("_getLoginDataFromParent: A form origin is required");
     }
@@ -306,7 +306,7 @@ var LoginManagerContent = {
     let form = LoginFormFactory.createFromField(aElement);
     let win = doc.defaultView;
 
-    let formOrigin = LoginUtils._getPasswordOrigin(doc.documentURI);
+    let formOrigin = LoginHelper.getLoginOrigin(doc.documentURI);
     let actionOrigin = LoginUtils._getActionOrigin(form);
 
     let messageManager = win.docShell.messageManager;
@@ -522,9 +522,9 @@ var LoginManagerContent = {
       log("fillForm: No input element specified");
       return;
     }
-    if (LoginUtils._getPasswordOrigin(topDocument.documentURI) != loginFormOrigin) {
+    if (LoginHelper.getLoginOrigin(topDocument.documentURI) != loginFormOrigin) {
       if (!inputElement ||
-          LoginUtils._getPasswordOrigin(inputElement.ownerDocument.documentURI) != loginFormOrigin) {
+          LoginHelper.getLoginOrigin(inputElement.ownerDocument.documentURI) != loginFormOrigin) {
         log("fillForm: The requested origin doesn't match the one form the",
             "document. This may mean we navigated to a document from a different",
             "site before we had a chance to indicate this change in the user",
@@ -552,7 +552,7 @@ var LoginManagerContent = {
     let doc = form.ownerDocument;
     let autofillForm = LoginHelper.autofillForms && !PrivateBrowsingUtils.isContentWindowPrivate(doc.defaultView);
 
-    let formOrigin = LoginUtils._getPasswordOrigin(doc.documentURI);
+    let formOrigin = LoginHelper.getLoginOrigin(doc.documentURI);
     LoginRecipesContent.cacheRecipes(formOrigin, doc.defaultView, recipes);
 
     this._fillForm(form, loginsFound, recipes, {autofillForm});
@@ -639,7 +639,7 @@ var LoginManagerContent = {
 
     let acForm = LoginFormFactory.createFromField(acInputField);
     let doc = acForm.ownerDocument;
-    let formOrigin = LoginUtils._getPasswordOrigin(doc.documentURI);
+    let formOrigin = LoginHelper.getLoginOrigin(doc.documentURI);
     let recipes = LoginRecipesContent.getRecipes(formOrigin, doc.defaultView);
 
     // Make sure the username field fillForm will use is the
@@ -935,7 +935,7 @@ var LoginManagerContent = {
       return;
     }
 
-    var hostname = LoginUtils._getPasswordOrigin(doc.documentURI);
+    var hostname = LoginHelper.getLoginOrigin(doc.documentURI);
     if (!hostname) {
       log("(form submission ignored -- invalid hostname)");
       return;
@@ -1396,7 +1396,7 @@ var LoginManagerContent = {
     let form = LoginFormFactory.createFromField(aField);
 
     let doc = aField.ownerDocument;
-    let formOrigin = LoginUtils._getPasswordOrigin(doc.documentURI);
+    let formOrigin = LoginHelper.getLoginOrigin(doc.documentURI);
     let recipes = LoginRecipesContent.getRecipes(formOrigin, doc.defaultView);
 
     return this._getFormFields(form, false, recipes);
@@ -1445,31 +1445,6 @@ var LoginManagerContent = {
 };
 
 var LoginUtils = {
-  /**
-   * Get the parts of the URL we want for identification.
-   * Strip out things like the userPass portion
-   */
-  _getPasswordOrigin(uriString, allowJS) {
-    var realm = "";
-    try {
-      var uri = Services.io.newURI(uriString);
-
-      if (allowJS && uri.scheme == "javascript") {
-        return "javascript:";
-      }
-
-      // Build this manually instead of using prePath to avoid including the userPass portion.
-      realm = uri.scheme + "://" + uri.displayHostPort;
-    } catch (e) {
-      // bug 159484 - disallow url types that don't support a hostPort.
-      // (although we handle "javascript:..." as a special case above.)
-      log("Couldn't parse origin for", uriString, e);
-      realm = null;
-    }
-
-    return realm;
-  },
-
   _getActionOrigin(form) {
     var uriString = form.action;
 
@@ -1478,7 +1453,7 @@ var LoginUtils = {
       uriString = form.baseURI;
     } // ala bug 297761
 
-    return this._getPasswordOrigin(uriString, true);
+    return LoginHelper.getLoginOrigin(uriString, true);
   },
 };
 
@@ -1699,7 +1674,7 @@ var LoginFormFactory = {
     }
 
     let formLike = FormLikeFactory.createFromField(aField);
-    formLike.action = LoginUtils._getPasswordOrigin(aField.ownerDocument.baseURI);
+    formLike.action = LoginHelper.getLoginOrigin(aField.ownerDocument.baseURI);
     log("Created non-form FormLike for rootElement:", aField.ownerDocument.documentElement);
 
     let state = LoginManagerContent.stateForDocument(formLike.ownerDocument);
