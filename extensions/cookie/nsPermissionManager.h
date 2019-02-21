@@ -268,7 +268,29 @@ class nsPermissionManager final : public nsIPermissionManager,
  private:
   virtual ~nsPermissionManager();
 
-  int32_t GetTypeIndex(const char* aTypeString, bool aAdd);
+  // Returns -1 on failure
+  int32_t GetTypeIndex(const char* aType, bool aAdd) {
+    for (uint32_t i = 0; i < mTypeArray.Length(); ++i) {
+      if (mTypeArray[i].Equals(aType)) {
+        return i;
+      }
+    }
+
+    if (!aAdd) {
+      // Not found, but that is ok - we were just looking.
+      return -1;
+    }
+
+    // This type was not registered before.
+    // append it to the array, without copy-constructing the string
+    nsCString* elem = mTypeArray.AppendElement();
+    if (!elem) {
+      return -1;
+    }
+
+    elem->Assign(aType);
+    return mTypeArray.Length() - 1;
+  }
 
   PermissionHashKey* GetPermissionHashKey(nsIPrincipal* aPrincipal,
                                           uint32_t aType, bool aExactHostMatch);
