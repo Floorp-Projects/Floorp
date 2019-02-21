@@ -19,11 +19,11 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/CryptoKey.h"
 #include "mozilla/dom/RTCCertificateBinding.h"
-#include "mtransport/dtlsidentity.h"
 #include "js/StructuredClone.h"
 #include "js/TypeDecls.h"
 
 namespace mozilla {
+class DtlsIdentity;
 namespace dom {
 
 class ObjectOrString;

@@ -12,6 +12,7 @@ namespace mozilla {
 
 class MediaTransportParent : public dom::PMediaTransportParent {
  public:
+#ifdef MOZ_WEBRTC
   MediaTransportParent();
   virtual ~MediaTransportParent();
 
@@ -57,6 +58,7 @@ class MediaTransportParent : public dom::PMediaTransportParent {
   // Hide the sigslot/MediaTransportHandler stuff from IPC.
   class Impl;
   std::unique_ptr<Impl> mImpl;
+#endif //MOZ_WEBRTC
 };
 }  // namespace mozilla
 #endif  //_MTRANSPORTHANDLER_PARENT_H__
