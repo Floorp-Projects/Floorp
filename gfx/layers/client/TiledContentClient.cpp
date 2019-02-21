@@ -24,19 +24,12 @@
 #include "mozilla/layers/ShadowLayers.h"  // for ShadowLayerForwarder
 #include "mozilla/layers/PaintThread.h"   // for PaintThread
 #include "TextureClientPool.h"
-#include "nsDebug.h"              // for NS_ASSERTION
 #include "nsISupportsImpl.h"      // for gfxContext::AddRef, etc
 #include "nsExpirationTracker.h"  // for nsExpirationTracker
 #include "nsMathUtils.h"          // for NS_lroundf
 #include "LayersLogging.h"
 #include "UnitTransforms.h"  // for TransformTo
 #include "mozilla/UniquePtr.h"
-
-// This is the minimum area that we deem reasonable to copy from the front
-// buffer to the back buffer on tile updates. If the valid region is smaller
-// than this, we just redraw it and save on the copy (and requisite
-// surface-locking involved).
-#define MINIMUM_TILE_COPY_AREA (1.f / 16.f)
 
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
 #  include "cairo.h"

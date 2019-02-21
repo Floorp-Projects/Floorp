@@ -11,7 +11,10 @@ UNIFIED_SOURCES += [
     'mozInlineSpellWordUtil.cpp',
     'mozPersonalDictionary.cpp',
     'mozSpellChecker.cpp',
-    'mozSpellCheckerFactory.cpp',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 FINAL_LIBRARY = 'xul'

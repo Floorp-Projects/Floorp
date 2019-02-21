@@ -36,12 +36,6 @@ using namespace js;
       uint32_t offset = uint32_t(obj->getFixedSlot(BYTEOFFSET_SLOT).toInt32());
       MOZ_ASSERT(offset <= INT32_MAX);
 
-      // We don't expose the underlying ArrayBuffer for typed objects,
-      // and we don't allow constructing a TypedObject from an arbitrary
-      // ArrayBuffer, so we should never have a TypedArray/DataView with
-      // a buffer that has TypedObject views.
-      MOZ_RELEASE_ASSERT(!buf.forInlineTypedObject());
-
       MOZ_ASSERT_IF(buf.dataPointer() == nullptr, offset == 0);
 
       // The data may or may not be inline with the buffer. The buffer

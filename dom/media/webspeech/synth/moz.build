@@ -38,8 +38,11 @@ if CONFIG['MOZ_WEBSPEECH']:
 
     if CONFIG['MOZ_WEBSPEECH_TEST_BACKEND']:
         UNIFIED_SOURCES += [
-            'test/FakeSynthModule.cpp',
             'test/nsFakeSynthServices.cpp'
+        ]
+
+        XPCOM_MANIFESTS += [
+            'test/components.conf',
         ]
 
     if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':

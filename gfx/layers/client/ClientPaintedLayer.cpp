@@ -147,10 +147,20 @@ void ClientPaintedLayer::RenderLayerWithReadback(ReadbackProcessor* aReadback) {
     MOZ_ASSERT(ctx);  // already checked the target above
 
     if (!gfxEnv::SkipRasterization()) {
-      ClientManager()->GetPaintedLayerCallback()(
-          this, ctx, iter.mDrawRegion, iter.mDrawRegion, state.mClip,
-          state.mRegionToInvalidate,
-          ClientManager()->GetPaintedLayerCallbackData());
+      if (!target->IsCaptureDT()) {
+        target->ClearRect(Rect());
+        if (target->IsValid()) {
+          ClientManager()->GetPaintedLayerCallback()(
+              this, ctx, iter.mDrawRegion, iter.mDrawRegion, state.mClip,
+              state.mRegionToInvalidate,
+              ClientManager()->GetPaintedLayerCallbackData());
+        }
+      } else {
+        ClientManager()->GetPaintedLayerCallback()(
+            this, ctx, iter.mDrawRegion, iter.mDrawRegion, state.mClip,
+            state.mRegionToInvalidate,
+            ClientManager()->GetPaintedLayerCallbackData());
+      }
     }
 
     ctx = nullptr;
