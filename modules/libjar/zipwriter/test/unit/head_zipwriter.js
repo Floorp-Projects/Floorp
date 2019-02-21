@@ -27,13 +27,13 @@ const PR_MSEC_PER_SEC  = 1000;
 
 const DATA_DIR = "data/";
 
-var ioSvc = Cc["@mozilla.org/network/io-service;1"]
-             .getService(Ci.nsIIOService);
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var ioSvc = Services.io;
 
 var ZipWriter = Components.Constructor("@mozilla.org/zipwriter;1",
-                                       "nsIZipWriter");
+  "nsIZipWriter");
 var ZipReader = Components.Constructor("@mozilla.org/libjar/zip-reader;1",
-                                       "nsIZipReader", "open");
+  "nsIZipReader", "open");
 
 var tmpDir = do_get_profile();
 var tmpFile = tmpDir.clone();

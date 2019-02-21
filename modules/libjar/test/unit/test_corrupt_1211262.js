@@ -8,7 +8,7 @@ function run_test() {
   var file = do_get_file("data/test_corrupt3.zip");
 
   var zipreader = Cc["@mozilla.org/libjar/zip-reader;1"].
-                  createInstance(Ci.nsIZipReader);
+    createInstance(Ci.nsIZipReader);
   zipreader.open(file);
 
   var failed = false;
@@ -16,7 +16,7 @@ function run_test() {
     let entry = zipreader.getEntry(entryPath);
     if (!entry.isDirectory) {
       try {
-        let inputStream = zipreader.getInputStream(entryPath);
+        zipreader.getInputStream(entryPath);
       } catch (e) {
         failed = true;
       }

@@ -7,21 +7,14 @@
  */
 
 
-const {classes: Cc,
-       interfaces: Ci,
-       results: Cr,
-       utils: Cu,
-       Constructor: ctor,
-       } = Components;
+const {Constructor: ctor} = Components;
 
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
-const ios = Cc["@mozilla.org/network/io-service;1"].
-                getService(Ci.nsIIOService);
-const dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-                getService(Ci.nsIProperties);
-const obs = Cc["@mozilla.org/observer-service;1"].
-                getService(Ci.nsIObserverService);
+const ios = Services.io;
+const dirSvc = Services.dirsvc;
+const obs = Services.obs;
 
 const nsIBinaryInputStream = ctor("@mozilla.org/binaryinputstream;1",
                                "nsIBinaryInputStream",
@@ -88,13 +81,13 @@ add_test(testAsync);
  * Basic test for nsIZipReader.
  */
 function testZipEntry() {
-    var uri = jarBase + "/inner40.zip";
-    var chan = NetUtil.newChannel({uri, loadUsingSystemPrincipal: true})
-                      .QueryInterface(Ci.nsIJARChannel);
-    var entry = chan.zipEntry;
-    Assert.ok(entry.CRC32 == 0x8b635486);
-    Assert.ok(entry.realSize == 184);
-    run_next_test();
+  var uri = jarBase + "/inner40.zip";
+  var chan = NetUtil.newChannel({uri, loadUsingSystemPrincipal: true})
+    .QueryInterface(Ci.nsIJARChannel);
+  var entry = chan.zipEntry;
+  Assert.ok(entry.CRC32 == 0x8b635486);
+  Assert.ok(entry.realSize == 184);
+  run_next_test();
 }
 
 add_test(testZipEntry);

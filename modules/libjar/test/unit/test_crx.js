@@ -19,7 +19,7 @@ function run_test() {
   let file = do_get_file("data/test_crx_dummy.crx");
 
   let zipreader = Cc["@mozilla.org/libjar/zip-reader;1"].
-                  createInstance(Ci.nsIZipReader);
+    createInstance(Ci.nsIZipReader);
   zipreader.open(file);
   // do crc stuff
   function check_archive_crc() {
@@ -27,7 +27,7 @@ function run_test() {
     return true;
   }
   Assert.ok(check_archive_crc());
-  let entries = zipreader.findEntries(null);
+  zipreader.findEntries(null);
   let stream = wrapInputStream(zipreader.getInputStream("modules/libjar/test/Makefile.in"));
   let dirstream = wrapInputStream(zipreader.getInputStream("modules/libjar/test/"));
   zipreader.close();

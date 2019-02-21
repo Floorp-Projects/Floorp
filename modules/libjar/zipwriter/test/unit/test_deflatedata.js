@@ -41,7 +41,7 @@ function run_test() {
 
   zipR.test(FILENAME);
 
-  var stream = Cc["@mozilla.org/scriptableinputstream;1"]
+  stream = Cc["@mozilla.org/scriptableinputstream;1"]
                 .createInstance(Ci.nsIScriptableInputStream);
   stream.init(zipR.getInputStream(FILENAME));
   var result = stream.read(DATA.length);

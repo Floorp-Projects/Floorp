@@ -29,7 +29,7 @@ function run_test() {
 
   zipW.open(tmpFile, PR_RDWR);
 
-  for (var i = 0; i < TESTS.length; i++) {
+  for (let i = 0; i < TESTS.length; i++) {
     Assert.ok(zipW.hasEntry(TESTS[i].name));
     var entry = zipW.getEntry(TESTS[i].name);
     Assert.ok(entry != null);
@@ -46,7 +46,7 @@ function run_test() {
     Assert.equal(e.result, Cr.NS_ERROR_FILE_NOT_FOUND);
   }
 
-  for (var i = 0; i < TESTS.length; i++) {
+  for (let i = 0; i < TESTS.length; i++) {
     zipW.removeEntry(TESTS[i].name, false);
   }
 

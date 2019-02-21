@@ -39,10 +39,10 @@ function run_test() {
   Assert.ok(!zipW.inQueue);
 
   var stream = Cc["@mozilla.org/io/string-input-stream;1"]
-                .createInstance(Ci.nsIStringInputStream);
+    .createInstance(Ci.nsIStringInputStream);
   stream.setData(DATA, DATA.length);
   zipW.addEntryStream(FILENAME, time * PR_USEC_PER_MSEC,
-                      Ci.nsIZipWriter.COMPRESSION_BEST, stream, false);
+    Ci.nsIZipWriter.COMPRESSION_BEST, stream, false);
 
   // Check that zip state is right at this stage.
   testpass(zipW);
@@ -57,8 +57,8 @@ function run_test() {
   var zipR = new ZipReader(tmpFile);
   testpass(zipR);
   zipR.test(FILENAME);
-  var stream = Cc["@mozilla.org/scriptableinputstream;1"]
-                .createInstance(Ci.nsIScriptableInputStream);
+  stream = Cc["@mozilla.org/scriptableinputstream;1"]
+    .createInstance(Ci.nsIScriptableInputStream);
   stream.init(zipR.getInputStream(FILENAME));
   var result = stream.read(DATA.length);
   stream.close();
