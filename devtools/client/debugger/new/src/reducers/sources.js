@@ -378,6 +378,17 @@ export function getSourceFromId(state: OuterState, id: string): Source {
   return source;
 }
 
+export function getSourceByActorId(state: OuterState, actorId: string): Source {
+  // We don't index the sources by actor IDs, so this method should be used
+  // sparingly.
+  for (const source of Object.values(getSources(state))) {
+    if (source.actors.some(({ actor }) => actor == actorId)) {
+      return source;
+    }
+  }
+  return null;
+}
+
 export function getSourcesByURLInSources(
   sources: SourcesMap,
   urls: UrlsMap,
