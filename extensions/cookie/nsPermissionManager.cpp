@@ -2131,7 +2131,7 @@ nsPermissionManager::RemoveAllSince(int64_t aSince) {
 
 template <class T>
 nsresult nsPermissionManager::RemovePermissionEntries(T aCondition) {
-  AutoTArray<Pair<nsCOMPtr<nsIPrincipal>, nsCString>, 10> array;
+  Vector<Pair<nsCOMPtr<nsIPrincipal>, nsCString>, 10> array;
   for (auto iter = mPermissionTable.Iter(); !iter.Done(); iter.Next()) {
     PermissionHashKey* entry = iter.Get();
     for (const auto& permEntry : entry->GetPermissions()) {
@@ -2146,15 +2146,15 @@ nsresult nsPermissionManager::RemovePermissionEntries(T aCondition) {
         continue;
       }
 
-      array.AppendElement(
-          MakePair(principal, mTypeArray.ElementAt(permEntry.mType)));
+      if (!array.emplaceBack(principal, mTypeArray[permEntry.mType])) {
+        continue;
+      }
     }
   }
 
-  for (size_t i = 0; i < array.Length(); ++i) {
+  for (auto& i : array) {
     // AddInternal handles removal, so let it do the work...
-    AddInternal(array[i].first(), array[i].second(),
-                nsIPermissionManager::UNKNOWN_ACTION, 0,
+    AddInternal(i.first(), i.second(), nsIPermissionManager::UNKNOWN_ACTION, 0,
                 nsIPermissionManager::EXPIRE_NEVER, 0, 0,
                 nsPermissionManager::eNotify, nsPermissionManager::eWriteToDB);
   }
@@ -2372,9 +2372,9 @@ nsPermissionManager::GetPermissionObject(nsIPrincipal* aPrincipal,
   NS_ENSURE_SUCCESS(rv, rv);
 
   PermissionEntry& perm = entry->GetPermissions()[idx];
-  nsCOMPtr<nsIPermission> r = nsPermission::Create(
-      principal, mTypeArray.ElementAt(perm.mType), perm.mPermission,
-      perm.mExpireType, perm.mExpireTime);
+  nsCOMPtr<nsIPermission> r =
+      nsPermission::Create(principal, mTypeArray[perm.mType], perm.mPermission,
+                           perm.mExpireType, perm.mExpireTime);
   if (NS_WARN_IF(!r)) {
     return NS_ERROR_FAILURE;
   }
@@ -2642,7 +2642,7 @@ NS_IMETHODIMP nsPermissionManager::GetAllWithTypePrefix(
       }
 
       if (!aPrefix.IsEmpty() &&
-          !StringBeginsWith(mTypeArray.ElementAt(permEntry.mType), aPrefix)) {
+          !StringBeginsWith(mTypeArray[permEntry.mType], aPrefix)) {
         continue;
       }
 
@@ -2654,8 +2654,8 @@ NS_IMETHODIMP nsPermissionManager::GetAllWithTypePrefix(
       }
 
       RefPtr<nsIPermission> permission = nsPermission::Create(
-          principal, mTypeArray.ElementAt(permEntry.mType),
-          permEntry.mPermission, permEntry.mExpireType, permEntry.mExpireTime);
+          principal, mTypeArray[permEntry.mType], permEntry.mPermission,
+          permEntry.mExpireType, permEntry.mExpireTime);
       if (NS_WARN_IF(!permission)) {
         continue;
       }
@@ -2700,8 +2700,8 @@ nsPermissionManager::GetAllForPrincipal(nsIPrincipal* aPrincipal,
       }
 
       nsCOMPtr<nsIPermission> permission = nsPermission::Create(
-          aPrincipal, mTypeArray.ElementAt(permEntry.mType),
-          permEntry.mPermission, permEntry.mExpireType, permEntry.mExpireTime);
+          aPrincipal, mTypeArray[permEntry.mType], permEntry.mPermission,
+          permEntry.mExpireType, permEntry.mExpireTime);
       if (NS_WARN_IF(!permission)) {
         continue;
       }
@@ -2755,7 +2755,7 @@ nsPermissionManager::RemovePermissionsWithAttributes(
 
 nsresult nsPermissionManager::RemovePermissionsWithAttributes(
     mozilla::OriginAttributesPattern& aPattern) {
-  AutoTArray<Pair<nsCOMPtr<nsIPrincipal>, nsCString>, 10> permissions;
+  Vector<Pair<nsCOMPtr<nsIPrincipal>, nsCString>, 10> permissions;
   for (auto iter = mPermissionTable.Iter(); !iter.Done(); iter.Next()) {
     PermissionHashKey* entry = iter.Get();
 
@@ -2771,14 +2771,14 @@ nsresult nsPermissionManager::RemovePermissionsWithAttributes(
     }
 
     for (const auto& permEntry : entry->GetPermissions()) {
-      permissions.AppendElement(
-          MakePair(principal, mTypeArray.ElementAt(permEntry.mType)));
+      if (!permissions.emplaceBack(principal, mTypeArray[permEntry.mType])) {
+        continue;
+      }
     }
   }
 
-  for (size_t i = 0; i < permissions.Length(); ++i) {
-    AddInternal(permissions[i].first(), permissions[i].second(),
-                nsIPermissionManager::UNKNOWN_ACTION, 0,
+  for (auto& i : permissions) {
+    AddInternal(i.first(), i.second(), nsIPermissionManager::UNKNOWN_ACTION, 0,
                 nsIPermissionManager::EXPIRE_NEVER, 0, 0,
                 nsPermissionManager::eNotify, nsPermissionManager::eWriteToDB);
   }
@@ -2792,7 +2792,7 @@ nsresult nsPermissionManager::RemovePermissionsWithAttributes(
 
 nsresult nsPermissionManager::RemoveAllFromMemory() {
   mLargestID = 0;
-  mTypeArray.Clear();
+  mTypeArray.clear();
   mPermissionTable.Clear();
 
   return NS_OK;
@@ -3223,10 +3223,10 @@ nsPermissionManager::GetPermissionsWithKey(const nsACString& aPermissionKey,
       bool isPreload = IsPreloadPermission(mTypeArray[permEntry.mType].get());
       if ((isPreload && aPermissionKey.IsEmpty()) ||
           (!isPreload && aPermissionKey == permissionKey)) {
-        aPerms.AppendElement(IPC::Permission(
-            entry->GetKey()->mOrigin, mTypeArray.ElementAt(permEntry.mType),
-            permEntry.mPermission, permEntry.mExpireType,
-            permEntry.mExpireTime));
+        aPerms.AppendElement(
+            IPC::Permission(entry->GetKey()->mOrigin,
+                            mTypeArray[permEntry.mType], permEntry.mPermission,
+                            permEntry.mExpireType, permEntry.mExpireTime));
       }
     }
   }
