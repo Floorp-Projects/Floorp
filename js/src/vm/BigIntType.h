@@ -191,6 +191,11 @@ class BigInt final : public js::gc::TenuredCell {
   static bool lessThan(JSContext* cx, HandleValue lhs, HandleValue rhs,
                        mozilla::Maybe<bool>& res);
 
+#if defined(DEBUG) || defined(JS_JITSPEW)
+  void dump();  // Debugger-friendly stderr dump.
+  void dump(js::GenericPrinter& out);
+#endif
+
  private:
   static constexpr size_t DigitBits = sizeof(Digit) * CHAR_BIT;
   static constexpr size_t HalfDigitBits = DigitBits / 2;
