@@ -79,17 +79,19 @@ class nsPermissionManager final : public nsIPermissionManager,
     static PermissionKey* CreateFromOriginNoSuffix(
         const nsACString& aOriginNoSuffix);
 
-    explicit PermissionKey(const nsACString& aOrigin) : mOrigin(aOrigin) {}
+    explicit PermissionKey(const nsACString& aOrigin)
+        : mOrigin(aOrigin), mHashCode(mozilla::HashString(aOrigin)) {}
 
     bool operator==(const PermissionKey& aKey) const {
       return mOrigin.Equals(aKey.mOrigin);
     }
 
-    PLDHashNumber GetHashCode() const { return mozilla::HashString(mOrigin); }
+    PLDHashNumber GetHashCode() const { return mHashCode; }
 
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PermissionKey)
 
-    nsCString mOrigin;
+    const nsCString mOrigin;
+    const PLDHashNumber mHashCode;
 
    private:
     // Default ctor shouldn't be used.
