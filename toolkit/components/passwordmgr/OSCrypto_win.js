@@ -174,9 +174,8 @@ OSCrypto.prototype = {
     let len = outData.cbData;
     let decrypted = ctypes.cast(outData.pbData,
                                 wintypes.BYTE.array(len).ptr).contents;
-    for (let i = 0; i < decrypted.length; i++) {
-      decryptedData += String.fromCharCode(decrypted[i]);
-    }
+    // Output that may include characters outside of the 0-255 (byte) range needs to use TextDecoder.
+    decryptedData = (new TextDecoder()).decode(new Uint8Array(decrypted));
 
     this._functions.get("LocalFree")(outData.pbData);
     return decryptedData;
@@ -191,9 +190,11 @@ OSCrypto.prototype = {
    */
   encryptData(data, entropy = null) {
     let encryptedData = "";
-    let decryptedData = wintypes.BYTE.array(data.length)(this.stringToArray(data));
+    // Input that may include characters outside of the 0-255 (byte) range needs to use TextEncoder.
+    let decryptedByteData = [...(new TextEncoder()).encode(data)];
+    let decryptedData = wintypes.BYTE.array(decryptedByteData.length)(decryptedByteData);
 
-    let inData = new this._structs.DATA_BLOB(data.length, decryptedData);
+    let inData = new this._structs.DATA_BLOB(decryptedData.length, decryptedData);
     let outData = new this._structs.DATA_BLOB();
     let entropyParam;
     if (!entropy) {
