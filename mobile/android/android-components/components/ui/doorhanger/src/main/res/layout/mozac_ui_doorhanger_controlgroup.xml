@@ -17,7 +17,8 @@
         android:layout_marginStart="0dp"
         android:importantForAccessibility="no"
         android:scaleType="center"
-        android:tint="#000000"
+        android:tint="?android:attr/textColorPrimary"
+        tools:tint="#000000"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:src="@android:drawable/ic_menu_camera" />
