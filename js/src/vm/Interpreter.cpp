@@ -871,29 +871,28 @@ JSType js::TypeOfObject(JSObject* obj) {
 }
 
 JSType js::TypeOfValue(const Value& v) {
-  if (v.isNumber()) {
-    return JSTYPE_NUMBER;
+  switch (v.type()) {
+    case ValueType::Double:
+    case ValueType::Int32:
+      return JSTYPE_NUMBER;
+    case ValueType::String:
+      return JSTYPE_STRING;
+    case ValueType::Null:
+      return JSTYPE_OBJECT;
+    case ValueType::Undefined:
+      return JSTYPE_UNDEFINED;
+    case ValueType::Object:
+      return TypeOfObject(&v.toObject());
+    case ValueType::Boolean:
+      return JSTYPE_BOOLEAN;
+    case ValueType::BigInt:
+      return JSTYPE_BIGINT;
+    case ValueType::Symbol:
+      return JSTYPE_SYMBOL;
+    case ValueType::Magic:
+    case ValueType::PrivateGCThing:
+      MOZ_CRASH("unexpected type");
   }
-  if (v.isString()) {
-    return JSTYPE_STRING;
-  }
-  if (v.isNull()) {
-    return JSTYPE_OBJECT;
-  }
-  if (v.isUndefined()) {
-    return JSTYPE_UNDEFINED;
-  }
-  if (v.isObject()) {
-    return TypeOfObject(&v.toObject());
-  }
-  if (v.isBoolean()) {
-    return JSTYPE_BOOLEAN;
-  }
-  if (v.isBigInt()) {
-    return JSTYPE_BIGINT;
-  }
-  MOZ_ASSERT(v.isSymbol());
-  return JSTYPE_SYMBOL;
 }
 
 bool js::CheckClassHeritageOperation(JSContext* cx, HandleValue heritage) {
