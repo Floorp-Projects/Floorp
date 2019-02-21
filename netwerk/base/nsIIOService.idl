@@ -101,12 +101,12 @@ interface nsIIOService : nsISupports
      * Keep in mind that URIs coming from a webpage should *never* use the
      * systemPrincipal as the loadingPrincipal.
      */
-    nsIChannel newChannelFromURI2(in nsIURI aURI,
-                                  in Node aLoadingNode,
-                                  in nsIPrincipal aLoadingPrincipal,
-                                  in nsIPrincipal aTriggeringPrincipal,
-                                  in unsigned long aSecurityFlags,
-                                  in unsigned long aContentPolicyType);
+    nsIChannel newChannelFromURI(in nsIURI aURI,
+                                 in Node aLoadingNode,
+                                 in nsIPrincipal aLoadingPrincipal,
+                                 in nsIPrincipal aTriggeringPrincipal,
+                                 in unsigned long aSecurityFlags,
+                                 in unsigned long aContentPolicyType);
 
     [noscript, nostdcall, notxpcom]
     nsresult NewChannelFromURIWithClientAndController(in nsIURI aURI,
@@ -120,22 +120,22 @@ interface nsIIOService : nsISupports
                                                       out nsIChannel aResult);
 
     /**
-     * Equivalent to newChannelFromURI2(aURI, aLoadingNode, ...)
+     * Equivalent to newChannelFromURI(aURI, aLoadingNode, ...)
      */
     nsIChannel newChannelFromURIWithLoadInfo(in nsIURI aURI,
                                              in nsILoadInfo aLoadInfo);
 
     /**
-     * Equivalent to newChannelFromURI2(newURI(...))
+     * Equivalent to newChannelFromURI(newURI(...))
      */
-    nsIChannel newChannel2(in AUTF8String aSpec,
-                           in string aOriginCharset,
-                           in nsIURI aBaseURI,
-                           in Node aLoadingNode,
-                           in nsIPrincipal aLoadingPrincipal,
-                           in nsIPrincipal aTriggeringPrincipal,
-                           in unsigned long aSecurityFlags,
-                           in unsigned long aContentPolicyType);
+    nsIChannel newChannel(in AUTF8String aSpec,
+                          in string aOriginCharset,
+                          in nsIURI aBaseURI,
+                          in Node aLoadingNode,
+                          in nsIPrincipal aLoadingPrincipal,
+                          in nsIPrincipal aTriggeringPrincipal,
+                          in unsigned long aSecurityFlags,
+                          in unsigned long aContentPolicyType);
 
     /**
      * Returns true if networking is in "offline" mode. When in offline mode, 
@@ -226,14 +226,14 @@ interface nsIIOService : nsISupports
      * then loadingPrincipal must be equal to loadingNode->NodePrincipal().
      * But less error prone is to just supply a loadingNode.
      */
-    nsIChannel newChannelFromURIWithProxyFlags2(in nsIURI aURI,
-                                                in nsIURI aProxyURI,
-                                                in unsigned long aProxyFlags,
-                                                in Node aLoadingNode,
-                                                in nsIPrincipal aLoadingPrincipal,
-                                                in nsIPrincipal aTriggeringPrincipal,
-                                                in unsigned long aSecurityFlags,
-                                                in unsigned long aContentPolicyType);
+    nsIChannel newChannelFromURIWithProxyFlags(in nsIURI aURI,
+                                               in nsIURI aProxyURI,
+                                               in unsigned long aProxyFlags,
+                                               in Node aLoadingNode,
+                                               in nsIPrincipal aLoadingPrincipal,
+                                               in nsIPrincipal aTriggeringPrincipal,
+                                               in unsigned long aSecurityFlags,
+                                               in unsigned long aContentPolicyType);
 };
 
 %{C++

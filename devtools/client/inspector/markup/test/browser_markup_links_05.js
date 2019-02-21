@@ -23,7 +23,7 @@ add_task(async function() {
 
   info("Follow the link and wait for the new tab to open");
   const onTabOpened = once(gBrowser.tabContainer, "TabOpen");
-  inspector.onFollowLink();
+  inspector.markup.contextMenu._onFollowLink();
   const {target: tab} = await onTabOpened;
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
@@ -43,7 +43,7 @@ add_task(async function() {
 
   info("Follow the link and wait for the new node to be selected");
   const onSelection = inspector.selection.once("new-node-front");
-  inspector.onFollowLink();
+  inspector.markup.contextMenu._onFollowLink();
   await onSelection;
 
   ok(true, "A new node was selected");
@@ -59,8 +59,8 @@ add_task(async function() {
   });
 
   info("Try to follow the link and check that no new node were selected");
-  const onFailed = inspector.once("idref-attribute-link-failed");
-  inspector.onFollowLink();
+  const onFailed = inspector.markup.once("idref-attribute-link-failed");
+  inspector.markup.contextMenu._onFollowLink();
   await onFailed;
 
   ok(true, "The node selection failed");

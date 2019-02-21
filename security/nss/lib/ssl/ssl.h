@@ -299,6 +299,17 @@ SSL_IMPORT PRFileDesc *DTLS_ImportFD(PRFileDesc *model, PRFileDesc *fd);
  * This is disabled by default and will be removed in a future version. */
 #define SSL_ENABLE_V2_COMPATIBLE_HELLO 38
 
+/* Enables the post-handshake authentication in TLS 1.3.  If it is set
+ * to PR_TRUE, the client will send the "post_handshake_auth"
+ * extension to indicate that it will process CertificateRequest
+ * messages after handshake.
+ *
+ * This option applies only to clients.  For a server, the
+ * SSL_SendCertificateRequest can be used to request post-handshake
+ * authentication.
+ */
+#define SSL_ENABLE_POST_HANDSHAKE_AUTH 39
+
 #ifdef SSL_DEPRECATED_FUNCTION
 /* Old deprecated function names */
 SSL_IMPORT SECStatus SSL_Enable(PRFileDesc *fd, int option, PRIntn on);

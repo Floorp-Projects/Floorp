@@ -301,12 +301,12 @@ var NetUtil = {
             contentPolicyType = Ci.nsIContentPolicy.TYPE_OTHER;
         }
 
-        return Services.io.newChannelFromURI2(uri,
-                                              loadingNode || null,
-                                              loadingPrincipal || null,
-                                              triggeringPrincipal || null,
-                                              securityFlags,
-                                              contentPolicyType);
+        return Services.io.newChannelFromURI(uri,
+                                             loadingNode || null,
+                                             loadingPrincipal || null,
+                                             triggeringPrincipal || null,
+                                             securityFlags,
+                                             contentPolicyType);
     },
 
     /**

@@ -9,6 +9,7 @@ DIRS += [
 ]
 
 DevToolsModules(
+    'markup-context-menu.js',
     'markup.js',
     'utils.js',
 )

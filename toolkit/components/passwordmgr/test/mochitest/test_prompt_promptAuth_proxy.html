@@ -103,14 +103,14 @@ var resolveCallback = SpecialPowers.wrapCallbackObject({
     // The proxyChannel needs to move to at least on-modify-request to
     // have valid ProxyInfo, but we use OnStartRequest during startup()
     // for simplicity.
-    proxyChannel = SpecialPowers.Services.io.newChannel2(proxiedHost,
-                                                         null,
-                                                         null,
-                                                         null, // aLoadingNode
-                                                         systemPrincipal,
-                                                         null, // aTriggeringPrincipal
-                                                         Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                                                         Ci.nsIContentPolicy.TYPE_OTHER);
+    proxyChannel = SpecialPowers.Services.io.newChannel(proxiedHost,
+                                                        null,
+                                                        null,
+                                                        null, // aLoadingNode
+                                                        systemPrincipal,
+                                                        null, // aTriggeringPrincipal
+                                                        Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                                                        Ci.nsIContentPolicy.TYPE_OTHER);
     proxyChannel.asyncOpen(SpecialPowers.wrapCallbackObject(new proxyChannelListener()));
   },
 });
@@ -119,14 +119,14 @@ function startup() {
   // Need to allow for arbitrary network servers defined in PAC instead of a hardcoded moz-proxy.
   var pps = SpecialPowers.Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
 
-  var channel = SpecialPowers.Services.io.newChannel2("http://example.com",
-                                                      null,
-                                                      null,
-                                                      null, // aLoadingNode
-                                                      systemPrincipal,
-                                                      null, // aTriggeringPrincipal
-                                                      Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                                                      Ci.nsIContentPolicy.TYPE_OTHER);
+  var channel = SpecialPowers.Services.io.newChannel("http://example.com",
+                                                     null,
+                                                     null,
+                                                     null, // aLoadingNode
+                                                     systemPrincipal,
+                                                     null, // aTriggeringPrincipal
+                                                     Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                                                     Ci.nsIContentPolicy.TYPE_OTHER);
   pps.asyncResolve(channel, 0, resolveCallback);
 }
 

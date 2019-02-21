@@ -168,6 +168,7 @@
             'cmd/pk11ectest/pk11ectest.gyp:pk11ectest',
             'cmd/pk11gcmtest/pk11gcmtest.gyp:pk11gcmtest',
             'cmd/pk11mode/pk11mode.gyp:pk11mode',
+            'cmd/pk11importtest/pk11importtest.gyp:pk11importtest',
             'cmd/pk1sign/pk1sign.gyp:pk1sign',
             'cmd/pp/pp.gyp:pp',
             'cmd/rsaperf/rsaperf.gyp:rsaperf',

@@ -252,7 +252,15 @@ dbtest_main()
     else
       html_passed "Nicknane conflict test-setting nickname conflict was correctly rejected"
     fi
-
+    # import a token private key and make sure the corresponding public key is 
+    # created
+    ${BINDIR}/pk11importtest -d ${CONFLICT_DIR} -f ${R_PWFILE}
+    ret=$?
+    if [ $ret -ne 0 ]; then
+      html_failed "Importing Token Private Key does not create the corrresponding Public Key"
+    else
+      html_passed "Importing Token Private Key correctly creates the corrresponding Public Key"
+    fi
 }
 
 ################## main #################################################

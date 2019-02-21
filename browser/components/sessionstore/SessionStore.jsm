@@ -1591,7 +1591,7 @@ var SessionStoreInternal = {
   onQuitApplicationGranted: function ssi_onQuitApplicationGranted(syncShutdown = false) {
     // Collect an initial snapshot of window data before we do the flush.
     let index = 0;
-    for (let window of this._browserWindows) {
+    for (let window of this._orderedBrowserWindows) {
       this._collectWindowData(window);
       this._windows[window.__SSi].zIndex = ++index;
     }
@@ -3416,7 +3416,7 @@ var SessionStoreInternal = {
     if (RunState.isRunning) {
       // update the data for all windows with activities since the last save operation.
       let index = 0;
-      for (let window of this._browserWindows) {
+      for (let window of this._orderedBrowserWindows) {
         if (!this._isWindowLoaded(window)) // window data is still in _statesToRestore
           continue;
         if (aUpdateAll || DirtyWindows.has(window) || window == activeWindow) {
@@ -4527,12 +4527,38 @@ var SessionStoreInternal = {
   },
 
   /**
-   * Iterator that yields all currently opened browser windows, in order.
+   * Iterator that yields all currently opened browser windows.
    * (Might miss the most recent one.)
+   * This list is in focus order, but may include minimized windows
+   * before non-minimized windows.
    */
   _browserWindows: {
     * [Symbol.iterator]() {
       for (let window of BrowserWindowTracker.orderedWindows) {
+        if (window.__SSi && !window.closed)
+          yield window;
+      }
+    },
+  },
+
+  /**
+   * Iterator that yields all currently opened browser windows,
+   * with minimized windows last.
+   * (Might miss the most recent window.)
+   */
+  _orderedBrowserWindows: {
+    * [Symbol.iterator]() {
+      let windows = BrowserWindowTracker.orderedWindows;
+      windows.sort((a, b) => {
+        if (a.windowState == a.STATE_MINIMIZED && b.windowState != b.STATE_MINIMIZED) {
+          return 1;
+        }
+        if (a.windowState != a.STATE_MINIMIZED && b.windowState == b.STATE_MINIMIZED) {
+          return -1;
+        }
+        return 0;
+      });
+      for (let window of windows) {
         if (window.__SSi && !window.closed)
           yield window;
       }

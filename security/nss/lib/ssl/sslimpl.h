@@ -272,6 +272,7 @@ typedef struct sslOptionsStr {
     unsigned int enableDtlsShortHeader : 1;
     unsigned int enableHelloDowngradeCheck : 1;
     unsigned int enableV2CompatibleHello : 1;
+    unsigned int enablePostHandshakeAuth : 1;
 } sslOptions;
 
 typedef enum { sslHandshakingUndetermined = 0,
@@ -622,8 +623,6 @@ typedef struct SSL3HandshakeStateStr {
     unsigned long msg_len;
     PRBool isResuming;  /* we are resuming (not used in TLS 1.3) */
     PRBool sendingSCSV; /* instead of empty RI */
-    sslBuffer msgState; /* current state for handshake messages*/
-                        /* protected by recvBufLock */
 
     /* The session ticket received in a NewSessionTicket message is temporarily
      * stored in newSessionTicket until the handshake is finished; then it is
@@ -744,10 +743,10 @@ struct ssl3StateStr {
      * update is initiated locally. */
     PRBool peerRequestedKeyUpdate;
 
-    /* Internal callback for when we do a cipher suite change. Used for
-     * debugging in TLS 1.3. This can only be set by non-public functions. */
-    sslCipherSpecChangedFunc changedCipherSpecFunc;
-    void *changedCipherSpecArg;
+    /* This is true after the server requests client certificate;
+     * false after the client certificate is received.  Used by the
+     * server. */
+    PRBool clientCertRequested;
 
     CERTCertificate *clientCertificate;   /* used by client */
     SECKEYPrivateKey *clientPrivateKey;   /* used by client */
@@ -994,6 +993,10 @@ struct sslSocketStr {
     PRCList extensionHooks;
     SSLResumptionTokenCallback resumptionTokenCallback;
     void *resumptionTokenContext;
+    SSLSecretCallback secretCallback;
+    void *secretCallbackArg;
+    SSLRecordWriteCallback recordWriteCallback;
+    void *recordWriteCallbackArg;
 
     PRIntervalTime rTimeout; /* timeout for NSPR I/O */
     PRIntervalTime wTimeout; /* timeout for NSPR I/O */
@@ -1174,7 +1177,7 @@ extern SECStatus ssl_SaveWriteData(sslSocket *ss,
                                    const void *p, unsigned int l);
 extern SECStatus ssl_BeginClientHandshake(sslSocket *ss);
 extern SECStatus ssl_BeginServerHandshake(sslSocket *ss);
-extern int ssl_Do1stHandshake(sslSocket *ss);
+extern SECStatus ssl_Do1stHandshake(sslSocket *ss);
 
 extern SECStatus ssl3_InitPendingCipherSpecs(sslSocket *ss, PK11SymKey *secret,
                                              PRBool derive);
@@ -1741,6 +1744,17 @@ SECStatus SSLExp_GetResumptionTokenInfo(const PRUint8 *tokenData, unsigned int t
                                         SSLResumptionTokenInfo *token, unsigned int version);
 
 SECStatus SSLExp_DestroyResumptionTokenInfo(SSLResumptionTokenInfo *token);
+
+SECStatus SSLExp_SecretCallback(PRFileDesc *fd, SSLSecretCallback cb,
+                                void *arg);
+SECStatus SSLExp_RecordLayerWriteCallback(PRFileDesc *fd,
+                                          SSLRecordWriteCallback write,
+                                          void *arg);
+SECStatus SSLExp_RecordLayerData(PRFileDesc *fd, PRUint16 epoch,
+                                 SSLContentType contentType,
+                                 const PRUint8 *data, unsigned int len);
+SECStatus SSLExp_GetCurrentEpoch(PRFileDesc *fd, PRUint16 *readEpoch,
+                                 PRUint16 *writeEpoch);
 
 #define SSLResumptionTokenVersion 2
 

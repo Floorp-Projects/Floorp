@@ -97,13 +97,7 @@ inline std::shared_ptr<T> MakeTlsFilter(const std::shared_ptr<TlsAgent>& agent,
 // Abstract filter that operates on entire (D)TLS records.
 class TlsRecordFilter : public PacketFilter {
  public:
-  TlsRecordFilter(const std::shared_ptr<TlsAgent>& a)
-      : agent_(a),
-        count_(0),
-        cipher_spec_(),
-        dropped_record_(false),
-        in_sequence_number_(0),
-        out_sequence_number_(0) {}
+  TlsRecordFilter(const std::shared_ptr<TlsAgent>& a);
 
   std::shared_ptr<TlsAgent> agent() const { return agent_.lock(); }
 
@@ -118,10 +112,11 @@ class TlsRecordFilter : public PacketFilter {
   // behavior.
   void EnableDecryption();
   bool Unprotect(const TlsRecordHeader& header, const DataBuffer& cipherText,
-                 uint8_t* inner_content_type, DataBuffer* plaintext);
-  bool Protect(const TlsRecordHeader& header, uint8_t inner_content_type,
-               const DataBuffer& plaintext, DataBuffer* ciphertext,
-               size_t padding = 0);
+                 uint16_t* protection_epoch, uint8_t* inner_content_type,
+                 DataBuffer* plaintext);
+  bool Protect(TlsCipherSpec& protection_spec, const TlsRecordHeader& header,
+               uint8_t inner_content_type, const DataBuffer& plaintext,
+               DataBuffer* ciphertext, size_t padding = 0);
 
  protected:
   // There are two filter functions which can be overriden. Both are
@@ -146,20 +141,17 @@ class TlsRecordFilter : public PacketFilter {
   }
 
   bool is_dtls13() const;
+  TlsCipherSpec& spec(uint16_t epoch);
 
  private:
-  static void CipherSpecChanged(void* arg, PRBool sending,
-                                ssl3CipherSpec* newSpec);
+  static void SecretCallback(PRFileDesc* fd, PRUint16 epoch,
+                             SSLSecretDirection dir, PK11SymKey* secret,
+                             void* arg);
 
   std::weak_ptr<TlsAgent> agent_;
-  size_t count_;
-  std::unique_ptr<TlsCipherSpec> cipher_spec_;
-  // Whether we dropped a record since the cipher spec changed.
-  bool dropped_record_;
-  // The sequence number we use for reading records as they are written.
-  uint64_t in_sequence_number_;
-  // The sequence number we use for writing modified records.
-  uint64_t out_sequence_number_;
+  size_t count_ = 0;
+  std::vector<TlsCipherSpec> cipher_specs_;
+  bool decrypting_ = false;
 };
 
 inline std::ostream& operator<<(std::ostream& stream, const TlsVersioned& v) {

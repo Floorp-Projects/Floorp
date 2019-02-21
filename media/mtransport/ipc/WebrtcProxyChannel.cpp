@@ -169,7 +169,7 @@ nsresult WebrtcProxyChannel::Open(const nsCString& aHost, const int& aPort,
   // -the previous proxy tunnel didn't support redirects e.g. 307. don't need to
   // introduce new behavior. can't follow redirects on connect anyway.
   nsCOMPtr<nsIChannel> localChannel;
-  rv = ioService->NewChannelFromURIWithProxyFlags2(
+  rv = ioService->NewChannelFromURIWithProxyFlags(
       uri, nullptr,
       // Proxy flags are overridden by SetConnectOnly()
       0, aLoadInfo->LoadingNode(), aLoadInfo->LoadingPrincipal(),

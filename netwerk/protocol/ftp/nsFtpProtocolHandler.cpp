@@ -173,15 +173,15 @@ nsFtpProtocolHandler::NewURI(const nsACString &aSpec, const char *aCharset,
 NS_IMETHODIMP
 nsFtpProtocolHandler::NewChannel(nsIURI *url, nsILoadInfo *aLoadInfo,
                                  nsIChannel **result) {
-  return NewProxiedChannel2(url, nullptr, 0, nullptr, aLoadInfo, result);
+  return NewProxiedChannel(url, nullptr, 0, nullptr, aLoadInfo, result);
 }
 
 NS_IMETHODIMP
-nsFtpProtocolHandler::NewProxiedChannel2(nsIURI *uri, nsIProxyInfo *proxyInfo,
-                                         uint32_t proxyResolveFlags,
-                                         nsIURI *proxyURI,
-                                         nsILoadInfo *aLoadInfo,
-                                         nsIChannel **result) {
+nsFtpProtocolHandler::NewProxiedChannel(nsIURI *uri, nsIProxyInfo *proxyInfo,
+                                        uint32_t proxyResolveFlags,
+                                        nsIURI *proxyURI,
+                                        nsILoadInfo *aLoadInfo,
+                                        nsIChannel **result) {
   NS_ENSURE_ARG_POINTER(uri);
   RefPtr<nsBaseChannel> channel;
   if (IsNeckoChild())
@@ -202,14 +202,6 @@ nsFtpProtocolHandler::NewProxiedChannel2(nsIURI *uri, nsIProxyInfo *proxyInfo,
 
   channel.forget(result);
   return rv;
-}
-
-NS_IMETHODIMP
-nsFtpProtocolHandler::NewProxiedChannel(nsIURI *uri, nsIProxyInfo *proxyInfo,
-                                        uint32_t proxyResolveFlags,
-                                        nsIURI *proxyURI, nsIChannel **result) {
-  return NewProxiedChannel2(uri, proxyInfo, proxyResolveFlags, proxyURI,
-                            nullptr /*loadinfo*/, result);
 }
 
 NS_IMETHODIMP
