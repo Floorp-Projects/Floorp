@@ -7,10 +7,18 @@
 GeckoCppUnitTests(
     [
       'TestDllInterceptor',
-      'TestDllInterceptorCrossProcess',
     ],
     linkage=None
 )
+
+if CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
+    # Cross-process interceptors not yet supported on aarch64
+    GeckoCppUnitTests(
+        [
+          'TestDllInterceptorCrossProcess',
+        ],
+        linkage=None
+    )
 
 OS_LIBS += [
     'ole32',
