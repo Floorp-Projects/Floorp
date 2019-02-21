@@ -9,6 +9,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Types.h"
 
@@ -71,6 +72,75 @@ class MOZ_STACK_CLASS Trampoline final {
     return mLocalBase && mRemoteBase && mPrevLocalProt && mAccumulatedStatus;
   }
 
+#if defined(_M_ARM64)
+
+  void WriteInstruction(uint32_t aInstruction) {
+    if (mOffset + sizeof(uint32_t) > mMaxOffset) {
+      mAccumulatedStatus = false;
+      return;
+    }
+
+    *reinterpret_cast<uint32_t*>(mLocalBase + mOffset) = aInstruction;
+    mOffset += sizeof(uint32_t);
+  }
+
+  void WriteLoadLiteral(const uintptr_t aAddress, const uint8_t aReg) {
+    // We grow the literal pool from the *end* of the tramp,
+    // so we need to ensure that there is enough room for both an instruction
+    // and a pointer
+    if (mOffset + sizeof(uint32_t) + sizeof(uintptr_t) > mMaxOffset) {
+      mAccumulatedStatus = false;
+      return;
+    }
+
+    mMaxOffset -= sizeof(uintptr_t);
+    *reinterpret_cast<uintptr_t*>(mLocalBase + mMaxOffset) = aAddress;
+
+    CheckedInt<intptr_t> pc(GetCurrentRemoteAddress());
+    if (!pc.isValid()) {
+      mAccumulatedStatus = false;
+      return;
+    }
+
+    CheckedInt<intptr_t> literal(reinterpret_cast<uintptr_t>(mLocalBase) +
+                                 mMaxOffset);
+    if (!literal.isValid()) {
+      mAccumulatedStatus = false;
+      return;
+    }
+
+    CheckedInt<intptr_t> ptrOffset = (literal - pc);
+    if (!ptrOffset.isValid()) {
+      mAccumulatedStatus = false;
+      return;
+    }
+
+    // ptrOffset must be properly aligned
+    MOZ_ASSERT((ptrOffset.value() % 4) == 0);
+    ptrOffset /= 4;
+
+    CheckedInt<int32_t> offset(ptrOffset.value());
+    if (!offset.isValid()) {
+      mAccumulatedStatus = false;
+      return;
+    }
+
+    // Ensure that offset falls within the range of a signed 19-bit value
+    if (offset.value() < -0x40000 || offset.value() > 0x3FFFF) {
+      mAccumulatedStatus = false;
+      return;
+    }
+
+    const int32_t kimm19Mask = 0x7FFFF;
+    int32_t masked = offset.value() & kimm19Mask;
+
+    MOZ_ASSERT(aReg < 32);
+    uint32_t loadInstr = 0x58000000 | (masked << 5) | aReg;
+    WriteInstruction(loadInstr);
+  }
+
+#else
+
   void WriteByte(uint8_t aValue) {
     if (mOffset >= mMaxOffset) {
       mAccumulatedStatus = false;
@@ -90,6 +160,32 @@ class MOZ_STACK_CLASS Trampoline final {
     *reinterpret_cast<int32_t*>(mLocalBase + mOffset) = aValue;
     mOffset += sizeof(int32_t);
   }
+
+  void WriteDisp32(uintptr_t aAbsTarget) {
+    if (mOffset + sizeof(int32_t) > mMaxOffset) {
+      mAccumulatedStatus = false;
+      return;
+    }
+
+    // This needs to be computed from the remote location
+    intptr_t remoteTrampPosition = static_cast<intptr_t>(mRemoteBase + mOffset);
+
+    intptr_t diff = static_cast<intptr_t>(aAbsTarget) -
+                    (remoteTrampPosition + sizeof(int32_t));
+
+    CheckedInt<int32_t> checkedDisp(diff);
+    MOZ_ASSERT(checkedDisp.isValid());
+    if (!checkedDisp.isValid()) {
+      mAccumulatedStatus = false;
+      return;
+    }
+
+    int32_t disp = checkedDisp.value();
+    *reinterpret_cast<int32_t*>(mLocalBase + mOffset) = disp;
+    mOffset += sizeof(int32_t);
+  }
+
+#endif
 
   void WritePointer(uintptr_t aValue) {
     if (mOffset + sizeof(uintptr_t) > mMaxOffset) {
@@ -124,30 +220,6 @@ class MOZ_STACK_CLASS Trampoline final {
     }
 
     return Some(ReadOnlyTargetFunction<MMPolicy>::DecodePtr(encoded.value()));
-  }
-
-  void WriteDisp32(uintptr_t aAbsTarget) {
-    if (mOffset + sizeof(int32_t) > mMaxOffset) {
-      mAccumulatedStatus = false;
-      return;
-    }
-
-    // This needs to be computed from the remote location
-    intptr_t remoteTrampPosition = static_cast<intptr_t>(mRemoteBase + mOffset);
-
-    intptr_t diff = static_cast<intptr_t>(aAbsTarget) -
-                    (remoteTrampPosition + sizeof(int32_t));
-
-    CheckedInt<int32_t> checkedDisp(diff);
-    MOZ_ASSERT(checkedDisp.isValid());
-    if (!checkedDisp.isValid()) {
-      mAccumulatedStatus = false;
-      return;
-    }
-
-    int32_t disp = checkedDisp.value();
-    *reinterpret_cast<int32_t*>(mLocalBase + mOffset) = disp;
-    mOffset += sizeof(int32_t);
   }
 
 #if defined(_M_IX86)
@@ -213,7 +285,7 @@ class MOZ_STACK_CLASS Trampoline final {
   const uintptr_t mRemoteBase;
   uint32_t mOffset;
   uint32_t mExeOffset;
-  const uint32_t mMaxOffset;
+  uint32_t mMaxOffset;
   bool mAccumulatedStatus;
 };
 
