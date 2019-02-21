@@ -55,8 +55,6 @@ uint8_t gLayerManagerLayerBuilder;
 namespace mozilla {
 namespace layers {
 
-FILE* FILEOrDefault(FILE* aFile) { return aFile ? aFile : stderr; }
-
 typedef ScrollableLayerGuid::ViewID ViewID;
 
 using namespace mozilla::gfx;

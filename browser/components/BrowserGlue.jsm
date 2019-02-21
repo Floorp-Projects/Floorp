@@ -244,6 +244,16 @@ let ACTORS = {
     },
   },
 
+  RFPHelper: {
+    child: {
+      module: "resource:///actors/RFPHelperChild.jsm",
+      group: "browsers",
+      events: {
+        "resize": {},
+      },
+    },
+  },
+
   SearchTelemetry: {
     child: {
       module: "resource:///actors/SearchTelemetryChild.jsm",
@@ -397,7 +407,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   HybridContentTelemetry: "resource://gre/modules/HybridContentTelemetry.jsm",
   Integration: "resource://gre/modules/Integration.jsm",
   L10nRegistry: "resource://gre/modules/L10nRegistry.jsm",
-  LanguagePrompt: "resource://gre/modules/LanguagePrompt.jsm",
   LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
   LiveBookmarkMigrator: "resource:///modules/LiveBookmarkMigrator.jsm",
   NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
@@ -415,6 +424,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
+  RFPHelper: "resource://gre/modules/RFPHelper.jsm",
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
   SaveToPocket: "chrome://pocket/content/SaveToPocket.jsm",
@@ -1461,6 +1471,7 @@ BrowserGlue.prototype = {
     DateTimePickerParent.uninit();
 
     Normandy.uninit();
+    RFPHelper.uninit();
   },
 
   // Set up a listener to enable/disable the screenshots extension
@@ -1674,7 +1685,7 @@ BrowserGlue.prototype = {
     }
 
     Services.tm.idleDispatchToMainThread(() => {
-      LanguagePrompt.init();
+      RFPHelper.init();
     });
 
     Services.tm.idleDispatchToMainThread(() => {

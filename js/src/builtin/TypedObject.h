@@ -619,7 +619,6 @@ class TypedObject : public ShapedObject {
   static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
 
   /* Accessors for self hosted code. */
-  static MOZ_MUST_USE bool GetBuffer(JSContext* cx, unsigned argc, Value* vp);
   static MOZ_MUST_USE bool GetByteOffset(JSContext* cx, unsigned argc,
                                          Value* vp);
 
@@ -701,8 +700,6 @@ class OutlineTypedObject : public TypedObject {
 class OutlineTransparentTypedObject : public OutlineTypedObject {
  public:
   static const Class class_;
-
-  ArrayBufferObject* getOrCreateBuffer(JSContext* cx);
 };
 
 // Class for an opaque typed object whose owner may be either an array buffer
@@ -759,8 +756,6 @@ class InlineTypedObject : public TypedObject {
 class InlineTransparentTypedObject : public InlineTypedObject {
  public:
   static const Class class_;
-
-  ArrayBufferObject* getOrCreateBuffer(JSContext* cx);
 
   uint8_t* inlineTypedMem() const {
     return InlineTypedObject::inlineTypedMem();

@@ -8,6 +8,10 @@ SOURCES += [
     'nsGIOProtocolHandler.cpp',
 ]
 
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
+
 FINAL_LIBRARY = 'xul'
 
 CXXFLAGS += CONFIG['TK_CFLAGS']

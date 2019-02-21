@@ -8,14 +8,10 @@ EXPORTS += [
     'mozStorageCID.h',
 ]
 
-SOURCES += [
-    'mozStorageModule.cpp',
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 FINAL_LIBRARY = 'xul'
-
-LOCAL_INCLUDES += [
-    '..',
-]
 
 CXXFLAGS += CONFIG['SQLITE_CFLAGS']

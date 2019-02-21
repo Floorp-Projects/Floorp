@@ -3429,10 +3429,6 @@ void MacroAssembler::wasmInterruptCheck(Register tls,
 
 void MacroAssembler::wasmReserveStackChecked(uint32_t amount,
                                              wasm::BytecodeOffset trapOffset) {
-  if (!amount) {
-    return;
-  }
-
   // If the frame is large, don't bump sp until after the stack limit check so
   // that the trap handler isn't called with a wild sp.
 

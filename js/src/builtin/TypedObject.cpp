@@ -1490,23 +1490,6 @@ bool TypedObject::isAttached() const {
   return true;
 }
 
-/* static */ bool TypedObject::GetBuffer(JSContext* cx, unsigned argc,
-                                         Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  JSObject& obj = args[0].toObject();
-  ArrayBufferObject* buffer;
-  if (obj.is<OutlineTransparentTypedObject>()) {
-    buffer = obj.as<OutlineTransparentTypedObject>().getOrCreateBuffer(cx);
-  } else {
-    buffer = obj.as<InlineTransparentTypedObject>().getOrCreateBuffer(cx);
-  }
-  if (!buffer) {
-    return false;
-  }
-  args.rval().setObject(*buffer);
-  return true;
-}
-
 /* static */ bool TypedObject::GetByteOffset(JSContext* cx, unsigned argc,
                                              Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -1531,11 +1514,6 @@ bool TypedObject::isAttached() const {
 }
 
 void OutlineTypedObject::setOwnerAndData(JSObject* owner, uint8_t* data) {
-  // Make sure we don't associate with array buffers whose data is from an
-  // inline typed object, see obj_trace.
-  MOZ_ASSERT_IF(owner && owner->is<ArrayBufferObject>(),
-                !owner->as<ArrayBufferObject>().forInlineTypedObject());
-
   // Typed objects cannot move from one owner to another, so don't worry
   // about pre barriers during this initialization.
   owner_ = owner;
@@ -1593,14 +1571,6 @@ void OutlineTypedObject::attach(JSContext* cx, ArrayBufferObject& buffer,
   MOZ_ASSERT(!isAttached());
   MOZ_ASSERT(offset <= buffer.byteLength());
   MOZ_ASSERT(size() <= buffer.byteLength() - offset);
-
-  // If the owner's data is from an inline typed object, associate this with
-  // the inline typed object instead, to simplify tracing.
-  if (buffer.forInlineTypedObject()) {
-    InlineTypedObject& realOwner = buffer.firstView()->as<InlineTypedObject>();
-    attach(cx, realOwner, offset);
-    return;
-  }
 
   buffer.setHasTypedObjectViews();
 
@@ -1711,11 +1681,7 @@ void OutlineTypedObject::attach(JSContext* cx, TypedObject& typedObj,
   uint8_t* newData = oldData;
 
   // Update the data pointer if the owner moved and the owner's data is
-  // inline with it. Note that an array buffer pointing to data in an inline
-  // typed object will never be used as an owner for another outline typed
-  // object. In such cases, the owner will be the inline typed object itself.
-  MOZ_ASSERT_IF(owner->is<ArrayBufferObject>(),
-                !owner->as<ArrayBufferObject>().forInlineTypedObject());
+  // inline with it.
   if (owner != oldOwner && (owner->is<InlineTypedObject>() ||
                             owner->as<ArrayBufferObject>().hasInlineData())) {
     newData += reinterpret_cast<uint8_t*>(owner) -
@@ -2224,70 +2190,6 @@ void OutlineTypedObject::notifyBufferDetached(void* newData) {
   }
 
   return 0;
-}
-
-ArrayBufferObject* InlineTransparentTypedObject::getOrCreateBuffer(
-    JSContext* cx) {
-  ObjectRealm& realm = ObjectRealm::get(this);
-  if (!realm.lazyArrayBuffers) {
-    auto table = cx->make_unique<ObjectWeakMap>(cx);
-    if (!table) {
-      return nullptr;
-    }
-
-    realm.lazyArrayBuffers = std::move(table);
-  }
-
-  ObjectWeakMap* table = realm.lazyArrayBuffers.get();
-
-  JSObject* obj = table->lookup(this);
-  if (obj) {
-    return &obj->as<ArrayBufferObject>();
-  }
-
-  ArrayBufferObject::BufferContents contents =
-      ArrayBufferObject::BufferContents::createPlain(inlineTypedMem());
-  size_t nbytes = typeDescr().size();
-
-  // Prevent GC under ArrayBufferObject::create, which might move this object
-  // and its contents.
-  gc::AutoSuppressGC suppress(cx);
-
-  ArrayBufferObject* buffer = ArrayBufferObject::create(
-      cx, nbytes, contents, ArrayBufferObject::DoesntOwnData);
-  if (!buffer) {
-    return nullptr;
-  }
-
-  // The owning object must always be the array buffer's first view. This
-  // both prevents the memory from disappearing out from under the buffer
-  // (the first view is held strongly by the buffer) and is used by the
-  // buffer marking code to detect whether its data pointer needs to be
-  // relocated.
-  MOZ_ALWAYS_TRUE(buffer->addView(cx, this));
-
-  buffer->setForInlineTypedObject();
-  buffer->setHasTypedObjectViews();
-
-  if (!table->add(cx, this, buffer)) {
-    return nullptr;
-  }
-
-  if (IsInsideNursery(this)) {
-    // Make sure the buffer is traced by the next generational collection,
-    // so that its data pointer is updated after this typed object moves.
-    storeBuffer()->putWholeCell(buffer);
-  }
-
-  return buffer;
-}
-
-ArrayBufferObject* OutlineTransparentTypedObject::getOrCreateBuffer(
-    JSContext* cx) {
-  if (owner().is<ArrayBufferObject>()) {
-    return &owner().as<ArrayBufferObject>();
-  }
-  return owner().as<InlineTransparentTypedObject>().getOrCreateBuffer(cx);
 }
 
 /******************************************************************************
