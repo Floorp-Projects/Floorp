@@ -225,8 +225,6 @@ class UrlbarController {
           // Prevent beep on Mac.
           event.preventDefault();
         }
-        // TODO: We should have an input bufferrer so that we can use search results
-        // if appropriate.
         this.input.handleCommand(event);
         break;
       case KeyEvent.DOM_VK_TAB:
