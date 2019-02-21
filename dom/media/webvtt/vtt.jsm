@@ -524,6 +524,8 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
       // set the font size explicitly.
       if (supportPseudo) {
         this.cueDiv.style.setProperty("--cue-font-size", this.fontSize);
+      } else {
+        this._applyNonPseudoCueStyles();
       }
       this.applyStyles(this._getNodeDefaultStyles(cue));
     }
@@ -552,6 +554,21 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
       return renderingAreaHeight * 0.05 + "px";
     }
 
+    _applyNonPseudoCueStyles() {
+      // If cue div is not a pseudo element, we should set the default css style
+      // for it, the reason we need to set these attributes to cueDiv is because
+      // if we set background on the root node directly, if would cause filling
+      // too large area for the background color as the size of root node won't
+      // be adjusted by cue size.
+      this.applyStyles({
+        "color": "rgba(255, 255, 255, 1)",
+        "white-space": "pre-line",
+        "font": this.fontSize + " sans-serif",
+        "background-color": "rgba(0, 0, 0, 0.8)",
+        "display": "inline",
+      }, this.cueDiv);
+    }
+
     // spec https://www.w3.org/TR/webvtt1/#applying-css-properties
     _getNodeDefaultStyles(cue) {
       let styles = {
@@ -560,7 +577,6 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
         "overflow-wrap": "break-word",
         // "text-wrap": "balance", (we haven't supported this CSS attribute yet)
         "font": this.fontSize + " sans-serif",
-        "color": "rgba(255,255,255,1)",
         "white-space": "pre-line",
         "text-align": cue.align,
       }
