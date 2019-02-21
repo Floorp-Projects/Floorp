@@ -1584,12 +1584,12 @@ nsresult PendingLookup::SendRemoteQueryInternal(Reason& aReason) {
 
   // Set up the channel to transmit the request to the service.
   nsCOMPtr<nsIIOService> ios = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
-  rv = ios->NewChannel2(serviceUrl, nullptr, nullptr,
-                        nullptr,  // aLoadingNode
-                        nsContentUtils::GetSystemPrincipal(),
-                        nullptr,  // aTriggeringPrincipal
-                        nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                        nsIContentPolicy::TYPE_OTHER, getter_AddRefs(mChannel));
+  rv = ios->NewChannel(serviceUrl, nullptr, nullptr,
+                       nullptr,  // aLoadingNode
+                       nsContentUtils::GetSystemPrincipal(),
+                       nullptr,  // aTriggeringPrincipal
+                       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                       nsIContentPolicy::TYPE_OTHER, getter_AddRefs(mChannel));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();

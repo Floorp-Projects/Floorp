@@ -139,6 +139,7 @@ class TlsAgent : public PollTarget {
                  const std::string& expected = "") const;
   void EnableSrtp();
   void CheckSrtp() const;
+  void CheckEpochs(uint16_t expected_read, uint16_t expected_write) const;
   void CheckErrorCode(int32_t expected) const;
   void WaitForErrorCode(int32_t expected, uint32_t delay) const;
   // Send data on the socket, encrypting it.

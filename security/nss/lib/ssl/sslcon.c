@@ -44,17 +44,13 @@ const char *ssl_version = "SECURITY_VERSION:"
  * This function acquires and releases the RecvBufLock.
  *
  * returns SECSuccess for success.
- * returns SECWouldBlock when that value is returned by
- *  ssl3_GatherCompleteHandshake().
- * returns SECFailure on all other errors.
+ * returns SECFailure on error, setting PR_WOULD_BLOCK_ERROR if only blocked.
  *
  * The gather functions called by ssl_GatherRecord1stHandshake are expected
  *  to return values interpreted as follows:
  *  1 : the function completed without error.
  *  0 : the function read EOF.
  * -1 : read error, or PR_WOULD_BLOCK_ERROR, or handleRecord error.
- * -2 : the function wants ssl_GatherRecord1stHandshake to be called again
- *  immediately, by ssl_Do1stHandshake.
  *
  * This code is similar to, and easily confused with, DoRecv() in sslsecur.c
  *
@@ -82,15 +78,13 @@ ssl_GatherRecord1stHandshake(sslSocket *ss)
     ssl_ReleaseRecvBufLock(ss);
 
     if (rv <= 0) {
-        if (rv == SECWouldBlock) {
-            /* Progress is blocked waiting for callback completion.  */
-            SSL_TRC(10, ("%d: SSL[%d]: handshake blocked (need %d)",
-                         SSL_GETPID(), ss->fd, ss->gs.remainder));
-            return SECWouldBlock;
-        }
         if (rv == 0) {
             /* EOF. Loser  */
             PORT_SetError(PR_END_OF_FILE_ERROR);
+        }
+        if (PORT_GetError() == PR_WOULD_BLOCK_ERROR) {
+            SSL_TRC(10, ("%d: SSL[%d]: handshake blocked (need %d)",
+                         SSL_GETPID(), ss->fd, ss->gs.remainder));
         }
         return SECFailure; /* rv is < 0 here. */
     }

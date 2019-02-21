@@ -33,6 +33,7 @@ struct ScopedMaybeDelete {
 SCOPED(SECAlgorithmID);
 SCOPED(SECItem);
 SCOPED(PK11URI);
+SCOPED(PLArenaPool);
 
 #undef SCOPED
 

@@ -2047,7 +2047,7 @@ nsHttpHandler::NewChannel(nsIURI *uri, nsILoadInfo *aLoadInfo,
     }
   }
 
-  return NewProxiedChannel2(uri, nullptr, 0, nullptr, aLoadInfo, result);
+  return NewProxiedChannel(uri, nullptr, 0, nullptr, aLoadInfo, result);
 }
 
 NS_IMETHODIMP
@@ -2062,9 +2062,9 @@ nsHttpHandler::AllowPort(int32_t port, const char *scheme, bool *_retval) {
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsHttpHandler::NewProxiedChannel2(nsIURI *uri, nsIProxyInfo *givenProxyInfo,
-                                  uint32_t proxyResolveFlags, nsIURI *proxyURI,
-                                  nsILoadInfo *aLoadInfo, nsIChannel **result) {
+nsHttpHandler::NewProxiedChannel(nsIURI *uri, nsIProxyInfo *givenProxyInfo,
+                                 uint32_t proxyResolveFlags, nsIURI *proxyURI,
+                                 nsILoadInfo *aLoadInfo, nsIChannel **result) {
   RefPtr<HttpBaseChannel> httpChannel;
 
   LOG(("nsHttpHandler::NewProxiedChannel [proxyInfo=%p]\n", givenProxyInfo));
@@ -2125,14 +2125,6 @@ nsHttpHandler::NewProxiedChannel2(nsIURI *uri, nsIProxyInfo *givenProxyInfo,
 
   httpChannel.forget(result);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpHandler::NewProxiedChannel(nsIURI *uri, nsIProxyInfo *givenProxyInfo,
-                                 uint32_t proxyResolveFlags, nsIURI *proxyURI,
-                                 nsIChannel **result) {
-  return NewProxiedChannel2(uri, givenProxyInfo, proxyResolveFlags, proxyURI,
-                            nullptr, result);
 }
 
 //-----------------------------------------------------------------------------

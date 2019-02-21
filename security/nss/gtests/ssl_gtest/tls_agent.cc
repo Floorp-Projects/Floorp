@@ -640,6 +640,16 @@ void TlsAgent::CheckAlpn(SSLNextProtoState expected_state,
   }
 }
 
+void TlsAgent::CheckEpochs(uint16_t expected_read,
+                           uint16_t expected_write) const {
+  uint16_t read_epoch = 0;
+  uint16_t write_epoch = 0;
+  EXPECT_EQ(SECSuccess,
+            SSL_GetCurrentEpoch(ssl_fd(), &read_epoch, &write_epoch));
+  EXPECT_EQ(expected_read, read_epoch) << role_str() << " read epoch";
+  EXPECT_EQ(expected_write, write_epoch) << role_str() << " write epoch";
+}
+
 void TlsAgent::EnableSrtp() {
   EXPECT_TRUE(EnsureTlsSetup());
   const uint16_t ciphers[] = {SRTP_AES128_CM_HMAC_SHA1_80,

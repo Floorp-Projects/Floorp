@@ -350,6 +350,27 @@ typedef SSLHelloRetryRequestAction(PR_CALLBACK *SSLHelloRetryRequestCallback)(
                          (PRFileDesc * _fd, PRBool _requestUpdate), \
                          (fd, requestUpdate))
 
+/* This function allows a server application to trigger
+ * re-authentication (TLS 1.3 only) after handshake.
+ *
+ * This function will cause a CertificateRequest message to be sent by
+ * a server.  This can be called once at a time, and is not allowed
+ * until an answer is received.
+ *
+ * The AuthCertificateCallback is called when the answer is received.
+ * If the answer is accepted by the server, the value returned by
+ * SSL_PeerCertificate() is replaced.  If you need to remember all the
+ * certificates, you will need to call SSL_PeerCertificate() and save
+ * what you get before calling this.
+ *
+ * If the AuthCertificateCallback returns SECFailure, the connection
+ * is aborted.
+ */
+#define SSL_SendCertificateRequest(fd)                 \
+    SSL_EXPERIMENTAL_API("SSL_SendCertificateRequest", \
+                         (PRFileDesc * _fd),           \
+                         (fd))
+
 /*
  * Session cache API.
  */
@@ -510,6 +531,100 @@ typedef SECStatus(PR_CALLBACK *SSLResumptionTokenCallback)(
                          (cipherSuites, cipherSuiteCount,           \
                           group, pubKey, pad, notBefore, notAfter,  \
                           out, outlen, maxlen))
+
+/* SSL_SetSecretCallback installs a callback that TLS calls when it installs new
+ * traffic secrets.
+ *
+ * SSLSecretCallback is called with the current epoch and the corresponding
+ * secret; this matches the epoch used in DTLS 1.3, even if the socket is
+ * operating in stream mode:
+ *
+ * - client_early_traffic_secret corresponds to epoch 1
+ * - {client|server}_handshake_traffic_secret is epoch 2
+ * - {client|server}_application_traffic_secret_{N} is epoch 3+N
+ *
+ * The callback is invoked separately for read secrets (client secrets on the
+ * server; server secrets on the client), and write secrets.
+ *
+ * This callback is only called if (D)TLS 1.3 is negotiated.
+ */
+typedef void(PR_CALLBACK *SSLSecretCallback)(
+    PRFileDesc *fd, PRUint16 epoch, SSLSecretDirection dir, PK11SymKey *secret,
+    void *arg);
+
+#define SSL_SecretCallback(fd, cb, arg)                                         \
+    SSL_EXPERIMENTAL_API("SSL_SecretCallback",                                  \
+                         (PRFileDesc * _fd, SSLSecretCallback _cb, void *_arg), \
+                         (fd, cb, arg))
+
+/* SSL_RecordLayerWriteCallback() is used to replace the TLS record layer.  This
+ * function installs a callback that TLS calls when it would otherwise encrypt
+ * and write a record to the underlying NSPR IO layer.  The application is
+ * responsible for ensuring that these records are encrypted and written.
+ *
+ * Calling this API also disables reads from the underlying NSPR layer.  The
+ * application is expected to push data when it is available using
+ * SSL_RecordLayerData().
+ *
+ * When data would be written, the provided SSLRecordWriteCallback with the
+ * epoch, TLS content type, and the data. The data provided to the callback is
+ * not split into record-sized writes.  If the callback returns SECFailure, the
+ * write will be considered to have failed; in particular, PR_WOULD_BLOCK_ERROR
+ * is not handled specially.
+ *
+ * If TLS 1.3 is in use, the epoch indicates the expected level of protection
+ * that the record would receive, this matches that used in DTLS 1.3:
+ *
+ * - epoch 0 corresponds to no record protection
+ * - epoch 1 corresponds to 0-RTT
+ * - epoch 2 corresponds to TLS handshake
+ * - epoch 3 and higher are application data
+ *
+ * Prior versions of TLS use epoch 1 and higher for application data.
+ *
+ * This API is not supported for DTLS.
+ */
+typedef SECStatus(PR_CALLBACK *SSLRecordWriteCallback)(
+    PRFileDesc *fd, PRUint16 epoch, SSLContentType contentType,
+    const PRUint8 *data, unsigned int len, void *arg);
+
+#define SSL_RecordLayerWriteCallback(fd, writeCb, arg)                   \
+    SSL_EXPERIMENTAL_API("SSL_RecordLayerWriteCallback",                 \
+                         (PRFileDesc * _fd, SSLRecordWriteCallback _wCb, \
+                          void *_arg),                                   \
+                         (fd, writeCb, arg))
+
+/* SSL_RecordLayerData() is used to provide new data to TLS.  The application
+ * indicates the epoch (see the description of SSL_RecordLayerWriteCallback()),
+ * content type, and the data that was received.  The application is responsible
+ * for removing any encryption or other protection before passing data to this
+ * function.
+ *
+ * This returns SECSuccess if the data was successfully processed.  If this
+ * function is used to drive the handshake and the caller needs to know when the
+ * handshake is complete, a call to SSL_ForceHandshake will return SECSuccess
+ * when the handshake is complete.
+ *
+ * This API is not supported for DTLS sockets.
+ */
+#define SSL_RecordLayerData(fd, epoch, ct, data, len)               \
+    SSL_EXPERIMENTAL_API("SSL_RecordLayerData",                     \
+                         (PRFileDesc * _fd, PRUint16 _epoch,        \
+                          SSLContentType _contentType,              \
+                          const PRUint8 *_data, unsigned int _len), \
+                         (fd, epoch, ct, data, len))
+
+/*
+ * SSL_GetCurrentEpoch() returns the read and write epochs that the socket is
+ * currently using.  NULL values for readEpoch or writeEpoch are ignored.
+ *
+ * See SSL_RecordLayerWriteCallback() for details on epochs.
+ */
+#define SSL_GetCurrentEpoch(fd, readEpoch, writeEpoch)             \
+    SSL_EXPERIMENTAL_API("SSL_GetCurrentEpoch",                    \
+                         (PRFileDesc * _fd, PRUint16 * _readEpoch, \
+                          PRUint16 * _writeEpoch),                 \
+                         (fd, readEpoch, writeEpoch))
 
 /* Deprecated experimental APIs */
 #define SSL_UseAltServerHelloType(fd, enable) SSL_DEPRECATED_EXPERIMENTAL_API

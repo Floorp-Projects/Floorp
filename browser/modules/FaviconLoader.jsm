@@ -90,7 +90,7 @@ class FaviconLoad {
   constructor(iconInfo) {
     this.icon = iconInfo;
 
-    this.channel = Services.io.newChannelFromURI2(
+    this.channel = Services.io.newChannelFromURI(
       iconInfo.iconUri,
       iconInfo.node,
       iconInfo.node.nodePrincipal,
