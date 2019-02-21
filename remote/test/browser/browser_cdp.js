@@ -46,9 +46,13 @@ async function testCDP() {
   });
   ok(true, "CDP client has been instantiated");
 
-  const {Log, Page} = client;
+  const {Browser, Log, Page} = client;
+  ok("Browser" in client, "Browser domain is available");
   ok("Log" in client, "Log domain is available");
   ok("Page" in client, "Page domain is available");
+
+  const version = await Browser.getVersion();
+  is(version.product, "Firefox", "Browser.getVersion works");
 
   // receive console.log messages and print them
   Log.enable();

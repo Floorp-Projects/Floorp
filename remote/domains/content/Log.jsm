@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["Log"];
 
-const {Domain} = ChromeUtils.import("chrome://remote/content/Domain.jsm");
+const {Domain} = ChromeUtils.import("chrome://remote/content/domains/Domain.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 class Log extends Domain {

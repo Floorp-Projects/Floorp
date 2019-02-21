@@ -6,12 +6,16 @@
 
 var EXPORTED_SYMBOLS = ["Domains"];
 
-const {Domain} = ChromeUtils.import("chrome://remote/content/Domain.jsm");
-
 class Domains extends Map {
-  constructor(session) {
+  constructor(session, modules) {
     super();
     this.session = session;
+    this.modules = modules;
+  }
+
+  domainSupportsMethod(name, method) {
+    const domain = this.modules[name];
+    return domain && !!domain.prototype[method];
   }
 
   get(name) {
@@ -28,7 +32,7 @@ class Domains extends Map {
   }
 
   new(name) {
-    const Cls = Domain[name];
+    const Cls = this.modules[name];
     if (!Cls) {
       throw new Error("No such domain: " + name);
     }

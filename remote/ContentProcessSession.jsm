@@ -6,7 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["ContentProcessSession"];
 
-const {Domains} = ChromeUtils.import("chrome://remote/content/Domains.jsm");
+const {Domains} = ChromeUtils.import("chrome://remote/content/domains/Domains.jsm");
+const {ContentProcessDomains} = ChromeUtils.import("chrome://remote/content/domains/ContentProcessDomains.jsm");
 
 class ContentProcessSession {
   constructor(messageManager, browsingContext, content, docShell) {
@@ -15,7 +16,7 @@ class ContentProcessSession {
     this.content = content;
     this.docShell = docShell;
 
-    this.domains = new Domains(this);
+    this.domains = new Domains(this, ContentProcessDomains);
     this.messageManager.addMessageListener("remote-protocol:request", this);
     this.messageManager.addMessageListener("remote-protocol:destroy", this);
 

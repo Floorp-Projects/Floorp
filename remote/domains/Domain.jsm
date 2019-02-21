@@ -7,7 +7,6 @@
 var EXPORTED_SYMBOLS = ["Domain"];
 
 const {EventEmitter} = ChromeUtils.import("chrome://remote/content/EventEmitter.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 class Domain {
   constructor(session, target) {
@@ -32,8 +31,3 @@ class Domain {
     return this.docShell.chromeEventHandler;
   }
 }
-
-XPCOMUtils.defineLazyModuleGetters(Domain, {
-  Log: "chrome://remote/content/domain/Log.jsm",
-  Page: "chrome://remote/content/domain/Page.jsm",
-});
