@@ -147,6 +147,8 @@ void MediaTransportHandlerIPC::Destroy() {
 // this class once we move mtransport to its own process.
 void MediaTransportHandlerIPC::SetProxyServer(
     NrSocketProxyConfig&& aProxyConfig) {
+  // TODO(bug 1521113): This doesn't work on IPC
+#if 0
   mInitPromise->Then(
       GetMainThreadSerialEventTarget(), __func__,
       [aProxyConfig = std::move(aProxyConfig), this,
@@ -157,6 +159,7 @@ void MediaTransportHandlerIPC::SetProxyServer(
         }
       },
       [](const nsCString& aError) {});
+#endif
 }
 
 void MediaTransportHandlerIPC::EnsureProvisionalTransport(
