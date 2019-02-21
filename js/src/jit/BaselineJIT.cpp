@@ -1167,11 +1167,8 @@ void jit::ToggleBaselineProfiling(JSRuntime* runtime, bool enable) {
   }
 
   for (ZonesIter zone(runtime, SkipAtoms); !zone.done(); zone.next()) {
-    for (auto iter = zone->cellIter<JSScript>(); !iter.done(); iter.next()) {
-      JSScript* script = iter;
-      if (gc::IsAboutToBeFinalizedUnbarriered(&script)) {
-        continue;
-      }
+    for (auto script = zone->cellIter<JSScript>(); !script.done();
+         script.next()) {
       if (!script->hasBaselineScript()) {
         continue;
       }

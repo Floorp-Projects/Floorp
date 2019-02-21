@@ -27,29 +27,10 @@ async function test_domainPolicy() {
 
   // Init test
   function initProcess() {
-    tab = BrowserTestUtils.addTab(gBrowser);
-    gBrowser.selectedTab = tab;
-
-    let initPromise = ContentTask.spawn(tab.linkedBrowser, null, function() {
-      const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
-      function loadBase() {
-        let deferred = PromiseUtils.defer();
-        let listener = (event) => {
-          removeEventListener("DOMDocElementInserted", listener, true);
-          let listener2 = (event2) => {
-            content.removeEventListener("load", listener2);
-            deferred.resolve();
-          };
-          content.addEventListener("load", listener2);
-        };
-        addEventListener("DOMDocElementInserted", listener, true);
-        return deferred.promise;
-      }
-
-      return loadBase();
-    });
-    BrowserTestUtils.loadURI(tab.linkedBrowser, "http://mochi.test:8888/browser/dom/ipc/tests/file_domainPolicy_base.html");
-    return initPromise;
+    return BrowserTestUtils.openNewForegroundTab(
+      {gBrowser,
+       opening: "http://mochi.test:8888/browser/dom/ipc/tests/file_domainPolicy_base.html",
+       forceNewProcess: true});
   }
 
   // We use ContentTask for the tests, but we also want to pass some data and some helper functions too.
@@ -113,8 +94,7 @@ async function test_domainPolicy() {
   info("Testing simple blocklist policy");
 
   info("Creating child process first, activating domainPolicy after");
-  currentTask = initProcess();
-  await currentTask;
+  tab = await initProcess();
   activateDomainPolicy();
   var bl = policy.blocklist;
   bl.add(Services.io.newURI("http://example.com"));
@@ -125,8 +105,7 @@ async function test_domainPolicy() {
   activateDomainPolicy();
   bl = policy.blocklist;
   bl.add(Services.io.newURI("http://example.com"));
-  currentTask = initProcess();
-  await currentTask;
+  tab = await initProcess();
   currentTask = runTest(testDomain("http://example.com"));
   checkAndCleanup(await currentTask);
 
@@ -185,8 +164,7 @@ async function test_domainPolicy() {
   info("Testing Blocklist-style Domain Policy");
   info("Activating domainPolicy first, creating child process after");
   activate(true, testPolicy.exceptions, testPolicy.superExceptions);
-  currentTask = initProcess();
-  await currentTask;
+  tab = await initProcess();
   let results = [];
   currentTask = runTest(testList(true, testPolicy.notExempt));
   results = results.concat(await currentTask);
@@ -195,8 +173,7 @@ async function test_domainPolicy() {
   checkAndCleanup(results);
 
   info("Creating child process first, activating domainPolicy after");
-  currentTask = initProcess();
-  await currentTask;
+  tab = await initProcess();
   activate(true, testPolicy.exceptions, testPolicy.superExceptions);
   results = [];
   currentTask = runTest(testList(true, testPolicy.notExempt));
@@ -213,8 +190,7 @@ async function test_domainPolicy() {
 
   info("Activating domainPolicy first, creating child process after");
   activate(false, testPolicy.exceptions, testPolicy.superExceptions);
-  currentTask = initProcess();
-  await currentTask;
+  tab = await initProcess();
   results = [];
   currentTask = runTest(testList(false, testPolicy.notExempt));
   results = results.concat(await currentTask);
@@ -223,8 +199,7 @@ async function test_domainPolicy() {
   checkAndCleanup(results);
 
   info("Creating child process first, activating domainPolicy after");
-  currentTask = initProcess();
-  await currentTask;
+  tab = await initProcess();
   activate(false, testPolicy.exceptions, testPolicy.superExceptions);
   results = [];
   currentTask = runTest(testList(false, testPolicy.notExempt));

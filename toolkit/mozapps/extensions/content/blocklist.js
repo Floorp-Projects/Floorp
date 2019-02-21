@@ -6,6 +6,7 @@
 
 "use strict";
 
+/* global MozXULElement */
 /* exported init, finish */
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -31,16 +32,42 @@ function init() {
   list.sort((a, b) => String(a.name).localeCompare(b.name));
   for (let listItem of list) {
     let item = document.createXULElement("richlistitem");
-    item.setAttribute("name", listItem.name);
-    item.setAttribute("version", listItem.version);
-    item.setAttribute("icon", listItem.icon);
+
+    const icon = document.createXULElement("image");
+    icon.src = listItem.icon;
+
+    const container = document.createXULElement("vbox");
+    container.flex = 1;
+
+    const nameVersion = document.createXULElement("hbox");
+    nameVersion.className = "addon-name-version";
+
+    const name = document.createXULElement("label");
+    name.className = "addonName";
+    name.value = listItem.name;
+    name.crop = "end";
+    const version = document.createXULElement("label");
+    version.value = listItem.version;
+
+    nameVersion.append(name, version);
+
+    const fragment = document.createXULElement("hbox");
+    fragment.pack = "end";
+
     if (listItem.blocked) {
-      item.setAttribute("class", "hardBlockedAddon");
+      fragment.appendChild(MozXULElement.parseXULToFragment(`
+        <label class="blockedLabel" value="&blocklist.blocked.label;"/>
+      `, ["chrome://mozapps/locale/extensions/blocklist.dtd"]));
       hasHardBlocks = true;
     } else {
-      item.setAttribute("class", "softBlockedAddon");
+      fragment.appendChild(MozXULElement.parseXULToFragment(`
+        <checkbox class="disableCheckbox" checked="true" label="&blocklist.checkbox.label;"/>
+      `, ["chrome://mozapps/locale/extensions/blocklist.dtd"]));
       hasSoftBlocks = true;
     }
+
+    container.append(nameVersion, fragment);
+    item.append(icon, container);
     richlist.appendChild(item);
   }
 
@@ -66,7 +93,7 @@ function finish(shouldRestartNow) {
   var items = document.getElementById("addonList").childNodes;
   for (let i = 0; i < list.length; i++) {
     if (!list[i].blocked)
-      list[i].disable = items[i].checked;
+      list[i].disable = items[i].querySelector(".disableCheckbox").checked;
   }
   return true;
 }

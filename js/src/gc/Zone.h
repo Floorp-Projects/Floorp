@@ -41,6 +41,9 @@ using UniqueIdMap = GCHashMap<Cell*, uint64_t, PointerHasher<Cell*>,
 extern uint64_t NextCellUniqueId(JSRuntime* rt);
 
 template <typename T>
+class ZoneAllCellIter;
+
+template <typename T>
 class ZoneCellIter;
 
 }  // namespace gc
@@ -207,6 +210,13 @@ class Zone : public JS::shadow::Zone,
   js::gc::ZoneCellIter<T> cellIter(Args&&... args) {
     return js::gc::ZoneCellIter<T>(const_cast<Zone*>(this),
                                    std::forward<Args>(args)...);
+  }
+
+  // As above, but can return about-to-be-finalised things.
+  template <typename T, typename... Args>
+  js::gc::ZoneAllCellIter<T> cellIterUnsafe(Args&&... args) {
+    return js::gc::ZoneAllCellIter<T>(const_cast<Zone*>(this),
+                                      std::forward<Args>(args)...);
   }
 
   MOZ_MUST_USE void* onOutOfMemory(js::AllocFunction allocFunc,

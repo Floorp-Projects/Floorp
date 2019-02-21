@@ -24,6 +24,7 @@ from mozbuild.base import (
 def create_parser_tests():
     from marionette_harness.runtests import MarionetteArguments
     from mozlog.structured import commandline
+
     parser = MarionetteArguments()
     commandline.add_logging_group(parser)
     return parser
@@ -72,6 +73,7 @@ class MarionetteTest(MachCommandBase):
              conditions=[conditions.is_firefox_or_android],
              parser=create_parser_tests,
              )
+
     def marionette_test(self, tests, **kwargs):
         if "test_objects" in kwargs:
             tests = []
@@ -114,3 +116,4 @@ class Marionette(MachCommandBase):
         if not kwargs.get("binary") and conditions.is_firefox(self):
             kwargs["binary"] = self.get_binary_path("app")
         return run_marionette(tests, topsrcdir=self.topsrcdir, **kwargs)
+

@@ -200,6 +200,26 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
   },
 
   /**
+   * Get the StyleRuleActor matching the given rule id or null if no match is found.
+   *
+   * @param  {String} ruleId
+   *         Actor ID of the StyleRuleActor
+   * @return {StyleRuleActor|null}
+   */
+  getRule: function(ruleId) {
+    let match = null;
+
+    for (const actor of this.refMap.values()) {
+      if (actor.actorID === ruleId) {
+        match = actor;
+        continue;
+      }
+    }
+
+    return match;
+  },
+
+  /**
    * Get the computed style for a node.
    *
    * @param NodeActor node
@@ -966,6 +986,14 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
 });
 exports.PageStyleActor = PageStyleActor;
 
+const SUPPORTED_RULE_TYPES = [
+  CSSRule.STYLE_RULE,
+  CSSRule.SUPPORTS_RULE,
+  CSSRule.KEYFRAME_RULE,
+  CSSRule.KEYFRAMES_RULE,
+  CSSRule.MEDIA_RULE,
+];
+
 /**
  * An actor that represents a CSS style object on the protocol.
  *
@@ -990,9 +1018,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       this.type = item.type;
       this.rawRule = item;
       this._computeRuleIndex();
-      if ((this.type === CSSRule.STYLE_RULE ||
-           this.type === CSSRule.KEYFRAME_RULE) &&
-          this.rawRule.parentStyleSheet) {
+      if (SUPPORTED_RULE_TYPES.includes(this.type) && this.rawRule.parentStyleSheet) {
         this.line = InspectorUtils.getRelativeRuleLine(this.rawRule);
         this.column = InspectorUtils.getRuleColumn(this.rawRule);
         this._parentSheet = this.rawRule.parentStyleSheet;
@@ -1371,9 +1397,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    * properties.
    */
   getAuthoredCssText: function() {
-    if (!this.canSetRuleText ||
-        (this.type !== CSSRule.STYLE_RULE &&
-         this.type !== CSSRule.KEYFRAME_RULE)) {
+    if (!this.canSetRuleText || !SUPPORTED_RULE_TYPES.includes(this.type)) {
       return Promise.resolve("");
     }
 
@@ -1381,9 +1405,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       return Promise.resolve(this.authoredText);
     }
 
-    const parentStyleSheet =
-        this.pageStyle._sheetRef(this._parentSheet);
-    return parentStyleSheet.getText().then((longStr) => {
+    return this.sheetActor.getText().then((longStr) => {
       const cssText = longStr.str;
       const {text} = getRuleText(cssText, this.line, this.column);
 
@@ -1391,6 +1413,47 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       this.authoredText = text;
       return this.authoredText;
     });
+  },
+
+  /**
+   * Return a promise that resolves to the complete cssText of the rule as authored.
+   *
+   * Unlike |getAuthoredCssText()|, which only returns the contents of the rule, this
+   * method includes the CSS selectors and at-rules (@media, @supports, @keyframes, etc.)
+   *
+   * If the rule type is unrecongized, the promise resolves to an empty string.
+   * If the rule is an element inline style, the promise resolves to the text content of
+   * the element's style attribute.
+   *
+   * @return {String}
+   */
+  getRuleText: async function() {
+    if (this.type === ELEMENT_STYLE) {
+      return Promise.resolve(this.rawNode.getAttribute("style"));
+    }
+
+    if (!SUPPORTED_RULE_TYPES.includes(this.type)) {
+      return Promise.resolve("");
+    }
+
+    const ruleBodyText = await this.getAuthoredCssText();
+    const { str: stylesheetText } = await this.sheetActor.getText();
+    const [start, end] = getSelectorOffsets(stylesheetText, this.line, this.column);
+    const selectorText = stylesheetText.substring(start, end);
+
+    // CSS rule type as a string "@media", "@supports", "@keyframes", etc.
+    const typeName = CSSRuleTypeName[this.type];
+
+    let text;
+    // When dealing with at-rules, getSelectorOffsets() will not return the rule type.
+    // We prepend it ourselves.
+    if (typeName) {
+      text = `${typeName}${selectorText} {${ruleBodyText}}`;
+    } else {
+      text = `${selectorText} {${ruleBodyText}}`;
+    }
+
+    return text;
   },
 
   /**

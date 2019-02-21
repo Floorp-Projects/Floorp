@@ -279,6 +279,7 @@ package org.mozilla.geckoview {
     method @android.support.annotation.UiThread @android.support.annotation.NonNull public org.mozilla.geckoview.CompositorController getCompositorController();
     method @android.support.annotation.AnyThread @android.support.annotation.Nullable public org.mozilla.geckoview.ContentBlocking.Delegate getContentBlockingDelegate();
     method @android.support.annotation.UiThread @android.support.annotation.Nullable public org.mozilla.geckoview.GeckoSession.ContentDelegate getContentDelegate();
+    method @android.support.annotation.AnyThread @android.support.annotation.NonNull public static java.lang.String getDefaultUserAgent();
     method @android.support.annotation.UiThread @android.support.annotation.NonNull public org.mozilla.geckoview.DynamicToolbarAnimator getDynamicToolbarAnimator();
     method @android.support.annotation.AnyThread @android.support.annotation.NonNull public org.mozilla.gecko.EventDispatcher getEventDispatcher();
     method @android.support.annotation.AnyThread @android.support.annotation.NonNull public org.mozilla.geckoview.SessionFinder getFinder();

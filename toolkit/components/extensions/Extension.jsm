@@ -53,6 +53,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   PluralForm: "resource://gre/modules/PluralForm.jsm",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
   XPIProvider: "resource://gre/modules/addons/XPIProvider.jsm",
 });
@@ -711,13 +712,6 @@ class ExtensionData {
         permissions.add(perm);
       }
 
-      // We only want to set permissions if the feature is preffed on
-      // (allowPrivateBrowsingByDefault is false)
-      if (!allowPrivateBrowsingByDefault &&
-          manifest.incognito !== "not_allowed" &&
-          this.isPrivileged && !this.addonData.temporarilyInstalled) {
-        permissions.add("internal:privateBrowsingAllowed");
-      }
 
       if (this.id) {
         // An extension always gets permission to its own url.
@@ -1888,6 +1882,22 @@ class Extension extends ExtensionData {
 
       if (this.hasShutdown) {
         return;
+      }
+
+      // If we're in permanent private browsing and an extension is installed, we
+      // add the permission. Any other situation requires the user to explicitly
+      // enable the permission in about:addons.
+      // Privileged/system extensions get private browsing access automatically,
+      // unless they opt-out by setting "not_allowed".
+      if (!allowPrivateBrowsingByDefault && this.manifest.incognito !== "not_allowed" &&
+          !this.permissions.has("internal:privateBrowsingAllowed")) {
+        if ((PrivateBrowsingUtils.permanentPrivateBrowsing && this.startupReason == "ADDON_INSTALL") ||
+            (this.isPrivileged && !this.addonData.temporarilyInstalled)) {
+          // Add to EP so it is preserved after ADDON_INSTALL.  We don't wait on the add here
+          // since we are pushing the value into this.permissions.  EP will eventually save.
+          ExtensionPermissions.add(this.id, {permissions: ["internal:privateBrowsingAllowed"], origins: []});
+          this.permissions.add("internal:privateBrowsingAllowed");
+        }
       }
 
       GlobalManager.init(this);

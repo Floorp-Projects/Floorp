@@ -28,8 +28,9 @@ class ChangesContextMenu {
     // Window object to which the Changes panel belongs to.
     this.window = this.document.defaultView;
 
-    this._onCopySelection = this.view.copySelection.bind(this.view);
     this._onCopyChanges = this.view.copyChanges.bind(this.view);
+    this._onCopyRule = this.view.copyRule.bind(this.view);
+    this._onCopySelection = this.view.copySelection.bind(this.view);
     this._onSelectAll = this._onSelectAll.bind(this);
   }
 
@@ -66,6 +67,12 @@ class ChangesContextMenu {
       menu.append(new MenuItem({
         label: getStr("changes.contextmenu.copyChanges"),
         click: () => this._onCopyChanges(ruleId, sourceId),
+      }));
+
+      // Copy Rule option
+      menu.append(new MenuItem({
+        label: getStr("changes.contextmenu.copyRule"),
+        click: () => this._onCopyRule(ruleId),
       }));
 
       menu.append(new MenuItem({
