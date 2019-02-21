@@ -2252,41 +2252,45 @@ nsresult nsPermissionManager::RemoveAllInternal(bool aNotifyObservers) {
 NS_IMETHODIMP
 nsPermissionManager::TestExactPermission(nsIURI* aURI, const char* aType,
                                          uint32_t* aPermission) {
-  return CommonTestPermission(aURI, aType, aPermission, true, true);
+  return CommonTestPermission(aURI, -1, aType, aPermission, true, true);
 }
 
 NS_IMETHODIMP
 nsPermissionManager::TestExactPermissionFromPrincipal(nsIPrincipal* aPrincipal,
                                                       const char* aType,
                                                       uint32_t* aPermission) {
-  return CommonTestPermission(aPrincipal, aType, aPermission, true, true);
+  return CommonTestPermission(aPrincipal, -1, aType, aPermission, true, true);
 }
 
 NS_IMETHODIMP
 nsPermissionManager::TestExactPermanentPermission(nsIPrincipal* aPrincipal,
                                                   const char* aType,
                                                   uint32_t* aPermission) {
-  return CommonTestPermission(aPrincipal, aType, aPermission, true, false);
+  return CommonTestPermission(aPrincipal, -1, aType, aPermission, true, false);
 }
 
 NS_IMETHODIMP
 nsPermissionManager::TestPermission(nsIURI* aURI, const char* aType,
                                     uint32_t* aPermission) {
-  return CommonTestPermission(aURI, aType, aPermission, false, true);
+  return CommonTestPermission(aURI, -1, aType, aPermission, false, true);
 }
 
 NS_IMETHODIMP
 nsPermissionManager::TestPermissionOriginNoSuffix(
     const nsACString& aOriginNoSuffix, const char* aType,
     uint32_t* aPermission) {
-  auto preparationResult = CommonPrepareToTestPermission(nullptr, aPermission);
+  // Our caller isn't providing a type index hint, so we just pass -1 to force
+  // CommonPrepareToTestPermission to compute it for us based on aType.
+  auto preparationResult =
+      CommonPrepareToTestPermission(nullptr, -1, aType, aPermission);
   if (preparationResult.mShouldContinue == eDone) {
     return NS_OK;
   }
 
   MOZ_ASSERT(!preparationResult.mPrincipal);
 
-  return CommonTestPermissionInternal(nullptr, nullptr, aOriginNoSuffix, aType,
+  return CommonTestPermissionInternal(nullptr, nullptr, aOriginNoSuffix,
+                                      preparationResult.mTypeIndex, aType,
                                       aPermission, false, true);
 }
 
@@ -2309,7 +2313,7 @@ NS_IMETHODIMP
 nsPermissionManager::TestPermissionFromPrincipal(nsIPrincipal* aPrincipal,
                                                  const char* aType,
                                                  uint32_t* aPermission) {
-  return CommonTestPermission(aPrincipal, aType, aPermission, false, true);
+  return CommonTestPermission(aPrincipal, -1, aType, aPermission, false, true);
 }
 
 NS_IMETHODIMP
@@ -2380,8 +2384,8 @@ nsPermissionManager::GetPermissionObject(nsIPrincipal* aPrincipal,
 
 nsresult nsPermissionManager::CommonTestPermissionInternal(
     BasePrincipal* aPrincipal, nsIURI* aURI, const nsACString& aOriginNoSuffix,
-    const char* aType, uint32_t* aPermission, bool aExactHostMatch,
-    bool aIncludingSession) {
+    int32_t aTypeIndex, const char* aType, uint32_t* aPermission,
+    bool aExactHostMatch, bool aIncludingSession) {
   MOZ_ASSERT(aPrincipal || aURI || !aOriginNoSuffix.IsEmpty());
   MOZ_ASSERT_IF(aPrincipal, !aURI && aOriginNoSuffix.IsEmpty());
   MOZ_ASSERT_IF(aURI, !aPrincipal && aOriginNoSuffix.IsEmpty());
@@ -2408,8 +2412,8 @@ nsresult nsPermissionManager::CommonTestPermissionInternal(
     auto ep = aPrincipal->As<ExpandedPrincipal>();
     for (auto& prin : ep->AllowList()) {
       uint32_t perm;
-      nsresult rv = CommonTestPermission(prin, aType, &perm, aExactHostMatch,
-                                         aIncludingSession);
+      nsresult rv = CommonTestPermission(prin, aTypeIndex, aType, &perm,
+                                         aExactHostMatch, aIncludingSession);
       NS_ENSURE_SUCCESS(rv, rv);
       if (perm == nsIPermissionManager::ALLOW_ACTION) {
         *aPermission = perm;
@@ -2439,24 +2443,19 @@ nsresult nsPermissionManager::CommonTestPermissionInternal(
   }
 #endif
 
-  int32_t typeIndex = GetTypeIndex(aType, false);
-  // If type == -1, the type isn't known,
-  // so just return NS_OK
-  if (typeIndex == -1) return NS_OK;
-
   PermissionHashKey* entry =
-      aPrincipal ? GetPermissionHashKey(aPrincipal, typeIndex, aExactHostMatch)
-                 : GetPermissionHashKey(aURI, aOriginNoSuffix, typeIndex,
+      aPrincipal ? GetPermissionHashKey(aPrincipal, aTypeIndex, aExactHostMatch)
+                 : GetPermissionHashKey(aURI, aOriginNoSuffix, aTypeIndex,
                                         aExactHostMatch);
   if (!entry || (!aIncludingSession &&
-                 entry->GetPermission(typeIndex).mNonSessionExpireType ==
+                 entry->GetPermission(aTypeIndex).mNonSessionExpireType ==
                      nsIPermissionManager::EXPIRE_SESSION)) {
     return NS_OK;
   }
 
   *aPermission = aIncludingSession
-                     ? entry->GetPermission(typeIndex).mPermission
-                     : entry->GetPermission(typeIndex).mNonSessionPermission;
+                     ? entry->GetPermission(aTypeIndex).mPermission
+                     : entry->GetPermission(aTypeIndex).mNonSessionPermission;
 
   return NS_OK;
 }
