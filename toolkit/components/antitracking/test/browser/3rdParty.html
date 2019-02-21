@@ -20,7 +20,20 @@ function is(a, b, msg) {
 }
 
 onmessage = function(e) {
-  let runnableStr = `(() => {return (${e.data});})();`;
+  let data = e.data;
+  if (data.includes("!!!")) {
+    // The data argument may be packed with information about whether we are on
+    // the allow list.  In that case, extract that information and prepare it
+    // for our callbacks to access it.
+    let parts = data.split("!!!");
+    // Only consider ourselves allow-listed when the cookie policy is set to
+    // block third-party trackers, since otherwise we won't obtain storage
+    // access by default, which is what this data is used for in tests.
+    window.allowListed = parts[0] === "true" &&
+                         (SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior") == SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER);
+    data = parts[1];
+  }
+  let runnableStr = `(() => {return (${data});})();`;
   let runnable = eval(runnableStr); // eslint-disable-line no-eval
   runnable.call(this, /* Phase */ 1).then(_ => {
     parent.postMessage({ type: "finish" }, "*");
