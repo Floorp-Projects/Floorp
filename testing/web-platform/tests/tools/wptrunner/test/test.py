@@ -1,4 +1,3 @@
-from __future__ import print_function
 import ConfigParser
 import argparse
 import os
@@ -154,7 +153,7 @@ def main():
         if args.pdb:
             import pdb
             import traceback
-            print(traceback.format_exc())
+            print traceback.format_exc()
             pdb.post_mortem()
         else:
             raise

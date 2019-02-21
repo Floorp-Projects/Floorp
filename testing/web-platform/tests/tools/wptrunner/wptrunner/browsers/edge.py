@@ -1,4 +1,3 @@
-from __future__ import print_function
 from .base import Browser, ExecutorBrowser, require_arg
 from ..webdriver_server import EdgeDriverServer
 from ..executors import executor_kwargs as base_executor_kwargs
@@ -77,7 +76,7 @@ class EdgeBrowser(Browser):
 
 
     def start(self, **kwargs):
-        print(self.server.url)
+        print self.server.url
         self.server.start()
 
     def stop(self, force=False):
