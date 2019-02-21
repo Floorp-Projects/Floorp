@@ -195,7 +195,7 @@ class UrlbarController {
         this.view.isOpen &&
         event.ctrlKey &&
         (event.key == "n" || event.key == "p")) {
-      this.view.selectNextItem({ reverse: event.key == "p" });
+      this.view.selectBy(1, { reverse: event.key == "p" });
       event.preventDefault();
       return;
     }
@@ -231,23 +231,30 @@ class UrlbarController {
         break;
       case KeyEvent.DOM_VK_TAB:
         if (this.view.isOpen) {
-          this.view.selectNextItem({ reverse: event.shiftKey });
+          this.view.selectBy(1, { reverse: event.shiftKey });
           this.userSelectionBehavior = "tab";
           event.preventDefault();
         }
         break;
       case KeyEvent.DOM_VK_DOWN:
       case KeyEvent.DOM_VK_UP:
-        if (!event.ctrlKey && !event.altKey) {
-          if (this.view.isOpen) {
-            this.userSelectionBehavior = "arrow";
-            this.view.selectNextItem({
-              reverse: event.keyCode == KeyEvent.DOM_VK_UP });
-          } else {
-            this.input.startQuery();
-          }
-          event.preventDefault();
+      case KeyEvent.DOM_VK_PAGE_DOWN:
+      case KeyEvent.DOM_VK_PAGE_UP:
+        if (event.ctrlKey || event.altKey) {
+          break;
         }
+        if (this.view.isOpen) {
+          this.userSelectionBehavior = "arrow";
+          this.view.selectBy(
+            event.keyCode == KeyEvent.DOM_VK_PAGE_DOWN ||
+            event.keyCode == KeyEvent.DOM_VK_PAGE_UP ?
+              5 : 1,
+            { reverse: event.keyCode == KeyEvent.DOM_VK_UP ||
+                       event.keyCode == KeyEvent.DOM_VK_PAGE_UP });
+        } else {
+          this.input.startQuery();
+        }
+        event.preventDefault();
         break;
       case KeyEvent.DOM_VK_DELETE:
         if (isMac && !event.shiftKey) {
