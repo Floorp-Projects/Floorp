@@ -9,6 +9,7 @@
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/ToString.h"
 
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
@@ -259,7 +260,7 @@ void ComputedStyle::List(FILE* out, int32_t aIndent) {
   }
   str.Append(nsPrintfCString("%p(%d) parent=%p ", (void*)this, 0, nullptr));
   if (mPseudoType != PseudoStyleType::NotPseudo) {
-    str.Append(nsPrintfCString("pseudo-%d ", static_cast<int>(mPseudoType)));
+    str.Append(nsPrintfCString("%s ", ToString(mPseudoType).c_str()));
   }
 
   fprintf_stderr(out, "%s{ServoComputedData}\n", str.get());
