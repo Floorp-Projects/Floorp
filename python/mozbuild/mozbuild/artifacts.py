@@ -699,11 +699,9 @@ class TaskCache(CacheManager):
         CacheManager.__init__(self, cache_dir, 'artifact_url', MAX_CACHED_TASKS, log=log, skip_cache=skip_cache)
 
     @cachedmethod(operator.attrgetter('_cache'))
-    def artifact_urls(self, tree, job, rev, download_symbols, download_host_bins):
+    def artifacts(self, tree, job, rev):
         try:
-            artifact_job = get_job_details(job, log=self._log,
-                                           download_symbols=download_symbols,
-                                           download_host_bins=download_host_bins)
+            artifact_job_class = JOB_DETAILS[job]
         except KeyError:
             self.log(logging.INFO, 'artifact',
                 {'job': job},
@@ -718,7 +716,7 @@ class TaskCache(CacheManager):
         namespace = 'gecko.v2.{tree}.revision.{rev}.{product}.{job}'.format(
             rev=rev,
             tree=tree,
-            product=artifact_job.product,
+            product=artifact_job_class.product,
             job=job,
         )
         self.log(logging.INFO, 'artifact',
@@ -731,18 +729,7 @@ class TaskCache(CacheManager):
             # care about; and even those that do may not have completed yet.
             raise ValueError('Task for {namespace} does not exist (yet)!'.format(namespace=namespace))
 
-        artifacts = list_artifacts(taskId)
-
-        urls = []
-        for artifact_name in artifact_job.find_candidate_artifacts(artifacts):
-            # We can easily extract the task ID from the URL.  We can't easily
-            # extract the build ID; we use the .ini files embedded in the
-            # downloaded artifact for this.
-            url = get_artifact_url(taskId, artifact_name)
-            urls.append(url)
-        if not urls:
-            raise ValueError('Task for {namespace} existed, but no artifacts found!'.format(namespace=namespace))
-        return urls
+        return taskId, list_artifacts(taskId)
 
 
 class ArtifactPersistLimit(PersistLimit):
@@ -1127,11 +1114,17 @@ class Artifacts(object):
 
     def find_pushhead_artifacts(self, task_cache, job, tree, pushhead):
         try:
-            urls = task_cache.artifact_urls(tree, job, pushhead,
-                                            self._download_symbols,
-                                            self._download_host_bins)
+            taskId, artifacts = task_cache.artifacts(tree, job, pushhead)
         except ValueError:
             return None
+
+        urls = []
+        for artifact_name in self._artifact_job.find_candidate_artifacts(artifacts):
+            # We can easily extract the task ID from the URL.  We can't easily
+            # extract the build ID; we use the .ini files embedded in the
+            # downloaded artifact for this.
+            url = get_artifact_url(taskId, artifact_name)
+            urls.append(url)
         if urls:
             self.log(logging.INFO, 'artifact',
                      {'pushhead': pushhead,
