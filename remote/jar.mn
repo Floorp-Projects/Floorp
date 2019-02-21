@@ -27,9 +27,7 @@ remote.jar:
 
   # domains
   content/domain/Log.jsm (domain/Log.jsm)
-  content/domain/Network.jsm (domain/Network.jsm)
   content/domain/Page.jsm (domain/Page.jsm)
-  content/domain/Runtime.jsm (domain/Runtime.jsm)
 
   # transport layer
   content/server/HTTPD.jsm (../netwerk/test/httpserver/httpd.js)

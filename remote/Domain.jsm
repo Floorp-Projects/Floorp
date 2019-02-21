@@ -35,7 +35,5 @@ class Domain {
 
 XPCOMUtils.defineLazyModuleGetters(Domain, {
   Log: "chrome://remote/content/domain/Log.jsm",
-  Network: "chrome://remote/content/domain/Network.jsm",
   Page: "chrome://remote/content/domain/Page.jsm",
-  Runtime: "chrome://remote/content/domain/Runtime.jsm",
 });

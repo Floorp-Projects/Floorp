@@ -7,7 +7,6 @@
 var EXPORTED_SYMBOLS = ["Page"];
 
 const {Domain} = ChromeUtils.import("chrome://remote/content/Domain.jsm");
-const {t} = ChromeUtils.import("chrome://remote/content/Protocol.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {UnsupportedError} = ChromeUtils.import("chrome://remote/content/Error.jsm");
 
@@ -85,50 +84,7 @@ class Page extends Domain {
       break;
     }
   }
-
-  static get schema() {
-    return {
-      methods: {
-        enable: {},
-        disable: {},
-        navigate: {
-          params: {
-            url: t.String,
-            referrer: t.Optional(t.String),
-            transitionType: t.Optional(Page.TransitionType.schema),
-            frameId: t.Optional(Page.FrameId.schema),
-          },
-          returns: {
-            frameId: Page.FrameId,
-            loaderId: t.Optional(Domain.Network.LoaderId.schema),
-            errorText: t.String,
-          },
-        },
-      },
-
-      events: {
-        domContentEventFired: {
-          timestamp: Domain.Network.MonotonicTime.schema,
-        },
-        loadEventFired: {
-          timestamp: Domain.Network.MonotonicTime.schema,
-        },
-      },
-    };
-  }
 }
-
-Page.FrameId = {schema: t.String};
-Page.TransitionType = {
-  schema: t.Enum([
-    "auto_bookmark",
-    "auto_subframe",
-    "link",
-    "manual_subframe",
-    "reload",
-    "typed",
-  ]),
-};
 
 function transitionToLoadFlag(transitionType) {
   switch (transitionType) {
