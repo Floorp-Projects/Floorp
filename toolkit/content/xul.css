@@ -61,7 +61,7 @@ broadcasterset, broadcaster, observes,
 keyset, key, toolbarpalette, toolbarset,
 template, rule, conditions, action,
 bindings, binding, content, member, triple,
-treechildren, treeitem, treeseparator, treerow, treecell {
+treeitem, treeseparator, treerow, treecell {
   display: none;
 }
 
@@ -426,27 +426,24 @@ column {
 
 /******** tree ******/
 
-tree {
-  -moz-binding: url("chrome://global/content/bindings/tree.xml#tree");
-}
-
 treecolpicker {
   -moz-box-ordinal-group: 2147483646;
 }
 
-tree > treechildren {
+treechildren {
   display: -moz-box;
   -moz-user-select: none;
   -moz-box-flex: 1;
 }
 
 tree {
+  -moz-binding: none;
   -moz-box-orient: vertical;
   width: 10px;
   height: 10px;
 }
 
-tree[hidecolumnpicker="true"] > treecols > treecolpicker {
+tree[hidecolumnpicker="true"] treecolpicker {
   display: none;
 }
 
@@ -460,7 +457,7 @@ treecol[hidden="true"] {
 }
 
 /* ::::: lines connecting cells ::::: */
-tree:not([treelines="true"]) > treechildren::-moz-tree-line {
+tree:not([treelines="true"]) treechildren::-moz-tree-line {
   visibility: hidden;
 }
 
