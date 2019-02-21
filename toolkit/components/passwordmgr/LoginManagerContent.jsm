@@ -40,8 +40,6 @@ Services.cpmm.addMessageListener("clearRecipeCache", () => {
   LoginRecipesContent._clearRecipeCache();
 });
 
-// These mirror signon.* prefs.
-var gEnabled, gAutofillForms, gStoreWhenAutocompleteOff;
 var gLastRightClickTimeStamp = Number.NEGATIVE_INFINITY;
 
 var observer = {
@@ -66,12 +64,6 @@ var observer = {
     }
 
     return true; // Always return true, or form submit will be canceled.
-  },
-
-  onPrefChange() {
-    gEnabled = Services.prefs.getBoolPref("signon.rememberSignons");
-    gAutofillForms = Services.prefs.getBoolPref("signon.autofillForms");
-    gStoreWhenAutocompleteOff = Services.prefs.getBoolPref("signon.storeWhenAutocompleteOff");
   },
 
   // nsIWebProgressListener
@@ -118,7 +110,7 @@ var observer = {
       return;
     }
 
-    if (!gEnabled) {
+    if (!LoginHelper.enabled) {
       return;
     }
 
@@ -147,11 +139,6 @@ var observer = {
 };
 
 Services.obs.addObserver(observer, "earlyformsubmit");
-var prefBranch = Services.prefs.getBranch("signon.");
-prefBranch.addObserver("", observer.onPrefChange);
-
-observer.onPrefChange(); // read initial values
-
 
 // This object maps to the "child" process (even in the single-process case).
 var LoginManagerContent = {
@@ -442,7 +429,7 @@ var LoginManagerContent = {
     let messageManager = window.docShell.messageManager;
     messageManager.sendAsyncMessage("LoginStats:LoginEncountered");
 
-    if (!gEnabled) {
+    if (!LoginHelper.enabled) {
       return;
     }
 
@@ -561,7 +548,7 @@ var LoginManagerContent = {
 
   loginsFound({ form, loginsFound, recipes }) {
     let doc = form.ownerDocument;
-    let autofillForm = gAutofillForms && !PrivateBrowsingUtils.isContentWindowPrivate(doc.defaultView);
+    let autofillForm = LoginHelper.autofillForms && !PrivateBrowsingUtils.isContentWindowPrivate(doc.defaultView);
 
     let formOrigin = LoginUtils._getPasswordOrigin(doc.documentURI);
     LoginRecipesContent.cacheRecipes(formOrigin, doc.defaultView, recipes);
@@ -613,7 +600,7 @@ var LoginManagerContent = {
       return;
     }
 
-    if (!gEnabled) {
+    if (!LoginHelper.enabled) {
       return;
     }
 
@@ -942,7 +929,7 @@ var LoginManagerContent = {
     }
 
     // If password saving is disabled (globally or for host), bail out now.
-    if (!gEnabled) {
+    if (!LoginHelper.enabled) {
       return;
     }
 
@@ -974,7 +961,7 @@ var LoginManagerContent = {
          this._isAutocompleteDisabled(usernameField) ||
          this._isAutocompleteDisabled(newPasswordField) ||
          this._isAutocompleteDisabled(oldPasswordField)) &&
-        !gStoreWhenAutocompleteOff) {
+        !LoginHelper.storeWhenAutocompleteOff) {
       log("(form submission ignored -- autocomplete=off found)");
       return;
     }
