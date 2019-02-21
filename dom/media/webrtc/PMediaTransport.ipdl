@@ -3,6 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PSocketProcessBridge;
+
+#ifdef MOZ_WEBRTC
 include PBrowserOrId;
 
 // ParamTraits stuff for generated code and other classes we don't want to change
@@ -20,6 +22,7 @@ using mozilla::dom::RTCIceTransportPolicy from "mozilla/dom/RTCConfigurationBind
 // ParamTraits stuff for our own classes
 using MediaPacket from "mtransport/mediapacket.h";
 using net::NrIceStunAddrArray from "mozilla/net/PStunAddrsParams.h";
+#endif // MOZ_WEBRTC
 
 namespace mozilla {
 namespace dom {
@@ -29,6 +32,8 @@ async protocol PMediaTransport {
 
 parent:
   async __delete__();
+
+#ifdef MOZ_WEBRTC
   async GetIceLog(nsCString pattern) returns (WebrtcGlobalLog loglines);
   async ClearIceLog();
   async EnterPrivateMode();
@@ -88,6 +93,8 @@ child:
   async OnEncryptedSending(string transportId, MediaPacket packet);
   async OnStateChange(string transportId, int state);
   async OnRtcpStateChange(string transportId, int state);
+
+#endif // MOZ_WEBRTC
 };
 } // namespace dom
 } // namespace mozilla

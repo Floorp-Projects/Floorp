@@ -12,6 +12,7 @@ class MediaTransportHandlerIPC;
 
 class MediaTransportChild : public dom::PMediaTransportChild {
  public:
+#ifdef MOZ_WEBRTC
   explicit MediaTransportChild(MediaTransportHandlerIPC* aUser);
   virtual ~MediaTransportChild();
   mozilla::ipc::IPCResult RecvOnCandidate(const string& transportId,
@@ -30,6 +31,7 @@ class MediaTransportChild : public dom::PMediaTransportChild {
 
  private:
   RefPtr<MediaTransportHandlerIPC> mUser;
+#endif //MOZ_WEBRTC
 };
 
 }  // namespace mozilla
