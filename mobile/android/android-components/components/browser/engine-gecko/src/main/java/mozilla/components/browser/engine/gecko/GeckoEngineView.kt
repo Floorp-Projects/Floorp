@@ -5,6 +5,7 @@
 package mozilla.components.browser.engine.gecko
 
 import android.content.Context
+import android.support.v4.view.ViewCompat
 import android.util.AttributeSet
 import android.widget.FrameLayout
 import mozilla.components.concept.engine.EngineSession
@@ -27,6 +28,10 @@ class GeckoEngineView @JvmOverloads constructor(
 
             super.onDetachedFromWindow()
         }
+    }.apply {
+        // Explicitly mark this view as important for autofill. The default "auto" doesn't seem to trigger any
+        // autofill behavior for us here.
+        ViewCompat.setImportantForAutofill(this, 0x1 /* View.IMPORTANT_FOR_AUTOFILL_YES */)
     }
 
     init {
