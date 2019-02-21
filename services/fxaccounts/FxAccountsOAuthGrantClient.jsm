@@ -81,6 +81,41 @@ this.FxAccountsOAuthGrantClient.prototype = {
   },
 
   /**
+   * Retrieves an OAuth authorization code using an assertion
+   *
+   * @param {Object} assertion BrowserID assertion
+   * @param {Object} options
+   * @param options.client_id
+   * @param options.state
+   * @param options.scope
+   * @param options.access_type
+   * @param options.code_challenge_method
+   * @param options.code_challenge
+   * @param [options.keys_jwe]
+   * @returns {Promise<Object>} Object containing "code" and "state" properties.
+   */
+  authorizeCodeFromAssertion(assertion, options) {
+    if (!assertion) {
+      throw new Error("Missing 'assertion' parameter");
+    }
+    const {client_id, state, scope, access_type, code_challenge, code_challenge_method, keys_jwe} = options;
+    const params = {
+      assertion,
+      client_id,
+      response_type: "code",
+      state,
+      scope,
+      access_type,
+      code_challenge,
+      code_challenge_method,
+    };
+    if (keys_jwe) {
+      params.keys_jwe = keys_jwe;
+    }
+    return this._createRequest(AUTH_ENDPOINT, "POST", params);
+  },
+
+  /**
    * Destroys a previously fetched OAuth access token.
    *
    * @param {String} token The previously fetched token
