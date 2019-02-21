@@ -94,8 +94,8 @@ nsDataHandler::NewURI(const nsACString& aSpec,
 }
 
 NS_IMETHODIMP
-nsDataHandler::NewChannel2(nsIURI* uri, nsILoadInfo* aLoadInfo,
-                           nsIChannel** result) {
+nsDataHandler::NewChannel(nsIURI* uri, nsILoadInfo* aLoadInfo,
+                          nsIChannel** result) {
   NS_ENSURE_ARG_POINTER(uri);
   nsDataChannel* channel;
   if (XRE_IsParentProcess()) {
@@ -120,11 +120,6 @@ nsDataHandler::NewChannel2(nsIURI* uri, nsILoadInfo* aLoadInfo,
 
   *result = channel;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDataHandler::NewChannel(nsIURI* uri, nsIChannel** result) {
-  return NewChannel2(uri, nullptr, result);
 }
 
 NS_IMETHODIMP

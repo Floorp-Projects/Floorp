@@ -5,17 +5,23 @@
 "use strict";
 /* global frame */
 
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 const {WebElementEventTarget} = ChromeUtils.import("chrome://marionette/content/dom.js");
 const {element} = ChromeUtils.import("chrome://marionette/content/element.js");
 const {
   NoSuchWindowError,
   UnsupportedOperationError,
 } = ChromeUtils.import("chrome://marionette/content/error.js");
+const {Log} = ChromeUtils.import("chrome://marionette/content/log.js");
 const {
   MessageManagerDestroyedPromise,
   waitForEvent,
   waitForObserverTopic,
 } = ChromeUtils.import("chrome://marionette/content/sync.js");
+
+XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
 
 this.EXPORTED_SYMBOLS = ["browser", "Context", "WindowState"];
 
@@ -323,12 +329,16 @@ browser.Context = class {
 
         await Promise.all([activated, focused, startup]);
 
+        logger.trace("Opening window is active window: " +
+            `${Services.focus.activeWindow == this.window}`);
         if (!focus) {
           // The new window shouldn't get focused. As such set the
           // focus back to the currently selected window.
           activated = waitForEvent(this.window, "activate");
           focused = waitForEvent(this.window, "focus", {capture: true});
 
+          logger.trace("Setting focus back to opening window " +
+              `due to focus: ${focus}`);
           this.window.focus();
 
           await Promise.all([activated, focused]);

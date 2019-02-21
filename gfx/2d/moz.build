@@ -260,6 +260,3 @@ if CONFIG['MOZ_ENABLE_SKIA_GPU']:
     LOCAL_INCLUDES += [
         '/gfx/skia/skia/src/gpu',
     ]
-
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    AllowCompilerWarnings()  # workaround for bug 1090497

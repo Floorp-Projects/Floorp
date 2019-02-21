@@ -176,11 +176,8 @@ void CookieServiceChild::TrackCookieLoad(nsIChannel *aChannel) {
           rejectedReason);
     }
   }
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-  mozilla::OriginAttributes attrs;
-  if (loadInfo) {
-    attrs = loadInfo->GetOriginAttributes();
-  }
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  mozilla::OriginAttributes attrs = loadInfo->GetOriginAttributes();
   URIParams uriParams;
   SerializeURI(uri, uriParams);
   bool isSafeTopLevelNav = NS_IsSafeTopLevelNav(aChannel);
@@ -484,10 +481,8 @@ nsresult CookieServiceChild::GetCookieStringInternal(nsIURI *aHostURI,
   nsCOMPtr<nsILoadInfo> loadInfo;
   mozilla::OriginAttributes attrs;
   if (aChannel) {
-    loadInfo = aChannel->GetLoadInfo();
-    if (loadInfo) {
-      attrs = loadInfo->GetOriginAttributes();
-    }
+    loadInfo = aChannel->LoadInfo();
+    attrs = loadInfo->GetOriginAttributes();
   }
 
   // Asynchronously call the parent.
@@ -569,10 +564,8 @@ nsresult CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
     aChannel->GetURI(getter_AddRefs(channelURI));
     SerializeURI(channelURI, channelURIParams);
 
-    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-    if (loadInfo) {
-      attrs = loadInfo->GetOriginAttributes();
-    }
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+    attrs = loadInfo->GetOriginAttributes();
   } else {
     SerializeURI(nullptr, channelURIParams);
   }

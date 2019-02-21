@@ -98,10 +98,9 @@ UrlClassifierFeatureFlash::UrlClassifierFeatureFlash(
   }
 
   // We use Flash feature just for document loading.
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   nsContentPolicyType contentPolicyType =
-      loadInfo ? loadInfo->GetExternalContentPolicyType()
-               : nsIContentPolicy::TYPE_INVALID;
+      loadInfo->GetExternalContentPolicyType();
 
   if (contentPolicyType != nsIContentPolicy::TYPE_DOCUMENT &&
       contentPolicyType != nsIContentPolicy::TYPE_SUBDOCUMENT) {

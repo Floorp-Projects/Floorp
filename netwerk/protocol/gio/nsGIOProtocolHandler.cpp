@@ -965,8 +965,8 @@ nsGIOProtocolHandler::NewURI(const nsACString &aSpec,
 }
 
 NS_IMETHODIMP
-nsGIOProtocolHandler::NewChannel2(nsIURI *aURI, nsILoadInfo *aLoadInfo,
-                                  nsIChannel **aResult) {
+nsGIOProtocolHandler::NewChannel(nsIURI *aURI, nsILoadInfo *aLoadInfo,
+                                 nsIChannel **aResult) {
   NS_ENSURE_ARG_POINTER(aURI);
   nsresult rv;
 
@@ -989,11 +989,6 @@ nsGIOProtocolHandler::NewChannel2(nsIURI *aURI, nsILoadInfo *aLoadInfo,
     stream->SetChannel(*aResult);
   }
   return rv;
-}
-
-NS_IMETHODIMP
-nsGIOProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **aResult) {
-  return NewChannel2(aURI, nullptr, aResult);
 }
 
 NS_IMETHODIMP
