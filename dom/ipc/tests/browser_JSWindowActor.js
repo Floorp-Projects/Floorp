@@ -99,3 +99,4 @@ add_task(async function test_asyncMessage_without_both_side_actor() {
         ChromeUtils.unregisterWindowActor("Test");
     });
 });
+
