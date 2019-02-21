@@ -30,7 +30,7 @@ namespace gl {
 
 class GLContextGLX;
 
-class GLXLibrary final {
+class GLXLibrary {
  public:
   bool EnsureInitialized();
 
@@ -179,8 +179,8 @@ class GLXLibrary final {
   bool IsATI() { return mIsATI; }
   bool IsMesa() { return mClientIsMesa; }
 
-  auto GetGetProcAddress() const {
-    return mSymbols.fGetProcAddress;
+  PRFuncPtr GetGetProcAddress() const {
+    return (PRFuncPtr)mSymbols.fGetProcAddress;
   }
 
  private:

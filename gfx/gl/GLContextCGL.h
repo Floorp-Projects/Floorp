@@ -41,6 +41,8 @@ class GLContextCGL : public GLContext {
     return static_cast<GLContextCGL*>(gl);
   }
 
+  bool Init() override;
+
   NSOpenGLContext* GetNSOpenGLContext() const { return mContext; }
   CGLContextObj GetCGLContext() const;
 
@@ -50,13 +52,13 @@ class GLContextCGL : public GLContext {
 
   virtual GLenum GetPreferredARGB32Format() const override;
 
+  virtual bool SetupLookupFunction() override;
+
   virtual bool IsDoubleBuffered() const override;
 
   virtual bool SwapBuffers() override;
 
   virtual void GetWSIInfo(nsCString* const out) const override;
-
-  Maybe<SymbolLoader> GetSymbolLoader() const override;
 };
 
 }  // namespace gl

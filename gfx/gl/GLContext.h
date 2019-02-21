@@ -191,7 +191,8 @@ enum class GLRenderer {
   Other
 };
 
-class GLContext : public GenericAtomicRefCounted,
+class GLContext : public GLLibraryLoader,
+                  public GenericAtomicRefCounted,
                   public SupportsWeakPtr<GLContext> {
  public:
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(GLContext)
@@ -3310,8 +3311,8 @@ class GLContext : public GenericAtomicRefCounted,
   // -----------------------------------------------------------------------------
   // Constructor
  protected:
-  explicit GLContext(CreateContextFlags flags,
-                     const SurfaceCaps& caps, GLContext* sharedContext = nullptr,
+  explicit GLContext(CreateContextFlags flags, const SurfaceCaps& caps,
+                     GLContext* sharedContext = nullptr,
                      bool isOffscreen = false, bool canUseTLSIsCurrent = false);
 
   // -----------------------------------------------------------------------------
@@ -3332,6 +3333,10 @@ class GLContext : public GenericAtomicRefCounted,
   typedef gfx::SurfaceFormat SurfaceFormat;
 
  public:
+  virtual bool Init() = 0;
+
+  virtual bool SetupLookupFunction() = 0;
+
   virtual void ReleaseSurface() {}
 
   bool IsDestroyed() const {
@@ -3365,8 +3370,6 @@ class GLContext : public GenericAtomicRefCounted,
    * Releases a color buffer that is being used as a texture
    */
   virtual bool ReleaseTexImage() { return false; }
-
-  virtual Maybe<SymbolLoader> GetSymbolLoader() const = 0;
 
   // Before reads from offscreen texture
   void GuaranteeResolve();
@@ -3561,14 +3564,16 @@ class GLContext : public GenericAtomicRefCounted,
 
   bool IsOffscreenSizeAllowed(const gfx::IntSize& aSize) const;
 
-  virtual bool Init();
+ protected:
+  bool InitWithPrefix(const char* prefix, bool trygl);
 
  private:
-  bool InitImpl();
-  void LoadMoreSymbols(const SymbolLoader& loader);
-  bool LoadExtSymbols(const SymbolLoader& loader, const SymLoadStruct* list,
+  bool InitWithPrefixImpl(const char* prefix, bool trygl);
+  void LoadMoreSymbols(const char* prefix, bool trygl);
+  bool LoadExtSymbols(const char* prefix, bool trygl, const SymLoadStruct* list,
                       GLExtensions ext);
-  bool LoadFeatureSymbols(const SymbolLoader& loader, const SymLoadStruct* list, GLFeature feature);
+  bool LoadFeatureSymbols(const char* prefix, bool trygl,
+                          const SymLoadStruct* list, GLFeature feature);
 
  protected:
   void InitExtensions();
