@@ -23,8 +23,10 @@
 #include "nsIRunnable.h"
 #include "nsRefPtrHashtable.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/ExpandedPrincipal.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/Unused.h"
+#include "mozilla/Variant.h"
 #include "mozilla/Vector.h"
 
 namespace mozilla {
@@ -317,13 +319,9 @@ class nsPermissionManager final : public nsIPermissionManager,
                                           const nsACString& aOriginNoSuffix,
                                           uint32_t aType, bool aExactHostMatch);
 
-  enum TestPreparationEnum { eContinue, eDone };
-  struct TestPreparationResult {
-    mozilla::BasePrincipal* mPrincipal;
-    int32_t mTypeIndex;
-    uint32_t mDefaultPermission;
-    TestPreparationEnum mShouldContinue;
-  };
+  // The int32_t is the type index, the nsresult is an early bail-out return
+  // code.
+  typedef mozilla::Variant<int32_t, nsresult> TestPreparationResult;
   /**
    * Perform the early steps of a permission check and determine whether we need
    * to call CommonTestPermissionInternal() for the actual permission check.
@@ -344,15 +342,22 @@ class nsPermissionManager final : public nsIPermissionManager,
    *                           determine the result of the permission check.
    * @param aDefaultPermissionIsValid whether the previous argument contains a
    *                                  valid value.
+   * @param aExactHostMatch whether to look for the exact host name or also for
+   *                        subdomains that can have the same permission.
+   * @param aIncludingSession whether to include session permissions when
+   *                          testing for the permission.
    */
   TestPreparationResult CommonPrepareToTestPermission(
       nsIPrincipal* aPrincipal, int32_t aTypeIndex, const char* aType,
       uint32_t* aPermission, uint32_t aDefaultPermission,
-      bool aDefaultPermissionIsValid) {
+      bool aDefaultPermissionIsValid, bool aExactHostMatch,
+      bool aIncludingSession) {
+    using mozilla::AsVariant;
+
     auto* basePrin = mozilla::BasePrincipal::Cast(aPrincipal);
     if (basePrin && basePrin->IsSystemPrincipal()) {
       *aPermission = ALLOW_ACTION;
-      return {basePrin, -1, UNKNOWN_ACTION, eDone};
+      return AsVariant(NS_OK);
     }
 
     // For some permissions, query the default from a pref. We want to avoid
@@ -368,16 +373,41 @@ class nsPermissionManager final : public nsIPermissionManager,
     // Set the default.
     *aPermission = defaultPermission;
 
-    // For expanded principals, we want to iterate over the allowlist and see
-    // if the permission is granted for any of them.
     int32_t typeIndex =
         aTypeIndex == -1 ? GetTypeIndex(aType, false) : aTypeIndex;
-    // If type == -1, the type isn't known, just signal that we are done.
-    if (typeIndex == -1) {
-      return {basePrin, -1, UNKNOWN_ACTION, NS_OK, eDone};
+
+    // For expanded principals, we want to iterate over the allowlist and see
+    // if the permission is granted for any of them.
+    if (basePrin && basePrin->Is<ExpandedPrincipal>()) {
+      auto ep = basePrin->As<ExpandedPrincipal>();
+      for (auto& prin : ep->AllowList()) {
+        uint32_t perm;
+        nsresult rv = CommonTestPermission(prin, typeIndex, aType, &perm,
+                                           defaultPermission, true,
+                                           aExactHostMatch, aIncludingSession);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return AsVariant(rv);
+        }
+
+        if (perm == nsIPermissionManager::ALLOW_ACTION) {
+          *aPermission = perm;
+          return AsVariant(NS_OK);
+        }
+        if (perm == nsIPermissionManager::PROMPT_ACTION) {
+          // Store it, but keep going to see if we can do better.
+          *aPermission = perm;
+        }
+      }
+
+      return AsVariant(NS_OK);
     }
 
-    return {basePrin, typeIndex, uint32_t(defaultPermission), NS_OK, eContinue};
+    // If type == -1, the type isn't known, just signal that we are done.
+    if (typeIndex == -1) {
+      return AsVariant(NS_OK);
+    }
+
+    return AsVariant(typeIndex);
   }
 
   // If aTypeIndex is passed -1, we try to inder the type index from aType.
@@ -388,16 +418,14 @@ class nsPermissionManager final : public nsIPermissionManager,
                                 bool aExactHostMatch, bool aIncludingSession) {
     auto preparationResult = CommonPrepareToTestPermission(
         aPrincipal, aTypeIndex, aType, aPermission, aDefaultPermission,
-        aDefaultPermissionIsValid);
-    if (preparationResult.mShouldContinue == eDone) {
-      return NS_OK;
+        aDefaultPermissionIsValid, aExactHostMatch, aIncludingSession);
+    if (preparationResult.is<nsresult>()) {
+      return preparationResult.as<nsresult>();
     }
 
     return CommonTestPermissionInternal(
-        preparationResult.mPrincipal, nullptr, EmptyCString(),
-        preparationResult.mTypeIndex, aType, aPermission,
-        preparationResult.mDefaultPermission, aExactHostMatch,
-        aIncludingSession);
+        aPrincipal, nullptr, EmptyCString(), preparationResult.as<int32_t>(),
+        aType, aPermission, aExactHostMatch, aIncludingSession);
   }
   // If aTypeIndex is passed -1, we try to inder the type index from aType.
   nsresult CommonTestPermission(nsIURI* aURI, int32_t aTypeIndex,
@@ -407,24 +435,22 @@ class nsPermissionManager final : public nsIPermissionManager,
                                 bool aExactHostMatch, bool aIncludingSession) {
     auto preparationResult = CommonPrepareToTestPermission(
         nullptr, aTypeIndex, aType, aPermission, aDefaultPermission,
-        aDefaultPermissionIsValid);
-    if (preparationResult.mShouldContinue == eDone) {
-      return NS_OK;
+        aDefaultPermissionIsValid, aExactHostMatch, aIncludingSession);
+    if (preparationResult.is<nsresult>()) {
+      return preparationResult.as<nsresult>();
     }
 
-    MOZ_ASSERT(!preparationResult.mPrincipal);
-
     return CommonTestPermissionInternal(
-        nullptr, aURI, EmptyCString(), preparationResult.mTypeIndex, aType,
-        aPermission, preparationResult.mDefaultPermission, aExactHostMatch,
-        aIncludingSession);
+        nullptr, aURI, EmptyCString(), preparationResult.as<int32_t>(), aType,
+        aPermission, aExactHostMatch, aIncludingSession);
   }
   // Only one of aPrincipal or aURI is allowed to be passed in.
-  nsresult CommonTestPermissionInternal(
-      mozilla::BasePrincipal* aPrincipal, nsIURI* aURI,
-      const nsACString& aOriginNoSuffix, int32_t aTypeIndex, const char* aType,
-      uint32_t* aPermission, uint32_t aDefaultPermission, bool aExactHostMatch,
-      bool aIncludingSession);
+  nsresult CommonTestPermissionInternal(nsIPrincipal* aPrincipal, nsIURI* aURI,
+                                        const nsACString& aOriginNoSuffix,
+                                        int32_t aTypeIndex, const char* aType,
+                                        uint32_t* aPermission,
+                                        bool aExactHostMatch,
+                                        bool aIncludingSession);
 
   nsresult OpenDatabase(nsIFile* permissionsFile);
   nsresult InitDB(bool aRemoveFile);
