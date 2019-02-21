@@ -167,7 +167,7 @@ class SitePermissionsFeatureTest {
     @Test
     fun `rejecting a content permission must call reject and consume contentPermissionRequest`() {
         val session = getSelectedSession()
-        var grantWasCalled = false
+        var rejectWasCalled = false
 
         val permissions = listOf(
             ContentGeoLocation(),
@@ -184,7 +184,7 @@ class SitePermissionsFeatureTest {
                     get() = listOf(permission)
 
                 override fun reject() {
-                    grantWasCalled = true
+                    rejectWasCalled = true
                 }
 
                 override fun grant(permissions: List<Permission>) = Unit
@@ -197,7 +197,7 @@ class SitePermissionsFeatureTest {
             val negativeButton = prompt.buttons.find { !it.positive }
             negativeButton!!.onClick.invoke()
 
-            assertTrue(grantWasCalled)
+            assertTrue(rejectWasCalled)
             assertTrue(session.contentPermissionRequest.isConsumed())
         }
     }
@@ -235,7 +235,7 @@ class SitePermissionsFeatureTest {
             val radioButton = prompt.controlGroups.first().controls[index] as DoorhangerPrompt.Control.RadioButton
 
             // Simulating a user click either on the back/front camera option
-            radioButton.checked = !radioButton.checked
+            radioButton.checked = true
 
             val positiveButton = prompt.buttons.find { it.positive }
             positiveButton?.onClick?.invoke()
@@ -248,7 +248,7 @@ class SitePermissionsFeatureTest {
     @Test
     fun `rejecting a camera content permission must call reject and consume contentPermissionRequest`() {
         val session = getSelectedSession()
-        var grantWasCalled = false
+        var rejectWasCalled = false
 
         val permissions = listOf(
                 ContentVideoCapture("", "back camera"),
@@ -264,7 +264,7 @@ class SitePermissionsFeatureTest {
                     get() = if (index > 0) permissions.reversed() else permissions
 
                 override fun reject() {
-                    grantWasCalled = true
+                    rejectWasCalled = true
                 }
 
                 override fun grant(permissions: List<Permission>) = Unit
@@ -277,9 +277,101 @@ class SitePermissionsFeatureTest {
             val negativeButton = prompt.buttons.find { !it.positive }
             negativeButton!!.onClick.invoke()
 
-            assertTrue(grantWasCalled)
+            assertTrue(rejectWasCalled)
             assertTrue(session.contentPermissionRequest.isConsumed())
         }
+    }
+
+    @Test
+    fun `granting a camera and microphone permission must call grant and consume contentPermissionRequest`() {
+        val session = getSelectedSession()
+        var grantWasCalled = false
+        val permissionRequest: PermissionRequest = object : PermissionRequest {
+            override val uri: String?
+                get() = "http://www.mozilla.org"
+
+            override val permissions: List<Permission>
+                get() = listOf(
+                    ContentVideoCapture("", "back camera"),
+                    ContentVideoCamera("", "front camera"),
+                    ContentAudioMicrophone()
+                )
+
+            override fun grant(permissions: List<Permission>) {
+                grantWasCalled = true
+            }
+            override fun containsVideoAndAudioSources() = true
+
+            override fun reject() = Unit
+        }
+
+        session.contentPermissionRequest = Consumable.from(permissionRequest)
+
+        val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
+
+        prompt.controlGroups.forEach { control ->
+            val radioButton = control.controls.first() as DoorhangerPrompt.Control.RadioButton
+            radioButton.checked = true
+        }
+
+        val positiveButton = prompt.buttons.find { it.positive }
+        positiveButton?.onClick?.invoke()
+
+        assertTrue(grantWasCalled)
+        assertTrue(session.contentPermissionRequest.isConsumed())
+    }
+
+    @Test
+    fun `rejecting a camera and microphone permission must call reject and consume contentPermissionRequest`() {
+        val session = getSelectedSession()
+        var rejectWasCalled = false
+        val permissionRequest: PermissionRequest = object : PermissionRequest {
+            override val uri: String?
+                get() = "http://www.mozilla.org"
+
+            override val permissions: List<Permission>
+                get() = listOf(
+                    ContentVideoCapture("", "back camera"),
+                    ContentVideoCamera("", "front camera"),
+                    ContentAudioMicrophone()
+                )
+            override fun reject() {
+                rejectWasCalled = true
+            }
+
+            override fun containsVideoAndAudioSources() = true
+
+            override fun grant(permissions: List<Permission>) = Unit
+        }
+
+        session.contentPermissionRequest = Consumable.from(permissionRequest)
+
+        val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
+
+        val positiveButton = prompt.buttons.find { !it.positive }
+        positiveButton?.onClick?.invoke()
+
+        assertTrue(rejectWasCalled)
+        assertTrue(session.contentPermissionRequest.isConsumed())
+    }
+
+    @Test(expected = NoSuchElementException::class)
+    fun `trying to find an option permission when none of the options are checked will throw an exception`() {
+        val permissions = listOf(
+            ContentVideoCapture("", "back camera"),
+            ContentVideoCamera("", "front camera")
+        )
+
+        val cameraControlGroup = sitePermissionFeature.createControlGroupForCameraPermission(
+            cameraPermissions = permissions
+        )
+
+        cameraControlGroup.controls.forEach { control ->
+            val radioButton = control as DoorhangerPrompt.Control.RadioButton
+            radioButton.checked = false
+        }
+
+        sitePermissionFeature.findSelectedPermission(cameraControlGroup, permissions)
     }
 
     @Test

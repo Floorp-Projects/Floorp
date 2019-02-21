@@ -26,6 +26,7 @@ dependencies {
     implementation project(':concept-engine')
     implementation project(':ui-icons')
     implementation project(':ui-doorhanger')
+    implementation project(':support-ktx')
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.support_constraintlayout
