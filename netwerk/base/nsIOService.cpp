@@ -836,18 +836,18 @@ nsIOService::NewFileURI(nsIFile *file, nsIURI **result) {
 }
 
 NS_IMETHODIMP
-nsIOService::NewChannelFromURI2(nsIURI *aURI, nsINode *aLoadingNode,
-                                nsIPrincipal *aLoadingPrincipal,
-                                nsIPrincipal *aTriggeringPrincipal,
-                                uint32_t aSecurityFlags,
-                                uint32_t aContentPolicyType,
-                                nsIChannel **result) {
-  return NewChannelFromURIWithProxyFlags2(aURI,
-                                          nullptr,  // aProxyURI
-                                          0,        // aProxyFlags
-                                          aLoadingNode, aLoadingPrincipal,
-                                          aTriggeringPrincipal, aSecurityFlags,
-                                          aContentPolicyType, result);
+nsIOService::NewChannelFromURI(nsIURI *aURI, nsINode *aLoadingNode,
+                               nsIPrincipal *aLoadingPrincipal,
+                               nsIPrincipal *aTriggeringPrincipal,
+                               uint32_t aSecurityFlags,
+                               uint32_t aContentPolicyType,
+                               nsIChannel **result) {
+  return NewChannelFromURIWithProxyFlags(aURI,
+                                         nullptr,  // aProxyURI
+                                         0,        // aProxyFlags
+                                         aLoadingNode, aLoadingPrincipal,
+                                         aTriggeringPrincipal, aSecurityFlags,
+                                         aContentPolicyType, result);
 }
 nsresult nsIOService::NewChannelFromURIWithClientAndController(
     nsIURI *aURI, nsINode *aLoadingNode, nsIPrincipal *aLoadingPrincipal,
@@ -976,7 +976,7 @@ nsresult nsIOService::NewChannelFromURIWithProxyFlagsInternal(
 }
 
 NS_IMETHODIMP
-nsIOService::NewChannelFromURIWithProxyFlags2(
+nsIOService::NewChannelFromURIWithProxyFlags(
     nsIURI *aURI, nsIURI *aProxyURI, uint32_t aProxyFlags,
     nsINode *aLoadingNode, nsIPrincipal *aLoadingPrincipal,
     nsIPrincipal *aTriggeringPrincipal, uint32_t aSecurityFlags,
@@ -989,20 +989,20 @@ nsIOService::NewChannelFromURIWithProxyFlags2(
 }
 
 NS_IMETHODIMP
-nsIOService::NewChannel2(const nsACString &aSpec, const char *aCharset,
-                         nsIURI *aBaseURI, nsINode *aLoadingNode,
-                         nsIPrincipal *aLoadingPrincipal,
-                         nsIPrincipal *aTriggeringPrincipal,
-                         uint32_t aSecurityFlags, uint32_t aContentPolicyType,
-                         nsIChannel **result) {
+nsIOService::NewChannel(const nsACString &aSpec, const char *aCharset,
+                        nsIURI *aBaseURI, nsINode *aLoadingNode,
+                        nsIPrincipal *aLoadingPrincipal,
+                        nsIPrincipal *aTriggeringPrincipal,
+                        uint32_t aSecurityFlags, uint32_t aContentPolicyType,
+                        nsIChannel **result) {
   nsresult rv;
   nsCOMPtr<nsIURI> uri;
   rv = NewURI(aSpec, aCharset, aBaseURI, getter_AddRefs(uri));
   if (NS_FAILED(rv)) return rv;
 
-  return NewChannelFromURI2(uri, aLoadingNode, aLoadingPrincipal,
-                            aTriggeringPrincipal, aSecurityFlags,
-                            aContentPolicyType, result);
+  return NewChannelFromURI(uri, aLoadingNode, aLoadingPrincipal,
+                           aTriggeringPrincipal, aSecurityFlags,
+                           aContentPolicyType, result);
 }
 
 bool nsIOService::IsLinkUp() {
@@ -1763,13 +1763,13 @@ nsresult nsIOService::SpeculativeConnectInternal(
   // channel we create underneath - hence it's safe to use
   // the systemPrincipal as the loadingPrincipal for this channel.
   nsCOMPtr<nsIChannel> channel;
-  rv = NewChannelFromURI2(aURI,
-                          nullptr,  // aLoadingNode,
-                          loadingPrincipal,
-                          nullptr,  // aTriggeringPrincipal,
-                          nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                          nsIContentPolicy::TYPE_SPECULATIVE,
-                          getter_AddRefs(channel));
+  rv = NewChannelFromURI(aURI,
+                         nullptr,  // aLoadingNode,
+                         loadingPrincipal,
+                         nullptr,  // aTriggeringPrincipal,
+                         nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                         nsIContentPolicy::TYPE_SPECULATIVE,
+                         getter_AddRefs(channel));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aAnonymous) {
