@@ -279,51 +279,83 @@ class nsPermissionManager final : public nsIPermissionManager,
   enum TestPreparationEnum { eContinue, eDone };
   struct TestPreparationResult {
     mozilla::BasePrincipal* mPrincipal;
+    int32_t mTypeIndex;
     TestPreparationEnum mShouldContinue;
   };
+  /**
+   * Perform the early steps of a permission check and determine whether we need
+   * to call CommonTestPermissionInternal() for the actual permission check.
+   *
+   * @param aPrincipal optional principal argument to check the permission for,
+   *                   can be nullptr if we aren't performing a principal-based
+   *                   check.
+   * @param aTypeIndex if the caller isn't sure what the index of the permission
+   *                   type to check for is in the mTypeArray member variable,
+   *                   it should pass -1, otherwise this would be the index of
+   *                   the type inside mTypeArray.  This would only be something
+   *                   other than -1 in recursive invocations of this function.
+   * @param aType      the permission type to test.
+   * @param aPermission out argument which will be a permission type that we
+   *                    will return from this function once the function is
+   *                    done.
+   */
   TestPreparationResult CommonPrepareToTestPermission(nsIPrincipal* aPrincipal,
+                                                      int32_t aTypeIndex,
+                                                      const char* aType,
                                                       uint32_t* aPermission) {
     auto* basePrin = mozilla::BasePrincipal::Cast(aPrincipal);
     if (basePrin && basePrin->IsSystemPrincipal()) {
       *aPermission = nsIPermissionManager::ALLOW_ACTION;
-      return {basePrin, eDone};
+      return {basePrin, -1, eDone};
     }
 
-    return {basePrin, eContinue};
+    *aPermission = nsIPermissionManager::UNKNOWN_ACTION;
+
+    int32_t typeIndex =
+        aTypeIndex == -1 ? GetTypeIndex(aType, false) : aTypeIndex;
+    // If type == -1, the type isn't known, just signal that we are done.
+    if (typeIndex == -1) {
+      return {basePrin, -1, eDone};
+    }
+
+    return {basePrin, typeIndex, eContinue};
   }
 
-  nsresult CommonTestPermission(nsIPrincipal* aPrincipal, const char* aType,
-                                uint32_t* aPermission, bool aExactHostMatch,
-                                bool aIncludingSession) {
-    auto preparationResult =
-        CommonPrepareToTestPermission(aPrincipal, aPermission);
+  // If aTypeIndex is passed -1, we try to inder the type index from aType.
+  nsresult CommonTestPermission(nsIPrincipal* aPrincipal, int32_t aTypeIndex,
+                                const char* aType, uint32_t* aPermission,
+                                bool aExactHostMatch, bool aIncludingSession) {
+    auto preparationResult = CommonPrepareToTestPermission(
+        aPrincipal, aTypeIndex, aType, aPermission);
     if (preparationResult.mShouldContinue == eDone) {
       return NS_OK;
     }
 
-    return CommonTestPermissionInternal(preparationResult.mPrincipal, nullptr,
-                                        EmptyCString(), aType, aPermission,
-                                        aExactHostMatch, aIncludingSession);
+    return CommonTestPermissionInternal(
+        preparationResult.mPrincipal, nullptr, EmptyCString(),
+        preparationResult.mTypeIndex, aType, aPermission, aExactHostMatch,
+        aIncludingSession);
   }
-  nsresult CommonTestPermission(nsIURI* aURI, const char* aType,
-                                uint32_t* aPermission, bool aExactHostMatch,
-                                bool aIncludingSession) {
+  // If aTypeIndex is passed -1, we try to inder the type index from aType.
+  nsresult CommonTestPermission(nsIURI* aURI, int32_t aTypeIndex,
+                                const char* aType, uint32_t* aPermission,
+                                bool aExactHostMatch, bool aIncludingSession) {
     auto preparationResult =
-        CommonPrepareToTestPermission(nullptr, aPermission);
+        CommonPrepareToTestPermission(nullptr, aTypeIndex, aType, aPermission);
     if (preparationResult.mShouldContinue == eDone) {
       return NS_OK;
     }
 
     MOZ_ASSERT(!preparationResult.mPrincipal);
 
-    return CommonTestPermissionInternal(nullptr, aURI, EmptyCString(), aType,
-                                        aPermission, aExactHostMatch,
-                                        aIncludingSession);
+    return CommonTestPermissionInternal(
+        nullptr, aURI, EmptyCString(), preparationResult.mTypeIndex, aType,
+        aPermission, aExactHostMatch, aIncludingSession);
   }
   // Only one of aPrincipal or aURI is allowed to be passed in.
   nsresult CommonTestPermissionInternal(
       mozilla::BasePrincipal* aPrincipal, nsIURI* aURI,
-      const nsACString& aOriginNoSuffix, const char* aType,
+      const nsACString& aOriginNoSuffix, int32_t aTypeIndex, const char* aType,
       uint32_t* aPermission, bool aExactHostMatch, bool aIncludingSession);
 
   nsresult OpenDatabase(nsIFile* permissionsFile);
