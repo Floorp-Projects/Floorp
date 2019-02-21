@@ -723,10 +723,10 @@ def main(args=sys.argv[1:]):
         os.sys.exit(1)
 
     # when running raptor locally with gecko profiling on, use the view-gecko-profile
-    # tool to automatically load the latest gecko profile in perf-html.io
+    # tool to automatically load the latest gecko profile in profiler.firefox.com
     if args.gecko_profile and args.run_local:
         if os.environ.get('DISABLE_PROFILE_LAUNCH', '0') == '1':
-            LOG.info("Not launching perf-html.io because DISABLE_PROFILE_LAUNCH=1")
+            LOG.info("Not launching profiler.firefox.com because DISABLE_PROFILE_LAUNCH=1")
         else:
             view_gecko_profile(args.binary)
 

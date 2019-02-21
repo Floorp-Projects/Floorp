@@ -92,10 +92,10 @@ window.performance.mark("my-function-start");
 window.performance.measure("my-function", "my-function-start");
 ```
 
-This marker will appear in the `Marker Chart` section in perf-html, in the `UserTiming` lines:
+This marker will appear in the `Marker Chart` section in [profiler.firefox.com](https://profiler.firefox.com), in the `UserTiming` lines:
   ![custom markers](performance/profiler-custom-markers.png)
 
-You can double click on it to make perf-html display the record during this precise moment in time,
+You can double click on it to make [profiler.firefox.com](https://profiler.firefox.com) display the record during this precise moment in time,
 and the call tree will only display what was executed during this measurement.
 
 ### Prototype quickly

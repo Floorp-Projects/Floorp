@@ -333,10 +333,10 @@ def run_tests(config, browser_config):
                   % (results_urls['output_urls']))
 
     # when running talos locally with gecko profiling on, use the view-gecko-profile
-    # tool to automatically load the latest gecko profile in perf-html.io
+    # tool to automatically load the latest gecko profile in profiler.firefox.com
     if config['gecko_profile'] and browser_config['develop']:
         if os.environ.get('DISABLE_PROFILE_LAUNCH', '0') == '1':
-            LOG.info("Not launching perf-html.io because DISABLE_PROFILE_LAUNCH=1")
+            LOG.info("Not launching profiler.firefox.com because DISABLE_PROFILE_LAUNCH=1")
         else:
             view_gecko_profile(config['browser_path'])
 
@@ -346,7 +346,7 @@ def run_tests(config, browser_config):
 
 
 def view_gecko_profile(ffox_bin):
-    # automatically load the latest talos gecko-profile archive in perf-html.io
+    # automatically load the latest talos gecko-profile archive in profiler.firefox.com
     if sys.platform.startswith('win') and not ffox_bin.endswith(".exe"):
         ffox_bin = ffox_bin + ".exe"
 
@@ -356,7 +356,7 @@ def view_gecko_profile(ffox_bin):
 
     profile_zip = os.environ.get('TALOS_LATEST_GECKO_PROFILE_ARCHIVE', None)
     if profile_zip is None or not os.path.exists(profile_zip):
-        LOG.info("No local talos gecko profiles were found so not launching perf-html.io")
+        LOG.info("No local talos gecko profiles were found so not launching profiler.firefox.com")
         return
 
     # need the view-gecko-profile tool, it's in repo/testing/tools
