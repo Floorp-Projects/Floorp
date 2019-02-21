@@ -68,6 +68,8 @@ async function runTests(options) {
     let [{id, windowId}] = await browser.tabs.query({active: true, currentWindow: true});
     tabs.push(id);
     windows.push(windowId);
+
+    browser.test.sendMessage("background-page-ready");
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -108,12 +110,16 @@ async function runTests(options) {
     });
   });
 
-  // Wait for initial sidebar load to start tests.
-  SidebarUI.browser.addEventListener("load", event => {
+  // Wait for initial sidebar load.
+  SidebarUI.browser.addEventListener("load", async () => {
+    // Wait for the background page listeners to be ready and
+    // then start the tests.
+    await extension.awaitMessage("background-page-ready");
     extension.sendMessage("runNextTest");
   }, {capture: true, once: true});
 
   await extension.startup();
+
   await awaitFinish;
   await extension.unload();
 }
