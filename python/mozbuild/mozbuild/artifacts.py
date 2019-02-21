@@ -536,8 +536,7 @@ class WinArtifactJob(ArtifactJob):
 # https://tools.taskcluster.net/index/artifacts/#gecko.v2.mozilla-central.latest/gecko.v2.mozilla-central.latest
 # The values correpsond to a pair of (<package regex>, <test archive regex>).
 JOB_DETAILS = {
-    'android-api-16-opt': (AndroidArtifactJob, (r'(public/build/fennec-(.*)\.android-arm.apk|public/build/target\.apk)',
-                                                r'public/build/fennec-(.*)\.common\.tests\.(zip|tar\.gz)|'
+    'android-api-16-opt': (AndroidArtifactJob, (r'public/build/target\.apk',
                                                 r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
     'android-api-16-debug': (AndroidArtifactJob, (r'public/build/target\.apk',
                                                   r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
@@ -563,41 +562,25 @@ JOB_DETAILS = {
                                        r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
     'linux64-debug': (LinuxArtifactJob, (r'public/build/target\.tar\.bz2',
                                          r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'macosx64-opt': (MacArtifactJob, (r'public/build/firefox-(.*)\.mac\.dmg|public/build/target\.dmg',
-                                      r'public/build/firefox-(.*)\.common\.tests\.(zip|tar\.gz)|'
+    'macosx64-opt': (MacArtifactJob, (r'public/build/target\.dmg',
                                       r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'macosx64-debug': (MacArtifactJob, (r'public/build/firefox-(.*)\.mac\.dmg|public/build/target\.dmg',
-                                        r'public/build/firefox-(.*)\.common\.tests\.(zip|tar\.gz)|'
+    'macosx64-debug': (MacArtifactJob, (r'public/build/target\.dmg',
                                         r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'win32-opt': (WinArtifactJob, (r'public/build/firefox-(.*)\.win32\.(zip|tar\.gz)|'
-                                   r'public/build/target\.(zip|tar\.gz)',
-                                   r'public/build/firefox-(.*)\.common\.tests\.(zip|tar\.gz)|'
+    'win32-opt': (WinArtifactJob, (r'public/build/target\.(zip|tar\.gz)',
                                    r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'win32-pgo': (WinArtifactJob, (r'public/build/firefox-(.*)\.win32\.(zip|tar\.gz)|'
-                                   r'public/build/target\.(zip|tar\.gz)',
-                                   r'public/build/firefox-(.*)\.common\.tests\.(zip|tar\.gz)|'
+    'win32-pgo': (WinArtifactJob, (r'public/build/target\.(zip|tar\.gz)',
                                    r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'win32-debug': (WinArtifactJob, (r'public/build/firefox-(.*)\.win32\.(zip|tar\.gz)|'
-                                     r'public/build/target\.(zip|tar\.gz)',
-                                     r'public/build/firefox-(.*)\.common\.tests\.(zip|tar\.gz)|'
+    'win32-debug': (WinArtifactJob, (r'public/build/target\.(zip|tar\.gz)',
                                      r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'win64-opt': (WinArtifactJob, (r'public/build/firefox-(.*)\.win64\.(zip|tar\.gz)|'
-                                   r'public/build/target\.(zip|tar\.gz)',
-                                   r'public/build/firefox-(.*)\.common\.tests\.(zip|tar\.gz)|'
+    'win64-opt': (WinArtifactJob, (r'public/build/target\.(zip|tar\.gz)',
                                    r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'win64-pgo': (WinArtifactJob, (r'public/build/firefox-(.*)\.win64\.(zip|tar\.gz)|'
-                                   r'public/build/target\.(zip|tar\.gz)',
-                                   r'public/build/firefox-(.*)\.common\.tests\.(zip|tar\.gz)|'
+    'win64-pgo': (WinArtifactJob, (r'public/build/target\.(zip|tar\.gz)',
                                    r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'win64-debug': (WinArtifactJob, (r'public/build/firefox-(.*)\.win64\.(zip|tar\.gz)|public/build/target\.(zip|tar\.gz)',
-                                     r'public/build/firefox-(.*)\.common\.tests\.(zip|tar\.gz)|'
+    'win64-debug': (WinArtifactJob, (r'public/build/target\.(zip|tar\.gz)',
                                      r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'win64-aarch64-opt': (WinArtifactJob, (r'public/build/firefox-(.*)\.win64\.(zip|tar\.gz)|'
-                                           r'public/build/target\.(zip|tar\.gz)',
-                                           r'public/build/firefox-(.*)\.common\.tests\.(zip|tar\.gz)|'
+    'win64-aarch64-opt': (WinArtifactJob, (r'public/build/target\.(zip|tar\.gz)',
                                            r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
-    'win64-aarch64-debug': (WinArtifactJob, (r'public/build/firefox-(.*)\.win64\.(zip|tar\.gz)|public/build/target\.(zip|tar\.gz)',
-                                             r'public/build/firefox-(.*)\.common\.tests\.(zip|tar\.gz)|'
+    'win64-aarch64-debug': (WinArtifactJob, (r'public/build/target\.(zip|tar\.gz)',
                                              r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
 }
 
