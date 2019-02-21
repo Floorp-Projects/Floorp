@@ -329,9 +329,15 @@ var E10SUtils = {
    * @param {String} principal_b64 A base64 encoded serialized principal.
    * @return {nsIPrincipal} A deserialized principal.
    */
-  deserializePrincipal(principal_b64) {
-    if (!principal_b64)
-      return null;
+  deserializePrincipal(principal_b64, fallbackPrincipalCallback = null) {
+    if (!principal_b64) {
+      if (!fallbackPrincipalCallback) {
+        debug("No principal passed to deserializePrincipal and no fallbackPrincipalCallback");
+        return null;
+      }
+
+      return fallbackPrincipalCallback();
+    }
 
     try {
       let principal = serializationHelper.deserializeObject(principal_b64);
@@ -340,7 +346,11 @@ var E10SUtils = {
     } catch (e) {
       debug(`Failed to deserialize principal_b64 '${principal_b64}' ${e}`);
     }
-    return null;
+    if (!fallbackPrincipalCallback) {
+      debug("No principal passed to deserializePrincipal and no fallbackPrincipalCallback");
+      return null;
+    }
+    return fallbackPrincipalCallback();
   },
 
   shouldLoadURIInBrowser(browser, uri, multiProcess = true,
