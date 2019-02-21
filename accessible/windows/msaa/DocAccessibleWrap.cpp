@@ -77,7 +77,8 @@ DocAccessibleWrap::get_accValue(VARIANT aVarChild, BSTR __RPC_FAR* aValue) {
   // If document is being used to create a widget, don't use the URL hack
   roles::Role role = Role();
   if (role != roles::DOCUMENT && role != roles::APPLICATION &&
-      role != roles::DIALOG && role != roles::ALERT)
+      role != roles::DIALOG && role != roles::ALERT &&
+      role != roles::NON_NATIVE_DOCUMENT)
     return hr;
 
   nsAutoString url;
