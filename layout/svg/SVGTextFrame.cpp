@@ -3520,7 +3520,8 @@ void SVGTextFrame::ReflowSVG() {
     // Due to rounding issues when we have a transform applied, we sometimes
     // don't include an additional row of pixels.  For now, just inflate our
     // covered region.
-    mRect.Inflate(ceil(presContext->AppUnitsPerDevPixel() / mLastContextScale));
+    double contextScale = GetContextScale(GetCanvasTM());
+    mRect.Inflate(ceil(presContext->AppUnitsPerDevPixel() / contextScale));
   }
 
   if (mState & NS_FRAME_FIRST_REFLOW) {
