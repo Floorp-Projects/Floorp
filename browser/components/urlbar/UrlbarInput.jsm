@@ -367,7 +367,12 @@ class UrlbarInput {
         break;
       }
       case UrlbarUtils.RESULT_TYPE.OMNIBOX: {
-        // Give the extension control of handling the command.
+        // We don't directly handle a load when an Omnibox API result is picked,
+        // instead we forward the request to the WebExtension itself, because
+        // the value may not even be a url.
+        // We pass the keyword and content, that actually is the retrieved value
+        // prefixed by the keyword. ExtensionSearchHandler uses this keyword
+        // redundancy as a sanity check.
         ExtensionSearchHandler.handleInputEntered(result.payload.keyword,
                                                   result.payload.content,
                                                   where);
