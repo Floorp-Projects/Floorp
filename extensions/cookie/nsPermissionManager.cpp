@@ -46,6 +46,7 @@
 #include "mozilla/AbstractThread.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "nsEffectiveTLDService.h"
 
 static mozilla::StaticRefPtr<nsPermissionManager> gPermissionManager;
 
@@ -217,15 +218,9 @@ nsresult GetPrincipal(nsIURI* aURI, nsIPrincipal** aPrincipal) {
 }
 
 nsCString GetNextSubDomainForHost(const nsACString& aHost) {
-  nsCOMPtr<nsIEffectiveTLDService> tldService =
-      do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
-  if (!tldService) {
-    NS_ERROR("Should have a tld service!");
-    return EmptyCString();
-  }
-
   nsCString subDomain;
-  nsresult rv = tldService->GetNextSubDomain(aHost, subDomain);
+  nsresult rv =
+      nsEffectiveTLDService::GetInstance()->GetNextSubDomain(aHost, subDomain);
   // We can fail if there is no more subdomain or if the host can't have a
   // subdomain.
   if (NS_FAILED(rv)) {
@@ -542,14 +537,10 @@ nsresult UpgradeHostToOriginAndInsert(
 
     // Get the eTLD+1 of the domain
     nsAutoCString eTLD1;
-    nsCOMPtr<nsIEffectiveTLDService> tldService =
-        do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
-    MOZ_ASSERT(tldService);  // We should always have a tldService
-    if (tldService) {
-      rv = tldService->GetBaseDomainFromHost(aHost, 0, eTLD1);
-    }
+    rv = nsEffectiveTLDService::GetInstance()->GetBaseDomainFromHost(aHost, 0,
+                                                                     eTLD1);
 
-    if (!tldService || NS_FAILED(rv)) {
+    if (NS_FAILED(rv)) {
       // If the lookup on the tldService for the base domain for the host
       // failed, that means that we just want to directly use the host as the
       // host name for the lookup.
@@ -1499,10 +1490,6 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
         // Only perform this migration if the original schema version was 7, and
         // the moz_hosts table is a backup.
         if (dbSchemaVersion == 7 && hostsIsBackupExists) {
-          nsCOMPtr<nsIEffectiveTLDService> tldService =
-              do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
-          MOZ_ASSERT(tldService);  // We should always have a tldService
-
           nsCOMPtr<mozIStorageStatement> stmt;
           rv = mDBConn->CreateStatement(
               NS_LITERAL_CSTRING(
@@ -1538,7 +1525,8 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
             }
 
             nsAutoCString eTLD1;
-            rv = tldService->GetBaseDomainFromHost(host, 0, eTLD1);
+            rv = nsEffectiveTLDService::GetInstance()->GetBaseDomainFromHost(
+                host, 0, eTLD1);
             if (NS_SUCCEEDED(rv)) {
               // We only care about entries which the tldService can't handle
               continue;
