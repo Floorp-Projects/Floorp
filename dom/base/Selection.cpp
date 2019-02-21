@@ -3190,13 +3190,11 @@ nsresult Selection::NotifySelectionListeners() {
       if (newEditingHost && newEditingHost != focusedElement) {
         MOZ_ASSERT(!newEditingHost->IsInNativeAnonymousSubtree());
         // Note that don't steal focus from focused window if the window doesn't
-        // have focus and if the window isn't focused window, shouldn't be
-        // scrolled to the new focused element.
-        uint32_t flags = nsIFocusManager::FLAG_NOSWITCHFRAME;
-        if (focusedWindow != fm->GetFocusedWindow()) {
-          flags |= nsIFocusManager::FLAG_NOSCROLL;
-        }
-        fm->SetFocus(newEditingHost, flags);
+        // have focus.  Additionally, although when an element gets focus, we
+        // usually scroll to the element, but in this case, we shouldn't do it
+        // because Chrome does not do so.
+        fm->SetFocus(newEditingHost, nsIFocusManager::FLAG_NOSWITCHFRAME |
+                                         nsIFocusManager::FLAG_NOSCROLL);
       }
     }
   }
