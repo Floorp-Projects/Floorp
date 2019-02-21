@@ -10,9 +10,7 @@ const PREF_INT     = 64;
 const PREF_STRING  = 32;
 
 function run_test() {
-
-  var ps = Cc["@mozilla.org/preferences-service;1"].
-            getService(Ci.nsIPrefService);
+  const ps = Services.prefs;
 
   let defaultBranch = ps.getDefaultBranch("");
   let userBranch = ps.getBranch("");
@@ -20,7 +18,7 @@ function run_test() {
   let prefFile = do_get_profile();
   prefFile.append("prefs.js");
 
-  //**************************************************************************//
+  //* *************************************************************************//
   // prefs are not dirty after a write
   ps.savePrefFile(null);
   Assert.ok(!ps.dirty);
@@ -58,7 +56,8 @@ function run_test() {
   Assert.ok(!ps.dirty);
   // Fail to change type of a pref with default value -> not dirty
   do_check_throws(function() {
-    userBranch.setCharPref("DirtyTest.existing.bool", "boo"); }, Cr.NS_ERROR_UNEXPECTED);
+    userBranch.setCharPref("DirtyTest.existing.bool", "boo");
+}, Cr.NS_ERROR_UNEXPECTED);
   Assert.ok(!ps.dirty);
 
   // Set user value same as default, not dirty

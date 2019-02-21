@@ -3,8 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-function run_test()
-{
+function run_test() {
   zipW.open(tmpFile, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
   zipW.close();
 

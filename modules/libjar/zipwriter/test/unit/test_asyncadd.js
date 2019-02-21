@@ -10,24 +10,22 @@ var TESTS = [
   {
     name: "test.txt",
     size: 232,
-    crc: 0x0373ac26
+    crc: 0x0373ac26,
   },
   {
     name: "test.png",
     size: 3402,
-    crc: 0x504a5c30
-  }
+    crc: 0x504a5c30,
+  },
 ];
 
 var size = 0;
 
 var observer = {
-  onStartRequest: function(request, context)
-  {
+  onStartRequest(request, context) {
   },
 
-  onStopRequest: function(request, context, status)
-  {
+  onStopRequest(request, context, status) {
     Assert.equal(status, Cr.NS_OK);
 
     zipW.close();
@@ -57,47 +55,43 @@ var observer = {
 
     zipR.close();
     do_test_finished();
-  }
+  },
 };
 
 var methods = {
-  file: function method_file(entry, source)
-  {
+  file: function method_file(entry, source) {
     zipW.addEntryFile(entry, Ci.nsIZipWriter.COMPRESSION_NONE, source,
                       true);
   },
-  channel: function method_channel(entry, source)
-  {
+  channel: function method_channel(entry, source) {
     zipW.addEntryChannel(entry, source.lastModifiedTime * PR_MSEC_PER_SEC,
                          Ci.nsIZipWriter.COMPRESSION_NONE,
                          NetUtil.newChannel({
                            uri: ioSvc.newFileURI(source),
-                           loadUsingSystemPrincipal: true
+                           loadUsingSystemPrincipal: true,
                          }), true);
   },
-  stream: function method_stream(entry, source)
-  {
+  stream: function method_stream(entry, source) {
     zipW.addEntryStream(entry, source.lastModifiedTime * PR_MSEC_PER_SEC,
                         Ci.nsIZipWriter.COMPRESSION_NONE,
                         NetUtil.newChannel({
                           uri: ioSvc.newFileURI(source),
-                          loadUsingSystemPrincipal: true
+                          loadUsingSystemPrincipal: true,
                         }).open(), true);
-  }
-}
+  },
+};
 
-function run_test()
-{
+function run_test() {
   zipW.open(tmpFile, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
 
   for (var i = 0; i < TESTS.length; i++) {
-    var source = do_get_file(DATA_DIR+TESTS[i].name);
+    var source = do_get_file(DATA_DIR + TESTS[i].name);
     for (let method in methods) {
       var entry = method + "/" + TESTS[i].name;
       methods[method](entry, source);
       size += ZIP_FILE_HEADER_SIZE + ZIP_CDS_HEADER_SIZE +
               (ZIP_EXTENDED_TIMESTAMP_SIZE * 2) +
-              (entry.length*2) + TESTS[i].size;
+              (entry.length * 2) + TESTS[i].size;
     }
   }
   do_test_pending();

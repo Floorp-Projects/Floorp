@@ -2,8 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function wrapInputStream(input)
-{
+function wrapInputStream(input) {
   var nsIScriptableInputStream = Ci.nsIScriptableInputStream;
   var factory = Cc["@mozilla.org/scriptableinputstream;1"];
   var wrapper = factory.createInstance(nsIScriptableInputStream);

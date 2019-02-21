@@ -1198,6 +1198,13 @@ void AudioContext::Unmute() const {
   }
 }
 
+void AudioContext::SetParamMapForWorkletName(
+    const nsAString& aName, AudioParamDescriptorMap* aParamMap) {
+  MOZ_ASSERT(!mWorkletParamDescriptors.GetValue(aName));
+  Unused << mWorkletParamDescriptors.Put(aName, std::move(*aParamMap),
+                                         fallible);
+}
+
 size_t AudioContext::SizeOfIncludingThis(
     mozilla::MallocSizeOf aMallocSizeOf) const {
   // AudioNodes are tracked separately because we do not want the AudioContext

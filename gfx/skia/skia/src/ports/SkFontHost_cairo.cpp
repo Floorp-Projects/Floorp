@@ -267,7 +267,7 @@ public:
 
     cairo_font_face_t* GetCairoFontFace() const { return fFontFace; }
 
-private:
+   private:
     ~SkCairoFTTypeface()
     {
         cairo_font_face_destroy(fFontFace);
@@ -283,7 +283,8 @@ private:
 };
 
 static bool FindByCairoFontFace(SkTypeface* typeface, void* context) {
-    return static_cast<SkCairoFTTypeface*>(typeface)->GetCairoFontFace() == static_cast<cairo_font_face_t*>(context);
+  return static_cast<SkCairoFTTypeface*>(typeface)->GetCairoFontFace() ==
+         static_cast<cairo_font_face_t*>(context);
 }
 
 SkTypeface* SkCreateTypefaceFromCairoFTFontWithFontconfig(cairo_scaled_font_t* scaledFont, FcPattern* pattern)
@@ -292,10 +293,11 @@ SkTypeface* SkCreateTypefaceFromCairoFTFontWithFontconfig(cairo_scaled_font_t* s
     SkASSERT(cairo_font_face_status(fontFace) == CAIRO_STATUS_SUCCESS);
     SkASSERT(cairo_font_face_get_type(fontFace) == CAIRO_FONT_TYPE_FT);
 
-    SkTypeface* typeface = SkTypefaceCache::FindByProcAndRef(FindByCairoFontFace, fontFace);
+    SkTypeface* typeface =
+        SkTypefaceCache::FindByProcAndRef(FindByCairoFontFace, fontFace);
     if (!typeface) {
-        typeface = new SkCairoFTTypeface(fontFace, pattern);
-        SkTypefaceCache::Add(typeface);
+      typeface = new SkCairoFTTypeface(fontFace, pattern);
+      SkTypefaceCache::Add(typeface);
     }
 
     return typeface;

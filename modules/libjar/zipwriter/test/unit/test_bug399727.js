@@ -21,17 +21,17 @@ BinaryComparer.prototype = {
   length: null,
   callback: null,
 
-  onStartRequest: function(aRequest, aContext) {
+  onStartRequest(aRequest, aContext) {
   },
 
-  onStopRequest: function(aRequest, aContext, aStatusCode) {
+  onStopRequest(aRequest, aContext, aStatusCode) {
     this.fileStream.close();
     Assert.equal(aStatusCode, Cr.NS_OK);
     Assert.equal(this.offset, this.length);
     this.callback();
   },
 
-  onDataAvailable: function(aRequest, aContext, aInputStream, aOffset, aCount) {
+  onDataAvailable(aRequest, aContext, aInputStream, aOffset, aCount) {
     var stream = Cc["@mozilla.org/binaryinputstream;1"].
                  createInstance(Ci.nsIBinaryInputStream);
     stream.setInputStream(aInputStream);
@@ -39,34 +39,30 @@ BinaryComparer.prototype = {
     for (var i = 0; i < aCount; i++) {
       try {
         source = this.fileStream.read8();
-      }
-      catch (e) {
+      } catch (e) {
         do_throw("Unable to read from file at offset " + this.offset + " " + e);
       }
       try {
         actual = stream.read8();
-      }
-      catch (e) {
+      } catch (e) {
         do_throw("Unable to read from converted stream at offset " + this.offset + " " + e);
       }
       if (source != actual)
         do_throw("Invalid value " + actual + " at offset " + this.offset + ", should have been " + source);
       this.offset++;
     }
-  }
-}
+  },
+};
 
-function comparer_callback()
-{
+function comparer_callback() {
   do_test_finished();
 }
 
-function run_test()
-{
+function run_test() {
   var source = do_get_file(DATA_DIR + "test_bug399727.html");
   var comparer = new BinaryComparer(do_get_file(DATA_DIR + "test_bug399727.zlib"),
                                     comparer_callback);
-  
+
   // Prepare the stream converter
   var scs = Cc["@mozilla.org/streamConverters;1"].
             getService(Ci.nsIStreamConverterService);

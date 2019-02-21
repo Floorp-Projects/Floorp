@@ -9,19 +9,18 @@ var TESTS = [
     name: "test.txt",
     size: 232,
     crc: 0x0373ac26,
-    time: Date.UTC(2007, 4, 1, 20, 44, 55)
+    time: Date.UTC(2007, 4, 1, 20, 44, 55),
   },
   {
     name: "test.png",
     size: 3402,
     crc: 0x504a5c30,
-    time: Date.UTC(2007, 4, 1, 20, 49, 39)
-  }
+    time: Date.UTC(2007, 4, 1, 20, 49, 39),
+  },
 ];
 var BADENTRY = "unknown.txt";
 
-function run_test()
-{
+function run_test() {
   // Copy our test zip to the tmp dir so we can modify it
   var testzip = do_get_file(DATA_DIR + "test.zip");
   testzip.copyTo(tmpDir, tmpFile.leafName);
@@ -30,7 +29,7 @@ function run_test()
 
   zipW.open(tmpFile, PR_RDWR);
 
-  for (var i = 0; i < TESTS.length; i++) {
+  for (let i = 0; i < TESTS.length; i++) {
     Assert.ok(zipW.hasEntry(TESTS[i].name));
     var entry = zipW.getEntry(TESTS[i].name);
     Assert.ok(entry != null);
@@ -43,12 +42,11 @@ function run_test()
   try {
     zipW.removeEntry(BADENTRY, false);
     do_throw("shouldn't be able to remove an entry that doesn't exist");
-  }
-  catch (e) {
+  } catch (e) {
     Assert.equal(e.result, Cr.NS_ERROR_FILE_NOT_FOUND);
   }
 
-  for (var i = 0; i < TESTS.length; i++) {
+  for (let i = 0; i < TESTS.length; i++) {
     zipW.removeEntry(TESTS[i].name, false);
   }
 

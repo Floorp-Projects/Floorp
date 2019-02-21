@@ -22,8 +22,9 @@ static guint sTimerID;
 static GtkWidget *sWin;
 static GtkWidget *sLabel;
 static GtkWidget *sProgressBar;
+static GdkPixbuf *sPixbuf;
 
-static const char *sProgramPath;
+StringTable sStrings;
 
 static gboolean UpdateDialog(gpointer data) {
   if (sQuit) {
@@ -45,9 +46,20 @@ static gboolean OnDeleteEvent(GtkWidget *widget, GdkEvent *event,
 }
 
 int InitProgressUI(int *pargc, char ***pargv) {
-  sProgramPath = (*pargv)[0];
-
   sEnableUI = gtk_init_check(pargc, pargv);
+  if (sEnableUI) {
+    // Prepare to show the UI here in case the files are modified by the update.
+    char ini_path[PATH_MAX];
+    SprintfLiteral(ini_path, "%s.ini", (*pargv)[0]);
+    if (ReadStrings(ini_path, &sStrings) != OK) {
+      sEnableUI = false;
+      return -1;
+    }
+
+    char icon_path[PATH_MAX];
+    SprintfLiteral(icon_path, "%s/icons/updater.png", (*pargv)[2]);
+    sPixbuf = gdk_pixbuf_new_from_file(icon_path, nullptr);
+  }
   return 0;
 }
 
@@ -65,38 +77,25 @@ int ShowProgressUI() {
     return 0;
   }
 
-  char ini_path[PATH_MAX];
-  SprintfLiteral(ini_path, "%s.ini", sProgramPath);
-
-  StringTable strings;
-  if (ReadStrings(ini_path, &strings) != OK) {
-    return -1;
-  }
-
   sWin = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   if (!sWin) {
     return -1;
   }
 
-  static GdkPixbuf *pixbuf;
-  char icon_path[PATH_MAX];
-  SprintfLiteral(icon_path, "%s.png", sProgramPath);
-
   g_signal_connect(G_OBJECT(sWin), "delete_event", G_CALLBACK(OnDeleteEvent),
                    nullptr);
 
-  gtk_window_set_title(GTK_WINDOW(sWin), strings.title);
+  gtk_window_set_title(GTK_WINDOW(sWin), sStrings.title);
   gtk_window_set_type_hint(GTK_WINDOW(sWin), GDK_WINDOW_TYPE_HINT_DIALOG);
   gtk_window_set_position(GTK_WINDOW(sWin), GTK_WIN_POS_CENTER_ALWAYS);
   gtk_window_set_resizable(GTK_WINDOW(sWin), FALSE);
   gtk_window_set_decorated(GTK_WINDOW(sWin), TRUE);
   gtk_window_set_deletable(GTK_WINDOW(sWin), FALSE);
-  pixbuf = gdk_pixbuf_new_from_file(icon_path, nullptr);
-  gtk_window_set_icon(GTK_WINDOW(sWin), pixbuf);
-  g_object_unref(pixbuf);
+  gtk_window_set_icon(GTK_WINDOW(sWin), sPixbuf);
+  g_object_unref(sPixbuf);
 
   GtkWidget *vbox = gtk_vbox_new(TRUE, 6);
-  sLabel = gtk_label_new(strings.info);
+  sLabel = gtk_label_new(sStrings.info);
   gtk_misc_set_alignment(GTK_MISC(sLabel), 0.0f, 0.0f);
   sProgressBar = gtk_progress_bar_new();
 

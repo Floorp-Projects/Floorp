@@ -188,8 +188,7 @@ class PreprocessorOutputWrapper(object):
         self._pp = preprocessor
 
     def write(self, str):
-        file = os.path.normpath(os.path.abspath(self._pp.context['FILE']))
-        with errors.context(file, self._pp.context['LINE']):
+        with errors.context(self._pp.context['FILE'], self._pp.context['LINE']):
             self._parser.handle_line(str)
 
 

@@ -10,8 +10,7 @@ const CRC = 0xe6164331;
 // XXX Must use a constant time here away from DST changes. See bug 402434.
 const time = 1199145600000; // Jan 1st 2008
 
-function testpass(source)
-{
+function testpass(source) {
   // Should exist.
   Assert.ok(source.hasEntry(FILENAME));
 
@@ -34,8 +33,7 @@ function testpass(source)
   Assert.equal(entry.CRC32, CRC);
 }
 
-function run_test()
-{
+function run_test() {
   zipW.open(tmpFile, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
 
   // Shouldn't be there to start with.
@@ -67,7 +65,7 @@ function run_test()
   var zipR = new ZipReader(tmpFile);
   testpass(zipR);
   zipR.test(FILENAME);
-  var stream = Cc["@mozilla.org/scriptableinputstream;1"]
+  stream = Cc["@mozilla.org/scriptableinputstream;1"]
                 .createInstance(Ci.nsIScriptableInputStream);
   stream.init(zipR.getInputStream(FILENAME));
   var result = stream.read(DATA.length);
