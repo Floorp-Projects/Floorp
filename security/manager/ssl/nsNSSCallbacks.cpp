@@ -239,12 +239,12 @@ OCSPRequest::Run() {
   }
 
   nsCOMPtr<nsIChannel> channel;
-  rv = ios->NewChannel2(mAIALocation, nullptr, nullptr,
-                        nullptr,  // aLoadingNode
-                        nsContentUtils::GetSystemPrincipal(),
-                        nullptr,  // aTriggeringPrincipal
-                        nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                        nsIContentPolicy::TYPE_OTHER, getter_AddRefs(channel));
+  rv = ios->NewChannel(mAIALocation, nullptr, nullptr,
+                       nullptr,  // aLoadingNode
+                       nsContentUtils::GetSystemPrincipal(),
+                       nullptr,  // aTriggeringPrincipal
+                       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                       nsIContentPolicy::TYPE_OTHER, getter_AddRefs(channel));
   if (NS_FAILED(rv)) {
     return NotifyDone(rv, lock);
   }

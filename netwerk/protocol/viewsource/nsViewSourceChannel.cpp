@@ -60,7 +60,7 @@ nsresult nsViewSourceChannel::Init(nsIURI *uri) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  // This function is called from within nsViewSourceHandler::NewChannel2
+  // This function is called from within nsViewSourceHandler::NewChannel
   // and sets the right loadInfo right after returning from this function.
   // Until then we follow the principal of least privilege and use
   // nullPrincipal as the loadingPrincipal and the least permissive
@@ -68,7 +68,7 @@ nsresult nsViewSourceChannel::Init(nsIURI *uri) {
   nsCOMPtr<nsIPrincipal> nullPrincipal =
       mozilla::NullPrincipal::CreateWithoutOriginAttributes();
 
-  rv = pService->NewChannel2(
+  rv = pService->NewChannel(
       path,
       nullptr,  // aOriginCharset
       nullptr,  // aCharSet
