@@ -1979,34 +1979,23 @@ bool GetPropIRGenerator::tryAttachModuleNamespace(HandleObject obj,
 
 bool GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId, HandleId id) {
   JSProtoKey protoKey;
-  switch (val_.type()) {
-    case ValueType::String:
-      if (JSID_IS_ATOM(id, cx_->names().length)) {
-        // String length is special-cased, see js::GetProperty.
-        return false;
-      }
-      protoKey = JSProto_String;
-      break;
-    case ValueType::Int32:
-    case ValueType::Double:
-      protoKey = JSProto_Number;
-      break;
-    case ValueType::Boolean:
-      protoKey = JSProto_Boolean;
-      break;
-    case ValueType::Symbol:
-      protoKey = JSProto_Symbol;
-      break;
-    case ValueType::BigInt:
-      protoKey = JSProto_BigInt;
-      break;
-    case ValueType::Null:
-    case ValueType::Undefined:
-    case ValueType::Magic:
+  if (val_.isString()) {
+    if (JSID_IS_ATOM(id, cx_->names().length)) {
+      // String length is special-cased, see js::GetProperty.
       return false;
-    case ValueType::Object:
-    case ValueType::PrivateGCThing:
-      MOZ_CRASH("unexpected");
+    }
+    protoKey = JSProto_String;
+  } else if (val_.isNumber()) {
+    protoKey = JSProto_Number;
+  } else if (val_.isBoolean()) {
+    protoKey = JSProto_Boolean;
+  } else if (val_.isSymbol()) {
+    protoKey = JSProto_Symbol;
+  } else if (val_.isBigInt()) {
+    protoKey = JSProto_BigInt;
+  } else {
+    MOZ_ASSERT(val_.isNullOrUndefined() || val_.isMagic());
+    return false;
   }
 
   RootedObject proto(cx_, cx_->global()->maybeGetPrototype(protoKey));
@@ -5907,7 +5896,7 @@ bool UnaryArithIRGenerator::tryAttachInt32() {
       trackAttached("UnaryArith.Int32Dec");
       break;
     default:
-      MOZ_CRASH("unexpected OP");
+      MOZ_CRASH("Unexected OP");
   }
 
   writer.returnFromIC();

@@ -2541,35 +2541,23 @@ void js::ReportIncompatibleMethod(JSContext* cx, const CallArgs& args,
   RootedValue thisv(cx, args.thisv());
 
 #ifdef DEBUG
-  switch (thisv.type()) {
-    case ValueType::Object:
-      MOZ_ASSERT(thisv.toObject().getClass() != clasp ||
-                 !thisv.toObject().isNative() ||
-                 !thisv.toObject().staticPrototype() ||
-                 thisv.toObject().staticPrototype()->getClass() != clasp);
-      break;
-    case ValueType::String:
-      MOZ_ASSERT(clasp != &StringObject::class_);
-      break;
-    case ValueType::Double:
-    case ValueType::Int32:
-      MOZ_ASSERT(clasp != &NumberObject::class_);
-      break;
-    case ValueType::Boolean:
-      MOZ_ASSERT(clasp != &BooleanObject::class_);
-      break;
-    case ValueType::Symbol:
-      MOZ_ASSERT(clasp != &SymbolObject::class_);
-      break;
-    case ValueType::BigInt:
-      MOZ_ASSERT(clasp != &BigIntObject::class_);
-      break;
-    case ValueType::Undefined:
-    case ValueType::Null:
-      break;
-    case ValueType::Magic:
-    case ValueType::PrivateGCThing:
-      MOZ_CRASH("unexpected type");
+  if (thisv.isObject()) {
+    MOZ_ASSERT(thisv.toObject().getClass() != clasp ||
+               !thisv.toObject().isNative() ||
+               !thisv.toObject().staticPrototype() ||
+               thisv.toObject().staticPrototype()->getClass() != clasp);
+  } else if (thisv.isString()) {
+    MOZ_ASSERT(clasp != &StringObject::class_);
+  } else if (thisv.isNumber()) {
+    MOZ_ASSERT(clasp != &NumberObject::class_);
+  } else if (thisv.isBoolean()) {
+    MOZ_ASSERT(clasp != &BooleanObject::class_);
+  } else if (thisv.isSymbol()) {
+    MOZ_ASSERT(clasp != &SymbolObject::class_);
+  } else if (thisv.isBigInt()) {
+    MOZ_ASSERT(clasp != &BigIntObject::class_);
+  } else {
+    MOZ_ASSERT(thisv.isUndefined() || thisv.isNull());
   }
 #endif
 
