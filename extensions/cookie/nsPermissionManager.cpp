@@ -9,7 +9,6 @@
 #include "mozilla/DebugOnly.h"
 
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/BasePrincipal.h"
 #include "mozilla/ContentPrincipal.h"
 #include "mozilla/Pair.h"
 #include "mozilla/Services.h"
@@ -2280,6 +2279,13 @@ NS_IMETHODIMP
 nsPermissionManager::TestPermissionOriginNoSuffix(
     const nsACString& aOriginNoSuffix, const char* aType,
     uint32_t* aPermission) {
+  auto preparationResult = CommonPrepareToTestPermission(nullptr, aPermission);
+  if (preparationResult.mShouldContinue == eDone) {
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(!preparationResult.mPrincipal);
+
   return CommonTestPermissionInternal(nullptr, nullptr, aOriginNoSuffix, aType,
                                       aPermission, false, true);
 }
@@ -2373,7 +2379,7 @@ nsPermissionManager::GetPermissionObject(nsIPrincipal* aPrincipal,
 }
 
 nsresult nsPermissionManager::CommonTestPermissionInternal(
-    nsIPrincipal* aPrincipal, nsIURI* aURI, const nsACString& aOriginNoSuffix,
+    BasePrincipal* aPrincipal, nsIURI* aURI, const nsACString& aOriginNoSuffix,
     const char* aType, uint32_t* aPermission, bool aExactHostMatch,
     bool aIncludingSession) {
   MOZ_ASSERT(aPrincipal || aURI || !aOriginNoSuffix.IsEmpty());
@@ -2381,11 +2387,6 @@ nsresult nsPermissionManager::CommonTestPermissionInternal(
   MOZ_ASSERT_IF(aURI, !aPrincipal && aOriginNoSuffix.IsEmpty());
   NS_ENSURE_ARG_POINTER(aPrincipal || aURI || !aOriginNoSuffix.IsEmpty());
   NS_ENSURE_ARG_POINTER(aType);
-
-  if (aPrincipal && nsContentUtils::IsSystemPrincipal(aPrincipal)) {
-    *aPermission = nsIPermissionManager::ALLOW_ACTION;
-    return NS_OK;
-  }
 
   // Set the default.
   *aPermission = nsIPermissionManager::UNKNOWN_ACTION;
@@ -2403,9 +2404,8 @@ nsresult nsPermissionManager::CommonTestPermissionInternal(
 
   // For expanded principals, we want to iterate over the allowlist and see
   // if the permission is granted for any of them.
-  auto* basePrin = BasePrincipal::Cast(aPrincipal);
-  if (basePrin && basePrin->Is<ExpandedPrincipal>()) {
-    auto ep = basePrin->As<ExpandedPrincipal>();
+  if (aPrincipal && aPrincipal->Is<ExpandedPrincipal>()) {
+    auto ep = aPrincipal->As<ExpandedPrincipal>();
     for (auto& prin : ep->AllowList()) {
       uint32_t perm;
       nsresult rv = CommonTestPermission(prin, aType, &perm, aExactHostMatch,

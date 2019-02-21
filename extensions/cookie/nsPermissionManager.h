@@ -22,6 +22,7 @@
 #include "nsDataHashtable.h"
 #include "nsIRunnable.h"
 #include "nsRefPtrHashtable.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/MozPromise.h"
 
 namespace mozilla {
@@ -273,27 +274,55 @@ class nsPermissionManager final : public nsIPermissionManager,
                                           const nsACString& aOriginNoSuffix,
                                           uint32_t aType, bool aExactHostMatch);
 
+  enum TestPreparationEnum { eContinue, eDone };
+  struct TestPreparationResult {
+    mozilla::BasePrincipal* mPrincipal;
+    TestPreparationEnum mShouldContinue;
+  };
+  TestPreparationResult CommonPrepareToTestPermission(nsIPrincipal* aPrincipal,
+                                                      uint32_t* aPermission) {
+    auto* basePrin = mozilla::BasePrincipal::Cast(aPrincipal);
+    if (basePrin && basePrin->IsSystemPrincipal()) {
+      *aPermission = nsIPermissionManager::ALLOW_ACTION;
+      return {basePrin, eDone};
+    }
+
+    return {basePrin, eContinue};
+  }
+
   nsresult CommonTestPermission(nsIPrincipal* aPrincipal, const char* aType,
                                 uint32_t* aPermission, bool aExactHostMatch,
                                 bool aIncludingSession) {
-    return CommonTestPermissionInternal(aPrincipal, nullptr, EmptyCString(),
-                                        aType, aPermission, aExactHostMatch,
-                                        aIncludingSession);
+    auto preparationResult =
+        CommonPrepareToTestPermission(aPrincipal, aPermission);
+    if (preparationResult.mShouldContinue == eDone) {
+      return NS_OK;
+    }
+
+    return CommonTestPermissionInternal(preparationResult.mPrincipal, nullptr,
+                                        EmptyCString(), aType, aPermission,
+                                        aExactHostMatch, aIncludingSession);
   }
   nsresult CommonTestPermission(nsIURI* aURI, const char* aType,
                                 uint32_t* aPermission, bool aExactHostMatch,
                                 bool aIncludingSession) {
+    auto preparationResult =
+        CommonPrepareToTestPermission(nullptr, aPermission);
+    if (preparationResult.mShouldContinue == eDone) {
+      return NS_OK;
+    }
+
+    MOZ_ASSERT(!preparationResult.mPrincipal);
+
     return CommonTestPermissionInternal(nullptr, aURI, EmptyCString(), aType,
                                         aPermission, aExactHostMatch,
                                         aIncludingSession);
   }
   // Only one of aPrincipal or aURI is allowed to be passed in.
-  nsresult CommonTestPermissionInternal(nsIPrincipal* aPrincipal, nsIURI* aURI,
-                                        const nsACString& aOriginNoSuffix,
-                                        const char* aType,
-                                        uint32_t* aPermission,
-                                        bool aExactHostMatch,
-                                        bool aIncludingSession);
+  nsresult CommonTestPermissionInternal(
+      mozilla::BasePrincipal* aPrincipal, nsIURI* aURI,
+      const nsACString& aOriginNoSuffix, const char* aType,
+      uint32_t* aPermission, bool aExactHostMatch, bool aIncludingSession);
 
   nsresult OpenDatabase(nsIFile* permissionsFile);
   nsresult InitDB(bool aRemoveFile);
