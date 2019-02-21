@@ -1331,6 +1331,19 @@ AbortReasonOr<Ok> IonBuilder::addOsrValueTypeBarrier(
     def = barrier;
   }
 
+  // The following guards aren't directly linked into the usedef chain,
+  // however in the OSR block we need to ensure they're not optimized out, so we
+  // mark them as implicitly used.
+  switch (type) {
+    case MIRType::Null:
+    case MIRType::Undefined:
+    case MIRType::MagicOptimizedArguments:
+      def->setImplicitlyUsed();
+      break;
+    default:
+      break;
+  }
+
   switch (type) {
     case MIRType::Boolean:
     case MIRType::Int32:
