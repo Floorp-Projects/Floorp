@@ -6,7 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["Session"];
 
-const {Domain} = ChromeUtils.import("chrome://remote/content/Domain.jsm");
+const {ParentProcessDomains} = ChromeUtils.import("chrome://remote/content/domains/ParentProcessDomains.jsm");
+const {Domains} = ChromeUtils.import("chrome://remote/content/domains/Domains.jsm");
 const {formatError} = ChromeUtils.import("chrome://remote/content/Error.jsm");
 
 class Session {
@@ -22,6 +23,8 @@ class Session {
     this.messageManager.addMessageListener("remote-protocol:error", this);
 
     this.connection.onmessage = this.dispatch.bind(this);
+
+    this.domains = new Domains(this, ParentProcessDomains);
   }
 
   destructor() {
@@ -45,15 +48,21 @@ class Session {
       }
 
       const [domainName, methodName] = split(method, ".", 1);
-      const domain = Domain[domainName];
-      if (!domain) {
-        throw new TypeError("No such domain: " + domainName);
-      }
+      if (this.domains.domainSupportsMethod(domainName, methodName)) {
+        const inst = this.domains.get(domainName);
+        const methodFn = inst[methodName];
+        if (!methodFn || typeof methodFn != "function") {
+          throw new Error(`Method implementation of ${methodName} missing`);
+        }
 
-      this.messageManager.sendAsyncMessage("remote-protocol:request", {
-        browsingContextId: this.browsingContext.id,
-        request: {id, domainName, methodName, params},
-      });
+        const result = await methodFn.call(inst, params);
+        this.connection.send({id, result});
+      } else {
+        this.messageManager.sendAsyncMessage("remote-protocol:request", {
+          browsingContextId: this.browsingContext.id,
+          request: {id, domainName, methodName, params},
+        });
+      }
     } catch (e) {
       const error = formatError(e, {stack: true});
       this.connection.send({id, error});
@@ -76,6 +85,13 @@ class Session {
       this.connection.send({id, error: formatError(error, {stack: true})});
       break;
     }
+  }
+
+  onevent(eventName, params) {
+    this.connection.send({
+      method: eventName,
+      params,
+    });
   }
 }
 
