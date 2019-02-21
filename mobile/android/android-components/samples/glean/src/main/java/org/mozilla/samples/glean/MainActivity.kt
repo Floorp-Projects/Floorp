@@ -37,8 +37,6 @@ open class MainActivity : AppCompatActivity() {
             // 'extras' field a dictionary of values.  Note that the dictionary keys must be
             // declared in the metrics.yaml file under the 'extra_keys' section of an event metric.
             BrowserEngagement.click.record(
-                    "object1",
-                    "data",
                     mapOf(
                             "key1" to "extra_value_1",
                             "key2" to "extra_value_2"

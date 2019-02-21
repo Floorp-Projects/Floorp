@@ -45,7 +45,7 @@ class EventsStorageEngineTest {
                 stores = storeNames,
                 category = "telemetry",
                 name = "test_event_no_optional",
-                objectId = "test_event_object"
+                monotonicElapsedMs = SystemClock.elapsedRealtime()
         )
 
         // Check that the data was correctly recorded in each store.
@@ -54,9 +54,6 @@ class EventsStorageEngineTest {
             assertEquals(1, snapshot!!.size)
             assertEquals("telemetry", snapshot.first().category)
             assertEquals("test_event_no_optional", snapshot.first().name)
-            assertEquals("test_event_object", snapshot.first().objectId)
-            assertNull("The 'value' must be null if not provided",
-                    snapshot.first().value)
             assertNull("The 'extra' must be null if not provided",
                     snapshot.first().extra)
         }
@@ -71,8 +68,7 @@ class EventsStorageEngineTest {
                 stores = storeNames,
                 category = "telemetry",
                 name = "test_event_with_optional",
-                objectId = "test_event_object",
-                value = "user_value",
+                monotonicElapsedMs = SystemClock.elapsedRealtime(),
                 extra = mapOf("key1" to "value1", "key2" to "value2")
         )
 
@@ -82,8 +78,6 @@ class EventsStorageEngineTest {
             assertEquals(1, snapshot!!.size)
             assertEquals("telemetry", snapshot.first().category)
             assertEquals("test_event_with_optional", snapshot.first().name)
-            assertEquals("test_event_object", snapshot.first().objectId)
-            assertEquals("user_value", snapshot.first().value)
             assertEquals(mapOf("key1" to "value1", "key2" to "value2"), snapshot.first().extra)
         }
     }
@@ -98,16 +92,13 @@ class EventsStorageEngineTest {
                 stores = listOf("store1"),
                 category = "telemetry",
                 name = "test_event_time",
-                objectId = "test_event_object"
+                monotonicElapsedMs = SystemClock.elapsedRealtime()
         )
 
         val snapshot = EventsStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
         assertEquals(1, snapshot!!.size)
         assertEquals("telemetry", snapshot.first().category)
         assertEquals("test_event_time", snapshot.first().name)
-        assertEquals("test_event_object", snapshot.first().objectId)
-        assertNull("The 'value' must be null if not provided",
-                snapshot.first().value)
         assertNull("The 'extra' must be null if not provided",
                 snapshot.first().extra)
         assertEquals(expectedTimeSinceStart, snapshot.first().msSinceStart)
@@ -128,7 +119,7 @@ class EventsStorageEngineTest {
                 stores = storeNames,
                 category = "telemetry",
                 name = "test_event_clear",
-                objectId = "test_event_object"
+                monotonicElapsedMs = SystemClock.elapsedRealtime()
         )
 
         // Get the snapshot from "store1" and clear it.
@@ -144,22 +135,19 @@ class EventsStorageEngineTest {
             assertEquals(1, s!!.size)
             assertEquals("telemetry", s.first().category)
             assertEquals("test_event_clear", s.first().name)
-            assertEquals("test_event_object", s.first().objectId)
-            assertNull("The 'value' must be null if not provided",
-                    s.first().value)
             assertNull("The 'extra' must be null if not provided",
                     s.first().extra)
         }
     }
 
     @Test
-    fun `Events are serialized in the correct JSON format`() {
+    fun `Events are serialized in the correct JSON format (no extra)`() {
         // Record the event in the store, without providing optional arguments.
         EventsStorageEngine.record(
             stores = listOf("store1"),
             category = "telemetry",
             name = "test_event_clear",
-            objectId = "test_event_object"
+            monotonicElapsedMs = SystemClock.elapsedRealtime()
         )
 
         // Get the snapshot from "store1" and clear it.
@@ -168,7 +156,28 @@ class EventsStorageEngineTest {
         assertNull("The engine must report 'null' on empty stores",
             EventsStorageEngine.getSnapshotAsJSON(storeName = "store1", clearStore = false))
         // Check that this serializes to the expected JSON format.
-        assertEquals("[[0,\"telemetry\",\"test_event_clear\",\"test_event_object\",null,null]]",
+        assertEquals("[[0,\"telemetry\",\"test_event_clear\"]]",
+            snapshot.toString())
+    }
+
+    @Test
+    fun `Events are serialized in the correct JSON format (with extra)`() {
+        // Record the event in the store, without providing optional arguments.
+        EventsStorageEngine.record(
+            stores = listOf("store1"),
+            category = "telemetry",
+            name = "test_event_clear",
+            monotonicElapsedMs = SystemClock.elapsedRealtime(),
+            extra = mapOf("someExtra" to "field")
+        )
+
+        // Get the snapshot from "store1" and clear it.
+        val snapshot = EventsStorageEngine.getSnapshotAsJSON(storeName = "store1", clearStore = true)
+        // Check that getting a new snapshot for "store1" returns an empty store.
+        assertNull("The engine must report 'null' on empty stores",
+            EventsStorageEngine.getSnapshotAsJSON(storeName = "store1", clearStore = false))
+        // Check that this serializes to the expected JSON format.
+        assertEquals("[[0,\"telemetry\",\"test_event_clear\",{\"someExtra\":\"field\"}]]",
             snapshot.toString())
     }
 
@@ -184,7 +193,7 @@ class EventsStorageEngineTest {
             lifetime = Lifetime.Ping,
             name = "click",
             sendInPings = listOf("default"),
-            objects = listOf("buttonA")
+            allowedExtraKeys = listOf("test_event_number")
         )
 
         resetGlean(getContextWithMockedInfo(), Glean.configuration.copy(
@@ -195,7 +204,7 @@ class EventsStorageEngineTest {
         try {
             // We send 510 events.  We expect to get the first 500 in the ping, and 10 remaining afterward
             for (i in 0..509) {
-                click.record("buttonA", "$i")
+                click.record(extra = mapOf("test_event_number" to "$i"))
             }
 
             val request = server.takeRequest()
@@ -207,7 +216,7 @@ class EventsStorageEngineTest {
             assertEquals(500, eventsArray.length())
 
             for (i in 0..499) {
-                assertEquals("$i", eventsArray.getJSONArray(i).getString(4))
+                assertEquals("$i", eventsArray.getJSONArray(i).getJSONObject(3)["test_event_number"])
             }
         } finally {
             server.shutdown()
@@ -216,7 +225,7 @@ class EventsStorageEngineTest {
         val remaining = EventsStorageEngine.getSnapshot("events", false)!!
         assertEquals(10, remaining.size)
         for (i in 0..9) {
-            assertEquals("${i + 500}", remaining[i].value)
+            assertEquals("${i + 500}", remaining[i].extra?.get("test_event_number"))
         }
     }
 }

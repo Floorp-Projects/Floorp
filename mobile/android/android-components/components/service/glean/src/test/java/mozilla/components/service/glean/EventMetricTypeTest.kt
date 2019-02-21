@@ -7,7 +7,6 @@ package mozilla.components.service.glean
 import android.os.SystemClock
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
-import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.storages.EventsStorageEngine
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -30,9 +29,7 @@ class EventMetricTypeTest {
 
     @Before
     fun setUp() {
-        Glean.initialized = true
-        Glean.applicationId = "test"
-        Glean.configuration = Configuration()
+        resetGlean()
         EventsStorageEngine.clearAllStores()
     }
 
@@ -44,8 +41,7 @@ class EventMetricTypeTest {
             category = "ui",
             lifetime = Lifetime.Ping,
             name = "click",
-            sendInPings = listOf("store1"),
-            objects = listOf("buttonA", "buttonB")
+            sendInPings = listOf("store1")
         )
         assertEquals(listOf("events"), click.defaultStorageDestinations)
     }
@@ -59,27 +55,27 @@ class EventMetricTypeTest {
             lifetime = Lifetime.Ping,
             name = "click",
             sendInPings = listOf("store1"),
-            objects = listOf("buttonA", "buttonB")
+            allowedExtraKeys = listOf("object_id")
         )
 
         // Record two events of the same type, with a little delay.
-        click.record("buttonA")
+        click.record(extra = mapOf("object_id" to "buttonA"))
 
         val expectedTimeSinceStart: Long = 37
         SystemClock.sleep(expectedTimeSinceStart)
 
-        click.record("buttonB")
+        click.record(extra = mapOf("object_id" to "buttonB"))
 
         // Check that data was properly recorded.
         val snapshot = click.testGetValue()
         assertTrue(click.testHasValue())
         assertEquals(2, snapshot.size)
 
-        val firstEvent = snapshot.single { e -> e.objectId == "buttonA" }
+        val firstEvent = snapshot.single { e -> e.extra?.get("object_id") == "buttonA" }
         assertEquals("ui", firstEvent.category)
         assertEquals("click", firstEvent.name)
 
-        val secondEvent = snapshot.single { e -> e.objectId == "buttonB" }
+        val secondEvent = snapshot.single { e -> e.extra?.get("object_id") == "buttonB" }
         assertEquals("ui", secondEvent.category)
         assertEquals("click", secondEvent.name)
 
@@ -96,26 +92,26 @@ class EventMetricTypeTest {
             lifetime = Lifetime.Ping,
             name = "click",
             sendInPings = listOf("store1"),
-            objects = listOf("buttonA", "buttonB")
+            allowedExtraKeys = listOf("object_id")
         )
 
         // Record two events of the same type, with a little delay.
-        click.record("buttonA")
+        click.record(extra = mapOf("object_id" to "buttonA"))
 
         val expectedTimeSinceStart: Long = 37
         SystemClock.sleep(expectedTimeSinceStart)
 
-        click.record("buttonB")
+        click.record(extra = mapOf("object_id" to "buttonB"))
 
         // Check that data was properly recorded.
         val snapshot = click.testGetValue()
         assertTrue(click.testHasValue())
         assertEquals(2, snapshot.size)
 
-        val firstEvent = snapshot.single { e -> e.objectId == "buttonA" }
+        val firstEvent = snapshot.single { e -> e.extra?.get("object_id") == "buttonA" }
         assertEquals("click", firstEvent.name)
 
-        val secondEvent = snapshot.single { e -> e.objectId == "buttonB" }
+        val secondEvent = snapshot.single { e -> e.extra?.get("object_id") == "buttonB" }
         assertEquals("click", secondEvent.name)
 
         assertTrue("The sequence of the events must be preserved",
@@ -130,11 +126,10 @@ class EventMetricTypeTest {
             lifetime = Lifetime.Application,
             name = "testEvent",
             sendInPings = listOf("store1"),
-            allowedExtraKeys = listOf("extra1", "extra2"),
-            objects = listOf("buttonA")
+            allowedExtraKeys = listOf("extra1", "extra2")
         )
 
-        testEvent.record("buttonA",
+        testEvent.record(
             extra = mapOf("unknownExtra" to "someValue", "extra1" to "test"))
 
         // Check that nothing was recorded.
@@ -151,62 +146,15 @@ class EventMetricTypeTest {
             category = "ui",
             lifetime = Lifetime.Ping,
             name = "click",
-            sendInPings = listOf("store1"),
-            objects = listOf("buttonA")
+            sendInPings = listOf("store1")
         )
 
         // Attempt to store the event.
-        click.record("buttonA")
+        click.record()
 
         // Check that nothing was recorded.
         assertFalse("Events must not be recorded if they are disabled",
             click.testHasValue())
-    }
-
-    @Test
-    fun `events must not record data if 'objectId' is not in the objects set`() {
-        val click = EventMetricType(
-            disabled = false,
-            category = "ui",
-            lifetime = Lifetime.Ping,
-            name = "click",
-            sendInPings = listOf("store1"),
-            objects = listOf("object1")
-        )
-
-        val testValue = "LeanGleanByFrank"
-        click.record(testValue)
-
-        assertFalse("Events must not be recorded if they are invalid",
-            click.testHasValue())
-    }
-
-    @Test
-    fun `'value' is properly recorded and truncated`() {
-        val click = EventMetricType(
-            disabled = false,
-            category = "ui",
-            lifetime = Lifetime.Ping,
-            name = "click",
-            sendInPings = listOf("store1"),
-            objects = listOf("buttonA", "buttonB")
-        )
-
-        val testValue = "LeanGleanByFrank"
-        click.record("buttonA", value = testValue)
-        click.record("buttonB", value = testValue.repeat(10))
-
-        val snapshot = click.testGetValue()
-
-        val firstEvent = snapshot.single { e -> e.objectId == "buttonA" }
-        assertEquals("ui", firstEvent.category)
-        assertEquals("click", firstEvent.name)
-        assertEquals(testValue, firstEvent.value)
-
-        val secondEvent = snapshot.single { e -> e.objectId == "buttonB" }
-        assertEquals("ui", secondEvent.category)
-        assertEquals("click", secondEvent.name)
-        assertEquals(testValue.repeat(10).substring(0, EventMetricType.MAX_LENGTH_VALUE), secondEvent.value)
     }
 
     @Test
@@ -216,11 +164,10 @@ class EventMetricTypeTest {
             category = "ui",
             lifetime = Lifetime.Ping,
             name = "testEvent",
-            sendInPings = listOf("store1"),
-            objects = listOf("buttonA")
+            sendInPings = listOf("store1")
         )
 
-        testEvent.record("buttonA",
+        testEvent.record(
             extra = mapOf("unknownExtra" to "someValue", "unknownExtra2" to "test"))
 
         // Check that nothing was recorded.
@@ -236,11 +183,10 @@ class EventMetricTypeTest {
             lifetime = Lifetime.Ping,
             name = "testEvent",
             sendInPings = listOf("store1"),
-            allowedExtraKeys = listOf("extra1", "extra2"),
-            objects = listOf("buttonA")
+            allowedExtraKeys = listOf("extra1", "extra2")
         )
 
-        testEvent.record("buttonA",
+        testEvent.record(
             extra = mapOf("unknownExtra" to "someValue", "extra1" to "test"))
 
         // Check that nothing was recorded.
@@ -256,12 +202,11 @@ class EventMetricTypeTest {
             lifetime = Lifetime.Ping,
             name = "testEvent",
             sendInPings = listOf("store1"),
-            allowedExtraKeys = listOf("extra1", "truncatedExtra"),
-            objects = listOf("buttonA")
+            allowedExtraKeys = listOf("extra1", "truncatedExtra")
         )
 
         val testValue = "LeanGleanByFrank"
-        testEvent.record("buttonA",
+        testEvent.record(
             extra = mapOf("extra1" to testValue, "truncatedExtra" to testValue.repeat(10)))
 
         // Check that nothing was recorded.
@@ -286,8 +231,7 @@ class EventMetricTypeTest {
             lifetime = Lifetime.Ping,
             name = "testEvent",
             sendInPings = listOf("store1"),
-            allowedExtraKeys = listOf("extra1", "truncatedExtra"),
-            objects = listOf("buttonA")
+            allowedExtraKeys = listOf("extra1", "truncatedExtra")
         )
         testEvent.testGetValue()
     }
@@ -301,31 +245,58 @@ class EventMetricTypeTest {
             lifetime = Lifetime.Ping,
             name = "click",
             sendInPings = listOf("store1", "store2"),
-            objects = listOf("buttonA", "buttonB")
+            allowedExtraKeys = listOf("object_id")
         )
 
         // Record two events of the same type, with a little delay.
-        click.record("buttonA")
+        click.record(extra = mapOf("object_id" to "buttonA"))
 
         val expectedTimeSinceStart: Long = 37
         SystemClock.sleep(expectedTimeSinceStart)
 
-        click.record("buttonB")
+        click.record(extra = mapOf("object_id" to "buttonB"))
 
         // Check that data was properly recorded in the second ping.
         val snapshot = click.testGetValue("store2")
         assertTrue(click.testHasValue("store2"))
         assertEquals(2, snapshot.size)
 
-        val firstEvent = snapshot.single { e -> e.objectId == "buttonA" }
+        val firstEvent = snapshot.single { e -> e.extra?.get("object_id") == "buttonA" }
         assertEquals("ui", firstEvent.category)
         assertEquals("click", firstEvent.name)
 
-        val secondEvent = snapshot.single { e -> e.objectId == "buttonB" }
+        val secondEvent = snapshot.single { e -> e.extra?.get("object_id") == "buttonB" }
         assertEquals("ui", secondEvent.category)
         assertEquals("click", secondEvent.name)
 
         assertTrue("The sequence of the events must be preserved",
             firstEvent.msSinceStart < secondEvent.msSinceStart)
+    }
+
+    @Test
+    fun `events should not record when upload is disabled`() {
+        val eventMetric = EventMetricType(
+            disabled = false,
+            category = "ui",
+            lifetime = Lifetime.Ping,
+            name = "event_metric",
+            sendInPings = listOf("store1"),
+            allowedExtraKeys = listOf("test_name")
+        )
+        Glean.testClearAllData()
+        assertEquals(true, Glean.getUploadEnabled())
+        Glean.setUploadEnabled(true)
+        eventMetric.record(mapOf("test_name" to "event1"))
+        val snapshot1 = eventMetric.testGetValue()
+        assertEquals(1, snapshot1.size)
+        Glean.setUploadEnabled(false)
+        assertEquals(false, Glean.getUploadEnabled())
+        eventMetric.record(mapOf("test_name" to "event2"))
+        val snapshot2 = eventMetric.testGetValue()
+        assertEquals(1, snapshot2.size)
+        Glean.setUploadEnabled(true)
+        eventMetric.record(mapOf("test_name" to "event3"))
+        val snapshot3 = eventMetric.testGetValue()
+        assertEquals(2, snapshot3.size)
     }
 }

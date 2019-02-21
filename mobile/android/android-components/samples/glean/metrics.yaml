@@ -15,9 +15,6 @@ browser.engagement:
       - N/A 
     notification_emails:
       - telemetry-client-dev@mozilla.com
-    objects:
-      - object1
-      - object2
     extra_keys:
       key1: "This is key one"
       key2: "This is key two"

@@ -24,6 +24,7 @@ import mozilla.components.service.glean.storages.ExperimentsStorageEngine
 import mozilla.components.service.glean.storages.StorageEngineManager
 import mozilla.components.service.glean.ping.BaselinePing
 import mozilla.components.service.glean.scheduler.MetricsPingScheduler
+import mozilla.components.service.glean.storages.DatetimesStorageEngine
 import mozilla.components.service.glean.storages.StringsStorageEngine
 import mozilla.components.service.glean.storages.UuidsStorageEngine
 import mozilla.components.support.base.log.logger.Logger
@@ -218,7 +219,7 @@ open class GleanInternalAPI internal constructor () {
         if (firstRunDetector.isFirstRun()) {
             val uuid = UUID.randomUUID()
             UuidsStorageEngine.record(GleanInternalMetrics.clientId, uuid)
-            GleanInternalMetrics.firstRunDate.set()
+            DatetimesStorageEngine.set(GleanInternalMetrics.firstRunDate)
         }
 
         try {
@@ -311,7 +312,7 @@ object Glean : GleanInternalAPI() {
         Default
     }
 
-    internal const val SCHEMA_VERSION = 2
+    internal const val SCHEMA_VERSION = 1
 
     /**
     * The name of the directory, inside the application's directory,

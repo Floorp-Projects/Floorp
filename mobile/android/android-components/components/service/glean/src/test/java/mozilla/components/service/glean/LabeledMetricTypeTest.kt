@@ -424,8 +424,7 @@ class LabeledMetricTypeTest {
             category = "telemetry",
             lifetime = Lifetime.Application,
             name = "labeled_event_metric",
-            sendInPings = listOf("default"),
-            objects = listOf("foo", "bar")
+            sendInPings = listOf("default")
         )
 
         val labeledEventMetric = LabeledMetricType<EventMetricType>(

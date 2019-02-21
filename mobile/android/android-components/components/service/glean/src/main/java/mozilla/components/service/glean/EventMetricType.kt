@@ -4,6 +4,7 @@
 
 package mozilla.components.service.glean
 
+import android.os.SystemClock
 import android.support.annotation.VisibleForTesting
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -26,7 +27,6 @@ data class EventMetricType(
     override val lifetime: Lifetime,
     override val name: String,
     override val sendInPings: List<String>,
-    val objects: List<String>,
     val allowedExtraKeys: List<String>? = null
 ) : CommonMetricData {
 
@@ -39,24 +39,18 @@ data class EventMetricType(
 
     companion object {
         // Maximum length of any string value in the extra dictionary, in characters
-        internal const val MAX_LENGTH_EXTRA_KEY_VALUE = 80
-        // Maximum length of any passed value string, in characters
-        internal const val MAX_LENGTH_VALUE = 80
+        internal const val MAX_LENGTH_EXTRA_KEY_VALUE = 100
     }
 
     /**
      * Record an event by using the information provided by the instance of this class.
      *
-     * @param objectId the object the event occurred on, e.g. 'reload_button'. The maximum
-     *                 length of this string is defined by [MAX_LENGTH_OBJECT_ID]
-     * @param value optional. This is a user defined value, providing context for the event. The
-     *              maximum length of this string is defined by [MAX_LENGTH_VALUE]
      * @param extra optional. This is map, both keys and values need to be strings, keys are
      *              identifiers. This is used for events where additional richer context is needed.
      *              The maximum length for values is defined by [MAX_LENGTH_EXTRA_KEY_VALUE]
      */
-    @Suppress("ReturnCount", "ComplexMethod")
-    fun record(objectId: String, value: String? = null, extra: Map<String, String>? = null) {
+    @Suppress("ReturnCount")
+    fun record(extra: Map<String, String>? = null) {
         // TODO report errors through other special metrics handled by the SDK. See bug 1499761.
         if (!shouldRecord(logger)) {
             return
@@ -65,21 +59,6 @@ data class EventMetricType(
         if (lifetime != Lifetime.Ping) {
             logger.warn("$category.$name can only have a Ping lifetime")
             return
-        }
-
-        // We don't need to check that the objectId is short, since that
-        // has already been determined at build time for each of the valid objectId values.
-        if (!objects.contains(objectId)) {
-            logger.warn("objectId '$objectId' is not valid on the $category.$name metric")
-            return
-        }
-
-        val truncatedValue = value?.let {
-            if (it.length > MAX_LENGTH_VALUE) {
-                logger.warn("Value parameter exceeds maximum string length, truncating.")
-                return@let it.substring(0, MAX_LENGTH_VALUE)
-            }
-            it
         }
 
         // Check if the provided extra keys are allowed and have sane values.
@@ -103,14 +82,17 @@ data class EventMetricType(
             eventKeys
         }
 
+        // We capture the event time now, since we don't know when the async code below
+        // might get executed.
+        val monotonicElapsed = SystemClock.elapsedRealtime()
+
         ioTask = Dispatchers.API.launch {
             // Delegate storing the event to the storage engine.
             EventsStorageEngine.record(
                 stores = getStorageNames(),
                 category = category,
                 name = name,
-                objectId = objectId,
-                value = truncatedValue,
+                monotonicElapsedMs = monotonicElapsed,
                 extra = truncatedExtraKeys
             )
         }

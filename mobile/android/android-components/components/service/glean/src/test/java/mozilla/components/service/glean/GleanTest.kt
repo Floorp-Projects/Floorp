@@ -59,7 +59,7 @@ class GleanTest {
     }
 
     @Test
-    fun `disabling metrics should record nothing`() {
+    fun `disabling upload should disable metrics recording`() {
         val stringMetric = StringMetricType(
                 disabled = false,
                 category = "telemetry",
@@ -75,33 +75,6 @@ class GleanTest {
                 "Metrics should not be recorded if glean is disabled",
                 StringsStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
         )
-    }
-
-    @Test
-    fun `disabling event metrics should record only when enabled`() {
-        val eventMetric = EventMetricType(
-                disabled = false,
-                category = "ui",
-                lifetime = Lifetime.Ping,
-                name = "event_metric",
-                sendInPings = listOf("store1"),
-                objects = listOf("buttonA")
-        )
-        Glean.testClearAllData()
-        assertEquals(true, Glean.getUploadEnabled())
-        Glean.setUploadEnabled(true)
-        eventMetric.record("buttonA", "event1")
-        val snapshot1 = EventsStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
-        assertEquals(1, snapshot1!!.size)
-        Glean.setUploadEnabled(false)
-        assertEquals(false, Glean.getUploadEnabled())
-        eventMetric.record("buttonA", "event2")
-        val snapshot2 = EventsStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
-        assertEquals(1, snapshot2!!.size)
-        Glean.setUploadEnabled(true)
-        eventMetric.record("buttonA", "event3")
-        val snapshot3 = EventsStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
-        assertEquals(2, snapshot3!!.size)
     }
 
     @Test
@@ -182,8 +155,7 @@ class GleanTest {
             category = "ui",
             lifetime = Lifetime.Ping,
             name = "click",
-            sendInPings = listOf("default"),
-            objects = listOf("buttonA")
+            sendInPings = listOf("default")
         )
 
         resetGlean(getContextWithMockedInfo(), Glean.configuration.copy(
@@ -199,7 +171,7 @@ class GleanTest {
         try {
             // Simulate the first foreground event after the application starts.
             lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
-            click.record("buttonA")
+            click.record()
 
             // Simulate going to background.
             lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)

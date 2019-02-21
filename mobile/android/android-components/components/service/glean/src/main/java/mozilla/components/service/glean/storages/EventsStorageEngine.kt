@@ -10,6 +10,7 @@ import android.content.Context
 import android.os.SystemClock
 import android.support.annotation.VisibleForTesting
 import org.json.JSONArray
+import org.json.JSONObject
 
 /**
  * This singleton handles the in-memory storage logic for events. It is meant to be used by
@@ -40,22 +41,19 @@ internal object EventsStorageEngine : StorageEngine {
      * @param stores the list of stores to record the event into
      * @param category the category of the event
      * @param name the name of the event
-     * @param objectId the id of the event object
-     * @param value an optional, user defined value providing context for the event
+     * @param monotonicElapsedMs the monotonic elapsed time since boot, in milliseconds
      * @param extra an optional, user defined String to String map used to provide richer event
      *              context if needed
      */
-    @Suppress("LongParameterList")
     fun record(
         stores: List<String>,
         category: String,
         name: String,
-        objectId: String,
-        value: String? = null,
+        monotonicElapsedMs: Long,
         extra: Map<String, String>? = null
     ) {
-        val msSinceStart = SystemClock.elapsedRealtime() - startTime
-        val event = RecordedEventData(category, name, objectId, msSinceStart, value, extra)
+        val msSinceStart = monotonicElapsedMs - startTime
+        val event = RecordedEventData(category, name, msSinceStart, extra)
 
         // Record a copy of the event in all the needed stores.
         synchronized(this) {
@@ -103,9 +101,9 @@ internal object EventsStorageEngine : StorageEngine {
                 eventData.put(it.msSinceStart)
                 eventData.put(it.category)
                 eventData.put(it.name)
-                eventData.put(it.objectId)
-                eventData.put(it.value)
-                eventData.put(it.extra)
+                if (it.extra != null) {
+                    eventData.put(JSONObject(it.extra))
+                }
                 eventsArray.put(eventData)
             }
             return eventsArray
@@ -125,9 +123,7 @@ internal object EventsStorageEngine : StorageEngine {
 data class RecordedEventData(
     val category: String,
     val name: String,
-    val objectId: String,
     val msSinceStart: Long,
-    val value: String? = null,
     val extra: Map<String, String>? = null,
 
     internal val identifier: String = if (category.isEmpty()) { name } else { "$category.$name" }
