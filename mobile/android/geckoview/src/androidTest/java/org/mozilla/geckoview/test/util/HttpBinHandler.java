@@ -26,11 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Enumeration;
-import java.util.Random;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -167,27 +163,6 @@ class HttpBinHandler extends AbstractHandler {
                 response.put("data", data.toString("UTF-8"));
                 respondJSON(servletResponse, os, response);
                 baseRequest.setHandled(true);
-            } else if (uri.startsWith("/bytes")) {
-                pipe(is);
-
-                final int count = Integer.parseInt(uri.substring("/bytes/".length()));
-
-                final Random random = new Random(System.currentTimeMillis());
-                final byte[] payload = new byte[count];
-                random.nextBytes(payload);
-
-                servletResponse.setStatus(HttpServletResponse.SC_OK);
-                servletResponse.setContentLength(count);
-                servletResponse.setContentType("application/octet-stream");
-
-                final byte[] digest = MessageDigest.getInstance("SHA-256").digest(payload);
-                servletResponse.addHeader("X-SHA-256",
-                        String.format("%064x", new BigInteger(1, digest)));
-
-                os.write(payload);
-                os.flush();
-
-                baseRequest.setHandled(true);
             }
 
             if (!baseRequest.isHandled()) {
@@ -196,10 +171,6 @@ class HttpBinHandler extends AbstractHandler {
             }
         } catch (JSONException e) {
             Log.e(LOGTAG, "JSON error while handling response", e);
-            servletResponse.setStatus(500);
-            baseRequest.setHandled(true);
-        } catch (NoSuchAlgorithmException e) {
-            Log.e(LOGTAG, "Failed to generate digest", e);
             servletResponse.setStatus(500);
             baseRequest.setHandled(true);
         }

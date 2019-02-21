@@ -753,7 +753,6 @@ package org.mozilla.geckoview {
     method public void speculativeConnect(@android.support.annotation.NonNull java.lang.String);
     field public static final int FETCH_FLAGS_ANONYMOUS = 1;
     field public static final int FETCH_FLAGS_NONE = 0;
-    field public static final int FETCH_FLAGS_NO_REDIRECTS = 2;
   }
 
   public static interface GeckoWebExecutor.FetchFlags implements java.lang.annotation.Annotation {
@@ -920,12 +919,14 @@ package org.mozilla.geckoview {
 
   @android.support.annotation.AnyThread public abstract class WebMessage {
     ctor protected WebMessage(@android.support.annotation.NonNull org.mozilla.geckoview.WebMessage.Builder);
+    field @android.support.annotation.Nullable public final java.nio.ByteBuffer body;
     field @android.support.annotation.NonNull public final java.util.Map<java.lang.String, java.lang.String> headers;
     field @android.support.annotation.NonNull public final java.lang.String uri;
   }
 
   @android.support.annotation.AnyThread public abstract static class WebMessage.Builder {
     method @android.support.annotation.NonNull public org.mozilla.geckoview.WebMessage.Builder addHeader(@android.support.annotation.NonNull java.lang.String, @android.support.annotation.NonNull java.lang.String);
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.WebMessage.Builder body(@android.support.annotation.Nullable java.nio.ByteBuffer);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.WebMessage.Builder header(@android.support.annotation.NonNull java.lang.String, @android.support.annotation.NonNull java.lang.String);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.WebMessage.Builder uri(@android.support.annotation.NonNull java.lang.String);
   }
@@ -938,7 +939,6 @@ package org.mozilla.geckoview {
     field public static final int CACHE_MODE_NO_STORE = 2;
     field public static final int CACHE_MODE_ONLY_IF_CACHED = 6;
     field public static final int CACHE_MODE_RELOAD = 3;
-    field @android.support.annotation.Nullable public final java.nio.ByteBuffer body;
     field public final int cacheMode;
     field @android.support.annotation.NonNull public final java.lang.String method;
     field @android.support.annotation.Nullable public final java.lang.String referrer;
@@ -946,7 +946,6 @@ package org.mozilla.geckoview {
 
   @android.support.annotation.AnyThread public static class WebRequest.Builder extends org.mozilla.geckoview.WebMessage.Builder {
     ctor public Builder(@android.support.annotation.NonNull java.lang.String);
-    method @android.support.annotation.NonNull public org.mozilla.geckoview.WebRequest.Builder body(@android.support.annotation.Nullable java.nio.ByteBuffer);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.WebRequest build();
     method @android.support.annotation.NonNull public org.mozilla.geckoview.WebRequest.Builder cacheMode(int);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.WebRequest.Builder method(@android.support.annotation.NonNull java.lang.String);
@@ -1003,14 +1002,12 @@ package org.mozilla.geckoview {
 
   @android.support.annotation.AnyThread public class WebResponse extends org.mozilla.geckoview.WebMessage {
     ctor protected WebResponse(@android.support.annotation.NonNull org.mozilla.geckoview.WebResponse.Builder);
-    field @android.support.annotation.Nullable public final java.io.InputStream body;
     field public final boolean redirected;
     field public final int statusCode;
   }
 
   @android.support.annotation.AnyThread public static class WebResponse.Builder extends org.mozilla.geckoview.WebMessage.Builder {
     ctor public Builder(@android.support.annotation.NonNull java.lang.String);
-    method @android.support.annotation.NonNull public org.mozilla.geckoview.WebResponse.Builder body(@android.support.annotation.NonNull java.io.InputStream);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.WebResponse build();
     method @android.support.annotation.NonNull public org.mozilla.geckoview.WebResponse.Builder redirected(boolean);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.WebResponse.Builder statusCode(int);
