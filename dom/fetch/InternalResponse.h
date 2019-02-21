@@ -252,6 +252,13 @@ class InternalResponse final {
     return rtn;
   }
 
+  bool HasCacheInfoChannel() const {
+    if (mWrappedResponse) {
+      return !!mWrappedResponse->HasCacheInfoChannel();
+    }
+    return !!mCacheInfoChannel;
+  }
+
   void InitChannelInfo(nsIChannel* aChannel) {
     mChannelInfo.InitFromChannel(aChannel);
   }

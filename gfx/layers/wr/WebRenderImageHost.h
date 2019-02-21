@@ -75,8 +75,6 @@ class WebRenderImageHost : public CompositableHost, public ImageComposite {
 
   void ClearWrBridge();
 
-  void EnableUseAsyncImagePipeline() { mUseAsyncImagePipeline = true; }
-
   TextureHost* GetCurrentTextureHost() { return mCurrentTextureHost; }
 
  protected:
@@ -88,7 +86,6 @@ class WebRenderImageHost : public CompositableHost, public ImageComposite {
   WebRenderBridgeParent* MOZ_NON_OWNING_REF mWrBridge;
 
   uint32_t mWrBridgeBindings;
-  bool mUseAsyncImagePipeline;
 
   CompositableTextureHostRef mCurrentTextureHost;
 };

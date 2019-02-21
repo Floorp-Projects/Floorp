@@ -14,6 +14,9 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FormData.h"
 
+#define WASM_CONTENT_TYPE "application/wasm"
+#define WASM_ALT_DATA_TYPE_V1 "wasm/machine-code/1"
+
 class nsIPrincipal;
 class nsIHttpChannel;
 

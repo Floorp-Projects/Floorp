@@ -26,7 +26,7 @@ function startTest()
 function onAttach(aState, aResponse)
 {
   onLogMessage = onLogMessage.bind(null, aState);
-  aState.dbgClient.addListener("logMessage", onLogMessage);
+  aState.client.on("logMessage", onLogMessage);
 
   expectedMessages = [{
     message: "hello world! bug859756",
@@ -40,9 +40,8 @@ function onAttach(aState, aResponse)
 
 let receivedMessages = [];
 
-function onLogMessage(aState, aType, aPacket)
+function onLogMessage(aState, aPacket)
 {
-  is(aPacket.from, aState.actor, "packet actor");
   info("received message: " + aPacket.message);
 
   let found = false;
@@ -61,7 +60,7 @@ function onLogMessage(aState, aType, aPacket)
     return;
   }
 
-  aState.dbgClient.removeListener("logMessage", onLogMessage);
+  aState.client.off("logMessage", onLogMessage);
 
   checkObject(receivedMessages, expectedMessages);
 

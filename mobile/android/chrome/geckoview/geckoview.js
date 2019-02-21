@@ -303,11 +303,8 @@ class ModuleInfo {
     }
 
     if (aPhase.resource && !this._impl) {
-      const scope = {};
-      const global = ChromeUtils.import(aPhase.resource, scope);
-      const tag = this._name.replace("GeckoView", "");
-      GeckoViewUtils.initLogging(tag, global);
-      this._impl = new scope[this._name](this);
+      const exports = ChromeUtils.import(aPhase.resource);
+      this._impl = new exports[this._name](this);
     }
 
     if (aPhase.frameScript && !this._contentModuleLoaded) {

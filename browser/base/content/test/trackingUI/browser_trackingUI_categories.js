@@ -3,6 +3,8 @@ const TP_PREF = "privacy.trackingprotection.enabled";
 const TP_PB_PREF = "privacy.trackingprotection.pbmode.enabled";
 const TPC_PREF = "network.cookie.cookieBehavior";
 const TT_PREF = "urlclassifier.trackingTable";
+const CM_PREF = "privacy.trackingprotection.cryptomining.enabled";
+const FP_PREF = "privacy.trackingprotection.fingerprinting.enabled";
 
 ChromeUtils.import("resource://testing-common/CustomizableUITestUtils.jsm", this);
 
@@ -12,6 +14,8 @@ registerCleanupFunction(function() {
   Services.prefs.clearUserPref(TPC_PREF);
   Services.prefs.clearUserPref(TT_PREF);
   Services.prefs.clearUserPref(CAT_PREF);
+  Services.prefs.clearUserPref(CM_PREF);
+  Services.prefs.clearUserPref(FP_PREF);
 });
 
 add_task(async function testCategoryLabelsInControlPanel() {
@@ -123,5 +127,35 @@ add_task(async function testSubcategoryLabels() {
       gNavigatorBundle.getString("contentBlocking.cookies.blockingUnvisited.label"),
       "The category label has updated correctly");
     is(categoryLabel.textContent, gNavigatorBundle.getString("contentBlocking.cookies.blockingUnvisited.label"));
+
+    categoryLabel =
+      document.getElementById("identity-popup-content-blocking-fingerprinters-state-label");
+
+    Services.prefs.setBoolPref(FP_PREF, true);
+    await TestUtils.waitForCondition(() => categoryLabel.textContent ==
+      gNavigatorBundle.getString("contentBlocking.fingerprinters.blocking.label"),
+      "The category label has updated correctly");
+    is(categoryLabel.textContent, gNavigatorBundle.getString("contentBlocking.fingerprinters.blocking.label"));
+
+    Services.prefs.setBoolPref(FP_PREF, false);
+    await TestUtils.waitForCondition(() => categoryLabel.textContent ==
+      gNavigatorBundle.getString("contentBlocking.fingerprinters.allowed.label"),
+      "The category label has updated correctly");
+    is(categoryLabel.textContent, gNavigatorBundle.getString("contentBlocking.fingerprinters.allowed.label"));
+
+    categoryLabel =
+      document.getElementById("identity-popup-content-blocking-cryptominers-state-label");
+
+    Services.prefs.setBoolPref(CM_PREF, true);
+    await TestUtils.waitForCondition(() => categoryLabel.textContent ==
+      gNavigatorBundle.getString("contentBlocking.cryptominers.blocking.label"),
+      "The category label has updated correctly");
+    is(categoryLabel.textContent, gNavigatorBundle.getString("contentBlocking.cryptominers.blocking.label"));
+
+    Services.prefs.setBoolPref(CM_PREF, false);
+    await TestUtils.waitForCondition(() => categoryLabel.textContent ==
+      gNavigatorBundle.getString("contentBlocking.cryptominers.allowed.label"),
+      "The category label has updated correctly");
+    is(categoryLabel.textContent, gNavigatorBundle.getString("contentBlocking.cryptominers.allowed.label"));
   });
 });

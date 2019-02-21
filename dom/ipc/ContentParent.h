@@ -1109,8 +1109,6 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvGetGraphicsDeviceInitData(
       ContentDeviceData* aOut);
 
-  mozilla::ipc::IPCResult RecvGetAndroidSystemInfo(AndroidSystemInfo* aInfo);
-
   mozilla::ipc::IPCResult RecvNotifyBenchmarkResult(const nsString& aCodecName,
                                                     const uint32_t& aDecodeFPS);
 

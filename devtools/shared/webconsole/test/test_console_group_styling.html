@@ -21,14 +21,14 @@ window.onload = async function () {
       (consoleState, response) => resolve(consoleState)
     ));
     state = await onAttachConsole;
-    const debuggerClient = state.dbgClient;
+    const consoleFront = state.client;
 
-    await testSingleCustomStyleGroup(debuggerClient);
-    await testSingleCustomStyleGroupCollapsed(debuggerClient);
-    await testMultipleCustomStyleGroup(debuggerClient);
-    await testMultipleCustomStyleGroupCollapsed(debuggerClient);
-    await testFormatterWithNoStyleGroup(debuggerClient);
-    await testFormatterWithNoStyleGroupCollapsed(debuggerClient);
+    await testSingleCustomStyleGroup(consoleFront);
+    await testSingleCustomStyleGroupCollapsed(consoleFront);
+    await testMultipleCustomStyleGroup(consoleFront);
+    await testMultipleCustomStyleGroupCollapsed(consoleFront);
+    await testFormatterWithNoStyleGroup(consoleFront);
+    await testFormatterWithNoStyleGroupCollapsed(consoleFront);
   } catch (e) {
     ok(false, `Error thrown: ${e.message}`);
   }
@@ -37,10 +37,10 @@ window.onload = async function () {
   SimpleTest.finish();
 };
 
-async function testSingleCustomStyleGroup(debuggerClient) {
+async function testSingleCustomStyleGroup(consoleFront) {
   info("Testing console.group with a custom style");
   let packet = await consoleAPICall(
-    debuggerClient,
+    consoleFront,
     () => top.console.group("%cfoobar", "color:red")
   );
 
@@ -50,10 +50,10 @@ async function testSingleCustomStyleGroup(debuggerClient) {
   });
 }
 
-async function testSingleCustomStyleGroupCollapsed(debuggerClient) {
+async function testSingleCustomStyleGroupCollapsed(consoleFront) {
   info("Testing console.groupCollapsed with a custom style");
   let packet = await consoleAPICall(
-    debuggerClient,
+    consoleFront,
     () => top.console.groupCollapsed("%cfoobaz", "color:blue")
   );
 
@@ -63,10 +63,10 @@ async function testSingleCustomStyleGroupCollapsed(debuggerClient) {
   });
 }
 
-async function testMultipleCustomStyleGroup(debuggerClient) {
+async function testMultipleCustomStyleGroup(consoleFront) {
   info("Testing console.group with multiple custom styles");
   let packet = await consoleAPICall(
-    debuggerClient,
+    consoleFront,
     () => top.console.group("%cfoo%cbar", "color:red", "color:blue")
   );
 
@@ -76,10 +76,10 @@ async function testMultipleCustomStyleGroup(debuggerClient) {
   });
 }
 
-async function testMultipleCustomStyleGroupCollapsed(debuggerClient) {
+async function testMultipleCustomStyleGroupCollapsed(consoleFront) {
   info("Testing console.groupCollapsed with multiple custom styles");
   let packet = await consoleAPICall(
-    debuggerClient,
+    consoleFront,
     () => top.console.group("%cfoo%cbaz", "color:red", "color:green")
   );
 
@@ -89,10 +89,10 @@ async function testMultipleCustomStyleGroupCollapsed(debuggerClient) {
   });
 }
 
-async function testFormatterWithNoStyleGroup(debuggerClient) {
+async function testFormatterWithNoStyleGroup(consoleFront) {
   info("Testing console.group with one formatter but no style");
   let packet = await consoleAPICall(
-    debuggerClient,
+    consoleFront,
     () => top.console.group("%cfoobar")
   );
 
@@ -102,10 +102,10 @@ async function testFormatterWithNoStyleGroup(debuggerClient) {
   });
 }
 
-async function testFormatterWithNoStyleGroupCollapsed(debuggerClient) {
+async function testFormatterWithNoStyleGroupCollapsed(consoleFront) {
   info("Testing console.groupCollapsed with one formatter but no style");
   let packet = await consoleAPICall(
-    debuggerClient,
+    consoleFront,
     () => top.console.groupCollapsed("%cfoobaz")
   );
 

@@ -45,6 +45,7 @@
 #include "mozilla/dom/Response.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/net/NeckoChannelParams.h"
 
 #include "js/Conversions.h"
 #include "js/TypeDecls.h"
@@ -319,7 +320,7 @@ class StartResponse final : public Runnable {
         !outerChannel->PreferredAlternativeDataTypes().IsEmpty()) {
       // TODO: handle multiple types properly.
       preferredAltDataType.Assign(
-          mozilla::Get<0>(outerChannel->PreferredAlternativeDataTypes()[0]));
+          outerChannel->PreferredAlternativeDataTypes()[0].type());
     }
 
     // Get the alternative data type saved in the InternalResponse

@@ -98,7 +98,9 @@ class TestGetDecisionParameters(unittest.TestCase):
         self.assertEqual(params['try_task_config'], None)
 
     @patch('taskgraph.decision.get_hg_revision_branch')
-    def test_try_task_config(self, _):
+    @patch('taskgraph.decision.get_hg_commit_message')
+    def test_try_task_config(self, mock_get_hg_commit_message, _):
+        mock_get_hg_commit_message.return_value = 'Fuzzy query=foo'
         ttc = {'tasks': ['a', 'b'], 'templates': {}}
         self.options['project'] = 'try'
         with MockedOpen({self.ttc_file: json.dumps(ttc)}):

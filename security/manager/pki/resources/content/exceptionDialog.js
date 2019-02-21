@@ -74,6 +74,9 @@ function initExceptionDialog() {
   }
 
   document.l10n.translateElements(l10nUpdatedElements).then(() => window.sizeToContent());
+
+  document.addEventListener("dialogextra1", addException);
+  document.addEventListener("dialogextra2", checkCert);
 }
 
 /**

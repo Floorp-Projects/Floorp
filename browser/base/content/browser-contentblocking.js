@@ -15,7 +15,8 @@ var Fingerprinting = {
   },
 
   init() {
-    XPCOMUtils.defineLazyPreferenceGetter(this, "enabled", this.PREF_ENABLED, false);
+    XPCOMUtils.defineLazyPreferenceGetter(this, "enabled", this.PREF_ENABLED, false,
+      () => this.updateCategoryLabel());
     this.updateCategoryLabel();
   },
 
@@ -39,9 +40,9 @@ var Fingerprinting = {
   updateCategoryLabel() {
     let label;
     if (this.enabled) {
-      label = ContentBlocking.showBlockedLabels ? "contentBlocking.cryptominers.blocking.label" : null;
+      label = ContentBlocking.showBlockedLabels ? "contentBlocking.fingerprinters.blocking.label" : null;
     } else {
-      label = ContentBlocking.showAllowedLabels ? "contentBlocking.cryptominers.allowed.label" : null;
+      label = ContentBlocking.showAllowedLabels ? "contentBlocking.fingerprinters.allowed.label" : null;
     }
     this.categoryLabel.textContent = label ? gNavigatorBundle.getString(label) : "";
   },
@@ -126,7 +127,8 @@ var Cryptomining = {
   },
 
   init() {
-    XPCOMUtils.defineLazyPreferenceGetter(this, "enabled", this.PREF_ENABLED, false);
+    XPCOMUtils.defineLazyPreferenceGetter(this, "enabled", this.PREF_ENABLED, false,
+      () => this.updateCategoryLabel());
     this.updateCategoryLabel();
   },
 

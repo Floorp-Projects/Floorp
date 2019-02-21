@@ -1282,7 +1282,6 @@ WebConsoleActor.prototype =
     if (this.parentActor.isRootActor) {
       Services.console.reset();
     }
-    return {};
   },
 
   /**
@@ -1528,12 +1527,9 @@ WebConsoleActor.prototype =
    *        The console API call we need to send to the remote client.
    */
   onConsoleAPICall: function(message) {
-    const packet = {
-      from: this.actorID,
-      type: "consoleAPICall",
+    this.conn.sendActorEvent(this.actorID, "consoleAPICall", {
       message: this.prepareConsoleMessageForRemote(message),
-    };
-    this.conn.send(packet);
+    });
   },
 
   /**
@@ -1606,8 +1602,10 @@ WebConsoleActor.prototype =
 
     channel.requestMethod = method;
 
-    for (const {name, value} of headers) {
-      channel.setRequestHeader(name, value, false);
+    if (headers) {
+      for (const {name, value} of headers) {
+        channel.setRequestHeader(name, value, false);
+      }
     }
 
     if (body) {
@@ -1660,28 +1658,6 @@ WebConsoleActor.prototype =
       type: "fileActivity",
       uri: fileURI,
     };
-    this.conn.send(packet);
-  },
-
-  /**
-   * Handler for reflow activity. This method forwards reflow events to the
-   * remote Web Console client.
-   *
-   * @see ConsoleReflowListener
-   * @param Object reflowInfo
-   */
-  onReflowActivity: function(reflowInfo) {
-    const packet = {
-      from: this.actorID,
-      type: "reflowActivity",
-      interruptible: reflowInfo.interruptible,
-      start: reflowInfo.start,
-      end: reflowInfo.end,
-      sourceURL: reflowInfo.sourceURL,
-      sourceLine: reflowInfo.sourceLine,
-      functionName: reflowInfo.functionName,
-    };
-
     this.conn.send(packet);
   },
 

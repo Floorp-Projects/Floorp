@@ -10,9 +10,11 @@ Also contains a few additional utilities not found in :py:mod:`os.path`.
 
 from __future__ import absolute_import
 
+import ctypes
 import posixpath
 import os
 import re
+import sys
 
 
 def normsep(path):
@@ -144,3 +146,61 @@ def rebase(oldbase, base, relativepath):
     if relativepath.endswith('/') and not result.endswith('/'):
         result += '/'
     return result
+
+
+def readlink(path):
+    if hasattr(os, 'readlink'):
+        return normsep(os.readlink(path))
+
+    # Unfortunately os.path.realpath doesn't support symlinks on Windows, and os.readlink
+    # is only available on Windows with Python 3.2+. We have to resort to ctypes...
+
+    assert sys.platform == 'win32'
+
+    CreateFileW = ctypes.windll.kernel32.CreateFileW
+    CreateFileW.argtypes = [
+        ctypes.wintypes.LPCWSTR,
+        ctypes.wintypes.DWORD,
+        ctypes.wintypes.DWORD,
+        ctypes.wintypes.LPVOID,
+        ctypes.wintypes.DWORD,
+        ctypes.wintypes.DWORD,
+        ctypes.wintypes.HANDLE,
+    ]
+    CreateFileW.restype = ctypes.wintypes.HANDLE
+
+    GENERIC_READ = 0x80000000
+    FILE_SHARE_READ = 0x00000001
+    OPEN_EXISTING = 3
+    FILE_FLAG_BACKUP_SEMANTICS = 0x02000000
+
+    handle = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING,
+                         FILE_FLAG_BACKUP_SEMANTICS, 0)
+    assert handle != 1, 'Failed getting a handle to: {}'.format(path)
+
+    MAX_PATH = 260
+
+    buf = ctypes.create_unicode_buffer(MAX_PATH)
+    GetFinalPathNameByHandleW = ctypes.windll.kernel32.GetFinalPathNameByHandleW
+    GetFinalPathNameByHandleW.argtypes = [
+        ctypes.wintypes.HANDLE,
+        ctypes.wintypes.LPWSTR,
+        ctypes.wintypes.DWORD,
+        ctypes.wintypes.DWORD,
+    ]
+    GetFinalPathNameByHandleW.restype = ctypes.wintypes.DWORD
+
+    FILE_NAME_NORMALIZED = 0x0
+
+    rv = GetFinalPathNameByHandleW(handle, buf, MAX_PATH, FILE_NAME_NORMALIZED)
+    assert rv != 0 and rv <= MAX_PATH, 'Failed getting final path for: {}'.format(path)
+
+    CloseHandle = ctypes.windll.kernel32.CloseHandle
+    CloseHandle.argtypes = [ctypes.wintypes.HANDLE]
+    CloseHandle.restype = ctypes.wintypes.BOOL
+
+    rv = CloseHandle(handle)
+    assert rv != 0, 'Failed closing handle'
+
+    # Remove leading '\\?\' from the result.
+    return normsep(buf.value[4:])

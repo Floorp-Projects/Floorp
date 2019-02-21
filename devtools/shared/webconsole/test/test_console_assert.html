@@ -17,13 +17,13 @@ window.onload = async function () {
     state = await new Promise(resolve =>
       attachConsole(["ConsoleAPI"], resolve)
     );
-    const {dbgClient} = state;
+    const {client} = state;
 
-    await testFalseAssert(dbgClient);
-    await testFalsyAssert(dbgClient);
-    await testUndefinedAssert(dbgClient);
-    await testNullAssert(dbgClient);
-    await testTrueAssert(dbgClient);
+    await testFalseAssert(client);
+    await testFalsyAssert(client);
+    await testUndefinedAssert(client);
+    await testNullAssert(client);
+    await testTrueAssert(client);
 
   } catch (e) {
     ok(false, `Error thrown: ${e.message}`);
@@ -33,10 +33,10 @@ window.onload = async function () {
   SimpleTest.finish();
 };
 
-async function testFalseAssert(debuggerClient) {
+async function testFalseAssert(consoleFront) {
   info(`Testing console.assert(false)`);
   const packet = await consoleAPICall(
-    debuggerClient,
+    consoleFront,
     () => top.console.assert(false, "assertion is false")
   );
 
@@ -45,10 +45,10 @@ async function testFalseAssert(debuggerClient) {
   });
 }
 
-async function testFalsyAssert(debuggerClient) {
+async function testFalsyAssert(consoleFront) {
   info(`Testing console.assert(0")`);
   const packet = await consoleAPICall(
-    debuggerClient,
+    consoleFront,
     () => top.console.assert(0, "assertion is false")
   );
 
@@ -57,10 +57,10 @@ async function testFalsyAssert(debuggerClient) {
   });
 }
 
-async function testUndefinedAssert(debuggerClient) {
+async function testUndefinedAssert(consoleFront) {
   info(`Testing console.assert(undefined)`);
   const packet = await consoleAPICall(
-    debuggerClient,
+    consoleFront,
     () => top.console.assert(undefined, "assertion is false")
   );
 
@@ -69,10 +69,10 @@ async function testUndefinedAssert(debuggerClient) {
   });
 }
 
-async function testNullAssert(debuggerClient) {
+async function testNullAssert(consoleFront) {
   info(`Testing console.assert(null)`);
   const packet = await consoleAPICall(
-    debuggerClient,
+    consoleFront,
     () => top.console.assert(null, "assertion is false")
   );
 
@@ -81,10 +81,10 @@ async function testNullAssert(debuggerClient) {
   });
 }
 
-async function testTrueAssert(debuggerClient) {
+async function testTrueAssert(consoleFront) {
   info(`Testing console.assert(true)`);
   const onConsoleApiCall = consoleAPICall(
-    debuggerClient,
+    consoleFront,
     () => top.console.assert(true, "assertion is false")
   );
 
