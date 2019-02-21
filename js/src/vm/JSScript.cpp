@@ -3274,7 +3274,7 @@ static bool ShouldTrackRecordReplayProgress(JSScript* script) {
   script->setFlag(MutableFlags::HideScriptFromDebugger,
                   options.hideScriptFromDebugger);
 
-  script->setFlag(MutableFlags::TrackRecordReplayProgress,
+  script->setFlag(ImmutableFlags::TrackRecordReplayProgress,
                   ShouldTrackRecordReplayProgress(script));
 
   if (cx->runtime()->lcovOutput().isEnabled()) {
