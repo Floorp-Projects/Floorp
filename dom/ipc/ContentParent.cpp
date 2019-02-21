@@ -132,6 +132,7 @@
 #include "nsIClipboard.h"
 #include "nsICookie.h"
 #include "nsContentPermissionHelper.h"
+#include "nsIContentSecurityPolicy.h"
 #include "nsIContentProcess.h"
 #include "nsICycleCollectorListener.h"
 #include "nsIDocShellTreeOwner.h"
@@ -4606,7 +4607,7 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
     uint64_t aNextTabParentId, const nsString& aName, nsresult& aResult,
     nsCOMPtr<nsITabParent>& aNewTabParent, bool* aWindowIsNew,
     int32_t& aOpenLocation, nsIPrincipal* aTriggeringPrincipal,
-    uint32_t aReferrerPolicy, bool aLoadURI)
+    uint32_t aReferrerPolicy, bool aLoadURI, nsIContentSecurityPolicy* aCsp)
 
 {
   // The content process should never be in charge of computing whether or
@@ -4690,6 +4691,7 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
     MOZ_ASSERT(aTriggeringPrincipal, "need a valid triggeringPrincipal");
     params->SetTriggeringPrincipal(aTriggeringPrincipal);
     params->SetReferrerPolicy(aReferrerPolicy);
+    params->SetCsp(aCsp);
 
     RefPtr<Element> el;
 
@@ -4806,8 +4808,8 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
     const bool& aPositionSpecified, const bool& aSizeSpecified,
     const OptionalURIParams& aURIToLoad, const nsCString& aFeatures,
     const nsCString& aBaseURI, const float& aFullZoom,
-    const IPC::Principal& aTriggeringPrincipal, const uint32_t& aReferrerPolicy,
-    CreateWindowResolver&& aResolve) {
+    const IPC::Principal& aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
+    const uint32_t& aReferrerPolicy, CreateWindowResolver&& aResolve) {
   nsresult rv = NS_OK;
   CreatedWindowInfo cwi;
 
@@ -4853,7 +4855,7 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
       aPositionSpecified, aSizeSpecified, uriToLoad, aFeatures, aBaseURI,
       aFullZoom, nextTabParentId, VoidString(), rv, newRemoteTab,
       &cwi.windowOpened(), openLocation, aTriggeringPrincipal, aReferrerPolicy,
-      /* aLoadUri = */ false);
+      /* aLoadUri = */ false, aCsp);
   if (!ipcResult) {
     return ipcResult;
   }
@@ -4887,12 +4889,13 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindowInDifferentProcess(
     const bool& aSizeSpecified, const OptionalURIParams& aURIToLoad,
     const nsCString& aFeatures, const nsCString& aBaseURI,
     const float& aFullZoom, const nsString& aName,
-    const IPC::Principal& aTriggeringPrincipal,
+    const IPC::Principal& aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
     const uint32_t& aReferrerPolicy) {
   nsCOMPtr<nsITabParent> newRemoteTab;
   bool windowIsNew;
   nsCOMPtr<nsIURI> uriToLoad = DeserializeURI(aURIToLoad);
   int32_t openLocation = nsIBrowserDOMWindow::OPEN_NEWWINDOW;
+
   nsresult rv;
   mozilla::ipc::IPCResult ipcResult = CommonCreateWindow(
       aThisTab, /* aSetOpener = */ false, aChromeFlags, aCalledFromJS,
@@ -4900,7 +4903,7 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindowInDifferentProcess(
       aFullZoom,
       /* aNextTabParentId = */ 0, aName, rv, newRemoteTab, &windowIsNew,
       openLocation, aTriggeringPrincipal, aReferrerPolicy,
-      /* aLoadUri = */ true);
+      /* aLoadUri = */ true, aCsp);
   if (!ipcResult) {
     return ipcResult;
   }

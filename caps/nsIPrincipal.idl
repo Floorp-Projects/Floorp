@@ -151,12 +151,13 @@ interface nsIPrincipal : nsISerializable
                       in boolean allowIfInheritsPrincipal);
 
     /**
-     * A Content Security Policy associated with this principal.
-     * Use this function to query the associated CSP with this principal.
-     * Please *only* use this function to *set* a CSP when you know exactly what you are doing.
+     * A Content Security Policy associated with this principal. Use this function to
+     * query the associated CSP with this principal, but please *only* use this
+     * function to *set* a CSP when you know exactly what you are doing.
      * Most likely you want to call ensureCSP instead of setCSP.
      */
-    [noscript] attribute nsIContentSecurityPolicy csp;
+    readonly attribute nsIContentSecurityPolicy csp;
+    [noscript] void setCsp(in nsIContentSecurityPolicy aCsp);
 
     /*
      * Use this function to query a CSP associated with this principal.

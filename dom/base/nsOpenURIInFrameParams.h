@@ -31,4 +31,5 @@ class nsOpenURIInFrameParams final : public nsIOpenURIInFrameParams {
   nsString mReferrer;
   uint32_t mReferrerPolicy;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
+  nsCOMPtr<nsIContentSecurityPolicy> mCsp;
 };

@@ -10,6 +10,7 @@
 #include "mozilla/EventForwards.h"
 
 class nsIContent;
+class nsIContentSecurityPolicy;
 class nsIDocShell;
 class nsIInputStream;
 class nsIRequest;
@@ -42,6 +43,11 @@ class nsILinkHandler : public nsISupports {
    * @param aIsTrusted false if the triggerer is an untrusted DOM event.
    * @param aTriggeringPrincipal, if not passed explicitly we fall back to
    *        the document's principal.
+   * @param aCsp, the CSP to be used for the load, that is the CSP of the
+   *        entity responsible for causing the load to occur. Most likely
+   *        this is the CSP of the document that started the load. In case
+   *        aCsp was not passed explicitly we fall back to using
+   *        aContent's document's CSP if that document holds any.
    */
   NS_IMETHOD OnLinkClick(nsIContent* aContent, nsIURI* aURI,
                          const nsAString& aTargetSpec,
@@ -49,7 +55,8 @@ class nsILinkHandler : public nsISupports {
                          nsIInputStream* aPostDataStream,
                          nsIInputStream* aHeadersDataStream,
                          bool aIsUserTriggered, bool aIsTrusted,
-                         nsIPrincipal* aTriggeringPrincipal) = 0;
+                         nsIPrincipal* aTriggeringPrincipal,
+                         nsIContentSecurityPolicy* aCsp) = 0;
 
   /**
    * Process a click on a link.
@@ -70,6 +77,11 @@ class nsILinkHandler : public nsISupports {
    * @param aRequest the request that was opened
    * @param aTriggeringPrincipal, if not passed explicitly we fall back to
    *        the document's principal.
+   * @param aCsp, the CSP to be used for the load, that is the CSP of the
+   *        entity responsible for causing the load to occur. Most likely
+   *        this is the CSP of the document that started the load. In case
+   *        aCsp was not passed explicitly we fall back to using
+   *        aContent's document's CSP if that document holds any.
    */
   NS_IMETHOD OnLinkClickSync(
       nsIContent* aContent, nsIURI* aURI, const nsAString& aTargetSpec,
@@ -77,7 +89,8 @@ class nsILinkHandler : public nsISupports {
       nsIInputStream* aHeadersDataStream = 0, bool aNoOpenerImplied = false,
       nsIDocShell** aDocShell = 0, nsIRequest** aRequest = 0,
       bool aIsUserTriggered = false,
-      nsIPrincipal* aTriggeringPrincipal = nullptr) = 0;
+      nsIPrincipal* aTriggeringPrincipal = nullptr,
+      nsIContentSecurityPolicy* aCsp = nullptr) = 0;
 
   /**
    * Process a mouse-over a link.

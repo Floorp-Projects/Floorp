@@ -70,6 +70,7 @@ already_AddRefed<nsSHEntryShared> nsSHEntryShared::Duplicate(
   newEntry->mChildShells.AppendObjects(aEntry->mChildShells);
   newEntry->mTriggeringPrincipal = aEntry->mTriggeringPrincipal;
   newEntry->mPrincipalToInherit = aEntry->mPrincipalToInherit;
+  newEntry->mCsp = aEntry->mCsp;
   newEntry->mContentType.Assign(aEntry->mContentType);
   newEntry->mIsFrameNavigation = aEntry->mIsFrameNavigation;
   newEntry->mSaveLayoutState = aEntry->mSaveLayoutState;
