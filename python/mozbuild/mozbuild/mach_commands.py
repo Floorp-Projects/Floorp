@@ -1258,7 +1258,9 @@ class PackageFrontend(MachCommandBase):
         '''
         pass
 
-    def _make_artifacts(self, tree=None, job=None, skip_cache=False):
+    def _make_artifacts(self, tree=None, job=None, skip_cache=False,
+                        download_tests=True, download_symbols=False,
+                        download_host_bins=False):
         state_dir = self._mach_context.state_dir
         cache_dir = os.path.join(state_dir, 'package-frontend')
 
@@ -1279,7 +1281,10 @@ class PackageFrontend(MachCommandBase):
         artifacts = Artifacts(tree, self.substs, self.defines, job,
                               log=self.log, cache_dir=cache_dir,
                               skip_cache=skip_cache, hg=hg, git=git,
-                              topsrcdir=self.topsrcdir)
+                              topsrcdir=self.topsrcdir,
+                              download_tests=download_tests,
+                              download_symbols=download_symbols,
+                              download_host_bins=download_host_bins)
         return artifacts
 
     @ArtifactSubCommand('artifact', 'install',
@@ -1292,9 +1297,16 @@ class PackageFrontend(MachCommandBase):
     @CommandArgument('--skip-cache', action='store_true',
         help='Skip all local caches to force re-fetching remote artifacts.',
         default=False)
-    def artifact_install(self, source=None, skip_cache=False, tree=None, job=None, verbose=False):
+    @CommandArgument('--no-tests', action='store_true', help="Don't install tests.")
+    @CommandArgument('--symbols', action='store_true', help='Download symbols.')
+    @CommandArgument('--host-bins', action='store_true', help='Download host binaries.')
+    def artifact_install(self, source=None, skip_cache=False, tree=None, job=None, verbose=False,
+                         no_tests=False, symbols=False, host_bins=False):
         self._set_log_level(verbose)
-        artifacts = self._make_artifacts(tree=tree, job=job, skip_cache=skip_cache)
+        artifacts = self._make_artifacts(tree=tree, job=job, skip_cache=skip_cache,
+                                         download_tests=not no_tests,
+                                         download_symbols=symbols,
+                                         download_host_bins=host_bins)
 
         return artifacts.install_from(source, self.distdir)
 
