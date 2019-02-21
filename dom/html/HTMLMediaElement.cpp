@@ -4478,7 +4478,11 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(
 
 #ifdef MOZ_ANDROID_HLS_SUPPORT
   if (HLSDecoder::IsSupportedType(*containerType)) {
-    RefPtr<HLSDecoder> decoder = new HLSDecoder(decoderInit);
+    RefPtr<HLSDecoder> decoder = HLSDecoder::Create(decoderInit);
+    if (!decoder) {
+      reportCanPlay(false);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
     reportCanPlay(true);
     return SetupDecoder(decoder.get(), aChannel);
   }
