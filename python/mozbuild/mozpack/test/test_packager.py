@@ -5,6 +5,7 @@
 import unittest
 import mozunit
 import os
+from buildconfig import topobjdir
 from mozpack.packager import (
     preprocess_manifest,
     CallDeque,
@@ -43,7 +44,7 @@ baz@SUFFIX@
 
 
 class TestPreprocessManifest(unittest.TestCase):
-    MANIFEST_PATH = os.path.join(os.path.abspath(os.curdir), 'manifest')
+    MANIFEST_PATH = os.path.join('$OBJDIR', 'manifest')
 
     EXPECTED_LOG = [
         ((MANIFEST_PATH, 2), 'add', '', 'bar/*'),
@@ -68,6 +69,11 @@ class TestPreprocessManifest(unittest.TestCase):
                 self.log.append(args)
 
         self.sink = MockSink()
+        self.cwd = os.getcwd()
+        os.chdir(topobjdir)
+
+    def tearDown(self):
+        os.chdir(self.cwd)
 
     def test_preprocess_manifest(self):
         with MockedOpen({'manifest': MANIFEST}):
