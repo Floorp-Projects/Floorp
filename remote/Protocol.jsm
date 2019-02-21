@@ -1,57 +1,6 @@
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "Protocol",
-  "t",
-];
-
-var t = {
-  String: x => typeof x == "string" || x instanceof String,
-  Number: x => typeof x == "number",
-  Boolean: x => typeof x == "boolean",
-  Null: x => Object.is(x, null),
-  Enum: values => x => values.includes(x),
-  Undefined: x => Object.is(x, undefined),
-  Or: (...schemas) => x => schemas.some(schema => checkSchema(schema, x)),
-  Either: (...schemas) => x => schemas.map(schema => checkSchema(schema, x)).reduce((acc, x) => acc + (x ? 1 : 0)) === 1,
-  Array: schema => x => Array.isArray(x) && x.every(element => checkSchema(schema, element)),
-  Nullable: schema => x => Object.is(x, null) || checkSchema(schema, x),
-  Optional: schema => x => Object.is(x, undefined) || checkSchema(schema, x),
-  Any: x => true,
-};
-
-// TODO(ato): Add support for .schema()
-function checkSchema(schema, x, details = {}, path = []) {
-  if (typeof schema == "object") {
-    for (const [propertyName, check] of Object.entries(schema)) {
-      path.push(propertyName);
-      const result = checkSchema(check, x[propertyName], details, path);
-      path.pop();
-      if (!result) {
-        return false;
-      }
-    }
-
-    for (const propertyName of Object.keys(x)) {
-      if (!schema[propertyName]) {
-        path.push(propertyName);
-        details.propertyName = path.join(".");
-        details.propertyValue = x[propertyName];
-        details.errorType = "extra";
-        return false;
-      }
-    }
-    return true;
-  }
-
-  const rv = schema(x);
-  if (!rv) {
-    details.propertyName = path.join(".");
-    details.propertyValue = x;
-    details.errorType = "unsupported";
-  }
-  return rv;
-}
+var EXPORTED_SYMBOLS = ["Protocol"];
 
 // TODO(ato): We send back a description of the protocol
 // when the user makes the initial HTTP request,
@@ -17404,7 +17353,4 @@ const Description = {
     }
 };
 
-var Protocol = {
-  checkSchema,
-  Description,
-};
+const Protocol = {Description};

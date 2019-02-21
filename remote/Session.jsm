@@ -8,7 +8,6 @@ var EXPORTED_SYMBOLS = ["Session"];
 
 const {Domain} = ChromeUtils.import("chrome://remote/content/Domain.jsm");
 const {formatError} = ChromeUtils.import("chrome://remote/content/Error.jsm");
-const {Protocol} = ChromeUtils.import("chrome://remote/content/Protocol.jsm");
 
 class Session {
   constructor(connection, target) {
@@ -46,11 +45,14 @@ class Session {
       }
 
       const [domainName, methodName] = split(method, ".", 1);
-      assertSchema(domainName, methodName, params);
+      const domain = Domain[domainName];
+      if (!domain) {
+        throw new TypeError("No such domain: " + domainName);
+      }
 
       this.messageManager.sendAsyncMessage("remote-protocol:request", {
         browsingContextId: this.browsingContext.id,
-        request: { id, domainName, methodName, params },
+        request: {id, domainName, methodName, params},
       });
     } catch (e) {
       const error = formatError(e, {stack: true});
@@ -74,24 +76,6 @@ class Session {
         this.connection.send({id: data.id, error});
         break;
     }
-  }
-}
-
-function assertSchema(domainName, methodName, params) {
-  const domain = Domain[domainName];
-  if (!domain) {
-    throw new TypeError("No such domain: " + domainName);
-  }
-  if (!domain.schema) {
-    throw new Error(`Domain ${domainName} missing schema description`);
-  }
-
-  let details = {};
-  const descriptor = (domain.schema.methods || {})[methodName];
-  if (!Protocol.checkSchema(descriptor.params || {}, params, details)) {
-    const {errorType, propertyName, propertyValue} = details;
-    throw new TypeError(`${domainName}.${methodName} called ` +
-        `with ${errorType} ${propertyName}: ${propertyValue}`);
   }
 }
 

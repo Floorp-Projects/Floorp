@@ -8,32 +8,6 @@ var EXPORTED_SYMBOLS = ["Log"];
 
 const {Domain} = ChromeUtils.import("chrome://remote/content/Domain.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {t} = ChromeUtils.import("chrome://remote/content/Protocol.jsm");
-
-const {Network, Runtime} = Domain;
-
-const ALLOWED_SOURCES = [
-  "xml",
-  "javascript",
-  "network",
-  "storage",
-  "appcache",
-  "rendering",
-  "security",
-  "deprecation",
-  "worker",
-  "violation",
-  "intervention",
-  "recommendation",
-  "other",
-];
-
-const ALLOWED_LEVELS = [
-  "verbose",
-  "info",
-  "warning",
-  "error",
-];
 
 class Log extends Domain {
   constructor(session, target) {
@@ -84,37 +58,12 @@ class Log extends Domain {
     this.emit("Log.entryAdded", {entry});
   }
 
+  // XPCOM
+
   get QueryInterface() {
     return ChromeUtils.generateQI([Ci.nsIConsoleListener]);
   }
-
-  static get schema() {
-    return {
-      methods: {
-        enable: {},
-        disable: {},
-      },
-      events: {
-        entryAdded: Log.LogEntry.schema,
-      },
-    };
-  }
 }
-
-Log.LogEntry = {
-  schema: {
-    source: t.Enum(ALLOWED_SOURCES),
-    level: t.Enum(ALLOWED_LEVELS),
-    text: t.String,
-    timestamp: Runtime.Timestamp,
-    url: t.Optional(t.String),
-    lineNumber: t.Optional(t.Number),
-    stackTrace: t.Optional(Runtime.StackTrace.schema),
-    networkRequestId: t.Optional(Network.RequestId.schema),
-    workerId: t.Optional(t.String),
-    args: t.Optional(t.Array(Runtime.RemoteObject.schema)),
-  },
-};
 
 function fromConsoleMessage(message) {
   const levels = {
