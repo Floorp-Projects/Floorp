@@ -40,7 +40,7 @@
             android:key="@string/pref_key_credit_cards_addresses"
             android:title="@string/preferences_credit_cards_addresses" />
 
-        <androidx.preference.SwitchPreference
+        <org.mozilla.fenix.settings.DefaultBrowserPreference
             android:key="@string/pref_key_make_default_browser"
             android:title="@string/preferences_set_as_default_browser" />
     </androidx.preference.PreferenceCategory>
