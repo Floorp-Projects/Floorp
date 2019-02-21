@@ -280,8 +280,8 @@ void XMLHttpRequestMainThread::InitParameters(bool aAnon, bool aSystem) {
     }
 
     uint32_t permission;
-    nsresult rv = permMgr->TestPermissionFromPrincipal(principal, "systemXHR",
-                                                       &permission);
+    nsresult rv = permMgr->TestPermissionFromPrincipal(
+        principal, NS_LITERAL_CSTRING("systemXHR"), &permission);
     if (NS_FAILED(rv) || permission != nsIPermissionManager::ALLOW_ACTION) {
       SetParameters(aAnon, false);
       return;

@@ -44,7 +44,7 @@ nsresult GetPermissionState(nsIPrincipal* aPrincipal,
   }
   uint32_t permission = nsIPermissionManager::UNKNOWN_ACTION;
   nsresult rv = permManager->TestExactPermissionFromPrincipal(
-      aPrincipal, "desktop-notification", &permission);
+      aPrincipal, NS_LITERAL_CSTRING("desktop-notification"), &permission);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

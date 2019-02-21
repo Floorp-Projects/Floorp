@@ -108,7 +108,8 @@ namespace dom {
 static bool sVibratorEnabled = false;
 static uint32_t sMaxVibrateMS = 0;
 static uint32_t sMaxVibrateListLen = 0;
-static const char* kVibrationPermissionType = "vibration";
+static const nsLiteralCString kVibrationPermissionType =
+    NS_LITERAL_CSTRING("vibration");
 
 /* static */
 void Navigator::Init() {

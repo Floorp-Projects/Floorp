@@ -39,7 +39,7 @@
 #define TOPIC_CANVAS_PERMISSIONS_PROMPT "canvas-permissions-prompt"
 #define TOPIC_CANVAS_PERMISSIONS_PROMPT_HIDE_DOORHANGER \
   "canvas-permissions-prompt-hide-doorhanger"
-#define PERMISSION_CANVAS_EXTRACT_DATA "canvas"
+#define PERMISSION_CANVAS_EXTRACT_DATA NS_LITERAL_CSTRING("canvas")
 
 using namespace mozilla::gfx;
 
