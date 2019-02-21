@@ -5,6 +5,7 @@
 package mozilla.components.service.glean
 
 import android.support.annotation.VisibleForTesting
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.service.glean.storages.StringListsStorageEngine
 import mozilla.components.support.base.log.logger.Logger
@@ -29,6 +30,9 @@ data class StringListMetricType(
     override val defaultStorageDestinations: List<String> = listOf("metrics")
 
     private val logger = Logger("glean/StringListMetricType")
+
+    // Holds the Job returned from launch{} for awaiting purposes
+    private var ioTask: Job? = null
 
     companion object {
         // Maximum length of any passed value string, in characters.
@@ -61,7 +65,7 @@ data class StringListMetricType(
             it
         }
 
-        Dispatchers.API.launch {
+        ioTask = Dispatchers.API.launch {
             // Delegate storing the string to the storage engine.
             StringListsStorageEngine.add(
                 metricData = this@StringListMetricType,
@@ -93,7 +97,7 @@ data class StringListMetricType(
             it.take(MAX_STRING_LENGTH)
         }
 
-        Dispatchers.API.launch {
+        ioTask = Dispatchers.API.launch {
             // Delegate storing the string list to the storage engine.
             StringListsStorageEngine.set(
                 metricData = this@StringListMetricType,
@@ -103,7 +107,9 @@ data class StringListMetricType(
     }
 
     /**
-     * Tests whether a value is stored for the metric for testing purposes only
+     * Tests whether a value is stored for the metric for testing purposes only. This function will
+     * attempt to await the last task (if any) writing to the the metric's storage engine before
+     * returning a value.
      *
      * @param pingName represents the name of the ping to retrieve the metric for.  Defaults
      *                 to the either the first value in [defaultStorageDestinations] or the first
@@ -112,11 +118,14 @@ data class StringListMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testHasValue(pingName: String = getStorageNames().first()): Boolean {
+        ioTask?.let { awaitJob(it) }
+
         return StringListsStorageEngine.getSnapshot(pingName, false)?.get(identifier) != null
     }
 
     /**
-     * Returns the stored value for testing purposes only
+     * Returns the stored value for testing purposes only. This function will attempt to await the
+     * last task (if any) writing to the the metric's storage engine before returning a value.
      *
      * @param pingName represents the name of the ping to retrieve the metric for.  Defaults
      *                 to the either the first value in [defaultStorageDestinations] or the first
@@ -126,6 +135,8 @@ data class StringListMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testGetValue(pingName: String = getStorageNames().first()): List<String> {
+        ioTask?.let { awaitJob(it) }
+
         return StringListsStorageEngine.getSnapshot(pingName, false)!![identifier]!!
     }
 }

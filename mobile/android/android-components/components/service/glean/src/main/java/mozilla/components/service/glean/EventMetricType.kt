@@ -5,6 +5,7 @@
 package mozilla.components.service.glean
 
 import android.support.annotation.VisibleForTesting
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.service.glean.storages.EventsStorageEngine
 import mozilla.components.service.glean.storages.RecordedEventData
@@ -32,6 +33,9 @@ data class EventMetricType(
     override val defaultStorageDestinations: List<String> = listOf("events")
 
     private val logger = Logger("glean/EventMetricType")
+
+    // Holds the Job returned from launch{} for awaiting purposes
+    private var ioTask: Job? = null
 
     companion object {
         // Maximum length of any string value in the extra dictionary, in characters
@@ -99,7 +103,7 @@ data class EventMetricType(
             eventKeys
         }
 
-        Dispatchers.API.launch {
+        ioTask = Dispatchers.API.launch {
             // Delegate storing the event to the storage engine.
             EventsStorageEngine.record(
                 stores = getStorageNames(),
@@ -113,7 +117,9 @@ data class EventMetricType(
     }
 
     /**
-     * Tests whether a value is stored for the metric for testing purposes only
+     * Tests whether a value is stored for the metric for testing purposes only. This function will
+     * attempt to await the last task (if any) writing to the the metric's storage engine before
+     * returning a value.
      *
      * @param pingName represents the name of the ping to retrieve the metric for.  Defaults
      *                 to the either the first value in [defaultStorageDestinations] or the first
@@ -122,6 +128,8 @@ data class EventMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testHasValue(pingName: String = getStorageNames().first()): Boolean {
+        ioTask?.let { awaitJob(it) }
+
         val snapshot = EventsStorageEngine.getSnapshot(pingName, false) ?: return false
         return snapshot.any { event ->
             event.identifier == identifier
@@ -129,7 +137,8 @@ data class EventMetricType(
     }
 
     /**
-     * Returns the stored value for testing purposes only
+     * Returns the stored value for testing purposes only. This function will attempt to await the
+     * last task (if any) writing to the the metric's storage engine before returning a value.
      *
      * @param pingName represents the name of the ping to retrieve the metric for.  Defaults
      *                 to the either the first value in [defaultStorageDestinations] or the first
@@ -139,6 +148,8 @@ data class EventMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testGetValue(pingName: String = getStorageNames().first()): List<RecordedEventData> {
+        ioTask?.let { awaitJob(it) }
+
         return EventsStorageEngine.getSnapshot(pingName, false)!!.filter { event ->
             event.identifier == identifier
         }

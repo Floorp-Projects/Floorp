@@ -5,6 +5,7 @@
 package mozilla.components.service.glean
 
 import android.support.annotation.VisibleForTesting
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.service.glean.storages.DatetimesStorageEngine
 import mozilla.components.service.glean.utils.parseISOTimeString
@@ -31,6 +32,9 @@ data class DatetimeMetricType(
 
     private val logger = Logger("glean/DatetimeMetricType")
 
+    // Holds the Job returned from launch{} for awaiting purposes
+    private var ioTask: Job? = null
+
     /**
      * Set a datetime value, truncating it to the metric's resolution.
      *
@@ -42,7 +46,7 @@ data class DatetimeMetricType(
             return
         }
 
-        Dispatchers.API.launch {
+        ioTask = Dispatchers.API.launch {
             // Delegate storing the datetime to the storage engine.
             DatetimesStorageEngine.set(
                 this@DatetimeMetricType,
@@ -67,7 +71,7 @@ data class DatetimeMetricType(
             return
         }
 
-        Dispatchers.API.launch {
+        ioTask = Dispatchers.API.launch {
             // Delegate storing the datetime to the storage engine.
             DatetimesStorageEngine.set(
                 this@DatetimeMetricType,
@@ -77,7 +81,9 @@ data class DatetimeMetricType(
     }
 
     /**
-     * Tests whether a value is stored for the metric for testing purposes only
+     * Tests whether a value is stored for the metric for testing purposes only. This function will
+     * attempt to await the last task (if any) writing to the the metric's storage engine before
+     * returning a value.
      *
      * @param pingName represents the name of the ping to retrieve the metric for.  Defaults
      *                 to the either the first value in [defaultStorageDestinations] or the first
@@ -86,11 +92,15 @@ data class DatetimeMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testHasValue(pingName: String = getStorageNames().first()): Boolean {
+        ioTask?.let { awaitJob(it) }
+
         return DatetimesStorageEngine.getSnapshot(pingName, false)?.get(identifier) != null
     }
 
     /**
-     * Returns the string representation of the stored value for testing purposes only.
+     * Returns the string representation of the stored value for testing purposes only. This
+     * function will attempt to await the last task (if any) writing to the the metric's storage
+     * engine before returning a value.
      *
      * @param pingName represents the name of the ping to retrieve the metric for.  Defaults
      *                 to the either the first value in [defaultStorageDestinations] or the first
@@ -100,11 +110,14 @@ data class DatetimeMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testGetValueAsString(pingName: String = getStorageNames().first()): String {
+        ioTask?.let { awaitJob(it) }
+
         return DatetimesStorageEngine.getSnapshot(pingName, false)!![identifier]!!
     }
 
     /**
-     * Returns the stored value for testing purposes only
+     * Returns the stored value for testing purposes only. This function will attempt to await the
+     * last task (if any) writing to the the metric's storage engine before returning a value.
      *
      * [Date] objects are always in the user's local timezone offset. If you
      * care about checking that the timezone offset was set and sent correctly, use
@@ -118,6 +131,8 @@ data class DatetimeMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testGetValue(pingName: String = getStorageNames().first()): Date {
+        ioTask?.let { awaitJob(it) }
+
         return parseISOTimeString(DatetimesStorageEngine.getSnapshot(pingName, false)!![identifier]!!)!!
     }
 }

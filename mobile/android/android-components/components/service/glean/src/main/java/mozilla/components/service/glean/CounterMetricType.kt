@@ -5,6 +5,7 @@
 package mozilla.components.service.glean
 
 import android.support.annotation.VisibleForTesting
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.service.glean.storages.CountersStorageEngine
 import mozilla.components.support.base.log.logger.Logger
@@ -30,6 +31,9 @@ data class CounterMetricType(
 
     private val logger = Logger("glean/CounterMetricType")
 
+    // Holds the Job returned from launch{} for awaiting purposes
+    private var ioTask: Job? = null
+
     /**
      * Add to counter value.
      *
@@ -48,7 +52,7 @@ data class CounterMetricType(
             return
         }
 
-        Dispatchers.API.launch {
+        ioTask = Dispatchers.API.launch {
             // Delegate storing the new counter value to the storage engine.
             CountersStorageEngine.record(
                     this@CounterMetricType,
@@ -58,7 +62,9 @@ data class CounterMetricType(
     }
 
     /**
-     * Tests whether a value is stored for the metric for testing purposes only
+     * Tests whether a value is stored for the metric for testing purposes only. This function will
+     * attempt to await the last task (if any) writing to the the metric's storage engine before
+     * returning a value.
      *
      * @param pingName represents the name of the ping to retrieve the metric for.  Defaults
      *                 to the either the first value in [defaultStorageDestinations] or the first
@@ -67,11 +73,14 @@ data class CounterMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testHasValue(pingName: String = getStorageNames().first()): Boolean {
+        ioTask?.let { awaitJob(it) }
+
         return CountersStorageEngine.getSnapshot(pingName, false)?.get(identifier) != null
     }
 
     /**
-     * Returns the stored value for testing purposes only
+     * Returns the stored value for testing purposes only. This function will attempt to await the
+     * last task (if any) writing to the the metric's storage engine before returning a value.
      *
      * @param pingName represents the name of the ping to retrieve the metric for.  Defaults
      *                 to the either the first value in [defaultStorageDestinations] or the first
@@ -81,6 +90,8 @@ data class CounterMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testGetValue(pingName: String = getStorageNames().first()): Int {
+        ioTask?.let { awaitJob(it) }
+
         return CountersStorageEngine.getSnapshot(pingName, false)!![identifier]!!
     }
 }

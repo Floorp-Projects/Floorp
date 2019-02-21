@@ -5,6 +5,7 @@
 package mozilla.components.service.glean
 
 import android.support.annotation.VisibleForTesting
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.service.glean.storages.BooleansStorageEngine
 import mozilla.components.support.base.log.logger.Logger
@@ -29,6 +30,10 @@ data class BooleanMetricType(
 
     private val logger = Logger("glean/BooleanMetricType")
 
+    // Holds the Job returned from launch{} for awaiting purposes
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    var ioTask: Job? = null
+
     /**
      * Set a boolean value.
      *
@@ -41,7 +46,7 @@ data class BooleanMetricType(
             return
         }
 
-        Dispatchers.API.launch {
+        ioTask = Dispatchers.API.launch {
             // Delegate storing the boolean to the storage engine.
             BooleansStorageEngine.record(
                 this@BooleanMetricType,
@@ -51,7 +56,9 @@ data class BooleanMetricType(
     }
 
     /**
-     * Tests whether a value is stored for the metric for testing purposes only
+     * Tests whether a value is stored for the metric for testing purposes only. This function will
+     * attempt to await the last task (if any) writing to the the metric's storage engine before
+     * returning a value.
      *
      * @param pingName represents the name of the ping to retrieve the metric for.  Defaults
      *                 to the either the first value in [defaultStorageDestinations] or the first
@@ -60,11 +67,14 @@ data class BooleanMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testHasValue(pingName: String = getStorageNames().first()): Boolean {
+        ioTask?.let { awaitJob(it) }
+
         return BooleansStorageEngine.getSnapshot(pingName, false)?.get(identifier) != null
     }
 
     /**
-     * Returns the stored value for testing purposes only
+     * Returns the stored value for testing purposes only. This function will attempt to await the
+     * last task (if any) writing to the the metric's storage engine before returning a value.
      *
      * @param pingName represents the name of the ping to retrieve the metric for.  Defaults
      *                 to the either the first value in [defaultStorageDestinations] or the first
@@ -74,6 +84,8 @@ data class BooleanMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testGetValue(pingName: String = getStorageNames().first()): Boolean {
+        ioTask?.let { awaitJob(it) }
+
         return BooleansStorageEngine.getSnapshot(pingName, false)!![identifier]!!
     }
 }

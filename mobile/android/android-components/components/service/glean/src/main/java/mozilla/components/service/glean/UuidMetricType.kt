@@ -5,6 +5,7 @@
 package mozilla.components.service.glean
 
 import android.support.annotation.VisibleForTesting
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -30,6 +31,9 @@ data class UuidMetricType(
     override val defaultStorageDestinations: List<String> = listOf("metrics")
 
     private val logger = Logger("glean/UuidMetricType")
+
+    // Holds the Job returned from launch{} for awaiting purposes
+    private var ioTask: Job? = null
 
     /**
      * Generate a new UUID value and set it in the metric store.
@@ -61,7 +65,7 @@ data class UuidMetricType(
             return
         }
 
-        Dispatchers.API.launch {
+        ioTask = Dispatchers.API.launch {
             // Delegate storing the event to the storage engine.
             UuidsStorageEngine.record(
                 this@UuidMetricType,
@@ -71,7 +75,9 @@ data class UuidMetricType(
     }
 
     /**
-     * Tests whether a value is stored for the metric for testing purposes only
+     * Tests whether a value is stored for the metric for testing purposes only. This function will
+     * attempt to await the last task (if any) writing to the the metric's storage engine before
+     * returning a value.
      *
      * @param pingName represents the name of the ping to retrieve the metric for.  Defaults
      *                 to the either the first value in [defaultStorageDestinations] or the first
@@ -80,12 +86,14 @@ data class UuidMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testHasValue(pingName: String = getStorageNames().first()): Boolean {
-        return UuidsStorageEngine
-            .getSnapshot(pingName, false)?.get(identifier) != null
+        ioTask?.let { awaitJob(it) }
+
+        return UuidsStorageEngine.getSnapshot(pingName, false)?.get(identifier) != null
     }
 
     /**
-     * Returns the stored value for testing purposes only
+     * Returns the stored value for testing purposes only. This function will attempt to await the
+     * last task (if any) writing to the the metric's storage engine before returning a value.
      *
      * @param pingName represents the name of the ping to retrieve the metric for.  Defaults
      *                 to the either the first value in [defaultStorageDestinations] or the first
@@ -95,6 +103,8 @@ data class UuidMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testGetValue(pingName: String = getStorageNames().first()): UUID {
+        ioTask?.let { awaitJob(it) }
+
         return UuidsStorageEngine.getSnapshot(pingName, false)!![identifier]!!
     }
 }
