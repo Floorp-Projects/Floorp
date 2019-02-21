@@ -361,7 +361,7 @@ raptor-tp6-10-chrome:
 
 raptor-tp6-binast-1-firefox:
     description: "Raptor tp6-binast-1 on Firefox"
-    try-name: = raptor-tp6-binast-1
+    try-name: raptor-tp6-binast-1
     treeherder-symbol: Rap(tp6-b-1)
     run-on-projects: ['try', 'mozilla-central']
     tier: 2
