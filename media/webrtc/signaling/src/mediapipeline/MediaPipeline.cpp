@@ -226,38 +226,6 @@ class VideoFrameConverter {
 
   static void DeleteBuffer(uint8_t* aData) { delete[] aData; }
 
-  // This takes ownership of the buffer and attached it to the VideoFrame we
-  // send to the listeners
-  void VideoFrameConverted(UniquePtr<uint8_t[]> aBuffer,
-                           unsigned int aVideoFrameLength,
-                           unsigned short aWidth, unsigned short aHeight,
-                           VideoType aVideoType, uint64_t aCaptureTime) {
-    // check for parameter sanity
-    if (!aBuffer || aVideoFrameLength == 0 || aWidth == 0 || aHeight == 0) {
-      MOZ_LOG(gMediaPipelineLog, LogLevel::Error,
-              ("%s Invalid Parameters", __FUNCTION__));
-      MOZ_ASSERT(false);
-      return;
-    }
-    MOZ_ASSERT(aVideoType == VideoType::kVideoI420);
-
-    const int stride_y = aWidth;
-    const int stride_uv = (aWidth + 1) / 2;
-
-    const uint8_t* buffer_y = aBuffer.get();
-    const uint8_t* buffer_u = buffer_y + stride_y * aHeight;
-    const uint8_t* buffer_v = buffer_u + stride_uv * ((aHeight + 1) / 2);
-    rtc::scoped_refptr<webrtc::WrappedI420Buffer> video_frame_buffer(
-        new rtc::RefCountedObject<webrtc::WrappedI420Buffer>(
-            aWidth, aHeight, buffer_y, stride_y, buffer_u, stride_uv, buffer_v,
-            stride_uv, rtc::Bind(&DeleteBuffer, aBuffer.release())));
-
-    webrtc::VideoFrame video_frame(video_frame_buffer, aCaptureTime,
-                                   aCaptureTime,
-                                   webrtc::kVideoRotation_0);  // XXX
-    VideoFrameConverted(video_frame);
-  }
-
   void VideoFrameConverted(const webrtc::VideoFrame& aVideoFrame) {
     MutexAutoLock lock(mMutex);
 
@@ -269,6 +237,10 @@ class VideoFrameConverter {
   void ProcessVideoFrame(Image* aImage, IntSize aSize, bool aForceBlack) {
     --mLength;  // Atomic
     MOZ_ASSERT(mLength >= 0);
+
+    // See Bug 1529581 - Ideally we'd use the mTimestamp from the chunk
+    // passed into QueueVideoChunk rather than the webrtc.org clock here.
+    int64_t now = webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();
 
     if (aForceBlack) {
       // Send a black image.
@@ -286,8 +258,9 @@ class VideoFrameConverter {
       MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
               ("Sending a black video frame"));
       webrtc::I420Buffer::SetBlack(buffer);
-      webrtc::VideoFrame frame(buffer, 0, 0,  // not setting timestamps
-                               webrtc::kVideoRotation_0);
+
+      webrtc::VideoFrame frame(buffer, 0, // not setting rtp timestamp
+                               now, webrtc::kVideoRotation_0);
       VideoFrameConverted(frame);
       return;
     }
@@ -306,9 +279,9 @@ class VideoFrameConverter {
                 data->mCbCrStride, data->mCrChannel, data->mCbCrStride,
                 rtc::KeepRefUntilDone(image)));
 
-        webrtc::VideoFrame i420_frame(video_frame_buffer, 0,
-                                      0,  // not setting timestamps
-                                      webrtc::kVideoRotation_0);
+        webrtc::VideoFrame i420_frame(video_frame_buffer,
+                                      0, // not setting rtp timestamp
+                                      now, webrtc::kVideoRotation_0);
         MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
                 ("Sending an I420 video frame"));
         VideoFrameConverted(i420_frame);
@@ -338,8 +311,8 @@ class VideoFrameConverter {
       return;
     }
 
-    webrtc::VideoFrame frame(buffer, 0, 0,  // not setting timestamps
-                             webrtc::kVideoRotation_0);
+    webrtc::VideoFrame frame(buffer, 0, //not setting rtp timestamp
+                             now, webrtc::kVideoRotation_0);
     VideoFrameConverted(frame);
   }
 
