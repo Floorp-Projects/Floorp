@@ -8,15 +8,17 @@
  */
 
 add_task(async function() {
-  let bm = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                                                url: "http://bug1105244.example.com/",
-                                                title: "test" });
+  let bm = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: "http://bug1105244.example.com/",
+    title: "test",
+  });
 
   registerCleanupFunction(async function() {
     await PlacesUtils.bookmarks.remove(bm);
   });
 
-  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, testDelete);
+  await BrowserTestUtils.withNewTab("about:blank", testDelete);
 });
 
 function sendHome() {
@@ -40,9 +42,7 @@ async function testDelete() {
 
   // delete the first few chars - each delete should operate on the input field.
   await UrlbarTestUtils.promisePopupOpen(window, sendDelete);
-
   Assert.equal(gURLBar.inputField.value, "ug1105244.example.com/");
-
   sendDelete();
   Assert.equal(gURLBar.inputField.value, "g1105244.example.com/");
 }
