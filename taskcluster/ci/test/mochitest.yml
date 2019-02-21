@@ -7,6 +7,7 @@ job-defaults:
         by-test-platform:
             linux64/debug: both
             default: false
+    socketprocess-e10s: false
     mozharness:
         script:
             by-test-platform:
@@ -283,6 +284,10 @@ mochitest-media:
             macosx64-ccov/debug: 7200
             default: 5400
     run-on-projects: built-projects
+    socketprocess-e10s:
+        by-test-platform:
+            android.*: false
+            default: both
     loopback-video: true
     virtualization:
         by-test-platform:
