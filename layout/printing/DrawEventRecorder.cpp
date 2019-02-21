@@ -11,8 +11,6 @@ namespace layout {
 
 void DrawEventRecorderPRFileDesc::RecordEvent(
     const gfx::RecordedEvent& aEvent) {
-  WriteElement(mOutputStream, aEvent.GetType());
-
   aEvent.RecordToStream(mOutputStream);
 
   Flush();
