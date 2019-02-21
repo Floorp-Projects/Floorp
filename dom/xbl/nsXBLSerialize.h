@@ -24,9 +24,6 @@ typedef uint8_t XBLBindingSerializeDetails;
 // Set to indicate that nsXBLPrototypeBinding::mInheritStyle should be true
 #define XBLBinding_Serialize_InheritStyle (1 << 1)
 
-// Set to indicate that nsXBLPrototypeBinding::mChromeOnlyContent should be true
-#define XBLBinding_Serialize_ChromeOnlyContent (1 << 2)
-
 // Set to indicate that nsXBLPrototypeBinding::mBindToUntrustedContent should be
 // true
 #define XBLBinding_Serialize_BindToUntrustedContent (1 << 3)

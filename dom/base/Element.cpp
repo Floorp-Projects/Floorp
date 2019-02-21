@@ -1731,9 +1731,7 @@ nsresult Element::BindToTree(Document* aDocument, nsIContent* aParent,
         OwnerDoc()->BindingManager()->GetBindingWithContent(this);
 
     if (binding) {
-      binding->BindAnonymousContent(
-          binding->GetAnonymousContent(), this,
-          binding->PrototypeBinding()->ChromeOnlyContent());
+      binding->BindAnonymousContent(binding->GetAnonymousContent(), this);
     }
   }
 

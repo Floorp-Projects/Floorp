@@ -181,8 +181,6 @@ class nsXBLPrototypeBinding final
    * aFlags can contain XBLBinding_Serialize_InheritStyle to indicate that
    * mInheritStyle flag should be set, and XBLBinding_Serialize_IsFirstBinding
    * to indicate the first binding in a document.
-   * XBLBinding_Serialize_ChromeOnlyContent indicates that
-   * nsXBLPrototypeBinding::mChromeOnlyContent should be true.
    * XBLBinding_Serialize_BindToUntrustedContent indicates that
    * nsXBLPrototypeBinding::mBindToUntrustedContent should be true.
    */
@@ -274,7 +272,6 @@ class nsXBLPrototypeBinding final
                                         nsIContent* aCopyRoot,
                                         mozilla::dom::Element* aTemplChild);
 
-  bool ChromeOnlyContent() const { return mChromeOnlyContent; }
   bool SimpleScopeChain() const { return mSimpleScopeChain; }
   bool BindToUntrustedContent() const { return mBindToUntrustedContent; }
 
@@ -314,13 +311,15 @@ class nsXBLPrototypeBinding final
 
   // Weak.  The docinfo will own our base binding.
   mozilla::WeakPtr<nsXBLPrototypeBinding> mBaseBinding;
+  // FIXME(emilio): This is dead code now.
   bool mInheritStyle;
   bool mCheckedBaseProto;
   bool mKeyHandlersRegistered;
-  bool mChromeOnlyContent;
+  // FIXME(emilio): This is dead code now.
   bool mBindToUntrustedContent;
   // True if constructors, handlers, etc for this binding would skip the scope
   // chain for parent elements and go directly to the document.
+  // FIXME(emilio): This is dead code now.
   bool mSimpleScopeChain;
 
   nsAutoPtr<nsXBLPrototypeResources>

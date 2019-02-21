@@ -222,7 +222,6 @@ STATIC_ATOMS = [
     Atom("childList", "childList"),
     Atom("choose", "choose"),
     Atom("chromemargin", "chromemargin"),
-    Atom("chromeOnlyContent", "chromeOnlyContent"),
     Atom("exposeToUntrustedContent", "exposeToUntrustedContent"),
     Atom("circ", "circ"),
     Atom("circle", "circle"),
