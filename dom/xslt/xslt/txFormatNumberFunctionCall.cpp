@@ -254,12 +254,12 @@ nsresult txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
   else
     bufsize = 1 + 30;
 
-  char* buf = new char[bufsize];
+  auto buf = MakeUnique<char[]>(bufsize);
   int bufIntDigits, sign;
   char* endp;
-  PR_dtoa(value, 0, 0, &bufIntDigits, &sign, &endp, buf, bufsize - 1);
+  PR_dtoa(value, 0, 0, &bufIntDigits, &sign, &endp, buf.get(), bufsize - 1);
 
-  int buflen = endp - buf;
+  int buflen = endp - buf.get();
   int intDigits;
   intDigits = bufIntDigits > minIntegerSize ? bufIntDigits : minIntegerSize;
 
@@ -339,8 +339,6 @@ nsresult txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
     // This can only happen for formats like '##.##'
     res.Append(format->mZeroDigit);
   }
-
-  delete[] buf;
 
   // Build suffix
   res.Append(suffix);
