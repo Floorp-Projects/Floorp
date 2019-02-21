@@ -26,16 +26,22 @@ class RecordedEventDerived : public RecordedEvent {
 
  public:
   void RecordToStream(std::ostream& aStream) const override {
+    WriteElement(aStream, this->mType);
     static_cast<const Derived*>(this)->Record(aStream);
   }
   void RecordToStream(EventStream& aStream) const override {
+    WriteElement(aStream, this->mType);
     static_cast<const Derived*>(this)->Record(aStream);
   }
   void RecordToStream(MemStream& aStream) const override {
     SizeCollector size;
+    WriteElement(size, this->mType);
     static_cast<const Derived*>(this)->Record(size);
+
     aStream.Resize(aStream.mLength + size.mTotalSize);
+
     MemWriter writer(aStream.mData + aStream.mLength - size.mTotalSize);
+    WriteElement(writer, this->mType);
     static_cast<const Derived*>(this)->Record(writer);
   }
 };
