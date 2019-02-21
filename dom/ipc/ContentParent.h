@@ -519,7 +519,8 @@ class ContentParent final : public PContentParent,
       const OptionalURIParams& aURIToLoad, const nsCString& aFeatures,
       const nsCString& aBaseURI, const float& aFullZoom,
       const IPC::Principal& aTriggeringPrincipal,
-      const uint32_t& aReferrerPolicy, CreateWindowResolver&& aResolve);
+      nsIContentSecurityPolicy* aCsp, const uint32_t& aReferrerPolicy,
+      CreateWindowResolver&& aResolve);
 
   mozilla::ipc::IPCResult RecvCreateWindowInDifferentProcess(
       PBrowserParent* aThisTab, const uint32_t& aChromeFlags,
@@ -528,7 +529,7 @@ class ContentParent final : public PContentParent,
       const nsCString& aFeatures, const nsCString& aBaseURI,
       const float& aFullZoom, const nsString& aName,
       const IPC::Principal& aTriggeringPrincipal,
-      const uint32_t& aReferrerPolicy);
+      nsIContentSecurityPolicy* aCsp, const uint32_t& aReferrerPolicy);
 
   static void BroadcastBlobURLRegistration(
       const nsACString& aURI, BlobImpl* aBlobImpl, nsIPrincipal* aPrincipal,
@@ -696,7 +697,7 @@ class ContentParent final : public PContentParent,
       nsresult& aResult, nsCOMPtr<nsITabParent>& aNewTabParent,
       bool* aWindowIsNew, int32_t& aOpenLocation,
       nsIPrincipal* aTriggeringPrincipal, uint32_t aReferrerPolicy,
-      bool aLoadUri);
+      bool aLoadUri, nsIContentSecurityPolicy* aCsp);
 
   FORWARD_SHMEM_ALLOCATOR_TO(PContentParent)
 

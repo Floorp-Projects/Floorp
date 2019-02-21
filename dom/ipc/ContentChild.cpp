@@ -755,15 +755,13 @@ ContentChild::ProvideWindow(mozIDOMWindowProxy* aParent, uint32_t aChromeFlags,
                              aWindowIsNew, aReturn);
 }
 
-static nsresult GetCreateWindowParams(mozIDOMWindowProxy* aParent,
-                                      nsDocShellLoadState* aLoadState,
-                                      nsACString& aBaseURIString,
-                                      float* aFullZoom,
-                                      uint32_t* aReferrerPolicy,
-                                      nsIPrincipal** aTriggeringPrincipal) {
+static nsresult GetCreateWindowParams(
+    mozIDOMWindowProxy* aParent, nsDocShellLoadState* aLoadState,
+    nsACString& aBaseURIString, float* aFullZoom, uint32_t* aReferrerPolicy,
+    nsIPrincipal** aTriggeringPrincipal, nsIContentSecurityPolicy** aCsp) {
   *aFullZoom = 1.0f;
-  if (!aTriggeringPrincipal) {
-    NS_ERROR("aTriggeringPrincipal is null");
+  if (!aTriggeringPrincipal || !aCsp) {
+    NS_ERROR("aTriggeringPrincipal || aCsp is null");
     return NS_ERROR_FAILURE;
   }
   auto* opener = nsPIDOMWindowOuter::From(aParent);
@@ -776,6 +774,15 @@ static nsresult GetCreateWindowParams(mozIDOMWindowProxy* aParent,
 
   nsCOMPtr<Document> doc = opener->GetDoc();
   NS_ADDREF(*aTriggeringPrincipal = doc->NodePrincipal());
+
+  // Currently we query the CSP from the doc->NodePrincipal(). After
+  // Bug 965637 we can query the CSP from the doc directly.
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  doc->NodePrincipal()->GetCsp(getter_AddRefs(csp));
+  if (csp) {
+    csp.forget(aCsp);
+  }
+
   nsCOMPtr<nsIURI> baseURI = doc->GetDocBaseURI();
   if (!baseURI) {
     NS_ERROR("Document didn't return a base URI");
@@ -856,10 +863,11 @@ nsresult ContentChild::ProvideWindowCommon(
     nsAutoCString baseURIString;
     float fullZoom;
     nsCOMPtr<nsIPrincipal> triggeringPrincipal;
+    nsCOMPtr<nsIContentSecurityPolicy> csp;
     uint32_t referrerPolicy = mozilla::net::RP_Unset;
-    rv = GetCreateWindowParams(aParent, aLoadState, baseURIString, &fullZoom,
-                               &referrerPolicy,
-                               getter_AddRefs(triggeringPrincipal));
+    rv = GetCreateWindowParams(
+        aParent, aLoadState, baseURIString, &fullZoom, &referrerPolicy,
+        getter_AddRefs(triggeringPrincipal), getter_AddRefs(csp));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -869,7 +877,7 @@ nsresult ContentChild::ProvideWindowCommon(
     Unused << SendCreateWindowInDifferentProcess(
         aTabOpener, aChromeFlags, aCalledFromJS, aPositionSpecified,
         aSizeSpecified, uriToLoad, features, baseURIString, fullZoom, name,
-        Principal(triggeringPrincipal), referrerPolicy);
+        Principal(triggeringPrincipal), csp, referrerPolicy);
 
     // We return NS_ERROR_ABORT, so that the caller knows that we've abandoned
     // the window open as far as it is concerned.
@@ -1055,10 +1063,11 @@ nsresult ContentChild::ProvideWindowCommon(
     nsAutoCString baseURIString;
     float fullZoom;
     nsCOMPtr<nsIPrincipal> triggeringPrincipal;
+    nsCOMPtr<nsIContentSecurityPolicy> csp;
     uint32_t referrerPolicy = mozilla::net::RP_Unset;
-    rv = GetCreateWindowParams(aParent, aLoadState, baseURIString, &fullZoom,
-                               &referrerPolicy,
-                               getter_AddRefs(triggeringPrincipal));
+    rv = GetCreateWindowParams(
+        aParent, aLoadState, baseURIString, &fullZoom, &referrerPolicy,
+        getter_AddRefs(triggeringPrincipal), getter_AddRefs(csp));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1073,7 +1082,8 @@ nsresult ContentChild::ProvideWindowCommon(
     SendCreateWindow(aTabOpener, newChild, aChromeFlags, aCalledFromJS,
                      aPositionSpecified, aSizeSpecified, uriToLoad, features,
                      baseURIString, fullZoom, Principal(triggeringPrincipal),
-                     referrerPolicy, std::move(resolve), std::move(reject));
+                     csp, referrerPolicy, std::move(resolve),
+                     std::move(reject));
   }
 
   // =======================
