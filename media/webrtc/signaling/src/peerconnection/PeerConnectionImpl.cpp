@@ -308,7 +308,7 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
       mSTSThread(nullptr),
       mForceIceTcp(false),
       mMedia(nullptr),
-      mTransportHandler(MediaTransportHandler::Create()),
+      mTransportHandler(nullptr),
       mUuidGen(MakeUnique<PCUuidGenerator>()),
       mIceRestartCount(0),
       mIceRollbackCount(0),
@@ -403,6 +403,10 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   mSTSThread = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &res);
   MOZ_ASSERT(mSTSThread);
 
+  // We do callback handling on STS instead of main to avoid media jank.
+  // Someday, we may have a dedicated thread for this.
+  mTransportHandler = MediaTransportHandler::Create(mSTSThread);
+
   // Initialize NSS if we are in content process. For chrome process, NSS should
   // already been initialized.
   if (XRE_IsParentProcess()) {
@@ -464,8 +468,8 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
     iceServers = aConfiguration.mIceServers.Value();
   }
 
-  res = mTransportHandler->Init("PC:" + GetName(), iceServers,
-                                aConfiguration.mIceTransportPolicy);
+  res = mTransportHandler->CreateIceCtx("PC:" + GetName(), iceServers,
+                                        aConfiguration.mIceTransportPolicy);
   if (NS_FAILED(res)) {
     CSFLogError(LOGTAG, "%s: Failed to init mtransport", __FUNCTION__);
     return NS_ERROR_FAILURE;

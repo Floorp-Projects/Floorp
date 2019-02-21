@@ -12,6 +12,12 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Maybe.h"
 
+class PickleIterator;
+
+namespace IPC {
+class Message;
+}
+
 namespace mozilla {
 
 // TODO: It might be worthwhile to teach this class how to "borrow" a buffer.
@@ -20,6 +26,7 @@ class MediaPacket {
  public:
   MediaPacket() = default;
   MediaPacket(MediaPacket&& orig) = default;
+  MediaPacket(const MediaPacket& orig);
 
   // Takes ownership of the passed-in data
   void Take(UniquePtr<uint8_t[]>&& data, size_t len, size_t capacity = 0) {
@@ -35,6 +42,9 @@ class MediaPacket {
     data_.reset();
     len_ = 0;
     capacity_ = 0;
+    encrypted_data_.reset();
+    encrypted_len_ = 0;
+    sdp_level_.reset();
   }
 
   // Copies the passed-in data
@@ -68,6 +78,9 @@ class MediaPacket {
 
   Type type() const { return type_; }
 
+  void Serialize(IPC::Message* aMsg) const;
+  bool Deserialize(const IPC::Message* aMsg, PickleIterator* aIter);
+
  private:
   UniquePtr<uint8_t[]> data_;
   size_t len_ = 0;
@@ -80,4 +93,21 @@ class MediaPacket {
   Type type_ = UNCLASSIFIED;
 };
 }  // namespace mozilla
+
+namespace IPC {
+template <typename>
+struct ParamTraits;
+
+template <>
+struct ParamTraits<mozilla::MediaPacket> {
+  static void Write(Message* aMsg, const mozilla::MediaPacket& aParam) {
+    aParam.Serialize(aMsg);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   mozilla::MediaPacket* aResult) {
+    return aResult->Deserialize(aMsg, aIter);
+  }
+};
+}  // namespace IPC
 #endif  // mediapacket_h__
