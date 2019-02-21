@@ -293,7 +293,7 @@ static const ClassOps ArrayBufferObjectClassOps = {
     nullptr, /* call        */
     nullptr, /* hasInstance */
     nullptr, /* construct   */
-    ArrayBufferObject::trace,
+    nullptr, /* trace */
 };
 
 static const JSFunctionSpec arraybuffer_functions[] = {
@@ -445,7 +445,7 @@ static ArrayBufferObject::BufferContents AllocateArrayBufferContents(
     JSContext* cx, uint32_t nbytes) {
   uint8_t* p =
       cx->pod_callocCanGC<uint8_t>(nbytes, js::ArrayBufferContentsArena);
-  return ArrayBufferObject::BufferContents::create<ArrayBufferObject::PLAIN>(p);
+  return ArrayBufferObject::BufferContents::createPlainData(p);
 }
 
 static void NoteViewBufferWasDetached(
@@ -468,8 +468,6 @@ static void NoteViewBufferWasDetached(
   // When detaching buffers where we don't know all views, the new data must
   // match the old data. All missing views are typed objects, which do not
   // expect their data to ever change.
-  MOZ_ASSERT_IF(buffer->forInlineTypedObject(),
-                newContents.data() == buffer->dataPointer());
 
   // When detaching a buffer with typed object views, any jitcode accessing
   // such views must be deoptimized so that detachment checks are performed.
@@ -503,8 +501,6 @@ static void NoteViewBufferWasDetached(
     innerViews.removeViews(buffer);
   }
   if (JSObject* view = buffer->firstView()) {
-    MOZ_ASSERT(!buffer->forInlineTypedObject(),
-               "Typed object buffers cannot be detached");
     NoteViewBufferWasDetached(&view->as<ArrayBufferViewObject>(), newContents,
                               cx);
     buffer->setFirstView(nullptr);
@@ -561,7 +557,6 @@ void ArrayBufferObject::changeContents(JSContext* cx,
                                        BufferContents newContents,
                                        OwnsState ownsState) {
   MOZ_RELEASE_ASSERT(!isWasm());
-  MOZ_ASSERT(!forInlineTypedObject());
 
   // Change buffer contents.
   uint8_t* oldDataPointer = dataPointer();
@@ -931,17 +926,29 @@ bool js::CreateWasmBuffer(JSContext* cx, const wasm::Limits& memory,
   // Don't assert cx->wasmHaveSignalHandlers because (1) they aren't needed
   // for asm.js, (2) they are only installed for WebAssembly, not asm.js.
 
-  if (buffer->forInlineTypedObject()) {
-    return false;
-  }
-
-  if (!buffer->isWasm() && buffer->isPreparedForAsmJS()) {
-    return true;
-  }
-
-  // Non-prepared-for-asm.js wasm buffers can be detached at any time.
+  // wasm buffers can be detached at any time.
   if (buffer->isWasm()) {
+    MOZ_ASSERT(!buffer->isPreparedForAsmJS());
     return false;
+  }
+
+  // asm.js code and associated buffers are potentially long-lived.  Yet if
+  // |buffer->hasUserOwnedData()|, |buffer| *must* be detached by the user
+  // before the user-provided data is disposed.  Eliminate the complexity of
+  // this edge case by not allowing buffers with user-provided content to be
+  // used with asm.js, as no callers exist that want to use such buffer with
+  // asm.js.
+  if (buffer->hasUserOwnedData()) {
+    MOZ_ASSERT(!buffer->isPreparedForAsmJS());
+    return false;
+  }
+
+  MOZ_ASSERT(buffer->isPlainData() || buffer->isMapped() ||
+             buffer->isExternal());
+
+  // Buffers already prepared for asm.js need no further work.
+  if (buffer->isPreparedForAsmJS()) {
+    return true;
   }
 
   if (!buffer->ownsData()) {
@@ -986,8 +993,11 @@ void ArrayBufferObject::releaseData(FreeOp* fop) {
   MOZ_ASSERT(ownsData());
 
   switch (bufferKind()) {
-    case PLAIN:
+    case PLAIN_DATA:
       fop->free_(dataPointer());
+      break;
+    case USER_OWNED:
+      MOZ_ASSERT_UNREACHABLE("user-owned data should never be owned by this");
       break;
     case MAPPED:
       gc::DeallocateMappedContent(dataPointer(), byteLength());
@@ -1004,6 +1014,11 @@ void ArrayBufferObject::releaseData(FreeOp* fop) {
         JS::AutoSuppressGCAnalysis nogc;
         freeInfo()->freeFunc(dataPointer(), freeInfo()->freeUserData);
       }
+      break;
+    case BAD1:
+    case BAD2:
+    case BAD3:
+      MOZ_CRASH("invalid BufferKind encountered");
       break;
   }
 }
@@ -1123,7 +1138,8 @@ Maybe<uint32_t> js::WasmArrayBufferMaxSize(
   newBuf->initialize(newSize, contents, OwnsData);
 
   memcpy(newBuf->dataPointer(), oldBuf->dataPointer(), oldBuf->byteLength());
-  ArrayBufferObject::detach(cx, oldBuf, BufferContents::createPlain(nullptr));
+  ArrayBufferObject::detach(cx, oldBuf,
+                            BufferContents::createPlainData(nullptr));
   return true;
 }
 
@@ -1207,7 +1223,7 @@ ArrayBufferObject* ArrayBufferObject::create(
       int newSlots = JS_HOWMANY(nbytes, sizeof(Value));
       MOZ_ASSERT(int(nbytes) <= newSlots * int(sizeof(Value)));
       nslots = reservedSlots + newSlots;
-      contents = BufferContents::createPlain(nullptr);
+      contents = BufferContents::createPlainData(nullptr);
     } else {
       contents = AllocateArrayBufferContents(cx, nbytes);
       if (!contents) {
@@ -1237,7 +1253,8 @@ ArrayBufferObject* ArrayBufferObject::create(
   if (!contents) {
     void* data = obj->inlineDataPointer();
     memset(data, 0, nbytes);
-    obj->initialize(nbytes, BufferContents::createPlain(data), DoesntOwnData);
+    obj->initialize(nbytes, BufferContents::createPlainData(data),
+                    DoesntOwnData);
   } else {
     obj->initialize(nbytes, contents, ownsState);
   }
@@ -1247,7 +1264,7 @@ ArrayBufferObject* ArrayBufferObject::create(
 
 ArrayBufferObject* ArrayBufferObject::create(
     JSContext* cx, uint32_t nbytes, HandleObject proto /* = nullptr */) {
-  return create(cx, nbytes, BufferContents::createPlain(nullptr),
+  return create(cx, nbytes, BufferContents::createPlainData(nullptr),
                 OwnsState::OwnsData, proto);
 }
 
@@ -1261,7 +1278,7 @@ ArrayBufferObject* ArrayBufferObject::createEmpty(JSContext* cx) {
   obj->setByteLength(0);
   obj->setFlags(0);
   obj->setFirstView(nullptr);
-  obj->setDataPointer(BufferContents::createPlain(nullptr), DoesntOwnData);
+  obj->setDataPointer(BufferContents::createPlainData(nullptr), DoesntOwnData);
 
   return obj;
 }
@@ -1291,7 +1308,8 @@ ArrayBufferObject* ArrayBufferObject::createFromNewRawBuffer(
 ArrayBufferObject::externalizeContents(JSContext* cx,
                                        Handle<ArrayBufferObject*> buffer,
                                        bool hasStealableContents) {
-  MOZ_ASSERT(buffer->isPlain(), "Only support doing this on plain ABOs");
+  MOZ_ASSERT(buffer->isPlainData(),
+             "only support doing this on ABOs containing plain data");
   MOZ_ASSERT(!buffer->isDetached(), "must have contents to externalize");
   MOZ_ASSERT_IF(hasStealableContents, buffer->hasStealableContents());
 
@@ -1307,7 +1325,7 @@ ArrayBufferObject::externalizeContents(JSContext* cx,
   BufferContents newContents =
       AllocateArrayBufferContents(cx, buffer->byteLength());
   if (!newContents) {
-    return BufferContents::createPlain(nullptr);
+    return BufferContents::createFailed();
   }
   memcpy(newContents.data(), contents.data(), buffer->byteLength());
   buffer->changeContents(cx, newContents, DoesntOwnData);
@@ -1330,7 +1348,7 @@ ArrayBufferObject::externalizeContents(JSContext* cx,
   if (hasStealableContents) {
     // Return the old contents and reset the detached buffer's data
     // pointer. This pointer should never be accessed.
-    auto newContents = BufferContents::createPlain(nullptr);
+    auto newContents = BufferContents::createPlainData(nullptr);
     buffer->setOwnsData(DoesntOwnData);  // Do not free the stolen data.
     ArrayBufferObject::detach(cx, buffer, newContents);
     buffer->setOwnsData(DoesntOwnData);  // Do not free the nullptr.
@@ -1342,7 +1360,7 @@ ArrayBufferObject::externalizeContents(JSContext* cx,
   BufferContents contentsCopy =
       AllocateArrayBufferContents(cx, buffer->byteLength());
   if (!contentsCopy) {
-    return BufferContents::createPlain(nullptr);
+    return BufferContents::createFailed();
   }
 
   if (buffer->byteLength() > 0) {
@@ -1361,7 +1379,7 @@ ArrayBufferObject::externalizeContents(JSContext* cx,
   }
 
   switch (buffer.bufferKind()) {
-    case PLAIN:
+    case PLAIN_DATA:
       if (buffer.isPreparedForAsmJS()) {
         info->objectsMallocHeapElementsAsmJS +=
             mallocSizeOf(buffer.dataPointer());
@@ -1369,6 +1387,11 @@ ArrayBufferObject::externalizeContents(JSContext* cx,
         info->objectsMallocHeapElementsNormal +=
             mallocSizeOf(buffer.dataPointer());
       }
+      break;
+    case USER_OWNED:
+      MOZ_ASSERT_UNREACHABLE(
+          "user-owned data should never be owned by this, and such memory "
+          "should be accounted for by the code that provided it");
       break;
     case MAPPED:
       info->objectsNonHeapElementsNormal += buffer.byteLength();
@@ -1378,7 +1401,12 @@ ArrayBufferObject::externalizeContents(JSContext* cx,
       MOZ_ASSERT(buffer.wasmMappedSize() >= buffer.byteLength());
       info->wasmGuardPages += buffer.wasmMappedSize() - buffer.byteLength();
       break;
-    case KIND_MASK:
+    case EXTERNAL:
+      MOZ_CRASH("external buffers not currently supported");
+      break;
+    case BAD1:
+    case BAD2:
+    case BAD3:
       MOZ_CRASH("bad bufferKind()");
   }
 }
@@ -1401,25 +1429,6 @@ ArrayBufferObject::externalizeContents(JSContext* cx,
 
   memcpy(toBuffer->dataPointer() + toIndex,
          fromBuffer->dataPointer() + fromIndex, count);
-}
-
-/* static */ void ArrayBufferObject::trace(JSTracer* trc, JSObject* obj) {
-  // If this buffer is associated with an inline typed object,
-  // fix up the data pointer if the typed object was moved.
-  ArrayBufferObject& buf = obj->as<ArrayBufferObject>();
-
-  if (!buf.forInlineTypedObject()) {
-    return;
-  }
-
-  JSObject* view = MaybeForwarded(buf.firstView());
-  MOZ_ASSERT(view && view->is<InlineTransparentTypedObject>());
-
-  TraceManuallyBarrieredEdge(trc, &view,
-                             "array buffer inline typed object owner");
-  buf.setFixedSlot(
-      DATA_SLOT,
-      PrivateValue(view->as<InlineTransparentTypedObject>().inlineTypedMem()));
 }
 
 /* static */ size_t ArrayBufferObject::objectMoved(JSObject* obj,
@@ -1634,7 +1643,7 @@ JS_FRIEND_API bool JS_DetachArrayBuffer(JSContext* cx, HandleObject obj) {
 
   ArrayBufferObject::BufferContents newContents =
       buffer->hasStealableContents()
-          ? ArrayBufferObject::BufferContents::createPlain(nullptr)
+          ? ArrayBufferObject::BufferContents::createPlainData(nullptr)
           : buffer->contents();
 
   ArrayBufferObject::detach(cx, buffer, newContents);
@@ -1665,8 +1674,9 @@ JS_PUBLIC_API JSObject* JS_NewArrayBufferWithContents(JSContext* cx,
   CHECK_THREAD(cx);
   MOZ_ASSERT_IF(!data, nbytes == 0);
 
-  ArrayBufferObject::BufferContents contents =
-      ArrayBufferObject::BufferContents::create<ArrayBufferObject::PLAIN>(data);
+  using BufferContents = ArrayBufferObject::BufferContents;
+
+  BufferContents contents = BufferContents::createPlainData(data);
   return ArrayBufferObject::create(cx, nbytes, contents,
                                    ArrayBufferObject::OwnsData,
                                    /* proto = */ nullptr, TenuredObject);
@@ -1695,8 +1705,10 @@ JS_PUBLIC_API JSObject* JS_NewArrayBufferWithExternalContents(JSContext* cx,
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   MOZ_ASSERT_IF(!data, nbytes == 0);
-  ArrayBufferObject::BufferContents contents =
-      ArrayBufferObject::BufferContents::create<ArrayBufferObject::PLAIN>(data);
+
+  using BufferContents = ArrayBufferObject::BufferContents;
+
+  BufferContents contents = BufferContents::createUserOwned(data);
   return ArrayBufferObject::create(cx, nbytes, contents,
                                    ArrayBufferObject::DoesntOwnData,
                                    /* proto = */ nullptr, TenuredObject);
@@ -1731,8 +1743,9 @@ JS_PUBLIC_API void* JS_ExternalizeArrayBufferContents(JSContext* cx,
   }
 
   Handle<ArrayBufferObject*> buffer = obj.as<ArrayBufferObject>();
-  if (!buffer->isPlain()) {
-    // This operation isn't supported on mapped or wsm ArrayBufferObjects.
+  if (!buffer->isPlainData()) {
+    // This operation isn't supported on mapped or wasm ArrayBufferObjects, or
+    // on ArrayBufferObjects with user-provided data.
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TYPED_ARRAY_BAD_ARGS);
     return nullptr;
@@ -1785,12 +1798,16 @@ JS_PUBLIC_API void* JS_StealArrayBufferContents(JSContext* cx,
     return nullptr;
   }
 
-  // The caller assumes that a plain malloc'd buffer is returned.
-  // hasStealableContents is true for mapped buffers, so we must additionally
-  // require that the buffer is plain. In the future, we could consider
-  // returning something that handles releasing the memory.
+  // The caller assumes that a plain malloc'd buffer is returned.  To steal
+  // actual contents, then, we must have |hasStealableContents()| *and* the
+  // contents must be |isPlainData()|.  (Mapped data would not be malloc'd;
+  // user-provided data we flat-out know nothing about at all -- although it
+  // *should* have not passed the |hasStealableContents()| check anyway.)
+  //
+  // In the future, we could consider returning something that handles
+  // releasing the memory, in the mapped-data case.
   bool hasStealableContents =
-      buffer->hasStealableContents() && buffer->isPlain();
+      buffer->hasStealableContents() && buffer->isPlainData();
 
   AutoRealm ar(cx, buffer);
   return ArrayBufferObject::stealContents(cx, buffer, hasStealableContents)

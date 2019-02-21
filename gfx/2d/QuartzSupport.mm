@@ -35,7 +35,7 @@ CGColorSpaceRef CreateSystemColorSpace() {
 
 nsCARenderer::~nsCARenderer() { Destroy(); }
 
-void cgdata_release_callback(void* aCGData, const void* data, size_t size) {
+static void cgdata_release_callback(void* aCGData, const void* data, size_t size) {
   if (aCGData) {
     free(aCGData);
   }
