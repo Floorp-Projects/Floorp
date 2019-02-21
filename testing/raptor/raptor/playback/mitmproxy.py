@@ -327,7 +327,7 @@ class MitmproxyAndroid(Mitmproxy):
 
     def setup(self):
         """For geckoview we need to install the generated mitmproxy CA cert"""
-        if self.config['app'] == "geckoview":
+        if self.config['app'] in ["geckoview", "refbrow", "fenix"]:
             # install the generated CA certificate into android geckoview
             self.install_mitmproxy_cert(self.mitmproxy_proc,
                                         self.browser_path)

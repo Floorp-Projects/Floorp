@@ -163,7 +163,7 @@ function getTestSettings() {
         }
 
         // write options to storage that our content script needs to know
-        if (["firefox", "geckoview"].includes(browserName)) {
+        if (["firefox", "geckoview", "refbrow", "fenix"].includes(browserName)) {
           ext.storage.local.clear().then(function() {
             ext.storage.local.set({settings}).then(function() {
               console.log("wrote settings to ext local storage");
@@ -185,7 +185,7 @@ function getTestSettings() {
 
 function getBrowserInfo() {
   return new Promise(resolve => {
-    if (["firefox", "geckoview"].includes(browserName)) {
+    if (["firefox", "geckoview", "refbrow", "fenix"].includes(browserName)) {
       ext = browser;
       var gettingInfo = browser.runtime.getBrowserInfo();
       gettingInfo.then(function(bi) {
@@ -275,7 +275,7 @@ function waitForResult() {
 async function getScreenCapture() {
   console.log("Capturing screenshot...");
   var capturing;
-  if (["firefox", "geckoview"].includes(browserName)) {
+  if (["firefox", "geckoview", "refbrow", "fenix"].includes(browserName)) {
     capturing = ext.tabs.captureVisibleTab();
     capturing.then(onCaptured, onError);
     await capturing;
@@ -417,7 +417,8 @@ function setTimeoutAlarm(timeoutName, timeoutMS) {
 }
 
 function cancelTimeoutAlarm(timeoutName) {
-  if (browserName === "firefox" || browserName === "geckoview") {
+  if (browserName === "firefox" || browserName === "geckoview" ||
+      browserName === "refbrow" || browserName === "fenix") {
     var clearAlarm = ext.alarms.clear(timeoutName);
     clearAlarm.then(function(onCleared) {
       if (onCleared) {
@@ -601,7 +602,8 @@ function runner() {
 
       // setTimeout(function() { nextCycle(); }, postStartupDelay);
       // on geckoview you can't create a new tab; only using existing tab - set it blank first
-      if (config.browser == "geckoview") {
+      if (config.browser == "geckoview" || config.browser == "refbrow" ||
+          config.browser == "fenix") {
         setTimeout(function() { nextCycle(); }, postStartupDelay);
       } else {
         setTimeout(function() {
