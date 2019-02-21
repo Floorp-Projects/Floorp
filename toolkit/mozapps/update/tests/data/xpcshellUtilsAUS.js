@@ -1628,7 +1628,7 @@ function copyTestUpdaterToBinDir() {
  * @return  nsIFIle for the copied test updater.
  */
 function copyTestUpdaterForRunUsingUpdater() {
-  if (AppConstants.platform == "win") {
+  if (AppConstants.platform == "win" || AppConstants.platform == "linux") {
     return copyTestUpdaterToBinDir();
   }
 
@@ -1639,11 +1639,9 @@ function copyTestUpdaterForRunUsingUpdater() {
     testUpdater.copyToFollowingLinks(updater.parent, updater.leafName);
   }
 
-  if (AppConstants.platform == "macosx") {
-    updater.append("Contents");
-    updater.append("MacOS");
-    updater.append("org.mozilla.updater");
-  }
+  updater.append("Contents");
+  updater.append("MacOS");
+  updater.append("org.mozilla.updater");
   return updater;
 }
 
@@ -2190,9 +2188,12 @@ function setupAppFiles() {
                   {relPath: "dependentlibs.list",
                    inGreDir: true}];
 
-  // On Linux the updater.png must also be copied
+  // On Linux the updater.png must also be copied and libsoftokn3.so must be
+  // symlinked or copied.
   if (AppConstants.platform == "linux") {
     appFiles.push({relPath: "icons/updater.png",
+                   inGreDir: true},
+                  {relPath: "libsoftokn3.so",
                    inGreDir: true});
   }
 
@@ -4143,42 +4144,33 @@ function setEnvironment() {
     gEnv.set("XRE_NO_WINDOWS_CRASH_DIALOG", "1");
   }
 
-  if (AppConstants.platform == "macosx" || AppConstants.platform == "linux") {
+  if (AppConstants.platform == "macosx") {
+    let shouldSetEnv = true;
     let appGreBinDir = gGREBinDirOrig.clone();
     let envGreBinDir = Cc["@mozilla.org/file/local;1"].
                        createInstance(Ci.nsIFile);
-    let shouldSetEnv = true;
-    if (AppConstants.platform == "macosx") {
-      if (gEnv.exists("DYLD_LIBRARY_PATH")) {
-        gEnvDyldLibraryPath = gEnv.get("DYLD_LIBRARY_PATH");
-        envGreBinDir.initWithPath(gEnvDyldLibraryPath);
-        if (envGreBinDir.path == appGreBinDir.path) {
-          gEnvDyldLibraryPath = null;
-          shouldSetEnv = false;
-        }
-      }
-
-      if (shouldSetEnv) {
-        debugDump("setting DYLD_LIBRARY_PATH environment variable value to " +
-                  appGreBinDir.path);
-        gEnv.set("DYLD_LIBRARY_PATH", appGreBinDir.path);
-      }
-    } else {
-      if (gEnv.exists("LD_LIBRARY_PATH")) {
-        gEnvLdLibraryPath = gEnv.get("LD_LIBRARY_PATH");
-        envGreBinDir.initWithPath(gEnvLdLibraryPath);
-        if (envGreBinDir.path == appGreBinDir.path) {
-          gEnvLdLibraryPath = null;
-          shouldSetEnv = false;
-        }
-      }
-
-      if (shouldSetEnv) {
-        debugDump("setting LD_LIBRARY_PATH environment variable value to " +
-                  appGreBinDir.path);
-        gEnv.set("LD_LIBRARY_PATH", appGreBinDir.path);
+    if (gEnv.exists("DYLD_LIBRARY_PATH")) {
+      gEnvDyldLibraryPath = gEnv.get("DYLD_LIBRARY_PATH");
+      envGreBinDir.initWithPath(gEnvDyldLibraryPath);
+      if (envGreBinDir.path == appGreBinDir.path) {
+        gEnvDyldLibraryPath = null;
+        shouldSetEnv = false;
       }
     }
+
+    if (shouldSetEnv) {
+      debugDump("setting DYLD_LIBRARY_PATH environment variable value to " +
+                appGreBinDir.path);
+      gEnv.set("DYLD_LIBRARY_PATH", appGreBinDir.path);
+    }
+  }
+
+  if (AppConstants.platform == "linux" && gEnv.exists("LD_LIBRARY_PATH")) {
+    gEnvLdLibraryPath = gEnv.get("LD_LIBRARY_PATH");
+    debugDump("removing LD_LIBRARY_PATH environment variable");
+    // By removing the LD_LIBRARY_PATH environment variable this will test
+    // that setting the rpath for the updater is working properly.
+    gEnv.set("LD_LIBRARY_PATH", "");
   }
 
   if (gEnv.exists("XPCOM_MEM_LEAK_LOG")) {
@@ -4232,24 +4224,21 @@ function resetEnvironment() {
     gEnv.set("XPCOM_DEBUG_BREAK", "");
   }
 
-  if (AppConstants.platform == "macosx" || AppConstants.platform == "linux") {
-    if (AppConstants.platform == "macosx") {
-      if (gEnvDyldLibraryPath) {
-        debugDump("setting DYLD_LIBRARY_PATH environment variable value " +
-                  "back to " + gEnvDyldLibraryPath);
-        gEnv.set("DYLD_LIBRARY_PATH", gEnvDyldLibraryPath);
-      } else if (gEnvDyldLibraryPath !== null) {
-        debugDump("removing DYLD_LIBRARY_PATH environment variable");
-        gEnv.set("DYLD_LIBRARY_PATH", "");
-      }
-    } else if (gEnvLdLibraryPath) {
-      debugDump("setting LD_LIBRARY_PATH environment variable value back " +
-                "to " + gEnvLdLibraryPath);
-      gEnv.set("LD_LIBRARY_PATH", gEnvLdLibraryPath);
-    } else if (gEnvLdLibraryPath !== null) {
-      debugDump("removing LD_LIBRARY_PATH environment variable");
-      gEnv.set("LD_LIBRARY_PATH", "");
+  if (AppConstants.platform == "macosx") {
+    if (gEnvDyldLibraryPath) {
+      debugDump("setting DYLD_LIBRARY_PATH environment variable value " +
+                "back to " + gEnvDyldLibraryPath);
+      gEnv.set("DYLD_LIBRARY_PATH", gEnvDyldLibraryPath);
+    } else if (gEnvDyldLibraryPath !== null) {
+      debugDump("removing DYLD_LIBRARY_PATH environment variable");
+      gEnv.set("DYLD_LIBRARY_PATH", "");
     }
+  }
+
+  if (AppConstants.platform == "linux" && gEnvLdLibraryPath) {
+    debugDump("setting LD_LIBRARY_PATH environment variable value back " +
+              "to " + gEnvLdLibraryPath);
+    gEnv.set("LD_LIBRARY_PATH", gEnvLdLibraryPath);
   }
 
   if (AppConstants.platform == "win" && gAddedEnvXRENoWindowsCrashDialog) {

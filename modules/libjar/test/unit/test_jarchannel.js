@@ -7,21 +7,14 @@
  */
 
 
-const {classes: Cc,
-       interfaces: Ci,
-       results: Cr,
-       utils: Cu,
-       Constructor: ctor
-       } = Components;
+const {Constructor: ctor} = Components;
 
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
-const ios = Cc["@mozilla.org/network/io-service;1"].
-                getService(Ci.nsIIOService);
-const dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-                getService(Ci.nsIProperties);
-const obs = Cc["@mozilla.org/observer-service;1"].
-                getService(Ci.nsIObserverService);
+const ios = Services.io;
+const dirSvc = Services.dirsvc;
+const obs = Services.obs;
 
 const nsIBinaryInputStream = ctor("@mozilla.org/binaryinputstream;1",
                                "nsIBinaryInputStream",
@@ -40,33 +33,27 @@ Listener.prototype = {
     gotStartRequest: false,
     available: -1,
     gotStopRequest: false,
-    QueryInterface: function(iid) {
-        if (iid.equals(Ci.nsISupports) ||
-            iid.equals(Ci.nsIRequestObserver))
-            return this;
-        throw Cr.NS_ERROR_NO_INTERFACE;
-    },
-    onDataAvailable: function(request, ctx, stream, offset, count) {
+    QueryInterface: ChromeUtils.generateQI(["nsIRequestObserver"]),
+    onDataAvailable(request, ctx, stream, offset, count) {
         try {
             this.available = stream.available();
             Assert.equal(this.available, count);
             // Need to consume stream to avoid assertion
             new nsIBinaryInputStream(stream).readBytes(count);
-        }
-        catch (ex) {
+        } catch (ex) {
             do_throw(ex);
         }
     },
-    onStartRequest: function(request, ctx) {
+    onStartRequest(request, ctx) {
         this.gotStartRequest = true;
     },
-    onStopRequest: function(request, ctx, status) {
+    onStopRequest(request, ctx, status) {
         this.gotStopRequest = true;
         Assert.equal(status, 0);
         if (this._callback) {
             this._callback.call(null, this);
         }
-    }
+    },
 };
 
 /**
@@ -74,7 +61,7 @@ Listener.prototype = {
  */
 function testAsync() {
     var uri = jarBase + "/inner40.zip";
-    var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
+    var chan = NetUtil.newChannel({uri, loadUsingSystemPrincipal: true});
     Assert.ok(chan.contentLength < 0);
     chan.asyncOpen(new Listener(function(l) {
         Assert.ok(chan.contentLength > 0);
@@ -94,13 +81,13 @@ add_test(testAsync);
  * Basic test for nsIZipReader.
  */
 function testZipEntry() {
-    var uri = jarBase + "/inner40.zip";
-    var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true})
-                      .QueryInterface(Ci.nsIJARChannel);
-    var entry = chan.zipEntry;
-    Assert.ok(entry.CRC32 == 0x8b635486);
-    Assert.ok(entry.realSize == 184);
-    run_next_test();
+  var uri = jarBase + "/inner40.zip";
+  var chan = NetUtil.newChannel({uri, loadUsingSystemPrincipal: true})
+    .QueryInterface(Ci.nsIJARChannel);
+  var entry = chan.zipEntry;
+  Assert.ok(entry.CRC32 == 0x8b635486);
+  Assert.ok(entry.realSize == 184);
+  run_next_test();
 }
 
 add_test(testZipEntry);
@@ -111,7 +98,7 @@ add_test(testZipEntry);
  */
 add_test(function testSync() {
     var uri = jarBase + "/inner40.zip";
-    var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
+    var chan = NetUtil.newChannel({uri, loadUsingSystemPrincipal: true});
     var stream = chan.open();
     Assert.ok(chan.contentLength > 0);
     Assert.equal(stream.available(), chan.contentLength);
@@ -127,7 +114,7 @@ add_test(function testSync() {
  */
 add_test(function testSyncNested() {
     var uri = "jar:" + jarBase + "/inner40.zip!/foo";
-    var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
+    var chan = NetUtil.newChannel({uri, loadUsingSystemPrincipal: true});
     var stream = chan.open();
     Assert.ok(chan.contentLength > 0);
     Assert.equal(stream.available(), chan.contentLength);
@@ -142,7 +129,7 @@ add_test(function testSyncNested() {
  */
 add_test(function testAsyncNested(next) {
     var uri = "jar:" + jarBase + "/inner40.zip!/foo";
-    var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
+    var chan = NetUtil.newChannel({uri, loadUsingSystemPrincipal: true});
     chan.asyncOpen(new Listener(function(l) {
         Assert.ok(chan.contentLength > 0);
         Assert.ok(l.gotStartRequest);
@@ -162,7 +149,7 @@ add_test(function testSyncCloseUnlocks() {
     copy.append(fileBase);
     file.copyTo(copy.parent, copy.leafName);
     var uri = "jar:" + ios.newFileURI(copy).spec + "!/inner40.zip";
-    var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
+    var chan = NetUtil.newChannel({uri, loadUsingSystemPrincipal: true});
     var stream = chan.open();
     Assert.ok(chan.contentLength > 0);
     stream.close();
@@ -172,8 +159,7 @@ add_test(function testSyncCloseUnlocks() {
 
     try {
         copy.remove(false);
-    }
-    catch (ex) {
+    } catch (ex) {
         do_throw(ex);
     }
 
@@ -190,9 +176,9 @@ add_test(function testAsyncCloseUnlocks() {
     file.copyTo(copy.parent, copy.leafName);
 
     var uri = "jar:" + ios.newFileURI(copy).spec + "!/inner40.zip";
-    var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
+    var chan = NetUtil.newChannel({uri, loadUsingSystemPrincipal: true});
 
-    chan.asyncOpen(new Listener(function (l) {
+    chan.asyncOpen(new Listener(function(l) {
         Assert.ok(chan.contentLength > 0);
 
         // Drop any jar caches
@@ -200,8 +186,7 @@ add_test(function testAsyncCloseUnlocks() {
 
         try {
             copy.remove(false);
-        }
-        catch (ex) {
+        } catch (ex) {
             do_throw(ex);
         }
 

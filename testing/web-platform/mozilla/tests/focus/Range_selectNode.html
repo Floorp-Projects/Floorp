@@ -4,6 +4,7 @@
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <body>
+<div style="height: 3000px;">Spacer to check whether or not page was scrolled down to focused editor</div>
 <p id="staticBefore">static text</p>
 <div id="editor" contenteditable><p>content of editor</p></div>
 <div id="outerEditor" contenteditable
@@ -63,6 +64,7 @@ function resetFocusAndSelectionRange(aFocus)
     } else {
         document.getSelection().collapse(staticBefore.textNode, 0);
     }
+    document.documentElement.scrollTop = 0;
 }
 
 function selectNode(aNodeToSelect)
@@ -81,155 +83,185 @@ function selectNodeContents(aNodeToSelectItsContents)
         resetFocusAndSelectionRange();
         aTest.func(staticBefore.textNode);
         assert_equals(document.activeElement, document.body);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be the <body> after " + aTest.doingDescription + " with the first text node of 'staticBefore' when active element is the <body>");
     test(function() {
         resetFocusAndSelectionRange();
         aTest.func(editor.textNode);
         assert_equals(document.activeElement, editor.element);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be 'editor' after " + aTest.doingDescription + " with the first text node of 'editor' when active element is the <body>");
     test(function() {
         resetFocusAndSelectionRange();
         aTest.func(outerEditor.textNode);
         assert_equals(document.activeElement, outerEditor.element);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be 'outerEditor' after " + aTest.doingDescription + " with the first text node of 'outerEditor' when active element is the <body>");
     test(function() {
         resetFocusAndSelectionRange();
         aTest.func(staticInEditor.textNode);
         assert_equals(document.activeElement, document.body);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be the <body> after " + aTest.doingDescription + " with the first text node of 'staticInEditor' when active element is the <body>");
     test(function() {
         resetFocusAndSelectionRange();
         aTest.func(innerEditor.textNode);
         assert_equals(document.activeElement, innerEditor.element);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be 'innerEditor' after " + aTest.doingDescription + " with the first text node of 'innerEditor' when active element is the <body>");
     test(function() {
         resetFocusAndSelectionRange();
         aTest.func(anchor.textNode);
         assert_equals(document.activeElement, document.body);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be the <body> after " + aTest.doingDescription + " with the first text node of 'anchor' when active element is the <body>");
 
     test(function() {
         resetFocusAndSelectionRange(editor);
         aTest.func(staticBefore.textNode);
         assert_equals(document.activeElement, editor.element);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be 'editor' after " + aTest.doingDescription + " with the first text node of 'staticBefore' when active element is 'editor'");
     test(function() {
         resetFocusAndSelectionRange(editor);
         aTest.func(editor.textNode);
         assert_equals(document.activeElement, editor.element);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be 'editor' after " + aTest.doingDescription + " with the first text node of 'editor' when active element is 'editor'");
     test(function() {
         resetFocusAndSelectionRange(editor);
         aTest.func(outerEditor.textNode);
         assert_equals(document.activeElement, outerEditor.element);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be 'outerEditor' after " + aTest.doingDescription + " with the first text node of 'outerEditor' when active element is 'editor'");
     test(function() {
         resetFocusAndSelectionRange(editor);
         aTest.func(staticInEditor.textNode);
         assert_equals(document.activeElement, editor.element);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be 'editor' after " + aTest.doingDescription + " with the first text node of 'staticInEditor' when active element is 'editor'");
     test(function() {
         resetFocusAndSelectionRange(editor);
         aTest.func(innerEditor.textNode);
         assert_equals(document.activeElement, innerEditor.element);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be 'innerEditor' after " + aTest.doingDescription + " with the first text node of 'innerEditor' when active element is 'editor'");
     test(function() {
         resetFocusAndSelectionRange(editor);
         aTest.func(anchor.textNode);
         assert_equals(document.activeElement, editor.element);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be 'editor' after " + aTest.doingDescription + " with the first text node of 'anchor' when active element is the 'editor'");
 
     test(function() {
         resetFocusAndSelectionRange(outerEditor);
         aTest.func(staticBefore.textNode);
         assert_equals(document.activeElement, outerEditor.element);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be 'outerEditor' after " + aTest.doingDescription + " with the first text node of 'staticBefore' when active element is 'outerEditor'");
     test(function() {
         resetFocusAndSelectionRange(outerEditor);
         aTest.func(editor.textNode);
         assert_equals(document.activeElement, editor.element);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be 'editor' after " + aTest.doingDescription + " with the first text node of 'editor' when active element is 'outerEditor'");
     test(function() {
         resetFocusAndSelectionRange(outerEditor);
         aTest.func(outerEditor.textNode);
         assert_equals(document.activeElement, outerEditor.element);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be 'outerEditor' after " + aTest.doingDescription + " with the first text node of 'outerEditor' when active element is 'outerEditor'");
     test(function() {
         resetFocusAndSelectionRange(outerEditor);
         aTest.func(staticInEditor.textNode);
         assert_equals(document.activeElement, outerEditor.element);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be 'outerEditor' after " + aTest.doingDescription + " with the first text node of 'staticInEditor' when active element is 'outerEditor'");
     test(function() {
         resetFocusAndSelectionRange(outerEditor);
         aTest.func(innerEditor.textNode);
         assert_equals(document.activeElement, innerEditor.element);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be 'innerEditor' after " + aTest.doingDescription + " with the first text node of 'innerEditor' when active element is 'outerEditor'");
     test(function() {
         resetFocusAndSelectionRange(outerEditor);
         aTest.func(anchor.textNode);
         assert_equals(document.activeElement, outerEditor.element);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be 'outerEditor' after " + aTest.doingDescription + " with the first text node of 'anchor' when active element is the 'outerEditor'");
 
     test(function() {
         resetFocusAndSelectionRange(innerEditor);
         aTest.func(staticBefore.textNode);
         assert_equals(document.activeElement, innerEditor.element);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be 'innerEditor' after " + aTest.doingDescription + " with the first text node of 'staticBefore' when active element is 'innerEditor'");
     test(function() {
         resetFocusAndSelectionRange(innerEditor);
         aTest.func(editor.textNode);
         assert_equals(document.activeElement, editor.element);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be 'editor' after " + aTest.doingDescription + " with the first text node of 'editor' when active element is 'innerEditor'");
     test(function() {
         resetFocusAndSelectionRange(innerEditor);
         aTest.func(outerEditor.textNode);
         assert_equals(document.activeElement, outerEditor.element);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be 'outerEditor' after " + aTest.doingDescription + " with the first text node of 'outerEditor' when active element is 'innerEditor'");
     test(function() {
         resetFocusAndSelectionRange(innerEditor);
         aTest.func(staticInEditor.textNode);
         assert_equals(document.activeElement, innerEditor.element);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be 'innerEditor' after " + aTest.doingDescription + " with the first text node of 'staticInEditor' when active element is 'innerEditor'");
     test(function() {
         resetFocusAndSelectionRange(innerEditor);
         aTest.func(innerEditor.textNode);
         assert_equals(document.activeElement, innerEditor.element);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be 'innerEditor' after " + aTest.doingDescription + " with the first text node of 'innerEditor' when active element is 'innerEditor'");
     test(function() {
         resetFocusAndSelectionRange(innerEditor);
         aTest.func(anchor.textNode);
         assert_equals(document.activeElement, innerEditor.element);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be 'innerEditor' after " + aTest.doingDescription + " with the first text node of 'anchor' when active element is the 'innerEditor'");
 
     test(function() {
         resetFocusAndSelectionRange(anchor);
         aTest.func(staticBefore.textNode);
         assert_equals(document.activeElement, anchor.element);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be 'anchor' after " + aTest.doingDescription + " with the first text node of 'staticBefore' when active element is 'anchor'");
     test(function() {
         resetFocusAndSelectionRange(anchor);
         aTest.func(editor.textNode);
         assert_equals(document.activeElement, editor.element);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be 'editor' after " + aTest.doingDescription + " with the first text node of 'editor' when active element is 'anchor'");
     test(function() {
         resetFocusAndSelectionRange(anchor);
         aTest.func(outerEditor.textNode);
         assert_equals(document.activeElement, outerEditor.element);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be 'outerEditor' after " + aTest.doingDescription + " with the first text node of 'outerEditor' when active element is 'anchor'");
     test(function() {
         resetFocusAndSelectionRange(anchor);
         aTest.func(staticInEditor.textNode);
         assert_equals(document.activeElement, anchor.element);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be 'anchor' after " + aTest.doingDescription + " with the first text node of 'staticInEditor' when active element is 'anchor'");
     test(function() {
         resetFocusAndSelectionRange(anchor);
         aTest.func(innerEditor.textNode);
         assert_equals(document.activeElement, innerEditor.element);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be 'innerEditor' after " + aTest.doingDescription + " with the first text node of 'innerEditor' when active element is 'anchor'");
     test(function() {
         resetFocusAndSelectionRange(anchor);
         aTest.func(anchor.textNode);
         assert_equals(document.activeElement, anchor.element);
+        assert_equals(document.documentElement.scrollTop, 0);
     }, "Active element should be 'anchor' after " + aTest.doingDescription + " with the first text node of 'anchor' when active element is the 'anchor'");
 });
 </script>

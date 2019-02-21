@@ -1114,7 +1114,7 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
   friend class CanvasDrawObserver;
   friend class ImageBitmap;
 
-  void SetWriteOnly() { mWriteOnly = true; }
+  void SetWriteOnly();
 
   bool IsWriteOnly() const { return mWriteOnly; }
 

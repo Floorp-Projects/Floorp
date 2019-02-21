@@ -9,15 +9,13 @@ function run_test() {
   const FLOAT = 9.674;
   const FUDGE = 0.001;
 
-  let ps = Cc["@mozilla.org/preferences-service;1"]
-           .getService(Ci.nsIPrefService);
-  let prefs = ps.getDefaultBranch(null);
+  let prefs = Services.prefs.getDefaultBranch(null);
 
   /* Test with a non-default branch */
   prefs.setCharPref(FULL_PREF_NAME, FLOAT);
-  let pb = ps.getBranch(BRANCH);
+  let pb = Services.prefs.getBranch(BRANCH);
 
   let floatPref = pb.getFloatPref(PREF_NAME);
-  Assert.ok(FLOAT+FUDGE >= floatPref);
-  Assert.ok(FLOAT-FUDGE <= floatPref);
+  Assert.ok(FLOAT + FUDGE >= floatPref);
+  Assert.ok(FLOAT - FUDGE <= floatPref);
 }

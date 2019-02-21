@@ -6,31 +6,29 @@
 // Values taken from using zipinfo to list the test.zip contents
 var TESTS = [
   "test.txt",
-  "test.png"
+  "test.png",
 ];
 
-function run_test()
-{
+function run_test() {
   zipW.open(tmpFile, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
 
-  for (var i = 0; i < TESTS.length; i++) {
-    var source = do_get_file(DATA_DIR + TESTS[i]);
+  for (let i = 0; i < TESTS.length; i++) {
+    let source = do_get_file(DATA_DIR + TESTS[i]);
     zipW.addEntryFile(TESTS[i], Ci.nsIZipWriter.COMPRESSION_NONE, source,
                       false);
   }
 
   try {
-    var source = do_get_file(DATA_DIR + TESTS[0]);
+    let source = do_get_file(DATA_DIR + TESTS[0]);
     zipW.addEntryFile(TESTS[0], Ci.nsIZipWriter.COMPRESSION_NONE, source,
                       false);
     do_throw("Should not be able to add the same file twice");
-  }
-  catch (e) {
+  } catch (e) {
     Assert.equal(e.result, Cr.NS_ERROR_FILE_ALREADY_EXISTS);
   }
 
   // Remove all the tests and see if we are left with an empty zip
-  for (var i = 0; i < TESTS.length; i++) {
+  for (let i = 0; i < TESTS.length; i++) {
     zipW.removeEntry(TESTS[i], false);
   }
 

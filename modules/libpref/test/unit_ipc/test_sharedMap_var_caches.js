@@ -22,15 +22,13 @@
 const PREF1_NAME = "dom.webcomponents.shadowdom.report_usage";
 const PREF1_VALUE = false;
 
-const PREF2_NAME = "dom.mutation-events.cssom.disabled"
+const PREF2_NAME = "dom.mutation-events.cssom.disabled";
 const PREF2_VALUE = true;
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {ExtensionTestUtils} = ChromeUtils.import("resource://testing-common/ExtensionXPCShellUtils.jsm");
 
 ExtensionTestUtils.init(this);
-
-let contentPage;
 
 const {prefs} = Services;
 const defaultPrefs = prefs.getDefaultBranch("");
@@ -52,14 +50,15 @@ add_task(async function test_sharedMap_var_caches() {
   let contentPage = await ExtensionTestUtils.loadContentPage("about:blank", {remote: true});
   registerCleanupFunction(() => contentPage.close());
 
+  /* eslint-disable no-shadow */
   let values = await contentPage.spawn([PREF1_NAME, PREF2_NAME], (prefs) => {
     const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
     return prefs.map(pref => Services.prefs.getBoolPref(pref));
-  })
+  });
+  /* eslint-enable no-shadow */
 
   equal(values[0], !PREF1_VALUE,
         `Expected content value for ${PREF1_NAME}`);
   equal(values[1], !PREF2_VALUE,
         `Expected content value for ${PREF2_NAME}`);
 });
-

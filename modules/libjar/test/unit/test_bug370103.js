@@ -1,13 +1,12 @@
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 // Regression test for bug 370103 - crash when passing a null listener to
 // nsIChannel.asyncOpen
 function run_test() {
   // Compose the jar: url
-  var ioService = Cc["@mozilla.org/network/io-service;1"].
-                    getService(Ci.nsIIOService);
   var file = do_get_file("data/test_bug370103.jar");
-  var url = ioService.newFileURI(file).spec;
+  var url = Services.io.newFileURI(file).spec;
   url = "jar:" + url + "!/test_bug370103";
 
   // Try opening channel with null listener
@@ -16,8 +15,7 @@ function run_test() {
   var exception = false;
   try {
     channel.asyncOpen(null);
-  }
-  catch(e) {
+  } catch (e) {
     exception = true;
   }
 

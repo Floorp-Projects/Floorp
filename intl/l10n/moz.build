@@ -11,6 +11,10 @@ EXTRA_JS_MODULES += [
     'Localization.jsm',
 ]
 
+TESTING_JS_MODULES += [
+    'FluentSyntax.jsm',
+]
+
 XPIDL_SOURCES += [
     'mozIDOMLocalization.idl',
 ]

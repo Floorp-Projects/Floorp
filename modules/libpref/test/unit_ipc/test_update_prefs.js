@@ -1,14 +1,14 @@
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 function isParentProcess() {
-    let appInfo = Cc["@mozilla.org/xre/app-info;1"];
-    return (!appInfo || appInfo.getService(Ci.nsIXULRuntime).processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT);
+  return Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 }
 
 function run_test() {
   if (isParentProcess()) {
-
     do_load_child_test_harness();
 
-    var pb = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+    var pb = Services.prefs;
 
     // these prefs are set after the child has been created.
     pb.setBoolPref("Test.IPC.bool.new", true);
@@ -20,11 +20,11 @@ function run_test() {
 }
 
 function testPrefClear() {
-  var pb = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+  var pb = Services.prefs;
   pb.clearUserPref("Test.IPC.bool.new");
 
   sendCommand(
-'var pb = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);\n'+
+'var pb = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);\n' +
 'pb.prefHasUserValue("Test.IPC.bool.new");\n',
     checkWasCleared);
 }

@@ -4,8 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function wrapInputStream(input)
-{
+function wrapInputStream(input) {
   let nsIScriptableInputStream = Ci.nsIScriptableInputStream;
   let factory = Cc["@mozilla.org/scriptableinputstream;1"];
   let wrapper = factory.createInstance(nsIScriptableInputStream);
@@ -20,17 +19,17 @@ function run_test() {
   let file = do_get_file("data/test_crx_dummy.crx");
 
   let zipreader = Cc["@mozilla.org/libjar/zip-reader;1"].
-                  createInstance(Ci.nsIZipReader);
+    createInstance(Ci.nsIZipReader);
   zipreader.open(file);
   // do crc stuff
   function check_archive_crc() {
     zipreader.test(null);
     return true;
   }
-  Assert.ok(check_archive_crc())
-  let entries = zipreader.findEntries(null);
-  let stream = wrapInputStream(zipreader.getInputStream("modules/libjar/test/Makefile.in"))
-  let dirstream= wrapInputStream(zipreader.getInputStream("modules/libjar/test/"))
+  Assert.ok(check_archive_crc());
+  zipreader.findEntries(null);
+  let stream = wrapInputStream(zipreader.getInputStream("modules/libjar/test/Makefile.in"));
+  let dirstream = wrapInputStream(zipreader.getInputStream("modules/libjar/test/"));
   zipreader.close();
   zipreader = null;
   Cu.forceGC();

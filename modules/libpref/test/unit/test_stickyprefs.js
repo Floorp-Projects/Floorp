@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/licenses/publicdomain/  */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const ps = Services.prefs;
 
 // A little helper to reset the service and load one pref file.
@@ -35,10 +33,6 @@ function saveAndReload() {
   file.exists();
 
   ps.readUserPrefsFromFile(file);
-}
-
-function run_test() {
-  run_next_test();
 }
 
 // A sticky pref should not be written if the value is unchanged.
