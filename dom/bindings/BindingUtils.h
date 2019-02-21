@@ -2278,7 +2278,7 @@ inline bool XrayGetNativeProto(JSContext* cx, JS::Handle<JSObject*> obj,
       } else {
         protop.set(JS::GetRealmObjectPrototype(cx));
       }
-    } else if (JS_ObjectIsFunction(cx, obj)) {
+    } else if (JS_ObjectIsFunction(obj)) {
       MOZ_ASSERT(JS_IsNativeFunction(obj, Constructor));
       protop.set(JS::GetRealmFunctionPrototype(cx));
     } else {
