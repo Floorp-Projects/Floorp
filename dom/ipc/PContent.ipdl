@@ -104,6 +104,7 @@ using mozilla::CrossProcessMutexHandle from "mozilla/ipc/CrossProcessMutex.h";
 using refcounted class nsIInputStream from "mozilla/ipc/IPCStreamUtils.h";
 using refcounted class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingContext.h";
 using mozilla::dom::BrowsingContextId from "mozilla/dom/ipc/IdType.h";
+using mozilla::dom::BrowsingContextTransaction from "mozilla/dom/BrowsingContext.h";
 
 union ChromeRegistryItem
 {
@@ -1259,8 +1260,11 @@ parent:
                                    bool aNewValue);
 
 both:
-     async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
-                        Principal aPrincipal, ClonedMessageData aData);
+    async CommitBrowsingContextTransaction(BrowsingContext aContext,
+                                           BrowsingContextTransaction aTransaction);
+
+    async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
+                       Principal aPrincipal, ClonedMessageData aData);
 
     /**
      * Notify `push-subscription-modified` observers in the parent and child.

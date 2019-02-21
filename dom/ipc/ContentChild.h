@@ -723,6 +723,9 @@ class ContentChild final : public PContentChild,
       BrowsingContext* aContext, const ClonedMessageData& aMessage,
       const PostMessageData& aData);
 
+  mozilla::ipc::IPCResult RecvCommitBrowsingContextTransaction(
+      BrowsingContext* aContext, BrowsingContext::Transaction&& aTransaction);
+
 #ifdef NIGHTLY_BUILD
   virtual PContentChild::Result OnMessageReceived(const Message& aMsg) override;
 #else
