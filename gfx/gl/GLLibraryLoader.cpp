@@ -4,8 +4,6 @@
 
 #include "GLLibraryLoader.h"
 
-#include <regex>
-
 #include "nsDebug.h"
 
 #ifdef WIN32
@@ -15,16 +13,31 @@
 namespace mozilla {
 namespace gl {
 
-void ClearSymbols(const SymLoadStruct* const firstStruct) {
-  for (auto itr = firstStruct; itr->symPointer; ++itr) {
-    *itr->symPointer = nullptr;
-  }
+bool GLLibraryLoader::OpenLibrary(const char* library) {
+  PRLibSpec lspec;
+  lspec.type = PR_LibSpec_Pathname;
+  lspec.value.pathname = library;
+
+  mLibrary = PR_LoadLibraryWithFlags(lspec, PR_LD_LAZY | PR_LD_LOCAL);
+  if (!mLibrary) return false;
+
+  return true;
 }
 
-/*
-PRFuncPtr GLLibraryLoader::LookupSymbol(PRLibrary& lib, const char* const sym,
-                                        const PlatformLookupFunction lookupFunction) {
-  PRFuncPtr res = nullptr;
+bool GLLibraryLoader::LoadSymbols(const SymLoadStruct* firstStruct,
+                                  bool tryplatform, const char* prefix,
+                                  bool warnOnFailure) {
+  return LoadSymbols(mLibrary, firstStruct, tryplatform ? mLookupFunc : nullptr,
+                     prefix, warnOnFailure);
+}
+
+PRFuncPtr GLLibraryLoader::LookupSymbol(const char* sym) {
+  return LookupSymbol(mLibrary, sym, mLookupFunc);
+}
+
+PRFuncPtr GLLibraryLoader::LookupSymbol(PRLibrary* lib, const char* sym,
+                                        PlatformLookupFunction lookupFunction) {
+  PRFuncPtr res = 0;
 
   // try finding it in the library directly, if we have one
   if (lib) {
@@ -44,50 +57,55 @@ PRFuncPtr GLLibraryLoader::LookupSymbol(PRLibrary& lib, const char* const sym,
 
   return res;
 }
-*/
 
-bool SymbolLoader::LoadSymbols(const SymLoadStruct* const firstStruct,
-                               const bool warnOnFailures) const {
-  bool ok = true;
+bool GLLibraryLoader::LoadSymbols(PRLibrary* lib,
+                                  const SymLoadStruct* firstStruct,
+                                  PlatformLookupFunction lookupFunction,
+                                  const char* prefix, bool warnOnFailure) {
+  char sbuf[MAX_SYMBOL_LENGTH * 2];
+  int failCount = 0;
 
-  for (auto itr = firstStruct; itr->symPointer; ++itr) {
-    *itr->symPointer = nullptr;
+  const SymLoadStruct* ss = firstStruct;
+  while (ss->symPointer) {
+    *ss->symPointer = 0;
 
-    for (const auto& s : itr->symNames) {
-      if (!s) break;
+    for (int i = 0; i < MAX_SYMBOL_NAMES; i++) {
+      if (ss->symNames[i] == nullptr) break;
 
-      const auto p = GetProcAddress(s);
+      const char* s = ss->symNames[i];
+      if (prefix && *prefix != 0) {
+        strcpy(sbuf, prefix);
+        strcat(sbuf, ss->symNames[i]);
+        s = sbuf;
+      }
+
+      PRFuncPtr p = LookupSymbol(lib, s, lookupFunction);
       if (p) {
-        *itr->symPointer = p;
+        *ss->symPointer = p;
         break;
       }
     }
 
-    if (!*itr->symPointer) {
-      if (warnOnFailures) {
-        printf_stderr("Can't find symbol '%s'.\n", itr->symNames[0]);
+    if (*ss->symPointer == 0) {
+      if (warnOnFailure) {
+        printf_stderr("Can't find symbol '%s'.\n", ss->symNames[0]);
       }
-      ok = false;
+
+      failCount++;
     }
+
+    ss++;
   }
 
-  return ok;
+  return failCount == 0 ? true : false;
 }
 
-// -
-
-PRFuncPtr SymbolLoader::GetProcAddress(const char* const name) const {
-#ifdef DEBUG
-  static const std::regex kRESymbol("[a-z].*");
-  if (!std::regex_match(name, kRESymbol)) {
-    gfxCriticalError() << "Bad symbol name : " << name;
+/*static*/ void GLLibraryLoader::ClearSymbols(
+    const SymLoadStruct* const firstStruct) {
+  for (auto cur = firstStruct; cur->symPointer; ++cur) {
+    *cur->symPointer = nullptr;
   }
-#endif
-
-  if (mPfn) return mPfn(name);
-  if (mLib) return PR_FindFunctionSymbol(mLib, name);
-  return nullptr;
 }
 
-} // namespace gl
-} // namespace mozilla
+} /* namespace gl */
+} /* namespace mozilla */

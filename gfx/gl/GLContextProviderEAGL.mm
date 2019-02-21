@@ -49,6 +49,12 @@ GLContextEAGL::~GLContextEAGL() {
   }
 }
 
+bool GLContextEAGL::Init() {
+  if (!InitWithPrefix("gl", true)) return false;
+
+  return true;
+}
+
 bool GLContextEAGL::AttachToWindow(nsIWidget* aWidget) {
   // This should only be called once
   MOZ_ASSERT(!mBackbufferFB && !mBackbufferRB);
@@ -100,18 +106,7 @@ bool GLContextEAGL::MakeCurrentImpl() const {
 
 bool GLContextEAGL::IsCurrentImpl() const { return [EAGLContext currentContext] == mContext; }
 
-static PRFuncPtr GLAPIENTRY GetLoadedProcAddress(const char* const name) {
-  PRLibrary* lib = nullptr;
-  const auto& ret = PR_FindFunctionSymbolAndLibrary(name, &leakedLibRef);
-  if (lib) {
-    PR_UnloadLibrary(lib);
-  }
-  return ret;
-}
-
-Maybe<SymbolLoader> GLContextEAGL::GetSymbolLoader() const {
-  return Some(SymbolLoader(&GetLoadedProcAddress));
-}
+bool GLContextEAGL::SetupLookupFunction() { return false; }
 
 bool GLContextEAGL::IsDoubleBuffered() const { return true; }
 
