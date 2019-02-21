@@ -3390,10 +3390,9 @@ bool nsCookieService::CanSetCookie(nsIURI *aHostURI, const nsCookieKey &aKey,
     if (aChannel) {
       nsCOMPtr<nsIURI> channelURI;
       NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
-      nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-      addonAllowsLoad =
-          loadInfo && BasePrincipal::Cast(loadInfo->TriggeringPrincipal())
-                          ->AddonAllowsLoad(channelURI);
+      nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+      addonAllowsLoad = BasePrincipal::Cast(loadInfo->TriggeringPrincipal())
+                            ->AddonAllowsLoad(channelURI);
     }
 
     if (!addonAllowsLoad) {

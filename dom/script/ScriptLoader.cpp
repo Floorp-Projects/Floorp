@@ -1275,7 +1275,7 @@ nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
     if (element && element->IsHTMLElement()) {
       nsAutoString cspNonce;
       element->GetAttribute(NS_LITERAL_STRING("nonce"), cspNonce);
-      nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
+      nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
       loadInfo->SetCspNonce(cspNonce);
     }
   }
@@ -3208,9 +3208,9 @@ nsresult ScriptLoader::VerifySRI(ScriptLoadRequest* aRequest,
       rv = NS_ERROR_SRI_CORRUPT;
     }
   } else {
-    nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
+    nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
 
-    if (loadInfo && loadInfo->GetEnforceSRI()) {
+    if (loadInfo->GetEnforceSRI()) {
       MOZ_LOG(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug,
               ("ScriptLoader::OnStreamComplete, required SRI not found"));
       nsCOMPtr<nsIContentSecurityPolicy> csp;

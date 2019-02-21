@@ -22,10 +22,7 @@ ServiceWorkerInterceptController::ShouldPrepareForIntercept(
     nsIURI* aURI, nsIChannel* aChannel, bool* aShouldIntercept) {
   *aShouldIntercept = false;
 
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-  if (!loadInfo) {
-    return NS_OK;
-  }
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
 
   // For subresource requests we base our decision solely on the client's
   // controller value.  Any settings that would have blocked service worker

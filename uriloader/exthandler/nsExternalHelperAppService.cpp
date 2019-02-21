@@ -625,7 +625,7 @@ nsresult nsExternalHelperAppService::DoContentContentProcessHelper(
     channel->GetContentDisposition(&contentDisposition);
     channel->GetContentDispositionFilename(fileName);
     channel->GetContentDispositionHeader(disp);
-    loadInfo = channel->GetLoadInfo();
+    loadInfo = channel->LoadInfo();
 
     nsCOMPtr<nsIFileChannel> fileChan(do_QueryInterface(aRequest));
     wasFileChannel = fileChan != nullptr;
@@ -1978,19 +1978,17 @@ nsExternalAppHandler::OnSaveComplete(nsIBackgroundFileSaver* aSaver,
     // Save the redirect information.
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(mRequest);
     if (channel) {
-      nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
-      if (loadInfo) {
-        nsresult rv = NS_OK;
-        nsCOMPtr<nsIMutableArray> redirectChain =
-            do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-        LOG(("nsExternalAppHandler: Got %zu redirects\n",
-             loadInfo->RedirectChain().Length()));
-        for (nsIRedirectHistoryEntry* entry : loadInfo->RedirectChain()) {
-          redirectChain->AppendElement(entry);
-        }
-        mRedirects = redirectChain;
+      nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+      nsresult rv = NS_OK;
+      nsCOMPtr<nsIMutableArray> redirectChain =
+          do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      LOG(("nsExternalAppHandler: Got %zu redirects\n",
+           loadInfo->RedirectChain().Length()));
+      for (nsIRedirectHistoryEntry* entry : loadInfo->RedirectChain()) {
+        redirectChain->AppendElement(entry);
       }
+      mRedirects = redirectChain;
     }
 
     if (NS_FAILED(aStatus)) {

@@ -2419,7 +2419,7 @@ static void WarnIfSandboxIneffective(nsIDocShell* aDocShell,
 }
 
 bool Document::IsSynthesized() {
-  nsCOMPtr<nsILoadInfo> loadInfo = mChannel ? mChannel->GetLoadInfo() : nullptr;
+  nsCOMPtr<nsILoadInfo> loadInfo = mChannel ? mChannel->LoadInfo() : nullptr;
   return loadInfo && loadInfo->GetServiceWorkerTaintingSynthesized();
 }
 
@@ -2519,8 +2519,8 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(aContainer);
 
   // If this is an error page, don't inherit sandbox flags from docshell
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-  if (docShell && !(loadInfo && loadInfo->GetLoadErrorPage())) {
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  if (docShell && !loadInfo->GetLoadErrorPage()) {
     nsresult rv = docShell->GetSandboxFlags(&mSandboxFlags);
     NS_ENSURE_SUCCESS(rv, rv);
     WarnIfSandboxIneffective(docShell, mSandboxFlags, GetChannel());
@@ -2667,8 +2667,8 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
 
   // Check if this is a signed content to apply default CSP.
   bool applySignedContentCSP = false;
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-  if (loadInfo && loadInfo->GetVerifySignedContent()) {
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  if (loadInfo->GetVerifySignedContent()) {
     applySignedContentCSP = true;
   }
 
@@ -7423,13 +7423,10 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest) {
         // Favicon loads don't need to block caching.
         nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
         if (channel) {
-          nsCOMPtr<nsILoadInfo> li;
-          channel->GetLoadInfo(getter_AddRefs(li));
-          if (li) {
-            if (li->InternalContentPolicyType() ==
-                nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON) {
-              continue;
-            }
+          nsCOMPtr<nsILoadInfo> li = channel->LoadInfo();
+          if (li->InternalContentPolicyType() ==
+              nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON) {
+            continue;
           }
         }
 #ifdef DEBUG_PAGE_CACHE
@@ -11721,8 +11718,8 @@ void Document::SetUserHasInteracted() {
 
   mUserHasInteracted = true;
 
-  nsCOMPtr<nsILoadInfo> loadInfo = mChannel ? mChannel->GetLoadInfo() : nullptr;
-  if (loadInfo) {
+  if (mChannel) {
+    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
     loadInfo->SetDocumentHasUserInteracted(true);
   }
 

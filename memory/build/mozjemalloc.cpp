@@ -4351,13 +4351,14 @@ inline void MozJemalloc::moz_dispose_arena(arena_id_t aArenaId) {
 
 // End non-standard functions.
 // ***************************************************************************
+#ifndef XP_WIN
 // Begin library-private functions, used by threading libraries for protection
 // of malloc during fork().  These functions are only called if the program is
 // running in threaded mode, so there is no need to check whether the program
 // is threaded here.
-#ifndef XP_DARWIN
+#  ifndef XP_DARWIN
 static
-#endif
+#  endif
     void
     _malloc_prefork(void) {
   // Acquire all mutexes in a safe order.
@@ -4372,9 +4373,9 @@ static
   huge_mtx.Lock();
 }
 
-#ifndef XP_DARWIN
+#  ifndef XP_DARWIN
 static
-#endif
+#  endif
     void
     _malloc_postfork_parent(void) {
   // Release all mutexes, now that fork() has completed.
@@ -4389,9 +4390,9 @@ static
   gArenas.mLock.Unlock();
 }
 
-#ifndef XP_DARWIN
+#  ifndef XP_DARWIN
 static
-#endif
+#  endif
     void
     _malloc_postfork_child(void) {
   // Reinitialize all mutexes, now that fork() has completed.
@@ -4405,6 +4406,7 @@ static
 
   gArenas.mLock.Init();
 }
+#endif  // XP_WIN
 
 // End library-private functions.
 // ***************************************************************************

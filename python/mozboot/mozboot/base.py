@@ -153,6 +153,9 @@ MODERN_PYTHON_VERSION = LooseVersion('2.7.3')
 # Upgrade rust older than this.
 MODERN_RUST_VERSION = LooseVersion('1.32.0')
 
+# Upgrade nasm older than this.
+MODERN_NASM_VERSION = LooseVersion('2.14')
+
 
 class BaseBootstrapper(object):
     """Base class for system bootstrappers."""
@@ -453,7 +456,7 @@ class BaseBootstrapper(object):
         This should be defined in child classes.
         """
 
-    def _parse_version(self, path, name=None, env=None):
+    def _parse_version_impl(self, path, name, env, version_param):
         '''Execute the given path, returning the version.
 
         Invokes the path argument with the --version switch
@@ -473,7 +476,7 @@ class BaseBootstrapper(object):
         if name.endswith('.exe'):
             name = name[:-4]
 
-        info = self.check_output([path, '--version'],
+        info = self.check_output([path, version_param],
                                  env=env,
                                  stderr=subprocess.STDOUT)
         match = re.search(name + ' ([a-z0-9\.]+)', info)
@@ -482,6 +485,12 @@ class BaseBootstrapper(object):
             return None
 
         return LooseVersion(match.group(1))
+
+    def _parse_version(self, path, name=None, env=None):
+        return self._parse_version_impl(path, name, env, "--version")
+
+    def _parse_version_short(self, path, name=None, env=None):
+        return self._parse_version_impl(path, name, env, "-v")
 
     def _hg_cleanenv(self, load_hgrc=False):
         """ Returns a copy of the current environment updated with the HGPLAIN
@@ -592,6 +601,17 @@ class BaseBootstrapper(object):
         Child classes should reimplement this.
         """
         print(PYTHON_UNABLE_UPGRADE % (current, MODERN_PYTHON_VERSION))
+
+    def is_nasm_modern(self):
+        nasm = self.which('nasm')
+        if not nasm:
+            return False
+
+        our = self._parse_version_short(nasm, 'version')
+        if not our:
+            return False
+
+        return our >= MODERN_NASM_VERSION
 
     def is_rust_modern(self, cargo_bin):
         rustc = self.which('rustc', cargo_bin)

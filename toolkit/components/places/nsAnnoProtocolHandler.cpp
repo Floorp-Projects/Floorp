@@ -51,7 +51,7 @@ static nsresult GetDefaultIcon(nsIChannel *aOriginalChannel,
   nsresult rv = NS_NewURI(getter_AddRefs(defaultIconURI),
                           NS_LITERAL_CSTRING(FAVICON_DEFAULT_URL));
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsILoadInfo> loadInfo = aOriginalChannel->GetLoadInfo();
+  nsCOMPtr<nsILoadInfo> loadInfo = aOriginalChannel->LoadInfo();
   rv = NS_NewChannelInternal(aChannel, defaultIconURI, loadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
   Unused << (*aChannel)->SetContentType(
@@ -132,7 +132,7 @@ class faviconAsyncLoader : public AsyncStatementCallback {
     // Ensure we'll break possible cycles with the listener.
     auto cleanup = MakeScopeExit([&]() { mListener = nullptr; });
 
-    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
+    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
     nsCOMPtr<nsIEventTarget> target =
         nsContentUtils::GetEventTargetByLoadInfo(loadInfo, TaskCategory::Other);
     if (!mData.IsEmpty()) {
@@ -224,8 +224,8 @@ nsAnnoProtocolHandler::NewURI(const nsACString &aSpec,
 //
 
 NS_IMETHODIMP
-nsAnnoProtocolHandler::NewChannel2(nsIURI *aURI, nsILoadInfo *aLoadInfo,
-                                   nsIChannel **_retval) {
+nsAnnoProtocolHandler::NewChannel(nsIURI *aURI, nsILoadInfo *aLoadInfo,
+                                  nsIChannel **_retval) {
   NS_ENSURE_ARG_POINTER(aURI);
 
   // annotation info
@@ -239,11 +239,6 @@ nsAnnoProtocolHandler::NewChannel2(nsIURI *aURI, nsILoadInfo *aLoadInfo,
     return NS_ERROR_INVALID_ARG;
 
   return NewFaviconChannel(aURI, annoURI, aLoadInfo, _retval);
-}
-
-NS_IMETHODIMP
-nsAnnoProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval) {
-  return NewChannel2(aURI, nullptr, _retval);
 }
 
 // nsAnnoProtocolHandler::AllowPort

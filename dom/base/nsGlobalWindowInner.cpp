@@ -1718,7 +1718,7 @@ nsresult nsGlobalWindowInner::EnsureClientSource() {
     }
 
     if (!ignoreLoadInfo) {
-      loadInfo = channel->GetLoadInfo();
+      loadInfo = channel->LoadInfo();
     }
   }
 

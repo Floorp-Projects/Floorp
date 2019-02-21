@@ -33,11 +33,7 @@ LazyLogModule UrlClassifierCommon::sLog("nsChannelClassifier");
 
 /* static */ bool UrlClassifierCommon::AddonMayLoad(nsIChannel* aChannel,
                                                     nsIURI* aURI) {
-  nsCOMPtr<nsILoadInfo> channelLoadInfo = aChannel->GetLoadInfo();
-  if (!channelLoadInfo) {
-    return false;
-  }
-
+  nsCOMPtr<nsILoadInfo> channelLoadInfo = aChannel->LoadInfo();
   // loadingPrincipal is used here to ensure we are loading into an
   // addon principal.  This allows an addon, with explicit permission, to
   // call out to API endpoints that may otherwise get blocked.

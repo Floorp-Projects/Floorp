@@ -171,14 +171,9 @@ nsFtpProtocolHandler::NewURI(const nsACString &aSpec, const char *aCharset,
 }
 
 NS_IMETHODIMP
-nsFtpProtocolHandler::NewChannel2(nsIURI *url, nsILoadInfo *aLoadInfo,
-                                  nsIChannel **result) {
+nsFtpProtocolHandler::NewChannel(nsIURI *url, nsILoadInfo *aLoadInfo,
+                                 nsIChannel **result) {
   return NewProxiedChannel2(url, nullptr, 0, nullptr, aLoadInfo, result);
-}
-
-NS_IMETHODIMP
-nsFtpProtocolHandler::NewChannel(nsIURI *url, nsIChannel **result) {
-  return NewChannel2(url, nullptr, result);
 }
 
 NS_IMETHODIMP

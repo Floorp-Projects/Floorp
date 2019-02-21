@@ -747,13 +747,7 @@ bool XMLHttpRequestMainThread::IsCrossSiteCORSRequest() const {
     return false;
   }
 
-  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
-  MOZ_ASSERT(loadInfo);
-
-  if (!loadInfo) {
-    return false;
-  }
-
+  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
   return loadInfo->GetTainting() == LoadTainting::CORS;
 }
 
@@ -1478,11 +1472,8 @@ void XMLHttpRequestMainThread::SetOriginAttributes(
 
   OriginAttributes attrs(aAttrs);
 
-  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
-  MOZ_ASSERT(loadInfo);
-  if (loadInfo) {
-    loadInfo->SetOriginAttributes(attrs);
-  }
+  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
+  loadInfo->SetOriginAttributes(attrs);
 }
 
 /*
@@ -1989,12 +1980,9 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest* request,
       mResponseXML->ForceEnableXULXBL();
     }
 
-    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
-    MOZ_ASSERT(loadInfo);
+    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
     bool isCrossSite = false;
-    if (loadInfo) {
-      isCrossSite = loadInfo->GetTainting() != LoadTainting::Basic;
-    }
+    isCrossSite = loadInfo->GetTainting() != LoadTainting::Basic;
 
     if (isCrossSite) {
       nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(mResponseXML);
@@ -2365,11 +2353,7 @@ nsresult XMLHttpRequestMainThread::CreateChannel() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mCSPEventListener) {
-    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
-    if (NS_WARN_IF(!loadInfo)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
+    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
     rv = loadInfo->SetCspEventListener(mCSPEventListener);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -2525,10 +2509,8 @@ nsresult XMLHttpRequestMainThread::InitiateFetch(
   // .withCredentials can be called after open() is called.
   // Not doing this for privileged system XHRs since those don't use CORS.
   if (!IsSystemXHR() && !mIsAnon && mFlagACwithCredentials) {
-    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
-    if (loadInfo) {
-      static_cast<net::LoadInfo*>(loadInfo.get())->SetIncludeCookiesSecFlag();
-    }
+    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
+    static_cast<net::LoadInfo*>(loadInfo.get())->SetIncludeCookiesSecFlag();
   }
 
   // We never let XHR be blocked by head CSS/JS loads to avoid potential
@@ -2591,11 +2573,9 @@ nsresult XMLHttpRequestMainThread::InitiateFetch(
   if (!IsSystemXHR()) {
     nsTArray<nsCString> CORSUnsafeHeaders;
     mAuthorRequestHeaders.GetCORSUnsafeHeaders(CORSUnsafeHeaders);
-    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
-    if (loadInfo) {
-      loadInfo->SetCorsPreflightInfo(CORSUnsafeHeaders,
-                                     mFlagHadUploadListenersOnSend);
-    }
+    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
+    loadInfo->SetCorsPreflightInfo(CORSUnsafeHeaders,
+                                   mFlagHadUploadListenersOnSend);
   }
 
   // Hook us up to listen to redirects and the like. Only do this very late

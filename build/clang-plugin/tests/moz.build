@@ -63,13 +63,10 @@ COMPILE_FLAGS['OS_CXXFLAGS'] = (
 )
 COMPILE_FLAGS['OS_CFLAGS'] = (
     [f for f in COMPILE_FLAGS.get('OS_CFLAGS', []) if not f.startswith('-W')] +
-    ['-fsyntax-only', '-Xclang', '-verify', '-ferror-limit=0', '-std=c11',
+    ['-fsyntax-only', '-Xclang', '-verify', '-ferror-limit=0', '-Xclang', '-std=c11',
      '-Wno-invalid-noreturn']
 )
 
 # Don't reflect WARNINGS_CFLAGS into CFLAGS, as the warnings flags should be
 # as specified in OS_CFLAGS above.
 DisableCompilerWarnings()
-
-if CONFIG['ENABLE_CLANG_PLUGIN'] and CONFIG['CC_TYPE'] == 'clang-cl':
-    AllowCompilerWarnings()  # workaround for bug 1090497
