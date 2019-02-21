@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1549627400713" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1550684288501" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2489,6 +2489,26 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="f7c4b329-7a54-48d3-9494-81783fe99d90" id="superzoom@funnerapps.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="d94f7e0f-7088-43c9-a8da-eae102781079" id="/^((odnenajaeicndaeiapagpglohiklndhe@chrome-store-foxified-2174031944)|(akdibckdjeocfbcjaikipkhhbggcbgkg@chrome-store-foxified-699805590)|(\{bd9f5830-bf8c-4e38-933d-09f85b24d744\})|(youtube-downloader@addoncrop\.com)|(dailymotion-downloader@addoncrop\.com)|(youtube-mp3-iframe-downloader@addoncrop\.com)|(youtube-downloader-lite@addoncrop\.com)|(dailymotion-downloader-lite@addoncrop\.com)|(generated-p5qj07ef5ceqfktp5v8whw@chrome-store-foxified--505607522)|(generated-tuag2j5gwq73xzp8fbw3j8@chrome-store-foxified--505607522)|(generated-uj53d5j612ap5pz11hwgv2@chrome-store-foxified--505607522)|(\{f51f0244-bfb0-40ce-bf9d-af49f5949e61\})|(\{81751484-2dc9-47bf-aec3-b8e556237178\})|(\{d89d1e20-57af-4164-82cc-650af45cf0a5\})|(\{a5e28713-14c3-4967-befe-2ec253e317cd\})|(\{335ac35b-6c16-4304-93f0-64a418e5bf81\})|(\{d3fdb429-ef84-40a4-b160-010745ee0098\})|(\{d66db057-7d38-4df4-a0ba-63c272be25ee\})|(\{ff7f7151-09e3-4e35-9052-b21e23e7e2c1\})|(\{1479da02-e759-4a6f-8f62-c08096583806\})|(\{42d59cda-c117-459e-b244-1b850c27ccc9\})|(\{bec48f33-7869-4158-8cbc-5cf1606f9afa\})|(\{08ca656c-4973-46a8-85a9-3d771399c86e\})|(\{dc5336c8-5624-4f74-a794-bb15f3760f34\})|(\{6a3d97de-1b42-4624-880a-1a68bc917142\})|(\{ad965166-3a34-449d-8230-a636fb5cae57\})|(video-view@vv\.us)|(video-view@excoe\.com)|(xeco@rama\.com)|(ghj@brem\.com)|(fgtr@rembgr\.com)|(xero@saltam\.com)|(sora@remjem\.com)|(repo@saram\.com)|(tora@empoytr\.net)|(saving@ropbart\.com)|(japa@vbgt\.com)|(rtya@nop\.net)|(asan@khazan\.com)|(xerb@tangot\.com)|(audiotools@ramdeen\.com)|(webat@extrolm\.com)|(media@medplus\.com)|(audio@audequl\.com)|(control@medcontrols\.com)|(sabqo@rimjim\.com)|(repto@secroa\.com)|(meters@videobf\.com)|(betro@diskra\.com)|(codeca@vxmrop\.com)|(revoca@feronx\.com)|(brota@vidbrghta\.com))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="d6b2dbad-31e9-4984-b649-19036cd38e1d" id="/^((((generated-e0yf8zkhypow3jjifkqzwo)|(iiinclagpealgnaglbmkdbfbgchjjbpg)|(jaehkpjddfdgiiefcnhahapilbejohhj))@chrome-store-foxified--?\d+)|(jid1-9ETkKdBARv7Iww@jetpack)|(\{813fe658-5a29-4dcc-ba6c-3941676e4f19\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="f2483d7d-1895-4ae6-9901-7321e59062a6" id="/^((pohhpifegcbplaijeeonlbkjgocfgjbf@chrome-store-foxified-18573537)|(pohhpifegcbplaijeeonlbkjgocfgjbf@chrome-store-foxified-570932499)|(aackamlchlgmalkmcphbhhcjebbpnfdf@chrome-store-foxified-233164420)|(pohhpifegcbplaijeeonlbkjgocfgjbf@chrome-store-foxified-1808417494)|(nnfhjlgginbfdejaajhbboeemajpjgfp@chrome-store-foxified-699139867)|(dilkapnoekabmkkhhdlpnpfgjcmddlia@chrome-store-foxified-1808417494)|(dilkapnoekabmkkhhdlpnpfgjcmddlia@chrome-store-foxified-1190639722)|(nnfhjlgginbfdejaajhbboeemajpjgfp@chrome-store-foxified-2745518014)|(fibaefnljghpmdibfkhnlaniblfkkndi@chrome-store-foxified-1955364993)|(dilkapnoekabmkkhhdlpnpfgjcmddlia@chrome-store-foxified-1516694386)|(generated-rk4dtanssk56goquir78sz@chrome-store-foxified--1594555229)|(nnfhjlgginbfdejaajhbboeemajpjgfp@chrome-store-foxified-1388315457)|(oaoebpgbkehlcdggaeeohgfpopdhjell@chrome-store-foxified-1823310541)|(fibaefnljghpmdibfkhnlaniblfkkndi@chrome-store-foxified--1031675095)|(ancjheohbkbnkgcmfaldcaepoeeplkgh@chrome-store-foxified-1823310541)|(generated-lwcbpuj27wcknyyl6pkap7@chrome-store-foxified-1823310541)|(generated-bmtr2hbgikv399aj6aeycd@chrome-store-foxified-1823310541)|(generated-8w9odie82h2ugbsrofooj3@chrome-store-foxified-1823310541)|(\{4170faaa-ee87-4a0e-b57a-1aec49282887\})|(\{b66dd4bc-7f5e-41d9-bc43-84c5736d0c87\})|(\{507ad1fb-08ae-43ac-a596-fd5b6e7dea9a\})|(\{8bf85207-66df-4eb7-b913-ac162498c687\})|(\{b063895a-8077-452d-b049-ebc20a39f882\})|(\{5776bd90-3d09-43b5-a769-8da373e9820f\})|(\{f6bdce44-3d5a-4f88-9a64-e39fcb4f0717\})|(\{1c22e687-6a02-440c-a6d5-c1ccaf520e10\})|(\{f7be824f-7287-466a-8590-2f48007a223b\})|(\{89ffc0b4-97f7-447c-bd6f-9c519b0188bd\})|(\{3a67084b-c231-4b4b-a924-ffa741f90921\})|(\{fac8b1d0-f321-491d-9234-c40d89b3660d\})|(\{a8053a83-8d1a-4f0e-9f88-d31cfe00cf83\})|(\{d10fa57e-37d3-43d3-39f8-e6d5b2a7759d\})|(savetube_downloader@savetube\.co)|(\{95a8a08c-53a8-7e1d-5a80-f1a5cd4751bf\})|(\{5037bd74-c23b-4bbf-8865-6b5a09e07342\})|(\{830c558c-70f0-4b07-95f1-8e06ad34ee2c\})|(\{e4d93c37-1299-452f-9b60-adee15ad3802\})|(googlemaps@search))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="27917953-17fb-4ffc-bcf1-5fc2727174b4" id="restore.old@youtube.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="9600b4cd-da02-4947-a4f5-c56c657ba197" id="{5288d05d-253f-4675-be3b-152bf02aa3ec}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
