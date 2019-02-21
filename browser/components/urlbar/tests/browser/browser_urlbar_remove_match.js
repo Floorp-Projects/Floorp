@@ -21,7 +21,8 @@ add_task(async function test_remove_history() {
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
   Assert.equal(UrlbarTestUtils.getSelectedIndex(window), 1);
-  let options = AppConstants.platform == "macosx" ? { shiftKey: true } : {};
+  let options = UrlbarPrefs.get("quantumbar") || AppConstants.platform == "macosx" ?
+    { shiftKey: true } : {};
   EventUtils.synthesizeKey("KEY_Delete", options);
   await promiseVisitRemoved;
   await TestUtils.waitForCondition(
@@ -56,7 +57,8 @@ add_task(async function test_remove_bookmark_doesnt() {
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
   Assert.equal(UrlbarTestUtils.getSelectedIndex(window), 1);
-  let options = AppConstants.platform == "macosx" ? { shiftKey: true } : {};
+  let options = UrlbarPrefs.get("quantumbar") || AppConstants.platform == "macosx" ?
+    { shiftKey: true } : {};
   EventUtils.synthesizeKey("KEY_Delete", options);
 
   // We don't have an easy way of determining if the event was process or not,

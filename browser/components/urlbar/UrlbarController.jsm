@@ -257,16 +257,8 @@ class UrlbarController {
         event.preventDefault();
         break;
       case KeyEvent.DOM_VK_DELETE:
-        if (isMac && !event.shiftKey) {
-          break;
-        }
-        if (this._handleDeleteEntry()) {
-          event.preventDefault();
-        }
-        break;
       case KeyEvent.DOM_VK_BACK_SPACE:
-        if (isMac && event.shiftKey &&
-            this._handleDeleteEntry()) {
+        if (event.shiftKey && this.view.isOpen && this._handleDeleteEntry()) {
           event.preventDefault();
         }
         break;
