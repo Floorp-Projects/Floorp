@@ -167,7 +167,7 @@ OSCrypto.prototype = {
                                                            null, null, FLAGS_NOT_SET,
                                                            outData.address());
     if (status === 0) {
-      throw new Error("decryptData failed: " + status);
+      throw new Error("decryptData failed: " + ctypes.winLastError);
     }
 
     // convert byte array to JS string.
@@ -213,7 +213,7 @@ OSCrypto.prototype = {
                                                          null, null, FLAGS_NOT_SET,
                                                          outData.address());
     if (status === 0) {
-      throw new Error("encryptData failed: " + status);
+      throw new Error("encryptData failed: " + ctypes.winLastError);
     }
 
     // convert byte array to JS string.
