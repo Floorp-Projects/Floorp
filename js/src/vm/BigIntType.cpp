@@ -3209,6 +3209,38 @@ JSAtom* js::BigIntToAtom(JSContext* cx, HandleBigInt bi) {
 template JSAtom* js::BigIntToAtom<js::CanGC>(JSContext* cx, HandleBigInt bi);
 template JSAtom* js::BigIntToAtom<js::NoGC>(JSContext* cx, HandleBigInt bi);
 
+#if defined(DEBUG) || defined(JS_JITSPEW)
+void BigInt::dump() {
+  js::Fprinter out(stderr);
+  dump(out);
+}
+
+void BigInt::dump(js::GenericPrinter& out) {
+  if (isNegative()) {
+    out.putChar('-');
+  }
+
+  if (digitLength() == 0) {
+    out.put("0");
+  } else if (digitLength() == 1) {
+    uint64_t d = digit(0);
+    out.printf("%" PRIu64, d);
+  } else {
+    out.put("0x");
+    for (size_t i = 0; i < digitLength(); i++) {
+      uint64_t d = digit(digitLength() - i - 1);
+      if (sizeof(Digit) == 4) {
+        out.printf("%0.8" PRIX32, uint32_t(d));
+      } else {
+        out.printf("%0.16" PRIX64, d);
+      }
+    }
+  }
+
+  out.putChar('n');
+}
+#endif
+
 JS::ubi::Node::Size JS::ubi::Concrete<BigInt>::size(
     mozilla::MallocSizeOf mallocSizeOf) const {
   BigInt& bi = get();
