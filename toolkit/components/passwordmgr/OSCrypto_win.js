@@ -137,6 +137,25 @@ OSCrypto.prototype = {
     return hashStr.toUpperCase();
   },
 
+  _getEntropyParam(entropy) {
+    if (!entropy) {
+      return null;
+    }
+    let entropyArray = this.stringToArray(entropy);
+    entropyArray.push(0); // Null-terminate the data.
+    let entropyData = wintypes.WORD.array(entropyArray.length)(entropyArray);
+    let optionalEntropy = new this._structs.DATA_BLOB(entropyData.length * wintypes.WORD.size,
+                                                      entropyData);
+    return optionalEntropy.address();
+  },
+
+  _convertWinArrayToJSArray(dataBlob) {
+    // Convert DATA_BLOB to JS accessible array
+    return ctypes.cast(dataBlob.pbData,
+                       wintypes.BYTE.array(dataBlob.cbData).ptr)
+                 .contents;
+  },
+
   /**
    * Decrypt a string using the windows CryptUnprotectData API.
    * @param {string} data - the encrypted string that needs to be decrypted.
@@ -146,21 +165,10 @@ OSCrypto.prototype = {
    */
   decryptData(data, entropy = null) {
     let array = this.stringToArray(data);
-    let decryptedData = "";
     let encryptedData = wintypes.BYTE.array(array.length)(array);
     let inData = new this._structs.DATA_BLOB(encryptedData.length, encryptedData);
     let outData = new this._structs.DATA_BLOB();
-    let entropyParam;
-    if (entropy) {
-      let entropyArray = this.stringToArray(entropy);
-      entropyArray.push(0);
-      let entropyData = wintypes.WORD.array(entropyArray.length)(entropyArray);
-      let optionalEntropy = new this._structs.DATA_BLOB(entropyData.length * 2,
-                                                        entropyData);
-      entropyParam = optionalEntropy.address();
-    } else {
-      entropyParam = null;
-    }
+    let entropyParam = this._getEntropyParam(entropy);
 
     let status = this._functions.get("CryptUnprotectData")(inData.address(), null,
                                                            entropyParam,
@@ -170,12 +178,9 @@ OSCrypto.prototype = {
       throw new Error("decryptData failed: " + ctypes.winLastError);
     }
 
-    // convert byte array to JS string.
-    let len = outData.cbData;
-    let decrypted = ctypes.cast(outData.pbData,
-                                wintypes.BYTE.array(len).ptr).contents;
+    let decrypted = this._convertWinArrayToJSArray(outData);
+    let decryptedData = (new TextDecoder()).decode(new Uint8Array(decrypted));
     // Output that may include characters outside of the 0-255 (byte) range needs to use TextDecoder.
-    decryptedData = (new TextDecoder()).decode(new Uint8Array(decrypted));
 
     this._functions.get("LocalFree")(outData.pbData);
     return decryptedData;
@@ -189,24 +194,13 @@ OSCrypto.prototype = {
    * @returns {string} the encrypted string.
    */
   encryptData(data, entropy = null) {
-    let encryptedData = "";
     // Input that may include characters outside of the 0-255 (byte) range needs to use TextEncoder.
     let decryptedByteData = [...(new TextEncoder()).encode(data)];
     let decryptedData = wintypes.BYTE.array(decryptedByteData.length)(decryptedByteData);
 
     let inData = new this._structs.DATA_BLOB(decryptedData.length, decryptedData);
     let outData = new this._structs.DATA_BLOB();
-    let entropyParam;
-    if (!entropy) {
-      entropyParam = null;
-    } else {
-      let entropyArray = this.stringToArray(entropy);
-      entropyArray.push(0);
-      let entropyData = wintypes.WORD.array(entropyArray.length)(entropyArray);
-      let optionalEntropy = new this._structs.DATA_BLOB(entropyData.length * 2,
-                                                        entropyData);
-      entropyParam = optionalEntropy.address();
-    }
+    let entropyParam = this._getEntropyParam(entropy);
 
     let status = this._functions.get("CryptProtectData")(inData.address(), null,
                                                          entropyParam,
@@ -216,11 +210,8 @@ OSCrypto.prototype = {
       throw new Error("encryptData failed: " + ctypes.winLastError);
     }
 
-    // convert byte array to JS string.
-    let len = outData.cbData;
-    let encrypted = ctypes.cast(outData.pbData,
-                                wintypes.BYTE.array(len).ptr).contents;
-    encryptedData = this.arrayToString(encrypted);
+    let encrypted = this._convertWinArrayToJSArray(outData);
+    let encryptedData = this.arrayToString(encrypted);
     this._functions.get("LocalFree")(outData.pbData);
     return encryptedData;
   },
