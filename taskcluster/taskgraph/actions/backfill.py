@@ -184,7 +184,7 @@ def backfill_action(parameters, graph_config, input, task_group_id, task_id):
 
             times = input.get('times', 1)
             for i in xrange(times):
-                create_tasks([label], full_task_graph, label_to_taskid,
+                create_tasks(graph_config, [label], full_task_graph, label_to_taskid,
                              push_params, push_decision_task_id, push, modifier=modifier)
             backfill_pushes.append(push)
         else:
