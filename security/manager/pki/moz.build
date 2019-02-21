@@ -16,10 +16,7 @@ UNIFIED_SOURCES += [
     'nsASN1Tree.cpp',
     'nsNSSDialogHelper.cpp',
     'nsNSSDialogs.cpp',
-]
-
-XPCOM_MANIFESTS += [
-    'components.conf',
+    'nsPKIModule.cpp',
 ]
 
 LOCAL_INCLUDES += [

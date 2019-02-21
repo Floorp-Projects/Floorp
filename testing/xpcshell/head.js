@@ -231,11 +231,6 @@ function _do_quit() {
   _quit = true;
 }
 
-// This is useless, except to the extent that it has the side-effect of
-// initializing the widget module, which some tests unfortunately
-// accidentally rely on.
-void Cc["@mozilla.org/widget/transferable;1"].createInstance();
-
 /**
  * Overrides idleService with a mock.  Idle is commonly used for maintenance
  * tasks, thus if a test uses a service that requires the idle service, it will
@@ -257,6 +252,12 @@ var _fakeIdleService = {
 
   activate: function FIS_activate() {
     if (!this.originalCID) {
+      // This is useless, except to the extent that it has the
+      // side-effect of initializing the widget module, which some
+      // callers unfortunately accidentally rely on.
+      void Components.manager.getClassObject(Cc[this.contractID],
+                                             Ci.nsIFactory);
+
       this.originalCID = this.registrar.contractIDToCID(this.contractID);
       // Replace with the mock.
       this.registrar.registerFactory(this.CID, "Fake Idle Service",

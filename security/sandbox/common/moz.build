@@ -9,10 +9,6 @@ with Files('**'):
 
 UNIFIED_SOURCES += ['SandboxSettings.cpp']
 
-XPCOM_MANIFESTS += [
-    'components.conf',
-]
-
 XPIDL_SOURCES += [
     'mozISandboxSettings.idl',
 ]
