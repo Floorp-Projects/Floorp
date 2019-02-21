@@ -98,6 +98,11 @@ class SearchFragment : Fragment() {
             }
     }
 
+    // Issue: https://github.com/mozilla-mobile/fenix/issues/626
+    // Currently we were kind of forcing all this logic through the Toolbar Feature.
+    // But since we cannot actually load a page without an available GeckoSession
+    // we have to wait until after we navigate to call the use case.
+    // We should move this logic into a place that makes more sense.
     private fun load(text: String) {
         val sessionId = SearchFragmentArgs.fromBundle(arguments!!).sessionId
         val isPrivate = SearchFragmentArgs.fromBundle(arguments!!).isPrivateTab

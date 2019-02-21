@@ -58,10 +58,6 @@ class ToolbarUIView(
                     url = text
                     actionEmitter.onNext(SearchAction.TextChanged(text))
                 }
-
-                override fun onStopEditing() {
-//                    actionEmitter.onNext(SearchAction.UrlCommitted(url))
-                }
             })
         }
 
