@@ -6,6 +6,13 @@ package mozilla.components.service.glean.storages
 
 import android.content.Context
 import android.support.annotation.VisibleForTesting
+import mozilla.components.service.glean.BooleanMetricType
+import mozilla.components.service.glean.CounterMetricType
+import mozilla.components.service.glean.DatetimeMetricType
+import mozilla.components.service.glean.StringListMetricType
+import mozilla.components.service.glean.StringMetricType
+import mozilla.components.service.glean.TimespanMetricType
+import mozilla.components.service.glean.UuidMetricType
 import org.json.JSONArray
 import org.json.JSONObject
 import mozilla.components.support.ktx.android.org.json.getOrPutJSONObject
@@ -119,6 +126,27 @@ internal class StorageEngineManager(
     fun clearAllStores() {
         for (storageEngine in storageEngines) {
             storageEngine.value.clearAllStores()
+        }
+    }
+
+    companion object {
+        /**
+        * Get the storage engine associated with a given metric type.
+        *
+        * @return A storage engine, or null if none exists
+        */
+        internal fun <T> getStorageEngineForMetric(subMetric: T): StorageEngine? {
+            // Every metric that supports labels needs an entry here
+            return when (subMetric) {
+                is BooleanMetricType -> BooleansStorageEngine as StorageEngine
+                is CounterMetricType -> CountersStorageEngine as StorageEngine
+                is DatetimeMetricType -> DatetimesStorageEngine as StorageEngine
+                is StringListMetricType -> StringListsStorageEngine as StorageEngine
+                is StringMetricType -> StringsStorageEngine as StorageEngine
+                is TimespanMetricType -> TimespansStorageEngine as StorageEngine
+                is UuidMetricType -> UuidsStorageEngine as StorageEngine
+                else -> null
+            }
         }
     }
 }

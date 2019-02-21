@@ -36,7 +36,7 @@ class StringListMetricTypeTest {
         // Clear the stored "user" preferences between tests.
         ApplicationProvider.getApplicationContext<Context>()
             .getSharedPreferences(
-                StringListsStorageEngine.javaClass.simpleName,
+                StringListsStorageEngine.javaClass.canonicalName,
                 Context.MODE_PRIVATE)
             .edit()
             .clear()

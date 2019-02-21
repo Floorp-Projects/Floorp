@@ -33,7 +33,7 @@ class BooleanMetricTypeTest {
         BooleansStorageEngine.applicationContext = ApplicationProvider.getApplicationContext()
         // Clear the stored "user" preferences between tests.
         ApplicationProvider.getApplicationContext<Context>()
-            .getSharedPreferences(BooleansStorageEngine.javaClass.simpleName, Context.MODE_PRIVATE)
+            .getSharedPreferences(BooleansStorageEngine.javaClass.canonicalName, Context.MODE_PRIVATE)
             .edit()
             .clear()
             .apply()

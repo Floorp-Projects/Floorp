@@ -33,7 +33,7 @@ class StringMetricTypeTest {
         StringsStorageEngine.applicationContext = ApplicationProvider.getApplicationContext()
         // Clear the stored "user" preferences between tests.
         ApplicationProvider.getApplicationContext<Context>()
-            .getSharedPreferences(StringsStorageEngine.javaClass.simpleName, Context.MODE_PRIVATE)
+            .getSharedPreferences(StringsStorageEngine.javaClass.canonicalName, Context.MODE_PRIVATE)
             .edit()
             .clear()
             .apply()

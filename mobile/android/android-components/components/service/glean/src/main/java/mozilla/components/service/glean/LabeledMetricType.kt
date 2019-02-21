@@ -4,6 +4,8 @@
 
 package mozilla.components.service.glean
 
+import mozilla.components.service.glean.storages.StorageEngine
+import mozilla.components.service.glean.storages.StorageEngineManager
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -67,6 +69,20 @@ data class LabeledMetricType<T>(
      * @return adjusted label, possibly set to [OTHER_LABEL]
      */
     private fun getFinalDynamicLabel(label: String): String {
+        if (lifetime != Lifetime.Application && seenLabels.size == 0) {
+            // TODO 1530733: This might cause I/O on the main thread if this is the
+            // first thing being stored to the given storage engine after app restart.
+            getStorageEngineForMetric()?.let {
+                val identifier = (subMetric as CommonMetricData).identifier
+                val prefix = "$identifier/"
+                seenLabels.addAll(
+                    it.getIdentifiersInStores((subMetric as CommonMetricData).sendInPings)
+                        .filter { it.startsWith(prefix) }
+                        .map { it.substring(prefix.length) }
+                )
+            }
+        }
+
         if (!seenLabels.contains(label)) {
             if (seenLabels.size >= MAX_LABELS) {
                 return OTHER_LABEL
@@ -96,6 +112,7 @@ data class LabeledMetricType<T>(
         return when (subMetric) {
             is BooleanMetricType -> subMetric.copy(name = newName) as T
             is CounterMetricType -> subMetric.copy(name = newName) as T
+            is DatetimeMetricType -> subMetric.copy(name = newName) as T
             is StringListMetricType -> subMetric.copy(name = newName) as T
             is StringMetricType -> subMetric.copy(name = newName) as T
             is TimespanMetricType -> subMetric.copy(name = newName) as T
@@ -104,6 +121,14 @@ data class LabeledMetricType<T>(
                 "Can not create a labeled version of this metric type"
             )
         }
+    }
+
+    /**
+     * Delegates to [StorageEngineManager.getStorageEngineForMetric].
+     * Provided here so it can be mocked for testing.
+     */
+    internal fun getStorageEngineForMetric(): StorageEngine? {
+        return StorageEngineManager.getStorageEngineForMetric(subMetric)
     }
 
     /**

@@ -33,7 +33,7 @@ class CounterMetricTypeTest {
         CountersStorageEngine.applicationContext = ApplicationProvider.getApplicationContext()
         // Clear the stored "user" preferences between tests.
         ApplicationProvider.getApplicationContext<Context>()
-            .getSharedPreferences(CountersStorageEngine.javaClass.simpleName, Context.MODE_PRIVATE)
+            .getSharedPreferences(CountersStorageEngine.javaClass.canonicalName, Context.MODE_PRIVATE)
             .edit()
             .clear()
             .apply()

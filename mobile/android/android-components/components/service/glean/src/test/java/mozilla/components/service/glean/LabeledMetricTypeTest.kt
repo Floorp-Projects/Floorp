@@ -4,6 +4,7 @@
 
 package mozilla.components.service.glean
 
+import android.content.Context
 import android.content.SharedPreferences
 import mozilla.components.service.glean.storages.BooleansStorageEngine
 import mozilla.components.service.glean.storages.CountersStorageEngine
@@ -20,6 +21,13 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import java.util.UUID
 import mozilla.components.support.base.log.logger.Logger
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.ArgumentMatchers.eq
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.doAnswer
+import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.spy
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -437,5 +445,65 @@ class LabeledMetricTypeTest {
         )
 
         labeledEventMetric["label1"]
+    }
+
+    @Test
+    fun `test seen labels get reloaded from disk`() {
+        val persistedSample = mapOf(
+            "store1#telemetry.labeled_metric/label1" to 1,
+            "store1#telemetry.labeled_metric/label2" to 1,
+            "store1#telemetry.labeled_metric/label3" to 1
+        )
+
+        // Create a fake application context that will be used to load our data.
+        val context = mock(Context::class.java)
+        val sharedPreferences = mock(SharedPreferences::class.java)
+        `when`(sharedPreferences.all).thenAnswer { persistedSample }
+        `when`(context.getSharedPreferences(
+            eq(MockScalarStorageEngine::class.java.canonicalName),
+            eq(Context.MODE_PRIVATE)
+        )).thenReturn(sharedPreferences)
+
+        val storageEngine = MockScalarStorageEngine()
+        storageEngine.applicationContext = context
+
+        val metric = GenericMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.User,
+            name = "labeled_metric",
+            sendInPings = listOf("store1")
+        )
+
+        val labeledMetric = LabeledMetricType<GenericMetricType>(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.User,
+            name = "labeled_metric",
+            sendInPings = listOf("store1"),
+            subMetric = metric
+        )
+
+        val labeledMetricSpy = spy(labeledMetric)
+        doReturn(storageEngine).`when`(labeledMetricSpy).getStorageEngineForMetric()
+
+        doAnswer {
+            metric.copy(name = it.arguments[0] as String)
+        }.`when`(labeledMetricSpy).getMetricWithNewName(anyString())
+
+        for (i in 4..20) {
+            storageEngine.record(labeledMetricSpy["label$i"], 1)
+        }
+        // Go back and record in one of the real labels again
+        storageEngine.record(labeledMetricSpy["label1"], 2)
+
+        val snapshot = storageEngine.getSnapshot(storeName = "store1", clearStore = false)
+
+        assertEquals(17, snapshot!!.size)
+        assertEquals(2, snapshot.get("telemetry.labeled_metric/label1"))
+        for (i in 2..15) {
+            assertEquals(1, snapshot.get("telemetry.labeled_metric/label$i"))
+        }
+        assertEquals(1, snapshot.get("telemetry.labeled_metric/__other__"))
     }
 }

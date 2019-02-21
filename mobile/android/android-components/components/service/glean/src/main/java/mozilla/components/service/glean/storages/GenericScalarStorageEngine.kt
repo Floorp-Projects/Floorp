@@ -122,6 +122,21 @@ internal abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
     }
 
     /**
+     * Ensures that the user lifetime metrics (in [userLifetimeStorage]) is
+     * loaded.  This is a no-op if they are already loaded.
+     */
+    private fun ensureUserLifetimeLoaded() {
+        // Make sure data with "user" lifetime is loaded.
+        // We still need to catch exceptions here, as `getAll()` might throw.
+        @Suppress("TooGenericExceptionCaught")
+        try {
+            userLifetimeStorage.all
+        } catch (e: NullPointerException) {
+            // Intentionally left blank. We just want to fall through.
+        }
+    }
+
+    /**
      * Retrieves the [recorded metric data][ScalarType] for the provided
      * store name.
      *
@@ -139,14 +154,7 @@ internal abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
     fun getSnapshot(storeName: String, clearStore: Boolean): GenericDataStorage<ScalarType>? {
         val allLifetimes: GenericDataStorage<ScalarType> = mutableMapOf()
 
-        // Make sure data with "user" lifetime is loaded before getting the snapshot.
-        // We still need to catch exceptions here, as `getAll()` might throw.
-        @Suppress("TooGenericExceptionCaught")
-        try {
-            userLifetimeStorage.all
-        } catch (e: NullPointerException) {
-            // Intentionally left blank. We just want to fall through.
-        }
+        ensureUserLifetimeLoaded()
 
         // Get the metrics for all the supported lifetimes.
         for (store in dataStores) {
@@ -174,6 +182,29 @@ internal abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
     override fun getSnapshotAsJSON(storeName: String, clearStore: Boolean): Any? {
         return getSnapshot(storeName, clearStore)?.let { dataMap ->
             return JSONObject(dataMap)
+        }
+    }
+
+    /**
+     * Return all of the metric identifiers currently holding data for the given
+     * stores.
+     *
+     * @param stores The stores to look in.
+     * @return a sequence of identifiers (including labels, if any) found in
+     *     those stores.
+     */
+    override fun getIdentifiersInStores(stores: List<String>) = sequence {
+        // Make sure data with "user" lifetime is loaded before getting the snapshot.
+        ensureUserLifetimeLoaded()
+
+        dataStores.forEach { lifetime ->
+            stores.forEach {
+                lifetime[it]?.let { store ->
+                    store.forEach {
+                        yield(it.key)
+                    }
+                }
+            }
         }
     }
 
