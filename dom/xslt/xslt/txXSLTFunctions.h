@@ -71,6 +71,9 @@ class txFormatNumberFunctionCall : public FunctionCall {
     Finished
   };
 
+  // Helper that reports and invalid arg to the provided context.
+  void ReportInvalidArg(txIEvalContext* aContext);
+
   txStylesheet* mStylesheet;
   RefPtr<txNamespaceMap> mMappings;
 };
