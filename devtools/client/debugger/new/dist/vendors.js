@@ -1,13 +1,13 @@
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("devtools/client/shared/vendor/react"), require("devtools/client/shared/vendor/lodash"), require("devtools/client/shared/vendor/react-dom"), require("Services"), require("devtools/shared/flags"), require("devtools/client/shared/vendor/react-prop-types"), require("devtools/client/shared/vendor/react-dom-factories"));
+		module.exports = factory(require("devtools/client/shared/vendor/react-prop-types"), require("devtools/client/shared/vendor/react"), require("devtools/client/shared/vendor/react-dom-factories"), require("devtools/client/shared/vendor/lodash"), require("Services"), require("devtools/client/shared/vendor/react-dom"), require("devtools/shared/flags"));
 	else if(typeof define === 'function' && define.amd)
-		define(["devtools/client/shared/vendor/react", "devtools/client/shared/vendor/lodash", "devtools/client/shared/vendor/react-dom", "Services", "devtools/shared/flags", "devtools/client/shared/vendor/react-prop-types", "devtools/client/shared/vendor/react-dom-factories"], factory);
+		define(["devtools/client/shared/vendor/react-prop-types", "devtools/client/shared/vendor/react", "devtools/client/shared/vendor/react-dom-factories", "devtools/client/shared/vendor/lodash", "Services", "devtools/client/shared/vendor/react-dom", "devtools/shared/flags"], factory);
 	else {
-		var a = typeof exports === 'object' ? factory(require("devtools/client/shared/vendor/react"), require("devtools/client/shared/vendor/lodash"), require("devtools/client/shared/vendor/react-dom"), require("Services"), require("devtools/shared/flags"), require("devtools/client/shared/vendor/react-prop-types"), require("devtools/client/shared/vendor/react-dom-factories")) : factory(root["devtools/client/shared/vendor/react"], root["devtools/client/shared/vendor/lodash"], root["devtools/client/shared/vendor/react-dom"], root["Services"], root["devtools/shared/flags"], root["devtools/client/shared/vendor/react-prop-types"], root["devtools/client/shared/vendor/react-dom-factories"]);
+		var a = typeof exports === 'object' ? factory(require("devtools/client/shared/vendor/react-prop-types"), require("devtools/client/shared/vendor/react"), require("devtools/client/shared/vendor/react-dom-factories"), require("devtools/client/shared/vendor/lodash"), require("Services"), require("devtools/client/shared/vendor/react-dom"), require("devtools/shared/flags")) : factory(root["devtools/client/shared/vendor/react-prop-types"], root["devtools/client/shared/vendor/react"], root["devtools/client/shared/vendor/react-dom-factories"], root["devtools/client/shared/vendor/lodash"], root["Services"], root["devtools/client/shared/vendor/react-dom"], root["devtools/shared/flags"]);
 		for(var i in a) (typeof exports === 'object' ? exports : root)[i] = a[i];
 	}
-})(typeof self !== 'undefined' ? self : this, function(__WEBPACK_EXTERNAL_MODULE_0__, __WEBPACK_EXTERNAL_MODULE_2__, __WEBPACK_EXTERNAL_MODULE_4__, __WEBPACK_EXTERNAL_MODULE_22__, __WEBPACK_EXTERNAL_MODULE_52__, __WEBPACK_EXTERNAL_MODULE_3642__, __WEBPACK_EXTERNAL_MODULE_3643__) {
+})(typeof self !== 'undefined' ? self : this, function(__WEBPACK_EXTERNAL_MODULE_0__, __WEBPACK_EXTERNAL_MODULE_1__, __WEBPACK_EXTERNAL_MODULE_2__, __WEBPACK_EXTERNAL_MODULE_10__, __WEBPACK_EXTERNAL_MODULE_20__, __WEBPACK_EXTERNAL_MODULE_24__, __WEBPACK_EXTERNAL_MODULE_68__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "/assets/build";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 3728);
+/******/ 	return __webpack_require__(__webpack_require__.s = 761);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -82,460 +82,21 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_0__;
 
 /***/ }),
 
-/***/ 118:
+/***/ 1:
 /***/ (function(module, exports) {
 
-
-
-/***/ }),
-
-/***/ 119:
-/***/ (function(module, exports, __webpack_require__) {
-
-/* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-// resolves . and .. elements in a path array with directory names there
-// must be no slashes, empty elements, or device names (c:\) in the array
-// (so also no leading and trailing slashes - it does not distinguish
-// relative and absolute paths)
-function normalizeArray(parts, allowAboveRoot) {
-  // if the path tries to go above the root, `up` ends up > 0
-  var up = 0;
-  for (var i = parts.length - 1; i >= 0; i--) {
-    var last = parts[i];
-    if (last === '.') {
-      parts.splice(i, 1);
-    } else if (last === '..') {
-      parts.splice(i, 1);
-      up++;
-    } else if (up) {
-      parts.splice(i, 1);
-      up--;
-    }
-  }
-
-  // if the path is allowed to go above the root, restore leading ..s
-  if (allowAboveRoot) {
-    for (; up--; up) {
-      parts.unshift('..');
-    }
-  }
-
-  return parts;
-}
-
-// Split a filename into [root, dir, basename, ext], unix version
-// 'root' is just a slash, or nothing.
-var splitPathRe =
-    /^(\/?|)([\s\S]*?)((?:\.{1,2}|[^\/]+?|)(\.[^.\/]*|))(?:[\/]*)$/;
-var splitPath = function(filename) {
-  return splitPathRe.exec(filename).slice(1);
-};
-
-// path.resolve([from ...], to)
-// posix version
-exports.resolve = function() {
-  var resolvedPath = '',
-      resolvedAbsolute = false;
-
-  for (var i = arguments.length - 1; i >= -1 && !resolvedAbsolute; i--) {
-    var path = (i >= 0) ? arguments[i] : process.cwd();
-
-    // Skip empty and invalid entries
-    if (typeof path !== 'string') {
-      throw new TypeError('Arguments to path.resolve must be strings');
-    } else if (!path) {
-      continue;
-    }
-
-    resolvedPath = path + '/' + resolvedPath;
-    resolvedAbsolute = path.charAt(0) === '/';
-  }
-
-  // At this point the path should be resolved to a full absolute path, but
-  // handle relative paths to be safe (might happen when process.cwd() fails)
-
-  // Normalize the path
-  resolvedPath = normalizeArray(filter(resolvedPath.split('/'), function(p) {
-    return !!p;
-  }), !resolvedAbsolute).join('/');
-
-  return ((resolvedAbsolute ? '/' : '') + resolvedPath) || '.';
-};
-
-// path.normalize(path)
-// posix version
-exports.normalize = function(path) {
-  var isAbsolute = exports.isAbsolute(path),
-      trailingSlash = substr(path, -1) === '/';
-
-  // Normalize the path
-  path = normalizeArray(filter(path.split('/'), function(p) {
-    return !!p;
-  }), !isAbsolute).join('/');
-
-  if (!path && !isAbsolute) {
-    path = '.';
-  }
-  if (path && trailingSlash) {
-    path += '/';
-  }
-
-  return (isAbsolute ? '/' : '') + path;
-};
-
-// posix version
-exports.isAbsolute = function(path) {
-  return path.charAt(0) === '/';
-};
-
-// posix version
-exports.join = function() {
-  var paths = Array.prototype.slice.call(arguments, 0);
-  return exports.normalize(filter(paths, function(p, index) {
-    if (typeof p !== 'string') {
-      throw new TypeError('Arguments to path.join must be strings');
-    }
-    return p;
-  }).join('/'));
-};
-
-
-// path.relative(from, to)
-// posix version
-exports.relative = function(from, to) {
-  from = exports.resolve(from).substr(1);
-  to = exports.resolve(to).substr(1);
-
-  function trim(arr) {
-    var start = 0;
-    for (; start < arr.length; start++) {
-      if (arr[start] !== '') break;
-    }
-
-    var end = arr.length - 1;
-    for (; end >= 0; end--) {
-      if (arr[end] !== '') break;
-    }
-
-    if (start > end) return [];
-    return arr.slice(start, end - start + 1);
-  }
-
-  var fromParts = trim(from.split('/'));
-  var toParts = trim(to.split('/'));
-
-  var length = Math.min(fromParts.length, toParts.length);
-  var samePartsLength = length;
-  for (var i = 0; i < length; i++) {
-    if (fromParts[i] !== toParts[i]) {
-      samePartsLength = i;
-      break;
-    }
-  }
-
-  var outputParts = [];
-  for (var i = samePartsLength; i < fromParts.length; i++) {
-    outputParts.push('..');
-  }
-
-  outputParts = outputParts.concat(toParts.slice(samePartsLength));
-
-  return outputParts.join('/');
-};
-
-exports.sep = '/';
-exports.delimiter = ':';
-
-exports.dirname = function(path) {
-  var result = splitPath(path),
-      root = result[0],
-      dir = result[1];
-
-  if (!root && !dir) {
-    // No dirname whatsoever
-    return '.';
-  }
-
-  if (dir) {
-    // It has a dirname, strip trailing slash
-    dir = dir.substr(0, dir.length - 1);
-  }
-
-  return root + dir;
-};
-
-
-exports.basename = function(path, ext) {
-  var f = splitPath(path)[2];
-  // TODO: make this comparison case-insensitive on windows?
-  if (ext && f.substr(-1 * ext.length) === ext) {
-    f = f.substr(0, f.length - ext.length);
-  }
-  return f;
-};
-
-
-exports.extname = function(path) {
-  return splitPath(path)[3];
-};
-
-function filter (xs, f) {
-    if (xs.filter) return xs.filter(f);
-    var res = [];
-    for (var i = 0; i < xs.length; i++) {
-        if (f(xs[i], i, xs)) res.push(xs[i]);
-    }
-    return res;
-}
-
-// String.prototype.substr - negative index don't work in IE8
-var substr = 'ab'.substr(-1) === 'b'
-    ? function (str, start, len) { return str.substr(start, len) }
-    : function (str, start, len) {
-        if (start < 0) start = str.length + start;
-        return str.substr(start, len);
-    }
-;
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(120)))
+module.exports = __WEBPACK_EXTERNAL_MODULE_1__;
 
 /***/ }),
 
-/***/ 120:
+/***/ 10:
 /***/ (function(module, exports) {
 
-// shim for using process in browser
-var process = module.exports = {};
-
-// cached from whatever global is present so that test runners that stub it
-// don't break things.  But we need to wrap it in a try catch in case it is
-// wrapped in strict mode code which doesn't define any globals.  It's inside a
-// function because try/catches deoptimize in certain engines.
-
-var cachedSetTimeout;
-var cachedClearTimeout;
-
-function defaultSetTimout() {
-    throw new Error('setTimeout has not been defined');
-}
-function defaultClearTimeout () {
-    throw new Error('clearTimeout has not been defined');
-}
-(function () {
-    try {
-        if (typeof setTimeout === 'function') {
-            cachedSetTimeout = setTimeout;
-        } else {
-            cachedSetTimeout = defaultSetTimout;
-        }
-    } catch (e) {
-        cachedSetTimeout = defaultSetTimout;
-    }
-    try {
-        if (typeof clearTimeout === 'function') {
-            cachedClearTimeout = clearTimeout;
-        } else {
-            cachedClearTimeout = defaultClearTimeout;
-        }
-    } catch (e) {
-        cachedClearTimeout = defaultClearTimeout;
-    }
-} ())
-function runTimeout(fun) {
-    if (cachedSetTimeout === setTimeout) {
-        //normal enviroments in sane situations
-        return setTimeout(fun, 0);
-    }
-    // if setTimeout wasn't available but was latter defined
-    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
-        cachedSetTimeout = setTimeout;
-        return setTimeout(fun, 0);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedSetTimeout(fun, 0);
-    } catch(e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
-            return cachedSetTimeout.call(null, fun, 0);
-        } catch(e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
-            return cachedSetTimeout.call(this, fun, 0);
-        }
-    }
-
-
-}
-function runClearTimeout(marker) {
-    if (cachedClearTimeout === clearTimeout) {
-        //normal enviroments in sane situations
-        return clearTimeout(marker);
-    }
-    // if clearTimeout wasn't available but was latter defined
-    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
-        cachedClearTimeout = clearTimeout;
-        return clearTimeout(marker);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedClearTimeout(marker);
-    } catch (e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
-            return cachedClearTimeout.call(null, marker);
-        } catch (e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
-            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
-            return cachedClearTimeout.call(this, marker);
-        }
-    }
-
-
-
-}
-var queue = [];
-var draining = false;
-var currentQueue;
-var queueIndex = -1;
-
-function cleanUpNextTick() {
-    if (!draining || !currentQueue) {
-        return;
-    }
-    draining = false;
-    if (currentQueue.length) {
-        queue = currentQueue.concat(queue);
-    } else {
-        queueIndex = -1;
-    }
-    if (queue.length) {
-        drainQueue();
-    }
-}
-
-function drainQueue() {
-    if (draining) {
-        return;
-    }
-    var timeout = runTimeout(cleanUpNextTick);
-    draining = true;
-
-    var len = queue.length;
-    while(len) {
-        currentQueue = queue;
-        queue = [];
-        while (++queueIndex < len) {
-            if (currentQueue) {
-                currentQueue[queueIndex].run();
-            }
-        }
-        queueIndex = -1;
-        len = queue.length;
-    }
-    currentQueue = null;
-    draining = false;
-    runClearTimeout(timeout);
-}
-
-process.nextTick = function (fun) {
-    var args = new Array(arguments.length - 1);
-    if (arguments.length > 1) {
-        for (var i = 1; i < arguments.length; i++) {
-            args[i - 1] = arguments[i];
-        }
-    }
-    queue.push(new Item(fun, args));
-    if (queue.length === 1 && !draining) {
-        runTimeout(drainQueue);
-    }
-};
-
-// v8 likes predictible objects
-function Item(fun, array) {
-    this.fun = fun;
-    this.array = array;
-}
-Item.prototype.run = function () {
-    this.fun.apply(null, this.array);
-};
-process.title = 'browser';
-process.browser = true;
-process.env = {};
-process.argv = [];
-process.version = ''; // empty string to avoid regexp issues
-process.versions = {};
-
-function noop() {}
-
-process.on = noop;
-process.addListener = noop;
-process.once = noop;
-process.off = noop;
-process.removeListener = noop;
-process.removeAllListeners = noop;
-process.emit = noop;
-process.prependListener = noop;
-process.prependOnceListener = noop;
-
-process.listeners = function (name) { return [] }
-
-process.binding = function (name) {
-    throw new Error('process.binding is not supported');
-};
-
-process.cwd = function () { return '/' };
-process.chdir = function (dir) {
-    throw new Error('process.chdir is not supported');
-};
-process.umask = function() { return 0; };
-
+module.exports = __WEBPACK_EXTERNAL_MODULE_10__;
 
 /***/ }),
 
-/***/ 1301:
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-
-/***/ 1355:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const feature = __webpack_require__(1461);
-
-module.exports = feature;
-
-/***/ }),
-
-/***/ 1359:
+/***/ 100:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -545,4261 +106,15 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _Svg = __webpack_require__(3842);
-
-var _Svg2 = _interopRequireDefault(_Svg);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-exports.default = _Svg2.default; /* This Source Code Form is subject to the terms of the Mozilla Public
-                                  * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-/**
- * This file maps the SVG React Components in the images directory.
- */
-
-/***/ }),
-
-/***/ 1376:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const Menu = __webpack_require__(1464);
-const MenuItem = __webpack_require__(1466);
-const { PrefsHelper } = __webpack_require__(1467);
-const KeyShortcuts = __webpack_require__(1468);
-const { ZoomKeys } = __webpack_require__(1469);
-const EventEmitter = __webpack_require__(1382);
-const asyncStorage = __webpack_require__(3769);
-const SourceUtils = __webpack_require__(3637);
-const Telemetry = __webpack_require__(3750);
-const { getUnicodeHostname, getUnicodeUrlPath, getUnicodeUrl } = __webpack_require__(3638);
-
-module.exports = {
-  KeyShortcuts,
-  Menu,
-  MenuItem,
-  PrefsHelper,
-  ZoomKeys,
-  asyncStorage,
-  EventEmitter,
-  SourceUtils,
-  Telemetry,
-  getUnicodeHostname,
-  getUnicodeUrlPath,
-  getUnicodeUrl
-};
-
-/***/ }),
-
-/***/ 1382:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-var EventEmitter = function EventEmitter() {};
-module.exports = EventEmitter;
-
-const promise = __webpack_require__(1465);
-
-/**
- * Decorate an object with event emitter functionality.
- *
- * @param Object aObjectToDecorate
- *        Bind all public methods of EventEmitter to
- *        the aObjectToDecorate object.
- */
-EventEmitter.decorate = function EventEmitter_decorate(aObjectToDecorate) {
-  let emitter = new EventEmitter();
-  aObjectToDecorate.on = emitter.on.bind(emitter);
-  aObjectToDecorate.off = emitter.off.bind(emitter);
-  aObjectToDecorate.once = emitter.once.bind(emitter);
-  aObjectToDecorate.emit = emitter.emit.bind(emitter);
-};
-
-EventEmitter.prototype = {
-  /**
-   * Connect a listener.
-   *
-   * @param string aEvent
-   *        The event name to which we're connecting.
-   * @param function aListener
-   *        Called when the event is fired.
-   */
-  on: function EventEmitter_on(aEvent, aListener) {
-    if (!this._eventEmitterListeners) this._eventEmitterListeners = new Map();
-    if (!this._eventEmitterListeners.has(aEvent)) {
-      this._eventEmitterListeners.set(aEvent, []);
-    }
-    this._eventEmitterListeners.get(aEvent).push(aListener);
-  },
-
-  /**
-   * Listen for the next time an event is fired.
-   *
-   * @param string aEvent
-   *        The event name to which we're connecting.
-   * @param function aListener
-   *        (Optional) Called when the event is fired. Will be called at most
-   *        one time.
-   * @return promise
-   *        A promise which is resolved when the event next happens. The
-   *        resolution value of the promise is the first event argument. If
-   *        you need access to second or subsequent event arguments (it's rare
-   *        that this is needed) then use aListener
-   */
-  once: function EventEmitter_once(aEvent, aListener) {
-    let deferred = promise.defer();
-
-    let handler = (aEvent, aFirstArg, ...aRest) => {
-      this.off(aEvent, handler);
-      if (aListener) {
-        aListener.apply(null, [aEvent, aFirstArg, ...aRest]);
-      }
-      deferred.resolve(aFirstArg);
-    };
-
-    handler._originalListener = aListener;
-    this.on(aEvent, handler);
-
-    return deferred.promise;
-  },
-
-  /**
-   * Remove a previously-registered event listener.  Works for events
-   * registered with either on or once.
-   *
-   * @param string aEvent
-   *        The event name whose listener we're disconnecting.
-   * @param function aListener
-   *        The listener to remove.
-   */
-  off: function EventEmitter_off(aEvent, aListener) {
-    if (!this._eventEmitterListeners) return;
-    let listeners = this._eventEmitterListeners.get(aEvent);
-    if (listeners) {
-      this._eventEmitterListeners.set(aEvent, listeners.filter(l => {
-        return l !== aListener && l._originalListener !== aListener;
-      }));
-    }
-  },
-
-  /**
-   * Emit an event.  All arguments to this method will
-   * be sent to listener functions.
-   */
-  emit: function EventEmitter_emit(aEvent) {
-    if (!this._eventEmitterListeners || !this._eventEmitterListeners.has(aEvent)) {
-      return;
-    }
-
-    let originalListeners = this._eventEmitterListeners.get(aEvent);
-    for (let listener of this._eventEmitterListeners.get(aEvent)) {
-      // If the object was destroyed during event emission, stop
-      // emitting.
-      if (!this._eventEmitterListeners) {
-        break;
-      }
-
-      // If listeners were removed during emission, make sure the
-      // event handler we're going to fire wasn't removed.
-      if (originalListeners === this._eventEmitterListeners.get(aEvent) || this._eventEmitterListeners.get(aEvent).some(l => l === listener)) {
-        try {
-          listener.apply(null, arguments);
-        } catch (ex) {
-          // Prevent a bad listener from interfering with the others.
-          let msg = ex + ": " + ex.stack;
-          //console.error(msg);
-          console.log(msg);
-        }
-      }
-    }
-  }
-};
-
-/***/ }),
-
-/***/ 1413:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const { Menu, MenuItem } = __webpack_require__(1376);
-
-function inToolbox() {
-  try {
-    return window.parent.document.documentURI == "about:devtools-toolbox";
-  } catch (e) {
-    // If `window` is not available, it's very likely that we are in the toolbox.
-    return true;
-  }
-}
-
-if (!inToolbox()) {
-  __webpack_require__(1301);
-}
-
-function createPopup(doc) {
-  let popup = doc.createElement("menupopup");
-  popup.className = "landing-popup";
-  if (popup.openPopupAtScreen) {
-    return popup;
-  }
-
-  function preventDefault(e) {
-    e.preventDefault();
-    e.returnValue = false;
-  }
-
-  let mask = document.querySelector("#contextmenu-mask");
-  if (!mask) {
-    mask = doc.createElement("div");
-    mask.id = "contextmenu-mask";
-    document.body.appendChild(mask);
-  }
-
-  mask.onclick = () => popup.hidePopup();
-
-  popup.openPopupAtScreen = function (clientX, clientY) {
-    this.style.setProperty("left", `${clientX}px`);
-    this.style.setProperty("top", `${clientY}px`);
-    mask = document.querySelector("#contextmenu-mask");
-    window.onwheel = preventDefault;
-    mask.classList.add("show");
-    this.dispatchEvent(new Event("popupshown"));
-    this.popupshown;
-  };
-
-  popup.hidePopup = function () {
-    this.remove();
-    mask = document.querySelector("#contextmenu-mask");
-    mask.classList.remove("show");
-    window.onwheel = null;
-  };
-
-  return popup;
-}
-
-if (!inToolbox()) {
-  Menu.prototype.createPopup = createPopup;
-}
-
-function onShown(menu, popup) {
-  popup.childNodes.forEach((menuItemNode, i) => {
-    let item = menu.items[i];
-
-    if (!item.disabled && item.visible) {
-      menuItemNode.onclick = () => {
-        item.click();
-        popup.hidePopup();
-      };
-
-      showSubMenu(item.submenu, menuItemNode, popup);
-    }
-  });
-}
-
-function showMenu(evt, items) {
-  if (items.length === 0) {
-    return;
-  }
-
-  let menu = new Menu();
-  items.filter(item => item.visible === undefined || item.visible === true).forEach(item => {
-    let menuItem = new MenuItem(item);
-    menuItem.submenu = createSubMenu(item.submenu);
-    menu.append(menuItem);
-  });
-
-  if (inToolbox()) {
-    menu.popup(evt.screenX, evt.screenY, { doc: window.parent.document });
-    return;
-  }
-
-  menu.on("open", (_, popup) => onShown(menu, popup));
-  menu.popup(evt.clientX, evt.clientY, { doc: document });
-}
-
-function createSubMenu(subItems) {
-  if (subItems) {
-    let subMenu = new Menu();
-    subItems.forEach(subItem => {
-      subMenu.append(new MenuItem(subItem));
-    });
-    return subMenu;
-  }
-  return null;
-}
-
-function showSubMenu(subMenu, menuItemNode, popup) {
-  if (subMenu) {
-    let subMenuNode = menuItemNode.querySelector("menupopup");
-    let { top } = menuItemNode.getBoundingClientRect();
-    let { left, width } = popup.getBoundingClientRect();
-    subMenuNode.style.setProperty("left", `${left + width - 1}px`);
-    subMenuNode.style.setProperty("top", `${top}px`);
-
-    let subMenuItemNodes = menuItemNode.querySelector("menupopup:not(.landing-popup)").childNodes;
-    subMenuItemNodes.forEach((subMenuItemNode, j) => {
-      let subMenuItem = subMenu.items.filter(item => item.visible === undefined || item.visible === true)[j];
-      if (!subMenuItem.disabled && subMenuItem.visible) {
-        subMenuItemNode.onclick = () => {
-          subMenuItem.click();
-          popup.hidePopup();
-        };
-      }
-    });
-  }
-}
-
-function buildMenu(items) {
-  return items.map(itm => {
-    const hide = typeof itm.hidden === "function" ? itm.hidden() : itm.hidden;
-    return hide ? null : itm.item;
-  }).filter(itm => itm !== null);
-}
-
-module.exports = {
-  showMenu,
-  buildMenu
-};
-
-/***/ }),
-
-/***/ 1461:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const { get: pick, set: put } = __webpack_require__(2);
-const fs = __webpack_require__(118);
-const path = __webpack_require__(119);
-
-let config;
-/**
- * Gets a config value for a given key
- * e.g "chrome.webSocketPort"
- */
-function getValue(key) {
-  return pick(config, key);
-}
-
-function setValue(key, value) {
-  return put(config, key, value);
-}
-
-function setConfig(value) {
-  config = value;
-}
-
-function getConfig() {
-  return config;
-}
-
-function updateLocalConfig(relativePath) {
-  const localConfigPath = path.resolve(relativePath, "../configs/local.json");
-  const output = JSON.stringify(config, null, 2);
-  fs.writeFileSync(localConfigPath, output, { flag: "w" });
-  return output;
-}
-
-module.exports = {
-  getValue,
-  setValue,
-  getConfig,
-  setConfig,
-  updateLocalConfig
-};
-
-/***/ }),
-
-/***/ 1464:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _devtoolsServices = __webpack_require__(22);
-
-var _devtoolsServices2 = _interopRequireDefault(_devtoolsServices);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-const { appinfo } = _devtoolsServices2.default; /* This Source Code Form is subject to the terms of the Mozilla Public
-                                                 * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                                 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const isMacOS = appinfo.OS === "Darwin";
-
-const EventEmitter = __webpack_require__(1382);
-
-/**
- * Formats key for use in tooltips
- * For macOS we use the following unicode
- *
- * cmd ⌘ = \u2318
- * shift ⇧ – \u21E7
- * option (alt) ⌥ \u2325
- *
- * For Win/Lin this replaces CommandOrControl or CmdOrCtrl with Ctrl
- *
- * @static
- */
-function formatKeyShortcut(shortcut) {
-  if (isMacOS) {
-    return shortcut.replace(/Shift\+/g, "\u21E7").replace(/Command\+|Cmd\+/g, "\u2318").replace(/CommandOrControl\+|CmdOrCtrl\+/g, "\u2318").replace(/Alt\+/g, "\u2325");
-  }
-  return shortcut.replace(/CommandOrControl\+|CmdOrCtrl\+/g, `${L10N.getStr("ctrl")}+`).replace(/Shift\+/g, "Shift+");
-}
-
-function inToolbox() {
-  try {
-    return window.parent.document.documentURI == "about:devtools-toolbox";
-  } catch (e) {
-    // If `window` is not available, it's very likely that we are in the toolbox.
-    return true;
-  }
-}
-
-/**
- * A partial implementation of the Menu API provided by electron:
- * https://github.com/electron/electron/blob/master/docs/api/menu.md.
- *
- * Extra features:
- *  - Emits an 'open' and 'close' event when the menu is opened/closed
-
- * @param String id (non standard)
- *        Needed so tests can confirm the XUL implementation is working
- */
-function Menu({ id = null } = {}) {
-  this.menuitems = [];
-  this.id = id;
-
-  Object.defineProperty(this, "items", {
-    get() {
-      return this.menuitems;
-    }
-  });
-
-  EventEmitter.decorate(this);
-}
-
-/**
- * Add an item to the end of the Menu
- *
- * @param {MenuItem} menuItem
- */
-Menu.prototype.append = function (menuItem) {
-  this.menuitems.push(menuItem);
-};
-
-/**
- * Add an item to a specified position in the menu
- *
- * @param {int} pos
- * @param {MenuItem} menuItem
- */
-Menu.prototype.insert = function (pos, menuItem) {
-  throw Error("Not implemented");
-};
-
-/**
- * Show the Menu at a specified location on the screen
- *
- * Missing features:
- *   - browserWindow - BrowserWindow (optional) - Default is null.
- *   - positioningItem Number - (optional) OS X
- *
- * @param {int} screenX
- * @param {int} screenY
- * @param Toolbox toolbox (non standard)
- *        Needed so we in which window to inject XUL
- */
-Menu.prototype.popup = function (screenX, screenY, toolbox) {
-  let doc = toolbox.doc;
-  let popupset = doc.querySelector("popupset");
-  if (!popupset) {
-    popupset = doc.createXULElement("popupset");
-    doc.documentElement.appendChild(popupset);
-  }
-  // See bug 1285229, on Windows, opening the same popup multiple times in a
-  // row ends up duplicating the popup. The newly inserted popup doesn't
-  // dismiss the old one. So remove any previously displayed popup before
-  // opening a new one.
-  let popup = popupset.querySelector("menupopup[menu-api=\"true\"]");
-  if (popup) {
-    popup.hidePopup();
-  }
-
-  popup = this.createPopup(doc);
-  popup.setAttribute("menu-api", "true");
-
-  if (this.id) {
-    popup.id = this.id;
-  }
-  this._createMenuItems(popup);
-
-  // Remove the menu from the DOM once it's hidden.
-  popup.addEventListener("popuphidden", e => {
-    if (e.target === popup) {
-      popup.remove();
-      this.emit("close", popup);
-    }
-  });
-
-  popup.addEventListener("popupshown", e => {
-    if (e.target === popup) {
-      this.emit("open", popup);
-    }
-  });
-
-  popupset.appendChild(popup);
-  popup.openPopupAtScreen(screenX, screenY, true);
-};
-
-Menu.prototype.createPopup = function (doc) {
-  return doc.createElement("menupopup");
-};
-
-Menu.prototype._createMenuItems = function (parent) {
-  let doc = parent.ownerDocument;
-  this.menuitems.forEach(item => {
-    if (!item.visible) {
-      return;
-    }
-
-    if (item.submenu) {
-      let menupopup = doc.createElement("menupopup");
-      item.submenu._createMenuItems(menupopup);
-
-      let menuitem = doc.createElement("menuitem");
-      menuitem.setAttribute("label", item.label);
-      if (!inToolbox()) {
-        menuitem.textContent = item.label;
-      }
-
-      let menu = doc.createElement("menu");
-      menu.appendChild(menuitem);
-      menu.appendChild(menupopup);
-      if (item.disabled) {
-        menu.setAttribute("disabled", "true");
-      }
-      if (item.accesskey) {
-        menu.setAttribute("accesskey", item.accesskey);
-      }
-      if (item.id) {
-        menu.id = item.id;
-      }
-      if (item.accelerator) {
-        menuitem.setAttribute("acceltext", formatKeyShortcut(item.accelerator));
-      }
-      parent.appendChild(menu);
-    } else if (item.type === "separator") {
-      let menusep = doc.createElement("menuseparator");
-      parent.appendChild(menusep);
-    } else {
-      let menuitem = doc.createElement("menuitem");
-      menuitem.setAttribute("label", item.label);
-
-      if (!inToolbox()) {
-        menuitem.textContent = item.label;
-      }
-
-      menuitem.addEventListener("command", () => item.click());
-
-      if (item.type === "checkbox") {
-        menuitem.setAttribute("type", "checkbox");
-      }
-      if (item.type === "radio") {
-        menuitem.setAttribute("type", "radio");
-      }
-      if (item.disabled) {
-        menuitem.setAttribute("disabled", "true");
-      }
-      if (item.checked) {
-        menuitem.setAttribute("checked", "true");
-      }
-      if (item.accesskey) {
-        menuitem.setAttribute("accesskey", item.accesskey);
-      }
-      if (item.id) {
-        menuitem.id = item.id;
-      }
-      if (item.accelerator) {
-        menuitem.setAttribute("acceltext", formatKeyShortcut(item.accelerator));
-      }
-      parent.appendChild(menuitem);
-    }
-  });
-};
-
-Menu.setApplicationMenu = () => {
-  throw Error("Not implemented");
-};
-
-Menu.sendActionToFirstResponder = () => {
-  throw Error("Not implemented");
-};
-
-Menu.buildFromTemplate = () => {
-  throw Error("Not implemented");
-};
-
-module.exports = Menu;
-
-/***/ }),
-
-/***/ 1465:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-/*
- * A sham for https://dxr.mozilla.org/mozilla-central/source/toolkit/modules/Promise.jsm
- */
-
-/**
- * Promise.jsm is mostly the Promise web API with a `defer` method. Just drop this in here,
- * and use the native web API (although building with webpack/babel, it may replace this
- * with it's own version if we want to target environments that do not have `Promise`.
- */
-
-let p = typeof window != "undefined" ? window.Promise : Promise;
-p.defer = function defer() {
-  var resolve, reject;
-  var promise = new Promise(function () {
-    resolve = arguments[0];
-    reject = arguments[1];
-  });
-  return {
-    resolve: resolve,
-    reject: reject,
-    promise: promise
-  };
-};
-
-module.exports = p;
-
-/***/ }),
-
-/***/ 1466:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-/**
- * A partial implementation of the MenuItem API provided by electron:
- * https://github.com/electron/electron/blob/master/docs/api/menu-item.md.
- *
- * Missing features:
- *   - id String - Unique within a single menu. If defined then it can be used
- *                 as a reference to this item by the position attribute.
- *   - role String - Define the action of the menu item; when specified the
- *                   click property will be ignored
- *   - sublabel String
- *   - icon NativeImage
- *   - position String - This field allows fine-grained definition of the
- *                       specific location within a given menu.
- *
- * Implemented features:
- *  @param Object options
- *    Function click
- *      Will be called with click(menuItem, browserWindow) when the menu item
- *       is clicked
- *    String type
- *      Can be normal, separator, submenu, checkbox or radio
- *    String label
- *    Boolean enabled
- *      If false, the menu item will be greyed out and unclickable.
- *    Boolean checked
- *      Should only be specified for checkbox or radio type menu items.
- *    Menu submenu
- *      Should be specified for submenu type menu items. If submenu is specified,
- *      the type: 'submenu' can be omitted. If the value is not a Menu then it
- *      will be automatically converted to one using Menu.buildFromTemplate.
- *    Boolean visible
- *      If false, the menu item will be entirely hidden.
- *    String accelerator
- *      If specified, will be used as accelerator text for MenuItem
- */
-function MenuItem({
-  accesskey = null,
-  checked = false,
-  click = () => {},
-  disabled = false,
-  label = "",
-  id = null,
-  submenu = null,
-  type = "normal",
-  visible = true,
-  accelerator = ""
-} = {}) {
-  this.accesskey = accesskey;
-  this.checked = checked;
-  this.click = click;
-  this.disabled = disabled;
-  this.id = id;
-  this.label = label;
-  this.submenu = submenu;
-  this.type = type;
-  this.visible = visible;
-  this.accelerator = accelerator;
-}
-
-module.exports = MenuItem;
-
-/***/ }),
-
-/***/ 1467:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const Services = __webpack_require__(22);
-const EventEmitter = __webpack_require__(1382);
-
-/**
- * Shortcuts for lazily accessing and setting various preferences.
- * Usage:
- *   let prefs = new Prefs("root.path.to.branch", {
- *     myIntPref: ["Int", "leaf.path.to.my-int-pref"],
- *     myCharPref: ["Char", "leaf.path.to.my-char-pref"],
- *     myJsonPref: ["Json", "leaf.path.to.my-json-pref"],
- *     myFloatPref: ["Float", "leaf.path.to.my-float-pref"]
- *     ...
- *   });
- *
- * Get/set:
- *   prefs.myCharPref = "foo";
- *   let aux = prefs.myCharPref;
- *
- * Observe:
- *   prefs.registerObserver();
- *   prefs.on("pref-changed", (prefName, prefValue) => {
- *     ...
- *   });
- *
- * @param string prefsRoot
- *        The root path to the required preferences branch.
- * @param object prefsBlueprint
- *        An object containing { accessorName: [prefType, prefName, prefDefault] } keys.
- */
-function PrefsHelper(prefsRoot = "", prefsBlueprint = {}) {
-  EventEmitter.decorate(this);
-
-  let cache = new Map();
-
-  for (let accessorName in prefsBlueprint) {
-    let [prefType, prefName, prefDefault] = prefsBlueprint[accessorName];
-    map(this, cache, accessorName, prefType, prefsRoot, prefName, prefDefault);
-  }
-
-  let observer = makeObserver(this, cache, prefsRoot, prefsBlueprint);
-  this.registerObserver = () => observer.register();
-  this.unregisterObserver = () => observer.unregister();
-}
-
-/**
- * Helper method for getting a pref value.
- *
- * @param Map cache
- * @param string prefType
- * @param string prefsRoot
- * @param string prefName
- * @return any
- */
-function get(cache, prefType, prefsRoot, prefName) {
-  let cachedPref = cache.get(prefName);
-  if (cachedPref !== undefined) {
-    return cachedPref;
-  }
-  let value = Services.prefs["get" + prefType + "Pref"]([prefsRoot, prefName].join("."));
-  cache.set(prefName, value);
-  return value;
-}
-
-/**
- * Helper method for setting a pref value.
- *
- * @param Map cache
- * @param string prefType
- * @param string prefsRoot
- * @param string prefName
- * @param any value
- */
-function set(cache, prefType, prefsRoot, prefName, value) {
-  Services.prefs["set" + prefType + "Pref"]([prefsRoot, prefName].join("."), value);
-  cache.set(prefName, value);
-}
-
-/**
- * Maps a property name to a pref, defining lazy getters and setters.
- * Supported types are "Bool", "Char", "Int", "Float" (sugar around "Char"
- * type and casting), and "Json" (which is basically just sugar for "Char"
- * using the standard JSON serializer).
- *
- * @param PrefsHelper self
- * @param Map cache
- * @param string accessorName
- * @param string prefType
- * @param string prefsRoot
- * @param string prefName
- * @param string prefDefault
- * @param array serializer [optional]
- */
-function map(self, cache, accessorName, prefType, prefsRoot, prefName, prefDefault, serializer = { in: e => e, out: e => e }) {
-  if (prefName in self) {
-    throw new Error(`Can't use ${prefName} because it overrides a property` + "on the instance.");
-  }
-  if (prefType == "Json") {
-    map(self, cache, accessorName, "String", prefsRoot, prefName, prefDefault, {
-      in: JSON.parse,
-      out: JSON.stringify
-    });
-    return;
-  }
-  if (prefType == "Float") {
-    map(self, cache, accessorName, "Char", prefsRoot, prefName, prefDefault, {
-      in: Number.parseFloat,
-      out: n => n + ""
-    });
-    return;
-  }
-
-  Object.defineProperty(self, accessorName, {
-    get: () => {
-      try {
-        return serializer.in(get(cache, prefType, prefsRoot, prefName));
-      } catch (e) {
-        if (typeof prefDefault !== 'undefined') {
-          return prefDefault;
-        }
-        throw e;
-      }
-    },
-    set: e => set(cache, prefType, prefsRoot, prefName, serializer.out(e))
-  });
-}
-
-/**
- * Finds the accessor for the provided pref, based on the blueprint object
- * used in the constructor.
- *
- * @param PrefsHelper self
- * @param object prefsBlueprint
- * @return string
- */
-function accessorNameForPref(somePrefName, prefsBlueprint) {
-  for (let accessorName in prefsBlueprint) {
-    let [, prefName] = prefsBlueprint[accessorName];
-    if (somePrefName == prefName) {
-      return accessorName;
-    }
-  }
-  return "";
-}
-
-/**
- * Creates a pref observer for `self`.
- *
- * @param PrefsHelper self
- * @param Map cache
- * @param string prefsRoot
- * @param object prefsBlueprint
- * @return object
- */
-function makeObserver(self, cache, prefsRoot, prefsBlueprint) {
-  return {
-    register: function () {
-      this._branch = Services.prefs.getBranch(prefsRoot + ".");
-      this._branch.addObserver("", this);
-    },
-    unregister: function () {
-      this._branch.removeObserver("", this);
-    },
-    observe: function (subject, topic, prefName) {
-      // If this particular pref isn't handled by the blueprint object,
-      // even though it's in the specified branch, ignore it.
-      let accessorName = accessorNameForPref(prefName, prefsBlueprint);
-      if (!(accessorName in self)) {
-        return;
-      }
-      cache.delete(prefName);
-      self.emit("pref-changed", accessorName, self[accessorName]);
-    }
-  };
-}
-
-exports.PrefsHelper = PrefsHelper;
-
-/***/ }),
-
-/***/ 1468:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const { appinfo } = __webpack_require__(22);
-const EventEmitter = __webpack_require__(1382);
-const isOSX = appinfo.OS === "Darwin";
-
-// List of electron keys mapped to DOM API (DOM_VK_*) key code
-const ElectronKeysMapping = {
-  "F1": "DOM_VK_F1",
-  "F2": "DOM_VK_F2",
-  "F3": "DOM_VK_F3",
-  "F4": "DOM_VK_F4",
-  "F5": "DOM_VK_F5",
-  "F6": "DOM_VK_F6",
-  "F7": "DOM_VK_F7",
-  "F8": "DOM_VK_F8",
-  "F9": "DOM_VK_F9",
-  "F10": "DOM_VK_F10",
-  "F11": "DOM_VK_F11",
-  "F12": "DOM_VK_F12",
-  "F13": "DOM_VK_F13",
-  "F14": "DOM_VK_F14",
-  "F15": "DOM_VK_F15",
-  "F16": "DOM_VK_F16",
-  "F17": "DOM_VK_F17",
-  "F18": "DOM_VK_F18",
-  "F19": "DOM_VK_F19",
-  "F20": "DOM_VK_F20",
-  "F21": "DOM_VK_F21",
-  "F22": "DOM_VK_F22",
-  "F23": "DOM_VK_F23",
-  "F24": "DOM_VK_F24",
-  "Space": "DOM_VK_SPACE",
-  "Backspace": "DOM_VK_BACK_SPACE",
-  "Delete": "DOM_VK_DELETE",
-  "Insert": "DOM_VK_INSERT",
-  "Return": "DOM_VK_RETURN",
-  "Enter": "DOM_VK_RETURN",
-  "Up": "DOM_VK_UP",
-  "Down": "DOM_VK_DOWN",
-  "Left": "DOM_VK_LEFT",
-  "Right": "DOM_VK_RIGHT",
-  "Home": "DOM_VK_HOME",
-  "End": "DOM_VK_END",
-  "PageUp": "DOM_VK_PAGE_UP",
-  "PageDown": "DOM_VK_PAGE_DOWN",
-  "Escape": "DOM_VK_ESCAPE",
-  "Esc": "DOM_VK_ESCAPE",
-  "Tab": "DOM_VK_TAB",
-  "VolumeUp": "DOM_VK_VOLUME_UP",
-  "VolumeDown": "DOM_VK_VOLUME_DOWN",
-  "VolumeMute": "DOM_VK_VOLUME_MUTE",
-  "PrintScreen": "DOM_VK_PRINTSCREEN"
-};
-
-/**
- * Helper to listen for keyboard events decribed in .properties file.
- *
- * let shortcuts = new KeyShortcuts({
- *   window
- * });
- * shortcuts.on("Ctrl+F", event => {
- *   // `event` is the KeyboardEvent which relates to the key shortcuts
- * });
- *
- * @param DOMWindow window
- *        The window object of the document to listen events from.
- * @param DOMElement target
- *        Optional DOM Element on which we should listen events from.
- *        If omitted, we listen for all events fired on `window`.
- */
-function KeyShortcuts({ window, target }) {
-  this.window = window;
-  this.target = target || window;
-  this.keys = new Map();
-  this.eventEmitter = new EventEmitter();
-  this.target.addEventListener("keydown", this);
-}
-
-/*
- * Parse an electron-like key string and return a normalized object which
- * allow efficient match on DOM key event. The normalized object matches DOM
- * API.
- *
- * @param DOMWindow window
- *        Any DOM Window object, just to fetch its `KeyboardEvent` object
- * @param String str
- *        The shortcut string to parse, following this document:
- *        https://github.com/electron/electron/blob/master/docs/api/accelerator.md
- */
-KeyShortcuts.parseElectronKey = function (window, str) {
-  let modifiers = str.split("+");
-  let key = modifiers.pop();
-
-  let shortcut = {
-    ctrl: false,
-    meta: false,
-    alt: false,
-    shift: false,
-    // Set for character keys
-    key: undefined,
-    // Set for non-character keys
-    keyCode: undefined
-  };
-  for (let mod of modifiers) {
-    if (mod === "Alt") {
-      shortcut.alt = true;
-    } else if (["Command", "Cmd"].includes(mod)) {
-      shortcut.meta = true;
-    } else if (["CommandOrControl", "CmdOrCtrl"].includes(mod)) {
-      if (isOSX) {
-        shortcut.meta = true;
-      } else {
-        shortcut.ctrl = true;
-      }
-    } else if (["Control", "Ctrl"].includes(mod)) {
-      shortcut.ctrl = true;
-    } else if (mod === "Shift") {
-      shortcut.shift = true;
-    } else {
-      console.error("Unsupported modifier:", mod, "from key:", str);
-      return null;
-    }
-  }
-
-  // Plus is a special case. It's a character key and shouldn't be matched
-  // against a keycode as it is only accessible via Shift/Capslock
-  if (key === "Plus") {
-    key = "+";
-  }
-
-  if (typeof key === "string" && key.length === 1) {
-    // Match any single character
-    shortcut.key = key.toLowerCase();
-  } else if (key in ElectronKeysMapping) {
-    // Maps the others manually to DOM API DOM_VK_*
-    key = ElectronKeysMapping[key];
-    shortcut.keyCode = window.KeyboardEvent[key];
-    // Used only to stringify the shortcut
-    shortcut.keyCodeString = key;
-    shortcut.key = key;
-  } else {
-    console.error("Unsupported key:", key);
-    return null;
-  }
-
-  return shortcut;
-};
-
-KeyShortcuts.stringify = function (shortcut) {
-  let list = [];
-  if (shortcut.alt) {
-    list.push("Alt");
-  }
-  if (shortcut.ctrl) {
-    list.push("Ctrl");
-  }
-  if (shortcut.meta) {
-    list.push("Cmd");
-  }
-  if (shortcut.shift) {
-    list.push("Shift");
-  }
-  let key;
-  if (shortcut.key) {
-    key = shortcut.key.toUpperCase();
-  } else {
-    key = shortcut.keyCodeString;
-  }
-  list.push(key);
-  return list.join("+");
-};
-
-KeyShortcuts.prototype = {
-  destroy() {
-    this.target.removeEventListener("keydown", this);
-    this.keys.clear();
-  },
-
-  doesEventMatchShortcut(event, shortcut) {
-    if (shortcut.meta != event.metaKey) {
-      return false;
-    }
-    if (shortcut.ctrl != event.ctrlKey) {
-      return false;
-    }
-    if (shortcut.alt != event.altKey) {
-      return false;
-    }
-    // Shift is a special modifier, it may implicitely be required if the
-    // expected key is a special character accessible via shift.
-    if (shortcut.shift != event.shiftKey && event.key && event.key.match(/[a-zA-Z]/)) {
-      return false;
-    }
-    if (shortcut.keyCode) {
-      return event.keyCode == shortcut.keyCode;
-    } else if (event.key in ElectronKeysMapping) {
-      return ElectronKeysMapping[event.key] === shortcut.key;
-    }
-
-    // get the key from the keyCode if key is not provided.
-    let key = event.key || String.fromCharCode(event.keyCode);
-
-    // For character keys, we match if the final character is the expected one.
-    // But for digits we also accept indirect match to please azerty keyboard,
-    // which requires Shift to be pressed to get digits.
-    return key.toLowerCase() == shortcut.key || shortcut.key.match(/^[0-9]$/) && event.keyCode == shortcut.key.charCodeAt(0);
-  },
-
-  handleEvent(event) {
-    for (let [key, shortcut] of this.keys) {
-      if (this.doesEventMatchShortcut(event, shortcut)) {
-        this.eventEmitter.emit(key, event);
-      }
-    }
-  },
-
-  on(key, listener) {
-    if (typeof listener !== "function") {
-      throw new Error("KeyShortcuts.on() expects a function as " + "second argument");
-    }
-    if (!this.keys.has(key)) {
-      let shortcut = KeyShortcuts.parseElectronKey(this.window, key);
-      // The key string is wrong and we were unable to compute the key shortcut
-      if (!shortcut) {
-        return;
-      }
-      this.keys.set(key, shortcut);
-    }
-    this.eventEmitter.on(key, listener);
-  },
-
-  off(key, listener) {
-    this.eventEmitter.off(key, listener);
-  }
-};
-module.exports = KeyShortcuts;
-
-/***/ }),
-
-/***/ 1469:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-
-/**
- * Empty shim for "devtools/client/shared/zoom-keys" module
- *
- * Based on nsIMarkupDocumentViewer.fullZoom API
- * https://developer.mozilla.org/en-US/Firefox/Releases/3/Full_page_zoom
- */
-
-exports.register = function (window) {};
-
-/***/ }),
-
-/***/ 161:
-/***/ (function(module, exports, __webpack_require__) {
-
-/* WEBPACK VAR INJECTION */(function(process) {(function() {
-  var Query, defaultPathSeparator, filter, matcher, parseOptions, pathScorer, preparedQueryCache, scorer;
-
-  filter = __webpack_require__(162);
-
-  matcher = __webpack_require__(166);
-
-  scorer = __webpack_require__(163);
-
-  pathScorer = __webpack_require__(164);
-
-  Query = __webpack_require__(165);
-
-  preparedQueryCache = null;
-
-  defaultPathSeparator = (typeof process !== "undefined" && process !== null ? process.platform : void 0) === "win32" ? '\\' : '/';
-
-  module.exports = {
-    filter: function(candidates, query, options) {
-      if (options == null) {
-        options = {};
-      }
-      if (!((query != null ? query.length : void 0) && (candidates != null ? candidates.length : void 0))) {
-        return [];
-      }
-      options = parseOptions(options, query);
-      return filter(candidates, query, options);
-    },
-    score: function(string, query, options) {
-      if (options == null) {
-        options = {};
-      }
-      if (!((string != null ? string.length : void 0) && (query != null ? query.length : void 0))) {
-        return 0;
-      }
-      options = parseOptions(options, query);
-      if (options.usePathScoring) {
-        return pathScorer.score(string, query, options);
-      } else {
-        return scorer.score(string, query, options);
-      }
-    },
-    match: function(string, query, options) {
-      var _i, _ref, _results;
-      if (options == null) {
-        options = {};
-      }
-      if (!string) {
-        return [];
-      }
-      if (!query) {
-        return [];
-      }
-      if (string === query) {
-        return (function() {
-          _results = [];
-          for (var _i = 0, _ref = string.length; 0 <= _ref ? _i < _ref : _i > _ref; 0 <= _ref ? _i++ : _i--){ _results.push(_i); }
-          return _results;
-        }).apply(this);
-      }
-      options = parseOptions(options, query);
-      return matcher.match(string, query, options);
-    },
-    wrap: function(string, query, options) {
-      if (options == null) {
-        options = {};
-      }
-      if (!string) {
-        return [];
-      }
-      if (!query) {
-        return [];
-      }
-      options = parseOptions(options, query);
-      return matcher.wrap(string, query, options);
-    },
-    prepareQuery: function(query, options) {
-      if (options == null) {
-        options = {};
-      }
-      options = parseOptions(options, query);
-      return options.preparedQuery;
-    }
-  };
-
-  parseOptions = function(options, query) {
-    if (options.allowErrors == null) {
-      options.allowErrors = false;
-    }
-    if (options.usePathScoring == null) {
-      options.usePathScoring = true;
-    }
-    if (options.useExtensionBonus == null) {
-      options.useExtensionBonus = false;
-    }
-    if (options.pathSeparator == null) {
-      options.pathSeparator = defaultPathSeparator;
-    }
-    if (options.optCharRegEx == null) {
-      options.optCharRegEx = null;
-    }
-    if (options.wrap == null) {
-      options.wrap = null;
-    }
-    if (options.preparedQuery == null) {
-      options.preparedQuery = preparedQueryCache && preparedQueryCache.query === query ? preparedQueryCache : (preparedQueryCache = new Query(query, options));
-    }
-    return options;
-  };
-
-}).call(this);
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(120)))
-
-/***/ }),
-
-/***/ 162:
-/***/ (function(module, exports, __webpack_require__) {
-
-(function() {
-  var Query, pathScorer, pluckCandidates, scorer, sortCandidates;
-
-  scorer = __webpack_require__(163);
-
-  pathScorer = __webpack_require__(164);
-
-  Query = __webpack_require__(165);
-
-  pluckCandidates = function(a) {
-    return a.candidate;
-  };
-
-  sortCandidates = function(a, b) {
-    return b.score - a.score;
-  };
-
-  module.exports = function(candidates, query, options) {
-    var bKey, candidate, key, maxInners, maxResults, score, scoreProvider, scoredCandidates, spotLeft, string, usePathScoring, _i, _len;
-    scoredCandidates = [];
-    key = options.key, maxResults = options.maxResults, maxInners = options.maxInners, usePathScoring = options.usePathScoring;
-    spotLeft = (maxInners != null) && maxInners > 0 ? maxInners : candidates.length + 1;
-    bKey = key != null;
-    scoreProvider = usePathScoring ? pathScorer : scorer;
-    for (_i = 0, _len = candidates.length; _i < _len; _i++) {
-      candidate = candidates[_i];
-      string = bKey ? candidate[key] : candidate;
-      if (!string) {
-        continue;
-      }
-      score = scoreProvider.score(string, query, options);
-      if (score > 0) {
-        scoredCandidates.push({
-          candidate: candidate,
-          score: score
-        });
-        if (!--spotLeft) {
-          break;
-        }
-      }
-    }
-    scoredCandidates.sort(sortCandidates);
-    candidates = scoredCandidates.map(pluckCandidates);
-    if (maxResults != null) {
-      candidates = candidates.slice(0, maxResults);
-    }
-    return candidates;
-  };
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 163:
-/***/ (function(module, exports) {
-
-(function() {
-  var AcronymResult, computeScore, emptyAcronymResult, isAcronymFullWord, isMatch, isSeparator, isWordEnd, isWordStart, miss_coeff, pos_bonus, scoreAcronyms, scoreCharacter, scoreConsecutives, scoreExact, scoreExactMatch, scorePattern, scorePosition, scoreSize, tau_size, wm;
-
-  wm = 150;
-
-  pos_bonus = 20;
-
-  tau_size = 150;
-
-  miss_coeff = 0.75;
-
-  exports.score = function(string, query, options) {
-    var allowErrors, preparedQuery, score, string_lw;
-    preparedQuery = options.preparedQuery, allowErrors = options.allowErrors;
-    if (!(allowErrors || isMatch(string, preparedQuery.core_lw, preparedQuery.core_up))) {
-      return 0;
-    }
-    string_lw = string.toLowerCase();
-    score = computeScore(string, string_lw, preparedQuery);
-    return Math.ceil(score);
-  };
-
-  exports.isMatch = isMatch = function(subject, query_lw, query_up) {
-    var i, j, m, n, qj_lw, qj_up, si;
-    m = subject.length;
-    n = query_lw.length;
-    if (!m || n > m) {
-      return false;
-    }
-    i = -1;
-    j = -1;
-    while (++j < n) {
-      qj_lw = query_lw.charCodeAt(j);
-      qj_up = query_up.charCodeAt(j);
-      while (++i < m) {
-        si = subject.charCodeAt(i);
-        if (si === qj_lw || si === qj_up) {
-          break;
-        }
-      }
-      if (i === m) {
-        return false;
-      }
-    }
-    return true;
-  };
-
-  exports.computeScore = computeScore = function(subject, subject_lw, preparedQuery) {
-    var acro, acro_score, align, csc_diag, csc_row, csc_score, csc_should_rebuild, i, j, m, miss_budget, miss_left, n, pos, query, query_lw, record_miss, score, score_diag, score_row, score_up, si_lw, start, sz;
-    query = preparedQuery.query;
-    query_lw = preparedQuery.query_lw;
-    m = subject.length;
-    n = query.length;
-    acro = scoreAcronyms(subject, subject_lw, query, query_lw);
-    acro_score = acro.score;
-    if (acro.count === n) {
-      return scoreExact(n, m, acro_score, acro.pos);
-    }
-    pos = subject_lw.indexOf(query_lw);
-    if (pos > -1) {
-      return scoreExactMatch(subject, subject_lw, query, query_lw, pos, n, m);
-    }
-    score_row = new Array(n);
-    csc_row = new Array(n);
-    sz = scoreSize(n, m);
-    miss_budget = Math.ceil(miss_coeff * n) + 5;
-    miss_left = miss_budget;
-    csc_should_rebuild = true;
-    j = -1;
-    while (++j < n) {
-      score_row[j] = 0;
-      csc_row[j] = 0;
-    }
-    i = -1;
-    while (++i < m) {
-      si_lw = subject_lw[i];
-      if (!si_lw.charCodeAt(0) in preparedQuery.charCodes) {
-        if (csc_should_rebuild) {
-          j = -1;
-          while (++j < n) {
-            csc_row[j] = 0;
-          }
-          csc_should_rebuild = false;
-        }
-        continue;
-      }
-      score = 0;
-      score_diag = 0;
-      csc_diag = 0;
-      record_miss = true;
-      csc_should_rebuild = true;
-      j = -1;
-      while (++j < n) {
-        score_up = score_row[j];
-        if (score_up > score) {
-          score = score_up;
-        }
-        csc_score = 0;
-        if (query_lw[j] === si_lw) {
-          start = isWordStart(i, subject, subject_lw);
-          csc_score = csc_diag > 0 ? csc_diag : scoreConsecutives(subject, subject_lw, query, query_lw, i, j, start);
-          align = score_diag + scoreCharacter(i, j, start, acro_score, csc_score);
-          if (align > score) {
-            score = align;
-            miss_left = miss_budget;
-          } else {
-            if (record_miss && --miss_left <= 0) {
-              return Math.max(score, score_row[n - 1]) * sz;
-            }
-            record_miss = false;
-          }
-        }
-        score_diag = score_up;
-        csc_diag = csc_row[j];
-        csc_row[j] = csc_score;
-        score_row[j] = score;
-      }
-    }
-    score = score_row[n - 1];
-    return score * sz;
-  };
-
-  exports.isWordStart = isWordStart = function(pos, subject, subject_lw) {
-    var curr_s, prev_s;
-    if (pos === 0) {
-      return true;
-    }
-    curr_s = subject[pos];
-    prev_s = subject[pos - 1];
-    return isSeparator(prev_s) || (curr_s !== subject_lw[pos] && prev_s === subject_lw[pos - 1]);
-  };
-
-  exports.isWordEnd = isWordEnd = function(pos, subject, subject_lw, len) {
-    var curr_s, next_s;
-    if (pos === len - 1) {
-      return true;
-    }
-    curr_s = subject[pos];
-    next_s = subject[pos + 1];
-    return isSeparator(next_s) || (curr_s === subject_lw[pos] && next_s !== subject_lw[pos + 1]);
-  };
-
-  isSeparator = function(c) {
-    return c === ' ' || c === '.' || c === '-' || c === '_' || c === '/' || c === '\\';
-  };
-
-  scorePosition = function(pos) {
-    var sc;
-    if (pos < pos_bonus) {
-      sc = pos_bonus - pos;
-      return 100 + sc * sc;
-    } else {
-      return Math.max(100 + pos_bonus - pos, 0);
-    }
-  };
-
-  exports.scoreSize = scoreSize = function(n, m) {
-    return tau_size / (tau_size + Math.abs(m - n));
-  };
-
-  scoreExact = function(n, m, quality, pos) {
-    return 2 * n * (wm * quality + scorePosition(pos)) * scoreSize(n, m);
-  };
-
-  exports.scorePattern = scorePattern = function(count, len, sameCase, start, end) {
-    var bonus, sz;
-    sz = count;
-    bonus = 6;
-    if (sameCase === count) {
-      bonus += 2;
-    }
-    if (start) {
-      bonus += 3;
-    }
-    if (end) {
-      bonus += 1;
-    }
-    if (count === len) {
-      if (start) {
-        if (sameCase === len) {
-          sz += 2;
-        } else {
-          sz += 1;
-        }
-      }
-      if (end) {
-        bonus += 1;
-      }
-    }
-    return sameCase + sz * (sz + bonus);
-  };
-
-  exports.scoreCharacter = scoreCharacter = function(i, j, start, acro_score, csc_score) {
-    var posBonus;
-    posBonus = scorePosition(i);
-    if (start) {
-      return posBonus + wm * ((acro_score > csc_score ? acro_score : csc_score) + 10);
-    }
-    return posBonus + wm * csc_score;
-  };
-
-  exports.scoreConsecutives = scoreConsecutives = function(subject, subject_lw, query, query_lw, i, j, startOfWord) {
-    var k, m, mi, n, nj, sameCase, sz;
-    m = subject.length;
-    n = query.length;
-    mi = m - i;
-    nj = n - j;
-    k = mi < nj ? mi : nj;
-    sameCase = 0;
-    sz = 0;
-    if (query[j] === subject[i]) {
-      sameCase++;
-    }
-    while (++sz < k && query_lw[++j] === subject_lw[++i]) {
-      if (query[j] === subject[i]) {
-        sameCase++;
-      }
-    }
-    if (sz < k) {
-      i--;
-    }
-    if (sz === 1) {
-      return 1 + 2 * sameCase;
-    }
-    return scorePattern(sz, n, sameCase, startOfWord, isWordEnd(i, subject, subject_lw, m));
-  };
-
-  exports.scoreExactMatch = scoreExactMatch = function(subject, subject_lw, query, query_lw, pos, n, m) {
-    var end, i, pos2, sameCase, start;
-    start = isWordStart(pos, subject, subject_lw);
-    if (!start) {
-      pos2 = subject_lw.indexOf(query_lw, pos + 1);
-      if (pos2 > -1) {
-        start = isWordStart(pos2, subject, subject_lw);
-        if (start) {
-          pos = pos2;
-        }
-      }
-    }
-    i = -1;
-    sameCase = 0;
-    while (++i < n) {
-      if (query[pos + i] === subject[i]) {
-        sameCase++;
-      }
-    }
-    end = isWordEnd(pos + n - 1, subject, subject_lw, m);
-    return scoreExact(n, m, scorePattern(n, n, sameCase, start, end), pos);
-  };
-
-  AcronymResult = (function() {
-    function AcronymResult(score, pos, count) {
-      this.score = score;
-      this.pos = pos;
-      this.count = count;
-    }
-
-    return AcronymResult;
-
-  })();
-
-  emptyAcronymResult = new AcronymResult(0, 0.1, 0);
-
-  exports.scoreAcronyms = scoreAcronyms = function(subject, subject_lw, query, query_lw) {
-    var count, fullWord, i, j, m, n, qj_lw, sameCase, score, sepCount, sumPos;
-    m = subject.length;
-    n = query.length;
-    if (!(m > 1 && n > 1)) {
-      return emptyAcronymResult;
-    }
-    count = 0;
-    sepCount = 0;
-    sumPos = 0;
-    sameCase = 0;
-    i = -1;
-    j = -1;
-    while (++j < n) {
-      qj_lw = query_lw[j];
-      if (isSeparator(qj_lw)) {
-        i = subject_lw.indexOf(qj_lw, i + 1);
-        if (i > -1) {
-          sepCount++;
-          continue;
-        } else {
-          break;
-        }
-      }
-      while (++i < m) {
-        if (qj_lw === subject_lw[i] && isWordStart(i, subject, subject_lw)) {
-          if (query[j] === subject[i]) {
-            sameCase++;
-          }
-          sumPos += i;
-          count++;
-          break;
-        }
-      }
-      if (i === m) {
-        break;
-      }
-    }
-    if (count < 2) {
-      return emptyAcronymResult;
-    }
-    fullWord = count === n ? isAcronymFullWord(subject, subject_lw, query, count) : false;
-    score = scorePattern(count, n, sameCase, true, fullWord);
-    return new AcronymResult(score, sumPos / count, count + sepCount);
-  };
-
-  isAcronymFullWord = function(subject, subject_lw, query, nbAcronymInQuery) {
-    var count, i, m, n;
-    m = subject.length;
-    n = query.length;
-    count = 0;
-    if (m > 12 * n) {
-      return false;
-    }
-    i = -1;
-    while (++i < m) {
-      if (isWordStart(i, subject, subject_lw) && ++count > nbAcronymInQuery) {
-        return false;
-      }
-    }
-    return true;
-  };
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 164:
-/***/ (function(module, exports, __webpack_require__) {
-
-(function() {
-  var computeScore, countDir, file_coeff, getExtension, getExtensionScore, isMatch, scorePath, scoreSize, tau_depth, _ref;
-
-  _ref = __webpack_require__(163), isMatch = _ref.isMatch, computeScore = _ref.computeScore, scoreSize = _ref.scoreSize;
-
-  tau_depth = 20;
-
-  file_coeff = 2.5;
-
-  exports.score = function(string, query, options) {
-    var allowErrors, preparedQuery, score, string_lw;
-    preparedQuery = options.preparedQuery, allowErrors = options.allowErrors;
-    if (!(allowErrors || isMatch(string, preparedQuery.core_lw, preparedQuery.core_up))) {
-      return 0;
-    }
-    string_lw = string.toLowerCase();
-    score = computeScore(string, string_lw, preparedQuery);
-    score = scorePath(string, string_lw, score, options);
-    return Math.ceil(score);
-  };
-
-  scorePath = function(subject, subject_lw, fullPathScore, options) {
-    var alpha, basePathScore, basePos, depth, end, extAdjust, fileLength, pathSeparator, preparedQuery, useExtensionBonus;
-    if (fullPathScore === 0) {
-      return 0;
-    }
-    preparedQuery = options.preparedQuery, useExtensionBonus = options.useExtensionBonus, pathSeparator = options.pathSeparator;
-    end = subject.length - 1;
-    while (subject[end] === pathSeparator) {
-      end--;
-    }
-    basePos = subject.lastIndexOf(pathSeparator, end);
-    fileLength = end - basePos;
-    extAdjust = 1.0;
-    if (useExtensionBonus) {
-      extAdjust += getExtensionScore(subject_lw, preparedQuery.ext, basePos, end, 2);
-      fullPathScore *= extAdjust;
-    }
-    if (basePos === -1) {
-      return fullPathScore;
-    }
-    depth = preparedQuery.depth;
-    while (basePos > -1 && depth-- > 0) {
-      basePos = subject.lastIndexOf(pathSeparator, basePos - 1);
-    }
-    basePathScore = basePos === -1 ? fullPathScore : extAdjust * computeScore(subject.slice(basePos + 1, end + 1), subject_lw.slice(basePos + 1, end + 1), preparedQuery);
-    alpha = 0.5 * tau_depth / (tau_depth + countDir(subject, end + 1, pathSeparator));
-    return alpha * basePathScore + (1 - alpha) * fullPathScore * scoreSize(0, file_coeff * fileLength);
-  };
-
-  exports.countDir = countDir = function(path, end, pathSeparator) {
-    var count, i;
-    if (end < 1) {
-      return 0;
-    }
-    count = 0;
-    i = -1;
-    while (++i < end && path[i] === pathSeparator) {
-      continue;
-    }
-    while (++i < end) {
-      if (path[i] === pathSeparator) {
-        count++;
-        while (++i < end && path[i] === pathSeparator) {
-          continue;
-        }
-      }
-    }
-    return count;
-  };
-
-  exports.getExtension = getExtension = function(str) {
-    var pos;
-    pos = str.lastIndexOf(".");
-    if (pos < 0) {
-      return "";
-    } else {
-      return str.substr(pos + 1);
-    }
-  };
-
-  getExtensionScore = function(candidate, ext, startPos, endPos, maxDepth) {
-    var m, matched, n, pos;
-    if (!ext.length) {
-      return 0;
-    }
-    pos = candidate.lastIndexOf(".", endPos);
-    if (!(pos > startPos)) {
-      return 0;
-    }
-    n = ext.length;
-    m = endPos - pos;
-    if (m < n) {
-      n = m;
-      m = ext.length;
-    }
-    pos++;
-    matched = -1;
-    while (++matched < n) {
-      if (candidate[pos + matched] !== ext[matched]) {
-        break;
-      }
-    }
-    if (matched === 0 && maxDepth > 0) {
-      return 0.9 * getExtensionScore(candidate, ext, startPos, pos - 2, maxDepth - 1);
-    }
-    return matched / m;
-  };
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 165:
-/***/ (function(module, exports, __webpack_require__) {
-
-(function() {
-  var Query, coreChars, countDir, getCharCodes, getExtension, opt_char_re, truncatedUpperCase, _ref;
-
-  _ref = __webpack_require__(164), countDir = _ref.countDir, getExtension = _ref.getExtension;
-
-  module.exports = Query = (function() {
-    function Query(query, _arg) {
-      var optCharRegEx, pathSeparator, _ref1;
-      _ref1 = _arg != null ? _arg : {}, optCharRegEx = _ref1.optCharRegEx, pathSeparator = _ref1.pathSeparator;
-      if (!(query && query.length)) {
-        return null;
-      }
-      this.query = query;
-      this.query_lw = query.toLowerCase();
-      this.core = coreChars(query, optCharRegEx);
-      this.core_lw = this.core.toLowerCase();
-      this.core_up = truncatedUpperCase(this.core);
-      this.depth = countDir(query, query.length, pathSeparator);
-      this.ext = getExtension(this.query_lw);
-      this.charCodes = getCharCodes(this.query_lw);
-    }
-
-    return Query;
-
-  })();
-
-  opt_char_re = /[ _\-:\/\\]/g;
-
-  coreChars = function(query, optCharRegEx) {
-    if (optCharRegEx == null) {
-      optCharRegEx = opt_char_re;
-    }
-    return query.replace(optCharRegEx, '');
-  };
-
-  truncatedUpperCase = function(str) {
-    var char, upper, _i, _len;
-    upper = "";
-    for (_i = 0, _len = str.length; _i < _len; _i++) {
-      char = str[_i];
-      upper += char.toUpperCase()[0];
-    }
-    return upper;
-  };
-
-  getCharCodes = function(str) {
-    var charCodes, i, len;
-    len = str.length;
-    i = -1;
-    charCodes = [];
-    while (++i < len) {
-      charCodes[str.charCodeAt(i)] = true;
-    }
-    return charCodes;
-  };
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 166:
-/***/ (function(module, exports, __webpack_require__) {
-
-(function() {
-  var basenameMatch, computeMatch, isMatch, isWordStart, match, mergeMatches, scoreAcronyms, scoreCharacter, scoreConsecutives, _ref;
-
-  _ref = __webpack_require__(163), isMatch = _ref.isMatch, isWordStart = _ref.isWordStart, scoreConsecutives = _ref.scoreConsecutives, scoreCharacter = _ref.scoreCharacter, scoreAcronyms = _ref.scoreAcronyms;
-
-  exports.match = match = function(string, query, options) {
-    var allowErrors, baseMatches, matches, pathSeparator, preparedQuery, string_lw;
-    allowErrors = options.allowErrors, preparedQuery = options.preparedQuery, pathSeparator = options.pathSeparator;
-    if (!(allowErrors || isMatch(string, preparedQuery.core_lw, preparedQuery.core_up))) {
-      return [];
-    }
-    string_lw = string.toLowerCase();
-    matches = computeMatch(string, string_lw, preparedQuery);
-    if (matches.length === 0) {
-      return matches;
-    }
-    if (string.indexOf(pathSeparator) > -1) {
-      baseMatches = basenameMatch(string, string_lw, preparedQuery, pathSeparator);
-      matches = mergeMatches(matches, baseMatches);
-    }
-    return matches;
-  };
-
-  exports.wrap = function(string, query, options) {
-    var matchIndex, matchPos, matchPositions, output, strPos, tagClass, tagClose, tagOpen, _ref1;
-    if ((options.wrap != null)) {
-      _ref1 = options.wrap, tagClass = _ref1.tagClass, tagOpen = _ref1.tagOpen, tagClose = _ref1.tagClose;
-    }
-    if (tagClass == null) {
-      tagClass = 'highlight';
-    }
-    if (tagOpen == null) {
-      tagOpen = '<strong class="' + tagClass + '">';
-    }
-    if (tagClose == null) {
-      tagClose = '</strong>';
-    }
-    if (string === query) {
-      return tagOpen + string + tagClose;
-    }
-    matchPositions = match(string, query, options);
-    if (matchPositions.length === 0) {
-      return string;
-    }
-    output = '';
-    matchIndex = -1;
-    strPos = 0;
-    while (++matchIndex < matchPositions.length) {
-      matchPos = matchPositions[matchIndex];
-      if (matchPos > strPos) {
-        output += string.substring(strPos, matchPos);
-        strPos = matchPos;
-      }
-      while (++matchIndex < matchPositions.length) {
-        if (matchPositions[matchIndex] === matchPos + 1) {
-          matchPos++;
-        } else {
-          matchIndex--;
-          break;
-        }
-      }
-      matchPos++;
-      if (matchPos > strPos) {
-        output += tagOpen;
-        output += string.substring(strPos, matchPos);
-        output += tagClose;
-        strPos = matchPos;
-      }
-    }
-    if (strPos <= string.length - 1) {
-      output += string.substring(strPos);
-    }
-    return output;
-  };
-
-  basenameMatch = function(subject, subject_lw, preparedQuery, pathSeparator) {
-    var basePos, depth, end;
-    end = subject.length - 1;
-    while (subject[end] === pathSeparator) {
-      end--;
-    }
-    basePos = subject.lastIndexOf(pathSeparator, end);
-    if (basePos === -1) {
-      return [];
-    }
-    depth = preparedQuery.depth;
-    while (depth-- > 0) {
-      basePos = subject.lastIndexOf(pathSeparator, basePos - 1);
-      if (basePos === -1) {
-        return [];
-      }
-    }
-    basePos++;
-    end++;
-    return computeMatch(subject.slice(basePos, end), subject_lw.slice(basePos, end), preparedQuery, basePos);
-  };
-
-  mergeMatches = function(a, b) {
-    var ai, bj, i, j, m, n, out;
-    m = a.length;
-    n = b.length;
-    if (n === 0) {
-      return a.slice();
-    }
-    if (m === 0) {
-      return b.slice();
-    }
-    i = -1;
-    j = 0;
-    bj = b[j];
-    out = [];
-    while (++i < m) {
-      ai = a[i];
-      while (bj <= ai && ++j < n) {
-        if (bj < ai) {
-          out.push(bj);
-        }
-        bj = b[j];
-      }
-      out.push(ai);
-    }
-    while (j < n) {
-      out.push(b[j++]);
-    }
-    return out;
-  };
-
-  computeMatch = function(subject, subject_lw, preparedQuery, offset) {
-    var DIAGONAL, LEFT, STOP, UP, acro_score, align, backtrack, csc_diag, csc_row, csc_score, i, j, m, matches, move, n, pos, query, query_lw, score, score_diag, score_row, score_up, si_lw, start, trace;
-    if (offset == null) {
-      offset = 0;
-    }
-    query = preparedQuery.query;
-    query_lw = preparedQuery.query_lw;
-    m = subject.length;
-    n = query.length;
-    acro_score = scoreAcronyms(subject, subject_lw, query, query_lw).score;
-    score_row = new Array(n);
-    csc_row = new Array(n);
-    STOP = 0;
-    UP = 1;
-    LEFT = 2;
-    DIAGONAL = 3;
-    trace = new Array(m * n);
-    pos = -1;
-    j = -1;
-    while (++j < n) {
-      score_row[j] = 0;
-      csc_row[j] = 0;
-    }
-    i = -1;
-    while (++i < m) {
-      score = 0;
-      score_up = 0;
-      csc_diag = 0;
-      si_lw = subject_lw[i];
-      j = -1;
-      while (++j < n) {
-        csc_score = 0;
-        align = 0;
-        score_diag = score_up;
-        if (query_lw[j] === si_lw) {
-          start = isWordStart(i, subject, subject_lw);
-          csc_score = csc_diag > 0 ? csc_diag : scoreConsecutives(subject, subject_lw, query, query_lw, i, j, start);
-          align = score_diag + scoreCharacter(i, j, start, acro_score, csc_score);
-        }
-        score_up = score_row[j];
-        csc_diag = csc_row[j];
-        if (score > score_up) {
-          move = LEFT;
-        } else {
-          score = score_up;
-          move = UP;
-        }
-        if (align > score) {
-          score = align;
-          move = DIAGONAL;
-        } else {
-          csc_score = 0;
-        }
-        score_row[j] = score;
-        csc_row[j] = csc_score;
-        trace[++pos] = score > 0 ? move : STOP;
-      }
-    }
-    i = m - 1;
-    j = n - 1;
-    pos = i * n + j;
-    backtrack = true;
-    matches = [];
-    while (backtrack && i >= 0 && j >= 0) {
-      switch (trace[pos]) {
-        case UP:
-          i--;
-          pos -= n;
-          break;
-        case LEFT:
-          j--;
-          pos--;
-          break;
-        case DIAGONAL:
-          matches.push(i + offset);
-          j--;
-          i--;
-          pos -= n + 1;
-          break;
-        default:
-          backtrack = false;
-      }
-    }
-    matches.reverse();
-    return matches;
-  };
-
-}).call(this);
-
-
-/***/ }),
-
-/***/ 175:
-/***/ (function(module, exports, __webpack_require__) {
-
-var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
-  Copyright (c) 2017 Jed Watson.
-  Licensed under the MIT License (MIT), see
-  http://jedwatson.github.io/classnames
-*/
-/* global define */
-
-(function () {
-	'use strict';
-
-	var hasOwn = {}.hasOwnProperty;
-
-	function classNames () {
-		var classes = [];
-
-		for (var i = 0; i < arguments.length; i++) {
-			var arg = arguments[i];
-			if (!arg) continue;
-
-			var argType = typeof arg;
-
-			if (argType === 'string' || argType === 'number') {
-				classes.push(arg);
-			} else if (Array.isArray(arg) && arg.length) {
-				var inner = classNames.apply(null, arg);
-				if (inner) {
-					classes.push(inner);
-				}
-			} else if (argType === 'object') {
-				for (var key in arg) {
-					if (hasOwn.call(arg, key) && arg[key]) {
-						classes.push(key);
-					}
-				}
-			}
-		}
-
-		return classes.join(' ');
-	}
-
-	if (typeof module !== 'undefined' && module.exports) {
-		classNames.default = classNames;
-		module.exports = classNames;
-	} else if (true) {
-		// register as 'classnames', consistent with npm package name
-		!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = (function () {
-			return classNames;
-		}).apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
-				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	} else {
-		window.classNames = classNames;
-	}
-}());
-
-
-/***/ }),
-
-/***/ 1763:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _react = __webpack_require__(0);
+var _react = __webpack_require__(1);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _propTypes = __webpack_require__(3642);
-
-var _util = __webpack_require__(1777);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var process = process || { env: {} };
-
-var InlineSVG = function (_React$Component) {
-    _inherits(InlineSVG, _React$Component);
-
-    function InlineSVG() {
-        _classCallCheck(this, InlineSVG);
-
-        return _possibleConstructorReturn(this, (InlineSVG.__proto__ || Object.getPrototypeOf(InlineSVG)).apply(this, arguments));
-    }
-
-    _createClass(InlineSVG, [{
-        key: 'componentWillReceiveProps',
-        value: function componentWillReceiveProps(_ref) {
-            var children = _ref.children;
-
-            if ("production" !== process.env.NODE_ENV && children != null) {
-                console.info('<InlineSVG />: `children` prop will be ignored.');
-            }
-        }
-    }, {
-        key: 'render',
-        value: function render() {
-            var Element = void 0,
-                __html = void 0,
-                svgProps = void 0;
-
-            var _props = this.props,
-                element = _props.element,
-                raw = _props.raw,
-                src = _props.src,
-                otherProps = _objectWithoutProperties(_props, ['element', 'raw', 'src']);
-
-            if (raw === true) {
-                Element = 'svg';
-                svgProps = (0, _util.extractSVGProps)(src);
-                __html = (0, _util.getSVGFromSource)(src).innerHTML;
-            }
-            __html = __html || src;
-            Element = Element || element;
-            svgProps = svgProps || {};
-
-            return _react2.default.createElement(Element, _extends({}, svgProps, otherProps, { src: null, children: null,
-                dangerouslySetInnerHTML: { __html: __html } }));
-        }
-    }]);
-
-    return InlineSVG;
-}(_react2.default.Component);
-
-exports.default = InlineSVG;
-
-
-InlineSVG.defaultProps = {
-    element: 'i',
-    raw: false,
-    src: ''
-};
-
-InlineSVG.propTypes = {
-    src: _propTypes.string.isRequired,
-    element: _propTypes.string,
-    raw: _propTypes.bool
-};
-
-/***/ }),
-
-/***/ 1777:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.convertReactSVGDOMProperty = convertReactSVGDOMProperty;
-exports.startsWith = startsWith;
-exports.serializeAttrs = serializeAttrs;
-exports.getSVGFromSource = getSVGFromSource;
-exports.extractSVGProps = extractSVGProps;
-// Transform DOM prop/attr names applicable to `<svg>` element but react-limited
-
-function convertReactSVGDOMProperty(str) {
-    return str.replace(/[-|:]([a-z])/g, function (g) {
-        return g[1].toUpperCase();
-    });
-}
-
-function startsWith(str, substring) {
-    return str.indexOf(substring) === 0;
-}
-
-var DataPropPrefix = 'data-';
-// Serialize `Attr` objects in `NamedNodeMap`
-function serializeAttrs(map) {
-    var ret = {};
-    for (var prop, i = 0; i < map.length; i++) {
-        var key = map[i].name;
-        if (key == "class") {
-            prop = "className";
-        } else if (!startsWith(key, DataPropPrefix)) {
-            prop = convertReactSVGDOMProperty(key);
-        } else {
-            prop = key;
-        }
-
-        ret[prop] = map[i].value;
-    }
-    return ret;
-}
-
-function getSVGFromSource(src) {
-    var svgContainer = document.createElement('div');
-    svgContainer.innerHTML = src;
-    var svg = svgContainer.firstElementChild;
-    svg.remove ? svg.remove() : svgContainer.removeChild(svg); // deref from parent element
-    return svg;
-}
-
-// get <svg /> element props
-function extractSVGProps(src) {
-    var map = getSVGFromSource(src).attributes;
-    return map.length > 0 ? serializeAttrs(map) : null;
-}
-
-/***/ }),
-
-/***/ 2:
-/***/ (function(module, exports) {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE_2__;
-
-/***/ }),
-
-/***/ 22:
-/***/ (function(module, exports) {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE_22__;
-
-/***/ }),
-
-/***/ 333:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-exports.__esModule = true;
-exports.EXITING = exports.ENTERED = exports.ENTERING = exports.EXITED = exports.UNMOUNTED = undefined;
-
-var _propTypes = __webpack_require__(3642);
-
-var PropTypes = _interopRequireWildcard(_propTypes);
-
-var _react = __webpack_require__(0);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _reactDom = __webpack_require__(4);
-
-var _reactDom2 = _interopRequireDefault(_reactDom);
-
-var _reactLifecyclesCompat = __webpack_require__(3770);
-
-var _PropTypes = __webpack_require__(335);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
-
-function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var UNMOUNTED = exports.UNMOUNTED = 'unmounted';
-var EXITED = exports.EXITED = 'exited';
-var ENTERING = exports.ENTERING = 'entering';
-var ENTERED = exports.ENTERED = 'entered';
-var EXITING = exports.EXITING = 'exiting';
-
-/**
- * The Transition component lets you describe a transition from one component
- * state to another _over time_ with a simple declarative API. Most commonly
- * it's used to animate the mounting and unmounting of a component, but can also
- * be used to describe in-place transition states as well.
- *
- * By default the `Transition` component does not alter the behavior of the
- * component it renders, it only tracks "enter" and "exit" states for the components.
- * It's up to you to give meaning and effect to those states. For example we can
- * add styles to a component when it enters or exits:
- *
- * ```jsx
- * import Transition from 'react-transition-group/Transition';
- *
- * const duration = 300;
- *
- * const defaultStyle = {
- *   transition: `opacity ${duration}ms ease-in-out`,
- *   opacity: 0,
- * }
- *
- * const transitionStyles = {
- *   entering: { opacity: 0 },
- *   entered:  { opacity: 1 },
- * };
- *
- * const Fade = ({ in: inProp }) => (
- *   <Transition in={inProp} timeout={duration}>
- *     {(state) => (
- *       <div style={{
- *         ...defaultStyle,
- *         ...transitionStyles[state]
- *       }}>
- *         I'm a fade Transition!
- *       </div>
- *     )}
- *   </Transition>
- * );
- * ```
- *
- * As noted the `Transition` component doesn't _do_ anything by itself to its child component.
- * What it does do is track transition states over time so you can update the
- * component (such as by adding styles or classes) when it changes states.
- *
- * There are 4 main states a Transition can be in:
- *  - `'entering'`
- *  - `'entered'`
- *  - `'exiting'`
- *  - `'exited'`
- *
- * Transition state is toggled via the `in` prop. When `true` the component begins the
- * "Enter" stage. During this stage, the component will shift from its current transition state,
- * to `'entering'` for the duration of the transition and then to the `'entered'` stage once
- * it's complete. Let's take the following example:
- *
- * ```jsx
- * state = { in: false };
- *
- * toggleEnterState = () => {
- *   this.setState({ in: true });
- * }
- *
- * render() {
- *   return (
- *     <div>
- *       <Transition in={this.state.in} timeout={500} />
- *       <button onClick={this.toggleEnterState}>Click to Enter</button>
- *     </div>
- *   );
- * }
- * ```
- *
- * When the button is clicked the component will shift to the `'entering'` state and
- * stay there for 500ms (the value of `timeout`) before it finally switches to `'entered'`.
- *
- * When `in` is `false` the same thing happens except the state moves from `'exiting'` to `'exited'`.
- *
- * ## Timing
- *
- * Timing is often the trickiest part of animation, mistakes can result in slight delays
- * that are hard to pin down. A common example is when you want to add an exit transition,
- * you should set the desired final styles when the state is `'exiting'`. That's when the
- * transition to those styles will start and, if you matched the `timeout` prop with the
- * CSS Transition duration, it will end exactly when the state changes to `'exited'`.
- *
- * > **Note**: For simpler transitions the `Transition` component might be enough, but
- * > take into account that it's platform-agnostic, while the `CSSTransition` component
- * > [forces reflows](https://github.com/reactjs/react-transition-group/blob/5007303e729a74be66a21c3e2205e4916821524b/src/CSSTransition.js#L208-L215)
- * > in order to make more complex transitions more predictable. For example, even though
- * > classes `example-enter` and `example-enter-active` are applied immediately one after
- * > another, you can still transition from one to the other because of the forced reflow
- * > (read [this issue](https://github.com/reactjs/react-transition-group/issues/159#issuecomment-322761171)
- * > for more info). Take this into account when choosing between `Transition` and
- * > `CSSTransition`.
- *
- * ## Example
- *
- * <iframe src="https://codesandbox.io/embed/741op4mmj0?fontsize=14" style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;" sandbox="allow-modals allow-forms allow-popups allow-scripts allow-same-origin"></iframe>
- *
- */
-
-var Transition = function (_React$Component) {
-  _inherits(Transition, _React$Component);
-
-  function Transition(props, context) {
-    _classCallCheck(this, Transition);
-
-    var _this = _possibleConstructorReturn(this, _React$Component.call(this, props, context));
-
-    var parentGroup = context.transitionGroup;
-    // In the context of a TransitionGroup all enters are really appears
-    var appear = parentGroup && !parentGroup.isMounting ? props.enter : props.appear;
-
-    var initialStatus = void 0;
-
-    _this.appearStatus = null;
-
-    if (props.in) {
-      if (appear) {
-        initialStatus = EXITED;
-        _this.appearStatus = ENTERING;
-      } else {
-        initialStatus = ENTERED;
-      }
-    } else {
-      if (props.unmountOnExit || props.mountOnEnter) {
-        initialStatus = UNMOUNTED;
-      } else {
-        initialStatus = EXITED;
-      }
-    }
-
-    _this.state = { status: initialStatus };
-
-    _this.nextCallback = null;
-    return _this;
-  }
-
-  Transition.prototype.getChildContext = function getChildContext() {
-    return { transitionGroup: null // allows for nested Transitions
-    };
-  };
-
-  Transition.getDerivedStateFromProps = function getDerivedStateFromProps(_ref, prevState) {
-    var nextIn = _ref.in;
-
-    if (nextIn && prevState.status === UNMOUNTED) {
-      return { status: EXITED };
-    }
-    return null;
-  };
-
-  // getSnapshotBeforeUpdate(prevProps) {
-  //   let nextStatus = null
-
-  //   if (prevProps !== this.props) {
-  //     const { status } = this.state
-
-  //     if (this.props.in) {
-  //       if (status !== ENTERING && status !== ENTERED) {
-  //         nextStatus = ENTERING
-  //       }
-  //     } else {
-  //       if (status === ENTERING || status === ENTERED) {
-  //         nextStatus = EXITING
-  //       }
-  //     }
-  //   }
-
-  //   return { nextStatus }
-  // }
-
-  Transition.prototype.componentDidMount = function componentDidMount() {
-    this.updateStatus(true, this.appearStatus);
-  };
-
-  Transition.prototype.componentDidUpdate = function componentDidUpdate(prevProps) {
-    var nextStatus = null;
-    if (prevProps !== this.props) {
-      var status = this.state.status;
-
-
-      if (this.props.in) {
-        if (status !== ENTERING && status !== ENTERED) {
-          nextStatus = ENTERING;
-        }
-      } else {
-        if (status === ENTERING || status === ENTERED) {
-          nextStatus = EXITING;
-        }
-      }
-    }
-    this.updateStatus(false, nextStatus);
-  };
-
-  Transition.prototype.componentWillUnmount = function componentWillUnmount() {
-    this.cancelNextCallback();
-  };
-
-  Transition.prototype.getTimeouts = function getTimeouts() {
-    var timeout = this.props.timeout;
-
-    var exit = void 0,
-        enter = void 0,
-        appear = void 0;
-
-    exit = enter = appear = timeout;
-
-    if (timeout != null && typeof timeout !== 'number') {
-      exit = timeout.exit;
-      enter = timeout.enter;
-      appear = timeout.appear;
-    }
-    return { exit: exit, enter: enter, appear: appear };
-  };
-
-  Transition.prototype.updateStatus = function updateStatus() {
-    var mounting = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-    var nextStatus = arguments[1];
-
-    if (nextStatus !== null) {
-      // nextStatus will always be ENTERING or EXITING.
-      this.cancelNextCallback();
-      var node = _reactDom2.default.findDOMNode(this);
-
-      if (nextStatus === ENTERING) {
-        this.performEnter(node, mounting);
-      } else {
-        this.performExit(node);
-      }
-    } else if (this.props.unmountOnExit && this.state.status === EXITED) {
-      this.setState({ status: UNMOUNTED });
-    }
-  };
-
-  Transition.prototype.performEnter = function performEnter(node, mounting) {
-    var _this2 = this;
-
-    var enter = this.props.enter;
-
-    var appearing = this.context.transitionGroup ? this.context.transitionGroup.isMounting : mounting;
-
-    var timeouts = this.getTimeouts();
-
-    // no enter animation skip right to ENTERED
-    // if we are mounting and running this it means appear _must_ be set
-    if (!mounting && !enter) {
-      this.safeSetState({ status: ENTERED }, function () {
-        _this2.props.onEntered(node);
-      });
-      return;
-    }
-
-    this.props.onEnter(node, appearing);
-
-    this.safeSetState({ status: ENTERING }, function () {
-      _this2.props.onEntering(node, appearing);
-
-      // FIXME: appear timeout?
-      _this2.onTransitionEnd(node, timeouts.enter, function () {
-        _this2.safeSetState({ status: ENTERED }, function () {
-          _this2.props.onEntered(node, appearing);
-        });
-      });
-    });
-  };
-
-  Transition.prototype.performExit = function performExit(node) {
-    var _this3 = this;
-
-    var exit = this.props.exit;
-
-    var timeouts = this.getTimeouts();
-
-    // no exit animation skip right to EXITED
-    if (!exit) {
-      this.safeSetState({ status: EXITED }, function () {
-        _this3.props.onExited(node);
-      });
-      return;
-    }
-    this.props.onExit(node);
-
-    this.safeSetState({ status: EXITING }, function () {
-      _this3.props.onExiting(node);
-
-      _this3.onTransitionEnd(node, timeouts.exit, function () {
-        _this3.safeSetState({ status: EXITED }, function () {
-          _this3.props.onExited(node);
-        });
-      });
-    });
-  };
-
-  Transition.prototype.cancelNextCallback = function cancelNextCallback() {
-    if (this.nextCallback !== null) {
-      this.nextCallback.cancel();
-      this.nextCallback = null;
-    }
-  };
-
-  Transition.prototype.safeSetState = function safeSetState(nextState, callback) {
-    // This shouldn't be necessary, but there are weird race conditions with
-    // setState callbacks and unmounting in testing, so always make sure that
-    // we can cancel any pending setState callbacks after we unmount.
-    callback = this.setNextCallback(callback);
-    this.setState(nextState, callback);
-  };
-
-  Transition.prototype.setNextCallback = function setNextCallback(callback) {
-    var _this4 = this;
-
-    var active = true;
-
-    this.nextCallback = function (event) {
-      if (active) {
-        active = false;
-        _this4.nextCallback = null;
-
-        callback(event);
-      }
-    };
-
-    this.nextCallback.cancel = function () {
-      active = false;
-    };
-
-    return this.nextCallback;
-  };
-
-  Transition.prototype.onTransitionEnd = function onTransitionEnd(node, timeout, handler) {
-    this.setNextCallback(handler);
-
-    if (node) {
-      if (this.props.addEndListener) {
-        this.props.addEndListener(node, this.nextCallback);
-      }
-      if (timeout != null) {
-        setTimeout(this.nextCallback, timeout);
-      }
-    } else {
-      setTimeout(this.nextCallback, 0);
-    }
-  };
-
-  Transition.prototype.render = function render() {
-    var status = this.state.status;
-    if (status === UNMOUNTED) {
-      return null;
-    }
-
-    var _props = this.props,
-        children = _props.children,
-        childProps = _objectWithoutProperties(_props, ['children']);
-    // filter props for Transtition
-
-
-    delete childProps.in;
-    delete childProps.mountOnEnter;
-    delete childProps.unmountOnExit;
-    delete childProps.appear;
-    delete childProps.enter;
-    delete childProps.exit;
-    delete childProps.timeout;
-    delete childProps.addEndListener;
-    delete childProps.onEnter;
-    delete childProps.onEntering;
-    delete childProps.onEntered;
-    delete childProps.onExit;
-    delete childProps.onExiting;
-    delete childProps.onExited;
-
-    if (typeof children === 'function') {
-      return children(status, childProps);
-    }
-
-    var child = _react2.default.Children.only(children);
-    return _react2.default.cloneElement(child, childProps);
-  };
-
-  return Transition;
-}(_react2.default.Component);
-
-Transition.contextTypes = {
-  transitionGroup: PropTypes.object
-};
-Transition.childContextTypes = {
-  transitionGroup: function transitionGroup() {}
-};
-
-
-Transition.propTypes =  false ? {
-  /**
-   * A `function` child can be used instead of a React element.
-   * This function is called with the current transition status
-   * ('entering', 'entered', 'exiting', 'exited', 'unmounted'), which can be used
-   * to apply context specific props to a component.
-   *
-   * ```jsx
-   * <Transition timeout={150}>
-   *   {(status) => (
-   *     <MyComponent className={`fade fade-${status}`} />
-   *   )}
-   * </Transition>
-   * ```
-   */
-  children: PropTypes.oneOfType([PropTypes.func.isRequired, PropTypes.element.isRequired]).isRequired,
-
-  /**
-   * Show the component; triggers the enter or exit states
-   */
-  in: PropTypes.bool,
-
-  /**
-   * By default the child component is mounted immediately along with
-   * the parent `Transition` component. If you want to "lazy mount" the component on the
-   * first `in={true}` you can set `mountOnEnter`. After the first enter transition the component will stay
-   * mounted, even on "exited", unless you also specify `unmountOnExit`.
-   */
-  mountOnEnter: PropTypes.bool,
-
-  /**
-   * By default the child component stays mounted after it reaches the `'exited'` state.
-   * Set `unmountOnExit` if you'd prefer to unmount the component after it finishes exiting.
-   */
-  unmountOnExit: PropTypes.bool,
-
-  /**
-   * Normally a component is not transitioned if it is shown when the `<Transition>` component mounts.
-   * If you want to transition on the first mount set `appear` to `true`, and the
-   * component will transition in as soon as the `<Transition>` mounts.
-   *
-   * > Note: there are no specific "appear" states. `appear` only adds an additional `enter` transition.
-   */
-  appear: PropTypes.bool,
-
-  /**
-   * Enable or disable enter transitions.
-   */
-  enter: PropTypes.bool,
-
-  /**
-   * Enable or disable exit transitions.
-   */
-  exit: PropTypes.bool,
-
-  /**
-   * The duration of the transition, in milliseconds.
-   * Required unless `addEndListener` is provided
-   *
-   * You may specify a single timeout for all transitions like: `timeout={500}`,
-   * or individually like:
-   *
-   * ```jsx
-   * timeout={{
-   *  enter: 300,
-   *  exit: 500,
-   * }}
-   * ```
-   *
-   * @type {number | { enter?: number, exit?: number }}
-   */
-  timeout: function timeout(props) {
-    for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-      args[_key - 1] = arguments[_key];
-    }
-
-    var pt = _PropTypes.timeoutsShape;
-    if (!props.addEndListener) pt = pt.isRequired;
-    return pt.apply(undefined, [props].concat(args));
-  },
-
-  /**
-   * Add a custom transition end trigger. Called with the transitioning
-   * DOM node and a `done` callback. Allows for more fine grained transition end
-   * logic. **Note:** Timeouts are still used as a fallback if provided.
-   *
-   * ```jsx
-   * addEndListener={(node, done) => {
-   *   // use the css transitionend event to mark the finish of a transition
-   *   node.addEventListener('transitionend', done, false);
-   * }}
-   * ```
-   */
-  addEndListener: PropTypes.func,
-
-  /**
-   * Callback fired before the "entering" status is applied. An extra parameter
-   * `isAppearing` is supplied to indicate if the enter stage is occurring on the initial mount
-   *
-   * @type Function(node: HtmlElement, isAppearing: bool) -> void
-   */
-  onEnter: PropTypes.func,
-
-  /**
-   * Callback fired after the "entering" status is applied. An extra parameter
-   * `isAppearing` is supplied to indicate if the enter stage is occurring on the initial mount
-   *
-   * @type Function(node: HtmlElement, isAppearing: bool)
-   */
-  onEntering: PropTypes.func,
-
-  /**
-   * Callback fired after the "entered" status is applied. An extra parameter
-   * `isAppearing` is supplied to indicate if the enter stage is occurring on the initial mount
-   *
-   * @type Function(node: HtmlElement, isAppearing: bool) -> void
-   */
-  onEntered: PropTypes.func,
-
-  /**
-   * Callback fired before the "exiting" status is applied.
-   *
-   * @type Function(node: HtmlElement) -> void
-   */
-  onExit: PropTypes.func,
-
-  /**
-   * Callback fired after the "exiting" status is applied.
-   *
-   * @type Function(node: HtmlElement) -> void
-   */
-  onExiting: PropTypes.func,
-
-  /**
-   * Callback fired after the "exited" status is applied.
-   *
-   * @type Function(node: HtmlElement) -> void
-   */
-  onExited: PropTypes.func
-
-  // Name the function so it is clearer in the documentation
-} : {};function noop() {}
-
-Transition.defaultProps = {
-  in: false,
-  mountOnEnter: false,
-  unmountOnExit: false,
-  appear: false,
-  enter: true,
-  exit: true,
-
-  onEnter: noop,
-  onEntering: noop,
-  onEntered: noop,
-
-  onExit: noop,
-  onExiting: noop,
-  onExited: noop
-};
-
-Transition.UNMOUNTED = 0;
-Transition.EXITED = 1;
-Transition.ENTERING = 2;
-Transition.ENTERED = 3;
-Transition.EXITING = 4;
-
-exports.default = (0, _reactLifecyclesCompat.polyfill)(Transition);
-
-/***/ }),
-
-/***/ 335:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-exports.__esModule = true;
-exports.classNamesShape = exports.timeoutsShape = undefined;
-exports.transitionTimeout = transitionTimeout;
-
-var _propTypes = __webpack_require__(3642);
-
-var _propTypes2 = _interopRequireDefault(_propTypes);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function transitionTimeout(transitionType) {
-  var timeoutPropName = 'transition' + transitionType + 'Timeout';
-  var enabledPropName = 'transition' + transitionType;
-
-  return function (props) {
-    // If the transition is enabled
-    if (props[enabledPropName]) {
-      // If no timeout duration is provided
-      if (props[timeoutPropName] == null) {
-        return new Error(timeoutPropName + ' wasn\'t supplied to CSSTransitionGroup: ' + 'this can cause unreliable animations and won\'t be supported in ' + 'a future version of React. See ' + 'https://fb.me/react-animation-transition-group-timeout for more ' + 'information.');
-
-        // If the duration isn't a number
-      } else if (typeof props[timeoutPropName] !== 'number') {
-        return new Error(timeoutPropName + ' must be a number (in milliseconds)');
-      }
-    }
-
-    return null;
-  };
-}
-
-var timeoutsShape = exports.timeoutsShape = _propTypes2.default.oneOfType([_propTypes2.default.number, _propTypes2.default.shape({
-  enter: _propTypes2.default.number,
-  exit: _propTypes2.default.number
-}).isRequired]);
-
-var classNamesShape = exports.classNamesShape = _propTypes2.default.oneOfType([_propTypes2.default.string, _propTypes2.default.shape({
-  enter: _propTypes2.default.string,
-  exit: _propTypes2.default.string,
-  active: _propTypes2.default.string
-}), _propTypes2.default.shape({
-  enter: _propTypes2.default.string,
-  enterDone: _propTypes2.default.string,
-  enterActive: _propTypes2.default.string,
-  exit: _propTypes2.default.string,
-  exitDone: _propTypes2.default.string,
-  exitActive: _propTypes2.default.string
-})]);
-
-/***/ }),
-
-/***/ 3637:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-// TODO : Localize this (was l10n.getStr("frame.unknownSource"))
-const UNKNOWN_SOURCE_STRING = "(unknown)";
-
-// Character codes used in various parsing helper functions.
-const CHAR_CODE_A = "a".charCodeAt(0);
-const CHAR_CODE_B = "b".charCodeAt(0);
-const CHAR_CODE_C = "c".charCodeAt(0);
-const CHAR_CODE_D = "d".charCodeAt(0);
-const CHAR_CODE_E = "e".charCodeAt(0);
-const CHAR_CODE_F = "f".charCodeAt(0);
-const CHAR_CODE_H = "h".charCodeAt(0);
-const CHAR_CODE_I = "i".charCodeAt(0);
-const CHAR_CODE_J = "j".charCodeAt(0);
-const CHAR_CODE_L = "l".charCodeAt(0);
-const CHAR_CODE_M = "m".charCodeAt(0);
-const CHAR_CODE_N = "n".charCodeAt(0);
-const CHAR_CODE_O = "o".charCodeAt(0);
-const CHAR_CODE_P = "p".charCodeAt(0);
-const CHAR_CODE_R = "r".charCodeAt(0);
-const CHAR_CODE_S = "s".charCodeAt(0);
-const CHAR_CODE_T = "t".charCodeAt(0);
-const CHAR_CODE_U = "u".charCodeAt(0);
-const CHAR_CODE_W = "w".charCodeAt(0);
-const CHAR_CODE_COLON = ":".charCodeAt(0);
-const CHAR_CODE_DASH = "-".charCodeAt(0);
-const CHAR_CODE_L_SQUARE_BRACKET = "[".charCodeAt(0);
-const CHAR_CODE_SLASH = "/".charCodeAt(0);
-const CHAR_CODE_CAP_S = "S".charCodeAt(0);
-
-// The cache used in the `parseURL` function.
-const gURLStore = new Map();
-// The cache used in the `getSourceNames` function.
-const gSourceNamesStore = new Map();
-
-/**
-* Takes a string and returns an object containing all the properties
-* available on an URL instance, with additional properties (fileName),
-* Leverages caching.
-*
-* @param {String} location
-* @return {Object?} An object containing most properties available
-*                   in https://developer.mozilla.org/en-US/docs/Web/API/URL
-*/
-
-function parseURL(location) {
-  let url = gURLStore.get(location);
-
-  if (url !== void 0) {
-    return url;
-  }
-
-  try {
-    url = new URL(location);
-    // The callers were generally written to expect a URL from
-    // sdk/url, which is subtly different.  So, work around some
-    // important differences here.
-    url = {
-      href: url.href,
-      protocol: url.protocol,
-      host: url.host,
-      hostname: url.hostname,
-      port: url.port || null,
-      pathname: url.pathname,
-      search: url.search,
-      hash: url.hash,
-      username: url.username,
-      password: url.password,
-      origin: url.origin
-    };
-
-    // Definitions:
-    // Example: https://foo.com:8888/file.js
-    // `hostname`: "foo.com"
-    // `host`: "foo.com:8888"
-    let isChrome = isChromeScheme(location);
-
-    url.fileName = url.pathname ? url.pathname.slice(url.pathname.lastIndexOf("/") + 1) || "/" : "/";
-
-    if (isChrome) {
-      url.hostname = null;
-      url.host = null;
-    }
-
-    gURLStore.set(location, url);
-    return url;
-  } catch (e) {
-    gURLStore.set(location, null);
-    return null;
-  }
-}
-
-/**
-* Parse a source into a short and long name as well as a host name.
-*
-* @param {String} source
-*        The source to parse. Can be a URI or names like "(eval)" or
-*        "self-hosted".
-* @return {Object}
-*         An object with the following properties:
-*           - {String} short: A short name for the source.
-*             - "http://page.com/test.js#go?q=query" -> "test.js"
-*           - {String} long: The full, long name for the source, with
-              hash/query stripped.
-*             - "http://page.com/test.js#go?q=query" -> "http://page.com/test.js"
-*           - {String?} host: If available, the host name for the source.
-*             - "http://page.com/test.js#go?q=query" -> "page.com"
-*/
-function getSourceNames(source) {
-  let data = gSourceNamesStore.get(source);
-
-  if (data) {
-    return data;
-  }
-
-  let short, long, host;
-  const sourceStr = source ? String(source) : "";
-
-  // If `data:...` uri
-  if (isDataScheme(sourceStr)) {
-    let commaIndex = sourceStr.indexOf(",");
-    if (commaIndex > -1) {
-      // The `short` name for a data URI becomes `data:` followed by the actual
-      // encoded content, omitting the MIME type, and charset.
-      short = `data:${sourceStr.substring(commaIndex + 1)}`.slice(0, 100);
-      let result = { short, long: sourceStr };
-      gSourceNamesStore.set(source, result);
-      return result;
-    }
-  }
-
-  // If Scratchpad URI, like "Scratchpad/1"; no modifications,
-  // and short/long are the same.
-  if (isScratchpadScheme(sourceStr)) {
-    let result = { short: sourceStr, long: sourceStr };
-    gSourceNamesStore.set(source, result);
-    return result;
-  }
-
-  const parsedUrl = parseURL(sourceStr);
-
-  if (!parsedUrl) {
-    // Malformed URI.
-    long = sourceStr;
-    short = sourceStr.slice(0, 100);
-  } else {
-    host = parsedUrl.host;
-
-    long = parsedUrl.href;
-    if (parsedUrl.hash) {
-      long = long.replace(parsedUrl.hash, "");
-    }
-    if (parsedUrl.search) {
-      long = long.replace(parsedUrl.search, "");
-    }
-
-    short = parsedUrl.fileName;
-    // If `short` is just a slash, and we actually have a path,
-    // strip the slash and parse again to get a more useful short name.
-    // e.g. "http://foo.com/bar/" -> "bar", rather than "/"
-    if (short === "/" && parsedUrl.pathname !== "/") {
-      short = parseURL(long.replace(/\/$/, "")).fileName;
-    }
-  }
-
-  if (!short) {
-    if (!long) {
-      long = UNKNOWN_SOURCE_STRING;
-    }
-    short = long.slice(0, 100);
-  }
-
-  let result = { short, long, host };
-  gSourceNamesStore.set(source, result);
-  return result;
-}
-
-// For the functions below, we assume that we will never access the location
-// argument out of bounds, which is indeed the vast majority of cases.
-//
-// They are written this way because they are hot. Each frame is checked for
-// being content or chrome when processing the profile.
-
-function isColonSlashSlash(location, i = 0) {
-  return location.charCodeAt(++i) === CHAR_CODE_COLON && location.charCodeAt(++i) === CHAR_CODE_SLASH && location.charCodeAt(++i) === CHAR_CODE_SLASH;
-}
-
-/**
-* Checks for a Scratchpad URI, like "Scratchpad/1"
-*/
-function isScratchpadScheme(location, i = 0) {
-  return location.charCodeAt(i) === CHAR_CODE_CAP_S && location.charCodeAt(++i) === CHAR_CODE_C && location.charCodeAt(++i) === CHAR_CODE_R && location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_T && location.charCodeAt(++i) === CHAR_CODE_C && location.charCodeAt(++i) === CHAR_CODE_H && location.charCodeAt(++i) === CHAR_CODE_P && location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_D && location.charCodeAt(++i) === CHAR_CODE_SLASH;
-}
-
-function isDataScheme(location, i = 0) {
-  return location.charCodeAt(i) === CHAR_CODE_D && location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_T && location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_COLON;
-}
-
-function isContentScheme(location, i = 0) {
-  let firstChar = location.charCodeAt(i);
-
-  switch (firstChar) {
-    // "http://" or "https://"
-    case CHAR_CODE_H:
-      if (location.charCodeAt(++i) === CHAR_CODE_T && location.charCodeAt(++i) === CHAR_CODE_T && location.charCodeAt(++i) === CHAR_CODE_P) {
-        if (location.charCodeAt(i + 1) === CHAR_CODE_S) {
-          ++i;
-        }
-        return isColonSlashSlash(location, i);
-      }
-      return false;
-
-    // "file://"
-    case CHAR_CODE_F:
-      if (location.charCodeAt(++i) === CHAR_CODE_I && location.charCodeAt(++i) === CHAR_CODE_L && location.charCodeAt(++i) === CHAR_CODE_E) {
-        return isColonSlashSlash(location, i);
-      }
-      return false;
-
-    // "app://"
-    case CHAR_CODE_A:
-      if (location.charCodeAt(++i) == CHAR_CODE_P && location.charCodeAt(++i) == CHAR_CODE_P) {
-        return isColonSlashSlash(location, i);
-      }
-      return false;
-
-    // "blob:"
-    case CHAR_CODE_B:
-      if (location.charCodeAt(++i) == CHAR_CODE_L && location.charCodeAt(++i) == CHAR_CODE_O && location.charCodeAt(++i) == CHAR_CODE_B && location.charCodeAt(++i) == CHAR_CODE_COLON) {
-        return isContentScheme(location, i + 1);
-      }
-      return false;
-
-    default:
-      return false;
-  }
-}
-
-function isChromeScheme(location, i = 0) {
-  let firstChar = location.charCodeAt(i);
-
-  switch (firstChar) {
-    // "chrome://"
-    case CHAR_CODE_C:
-      if (location.charCodeAt(++i) === CHAR_CODE_H && location.charCodeAt(++i) === CHAR_CODE_R && location.charCodeAt(++i) === CHAR_CODE_O && location.charCodeAt(++i) === CHAR_CODE_M && location.charCodeAt(++i) === CHAR_CODE_E) {
-        return isColonSlashSlash(location, i);
-      }
-      return false;
-
-    // "resource://"
-    case CHAR_CODE_R:
-      if (location.charCodeAt(++i) === CHAR_CODE_E && location.charCodeAt(++i) === CHAR_CODE_S && location.charCodeAt(++i) === CHAR_CODE_O && location.charCodeAt(++i) === CHAR_CODE_U && location.charCodeAt(++i) === CHAR_CODE_R && location.charCodeAt(++i) === CHAR_CODE_C && location.charCodeAt(++i) === CHAR_CODE_E) {
-        return isColonSlashSlash(location, i);
-      }
-      return false;
-
-    // "jar:file://"
-    case CHAR_CODE_J:
-      if (location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_R && location.charCodeAt(++i) === CHAR_CODE_COLON && location.charCodeAt(++i) === CHAR_CODE_F && location.charCodeAt(++i) === CHAR_CODE_I && location.charCodeAt(++i) === CHAR_CODE_L && location.charCodeAt(++i) === CHAR_CODE_E) {
-        return isColonSlashSlash(location, i);
-      }
-      return false;
-
-    default:
-      return false;
-  }
-}
-
-function isWASM(location, i = 0) {
-  return (
-    // "wasm-function["
-    location.charCodeAt(i) === CHAR_CODE_W && location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_S && location.charCodeAt(++i) === CHAR_CODE_M && location.charCodeAt(++i) === CHAR_CODE_DASH && location.charCodeAt(++i) === CHAR_CODE_F && location.charCodeAt(++i) === CHAR_CODE_U && location.charCodeAt(++i) === CHAR_CODE_N && location.charCodeAt(++i) === CHAR_CODE_C && location.charCodeAt(++i) === CHAR_CODE_T && location.charCodeAt(++i) === CHAR_CODE_I && location.charCodeAt(++i) === CHAR_CODE_O && location.charCodeAt(++i) === CHAR_CODE_N && location.charCodeAt(++i) === CHAR_CODE_L_SQUARE_BRACKET
-  );
-}
-
-/**
-* A utility method to get the file name from a sourcemapped location
-* The sourcemap location can be in any form. This method returns a
-* formatted file name for different cases like Windows or OSX.
-* @param source
-* @returns String
-*/
-function getSourceMappedFile(source) {
-  // If sourcemapped source is a OSX path, return
-  // the characters after last "/".
-  // If sourcemapped source is a Windowss path, return
-  // the characters after last "\\".
-  if (source.lastIndexOf("/") >= 0) {
-    source = source.slice(source.lastIndexOf("/") + 1);
-  } else if (source.lastIndexOf("\\") >= 0) {
-    source = source.slice(source.lastIndexOf("\\") + 1);
-  }
-  return source;
-}
-
-module.exports = {
-  parseURL,
-  getSourceNames,
-  isScratchpadScheme,
-  isChromeScheme,
-  isContentScheme,
-  isWASM,
-  isDataScheme,
-  getSourceMappedFile
-};
-
-/***/ }),
-
-/***/ 3638:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-// This file is a chrome-API-free version of the module
-// devtools/client/shared/unicode-url.js in the mozilla-central repository, so
-// that it can be used in Chrome-API-free applications, such as the Launchpad.
-// But because of this, it cannot take advantage of utilizing chrome APIs and
-// should implement the similar functionalities on its own.
-//
-// Please keep in mind that if the feature in this file has changed, don't
-// forget to also change that accordingly in
-// devtools/client/shared/unicode-url.js in the mozilla-central repository.
-
-
-
-const punycode = __webpack_require__(3641);
-
-/**
- * Gets a readble Unicode hostname from a hostname.
- *
- * If the `hostname` is a readable ASCII hostname, such as example.org, then
- * this function will simply return the original `hostname`.
- *
- * If the `hostname` is a Punycode hostname representing a Unicode domain name,
- * such as xn--g6w.xn--8pv, then this function will return the readable Unicode
- * domain name by decoding the Punycode hostname.
- *
- * @param {string}  hostname
- *                  the hostname from which the Unicode hostname will be
- *                  parsed, such as example.org, xn--g6w.xn--8pv.
- * @return {string} The Unicode hostname. It may be the same as the `hostname`
- *                  passed to this function if the `hostname` itself is
- *                  a readable ASCII hostname or a Unicode hostname.
- */
-function getUnicodeHostname(hostname) {
-  try {
-    return punycode.toUnicode(hostname);
-  } catch (err) {}
-  return hostname;
-}
-
-/**
- * Gets a readble Unicode URL pathname from a URL pathname.
- *
- * If the `urlPath` is a readable ASCII URL pathname, such as /a/b/c.js, then
- * this function will simply return the original `urlPath`.
- *
- * If the `urlPath` is a URI-encoded pathname, such as %E8%A9%A6/%E6%B8%AC.js,
- * then this function will return the readable Unicode pathname.
- *
- * If the `urlPath` is a malformed URL pathname, then this function will simply
- * return the original `urlPath`.
- *
- * @param {string}  urlPath
- *                  the URL path from which the Unicode URL path will be parsed,
- *                  such as /a/b/c.js, %E8%A9%A6/%E6%B8%AC.js.
- * @return {string} The Unicode URL Path. It may be the same as the `urlPath`
- *                  passed to this function if the `urlPath` itself is a readable
- *                  ASCII url or a Unicode url.
- */
-function getUnicodeUrlPath(urlPath) {
-  try {
-    return decodeURIComponent(urlPath);
-  } catch (err) {}
-  return urlPath;
-}
-
-/**
- * Gets a readable Unicode URL from a URL.
- *
- * If the `url` is a readable ASCII URL, such as http://example.org/a/b/c.js,
- * then this function will simply return the original `url`.
- *
- * If the `url` includes either an unreadable Punycode domain name or an
- * unreadable URI-encoded pathname, such as
- * http://xn--g6w.xn--8pv/%E8%A9%A6/%E6%B8%AC.js, then this function will return
- * the readable URL by decoding all its unreadable URL components to Unicode
- * characters.
- *
- * If the `url` is a malformed URL, then this function will return the original
- * `url`.
- *
- * If the `url` is a data: URI, then this function will return the original
- * `url`.
- *
- * @param {string}  url
- *                  the full URL, or a data: URI. from which the readable URL
- *                  will be parsed, such as, http://example.org/a/b/c.js,
- *                  http://xn--g6w.xn--8pv/%E8%A9%A6/%E6%B8%AC.js
- * @return {string} The readable URL. It may be the same as the `url` passed to
- *                  this function if the `url` itself is readable.
- */
-function getUnicodeUrl(url) {
-  try {
-    const { protocol, hostname } = new URL(url);
-    if (protocol === "data:") {
-      // Never convert a data: URI.
-      return url;
-    }
-    const readableHostname = getUnicodeHostname(hostname);
-    url = decodeURIComponent(url);
-    return url.replace(hostname, readableHostname);
-  } catch (err) {}
-  return url;
-}
-
-module.exports = {
-  getUnicodeHostname,
-  getUnicodeUrlPath,
-  getUnicodeUrl
-};
-
-/***/ }),
-
-/***/ 3641:
-/***/ (function(module, exports, __webpack_require__) {
-
-/* WEBPACK VAR INJECTION */(function(module, global) {var __WEBPACK_AMD_DEFINE_RESULT__;/*! https://mths.be/punycode v1.4.1 by @mathias */
-;(function(root) {
-
-	/** Detect free variables */
-	var freeExports = typeof exports == 'object' && exports &&
-		!exports.nodeType && exports;
-	var freeModule = typeof module == 'object' && module &&
-		!module.nodeType && module;
-	var freeGlobal = typeof global == 'object' && global;
-	if (
-		freeGlobal.global === freeGlobal ||
-		freeGlobal.window === freeGlobal ||
-		freeGlobal.self === freeGlobal
-	) {
-		root = freeGlobal;
-	}
-
-	/**
-	 * The `punycode` object.
-	 * @name punycode
-	 * @type Object
-	 */
-	var punycode,
-
-	/** Highest positive signed 32-bit float value */
-	maxInt = 2147483647, // aka. 0x7FFFFFFF or 2^31-1
-
-	/** Bootstring parameters */
-	base = 36,
-	tMin = 1,
-	tMax = 26,
-	skew = 38,
-	damp = 700,
-	initialBias = 72,
-	initialN = 128, // 0x80
-	delimiter = '-', // '\x2D'
-
-	/** Regular expressions */
-	regexPunycode = /^xn--/,
-	regexNonASCII = /[^\x20-\x7E]/, // unprintable ASCII chars + non-ASCII chars
-	regexSeparators = /[\x2E\u3002\uFF0E\uFF61]/g, // RFC 3490 separators
-
-	/** Error messages */
-	errors = {
-		'overflow': 'Overflow: input needs wider integers to process',
-		'not-basic': 'Illegal input >= 0x80 (not a basic code point)',
-		'invalid-input': 'Invalid input'
-	},
-
-	/** Convenience shortcuts */
-	baseMinusTMin = base - tMin,
-	floor = Math.floor,
-	stringFromCharCode = String.fromCharCode,
-
-	/** Temporary variable */
-	key;
-
-	/*--------------------------------------------------------------------------*/
-
-	/**
-	 * A generic error utility function.
-	 * @private
-	 * @param {String} type The error type.
-	 * @returns {Error} Throws a `RangeError` with the applicable error message.
-	 */
-	function error(type) {
-		throw new RangeError(errors[type]);
-	}
-
-	/**
-	 * A generic `Array#map` utility function.
-	 * @private
-	 * @param {Array} array The array to iterate over.
-	 * @param {Function} callback The function that gets called for every array
-	 * item.
-	 * @returns {Array} A new array of values returned by the callback function.
-	 */
-	function map(array, fn) {
-		var length = array.length;
-		var result = [];
-		while (length--) {
-			result[length] = fn(array[length]);
-		}
-		return result;
-	}
-
-	/**
-	 * A simple `Array#map`-like wrapper to work with domain name strings or email
-	 * addresses.
-	 * @private
-	 * @param {String} domain The domain name or email address.
-	 * @param {Function} callback The function that gets called for every
-	 * character.
-	 * @returns {Array} A new string of characters returned by the callback
-	 * function.
-	 */
-	function mapDomain(string, fn) {
-		var parts = string.split('@');
-		var result = '';
-		if (parts.length > 1) {
-			// In email addresses, only the domain name should be punycoded. Leave
-			// the local part (i.e. everything up to `@`) intact.
-			result = parts[0] + '@';
-			string = parts[1];
-		}
-		// Avoid `split(regex)` for IE8 compatibility. See #17.
-		string = string.replace(regexSeparators, '\x2E');
-		var labels = string.split('.');
-		var encoded = map(labels, fn).join('.');
-		return result + encoded;
-	}
-
-	/**
-	 * Creates an array containing the numeric code points of each Unicode
-	 * character in the string. While JavaScript uses UCS-2 internally,
-	 * this function will convert a pair of surrogate halves (each of which
-	 * UCS-2 exposes as separate characters) into a single code point,
-	 * matching UTF-16.
-	 * @see `punycode.ucs2.encode`
-	 * @see <https://mathiasbynens.be/notes/javascript-encoding>
-	 * @memberOf punycode.ucs2
-	 * @name decode
-	 * @param {String} string The Unicode input string (UCS-2).
-	 * @returns {Array} The new array of code points.
-	 */
-	function ucs2decode(string) {
-		var output = [],
-		    counter = 0,
-		    length = string.length,
-		    value,
-		    extra;
-		while (counter < length) {
-			value = string.charCodeAt(counter++);
-			if (value >= 0xD800 && value <= 0xDBFF && counter < length) {
-				// high surrogate, and there is a next character
-				extra = string.charCodeAt(counter++);
-				if ((extra & 0xFC00) == 0xDC00) { // low surrogate
-					output.push(((value & 0x3FF) << 10) + (extra & 0x3FF) + 0x10000);
-				} else {
-					// unmatched surrogate; only append this code unit, in case the next
-					// code unit is the high surrogate of a surrogate pair
-					output.push(value);
-					counter--;
-				}
-			} else {
-				output.push(value);
-			}
-		}
-		return output;
-	}
-
-	/**
-	 * Creates a string based on an array of numeric code points.
-	 * @see `punycode.ucs2.decode`
-	 * @memberOf punycode.ucs2
-	 * @name encode
-	 * @param {Array} codePoints The array of numeric code points.
-	 * @returns {String} The new Unicode string (UCS-2).
-	 */
-	function ucs2encode(array) {
-		return map(array, function(value) {
-			var output = '';
-			if (value > 0xFFFF) {
-				value -= 0x10000;
-				output += stringFromCharCode(value >>> 10 & 0x3FF | 0xD800);
-				value = 0xDC00 | value & 0x3FF;
-			}
-			output += stringFromCharCode(value);
-			return output;
-		}).join('');
-	}
-
-	/**
-	 * Converts a basic code point into a digit/integer.
-	 * @see `digitToBasic()`
-	 * @private
-	 * @param {Number} codePoint The basic numeric code point value.
-	 * @returns {Number} The numeric value of a basic code point (for use in
-	 * representing integers) in the range `0` to `base - 1`, or `base` if
-	 * the code point does not represent a value.
-	 */
-	function basicToDigit(codePoint) {
-		if (codePoint - 48 < 10) {
-			return codePoint - 22;
-		}
-		if (codePoint - 65 < 26) {
-			return codePoint - 65;
-		}
-		if (codePoint - 97 < 26) {
-			return codePoint - 97;
-		}
-		return base;
-	}
-
-	/**
-	 * Converts a digit/integer into a basic code point.
-	 * @see `basicToDigit()`
-	 * @private
-	 * @param {Number} digit The numeric value of a basic code point.
-	 * @returns {Number} The basic code point whose value (when used for
-	 * representing integers) is `digit`, which needs to be in the range
-	 * `0` to `base - 1`. If `flag` is non-zero, the uppercase form is
-	 * used; else, the lowercase form is used. The behavior is undefined
-	 * if `flag` is non-zero and `digit` has no uppercase form.
-	 */
-	function digitToBasic(digit, flag) {
-		//  0..25 map to ASCII a..z or A..Z
-		// 26..35 map to ASCII 0..9
-		return digit + 22 + 75 * (digit < 26) - ((flag != 0) << 5);
-	}
-
-	/**
-	 * Bias adaptation function as per section 3.4 of RFC 3492.
-	 * https://tools.ietf.org/html/rfc3492#section-3.4
-	 * @private
-	 */
-	function adapt(delta, numPoints, firstTime) {
-		var k = 0;
-		delta = firstTime ? floor(delta / damp) : delta >> 1;
-		delta += floor(delta / numPoints);
-		for (/* no initialization */; delta > baseMinusTMin * tMax >> 1; k += base) {
-			delta = floor(delta / baseMinusTMin);
-		}
-		return floor(k + (baseMinusTMin + 1) * delta / (delta + skew));
-	}
-
-	/**
-	 * Converts a Punycode string of ASCII-only symbols to a string of Unicode
-	 * symbols.
-	 * @memberOf punycode
-	 * @param {String} input The Punycode string of ASCII-only symbols.
-	 * @returns {String} The resulting string of Unicode symbols.
-	 */
-	function decode(input) {
-		// Don't use UCS-2
-		var output = [],
-		    inputLength = input.length,
-		    out,
-		    i = 0,
-		    n = initialN,
-		    bias = initialBias,
-		    basic,
-		    j,
-		    index,
-		    oldi,
-		    w,
-		    k,
-		    digit,
-		    t,
-		    /** Cached calculation results */
-		    baseMinusT;
-
-		// Handle the basic code points: let `basic` be the number of input code
-		// points before the last delimiter, or `0` if there is none, then copy
-		// the first basic code points to the output.
-
-		basic = input.lastIndexOf(delimiter);
-		if (basic < 0) {
-			basic = 0;
-		}
-
-		for (j = 0; j < basic; ++j) {
-			// if it's not a basic code point
-			if (input.charCodeAt(j) >= 0x80) {
-				error('not-basic');
-			}
-			output.push(input.charCodeAt(j));
-		}
-
-		// Main decoding loop: start just after the last delimiter if any basic code
-		// points were copied; start at the beginning otherwise.
-
-		for (index = basic > 0 ? basic + 1 : 0; index < inputLength; /* no final expression */) {
-
-			// `index` is the index of the next character to be consumed.
-			// Decode a generalized variable-length integer into `delta`,
-			// which gets added to `i`. The overflow checking is easier
-			// if we increase `i` as we go, then subtract off its starting
-			// value at the end to obtain `delta`.
-			for (oldi = i, w = 1, k = base; /* no condition */; k += base) {
-
-				if (index >= inputLength) {
-					error('invalid-input');
-				}
-
-				digit = basicToDigit(input.charCodeAt(index++));
-
-				if (digit >= base || digit > floor((maxInt - i) / w)) {
-					error('overflow');
-				}
-
-				i += digit * w;
-				t = k <= bias ? tMin : (k >= bias + tMax ? tMax : k - bias);
-
-				if (digit < t) {
-					break;
-				}
-
-				baseMinusT = base - t;
-				if (w > floor(maxInt / baseMinusT)) {
-					error('overflow');
-				}
-
-				w *= baseMinusT;
-
-			}
-
-			out = output.length + 1;
-			bias = adapt(i - oldi, out, oldi == 0);
-
-			// `i` was supposed to wrap around from `out` to `0`,
-			// incrementing `n` each time, so we'll fix that now:
-			if (floor(i / out) > maxInt - n) {
-				error('overflow');
-			}
-
-			n += floor(i / out);
-			i %= out;
-
-			// Insert `n` at position `i` of the output
-			output.splice(i++, 0, n);
-
-		}
-
-		return ucs2encode(output);
-	}
-
-	/**
-	 * Converts a string of Unicode symbols (e.g. a domain name label) to a
-	 * Punycode string of ASCII-only symbols.
-	 * @memberOf punycode
-	 * @param {String} input The string of Unicode symbols.
-	 * @returns {String} The resulting Punycode string of ASCII-only symbols.
-	 */
-	function encode(input) {
-		var n,
-		    delta,
-		    handledCPCount,
-		    basicLength,
-		    bias,
-		    j,
-		    m,
-		    q,
-		    k,
-		    t,
-		    currentValue,
-		    output = [],
-		    /** `inputLength` will hold the number of code points in `input`. */
-		    inputLength,
-		    /** Cached calculation results */
-		    handledCPCountPlusOne,
-		    baseMinusT,
-		    qMinusT;
-
-		// Convert the input in UCS-2 to Unicode
-		input = ucs2decode(input);
-
-		// Cache the length
-		inputLength = input.length;
-
-		// Initialize the state
-		n = initialN;
-		delta = 0;
-		bias = initialBias;
-
-		// Handle the basic code points
-		for (j = 0; j < inputLength; ++j) {
-			currentValue = input[j];
-			if (currentValue < 0x80) {
-				output.push(stringFromCharCode(currentValue));
-			}
-		}
-
-		handledCPCount = basicLength = output.length;
-
-		// `handledCPCount` is the number of code points that have been handled;
-		// `basicLength` is the number of basic code points.
-
-		// Finish the basic string - if it is not empty - with a delimiter
-		if (basicLength) {
-			output.push(delimiter);
-		}
-
-		// Main encoding loop:
-		while (handledCPCount < inputLength) {
-
-			// All non-basic code points < n have been handled already. Find the next
-			// larger one:
-			for (m = maxInt, j = 0; j < inputLength; ++j) {
-				currentValue = input[j];
-				if (currentValue >= n && currentValue < m) {
-					m = currentValue;
-				}
-			}
-
-			// Increase `delta` enough to advance the decoder's <n,i> state to <m,0>,
-			// but guard against overflow
-			handledCPCountPlusOne = handledCPCount + 1;
-			if (m - n > floor((maxInt - delta) / handledCPCountPlusOne)) {
-				error('overflow');
-			}
-
-			delta += (m - n) * handledCPCountPlusOne;
-			n = m;
-
-			for (j = 0; j < inputLength; ++j) {
-				currentValue = input[j];
-
-				if (currentValue < n && ++delta > maxInt) {
-					error('overflow');
-				}
-
-				if (currentValue == n) {
-					// Represent delta as a generalized variable-length integer
-					for (q = delta, k = base; /* no condition */; k += base) {
-						t = k <= bias ? tMin : (k >= bias + tMax ? tMax : k - bias);
-						if (q < t) {
-							break;
-						}
-						qMinusT = q - t;
-						baseMinusT = base - t;
-						output.push(
-							stringFromCharCode(digitToBasic(t + qMinusT % baseMinusT, 0))
-						);
-						q = floor(qMinusT / baseMinusT);
-					}
-
-					output.push(stringFromCharCode(digitToBasic(q, 0)));
-					bias = adapt(delta, handledCPCountPlusOne, handledCPCount == basicLength);
-					delta = 0;
-					++handledCPCount;
-				}
-			}
-
-			++delta;
-			++n;
-
-		}
-		return output.join('');
-	}
-
-	/**
-	 * Converts a Punycode string representing a domain name or an email address
-	 * to Unicode. Only the Punycoded parts of the input will be converted, i.e.
-	 * it doesn't matter if you call it on a string that has already been
-	 * converted to Unicode.
-	 * @memberOf punycode
-	 * @param {String} input The Punycoded domain name or email address to
-	 * convert to Unicode.
-	 * @returns {String} The Unicode representation of the given Punycode
-	 * string.
-	 */
-	function toUnicode(input) {
-		return mapDomain(input, function(string) {
-			return regexPunycode.test(string)
-				? decode(string.slice(4).toLowerCase())
-				: string;
-		});
-	}
-
-	/**
-	 * Converts a Unicode string representing a domain name or an email address to
-	 * Punycode. Only the non-ASCII parts of the domain name will be converted,
-	 * i.e. it doesn't matter if you call it with a domain that's already in
-	 * ASCII.
-	 * @memberOf punycode
-	 * @param {String} input The domain name or email address to convert, as a
-	 * Unicode string.
-	 * @returns {String} The Punycode representation of the given domain name or
-	 * email address.
-	 */
-	function toASCII(input) {
-		return mapDomain(input, function(string) {
-			return regexNonASCII.test(string)
-				? 'xn--' + encode(string)
-				: string;
-		});
-	}
-
-	/*--------------------------------------------------------------------------*/
-
-	/** Define the public API */
-	punycode = {
-		/**
-		 * A string representing the current Punycode.js version number.
-		 * @memberOf punycode
-		 * @type String
-		 */
-		'version': '1.4.1',
-		/**
-		 * An object of methods to convert from JavaScript's internal character
-		 * representation (UCS-2) to Unicode code points, and back.
-		 * @see <https://mathiasbynens.be/notes/javascript-encoding>
-		 * @memberOf punycode
-		 * @type Object
-		 */
-		'ucs2': {
-			'decode': ucs2decode,
-			'encode': ucs2encode
-		},
-		'decode': decode,
-		'encode': encode,
-		'toASCII': toASCII,
-		'toUnicode': toUnicode
-	};
-
-	/** Expose `punycode` */
-	// Some AMD build optimizers, like r.js, check for specific condition patterns
-	// like the following:
-	if (
-		true
-	) {
-		!(__WEBPACK_AMD_DEFINE_RESULT__ = (function() {
-			return punycode;
-		}).call(exports, __webpack_require__, exports, module),
-				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	} else if (freeExports && freeModule) {
-		if (module.exports == freeExports) {
-			// in Node.js, io.js, or RingoJS v0.8.0+
-			freeModule.exports = punycode;
-		} else {
-			// in Narwhal or RingoJS v0.7.0-
-			for (key in punycode) {
-				punycode.hasOwnProperty(key) && (freeExports[key] = punycode[key]);
-			}
-		}
-	} else {
-		// in Rhino or a web browser
-		root.punycode = punycode;
-	}
-
-}(this));
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(793)(module), __webpack_require__(792)))
-
-/***/ }),
-
-/***/ 3642:
-/***/ (function(module, exports) {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE_3642__;
-
-/***/ }),
-
-/***/ 3643:
-/***/ (function(module, exports) {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE_3643__;
-
-/***/ }),
-
-/***/ 3651:
-/***/ (function(module, exports, __webpack_require__) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const networkRequest = __webpack_require__(3653);
-const workerUtils = __webpack_require__(3654);
-
-module.exports = {
-  networkRequest,
-  workerUtils
-};
-
-/***/ }),
-
-/***/ 3653:
-/***/ (function(module, exports) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-function networkRequest(url, opts) {
-  return fetch(url, {
-    cache: opts.loadFromCache ? "default" : "no-cache"
-  }).then(res => {
-    if (res.status >= 200 && res.status < 300) {
-      if (res.headers.get("Content-Type") === "application/wasm") {
-        return res.arrayBuffer().then(buffer => ({
-          content: buffer,
-          isDwarf: true
-        }));
-      }
-      return res.text().then(text => ({ content: text }));
-    }
-    return Promise.reject(`request failed with status ${res.status}`);
-  });
-}
-
-module.exports = networkRequest;
-
-/***/ }),
-
-/***/ 3654:
-/***/ (function(module, exports) {
-
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
-
-function WorkerDispatcher() {
-  this.msgId = 1;
-  this.worker = null;
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-WorkerDispatcher.prototype = {
-  start(url, win = window) {
-    this.worker = new win.Worker(url);
-    this.worker.onerror = () => {
-      console.error(`Error in worker ${url}`);
-    };
-  },
-
-  stop() {
-    if (!this.worker) {
-      return;
-    }
-
-    this.worker.terminate();
-    this.worker = null;
-  },
-
-  task(method, { queue = false } = {}) {
-    const calls = [];
-    const push = args => {
-      return new Promise((resolve, reject) => {
-        if (queue && calls.length === 0) {
-          Promise.resolve().then(flush);
-        }
-
-        calls.push([args, resolve, reject]);
-
-        if (!queue) {
-          flush();
-        }
-      });
-    };
-
-    const flush = () => {
-      const items = calls.slice();
-      calls.length = 0;
-
-      if (!this.worker) {
-        return;
-      }
-
-      const id = this.msgId++;
-      this.worker.postMessage({
-        id,
-        method,
-        calls: items.map(item => item[0])
-      });
-
-      const listener = ({ data: result }) => {
-        if (result.id !== id) {
-          return;
-        }
-
-        if (!this.worker) {
-          return;
-        }
-
-        this.worker.removeEventListener("message", listener);
-
-        result.results.forEach((resultData, i) => {
-          const [, resolve, reject] = items[i];
-
-          if (resultData.error) {
-            reject(resultData.error);
-          } else {
-            resolve(resultData.response);
-          }
-        });
-      };
-
-      this.worker.addEventListener("message", listener);
-    };
-
-    return (...args) => push(args);
-  },
-
-  invoke(method, ...args) {
-    return this.task(method)(...args);
-  }
-};
-
-function workerHandler(publicInterface) {
-  return function (msg) {
-    const { id, method, calls } = msg.data;
-
-    Promise.all(calls.map(args => {
-      try {
-        const response = publicInterface[method].apply(undefined, args);
-        if (response instanceof Promise) {
-          return response.then(val => ({ response: val }),
-          // Error can't be sent via postMessage, so be sure to
-          // convert to string.
-          err => ({ error: err.toString() }));
-        }
-        return { response };
-      } catch (error) {
-        // Error can't be sent via postMessage, so be sure to convert to
-        // string.
-        return { error: error.toString() };
-      }
-    })).then(results => {
-      self.postMessage({ id, results });
-    });
-  };
-}
-
-function streamingWorkerHandler(publicInterface, { timeout = 100 } = {}, worker = self) {
-  let streamingWorker = (() => {
-    var _ref = _asyncToGenerator(function* (id, tasks) {
-      let isWorking = true;
-
-      const timeoutId = setTimeout(function () {
-        isWorking = false;
-      }, timeout);
-
-      const results = [];
-      while (tasks.length !== 0 && isWorking) {
-        const { callback, context, args } = tasks.shift();
-        const result = yield callback.call(context, args);
-        results.push(result);
-      }
-      worker.postMessage({ id, status: "pending", data: results });
-      clearTimeout(timeoutId);
-
-      if (tasks.length !== 0) {
-        yield streamingWorker(id, tasks);
-      }
-    });
-
-    return function streamingWorker(_x, _x2) {
-      return _ref.apply(this, arguments);
-    };
-  })();
-
-  return (() => {
-    var _ref2 = _asyncToGenerator(function* (msg) {
-      const { id, method, args } = msg.data;
-      const workerMethod = publicInterface[method];
-      if (!workerMethod) {
-        console.error(`Could not find ${method} defined in worker.`);
-      }
-      worker.postMessage({ id, status: "start" });
-
-      try {
-        const tasks = workerMethod(args);
-        yield streamingWorker(id, tasks);
-        worker.postMessage({ id, status: "done" });
-      } catch (error) {
-        worker.postMessage({ id, status: "error", error });
-      }
-    });
-
-    return function (_x3) {
-      return _ref2.apply(this, arguments);
-    };
-  })();
-}
-
-module.exports = {
-  WorkerDispatcher,
-  workerHandler,
-  streamingWorkerHandler
-};
-
-/***/ }),
-
-/***/ 3669:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _tree = __webpack_require__(3670);
-
-var _tree2 = _interopRequireDefault(_tree);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-module.exports = {
-  Tree: _tree2.default
-}; /* This Source Code Form is subject to the terms of the Mozilla Public
-    * License, v. 2.0. If a copy of the MPL was not distributed with this
-    * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-/***/ }),
-
-/***/ 3670:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _react = __webpack_require__(0);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _reactDomFactories = __webpack_require__(3643);
+var _reactDomFactories = __webpack_require__(2);
 
 var _reactDomFactories2 = _interopRequireDefault(_reactDomFactories);
 
-var _propTypes = __webpack_require__(3642);
+var _propTypes = __webpack_require__(0);
 
 var _propTypes2 = _interopRequireDefault(_propTypes);
 
@@ -4809,7 +124,7 @@ const { Component, createFactory } = _react2.default; /* This Source Code Form i
                                                        * License, v. 2.0. If a copy of the MPL was not distributed with this
                                                        * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-__webpack_require__(3671);
+__webpack_require__(101);
 
 // depth
 const AUTO_EXPAND_DEPTH = 0;
@@ -5748,74 +1063,14 @@ exports.default = Tree;
 
 /***/ }),
 
-/***/ 3671:
+/***/ 101:
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
 
 /***/ }),
 
-/***/ 3721:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(process) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-const flag = __webpack_require__(52);
-
-function isBrowser() {
-  return typeof window == "object";
-}
-
-function isNode() {
-  return process && process.release && process.release.name == 'node';
-}
-
-function isDevelopment() {
-  if (!isNode() && isBrowser()) {
-    const href = window.location ? window.location.href : "";
-    return href.match(/^file:/) || href.match(/localhost:/);
-  }
-
-  return "production" != "production";
-}
-
-function isTesting() {
-  return flag.testing;
-}
-
-function isFirefoxPanel() {
-  return !isDevelopment();
-}
-
-function isFirefox() {
-  return (/firefox/i.test(navigator.userAgent)
-  );
-}
-
-module.exports = {
-  isDevelopment,
-  isTesting,
-  isFirefoxPanel,
-  isFirefox
-};
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(120)))
-
-/***/ }),
-
-/***/ 3728:
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(3729);
-
-
-/***/ }),
-
-/***/ 3729:
+/***/ 108:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5824,115 +1079,1840 @@ module.exports = __webpack_require__(3729);
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.vendored = undefined;
 
-var _devtoolsComponents = __webpack_require__(3669);
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var devtoolsComponents = _interopRequireWildcard(_devtoolsComponents);
+var _propTypes = __webpack_require__(0);
 
-var _devtoolsConfig = __webpack_require__(1355);
+var _propTypes2 = _interopRequireDefault(_propTypes);
 
-var devtoolsConfig = _interopRequireWildcard(_devtoolsConfig);
+var _react = __webpack_require__(1);
 
-var _devtoolsContextmenu = __webpack_require__(1413);
+var _react2 = _interopRequireDefault(_react);
 
-var devtoolsContextmenu = _interopRequireWildcard(_devtoolsContextmenu);
+var _tab = __webpack_require__(109);
 
-var _devtoolsEnvironment = __webpack_require__(3721);
+var _tab2 = _interopRequireDefault(_tab);
 
-var devtoolsEnvironment = _interopRequireWildcard(_devtoolsEnvironment);
+var _tabList = __webpack_require__(222);
 
-var _devtoolsModules = __webpack_require__(1376);
+var _tabList2 = _interopRequireDefault(_tabList);
 
-var devtoolsModules = _interopRequireWildcard(_devtoolsModules);
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var _devtoolsUtils = __webpack_require__(3651);
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var devtoolsUtils = _interopRequireWildcard(_devtoolsUtils);
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-var _fuzzaldrinPlus = __webpack_require__(161);
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var fuzzaldrinPlus = _interopRequireWildcard(_fuzzaldrinPlus);
+var TabList = function (_React$Component) {
+  _inherits(TabList, _React$Component);
 
-var _Transition = __webpack_require__(333);
+  function TabList(props) {
+    _classCallCheck(this, TabList);
 
-var transition = _interopRequireWildcard(_Transition);
+    var _this = _possibleConstructorReturn(this, (TabList.__proto__ || Object.getPrototypeOf(TabList)).call(this, props));
 
-var _tabs = __webpack_require__(3762);
+    var childrenCount = _react2.default.Children.count(props.children);
 
-var reactAriaComponentsTabs = _interopRequireWildcard(_tabs);
+    _this.handleKeyPress = _this.handleKeyPress.bind(_this);
+    _this.tabRefs = new Array(childrenCount).fill(0).map(function () {
+      return _react2.default.createRef();
+    });
+    _this.handlers = _this.getHandlers(props.vertical);
+    return _this;
+  }
 
-var _reselect = __webpack_require__(3791);
+  _createClass(TabList, [{
+    key: 'componentDidUpdate',
+    value: function componentDidUpdate(prevProps) {
+      if (prevProps.activeIndex !== this.props.activeIndex) {
+        this.tabRefs[this.props.activeIndex].current.focus();
+      }
+    }
+  }, {
+    key: 'getHandlers',
+    value: function getHandlers(vertical) {
+      if (vertical) {
+        return {
+          ArrowDown: this.next.bind(this),
+          ArrowUp: this.previous.bind(this)
+        };
+      }
+      return {
+        ArrowLeft: this.previous.bind(this),
+        ArrowRight: this.next.bind(this)
+      };
+    }
+  }, {
+    key: 'wrapIndex',
+    value: function wrapIndex(index) {
+      var count = _react2.default.Children.count(this.props.children);
+      return (index + count) % count;
+    }
+  }, {
+    key: 'handleKeyPress',
+    value: function handleKeyPress(event) {
+      var handler = this.handlers[event.key];
+      if (handler) {
+        handler();
+      }
+    }
+  }, {
+    key: 'previous',
+    value: function previous() {
+      var newIndex = this.wrapIndex(this.props.activeIndex - 1);
+      this.props.onActivateTab(newIndex);
+    }
+  }, {
+    key: 'next',
+    value: function next() {
+      var newIndex = this.wrapIndex(this.props.activeIndex + 1);
+      this.props.onActivateTab(newIndex);
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      var _this2 = this;
 
-var reselect = _interopRequireWildcard(_reselect);
+      var _props = this.props,
+          accessibleId = _props.accessibleId,
+          activeIndex = _props.activeIndex,
+          children = _props.children,
+          className = _props.className,
+          onActivateTab = _props.onActivateTab;
 
-var _classnames = __webpack_require__(175);
 
-var _classnames2 = _interopRequireDefault(_classnames);
+      return _react2.default.createElement(
+        'ul',
+        { className: className, onKeyUp: this.handleKeyPress, role: 'tablist' },
+        _react2.default.Children.map(children, function (child, index) {
+          if (child.type !== _tab2.default) {
+            throw new Error('Direct children of a <TabList> must be a <Tab>');
+          }
 
-var _devtoolsSplitter = __webpack_require__(3802);
+          var active = index === activeIndex;
+          var tabRef = _this2.tabRefs[index];
 
-var _devtoolsSplitter2 = _interopRequireDefault(_devtoolsSplitter);
+          return _react2.default.cloneElement(child, {
+            accessibleId: active ? accessibleId : undefined,
+            active: active,
+            tabRef: tabRef,
+            onActivate: function onActivate() {
+              return onActivateTab(index);
+            }
+          });
+        })
+      );
+    }
+  }]);
 
-var _lodashMove = __webpack_require__(3751);
+  return TabList;
+}(_react2.default.Component);
 
-var _lodashMove2 = _interopRequireDefault(_lodashMove);
+exports.default = TabList;
 
-var _Svg = __webpack_require__(1359);
+
+TabList.propTypes = {
+  accessibleId: _propTypes2.default.string,
+  activeIndex: _propTypes2.default.number,
+  children: _propTypes2.default.node,
+  className: _propTypes2.default.string,
+  onActivateTab: _propTypes2.default.func,
+  vertical: _propTypes2.default.bool
+};
+
+TabList.defaultProps = {
+  accessibleId: undefined,
+  activeIndex: 0,
+  children: null,
+  className: _tabList2.default.container,
+  onActivateTab: function onActivateTab() {},
+  vertical: false
+};
+
+/***/ }),
+
+/***/ 109:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = Tab;
+
+var _propTypes = __webpack_require__(0);
+
+var _propTypes2 = _interopRequireDefault(_propTypes);
+
+var _react = __webpack_require__(1);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _ref2 = __webpack_require__(220);
+
+var _ref3 = _interopRequireDefault(_ref2);
+
+var _tab = __webpack_require__(221);
+
+var _tab2 = _interopRequireDefault(_tab);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function Tab(_ref) {
+  var accessibleId = _ref.accessibleId,
+      active = _ref.active,
+      children = _ref.children,
+      className = _ref.className,
+      onActivate = _ref.onActivate,
+      tabRef = _ref.tabRef;
+
+  return _react2.default.createElement(
+    'li',
+    {
+      'aria-selected': active,
+      className: className,
+      id: accessibleId,
+      onClick: onActivate,
+      onKeyDown: function onKeyDown() {},
+      ref: tabRef,
+      role: 'tab',
+      tabIndex: active ? 0 : undefined
+    },
+    children
+  );
+}
+
+Tab.propTypes = {
+  accessibleId: _propTypes2.default.string,
+  active: _propTypes2.default.bool,
+  children: _propTypes2.default.node.isRequired,
+  className: _propTypes2.default.string,
+  onActivate: _propTypes2.default.func,
+  tabRef: _ref3.default
+};
+
+Tab.defaultProps = {
+  accessibleId: undefined,
+  active: false,
+  className: _tab2.default.container,
+  onActivate: undefined,
+  tabRef: undefined
+};
+
+/***/ }),
+
+/***/ 110:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = TabPanels;
+
+var _propTypes = __webpack_require__(0);
+
+var _propTypes2 = _interopRequireDefault(_propTypes);
+
+var _react = __webpack_require__(1);
+
+var _react2 = _interopRequireDefault(_react);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function TabPanels(_ref) {
+  var accessibleId = _ref.accessibleId,
+      activeIndex = _ref.activeIndex,
+      children = _ref.children,
+      className = _ref.className,
+      hasFocusableContent = _ref.hasFocusableContent;
+
+  return _react2.default.createElement(
+    'div',
+    {
+      'aria-labelledby': accessibleId,
+      role: 'tabpanel',
+      className: className,
+      tabIndex: hasFocusableContent ? undefined : 0
+    },
+    _react2.default.Children.toArray(children)[activeIndex]
+  );
+}
+
+TabPanels.propTypes = {
+  accessibleId: _propTypes2.default.string,
+  activeIndex: _propTypes2.default.number,
+  children: _propTypes2.default.node.isRequired,
+  className: _propTypes2.default.string,
+  hasFocusableContent: _propTypes2.default.bool.isRequired
+};
+
+TabPanels.defaultProps = {
+  accessibleId: undefined,
+  activeIndex: 0,
+  className: null
+};
+
+/***/ }),
+
+/***/ 111:
+/***/ (function(module, exports, __webpack_require__) {
+
+(function() {
+  var Query, coreChars, countDir, getCharCodes, getExtension, opt_char_re, truncatedUpperCase, _ref;
+
+  _ref = __webpack_require__(63), countDir = _ref.countDir, getExtension = _ref.getExtension;
+
+  module.exports = Query = (function() {
+    function Query(query, _arg) {
+      var optCharRegEx, pathSeparator, _ref1;
+      _ref1 = _arg != null ? _arg : {}, optCharRegEx = _ref1.optCharRegEx, pathSeparator = _ref1.pathSeparator;
+      if (!(query && query.length)) {
+        return null;
+      }
+      this.query = query;
+      this.query_lw = query.toLowerCase();
+      this.core = coreChars(query, optCharRegEx);
+      this.core_lw = this.core.toLowerCase();
+      this.core_up = truncatedUpperCase(this.core);
+      this.depth = countDir(query, query.length, pathSeparator);
+      this.ext = getExtension(this.query_lw);
+      this.charCodes = getCharCodes(this.query_lw);
+    }
+
+    return Query;
+
+  })();
+
+  opt_char_re = /[ _\-:\/\\]/g;
+
+  coreChars = function(query, optCharRegEx) {
+    if (optCharRegEx == null) {
+      optCharRegEx = opt_char_re;
+    }
+    return query.replace(optCharRegEx, '');
+  };
+
+  truncatedUpperCase = function(str) {
+    var char, upper, _i, _len;
+    upper = "";
+    for (_i = 0, _len = str.length; _i < _len; _i++) {
+      char = str[_i];
+      upper += char.toUpperCase()[0];
+    }
+    return upper;
+  };
+
+  getCharCodes = function(str) {
+    var charCodes, i, len;
+    len = str.length;
+    i = -1;
+    charCodes = [];
+    while (++i < len) {
+      charCodes[str.charCodeAt(i)] = true;
+    }
+    return charCodes;
+  };
+
+}).call(this);
+
+
+/***/ }),
+
+/***/ 130:
+/***/ (function(module, exports, __webpack_require__) {
+
+const SplitBox = __webpack_require__(214);
+
+module.exports = SplitBox;
+
+/***/ }),
+
+/***/ 131:
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(process) {(function() {
+  var Query, defaultPathSeparator, filter, matcher, parseOptions, pathScorer, preparedQueryCache, scorer;
+
+  filter = __webpack_require__(226);
+
+  matcher = __webpack_require__(227);
+
+  scorer = __webpack_require__(48);
+
+  pathScorer = __webpack_require__(63);
+
+  Query = __webpack_require__(111);
+
+  preparedQueryCache = null;
+
+  defaultPathSeparator = (typeof process !== "undefined" && process !== null ? process.platform : void 0) === "win32" ? '\\' : '/';
+
+  module.exports = {
+    filter: function(candidates, query, options) {
+      if (options == null) {
+        options = {};
+      }
+      if (!((query != null ? query.length : void 0) && (candidates != null ? candidates.length : void 0))) {
+        return [];
+      }
+      options = parseOptions(options, query);
+      return filter(candidates, query, options);
+    },
+    score: function(string, query, options) {
+      if (options == null) {
+        options = {};
+      }
+      if (!((string != null ? string.length : void 0) && (query != null ? query.length : void 0))) {
+        return 0;
+      }
+      options = parseOptions(options, query);
+      if (options.usePathScoring) {
+        return pathScorer.score(string, query, options);
+      } else {
+        return scorer.score(string, query, options);
+      }
+    },
+    match: function(string, query, options) {
+      var _i, _ref, _results;
+      if (options == null) {
+        options = {};
+      }
+      if (!string) {
+        return [];
+      }
+      if (!query) {
+        return [];
+      }
+      if (string === query) {
+        return (function() {
+          _results = [];
+          for (var _i = 0, _ref = string.length; 0 <= _ref ? _i < _ref : _i > _ref; 0 <= _ref ? _i++ : _i--){ _results.push(_i); }
+          return _results;
+        }).apply(this);
+      }
+      options = parseOptions(options, query);
+      return matcher.match(string, query, options);
+    },
+    wrap: function(string, query, options) {
+      if (options == null) {
+        options = {};
+      }
+      if (!string) {
+        return [];
+      }
+      if (!query) {
+        return [];
+      }
+      options = parseOptions(options, query);
+      return matcher.wrap(string, query, options);
+    },
+    prepareQuery: function(query, options) {
+      if (options == null) {
+        options = {};
+      }
+      options = parseOptions(options, query);
+      return options.preparedQuery;
+    }
+  };
+
+  parseOptions = function(options, query) {
+    if (options.allowErrors == null) {
+      options.allowErrors = false;
+    }
+    if (options.usePathScoring == null) {
+      options.usePathScoring = true;
+    }
+    if (options.useExtensionBonus == null) {
+      options.useExtensionBonus = false;
+    }
+    if (options.pathSeparator == null) {
+      options.pathSeparator = defaultPathSeparator;
+    }
+    if (options.optCharRegEx == null) {
+      options.optCharRegEx = null;
+    }
+    if (options.wrap == null) {
+      options.wrap = null;
+    }
+    if (options.preparedQuery == null) {
+      options.preparedQuery = preparedQueryCache && preparedQueryCache.query === query ? preparedQueryCache : (preparedQueryCache = new Query(query, options));
+    }
+    return options;
+  };
+
+}).call(this);
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(50)))
+
+/***/ }),
+
+/***/ 132:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _Svg = __webpack_require__(231);
 
 var _Svg2 = _interopRequireDefault(_Svg);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
-
-// We cannot directly export literals containing special characters
-// (eg. "my-module/Test") which is why they are nested in "vendored".
-// The keys of the vendored object should match the module names
-// !!! Should remain synchronized with .babel/transform-mc.js !!!
-
-
-// Modules imported without destructuring
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+exports.default = _Svg2.default; /* This Source Code Form is subject to the terms of the Mozilla Public
+                                  * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 /**
- * Vendors.js is a file used to bundle and expose all dependencies needed to run
- * the transpiled debugger modules when running in Firefox.
- *
- * To make transpilation easier, a vendored module should always be imported in
- * same way:
- * - always with destructuring (import { a } from "modA";)
- * - always without destructuring (import modB from "modB")
- *
- * Both are fine, but cannot be mixed for the same module.
+ * This file maps the SVG React Components in the images directory.
  */
-
-// Modules imported with destructuring
-const vendored = exports.vendored = {
-  classnames: _classnames2.default,
-  "devtools-components": devtoolsComponents,
-  "devtools-config": devtoolsConfig,
-  "devtools-contextmenu": devtoolsContextmenu,
-  "devtools-environment": devtoolsEnvironment,
-  "devtools-modules": devtoolsModules,
-  "devtools-splitter": _devtoolsSplitter2.default,
-  "devtools-utils": devtoolsUtils,
-  "fuzzaldrin-plus": fuzzaldrinPlus,
-  "lodash-move": _lodashMove2.default,
-  "react-aria-components/src/tabs": reactAriaComponentsTabs,
-  "react-transition-group/Transition": transition,
-  reselect,
-  // Svg is required via relative paths, so the key is not imported path.
-  // See .babel/transform-mc.js
-  Svg: _Svg2.default
-};
-// $FlowIgnore
 
 /***/ }),
 
-/***/ 3750:
+/***/ 154:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _devtoolsServices = __webpack_require__(20);
+
+var _devtoolsServices2 = _interopRequireDefault(_devtoolsServices);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const { appinfo } = _devtoolsServices2.default; /* This Source Code Form is subject to the terms of the Mozilla Public
+                                                 * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                                 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const isMacOS = appinfo.OS === "Darwin";
+
+const EventEmitter = __webpack_require__(46);
+
+/**
+ * Formats key for use in tooltips
+ * For macOS we use the following unicode
+ *
+ * cmd ⌘ = \u2318
+ * shift ⇧ – \u21E7
+ * option (alt) ⌥ \u2325
+ *
+ * For Win/Lin this replaces CommandOrControl or CmdOrCtrl with Ctrl
+ *
+ * @static
+ */
+function formatKeyShortcut(shortcut) {
+  if (isMacOS) {
+    return shortcut.replace(/Shift\+/g, "\u21E7").replace(/Command\+|Cmd\+/g, "\u2318").replace(/CommandOrControl\+|CmdOrCtrl\+/g, "\u2318").replace(/Alt\+/g, "\u2325");
+  }
+  return shortcut.replace(/CommandOrControl\+|CmdOrCtrl\+/g, `${L10N.getStr("ctrl")}+`).replace(/Shift\+/g, "Shift+");
+}
+
+function inToolbox() {
+  try {
+    return window.parent.document.documentURI == "about:devtools-toolbox";
+  } catch (e) {
+    // If `window` is not available, it's very likely that we are in the toolbox.
+    return true;
+  }
+}
+
+/**
+ * A partial implementation of the Menu API provided by electron:
+ * https://github.com/electron/electron/blob/master/docs/api/menu.md.
+ *
+ * Extra features:
+ *  - Emits an 'open' and 'close' event when the menu is opened/closed
+
+ * @param String id (non standard)
+ *        Needed so tests can confirm the XUL implementation is working
+ */
+function Menu({ id = null } = {}) {
+  this.menuitems = [];
+  this.id = id;
+
+  Object.defineProperty(this, "items", {
+    get() {
+      return this.menuitems;
+    }
+  });
+
+  EventEmitter.decorate(this);
+}
+
+/**
+ * Add an item to the end of the Menu
+ *
+ * @param {MenuItem} menuItem
+ */
+Menu.prototype.append = function (menuItem) {
+  this.menuitems.push(menuItem);
+};
+
+/**
+ * Add an item to a specified position in the menu
+ *
+ * @param {int} pos
+ * @param {MenuItem} menuItem
+ */
+Menu.prototype.insert = function (pos, menuItem) {
+  throw Error("Not implemented");
+};
+
+/**
+ * Show the Menu at a specified location on the screen
+ *
+ * Missing features:
+ *   - browserWindow - BrowserWindow (optional) - Default is null.
+ *   - positioningItem Number - (optional) OS X
+ *
+ * @param {int} screenX
+ * @param {int} screenY
+ * @param Toolbox toolbox (non standard)
+ *        Needed so we in which window to inject XUL
+ */
+Menu.prototype.popup = function (screenX, screenY, toolbox) {
+  let doc = toolbox.doc;
+  let popupset = doc.querySelector("popupset");
+  if (!popupset) {
+    popupset = doc.createXULElement("popupset");
+    doc.documentElement.appendChild(popupset);
+  }
+  // See bug 1285229, on Windows, opening the same popup multiple times in a
+  // row ends up duplicating the popup. The newly inserted popup doesn't
+  // dismiss the old one. So remove any previously displayed popup before
+  // opening a new one.
+  let popup = popupset.querySelector("menupopup[menu-api=\"true\"]");
+  if (popup) {
+    popup.hidePopup();
+  }
+
+  popup = this.createPopup(doc);
+  popup.setAttribute("menu-api", "true");
+
+  if (this.id) {
+    popup.id = this.id;
+  }
+  this._createMenuItems(popup);
+
+  // Remove the menu from the DOM once it's hidden.
+  popup.addEventListener("popuphidden", e => {
+    if (e.target === popup) {
+      popup.remove();
+      this.emit("close", popup);
+    }
+  });
+
+  popup.addEventListener("popupshown", e => {
+    if (e.target === popup) {
+      this.emit("open", popup);
+    }
+  });
+
+  popupset.appendChild(popup);
+  popup.openPopupAtScreen(screenX, screenY, true);
+};
+
+Menu.prototype.createPopup = function (doc) {
+  return doc.createElement("menupopup");
+};
+
+Menu.prototype._createMenuItems = function (parent) {
+  let doc = parent.ownerDocument;
+  this.menuitems.forEach(item => {
+    if (!item.visible) {
+      return;
+    }
+
+    if (item.submenu) {
+      let menupopup = doc.createElement("menupopup");
+      item.submenu._createMenuItems(menupopup);
+
+      let menuitem = doc.createElement("menuitem");
+      menuitem.setAttribute("label", item.label);
+      if (!inToolbox()) {
+        menuitem.textContent = item.label;
+      }
+
+      let menu = doc.createElement("menu");
+      menu.appendChild(menuitem);
+      menu.appendChild(menupopup);
+      if (item.disabled) {
+        menu.setAttribute("disabled", "true");
+      }
+      if (item.accesskey) {
+        menu.setAttribute("accesskey", item.accesskey);
+      }
+      if (item.id) {
+        menu.id = item.id;
+      }
+      if (item.accelerator) {
+        menuitem.setAttribute("acceltext", formatKeyShortcut(item.accelerator));
+      }
+      parent.appendChild(menu);
+    } else if (item.type === "separator") {
+      let menusep = doc.createElement("menuseparator");
+      parent.appendChild(menusep);
+    } else {
+      let menuitem = doc.createElement("menuitem");
+      menuitem.setAttribute("label", item.label);
+
+      if (!inToolbox()) {
+        menuitem.textContent = item.label;
+      }
+
+      menuitem.addEventListener("command", () => item.click());
+
+      if (item.type === "checkbox") {
+        menuitem.setAttribute("type", "checkbox");
+      }
+      if (item.type === "radio") {
+        menuitem.setAttribute("type", "radio");
+      }
+      if (item.disabled) {
+        menuitem.setAttribute("disabled", "true");
+      }
+      if (item.checked) {
+        menuitem.setAttribute("checked", "true");
+      }
+      if (item.accesskey) {
+        menuitem.setAttribute("accesskey", item.accesskey);
+      }
+      if (item.id) {
+        menuitem.id = item.id;
+      }
+      if (item.accelerator) {
+        menuitem.setAttribute("acceltext", formatKeyShortcut(item.accelerator));
+      }
+      parent.appendChild(menuitem);
+    }
+  });
+};
+
+Menu.setApplicationMenu = () => {
+  throw Error("Not implemented");
+};
+
+Menu.sendActionToFirstResponder = () => {
+  throw Error("Not implemented");
+};
+
+Menu.buildFromTemplate = () => {
+  throw Error("Not implemented");
+};
+
+module.exports = Menu;
+
+/***/ }),
+
+/***/ 155:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+ * A sham for https://dxr.mozilla.org/mozilla-central/source/toolkit/modules/Promise.jsm
+ */
+
+/**
+ * Promise.jsm is mostly the Promise web API with a `defer` method. Just drop this in here,
+ * and use the native web API (although building with webpack/babel, it may replace this
+ * with it's own version if we want to target environments that do not have `Promise`.
+ */
+
+let p = typeof window != "undefined" ? window.Promise : Promise;
+p.defer = function defer() {
+  var resolve, reject;
+  var promise = new Promise(function () {
+    resolve = arguments[0];
+    reject = arguments[1];
+  });
+  return {
+    resolve: resolve,
+    reject: reject,
+    promise: promise
+  };
+};
+
+module.exports = p;
+
+/***/ }),
+
+/***/ 156:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * A partial implementation of the MenuItem API provided by electron:
+ * https://github.com/electron/electron/blob/master/docs/api/menu-item.md.
+ *
+ * Missing features:
+ *   - id String - Unique within a single menu. If defined then it can be used
+ *                 as a reference to this item by the position attribute.
+ *   - role String - Define the action of the menu item; when specified the
+ *                   click property will be ignored
+ *   - sublabel String
+ *   - icon NativeImage
+ *   - position String - This field allows fine-grained definition of the
+ *                       specific location within a given menu.
+ *
+ * Implemented features:
+ *  @param Object options
+ *    Function click
+ *      Will be called with click(menuItem, browserWindow) when the menu item
+ *       is clicked
+ *    String type
+ *      Can be normal, separator, submenu, checkbox or radio
+ *    String label
+ *    Boolean enabled
+ *      If false, the menu item will be greyed out and unclickable.
+ *    Boolean checked
+ *      Should only be specified for checkbox or radio type menu items.
+ *    Menu submenu
+ *      Should be specified for submenu type menu items. If submenu is specified,
+ *      the type: 'submenu' can be omitted. If the value is not a Menu then it
+ *      will be automatically converted to one using Menu.buildFromTemplate.
+ *    Boolean visible
+ *      If false, the menu item will be entirely hidden.
+ *    String accelerator
+ *      If specified, will be used as accelerator text for MenuItem
+ */
+function MenuItem({
+  accesskey = null,
+  checked = false,
+  click = () => {},
+  disabled = false,
+  label = "",
+  id = null,
+  submenu = null,
+  type = "normal",
+  visible = true,
+  accelerator = ""
+} = {}) {
+  this.accesskey = accesskey;
+  this.checked = checked;
+  this.click = click;
+  this.disabled = disabled;
+  this.id = id;
+  this.label = label;
+  this.submenu = submenu;
+  this.type = type;
+  this.visible = visible;
+  this.accelerator = accelerator;
+}
+
+module.exports = MenuItem;
+
+/***/ }),
+
+/***/ 157:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const Services = __webpack_require__(20);
+const EventEmitter = __webpack_require__(46);
+
+/**
+ * Shortcuts for lazily accessing and setting various preferences.
+ * Usage:
+ *   let prefs = new Prefs("root.path.to.branch", {
+ *     myIntPref: ["Int", "leaf.path.to.my-int-pref"],
+ *     myCharPref: ["Char", "leaf.path.to.my-char-pref"],
+ *     myJsonPref: ["Json", "leaf.path.to.my-json-pref"],
+ *     myFloatPref: ["Float", "leaf.path.to.my-float-pref"]
+ *     ...
+ *   });
+ *
+ * Get/set:
+ *   prefs.myCharPref = "foo";
+ *   let aux = prefs.myCharPref;
+ *
+ * Observe:
+ *   prefs.registerObserver();
+ *   prefs.on("pref-changed", (prefName, prefValue) => {
+ *     ...
+ *   });
+ *
+ * @param string prefsRoot
+ *        The root path to the required preferences branch.
+ * @param object prefsBlueprint
+ *        An object containing { accessorName: [prefType, prefName, prefDefault] } keys.
+ */
+function PrefsHelper(prefsRoot = "", prefsBlueprint = {}) {
+  EventEmitter.decorate(this);
+
+  let cache = new Map();
+
+  for (let accessorName in prefsBlueprint) {
+    let [prefType, prefName, prefDefault] = prefsBlueprint[accessorName];
+    map(this, cache, accessorName, prefType, prefsRoot, prefName, prefDefault);
+  }
+
+  let observer = makeObserver(this, cache, prefsRoot, prefsBlueprint);
+  this.registerObserver = () => observer.register();
+  this.unregisterObserver = () => observer.unregister();
+}
+
+/**
+ * Helper method for getting a pref value.
+ *
+ * @param Map cache
+ * @param string prefType
+ * @param string prefsRoot
+ * @param string prefName
+ * @return any
+ */
+function get(cache, prefType, prefsRoot, prefName) {
+  let cachedPref = cache.get(prefName);
+  if (cachedPref !== undefined) {
+    return cachedPref;
+  }
+  let value = Services.prefs["get" + prefType + "Pref"]([prefsRoot, prefName].join("."));
+  cache.set(prefName, value);
+  return value;
+}
+
+/**
+ * Helper method for setting a pref value.
+ *
+ * @param Map cache
+ * @param string prefType
+ * @param string prefsRoot
+ * @param string prefName
+ * @param any value
+ */
+function set(cache, prefType, prefsRoot, prefName, value) {
+  Services.prefs["set" + prefType + "Pref"]([prefsRoot, prefName].join("."), value);
+  cache.set(prefName, value);
+}
+
+/**
+ * Maps a property name to a pref, defining lazy getters and setters.
+ * Supported types are "Bool", "Char", "Int", "Float" (sugar around "Char"
+ * type and casting), and "Json" (which is basically just sugar for "Char"
+ * using the standard JSON serializer).
+ *
+ * @param PrefsHelper self
+ * @param Map cache
+ * @param string accessorName
+ * @param string prefType
+ * @param string prefsRoot
+ * @param string prefName
+ * @param string prefDefault
+ * @param array serializer [optional]
+ */
+function map(self, cache, accessorName, prefType, prefsRoot, prefName, prefDefault, serializer = { in: e => e, out: e => e }) {
+  if (prefName in self) {
+    throw new Error(`Can't use ${prefName} because it overrides a property` + "on the instance.");
+  }
+  if (prefType == "Json") {
+    map(self, cache, accessorName, "String", prefsRoot, prefName, prefDefault, {
+      in: JSON.parse,
+      out: JSON.stringify
+    });
+    return;
+  }
+  if (prefType == "Float") {
+    map(self, cache, accessorName, "Char", prefsRoot, prefName, prefDefault, {
+      in: Number.parseFloat,
+      out: n => n + ""
+    });
+    return;
+  }
+
+  Object.defineProperty(self, accessorName, {
+    get: () => {
+      try {
+        return serializer.in(get(cache, prefType, prefsRoot, prefName));
+      } catch (e) {
+        if (typeof prefDefault !== 'undefined') {
+          return prefDefault;
+        }
+        throw e;
+      }
+    },
+    set: e => set(cache, prefType, prefsRoot, prefName, serializer.out(e))
+  });
+}
+
+/**
+ * Finds the accessor for the provided pref, based on the blueprint object
+ * used in the constructor.
+ *
+ * @param PrefsHelper self
+ * @param object prefsBlueprint
+ * @return string
+ */
+function accessorNameForPref(somePrefName, prefsBlueprint) {
+  for (let accessorName in prefsBlueprint) {
+    let [, prefName] = prefsBlueprint[accessorName];
+    if (somePrefName == prefName) {
+      return accessorName;
+    }
+  }
+  return "";
+}
+
+/**
+ * Creates a pref observer for `self`.
+ *
+ * @param PrefsHelper self
+ * @param Map cache
+ * @param string prefsRoot
+ * @param object prefsBlueprint
+ * @return object
+ */
+function makeObserver(self, cache, prefsRoot, prefsBlueprint) {
+  return {
+    register: function () {
+      this._branch = Services.prefs.getBranch(prefsRoot + ".");
+      this._branch.addObserver("", this);
+    },
+    unregister: function () {
+      this._branch.removeObserver("", this);
+    },
+    observe: function (subject, topic, prefName) {
+      // If this particular pref isn't handled by the blueprint object,
+      // even though it's in the specified branch, ignore it.
+      let accessorName = accessorNameForPref(prefName, prefsBlueprint);
+      if (!(accessorName in self)) {
+        return;
+      }
+      cache.delete(prefName);
+      self.emit("pref-changed", accessorName, self[accessorName]);
+    }
+  };
+}
+
+exports.PrefsHelper = PrefsHelper;
+
+/***/ }),
+
+/***/ 158:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const { appinfo } = __webpack_require__(20);
+const EventEmitter = __webpack_require__(46);
+const isOSX = appinfo.OS === "Darwin";
+
+// List of electron keys mapped to DOM API (DOM_VK_*) key code
+const ElectronKeysMapping = {
+  "F1": "DOM_VK_F1",
+  "F2": "DOM_VK_F2",
+  "F3": "DOM_VK_F3",
+  "F4": "DOM_VK_F4",
+  "F5": "DOM_VK_F5",
+  "F6": "DOM_VK_F6",
+  "F7": "DOM_VK_F7",
+  "F8": "DOM_VK_F8",
+  "F9": "DOM_VK_F9",
+  "F10": "DOM_VK_F10",
+  "F11": "DOM_VK_F11",
+  "F12": "DOM_VK_F12",
+  "F13": "DOM_VK_F13",
+  "F14": "DOM_VK_F14",
+  "F15": "DOM_VK_F15",
+  "F16": "DOM_VK_F16",
+  "F17": "DOM_VK_F17",
+  "F18": "DOM_VK_F18",
+  "F19": "DOM_VK_F19",
+  "F20": "DOM_VK_F20",
+  "F21": "DOM_VK_F21",
+  "F22": "DOM_VK_F22",
+  "F23": "DOM_VK_F23",
+  "F24": "DOM_VK_F24",
+  "Space": "DOM_VK_SPACE",
+  "Backspace": "DOM_VK_BACK_SPACE",
+  "Delete": "DOM_VK_DELETE",
+  "Insert": "DOM_VK_INSERT",
+  "Return": "DOM_VK_RETURN",
+  "Enter": "DOM_VK_RETURN",
+  "Up": "DOM_VK_UP",
+  "Down": "DOM_VK_DOWN",
+  "Left": "DOM_VK_LEFT",
+  "Right": "DOM_VK_RIGHT",
+  "Home": "DOM_VK_HOME",
+  "End": "DOM_VK_END",
+  "PageUp": "DOM_VK_PAGE_UP",
+  "PageDown": "DOM_VK_PAGE_DOWN",
+  "Escape": "DOM_VK_ESCAPE",
+  "Esc": "DOM_VK_ESCAPE",
+  "Tab": "DOM_VK_TAB",
+  "VolumeUp": "DOM_VK_VOLUME_UP",
+  "VolumeDown": "DOM_VK_VOLUME_DOWN",
+  "VolumeMute": "DOM_VK_VOLUME_MUTE",
+  "PrintScreen": "DOM_VK_PRINTSCREEN"
+};
+
+/**
+ * Helper to listen for keyboard events decribed in .properties file.
+ *
+ * let shortcuts = new KeyShortcuts({
+ *   window
+ * });
+ * shortcuts.on("Ctrl+F", event => {
+ *   // `event` is the KeyboardEvent which relates to the key shortcuts
+ * });
+ *
+ * @param DOMWindow window
+ *        The window object of the document to listen events from.
+ * @param DOMElement target
+ *        Optional DOM Element on which we should listen events from.
+ *        If omitted, we listen for all events fired on `window`.
+ */
+function KeyShortcuts({ window, target }) {
+  this.window = window;
+  this.target = target || window;
+  this.keys = new Map();
+  this.eventEmitter = new EventEmitter();
+  this.target.addEventListener("keydown", this);
+}
+
+/*
+ * Parse an electron-like key string and return a normalized object which
+ * allow efficient match on DOM key event. The normalized object matches DOM
+ * API.
+ *
+ * @param DOMWindow window
+ *        Any DOM Window object, just to fetch its `KeyboardEvent` object
+ * @param String str
+ *        The shortcut string to parse, following this document:
+ *        https://github.com/electron/electron/blob/master/docs/api/accelerator.md
+ */
+KeyShortcuts.parseElectronKey = function (window, str) {
+  let modifiers = str.split("+");
+  let key = modifiers.pop();
+
+  let shortcut = {
+    ctrl: false,
+    meta: false,
+    alt: false,
+    shift: false,
+    // Set for character keys
+    key: undefined,
+    // Set for non-character keys
+    keyCode: undefined
+  };
+  for (let mod of modifiers) {
+    if (mod === "Alt") {
+      shortcut.alt = true;
+    } else if (["Command", "Cmd"].includes(mod)) {
+      shortcut.meta = true;
+    } else if (["CommandOrControl", "CmdOrCtrl"].includes(mod)) {
+      if (isOSX) {
+        shortcut.meta = true;
+      } else {
+        shortcut.ctrl = true;
+      }
+    } else if (["Control", "Ctrl"].includes(mod)) {
+      shortcut.ctrl = true;
+    } else if (mod === "Shift") {
+      shortcut.shift = true;
+    } else {
+      console.error("Unsupported modifier:", mod, "from key:", str);
+      return null;
+    }
+  }
+
+  // Plus is a special case. It's a character key and shouldn't be matched
+  // against a keycode as it is only accessible via Shift/Capslock
+  if (key === "Plus") {
+    key = "+";
+  }
+
+  if (typeof key === "string" && key.length === 1) {
+    // Match any single character
+    shortcut.key = key.toLowerCase();
+  } else if (key in ElectronKeysMapping) {
+    // Maps the others manually to DOM API DOM_VK_*
+    key = ElectronKeysMapping[key];
+    shortcut.keyCode = window.KeyboardEvent[key];
+    // Used only to stringify the shortcut
+    shortcut.keyCodeString = key;
+    shortcut.key = key;
+  } else {
+    console.error("Unsupported key:", key);
+    return null;
+  }
+
+  return shortcut;
+};
+
+KeyShortcuts.stringify = function (shortcut) {
+  let list = [];
+  if (shortcut.alt) {
+    list.push("Alt");
+  }
+  if (shortcut.ctrl) {
+    list.push("Ctrl");
+  }
+  if (shortcut.meta) {
+    list.push("Cmd");
+  }
+  if (shortcut.shift) {
+    list.push("Shift");
+  }
+  let key;
+  if (shortcut.key) {
+    key = shortcut.key.toUpperCase();
+  } else {
+    key = shortcut.keyCodeString;
+  }
+  list.push(key);
+  return list.join("+");
+};
+
+KeyShortcuts.prototype = {
+  destroy() {
+    this.target.removeEventListener("keydown", this);
+    this.keys.clear();
+  },
+
+  doesEventMatchShortcut(event, shortcut) {
+    if (shortcut.meta != event.metaKey) {
+      return false;
+    }
+    if (shortcut.ctrl != event.ctrlKey) {
+      return false;
+    }
+    if (shortcut.alt != event.altKey) {
+      return false;
+    }
+    // Shift is a special modifier, it may implicitely be required if the
+    // expected key is a special character accessible via shift.
+    if (shortcut.shift != event.shiftKey && event.key && event.key.match(/[a-zA-Z]/)) {
+      return false;
+    }
+    if (shortcut.keyCode) {
+      return event.keyCode == shortcut.keyCode;
+    } else if (event.key in ElectronKeysMapping) {
+      return ElectronKeysMapping[event.key] === shortcut.key;
+    }
+
+    // get the key from the keyCode if key is not provided.
+    let key = event.key || String.fromCharCode(event.keyCode);
+
+    // For character keys, we match if the final character is the expected one.
+    // But for digits we also accept indirect match to please azerty keyboard,
+    // which requires Shift to be pressed to get digits.
+    return key.toLowerCase() == shortcut.key || shortcut.key.match(/^[0-9]$/) && event.keyCode == shortcut.key.charCodeAt(0);
+  },
+
+  handleEvent(event) {
+    for (let [key, shortcut] of this.keys) {
+      if (this.doesEventMatchShortcut(event, shortcut)) {
+        this.eventEmitter.emit(key, event);
+      }
+    }
+  },
+
+  on(key, listener) {
+    if (typeof listener !== "function") {
+      throw new Error("KeyShortcuts.on() expects a function as " + "second argument");
+    }
+    if (!this.keys.has(key)) {
+      let shortcut = KeyShortcuts.parseElectronKey(this.window, key);
+      // The key string is wrong and we were unable to compute the key shortcut
+      if (!shortcut) {
+        return;
+      }
+      this.keys.set(key, shortcut);
+    }
+    this.eventEmitter.on(key, listener);
+  },
+
+  off(key, listener) {
+    this.eventEmitter.off(key, listener);
+  }
+};
+module.exports = KeyShortcuts;
+
+/***/ }),
+
+/***/ 159:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+/**
+ * Empty shim for "devtools/client/shared/zoom-keys" module
+ *
+ * Based on nsIMarkupDocumentViewer.fullZoom API
+ * https://developer.mozilla.org/en-US/Firefox/Releases/3/Full_page_zoom
+ */
+
+exports.register = function (window) {};
+
+/***/ }),
+
+/***/ 16:
+/***/ (function(module, exports, __webpack_require__) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const networkRequest = __webpack_require__(27);
+const workerUtils = __webpack_require__(28);
+
+module.exports = {
+  networkRequest,
+  workerUtils
+};
+
+/***/ }),
+
+/***/ 160:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/**
+ *
+ * Adapted from https://github.com/mozilla-b2g/gaia/blob/f09993563fb5fec4393eb71816ce76cb00463190/shared/js/async_storage.js
+ * (converted to use Promises instead of callbacks).
+ *
+ * This file defines an asynchronous version of the localStorage API, backed by
+ * an IndexedDB database.  It creates a global asyncStorage object that has
+ * methods like the localStorage object.
+ *
+ * To store a value use setItem:
+ *
+ *   asyncStorage.setItem("key", "value");
+ *
+ * This returns a promise in case you want confirmation that the value has been stored.
+ *
+ *  asyncStorage.setItem("key", "newvalue").then(function() {
+ *    console.log("new value stored");
+ *  });
+ *
+ * To read a value, call getItem(), but note that you must wait for a promise
+ * resolution for the value to be retrieved.
+ *
+ *  asyncStorage.getItem("key").then(function(value) {
+ *    console.log("The value of key is:", value);
+ *  });
+ *
+ * Note that unlike localStorage, asyncStorage does not allow you to store and
+ * retrieve values by setting and querying properties directly. You cannot just
+ * write asyncStorage.key; you have to explicitly call setItem() or getItem().
+ *
+ * removeItem(), clear(), length(), and key() are like the same-named methods of
+ * localStorage, and all return a promise.
+ *
+ * The asynchronous nature of getItem() makes it tricky to retrieve multiple
+ * values. But unlike localStorage, asyncStorage does not require the values you
+ * store to be strings.  So if you need to save multiple values and want to
+ * retrieve them together, in a single asynchronous operation, just group the
+ * values into a single object. The properties of this object may not include
+ * DOM elements, but they may include things like Blobs and typed arrays.
+ *
+ */
+
+
+
+const DBNAME = "devtools-async-storage";
+const DBVERSION = 1;
+const STORENAME = "keyvaluepairs";
+var db = null;
+
+function withStore(type, onsuccess, onerror) {
+  if (db) {
+    const transaction = db.transaction(STORENAME, type);
+    const store = transaction.objectStore(STORENAME);
+    onsuccess(store);
+  } else {
+    const openreq = indexedDB.open(DBNAME, DBVERSION);
+    openreq.onerror = function withStoreOnError() {
+      onerror();
+    };
+    openreq.onupgradeneeded = function withStoreOnUpgradeNeeded() {
+      // First time setup: create an empty object store
+      openreq.result.createObjectStore(STORENAME);
+    };
+    openreq.onsuccess = function withStoreOnSuccess() {
+      db = openreq.result;
+      const transaction = db.transaction(STORENAME, type);
+      const store = transaction.objectStore(STORENAME);
+      onsuccess(store);
+    };
+  }
+}
+
+function getItem(itemKey) {
+  return new Promise((resolve, reject) => {
+    let req;
+    withStore("readonly", store => {
+      store.transaction.oncomplete = function onComplete() {
+        let value = req.result;
+        if (value === undefined) {
+          value = null;
+        }
+        resolve(value);
+      };
+      req = store.get(itemKey);
+      req.onerror = function getItemOnError() {
+        reject("Error in asyncStorage.getItem(): ", req.error.name);
+      };
+    }, reject);
+  });
+}
+
+function setItem(itemKey, value) {
+  return new Promise((resolve, reject) => {
+    withStore("readwrite", store => {
+      store.transaction.oncomplete = resolve;
+      const req = store.put(value, itemKey);
+      req.onerror = function setItemOnError() {
+        reject("Error in asyncStorage.setItem(): ", req.error.name);
+      };
+    }, reject);
+  });
+}
+
+function removeItem(itemKey) {
+  return new Promise((resolve, reject) => {
+    withStore("readwrite", store => {
+      store.transaction.oncomplete = resolve;
+      const req = store.delete(itemKey);
+      req.onerror = function removeItemOnError() {
+        reject("Error in asyncStorage.removeItem(): ", req.error.name);
+      };
+    }, reject);
+  });
+}
+
+function clear() {
+  return new Promise((resolve, reject) => {
+    withStore("readwrite", store => {
+      store.transaction.oncomplete = resolve;
+      const req = store.clear();
+      req.onerror = function clearOnError() {
+        reject("Error in asyncStorage.clear(): ", req.error.name);
+      };
+    }, reject);
+  });
+}
+
+function length() {
+  return new Promise((resolve, reject) => {
+    let req;
+    withStore("readonly", store => {
+      store.transaction.oncomplete = function onComplete() {
+        resolve(req.result);
+      };
+      req = store.count();
+      req.onerror = function lengthOnError() {
+        reject("Error in asyncStorage.length(): ", req.error.name);
+      };
+    }, reject);
+  });
+}
+
+function key(n) {
+  return new Promise((resolve, reject) => {
+    if (n < 0) {
+      resolve(null);
+      return;
+    }
+
+    let req;
+    withStore("readonly", store => {
+      store.transaction.oncomplete = function onComplete() {
+        const cursor = req.result;
+        resolve(cursor ? cursor.key : null);
+      };
+      let advanced = false;
+      req = store.openCursor();
+      req.onsuccess = function keyOnSuccess() {
+        const cursor = req.result;
+        if (!cursor) {
+          // this means there weren"t enough keys
+          return;
+        }
+        if (n === 0 || advanced) {
+          // Either 1) we have the first key, return it if that's what they
+          // wanted, or 2) we"ve got the nth key.
+          return;
+        }
+
+        // Otherwise, ask the cursor to skip ahead n records
+        advanced = true;
+        cursor.advance(n);
+      };
+      req.onerror = function keyOnError() {
+        reject("Error in asyncStorage.key(): ", req.error.name);
+      };
+    }, reject);
+  });
+}
+
+exports.getItem = getItem;
+exports.setItem = setItem;
+exports.removeItem = removeItem;
+exports.clear = clear;
+exports.length = length;
+exports.key = key;
+
+/***/ }),
+
+/***/ 161:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// TODO : Localize this (was l10n.getStr("frame.unknownSource"))
+const UNKNOWN_SOURCE_STRING = "(unknown)";
+
+// Character codes used in various parsing helper functions.
+const CHAR_CODE_A = "a".charCodeAt(0);
+const CHAR_CODE_B = "b".charCodeAt(0);
+const CHAR_CODE_C = "c".charCodeAt(0);
+const CHAR_CODE_D = "d".charCodeAt(0);
+const CHAR_CODE_E = "e".charCodeAt(0);
+const CHAR_CODE_F = "f".charCodeAt(0);
+const CHAR_CODE_H = "h".charCodeAt(0);
+const CHAR_CODE_I = "i".charCodeAt(0);
+const CHAR_CODE_J = "j".charCodeAt(0);
+const CHAR_CODE_L = "l".charCodeAt(0);
+const CHAR_CODE_M = "m".charCodeAt(0);
+const CHAR_CODE_N = "n".charCodeAt(0);
+const CHAR_CODE_O = "o".charCodeAt(0);
+const CHAR_CODE_P = "p".charCodeAt(0);
+const CHAR_CODE_R = "r".charCodeAt(0);
+const CHAR_CODE_S = "s".charCodeAt(0);
+const CHAR_CODE_T = "t".charCodeAt(0);
+const CHAR_CODE_U = "u".charCodeAt(0);
+const CHAR_CODE_W = "w".charCodeAt(0);
+const CHAR_CODE_COLON = ":".charCodeAt(0);
+const CHAR_CODE_DASH = "-".charCodeAt(0);
+const CHAR_CODE_L_SQUARE_BRACKET = "[".charCodeAt(0);
+const CHAR_CODE_SLASH = "/".charCodeAt(0);
+const CHAR_CODE_CAP_S = "S".charCodeAt(0);
+
+// The cache used in the `parseURL` function.
+const gURLStore = new Map();
+// The cache used in the `getSourceNames` function.
+const gSourceNamesStore = new Map();
+
+/**
+* Takes a string and returns an object containing all the properties
+* available on an URL instance, with additional properties (fileName),
+* Leverages caching.
+*
+* @param {String} location
+* @return {Object?} An object containing most properties available
+*                   in https://developer.mozilla.org/en-US/docs/Web/API/URL
+*/
+
+function parseURL(location) {
+  let url = gURLStore.get(location);
+
+  if (url !== void 0) {
+    return url;
+  }
+
+  try {
+    url = new URL(location);
+    // The callers were generally written to expect a URL from
+    // sdk/url, which is subtly different.  So, work around some
+    // important differences here.
+    url = {
+      href: url.href,
+      protocol: url.protocol,
+      host: url.host,
+      hostname: url.hostname,
+      port: url.port || null,
+      pathname: url.pathname,
+      search: url.search,
+      hash: url.hash,
+      username: url.username,
+      password: url.password,
+      origin: url.origin
+    };
+
+    // Definitions:
+    // Example: https://foo.com:8888/file.js
+    // `hostname`: "foo.com"
+    // `host`: "foo.com:8888"
+    let isChrome = isChromeScheme(location);
+
+    url.fileName = url.pathname ? url.pathname.slice(url.pathname.lastIndexOf("/") + 1) || "/" : "/";
+
+    if (isChrome) {
+      url.hostname = null;
+      url.host = null;
+    }
+
+    gURLStore.set(location, url);
+    return url;
+  } catch (e) {
+    gURLStore.set(location, null);
+    return null;
+  }
+}
+
+/**
+* Parse a source into a short and long name as well as a host name.
+*
+* @param {String} source
+*        The source to parse. Can be a URI or names like "(eval)" or
+*        "self-hosted".
+* @return {Object}
+*         An object with the following properties:
+*           - {String} short: A short name for the source.
+*             - "http://page.com/test.js#go?q=query" -> "test.js"
+*           - {String} long: The full, long name for the source, with
+              hash/query stripped.
+*             - "http://page.com/test.js#go?q=query" -> "http://page.com/test.js"
+*           - {String?} host: If available, the host name for the source.
+*             - "http://page.com/test.js#go?q=query" -> "page.com"
+*/
+function getSourceNames(source) {
+  let data = gSourceNamesStore.get(source);
+
+  if (data) {
+    return data;
+  }
+
+  let short, long, host;
+  const sourceStr = source ? String(source) : "";
+
+  // If `data:...` uri
+  if (isDataScheme(sourceStr)) {
+    let commaIndex = sourceStr.indexOf(",");
+    if (commaIndex > -1) {
+      // The `short` name for a data URI becomes `data:` followed by the actual
+      // encoded content, omitting the MIME type, and charset.
+      short = `data:${sourceStr.substring(commaIndex + 1)}`.slice(0, 100);
+      let result = { short, long: sourceStr };
+      gSourceNamesStore.set(source, result);
+      return result;
+    }
+  }
+
+  // If Scratchpad URI, like "Scratchpad/1"; no modifications,
+  // and short/long are the same.
+  if (isScratchpadScheme(sourceStr)) {
+    let result = { short: sourceStr, long: sourceStr };
+    gSourceNamesStore.set(source, result);
+    return result;
+  }
+
+  const parsedUrl = parseURL(sourceStr);
+
+  if (!parsedUrl) {
+    // Malformed URI.
+    long = sourceStr;
+    short = sourceStr.slice(0, 100);
+  } else {
+    host = parsedUrl.host;
+
+    long = parsedUrl.href;
+    if (parsedUrl.hash) {
+      long = long.replace(parsedUrl.hash, "");
+    }
+    if (parsedUrl.search) {
+      long = long.replace(parsedUrl.search, "");
+    }
+
+    short = parsedUrl.fileName;
+    // If `short` is just a slash, and we actually have a path,
+    // strip the slash and parse again to get a more useful short name.
+    // e.g. "http://foo.com/bar/" -> "bar", rather than "/"
+    if (short === "/" && parsedUrl.pathname !== "/") {
+      short = parseURL(long.replace(/\/$/, "")).fileName;
+    }
+  }
+
+  if (!short) {
+    if (!long) {
+      long = UNKNOWN_SOURCE_STRING;
+    }
+    short = long.slice(0, 100);
+  }
+
+  let result = { short, long, host };
+  gSourceNamesStore.set(source, result);
+  return result;
+}
+
+// For the functions below, we assume that we will never access the location
+// argument out of bounds, which is indeed the vast majority of cases.
+//
+// They are written this way because they are hot. Each frame is checked for
+// being content or chrome when processing the profile.
+
+function isColonSlashSlash(location, i = 0) {
+  return location.charCodeAt(++i) === CHAR_CODE_COLON && location.charCodeAt(++i) === CHAR_CODE_SLASH && location.charCodeAt(++i) === CHAR_CODE_SLASH;
+}
+
+/**
+* Checks for a Scratchpad URI, like "Scratchpad/1"
+*/
+function isScratchpadScheme(location, i = 0) {
+  return location.charCodeAt(i) === CHAR_CODE_CAP_S && location.charCodeAt(++i) === CHAR_CODE_C && location.charCodeAt(++i) === CHAR_CODE_R && location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_T && location.charCodeAt(++i) === CHAR_CODE_C && location.charCodeAt(++i) === CHAR_CODE_H && location.charCodeAt(++i) === CHAR_CODE_P && location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_D && location.charCodeAt(++i) === CHAR_CODE_SLASH;
+}
+
+function isDataScheme(location, i = 0) {
+  return location.charCodeAt(i) === CHAR_CODE_D && location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_T && location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_COLON;
+}
+
+function isContentScheme(location, i = 0) {
+  let firstChar = location.charCodeAt(i);
+
+  switch (firstChar) {
+    // "http://" or "https://"
+    case CHAR_CODE_H:
+      if (location.charCodeAt(++i) === CHAR_CODE_T && location.charCodeAt(++i) === CHAR_CODE_T && location.charCodeAt(++i) === CHAR_CODE_P) {
+        if (location.charCodeAt(i + 1) === CHAR_CODE_S) {
+          ++i;
+        }
+        return isColonSlashSlash(location, i);
+      }
+      return false;
+
+    // "file://"
+    case CHAR_CODE_F:
+      if (location.charCodeAt(++i) === CHAR_CODE_I && location.charCodeAt(++i) === CHAR_CODE_L && location.charCodeAt(++i) === CHAR_CODE_E) {
+        return isColonSlashSlash(location, i);
+      }
+      return false;
+
+    // "app://"
+    case CHAR_CODE_A:
+      if (location.charCodeAt(++i) == CHAR_CODE_P && location.charCodeAt(++i) == CHAR_CODE_P) {
+        return isColonSlashSlash(location, i);
+      }
+      return false;
+
+    // "blob:"
+    case CHAR_CODE_B:
+      if (location.charCodeAt(++i) == CHAR_CODE_L && location.charCodeAt(++i) == CHAR_CODE_O && location.charCodeAt(++i) == CHAR_CODE_B && location.charCodeAt(++i) == CHAR_CODE_COLON) {
+        return isContentScheme(location, i + 1);
+      }
+      return false;
+
+    default:
+      return false;
+  }
+}
+
+function isChromeScheme(location, i = 0) {
+  let firstChar = location.charCodeAt(i);
+
+  switch (firstChar) {
+    // "chrome://"
+    case CHAR_CODE_C:
+      if (location.charCodeAt(++i) === CHAR_CODE_H && location.charCodeAt(++i) === CHAR_CODE_R && location.charCodeAt(++i) === CHAR_CODE_O && location.charCodeAt(++i) === CHAR_CODE_M && location.charCodeAt(++i) === CHAR_CODE_E) {
+        return isColonSlashSlash(location, i);
+      }
+      return false;
+
+    // "resource://"
+    case CHAR_CODE_R:
+      if (location.charCodeAt(++i) === CHAR_CODE_E && location.charCodeAt(++i) === CHAR_CODE_S && location.charCodeAt(++i) === CHAR_CODE_O && location.charCodeAt(++i) === CHAR_CODE_U && location.charCodeAt(++i) === CHAR_CODE_R && location.charCodeAt(++i) === CHAR_CODE_C && location.charCodeAt(++i) === CHAR_CODE_E) {
+        return isColonSlashSlash(location, i);
+      }
+      return false;
+
+    // "jar:file://"
+    case CHAR_CODE_J:
+      if (location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_R && location.charCodeAt(++i) === CHAR_CODE_COLON && location.charCodeAt(++i) === CHAR_CODE_F && location.charCodeAt(++i) === CHAR_CODE_I && location.charCodeAt(++i) === CHAR_CODE_L && location.charCodeAt(++i) === CHAR_CODE_E) {
+        return isColonSlashSlash(location, i);
+      }
+      return false;
+
+    default:
+      return false;
+  }
+}
+
+function isWASM(location, i = 0) {
+  return (
+    // "wasm-function["
+    location.charCodeAt(i) === CHAR_CODE_W && location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_S && location.charCodeAt(++i) === CHAR_CODE_M && location.charCodeAt(++i) === CHAR_CODE_DASH && location.charCodeAt(++i) === CHAR_CODE_F && location.charCodeAt(++i) === CHAR_CODE_U && location.charCodeAt(++i) === CHAR_CODE_N && location.charCodeAt(++i) === CHAR_CODE_C && location.charCodeAt(++i) === CHAR_CODE_T && location.charCodeAt(++i) === CHAR_CODE_I && location.charCodeAt(++i) === CHAR_CODE_O && location.charCodeAt(++i) === CHAR_CODE_N && location.charCodeAt(++i) === CHAR_CODE_L_SQUARE_BRACKET
+  );
+}
+
+/**
+* A utility method to get the file name from a sourcemapped location
+* The sourcemap location can be in any form. This method returns a
+* formatted file name for different cases like Windows or OSX.
+* @param source
+* @returns String
+*/
+function getSourceMappedFile(source) {
+  // If sourcemapped source is a OSX path, return
+  // the characters after last "/".
+  // If sourcemapped source is a Windowss path, return
+  // the characters after last "\\".
+  if (source.lastIndexOf("/") >= 0) {
+    source = source.slice(source.lastIndexOf("/") + 1);
+  } else if (source.lastIndexOf("\\") >= 0) {
+    source = source.slice(source.lastIndexOf("\\") + 1);
+  }
+  return source;
+}
+
+module.exports = {
+  parseURL,
+  getSourceNames,
+  isScratchpadScheme,
+  isChromeScheme,
+  isContentScheme,
+  isWASM,
+  isDataScheme,
+  getSourceMappedFile
+};
+
+/***/ }),
+
+/***/ 162:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6272,7 +3252,126 @@ module.exports = Telemetry;
 
 /***/ }),
 
-/***/ 3751:
+/***/ 163:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// This file is a chrome-API-free version of the module
+// devtools/client/shared/unicode-url.js in the mozilla-central repository, so
+// that it can be used in Chrome-API-free applications, such as the Launchpad.
+// But because of this, it cannot take advantage of utilizing chrome APIs and
+// should implement the similar functionalities on its own.
+//
+// Please keep in mind that if the feature in this file has changed, don't
+// forget to also change that accordingly in
+// devtools/client/shared/unicode-url.js in the mozilla-central repository.
+
+
+
+const punycode = __webpack_require__(67);
+
+/**
+ * Gets a readble Unicode hostname from a hostname.
+ *
+ * If the `hostname` is a readable ASCII hostname, such as example.org, then
+ * this function will simply return the original `hostname`.
+ *
+ * If the `hostname` is a Punycode hostname representing a Unicode domain name,
+ * such as xn--g6w.xn--8pv, then this function will return the readable Unicode
+ * domain name by decoding the Punycode hostname.
+ *
+ * @param {string}  hostname
+ *                  the hostname from which the Unicode hostname will be
+ *                  parsed, such as example.org, xn--g6w.xn--8pv.
+ * @return {string} The Unicode hostname. It may be the same as the `hostname`
+ *                  passed to this function if the `hostname` itself is
+ *                  a readable ASCII hostname or a Unicode hostname.
+ */
+function getUnicodeHostname(hostname) {
+  try {
+    return punycode.toUnicode(hostname);
+  } catch (err) {}
+  return hostname;
+}
+
+/**
+ * Gets a readble Unicode URL pathname from a URL pathname.
+ *
+ * If the `urlPath` is a readable ASCII URL pathname, such as /a/b/c.js, then
+ * this function will simply return the original `urlPath`.
+ *
+ * If the `urlPath` is a URI-encoded pathname, such as %E8%A9%A6/%E6%B8%AC.js,
+ * then this function will return the readable Unicode pathname.
+ *
+ * If the `urlPath` is a malformed URL pathname, then this function will simply
+ * return the original `urlPath`.
+ *
+ * @param {string}  urlPath
+ *                  the URL path from which the Unicode URL path will be parsed,
+ *                  such as /a/b/c.js, %E8%A9%A6/%E6%B8%AC.js.
+ * @return {string} The Unicode URL Path. It may be the same as the `urlPath`
+ *                  passed to this function if the `urlPath` itself is a readable
+ *                  ASCII url or a Unicode url.
+ */
+function getUnicodeUrlPath(urlPath) {
+  try {
+    return decodeURIComponent(urlPath);
+  } catch (err) {}
+  return urlPath;
+}
+
+/**
+ * Gets a readable Unicode URL from a URL.
+ *
+ * If the `url` is a readable ASCII URL, such as http://example.org/a/b/c.js,
+ * then this function will simply return the original `url`.
+ *
+ * If the `url` includes either an unreadable Punycode domain name or an
+ * unreadable URI-encoded pathname, such as
+ * http://xn--g6w.xn--8pv/%E8%A9%A6/%E6%B8%AC.js, then this function will return
+ * the readable URL by decoding all its unreadable URL components to Unicode
+ * characters.
+ *
+ * If the `url` is a malformed URL, then this function will return the original
+ * `url`.
+ *
+ * If the `url` is a data: URI, then this function will return the original
+ * `url`.
+ *
+ * @param {string}  url
+ *                  the full URL, or a data: URI. from which the readable URL
+ *                  will be parsed, such as, http://example.org/a/b/c.js,
+ *                  http://xn--g6w.xn--8pv/%E8%A9%A6/%E6%B8%AC.js
+ * @return {string} The readable URL. It may be the same as the `url` passed to
+ *                  this function if the `url` itself is readable.
+ */
+function getUnicodeUrl(url) {
+  try {
+    const { protocol, hostname } = new URL(url);
+    if (protocol === "data:") {
+      // Never convert a data: URI.
+      return url;
+    }
+    const readableHostname = getUnicodeHostname(hostname);
+    url = decodeURIComponent(url);
+    return url.replace(hostname, readableHostname);
+  } catch (err) {}
+  return url;
+}
+
+module.exports = {
+  getUnicodeHostname,
+  getUnicodeUrlPath,
+  getUnicodeUrl
+};
+
+/***/ }),
+
+/***/ 172:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6310,35 +3409,50 @@ function move(array, moveIndex, toIndex) {
 
 /***/ }),
 
-/***/ 3758:
+/***/ 2:
+/***/ (function(module, exports) {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE_2__;
+
+/***/ }),
+
+/***/ 20:
+/***/ (function(module, exports) {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE_20__;
+
+/***/ }),
+
+/***/ 211:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
+exports.__esModule = true;
+exports.EXITING = exports.ENTERED = exports.ENTERING = exports.EXITED = exports.UNMOUNTED = undefined;
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _propTypes = __webpack_require__(0);
 
-var _propTypes = __webpack_require__(3642);
+var PropTypes = _interopRequireWildcard(_propTypes);
 
-var _propTypes2 = _interopRequireDefault(_propTypes);
-
-var _react = __webpack_require__(0);
+var _react = __webpack_require__(1);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _tab = __webpack_require__(3759);
+var _reactDom = __webpack_require__(24);
 
-var _tab2 = _interopRequireDefault(_tab);
+var _reactDom2 = _interopRequireDefault(_reactDom);
 
-var _tabList = __webpack_require__(3764);
+var _reactLifecyclesCompat = __webpack_require__(212);
 
-var _tabList2 = _interopRequireDefault(_tabList);
+var _PropTypes = __webpack_require__(213);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -6346,644 +3460,574 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var TabList = function (_React$Component) {
-  _inherits(TabList, _React$Component);
+var UNMOUNTED = exports.UNMOUNTED = 'unmounted';
+var EXITED = exports.EXITED = 'exited';
+var ENTERING = exports.ENTERING = 'entering';
+var ENTERED = exports.ENTERED = 'entered';
+var EXITING = exports.EXITING = 'exiting';
 
-  function TabList(props) {
-    _classCallCheck(this, TabList);
-
-    var _this = _possibleConstructorReturn(this, (TabList.__proto__ || Object.getPrototypeOf(TabList)).call(this, props));
-
-    var childrenCount = _react2.default.Children.count(props.children);
-
-    _this.handleKeyPress = _this.handleKeyPress.bind(_this);
-    _this.tabRefs = new Array(childrenCount).fill(0).map(function () {
-      return _react2.default.createRef();
-    });
-    _this.handlers = _this.getHandlers(props.vertical);
-    return _this;
-  }
-
-  _createClass(TabList, [{
-    key: 'componentDidUpdate',
-    value: function componentDidUpdate(prevProps) {
-      if (prevProps.activeIndex !== this.props.activeIndex) {
-        this.tabRefs[this.props.activeIndex].current.focus();
-      }
-    }
-  }, {
-    key: 'getHandlers',
-    value: function getHandlers(vertical) {
-      if (vertical) {
-        return {
-          ArrowDown: this.next.bind(this),
-          ArrowUp: this.previous.bind(this)
-        };
-      }
-      return {
-        ArrowLeft: this.previous.bind(this),
-        ArrowRight: this.next.bind(this)
-      };
-    }
-  }, {
-    key: 'wrapIndex',
-    value: function wrapIndex(index) {
-      var count = _react2.default.Children.count(this.props.children);
-      return (index + count) % count;
-    }
-  }, {
-    key: 'handleKeyPress',
-    value: function handleKeyPress(event) {
-      var handler = this.handlers[event.key];
-      if (handler) {
-        handler();
-      }
-    }
-  }, {
-    key: 'previous',
-    value: function previous() {
-      var newIndex = this.wrapIndex(this.props.activeIndex - 1);
-      this.props.onActivateTab(newIndex);
-    }
-  }, {
-    key: 'next',
-    value: function next() {
-      var newIndex = this.wrapIndex(this.props.activeIndex + 1);
-      this.props.onActivateTab(newIndex);
-    }
-  }, {
-    key: 'render',
-    value: function render() {
-      var _this2 = this;
-
-      var _props = this.props,
-          accessibleId = _props.accessibleId,
-          activeIndex = _props.activeIndex,
-          children = _props.children,
-          className = _props.className,
-          onActivateTab = _props.onActivateTab;
-
-
-      return _react2.default.createElement(
-        'ul',
-        { className: className, onKeyUp: this.handleKeyPress, role: 'tablist' },
-        _react2.default.Children.map(children, function (child, index) {
-          if (child.type !== _tab2.default) {
-            throw new Error('Direct children of a <TabList> must be a <Tab>');
-          }
-
-          var active = index === activeIndex;
-          var tabRef = _this2.tabRefs[index];
-
-          return _react2.default.cloneElement(child, {
-            accessibleId: active ? accessibleId : undefined,
-            active: active,
-            tabRef: tabRef,
-            onActivate: function onActivate() {
-              return onActivateTab(index);
-            }
-          });
-        })
-      );
-    }
-  }]);
-
-  return TabList;
-}(_react2.default.Component);
-
-exports.default = TabList;
-
-
-TabList.propTypes = {
-  accessibleId: _propTypes2.default.string,
-  activeIndex: _propTypes2.default.number,
-  children: _propTypes2.default.node,
-  className: _propTypes2.default.string,
-  onActivateTab: _propTypes2.default.func,
-  vertical: _propTypes2.default.bool
-};
-
-TabList.defaultProps = {
-  accessibleId: undefined,
-  activeIndex: 0,
-  children: null,
-  className: _tabList2.default.container,
-  onActivateTab: function onActivateTab() {},
-  vertical: false
-};
-
-/***/ }),
-
-/***/ 3759:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = Tab;
-
-var _propTypes = __webpack_require__(3642);
-
-var _propTypes2 = _interopRequireDefault(_propTypes);
-
-var _react = __webpack_require__(0);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _ref2 = __webpack_require__(3784);
-
-var _ref3 = _interopRequireDefault(_ref2);
-
-var _tab = __webpack_require__(3763);
-
-var _tab2 = _interopRequireDefault(_tab);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function Tab(_ref) {
-  var accessibleId = _ref.accessibleId,
-      active = _ref.active,
-      children = _ref.children,
-      className = _ref.className,
-      onActivate = _ref.onActivate,
-      tabRef = _ref.tabRef;
-
-  return _react2.default.createElement(
-    'li',
-    {
-      'aria-selected': active,
-      className: className,
-      id: accessibleId,
-      onClick: onActivate,
-      onKeyDown: function onKeyDown() {},
-      ref: tabRef,
-      role: 'tab',
-      tabIndex: active ? 0 : undefined
-    },
-    children
-  );
-}
-
-Tab.propTypes = {
-  accessibleId: _propTypes2.default.string,
-  active: _propTypes2.default.bool,
-  children: _propTypes2.default.node.isRequired,
-  className: _propTypes2.default.string,
-  onActivate: _propTypes2.default.func,
-  tabRef: _ref3.default
-};
-
-Tab.defaultProps = {
-  accessibleId: undefined,
-  active: false,
-  className: _tab2.default.container,
-  onActivate: undefined,
-  tabRef: undefined
-};
-
-/***/ }),
-
-/***/ 3760:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = TabPanels;
-
-var _propTypes = __webpack_require__(3642);
-
-var _propTypes2 = _interopRequireDefault(_propTypes);
-
-var _react = __webpack_require__(0);
-
-var _react2 = _interopRequireDefault(_react);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function TabPanels(_ref) {
-  var accessibleId = _ref.accessibleId,
-      activeIndex = _ref.activeIndex,
-      children = _ref.children,
-      className = _ref.className,
-      hasFocusableContent = _ref.hasFocusableContent;
-
-  return _react2.default.createElement(
-    'div',
-    {
-      'aria-labelledby': accessibleId,
-      role: 'tabpanel',
-      className: className,
-      tabIndex: hasFocusableContent ? undefined : 0
-    },
-    _react2.default.Children.toArray(children)[activeIndex]
-  );
-}
-
-TabPanels.propTypes = {
-  accessibleId: _propTypes2.default.string,
-  activeIndex: _propTypes2.default.number,
-  children: _propTypes2.default.node.isRequired,
-  className: _propTypes2.default.string,
-  hasFocusableContent: _propTypes2.default.bool.isRequired
-};
-
-TabPanels.defaultProps = {
-  accessibleId: undefined,
-  activeIndex: 0,
-  className: null
-};
-
-/***/ }),
-
-/***/ 3762:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _tabList = __webpack_require__(3758);
-
-Object.defineProperty(exports, 'TabList', {
-  enumerable: true,
-  get: function get() {
-    return _interopRequireDefault(_tabList).default;
-  }
-});
-
-var _tabPanels = __webpack_require__(3760);
-
-Object.defineProperty(exports, 'TabPanels', {
-  enumerable: true,
-  get: function get() {
-    return _interopRequireDefault(_tabPanels).default;
-  }
-});
-
-var _tab = __webpack_require__(3759);
-
-Object.defineProperty(exports, 'Tab', {
-  enumerable: true,
-  get: function get() {
-    return _interopRequireDefault(_tab).default;
-  }
-});
-
-var _tabs = __webpack_require__(3765);
-
-Object.defineProperty(exports, 'Tabs', {
-  enumerable: true,
-  get: function get() {
-    return _interopRequireDefault(_tabs).default;
-  }
-});
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/***/ }),
-
-/***/ 3763:
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-
-/***/ 3764:
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-
-/***/ 3765:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _propTypes = __webpack_require__(3642);
-
-var _propTypes2 = _interopRequireDefault(_propTypes);
-
-var _react = __webpack_require__(0);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _uniqueId = __webpack_require__(3766);
-
-var _uniqueId2 = _interopRequireDefault(_uniqueId);
-
-var _tabList = __webpack_require__(3758);
-
-var _tabList2 = _interopRequireDefault(_tabList);
-
-var _tabPanels = __webpack_require__(3760);
-
-var _tabPanels2 = _interopRequireDefault(_tabPanels);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var Tabs = function (_React$Component) {
-  _inherits(Tabs, _React$Component);
-
-  function Tabs() {
-    _classCallCheck(this, Tabs);
-
-    var _this = _possibleConstructorReturn(this, (Tabs.__proto__ || Object.getPrototypeOf(Tabs)).call(this));
-
-    _this.accessibleId = (0, _uniqueId2.default)();
-    return _this;
-  }
-
-  _createClass(Tabs, [{
-    key: 'render',
-    value: function render() {
-      var _props = this.props,
-          activeIndex = _props.activeIndex,
-          children = _props.children,
-          className = _props.className,
-          onActivateTab = _props.onActivateTab;
-
-      var accessibleId = this.accessibleId;
-
-      return _react2.default.createElement(
-        'div',
-        { className: className },
-        _react2.default.Children.map(children, function (child) {
-          if (!child) {
-            return child;
-          }
-
-          switch (child.type) {
-            case _tabList2.default:
-              return _react2.default.cloneElement(child, { accessibleId: accessibleId, activeIndex: activeIndex, onActivateTab: onActivateTab });
-            case _tabPanels2.default:
-              return _react2.default.cloneElement(child, { accessibleId: accessibleId, activeIndex: activeIndex });
-            default:
-              return child;
-          }
-        })
-      );
-    }
-  }]);
-
-  return Tabs;
-}(_react2.default.Component);
-
-exports.default = Tabs;
-
-
-Tabs.propTypes = {
-  activeIndex: _propTypes2.default.number.isRequired,
-  children: _propTypes2.default.node,
-  className: _propTypes2.default.string,
-  onActivateTab: _propTypes2.default.func
-};
-
-Tabs.defaultProps = {
-  children: null,
-  className: undefined,
-  onActivateTab: function onActivateTab() {}
-};
-
-/***/ }),
-
-/***/ 3766:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = uniqueId;
-var counter = 0;
-
-function uniqueId() {
-  counter += 1;
-  return "$rac$" + counter;
-}
-
-/***/ }),
-
-/***/ 3769:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
 /**
+ * The Transition component lets you describe a transition from one component
+ * state to another _over time_ with a simple declarative API. Most commonly
+ * it's used to animate the mounting and unmounting of a component, but can also
+ * be used to describe in-place transition states as well.
  *
- * Adapted from https://github.com/mozilla-b2g/gaia/blob/f09993563fb5fec4393eb71816ce76cb00463190/shared/js/async_storage.js
- * (converted to use Promises instead of callbacks).
+ * By default the `Transition` component does not alter the behavior of the
+ * component it renders, it only tracks "enter" and "exit" states for the components.
+ * It's up to you to give meaning and effect to those states. For example we can
+ * add styles to a component when it enters or exits:
  *
- * This file defines an asynchronous version of the localStorage API, backed by
- * an IndexedDB database.  It creates a global asyncStorage object that has
- * methods like the localStorage object.
+ * ```jsx
+ * import Transition from 'react-transition-group/Transition';
  *
- * To store a value use setItem:
+ * const duration = 300;
  *
- *   asyncStorage.setItem("key", "value");
+ * const defaultStyle = {
+ *   transition: `opacity ${duration}ms ease-in-out`,
+ *   opacity: 0,
+ * }
  *
- * This returns a promise in case you want confirmation that the value has been stored.
+ * const transitionStyles = {
+ *   entering: { opacity: 0 },
+ *   entered:  { opacity: 1 },
+ * };
  *
- *  asyncStorage.setItem("key", "newvalue").then(function() {
- *    console.log("new value stored");
- *  });
+ * const Fade = ({ in: inProp }) => (
+ *   <Transition in={inProp} timeout={duration}>
+ *     {(state) => (
+ *       <div style={{
+ *         ...defaultStyle,
+ *         ...transitionStyles[state]
+ *       }}>
+ *         I'm a fade Transition!
+ *       </div>
+ *     )}
+ *   </Transition>
+ * );
+ * ```
  *
- * To read a value, call getItem(), but note that you must wait for a promise
- * resolution for the value to be retrieved.
+ * As noted the `Transition` component doesn't _do_ anything by itself to its child component.
+ * What it does do is track transition states over time so you can update the
+ * component (such as by adding styles or classes) when it changes states.
  *
- *  asyncStorage.getItem("key").then(function(value) {
- *    console.log("The value of key is:", value);
- *  });
+ * There are 4 main states a Transition can be in:
+ *  - `'entering'`
+ *  - `'entered'`
+ *  - `'exiting'`
+ *  - `'exited'`
  *
- * Note that unlike localStorage, asyncStorage does not allow you to store and
- * retrieve values by setting and querying properties directly. You cannot just
- * write asyncStorage.key; you have to explicitly call setItem() or getItem().
+ * Transition state is toggled via the `in` prop. When `true` the component begins the
+ * "Enter" stage. During this stage, the component will shift from its current transition state,
+ * to `'entering'` for the duration of the transition and then to the `'entered'` stage once
+ * it's complete. Let's take the following example:
  *
- * removeItem(), clear(), length(), and key() are like the same-named methods of
- * localStorage, and all return a promise.
+ * ```jsx
+ * state = { in: false };
  *
- * The asynchronous nature of getItem() makes it tricky to retrieve multiple
- * values. But unlike localStorage, asyncStorage does not require the values you
- * store to be strings.  So if you need to save multiple values and want to
- * retrieve them together, in a single asynchronous operation, just group the
- * values into a single object. The properties of this object may not include
- * DOM elements, but they may include things like Blobs and typed arrays.
+ * toggleEnterState = () => {
+ *   this.setState({ in: true });
+ * }
+ *
+ * render() {
+ *   return (
+ *     <div>
+ *       <Transition in={this.state.in} timeout={500} />
+ *       <button onClick={this.toggleEnterState}>Click to Enter</button>
+ *     </div>
+ *   );
+ * }
+ * ```
+ *
+ * When the button is clicked the component will shift to the `'entering'` state and
+ * stay there for 500ms (the value of `timeout`) before it finally switches to `'entered'`.
+ *
+ * When `in` is `false` the same thing happens except the state moves from `'exiting'` to `'exited'`.
+ *
+ * ## Timing
+ *
+ * Timing is often the trickiest part of animation, mistakes can result in slight delays
+ * that are hard to pin down. A common example is when you want to add an exit transition,
+ * you should set the desired final styles when the state is `'exiting'`. That's when the
+ * transition to those styles will start and, if you matched the `timeout` prop with the
+ * CSS Transition duration, it will end exactly when the state changes to `'exited'`.
+ *
+ * > **Note**: For simpler transitions the `Transition` component might be enough, but
+ * > take into account that it's platform-agnostic, while the `CSSTransition` component
+ * > [forces reflows](https://github.com/reactjs/react-transition-group/blob/5007303e729a74be66a21c3e2205e4916821524b/src/CSSTransition.js#L208-L215)
+ * > in order to make more complex transitions more predictable. For example, even though
+ * > classes `example-enter` and `example-enter-active` are applied immediately one after
+ * > another, you can still transition from one to the other because of the forced reflow
+ * > (read [this issue](https://github.com/reactjs/react-transition-group/issues/159#issuecomment-322761171)
+ * > for more info). Take this into account when choosing between `Transition` and
+ * > `CSSTransition`.
+ *
+ * ## Example
+ *
+ * <iframe src="https://codesandbox.io/embed/741op4mmj0?fontsize=14" style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;" sandbox="allow-modals allow-forms allow-popups allow-scripts allow-same-origin"></iframe>
  *
  */
 
+var Transition = function (_React$Component) {
+  _inherits(Transition, _React$Component);
 
+  function Transition(props, context) {
+    _classCallCheck(this, Transition);
 
-const DBNAME = "devtools-async-storage";
-const DBVERSION = 1;
-const STORENAME = "keyvaluepairs";
-var db = null;
+    var _this = _possibleConstructorReturn(this, _React$Component.call(this, props, context));
 
-function withStore(type, onsuccess, onerror) {
-  if (db) {
-    const transaction = db.transaction(STORENAME, type);
-    const store = transaction.objectStore(STORENAME);
-    onsuccess(store);
-  } else {
-    const openreq = indexedDB.open(DBNAME, DBVERSION);
-    openreq.onerror = function withStoreOnError() {
-      onerror();
-    };
-    openreq.onupgradeneeded = function withStoreOnUpgradeNeeded() {
-      // First time setup: create an empty object store
-      openreq.result.createObjectStore(STORENAME);
-    };
-    openreq.onsuccess = function withStoreOnSuccess() {
-      db = openreq.result;
-      const transaction = db.transaction(STORENAME, type);
-      const store = transaction.objectStore(STORENAME);
-      onsuccess(store);
-    };
+    var parentGroup = context.transitionGroup;
+    // In the context of a TransitionGroup all enters are really appears
+    var appear = parentGroup && !parentGroup.isMounting ? props.enter : props.appear;
+
+    var initialStatus = void 0;
+
+    _this.appearStatus = null;
+
+    if (props.in) {
+      if (appear) {
+        initialStatus = EXITED;
+        _this.appearStatus = ENTERING;
+      } else {
+        initialStatus = ENTERED;
+      }
+    } else {
+      if (props.unmountOnExit || props.mountOnEnter) {
+        initialStatus = UNMOUNTED;
+      } else {
+        initialStatus = EXITED;
+      }
+    }
+
+    _this.state = { status: initialStatus };
+
+    _this.nextCallback = null;
+    return _this;
   }
-}
 
-function getItem(itemKey) {
-  return new Promise((resolve, reject) => {
-    let req;
-    withStore("readonly", store => {
-      store.transaction.oncomplete = function onComplete() {
-        let value = req.result;
-        if (value === undefined) {
-          value = null;
+  Transition.prototype.getChildContext = function getChildContext() {
+    return { transitionGroup: null // allows for nested Transitions
+    };
+  };
+
+  Transition.getDerivedStateFromProps = function getDerivedStateFromProps(_ref, prevState) {
+    var nextIn = _ref.in;
+
+    if (nextIn && prevState.status === UNMOUNTED) {
+      return { status: EXITED };
+    }
+    return null;
+  };
+
+  // getSnapshotBeforeUpdate(prevProps) {
+  //   let nextStatus = null
+
+  //   if (prevProps !== this.props) {
+  //     const { status } = this.state
+
+  //     if (this.props.in) {
+  //       if (status !== ENTERING && status !== ENTERED) {
+  //         nextStatus = ENTERING
+  //       }
+  //     } else {
+  //       if (status === ENTERING || status === ENTERED) {
+  //         nextStatus = EXITING
+  //       }
+  //     }
+  //   }
+
+  //   return { nextStatus }
+  // }
+
+  Transition.prototype.componentDidMount = function componentDidMount() {
+    this.updateStatus(true, this.appearStatus);
+  };
+
+  Transition.prototype.componentDidUpdate = function componentDidUpdate(prevProps) {
+    var nextStatus = null;
+    if (prevProps !== this.props) {
+      var status = this.state.status;
+
+
+      if (this.props.in) {
+        if (status !== ENTERING && status !== ENTERED) {
+          nextStatus = ENTERING;
         }
-        resolve(value);
-      };
-      req = store.get(itemKey);
-      req.onerror = function getItemOnError() {
-        reject("Error in asyncStorage.getItem(): ", req.error.name);
-      };
-    }, reject);
-  });
-}
+      } else {
+        if (status === ENTERING || status === ENTERED) {
+          nextStatus = EXITING;
+        }
+      }
+    }
+    this.updateStatus(false, nextStatus);
+  };
 
-function setItem(itemKey, value) {
-  return new Promise((resolve, reject) => {
-    withStore("readwrite", store => {
-      store.transaction.oncomplete = resolve;
-      const req = store.put(value, itemKey);
-      req.onerror = function setItemOnError() {
-        reject("Error in asyncStorage.setItem(): ", req.error.name);
-      };
-    }, reject);
-  });
-}
+  Transition.prototype.componentWillUnmount = function componentWillUnmount() {
+    this.cancelNextCallback();
+  };
 
-function removeItem(itemKey) {
-  return new Promise((resolve, reject) => {
-    withStore("readwrite", store => {
-      store.transaction.oncomplete = resolve;
-      const req = store.delete(itemKey);
-      req.onerror = function removeItemOnError() {
-        reject("Error in asyncStorage.removeItem(): ", req.error.name);
-      };
-    }, reject);
-  });
-}
+  Transition.prototype.getTimeouts = function getTimeouts() {
+    var timeout = this.props.timeout;
 
-function clear() {
-  return new Promise((resolve, reject) => {
-    withStore("readwrite", store => {
-      store.transaction.oncomplete = resolve;
-      const req = store.clear();
-      req.onerror = function clearOnError() {
-        reject("Error in asyncStorage.clear(): ", req.error.name);
-      };
-    }, reject);
-  });
-}
+    var exit = void 0,
+        enter = void 0,
+        appear = void 0;
 
-function length() {
-  return new Promise((resolve, reject) => {
-    let req;
-    withStore("readonly", store => {
-      store.transaction.oncomplete = function onComplete() {
-        resolve(req.result);
-      };
-      req = store.count();
-      req.onerror = function lengthOnError() {
-        reject("Error in asyncStorage.length(): ", req.error.name);
-      };
-    }, reject);
-  });
-}
+    exit = enter = appear = timeout;
 
-function key(n) {
-  return new Promise((resolve, reject) => {
-    if (n < 0) {
-      resolve(null);
+    if (timeout != null && typeof timeout !== 'number') {
+      exit = timeout.exit;
+      enter = timeout.enter;
+      appear = timeout.appear;
+    }
+    return { exit: exit, enter: enter, appear: appear };
+  };
+
+  Transition.prototype.updateStatus = function updateStatus() {
+    var mounting = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+    var nextStatus = arguments[1];
+
+    if (nextStatus !== null) {
+      // nextStatus will always be ENTERING or EXITING.
+      this.cancelNextCallback();
+      var node = _reactDom2.default.findDOMNode(this);
+
+      if (nextStatus === ENTERING) {
+        this.performEnter(node, mounting);
+      } else {
+        this.performExit(node);
+      }
+    } else if (this.props.unmountOnExit && this.state.status === EXITED) {
+      this.setState({ status: UNMOUNTED });
+    }
+  };
+
+  Transition.prototype.performEnter = function performEnter(node, mounting) {
+    var _this2 = this;
+
+    var enter = this.props.enter;
+
+    var appearing = this.context.transitionGroup ? this.context.transitionGroup.isMounting : mounting;
+
+    var timeouts = this.getTimeouts();
+
+    // no enter animation skip right to ENTERED
+    // if we are mounting and running this it means appear _must_ be set
+    if (!mounting && !enter) {
+      this.safeSetState({ status: ENTERED }, function () {
+        _this2.props.onEntered(node);
+      });
       return;
     }
 
-    let req;
-    withStore("readonly", store => {
-      store.transaction.oncomplete = function onComplete() {
-        const cursor = req.result;
-        resolve(cursor ? cursor.key : null);
-      };
-      let advanced = false;
-      req = store.openCursor();
-      req.onsuccess = function keyOnSuccess() {
-        const cursor = req.result;
-        if (!cursor) {
-          // this means there weren"t enough keys
-          return;
-        }
-        if (n === 0 || advanced) {
-          // Either 1) we have the first key, return it if that's what they
-          // wanted, or 2) we"ve got the nth key.
-          return;
-        }
+    this.props.onEnter(node, appearing);
 
-        // Otherwise, ask the cursor to skip ahead n records
-        advanced = true;
-        cursor.advance(n);
-      };
-      req.onerror = function keyOnError() {
-        reject("Error in asyncStorage.key(): ", req.error.name);
-      };
-    }, reject);
-  });
-}
+    this.safeSetState({ status: ENTERING }, function () {
+      _this2.props.onEntering(node, appearing);
 
-exports.getItem = getItem;
-exports.setItem = setItem;
-exports.removeItem = removeItem;
-exports.clear = clear;
-exports.length = length;
-exports.key = key;
+      // FIXME: appear timeout?
+      _this2.onTransitionEnd(node, timeouts.enter, function () {
+        _this2.safeSetState({ status: ENTERED }, function () {
+          _this2.props.onEntered(node, appearing);
+        });
+      });
+    });
+  };
+
+  Transition.prototype.performExit = function performExit(node) {
+    var _this3 = this;
+
+    var exit = this.props.exit;
+
+    var timeouts = this.getTimeouts();
+
+    // no exit animation skip right to EXITED
+    if (!exit) {
+      this.safeSetState({ status: EXITED }, function () {
+        _this3.props.onExited(node);
+      });
+      return;
+    }
+    this.props.onExit(node);
+
+    this.safeSetState({ status: EXITING }, function () {
+      _this3.props.onExiting(node);
+
+      _this3.onTransitionEnd(node, timeouts.exit, function () {
+        _this3.safeSetState({ status: EXITED }, function () {
+          _this3.props.onExited(node);
+        });
+      });
+    });
+  };
+
+  Transition.prototype.cancelNextCallback = function cancelNextCallback() {
+    if (this.nextCallback !== null) {
+      this.nextCallback.cancel();
+      this.nextCallback = null;
+    }
+  };
+
+  Transition.prototype.safeSetState = function safeSetState(nextState, callback) {
+    // This shouldn't be necessary, but there are weird race conditions with
+    // setState callbacks and unmounting in testing, so always make sure that
+    // we can cancel any pending setState callbacks after we unmount.
+    callback = this.setNextCallback(callback);
+    this.setState(nextState, callback);
+  };
+
+  Transition.prototype.setNextCallback = function setNextCallback(callback) {
+    var _this4 = this;
+
+    var active = true;
+
+    this.nextCallback = function (event) {
+      if (active) {
+        active = false;
+        _this4.nextCallback = null;
+
+        callback(event);
+      }
+    };
+
+    this.nextCallback.cancel = function () {
+      active = false;
+    };
+
+    return this.nextCallback;
+  };
+
+  Transition.prototype.onTransitionEnd = function onTransitionEnd(node, timeout, handler) {
+    this.setNextCallback(handler);
+
+    if (node) {
+      if (this.props.addEndListener) {
+        this.props.addEndListener(node, this.nextCallback);
+      }
+      if (timeout != null) {
+        setTimeout(this.nextCallback, timeout);
+      }
+    } else {
+      setTimeout(this.nextCallback, 0);
+    }
+  };
+
+  Transition.prototype.render = function render() {
+    var status = this.state.status;
+    if (status === UNMOUNTED) {
+      return null;
+    }
+
+    var _props = this.props,
+        children = _props.children,
+        childProps = _objectWithoutProperties(_props, ['children']);
+    // filter props for Transtition
+
+
+    delete childProps.in;
+    delete childProps.mountOnEnter;
+    delete childProps.unmountOnExit;
+    delete childProps.appear;
+    delete childProps.enter;
+    delete childProps.exit;
+    delete childProps.timeout;
+    delete childProps.addEndListener;
+    delete childProps.onEnter;
+    delete childProps.onEntering;
+    delete childProps.onEntered;
+    delete childProps.onExit;
+    delete childProps.onExiting;
+    delete childProps.onExited;
+
+    if (typeof children === 'function') {
+      return children(status, childProps);
+    }
+
+    var child = _react2.default.Children.only(children);
+    return _react2.default.cloneElement(child, childProps);
+  };
+
+  return Transition;
+}(_react2.default.Component);
+
+Transition.contextTypes = {
+  transitionGroup: PropTypes.object
+};
+Transition.childContextTypes = {
+  transitionGroup: function transitionGroup() {}
+};
+
+
+Transition.propTypes =  false ? {
+  /**
+   * A `function` child can be used instead of a React element.
+   * This function is called with the current transition status
+   * ('entering', 'entered', 'exiting', 'exited', 'unmounted'), which can be used
+   * to apply context specific props to a component.
+   *
+   * ```jsx
+   * <Transition timeout={150}>
+   *   {(status) => (
+   *     <MyComponent className={`fade fade-${status}`} />
+   *   )}
+   * </Transition>
+   * ```
+   */
+  children: PropTypes.oneOfType([PropTypes.func.isRequired, PropTypes.element.isRequired]).isRequired,
+
+  /**
+   * Show the component; triggers the enter or exit states
+   */
+  in: PropTypes.bool,
+
+  /**
+   * By default the child component is mounted immediately along with
+   * the parent `Transition` component. If you want to "lazy mount" the component on the
+   * first `in={true}` you can set `mountOnEnter`. After the first enter transition the component will stay
+   * mounted, even on "exited", unless you also specify `unmountOnExit`.
+   */
+  mountOnEnter: PropTypes.bool,
+
+  /**
+   * By default the child component stays mounted after it reaches the `'exited'` state.
+   * Set `unmountOnExit` if you'd prefer to unmount the component after it finishes exiting.
+   */
+  unmountOnExit: PropTypes.bool,
+
+  /**
+   * Normally a component is not transitioned if it is shown when the `<Transition>` component mounts.
+   * If you want to transition on the first mount set `appear` to `true`, and the
+   * component will transition in as soon as the `<Transition>` mounts.
+   *
+   * > Note: there are no specific "appear" states. `appear` only adds an additional `enter` transition.
+   */
+  appear: PropTypes.bool,
+
+  /**
+   * Enable or disable enter transitions.
+   */
+  enter: PropTypes.bool,
+
+  /**
+   * Enable or disable exit transitions.
+   */
+  exit: PropTypes.bool,
+
+  /**
+   * The duration of the transition, in milliseconds.
+   * Required unless `addEndListener` is provided
+   *
+   * You may specify a single timeout for all transitions like: `timeout={500}`,
+   * or individually like:
+   *
+   * ```jsx
+   * timeout={{
+   *  enter: 300,
+   *  exit: 500,
+   * }}
+   * ```
+   *
+   * @type {number | { enter?: number, exit?: number }}
+   */
+  timeout: function timeout(props) {
+    for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+      args[_key - 1] = arguments[_key];
+    }
+
+    var pt = _PropTypes.timeoutsShape;
+    if (!props.addEndListener) pt = pt.isRequired;
+    return pt.apply(undefined, [props].concat(args));
+  },
+
+  /**
+   * Add a custom transition end trigger. Called with the transitioning
+   * DOM node and a `done` callback. Allows for more fine grained transition end
+   * logic. **Note:** Timeouts are still used as a fallback if provided.
+   *
+   * ```jsx
+   * addEndListener={(node, done) => {
+   *   // use the css transitionend event to mark the finish of a transition
+   *   node.addEventListener('transitionend', done, false);
+   * }}
+   * ```
+   */
+  addEndListener: PropTypes.func,
+
+  /**
+   * Callback fired before the "entering" status is applied. An extra parameter
+   * `isAppearing` is supplied to indicate if the enter stage is occurring on the initial mount
+   *
+   * @type Function(node: HtmlElement, isAppearing: bool) -> void
+   */
+  onEnter: PropTypes.func,
+
+  /**
+   * Callback fired after the "entering" status is applied. An extra parameter
+   * `isAppearing` is supplied to indicate if the enter stage is occurring on the initial mount
+   *
+   * @type Function(node: HtmlElement, isAppearing: bool)
+   */
+  onEntering: PropTypes.func,
+
+  /**
+   * Callback fired after the "entered" status is applied. An extra parameter
+   * `isAppearing` is supplied to indicate if the enter stage is occurring on the initial mount
+   *
+   * @type Function(node: HtmlElement, isAppearing: bool) -> void
+   */
+  onEntered: PropTypes.func,
+
+  /**
+   * Callback fired before the "exiting" status is applied.
+   *
+   * @type Function(node: HtmlElement) -> void
+   */
+  onExit: PropTypes.func,
+
+  /**
+   * Callback fired after the "exiting" status is applied.
+   *
+   * @type Function(node: HtmlElement) -> void
+   */
+  onExiting: PropTypes.func,
+
+  /**
+   * Callback fired after the "exited" status is applied.
+   *
+   * @type Function(node: HtmlElement) -> void
+   */
+  onExited: PropTypes.func
+
+  // Name the function so it is clearer in the documentation
+} : {};function noop() {}
+
+Transition.defaultProps = {
+  in: false,
+  mountOnEnter: false,
+  unmountOnExit: false,
+  appear: false,
+  enter: true,
+  exit: true,
+
+  onEnter: noop,
+  onEntering: noop,
+  onEntered: noop,
+
+  onExit: noop,
+  onExiting: noop,
+  onExited: noop
+};
+
+Transition.UNMOUNTED = 0;
+Transition.EXITED = 1;
+Transition.ENTERING = 2;
+Transition.ENTERED = 3;
+Transition.EXITING = 4;
+
+exports.default = (0, _reactLifecyclesCompat.polyfill)(Transition);
 
 /***/ }),
 
-/***/ 3770:
+/***/ 212:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -7151,182 +4195,78 @@ function polyfill(Component) {
 
 /***/ }),
 
-/***/ 3784:
+/***/ 213:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
+exports.__esModule = true;
+exports.classNamesShape = exports.timeoutsShape = undefined;
+exports.transitionTimeout = transitionTimeout;
 
-var _propTypes = __webpack_require__(3642);
+var _propTypes = __webpack_require__(0);
 
 var _propTypes2 = _interopRequireDefault(_propTypes);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-exports.default = _propTypes2.default.object;
+function transitionTimeout(transitionType) {
+  var timeoutPropName = 'transition' + transitionType + 'Timeout';
+  var enabledPropName = 'transition' + transitionType;
 
-/***/ }),
+  return function (props) {
+    // If the transition is enabled
+    if (props[enabledPropName]) {
+      // If no timeout duration is provided
+      if (props[timeoutPropName] == null) {
+        return new Error(timeoutPropName + ' wasn\'t supplied to CSSTransitionGroup: ' + 'this can cause unreliable animations and won\'t be supported in ' + 'a future version of React. See ' + 'https://fb.me/react-animation-transition-group-timeout for more ' + 'information.');
 
-/***/ 3791:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony export (immutable) */ __webpack_exports__["defaultMemoize"] = defaultMemoize;
-/* harmony export (immutable) */ __webpack_exports__["createSelectorCreator"] = createSelectorCreator;
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "createSelector", function() { return createSelector; });
-/* harmony export (immutable) */ __webpack_exports__["createStructuredSelector"] = createStructuredSelector;
-function defaultEqualityCheck(a, b) {
-  return a === b;
-}
-
-function areArgumentsShallowlyEqual(equalityCheck, prev, next) {
-  if (prev === null || next === null || prev.length !== next.length) {
-    return false;
-  }
-
-  // Do this in a for loop (and not a `forEach` or an `every`) so we can determine equality as fast as possible.
-  var length = prev.length;
-  for (var i = 0; i < length; i++) {
-    if (!equalityCheck(prev[i], next[i])) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-function defaultMemoize(func) {
-  var equalityCheck = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultEqualityCheck;
-
-  var lastArgs = null;
-  var lastResult = null;
-  // we reference arguments instead of spreading them for performance reasons
-  return function () {
-    if (!areArgumentsShallowlyEqual(equalityCheck, lastArgs, arguments)) {
-      // apply arguments instead of spreading for performance.
-      lastResult = func.apply(null, arguments);
-    }
-
-    lastArgs = arguments;
-    return lastResult;
-  };
-}
-
-function getDependencies(funcs) {
-  var dependencies = Array.isArray(funcs[0]) ? funcs[0] : funcs;
-
-  if (!dependencies.every(function (dep) {
-    return typeof dep === 'function';
-  })) {
-    var dependencyTypes = dependencies.map(function (dep) {
-      return typeof dep;
-    }).join(', ');
-    throw new Error('Selector creators expect all input-selectors to be functions, ' + ('instead received the following types: [' + dependencyTypes + ']'));
-  }
-
-  return dependencies;
-}
-
-function createSelectorCreator(memoize) {
-  for (var _len = arguments.length, memoizeOptions = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-    memoizeOptions[_key - 1] = arguments[_key];
-  }
-
-  return function () {
-    for (var _len2 = arguments.length, funcs = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-      funcs[_key2] = arguments[_key2];
-    }
-
-    var recomputations = 0;
-    var resultFunc = funcs.pop();
-    var dependencies = getDependencies(funcs);
-
-    var memoizedResultFunc = memoize.apply(undefined, [function () {
-      recomputations++;
-      // apply arguments instead of spreading for performance.
-      return resultFunc.apply(null, arguments);
-    }].concat(memoizeOptions));
-
-    // If a selector is called with the exact same arguments we don't need to traverse our dependencies again.
-    var selector = memoize(function () {
-      var params = [];
-      var length = dependencies.length;
-
-      for (var i = 0; i < length; i++) {
-        // apply arguments instead of spreading and mutate a local list of params for performance.
-        params.push(dependencies[i].apply(null, arguments));
+        // If the duration isn't a number
+      } else if (typeof props[timeoutPropName] !== 'number') {
+        return new Error(timeoutPropName + ' must be a number (in milliseconds)');
       }
+    }
 
-      // apply arguments instead of spreading for performance.
-      return memoizedResultFunc.apply(null, params);
-    });
-
-    selector.resultFunc = resultFunc;
-    selector.dependencies = dependencies;
-    selector.recomputations = function () {
-      return recomputations;
-    };
-    selector.resetRecomputations = function () {
-      return recomputations = 0;
-    };
-    return selector;
+    return null;
   };
 }
 
-var createSelector = createSelectorCreator(defaultMemoize);
+var timeoutsShape = exports.timeoutsShape = _propTypes2.default.oneOfType([_propTypes2.default.number, _propTypes2.default.shape({
+  enter: _propTypes2.default.number,
+  exit: _propTypes2.default.number
+}).isRequired]);
 
-function createStructuredSelector(selectors) {
-  var selectorCreator = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : createSelector;
-
-  if (typeof selectors !== 'object') {
-    throw new Error('createStructuredSelector expects first argument to be an object ' + ('where each property is a selector, instead received a ' + typeof selectors));
-  }
-  var objectKeys = Object.keys(selectors);
-  return selectorCreator(objectKeys.map(function (key) {
-    return selectors[key];
-  }), function () {
-    for (var _len3 = arguments.length, values = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-      values[_key3] = arguments[_key3];
-    }
-
-    return values.reduce(function (composition, value, index) {
-      composition[objectKeys[index]] = value;
-      return composition;
-    }, {});
-  });
-}
+var classNamesShape = exports.classNamesShape = _propTypes2.default.oneOfType([_propTypes2.default.string, _propTypes2.default.shape({
+  enter: _propTypes2.default.string,
+  exit: _propTypes2.default.string,
+  active: _propTypes2.default.string
+}), _propTypes2.default.shape({
+  enter: _propTypes2.default.string,
+  enterDone: _propTypes2.default.string,
+  enterActive: _propTypes2.default.string,
+  exit: _propTypes2.default.string,
+  exitDone: _propTypes2.default.string,
+  exitActive: _propTypes2.default.string
+})]);
 
 /***/ }),
 
-/***/ 3802:
-/***/ (function(module, exports, __webpack_require__) {
-
-const SplitBox = __webpack_require__(3803);
-
-module.exports = SplitBox;
-
-/***/ }),
-
-/***/ 3803:
+/***/ 214:
 /***/ (function(module, exports, __webpack_require__) {
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const React = __webpack_require__(0);
-const ReactDOM = __webpack_require__(4);
-const Draggable = React.createFactory(__webpack_require__(3804));
+const React = __webpack_require__(1);
+const ReactDOM = __webpack_require__(24);
+const Draggable = React.createFactory(__webpack_require__(215));
 const { Component } = React;
-const PropTypes = __webpack_require__(3642);
-const dom = __webpack_require__(3643);
+const PropTypes = __webpack_require__(0);
+const dom = __webpack_require__(2);
 
-__webpack_require__(3805);
+__webpack_require__(216);
 
 /**
  * This component represents a Splitter. The splitter supports vertical
@@ -7570,18 +4510,18 @@ module.exports = SplitBox;
 
 /***/ }),
 
-/***/ 3804:
+/***/ 215:
 /***/ (function(module, exports, __webpack_require__) {
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const React = __webpack_require__(0);
-const ReactDOM = __webpack_require__(4);
+const React = __webpack_require__(1);
+const ReactDOM = __webpack_require__(24);
 const { Component } = React;
-const PropTypes = __webpack_require__(3642);
-const dom = __webpack_require__(3643);
+const PropTypes = __webpack_require__(0);
+const dom = __webpack_require__(2);
 
 class Draggable extends Component {
   static get propTypes() {
@@ -7643,20 +4583,514 @@ module.exports = Draggable;
 
 /***/ }),
 
-/***/ 3805:
+/***/ 216:
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
 
 /***/ }),
 
-/***/ 3842:
+/***/ 219:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var _svgInlineReact = __webpack_require__(1763);
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _tabList = __webpack_require__(108);
+
+Object.defineProperty(exports, 'TabList', {
+  enumerable: true,
+  get: function get() {
+    return _interopRequireDefault(_tabList).default;
+  }
+});
+
+var _tabPanels = __webpack_require__(110);
+
+Object.defineProperty(exports, 'TabPanels', {
+  enumerable: true,
+  get: function get() {
+    return _interopRequireDefault(_tabPanels).default;
+  }
+});
+
+var _tab = __webpack_require__(109);
+
+Object.defineProperty(exports, 'Tab', {
+  enumerable: true,
+  get: function get() {
+    return _interopRequireDefault(_tab).default;
+  }
+});
+
+var _tabs = __webpack_require__(223);
+
+Object.defineProperty(exports, 'Tabs', {
+  enumerable: true,
+  get: function get() {
+    return _interopRequireDefault(_tabs).default;
+  }
+});
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/***/ }),
+
+/***/ 220:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _propTypes = __webpack_require__(0);
+
+var _propTypes2 = _interopRequireDefault(_propTypes);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = _propTypes2.default.object;
+
+/***/ }),
+
+/***/ 221:
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+
+/***/ 222:
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+
+/***/ 223:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _propTypes = __webpack_require__(0);
+
+var _propTypes2 = _interopRequireDefault(_propTypes);
+
+var _react = __webpack_require__(1);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _uniqueId = __webpack_require__(224);
+
+var _uniqueId2 = _interopRequireDefault(_uniqueId);
+
+var _tabList = __webpack_require__(108);
+
+var _tabList2 = _interopRequireDefault(_tabList);
+
+var _tabPanels = __webpack_require__(110);
+
+var _tabPanels2 = _interopRequireDefault(_tabPanels);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Tabs = function (_React$Component) {
+  _inherits(Tabs, _React$Component);
+
+  function Tabs() {
+    _classCallCheck(this, Tabs);
+
+    var _this = _possibleConstructorReturn(this, (Tabs.__proto__ || Object.getPrototypeOf(Tabs)).call(this));
+
+    _this.accessibleId = (0, _uniqueId2.default)();
+    return _this;
+  }
+
+  _createClass(Tabs, [{
+    key: 'render',
+    value: function render() {
+      var _props = this.props,
+          activeIndex = _props.activeIndex,
+          children = _props.children,
+          className = _props.className,
+          onActivateTab = _props.onActivateTab;
+
+      var accessibleId = this.accessibleId;
+
+      return _react2.default.createElement(
+        'div',
+        { className: className },
+        _react2.default.Children.map(children, function (child) {
+          if (!child) {
+            return child;
+          }
+
+          switch (child.type) {
+            case _tabList2.default:
+              return _react2.default.cloneElement(child, { accessibleId: accessibleId, activeIndex: activeIndex, onActivateTab: onActivateTab });
+            case _tabPanels2.default:
+              return _react2.default.cloneElement(child, { accessibleId: accessibleId, activeIndex: activeIndex });
+            default:
+              return child;
+          }
+        })
+      );
+    }
+  }]);
+
+  return Tabs;
+}(_react2.default.Component);
+
+exports.default = Tabs;
+
+
+Tabs.propTypes = {
+  activeIndex: _propTypes2.default.number.isRequired,
+  children: _propTypes2.default.node,
+  className: _propTypes2.default.string,
+  onActivateTab: _propTypes2.default.func
+};
+
+Tabs.defaultProps = {
+  children: null,
+  className: undefined,
+  onActivateTab: function onActivateTab() {}
+};
+
+/***/ }),
+
+/***/ 224:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = uniqueId;
+var counter = 0;
+
+function uniqueId() {
+  counter += 1;
+  return "$rac$" + counter;
+}
+
+/***/ }),
+
+/***/ 225:
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+
+/***/ 226:
+/***/ (function(module, exports, __webpack_require__) {
+
+(function() {
+  var Query, pathScorer, pluckCandidates, scorer, sortCandidates;
+
+  scorer = __webpack_require__(48);
+
+  pathScorer = __webpack_require__(63);
+
+  Query = __webpack_require__(111);
+
+  pluckCandidates = function(a) {
+    return a.candidate;
+  };
+
+  sortCandidates = function(a, b) {
+    return b.score - a.score;
+  };
+
+  module.exports = function(candidates, query, options) {
+    var bKey, candidate, key, maxInners, maxResults, score, scoreProvider, scoredCandidates, spotLeft, string, usePathScoring, _i, _len;
+    scoredCandidates = [];
+    key = options.key, maxResults = options.maxResults, maxInners = options.maxInners, usePathScoring = options.usePathScoring;
+    spotLeft = (maxInners != null) && maxInners > 0 ? maxInners : candidates.length + 1;
+    bKey = key != null;
+    scoreProvider = usePathScoring ? pathScorer : scorer;
+    for (_i = 0, _len = candidates.length; _i < _len; _i++) {
+      candidate = candidates[_i];
+      string = bKey ? candidate[key] : candidate;
+      if (!string) {
+        continue;
+      }
+      score = scoreProvider.score(string, query, options);
+      if (score > 0) {
+        scoredCandidates.push({
+          candidate: candidate,
+          score: score
+        });
+        if (!--spotLeft) {
+          break;
+        }
+      }
+    }
+    scoredCandidates.sort(sortCandidates);
+    candidates = scoredCandidates.map(pluckCandidates);
+    if (maxResults != null) {
+      candidates = candidates.slice(0, maxResults);
+    }
+    return candidates;
+  };
+
+}).call(this);
+
+
+/***/ }),
+
+/***/ 227:
+/***/ (function(module, exports, __webpack_require__) {
+
+(function() {
+  var basenameMatch, computeMatch, isMatch, isWordStart, match, mergeMatches, scoreAcronyms, scoreCharacter, scoreConsecutives, _ref;
+
+  _ref = __webpack_require__(48), isMatch = _ref.isMatch, isWordStart = _ref.isWordStart, scoreConsecutives = _ref.scoreConsecutives, scoreCharacter = _ref.scoreCharacter, scoreAcronyms = _ref.scoreAcronyms;
+
+  exports.match = match = function(string, query, options) {
+    var allowErrors, baseMatches, matches, pathSeparator, preparedQuery, string_lw;
+    allowErrors = options.allowErrors, preparedQuery = options.preparedQuery, pathSeparator = options.pathSeparator;
+    if (!(allowErrors || isMatch(string, preparedQuery.core_lw, preparedQuery.core_up))) {
+      return [];
+    }
+    string_lw = string.toLowerCase();
+    matches = computeMatch(string, string_lw, preparedQuery);
+    if (matches.length === 0) {
+      return matches;
+    }
+    if (string.indexOf(pathSeparator) > -1) {
+      baseMatches = basenameMatch(string, string_lw, preparedQuery, pathSeparator);
+      matches = mergeMatches(matches, baseMatches);
+    }
+    return matches;
+  };
+
+  exports.wrap = function(string, query, options) {
+    var matchIndex, matchPos, matchPositions, output, strPos, tagClass, tagClose, tagOpen, _ref1;
+    if ((options.wrap != null)) {
+      _ref1 = options.wrap, tagClass = _ref1.tagClass, tagOpen = _ref1.tagOpen, tagClose = _ref1.tagClose;
+    }
+    if (tagClass == null) {
+      tagClass = 'highlight';
+    }
+    if (tagOpen == null) {
+      tagOpen = '<strong class="' + tagClass + '">';
+    }
+    if (tagClose == null) {
+      tagClose = '</strong>';
+    }
+    if (string === query) {
+      return tagOpen + string + tagClose;
+    }
+    matchPositions = match(string, query, options);
+    if (matchPositions.length === 0) {
+      return string;
+    }
+    output = '';
+    matchIndex = -1;
+    strPos = 0;
+    while (++matchIndex < matchPositions.length) {
+      matchPos = matchPositions[matchIndex];
+      if (matchPos > strPos) {
+        output += string.substring(strPos, matchPos);
+        strPos = matchPos;
+      }
+      while (++matchIndex < matchPositions.length) {
+        if (matchPositions[matchIndex] === matchPos + 1) {
+          matchPos++;
+        } else {
+          matchIndex--;
+          break;
+        }
+      }
+      matchPos++;
+      if (matchPos > strPos) {
+        output += tagOpen;
+        output += string.substring(strPos, matchPos);
+        output += tagClose;
+        strPos = matchPos;
+      }
+    }
+    if (strPos <= string.length - 1) {
+      output += string.substring(strPos);
+    }
+    return output;
+  };
+
+  basenameMatch = function(subject, subject_lw, preparedQuery, pathSeparator) {
+    var basePos, depth, end;
+    end = subject.length - 1;
+    while (subject[end] === pathSeparator) {
+      end--;
+    }
+    basePos = subject.lastIndexOf(pathSeparator, end);
+    if (basePos === -1) {
+      return [];
+    }
+    depth = preparedQuery.depth;
+    while (depth-- > 0) {
+      basePos = subject.lastIndexOf(pathSeparator, basePos - 1);
+      if (basePos === -1) {
+        return [];
+      }
+    }
+    basePos++;
+    end++;
+    return computeMatch(subject.slice(basePos, end), subject_lw.slice(basePos, end), preparedQuery, basePos);
+  };
+
+  mergeMatches = function(a, b) {
+    var ai, bj, i, j, m, n, out;
+    m = a.length;
+    n = b.length;
+    if (n === 0) {
+      return a.slice();
+    }
+    if (m === 0) {
+      return b.slice();
+    }
+    i = -1;
+    j = 0;
+    bj = b[j];
+    out = [];
+    while (++i < m) {
+      ai = a[i];
+      while (bj <= ai && ++j < n) {
+        if (bj < ai) {
+          out.push(bj);
+        }
+        bj = b[j];
+      }
+      out.push(ai);
+    }
+    while (j < n) {
+      out.push(b[j++]);
+    }
+    return out;
+  };
+
+  computeMatch = function(subject, subject_lw, preparedQuery, offset) {
+    var DIAGONAL, LEFT, STOP, UP, acro_score, align, backtrack, csc_diag, csc_row, csc_score, i, j, m, matches, move, n, pos, query, query_lw, score, score_diag, score_row, score_up, si_lw, start, trace;
+    if (offset == null) {
+      offset = 0;
+    }
+    query = preparedQuery.query;
+    query_lw = preparedQuery.query_lw;
+    m = subject.length;
+    n = query.length;
+    acro_score = scoreAcronyms(subject, subject_lw, query, query_lw).score;
+    score_row = new Array(n);
+    csc_row = new Array(n);
+    STOP = 0;
+    UP = 1;
+    LEFT = 2;
+    DIAGONAL = 3;
+    trace = new Array(m * n);
+    pos = -1;
+    j = -1;
+    while (++j < n) {
+      score_row[j] = 0;
+      csc_row[j] = 0;
+    }
+    i = -1;
+    while (++i < m) {
+      score = 0;
+      score_up = 0;
+      csc_diag = 0;
+      si_lw = subject_lw[i];
+      j = -1;
+      while (++j < n) {
+        csc_score = 0;
+        align = 0;
+        score_diag = score_up;
+        if (query_lw[j] === si_lw) {
+          start = isWordStart(i, subject, subject_lw);
+          csc_score = csc_diag > 0 ? csc_diag : scoreConsecutives(subject, subject_lw, query, query_lw, i, j, start);
+          align = score_diag + scoreCharacter(i, j, start, acro_score, csc_score);
+        }
+        score_up = score_row[j];
+        csc_diag = csc_row[j];
+        if (score > score_up) {
+          move = LEFT;
+        } else {
+          score = score_up;
+          move = UP;
+        }
+        if (align > score) {
+          score = align;
+          move = DIAGONAL;
+        } else {
+          csc_score = 0;
+        }
+        score_row[j] = score;
+        csc_row[j] = csc_score;
+        trace[++pos] = score > 0 ? move : STOP;
+      }
+    }
+    i = m - 1;
+    j = n - 1;
+    pos = i * n + j;
+    backtrack = true;
+    matches = [];
+    while (backtrack && i >= 0 && j >= 0) {
+      switch (trace[pos]) {
+        case UP:
+          i--;
+          pos -= n;
+          break;
+        case LEFT:
+          j--;
+          pos--;
+          break;
+        case DIAGONAL:
+          matches.push(i + offset);
+          j--;
+          i--;
+          pos -= n + 1;
+          break;
+        default:
+          backtrack = false;
+      }
+    }
+    matches.reverse();
+    return matches;
+  };
+
+}).call(this);
+
+
+/***/ }),
+
+/***/ 231:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _svgInlineReact = __webpack_require__(232);
 
 var _svgInlineReact2 = _interopRequireDefault(_svgInlineReact);
 
@@ -7666,12 +5100,12 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const React = __webpack_require__(0);
+const React = __webpack_require__(1);
 
 
 const svg = {
-  breakpoint: __webpack_require__(3843),
-  "column-marker": __webpack_require__(3844)
+  breakpoint: __webpack_require__(234),
+  "column-marker": __webpack_require__(235)
 };
 
 function Svg({ name, className, onClick, "aria-label": ariaLabel }) {
@@ -7697,35 +5131,188 @@ module.exports = Svg;
 
 /***/ }),
 
-/***/ 3843:
+/***/ 232:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = __webpack_require__(1);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _propTypes = __webpack_require__(0);
+
+var _util = __webpack_require__(233);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var process = process || { env: {} };
+
+var InlineSVG = function (_React$Component) {
+    _inherits(InlineSVG, _React$Component);
+
+    function InlineSVG() {
+        _classCallCheck(this, InlineSVG);
+
+        return _possibleConstructorReturn(this, (InlineSVG.__proto__ || Object.getPrototypeOf(InlineSVG)).apply(this, arguments));
+    }
+
+    _createClass(InlineSVG, [{
+        key: 'componentWillReceiveProps',
+        value: function componentWillReceiveProps(_ref) {
+            var children = _ref.children;
+
+            if ("production" !== process.env.NODE_ENV && children != null) {
+                console.info('<InlineSVG />: `children` prop will be ignored.');
+            }
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            var Element = void 0,
+                __html = void 0,
+                svgProps = void 0;
+
+            var _props = this.props,
+                element = _props.element,
+                raw = _props.raw,
+                src = _props.src,
+                otherProps = _objectWithoutProperties(_props, ['element', 'raw', 'src']);
+
+            if (raw === true) {
+                Element = 'svg';
+                svgProps = (0, _util.extractSVGProps)(src);
+                __html = (0, _util.getSVGFromSource)(src).innerHTML;
+            }
+            __html = __html || src;
+            Element = Element || element;
+            svgProps = svgProps || {};
+
+            return _react2.default.createElement(Element, _extends({}, svgProps, otherProps, { src: null, children: null,
+                dangerouslySetInnerHTML: { __html: __html } }));
+        }
+    }]);
+
+    return InlineSVG;
+}(_react2.default.Component);
+
+exports.default = InlineSVG;
+
+
+InlineSVG.defaultProps = {
+    element: 'i',
+    raw: false,
+    src: ''
+};
+
+InlineSVG.propTypes = {
+    src: _propTypes.string.isRequired,
+    element: _propTypes.string,
+    raw: _propTypes.bool
+};
+
+/***/ }),
+
+/***/ 233:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.convertReactSVGDOMProperty = convertReactSVGDOMProperty;
+exports.startsWith = startsWith;
+exports.serializeAttrs = serializeAttrs;
+exports.getSVGFromSource = getSVGFromSource;
+exports.extractSVGProps = extractSVGProps;
+// Transform DOM prop/attr names applicable to `<svg>` element but react-limited
+
+function convertReactSVGDOMProperty(str) {
+    return str.replace(/[-|:]([a-z])/g, function (g) {
+        return g[1].toUpperCase();
+    });
+}
+
+function startsWith(str, substring) {
+    return str.indexOf(substring) === 0;
+}
+
+var DataPropPrefix = 'data-';
+// Serialize `Attr` objects in `NamedNodeMap`
+function serializeAttrs(map) {
+    var ret = {};
+    for (var prop, i = 0; i < map.length; i++) {
+        var key = map[i].name;
+        if (key == "class") {
+            prop = "className";
+        } else if (!startsWith(key, DataPropPrefix)) {
+            prop = convertReactSVGDOMProperty(key);
+        } else {
+            prop = key;
+        }
+
+        ret[prop] = map[i].value;
+    }
+    return ret;
+}
+
+function getSVGFromSource(src) {
+    var svgContainer = document.createElement('div');
+    svgContainer.innerHTML = src;
+    var svg = svgContainer.firstElementChild;
+    svg.remove ? svg.remove() : svgContainer.removeChild(svg); // deref from parent element
+    return svg;
+}
+
+// get <svg /> element props
+function extractSVGProps(src) {
+    var map = getSVGFromSource(src).attributes;
+    return map.length > 0 ? serializeAttrs(map) : null;
+}
+
+/***/ }),
+
+/***/ 234:
 /***/ (function(module, exports) {
 
 module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 60 15\"><path d=\"M53.07.5H1.5c-.54 0-1 .46-1 1v12c0 .54.46 1 1 1h51.57c.58 0 1.15-.26 1.53-.7l4.7-6.3-4.7-6.3c-.38-.44-.95-.7-1.53-.7z\"></path></svg>"
 
 /***/ }),
 
-/***/ 3844:
+/***/ 235:
 /***/ (function(module, exports) {
 
 module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 11 13\"><path d=\"M5.07.5H1.5c-.54 0-1 .46-1 1v10c0 .54.46 1 1 1h3.57c.58 0 1.15-.26 1.53-.7l3.7-5.3-3.7-5.3C6.22.76 5.65.5 5.07.5z\"></path></svg>"
 
 /***/ }),
 
-/***/ 4:
+/***/ 24:
 /***/ (function(module, exports) {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_4__;
+module.exports = __WEBPACK_EXTERNAL_MODULE_24__;
 
 /***/ }),
 
-/***/ 52:
-/***/ (function(module, exports) {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE_52__;
-
-/***/ }),
-
-/***/ 792:
+/***/ 25:
 /***/ (function(module, exports) {
 
 var g;
@@ -7753,7 +5340,587 @@ module.exports = g;
 
 /***/ }),
 
-/***/ 793:
+/***/ 26:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(process) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+const flag = __webpack_require__(68);
+
+function isBrowser() {
+  return typeof window == "object";
+}
+
+function isNode() {
+  return process && process.release && process.release.name == 'node';
+}
+
+function isDevelopment() {
+  if (!isNode() && isBrowser()) {
+    const href = window.location ? window.location.href : "";
+    return href.match(/^file:/) || href.match(/localhost:/);
+  }
+
+  return "production" != "production";
+}
+
+function isTesting() {
+  return flag.testing;
+}
+
+function isFirefoxPanel() {
+  return !isDevelopment();
+}
+
+function isFirefox() {
+  return (/firefox/i.test(navigator.userAgent)
+  );
+}
+
+module.exports = {
+  isDevelopment,
+  isTesting,
+  isFirefoxPanel,
+  isFirefox
+};
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(50)))
+
+/***/ }),
+
+/***/ 27:
+/***/ (function(module, exports) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+function networkRequest(url, opts) {
+  return fetch(url, {
+    cache: opts.loadFromCache ? "default" : "no-cache"
+  }).then(res => {
+    if (res.status >= 200 && res.status < 300) {
+      if (res.headers.get("Content-Type") === "application/wasm") {
+        return res.arrayBuffer().then(buffer => ({
+          content: buffer,
+          isDwarf: true
+        }));
+      }
+      return res.text().then(text => ({ content: text }));
+    }
+    return Promise.reject(`request failed with status ${res.status}`);
+  });
+}
+
+module.exports = networkRequest;
+
+/***/ }),
+
+/***/ 28:
+/***/ (function(module, exports) {
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+function WorkerDispatcher() {
+  this.msgId = 1;
+  this.worker = null;
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+WorkerDispatcher.prototype = {
+  start(url, win = window) {
+    this.worker = new win.Worker(url);
+    this.worker.onerror = () => {
+      console.error(`Error in worker ${url}`);
+    };
+  },
+
+  stop() {
+    if (!this.worker) {
+      return;
+    }
+
+    this.worker.terminate();
+    this.worker = null;
+  },
+
+  task(method, { queue = false } = {}) {
+    const calls = [];
+    const push = args => {
+      return new Promise((resolve, reject) => {
+        if (queue && calls.length === 0) {
+          Promise.resolve().then(flush);
+        }
+
+        calls.push([args, resolve, reject]);
+
+        if (!queue) {
+          flush();
+        }
+      });
+    };
+
+    const flush = () => {
+      const items = calls.slice();
+      calls.length = 0;
+
+      if (!this.worker) {
+        return;
+      }
+
+      const id = this.msgId++;
+      this.worker.postMessage({
+        id,
+        method,
+        calls: items.map(item => item[0])
+      });
+
+      const listener = ({ data: result }) => {
+        if (result.id !== id) {
+          return;
+        }
+
+        if (!this.worker) {
+          return;
+        }
+
+        this.worker.removeEventListener("message", listener);
+
+        result.results.forEach((resultData, i) => {
+          const [, resolve, reject] = items[i];
+
+          if (resultData.error) {
+            reject(resultData.error);
+          } else {
+            resolve(resultData.response);
+          }
+        });
+      };
+
+      this.worker.addEventListener("message", listener);
+    };
+
+    return (...args) => push(args);
+  },
+
+  invoke(method, ...args) {
+    return this.task(method)(...args);
+  }
+};
+
+function workerHandler(publicInterface) {
+  return function (msg) {
+    const { id, method, calls } = msg.data;
+
+    Promise.all(calls.map(args => {
+      try {
+        const response = publicInterface[method].apply(undefined, args);
+        if (response instanceof Promise) {
+          return response.then(val => ({ response: val }),
+          // Error can't be sent via postMessage, so be sure to
+          // convert to string.
+          err => ({ error: err.toString() }));
+        }
+        return { response };
+      } catch (error) {
+        // Error can't be sent via postMessage, so be sure to convert to
+        // string.
+        return { error: error.toString() };
+      }
+    })).then(results => {
+      self.postMessage({ id, results });
+    });
+  };
+}
+
+function streamingWorkerHandler(publicInterface, { timeout = 100 } = {}, worker = self) {
+  let streamingWorker = (() => {
+    var _ref = _asyncToGenerator(function* (id, tasks) {
+      let isWorking = true;
+
+      const timeoutId = setTimeout(function () {
+        isWorking = false;
+      }, timeout);
+
+      const results = [];
+      while (tasks.length !== 0 && isWorking) {
+        const { callback, context, args } = tasks.shift();
+        const result = yield callback.call(context, args);
+        results.push(result);
+      }
+      worker.postMessage({ id, status: "pending", data: results });
+      clearTimeout(timeoutId);
+
+      if (tasks.length !== 0) {
+        yield streamingWorker(id, tasks);
+      }
+    });
+
+    return function streamingWorker(_x, _x2) {
+      return _ref.apply(this, arguments);
+    };
+  })();
+
+  return (() => {
+    var _ref2 = _asyncToGenerator(function* (msg) {
+      const { id, method, args } = msg.data;
+      const workerMethod = publicInterface[method];
+      if (!workerMethod) {
+        console.error(`Could not find ${method} defined in worker.`);
+      }
+      worker.postMessage({ id, status: "start" });
+
+      try {
+        const tasks = workerMethod(args);
+        yield streamingWorker(id, tasks);
+        worker.postMessage({ id, status: "done" });
+      } catch (error) {
+        worker.postMessage({ id, status: "error", error });
+      }
+    });
+
+    return function (_x3) {
+      return _ref2.apply(this, arguments);
+    };
+  })();
+}
+
+module.exports = {
+  WorkerDispatcher,
+  workerHandler,
+  streamingWorkerHandler
+};
+
+/***/ }),
+
+/***/ 31:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony export (immutable) */ __webpack_exports__["defaultMemoize"] = defaultMemoize;
+/* harmony export (immutable) */ __webpack_exports__["createSelectorCreator"] = createSelectorCreator;
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "createSelector", function() { return createSelector; });
+/* harmony export (immutable) */ __webpack_exports__["createStructuredSelector"] = createStructuredSelector;
+function defaultEqualityCheck(a, b) {
+  return a === b;
+}
+
+function areArgumentsShallowlyEqual(equalityCheck, prev, next) {
+  if (prev === null || next === null || prev.length !== next.length) {
+    return false;
+  }
+
+  // Do this in a for loop (and not a `forEach` or an `every`) so we can determine equality as fast as possible.
+  var length = prev.length;
+  for (var i = 0; i < length; i++) {
+    if (!equalityCheck(prev[i], next[i])) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function defaultMemoize(func) {
+  var equalityCheck = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultEqualityCheck;
+
+  var lastArgs = null;
+  var lastResult = null;
+  // we reference arguments instead of spreading them for performance reasons
+  return function () {
+    if (!areArgumentsShallowlyEqual(equalityCheck, lastArgs, arguments)) {
+      // apply arguments instead of spreading for performance.
+      lastResult = func.apply(null, arguments);
+    }
+
+    lastArgs = arguments;
+    return lastResult;
+  };
+}
+
+function getDependencies(funcs) {
+  var dependencies = Array.isArray(funcs[0]) ? funcs[0] : funcs;
+
+  if (!dependencies.every(function (dep) {
+    return typeof dep === 'function';
+  })) {
+    var dependencyTypes = dependencies.map(function (dep) {
+      return typeof dep;
+    }).join(', ');
+    throw new Error('Selector creators expect all input-selectors to be functions, ' + ('instead received the following types: [' + dependencyTypes + ']'));
+  }
+
+  return dependencies;
+}
+
+function createSelectorCreator(memoize) {
+  for (var _len = arguments.length, memoizeOptions = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+    memoizeOptions[_key - 1] = arguments[_key];
+  }
+
+  return function () {
+    for (var _len2 = arguments.length, funcs = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+      funcs[_key2] = arguments[_key2];
+    }
+
+    var recomputations = 0;
+    var resultFunc = funcs.pop();
+    var dependencies = getDependencies(funcs);
+
+    var memoizedResultFunc = memoize.apply(undefined, [function () {
+      recomputations++;
+      // apply arguments instead of spreading for performance.
+      return resultFunc.apply(null, arguments);
+    }].concat(memoizeOptions));
+
+    // If a selector is called with the exact same arguments we don't need to traverse our dependencies again.
+    var selector = memoize(function () {
+      var params = [];
+      var length = dependencies.length;
+
+      for (var i = 0; i < length; i++) {
+        // apply arguments instead of spreading and mutate a local list of params for performance.
+        params.push(dependencies[i].apply(null, arguments));
+      }
+
+      // apply arguments instead of spreading for performance.
+      return memoizedResultFunc.apply(null, params);
+    });
+
+    selector.resultFunc = resultFunc;
+    selector.dependencies = dependencies;
+    selector.recomputations = function () {
+      return recomputations;
+    };
+    selector.resetRecomputations = function () {
+      return recomputations = 0;
+    };
+    return selector;
+  };
+}
+
+var createSelector = createSelectorCreator(defaultMemoize);
+
+function createStructuredSelector(selectors) {
+  var selectorCreator = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : createSelector;
+
+  if (typeof selectors !== 'object') {
+    throw new Error('createStructuredSelector expects first argument to be an object ' + ('where each property is a selector, instead received a ' + typeof selectors));
+  }
+  var objectKeys = Object.keys(selectors);
+  return selectorCreator(objectKeys.map(function (key) {
+    return selectors[key];
+  }), function () {
+    for (var _len3 = arguments.length, values = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+      values[_key3] = arguments[_key3];
+    }
+
+    return values.reduce(function (composition, value, index) {
+      composition[objectKeys[index]] = value;
+      return composition;
+    }, {});
+  });
+}
+
+/***/ }),
+
+/***/ 33:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const { Menu, MenuItem } = __webpack_require__(34);
+
+function inToolbox() {
+  try {
+    return window.parent.document.documentURI == "about:devtools-toolbox";
+  } catch (e) {
+    // If `window` is not available, it's very likely that we are in the toolbox.
+    return true;
+  }
+}
+
+if (!inToolbox()) {
+  __webpack_require__(225);
+}
+
+function createPopup(doc) {
+  let popup = doc.createElement("menupopup");
+  popup.className = "landing-popup";
+  if (popup.openPopupAtScreen) {
+    return popup;
+  }
+
+  function preventDefault(e) {
+    e.preventDefault();
+    e.returnValue = false;
+  }
+
+  let mask = document.querySelector("#contextmenu-mask");
+  if (!mask) {
+    mask = doc.createElement("div");
+    mask.id = "contextmenu-mask";
+    document.body.appendChild(mask);
+  }
+
+  mask.onclick = () => popup.hidePopup();
+
+  popup.openPopupAtScreen = function (clientX, clientY) {
+    this.style.setProperty("left", `${clientX}px`);
+    this.style.setProperty("top", `${clientY}px`);
+    mask = document.querySelector("#contextmenu-mask");
+    window.onwheel = preventDefault;
+    mask.classList.add("show");
+    this.dispatchEvent(new Event("popupshown"));
+    this.popupshown;
+  };
+
+  popup.hidePopup = function () {
+    this.remove();
+    mask = document.querySelector("#contextmenu-mask");
+    mask.classList.remove("show");
+    window.onwheel = null;
+  };
+
+  return popup;
+}
+
+if (!inToolbox()) {
+  Menu.prototype.createPopup = createPopup;
+}
+
+function onShown(menu, popup) {
+  popup.childNodes.forEach((menuItemNode, i) => {
+    let item = menu.items[i];
+
+    if (!item.disabled && item.visible) {
+      menuItemNode.onclick = () => {
+        item.click();
+        popup.hidePopup();
+      };
+
+      showSubMenu(item.submenu, menuItemNode, popup);
+    }
+  });
+}
+
+function showMenu(evt, items) {
+  if (items.length === 0) {
+    return;
+  }
+
+  let menu = new Menu();
+  items.filter(item => item.visible === undefined || item.visible === true).forEach(item => {
+    let menuItem = new MenuItem(item);
+    menuItem.submenu = createSubMenu(item.submenu);
+    menu.append(menuItem);
+  });
+
+  if (inToolbox()) {
+    menu.popup(evt.screenX, evt.screenY, { doc: window.parent.document });
+    return;
+  }
+
+  menu.on("open", (_, popup) => onShown(menu, popup));
+  menu.popup(evt.clientX, evt.clientY, { doc: document });
+}
+
+function createSubMenu(subItems) {
+  if (subItems) {
+    let subMenu = new Menu();
+    subItems.forEach(subItem => {
+      subMenu.append(new MenuItem(subItem));
+    });
+    return subMenu;
+  }
+  return null;
+}
+
+function showSubMenu(subMenu, menuItemNode, popup) {
+  if (subMenu) {
+    let subMenuNode = menuItemNode.querySelector("menupopup");
+    let { top } = menuItemNode.getBoundingClientRect();
+    let { left, width } = popup.getBoundingClientRect();
+    subMenuNode.style.setProperty("left", `${left + width - 1}px`);
+    subMenuNode.style.setProperty("top", `${top}px`);
+
+    let subMenuItemNodes = menuItemNode.querySelector("menupopup:not(.landing-popup)").childNodes;
+    subMenuItemNodes.forEach((subMenuItemNode, j) => {
+      let subMenuItem = subMenu.items.filter(item => item.visible === undefined || item.visible === true)[j];
+      if (!subMenuItem.disabled && subMenuItem.visible) {
+        subMenuItemNode.onclick = () => {
+          subMenuItem.click();
+          popup.hidePopup();
+        };
+      }
+    });
+  }
+}
+
+function buildMenu(items) {
+  return items.map(itm => {
+    const hide = typeof itm.hidden === "function" ? itm.hidden() : itm.hidden;
+    return hide ? null : itm.item;
+  }).filter(itm => itm !== null);
+}
+
+module.exports = {
+  showMenu,
+  buildMenu
+};
+
+/***/ }),
+
+/***/ 34:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const Menu = __webpack_require__(154);
+const MenuItem = __webpack_require__(156);
+const { PrefsHelper } = __webpack_require__(157);
+const KeyShortcuts = __webpack_require__(158);
+const { ZoomKeys } = __webpack_require__(159);
+const EventEmitter = __webpack_require__(46);
+const asyncStorage = __webpack_require__(160);
+const SourceUtils = __webpack_require__(161);
+const Telemetry = __webpack_require__(162);
+const { getUnicodeHostname, getUnicodeUrlPath, getUnicodeUrl } = __webpack_require__(163);
+
+module.exports = {
+  KeyShortcuts,
+  Menu,
+  MenuItem,
+  PrefsHelper,
+  ZoomKeys,
+  asyncStorage,
+  EventEmitter,
+  SourceUtils,
+  Telemetry,
+  getUnicodeHostname,
+  getUnicodeUrlPath,
+  getUnicodeUrl
+};
+
+/***/ }),
+
+/***/ 42:
 /***/ (function(module, exports) {
 
 module.exports = function(module) {
@@ -7779,6 +5946,1839 @@ module.exports = function(module) {
 	return module;
 };
 
+
+/***/ }),
+
+/***/ 46:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+var EventEmitter = function EventEmitter() {};
+module.exports = EventEmitter;
+
+const promise = __webpack_require__(155);
+
+/**
+ * Decorate an object with event emitter functionality.
+ *
+ * @param Object aObjectToDecorate
+ *        Bind all public methods of EventEmitter to
+ *        the aObjectToDecorate object.
+ */
+EventEmitter.decorate = function EventEmitter_decorate(aObjectToDecorate) {
+  let emitter = new EventEmitter();
+  aObjectToDecorate.on = emitter.on.bind(emitter);
+  aObjectToDecorate.off = emitter.off.bind(emitter);
+  aObjectToDecorate.once = emitter.once.bind(emitter);
+  aObjectToDecorate.emit = emitter.emit.bind(emitter);
+};
+
+EventEmitter.prototype = {
+  /**
+   * Connect a listener.
+   *
+   * @param string aEvent
+   *        The event name to which we're connecting.
+   * @param function aListener
+   *        Called when the event is fired.
+   */
+  on: function EventEmitter_on(aEvent, aListener) {
+    if (!this._eventEmitterListeners) this._eventEmitterListeners = new Map();
+    if (!this._eventEmitterListeners.has(aEvent)) {
+      this._eventEmitterListeners.set(aEvent, []);
+    }
+    this._eventEmitterListeners.get(aEvent).push(aListener);
+  },
+
+  /**
+   * Listen for the next time an event is fired.
+   *
+   * @param string aEvent
+   *        The event name to which we're connecting.
+   * @param function aListener
+   *        (Optional) Called when the event is fired. Will be called at most
+   *        one time.
+   * @return promise
+   *        A promise which is resolved when the event next happens. The
+   *        resolution value of the promise is the first event argument. If
+   *        you need access to second or subsequent event arguments (it's rare
+   *        that this is needed) then use aListener
+   */
+  once: function EventEmitter_once(aEvent, aListener) {
+    let deferred = promise.defer();
+
+    let handler = (aEvent, aFirstArg, ...aRest) => {
+      this.off(aEvent, handler);
+      if (aListener) {
+        aListener.apply(null, [aEvent, aFirstArg, ...aRest]);
+      }
+      deferred.resolve(aFirstArg);
+    };
+
+    handler._originalListener = aListener;
+    this.on(aEvent, handler);
+
+    return deferred.promise;
+  },
+
+  /**
+   * Remove a previously-registered event listener.  Works for events
+   * registered with either on or once.
+   *
+   * @param string aEvent
+   *        The event name whose listener we're disconnecting.
+   * @param function aListener
+   *        The listener to remove.
+   */
+  off: function EventEmitter_off(aEvent, aListener) {
+    if (!this._eventEmitterListeners) return;
+    let listeners = this._eventEmitterListeners.get(aEvent);
+    if (listeners) {
+      this._eventEmitterListeners.set(aEvent, listeners.filter(l => {
+        return l !== aListener && l._originalListener !== aListener;
+      }));
+    }
+  },
+
+  /**
+   * Emit an event.  All arguments to this method will
+   * be sent to listener functions.
+   */
+  emit: function EventEmitter_emit(aEvent) {
+    if (!this._eventEmitterListeners || !this._eventEmitterListeners.has(aEvent)) {
+      return;
+    }
+
+    let originalListeners = this._eventEmitterListeners.get(aEvent);
+    for (let listener of this._eventEmitterListeners.get(aEvent)) {
+      // If the object was destroyed during event emission, stop
+      // emitting.
+      if (!this._eventEmitterListeners) {
+        break;
+      }
+
+      // If listeners were removed during emission, make sure the
+      // event handler we're going to fire wasn't removed.
+      if (originalListeners === this._eventEmitterListeners.get(aEvent) || this._eventEmitterListeners.get(aEvent).some(l => l === listener)) {
+        try {
+          listener.apply(null, arguments);
+        } catch (ex) {
+          // Prevent a bad listener from interfering with the others.
+          let msg = ex + ": " + ex.stack;
+          //console.error(msg);
+          console.log(msg);
+        }
+      }
+    }
+  }
+};
+
+/***/ }),
+
+/***/ 48:
+/***/ (function(module, exports) {
+
+(function() {
+  var AcronymResult, computeScore, emptyAcronymResult, isAcronymFullWord, isMatch, isSeparator, isWordEnd, isWordStart, miss_coeff, pos_bonus, scoreAcronyms, scoreCharacter, scoreConsecutives, scoreExact, scoreExactMatch, scorePattern, scorePosition, scoreSize, tau_size, wm;
+
+  wm = 150;
+
+  pos_bonus = 20;
+
+  tau_size = 150;
+
+  miss_coeff = 0.75;
+
+  exports.score = function(string, query, options) {
+    var allowErrors, preparedQuery, score, string_lw;
+    preparedQuery = options.preparedQuery, allowErrors = options.allowErrors;
+    if (!(allowErrors || isMatch(string, preparedQuery.core_lw, preparedQuery.core_up))) {
+      return 0;
+    }
+    string_lw = string.toLowerCase();
+    score = computeScore(string, string_lw, preparedQuery);
+    return Math.ceil(score);
+  };
+
+  exports.isMatch = isMatch = function(subject, query_lw, query_up) {
+    var i, j, m, n, qj_lw, qj_up, si;
+    m = subject.length;
+    n = query_lw.length;
+    if (!m || n > m) {
+      return false;
+    }
+    i = -1;
+    j = -1;
+    while (++j < n) {
+      qj_lw = query_lw.charCodeAt(j);
+      qj_up = query_up.charCodeAt(j);
+      while (++i < m) {
+        si = subject.charCodeAt(i);
+        if (si === qj_lw || si === qj_up) {
+          break;
+        }
+      }
+      if (i === m) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  exports.computeScore = computeScore = function(subject, subject_lw, preparedQuery) {
+    var acro, acro_score, align, csc_diag, csc_row, csc_score, csc_should_rebuild, i, j, m, miss_budget, miss_left, n, pos, query, query_lw, record_miss, score, score_diag, score_row, score_up, si_lw, start, sz;
+    query = preparedQuery.query;
+    query_lw = preparedQuery.query_lw;
+    m = subject.length;
+    n = query.length;
+    acro = scoreAcronyms(subject, subject_lw, query, query_lw);
+    acro_score = acro.score;
+    if (acro.count === n) {
+      return scoreExact(n, m, acro_score, acro.pos);
+    }
+    pos = subject_lw.indexOf(query_lw);
+    if (pos > -1) {
+      return scoreExactMatch(subject, subject_lw, query, query_lw, pos, n, m);
+    }
+    score_row = new Array(n);
+    csc_row = new Array(n);
+    sz = scoreSize(n, m);
+    miss_budget = Math.ceil(miss_coeff * n) + 5;
+    miss_left = miss_budget;
+    csc_should_rebuild = true;
+    j = -1;
+    while (++j < n) {
+      score_row[j] = 0;
+      csc_row[j] = 0;
+    }
+    i = -1;
+    while (++i < m) {
+      si_lw = subject_lw[i];
+      if (!si_lw.charCodeAt(0) in preparedQuery.charCodes) {
+        if (csc_should_rebuild) {
+          j = -1;
+          while (++j < n) {
+            csc_row[j] = 0;
+          }
+          csc_should_rebuild = false;
+        }
+        continue;
+      }
+      score = 0;
+      score_diag = 0;
+      csc_diag = 0;
+      record_miss = true;
+      csc_should_rebuild = true;
+      j = -1;
+      while (++j < n) {
+        score_up = score_row[j];
+        if (score_up > score) {
+          score = score_up;
+        }
+        csc_score = 0;
+        if (query_lw[j] === si_lw) {
+          start = isWordStart(i, subject, subject_lw);
+          csc_score = csc_diag > 0 ? csc_diag : scoreConsecutives(subject, subject_lw, query, query_lw, i, j, start);
+          align = score_diag + scoreCharacter(i, j, start, acro_score, csc_score);
+          if (align > score) {
+            score = align;
+            miss_left = miss_budget;
+          } else {
+            if (record_miss && --miss_left <= 0) {
+              return Math.max(score, score_row[n - 1]) * sz;
+            }
+            record_miss = false;
+          }
+        }
+        score_diag = score_up;
+        csc_diag = csc_row[j];
+        csc_row[j] = csc_score;
+        score_row[j] = score;
+      }
+    }
+    score = score_row[n - 1];
+    return score * sz;
+  };
+
+  exports.isWordStart = isWordStart = function(pos, subject, subject_lw) {
+    var curr_s, prev_s;
+    if (pos === 0) {
+      return true;
+    }
+    curr_s = subject[pos];
+    prev_s = subject[pos - 1];
+    return isSeparator(prev_s) || (curr_s !== subject_lw[pos] && prev_s === subject_lw[pos - 1]);
+  };
+
+  exports.isWordEnd = isWordEnd = function(pos, subject, subject_lw, len) {
+    var curr_s, next_s;
+    if (pos === len - 1) {
+      return true;
+    }
+    curr_s = subject[pos];
+    next_s = subject[pos + 1];
+    return isSeparator(next_s) || (curr_s === subject_lw[pos] && next_s !== subject_lw[pos + 1]);
+  };
+
+  isSeparator = function(c) {
+    return c === ' ' || c === '.' || c === '-' || c === '_' || c === '/' || c === '\\';
+  };
+
+  scorePosition = function(pos) {
+    var sc;
+    if (pos < pos_bonus) {
+      sc = pos_bonus - pos;
+      return 100 + sc * sc;
+    } else {
+      return Math.max(100 + pos_bonus - pos, 0);
+    }
+  };
+
+  exports.scoreSize = scoreSize = function(n, m) {
+    return tau_size / (tau_size + Math.abs(m - n));
+  };
+
+  scoreExact = function(n, m, quality, pos) {
+    return 2 * n * (wm * quality + scorePosition(pos)) * scoreSize(n, m);
+  };
+
+  exports.scorePattern = scorePattern = function(count, len, sameCase, start, end) {
+    var bonus, sz;
+    sz = count;
+    bonus = 6;
+    if (sameCase === count) {
+      bonus += 2;
+    }
+    if (start) {
+      bonus += 3;
+    }
+    if (end) {
+      bonus += 1;
+    }
+    if (count === len) {
+      if (start) {
+        if (sameCase === len) {
+          sz += 2;
+        } else {
+          sz += 1;
+        }
+      }
+      if (end) {
+        bonus += 1;
+      }
+    }
+    return sameCase + sz * (sz + bonus);
+  };
+
+  exports.scoreCharacter = scoreCharacter = function(i, j, start, acro_score, csc_score) {
+    var posBonus;
+    posBonus = scorePosition(i);
+    if (start) {
+      return posBonus + wm * ((acro_score > csc_score ? acro_score : csc_score) + 10);
+    }
+    return posBonus + wm * csc_score;
+  };
+
+  exports.scoreConsecutives = scoreConsecutives = function(subject, subject_lw, query, query_lw, i, j, startOfWord) {
+    var k, m, mi, n, nj, sameCase, sz;
+    m = subject.length;
+    n = query.length;
+    mi = m - i;
+    nj = n - j;
+    k = mi < nj ? mi : nj;
+    sameCase = 0;
+    sz = 0;
+    if (query[j] === subject[i]) {
+      sameCase++;
+    }
+    while (++sz < k && query_lw[++j] === subject_lw[++i]) {
+      if (query[j] === subject[i]) {
+        sameCase++;
+      }
+    }
+    if (sz < k) {
+      i--;
+    }
+    if (sz === 1) {
+      return 1 + 2 * sameCase;
+    }
+    return scorePattern(sz, n, sameCase, startOfWord, isWordEnd(i, subject, subject_lw, m));
+  };
+
+  exports.scoreExactMatch = scoreExactMatch = function(subject, subject_lw, query, query_lw, pos, n, m) {
+    var end, i, pos2, sameCase, start;
+    start = isWordStart(pos, subject, subject_lw);
+    if (!start) {
+      pos2 = subject_lw.indexOf(query_lw, pos + 1);
+      if (pos2 > -1) {
+        start = isWordStart(pos2, subject, subject_lw);
+        if (start) {
+          pos = pos2;
+        }
+      }
+    }
+    i = -1;
+    sameCase = 0;
+    while (++i < n) {
+      if (query[pos + i] === subject[i]) {
+        sameCase++;
+      }
+    }
+    end = isWordEnd(pos + n - 1, subject, subject_lw, m);
+    return scoreExact(n, m, scorePattern(n, n, sameCase, start, end), pos);
+  };
+
+  AcronymResult = (function() {
+    function AcronymResult(score, pos, count) {
+      this.score = score;
+      this.pos = pos;
+      this.count = count;
+    }
+
+    return AcronymResult;
+
+  })();
+
+  emptyAcronymResult = new AcronymResult(0, 0.1, 0);
+
+  exports.scoreAcronyms = scoreAcronyms = function(subject, subject_lw, query, query_lw) {
+    var count, fullWord, i, j, m, n, qj_lw, sameCase, score, sepCount, sumPos;
+    m = subject.length;
+    n = query.length;
+    if (!(m > 1 && n > 1)) {
+      return emptyAcronymResult;
+    }
+    count = 0;
+    sepCount = 0;
+    sumPos = 0;
+    sameCase = 0;
+    i = -1;
+    j = -1;
+    while (++j < n) {
+      qj_lw = query_lw[j];
+      if (isSeparator(qj_lw)) {
+        i = subject_lw.indexOf(qj_lw, i + 1);
+        if (i > -1) {
+          sepCount++;
+          continue;
+        } else {
+          break;
+        }
+      }
+      while (++i < m) {
+        if (qj_lw === subject_lw[i] && isWordStart(i, subject, subject_lw)) {
+          if (query[j] === subject[i]) {
+            sameCase++;
+          }
+          sumPos += i;
+          count++;
+          break;
+        }
+      }
+      if (i === m) {
+        break;
+      }
+    }
+    if (count < 2) {
+      return emptyAcronymResult;
+    }
+    fullWord = count === n ? isAcronymFullWord(subject, subject_lw, query, count) : false;
+    score = scorePattern(count, n, sameCase, true, fullWord);
+    return new AcronymResult(score, sumPos / count, count + sepCount);
+  };
+
+  isAcronymFullWord = function(subject, subject_lw, query, nbAcronymInQuery) {
+    var count, i, m, n;
+    m = subject.length;
+    n = query.length;
+    count = 0;
+    if (m > 12 * n) {
+      return false;
+    }
+    i = -1;
+    while (++i < m) {
+      if (isWordStart(i, subject, subject_lw) && ++count > nbAcronymInQuery) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+}).call(this);
+
+
+/***/ }),
+
+/***/ 50:
+/***/ (function(module, exports) {
+
+// shim for using process in browser
+var process = module.exports = {};
+
+// cached from whatever global is present so that test runners that stub it
+// don't break things.  But we need to wrap it in a try catch in case it is
+// wrapped in strict mode code which doesn't define any globals.  It's inside a
+// function because try/catches deoptimize in certain engines.
+
+var cachedSetTimeout;
+var cachedClearTimeout;
+
+function defaultSetTimout() {
+    throw new Error('setTimeout has not been defined');
+}
+function defaultClearTimeout () {
+    throw new Error('clearTimeout has not been defined');
+}
+(function () {
+    try {
+        if (typeof setTimeout === 'function') {
+            cachedSetTimeout = setTimeout;
+        } else {
+            cachedSetTimeout = defaultSetTimout;
+        }
+    } catch (e) {
+        cachedSetTimeout = defaultSetTimout;
+    }
+    try {
+        if (typeof clearTimeout === 'function') {
+            cachedClearTimeout = clearTimeout;
+        } else {
+            cachedClearTimeout = defaultClearTimeout;
+        }
+    } catch (e) {
+        cachedClearTimeout = defaultClearTimeout;
+    }
+} ())
+function runTimeout(fun) {
+    if (cachedSetTimeout === setTimeout) {
+        //normal enviroments in sane situations
+        return setTimeout(fun, 0);
+    }
+    // if setTimeout wasn't available but was latter defined
+    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+        cachedSetTimeout = setTimeout;
+        return setTimeout(fun, 0);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedSetTimeout(fun, 0);
+    } catch(e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+            return cachedSetTimeout.call(null, fun, 0);
+        } catch(e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+            return cachedSetTimeout.call(this, fun, 0);
+        }
+    }
+
+
+}
+function runClearTimeout(marker) {
+    if (cachedClearTimeout === clearTimeout) {
+        //normal enviroments in sane situations
+        return clearTimeout(marker);
+    }
+    // if clearTimeout wasn't available but was latter defined
+    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+        cachedClearTimeout = clearTimeout;
+        return clearTimeout(marker);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedClearTimeout(marker);
+    } catch (e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+            return cachedClearTimeout.call(null, marker);
+        } catch (e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+            return cachedClearTimeout.call(this, marker);
+        }
+    }
+
+
+
+}
+var queue = [];
+var draining = false;
+var currentQueue;
+var queueIndex = -1;
+
+function cleanUpNextTick() {
+    if (!draining || !currentQueue) {
+        return;
+    }
+    draining = false;
+    if (currentQueue.length) {
+        queue = currentQueue.concat(queue);
+    } else {
+        queueIndex = -1;
+    }
+    if (queue.length) {
+        drainQueue();
+    }
+}
+
+function drainQueue() {
+    if (draining) {
+        return;
+    }
+    var timeout = runTimeout(cleanUpNextTick);
+    draining = true;
+
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        while (++queueIndex < len) {
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
+        }
+        queueIndex = -1;
+        len = queue.length;
+    }
+    currentQueue = null;
+    draining = false;
+    runClearTimeout(timeout);
+}
+
+process.nextTick = function (fun) {
+    var args = new Array(arguments.length - 1);
+    if (arguments.length > 1) {
+        for (var i = 1; i < arguments.length; i++) {
+            args[i - 1] = arguments[i];
+        }
+    }
+    queue.push(new Item(fun, args));
+    if (queue.length === 1 && !draining) {
+        runTimeout(drainQueue);
+    }
+};
+
+// v8 likes predictible objects
+function Item(fun, array) {
+    this.fun = fun;
+    this.array = array;
+}
+Item.prototype.run = function () {
+    this.fun.apply(null, this.array);
+};
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
+process.prependListener = noop;
+process.prependOnceListener = noop;
+
+process.listeners = function (name) { return [] }
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+};
+
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+process.umask = function() { return 0; };
+
+
+/***/ }),
+
+/***/ 6:
+/***/ (function(module, exports, __webpack_require__) {
+
+var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
+  Copyright (c) 2017 Jed Watson.
+  Licensed under the MIT License (MIT), see
+  http://jedwatson.github.io/classnames
+*/
+/* global define */
+
+(function () {
+	'use strict';
+
+	var hasOwn = {}.hasOwnProperty;
+
+	function classNames () {
+		var classes = [];
+
+		for (var i = 0; i < arguments.length; i++) {
+			var arg = arguments[i];
+			if (!arg) continue;
+
+			var argType = typeof arg;
+
+			if (argType === 'string' || argType === 'number') {
+				classes.push(arg);
+			} else if (Array.isArray(arg) && arg.length) {
+				var inner = classNames.apply(null, arg);
+				if (inner) {
+					classes.push(inner);
+				}
+			} else if (argType === 'object') {
+				for (var key in arg) {
+					if (hasOwn.call(arg, key) && arg[key]) {
+						classes.push(key);
+					}
+				}
+			}
+		}
+
+		return classes.join(' ');
+	}
+
+	if (typeof module !== 'undefined' && module.exports) {
+		classNames.default = classNames;
+		module.exports = classNames;
+	} else if (true) {
+		// register as 'classnames', consistent with npm package name
+		!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = (function () {
+			return classNames;
+		}).apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	} else {
+		window.classNames = classNames;
+	}
+}());
+
+
+/***/ }),
+
+/***/ 63:
+/***/ (function(module, exports, __webpack_require__) {
+
+(function() {
+  var computeScore, countDir, file_coeff, getExtension, getExtensionScore, isMatch, scorePath, scoreSize, tau_depth, _ref;
+
+  _ref = __webpack_require__(48), isMatch = _ref.isMatch, computeScore = _ref.computeScore, scoreSize = _ref.scoreSize;
+
+  tau_depth = 20;
+
+  file_coeff = 2.5;
+
+  exports.score = function(string, query, options) {
+    var allowErrors, preparedQuery, score, string_lw;
+    preparedQuery = options.preparedQuery, allowErrors = options.allowErrors;
+    if (!(allowErrors || isMatch(string, preparedQuery.core_lw, preparedQuery.core_up))) {
+      return 0;
+    }
+    string_lw = string.toLowerCase();
+    score = computeScore(string, string_lw, preparedQuery);
+    score = scorePath(string, string_lw, score, options);
+    return Math.ceil(score);
+  };
+
+  scorePath = function(subject, subject_lw, fullPathScore, options) {
+    var alpha, basePathScore, basePos, depth, end, extAdjust, fileLength, pathSeparator, preparedQuery, useExtensionBonus;
+    if (fullPathScore === 0) {
+      return 0;
+    }
+    preparedQuery = options.preparedQuery, useExtensionBonus = options.useExtensionBonus, pathSeparator = options.pathSeparator;
+    end = subject.length - 1;
+    while (subject[end] === pathSeparator) {
+      end--;
+    }
+    basePos = subject.lastIndexOf(pathSeparator, end);
+    fileLength = end - basePos;
+    extAdjust = 1.0;
+    if (useExtensionBonus) {
+      extAdjust += getExtensionScore(subject_lw, preparedQuery.ext, basePos, end, 2);
+      fullPathScore *= extAdjust;
+    }
+    if (basePos === -1) {
+      return fullPathScore;
+    }
+    depth = preparedQuery.depth;
+    while (basePos > -1 && depth-- > 0) {
+      basePos = subject.lastIndexOf(pathSeparator, basePos - 1);
+    }
+    basePathScore = basePos === -1 ? fullPathScore : extAdjust * computeScore(subject.slice(basePos + 1, end + 1), subject_lw.slice(basePos + 1, end + 1), preparedQuery);
+    alpha = 0.5 * tau_depth / (tau_depth + countDir(subject, end + 1, pathSeparator));
+    return alpha * basePathScore + (1 - alpha) * fullPathScore * scoreSize(0, file_coeff * fileLength);
+  };
+
+  exports.countDir = countDir = function(path, end, pathSeparator) {
+    var count, i;
+    if (end < 1) {
+      return 0;
+    }
+    count = 0;
+    i = -1;
+    while (++i < end && path[i] === pathSeparator) {
+      continue;
+    }
+    while (++i < end) {
+      if (path[i] === pathSeparator) {
+        count++;
+        while (++i < end && path[i] === pathSeparator) {
+          continue;
+        }
+      }
+    }
+    return count;
+  };
+
+  exports.getExtension = getExtension = function(str) {
+    var pos;
+    pos = str.lastIndexOf(".");
+    if (pos < 0) {
+      return "";
+    } else {
+      return str.substr(pos + 1);
+    }
+  };
+
+  getExtensionScore = function(candidate, ext, startPos, endPos, maxDepth) {
+    var m, matched, n, pos;
+    if (!ext.length) {
+      return 0;
+    }
+    pos = candidate.lastIndexOf(".", endPos);
+    if (!(pos > startPos)) {
+      return 0;
+    }
+    n = ext.length;
+    m = endPos - pos;
+    if (m < n) {
+      n = m;
+      m = ext.length;
+    }
+    pos++;
+    matched = -1;
+    while (++matched < n) {
+      if (candidate[pos + matched] !== ext[matched]) {
+        break;
+      }
+    }
+    if (matched === 0 && maxDepth > 0) {
+      return 0.9 * getExtensionScore(candidate, ext, startPos, pos - 2, maxDepth - 1);
+    }
+    return matched / m;
+  };
+
+}).call(this);
+
+
+/***/ }),
+
+/***/ 67:
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(module, global) {var __WEBPACK_AMD_DEFINE_RESULT__;/*! https://mths.be/punycode v1.4.1 by @mathias */
+;(function(root) {
+
+	/** Detect free variables */
+	var freeExports = typeof exports == 'object' && exports &&
+		!exports.nodeType && exports;
+	var freeModule = typeof module == 'object' && module &&
+		!module.nodeType && module;
+	var freeGlobal = typeof global == 'object' && global;
+	if (
+		freeGlobal.global === freeGlobal ||
+		freeGlobal.window === freeGlobal ||
+		freeGlobal.self === freeGlobal
+	) {
+		root = freeGlobal;
+	}
+
+	/**
+	 * The `punycode` object.
+	 * @name punycode
+	 * @type Object
+	 */
+	var punycode,
+
+	/** Highest positive signed 32-bit float value */
+	maxInt = 2147483647, // aka. 0x7FFFFFFF or 2^31-1
+
+	/** Bootstring parameters */
+	base = 36,
+	tMin = 1,
+	tMax = 26,
+	skew = 38,
+	damp = 700,
+	initialBias = 72,
+	initialN = 128, // 0x80
+	delimiter = '-', // '\x2D'
+
+	/** Regular expressions */
+	regexPunycode = /^xn--/,
+	regexNonASCII = /[^\x20-\x7E]/, // unprintable ASCII chars + non-ASCII chars
+	regexSeparators = /[\x2E\u3002\uFF0E\uFF61]/g, // RFC 3490 separators
+
+	/** Error messages */
+	errors = {
+		'overflow': 'Overflow: input needs wider integers to process',
+		'not-basic': 'Illegal input >= 0x80 (not a basic code point)',
+		'invalid-input': 'Invalid input'
+	},
+
+	/** Convenience shortcuts */
+	baseMinusTMin = base - tMin,
+	floor = Math.floor,
+	stringFromCharCode = String.fromCharCode,
+
+	/** Temporary variable */
+	key;
+
+	/*--------------------------------------------------------------------------*/
+
+	/**
+	 * A generic error utility function.
+	 * @private
+	 * @param {String} type The error type.
+	 * @returns {Error} Throws a `RangeError` with the applicable error message.
+	 */
+	function error(type) {
+		throw new RangeError(errors[type]);
+	}
+
+	/**
+	 * A generic `Array#map` utility function.
+	 * @private
+	 * @param {Array} array The array to iterate over.
+	 * @param {Function} callback The function that gets called for every array
+	 * item.
+	 * @returns {Array} A new array of values returned by the callback function.
+	 */
+	function map(array, fn) {
+		var length = array.length;
+		var result = [];
+		while (length--) {
+			result[length] = fn(array[length]);
+		}
+		return result;
+	}
+
+	/**
+	 * A simple `Array#map`-like wrapper to work with domain name strings or email
+	 * addresses.
+	 * @private
+	 * @param {String} domain The domain name or email address.
+	 * @param {Function} callback The function that gets called for every
+	 * character.
+	 * @returns {Array} A new string of characters returned by the callback
+	 * function.
+	 */
+	function mapDomain(string, fn) {
+		var parts = string.split('@');
+		var result = '';
+		if (parts.length > 1) {
+			// In email addresses, only the domain name should be punycoded. Leave
+			// the local part (i.e. everything up to `@`) intact.
+			result = parts[0] + '@';
+			string = parts[1];
+		}
+		// Avoid `split(regex)` for IE8 compatibility. See #17.
+		string = string.replace(regexSeparators, '\x2E');
+		var labels = string.split('.');
+		var encoded = map(labels, fn).join('.');
+		return result + encoded;
+	}
+
+	/**
+	 * Creates an array containing the numeric code points of each Unicode
+	 * character in the string. While JavaScript uses UCS-2 internally,
+	 * this function will convert a pair of surrogate halves (each of which
+	 * UCS-2 exposes as separate characters) into a single code point,
+	 * matching UTF-16.
+	 * @see `punycode.ucs2.encode`
+	 * @see <https://mathiasbynens.be/notes/javascript-encoding>
+	 * @memberOf punycode.ucs2
+	 * @name decode
+	 * @param {String} string The Unicode input string (UCS-2).
+	 * @returns {Array} The new array of code points.
+	 */
+	function ucs2decode(string) {
+		var output = [],
+		    counter = 0,
+		    length = string.length,
+		    value,
+		    extra;
+		while (counter < length) {
+			value = string.charCodeAt(counter++);
+			if (value >= 0xD800 && value <= 0xDBFF && counter < length) {
+				// high surrogate, and there is a next character
+				extra = string.charCodeAt(counter++);
+				if ((extra & 0xFC00) == 0xDC00) { // low surrogate
+					output.push(((value & 0x3FF) << 10) + (extra & 0x3FF) + 0x10000);
+				} else {
+					// unmatched surrogate; only append this code unit, in case the next
+					// code unit is the high surrogate of a surrogate pair
+					output.push(value);
+					counter--;
+				}
+			} else {
+				output.push(value);
+			}
+		}
+		return output;
+	}
+
+	/**
+	 * Creates a string based on an array of numeric code points.
+	 * @see `punycode.ucs2.decode`
+	 * @memberOf punycode.ucs2
+	 * @name encode
+	 * @param {Array} codePoints The array of numeric code points.
+	 * @returns {String} The new Unicode string (UCS-2).
+	 */
+	function ucs2encode(array) {
+		return map(array, function(value) {
+			var output = '';
+			if (value > 0xFFFF) {
+				value -= 0x10000;
+				output += stringFromCharCode(value >>> 10 & 0x3FF | 0xD800);
+				value = 0xDC00 | value & 0x3FF;
+			}
+			output += stringFromCharCode(value);
+			return output;
+		}).join('');
+	}
+
+	/**
+	 * Converts a basic code point into a digit/integer.
+	 * @see `digitToBasic()`
+	 * @private
+	 * @param {Number} codePoint The basic numeric code point value.
+	 * @returns {Number} The numeric value of a basic code point (for use in
+	 * representing integers) in the range `0` to `base - 1`, or `base` if
+	 * the code point does not represent a value.
+	 */
+	function basicToDigit(codePoint) {
+		if (codePoint - 48 < 10) {
+			return codePoint - 22;
+		}
+		if (codePoint - 65 < 26) {
+			return codePoint - 65;
+		}
+		if (codePoint - 97 < 26) {
+			return codePoint - 97;
+		}
+		return base;
+	}
+
+	/**
+	 * Converts a digit/integer into a basic code point.
+	 * @see `basicToDigit()`
+	 * @private
+	 * @param {Number} digit The numeric value of a basic code point.
+	 * @returns {Number} The basic code point whose value (when used for
+	 * representing integers) is `digit`, which needs to be in the range
+	 * `0` to `base - 1`. If `flag` is non-zero, the uppercase form is
+	 * used; else, the lowercase form is used. The behavior is undefined
+	 * if `flag` is non-zero and `digit` has no uppercase form.
+	 */
+	function digitToBasic(digit, flag) {
+		//  0..25 map to ASCII a..z or A..Z
+		// 26..35 map to ASCII 0..9
+		return digit + 22 + 75 * (digit < 26) - ((flag != 0) << 5);
+	}
+
+	/**
+	 * Bias adaptation function as per section 3.4 of RFC 3492.
+	 * https://tools.ietf.org/html/rfc3492#section-3.4
+	 * @private
+	 */
+	function adapt(delta, numPoints, firstTime) {
+		var k = 0;
+		delta = firstTime ? floor(delta / damp) : delta >> 1;
+		delta += floor(delta / numPoints);
+		for (/* no initialization */; delta > baseMinusTMin * tMax >> 1; k += base) {
+			delta = floor(delta / baseMinusTMin);
+		}
+		return floor(k + (baseMinusTMin + 1) * delta / (delta + skew));
+	}
+
+	/**
+	 * Converts a Punycode string of ASCII-only symbols to a string of Unicode
+	 * symbols.
+	 * @memberOf punycode
+	 * @param {String} input The Punycode string of ASCII-only symbols.
+	 * @returns {String} The resulting string of Unicode symbols.
+	 */
+	function decode(input) {
+		// Don't use UCS-2
+		var output = [],
+		    inputLength = input.length,
+		    out,
+		    i = 0,
+		    n = initialN,
+		    bias = initialBias,
+		    basic,
+		    j,
+		    index,
+		    oldi,
+		    w,
+		    k,
+		    digit,
+		    t,
+		    /** Cached calculation results */
+		    baseMinusT;
+
+		// Handle the basic code points: let `basic` be the number of input code
+		// points before the last delimiter, or `0` if there is none, then copy
+		// the first basic code points to the output.
+
+		basic = input.lastIndexOf(delimiter);
+		if (basic < 0) {
+			basic = 0;
+		}
+
+		for (j = 0; j < basic; ++j) {
+			// if it's not a basic code point
+			if (input.charCodeAt(j) >= 0x80) {
+				error('not-basic');
+			}
+			output.push(input.charCodeAt(j));
+		}
+
+		// Main decoding loop: start just after the last delimiter if any basic code
+		// points were copied; start at the beginning otherwise.
+
+		for (index = basic > 0 ? basic + 1 : 0; index < inputLength; /* no final expression */) {
+
+			// `index` is the index of the next character to be consumed.
+			// Decode a generalized variable-length integer into `delta`,
+			// which gets added to `i`. The overflow checking is easier
+			// if we increase `i` as we go, then subtract off its starting
+			// value at the end to obtain `delta`.
+			for (oldi = i, w = 1, k = base; /* no condition */; k += base) {
+
+				if (index >= inputLength) {
+					error('invalid-input');
+				}
+
+				digit = basicToDigit(input.charCodeAt(index++));
+
+				if (digit >= base || digit > floor((maxInt - i) / w)) {
+					error('overflow');
+				}
+
+				i += digit * w;
+				t = k <= bias ? tMin : (k >= bias + tMax ? tMax : k - bias);
+
+				if (digit < t) {
+					break;
+				}
+
+				baseMinusT = base - t;
+				if (w > floor(maxInt / baseMinusT)) {
+					error('overflow');
+				}
+
+				w *= baseMinusT;
+
+			}
+
+			out = output.length + 1;
+			bias = adapt(i - oldi, out, oldi == 0);
+
+			// `i` was supposed to wrap around from `out` to `0`,
+			// incrementing `n` each time, so we'll fix that now:
+			if (floor(i / out) > maxInt - n) {
+				error('overflow');
+			}
+
+			n += floor(i / out);
+			i %= out;
+
+			// Insert `n` at position `i` of the output
+			output.splice(i++, 0, n);
+
+		}
+
+		return ucs2encode(output);
+	}
+
+	/**
+	 * Converts a string of Unicode symbols (e.g. a domain name label) to a
+	 * Punycode string of ASCII-only symbols.
+	 * @memberOf punycode
+	 * @param {String} input The string of Unicode symbols.
+	 * @returns {String} The resulting Punycode string of ASCII-only symbols.
+	 */
+	function encode(input) {
+		var n,
+		    delta,
+		    handledCPCount,
+		    basicLength,
+		    bias,
+		    j,
+		    m,
+		    q,
+		    k,
+		    t,
+		    currentValue,
+		    output = [],
+		    /** `inputLength` will hold the number of code points in `input`. */
+		    inputLength,
+		    /** Cached calculation results */
+		    handledCPCountPlusOne,
+		    baseMinusT,
+		    qMinusT;
+
+		// Convert the input in UCS-2 to Unicode
+		input = ucs2decode(input);
+
+		// Cache the length
+		inputLength = input.length;
+
+		// Initialize the state
+		n = initialN;
+		delta = 0;
+		bias = initialBias;
+
+		// Handle the basic code points
+		for (j = 0; j < inputLength; ++j) {
+			currentValue = input[j];
+			if (currentValue < 0x80) {
+				output.push(stringFromCharCode(currentValue));
+			}
+		}
+
+		handledCPCount = basicLength = output.length;
+
+		// `handledCPCount` is the number of code points that have been handled;
+		// `basicLength` is the number of basic code points.
+
+		// Finish the basic string - if it is not empty - with a delimiter
+		if (basicLength) {
+			output.push(delimiter);
+		}
+
+		// Main encoding loop:
+		while (handledCPCount < inputLength) {
+
+			// All non-basic code points < n have been handled already. Find the next
+			// larger one:
+			for (m = maxInt, j = 0; j < inputLength; ++j) {
+				currentValue = input[j];
+				if (currentValue >= n && currentValue < m) {
+					m = currentValue;
+				}
+			}
+
+			// Increase `delta` enough to advance the decoder's <n,i> state to <m,0>,
+			// but guard against overflow
+			handledCPCountPlusOne = handledCPCount + 1;
+			if (m - n > floor((maxInt - delta) / handledCPCountPlusOne)) {
+				error('overflow');
+			}
+
+			delta += (m - n) * handledCPCountPlusOne;
+			n = m;
+
+			for (j = 0; j < inputLength; ++j) {
+				currentValue = input[j];
+
+				if (currentValue < n && ++delta > maxInt) {
+					error('overflow');
+				}
+
+				if (currentValue == n) {
+					// Represent delta as a generalized variable-length integer
+					for (q = delta, k = base; /* no condition */; k += base) {
+						t = k <= bias ? tMin : (k >= bias + tMax ? tMax : k - bias);
+						if (q < t) {
+							break;
+						}
+						qMinusT = q - t;
+						baseMinusT = base - t;
+						output.push(
+							stringFromCharCode(digitToBasic(t + qMinusT % baseMinusT, 0))
+						);
+						q = floor(qMinusT / baseMinusT);
+					}
+
+					output.push(stringFromCharCode(digitToBasic(q, 0)));
+					bias = adapt(delta, handledCPCountPlusOne, handledCPCount == basicLength);
+					delta = 0;
+					++handledCPCount;
+				}
+			}
+
+			++delta;
+			++n;
+
+		}
+		return output.join('');
+	}
+
+	/**
+	 * Converts a Punycode string representing a domain name or an email address
+	 * to Unicode. Only the Punycoded parts of the input will be converted, i.e.
+	 * it doesn't matter if you call it on a string that has already been
+	 * converted to Unicode.
+	 * @memberOf punycode
+	 * @param {String} input The Punycoded domain name or email address to
+	 * convert to Unicode.
+	 * @returns {String} The Unicode representation of the given Punycode
+	 * string.
+	 */
+	function toUnicode(input) {
+		return mapDomain(input, function(string) {
+			return regexPunycode.test(string)
+				? decode(string.slice(4).toLowerCase())
+				: string;
+		});
+	}
+
+	/**
+	 * Converts a Unicode string representing a domain name or an email address to
+	 * Punycode. Only the non-ASCII parts of the domain name will be converted,
+	 * i.e. it doesn't matter if you call it with a domain that's already in
+	 * ASCII.
+	 * @memberOf punycode
+	 * @param {String} input The domain name or email address to convert, as a
+	 * Unicode string.
+	 * @returns {String} The Punycode representation of the given domain name or
+	 * email address.
+	 */
+	function toASCII(input) {
+		return mapDomain(input, function(string) {
+			return regexNonASCII.test(string)
+				? 'xn--' + encode(string)
+				: string;
+		});
+	}
+
+	/*--------------------------------------------------------------------------*/
+
+	/** Define the public API */
+	punycode = {
+		/**
+		 * A string representing the current Punycode.js version number.
+		 * @memberOf punycode
+		 * @type String
+		 */
+		'version': '1.4.1',
+		/**
+		 * An object of methods to convert from JavaScript's internal character
+		 * representation (UCS-2) to Unicode code points, and back.
+		 * @see <https://mathiasbynens.be/notes/javascript-encoding>
+		 * @memberOf punycode
+		 * @type Object
+		 */
+		'ucs2': {
+			'decode': ucs2decode,
+			'encode': ucs2encode
+		},
+		'decode': decode,
+		'encode': encode,
+		'toASCII': toASCII,
+		'toUnicode': toUnicode
+	};
+
+	/** Expose `punycode` */
+	// Some AMD build optimizers, like r.js, check for specific condition patterns
+	// like the following:
+	if (
+		true
+	) {
+		!(__WEBPACK_AMD_DEFINE_RESULT__ = (function() {
+			return punycode;
+		}).call(exports, __webpack_require__, exports, module),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	} else if (freeExports && freeModule) {
+		if (module.exports == freeExports) {
+			// in Node.js, io.js, or RingoJS v0.8.0+
+			freeModule.exports = punycode;
+		} else {
+			// in Narwhal or RingoJS v0.7.0-
+			for (key in punycode) {
+				punycode.hasOwnProperty(key) && (freeExports[key] = punycode[key]);
+			}
+		}
+	} else {
+		// in Rhino or a web browser
+		root.punycode = punycode;
+	}
+
+}(this));
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42)(module), __webpack_require__(25)))
+
+/***/ }),
+
+/***/ 68:
+/***/ (function(module, exports) {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE_68__;
+
+/***/ }),
+
+/***/ 73:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _tree = __webpack_require__(100);
+
+var _tree2 = _interopRequireDefault(_tree);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+module.exports = {
+  Tree: _tree2.default
+}; /* This Source Code Form is subject to the terms of the Mozilla Public
+    * License, v. 2.0. If a copy of the MPL was not distributed with this
+    * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/***/ }),
+
+/***/ 761:
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(762);
+
+
+/***/ }),
+
+/***/ 762:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.vendored = undefined;
+
+var _devtoolsComponents = __webpack_require__(73);
+
+var devtoolsComponents = _interopRequireWildcard(_devtoolsComponents);
+
+var _devtoolsConfig = __webpack_require__(763);
+
+var devtoolsConfig = _interopRequireWildcard(_devtoolsConfig);
+
+var _devtoolsContextmenu = __webpack_require__(33);
+
+var devtoolsContextmenu = _interopRequireWildcard(_devtoolsContextmenu);
+
+var _devtoolsEnvironment = __webpack_require__(26);
+
+var devtoolsEnvironment = _interopRequireWildcard(_devtoolsEnvironment);
+
+var _devtoolsModules = __webpack_require__(34);
+
+var devtoolsModules = _interopRequireWildcard(_devtoolsModules);
+
+var _devtoolsUtils = __webpack_require__(16);
+
+var devtoolsUtils = _interopRequireWildcard(_devtoolsUtils);
+
+var _fuzzaldrinPlus = __webpack_require__(131);
+
+var fuzzaldrinPlus = _interopRequireWildcard(_fuzzaldrinPlus);
+
+var _Transition = __webpack_require__(211);
+
+var transition = _interopRequireWildcard(_Transition);
+
+var _tabs = __webpack_require__(219);
+
+var reactAriaComponentsTabs = _interopRequireWildcard(_tabs);
+
+var _reselect = __webpack_require__(31);
+
+var reselect = _interopRequireWildcard(_reselect);
+
+var _classnames = __webpack_require__(6);
+
+var _classnames2 = _interopRequireDefault(_classnames);
+
+var _devtoolsSplitter = __webpack_require__(130);
+
+var _devtoolsSplitter2 = _interopRequireDefault(_devtoolsSplitter);
+
+var _lodashMove = __webpack_require__(172);
+
+var _lodashMove2 = _interopRequireDefault(_lodashMove);
+
+var _Svg = __webpack_require__(132);
+
+var _Svg2 = _interopRequireDefault(_Svg);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+// We cannot directly export literals containing special characters
+// (eg. "my-module/Test") which is why they are nested in "vendored".
+// The keys of the vendored object should match the module names
+// !!! Should remain synchronized with .babel/transform-mc.js !!!
+
+
+// Modules imported without destructuring
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+/**
+ * Vendors.js is a file used to bundle and expose all dependencies needed to run
+ * the transpiled debugger modules when running in Firefox.
+ *
+ * To make transpilation easier, a vendored module should always be imported in
+ * same way:
+ * - always with destructuring (import { a } from "modA";)
+ * - always without destructuring (import modB from "modB")
+ *
+ * Both are fine, but cannot be mixed for the same module.
+ */
+
+// Modules imported with destructuring
+const vendored = exports.vendored = {
+  classnames: _classnames2.default,
+  "devtools-components": devtoolsComponents,
+  "devtools-config": devtoolsConfig,
+  "devtools-contextmenu": devtoolsContextmenu,
+  "devtools-environment": devtoolsEnvironment,
+  "devtools-modules": devtoolsModules,
+  "devtools-splitter": _devtoolsSplitter2.default,
+  "devtools-utils": devtoolsUtils,
+  "fuzzaldrin-plus": fuzzaldrinPlus,
+  "lodash-move": _lodashMove2.default,
+  "react-aria-components/src/tabs": reactAriaComponentsTabs,
+  "react-transition-group/Transition": transition,
+  reselect,
+  // Svg is required via relative paths, so the key is not imported path.
+  // See .babel/transform-mc.js
+  Svg: _Svg2.default
+};
+// $FlowIgnore
+
+/***/ }),
+
+/***/ 763:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const feature = __webpack_require__(764);
+
+module.exports = feature;
+
+/***/ }),
+
+/***/ 764:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const { get: pick, set: put } = __webpack_require__(10);
+const fs = __webpack_require__(765);
+const path = __webpack_require__(766);
+
+let config;
+/**
+ * Gets a config value for a given key
+ * e.g "chrome.webSocketPort"
+ */
+function getValue(key) {
+  return pick(config, key);
+}
+
+function setValue(key, value) {
+  return put(config, key, value);
+}
+
+function setConfig(value) {
+  config = value;
+}
+
+function getConfig() {
+  return config;
+}
+
+function updateLocalConfig(relativePath) {
+  const localConfigPath = path.resolve(relativePath, "../configs/local.json");
+  const output = JSON.stringify(config, null, 2);
+  fs.writeFileSync(localConfigPath, output, { flag: "w" });
+  return output;
+}
+
+module.exports = {
+  getValue,
+  setValue,
+  getConfig,
+  setConfig,
+  updateLocalConfig
+};
+
+/***/ }),
+
+/***/ 765:
+/***/ (function(module, exports) {
+
+
+
+/***/ }),
+
+/***/ 766:
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+// resolves . and .. elements in a path array with directory names there
+// must be no slashes, empty elements, or device names (c:\) in the array
+// (so also no leading and trailing slashes - it does not distinguish
+// relative and absolute paths)
+function normalizeArray(parts, allowAboveRoot) {
+  // if the path tries to go above the root, `up` ends up > 0
+  var up = 0;
+  for (var i = parts.length - 1; i >= 0; i--) {
+    var last = parts[i];
+    if (last === '.') {
+      parts.splice(i, 1);
+    } else if (last === '..') {
+      parts.splice(i, 1);
+      up++;
+    } else if (up) {
+      parts.splice(i, 1);
+      up--;
+    }
+  }
+
+  // if the path is allowed to go above the root, restore leading ..s
+  if (allowAboveRoot) {
+    for (; up--; up) {
+      parts.unshift('..');
+    }
+  }
+
+  return parts;
+}
+
+// Split a filename into [root, dir, basename, ext], unix version
+// 'root' is just a slash, or nothing.
+var splitPathRe =
+    /^(\/?|)([\s\S]*?)((?:\.{1,2}|[^\/]+?|)(\.[^.\/]*|))(?:[\/]*)$/;
+var splitPath = function(filename) {
+  return splitPathRe.exec(filename).slice(1);
+};
+
+// path.resolve([from ...], to)
+// posix version
+exports.resolve = function() {
+  var resolvedPath = '',
+      resolvedAbsolute = false;
+
+  for (var i = arguments.length - 1; i >= -1 && !resolvedAbsolute; i--) {
+    var path = (i >= 0) ? arguments[i] : process.cwd();
+
+    // Skip empty and invalid entries
+    if (typeof path !== 'string') {
+      throw new TypeError('Arguments to path.resolve must be strings');
+    } else if (!path) {
+      continue;
+    }
+
+    resolvedPath = path + '/' + resolvedPath;
+    resolvedAbsolute = path.charAt(0) === '/';
+  }
+
+  // At this point the path should be resolved to a full absolute path, but
+  // handle relative paths to be safe (might happen when process.cwd() fails)
+
+  // Normalize the path
+  resolvedPath = normalizeArray(filter(resolvedPath.split('/'), function(p) {
+    return !!p;
+  }), !resolvedAbsolute).join('/');
+
+  return ((resolvedAbsolute ? '/' : '') + resolvedPath) || '.';
+};
+
+// path.normalize(path)
+// posix version
+exports.normalize = function(path) {
+  var isAbsolute = exports.isAbsolute(path),
+      trailingSlash = substr(path, -1) === '/';
+
+  // Normalize the path
+  path = normalizeArray(filter(path.split('/'), function(p) {
+    return !!p;
+  }), !isAbsolute).join('/');
+
+  if (!path && !isAbsolute) {
+    path = '.';
+  }
+  if (path && trailingSlash) {
+    path += '/';
+  }
+
+  return (isAbsolute ? '/' : '') + path;
+};
+
+// posix version
+exports.isAbsolute = function(path) {
+  return path.charAt(0) === '/';
+};
+
+// posix version
+exports.join = function() {
+  var paths = Array.prototype.slice.call(arguments, 0);
+  return exports.normalize(filter(paths, function(p, index) {
+    if (typeof p !== 'string') {
+      throw new TypeError('Arguments to path.join must be strings');
+    }
+    return p;
+  }).join('/'));
+};
+
+
+// path.relative(from, to)
+// posix version
+exports.relative = function(from, to) {
+  from = exports.resolve(from).substr(1);
+  to = exports.resolve(to).substr(1);
+
+  function trim(arr) {
+    var start = 0;
+    for (; start < arr.length; start++) {
+      if (arr[start] !== '') break;
+    }
+
+    var end = arr.length - 1;
+    for (; end >= 0; end--) {
+      if (arr[end] !== '') break;
+    }
+
+    if (start > end) return [];
+    return arr.slice(start, end - start + 1);
+  }
+
+  var fromParts = trim(from.split('/'));
+  var toParts = trim(to.split('/'));
+
+  var length = Math.min(fromParts.length, toParts.length);
+  var samePartsLength = length;
+  for (var i = 0; i < length; i++) {
+    if (fromParts[i] !== toParts[i]) {
+      samePartsLength = i;
+      break;
+    }
+  }
+
+  var outputParts = [];
+  for (var i = samePartsLength; i < fromParts.length; i++) {
+    outputParts.push('..');
+  }
+
+  outputParts = outputParts.concat(toParts.slice(samePartsLength));
+
+  return outputParts.join('/');
+};
+
+exports.sep = '/';
+exports.delimiter = ':';
+
+exports.dirname = function(path) {
+  var result = splitPath(path),
+      root = result[0],
+      dir = result[1];
+
+  if (!root && !dir) {
+    // No dirname whatsoever
+    return '.';
+  }
+
+  if (dir) {
+    // It has a dirname, strip trailing slash
+    dir = dir.substr(0, dir.length - 1);
+  }
+
+  return root + dir;
+};
+
+
+exports.basename = function(path, ext) {
+  var f = splitPath(path)[2];
+  // TODO: make this comparison case-insensitive on windows?
+  if (ext && f.substr(-1 * ext.length) === ext) {
+    f = f.substr(0, f.length - ext.length);
+  }
+  return f;
+};
+
+
+exports.extname = function(path) {
+  return splitPath(path)[3];
+};
+
+function filter (xs, f) {
+    if (xs.filter) return xs.filter(f);
+    var res = [];
+    for (var i = 0; i < xs.length; i++) {
+        if (f(xs[i], i, xs)) res.push(xs[i]);
+    }
+    return res;
+}
+
+// String.prototype.substr - negative index don't work in IE8
+var substr = 'ab'.substr(-1) === 'b'
+    ? function (str, start, len) { return str.substr(start, len) }
+    : function (str, start, len) {
+        if (start < 0) start = str.length + start;
+        return str.substr(start, len);
+    }
+;
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(50)))
 
 /***/ })
 
