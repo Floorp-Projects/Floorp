@@ -13,10 +13,13 @@ import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
+import mozilla.components.concept.engine.webextension.WebExtension
 import org.json.JSONObject
+import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoWebExecutor
+import org.mozilla.geckoview.WebExtension as GeckoWebExtension
 
 /**
  * Gecko-based implementation of Engine interface.
@@ -58,6 +61,24 @@ class GeckoEngine(
      */
     override fun speculativeConnect(url: String) {
         executor.speculativeConnect(url)
+    }
+
+    /**
+     * See [Engine.installWebExtension].
+     */
+    override fun installWebExtension(
+        ext: WebExtension,
+        onSuccess: ((WebExtension) -> Unit),
+        onError: ((WebExtension, Throwable) -> Unit)
+    ) {
+        val result = runtime.registerWebExtension(GeckoWebExtension(ext.url, ext.id))
+        result.then({
+            onSuccess(ext)
+            GeckoResult<Void>()
+        }, {
+            throwable -> onError(ext, throwable)
+            GeckoResult<Void>()
+        })
     }
 
     override fun name(): String = "Gecko"

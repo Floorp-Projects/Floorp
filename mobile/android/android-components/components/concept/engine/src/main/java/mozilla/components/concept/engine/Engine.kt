@@ -6,7 +6,9 @@ package mozilla.components.concept.engine
 
 import android.content.Context
 import android.util.AttributeSet
+import mozilla.components.concept.engine.webextension.WebExtension
 import org.json.JSONObject
+import java.lang.UnsupportedOperationException
 
 /**
  * Entry point for interacting with the engine implementation.
@@ -55,6 +57,20 @@ interface Engine {
      * Not all [Engine] implementations may actually implement this.
      */
     fun speculativeConnect(url: String)
+
+    /**
+     * Installs the provided extension in this engine.
+     *
+     * @param ext the [WebExtension] to install.
+     * @param onSuccess (optional) callback invoked if the extension was installed successfully.
+     * @param onError (optional) callback invoked if there was an error installing the extension.
+     * @throws UnsupportedOperationException if this engine doesn't support web extensions.
+     */
+    fun installWebExtension(
+        ext: WebExtension,
+        onSuccess: ((WebExtension) -> Unit) = { },
+        onError: ((WebExtension, Throwable) -> Unit) = { _, _ -> }
+    ): Unit = throw UnsupportedOperationException("Web extension support is not available in this engine")
 
     /**
      * Provides access to the settings of this engine.

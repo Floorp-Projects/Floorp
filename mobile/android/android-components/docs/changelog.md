@@ -12,6 +12,16 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **browser-engine-gecko-nightly**
+  * Added API to install web extensions:
+
+  ```kotlin
+  val borderify = WebExtension("borderify", "resource://android/assets/extensions/borderify/")
+  engine.installWebExtension(borderify) {
+      ext, throwable -> Log.log(Log.Priority.ERROR, "MyApp", throwable, "Failed to install ${ext.id}")
+  }
+  ```
+
 * **feature-toolbar**
   * Added ability to color parts of the domain (e.g. [registrable domain](https://url.spec.whatwg.org/#host-registrable-domain)) by providing a `UrlRenderConfiguration`:
 

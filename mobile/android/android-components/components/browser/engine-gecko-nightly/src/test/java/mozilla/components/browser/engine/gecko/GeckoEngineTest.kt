@@ -8,6 +8,9 @@ import android.content.Context
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.UnsupportedSettingException
+import mozilla.components.concept.engine.webextension.WebExtension
+import mozilla.components.support.test.any
+import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -19,12 +22,15 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mozilla.geckoview.ContentBlocking
+import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoWebExecutor
+import org.mozilla.geckoview.WebExtension as GeckoWebExtension
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import java.io.IOException
 
 @RunWith(RobolectricTestRunner::class)
 class GeckoEngineTest {
@@ -145,5 +151,49 @@ class GeckoEngineTest {
         engine.speculativeConnect("https://www.mozilla.org")
 
         verify(executor).speculativeConnect("https://www.mozilla.org")
+    }
+
+    @Test
+    fun `install web extension successfully`() {
+        val runtime = mock(GeckoRuntime::class.java)
+        val engine = GeckoEngine(context, runtime = runtime)
+        var onSuccessCalled = false
+        var onErrorCalled = false
+        var result = GeckoResult<Void>()
+
+        `when`(runtime.registerWebExtension(any())).thenReturn(result)
+        engine.installWebExtension(
+                WebExtension("test-webext", "resource://android/assets/extensions/test"),
+                onSuccess = { onSuccessCalled = true },
+                onError = { _, _ -> onErrorCalled = true }
+        )
+        result.complete(null)
+
+        val extCaptor = argumentCaptor<GeckoWebExtension>()
+        verify(runtime).registerWebExtension(extCaptor.capture())
+        assertEquals("test-webext", extCaptor.value.id)
+        assertEquals("resource://android/assets/extensions/test", extCaptor.value.location)
+        assertTrue(onSuccessCalled)
+        assertFalse(onErrorCalled)
+    }
+
+    @Test
+    fun `install web extension failure`() {
+        val runtime = mock(GeckoRuntime::class.java)
+        val engine = GeckoEngine(context, runtime = runtime)
+        var onErrorCalled = false
+        val expected = IOException()
+        var result = GeckoResult<Void>()
+
+        var throwable: Throwable? = null
+        `when`(runtime.registerWebExtension(any())).thenReturn(result)
+        engine.installWebExtension(WebExtension("test-webext-error", "resource://android/assets/extensions/error")) { _, e ->
+            onErrorCalled = true
+            throwable = e
+        }
+        result.completeExceptionally(expected)
+
+        assertTrue(onErrorCalled)
+        assertEquals(expected, throwable)
     }
 }
