@@ -19,10 +19,8 @@ JSObject* JSWindowActorParent::WrapObject(JSContext* aCx,
 
 WindowGlobalParent* JSWindowActorParent::Manager() const { return mManager; }
 
-void JSWindowActorParent::Init(const nsAString& aName,
-                               WindowGlobalParent* aManager) {
+void JSWindowActorParent::Init(WindowGlobalParent* aManager) {
   MOZ_ASSERT(!mManager, "Cannot Init() a JSWindowActorParent twice!");
-  mName = aName;
   mManager = aManager;
 }
 
@@ -60,6 +58,7 @@ class AsyncMessageToChild : public Runnable {
 }  // anonymous namespace
 
 void JSWindowActorParent::SendAsyncMessage(JSContext* aCx,
+                                           const nsAString& aActorName,
                                            const nsAString& aMessageName,
                                            JS::Handle<JS::Value> aObj,
                                            JS::Handle<JS::Value> aTransfers,
@@ -82,8 +81,8 @@ void JSWindowActorParent::SendAsyncMessage(JSContext* aCx,
   // loads.
   if (mManager->IsInProcess()) {
     RefPtr<WindowGlobalChild> child = mManager->GetChildActor();
-    RefPtr<AsyncMessageToChild> ev =
-        new AsyncMessageToChild(mName, aMessageName, std::move(data), child);
+    RefPtr<AsyncMessageToChild> ev = new AsyncMessageToChild(
+        aActorName, aMessageName, std::move(data), child);
     DebugOnly<nsresult> rv = NS_DispatchToMainThread(ev);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "JS Window Actor AsyncMessageToChild dispatch failed");
@@ -100,8 +99,8 @@ void JSWindowActorParent::SendAsyncMessage(JSContext* aCx,
     return;
   }
 
-  if (!mManager->SendAsyncMessage(mName, PromiseFlatString(aMessageName),
-                                  msgData)) {
+  if (!mManager->SendAsyncMessage(PromiseFlatString(aActorName),
+                                  PromiseFlatString(aMessageName), msgData)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return;
   }
