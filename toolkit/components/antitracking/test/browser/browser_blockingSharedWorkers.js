@@ -51,7 +51,11 @@ AntiTracking.runTest("SharedWorkers and Storage Access API",
   },
   async _ => {
     /* import-globals-from storageAccessAPIHelpers.js */
-    await noStorageAccessInitially();
+    if (allowListed) {
+      await hasStorageAccessInitially();
+    } else {
+      await noStorageAccessInitially();
+    }
 
     new SharedWorker("a.js", "foo");
     ok(true, "SharedWorker is allowed");

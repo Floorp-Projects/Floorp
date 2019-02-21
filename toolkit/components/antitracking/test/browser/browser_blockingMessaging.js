@@ -118,7 +118,11 @@ AntiTracking.runTest("BroadcastChannel and Storage Access API",
   },
   async _ => {
     /* import-globals-from storageAccessAPIHelpers.js */
-    await noStorageAccessInitially();
+    if (allowListed) {
+      await hasStorageAccessInitially();
+    } else {
+      await noStorageAccessInitially();
+    }
 
     new BroadcastChannel("hello");
     ok(true, "BroadcastChanneli can be used");
@@ -215,7 +219,11 @@ AntiTracking.runTest("BroadcastChannel in workers and Storage Access API",
     }
 
     /* import-globals-from storageAccessAPIHelpers.js */
-    await noStorageAccessInitially();
+    if (allowListed) {
+      await hasStorageAccessInitially();
+    } else {
+      await noStorageAccessInitially();
+    }
 
     let blob = new Blob([nonBlockingCode.toString() + "; nonBlockingCode();"]);
     ok(blob, "Blob has been created");
