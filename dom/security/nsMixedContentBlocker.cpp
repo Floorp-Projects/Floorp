@@ -301,7 +301,7 @@ nsMixedContentBlocker::AsyncOnChannelRedirect(
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Get the loading Info from the old channel
-  nsCOMPtr<nsILoadInfo> loadInfo = aOldChannel->GetLoadInfo();
+  nsCOMPtr<nsILoadInfo> loadInfo = aOldChannel->LoadInfo();
   nsCOMPtr<nsIPrincipal> requestingPrincipal = loadInfo->LoadingPrincipal();
 
   // Since we are calling shouldLoad() directly on redirects, we don't go

@@ -92,8 +92,8 @@ nsChromeProtocolHandler::NewURI(const nsACString &aSpec, const char *aCharset,
 }
 
 NS_IMETHODIMP
-nsChromeProtocolHandler::NewChannel2(nsIURI *aURI, nsILoadInfo *aLoadInfo,
-                                     nsIChannel **aResult) {
+nsChromeProtocolHandler::NewChannel(nsIURI *aURI, nsILoadInfo *aLoadInfo,
+                                    nsIChannel **aResult) {
   nsresult rv;
 
   NS_ENSURE_ARG_POINTER(aURI);
@@ -189,11 +189,6 @@ nsChromeProtocolHandler::NewChannel2(nsIURI *aURI, nsILoadInfo *aLoadInfo,
   *aResult = result;
   NS_ADDREF(*aResult);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsChromeProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **aResult) {
-  return NewChannel2(aURI, nullptr, aResult);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

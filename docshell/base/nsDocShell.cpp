@@ -4576,10 +4576,8 @@ nsDocShell::Reload(uint32_t aReloadFlags) {
         httpChan->GetOriginalURI(getter_AddRefs(originalURI));
       }
 
-      nsCOMPtr<nsILoadInfo> loadInfo = chan->GetLoadInfo();
-      if (loadInfo) {
-        loadInfo->GetResultPrincipalURI(getter_AddRefs(resultPrincipalURI));
-      }
+      nsCOMPtr<nsILoadInfo> loadInfo = chan->LoadInfo();
+      loadInfo->GetResultPrincipalURI(getter_AddRefs(resultPrincipalURI));
     }
 
     MOZ_ASSERT(triggeringPrincipal, "Need a valid triggeringPrincipal");
@@ -6850,7 +6848,7 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
           // can increment counts from the search engine
           MaybeNotifyKeywordSearchLoading(keywordProviderName, keywordAsSent);
 
-          nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+          nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
           MOZ_ASSERT(loadInfo, "loadInfo is required on all channels");
           nsCOMPtr<nsIPrincipal> triggeringPrincipal =
               loadInfo->TriggeringPrincipal();
@@ -6902,10 +6900,8 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
     }
   } else if (url && NS_SUCCEEDED(aStatus)) {
     // If we have a host
-    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-    if (loadInfo) {
-      PredictorLearnRedirect(url, aChannel, loadInfo->GetOriginAttributes());
-    }
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+    PredictorLearnRedirect(url, aChannel, loadInfo->GetOriginAttributes());
   }
 
   return NS_OK;
@@ -9829,8 +9825,7 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
                         GetIsMozBrowser());
 
   if (isTopLevelDoc && GetDocument() && GetDocument()->GetChannel()) {
-    nsCOMPtr<nsILoadInfo> oldLoadInfo =
-        GetDocument()->GetChannel()->GetLoadInfo();
+    nsCOMPtr<nsILoadInfo> oldLoadInfo = GetDocument()->GetChannel()->LoadInfo();
     loadInfo->SetOpenerPolicy(oldLoadInfo->GetOpenerPolicy());
   }
 
@@ -11293,29 +11288,27 @@ nsresult nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
       discardLayoutState = ShouldDiscardLayoutState(httpChannel);
     }
 
-    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-    if (loadInfo) {
-      if (!triggeringPrincipal) {
-        triggeringPrincipal = loadInfo->TriggeringPrincipal();
-      }
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+    if (!triggeringPrincipal) {
+      triggeringPrincipal = loadInfo->TriggeringPrincipal();
+    }
 
-      loadInfo->GetResultPrincipalURI(getter_AddRefs(resultPrincipalURI));
+    loadInfo->GetResultPrincipalURI(getter_AddRefs(resultPrincipalURI));
 
-      // For now keep storing just the principal in the SHEntry.
-      if (!principalToInherit) {
-        if (loadInfo->GetLoadingSandboxed()) {
-          if (loadInfo->LoadingPrincipal()) {
-            principalToInherit = NullPrincipal::CreateWithInheritedAttributes(
-                loadInfo->LoadingPrincipal());
-          } else {
-            // get the OriginAttributes
-            OriginAttributes attrs;
-            loadInfo->GetOriginAttributes(&attrs);
-            principalToInherit = NullPrincipal::Create(attrs);
-          }
+    // For now keep storing just the principal in the SHEntry.
+    if (!principalToInherit) {
+      if (loadInfo->GetLoadingSandboxed()) {
+        if (loadInfo->LoadingPrincipal()) {
+          principalToInherit = NullPrincipal::CreateWithInheritedAttributes(
+              loadInfo->LoadingPrincipal());
         } else {
-          principalToInherit = loadInfo->PrincipalToInherit();
+          // get the OriginAttributes
+          OriginAttributes attrs;
+          loadInfo->GetOriginAttributes(&attrs);
+          principalToInherit = NullPrincipal::Create(attrs);
         }
+      } else {
+        principalToInherit = loadInfo->PrincipalToInherit();
       }
     }
   }

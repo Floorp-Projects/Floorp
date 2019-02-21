@@ -93,10 +93,7 @@ nsresult nsDocShellLoadState::CreateFromPendingChannel(
   }
   loadState->SetOriginalURI(originalUri);
 
-  nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
-  if (NS_WARN_IF(!loadInfo)) {
-    return NS_ERROR_FAILURE;
-  }
+  nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
   loadState->SetTriggeringPrincipal(loadInfo->TriggeringPrincipal());
 
   // Return the newly created loadState.

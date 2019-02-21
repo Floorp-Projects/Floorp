@@ -83,55 +83,48 @@ nsresult nsBaseChannel::Redirect(nsIChannel *newChannel, uint32_t redirectFlags,
 
   // make a copy of the loadinfo, append to the redirectchain
   // and set it on the new channel
-  if (mLoadInfo) {
-    nsSecurityFlags secFlags = mLoadInfo->GetSecurityFlags() &
-                               ~nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
-    nsCOMPtr<nsILoadInfo> newLoadInfo =
-        static_cast<mozilla::net::LoadInfo *>(mLoadInfo.get())
-            ->CloneWithNewSecFlags(secFlags);
+  nsSecurityFlags secFlags =
+      mLoadInfo->GetSecurityFlags() & ~nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
+  nsCOMPtr<nsILoadInfo> newLoadInfo =
+      static_cast<mozilla::net::LoadInfo *>(mLoadInfo.get())
+          ->CloneWithNewSecFlags(secFlags);
 
-    nsCOMPtr<nsIPrincipal> uriPrincipal;
-    nsIScriptSecurityManager *sm = nsContentUtils::GetSecurityManager();
-    sm->GetChannelURIPrincipal(this, getter_AddRefs(uriPrincipal));
-    bool isInternalRedirect =
-        (redirectFlags & (nsIChannelEventSink::REDIRECT_INTERNAL |
-                          nsIChannelEventSink::REDIRECT_STS_UPGRADE));
+  nsCOMPtr<nsIPrincipal> uriPrincipal;
+  nsIScriptSecurityManager *sm = nsContentUtils::GetSecurityManager();
+  sm->GetChannelURIPrincipal(this, getter_AddRefs(uriPrincipal));
+  bool isInternalRedirect =
+      (redirectFlags & (nsIChannelEventSink::REDIRECT_INTERNAL |
+                        nsIChannelEventSink::REDIRECT_STS_UPGRADE));
 
-    // nsBaseChannel hst no thing to do with HttpBaseChannel, we would not care
-    // about referrer and remote address in this case
-    nsCOMPtr<nsIRedirectHistoryEntry> entry =
-        new nsRedirectHistoryEntry(uriPrincipal, nullptr, EmptyCString());
+  // nsBaseChannel hst no thing to do with HttpBaseChannel, we would not care
+  // about referrer and remote address in this case
+  nsCOMPtr<nsIRedirectHistoryEntry> entry =
+      new nsRedirectHistoryEntry(uriPrincipal, nullptr, EmptyCString());
 
-    newLoadInfo->AppendRedirectHistoryEntry(entry, isInternalRedirect);
+  newLoadInfo->AppendRedirectHistoryEntry(entry, isInternalRedirect);
 
-    // Ensure the channel's loadInfo's result principal URI so that it's
-    // either non-null or updated to the redirect target URI.
-    // We must do this because in case the loadInfo's result principal URI
-    // is null, it would be taken from OriginalURI of the channel.  But we
-    // overwrite it with the whole redirect chain first URI before opening
-    // the target channel, hence the information would be lost.
-    // If the protocol handler that created the channel wants to use
-    // the originalURI of the channel as the principal URI, it has left
-    // the result principal URI on the load info null.
-    nsCOMPtr<nsIURI> resultPrincipalURI;
+  // Ensure the channel's loadInfo's result principal URI so that it's
+  // either non-null or updated to the redirect target URI.
+  // We must do this because in case the loadInfo's result principal URI
+  // is null, it would be taken from OriginalURI of the channel.  But we
+  // overwrite it with the whole redirect chain first URI before opening
+  // the target channel, hence the information would be lost.
+  // If the protocol handler that created the channel wants to use
+  // the originalURI of the channel as the principal URI, it has left
+  // the result principal URI on the load info null.
+  nsCOMPtr<nsIURI> resultPrincipalURI;
 
-    nsCOMPtr<nsILoadInfo> existingLoadInfo = newChannel->GetLoadInfo();
-    if (existingLoadInfo) {
-      existingLoadInfo->GetResultPrincipalURI(
-          getter_AddRefs(resultPrincipalURI));
-    }
-    if (!resultPrincipalURI) {
-      newChannel->GetOriginalURI(getter_AddRefs(resultPrincipalURI));
-    }
-
-    newLoadInfo->SetResultPrincipalURI(resultPrincipalURI);
-
-    newChannel->SetLoadInfo(newLoadInfo);
-  } else {
-    // the newChannel was created with a dummy loadInfo, we should clear
-    // it in case the original channel does not have a loadInfo
-    newChannel->SetLoadInfo(nullptr);
+  nsCOMPtr<nsILoadInfo> existingLoadInfo = newChannel->LoadInfo();
+  if (existingLoadInfo) {
+    existingLoadInfo->GetResultPrincipalURI(getter_AddRefs(resultPrincipalURI));
   }
+  if (!resultPrincipalURI) {
+    newChannel->GetOriginalURI(getter_AddRefs(resultPrincipalURI));
+  }
+
+  newLoadInfo->SetResultPrincipalURI(resultPrincipalURI);
+
+  newChannel->SetLoadInfo(newLoadInfo);
 
   // Preserve the privacy bit if it has been overridden
   if (mPrivateBrowsingOverriden) {

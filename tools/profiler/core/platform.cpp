@@ -1259,7 +1259,7 @@ static void MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
   }
 }
 
-#if defined(GP_OS_windows)
+#if defined(GP_OS_windows) && defined(USE_MOZ_STACK_WALK)
 static HANDLE GetThreadHandle(PlatformData* aData);
 #endif
 

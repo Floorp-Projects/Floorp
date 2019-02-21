@@ -94,8 +94,10 @@ class PlatformData {
   HANDLE mProfiledThread;
 };
 
+#if defined(USE_MOZ_STACK_WALK)
 HANDLE
 GetThreadHandle(PlatformData* aData) { return aData->ProfiledThread(); }
+#endif
 
 static const HANDLE kNoThread = INVALID_HANDLE_VALUE;
 

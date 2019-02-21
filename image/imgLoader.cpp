@@ -825,11 +825,9 @@ static nsresult NewImageChannel(
       // triggeringPrincipal as the channel's originAttributes. This allows the
       // favicon loading from XUL will use the correct originAttributes.
 
-      nsCOMPtr<nsILoadInfo> loadInfo = (*aResult)->GetLoadInfo();
-      if (loadInfo) {
-        rv = loadInfo->SetOriginAttributes(
-            aTriggeringPrincipal->OriginAttributesRef());
-      }
+      nsCOMPtr<nsILoadInfo> loadInfo = (*aResult)->LoadInfo();
+      rv = loadInfo->SetOriginAttributes(
+          aTriggeringPrincipal->OriginAttributesRef());
     }
   } else {
     // either we are loading something inside a document, in which case
@@ -858,10 +856,8 @@ static nsresult NewImageChannel(
     }
     attrs.mPrivateBrowsingId = aRespectPrivacy ? 1 : 0;
 
-    nsCOMPtr<nsILoadInfo> loadInfo = (*aResult)->GetLoadInfo();
-    if (loadInfo) {
-      rv = loadInfo->SetOriginAttributes(attrs);
-    }
+    nsCOMPtr<nsILoadInfo> loadInfo = (*aResult)->LoadInfo();
+    rv = loadInfo->SetOriginAttributes(attrs);
   }
 
   if (NS_FAILED(rv)) {
@@ -2374,12 +2370,9 @@ nsresult imgLoader::LoadImageWithChannel(nsIChannel* channel,
   nsCOMPtr<Document> doc = do_QueryInterface(aCX);
 
   NS_ENSURE_TRUE(channel, NS_ERROR_FAILURE);
-  nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
+  nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
 
-  OriginAttributes attrs;
-  if (loadInfo) {
-    attrs = loadInfo->GetOriginAttributes();
-  }
+  OriginAttributes attrs = loadInfo->GetOriginAttributes();
 
   nsresult rv;
   ImageCacheKey key(uri, attrs, doc, rv);
@@ -2420,12 +2413,10 @@ nsresult imgLoader::LoadImageWithChannel(nsIChannel* channel,
       // Since aCanMakeNewChannel == false, we don't need to pass content policy
       // type/principal/etc
 
-      nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
+      nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
       // if there is a loadInfo, use the right contentType, otherwise
       // default to the internal image type
-      nsContentPolicyType policyType =
-          loadInfo ? loadInfo->InternalContentPolicyType()
-                   : nsIContentPolicy::TYPE_INTERNAL_IMAGE;
+      nsContentPolicyType policyType = loadInfo->InternalContentPolicyType();
 
       if (ValidateEntry(entry, uri, nullptr, nullptr, RP_Unset, nullptr,
                         aObserver, aCX, doc, requestFlags, policyType, false,

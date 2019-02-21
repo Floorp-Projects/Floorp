@@ -5516,11 +5516,10 @@ void nsGlobalWindowOuter::NotifyContentBlockingEvent(unsigned aEvent,
 // static
 bool nsGlobalWindowOuter::SameLoadingURI(Document* aDoc, nsIChannel* aChannel) {
   nsCOMPtr<nsIURI> docURI = aDoc->GetDocumentURI();
-  nsCOMPtr<nsILoadInfo> channelLoadInfo = aChannel->GetLoadInfo();
-  if (!channelLoadInfo || !docURI) {
+  if (!docURI) {
     return false;
   }
-
+  nsCOMPtr<nsILoadInfo> channelLoadInfo = aChannel->LoadInfo();
   nsCOMPtr<nsIPrincipal> channelLoadingPrincipal =
       channelLoadInfo->LoadingPrincipal();
   if (!channelLoadingPrincipal) {

@@ -27,9 +27,11 @@ static bool sStdoutOrStderr = false;
 
 static Mutex sMutex;
 
+#ifndef _WIN32
 static void prefork() { sMutex.Lock(); }
 
 static void postfork() { sMutex.Unlock(); }
+#endif
 
 static size_t GetPid() { return size_t(getpid()); }
 

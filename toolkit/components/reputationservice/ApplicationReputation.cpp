@@ -1592,13 +1592,10 @@ nsresult PendingLookup::SendRemoteQueryInternal(Reason& aReason) {
                         nsIContentPolicy::TYPE_OTHER, getter_AddRefs(mChannel));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
-  if (loadInfo) {
-    mozilla::OriginAttributes attrs;
-    attrs.mFirstPartyDomain.AssignLiteral(
-        NECKO_SAFEBROWSING_FIRST_PARTY_DOMAIN);
-    loadInfo->SetOriginAttributes(attrs);
-  }
+  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
+  mozilla::OriginAttributes attrs;
+  attrs.mFirstPartyDomain.AssignLiteral(NECKO_SAFEBROWSING_FIRST_PARTY_DOMAIN);
+  loadInfo->SetOriginAttributes(attrs);
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel, &rv));
   NS_ENSURE_SUCCESS(rv, rv);

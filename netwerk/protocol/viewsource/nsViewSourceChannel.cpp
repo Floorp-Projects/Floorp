@@ -136,11 +136,7 @@ nsresult nsViewSourceChannel::UpdateLoadInfoResultPrincipalURI() {
 
   MOZ_ASSERT(mChannel);
 
-  nsCOMPtr<nsILoadInfo> channelLoadInfo = mChannel->GetLoadInfo();
-  if (!channelLoadInfo) {
-    return NS_OK;
-  }
-
+  nsCOMPtr<nsILoadInfo> channelLoadInfo = mChannel->LoadInfo();
   nsCOMPtr<nsIURI> channelResultPrincipalURI;
   rv = channelLoadInfo->GetResultPrincipalURI(
       getter_AddRefs(channelResultPrincipalURI));
@@ -290,21 +286,11 @@ nsViewSourceChannel::GetURI(nsIURI **aURI) {
 NS_IMETHODIMP
 nsViewSourceChannel::Open(nsIInputStream **aStream) {
   NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
-  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
-  if (!loadInfo) {
-    MOZ_ASSERT(loadInfo, "can not enforce security without loadInfo");
-    return NS_ERROR_UNEXPECTED;
-  }
   return Open(aStream);
 }
 
 NS_IMETHODIMP
 nsViewSourceChannel::AsyncOpen(nsIStreamListener *aListener) {
-  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
-  if (!loadInfo) {
-    MOZ_ASSERT(loadInfo, "can not enforce security without loadInfo");
-    return NS_ERROR_UNEXPECTED;
-  }
   // We can't ensure GetInitialSecurityCheckDone here
 
   NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);

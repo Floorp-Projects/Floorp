@@ -55,18 +55,13 @@ class ClientChannelHelper final : public nsIInterfaceRequestor,
                          nsIAsyncVerifyRedirectCallback* aCallback) override {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsCOMPtr<nsILoadInfo> oldLoadInfo;
-    nsresult rv = aOldChannel->GetLoadInfo(getter_AddRefs(oldLoadInfo));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsILoadInfo> newLoadInfo;
-    rv = aNewChannel->GetLoadInfo(getter_AddRefs(newLoadInfo));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = nsContentUtils::CheckSameOrigin(aOldChannel, aNewChannel);
+    nsresult rv = nsContentUtils::CheckSameOrigin(aOldChannel, aNewChannel);
     if (NS_WARN_IF(NS_FAILED(rv) && rv != NS_ERROR_DOM_BAD_URI)) {
       return rv;
     }
+
+    nsCOMPtr<nsILoadInfo> oldLoadInfo = aOldChannel->LoadInfo();
+    nsCOMPtr<nsILoadInfo> newLoadInfo = aNewChannel->LoadInfo();
 
     UniquePtr<ClientSource> reservedClient =
         oldLoadInfo->TakeReservedClientSource();
@@ -181,8 +176,7 @@ nsresult AddClientChannelHelper(nsIChannel* aChannel,
   MOZ_DIAGNOSTIC_ASSERT(reservedClientInfo.isNothing() ||
                         initialClientInfo.isNothing());
 
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-  NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
 
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
   NS_ENSURE_TRUE(ssm, NS_ERROR_FAILURE);

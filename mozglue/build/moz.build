@@ -134,6 +134,3 @@ if CONFIG['MOZ_LINKER'] and CONFIG['CPU_ARCH'] == 'arm':
     LDFLAGS += ['-Wl,-version-script,%s/arm-eabi-filter' % SRCDIR]
 
 DIST_INSTALL = True
-
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    AllowCompilerWarnings()  # workaround for bug 1090497

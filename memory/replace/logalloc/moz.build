@@ -28,6 +28,3 @@ if CONFIG['OS_TARGET'] == 'Android' and FORCE_SHARED_LIB:
 DIRS += [
     'replay',
 ]
-
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    AllowCompilerWarnings()  # workaround for bug 1090497

@@ -16,8 +16,8 @@ static PRIOMethods ipv6_to_v4_tcpMethods;
 static PRIOMethods ipv6_to_v4_udpMethods;
 static PRDescIdentity _pr_ipv6_to_ipv4_id;
 extern PRBool IsValidNetAddr(const PRNetAddr *addr);
-extern PRIPv6Addr _pr_in6addr_any;
-extern PRIPv6Addr _pr_in6addr_loopback;
+extern const PRIPv6Addr _pr_in6addr_any;
+extern const PRIPv6Addr _pr_in6addr_loopback;
 
 /*
  * convert an IPv4-mapped IPv6 addr to an IPv4 addr

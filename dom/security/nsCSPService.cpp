@@ -260,13 +260,7 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
   nsresult rv = newChannel->GetURI(getter_AddRefs(newUri));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsILoadInfo> loadInfo = oldChannel->GetLoadInfo();
-
-  // if no loadInfo on the channel, nothing for us to do
-  if (!loadInfo) {
-    return NS_OK;
-  }
-
+  nsCOMPtr<nsILoadInfo> loadInfo = oldChannel->LoadInfo();
   nsCOMPtr<nsICSPEventListener> cspEventListener;
   rv = loadInfo->GetCspEventListener(getter_AddRefs(cspEventListener));
   NS_ENSURE_SUCCESS(rv, rv);

@@ -28,16 +28,12 @@ MozProtocolHandler.prototype = {
     return mutator.finalize();
   },
 
-  newChannel2(uri, loadInfo) {
+  newChannel(uri, loadInfo) {
     const kCanada = "https://www.mozilla.org/contact/communities/canada/";
     let realURL = NetUtil.newURI((uri && uri.spec == "moz://eh") ? kCanada : this.urlToLoad);
     let channel = Services.io.newChannelFromURIWithLoadInfo(realURL, loadInfo);
     loadInfo.resultPrincipalURI = realURL;
     return channel;
-  },
-
-  newChannel(uri) {
-    return this.newChannel2(uri, null);
   },
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsIProtocolHandler]),
