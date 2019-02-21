@@ -364,6 +364,25 @@ function TargetMixin(parentClass) {
     }
 
     /**
+     * Attach to thread actor.
+     *
+     * This depends on having the sub-class to set the thread actor ID in `_threadActor`.
+     *
+     * @param object options
+     *        Configuration options.
+     */
+    async attachThread(options = {}) {
+      if (!this._threadActor) {
+        throw new Error("TargetMixin sub class should set _threadActor before calling " +
+                        "attachThread");
+      }
+      const [response, threadClient] =
+        await this._client.attachThread(this._threadActor, options);
+      this.threadClient = threadClient;
+      return [response, threadClient];
+    }
+
+    /**
      * Listen to the different events.
      */
     _setupListeners() {
@@ -501,7 +520,15 @@ function TargetMixin(parentClass) {
           }
         }
 
-        // Do that very last in order to let a chance to call detach.
+        if (this.threadClient) {
+          try {
+            await this.threadClient.detach();
+          } catch (e) {
+            console.warn(`Error while detaching the thread front: ${e.message}`);
+          }
+        }
+
+        // Do that very last in order to let a chance to dispatch `detach` requests.
         super.destroy();
 
         this._cleanup();
@@ -515,6 +542,7 @@ function TargetMixin(parentClass) {
      */
     _cleanup() {
       this.activeConsole = null;
+      this.threadClient = null;
       this._client = null;
       this._tab = null;
 
