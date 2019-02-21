@@ -59,7 +59,7 @@
 ** Global lock variable used to bracket calls into rusty libraries that
 ** aren't thread safe (like libc, libX, etc).
 */
-static PRLock *_pr_rename_lock = NULL;
+static PRLock *_pr_unix_rename_lock = NULL;
 static PRMonitor *_pr_Xfe_mon = NULL;
 
 static PRInt64 minus_one;
@@ -204,8 +204,8 @@ PRInt32 _MD_rename(const char *from, const char *to)
     ** of an existing file. Holding a lock across these two function
     ** and the open function is known to be a bad idea, but ....
     */
-    if (NULL != _pr_rename_lock)
-        PR_Lock(_pr_rename_lock);
+    if (NULL != _pr_unix_rename_lock)
+        PR_Lock(_pr_unix_rename_lock);
     if (0 == access(to, F_OK))
         PR_SetError(PR_FILE_EXISTS_ERROR, 0);
     else
@@ -216,8 +216,8 @@ PRInt32 _MD_rename(const char *from, const char *to)
             _PR_MD_MAP_RENAME_ERROR(err);
         }
     }
-    if (NULL != _pr_rename_lock)
-        PR_Unlock(_pr_rename_lock);
+    if (NULL != _pr_unix_rename_lock)
+        PR_Unlock(_pr_unix_rename_lock);
     return rv;
 }
 
@@ -260,15 +260,15 @@ int rv, err;
     ** This lock is used to enforce rename semantics as described
     ** in PR_Rename. Look there for more fun details.
     */
-    if (NULL !=_pr_rename_lock)
-        PR_Lock(_pr_rename_lock);
+    if (NULL !=_pr_unix_rename_lock)
+        PR_Lock(_pr_unix_rename_lock);
     rv = mkdir(name, mode);
     if (rv < 0) {
         err = _MD_ERRNO();
         _PR_MD_MAP_MKDIR_ERROR(err);
     }
-    if (NULL !=_pr_rename_lock)
-        PR_Unlock(_pr_rename_lock);
+    if (NULL !=_pr_unix_rename_lock)
+        PR_Unlock(_pr_unix_rename_lock);
     return rv;
 }
 
@@ -2219,8 +2219,8 @@ PRInt32 _MD_open(const char *name, PRIntn flags, PRIntn mode)
     if (flags & PR_CREATE_FILE)
     {
         osflags |= O_CREAT;
-        if (NULL !=_pr_rename_lock)
-            PR_Lock(_pr_rename_lock);
+        if (NULL !=_pr_unix_rename_lock)
+            PR_Lock(_pr_unix_rename_lock);
     }
 
 #if defined(ANDROID)
@@ -2234,8 +2234,8 @@ PRInt32 _MD_open(const char *name, PRIntn flags, PRIntn mode)
         _PR_MD_MAP_OPEN_ERROR(err);
     }
 
-    if ((flags & PR_CREATE_FILE) && (NULL !=_pr_rename_lock))
-        PR_Unlock(_pr_rename_lock);
+    if ((flags & PR_CREATE_FILE) && (NULL !=_pr_unix_rename_lock))
+        PR_Unlock(_pr_unix_rename_lock);
     return rv;
 }
 
@@ -2871,8 +2871,8 @@ void _PR_UnixInit(void)
     rv = sigaction(SIGPIPE, &sigact, 0);
     PR_ASSERT(0 == rv);
 
-    _pr_rename_lock = PR_NewLock();
-    PR_ASSERT(NULL != _pr_rename_lock);
+    _pr_unix_rename_lock = PR_NewLock();
+    PR_ASSERT(NULL != _pr_unix_rename_lock);
     _pr_Xfe_mon = PR_NewMonitor();
     PR_ASSERT(NULL != _pr_Xfe_mon);
 
@@ -2881,9 +2881,9 @@ void _PR_UnixInit(void)
 
 void _PR_UnixCleanup(void)
 {
-    if (_pr_rename_lock) {
-        PR_DestroyLock(_pr_rename_lock);
-        _pr_rename_lock = NULL;
+    if (_pr_unix_rename_lock) {
+        PR_DestroyLock(_pr_unix_rename_lock);
+        _pr_unix_rename_lock = NULL;
     }
     if (_pr_Xfe_mon) {
         PR_DestroyMonitor(_pr_Xfe_mon);

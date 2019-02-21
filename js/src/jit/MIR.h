@@ -11870,6 +11870,60 @@ class MWasmStoreGlobalCell : public MBinaryInstruction,
   }
 };
 
+// Represents a known-good derived pointer into an object or memory region (in
+// the most general sense) that will not move while the derived pointer is live.
+// The `offset` *must* be a valid offset into the object represented by `base`;
+// hence overflow in the address calculation will never be an issue.
+
+class MWasmDerivedPointer : public MUnaryInstruction,
+                            public NoTypePolicy::Data {
+  MWasmDerivedPointer(MDefinition* base, size_t offset)
+    : MUnaryInstruction(classOpcode, base), offset_(offset) {
+    MOZ_ASSERT(offset <= INT32_MAX);
+    setResultType(MIRType::Pointer);
+    setMovable();
+  }
+
+  size_t offset_;
+
+ public:
+  INSTRUCTION_HEADER(WasmDerivedPointer)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, base))
+
+  size_t offset() const { return offset_; }
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+
+  ALLOW_CLONE(MWasmDerivedPointer)
+};
+
+class MWasmStoreRef : public MAryInstruction<3>,
+                      public NoTypePolicy::Data {
+  AliasSet::Flag aliasSet_;
+
+  MWasmStoreRef(MDefinition* tls, MDefinition* valueAddr, MDefinition* value,
+                AliasSet::Flag aliasSet)
+    : MAryInstruction<3>(classOpcode), aliasSet_(aliasSet) {
+    initOperand(0, tls);
+    initOperand(1, valueAddr);
+    initOperand(2, value);
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmStoreRef)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, tls), (1, valueAddr), (2, value))
+
+  AliasSet getAliasSet() const override {
+    return AliasSet::Store(aliasSet_);
+  }
+};
+
 class MWasmParameter : public MNullaryInstruction {
   ABIArg abi_;
 

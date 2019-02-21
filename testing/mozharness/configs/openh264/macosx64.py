@@ -12,9 +12,24 @@ config = {
     'tooltool_cache': "/builds/tooltool_cache",
     'exes': {
         'gittool.py': [os.path.join(external_tools_path, 'gittool.py')],
-        'python2.7': "/tools/python27/bin/python2.7",
+        'python2.7': "python2.7",
     },
     'dump_syms_binary': 'dump_syms',
     'arch': 'x64',
     'use_yasm': True,
+    'operating_system': 'darwin',
+    'partial_env': {
+        'CXXFLAGS': ('-target x86_64-apple-darwin11 '
+                     '-B %(abs_work_dir)s/src/cctools/bin '
+                     '-isysroot %(abs_work_dir)s/src/MacOSX10.11.sdk '
+                     '-mmacosx-version-min=10.11'),
+        'LDFLAGS': ('-target x86_64-apple-darwin11 '
+                    '-B %(abs_work_dir)s/src/cctools/bin '
+                    '-isysroot %(abs_work_dir)s/src/MacOSX10.11.sdk '
+                    '-mmacosx-version-min=10.11 '
+                    '-fuse-ld=%(abs_work_dir)s/src/cctools/bin/x86_64-darwin11-ld'),
+        'PATH': '%(abs_work_dir)s/src/clang/bin/:%(PATH)s',
+    },
+    "tooltool_servers": ['http://relengapi/tooltool/'],
+    "tooltool_url": 'http://relengapi/tooltool/',
 }

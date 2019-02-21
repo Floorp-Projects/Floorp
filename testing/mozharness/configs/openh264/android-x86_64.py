@@ -25,7 +25,7 @@ config = {
     },
     'avoid_avx2': True,
     'dump_syms_binary': 'dump_syms',
-    'arch': 'x86',
+    'arch': 'x86_64',
     'min_sdk': 16,
     'operating_system': 'android',
     'partial_env': {

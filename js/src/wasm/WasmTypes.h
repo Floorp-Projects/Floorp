@@ -2075,6 +2075,7 @@ enum class SymbolicAddress {
   TableSet,
   TableSize,
   PostBarrier,
+  PostBarrierFiltering,
   StructNew,
   StructNarrow,
 #if defined(JS_CODEGEN_MIPS32)
