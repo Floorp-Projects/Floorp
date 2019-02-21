@@ -691,8 +691,7 @@ ConfigureVideoEncoderSettings(const VideoCodecConfig* aConfig,
   bool is_screencast =
       aConduit->CodecMode() == webrtc::VideoCodecMode::kScreensharing;
   // No automatic resizing when using simulcast or screencast.
-  bool automatic_resize =
-      !is_screencast && aConfig->mSimulcastEncodings.size() <= 1;
+  bool automatic_resize = !is_screencast && aConfig->mEncodings.size() <= 1;
   bool frame_dropping = !is_screencast;
   bool denoising;
   bool codec_default_denoising = false;
@@ -787,8 +786,9 @@ MediaConduitErrorCode WebrtcVideoConduit::ConfigureSendMediaCodec(
     return condError;
   }
 
-  size_t streamCount = std::min(codecConfig->mSimulcastEncodings.size(),
+  size_t streamCount = std::min(codecConfig->mEncodings.size(),
                                 (size_t)webrtc::kMaxSimulcastStreams);
+
   CSFLogDebug(LOGTAG, "%s for VideoConduit:%p stream count:%zu", __FUNCTION__,
               this, streamCount);
 
@@ -833,10 +833,9 @@ MediaConduitErrorCode WebrtcVideoConduit::ConfigureSendMediaCodec(
   mVideoAdapter = MakeUnique<cricket::VideoAdapter>(
       streamCount > 1 ? SIMULCAST_RESOLUTION_ALIGNMENT : 1);
   mVideoAdapter->OnScaleResolutionBy(
-      (streamCount >= 1 &&
-       codecConfig->mSimulcastEncodings[0].constraints.scaleDownBy > 1.0)
+      codecConfig->mEncodings[0].constraints.scaleDownBy > 1.0
           ? rtc::Optional<float>(
-                codecConfig->mSimulcastEncodings[0].constraints.scaleDownBy)
+                codecConfig->mEncodings[0].constraints.scaleDownBy)
           : rtc::Optional<float>());
 
   // XXX parse the encoded SPS/PPS data and set spsData/spsLen/ppsData/ppsLen
@@ -860,8 +859,7 @@ MediaConduitErrorCode WebrtcVideoConduit::ConfigureSendMediaCodec(
         mActiveCodecMode == mCodecMode) {
       mCurSendCodecConfig->mEncodingConstraints =
           codecConfig->mEncodingConstraints;
-      mCurSendCodecConfig->mSimulcastEncodings =
-          codecConfig->mSimulcastEncodings;
+      mCurSendCodecConfig->mEncodings = codecConfig->mEncodings;
       mSendStream->ReconfigureVideoEncoder(mEncoderConfig.CopyConfig());
       return kMediaConduitNoError;
     }
@@ -906,17 +904,16 @@ MediaConduitErrorCode WebrtcVideoConduit::ConfigureSendMediaCodec(
   mSendStreamConfig.rtp.rids.clear();
   bool has_rid = false;
   for (size_t idx = 0; idx < streamCount; idx++) {
-    auto& simulcastEncoding = mCurSendCodecConfig->mSimulcastEncodings[idx];
-    if (simulcastEncoding.rid[0]) {
+    auto& encoding = mCurSendCodecConfig->mEncodings[idx];
+    if (encoding.rid[0]) {
       has_rid = true;
       break;
     }
   }
   if (has_rid) {
     for (size_t idx = streamCount; idx > 0; idx--) {
-      auto& simulcastEncoding =
-          mCurSendCodecConfig->mSimulcastEncodings[idx - 1];
-      mSendStreamConfig.rtp.rids.push_back(simulcastEncoding.rid);
+      auto& encoding = mCurSendCodecConfig->mEncodings[idx - 1];
+      mSendStreamConfig.rtp.rids.push_back(encoding.rid);
     }
   }
 
