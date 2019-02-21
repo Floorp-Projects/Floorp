@@ -5,7 +5,7 @@
 /* global addMessageListener, addEventListener, content, sendAsyncMessage */
 
 /**
- * This frame script injects itself into perf-html.io and injects the profile
+ * This frame script injects itself into profiler.firefox.com and injects the profile
  * into the page. It is mostly taken from the Gecko Profiler Addon implementation.
  */
 

@@ -585,8 +585,8 @@ UniqueChars Statistics::renderJsonMessage(uint64_t timestamp,
                                           Statistics::JSONUse use) const {
   /*
    * The format of the JSON message is specified by the GCMajorMarkerPayload
-   * type in perf.html
-   * https://github.com/devtools-html/perf.html/blob/master/src/types/markers.js#L62
+   * type in profiler.firefox.com
+   * https://github.com/firefox-devtools/profiler/blob/master/src/types/markers.js#L62
    *
    * All the properties listed here are created within the timings property
    * of the GCMajor marker.
@@ -632,8 +632,8 @@ void Statistics::formatJsonDescription(uint64_t timestamp, JSONPrinter& json,
   // Telemetry tests:
   //   toolkit/components/telemetry/tests/browser/browser_TelemetryGC.js,
   //   toolkit/components/telemetry/tests/unit/test_TelemetryGC.js
-  // Perf.html:
-  //   https://github.com/devtools-html/perf.html
+  // Firefox Profiler:
+  //   https://github.com/firefox-devtools/profiler
   //
   // Please also number each property to help correctly maintain the Telemetry
   // ping code
@@ -644,8 +644,8 @@ void Statistics::formatJsonDescription(uint64_t timestamp, JSONPrinter& json,
   gcDuration(&total, &longest);
   json.property("max_pause", longest, JSONPrinter::MILLISECONDS);  // #3
   json.property("total_time", total, JSONPrinter::MILLISECONDS);   // #4
-  // We might be able to omit reason if perf.html was able to retrive it
-  // from the first slice.  But it doesn't do this yet.
+  // We might be able to omit reason if profiler.firefox.com was able to retrive
+  // it from the first slice.  But it doesn't do this yet.
   json.property("reason", ExplainGCReason(slices_[0].reason));      // #5
   json.property("zones_collected", zoneStats.collectedZoneCount);   // #6
   json.property("total_zones", zoneStats.zoneCount);                // #7
@@ -700,8 +700,8 @@ void Statistics::formatJsonSliceDescription(unsigned i, const SliceData& slice,
   // Telemetry tests:
   //   toolkit/components/telemetry/tests/browser/browser_TelemetryGC.js,
   //   toolkit/components/telemetry/tests/unit/test_TelemetryGC.js
-  // Perf.html:
-  //   https://github.com/devtools-html/perf.html
+  // Firefox Profiler:
+  //   https://github.com/firefox-devtools/profiler
   //
   char budgetDescription[200];
   slice.budget.describe(budgetDescription, sizeof(budgetDescription) - 1);
