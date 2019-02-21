@@ -1229,7 +1229,8 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
   }
 
   uint32_t result = 0;
-  rv = permManager->TestPermissionFromPrincipal(parentPrincipal, type, &result);
+  rv = permManager->TestPermissionWithoutDefaultsFromPrincipal(parentPrincipal,
+                                                               type, &result);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG(("Failed to test the permission"));
     return false;
@@ -1471,7 +1472,8 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
   }
 
   uint32_t result = 0;
-  rv = permManager->TestPermissionFromPrincipal(parentPrincipal, type, &result);
+  rv = permManager->TestPermissionWithoutDefaultsFromPrincipal(parentPrincipal,
+                                                               type, &result);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG(("Failed to test the permission"));
     return false;
@@ -1566,7 +1568,8 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
   }
 
   uint32_t result = 0;
-  rv = permManager->TestPermissionFromPrincipal(parentPrincipal, type, &result);
+  rv = permManager->TestPermissionWithoutDefaultsFromPrincipal(parentPrincipal,
+                                                               type, &result);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG(("Failed to test the permission"));
     return false;
@@ -1829,7 +1832,7 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
   }
 
   uint32_t result = 0;
-  nsresult rv = permManager->TestPermissionFromPrincipal(
+  nsresult rv = permManager->TestPermissionWithoutDefaultsFromPrincipal(
       aPrincipal, USER_INTERACTION_PERM, &result);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
