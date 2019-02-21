@@ -894,6 +894,11 @@ class XPCWrappedNativeScope final {
   // entering, and the scope object is wrapped into this compartment.
   JSObject* EnsureContentXBLScope(JSContext* cx);
 
+  // Check whether our mAllowContentXBLScope state matches the given
+  // principal.  This is used to avoid sharing compartments on
+  // mismatch.
+  bool XBLScopeStateMatches(nsIPrincipal* aPrincipal);
+
   XPCWrappedNativeScope(JS::Compartment* aCompartment,
                         JS::HandleObject aFirstGlobal);
 
@@ -2684,6 +2689,18 @@ class CompartmentPrivate {
   static CompartmentPrivate* Get(JSObject* object) {
     JS::Compartment* compartment = js::GetObjectCompartment(object);
     return Get(compartment);
+  }
+
+  bool CanShareCompartmentWith(nsIPrincipal* principal) {
+    // Only share if we're same-origin with the principal.
+    if (!originInfo.IsSameOrigin(principal)) {
+      return false;
+    }
+
+    // Don't share if we have any weird state set.
+    return !wantXrays && !isWebExtensionContentScript &&
+           !isContentXBLCompartment && !isUAWidgetCompartment &&
+           !universalXPConnectEnabled && scope->XBLScopeStateMatches(principal);
   }
 
   CompartmentOriginInfo originInfo;
