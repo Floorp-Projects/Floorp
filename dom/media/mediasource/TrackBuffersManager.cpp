@@ -8,14 +8,14 @@
 #include "ContainerParser.h"
 #include "MediaSourceDemuxer.h"
 #include "MediaSourceUtils.h"
-#include "mozilla/ErrorResult.h"
-#include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs.h"
-#include "nsMimeTypes.h"
 #include "SourceBuffer.h"
 #include "SourceBufferResource.h"
 #include "SourceBufferTask.h"
 #include "WebMDemuxer.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
+#include "nsMimeTypes.h"
 
 #ifdef MOZ_FMP4
 #  include "MP4Demuxer.h"
@@ -1631,16 +1631,6 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
   }
 
   for (auto& sample : aSamples) {
-    SAMPLE_DEBUG("Processing %s frame(pts:%" PRId64 " end:%" PRId64
-                 ", dts:%" PRId64 ", duration:%" PRId64
-                 ", "
-                 "kf:%d)",
-                 aTrackData.mInfo->mMimeType.get(),
-                 sample->mTime.ToMicroseconds(),
-                 sample->GetEndTime().ToMicroseconds(),
-                 sample->mTimecode.ToMicroseconds(),
-                 sample->mDuration.ToMicroseconds(), sample->mKeyframe);
-
     const TimeUnit sampleEndTime = sample->GetEndTime();
     if (sampleEndTime > aTrackData.mLastParsedEndTime) {
       aTrackData.mLastParsedEndTime = sampleEndTime;
@@ -1690,6 +1680,16 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
     TimeUnit decodeTimestamp = mSourceBufferAttributes->mGenerateTimestamps
                                    ? timestampOffset
                                    : timestampOffset + sampleTimecode;
+
+    SAMPLE_DEBUG(
+        "Processing %s frame [%" PRId64 ",%" PRId64 "] (adjusted:[%" PRId64
+        ",%" PRId64 "]), dts:%" PRId64 ", duration:%" PRId64 ", kf:%d)",
+        aTrackData.mInfo->mMimeType.get(), sample->mTime.ToMicroseconds(),
+        sample->GetEndTime().ToMicroseconds(),
+        sampleInterval.mStart.ToMicroseconds(),
+        sampleInterval.mEnd.ToMicroseconds(),
+        sample->mTimecode.ToMicroseconds(), sample->mDuration.ToMicroseconds(),
+        sample->mKeyframe);
 
     // 6. If last decode timestamp for track buffer is set and decode timestamp
     // is less than last decode timestamp: OR If last decode timestamp for track
@@ -1786,9 +1786,21 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
         //    support gapless audio splicing.
         TimeInterval intersection = mAppendWindow.Intersection(sampleInterval);
         sample->mOriginalPresentationWindow = Some(sampleInterval);
+        MSE_DEBUGV("will truncate frame from [%" PRId64 ",%" PRId64
+                   "] to [%" PRId64 ",%" PRId64 "]",
+                   sampleInterval.mStart.ToMicroseconds(),
+                   sampleInterval.mEnd.ToMicroseconds(),
+                   intersection.mStart.ToMicroseconds(),
+                   intersection.mEnd.ToMicroseconds());
         sampleInterval = intersection;
         sample->mDuration = intersection.Length();
       } else {
+        MSE_DEBUGV("frame [%" PRId64 ",%" PRId64
+                   "] outside appendWindow [%" PRId64 ",%" PRId64 "] dropping",
+                   sampleInterval.mStart.ToMicroseconds(),
+                   sampleInterval.mEnd.ToMicroseconds(),
+                   mAppendWindow.mStart.ToMicroseconds(),
+                   mAppendWindow.mEnd.ToMicroseconds());
         if (samples.Length()) {
           // We are creating a discontinuity in the samples.
           // Insert the samples processed so far.
@@ -2041,6 +2053,12 @@ uint32_t TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
     if (aIntervals.ContainsStrict(sample->mTime)) {
       // The start of this existing frame will be overwritten, we drop that
       // entire frame.
+      MSE_DEBUGV("overridding start of frame [%" PRId64 ",%" PRId64
+                 "] with [%" PRId64 ",%" PRId64 "] dropping",
+                 sample->mTime.ToMicroseconds(),
+                 sample->GetEndTime().ToMicroseconds(),
+                 aIntervals.GetStart().ToMicroseconds(),
+                 aIntervals.GetEnd().ToMicroseconds());
       if (firstRemovedIndex.isNothing()) {
         firstRemovedIndex = Some(i);
       }
@@ -2063,6 +2081,16 @@ uint32_t TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
       }
       MOZ_ASSERT(startTime > sample->mTime);
       sample->mDuration = startTime - sample->mTime;
+      MSE_DEBUGV("partial overwrite of frame [%" PRId64 ",%" PRId64
+                 "] with [%" PRId64 ",%" PRId64
+                 "] trim to "
+                 "[%" PRId64 ",%" PRId64 "]",
+                 sampleInterval.mStart.ToMicroseconds(),
+                 sampleInterval.mEnd.ToMicroseconds(),
+                 aIntervals.GetStart().ToMicroseconds(),
+                 aIntervals.GetEnd().ToMicroseconds(),
+                 sample->mTime.ToMicroseconds(),
+                 sample->GetEndTime().ToMicroseconds());
       continue;
     }
 
