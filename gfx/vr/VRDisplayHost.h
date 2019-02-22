@@ -54,7 +54,7 @@ class VRDisplayHost {
                    const layers::SurfaceDescriptor& aTexture, uint64_t aFrameId,
                    const gfx::Rect& aLeftEyeRect,
                    const gfx::Rect& aRightEyeRect);
-
+  void CancelCurrentSubmitTask();
   bool CheckClearDisplayInfoDirty();
   void SetGroupMask(uint32_t aGroupMask);
   bool GetIsConnected();
@@ -102,6 +102,9 @@ class VRDisplayHost {
   void CheckWatchDog();
 
   VRDisplayInfo mLastUpdateDisplayInfo;
+
+  mozilla::Monitor mCurrentSubmitTaskMonitor;
+  RefPtr<CancelableRunnable> mCurrentSubmitTask;
   bool mFrameStarted;
 #if defined(MOZ_WIDGET_ANDROID)
  protected:

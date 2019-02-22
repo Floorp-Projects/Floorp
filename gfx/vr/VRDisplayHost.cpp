@@ -66,7 +66,11 @@ VRDisplayHost::AutoRestoreRenderState::~AutoRestoreRenderState() {
 bool VRDisplayHost::AutoRestoreRenderState::IsSuccess() { return mSuccess; }
 
 VRDisplayHost::VRDisplayHost(VRDeviceType aType)
-    : mDisplayInfo{}, mLastUpdateDisplayInfo{}, mFrameStarted(false) {
+    : mDisplayInfo{},
+      mLastUpdateDisplayInfo{},
+      mCurrentSubmitTaskMonitor("CurrentSubmitTaskMonitor"),
+      mCurrentSubmitTask(nullptr),
+      mFrameStarted(false) {
   MOZ_COUNT_CTOR(VRDisplayHost);
   mDisplayInfo.mType = aType;
   mDisplayInfo.mDisplayID = VRSystemManager::AllocateDisplayID();
@@ -83,6 +87,8 @@ VRDisplayHost::VRDisplayHost(VRDeviceType aType)
 }
 
 VRDisplayHost::~VRDisplayHost() {
+  CancelCurrentSubmitTask();
+
   if (mSubmitThread) {
     mSubmitThread->Shutdown();
     mSubmitThread = nullptr;
@@ -285,8 +291,14 @@ void VRDisplayHost::SubmitFrameInternal(
 #endif  // !defined(MOZ_WIDGET_ANDROID)
   AUTO_PROFILER_TRACING("VR", "SubmitFrameAtVRDisplayHost", OTHER);
 
-  if (!SubmitFrame(aTexture, aFrameId, aLeftEyeRect, aRightEyeRect)) {
-    return;
+  { // scope lock
+    MonitorAutoLock lock(mCurrentSubmitTaskMonitor);
+
+    if (!SubmitFrame(aTexture, aFrameId, aLeftEyeRect, aRightEyeRect)) {
+      mCurrentSubmitTask = nullptr;
+      return;
+    }
+    mCurrentSubmitTask = nullptr;
   }
 
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_ANDROID)
@@ -315,6 +327,7 @@ void VRDisplayHost::SubmitFrame(VRLayerParent* aLayer,
                                 uint64_t aFrameId,
                                 const gfx::Rect& aLeftEyeRect,
                                 const gfx::Rect& aRightEyeRect) {
+  MonitorAutoLock lock(mCurrentSubmitTaskMonitor);
   if ((mDisplayInfo.mGroupMask & aLayer->GetGroup()) == 0) {
     // Suppress layers hidden by the group mask
     return;
@@ -342,23 +355,35 @@ void VRDisplayHost::SubmitFrame(VRLayerParent* aLayer,
 
   mFrameStarted = false;
 
-  RefPtr<Runnable> submit =
-      NewRunnableMethod<StoreCopyPassByConstLRef<layers::SurfaceDescriptor>,
-                        uint64_t, StoreCopyPassByConstLRef<gfx::Rect>,
-                        StoreCopyPassByConstLRef<gfx::Rect>>(
-          "gfx::VRDisplayHost::SubmitFrameInternal", this,
-          &VRDisplayHost::SubmitFrameInternal, aTexture, aFrameId, aLeftEyeRect,
-          aRightEyeRect);
+  RefPtr<CancelableRunnable> task =
+    NewCancelableRunnableMethod<StoreCopyPassByConstLRef<layers::SurfaceDescriptor>,
+                                uint64_t, StoreCopyPassByConstLRef<gfx::Rect>,
+                                StoreCopyPassByConstLRef<gfx::Rect>>(
+      "gfx::VRDisplayHost::SubmitFrameInternal", this,
+      &VRDisplayHost::SubmitFrameInternal, aTexture, aFrameId, aLeftEyeRect,
+      aRightEyeRect);
 
+  if (!mCurrentSubmitTask) {
+    mCurrentSubmitTask = task;
 #if !defined(MOZ_WIDGET_ANDROID)
-  if (!mSubmitThread) {
-    mSubmitThread = new VRThread(NS_LITERAL_CSTRING("VR_SubmitFrame"));
-  }
-  mSubmitThread->Start();
-  mSubmitThread->PostTask(submit.forget());
+    if (!mSubmitThread) {
+      mSubmitThread = new VRThread(NS_LITERAL_CSTRING("VR_SubmitFrame"));
+    }
+    mSubmitThread->Start();
+    mSubmitThread->PostTask(task.forget());
 #else
-  CompositorThreadHolder::Loop()->PostTask(submit.forget());
+    CompositorThreadHolder::Loop()->PostTask(task.forget());
 #endif  // defined(MOZ_WIDGET_ANDROID)
+  }
+
+}
+
+void VRDisplayHost::CancelCurrentSubmitTask() {
+  MonitorAutoLock lock(mCurrentSubmitTaskMonitor);
+  if (mCurrentSubmitTask) {
+    mCurrentSubmitTask->Cancel();
+    mCurrentSubmitTask = nullptr;
+  }
 }
 
 bool VRDisplayHost::CheckClearDisplayInfoDirty() {
