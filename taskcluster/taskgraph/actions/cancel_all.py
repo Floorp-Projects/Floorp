@@ -23,7 +23,6 @@ logger = logging.getLogger(__name__)
 @register_callback_action(
     title='Cancel All',
     name='cancel-all',
-    kind='hook',
     generic=True,
     symbol='cAll',
     description=(
