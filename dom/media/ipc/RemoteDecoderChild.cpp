@@ -114,8 +114,7 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDecoderChild::Decode(
   MediaRawDataIPDL sample(
       MediaDataIPDL(aSample->mOffset, aSample->mTime.ToMicroseconds(),
                     aSample->mTimecode.ToMicroseconds(),
-                    aSample->mDuration.ToMicroseconds(), aSample->mFrames,
-                    aSample->mKeyframe),
+                    aSample->mDuration.ToMicroseconds(), aSample->mKeyframe),
       buffer);
   SendInput(sample);
 
