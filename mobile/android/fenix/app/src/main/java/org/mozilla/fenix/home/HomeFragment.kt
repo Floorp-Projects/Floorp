@@ -7,12 +7,14 @@ package org.mozilla.fenix.home
 import android.content.res.Resources
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.android.synthetic.main.fragment_home.view.*
@@ -24,6 +26,8 @@ import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.home.sessions.ArchivedSession
+import org.mozilla.fenix.home.sessions.SessionsChange
 import org.mozilla.fenix.home.sessions.SessionsComponent
 import org.mozilla.fenix.home.tabs.TabsAction
 import org.mozilla.fenix.home.tabs.TabsChange
@@ -51,7 +55,7 @@ class HomeFragment : Fragment() {
         TabsComponent(view.homeLayout, bus, (activity as HomeActivity).browsingModeManager.isPrivate,
             TabsState(sessionManager.sessions.map { it.toSessionViewState(it == sessionManager.selectedSession) })
         )
-        SessionsComponent(view.homeLayout, bus, (activity as HomeActivity).browsingModeManager.isPrivate)
+        SessionsComponent(view.homeLayout, bus)
         layoutComponents(view)
         ActionBusFactory.get(this).logMergedObservables()
         val activity = activity as HomeActivity
@@ -63,6 +67,16 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         setupHomeMenu()
+
+        val bundles = requireComponents.core.sessionStorage.bundles(40)
+
+        bundles.observe(this, Observer {sessionBundles ->
+            val archivedSessions = sessionBundles.mapNotNull { sessionBundle ->
+                sessionBundle.id?.let { ArchivedSession(it, sessionBundle.lastSavedAt, sessionBundle.urls) }
+            }
+
+            getManagedEmitter<SessionsChange>().onNext(SessionsChange.Changed(archivedSessions))
+        })
 
         val searchIcon = requireComponents.search.searchEngineManager.getDefaultSearchEngine(requireContext()).let {
             BitmapDrawable(resources, it.icon)

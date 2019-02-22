@@ -12,10 +12,11 @@ import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.UIComponent
 import org.mozilla.fenix.mvi.ViewState
 
+data class ArchivedSession(val id: Long, private val savedAt: Long, val urls: List<String>)
+
 class SessionsComponent(
     private val container: ViewGroup,
     bus: ActionBusFactory,
-    private val isPrivate: Boolean,
     override var initialState: SessionsState = SessionsState(emptyList())
 ) :
     UIComponent<SessionsState, SessionsAction, SessionsChange>(
@@ -25,23 +26,23 @@ class SessionsComponent(
 
     override val reducer: (SessionsState, SessionsChange) -> SessionsState = { state, change ->
         when (change) {
-            is SessionsChange.Changed -> state // copy state with changes here
+            is SessionsChange.Changed -> state.copy(archivedSessions = change.archivedSessions) // copy state with changes here
         }
     }
 
-    override fun initView() = SessionsUIView(container, actionEmitter, isPrivate, changesObservable)
+    override fun initView() = SessionsUIView(container, actionEmitter, changesObservable)
 
     init {
         render(reducer)
     }
 }
 
-data class SessionsState(val sessions: List<Session>, val isPrivate: Boolean = false) : ViewState
+data class SessionsState(val archivedSessions: List<ArchivedSession>) : ViewState
 
 sealed class SessionsAction : Action {
-    object Select : SessionsAction()
+    data class Select(val archivedSession: ArchivedSession) : SessionsAction()
 }
 
 sealed class SessionsChange : Change {
-    data class Changed(val isPrivate: Boolean) : SessionsChange()
+    data class Changed(val archivedSessions: List<ArchivedSession>) : SessionsChange()
 }

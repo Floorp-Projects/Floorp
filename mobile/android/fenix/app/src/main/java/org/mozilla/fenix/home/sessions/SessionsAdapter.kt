@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.home.sessions
 
-import android.content.Context
 import android.text.SpannableString
 import android.text.style.ClickableSpan
 import android.text.style.ForegroundColorSpan
@@ -16,35 +15,34 @@ import androidx.recyclerview.widget.RecyclerView
 import org.mozilla.fenix.R
 
 class SessionsAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-    var isPrivate = false
-    var context: Context? = null
+    private var isPrivate = false
+    private var items = listOf<ArchivedSession>()
+
+
+    fun reloadDatat(items: List<ArchivedSession>) {
+        this.items = items
+        notifyDataSetChanged()
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
 
         return when (viewType) {
             HeaderViewHolder.LAYOUT_ID -> HeaderViewHolder(view)
-            EmptyListViewHolder.LAYOUT_ID -> EmptyListViewHolder(view)
-            PrivateEmptyListViewHolder.LAYOUT_ID -> PrivateEmptyListViewHolder(view)
             else -> EmptyListViewHolder(view)
         }
     }
 
     override fun getItemViewType(position: Int) = when (position) {
         0 -> HeaderViewHolder.LAYOUT_ID
-        1 -> if (isPrivate) PrivateEmptyListViewHolder.LAYOUT_ID else EmptyListViewHolder.LAYOUT_ID
-        else -> -1
+        else -> EmptyListViewHolder.LAYOUT_ID
     }
 
-    override fun getItemCount(): Int = 2
+    override fun getItemCount(): Int = items.size + 1
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder) {
-            is HeaderViewHolder -> if (isPrivate) {
-                holder.headerText.text = "Private Session"
-            } else {
-                holder.headerText.text = "Today"
-            }
+            is HeaderViewHolder -> holder.headerText.text = "Today"
             is PrivateEmptyListViewHolder -> {
                 // Format the description text to include a hyperlink
                 val descriptionText = String
@@ -66,21 +64,21 @@ class SessionsAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         }
     }
 
-    private class HeaderViewHolder(private val view: View) : RecyclerView.ViewHolder(view) {
+    private class HeaderViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val headerText = view.findViewById<TextView>(R.id.header_text)
         companion object {
             const val LAYOUT_ID = R.layout.session_list_header
         }
     }
 
-    private class PrivateEmptyListViewHolder(private val view: View) : RecyclerView.ViewHolder(view) {
+    private class PrivateEmptyListViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val description = view.findViewById<TextView>(R.id.session_description)
         companion object {
             const val LAYOUT_ID = R.layout.session_list_empty_private
         }
     }
 
-    private class EmptyListViewHolder(private val view: View) : RecyclerView.ViewHolder(view) {
+    private class EmptyListViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         companion object {
             const val LAYOUT_ID = R.layout.session_list_empty
         }
