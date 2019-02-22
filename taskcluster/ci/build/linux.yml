@@ -43,7 +43,7 @@ linux64-plain/opt:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        max-run-time: 3600
+        max-run-time: 5400
         env:
             PERFHERDER_EXTRA_OPTIONS: plain
     run:
@@ -188,7 +188,7 @@ linux64-plain/debug:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        max-run-time: 3600
+        max-run-time: 5400
         env:
             PERFHERDER_EXTRA_OPTIONS: plain
     run:
@@ -297,7 +297,7 @@ linux64-base-toolchains/debug:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         docker-image: {in-tree: debian7-amd64-build-base}
-        max-run-time: 3600
+        max-run-time: 5400
         env:
             PERFHERDER_EXTRA_OPTIONS: base-toolchains
             FORCE_GCC: '1'
@@ -914,7 +914,7 @@ linux64-noopt/debug:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        max-run-time: 3600
+        max-run-time: 5400
     run:
         using: mozharness
         actions: [get-secrets, build, check-test]
