@@ -9,7 +9,6 @@
 
 const { Cu } = require("chrome");
 const Services = require("Services");
-const makeDebugger = require("devtools/server/actors/utils/make-debugger");
 const {
   isAfterPseudoElement,
   isBeforePseudoElement,
@@ -195,6 +194,18 @@ const REACT_EVENT_NAMES = [
  */
 class MainEventCollector {
   /**
+   * We allow displaying chrome events if the page is chrome or if
+   * `devtools.chrome.enabled = true`.
+   */
+  get chromeEnabled() {
+    if (typeof this._chromeEnabled === "undefined") {
+      this._chromeEnabled = Services.prefs.getBoolPref("devtools.chrome.enabled");
+    }
+
+    return this._chromeEnabled;
+  }
+
+  /**
    * Check if a node has any event listeners attached. Please do not override
    * this method... your getListeners() implementation needs to have the
    * following signature:
@@ -265,6 +276,16 @@ class MainEventCollector {
   unwrap(obj) {
     return Cu.isXrayWrapper(obj) ? obj.wrappedJSObject : obj;
   }
+
+  isChromeHandler(handler) {
+    const handlerPrincipal = Cu.getObjectPrincipal(handler);
+
+    // Chrome codebase may register listeners on the page from a frame script or
+    // JSM <video> tags may also report internal listeners, but they won't be
+    // coming from the system principal. Instead, they will be using an expanded
+    // principal.
+    return handlerPrincipal.isSystemPrincipal || handlerPrincipal.isExpandedPrincipal;
+  }
 }
 
 /**
@@ -315,6 +336,12 @@ class DOMEventCollector extends MainEventCollector {
 
       // Ignore listeners that have no handler.
       if (!handler) {
+        continue;
+      }
+
+      // If we shouldn't be showing chrome events due to context and this is a
+      // chrome handler we can ignore it.
+      if (!this.chromeEnabled && this.isChromeHandler(handler)) {
         continue;
       }
 
@@ -390,13 +417,20 @@ class JQueryEventCollector extends MainEventCollector {
           }
 
           if (typeof event === "function" || typeof event === "object") {
+            // If we shouldn't be showing chrome events due to context and this
+            // is a chrome handler we can ignore it.
+            const handler = event.handler || event;
+            if (!this.chromeEnabled && this.isChromeHandler(handler)) {
+              continue;
+            }
+
             if (checkOnly) {
               return true;
             }
 
             const eventInfo = {
               type: type,
-              handler: event.handler || event,
+              handler: handler,
               tags: "jQuery",
               hide: {
                 capturing: true,
@@ -470,12 +504,19 @@ class JQueryLiveEventCollector extends MainEventCollector {
             }
 
             if (typeof event === "function" || typeof event === "object") {
+              // If we shouldn't be showing chrome events due to context and this
+              // is a chrome handler we can ignore it.
+              const handler = event.handler || event;
+              if (!this.chromeEnabled && this.isChromeHandler(handler)) {
+                continue;
+              }
+
               if (checkOnly) {
                 return true;
               }
               const eventInfo = {
                 type: event.origType || event.type.substr(selector.length + 1),
-                handler: event.handler || event,
+                handler: handler,
                 tags: "jQuery,Live",
                 hide: {
                   dom0: true,
@@ -577,6 +618,10 @@ class ReactEventCollector extends MainEventCollector {
             continue;
           }
 
+          if (!this.chromeEnabled && this.isChromeHandler(listener)) {
+            continue;
+          }
+
           if (checkOnly) {
             return true;
           }
@@ -671,12 +716,6 @@ class EventCollector {
       new JQueryEventCollector(),
       new DOMEventCollector(),
     ];
-
-    // Add a method to create a simple debugger.
-    this.makeDebuggerForContent = makeDebugger.bind(null, {
-      findDebuggees: dbg => [],
-      shouldAddNewGlobalAsDebuggee: global => true,
-    });
   }
 
   /**
@@ -684,7 +723,6 @@ class EventCollector {
    */
   destroy() {
     this.eventCollectors = null;
-    this.makeDebuggerForContent = null;
   }
 
   /**
@@ -701,6 +739,7 @@ class EventCollector {
         return true;
       }
     }
+
     return false;
   }
 
@@ -713,7 +752,7 @@ class EventCollector {
    *         {
    *           type: type,        // e.g. "click"
    *           handler: handler,  // The function called when event is triggered.
-   *           tags: "jQuery",    // Comma seperated list of tags displayed
+   *           tags: "jQuery",    // Comma separated list of tags displayed
    *                              // inside event bubble.
    *           hide: {            // Flags for hiding certain properties.
    *             capturing: true,
@@ -723,9 +762,7 @@ class EventCollector {
    */
   getEventListeners(node) {
     const listenerArray = [];
-    const dbg = this.makeDebuggerForContent();
-    const global = Cu.getGlobalForObject(node);
-    const globalDO = dbg.addDebuggee(global);
+    const dbg = new Debugger();
 
     for (const collector of this.eventCollectors) {
       const listeners = collector.getListeners(node);
@@ -738,11 +775,9 @@ class EventCollector {
         if (collector.normalizeListener) {
           listener.normalizeListener = collector.normalizeListener;
         }
-        this.processHandlerForEvent(listenerArray, listener, globalDO);
+        this.processHandlerForEvent(listenerArray, listener, dbg);
       }
     }
-
-    dbg.removeDebuggee(globalDO);
 
     listenerArray.sort((a, b) => {
       return a.type.localeCompare(b.type);
@@ -757,9 +792,10 @@ class EventCollector {
    * @param  {Array} listenerArray
    *         listenerArray contains all event objects that we have gathered
    *         so far.
-   * @param  {Object} eventInfo
-   *         See event-parsers.js.registerEventParser() for a description of the
-   *         eventInfo object.
+   * @param  {EventListener} listener
+   *         The event listener to process.
+   * @param  {Debugger} dbg
+   *         Debugger instance.
    *
    * @return {Array}
    *         An array of objects where a typical object looks like this:
@@ -776,128 +812,142 @@ class EventCollector {
    *             native: false
    *           }
    */
-  processHandlerForEvent(listenerArray, listener, globalDO) {
-    const { capturing, handler } = listener;
-    let listenerDO = globalDO.makeDebuggeeValue(handler);
+  processHandlerForEvent(listenerArray, listener, dbg) {
+    let globalDO;
 
-    const { normalizeListener } = listener;
+    try {
+      const { capturing, handler } = listener;
+      const global = Cu.getGlobalForObject(handler);
 
-    if (normalizeListener) {
-      listenerDO = normalizeListener(listenerDO, listener);
-    }
+      // It is important that we recreate the globalDO for each handler because
+      // their global object can vary e.g. resource:// URLs on a video control. If
+      // we don't do this then all chrome listeners simply display "native code."
+      globalDO = dbg.addDebuggee(global);
+      let listenerDO = globalDO.makeDebuggeeValue(handler);
 
-    const hide = listener.hide || {};
-    const override = listener.override || {};
-    const tags = listener.tags || "";
-    const type = listener.type || "";
-    let dom0 = false;
-    let functionSource = handler.toString();
-    let line = 0;
-    let native = false;
-    let url = "";
+      const { normalizeListener } = listener;
 
-    // If the listener is an object with a 'handleEvent' method, use that.
-    if (listenerDO.class === "Object" || /^XUL\w*Element$/.test(listenerDO.class)) {
-      let desc;
-
-      while (!desc && listenerDO) {
-        desc = listenerDO.getOwnPropertyDescriptor("handleEvent");
-        listenerDO = listenerDO.proto;
+      if (normalizeListener) {
+        listenerDO = normalizeListener(listenerDO, listener);
       }
 
-      if (desc && desc.value) {
-        listenerDO = desc.value;
-      }
-    }
+      const hide = listener.hide || {};
+      const override = listener.override || {};
+      const tags = listener.tags || "";
+      const type = listener.type || "";
+      let dom0 = false;
+      let functionSource = handler.toString();
+      let line = 0;
+      let native = false;
+      let url = "";
 
-    // If the listener is bound to a different context then we need to switch
-    // to the bound function.
-    if (listenerDO.isBoundFunction) {
-      listenerDO = listenerDO.boundTargetFunction;
-    }
+      // If the listener is an object with a 'handleEvent' method, use that.
+      if (listenerDO.class === "Object" || /^XUL\w*Element$/.test(listenerDO.class)) {
+        let desc;
 
-    const { isArrowFunction, name, script, parameterNames } = listenerDO;
+        while (!desc && listenerDO) {
+          desc = listenerDO.getOwnPropertyDescriptor("handleEvent");
+          listenerDO = listenerDO.proto;
+        }
 
-    if (script) {
-      const scriptSource = script.source.text;
-
-      // Scripts are provided via script tags. If it wasn't provided by a
-      // script tag it must be a DOM0 event.
-      if (script.source.element) {
-        dom0 = script.source.element.class !== "HTMLScriptElement";
-      } else {
-        dom0 = false;
-      }
-
-      line = script.startLine;
-      url = script.url;
-
-      // Checking for the string "[native code]" is the only way at this point
-      // to check for native code. Even if this provides a false positive then
-      // grabbing the source code a second time is harmless.
-      if (functionSource === "[object Object]" ||
-          functionSource === "[object XULElement]" ||
-          functionSource.includes("[native code]")) {
-        functionSource =
-          scriptSource.substr(script.sourceStart, script.sourceLength);
-
-        // At this point the script looks like this:
-        // () { ... }
-        // We prefix this with "function" if it is not a fat arrow function.
-        if (!isArrowFunction) {
-          functionSource = "function " + functionSource;
+        if (desc && desc.value) {
+          listenerDO = desc.value;
         }
       }
-    } else {
-      // If the listener is a native one (provided by C++ code) then we have no
-      // access to the script. We use the native flag to prevent showing the
-      // debugger button because the script is not available.
-      native = true;
-    }
 
-    // Arrow function text always contains the parameters. Function
-    // parameters are often missing e.g. if Array.sort is used as a handler.
-    // If they are missing we provide the parameters ourselves.
-    if (parameterNames && parameterNames.length > 0) {
-      const prefix = "function " + name + "()";
-      const paramString = parameterNames.join(", ");
+      // If the listener is bound to a different context then we need to switch
+      // to the bound function.
+      if (listenerDO.isBoundFunction) {
+        listenerDO = listenerDO.boundTargetFunction;
+      }
 
-      if (functionSource.startsWith(prefix)) {
-        functionSource = functionSource.substr(prefix.length);
+      const { isArrowFunction, name, script, parameterNames } = listenerDO;
 
-        functionSource = `function ${name} (${paramString})${functionSource}`;
+      if (script) {
+        const scriptSource = script.source.text;
+
+        // Scripts are provided via script tags. If it wasn't provided by a
+        // script tag it must be a DOM0 event.
+        if (script.source.element) {
+          dom0 = script.source.element.class !== "HTMLScriptElement";
+        } else {
+          dom0 = false;
+        }
+
+        line = script.startLine;
+        url = script.url;
+
+        // Checking for the string "[native code]" is the only way at this point
+        // to check for native code. Even if this provides a false positive then
+        // grabbing the source code a second time is harmless.
+        if (functionSource === "[object Object]" ||
+            functionSource === "[object XULElement]" ||
+            functionSource.includes("[native code]")) {
+          functionSource =
+            scriptSource.substr(script.sourceStart, script.sourceLength);
+
+          // At this point the script looks like this:
+          // () { ... }
+          // We prefix this with "function" if it is not a fat arrow function.
+          if (!isArrowFunction) {
+            functionSource = "function " + functionSource;
+          }
+        }
+      } else {
+        // If the listener is a native one (provided by C++ code) then we have no
+        // access to the script. We use the native flag to prevent showing the
+        // debugger button because the script is not available.
+        native = true;
+      }
+
+      // Arrow function text always contains the parameters. Function
+      // parameters are often missing e.g. if Array.sort is used as a handler.
+      // If they are missing we provide the parameters ourselves.
+      if (parameterNames && parameterNames.length > 0) {
+        const prefix = "function " + name + "()";
+        const paramString = parameterNames.join(", ");
+
+        if (functionSource.startsWith(prefix)) {
+          functionSource = functionSource.substr(prefix.length);
+
+          functionSource = `function ${name} (${paramString})${functionSource}`;
+        }
+      }
+
+      // If the listener is native code we display the filename "[native code]."
+      // This is the official string and should *not* be translated.
+      let origin;
+      if (native) {
+        origin = "[native code]";
+      } else {
+        origin = url + ((dom0 || line === 0) ? "" : ":" + line);
+      }
+
+      const eventObj = {
+        type: override.type || type,
+        handler: override.handler || functionSource.trim(),
+        origin: override.origin || origin,
+        tags: override.tags || tags,
+        DOM0: typeof override.dom0 !== "undefined" ? override.dom0 : dom0,
+        capturing: typeof override.capturing !== "undefined" ?
+                          override.capturing : capturing,
+        hide: typeof override.hide !== "undefined" ? override.hide : hide,
+        native,
+      };
+
+      // Hide the debugger icon for DOM0 and native listeners. DOM0 listeners are
+      // generated dynamically from e.g. an onclick="" attribute so the script
+      // doesn't actually exist.
+      if (native || dom0) {
+        eventObj.hide.debugger = true;
+      }
+      listenerArray.push(eventObj);
+    } finally {
+      // Ensure that we always remove the debuggee.
+      if (globalDO) {
+        dbg.removeDebuggee(globalDO);
       }
     }
-
-    // If the listener is native code we display the filename "[native code]."
-    // This is the official string and should *not* be translated.
-    let origin;
-    if (native) {
-      origin = "[native code]";
-    } else {
-      origin = url + ((dom0 || line === 0) ? "" : ":" + line);
-    }
-
-    const eventObj = {
-      type: override.type || type,
-      handler: override.handler || functionSource.trim(),
-      origin: override.origin || origin,
-      tags: override.tags || tags,
-      DOM0: typeof override.dom0 !== "undefined" ? override.dom0 : dom0,
-      capturing: typeof override.capturing !== "undefined" ?
-                        override.capturing : capturing,
-      hide: typeof override.hide !== "undefined" ? override.hide : hide,
-      native,
-    };
-
-    // Hide the debugger icon for DOM0 and native listeners. DOM0 listeners are
-    // generated dynamically from e.g. an onclick="" attribute so the script
-    // doesn't actually exist.
-    if (native || dom0) {
-      eventObj.hide.debugger = true;
-    }
-
-    listenerArray.push(eventObj);
   }
 }
 
