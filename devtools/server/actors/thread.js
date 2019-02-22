@@ -279,6 +279,10 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this.dbg.addDebuggees();
     this.dbg.enabled = true;
 
+    if ("observeAsmJS" in this._options) {
+      this.dbg.allowUnobservedAsmJS = !this._options.observeAsmJS;
+    }
+
     // Notify the parent that we've finished attaching. If this is a worker
     // thread which was paused until attaching, this will allow content to
     // begin executing.
