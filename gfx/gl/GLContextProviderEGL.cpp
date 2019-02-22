@@ -366,20 +366,7 @@ GLContextEGL::~GLContextEGL() {
 }
 
 bool GLContextEGL::Init() {
-  mLibrary = LoadApitraceLibrary();
-  if (!mLibrary) {
-    if (!OpenLibrary(GLES2_LIB)) {
-#if defined(XP_UNIX)
-      if (!OpenLibrary(GLES2_LIB2)) {
-        NS_WARNING("Couldn't load GLES2 LIB.");
-        return false;
-      }
-#endif
-    }
-  }
-
-  SetupLookupFunction();
-  if (!InitWithPrefix("gl", true)) return false;
+  if (!GLContext::Init()) return false;
 
   bool current = MakeCurrent();
   if (!current) {
@@ -499,9 +486,8 @@ void GLContextEGL::ReleaseSurface() {
   mSurface = EGL_NO_SURFACE;
 }
 
-bool GLContextEGL::SetupLookupFunction() {
-  mLookupFunc = mEgl->GetLookupFunction();
-  return true;
+Maybe<SymbolLoader> GLContextEGL::GetSymbolLoader() const {
+  return mEgl->GetSymbolLoader();
 }
 
 bool GLContextEGL::SwapBuffers() {
