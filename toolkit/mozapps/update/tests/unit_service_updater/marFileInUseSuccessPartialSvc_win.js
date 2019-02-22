@@ -20,13 +20,7 @@ async function setupUpdaterTestFinished() {
   await runHelperFileInUse(gTestFiles[11].relPathDir + gTestFiles[11].fileName,
                            false);
   runUpdate(STATE_SUCCEEDED, false, 0, true);
-  waitForHelperExit();
-}
-
-/**
- * Called after the call to waitForHelperExit finishes.
- */
-function waitForHelperExitFinished() {
+  await waitForHelperExit();
   checkPostUpdateAppLog();
 }
 
