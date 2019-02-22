@@ -197,7 +197,10 @@ void ActivationContextRegion::Activate() {
     return;
   }
 
-  BOOL activated = ::ActivateActCtx(mActCtx.mActCtx, &mActCookie);
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  BOOL activated =
+#endif
+    ::ActivateActCtx(mActCtx.mActCtx, &mActCookie);
   MOZ_DIAGNOSTIC_ASSERT(activated);
 }
 
