@@ -1,0 +1,7 @@
+include protocol maybe_OfActors;
+
+protocol maybe_OfActorsSub {
+    manager maybe_OfActors;
+
+child: async __delete__();
+};
