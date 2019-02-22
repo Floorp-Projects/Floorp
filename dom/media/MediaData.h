@@ -336,14 +336,6 @@ class AudioData : public MediaData {
   static const Type sType = AUDIO_DATA;
   static const char* sTypeName;
 
-  // Creates a new AudioData identical to aOther, but with a different
-  // specified timestamp and duration. All data from aOther is copied
-  // into the new AudioData but the audio data which is transferred.
-  // After such call, the original aOther is unusable.
-  static already_AddRefed<AudioData> TransferAndUpdateTimestampAndDuration(
-      AudioData* aOther, const media::TimeUnit& aTimestamp,
-      const media::TimeUnit& aDuration);
-
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
   // If mAudioBuffer is null, creates it from mAudioData.
