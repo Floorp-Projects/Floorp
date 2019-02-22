@@ -31,7 +31,7 @@ runWithMSE(async (ms, el) => {
   // Seek to the middle of the gap where audio is missing. As we are in readyState = ended
   // seeking must complete.
   el.currentTime = videosb.buffered.end(0) / 2 + audiosb.buffered.end(0) / 2;
-  ok(el.currentTime - audiosb.buffered.end(0) > 1, "gap is big enough");
+  ok(el.currentTime - audiosb.buffered.end(0) >= 1, "gap is big enough");
   is(el.buffered.length, 1, "continuous buffered range");
   is(el.buffered.end(0), videosb.buffered.end(0),
      "buffered range end is aligned with longest track");
