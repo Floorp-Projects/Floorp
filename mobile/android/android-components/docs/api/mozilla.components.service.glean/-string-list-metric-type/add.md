@@ -2,7 +2,7 @@
 
 # add
 
-`fun add(value: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/StringListMetricType.kt#L49)
+`fun add(value: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/StringListMetricType.kt#L53)
 
 Appends a string value to one or more string list metric stores.  If the string exceeds the
 maximum string length, defined as [MAX_STRING_LENGTH](-m-a-x_-s-t-r-i-n-g_-l-e-n-g-t-h.md), it will be truncated.

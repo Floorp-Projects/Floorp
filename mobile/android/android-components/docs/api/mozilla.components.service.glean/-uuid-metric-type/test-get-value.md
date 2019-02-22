@@ -2,9 +2,10 @@
 
 # testGetValue
 
-`fun testGetValue(pingName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = getStorageNames().first()): `[`UUID`](https://developer.android.com/reference/java/util/UUID.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/UuidMetricType.kt#L97)
+`fun testGetValue(pingName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = getStorageNames().first()): `[`UUID`](https://developer.android.com/reference/java/util/UUID.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/UuidMetricType.kt#L105)
 
-Returns the stored value for testing purposes only
+Returns the stored value for testing purposes only. This function will attempt to await the
+last task (if any) writing to the the metric's storage engine before returning a value.
 
 ### Parameters
 

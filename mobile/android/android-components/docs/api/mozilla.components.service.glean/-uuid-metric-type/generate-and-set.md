@@ -2,7 +2,7 @@
 
 # generateAndSet
 
-`fun generateAndSet(): `[`UUID`](https://developer.android.com/reference/java/util/UUID.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/UuidMetricType.kt#L39)
+`fun generateAndSet(): `[`UUID`](https://developer.android.com/reference/java/util/UUID.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/UuidMetricType.kt#L43)
 
 Generate a new UUID value and set it in the metric store.
 

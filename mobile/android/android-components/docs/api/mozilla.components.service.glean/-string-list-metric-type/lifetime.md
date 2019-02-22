@@ -2,7 +2,7 @@
 
 # lifetime
 
-`val lifetime: `[`Lifetime`](../-lifetime/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/StringListMetricType.kt#L24)
+`val lifetime: `[`Lifetime`](../-lifetime/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/StringListMetricType.kt#L25)
 
 Overrides [CommonMetricData.lifetime](../-common-metric-data/lifetime.md)
 
