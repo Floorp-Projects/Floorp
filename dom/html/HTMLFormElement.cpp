@@ -92,8 +92,6 @@ static const nsAttrValue::EnumTable kFormAutocompleteTable[] = {
 static const nsAttrValue::EnumTable* kFormDefaultAutocomplete =
     &kFormAutocompleteTable[0];
 
-bool HTMLFormElement::gFirstFormSubmitted = false;
-
 HTMLFormElement::HTMLFormElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : nsGenericHTMLElement(std::move(aNodeInfo)),
@@ -852,14 +850,6 @@ nsresult HTMLFormElement::DoSecureToInsecureSubmitCheck(nsIURI* aActionURL,
 nsresult HTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
                                                 bool* aCancelSubmit,
                                                 bool aEarlyNotify) {
-  // If this is the first form, bring alive the first form submit
-  // category observers
-  if (!gFirstFormSubmitted) {
-    gFirstFormSubmitted = true;
-    NS_CreateServicesFromCategory(NS_FIRST_FORMSUBMIT_CATEGORY, nullptr,
-                                  NS_FIRST_FORMSUBMIT_CATEGORY);
-  }
-
   if (!aEarlyNotify) {
     nsresult rv = DoSecureToInsecureSubmitCheck(aActionURL, aCancelSubmit);
     if (NS_FAILED(rv)) {
