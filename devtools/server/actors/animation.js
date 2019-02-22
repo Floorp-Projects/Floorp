@@ -112,7 +112,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
     }
 
     const pseudo = this.player.effect.target;
-    const treeWalker = this.walker.getDocumentWalker(pseudo.parentElement);
+    const treeWalker = this.walker.getDocumentWalker(pseudo.element);
     return pseudo.type === "::before" ? treeWalker.firstChild() : treeWalker.lastChild();
   },
 
@@ -270,7 +270,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
     if (target.type) {
       // Animated element is a pseudo element.
       pseudo = target.type;
-      target = target.parentElement;
+      target = target.element;
     }
     return this.window.getComputedStyle(target, pseudo).animationTimingFunction;
   },
@@ -429,7 +429,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
           if (target.type) {
             // This target is a pseudo element.
             pseudo = target.type;
-            target = target.parentElement;
+            target = target.element;
           }
           const value =
             DOMWindowUtils.getUnanimatedComputedStyle(target,

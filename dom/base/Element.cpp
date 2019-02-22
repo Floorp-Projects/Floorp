@@ -3421,7 +3421,7 @@ already_AddRefed<Animation> Element::Animate(
   if (aTarget.Value().IsElement()) {
     referenceElement = &aTarget.Value().GetAsElement();
   } else {
-    referenceElement = aTarget.Value().GetAsCSSPseudoElement().ParentElement();
+    referenceElement = aTarget.Value().GetAsCSSPseudoElement().Element();
   }
 
   nsCOMPtr<nsIGlobalObject> ownerGlobal = referenceElement->GetOwnerGlobal();
