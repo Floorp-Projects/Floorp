@@ -233,9 +233,11 @@ RefPtr<MediaDataDecoder::DecodePromise> VorbisDataDecoder::ProcessDecode(
     AudioSampleBuffer data(std::move(buffer));
     data = mAudioConverter->Process(std::move(data));
 
-    results.AppendElement(
-        new AudioData(aOffset, time, duration, data.Forget(), channels, rate,
-                      mAudioConverter->OutputConfig().Layout().Map()));
+    RefPtr<AudioData> audio =
+        new AudioData(aOffset, time, data.Forget(), channels, rate,
+                      mAudioConverter->OutputConfig().Layout().Map());
+    MOZ_DIAGNOSTIC_ASSERT(duration == audio->mDuration, "must be equal");
+    results.AppendElement(std::move(audio));
     mFrames += frames;
     err = vorbis_synthesis_read(&mVorbisDsp, frames);
     if (err) {

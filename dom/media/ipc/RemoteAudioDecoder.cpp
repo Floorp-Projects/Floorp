@@ -29,7 +29,6 @@ mozilla::ipc::IPCResult RemoteAudioDecoderChild::RecvOutput(
   RefPtr<AudioData> audio =
       new AudioData(aData.base().offset(),
                     media::TimeUnit::FromMicroseconds(aData.base().time()),
-                    media::TimeUnit::FromMicroseconds(aData.base().duration()),
                     std::move(alignedAudioBuffer), aData.channels(),
                     aData.rate(), aData.channelMap());
 

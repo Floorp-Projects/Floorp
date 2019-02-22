@@ -242,9 +242,11 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
             RESULT_DETAIL("Invalid count of accumulated audio samples"));
       }
 
-      aResults.AppendElement(new AudioData(
-          samplePosition, pts, duration, std::move(audio), numChannels,
-          samplingRate, mCodecContext->channel_layout));
+      RefPtr<AudioData> data =
+          new AudioData(samplePosition, pts, std::move(audio), numChannels,
+                        samplingRate, mCodecContext->channel_layout);
+      MOZ_DIAGNOSTIC_ASSERT(duration == data->mDuration, "must be equal");
+      aResults.AppendElement(std::move(data));
 
       pts = newpts;
 
