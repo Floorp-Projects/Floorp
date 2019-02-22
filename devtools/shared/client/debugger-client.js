@@ -20,7 +20,6 @@ loader.lazyRequireGetter(this, "DebuggerSocket", "devtools/shared/security/socke
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
 loader.lazyRequireGetter(this, "RootFront", "devtools/shared/fronts/root", true);
-loader.lazyRequireGetter(this, "BrowsingContextTargetFront", "devtools/shared/fronts/targets/browsing-context", true);
 loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-client");
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/object-client");
 loader.lazyRequireGetter(this, "Pool", "devtools/shared/protocol", true);
@@ -246,30 +245,6 @@ DebuggerClient.prototype = {
     detachClients();
 
     return deferred.promise;
-  },
-
-  /**
-   * Attach to a target actor:
-   *
-   *  - start watching for new documents (emits `tabNativated` messages)
-   *  - start watching for inner iframe updates (emits `frameUpdate` messages)
-   *  - retrieve the thread actor:
-   *    Instantiates a new ThreadActor that can be later attached to in order to
-   *    debug JS sources in the document.
-   *
-   * @param string targetActorForm
-   *        The target actor form for the tab to attach.
-   */
-  attachTarget: async function(targetActorForm) {
-    const actorID = targetActorForm.actor;
-    let front = this._frontPool.actor(actorID);
-    if (!front) {
-      front = new BrowsingContextTargetFront(this, targetActorForm);
-      this._frontPool.manage(front);
-    }
-
-    const response = await front.attach();
-    return [response, front];
   },
 
   /**
