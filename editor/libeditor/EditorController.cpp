@@ -52,8 +52,6 @@ nsresult EditorController::RegisterEditingCommands(
   NS_REGISTER_ONE_COMMAND(CutOrDeleteCommand, "cmd_cutOrDelete");
   NS_REGISTER_ONE_COMMAND(CopyCommand, "cmd_copy");
   NS_REGISTER_ONE_COMMAND(CopyOrDeleteCommand, "cmd_copyOrDelete");
-  NS_REGISTER_ONE_COMMAND(CopyAndCollapseToEndCommand,
-                          "cmd_copyAndCollapseToEnd");
   NS_REGISTER_ONE_COMMAND(SelectAllCommand, "cmd_selectAll");
 
   NS_REGISTER_ONE_COMMAND(PasteCommand, "cmd_paste");
