@@ -996,7 +996,11 @@
             this._collapseUnusedItems();
           }
           this.richlistbox.style.removeProperty("height");
-          this.richlistbox.height = height;
+          // We need to get the ceiling of the calculated value to ensure that the box fully contains
+          // all of its contents and doesn't cause a scrollbar since nsIBoxObject only expects a
+          // `long`. e.g. if `height` is 99.5 the richlistbox would render at height 99px with a
+          // scrollbar for the extra 0.5px.
+          this.richlistbox.height = Math.ceil(height);
           ]]>
         </body>
       </method>
