@@ -105,16 +105,16 @@ function update(
 
   switch (action.type) {
     case "UPDATE_SOURCE":
-      return updateSource(state, action.source);
+      return updateSources(state, [action.source]);
 
     case "ADD_SOURCE":
-      return addSources(state, [action.source]);
+      return updateSources(state, [action.source]);
 
     case "ADD_SOURCES":
-      return addSources(state, action.sources);
+      return updateSources(state, action.sources);
 
     case "SET_WORKERS":
-      return updateWorkers(state, action);
+      return updateWorkers(state, action.workers, action.mainThread);
 
     case "SET_SELECTED_LOCATION":
       location = {
@@ -155,14 +155,14 @@ function update(
       return { ...state, pendingSelectedLocation: location };
 
     case "LOAD_SOURCE_TEXT":
-      return updateLoadedState(state, action);
+      return setSourceTextProps(state, action);
 
     case "BLACKBOX":
       if (action.status === "done") {
         const { id, url } = action.source;
         const { isBlackBoxed } = ((action: any): DonePromiseAction).value;
         updateBlackBoxList(url, isBlackBoxed);
-        return updateSource(state, { id, isBlackBoxed });
+        return updateSources(state, [{ id, isBlackBoxed }]);
       }
       break;
 
@@ -179,147 +179,145 @@ function update(
   return state;
 }
 
-/*
- * Update a source when its state changes
- * e.g. the text was loaded, it was blackboxed
- */
-function updateSource(state: SourcesState, source: Object) {
-  const existingSource = state.sources[source.id];
+function getTextPropsFromAction(action) {
+  const { sourceId } = action;
+
+  if (action.status === "start") {
+    return { id: sourceId, loadedState: "loading" };
+  } else if (action.status === "error") {
+    return { id: sourceId, error: action.error, loadedState: "loaded" };
+  }
+
+  if (!action.value) {
+    return null;
+  }
+
   return {
-    ...state, 
-    sources: {
-      ...state.sources, 
-      [source.id]: { ...existingSource, ...source }
-    }
+    id: sourceId,
+    text: action.value.text,
+    contentType: action.value.contentType,
+    loadedState: "loaded"
   };
 }
 
-/*
- * Update all of the sources when an event occurs.
- * e.g. workers are updated, project directory root changes
- */
-function updateAllSources(
-  state: SourcesState,
-  callback: any
-) {
-  const updatedSources = Object.values(state.sources).map(source => ({
-    ...source,
-    ...callback(source)
-  }))
-
-  return addSources({ ...state, ...emptySources }, updatedSources);
+// TODO: Action is coerced to `any` unfortunately because how we type
+// asynchronous actions is wrong. The `value` may be null for the
+// "start" and "error" states but we don't type it like that. We need
+// to rethink how we type async actions.
+function setSourceTextProps(state, action: LoadSourceAction): SourcesState {
+  const source = getTextPropsFromAction(action);
+  if (!source) {
+    return state;
+  }
+  return updateSources(state, [source]);
 }
 
-/*
- * Add sources to the sources store
- * - Add the source to the sources store
- * - Add the source URL to the urls map
- * - Add the source ID to the thread displayed map
- */
-function addSources(state: SourcesState, sources: Source[]) {
+function updateSources(state, sources: Object[]) {
+  const displayed = { ...state.displayed };
+  for (const thread in displayed) {
+    displayed[thread] = { ...displayed[thread] };
+  }
+
   state = {
     ...state,
     sources: { ...state.sources },
     urls: { ...state.urls },
-    displayed: { ...state.displayed }
+    displayed
   };
 
-  for (const source of sources) {
-    const existingSource = state.sources[source.id];
-    let updatedSource = existingSource || source;
-
-    // Merge the source actor list
-    if (existingSource && source.actors) {
-      const actors = uniqBy(
-        [...existingSource.actors, ...source.actors],
-        ({ actor }) => actor
-      );
-      updatedSource = { ...updatedSource, actors }
-    }
-
-    // 1. Add the source to the sources map
-    state.sources[source.id] = updatedSource;
-
-    // 2. Update the source url map
-    const existing = state.urls[source.url] || [];
-    if (!existing.includes(source.id)) {
-      state.urls[source.url] = [...existing, source.id];
-    }
-
-    // 3. Update the displayed actor map
-    if (
-      underRoot(source, state.projectDirectoryRoot) &&
-      (!source.isExtension || getChromeAndExtenstionsEnabled({ sources: state }))
-    ) {
-      for (const actor of getSourceActors(state, source)) {
-        if (!state.displayed[actor.thread]) {
-          state.displayed[actor.thread] = {}
-        }
-        state.displayed[actor.thread][source.id] = true;
-      }
-    }
-  }
-
+  sources.forEach(source => updateSource(state, source));
   return state;
 }
 
-/*
- * Update sources when the worker list changes.
- * - filter source actor lists so that missing threads no longer appear
- * - NOTE: we do not remove sources for destroyed threads
- */
-function updateWorkers(state: SourcesState, action: Object) {
-  const threads = [
-    action.mainThread,
-    ...action.workers.map(({ actor }) => actor)
-  ];
-
-  return updateAllSources(state, source => ({
-    actors: source.actors.filter(({ thread }) => threads.includes(thread))
-  }));
+function updateSourceUrl(state: SourcesState, source: Source) {
+  const existing = state.urls[source.url] || [];
+  if (!existing.includes(source.id)) {
+    state.urls[source.url] = [...existing, source.id];
+  }
 }
 
-/*
- * Update sources when the project directory root changes
- */
+function updateSource(state: SourcesState, source: Object) {
+  if (!source.id) {
+    return;
+  }
+
+  const existingSource = state.sources[source.id];
+  const updatedSource = existingSource
+    ? { ...existingSource, ...source }
+    : createSource(state, source);
+
+  // Any actors in the source are added to the existing ones.
+  if (existingSource && source.actors) {
+    updatedSource.actors = uniqBy(
+      [...existingSource.actors, ...updatedSource.actors],
+      ({ actor }) => actor
+    );
+  }
+
+  state.sources[source.id] = updatedSource;
+
+  updateSourceUrl(state, updatedSource);
+  updateDisplayedSource(state, updatedSource);
+}
+
+function updateDisplayedSource(state: SourcesState, source: Source) {
+  const root = state.projectDirectoryRoot;
+
+  if (
+    !underRoot(source, root) ||
+    (!getChromeAndExtenstionsEnabled({ sources: state }) && source.isExtension)
+  ) {
+    return;
+  }
+
+  let actors = source.actors;
+
+  // Original sources do not have actors, so use the generated source.
+  if (isOriginalSource(source)) {
+    const generatedSource = state.sources[originalToGeneratedId(source.id)];
+    actors = generatedSource ? generatedSource.actors : [];
+  }
+
+  actors.forEach(({ thread }) => {
+    if (!state.displayed[thread]) {
+      state.displayed[thread] = {};
+    }
+    state.displayed[thread][source.id] = true;
+  });
+}
+
+function updateWorkers(
+  state: SourcesState,
+  workers: WorkerList,
+  mainThread: ThreadId
+) {
+  // Filter out source actors for all removed threads.
+  const threads = [mainThread, ...workers.map(({ actor }) => actor)];
+  const updateActors = source =>
+    source.actors.filter(({ thread }) => threads.includes(thread));
+
+  const sources: Source[] = Object.values(state.sources)
+    .map((source: any) => ({ ...source, actors: updateActors(source) }))
+
+  // Regenerate derived information from the updated sources.
+  return updateSources({ ...state, ...emptySources }, sources);
+}
+
 function updateProjectDirectoryRoot(state: SourcesState, root: string) {
   prefs.projectDirectoryRoot = root;
 
-  return updateAllSources(
-    { ...state, projectDirectoryRoot: root },
-    source => ({ relativeUrl: getRelativeUrl(source, root) })
-  );
-}
-
-/*
- * Update a source's loaded state fields
- * i.e. loadedState, text, error
- */
-function updateLoadedState(state, action: LoadSourceAction): SourcesState {
-  const { sourceId } = action;
-  let source;
-
-  if (action.status === "start") {
-    source = { id: sourceId, loadedState: "loading" };
-
-  } else if (action.status === "error") {
-    source = { id: sourceId, error: action.error, loadedState: "loaded" };
-
-  } else {
-
-    if (!action.value) {
-      return state;
-    }
-
-    source = {
-      id: sourceId,
-      text: action.value.text,
-      contentType: action.value.contentType,
-      loadedState: "loaded"
+  const sources: Source[] = Object.values(state.sources).map((source: any) => {
+    return {
+      ...source,
+      relativeUrl: getRelativeUrl(source, root)
     };
-  }
+  });
 
-  return updateSource(state, source);
+  // Regenerate derived information from the updated sources.
+  return updateSources(
+    { ...state, projectDirectoryRoot: root, ...emptySources },
+    sources
+  );
 }
 
 function updateBlackBoxList(url, isBlackBoxed) {
@@ -351,16 +349,6 @@ export function getBlackBoxList() {
 type OuterState = { sources: SourcesState };
 
 const getSourcesState = (state: OuterState) => state.sources;
-
-function getSourceActors(state, source) {
-  if (isGenerated(source)) {
-    return source.actors;
-  }
-
-  // Original sources do not have actors, so use the generated source.
-  const generatedSource = state.sources[originalToGeneratedId(source.id)];
-  return generatedSource ? generatedSource.actors : [];
-}
 
 export function getSourceInSources(sources: SourcesMap, id: string): ?Source {
   return sources[id];
