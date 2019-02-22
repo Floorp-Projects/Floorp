@@ -151,6 +151,7 @@ const POLICIES_TESTS = [
     },
     lockedPrefs: {
       "xpinstall.enabled": false,
+      "browser.newtabpage.activity-stream.asrouter.userprefs.cfr": false,
     },
   },
 
@@ -224,6 +225,16 @@ const POLICIES_TESTS = [
       "security.tls.version.max": 4,
     },
   },
+    },
+  },
+
+  // POLICY: DisableShield
+  {
+    policies: {
+      "DisableFirefoxStudies": true,
+    },
+    lockedPrefs: {
+      "browser.newtabpage.activity-stream.asrouter.userprefs.cfr": false,
 ];
 
 add_task(async function test_policy_remember_passwords() {
