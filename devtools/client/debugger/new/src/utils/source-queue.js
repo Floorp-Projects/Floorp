@@ -29,10 +29,8 @@ export default {
     queue();
   },
   queueSources: (sources: Source[]) => {
-    if (sources.length > 0) {
-      queuedSources = queuedSources.concat(sources);
-      queue();
-    }
+    queuedSources = queuedSources.concat(sources);
+    queue();
   },
 
   flush: () => Promise.all([queue.flush(), currentWork]),
