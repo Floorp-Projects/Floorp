@@ -36,7 +36,7 @@
       // "hello "
       // __h__e__l__l__o__ __
       //  0  1  2  3  4  5  6
-      ids = [ "i2", "d2", "e2", "t2" ];
+      ids = [ "i2", "d2", "p2", "e2", "t2" ];
       testTextBeforeOffset(ids, BOUNDARY_WORD_START,
                            [ [ 0, 6, "", 0, 0 ] ]);
       testTextBeforeOffset(ids, BOUNDARY_WORD_END,
@@ -83,10 +83,38 @@
                           [ [ 0, 5, " all", 5, 9 ],
                             [ 6, 9, "", 9, 9 ] ]);
 
+      // "  hello  all  " (with whitespace collapsing)
+      // __h__e__l__l__o__ __a__l__l__ __
+      //  0  1  2  3  4  5  6  7  8  9 10
+      ids = [ "d6a", "e6a" ];
+      testTextBeforeOffset(ids, BOUNDARY_WORD_START,
+                           [ [ 0, 5, "", 0, 0 ],
+                             [ 6, 10, "hello ", 0, 6 ] ]);
+      testTextBeforeOffset(ids, BOUNDARY_WORD_END,
+                           [ [ 0, 5, "", 0, 0 ],
+                             [ 6, 9, "hello", 0, 5 ],
+                             [ 10, 10, " all", 5, 9 ] ]);
+
+      testTextAtOffset(ids, BOUNDARY_WORD_START,
+                       [ [ 0, 5, "hello ", 0, 6 ],
+                         [ 6, 10, "all ", 6, 10 ] ]);
+      testTextAtOffset(ids, BOUNDARY_WORD_END,
+                       [ [ 0, 4, "hello", 0, 5 ],
+                         [ 5, 8, " all", 5, 9 ],
+                         [ 9, 10, " ", 9, 10 ] ]);
+
+      testTextAfterOffset(ids, BOUNDARY_WORD_START,
+                          [ [ 0, 5, "all ", 6, 10 ],
+                            [ 6, 10, "", 10, 10 ] ]);
+      testTextAfterOffset(ids, BOUNDARY_WORD_END,
+                          [ [ 0, 5, " all", 5, 9 ],
+                            [ 6, 9, " ", 9, 10 ],
+                            [ 10, 10, "", 10, 10 ] ]);
+
       // "hello my friend"
       // __h__e__l__l__o__ __m__y__ __f__r__i__e__n__d__
       //  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15
-      ids = [ "i7", "d7", "e7", "t7" ];
+      ids = [ "i7", "d7", "e7", "t7", "w7" ];
       testTextBeforeOffset(ids, BOUNDARY_WORD_START,
                            [ [ 0, 5, "", 0, 0 ],
                              [ 6, 8, "hello ", 0, 6 ],
@@ -247,19 +275,24 @@
   <textarea id="t1">hello</textarea>
 
   <input id="i2" value="hello "/>
-  <pre><div id="d2">hello </div></pre>
+  <div id="d2"> hello </div>
+  <pre><div id="p2">hello </div></pre>
   <div id="e2" contenteditable="true" style='white-space:pre'>hello </div>
   <textarea id="t2">hello </textarea>
 
   <input id="i6" value="hello all"/>
-  <div id="d6">hello all</div>
+  <div id="d6"> hello  all</div>
   <div id="e6" contenteditable="true">hello all</div>
   <textarea id="t6">hello all</textarea>
 
+  <div id="d6a">  hello  all  </div>
+  <div id="e6a" contenteditable="true">  hello  all  </div>
+
   <input id="i7" value="hello my friend"/>
-  <div id="d7">hello my friend</div>
+  <div id="d7"> hello  my   friend</div>
   <div id="e7" contenteditable="true">hello my friend</div>
   <textarea id="t7">hello my friend</textarea>
+  <div id="w7" style="width:1em"> hello my friend</div>
 
   <input id="i8" value="Brave Sir  Robin   ran"/>
   <pre>
