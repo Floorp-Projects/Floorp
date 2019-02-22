@@ -326,15 +326,17 @@ void JSWindowActorService::RegisterWindowActor(
 }
 
 void JSWindowActorService::UnregisterWindowActor(const nsAString& aName) {
+  nsAutoString name(aName);
+
   RefPtr<JSWindowActorProtocol> proto;
   if (mDescriptors.Remove(aName, getter_AddRefs(proto))) {
     // If we're in the parent process, also unregister the window actor in all
     // live content processes.
-    // if (XRE_IsParentProcess()) {
-    //   for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
-    //     Unused << cp->SendUnregisterWindowActor(aName);
-    //   }
-    // }
+    if (XRE_IsParentProcess()) {
+      for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
+        Unused << cp->SendUnregisterJSWindowActor(name);
+      }
+    }
 
     // Remove listeners for this actor from each of our window roots.
     for (EventTarget* root : mRoots) {

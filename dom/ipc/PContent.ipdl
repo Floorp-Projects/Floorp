@@ -558,6 +558,11 @@ child:
      */
     async InitJSWindowActorInfos(JSWindowActorInfo[] aInfos);
 
+    /**
+     * Unregister a previously registered JSWindowActor in the child process.
+     */
+    async UnregisterJSWindowActor(nsString name);
+
     async SetXPCOMProcessAttributes(XPCOMInitData xpcomInit,
                                     StructuredCloneData initialData,
                                     LookAndFeelInt[] lookAndFeelIntCache,
