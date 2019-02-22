@@ -1264,14 +1264,14 @@ static bool FoldAdd(JSContext* cx, FullParseHandler* handler,
   return true;
 }
 
-class FoldVisitor : public ParseNodeVisitor<FoldVisitor> {
-  using Base = ParseNodeVisitor;
+class FoldVisitor : public RewritingParseNodeVisitor<FoldVisitor> {
+  using Base = RewritingParseNodeVisitor;
 
   FullParseHandler* handler;
 
  public:
   explicit FoldVisitor(JSContext* cx, FullParseHandler* handler)
-      : ParseNodeVisitor(cx), handler(handler) {}
+      : RewritingParseNodeVisitor(cx), handler(handler) {}
 
   bool visitElemExpr(ParseNode*& pn) {
     return Base::visitElemExpr(pn) && FoldElement(cx_, handler, &pn);
