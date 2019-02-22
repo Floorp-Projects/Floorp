@@ -42,6 +42,7 @@ import org.mozilla.geckoview.WebResponse
 import org.mozilla.geckoview.test.util.Environment
 import org.mozilla.geckoview.test.util.HttpBin
 import org.mozilla.geckoview.test.util.RuntimeCreator
+import java.net.UnknownHostException
 
 @MediumTest
 @RunWith(AndroidJUnit4::class)
@@ -249,9 +250,14 @@ class WebExecutorTest {
     }
 
     @Test
+    fun testFetchUnknownHost() {
+        thrown.expect(equalTo(WebRequestError(WebRequestError.ERROR_UNKNOWN_HOST, WebRequestError.ERROR_CATEGORY_URI)))
+        fetch(WebRequest("https://this.should.not.resolve"))
+    }
+
+    @Test(expected = UnknownHostException::class)
     fun testResolveError() {
-        thrown.expect(equalTo(WebRequestError(WebRequestError.ERROR_UNKNOWN_HOST, WebRequestError.ERROR_CATEGORY_URI)));
-        executor.resolve("this should not resolve").poll()
+        executor.resolve("this.should.not.resolve").poll()
     }
 
     @Test
