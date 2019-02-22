@@ -4,14 +4,11 @@
 
 "use strict";
 
-const Services = require("Services");
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const Types = require("../types");
-
-const FONT_HIGHLIGHTER_PREF = "devtools.inspector.fonthighlighter.enabled";
 
 class FontName extends PureComponent {
   static get propTypes() {
@@ -46,16 +43,14 @@ class FontName extends PureComponent {
   }
 
   render() {
-    const options = {
-      className: "font-name",
-    };
-
-    if (Services.prefs.getBoolPref(FONT_HIGHLIGHTER_PREF)) {
-      options.onMouseOver = this.onNameMouseOver;
-      options.onMouseOut = this.onNameMouseOut;
-    }
-
-    return dom.span(options, this.props.font.name);
+    return dom.span(
+      {
+        className: "font-name",
+        onMouseOver: this.onNameMouseOver,
+        onMouseOut: this.onNameMouseOut,
+      },
+      this.props.font.name
+    );
   }
 }
 
