@@ -573,8 +573,13 @@ class nsTextFrame : public nsFrame {
     int32_t mLength;
     int32_t GetEnd() const { return mStart + mLength; }
   };
-  TrimmedOffsets GetTrimmedOffsets(const nsTextFragment* aFrag, bool aTrimAfter,
-                                   bool aPostReflow = true) const;
+  enum class TrimmedOffsetFlags : uint8_t {
+    kDefaultTrimFlags = 0,
+    kNotPostReflow = 1 << 0,
+    kNoTrimAfter = 1 << 1
+  };
+  TrimmedOffsets GetTrimmedOffsets(const nsTextFragment* aFrag,
+      TrimmedOffsetFlags aFlags = TrimmedOffsetFlags::kDefaultTrimFlags) const;
 
   // Similar to Reflow(), but for use from nsLineLayout
   void ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
@@ -805,5 +810,7 @@ class nsTextFrame : public nsFrame {
   nsPoint GetPointFromIterator(const gfxSkipCharsIterator& aIter,
                                PropertyProvider& aProperties);
 };
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsTextFrame::TrimmedOffsetFlags)
 
 #endif
