@@ -8,6 +8,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Unused.h"
 #include "mozilla/mscom/Utils.h"
 
 namespace mozilla {
@@ -199,6 +200,7 @@ void ActivationContextRegion::Activate() {
 
   BOOL activated = ::ActivateActCtx(mActCtx.mActCtx, &mActCookie);
   MOZ_DIAGNOSTIC_ASSERT(activated);
+  Unused << activated;
 }
 
 bool ActivationContextRegion::Deactivate() {
