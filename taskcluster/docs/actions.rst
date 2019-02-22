@@ -243,7 +243,7 @@ Creating Tasks
 
 The ``create_tasks`` utility function provides a full-featured way to create
 new tasks.  Its features include creating prerequisite tasks, operating in a
-"testing" mode with ``./mach taskgraph action-callback --test``, and generating
+"testing" mode with ``./mach taskgraph test-action-callback``, and generating
 artifacts that can be used by later action tasks to figure out what happened.
 See the source for more detailed docmentation.
 
