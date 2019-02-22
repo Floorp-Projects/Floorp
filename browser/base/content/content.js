@@ -41,6 +41,12 @@ function shouldIgnoreLoginManagerEvent(event) {
   return event.target.nodePrincipal.isNullPrincipal;
 }
 
+addEventListener("DOMFormBeforeSubmit", function(event) {
+  if (shouldIgnoreLoginManagerEvent(event)) {
+    return;
+  }
+  LoginManagerContent.onDOMFormBeforeSubmit(event);
+});
 addEventListener("DOMFormHasPassword", function(event) {
   if (shouldIgnoreLoginManagerEvent(event)) {
     return;
