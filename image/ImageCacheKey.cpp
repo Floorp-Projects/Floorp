@@ -7,6 +7,7 @@
 
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Move.h"
+#include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 #include "nsICookieService.h"
 #include "nsLayoutUtils.h"
@@ -38,37 +39,16 @@ static Maybe<uint64_t> BlobSerial(nsIURI* aURI) {
 }
 
 ImageCacheKey::ImageCacheKey(nsIURI* aURI, const OriginAttributes& aAttrs,
-                             Document* aDocument, nsresult& aRv)
+                             Document* aDocument)
     : mURI(aURI),
       mOriginAttributes(aAttrs),
       mControlledDocument(GetSpecialCaseDocumentToken(aDocument, aURI)),
-      mHash(0),
       mIsChrome(false) {
   if (SchemeIs("blob")) {
     mBlobSerial = BlobSerial(mURI);
   } else if (SchemeIs("chrome")) {
     mIsChrome = true;
   }
-
-  // Since we frequently call Hash() several times in a row on the same
-  // ImageCacheKey, as an optimization we compute our hash once and store it.
-
-  nsPrintfCString ptr("%p", mControlledDocument);
-  nsAutoCString suffix;
-  mOriginAttributes.CreateSuffix(suffix);
-
-  if (mBlobSerial) {
-    aRv = mURI->GetRef(mBlobRef);
-    NS_ENSURE_SUCCESS_VOID(aRv);
-    mHash = HashGeneric(*mBlobSerial, HashString(mBlobRef));
-  } else {
-    nsAutoCString spec;
-    aRv = mURI->GetSpec(spec);
-    NS_ENSURE_SUCCESS_VOID(aRv);
-    mHash = HashString(spec);
-  }
-
-  mHash = AddToHash(mHash, HashString(suffix), HashString(ptr));
 }
 
 ImageCacheKey::ImageCacheKey(const ImageCacheKey& aOther)
@@ -100,6 +80,12 @@ bool ImageCacheKey::operator==(const ImageCacheKey& aOther) const {
     return false;
   }
   if (mBlobSerial || aOther.mBlobSerial) {
+    if (mBlobSerial && mBlobRef.IsEmpty()) {
+      EnsureBlobRef();
+    }
+    if (aOther.mBlobSerial && aOther.mBlobRef.IsEmpty()) {
+      aOther.EnsureBlobRef();
+    }
     // If at least one of us has a blob serial, just compare the blob serial and
     // the ref portion of the URIs.
     return mBlobSerial == aOther.mBlobSerial && mBlobRef == aOther.mBlobRef;
@@ -109,6 +95,40 @@ bool ImageCacheKey::operator==(const ImageCacheKey& aOther) const {
   bool equals = false;
   nsresult rv = mURI->Equals(aOther.mURI, &equals);
   return NS_SUCCEEDED(rv) && equals;
+}
+
+void ImageCacheKey::EnsureBlobRef() const {
+  MOZ_ASSERT(mBlobSerial);
+  MOZ_ASSERT(mBlobRef.IsEmpty());
+
+  nsresult rv = mURI->GetRef(mBlobRef);
+  NS_ENSURE_SUCCESS_VOID(rv);
+}
+
+void ImageCacheKey::EnsureHash() const {
+  MOZ_ASSERT(mHash.isNothing());
+  PLDHashNumber hash = 0;
+
+  // Since we frequently call Hash() several times in a row on the same
+  // ImageCacheKey, as an optimization we compute our hash once and store it.
+
+  nsPrintfCString ptr("%p", mControlledDocument);
+  nsAutoCString suffix;
+  mOriginAttributes.CreateSuffix(suffix);
+
+  if (mBlobSerial) {
+    if (mBlobRef.IsEmpty()) {
+      EnsureBlobRef();
+    }
+    hash = HashGeneric(*mBlobSerial, HashString(mBlobRef));
+  } else {
+    nsAutoCString spec;
+    Unused << mURI->GetSpec(spec);
+    hash = HashString(spec);
+  }
+
+  hash = AddToHash(hash, HashString(suffix), HashString(ptr));
+  mHash.emplace(hash);
 }
 
 bool ImageCacheKey::SchemeIs(const char* aScheme) {
