@@ -186,6 +186,16 @@ let ACTORS = {
     },
   },
 
+  FormSubmit: {
+    child: {
+      module: "resource://gre/actors/FormSubmitChild.jsm",
+      allFrames: true,
+      events: {
+        "DOMFormBeforeSubmit": {},
+      },
+    },
+  },
+
   KeyPressEventModelChecker: {
     child: {
       module: "resource://gre/actors/KeyPressEventModelCheckerChild.jsm",

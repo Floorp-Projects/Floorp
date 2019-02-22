@@ -40,6 +40,8 @@ XPCOM_MANIFESTS += [
     'components.conf',
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_TARGET_FILES.actors += [
+    'FormSubmitChild.jsm',
+]
 
-JAR_MANIFESTS += ['jar.mn']
+FINAL_LIBRARY = 'xul'
