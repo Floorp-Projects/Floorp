@@ -1,5 +1,7 @@
 // |jit-test| skip-if: !wasmStreamingIsSupported()
 
+load(libdir + "wasm-binary.js");
+
 function testInstantiate(source, importObj, exportName, expectedValue) {
     var result;
     WebAssembly.instantiateStreaming(code, importObj).then(r => { result = r });
@@ -89,3 +91,6 @@ var mem = new WebAssembly.Memory({initial:1});
 WebAssembly.instantiateStreaming(code, {js:{mem}});
 drainJobQueue();
 assertEq(new Uint8Array(mem.buffer)[0], 97);
+
+// Junk section before code section.
+testFailBoth(moduleWithSections([{name: 100, body: [1, 2, 3]}, bodySection([])]), WebAssembly.CompileError);

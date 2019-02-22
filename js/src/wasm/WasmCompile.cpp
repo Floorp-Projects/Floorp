@@ -701,35 +701,40 @@ SharedModule wasm::CompileStreaming(
     const Atomic<bool>& cancelled, UniqueChars* error,
     UniqueCharsVector* warnings) {
   CompilerEnvironment compilerEnv(args);
-  Maybe<ModuleEnvironment> env;
+  ModuleEnvironment env(
+      args.gcEnabled, &compilerEnv,
+      args.sharedMemoryEnabled ? Shareable::True : Shareable::False);
 
   {
     Decoder d(envBytes, 0, error, warnings);
 
-    env.emplace(args.gcEnabled, &compilerEnv,
-                args.sharedMemoryEnabled ? Shareable::True : Shareable::False);
-    if (!DecodeModuleEnvironment(d, env.ptr())) {
+    if (!DecodeModuleEnvironment(d, &env)) {
       return nullptr;
     }
 
-    MOZ_ASSERT(d.done());
+    if (!env.codeSection) {
+      d.fail("unknown section before code section");
+      return nullptr;
+    }
+
+    MOZ_RELEASE_ASSERT(env.codeSection->size == codeBytes.length());
+    MOZ_RELEASE_ASSERT(d.done());
   }
 
-  ModuleGenerator mg(args, env.ptr(), &cancelled, error);
+  ModuleGenerator mg(args, &env, &cancelled, error);
   if (!mg.init()) {
     return nullptr;
   }
 
   {
-    MOZ_ASSERT(env->codeSection->size == codeBytes.length());
-    StreamingDecoder d(*env, codeBytes, codeBytesEnd, cancelled, error,
+    StreamingDecoder d(env, codeBytes, codeBytesEnd, cancelled, error,
                        warnings);
 
-    if (!DecodeCodeSection(*env, d, mg)) {
+    if (!DecodeCodeSection(env, d, mg)) {
       return nullptr;
     }
 
-    MOZ_ASSERT(d.done());
+    MOZ_RELEASE_ASSERT(d.done());
   }
 
   {
@@ -746,13 +751,13 @@ SharedModule wasm::CompileStreaming(
   const Bytes& tailBytes = *streamEnd.tailBytes;
 
   {
-    Decoder d(tailBytes, env->codeSection->end(), error, warnings);
+    Decoder d(tailBytes, env.codeSection->end(), error, warnings);
 
-    if (!DecodeModuleTail(d, env.ptr())) {
+    if (!DecodeModuleTail(d, &env)) {
       return nullptr;
     }
 
-    MOZ_ASSERT(d.done());
+    MOZ_RELEASE_ASSERT(d.done());
   }
 
   SharedBytes bytecode = CreateBytecode(envBytes, codeBytes, tailBytes, error);
