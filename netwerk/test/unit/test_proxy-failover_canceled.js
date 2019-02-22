@@ -41,6 +41,7 @@ function run_test()
   var prefs = prefserv.getBranch("network.proxy.");
     prefs.setIntPref("type", 2);
     prefs.setCharPref("no_proxies_on", "nothing");
+    prefs.setBoolPref("allow_hijacking_localhost", true);
   prefs.setCharPref("autoconfig_url", "data:text/plain," +
     "function FindProxyForURL(url, host) {return 'PROXY a_non_existent_domain_x7x6c572v:80; PROXY localhost:" +
     httpServer.identity.primaryPort + "';}"

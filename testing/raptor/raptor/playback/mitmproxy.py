@@ -59,7 +59,7 @@ POLICIES_CONTENT_ON = '''{
       "Mode": "manual",
       "HTTPProxy": "%(host)s:8080",
       "SSLProxy": "%(host)s:8080",
-      "Passthrough": "localhost, 127.0.0.1, %(host)s",
+      "Passthrough": "%(host)s",
       "Locked": true
     }
   }
@@ -327,7 +327,7 @@ class MitmproxyAndroid(Mitmproxy):
 
     def setup(self):
         """For geckoview we need to install the generated mitmproxy CA cert"""
-        if self.config['app'] == "geckoview":
+        if self.config['app'] in ["geckoview", "refbrow", "fenix"]:
             # install the generated CA certificate into android geckoview
             self.install_mitmproxy_cert(self.mitmproxy_proc,
                                         self.browser_path)

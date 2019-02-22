@@ -90,9 +90,8 @@ add_task(async function test_content_script_on_cookieBehaviorReject() {
       /The operation is insecure/,
       "a content script can't use indexedDB from a page where it is disallowed");
 
-    browser.test.assertThrows(
-      () => localStorage,
-      /The operation is insecure/,
+    browser.test.assertTrue(
+      window.localStorage === null,
       "a content script can't use localStorage from a page where it is disallowed");
 
     browser.test.notifyPass("cs_disallowed_storage");

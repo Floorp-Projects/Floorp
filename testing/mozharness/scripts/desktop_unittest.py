@@ -18,6 +18,7 @@ import copy
 import shutil
 import glob
 import imp
+import platform
 
 from datetime import datetime, timedelta
 
@@ -931,7 +932,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
                     # 3) checking to see if the return code is in success_codes
 
                     success_codes = None
-                    if self._is_windows() and suite_category != 'gtest':
+                    if suite_category == 'reftest' and platform.platform().startswith('Windows-7'):
                         # bug 1120644
                         success_codes = [0, 1]
 

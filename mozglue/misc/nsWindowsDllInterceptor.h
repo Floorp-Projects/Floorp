@@ -419,12 +419,6 @@ class WindowsDllInterceptor final
   bool AddDetour(FARPROC aProc, intptr_t aHookDest, void** aOrigFunc) {
     MOZ_ASSERT(mModule && aProc);
 
-#if defined(_M_ARM64)
-    // XXX: this is just to get things compiling; we'll have to add real
-    // support at some future point.
-    return false;
-#endif
-
     if (!mDetourPatcher.Initialized()) {
       DetourFlags flags = DetourFlags::eDefault;
 #if defined(_M_X64)

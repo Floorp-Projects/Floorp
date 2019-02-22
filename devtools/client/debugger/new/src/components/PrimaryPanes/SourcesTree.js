@@ -288,13 +288,14 @@ class SourcesTree extends Component<Props, State> {
   }
 
   renderPane(...children) {
-    const { projectRoot } = this.props;
+    const { projectRoot, thread } = this.props;
 
     return (
       <div
         key="pane"
         className={classnames("sources-pane", {
-          "sources-list-custom-root": projectRoot
+          "sources-list-custom-root": projectRoot,
+          thread
         })}
       >
         {children}

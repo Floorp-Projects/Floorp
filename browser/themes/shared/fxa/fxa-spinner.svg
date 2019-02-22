@@ -1,0 +1,28 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<svg width="73px" height="73px" viewBox="0 0 73 73" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 46.2 (44496) - http://www.bohemiancoding.com/sketch -->
+    <defs>
+        <linearGradient x1="93.0928096%" y1="52.7734375%" x2="68.5133398%" y2="119.326007%" id="linearGradient-1">
+            <stop stop-color="#0A84FF" stop-opacity="0" offset="0%"></stop>
+            <stop stop-color="#0A84FF" offset="69.3698182%"></stop>
+            <stop stop-color="#0A84FF" offset="100%"></stop>
+            <stop stop-color="#2484C6" stop-opacity="0.00477766951" offset="100%"></stop>
+            <stop stop-color="#2484C6" stop-opacity="0" offset="100%"></stop>
+            <stop stop-color="#2484C6" stop-opacity="0" offset="100%"></stop>
+        </linearGradient>
+        <rect id="path-2" x="0" y="0" width="48" height="60"></rect>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Shape" transform="translate(-5.000000, -1.000000)">
+            <path d="M41.8,73.8 C21.9,73.8 5.8,57.7 5.8,37.8 C5.8,18.1 21.6,2.2 41.1,1.8 C41.3,1.8 41.4,1.8 41.4,1.8 C41.5,1.8 41.7,1.8 41.8,1.8 C44.6,2.2 46.8,4.5 46.8,7.3 C46.8,10.1 44.6,12.5 41.8,12.7 C28,12.8 16.8,24 16.8,37.8 C16.8,51.6 28,62.8 41.8,62.8 C55.6,62.8 66.8,51.6 66.8,37.8 L77.8,37.8 C77.8,57.7 61.7,73.8 41.8,73.8 Z" fill="url(#linearGradient-1)"></path>
+            <mask id="mask-3" fill="white">
+                <use xlink:href="#path-2"></use>
+            </mask>
+            <g id="Mask"></g>
+            <path d="M41.8,73.8 C21.9,73.8 5.8,57.7 5.8,37.8 C5.8,18.1 21.6,2.2 41.1,1.8 C41.3,1.8 41.4,1.8 41.4,1.8 C41.5,1.8 41.7,1.8 41.8,1.8 C44.6,2.2 46.8,4.5 46.8,7.3 C46.8,10.1 44.6,12.5 41.8,12.7 C28,12.8 16.8,24 16.8,37.8 C16.8,51.6 28,62.8 41.8,62.8 C55.6,62.8 66.8,51.6 66.8,37.8 L77.8,37.8 C77.8,57.7 61.7,73.8 41.8,73.8 Z" fill="#0A84FF" mask="url(#mask-3)"></path>
+        </g>
+    </g>
+</svg>

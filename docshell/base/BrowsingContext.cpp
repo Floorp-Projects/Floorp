@@ -6,6 +6,8 @@
 
 #include "mozilla/dom/BrowsingContext.h"
 
+#include "ipc/IPCMessageUtils.h"
+
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/BrowsingContextBinding.h"
@@ -165,12 +167,12 @@ BrowsingContext::BrowsingContext(BrowsingContext* aParent,
                                  BrowsingContext* aOpener,
                                  const nsAString& aName,
                                  uint64_t aBrowsingContextId, Type aType)
-    : mType(aType),
+    : mName(aName),
+      mClosed(false),
+      mType(aType),
       mBrowsingContextId(aBrowsingContextId),
       mParent(aParent),
       mOpener(aOpener),
-      mName(aName),
-      mClosed(false),
       mIsActivatedByUserGesture(false) {
   // Specify our group in our constructor. We will explicitly join the group
   // when we are registered, as doing so will take a reference.
@@ -652,6 +654,23 @@ void BrowsingContext::PostMessageMoz(JSContext* aCx,
                  aSubjectPrincipal, aError);
 }
 
+void BrowsingContext::Transaction::Commit(BrowsingContext* aBrowsingContext) {
+  if (XRE_IsContentProcess()) {
+    ContentChild* cc = ContentChild::GetSingleton();
+    cc->SendCommitBrowsingContextTransaction(aBrowsingContext, *this);
+  } else {
+    MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+    for (auto iter = aBrowsingContext->Group()->ContentParentsIter();
+         !iter.Done(); iter.Next()) {
+      nsRefPtrHashKey<ContentParent>* entry = iter.Get();
+      Unused << entry->GetKey()->SendCommitBrowsingContextTransaction(
+          aBrowsingContext, *this);
+    }
+  }
+
+  Apply(aBrowsingContext);
+}
+
 }  // namespace dom
 
 namespace ipc {
@@ -692,6 +711,27 @@ bool IPDLParamTraits<dom::BrowsingContext>::Read(
   }
 
   return aResult != nullptr;
+}
+
+void IPDLParamTraits<dom::BrowsingContext::Transaction>::Write(
+    IPC::Message* aMessage, IProtocol* aActor,
+    const dom::BrowsingContext::Transaction& aTransaction) {
+  void_t sentinel;
+  const dom::BrowsingContext::Transaction* transaction = &aTransaction;
+  auto tuple = mozilla::Tie(
+      MOZ_FOR_EACH_SYNCED_BC_FIELD(MOZ_SYNCED_BC_FIELD_ARGUMENT, sentinel));
+
+  WriteIPDLParam(aMessage, aActor, tuple);
+}
+
+bool IPDLParamTraits<dom::BrowsingContext::Transaction>::Read(
+    const IPC::Message* aMessage, PickleIterator* aIterator, IProtocol* aActor,
+    dom::BrowsingContext::Transaction* aTransaction) {
+  void_t sentinel;
+  dom::BrowsingContext::Transaction* transaction = aTransaction;
+  auto tuple = mozilla::Tie(
+      MOZ_FOR_EACH_SYNCED_BC_FIELD(MOZ_SYNCED_BC_FIELD_ARGUMENT, sentinel));
+  return ReadIPDLParam(aMessage, aIterator, aActor, &tuple);
 }
 
 }  // namespace ipc

@@ -4,12 +4,6 @@
 
 // Tests that the source tree works.
 
-function getLabel(dbg, index) {
-  return findElement(dbg, "sourceNode", index)
-    .textContent.trim()
-    .replace(/^[\s\u200b]*/g, "");
-}
-
 add_task(async function() {
   const dbg = await initDebugger("doc-sources.html", "simple1", "simple2", "nested-source", "long.js");
   const {
@@ -52,7 +46,7 @@ add_task(async function() {
   await waitForSourceCount(dbg, 9);
   await assertNodeIsFocused(dbg, 4);
   is(
-    getLabel(dbg, 7),
+    getSourceNodeLabel(dbg, 7),
     "math.min.js",
     "math.min.js - The dynamic script exists"
   );

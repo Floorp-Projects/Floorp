@@ -32,7 +32,7 @@ add_task(async function test_browser_settings() {
     "network.proxy.socks_port": 0,
     "network.proxy.socks_version": 5,
     "network.proxy.socks_remote_dns": false,
-    "network.proxy.no_proxies_on": "localhost, 127.0.0.1",
+    "network.proxy.no_proxies_on": "",
     "network.proxy.autoconfig_url": "",
     "signon.autologin.proxy": false,
   };
@@ -99,7 +99,7 @@ add_task(async function test_browser_settings() {
       proxyDNS: false,
       httpProxyAll: false,
       socksVersion: 5,
-      passthrough: "localhost, 127.0.0.1",
+      passthrough: "",
       http: "",
       ftp: "",
       ssl: "",

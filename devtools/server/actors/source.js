@@ -445,11 +445,26 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     if (column === undefined) {
       // This is a line breakpoint, so we add a breakpoint on the first
       // breakpoint on the line.
+      const lineMatches = [];
       for (const script of scripts) {
-        const offsets = script.getPossibleBreakpointOffsets({ line });
-        if (offsets.length > 0) {
-          entryPoints.push({ script, offsets: [offsets[0]] });
-          break;
+        const possibleBreakpoints = script.getPossibleBreakpoints({ line });
+        for (const possibleBreakpoint of possibleBreakpoints) {
+          lineMatches.push({ ...possibleBreakpoint, script });
+        }
+      }
+      lineMatches.sort((a, b) => a.columnNumber - b.columnNumber);
+
+      if (lineMatches.length > 0) {
+        // A single Debugger.Source may have _multiple_ Debugger.Scripts
+        // at the same position from multiple evaluations of the source,
+        // so we explicitly want to take all of the matches for the matched
+        // column number.
+        const firstColumn = lineMatches[0].columnNumber;
+        const firstColumnMatches = lineMatches
+          .filter(m => m.columnNumber === firstColumn);
+
+        for (const { script, offset } of firstColumnMatches) {
+          entryPoints.push({ script, offsets: [offset] });
         }
       }
     } else {

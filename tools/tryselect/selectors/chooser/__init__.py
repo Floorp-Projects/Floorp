@@ -37,7 +37,9 @@ def run_try_chooser(update=False, query=None, templates=None, full=False, parame
         return
 
     # give app a second to start before opening the browser
-    Timer(1, lambda: webbrowser.open('http://127.0.0.1:5000')).start()
+    url = 'http://127.0.0.1:5000'
+    Timer(1, lambda: webbrowser.open(url)).start()
+    print("Starting trychooser on {}".format(url))
     app.run()
 
     selected = app.tasks

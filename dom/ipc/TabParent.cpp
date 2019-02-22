@@ -1218,11 +1218,6 @@ void TabParent::SendRealDragEvent(WidgetDragEvent& aEvent, uint32_t aDragAction,
   MOZ_ASSERT(!ret || aEvent.HasBeenPostedToRemoteProcess());
 }
 
-LayoutDevicePoint TabParent::AdjustTapToChildWidget(
-    const LayoutDevicePoint& aPoint) {
-  return aPoint + LayoutDevicePoint(GetChildProcessOffset());
-}
-
 void TabParent::SendMouseWheelEvent(WidgetWheelEvent& aEvent) {
   if (mIsDestroyed || !mIsReadyToHandleInputEvents) {
     return;

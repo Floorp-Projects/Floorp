@@ -1895,6 +1895,14 @@ toolbar#nav-bar {
             self.log.info("Increasing default timeout to 90 seconds")
             prefs["testing.browserTestHarness.timeout"] = 90
 
+        if (mozinfo.info["os"] == "win" and
+                mozinfo.info["processor"] == "aarch64"):
+            extended_timeout = self.DEFAULT_TIMEOUT * 4
+            self.log.info("Increasing default timeout to {} seconds".format(
+                extended_timeout
+            ))
+            prefs["testing.browserTestHarness.timeout"] = extended_timeout
+
         if getattr(self, 'testRootAbs', None):
             prefs['mochitest.testRoot'] = self.testRootAbs
 

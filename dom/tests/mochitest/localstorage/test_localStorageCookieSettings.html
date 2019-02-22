@@ -22,10 +22,10 @@ SpecialPowers.pushPrefEnv({"set": [
 function test1() {
   try {
     localStorage.setItem("contentkey", "test-value");
-    ok(false, "Setting localStorageItem should throw a security exception");
+    ok(false, "Setting localStorageItem should throw a type error exception");
   }
   catch(ex) {
-    is(ex.name, "SecurityError");
+    is(ex.name, "TypeError");
   }
 
   // Set cookies behavior to "reject 3rd party"
@@ -37,10 +37,10 @@ function test1() {
 function test3() {
   try {
     localStorage.setItem("contentkey", "test-value");
-    ok(true, "Setting localStorageItem should not throw a security exception");
+    ok(true, "Setting localStorageItem should not throw a type error exception");
   }
   catch(ex) {
-    ok(false, "Setting localStorageItem should not throw a security exception");
+    ok(false, "Setting localStorageItem should not throw a type error exception");
   }
 
   var fileTest = (location.protocol + "//example.com" + location.pathname)

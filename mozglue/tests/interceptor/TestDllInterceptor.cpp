@@ -591,10 +591,10 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
 #endif
 
   if (TEST_HOOK(user32.dll, GetWindowInfo, Equals, FALSE) &&
-#ifdef _WIN64
+#if defined(_M_X64)
       TEST_HOOK(user32.dll, SetWindowLongPtrA, Equals, 0) &&
       TEST_HOOK(user32.dll, SetWindowLongPtrW, Equals, 0) &&
-#else
+#elif defined(_M_IX86)
       TEST_HOOK(user32.dll, SetWindowLongA, Equals, 0) &&
       TEST_HOOK(user32.dll, SetWindowLongW, Equals, 0) &&
 #endif
@@ -603,6 +603,7 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
       // We keep this test to hook complex code on x86. (Bug 850957)
       TEST_HOOK(ntdll.dll, NtFlushBuffersFile, NotEquals, 0) &&
 #endif
+#if !defined(_M_ARM64)
       TEST_HOOK(ntdll.dll, NtCreateFile, NotEquals, 0) &&
       TEST_HOOK(ntdll.dll, NtReadFile, NotEquals, 0) &&
       TEST_HOOK(ntdll.dll, NtReadFileScatter, NotEquals, 0) &&
@@ -615,40 +616,50 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
       // function
       TEST_HOOK(kernel32.dll, SetUnhandledExceptionFilter, Ignore, nullptr) &&
 #endif
+#endif
 #ifdef _M_IX86
       TEST_HOOK_FOR_INVALID_HANDLE_VALUE(kernel32.dll, CreateFileW) &&
 #endif
+#if !defined(_M_ARM64)
       TEST_HOOK_FOR_INVALID_HANDLE_VALUE(kernel32.dll, CreateFileA) &&
+#endif
       TEST_HOOK(kernelbase.dll, QueryDosDeviceW, Equals, 0) &&
       TEST_DETOUR(user32.dll, CreateWindowExW, Equals, nullptr) &&
       TEST_HOOK(user32.dll, InSendMessageEx, Equals, ISMEX_NOSEND) &&
+#if !defined(_M_ARM64)
       TEST_HOOK(imm32.dll, ImmGetContext, Equals, nullptr) &&
+#endif
       TEST_HOOK(imm32.dll, ImmGetCompositionStringW, Ignore, 0) &&
       TEST_HOOK_SKIP_EXEC(imm32.dll, ImmSetCandidateWindow) &&
       TEST_HOOK(imm32.dll, ImmNotifyIME, Equals, 0) &&
+#if !defined(_M_ARM64)
       TEST_HOOK(comdlg32.dll, GetSaveFileNameW, Ignore, FALSE) &&
       TEST_HOOK(comdlg32.dll, GetOpenFileNameW, Ignore, FALSE) &&
-#ifdef _M_X64
+#endif
+#if defined(_M_X64) || defined(_M_ARM64)
       TEST_HOOK(user32.dll, GetKeyState, Ignore, 0) &&  // see Bug 1316415
       TEST_HOOK(ntdll.dll, LdrUnloadDll, NotEquals, 0) &&
       MAYBE_TEST_HOOK_SKIP_EXEC(IsWin8OrLater(), ntdll.dll,
                                 LdrResolveDelayLoadedAPI) &&
       MAYBE_TEST_HOOK(!IsWin8OrLater(), kernel32.dll,
                       RtlInstallFunctionTableCallback, Equals, FALSE) &&
+#endif
+#if defined(_M_X64)
       TEST_HOOK(comdlg32.dll, PrintDlgW, Ignore, 0) &&
 #endif
       MAYBE_TEST_HOOK(ShouldTestTipTsf(), tiptsf.dll, ProcessCaretEvents,
                       Ignore, nullptr) &&
-#ifdef _M_IX86
+#if !defined(_M_ARM64)
       TEST_HOOK(user32.dll, SendMessageTimeoutW, Equals, 0) &&
 #endif
       TEST_HOOK(user32.dll, SetCursorPos, NotEquals, FALSE) &&
+#if !defined(_M_ARM64)
       TEST_HOOK(kernel32.dll, TlsAlloc, NotEquals, TLS_OUT_OF_INDEXES) &&
       TEST_HOOK_PARAMS(kernel32.dll, TlsFree, Equals, FALSE,
                        TLS_OUT_OF_INDEXES) &&
       TEST_HOOK(kernel32.dll, CloseHandle, Equals, FALSE) &&
       TEST_HOOK(kernel32.dll, DuplicateHandle, Equals, FALSE) &&
-
+#endif
       TEST_HOOK(wininet.dll, InternetOpenA, NotEquals, nullptr) &&
       TEST_HOOK(wininet.dll, InternetCloseHandle, Equals, FALSE) &&
       TEST_HOOK(wininet.dll, InternetConnectA, Equals, nullptr) &&
@@ -667,10 +678,12 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
       TEST_HOOK(sspicli.dll, AcquireCredentialsHandleA, NotEquals, SEC_E_OK) &&
       TEST_HOOK(sspicli.dll, QueryCredentialsAttributesA, NotEquals,
                 SEC_E_OK) &&
+#if !defined(_M_ARM64)
       TEST_HOOK(sspicli.dll, FreeCredentialsHandle, NotEquals, SEC_E_OK) &&
-
+#endif
       TEST_DETOUR_SKIP_EXEC(kernel32.dll, BaseThreadInitThunk) &&
-      TEST_DETOUR_SKIP_EXEC(ntdll.dll, LdrLoadDll) && TestTenByteDetour()) {
+      TEST_DETOUR_SKIP_EXEC(ntdll.dll, LdrLoadDll) && TestTenByteDetour()
+      ) {
     printf("TEST-PASS | WindowsDllInterceptor | all checks passed\n");
 
     LARGE_INTEGER end, freq;

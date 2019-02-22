@@ -50,7 +50,7 @@ const TEST_LOGINS = [
   {
     id: 4,
     username: "user",
-    password: "password",
+    password: "اقرأPÀßwörd",
     hostname: "http://httpbin.org",
     formSubmitURL: null,
     httpRealm: "me@kennethreitz.com", // Digest auth.

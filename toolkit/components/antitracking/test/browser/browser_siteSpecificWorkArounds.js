@@ -58,12 +58,13 @@ AntiTracking.runTest("localStorage with a tracker that is whitelisted via a fanc
 
 AntiTracking.runTest("localStorage with a tracker that is whitelisted via a misconfigured pref",
   async _ => {
+    is(window.localStorage, null, "LocalStorage is null");
     try {
       localStorage.foo = 42;
       ok(false, "LocalStorage cannot be used!");
     } catch (e) {
       ok(true, "LocalStorage cannot be used!");
-      is(e.name, "SecurityError", "We want a security error message.");
+      is(e.name, "TypeError", "We want a type error message.");
     }
   },
   async _ => {
