@@ -3,7 +3,20 @@ Bug 1520760 - Fix AVX2 detection to ensure we have all required CPU parameters.
 diff --git simd/i386/jsimdcpu.asm simd/i386/jsimdcpu.asm
 --- simd/i386/jsimdcpu.asm
 +++ simd/i386/jsimdcpu.asm
-@@ -87,8 +87,10 @@ EXTN(jpeg_simd_cpu_support):
+@@ -75,6 +75,12 @@ EXTN(jpeg_simd_cpu_support):
+     or          edi, byte JSIMD_SSE2
+ .no_sse2:
+ 
++    ; Check for level 7 support
++    xor         eax, eax
++    cpuid
++    cmp         eax, 7
++    jl          short .no_avx2
++
+     ; Check for AVX2 instruction support
+     mov         eax, 7
+     xor         ecx, ecx
+@@ -87,8 +93,10 @@ EXTN(jpeg_simd_cpu_support):
      mov         eax, 1
      xor         ecx, ecx
      cpuid
@@ -18,15 +31,27 @@ diff --git simd/i386/jsimdcpu.asm simd/i386/jsimdcpu.asm
 diff --git simd/x86_64/jsimdcpu.asm simd/x86_64/jsimdcpu.asm
 --- simd/x86_64/jsimdcpu.asm
 +++ simd/x86_64/jsimdcpu.asm
-@@ -53,8 +53,10 @@ EXTN(jpeg_simd_cpu_support):
-     mov         rax, 1
+@@ -38,14 +38,20 @@ EXTN(jpeg_simd_cpu_support):
+ 
+     xor         rdi, rdi                ; simd support flag
+ 
++    ; Check for level 7 support
++    xor         rax, rax
++    cpuid
++
++    or          rdi, JSIMD_SSE2
++    or          rdi, JSIMD_SSE
++    cmp         rax, 7
++    jl          short .return
++
+     ; Check for AVX2 instruction support
+     mov         rax, 7
      xor         rcx, rcx
      cpuid
--    test        rcx, 1<<27
-+    test        rcx, 1<<26
-     jz          short .return           ; O/S does not support XSAVE
-+    test        rcx, 1<<27
-+    jz          short .return           ; O/S does not support OSXSAVE
-     test        rcx, 1<<28
-     jz          short .return           ; CPU does not support AVX2
+     mov         rax, rbx                ; rax = Extended feature flags
+-
+-    or          rdi, JSIMD_SSE2
+-    or          rdi, JSIMD_SSE
+     test        rax, 1<<5               ; bit5:AVX2
+     jz          short .return
  
