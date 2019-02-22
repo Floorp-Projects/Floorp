@@ -124,7 +124,7 @@ def collapse(paths, base=None, dotfiles=False):
         # Every file under this base was covered, so we can collapse them all
         # up into the base path.
         return [base]
-    return covered
+    return list(covered)
 
 
 def filterpaths(root, paths, include, exclude=None, extensions=None):
