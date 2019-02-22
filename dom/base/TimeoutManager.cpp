@@ -866,11 +866,18 @@ void TimeoutManager::RunTimeout(const TimeStamp& aNow,
         if (IsValidFiringId(timeout->mFiringId)) {
           MOZ_LOG(gTimeoutLog, LogLevel::Debug,
                   ("Skipping Run%s(TimeoutManager=%p, timeout=%p) since "
-                   "firingId %d is valid (processing firingId %d) - "
-                   "FiringIndex %" PRId64 " (mLastFiringIndex %" PRId64 ")",
+                   "firingId %d is valid (processing firingId %d)"
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+                   " - FiringIndex %" PRId64 " (mLastFiringIndex %" PRId64 ")"
+#endif
+                   ,
                    timeout->mIsInterval ? "Interval" : "Timeout", this,
-                   timeout.get(), timeout->mFiringId, firingId,
-                   timeout->mFiringIndex, mFiringIndex));
+                   timeout.get(), timeout->mFiringId, firingId
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+                   ,
+                   timeout->mFiringIndex, mFiringIndex
+#endif
+                   ));
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
           // The old FiringIndex assumed no recursion; recursion can cause
           // other timers to get fired "in the middle" of a sequence we've
