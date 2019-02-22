@@ -19,14 +19,8 @@ function run_test() {
 /**
  * Called after the call to setupUpdaterTest finishes.
  */
-function setupUpdaterTestFinished() {
-  runHelperFileInUse(DIR_RESOURCES + gCallbackBinFile, false);
-}
-
-/**
- * Called after the call to waitForHelperSleep finishes.
- */
-function waitForHelperSleepFinished() {
+async function setupUpdaterTestFinished() {
+  await runHelperFileInUse(DIR_RESOURCES + gCallbackBinFile, false);
   stageUpdate(true);
 }
 
