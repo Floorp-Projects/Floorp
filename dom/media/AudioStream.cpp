@@ -627,8 +627,10 @@ long AudioStream::DataCallback(void* aBuffer, long aFrames) {
   MonitorAutoLock mon(mMonitor);
   MOZ_ASSERT(mState != SHUTDOWN, "No data callback after shutdown");
 
-  auto writer = AudioBufferWriter(reinterpret_cast<AudioDataValue*>(aBuffer),
-                                  mOutChannels, aFrames);
+  auto writer = AudioBufferWriter(
+      MakeSpan<AudioDataValue>(reinterpret_cast<AudioDataValue*>(aBuffer),
+                               mOutChannels * aFrames),
+      mOutChannels, aFrames);
 
   if (mPrefillQuirk) {
     // Don't consume audio data until Start() is called.
