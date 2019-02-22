@@ -18,8 +18,6 @@ exclude =
     mobile/android/*.configure,
     node_modules,
     security/nss/,
-    testing/firefox-ui/**/__init__.py,
-    testing/marionette/**/__init__.py,
     testing/marionette/harness/marionette_harness/runner/mixins,
     testing/marionette/harness/marionette_harness/tests,
     testing/mochitest/pywebsocket,
@@ -41,4 +39,6 @@ ignore =
 
 per-file-ignores =
     ipc/ipdl/*: F403, F405
+    testing/firefox-ui/**/__init__.py: F401
+    testing/marionette/**/__init__.py: F401
     testing/mozharness/configs/*: E124, E127, E128, E131, E231, E261, E265, E266, E501, W391
