@@ -993,7 +993,7 @@ static JSString* UTF8CharsToString(JSContext* cx, const char* chars) {
       continue;
     }
 
-    buf = ArrayBufferObject::create(cx, cs.payload->length());
+    buf = ArrayBufferObject::createZeroed(cx, cs.payload->length());
     if (!buf) {
       return false;
     }
