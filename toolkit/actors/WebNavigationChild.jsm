@@ -40,10 +40,8 @@ class WebNavigationChild extends ActorChild {
         histogram.add("WebNavigation:LoadURI",
                       Services.telemetry.msSystemNow() - message.data.requestTime);
 
-        this.loadURI(message.data.uri, message.data.flags,
-                     message.data.referrerInfo,
-                     message.data.postData, message.data.headers,
-                     message.data.baseURI, message.data.triggeringPrincipal);
+        this.loadURI(message.data);
+
         break;
       case "WebNavigation:SetOriginAttributes":
         this.setOriginAttributes(message.data.originAttributes);
@@ -83,7 +81,18 @@ class WebNavigationChild extends ActorChild {
     this._wrapURIChangeCall(() => this.webNavigation.gotoIndex(index));
   }
 
-  loadURI(uri, flags, referrerInfo, postData, headers, baseURI, triggeringPrincipal) {
+  loadURI(params) {
+    let {
+      uri,
+      flags,
+      referrerInfo,
+      postData,
+      headers,
+      baseURI,
+      triggeringPrincipal,
+      csp,
+    } = params || {};
+
     if (AppConstants.MOZ_CRASHREPORTER && CrashReporter.enabled) {
       let annotation = uri;
       try {
@@ -109,9 +118,13 @@ class WebNavigationChild extends ActorChild {
       this._assert(false, "Unable to deserialize passed triggering principal", new Error().lineNumber);
       return Services.scriptSecurityManager.getSystemPrincipal({});
     });
+    if (csp) {
+      csp = E10SUtils.deserializeCSP(csp);
+    }
 
     let loadURIOptions = {
       triggeringPrincipal,
+      csp,
       loadFlags: flags,
       referrerInfo: E10SUtils.deserializeReferrerInfo(referrerInfo),
       postData,

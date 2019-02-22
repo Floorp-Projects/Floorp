@@ -214,6 +214,7 @@ ContentRestoreInternal.prototype = {
         let postData = loadArguments.postData ?
                        E10SUtils.makeInputStream(loadArguments.postData) : null;
         let triggeringPrincipal = E10SUtils.deserializePrincipal(loadArguments.triggeringPrincipal, () => Services.scriptSecurityManager.createNullPrincipal({}));
+        let csp = loadArguments.csp ? E10SUtils.deserializeCSP(loadArguments.csp) : null;
 
         if (loadArguments.userContextId) {
           webNavigation.setOriginAttributesBeforeLoading({ userContextId: loadArguments.userContextId });
@@ -223,6 +224,7 @@ ContentRestoreInternal.prototype = {
           loadFlags: loadArguments.flags,
           referrerInfo,
           postData,
+          csp,
         };
         webNavigation.loadURI(loadArguments.uri, loadURIOptions);
       } else if (tabData.userTypedValue && tabData.userTypedClear) {

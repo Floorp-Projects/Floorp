@@ -13,6 +13,8 @@ ChromeUtils.defineModuleGetter(this, "PlacesUIUtils",
                                "resource:///modules/PlacesUIUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
                                "resource://gre/modules/PrivateBrowsingUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "E10SUtils",
+                               "resource://gre/modules/E10SUtils.jsm");
 
 var ContentClick = {
   // Listeners are added in BrowserGlue.jsm
@@ -76,6 +78,7 @@ var ContentClick = {
       isContentWindowPrivate: json.isContentWindowPrivate,
       originPrincipal: json.originPrincipal,
       triggeringPrincipal: json.triggeringPrincipal,
+      csp: json.csp ? E10SUtils.deserializeCSP(json.csp) : null,
       frameOuterWindowID: json.frameOuterWindowID,
     };
 
