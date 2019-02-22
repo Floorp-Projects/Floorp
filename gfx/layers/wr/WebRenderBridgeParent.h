@@ -18,6 +18,7 @@
 #include "mozilla/layers/UiCompositorControllerParent.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/WeakPtr.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/webrender/RenderThread.h"
@@ -49,8 +50,10 @@ class WebRenderImageHost;
 class WebRenderBridgeParent final : public PWebRenderBridgeParent,
                                     public CompositorVsyncSchedulerOwner,
                                     public CompositableParentManager,
-                                    public layers::FrameRecorder {
+                                    public layers::FrameRecorder,
+                                    public SupportsWeakPtr<WebRenderBridgeParent> {
  public:
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebRenderBridgeParent)
   WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,
                         const wr::PipelineId& aPipelineId,
                         widget::CompositorWidget* aWidget,
