@@ -86,11 +86,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             requireComponents.useCases.tabsUseCases.addTab.invoke(aboutURL, true)
             view?.let {
                 Navigation.findNavController(it)
-                    .navigate(
-                        SettingsFragmentDirections.actionGlobalBrowser(
-                            null, false
-                        )
-                    )
+                    .navigate(SettingsFragmentDirections.actionGlobalBrowser(null))
             }
             true
         }

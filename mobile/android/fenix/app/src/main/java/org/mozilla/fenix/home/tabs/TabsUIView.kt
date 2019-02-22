@@ -51,8 +51,7 @@ class TabsUIView(
         }
         header.add_tab_button.increaseTapArea(HomeFragment.addTabButtonIncreaseDps)
         header.add_tab_button.setOnClickListener {
-            val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null,
-                isPrivate)
+            val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null)
             Navigation.findNavController(it).navigate(directions)
         }
         header.tabs_overflow_button.increaseTapArea(HomeFragment.overflowButtonIncreaseDps)

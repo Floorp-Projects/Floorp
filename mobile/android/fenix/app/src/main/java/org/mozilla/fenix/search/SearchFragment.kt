@@ -40,7 +40,7 @@ class SearchFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val sessionId = SearchFragmentArgs.fromBundle(arguments!!).sessionId
-        val isPrivate = SearchFragmentArgs.fromBundle(arguments!!).isPrivateTab
+        val isPrivate = (activity as HomeActivity).browsingModeManager.isPrivate
         val view = inflater.inflate(R.layout.fragment_search, container, false)
         val url = sessionId?.let {
             requireComponents.core.sessionManager.findSessionById(it)?.let {
@@ -105,7 +105,7 @@ class SearchFragment : Fragment() {
     // We should move this logic into a place that makes more sense.
     private fun load(text: String) {
         val sessionId = SearchFragmentArgs.fromBundle(arguments!!).sessionId
-        val isPrivate = SearchFragmentArgs.fromBundle(arguments!!).isPrivateTab
+        val isPrivate = (activity as HomeActivity).browsingModeManager.isPrivate
 
         val loadUrlUseCase = if (sessionId == null) {
             if (isPrivate) {
@@ -131,8 +131,7 @@ class SearchFragment : Fragment() {
 
     private fun transitionToBrowser() {
         val sessionId = SearchFragmentArgs.fromBundle(arguments!!).sessionId
-        val directions = SearchFragmentDirections.actionSearchFragmentToBrowserFragment(sessionId,
-            (activity as HomeActivity).browsingModeManager.isPrivate)
+        val directions = SearchFragmentDirections.actionSearchFragmentToBrowserFragment(sessionId)
 
         Navigation.findNavController(view!!.search_layout).navigate(directions)
     }

@@ -21,7 +21,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.support.base.feature.BackHandler
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.mvi.ActionBusFactory
@@ -58,8 +57,7 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
     private fun selectItem(item: HistoryItem) {
         Navigation.findNavController(requireActivity(), R.id.container).apply {
             navigate(
-                HistoryFragmentDirections.actionGlobalBrowser(null,
-                    (activity as HomeActivity).browsingModeManager.isPrivate),
+                HistoryFragmentDirections.actionGlobalBrowser(null),
                 NavOptions.Builder().setPopUpTo(R.id.homeFragment, false).build()
             )
         }

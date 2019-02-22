@@ -38,7 +38,6 @@
             app:destination="@id/browserFragment"
             app:popUpTo="@id/homeFragment" />
         <argument android:name="session_id" app:argType="string" app:nullable="true"/>
-        <argument android:name="is_private_tab" app:argType="boolean"/>
     </fragment>
 
     <fragment
@@ -57,9 +56,6 @@
             android:name="session_id"
             app:argType="string"
             app:nullable="true" />
-        <argument
-            android:name="is_private_tab"
-            app:argType="boolean"/>
         <action
             android:id="@+id/action_browserFragment_to_settingsFragment"
             app:destination="@id/settingsFragment" />

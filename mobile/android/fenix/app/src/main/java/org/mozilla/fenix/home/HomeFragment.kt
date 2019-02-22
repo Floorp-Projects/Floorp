@@ -79,8 +79,7 @@ class HomeFragment : Fragment() {
         val roundToInt = (toolbarPaddingDp * Resources.getSystem().displayMetrics.density).roundToInt()
         view.toolbar.compoundDrawablePadding = roundToInt
         view.toolbar.setOnClickListener {
-            val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null,
-                (activity as HomeActivity).browsingModeManager.isPrivate)
+            val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null)
             Navigation.findNavController(it).navigate(directions)
         }
 
@@ -112,10 +111,7 @@ class HomeFragment : Fragment() {
             override fun onTransitionCompleted(p0: MotionLayout?, p1: Int) { }
         })
 
-        view.toolbar_wrapper.isPrivateModeEnabled = (requireActivity() as HomeActivity)
-            .themeManager
-            .currentTheme
-            .isPrivate()
+        view.toolbar_wrapper.isPrivateModeEnabled = (activity as HomeActivity).browsingModeManager.isPrivate
 
         privateBrowsingButton.setOnClickListener {
             val browsingModeManager = (activity as HomeActivity).browsingModeManager
@@ -135,10 +131,7 @@ class HomeFragment : Fragment() {
                         is TabsAction.Select -> {
                             val session = requireComponents.core.sessionManager.findSessionById(it.sessionId)
                             requireComponents.core.sessionManager.select(session!!)
-                            val directions = HomeFragmentDirections.actionHomeFragmentToBrowserFragment(
-                                it.sessionId,
-                                (activity as HomeActivity).browsingModeManager.isPrivate
-                            )
+                            val directions = HomeFragmentDirections.actionHomeFragmentToBrowserFragment(it.sessionId)
                             Navigation.findNavController(view!!).navigate(directions)
                         }
                         is TabsAction.Close -> {

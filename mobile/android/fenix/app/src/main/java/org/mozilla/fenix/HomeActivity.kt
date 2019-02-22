@@ -89,7 +89,7 @@ open class HomeActivity : AppCompatActivity() {
     private fun openToBrowser() {
         val sessionId = SafeIntent(intent).getStringExtra(IntentProcessor.ACTIVE_SESSION_ID)
         val host = supportFragmentManager.findFragmentById(R.id.container) as NavHostFragment
-        val directions = NavGraphDirections.actionGlobalBrowser(sessionId, browsingModeManager.isPrivate)
+        val directions = NavGraphDirections.actionGlobalBrowser(sessionId)
         host.navController.navigate(directions)
     }
 
