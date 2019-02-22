@@ -127,7 +127,7 @@ VideoData::VideoData(int64_t aOffset, const TimeUnit& aTime,
                      const TimeUnit& aDuration, bool aKeyframe,
                      const TimeUnit& aTimecode, IntSize aDisplay,
                      layers::ImageContainer::FrameID aFrameID)
-    : MediaData(VIDEO_DATA, aOffset, aTime, aDuration, 1),
+    : MediaData(Type::VIDEO_DATA, aOffset, aTime, aDuration, 1),
       mDisplay(aDisplay),
       mFrameID(aFrameID),
       mSentToCompositor(false),
@@ -354,14 +354,16 @@ already_AddRefed<VideoData> VideoData::CreateFromImage(
 }
 
 MediaRawData::MediaRawData()
-    : MediaData(RAW_DATA, 0), mCrypto(mCryptoInternal) {}
+    : MediaData(Type::RAW_DATA, 0), mCrypto(mCryptoInternal) {}
 
 MediaRawData::MediaRawData(const uint8_t* aData, size_t aSize)
-    : MediaData(RAW_DATA, 0), mCrypto(mCryptoInternal), mBuffer(aData, aSize) {}
+    : MediaData(Type::RAW_DATA, 0),
+      mCrypto(mCryptoInternal),
+      mBuffer(aData, aSize) {}
 
 MediaRawData::MediaRawData(const uint8_t* aData, size_t aSize,
                            const uint8_t* aAlphaData, size_t aAlphaSize)
-    : MediaData(RAW_DATA, 0),
+    : MediaData(Type::RAW_DATA, 0),
       mCrypto(mCryptoInternal),
       mBuffer(aData, aSize),
       mAlphaBuffer(aAlphaData, aAlphaSize) {}

@@ -172,7 +172,7 @@ void VideoDecoderParent::ProcessDecodedData(
   }
 
   for (auto&& data : aData) {
-    MOZ_ASSERT(data->mType == MediaData::VIDEO_DATA,
+    MOZ_ASSERT(data->mType == MediaData::Type::VIDEO_DATA,
                "Can only decode videos using VideoDecoderParent!");
     VideoData* video = static_cast<VideoData*>(data.get());
 

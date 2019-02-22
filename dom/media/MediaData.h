@@ -251,7 +251,21 @@ class MediaData {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaData)
 
-  enum Type { AUDIO_DATA = 0, VIDEO_DATA, RAW_DATA, NULL_DATA };
+  enum class Type { AUDIO_DATA = 0, VIDEO_DATA, RAW_DATA, NULL_DATA };
+  static const char* TypeToStr(Type aType) {
+    switch (aType) {
+      case Type::AUDIO_DATA:
+        return "AUDIO_DATA";
+      case Type::VIDEO_DATA:
+        return "VIDEO_DATA";
+      case Type::RAW_DATA:
+        return "RAW_DATA";
+      case Type::NULL_DATA:
+        return "NULL_DATA";
+      default:
+        MOZ_CRASH("bad value");
+    }
+  }
 
   MediaData(Type aType, int64_t aOffset, const media::TimeUnit& aTimestamp,
             const media::TimeUnit& aDuration, uint32_t aFrames)
@@ -316,9 +330,9 @@ class NullData : public MediaData {
  public:
   NullData(int64_t aOffset, const media::TimeUnit& aTime,
            const media::TimeUnit& aDuration)
-      : MediaData(NULL_DATA, aOffset, aTime, aDuration, 0) {}
+      : MediaData(Type::NULL_DATA, aOffset, aTime, aDuration, 0) {}
 
-  static const Type sType = NULL_DATA;
+  static const Type sType = Type::NULL_DATA;
 };
 
 // Holds chunk a decoded audio frames.
@@ -334,7 +348,7 @@ class AudioData : public MediaData {
         mRate(aRate),
         mAudioData(std::move(aData)) {}
 
-  static const Type sType = AUDIO_DATA;
+  static const Type sType = Type::AUDIO_DATA;
   static const char* sTypeName;
 
   // Access the buffer as a Span.
@@ -390,7 +404,7 @@ class VideoData : public MediaData {
   typedef layers::Image Image;
   typedef layers::PlanarYCbCrImage PlanarYCbCrImage;
 
-  static const Type sType = VIDEO_DATA;
+  static const Type sType = Type::VIDEO_DATA;
   static const char* sTypeName;
 
   // YCbCr data obtained from decoding the video. The index's are:

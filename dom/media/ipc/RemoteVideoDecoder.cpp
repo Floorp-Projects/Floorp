@@ -170,7 +170,7 @@ void RemoteVideoDecoderParent::ProcessDecodedData(
   MOZ_ASSERT(OnManagerThread());
 
   for (const auto& data : aData) {
-    MOZ_ASSERT(data->mType == MediaData::VIDEO_DATA,
+    MOZ_ASSERT(data->mType == MediaData::Type::VIDEO_DATA,
                "Can only decode videos using RemoteDecoderParent!");
     VideoData* video = static_cast<VideoData*>(data.get());
 

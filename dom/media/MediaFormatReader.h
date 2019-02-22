@@ -41,9 +41,9 @@ struct WaitForDataRejectValue {
 
 struct SeekRejectValue {
   MOZ_IMPLICIT SeekRejectValue(const MediaResult& aError)
-      : mType(MediaData::NULL_DATA), mError(aError) {}
+      : mType(MediaData::Type::NULL_DATA), mError(aError) {}
   MOZ_IMPLICIT SeekRejectValue(nsresult aResult)
-      : mType(MediaData::NULL_DATA), mError(aResult) {}
+      : mType(MediaData::Type::NULL_DATA), mError(aResult) {}
   SeekRejectValue(MediaData::Type aType, const MediaResult& aError)
       : mType(aType), mError(aError) {}
   MediaData::Type mType;
