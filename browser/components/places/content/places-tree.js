@@ -117,7 +117,7 @@
       if (this.delayConnectedCallback()) {
         return;
       }
-
+      super.connectedCallback();
       this._contextMenuShown = false;
 
       this._active = true;
