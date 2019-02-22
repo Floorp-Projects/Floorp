@@ -10,7 +10,6 @@ struct MediaDataIPDL
   int64_t time;
   int64_t timecode;
   int64_t duration;
-  uint32_t frames;
   bool keyframe;
 };
 

@@ -30,7 +30,7 @@ mozilla::ipc::IPCResult RemoteAudioDecoderChild::RecvOutput(
       new AudioData(aData.base().offset(),
                     media::TimeUnit::FromMicroseconds(aData.base().time()),
                     media::TimeUnit::FromMicroseconds(aData.base().duration()),
-                    aData.base().frames(), std::move(alignedAudioBuffer),
+                    aData.frames(), std::move(alignedAudioBuffer),
                     aData.channels(), aData.rate(), aData.channelMap());
 
   mDecodedData.AppendElement(std::move(audio));
@@ -111,15 +111,15 @@ void RemoteAudioDecoderParent::ProcessDecodedData(
                    Shmem::SharedMemory::TYPE_BASIC, &buffer) &&
         audio->Data().Length() == buffer.Size<AudioDataValue>()) {
       PodCopy(buffer.get<AudioDataValue>(), audio->Data().Elements(),
-             audio->Data().Length());
+              audio->Data().Length());
     }
 
     RemoteAudioDataIPDL output(
         MediaDataIPDL(data->mOffset, data->mTime.ToMicroseconds(),
                       data->mTimecode.ToMicroseconds(),
-                      data->mDuration.ToMicroseconds(), data->mFrames,
-                      data->mKeyframe),
-        audio->mChannels, audio->mRate, audio->mChannelMap, buffer);
+                      data->mDuration.ToMicroseconds(), data->mKeyframe),
+        audio->mChannels, audio->mRate, audio->mFrames, audio->mChannelMap,
+        buffer);
 
     Unused << SendOutput(output);
   }

@@ -1684,12 +1684,12 @@ void MediaFormatReader::NotifyNewOutput(
                     "{\"type\":\"AudioData\", \"offset\":%" PRIi64
                     ", \"time_us\":%" PRIi64 ", \"timecode_us\":%" PRIi64
                     ", \"duration_us\":%" PRIi64 ", \"frames\":%" PRIu32
-                    ", \"kf\":%s, \"channels\":%" PRIu32 ", \"rate\":%" PRIu32
+                    ", \"channels\":%" PRIu32 ", \"rate\":%" PRIu32
                     ", \"bytes\":%zu}",
                     sample->mOffset, sample->mTime.ToMicroseconds(),
                     sample->mTimecode.ToMicroseconds(),
-                    sample->mDuration.ToMicroseconds(), sample->mFrames,
-                    sample->mKeyframe ? "true" : "false",
+                    sample->mDuration.ToMicroseconds(),
+                    static_cast<AudioData*>(sample.get())->mFrames,
                     sample->As<AudioData>()->mChannels,
                     sample->As<AudioData>()->mRate,
                     sample->As<AudioData>()->Data().Length());
@@ -1700,11 +1700,11 @@ void MediaFormatReader::NotifyNewOutput(
                                                      : "decoded_got_video!?",
                     "{\"type\":\"VideoData\", \"offset\":%" PRIi64
                     ", \"time_us\":%" PRIi64 ", \"timecode_us\":%" PRIi64
-                    ", \"duration_us\":%" PRIi64 ", \"frames\":%" PRIu32
+                    ", \"duration_us\":%" PRIi64
                     ", \"kf\":%s, \"size\":[%" PRIi32 ",%" PRIi32 "]}",
                     sample->mOffset, sample->mTime.ToMicroseconds(),
                     sample->mTimecode.ToMicroseconds(),
-                    sample->mDuration.ToMicroseconds(), sample->mFrames,
+                    sample->mDuration.ToMicroseconds(),
                     sample->mKeyframe ? "true" : "false",
                     sample->As<VideoData>()->mDisplay.width,
                     sample->As<VideoData>()->mDisplay.height);
@@ -1717,11 +1717,10 @@ void MediaFormatReader::NotifyNewOutput(
                                                            : "decoded_?",
                     "{\"type\":\"RawData\", \"offset\":%" PRIi64
                     " \"time_us\":%" PRIi64 ", \"timecode_us\":%" PRIi64
-                    ", \"duration_us\":%" PRIi64 ", \"frames\":%" PRIu32
-                    ", \"kf\":%s}",
+                    ", \"duration_us\":%" PRIi64 ", \"kf\":%s}",
                     sample->mOffset, sample->mTime.ToMicroseconds(),
                     sample->mTimecode.ToMicroseconds(),
-                    sample->mDuration.ToMicroseconds(), sample->mFrames,
+                    sample->mDuration.ToMicroseconds(),
                     sample->mKeyframe ? "true" : "false");
             break;
           case MediaData::Type::NULL_DATA:
@@ -1732,11 +1731,10 @@ void MediaFormatReader::NotifyNewOutput(
                                                            : "decoded_?",
                     "{\"type\":\"NullData\", \"offset\":%" PRIi64
                     " \"time_us\":%" PRIi64 ", \"timecode_us\":%" PRIi64
-                    ", \"duration_us\":%" PRIi64 ", \"frames\":%" PRIu32
-                    ", \"kf\":%s}",
+                    ", \"duration_us\":%" PRIi64 ", \"kf\":%s}",
                     sample->mOffset, sample->mTime.ToMicroseconds(),
                     sample->mTimecode.ToMicroseconds(),
-                    sample->mDuration.ToMicroseconds(), sample->mFrames,
+                    sample->mDuration.ToMicroseconds(),
                     sample->mKeyframe ? "true" : "false");
             break;
         }
@@ -1957,11 +1955,11 @@ void MediaFormatReader::DecodeDemuxedSamples(TrackType aTrack,
               : aTrack == TrackInfo::kVideoTrack ? "decode_video" : "decode_?",
           "{\"type\":\"MediaRawData\", \"offset\":%" PRIi64
           ", \"bytes\":%zu, \"time_us\":%" PRIi64 ", \"timecode_us\":%" PRIi64
-          ", \"duration_us\":%" PRIi64 ", \"frames\":%" PRIu32 "%s%s}",
+          ", \"duration_us\":%" PRIi64 ",%s%s}",
           aSample->mOffset, aSample->Size(), aSample->mTime.ToMicroseconds(),
           aSample->mTimecode.ToMicroseconds(),
-          aSample->mDuration.ToMicroseconds(), aSample->mFrames,
-          aSample->mKeyframe ? " kf" : "", aSample->mEOS ? " eos" : "");
+          aSample->mDuration.ToMicroseconds(), aSample->mKeyframe ? " kf" : "",
+          aSample->mEOS ? " eos" : "");
   decoder.mDecoder->Decode(aSample)
       ->Then(
           mTaskQueue, __func__,
