@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*
+/**
  * Form Autofill frame script.
  */
 
@@ -11,18 +11,17 @@
 /* eslint-env mozilla/frame-script */
 
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-var {FormAutofillContent} = ChromeUtils.import("resource://formautofill/FormAutofillContent.jsm");
 ChromeUtils.defineModuleGetter(this, "setTimeout",
                                "resource://gre/modules/Timer.jsm");
 ChromeUtils.defineModuleGetter(this, "FormAutofill",
                                "resource://formautofill/FormAutofill.jsm");
+ChromeUtils.defineModuleGetter(this, "FormAutofillContent",
+                               "resource://formautofill/FormAutofillContent.jsm");
 ChromeUtils.defineModuleGetter(this, "FormAutofillUtils",
                                "resource://formautofill/FormAutofillUtils.jsm");
 
 /**
  * Handles content's interactions for the frame.
- *
- * NOTE: Declares it by "var" to make it accessible in unit tests.
  */
 var FormAutofillFrameScript = {
   _nextHandleElement: null,
@@ -49,6 +48,7 @@ var FormAutofillFrameScript = {
 
   init() {
     addEventListener("focusin", this);
+    addEventListener("DOMFormBeforeSubmit", this);
     addMessageListener("FormAutofill:PreviewProfile", this);
     addMessageListener("FormAutofill:ClearForm", this);
     addMessageListener("FormAutoComplete:PopupClosed", this);
@@ -59,6 +59,23 @@ var FormAutofillFrameScript = {
     if (!evt.isTrusted || !FormAutofill.isAutofillEnabled) {
       return;
     }
+
+    switch (evt.type) {
+      case "focusin": {
+        this.onFocusIn(evt);
+        break;
+      }
+      case "DOMFormBeforeSubmit": {
+        this.onDOMFormBeforeSubmit(evt);
+        break;
+      }
+      default: {
+        throw new Error("Unexpected event type");
+      }
+    }
+  },
+
+  onFocusIn(evt) {
     FormAutofillContent.updateActiveInput();
 
     let element = evt.target;
@@ -80,6 +97,20 @@ var FormAutofillFrameScript = {
     }
 
     this._doIdentifyAutofillFields();
+  },
+
+  /**
+   * Handle the DOMFormBeforeSubmit event.
+   * @param {Event} evt
+   */
+  onDOMFormBeforeSubmit(evt) {
+    let formElement = evt.target;
+
+    if (!FormAutofill.isAutofillEnabled) {
+      return;
+    }
+
+    FormAutofillContent.formSubmitted(formElement);
   },
 
   receiveMessage(message) {
