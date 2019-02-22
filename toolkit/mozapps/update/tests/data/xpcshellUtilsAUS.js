@@ -3848,84 +3848,11 @@ const gAppTimerCallback = {
 
 /**
  * Launches an application to apply an update.
+ *
+ * @param   aExpectedStatus
+ *          The expected value of update.status when the update finishes.
  */
-function runUpdateUsingApp(aExpectedStatus) {
-  /**
-   * The observer for the call to nsIProcess:runAsync. When completed
-   * runUpdateFinished will be called.
-   */
-  const processObserver = {
-    observe: function PO_observe(aSubject, aTopic, aData) {
-      debugDump("topic: " + aTopic + ", process exitValue: " +
-                gProcess.exitValue);
-      resetEnvironment();
-      if (gAppTimer) {
-        gAppTimer.cancel();
-        gAppTimer = null;
-      }
-      Assert.equal(gProcess.exitValue, 0,
-                   "the application process exit value should be 0");
-      Assert.equal(aTopic, "process-finished",
-                   "the application process observer topic should be " +
-                   "process-finished");
-
-      if (IS_SERVICE_TEST) {
-        waitForServiceStop(false);
-      }
-
-      executeSoon(afterAppExits);
-    },
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
-  };
-
-  function afterAppExits() {
-    gTimeoutRuns++;
-
-    if (AppConstants.platform == "win") {
-      waitForApplicationStop(FILE_UPDATER_BIN);
-    }
-
-    let status;
-    try {
-      status = readStatusFile();
-    } catch (e) {
-      logTestInfo("error reading status file, exception: " + e);
-    }
-    // Don't proceed until the update's status is the expected value.
-    if (status != aExpectedStatus) {
-      if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
-        logUpdateLog(FILE_UPDATE_LOG);
-        do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the update " +
-                 "status to equal: " +
-                 aExpectedStatus +
-                 ", current status: " + status);
-      } else {
-        do_timeout(FILE_IN_USE_TIMEOUT_MS, afterAppExits);
-      }
-      return;
-    }
-
-    // Don't check for an update log when the code in nsUpdateDriver.cpp skips
-    // updating.
-    if (aExpectedStatus != STATE_PENDING &&
-        aExpectedStatus != STATE_PENDING_SVC &&
-        aExpectedStatus != STATE_APPLIED &&
-        aExpectedStatus != STATE_APPLIED_SVC) {
-      // Don't proceed until the update log has been created.
-      let log = getUpdateDirFile(FILE_UPDATE_LOG);
-      if (!log.exists()) {
-        if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
-          do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the update " +
-                   "log to be created. Path: " + log.path);
-        }
-        do_timeout(FILE_IN_USE_TIMEOUT_MS, afterAppExits);
-        return;
-      }
-    }
-
-    executeSoon(runUpdateFinished);
-  }
-
+async function runUpdateUsingApp(aExpectedStatus) {
   debugDump("start - launching application to apply update");
 
   let launchBin = getLaunchBin();
@@ -3941,8 +3868,35 @@ function runUpdateUsingApp(aExpectedStatus) {
                              Ci.nsITimer.TYPE_ONE_SHOT);
 
   setEnvironment();
+
   debugDump("launching application");
-  gProcess.runAsync(args, args.length, processObserver);
+  gProcess.run(true, args, args.length);
+  debugDump("launched application exited");
+
+  resetEnvironment();
+
+  if (AppConstants.platform == "win") {
+    waitForApplicationStop(FILE_UPDATER_BIN);
+  }
+
+  let file = getUpdateDirFile(FILE_UPDATE_STATUS);
+  await TestUtils.waitForCondition(() => (file.exists()),
+    "Waiting for file to exist, path: " + file.path);
+
+  await TestUtils.waitForCondition(() => (readStatusFile() == aExpectedStatus),
+    "Waiting for expected status file contents: " + aExpectedStatus);
+
+  // Don't check for an update log when the code in nsUpdateDriver.cpp skips
+  // updating.
+  if (aExpectedStatus != STATE_PENDING &&
+      aExpectedStatus != STATE_PENDING_SVC &&
+      aExpectedStatus != STATE_APPLIED &&
+      aExpectedStatus != STATE_APPLIED_SVC) {
+    // Don't proceed until the update log has been created.
+    file = getUpdateDirFile(FILE_UPDATE_LOG);
+    await TestUtils.waitForCondition(() => (file.exists()),
+      "Waiting for file to exist, path: " + file.path);
+  }
 
   debugDump("finish - launching application to apply update");
 }
