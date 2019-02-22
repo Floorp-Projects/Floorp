@@ -5,7 +5,3 @@ function timer() {
 }
 
 setInterval(timer, 1000);
-
-self.onmessage = () => {
-  console.log('hi')
-}
