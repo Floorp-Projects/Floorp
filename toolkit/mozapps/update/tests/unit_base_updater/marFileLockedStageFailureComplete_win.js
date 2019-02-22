@@ -27,20 +27,14 @@ async function setupUpdaterTestFinished() {
 /**
  * Called after the call to stageUpdate finishes.
  */
-function stageUpdateFinished() {
+async function stageUpdateFinished() {
   checkPostUpdateRunningFile(false);
   // Files aren't checked after staging since this test locks a file which
   // prevents reading the file.
   checkUpdateLogContains(ERR_ENSURE_COPY);
   // Switch the application to the staged application that was updated.
   runUpdate(STATE_FAILED_WRITE_ERROR, false, 1, false);
-  waitForHelperExit();
-}
-
-/**
- * Called after the call to waitForHelperExit finishes.
- */
-async function waitForHelperExitFinished() {
+  await waitForHelperExit();
   standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);

@@ -29,19 +29,13 @@ async function setupUpdaterTestFinished() {
 /**
  * Called after the call to stageUpdate finishes.
  */
-function stageUpdateFinished() {
+async function stageUpdateFinished() {
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateSuccess(getStageDirFile, true);
   checkUpdateLogContents(LOG_COMPLETE_SUCCESS, true);
   // Switch the application to the staged application that was updated.
   runUpdate(STATE_AFTER_RUNUPDATE, true, 1, true);
-  waitForHelperExit();
-}
-
-/**
- * Called after the call to waitForHelperExit finishes.
- */
-async function waitForHelperExitFinished() {
+  await waitForHelperExit();
   standardInit();
   checkPostUpdateRunningFile(false);
   setTestFilesAndDirsForFailure();
