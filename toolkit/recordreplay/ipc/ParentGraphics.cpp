@@ -167,7 +167,7 @@ void UpdateGraphicsInUIProcess(const PaintMessage* aMsg) {
   // Create an ArrayBuffer whose contents are the externally-provided |memory|.
   JS::RootedObject bufferObject(cx);
   bufferObject =
-      JS_NewArrayBufferWithExternalContents(cx, width * height * 4, memory);
+      JS_NewArrayBufferWithUserOwnedContents(cx, width * height * 4, memory);
   MOZ_RELEASE_ASSERT(bufferObject);
 
   JS::RootedValue buffer(cx, ObjectValue(*bufferObject));
@@ -178,7 +178,7 @@ void UpdateGraphicsInUIProcess(const PaintMessage* aMsg) {
   }
 
   // Manually detach this ArrayBuffer once this update completes, as the
-  // JS_NewArrayBufferWithExternalContents API mandates.  (The API also
+  // JS_NewArrayBufferWithUserOwnedContents API mandates.  (The API also
   // guarantees that this call always succeeds.)
   MOZ_ALWAYS_TRUE(JS_DetachArrayBuffer(cx, bufferObject));
 }
