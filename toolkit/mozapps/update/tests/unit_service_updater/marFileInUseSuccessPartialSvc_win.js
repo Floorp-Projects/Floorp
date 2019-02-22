@@ -4,19 +4,13 @@
 
 /* File in use partial MAR file patch apply success test */
 
-function run_test() {
+async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
   gTestFiles = gTestFilesPartialSuccess;
   gTestDirs = gTestDirsPartialSuccess;
-  setupUpdaterTest(FILE_PARTIAL_MAR, false);
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-async function setupUpdaterTestFinished() {
+  await setupUpdaterTest(FILE_PARTIAL_MAR, false);
   await runHelperFileInUse(gTestFiles[11].relPathDir + gTestFiles[11].fileName,
                            false);
   runUpdate(STATE_SUCCEEDED, false, 0, true);

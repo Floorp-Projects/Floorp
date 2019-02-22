@@ -7,23 +7,16 @@
  * apply it.
  */
 
-function run_test() {
+async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
-
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
   // The third parameter will test that a full path to the post update binary
   // doesn't execute.
-  setupUpdaterTest(FILE_COMPLETE_MAR, undefined,
-                   getApplyDirFile(null, true).path + "/");
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-function setupUpdaterTestFinished() {
+  await setupUpdaterTest(FILE_COMPLETE_MAR, undefined,
+                         getApplyDirFile(null, true).path + "/");
   runUpdateUsingApp(STATE_SUCCEEDED);
 }
 

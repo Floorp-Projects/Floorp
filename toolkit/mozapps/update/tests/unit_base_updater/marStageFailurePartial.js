@@ -8,7 +8,7 @@
 const STATE_AFTER_STAGE = STATE_FAILED;
 gStagingRemovedUpdate = true;
 
-function run_test() {
+async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
@@ -16,13 +16,7 @@ function run_test() {
   gTestFiles[11].originalFile = "partial.png";
   gTestDirs = gTestDirsPartialSuccess;
   setTestFilesAndDirsForFailure();
-  setupUpdaterTest(FILE_PARTIAL_MAR, false);
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-function setupUpdaterTestFinished() {
+  await setupUpdaterTest(FILE_PARTIAL_MAR, false);
   stageUpdate(true);
 }
 

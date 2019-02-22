@@ -7,20 +7,14 @@
 
 const STATE_AFTER_RUNUPDATE = STATE_FAILED_INVALID_CALLBACK_PATH_ERROR;
 
-function run_test() {
+async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();
-  setupUpdaterTest(FILE_COMPLETE_MAR, false);
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-async function setupUpdaterTestFinished() {
+  await setupUpdaterTest(FILE_COMPLETE_MAR, false);
   let path = "123456789";
   if (AppConstants.platform == "win") {
     path = "\\" + path;
@@ -30,7 +24,6 @@ async function setupUpdaterTestFinished() {
     path = "/" + path;
     path = path.repeat(1000); // 10000 characters
   }
-
   runUpdate(STATE_AFTER_RUNUPDATE, false, 1, true, null, null, null, path);
   standardInit();
   checkPostUpdateRunningFile(false);

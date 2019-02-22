@@ -5,7 +5,7 @@
 
 /* Test product/channel MAR security check */
 
-function run_test() {
+async function run_test() {
   if (!MOZ_VERIFY_MAR_SIGNATURE) {
     return;
   }
@@ -18,13 +18,7 @@ function run_test() {
     UPDATE_SETTINGS_CONTENTS.replace("xpcshell-test", "wrong-channel");
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();
-  setupUpdaterTest(FILE_COMPLETE_MAR, false);
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-async function setupUpdaterTestFinished() {
+  await setupUpdaterTest(FILE_COMPLETE_MAR, false);
   // If execv is used the updater process will turn into the callback process
   // and the updater's return code will be that of the callback process.
   runUpdate(STATE_FAILED_MAR_CHANNEL_MISMATCH_ERROR,

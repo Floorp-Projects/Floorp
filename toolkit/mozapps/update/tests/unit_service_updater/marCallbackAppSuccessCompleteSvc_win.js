@@ -4,20 +4,14 @@
 
 /* Replace app binary complete MAR file patch apply success test */
 
-function run_test() {
+async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
   gCallbackBinFile = "exe0.exe";
-  setupUpdaterTest(FILE_COMPLETE_MAR, false);
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-async function setupUpdaterTestFinished() {
+  await setupUpdaterTest(FILE_COMPLETE_MAR, false);
   runUpdate(STATE_SUCCEEDED, false, 0, true);
   await checkPostUpdateAppLog();
   standardInit();

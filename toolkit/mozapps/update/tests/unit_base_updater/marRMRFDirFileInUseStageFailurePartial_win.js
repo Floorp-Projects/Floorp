@@ -8,20 +8,15 @@
 const STATE_AFTER_STAGE = IS_SERVICE_TEST ? STATE_APPLIED_SVC : STATE_APPLIED;
 const STATE_AFTER_RUNUPDATE = IS_SERVICE_TEST ? STATE_PENDING_SVC : STATE_PENDING;
 
-function run_test() {
+async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
   gTestFiles = gTestFilesPartialSuccess;
   gTestDirs = gTestDirsPartialSuccess;
-  setupUpdaterTest(FILE_PARTIAL_MAR, false);
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-async function setupUpdaterTestFinished() {
-  await runHelperFileInUse(gTestDirs[2].relPathDir + gTestDirs[2].files[0], true);
+  await setupUpdaterTest(FILE_PARTIAL_MAR, false);
+  await runHelperFileInUse(gTestDirs[2].relPathDir + gTestDirs[2].files[0],
+                           true);
   stageUpdate(true);
 }
 

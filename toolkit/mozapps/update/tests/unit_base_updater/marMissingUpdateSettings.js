@@ -5,7 +5,7 @@
 
 /* Test update-settings.ini missing channel MAR security check */
 
-function run_test() {
+async function run_test() {
   if (!MOZ_VERIFY_MAR_SIGNATURE) {
     return;
   }
@@ -17,13 +17,7 @@ function run_test() {
   gTestFiles[gTestFiles.length - 2].originalContents = null;
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();
-  setupUpdaterTest(FILE_COMPLETE_MAR, false);
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-async function setupUpdaterTestFinished() {
+  await setupUpdaterTest(FILE_COMPLETE_MAR, false);
   // If execv is used the updater process will turn into the callback process
   // and the updater's return code will be that of the callback process.
   runUpdate(STATE_FAILED_UPDATE_SETTINGS_FILE_CHANNEL,

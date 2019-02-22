@@ -8,7 +8,7 @@
 const STATE_AFTER_STAGE = STATE_FAILED;
 gStagingRemovedUpdate = true;
 
-function run_test() {
+async function run_test() {
   if (!MOZ_VERIFY_MAR_SIGNATURE) {
     return;
   }
@@ -20,13 +20,7 @@ function run_test() {
   gTestFiles[gTestFiles.length - 2].originalContents = null;
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();
-  setupUpdaterTest(FILE_COMPLETE_MAR, false);
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-function setupUpdaterTestFinished() {
+  await setupUpdaterTest(FILE_COMPLETE_MAR, false);
   stageUpdate(true);
 }
 

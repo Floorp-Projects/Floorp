@@ -9,20 +9,13 @@
 
 const STATE_AFTER_STAGE = IS_SERVICE_TEST ? STATE_APPLIED_SVC : STATE_APPLIED;
 
-function run_test() {
+async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
-
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
-  setupUpdaterTest(FILE_COMPLETE_MAR, true);
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-function setupUpdaterTestFinished() {
+  await setupUpdaterTest(FILE_COMPLETE_MAR, true);
   stageUpdate(true);
 }
 

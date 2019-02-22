@@ -7,7 +7,7 @@
 
 const STATE_AFTER_STAGE = IS_SERVICE_TEST ? STATE_APPLIED_SVC : STATE_APPLIED;
 
-function run_test() {
+async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
@@ -17,13 +17,7 @@ function run_test() {
   gTestFiles[gTestFiles.length - 1].comparePerms = 0o644;
   gTestDirs = gTestDirsPartialSuccess;
   preventDistributionFiles();
-  setupUpdaterTest(FILE_PARTIAL_MAR, true);
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-function setupUpdaterTestFinished() {
+  await setupUpdaterTest(FILE_PARTIAL_MAR, true);
   stageUpdate(true);
 }
 
