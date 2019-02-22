@@ -340,9 +340,7 @@ class PageAction {
       accessKey: secondaryBtnStrings[0].attributes.accesskey,
       callback: () => {
         this.dispatchUserAction(secondary[0].action);
-        this.hide();
         this._sendTelemetry({message_id: id, bucket_id: content.bucket_id, event: "DISMISS"});
-        RecommendationMap.delete(browser);
       },
     }, {
       label: secondaryBtnStrings[1].label,
@@ -358,9 +356,7 @@ class PageAction {
       accessKey: secondaryBtnStrings[2].attributes.accesskey,
       callback: () => {
         this.dispatchUserAction(secondary[2].action);
-        this.hide();
         this._sendTelemetry({message_id: id, bucket_id: content.bucket_id, event: "MANAGE"});
-        RecommendationMap.delete(browser);
       },
     }];
 
@@ -409,6 +405,11 @@ const CFRPageActions = {
         // The browser has a recommendation specified with this host, so show
         // the page action
         pageAction.show(recommendation);
+      } else if (recommendation.retain) {
+        // Keep the recommendation first time the user navigates away just in
+        // case they will go back to the previous page
+        pageAction.hide();
+        recommendation.retain = false;
       } else {
         // The user has navigated away from the specified host in the given
         // browser, so the recommendation is no longer valid and should be removed
@@ -451,7 +452,7 @@ const CFRPageActions = {
     // If we are forcing via the Admin page, the browser comes in a different format
     const win = browser.browser.ownerGlobal;
     const {id, content} = recommendation;
-    RecommendationMap.set(browser.browser, {id, content});
+    RecommendationMap.set(browser.browser, {id, retain: true, content});
     if (!PageActionMap.has(win)) {
       PageActionMap.set(win, new PageAction(win, dispatchToASRouter));
     }
@@ -476,7 +477,7 @@ const CFRPageActions = {
       return false;
     }
     const {id, content} = recommendation;
-    RecommendationMap.set(browser, {id, host, content});
+    RecommendationMap.set(browser, {id, host, retain: true, content});
     if (!PageActionMap.has(win)) {
       PageActionMap.set(win, new PageAction(win, dispatchToASRouter));
     }

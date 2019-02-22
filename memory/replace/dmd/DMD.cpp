@@ -134,7 +134,7 @@ class InfallibleAllocPolicy {
   }
 
   static void* calloc_(size_t aCount, size_t aSize) {
-    void* p = gMallocTable.calloc(1, aSize);
+    void* p = gMallocTable.calloc(aCount, aSize);
     ExitOnFailure(p);
     return p;
   }

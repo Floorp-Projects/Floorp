@@ -26,6 +26,8 @@ ChromeUtils.defineModuleGetter(this, "HomePage",
   "resource:///modules/HomePage.jsm");
 ChromeUtils.defineModuleGetter(this, "ExtensionSettingsStore",
   "resource://gre/modules/ExtensionSettingsStore.jsm");
+ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetters(this, {
   gUUIDGenerator: ["@mozilla.org/uuid-generator;1", "nsIUUIDGenerator"],
@@ -35,6 +37,9 @@ XPCOMUtils.defineLazyServiceGetters(this, {
 const ACTIVITY_STREAM_ID = "activity-stream";
 const ACTIVITY_STREAM_ENDPOINT_PREF = "browser.newtabpage.activity-stream.telemetry.ping.endpoint";
 const ACTIVITY_STREAM_ROUTER_ID = "activity-stream-router";
+const DOMWINDOW_OPENED_TOPIC = "domwindowopened";
+const DOMWINDOW_UNLOAD_TOPIC = "unload";
+const TAB_PINNED_EVENT = "TabPinned";
 
 // This is a mapping table between the user preferences and its encoding code
 const USER_PREFS_ENCODING = {
@@ -63,10 +68,73 @@ this.TelemetryFeed = class TelemetryFeed {
     this._onEventsTelemetryPrefChange = this._onEventsTelemetryPrefChange.bind(this);
     this._prefs.observe(EVENTS_TELEMETRY_PREF, this._onEventsTelemetryPrefChange);
     this._classifySite = classifySite;
+    this._addWindowListeners = this._addWindowListeners.bind(this);
+    this.handleEvent = this.handleEvent.bind(this);
   }
 
   init() {
     Services.obs.addObserver(this.browserOpenNewtabStart, "browser-open-newtab-start");
+    // Add pin tab event listeners on future windows
+    Services.obs.addObserver(this._addWindowListeners, DOMWINDOW_OPENED_TOPIC);
+    // Listen for pin tab events on all open windows
+    for (let win of Services.wm.getEnumerator("navigator:browser")) {
+      this._addWindowListeners(win);
+    }
+  }
+
+  handleEvent(event) {
+    switch (event.type) {
+      case TAB_PINNED_EVENT:
+        this.countPinnedTab(event.target);
+        break;
+      case DOMWINDOW_UNLOAD_TOPIC:
+        this._removeWindowListeners(event.target);
+        break;
+    }
+  }
+
+  _removeWindowListeners(win) {
+    win.removeEventListener(DOMWINDOW_UNLOAD_TOPIC, this.handleEvent);
+    win.removeEventListener(TAB_PINNED_EVENT, this.handleEvent);
+  }
+
+  _addWindowListeners(win) {
+    win.addEventListener(DOMWINDOW_UNLOAD_TOPIC, this.handleEvent);
+    win.addEventListener(TAB_PINNED_EVENT, this.handleEvent);
+  }
+
+  countPinnedTab(target, source = "TAB_CONTEXT_MENU") {
+    const win = target.ownerGlobal;
+    if (PrivateBrowsingUtils.isWindowPrivate(win)) {
+      return;
+    }
+    const event = Object.assign(
+      this.createPing(),
+      {
+        action: "activity_stream_user_event",
+        event: TAB_PINNED_EVENT.toUpperCase(),
+        value: {total_pinned_tabs: this.countTotalPinnedTabs()},
+        source,
+        // These fields are required but not relevant for this ping
+        page: "n/a",
+        session_id: "n/a",
+      },
+    );
+    this.sendEvent(event);
+  }
+
+  countTotalPinnedTabs() {
+    let pinnedTabs = 0;
+    for (let win of Services.wm.getEnumerator("navigator:browser")) {
+      if (win.closed || PrivateBrowsingUtils.isWindowPrivate(win)) {
+        continue;
+      }
+      for (let tab of win.gBrowser.tabs) {
+        pinnedTabs += tab.pinned ? 1 : 0;
+      }
+    }
+
+    return pinnedTabs;
   }
 
   getOrCreateImpressionId() {
@@ -691,6 +759,8 @@ this.TelemetryFeed = class TelemetryFeed {
     try {
       Services.obs.removeObserver(this.browserOpenNewtabStart,
         "browser-open-newtab-start");
+      Services.obs.removeObserver(this._addWindowListeners,
+        DOMWINDOW_OPENED_TOPIC);
     } catch (e) {
       // Operation can fail when uninit is called before
       // init has finished setting up the observer

@@ -97,8 +97,7 @@ class nsXBLBinding final {
   bool ImplementsInterface(REFNSIID aIID) const;
 
   void GenerateAnonymousContent();
-  void BindAnonymousContent(nsIContent* aAnonParent, nsIContent* aElement,
-                            bool aNativeAnon);
+  void BindAnonymousContent(nsIContent* aAnonParent, nsIContent* aElement);
   static void UnbindAnonymousContent(mozilla::dom::Document* aDocument,
                                      nsIContent* aAnonParent,
                                      bool aNullParent = true);

@@ -95,10 +95,6 @@ var whitelist = [
   {file: "resource://gre/res/fonts/mathfontSTIXGeneral.properties"},
   {file: "resource://gre/res/fonts/mathfontUnicode.properties"},
 
-  // toolkit/components/places/ColorAnalyzer_worker.js
-  {file: "resource://gre/modules/ClusterLib.js"},
-  {file: "resource://gre/modules/ColorConversion.js"},
-
   // Needed by HiddenFrame.jsm, but can't be packaged test-only
   {file: "chrome://global/content/win.xul"},
 

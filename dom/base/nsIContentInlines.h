@@ -17,6 +17,23 @@
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/dom/ShadowRoot.h"
 
+inline bool nsINode::IsUAWidget() const {
+  auto* shadow = mozilla::dom::ShadowRoot::FromNode(this);
+  return shadow && shadow->IsUAWidget();
+}
+
+inline bool nsINode::IsInUAWidget() const {
+  if (!IsInShadowTree()) {
+    return false;
+  }
+  mozilla::dom::ShadowRoot* shadow = AsContent()->GetContainingShadow();
+  return shadow && shadow->IsUAWidget();
+}
+
+inline bool nsINode::IsRootOfChromeAccessOnlySubtree() const {
+  return IsRootOfNativeAnonymousSubtree() || IsUAWidget();
+}
+
 inline bool nsIContent::IsInHTMLDocument() const {
   return OwnerDoc()->IsHTMLDocument();
 }

@@ -16,10 +16,10 @@ scripts:
   bundle:
     locales: pontoon-to-json --src $npm_package_config_locales_dir --dest data
     webpack: webpack --config webpack.system-addon.config.js
-    css: node-sass --source-map true --source-map-contents content-src/styles -o css
+    css: node-sass content-src/styles -o css
     html: rimraf prerendered && webpack --config webpack.prerender.config.js && node ./bin/render-activity-stream-html.js
 
-# buildmc: Export the bootstraped add-on to mozilla central
+# buildmc: Export code to mozilla central
   buildmc:
     pre: rimraf $npm_package_config_mc_dir/browser/components/newtab/
     bundle: => bundle
@@ -39,15 +39,15 @@ scripts:
     css: node-sass --source-map true --source-map-contents content-src/aboutlibrary -o aboutlibrary/content
     copy: cpx "aboutlibrary/**/{,.}*" $npm_package_config_mc_dir/browser/components/library
 
-# startmc: Start developing the bootstrapped add-on
+# startmc: Automatically rebuild/export to mozilla central when files are changed. NOTE: Includes sourcemaps, do not use for profiling/perf testing.
   startmc:
     _parallel: true
     pre: =>buildmc
     # This copies only the system addon sub-folder; changing anything outside of it will need a full rebuild.
     copy: cpx "{{,.}*,!(node_modules)/**/{,.}*}" $npm_package_config_mc_dir/browser/components/newtab/ -w
     copyPingCentre: =>buildmc:copyPingCentre -- -w
-    webpack: =>bundle:webpack -- -w
-    css: =>bundle:css && =>bundle:css -- -w
+    webpack: =>bundle:webpack -- --env.development -w
+    css: =>bundle:css && =>bundle:css -- --source-map-embed --source-map-contents -w
 
   # importmc: Import changes from mc to github repo
   importmc: rsync --exclude-from .mcignore -a $npm_package_config_mc_dir/browser/components/newtab/ .

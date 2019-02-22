@@ -4780,7 +4780,7 @@ inline bool ShouldUseNACScope(const nsINode* aNode) {
 }
 
 inline bool ShouldUseUAWidgetScope(const nsINode* aNode) {
-  return aNode->IsInUAWidget();
+  return aNode->HasBeenInUAWidget();
 }
 
 inline mozilla::dom::ParentObject nsINode::GetParentObject() const {

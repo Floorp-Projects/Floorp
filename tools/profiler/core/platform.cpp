@@ -133,9 +133,10 @@
 #endif
 
 // Linux builds use LUL, which uses DWARF info to unwind stacks.
-#if defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_x86_linux) ||    \
-    defined(GP_PLAT_x86_android) || defined(GP_PLAT_mips64_linux) || \
-    defined(GP_PLAT_arm64_linux) || defined(GP_PLAT_arm64_android)
+#if defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_x86_linux) ||     \
+    defined(GP_PLAT_amd64_android) || defined(GP_PLAT_x86_android) || \
+    defined(GP_PLAT_mips64_linux) || defined(GP_PLAT_arm64_linux) ||  \
+    defined(GP_PLAT_arm64_android)
 #  define HAVE_NATIVE_UNWIND
 #  define USE_LUL_STACKWALK
 #  include "lul/LulMain.h"
@@ -1418,7 +1419,7 @@ static void DoLULBacktrace(PSLockRef aLock,
   lul::UnwindRegs startRegs;
   memset(&startRegs, 0, sizeof(startRegs));
 
-#  if defined(GP_PLAT_amd64_linux)
+#  if defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_amd64_android)
   startRegs.xip = lul::TaggedUWord(mc->gregs[REG_RIP]);
   startRegs.xsp = lul::TaggedUWord(mc->gregs[REG_RSP]);
   startRegs.xbp = lul::TaggedUWord(mc->gregs[REG_RBP]);
@@ -1480,7 +1481,7 @@ static void DoLULBacktrace(PSLockRef aLock,
   lul::StackImage stackImg;
 
   {
-#  if defined(GP_PLAT_amd64_linux)
+#  if defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_amd64_android)
     uintptr_t rEDZONE_SIZE = 128;
     uintptr_t start = startRegs.xsp.Value() - rEDZONE_SIZE;
 #  elif defined(GP_PLAT_arm_linux) || defined(GP_PLAT_arm_android)

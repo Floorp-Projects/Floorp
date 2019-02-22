@@ -225,8 +225,6 @@ class UrlbarController {
           // Prevent beep on Mac.
           event.preventDefault();
         }
-        // TODO: We should have an input bufferrer so that we can use search results
-        // if appropriate.
         this.input.handleCommand(event);
         break;
       case KeyEvent.DOM_VK_TAB:
@@ -257,16 +255,8 @@ class UrlbarController {
         event.preventDefault();
         break;
       case KeyEvent.DOM_VK_DELETE:
-        if (isMac && !event.shiftKey) {
-          break;
-        }
-        if (this._handleDeleteEntry()) {
-          event.preventDefault();
-        }
-        break;
       case KeyEvent.DOM_VK_BACK_SPACE:
-        if (isMac && event.shiftKey &&
-            this._handleDeleteEntry()) {
+        if (event.shiftKey && this.view.isOpen && this._handleDeleteEntry()) {
           event.preventDefault();
         }
         break;

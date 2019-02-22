@@ -59,9 +59,9 @@ nsEffectiveTLDService::~nsEffectiveTLDService() {
 }
 
 // static
-already_AddRefed<nsEffectiveTLDService> nsEffectiveTLDService::GetInstance() {
+nsEffectiveTLDService *nsEffectiveTLDService::GetInstance() {
   if (gService) {
-    return do_AddRef(gService);
+    return gService;
   }
   nsCOMPtr<nsIEffectiveTLDService> tldService =
       do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
@@ -71,7 +71,7 @@ already_AddRefed<nsEffectiveTLDService> nsEffectiveTLDService::GetInstance() {
   MOZ_ASSERT(
       gService,
       "gService must have been initialized in nsEffectiveTLDService::Init");
-  return do_AddRef(gService);
+  return gService;
 }
 
 MOZ_DEFINE_MALLOC_SIZE_OF(EffectiveTLDServiceMallocSizeOf)

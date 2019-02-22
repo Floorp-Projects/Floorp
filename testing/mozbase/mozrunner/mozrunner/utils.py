@@ -8,9 +8,10 @@
 
 from __future__ import absolute_import, print_function
 
-import mozinfo
 import os
 import sys
+
+import mozinfo
 
 __all__ = ['findInPath', 'get_metadata_from_egg']
 

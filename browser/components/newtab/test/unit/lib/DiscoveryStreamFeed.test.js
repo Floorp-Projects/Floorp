@@ -700,10 +700,10 @@ describe("DiscoveryStreamFeed", () => {
     });
   });
 
-  describe("#onAction: DISCOVERY_STREAM_SPOC_IMPRESSION", () => {
-    it("should call recordTopRecImpressions from DISCOVERY_STREAM_REC_IMPRESSION", async () => {
+  describe("#onAction: DISCOVERY_STREAM_IMPRESSION_STATS", () => {
+    it("should call recordTopRecImpressions from DISCOVERY_STREAM_IMPRESSION_STATS", async () => {
       sandbox.stub(feed, "recordTopRecImpressions").returns();
-      await feed.onAction({type: at.DISCOVERY_STREAM_REC_IMPRESSION, data: {recId: "seen"}});
+      await feed.onAction({type: at.DISCOVERY_STREAM_IMPRESSION_STATS, data: {tiles: [{id: "seen"}]}});
 
       assert.calledWith(feed.recordTopRecImpressions, "seen");
     });

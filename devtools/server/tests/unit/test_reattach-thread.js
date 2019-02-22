@@ -10,10 +10,9 @@
 add_task(threadClientTest(async ({ threadClient, debuggee, client, targetFront }) => {
   await threadClient.detach();
   Assert.equal(threadClient.state, "detached");
-  Assert.equal(targetFront.thread, null);
   const [, newThreadClient] = await targetFront.attachThread({});
   Assert.notEqual(threadClient, newThreadClient);
   Assert.equal(newThreadClient.state, "paused");
-  Assert.equal(targetFront.thread, newThreadClient);
+  Assert.equal(targetFront.threadClient, newThreadClient);
   await newThreadClient.resume();
 }));

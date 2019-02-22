@@ -40,9 +40,9 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "კარგი, გასაგებია",
   "prefs_home_header": "Firefox საწყისი გვერდი",
   "prefs_home_description": "აირჩიეთ, თუ რისი გამოჩენა გსურთ Firefox-ის საწყის გვერდზე.",
-  "prefs_content_discovery_header": "Firefox Home",
-  "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
-  "prefs_content_discovery_button": "Turn Off Content Discovery",
+  "prefs_content_discovery_header": "Firefox მთავარი",
+  "prefs_content_discovery_description": "შიგთავსის მოძიება Firefox-ის მთავარ გვერდზე, საშუალებას გაძლევთ აღმოაჩინოთ მაღალი ხარისხის, გამოსადეგი სტატიები მთელ ინტერნეტში.",
+  "prefs_content_discovery_button": "შიგთავსის მოძიების გამორთვა",
   "prefs_section_rows_option": "{num} რიგად;{num} რიგად",
   "prefs_search_header": "საძიებო ველი",
   "prefs_topsites_description": "ხშირად მონახულებული საიტები",
@@ -110,6 +110,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "პირადი მონაცემების დაცვის განაცხადს",
   "firstrun_continue_to_login": "გაგრძელება",
   "firstrun_skip_login": "გამოტოვება",
-  "context_menu_title": "მენიუს გახსნა",
-  "pocket_learn_more": "იხილეთ ვრცლად"
+  "context_menu_title": "მენიუს გახსნა"
 };

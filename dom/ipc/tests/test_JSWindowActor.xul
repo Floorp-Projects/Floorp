@@ -70,7 +70,7 @@
     let child = this.window.getWindowGlobalChild();
     let actorChild = child.getActor("Test");
     let promise = new Promise(resolve => {
-      actorChild.sendAsyncMessage("Test", "init", {});
+      actorChild.sendAsyncMessage("init", {});
       actorChild.done = (data) => resolve(data);
     }).then(data => {
       ok(data.initial, "Initial should be true.");

@@ -2648,7 +2648,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
           audioPerm = nsIPermissionManager::DENY_ACTION;
         } else {
           rv = permManager->TestExactPermissionFromPrincipal(
-              principal, "microphone", &audioPerm);
+              principal, NS_LITERAL_CSTRING("microphone"), &audioPerm);
           MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
         }
       } else {
@@ -2657,7 +2657,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
           audioPerm = nsIPermissionManager::DENY_ACTION;
         } else {
           rv = permManager->TestExactPermissionFromPrincipal(
-              principal, "screen", &audioPerm);
+              principal, NS_LITERAL_CSTRING("screen"), &audioPerm);
           MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
         }
       }
@@ -2672,7 +2672,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
           videoPerm = nsIPermissionManager::DENY_ACTION;
         } else {
           rv = permManager->TestExactPermissionFromPrincipal(
-              principal, "camera", &videoPerm);
+              principal, NS_LITERAL_CSTRING("camera"), &videoPerm);
           MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
         }
       } else {
@@ -2681,7 +2681,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
           videoPerm = nsIPermissionManager::DENY_ACTION;
         } else {
           rv = permManager->TestExactPermissionFromPrincipal(
-              principal, "screen", &videoPerm);
+              principal, NS_LITERAL_CSTRING("screen"), &videoPerm);
           MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
         }
       }
@@ -4054,8 +4054,8 @@ bool MediaManager::IsActivelyCapturingOrHasAPermission(uint64_t aWindowId) {
             doc, NS_LITERAL_STRING("microphone"))) {
       audio = nsIPermissionManager::DENY_ACTION;
     } else {
-      rv = mgr->TestExactPermissionFromPrincipal(principal, "microphone",
-                                                 &audio);
+      rv = mgr->TestExactPermissionFromPrincipal(
+          principal, NS_LITERAL_CSTRING("microphone"), &audio);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return false;
       }
@@ -4065,7 +4065,8 @@ bool MediaManager::IsActivelyCapturingOrHasAPermission(uint64_t aWindowId) {
             doc, NS_LITERAL_STRING("camera"))) {
       video = nsIPermissionManager::DENY_ACTION;
     } else {
-      rv = mgr->TestExactPermissionFromPrincipal(principal, "camera", &video);
+      rv = mgr->TestExactPermissionFromPrincipal(
+          principal, NS_LITERAL_CSTRING("camera"), &video);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return false;
       }

@@ -229,7 +229,6 @@ class AbsolutePositioningCommand final : public StateUpdatingCommandBase {
 
 NS_DECL_COMPOSER_COMMAND(DocumentStateCommand)
 NS_DECL_COMPOSER_COMMAND(SetDocumentStateCommand)
-NS_DECL_COMPOSER_COMMAND(SetDocumentOptionsCommand)
 
 NS_DECL_COMPOSER_COMMAND(DecreaseZIndexCommand)
 NS_DECL_COMPOSER_COMMAND(IncreaseZIndexCommand)

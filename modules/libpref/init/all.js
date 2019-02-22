@@ -290,7 +290,7 @@ pref("ui.menu.incremental_search.timeout", 1000);
 pref("ui.popup.disable_autohide", false);
 
 #ifdef XP_MACOSX
-pref("ui.touchbar.layout", "Back,Reload,OpenOrFocus,AddBookmark,NewTab,Share");
+pref("ui.touchbar.layout", "Back,Forward,Reload,OpenLocation,NewTab,Share");
 #endif
 
 // 0 = default: always, except in high contrast mode

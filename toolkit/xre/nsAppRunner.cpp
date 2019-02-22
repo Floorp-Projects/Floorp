@@ -1670,7 +1670,7 @@ static void RegisterApplicationRestartChanged(const char* aPref, void* aData) {
 #  if defined(MOZ_LAUNCHER_PROCESS)
 
 static void OnLauncherPrefChanged(const char* aPref, void* aData) {
-  bool prefVal = Preferences::GetBool(PREF_WIN_LAUNCHER_PROCESS_ENABLED, false);
+  bool prefVal = Preferences::GetBool(aPref, false);
 
   mozilla::LauncherRegistryInfo launcherRegInfo;
   mozilla::LauncherVoidResult reflectResult =
@@ -1679,6 +1679,17 @@ static void OnLauncherPrefChanged(const char* aPref, void* aData) {
 }
 
 static void SetupLauncherProcessPref() {
+#    if defined(NIGHTLY_BUILD)
+  // On Nightly, tie launcher state to the SHIELD opt-out pref. Fire the
+  // callback immediately to ensure the pref is reflected to the registry.
+  // Also handle any future modification to SHIELD opt-out.
+  Preferences::RegisterCallbackAndCall(&OnLauncherPrefChanged,
+                                       "app.shield.optoutstudies.enabled");
+
+  // Now we fall-through to the remaining code that populates the launcher
+  // pref and the crash report annotations.
+#    endif  // defined(NIGHTLY_BUILD)
+
   mozilla::LauncherRegistryInfo launcherRegInfo;
 
   mozilla::LauncherResult<mozilla::LauncherRegistryInfo::EnabledState>
@@ -1695,8 +1706,11 @@ static void SetupLauncherProcessPref() {
         static_cast<uint32_t>(enabledState.unwrap()));
   }
 
+#    if !defined(NIGHTLY_BUILD)
+  // Only watch the launcher pref if we're not on nightly
   Preferences::RegisterCallback(&OnLauncherPrefChanged,
                                 PREF_WIN_LAUNCHER_PROCESS_ENABLED);
+#    endif  // !defined(NIGHTLY_BUILD)
 }
 
 #  endif  // defined(MOZ_LAUNCHER_PROCESS)

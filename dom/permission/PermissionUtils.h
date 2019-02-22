@@ -14,8 +14,8 @@
 namespace mozilla {
 namespace dom {
 
-const char* PermissionNameToType(PermissionName aName);
-Maybe<PermissionName> TypeToPermissionName(const char* aType);
+const nsLiteralCString& PermissionNameToType(PermissionName aName);
+Maybe<PermissionName> TypeToPermissionName(const nsACString& aType);
 
 PermissionState ActionToPermissionState(uint32_t aAction);
 

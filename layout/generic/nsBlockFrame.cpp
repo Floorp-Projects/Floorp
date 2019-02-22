@@ -6772,6 +6772,7 @@ void nsBlockFrame::SetInitialChildList(ChildListID aListID,
           !GetParent()->IsListControlFrame()) ||
          pseudo == PseudoStyleType::mozSVGText) &&
         !IsComboboxControlFrame() && !IsFrameOfType(eMathML) &&
+        !IsColumnSetWrapperFrame() &&
         RefPtr<ComputedStyle>(GetFirstLetterStyle(PresContext())) != nullptr;
     NS_ASSERTION(haveFirstLetterStyle ==
                      ((mState & NS_BLOCK_HAS_FIRST_LETTER_STYLE) != 0),

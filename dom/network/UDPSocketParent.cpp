@@ -53,8 +53,8 @@ bool UDPSocketParent::Init(const IPC::Principal& aPrincipal,
     }
 
     uint32_t permission = nsIPermissionManager::DENY_ACTION;
-    permMgr->TestExactPermissionFromPrincipal(mPrincipal, "udp-socket",
-                                              &permission);
+    permMgr->TestExactPermissionFromPrincipal(
+        mPrincipal, NS_LITERAL_CSTRING("udp-socket"), &permission);
     if (permission != nsIPermissionManager::ALLOW_ACTION) {
       return false;
     }

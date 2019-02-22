@@ -1724,7 +1724,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
   /**
    * A function called when there's a new source from a thread actor's sources.
-   * Emits `newSource` on the target actor.
+   * Emits `newSource` on the thread actor.
    *
    * @param {SourceActor} source
    */
@@ -1734,18 +1734,9 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // We use executeSoon because we don't want to block those operations
     // by sending packets in the middle of them.
     DevToolsUtils.executeSoon(() => {
-      const type = "newSource";
-      this.conn.send({
-        from: this._parent.actorID,
-        type,
-        source: source.form(),
-      });
-
-      // For compatibility and debugger still using `newSource` on the thread client,
-      // still emit this event here. Clean up in bug 1247084
       this.conn.send({
         from: this.actorID,
-        type,
+        type: "newSource",
         source: source.form(),
       });
     });

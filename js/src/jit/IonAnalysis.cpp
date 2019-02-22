@@ -1286,7 +1286,8 @@ bool jit::EliminateDeadResumePointOperands(MIRGenerator* mir, MIRGraph& graph) {
 bool js::jit::DeadIfUnused(const MDefinition* def) {
   return !def->isEffectful() &&
          (!def->isGuard() ||
-          def->block() == def->block()->graph().osrBlock()) &&
+          (def->block() == def->block()->graph().osrBlock() &&
+           !def->isImplicitlyUsed())) &&
          !def->isGuardRangeBailouts() && !def->isControlInstruction() &&
          (!def->isInstruction() || !def->toInstruction()->resumePoint());
 }

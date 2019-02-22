@@ -1,5 +1,18 @@
 "use strict";
 
+async function focusWindow(win) {
+  if (Services.focus.activeWindow == win) {
+    return;
+  }
+  let promise = new Promise(resolve => {
+    win.addEventListener("focus", function() {
+      resolve();
+    }, {capture: true, once: true});
+  });
+  win.focus();
+  await promise;
+}
+
 function getDialogDoc() {
   // Trudge through all the open windows, until we find the one
   // that has either commonDialog.xul or selectDialog.xul loaded.
@@ -69,7 +82,7 @@ async function getResponseResult(browser, resultUrl) {
 }
 
 async function waitForAuthPrompt() {
-  let promptDoc = await BrowserTestUtils.waitForCondition(() => {
+  let promptDoc = await TestUtils.waitForCondition(() => {
     return getAuthPrompt();
   });
   info("Got prompt: " + promptDoc);
@@ -96,6 +109,7 @@ async function loadAccessRestrictedURL(browser, url, username, password) {
   dialogUI.loginTextbox.value = username;
   dialogUI.password1Textbox.value = password;
   promptDoc.getElementById("commonDialog").acceptDialog();
+  await SimpleTest.promiseFocus(browser.ownerGlobal);
   await browserLoaded;
 }
 
@@ -122,6 +136,7 @@ add_task(async function test_setup() {
 
 add_task(async function test_normal_popup_notification_1() {
   info("test 1: run outside of private mode, popup notification should appear");
+  await focusWindow(normalWin);
   await BrowserTestUtils.withNewTab({
     gBrowser: normalWin.gBrowser,
     url: form1Url,
@@ -136,7 +151,8 @@ add_task(async function test_normal_popup_notification_1() {
     let notif = getCaptureDoorhanger("password-save", PopupNotifications, browser);
     ok(notif, "got notification popup");
     if (notif) {
-      ok(!notif.wasDismissed, "notification should not be dismissed");
+      await TestUtils.waitForCondition(() => !notif.dismissed,
+                                       "notification should not be dismissed");
       notif.remove();
     }
   });
@@ -150,7 +166,7 @@ add_task(async function test_private_popup_notification_2() {
 
   // clear existing logins for parity with the previous test
   Services.logins.removeAllLogins();
-
+  await focusWindow(privateWin);
   await BrowserTestUtils.withNewTab({
     gBrowser: privateWin.gBrowser,
     url: form1Url,
@@ -165,7 +181,8 @@ add_task(async function test_private_popup_notification_2() {
     let notif = getCaptureDoorhanger("password-save", PopupNotifications, browser);
     ok(notif, "Expected notification popup");
     if (notif) {
-      ok(notif.wasDismissed, "notification should be dismissed");
+      await TestUtils.waitForCondition(() => notif.dismissed,
+                                       "notification should be dismissed");
       notif.remove();
     }
   });
@@ -182,6 +199,7 @@ add_task(async function test_private_popup_notification_no_capture_pref_2b() {
   // clear existing logins for parity with the previous test
   Services.logins.removeAllLogins();
 
+  await focusWindow(privateWin);
   await BrowserTestUtils.withNewTab({
     gBrowser: privateWin.gBrowser,
     url: form1Url,
@@ -217,6 +235,7 @@ add_task(async function test_normal_popup_notification_3() {
   let timeLastUsed = allLogins[0].timeLastUsed;
   let loginGuid = allLogins[0].guid;
 
+  await focusWindow(normalWin);
   await BrowserTestUtils.withNewTab({
     gBrowser: normalWin.gBrowser,
     url: form1Url,
@@ -251,6 +270,7 @@ add_task(async function test_private_popup_notification_3b() {
   let timeLastUsed = allLogins[0].timeLastUsed;
   let loginGuid = allLogins[0].guid;
 
+  await focusWindow(privateWin);
   await BrowserTestUtils.withNewTab({
     gBrowser: privateWin.gBrowser,
     url: form1Url,
@@ -284,6 +304,7 @@ add_task(async function test_normal_new_password_4() {
   let timeLastUsed = allLogins[0].timeLastUsed;
   let loginGuid = allLogins[0].guid;
 
+  await focusWindow(normalWin);
   await BrowserTestUtils.withNewTab({
     gBrowser: normalWin.gBrowser,
     url: form2Url,
@@ -296,7 +317,8 @@ add_task(async function test_normal_new_password_4() {
     let notif = getCaptureDoorhanger("password-change", PopupNotifications, browser);
     ok(notif, "got notification popup");
     if (notif) {
-      ok(!notif.wasDismissed, "notification should not be dismissed");
+      await TestUtils.waitForCondition(() => !notif.dismissed,
+                                       "notification should not be dismissed");
       notif.remove();
     }
   });
@@ -320,6 +342,7 @@ add_task(async function test_private_new_password_5() {
   let timeLastUsed = allLogins[0].timeLastUsed;
   let loginGuid = allLogins[0].guid;
 
+  await focusWindow(privateWin);
   await BrowserTestUtils.withNewTab({
     gBrowser: privateWin.gBrowser,
     url: form2Url,
@@ -332,7 +355,8 @@ add_task(async function test_private_new_password_5() {
     let notif = getCaptureDoorhanger("password-change", PopupNotifications, browser);
     ok(notif, "Expected notification popup");
     if (notif) {
-      ok(!notif.wasDismissed, "notification should not be dismissed");
+      await TestUtils.waitForCondition(() => !notif.dismissed,
+                                       "notification should not be dismissed");
       notif.remove();
     }
   });
@@ -347,6 +371,7 @@ add_task(async function test_normal_with_login_6() {
   info("test 6: run with a login, outside of private mode, " +
        "submit with an existing password (from test 4): popup notification should appear");
 
+  await focusWindow(normalWin);
   await BrowserTestUtils.withNewTab({
     gBrowser: normalWin.gBrowser,
     url: form2Url,
@@ -359,7 +384,8 @@ add_task(async function test_normal_with_login_6() {
     let notif = getCaptureDoorhanger("password-change", PopupNotifications, browser);
     ok(notif, "got notification popup");
     if (notif) {
-      ok(!notif.wasDismissed, "notification should not be dismissed");
+      await TestUtils.waitForCondition(() => !notif.dismissed,
+                                       "notification should not be dismissed");
       notif.remove();
     }
     Services.logins.removeLogin(login);
@@ -373,6 +399,7 @@ add_task(async function test_normal_autofilled_7() {
   // Sanity check the HTTP login exists.
   is(Services.logins.getAllLogins().length, 1, "Should have the HTTP login");
 
+  await focusWindow(normalWin);
   await BrowserTestUtils.withNewTab({
     gBrowser: normalWin.gBrowser,
     url: "about:blank",
@@ -383,7 +410,7 @@ add_task(async function test_normal_autofilled_7() {
       await TestUtils.topicObserved("passwordmgr-processed-form");
       await Promise.resolve();
     });
-
+    await SimpleTest.promiseFocus(browser.ownerGlobal);
     await BrowserTestUtils.loadURI(browser, form1Url);
     await formFilled;
 
@@ -399,6 +426,7 @@ add_task(async function test_private_not_autofilled_8() {
   // Sanity check the HTTP login exists.
   is(Services.logins.getAllLogins().length, 1, "Should have the HTTP login");
 
+  await focusWindow(privateWin);
   await BrowserTestUtils.withNewTab({
     gBrowser: privateWin.gBrowser,
     url: form1Url,
@@ -415,6 +443,7 @@ add_task(async function test_private_not_autofilled_8() {
 //   // Sanity check the HTTP login exists.
 //   is(Services.logins.getAllLogins().length, 1, "Should have the HTTP login");
 
+//   await focusWindow(privateWin);
 //   await BrowserTestUtils.withNewTab({
 //     gBrowser: privateWin.gBrowser,
 //     url: form1Url,
@@ -455,6 +484,7 @@ add_task(async function test_normal_autofilled_10() {
   // Sanity check the HTTP login exists.
   is(Services.logins.getAllLogins().length, 1, "Should have the HTTP login");
 
+  await focusWindow(normalWin);
   await BrowserTestUtils.withNewTab({
     gBrowser: normalWin.gBrowser,
     url: form1Url,
@@ -470,6 +500,7 @@ add_task(async function test_normal_http_basic_auth() {
   Services.logins.removeAllLogins();
   clearHttpAuths();
 
+  await focusWindow(normalWin);
   await BrowserTestUtils.withNewTab({
     gBrowser: normalWin.gBrowser,
     url: "https://example.com",
@@ -495,7 +526,8 @@ add_task(async function test_normal_http_basic_auth() {
     let notif = getCaptureDoorhanger("password-save", PopupNotifications, browser);
     ok(notif, "got notification popup");
     if (notif) {
-      ok(!notif.wasDismissed, "notification should not be dismissed");
+      await TestUtils.waitForCondition(() => !notif.dismissed,
+                                       "notification should not be dismissed");
       notif.remove();
     }
   });
@@ -509,11 +541,13 @@ add_task(async function test_private_http_basic_auth() {
   const capturePrefValue = Services.prefs.getBoolPref(PRIVATE_BROWSING_CAPTURE_PREF);
   ok(capturePrefValue, `Expect ${PRIVATE_BROWSING_CAPTURE_PREF} to default to true`);
 
+  await focusWindow(privateWin);
   await BrowserTestUtils.withNewTab({
     gBrowser: privateWin.gBrowser,
     url: "https://example.com",
   }, async function(browser) {
     await loadAccessRestrictedURL(browser, authUrl, "test", "testpass");
+
     let fieldValues = await getResponseResult(browser, "authenticate.sjs");
     is(fieldValues.username, "test", "Checking authorized username");
     is(fieldValues.password, "testpass", "Checking authorized password");
@@ -521,7 +555,8 @@ add_task(async function test_private_http_basic_auth() {
     let notif = getCaptureDoorhanger("password-save", PopupNotifications, browser);
     ok(notif, "got notification popup");
     if (notif) {
-      ok(notif.wasDismissed, "notification should be dismissed");
+      await TestUtils.waitForCondition(() => notif.dismissed,
+                                       "notification should be dismissed");
       notif.remove();
     }
   });
@@ -537,11 +572,13 @@ add_task(async function test_private_http_basic_auth_no_capture_pref() {
   Services.logins.removeAllLogins();
   clearHttpAuths();
 
+  await focusWindow(privateWin);
   await BrowserTestUtils.withNewTab({
     gBrowser: privateWin.gBrowser,
     url: "https://example.com",
   }, async function(browser) {
     await loadAccessRestrictedURL(browser, authUrl, "test", "testpass");
+
     let fieldValues = await getResponseResult(browser, "authenticate.sjs");
     is(fieldValues.username, "test", "Checking authorized username");
     is(fieldValues.password, "testpass", "Checking authorized password");

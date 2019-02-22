@@ -476,7 +476,6 @@ nsresult nsClipboardCommand::IsCommandEnabled(const char *aCommandName,
   *outCmdEnabled = false;
 
   if (strcmp(aCommandName, "cmd_copy") &&
-      strcmp(aCommandName, "cmd_copyAndCollapseToEnd") &&
       strcmp(aCommandName, "cmd_cut") && strcmp(aCommandName, "cmd_paste")) {
     return NS_OK;
   }
@@ -492,8 +491,7 @@ nsresult nsClipboardCommand::IsCommandEnabled(const char *aCommandName,
     *outCmdEnabled = true;
   } else {
     // Cut isn't enabled in xul documents which use nsClipboardCommand
-    if (strcmp(aCommandName, "cmd_copy") == 0 ||
-        strcmp(aCommandName, "cmd_copyAndCollapseToEnd") == 0) {
+    if (strcmp(aCommandName, "cmd_copy") == 0) {
       *outCmdEnabled = nsCopySupport::CanCopy(doc);
     }
   }
@@ -503,7 +501,6 @@ nsresult nsClipboardCommand::IsCommandEnabled(const char *aCommandName,
 nsresult nsClipboardCommand::DoCommand(const char *aCommandName,
                                        nsISupports *aContext) {
   if (strcmp(aCommandName, "cmd_cut") && strcmp(aCommandName, "cmd_copy") &&
-      strcmp(aCommandName, "cmd_copyAndCollapseToEnd") &&
       strcmp(aCommandName, "cmd_paste"))
     return NS_OK;
 
@@ -524,16 +521,9 @@ nsresult nsClipboardCommand::DoCommand(const char *aCommandName,
   }
 
   bool actionTaken = false;
-  bool notCancelled = nsCopySupport::FireClipboardEvent(
-      eventMessage, nsIClipboard::kGlobalClipboard, presShell, nullptr,
-      &actionTaken);
-
-  if (notCancelled && !strcmp(aCommandName, "cmd_copyAndCollapseToEnd")) {
-    dom::Selection *sel =
-        presShell->GetCurrentSelection(SelectionType::eNormal);
-    NS_ENSURE_TRUE(sel, NS_ERROR_FAILURE);
-    sel->CollapseToEnd(IgnoreErrors());
-  }
+  nsCopySupport::FireClipboardEvent(eventMessage,
+                                    nsIClipboard::kGlobalClipboard, presShell,
+                                    nullptr, &actionTaken);
 
   return actionTaken ? NS_OK : NS_SUCCESS_DOM_NO_OPERATION;
 }
@@ -1114,7 +1104,6 @@ nsresult nsWindowCommandRegistration::RegisterWindowCommands(
 
   NS_REGISTER_ONE_COMMAND(nsClipboardCommand, "cmd_cut");
   NS_REGISTER_ONE_COMMAND(nsClipboardCommand, "cmd_copy");
-  NS_REGISTER_ONE_COMMAND(nsClipboardCommand, "cmd_copyAndCollapseToEnd");
   NS_REGISTER_ONE_COMMAND(nsClipboardCommand, "cmd_paste");
   NS_REGISTER_ONE_COMMAND(nsClipboardCopyLinkCommand, "cmd_copyLink");
   NS_REGISTER_FIRST_COMMAND(nsClipboardImageCommands, sCopyImageLocationString);
