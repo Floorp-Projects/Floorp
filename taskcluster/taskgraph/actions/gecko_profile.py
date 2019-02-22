@@ -25,7 +25,6 @@ logger = logging.getLogger(__name__)
 @register_callback_action(
     title='GeckoProfile',
     name='geckoprofile',
-    kind='hook',
     generic=True,
     symbol='Gp',
     description=('Take the label of the current task, '
