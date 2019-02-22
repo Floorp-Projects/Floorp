@@ -103,6 +103,7 @@ class ExtensionPolicyService final : public nsIAddonPolicyService,
 
   void CheckRequest(nsIChannel* aChannel);
   void CheckDocument(dom::Document* aDocument);
+  void CheckWindow(nsPIDOMWindowOuter* aWindow);
 
   void CheckContentScripts(const DocInfo& aDocInfo, bool aIsPreload);
 
