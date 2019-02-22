@@ -4,7 +4,6 @@
 
 from __future__ import absolute_import, print_function
 
-import io
 import os
 import posixpath
 import re
@@ -16,9 +15,6 @@ import time
 import traceback
 
 from distutils import dir_util
-import six
-from six.moves import range
-
 from . import version_codes
 
 
@@ -193,7 +189,7 @@ class ADBCommand(object):
                                       stdout=subprocess.PIPE,
                                       stderr=subprocess.PIPE).communicate()
             re_version = re.compile(r'Android Debug Bridge version (.*)')
-            self._adb_version = re_version.match(output[0].decode('utf-8')).group(1)
+            self._adb_version = re_version.match(output[0]).group(1)
 
         except Exception as exc:
             raise ADBError('%s: %s is not executable.' % (exc, adb))
@@ -322,9 +318,9 @@ class ADBCommand(object):
                                     adb_process.exitcode,
                                     output))
 
-            return output.decode('utf-8')
+            return output
         finally:
-            if adb_process and isinstance(adb_process.stdout_file, io.IOBase):
+            if adb_process and isinstance(adb_process.stdout_file, file):
                 adb_process.stdout_file.close()
 
 
@@ -791,7 +787,7 @@ class ADBDevice(ADBCommand):
                 re_device_serial_tcpip.match(serial) is not None or \
                 ":" not in serial
 
-        if isinstance(device, six.string_types):
+        if isinstance(device, (str, unicode)):
             # Treat this as a device serial
             if not is_valid_serial(device):
                 raise ValueError("Device serials containing ':' characters are "
@@ -885,7 +881,7 @@ class ADBDevice(ADBCommand):
         offset = 1
         while length - offset >= 0:
             file_obj.seek(-offset, os.SEEK_END)
-            char = file_obj.read(1).decode('utf-8')
+            char = file_obj.read(1)
             if not char:
                 break
             if char != '\r' and char != '\n':
@@ -1341,8 +1337,8 @@ class ADBDevice(ADBCommand):
         if cwd:
             cmd = "cd %s && %s" % (cwd, cmd)
         if env:
-            envstr = '&& '.join(['export %s=%s' %
-                                (x[0], x[1]) for x in env.items()])
+            envstr = '&& '.join(map(lambda x: 'export %s=%s' %
+                                    (x[0], x[1]), env.iteritems()))
             cmd = envstr + "&& " + cmd
         cmd += "; echo adb_returncode=$?"
 
@@ -1366,7 +1362,7 @@ class ADBDevice(ADBCommand):
                 time.sleep(self._polling_interval)
                 exitcode = adb_process.proc.poll()
         else:
-            stdout2 = io.open(adb_process.stdout_file.name, 'rb')
+            stdout2 = open(adb_process.stdout_file.name, 'rb')
             while ((time.time() - start_time) <= float(timeout)) and exitcode is None:
                 try:
                     line = _timed_read_line(stdout2)
@@ -1478,9 +1474,9 @@ class ADBDevice(ADBCommand):
                                     adb_process.exitcode,
                                     output))
 
-            return output.decode('utf-8')
+            return output
         finally:
-            if adb_process and isinstance(adb_process.stdout_file, io.IOBase):
+            if adb_process and isinstance(adb_process.stdout_file, file):
                 adb_process.stdout_file.close()
 
     # Informational methods
@@ -2078,7 +2074,7 @@ class ADBDevice(ADBCommand):
             else:
                 entry = line
             entries[entry] = 1
-        entry_list = list(entries.keys())
+        entry_list = entries.keys()
         entry_list.sort()
         return entry_list
 
@@ -2251,7 +2247,7 @@ class ADBDevice(ADBCommand):
         """
         with tempfile.NamedTemporaryFile() as tf:
             self.pull(remote, tf.name, timeout=timeout)
-            with io.open(tf.name) as tf2:
+            with open(tf.name) as tf2:
                 # ADB pull does not support offset and length, but we can
                 # instead read only the requested portion of the local file
                 if offset is not None and length is not None:
@@ -2485,7 +2481,7 @@ class ADBDevice(ADBCommand):
         :raises: * ADBTimeoutError
                  * ADBError
         """
-        if not isinstance(process_name, six.string_types):
+        if not isinstance(process_name, basestring):
             raise ADBError("Process name %s is not a string" % process_name)
 
         # Filter out extra spaces.
@@ -3013,7 +3009,7 @@ class ADBDevice(ADBCommand):
         # against bool prior to testing it against int in order to
         # prevent falsely identifying a bool value as an int.
         if extras:
-            for (key, val) in extras.items():
+            for (key, val) in extras.iteritems():
                 if isinstance(val, bool):
                     extra_type_param = "--ez"
                 elif isinstance(val, int):
@@ -3064,7 +3060,7 @@ class ADBDevice(ADBCommand):
         if moz_env:
             # moz_env is expected to be a dictionary of environment variables:
             # Fennec itself will set them when launched
-            for (env_count, (env_key, env_val)) in moz_env.items():
+            for (env_count, (env_key, env_val)) in enumerate(moz_env.iteritems()):
                 extras["env" + str(env_count)] = env_key + "=" + env_val
 
         # Additional command line arguments that fennec will read and use (e.g.
@@ -3114,7 +3110,7 @@ class ADBDevice(ADBCommand):
         if moz_env:
             # moz_env is expected to be a dictionary of environment variables:
             # geckoview_example itself will set them when launched
-            for (env_count, (env_key, env_val)) in enumerate(moz_env.items()):
+            for (env_count, (env_key, env_val)) in enumerate(moz_env.iteritems()):
                 extras["env" + str(env_count)] = env_key + "=" + env_val
 
         # Additional command line arguments that the app will read and use (e.g.
