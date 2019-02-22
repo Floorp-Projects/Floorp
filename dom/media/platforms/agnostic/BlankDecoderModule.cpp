@@ -103,10 +103,9 @@ already_AddRefed<MediaData> BlankAudioDataCreator::Create(
     }
     mFrameSum++;
   }
-  RefPtr<AudioData> data(
-      new AudioData(aSample->mOffset, aSample->mTime, aSample->mDuration,
-                    uint32_t(frames.value()), std::move(samples), mChannelCount,
-                    mSampleRate));
+  RefPtr<AudioData> data(new AudioData(aSample->mOffset, aSample->mTime,
+                                       aSample->mDuration, std::move(samples),
+                                       mChannelCount, mSampleRate));
   return data.forget();
 }
 

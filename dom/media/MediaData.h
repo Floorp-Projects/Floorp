@@ -334,17 +334,15 @@ class NullData : public MediaData {
 class AudioData : public MediaData {
  public:
   AudioData(int64_t aOffset, const media::TimeUnit& aTime,
-            const media::TimeUnit& aDuration, uint32_t aFrames,
-            AlignedAudioBuffer&& aData, uint32_t aChannels, uint32_t aRate,
+            const media::TimeUnit& aDuration, AlignedAudioBuffer&& aData,
+            uint32_t aChannels, uint32_t aRate,
             uint32_t aChannelMap = AudioConfig::ChannelLayout::UNKNOWN_MAP)
       : MediaData(sType, aOffset, aTime, aDuration),
         mChannels(aChannels),
         mChannelMap(aChannelMap),
         mRate(aRate),
         mAudioData(std::move(aData)),
-        mFrames(mAudioData.Length() / aChannels) {
-    MOZ_DIAGNOSTIC_ASSERT(mFrames == aFrames);
-  }
+        mFrames(mAudioData.Length() / aChannels) {}
 
   static const Type sType = Type::AUDIO_DATA;
   static const char* sTypeName;

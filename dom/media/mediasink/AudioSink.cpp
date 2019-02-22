@@ -459,7 +459,7 @@ already_AddRefed<AudioData> AudioSink::CreateAudioFromBuffer(
     return nullptr;
   }
   RefPtr<AudioData> data =
-      new AudioData(aReference->mOffset, aReference->mTime, duration, frames,
+      new AudioData(aReference->mOffset, aReference->mTime, duration,
                     std::move(aBuffer), mOutputChannels, mOutputRate);
   return data.forget();
 }

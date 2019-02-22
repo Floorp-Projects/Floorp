@@ -127,7 +127,7 @@ RefPtr<MediaDataDecoder::DecodePromise> WaveDataDecoder::ProcessDecode(
   auto duration = FramesToTimeUnit(frames, mInfo.mRate);
 
   return DecodePromise::CreateAndResolve(
-      DecodedData{new AudioData(aOffset, aSample->mTime, duration, frames,
+      DecodedData{new AudioData(aOffset, aSample->mTime, duration,
                                 std::move(buffer), mInfo.mChannels,
                                 mInfo.mRate)},
       __func__);

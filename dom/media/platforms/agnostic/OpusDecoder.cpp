@@ -333,7 +333,7 @@ RefPtr<MediaDataDecoder::DecodePromise> OpusDataDecoder::ProcessDecode(
   buffer.SetLength(frames * channels);
 
   return DecodePromise::CreateAndResolve(
-      DecodedData{new AudioData(aSample->mOffset, time, duration, frames,
+      DecodedData{new AudioData(aSample->mOffset, time, duration,
                                 std::move(buffer), mOpusParser->mChannels,
                                 mOpusParser->mRate, mChannelMap)},
       __func__);
