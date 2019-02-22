@@ -8,6 +8,10 @@ root:
           bounds: [0, 0, 100, 100]
           mix-blend-mode: multiply
           items:
-            - type: rect
+            - type: stacking-context
               bounds: [0, 0, 100, 100]
-              color: [255, 128, 0]
+              mix-blend-mode: multiply
+              items:
+                - type: rect
+                  bounds: [0, 0, 100, 100]
+                  color: [255, 128, 0]
