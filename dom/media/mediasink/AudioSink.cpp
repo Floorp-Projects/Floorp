@@ -245,7 +245,7 @@ UniquePtr<AudioStream::Chunk> AudioSink::PopFrames(uint32_t aFrames) {
     mCurrentData = mProcessedQueue.PeekFront();
     {
       MonitorAutoLock mon(mMonitor);
-      mCursor = MakeUnique<AudioBufferCursor>(mCurrentData->mAudioData.get(),
+      mCursor = MakeUnique<AudioBufferCursor>(mCurrentData->Data().Elements(),
                                               mCurrentData->mChannels,
                                               mCurrentData->mFrames);
     }
@@ -418,7 +418,7 @@ void AudioSink::NotifyAudioNeeded() {
     if (mConverter->InputConfig() != mConverter->OutputConfig()) {
       // We must ensure that the size in the buffer contains exactly the number
       // of frames, in case one of the audio producer over allocated the buffer.
-      AlignedAudioBuffer buffer(std::move(data->mAudioData));
+      AlignedAudioBuffer buffer(data->MoveableData());
       buffer.SetLength(size_t(data->mFrames) * data->mChannels);
 
       AlignedAudioBuffer convertedData =

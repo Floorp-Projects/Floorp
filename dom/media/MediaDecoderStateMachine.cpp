@@ -1343,8 +1343,9 @@ class MediaDecoderStateMachine::AccurateSeekingState
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
+    Span<const AudioDataValue> audioDataRange = aAudio->Data();
     memcpy(audioData.get(),
-           aAudio->mAudioData.get() + (framesToPrune.value() * channels),
+           audioDataRange.Elements() + (framesToPrune.value() * channels),
            frames * channels * sizeof(AudioDataValue));
     auto duration = FramesToTimeUnit(frames, Info().mAudio.mRate);
     if (!duration.IsValid()) {

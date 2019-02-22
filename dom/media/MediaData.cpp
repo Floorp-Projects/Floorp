@@ -41,7 +41,9 @@ bool IsDataLoudnessHearable(const AudioDataValue aData) {
 }
 
 void AudioData::EnsureAudioBuffer() {
-  if (mAudioBuffer) return;
+  if (mAudioBuffer) {
+    return;
+  }
   mAudioBuffer =
       SharedBuffer::Create(mFrames * mChannels * sizeof(AudioDataValue));
 
