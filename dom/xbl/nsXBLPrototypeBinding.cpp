@@ -113,7 +113,6 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding()
       mInheritStyle(true),
       mCheckedBaseProto(false),
       mKeyHandlersRegistered(false),
-      mChromeOnlyContent(false),
       mBindToUntrustedContent(false),
       mSimpleScopeChain(false),
       mResources(nullptr),
@@ -210,10 +209,6 @@ void nsXBLPrototypeBinding::SetBindingElement(Element* aElement) {
   if (mBinding->AttrValueIs(kNameSpaceID_None, nsGkAtoms::inheritstyle,
                             nsGkAtoms::_false, eCaseMatters))
     mInheritStyle = false;
-
-  mChromeOnlyContent =
-      mBinding->AttrValueIs(kNameSpaceID_None, nsGkAtoms::chromeOnlyContent,
-                            nsGkAtoms::_true, eCaseMatters);
 
   mBindToUntrustedContent = mBinding->AttrValueIs(
       kNameSpaceID_None, nsGkAtoms::bindToUntrustedContent, nsGkAtoms::_true,
@@ -722,8 +717,6 @@ nsresult nsXBLPrototypeBinding::Read(nsIObjectInputStream* aStream,
                                      nsXBLDocumentInfo* aDocInfo,
                                      Document* aDocument, uint8_t aFlags) {
   mInheritStyle = (aFlags & XBLBinding_Serialize_InheritStyle) ? true : false;
-  mChromeOnlyContent =
-      (aFlags & XBLBinding_Serialize_ChromeOnlyContent) ? true : false;
   mBindToUntrustedContent =
       (aFlags & XBLBinding_Serialize_BindToUntrustedContent) ? true : false;
   mSimpleScopeChain =
@@ -938,10 +931,6 @@ nsresult nsXBLPrototypeBinding::Write(nsIObjectOutputStream* aStream) {
   // mAlternateBindingURI is only set on the first binding.
   if (mAlternateBindingURI) {
     flags |= XBLBinding_Serialize_IsFirstBinding;
-  }
-
-  if (mChromeOnlyContent) {
-    flags |= XBLBinding_Serialize_ChromeOnlyContent;
   }
 
   if (mBindToUntrustedContent) {

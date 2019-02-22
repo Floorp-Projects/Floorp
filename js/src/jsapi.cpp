@@ -3339,7 +3339,7 @@ JS_PUBLIC_API bool JS_GetFunctionLength(JSContext* cx, HandleFunction fun,
   return JSFunction::getLength(cx, fun, length);
 }
 
-JS_PUBLIC_API bool JS_ObjectIsFunction(JSContext* cx, JSObject* obj) {
+JS_PUBLIC_API bool JS_ObjectIsFunction(JSObject* obj) {
   return obj->is<JSFunction>();
 }
 

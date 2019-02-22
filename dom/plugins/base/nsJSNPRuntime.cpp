@@ -677,8 +677,7 @@ bool nsJSObjWrapper::NP_HasMethod(NPObject *npobj, NPIdentifier id) {
   JS::Rooted<JS::Value> v(cx);
   bool ok = GetProperty(cx, npjsobj->mJSObj, id, &v);
 
-  return ok && !v.isPrimitive() &&
-         ::JS_ObjectIsFunction(cx, v.toObjectOrNull());
+  return ok && !v.isPrimitive() && ::JS_ObjectIsFunction(v.toObjectOrNull());
 }
 
 static bool doInvoke(NPObject *npobj, NPIdentifier method,

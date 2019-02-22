@@ -1,10 +1,9 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 from __future__ import absolute_import, print_function
 
-
-from ConfigParser import (
-    ConfigParser,
-    RawConfigParser
-)
 import datetime
 import os
 import posixpath
@@ -13,6 +12,7 @@ import tempfile
 import time
 
 from mozdevice import ADBHost, ADBError
+from six.moves.configparser import ConfigParser, RawConfigParser
 
 
 class Device(object):
@@ -187,7 +187,7 @@ class Device(object):
                 self.app_ctx.cleanup_profile()
 
             # Remove the test profile
-            self.device.rm(self.app_ctx.remote_profile, recursive=True)
+            self.device.rm(self.app_ctx.remote_profile, force=True, recursive=True)
         except Exception as e:
             print("cleanup aborted: %s" % str(e))
 

@@ -313,28 +313,22 @@ class UrlbarInput {
    */
   pickResult(event, resultIndex) {
     let result = this.view.getResult(resultIndex);
-    this.setValueFromResult(result);
-
-    this.view.close();
-
-    this.controller.recordSelectedResult(event, resultIndex);
-
+    let isCanonized = this.setValueFromResult(result, event);
     let where = this._whereToOpen(event);
-    let {url, postData} = UrlbarUtils.getUrlFromResult(result);
     let openParams = {
-      postData,
       allowInheritPrincipal: false,
     };
 
-    if (result.autofill) {
-      // For autofilled results, the value that should be canonized is not the
-      // autofilled value but the value that the user typed.
-      let canonizedUrl = this._maybeCanonizeURL(event, this._lastSearchString);
-      if (canonizedUrl) {
-        this._loadURL(canonizedUrl, where, openParams);
-        return;
-      }
+    this.view.close();
+    this.controller.recordSelectedResult(event, resultIndex);
+
+    if (isCanonized) {
+      this._loadURL(this.value, where, openParams);
+      return;
     }
+
+    let {url, postData} = UrlbarUtils.getUrlFromResult(result);
+    openParams.postData = postData;
 
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.TAB_SWITCH: {
@@ -356,12 +350,6 @@ class UrlbarInput {
         return;
       }
       case UrlbarUtils.RESULT_TYPE.SEARCH: {
-        let canonizedUrl = this._maybeCanonizeURL(event,
-                result.payload.suggestion || result.payload.query);
-        if (canonizedUrl) {
-          url = canonizedUrl;
-          break;
-        }
         if (result.payload.isKeywordOffer) {
           // Picking a keyword offer just fills it in the input and doesn't
           // visit anything.  The user can then type a search string.  Also
@@ -379,7 +367,12 @@ class UrlbarInput {
         break;
       }
       case UrlbarUtils.RESULT_TYPE.OMNIBOX: {
-        // Give the extension control of handling the command.
+        // We don't directly handle a load when an Omnibox API result is picked,
+        // instead we forward the request to the WebExtension itself, because
+        // the value may not even be a url.
+        // We pass the keyword and content, that actually is the retrieved value
+        // prefixed by the keyword. ExtensionSearchHandler uses this keyword
+        // redundancy as a sanity check.
         ExtensionSearchHandler.handleInputEntered(result.payload.keyword,
                                                   result.payload.content,
                                                   where);
@@ -397,12 +390,23 @@ class UrlbarInput {
    * Called by the view when moving through results with the keyboard.
    *
    * @param {UrlbarResult} result The result that was selected.
+   * @param {Event} [event] The event that picked the result.
+   * @returns {boolean}
+   *   Whether the value has been canonized
    */
-  setValueFromResult(result) {
-    if (result.autofill) {
-      this._setValueFromResultAutofill(result);
+  setValueFromResult(result, event = null) {
+    // For autofilled results, the value that should be canonized is not the
+    // autofilled value but the value that the user typed.
+    let canonizedUrl = this._maybeCanonizeURL(event, result.autofill ?
+                         this._lastSearchString : this.textValue);
+    if (canonizedUrl) {
+      this.value = canonizedUrl;
     } else {
-      this.value = this._valueFromResultPayload(result);
+      this.value = this._getValueFromResult(result);
+      if (result.autofill) {
+        this.selectionStart = result.autofill.selectionStart;
+        this.selectionEnd = result.autofill.selectionEnd;
+      }
     }
     this._resultForCurrentValue = result;
 
@@ -418,6 +422,8 @@ class UrlbarInput {
         this.setAttribute("actiontype", "extension");
         break;
     }
+
+    return !!canonizedUrl;
   }
 
   /**
@@ -548,13 +554,11 @@ class UrlbarInput {
 
   // Private methods below.
 
-  _setValueFromResultAutofill(result) {
-    this.value = result.autofill.value;
-    this.selectionStart = result.autofill.selectionStart;
-    this.selectionEnd = result.autofill.selectionEnd;
-  }
+  _getValueFromResult(result) {
+    if (result.autofill) {
+      return result.autofill.value;
+    }
 
-  _valueFromResultPayload(result) {
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.KEYWORD:
         return result.payload.input;
@@ -796,9 +800,9 @@ class UrlbarInput {
   _loadURL(url, openUILinkWhere, params) {
     let browser = this.window.gBrowser.selectedBrowser;
 
-    // TODO: These should probably be set by the input field.
-    // this.value = url;
-    // browser.userTypedValue = url;
+    this.value = url;
+    browser.userTypedValue = url;
+
     if (this.window.gInitialPages.includes(url)) {
       browser.initialPageLoadedFromUserAction = url;
     }

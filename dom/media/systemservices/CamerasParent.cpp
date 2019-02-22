@@ -686,7 +686,8 @@ static bool HasCameraPermission(const ipc::PrincipalInfo& aPrincipalInfo) {
   }
 
   // Name used with nsIPermissionManager
-  static const char* cameraPermission = "MediaManagerVideo";
+  static const nsLiteralCString cameraPermission =
+      NS_LITERAL_CSTRING("MediaManagerVideo");
   nsCOMPtr<nsIPermissionManager> mgr =
       do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {

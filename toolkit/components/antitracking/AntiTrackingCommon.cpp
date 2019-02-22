@@ -626,7 +626,7 @@ NS_IMETHODIMP
 TemporaryAccessGrantObserver::Observe(nsISupports* aSubject, const char* aTopic,
                                       const char16_t* aData) {
   if (strcmp(aTopic, NS_TIMER_CALLBACK_TOPIC) == 0) {
-    Unused << mPM->RemoveFromPrincipal(mPrincipal, mType.get());
+    Unused << mPM->RemoveFromPrincipal(mPrincipal, mType);
   } else if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
     nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();
@@ -684,8 +684,7 @@ NS_IMETHODIMP SettingsChangeObserver::Observe(nsISupports* aSubject,
     if (perm) {
       nsAutoCString type;
       nsresult rv = perm->GetType(type);
-      if (NS_WARN_IF(NS_FAILED(rv)) ||
-          type.EqualsLiteral(USER_INTERACTION_PERM)) {
+      if (NS_WARN_IF(NS_FAILED(rv)) || type.Equals(USER_INTERACTION_PERM)) {
         // Ignore failures or notifications that have been sent because of
         // user interactions.
         return NS_OK;
@@ -980,9 +979,9 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
          "permission manager",
          expirationTime));
 
-    rv = permManager->AddFromPrincipal(aTrackingPrincipal, "cookie",
-                                       nsICookiePermission::ACCESS_ALLOW,
-                                       expirationType, when);
+    rv = permManager->AddFromPrincipal(
+        aTrackingPrincipal, NS_LITERAL_CSTRING("cookie"),
+        nsICookiePermission::ACCESS_ALLOW, expirationType, when);
   } else {
     uint32_t privateBrowsingId = 0;
     rv = aParentPrincipal->GetPrivateBrowsingId(&privateBrowsingId);
@@ -1003,7 +1002,7 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
          "permission manager",
          type.get(), expirationTime));
 
-    rv = permManager->AddFromPrincipal(aParentPrincipal, type.get(),
+    rv = permManager->AddFromPrincipal(aParentPrincipal, type,
                                        nsIPermissionManager::ALLOW_ACTION,
                                        expirationType, when);
 
@@ -1230,8 +1229,8 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
   }
 
   uint32_t result = 0;
-  rv = permManager->TestPermissionFromPrincipal(parentPrincipal, type.get(),
-                                                &result);
+  rv = permManager->TestPermissionWithoutDefaultsFromPrincipal(parentPrincipal,
+                                                               type, &result);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG(("Failed to test the permission"));
     return false;
@@ -1473,8 +1472,8 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
   }
 
   uint32_t result = 0;
-  rv = permManager->TestPermissionFromPrincipal(parentPrincipal, type.get(),
-                                                &result);
+  rv = permManager->TestPermissionWithoutDefaultsFromPrincipal(parentPrincipal,
+                                                               type, &result);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG(("Failed to test the permission"));
     return false;
@@ -1569,8 +1568,8 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
   }
 
   uint32_t result = 0;
-  rv = permManager->TestPermissionFromPrincipal(parentPrincipal, type.get(),
-                                                &result);
+  rv = permManager->TestPermissionWithoutDefaultsFromPrincipal(parentPrincipal,
+                                                               type, &result);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG(("Failed to test the permission"));
     return false;
@@ -1634,8 +1633,9 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
 
   // Check both the normal mode and private browsing mode user override
   // permissions.
-  Pair<const char*, bool> types[] = {{"trackingprotection", false},
-                                     {"trackingprotection-pb", true}};
+  Pair<const nsLiteralCString, bool> types[] = {
+      {NS_LITERAL_CSTRING("trackingprotection"), false},
+      {NS_LITERAL_CSTRING("trackingprotection-pb"), true}};
 
   auto topWinURI = PromiseFlatCString(escaped);
   for (size_t i = 0; i < ArrayLength(types); ++i) {
@@ -1650,7 +1650,7 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
 
     if (permissions == nsIPermissionManager::ALLOW_ACTION) {
       aIsAllowListed = true;
-      LOG(("Found user override type %s for %s", types[i].first(),
+      LOG(("Found user override type %s for %s", types[i].first().get(),
            topWinURI.get()));
       // Stop checking the next permisson type if we decided to override.
       break;
@@ -1832,7 +1832,7 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
   }
 
   uint32_t result = 0;
-  nsresult rv = permManager->TestPermissionFromPrincipal(
+  nsresult rv = permManager->TestPermissionWithoutDefaultsFromPrincipal(
       aPrincipal, USER_INTERACTION_PERM, &result);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;

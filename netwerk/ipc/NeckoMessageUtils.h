@@ -29,7 +29,7 @@ struct Permission {
 
   Permission() : capability(0), expireType(0), expireTime(0) {}
 
-  Permission(const nsCString& aOrigin, const nsCString& aType,
+  Permission(const nsCString& aOrigin, const nsACString& aType,
              const uint32_t aCapability, const uint32_t aExpireType,
              const int64_t aExpireTime)
       : origin(aOrigin),
