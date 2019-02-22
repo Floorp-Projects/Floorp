@@ -2451,15 +2451,10 @@ impl<'a> DisplayListFlattener<'a> {
             }
 
             let font = FontInstance::new(
-                font_instance.font_key,
-                font_instance.size,
-                *text_color,
-                font_instance.bg_color,
+                Arc::clone(font_instance),
+                (*text_color).into(),
                 render_mode,
                 flags,
-                font_instance.synthetic_italics,
-                font_instance.platform_options,
-                font_instance.variations.clone(),
             );
 
             // TODO(gw): We can do better than a hash lookup here...
