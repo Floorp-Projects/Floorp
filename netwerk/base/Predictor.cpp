@@ -607,6 +607,8 @@ nsresult Predictor::Create(nsISupports *aOuter, const nsIID &aIID,
 
   RefPtr<Predictor> svc = new Predictor();
   if (IsNeckoChild()) {
+    NeckoChild::InitNeckoChild();
+
     // Child threads only need to be call into the public interface methods
     // so we don't bother with initialization
     return svc->QueryInterface(aIID, aResult);
