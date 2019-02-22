@@ -1407,9 +1407,8 @@ imgLoader::RemoveEntry(nsIURI* aURI, Document* aDoc) {
       }
     }
 
-    nsresult rv = NS_OK;
-    ImageCacheKey key(aURI, attrs, aDoc, rv);
-    if (NS_SUCCEEDED(rv) && RemoveFromCache(key)) {
+    ImageCacheKey key(aURI, attrs, aDoc);
+    if (RemoveFromCache(key)) {
       return NS_OK;
     }
   }
@@ -1429,9 +1428,7 @@ imgLoader::FindEntryProperties(nsIURI* uri, Document* aDoc,
     }
   }
 
-  nsresult rv;
-  ImageCacheKey key(uri, attrs, aDoc, rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  ImageCacheKey key(uri, attrs, aDoc);
   imgCacheTable& cache = GetCache(key);
 
   RefPtr<imgCacheEntry> entry;
@@ -2144,8 +2141,7 @@ nsresult imgLoader::LoadImage(
   if (aTriggeringPrincipal) {
     attrs = aTriggeringPrincipal->OriginAttributesRef();
   }
-  ImageCacheKey key(aURI, attrs, aLoadingDocument, rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  ImageCacheKey key(aURI, attrs, aLoadingDocument);
   imgCacheTable& cache = GetCache(key);
 
   if (cache.Get(key, getter_AddRefs(entry)) && entry) {
@@ -2374,9 +2370,7 @@ nsresult imgLoader::LoadImageWithChannel(nsIChannel* channel,
 
   OriginAttributes attrs = loadInfo->GetOriginAttributes();
 
-  nsresult rv;
-  ImageCacheKey key(uri, attrs, doc, rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  ImageCacheKey key(uri, attrs, doc);
 
   nsLoadFlags requestFlags = nsIRequest::LOAD_NORMAL;
   channel->GetLoadFlags(&requestFlags);
@@ -2475,7 +2469,7 @@ nsresult imgLoader::LoadImageWithChannel(nsIChannel* channel,
   // Filter out any load flags not from nsIRequest
   requestFlags &= nsIRequest::LOAD_REQUESTMASK;
 
-  rv = NS_OK;
+  nsresult rv = NS_OK;
   if (request) {
     // we have this in our cache already.. cancel the current (document) load
 
@@ -2496,8 +2490,7 @@ nsresult imgLoader::LoadImageWithChannel(nsIChannel* channel,
     // constructed above with the *current URI* and not the *original URI*. I'm
     // pretty sure this is a bug, and it's preventing us from ever getting a
     // cache hit in LoadImageWithChannel when redirects are involved.
-    ImageCacheKey originalURIKey(originalURI, attrs, doc, rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ImageCacheKey originalURIKey(originalURI, attrs, doc);
 
     // Default to doing a principal check because we don't know who
     // started that load and whether their principal ended up being
