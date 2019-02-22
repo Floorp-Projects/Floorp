@@ -26,6 +26,7 @@ use clip_scroll_tree::{SpatialNodeIndex, ClipScrollTree};
 #[cfg(feature = "debugger")]
 use debug_server;
 use frame_builder::{FrameBuilder, FrameBuilderConfig};
+use glyph_rasterizer::{FontInstance};
 use gpu_cache::GpuCache;
 use hit_test::{HitTest, HitTester};
 use intern_types;
@@ -51,6 +52,7 @@ use serde::{Serialize, Deserialize};
 use serde_json;
 #[cfg(any(feature = "capture", feature = "replay"))]
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::mem::replace;
 use std::sync::mpsc::{channel, Sender, Receiver};
@@ -990,7 +992,8 @@ impl RenderBackend {
             }
             ApiMsg::GetGlyphDimensions(instance_key, glyph_indices, tx) => {
                 let mut glyph_dimensions = Vec::with_capacity(glyph_indices.len());
-                if let Some(font) = self.resource_cache.get_font_instance(instance_key) {
+                if let Some(base) = self.resource_cache.get_font_instance(instance_key) {
+                    let font = FontInstance::from_base(Arc::clone(&base));
                     for glyph_index in &glyph_indices {
                         let glyph_dim = self.resource_cache.get_glyph_dimensions(&font, *glyph_index);
                         glyph_dimensions.push(glyph_dim);
