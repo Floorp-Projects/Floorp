@@ -103,7 +103,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
   },
 
   get isPseudoElement() {
-    return !this.player.effect.target.ownerDocument;
+    return !!this.player.effect.target.element;
   },
 
   get node() {
