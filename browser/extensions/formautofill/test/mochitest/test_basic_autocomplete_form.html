@@ -37,6 +37,7 @@ async function setupAddressStorage() {
   await addAddress(MOCK_STORAGE[1]);
 }
 
+// TODO: Add form history fallback test cases for credit card fields. (bug 1393374)
 async function setupFormHistory() {
   await updateFormHistory([
     {op: "add", fieldname: "tel", value: "+1234567890"},
@@ -158,11 +159,9 @@ add_task(async function check_fields_after_form_autofill() {
 // Fallback to history search after autofill address.
 add_task(async function check_fallback_after_form_autofill() {
   await setInput("#tel", "", true);
-  await triggerPopupAndHoverItem("#tel", 0);
+  synthesizeKey("KEY_ArrowDown");
+  await expectPopup();
   checkMenuEntries(["+1234567890"], false);
-  await triggerAutofillAndCheckProfile({
-    tel: "+1234567890",
-  });
 });
 
 // Resume form autofill once all the autofilled fileds are changed.
@@ -170,14 +169,14 @@ add_task(async function check_form_autofill_resume() {
   document.querySelector("#tel").blur();
   document.querySelector("#form1").reset();
   await setInput("#tel", "");
-  await triggerPopupAndHoverItem("#tel", 0);
+  synthesizeKey("KEY_ArrowDown");
+  await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
     JSON.stringify({
       primary: address.tel,
       secondary: FormAutofillUtils.toOneLineAddress(address["street-address"]),
     })
   ));
-  await triggerAutofillAndCheckProfile(MOCK_STORAGE[0]);
 });
 
 </script>
