@@ -307,7 +307,7 @@ void MediaFormatReader::DecoderData::ShutdownDecoder() {
   // we can forget mDecoder and be ready to create a new one.
   mDecoder = nullptr;
   mDescription = NS_LITERAL_CSTRING("shutdown");
-  mOwner->ScheduleUpdate(mType == MediaData::AUDIO_DATA
+  mOwner->ScheduleUpdate(mType == MediaData::Type::AUDIO_DATA
                              ? TrackType::kAudioTrack
                              : TrackType::kVideoTrack);
 }
@@ -326,8 +326,9 @@ void MediaFormatReader::DecoderData::Flush() {
   mNumSamplesOutput = 0;
   mSizeOfQueue = 0;
   if (mDecoder) {
-    TrackType type = mType == MediaData::AUDIO_DATA ? TrackType::kAudioTrack
-                                                    : TrackType::kVideoTrack;
+    TrackType type = mType == MediaData::Type::AUDIO_DATA
+                         ? TrackType::kAudioTrack
+                         : TrackType::kVideoTrack;
     mFlushing = true;
     MOZ_DIAGNOSTIC_ASSERT(!mShutdownPromise);
     mShutdownPromise = new SharedShutdownPromiseHolder();
@@ -972,9 +973,9 @@ MediaFormatReader::MediaFormatReader(MediaFormatReaderInit& aInit,
     : mTaskQueue(new TaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK),
                                "MediaFormatReader::mTaskQueue",
                                /* aSupportsTailDispatch = */ true)),
-      mAudio(this, MediaData::AUDIO_DATA,
+      mAudio(this, MediaData::Type::AUDIO_DATA,
              StaticPrefs::MediaAudioMaxDecodeError()),
-      mVideo(this, MediaData::VIDEO_DATA,
+      mVideo(this, MediaData::Type::VIDEO_DATA,
              StaticPrefs::MediaVideoMaxDecodeError()),
       mDemuxer(new DemuxerProxy(aDemuxer)),
       mDemuxerInitDone(false),
@@ -1676,7 +1677,7 @@ void MediaFormatReader::NotifyNewOutput(
     for (auto&& sample : aResults) {
       if (DecoderDoctorLogger::IsDDLoggingEnabled()) {
         switch (sample->mType) {
-          case MediaData::AUDIO_DATA:
+          case MediaData::Type::AUDIO_DATA:
             DDLOGPR(DDLogCategory::Log,
                     aTrack == TrackInfo::kAudioTrack ? "decoded_audio"
                                                      : "decoded_got_audio!?",
@@ -1693,7 +1694,7 @@ void MediaFormatReader::NotifyNewOutput(
                     sample->As<AudioData>()->mRate,
                     sample->As<AudioData>()->Data().Length());
             break;
-          case MediaData::VIDEO_DATA:
+          case MediaData::Type::VIDEO_DATA:
             DDLOGPR(DDLogCategory::Log,
                     aTrack == TrackInfo::kVideoTrack ? "decoded_video"
                                                      : "decoded_got_video!?",
@@ -1708,7 +1709,7 @@ void MediaFormatReader::NotifyNewOutput(
                     sample->As<VideoData>()->mDisplay.width,
                     sample->As<VideoData>()->mDisplay.height);
             break;
-          case MediaData::RAW_DATA:
+          case MediaData::Type::RAW_DATA:
             DDLOGPR(DDLogCategory::Log,
                     aTrack == TrackInfo::kAudioTrack
                         ? "decoded_audio"
@@ -1723,7 +1724,7 @@ void MediaFormatReader::NotifyNewOutput(
                     sample->mDuration.ToMicroseconds(), sample->mFrames,
                     sample->mKeyframe ? "true" : "false");
             break;
-          case MediaData::NULL_DATA:
+          case MediaData::Type::NULL_DATA:
             DDLOGPR(DDLogCategory::Log,
                     aTrack == TrackInfo::kAudioTrack
                         ? "decoded_audio"
@@ -2252,7 +2253,7 @@ void MediaFormatReader::Update(TrackType aTrack) {
   }
 
   while (decoder.mOutput.Length() &&
-         decoder.mOutput[0]->mType == MediaData::NULL_DATA) {
+         decoder.mOutput[0]->mType == MediaData::Type::NULL_DATA) {
     LOGV("Dropping null data. Time: %" PRId64,
          decoder.mOutput[0]->mTime.ToMicroseconds());
     decoder.mOutput.RemoveElementAt(0);
@@ -2467,7 +2468,7 @@ void MediaFormatReader::Update(TrackType aTrack) {
 
 void MediaFormatReader::ReturnOutput(MediaData* aData, TrackType aTrack) {
   MOZ_ASSERT(GetDecoderData(aTrack).HasPromise());
-  MOZ_DIAGNOSTIC_ASSERT(aData->mType != MediaData::NULL_DATA);
+  MOZ_DIAGNOSTIC_ASSERT(aData->mType != MediaData::Type::NULL_DATA);
   LOG("Resolved data promise for %s [%" PRId64 ", %" PRId64 "]",
       TrackTypeToStr(aTrack), aData->mTime.ToMicroseconds(),
       aData->GetEndTime().ToMicroseconds());
@@ -2526,8 +2527,9 @@ size_t MediaFormatReader::SizeOfQueue(TrackType aTrack) {
 RefPtr<MediaFormatReader::WaitForDataPromise> MediaFormatReader::WaitForData(
     MediaData::Type aType) {
   MOZ_ASSERT(OnTaskQueue());
-  TrackType trackType = aType == MediaData::VIDEO_DATA ? TrackType::kVideoTrack
-                                                       : TrackType::kAudioTrack;
+  TrackType trackType = aType == MediaData::Type::VIDEO_DATA
+                            ? TrackType::kVideoTrack
+                            : TrackType::kAudioTrack;
   auto& decoder = GetDecoderData(trackType);
   if (!decoder.IsWaitingForData() && !decoder.IsWaitingForKey()) {
     // We aren't waiting for anything.
@@ -2548,14 +2550,14 @@ nsresult MediaFormatReader::ResetDecode(TrackSet aTracks) {
   // Do the same for any data wait promises.
   if (aTracks.contains(TrackInfo::kAudioTrack)) {
     mAudio.mWaitingPromise.RejectIfExists(
-        WaitForDataRejectValue(MediaData::AUDIO_DATA,
+        WaitForDataRejectValue(MediaData::Type::AUDIO_DATA,
                                WaitForDataRejectValue::CANCELED),
         __func__);
   }
 
   if (aTracks.contains(TrackInfo::kVideoTrack)) {
     mVideo.mWaitingPromise.RejectIfExists(
-        WaitForDataRejectValue(MediaData::VIDEO_DATA,
+        WaitForDataRejectValue(MediaData::Type::VIDEO_DATA,
                                WaitForDataRejectValue::CANCELED),
         __func__);
   }
@@ -2821,8 +2823,8 @@ void MediaFormatReader::OnSeekFailed(TrackType aTrack,
   MOZ_ASSERT(!mVideo.mSeekRequest.Exists() && !mAudio.mSeekRequest.Exists());
   mPendingSeekTime.reset();
 
-  auto type = aTrack == TrackType::kAudioTrack ? MediaData::AUDIO_DATA
-                                               : MediaData::VIDEO_DATA;
+  auto type = aTrack == TrackType::kAudioTrack ? MediaData::Type::AUDIO_DATA
+                                               : MediaData::Type::VIDEO_DATA;
   mSeekPromise.Reject(SeekRejectValue(type, aError), __func__);
 }
 

@@ -98,7 +98,7 @@ void RemoteAudioDecoderParent::ProcessDecodedData(
   MOZ_ASSERT(OnManagerThread());
 
   for (const auto& data : aData) {
-    MOZ_ASSERT(data->mType == MediaData::AUDIO_DATA,
+    MOZ_ASSERT(data->mType == MediaData::Type::AUDIO_DATA,
                "Can only decode audio using RemoteAudioDecoderParent!");
     AudioData* audio = static_cast<AudioData*>(data.get());
 

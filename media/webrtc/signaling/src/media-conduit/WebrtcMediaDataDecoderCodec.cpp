@@ -111,7 +111,7 @@ int32_t WebrtcMediaDataDecoder::Decode(
                  [&](const MediaResult& aError) { mError = aError; });
 
     for (auto& frame : mResults) {
-      MOZ_ASSERT(frame->mType == MediaData::VIDEO_DATA);
+      MOZ_ASSERT(frame->mType == MediaData::Type::VIDEO_DATA);
       RefPtr<VideoData> video = frame->As<VideoData>();
       MOZ_ASSERT(video);
       if (!video->mImage) {
