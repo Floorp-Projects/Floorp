@@ -1711,7 +1711,7 @@ function readServiceLogFile() {
  * Launches the updater binary to apply an update for updater tests.
  *
  * @param   aExpectedStatus
- *          The expected value of update.status when the test finishes. For
+ *          The expected value of update.status when the update finishes. For
  *          service tests passing STATE_PENDING or STATE_APPLIED will change the
  *          value to STATE_PENDING_SVC and STATE_APPLIED_SVC respectively.
  * @param   aSwitchApp
@@ -1740,7 +1740,7 @@ function runUpdate(aExpectedStatus, aSwitchApp, aExpectedExitValue, aCheckSvcLog
                    aPatchDirPath, aInstallDirPath, aApplyToDirPath,
                    aCallbackPath) {
   let isInvalidArgTest = !!aPatchDirPath || !!aInstallDirPath ||
-                         !!aApplyToDirPath || aCallbackPath;
+                         !!aApplyToDirPath || !!aCallbackPath;
 
   let svcOriginalLog;
   if (IS_SERVICE_TEST) {
@@ -1849,8 +1849,6 @@ function runUpdate(aExpectedStatus, aSwitchApp, aExpectedExitValue, aCheckSvcLog
                       "contain the successful launch string");
     }
   }
-
-  executeSoon(runUpdateFinished);
 }
 
 /**

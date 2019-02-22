@@ -26,12 +26,6 @@ function setupUpdaterTestFinished() {
  */
 function waitForHelperSleepFinished() {
   runUpdate(STATE_FAILED_WRITE_ERROR, false, 1, true);
-}
-
-/**
- * Called after the call to runUpdate finishes.
- */
-function runUpdateFinished() {
   waitForHelperExit();
 }
 
