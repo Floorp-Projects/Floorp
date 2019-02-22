@@ -50,8 +50,6 @@ pref("devtools.inspector.showUserAgentStyles", false);
 pref("devtools.inspector.showAllAnonymousContent", false);
 // Show user agent shadow roots
 pref("devtools.inspector.showUserAgentShadowRoots", false);
-// Enable the font highlight-on-hover feature
-pref("devtools.inspector.fonthighlighter.enabled", true);
 // Enable the new Rules View
 pref("devtools.inspector.new-rulesview.enabled", false);
 
