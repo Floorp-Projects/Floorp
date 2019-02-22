@@ -98,10 +98,10 @@ ParseNode* ParseNode::appendOrCreateList(ParseNodeKind kind, ParseNode* left,
   return list;
 }
 
-const ParseNodeArity js::frontend::ParseNodeKindArity[] = {
-#define ARITY(_name, type) type::arity(),
-    FOR_EACH_PARSE_NODE_KIND(ARITY)
-#undef ARITY
+const ParseNode::TypeCode ParseNode::typeCodeTable[] = {
+#define TYPE_CODE(_name, type) type::classTypeCode(),
+    FOR_EACH_PARSE_NODE_KIND(TYPE_CODE)
+#undef TYPE_CODE
 };
 
 #ifdef DEBUG
