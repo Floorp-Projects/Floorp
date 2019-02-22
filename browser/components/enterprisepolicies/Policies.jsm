@@ -485,7 +485,7 @@ var Policies = {
 
   "DontCheckDefaultBrowser": {
     onBeforeUIStartup(manager, param) {
-      setAndLockPref("browser.shell.checkDefaultBrowser", false);
+      setAndLockPref("browser.shell.checkDefaultBrowser", !param);
     },
   },
 
