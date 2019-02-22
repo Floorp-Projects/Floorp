@@ -29,6 +29,7 @@
 
 #include "common/windows/pdb_source_line_writer.h"
 
+#include <assert.h>
 #include <windows.h>
 #include <winnt.h>
 #include <atlbase.h>
@@ -723,35 +724,17 @@ bool PDBSourceLineWriter::PrintFrameDataUsingPDB() {
 }
 
 bool PDBSourceLineWriter::PrintFrameDataUsingEXE() {
-  if (code_file_.empty() && !FindPEFile()) {
-    fprintf(stderr, "Couldn't locate EXE or DLL file.\n");
-    return false;
-  }
-
-  // Convert wchar to native charset because ImageLoad only takes
-  // a PSTR as input.
-  string code_file;
-  if (!WindowsStringUtils::safe_wcstombs(code_file_, &code_file)) {
-    return false;
-  }
-
-  AutoImage img(ImageLoad((PSTR)code_file.c_str(), NULL));
+  AutoImage img(LoadImageForPEFile());
   if (!img) {
-    fprintf(stderr, "Failed to load %s\n", code_file.c_str());
     return false;
   }
-  PIMAGE_OPTIONAL_HEADER64 optional_header =
-    &(reinterpret_cast<PIMAGE_NT_HEADERS64>(img->FileHeader))->OptionalHeader;
-  if (optional_header->Magic != IMAGE_NT_OPTIONAL_HDR64_MAGIC) {
+
+  DWORD exception_rva, exception_size;
+  if (!Get64BitExceptionInformation(img, &exception_rva, &exception_size)) {
     fprintf(stderr, "Not a PE32+ image\n");
     return false;
   }
 
-  // Read Exception Directory
-  DWORD exception_rva = optional_header->
-    DataDirectory[IMAGE_DIRECTORY_ENTRY_EXCEPTION].VirtualAddress;
-  DWORD exception_size = optional_header->
-    DataDirectory[IMAGE_DIRECTORY_ENTRY_EXCEPTION].Size;
   PIMAGE_RUNTIME_FUNCTION_ENTRY funcs =
     static_cast<PIMAGE_RUNTIME_FUNCTION_ENTRY>(
         ImageRvaToVa(img->FileHeader,
@@ -855,14 +838,1146 @@ bool PDBSourceLineWriter::PrintFrameDataUsingEXE() {
   return true;
 }
 
+namespace {
+
+// See https://docs.microsoft.com/en-us/cpp/build/arm64-exception-handling
+// for documentation on the particulars of the unwind format.
+
+class UnwindInsn {
+public:
+  // Unwind codes for .xdata unwind records.  We store offsets for "save
+  // register"-style codes as positive offsets always, despite the
+  // documentation saying that offsets for *_x/*X codes are negative.
+  enum class Code {
+    kAllocS,
+    kSaveR19R20X,
+    kSaveFpLr,
+    kSaveFpLrX,
+    kAllocM,
+    kSaveRegP,
+    kSaveRegPX,
+    kSaveReg,
+    kSaveRegX,
+    kSaveLrPair,
+    kSaveFRegP,
+    kSaveFRegPX,
+    kSaveFReg,
+    kSaveFRegX,
+    kAllocL,
+    kSetFP,
+    kAddFP,
+    kNop,
+    kEnd,
+    kEndC,
+    kSaveNext,
+    kArithmeticAdd,
+    kArithmeticSub,
+    kArithmeticEor,
+    kArithmeticRol,
+    kArithmeticRor,
+    kCustomStack,
+  };
+
+  UnwindInsn(const UnwindInsn&) = default;
+  UnwindInsn& operator=(const UnwindInsn&) = default;
+  UnwindInsn(UnwindInsn&&) = default;
+  UnwindInsn& operator=(UnwindInsn&&) = default;
+
+  Code InsnCode() const {
+    return code_;
+  }
+
+  uint32_t InsnLength() const {
+    return kInsnLengths[(int)code_];
+  }
+
+  uint32_t AllocAmount() const {
+    assert(code_ == Code::kAllocS || code_ == Code::kAllocM || code_ == Code::kAllocL);
+    return amount_;
+  }
+
+  static UnwindInsn AllocS(uint32_t amount) {
+    assert(size < 512);
+    return UnwindInsn(Code::kAllocS, amount);
+  }
+
+  static UnwindInsn SaveR19R20X(uint32_t offset) {
+    assert(offset <= 248);
+    return UnwindInsn(Code::kSaveR19R20X, offset);
+  }
+
+  static UnwindInsn SaveFpLr(uint32_t offset) {
+    assert(offset <= 504);
+    return UnwindInsn(Code::kSaveFpLr, offset);
+  }
+
+  static UnwindInsn SaveFpLrX(uint32_t offset) {
+    assert(offset <= 512);
+    return UnwindInsn(Code::kSaveFpLrX, offset);
+  }
+
+  static UnwindInsn AllocM(uint32_t amount) {
+    assert(size < 65536);
+    return UnwindInsn(Code::kAllocM, amount);
+  }
+
+  uint32_t RegPair() const {
+    assert(code_ == Code::kSaveRegP ||
+           code_ == Code::kSaveRegPX ||
+           code_ == Code::kSaveFRegP ||
+           code_ == Code::kSaveFRegPX);
+    return reg_;
+  }
+
+  uint32_t Offset() const {
+    assert(code_ == Code::kSaveFpLr ||
+           code_ == Code::kSaveRegP ||
+           code_ == Code::kSaveReg ||
+           code_ == Code::kSaveLrPair ||
+           code_ == Code::kSaveFRegP ||
+           code_ == Code::kSaveFReg);
+    return offset_;
+  }
+
+  uint32_t OffsetX() const {
+    assert(code_ == Code::kSaveR19R20X ||
+           code_ == Code::kSaveFpLrX ||
+           code_ == Code::kSaveRegPX ||
+           code_ == Code::kSaveRegX ||
+           code_ == Code::kSaveFRegPX ||
+           code_ == Code::kSaveFRegX);
+    return offset_;
+  }
+
+  static UnwindInsn SaveRegP(uint32_t r1, uint32_t offset) {
+    assert(size <= 504);
+    return UnwindInsn(Code::kSaveRegP, offset, r1);
+  }
+
+  static UnwindInsn SaveRegPX(uint32_t r1, uint32_t offset) {
+    assert(offset <= 512);
+    return UnwindInsn(Code::kSaveRegPX, offset, r1);
+  }
+
+  uint32_t Reg() const {
+    assert(code_ == Code::kSaveReg ||
+           code_ == Code::kSaveRegX ||
+           code_ == Code::kSaveFReg ||
+           code_ == Code::kSaveFRegX ||
+           code_ == Code::kSaveLrPair);
+    return reg_;
+  }
+
+  static UnwindInsn SaveReg(uint32_t reg, uint32_t offset) {
+    assert(offset <= 504);
+    return UnwindInsn(Code::kSaveReg, offset, reg);
+  }
+
+  static UnwindInsn SaveRegX(uint32_t reg, uint32_t offset) {
+    assert(offset <= 256);
+    return UnwindInsn(Code::kSaveRegX, offset, reg);
+  }
+
+  uint32_t SaveRegLrPaired() const {
+    assert(code_ == Code::kSaveLrPair);
+    return reg_;
+  }
+
+  static UnwindInsn SaveLrPair(uint32_t reg, uint32_t offset) {
+    assert(offset <= 504);
+    return UnwindInsn(Code::kSaveLrPair, offset, reg);
+  }
+
+  static UnwindInsn SaveFRegP(uint32_t r1, uint32_t offset) {
+    assert(size <= 504);
+    return UnwindInsn(Code::kSaveFRegP, offset, r1);
+  }
+
+  static UnwindInsn SaveFRegPX(uint32_t r1, uint32_t offset) {
+    assert(offset <= 512);
+    return UnwindInsn(Code::kSaveFRegPX, offset, r1);
+  }
+
+  static UnwindInsn SaveFReg(uint32_t reg, uint32_t offset) {
+    assert(offset <= 504);
+    return UnwindInsn(Code::kSaveFReg, offset, reg);
+  }
+
+  static UnwindInsn SaveFRegX(uint32_t reg, uint32_t offset) {
+    assert(offset <= 256);
+    return UnwindInsn(Code::kSaveFRegX, offset, reg);
+  }
+
+  static UnwindInsn AllocL(uint32_t size) {
+    assert(size < (1 << 28));
+    return UnwindInsn(Code::kAllocL, size);
+  }
+
+  static UnwindInsn SetFP() {
+    return UnwindInsn(Code::kSetFP);
+  }
+
+  static UnwindInsn AddFP(uint32_t amount) {
+    assert(amount < (256 * 8));
+    return UnwindInsn(Code::kAddFP, amount);
+  }
+
+  uint32_t FPAmount() const {
+    assert(code_ == Code::kAddFP);
+    return amount_;
+  }
+
+  static UnwindInsn Nop() { return UnwindInsn(Code::kNop); }
+  static UnwindInsn End() { return UnwindInsn(Code::kEnd); }
+  static UnwindInsn EndC() { return UnwindInsn(Code::kEndC); }
+  static UnwindInsn SaveNext() { return UnwindInsn(Code::kSaveNext); }
+
+  uint32_t CookieRegister() const {
+    assert(code_ == Code::kArithmeticAdd ||
+           code_ == Code::kArithmeticSub ||
+           code_ == Code::kArithmeticEor ||
+           code_ == Code::kArithmeticRol ||
+           code_ == Code::kArithmeticRor);
+    return cookie_reg_;
+  }
+
+  static UnwindInsn ArithmeticAdd(uint32_t cookie) {
+    return UnwindInsn(Code::kArithmeticAdd, cookie);
+  }
+
+  static UnwindInsn ArithmeticSub(uint32_t cookie) {
+    return UnwindInsn(Code::kArithmeticSub, cookie);
+  }
+
+  static UnwindInsn ArithmeticEor(uint32_t cookie) {
+    return UnwindInsn(Code::kArithmeticEor, cookie);
+  }
+
+  static UnwindInsn ArithmeticRol(uint32_t cookie) {
+    return UnwindInsn(Code::kArithmeticRol, cookie);
+  }
+
+  static UnwindInsn ArithmeticRor(uint32_t cookie) {
+    return UnwindInsn(Code::kArithmeticRor, cookie);
+  }
+
+  static UnwindInsn CustomStack() {
+    return UnwindInsn(Code::kCustomStack);
+  }
+
+  static std::vector<UnwindInsn> ParseInsns(const uint8_t* data,
+                                            uint32_t n_bytes);
+
+private:
+  UnwindInsn(Code code)
+    : UnwindInsn(code, 0, 0)
+  {}
+
+  UnwindInsn(Code code, uint32_t x)
+    : UnwindInsn(code, x, 0)
+  {}
+
+  UnwindInsn(Code code, uint32_t x, uint32_t y)
+    : code_(code), amount_(x), reg_(y)
+  {}
+
+  struct InsnParser {
+    // Bits that match for a given instruction after applying `mask`.
+    uint8_t match;
+    // Bits for insn data and bits for insn codes are mixed in the same
+    // byte, so we apply this mask to isolate the latter.
+    uint8_t mask;
+    // The total number of bytes occupied by this insn.
+    uint8_t n_bytes;
+    UnwindInsn (*func)(uint8_t unmasked_first, const uint8_t* codes);
+  };
+
+  static UnwindInsn ParseAllocS(uint8_t first, const uint8_t* rest);
+  static UnwindInsn ParseSaveR19R20X(uint8_t first, const uint8_t* rest);
+  static UnwindInsn ParseSaveFpLr(uint8_t first, const uint8_t* rest);
+  static UnwindInsn ParseSaveFpLrX(uint8_t first, const uint8_t* rest);
+  static UnwindInsn ParseAllocM(uint8_t first, const uint8_t* rest);
+  static UnwindInsn ParseSaveRegP(uint8_t first, const uint8_t* rest);
+  static UnwindInsn ParseSaveRegPX(uint8_t first, const uint8_t* rest);
+  static UnwindInsn ParseSaveReg(uint8_t first, const uint8_t* rest);
+  static UnwindInsn ParseSaveRegX(uint8_t first, const uint8_t* rest);
+  static UnwindInsn ParseSaveLrPair(uint8_t first, const uint8_t* rest);
+  static UnwindInsn ParseSaveFRegP(uint8_t first, const uint8_t* rest);
+  static UnwindInsn ParseSaveFRegPX(uint8_t first, const uint8_t* rest);
+  static UnwindInsn ParseSaveFReg(uint8_t first, const uint8_t* rest);
+  static UnwindInsn ParseSaveFRegX(uint8_t first, const uint8_t* rest);
+  static UnwindInsn ParseAllocL(uint8_t first, const uint8_t* rest);
+  static UnwindInsn ParseSetFP(uint8_t first, const uint8_t* rest);
+  static UnwindInsn ParseAddFP(uint8_t first, const uint8_t* rest);
+  static UnwindInsn ParseNop(uint8_t first, const uint8_t* rest);
+  static UnwindInsn ParseEnd(uint8_t first, const uint8_t* rest);
+  static UnwindInsn ParseEndC(uint8_t first, const uint8_t* rest);
+  static UnwindInsn ParseSaveNext(uint8_t first, const uint8_t* rest);
+  static UnwindInsn ParseArithmetic(uint8_t first, const uint8_t* rest);
+  static UnwindInsn ParseCustomStackReserved(uint8_t first, const uint8_t* rest);
+  static UnwindInsn ParseReserved(uint8_t first, const uint8_t* rest);
+
+  static const InsnParser kParsers[];
+
+  static const uint8_t kInsnLengths[];
+
+  Code code_;
+  union {
+    uint32_t amount_;
+    uint32_t offset_;
+    uint32_t cookie_reg_;
+  };
+  union {
+    uint32_t reg_;
+  };
+};
+
+const uint8_t UnwindInsn::kInsnLengths[] = {
+  1, // AllocS
+  1, // SaveR19R20X
+  1, // SaveFpLr
+  1, // SaveFpLrX
+  2, // AllocM
+  2, // SaveRegP
+  2, // SaveRegPX
+  2, // SaveReg
+  2, // SaveRegX
+  2, // SaveLrPair
+  2, // SaveFRegP
+  2, // SaveFRegPX
+  2, // SaveFReg
+  2, // SaveFRegX
+  4, // AllocL
+  1, // SetFP
+  2, // AddFP
+  1, // Nop
+  1, // End
+  1, // EndC
+  1, // SaveNext
+  2, // ArithmeticAdd
+  2, // ArithmeticSub
+  2, // ArithmeticEor
+  2, // ArithmeticRol
+  2, // ArithmeticRor
+  1, // CustomStack
+};
+
+static uint32_t
+bitfield(uint32_t bits, uint32_t size, uint32_t bit) {
+  return (bits >> bit) & ((1u << size) - 1);
+}
+
+UnwindInsn
+UnwindInsn::ParseAllocS(uint8_t first, const uint8_t*) {
+  uint32_t size = first * 16;
+  return UnwindInsn::AllocS(size);
+}
+
+UnwindInsn
+UnwindInsn::ParseSaveR19R20X(uint8_t first, const uint8_t*) {
+  uint32_t offset = first * 8;
+  return UnwindInsn::SaveR19R20X(offset);
+}
+
+UnwindInsn
+UnwindInsn::ParseSaveFpLr(uint8_t first, const uint8_t*) {
+  uint32_t offset = first * 8;
+  return UnwindInsn::SaveFpLr(offset);
+}
+
+UnwindInsn
+UnwindInsn::ParseSaveFpLrX(uint8_t first, const uint8_t*) {
+  uint32_t offset = (first + 1) * 8;
+  return UnwindInsn::SaveFpLrX(offset);
+}
+
+UnwindInsn
+UnwindInsn::ParseAllocM(uint8_t first, const uint8_t* rest) {
+  uint64_t size = ((uint64_t(first) << 8) | rest[0]) * 16;
+  return UnwindInsn::AllocM(size);
+}
+
+UnwindInsn
+UnwindInsn::ParseSaveRegP(uint8_t first, const uint8_t* rest) {
+  uint8_t byte = rest[0];
+  uint32_t r19offset = (first << 2) | (byte >> 6);
+  uint32_t spoffset = (byte & 0x3f) * 8;
+  return UnwindInsn::SaveRegP(19 + r19offset, spoffset);
+}
+
+UnwindInsn
+UnwindInsn::ParseSaveRegPX(uint8_t first, const uint8_t* rest) {
+  uint8_t byte = rest[0];
+  uint32_t r19offset = (first << 2) | (byte >> 6);
+  uint32_t spoffset = ((byte & 0x3f) + 1) * 8;
+  return UnwindInsn::SaveRegPX(19 + r19offset, spoffset);
+}
+
+UnwindInsn
+UnwindInsn::ParseSaveReg(uint8_t first, const uint8_t* rest) {
+  uint8_t byte = rest[0];
+  uint32_t r19offset = (first << 2) | (byte >> 6);
+  uint32_t spoffset = (byte & 0x3f) * 8;
+  return UnwindInsn::SaveReg(19 + r19offset, spoffset);
+}
+
+UnwindInsn
+UnwindInsn::ParseSaveRegX(uint8_t first, const uint8_t* rest) {
+  uint8_t byte = rest[0];
+  uint32_t r19offset = (first << 3) | (byte >> 5);
+  uint32_t spoffset = ((byte & 0x1f) + 1) * 8;
+  return UnwindInsn::SaveRegX(19 + r19offset, spoffset);
+}
+
+UnwindInsn
+UnwindInsn::ParseSaveLrPair(uint8_t first, const uint8_t* rest) {
+  uint8_t byte = rest[0];
+  uint32_t r19offset = ((first << 2) | (byte >> 6)) * 2;
+  uint32_t spoffset = ((byte & 0x3f) + 1) * 8;
+  return UnwindInsn::SaveLrPair(19 + r19offset, spoffset);
+}
+
+UnwindInsn
+UnwindInsn::ParseSaveFRegP(uint8_t first, const uint8_t* rest) {
+  uint8_t byte = rest[0];
+  uint32_t d8offset = (first << 2) | (byte >> 6);
+  uint32_t spoffset = (byte & 0x3f) * 8;
+  return UnwindInsn::SaveFRegP(8 + d8offset, spoffset);
+}
+
+UnwindInsn
+UnwindInsn::ParseSaveFRegPX(uint8_t first, const uint8_t* rest) {
+  uint8_t byte = rest[0];
+  uint32_t d8offset = (first << 2) | (byte >> 6);
+  uint32_t spoffset = ((byte & 0x3f) + 1) * 8;
+  return UnwindInsn::SaveFRegPX(8 + d8offset, spoffset);
+}
+
+UnwindInsn
+UnwindInsn::ParseSaveFReg(uint8_t first, const uint8_t* rest) {
+  uint8_t byte = rest[0];
+  uint32_t d8offset = (first << 2) | (byte >> 6);
+  uint32_t spoffset = (byte & 0x3f) * 8;
+  return UnwindInsn::SaveFReg(8 + d8offset, spoffset);
+}
+
+UnwindInsn
+UnwindInsn::ParseSaveFRegX(uint8_t, const uint8_t* rest) {
+  uint8_t byte = rest[0];
+  uint32_t d8offset = byte >> 3;
+  uint32_t spoffset = ((byte & 0x1f) + 1) * 8;
+  return UnwindInsn::SaveFRegX(8 + d8offset, spoffset);
+}
+
+UnwindInsn
+UnwindInsn::ParseAllocL(uint8_t, const uint8_t* rest) {
+  uint64_t size = ((rest[0] << 16) | (rest[1] << 8) | rest[2]) * 16;
+  return UnwindInsn::AllocL(size);
+}
+
+UnwindInsn
+UnwindInsn::ParseSetFP(uint8_t first, const uint8_t*) {
+  return UnwindInsn::SetFP();
+}
+
+UnwindInsn
+UnwindInsn::ParseAddFP(uint8_t first, const uint8_t* rest) {
+  uint8_t amount = rest[0] * 8;
+  return UnwindInsn::AddFP(amount);
+}
+
+UnwindInsn
+UnwindInsn::ParseNop(uint8_t, const uint8_t*) {
+  return UnwindInsn::Nop();
+}
+
+UnwindInsn
+UnwindInsn::ParseEnd(uint8_t, const uint8_t*) {
+  return UnwindInsn::End();
+}
+
+UnwindInsn
+UnwindInsn::ParseEndC(uint8_t, const uint8_t*) {
+  return UnwindInsn::EndC();
+}
+
+UnwindInsn
+UnwindInsn::ParseSaveNext(uint8_t, const uint8_t*) {
+  return UnwindInsn::SaveNext();
+}
+
+UnwindInsn
+UnwindInsn::ParseArithmetic(uint8_t, const uint8_t* rest) {
+  uint8_t code = rest[0];
+  uint8_t op = (code & 0xe0) >> 5;
+
+  enum Op {
+    kAdd,
+    kSub,
+    kEor,
+    kRol,
+    kRor,
+  };
+
+  switch (op) {
+  case kAdd: {
+    uint32_t cookie = ((code & 0x10) >> 4) ? 28 : 31;
+    return UnwindInsn::ArithmeticAdd(cookie);
+  }
+  case kSub: {
+    uint32_t cookie = ((code & 0x10) >> 4) ? 28 : 31;
+    return UnwindInsn::ArithmeticSub(cookie);
+  }
+  case kEor: {
+    uint32_t cookie = ((code & 0x10) >> 4) ? 28 : 31;
+    return UnwindInsn::ArithmeticEor(cookie);
+  }
+  case kRol: {
+    // If this bit is not zero, the code is reserved.
+    if (code & 0x10) {
+      goto reserved;
+    }
+    uint32_t cookie = 28;
+    return UnwindInsn::ArithmeticRol(cookie);
+  }
+  case kRor: {
+    uint32_t cookie = ((code & 0x10) >> 4) ? 28 : 31;
+    return UnwindInsn::ArithmeticRor(cookie);
+  }
+  default:
+  reserved:
+    // Reserved, error
+    fprintf(stderr, "reserved arithmetic opcode found: %d\n", int(code));
+    return UnwindInsn::Nop();
+  }
+}
+
+UnwindInsn
+UnwindInsn::ParseCustomStackReserved(uint8_t, const uint8_t*) {
+  // XXX we really just want to crash here.
+  return UnwindInsn::CustomStack();
+}
+
+UnwindInsn
+UnwindInsn::ParseReserved(uint8_t, const uint8_t*) {
+  // XXX we really just want to crash here.
+  return UnwindInsn::Nop();
+}
+
+const UnwindInsn::InsnParser UnwindInsn::kParsers[] = {
+  0x00, 0xe0, 1, ParseAllocS,
+  0x20, 0xe0, 1, ParseSaveR19R20X,
+  0x40, 0xc0, 1, ParseSaveFpLr,
+  0x80, 0xc0, 1, ParseSaveFpLrX,
+  0xc0, 0xf8, 2, ParseAllocM,
+  0xc8, 0xfc, 2, ParseSaveRegP,
+  0xcc, 0xfc, 2, ParseSaveRegPX,
+  0xd0, 0xfc, 2, ParseSaveReg,
+  0xd4, 0xfe, 2, ParseSaveRegX,
+  0xd6, 0xfe, 2, ParseSaveLrPair,
+  0xd8, 0xfe, 2, ParseSaveFRegP,
+  0xda, 0xfe, 2, ParseSaveFRegPX,
+  0xdc, 0xfe, 2, ParseSaveFReg,
+  0xde, 0xff, 2, ParseSaveFRegX,
+  0xe0, 0xff, 4, ParseAllocL,
+  0xe1, 0xff, 1, ParseSetFP,
+  0xe2, 0xff, 2, ParseAddFP,
+  0xe3, 0xff, 1, ParseNop,
+  0xe4, 0xff, 1, ParseEnd,
+  0xe5, 0xff, 1, ParseEndC,
+  0xe6, 0xff, 1, ParseSaveNext,
+  0xe7, 0xff, 2, ParseArithmetic,
+  0xe8, 0xf8, 1, ParseCustomStackReserved,
+  0xf0, 0xf0, 1, ParseReserved,
+};
+
+std::vector<UnwindInsn>
+UnwindInsn::ParseInsns(const uint8_t* data, uint32_t n_bytes) {
+  std::vector<UnwindInsn> insns;
+
+  // We should never try to match on bits we mask out.
+  for (auto& parser : kParsers) {
+    assert((parser.match & (~size_t(parser.mask))) == 0);
+  }
+
+  for (const uint8_t* end = data + n_bytes; data < end; ) {
+    uint8_t first = data[0];
+    const uint8_t* const rest = data + 1;
+
+    auto b = std::begin(kParsers);
+    auto e = std::end(kParsers);
+    auto i = std::find_if(b, e, [&](const auto& p) {
+        return (first & p.mask) == p.match;
+      });
+
+    assert(i != e);
+
+    // Try to ensure parser functions aren't going to access more than they
+    // are supposed to.
+    const uint8_t* p = i->n_bytes == 1 ? nullptr : rest;
+    insns.emplace_back(i->func(first & (~size_t(i->mask)), p));
+
+    data += i->n_bytes;
+  }
+
+  return insns;
+}
+
+struct EpilogScope {
+  uint32_t start_offset;
+  uint32_t start_index;
+};
+
+struct UnwindInformation {
+  uint32_t func_length;
+  std::vector<EpilogScope> epilog_scopes;
+  std::vector<UnwindInsn> unwind_insns;
+};
+
+bool
+DecodePackedUnwindData(uint32_t packed, UnwindInformation* info) {
+  uint32_t flag = bitfield(packed, 2, 0);
+  uint32_t func_length = bitfield(packed, 11, 2) * 4;
+  uint32_t reg_f = bitfield(packed, 3, 13);
+  uint32_t reg_i = bitfield(packed, 4, 16);
+  uint32_t h = bitfield(packed, 1, 20);
+  uint32_t cr = bitfield(packed, 2, 21);
+  uint32_t frame_size = bitfield(packed, 9, 23) * 16;
+
+  // The steps below follow the table for decoding packed unwind data in the
+  // ARM64 exception handling document referenced above.  Variable names are
+  // as consistent as possible with the documentation as well.
+
+  // Step 0.
+  uint32_t intsz = reg_i * 8;
+  if (cr == 0x1) {
+    intsz += 8; // save lr
+  }
+  uint32_t fpsz = reg_f * 8;
+  if (reg_f) {
+    fpsz += 8;
+  }
+
+  // Documentation said `8 * h` here, but that seems completely wrong:
+  // that would calculate the number of registers homed, not the size of
+  // the area required to save them.
+  uint32_t savsz = ((intsz + fpsz + 64 * h) + 0xf) & ~uint32_t(0xf);
+  uint32_t locsz = frame_size - savsz;
+
+  std::vector<UnwindInsn> unwind_insns;
+
+  // Steps 1 and 2.
+  if (reg_i > 0) {
+    // XXX what happens when reg_i == 1 and cr == 0x1?  There's no
+    // unwind insn for saving <r19,lr> with pre-indexed offset.
+    if (reg_i == 1 && cr == 0x1) {
+      fprintf(stderr, "No unwind insn for reg_i == 1 with saved lr\n");
+      return false;
+    }
+    int32_t regs_to_save = reg_i;
+    // Note that this is really SaveR19R20X in the regs_to_save >= 2 case, but
+    // we do this so we have to worry less about how big `savsz` is.
+    UnwindInsn (*insn)(uint32_t reg, uint32_t offset) =
+      (regs_to_save >= 2
+       ? UnwindInsn::SaveRegX
+       : UnwindInsn::SaveRegPX);
+    unwind_insns.emplace_back(insn(19, savsz));
+    regs_to_save -= 2;
+    uint32_t next_reg = 21;
+    uint32_t reg_offset = 16;
+    while (regs_to_save > 0) {
+      if (regs_to_save >= 2) {
+        insn = UnwindInsn::SaveRegP;
+      } else if (cr == 0x1) {
+        assert(regs_to_save == 1);
+        insn = UnwindInsn::SaveLrPair;
+      } else {
+        assert(regs_to_save == 1);
+        insn = UnwindInsn::SaveReg;
+      }
+      unwind_insns.emplace_back(insn(next_reg, reg_offset));
+      next_reg += 2;
+      reg_offset += 16;
+      regs_to_save -= 2;
+    }
+  }
+
+  // Step 2.  Folding the lr save in with an odd number of integer register
+  // saves was handled above.
+  if (cr == 0x1 && ((reg_i & 0x1) == 0)) {
+    unwind_insns.emplace_back(UnwindInsn::SaveReg(30, intsz-8));
+  }
+
+  // Step 3.
+  if (reg_f > 0) {
+    int32_t regs_to_save = reg_f + 1;
+    // Handle the special case of no integer save regs and no lr save.
+    if (reg_i == 0 && cr == 0x0) {
+      unwind_insns.emplace_back(UnwindInsn::SaveFRegPX(8, intsz));
+    } else {
+      unwind_insns.emplace_back(UnwindInsn::SaveFRegP(8, intsz));
+    }
+    regs_to_save -= 2;
+    uint32_t next_reg = 10;
+    uint32_t reg_offset = 16;
+    while (regs_to_save > 0) {
+      auto insn = regs_to_save < 2
+        ? UnwindInsn::SaveFReg
+        : UnwindInsn::SaveFRegP;
+      unwind_insns.emplace_back(insn(next_reg, reg_offset));
+      next_reg += 2;
+      reg_offset += 16;
+      regs_to_save -= 2;
+    }
+  }
+
+  // Step 4.
+  if (h == 1) {
+    // TODO: we could record the saves of the argument registers in CFI data,
+    // which might provide more informative unwinds.
+    unwind_insns.emplace_back(UnwindInsn::Nop());
+    unwind_insns.emplace_back(UnwindInsn::Nop());
+    unwind_insns.emplace_back(UnwindInsn::Nop());
+    unwind_insns.emplace_back(UnwindInsn::Nop());
+  }
+
+  // All the logic for allocating the stack for the substeps of step 5.
+  auto alloc_stack = [&](uint32_t amount) {
+      if (amount < 512) {
+        unwind_insns.emplace_back(UnwindInsn::AllocS(amount));
+      } else if (amount <= 4088) {
+        unwind_insns.emplace_back(UnwindInsn::AllocM(amount));
+      } else {
+        unwind_insns.emplace_back(UnwindInsn::AllocM(4088));
+        uint32_t remaining = amount - 4088;
+        assert(remaining != 0);
+        assert(remaining < amount);
+        if (remaining < 512) {
+          unwind_insns.emplace_back(UnwindInsn::AllocS(remaining));
+        } else {
+          unwind_insns.emplace_back(UnwindInsn::AllocM(remaining));
+        }
+      }
+  };
+
+  // Steps 5a - 5c.
+  if (cr == 0x3) {
+    if (locsz <= 512) {
+      unwind_insns.emplace_back(UnwindInsn::SaveFpLrX(locsz));
+      unwind_insns.emplace_back(UnwindInsn::SetFP());
+    } else {
+      alloc_stack(locsz);
+      unwind_insns.emplace_back(UnwindInsn::SaveFpLr(0));
+      unwind_insns.emplace_back(UnwindInsn::SetFP());
+    }
+  }
+
+  // Steps 5d and 5e.
+  if (cr == 0x0 || cr == 0x1) {
+    alloc_stack(locsz);
+  }
+
+  // Signal the end of the prolog.
+  unwind_insns.emplace_back(UnwindInsn::End());
+
+  // TODO: if we ever decided to generate unwind information for epilogs,
+  // we'd need to either make the unwind insns generated here consistent with
+  // how they would appear in a .xdata record or do a bunch of gymnastics to
+  // fixup our EpilogScopes vector.
+  *info = UnwindInformation{func_length,
+                            std::vector<EpilogScope>(),
+                            std::move(unwind_insns)};
+  return true;
+}
+
+bool
+DecodeXDataRecord(void* ptr, UnwindInformation* info) {
+  uint32_t* words = static_cast<uint32_t*>(ptr);
+  uint32_t w = words[0];
+  uint32_t func_length = bitfield(w, 18, 0) * 4;
+  uint32_t vers = bitfield(w, 2, 18);
+  uint32_t x = bitfield(w, 1, 20);
+  uint32_t e = bitfield(w, 1, 21);
+  uint32_t epilog_count = bitfield(w, 5, 22);
+  uint32_t code_words = bitfield(w, 5, 27);
+
+  assert(vers == 0);
+
+  words++;
+
+  if (epilog_count == 0 && code_words == 0) {
+    uint32_t w = words[0];
+    epilog_count = bitfield(w, 16, 0);
+    code_words = bitfield(w, 8, 16);
+    words++;
+  }
+
+  std::vector<EpilogScope> epilog_scopes;
+  // When e == 1, the documentation claims that epilog_count actually
+  // specifies the start index...but there's no documentation on how to
+  // recover the offset.  Presumably what we would do is parse all the unwind
+  // insns, and then calculate how long the epilog must be by examining the
+  // insns, and then push our single epilog scope.  But other parts of the
+  // documentation claim otherwise.
+  //
+  // Just punt here, we don't emit unwind information for epilogs anyway.
+  if (e == 1) {
+    ;
+  } else if (epilog_count != 0) {
+    for (size_t i = 0; i < epilog_count; ++i) {
+      uint32_t w = words[i];
+      uint32_t start_offset = bitfield(w, 18, 0) * 4;
+      uint32_t res = bitfield(w, 4, 18);
+      uint32_t start_index = bitfield(w, 10, 22);
+
+      assert(res == 0);
+
+      epilog_scopes.emplace_back(EpilogScope{start_offset, start_index});
+    }
+
+    words += epilog_count;
+  }
+
+  uint8_t* codes_ptr = reinterpret_cast<uint8_t*>(words);
+
+  std::vector<UnwindInsn> unwind_insns =
+    UnwindInsn::ParseInsns(codes_ptr, code_words * 4);
+
+  // For unexplained reasons, presumably to increase sharing of unwind insns
+  // between prolog and epilog sequences, the insns for unwinding the prolog
+  // occur in the reverse order of their corresponding instructions in the
+  // prolog.  That is, if the prolog looks like:
+  //
+  // stp x21, x22, [sp,#-0x30]!
+  // stp x19, x20, [sp,#0x10]
+  // stp fp, lr, [sp,#0x20]
+  // add fp, sp, #0x20
+  //
+  // the unwind insns describing the prolog will appear in the unwind data as:
+  //
+  // AddFP
+  // SaveRegP
+  // SaveRegP
+  // SaveRegPX
+  // End
+  //
+  // This is somewhat inconvenient for using the insns to print STACK CFI lines,
+  // below, so reverse the prolog insns.  This transformation means that we can
+  // no longer generate STACK CFI lines for epilogs, as epilog unwind insns may
+  // overlap the prolog unwind insns.  But since we don't generate said lines
+  // for epilogs currently, this is not a huge restriction.
+  auto end_insn = std::find_if(unwind_insns.begin(),
+                               unwind_insns.end(),
+                               [&](const UnwindInsn& insn) {
+                                 return insn.InsnCode() == UnwindInsn::Code::kEnd;
+                               });
+  assert(end_insn != unwind_insns.end());
+  std::reverse(unwind_insns.begin(), end_insn);
+
+  *info = UnwindInformation{func_length,
+                            std::move(epilog_scopes),
+                            std::move(unwind_insns)};
+  return true;
+}
+
+} // namespace
+
+bool PDBSourceLineWriter::PrintFrameDataUsingArm64EXE() {
+  AutoImage img(LoadImageForPEFile());
+  if (!img) {
+    return false;
+  }
+
+  DWORD exception_rva, exception_size;
+  if (!Get64BitExceptionInformation(img, &exception_rva, &exception_size)) {
+    fprintf(stderr, "Not a PE32+ image\n");
+    return false;
+  }
+
+  PIMAGE_ARM64_RUNTIME_FUNCTION_ENTRY funcs =
+    static_cast<PIMAGE_ARM64_RUNTIME_FUNCTION_ENTRY>(
+        ImageRvaToVa(img->FileHeader,
+                     img->MappedAddress,
+                     exception_rva,
+                     &img->LastRvaSection));
+
+  for (DWORD i = 0; i < exception_size / sizeof(*funcs); ++i) {
+    PIMAGE_ARM64_RUNTIME_FUNCTION_ENTRY func = &funcs[i];
+
+    // Don't know what to do with the reserved data flag.
+    if (func->Flag == 0x3) {
+      fprintf(stderr, "Encountered reserved .pdata entry\n");
+      return false;
+    }
+
+    // No prolog/epilog packed unwind data is a TODO.
+    if (func->Flag == 0x2) {
+      fprintf(stderr, "Don't handle no-prolog packed unwind data (%lx) yet\n",
+              func->UnwindData);
+      return false;
+    }
+
+    // Decode the bits we understand.
+    UnwindInformation info;
+    if (func->Flag == 0x1) {
+      if (!DecodePackedUnwindData(func->UnwindData, &info)) {
+        fprintf(stderr, "Couldn't decode packed unwind data (%lx)\n",
+                func->UnwindData);
+        return false;
+      }
+    } else {
+      assert(func->Flag == 0);
+
+      PVOID xdata_address = ImageRvaToVa(img->FileHeader,
+                                         img->MappedAddress,
+                                         func->UnwindData,
+                                         nullptr);
+      if (!DecodeXDataRecord(xdata_address, &info)) {
+        fprintf(stderr, "Couldn't decode xdata record\n");
+        return false;
+      }
+    }
+
+    // Ouput CFI lines for the prolog only.  We fix the CFA at sp on function
+    // entry, which means we just have to track updates to sp.
+
+    // Whether we have seen a set of fp, for consistency checking.
+    bool fp_set = false;
+    bool saw_end = false;
+    uint32_t stack_offset = 0;
+    // This address is module-load relative, so it can be used for the
+    // address required by STACK CFI records.
+    uint32_t address = func->BeginAddress;
+    fprintf(output_, "STACK CFI INIT %x %x .cfa: sp 0 + .ra: x30\n",
+            address, info.func_length);
+
+    // See the above comment in DecodeXDataRecord for an explanation of why
+    // we can just iterate straight through here, and why this code needs to
+    // change if we ever decide to handle epilogs here.
+    for (const auto& insn : info.unwind_insns) {
+      // Once we've seen the End insn, we know that we're done with the prolog.
+      if (saw_end) {
+        break;
+      }
+
+      // The unwind format is designed so that one unwind insn maps precisely
+      // to one instruction.
+      address += 4;
+
+      // The *X insns adjust sp, which require updating the CFA.  We update
+      // the CFA in the same line as describing the register saves, since
+      // the unwind format doesn't permit multiple lines with the same
+      // address.  Note that since the CFA is unchanging, even if the rule
+      // used to calculate it changes, the register save descriptions are
+      // identical whether the previous CFA rule is used, or the updated
+      // CFA rule.
+      //
+      // The conceptual frame we're keeping track of here looks like this:
+      //
+      // CFA (sp at function entry) --> +-----
+      //                                |
+      //                                | ...
+      //                                |
+      //               stack_offset --> +-----
+      //
+      // Where `stack_offset` represents how far we've adjusted `sp` downwards.
+      // We are always adding some quantity to `sp` or `fp` to find the CFA.
+      //
+      // For a *X instruction, which updates sp and then stores register(s),
+      // the frame is going to look like:
+      //
+      // CFA (sp at function entry) --> +-----
+      //                                |
+      //                                | ...
+      //                                |
+      //               stack_offset --> +-----
+      //                                | register(s)
+      //   stack_offset + OffsetX() --> +-----
+      //
+      // since we always store OffsetX() as a positive quantity, despite the
+      // actual ARM64 instruction being `str xnn, [sp, #-0xNN]!`.
+      //
+      // For other save register instructions, the frame looks more like:
+      //
+      // CFA (sp at function entry) --> +-----
+      //                                |
+      //                                | ...
+      //                                +-----
+      //                                | register(s)
+      //    stack_offset - Offset() --> +-----
+      //                                |
+      //               stack_offset --> +-----
+      //
+      // Note that for a save pair operation, we need to subtract `Offset()`
+      // to find the first slot, and then subtract another 8 bytes to find
+      // the second slot.
+      switch (insn.InsnCode()) {
+      case UnwindInsn::Code::kAllocS:
+      case UnwindInsn::Code::kAllocM:
+      case UnwindInsn::Code::kAllocL:
+        stack_offset += insn.AllocAmount();
+        fprintf(output_, "STACK CFI %x .cfa: sp %u +\n",
+                address, stack_offset);
+        break;
+      case UnwindInsn::Code::kSaveR19R20X: {
+        uint32_t offset = stack_offset + insn.OffsetX();
+        fprintf(output_, "STACK CFI %x .cfa: sp %u + x19: .cfa %u - ^ x20: .cfa %u - ^\n",
+                address, offset, offset, offset - 8);
+        stack_offset += insn.OffsetX();
+        break;
+      }
+      case UnwindInsn::Code::kSaveFpLr: {
+        uint32_t offset = stack_offset - insn.Offset();
+        assert(offset < stack_offset);
+        fprintf(output_, "STACK CFI %x x29: .cfa %u - ^ .ra: .cfa %u - ^\n",
+                address, offset, offset - 8);
+        break;
+      }
+      case UnwindInsn::Code::kSaveFpLrX: {
+        uint32_t offset = stack_offset + insn.OffsetX();
+        fprintf(output_, "STACK CFI %x .cfa: sp %u + x29: .cfa %u - ^ .ra: .cfa %u - ^\n",
+                address, offset, offset, offset - 8);
+        stack_offset += insn.OffsetX();
+        break;
+      }
+      case UnwindInsn::Code::kSaveRegP: {
+        uint32_t offset = stack_offset - insn.Offset();
+        uint32_t r = insn.Reg();
+        assert(offset < stack_offset);
+        fprintf(output_, "STACK CFI %x x%d: .cfa %u - ^ x%d: .cfa %u - ^\n",
+                address, r, offset, r + 1, offset - 8);
+        break;
+      }
+      case UnwindInsn::Code::kSaveRegPX: {
+        uint32_t offset = stack_offset + insn.OffsetX();
+        uint32_t r = insn.Reg();
+        fprintf(output_, "STACK CFI %x .cfa: sp %u + x%d: .cfa %u - ^ x%d: .cfa %u - ^\n",
+                address, offset, r, offset, r + 1, offset - 8);
+        stack_offset += insn.OffsetX();
+        break;
+      }
+      case UnwindInsn::Code::kSaveReg: {
+        uint32_t offset = stack_offset - insn.Offset();
+        uint32_t r = insn.Reg();
+        assert(offset < stack_offset);
+        fprintf(output_, "STACK CFI %x x%d: .cfa %u - ^\n",
+                address, r, offset);
+        break;
+      }
+      case UnwindInsn::Code::kSaveRegX: {
+        uint32_t offset = stack_offset + insn.OffsetX();
+        uint32_t r = insn.Reg();
+        fprintf(output_, "STACK CFI %x .cfa: sp %u + x%d: .cfa %u - ^\n",
+                address, offset, r, offset);
+        stack_offset += insn.OffsetX();
+        break;
+      }
+      case UnwindInsn::Code::kSaveLrPair: {
+        uint32_t offset = stack_offset - insn.Offset();
+        uint32_t r = insn.Reg();
+        assert(offset < stack_offset);
+        fprintf(output_, "STACK CFI %x x%d: .cfa %u - ^ .ra: .cfa %u - ^\n",
+                address, r, offset, offset - 8);
+        break;
+      }
+      case UnwindInsn::Code::kSaveFRegP: {
+        uint32_t offset = stack_offset - insn.Offset();
+        uint32_t r = insn.Reg();
+        assert(offset < stack_offset);
+        fprintf(output_, "STACK CFI %x d%d: .cfa %u - ^ d%d: .cfa %u - ^\n",
+                address, r, offset, r + 1, offset - 8);
+        break;
+      }
+      case UnwindInsn::Code::kSaveFRegPX: {
+        uint32_t offset = stack_offset + insn.OffsetX();
+        uint32_t r = insn.Reg();
+        fprintf(output_, "STACK CFI %x .cfa: sp %u - d%d: .cfa %u - ^ d%d: .cfa %u - ^\n",
+                address, offset, r, offset, r + 1, offset - 8);
+        stack_offset += insn.OffsetX();
+        break;
+      }
+      case UnwindInsn::Code::kSaveFReg: {
+        uint32_t offset = stack_offset - insn.Offset();
+        uint32_t r = insn.Reg();
+        assert(offset < stack_offset);
+        fprintf(output_, "STACK CFI %x d%d: .cfa %u - ^\n",
+                address, r, offset);
+        break;
+      }
+      case UnwindInsn::Code::kSaveFRegX: {
+        uint32_t offset = stack_offset + insn.OffsetX();
+        uint32_t r = insn.Reg();
+        fprintf(output_, "STACK CFI %x .cfa: sp %u - d%d: .cfa %u - ^\n",
+                address, offset, r, offset);
+        stack_offset += insn.OffsetX();
+        break;
+      }
+      // AddFP/SetFP break in the presence of multiple instances of the
+      // respective opcodes, but really that shouldn't happen...
+      case UnwindInsn::Code::kAddFP:
+        if (fp_set) {
+          fprintf(stderr, "Can't handle multiple operations on fp\n");
+          return false;
+        }
+        fp_set = true;
+        fprintf(output_, "STACK CFI %x .cfa: x29 %u +\n",
+                address, stack_offset + insn.FPAmount());
+        break;
+      case UnwindInsn::Code::kSetFP:
+        if (fp_set) {
+          fprintf(stderr, "Can't handle multiple operations on fp\n");
+          return false;
+        }
+        fp_set = true;
+        fprintf(output_, "STACK CFI %x .cfa: x29 %u +\n",
+                address, stack_offset);
+        break;
+      case UnwindInsn::Code::kNop:
+        break;
+      case UnwindInsn::Code::kEnd:
+        if (saw_end) {
+          fprintf(stderr, "Can't handle multiple End opcodes\n");
+          return false;
+        }
+        saw_end = true;
+        break;
+      case UnwindInsn::Code::kEndC:
+        break;
+      case UnwindInsn::Code::kSaveNext:
+        fprintf(stderr, "Saving the next obvious register unimplemented\n");
+        return false;
+      case UnwindInsn::Code::kArithmeticAdd:
+      case UnwindInsn::Code::kArithmeticSub:
+      case UnwindInsn::Code::kArithmeticEor:
+      case UnwindInsn::Code::kArithmeticRol:
+      case UnwindInsn::Code::kArithmeticRor:
+        fprintf(stderr, "Arithmetic cookie operations unimplemented\n");
+        return false;
+      case UnwindInsn::Code::kCustomStack:
+        fprintf(stderr, "Custom stack operations unimplemented\n");
+        return false;
+      default:
+        fprintf(stderr, "Unknown unwind opcode %d", int(insn.InsnCode()));
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 bool PDBSourceLineWriter::PrintFrameData() {
   PDBModuleInfo info;
-  if (GetModuleInfo(&info) && info.cpu == L"x86_64") {
-    return PrintFrameDataUsingEXE();
-  } else {
+  if (!GetModuleInfo(&info)) {
     return PrintFrameDataUsingPDB();
   }
-  return false;
+  if (info.cpu == L"x86_64") {
+    return PrintFrameDataUsingEXE();
+  }
+  if (info.cpu == L"arm64") {
+    return PrintFrameDataUsingArm64EXE();
+  }
+  return PrintFrameDataUsingPDB();
 }
 
 bool PDBSourceLineWriter::PrintCodePublicSymbol(IDiaSymbol *symbol,
@@ -1022,6 +2137,45 @@ bool PDBSourceLineWriter::FindPEFile() {
   }
 
   return false;
+}
+
+bool PDBSourceLineWriter::Get64BitExceptionInformation(PLOADED_IMAGE img,
+                                                       DWORD* rva,
+                                                       DWORD* size) {
+  PIMAGE_OPTIONAL_HEADER64 optional_header =
+    &(reinterpret_cast<PIMAGE_NT_HEADERS64>(img->FileHeader))->OptionalHeader;
+  if (optional_header->Magic != IMAGE_NT_OPTIONAL_HDR64_MAGIC) {
+    return false;
+  }
+
+  // Read Exception Directory
+  *rva = optional_header->
+    DataDirectory[IMAGE_DIRECTORY_ENTRY_EXCEPTION].VirtualAddress;
+  *size = optional_header->
+    DataDirectory[IMAGE_DIRECTORY_ENTRY_EXCEPTION].Size;
+  return true;
+}
+
+PLOADED_IMAGE PDBSourceLineWriter::LoadImageForPEFile() {
+  if (code_file_.empty() && !FindPEFile()) {
+    fprintf(stderr, "Couldn't locate EXE or DLL file.\n");
+    return nullptr;
+  }
+
+  // Convert wchar to native charset because ImageLoad only takes
+  // a PSTR as input.
+  string code_file;
+  if (!WindowsStringUtils::safe_wcstombs(code_file_, &code_file)) {
+    return nullptr;
+  }
+
+  PLOADED_IMAGE img = ImageLoad((PSTR)code_file.c_str(), NULL);
+  if (!img) {
+    fprintf(stderr, "Failed to open PE file: %s\n", code_file.c_str());
+    return nullptr;
+  }
+  
+  return img;
 }
 
 static const DWORD kUndecorateOptions =
@@ -1309,6 +2463,9 @@ bool PDBSourceLineWriter::GetModuleInfo(PDBModuleInfo *info) {
       case IMAGE_FILE_MACHINE_AMD64:
         info->cpu = L"x86_64";
         break;
+      case IMAGE_FILE_MACHINE_ARM64:
+        info->cpu = L"arm64";
+        break;
       default:
         info->cpu = L"unknown";
         break;
@@ -1381,21 +2538,8 @@ bool PDBSourceLineWriter::GetPEInfo(PEModuleInfo *info) {
     return false;
   }
 
-  if (code_file_.empty() && !FindPEFile()) {
-    fprintf(stderr, "Couldn't locate EXE or DLL file.\n");
-    return false;
-  }
-
-  // Convert wchar to native charset because ImageLoad only takes
-  // a PSTR as input.
-  string code_file;
-  if (!WindowsStringUtils::safe_wcstombs(code_file_, &code_file)) {
-    return false;
-  }
-
-  AutoImage img(ImageLoad((PSTR)code_file.c_str(), NULL));
+  AutoImage img(LoadImageForPEFile());
   if (!img) {
-    fprintf(stderr, "Failed to open PE file: %s\n", code_file.c_str());
     return false;
   }
 

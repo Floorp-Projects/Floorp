@@ -34,6 +34,7 @@
 #define COMMON_WINDOWS_PDB_SOURCE_LINE_WRITER_H_
 
 #include <atlcomcli.h>
+#include <ImageHlp.h>
 
 #include <unordered_map>
 #include <string>
@@ -163,6 +164,11 @@ class PDBSourceLineWriter {
   bool PrintFrameDataUsingEXE();
 
   // Outputs all of the frame information necessary to construct stack
+  // backtraces in the absence of frame pointers. For arm64 data stored in
+  // .exe, .dll files. Returns true on success.
+  bool PrintFrameDataUsingArm64EXE();
+
+  // Outputs all of the frame information necessary to construct stack
   // backtraces in the absence of frame pointers.  Returns true on success.
   bool PrintFrameData();
 
@@ -216,6 +222,15 @@ class PDBSourceLineWriter {
   // Find the PE file corresponding to the loaded PDB file, and
   // set the code_file_ member. Returns false on failure.
   bool FindPEFile();
+
+  // Get the RVA and size of the exception information of a 64-bit loaded
+  // image.  Returns false if the image is not a 64-bit image.
+  bool Get64BitExceptionInformation(PLOADED_IMAGE image,
+				    DWORD *rva, DWORD *size);
+
+  // Load the image for the PE file corresponding to the loaded PDB file.
+  // Returns nullptr on failure.
+  PLOADED_IMAGE LoadImageForPEFile();
 
   // Returns the function name for a symbol.  If possible, the name is
   // undecorated.  If the symbol's decorated form indicates the size of
