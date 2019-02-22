@@ -195,7 +195,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "0f2654931e2d"
+        "revision": "f019b05d99e1"
     },
     "fy-NL": {
         "platforms": [
@@ -225,7 +225,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "05960bf945c8"
+        "revision": "bc4ce2dac4f7"
     },
     "gu-IN": {
         "platforms": [
@@ -543,7 +543,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "ec8089e5b506"
+        "revision": "4f82e8cc4650"
     },
     "wo": {
         "platforms": [
