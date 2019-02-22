@@ -72,9 +72,18 @@ static const char* sEGLExtensionNames[] = {
     "EGL_KHR_create_context_no_error",
     "EGL_MOZ_create_context_provoking_vertex_dont_care"};
 
-#if defined(ANDROID)
+PRLibrary* LoadApitraceLibrary() {
+  const char* path = nullptr;
 
-static PRLibrary* LoadApitraceLibrary() {
+#ifdef ANDROID
+  // We only need to explicitly dlopen egltrace
+  // on android as we can use LD_PRELOAD or other tricks
+  // on other platforms. We look for it in /data/local
+  // as that's writeable by all users.
+  path = "/data/local/tmp/egltrace.so";
+#endif
+  if (!path) return nullptr;
+
   // Initialization of gfx prefs here is only needed during the unit tests...
   gfxPrefs::GetSingleton();
   if (!gfxPrefs::UseApitrace()) {
@@ -82,7 +91,6 @@ static PRLibrary* LoadApitraceLibrary() {
   }
 
   static PRLibrary* sApitraceLibrary = nullptr;
-
   if (sApitraceLibrary) return sApitraceLibrary;
 
   nsAutoCString logFile;
@@ -96,19 +104,18 @@ static PRLibrary* LoadApitraceLibrary() {
   nsAutoCString logPath;
   logPath.AppendPrintf("%s/%s", getenv("GRE_HOME"), logFile.get());
 
+#ifndef XP_WIN  // Windows is missing setenv and forbids PR_LoadLibrary.
   // apitrace uses the TRACE_FILE environment variable to determine where
   // to log trace output to
   printf_stderr("Logging GL tracing output to %s", logPath.get());
   setenv("TRACE_FILE", logPath.get(), false);
 
-  printf_stderr("Attempting load of %s\n", APITRACE_LIB);
-
-  sApitraceLibrary = PR_LoadLibrary(APITRACE_LIB);
+  printf_stderr("Attempting load of %s\n", path);
+  sApitraceLibrary = PR_LoadLibrary(path);
+#endif
 
   return sApitraceLibrary;
 }
-
-#endif  // ANDROID
 
 #ifdef XP_WIN
 // see the comment in GLLibraryEGL::EnsureInitialized() for the rationale here.
