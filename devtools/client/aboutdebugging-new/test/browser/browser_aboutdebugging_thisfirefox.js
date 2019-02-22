@@ -33,10 +33,12 @@ add_task(async function() {
 
   const paneTitles = [...paneTitlesEls].map(el => el.textContent);
 
-  EXPECTED_TARGET_PANES.forEach(expectedPane => {
-    ok(paneTitles.includes(expectedPane),
-      "Expected debug target category found: " + expectedPane);
-  });
+  for (let i = 0; i < EXPECTED_TARGET_PANES.length; i++) {
+    const expectedPaneTitle = EXPECTED_TARGET_PANES[i];
+    const actualPaneTitle = paneTitles[i];
+    ok(actualPaneTitle.startsWith(expectedPaneTitle),
+       `Expected debug target category found: ${ expectedPaneTitle }`);
+  }
 
   await removeTab(tab);
 });
