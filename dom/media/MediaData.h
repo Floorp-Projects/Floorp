@@ -12,6 +12,7 @@
 #  include "SharedBuffer.h"
 #  include "TimeUnits.h"
 #  include "mozilla/CheckedInt.h"
+#  include "mozilla/Maybe.h"
 #  include "mozilla/PodOperations.h"
 #  include "mozilla/RefPtr.h"
 #  include "mozilla/Span.h"
@@ -336,6 +337,15 @@ class AudioData : public MediaData {
   static const Type sType = AUDIO_DATA;
   static const char* sTypeName;
 
+  // Access the buffer as a Span.
+  Span<AudioDataValue> Data() const {
+    return MakeSpan(mAudioData.Data(), mAudioData.Length());
+  }
+
+  // Get the internal audio buffer to be moved. After this call the original
+  // AudioData will be emptied and can't be used again.
+  AlignedAudioBuffer MoveableData() { return std::move(mAudioData); }
+
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
   // If mAudioBuffer is null, creates it from mAudioData.
@@ -355,11 +365,12 @@ class AudioData : public MediaData {
   // At least one of mAudioBuffer/mAudioData must be non-null.
   // mChannels channels, each with mFrames frames
   RefPtr<SharedBuffer> mAudioBuffer;
-  // mFrames frames, each with mChannels values
-  AlignedAudioBuffer mAudioData;
-
  protected:
   ~AudioData() {}
+
+ private:
+  // mFrames frames, each with mChannels values
+  AlignedAudioBuffer mAudioData;
 };
 
 namespace layers {

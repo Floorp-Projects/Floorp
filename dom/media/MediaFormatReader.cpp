@@ -1691,7 +1691,7 @@ void MediaFormatReader::NotifyNewOutput(
                     sample->mKeyframe ? "true" : "false",
                     sample->As<AudioData>()->mChannels,
                     sample->As<AudioData>()->mRate,
-                    sample->As<AudioData>()->mAudioData.Size());
+                    sample->As<AudioData>()->Data().Length());
             break;
           case MediaData::VIDEO_DATA:
             DDLOGPR(DDLogCategory::Log,

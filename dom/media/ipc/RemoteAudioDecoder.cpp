@@ -7,6 +7,7 @@
 
 #include "RemoteDecoderManagerChild.h"
 #include "VorbisDecoder.h"
+#include "mozilla/PodOperations.h"
 
 namespace mozilla {
 
@@ -19,10 +20,9 @@ mozilla::ipc::IPCResult RemoteAudioDecoderChild::RecvOutput(
   const RemoteAudioDataIPDL& aData = aDecodedData.get_RemoteAudioDataIPDL();
 
   AlignedAudioBuffer alignedAudioBuffer;
-  alignedAudioBuffer.SetLength(aData.buffer().Size<uint8_t>() /
-                               sizeof(*alignedAudioBuffer.Data()));
-  memcpy(alignedAudioBuffer.Data(), aData.buffer().get<uint8_t>(),
-         aData.buffer().Size<uint8_t>());
+  alignedAudioBuffer.SetLength(aData.buffer().Size<AudioDataValue>());
+  PodCopy(alignedAudioBuffer.Data(), aData.buffer().get<AudioDataValue>(),
+          alignedAudioBuffer.Length());
 
   DeallocShmem(aData.buffer());
 
@@ -102,16 +102,16 @@ void RemoteAudioDecoderParent::ProcessDecodedData(
                "Can only decode audio using RemoteAudioDecoderParent!");
     AudioData* audio = static_cast<AudioData*>(data.get());
 
-    MOZ_ASSERT(audio->mAudioData,
+    MOZ_ASSERT(audio->Data().Elements(),
                "Decoded audio must output an AlignedAudioBuffer "
                "to be used with RemoteAudioDecoderParent");
 
     Shmem buffer;
-    if (AllocShmem(audio->mAudioData.Size(), Shmem::SharedMemory::TYPE_BASIC,
-                   &buffer) &&
-        audio->mAudioData.Size() == buffer.Size<uint8_t>()) {
-      memcpy(buffer.get<uint8_t>(), audio->mAudioData.Data(),
-             audio->mAudioData.Size());
+    if (AllocShmem(audio->Data().Length() * sizeof(AudioDataValue),
+                   Shmem::SharedMemory::TYPE_BASIC, &buffer) &&
+        audio->Data().Length() == buffer.Size<AudioDataValue>()) {
+      PodCopy(buffer.get<AudioDataValue>(), audio->Data().Elements(),
+             audio->Data().Length());
     }
 
     RemoteAudioDataIPDL output(
