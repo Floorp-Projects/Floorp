@@ -75,6 +75,12 @@ EXTN(jpeg_simd_cpu_support):
     or          edi, byte JSIMD_SSE2
 .no_sse2:
 
+    ; Check for level 7 support
+    xor         eax, eax
+    cpuid
+    cmp         eax, 7
+    jl          short .no_avx2
+
     ; Check for AVX2 instruction support
     mov         eax, 7
     xor         ecx, ecx
