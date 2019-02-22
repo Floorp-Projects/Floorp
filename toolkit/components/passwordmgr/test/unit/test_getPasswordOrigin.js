@@ -1,9 +1,10 @@
-/**
- * Test for LoginHelper.getLoginOrigin
+/*
+ * Test for LoginUtils._getPasswordOrigin
  */
 
 "use strict";
 
+const LMCBackstagePass = ChromeUtils.import("resource://gre/modules/LoginManagerContent.jsm", null);
 const TESTCASES = [
   ["javascript:void(0);", null],
   ["javascript:void(0);", "javascript:", true],
@@ -22,6 +23,6 @@ const TESTCASES = [
 ];
 
 for (let [input, expected, allowJS] of TESTCASES) {
-  let actual = LoginHelper.getLoginOrigin(input, allowJS);
+  let actual = LMCBackstagePass.LoginUtils._getPasswordOrigin(input, allowJS);
   Assert.strictEqual(actual, expected, "Checking: " + input);
 }
