@@ -65,7 +65,7 @@ const LOCALIZABLE_ATTRIBUTES = {
     description: ["value"],
     key: ["key", "keycode"],
     label: ["value"],
-    textbox: ["placeholder"],
+    textbox: ["placeholder", "value"],
   },
 };
 
