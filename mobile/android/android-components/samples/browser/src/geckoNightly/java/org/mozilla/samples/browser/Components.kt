@@ -18,6 +18,8 @@ class Components(private val applicationContext: Context) : DefaultComponents(ap
             installWebExtension(WebExtension("mozac-borderify", "resource://android/assets/extensions/borderify/")) {
                 ext, throwable -> Log.log(Log.Priority.ERROR, "SampleBrowser", throwable, "Failed to install ${ext.id}")
             }
+
+            icons.install(this)
         }
     }
 }

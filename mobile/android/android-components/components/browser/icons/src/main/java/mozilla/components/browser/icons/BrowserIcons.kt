@@ -12,6 +12,9 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import mozilla.components.browser.icons.generator.DefaultIconGenerator
 import mozilla.components.browser.icons.generator.IconGenerator
+import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.webextension.WebExtension
+import mozilla.components.support.base.log.logger.Logger
 import java.util.concurrent.Executors
 
 // Number of worker threads we are using internally.
@@ -33,5 +36,21 @@ class BrowserIcons(
     fun loadIcon(request: IconRequest): Deferred<Icon> = scope.async {
         // For now we only generate an icon.
         generator.generate(context, request)
+    }
+
+    /**
+     * Installs the "icons" extension in the engine in order to dynamically load icons for loaded websites.
+     */
+    fun install(engine: Engine) {
+        engine.installWebExtension(
+            WebExtension(
+                id = "browser-icons",
+                url = "resource://android/assets/extensions/browser-icons/"),
+            onSuccess = {
+                Logger.debug("Installed browser-icons extension")
+            },
+            onError = { _, throwable ->
+                Logger.error("Could not install browser-icons extension", throwable)
+            })
     }
 }
