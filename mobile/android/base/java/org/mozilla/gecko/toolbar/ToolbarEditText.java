@@ -321,9 +321,18 @@ public class ToolbarEditText extends CustomEditText
 
             beginSettingAutocomplete();
 
-            // Should we force capitalisation from result
-            if (pathStart != -1) {
+            // If we're autocompleting the path part of an URL, force using the autocomplete
+            // result's capitalisation.
+            // Because replacing the text can mess up the composition spans and confuse certain
+            // IMEs, requiring further workarounds afterwards, we only do this if we actually have
+            // to fix up the capitalisation.
+            if (pathStart != -1 &&
+                    !TextUtils.regionMatches(text, pathStart,
+                            result, pathStart, autoCompleteStart - pathStart)) {
                 text.replace(pathStart, autoCompleteStart, result, pathStart, autoCompleteStart);
+                if (InputMethods.needsRestartOnReplaceRemove(mContext)) {
+                    InputMethods.restartInput(mContext, this);
+                }
             }
 
             // Replace the existing autocomplete text with new one.
@@ -489,7 +498,7 @@ public class ToolbarEditText extends CustomEditText
             @Override
             public boolean setComposingText(final CharSequence text, final int newCursorPosition) {
                 if (removeAutocompleteOnComposing(text)) {
-                    if (InputMethods.needsRemoveAutocompleteHack(mContext)) {
+                    if (InputMethods.needsRestartOnReplaceRemove(mContext)) {
                         InputMethods.restartInput(mContext, ToolbarEditText.this);
                     }
                     return false;
