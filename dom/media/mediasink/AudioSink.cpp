@@ -455,8 +455,9 @@ already_AddRefed<AudioData> AudioSink::CreateAudioFromBuffer(
     return nullptr;
   }
   RefPtr<AudioData> data =
-      new AudioData(aReference->mOffset, aReference->mTime, duration,
-                    std::move(aBuffer), mOutputChannels, mOutputRate);
+      new AudioData(aReference->mOffset, aReference->mTime, std::move(aBuffer),
+                    mOutputChannels, mOutputRate);
+  MOZ_DIAGNOSTIC_ASSERT(duration == data->mDuration, "must be equal");
   return data.forget();
 }
 

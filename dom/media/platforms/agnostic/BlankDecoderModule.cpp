@@ -104,8 +104,9 @@ already_AddRefed<MediaData> BlankAudioDataCreator::Create(
     mFrameSum++;
   }
   RefPtr<AudioData> data(new AudioData(aSample->mOffset, aSample->mTime,
-                                       aSample->mDuration, std::move(samples),
-                                       mChannelCount, mSampleRate));
+                                       std::move(samples), mChannelCount,
+                                       mSampleRate));
+  MOZ_DIAGNOSTIC_ASSERT(aSample->mDuration == data->mDuration, "must be equal");
   return data.forget();
 }
 

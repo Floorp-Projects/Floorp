@@ -301,10 +301,11 @@ MediaResult AppleATDecoder::DecodeSample(MediaRawData* aSample) {
   }
 
   RefPtr<AudioData> audio = new AudioData(
-      aSample->mOffset, aSample->mTime, duration, data.Forget(), channels, rate,
+      aSample->mOffset, aSample->mTime, data.Forget(), channels, rate,
       mChannelLayout && mChannelLayout->IsValid()
           ? mChannelLayout->Map()
           : AudioConfig::ChannelLayout::UNKNOWN_MAP);
+  MOZ_DIAGNOSTIC_ASSERT(duration == audio->mDuration, "must be equal");
   mDecodedSamples.AppendElement(std::move(audio));
   return NS_OK;
 }

@@ -66,8 +66,10 @@ class AudioCompactor {
         return false;
       }
 
-      mQueue.Push(new AudioData(aOffset, time, duration, std::move(buffer),
-                                aChannels, aSampleRate));
+      RefPtr<AudioData> data = new AudioData(aOffset, time, std::move(buffer),
+                                             aChannels, aSampleRate);
+      MOZ_DIAGNOSTIC_ASSERT(duration == data->mDuration, "must be equal");
+      mQueue.Push(data);
 
       // Remove the frames we just pushed into the queue and loop if there is
       // more to be done.
