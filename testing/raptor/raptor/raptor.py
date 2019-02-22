@@ -454,6 +454,7 @@ class RaptorDesktopChrome(RaptorDesktop):
             '--proxy-bypass-list=localhost;127.0.0.1',
             '--ignore-certificate-errors',
             '--no-default-browser-check',
+            '--use-mock-keychain',
         ]
         if self.config['host'] not in ('localhost', '127.0.0.1'):
             chrome_args[0] = chrome_args[0].replace('127.0.0.1', self.config['host'])
