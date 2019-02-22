@@ -2642,6 +2642,16 @@ bool TextInputHandler::HandleCommand(Command aCommand) {
         }
         break;
       }
+      case CommandInsertTab:
+      case CommandInsertBacktab:
+        nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
+        keypressEvent.mKeyCode = NS_VK_TAB;
+        keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_Tab;
+        keypressEvent.mModifiers &= ~(MODIFIER_CONTROL | MODIFIER_ALT | MODIFIER_META);
+        if (aCommand == CommandInsertBacktab) {
+          keypressEvent.mModifiers |= MODIFIER_SHIFT;
+        }
+        break;
       case CommandDeleteCharBackward:
       case CommandDeleteToBeginningOfLine:
       case CommandDeleteWordBackward: {
