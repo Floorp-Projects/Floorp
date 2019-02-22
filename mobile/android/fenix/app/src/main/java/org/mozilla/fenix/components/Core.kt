@@ -6,6 +6,7 @@ package org.mozilla.fenix.components
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Bundle
 import android.preference.PreferenceManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -34,12 +35,20 @@ import java.util.concurrent.TimeUnit
 class Core(private val context: Context) {
 
     private val runtime by lazy {
-        val runtimeSettings = GeckoRuntimeSettings.Builder()
+        val builder = GeckoRuntimeSettings.Builder()
+
+        testConfig?.let {
+            builder.extras(it)
+        }
+
+        val runtimeSettings = builder
             .crashHandler(CrashHandlerService::class.java)
             .build()
 
         GeckoRuntime.create(context, runtimeSettings)
     }
+
+    var testConfig: Bundle? = null
 
     /**
      * The browser engine component initialized based on the build
