@@ -243,8 +243,6 @@ let ProfileAutocomplete = {
     this._registered = true;
 
     Services.obs.addObserver(this, "autocomplete-will-enter-text");
-
-    this.debug("ensureRegistered. Finished with _registered:", this._registered);
   },
 
   ensureUnregistered() {
@@ -338,6 +336,7 @@ let ProfileAutocomplete = {
  * NOTE: Declares it by "var" to make it accessible in unit tests.
  */
 var FormAutofillContent = {
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIFormSubmitObserver]),
   /**
    * @type {WeakMap} mapping FormLike root HTML elements to FormAutofillHandler objects.
    */
@@ -346,9 +345,7 @@ var FormAutofillContent = {
   /**
    * @type {Set} Set of the fields with usable values in any saved profile.
    */
-  get savedFieldNames() {
-    return Services.cpmm.sharedData.get("FormAutofill:savedFieldNames");
-  },
+  savedFieldNames: null,
 
   /**
    * @type {Object} The object where to store the active items, e.g. element,
@@ -358,12 +355,12 @@ var FormAutofillContent = {
 
   init() {
     FormAutofill.defineLazyLogGetter(this, "FormAutofillContent");
-    this.debug("init");
 
-    // eslint-disable-next-line mozilla/balanced-listeners
-    Services.cpmm.sharedData.addEventListener("change", this);
+    Services.cpmm.addMessageListener("FormAutofill:enabledStatus", this);
+    Services.cpmm.addMessageListener("FormAutofill:savedFieldNames", this);
+    Services.obs.addObserver(this, "earlyformsubmit");
 
-    let autofillEnabled = Services.cpmm.sharedData.get("FormAutofill:enabled");
+    let autofillEnabled = Services.cpmm.initialProcessData.autofillEnabled;
     // If storage hasn't be initialized yet autofillEnabled is undefined but we need to ensure
     // autocomplete is registered before the focusin so register it in this case as long as the
     // pref is true.
@@ -373,6 +370,9 @@ var FormAutofillContent = {
     if (autofillEnabled || shouldEnableAutofill) {
       ProfileAutocomplete.ensureRegistered();
     }
+
+    this.savedFieldNames =
+      Services.cpmm.initialProcessData.autofillSavedFieldNames;
   },
 
   /**
@@ -389,54 +389,59 @@ var FormAutofillContent = {
   },
 
   /**
-   * Handle a form submission and early return when:
+   * Handle earlyformsubmit event and early return when:
    * 1. In private browsing mode.
    * 2. Could not map any autofill handler by form element.
    * 3. Number of filled fields is less than autofill threshold
    *
-   * @param {HTMLElement} formElement Root element which receives submit event.
-   * @param {Window} domWin Content window only passed for unit tests
+   * @param {HTMLElement} formElement Root element which receives earlyformsubmit event.
+   * @param {Object} domWin Content window
+   * @returns {boolean} Should always return true so form submission isn't canceled.
    */
-  formSubmitted(formElement, domWin = formElement.ownerGlobal) {
-    this.debug("Handling form submission");
+  notify(formElement, domWin) {
+    try {
+      this.debug("Notifying form early submission");
 
-    if (!FormAutofill.isAutofillEnabled) {
-      this.debug("Form Autofill is disabled");
-      return;
+      if (!FormAutofill.isAutofillEnabled) {
+        this.debug("Form Autofill is disabled");
+        return true;
+      }
+
+      if (domWin && PrivateBrowsingUtils.isContentWindowPrivate(domWin)) {
+        this.debug("Ignoring submission in a private window");
+        return true;
+      }
+
+      let handler = this._formsDetails.get(formElement);
+      if (!handler) {
+        this.debug("Form element could not map to an existing handler");
+        return true;
+      }
+
+      let records = handler.createRecords();
+      if (!Object.values(records).some(typeRecords => typeRecords.length)) {
+        return true;
+      }
+
+      this._onFormSubmit(records, domWin, handler.timeStartedFillingMS);
+    } catch (ex) {
+      Cu.reportError(ex);
     }
-
-    // The `domWin` truthiness test is used by unit tests to bypass this check.
-    if (domWin && PrivateBrowsingUtils.isContentWindowPrivate(domWin)) {
-      this.debug("Ignoring submission in a private window");
-      return;
-    }
-
-    let handler = this._formsDetails.get(formElement);
-    if (!handler) {
-      this.debug("Form element could not map to an existing handler");
-      return;
-    }
-
-    let records = handler.createRecords();
-    if (!Object.values(records).some(typeRecords => typeRecords.length)) {
-      return;
-    }
-
-    this._onFormSubmit(records, domWin, handler.timeStartedFillingMS);
+    return true;
   },
 
-  handleEvent(evt) {
-    switch (evt.type) {
-      case "change": {
-        if (!evt.changedKeys.includes("FormAutofill:enabled")) {
-          return;
-        }
-        if (Services.cpmm.sharedData.get("FormAutofill:enabled")) {
+  receiveMessage({name, data}) {
+    switch (name) {
+      case "FormAutofill:enabledStatus": {
+        if (data) {
           ProfileAutocomplete.ensureRegistered();
         } else {
           ProfileAutocomplete.ensureUnregistered();
         }
         break;
+      }
+      case "FormAutofill:savedFieldNames": {
+        this.savedFieldNames = data;
       }
     }
   },
