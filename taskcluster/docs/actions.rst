@@ -24,13 +24,9 @@ At a very high level, the process looks like this:
 Defining Action Tasks
 ---------------------
 
-There are two options for defining actions: creating a callback action, or
-creating a custom action task.  A callback action automatically defines an
-action task that will invoke a Python function of your devising.
-
-A custom action task is an arbitrary task definition that will be created
-directly.  In cases where the callback would simply call ``queue.createTask``,
-a custom action task can be more efficient.
+There is one options for defining actions: creating a callback action.
+A callback action automatically defines an action task that will invoke a
+Python function of your devising.
 
 Creating a Callback Action
 --------------------------
