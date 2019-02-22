@@ -1918,9 +1918,9 @@ static bool CacheEntry_setBytecode(JSContext* cx, HandleObject cache,
 
   using BufferContents = ArrayBufferObject::BufferContents;
 
-  BufferContents contents = BufferContents::createMalloced(buffer);
+  BufferContents contents = BufferContents::createPlainData(buffer);
   Rooted<ArrayBufferObject*> arrayBuffer(
-      cx, ArrayBufferObject::createForContents(cx, length, contents));
+      cx, ArrayBufferObject::create(cx, length, contents));
   if (!arrayBuffer) {
     return false;
   }
@@ -6981,7 +6981,7 @@ class StreamCacheEntryObject : public NativeObject {
     auto& bytes =
         args.thisv().toObject().as<StreamCacheEntryObject>().cache().bytes();
     RootedArrayBufferObject buffer(
-        cx, ArrayBufferObject::createZeroed(cx, bytes.length()));
+        cx, ArrayBufferObject::create(cx, bytes.length()));
     if (!buffer) {
       return false;
     }
