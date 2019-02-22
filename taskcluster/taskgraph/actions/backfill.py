@@ -26,7 +26,6 @@ logger = logging.getLogger(__name__)
 @register_callback_action(
     title='Backfill',
     name='backfill',
-    kind='hook',
     generic=True,
     symbol='Bk',
     description=('Take the label of the current task, '

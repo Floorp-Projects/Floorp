@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
     title='Purge Worker Caches',
     name='purge-cache',
     symbol='purge-cache',
-    kind='hook',
     generic=True,
     description=(
         'Purge any caches associated with this task '
