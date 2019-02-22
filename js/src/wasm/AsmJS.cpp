@@ -6753,7 +6753,7 @@ static bool CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata,
   if (buffer->is<ArrayBufferObject>()) {
     Rooted<ArrayBufferObject*> arrayBuffer(cx,
                                            &buffer->as<ArrayBufferObject>());
-    if (!ArrayBufferObject::prepareForAsmJS(cx, arrayBuffer)) {
+    if (!arrayBuffer->prepareForAsmJS()) {
       return LinkFail(cx, "Unable to prepare ArrayBuffer for asm.js use");
     }
   } else {
