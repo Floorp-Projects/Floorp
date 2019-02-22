@@ -863,50 +863,50 @@ bool js::CreateWasmBuffer(JSContext* cx, const wasm::Limits& memory,
                                                              maxSize, buffer);
 }
 
-// Note this function can return false with or without an exception pending. The
-// asm.js caller checks cx->isExceptionPending before propagating failure.
-// Returning false without throwing means that asm.js linking will fail which
-// will recompile as non-asm.js.
-/* static */ bool ArrayBufferObject::prepareForAsmJS(
-    JSContext* cx, Handle<ArrayBufferObject*> buffer) {
-  MOZ_ASSERT(buffer->byteLength() % wasm::PageSize == 0,
+bool ArrayBufferObject::prepareForAsmJS() {
+  MOZ_ASSERT(byteLength() % wasm::PageSize == 0,
              "prior size checking should have guaranteed page-size multiple");
-  MOZ_ASSERT(buffer->byteLength() > 0,
+  MOZ_ASSERT(byteLength() > 0,
              "prior size checking should have excluded empty buffers");
-  MOZ_ASSERT(!buffer->isNoData(),
-             "size checking should have excluded detached or empty buffers");
 
-  static_assert(wasm::PageSize > MaxInlineBytes,
-                "inline data must be too small to be a page size multiple");
-  MOZ_ASSERT(!buffer->isInlineData(),
-             "inline-data buffers are implicitly excluded by size checks");
+  switch (bufferKind()) {
+    case MALLOCED:
+    case MAPPED:
+    case EXTERNAL:
+      // It's okay if this uselessly sets the flag a second time.
+      setIsPreparedForAsmJS();
+      return true;
 
-  // Don't assert cx->wasmHaveSignalHandlers because (1) they aren't needed
-  // for asm.js, (2) they are only installed for WebAssembly, not asm.js.
+    case INLINE_DATA:
+      static_assert(wasm::PageSize > MaxInlineBytes,
+                    "inline data must be too small to be a page size multiple");
+      MOZ_ASSERT_UNREACHABLE(
+          "inline-data buffers should be implicitly excluded by size checks");
+      return false;
 
-  // wasm buffers can be detached at any time.
-  if (buffer->isWasm()) {
-    MOZ_ASSERT(!buffer->isPreparedForAsmJS());
-    return false;
+    case NO_DATA:
+      MOZ_ASSERT_UNREACHABLE(
+          "size checking should have excluded detached or empty buffers");
+      return false;
+
+    // asm.js code and associated buffers are potentially long-lived.  Yet a
+    // buffer of user-owned data *must* be detached by the user before the
+    // user-owned data is disposed.  No caller wants to use a user-owned
+    // ArrayBuffer with asm.js, so just don't support this and avoid a mess of
+    // complexity.
+    case USER_OWNED:
+    // wasm buffers can be detached at any time.
+    case WASM:
+      MOZ_ASSERT(!isPreparedForAsmJS());
+      return false;
+
+    case BAD1:
+      MOZ_ASSERT_UNREACHABLE("invalid bufferKind() encountered");
+      return false;
   }
 
-  // asm.js code and associated buffers are potentially long-lived.  Yet if
-  // |buffer->hasUserOwnedData()|, |buffer| *must* be detached by the user
-  // before the user-provided data is disposed.  Eliminate the complexity of
-  // this edge case by not allowing buffers with user-provided content to be
-  // used with asm.js, as no callers exist that want to use such buffer with
-  // asm.js.
-  if (buffer->hasUserOwnedData()) {
-    MOZ_ASSERT(!buffer->isPreparedForAsmJS());
-    return false;
-  }
-
-  MOZ_ASSERT(buffer->isMalloced() || buffer->isMapped() ||
-             buffer->isExternal());
-
-  // It's fine if this uselessly sets the flag a second time.
-  buffer->setIsPreparedForAsmJS();
-  return true;
+  MOZ_ASSERT_UNREACHABLE("non-exhaustive kind-handling switch?");
+  return false;
 }
 
 ArrayBufferObject::BufferContents ArrayBufferObject::createMappedContents(
