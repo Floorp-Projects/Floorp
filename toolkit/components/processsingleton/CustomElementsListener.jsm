@@ -15,7 +15,11 @@ Services.obs.addObserver({
       doc.contentType == "application/vnd.mozilla.xul+xml" ||
       doc.contentType == "application/xhtml+xml" ||
       doc.contentType == "text/html"
-    )) {
+    ) &&
+        // People shouldn't be using our built-in custom elements in
+        // system-principal about:blank anyway, and trying to support that
+        // causes responsiveness regressions.  So let's not support it.
+        doc.URL != "about:blank") {
       Services.scriptloader.loadSubScript(
         "chrome://global/content/customElements.js", doc.ownerGlobal);
     }
