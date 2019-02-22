@@ -386,7 +386,6 @@ class nsWindow final : public nsBaseWidget {
   static CSDSupportLevel GetSystemCSDSupportLevel();
 
   static bool HideTitlebarByDefault();
-  static bool TopLevelWindowUseARGBVisual();
   static bool GetTopLevelWindowActiveState(nsIFrame* aFrame);
 
  protected:
