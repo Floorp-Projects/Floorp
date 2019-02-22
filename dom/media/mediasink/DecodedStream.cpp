@@ -530,11 +530,11 @@ static void SendStreamAudio(DecodedStreamData* aStream,
   AudioDataValue* bufferData = static_cast<AudioDataValue*>(buffer->Data());
   AutoTArray<const AudioDataValue*, 2> channels;
   for (uint32_t i = 0; i < audio->mChannels; ++i) {
-    channels.AppendElement(bufferData + i * audio->mFrames);
+    channels.AppendElement(bufferData + i * audio->Frames());
   }
-  aOutput->AppendFrames(buffer.forget(), channels, audio->mFrames,
+  aOutput->AppendFrames(buffer.forget(), channels, audio->Frames(),
                         aPrincipalHandle);
-  aStream->mAudioFramesWritten += audio->mFrames;
+  aStream->mAudioFramesWritten += audio->Frames();
 
   aStream->mNextAudioTime = audio->GetEndTime();
 }
