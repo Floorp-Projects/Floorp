@@ -1630,6 +1630,24 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
     aTrackData.mLastParsedEndTime = TimeUnit();
   }
 
+  auto addToSamples = [&](MediaRawData* aSample,
+                          const TimeInterval& aInterval) {
+    aSample->mTime = aInterval.mStart;
+    aSample->mDuration = aInterval.Length();
+    aSample->mTrackInfo = trackBuffer.mLastInfo;
+    samplesRange += aInterval;
+    sizeNewSamples += aSample->ComputedSizeOfIncludingThis();
+    samples.AppendElement(aSample);
+  };
+
+  // Will be set to the last frame dropped due to being outside mAppendWindow.
+  // It will be added prior the first following frame which can be added to the
+  // track buffer.
+  // This sample will be set with a duration of only 1us which will cause it to
+  // be dropped once returned by the decoder.
+  // This sample is required to "prime" the decoder so that the following frame
+  // can be fully decoded.
+  RefPtr<MediaRawData> previouslyDroppedSample;
   for (auto& sample : aSamples) {
     const TimeUnit sampleEndTime = sample->GetEndTime();
     if (sampleEndTime > aTrackData.mLastParsedEndTime) {
@@ -1646,6 +1664,7 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
       // frame and jump to the top of the loop to start processing the next
       // coded frame.
       if (!sample->mKeyframe) {
+        previouslyDroppedSample = nullptr;
         continue;
       }
       // 2. Set the need random access point flag on track buffer to false.
@@ -1734,6 +1753,7 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
       CheckSequenceDiscontinuity(presentationTimestamp);
 
       if (!sample->mKeyframe) {
+        previouslyDroppedSample = nullptr;
         continue;
       }
       if (appendMode == SourceBufferAppendMode::Sequence) {
@@ -1793,8 +1813,10 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
                    intersection.mStart.ToMicroseconds(),
                    intersection.mEnd.ToMicroseconds());
         sampleInterval = intersection;
-        sample->mDuration = intersection.Length();
       } else {
+        sample->mOriginalPresentationWindow = Some(sampleInterval);
+        sample->mTimecode = decodeTimestamp;
+        previouslyDroppedSample = sample;
         MSE_DEBUGV("frame [%" PRId64 ",%" PRId64
                    "] outside appendWindow [%" PRId64 ",%" PRId64 "] dropping",
                    sampleInterval.mStart.ToMicroseconds(),
@@ -1816,13 +1838,23 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
         continue;
       }
     }
+    if (previouslyDroppedSample) {
+      MSE_DEBUGV("Adding silent frame");
+      // This "silent" sample will be added so that it starts exactly before the
+      // first usable one. The duration of the actual sample will be adjusted so
+      // that the total duration staty the same.
+      // Setting a dummy presentation window of 1us will cause this sample to be
+      // dropped after decoding by the AudioTrimmer (if audio).
+      TimeInterval previouslyDroppedSampleInterval =
+          TimeInterval(sampleInterval.mStart,
+                       sampleInterval.mStart + TimeUnit::FromMicroseconds(1));
+      addToSamples(previouslyDroppedSample, previouslyDroppedSampleInterval);
+      previouslyDroppedSample = nullptr;
+      sampleInterval.mStart += previouslyDroppedSampleInterval.Length();
+    }
 
-    samplesRange += sampleInterval;
-    sizeNewSamples += sample->ComputedSizeOfIncludingThis();
-    sample->mTime = sampleInterval.mStart;
     sample->mTimecode = decodeTimestamp;
-    sample->mTrackInfo = trackBuffer.mLastInfo;
-    samples.AppendElement(sample);
+    addToSamples(sample, sampleInterval);
 
     // Steps 11,12,13,14, 15 and 16 will be done in one block in InsertFrames.
 
