@@ -1056,6 +1056,7 @@ function _loadURI(browser, uri, params = {}) {
     referrerInfo,
     postData,
     userContextId,
+    csp,
   } = params || {};
 
   if (!triggeringPrincipal) {
@@ -1085,6 +1086,7 @@ function _loadURI(browser, uri, params = {}) {
   }
   let loadURIOptions = {
     triggeringPrincipal,
+    csp,
     loadFlags: flags,
     referrerInfo,
     postData,
@@ -1119,6 +1121,7 @@ function _loadURI(browser, uri, params = {}) {
         remoteType: requiredRemoteType,
         postData,
         newFrameloader,
+        csp: csp ? gSerializationHelper.serializeToString(csp) : null,
       };
 
       if (userContextId) {
@@ -1688,6 +1691,7 @@ var gBrowserInit = {
             userContextId: window.arguments[6],
             triggeringPrincipal: window.arguments[8] || Services.scriptSecurityManager.getSystemPrincipal(),
             allowInheritPrincipal: window.arguments[9],
+            csp: window.arguments[10],
           });
         } catch (e) {}
       } else if (window.arguments.length >= 3) {
@@ -1700,6 +1704,7 @@ var gBrowserInit = {
         //                 [7]: originPrincipal (nsIPrincipal)
         //                 [8]: triggeringPrincipal (nsIPrincipal)
         //                 [9]: allowInheritPrincipal (bool)
+        //                [10]: csp (nsIContentSecurityPolicy)
         let referrerURI = window.arguments[2];
         if (typeof(referrerURI) == "string") {
           try {
@@ -1719,7 +1724,7 @@ var gBrowserInit = {
                 window.arguments[7], !!window.arguments[7], window.arguments[8],
                 // TODO fix allowInheritPrincipal to default to false.
                 // Default to true unless explicitly set to false because of bug 1475201.
-                window.arguments[9] !== false);
+                window.arguments[9] !== false, window.arguments[10]);
         window.focus();
       } else {
         // Note: loadOneOrMoreURIs *must not* be called if window.arguments.length >= 3.
@@ -2438,7 +2443,7 @@ function BrowserTryToCloseWindow() {
 
 function loadURI(uri, referrer, postData, allowThirdPartyFixup, referrerPolicy,
                  userContextId, originPrincipal, forceAboutBlankViewerInCurrent,
-                 triggeringPrincipal, allowInheritPrincipal = false) {
+                 triggeringPrincipal, allowInheritPrincipal = false, csp = null) {
   if (!triggeringPrincipal) {
     throw new Error("Must load with a triggering Principal");
   }
@@ -2452,6 +2457,7 @@ function loadURI(uri, referrer, postData, allowThirdPartyFixup, referrerPolicy,
                  userContextId,
                  originPrincipal,
                  triggeringPrincipal,
+                 csp,
                  forceAboutBlankViewerInCurrent,
                  allowInheritPrincipal,
                });
@@ -4663,7 +4669,7 @@ var XULBrowserWindow = {
   },
 
   // Check whether this URI should load in the current process
-  shouldLoadURI(aDocShell, aURI, aReferrer, aHasPostData, aTriggeringPrincipal) {
+  shouldLoadURI(aDocShell, aURI, aReferrer, aHasPostData, aTriggeringPrincipal, aCsp) {
     if (!gMultiProcessBrowser)
       return true;
 
@@ -4680,7 +4686,7 @@ var XULBrowserWindow = {
       // XXX: Do we want to complain if we have post data but are still
       // redirecting the load? Perhaps a telemetry probe? Theoretically we
       // shouldn't do this, as it throws out data. See bug 1348018.
-      E10SUtils.redirectLoad(aDocShell, aURI, aReferrer, aTriggeringPrincipal, false);
+      E10SUtils.redirectLoad(aDocShell, aURI, aReferrer, aTriggeringPrincipal, false, null, aCsp);
       return false;
     }
 
@@ -5396,7 +5402,7 @@ nsBrowserAccess.prototype = {
                    aIsExternal, aForceNotRemote = false,
                    aUserContextId = Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID,
                    aOpenerWindow = null, aOpenerBrowser = null,
-                   aTriggeringPrincipal = null, aNextTabParentId = 0, aName = "") {
+                   aTriggeringPrincipal = null, aNextTabParentId = 0, aName = "", aCsp = null) {
     let win, needToFocusWin;
 
     // try the current window.  if we're in a popup, fall back on the most recent browser window
@@ -5432,6 +5438,7 @@ nsBrowserAccess.prototype = {
                                       openerBrowser: aOpenerBrowser,
                                       nextTabParentId: aNextTabParentId,
                                       name: aName,
+                                      csp: aCsp,
                                       });
     let browser = win.gBrowser.getBrowserForTab(tab);
 
@@ -5491,6 +5498,8 @@ nsBrowserAccess.prototype = {
     if (aOpener && aOpener.document) {
       referrerPolicy = aOpener.document.referrerPolicy;
     }
+    // Bug 965637, query the CSP from the doc instead of the Principal
+    let csp = aTriggeringPrincipal.csp;
     let isPrivate = aOpener
                   ? PrivateBrowsingUtils.isContentWindowPrivate(aOpener)
                   : PrivateBrowsingUtils.isWindowPrivate(window);
@@ -5529,7 +5538,8 @@ nsBrowserAccess.prototype = {
         let browser = this._openURIInNewTab(aURI, referrer, referrerPolicy,
                                             isPrivate, isExternal,
                                             forceNotRemote, userContextId,
-                                            openerWindow, null, aTriggeringPrincipal);
+                                            openerWindow, null, aTriggeringPrincipal,
+                                            0, "", csp);
         if (browser)
           newWindow = browser.contentWindow;
         break;
@@ -5541,6 +5551,7 @@ nsBrowserAccess.prototype = {
                             Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
           gBrowser.loadURI(aURI.spec, {
             triggeringPrincipal: aTriggeringPrincipal,
+            csp,
             flags: loadflags,
             referrerURI: referrer,
             referrerPolicy,
@@ -5588,7 +5599,7 @@ nsBrowserAccess.prototype = {
                                  isExternal, false,
                                  userContextId, null, aParams.openerBrowser,
                                  aParams.triggeringPrincipal,
-                                 aNextTabParentId, aName);
+                                 aNextTabParentId, aName, aParams.csp);
   },
 
   isTabContentWindow(aWindow) {
@@ -6140,6 +6151,9 @@ function handleLinkClick(event, href, linkNode) {
 
   let frameOuterWindowID = WebNavigationFrames.getFrameId(doc.defaultView);
 
+  // Bug 965637, query the CSP from the doc instead of the Principal
+  let csp = doc.nodePrincipal.csp;
+
   urlSecurityCheck(href, doc.nodePrincipal);
   let params = {
     charset: doc.characterSet,
@@ -6149,6 +6163,7 @@ function handleLinkClick(event, href, linkNode) {
     noReferrer: BrowserUtils.linkHasNoReferrer(linkNode),
     originPrincipal: doc.nodePrincipal,
     triggeringPrincipal: doc.nodePrincipal,
+    csp,
     frameOuterWindowID,
   };
 

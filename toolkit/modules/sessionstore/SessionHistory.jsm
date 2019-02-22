@@ -224,6 +224,10 @@ var SessionHistoryInternal = {
       entry.triggeringPrincipal_base64 = E10SUtils.serializePrincipal(shEntry.triggeringPrincipal);
     }
 
+    if (shEntry.csp) {
+      entry.csp = E10SUtils.serializeCSP(shEntry.csp);
+    }
+
     entry.docIdentifier = shEntry.BFCacheEntry.ID;
 
     if (shEntry.stateData != null) {
@@ -459,6 +463,9 @@ var SessionHistoryInternal = {
     }
     if (entry.principalToInherit_base64) {
       shEntry.principalToInherit = E10SUtils.deserializePrincipal(entry.principalToInherit_base64);
+    }
+    if (entry.csp) {
+      shEntry.csp = E10SUtils.deserializeCSP(entry.csp);
     }
 
     if (entry.children) {
