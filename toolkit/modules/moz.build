@@ -186,6 +186,7 @@ EXTRA_JS_MODULES += [
     'AsyncPrefs.jsm',
     'AutoCompletePopupContent.jsm',
     'AutoScrollController.jsm',
+    'Battery.jsm',
     'BinarySearch.jsm',
     'BrowserUtils.jsm',
     'CanonicalJSON.jsm',
