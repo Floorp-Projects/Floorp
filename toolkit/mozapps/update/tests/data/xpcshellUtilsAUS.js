@@ -3358,41 +3358,17 @@ function getPostUpdateFile(aSuffix) {
  * Checks the contents of the updater post update binary log. When completed
  * checkPostUpdateAppLogFinished will be called.
  */
-function checkPostUpdateAppLog() {
+async function checkPostUpdateAppLog() {
   // Only Mac OS X and Windows support post update.
   if (AppConstants.platform == "macosx" || AppConstants.platform == "win") {
-    gTimeoutRuns++;
-    let postUpdateLog = getPostUpdateFile(".log");
-    if (!postUpdateLog.exists()) {
-      debugDump("postUpdateLog does not exist. Path: " + postUpdateLog.path);
-      if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
-        do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the post update " +
-                 "process to create the post update log. Path: " +
-                 postUpdateLog.path);
-      }
-      executeSoon(checkPostUpdateAppLog);
-      return;
-    }
+    let file = getPostUpdateFile(".log");
+    await TestUtils.waitForCondition(() => (file.exists()),
+      "Waiting for file to exist, path: " + file.path);
 
-    let logContents = readFile(postUpdateLog);
-    // It is possible for the log file contents check to occur before the log file
-    // contents are completely written so wait until the contents are the expected
-    // value. If the contents are never the expected value then the test will
-    // fail by timing out after gTimeoutRuns is greater than MAX_TIMEOUT_RUNS or
-    // the test harness times out the test.
-    if (logContents != "post-update\n") {
-      if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
-        do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the post update " +
-                 "process to create the expected contents in the post update log. Path: " +
-                 postUpdateLog.path);
-      }
-      executeSoon(checkPostUpdateAppLog);
-      return;
-    }
-    Assert.ok(true, "the post update log contents" + MSG_SHOULD_EQUAL);
+    let expectedContents = "post-update\n";
+    await TestUtils.waitForCondition(() => (readFile(file) == expectedContents),
+      "Waiting for expected file contents: " + expectedContents);
   }
-
-  executeSoon(checkPostUpdateAppLogFinished);
 }
 
 /**

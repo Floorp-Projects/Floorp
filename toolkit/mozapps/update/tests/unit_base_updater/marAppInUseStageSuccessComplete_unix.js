@@ -38,13 +38,7 @@ async function stageUpdateFinished() {
   // Switch the application to the staged application that was updated.
   runUpdate(STATE_SUCCEEDED, true, 0, true);
   await waitForHelperExit();
-  checkPostUpdateAppLog();
-}
-
-/**
- * Called after the call to checkPostUpdateAppLog finishes.
- */
-async function checkPostUpdateAppLogFinished() {
+  await checkPostUpdateAppLog();
   checkAppBundleModTime();
   checkSymLinks();
   standardInit();
