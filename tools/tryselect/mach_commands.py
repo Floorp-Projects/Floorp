@@ -164,7 +164,6 @@ class TrySelect(MachCommandBase):
         """
         self._activate_virtualenv()
         self.virtualenv_manager.install_pip_package('flask')
-        self.virtualenv_manager.install_pip_package('flask-wtf')
 
         from tryselect.selectors.chooser import run_try_chooser
         return run_try_chooser(**kwargs)
