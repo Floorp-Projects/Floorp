@@ -9,10 +9,12 @@ package org.mozilla.fenix.settings
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.annotation.RawRes
-import org.mozilla.fenix.R
 import org.mozilla.fenix.BuildConfig.BUILD_DATE
+import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.replace
+import org.mozilla.fenix.settings.SettingsFragment.Companion.wordmarkPath
 import org.mozilla.geckoview.BuildConfig
+import java.io.File
 
 object AboutPage {
     fun createAboutPage(context: Context): String {
@@ -36,9 +38,12 @@ object AboutPage {
 
         substitutionMap["%build-date%"] = BUILD_DATE
 
-        context.resources.getString(R.string.about_content, appName).also { content ->
-            substitutionMap["%about-content%"] = content
-        }
+        context.resources.getString(R.string.about_content, appName, SupportUtils.MOZILLA_MANIFESTO_URL)
+            .also { content ->
+                substitutionMap["%about-content%"] = content
+            }
+
+        substitutionMap["%wordmark%"] = File(context.filesDir, wordmarkPath).readText()
 
         return loadResourceFile(context, R.raw.about, substitutionMap)
     }

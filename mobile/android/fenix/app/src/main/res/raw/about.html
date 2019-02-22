@@ -4,48 +4,50 @@
    - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
 <head>
     <meta
-        name="viewport"
-        charset="utf-8"
-        content="width=device-width, initial-scale=1">
+            name="viewport"
+            charset="utf-8"
+            content="width=device-width, initial-scale=1">
     <style>
 body, html {
-    background: #221F1F;
-    color: #FFFFFF;
+    background: #f9f9fa;
+    color: #0C0C0D;
     font-family: sans-serif;
     line-height: 24px;
     font-size: 14px;
 }
-
 body{
     padding-left: 24px;
     padding-right: 24px;
     margin-left: 0px;
     margin-right: 0px;
 }
-
 a {
     color: #0A9AF4;
 }
-
 p.subtitle {
     text-align: center;
     opacity: .7;
     margin: 0;
 }
-
-h1#wordmark {
+img#wordmark {
+    /* We need to set the dp size here, because by default webview assumes the image is not
+    density specific (but since it's an android resource, we get a density specific version). */
+    width: 180px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
     padding-top: 24px;
-    text-align: center;
-}
+    }
     </style>
 </head>
 <html>
     <body
-        class="about">
-        <h1 id="wordmark">Fenix</h1>
+            class="about">
+        <br>
+        <img src="%wordmark%" id="wordmark"/>
+        <br>
         <p class="subtitle">%about-version%</p>
         %about-content%
-
         <p class="subtitle">Built on: %build-date%</p>
     </body>
 </html>
