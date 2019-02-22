@@ -182,9 +182,9 @@ child:
   // See ADivertableParentChannel::CancelDiversion
   async CancelDiversion();
 
-  async OriginalCacheInputStreamAvailable(OptionalIPCStream stream);
+  async OriginalCacheInputStreamAvailable(IPCStream? stream);
 
-  async AltDataCacheInputStreamAvailable(OptionalIPCStream stream);
+  async AltDataCacheInputStreamAvailable(IPCStream? stream);
 
 both:
   // After receiving this message, the parent also calls
