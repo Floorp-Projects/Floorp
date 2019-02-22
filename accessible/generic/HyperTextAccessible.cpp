@@ -519,7 +519,7 @@ uint32_t HyperTextAccessible::FindOffset(uint32_t aOffset,
   nsPeekOffsetStruct pos(
       aAmount, aDirection, innerContentOffset, nsPoint(0, 0), kIsJumpLinesOk,
       kIsScrollViewAStop, kIsKeyboardSelect, kIsVisualBidi, false,
-      nsPeekOffsetStruct::ForceEditableRegion::No, aWordMovementType);
+      nsPeekOffsetStruct::ForceEditableRegion::No, aWordMovementType, false);
   nsresult rv = frameAtOffset->PeekOffset(&pos);
 
   // PeekOffset fails on last/first lines of the text in certain cases.

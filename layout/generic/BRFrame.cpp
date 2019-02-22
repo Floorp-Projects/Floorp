@@ -45,7 +45,8 @@ class BRFrame final : public nsFrame {
                                            bool aWordSelectEatSpace,
                                            bool aIsKeyboardSelect,
                                            int32_t* aOffset,
-                                           PeekWordState* aState) override;
+                                           PeekWordState* aState,
+                                           bool aTrimSpaces) override;
 
   virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowInput,
@@ -238,7 +239,8 @@ nsIFrame::FrameSearchResult BRFrame::PeekOffsetWord(bool aForward,
                                                     bool aWordSelectEatSpace,
                                                     bool aIsKeyboardSelect,
                                                     int32_t* aOffset,
-                                                    PeekWordState* aState) {
+                                                    PeekWordState* aState,
+                                                    bool aTrimSpaces) {
   NS_ASSERTION(aOffset && *aOffset <= 1, "aOffset out of range");
   // Keep going. The actual line jumping will stop us.
   return CONTINUE;

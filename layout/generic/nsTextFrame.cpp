@@ -2966,8 +2966,9 @@ nsTextFrame::TrimmedOffsets nsTextFrame::GetTrimmedOffsets(
   // for display
   if (textStyle->WhiteSpaceIsSignificant()) return offsets;
 
-  if ((aFlags & TrimmedOffsetFlags::kNotPostReflow) ||
-      (GetStateBits() & TEXT_START_OF_LINE)) {
+  if (!(aFlags & TrimmedOffsetFlags::kNoTrimBefore) &&
+      ((aFlags & TrimmedOffsetFlags::kNotPostReflow) ||
+       (GetStateBits() & TEXT_START_OF_LINE))) {
     int32_t whitespaceCount =
         GetTrimmableWhitespaceCount(aFrag, offsets.mStart, offsets.mLength, 1);
     offsets.mStart += whitespaceCount;
@@ -7731,7 +7732,8 @@ nsIFrame::FrameSearchResult nsTextFrame::PeekOffsetNoAmount(bool aForward,
 class MOZ_STACK_CLASS ClusterIterator {
  public:
   ClusterIterator(nsTextFrame* aTextFrame, int32_t aPosition,
-                  int32_t aDirection, nsString& aContext);
+                  int32_t aDirection, nsString& aContext,
+                  bool aTrimSpaces = true);
 
   bool NextCluster();
   bool IsWhitespace();
@@ -7956,7 +7958,8 @@ bool ClusterIterator::NextCluster() {
 }
 
 ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, int32_t aPosition,
-                                 int32_t aDirection, nsString& aContext)
+                                 int32_t aDirection, nsString& aContext,
+                                 bool aTrimSpaces)
     : mTextFrame(aTextFrame),
       mDirection(aDirection),
       mCharIndex(-1),
@@ -7969,7 +7972,10 @@ ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, int32_t aPosition,
   mIterator.SetOriginalOffset(aPosition);
 
   mFrag = aTextFrame->GetContent()->GetText();
-  mTrimmed = aTextFrame->GetTrimmedOffsets(mFrag);
+  mTrimmed = aTextFrame->GetTrimmedOffsets(mFrag,
+      aTrimSpaces ? nsTextFrame::TrimmedOffsetFlags::kDefaultTrimFlags :
+                    nsTextFrame::TrimmedOffsetFlags::kNoTrimAfter |
+                        nsTextFrame::TrimmedOffsetFlags::kNoTrimBefore);
 
   int32_t textOffset = aTextFrame->GetContentOffset();
   int32_t textLen = aTextFrame->GetContentLength();
@@ -8007,7 +8013,7 @@ ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, int32_t aPosition,
 
 nsIFrame::FrameSearchResult nsTextFrame::PeekOffsetWord(
     bool aForward, bool aWordSelectEatSpace, bool aIsKeyboardSelect,
-    int32_t* aOffset, PeekWordState* aState) {
+    int32_t* aOffset, PeekWordState* aState, bool aTrimSpaces) {
   int32_t contentLength = GetContentLength();
   NS_ASSERTION(aOffset && *aOffset <= contentLength, "aOffset out of range");
 
@@ -8017,7 +8023,8 @@ nsIFrame::FrameSearchResult nsTextFrame::PeekOffsetWord(
 
   int32_t offset =
       GetContentOffset() + (*aOffset < 0 ? contentLength : *aOffset);
-  ClusterIterator cIter(this, offset, aForward ? 1 : -1, aState->mContext);
+  ClusterIterator cIter(this, offset, aForward ? 1 : -1, aState->mContext,
+                        aTrimSpaces);
 
   if (!cIter.NextCluster()) return CONTINUE_EMPTY;
 
