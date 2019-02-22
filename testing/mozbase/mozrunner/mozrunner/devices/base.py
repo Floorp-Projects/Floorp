@@ -187,7 +187,7 @@ class Device(object):
                 self.app_ctx.cleanup_profile()
 
             # Remove the test profile
-            self.device.rm(self.app_ctx.remote_profile, recursive=True)
+            self.device.rm(self.app_ctx.remote_profile, force=True, recursive=True)
         except Exception as e:
             print("cleanup aborted: %s" % str(e))
 
