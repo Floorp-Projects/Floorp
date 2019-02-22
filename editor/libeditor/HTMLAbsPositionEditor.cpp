@@ -343,8 +343,6 @@ nsresult HTMLEditor::ShowGrabberInternal(Element& aElement) {
   // called yet.  So, mAbsolutelyPositionedObject should be non-nullptr.
   MOZ_ASSERT(mAbsolutelyPositionedObject);
 
-  mHasShownGrabber = true;
-
   // Finally, move the grabber to proper position.
   rv = RefreshGrabberInternal();
   if (NS_WARN_IF(NS_FAILED(rv))) {

@@ -20,7 +20,7 @@ add_task(async function() {
   const store = applyMiddleware(task)(createStore)(reducer);
 
   store.dispatch(comboAction());
-  await waitUntilState(store, () => store.getState().length === 3);
+  await waitUntilState(store, () => store.getState().length === 4);
 
   equal(store.getState()[0].type, "fetchAsync-start",
         "Async dispatched actions in a generator task are fired");

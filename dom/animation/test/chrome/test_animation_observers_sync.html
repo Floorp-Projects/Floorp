@@ -83,7 +83,7 @@ function createPseudo(test, element, type) {
   var anims = document.getAnimations();
   assert_true(anims.length >= 1);
   var anim = anims[anims.length - 1];
-  assert_equals(anim.effect.target.parentElement, element);
+  assert_equals(anim.effect.target.element, element);
   assert_equals(anim.effect.target.type, '::' + type);
   anim.cancel();
   return anim.effect.target;

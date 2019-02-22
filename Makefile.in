@@ -163,8 +163,12 @@ binaries::
 	@$(MAKE) install-manifests install_manifests=dist/include
 endif
 
+# Host binaries are not produced for macOS consumers: that is, there's
+# no macOS-hosted job to produce them at this time.  Therefore we
+# enable --host-bins only for automation builds, which only require Linux and
+# Windows host binaries.
 recurse_artifact:
-	$(topsrcdir)/mach --log-no-times artifact install
+	$(topsrcdir)/mach --log-no-times artifact install$(if $(MOZ_ARTIFACT_BUILD_SYMBOLS), --symbols)$(if $(MOZ_AUTOMATION), --host-bins)
 
 ifdef MOZ_WIDGET_TOOLKIT
 ifdef ENABLE_TESTS

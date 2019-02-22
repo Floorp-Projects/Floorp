@@ -2356,9 +2356,6 @@ class HTMLEditor final : public TextEditor,
   nsTArray<RefPtr<StyleSheet>> mStyleSheets;
 
   // resizing
-  // If the instance has shown resizers at least once, mHasShownResizers is
-  // set to true.
-  bool mHasShownResizers;
   bool mIsObjectResizingEnabled;
   bool mIsResizing;
   bool mPreserveRatio;
@@ -2367,18 +2364,12 @@ class HTMLEditor final : public TextEditor,
   // absolute positioning
   bool mIsAbsolutelyPositioningEnabled;
   bool mResizedObjectIsAbsolutelyPositioned;
-  // If the instance has shown grabber at least once, mHasShownGrabber is
-  // set to true.
-  bool mHasShownGrabber;
   bool mGrabberClicked;
   bool mIsMoving;
 
   bool mSnapToGridEnabled;
 
   // inline table editing
-  // If the instance has shown inline table editor at least once,
-  // mHasShownInlineTableEditor is set to true.
-  bool mHasShownInlineTableEditor;
   bool mIsInlineTableEditingEnabled;
 
   // resizing
@@ -2415,12 +2406,6 @@ class HTMLEditor final : public TextEditor,
   int32_t mYIncrementFactor;
   int32_t mWidthIncrementFactor;
   int32_t mHeightIncrementFactor;
-
-  // When resizers, grabber and/or inline table editor are operated by user
-  // actually, the following counters are increased.
-  uint32_t mResizerUsedCount;
-  uint32_t mGrabberUsedCount;
-  uint32_t mInlineTableEditorUsedCount;
 
   int8_t mInfoXIncrement;
   int8_t mInfoYIncrement;

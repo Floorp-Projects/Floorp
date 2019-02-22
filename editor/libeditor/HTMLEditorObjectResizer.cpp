@@ -413,8 +413,6 @@ nsresult HTMLEditor::ShowResizersInternal(Element& aResizedElement) {
 
     MOZ_ASSERT(mResizedObject == &aResizedElement);
 
-    mHasShownResizers = true;
-
     // XXX Even when it failed to add event listener, should we need to set
     //     _moz_resizing attribute?
     aResizedElement.SetAttr(kNameSpaceID_None, nsGkAtoms::_moz_resizing,
@@ -622,7 +620,6 @@ nsresult HTMLEditor::OnMouseDown(int32_t aClientX, int32_t aClientY,
     // If we have an anonymous element and that element is a resizer,
     // let's start resizing!
     aEvent->PreventDefault();
-    mResizerUsedCount++;
     mOriginalX = aClientX;
     mOriginalY = aClientY;
     return StartResizing(aTarget);
@@ -636,7 +633,6 @@ nsresult HTMLEditor::OnMouseDown(int32_t aClientX, int32_t aClientY,
 
     // If we have an anonymous element and that element is a grabber,
     // let's start moving the element!
-    mGrabberUsedCount++;
     mOriginalX = aClientX;
     mOriginalY = aClientY;
     return GrabberClicked();

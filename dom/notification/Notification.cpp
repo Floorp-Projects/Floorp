@@ -1643,7 +1643,7 @@ NotificationPermission Notification::GetPermission(nsIGlobalObject* aGlobal,
   }
 
   permissionManager->TestExactPermissionFromPrincipal(
-      aPrincipal, "desktop-notification", &permission);
+      aPrincipal, NS_LITERAL_CSTRING("desktop-notification"), &permission);
 
   // Convert the result to one of the enum types.
   switch (permission) {
@@ -2342,7 +2342,8 @@ already_AddRefed<Promise> Notification::ShowPersistentNotification(
   if (!permissionManager) {
     return NS_ERROR_FAILURE;
   }
-  permissionManager->RemoveFromPrincipal(aPrincipal, "desktop-notification");
+  permissionManager->RemoveFromPrincipal(
+      aPrincipal, NS_LITERAL_CSTRING("desktop-notification"));
   return NS_OK;
 }
 

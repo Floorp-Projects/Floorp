@@ -2211,7 +2211,7 @@ JS_PUBLIC_API bool JS_GetFunctionLength(JSContext* cx, JS::HandleFunction fun,
  * overwritten the "Function" identifier with a different constructor and then
  * created instances using that constructor that might be passed in as obj).
  */
-extern JS_PUBLIC_API bool JS_ObjectIsFunction(JSContext* cx, JSObject* obj);
+extern JS_PUBLIC_API bool JS_ObjectIsFunction(JSObject* obj);
 
 extern JS_PUBLIC_API bool JS_IsNativeFunction(JSObject* funobj, JSNative call);
 

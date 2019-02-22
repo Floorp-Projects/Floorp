@@ -7,8 +7,7 @@
 [NoInterfaceObject]
 interface JSWindowActor {
   [Throws]
-  void sendAsyncMessage(DOMString actorName,
-                        DOMString messageName,
+  void sendAsyncMessage(DOMString messageName,
                         optional any obj,
                         optional any transfers);
 };

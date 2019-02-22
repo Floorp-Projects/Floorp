@@ -8370,18 +8370,32 @@ JS_FRIEND_API const char* JS::GCTraceKindToAscii(JS::TraceKind kind) {
 }
 
 JS::GCCellPtr::GCCellPtr(const Value& v) : ptr(0) {
-  if (v.isString()) {
-    ptr = checkedCast(v.toString(), JS::TraceKind::String);
-  } else if (v.isObject()) {
-    ptr = checkedCast(&v.toObject(), JS::TraceKind::Object);
-  } else if (v.isSymbol()) {
-    ptr = checkedCast(v.toSymbol(), JS::TraceKind::Symbol);
-  } else if (v.isBigInt()) {
-    ptr = checkedCast(v.toBigInt(), JS::TraceKind::BigInt);
-  } else if (v.isPrivateGCThing()) {
-    ptr = checkedCast(v.toGCThing(), v.toGCThing()->getTraceKind());
-  } else {
-    ptr = checkedCast(nullptr, JS::TraceKind::Null);
+  switch (v.type()) {
+    case ValueType::String:
+      ptr = checkedCast(v.toString(), JS::TraceKind::String);
+      break;
+    case ValueType::Object:
+      ptr = checkedCast(&v.toObject(), JS::TraceKind::Object);
+      break;
+    case ValueType::Symbol:
+      ptr = checkedCast(v.toSymbol(), JS::TraceKind::Symbol);
+      break;
+    case ValueType::BigInt:
+      ptr = checkedCast(v.toBigInt(), JS::TraceKind::BigInt);
+      break;
+    case ValueType::PrivateGCThing:
+      ptr = checkedCast(v.toGCThing(), v.toGCThing()->getTraceKind());
+      break;
+    case ValueType::Double:
+    case ValueType::Int32:
+    case ValueType::Boolean:
+    case ValueType::Undefined:
+    case ValueType::Null:
+    case ValueType::Magic: {
+      MOZ_ASSERT(!v.isGCThing());
+      ptr = checkedCast(nullptr, JS::TraceKind::Null);
+      break;
+    }
   }
 }
 

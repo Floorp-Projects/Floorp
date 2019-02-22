@@ -122,7 +122,7 @@ PopupBlocker::GetPopupControlState() {
 
   if (permissionManager &&
       NS_SUCCEEDED(permissionManager->TestPermissionFromPrincipal(
-          aPrincipal, "popup", &permit))) {
+          aPrincipal, NS_LITERAL_CSTRING("popup"), &permit))) {
     if (permit == nsIPermissionManager::ALLOW_ACTION) {
       return true;
     }

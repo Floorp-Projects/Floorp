@@ -89,7 +89,7 @@ already_AddRefed<Promise> Permissions::Query(JSContext* aCx,
 }
 
 /* static */ nsresult Permissions::RemovePermission(
-    nsIPrincipal* aPrincipal, const char* aPermissionType) {
+    nsIPrincipal* aPrincipal, const nsACString& aPermissionType) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
@@ -132,7 +132,8 @@ already_AddRefed<Promise> Permissions::Revoke(JSContext* aCx,
     return promise.forget();
   }
 
-  const char* permissionType = PermissionNameToType(permission.mName);
+  const nsLiteralCString& permissionType =
+      PermissionNameToType(permission.mName);
 
   nsresult rv;
   if (XRE_IsParentProcess()) {
@@ -142,8 +143,7 @@ already_AddRefed<Promise> Permissions::Revoke(JSContext* aCx,
     // to the parent; `ContentParent::RecvRemovePermission` will call
     // `RemovePermission`.
     ContentChild::GetSingleton()->SendRemovePermission(
-        IPC::Principal(document->NodePrincipal()),
-        nsDependentCString(permissionType), &rv);
+        IPC::Principal(document->NodePrincipal()), permissionType, &rv);
   }
 
   if (NS_WARN_IF(NS_FAILED(rv))) {

@@ -57,13 +57,11 @@ class EditorCommandBase : public nsIControllerCommand {
 // basic editor commands
 NS_DECL_EDITOR_COMMAND(UndoCommand)
 NS_DECL_EDITOR_COMMAND(RedoCommand)
-NS_DECL_EDITOR_COMMAND(ClearUndoCommand)
 
 NS_DECL_EDITOR_COMMAND(CutCommand)
 NS_DECL_EDITOR_COMMAND(CutOrDeleteCommand)
 NS_DECL_EDITOR_COMMAND(CopyCommand)
 NS_DECL_EDITOR_COMMAND(CopyOrDeleteCommand)
-NS_DECL_EDITOR_COMMAND(CopyAndCollapseToEndCommand)
 NS_DECL_EDITOR_COMMAND(PasteCommand)
 NS_DECL_EDITOR_COMMAND(PasteTransferableCommand)
 NS_DECL_EDITOR_COMMAND(SwitchTextDirectionCommand)

@@ -490,9 +490,7 @@ Section "-Application" APP_IDX
   ${EndIf}
 
 !ifdef MOZ_LAUNCHER_PROCESS
-!ifdef RELEASE_OR_BETA
   ${DisableLauncherProcessByDefault}
-!endif
 !endif
 
   ; Create shortcuts

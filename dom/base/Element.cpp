@@ -1632,8 +1632,8 @@ nsresult Element::BindToTree(Document* aDocument, nsIContent* aParent,
     if (aParent->IsInNativeAnonymousSubtree()) {
       SetFlags(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE);
     }
-    if (aParent->HasFlag(NODE_CHROME_ONLY_ACCESS)) {
-      SetFlags(NODE_CHROME_ONLY_ACCESS);
+    if (aParent->HasFlag(NODE_HAS_BEEN_IN_UA_WIDGET)) {
+      SetFlags(NODE_HAS_BEEN_IN_UA_WIDGET);
     }
     if (HasFlag(NODE_IS_ANONYMOUS_ROOT)) {
       aParent->SetMayHaveAnonymousChildren();
@@ -1731,9 +1731,7 @@ nsresult Element::BindToTree(Document* aDocument, nsIContent* aParent,
         OwnerDoc()->BindingManager()->GetBindingWithContent(this);
 
     if (binding) {
-      binding->BindAnonymousContent(
-          binding->GetAnonymousContent(), this,
-          binding->PrototypeBinding()->ChromeOnlyContent());
+      binding->BindAnonymousContent(binding->GetAnonymousContent(), this);
     }
   }
 
@@ -3423,7 +3421,7 @@ already_AddRefed<Animation> Element::Animate(
   if (aTarget.Value().IsElement()) {
     referenceElement = &aTarget.Value().GetAsElement();
   } else {
-    referenceElement = aTarget.Value().GetAsCSSPseudoElement().ParentElement();
+    referenceElement = aTarget.Value().GetAsCSSPseudoElement().Element();
   }
 
   nsCOMPtr<nsIGlobalObject> ownerGlobal = referenceElement->GetOwnerGlobal();

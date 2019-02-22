@@ -309,9 +309,11 @@ Maybe<wr::WrSpaceAndClip> ClipManager::DefineScrollLayers(
   if (parent) {
     parent->space = SpatialIdAfterOverride(parent->space);
   }
-  return Some(mBuilder->DefineScrollLayer(viewId, parent,
-                                          wr::ToRoundedLayoutRect(contentRect),
-                                          wr::ToRoundedLayoutRect(clipBounds)));
+  LayoutDevicePoint scrollOffset =
+      metrics.GetScrollOffset() * metrics.GetDevPixelsPerCSSPixel();
+  return Some(mBuilder->DefineScrollLayer(
+      viewId, parent, wr::ToRoundedLayoutRect(contentRect),
+      wr::ToRoundedLayoutRect(clipBounds), wr::ToLayoutPoint(scrollOffset)));
 }
 
 Maybe<wr::WrClipChainId> ClipManager::DefineClipChain(

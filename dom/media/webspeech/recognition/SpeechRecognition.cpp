@@ -165,8 +165,8 @@ bool SpeechRecognition::IsAuthorized(JSContext* aCx, JSObject* aGlobal) {
   }
 
   uint32_t speechRecognition = nsIPermissionManager::UNKNOWN_ACTION;
-  rv = mgr->TestExactPermissionFromPrincipal(principal, "speech-recognition",
-                                             &speechRecognition);
+  rv = mgr->TestExactPermissionFromPrincipal(
+      principal, NS_LITERAL_CSTRING("speech-recognition"), &speechRecognition);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }

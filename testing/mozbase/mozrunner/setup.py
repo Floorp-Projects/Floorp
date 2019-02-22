@@ -7,7 +7,7 @@ from __future__ import absolute_import
 from setuptools import setup, find_packages
 
 PACKAGE_NAME = 'mozrunner'
-PACKAGE_VERSION = '7.3.0'
+PACKAGE_VERSION = '7.4.0'
 
 desc = """Reliable start/stop/configuration of Mozilla Applications (Firefox, Thunderbird, etc.)"""
 
@@ -23,7 +23,6 @@ deps = [
 
 EXTRAS_REQUIRE = {'crash': ['mozcrash >= 1.0']}
 
-
 setup(name=PACKAGE_NAME,
       version=PACKAGE_VERSION,
       description=desc,
@@ -33,7 +32,8 @@ setup(name=PACKAGE_NAME,
                    'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',
                    'Natural Language :: English',
                    'Operating System :: OS Independent',
-                   'Programming Language :: Python',
+                   'Programming Language :: Python :: 2.7',
+                   'Programming Language :: Python :: 3.5',
                    'Topic :: Software Development :: Libraries :: Python Modules',
                    ],
       keywords='mozilla',

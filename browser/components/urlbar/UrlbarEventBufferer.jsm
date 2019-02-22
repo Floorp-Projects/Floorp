@@ -88,7 +88,7 @@ class UrlbarEventBufferer {
   // UrlbarController listener methods.
   onQueryStarted(queryContext) {
     this._lastQuery = {
-      startDate: Cu.now,
+      startDate: Cu.now(),
       status: QUERY_STATUS.RUNNING,
       searchString: queryContext.searchString,
       results: [],

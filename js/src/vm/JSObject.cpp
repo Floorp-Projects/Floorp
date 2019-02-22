@@ -113,31 +113,30 @@ void js::ReportNotObjectWithName(JSContext* cx, const char* name,
 }
 
 JS_PUBLIC_API const char* JS::InformalValueTypeName(const Value& v) {
-  if (v.isObject()) {
-    return v.toObject().getClass()->name;
+  switch (v.type()) {
+    case ValueType::Double:
+    case ValueType::Int32:
+      return "number";
+    case ValueType::Boolean:
+      return "boolean";
+    case ValueType::Undefined:
+      return "undefined";
+    case ValueType::Null:
+      return "null";
+    case ValueType::String:
+      return "string";
+    case ValueType::Symbol:
+      return "symbol";
+    case ValueType::BigInt:
+      return "bigint";
+    case ValueType::Object:
+      return v.toObject().getClass()->name;
+    case ValueType::Magic:
+    case ValueType::PrivateGCThing:
+      break;
   }
-  if (v.isString()) {
-    return "string";
-  }
-  if (v.isSymbol()) {
-    return "symbol";
-  }
-  if (v.isBigInt()) {
-    return "bigint";
-  }
-  if (v.isNumber()) {
-    return "number";
-  }
-  if (v.isBoolean()) {
-    return "boolean";
-  }
-  if (v.isNull()) {
-    return "null";
-  }
-  if (v.isUndefined()) {
-    return "undefined";
-  }
-  return "value";
+
+  MOZ_CRASH("unexpected type");
 }
 
 // ES6 draft rev37 6.2.4.4 FromPropertyDescriptor
@@ -3482,6 +3481,8 @@ static void dumpValue(const Value& v, js::GenericPrinter& out) {
     v.toString()->dumpNoNewline(out);
   } else if (v.isSymbol()) {
     v.toSymbol()->dump(out);
+  } else if (v.isBigInt()) {
+    v.toBigInt()->dump(out);
   } else if (v.isObject() && v.toObject().is<JSFunction>()) {
     JSFunction* fun = &v.toObject().as<JSFunction>();
     if (fun->displayAtom()) {

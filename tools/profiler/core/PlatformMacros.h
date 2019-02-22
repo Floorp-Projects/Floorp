@@ -14,6 +14,7 @@
 // Note: "GP" is short for "Gecko Profiler".
 
 #undef GP_PLAT_x86_android
+#undef GP_PLAT_amd64_android
 #undef GP_PLAT_arm_android
 #undef GP_PLAT_arm64_android
 #undef GP_PLAT_x86_linux
@@ -42,6 +43,11 @@
 #if defined(__ANDROID__) && defined(__i386__)
 #  define GP_PLAT_x86_android 1
 #  define GP_ARCH_x86 1
+#  define GP_OS_android 1
+
+#elif defined(__ANDROID__) && defined(__x86_64__)
+#  define GP_PLAT_amd64_android 1
+#  define GP_ARCH_amd64 1
 #  define GP_OS_android 1
 
 #elif defined(__ANDROID__) && defined(__arm__)

@@ -2670,7 +2670,7 @@ impl PrimitiveStore {
                     .get_image_properties(image_data.key);
 
                 if let Some(ImageProperties { descriptor, tiling: Some(tile_size), .. }) = image_properties {
-                    let device_image_size = descriptor.size;
+                    let device_image_rect = DeviceIntRect::from_size(descriptor.size);
 
                     // Tighten the clip rect because decomposing the repeated image can
                     // produce primitives that are partially covering the original image
@@ -2710,15 +2710,15 @@ impl PrimitiveStore {
                     for Repetition { origin, edge_flags } in repetitions {
                         let edge_flags = base_edge_flags | edge_flags;
 
-                        let image_rect = LayoutRect {
+                        let layout_image_rect = LayoutRect {
                             origin,
                             size: image_data.stretch_size,
                         };
 
                         let tiles = ::image::tiles(
-                            &image_rect,
+                            &layout_image_rect,
                             &visible_rect,
-                            &device_image_size,
+                            &device_image_rect,
                             tile_size as i32,
                         );
 

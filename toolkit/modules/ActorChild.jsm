@@ -43,8 +43,4 @@ this.ActorChild = class ActorChild {
     data.browsingContextId = this._dispatcher.browsingContextId;
     this.mm.sendAsyncMessage(msg, data);
   }
-
-  cleanup() {
-    this._dispatcher = null;
-  }
 };

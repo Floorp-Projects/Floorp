@@ -477,14 +477,6 @@ SVGUseElement* nsINode::DoGetContainingSVGUseShadowHost() const {
   return SVGUseElement::FromNodeOrNull(AsContent()->GetContainingShadowHost());
 }
 
-bool nsINode::IsInUAWidget() const {
-  if (!IsInShadowTree()) {
-    return false;
-  }
-  ShadowRoot* shadowRoot = AsContent()->GetContainingShadow();
-  return shadowRoot && shadowRoot->IsUAWidget();
-}
-
 void nsINode::GetNodeValueInternal(nsAString& aNodeValue) {
   SetDOMStringToNull(aNodeValue);
 }
