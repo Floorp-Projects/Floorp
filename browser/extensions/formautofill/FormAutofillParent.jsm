@@ -187,10 +187,10 @@ FormAutofillParent.prototype = {
    */
   _onStatusChanged() {
     log.debug("_onStatusChanged: Status changed to", this._active);
-    Services.ppmm.broadcastAsyncMessage("FormAutofill:enabledStatus", this._active);
-    // Sync process data autofillEnabled to make sure the value up to date
+    Services.ppmm.sharedData.set("FormAutofill:enabled", this._active);
+    // Sync autofill enabled to make sure the value is up-to-date
     // no matter when the new content process is initialized.
-    Services.ppmm.initialProcessData.autofillEnabled = this._active;
+    Services.ppmm.sharedData.flush();
   },
 
   /**
