@@ -5,12 +5,11 @@
 
 /* Too long callback file path failure test */
 
-const STATE_AFTER_RUNUPDATE = STATE_FAILED_INVALID_CALLBACK_PATH_ERROR;
-
 async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
+  const STATE_AFTER_RUNUPDATE = STATE_FAILED_INVALID_CALLBACK_PATH_ERROR;
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();

@@ -4,13 +4,11 @@
 
 /* Application in use complete MAR file staged patch apply success test */
 
-const START_STATE = STATE_PENDING;
-const STATE_AFTER_STAGE = STATE_APPLIED;
-
 async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
+  const STATE_AFTER_STAGE = STATE_APPLIED;
   gTestFiles = gTestFilesCompleteSuccess;
   gTestFiles[gTestFiles.length - 1].originalContents = null;
   gTestFiles[gTestFiles.length - 1].compareContents = "FromComplete\n";
@@ -19,13 +17,7 @@ async function run_test() {
   await setupUpdaterTest(FILE_COMPLETE_MAR, true);
   setupSymLinks();
   await runHelperFileInUse(DIR_RESOURCES + gCallbackBinFile, false);
-  stageUpdate(true);
-}
-
-/**
- * Called after the call to stageUpdate finishes.
- */
-async function stageUpdateFinished() {
+  await stageUpdate(STATE_AFTER_STAGE, true);
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateSuccess(getStageDirFile, true);
   checkUpdateLogContents(LOG_COMPLETE_SUCCESS, true);

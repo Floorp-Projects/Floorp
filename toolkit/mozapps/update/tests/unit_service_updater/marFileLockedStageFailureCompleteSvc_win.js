@@ -4,24 +4,17 @@
 
 /* File locked complete MAR file staged patch apply failure test */
 
-const STATE_AFTER_STAGE = STATE_PENDING;
-
 async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
+  const STATE_AFTER_STAGE = STATE_PENDING;
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();
   await setupUpdaterTest(FILE_COMPLETE_MAR, false);
   await runHelperLockFile(gTestFiles[3]);
-  stageUpdate(true);
-}
-
-/**
- * Called after the call to stageUpdate finishes.
- */
-async function stageUpdateFinished() {
+  await stageUpdate(STATE_AFTER_STAGE, true);
   checkPostUpdateRunningFile(false);
   // Files aren't checked after staging since this test locks a file which
   // prevents reading the file.

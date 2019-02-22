@@ -5,13 +5,12 @@
 
 /* Patch directory path traversal failure test */
 
-const STATE_AFTER_RUNUPDATE =
-  IS_SERVICE_TEST ? STATE_PENDING_SVC : STATE_PENDING;
-
 async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
+  const STATE_AFTER_RUNUPDATE =
+    IS_SERVICE_TEST ? STATE_PENDING_SVC : STATE_PENDING;
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();

@@ -5,9 +5,6 @@
 
 /* Test product/channel MAR security check */
 
-const STATE_AFTER_STAGE = STATE_FAILED;
-gStagingRemovedUpdate = true;
-
 async function run_test() {
   if (!MOZ_VERIFY_MAR_SIGNATURE) {
     return;
@@ -16,19 +13,14 @@ async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
+  const STATE_AFTER_STAGE = STATE_FAILED;
   gTestFiles = gTestFilesCompleteSuccess;
   gTestFiles[gTestFiles.length - 2].originalContents =
     UPDATE_SETTINGS_CONTENTS.replace("xpcshell-test", "wrong-channel");
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();
   await setupUpdaterTest(FILE_COMPLETE_MAR, false);
-  stageUpdate(true);
-}
-
-/**
- * Called after the call to stageUpdate finishes.
- */
-async function stageUpdateFinished() {
+  await stageUpdate(STATE_AFTER_STAGE, true, true);
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(STATE_FAILED_MAR_CHANNEL_MISMATCH_ERROR);

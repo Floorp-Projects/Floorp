@@ -6,12 +6,11 @@
 /* Callback file not in install directory or a sub-directory of the install
    directory failure */
 
-const STATE_AFTER_RUNUPDATE = STATE_FAILED_INVALID_CALLBACK_DIR_ERROR;
-
 async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
+  const STATE_AFTER_RUNUPDATE = STATE_FAILED_INVALID_CALLBACK_DIR_ERROR;
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();

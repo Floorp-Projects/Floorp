@@ -5,12 +5,11 @@
 
 /* General Partial MAR File Staged Patch Apply Test */
 
-const STATE_AFTER_STAGE = IS_SERVICE_TEST ? STATE_APPLIED_SVC : STATE_APPLIED;
-
 async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
+  const STATE_AFTER_STAGE = IS_SERVICE_TEST ? STATE_APPLIED_SVC : STATE_APPLIED;
   gTestFiles = gTestFilesPartialSuccess;
   gTestFiles[gTestFiles.length - 1].originalContents = null;
   gTestFiles[gTestFiles.length - 1].compareContents = "FromPartial\n";
@@ -18,13 +17,7 @@ async function run_test() {
   gTestDirs = gTestDirsPartialSuccess;
   preventDistributionFiles();
   await setupUpdaterTest(FILE_PARTIAL_MAR, true);
-  stageUpdate(true);
-}
-
-/**
- * Called after the call to stageUpdate finishes.
- */
-async function stageUpdateFinished() {
+  await stageUpdate(STATE_AFTER_STAGE, true);
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateSuccess(getStageDirFile, true);
   checkUpdateLogContents(LOG_PARTIAL_SUCCESS, true, false, true);

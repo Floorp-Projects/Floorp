@@ -157,11 +157,6 @@ var gPIDPersistProcess;
 var gCallbackBinFile = "callback_app" + mozinfo.bin_suffix;
 var gCallbackArgs = ["./", "callback.log", "Test Arg 2", "Test Arg 3"];
 var gPostUpdateBinFile = "postup_app" + mozinfo.bin_suffix;
-var gSvcOriginalLogContents;
-// Some update staging failures can remove the update. This allows tests to
-// specify that the status file and the active update should not be checked
-// after an update is staged.
-var gStagingRemovedUpdate = false;
 
 var gTimeoutRuns = 0;
 var gFileInUseTimeoutRuns = 0;
@@ -1933,40 +1928,24 @@ function setupActiveUpdate() {
 }
 
 /**
- * The update-staged observer for the call to nsIUpdateProcessor:processUpdate.
- */
-const gUpdateStagedObserver = {
-  observe(aSubject, aTopic, aData) {
-    debugDump("observe called with topic: " + aTopic + ", data: " + aData);
-    if (aTopic == "update-staged") {
-      Services.obs.removeObserver(gUpdateStagedObserver, "update-staged");
-      // The environment is reset after the update-staged observer topic because
-      // processUpdate in nsIUpdateProcessor uses a new thread and clearing the
-      // environment immediately after calling processUpdate can clear the
-      // environment before the updater is launched.
-      resetEnvironment();
-      // Use do_execute_soon to prevent any failures from propagating to the
-      // update service.
-      executeSoon(checkUpdateStagedState.bind(null, aData));
-    }
-  },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
-};
-
-/**
  * Stages an update using nsIUpdateProcessor:processUpdate for updater tests.
  *
+ * @param   aStateAfterStage
+ *          The expected update state after the update has been staged.
  * @param   aCheckSvcLog
  *          Whether the service log should be checked for service tests.
+ * @param   aUpdateRemoved (optional)
+ *          Whether the update is removed after staging. This can happen when
+ *          a staging failure occurs.
  */
-function stageUpdate(aCheckSvcLog) {
+async function stageUpdate(aStateAfterStage, aCheckSvcLog,
+                           aUpdateRemoved = false) {
   debugDump("start - attempting to stage update");
 
+  let svcLogOriginalContents;
   if (IS_SERVICE_TEST && aCheckSvcLog) {
-    gSvcOriginalLogContents = readServiceLogFile();
+    svcLogOriginalContents = readServiceLogFile();
   }
-
-  Services.obs.addObserver(gUpdateStagedObserver, "update-staged");
 
   setAppBundleModTime();
   setEnvironment();
@@ -1976,48 +1955,26 @@ function stageUpdate(aCheckSvcLog) {
       createInstance(Ci.nsIUpdateProcessor).processUpdate();
   } catch (e) {
     Assert.ok(false,
-              "error thrown while calling processUpdate, exception: " + e);
+              "error thrown while calling processUpdate, Exception: " + e);
   }
+  await waitForEvent("update-staged", aStateAfterStage);
+  resetEnvironment();
 
-  // The environment is not reset here because processUpdate in
-  // nsIUpdateProcessor uses a new thread and clearing the environment
-  // immediately after calling processUpdate can clear the environment before
-  // the updater is launched. Instead it is reset after the update-staged
-  // observer topic.
-
-  debugDump("finish - attempting to stage update");
-}
-
-/**
- * Checks that the update state is correct as well as the expected files are
- * present after staging and update for updater tests and then calls
- * stageUpdateFinished.
- *
- * @param   aUpdateState
- *          The update state received by the observer notification.
- */
-function checkUpdateStagedState(aUpdateState) {
   if (AppConstants.platform == "win") {
     if (IS_SERVICE_TEST) {
       waitForServiceStop(false);
     } else {
       let updater = getApplyDirFile(FILE_UPDATER_BIN);
-      if (isFileInUse(updater)) {
-        do_timeout(FILE_IN_USE_TIMEOUT_MS,
-                   checkUpdateStagedState.bind(null, aUpdateState));
-        return;
-      }
+      await TestUtils.waitForCondition(() => (!isFileInUse(updater)),
+        "Waiting for the file tp not be in use, Path: " + updater.path);
     }
   }
 
-  Assert.equal(aUpdateState, STATE_AFTER_STAGE,
-               "the notified state" + MSG_SHOULD_EQUAL);
-
-  if (!gStagingRemovedUpdate) {
-    Assert.equal(readStatusState(), STATE_AFTER_STAGE,
+  if (!aUpdateRemoved) {
+    Assert.equal(readStatusState(), aStateAfterStage,
                  "the status file state" + MSG_SHOULD_EQUAL);
 
-    Assert.equal(gUpdateManager.activeUpdate.state, STATE_AFTER_STAGE,
+    Assert.equal(gUpdateManager.activeUpdate.state, aStateAfterStage,
                  "the update state" + MSG_SHOULD_EQUAL);
   }
 
@@ -2034,8 +1991,8 @@ function checkUpdateStagedState(aUpdateState) {
             MSG_SHOULD_NOT_EXIST + getMsgPath(log.path));
 
   let stageDir = getStageDirFile();
-  if (STATE_AFTER_STAGE == STATE_APPLIED ||
-      STATE_AFTER_STAGE == STATE_APPLIED_SVC) {
+  if (aStateAfterStage == STATE_APPLIED ||
+      aStateAfterStage == STATE_APPLIED_SVC) {
     Assert.ok(stageDir.exists(),
               MSG_SHOULD_EXIST + getMsgPath(stageDir.path));
   } else {
@@ -2043,9 +2000,9 @@ function checkUpdateStagedState(aUpdateState) {
               MSG_SHOULD_NOT_EXIST + getMsgPath(stageDir.path));
   }
 
-  if (IS_SERVICE_TEST && gSvcOriginalLogContents !== undefined) {
+  if (IS_SERVICE_TEST && aCheckSvcLog) {
     let contents = readServiceLogFile();
-    Assert.notEqual(contents, gSvcOriginalLogContents,
+    Assert.notEqual(contents, svcLogOriginalContents,
                     "the contents of the maintenanceservice.log should not " +
                     "be the same as the original contents");
     Assert.notEqual(contents.indexOf(LOG_SVC_SUCCESSFUL_LAUNCH), -1,
@@ -2053,7 +2010,7 @@ function checkUpdateStagedState(aUpdateState) {
                     "contain the successful launch string");
   }
 
-  executeSoon(stageUpdateFinished);
+  debugDump("finish - attempting to stage update");
 }
 
 /**
@@ -3390,14 +3347,14 @@ function isFileInUse(aFile) {
     debugDump("file is not in use, path: " + aFile.path);
     return false;
   } catch (e) {
-    debugDump("file in use, path: " + aFile.path + ", exception: " + e);
+    debugDump("file in use, path: " + aFile.path + ", Exception: " + e);
     try {
       if (fileBak.exists()) {
         fileBak.remove(false);
       }
     } catch (ex) {
       logTestInfo("unable to remove backup file, path: " +
-                  fileBak.path + ", exception: " + ex);
+                  fileBak.path + ", Exception: " + ex);
     }
   }
   return true;
@@ -3789,7 +3746,7 @@ function adjustGeneralPaths() {
       try {
         gProcess.kill();
       } catch (e) {
-        debugDump("kill process failed. Exception: " + e);
+        debugDump("kill process failed, Exception: " + e);
       }
       gProcess = null;
       debugDump("finish - kill process");
@@ -3800,7 +3757,7 @@ function adjustGeneralPaths() {
       try {
         gPIDPersistProcess.kill();
       } catch (e) {
-        debugDump("kill pid persist process failed. Exception: " + e);
+        debugDump("kill pid persist process failed, Exception: " + e);
       }
       gPIDPersistProcess = null;
       debugDump("finish - kill pid persist process");
@@ -3820,7 +3777,7 @@ function adjustGeneralPaths() {
         gHandle = null;
         debugDump("finish - closing handle");
       } catch (e) {
-        debugDump("call to CloseHandle failed. Exception: " + e);
+        debugDump("call to CloseHandle failed, Exception: " + e);
       }
     }
 
