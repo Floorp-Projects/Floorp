@@ -363,63 +363,6 @@ CopyOrDeleteCommand::GetCommandStateParams(const char* aCommandName,
 }
 
 /******************************************************************************
- * mozilla::CopyAndCollapseToEndCommand
- ******************************************************************************/
-
-NS_IMETHODIMP
-CopyAndCollapseToEndCommand::IsCommandEnabled(const char* aCommandName,
-                                              nsISupports* aCommandRefCon,
-                                              bool* aIsEnabled) {
-  if (NS_WARN_IF(!aIsEnabled)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (!editor) {
-    *aIsEnabled = false;
-    return NS_OK;
-  }
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  return textEditor->CanCopy(aIsEnabled);
-}
-
-NS_IMETHODIMP
-CopyAndCollapseToEndCommand::DoCommand(const char* aCommandName,
-                                       nsISupports* aCommandRefCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (!editor) {
-    return NS_ERROR_FAILURE;
-  }
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  nsresult rv = textEditor->Copy();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  RefPtr<dom::Selection> selection = textEditor->GetSelection();
-  if (selection) {
-    selection->CollapseToEnd(IgnoreErrors());
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-CopyAndCollapseToEndCommand::DoCommandParams(const char* aCommandName,
-                                             nsICommandParams* aParams,
-                                             nsISupports* aCommandRefCon) {
-  return DoCommand(aCommandName, aCommandRefCon);
-}
-
-NS_IMETHODIMP
-CopyAndCollapseToEndCommand::GetCommandStateParams(
-    const char* aCommandName, nsICommandParams* aParams,
-    nsISupports* aCommandRefCon) {
-  bool canUndo;
-  IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
-  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, canUndo);
-}
-
-/******************************************************************************
  * mozilla::PasteCommand
  ******************************************************************************/
 
