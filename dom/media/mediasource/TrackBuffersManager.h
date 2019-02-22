@@ -394,8 +394,13 @@ class TrackBuffersManager
   // Remove all frames and their dependencies contained in aIntervals.
   // Return the index at which frames were first removed or 0 if no frames
   // removed.
+  enum class RemovalMode {
+    kRemoveFrame,
+    kTruncateFrame,
+  };
   uint32_t RemoveFrames(const media::TimeIntervals& aIntervals,
-                        TrackData& aTrackData, uint32_t aStartIndex);
+                        TrackData& aTrackData, uint32_t aStartIndex,
+                        RemovalMode aMode);
   // Recalculate track's evictable amount.
   void ResetEvictionIndex(TrackData& aTrackData);
   void UpdateEvictionIndex(TrackData& aTrackData, uint32_t aCurrentIndex);

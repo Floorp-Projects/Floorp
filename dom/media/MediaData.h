@@ -634,6 +634,14 @@ class MediaRawData final : public MediaData {
 
   RefPtr<TrackInfoSharedPtr> mTrackInfo;
 
+  // May contain the original start time and duration of the frames.
+  // mOriginalPresentationWindow.mStart would always be less or equal to mTime
+  // and mOriginalPresentationWindow.mEnd equal or greater to mTime + mDuration.
+  // This is used when the sample should get cropped so that its content will
+  // actually start on mTime and go for mDuration. If this interval is set, then
+  // the decoder should crop the content accordingly.
+  Maybe<media::TimeInterval> mOriginalPresentationWindow;
+
   // Return a deep copy or nullptr if out of memory.
   already_AddRefed<MediaRawData> Clone() const;
   // Create a MediaRawDataWriter for this MediaRawData. The writer is not

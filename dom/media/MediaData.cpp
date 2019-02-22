@@ -459,6 +459,7 @@ already_AddRefed<MediaRawData> MediaRawData::Clone() const {
   s->mCryptoInternal = mCryptoInternal;
   s->mTrackInfo = mTrackInfo;
   s->mEOS = mEOS;
+  s->mOriginalPresentationWindow = mOriginalPresentationWindow;
   if (!s->mBuffer.Append(mBuffer.Data(), mBuffer.Length())) {
     return nullptr;
   }
