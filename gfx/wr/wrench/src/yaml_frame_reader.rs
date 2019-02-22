@@ -1505,6 +1505,7 @@ impl YamlFrameReader {
             .expect("scroll frame must have a bounds");
         let content_size = yaml["content-size"].as_size().unwrap_or(clip_rect.size);
         let content_rect = LayoutRect::new(clip_rect.origin, content_size);
+        let external_scroll_offset = yaml["external-scroll-offset"].as_point().unwrap_or(LayoutPoint::zero());
 
         let numeric_id = yaml["id"].as_i64().map(|id| id as u64);
 
@@ -1525,6 +1526,7 @@ impl YamlFrameReader {
             complex_clips,
             image_mask,
             ScrollSensitivity::ScriptAndInputEvents,
+            external_scroll_offset,
         );
         if let Some(numeric_id) = numeric_id {
             self.add_spatial_id_mapping(numeric_id, space_and_clip.spatial_id);

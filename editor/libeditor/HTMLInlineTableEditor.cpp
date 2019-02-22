@@ -145,8 +145,6 @@ nsresult HTMLEditor::ShowInlineTableEditingUIInternal(Element& aCellElement) {
     AddMouseClickListener(mRemoveRowButton);
     AddMouseClickListener(mAddRowAfterButton);
 
-    mHasShownInlineTableEditor = true;
-
     nsresult rv = RefreshInlineTableEditingUIInternal();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -277,8 +275,6 @@ nsresult HTMLEditor::DoInlineTableEditingAction(const Element& aElement) {
   } else {
     return NS_OK;
   }
-
-  ++mInlineTableEditorUsedCount;
 
   // InsertTableRowsWithTransaction() might causes reframe.
   if (Destroyed()) {

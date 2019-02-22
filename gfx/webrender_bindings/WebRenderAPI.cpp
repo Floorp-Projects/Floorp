@@ -776,7 +776,8 @@ Maybe<wr::WrSpaceAndClip> DisplayListBuilder::GetScrollIdForDefinedScrollLayer(
 wr::WrSpaceAndClip DisplayListBuilder::DefineScrollLayer(
     const layers::ScrollableLayerGuid::ViewID& aViewId,
     const Maybe<wr::WrSpaceAndClip>& aParent,
-    const wr::LayoutRect& aContentRect, const wr::LayoutRect& aClipRect) {
+    const wr::LayoutRect& aContentRect, const wr::LayoutRect& aClipRect,
+    const wr::LayoutPoint& aScrollOffset) {
   auto it = mScrollIds.find(aViewId);
   if (it != mScrollIds.end()) {
     return it->second;
@@ -789,7 +790,7 @@ wr::WrSpaceAndClip DisplayListBuilder::DefineScrollLayer(
 
   auto spaceAndClip = wr_dp_define_scroll_layer(
       mWrState, aViewId, aParent ? aParent.ptr() : &defaultParent, aContentRect,
-      aClipRect);
+      aClipRect, aScrollOffset);
 
   WRDL_LOG("DefineScrollLayer id=%" PRIu64 "/%zu p=%s co=%s cl=%s\n", mWrState,
            aViewId, spaceAndClip.space.id,

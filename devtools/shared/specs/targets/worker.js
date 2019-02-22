@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Option, Arg, RetVal, generateActorSpec} = require("devtools/shared/protocol");
+const {Arg, RetVal, generateActorSpec} = require("devtools/shared/protocol");
 
 const workerTargetSpec = generateActorSpec({
   typeName: "workerTarget",
@@ -35,12 +35,6 @@ const workerTargetSpec = generateActorSpec({
     // Do not emit a `close` event as Target class emit this event on destroy
     "worker-close": {
       type: "close",
-    },
-    // newSource is being sent by ThreadActor in the name of its parent,
-    // i.e. WorkerTargetActor
-    newSource: {
-      type: "newSource",
-      source: Option(0, "json"),
     },
   },
 });

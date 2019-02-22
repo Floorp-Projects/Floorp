@@ -13,13 +13,14 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CSSPseudoElement, mParentElement)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CSSPseudoElement, mOriginatingElement)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(CSSPseudoElement, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(CSSPseudoElement, Release)
 
-CSSPseudoElement::CSSPseudoElement(Element* aElement, PseudoStyleType aType)
-    : mParentElement(aElement), mPseudoType(aType) {
+CSSPseudoElement::CSSPseudoElement(dom::Element* aElement,
+                                   PseudoStyleType aType)
+    : mOriginatingElement(aElement), mPseudoType(aType) {
   MOZ_ASSERT(aElement);
   MOZ_ASSERT(
       aType == PseudoStyleType::after || aType == PseudoStyleType::before,
@@ -28,14 +29,14 @@ CSSPseudoElement::CSSPseudoElement(Element* aElement, PseudoStyleType aType)
 
 CSSPseudoElement::~CSSPseudoElement() {
   // Element might have been unlinked already, so we have to do null check.
-  if (mParentElement) {
-    mParentElement->DeleteProperty(
+  if (mOriginatingElement) {
+    mOriginatingElement->DeleteProperty(
         GetCSSPseudoElementPropertyAtom(mPseudoType));
   }
 }
 
 ParentObject CSSPseudoElement::GetParentObject() const {
-  return mParentElement->GetParentObject();
+  return mOriginatingElement->GetParentObject();
 }
 
 JSObject* CSSPseudoElement::WrapObject(JSContext* aCx,
@@ -45,7 +46,7 @@ JSObject* CSSPseudoElement::WrapObject(JSContext* aCx,
 
 void CSSPseudoElement::GetAnimations(const AnimationFilter& filter,
                                      nsTArray<RefPtr<Animation>>& aRetVal) {
-  Document* doc = mParentElement->GetComposedDoc();
+  Document* doc = mOriginatingElement->GetComposedDoc();
   if (doc) {
     // We don't need to explicitly flush throttled animations here, since
     // updating the animation style of (pseudo-)elements will never affect the
@@ -55,7 +56,7 @@ void CSSPseudoElement::GetAnimations(const AnimationFilter& filter,
         ChangesToFlush(FlushType::Style, false /* flush animations */));
   }
 
-  Element::GetAnimationsUnsorted(mParentElement, mPseudoType, aRetVal);
+  Element::GetAnimationsUnsorted(mOriginatingElement, mPseudoType, aRetVal);
   aRetVal.Sort(AnimationPtrComparator<RefPtr<Animation>>());
 }
 
@@ -69,7 +70,7 @@ already_AddRefed<Animation> CSSPseudoElement::Animate(
 }
 
 /* static */ already_AddRefed<CSSPseudoElement>
-CSSPseudoElement::GetCSSPseudoElement(Element* aElement,
+CSSPseudoElement::GetCSSPseudoElement(dom::Element* aElement,
                                       PseudoStyleType aType) {
   if (!aElement) {
     return nullptr;

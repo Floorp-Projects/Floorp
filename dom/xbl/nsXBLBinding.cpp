@@ -155,8 +155,7 @@ nsXBLBinding* nsXBLBinding::GetBindingWithContent() {
 }
 
 void nsXBLBinding::BindAnonymousContent(nsIContent* aAnonParent,
-                                        nsIContent* aElement,
-                                        bool aChromeOnlyContent) {
+                                        nsIContent* aElement) {
   // We need to ensure two things.
   // (1) The anonymous content should be fooled into thinking it's in the bound
   // element's document, assuming that the bound element is in a document
@@ -172,10 +171,6 @@ void nsXBLBinding::BindAnonymousContent(nsIContent* aAnonParent,
   for (nsIContent* child = aAnonParent->GetFirstChild(); child;
        child = child->GetNextSibling()) {
     child->UnbindFromTree();
-    if (aChromeOnlyContent) {
-      child->SetFlags(NODE_CHROME_ONLY_ACCESS |
-                      NODE_IS_ROOT_OF_CHROME_ONLY_ACCESS);
-    }
     child->SetFlags(NODE_IS_ANONYMOUS_ROOT);
     nsresult rv = child->BindToTree(doc, aElement, mBoundElement);
     if (NS_FAILED(rv)) {
@@ -277,8 +272,7 @@ void nsXBLBinding::GenerateAnonymousContent() {
 
     // Do this after looking for <children> as this messes up the parent
     // pointer which would make the GetNextNode call above fail
-    BindAnonymousContent(mContent, mBoundElement,
-                         mPrototypeBinding->ChromeOnlyContent());
+    BindAnonymousContent(mContent, mBoundElement);
 
     // Insert explicit children into insertion points
     if (mDefaultInsertionPoint && mInsertionPoints.IsEmpty()) {

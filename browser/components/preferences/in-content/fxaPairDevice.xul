@@ -8,7 +8,7 @@
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/in-content/fxaPairDevice.css" type="text/css"?>
 
-<window id="fxaPairDeviceDialog" class="windowDialog"
+<window id="fxaPairDeviceDialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
         role="dialog"
@@ -18,8 +18,8 @@
         data-l10n-attrs="title, style">
 
   <linkset>
-    <link rel="localization" href="browser/branding/sync-brand.ftl"/>
-    <link rel="localization" href="browser/preferences/fxaPairDevice.ftl"/>
+    <html:link rel="localization" href="browser/branding/sync-brand.ftl"/>
+    <html:link rel="localization" href="browser/preferences/fxaPairDevice.ftl"/>
   </linkset>
   <script src="chrome://browser/content/preferences/in-content/fxaPairDevice.js"/>
 

@@ -23,53 +23,53 @@
 #define BEHAVIOR_NOFOREIGN 3
 
 // From nsIContentPolicy
-static const char *kTypeString[] = {
-    "other",
-    "script",
-    "image",
-    "stylesheet",
-    "object",
-    "document",
-    "subdocument",
-    "refresh",
-    "xbl",
-    "ping",
-    "xmlhttprequest",
-    "objectsubrequest",
-    "dtd",
-    "font",
-    "media",
-    "websocket",
-    "csp_report",
-    "xslt",
-    "beacon",
-    "fetch",
-    "image",
-    "manifest",
-    "",  // TYPE_INTERNAL_SCRIPT
-    "",  // TYPE_INTERNAL_WORKER
-    "",  // TYPE_INTERNAL_SHARED_WORKER
-    "",  // TYPE_INTERNAL_EMBED
-    "",  // TYPE_INTERNAL_OBJECT
-    "",  // TYPE_INTERNAL_FRAME
-    "",  // TYPE_INTERNAL_IFRAME
-    "",  // TYPE_INTERNAL_AUDIO
-    "",  // TYPE_INTERNAL_VIDEO
-    "",  // TYPE_INTERNAL_TRACK
-    "",  // TYPE_INTERNAL_XMLHTTPREQUEST
-    "",  // TYPE_INTERNAL_EVENTSOURCE
-    "",  // TYPE_INTERNAL_SERVICE_WORKER
-    "",  // TYPE_INTERNAL_SCRIPT_PRELOAD
-    "",  // TYPE_INTERNAL_IMAGE
-    "",  // TYPE_INTERNAL_IMAGE_PRELOAD
-    "",  // TYPE_INTERNAL_STYLESHEET
-    "",  // TYPE_INTERNAL_STYLESHEET_PRELOAD
-    "",  // TYPE_INTERNAL_IMAGE_FAVICON
-    "",  // TYPE_INTERNAL_WORKERS_IMPORT_SCRIPTS
-    "saveas_download",
-    "speculative",
-    "",  // TYPE_INTERNAL_MODULE
-    "",  // TYPE_INTERNAL_MODULE_PRELOAD
+static const nsLiteralCString kTypeString[] = {
+    NS_LITERAL_CSTRING("other"),
+    NS_LITERAL_CSTRING("script"),
+    NS_LITERAL_CSTRING("image"),
+    NS_LITERAL_CSTRING("stylesheet"),
+    NS_LITERAL_CSTRING("object"),
+    NS_LITERAL_CSTRING("document"),
+    NS_LITERAL_CSTRING("subdocument"),
+    NS_LITERAL_CSTRING("refresh"),
+    NS_LITERAL_CSTRING("xbl"),
+    NS_LITERAL_CSTRING("ping"),
+    NS_LITERAL_CSTRING("xmlhttprequest"),
+    NS_LITERAL_CSTRING("objectsubrequest"),
+    NS_LITERAL_CSTRING("dtd"),
+    NS_LITERAL_CSTRING("font"),
+    NS_LITERAL_CSTRING("media"),
+    NS_LITERAL_CSTRING("websocket"),
+    NS_LITERAL_CSTRING("csp_report"),
+    NS_LITERAL_CSTRING("xslt"),
+    NS_LITERAL_CSTRING("beacon"),
+    NS_LITERAL_CSTRING("fetch"),
+    NS_LITERAL_CSTRING("image"),
+    NS_LITERAL_CSTRING("manifest"),
+    NS_LITERAL_CSTRING(""),  // TYPE_INTERNAL_SCRIPT
+    NS_LITERAL_CSTRING(""),  // TYPE_INTERNAL_WORKER
+    NS_LITERAL_CSTRING(""),  // TYPE_INTERNAL_SHARED_WORKER
+    NS_LITERAL_CSTRING(""),  // TYPE_INTERNAL_EMBED
+    NS_LITERAL_CSTRING(""),  // TYPE_INTERNAL_OBJECT
+    NS_LITERAL_CSTRING(""),  // TYPE_INTERNAL_FRAME
+    NS_LITERAL_CSTRING(""),  // TYPE_INTERNAL_IFRAME
+    NS_LITERAL_CSTRING(""),  // TYPE_INTERNAL_AUDIO
+    NS_LITERAL_CSTRING(""),  // TYPE_INTERNAL_VIDEO
+    NS_LITERAL_CSTRING(""),  // TYPE_INTERNAL_TRACK
+    NS_LITERAL_CSTRING(""),  // TYPE_INTERNAL_XMLHTTPREQUEST
+    NS_LITERAL_CSTRING(""),  // TYPE_INTERNAL_EVENTSOURCE
+    NS_LITERAL_CSTRING(""),  // TYPE_INTERNAL_SERVICE_WORKER
+    NS_LITERAL_CSTRING(""),  // TYPE_INTERNAL_SCRIPT_PRELOAD
+    NS_LITERAL_CSTRING(""),  // TYPE_INTERNAL_IMAGE
+    NS_LITERAL_CSTRING(""),  // TYPE_INTERNAL_IMAGE_PRELOAD
+    NS_LITERAL_CSTRING(""),  // TYPE_INTERNAL_STYLESHEET
+    NS_LITERAL_CSTRING(""),  // TYPE_INTERNAL_STYLESHEET_PRELOAD
+    NS_LITERAL_CSTRING(""),  // TYPE_INTERNAL_IMAGE_FAVICON
+    NS_LITERAL_CSTRING(""),  // TYPE_INTERNAL_WORKERS_IMPORT_SCRIPTS
+    NS_LITERAL_CSTRING("saveas_download"),
+    NS_LITERAL_CSTRING("speculative"),
+    NS_LITERAL_CSTRING(""),  // TYPE_INTERNAL_MODULE
+    NS_LITERAL_CSTRING(""),  // TYPE_INTERNAL_MODULE_PRELOAD
 };
 
 #define NUMBER_OF_TYPES MOZ_ARRAY_LENGTH(kTypeString)
@@ -140,9 +140,10 @@ void nsContentBlocker::PrefChanged(nsIPrefBranch *aPrefBranch,
 #define PREF_CHANGED(_P) (!aPref || !strcmp(aPref, _P))
 
   for (uint32_t i = 0; i < NUMBER_OF_TYPES; ++i) {
-    if (*kTypeString[i] && PREF_CHANGED(kTypeString[i]) &&
-        NS_SUCCEEDED(aPrefBranch->GetIntPref(kTypeString[i], &val)))
+    if (!kTypeString[i].IsEmpty() && PREF_CHANGED(kTypeString[i].get()) &&
+        NS_SUCCEEDED(aPrefBranch->GetIntPref(kTypeString[i].get(), &val))) {
       mBehaviorPref[i] = LIMIT(val, 1, 3, 1);
+    }
   }
 }
 
@@ -262,7 +263,7 @@ nsresult nsContentBlocker::TestPermission(nsIURI *aCurrentURI,
   *aFromPrefs = false;
   nsresult rv;
 
-  if (!*kTypeString[aContentType - 1]) {
+  if (kTypeString[aContentType - 1].IsEmpty()) {
     // Disallow internal content policy types, they should not be used here.
     *aPermission = false;
     return NS_OK;

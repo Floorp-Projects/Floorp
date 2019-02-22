@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const Services = require("Services");
-
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 
@@ -35,54 +34,45 @@ function handleThreadState(toolbox, event, packet) {
   }
 }
 
-function attachThread(toolbox) {
+async function attachThread(toolbox) {
   const target = toolbox.target;
+  const threadOptions = {
+    autoBlackBox: false,
+    ignoreFrameEnvironment: true,
+  };
+  const [, threadClient] = await target.attachThread(threadOptions);
+  if (!threadClient.paused) {
+    throw new Error("Thread in wrong state when starting up, should be paused.");
+  }
 
-  const autoBlackBox = false;
-  const ignoreFrameEnvironment = true;
+  // These flags need to be set here because the client sends them
+  // with the `resume` request. We make sure to do this before
+  // resuming to avoid another interrupt. We can't pass it in with
+  // `threadOptions` because the resume request will override them.
+  threadClient.pauseOnExceptions(
+    Services.prefs.getBoolPref("devtools.debugger.pause-on-exceptions"),
+    Services.prefs.getBoolPref("devtools.debugger.ignore-caught-exceptions")
+  );
 
-  const threadOptions = { autoBlackBox, ignoreFrameEnvironment };
-
-  return new Promise((resolve, reject) => {
-    const handleResponse = ([res, threadClient]) => {
-      if (res.error) {
-        reject(new Error("Couldn't attach to thread: " + res.error));
-        return;
-      }
-
-      threadClient.addListener("paused", handleThreadState.bind(null, toolbox));
-      threadClient.addListener("resumed", handleThreadState.bind(null, toolbox));
-
-      if (!threadClient.paused) {
-        reject(new Error("Thread in wrong state when starting up, should be paused"));
-      }
-
-      // These flags need to be set here because the client sends them
-      // with the `resume` request. We make sure to do this before
-      // resuming to avoid another interrupt. We can't pass it in with
-      // `threadOptions` because the resume request will override them.
-      threadClient.pauseOnExceptions(
-        Services.prefs.getBoolPref("devtools.debugger.pause-on-exceptions"),
-        Services.prefs.getBoolPref("devtools.debugger.ignore-caught-exceptions")
+  try {
+    await threadClient.resume();
+  } catch (ex) {
+    // Interpret a possible error thrown by ThreadActor.resume
+    if (ex.error === "wrongOrder") {
+      const box = toolbox.getNotificationBox();
+      box.appendNotification(
+        L10N.getStr("toolbox.resumeOrderWarning"),
+        "wrong-resume-order",
+        "",
+        box.PRIORITY_WARNING_HIGH
       );
-
-      threadClient.resume(res => {
-        if (res.error === "wrongOrder") {
-          const box = toolbox.getNotificationBox();
-          box.appendNotification(
-            L10N.getStr("toolbox.resumeOrderWarning"),
-            "wrong-resume-order",
-            "",
-            box.PRIORITY_WARNING_HIGH
-          );
-        }
-
-        resolve(threadClient);
-      });
-    };
-
-    target.attachThread(threadOptions).then(handleResponse);
-  });
+    } else {
+      throw ex;
+    }
+  }
+  threadClient.addListener("paused", handleThreadState.bind(null, toolbox));
+  threadClient.addListener("resumed", handleThreadState.bind(null, toolbox));
+  return threadClient;
 }
 
 function detachThread(threadClient) {

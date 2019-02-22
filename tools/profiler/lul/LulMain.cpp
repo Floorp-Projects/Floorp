@@ -1499,7 +1499,7 @@ static __attribute__((noinline)) bool GetAndCheckStackTrace(
   // Get hold of the current unwind-start registers.
   UnwindRegs startRegs;
   memset(&startRegs, 0, sizeof(startRegs));
-#if defined(GP_PLAT_amd64_linux)
+#if defined(GP_ARCH_amd64)
   volatile uintptr_t block[3];
   MOZ_ASSERT(sizeof(block) == 24);
   __asm__ __volatile__(

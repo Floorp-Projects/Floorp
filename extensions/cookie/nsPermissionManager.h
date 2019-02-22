@@ -22,7 +22,12 @@
 #include "nsDataHashtable.h"
 #include "nsIRunnable.h"
 #include "nsRefPtrHashtable.h"
+#include "mozilla/BasePrincipal.h"
+#include "mozilla/ExpandedPrincipal.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/Unused.h"
+#include "mozilla/Variant.h"
+#include "mozilla/Vector.h"
 
 namespace mozilla {
 class OriginAttributesPattern;
@@ -78,17 +83,19 @@ class nsPermissionManager final : public nsIPermissionManager,
     static PermissionKey* CreateFromOriginNoSuffix(
         const nsACString& aOriginNoSuffix);
 
-    explicit PermissionKey(const nsACString& aOrigin) : mOrigin(aOrigin) {}
+    explicit PermissionKey(const nsACString& aOrigin)
+        : mOrigin(aOrigin), mHashCode(mozilla::HashString(aOrigin)) {}
 
     bool operator==(const PermissionKey& aKey) const {
       return mOrigin.Equals(aKey.mOrigin);
     }
 
-    PLDHashNumber GetHashCode() const { return mozilla::HashString(mOrigin); }
+    PLDHashNumber GetHashCode() const { return mHashCode; }
 
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PermissionKey)
 
-    nsCString mOrigin;
+    const nsCString mOrigin;
+    const PLDHashNumber mHashCode;
 
    private:
     // Default ctor shouldn't be used.
@@ -169,12 +176,24 @@ class nsPermissionManager final : public nsIPermissionManager,
   // be overridden with an explicit permission (including UNKNOWN_ACTION)
   static const int64_t cIDPermissionIsDefault = -1;
 
-  nsresult AddInternal(nsIPrincipal* aPrincipal, const nsCString& aType,
+  nsresult AddInternal(nsIPrincipal* aPrincipal, const nsACString& aType,
                        uint32_t aPermission, int64_t aID, uint32_t aExpireType,
                        int64_t aExpireTime, int64_t aModificationTime,
                        NotifyOperationType aNotifyOperation,
                        DBOperationType aDBOperation,
                        const bool aIgnoreSessionPermissions = false);
+
+  // Similar to TestPermissionFromPrincipal, except that it is used only for
+  // permissions which can never have default values.
+  nsresult TestPermissionWithoutDefaultsFromPrincipal(nsIPrincipal* aPrincipal,
+                                                      const nsACString& aType,
+                                                      uint32_t* aPermission) {
+    MOZ_ASSERT(!HasDefaultPref(aType));
+
+    return CommonTestPermission(aPrincipal, -1, aType, aPermission,
+                                nsIPermissionManager::UNKNOWN_ACTION, true,
+                                false, true);
+  }
 
   /**
    * Initialize the "clear-origin-attributes-data" observing.
@@ -239,8 +258,8 @@ class nsPermissionManager final : public nsIPermissionManager,
    * @param aPermissionKey  A string which will be filled with the permission
    * key.
    */
-  static void GetKeyForPermission(nsIPrincipal* aPrincipal, const char* aType,
-                                  nsACString& aPermissionKey);
+  static void GetKeyForPermission(nsIPrincipal* aPrincipal,
+                                  const nsACString& aType, nsACString& aKey);
 
   /**
    * See `nsIPermissionManager::GetPermissionsWithKey` for more info on
@@ -265,7 +284,48 @@ class nsPermissionManager final : public nsIPermissionManager,
  private:
   virtual ~nsPermissionManager();
 
-  int32_t GetTypeIndex(const char* aTypeString, bool aAdd);
+  // NOTE: nullptr can be passed as aType - if it is this function will return
+  // "false" unconditionally.
+  static bool HasDefaultPref(const nsACString& aType) {
+    // A list of permissions that can have a fallback default permission
+    // set under the permissions.default.* pref.
+    static const nsLiteralCString kPermissionsWithDefaults[] = {
+        NS_LITERAL_CSTRING("camera"), NS_LITERAL_CSTRING("microphone"),
+        NS_LITERAL_CSTRING("geo"), NS_LITERAL_CSTRING("desktop-notification"),
+        NS_LITERAL_CSTRING("shortcuts")};
+
+    if (!aType.IsEmpty()) {
+      for (const auto& perm : kPermissionsWithDefaults) {
+        if (perm.Equals(aType)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  // Returns -1 on failure
+  int32_t GetTypeIndex(const nsACString& aType, bool aAdd) {
+    for (uint32_t i = 0; i < mTypeArray.length(); ++i) {
+      if (mTypeArray[i].Equals(aType)) {
+        return i;
+      }
+    }
+
+    if (!aAdd) {
+      // Not found, but that is ok - we were just looking.
+      return -1;
+    }
+
+    // This type was not registered before.
+    // append it to the array, without copy-constructing the string
+    if (!mTypeArray.emplaceBack(aType)) {
+      return -1;
+    }
+
+    return mTypeArray.length() - 1;
+  }
 
   PermissionHashKey* GetPermissionHashKey(nsIPrincipal* aPrincipal,
                                           uint32_t aType, bool aExactHostMatch);
@@ -273,27 +333,136 @@ class nsPermissionManager final : public nsIPermissionManager,
                                           const nsACString& aOriginNoSuffix,
                                           uint32_t aType, bool aExactHostMatch);
 
-  nsresult CommonTestPermission(nsIPrincipal* aPrincipal, const char* aType,
-                                uint32_t* aPermission, bool aExactHostMatch,
-                                bool aIncludingSession) {
-    return CommonTestPermissionInternal(aPrincipal, nullptr, EmptyCString(),
-                                        aType, aPermission, aExactHostMatch,
-                                        aIncludingSession);
+  // The int32_t is the type index, the nsresult is an early bail-out return
+  // code.
+  typedef mozilla::Variant<int32_t, nsresult> TestPreparationResult;
+  /**
+   * Perform the early steps of a permission check and determine whether we need
+   * to call CommonTestPermissionInternal() for the actual permission check.
+   *
+   * @param aPrincipal optional principal argument to check the permission for,
+   *                   can be nullptr if we aren't performing a principal-based
+   *                   check.
+   * @param aTypeIndex if the caller isn't sure what the index of the permission
+   *                   type to check for is in the mTypeArray member variable,
+   *                   it should pass -1, otherwise this would be the index of
+   *                   the type inside mTypeArray.  This would only be something
+   *                   other than -1 in recursive invocations of this function.
+   * @param aType      the permission type to test.
+   * @param aPermission out argument which will be a permission type that we
+   *                    will return from this function once the function is
+   *                    done.
+   * @param aDefaultPermission the default permission to be used if we can't
+   *                           determine the result of the permission check.
+   * @param aDefaultPermissionIsValid whether the previous argument contains a
+   *                                  valid value.
+   * @param aExactHostMatch whether to look for the exact host name or also for
+   *                        subdomains that can have the same permission.
+   * @param aIncludingSession whether to include session permissions when
+   *                          testing for the permission.
+   */
+  TestPreparationResult CommonPrepareToTestPermission(
+      nsIPrincipal* aPrincipal, int32_t aTypeIndex, const nsACString& aType,
+      uint32_t* aPermission, uint32_t aDefaultPermission,
+      bool aDefaultPermissionIsValid, bool aExactHostMatch,
+      bool aIncludingSession) {
+    using mozilla::AsVariant;
+
+    auto* basePrin = mozilla::BasePrincipal::Cast(aPrincipal);
+    if (basePrin && basePrin->IsSystemPrincipal()) {
+      *aPermission = ALLOW_ACTION;
+      return AsVariant(NS_OK);
+    }
+
+    // For some permissions, query the default from a pref. We want to avoid
+    // doing this for all permissions so that permissions can opt into having
+    // the pref lookup overhead on each call.
+    int32_t defaultPermission =
+        aDefaultPermissionIsValid ? aDefaultPermission : UNKNOWN_ACTION;
+    if (!aDefaultPermissionIsValid && HasDefaultPref(aType)) {
+      mozilla::Unused << mDefaultPrefBranch->GetIntPref(
+          PromiseFlatCString(aType).get(), &defaultPermission);
+    }
+
+    // Set the default.
+    *aPermission = defaultPermission;
+
+    int32_t typeIndex =
+        aTypeIndex == -1 ? GetTypeIndex(aType, false) : aTypeIndex;
+
+    // For expanded principals, we want to iterate over the allowlist and see
+    // if the permission is granted for any of them.
+    if (basePrin && basePrin->Is<ExpandedPrincipal>()) {
+      auto ep = basePrin->As<ExpandedPrincipal>();
+      for (auto& prin : ep->AllowList()) {
+        uint32_t perm;
+        nsresult rv = CommonTestPermission(prin, typeIndex, aType, &perm,
+                                           defaultPermission, true,
+                                           aExactHostMatch, aIncludingSession);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return AsVariant(rv);
+        }
+
+        if (perm == nsIPermissionManager::ALLOW_ACTION) {
+          *aPermission = perm;
+          return AsVariant(NS_OK);
+        }
+        if (perm == nsIPermissionManager::PROMPT_ACTION) {
+          // Store it, but keep going to see if we can do better.
+          *aPermission = perm;
+        }
+      }
+
+      return AsVariant(NS_OK);
+    }
+
+    // If type == -1, the type isn't known, just signal that we are done.
+    if (typeIndex == -1) {
+      return AsVariant(NS_OK);
+    }
+
+    return AsVariant(typeIndex);
   }
-  nsresult CommonTestPermission(nsIURI* aURI, const char* aType,
-                                uint32_t* aPermission, bool aExactHostMatch,
-                                bool aIncludingSession) {
-    return CommonTestPermissionInternal(nullptr, aURI, EmptyCString(), aType,
-                                        aPermission, aExactHostMatch,
-                                        aIncludingSession);
+
+  // If aTypeIndex is passed -1, we try to inder the type index from aType.
+  nsresult CommonTestPermission(nsIPrincipal* aPrincipal, int32_t aTypeIndex,
+                                const nsACString& aType, uint32_t* aPermission,
+                                uint32_t aDefaultPermission,
+                                bool aDefaultPermissionIsValid,
+                                bool aExactHostMatch, bool aIncludingSession) {
+    auto preparationResult = CommonPrepareToTestPermission(
+        aPrincipal, aTypeIndex, aType, aPermission, aDefaultPermission,
+        aDefaultPermissionIsValid, aExactHostMatch, aIncludingSession);
+    if (preparationResult.is<nsresult>()) {
+      return preparationResult.as<nsresult>();
+    }
+
+    return CommonTestPermissionInternal(
+        aPrincipal, nullptr, EmptyCString(), preparationResult.as<int32_t>(),
+        aType, aPermission, aExactHostMatch, aIncludingSession);
+  }
+  // If aTypeIndex is passed -1, we try to inder the type index from aType.
+  nsresult CommonTestPermission(nsIURI* aURI, int32_t aTypeIndex,
+                                const nsACString& aType, uint32_t* aPermission,
+                                uint32_t aDefaultPermission,
+                                bool aDefaultPermissionIsValid,
+                                bool aExactHostMatch, bool aIncludingSession) {
+    auto preparationResult = CommonPrepareToTestPermission(
+        nullptr, aTypeIndex, aType, aPermission, aDefaultPermission,
+        aDefaultPermissionIsValid, aExactHostMatch, aIncludingSession);
+    if (preparationResult.is<nsresult>()) {
+      return preparationResult.as<nsresult>();
+    }
+
+    return CommonTestPermissionInternal(
+        nullptr, aURI, EmptyCString(), preparationResult.as<int32_t>(), aType,
+        aPermission, aExactHostMatch, aIncludingSession);
   }
   // Only one of aPrincipal or aURI is allowed to be passed in.
-  nsresult CommonTestPermissionInternal(nsIPrincipal* aPrincipal, nsIURI* aURI,
-                                        const nsACString& aOriginNoSuffix,
-                                        const char* aType,
-                                        uint32_t* aPermission,
-                                        bool aExactHostMatch,
-                                        bool aIncludingSession);
+  nsresult CommonTestPermissionInternal(
+      nsIPrincipal* aPrincipal, nsIURI* aURI, const nsACString& aOriginNoSuffix,
+      int32_t aTypeIndex, const nsACString& aType, uint32_t* aPermission,
+      bool aExactHostMatch, bool aIncludingSession);
 
   nsresult OpenDatabase(nsIFile* permissionsFile);
   nsresult InitDB(bool aRemoveFile);
@@ -303,7 +472,7 @@ class nsPermissionManager final : public nsIPermissionManager,
   nsresult _DoImport(nsIInputStream* inputStream, mozIStorageConnection* aConn);
   nsresult Read();
   void NotifyObserversWithPermission(nsIPrincipal* aPrincipal,
-                                     const nsCString& aType,
+                                     const nsACString& aType,
                                      uint32_t aPermission, uint32_t aExpireType,
                                      int64_t aExpireTime,
                                      const char16_t* aData);
@@ -336,7 +505,7 @@ class nsPermissionManager final : public nsIPermissionManager,
    * If aType is nullptr, checks that the permission manager would have all
    * permissions available for the given principal.
    */
-  bool PermissionAvailable(nsIPrincipal* aPrincipal, const char* aType);
+  bool PermissionAvailable(nsIPrincipal* aPrincipal, const nsACString& aType);
 
   nsRefPtrHashtable<nsCStringHashKey, mozilla::GenericPromise::Private>
       mPermissionKeyPromiseMap;
@@ -352,14 +521,15 @@ class nsPermissionManager final : public nsIPermissionManager,
   // a unique, monotonically increasing id used to identify each database entry
   int64_t mLargestID;
 
-  // An array to store the strings identifying the different types.
-  nsTArray<nsCString> mTypeArray;
-
   // Initially, |false|. Set to |true| once shutdown has started, to avoid
   // reopening the database.
   bool mIsShuttingDown;
 
   nsCOMPtr<nsIPrefBranch> mDefaultPrefBranch;
+
+  // NOTE: Ensure this is the last member since it has a large inline buffer.
+  // An array to store the strings identifying the different types.
+  mozilla::Vector<nsCString, 512> mTypeArray;
 
   friend class DeleteFromMozHostListener;
   friend class CloseDatabaseListener;
