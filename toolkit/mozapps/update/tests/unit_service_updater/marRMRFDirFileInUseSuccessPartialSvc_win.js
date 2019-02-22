@@ -20,13 +20,7 @@ async function setupUpdaterTestFinished() {
   await runHelperFileInUse(gTestDirs[2].relPathDir + gTestDirs[2].files[0], true);
   runUpdate(STATE_SUCCEEDED, false, 0, true);
   await waitForHelperExit();
-  checkPostUpdateAppLog();
-}
-
-/**
- * Called after the call to checkPostUpdateAppLog finishes.
- */
-async function checkPostUpdateAppLogFinished() {
+  await checkPostUpdateAppLog();
   standardInit();
   checkPostUpdateRunningFile(true);
   checkFilesAfterUpdateSuccess(getApplyDirFile, false, true);

@@ -20,13 +20,7 @@ async function setupUpdaterTestFinished() {
   await runHelperPIDPersists(DIR_RESOURCES + gCallbackBinFile, false);
   runUpdate(STATE_SUCCEEDED, false, 0, true);
   await waitForHelperExit();
-  checkPostUpdateAppLog();
-}
-
-/**
- * Called after the call to checkPostUpdateAppLog finishes.
- */
-async function checkPostUpdateAppLogFinished() {
+  await checkPostUpdateAppLog();
   standardInit();
   checkPostUpdateRunningFile(true);
   checkFilesAfterUpdateSuccess(getApplyDirFile);

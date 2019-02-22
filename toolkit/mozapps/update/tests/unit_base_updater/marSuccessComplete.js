@@ -18,15 +18,9 @@ function run_test() {
 /**
  * Called after the call to setupUpdaterTest finishes.
  */
-function setupUpdaterTestFinished() {
+async function setupUpdaterTestFinished() {
   runUpdate(STATE_SUCCEEDED, false, 0, true);
-  checkPostUpdateAppLog();
-}
-
-/**
- * Called after the call to checkPostUpdateAppLog finishes.
- */
-async function checkPostUpdateAppLogFinished() {
+  await checkPostUpdateAppLog();
   checkAppBundleModTime();
   standardInit();
   checkPostUpdateRunningFile(true);
