@@ -40,12 +40,6 @@ function stageUpdateFinished() {
   checkUpdateLogContains(ERR_ENSURE_COPY);
   // Switch the application to the staged application that was updated.
   runUpdate(STATE_FAILED_WRITE_ERROR, false, 1, false);
-}
-
-/**
- * Called after the call to runUpdate finishes.
- */
-function runUpdateFinished() {
   waitForHelperExit();
 }
 

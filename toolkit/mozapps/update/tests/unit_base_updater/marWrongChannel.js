@@ -24,17 +24,11 @@ function run_test() {
 /**
  * Called after the call to setupUpdaterTest finishes.
  */
-function setupUpdaterTestFinished() {
+async function setupUpdaterTestFinished() {
   // If execv is used the updater process will turn into the callback process
   // and the updater's return code will be that of the callback process.
-  runUpdate(STATE_FAILED_MAR_CHANNEL_MISMATCH_ERROR, false, (USE_EXECV ? 0 : 1),
-            false);
-}
-
-/**
- * Called after the call to runUpdateUsingUpdater finishes.
- */
-async function runUpdateFinished() {
+  runUpdate(STATE_FAILED_MAR_CHANNEL_MISMATCH_ERROR,
+            false, (USE_EXECV ? 0 : 1), false);
   standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);

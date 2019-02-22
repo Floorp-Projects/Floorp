@@ -36,12 +36,6 @@ function stageUpdateFinished() {
   checkUpdateLogContents(LOG_PARTIAL_SUCCESS, true, false, true);
   // Switch the application to the staged application that was updated.
   runUpdate(STATE_SUCCEEDED, true, 0, true);
-}
-
-/**
- * Called after the call to runUpdate finishes.
- */
-function runUpdateFinished() {
   checkPostUpdateAppLog();
 }
 

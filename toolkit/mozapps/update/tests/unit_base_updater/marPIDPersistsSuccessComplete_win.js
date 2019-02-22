@@ -29,12 +29,6 @@ function waitForHelperSleepFinished() {
     return;
   }
   runUpdate(STATE_SUCCEEDED, false, 0, true);
-}
-
-/**
- * Called after the call to runUpdate finishes.
- */
-function runUpdateFinished() {
   waitForHelperExit();
 }
 
