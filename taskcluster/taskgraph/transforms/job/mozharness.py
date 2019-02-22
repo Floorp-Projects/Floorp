@@ -306,6 +306,8 @@ def mozharness_on_generic_worker(config, job, taskdesc):
             mh_command.append(r'--extra-config-path '
                               r'.\build\src\{}'.format(path.replace('/', '\\')))
 
+    mh_command.append("--scm-level {}".format(config.params['level']))
+
     for cfg in run['config']:
         mh_command.append('--config ' + cfg.replace('/', '\\'))
     if run['use-magic-mh-args']:
