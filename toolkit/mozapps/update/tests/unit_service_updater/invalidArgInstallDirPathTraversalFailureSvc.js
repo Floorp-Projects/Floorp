@@ -26,7 +26,7 @@ function run_test() {
 /**
  * Called after the call to setupUpdaterTest finishes.
  */
-function setupUpdaterTestFinished() {
+async function setupUpdaterTestFinished() {
   let path = "123456789";
   if (AppConstants.platform == "win") {
     path = "C:\\" + path + "\\..\\" + path;
@@ -35,12 +35,6 @@ function setupUpdaterTestFinished() {
   }
 
   runUpdate(STATE_AFTER_RUNUPDATE, false, 1, true, null, path, null, null);
-}
-
-/**
- * Called after the call to runUpdateUsingUpdater finishes.
- */
-async function runUpdateFinished() {
   standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);

@@ -27,14 +27,8 @@ function run_test() {
 /**
  * Called after the call to setupUpdaterTest finishes.
  */
-function setupUpdaterTestFinished() {
+async function setupUpdaterTestFinished() {
   runUpdate(STATE_AFTER_RUNUPDATE, false, 1, true, null, null, "test", null);
-}
-
-/**
- * Called after the call to runUpdateUsingUpdater finishes.
- */
-async function runUpdateFinished() {
   standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);

@@ -28,15 +28,9 @@ function run_test() {
 /**
  * Called after the call to setupUpdaterTest finishes.
  */
-function setupUpdaterTestFinished() {
+async function setupUpdaterTestFinished() {
   let path = getApplyDirFile("..", false).path;
   runUpdate(STATE_AFTER_RUNUPDATE, true, 1, true, null, null, path, null);
-}
-
-/**
- * Called after the call to runUpdateUsingUpdater finishes.
- */
-async function runUpdateFinished() {
   standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);

@@ -20,12 +20,6 @@ function run_test() {
  */
 function setupUpdaterTestFinished() {
   runUpdate(STATE_SUCCEEDED, false, 0, true);
-}
-
-/**
- * Called after the call to runUpdateUsingService finishes.
- */
-function runUpdateFinished() {
   checkFilesAfterUpdateSuccess(getApplyDirFile, false, false);
 
   // We need to check the service log even though this is a bootstrap

@@ -19,17 +19,11 @@ function run_test() {
 /**
  * Called after the call to setupUpdaterTest finishes.
  */
-function setupUpdaterTestFinished() {
+async function setupUpdaterTestFinished() {
   // If execv is used the updater process will turn into the callback process
   // and the updater's return code will be that of the callback process.
-  runUpdate(STATE_FAILED_LOADSOURCE_ERROR_WRONG_SIZE, false, (USE_EXECV ? 0 : 1),
-            true);
-}
-
-/**
- * Called after the call to runUpdate finishes.
- */
-async function runUpdateFinished() {
+  runUpdate(STATE_FAILED_LOADSOURCE_ERROR_WRONG_SIZE,
+            false, (USE_EXECV ? 0 : 1), true);
   checkAppBundleModTime();
   standardInit();
   checkPostUpdateRunningFile(false);
