@@ -242,3 +242,46 @@ def get_ancestors_by_name(name, path, root):
         if path == root:
             break
     return configs
+
+
+def expand_exclusions(paths, config, root):
+    """Returns all files that match patterns and aren't excluded.
+
+    This is used by some external linters who receive 'batch' files (e.g dirs)
+    but aren't capable of applying their own exclusions. There is an argument
+    to be made that this step should just apply to all linters no matter what.
+
+    Args:
+        paths (list): List of candidate paths to lint.
+        config (dict): Linter's config object.
+        root (str): Root of the repository.
+
+    Returns:
+        Generator which generates list of paths that weren't excluded.
+    """
+    extensions = [e.lstrip('.') for e in config['extensions']]
+
+    def normalize(path):
+        path = mozpath.normpath(path)
+        if os.path.isabs(path):
+            return path
+        return mozpath.join(root, path)
+
+    exclude = map(normalize, config.get('exclude', []))
+    for path in paths:
+        path = mozpath.normsep(path)
+        if os.path.isfile(path):
+            if not any(path.startswith(e) for e in exclude):
+                yield path
+            continue
+
+        ignore = [e[len(path):].lstrip('/') for e in exclude
+                  if mozpath.commonprefix((path, e)) == path]
+        finder = FileFinder(path, ignore=ignore)
+
+        _, ext = os.path.splitext(path)
+        ext.lstrip('.')
+
+        for ext in extensions:
+            for p, f in finder.find("**/*.{}".format(ext)):
+                yield os.path.join(path, p)
