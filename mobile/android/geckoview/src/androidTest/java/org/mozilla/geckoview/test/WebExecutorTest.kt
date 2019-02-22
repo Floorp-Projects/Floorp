@@ -13,11 +13,15 @@ import android.support.test.filters.MediumTest
 import android.support.test.filters.SdkSuppress
 import android.support.test.runner.AndroidJUnit4
 
+import java.math.BigInteger
+
 import java.net.URI
 
 import java.nio.ByteBuffer
 import java.nio.CharBuffer
 import java.nio.charset.Charset
+
+import java.security.MessageDigest
 
 import java.util.concurrent.CountDownLatch
 
@@ -91,7 +95,8 @@ class WebExecutorTest {
     }
 
     fun WebResponse.getJSONBody(): JSONObject {
-        return JSONObject(Charset.forName("UTF-8").decode(body).toString())
+        val bytes = ByteBuffer.wrap(body!!.readBytes())
+        return JSONObject(Charset.forName("UTF-8").decode(bytes).toString())
     }
 
     @Test
@@ -238,5 +243,45 @@ class WebExecutorTest {
     fun testResolveError() {
         thrown.expect(equalTo(WebRequestError(WebRequestError.ERROR_UNKNOWN_HOST, WebRequestError.ERROR_CATEGORY_URI)));
         executor.resolve("this should not resolve").poll()
+    }
+
+    @Test
+    fun testFetchStream() {
+        val expectedCount = 1 * 1024 * 1024 // 1MB
+        val response = executor.fetch(WebRequest("$TEST_ENDPOINT/bytes/$expectedCount")).poll(env.defaultTimeoutMillis)!!
+
+        assertThat("Status code should match", response.statusCode, equalTo(200))
+        assertThat("Content-Length should match", response.headers["Content-Length"]!!.toInt(), equalTo(expectedCount))
+
+        val stream = response.body!!
+        val bytes = stream.readBytes(expectedCount)
+        stream.close()
+
+        assertThat("Byte counts should match", bytes.size, equalTo(expectedCount))
+
+        val digest = MessageDigest.getInstance("SHA-256").digest(bytes)
+        assertThat("Hashes should match", response.headers["X-SHA-256"],
+                equalTo(String.format("%064x", BigInteger(1, digest))))
+    }
+
+    @Test
+    fun testFetchStreamCancel() {
+        val expectedCount = 1 * 1024 * 1024 // 1MB
+        val response = executor.fetch(WebRequest("$TEST_ENDPOINT/bytes/$expectedCount")).poll(env.defaultTimeoutMillis)!!
+
+        assertThat("Status code should match", response.statusCode, equalTo(200))
+        assertThat("Content-Length should match", response.headers["Content-Length"]!!.toInt(), equalTo(expectedCount))
+
+        val stream = response.body!!;
+
+        assertThat("Stream should have 0 bytes available", stream.available(), equalTo(0))
+
+        // Wait a second. Not perfect, but should be enough time for at least one buffer
+        // to be appended if things are not going as they should.
+        SystemClock.sleep(1000);
+
+        assertThat("Stream should still have 0 bytes available", stream.available(), equalTo(0));
+
+        stream.close()
     }
 }
