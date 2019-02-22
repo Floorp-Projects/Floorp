@@ -134,8 +134,23 @@ class HeaderVisitor final : public nsIHttpHeaderVisitor {
 
 NS_IMPL_ISUPPORTS(HeaderVisitor, nsIHttpHeaderVisitor)
 
-class LoaderListener final : public nsIStreamLoaderObserver,
-                             public nsIRequestObserver {
+class StreamSupport final
+    : public java::GeckoInputStream::Support::Natives<StreamSupport> {
+ public:
+  typedef java::GeckoInputStream::Support::Natives<StreamSupport> Base;
+  using Base::AttachNative;
+  using Base::DisposeNative;
+  using Base::GetNative;
+
+  explicit StreamSupport(nsIRequest* aRequest) : mRequest(aRequest) {}
+
+  void Resume() { mRequest->Resume(); }
+
+ private:
+  nsCOMPtr<nsIRequest> mRequest;
+};
+
+class LoaderListener final : public nsIStreamListener {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
@@ -144,39 +159,84 @@ class LoaderListener final : public nsIStreamLoaderObserver,
   }
 
   NS_IMETHOD
-  OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext,
-                   nsresult aStatus, uint32_t aResultLength,
-                   const uint8_t* aResult) override {
-    nsresult rv = HandleWebResponse(aLoader, aStatus, aResultLength, aResult);
+  OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) override {
+    MOZ_ASSERT(!mStream);
+
+    nsresult status;
+    aRequest->GetStatus(&status);
+    if (NS_FAILED(status)) {
+      CompleteWithError(mResult, status);
+      return NS_OK;
+    }
+
+    StreamSupport::Init();
+
+    // We're expecting data later via OnDataAvailable, so create the stream now.
+    mSupport = java::GeckoInputStream::Support::New();
+    StreamSupport::AttachNative(mSupport,
+                                mozilla::MakeUnique<StreamSupport>(aRequest));
+
+    mStream = java::GeckoInputStream::New(mSupport);
+
+    // Suspend the request immediately. It will be resumed when (if) someone
+    // tries to read the Java stream.
+    aRequest->Suspend();
+
+    nsresult rv = HandleWebResponse(aRequest);
     if (NS_FAILED(rv)) {
       CompleteWithError(mResult, rv);
+      return NS_OK;
     }
 
     return NS_OK;
   }
 
   NS_IMETHOD
-  OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) override {
+  OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+                nsresult aStatusCode) override {
+    if (mStream) {
+      mStream->SendEof();
+    }
     return NS_OK;
   }
 
   NS_IMETHOD
-  OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
-                nsresult aStatusCode) override {
-    return NS_OK;
+  OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+                  nsIInputStream* aInputStream, uint64_t aOffset,
+                  uint32_t aCount) override {
+    MOZ_ASSERT(mStream);
+
+    // We only need this for the ReadSegments call, the value is unused.
+    uint32_t countRead;
+    return aInputStream->ReadSegments(WriteSegment, this, aCount, &countRead);
   }
 
  private:
+  static nsresult WriteSegment(nsIInputStream* aInputStream, void* aClosure,
+                               const char* aFromSegment, uint32_t aToOffset,
+                               uint32_t aCount, uint32_t* aWriteCount) {
+    LoaderListener* self = static_cast<LoaderListener*>(aClosure);
+    MOZ_ASSERT(self);
+    MOZ_ASSERT(self->mStream);
+
+    *aWriteCount = aCount;
+
+    jni::ByteArray::LocalRef buffer = jni::ByteArray::New(
+        reinterpret_cast<signed char*>(const_cast<char*>(aFromSegment)),
+        *aWriteCount);
+
+    if (NS_FAILED(self->mStream->AppendBuffer(buffer))) {
+      // The stream was closed or something, abort reading this channel.
+      return NS_ERROR_ABORT;
+    }
+
+    return NS_OK;
+  }
+
   NS_IMETHOD
-  HandleWebResponse(nsIStreamLoader* aLoader, nsresult aStatus,
-                    uint32_t aBodyLength, const uint8_t* aBody) {
-    NS_ENSURE_SUCCESS(aStatus, aStatus);
-
-    nsCOMPtr<nsIRequest> request;
-    nsresult rv = aLoader->GetRequest(getter_AddRefs(request));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIHttpChannel> channel = do_QueryInterface(request, &rv);
+  HandleWebResponse(nsIRequest* aRequest) {
+    nsresult rv;
+    nsCOMPtr<nsIHttpChannel> channel = do_QueryInterface(aRequest, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // URI
@@ -210,18 +270,9 @@ class LoaderListener final : public nsIStreamLoaderObserver,
 
     builder->Redirected(!loadInfo->RedirectChain().IsEmpty());
 
-    // Body
-    if (aBodyLength) {
-      jni::ByteBuffer::LocalRef buffer;
-
-      rv = java::GeckoWebExecutor::CreateByteBuffer(aBodyLength, &buffer);
-      NS_ENSURE_SUCCESS(rv, NS_ERROR_OUT_OF_MEMORY);
-
-      MOZ_ASSERT(buffer->Address());
-      MOZ_ASSERT(buffer->Capacity() == aBodyLength);
-
-      memcpy(buffer->Address(), aBody, aBodyLength);
-      builder->Body(buffer);
+    // Body stream
+    if (mStream) {
+      builder->Body(mStream);
     }
 
     mResult->Complete(builder->Build());
@@ -231,9 +282,11 @@ class LoaderListener final : public nsIStreamLoaderObserver,
   virtual ~LoaderListener() {}
 
   const java::GeckoResult::GlobalRef mResult;
+  java::GeckoInputStream::GlobalRef mStream;
+  java::GeckoInputStream::Support::GlobalRef mSupport;
 };
 
-NS_IMPL_ISUPPORTS(LoaderListener, nsIStreamLoaderObserver, nsIRequestObserver)
+NS_IMPL_ISUPPORTS(LoaderListener, nsIStreamListener)
 
 class DNSListener final : public nsIDNSListener {
  public:
@@ -379,7 +432,7 @@ nsresult WebExecutorSupport::CreateStreamLoader(
   }
 
   // Body
-  const auto body = reqBase->Body();
+  const auto body = req->Body();
   if (body) {
     nsCOMPtr<nsIInputStream> stream = new ByteBufferStream(body);
 
@@ -418,16 +471,11 @@ nsresult WebExecutorSupport::CreateStreamLoader(
   rv = internalChannel->SetBlockAuthPrompt(true);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // All done, set up the stream loader
+  // All done, set up the listener
   RefPtr<LoaderListener> listener = new LoaderListener(aResult);
 
-  nsCOMPtr<nsIStreamLoader> loader;
-  rv = NS_NewStreamLoader(getter_AddRefs(loader), listener);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // Finally, open the channel
-  rv = httpChannel->AsyncOpen(loader);
-  NS_ENSURE_SUCCESS(rv, rv);
+  rv = httpChannel->AsyncOpen(listener);
 
   return NS_OK;
 }

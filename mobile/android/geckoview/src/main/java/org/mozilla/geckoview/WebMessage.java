@@ -36,21 +36,9 @@ public abstract class WebMessage {
      */
     public final @NonNull Map<String, String> headers;
 
-    /**
-     * The body of the request or response. Must be a directly-allocated ByteBuffer.
-     * May be null.
-     */
-    public final @Nullable ByteBuffer body;
-
     protected WebMessage(final @NonNull Builder builder) {
         uri = builder.mUri;
         headers = Collections.unmodifiableMap(builder.mHeaders);
-
-        if (builder.mBody != null) {
-            body = builder.mBody.asReadOnlyBuffer();
-        } else {
-            body = null;
-        }
     }
 
     // This is only used via JNI.
@@ -128,21 +116,6 @@ public abstract class WebMessage {
                 mHeaders.put(key, value);
             }
 
-            return this;
-        }
-
-        /**
-         * Set the body.
-         *
-         * @param buffer A {@link ByteBuffer} with the data.
-         *               Must be allocated directly via {@link ByteBuffer#allocateDirect(int)}.
-         * @return This Builder instance.
-         */
-        public @NonNull Builder body(final @Nullable ByteBuffer buffer) {
-            if (buffer != null && !buffer.isDirect()) {
-                throw new IllegalArgumentException("body must be directly allocated");
-            }
-            mBody = buffer;
             return this;
         }
     }
