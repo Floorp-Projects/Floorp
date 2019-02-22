@@ -14,6 +14,8 @@ ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
                                "resource://gre/modules/PrivateBrowsingUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "WebNavigationFrames",
                                "resource://gre/modules/WebNavigationFrames.jsm");
+ChromeUtils.defineModuleGetter(this, "E10SUtils",
+                               "resource://gre/modules/E10SUtils.jsm");
 
 class ClickHandlerChild extends ActorChild {
   handleEvent(event) {
@@ -48,6 +50,12 @@ class ClickHandlerChild extends ActorChild {
       }
     }
 
+    // Bug 965637, query the CSP from the doc instead of the Principal
+    let csp = ownerDoc.nodePrincipal.csp;
+    if (csp) {
+      csp = E10SUtils.serializeCSP(csp);
+    }
+
     let frameOuterWindowID = WebNavigationFrames.getFrameId(ownerDoc.defaultView);
 
     let json = { button: event.button, shiftKey: event.shiftKey,
@@ -55,6 +63,7 @@ class ClickHandlerChild extends ActorChild {
                  altKey: event.altKey, href: null, title: null,
                  frameOuterWindowID, referrerPolicy,
                  triggeringPrincipal: principal,
+                 csp,
                  originAttributes: principal ? principal.originAttributes : {},
                  isContentWindowPrivate: PrivateBrowsingUtils.isContentWindowPrivate(ownerDoc.defaultView)};
 

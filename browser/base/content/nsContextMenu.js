@@ -10,6 +10,7 @@ var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   SpellCheckHelper: "resource://gre/modules/InlineSpellChecker.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
   LoginManagerContextMenu: "resource://gre/modules/LoginManagerContextMenu.jsm",
@@ -230,6 +231,8 @@ nsContextMenu.prototype = {
 
     // Everything after this isn't sent directly from ContextMenu
     this.ownerDoc = this.target.ownerDocument;
+
+    this.csp = E10SUtils.deserializeCSP(context.csp);
 
     // Remember the CSS selectors corresponding to clicked node. gContextMenuContentData
     // can be null if the menu was triggered by tests in which case use an empty array.
@@ -777,6 +780,7 @@ nsContextMenu.prototype = {
     let params = { charset: gContextMenuContentData.charSet,
                    originPrincipal: this.principal,
                    triggeringPrincipal: this.principal,
+                   csp: this.csp,
                    referrerURI: gContextMenuContentData.documentURIObject,
                    referrerPolicy: gContextMenuContentData.referrerPolicy,
                    frameOuterWindowID: gContextMenuContentData.frameOuterWindowID,
