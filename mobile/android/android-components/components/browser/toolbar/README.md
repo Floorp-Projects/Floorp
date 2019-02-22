@@ -22,6 +22,7 @@ implementation "org.mozilla.components:browser-toolbar:{latest-version}"
 | browserToolbarSecureColor               | color     | Color tint of the "secure" (lock) icon.                 |
 | browserToolbarInsecureColor             | color     | Color tint of the "insecure" (globe) icon.              |
 | browserToolbarMenuColor                 | color     | Color of the overflow menu button.                      |
+| browserToolbarCancelColor               | color     | Color of the cancel editing button.                     |
 | browserToolbarSuggestionBackgroundColor | color     | Background color of the autocomplete suggestion.        |
 | browserToolbarSuggestionForegroundColor | color     | Foreground (text) color of the autocomplete suggestion. |
 | browserToolbarFadingEdgeSize            | dimension | Size of the fading edge shown when the URL is too long. |
