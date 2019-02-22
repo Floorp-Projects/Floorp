@@ -38,11 +38,7 @@ add_task(async function() {
   info("Check whether the shortcut keys which opens devtools is enabled");
   await assertShortcutKeys(gBrowser.selectedBrowser, true);
 
-  await removeTab(devtoolsTab);
-  await Promise.all([
-    waitForRequestsToSettle(window.AboutDebugging.store),
-    gDevTools.once("toolbox-destroyed"),
-  ]);
+  await closeAboutDevtoolsToolbox(devtoolsTab, window);
   await removeTab(tab);
 });
 
