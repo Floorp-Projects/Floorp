@@ -5,11 +5,12 @@
 import datetime
 import jsone
 import os
+import slugid
 import taskcluster
 import yaml
 
 from git import Repo
-from lib.tasks import schedule_task, craft_new_task_id
+from lib.tasks import schedule_task
 
 ROOT = os.path.join(os.path.dirname(__file__), '../..')
 
@@ -39,32 +40,29 @@ def make_decision_task(params):
 
     def as_slugid(name):
         if name not in slugids:
-            slugids[name] = craft_new_task_id()
+            slugids[name] = slugid.nice()
         return slugids[name]
-
-    now_in_iso_format = datetime.datetime.utcnow().isoformat()[:23] + 'Z'
 
     # provide a similar JSON-e context to what taskcluster-github provides
     context = {
         'tasks_for': 'cron',
         'cron': {
-            'task_id': params['cron_task_id'],
+            'task_id': params['cron_task_id']
         },
-        'now': now_in_iso_format,
+        'now': datetime.datetime.utcnow().isoformat()[:23] + 'Z',
         'as_slugid': as_slugid,
         'event': {
             'repository': {
-                'html_url': params['html_url'],
+                'html_url': params['html_url']
             },
             'release': {
                 'tag_name': params['head_rev'],
-                'target_commitish': params['branch'],
-                'published_at': now_in_iso_format,
+                'target_commitish': params['branch']
             },
             'sender': {
-                'login': 'TaskclusterHook',
-            },
-        },
+                'login': 'TaskclusterHook'
+            }
+        }
     }
 
     rendered = jsone.render(taskcluster_yml, context)
