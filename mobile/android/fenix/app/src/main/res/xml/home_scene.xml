@@ -11,7 +11,7 @@
         motion:constraintSetEnd="@+id/end">
         <OnSwipe
                 motion:dragDirection="dragUp"
-                motion:touchAnchorId="@id/session_list"
+                motion:touchAnchorId="@id/homeScrollView"
                 motion:touchAnchorSide="top" />
 
         <KeyFrameSet>

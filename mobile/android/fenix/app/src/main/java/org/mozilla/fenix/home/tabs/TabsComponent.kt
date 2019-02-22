@@ -5,6 +5,7 @@
 package org.mozilla.fenix.home.tabs
 
 import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.session.Session
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
@@ -30,6 +31,8 @@ class TabsComponent(
     }
 
     override fun initView() = TabsUIView(container, actionEmitter, isPrivate, changesObservable)
+    val view: RecyclerView
+        get() = uiView.view as RecyclerView
 
     init {
         render(reducer)

@@ -29,6 +29,8 @@ class SessionsAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
         return when (viewType) {
             HeaderViewHolder.LAYOUT_ID -> HeaderViewHolder(view)
+            EmptyListViewHolder.LAYOUT_ID -> EmptyListViewHolder(view)
+            PrivateEmptyListViewHolder.LAYOUT_ID -> PrivateEmptyListViewHolder(view)
             else -> EmptyListViewHolder(view)
         }
     }

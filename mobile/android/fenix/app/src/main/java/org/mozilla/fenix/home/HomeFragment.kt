@@ -7,7 +7,6 @@ package org.mozilla.fenix.home
 import android.content.res.Resources
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -44,6 +43,8 @@ class HomeFragment : Fragment() {
     private val bus = ActionBusFactory.get(this)
     private var sessionObserver: SessionManager.Observer? = null
     private lateinit var homeMenu: HomeMenu
+    private lateinit var tabsComponent: TabsComponent
+    private lateinit var sessionsComponent: SessionsComponent
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -52,11 +53,10 @@ class HomeFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_home, container, false)
         val sessionManager = requireComponents.core.sessionManager
-        TabsComponent(view.homeLayout, bus, (activity as HomeActivity).browsingModeManager.isPrivate,
+        tabsComponent = TabsComponent(view.homeContainer, bus, (activity as HomeActivity).browsingModeManager.isPrivate,
             TabsState(sessionManager.sessions.map { it.toSessionViewState(it == sessionManager.selectedSession) })
         )
-        SessionsComponent(view.homeLayout, bus)
-        layoutComponents(view)
+        sessionsComponent = SessionsComponent(view.homeContainer, bus)
         ActionBusFactory.get(this).logMergedObservables()
         val activity = activity as HomeActivity
         DefaultThemeManager.applyStatusBarTheme(activity.window, activity.themeManager, activity)
@@ -67,6 +67,9 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         setupHomeMenu()
+
+        tabsComponent.view.isNestedScrollingEnabled = false
+        sessionsComponent.view.isNestedScrollingEnabled = false
 
         val bundles = requireComponents.core.sessionStorage.bundles(40)
 

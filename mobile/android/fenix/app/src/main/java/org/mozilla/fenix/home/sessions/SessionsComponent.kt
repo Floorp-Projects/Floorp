@@ -5,6 +5,7 @@
 package org.mozilla.fenix.home.sessions
 
 import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.session.Session
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
@@ -31,6 +32,8 @@ class SessionsComponent(
     }
 
     override fun initView() = SessionsUIView(container, actionEmitter, changesObservable)
+    val view: RecyclerView
+        get() = uiView.view as RecyclerView
 
     init {
         render(reducer)
