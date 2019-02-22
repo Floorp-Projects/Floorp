@@ -357,6 +357,11 @@ static inline void* js_malloc(size_t bytes) {
   return js_arena_malloc(js::MallocArena, bytes);
 }
 
+static inline void* js_arena_calloc(arena_id_t arena, size_t bytes) {
+  JS_OOM_POSSIBLY_FAIL();
+  return moz_arena_calloc(arena, bytes, 1);
+}
+
 static inline void* js_arena_calloc(arena_id_t arena, size_t nmemb,
                                     size_t size) {
   JS_OOM_POSSIBLY_FAIL();
@@ -364,7 +369,7 @@ static inline void* js_arena_calloc(arena_id_t arena, size_t nmemb,
 }
 
 static inline void* js_calloc(size_t bytes) {
-  return js_arena_calloc(js::MallocArena, bytes, 1);
+  return js_arena_calloc(js::MallocArena, bytes);
 }
 
 static inline void* js_calloc(size_t nmemb, size_t size) {
@@ -462,6 +467,22 @@ static inline void js_free(void* p) {
   }
 
 /*
+ * Given a class which should provide a 'new' method that takes an arena as
+ * its first argument, add JS_DECLARE_NEW_ARENA_METHODS
+ * (see js::MallocProvider for an example).
+ *
+ * Note: Do not add a ; at the end of a use of JS_DECLARE_NEW_ARENA_METHODS,
+ * or the build will break.
+ */
+#define JS_DECLARE_NEW_ARENA_METHODS(NEWNAME, ALLOCATOR, QUALIFIERS)           \
+  template <class T, typename... Args>                                         \
+  QUALIFIERS T* MOZ_HEAP_ALLOCATOR NEWNAME(arena_id_t arena, Args&&... args) { \
+    void* memory = ALLOCATOR(arena, sizeof(T));                                \
+    return MOZ_LIKELY(memory) ? new (memory) T(std::forward<Args>(args)...)    \
+                              : nullptr;                                       \
+  }
+
+/*
  * Given a class which should provide 'make' methods, add
  * JS_DECLARE_MAKE_METHODS (see js::MallocProvider for an example).  This
  * method is functionally the same as JS_DECLARE_NEW_METHODS: it just declares
@@ -480,6 +501,8 @@ static inline void js_free(void* p) {
   }
 
 JS_DECLARE_NEW_METHODS(js_new, js_malloc, static MOZ_ALWAYS_INLINE)
+JS_DECLARE_NEW_ARENA_METHODS(js_arena_new, js_arena_malloc,
+                             static MOZ_ALWAYS_INLINE)
 
 namespace js {
 
@@ -556,14 +579,21 @@ static MOZ_ALWAYS_INLINE T* js_pod_calloc(size_t numElems) {
 }
 
 template <class T>
-static MOZ_ALWAYS_INLINE T* js_pod_realloc(T* prior, size_t oldSize,
-                                           size_t newSize) {
+static MOZ_ALWAYS_INLINE T* js_pod_arena_realloc(arena_id_t arena, T* prior,
+                                                 size_t oldSize,
+                                                 size_t newSize) {
   MOZ_ASSERT(!(oldSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value));
   size_t bytes;
   if (MOZ_UNLIKELY(!js::CalculateAllocSize<T>(newSize, &bytes))) {
     return nullptr;
   }
-  return static_cast<T*>(js_realloc(prior, bytes));
+  return static_cast<T*>(js_arena_realloc(arena, prior, bytes));
+}
+
+template <class T>
+static MOZ_ALWAYS_INLINE T* js_pod_realloc(T* prior, size_t oldSize,
+                                           size_t newSize) {
+  return js_pod_arena_realloc<T>(js::MallocArena, prior, oldSize, newSize);
 }
 
 namespace JS {
