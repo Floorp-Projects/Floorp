@@ -157,8 +157,10 @@ var LoginManagerContent = {
              .getService(Ci.nsIUUIDGenerator).generateUUID().toString();
   },
 
-  _messages: [ "RemoteLogins:loginsFound",
-               "RemoteLogins:loginsAutoCompleted" ],
+  _messages: [
+    "RemoteLogins:loginsFound",
+    "RemoteLogins:loginsAutoCompleted",
+  ],
 
   /**
    * WeakMap of the root element of a FormLike to the FormLike representing its fields.
@@ -928,7 +930,7 @@ var LoginManagerContent = {
       return;
     }
 
-    // If password saving is disabled (globally or for host), bail out now.
+    // If password saving is disabled globally, bail out now.
     if (!LoginHelper.enabled) {
       return;
     }
