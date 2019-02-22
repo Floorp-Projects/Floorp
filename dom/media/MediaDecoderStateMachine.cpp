@@ -1326,38 +1326,15 @@ class MediaDecoderStateMachine::AccurateSeekingState
     NS_ASSERTION(mSeekJob.mTarget->GetTime() < audioTime + sampleDuration,
                  "Data must end after target.");
 
-    CheckedInt64 framesToPrune = TimeUnitToFrames(
-        mSeekJob.mTarget->GetTime() - audioTime, Info().mAudio.mRate);
-    if (!framesToPrune.isValid()) {
+    bool ok = aAudio->SetTrimWindow(
+        {mSeekJob.mTarget->GetTime(), aAudio->GetEndTime()});
+    if (!ok) {
       return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
-    }
-    if (framesToPrune.value() > aAudio->Frames()) {
-      // We've messed up somehow. Don't try to trim frames, the |frames|
-      // variable below will overflow.
-      SLOGE("Can't prune more frames that we have!");
-      return NS_ERROR_FAILURE;
-    }
-    uint32_t frames = aAudio->Frames() - uint32_t(framesToPrune.value());
-    uint32_t channels = aAudio->mChannels;
-    AlignedAudioBuffer audioData(frames * channels);
-    if (!audioData) {
-      return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    Span<const AudioDataValue> audioDataRange = aAudio->Data();
-    memcpy(audioData.get(),
-           audioDataRange.Elements() + (framesToPrune.value() * channels),
-           frames * channels * sizeof(AudioDataValue));
-    auto duration = FramesToTimeUnit(frames, Info().mAudio.mRate);
-    if (!duration.IsValid()) {
-      return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
-    }
-    RefPtr<AudioData> data(new AudioData(
-        aAudio->mOffset, mSeekJob.mTarget->GetTime(), duration,
-        std::move(audioData), channels, aAudio->mRate, aAudio->mChannelMap));
     MOZ_ASSERT(AudioQueue().GetSize() == 0,
                "Should be the 1st sample after seeking");
-    mMaster->PushAudio(data);
+    mMaster->PushAudio(aAudio);
     mDoneAudioSeeking = true;
 
     return NS_OK;

@@ -40,17 +40,73 @@ bool IsDataLoudnessHearable(const AudioDataValue aData) {
   return 20.0f * std::log10(AudioSampleToFloat(aData)) > -100;
 }
 
+Span<AudioDataValue> AudioData::Data() const {
+  return MakeSpan(GetAdjustedData(), mFrames * mChannels);
+}
+
+bool AudioData::AdjustForStartTime(int64_t aStartTime) {
+  const TimeUnit startTimeOffset =
+      media::TimeUnit::FromMicroseconds(aStartTime);
+  mOriginalTime -= startTimeOffset;
+  if (mTrimWindow) {
+    *mTrimWindow -= startTimeOffset;
+  }
+  return MediaData::AdjustForStartTime(aStartTime);
+}
+
+bool AudioData::SetTrimWindow(const media::TimeInterval& aTrim) {
+  if (!mAudioData) {
+    // MoveableData got called. Can no longer work on it.
+    return false;
+  }
+  const size_t originalFrames = mAudioData.Length() / mChannels;
+  const TimeUnit originalDuration = FramesToTimeUnit(originalFrames, mRate);
+  if (aTrim.mStart < mOriginalTime ||
+      aTrim.mEnd > mOriginalTime + originalDuration) {
+    return false;
+  }
+
+  auto trimBefore = TimeUnitToFrames(aTrim.mStart - mOriginalTime, mRate);
+  auto trimAfter = aTrim.mEnd == GetEndTime()
+                       ? originalFrames
+                       : TimeUnitToFrames(aTrim.mEnd - mOriginalTime, mRate);
+  if (!trimBefore.isValid() || !trimAfter.isValid()) {
+    // Overflow.
+    return false;
+  }
+  if (!mTrimWindow && trimBefore == 0 && trimAfter == originalFrames) {
+    // Nothing to change, abort early to prevent rounding errors.
+    return true;
+  }
+
+  mTrimWindow = Some(aTrim);
+  mDataOffset = trimBefore.value() * mChannels;
+  mFrames = (trimAfter - trimBefore).value();
+  mTime = mOriginalTime + FramesToTimeUnit(trimBefore.value(), mRate);
+  mDuration = FramesToTimeUnit(mFrames, mRate);
+
+  return true;
+}
+
+AudioDataValue* AudioData::GetAdjustedData() const {
+  if (!mAudioData) {
+    return nullptr;
+  }
+  return mAudioData.Data() + mDataOffset;
+}
+
 void AudioData::EnsureAudioBuffer() {
-  if (mAudioBuffer) {
+  if (mAudioBuffer || !mAudioData) {
     return;
   }
+  const AudioDataValue* srcData = GetAdjustedData();
   mAudioBuffer =
       SharedBuffer::Create(mFrames * mChannels * sizeof(AudioDataValue));
 
-  AudioDataValue* data = static_cast<AudioDataValue*>(mAudioBuffer->Data());
+  AudioDataValue* destData = static_cast<AudioDataValue*>(mAudioBuffer->Data());
   for (uint32_t i = 0; i < mFrames; ++i) {
     for (uint32_t j = 0; j < mChannels; ++j) {
-      data[j * mFrames + i] = mAudioData[i * mChannels + j];
+      destData[j * mFrames + i] = srcData[i * mChannels + j];
     }
   }
 }
@@ -69,14 +125,26 @@ bool AudioData::IsAudible() const {
     return false;
   }
 
+  const AudioDataValue* data = GetAdjustedData();
+
   for (uint32_t frame = 0; frame < mFrames; ++frame) {
     for (uint32_t channel = 0; channel < mChannels; ++channel) {
-      if (IsDataLoudnessHearable(mAudioData[frame * mChannels + channel])) {
+      if (IsDataLoudnessHearable(data[frame * mChannels + channel])) {
         return true;
       }
     }
   }
   return false;
+}
+
+AlignedAudioBuffer AudioData::MoveableData() {
+  // Trim buffer according to trimming mask.
+  mAudioData.PopFront(mDataOffset);
+  mAudioData.SetLength(mFrames * mChannels);
+  mDataOffset = 0;
+  mFrames = 0;
+  mTrimWindow.reset();
+  return std::move(mAudioData);
 }
 
 static bool ValidatePlane(const VideoData::YCbCrBuffer::Plane& aPlane) {

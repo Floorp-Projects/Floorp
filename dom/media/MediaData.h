@@ -296,7 +296,7 @@ class MediaData {
 
   media::TimeUnit GetEndTime() const { return mTime + mDuration; }
 
-  bool AdjustForStartTime(int64_t aStartTime) {
+  virtual bool AdjustForStartTime(int64_t aStartTime) {
     mTime = mTime - media::TimeUnit::FromMicroseconds(aStartTime);
     return !mTime.IsNegative();
   }
@@ -341,6 +341,7 @@ class AudioData : public MediaData {
         mChannels(aChannels),
         mChannelMap(aChannelMap),
         mRate(aRate),
+        mOriginalTime(aTime),
         mAudioData(std::move(aData)),
         mFrames(mAudioData.Length() / aChannels) {}
 
@@ -348,16 +349,22 @@ class AudioData : public MediaData {
   static const char* sTypeName;
 
   // Access the buffer as a Span.
-  Span<AudioDataValue> Data() const {
-    return MakeSpan(mAudioData.Data(), mAudioData.Length());
-  }
+  Span<AudioDataValue> Data() const;
 
   // Amount of frames for contained data.
   uint32_t Frames() const { return mFrames; }
 
+  // Trim the audio buffer such that its apparent content fits within the aTrim
+  // interval. The actual data isn't removed from the buffer and a followup call
+  // to SetTrimWindow could restore the content. mDuration, mTime and mFrames
+  // will be adjusted accordingly.
+  // Warning: rounding may occurs, in which case the new start time of the audio
+  // sample may still be lesser than aTrim.mStart.
+  bool SetTrimWindow(const media::TimeInterval& aTrim);
+
   // Get the internal audio buffer to be moved. After this call the original
   // AudioData will be emptied and can't be used again.
-  AlignedAudioBuffer MoveableData() { return std::move(mAudioData); }
+  AlignedAudioBuffer MoveableData();
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
@@ -367,6 +374,8 @@ class AudioData : public MediaData {
   // To check whether mAudioData has audible signal, it's used to distinguish
   // the audiable data and silent data.
   bool IsAudible() const;
+
+  bool AdjustForStartTime(int64_t aStartTime) override;
 
   const uint32_t mChannels;
   // The AudioConfig::ChannelLayout map. Channels are ordered as per SMPTE
@@ -384,10 +393,14 @@ class AudioData : public MediaData {
   ~AudioData() {}
 
  private:
+  AudioDataValue* GetAdjustedData() const;
+  media::TimeUnit mOriginalTime;
   // mFrames frames, each with mChannels values
   AlignedAudioBuffer mAudioData;
+  Maybe<media::TimeInterval> mTrimWindow;
   // Amount of frames for contained data.
-  const uint32_t mFrames;
+  uint32_t mFrames;
+  size_t mDataOffset = 0;
 };
 
 namespace layers {
