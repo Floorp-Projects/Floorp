@@ -243,8 +243,8 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
       }
 
       aResults.AppendElement(new AudioData(
-          samplePosition, pts, duration, mFrame->nb_samples, std::move(audio),
-          numChannels, samplingRate, mCodecContext->channel_layout));
+          samplePosition, pts, duration, std::move(audio), numChannels,
+          samplingRate, mCodecContext->channel_layout));
 
       pts = newpts;
 
