@@ -54,10 +54,9 @@ pane-privacy-title = Privacy & Security
 category-privacy =
     .tooltiptext = { pane-privacy-title }
 
-# The word "account" can be translated, do not translate or transliterate "Firefox".
-pane-sync-title = Firefox Account
-category-sync =
-    .tooltiptext = { pane-sync-title }
+pane-sync-title2 = { -sync-brand-short-name }
+category-sync2 =
+    .tooltiptext = { pane-sync-title2 }
 
 help-button-label = { -brand-short-name } Support
 addons-button-label = Extensions & Themes

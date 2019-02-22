@@ -2931,6 +2931,9 @@ bool SizeComputationInput::ComputeMargin(WritingMode aWM,
     // We have to compute the value. Note that this calculation is
     // performed according to the writing mode of the containing block
     // (http://dev.w3.org/csswg/css-writing-modes-3/#orthogonal-flows)
+    if (aPercentBasis == NS_UNCONSTRAINEDSIZE) {
+      aPercentBasis = 0;
+    }
     LogicalMargin m(aWM);
     m.IStart(aWM) = nsLayoutUtils::ComputeCBDependentValue(
         aPercentBasis, styleMargin->mMargin.GetIStart(aWM));
@@ -2976,6 +2979,9 @@ bool SizeComputationInput::ComputePadding(WritingMode aWM,
     // according to the writing mode of the containing block
     // (http://dev.w3.org/csswg/css-writing-modes-3/#orthogonal-flows)
     // clamp negative calc() results to 0
+    if (aPercentBasis == NS_UNCONSTRAINEDSIZE) {
+      aPercentBasis = 0;
+    }
     LogicalMargin p(aWM);
     p.IStart(aWM) =
         std::max(0, nsLayoutUtils::ComputeCBDependentValue(

@@ -11,7 +11,7 @@
       class="subcategory"
       hidden="true"
       data-category="paneSync">
-  <html:h1 data-l10n-id="pane-sync-title"/>
+  <html:h1 data-l10n-id="pane-sync-title2"/>
 </hbox>
 
 <deck id="weavePrefsDeck" data-category="paneSync" hidden="true"
@@ -70,7 +70,7 @@
     <hbox>
       <vbox id="fxaContentWrapper" flex="1">
         <groupbox id="fxaGroup">
-          <label class="search-header" hidden="true"><html:h2 data-l10n-id="pane-sync-title"/></label>
+          <label class="search-header" hidden="true"><html:h2 data-l10n-id="pane-sync-title2"/></label>
 
           <deck id="fxaLoginStatus" flex="1">
 

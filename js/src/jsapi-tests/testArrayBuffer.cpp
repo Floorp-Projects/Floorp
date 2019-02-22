@@ -3,8 +3,9 @@
  */
 
 #include "jsfriendapi.h"
-#include "js/MemoryFunctions.h"
 
+#include "builtin/TestingFunctions.h"
+#include "js/MemoryFunctions.h"
 #include "jsapi-tests/tests.h"
 
 BEGIN_TEST(testArrayBuffer_bug720949_steal) {
@@ -158,73 +159,6 @@ bool hasDetachedBuffer(JS::HandleObject obj) {
 
 END_TEST(testArrayBuffer_bug720949_viewList)
 
-BEGIN_TEST(testArrayBuffer_externalize) {
-  if (!testWithSize(cx, 2)) {  // ArrayBuffer data stored inline in the object.
-    return false;
-  }
-  if (!testWithSize(cx, 2000)) {  // ArrayBuffer data stored out-of-line in a
-                                  // separate heap allocation.
-    return false;
-  }
-
-  return true;
-}
-
-bool testWithSize(JSContext* cx, size_t n) {
-  JS::RootedObject buffer(cx, JS_NewArrayBuffer(cx, n));
-  CHECK(buffer != nullptr);
-
-  JS::RootedObject view(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, -1));
-  CHECK(view != nullptr);
-
-  void* contents = JS_ExternalizeArrayBufferContents(cx, buffer);
-  CHECK(contents != nullptr);
-  uint32_t actualLength;
-  CHECK(hasExpectedLength(cx, view, &actualLength));
-  CHECK(actualLength == n);
-  CHECK(!JS_IsDetachedArrayBufferObject(buffer));
-  CHECK(JS_GetArrayBufferByteLength(buffer) == uint32_t(n));
-
-  uint8_t* uint8Contents = static_cast<uint8_t*>(contents);
-  CHECK(*uint8Contents == 0);
-  uint8_t randomByte(rand() % UINT8_MAX);
-  *uint8Contents = randomByte;
-
-  JS::RootedValue v(cx);
-  CHECK(JS_GetElement(cx, view, 0, &v));
-  CHECK(v.toInt32() == randomByte);
-
-  view = nullptr;
-  GC(cx);
-
-  CHECK(JS_DetachArrayBuffer(cx, buffer));
-  GC(cx);
-  CHECK(*uint8Contents == randomByte);
-  JS_free(cx, contents);
-  GC(cx);
-  buffer = nullptr;
-  GC(cx);
-
-  return true;
-}
-
-static void GC(JSContext* cx) {
-  JS_GC(cx);
-  JS_GC(cx);  // Trigger another to wait for background finalization to end
-}
-
-static bool hasExpectedLength(JSContext* cx, JS::HandleObject obj,
-                              uint32_t* len) {
-  JS::RootedValue v(cx);
-  if (!JS_GetProperty(cx, obj, "byteLength", &v)) {
-    return false;
-  }
-  *len = v.toInt32();
-  return true;
-}
-
-END_TEST(testArrayBuffer_externalize)
-
 BEGIN_TEST(testArrayBuffer_customFreeFunc) {
   ExternalData data("One two three four");
 
@@ -306,3 +240,61 @@ BEGIN_TEST(testArrayBuffer_stealDetachExternal) {
   return true;
 }
 END_TEST(testArrayBuffer_stealDetachExternal)
+
+BEGIN_TEST(testArrayBuffer_serializeExternal) {
+  JS::RootedValue serializeValue(cx);
+
+  {
+    JS::RootedFunction serialize(cx);
+    serialize = JS_NewFunction(cx, js::testingFunc_serialize, 1, 0, "serialize");
+    CHECK(serialize);
+
+    serializeValue.setObject(*JS_GetFunctionObject(serialize));
+  }
+
+  ExternalData data("One two three four");
+  JS::RootedObject externalBuffer(
+      cx, JS_NewExternalArrayBuffer(cx, data.len(), data.contents(),
+                                    &ExternalData::freeCallback, &data));
+  CHECK(externalBuffer);
+  CHECK(!data.wasFreed());
+
+  JS::RootedValue v(cx, JS::ObjectValue(*externalBuffer));
+  JS::RootedObject transferMap(cx, JS_NewArrayObject(cx, JS::HandleValueArray(v)));
+  CHECK(transferMap);
+
+  JS::AutoValueArray<2> args(cx);
+  args[0].setObject(*externalBuffer);
+  args[1].setObject(*transferMap);
+
+  // serialize(externalBuffer, [externalBuffer]) should throw for an unhandled
+  // BufferContents kind.
+  CHECK(!JS::Call(cx, JS::UndefinedHandleValue, serializeValue,
+                  JS::HandleValueArray(args), &v));
+
+  JS::RootedValue exn(cx);
+  CHECK(JS_GetPendingException(cx, &exn));
+  JS_ClearPendingException(cx);
+
+  js::ErrorReport report(cx);
+  CHECK(report.init(cx, exn, js::ErrorReport::NoSideEffects));
+
+  CHECK_EQUAL(report.report()->errorNumber,
+              static_cast<unsigned int>(JSMSG_SC_NOT_TRANSFERABLE));
+
+  // Data should have been left alone.
+  CHECK(!data.wasFreed());
+
+  v.setNull();
+  transferMap = nullptr;
+  args[0].setNull();
+  args[1].setNull();
+  externalBuffer = nullptr;
+
+  JS_GC(cx);
+  JS_GC(cx);
+  CHECK(data.wasFreed());
+
+  return true;
+}
+END_TEST(testArrayBuffer_serializeExternal)

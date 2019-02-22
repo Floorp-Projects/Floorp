@@ -20,13 +20,10 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-redux-head.js",
   this);
 
-// Ensure the Changes panel is enabled before running the tests.
-Services.prefs.setBoolPref("devtools.inspector.changes.enabled", true);
 // Ensure the three-pane mode is enabled before running the tests.
 Services.prefs.setBoolPref("devtools.inspector.three-pane-enabled", true);
 
 registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("devtools.inspector.changes.enabled");
   Services.prefs.clearUserPref("devtools.inspector.three-pane-enabled");
 });
 
