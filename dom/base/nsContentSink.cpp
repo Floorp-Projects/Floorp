@@ -29,6 +29,7 @@
 #include "nsViewManager.h"
 #include "nsAtom.h"
 #include "nsGkAtoms.h"
+#include "nsGlobalWindowInner.h"
 #include "nsNetCID.h"
 #include "nsIOfflineCacheUpdate.h"
 #include "nsIApplicationCache.h"
@@ -1553,10 +1554,20 @@ void nsContentSink::NotifyDocElementCreated(Document* aDoc) {
 
   nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();
-  if (observerService) {
-    observerService->NotifyObservers(
-        ToSupports(aDoc), "document-element-inserted", EmptyString().get());
+  MOZ_ASSERT(observerService);
+
+  auto* win = nsGlobalWindowInner::Cast(aDoc->GetInnerWindow());
+  bool fireInitialInsertion = !win || !win->DidFireDocElemInserted();
+  if (win) {
+    win->SetDidFireDocElemInserted();
   }
+  if (fireInitialInsertion) {
+    observerService->NotifyObservers(ToSupports(aDoc),
+                                     "initial-document-element-inserted",
+                                     EmptyString().get());
+  }
+  observerService->NotifyObservers(
+      ToSupports(aDoc), "document-element-inserted", EmptyString().get());
 
   nsContentUtils::DispatchChromeEvent(
       aDoc, ToSupports(aDoc), NS_LITERAL_STRING("DOMDocElementInserted"),
