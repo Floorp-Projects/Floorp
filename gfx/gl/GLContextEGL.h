@@ -67,7 +67,7 @@ class GLContextEGL : public GLContext {
 
   virtual void ReleaseSurface() override;
 
-  virtual bool SetupLookupFunction() override;
+  Maybe<SymbolLoader> GetSymbolLoader() const override;
 
   virtual bool SwapBuffers() override;
 
