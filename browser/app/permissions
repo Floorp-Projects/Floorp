@@ -10,8 +10,6 @@
 origin	uitour	1	https://www.mozilla.org
 origin	uitour	1	https://screenshots.firefox.com
 origin	uitour	1	https://support.mozilla.org
-origin	uitour	1	https://addons.mozilla.org
-origin	uitour	1	https://discovery.addons.mozilla.org
 origin	uitour	1	about:home
 origin	uitour	1	about:newtab
 
