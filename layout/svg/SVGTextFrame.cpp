@@ -984,7 +984,7 @@ void TextRenderedRun::GetClipEdges(nscoord& aVisIStartEdge,
   // white space, as the nsTextFrame when painting does not include them when
   // interpreting clip edges.
   nsTextFrame::TrimmedOffsets trimmedOffsets =
-      mFrame->GetTrimmedOffsets(mFrame->GetContent()->GetText(), true);
+      mFrame->GetTrimmedOffsets(mFrame->GetContent()->GetText());
   TrimOffsets(frameOffset, frameLength, trimmedOffsets);
 
   // Convert the trimmed whole-nsTextFrame offset/length into skipped
@@ -1889,7 +1889,7 @@ TextRenderedRun TextRenderedRunIterator::Next() {
     uint32_t untrimmedOffset = offset;
     uint32_t untrimmedLength = length;
     nsTextFrame::TrimmedOffsets trimmedOffsets =
-        frame->GetTrimmedOffsets(frame->GetContent()->GetText(), true);
+        frame->GetTrimmedOffsets(frame->GetContent()->GetText());
     TrimOffsets(offset, length, trimmedOffsets);
     charIndex += offset - untrimmedOffset;
 
@@ -2371,7 +2371,8 @@ bool CharIterator::IsOriginalCharTrimmed() const {
     nsIContent* content = mFrameForTrimCheck->GetContent();
     nsTextFrame::TrimmedOffsets trim = mFrameForTrimCheck->GetTrimmedOffsets(
         content->GetText(),
-        /* aTrimAfter */ true, mPostReflow);
+            (mPostReflow ? nsTextFrame::TrimmedOffsetFlags::kDefaultTrimFlags :
+                           nsTextFrame::TrimmedOffsetFlags::kNotPostReflow));
     TrimOffsets(offset, length, trim);
     mTrimmedOffset = offset;
     mTrimmedLength = length;
@@ -3824,8 +3825,7 @@ nsresult SVGTextFrame::GetSubStringLength(nsIContent* aContent,
     uint32_t trimmedLength = untrimmedLength;
     nsTextFrame::TrimmedOffsets trimmedOffsets =
         frame->GetTrimmedOffsets(frame->GetContent()->GetText(),
-                                 /* aTrimAfter */ true,
-                                 /* aPostReflow */ false);
+            nsTextFrame::TrimmedOffsetFlags::kNotPostReflow);
     TrimOffsets(trimmedOffset, trimmedLength, trimmedOffsets);
 
     textElementCharIndex += trimmedOffset - untrimmedOffset;
@@ -4433,7 +4433,7 @@ void SVGTextFrame::DetermineCharPositions(nsTArray<nsPoint>& aPositions) {
 
     // Any white space characters trimmed at the start of the line of text.
     nsTextFrame::TrimmedOffsets trimmedOffsets =
-        frame->GetTrimmedOffsets(frame->GetContent()->GetText(), true);
+        frame->GetTrimmedOffsets(frame->GetContent()->GetText());
     while (it.GetOriginalOffset() < trimmedOffsets.mStart) {
       aPositions.AppendElement(position);
       it.AdvanceOriginal(1);
