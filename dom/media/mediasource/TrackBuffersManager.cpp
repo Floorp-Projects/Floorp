@@ -636,7 +636,7 @@ bool TrackBuffersManager::CodedFrameRemoval(TimeInterval aInterval) {
     // in the previous step and the next random access point after those removed
     // frames.
     TimeIntervals removedInterval{TimeInterval(start, removeEndTimestamp)};
-    RemoveFrames(removedInterval, *track, 0);
+    RemoveFrames(removedInterval, *track, 0, RemovalMode::kRemoveFrame);
 
     // 5. If this object is in activeSourceBuffers, the current playback
     // position is greater than or equal to start and less than the remove end
@@ -1613,21 +1613,6 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
   // added to.
   auto& trackBuffer = aTrackData;
 
-  // Some videos do not exactly start at 0, but instead a small negative value.
-  // To avoid evicting the starting frame of those videos, we allow a leeway
-  // of +- mLongestFrameDuration on the append window start.
-  // We only apply the leeway with the default append window start of 0 and
-  // append window end of infinity.
-  // Otherwise do as per spec.
-  TimeInterval targetWindow =
-      (mAppendWindow.mStart != TimeUnit::FromSeconds(0) ||
-       mAppendWindow.mEnd != TimeUnit::FromInfinity())
-          ? mAppendWindow
-          : TimeInterval(mAppendWindow.mStart, mAppendWindow.mEnd,
-                         trackBuffer.mLastFrameDuration.isSome()
-                             ? trackBuffer.mLongestFrameDuration
-                             : aSamples[0]->mDuration);
-
   TimeIntervals samplesRange;
   uint32_t sizeNewSamples = 0;
   TrackBuffer samples;  // array that will contain the frames to be added
@@ -1778,20 +1763,46 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
     // 9. If frame end timestamp is greater than appendWindowEnd, then set the
     // need random access point flag to true, drop the coded frame, and jump to
     // the top of the loop to start processing the next coded frame.
-    if (!targetWindow.ContainsWithStrictEnd(sampleInterval)) {
-      if (samples.Length()) {
-        // We are creating a discontinuity in the samples.
-        // Insert the samples processed so far.
-        InsertFrames(samples, samplesRange, trackBuffer);
-        samples.Clear();
-        samplesRange = TimeIntervals();
-        trackBuffer.mSizeBuffer += sizeNewSamples;
-        sizeNewSamples = 0;
-        UpdateHighestTimestamp(trackBuffer, highestSampleTime);
+    if (!mAppendWindow.ContainsStrict(sampleInterval)) {
+      if (mAppendWindow.IntersectsStrict(sampleInterval)) {
+        // 8. Note: Some implementations MAY choose to collect some of these
+        //    coded frames with presentation timestamp less than
+        //    appendWindowStart and use them to generate a splice at the first
+        //    coded frame that has a presentation timestamp greater than or
+        //    equal to appendWindowStart even if that frame is not a random
+        //    access point. Supporting this requires multiple decoders or faster
+        //    than real-time decoding so for now this behavior will not be a
+        //    normative requirement.
+        // 9. Note: Some implementations MAY choose to collect coded frames with
+        //    presentation timestamp less than appendWindowEnd and frame end
+        //    timestamp greater than appendWindowEnd and use them to generate a
+        //    splice across the portion of the collected coded frames within the
+        //    append window at time of collection, and the beginning portion of
+        //    later processed frames which only partially overlap the end of the
+        //    collected coded frames. Supporting this requires multiple decoders
+        //    or faster than real-time decoding so for now this behavior will
+        //    not be a normative requirement. In conjunction with collecting
+        //    coded frames that span appendWindowStart, implementations MAY thus
+        //    support gapless audio splicing.
+        TimeInterval intersection = mAppendWindow.Intersection(sampleInterval);
+        sample->mOriginalPresentationWindow = Some(sampleInterval);
+        sampleInterval = intersection;
+        sample->mDuration = intersection.Length();
+      } else {
+        if (samples.Length()) {
+          // We are creating a discontinuity in the samples.
+          // Insert the samples processed so far.
+          InsertFrames(samples, samplesRange, trackBuffer);
+          samples.Clear();
+          samplesRange = TimeIntervals();
+          trackBuffer.mSizeBuffer += sizeNewSamples;
+          sizeNewSamples = 0;
+          UpdateHighestTimestamp(trackBuffer, highestSampleTime);
+        }
+        trackBuffer.mNeedRandomAccessPoint = true;
+        needDiscontinuityCheck = true;
+        continue;
       }
-      trackBuffer.mNeedRandomAccessPoint = true;
-      needDiscontinuityCheck = true;
-      continue;
     }
 
     samplesRange += sampleInterval;
@@ -1896,7 +1907,6 @@ void TrackBuffersManager::InsertFrames(TrackBuffer& aSamples,
              aIntervals.GetStart().ToMicroseconds(),
              aIntervals.GetEnd().ToMicroseconds());
 
-  // TODO: Handle splicing of audio (and text) frames.
   // 11. Let spliced audio frame be an unset variable for holding audio splice
   // information
   // 12. Let spliced timed text frame be an unset variable for holding timed
@@ -1945,7 +1955,8 @@ void TrackBuffersManager::InsertFrames(TrackBuffer& aSamples,
       trackBuffer.mNextInsertionIndex.reset();
     }
     uint32_t index = RemoveFrames(aIntervals, trackBuffer,
-                                  trackBuffer.mNextInsertionIndex.refOr(0));
+                                  trackBuffer.mNextInsertionIndex.refOr(0),
+                                  RemovalMode::kTruncateFrame);
     if (index) {
       trackBuffer.mNextInsertionIndex = Some(index);
     }
@@ -2004,7 +2015,8 @@ void TrackBuffersManager::UpdateHighestTimestamp(
 
 uint32_t TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
                                            TrackData& aTrackData,
-                                           uint32_t aStartIndex) {
+                                           uint32_t aStartIndex,
+                                           RemovalMode aMode) {
   TrackBuffer& data = aTrackData.GetTrackBuffer();
   Maybe<uint32_t> firstRemovedIndex;
   uint32_t lastRemovedIndex = 0;
@@ -2025,14 +2037,35 @@ uint32_t TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
   //   frame end timestamp"
   TimeUnit intervalsEnd = aIntervals.GetEnd();
   for (uint32_t i = aStartIndex; i < data.Length(); i++) {
-    const RefPtr<MediaRawData> sample = data[i];
-    if (aIntervals.ContainsWithStrictEnd(sample->mTime)) {
+    RefPtr<MediaRawData>& sample = data[i];
+    if (aIntervals.ContainsStrict(sample->mTime)) {
+      // The start of this existing frame will be overwritten, we drop that
+      // entire frame.
       if (firstRemovedIndex.isNothing()) {
         firstRemovedIndex = Some(i);
       }
       lastRemovedIndex = i;
       continue;
     }
+    TimeInterval sampleInterval(sample->mTime, sample->GetEndTime());
+    if (aMode == RemovalMode::kTruncateFrame &&
+        aIntervals.IntersectsStrict(sampleInterval)) {
+      // The sample to be overwritten is only partially covered.
+      TimeIntervals intersection =
+          Intersection(aIntervals, TimeIntervals(sampleInterval));
+      bool found = false;
+      TimeUnit startTime = intersection.GetStart(&found);
+      MOZ_DIAGNOSTIC_ASSERT(found, "Must intersect with added coded frames");
+      Unused << found;
+      // Signal that this frame should be truncated when decoded.
+      if (!sample->mOriginalPresentationWindow) {
+        sample->mOriginalPresentationWindow = Some(sampleInterval);
+      }
+      MOZ_ASSERT(startTime > sample->mTime);
+      sample->mDuration = startTime - sample->mTime;
+      continue;
+    }
+
     if (sample->mTime >= intervalsEnd) {
       // We can break the loop now. All frames up to the next keyframe will be
       // removed during the next step.
