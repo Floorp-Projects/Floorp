@@ -40,6 +40,18 @@ bool IsDataLoudnessHearable(const AudioDataValue aData) {
   return 20.0f * std::log10(AudioSampleToFloat(aData)) > -100;
 }
 
+AudioData::AudioData(int64_t aOffset, const media::TimeUnit& aTime,
+                     AlignedAudioBuffer&& aData, uint32_t aChannels,
+                     uint32_t aRate, uint32_t aChannelMap)
+    : MediaData(sType, aOffset, aTime,
+                FramesToTimeUnit(aData.Length() / aChannels, aRate)),
+      mChannels(aChannels),
+      mChannelMap(aChannelMap),
+      mRate(aRate),
+      mOriginalTime(aTime),
+      mAudioData(std::move(aData)),
+      mFrames(mAudioData.Length() / aChannels) {}
+
 Span<AudioDataValue> AudioData::Data() const {
   return MakeSpan(GetAdjustedData(), mFrames * mChannels);
 }
