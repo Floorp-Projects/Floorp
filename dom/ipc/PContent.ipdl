@@ -230,10 +230,25 @@ struct BlobURLRegistrationData
   bool revoked;
 };
 
+struct JSWindowActorEventDecl
+{
+  nsString name;
+  bool capture;
+  bool systemGroup;
+  bool allowUntrusted;
+
+  // FIXME(gross): Optional<bool> is a bit gross to encode here, so instead it's
+  // encoded as two booleans.
+  bool hasPassive;
+  bool passive;
+};
+
 struct JSWindowActorInfo
 {
   nsString name;
   nsCString url;
+
+  JSWindowActorEventDecl[] events;
 };
 
 struct GMPAPITags
