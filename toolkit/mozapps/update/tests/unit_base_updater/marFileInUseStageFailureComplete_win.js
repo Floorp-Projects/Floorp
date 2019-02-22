@@ -4,25 +4,18 @@
 
 /* File in use complete MAR file staged patch apply failure test */
 
-const STATE_AFTER_STAGE = IS_SERVICE_TEST ? STATE_APPLIED_SVC : STATE_APPLIED;
-const STATE_AFTER_RUNUPDATE = IS_SERVICE_TEST ? STATE_PENDING_SVC : STATE_PENDING;
-
 async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
+  const STATE_AFTER_STAGE = IS_SERVICE_TEST ? STATE_APPLIED_SVC : STATE_APPLIED;
+  const STATE_AFTER_RUNUPDATE = IS_SERVICE_TEST ? STATE_PENDING_SVC : STATE_PENDING;
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
   await setupUpdaterTest(FILE_COMPLETE_MAR, false);
   await runHelperFileInUse(gTestFiles[13].relPathDir + gTestFiles[13].fileName,
                            false);
-  stageUpdate(true);
-}
-
-/**
- * Called after the call to stageUpdate finishes.
- */
-async function stageUpdateFinished() {
+  await stageUpdate(STATE_AFTER_STAGE, true);
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateSuccess(getStageDirFile, true);
   checkUpdateLogContents(LOG_COMPLETE_SUCCESS, true);

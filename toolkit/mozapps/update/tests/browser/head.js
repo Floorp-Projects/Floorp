@@ -361,26 +361,6 @@ function processStep(step) {
 }
 
 /**
- * Waits for the specified topic and (optionally) status.
- * @param  topic
- *         String representing the topic to wait for.
- * @param  status
- *         Optional String representing the status on said topic to wait for.
- * @return A promise which will resolve the first time an event occurs on the
- *         specified topic, and (optionally) with the specified status.
- */
-function waitForEvent(topic, status = null) {
-  return new Promise(resolve => Services.obs.addObserver({
-    observe(subject, innerTopic, innerStatus) {
-      if (!status || status == innerStatus) {
-        Services.obs.removeObserver(this, topic);
-        resolve(innerStatus);
-      }
-    },
-  }, topic));
-}
-
-/**
  * Gets the specified button for the notification.
  *
  * @param  win
