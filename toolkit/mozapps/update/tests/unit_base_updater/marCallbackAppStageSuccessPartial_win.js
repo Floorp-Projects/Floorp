@@ -8,7 +8,7 @@ async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
-  const STATE_AFTER_STAGE = IS_SERVICE_TEST ? STATE_APPLIED_SVC : STATE_APPLIED;
+  const STATE_AFTER_STAGE = gIsServiceTest ? STATE_APPLIED_SVC : STATE_APPLIED;
   gTestFiles = gTestFilesPartialSuccess;
   gTestDirs = gTestDirsPartialSuccess;
   gCallbackBinFile = "exe0.exe";

@@ -3,8 +3,7 @@
  */
 
 /**
- * Test applying an update by staging an update and launching an application to
- * apply it.
+ * Test applying an update by launching an application to apply it.
  */
 
 async function run_test() {

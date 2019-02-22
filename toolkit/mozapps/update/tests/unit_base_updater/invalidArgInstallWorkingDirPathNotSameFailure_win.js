@@ -15,8 +15,8 @@ async function run_test() {
   const STATE_AFTER_RUNUPDATE_SERVICE = AppConstants.EARLY_BETA_OR_EARLIER
       ? STATE_PENDING_SVC
       : STATE_FAILED_SERVICE_INVALID_APPLYTO_DIR_ERROR;
-  const STATE_AFTER_RUNUPDATE = IS_SERVICE_TEST ? STATE_AFTER_RUNUPDATE_SERVICE
-                                                : STATE_AFTER_RUNUPDATE_BASE;
+  const STATE_AFTER_RUNUPDATE = gIsServiceTest ? STATE_AFTER_RUNUPDATE_SERVICE
+                                               : STATE_AFTER_RUNUPDATE_BASE;
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();
@@ -27,7 +27,7 @@ async function run_test() {
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   await waitForUpdateXMLFiles();
-  if (IS_SERVICE_TEST) {
+  if (gIsServiceTest) {
     if (AppConstants.EARLY_BETA_OR_EARLIER) {
       checkUpdateManager(STATE_NONE, false, STATE_PENDING_SVC, 0, 1);
     } else {

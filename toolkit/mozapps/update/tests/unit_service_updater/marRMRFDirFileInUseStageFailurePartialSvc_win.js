@@ -9,8 +9,8 @@ async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
-  const STATE_AFTER_STAGE = IS_SERVICE_TEST ? STATE_APPLIED_SVC : STATE_APPLIED;
-  const STATE_AFTER_RUNUPDATE = IS_SERVICE_TEST ? STATE_PENDING_SVC : STATE_PENDING;
+  const STATE_AFTER_STAGE = gIsServiceTest ? STATE_APPLIED_SVC : STATE_APPLIED;
+  const STATE_AFTER_RUNUPDATE = gIsServiceTest ? STATE_PENDING_SVC : STATE_PENDING;
   gTestFiles = gTestFilesPartialSuccess;
   gTestDirs = gTestDirsPartialSuccess;
   await setupUpdaterTest(FILE_PARTIAL_MAR, false);
