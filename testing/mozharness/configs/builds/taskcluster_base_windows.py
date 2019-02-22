@@ -2,7 +2,6 @@ import os
 
 config = {
     'default_actions': [
-        'get-secrets',
         'build',
         'check-test',
     ],
@@ -26,12 +25,4 @@ config = {
     'upload_env': {
         'UPLOAD_PATH': os.path.join(os.getcwd(), 'public', 'build'),
     },
-    'secret_files': [
-        {'filename': 'z:/build/gapi.data',
-         'secret_name': 'project/releng/gecko/build/level-%(scm-level)s/gapi.data',
-         'min_scm_level': 1},
-        {'filename': 'z:/build/mozilla-desktop-geoloc-api.key',
-         'secret_name': 'project/releng/gecko/build/level-%(scm-level)s/mozilla-desktop-geoloc-api.key',
-         'min_scm_level': 2, 'default': 'try-build-has-no-secrets'},
-    ],
 }

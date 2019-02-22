@@ -20,7 +20,7 @@ from voluptuous.validators import Match
 from taskgraph.transforms.job import run_job_using
 from taskgraph.transforms.job.common import (
     docker_worker_add_workspace_cache,
-    setup_secrets,
+    docker_worker_setup_secrets,
     docker_worker_add_artifacts,
     docker_worker_add_tooltool,
     generic_worker_add_artifacts,
@@ -218,7 +218,7 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
     # Retry if mozharness returns TBPL_RETRY
     worker['retry-exit-status'] = [4]
 
-    setup_secrets(config, job, taskdesc)
+    docker_worker_setup_secrets(config, job, taskdesc)
 
     command = [
         '{workdir}/bin/run-task'.format(**run),
@@ -247,7 +247,8 @@ def mozharness_on_generic_worker(config, job, taskdesc):
 
     # fail if invalid run options are included
     invalid = []
-    for prop in ['tooltool-downloads', 'taskcluster-proxy', 'need-xvfb']:
+    for prop in ['tooltool-downloads',
+                 'secrets', 'taskcluster-proxy', 'need-xvfb']:
         if prop in run and run[prop]:
             invalid.append(prop)
     if not run.get('keep-artifacts', True):
@@ -257,8 +258,6 @@ def mozharness_on_generic_worker(config, job, taskdesc):
                         ', '.join(invalid))
 
     worker = taskdesc['worker']
-
-    setup_secrets(config, job, taskdesc)
 
     taskdesc['worker'].setdefault('artifacts', []).append({
         'name': 'public/logs',
