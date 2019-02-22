@@ -49,7 +49,7 @@ class RaptorRunner(MozbuildObject):
         self.config_file_path = os.path.join(self._topobjdir, 'testing',
                                              'raptor-in_tree_conf.json')
         self.binary_path = self.get_binary_path() if kwargs['app'] not in \
-            ['geckoview', 'fennec'] else None
+            ['geckoview', 'fennec', 'refbrow', 'fenix'] else None
         self.virtualenv_script = os.path.join(self.topsrcdir, 'third_party', 'python',
                                               'virtualenv', 'virtualenv.py')
         self.virtualenv_path = os.path.join(self._topobjdir, 'testing',
@@ -176,7 +176,9 @@ class MachRaptor(MachCommandBase):
 
         build_obj = MozbuildObject.from_environment(cwd=HERE)
 
-        if conditions.is_android(build_obj) or kwargs['app'] in ['geckoview', 'fennec']:
+        firefox_android_browsers = ["fennec", "geckoview", "refbrow", "fenix"]
+
+        if conditions.is_android(build_obj) or kwargs['app'] in firefox_android_browsers:
             from mozrunner.devices.android_device import verify_android_device
             from mozdevice import ADBAndroid, ADBHost
             if not verify_android_device(build_obj, install=True, app=kwargs['binary']):
@@ -189,7 +191,7 @@ class MachRaptor(MachCommandBase):
         raptor = self._spawn(RaptorRunner)
 
         try:
-            if kwargs['app'] == 'geckoview' and kwargs['power_test']:
+            if kwargs['app'] in firefox_android_browsers and kwargs['power_test']:
                 device = ADBAndroid(verbose=True)
                 adbhost = ADBHost(verbose=True)
                 device_serial = "%s:5555" % device.get_ip_address()
@@ -207,7 +209,7 @@ class MachRaptor(MachCommandBase):
             return 1
         finally:
             try:
-                if kwargs['app'] == 'geckoview' and kwargs['power_test']:
+                if kwargs['app'] in firefox_android_browsers and kwargs['power_test']:
                     raw_input("Connect device via usb and press ENTER...")
                     device = ADBAndroid(device=device_serial, verbose=True)
                     device.command_output(["usb"])

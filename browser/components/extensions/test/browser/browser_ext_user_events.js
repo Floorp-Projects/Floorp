@@ -36,9 +36,9 @@ add_task(async function testSources() {
           let result = await browser.permissions.request({
             permissions: [perm],
           });
-          browser.test.sendMessage("request", {success: true, result});
+          browser.test.sendMessage("request", {success: true, result, perm});
         } catch (err) {
-          browser.test.sendMessage("request", {success: false, errmsg: err.message});
+          browser.test.sendMessage("request", {success: false, errmsg: err.message, perm});
         }
       }
 
@@ -96,13 +96,14 @@ add_task(async function testSources() {
 
             browser.test.log("Calling permission.request from options page.");
 
+            let perm = "history";
             try {
               let result = await browser.permissions.request({
-                permissions: ["webRequest"],
+                permissions: [perm],
               });
-              browser.test.sendMessage("request", {success: true, result});
+              browser.test.sendMessage("request", {success: true, result, perm});
             } catch (err) {
-              browser.test.sendMessage("request", {success: false, errmsg: err.message});
+              browser.test.sendMessage("request", {success: false, errmsg: err.message, perm});
             }
           };
 
@@ -124,7 +125,7 @@ add_task(async function testSources() {
       browser_action: {default_title: "test"},
       page_action: {default_title: "test"},
       permissions: ["contextMenus"],
-      optional_permissions: ["bookmarks", "tabs", "webNavigation", "webRequest",
+      optional_permissions: ["bookmarks", "tabs", "webNavigation", "history",
                              "cookies", "downloads"],
       options_ui: {page: "options.html"},
       content_security_policy: "script-src 'self' https://example.com; object-src 'none';",
@@ -140,10 +141,25 @@ add_task(async function testSources() {
     useAddonManager: "temporary",
   });
 
-  async function check(what) {
+  async function testPermissionRequest({requestPermission, expectPrompt, perm}, what) {
+    info(`check request permission from '${what}'`);
+
+    let promptPromise = null;
+    if (expectPrompt) {
+      promptPromise = promisePopupNotificationShown("addon-webext-permissions")
+        .then(panel => {
+          panel.button.click();
+        });
+    }
+
+    await requestPermission();
+    await promptPromise;
+
     let result = await extension.awaitMessage("request");
     ok(result.success, `request() did not throw when called from ${what}`);
     is(result.result, true, `request() succeeded when called from ${what}`);
+    is(result.perm, perm, `requested permission ${what}`);
+    await promptPromise;
   }
 
   // Remove Sidebar button to prevent pushing extension button to overflow menu
@@ -152,52 +168,61 @@ add_task(async function testSources() {
   await extension.startup();
   await extension.awaitMessage("actions-ready");
 
-  promisePopupNotificationShown("addon-webext-permissions").then(panel => {
-    panel.button.click();
-  });
+  await testPermissionRequest({
+    requestPermission: () => clickPageAction(extension),
+    expectPrompt: true,
+    perm: "bookmarks",
+  }, "page action click");
 
-  clickPageAction(extension);
-  await check("page action click");
-
-  promisePopupNotificationShown("addon-webext-permissions").then(panel => {
-    panel.button.click();
-  });
-
-  clickBrowserAction(extension);
-  await check("browser action click");
-
-  promisePopupNotificationShown("addon-webext-permissions").then(panel => {
-    panel.button.click();
-  });
+  await testPermissionRequest({
+    requestPermission: () => clickBrowserAction(extension),
+    expectPrompt: true,
+    perm: "tabs",
+  }, "browser action click");
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   gBrowser.selectedTab = tab;
 
-  let menu = await openContextMenu("body");
-  let items = menu.getElementsByAttribute("label", "test user events in onclick");
-  is(items.length, 1, "Found context menu item");
-  EventUtils.synthesizeMouseAtCenter(items[0], {});
-  await check("context menu in onclick");
+  await testPermissionRequest({
+    requestPermission: async () => {
+      let menu = await openContextMenu("body");
+      let items = menu.getElementsByAttribute("label", "test user events in onclick");
+      is(items.length, 1, "Found context menu item");
+      EventUtils.synthesizeMouseAtCenter(items[0], {});
+    },
+    expectPrompt: false, // cookies permission has no prompt.
+    perm: "cookies",
+  }, "context menu in onclick");
 
   extension.sendMessage("contextMenus.update");
   await extension.awaitMessage("contextMenus.update-done");
-  menu = await openContextMenu("body");
-  items = menu.getElementsByAttribute("label", "test user events in onClicked");
-  is(items.length, 1, "Found context menu item again");
-  EventUtils.synthesizeMouseAtCenter(items[0], {});
-  await check("context menu in onClicked");
 
-  EventUtils.synthesizeKey("j", {altKey: true, shiftKey: true});
-  promisePopupNotificationShown("addon-webext-permissions").then(panel => {
-    panel.button.click();
-  });
-  await check("commands shortcut");
+  await testPermissionRequest({
+    requestPermission: async () => {
+      let menu = await openContextMenu("body");
+      let items = menu.getElementsByAttribute("label", "test user events in onClicked");
+      is(items.length, 1, "Found context menu item again");
+      EventUtils.synthesizeMouseAtCenter(items[0], {});
+    },
+    expectPrompt: true,
+    perm: "webNavigation",
+  }, "context menu in onClicked");
 
-  promisePopupNotificationShown("addon-webext-permissions").then(panel => {
-    panel.button.click();
-  });
-  extension.sendMessage("openOptionsPage");
-  await check("options page link click");
+  await testPermissionRequest({
+    requestPermission: () => {
+      EventUtils.synthesizeKey("j", {altKey: true, shiftKey: true});
+    },
+    expectPrompt: true,
+    perm: "downloads",
+  }, "commands shortcut");
+
+  await testPermissionRequest({
+    requestPermission: () => {
+      extension.sendMessage("openOptionsPage");
+    },
+    expectPrompt: true,
+    perm: "history",
+  }, "options page link click");
 
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await BrowserTestUtils.removeTab(tab);

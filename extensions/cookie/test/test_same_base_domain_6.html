@@ -13,7 +13,7 @@
       // By default, proxies don't apply to 127.0.0.1.
       // We need them to for this test (at least on android), though:
       SpecialPowers.pushPrefEnv({set: [
-        ["network.proxy.no_proxies_on", ""]
+        ["network.proxy.allow_hijacking_localhost", true]
       ]}).then(function() {
         setupTest('http://127.0.0.1:8888/tests/extensions/cookie/test/file_loopback_inner.html', 5, 2);
       });

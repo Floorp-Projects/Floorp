@@ -78,17 +78,37 @@ exports.ON_NEW_DEVICE_ID = "fxaccounts:new_device_id";
 
 exports.COMMAND_SENDTAB = "https://identity.mozilla.com/cmd/open-uri";
 
+// OAuth
+exports.FX_OAUTH_CLIENT_ID = "5882386c6d801776";
+exports.SCOPE_PROFILE = "profile";
+exports.SCOPE_OLD_SYNC = "https://identity.mozilla.com/apps/oldsync";
+
 // UI Requests.
 exports.UI_REQUEST_SIGN_IN_FLOW = "signInFlow";
 exports.UI_REQUEST_REFRESH_AUTH = "refreshAuthentication";
 
-// The OAuth client ID for Firefox Desktop
-exports.FX_OAUTH_CLIENT_ID = "5882386c6d801776";
-
 // Firefox Accounts WebChannel ID
 exports.WEBCHANNEL_ID = "account_updates";
 
+// WebChannel commands
+exports.COMMAND_PAIR_HEARTBEAT = "fxaccounts:pair_heartbeat";
+exports.COMMAND_PAIR_SUPP_METADATA = "fxaccounts:pair_supplicant_metadata";
+exports.COMMAND_PAIR_AUTHORIZE = "fxaccounts:pair_authorize";
+exports.COMMAND_PAIR_DECLINE = "fxaccounts:pair_decline";
+exports.COMMAND_PAIR_COMPLETE = "fxaccounts:pair_complete";
+
+exports.COMMAND_PROFILE_CHANGE = "profile:change";
+exports.COMMAND_CAN_LINK_ACCOUNT = "fxaccounts:can_link_account";
+exports.COMMAND_LOGIN = "fxaccounts:login";
+exports.COMMAND_LOGOUT = "fxaccounts:logout";
+exports.COMMAND_DELETE = "fxaccounts:delete";
+exports.COMMAND_SYNC_PREFERENCES = "fxaccounts:sync_preferences";
+exports.COMMAND_CHANGE_PASSWORD = "fxaccounts:change_password";
+exports.COMMAND_FXA_STATUS = "fxaccounts:fxa_status";
+exports.COMMAND_PAIR_PREFERENCES = "fxaccounts:pair_preferences";
+
 exports.PREF_LAST_FXA_USER = "identity.fxaccounts.lastSignedInUserHash";
+exports.PREF_REMOTE_PAIRING_URI = "identity.fxaccounts.remote.pairing.uri";
 
 // Server errno.
 // From https://github.com/mozilla/fxa-auth-server/blob/master/docs/api.md#response-format

@@ -5832,6 +5832,28 @@ void ContentParent::OnBrowsingContextGroupUnsubscribe(
   mGroups.RemoveEntry(aGroup);
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvCommitBrowsingContextTransaction(
+    BrowsingContext* aContext, BrowsingContext::Transaction&& aTransaction) {
+  if (!aContext) {
+    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Warning,
+            ("ParentIPC: Trying to run transaction on missing context."));
+    return IPC_OK();
+  }
+
+  for (auto iter = aContext->Group()->ContentParentsIter(); !iter.Done();
+       iter.Next()) {
+    auto* entry = iter.Get();
+    ContentParent* parent = entry->GetKey();
+    if (parent != this) {
+      Unused << parent->SendCommitBrowsingContextTransaction(aContext,
+                                                             aTransaction);
+    }
+  }
+
+  aTransaction.Apply(aContext);
+
+  return IPC_OK();
+}
 }  // namespace dom
 }  // namespace mozilla
 

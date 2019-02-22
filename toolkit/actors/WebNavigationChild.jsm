@@ -104,12 +104,11 @@ class WebNavigationChild extends ActorChild {
     if (baseURI)
       baseURI = Services.io.newURI(baseURI);
     this._assert(triggeringPrincipal, "We need a triggering principal to continue loading", new Error().lineNumber);
-    if (triggeringPrincipal)
-      triggeringPrincipal = E10SUtils.deserializePrincipal(triggeringPrincipal);
-    this._assert(triggeringPrincipal, "Unable to deserialize passed triggering principal", new Error().lineNumber);
-    if (!triggeringPrincipal) {
-      triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal({});
-    }
+
+    triggeringPrincipal = E10SUtils.deserializePrincipal(triggeringPrincipal, () => {
+      this._assert(false, "Unable to deserialize passed triggering principal", new Error().lineNumber);
+      return Services.scriptSecurityManager.getSystemPrincipal({});
+    });
 
     let loadURIOptions = {
       triggeringPrincipal,

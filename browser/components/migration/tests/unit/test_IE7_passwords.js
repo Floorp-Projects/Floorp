@@ -375,7 +375,7 @@ add_task(async function test_passwordsAvailable() {
     // new value with the encrypted data
     backupAndStore(Storage2Key, website.hash,
                    crypto.encryptData(crypto.arrayToString(website.data),
-                                      website.uri.spec, true));
+                                      website.uri.spec));
     Assert.ok(migrator.exists, "The migrator has to exist");
     uris.push(website.uri);
     hashes.push(website.hash);

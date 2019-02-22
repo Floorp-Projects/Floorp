@@ -122,7 +122,7 @@
                   oncommand="ContentBlocking.enableForCurrentPage(); gIdentityHandler.recordClick('block');" />
           <label id="identity-popup-content-blocking-report-breakage"
                  onclick="ContentBlocking.showReportBreakageSubview(); gIdentityHandler.recordClick('report_breakage');"
-                 is="text-link" class="subviewkeynav"
+                 class="text-link subviewkeynav"
                  flex="1">&contentBlocking.openBreakageReportView2.label;</label>
         </vbox>
       </hbox>

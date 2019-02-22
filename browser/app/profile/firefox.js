@@ -1416,6 +1416,12 @@ pref("identity.fxaccounts.remote.profile.uri", "https://profile.accounts.firefox
 // The remote URL of the FxA OAuth Server
 pref("identity.fxaccounts.remote.oauth.uri", "https://oauth.accounts.firefox.com/v1");
 
+// Whether FxA pairing using QR codes is enabled.
+pref("identity.fxaccounts.pairing.enabled", false);
+
+// The remote URI of the FxA pairing server
+pref("identity.fxaccounts.remote.pairing.uri", "wss://channelserver.services.mozilla.com");
+
 // Token server used by the FxA Sync identity.
 pref("identity.sync.tokenserver.uri", "https://token.services.mozilla.com/1.0/sync/1.5");
 
@@ -1474,11 +1480,17 @@ pref("media.gmp-widevinecdm.visible", true);
 pref("media.gmp-widevinecdm.enabled", true);
 #endif
 
-
 // Switch block autoplay logic to v2, and enable UI.
 pref("media.autoplay.enabled.user-gestures-needed", true);
+
+#ifdef NIGHTLY_BUILD
 // Set Firefox to block autoplay, asking for permission by default.
 pref("media.autoplay.default", 1); // 0=Allowed, 1=Blocked
+#else
+// Set Firefox to block autoplay, asking for permission by default.
+pref("media.autoplay.default", 0); // 0=Allowed, 1=Blocked
+#endif
+
 
 #ifdef NIGHTLY_BUILD
 // Block WebAudio from playing automatically.

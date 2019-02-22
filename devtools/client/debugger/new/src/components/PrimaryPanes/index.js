@@ -149,7 +149,7 @@ class PrimaryPanes extends Component<Props, State> {
           })}
           hasFocusableContent
         >
-          <div>
+          <div className="threads-list">
             {this.renderProjectRootHeader()}
             {this.renderThreadSources()}
           </div>
