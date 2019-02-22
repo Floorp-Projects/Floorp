@@ -15,6 +15,8 @@
 
 namespace mozilla {
 
+class AudioData;
+
 // Thread and type safe wrapper around nsDeque.
 template <class T>
 class MediaQueueDeallocator : public nsDequeFunctor {
@@ -153,12 +155,14 @@ class MediaQueue : private nsDeque {
     }
   }
 
-  uint32_t FrameCount() {
+  uint32_t AudioFramesCount() {
+    static_assert(mozilla::IsSame<T, AudioData>::value,
+                  "Only usable with MediaQueue<AudioData>");
     RecursiveMutexAutoLock lock(mRecursiveMutex);
     uint32_t frames = 0;
     for (size_t i = 0; i < GetSize(); ++i) {
       T* v = static_cast<T*>(ObjectAt(i));
-      frames += v->mFrames;
+      frames += v->Frames();
     }
     return frames;
   }

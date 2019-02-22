@@ -271,7 +271,7 @@ void MediaDecodeTask::SampleNotDecoded(const MediaResult& aError) {
 void MediaDecodeTask::FinishDecode() {
   mDecoderReader->Shutdown();
 
-  uint32_t frameCount = mAudioQueue.FrameCount();
+  uint32_t frameCount = mAudioQueue.AudioFramesCount();
   uint32_t channelCount = mMediaInfo.mAudio.mChannels;
   uint32_t sampleRate = mMediaInfo.mAudio.mRate;
 
@@ -341,20 +341,20 @@ void MediaDecodeTask::FinishDecode() {
       const uint32_t maxOutSamples = resampledFrames - writeIndex;
 
       for (uint32_t i = 0; i < audioData->mChannels; ++i) {
-        uint32_t inSamples = audioData->mFrames;
+        uint32_t inSamples = audioData->Frames();
         uint32_t outSamples = maxOutSamples;
         AudioDataValue* outData =
             mDecodeJob.mBuffer.ChannelDataForWrite<AudioDataValue>(i) +
             writeIndex;
 
         WebAudioUtils::SpeexResamplerProcess(
-            resampler, i, &bufferData[i * audioData->mFrames], &inSamples,
+            resampler, i, &bufferData[i * audioData->Frames()], &inSamples,
             outData, &outSamples);
 
         if (i == audioData->mChannels - 1) {
           writeIndex += outSamples;
           MOZ_ASSERT(writeIndex <= resampledFrames);
-          MOZ_ASSERT(inSamples == audioData->mFrames);
+          MOZ_ASSERT(inSamples == audioData->Frames());
         }
       }
     } else {
@@ -362,11 +362,11 @@ void MediaDecodeTask::FinishDecode() {
         AudioDataValue* outData =
             mDecodeJob.mBuffer.ChannelDataForWrite<AudioDataValue>(i) +
             writeIndex;
-        PodCopy(outData, &bufferData[i * audioData->mFrames],
-                audioData->mFrames);
+        PodCopy(outData, &bufferData[i * audioData->Frames()],
+                audioData->Frames());
 
         if (i == audioData->mChannels - 1) {
-          writeIndex += audioData->mFrames;
+          writeIndex += audioData->Frames();
         }
       }
     }

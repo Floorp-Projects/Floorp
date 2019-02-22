@@ -1689,7 +1689,7 @@ void MediaFormatReader::NotifyNewOutput(
                     sample->mOffset, sample->mTime.ToMicroseconds(),
                     sample->mTimecode.ToMicroseconds(),
                     sample->mDuration.ToMicroseconds(),
-                    static_cast<AudioData*>(sample.get())->mFrames,
+                    static_cast<AudioData*>(sample.get())->Frames(),
                     sample->As<AudioData>()->mChannels,
                     sample->As<AudioData>()->mRate,
                     sample->As<AudioData>()->Data().Length());

@@ -1292,7 +1292,7 @@ class MediaDecoderStateMachine::AccurateSeekingState
     MOZ_ASSERT(aAudio && mSeekJob.mTarget->IsAccurate());
 
     auto sampleDuration =
-        FramesToTimeUnit(aAudio->mFrames, Info().mAudio.mRate);
+        FramesToTimeUnit(aAudio->Frames(), Info().mAudio.mRate);
     if (!sampleDuration.IsValid()) {
       return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
     }
@@ -1331,13 +1331,13 @@ class MediaDecoderStateMachine::AccurateSeekingState
     if (!framesToPrune.isValid()) {
       return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
     }
-    if (framesToPrune.value() > aAudio->mFrames) {
+    if (framesToPrune.value() > aAudio->Frames()) {
       // We've messed up somehow. Don't try to trim frames, the |frames|
       // variable below will overflow.
       SLOGE("Can't prune more frames that we have!");
       return NS_ERROR_FAILURE;
     }
-    uint32_t frames = aAudio->mFrames - uint32_t(framesToPrune.value());
+    uint32_t frames = aAudio->Frames() - uint32_t(framesToPrune.value());
     uint32_t channels = aAudio->mChannels;
     AlignedAudioBuffer audioData(frames * channels);
     if (!audioData) {
