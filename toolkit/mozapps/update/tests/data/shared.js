@@ -140,6 +140,27 @@ XPCOMUtils.defineLazyServiceGetter(this, "gEnv",
                                    "@mozilla.org/process/environment;1",
                                    "nsIEnvironment");
 
+/**
+ * Waits for the specified topic and (optionally) status.
+ *
+ * @param  topic
+ *         String representing the topic to wait for.
+ * @param  status (optional)
+ *         A string representing the status on said topic to wait for.
+ * @return A promise which will resolve the first time an event occurs on the
+ *         specified topic, and (optionally) with the specified status.
+ */
+function waitForEvent(topic, status = null) {
+  return new Promise(resolve => Services.obs.addObserver({
+    observe(subject, innerTopic, innerStatus) {
+      if (!status || status == innerStatus) {
+        Services.obs.removeObserver(this, topic);
+        resolve(innerStatus);
+      }
+    },
+  }, topic));
+}
+
 /* Triggers post-update processing */
 function testPostUpdateProcessing() {
   gAUS.observe(null, "test-post-update-processing", "");
