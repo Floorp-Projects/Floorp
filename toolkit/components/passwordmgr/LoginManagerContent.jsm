@@ -341,9 +341,6 @@ var LoginManagerContent = {
     global.addEventListener("pageshow", (event) => {
       this.onPageShow(event);
     });
-    global.addEventListener("blur", (event) => {
-      this.onUsernameInput(event);
-    });
   },
 
   setupProgressListener(window) {
