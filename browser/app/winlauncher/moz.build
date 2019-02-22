@@ -9,6 +9,7 @@ Library('winlauncher')
 FORCE_STATIC_LIB = True
 
 UNIFIED_SOURCES += [
+    '/ipc/mscom/ProcessRuntime.cpp',
     'DllBlocklistWin.cpp',
     'ErrorHandler.cpp',
     'LauncherProcessWin.cpp',
@@ -19,6 +20,8 @@ OS_LIBS += [
     'ntdll',
     'oleaut32',
     'ole32',
+    'rpcrt4',
+    'version',
 ]
 
 TEST_DIRS += [
