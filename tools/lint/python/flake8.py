@@ -13,6 +13,7 @@ import sys
 import mozfile
 
 from mozlint import result
+from mozlint.pathutils import expand_exclusions
 from mozlint.util import pip
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -63,6 +64,12 @@ else:
     bindir = os.path.join(sys.prefix, 'bin')
 
 
+class NothingToLint(Exception):
+    """Exception used to bail out of flake8's internals if all the specified
+    files were excluded.
+    """
+
+
 def setup(root):
     if not pip.reinstall_program(FLAKE8_REQUIREMENTS_PATH):
         print(FLAKE8_INSTALL_ERROR)
@@ -72,8 +79,8 @@ def setup(root):
 def lint(paths, config, **lintargs):
     from flake8.main.application import Application
 
-    config_path = os.path.join(lintargs['root'], '.flake8')
-    exclude = config.get('exclude', [])
+    root = lintargs['root']
+    config_path = os.path.join(root, '.flake8')
 
     if lintargs.get('fix'):
         fix_cmd = [
@@ -82,25 +89,56 @@ def lint(paths, config, **lintargs):
             '--in-place', '--recursive',
         ]
 
-        if exclude:
-            fix_cmd.extend(['--exclude', ','.join(exclude)])
+        if config.get('exclude'):
+            fix_cmd.extend(['--exclude', ','.join(config['exclude'])])
 
         subprocess.call(fix_cmd + paths)
 
+    # Run flake8.
+    app = Application()
+
     output_file = mozfile.NamedTemporaryFile()
     flake8_cmd = [
-        os.path.join(bindir, 'flake8'),
         '--config', config_path,
         '--output-file', output_file.name,
         '--format', '{"path":"%(path)s","lineno":%(row)s,'
                     '"column":%(col)s,"rule":"%(code)s","message":"%(text)s"}',
         '--filename', ','.join(['*.{}'.format(e) for e in config['extensions']]),
-    ] + paths
+    ]
 
-    # Run flake8.
+    orig_make_file_checker_manager = app.make_file_checker_manager
+
+    def wrap_make_file_checker_manager(self):
+        """Flake8 is very inefficient when it comes to applying exclusion
+        rules, using `expand_exclusions` to turn directories into a list of
+        relevant python files is an order of magnitude faster.
+
+        Hooking into flake8 here also gives us a convenient place to merge the
+        `exclude` rules specified in the root .flake8 with the ones added by
+        tools/lint/mach_commands.py.
+        """
+        config.setdefault('exclude', []).extend(self.options.exclude)
+        self.options.exclude = None
+        self.args = self.args + list(expand_exclusions(paths, config, root))
+
+        if not self.args:
+            raise NothingToLint
+        return orig_make_file_checker_manager()
+
+    app.make_file_checker_manager = wrap_make_file_checker_manager.__get__(app, Application)
+
+    # Make sure to run from repository root so exlusions are joined to the
+    # repository root and not the current working directory.
+    oldcwd = os.getcwd()
+    os.chdir(root)
+    try:
+        app.run(flake8_cmd)
+    except NothingToLint:
+        pass
+    finally:
+        os.chdir(oldcwd)
+
     results = []
-    app = Application()
-    app.run(flake8_cmd)
 
     def process_line(line):
         # Escape slashes otherwise JSON conversion will not work

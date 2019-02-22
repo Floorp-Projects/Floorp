@@ -1,7 +1,6 @@
 import os
 
 import mozunit
-import pytest
 
 LINTER = 'flake8'
 
@@ -64,16 +63,19 @@ foo = ['A list of strings', 'that go over 80 characters', 'to test if autopep8 f
         assert fh.read() == contents
 
 
-@pytest.mark.xfail(reason="Bug 1277851 - custom configs are ignored if specifying a parent path")
-def test_lint_custom_config_from_parent_path(lint, paths):
-    results = lint(paths(), collapse_results=True)
-    assert paths('custom/good.py')[0] not in results
+def test_lint_excluded_file(lint, paths, config):
+    # First file is globally excluded, second one is from .flake8 config.
+    files = paths('bad.py', 'subdir/exclude/bad.py')
+    config['exclude'] = paths('bad.py')
+    results = lint(files, config)
+    print(results)
+    assert len(results) == 0
 
+    # Make sure excludes also apply when running from a different cwd.
+    cwd = paths('subdir')[0]
+    os.chdir(cwd)
 
-@pytest.mark.xfail(reason="Bug 1277851 - 'exclude' argument is ignored")
-def test_lint_excluded_file(lint, paths):
-    paths = paths('bad.py')
-    results = lint(paths, exclude=paths)
+    results = lint(paths('subdir/exclude'))
     assert len(results) == 0
 
 
