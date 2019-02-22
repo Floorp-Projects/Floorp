@@ -77,17 +77,6 @@ bool AudioData::IsAudible() const {
   return false;
 }
 
-/* static */
-already_AddRefed<AudioData> AudioData::TransferAndUpdateTimestampAndDuration(
-    AudioData* aOther, const TimeUnit& aTimestamp, const TimeUnit& aDuration) {
-  NS_ENSURE_TRUE(aOther, nullptr);
-  RefPtr<AudioData> v =
-      new AudioData(aOther->mOffset, aTimestamp, aDuration, aOther->mFrames,
-                    std::move(aOther->mAudioData), aOther->mChannels,
-                    aOther->mRate, aOther->mChannelMap);
-  return v.forget();
-}
-
 static bool ValidatePlane(const VideoData::YCbCrBuffer::Plane& aPlane) {
   return aPlane.mWidth <= PlanarYCbCrImage::MAX_DIMENSION &&
          aPlane.mHeight <= PlanarYCbCrImage::MAX_DIMENSION &&
