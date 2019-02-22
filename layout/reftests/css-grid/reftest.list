@@ -123,7 +123,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-item-auto-min-size-
 == grid-item-canvas-001.html grid-item-canvas-001-ref.html
 skip-if(Android) == grid-item-button-001.html grid-item-button-001-ref.html
 == grid-item-table-stretch-001.html grid-item-table-stretch-001-ref.html
-== grid-item-table-stretch-002.html grid-item-table-stretch-002-ref.html
+fails-if(Android) == grid-item-table-stretch-002.html grid-item-table-stretch-002-ref.html # Bug 1527734
 == grid-item-table-stretch-003.html grid-item-table-stretch-003-ref.html
 == grid-item-table-stretch-004.html grid-item-table-stretch-004-ref.html
 == grid-item-fieldset-stretch-001.html grid-item-fieldset-stretch-001-ref.html
