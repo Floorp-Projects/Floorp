@@ -22,15 +22,9 @@ function run_test() {
 /**
  * Called after the call to setupUpdaterTest finishes.
  */
-function setupUpdaterTestFinished() {
+async function setupUpdaterTestFinished() {
   setupSymLinks();
-  runHelperFileInUse(DIR_RESOURCES + gCallbackBinFile, false);
-}
-
-/**
- * Called after the call to waitForHelperSleep finishes.
- */
-function waitForHelperSleepFinished() {
+  await runHelperFileInUse(DIR_RESOURCES + gCallbackBinFile, false);
   stageUpdate(true);
 }
 

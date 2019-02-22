@@ -19,14 +19,8 @@ function run_test() {
 /**
  * Called after the call to setupUpdaterTest finishes.
  */
-function setupUpdaterTestFinished() {
-  runHelperLockFile(gTestFiles[2]);
-}
-
-/**
- * Called after the call to waitForHelperSleep finishes.
- */
-function waitForHelperSleepFinished() {
+async function setupUpdaterTestFinished() {
+  await runHelperLockFile(gTestFiles[2]);
   stageUpdate(true);
 }
 
