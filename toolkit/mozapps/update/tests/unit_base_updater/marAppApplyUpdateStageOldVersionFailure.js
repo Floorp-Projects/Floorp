@@ -11,20 +11,13 @@
 
 const STATE_AFTER_STAGE = STATE_APPLIED;
 
-function run_test() {
+async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
-
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
-  setupUpdaterTest(FILE_COMPLETE_MAR, null, "", false);
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-function setupUpdaterTestFinished() {
+  await setupUpdaterTest(FILE_COMPLETE_MAR, null, "", false);
   let patchProps = {state: STATE_AFTER_STAGE};
   let patches = getLocalPatchString(patchProps);
   let updateProps = {appVersion: "0.9"};

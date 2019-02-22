@@ -5,7 +5,7 @@
 
 /* General Partial MAR File Patch Apply Test */
 
-function run_test() {
+async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
@@ -16,13 +16,7 @@ function run_test() {
   gTestDirs = gTestDirsPartialSuccess;
   // The third parameter will test that a relative path that contains a
   // directory traversal to the post update binary doesn't execute.
-  setupUpdaterTest(FILE_PARTIAL_MAR, false, "test/../");
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-async function setupUpdaterTestFinished() {
+  await setupUpdaterTest(FILE_PARTIAL_MAR, false, "test/../");
   runUpdate(STATE_SUCCEEDED, false, 0, true);
   checkAppBundleModTime();
   standardInit();

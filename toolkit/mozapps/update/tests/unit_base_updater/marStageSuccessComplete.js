@@ -7,7 +7,7 @@
 
 const STATE_AFTER_STAGE = IS_SERVICE_TEST ? STATE_APPLIED_SVC : STATE_APPLIED;
 
-function run_test() {
+async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
@@ -17,13 +17,7 @@ function run_test() {
   gTestFiles[gTestFiles.length - 1].comparePerms = 0o644;
   gTestDirs = gTestDirsCompleteSuccess;
   setupSymLinks();
-  setupUpdaterTest(FILE_COMPLETE_MAR, false);
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-function setupUpdaterTestFinished() {
+  await setupUpdaterTest(FILE_COMPLETE_MAR, false);
   stageUpdate(true);
 }
 

@@ -6,20 +6,14 @@
 
 const STATE_AFTER_STAGE = STATE_PENDING;
 
-function run_test() {
+async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
   gTestFiles = gTestFilesPartialSuccess;
   gTestDirs = gTestDirsPartialSuccess;
   setTestFilesAndDirsForFailure();
-  setupUpdaterTest(FILE_PARTIAL_MAR, false);
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-async function setupUpdaterTestFinished() {
+  await setupUpdaterTest(FILE_PARTIAL_MAR, false);
   await runHelperLockFile(gTestFiles[2]);
   stageUpdate(true);
 }
