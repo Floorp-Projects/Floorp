@@ -245,9 +245,8 @@ UniquePtr<AudioStream::Chunk> AudioSink::PopFrames(uint32_t aFrames) {
     mCurrentData = mProcessedQueue.PeekFront();
     {
       MonitorAutoLock mon(mMonitor);
-      mCursor = MakeUnique<AudioBufferCursor>(mCurrentData->Data().Elements(),
-                                              mCurrentData->mChannels,
-                                              mCurrentData->mFrames);
+      mCursor = MakeUnique<AudioBufferCursor>(
+          mCurrentData->Data(), mCurrentData->mChannels, mCurrentData->mFrames);
     }
     MOZ_ASSERT(mCurrentData->mFrames > 0);
     mProcessedQueueLength -=
