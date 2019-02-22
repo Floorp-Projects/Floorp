@@ -24,7 +24,6 @@ logger = logging.getLogger(__name__)
     name='retrigger-mochitest',
     title='Retrigger Mochitest/Reftest with Debugging',
     symbol='rt',
-    kind='hook',
     generic=True,
     description="Retriggers the specified mochitest/reftest job with additional options",
     context=[{'test-type': 'mochitest'},

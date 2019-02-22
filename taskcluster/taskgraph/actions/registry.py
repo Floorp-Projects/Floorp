@@ -52,7 +52,7 @@ def hash_taskcluster_yml(filename):
 
 def register_callback_action(name, title, symbol, description, order=10000,
                              context=[], available=lambda parameters: True,
-                             schema=None, kind='task', generic=True, cb_name=None):
+                             schema=None, kind='hook', generic=True, cb_name=None):
     """
     Register an action callback that can be triggered from supporting
     user interfaces, such as Treeherder.
