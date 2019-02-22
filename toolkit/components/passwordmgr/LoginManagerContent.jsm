@@ -51,9 +51,27 @@ var gLastRightClickTimeStamp = Number.NEGATIVE_INFINITY;
 
 var observer = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsIFormSubmitObserver,
                                           Ci.nsIWebProgressListener,
                                           Ci.nsISupportsWeakReference]),
 
+  // nsIFormSubmitObserver
+  notify(formElement, aWindow, actionURI) {
+    log("observer notified for form submission.");
+
+    // We're invoked before the content's |onsubmit| handlers, so we
+    // can grab form data before it might be modified (see bug 257781).
+
+    try {
+      let formLike = LoginFormFactory.createFromForm(formElement);
+      LoginManagerContent._onFormSubmit(formLike);
+    } catch (e) {
+      log("Caught error in onFormSubmit(", e.lineNumber, "):", e.message);
+      Cu.reportError(e);
+    }
+
+    return true; // Always return true, or form submit will be canceled.
+  },
 
   // nsIWebProgressListener
   onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
@@ -127,6 +145,7 @@ var observer = {
   },
 };
 
+Services.obs.addObserver(observer, "earlyformsubmit");
 
 // This object maps to the "child" process (even in the single-process case).
 var LoginManagerContent = {
@@ -339,18 +358,6 @@ var LoginManagerContent = {
     } catch (ex) {
       // Ignore NS_ERROR_FAILURE if the progress listener was already added
     }
-  },
-
-  onDOMFormBeforeSubmit(event) {
-    if (!event.isTrusted) {
-      return;
-    }
-
-    // We're invoked before the content's |submit| event handlers, so we
-    // can grab form data before it might be modified (see bug 257781).
-    log("notified before form submission");
-    let formLike = LoginFormFactory.createFromForm(event.target);
-    LoginManagerContent._onFormSubmit(formLike);
   },
 
   onDOMFormHasPassword(event) {
@@ -896,7 +903,7 @@ var LoginManagerContent = {
 
       if (ChromeUtils.getClassName(formRoot) === "HTMLFormElement") {
         // For now only perform capture upon navigation for FormLike's without
-        // a <form> to avoid capture from both a DOMFormBeforeSubmit event and
+        // a <form> to avoid capture from both an earlyformsubmit and
         // navigation for the same "form".
         log("Ignoring navigation for the form root to avoid multiple prompts " +
             "since it was for a real <form>");

@@ -31,12 +31,10 @@ function runTests() {
   var target = document.getElementById("input");
 
   // Register a word to the form history.
-  let chromeScript = SpecialPowers.loadChromeScript(function addEntry() {
-    let {FormHistory} = ChromeUtils.import("resource://gre/modules/FormHistory.jsm");
-    FormHistory.update({ op: "add", fieldname: "test", value: "Mozilla" });
-  });
-  chromeScript.destroy();
   target.focus();
+  target.value = "Mozilla";
+  synthesizeKey("KEY_Enter");
+  target.value = "";
 
   new nsDoTestsForAutoCompleteWithComposition(
     "Testing on HTML input (asynchronously search)",

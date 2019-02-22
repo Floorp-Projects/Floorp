@@ -16,19 +16,19 @@ add_task(async function test_activeStatus_init() {
 
   // Default status is null before initialization
   Assert.equal(formAutofillParent._active, null);
-  Assert.equal(Services.ppmm.sharedData.get("FormAutofill:enabled"), undefined);
+  Assert.equal(Services.ppmm.initialProcessData.autofillEnabled, undefined);
 
   await formAutofillParent.init();
   // init shouldn't call updateStatus since that requires storage which will
   // lead to startup time regressions.
   Assert.equal(formAutofillParent._updateStatus.called, false);
-  Assert.equal(Services.ppmm.sharedData.get("FormAutofill:enabled"), undefined);
+  Assert.equal(Services.ppmm.initialProcessData.autofillEnabled, undefined);
 
   // Initialize profile storage
   await formAutofillParent.formAutofillStorage.initialize();
   // Upon first initializing profile storage, status should be computed.
   Assert.equal(formAutofillParent._updateStatus.called, true);
-  Assert.equal(Services.ppmm.sharedData.get("FormAutofill:enabled"), false);
+  Assert.equal(Services.ppmm.initialProcessData.autofillEnabled, false);
 
   formAutofillParent._uninit();
 });
