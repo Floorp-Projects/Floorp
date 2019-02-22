@@ -35,17 +35,11 @@ function setupUpdaterTestFinished() {
 /**
  * Called after the call to runUpdateUsingUpdater finishes.
  */
-function runUpdateFinished() {
+async function runUpdateFinished() {
   standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
-  executeSoon(waitForUpdateXMLFiles);
-}
-
-/**
- * Called after the call to waitForUpdateXMLFiles finishes.
- */
-function waitForUpdateXMLFilesFinished() {
+  await waitForUpdateXMLFiles();
   checkUpdateManager(STATE_NONE, false, STATE_AFTER_RUNUPDATE, 0, 1);
   waitForFilesInUse();
 }

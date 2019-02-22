@@ -33,17 +33,11 @@ function setupUpdaterTestFinished() {
 /**
  * Called after the call to stageUpdate finishes.
  */
-function stageUpdateFinished() {
+async function stageUpdateFinished() {
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(STATE_FAILED_UPDATE_SETTINGS_FILE_CHANNEL);
-  executeSoon(waitForUpdateXMLFiles);
-}
-
-/**
- * Called after the call to waitForUpdateXMLFiles finishes.
- */
-function waitForUpdateXMLFilesFinished() {
+  await waitForUpdateXMLFiles();
   checkUpdateManager(STATE_NONE, false, STATE_FAILED,
                      UPDATE_SETTINGS_FILE_CHANNEL, 1);
   waitForFilesInUse();
