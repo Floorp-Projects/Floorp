@@ -160,6 +160,16 @@
   fill-opacity: 1;
 }
 
+#pageAction-panel-pinTab,
+#pageAction-urlbar-pinTab {
+  list-style-image: url("resource://activity-stream/data/content/assets/glyph-pin-16.svg");
+}
+
+#pageAction-panel-pinTab[pinned],
+#pageAction-urlbar-pinTab[pinned] {
+  list-style-image: url("resource://activity-stream/data/content/assets/glyph-unpin-16.svg");
+}
+
 #pageAction-panel-copyURL,
 #pageAction-urlbar-copyURL {
   list-style-image: url("chrome://browser/skin/link.svg");

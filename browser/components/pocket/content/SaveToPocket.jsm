@@ -33,7 +33,7 @@ var PocketPageAction = {
         wantsIframe: true,
         urlbarIDOverride: "pocket-button-box",
         anchorIDOverride: "pocket-button",
-        _insertBeforeActionID: PageActions.ACTION_ID_BOOKMARK_SEPARATOR,
+        _insertBeforeActionID: PageActions.ACTION_ID_PIN_TAB,
         _urlbarNodeInMarkup: true,
         onBeforePlacedInWindow(window) {
           let action = PageActions.actionForID("pocket");
