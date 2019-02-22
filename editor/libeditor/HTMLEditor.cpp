@@ -12,7 +12,6 @@
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/mozInlineSpellChecker.h"
-#include "mozilla/Telemetry.h"
 #include "mozilla/TextEvents.h"
 
 #include "nsCRT.h"
@@ -145,7 +144,6 @@ HTMLEditor::HTMLEditor()
     : mCRInParagraphCreatesParagraph(false),
       mCSSAware(false),
       mSelectedCellIndex(0),
-      mHasShownResizers(false),
       mIsObjectResizingEnabled(HTMLEditorPrefs::IsResizingUIEnabledByDefault()),
       mIsResizing(false),
       mPreserveRatio(false),
@@ -153,11 +151,9 @@ HTMLEditor::HTMLEditor()
       mIsAbsolutelyPositioningEnabled(
           HTMLEditorPrefs::IsAbsolutePositioningUIEnabledByDefault()),
       mResizedObjectIsAbsolutelyPositioned(false),
-      mHasShownGrabber(false),
       mGrabberClicked(false),
       mIsMoving(false),
       mSnapToGridEnabled(false),
-      mHasShownInlineTableEditor(false),
       mIsInlineTableEditingEnabled(
           HTMLEditorPrefs::IsInlineTableEditingUIEnabledByDefault()),
       mOriginalX(0),
@@ -174,9 +170,6 @@ HTMLEditor::HTMLEditor()
       mYIncrementFactor(0),
       mWidthIncrementFactor(0),
       mHeightIncrementFactor(0),
-      mResizerUsedCount(0),
-      mGrabberUsedCount(0),
-      mInlineTableEditorUsedCount(0),
       mInfoXIncrement(20),
       mInfoYIncrement(20),
       mPositionedObjectX(0),
@@ -213,27 +206,6 @@ HTMLEditor::~HTMLEditor() {
   RemoveEventListeners();
 
   HideAnonymousEditingUIs();
-
-  Telemetry::Accumulate(Telemetry::HTMLEDITORS_WITH_RESIZERS,
-                        mHasShownResizers ? 1 : 0);
-  if (mHasShownResizers) {
-    Telemetry::Accumulate(Telemetry::HTMLEDITORS_WHOSE_RESIZERS_USED_BY_USER,
-                          mResizerUsedCount);
-  }
-  Telemetry::Accumulate(Telemetry::HTMLEDITORS_WITH_ABSOLUTE_POSITIONER,
-                        mHasShownGrabber ? 1 : 0);
-  if (mHasShownGrabber) {
-    Telemetry::Accumulate(
-        Telemetry::HTMLEDITORS_WHOSE_ABSOLUTE_POSITIONER_USED_BY_USER,
-        mGrabberUsedCount);
-  }
-  Telemetry::Accumulate(Telemetry::HTMLEDITORS_WITH_INLINE_TABLE_EDITOR,
-                        mHasShownInlineTableEditor ? 1 : 0);
-  if (mHasShownInlineTableEditor) {
-    Telemetry::Accumulate(
-        Telemetry::HTMLEDITORS_WHOSE_INLINE_TABLE_EDITOR_USED_BY_USER,
-        mInlineTableEditorUsedCount);
-  }
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLEditor)
