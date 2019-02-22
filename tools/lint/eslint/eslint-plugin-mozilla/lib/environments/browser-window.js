@@ -48,6 +48,7 @@ const MAPPINGS = {
   "panelUI.js": "browser/components/customizableui/content/panelUI.js",
   "viewSourceUtils.js":
     "toolkit/components/viewsource/content/viewSourceUtils.js",
+  "places-tree.js": "browser/components/places/content/places-tree.js",
 };
 
 const globalScriptsRegExp =
