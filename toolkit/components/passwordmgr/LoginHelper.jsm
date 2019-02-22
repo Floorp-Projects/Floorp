@@ -219,6 +219,31 @@ var LoginHelper = {
   },
 
   /**
+   * Get the parts of the URL we want for identification.
+   * Strip out things like the userPass portion and handle javascript:.
+   */
+  getLoginOrigin(uriString, allowJS) {
+    let realm = "";
+    try {
+      let uri = Services.io.newURI(uriString);
+
+      if (allowJS && uri.scheme == "javascript") {
+        return "javascript:";
+      }
+
+      // Build this manually instead of using prePath to avoid including the userPass portion.
+      realm = uri.scheme + "://" + uri.displayHostPort;
+    } catch (e) {
+      // bug 159484 - disallow url types that don't support a hostPort.
+      // (although we handle "javascript:..." as a special case above.)
+      log.warn("Couldn't parse origin for", uriString, e);
+      realm = null;
+    }
+
+    return realm;
+  },
+
+  /**
    * @param {String} aLoginOrigin - An origin value from a stored login's
    *                                hostname or formSubmitURL properties.
    * @param {String} aSearchOrigin - The origin that was are looking to match
