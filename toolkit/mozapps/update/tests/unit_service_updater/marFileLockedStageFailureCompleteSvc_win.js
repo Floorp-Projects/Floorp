@@ -52,20 +52,14 @@ function runUpdateFinished() {
 /**
  * Called after the call to waitForHelperExit finishes.
  */
-function waitForHelperExitFinished() {
+async function waitForHelperExitFinished() {
   standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(ERR_RENAME_FILE);
   checkUpdateLogContains(ERR_BACKUP_CREATE_7);
   checkUpdateLogContains(STATE_FAILED_WRITE_ERROR + "\n" + CALL_QUIT);
-  executeSoon(() => waitForUpdateXMLFiles(true, false));
-}
-
-/**
- * Called after the call to waitForUpdateXMLFiles finishes.
- */
-function waitForUpdateXMLFilesFinished() {
+  await waitForUpdateXMLFiles(true, false);
   checkUpdateManager(STATE_PENDING, true, STATE_PENDING, WRITE_ERROR, 0);
   checkCallbackLog();
 }

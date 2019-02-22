@@ -32,18 +32,12 @@ function setupUpdaterTestFinished() {
 /**
  * Called after the call to runUpdateUsingUpdater finishes.
  */
-function runUpdateFinished() {
+async function runUpdateFinished() {
   standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(STATE_FAILED_VERSION_DOWNGRADE_ERROR);
-  executeSoon(waitForUpdateXMLFiles);
-}
-
-/**
- * Called after the call to waitForUpdateXMLFiles finishes.
- */
-function waitForUpdateXMLFilesFinished() {
+  await waitForUpdateXMLFiles();
   checkUpdateManager(STATE_NONE, false, STATE_FAILED,
                      VERSION_DOWNGRADE_ERROR, 1);
   waitForFilesInUse();

@@ -48,17 +48,11 @@ function check_test_helper_pt1_1() {
 /**
  * Called after the download listener onStopRequest is called.
  */
-function downloadListenerStop() {
+async function downloadListenerStop() {
   Assert.equal(gStatusResult, Cr.NS_ERROR_UNEXPECTED,
                "the download status result" + MSG_SHOULD_EQUAL);
   gAUS.removeDownloadListener(downloadListener);
   // There is a pending write to the xml files.
-  executeSoon(waitForUpdateXMLFiles);
-}
-
-/**
- * Called after the call to waitForUpdateXMLFiles finishes.
- */
-function waitForUpdateXMLFilesFinished() {
+  await waitForUpdateXMLFiles();
   stop_httpserver(doTestFinish);
 }

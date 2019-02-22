@@ -51,7 +51,7 @@ function runUpdateFinished() {
 /**
  * Called after the call to waitForHelperExit finishes.
  */
-function waitForHelperExitFinished() {
+async function waitForHelperExitFinished() {
   standardInit();
   checkPostUpdateRunningFile(false);
   setTestFilesAndDirsForFailure();
@@ -60,13 +60,7 @@ function waitForHelperExitFinished() {
   checkUpdateLogContains(ERR_MOVE_DESTDIR_7 + "\n" +
                          STATE_FAILED_WRITE_ERROR + "\n" +
                          CALL_QUIT);
-  executeSoon(waitForUpdateXMLFiles);
-}
-
-/**
- * Called after the call to waitForUpdateXMLFiles finishes.
- */
-function waitForUpdateXMLFilesFinished() {
+  await waitForUpdateXMLFiles();
   checkUpdateManager(STATE_NONE, false, STATE_AFTER_RUNUPDATE, 0, 1);
   checkCallbackLog();
 }

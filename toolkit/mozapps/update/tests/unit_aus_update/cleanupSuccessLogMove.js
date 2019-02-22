@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-function run_test() {
+async function run_test() {
   setupTestCommon();
 
   debugDump("testing that the update.log is moved after a successful update");
@@ -25,19 +25,14 @@ function run_test() {
             "there should not be an active update");
   Assert.equal(gUpdateManager.updateCount, 1,
                "the update manager update count" + MSG_SHOULD_EQUAL);
-  executeSoon(waitForUpdateXMLFiles);
-}
+  await waitForUpdateXMLFiles();
 
-/**
- * Called after the call to waitForUpdateXMLFiles finishes.
- */
-function waitForUpdateXMLFilesFinished() {
   let cancelations = Services.prefs.getIntPref(PREF_APP_UPDATE_CANCELATIONS, 0);
   Assert.equal(cancelations, 0,
                "the " + PREF_APP_UPDATE_CANCELATIONS + " preference " +
                MSG_SHOULD_EQUAL);
 
-  let log = getUpdateDirFile(FILE_UPDATE_LOG);
+  log = getUpdateDirFile(FILE_UPDATE_LOG);
   Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);
 
   log = getUpdateDirFile(FILE_LAST_UPDATE_LOG);

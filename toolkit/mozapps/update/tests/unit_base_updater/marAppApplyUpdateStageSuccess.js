@@ -47,19 +47,13 @@ function runUpdateFinished() {
 /**
  * Called after the call to checkPostUpdateAppLog finishes.
  */
-function checkPostUpdateAppLogFinished() {
+async function checkPostUpdateAppLogFinished() {
   checkAppBundleModTime();
   standardInit();
   checkPostUpdateRunningFile(true);
   checkFilesAfterUpdateSuccess(getApplyDirFile, false, true);
   checkUpdateLogContents(LOG_REPLACE_SUCCESS, false, true);
-  executeSoon(waitForUpdateXMLFiles);
-}
-
-/**
- * Called after the call to waitForUpdateXMLFiles finishes.
- */
-function waitForUpdateXMLFilesFinished() {
+  await waitForUpdateXMLFiles();
   checkUpdateManager(STATE_NONE, false, STATE_SUCCEEDED, 0, 1);
 
   let updatesDir = getUpdateDirFile(DIR_PATCH);

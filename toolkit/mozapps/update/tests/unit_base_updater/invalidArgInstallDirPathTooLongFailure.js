@@ -43,17 +43,11 @@ function setupUpdaterTestFinished() {
 /**
  * Called after the call to runUpdateUsingUpdater finishes.
  */
-function runUpdateFinished() {
+async function runUpdateFinished() {
   standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
-  executeSoon(waitForUpdateXMLFiles);
-}
-
-/**
- * Called after the call to waitForUpdateXMLFiles finishes.
- */
-function waitForUpdateXMLFilesFinished() {
+  await waitForUpdateXMLFiles();
   if (IS_SERVICE_TEST) {
     if (AppConstants.EARLY_BETA_OR_EARLIER) {
       checkUpdateManager(STATE_NONE, false, STATE_PENDING_SVC, 0, 1);

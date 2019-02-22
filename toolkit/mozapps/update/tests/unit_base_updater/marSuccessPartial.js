@@ -29,19 +29,13 @@ function setupUpdaterTestFinished() {
 /**
  * Called after the call to runUpdate finishes.
  */
-function runUpdateFinished() {
+async function runUpdateFinished() {
   checkAppBundleModTime();
   standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateSuccess(getApplyDirFile);
   checkUpdateLogContents(LOG_PARTIAL_SUCCESS);
-  executeSoon(waitForUpdateXMLFiles);
-}
-
-/**
- * Called after the call to waitForUpdateXMLFiles finishes.
- */
-function waitForUpdateXMLFilesFinished() {
+  await waitForUpdateXMLFiles();
   checkUpdateManager(STATE_NONE, false, STATE_SUCCEEDED, 0, 1);
   checkCallbackLog();
 }
