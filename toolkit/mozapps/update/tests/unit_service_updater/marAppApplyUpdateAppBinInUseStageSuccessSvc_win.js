@@ -41,14 +41,8 @@ function stageUpdateFinished() {
 /**
  * Called after the call to runUpdateUsingApp finishes.
  */
-function runUpdateFinished() {
-  checkPostUpdateAppLog();
-}
-
-/**
- * Called after the call to checkPostUpdateAppLog finishes.
- */
-async function checkPostUpdateAppLogFinished() {
+async function runUpdateFinished() {
+  await checkPostUpdateAppLog();
   checkAppBundleModTime();
   standardInit();
   checkPostUpdateRunningFile(true);
