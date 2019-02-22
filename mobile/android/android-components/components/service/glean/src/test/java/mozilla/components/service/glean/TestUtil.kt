@@ -8,12 +8,17 @@ import android.content.Context
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import androidx.test.core.app.ApplicationProvider
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.ping.PingMaker
+import mozilla.components.service.glean.scheduler.PingScheduler
+import mozilla.components.service.glean.scheduler.PingUploadWorker
 import mozilla.components.service.glean.storages.StorageEngineManager
 import org.json.JSONObject
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
+import java.util.concurrent.ExecutionException
 
 /**
  * Checks ping content against the glean ping schema.
@@ -119,4 +124,30 @@ internal fun getContextWithMockedInfo(): Context {
     Mockito.`when`(packageManager.getPackageInfo(ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())).thenReturn(packageInfo)
     Mockito.`when`(context.packageManager).thenReturn(packageManager)
     return context
+}
+
+/**
+ * Helper function to check to see if a [PingUploadWorker] has been scheduled by the
+ * [PingScheduler]
+ *
+ * @return True if [PingUploadWorker] task found in [WorkManager], false otherwise
+ */
+internal fun isWorkScheduled(): Boolean {
+    val instance = WorkManager.getInstance()
+    val statuses = instance.getWorkInfosByTag(PingUploadWorker.PING_WORKER_TAG)
+    try {
+        val workInfoList = statuses.get()
+        for (workInfo in workInfoList) {
+            val state = workInfo.state
+            if ((state === WorkInfo.State.RUNNING) || (state === WorkInfo.State.ENQUEUED)) {
+                return true
+            }
+        }
+    } catch (e: ExecutionException) {
+        // Do nothing but will return false
+    } catch (e: InterruptedException) {
+        // Do nothing but will return false
+    }
+
+    return false
 }

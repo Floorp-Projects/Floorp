@@ -63,7 +63,7 @@ internal object EventsStorageEngine : StorageEngine {
                 val storeData = eventStores.getOrPut(storeName) { mutableListOf() }
                 storeData.add(event.copy())
                 if (storeData.size == Glean.configuration.maxEvents) {
-                    Glean.sendPing(storeName, "events")
+                    Glean.pingScheduler.assembleAndSerializePing(storeName)
                 }
             }
         }

@@ -1,7 +1,9 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package mozilla.components.service.glean
 
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
 import mozilla.components.service.glean.storages.TimespansStorageEngine
 import org.junit.Test
 import org.junit.Assert.assertFalse
@@ -16,14 +18,7 @@ class TimespanMetricTypeTest {
 
     @Before
     fun setUp() {
-        Glean.initialized = true
-        TimespansStorageEngine.applicationContext = ApplicationProvider.getApplicationContext()
-        // Clear the stored "user" preferences between tests.
-        ApplicationProvider.getApplicationContext<Context>()
-            .getSharedPreferences(TimespansStorageEngine.javaClass.simpleName, Context.MODE_PRIVATE)
-            .edit()
-            .clear()
-            .apply()
+        resetGlean()
         TimespansStorageEngine.clearAllStores()
     }
 

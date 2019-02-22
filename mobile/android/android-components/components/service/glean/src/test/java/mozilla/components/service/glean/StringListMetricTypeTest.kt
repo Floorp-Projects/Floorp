@@ -4,8 +4,6 @@
 
 package mozilla.components.service.glean
 
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.service.glean.StringListMetricType.Companion.MAX_STRING_LENGTH
@@ -31,16 +29,7 @@ class StringListMetricTypeTest {
 
     @Before
     fun setUp() {
-        Glean.initialized = true
-        StringListsStorageEngine.applicationContext = ApplicationProvider.getApplicationContext()
-        // Clear the stored "user" preferences between tests.
-        ApplicationProvider.getApplicationContext<Context>()
-            .getSharedPreferences(
-                StringListsStorageEngine.javaClass.simpleName,
-                Context.MODE_PRIVATE)
-            .edit()
-            .clear()
-            .apply()
+        resetGlean()
         StringListsStorageEngine.clearAllStores()
     }
 
