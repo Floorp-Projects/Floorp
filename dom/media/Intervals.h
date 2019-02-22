@@ -540,6 +540,34 @@ class IntervalSet {
     return false;
   }
 
+
+  bool Intersects(const ElemType& aInterval) const {
+    for (const auto& interval : mIntervals) {
+      if (interval.Intersects(aInterval)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool IntersectsStrict(const ElemType& aInterval) const {
+    for (const auto& interval : mIntervals) {
+      if (interval.IntersectsStrict(aInterval)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool IntersectsWithStrictEnd(const ElemType& aInterval) const {
+    for (const auto& interval : mIntervals) {
+      if (interval.IntersectsWithStrictEnd(aInterval)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   // Shift all values by aOffset.
   SelfType& Shift(const T& aOffset) {
     for (auto& interval : mIntervals) {
