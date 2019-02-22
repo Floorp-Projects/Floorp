@@ -982,6 +982,7 @@ body {
 .split-box.vert.sidebar {
   /* Set to prevent the sidebar from extending past the right edge of the page */
   width: unset;
+  height: 100vh;
 }
 
 .sidebar-wrapper {
@@ -1002,7 +1003,6 @@ body {
 .sidebar-contents {
   grid-row: 2 / 3;
   overflow: auto;
-  max-height: 100%;
 }
 
 .webconsole-sidebar-toolbar .sidebar-close-button {
