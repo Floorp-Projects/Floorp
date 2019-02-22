@@ -24,17 +24,25 @@ class NameResolver {
   static const size_t MaxParents = 100;
 
   JSContext* cx;
-  size_t nparents; /* number of parents in the parents array */
+
+  // Number of nodes in the parents array.
+  size_t nparents_;
+
+  // Stack of ParseNodes from the root to the current node.
+  // Only elements 0..nparents_ are initialized.
   MOZ_INIT_OUTSIDE_CTOR
-  ParseNode*
-      parents[MaxParents]; /* history of ParseNodes we've been looking at */
-  StringBuffer* buf;       /* when resolving, buffer to append to */
+  ParseNode* parents_[MaxParents];
+
+  // When resolving, the buffer to append to.
+  StringBuffer* buf_;
 
   /* Test whether a ParseNode represents a function invocation */
-  bool call(ParseNode* pn) { return pn && pn->isKind(ParseNodeKind::CallExpr); }
+  bool isCall(ParseNode* pn) {
+    return pn && pn->isKind(ParseNodeKind::CallExpr);
+  }
 
   /*
-   * Append a reference to a property named |name| to |buf|. If |name| is
+   * Append a reference to a property named |name| to |buf_|. If |name| is
    * a proper identifier name, then we append '.name'; otherwise, we
    * append '["name"]'.
    *
@@ -45,25 +53,26 @@ class NameResolver {
    */
   bool appendPropertyReference(JSAtom* name) {
     if (IsIdentifier(name)) {
-      return buf->append('.') && buf->append(name);
+      return buf_->append('.') && buf_->append(name);
     }
 
     /* Quote the string as needed. */
     UniqueChars source = QuoteString(cx, name, '"');
-    return source && buf->append('[') &&
-           buf->append(source.get(), strlen(source.get())) && buf->append(']');
+    return source && buf_->append('[') &&
+           buf_->append(source.get(), strlen(source.get())) &&
+           buf_->append(']');
   }
 
-  /* Append a number to buf. */
+  /* Append a number to buf_. */
   bool appendNumber(double n) {
     char number[30];
     int digits = SprintfLiteral(number, "%g", n);
-    return buf->append(number, digits);
+    return buf_->append(number, digits);
   }
 
-  // Append "[<n>]" to buf, referencing a property named by a numeric literal.
+  // Append "[<n>]" to buf_, referencing a property named by a numeric literal.
   bool appendNumericPropertyReference(double n) {
-    return buf->append("[") && appendNumber(n) && buf->append(']');
+    return buf_->append("[") && appendNumber(n) && buf_->append(']');
   }
 
   /*
@@ -88,11 +97,11 @@ class NameResolver {
       case ParseNodeKind::Name:
       case ParseNodeKind::PrivateName:
         *foundName = true;
-        return buf->append(n->as<NameNode>().atom());
+        return buf_->append(n->as<NameNode>().atom());
 
       case ParseNodeKind::ThisExpr:
         *foundName = true;
-        return buf->append("this");
+        return buf_->append("this");
 
       case ParseNodeKind::ElemExpr: {
         PropertyByValue* elem = &n->as<PropertyByValue>();
@@ -102,13 +111,13 @@ class NameResolver {
         if (!*foundName) {
           return true;
         }
-        if (!buf->append('[') || !nameExpression(elem->right(), foundName)) {
+        if (!buf_->append('[') || !nameExpression(elem->right(), foundName)) {
           return false;
         }
         if (!*foundName) {
           return true;
         }
-        return buf->append(']');
+        return buf_->append(']');
       }
 
       case ParseNodeKind::NumberExpr:
@@ -116,7 +125,7 @@ class NameResolver {
         return appendNumber(n->as<NumericLiteral>().value());
 
       default:
-        /* We're confused as to what to call this function. */
+        // We're confused as to what to call this function.
         *foundName = false;
         return true;
     }
@@ -138,8 +147,8 @@ class NameResolver {
   ParseNode* gatherNameable(ParseNode** nameable, size_t* size) {
     *size = 0;
 
-    for (int pos = nparents - 1; pos >= 0; pos--) {
-      ParseNode* cur = parents[pos];
+    for (int pos = nparents_ - 1; pos >= 0; pos--) {
+      ParseNode* cur = parents_[pos];
       if (cur->is<AssignmentNode>()) {
         return cur;
       }
@@ -147,49 +156,46 @@ class NameResolver {
       switch (cur->getKind()) {
         case ParseNodeKind::PrivateName:
         case ParseNodeKind::Name:
-          return cur; /* found the initialized declaration */
+          return cur;  // found the initialized declaration
         case ParseNodeKind::ThisExpr:
-          return cur; /* Setting a property of 'this'. */
+          return cur;  // setting a property of 'this'
         case ParseNodeKind::Function:
-          return nullptr; /* won't find an assignment or declaration */
+          return nullptr;  // won't find an assignment or declaration
 
         case ParseNodeKind::ReturnStmt:
-          /*
-           * Normally the relevant parent of a node is its direct parent, but
-           * sometimes with code like:
-           *
-           *    var foo = (function() { return function() {}; })();
-           *
-           * the outer function is just a helper to create a scope for the
-           * returned function. Hence the name of the returned function should
-           * actually be 'foo'.  This loop sees if the current node is a
-           * ParseNodeKind::Return, and if there is a direct function
-           * call we skip to that.
-           */
+          // Normally the relevant parent of a node is its direct parent, but
+          // sometimes with code like:
+          //
+          //    var foo = (function() { return function() {}; })();
+          //
+          // the outer function is just a helper to create a scope for the
+          // returned function. Hence the name of the returned function should
+          // actually be 'foo'.  This loop sees if the current node is a
+          // ParseNodeKind::Return, and if there is a direct function
+          // call we skip to that.
           for (int tmp = pos - 1; tmp > 0; tmp--) {
             if (isDirectCall(tmp, cur)) {
               pos = tmp;
               break;
-            } else if (call(cur)) {
-              /* Don't skip too high in the tree */
+            }
+            if (isCall(cur)) {
+              // Don't skip too high in the tree.
               break;
             }
-            cur = parents[tmp];
+            cur = parents_[tmp];
           }
           break;
 
         case ParseNodeKind::Colon:
         case ParseNodeKind::Shorthand:
-          /*
-           * Record the ParseNodeKind::Colon/Shorthand but skip the
-           * ParseNodeKind::Object so we're not flagged as a
-           * contributor.
-           */
+          // Record the ParseNodeKind::Colon/Shorthand but skip the
+          // ParseNodeKind::Object so we're not flagged as a
+          // contributor.
           pos--;
           MOZ_FALLTHROUGH;
 
         default:
-          /* Save any other nodes we encounter on the way up. */
+          // Save any other nodes we encounter on the way up.
           MOZ_ASSERT(*size < MaxParents);
           nameable[(*size)++] = cur;
           break;
@@ -210,11 +216,11 @@ class NameResolver {
     RootedFunction fun(cx, funNode->funbox()->function());
 
     StringBuffer buf(cx);
-    this->buf = &buf;
+    this->buf_ = &buf;
 
     retAtom.set(nullptr);
 
-    /* If the function already has a name, use that */
+    // If the function already has a name, use that.
     if (fun->displayAtom() != nullptr) {
       if (prefix == nullptr) {
         retAtom.set(fun->displayAtom());
@@ -227,17 +233,19 @@ class NameResolver {
       return !!retAtom;
     }
 
-    /* If a prefix is specified, then it is a form of namespace */
-    if (prefix != nullptr && (!buf.append(prefix) || !buf.append('/'))) {
-      return false;
+    // If a prefix is specified, then it is a form of namespace.
+    if (prefix != nullptr) {
+      if (!buf.append(prefix) || !buf.append('/')) {
+        return false;
+      }
     }
 
-    /* Gather all nodes relevant to naming */
+    // Gather all nodes relevant to naming.
     ParseNode* toName[MaxParents];
     size_t size;
     ParseNode* assignment = gatherNameable(toName, &size);
 
-    /* If the function is assigned to something, then that is very relevant */
+    // If the function is assigned to something, then that is very relevant.
     if (assignment) {
       if (assignment->is<AssignmentNode>()) {
         assignment = assignment->as<AssignmentNode>().left();
@@ -251,11 +259,9 @@ class NameResolver {
       }
     }
 
-    /*
-     * Other than the actual assignment, other relevant nodes to naming are
-     * those in object initializers and then particular nodes marking a
-     * contribution.
-     */
+    // Other than the actual assignment, other relevant nodes to naming are
+    // those in object initializers and then particular nodes marking a
+    // contribution.
     for (int pos = size - 1; pos >= 0; pos--) {
       ParseNode* node = toName[pos];
 
@@ -276,10 +282,8 @@ class NameResolver {
           MOZ_ASSERT(left->isKind(ParseNodeKind::ComputedName));
         }
       } else {
-        /*
-         * Don't have consecutive '<' characters, and also don't start
-         * with a '<' character.
-         */
+        // Don't have consecutive '<' characters, and also don't start
+        // with a '<' character.
         if (!buf.empty() && buf.getChar(buf.length() - 1) != '<' &&
             !buf.append('<')) {
           return false;
@@ -287,11 +291,9 @@ class NameResolver {
       }
     }
 
-    /*
-     * functions which are "genuinely anonymous" but are contained in some
-     * other namespace are rather considered as "contributing" to the outer
-     * function, so give them a contribution symbol here.
-     */
+    // functions which are "genuinely anonymous" but are contained in some
+    // other namespace are rather considered as "contributing" to the outer
+    // function, so give them a contribution symbol here.
     if (!buf.empty() && buf.getChar(buf.length() - 1) == '/' &&
         !buf.append('<')) {
       return false;
@@ -315,13 +317,13 @@ class NameResolver {
   }
 
   /*
-   * Tests whether parents[pos] is a function call whose callee is cur.
+   * Tests whether parents_[pos] is a function call whose callee is cur.
    * This is the case for functions which do things like simply create a scope
    * for new variables and then return an anonymous function using this scope.
    */
   bool isDirectCall(int pos, ParseNode* cur) {
-    return pos >= 0 && call(parents[pos]) &&
-           parents[pos]->as<BinaryNode>().left() == cur;
+    return pos >= 0 && isCall(parents_[pos]) &&
+           parents_[pos]->as<BinaryNode>().left() == cur;
   }
 
   bool resolveTemplateLiteral(ListNode* node, HandleAtom prefix) {
@@ -385,7 +387,7 @@ class NameResolver {
   }
 
  public:
-  explicit NameResolver(JSContext* cx) : cx(cx), nparents(0), buf(nullptr) {}
+  explicit NameResolver(JSContext* cx) : cx(cx), nparents_(0), buf_(nullptr) {}
 
   /*
    * Resolve all names for anonymous functions recursively within the
@@ -408,18 +410,18 @@ class NameResolver {
        * contribute anything to the namespace, so don't bother updating
        * the prefix to whatever was returned.
        */
-      if (!isDirectCall(nparents - 1, cur)) {
+      if (!isDirectCall(nparents_ - 1, cur)) {
         prefix = prefix2;
       }
     }
 
-    if (nparents >= MaxParents) {
+    if (nparents_ >= MaxParents) {
       return true;
     }
 
-    auto initialParents = nparents;
-    parents[initialParents] = cur;
-    nparents++;
+    auto initialParents = nparents_;
+    parents_[initialParents] = cur;
+    nparents_++;
 
     switch (cur->getKind()) {
       // Nodes with no children that might require name resolution need no
@@ -977,18 +979,12 @@ class NameResolver {
         MOZ_CRASH("invalid node kind");
     }
 
-    nparents--;
-    MOZ_ASSERT(initialParents == nparents, "nparents imbalance detected");
-
-    // It would be nice to common up the repeated |parents[initialParents]|
-    // in a single variable, but the #if condition required to prevent an
-    // unused-variable warning across three separate conditionally-expanded
-    // macros would be super-ugly.  :-(
-    MOZ_ASSERT(parents[initialParents] == cur,
+    nparents_--;
+    MOZ_ASSERT(initialParents == nparents_, "nparents imbalance detected");
+    MOZ_ASSERT(parents_[initialParents] == cur,
                "pushed child shouldn't change underneath us");
-
-    AlwaysPoison(&parents[initialParents], 0xFF,
-                 sizeof(parents[initialParents]), MemCheckKind::MakeUndefined);
+    AlwaysPoison(&parents_[initialParents], 0xFF,
+                 sizeof(parents_[initialParents]), MemCheckKind::MakeUndefined);
 
     return true;
   }
