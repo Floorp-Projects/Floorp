@@ -228,7 +228,7 @@ struct HttpChannelOpenArgs
   uint32_t                    loadFlags;
   RequestHeaderTuples         requestHeaders;
   nsCString                   requestMethod;
-  OptionalIPCStream           uploadStream;
+  IPCStream?                  uploadStream;
   bool                        uploadStreamHasHeaders;
   int16_t                     priority;
   uint32_t                    classOfService;
@@ -293,7 +293,7 @@ struct FTPChannelOpenArgs
   URIParams                 uri;
   uint64_t                  startPos;
   nsCString                 entityID;
-  OptionalIPCStream         uploadStream;
+  IPCStream?                uploadStream;
   OptionalLoadInfoArgs      loadInfo;
   uint32_t                  loadFlags;
 };
