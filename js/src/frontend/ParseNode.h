@@ -81,7 +81,7 @@ class BigIntBox;
   F(TemplateStringListExpr, ListNode)                                        \
   F(TemplateStringExpr, NameNode)                                            \
   F(TaggedTemplateExpr, BinaryNode)                                          \
-  F(CallSiteObjExpr, CallSiteNode)                                           \
+  F(CallSiteObj, CallSiteNode)                                               \
   F(RegExpExpr, RegExpLiteral)                                               \
   F(TrueExpr, BooleanLiteral)                                                \
   F(FalseExpr, BooleanLiteral)                                               \
@@ -381,8 +381,14 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
  *   right: Name node for assignment
  *
  * <Expressions>
+ * The `Expr` suffix is used for nodes that can appear anywhere an expression
+ * could appear.  It is not used on a few weird kinds like Arguments and
+ * CallSiteObj that are always the child node of an expression node, but which
+ * can't stand alone.
+ *
  * All left-associated binary trees of the same type are optimized into lists
  * to avoid recursion when processing expression chains.
+ *
  * CommaExpr (ListNode)
  *   head: list of N comma-separated exprs
  *   count: N >= 2
@@ -481,7 +487,7 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
  *   left: tag expression
  *   right: Arguments, with the first being the call site object, then
  *          arg1, arg2, ... argN
- * CallSiteObjExpr (CallSiteNode)
+ * CallSiteObj (CallSiteNode)
  *   head:  an Array of raw TemplateString, then corresponding cooked
  *          TemplateString nodes
  *            Array [, cooked TemplateString]+
@@ -1909,10 +1915,10 @@ class PropertyByValue : public BinaryNode {
 class CallSiteNode : public ListNode {
  public:
   explicit CallSiteNode(uint32_t begin)
-      : ListNode(ParseNodeKind::CallSiteObjExpr, TokenPos(begin, begin + 1)) {}
+      : ListNode(ParseNodeKind::CallSiteObj, TokenPos(begin, begin + 1)) {}
 
   static bool test(const ParseNode& node) {
-    bool match = node.isKind(ParseNodeKind::CallSiteObjExpr);
+    bool match = node.isKind(ParseNodeKind::CallSiteObj);
     MOZ_ASSERT_IF(match, node.is<ListNode>());
     return match;
   }
