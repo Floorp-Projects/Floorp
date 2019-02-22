@@ -10,7 +10,7 @@ async function run_test() {
     return;
   }
   const STATE_AFTER_RUNUPDATE =
-    IS_SERVICE_TEST ? STATE_PENDING_SVC : STATE_PENDING;
+    gIsServiceTest ? STATE_PENDING_SVC : STATE_PENDING;
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();

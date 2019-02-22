@@ -30,8 +30,6 @@
 
 "use strict";
 
-/* eslint-disable no-undef */
-
 const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
@@ -111,11 +109,11 @@ const LOG_FUNCTION = info;
 
 const gHTTPHandlerPath = "updates.xml";
 
-// This default value will be overridden when using the http server.
-var gURLData = URL_HOST + "/";
-
+var gIsServiceTest;
 var gTestID;
 
+// This default value will be overridden when using the http server.
+var gURLData = URL_HOST + "/";
 var gTestserver;
 
 var gIncrementalDownloadErrorType;
@@ -746,7 +744,7 @@ function setupTestCommon(aAppUpdateAutoEnabled = false) {
   let caller = Components.stack.caller;
   gTestID = caller.filename.toString().split("/").pop().split(".")[0];
 
-  if (gDebugTestLog && !IS_SERVICE_TEST) {
+  if (gDebugTestLog && !gIsServiceTest) {
     if (gTestsToLog.length == 0 || gTestsToLog.includes(gTestID)) {
       let logFile = do_get_file(gTestID + ".log", true);
       if (!logFile.exists()) {
@@ -763,7 +761,7 @@ function setupTestCommon(aAppUpdateAutoEnabled = false) {
 
   createAppInfo("xpcshell@tests.mozilla.org", APP_INFO_NAME, "1.0", "2.0");
 
-  if (IS_SERVICE_TEST && !shouldRunServiceTest()) {
+  if (gIsServiceTest && !shouldRunServiceTest()) {
     return false;
   }
 
@@ -802,7 +800,7 @@ function setupTestCommon(aAppUpdateAutoEnabled = false) {
   }
 
   if (AppConstants.platform == "win") {
-    Services.prefs.setBoolPref(PREF_APP_UPDATE_SERVICE_ENABLED, !!IS_SERVICE_TEST);
+    Services.prefs.setBoolPref(PREF_APP_UPDATE_SERVICE_ENABLED, !!gIsServiceTest);
   }
 
   adjustGeneralPaths();
@@ -1654,7 +1652,7 @@ function logUpdateLog(aLogLeafName) {
     logTestInfo("update log doesn't exist, path: " + updateLog.path);
   }
 
-  if (IS_SERVICE_TEST) {
+  if (gIsServiceTest) {
     let serviceLog = getMaintSvcDir();
     serviceLog.append("logs");
     serviceLog.append("maintenanceservice.log");
@@ -1720,7 +1718,7 @@ function runUpdate(aExpectedStatus, aSwitchApp, aExpectedExitValue, aCheckSvcLog
                          !!aApplyToDirPath || !!aCallbackPath;
 
   let svcOriginalLog;
-  if (IS_SERVICE_TEST) {
+  if (gIsServiceTest) {
     copyFileToTestAppDir(FILE_MAINTENANCE_SERVICE_BIN, false);
     copyFileToTestAppDir(FILE_MAINTENANCE_SERVICE_INSTALLER_BIN, false);
     if (aCheckSvcLog) {
@@ -1760,12 +1758,12 @@ function runUpdate(aExpectedStatus, aSwitchApp, aExpectedExitValue, aCheckSvcLog
     args[3] = pid;
   }
 
-  let launchBin = IS_SERVICE_TEST && isInvalidArgTest ? callbackApp : updateBin;
+  let launchBin = gIsServiceTest && isInvalidArgTest ? callbackApp : updateBin;
 
   if (!isInvalidArgTest) {
     args = args.concat([callbackApp.parent.path, callbackApp.path]);
     args = args.concat(gCallbackArgs);
-  } else if (IS_SERVICE_TEST) {
+  } else if (gIsServiceTest) {
     args = ["launch-service", updateBin.path].concat(args);
   } else if (aCallbackPath) {
     args = args.concat([callbackApp.parent.path, aCallbackPath]);
@@ -1792,7 +1790,7 @@ function runUpdate(aExpectedStatus, aSwitchApp, aExpectedExitValue, aCheckSvcLog
   }
 
   let status = readStatusFile();
-  if ((!IS_SERVICE_TEST && process.exitValue != aExpectedExitValue) ||
+  if ((!gIsServiceTest && process.exitValue != aExpectedExitValue) ||
       status != aExpectedStatus) {
     if (process.exitValue != aExpectedExitValue) {
       logTestInfo("updater exited with unexpected value! Got: " +
@@ -1805,7 +1803,7 @@ function runUpdate(aExpectedStatus, aSwitchApp, aExpectedExitValue, aCheckSvcLog
     logUpdateLog(FILE_LAST_UPDATE_LOG);
   }
 
-  if (!IS_SERVICE_TEST) {
+  if (!gIsServiceTest) {
     Assert.equal(process.exitValue, aExpectedExitValue,
                  "the process exit value" + MSG_SHOULD_EQUAL);
   }
@@ -1815,7 +1813,7 @@ function runUpdate(aExpectedStatus, aSwitchApp, aExpectedExitValue, aCheckSvcLog
   Assert.ok(!updateHasBinaryTransparencyErrorResult(),
             "binary transparency is not being processed for now");
 
-  if (IS_SERVICE_TEST && aCheckSvcLog) {
+  if (gIsServiceTest && aCheckSvcLog) {
     let contents = readServiceLogFile();
     Assert.notEqual(contents, svcOriginalLog,
                     "the contents of the maintenanceservice.log should not " +
@@ -1897,7 +1895,7 @@ function checkSymlink() {
  * Sets the active update and related information for updater tests.
  */
 function setupActiveUpdate() {
-  let pendingState = IS_SERVICE_TEST ? STATE_PENDING_SVC : STATE_PENDING;
+  let pendingState = gIsServiceTest ? STATE_PENDING_SVC : STATE_PENDING;
   let patchProps = {state: pendingState};
   let patches = getLocalPatchString(patchProps);
   let updates = getLocalUpdateString({}, patches);
@@ -1925,7 +1923,7 @@ async function stageUpdate(aStateAfterStage, aCheckSvcLog,
   debugDump("start - attempting to stage update");
 
   let svcLogOriginalContents;
-  if (IS_SERVICE_TEST && aCheckSvcLog) {
+  if (gIsServiceTest && aCheckSvcLog) {
     svcLogOriginalContents = readServiceLogFile();
   }
 
@@ -1943,7 +1941,7 @@ async function stageUpdate(aStateAfterStage, aCheckSvcLog,
   resetEnvironment();
 
   if (AppConstants.platform == "win") {
-    if (IS_SERVICE_TEST) {
+    if (gIsServiceTest) {
       waitForServiceStop(false);
     } else {
       let updater = getApplyDirFile(FILE_UPDATER_BIN);
@@ -1982,7 +1980,7 @@ async function stageUpdate(aStateAfterStage, aCheckSvcLog,
               MSG_SHOULD_NOT_EXIST + getMsgPath(stageDir.path));
   }
 
-  if (IS_SERVICE_TEST && aCheckSvcLog) {
+  if (gIsServiceTest && aCheckSvcLog) {
     let contents = readServiceLogFile();
     Assert.notEqual(contents, svcLogOriginalContents,
                     "the contents of the maintenanceservice.log should not " +
@@ -4059,7 +4057,7 @@ function setEnvironment() {
 
   gEnv.set("XPCOM_DEBUG_BREAK", "warn");
 
-  if (IS_SERVICE_TEST) {
+  if (gIsServiceTest) {
     debugDump("setting MOZ_NO_SERVICE_FALLBACK environment variable to 1");
     gEnv.set("MOZ_NO_SERVICE_FALLBACK", "1");
   }
@@ -4115,7 +4113,7 @@ function resetEnvironment() {
     gEnv.set("XRE_NO_WINDOWS_CRASH_DIALOG", "");
   }
 
-  if (IS_SERVICE_TEST) {
+  if (gIsServiceTest) {
     debugDump("removing MOZ_NO_SERVICE_FALLBACK environment variable");
     gEnv.set("MOZ_NO_SERVICE_FALLBACK", "");
   }
