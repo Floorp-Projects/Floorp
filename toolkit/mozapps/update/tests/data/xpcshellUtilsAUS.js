@@ -2634,54 +2634,44 @@ async function waitForHelperSleep() {
 }
 
 /**
- * Helper function that waits until the helper has finished its operations
- * before calling waitForHelperFinishFileUnlock to verify that the helper's
- * input and output directories are no longer in use.
- */
-function waitForHelperFinished() {
-  // Give the lock file process time to lock the file before updating otherwise
-  // this test can fail intermittently on Windows debug builds.
-  let output = getApplyDirFile(DIR_RESOURCES + "output");
-  if (readFile(output) != "finished\n") {
-    // Uses do_timeout instead of do_execute_soon to lessen log spew.
-    do_timeout(FILE_IN_USE_TIMEOUT_MS, waitForHelperFinished);
-    return;
-  }
-  // Give the lock file process time to unlock the file before deleting the
-  // input and output files.
-  waitForHelperFinishFileUnlock();
-}
-
-/**
- * Helper function that waits until the helper's input and output files are no
- * longer in use before calling waitForHelperExitFinished.
- */
-function waitForHelperFinishFileUnlock() {
-  try {
-    let output = getApplyDirFile(DIR_RESOURCES + "output");
-    if (output.exists()) {
-      output.remove(false);
-    }
-    let input = getApplyDirFile(DIR_RESOURCES + "input");
-    if (input.exists()) {
-      input.remove(false);
-    }
-  } catch (e) {
-    // Give the lock file process time to unlock the file before deleting the
-    // input and output files.
-    executeSoon(waitForHelperFinishFileUnlock);
-    return;
-  }
-  executeSoon(waitForHelperExitFinished);
-}
-
-/**
  * Helper function to tell the helper to finish and exit its sleep state.
  */
-function waitForHelperExit() {
-  let input = getApplyDirFile(DIR_RESOURCES + "input");
-  writeFile(input, "finish\n");
-  waitForHelperFinished();
+async function waitForHelperExit() {
+  let file = getApplyDirFile(DIR_RESOURCES + "input");
+  writeFile(file, "finish\n");
+
+  // Give the lock file process time to lock the file before updating otherwise
+  // this test can fail intermittently on Windows debug builds.
+  file = getApplyDirFile(DIR_RESOURCES + "output");
+  await TestUtils.waitForCondition(() => (file.exists()),
+    "Waiting for file to exist, Path: " + file.path);
+
+  let expectedContents = "finished\n";
+  await TestUtils.waitForCondition(() => (readFile(file) == expectedContents),
+    "Waiting for expected file contents: " + expectedContents);
+
+  // Give the lock file process time to unlock the file before deleting the
+  // input and output files.
+  await TestUtils.waitForCondition(() => {
+    try {
+      file.remove(false);
+    } catch (e) {
+      debugDump("failed to remove file. Path: " + file.path +
+                ", Exception: " + e);
+    }
+    return !file.exists();
+  }, "Waiting for file to be removed, Path: " + file.path);
+
+  file = getApplyDirFile(DIR_RESOURCES + "input");
+  await TestUtils.waitForCondition(() => {
+    try {
+      file.remove(false);
+    } catch (e) {
+      debugDump("failed to remove file. Path: " + file.path +
+                ", Exception: " + e);
+    }
+    return !file.exists();
+  }, "Waiting for file to be removed, Path: " + file.path);
 }
 
 /**

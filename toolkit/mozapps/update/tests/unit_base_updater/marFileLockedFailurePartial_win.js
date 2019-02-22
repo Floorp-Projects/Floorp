@@ -20,13 +20,7 @@ function run_test() {
 async function setupUpdaterTestFinished() {
   await runHelperLockFile(gTestFiles[2]);
   runUpdate(STATE_FAILED_READ_ERROR, false, 1, true);
-  waitForHelperExit();
-}
-
-/**
- * Called after the call to waitForHelperExit finishes.
- */
-async function waitForHelperExitFinished() {
+  await waitForHelperExit();
   standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
