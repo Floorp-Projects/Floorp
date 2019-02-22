@@ -45,7 +45,7 @@ addEventListener("DOMFormHasPassword", function(event) {
   if (shouldIgnoreLoginManagerEvent(event)) {
     return;
   }
-  LoginManagerContent.onDOMFormHasPassword(event, content);
+  LoginManagerContent.onDOMFormHasPassword(event);
   let formLike = LoginFormFactory.createFromForm(event.originalTarget);
   InsecurePasswordUtils.reportInsecurePasswords(formLike);
 });
