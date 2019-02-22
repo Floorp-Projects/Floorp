@@ -7,36 +7,88 @@ job-defaults:
     worker:
         max-run-time: 36000
         env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
+
+sm-plain-win64/debug:
+    description: "Spidermonkey Plain win64 debug"
+    index:
+        job-name: sm-plain-win64-debug
+    treeherder:
+        platform: windows2012-64/debug
+        symbol: SM(p)
+    run:
+        spidermonkey-variant: plaindebug
+        spidermonkey-platform: win64
+    toolchains:
+        - win64-clang-cl
+        - win64-rust
 
 sm-plain-win32/debug:
-    description: "Spidermonkey Plain"
+    description: "Spidermonkey Plain win32 debug"
     index:
         job-name: sm-plain-win32-debug
     treeherder:
         platform: windows2012-32/debug
         symbol: SM(p)
+    run-on-projects: []
     run:
         spidermonkey-variant: plaindebug
+        spidermonkey-platform: win32
+    toolchains:
+        - win64-clang-cl
+        - win64-rust
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
+
+sm-plain-win64/opt:
+    description: "Spidermonkey Plain win64 opt"
+    index:
+        job-name: sm-plain-win64-opt
+    treeherder:
+        platform: windows2012-64/opt
+        symbol: SM(p)
+    run:
+        spidermonkey-variant: plain
+        spidermonkey-platform: win64
     toolchains:
         - win64-clang-cl
         - win64-rust
 
 sm-plain-win32/opt:
-    description: "Spidermonkey Plain"
+    description: "Spidermonkey Plain win32 opt"
     index:
         job-name: sm-plain-win32-opt
     treeherder:
         platform: windows2012-32/opt
         symbol: SM(p)
+    run-on-projects: []
     run:
         spidermonkey-variant: plain
+        spidermonkey-platform: win32
+    toolchains:
+        - win64-clang-cl
+        - win64-rust
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
+
+sm-compacting-win64/debug:
+    description: "Spidermonkey Compacting win64 debug"
+    index:
+        job-name: sm-compacting-win64-debug
+    treeherder:
+        platform: windows2012-64/debug
+        symbol: SM(cgc)
+    run:
+        spidermonkey-variant: compacting
+        spidermonkey-platform: win64
     toolchains:
         - win64-clang-cl
         - win64-rust
 
 sm-compacting-win32/debug:
-    description: "Spidermonkey Compacting"
+    description: "Spidermonkey Compacting win32 debug"
     index:
         job-name: sm-compacting-win32-debug
     treeherder:
@@ -44,6 +96,11 @@ sm-compacting-win32/debug:
         symbol: SM(cgc)
     run:
         spidermonkey-variant: compacting
+        spidermonkey-platform: win32
+    run-on-projects: []
     toolchains:
         - win64-clang-cl
         - win64-rust
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
