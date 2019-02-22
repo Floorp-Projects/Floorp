@@ -1678,6 +1678,11 @@ var Scalars = {
       return;
     }
 
+    const headings = [
+      "namesHeader",
+      "valuesHeader",
+    ].map(h => bundle.GetStringFromName(h));
+
     let payload = aPayload.stores;
     if (payload) { // Check for stores in the current ping data first
       let hasData = false;
@@ -1693,11 +1698,6 @@ var Scalars = {
           return sclrs && Object.keys(sclrs).length > 0;
         });
         if (Object.keys(scalars).length > 0) {
-          const headings = [
-            "namesHeader",
-            "valuesHeader",
-          ].map(h => bundle.GetStringFromName(h));
-
           let s = GenericSubsection.renderSubsectionHeader(store, true, "scalars-section");
           let table = GenericTable.render(explodeObject(scalars), headings);
           let caption = document.createElement("caption");
@@ -1723,16 +1723,27 @@ var Scalars = {
 
       setHasData("scalars-section", hasData);
       if (Object.keys(scalars).length > 0) {
-        const headings = [
-          "namesHeader",
-          "valuesHeader",
-        ].map(h => bundle.GetStringFromName(h));
         const table = GenericTable.render(explodeObject(scalars), headings);
         scalarsSection.appendChild(table);
       }
     }
   },
 };
+
+function createScalarContainer(scalarId, scalarData, headings) {
+  // Add the name of the scalar.
+  let container = document.createElement("div");
+  container.classList.add("keyed-scalar");
+  container.id = scalarId;
+  let scalarNameSection = document.createElement("p");
+  scalarNameSection.classList.add("keyed-title");
+  scalarNameSection.appendChild(document.createTextNode(scalarId));
+  container.appendChild(scalarNameSection);
+  // Populate the section with the key-value pairs from the scalar.
+  const table = GenericTable.render(explodeObject(scalarData), headings);
+  container.appendChild(table);
+  return container;
+}
 
 var KeyedScalars = {
   /**
@@ -1749,6 +1760,11 @@ var KeyedScalars = {
     if (!selectedProcess) {
       return;
     }
+
+    const headings = [
+      "namesHeader",
+      "valuesHeader",
+    ].map(h => bundle.GetStringFromName(h));
 
     let payload = aPayload.stores;
     if (payload) { // Check for stores in the current ping data first
@@ -1773,22 +1789,9 @@ var KeyedScalars = {
         heading.textContent = store;
         s.appendChild(heading);
 
-        const headings = [
-          "namesHeader",
-          "valuesHeader",
-        ].map(h => bundle.GetStringFromName(h));
         for (let scalar in keyedScalars) {
           // Add the name of the scalar.
-          let container = document.createElement("div");
-          container.classList.add("keyed-scalar");
-          container.id = scalar;
-          let scalarNameSection = document.createElement("p");
-          scalarNameSection.classList.add("keyed-title");
-          scalarNameSection.appendChild(document.createTextNode(scalar));
-          container.appendChild(scalarNameSection);
-          // Populate the section with the key-value pairs from the scalar.
-          const table = GenericTable.render(explodeObject(keyedScalars[scalar]), headings);
-          container.appendChild(table);
+          const container = createScalarContainer(scalar, keyedScalars[scalar], headings);
           s.appendChild(container);
         }
 
@@ -1813,22 +1816,8 @@ var KeyedScalars = {
         return;
       }
 
-      const headings = [
-        "namesHeader",
-        "valuesHeader",
-      ].map(h => bundle.GetStringFromName(h));
       for (let scalar in keyedScalars) {
-        // Add the name of the scalar.
-        let container = document.createElement("div");
-        container.classList.add("keyed-scalar");
-        container.id = scalar;
-        let scalarNameSection = document.createElement("p");
-        scalarNameSection.classList.add("keyed-title");
-        scalarNameSection.appendChild(document.createTextNode(scalar));
-        container.appendChild(scalarNameSection);
-        // Populate the section with the key-value pairs from the scalar.
-        const table = GenericTable.render(explodeObject(keyedScalars[scalar]), headings);
-        container.appendChild(table);
+        const container = createScalarContainer(scalar, keyedScalars[scalar], headings);
         scalarsSection.appendChild(container);
       }
     }

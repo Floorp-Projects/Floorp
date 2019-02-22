@@ -55,20 +55,25 @@ static bool IsActivelyCapturingOrHasAPermission(nsPIDOMWindowInner* aWindow) {
   }
 
   auto principal = nsGlobalWindowInner::Cast(aWindow)->GetPrincipal();
-  return (nsContentUtils::IsExactSitePermAllow(principal, "camera") ||
-          nsContentUtils::IsExactSitePermAllow(principal, "microphone") ||
-          nsContentUtils::IsExactSitePermAllow(principal, "screen"));
+  return (nsContentUtils::IsExactSitePermAllow(principal,
+                                               NS_LITERAL_CSTRING("camera")) ||
+          nsContentUtils::IsExactSitePermAllow(
+              principal, NS_LITERAL_CSTRING("microphone")) ||
+          nsContentUtils::IsExactSitePermAllow(principal,
+                                               NS_LITERAL_CSTRING("screen")));
 }
 
 static bool IsSiteInAutoplayWhiteList(const Document* aDocument) {
   return aDocument ? nsContentUtils::IsExactSitePermAllow(
-                         aDocument->NodePrincipal(), "autoplay-media")
+                         aDocument->NodePrincipal(),
+                         NS_LITERAL_CSTRING("autoplay-media"))
                    : false;
 }
 
 static bool IsSiteInAutoplayBlackList(const Document* aDocument) {
   return aDocument ? nsContentUtils::IsExactSitePermDeny(
-                         aDocument->NodePrincipal(), "autoplay-media")
+                         aDocument->NodePrincipal(),
+                         NS_LITERAL_CSTRING("autoplay-media"))
                    : false;
 }
 

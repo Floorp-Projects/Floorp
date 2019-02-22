@@ -42,7 +42,7 @@ static const uint32_t ACCEPT_SESSION = 2;
 static const bool kDefaultPolicy = true;
 static const char kCookiesLifetimePolicy[] = "network.cookie.lifetimePolicy";
 
-static const char kPermissionType[] = "cookie";
+static const nsLiteralCString kPermissionType(NS_LITERAL_CSTRING("cookie"));
 
 namespace {
 mozilla::StaticRefPtr<nsCookiePermission> gSingleton;

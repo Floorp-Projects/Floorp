@@ -259,8 +259,8 @@ static bool PrincipalAllowsBrowserFrame(nsIPrincipal* aPrincipal) {
       mozilla::services::GetPermissionManager();
   NS_ENSURE_TRUE(permMgr, false);
   uint32_t permission = nsIPermissionManager::DENY_ACTION;
-  nsresult rv =
-      permMgr->TestPermissionFromPrincipal(aPrincipal, "browser", &permission);
+  nsresult rv = permMgr->TestPermissionFromPrincipal(
+      aPrincipal, NS_LITERAL_CSTRING("browser"), &permission);
   NS_ENSURE_SUCCESS(rv, false);
   return permission == nsIPermissionManager::ALLOW_ACTION;
 }

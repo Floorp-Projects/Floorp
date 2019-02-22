@@ -231,6 +231,12 @@ pub struct ScrollFrameDisplayItem {
     pub external_id: Option<ExternalScrollId>,
     pub image_mask: Option<ImageMask>,
     pub scroll_sensitivity: ScrollSensitivity,
+    /// The amount this scrollframe has already been scrolled by, in the caller.
+    /// This means that all the display items that are inside the scrollframe
+    /// will have their coordinates shifted by this amount, and this offset
+    /// should be added to those display item coordinates in order to get a
+    /// normalized value that is consistent across display lists.
+    pub external_scroll_offset: LayoutPoint,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
