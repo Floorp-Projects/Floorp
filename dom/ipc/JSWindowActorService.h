@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_JSWindowActorService_h
 #define mozilla_dom_JSWindowActorService_h
 
-#include "nsClassHashtable.h"
+#include "nsRefPtrHashtable.h"
 #include "nsString.h"
 
 namespace mozilla {
@@ -47,7 +47,7 @@ class JSWindowActorService final {
   JSWindowActorService();
   ~JSWindowActorService();
 
-  nsClassHashtable<nsStringHashKey, WindowActorOptions> mDescriptors;
+  nsRefPtrHashtable<nsStringHashKey, JSWindowActorProtocol> mDescriptors;
 };
 
 }  // namespace dom
