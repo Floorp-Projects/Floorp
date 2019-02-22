@@ -33,6 +33,8 @@
           src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/javascript"
           src="chrome://browser/content/contentTheme.js"/>
+  <script type="application/javascript"
+          src="chrome://browser/content/places/places-tree.js"/>
 
 #include ../../../../toolkit/content/editMenuCommands.inc.xul
 
@@ -82,7 +84,7 @@
   <tree id="historyTree"
         class="sidebar-placesTree"
         flex="1"
-        type="places"
+        is="places-tree"
         hidecolumnpicker="true"
         context="placesContext"
         onkeypress="PlacesUIUtils.onSidebarTreeKeyPress(event);"

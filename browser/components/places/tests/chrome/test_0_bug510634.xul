@@ -16,13 +16,15 @@
         onload="runTest();">
 
   <script type="application/javascript"
+          src="chrome://browser/content/places/places-tree.js"/>
+  <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
   <script type="application/javascript" src="head.js" />
 
   <body xmlns="http://www.w3.org/1999/xhtml" />
 
   <tree id="tree"
-        type="places"
+        is="places-tree"
         flex="1">
     <treecols>
       <treecol label="Title" id="title" anonid="title" primary="true" ordinal="1" flex="1"/>

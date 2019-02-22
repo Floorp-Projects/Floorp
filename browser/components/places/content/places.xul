@@ -71,6 +71,8 @@
           src="chrome://browser/content/downloads/allDownloadsView.js"/>
   <script type="application/javascript"
           src="chrome://global/content/contentAreaUtils.js"/>
+  <script type="application/javascript"
+          src="chrome://browser/content/places/places-tree.js"/>
 
   <commandset id="organizerCommandSet">
     <command id="OrganizerCommand_find:all"
@@ -357,7 +359,7 @@
   <hbox flex="1" id="placesView">
     <tree id="placesList"
           class="plain placesTree"
-          type="places"
+          is="places-tree"
           hidecolumnpicker="true" context="placesContext"
           onselect="PlacesOrganizer.onPlaceSelected(true);"
           onclick="PlacesOrganizer.onPlacesListClick(event);"
@@ -382,7 +384,7 @@
               context="placesContext"
               hidecolumnpicker="true"
               flex="1"
-              type="places"
+              is="places-tree"
               flatList="true"
               selectfirstnode="true"
               enableColumnDrag="true"

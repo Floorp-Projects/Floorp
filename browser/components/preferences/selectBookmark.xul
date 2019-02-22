@@ -28,11 +28,14 @@
           src="chrome://global/content/globalOverlay.js"/>
   <script type="application/javascript"
           src="chrome://browser/content/utilityOverlay.js"/>
+  <script type="application/javascript"
+          src="chrome://browser/content/places/places-tree.js"/>
+
   <description data-l10n-id="select-bookmark-desc"/>
 
   <separator class="thin"/>
 
-  <tree id="bookmarks" flex="1" type="places"
+  <tree id="bookmarks" flex="1" is="places-tree"
         style="height: 15em;"
         hidecolumnpicker="true"
         seltype="single"
