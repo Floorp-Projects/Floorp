@@ -689,9 +689,15 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
       EnsureInit();
       aResult = mCSDCloseButton;
       break;
-    case eIntID_GTKCSDTransparentBackground:
-      aResult = nsWindow::TopLevelWindowUseARGBVisual();
+    case eIntID_GTKCSDTransparentBackground: {
+      // Enable transparent titlebar corners for titlebar mode.
+      GdkScreen* screen = gdk_screen_get_default();
+      aResult = gdk_screen_is_composited(screen)
+                    ? (nsWindow::GetSystemCSDSupportLevel() !=
+                       nsWindow::CSD_SUPPORT_NONE)
+                    : false;
       break;
+    }
     case eIntID_GTKCSDReversedPlacement:
       EnsureInit();
       aResult = mCSDReversedPlacement;
