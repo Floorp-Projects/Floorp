@@ -34,17 +34,11 @@ function setupUpdaterTestFinished() {
 /**
  * Called after the call to stageUpdate finishes.
  */
-function stageUpdateFinished() {
+async function stageUpdateFinished() {
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(STATE_FAILED_MAR_CHANNEL_MISMATCH_ERROR);
-  executeSoon(waitForUpdateXMLFiles);
-}
-
-/**
- * Called after the call to waitForUpdateXMLFiles finishes.
- */
-function waitForUpdateXMLFilesFinished() {
+  await waitForUpdateXMLFiles();
   checkUpdateManager(STATE_NONE, false, STATE_FAILED,
                      MAR_CHANNEL_MISMATCH_ERROR, 1);
   waitForFilesInUse();
