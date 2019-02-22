@@ -15,10 +15,10 @@ static void GC(JSContext* cx) {
   JS_GC(cx);
 }
 
-BEGIN_TEST(testArrayBufferWithUserOwnedContents) {
+BEGIN_TEST(testExternalArrayBuffer) {
   size_t length = sizeof(test_data);
   JS::RootedObject obj(
-      cx, JS_NewArrayBufferWithUserOwnedContents(cx, length, test_data));
+      cx, JS_NewArrayBufferWithExternalContents(cx, length, test_data));
   GC(cx);
   CHECK(VerifyObject(obj, length));
   GC(cx);
@@ -44,4 +44,4 @@ bool VerifyObject(JS::HandleObject obj, uint32_t length) {
   return true;
 }
 
-END_TEST(testArrayBufferWithUserOwnedContents)
+END_TEST(testExternalArrayBuffer)

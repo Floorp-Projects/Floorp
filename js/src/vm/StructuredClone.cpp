@@ -1887,8 +1887,6 @@ bool JSStructuredCloneWriter::transferOwnership() {
         if (bufContents.kind() == ArrayBufferObject::MAPPED) {
           ownership = JS::SCTAG_TMO_MAPPED_DATA;
         } else {
-          MOZ_ASSERT(bufContents.kind() == ArrayBufferObject::MALLOCED,
-                     "failing to handle new ArrayBuffer kind?");
           ownership = JS::SCTAG_TMO_ALLOC_DATA;
         }
         extraData = nbytes;
@@ -2204,7 +2202,7 @@ bool JSStructuredCloneReader::readDataView(uint32_t byteLength,
 
 bool JSStructuredCloneReader::readArrayBuffer(uint32_t nbytes,
                                               MutableHandleValue vp) {
-  JSObject* obj = ArrayBufferObject::createZeroed(context(), nbytes);
+  JSObject* obj = ArrayBufferObject::create(context(), nbytes);
   if (!obj) {
     return false;
   }
@@ -2322,7 +2320,7 @@ bool JSStructuredCloneReader::readV1ArrayBuffer(uint32_t arrayType,
     return false;
   }
 
-  JSObject* obj = ArrayBufferObject::createZeroed(context(), nbytes.value());
+  JSObject* obj = ArrayBufferObject::create(context(), nbytes.value());
   if (!obj) {
     return false;
   }
