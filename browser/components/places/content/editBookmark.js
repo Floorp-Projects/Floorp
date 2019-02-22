@@ -1078,7 +1078,31 @@ var gEditItemOverlay = {
   onItemVisited() { },
 };
 
-for (let elt of ["folderMenuList", "folderTree", "namePicker",
+XPCOMUtils.defineLazyGetter(gEditItemOverlay, "_folderTree", () => {
+  if (!customElements.get("places-tree")) {
+    Services.scriptloader.loadSubScript("chrome://browser/content/places/places-tree.js", window);
+  }
+  gEditItemOverlay._element("folderTreeRow").prepend(MozXULElement.parseXULToFragment(`
+    <tree id="editBMPanel_folderTree"
+          flex="1"
+          class="placesTree"
+          is="places-tree"
+          height="150"
+          minheight="150"
+          editable="true"
+          onselect="gEditItemOverlay.onFolderTreeSelect();"
+          disableUserActions="true"
+          hidecolumnpicker="true">
+      <treecols>
+        <treecol anonid="title" flex="1" primary="true" hideheader="true"/>
+      </treecols>
+      <treechildren flex="1"/>
+    </tree>
+  `));
+  return gEditItemOverlay._element("folderTree");
+});
+
+for (let elt of ["folderMenuList", "namePicker",
                  "locationField", "keywordField",
                  "tagsField" ]) {
   let eltScoped = elt;

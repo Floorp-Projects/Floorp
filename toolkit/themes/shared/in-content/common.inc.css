@@ -385,14 +385,6 @@ xul|textbox {
   padding-left: 8px;
 }
 
-/* Create a separate rule to unset these styles on .tree-input instead of
-   using :not(.tree-input) so the selector specifity doesn't change. */
-xul|textbox.tree-input {
-  min-height: unset;
-  padding-right: unset;
-  padding-left: unset;
-}
-
 html|input[type="email"],
 html|input[type="tel"],
 html|input[type="text"],

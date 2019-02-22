@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-tree[type="places"] {
-  -moz-binding: url("chrome://browser/content/places/tree.xml#places-tree");
-}
-
-tree[type="places"] > treechildren::-moz-tree-cell {
+tree[is="places-tree"] > treechildren::-moz-tree-cell {
   /* ensure we use the direction of the website title / url instead of the
    * browser locale */
   unicode-bidi: plaintext;
