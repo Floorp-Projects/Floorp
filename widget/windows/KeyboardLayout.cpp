@@ -1432,14 +1432,11 @@ void NativeKey::InitWithKeyOrChar() {
       // cause sending another key message if odd tool hooks GetMessage(),
       // PeekMessage().
       sLastKeyMSG = mMsg;
-      // First, resolve the IME converted virtual keycode to its original
-      // keycode.
-      if (mMsg.wParam == VK_PROCESSKEY) {
-        mOriginalVirtualKeyCode =
-            static_cast<uint8_t>(::ImmGetVirtualKey(mMsg.hwnd));
-      } else {
-        mOriginalVirtualKeyCode = static_cast<uint8_t>(mMsg.wParam);
-      }
+
+      // Note that we don't need to compute raw virtual keycode here even when
+      // it's VK_PROCESS (i.e., already handled by IME) because we need to
+      // export it as DOM_VK_PROCESS and KEY_NAME_INDEX_Process.
+      mOriginalVirtualKeyCode = static_cast<uint8_t>(mMsg.wParam);
 
       // If the key message is sent from other application like a11y tools, the
       // scancode value might not be set proper value.  Then, probably the value
