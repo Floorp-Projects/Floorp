@@ -32,7 +32,7 @@
     <vbox flex="1">
       <label>&blocklist.summary;</label>
       <separator class="thin"/>
-      <richlistbox id="addonList" flex="1"/>
+      <richlistbox id="addonList" flex="1" style="-moz-user-focus: none;"/>
       <separator class="thin"/>
       <description id="bothMessage" hidden="true" class="bold">&blocklist.softandhard;</description>
       <description id="hardBlockMessage" hidden="true" class="bold">&blocklist.hardblocked;</description>
