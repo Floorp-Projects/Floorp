@@ -36,6 +36,16 @@ class MarkupContextMenu {
     this.walker = this.inspector.walker;
   }
 
+  destroy() {
+    this.markup = null;
+    this.inspector = null;
+    this.selection = null;
+    this.target = null;
+    this.telemetry = null;
+    this.toolbox = null;
+    this.walker = null;
+  }
+
   show(event) {
     if (!(event.originalTarget instanceof Element) ||
         event.originalTarget.closest("input[type=text]") ||
