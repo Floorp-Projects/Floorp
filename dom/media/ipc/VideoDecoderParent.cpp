@@ -196,8 +196,7 @@ void VideoDecoderParent::ProcessDecodedData(
     VideoDataIPDL output(
         MediaDataIPDL(data->mOffset, data->mTime.ToMicroseconds(),
                       data->mTimecode.ToMicroseconds(),
-                      data->mDuration.ToMicroseconds(), data->mFrames,
-                      data->mKeyframe),
+                      data->mDuration.ToMicroseconds(), data->mKeyframe),
         video->mDisplay, texture ? texture->GetSize() : IntSize(),
         texture ? mParent->StoreImage(video->mImage, texture)
                 : SurfaceDescriptorGPUVideo(0, null_t()),

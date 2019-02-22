@@ -268,13 +268,12 @@ class MediaData {
   }
 
   MediaData(Type aType, int64_t aOffset, const media::TimeUnit& aTimestamp,
-            const media::TimeUnit& aDuration, uint32_t aFrames)
+            const media::TimeUnit& aDuration)
       : mType(aType),
         mOffset(aOffset),
         mTime(aTimestamp),
         mTimecode(aTimestamp),
         mDuration(aDuration),
-        mFrames(aFrames),
         mKeyframe(false) {}
 
   // Type of contained data.
@@ -292,9 +291,6 @@ class MediaData {
 
   // Duration of sample, in microseconds.
   media::TimeUnit mDuration;
-
-  // Amount of frames for contained data.
-  const uint32_t mFrames;
 
   bool mKeyframe;
 
@@ -318,8 +314,7 @@ class MediaData {
   }
 
  protected:
-  MediaData(Type aType, uint32_t aFrames)
-      : mType(aType), mOffset(0), mFrames(aFrames), mKeyframe(false) {}
+  explicit MediaData(Type aType) : mType(aType), mOffset(0), mKeyframe(false) {}
 
   virtual ~MediaData() {}
 };
@@ -330,7 +325,7 @@ class NullData : public MediaData {
  public:
   NullData(int64_t aOffset, const media::TimeUnit& aTime,
            const media::TimeUnit& aDuration)
-      : MediaData(Type::NULL_DATA, aOffset, aTime, aDuration, 0) {}
+      : MediaData(Type::NULL_DATA, aOffset, aTime, aDuration) {}
 
   static const Type sType = Type::NULL_DATA;
 };
@@ -342,10 +337,11 @@ class AudioData : public MediaData {
             const media::TimeUnit& aDuration, uint32_t aFrames,
             AlignedAudioBuffer&& aData, uint32_t aChannels, uint32_t aRate,
             uint32_t aChannelMap = AudioConfig::ChannelLayout::UNKNOWN_MAP)
-      : MediaData(sType, aOffset, aTime, aDuration, aFrames),
+      : MediaData(sType, aOffset, aTime, aDuration),
         mChannels(aChannels),
         mChannelMap(aChannelMap),
         mRate(aRate),
+        mFrames(aFrames),
         mAudioData(std::move(aData)) {}
 
   static const Type sType = Type::AUDIO_DATA;
@@ -376,9 +372,12 @@ class AudioData : public MediaData {
   // channel map.
   const AudioConfig::ChannelLayout::ChannelMap mChannelMap;
   const uint32_t mRate;
+  // Amount of frames for contained data.
+  const uint32_t mFrames;
   // At least one of mAudioBuffer/mAudioData must be non-null.
   // mChannels channels, each with mFrames frames
   RefPtr<SharedBuffer> mAudioBuffer;
+
  protected:
   ~AudioData() {}
 
