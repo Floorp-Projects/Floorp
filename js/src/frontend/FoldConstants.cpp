@@ -388,7 +388,7 @@ restart:
     case ParseNodeKind::TemplateStringExpr:
     case ParseNodeKind::TemplateStringListExpr:
     case ParseNodeKind::TaggedTemplateExpr:
-    case ParseNodeKind::CallSiteObjExpr:
+    case ParseNodeKind::CallSiteObj:
     case ParseNodeKind::StringExpr:
     case ParseNodeKind::RegExpExpr:
     case ParseNodeKind::TrueExpr:

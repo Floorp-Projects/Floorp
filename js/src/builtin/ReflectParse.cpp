@@ -2824,7 +2824,7 @@ bool ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst) {
              builder.memberExpression(true, expr, key, &elem->pn_pos, dst);
     }
 
-    case ParseNodeKind::CallSiteObjExpr: {
+    case ParseNodeKind::CallSiteObj: {
       CallSiteNode* callSiteObj = &pn->as<CallSiteNode>();
       ListNode* rawNodes = callSiteObj->rawNodes();
       NodeVector raw(cx);
