@@ -52,8 +52,6 @@ pref("devtools.inspector.showAllAnonymousContent", false);
 pref("devtools.inspector.showUserAgentShadowRoots", false);
 // Enable the font highlight-on-hover feature
 pref("devtools.inspector.fonthighlighter.enabled", true);
-// Enable tracking of style changes and the Changes panel in the Inspector
-pref("devtools.inspector.changes.enabled", true);
 // Enable the new Rules View
 pref("devtools.inspector.new-rulesview.enabled", false);
 
