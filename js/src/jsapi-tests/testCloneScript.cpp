@@ -151,7 +151,7 @@ BEGIN_TEST(test_cloneScriptWithPrincipals) {
     CHECK(v.isObject());
 
     JSObject* funobj = &v.toObject();
-    CHECK(JS_ObjectIsFunction(cx, funobj));
+    CHECK(JS_ObjectIsFunction(funobj));
     CHECK(fun = JS_ValueToFunction(cx, v));
     CHECK(script = JS_GetFunctionScript(cx, fun));
     CHECK(JS_GetScriptPrincipals(script) == principalsB);

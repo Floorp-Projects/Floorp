@@ -7,14 +7,11 @@ const {workerTargetSpec} = require("devtools/shared/specs/targets/worker");
 const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
 const { TargetMixin } = require("./target-mixin");
 
-loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-client");
-
 class WorkerTargetFront extends
   TargetMixin(FrontClassWithSpec(workerTargetSpec)) {
   constructor(client) {
     super(client);
 
-    this.thread = null;
     this.traits = {};
 
     this._isClosed = false;
@@ -46,11 +43,6 @@ class WorkerTargetFront extends
   destroy() {
     this._isClosed = true;
 
-    if (this.thread) {
-      this.client.unregisterClient(this.thread);
-      this.thread = null;
-    }
-
     super.destroy();
   }
 
@@ -68,7 +60,7 @@ class WorkerTargetFront extends
       const connectResponse = await this.connect({});
       // Set the console actor ID on the form to expose it to Target.attachConsole
       this.targetForm.consoleActor = connectResponse.consoleActor;
-      this.threadActor = connectResponse.threadActor;
+      this._threadActor = connectResponse.threadActor;
 
       return this.attachConsole();
     })();
@@ -93,27 +85,6 @@ class WorkerTargetFront extends
     // Toolbox and options panel are calling this method but Worker Target can't be
     // reconfigured. So we ignore this call here.
     return Promise.resolve();
-  }
-
-  async attachThread(options = {}) {
-    if (this.thread) {
-      const response = [{
-        type: "connected",
-        threadActor: this.thread._actor,
-        consoleActor: this.targetForm.consoleActor,
-      }, this.thread];
-      return response;
-    }
-
-    const attachResponse = await this.client.request({
-      to: this.threadActor,
-      type: "attach",
-      options,
-    });
-    this.thread = new ThreadClient(this, this.threadActor);
-    this.client.registerClient(this.thread);
-
-    return [attachResponse, this.thread];
   }
 }
 

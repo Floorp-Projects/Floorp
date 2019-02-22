@@ -1758,7 +1758,7 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
 
   uint32_t perm;
   nsresult rv = permissionManager->TestPermissionFromPrincipal(
-      aPrincipal, "safe-browsing", &perm);
+      aPrincipal, NS_LITERAL_CSTRING("safe-browsing"), &perm);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (perm == nsIPermissionManager::ALLOW_ACTION) {

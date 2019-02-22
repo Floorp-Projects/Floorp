@@ -301,7 +301,6 @@ impl ClipNodeInfo {
                     let mut mask_tiles = Vec::new();
                     let mask_rect = LayoutRect::new(self.local_pos, size);
 
-                    let device_image_size = props.descriptor.size;
                     let visible_rect = if repeat {
                         *clipped_rect
                     } else {
@@ -314,15 +313,19 @@ impl ClipNodeInfo {
                         size,
                     );
 
+                    // TODO: As a followup, if the image is a tiled blob, the device_image_rect below
+                    // will be set to the blob's visible area.
+                    let device_image_rect = DeviceIntRect::from_size(props.descriptor.size);
+
                     for Repetition { origin, .. } in repetitions {
-                        let image_rect = LayoutRect {
+                        let layout_image_rect = LayoutRect {
                             origin,
                             size,
                         };
                         let tiles = image::tiles(
-                            &image_rect,
+                            &layout_image_rect,
                             &visible_rect,
-                            &device_image_size,
+                            &device_image_rect,
                             tile_size as i32,
                         );
                         for tile in tiles {

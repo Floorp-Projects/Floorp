@@ -1313,7 +1313,7 @@ inline const NativePropertyHooks* GetNativePropertyHooks(
     return domClass->mNativeHooks;
   }
 
-  if (JS_ObjectIsFunction(cx, obj)) {
+  if (JS_ObjectIsFunction(obj)) {
     type = eInterface;
     return GetNativePropertyHooksFromConstructorFunction(obj);
   }

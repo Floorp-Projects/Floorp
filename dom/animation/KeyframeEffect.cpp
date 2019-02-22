@@ -618,7 +618,7 @@ static KeyframeEffectParams KeyframeEffectParamsFromUnion(
   if (target.IsElement()) {
     result.emplace(&target.GetAsElement());
   } else {
-    RefPtr<Element> elem = target.GetAsCSSPseudoElement().ParentElement();
+    RefPtr<Element> elem = target.GetAsCSSPseudoElement().Element();
     result.emplace(elem, target.GetAsCSSPseudoElement().GetType());
   }
   return result;

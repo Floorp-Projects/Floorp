@@ -1383,6 +1383,7 @@ impl DisplayListBuilder {
         complex_clips: I,
         image_mask: Option<di::ImageMask>,
         scroll_sensitivity: di::ScrollSensitivity,
+        external_scroll_offset: LayoutPoint,
     ) -> di::SpaceAndClipInfo
     where
         I: IntoIterator<Item = di::ComplexClipRegion>,
@@ -1396,6 +1397,7 @@ impl DisplayListBuilder {
             external_id,
             image_mask,
             scroll_sensitivity,
+            external_scroll_offset,
         });
 
         self.push_item(

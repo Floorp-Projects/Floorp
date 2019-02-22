@@ -5179,7 +5179,7 @@ JS::AutoDebuggerJobQueueInterruption::AutoDebuggerJobQueueInterruption(
 }
 
 JS::AutoDebuggerJobQueueInterruption::~AutoDebuggerJobQueueInterruption() {
-  MOZ_ASSERT_IF(cx, cx->jobQueue->empty());
+  MOZ_ASSERT_IF(initialized(), cx->jobQueue->empty());
 }
 
 bool JS::AutoDebuggerJobQueueInterruption::init(JSContext* cx) {
