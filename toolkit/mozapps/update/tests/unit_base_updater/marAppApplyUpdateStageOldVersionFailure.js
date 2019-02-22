@@ -29,13 +29,7 @@ async function run_test() {
   // version of the application while there is an update that has been staged.
   writeVersionFile("0.9");
   // Try to switch the application to the fake staged application.
-  runUpdateUsingApp(STATE_AFTER_STAGE);
-}
-
-/**
- * Called after the call to runUpdateUsingApp finishes.
- */
-async function runUpdateFinished() {
+  await runUpdateUsingApp(STATE_AFTER_STAGE);
   standardInit();
   checkPostUpdateRunningFile(false);
   setTestFilesAndDirsForFailure();
