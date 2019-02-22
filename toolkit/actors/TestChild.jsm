@@ -23,6 +23,10 @@ class TestChild extends JSWindowActorChild {
     }
   }
 
+  handleEvent(aEvent) {
+    this.sendAsyncMessage("event", { type: aEvent.type });
+  }
+
   show() {
     return "TestChild";
   }
