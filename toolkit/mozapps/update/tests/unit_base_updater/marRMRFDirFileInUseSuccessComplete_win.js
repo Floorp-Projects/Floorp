@@ -4,19 +4,13 @@
 
 /* File in use inside removed dir complete MAR file patch apply success test */
 
-function run_test() {
+async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
-  setupUpdaterTest(FILE_COMPLETE_MAR, false);
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-async function setupUpdaterTestFinished() {
+  await setupUpdaterTest(FILE_COMPLETE_MAR, false);
   await runHelperFileInUse(gTestDirs[4].relPathDir + gTestDirs[4].subDirs[0] +
                            gTestDirs[4].subDirFiles[0], true);
   runUpdate(STATE_SUCCEEDED, false, 0, true);

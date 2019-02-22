@@ -4,20 +4,14 @@
 
 /* File locked partial MAR file patch apply failure test */
 
-function run_test() {
+async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
   gTestFiles = gTestFilesPartialSuccess;
   gTestDirs = gTestDirsPartialSuccess;
   setTestFilesAndDirsForFailure();
-  setupUpdaterTest(FILE_PARTIAL_MAR, false);
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-async function setupUpdaterTestFinished() {
+  await setupUpdaterTest(FILE_PARTIAL_MAR, false);
   await runHelperLockFile(gTestFiles[2]);
   runUpdate(STATE_FAILED_READ_ERROR, false, 1, true);
   await waitForHelperExit();

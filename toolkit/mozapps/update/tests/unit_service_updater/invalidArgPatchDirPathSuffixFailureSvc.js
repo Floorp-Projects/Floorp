@@ -8,20 +8,14 @@
 const STATE_AFTER_RUNUPDATE =
   IS_SERVICE_TEST ? STATE_PENDING_SVC : STATE_PENDING;
 
-function run_test() {
+async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();
-  setupUpdaterTest(FILE_COMPLETE_MAR, false);
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-async function setupUpdaterTestFinished() {
+  await setupUpdaterTest(FILE_COMPLETE_MAR, false);
   let path = getUpdateDirFile(DIR_PATCH).parent.path;
   runUpdate(STATE_AFTER_RUNUPDATE, false, 1, true, path, null, null, null);
   standardInit();

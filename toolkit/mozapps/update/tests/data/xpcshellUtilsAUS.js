@@ -2144,30 +2144,6 @@ function isBinarySigned(aBinPath) {
 }
 
 /**
- * Helper function for asynchronously setting up the application files required
- * to launch the application for the updater tests by either copying or creating
- * symlinks for the files. This is needed for Windows debug builds which can
- * lock a file that is being copied so that the tests can run in parallel. After
- * the files have been copied the setupUpdaterTestFinished function will be
- * called.
- */
-function setupAppFilesAsync() {
-  gTimeoutRuns++;
-  try {
-    setupAppFiles();
-  } catch (e) {
-    if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
-      do_throw("Exceeded MAX_TIMEOUT_RUNS while trying to setup application " +
-               "files! Exception: " + e);
-    }
-    executeSoon(setupAppFilesAsync);
-    return;
-  }
-
-  executeSoon(setupUpdaterTestFinished);
-}
-
-/**
  * Helper function for setting up the application files required to launch the
  * application for the updater tests by either copying or creating symlinks to
  * the files.
@@ -2689,7 +2665,7 @@ async function waitForHelperExit() {
  * @param   aSetupActiveUpdate
  *          Whether to setup the active update.
  */
-function setupUpdaterTest(aMarFile, aPostUpdateAsync,
+async function setupUpdaterTest(aMarFile, aPostUpdateAsync,
                           aPostUpdateExeRelPathPrefix = "",
                           aSetupActiveUpdate = true) {
   debugDump("start - updater test setup");
@@ -2787,8 +2763,17 @@ function setupUpdaterTest(aMarFile, aPostUpdateAsync,
     createUpdaterINI(aPostUpdateAsync, aPostUpdateExeRelPathPrefix);
   }
 
+  await TestUtils.waitForCondition(() => {
+    try {
+      setupAppFiles();
+      return true;
+    } catch (e) {
+      logTestInfo("exception when calling setupAppFiles, Exception: " + e);
+    }
+    return false;
+  }, "Waiting to setup app files");
+
   debugDump("finish - updater test setup");
-  setupAppFilesAsync();
 }
 
 /**

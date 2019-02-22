@@ -13,20 +13,14 @@ const STATE_AFTER_RUNUPDATE_SERVICE = AppConstants.EARLY_BETA_OR_EARLIER
 const STATE_AFTER_RUNUPDATE = IS_SERVICE_TEST ? STATE_AFTER_RUNUPDATE_SERVICE
                                               : STATE_AFTER_RUNUPDATE_BASE;
 
-function run_test() {
+async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();
-  setupUpdaterTest(FILE_COMPLETE_MAR, false);
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-async function setupUpdaterTestFinished() {
+  await setupUpdaterTest(FILE_COMPLETE_MAR, false);
   let path = "123456789";
   if (AppConstants.platform == "win") {
     path = "\\" + path;
@@ -36,7 +30,6 @@ async function setupUpdaterTestFinished() {
     path = "/" + path;
     path = path.repeat(1000); // 10000 characters
   }
-
   runUpdate(STATE_AFTER_RUNUPDATE, false, 1, true, null, path, null, null);
   standardInit();
   checkPostUpdateRunningFile(false);

@@ -9,22 +9,15 @@
 
 const STATE_AFTER_STAGE = STATE_PENDING;
 
-function run_test() {
+async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
-
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();
   createUpdateInProgressLockFile(getGREBinDir());
-  setupUpdaterTest(FILE_COMPLETE_MAR, false);
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-function setupUpdaterTestFinished() {
+  await setupUpdaterTest(FILE_COMPLETE_MAR, false);
   stageUpdate(false);
 }
 

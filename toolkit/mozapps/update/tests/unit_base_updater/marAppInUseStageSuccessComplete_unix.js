@@ -7,7 +7,7 @@
 const START_STATE = STATE_PENDING;
 const STATE_AFTER_STAGE = STATE_APPLIED;
 
-function run_test() {
+async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
@@ -16,13 +16,7 @@ function run_test() {
   gTestFiles[gTestFiles.length - 1].compareContents = "FromComplete\n";
   gTestFiles[gTestFiles.length - 1].comparePerms = 0o644;
   gTestDirs = gTestDirsCompleteSuccess;
-  setupUpdaterTest(FILE_COMPLETE_MAR, true);
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-async function setupUpdaterTestFinished() {
+  await setupUpdaterTest(FILE_COMPLETE_MAR, true);
   setupSymLinks();
   await runHelperFileInUse(DIR_RESOURCES + gCallbackBinFile, false);
   stageUpdate(true);

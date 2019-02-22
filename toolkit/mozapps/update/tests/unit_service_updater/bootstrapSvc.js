@@ -4,7 +4,7 @@
 
 /* Bootstrap the tests using the service by installing our own version of the service */
 
-function run_test() {
+async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
@@ -12,13 +12,7 @@ function run_test() {
   // application return code and update.status result.
   gTestFiles = gTestFilesCommon;
   gTestDirs = [];
-  setupUpdaterTest(FILE_COMPLETE_MAR, null);
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-function setupUpdaterTestFinished() {
+  await setupUpdaterTest(FILE_COMPLETE_MAR, null);
   runUpdate(STATE_SUCCEEDED, false, 0, true);
   checkFilesAfterUpdateSuccess(getApplyDirFile, false, false);
 
