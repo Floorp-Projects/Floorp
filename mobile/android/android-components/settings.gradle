@@ -40,6 +40,7 @@ gradle.projectsLoaded { ->
     // Note that since this is set on "rootProject.ext", it will be "in scope" during the evaluation of all projects'
     // gradle files. This means that they can just access "config.<value>", and it'll function properly
     gradle.rootProject.ext.config = new Config(buildconfig.componentsVersion)
+    gradle.rootProject.ext.buildConfig = buildconfig
 }
 //////////////////////////////////////////////////////////////////////////
 // Local Development overrides
