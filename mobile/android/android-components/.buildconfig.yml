@@ -188,10 +188,6 @@ projects:
     path: components/service/sync-logins
     description: 'A library for integrating with Firefox Sync - Logins.'
     publish: true
-  service-sync:
-    path: components/service/sync
-    description: 'A library for managing data synchronization.'
-    publish: true
   service-fretboard:
     path: components/service/fretboard
     description: 'An Android framework for segmenting users in order to run A/B tests and rollout features gradually.'

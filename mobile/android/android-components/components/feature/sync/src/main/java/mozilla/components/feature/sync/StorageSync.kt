@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.service.sync
+package mozilla.components.feature.sync
 
 import android.support.annotation.VisibleForTesting
 import kotlinx.coroutines.sync.Mutex
@@ -11,8 +11,8 @@ import mozilla.components.concept.sync.AuthException
 import mozilla.components.concept.sync.AuthInfo
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.StoreSyncStatus
-import mozilla.components.concept.sync.SyncError
 import mozilla.components.concept.sync.SyncResult
+import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncStatusObserver
 import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.support.base.log.logger.Logger
@@ -20,8 +20,7 @@ import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 
 /**
- * A feature implementation which orchestrates data synchronization of a set of [SyncableStore] which
- * all share a common, generic [AuthInfo].
+ * A feature implementation which orchestrates data synchronization of a set of [SyncableStore]-s.
  */
 class StorageSync(
     private val syncableStores: Map<String, SyncableStore>,
@@ -54,7 +53,7 @@ class StorageSync(
             account.authInfo(syncScope)
         } catch (e: AuthException) {
             syncableStores.keys.forEach { storeName ->
-                results[storeName] = StoreSyncStatus(SyncError(e))
+                results[storeName] = StoreSyncStatus(SyncStatus.Error(e))
             }
             return@withListeners results
         }
@@ -72,7 +71,7 @@ class StorageSync(
         auth: AuthInfo
     ): StoreSyncStatus {
         return StoreSyncStatus(store.sync(auth).also {
-            if (it is SyncError) {
+            if (it is SyncStatus.Error) {
                 logger.error("Error synchronizing a $storeName store", it.exception)
             } else {
                 logger.info("Synchronized $storeName store.")

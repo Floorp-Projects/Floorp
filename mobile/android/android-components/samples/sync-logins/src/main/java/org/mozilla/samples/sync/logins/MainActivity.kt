@@ -19,12 +19,13 @@ import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
-import mozilla.components.concept.sync.SyncError
+import mozilla.components.concept.sync.SyncStatusObserver
 import mozilla.components.service.fxa.FxaAccountManager
 import mozilla.components.service.fxa.Config
 import mozilla.components.service.fxa.FirefoxAccount
 import mozilla.components.service.fxa.FxaException
-import mozilla.components.service.sync.StorageSync
+import mozilla.components.feature.sync.BackgroundSyncManager
+import mozilla.components.feature.sync.GlobalSyncableStoreProvider
 import mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter
 import mozilla.components.service.sync.logins.SyncableLoginsStore
 import mozilla.components.support.base.log.Log
@@ -35,21 +36,20 @@ import kotlin.coroutines.CoroutineContext
 const val CLIENT_ID = "3c49430b43dfba77"
 const val REDIRECT_URL = "https://accounts.firefox.com/oauth/success/$CLIENT_ID"
 
-open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener, CoroutineScope {
-    private val loginsStoreName: String = "placesLogins"
-    private val loginsStore by lazy {
+class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener, CoroutineScope, SyncStatusObserver {
+    private val loginsStorage by lazy {
         SyncableLoginsStore(
-            AsyncLoginsStorageAdapter.forDatabase(File(applicationContext.filesDir, "logins.sqlite").canonicalPath)
+                AsyncLoginsStorageAdapter.forDatabase(File(this.filesDir, "logins.sqlite").canonicalPath)
         ) {
             CompletableDeferred("my-not-so-secret-password")
         }
     }
 
-    private val featureSync by lazy {
-        StorageSync(
-            syncableStores = mapOf(Pair(loginsStoreName, loginsStore)),
-            syncScope = "https://identity.mozilla.com/apps/oldsync"
-        )
+    private val syncManager by lazy {
+        GlobalSyncableStoreProvider.configureStore("logins" to loginsStorage)
+        BackgroundSyncManager("https://identity.mozilla.com/apps/oldsync").also {
+            it.addStore("logins")
+        }
     }
 
     private lateinit var listView: ListView
@@ -60,7 +60,8 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
         FxaAccountManager(
             applicationContext,
             Config.release(CLIENT_ID, REDIRECT_URL),
-            arrayOf("profile", "https://identity.mozilla.com/apps/oldsync")
+            arrayOf("profile", "https://identity.mozilla.com/apps/oldsync"),
+            syncManager
         )
     }
 
@@ -75,6 +76,8 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
 
         setContentView(R.layout.activity_main)
         job = Job()
+
+        syncManager.register(this, this)
 
         listView = findViewById(R.id.logins_list_view)
         adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1)
@@ -102,7 +105,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
         override fun onLoggedOut() {}
 
         override fun onAuthenticated(account: OAuthAccount) {
-            launch { syncLogins(account) }
+            syncManager.syncNow()
         }
 
         override fun onProfileUpdated(profile: Profile) {}
@@ -135,29 +138,31 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
         }
     }
 
-    private suspend fun syncLogins(account: OAuthAccount) {
-        val syncResult = CoroutineScope(Dispatchers.IO + job).async {
-            featureSync.sync(account)
-        }.await()
+    // SyncManager observable interface:
+    override fun onStarted() {
+        Toast.makeText(this@MainActivity, "Syncing...", Toast.LENGTH_SHORT).show()
+    }
 
-        check(loginsStoreName in syncResult) { "Expected to synchronize a logins store" }
+    override fun onIdle() {
+        Toast.makeText(this@MainActivity, "Logins sync success", Toast.LENGTH_SHORT).show()
 
-        val loginsSyncStatus = syncResult[loginsStoreName]!!.status
-        if (loginsSyncStatus is SyncError) {
-            Toast.makeText(
-                    this@MainActivity,
-                    "Logins sync error: " + loginsSyncStatus.exception.localizedMessage,
-                    Toast.LENGTH_SHORT
-            ).show()
-        } else {
-            Toast.makeText(this@MainActivity, "Logins sync success", Toast.LENGTH_SHORT).show()
+        launch {
+            val syncedLogins = CoroutineScope(Dispatchers.IO + job).async {
+                loginsStorage.withUnlocked {
+                    it.list().await()
+                }
+            }
+
+            adapter.addAll(syncedLogins.await().map { "Login: " + it.hostname })
+            adapter.notifyDataSetChanged()
         }
+    }
 
-        val syncedLogins = loginsStore.withUnlocked {
-            it.list().await()
-        }
-
-        adapter.addAll(syncedLogins.map { "Login: " + it.hostname })
-        adapter.notifyDataSetChanged()
+    override fun onError(error: java.lang.Exception?) {
+        Toast.makeText(
+            this@MainActivity,
+            "Logins sync error ${error?.localizedMessage}",
+            Toast.LENGTH_SHORT
+        ).show()
     }
 }

@@ -15,7 +15,6 @@ import kotlinx.coroutines.async
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
-import mozilla.components.concept.sync.SyncDispatcher
 import mozilla.components.concept.sync.SyncManager
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.coroutines.CoroutineContext

@@ -12,39 +12,40 @@ import kotlinx.android.synthetic.main.activity_main.historySyncStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
-import mozilla.components.concept.sync.SyncError
 import mozilla.components.concept.sync.SyncStatusObserver
 import mozilla.components.service.fxa.FxaAccountManager
 import mozilla.components.service.fxa.Config
 import mozilla.components.service.fxa.FxaException
-import mozilla.components.service.sync.StorageSync
+import mozilla.components.feature.sync.BackgroundSyncManager
+import mozilla.components.feature.sync.GlobalSyncableStoreProvider
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import java.lang.Exception
 import kotlin.coroutines.CoroutineContext
 
 class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener, CoroutineScope {
+    private val historyStorage by lazy {
+        PlacesHistoryStorage(this)
+    }
 
-    private val historyStoreName = "placesHistory"
-    private val historyStorage by lazy { PlacesHistoryStorage(applicationContext) }
+    private val syncManager by lazy {
+        GlobalSyncableStoreProvider.configureStore("history" to historyStorage)
+        BackgroundSyncManager("https://identity.mozilla.com/apps/oldsync").also {
+            it.addStore("history")
+        }
+    }
 
     private val accountManager by lazy {
         FxaAccountManager(
             this,
             Config.release(CLIENT_ID, REDIRECT_URL),
-            arrayOf("profile", "https://identity.mozilla.com/apps/oldsync")
-        )
-    }
-    private val featureSync by lazy {
-        StorageSync(
-            syncableStores = mapOf(historyStoreName to historyStorage),
-            syncScope = "https://identity.mozilla.com/apps/oldsync"
+            arrayOf("profile", "https://identity.mozilla.com/apps/oldsync"),
+            syncManager
         )
     }
 
@@ -83,7 +84,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
 
         // NB: ObserverRegistry takes care of unregistering this observer when appropriate, and
         // cleaning up any internal references to 'observer' and 'owner'.
-        featureSync.register(syncObserver, owner = this, autoPause = true)
+        syncManager.register(syncObserver, owner = this, autoPause = true)
         // Observe changes to the account and profile.
         accountManager.register(accountObserver, owner = this, autoPause = true)
 
@@ -91,29 +92,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
         launch { accountManager.initAsync().await() }
 
         findViewById<View>(R.id.buttonSyncHistory).setOnClickListener {
-            val account = accountManager.authenticatedAccount() ?: return@setOnClickListener
-
-            val txtView: TextView = findViewById(R.id.historySyncResult)
-
-            launch {
-                val syncResult = CoroutineScope(Dispatchers.IO + job).async {
-                    featureSync.sync(account)
-                }.await()
-
-                check(historyStoreName in syncResult) { "Expected to synchronize a history store" }
-
-                val historySyncStatus = syncResult[historyStoreName]!!.status
-                if (historySyncStatus is SyncError) {
-                    txtView.text = getString(R.string.sync_error, historySyncStatus.exception)
-                } else {
-                    val visitedCount = historyStorage.getVisited().size
-                    // visitedCount is passed twice: to get the correct plural form, and then as
-                    // an argument for string formatting.
-                    txtView.text = resources.getQuantityString(
-                        R.plurals.visited_url_count, visitedCount, visitedCount
-                    )
-                }
-            }
+            syncManager.syncNow()
         }
     }
 
@@ -189,6 +168,14 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
         override fun onIdle() {
             CoroutineScope(Dispatchers.Main).launch {
                 historySyncStatus?.text = getString(R.string.sync_idle)
+
+                val resultTextView: TextView = findViewById(R.id.historySyncResult)
+                val visitedCount = historyStorage.getVisited().size
+                // visitedCount is passed twice: to get the correct plural form, and then as
+                // an argument for string formatting.
+                resultTextView.text = resources.getQuantityString(
+                    R.plurals.visited_url_count, visitedCount, visitedCount
+                )
             }
         }
 
