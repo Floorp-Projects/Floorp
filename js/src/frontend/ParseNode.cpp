@@ -98,10 +98,10 @@ ParseNode* ParseNode::appendOrCreateList(ParseNodeKind kind, ParseNode* left,
   return list;
 }
 
-const ParseNode::TypeCode ParseNode::typeCodeTable[] = {
-#define TYPE_CODE(_name, type) type::classTypeCode(),
-    FOR_EACH_PARSE_NODE_KIND(TYPE_CODE)
-#undef TYPE_CODE
+const ParseNodeArity js::frontend::ParseNodeKindArity[] = {
+#define ARITY(_name, type) type::arity(),
+    FOR_EACH_PARSE_NODE_KIND(ARITY)
+#undef ARITY
 };
 
 #ifdef DEBUG
@@ -138,23 +138,54 @@ void ParseNode::dump() {
 }
 
 void ParseNode::dump(GenericPrinter& out, int indent) {
-  switch (getKind()) {
-#  define DUMP(K, T)                                                     \
-    case ParseNodeKind::K:                                               \
-      static_assert((void (T::*)(GenericPrinter&, int)) &                \
-                        T::dump != (void (T::*)(GenericPrinter&, int)) & \
-                        ParseNode::dump,                                 \
-                    "missing dump method in class " #T);                 \
-      as<T>().dump(out, indent);                                         \
-      break;
-    FOR_EACH_PARSE_NODE_KIND(DUMP)
-#  undef DUMP
-    default:
-      out.printf("#<BAD NODE %p, kind=%u>", (void*)this, unsigned(getKind()));
+  switch (getArity()) {
+    case PN_NULLARY:
+      as<NullaryNode>().dump(out);
+      return;
+    case PN_UNARY:
+      as<UnaryNode>().dump(out, indent);
+      return;
+    case PN_BINARY:
+      as<BinaryNode>().dump(out, indent);
+      return;
+    case PN_TERNARY:
+      as<TernaryNode>().dump(out, indent);
+      return;
+    case PN_FUNCTION:
+      as<FunctionNode>().dump(out, indent);
+      return;
+    case PN_MODULE:
+      as<ModuleNode>().dump(out, indent);
+      return;
+    case PN_LIST:
+      as<ListNode>().dump(out, indent);
+      return;
+    case PN_NAME:
+      as<NameNode>().dump(out, indent);
+      return;
+    case PN_FIELD:
+      as<ClassField>().dump(out, indent);
+      return;
+    case PN_NUMBER:
+      as<NumericLiteral>().dump(out, indent);
+      return;
+    case PN_BIGINT:
+      as<BigIntLiteral>().dump(out, indent);
+      return;
+    case PN_REGEXP:
+      as<RegExpLiteral>().dump(out, indent);
+      return;
+    case PN_LOOP:
+      as<LoopControlStatement>().dump(out, indent);
+      return;
+    case PN_SCOPE:
+      as<LexicalScopeNode>().dump(out, indent);
+      return;
   }
+  out.printf("#<BAD NODE %p, kind=%u>", (void*)this, unsigned(getKind()));
 }
 
-void NullaryNode::dump(GenericPrinter& out, int indent) {
+void NullaryNode::dump(GenericPrinter& out) {
   switch (getKind()) {
     case ParseNodeKind::TrueExpr:
       out.put("#true");
