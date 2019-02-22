@@ -4923,6 +4923,7 @@ var XULBrowserWindow = {
     }
 
     ContentBlocking.onContentBlockingEvent(this._event, aWebProgress, aIsSimulated);
+    gBrowser.selectedBrowser.updateSecurityUIForContentBlockingEvent(aEvent);
   },
 
   // This is called in multiple ways:

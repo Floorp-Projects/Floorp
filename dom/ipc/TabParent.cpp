@@ -2124,9 +2124,6 @@ mozilla::ipc::IPCResult TabParent::RecvOnContentBlockingEvent(
           aRequestData.originalRequestURI(), aRequestData.matchedList(),
           aEvent);
     } else {
-      if (aWebProgressData.get_WebProgressData().isTopLevel()) {
-        Unused << browser->UpdateSecurityUIForContentBlockingEvent(aEvent);
-      }
       Unused << browser->CallWebProgressContentBlockingEventListeners(
           true, aWebProgressData.get_WebProgressData().isTopLevel(),
           aWebProgressData.get_WebProgressData().isLoadingDocument(),
