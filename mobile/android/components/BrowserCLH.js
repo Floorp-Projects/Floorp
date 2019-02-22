@@ -230,14 +230,14 @@ BrowserCLH.prototype = {
       if (shouldIgnoreLoginManagerEvent(event)) {
         return;
       }
-      this.LoginManagerContent.onDOMFormHasPassword(event);
+      this.LoginManagerContent.onDOMFormHasPassword(event, event.target.ownerGlobal.top);
     }, options);
 
     aWindow.addEventListener("DOMInputPasswordAdded", event => {
       if (shouldIgnoreLoginManagerEvent(event)) {
         return;
       }
-      this.LoginManagerContent.onDOMInputPasswordAdded(event);
+      this.LoginManagerContent.onDOMInputPasswordAdded(event, event.target.ownerGlobal.top);
     }, options);
 
     aWindow.addEventListener("DOMAutoComplete", event => {
@@ -250,7 +250,7 @@ BrowserCLH.prototype = {
     aWindow.addEventListener("pageshow", event => {
       // XXXbz what about non-HTML documents??
       if (ChromeUtils.getClassName(event.target) == "HTMLDocument") {
-        this.LoginManagerContent.onPageShow(event);
+        this.LoginManagerContent.onPageShow(event, event.target.defaultView.top);
       }
     }, options);
   },
