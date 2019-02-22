@@ -94,14 +94,6 @@ interface nsIBrowser : nsISupports
   readonly attribute nsIPrincipal contentPrincipal;
 
   /**
-   * Called by Gecko when a content blocking event needs to update the event
-   * state stored in the security UI object stored in the parent process.
-   * @param aEvent one of the content blocking event codes defined in
-   *               nsIWebProgressListener.idl.
-   */
-  void updateSecurityUIForContentBlockingEvent(in unsigned long aEvent);
-
-  /**
    * Called by Gecko when we need to call the web progress listeners on our
    * browser element in order to notify them about a content blocking event
    * which happened in the content process.
