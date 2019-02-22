@@ -1166,6 +1166,7 @@ class GeneratedFile(ContextDerived):
         self.force = force
 
         suffixes = (
+            '.asm',
             '.c',
             '.cpp',
             '.h',
