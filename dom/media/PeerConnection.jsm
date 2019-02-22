@@ -1118,7 +1118,7 @@ class RTCPeerConnection {
     stream.getTracks().forEach(track => this.addTrack(track, stream));
   }
 
-  addTrack(track, stream) {
+  addTrack(track, ...streams) {
     this._checkClosed();
 
     if (this._transceivers.some(
@@ -1136,7 +1136,7 @@ class RTCPeerConnection {
 
     if (transceiver) {
       transceiver.sender.setTrack(track);
-      transceiver.sender.setStreams([stream]);
+      transceiver.sender.setStreams(streams);
       if (transceiver.direction == "recvonly") {
         transceiver.setDirectionInternal("sendrecv");
       } else if (transceiver.direction == "inactive") {
@@ -1144,7 +1144,7 @@ class RTCPeerConnection {
       }
     } else {
       transceiver = this._addTransceiverNoEvents(track, {
-        streams: [stream],
+        streams,
         direction: "sendrecv",
       });
     }

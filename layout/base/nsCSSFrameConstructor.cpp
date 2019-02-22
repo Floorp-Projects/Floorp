@@ -4169,6 +4169,8 @@ already_AddRefed<ComputedStyle> nsCSSFrameConstructor::BeginBuildingScrollFrame(
     InitAndRestoreFrame(aState, aContent, aParentFrame, gfxScrollFrame);
   }
 
+  MOZ_ASSERT(gfxScrollFrame);
+
   // if there are any anonymous children for the scroll frame, create
   // frames for them.
   //
@@ -4196,9 +4198,7 @@ already_AddRefed<ComputedStyle> nsCSSFrameConstructor::BeginBuildingScrollFrame(
       styleSet->ResolveInheritingAnonymousBoxStyle(aScrolledPseudo,
                                                    contentStyle);
 
-  if (gfxScrollFrame) {
-    gfxScrollFrame->SetInitialChildList(kPrincipalList, anonymousItems);
-  }
+  gfxScrollFrame->SetInitialChildList(kPrincipalList, anonymousItems);
 
   return scrolledChildStyle.forget();
 }

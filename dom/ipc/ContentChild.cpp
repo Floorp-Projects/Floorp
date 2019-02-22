@@ -3670,6 +3670,14 @@ mozilla::ipc::IPCResult ContentChild::RecvWindowPostMessage(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentChild::RecvCommitBrowsingContextTransaction(
+    BrowsingContext* aContext, BrowsingContext::Transaction&& aTransaction) {
+  if (aContext) {
+    aTransaction.Apply(aContext);
+  }
+  return IPC_OK();
+}
+
 }  // namespace dom
 
 #if defined(__OpenBSD__) && defined(MOZ_CONTENT_SANDBOX)

@@ -119,9 +119,9 @@ class TracingMarkerPayload : public ProfilerMarkerPayload {
   TracingKind mKind;
 };
 
-class DiskIOMarkerPayload : public ProfilerMarkerPayload {
+class FileIOMarkerPayload : public ProfilerMarkerPayload {
  public:
-  DiskIOMarkerPayload(const char* aOperation, const char* aSource,
+  FileIOMarkerPayload(const char* aOperation, const char* aSource,
                       const char* aFilename,
                       const mozilla::TimeStamp& aStartTime,
                       const mozilla::TimeStamp& aEndTime,

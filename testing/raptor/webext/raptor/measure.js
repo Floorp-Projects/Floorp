@@ -47,7 +47,7 @@ var getLoadTime = false;
 // performance.timing measurement used as 'starttime'
 var startMeasure = "fetchStart";
 
-function contentHandler() {
+function raptorContentHandler() {
   // retrieve test settings from local ext storage
   if (typeof(browser) !== "undefined") {
     // firefox, returns promise
@@ -316,4 +316,13 @@ function sendResult(_type, _value) {
   });
 }
 
-window.onload = contentHandler();
+// we do not wish to overwrite any window.onload that may exist in the pageload site itself
+var existing_onload = window.onload;
+if (existing_onload && typeof(existing_onload) == "function") {
+  window.onload = function() {
+    existing_onload();
+    raptorContentHandler();
+  };
+} else {
+  window.onload = raptorContentHandler();
+}

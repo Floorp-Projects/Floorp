@@ -1859,7 +1859,13 @@ var Events = {
       let evts = aPayload.processes[value].events;
       return evts && Object.keys(evts).length > 0;
     });
-    setHasData("events-section", hasData);
+
+    // Don't specifically hide the events section if there's no data.
+    // It might be a "main" ping that needs to always show the section.
+    if (hasData) {
+      setHasData("events-section", true);
+    }
+
     if (Object.keys(events).length > 0) {
       const headings = [
         "timestampHeader",

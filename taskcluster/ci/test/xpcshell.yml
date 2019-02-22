@@ -23,7 +23,6 @@ job-defaults:
         requires-signed-builds:
             by-test-platform:
                 windows10-64-asan/opt: false    # No XPCShell on ASAN yet
-                windows10-aarch64/*: false    # No signing on arm64
                 windows.*: true
                 default: false
 

@@ -23,6 +23,11 @@ type Props = {
 };
 
 export class Worker extends Component<Props> {
+  onSelectThread = () => {
+    const { thread } = this.props;
+    this.props.selectThread(thread.actor);
+  };
+
   render() {
     const { currentThread, isPaused, thread } = this.props;
 
@@ -32,12 +37,11 @@ export class Worker extends Component<Props> {
 
     return (
       <div
-        className={classnames(
-          "worker",
-          thread.actor == currentThread && "selected"
-        )}
+        className={classnames("worker", {
+          selected: thread.actor == currentThread
+        })}
         key={thread.actor}
-        onClick={() => this.props.selectThread(thread.actor)}
+        onClick={this.onSelectThread}
       >
         <div clasName="icon">
           <AccessibleImage className={isWorker ? "worker" : "file"} />

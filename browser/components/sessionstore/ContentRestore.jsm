@@ -213,9 +213,7 @@ ContentRestoreInternal.prototype = {
         }
         let postData = loadArguments.postData ?
                        E10SUtils.makeInputStream(loadArguments.postData) : null;
-        let triggeringPrincipal = loadArguments.triggeringPrincipal
-                                  ? E10SUtils.deserializePrincipal(loadArguments.triggeringPrincipal)
-                                  : Services.scriptSecurityManager.createNullPrincipal({});
+        let triggeringPrincipal = E10SUtils.deserializePrincipal(loadArguments.triggeringPrincipal, () => Services.scriptSecurityManager.createNullPrincipal({}));
 
         if (loadArguments.userContextId) {
           webNavigation.setOriginAttributesBeforeLoading({ userContextId: loadArguments.userContextId });

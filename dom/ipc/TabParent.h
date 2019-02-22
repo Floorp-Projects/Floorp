@@ -504,8 +504,6 @@ class TabParent final : public PBrowserParent,
   // PuppetWidget's origin to absolute screen coordinates in the child.
   LayoutDeviceIntPoint GetClientOffset();
 
-  LayoutDevicePoint AdjustTapToChildWidget(const LayoutDevicePoint& aPoint);
-
   /**
    * Native widget remoting protocol for use with windowed plugins with e10s.
    */

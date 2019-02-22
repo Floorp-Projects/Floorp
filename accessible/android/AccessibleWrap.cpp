@@ -419,9 +419,12 @@ mozilla::java::GeckoBundle::LocalRef AccessibleWrap::ToBundle(bool aSmall) {
   Value(textValue);
   nsAutoString nodeID;
   WrapperDOMNodeID(nodeID);
+  nsAutoString description;
+  Description(description);
 
   if (aSmall) {
-    return ToBundle(State(), Bounds(), ActionCount(), name, textValue, nodeID);
+    return ToBundle(State(), Bounds(), ActionCount(), name, textValue, nodeID,
+                    description);
   }
 
   double curValue = UnspecifiedNaN<double>();
@@ -433,15 +436,15 @@ mozilla::java::GeckoBundle::LocalRef AccessibleWrap::ToBundle(bool aSmall) {
   nsCOMPtr<nsIPersistentProperties> attributes = Attributes();
 
   return ToBundle(State(), Bounds(), ActionCount(), name, textValue, nodeID,
-                  curValue, minValue, maxValue, step, attributes);
+                  description, curValue, minValue, maxValue, step, attributes);
 }
 
 mozilla::java::GeckoBundle::LocalRef AccessibleWrap::ToBundle(
     const uint64_t aState, const nsIntRect& aBounds, const uint8_t aActionCount,
     const nsString& aName, const nsString& aTextValue,
-    const nsString& aDOMNodeID, const double& aCurVal, const double& aMinVal,
-    const double& aMaxVal, const double& aStep,
-    nsIPersistentProperties* aAttributes) {
+    const nsString& aDOMNodeID, const nsString& aDescription,
+    const double& aCurVal, const double& aMinVal, const double& aMaxVal,
+    const double& aStep, nsIPersistentProperties* aAttributes) {
   if (!IsProxy() && IsDefunct()) {
     return nullptr;
   }
@@ -461,10 +464,18 @@ mozilla::java::GeckoBundle::LocalRef AccessibleWrap::ToBundle(
                   java::sdk::Integer::ValueOf(AndroidClass()));
 
   if (aState & states::EDITABLE) {
-    GECKOBUNDLE_PUT(nodeInfo, "hint", jni::StringParam(aName));
+    nsAutoString hint(aName);
+    if (!aDescription.IsEmpty()) {
+      hint.AppendLiteral(" ");
+      hint.Append(aDescription);
+    }
+    GECKOBUNDLE_PUT(nodeInfo, "hint", jni::StringParam(hint));
     GECKOBUNDLE_PUT(nodeInfo, "text", jni::StringParam(aTextValue));
   } else {
     GECKOBUNDLE_PUT(nodeInfo, "text", jni::StringParam(aName));
+    if (!aDescription.IsEmpty()) {
+      GECKOBUNDLE_PUT(nodeInfo, "hint", jni::StringParam(aDescription));
+    }
   }
 
   nsAutoString geckoRole;

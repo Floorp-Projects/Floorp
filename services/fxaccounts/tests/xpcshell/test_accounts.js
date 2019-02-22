@@ -5,7 +5,7 @@
 
 const {FxAccounts} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
 const {FxAccountsClient} = ChromeUtils.import("resource://gre/modules/FxAccountsClient.jsm");
-const {ASSERTION_LIFETIME, CERT_LIFETIME, ERRNO_INVALID_AUTH_TOKEN, ERRNO_INVALID_FXA_ASSERTION, ERRNO_NETWORK, ERROR_INVALID_FXA_ASSERTION, ERROR_NETWORK, KEY_LIFETIME, ONLOGIN_NOTIFICATION, ONLOGOUT_NOTIFICATION, ONVERIFIED_NOTIFICATION} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+const {ASSERTION_LIFETIME, CERT_LIFETIME, ERRNO_INVALID_AUTH_TOKEN, ERRNO_INVALID_FXA_ASSERTION, ERRNO_NETWORK, ERROR_INVALID_FXA_ASSERTION, ERROR_NETWORK, KEY_LIFETIME, ONLOGIN_NOTIFICATION, ONLOGOUT_NOTIFICATION, ONVERIFIED_NOTIFICATION, SCOPE_OLD_SYNC} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 const {FxAccountsOAuthGrantClient, FxAccountsOAuthGrantClientError} = ChromeUtils.import("resource://gre/modules/FxAccountsOAuthGrantClient.jsm");
 const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
 
@@ -739,6 +739,69 @@ add_task(async function test_getKeys_invalid_token() {
   Assert.equal(user.keyFetchToken, null);
   await fxa.internal.abortExistingFlow();
 });
+
+// This is the exact same test vectors as
+// https://github.com/mozilla/fxa-crypto-relier/blob/f94f441159029a645a474d4b6439c38308da0bb0/test/deriver/ScopedKeys.js#L58
+add_task(async function test_getScopedKeys_oldsync() {
+  let fxa = new MockFxAccounts();
+  let client = fxa.internal.fxAccountsClient;
+  client.getScopedKeyData = () => Promise.resolve({
+    "https://identity.mozilla.com/apps/oldsync": {
+      "identifier": "https://identity.mozilla.com/apps/oldsync",
+      "keyRotationSecret": "0000000000000000000000000000000000000000000000000000000000000000",
+      "keyRotationTimestamp": 1510726317123,
+    },
+  });
+  let user = {
+    ...getTestUser("eusebius"),
+    uid: "aeaa1725c7a24ff983c6295725d5fc9b",
+    verified: true,
+    kSync: "0d6fe59791b05fa489e463ea25502e3143f6b7a903aa152e95cd9c6eddbac5b4dc68a19097ef65dbd147010ee45222444e66b8b3d7c8a441ebb7dd3dce015a9e",
+    kXCS: "22a42fe289dced5715135913424cb23b",
+    kExtSync: "baded53eb3587d7900e604e8a68d860abf9de30b5c955d3c4d5dba63f26fd88265cd85923f6e9dcd16aef3b82bc88039a89c59ecd9e88de09a7418c7d94f90c9",
+    kExtKbHash: "b776a89db29f22daedd154b44ff88397d0b210223fb956f5a749521dd8de8ddf",
+  };
+  await fxa.setSignedInUser(user);
+  const keys = await fxa.internal.getScopedKeys(`${SCOPE_OLD_SYNC} profile`, "123456789a");
+  Assert.deepEqual(keys, {
+    [SCOPE_OLD_SYNC]: {
+      "scope": SCOPE_OLD_SYNC,
+      "kid": "1510726317123-IqQv4onc7VcVE1kTQkyyOw",
+      "k": "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
+      "kty": "oct",
+    },
+  });
+});
+
+add_task(async function test_getScopedKeys_unavailable_key() {
+  let fxa = new MockFxAccounts();
+  let client = fxa.internal.fxAccountsClient;
+  client.getScopedKeyData = () => Promise.resolve({
+    "https://identity.mozilla.com/apps/oldsync": {
+      "identifier": "https://identity.mozilla.com/apps/oldsync",
+      "keyRotationSecret": "0000000000000000000000000000000000000000000000000000000000000000",
+      "keyRotationTimestamp": 1510726317123,
+    },
+    "otherkeybearingscope": {
+      "identifier": "otherkeybearingscope",
+      "keyRotationSecret": "0000000000000000000000000000000000000000000000000000000000000000",
+      "keyRotationTimestamp": 1510726331712,
+    },
+  });
+  let user = {
+    ...getTestUser("eusebius"),
+    uid: "aeaa1725c7a24ff983c6295725d5fc9b",
+    verified: true,
+    kSync: "0d6fe59791b05fa489e463ea25502e3143f6b7a903aa152e95cd9c6eddbac5b4dc68a19097ef65dbd147010ee45222444e66b8b3d7c8a441ebb7dd3dce015a9e",
+    kXCS: "22a42fe289dced5715135913424cb23b",
+    kExtSync: "baded53eb3587d7900e604e8a68d860abf9de30b5c955d3c4d5dba63f26fd88265cd85923f6e9dcd16aef3b82bc88039a89c59ecd9e88de09a7418c7d94f90c9",
+    kExtKbHash: "b776a89db29f22daedd154b44ff88397d0b210223fb956f5a749521dd8de8ddf",
+  };
+  await fxa.setSignedInUser(user);
+  await Assert.rejects(fxa.internal.getScopedKeys(`${SCOPE_OLD_SYNC} otherkeybearingscope profile`, "123456789a"),
+    /Unavailable key material for otherkeybearingscope/);
+});
+
 //  fetchAndUnwrapKeys with no keyFetchToken should trigger signOut
 add_test(function test_fetchAndUnwrapKeys_no_token() {
   let fxa = new MockFxAccounts();

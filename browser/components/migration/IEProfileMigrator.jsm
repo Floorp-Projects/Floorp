@@ -178,7 +178,7 @@ IE7FormPasswords.prototype = {
         let data;
         try {
           // the url is used as salt to decrypt the registry value
-          data = this._crypto.decryptData(value, url, true);
+          data = this._crypto.decryptData(value, url);
         } catch (e) {
           continue;
         }
