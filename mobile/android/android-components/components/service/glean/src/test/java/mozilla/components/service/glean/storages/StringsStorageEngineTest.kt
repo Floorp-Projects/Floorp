@@ -26,7 +26,7 @@ class StringsStorageEngineTest {
         StringsStorageEngine.applicationContext = ApplicationProvider.getApplicationContext()
         // Clear the stored "user" preferences between tests.
         ApplicationProvider.getApplicationContext<Context>()
-            .getSharedPreferences(StringsStorageEngine.javaClass.simpleName, Context.MODE_PRIVATE)
+            .getSharedPreferences(StringsStorageEngine.javaClass.canonicalName, Context.MODE_PRIVATE)
             .edit()
             .clear()
             .apply()
@@ -49,7 +49,7 @@ class StringsStorageEngineTest {
         val sharedPreferences = mock(SharedPreferences::class.java)
         `when`(sharedPreferences.all).thenAnswer { persistedSample }
         `when`(context.getSharedPreferences(
-            eq(storageEngine::class.java.simpleName),
+            eq(storageEngine::class.java.canonicalName),
             eq(Context.MODE_PRIVATE)
         )).thenReturn(sharedPreferences)
 

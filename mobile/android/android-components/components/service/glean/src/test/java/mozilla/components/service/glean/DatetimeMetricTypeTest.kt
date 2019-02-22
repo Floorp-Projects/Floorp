@@ -34,7 +34,7 @@ class DatetimeMetricTypeTest {
         DatetimesStorageEngine.applicationContext = ApplicationProvider.getApplicationContext()
         // Clear the stored "user" preferences between tests.
         ApplicationProvider.getApplicationContext<Context>()
-            .getSharedPreferences(DatetimesStorageEngine.javaClass.simpleName, Context.MODE_PRIVATE)
+            .getSharedPreferences(DatetimesStorageEngine.javaClass.canonicalName, Context.MODE_PRIVATE)
             .edit()
             .clear()
             .apply()

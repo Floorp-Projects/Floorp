@@ -70,7 +70,7 @@ internal class MetricsPingScheduler(val applicationContext: Context) {
      * Initializes the [SharedPreferences] where persisted metrics ping information is stored.
      */
     private fun getMetricsPrefs(): SharedPreferences {
-        return applicationContext.getSharedPreferences(this.javaClass.simpleName, Context.MODE_PRIVATE)
+        return applicationContext.getSharedPreferences(this.javaClass.canonicalName, Context.MODE_PRIVATE)
     }
 
     /**

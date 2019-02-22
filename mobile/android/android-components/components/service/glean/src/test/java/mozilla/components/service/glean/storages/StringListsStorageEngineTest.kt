@@ -27,7 +27,7 @@ class StringListsStorageEngineTest {
         // Clear the stored "user" preferences between tests.
         ApplicationProvider.getApplicationContext<Context>()
             .getSharedPreferences(
-                StringListsStorageEngine.javaClass.simpleName,
+                StringListsStorageEngine.javaClass.canonicalName,
                 Context.MODE_PRIVATE)
             .edit()
             .clear()
@@ -218,7 +218,7 @@ class StringListsStorageEngineTest {
         val sharedPreferences = Mockito.mock(SharedPreferences::class.java)
         Mockito.`when`(sharedPreferences.all).thenAnswer { persistedSample }
         Mockito.`when`(context.getSharedPreferences(
-            ArgumentMatchers.eq(storageEngine::class.java.simpleName),
+            ArgumentMatchers.eq(storageEngine::class.java.canonicalName),
             ArgumentMatchers.eq(Context.MODE_PRIVATE)
         )).thenReturn(sharedPreferences)
 

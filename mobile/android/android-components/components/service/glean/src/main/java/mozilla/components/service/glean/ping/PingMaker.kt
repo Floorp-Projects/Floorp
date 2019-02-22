@@ -25,7 +25,7 @@ internal class PingMaker(
     private val objectStartTime = getISOTimeString()
     internal val sharedPreferences: SharedPreferences? by lazy {
         applicationContext.getSharedPreferences(
-            this.javaClass.simpleName,
+            this.javaClass.canonicalName,
             Context.MODE_PRIVATE
         )
     }

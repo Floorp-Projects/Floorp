@@ -153,7 +153,7 @@ class GenericScalarStorageEngineTest {
         val sharedPreferences = mock(SharedPreferences::class.java)
         `when`(sharedPreferences.all).thenAnswer { persistedSample }
         `when`(context.getSharedPreferences(
-            eq(MockScalarStorageEngine::class.java.simpleName),
+            eq(MockScalarStorageEngine::class.java.canonicalName),
             eq(Context.MODE_PRIVATE)
         )).thenReturn(sharedPreferences)
 
@@ -192,7 +192,7 @@ class GenericScalarStorageEngineTest {
         val sharedPreferences = mock(SharedPreferences::class.java)
         `when`(sharedPreferences.all).thenAnswer { brokenSample }
         `when`(context.getSharedPreferences(
-            eq(MockScalarStorageEngine::class.java.simpleName),
+            eq(MockScalarStorageEngine::class.java.canonicalName),
             eq(Context.MODE_PRIVATE)
         )).thenReturn(sharedPreferences)
 
@@ -233,7 +233,7 @@ class GenericScalarStorageEngineTest {
         val sharedPreferences = mock(SharedPreferences::class.java)
         `when`(sharedPreferences.all).thenAnswer { brokenSample }
         `when`(context.getSharedPreferences(
-            eq(MockScalarStorageEngine::class.java.simpleName),
+            eq(MockScalarStorageEngine::class.java.canonicalName),
             eq(Context.MODE_PRIVATE)
         )).thenReturn(sharedPreferences)
 
@@ -254,7 +254,7 @@ class GenericScalarStorageEngineTest {
         val sharedPreferences = mock(SharedPreferences::class.java)
         `when`(sharedPreferences.all).thenThrow(NullPointerException())
         `when`(context.getSharedPreferences(
-            eq(MockScalarStorageEngine::class.java.simpleName),
+            eq(MockScalarStorageEngine::class.java.canonicalName),
             eq(Context.MODE_PRIVATE)
         )).thenReturn(sharedPreferences)
 
@@ -284,7 +284,7 @@ class GenericScalarStorageEngineTest {
         val sharedPreferences = mock(SharedPreferences::class.java)
         `when`(sharedPreferences.all).thenAnswer { persistedSample }
         `when`(context.getSharedPreferences(
-            eq(MockScalarStorageEngine::class.java.simpleName),
+            eq(MockScalarStorageEngine::class.java.canonicalName),
             eq(Context.MODE_PRIVATE)
         )).thenReturn(sharedPreferences)
 

@@ -88,7 +88,7 @@ internal abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
     @Suppress("TooGenericExceptionCaught")
     open fun deserializeUserLifetime(): SharedPreferences {
         val prefs =
-            applicationContext.getSharedPreferences(this.javaClass.simpleName, Context.MODE_PRIVATE)
+            applicationContext.getSharedPreferences(this.javaClass.canonicalName, Context.MODE_PRIVATE)
 
         val metrics = try {
             prefs.all.entries

@@ -28,7 +28,7 @@ class UuidsStorageEngineTest {
         UuidsStorageEngine.applicationContext = ApplicationProvider.getApplicationContext()
         // Clear the stored "user" preferences between tests.
         ApplicationProvider.getApplicationContext<Context>()
-            .getSharedPreferences(UuidsStorageEngine.javaClass.simpleName, Context.MODE_PRIVATE)
+            .getSharedPreferences(UuidsStorageEngine.javaClass.canonicalName, Context.MODE_PRIVATE)
             .edit()
             .clear()
             .apply()
@@ -51,7 +51,7 @@ class UuidsStorageEngineTest {
         val sharedPreferences = mock(SharedPreferences::class.java)
         `when`(sharedPreferences.all).thenAnswer { persistedSample }
         `when`(context.getSharedPreferences(
-            eq(storageEngine::class.java.simpleName),
+            eq(storageEngine::class.java.canonicalName),
             eq(Context.MODE_PRIVATE)
         )).thenReturn(sharedPreferences)
 
@@ -221,7 +221,7 @@ class UuidsStorageEngineTest {
 
         // Check that the persisted shared prefs contains the expected data.
         val storedData = ApplicationProvider.getApplicationContext<Context>()
-            .getSharedPreferences(storageEngine.javaClass.simpleName, Context.MODE_PRIVATE)
+            .getSharedPreferences(storageEngine.javaClass.canonicalName, Context.MODE_PRIVATE)
             .all
 
         assertEquals(2, storedData.size)
