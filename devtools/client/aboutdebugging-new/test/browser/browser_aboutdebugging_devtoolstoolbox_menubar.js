@@ -39,11 +39,7 @@ add_task(async function() {
   info("Check whether the menu items are enabled");
   await assertMenusItems(rootDocument, true);
 
-  await removeTab(devtoolsTab);
-  await Promise.all([
-    waitForRequestsToSettle(window.AboutDebugging.store),
-    gDevTools.once("toolbox-destroyed"),
-  ]);
+  await closeAboutDevtoolsToolbox(devtoolsTab, window);
   await removeTab(tab);
 });
 
