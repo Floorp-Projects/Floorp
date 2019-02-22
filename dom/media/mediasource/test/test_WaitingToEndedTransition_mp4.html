@@ -37,7 +37,11 @@ runWithMSE(async (ms, el) => {
   p = once(el, "ended");
   ms.endOfStream();
   await p;
-  is(el.duration, 3.854512, "Video has correct duration: " + el.duration);
+  // Following bug 1524890, we now implement fully step 8 of the coded frame
+  // processing algorithm
+  // http://w3c.github.io/media-source/index.html#sourcebuffer-coded-frame-processing
+  // As such, duration is exactly the value of videosb.appendWindowEnd
+  is(el.duration, videosb.appendWindowEnd, "Video has correct duration: " + el.duration);
   is(el.currentTime, el.duration, "Video has correct currentTime.");
   SimpleTest.finish();
 });
