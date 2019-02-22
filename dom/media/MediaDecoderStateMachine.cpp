@@ -1353,7 +1353,7 @@ class MediaDecoderStateMachine::AccurateSeekingState
       return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
     }
     RefPtr<AudioData> data(new AudioData(
-        aAudio->mOffset, mSeekJob.mTarget->GetTime(), duration, frames,
+        aAudio->mOffset, mSeekJob.mTarget->GetTime(), duration,
         std::move(audioData), channels, aAudio->mRate, aAudio->mChannelMap));
     MOZ_ASSERT(AudioQueue().GetSize() == 0,
                "Should be the 1st sample after seeking");

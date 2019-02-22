@@ -66,8 +66,8 @@ class AudioCompactor {
         return false;
       }
 
-      mQueue.Push(new AudioData(aOffset, time, duration, framesCopied,
-                                std::move(buffer), aChannels, aSampleRate));
+      mQueue.Push(new AudioData(aOffset, time, duration, std::move(buffer),
+                                aChannels, aSampleRate));
 
       // Remove the frames we just pushed into the queue and loop if there is
       // more to be done.

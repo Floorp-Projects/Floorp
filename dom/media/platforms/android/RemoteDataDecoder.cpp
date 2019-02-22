@@ -442,10 +442,10 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
       jni::ByteBuffer::LocalRef dest = jni::ByteBuffer::New(audio.get(), size);
       aSample->WriteToByteBuffer(dest);
 
-      RefPtr<AudioData> data = new AudioData(
-          0, TimeUnit::FromMicroseconds(presentationTimeUs),
-          FramesToTimeUnit(numFrames, mOutputSampleRate), numFrames,
-          std::move(audio), mOutputChannels, mOutputSampleRate);
+      RefPtr<AudioData> data =
+          new AudioData(0, TimeUnit::FromMicroseconds(presentationTimeUs),
+                        FramesToTimeUnit(numFrames, mOutputSampleRate),
+                        std::move(audio), mOutputChannels, mOutputSampleRate);
 
       UpdateOutputStatus(std::move(data));
     }

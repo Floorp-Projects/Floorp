@@ -300,12 +300,11 @@ MediaResult AppleATDecoder::DecodeSample(MediaRawData* aSample) {
     data = mAudioConverter->Process(std::move(data));
   }
 
-  RefPtr<AudioData> audio =
-      new AudioData(aSample->mOffset, aSample->mTime, duration, numFrames,
-                    data.Forget(), channels, rate,
-                    mChannelLayout && mChannelLayout->IsValid()
-                        ? mChannelLayout->Map()
-                        : AudioConfig::ChannelLayout::UNKNOWN_MAP);
+  RefPtr<AudioData> audio = new AudioData(
+      aSample->mOffset, aSample->mTime, duration, data.Forget(), channels, rate,
+      mChannelLayout && mChannelLayout->IsValid()
+          ? mChannelLayout->Map()
+          : AudioConfig::ChannelLayout::UNKNOWN_MAP);
   mDecodedSamples.AppendElement(std::move(audio));
   return NS_OK;
 }

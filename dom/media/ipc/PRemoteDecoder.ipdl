@@ -27,7 +27,6 @@ struct RemoteAudioDataIPDL
   MediaDataIPDL base;
   uint32_t channels;
   uint32_t rate;
-  uint32_t frames;
   uint32_t channelMap;
   Shmem buffer;
 };

@@ -326,9 +326,9 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutData) {
   media::TimeUnit duration = FramesToTimeUnit(numFrames, mAudioRate);
   NS_ENSURE_TRUE(duration.IsValid(), E_FAIL);
 
-  aOutData = new AudioData(aStreamOffset, timestamp, duration, numFrames,
-                           std::move(audioData), mAudioChannels, mAudioRate,
-                           mChannelsMap);
+  aOutData =
+      new AudioData(aStreamOffset, timestamp, duration, std::move(audioData),
+                    mAudioChannels, mAudioRate, mChannelsMap);
 
 #ifdef LOG_SAMPLE_DECODE
   LOG("Decoded audio sample! timestamp=%lld duration=%lld currentLength=%u",
