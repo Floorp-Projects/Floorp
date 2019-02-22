@@ -158,14 +158,17 @@ nsresult nsDOMCSSAttributeDeclaration::SetSMILValue(
 nsresult nsDOMCSSAttributeDeclaration::SetPropertyValue(
     const nsCSSPropertyID aPropID, const nsAString& aValue,
     nsIPrincipal* aSubjectPrincipal) {
-  // Scripted modifications to style.opacity or style.transform
+  // Scripted modifications to style.opacity or style.transform (or other
+  // transform-like properties, e.g. style.translate, style.rotate, style.scale)
   // could immediately force us into the animated state if heuristics suggest
   // this is scripted animation.
   // FIXME: This is missing the margin shorthand and the logical versions of
   // the margin properties, see bug 1266287.
   if (aPropID == eCSSProperty_opacity || aPropID == eCSSProperty_transform ||
-      aPropID == eCSSProperty_left || aPropID == eCSSProperty_top ||
-      aPropID == eCSSProperty_right || aPropID == eCSSProperty_bottom ||
+      aPropID == eCSSProperty_translate || aPropID == eCSSProperty_rotate ||
+      aPropID == eCSSProperty_scale || aPropID == eCSSProperty_left ||
+      aPropID == eCSSProperty_top || aPropID == eCSSProperty_right ||
+      aPropID == eCSSProperty_bottom ||
       aPropID == eCSSProperty_background_position_x ||
       aPropID == eCSSProperty_background_position_y ||
       aPropID == eCSSProperty_background_position) {
