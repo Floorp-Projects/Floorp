@@ -32,9 +32,8 @@ add_task(async function() {
   });
   ok(true, "CDP client has been instantiated");
 
-  const {Log, Network, Page} = client;
+  const {Log, Page} = client;
   ok("Log" in client, "Log domain is available");
-  ok("Network" in client, "Network domain is available");
   ok("Page" in client, "Page domain is available");
 
   // receive console.log messages and print them
@@ -45,11 +44,6 @@ add_task(async function() {
     const {timestamp, level, text, args} = entry;
     const msg = text || args.join(" ");
     console.log(`${new Date(timestamp)}\t${level.toUpperCase()}\t${msg}`);
-  });
-
-  // turn on network stack logging
-  Network.requestWillBeSent((params) => {
-    console.log(params.request.url);
   });
 
   // turn on navigation related events, such as DOMContentLoaded et al.
