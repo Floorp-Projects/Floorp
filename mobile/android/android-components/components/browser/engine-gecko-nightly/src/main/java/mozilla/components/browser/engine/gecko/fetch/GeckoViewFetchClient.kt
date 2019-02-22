@@ -20,7 +20,6 @@ import org.mozilla.geckoview.WebRequest.CACHE_MODE_RELOAD
 import org.mozilla.geckoview.WebRequestError
 import org.mozilla.geckoview.WebResponse
 import java.io.IOException
-import java.io.InputStream
 import java.net.SocketTimeoutException
 import java.nio.ByteBuffer
 import java.util.concurrent.TimeUnit
@@ -39,6 +38,7 @@ class GeckoViewFetchClient(
     internal var executor: GeckoWebExecutor = GeckoWebExecutor(runtime)
 
     @Throws(IOException::class)
+    @Suppress("ComplexMethod")
     override fun fetch(request: Request): Response {
         val webRequest = with(request) {
             WebRequest.Builder(url)
@@ -58,6 +58,9 @@ class GeckoViewFetchClient(
             var fetchFlags = 0
             if (request.cookiePolicy == Request.CookiePolicy.OMIT) {
                 fetchFlags += GeckoWebExecutor.FETCH_FLAGS_ANONYMOUS
+            }
+            if (request.redirect == Request.Redirect.MANUAL) {
+                fetchFlags += GeckoWebExecutor.FETCH_FLAGS_NO_REDIRECTS
             }
             val webResponse = executor.fetch(webRequest, fetchFlags).poll(readTimeOutMillis)
             return webResponse?.toResponse() ?: throw IOException("Fetch failed with null response")
@@ -107,7 +110,7 @@ private fun WebResponse.toResponse(): Response {
         statusCode,
         headers,
             body?.let {
-                Response.Body(ByteBufferInputStream(it), headers["Content-Type"])
+                Response.Body(it, headers["Content-Type"])
             } ?: Response.Body.empty()
     )
 }
@@ -119,24 +122,4 @@ private fun translateHeaders(webResponse: WebResponse): Headers {
     }
 
     return headers
-}
-
-class ByteBufferInputStream(private var buf: ByteBuffer) : InputStream() {
-    @Throws(IOException::class)
-    @Suppress("MagicNumber")
-    override fun read(): Int {
-        return if (!buf.hasRemaining()) -1 else (buf.get().toInt() and 0xFF)
-    }
-
-    @Throws(IOException::class)
-    override fun read(bytes: ByteArray, off: Int, len: Int): Int {
-        var len = len
-        if (!buf.hasRemaining()) {
-            return -1
-        }
-
-        len = Math.min(len, buf.remaining())
-        buf.get(bytes, off, len)
-        return len
-    }
 }

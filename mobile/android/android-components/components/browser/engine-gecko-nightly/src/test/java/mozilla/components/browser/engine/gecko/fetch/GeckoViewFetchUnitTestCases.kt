@@ -16,7 +16,6 @@ import okhttp3.mockwebserver.RecordedRequest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
@@ -33,7 +32,6 @@ import org.mozilla.geckoview.WebRequestError
 import org.mozilla.geckoview.WebResponse
 import org.robolectric.RobolectricTestRunner
 import java.io.IOException
-import java.nio.ByteBuffer
 import java.nio.charset.Charset
 import java.util.concurrent.TimeoutException
 
@@ -174,15 +172,29 @@ class GeckoViewFetchUnitTestCases : mozilla.components.tooling.fetch.tests.Fetch
     }
 
     @Test
-    @Ignore("Covered by instrumented tests")
     override fun get302FollowRedirects() {
-        super.get302FollowRedirects()
+        mockResponse(200)
+
+        val request = mock(Request::class.java)
+        `when`(request.url).thenReturn("https://mozilla.org")
+        `when`(request.method).thenReturn(Request.Method.GET)
+        `when`(request.redirect).thenReturn(Request.Redirect.FOLLOW)
+        createNewClient().fetch(request)
+
+        verify(geckoWebExecutor)!!.fetch(any(), eq(GeckoWebExecutor.FETCH_FLAGS_NONE))
     }
 
     @Test
-    @Ignore("Covered by instrumented tests")
     override fun get302FollowRedirectsDisabled() {
-        super.get302FollowRedirectsDisabled()
+        mockResponse(200)
+
+        val request = mock(Request::class.java)
+        `when`(request.url).thenReturn("https://mozilla.org")
+        `when`(request.method).thenReturn(Request.Method.GET)
+        `when`(request.redirect).thenReturn(Request.Redirect.MANUAL)
+        createNewClient().fetch(request)
+
+        verify(geckoWebExecutor)!!.fetch(any(), eq(GeckoWebExecutor.FETCH_FLAGS_NO_REDIRECTS))
     }
 
     @Test
@@ -218,30 +230,6 @@ class GeckoViewFetchUnitTestCases : mozilla.components.tooling.fetch.tests.Fetch
         `when`(request.url).thenReturn("https://mozilla.org")
         `when`(request.method).thenReturn(Request.Method.GET)
         createNewClient().fetch(request)
-    }
-
-    @Test
-    fun byteBufferInputStream() {
-        val value = "test"
-        val buffer = ByteBuffer.allocateDirect(value.length)
-        buffer.put(value.toByteArray())
-        buffer.rewind()
-
-        var stream = ByteBufferInputStream(buffer)
-        assertEquals('t'.toInt(), stream.read())
-        assertEquals('e'.toInt(), stream.read())
-        assertEquals('s'.toInt(), stream.read())
-        assertEquals('t'.toInt(), stream.read())
-        assertEquals(-1, stream.read())
-
-        val array = ByteArray(4)
-        buffer.rewind()
-        stream = ByteBufferInputStream(buffer)
-        stream.read(array, 0, 4)
-        assertEquals('t'.toByte(), array[0])
-        assertEquals('e'.toByte(), array[1])
-        assertEquals('s'.toByte(), array[2])
-        assertEquals('t'.toByte(), array[3])
     }
 
     @Test
@@ -331,10 +319,7 @@ class GeckoViewFetchUnitTestCases : mozilla.components.tooling.fetch.tests.Fetch
         }
 
         body?.let {
-            val buffer = ByteBuffer.allocateDirect(body.length)
-            buffer.put(body.toByteArray(charset))
-            buffer.rewind()
-            builder.body(buffer)
+            builder.body(it.byteInputStream(charset))
         }
 
         val response = builder.build()

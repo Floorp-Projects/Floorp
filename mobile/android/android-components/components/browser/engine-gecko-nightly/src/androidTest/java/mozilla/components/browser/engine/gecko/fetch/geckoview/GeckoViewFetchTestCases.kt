@@ -10,7 +10,6 @@ import androidx.test.filters.MediumTest
 import mozilla.components.browser.engine.gecko.fetch.GeckoViewFetchClient
 import mozilla.components.concept.fetch.Client
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
 import org.junit.Test
 
 @MediumTest
@@ -86,7 +85,6 @@ class GeckoViewFetchTestCases : mozilla.components.tooling.fetch.tests.FetchTest
 
     @Test
     @UiThreadTest
-    @Ignore("Blocked on: https://bugzilla.mozilla.org/show_bug.cgi?id=1526327")
     override fun get302FollowRedirectsDisabled() {
         super.get302FollowRedirectsDisabled()
     }
