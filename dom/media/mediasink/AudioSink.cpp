@@ -245,19 +245,20 @@ UniquePtr<AudioStream::Chunk> AudioSink::PopFrames(uint32_t aFrames) {
     mCurrentData = mProcessedQueue.PeekFront();
     {
       MonitorAutoLock mon(mMonitor);
-      mCursor = MakeUnique<AudioBufferCursor>(
-          mCurrentData->Data(), mCurrentData->mChannels, mCurrentData->mFrames);
+      mCursor = MakeUnique<AudioBufferCursor>(mCurrentData->Data(),
+                                              mCurrentData->mChannels,
+                                              mCurrentData->Frames());
     }
-    MOZ_ASSERT(mCurrentData->mFrames > 0);
+    MOZ_ASSERT(mCurrentData->Frames() > 0);
     mProcessedQueueLength -=
-        FramesToUsecs(mCurrentData->mFrames, mOutputRate).value();
+        FramesToUsecs(mCurrentData->Frames(), mOutputRate).value();
   }
 
   auto framesToPop = std::min(aFrames, mCursor->Available());
 
   SINK_LOG_V("playing audio at time=%" PRId64 " offset=%u length=%u",
              mCurrentData->mTime.ToMicroseconds(),
-             mCurrentData->mFrames - mCursor->Available(), framesToPop);
+             mCurrentData->Frames() - mCursor->Available(), framesToPop);
 
   UniquePtr<AudioStream::Chunk> chunk =
       MakeUnique<Chunk>(mCurrentData, framesToPop, mCursor->Ptr());
@@ -327,7 +328,7 @@ void AudioSink::NotifyAudioNeeded() {
     RefPtr<AudioData> data = mAudioQueue.PopFront();
 
     // Ignore the element with 0 frames and try next.
-    if (!data->mFrames) {
+    if (!data->Frames()) {
       continue;
     }
 
@@ -412,13 +413,13 @@ void AudioSink::NotifyAudioNeeded() {
     }
 
     mLastEndTime = data->GetEndTime();
-    mFramesParsed += data->mFrames;
+    mFramesParsed += data->Frames();
 
     if (mConverter->InputConfig() != mConverter->OutputConfig()) {
       // We must ensure that the size in the buffer contains exactly the number
       // of frames, in case one of the audio producer over allocated the buffer.
       AlignedAudioBuffer buffer(data->MoveableData());
-      buffer.SetLength(size_t(data->mFrames) * data->mChannels);
+      buffer.SetLength(size_t(data->Frames()) * data->mChannels);
 
       AlignedAudioBuffer convertedData =
           mConverter->Process(AudioSampleBuffer(std::move(buffer))).Forget();
@@ -437,12 +438,12 @@ void AudioSink::NotifyAudioNeeded() {
 }
 
 uint32_t AudioSink::PushProcessedAudio(AudioData* aData) {
-  if (!aData || !aData->mFrames) {
+  if (!aData || !aData->Frames()) {
     return 0;
   }
   mProcessedQueue.Push(aData);
-  mProcessedQueueLength += FramesToUsecs(aData->mFrames, mOutputRate).value();
-  return aData->mFrames;
+  mProcessedQueueLength += FramesToUsecs(aData->Frames(), mOutputRate).value();
+  return aData->Frames();
 }
 
 already_AddRefed<AudioData> AudioSink::CreateAudioFromBuffer(
@@ -492,7 +493,7 @@ uint32_t AudioSink::DrainConverter(uint32_t aMaxFrames) {
     return 0;
   }
   mProcessedQueue.Push(data);
-  return data->mFrames;
+  return data->Frames();
 }
 
 nsCString AudioSink::GetDebugInfo() {

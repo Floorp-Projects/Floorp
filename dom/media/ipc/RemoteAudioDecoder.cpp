@@ -118,7 +118,7 @@ void RemoteAudioDecoderParent::ProcessDecodedData(
         MediaDataIPDL(data->mOffset, data->mTime.ToMicroseconds(),
                       data->mTimecode.ToMicroseconds(),
                       data->mDuration.ToMicroseconds(), data->mKeyframe),
-        audio->mChannels, audio->mRate, audio->mFrames, audio->mChannelMap,
+        audio->mChannels, audio->mRate, audio->Frames(), audio->mChannelMap,
         buffer);
 
     Unused << SendOutput(output);

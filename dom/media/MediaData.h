@@ -341,8 +341,10 @@ class AudioData : public MediaData {
         mChannels(aChannels),
         mChannelMap(aChannelMap),
         mRate(aRate),
-        mFrames(aFrames),
-        mAudioData(std::move(aData)) {}
+        mAudioData(std::move(aData)),
+        mFrames(mAudioData.Length() / aChannels) {
+    MOZ_DIAGNOSTIC_ASSERT(mFrames == aFrames);
+  }
 
   static const Type sType = Type::AUDIO_DATA;
   static const char* sTypeName;
@@ -351,6 +353,9 @@ class AudioData : public MediaData {
   Span<AudioDataValue> Data() const {
     return MakeSpan(mAudioData.Data(), mAudioData.Length());
   }
+
+  // Amount of frames for contained data.
+  uint32_t Frames() const { return mFrames; }
 
   // Get the internal audio buffer to be moved. After this call the original
   // AudioData will be emptied and can't be used again.
@@ -372,8 +377,7 @@ class AudioData : public MediaData {
   // channel map.
   const AudioConfig::ChannelLayout::ChannelMap mChannelMap;
   const uint32_t mRate;
-  // Amount of frames for contained data.
-  const uint32_t mFrames;
+
   // At least one of mAudioBuffer/mAudioData must be non-null.
   // mChannels channels, each with mFrames frames
   RefPtr<SharedBuffer> mAudioBuffer;
@@ -384,6 +388,8 @@ class AudioData : public MediaData {
  private:
   // mFrames frames, each with mChannels values
   AlignedAudioBuffer mAudioData;
+  // Amount of frames for contained data.
+  const uint32_t mFrames;
 };
 
 namespace layers {
