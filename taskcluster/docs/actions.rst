@@ -44,7 +44,9 @@ your python callback, enabling it to do pretty much anything it wants to.
 To create a new callback action you must create a file
 ``taskcluster/taskgraph/actions/my-action.py``, that at minimum contains::
 
-  from registry import register_callback_action
+  from __future__ import absolute_import, print_function, unicode_literals
+
+  from .registry import register_callback_action
 
   @register_callback_action(
       name='hello',
@@ -54,7 +56,7 @@ To create a new callback action you must create a file
       order=10000,  # Order in which it should appear relative to other actions
   )
   def hello_world_action(parameters, graph_config, input, task_group_id, task_id, task):
-      print "Hello was triggered from taskGroupId: " + taskGroupId
+      print("Hello was triggered from taskGroupId: {}".format(task_group_id))
 
 The arguments are:
 ``parameters``
