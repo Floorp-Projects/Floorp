@@ -43,6 +43,10 @@
   --grey-90-a80: rgba(12, 12, 13, 0.8);
   --white-100: #fff; /* for ui, no special semantic */
 
+  /* Typography from Photon */
+  --title-20-font-size: 17px;
+  --title-20-font-weight: 600;
+
   /* Global layout vars */
   --page-width: 664px;
   --base-unit: 4px;
@@ -64,7 +68,7 @@
   --alt-heading-icon-gap: var(--base-unit);
   --main-heading-icon-size: calc(var(--base-unit) * 16);
   --main-heading-icon-gap: calc(var(--base-unit) * 3);
-  --main-subheading-icon-size: calc(var(--base-unit) * 5);
+  --main-subheading-icon-size: calc(var(--base-unit) * 4);
   --main-subheading-heading-icon-gap: calc(var(--base-unit) * 2);
 }
 
@@ -166,10 +170,9 @@ p {
 *  +--------+-------------+
 */
 .main-subheading {
-  margin-block-start: calc(var(--base-unit) * 4);
-  font-weight: 600;
-  font-size: 1.46em; /* import from .header-name in common.inc.css */
-  line-height: 1.3em; /* import from .header-name in common.inc.css */
+  margin-block: calc(var(--base-unit) * 4);
+  font-size: var(--title-20-font-size); /* Note: this is from Photon Title 20 */
+  font-weight: var(--title-20-font-weight); /* Note: this is from Photon Title 20 */
 
   display: grid;
   grid-template-columns: var(--main-subheading-icon-size) 1fr;
