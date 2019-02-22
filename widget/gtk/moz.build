@@ -44,7 +44,6 @@ UNIFIED_SOURCES += [
     'nsSound.cpp',
     'nsToolkit.cpp',
     'nsWidgetFactory.cpp',
-    'ProcInfo.cpp',
     'ScreenHelperGTK.cpp',
     'TaskbarProgress.cpp',
     'WakeLockListener.cpp',

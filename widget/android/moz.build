@@ -62,7 +62,6 @@ UNIFIED_SOURCES += [
     'nsPrintSettingsServiceAndroid.cpp',
     'nsWidgetFactory.cpp',
     'nsWindow.cpp',
-    'ProcInfo.cpp',
     'ScreenHelperAndroid.cpp',
     'WebExecutorSupport.cpp',
 ]
