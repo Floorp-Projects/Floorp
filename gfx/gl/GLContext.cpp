@@ -190,6 +190,7 @@ static const char* const sExtensionNames[] = {
     "GL_OES_depth32",
     "GL_OES_depth_texture",
     "GL_OES_element_index_uint",
+    "GL_OES_fbo_render_mipmap",
     "GL_OES_framebuffer_object",
     "GL_OES_packed_depth_stencil",
     "GL_OES_rgb8_rgba8",
