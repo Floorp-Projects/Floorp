@@ -1274,87 +1274,88 @@ class FoldVisitor : public ParseNodeVisitor<FoldVisitor> {
       : ParseNodeVisitor(cx), handler(handler) {}
 
   bool visitElemExpr(ParseNode*& pn) {
-    return Base::visitElemExpr(pn) && FoldElement(cx, handler, &pn);
+    return Base::visitElemExpr(pn) && FoldElement(cx_, handler, &pn);
   }
 
   bool visitTypeOfExpr(ParseNode*& pn) {
-    return Base::visitTypeOfExpr(pn) && FoldTypeOfExpr(cx, handler, &pn);
+    return Base::visitTypeOfExpr(pn) && FoldTypeOfExpr(cx_, handler, &pn);
   }
 
   bool visitDeleteExpr(ParseNode*& pn) {
-    return Base::visitDeleteExpr(pn) && FoldDeleteExpr(cx, handler, &pn);
+    return Base::visitDeleteExpr(pn) && FoldDeleteExpr(cx_, handler, &pn);
   }
 
   bool visitDeleteElemExpr(ParseNode*& pn) {
-    return Base::visitDeleteElemExpr(pn) && FoldDeleteElement(cx, handler, &pn);
+    return Base::visitDeleteElemExpr(pn) &&
+           FoldDeleteElement(cx_, handler, &pn);
   }
 
   bool visitNotExpr(ParseNode*& pn) {
-    return Base::visitNotExpr(pn) && FoldNot(cx, handler, &pn);
+    return Base::visitNotExpr(pn) && FoldNot(cx_, handler, &pn);
   }
 
   bool visitBitNotExpr(ParseNode*& pn) {
-    return Base::visitBitNotExpr(pn) && FoldUnaryArithmetic(cx, handler, &pn);
+    return Base::visitBitNotExpr(pn) && FoldUnaryArithmetic(cx_, handler, &pn);
   }
 
   bool visitPosExpr(ParseNode*& pn) {
-    return Base::visitPosExpr(pn) && FoldUnaryArithmetic(cx, handler, &pn);
+    return Base::visitPosExpr(pn) && FoldUnaryArithmetic(cx_, handler, &pn);
   }
 
   bool visitNegExpr(ParseNode*& pn) {
-    return Base::visitNegExpr(pn) && FoldUnaryArithmetic(cx, handler, &pn);
+    return Base::visitNegExpr(pn) && FoldUnaryArithmetic(cx_, handler, &pn);
   }
 
   bool visitPowExpr(ParseNode*& pn) {
-    return Base::visitPowExpr(pn) && FoldExponentiation(cx, handler, &pn);
+    return Base::visitPowExpr(pn) && FoldExponentiation(cx_, handler, &pn);
   }
 
   bool visitMulExpr(ParseNode*& pn) {
-    return Base::visitMulExpr(pn) && FoldBinaryArithmetic(cx, handler, &pn);
+    return Base::visitMulExpr(pn) && FoldBinaryArithmetic(cx_, handler, &pn);
   }
 
   bool visitDivExpr(ParseNode*& pn) {
-    return Base::visitDivExpr(pn) && FoldBinaryArithmetic(cx, handler, &pn);
+    return Base::visitDivExpr(pn) && FoldBinaryArithmetic(cx_, handler, &pn);
   }
 
   bool visitModExpr(ParseNode*& pn) {
-    return Base::visitModExpr(pn) && FoldBinaryArithmetic(cx, handler, &pn);
+    return Base::visitModExpr(pn) && FoldBinaryArithmetic(cx_, handler, &pn);
   }
 
   bool visitAddExpr(ParseNode*& pn) {
-    return Base::visitAddExpr(pn) && FoldAdd(cx, handler, &pn);
+    return Base::visitAddExpr(pn) && FoldAdd(cx_, handler, &pn);
   }
 
   bool visitSubExpr(ParseNode*& pn) {
-    return Base::visitSubExpr(pn) && FoldBinaryArithmetic(cx, handler, &pn);
+    return Base::visitSubExpr(pn) && FoldBinaryArithmetic(cx_, handler, &pn);
   }
 
   bool visitLshExpr(ParseNode*& pn) {
-    return Base::visitLshExpr(pn) && FoldBinaryArithmetic(cx, handler, &pn);
+    return Base::visitLshExpr(pn) && FoldBinaryArithmetic(cx_, handler, &pn);
   }
 
   bool visitRshExpr(ParseNode*& pn) {
-    return Base::visitRshExpr(pn) && FoldBinaryArithmetic(cx, handler, &pn);
+    return Base::visitRshExpr(pn) && FoldBinaryArithmetic(cx_, handler, &pn);
   }
 
   bool visitUrshExpr(ParseNode*& pn) {
-    return Base::visitUrshExpr(pn) && FoldBinaryArithmetic(cx, handler, &pn);
+    return Base::visitUrshExpr(pn) && FoldBinaryArithmetic(cx_, handler, &pn);
   }
 
   bool visitAndExpr(ParseNode*& pn) {
     // Note that this does result in the unfortunate fact that dead arms of this
     // node get constant folded. The same goes for visitOr.
-    return Base::visitAndExpr(pn) && FoldAndOr(cx, &pn);
+    return Base::visitAndExpr(pn) && FoldAndOr(cx_, &pn);
   }
 
   bool visitOrExpr(ParseNode*& pn) {
-    return Base::visitOrExpr(pn) && FoldAndOr(cx, &pn);
+    return Base::visitOrExpr(pn) && FoldAndOr(cx_, &pn);
   }
 
   bool visitConditionalExpr(ParseNode*& pn) {
     // Don't call base-class visitConditional because FoldConditional processes
     // pn's child nodes specially to save stack space.
-    return FoldConditional(cx, handler, &pn);
+    return FoldConditional(cx_, handler, &pn);
   }
 
  private:
@@ -1414,7 +1415,7 @@ class FoldVisitor : public ParseNodeVisitor<FoldVisitor> {
   bool visitIfStmt(ParseNode*& pn) {
     // Don't call base-class visitIf because FoldIf processes pn's child nodes
     // specially to save stack space.
-    return FoldIf(cx, handler, &pn);
+    return FoldIf(cx_, handler, &pn);
   }
 
   bool visitForStmt(ParseNode*& pn) {
@@ -1427,7 +1428,7 @@ class FoldVisitor : public ParseNodeVisitor<FoldVisitor> {
       TernaryNode& head = stmt.left()->as<TernaryNode>();
       ParseNode** test = head.unsafeKid2Reference();
       if (*test) {
-        if (!SimplifyCondition(cx, handler, test)) {
+        if (!SimplifyCondition(cx_, handler, test)) {
           return false;
         }
         if ((*test)->isKind(ParseNodeKind::TrueExpr)) {
@@ -1442,13 +1443,13 @@ class FoldVisitor : public ParseNodeVisitor<FoldVisitor> {
   bool visitWhileStmt(ParseNode*& pn) {
     BinaryNode& node = pn->as<BinaryNode>();
     return Base::visitWhileStmt(pn) &&
-           SimplifyCondition(cx, handler, node.unsafeLeftReference());
+           SimplifyCondition(cx_, handler, node.unsafeLeftReference());
   }
 
   bool visitDoWhileStmt(ParseNode*& pn) {
     BinaryNode& node = pn->as<BinaryNode>();
     return Base::visitDoWhileStmt(pn) &&
-           SimplifyCondition(cx, handler, node.unsafeRightReference());
+           SimplifyCondition(cx_, handler, node.unsafeRightReference());
   }
 
   bool visitFunction(ParseNode*& pn) {

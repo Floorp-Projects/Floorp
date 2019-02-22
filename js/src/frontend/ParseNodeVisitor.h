@@ -49,12 +49,12 @@ namespace frontend {
 template <typename Derived>
 class ParseNodeVisitor {
  public:
-  JSContext* cx;
+  JSContext* cx_;
 
-  explicit ParseNodeVisitor(JSContext* cx) : cx(cx) {}
+  explicit ParseNodeVisitor(JSContext* cx) : cx_(cx) {}
 
   MOZ_MUST_USE bool visit(ParseNode*& pn) {
-    if (!CheckRecursionLimit(cx)) {
+    if (!CheckRecursionLimit(cx_)) {
       return false;
     }
 
