@@ -123,9 +123,9 @@ let ACTORS = {
     },
   },
 
-  FormValidation: {
+  FormSubmit: {
     child: {
-      module: "resource:///actors/FormValidationChild.jsm",
+      module: "resource:///actors/FormSubmitChild.jsm",
       events: {
         "MozInvalidForm": {},
       },

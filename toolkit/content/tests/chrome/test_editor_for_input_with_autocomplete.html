@@ -23,13 +23,9 @@ SimpleTest.waitForExplicitFinish();
 
 async function registerWord(aTarget, aAutoCompleteController) {
   // Register a word to the form history.
-  let chromeScript = SpecialPowers.loadChromeScript(function addEntry() {
-    let {FormHistory} = ChromeUtils.import("resource://gre/modules/FormHistory.jsm");
-    FormHistory.update({ op: "add", fieldname: "test", value: "Mozilla" });
-  });
   aTarget.focus();
   aTarget.value = "Mozilla";
-
+  synthesizeKey("KEY_Enter");
   await waitForCondition(() => {
     if (aAutoCompleteController.searchStatus == aAutoCompleteController.STATUS_NONE ||
         aAutoCompleteController.searchStatus == aAutoCompleteController.STATUS_COMPLETE_NO_MATCH) {
@@ -37,7 +33,6 @@ async function registerWord(aTarget, aAutoCompleteController) {
     }
     return aAutoCompleteController.matchCount > 0;
   });
-  chromeScript.destroy();
   aTarget.value = "";
   synthesizeKey("KEY_Escape");
 }

@@ -82,18 +82,25 @@ var CreatedNavigationTargetListener = {
 };
 
 var FormSubmitListener = {
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsIFormSubmitObserver,
+                                          Ci.nsISupportsWeakReference]),
   init() {
     this.formSubmitWindows = new WeakSet();
-    addEventListener("DOMFormBeforeSubmit", this);
+    Services.obs.addObserver(FormSubmitListener, "earlyformsubmit");
   },
 
   uninit() {
-    removeEventListener("DOMFormBeforeSubmit", this);
+    Services.obs.removeObserver(FormSubmitListener, "earlyformsubmit");
     this.formSubmitWindows = new WeakSet();
   },
 
-  handleEvent({target: form}) {
-    this.formSubmitWindows.add(form.ownerGlobal);
+  notify: function(form, window, actionURI) {
+    try {
+      this.formSubmitWindows.add(window);
+    } catch (e) {
+      Cu.reportError("Error in FormSubmitListener.notify");
+    }
   },
 
   hasAndForget: function(window) {
