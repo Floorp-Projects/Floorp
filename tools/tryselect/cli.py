@@ -126,9 +126,6 @@ class BaseTryParser(ArgumentParser):
                 presets.edit()
                 sys.exit()
 
-            if args.preset and args.preset not in presets:
-                self.error("preset '{}' does not exist".format(args.preset))
-
     def parse_known_args(self, *args, **kwargs):
         args, remainder = ArgumentParser.parse_known_args(self, *args, **kwargs)
         self.validate(args)

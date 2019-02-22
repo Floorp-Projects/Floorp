@@ -68,6 +68,7 @@ class TrySelect(MachCommandBase):
         from tryselect import push
         push.MAX_HISTORY = self._mach_context.settings['try']['maxhistory']
         self.subcommand = self._mach_context.handler.subcommand
+        self.parser = self._mach_context.handler.parser
 
     def handle_presets(self, save, preset, **kwargs):
         """Handle preset related arguments.
@@ -76,10 +77,13 @@ class TrySelect(MachCommandBase):
         special preset handling. They can all save and load presets the same
         way.
         """
-        from tryselect.preset import presets
+        from tryselect.preset import presets, migrate_old_presets
         from tryselect.util.dicttools import merge
 
-        default = self._mach_context.handler.parser.get_default
+        # TODO: Remove after Jan 1, 2020.
+        migrate_old_presets()
+
+        default = self.parser.get_default
         if save:
             selector = self.subcommand or self._mach_context.settings['try']['default']
 
@@ -90,6 +94,11 @@ class TrySelect(MachCommandBase):
             sys.exit()
 
         if preset:
+            if preset not in presets:
+                # TODO: This should live in the parser's validation method, but
+                # for now we want this check to run *after* preset migration.
+                self.parser.error("preset '{}' does not exist".format(preset))
+
             name = preset
             preset = presets[name]
             selector = preset['selector']
