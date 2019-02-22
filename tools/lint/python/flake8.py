@@ -2,18 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, print_function
+
 import json
 import os
 import platform
-import signal
 import subprocess
 import sys
 
-from mozprocess import ProcessHandlerMixin
+import mozfile
 
 from mozlint import result
 from mozlint.util import pip
-
 
 here = os.path.abspath(os.path.dirname(__file__))
 FLAKE8_REQUIREMENTS_PATH = os.path.join(here, 'flake8_requirements.txt')
@@ -62,16 +62,47 @@ if platform.system() == 'Windows':
 else:
     bindir = os.path.join(sys.prefix, 'bin')
 
-results = []
+
+def setup(root):
+    if not pip.reinstall_program(FLAKE8_REQUIREMENTS_PATH):
+        print(FLAKE8_INSTALL_ERROR)
+        return 1
 
 
-class Flake8Process(ProcessHandlerMixin):
-    def __init__(self, config, *args, **kwargs):
-        self.config = config
-        kwargs['processOutputLine'] = [self.process_line]
-        ProcessHandlerMixin.__init__(self, *args, **kwargs)
+def lint(paths, config, **lintargs):
+    from flake8.main.application import Application
 
-    def process_line(self, line):
+    config_path = os.path.join(lintargs['root'], '.flake8')
+    exclude = config.get('exclude', [])
+
+    if lintargs.get('fix'):
+        fix_cmd = [
+            os.path.join(bindir, 'autopep8'),
+            '--global-config', config_path,
+            '--in-place', '--recursive',
+        ]
+
+        if exclude:
+            fix_cmd.extend(['--exclude', ','.join(exclude)])
+
+        subprocess.call(fix_cmd + paths)
+
+    output_file = mozfile.NamedTemporaryFile()
+    flake8_cmd = [
+        os.path.join(bindir, 'flake8'),
+        '--config', config_path,
+        '--output-file', output_file.name,
+        '--format', '{"path":"%(path)s","lineno":%(row)s,'
+                    '"column":%(col)s,"rule":"%(code)s","message":"%(text)s"}',
+        '--filename', ','.join(['*.{}'.format(e) for e in config['extensions']]),
+    ] + paths
+
+    # Run flake8.
+    results = []
+    app = Application()
+    app.run(flake8_cmd)
+
+    def process_line(line):
         # Escape slashes otherwise JSON conversion will not work
         line = line.replace('\\', '\\\\')
         try:
@@ -83,54 +114,7 @@ class Flake8Process(ProcessHandlerMixin):
         if res.get('code') in LINE_OFFSETS:
             res['lineoffset'] = LINE_OFFSETS[res['code']]
 
-        results.append(result.from_config(self.config, **res))
+        results.append(result.from_config(config, **res))
 
-    def run(self, *args, **kwargs):
-        # flake8 seems to handle SIGINT poorly. Handle it here instead
-        # so we can kill the process without a cryptic traceback.
-        orig = signal.signal(signal.SIGINT, signal.SIG_IGN)
-        ProcessHandlerMixin.run(self, *args, **kwargs)
-        signal.signal(signal.SIGINT, orig)
-
-
-def setup(root):
-    if not pip.reinstall_program(FLAKE8_REQUIREMENTS_PATH):
-        print(FLAKE8_INSTALL_ERROR)
-        return 1
-
-
-def lint(paths, config, **lintargs):
-    # TODO don't store results in a global
-    global results
-    results = []
-
-    config_path = os.path.join(lintargs['root'], '.flake8')
-    cmdargs = [
-        os.path.join(bindir, 'flake8'),
-        '--config', config_path,
-        '--format', '{"path":"%(path)s","lineno":%(row)s,'
-                    '"column":%(col)s,"rule":"%(code)s","message":"%(text)s"}',
-        '--filename', ','.join(['*.{}'.format(e) for e in config['extensions']]),
-    ]
-
-    if lintargs.get('fix'):
-        fix_cmdargs = [
-            os.path.join(bindir, 'autopep8'),
-            '--global-config', config_path,
-            '--in-place', '--recursive',
-        ]
-
-        if config.get('exclude'):
-            fix_cmdargs.extend(['--exclude', ','.join(config['exclude'])])
-
-        subprocess.call(fix_cmdargs + paths)
-
-    proc = Flake8Process(config, cmdargs + paths)
-    proc.run()
-    try:
-        proc.wait()
-    except KeyboardInterrupt:
-        proc.kill()
-        return 1
-
+    map(process_line, output_file.readlines())
     return results
