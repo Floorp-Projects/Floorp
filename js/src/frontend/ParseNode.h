@@ -787,7 +787,7 @@ class NullaryNode : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dump(GenericPrinter& out);
+  void dump(GenericPrinter& out, int indent);
 #endif
 };
 
