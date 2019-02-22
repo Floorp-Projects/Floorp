@@ -117,6 +117,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
                           FormAutofill.isAutofillAddressesEnabled :
                           FormAutofill.isAutofillCreditCardsEnabled;
     let AutocompleteResult = isAddressField ? AddressResult : CreditCardResult;
+    let isFormAutofillSearch = true;
     let pendingSearchResult = null;
 
     ProfileAutocomplete.lastProfileAutoCompleteFocusedInput = activeInput;
@@ -128,6 +129,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
     if (!searchPermitted || !savedFieldNames.has(activeFieldDetail.fieldName) ||
         (!isInputAutofilled && filledRecordGUID) || (isAddressField &&
         allFieldNames.filter(field => savedFieldNames.has(field)).length < FormAutofillUtils.AUTOFILL_FIELDS_THRESHOLD)) {
+      isFormAutofillSearch = false;
       if (activeInput.autocomplete == "off") {
         // Create a dummy result as an empty search result.
         pendingSearchResult = new AutocompleteResult("", "", [], [], {});
@@ -173,11 +175,15 @@ AutofillProfileAutoCompleteSearch.prototype = {
 
     Promise.resolve(pendingSearchResult).then((result) => {
       listener.onSearchResult(this, result);
-      ProfileAutocomplete.lastProfileAutoCompleteResult = result;
-      // Reset AutoCompleteController's state at the end of startSearch to ensure that
-      // none of form autofill result will be cached in other places and make the
-      // result out of sync.
-      autocompleteController.resetInternalState();
+      // Don't save cache results or reset state when returning non-autofill results such as the
+      // form history fallback above.
+      if (isFormAutofillSearch) {
+        ProfileAutocomplete.lastProfileAutoCompleteResult = result;
+        // Reset AutoCompleteController's state at the end of startSearch to ensure that
+        // none of form autofill result will be cached in other places and make the
+        // result out of sync.
+        autocompleteController.resetInternalState();
+      }
     });
   },
 
