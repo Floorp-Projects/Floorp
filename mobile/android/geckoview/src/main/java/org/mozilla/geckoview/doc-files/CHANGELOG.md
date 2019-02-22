@@ -60,6 +60,9 @@ exclude: true
 - Changed `WebResponse.body` from a `ByteBuffer` to an `InputStream`. Apps that want access
   to the entire response body will now need to read the stream themselves.
 
+- Added `GeckoWebExecutor.FETCH_FLAGS_NO_REDIRECTS`, which will cause `GeckoWebExecutor.fetch()` to not
+  automatically follow HTTP redirects (e.g., 302).
+
 [67.1]: ../GeckoSession.html#getDefaultUserAgent--
 
 ## v66
@@ -181,4 +184,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: 5655c3f6a74c860809e57a2d66499633ac23cfcc
+[api-version]: a1740e5cb61e34b3180b80f33b0b33243a34d588
