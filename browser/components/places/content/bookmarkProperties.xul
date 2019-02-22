@@ -38,6 +38,8 @@
           src="chrome://global/content/globalOverlay.js"/>
   <script type="application/javascript"
           src="chrome://browser/content/utilityOverlay.js"/>
+  <script type="application/javascript"
+          src="chrome://browser/content/places/places-tree.js"/>
 
 #include editBookmarkPanel.inc.xul
 

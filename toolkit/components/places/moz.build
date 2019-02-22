@@ -78,10 +78,6 @@ if CONFIG['MOZ_PLACES']:
         'components.conf',
     ]
 
-    XPCOM_MANIFESTS += [
-        'components.conf',
-    ]
-
     FINAL_LIBRARY = 'xul'
 
 include('/ipc/chromium/chromium-config.mozbuild')
