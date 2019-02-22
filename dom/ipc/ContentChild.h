@@ -428,6 +428,8 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvInitJSWindowActorInfos(
       nsTArray<JSWindowActorInfo>&& aInfos);
 
+  mozilla::ipc::IPCResult RecvUnregisterJSWindowActor(const nsString& aName);
+
   mozilla::ipc::IPCResult RecvLastPrivateDocShellDestroyed();
 
   mozilla::ipc::IPCResult RecvNotifyProcessPriorityChanged(
