@@ -22,19 +22,13 @@ async function run_test() {
 /**
  * Called after the call to stageUpdate finishes.
  */
-function stageUpdateFinished() {
+async function stageUpdateFinished() {
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateSuccess(getStageDirFile, true, false);
   checkUpdateLogContents(LOG_COMPLETE_SUCCESS, true);
   lockDirectory(getGREBinDir().path);
   // Switch the application to the staged application that was updated.
-  runUpdateUsingApp(STATE_SUCCEEDED);
-}
-
-/**
- * Called after the call to runUpdateUsingApp finishes.
- */
-async function runUpdateFinished() {
+  await runUpdateUsingApp(STATE_SUCCEEDED);
   await checkPostUpdateAppLog();
   checkAppBundleModTime();
   standardInit();
