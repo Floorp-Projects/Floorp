@@ -284,7 +284,7 @@ void IPCBlobInputStreamChild::StreamNeeded(IPCBlobInputStream* aStream,
 }
 
 mozilla::ipc::IPCResult IPCBlobInputStreamChild::RecvStreamReady(
-    const OptionalIPCStream& aStream) {
+    const Maybe<IPCStream>& aStream) {
   nsCOMPtr<nsIInputStream> stream = mozilla::ipc::DeserializeIPCStream(aStream);
 
   RefPtr<IPCBlobInputStream> pendingStream;
