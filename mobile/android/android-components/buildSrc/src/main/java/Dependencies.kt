@@ -34,8 +34,6 @@ object Versions {
 
     const val mozilla_appservices = "0.15.0"
     const val servo = "0.0.1.20181017.aa95911"
-
-    const val work_testing = "1.0.0-beta05"
 }
 
 // Synchronized dependencies used by (some) modules
@@ -92,6 +90,4 @@ object Dependencies {
     const val thirdparty_okhttp = "com.squareup.okhttp3:okhttp:${Versions.okhttp}"
     const val thirdparty_okhttp_urlconnection = "com.squareup.okhttp3:okhttp-urlconnection:${Versions.okhttp}"
     const val thirdparty_sentry = "io.sentry:sentry-android:${Versions.sentry}"
-
-    const val androidx_work_testing = "android.arch.work:work-testing:${Versions.work_testing}"
 }

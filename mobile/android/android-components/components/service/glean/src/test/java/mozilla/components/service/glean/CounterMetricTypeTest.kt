@@ -4,6 +4,8 @@
 
 package mozilla.components.service.glean
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.service.glean.storages.CountersStorageEngine
@@ -27,7 +29,14 @@ class CounterMetricTypeTest {
 
     @Before
     fun setUp() {
-        resetGlean()
+        Glean.initialized = true
+        CountersStorageEngine.applicationContext = ApplicationProvider.getApplicationContext()
+        // Clear the stored "user" preferences between tests.
+        ApplicationProvider.getApplicationContext<Context>()
+            .getSharedPreferences(CountersStorageEngine.javaClass.simpleName, Context.MODE_PRIVATE)
+            .edit()
+            .clear()
+            .apply()
         CountersStorageEngine.clearAllStores()
     }
 

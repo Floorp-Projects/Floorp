@@ -7,6 +7,7 @@ package mozilla.components.service.glean
 import android.os.SystemClock
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
+import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.storages.EventsStorageEngine
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -29,7 +30,9 @@ class EventMetricTypeTest {
 
     @Before
     fun setUp() {
-        resetGlean()
+        Glean.initialized = true
+        Glean.applicationId = "test"
+        Glean.configuration = Configuration()
         EventsStorageEngine.clearAllStores()
     }
 

@@ -4,14 +4,16 @@
 package mozilla.components.service.glean.storages
 
 import android.os.SystemClock
-import android.util.Log
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.work.Configuration
-import androidx.work.testing.SynchronousExecutor
-import androidx.work.testing.WorkManagerTestInitHelper
+import androidx.test.core.app.ApplicationProvider
+import mozilla.components.service.glean.checkPingSchema
+import mozilla.components.service.glean.Lifetime
+import mozilla.components.service.glean.EventMetricType
 import mozilla.components.service.glean.FakeDispatchersInTest
-import mozilla.components.service.glean.resetGlean
 import mozilla.components.service.glean.getContextWithMockedInfo
+import mozilla.components.service.glean.Glean
+import mozilla.components.service.glean.resetGlean
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
 import org.junit.Before
 import org.junit.Test
 import org.junit.Assert.assertEquals
@@ -28,16 +30,10 @@ class EventsStorageEngineTest {
 
     @Before
     fun setUp() {
-        resetGlean(getContextWithMockedInfo())
+        Glean.initialized = false
+        Glean.initialize(ApplicationProvider.getApplicationContext())
+        assert(Glean.initialized)
         EventsStorageEngine.clearAllStores()
-
-        val mTargetContext = InstrumentationRegistry.getInstrumentation().targetContext
-        val mConfiguration = Configuration.Builder()
-            .setExecutor(SynchronousExecutor())
-            .setMinimumLoggingLevel(Log.DEBUG)
-            .build()
-        // Initialize WorkManager using the WorkManagerTestInitHelper.
-        WorkManagerTestInitHelper.initializeTestWorkManager(mTargetContext, mConfiguration)
     }
 
     @Test
@@ -174,5 +170,53 @@ class EventsStorageEngineTest {
         // Check that this serializes to the expected JSON format.
         assertEquals("[[0,\"telemetry\",\"test_event_clear\",\"test_event_object\",null,null]]",
             snapshot.toString())
+    }
+
+    @Test
+    fun `test sending of event ping when it fills up`() {
+        val server = MockWebServer()
+        server.enqueue(MockResponse().setBody("OK"))
+
+        EventsStorageEngine.clearAllStores()
+        val click = EventMetricType(
+            disabled = false,
+            category = "ui",
+            lifetime = Lifetime.Ping,
+            name = "click",
+            sendInPings = listOf("default"),
+            objects = listOf("buttonA")
+        )
+
+        resetGlean(getContextWithMockedInfo(), Glean.configuration.copy(
+            serverEndpoint = "http://" + server.hostName + ":" + server.port,
+            logPings = true
+        ))
+
+        try {
+            // We send 510 events.  We expect to get the first 500 in the ping, and 10 remaining afterward
+            for (i in 0..509) {
+                click.record("buttonA", "$i")
+            }
+
+            val request = server.takeRequest()
+            val applicationId = "mozilla-components-service-glean"
+            assert(request.path.startsWith("/submit/$applicationId/events/${Glean.SCHEMA_VERSION}/"))
+            val eventsJsonData = request.body.readUtf8()
+            val eventsJson = checkPingSchema(eventsJsonData)
+            val eventsArray = eventsJson.getJSONArray("events")!!
+            assertEquals(500, eventsArray.length())
+
+            for (i in 0..499) {
+                assertEquals("$i", eventsArray.getJSONArray(i).getString(4))
+            }
+        } finally {
+            server.shutdown()
+        }
+
+        val remaining = EventsStorageEngine.getSnapshot("events", false)!!
+        assertEquals(10, remaining.size)
+        for (i in 0..9) {
+            assertEquals("${i + 500}", remaining[i].value)
+        }
     }
 }

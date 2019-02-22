@@ -40,7 +40,6 @@ dependencies {
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
     implementation Dependencies.arch_lifecycle
-    implementation Dependencies.arch_workmanager
 
     implementation project(':support-ktx')
     implementation project(':support-base')
@@ -51,7 +50,6 @@ dependencies {
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
     testImplementation Dependencies.testing_mockwebserver
-    testImplementation Dependencies.androidx_work_testing
 }
 
 apply from: '../../../publish.gradle'

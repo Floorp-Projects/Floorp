@@ -4,6 +4,8 @@
 
 package mozilla.components.service.glean
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.service.glean.storages.UuidsStorageEngine
@@ -28,7 +30,14 @@ class UuidMetricTypeTest {
 
     @Before
     fun setUp() {
-        resetGlean()
+        Glean.initialized = true
+        UuidsStorageEngine.applicationContext = ApplicationProvider.getApplicationContext()
+        // Clear the stored "user" preferences between tests.
+        ApplicationProvider.getApplicationContext<Context>()
+            .getSharedPreferences(UuidsStorageEngine.javaClass.simpleName, Context.MODE_PRIVATE)
+            .edit()
+            .clear()
+            .apply()
         UuidsStorageEngine.clearAllStores()
     }
 
