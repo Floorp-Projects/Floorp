@@ -50,11 +50,7 @@ add_task(async function() {
   await waitUntil(() => devtoolsDocument.querySelector("#node-menu-edithtml"));
   ok(true, "Context menu of markup view should be shown");
 
-  await removeTab(devtoolsTab);
-  await Promise.all([
-    waitForRequestsToSettle(window.AboutDebugging.store),
-    gDevTools.once("toolbox-destroyed"),
-  ]);
+  await closeAboutDevtoolsToolbox(devtoolsTab, window);
   await removeTab(tab);
 });
 
