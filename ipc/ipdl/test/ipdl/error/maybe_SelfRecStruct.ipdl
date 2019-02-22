@@ -1,0 +1,9 @@
+//error: struct `X' is only partially defined
+
+struct X {
+    X? x;
+};
+
+protocol maybe_SelfRecStruct {
+child: async Msg(X? aa);
+};

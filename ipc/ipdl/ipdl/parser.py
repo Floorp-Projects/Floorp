@@ -147,7 +147,7 @@ tokens = [
 
 t_COLONCOLON = '::'
 
-literals = '(){}[]<>;:,'
+literals = '(){}[]<>;:,?'
 t_ignore = ' \f\t\v'
 
 
@@ -669,6 +669,7 @@ def p_Type(p):
 def p_BasicType(p):
     """BasicType : CxxID
                  | CxxID '[' ']'
+                 | CxxID '?'
                  | CxxUniquePtrInst"""
     # ID == CxxType; we forbid qnames here,
     # in favor of the |using| declaration
@@ -682,6 +683,8 @@ def p_BasicType(p):
         p[1].uniqueptr = isunique
     if 4 == len(p):
         p[1].array = True
+    if 3 == len(p):
+        p[1].maybe = True
     p[0] = p[1]
 
 
