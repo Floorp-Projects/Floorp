@@ -91,6 +91,58 @@ add_task(async function bookmark() {
   });
 });
 
+add_task(async function pinTabFromPanel() {
+  // Open an actionable page so that the main page action button appears.  (It
+  // does not appear on about:blank for example.)
+  let url = "http://example.com/";
+  await BrowserTestUtils.withNewTab(url, async () => {
+    // Open the panel and click Pin Tab.
+    await promisePageActionPanelOpen();
+
+    let pinTabButton = document.getElementById("pageAction-panel-pinTab");
+    Assert.equal(pinTabButton.label, "Pin Tab");
+    let hiddenPromise = promisePageActionPanelHidden();
+    EventUtils.synthesizeMouseAtCenter(pinTabButton, {});
+    await hiddenPromise;
+
+    Assert.ok(gBrowser.selectedTab.pinned, "Tab was pinned");
+
+    // Open the panel and click Unpin Tab.
+    Assert.equal(pinTabButton.label, "Unpin Tab");
+    await promisePageActionPanelOpen();
+
+    hiddenPromise = promisePageActionPanelHidden();
+    EventUtils.synthesizeMouseAtCenter(pinTabButton, {});
+    await hiddenPromise;
+
+    Assert.ok(!gBrowser.selectedTab.pinned, "Tab was unpinned");
+  });
+});
+
+
+add_task(async function pinTabFromURLBar() {
+  // Open an actionable page so that the main page action button appears.  (It
+  // does not appear on about:blank for example.)
+  let url = "http://example.com/";
+  await BrowserTestUtils.withNewTab(url, async () => {
+    // Add action to URL bar.
+    let action = PageActions._builtInActions.find(a => a.id == "pinTab");
+    action.pinnedToUrlbar = true;
+    registerCleanupFunction(() => action.pinnedToUrlbar = false);
+
+    // Click the Pin Tab button.
+    let pinTabButton = document.getElementById("pageAction-urlbar-pinTab");
+    EventUtils.synthesizeMouseAtCenter(pinTabButton, {});
+    await BrowserTestUtils.waitForCondition(() => gBrowser.selectedTab.pinned,
+      "Tab was pinned");
+
+    // Click the Unpin Tab button
+    EventUtils.synthesizeMouseAtCenter(pinTabButton, {});
+    await BrowserTestUtils.waitForCondition(() => !gBrowser.selectedTab.pinned,
+      "Tab was unpinned");
+  });
+});
+
 add_task(async function emailLink() {
   // Open an actionable page so that the main page action button appears.  (It
   // does not appear on about:blank for example.)
