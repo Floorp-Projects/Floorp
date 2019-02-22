@@ -97,25 +97,12 @@ const MSG_SHOULD_EQUAL = " should equal the expected value";
 const MSG_SHOULD_EXIST = "the file or directory should exist";
 const MSG_SHOULD_NOT_EXIST = "the file or directory should not exist";
 
-// All we care about is that the last modified time has changed so that Mac OS
-// X Launch Services invalidates its cache so the test allows up to one minute
-// difference in the last modified time.
-const MAC_MAX_TIME_DIFFERENCE = 60000;
-
-// How many of do_execute_soon calls to wait before the test is aborted.
-const MAX_TIMEOUT_RUNS = 20000;
-
 // Time in seconds the helper application should sleep before exiting. The
 // helper can also be made to exit by writing |finish| to its input file.
 const HELPER_SLEEP_TIMEOUT = 180;
 
-// Maximum number of milliseconds the process that is launched can run before
-// the test will try to kill it.
-const APP_TIMER_TIMEOUT = 120000;
-
 // How many of do_timeout calls using FILE_IN_USE_TIMEOUT_MS to wait before the
 // test is aborted.
-const FILE_IN_USE_MAX_TIMEOUT_RUNS = 60;
 const FILE_IN_USE_TIMEOUT_MS = 1000;
 
 const PIPE_TO_NULL = AppConstants.platform == "win" ? ">nul" : "> /dev/null 2>&1";
@@ -133,15 +120,7 @@ var gTestserver;
 
 var gIncrementalDownloadErrorType;
 
-var gCheckFunc;
 var gResponseBody;
-var gResponseStatusCode = 200;
-var gRequestURL;
-var gUpdateCount;
-var gUpdates;
-var gStatusCode;
-var gStatusText;
-var gStatusResult;
 
 var gProcess;
 var gAppTimer;
@@ -159,7 +138,6 @@ var gCallbackArgs = ["./", "callback.log", "Test Arg 2", "Test Arg 3"];
 var gPostUpdateBinFile = "postup_app" + mozinfo.bin_suffix;
 
 var gTimeoutRuns = 0;
-var gFileInUseTimeoutRuns = 0;
 
 // Environment related globals
 var gShouldResetEnv = undefined;
@@ -1086,6 +1064,10 @@ function checkAppBundleModTime() {
   if (AppConstants.platform != "macosx") {
     return;
   }
+  // All we care about is that the last modified time has changed so that Mac OS
+  // X Launch Services invalidates its cache so the test allows up to one minute
+  // difference in the last modified time.
+  const MAC_MAX_TIME_DIFFERENCE = 60000;
   let now = Date.now();
   let applyToDir = getApplyDirFile();
   let timeDiff = Math.abs(applyToDir.lastModifiedTime - now);
@@ -3250,6 +3232,7 @@ function checkCallbackLog() {
   // value. If the contents are never the expected value then the test will
   // fail by timing out after gTimeoutRuns is greater than MAX_TIMEOUT_RUNS or
   // the test harness times out the test.
+  const MAX_TIMEOUT_RUNS = 20000;
   if (logContents != expectedLogContents) {
     gTimeoutRuns++;
     if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
@@ -3466,59 +3449,78 @@ UpdatePrompt.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIClassInfo, Ci.nsIUpdatePrompt]),
 };
 
-/* Update check listener */
-const updateCheckListener = {
-  onProgress: function UCL_onProgress(aRequest, aPosition, aTotalSize) {
-  },
+/**
+ * Waits for an update check request to complete.
+ *
+ * @param   aSuccess
+ *          Whether the update check succeeds or not. If aSuccess is true then
+ *          onCheckComplete should be called and if aSuccess is false then
+ *          onError should be called.
+ * @param   aExpectedValues
+ *          An object with common values to check.
+ * @return  A promise which will resolve the first time either the update check
+ *          onCheckComplete or onError occurs and returns the arguments from
+ *          onCheckComplete or onError.
+ */
+function waitForUpdateCheck(aSuccess, aExpectedValues = {}) {
+  return new Promise(resolve => gUpdateChecker.checkForUpdates({
+    onProgress: (aRequest, aPosition, aTotalSize) => {
+    },
+    onCheckComplete: (request, updates, updateCount) => {
+      Assert.ok(aSuccess, "the update check should succeed");
+      if (aExpectedValues.updateCount) {
+        Assert.equal(aExpectedValues.updateCount, updateCount,
+                     "the update count" + MSG_SHOULD_EQUAL);
+      }
+      resolve({request, updates, updateCount});
+    },
+    onError: (request, update) => {
+      Assert.ok(!aSuccess, "the update check should error");
+      if (aExpectedValues.url) {
+        Assert.equal(aExpectedValues.url, request.channel.originalURI.spec,
+                     "the url" + MSG_SHOULD_EQUAL);
+      }
+      resolve({request, update});
+    },
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIUpdateCheckListener]),
+  }, true));
+}
 
-  onCheckComplete: function UCL_onCheckComplete(aRequest, aUpdates, aUpdateCount) {
-    gRequestURL = aRequest.channel.originalURI.spec;
-    gUpdateCount = aUpdateCount;
-    gUpdates = aUpdates;
-    debugDump("url = " + gRequestURL + ", " +
-              "request.status = " + aRequest.status + ", " +
-              "updateCount = " + aUpdateCount);
-    // Use a timeout to allow the XHR to complete
-    executeSoon(gCheckFunc);
-  },
-
-  onError: function UCL_onError(aRequest, aUpdate) {
-    gRequestURL = aRequest.channel.originalURI.spec;
-    gStatusCode = aRequest.status;
-    if (gStatusCode == 0) {
-      gStatusCode = aRequest.channel.QueryInterface(Ci.nsIRequest).status;
-    }
-    gStatusText = aUpdate.statusText ? aUpdate.statusText : null;
-    debugDump("url = " + gRequestURL + ", " +
-              "request.status = " + gStatusCode + ", " +
-              "update.statusText = " + gStatusText);
-    // Use a timeout to allow the XHR to complete
-    executeSoon(gCheckFunc.bind(null, aRequest, aUpdate));
-  },
-
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIUpdateCheckListener]),
-};
-
-/* Update download listener - nsIRequestObserver */
-const downloadListener = {
-  onStartRequest: function DL_onStartRequest(aRequest, aContext) {
-  },
-
-  onProgress: function DL_onProgress(aRequest, aContext, aProgress, aMaxProgress) {
-  },
-
-  onStatus: function DL_onStatus(aRequest, aContext, aStatus, aStatusText) {
-  },
-
-  onStopRequest: function DL_onStopRequest(aRequest, aContext, aStatus) {
-    gStatusResult = aStatus;
-    // Use a timeout to allow the request to complete
-    executeSoon(downloadListenerStop);
-  },
-
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIRequestObserver,
-                                          Ci.nsIProgressEventSink]),
-};
+/**
+ * Downloads an update and waits for the download onStopRequest.
+ *
+ * @param   aUpdates
+ *          An array of updates to select from to download an update.
+ * @param   aUpdateCount
+ *          The number of updates in the aUpdates array.
+ * @param   aExpectedStatus
+ *          The download onStopRequest expected status.
+ * @return  A promise which will resolve the first time the update download
+ *          onStopRequest occurs and returns the arguments from onStopRequest.
+ */
+function waitForUpdateDownload(aUpdates, aUpdateCount, aExpectedStatus) {
+  let bestUpdate = gAUS.selectUpdate(aUpdates, aUpdateCount);
+  let state = gAUS.downloadUpdate(bestUpdate, false);
+  if (state == STATE_NONE || state == STATE_FAILED) {
+    do_throw("nsIApplicationUpdateService:downloadUpdate returned " + state);
+  }
+  return new Promise(resolve => gAUS.addDownloadListener({
+    onStartRequest: (aRequest, aContext) => {
+    },
+    onProgress: (aRequest, aContext, aProgress, aMaxProgress) => {
+    },
+    onStatus: (aRequest, aContext, aStatus, aStatusText) => {
+    },
+    onStopRequest: (request, context, status) => {
+      gAUS.removeDownloadListener(this);
+      Assert.equal(aExpectedStatus, status,
+                   "the download status" + MSG_SHOULD_EQUAL);
+      resolve(request, context, status);
+    },
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIRequestObserver,
+                                            Ci.nsIProgressEventSink]),
+  }));
+}
 
 /**
  * Helper for starting the http server used by the tests
@@ -3552,7 +3554,7 @@ function start_httpserver() {
  */
 function pathHandler(aMetadata, aResponse) {
   aResponse.setHeader("Content-Type", "text/xml", false);
-  aResponse.setStatusLine(aMetadata.httpVersion, gResponseStatusCode, "OK");
+  aResponse.setStatusLine(aMetadata.httpVersion, 200, "OK");
   aResponse.bodyOutputStream.write(gResponseBody, gResponseBody.length);
 }
 
@@ -3812,6 +3814,9 @@ const gAppTimerCallback = {
 async function runUpdateUsingApp(aExpectedStatus) {
   debugDump("start - launching application to apply update");
 
+  // The maximum number of milliseconds the process that is launched can run
+  // before the test will try to kill it.
+  const APP_TIMER_TIMEOUT = 120000;
   let launchBin = getLaunchBin();
   let args = getProcessArgs();
   debugDump("launching " + launchBin.path + " " + args.join(" "));

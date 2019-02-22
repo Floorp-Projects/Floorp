@@ -3,55 +3,24 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-function run_test() {
+async function run_test() {
   // The network code that downloads the mar file accesses the profile to cache
   // the download, but the profile is only available after calling
   // do_get_profile in xpcshell tests. This prevents an error from being logged.
   do_get_profile();
-
   setupTestCommon();
-
-  debugDump("testing invalid size mar download");
-
+  debugDump("testing mar download with the mar not found");
   Services.prefs.setBoolPref(PREF_APP_UPDATE_STAGING_ENABLED, false);
   start_httpserver();
   setUpdateURL(gURLData + gHTTPHandlerPath);
-  standardInit();
-  executeSoon(run_test_pt1);
-}
-
-// mar download with the mar not found
-function run_test_pt1() {
   let patchProps = {url: gURLData + "missing.mar"};
   let patches = getRemotePatchString(patchProps);
   let updates = getRemoteUpdateString({}, patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
-  gUpdates = null;
-  gUpdateCount = null;
-  gStatusResult = null;
-  gCheckFunc = check_test_helper_pt1_1;
-  debugDump("mar download with the mar not found");
-  gUpdateChecker.checkForUpdates(updateCheckListener, true);
-}
-
-function check_test_helper_pt1_1() {
-  Assert.equal(gUpdateCount, 1,
-               "the update count" + MSG_SHOULD_EQUAL);
-  let bestUpdate = gAUS.selectUpdate(gUpdates, gUpdateCount);
-  let state = gAUS.downloadUpdate(bestUpdate, false);
-  if (state == STATE_NONE || state == STATE_FAILED) {
-    do_throw("nsIApplicationUpdateService:downloadUpdate returned " + state);
-  }
-  gAUS.addDownloadListener(downloadListener);
-}
-
-/**
- * Called after the download listener onStopRequest is called.
- */
-async function downloadListenerStop() {
-  Assert.equal(gStatusResult, Cr.NS_ERROR_UNEXPECTED,
-               "the download status result" + MSG_SHOULD_EQUAL);
-  gAUS.removeDownloadListener(downloadListener);
+  await waitForUpdateCheck(true, {updateCount: 1}).then(async (aArgs) => {
+    await waitForUpdateDownload(aArgs.updates, aArgs.updateCount,
+                                Cr.NS_ERROR_UNEXPECTED);
+  });
   // There is a pending write to the xml files.
   await waitForUpdateXMLFiles();
   stop_httpserver(doTestFinish);
