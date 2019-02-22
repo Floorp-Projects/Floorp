@@ -25,6 +25,5 @@ interface nsIFormSubmitObserver: nsISupports
 %{C++
 #define NS_FORMSUBMIT_SUBJECT "formsubmit"
 #define NS_EARLYFORMSUBMIT_SUBJECT "earlyformsubmit"
-#define NS_FIRST_FORMSUBMIT_CATEGORY "firstformsubmit"
 #define NS_INVALIDFORMSUBMIT_SUBJECT "invalidformsubmit"
 %}
