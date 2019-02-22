@@ -2514,8 +2514,7 @@ function lockDirectory(aDirPath) {
 }
 
 /**
- * Launches the test helper binary to make it in use for updater tests and then
- * calls waitForHelperSleep.
+ * Launches the test helper binary to make it in use for updater tests.
  *
  * @param   aRelPath
  *          The relative path in the apply to directory for the helper binary.
@@ -2523,7 +2522,7 @@ function lockDirectory(aDirPath) {
  *          Whether to copy the test helper binary to the relative path in the
  *          apply to directory.
  */
-function runHelperFileInUse(aRelPath, aCopyTestHelper) {
+async function runHelperFileInUse(aRelPath, aCopyTestHelper) {
   debugDump("aRelPath: " + aRelPath);
   // Launch an existing file so it is in use during the update.
   let helperBin = getTestDirFile(FILE_HELPER_BIN);
@@ -2542,12 +2541,12 @@ function runHelperFileInUse(aRelPath, aCopyTestHelper) {
   fileInUseProcess.init(fileInUseBin);
   fileInUseProcess.run(false, args, args.length);
 
-  executeSoon(waitForHelperSleep);
+  await waitForHelperSleep();
 }
 
 /**
  * Launches the test helper binary to provide a pid that is in use for updater
- * tests and then calls waitForHelperSleep.
+ * tests.
  *
  * @param   aRelPath
  *          The relative path in the apply to directory for the helper binary.
@@ -2555,7 +2554,7 @@ function runHelperFileInUse(aRelPath, aCopyTestHelper) {
  *          Whether to copy the test helper binary to the relative path in the
  *          apply to directory.
  */
-function runHelperPIDPersists(aRelPath, aCopyTestHelper) {
+async function runHelperPIDPersists(aRelPath, aCopyTestHelper) {
   debugDump("aRelPath: " + aRelPath);
   // Launch an existing file so it is in use during the update.
   let helperBin = getTestDirFile(FILE_HELPER_BIN);
@@ -2574,17 +2573,19 @@ function runHelperPIDPersists(aRelPath, aCopyTestHelper) {
   gPIDPersistProcess.init(pidPersistsBin);
   gPIDPersistProcess.run(false, args, args.length);
 
-  executeSoon(waitForHelperSleep);
+  await waitForHelperSleep();
+  await TestUtils.waitForCondition(() => (!!gPIDPersistProcess.pid),
+    "Waiting for the process pid");
 }
 
 /**
  * Launches the test helper binary and locks a file specified on the command
- * line for updater tests and then calls waitForHelperSleep.
+ * line for updater tests.
  *
  * @param   aTestFile
  *          The test file object that describes the file to lock.
  */
-function runHelperLockFile(aTestFile) {
+async function runHelperLockFile(aTestFile) {
   // Exclusively lock an existing file so it is in use during the update.
   let helperBin = getTestDirFile(FILE_HELPER_BIN);
   let helperDestDir = getApplyDirFile(DIR_RESOURCES);
@@ -2604,40 +2605,32 @@ function runHelperLockFile(aTestFile) {
   helperProcess.init(helperBin);
   helperProcess.run(false, args, args.length);
 
-  executeSoon(waitForHelperSleep);
+  await waitForHelperSleep();
 }
 
 /**
- * Helper function that waits until the helper has completed its operations and
- * calls waitForHelperSleepFinished when it is finished.
+ * Helper function that waits until the helper has completed its operations.
  */
-function waitForHelperSleep() {
-  gTimeoutRuns++;
+async function waitForHelperSleep() {
   // Give the lock file process time to lock the file before updating otherwise
   // this test can fail intermittently on Windows debug builds.
-  let output = getApplyDirFile(DIR_RESOURCES + "output");
-  if (readFile(output) != "sleeping\n") {
-    if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
-      do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the helper to " +
-               "finish its operation. Path: " + output.path);
+  let file = getApplyDirFile(DIR_RESOURCES + "output");
+  await TestUtils.waitForCondition(() => (file.exists()),
+    "Waiting for file to exist, path: " + file.path);
+
+  let expectedContents = "sleeping\n";
+  await TestUtils.waitForCondition(() => (readFile(file) == expectedContents),
+    "Waiting for expected file contents: " + expectedContents);
+
+  await TestUtils.waitForCondition(() => {
+    try {
+      file.remove(false);
+    } catch (e) {
+      debugDump("failed to remove file. Path: " + file.path +
+                ", Exception: " + e);
     }
-    // Uses do_timeout instead of do_execute_soon to lessen log spew.
-    do_timeout(FILE_IN_USE_TIMEOUT_MS, waitForHelperSleep);
-    return;
-  }
-  try {
-    output.remove(false);
-  } catch (e) {
-    if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
-      do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the helper " +
-               "message file to no longer be in use. Path: " + output.path);
-    }
-    debugDump("failed to remove file. Path: " + output.path);
-    // Uses do_timeout instead of do_execute_soon to lessen log spew.
-    do_timeout(FILE_IN_USE_TIMEOUT_MS, waitForHelperSleep);
-    return;
-  }
-  waitForHelperSleepFinished();
+    return !file.exists();
+  }, "Waiting for file to be removed, Path: " + file.path);
 }
 
 /**
