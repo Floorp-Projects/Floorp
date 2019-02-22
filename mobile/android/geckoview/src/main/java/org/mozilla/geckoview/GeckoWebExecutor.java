@@ -14,6 +14,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
@@ -87,7 +88,9 @@ public class GeckoWebExecutor {
      * Send the given {@link WebRequest}.
      *
      * @param request A {@link WebRequest} instance
-     * @return A GeckoResult which will be completed with a {@link WebResponse}
+     * @return A {@link GeckoResult} which will be completed with a {@link WebResponse}. If the
+     *         request fails to complete, the {@link GeckoResult} will be completed exceptionally
+     *         with a {@link WebRequestError}.
      * @throws IllegalArgumentException if request is null or otherwise unusable.
      */
     public @NonNull GeckoResult<WebResponse> fetch(final @NonNull WebRequest request) {
@@ -99,7 +102,9 @@ public class GeckoWebExecutor {
      *
      * @param request A {@link WebRequest} instance
      * @param flags The specified flags. One or more of {@link FetchFlags}.
-     * @return A GeckoResult which will be completed with a {@link WebResponse}
+     * @return A {@link GeckoResult} which will be completed with a {@link WebResponse}. If the
+     *         request fails to complete, the {@link GeckoResult} will be completed exceptionally
+     *         with a {@link WebRequestError}.
      * @throws IllegalArgumentException if request is null or otherwise unusable.
      */
     public @NonNull GeckoResult<WebResponse> fetch(final @NonNull WebRequest request,
@@ -137,7 +142,8 @@ public class GeckoWebExecutor {
      *
      * @param host An Internet host name, e.g. mozilla.org.
      * @return A {@link GeckoResult} which will be fulfilled with a {@link List}
-     *         of {@link InetAddress}.
+     *         of {@link InetAddress}. In case of failure, the {@link GeckoResult}
+     *         will be completed exceptionally with a {@link java.net.UnknownHostException}.
      */
     public GeckoResult<InetAddress[]> resolve(final @NonNull String host) {
         final GeckoResult<InetAddress[]> result = new GeckoResult<>();
