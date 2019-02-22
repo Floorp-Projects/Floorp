@@ -1083,6 +1083,9 @@ static void DoApplyRenderingChangeToTree(nsIFrame* aFrame,
     }
     if ((aChange & nsChangeHint_UpdateTransformLayer) &&
         aFrame->IsTransformed()) {
+      // Note: All the transform-like properties should map to the same
+      // layer activity index, so does the restyle count. Therefore, using
+      // eCSSProperty_transform should be fine.
       ActiveLayerTracker::NotifyRestyle(aFrame, eCSSProperty_transform);
       // If we're not already going to do an invalidating paint, see
       // if we can get away with only updating the transform on a
@@ -1107,6 +1110,9 @@ static void DoApplyRenderingChangeToTree(nsIFrame* aFrame,
                                  ->PrincipalChildList()
                                  .FirstChild();
       for (; childFrame; childFrame = childFrame->GetNextSibling()) {
+        // Note: All the transform-like properties should map to the same
+        // layer activity index, so does the restyle count. Therefore, using
+        // eCSSProperty_transform should be fine.
         ActiveLayerTracker::NotifyRestyle(childFrame, eCSSProperty_transform);
       }
     }
