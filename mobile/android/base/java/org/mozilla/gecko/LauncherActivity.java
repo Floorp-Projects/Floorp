@@ -195,10 +195,7 @@ public class LauncherActivity extends Activity {
             return;
         }
         final String deepLink = intent.getData().getHost();
-        String uid = intent.getData().getQueryParameter("uid");
-        if (uid != null) {
-            uid = uid.replaceAll("\\n", "");
-        }
+        final String uid = intent.getData().getQueryParameter("uid");
         final String localUid = MmaDelegate.getDeviceId(LauncherActivity.this);
         final boolean isMmaDeepLink = uid != null && localUid != null && uid.equals(localUid);
 
