@@ -19,6 +19,8 @@ PQuotaParent* AllocPQuotaParent();
 
 bool DeallocPQuotaParent(PQuotaParent* aActor);
 
+bool RecvShutdownQuotaManager();
+
 }  // namespace quota
 }  // namespace dom
 }  // namespace mozilla
