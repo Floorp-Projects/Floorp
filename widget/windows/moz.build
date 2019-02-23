@@ -66,6 +66,7 @@ UNIFIED_SOURCES += [
     'nsWindowDbg.cpp',
     'nsWindowGfx.cpp',
     'nsWinGesture.cpp',
+    'ProcInfo.cpp',
     'ScreenHelperWin.cpp',
     'TaskbarPreview.cpp',
     'TaskbarPreviewButton.cpp',
