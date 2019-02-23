@@ -7,6 +7,10 @@
 #ifndef mozilla_dom_indexeddb_actorsparent_h__
 #define mozilla_dom_indexeddb_actorsparent_h__
 
+#include "nscore.h"
+
+#include <stdint.h>
+
 template <class>
 struct already_AddRefed;
 class nsIPrincipal;
@@ -25,6 +29,7 @@ class Client;
 
 namespace indexedDB {
 
+class FileManager;
 class LoggingInfo;
 class PBackgroundIDBFactoryParent;
 class PBackgroundIndexedDBUtilsParent;
@@ -57,6 +62,8 @@ bool DeallocPIndexedDBPermissionRequestParent(
 already_AddRefed<mozilla::dom::quota::Client> CreateQuotaClient();
 
 FileHandleThreadPool* GetFileHandleThreadPool();
+
+nsresult AsyncDeleteFile(FileManager* aFileManager, int64_t aFileId);
 
 }  // namespace indexedDB
 }  // namespace dom
