@@ -15,7 +15,7 @@ class Domains extends Map {
 
   domainSupportsMethod(name, method) {
     const domain = this.modules[name];
-    return domain && !!domain.prototype[method];
+    return domain && typeof domain.prototype[method] == "function";
   }
 
   get(name) {
@@ -53,8 +53,8 @@ class Domains extends Map {
   }
 
   clear() {
-    for (const domainName of this.keys()) {
-      this.delete(domainName);
+    for (const name of this.keys()) {
+      this.delete(name);
     }
   }
 }
