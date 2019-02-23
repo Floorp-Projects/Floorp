@@ -70,7 +70,7 @@ use render_backend::{FrameId, RenderBackend};
 use scene_builder::{SceneBuilder, LowPrioritySceneBuilder};
 use shade::{Shaders, WrShaders};
 use smallvec::SmallVec;
-use render_task::{RenderTask, RenderTaskKind, RenderTaskTree};
+use render_task::RenderTaskTree;
 use resource_cache::ResourceCache;
 use util::drain_filter;
 
@@ -2313,11 +2313,6 @@ impl Renderer {
         );
         debug_target.add(
             debug_server::BatchKind::Cache,
-            "Readbacks",
-            target.readbacks.len(),
-        );
-        debug_target.add(
-            debug_server::BatchKind::Cache,
             "Vertical Blur",
             target.vertical_blurs.len(),
         );
@@ -3027,74 +3022,6 @@ impl Renderer {
         self.profile_counters.vertices.add(6 * data.len());
     }
 
-    fn handle_readback_composite(
-        &mut self,
-        draw_target: DrawTarget,
-        uses_scissor: bool,
-        source: &RenderTask,
-        backdrop: &RenderTask,
-        readback: &RenderTask,
-    ) {
-        if uses_scissor {
-            self.device.disable_scissor();
-        }
-
-        let cache_texture = self.texture_resolver
-            .resolve(&TextureSource::PrevPassColor)
-            .unwrap();
-
-        // Before submitting the composite batch, do the
-        // framebuffer readbacks that are needed for each
-        // composite operation in this batch.
-        let (readback_rect, readback_layer) = readback.get_target_rect();
-        let (backdrop_rect, _) = backdrop.get_target_rect();
-        let backdrop_screen_origin = match backdrop.kind {
-            RenderTaskKind::Picture(ref task_info) => task_info.content_origin,
-            _ => panic!("bug: composite on non-picture?"),
-        };
-        let source_screen_origin = match source.kind {
-            RenderTaskKind::Picture(ref task_info) => task_info.content_origin,
-            _ => panic!("bug: composite on non-picture?"),
-        };
-
-        // Bind the FBO to blit the backdrop to.
-        // Called per-instance in case the layer (and therefore FBO)
-        // changes. The device will skip the GL call if the requested
-        // target is already bound.
-        let cache_draw_target = DrawTarget::Texture {
-            texture: cache_texture,
-            layer: readback_layer.0 as usize,
-            with_depth: false,
-        };
-        self.device.bind_draw_target(cache_draw_target);
-
-        let mut src = DeviceIntRect::new(
-            source_screen_origin + (backdrop_rect.origin - backdrop_screen_origin),
-            readback_rect.size,
-        );
-        let mut dest = readback_rect.to_i32();
-
-        // Need to invert the y coordinates and flip the image vertically when
-        // reading back from the framebuffer.
-        if draw_target.is_default() {
-            src.origin.y = draw_target.dimensions().height as i32 - src.size.height - src.origin.y;
-            dest.origin.y += dest.size.height;
-            dest.size.height = -dest.size.height;
-        }
-
-        self.device.bind_read_target(draw_target.into());
-        self.device.blit_render_target(src, dest, TextureFilter::Linear);
-
-        // Restore draw target to current pass render target + layer, and reset
-        // the read target.
-        self.device.bind_draw_target(draw_target);
-        self.device.reset_read_target();
-
-        if uses_scissor {
-            self.device.enable_scissor();
-        }
-    }
-
     fn handle_blits(
         &mut self,
         blits: &[BlitJob],
@@ -3418,20 +3345,6 @@ impl Renderer {
                             }
                         }
                         prev_blend_mode = batch.key.blend_mode;
-                    }
-
-                    // Handle special case readback for composites.
-                    if let BatchKind::Brush(BrushBatchKind::MixBlend { task_id, source_id, backdrop_id }) = batch.key.kind {
-                        // composites can't be grouped together because
-                        // they may overlap and affect each other.
-                        debug_assert_eq!(batch.instances.len(), 1);
-                        self.handle_readback_composite(
-                            draw_target,
-                            uses_scissor,
-                            &render_tasks[source_id],
-                            &render_tasks[task_id],
-                            &render_tasks[backdrop_id],
-                        );
                     }
 
                     let _timer = self.gpu_profile.start_timer(batch.key.kind.sampler_tag());
