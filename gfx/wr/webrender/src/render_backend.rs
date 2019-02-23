@@ -26,6 +26,7 @@ use clip_scroll_tree::{SpatialNodeIndex, ClipScrollTree};
 #[cfg(feature = "debugger")]
 use debug_server;
 use frame_builder::{FrameBuilder, FrameBuilderConfig};
+use glyph_rasterizer::{FontInstance};
 use gpu_cache::GpuCache;
 use hit_test::{HitTest, HitTester};
 use intern_types;
@@ -51,15 +52,15 @@ use serde::{Serialize, Deserialize};
 use serde_json;
 #[cfg(any(feature = "capture", feature = "replay"))]
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::mem::replace;
 use std::sync::mpsc::{channel, Sender, Receiver};
 use std::time::{UNIX_EPOCH, SystemTime};
 use std::u32;
 #[cfg(feature = "replay")]
 use tiling::Frame;
 use time::precise_time_ns;
-use util::{Recycler, drain_filter};
+use util::{Recycler, VecHelper, drain_filter};
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -568,7 +569,7 @@ impl Document {
     }
 
     pub fn updated_pipeline_info(&mut self) -> PipelineInfo {
-        let removed_pipelines = replace(&mut self.removed_pipelines, Vec::new());
+        let removed_pipelines = self.removed_pipelines.take_and_preallocate();
         PipelineInfo {
             epochs: self.scene.pipeline_epochs.clone(),
             removed_pipelines,
@@ -893,7 +894,7 @@ impl RenderBackend {
                         }
 
                         self.resource_cache.add_rasterized_blob_images(
-                            replace(&mut txn.rasterized_blobs, Vec::new())
+                            txn.rasterized_blobs.take()
                         );
                         if let Some((rasterizer, info)) = txn.blob_rasterizer.take() {
                             self.resource_cache.set_blob_rasterizer(rasterizer, info);
@@ -901,10 +902,10 @@ impl RenderBackend {
 
                         self.update_document(
                             txn.document_id,
-                            replace(&mut txn.resource_updates, Vec::new()),
+                            txn.resource_updates.take(),
                             txn.interner_updates.take(),
-                            replace(&mut txn.frame_ops, Vec::new()),
-                            replace(&mut txn.notifications, Vec::new()),
+                            txn.frame_ops.take(),
+                            txn.notifications.take(),
                             txn.render_frame,
                             txn.invalidate_rendered_frame,
                             &mut frame_counter,
@@ -990,7 +991,8 @@ impl RenderBackend {
             }
             ApiMsg::GetGlyphDimensions(instance_key, glyph_indices, tx) => {
                 let mut glyph_dimensions = Vec::with_capacity(glyph_indices.len());
-                if let Some(font) = self.resource_cache.get_font_instance(instance_key) {
+                if let Some(base) = self.resource_cache.get_font_instance(instance_key) {
+                    let font = FontInstance::from_base(Arc::clone(&base));
                     for glyph_index in &glyph_indices {
                         let glyph_dim = self.resource_cache.get_glyph_dimensions(&font, *glyph_index);
                         glyph_dimensions.push(glyph_dim);
@@ -1249,10 +1251,10 @@ impl RenderBackend {
 
             self.update_document(
                 txn.document_id,
-                replace(&mut txn.resource_updates, Vec::new()),
+                txn.resource_updates.take(),
                 None,
-                replace(&mut txn.frame_ops, Vec::new()),
-                replace(&mut txn.notifications, Vec::new()),
+                txn.frame_ops.take(),
+                txn.notifications.take(),
                 txn.render_frame,
                 txn.invalidate_rendered_frame,
                 frame_counter,

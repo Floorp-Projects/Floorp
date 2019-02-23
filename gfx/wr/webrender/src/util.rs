@@ -13,6 +13,7 @@ use std::{i32, f32, fmt, ptr};
 use std::borrow::Cow;
 use std::os::raw::c_void;
 use std::sync::Arc;
+use std::mem::replace;
 
 
 // Matches the definition of SK_ScalarNearlyZero in Skia.
@@ -61,6 +62,14 @@ pub trait VecHelper<T> {
     /// Either returns an existing elemenet, or grows the vector by one.
     /// Doesn't expect indices to be higher than the current length.
     fn entry(&mut self, index: usize) -> VecEntry<T>;
+
+    /// Equivalent to `mem::replace(&mut vec, Vec::new())`
+    fn take(&mut self) -> Self;
+
+    /// Functionally equivalent to `mem::replace(&mut vec, Vec::new())` but tries
+    /// to keep the allocation in the caller if it is empty or replace it with a
+    /// pre-allocated vector.
+    fn take_and_preallocate(&mut self) -> Self;
 }
 
 impl<T> VecHelper<T> for Vec<T> {
@@ -84,6 +93,19 @@ impl<T> VecHelper<T> for Vec<T> {
             assert_eq!(index, self.len());
             VecEntry::Vacant(self.alloc())
         }
+    }
+
+    fn take(&mut self) -> Self {
+        replace(self, Vec::new())
+    }
+
+    fn take_and_preallocate(&mut self) -> Self {
+        let len = self.len();
+        if len == 0 {
+            self.clear();
+            return Vec::new();
+        }
+        replace(self, Vec::with_capacity(len + 8))
     }
 }
 

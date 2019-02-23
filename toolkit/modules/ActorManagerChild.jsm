@@ -218,10 +218,12 @@ class SingletonDispatcher extends Dispatcher {
     }
 
     for (let actor of this.instances.values()) {
-      try {
-        actor.cleanup();
-      } catch (e) {
-        Cu.reportError(e);
+      if (typeof actor.cleanup == "function") {
+        try {
+          actor.cleanup();
+        } catch (e) {
+          Cu.reportError(e);
+        }
       }
     }
 
