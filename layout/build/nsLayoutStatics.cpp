@@ -118,6 +118,7 @@
 #include "mozilla/dom/RemoteWorkerService.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/ReportingHeader.h"
+#include "mozilla/dom/quota/ActorsParent.h"
 #include "mozilla/dom/localstorage/ActorsParent.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "nsThreadManager.h"
@@ -127,6 +128,7 @@ using namespace mozilla;
 using namespace mozilla::net;
 using namespace mozilla::dom;
 using namespace mozilla::dom::ipc;
+using namespace mozilla::dom::quota;
 
 nsrefcnt nsLayoutStatics::sLayoutStaticRefcnt = 0;
 
@@ -304,6 +306,7 @@ nsresult nsLayoutStatics::Initialize() {
   ReportingHeader::Initialize();
 
   if (XRE_IsParentProcess()) {
+    InitializeQuotaManager();
     InitializeLocalStorage();
   }
 

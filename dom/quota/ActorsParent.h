@@ -13,6 +13,8 @@ namespace quota {
 
 class PQuotaParent;
 
+void InitializeQuotaManager();
+
 PQuotaParent* AllocPQuotaParent();
 
 bool DeallocPQuotaParent(PQuotaParent* aActor);
