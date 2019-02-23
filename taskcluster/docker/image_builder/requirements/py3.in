@@ -1,0 +1,8 @@
+# The docker module removed support for docker engines < 1.21 starting with
+# docker 3.0. Once we upgrade the docker running on our workers, we can remove
+# this restriction here.
+docker<3.0
+docker-squash
+
+# For compressing docker images
+zstandard
