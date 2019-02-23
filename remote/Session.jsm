@@ -13,29 +13,29 @@ const {formatError} = ChromeUtils.import("chrome://remote/content/Error.jsm");
 class Session {
   constructor(connection, target) {
     this.connection = connection;
+    this.target = target;
+
     this.connection.onmessage = this.dispatch.bind(this);
 
-    this.browsingContext = target.browser.browsingContext;
-    this.messageManager = target.browser.messageManager;
-
     this.domains = new Domains(this, ParentProcessDomains);
-    this.messageManager.addMessageListener("remote:event", this);
-    this.messageManager.addMessageListener("remote:result", this);
-    this.messageManager.addMessageListener("remote:error", this);
+    this.mm.addMessageListener("remote:event", this);
+    this.mm.addMessageListener("remote:result", this);
+    this.mm.addMessageListener("remote:error", this);
 
-    this.messageManager.loadFrameScript("chrome://remote/content/frame-script.js", false);
+    this.mm.loadFrameScript("chrome://remote/content/frame-script.js", false);
   }
 
   destructor() {
+    this.domains.clear();
     this.connection.onmessage = null;
 
-    this.messageManager.sendAsyncMessage("remote:destroy", {
+    this.mm.sendAsyncMessage("remote:destroy", {
       browsingContextId: this.browsingContext.id,
     });
 
-    this.messageManager.removeMessageListener("remote:event", this);
-    this.messageManager.removeMessageListener("remote:result", this);
-    this.messageManager.removeMessageListener("remote:error", this);
+    this.mm.removeMessageListener("remote:event", this);
+    this.mm.removeMessageListener("remote:result", this);
+    this.mm.removeMessageListener("remote:error", this);
   }
 
   async dispatch({id, method, params}) {
@@ -58,7 +58,7 @@ class Session {
         const result = await methodFn.call(inst, params);
         this.connection.send({id, result});
       } else {
-        this.messageManager.sendAsyncMessage("remote:request", {
+        this.mm.sendAsyncMessage("remote:request", {
           browsingContextId: this.browsingContext.id,
           request: {id, domainName, methodName, params},
         });
@@ -68,6 +68,16 @@ class Session {
       this.connection.send({id, error});
     }
   }
+
+  get mm() {
+    return this.target.mm;
+  }
+
+  get browsingContext() {
+    return this.target.browsingContext;
+  }
+
+  // nsIMessageListener
 
   receiveMessage({name, data}) {
     const {id, result, event, error} = data;
@@ -86,6 +96,8 @@ class Session {
       break;
     }
   }
+
+  // EventEmitter
 
   onevent(eventName, params) {
     this.connection.send({

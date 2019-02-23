@@ -3,13 +3,33 @@
 
 "use strict";
 
+const {EventEmitter} = ChromeUtils.import("chrome://remote/content/EventEmitter.jsm");
 const {Session} = ChromeUtils.import("chrome://remote/content/Session.jsm");
 
 const connection = {onmessage: () => {}};
 
+class MockTarget {
+  constructor() {
+    EventEmitter.decorate(this);
+  }
+
+  get browsingContext() {
+    return {id: 42};
+  }
+
+  get mm() {
+    return {
+      addMessageListener() {},
+      removeMessageListener() {},
+      loadFrameScript() {},
+      sendAsyncMessage() {},
+    };
+  }
+}
+
 add_test(function test_Session_destructor() {
-  const session = new Session(connection);
-  session.domains.get("Log");
+  const session = new Session(connection, new MockTarget());
+  session.domains.get("Browser");
   equal(session.domains.size, 1);
   session.destructor();
   equal(session.domains.size, 0);
