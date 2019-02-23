@@ -128,6 +128,12 @@
     "minbytes": 16384,
     "maxbytes": 90112
   },
+  "c:\\windows\\system32\\dxgi.dll": {
+    "mincount": 2,
+    "maxcount": 2,
+    "minbytes": 32768,
+    "maxbytes": 32768
+  },
   "c:\\windows\\system32\\gdi32.dll": {
     "mincount": 0,
     "maxcount": 4,
