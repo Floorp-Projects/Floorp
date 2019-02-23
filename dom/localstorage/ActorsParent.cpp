@@ -182,10 +182,15 @@ const uint32_t kFlushTimeoutMs = 5000;
 
 const char kPrivateBrowsingObserverTopic[] = "last-pb-context-exited";
 
+const uint32_t kDefaultNextGen = false;
 const uint32_t kDefaultOriginLimitKB = 5 * 1024;
 const uint32_t kDefaultShadowWrites = true;
 const uint32_t kDefaultSnapshotPrefill = 4096;
 const uint32_t kDefaultClientValidation = true;
+/**
+ *
+ */
+const char kNextGenPref[] = "dom.storage.next_gen";
 /**
  * LocalStorage data limit as determined by summing up the lengths of all string
  * keys and values.  This is consistent with the legacy implementation and other
@@ -2718,6 +2723,7 @@ typedef nsClassHashtable<nsCStringHashKey, nsTArray<Observer*>>
 
 StaticAutoPtr<ObserverHashtable> gObservers;
 
+Atomic<bool> gNextGen(kDefaultNextGen);
 Atomic<uint32_t, Relaxed> gOriginLimitKB(kDefaultOriginLimitKB);
 Atomic<bool> gShadowWrites(kDefaultShadowWrites);
 Atomic<int32_t, Relaxed> gSnapshotPrefill(kDefaultSnapshotPrefill);
@@ -2940,6 +2946,11 @@ void InitializeLocalStorage() {
     NS_WARNING("Failed to initialize quota client!");
   }
 
+  if (NS_FAILED(Preferences::AddAtomicBoolVarCache(&gNextGen, kNextGenPref,
+                                                   kDefaultNextGen))) {
+    NS_WARNING("Unable to respond to next gen pref changes!");
+  }
+
   if (NS_FAILED(Preferences::AddAtomicUintVarCache(
           &gOriginLimitKB, kDefaultQuotaPref, kDefaultOriginLimitKB))) {
     NS_WARNING("Unable to respond to default quota pref changes!");
@@ -2958,6 +2969,8 @@ void InitializeLocalStorage() {
   gLocalStorageInitialized = true;
 #endif
 }
+
+bool GetCurrentNextGenPrefValue() { return gNextGen; }
 
 PBackgroundLSDatabaseParent* AllocPBackgroundLSDatabaseParent(
     const PrincipalInfo& aPrincipalInfo, const uint32_t& aPrivateBrowsingId,

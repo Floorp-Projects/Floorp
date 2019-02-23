@@ -220,8 +220,12 @@ class MOZ_STACK_CLASS LSNotifyInfo {
 };
 
 /**
- * Main-thread-only check of LSNG being enabled, the value is latched once
- * initialized so changing the preference during runtime has no effect.
+ * A check of LSNG being enabled, the value is latched once initialized so
+ * changing the preference during runtime has no effect.
+ * May be called on any thread in the parent process, but you should call
+ * CachedNextGenLocalStorageEnabled if you know that NextGenLocalStorageEnabled
+ * was already called because it is faster.
+ * May be called on the main thread only in a content process.
  */
 bool NextGenLocalStorageEnabled();
 
