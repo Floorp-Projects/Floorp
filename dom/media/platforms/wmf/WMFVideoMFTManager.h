@@ -43,17 +43,6 @@ class WMFVideoMFTManager : public MFTManager {
 
   nsCString GetDescriptionName() const override;
 
-  void Flush() override {
-    MFTManager::Flush();
-    mDraining = false;
-    mSamplesCount = 0;
-  }
-
-  void Drain() override {
-    MFTManager::Drain();
-    mDraining = true;
-  }
-
   MediaDataDecoder::ConversionRequired NeedsConversion() const override {
     return mStreamType == H264
                ? MediaDataDecoder::ConversionRequired::kNeedAnnexB
@@ -89,9 +78,6 @@ class WMFVideoMFTManager : public MFTManager {
   nsAutoPtr<DXVA2Manager> mDXVA2Manager;
 
   media::TimeUnit mLastDuration;
-  media::TimeUnit mLastTime;
-  bool mDraining = false;
-  int64_t mSamplesCount = 0;
 
   bool mDXVAEnabled;
   bool mUseHwAccel;
