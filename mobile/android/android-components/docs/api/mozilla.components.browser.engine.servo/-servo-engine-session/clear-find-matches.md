@@ -6,5 +6,5 @@
 
 Overrides [EngineSession.clearFindMatches](../../mozilla.components.concept.engine/-engine-session/clear-find-matches.md)
 
-Clears the highlighted results of previous calls to [findAll](find-all.md) / [findNext](find-next.md).
+Clears the highlighted results of previous calls to [findAll](../../mozilla.components.concept.engine/-engine-session/find-all.md) / [findNext](../../mozilla.components.concept.engine/-engine-session/find-next.md).
 

@@ -6,7 +6,7 @@
 
 Overrides [HistoryStorage.getSuggestions](../../mozilla.components.concept.storage/-history-storage/get-suggestions.md)
 
-Retrieves suggestions matching the [query](get-suggestions.md#mozilla.components.browser.storage.memory.InMemoryHistoryStorage$getSuggestions(kotlin.String, kotlin.Int)/query).
+Retrieves suggestions matching the [query](../../mozilla.components.concept.storage/-history-storage/get-suggestions.md#mozilla.components.concept.storage.HistoryStorage$getSuggestions(kotlin.String, kotlin.Int)/query).
 
 ### Parameters
 

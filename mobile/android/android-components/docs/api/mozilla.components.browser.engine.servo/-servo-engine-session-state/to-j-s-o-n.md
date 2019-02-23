@@ -8,6 +8,6 @@ Overrides [EngineSessionState.toJSON](../../mozilla.components.concept.engine/-e
 
 Create a JSON representation of this state that can be saved to disk.
 
-When reading JSON from disk [Engine.createSessionState](#) can be used to turn it back into an [EngineSessionState](../../mozilla.components.concept.engine/-engine-session-state/index.md)
+When reading JSON from disk [Engine.createSessionState](../../mozilla.components.concept.engine/-engine/create-session-state.md) can be used to turn it back into an [EngineSessionState](../../mozilla.components.concept.engine/-engine-session-state/index.md)
 instance.
 

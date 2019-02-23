@@ -10,7 +10,7 @@ Performs a sync.
 
 ### Parameters
 
-`authInfo` - Auth information of type [AuthInfo](#) necessary for syncing this store.
+`authInfo` - Auth information of type [AuthInfo](../../mozilla.components.concept.storage/-syncable-store/index.md#AuthInfo) necessary for syncing this store.
 
 **Return**
 [SyncStatus](../../mozilla.components.concept.storage/-sync-status.md) A status object describing how sync went.

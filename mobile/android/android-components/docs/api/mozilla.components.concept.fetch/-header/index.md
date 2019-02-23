@@ -10,7 +10,7 @@ Represents a [Header](./index.md) containing of a [name](name.md) and [value](va
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `Header(name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, value: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`<br>Represents a [Header](./index.md) containing of a [name](-init-.md#mozilla.components.concept.fetch.Header$<init>(kotlin.String, kotlin.String)/name) and [value](-init-.md#mozilla.components.concept.fetch.Header$<init>(kotlin.String, kotlin.String)/value). |
+| [&lt;init&gt;](-init-.md) | `Header(name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, value: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`<br>Represents a [Header](./index.md) containing of a [name](name.md) and [value](value.md). |
 
 ### Properties
 

@@ -6,5 +6,5 @@
 
 Overrides [AwesomeBar.addProviders](../../mozilla.components.concept.awesomebar/-awesome-bar/add-providers.md)
 
-Adds the following [SuggestionProvider](#) instances to be queried for [Suggestion](#)s whenever the text changes.
+Adds the following [SuggestionProvider](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) instances to be queried for [Suggestion](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion/index.md)s whenever the text changes.
 

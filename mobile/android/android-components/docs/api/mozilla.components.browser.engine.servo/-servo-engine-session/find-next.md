@@ -6,7 +6,7 @@
 
 Overrides [EngineSession.findNext](../../mozilla.components.concept.engine/-engine-session/find-next.md)
 
-Finds and highlights the next or previous match found by [findAll](find-all.md).
+Finds and highlights the next or previous match found by [findAll](../../mozilla.components.concept.engine/-engine-session/find-all.md).
 
 ### Parameters
 

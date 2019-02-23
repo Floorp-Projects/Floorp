@@ -7,7 +7,7 @@
 Overrides [Observable.pauseObserver](../-observable/pause-observer.md)
 
 Pauses the provided observer. No notifications will be sent to this
-observer until [resumeObserver](resume-observer.md) is called.
+observer until [resumeObserver](../-observable/resume-observer.md) is called.
 
 ### Parameters
 

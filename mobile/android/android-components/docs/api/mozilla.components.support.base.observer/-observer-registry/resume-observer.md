@@ -7,7 +7,7 @@
 Overrides [Observable.resumeObserver](../-observable/resume-observer.md)
 
 Resumes the provided observer. Notifications sent since it
-was last paused (see [pauseObserver](pause-observer.md)]) are lost and will not be
+was last paused (see [pauseObserver](../-observable/pause-observer.md)]) are lost and will not be
 re-delivered.
 
 ### Parameters

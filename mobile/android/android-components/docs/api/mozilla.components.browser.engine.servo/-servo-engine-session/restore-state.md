@@ -6,8 +6,8 @@
 
 Overrides [EngineSession.restoreState](../../mozilla.components.concept.engine/-engine-session/restore-state.md)
 
-Restores the engine state as provided by [saveState](save-state.md).
+Restores the engine state as provided by [saveState](../../mozilla.components.concept.engine/-engine-session/save-state.md).
 
 ### Parameters
 
-`state` - state retrieved from [saveState](save-state.md)
+`state` - state retrieved from [saveState](../../mozilla.components.concept.engine/-engine-session/save-state.md)

@@ -6,7 +6,7 @@
 
 Overrides [HistoryStorage.getAutocompleteSuggestion](../../mozilla.components.concept.storage/-history-storage/get-autocomplete-suggestion.md)
 
-Retrieves domain suggestions which best match the [query](get-autocomplete-suggestion.md#mozilla.components.browser.storage.memory.InMemoryHistoryStorage$getAutocompleteSuggestion(kotlin.String)/query).
+Retrieves domain suggestions which best match the [query](../../mozilla.components.concept.storage/-history-storage/get-autocomplete-suggestion.md#mozilla.components.concept.storage.HistoryStorage$getAutocompleteSuggestion(kotlin.String)/query).
 
 ### Parameters
 

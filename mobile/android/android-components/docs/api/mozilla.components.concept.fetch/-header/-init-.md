@@ -4,5 +4,5 @@
 
 `Header(name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, value: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`
 
-Represents a [Header](index.md) containing of a [name](-init-.md#mozilla.components.concept.fetch.Header$<init>(kotlin.String, kotlin.String)/name) and [value](-init-.md#mozilla.components.concept.fetch.Header$<init>(kotlin.String, kotlin.String)/value).
+Represents a [Header](index.md) containing of a [name](name.md) and [value](value.md).
 
