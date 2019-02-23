@@ -46,12 +46,12 @@ class ContentProcessSession {
     switch (name) {
     case "remote:request":
       try {
-        const {id, domainName, methodName, params} = data.request;
+        const {id, domain, method, params} = data.request;
 
-        const inst = this.domains.get(domainName);
-        const methodFn = inst[methodName];
+        const inst = this.domains.get(domain);
+        const methodFn = inst[method];
         if (!methodFn || typeof methodFn != "function") {
-          throw new Error(`Method implementation of ${methodName} missing`);
+          throw new Error(`Method implementation of ${method} missing`);
         }
 
         const result = await methodFn.call(inst, params);
