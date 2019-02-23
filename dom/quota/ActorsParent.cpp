@@ -218,6 +218,8 @@ enum AppId {
 #define LS_ARCHIVE_FILE_NAME "ls-archive.sqlite"
 #define LS_ARCHIVE_TMP_FILE_NAME "ls-archive-tmp.sqlite"
 
+const char kProfileDoChangeTopic[] = "profile-do-change";
+
 /******************************************************************************
  * SQLite functions
  ******************************************************************************/
@@ -420,13 +422,11 @@ class QuotaManager::CreateRunnable final : public BackgroundThreadObject,
                                            public Runnable {
   nsCOMPtr<nsIEventTarget> mMainEventTarget;
   nsTArray<nsCOMPtr<nsIRunnable>> mCallbacks;
-  nsString mBaseDirPath;
   RefPtr<QuotaManager> mManager;
   nsresult mResultCode;
 
   enum class State {
     Initial,
-    CreatingManager,
     RegisteringObserver,
     CallingCallbacks,
     Completed
@@ -454,8 +454,6 @@ class QuotaManager::CreateRunnable final : public BackgroundThreadObject,
   ~CreateRunnable() {}
 
   nsresult Init();
-
-  nsresult CreateManager();
 
   nsresult RegisterObserver();
 
@@ -496,6 +494,23 @@ class QuotaManager::ShutdownObserver final : public nsIObserver {
 
  private:
   ~ShutdownObserver() { MOZ_ASSERT(NS_IsMainThread()); }
+};
+
+class QuotaManager::Observer final : public nsIObserver {
+ public:
+  static nsresult Initialize();
+
+ private:
+  Observer() { MOZ_ASSERT(NS_IsMainThread()); }
+
+  ~Observer() { MOZ_ASSERT(NS_IsMainThread()); }
+
+  nsresult Init();
+
+  nsresult Shutdown();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
 };
 
 namespace {
@@ -1356,6 +1371,8 @@ void ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr) {
 
 namespace {
 
+nsString gBaseDirPath;
+
 #ifdef DEBUG
 bool gQuotaManagerInitialized = false;
 #endif
@@ -2166,6 +2183,10 @@ void InitializeQuotaManager() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!gQuotaManagerInitialized);
 
+  if (NS_FAILED(QuotaManager::Initialize())) {
+    NS_WARNING("Failed to initialize quota manager!");
+  }
+
 #ifdef DEBUG
   gQuotaManagerInitialized = true;
 #endif
@@ -2292,37 +2313,13 @@ void DirectoryLockImpl::NotifyOpenListener() {
 }
 
 nsresult QuotaManager::CreateRunnable::Init() {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mState == State::Initial);
-
-  nsresult rv;
-
-  nsCOMPtr<nsIFile> baseDir;
-  rv = NS_GetSpecialDirectory(NS_APP_INDEXEDDB_PARENT_DIR,
-                              getter_AddRefs(baseDir));
-  if (NS_FAILED(rv)) {
-    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                getter_AddRefs(baseDir));
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = baseDir->GetPath(mBaseDirPath);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
-nsresult QuotaManager::CreateRunnable::CreateManager() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::CreatingManager);
+  MOZ_ASSERT(mState == State::Initial);
+  MOZ_ASSERT(!gBaseDirPath.IsEmpty());
 
   mManager = new QuotaManager();
 
-  nsresult rv = mManager->Init(mBaseDirPath);
+  nsresult rv = mManager->Init(gBaseDirPath);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2407,9 +2404,6 @@ auto QuotaManager::CreateRunnable::GetNextState(
     nsCOMPtr<nsIEventTarget>& aThread) -> State {
   switch (mState) {
     case State::Initial:
-      aThread = mOwningThread;
-      return State::CreatingManager;
-    case State::CreatingManager:
       if (mMainEventTarget) {
         aThread = mMainEventTarget;
       } else {
@@ -2434,10 +2428,6 @@ QuotaManager::CreateRunnable::Run() {
   switch (mState) {
     case State::Initial:
       rv = Init();
-      break;
-
-    case State::CreatingManager:
-      rv = CreateManager();
       break;
 
     case State::RegisteringObserver:
@@ -2533,6 +2523,106 @@ QuotaManager::ShutdownObserver::Observe(nsISupports* aSubject,
 
   MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return done; }));
 
+  gBaseDirPath.Truncate();
+
+  return NS_OK;
+}
+
+// static
+nsresult QuotaManager::Observer::Initialize() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  RefPtr<Observer> observer = new Observer();
+
+  nsresult rv = observer->Init();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult QuotaManager::Observer::Init() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (NS_WARN_IF(!obs)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv = obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = obs->AddObserver(this, kProfileDoChangeTopic, false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult QuotaManager::Observer::Shutdown() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (NS_WARN_IF(!obs)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  MOZ_ALWAYS_SUCCEEDS(obs->RemoveObserver(this, kProfileDoChangeTopic));
+  MOZ_ALWAYS_SUCCEEDS(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID));
+
+  // In general, the instance will have died after the latter removal call, so
+  // it's not safe to do anything after that point.
+  // However, Shutdown is currently called from Observe which is called by the
+  // Observer Service which holds a strong reference to the observer while the
+  // Observe method is being called.
+
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(QuotaManager::Observer, nsIObserver)
+
+NS_IMETHODIMP
+QuotaManager::Observer::Observe(nsISupports* aSubject, const char* aTopic,
+                                const char16_t* aData) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsresult rv;
+
+  if (!strcmp(aTopic, kProfileDoChangeTopic)) {
+    nsCOMPtr<nsIFile> baseDir;
+    rv = NS_GetSpecialDirectory(NS_APP_INDEXEDDB_PARENT_DIR,
+                                getter_AddRefs(baseDir));
+    if (NS_FAILED(rv)) {
+      rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                  getter_AddRefs(baseDir));
+    }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = baseDir->GetPath(gBaseDirPath);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    return NS_OK;
+  }
+
+  if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    rv = Shutdown();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    return NS_OK;
+  }
+
+  NS_WARNING("Unknown observer topic!");
   return NS_OK;
 }
 
@@ -2864,6 +2954,18 @@ QuotaManager::~QuotaManager() {
   MOZ_ASSERT(!gInstance || gInstance == this);
 }
 
+// static
+nsresult QuotaManager::Initialize() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsresult rv = Observer::Initialize();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
 void QuotaManager::GetOrCreate(nsIRunnable* aCallback,
                                nsIEventTarget* aMainEventTarget) {
   AssertIsOnBackgroundThread();
@@ -2881,12 +2983,7 @@ void QuotaManager::GetOrCreate(nsIRunnable* aCallback,
   } else {
     if (!gCreateRunnable) {
       gCreateRunnable = new CreateRunnable(aMainEventTarget);
-      if (aMainEventTarget) {
-        MOZ_ALWAYS_SUCCEEDS(
-            aMainEventTarget->Dispatch(gCreateRunnable, NS_DISPATCH_NORMAL));
-      } else {
-        MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(gCreateRunnable));
-      }
+      NS_DispatchToCurrentThread(gCreateRunnable);
     }
 
     gCreateRunnable->AddCallback(aCallback);
