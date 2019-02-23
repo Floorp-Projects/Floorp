@@ -46,10 +46,6 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
       return nullptr;
     }
 
-    // Note: Take a ref to our BrowsingContext to prevent it being freed until
-    // after the message has been recieved on the other side.
-    Unused << do_AddRef(bc);
-
     // Note: ref is released in DeallocPWindowGlobalChild
     ipc->SendPWindowGlobalConstructor(do_AddRef(wgc).take(), init);
   } else {
