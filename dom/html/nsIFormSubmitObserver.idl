@@ -16,14 +16,10 @@ webidl Element;
 [scriptable, uuid(867cb7e7-835d-408b-9788-d2834d284e03)]
 interface nsIFormSubmitObserver: nsISupports
 {
-  void notify(in HTMLFormElement formNode, in mozIDOMWindow window, in nsIURI actionURL, out boolean cancelSubmit);
-
   void notifyInvalidSubmit(in HTMLFormElement formNode,
                            in Array<Element> invalidElements);
 };
 
 %{C++
-#define NS_FORMSUBMIT_SUBJECT "formsubmit"
-#define NS_EARLYFORMSUBMIT_SUBJECT "earlyformsubmit"
 #define NS_INVALIDFORMSUBMIT_SUBJECT "invalidformsubmit"
 %}
