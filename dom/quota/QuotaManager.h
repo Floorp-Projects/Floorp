@@ -95,10 +95,6 @@ class QuotaManager final : public BackgroundThreadObject {
   typedef nsClassHashtable<nsCStringHashKey, nsTArray<DirectoryLockImpl*>>
       DirectoryLockTable;
 
- public:
-  class CreateRunnable;
-
- private:
   class Observer;
 
  public:
