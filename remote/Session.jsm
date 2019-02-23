@@ -47,26 +47,29 @@ class Session {
         throw new TypeError("Message missing 'method' field");
       }
 
-      const [domainName, methodName] = split(method, ".", 1);
+      const [domainName, methodName] = Domains.splitMethod(method);
       if (this.domains.domainSupportsMethod(domainName, methodName)) {
-        const inst = this.domains.get(domainName);
-        const methodFn = inst[methodName];
-        if (!methodFn || typeof methodFn != "function") {
-          throw new Error(`Method implementation of ${methodName} missing`);
-        }
-
-        const result = await methodFn.call(inst, params);
-        this.connection.send({id, result});
+        await this.executeInParent(id, domainName, methodName, params);
       } else {
-        this.mm.sendAsyncMessage("remote:request", {
-          browsingContextId: this.browsingContext.id,
-          request: {id, domainName, methodName, params},
-        });
+        this.executeInChild(id, domainName, methodName, params);
       }
     } catch (e) {
       const error = formatError(e, {stack: true});
       this.connection.send({id, error});
     }
+  }
+
+  async executeInParent(id, domain, method, params) {
+    const inst = this.domains.get(domain);
+    const result = await inst[method](params);
+    this.connection.send({id, result});
+  }
+
+  executeInChild(id, domain, method, params) {
+    this.mm.sendAsyncMessage("remote:request", {
+      browsingContextId: this.browsingContext.id,
+      request: {id, domain, method, params},
+    });
   }
 
   get mm() {
@@ -105,36 +108,4 @@ class Session {
       params,
     });
   }
-}
-
-/**
- * Split s by sep, returning list of substrings.
- * If max is given, at most max splits are done.
- * If max is 0, there is no limit on the number of splits.
- */
-function split(s, sep, max = 0) {
-  if (typeof s != "string" ||
-      typeof sep != "string" ||
-      typeof max != "number") {
-    throw new TypeError();
-  }
-  if (!Number.isInteger(max) || max < 0) {
-    throw new RangeError();
-  }
-
-  const rv = [];
-  let i = 0;
-
-  while (rv.length < max) {
-    const si = s.indexOf(sep, i);
-    if (!si) {
-      break;
-    }
-
-    rv.push(s.substring(i, si));
-    i = si + sep.length;
-  }
-
-  rv.push(s.substring(i));
-  return rv;
 }
