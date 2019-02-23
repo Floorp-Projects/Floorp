@@ -6,8 +6,9 @@
 
 var EXPORTED_SYMBOLS = [
   "FatalError",
-  "UnsupportedError",
   "formatError",
+  "UnknownMethodError",
+  "UnsupportedError",
 ];
 
 const {Log} = ChromeUtils.import("chrome://remote/content/Log.jsm");
@@ -19,6 +20,7 @@ XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 class RemoteAgentError extends Error {
   constructor(...args) {
     super(...args);
+    this.name = this.constructor.name;
     this.notify();
   }
 
@@ -50,6 +52,8 @@ class FatalError extends RemoteAgentError {
 }
 
 class UnsupportedError extends RemoteAgentError {}
+
+class UnknownMethodError extends RemoteAgentError {}
 
 function formatError(error, {stack = false} = {}) {
   const s = [];

@@ -6,18 +6,39 @@
 
 var EXPORTED_SYMBOLS = ["Domain"];
 
-const {EventEmitter} = ChromeUtils.import("chrome://remote/content/EventEmitter.jsm");
-
 class Domain {
   constructor(session, target) {
     this.session = session;
     this.target = target;
     this.name = this.constructor.name;
 
-    EventEmitter.decorate(this);
+    this.eventListeners_ = new Set();
   }
 
   destructor() {}
+
+  emit(eventName, params = {}) {
+    for (const listener of this.eventListeners_) {
+      try {
+        if (isEventHandler(listener)) {
+          listener.onEvent(eventName, params);
+        } else {
+          listener.call(this, eventName, params);
+        }
+      } catch (e) {
+        Cu.reportError(e);
+      }
+    }
+  }
+
+  addEventListener(listener) {
+    if (typeof listener != "function" && !isEventHandler(listener)) {
+      throw new TypeError();
+    }
+    this.eventListeners_.add(listener);
+  }
+
+  // helpers
 
   get content() {
     return this.session.content;
@@ -30,4 +51,16 @@ class Domain {
   get chromeEventHandler() {
     return this.docShell.chromeEventHandler;
   }
+
+  // static
+
+  static implements(methodName) {
+    return typeof this.prototype[methodName] == "function";
+  }
+}
+
+function isEventHandler(listener) {
+  return listener &&
+      "onEvent" in listener &&
+      typeof listener.onEvent == "function";
 }

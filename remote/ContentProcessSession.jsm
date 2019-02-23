@@ -30,6 +30,20 @@ class ContentProcessSession {
     this.messageManager.removeMessageListener("remote:destroy", this);
   }
 
+  // Domain event listener
+
+  onEvent(eventName, params) {
+    this.messageManager.sendAsyncMessage("remote:event", {
+      browsingContextId: this.browsingContext.id,
+      event: {
+        method: eventName,
+        params,
+      },
+    });
+  }
+
+  // nsIMessageListener
+
   async receiveMessage({name, data}) {
     const {browsingContextId} = data;
 
@@ -78,19 +92,5 @@ class ContentProcessSession {
       this.destroy();
       break;
     }
-  }
-
-  // EventEmitter
-
-  // This method is called when any Domain emit any event
-  // Domains register "*" listener on each instantiated Domain.
-  onevent(eventName, params) {
-    this.messageManager.sendAsyncMessage("remote:event", {
-      browsingContextId: this.browsingContext.id,
-      event: {
-        method: eventName,
-        params,
-      },
-    });
   }
 }
