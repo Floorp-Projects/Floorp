@@ -860,44 +860,16 @@ nsresult HTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
     }
   }
 
-  // Notify observers that the form is being submitted.
-  nsCOMPtr<nsIObserverService> service =
-      mozilla::services::GetObserverService();
-  if (!service) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsISimpleEnumerator> theEnum;
-  nsresult rv = service->EnumerateObservers(
-      aEarlyNotify ? NS_EARLYFORMSUBMIT_SUBJECT : NS_FORMSUBMIT_SUBJECT,
-      getter_AddRefs(theEnum));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (theEnum) {
-    nsCOMPtr<nsISupports> inst;
-    *aCancelSubmit = false;
-
-    // XXXbz what do the submit observers actually want?  The window
-    // of the document this is shown in?  Or something else?
-    // sXBL/XBL2 issue
-    nsCOMPtr<nsPIDOMWindowOuter> window = OwnerDoc()->GetWindow();
-
-    bool loop = true;
-    while (NS_SUCCEEDED(theEnum->HasMoreElements(&loop)) && loop) {
-      theEnum->GetNext(getter_AddRefs(inst));
-
-      nsCOMPtr<nsIFormSubmitObserver> formSubmitObserver(
-          do_QueryInterface(inst));
-      if (formSubmitObserver) {
-        rv = formSubmitObserver->Notify(
-            this, window ? window->GetCurrentInnerWindow() : nullptr,
-            aActionURL, aCancelSubmit);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-      if (*aCancelSubmit) {
-        return NS_OK;
-      }
-    }
+  bool defaultAction = true;
+  nsresult rv = nsContentUtils::DispatchEventOnlyToChrome(
+      OwnerDoc(), static_cast<nsINode*>(this),
+      aEarlyNotify ? NS_LITERAL_STRING("DOMFormBeforeSubmit")
+                   : NS_LITERAL_STRING("DOMFormSubmit"),
+      CanBubble::eYes, Cancelable::eYes, &defaultAction);
+  *aCancelSubmit = !defaultAction;
+  if (*aCancelSubmit) {
+    return NS_OK;
   }
-
   return rv;
 }
 
