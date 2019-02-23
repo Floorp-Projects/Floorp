@@ -100,7 +100,6 @@ class QuotaManager final : public BackgroundThreadObject {
 
  private:
   class ShutdownRunnable;
-  class ShutdownObserver;
   class Observer;
 
  public:
