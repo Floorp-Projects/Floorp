@@ -447,7 +447,24 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
       case __NR_munmap:
         return Allow();
 
-        // Signal handling
+        // ipc::Shmem; also, glibc when creating threads:
+      case __NR_mprotect:
+        return Allow();
+
+        // madvise hints used by malloc; see bug 1303813 and bug 1364533
+      case __NR_madvise: {
+        Arg<int> advice(2);
+        return If(advice == MADV_DONTNEED, Allow())
+            .ElseIf(advice == MADV_FREE, Allow())
+            .ElseIf(advice == MADV_HUGEPAGE, Allow())
+            .ElseIf(advice == MADV_NOHUGEPAGE, Allow())
+#ifdef MOZ_ASAN
+            .ElseIf(advice == MADV_DONTDUMP, Allow())
+#endif
+            .Else(InvalidSyscall());
+      }
+
+      // Signal handling
 #if defined(ANDROID) || defined(MOZ_ASAN)
       case __NR_sigaltstack:
 #endif
@@ -1052,8 +1069,9 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
             .Default(SandboxPolicyCommon::EvaluateSyscall(sysno));
       }
 
-      case __NR_mprotect:
       case __NR_brk:
+        // FIXME(bug 1510861) are we using any hints that aren't allowed
+        // in SandboxPolicyCommon now?
       case __NR_madvise:
         // libc's realloc uses mremap (Bug 1286119); wasm does too (bug
         // 1342385).
@@ -1335,20 +1353,6 @@ class GMPSandboxPolicy : public SandboxPolicyCommon {
       case __NR_openat:
         return Trap(OpenTrap, mFiles);
 
-        // ipc::Shmem
-      case __NR_mprotect:
-        return Allow();
-      case __NR_madvise: {
-        Arg<int> advice(2);
-        return If(advice == MADV_DONTNEED, Allow())
-            .ElseIf(advice == MADV_FREE, Allow())
-            .ElseIf(advice == MADV_HUGEPAGE, Allow())
-            .ElseIf(advice == MADV_NOHUGEPAGE, Allow())
-#  ifdef MOZ_ASAN
-            .ElseIf(advice == MADV_DONTDUMP, Allow())
-#  endif
-            .Else(InvalidSyscall());
-      }
       case __NR_brk:
       CASES_FOR_geteuid:
         return Allow();
