@@ -573,11 +573,14 @@ QuotaManagerService::ClearStoragesForOriginAttributesPattern(
     const nsAString& aPattern, nsIQuotaRequest** _retval) {
   MOZ_ASSERT(NS_IsMainThread());
 
+  OriginAttributesPattern pattern;
+  MOZ_ALWAYS_TRUE(pattern.Init(aPattern));
+
   RefPtr<Request> request = new Request();
 
   ClearDataParams params;
 
-  params.pattern() = aPattern;
+  params.pattern() = pattern;
 
   nsAutoPtr<PendingRequestInfo> info(new RequestInfo(request, params));
 

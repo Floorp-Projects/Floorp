@@ -10,6 +10,9 @@ include PBackgroundSharedTypes;
 
 include "mozilla/dom/quota/SerializationHelpers.h";
 
+using mozilla::OriginAttributesPattern
+  from "mozilla/OriginAttributes.h";
+
 using mozilla::dom::quota::PersistenceType
   from "mozilla/dom/quota/PersistenceType.h";
 
@@ -76,7 +79,7 @@ struct ResetOriginParams
 
 struct ClearDataParams
 {
-  nsString pattern;
+  OriginAttributesPattern pattern;
 };
 
 struct ClearAllParams
