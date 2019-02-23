@@ -21,7 +21,7 @@
 #include "nsThreadUtils.h"
 #include "nsIPrincipal.h"
 #include "nsIWidget.h"
-#include "nsCSSPropertyID.h"
+#include "nsCSSPropertyIDSet.h"
 #include "nsStyleCoord.h"
 #include "nsStyleConsts.h"
 #include "nsGkAtoms.h"
@@ -2286,19 +2286,25 @@ class nsLayoutUtils {
                                         const nsCSSPropertyIDSet& aPropertySet);
 
   /**
-   * Returns true if |aEffectSet| has an animation of a property |aPropertySet|
-   * regardless of whether any property in the set is overridden by !important
-   * rule.
+   * Returns true if |aEffectSet| has an animation of a property in
+   * |aPropertySet| regardless of whether any property in the set is overridden
+   * by !important rule.
    */
   static bool HasAnimationOfPropertySet(mozilla::EffectSet* aEffectSet,
                                         const nsCSSPropertyIDSet& aPropertySet);
-
   /**
    * Returns true if |aFrame| has an animation of |aProperty| which is
    * not overridden by !important rules.
    */
   static bool HasEffectiveAnimation(const nsIFrame* aFrame,
                                     nsCSSPropertyID aProperty);
+
+  /**
+   * Returns true if |aFrame| has animations of properties in |aPropertySet|,
+   * and all of these properties are not overridden by !important rules.
+   */
+  static bool HasEffectiveAnimation(const nsIFrame* aFrame,
+                                    const nsCSSPropertyIDSet& aPropertySet);
 
   /**
    * Returns all effective animated CSS properties on |aFrame|. That means
