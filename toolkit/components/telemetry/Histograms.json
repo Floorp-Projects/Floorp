@@ -8145,13 +8145,6 @@
     "bug_numbers": [1489524],
     "description": "Time (ms) it takes to initialize the search service"
   },
-  "SEARCH_SERVICE_INIT_SYNC": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["rvitillo@mozilla.com", "gavin@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "search service has been initialized synchronously"
-  },
   "SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["mhammond@mozilla.com", "gavin@mozilla.com"],
