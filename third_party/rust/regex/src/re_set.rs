@@ -295,10 +295,6 @@ impl Iterator for SetMatchesIntoIter {
             }
         }
     }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.0.size_hint() 
-    }
 }
 
 impl DoubleEndedIterator for SetMatchesIntoIter {
@@ -334,10 +330,6 @@ impl<'a> Iterator for SetMatchesIter<'a> {
                 Some((i, &true)) => return Some(i),
             }
         }
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.0.size_hint() 
     }
 }
 
