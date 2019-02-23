@@ -889,6 +889,10 @@ class Quota final : public PQuotaParent {
 
   void StartIdleMaintenance();
 
+  bool VerifyRequestParams(const UsageRequestParams& aParams) const;
+
+  bool VerifyRequestParams(const RequestParams& aParams) const;
+
   // IPDL methods.
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -6382,6 +6386,124 @@ void Quota::StartIdleMaintenance() {
   quotaManager->StartIdleMaintenance();
 }
 
+bool Quota::VerifyRequestParams(const UsageRequestParams& aParams) const {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aParams.type() != UsageRequestParams::T__None);
+
+  switch (aParams.type()) {
+    case UsageRequestParams::TAllUsageParams:
+      break;
+
+    case UsageRequestParams::TOriginUsageParams: {
+      const OriginUsageParams& params = aParams.get_OriginUsageParams();
+
+      if (NS_WARN_IF(
+              !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
+        ASSERT_UNLESS_FUZZING();
+        return false;
+      }
+
+      break;
+    }
+
+    default:
+      MOZ_CRASH("Should never get here!");
+  }
+
+  return true;
+}
+
+bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aParams.type() != RequestParams::T__None);
+
+  switch (aParams.type()) {
+    case RequestParams::TInitParams:
+    case RequestParams::TInitTemporaryStorageParams:
+      break;
+
+    case RequestParams::TInitOriginParams: {
+      const InitOriginParams& params = aParams.get_InitOriginParams();
+
+      if (NS_WARN_IF(
+              !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
+        ASSERT_UNLESS_FUZZING();
+        return false;
+      }
+
+      break;
+    }
+
+    case RequestParams::TClearOriginParams: {
+      const ClearResetOriginParams& params =
+          aParams.get_ClearOriginParams().commonParams();
+
+      if (NS_WARN_IF(
+              !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
+        ASSERT_UNLESS_FUZZING();
+        return false;
+      }
+
+      break;
+    }
+
+    case RequestParams::TResetOriginParams: {
+      const ClearResetOriginParams& params =
+          aParams.get_ResetOriginParams().commonParams();
+
+      if (NS_WARN_IF(
+              !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
+        ASSERT_UNLESS_FUZZING();
+        return false;
+      }
+
+      break;
+    }
+
+    case RequestParams::TClearDataParams: {
+      if (BackgroundParent::IsOtherProcessActor(Manager())) {
+        ASSERT_UNLESS_FUZZING();
+        return false;
+      }
+
+      break;
+    }
+
+    case RequestParams::TClearAllParams:
+    case RequestParams::TResetAllParams:
+      break;
+
+    case RequestParams::TPersistedParams: {
+      const PersistedParams& params = aParams.get_PersistedParams();
+
+      if (NS_WARN_IF(
+              !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
+        ASSERT_UNLESS_FUZZING();
+        return false;
+      }
+
+      break;
+    }
+
+    case RequestParams::TPersistParams: {
+      const PersistParams& params = aParams.get_PersistParams();
+
+      if (NS_WARN_IF(
+              !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
+        ASSERT_UNLESS_FUZZING();
+        return false;
+      }
+
+      break;
+    }
+
+    default:
+      MOZ_CRASH("Should never get here!");
+  }
+
+  return true;
+}
+
 void Quota::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnBackgroundThread();
 #ifdef DEBUG
@@ -6394,6 +6516,18 @@ PQuotaUsageRequestParent* Quota::AllocPQuotaUsageRequestParent(
     const UsageRequestParams& aParams) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != UsageRequestParams::T__None);
+
+#ifdef DEBUG
+  // Always verify parameters in DEBUG builds!
+  bool trustParams = false;
+#else
+  bool trustParams = !BackgroundParent::IsOtherProcessActor(Manager());
+#endif
+
+  if (!trustParams && NS_WARN_IF(!VerifyRequestParams(aParams))) {
+    ASSERT_UNLESS_FUZZING();
+    return nullptr;
+  }
 
   RefPtr<QuotaUsageRequestBase> actor;
 
@@ -6447,14 +6581,16 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != RequestParams::T__None);
 
-  if (aParams.type() == RequestParams::TClearDataParams) {
-    PBackgroundParent* actor = Manager();
-    MOZ_ASSERT(actor);
+#ifdef DEBUG
+  // Always verify parameters in DEBUG builds!
+  bool trustParams = false;
+#else
+  bool trustParams = !BackgroundParent::IsOtherProcessActor(Manager());
+#endif
 
-    if (BackgroundParent::IsOtherProcessActor(actor)) {
-      ASSERT_UNLESS_FUZZING();
-      return nullptr;
-    }
+  if (!trustParams && NS_WARN_IF(!VerifyRequestParams(aParams))) {
+    ASSERT_UNLESS_FUZZING();
+    return nullptr;
   }
 
   RefPtr<QuotaRequestBase> actor;
