@@ -174,7 +174,7 @@ MFTDecoder::SendMFTMessage(MFT_MESSAGE_TYPE aMsg, ULONG_PTR aData) {
 
 HRESULT
 MFTDecoder::CreateInputSample(const uint8_t* aData, uint32_t aDataSize,
-                              int64_t aTimestamp,
+                              int64_t aTimestamp, int64_t aDuration,
                               RefPtr<IMFSample>* aOutSample) {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   NS_ENSURE_TRUE(mDecoder != nullptr, E_POINTER);
@@ -212,6 +212,9 @@ MFTDecoder::CreateInputSample(const uint8_t* aData, uint32_t aDataSize,
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   hr = sample->SetSampleTime(UsecsToHNs(aTimestamp));
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  hr = sample->SetSampleDuration(UsecsToHNs(aDuration));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   *aOutSample = sample.forget();
@@ -310,13 +313,14 @@ MFTDecoder::Output(RefPtr<IMFSample>* aOutput) {
 }
 
 HRESULT
-MFTDecoder::Input(const uint8_t* aData, uint32_t aDataSize,
-                  int64_t aTimestamp) {
+MFTDecoder::Input(const uint8_t* aData, uint32_t aDataSize, int64_t aTimestamp,
+                  int64_t aDuration) {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   NS_ENSURE_TRUE(mDecoder != nullptr, E_POINTER);
 
   RefPtr<IMFSample> input;
-  HRESULT hr = CreateInputSample(aData, aDataSize, aTimestamp, &input);
+  HRESULT hr =
+      CreateInputSample(aData, aDataSize, aTimestamp, aDuration, &input);
   NS_ENSURE_TRUE(SUCCEEDED(hr) && input != nullptr, hr);
 
   return Input(input);
