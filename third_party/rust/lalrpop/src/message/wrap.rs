@@ -1,6 +1,6 @@
+use super::*;
 use ascii_canvas::AsciiView;
 use std::cmp;
-use super::*;
 
 #[derive(Debug)]
 pub struct Wrap {

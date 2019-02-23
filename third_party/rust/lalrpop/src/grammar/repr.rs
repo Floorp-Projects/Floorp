@@ -4,17 +4,18 @@
  * representation incrementally.
  */
 
-use string_cache::DefaultAtom as Atom;
+use collections::{map, Map};
 use grammar::pattern::Pattern;
 use message::Content;
 use std::fmt::{Debug, Display, Error, Formatter};
-use collections::{map, Map};
+use string_cache::DefaultAtom as Atom;
 use util::Sep;
 
 // These concepts we re-use wholesale
-pub use grammar::parse_tree::{Annotation, InternToken, NonterminalString, Path, Span,
-                              TerminalLiteral, TerminalString, TypeParameter, Visibility,
-                              WhereClause};
+pub use grammar::parse_tree::{
+    Annotation, InternToken, NonterminalString, Path, Span, TerminalLiteral, TerminalString,
+    TypeParameter, Visibility, WhereClause,
+};
 
 #[derive(Clone, Debug)]
 pub struct Grammar {
@@ -210,7 +211,8 @@ impl TypeRepr {
     pub fn referenced(&self) -> Vec<TypeParameter> {
         match *self {
             TypeRepr::Tuple(ref tys) => tys.iter().flat_map(|t| t.referenced()).collect(),
-            TypeRepr::Nominal(ref data) => data.types
+            TypeRepr::Nominal(ref data) => data
+                .types
                 .iter()
                 .flat_map(|t| t.referenced())
                 .chain(match data.path.as_id() {
@@ -520,7 +522,8 @@ impl ActionFnDefn {
 
 impl UserActionFnDefn {
     fn to_fn_string(&self, defn: &ActionFnDefn, name: &str) -> String {
-        let arg_strings: Vec<String> = self.arg_patterns
+        let arg_strings: Vec<String> = self
+            .arg_patterns
             .iter()
             .zip(self.arg_types.iter())
             .map(|(p, t)| format!("{}: {}", p, t))
@@ -538,7 +541,8 @@ impl UserActionFnDefn {
 
 impl InlineActionFnDefn {
     fn to_fn_string(&self, name: &str) -> String {
-        let arg_strings: Vec<String> = self.symbols
+        let arg_strings: Vec<String> = self
+            .symbols
             .iter()
             .map(|inline_sym| match *inline_sym {
                 InlinedSymbol::Original(ref s) => format!("{}", s),

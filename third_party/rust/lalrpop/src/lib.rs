@@ -12,14 +12,15 @@ extern crate bit_set;
 extern crate diff;
 extern crate ena;
 extern crate itertools;
+#[cfg_attr(any(feature = "test", test), macro_use)]
 extern crate lalrpop_util;
 extern crate petgraph;
 extern crate regex;
 extern crate regex_syntax;
+extern crate sha2;
 extern crate string_cache;
 extern crate term;
 extern crate unicode_xid;
-extern crate sha2;
 
 #[cfg(test)]
 extern crate rand;
@@ -35,12 +36,12 @@ mod build;
 mod collections;
 mod file_text;
 mod grammar;
+mod kernel_set;
 mod lexer;
 mod lr1;
 mod message;
 mod normalize;
 mod parser;
-mod kernel_set;
 mod session;
 mod tls;
 mod tok;
@@ -51,7 +52,7 @@ mod generate;
 #[cfg(test)]
 mod test_util;
 
-pub use api::Configuration;
 pub use api::process_root;
 pub use api::process_root_unconditionally;
+pub use api::Configuration;
 use ascii_canvas::style;

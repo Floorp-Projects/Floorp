@@ -5,8 +5,8 @@ use std::fmt::Debug;
 
 pub mod builder;
 pub mod horiz;
-pub mod message;
 pub mod indent;
+pub mod message;
 pub mod styled;
 #[cfg(test)]
 mod test;

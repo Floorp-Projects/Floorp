@@ -70,11 +70,11 @@
 
 #![warn(missing_docs)]
 
-extern crate unreachable;
 #[macro_use]
 extern crate lazy_static;
 
 mod thread_id;
+mod unreachable;
 
 use std::sync::atomic::{AtomicPtr, AtomicUsize, Ordering};
 use std::sync::Mutex;
@@ -158,7 +158,7 @@ fn hash(id: usize, bits: usize) -> usize {
 #[cfg(target_pointer_width = "64")]
 #[inline]
 fn hash(id: usize, bits: usize) -> usize {
-    id.wrapping_mul(0x9E3779B97F4A7C15) >> (64 - bits)
+    id.wrapping_mul(0x9E37_79B9_7F4A_7C15) >> (64 - bits)
 }
 
 impl<T: ?Sized + Send> ThreadLocal<T> {

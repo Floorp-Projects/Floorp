@@ -86,8 +86,7 @@ impl Configuration {
     ///
     /// This was the default behaviour up to version 0.15.
     pub fn generate_in_source_tree(&mut self) -> &mut Self {
-        self.set_in_dir(Path::new("."))
-            .set_out_dir(Path::new("."))
+        self.set_in_dir(Path::new(".")).set_out_dir(Path::new("."))
     }
 
     /// If true, always convert `.lalrpop` files into `.rs` files, even if the
@@ -101,6 +100,13 @@ impl Configuration {
     /// generated code significantly larger. Default is false.
     pub fn emit_comments(&mut self, val: bool) -> &mut Configuration {
         self.session.emit_comments = val;
+        self
+    }
+
+    /// If false, shrinks the generated code by removing redundant white space.
+    /// Default is true.
+    pub fn emit_whitespace(&mut self, val: bool) -> &mut Configuration {
+        self.session.emit_whitespace = val;
         self
     }
 
@@ -133,6 +139,16 @@ impl Configuration {
     /// debugging LALRPOP itself.
     pub fn log_debug(&mut self) -> &mut Configuration {
         self.session.log.set_level(Level::Debug);
+        self
+    }
+
+    /// Sets the features used during compilation, disables the use of cargo features.
+    /// (Default: Loaded from `CARGO_FEATURE_{}` environment variables).
+    pub fn set_features<I>(&mut self, iterable: I) -> &mut Configuration
+    where
+        I: IntoIterator<Item = String>,
+    {
+        self.session.features = Some(iterable.into_iter().collect());
         self
     }
 
@@ -179,6 +195,26 @@ impl Configuration {
                 None => return Err("missing OUT_DIR variable")?,
             };
             session.out_dir = Some(PathBuf::from(out_dir));
+        }
+
+        if self.session.features.is_none() {
+            // Pick up the features cargo sets for build scripts
+            session.features = Some(
+                env::vars()
+                    .filter_map(|(feature_var, _)| {
+                        let prefix = "CARGO_FEATURE_";
+                        if feature_var.starts_with(prefix) {
+                            Some(
+                                feature_var[prefix.len()..]
+                                    .replace("_", "-")
+                                    .to_ascii_lowercase(),
+                            )
+                        } else {
+                            None
+                        }
+                    })
+                    .collect(),
+            );
         }
 
         let session = Rc::new(session);

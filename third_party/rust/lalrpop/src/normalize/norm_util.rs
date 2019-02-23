@@ -1,5 +1,5 @@
-use string_cache::DefaultAtom as Atom;
 use grammar::parse_tree::{ActionKind, Alternative, ExprSymbol, Symbol, SymbolKind};
+use string_cache::DefaultAtom as Atom;
 
 #[derive(Debug)]
 pub enum AlternativeAction<'a> {
@@ -24,7 +24,8 @@ pub fn analyze_action<'a>(alt: &'a Alternative) -> AlternativeAction<'a> {
 
 pub fn analyze_expr<'a>(expr: &'a ExprSymbol) -> Symbols<'a> {
     // First look for named symbols.
-    let named_symbols: Vec<_> = expr.symbols
+    let named_symbols: Vec<_> = expr
+        .symbols
         .iter()
         .enumerate()
         .filter_map(|(idx, sym)| match sym.kind {
@@ -37,7 +38,8 @@ pub fn analyze_expr<'a>(expr: &'a ExprSymbol) -> Symbols<'a> {
     }
 
     // Otherwise, make a tuple of the items they chose with `<>`.
-    let chosen_symbol_types: Vec<_> = expr.symbols
+    let chosen_symbol_types: Vec<_> = expr
+        .symbols
         .iter()
         .enumerate()
         .filter_map(|(idx, sym)| match sym.kind {
