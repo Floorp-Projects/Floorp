@@ -1385,10 +1385,10 @@ mozilla::Atomic<bool> gShutdown(false);
 // Constants for temporary storage limit computing.
 static const int32_t kDefaultFixedLimitKB = -1;
 static const uint32_t kDefaultChunkSizeKB = 10 * 1024;
-int32_t gFixedLimitKB = kDefaultFixedLimitKB;
-uint32_t gChunkSizeKB = kDefaultChunkSizeKB;
+Atomic<int32_t, Relaxed> gFixedLimitKB(kDefaultFixedLimitKB);
+Atomic<uint32_t, Relaxed> gChunkSizeKB(kDefaultChunkSizeKB);
 
-bool gTestingEnabled = false;
+Atomic<bool> gTestingEnabled(false);
 
 class StorageOperationBase : public Runnable {
   mozilla::Mutex mMutex;
@@ -2187,6 +2187,18 @@ void InitializeQuotaManager() {
     NS_WARNING("Failed to initialize quota manager!");
   }
 
+   if (NS_FAILED(Preferences::AddAtomicIntVarCache(
+           &gFixedLimitKB, PREF_FIXED_LIMIT, kDefaultFixedLimitKB)) ||
+       NS_FAILED(Preferences::AddAtomicUintVarCache(
+           &gChunkSizeKB, PREF_CHUNK_SIZE, kDefaultChunkSizeKB))) {
+    NS_WARNING("Unable to respond to temp storage pref changes!");
+  }
+
+   if (NS_FAILED(Preferences::AddAtomicBoolVarCache(
+           &gTestingEnabled, PREF_TESTING_FEATURES, false))) {
+    NS_WARNING("Unable to respond to testing pref changes!");
+  }
+
 #ifdef DEBUG
   gQuotaManagerInitialized = true;
 #endif
@@ -2330,18 +2342,6 @@ nsresult QuotaManager::CreateRunnable::Init() {
 nsresult QuotaManager::CreateRunnable::RegisterObserver() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mState == State::RegisteringObserver);
-
-  if (NS_FAILED(Preferences::AddIntVarCache(&gFixedLimitKB, PREF_FIXED_LIMIT,
-                                            kDefaultFixedLimitKB)) ||
-      NS_FAILED(Preferences::AddUintVarCache(&gChunkSizeKB, PREF_CHUNK_SIZE,
-                                             kDefaultChunkSizeKB))) {
-    NS_WARNING("Unable to respond to temp storage pref changes!");
-  }
-
-  if (NS_FAILED(Preferences::AddBoolVarCache(&gTestingEnabled,
-                                             PREF_TESTING_FEATURES, false))) {
-    NS_WARNING("Unable to respond to testing pref changes!");
-  }
 
   nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();
