@@ -485,6 +485,16 @@ void nsIOService::CallOrWaitForSocketProcess(
   }
 }
 
+int32_t nsIOService::SocketProcessPid() {
+  if (!mSocketProcess) {
+    return 0;
+  }
+  if (SocketProcessParent *actor = mSocketProcess->GetActor()) {
+    return (int32_t)actor->OtherPid();
+  }
+  return 0;
+}
+
 bool nsIOService::IsSocketProcessLaunchComplete() {
   MOZ_ASSERT(NS_IsMainThread());
   return mSocketProcessLaunchComplete;
