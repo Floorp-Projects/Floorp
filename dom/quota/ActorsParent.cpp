@@ -423,24 +423,17 @@ class DirectoryLockImpl final : public DirectoryLock {
 
 class QuotaManager::CreateRunnable final : public BackgroundThreadObject,
                                            public Runnable {
-  nsCOMPtr<nsIEventTarget> mMainEventTarget;
   nsTArray<nsCOMPtr<nsIRunnable>> mCallbacks;
   RefPtr<QuotaManager> mManager;
   nsresult mResultCode;
 
-  enum class State {
-    Initial,
-    RegisteringObserver,
-    CallingCallbacks,
-    Completed
-  };
+  enum class State { Initial, CallingCallbacks, Completed };
 
   State mState;
 
  public:
-  explicit CreateRunnable(nsIEventTarget* aMainEventTarget)
+  CreateRunnable()
       : Runnable("dom::quota::QuotaManager::CreateRunnable"),
-        mMainEventTarget(aMainEventTarget),
         mResultCode(NS_OK),
         mState(State::Initial) {
     AssertIsOnBackgroundThread();
@@ -457,8 +450,6 @@ class QuotaManager::CreateRunnable final : public BackgroundThreadObject,
   ~CreateRunnable() {}
 
   nsresult Init();
-
-  nsresult RegisterObserver();
 
   void CallCallbacks();
 
@@ -2166,6 +2157,14 @@ void InitializeQuotaManager() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!gQuotaManagerInitialized);
 
+  if (!QuotaManager::IsRunningGTests()) {
+    // This service has to be started on the main thread currently.
+    nsCOMPtr<mozIStorageService> ss;
+    if (NS_WARN_IF(!(ss = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID)))) {
+      NS_WARNING("Failed to get storage service!");
+    }
+  }
+
   if (NS_FAILED(QuotaManager::Initialize())) {
     NS_WARNING("Failed to initialize quota manager!");
   }
@@ -2330,22 +2329,6 @@ nsresult QuotaManager::CreateRunnable::Init() {
   return NS_OK;
 }
 
-nsresult QuotaManager::CreateRunnable::RegisterObserver() {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mState == State::RegisteringObserver);
-
-  nsresult rv;
-
-  // This service has to be started on the main thread currently.
-  nsCOMPtr<mozIStorageService> ss =
-      do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
 void QuotaManager::CreateRunnable::CallCallbacks() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::CallingCallbacks);
@@ -2372,13 +2355,6 @@ auto QuotaManager::CreateRunnable::GetNextState(
     nsCOMPtr<nsIEventTarget>& aThread) -> State {
   switch (mState) {
     case State::Initial:
-      if (mMainEventTarget) {
-        aThread = mMainEventTarget;
-      } else {
-        aThread = GetMainThreadEventTarget();
-      }
-      return State::RegisteringObserver;
-    case State::RegisteringObserver:
       aThread = mOwningThread;
       return State::CallingCallbacks;
     case State::CallingCallbacks:
@@ -2396,10 +2372,6 @@ QuotaManager::CreateRunnable::Run() {
   switch (mState) {
     case State::Initial:
       rv = Init();
-      break;
-
-    case State::RegisteringObserver:
-      rv = RegisterObserver();
       break;
 
     case State::CallingCallbacks:
@@ -2937,7 +2909,7 @@ void QuotaManager::GetOrCreate(nsIRunnable* aCallback,
     MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(aCallback));
   } else {
     if (!gCreateRunnable) {
-      gCreateRunnable = new CreateRunnable(aMainEventTarget);
+      gCreateRunnable = new CreateRunnable();
       NS_DispatchToCurrentThread(gCreateRunnable);
     }
 
