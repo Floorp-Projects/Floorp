@@ -223,7 +223,7 @@ public class WebRequestError extends Exception {
      * @param category An error category, e.g. {@link #ERROR_CATEGORY_URI}
      */
     public WebRequestError(@Error int code, @ErrorCategory int category) {
-        super(String.format("Request failed, error=%d, category=%d", code, category));
+        super(String.format("Request failed, error=0x%x, category=0x%x", code, category));
         this.code = code;
         this.category = category;
     }

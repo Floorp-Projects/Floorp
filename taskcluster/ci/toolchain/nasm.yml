@@ -1,18 +1,49 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+job-defaults:
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 1800
+    run:
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/nasm.tar.bz2
+
 win64-nasm:
     description: "nasm win64 build"
     treeherder:
         symbol: TW64(nasm)
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         docker-image: {in-tree: mingw32-build}
-        max-run-time: 1800
     run:
         script: build-nasm.sh
-        resources:
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
-        toolchain-artifact: public/build/nasm.tar.bz2
+        arguments: ['win64']
     toolchains:
         - linux64-clang-trunk-mingw-x64
     fetches:
         fetch:
             - nasm-2.14.02
+
+linux64-nasm:
+    description: "nasm linux64 build"
+    treeherder:
+        symbol: TL(nasm)
+    run:
+        script: build-nasm.sh
+        arguments: ['linux64']
+    fetches:
+        fetch:
+            - nasm-2.14.02
+
+linux64-nasm-2.13.02:
+    description: "nasm linux64 minimum supported version build"
+    treeherder:
+        symbol: TL(nasm-2.13.02)
+    run:
+        script: build-nasm.sh
+        arguments: ['linux64']
+    fetches:
+        fetch:
+            - nasm-2.13.02

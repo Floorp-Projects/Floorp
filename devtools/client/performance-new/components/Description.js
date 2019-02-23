@@ -48,16 +48,16 @@ class Description extends PureComponent {
           "performance panel. It records the entire browser, and then opens up " +
           "and shares the profile with ",
         this.renderLink(
-          "https://perf-html.io",
-          "perf-html.io"
+          "https://profiler.firefox.com",
+          "profiler.firefox.com"
         ),
         ", a Mozilla performance analysis tool."
       ),
       p(null,
         "This is still a prototype. Join along or file bugs at: ",
         this.renderLink(
-          "https://github.com/firefox-devtools/perf.html",
-          "github.com/firefox-devtools/perf.html"
+          "https://github.com/firefox-devtools/profiler",
+          "github.com/firefox-devtools/profiler"
         ),
         "."
       )

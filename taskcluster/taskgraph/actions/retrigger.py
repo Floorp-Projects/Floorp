@@ -27,7 +27,6 @@ logger = logging.getLogger(__name__)
     title='Retrigger',
     name='retrigger',
     symbol='rt',
-    kind='hook',
     cb_name='retrigger-decision',
     description=textwrap.dedent('''\
         Create a clone of the task (retriggering decision, action, and cron tasks requires
@@ -55,7 +54,6 @@ def retrigger_decision_action(parameters, graph_config, input, task_group_id, ta
     title='Retrigger',
     name='retrigger',
     symbol='rt',
-    kind='hook',
     generic=True,
     description=(
         'Create a clone of the task.'

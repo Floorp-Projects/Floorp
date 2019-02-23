@@ -25,6 +25,7 @@
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
+#include "mozilla/dom/JSWindowActorService.h"
 
 #ifdef MOZ_XUL
 #  include "nsXULElement.h"
@@ -50,6 +51,8 @@ nsWindowRoot::~nsWindowRoot() {
   if (mListenerManager) {
     mListenerManager->Disconnect();
   }
+
+  JSWindowActorService::UnregisterWindowRoot(this);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsWindowRoot, mWindow, mListenerManager,
@@ -329,5 +332,11 @@ void nsWindowRoot::EnumerateBrowsers(BrowserEnumerator aEnumFunc, void* aArg) {
 
 already_AddRefed<EventTarget> NS_NewWindowRoot(nsPIDOMWindowOuter* aWindow) {
   nsCOMPtr<EventTarget> result = new nsWindowRoot(aWindow);
+
+  RefPtr<JSWindowActorService> wasvc = JSWindowActorService::GetSingleton();
+  if (wasvc) {
+    wasvc->RegisterWindowRoot(result);
+  }
+
   return result.forget();
 }

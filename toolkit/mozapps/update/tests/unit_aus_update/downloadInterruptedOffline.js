@@ -3,11 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-function run_test() {
+async function run_test() {
   setupTestCommon();
-
   debugDump("testing mar download when offline");
-
   Services.prefs.setBoolPref(PREF_APP_UPDATE_STAGING_ENABLED, false);
   start_httpserver();
   setUpdateURL(gURLData + gHTTPHandlerPath);
@@ -16,31 +14,9 @@ function run_test() {
   let patches = getRemotePatchString({});
   let updates = getRemoteUpdateString({}, patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
-  gCheckFunc = updateCheckCompleted;
-  gUpdateChecker.checkForUpdates(updateCheckListener, true);
-}
-
-/**
- * Since gCheckFunc value is the updateCheckCompleted function at this stage
- * this is called after the update check completes in updateCheckListener.
- */
-function updateCheckCompleted() {
-  Assert.equal(gUpdateCount, 1,
-               "the update count" + MSG_SHOULD_EQUAL);
-  let bestUpdate = gAUS.selectUpdate(gUpdates, gUpdateCount);
-  let state = gAUS.downloadUpdate(bestUpdate, false);
-  if (state == STATE_NONE || state == STATE_FAILED) {
-    do_throw("nsIApplicationUpdateService:downloadUpdate returned " + state);
-  }
-  gAUS.addDownloadListener(downloadListener);
-}
-
-/**
- * Called after the download listener onStopRequest is called.
- */
-function downloadListenerStop() {
-  Assert.equal(gStatusResult, Cr.NS_OK,
-               "the download status result" + MSG_SHOULD_EQUAL);
-  gAUS.removeDownloadListener(downloadListener);
+  await waitForUpdateCheck(true, {updateCount: 1}).then(async (aArgs) => {
+    await waitForUpdateDownload(aArgs.updates, aArgs.updateCount,
+                                Cr.NS_OK);
+  });
   stop_httpserver(doTestFinish);
 }

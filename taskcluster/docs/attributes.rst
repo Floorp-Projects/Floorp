@@ -136,6 +136,12 @@ serviceworker_e10s
 For test suites which distinguish whether or not they run with the serviceworker
 e10s redesign enabled.
 
+socketprocess_e10s
+==================
+
+For test suites which distinguish whether or not they run with the socket
+process enabled.
+
 e10s
 ====
 

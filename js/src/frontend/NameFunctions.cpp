@@ -7,10 +7,12 @@
 #include "frontend/NameFunctions.h"
 
 #include "mozilla/MemoryChecking.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
 
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/ParseNode.h"
+#include "frontend/ParseNodeVisitor.h"
 #include "frontend/SharedContext.h"
 #include "util/StringBuffer.h"
 #include "vm/JSFunction.h"
@@ -20,21 +22,32 @@ using namespace js::frontend;
 
 namespace {
 
-class NameResolver {
+class NameResolver : public ParseNodeVisitor<NameResolver> {
+  using Base = ParseNodeVisitor;
+
   static const size_t MaxParents = 100;
 
-  JSContext* cx;
-  size_t nparents; /* number of parents in the parents array */
+  RootedAtom prefix_;
+
+  // Number of nodes in the parents array.
+  size_t nparents_;
+
+  // Stack of ParseNodes from the root to the current node.
+  // Only elements 0..nparents_ are initialized.
   MOZ_INIT_OUTSIDE_CTOR
-  ParseNode*
-      parents[MaxParents]; /* history of ParseNodes we've been looking at */
-  StringBuffer* buf;       /* when resolving, buffer to append to */
+  ParseNode* parents_[MaxParents];
+
+  // When naming a function, the buffer where the name is built.
+  // When we are not under resolveFun, buf_ is empty.
+  StringBuffer buf_;
 
   /* Test whether a ParseNode represents a function invocation */
-  bool call(ParseNode* pn) { return pn && pn->isKind(ParseNodeKind::CallExpr); }
+  bool isCall(ParseNode* pn) {
+    return pn && pn->isKind(ParseNodeKind::CallExpr);
+  }
 
   /*
-   * Append a reference to a property named |name| to |buf|. If |name| is
+   * Append a reference to a property named |name| to |buf_|. If |name| is
    * a proper identifier name, then we append '.name'; otherwise, we
    * append '["name"]'.
    *
@@ -45,25 +58,25 @@ class NameResolver {
    */
   bool appendPropertyReference(JSAtom* name) {
     if (IsIdentifier(name)) {
-      return buf->append('.') && buf->append(name);
+      return buf_.append('.') && buf_.append(name);
     }
 
     /* Quote the string as needed. */
-    UniqueChars source = QuoteString(cx, name, '"');
-    return source && buf->append('[') &&
-           buf->append(source.get(), strlen(source.get())) && buf->append(']');
+    UniqueChars source = QuoteString(cx_, name, '"');
+    return source && buf_.append('[') &&
+           buf_.append(source.get(), strlen(source.get())) && buf_.append(']');
   }
 
-  /* Append a number to buf. */
+  /* Append a number to buf_. */
   bool appendNumber(double n) {
     char number[30];
     int digits = SprintfLiteral(number, "%g", n);
-    return buf->append(number, digits);
+    return buf_.append(number, digits);
   }
 
-  // Append "[<n>]" to buf, referencing a property named by a numeric literal.
+  // Append "[<n>]" to buf_, referencing a property named by a numeric literal.
   bool appendNumericPropertyReference(double n) {
-    return buf->append("[") && appendNumber(n) && buf->append(']');
+    return buf_.append("[") && appendNumber(n) && buf_.append(']');
   }
 
   /*
@@ -88,11 +101,11 @@ class NameResolver {
       case ParseNodeKind::Name:
       case ParseNodeKind::PrivateName:
         *foundName = true;
-        return buf->append(n->as<NameNode>().atom());
+        return buf_.append(n->as<NameNode>().atom());
 
       case ParseNodeKind::ThisExpr:
         *foundName = true;
-        return buf->append("this");
+        return buf_.append("this");
 
       case ParseNodeKind::ElemExpr: {
         PropertyByValue* elem = &n->as<PropertyByValue>();
@@ -102,13 +115,13 @@ class NameResolver {
         if (!*foundName) {
           return true;
         }
-        if (!buf->append('[') || !nameExpression(elem->right(), foundName)) {
+        if (!buf_.append('[') || !nameExpression(elem->right(), foundName)) {
           return false;
         }
         if (!*foundName) {
           return true;
         }
-        return buf->append(']');
+        return buf_.append(']');
       }
 
       case ParseNodeKind::NumberExpr:
@@ -116,7 +129,7 @@ class NameResolver {
         return appendNumber(n->as<NumericLiteral>().value());
 
       default:
-        /* We're confused as to what to call this function. */
+        // We're confused as to what to call this function.
         *foundName = false;
         return true;
     }
@@ -136,10 +149,13 @@ class NameResolver {
    * outermost node.
    */
   ParseNode* gatherNameable(ParseNode** nameable, size_t* size) {
+    MOZ_ASSERT(nparents_ > 0);
+    MOZ_ASSERT(parents_[nparents_ - 1]->is<FunctionNode>());
+
     *size = 0;
 
-    for (int pos = nparents - 1; pos >= 0; pos--) {
-      ParseNode* cur = parents[pos];
+    for (int pos = nparents_ - 2; pos >= 0; pos--) {
+      ParseNode* cur = parents_[pos];
       if (cur->is<AssignmentNode>()) {
         return cur;
       }
@@ -147,49 +163,46 @@ class NameResolver {
       switch (cur->getKind()) {
         case ParseNodeKind::PrivateName:
         case ParseNodeKind::Name:
-          return cur; /* found the initialized declaration */
+          return cur;  // found the initialized declaration
         case ParseNodeKind::ThisExpr:
-          return cur; /* Setting a property of 'this'. */
+          return cur;  // setting a property of 'this'
         case ParseNodeKind::Function:
-          return nullptr; /* won't find an assignment or declaration */
+          return nullptr;  // won't find an assignment or declaration
 
         case ParseNodeKind::ReturnStmt:
-          /*
-           * Normally the relevant parent of a node is its direct parent, but
-           * sometimes with code like:
-           *
-           *    var foo = (function() { return function() {}; })();
-           *
-           * the outer function is just a helper to create a scope for the
-           * returned function. Hence the name of the returned function should
-           * actually be 'foo'.  This loop sees if the current node is a
-           * ParseNodeKind::Return, and if there is a direct function
-           * call we skip to that.
-           */
+          // Normally the relevant parent of a node is its direct parent, but
+          // sometimes with code like:
+          //
+          //    var foo = (function() { return function() {}; })();
+          //
+          // the outer function is just a helper to create a scope for the
+          // returned function. Hence the name of the returned function should
+          // actually be 'foo'.  This loop sees if the current node is a
+          // ParseNodeKind::Return, and if there is a direct function
+          // call we skip to that.
           for (int tmp = pos - 1; tmp > 0; tmp--) {
             if (isDirectCall(tmp, cur)) {
               pos = tmp;
               break;
-            } else if (call(cur)) {
-              /* Don't skip too high in the tree */
+            }
+            if (isCall(cur)) {
+              // Don't skip too high in the tree.
               break;
             }
-            cur = parents[tmp];
+            cur = parents_[tmp];
           }
           break;
 
         case ParseNodeKind::Colon:
         case ParseNodeKind::Shorthand:
-          /*
-           * Record the ParseNodeKind::Colon/Shorthand but skip the
-           * ParseNodeKind::Object so we're not flagged as a
-           * contributor.
-           */
+          // Record the ParseNodeKind::Colon/Shorthand but skip the
+          // ParseNodeKind::Object so we're not flagged as a
+          // contributor.
           pos--;
           MOZ_FALLTHROUGH;
 
         default:
-          /* Save any other nodes we encounter on the way up. */
+          // Save any other nodes we encounter on the way up.
           MOZ_ASSERT(*size < MaxParents);
           nameable[(*size)++] = cur;
           break;
@@ -204,40 +217,42 @@ class NameResolver {
    * listed, then it is skipped. Otherwise an intelligent name is guessed to
    * assign to the function's displayAtom field.
    */
-  bool resolveFun(FunctionNode* funNode, HandleAtom prefix,
-                  MutableHandleAtom retAtom) {
+  MOZ_MUST_USE bool resolveFun(FunctionNode* funNode,
+                               MutableHandleAtom retAtom) {
     MOZ_ASSERT(funNode != nullptr);
-    RootedFunction fun(cx, funNode->funbox()->function());
+    RootedFunction fun(cx_, funNode->funbox()->function());
 
-    StringBuffer buf(cx);
-    this->buf = &buf;
+    MOZ_ASSERT(buf_.empty());
+    auto resetBuf = mozilla::MakeScopeExit([&] { buf_.clear(); });
 
     retAtom.set(nullptr);
 
-    /* If the function already has a name, use that */
+    // If the function already has a name, use that.
     if (fun->displayAtom() != nullptr) {
-      if (prefix == nullptr) {
+      if (prefix_ == nullptr) {
         retAtom.set(fun->displayAtom());
         return true;
       }
-      if (!buf.append(prefix) || !buf.append('/') ||
-          !buf.append(fun->displayAtom()))
+      if (!buf_.append(prefix_) || !buf_.append('/') ||
+          !buf_.append(fun->displayAtom()))
         return false;
-      retAtom.set(buf.finishAtom());
+      retAtom.set(buf_.finishAtom());
       return !!retAtom;
     }
 
-    /* If a prefix is specified, then it is a form of namespace */
-    if (prefix != nullptr && (!buf.append(prefix) || !buf.append('/'))) {
-      return false;
+    // If a prefix is specified, then it is a form of namespace.
+    if (prefix_ != nullptr) {
+      if (!buf_.append(prefix_) || !buf_.append('/')) {
+        return false;
+      }
     }
 
-    /* Gather all nodes relevant to naming */
+    // Gather all nodes relevant to naming.
     ParseNode* toName[MaxParents];
     size_t size;
     ParseNode* assignment = gatherNameable(toName, &size);
 
-    /* If the function is assigned to something, then that is very relevant */
+    // If the function is assigned to something, then that is very relevant.
     if (assignment) {
       if (assignment->is<AssignmentNode>()) {
         assignment = assignment->as<AssignmentNode>().left();
@@ -251,11 +266,9 @@ class NameResolver {
       }
     }
 
-    /*
-     * Other than the actual assignment, other relevant nodes to naming are
-     * those in object initializers and then particular nodes marking a
-     * contribution.
-     */
+    // Other than the actual assignment, other relevant nodes to naming are
+    // those in object initializers and then particular nodes marking a
+    // contribution.
     for (int pos = size - 1; pos >= 0; pos--) {
       ParseNode* node = toName[pos];
 
@@ -276,32 +289,28 @@ class NameResolver {
           MOZ_ASSERT(left->isKind(ParseNodeKind::ComputedName));
         }
       } else {
-        /*
-         * Don't have consecutive '<' characters, and also don't start
-         * with a '<' character.
-         */
-        if (!buf.empty() && buf.getChar(buf.length() - 1) != '<' &&
-            !buf.append('<')) {
+        // Don't have consecutive '<' characters, and also don't start
+        // with a '<' character.
+        if (!buf_.empty() && buf_.getChar(buf_.length() - 1) != '<' &&
+            !buf_.append('<')) {
           return false;
         }
       }
     }
 
-    /*
-     * functions which are "genuinely anonymous" but are contained in some
-     * other namespace are rather considered as "contributing" to the outer
-     * function, so give them a contribution symbol here.
-     */
-    if (!buf.empty() && buf.getChar(buf.length() - 1) == '/' &&
-        !buf.append('<')) {
+    // functions which are "genuinely anonymous" but are contained in some
+    // other namespace are rather considered as "contributing" to the outer
+    // function, so give them a contribution symbol here.
+    if (!buf_.empty() && buf_.getChar(buf_.length() - 1) == '/' &&
+        !buf_.append('<')) {
       return false;
     }
 
-    if (buf.empty()) {
+    if (buf_.empty()) {
       return true;
     }
 
-    retAtom.set(buf.finishAtom());
+    retAtom.set(buf_.finishAtom());
     if (!retAtom) {
       return false;
     }
@@ -315,42 +324,51 @@ class NameResolver {
   }
 
   /*
-   * Tests whether parents[pos] is a function call whose callee is cur.
+   * Tests whether parents_[pos] is a function call whose callee is cur.
    * This is the case for functions which do things like simply create a scope
    * for new variables and then return an anonymous function using this scope.
    */
   bool isDirectCall(int pos, ParseNode* cur) {
-    return pos >= 0 && call(parents[pos]) &&
-           parents[pos]->as<BinaryNode>().left() == cur;
+    return pos >= 0 && isCall(parents_[pos]) &&
+           parents_[pos]->as<BinaryNode>().left() == cur;
   }
 
-  bool resolveTemplateLiteral(ListNode* node, HandleAtom prefix) {
-    MOZ_ASSERT(node->isKind(ParseNodeKind::TemplateStringListExpr));
-    ParseNode* element = node->head();
-    while (true) {
-      MOZ_ASSERT(element->isKind(ParseNodeKind::TemplateStringExpr));
-
-      element = element->pn_next;
-      if (!element) {
-        return true;
-      }
-
-      if (!resolve(element, prefix)) {
-        return false;
-      }
-
-      element = element->pn_next;
+ public:
+  MOZ_MUST_USE bool visitFunction(FunctionNode* pn) {
+    RootedAtom savedPrefix(cx_, prefix_);
+    RootedAtom newPrefix(cx_);
+    if (!resolveFun(pn, &newPrefix)) {
+      return false;
     }
+
+    // If a function looks like (function(){})() where the parent node
+    // of the definition of the function is a call, then it shouldn't
+    // contribute anything to the namespace, so don't bother updating
+    // the prefix to whatever was returned.
+    if (!isDirectCall(nparents_ - 2, pn)) {
+      prefix_ = newPrefix;
+    }
+
+    bool ok = Base::visitFunction(pn);
+
+    prefix_ = savedPrefix;
+    return ok;
   }
 
-  bool resolveTaggedTemplate(BinaryNode* taggedTemplate, HandleAtom prefix) {
-    MOZ_ASSERT(taggedTemplate->isKind(ParseNodeKind::TaggedTemplateExpr));
+  // Skip this type of node. It never contains functions.
+  MOZ_MUST_USE bool visitCallSiteObj(CallSiteNode* callSite) {
+    // This node only contains internal strings or undefined and an array -- no
+    // user-controlled expressions.
+    return true;
+  }
 
+  // Skip walking the list of string parts, which never contains functions.
+  MOZ_MUST_USE bool visitTaggedTemplateExpr(BinaryNode* taggedTemplate) {
     ParseNode* tag = taggedTemplate->left();
 
     // The leading expression, e.g. |tag| in |tag`foo`|,
     // that might contain functions.
-    if (!resolve(tag, prefix)) {
+    if (!visit(tag)) {
       return false;
     }
 
@@ -376,7 +394,7 @@ class NameResolver {
     // Next come any interpolated expressions in the tagged template.
     ParseNode* interpolated = element->pn_next;
     for (; interpolated; interpolated = interpolated->pn_next) {
-      if (!resolve(interpolated, prefix)) {
+      if (!visit(interpolated)) {
         return false;
       }
     }
@@ -384,613 +402,68 @@ class NameResolver {
     return true;
   }
 
+ private:
+  // Speed hack: this type of node can't contain functions, so skip walking it.
+  MOZ_MUST_USE bool internalVisitSpecList(ListNode* pn) {
+    // Import/export spec lists contain import/export specs containing
+    // only pairs of names. Alternatively, an export spec list may
+    // contain a single export batch specifier.
+#ifdef DEBUG
+    bool isImport = pn->isKind(ParseNodeKind::ImportSpecList);
+    ParseNode* item = pn->head();
+    if (!isImport && item && item->isKind(ParseNodeKind::ExportBatchSpecStmt)) {
+      MOZ_ASSERT(item->is<NullaryNode>());
+    } else {
+      for (ParseNode* item : pn->contents()) {
+        BinaryNode* spec = &item->as<BinaryNode>();
+        MOZ_ASSERT(spec->isKind(isImport ? ParseNodeKind::ImportSpec
+                                         : ParseNodeKind::ExportSpec));
+        MOZ_ASSERT(spec->left()->isKind(ParseNodeKind::Name));
+        MOZ_ASSERT(!spec->left()->as<NameNode>().initializer());
+        MOZ_ASSERT(spec->right()->isKind(ParseNodeKind::Name));
+        MOZ_ASSERT(!spec->right()->as<NameNode>().initializer());
+      }
+    }
+#endif
+    return true;
+  }
+
  public:
-  explicit NameResolver(JSContext* cx) : cx(cx), nparents(0), buf(nullptr) {}
+  MOZ_MUST_USE bool visitImportSpecList(ListNode* pn) {
+    return internalVisitSpecList(pn);
+  }
+
+  MOZ_MUST_USE bool visitExportSpecList(ListNode* pn) {
+    return internalVisitSpecList(pn);
+  }
+
+  explicit NameResolver(JSContext* cx)
+      : ParseNodeVisitor(cx), prefix_(cx), nparents_(0), buf_(cx) {}
 
   /*
-   * Resolve all names for anonymous functions recursively within the
-   * ParseNode instance given. The prefix is for each subsequent name, and
-   * should initially be nullptr.
+   * Resolve names for all anonymous functions in the given ParseNode tree.
    */
-  bool resolve(ParseNode* const cur, HandleAtom prefixArg = nullptr) {
-    RootedAtom prefix(cx, prefixArg);
-
-    MOZ_ASSERT(cur != nullptr);
-    if (cur->is<FunctionNode>()) {
-      RootedAtom prefix2(cx);
-      if (!resolveFun(&cur->as<FunctionNode>(), prefix, &prefix2)) {
-        return false;
-      }
-
-      /*
-       * If a function looks like (function(){})() where the parent node
-       * of the definition of the function is a call, then it shouldn't
-       * contribute anything to the namespace, so don't bother updating
-       * the prefix to whatever was returned.
-       */
-      if (!isDirectCall(nparents - 1, cur)) {
-        prefix = prefix2;
-      }
-    }
-
-    if (nparents >= MaxParents) {
+  MOZ_MUST_USE bool visit(ParseNode* pn) {
+    // Push pn to the parse node stack.
+    if (nparents_ >= MaxParents) {
+      // Silently skip very deeply nested functions.
       return true;
     }
+    auto initialParents = nparents_;
+    parents_[initialParents] = pn;
+    nparents_++;
 
-    auto initialParents = nparents;
-    parents[initialParents] = cur;
-    nparents++;
+    bool ok = Base::visit(pn);
 
-    switch (cur->getKind()) {
-      // Nodes with no children that might require name resolution need no
-      // further work.
-      case ParseNodeKind::EmptyStmt:
-      case ParseNodeKind::TrueExpr:
-      case ParseNodeKind::FalseExpr:
-      case ParseNodeKind::NullExpr:
-      case ParseNodeKind::RawUndefinedExpr:
-      case ParseNodeKind::Elision:
-      case ParseNodeKind::Generator:
-      case ParseNodeKind::ExportBatchSpecStmt:
-      case ParseNodeKind::PosHolder:
-        MOZ_ASSERT(cur->is<NullaryNode>());
-        break;
-
-      case ParseNodeKind::DebuggerStmt:
-        MOZ_ASSERT(cur->is<DebuggerStatement>());
-        break;
-
-      case ParseNodeKind::BreakStmt:
-        MOZ_ASSERT(cur->is<BreakStatement>());
-        break;
-
-      case ParseNodeKind::ContinueStmt:
-        MOZ_ASSERT(cur->is<ContinueStatement>());
-        break;
-
-      case ParseNodeKind::ObjectPropertyName:
-      case ParseNodeKind::PrivateName:  // TODO(khyperia): Implement private
-                                        // field access.
-      case ParseNodeKind::StringExpr:
-      case ParseNodeKind::TemplateStringExpr:
-        MOZ_ASSERT(cur->is<NameNode>());
-        break;
-
-      case ParseNodeKind::RegExpExpr:
-        MOZ_ASSERT(cur->is<RegExpLiteral>());
-        break;
-
-      case ParseNodeKind::NumberExpr:
-        MOZ_ASSERT(cur->is<NumericLiteral>());
-        break;
-
-      case ParseNodeKind::BigIntExpr:
-        MOZ_ASSERT(cur->is<BigIntLiteral>());
-        break;
-
-      case ParseNodeKind::TypeOfNameExpr:
-      case ParseNodeKind::SuperBase:
-        MOZ_ASSERT(cur->as<UnaryNode>().kid()->isKind(ParseNodeKind::Name));
-        MOZ_ASSERT(!cur->as<UnaryNode>().kid()->as<NameNode>().initializer());
-        break;
-
-      case ParseNodeKind::NewTargetExpr:
-      case ParseNodeKind::ImportMetaExpr: {
-        MOZ_ASSERT(
-            cur->as<BinaryNode>().left()->isKind(ParseNodeKind::PosHolder));
-        MOZ_ASSERT(
-            cur->as<BinaryNode>().right()->isKind(ParseNodeKind::PosHolder));
-        break;
-      }
-
-      // Nodes with a single non-null child requiring name resolution.
-      case ParseNodeKind::ExpressionStmt:
-      case ParseNodeKind::TypeOfExpr:
-      case ParseNodeKind::VoidExpr:
-      case ParseNodeKind::NotExpr:
-      case ParseNodeKind::BitNotExpr:
-      case ParseNodeKind::ThrowStmt:
-      case ParseNodeKind::DeleteNameExpr:
-      case ParseNodeKind::DeletePropExpr:
-      case ParseNodeKind::DeleteElemExpr:
-      case ParseNodeKind::DeleteExpr:
-      case ParseNodeKind::NegExpr:
-      case ParseNodeKind::PosExpr:
-      case ParseNodeKind::PreIncrementExpr:
-      case ParseNodeKind::PostIncrementExpr:
-      case ParseNodeKind::PreDecrementExpr:
-      case ParseNodeKind::PostDecrementExpr:
-      case ParseNodeKind::ComputedName:
-      case ParseNodeKind::Spread:
-      case ParseNodeKind::MutateProto:
-      case ParseNodeKind::ExportStmt:
-        if (!resolve(cur->as<UnaryNode>().kid(), prefix)) {
-          return false;
-        }
-        break;
-
-      // Nodes with a single nullable child.
-      case ParseNodeKind::ThisExpr:
-        if (ParseNode* expr = cur->as<ThisLiteral>().kid()) {
-          if (!resolve(expr, prefix)) {
-            return false;
-          }
-        }
-        break;
-
-      // Binary nodes with two non-null children.
-      case ParseNodeKind::AssignExpr:
-      case ParseNodeKind::AddAssignExpr:
-      case ParseNodeKind::SubAssignExpr:
-      case ParseNodeKind::BitOrAssignExpr:
-      case ParseNodeKind::BitXorAssignExpr:
-      case ParseNodeKind::BitAndAssignExpr:
-      case ParseNodeKind::LshAssignExpr:
-      case ParseNodeKind::RshAssignExpr:
-      case ParseNodeKind::UrshAssignExpr:
-      case ParseNodeKind::MulAssignExpr:
-      case ParseNodeKind::DivAssignExpr:
-      case ParseNodeKind::ModAssignExpr:
-      case ParseNodeKind::PowAssignExpr:
-      case ParseNodeKind::Colon:
-      case ParseNodeKind::Shorthand:
-      case ParseNodeKind::DoWhileStmt:
-      case ParseNodeKind::WhileStmt:
-      case ParseNodeKind::SwitchStmt:
-      case ParseNodeKind::ForStmt:
-      case ParseNodeKind::ClassMethod:
-      case ParseNodeKind::SetThis: {
-        BinaryNode* node = &cur->as<BinaryNode>();
-        if (!resolve(node->left(), prefix)) {
-          return false;
-        }
-        if (!resolve(node->right(), prefix)) {
-          return false;
-        }
-        break;
-      }
-
-      case ParseNodeKind::ClassField: {
-        ClassField* node = &cur->as<ClassField>();
-        if (!resolve(&node->name(), prefix)) {
-          return false;
-        }
-
-        if (node->hasInitializer()) {
-          if (!resolve(&node->initializer(), prefix)) {
-            return false;
-          }
-        }
-
-        break;
-      }
-
-      case ParseNodeKind::ElemExpr: {
-        PropertyByValue* elem = &cur->as<PropertyByValue>();
-        if (!elem->isSuper() && !resolve(&elem->expression(), prefix)) {
-          return false;
-        }
-        if (!resolve(&elem->key(), prefix)) {
-          return false;
-        }
-        break;
-      }
-
-      case ParseNodeKind::WithStmt: {
-        BinaryNode* node = &cur->as<BinaryNode>();
-        if (!resolve(node->left(), prefix)) {
-          return false;
-        }
-        if (!resolve(node->right(), prefix)) {
-          return false;
-        }
-        break;
-      }
-
-      case ParseNodeKind::Case: {
-        CaseClause* caseClause = &cur->as<CaseClause>();
-        if (ParseNode* caseExpr = caseClause->caseExpression()) {
-          if (!resolve(caseExpr, prefix)) {
-            return false;
-          }
-        }
-        if (!resolve(caseClause->statementList(), prefix)) {
-          return false;
-        }
-        break;
-      }
-
-      case ParseNodeKind::InitialYield: {
-#ifdef DEBUG
-        AssignmentNode* assignNode =
-            &cur->as<UnaryNode>().kid()->as<AssignmentNode>();
-        MOZ_ASSERT(assignNode->left()->isKind(ParseNodeKind::Name));
-        MOZ_ASSERT(assignNode->right()->isKind(ParseNodeKind::Generator));
-#endif
-        break;
-      }
-
-      case ParseNodeKind::YieldStarExpr:
-        if (!resolve(cur->as<UnaryNode>().kid(), prefix)) {
-          return false;
-        }
-        break;
-
-      case ParseNodeKind::YieldExpr:
-      case ParseNodeKind::AwaitExpr:
-        if (ParseNode* expr = cur->as<UnaryNode>().kid()) {
-          if (!resolve(expr, prefix)) {
-            return false;
-          }
-        }
-        break;
-
-      case ParseNodeKind::ReturnStmt:
-        if (ParseNode* returnValue = cur->as<UnaryNode>().kid()) {
-          if (!resolve(returnValue, prefix)) {
-            return false;
-          }
-        }
-        break;
-
-      case ParseNodeKind::ImportDecl:
-      case ParseNodeKind::ExportFromStmt:
-      case ParseNodeKind::ExportDefaultStmt: {
-        BinaryNode* node = &cur->as<BinaryNode>();
-        // The left halves of Import and ExportFrom don't contain any
-        // unconstrained expressions, but it's very hard to assert this to
-        // safely rely on it. So recur anyway.
-        if (!resolve(node->left(), prefix)) {
-          return false;
-        }
-        MOZ_ASSERT_IF(!node->isKind(ParseNodeKind::ExportDefaultStmt),
-                      node->right()->isKind(ParseNodeKind::StringExpr));
-        break;
-      }
-
-      // Ternary nodes with three expression children.
-      case ParseNodeKind::ConditionalExpr: {
-        TernaryNode* condNode = &cur->as<TernaryNode>();
-        if (!resolve(condNode->kid1(), prefix)) {
-          return false;
-        }
-        if (!resolve(condNode->kid2(), prefix)) {
-          return false;
-        }
-        if (!resolve(condNode->kid3(), prefix)) {
-          return false;
-        }
-        break;
-      }
-
-      // The first part of a for-in/of is the declaration in the loop (or
-      // null if no declaration).  The latter two parts are the location
-      // assigned each loop and the value being looped over; obviously,
-      // either might contain functions to name.  Declarations may (through
-      // computed property names, and possibly through [deprecated!]
-      // initializers) also contain functions to name.
-      case ParseNodeKind::ForIn:
-      case ParseNodeKind::ForOf: {
-        TernaryNode* forHead = &cur->as<TernaryNode>();
-        if (!resolve(forHead->kid1(), prefix)) {
-          return false;
-        }
-        MOZ_ASSERT(!forHead->kid2());
-        if (!resolve(forHead->kid3(), prefix)) {
-          return false;
-        }
-        break;
-      }
-
-      // Every part of a for(;;) head may contain a function needing name
-      // resolution.
-      case ParseNodeKind::ForHead: {
-        TernaryNode* forHead = &cur->as<TernaryNode>();
-        if (ParseNode* init = forHead->kid1()) {
-          if (!resolve(init, prefix)) {
-            return false;
-          }
-        }
-        if (ParseNode* cond = forHead->kid2()) {
-          if (!resolve(cond, prefix)) {
-            return false;
-          }
-        }
-        if (ParseNode* update = forHead->kid3()) {
-          if (!resolve(update, prefix)) {
-            return false;
-          }
-        }
-        break;
-      }
-
-      // The first child of a class is a pair of names referring to it,
-      // inside and outside the class.  The second is the class's heritage,
-      // if any.  The third is the class body.
-      case ParseNodeKind::ClassDecl: {
-        ClassNode* classNode = &cur->as<ClassNode>();
-#ifdef DEBUG
-        if (classNode->names()) {
-          ClassNames* names = classNode->names();
-          if (NameNode* outerBinding = names->outerBinding()) {
-            MOZ_ASSERT(outerBinding->isKind(ParseNodeKind::Name));
-            MOZ_ASSERT(!outerBinding->initializer());
-          }
-
-          NameNode* innerBinding = names->innerBinding();
-          MOZ_ASSERT(innerBinding->isKind(ParseNodeKind::Name));
-          MOZ_ASSERT(!innerBinding->initializer());
-        }
-#endif
-        if (ParseNode* heritage = classNode->heritage()) {
-          if (!resolve(heritage, prefix)) {
-            return false;
-          }
-        }
-        if (!resolve(classNode->memberList(), prefix)) {
-          return false;
-        }
-        break;
-      }
-
-      // The condition and consequent are non-optional, but the alternative
-      // might be omitted.
-      case ParseNodeKind::IfStmt: {
-        TernaryNode* ifNode = &cur->as<TernaryNode>();
-        if (!resolve(ifNode->kid1(), prefix)) {
-          return false;
-        }
-        if (!resolve(ifNode->kid2(), prefix)) {
-          return false;
-        }
-        if (ParseNode* alternative = ifNode->kid3()) {
-          if (!resolve(alternative, prefix)) {
-            return false;
-          }
-        }
-        break;
-      }
-
-      // The statements in the try-block are mandatory.  The catch-blocks
-      // and finally block are optional (but at least one or the other must
-      // be present).
-      case ParseNodeKind::TryStmt: {
-        TryNode* tryNode = &cur->as<TryNode>();
-        if (!resolve(tryNode->body(), prefix)) {
-          return false;
-        }
-        MOZ_ASSERT(tryNode->catchScope() || tryNode->finallyBlock());
-        if (LexicalScopeNode* catchScope = tryNode->catchScope()) {
-          MOZ_ASSERT(catchScope->scopeBody()->isKind(ParseNodeKind::Catch));
-          MOZ_ASSERT(catchScope->scopeBody()->is<BinaryNode>());
-          if (!resolve(catchScope->scopeBody(), prefix)) {
-            return false;
-          }
-        }
-        if (ParseNode* finallyBlock = tryNode->finallyBlock()) {
-          if (!resolve(finallyBlock, prefix)) {
-            return false;
-          }
-        }
-        break;
-      }
-
-      // The first child, the catch-pattern, may contain functions via
-      // computed property names.  The optional catch-conditions may
-      // contain any expression.  The catch statements, of course, may
-      // contain arbitrary expressions.
-      case ParseNodeKind::Catch: {
-        BinaryNode* node = &cur->as<BinaryNode>();
-        if (ParseNode* varNode = node->left()) {
-          if (!resolve(varNode, prefix)) {
-            return false;
-          }
-        }
-        if (!resolve(node->right(), prefix)) {
-          return false;
-        }
-        break;
-      }
-
-      // Nodes with arbitrary-expression children.
-      case ParseNodeKind::OrExpr:
-      case ParseNodeKind::AndExpr:
-      case ParseNodeKind::BitOrExpr:
-      case ParseNodeKind::BitXorExpr:
-      case ParseNodeKind::BitAndExpr:
-      case ParseNodeKind::StrictEqExpr:
-      case ParseNodeKind::EqExpr:
-      case ParseNodeKind::StrictNeExpr:
-      case ParseNodeKind::NeExpr:
-      case ParseNodeKind::LtExpr:
-      case ParseNodeKind::LeExpr:
-      case ParseNodeKind::GtExpr:
-      case ParseNodeKind::GeExpr:
-      case ParseNodeKind::InstanceOfExpr:
-      case ParseNodeKind::InExpr:
-      case ParseNodeKind::LshExpr:
-      case ParseNodeKind::RshExpr:
-      case ParseNodeKind::UrshExpr:
-      case ParseNodeKind::AddExpr:
-      case ParseNodeKind::SubExpr:
-      case ParseNodeKind::MulExpr:
-      case ParseNodeKind::DivExpr:
-      case ParseNodeKind::ModExpr:
-      case ParseNodeKind::PowExpr:
-      case ParseNodeKind::PipelineExpr:
-      case ParseNodeKind::CommaExpr:
-      case ParseNodeKind::ArrayExpr:
-      case ParseNodeKind::StatementList:
-      case ParseNodeKind::ParamsBody:
-      // Initializers for individual variables, and computed property names
-      // within destructuring patterns, may contain unnamed functions.
-      case ParseNodeKind::VarStmt:
-      case ParseNodeKind::ConstDecl:
-      case ParseNodeKind::LetDecl:
-        for (ParseNode* element : cur->as<ListNode>().contents()) {
-          if (!resolve(element, prefix)) {
-            return false;
-          }
-        }
-        break;
-
-      case ParseNodeKind::ObjectExpr:
-      case ParseNodeKind::ClassMemberList:
-        for (ParseNode* element : cur->as<ListNode>().contents()) {
-          if (!resolve(element, prefix)) {
-            return false;
-          }
-        }
-        break;
-
-      // A template string list's contents alternate raw template string
-      // contents with expressions interpolated into the overall literal.
-      case ParseNodeKind::TemplateStringListExpr:
-        if (!resolveTemplateLiteral(&cur->as<ListNode>(), prefix)) {
-          return false;
-        }
-        break;
-
-      case ParseNodeKind::TaggedTemplateExpr:
-        if (!resolveTaggedTemplate(&cur->as<BinaryNode>(), prefix)) {
-          return false;
-        }
-        break;
-
-      case ParseNodeKind::NewExpr:
-      case ParseNodeKind::CallExpr:
-      case ParseNodeKind::SuperCallExpr: {
-        BinaryNode* callNode = &cur->as<BinaryNode>();
-        if (!resolve(callNode->left(), prefix)) {
-          return false;
-        }
-        if (!resolve(callNode->right(), prefix)) {
-          return false;
-        }
-        break;
-      }
-
-      // Handles the arguments for new/call/supercall, but does _not_ handle
-      // the Arguments node used by tagged template literals, since that is
-      // special-cased inside of resolveTaggedTemplate.
-      case ParseNodeKind::Arguments:
-        for (ParseNode* element : cur->as<ListNode>().contents()) {
-          if (!resolve(element, prefix)) {
-            return false;
-          }
-        }
-        break;
-
-      // Import/export spec lists contain import/export specs containing
-      // only pairs of names. Alternatively, an export spec lists may
-      // contain a single export batch specifier.
-      case ParseNodeKind::ExportSpecList:
-      case ParseNodeKind::ImportSpecList: {
-#ifdef DEBUG
-        bool isImport = cur->isKind(ParseNodeKind::ImportSpecList);
-        ListNode* list = &cur->as<ListNode>();
-        ParseNode* item = list->head();
-        if (!isImport && item &&
-            item->isKind(ParseNodeKind::ExportBatchSpecStmt)) {
-          MOZ_ASSERT(item->is<NullaryNode>());
-          break;
-        }
-        for (ParseNode* item : list->contents()) {
-          BinaryNode* spec = &item->as<BinaryNode>();
-          MOZ_ASSERT(spec->isKind(isImport ? ParseNodeKind::ImportSpec
-                                           : ParseNodeKind::ExportSpec));
-          MOZ_ASSERT(spec->left()->isKind(ParseNodeKind::Name));
-          MOZ_ASSERT(!spec->left()->as<NameNode>().initializer());
-          MOZ_ASSERT(spec->right()->isKind(ParseNodeKind::Name));
-          MOZ_ASSERT(!spec->right()->as<NameNode>().initializer());
-        }
-#endif
-        break;
-      }
-
-      case ParseNodeKind::CallImportExpr: {
-        BinaryNode* node = &cur->as<BinaryNode>();
-        if (!resolve(node->right(), prefix)) {
-          return false;
-        }
-        break;
-      }
-
-      case ParseNodeKind::DotExpr: {
-        // Super prop nodes do not have a meaningful LHS
-        PropertyAccess* prop = &cur->as<PropertyAccess>();
-        if (prop->isSuper()) {
-          break;
-        }
-        if (!resolve(&prop->expression(), prefix)) {
-          return false;
-        }
-        break;
-      }
-
-      case ParseNodeKind::LabelStmt:
-        if (!resolve(cur->as<LabeledStatement>().statement(), prefix)) {
-          return false;
-        }
-        break;
-
-      case ParseNodeKind::Name:
-        if (ParseNode* init = cur->as<NameNode>().initializer()) {
-          if (!resolve(init, prefix)) {
-            return false;
-          }
-        }
-        break;
-
-      case ParseNodeKind::LexicalScope:
-        if (!resolve(cur->as<LexicalScopeNode>().scopeBody(), prefix)) {
-          return false;
-        }
-        break;
-
-      case ParseNodeKind::Function:
-        if (ParseNode* body = cur->as<FunctionNode>().body()) {
-          if (!resolve(body, prefix)) {
-            return false;
-          }
-        }
-        break;
-
-      case ParseNodeKind::Module:
-        if (ParseNode* body = cur->as<ModuleNode>().body()) {
-          if (!resolve(body, prefix)) {
-            return false;
-          }
-        }
-        break;
-
-        // Kinds that should be handled by parent node resolution.
-
-      case ParseNodeKind::ImportSpec:        // by ParseNodeKind::ImportSpecList
-      case ParseNodeKind::ExportSpec:        // by ParseNodeKind::ExportSpecList
-      case ParseNodeKind::CallSiteObjExpr:   // by ParseNodeKind::TaggedTemplate
-      case ParseNodeKind::ClassNames:        // by ParseNodeKind::ClassDecl
-      case ParseNodeKind::PropertyNameExpr:  // by ParseNodeKind::Dot
-        MOZ_CRASH("should have been handled by a parent node");
-
-      case ParseNodeKind::Limit:  // invalid sentinel value
-        MOZ_CRASH("invalid node kind");
-    }
-
-    nparents--;
-    MOZ_ASSERT(initialParents == nparents, "nparents imbalance detected");
-
-    // It would be nice to common up the repeated |parents[initialParents]|
-    // in a single variable, but the #if condition required to prevent an
-    // unused-variable warning across three separate conditionally-expanded
-    // macros would be super-ugly.  :-(
-    MOZ_ASSERT(parents[initialParents] == cur,
+    // Pop pn from the parse node stack.
+    nparents_--;
+    MOZ_ASSERT(initialParents == nparents_, "nparents imbalance detected");
+    MOZ_ASSERT(parents_[initialParents] == pn,
                "pushed child shouldn't change underneath us");
+    AlwaysPoison(&parents_[initialParents], 0xFF,
+                 sizeof(parents_[initialParents]), MemCheckKind::MakeUndefined);
 
-    AlwaysPoison(&parents[initialParents], 0xFF,
-                 sizeof(parents[initialParents]), MemCheckKind::MakeUndefined);
-
-    return true;
+    return ok;
   }
 };
 
@@ -1000,5 +473,5 @@ bool frontend::NameFunctions(JSContext* cx, ParseNode* pn) {
   AutoTraceLog traceLog(TraceLoggerForCurrentThread(cx),
                         TraceLogger_BytecodeNameFunctions);
   NameResolver nr(cx);
-  return nr.resolve(pn);
+  return nr.visit(pn);
 }

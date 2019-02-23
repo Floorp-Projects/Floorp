@@ -12,19 +12,12 @@ include ProtocolTypes;
 namespace mozilla {
 namespace ipc {
 
-// Use IPCStream or OptionalIPCStream in your ipdl to represent serialized
-// nsIInputStreams.  Then use AutoIPCStream from IPCStreamUtils.h to perform
-// the serialization.
+// Use IPCStream in your ipdl to represent serialized nsIInputStreams. Then use
+// AutoIPCStream from IPCStreamUtils.h to perform the serialization.
 struct IPCStream
 {
   InputStreamParams stream;
   OptionalFileDescriptorSet optionalFds;
-};
-
-union OptionalIPCStream
-{
-  IPCStream;
-  void_t;
 };
 
 } // namespace ipc

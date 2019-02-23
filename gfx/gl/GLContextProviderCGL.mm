@@ -56,6 +56,8 @@ class CGLLibrary {
     return mUseDoubleBufferedWindows;
   }
 
+  const auto& Library() const { return mOGLLibrary; }
+
  private:
   bool mInitialized = false;
   bool mUseDoubleBufferedWindows = true;
@@ -82,12 +84,6 @@ GLContextCGL::~GLContextCGL() {
   }
 }
 
-bool GLContextCGL::Init() {
-  if (!InitWithPrefix("gl", true)) return false;
-
-  return true;
-}
-
 CGLContextObj GLContextCGL::GetCGLContext() const {
   return static_cast<CGLContextObj>([mContext CGLContextObj]);
 }
@@ -112,8 +108,6 @@ bool GLContextCGL::IsCurrentImpl() const { return [NSOpenGLContext currentContex
 
 GLenum GLContextCGL::GetPreferredARGB32Format() const { return LOCAL_GL_BGRA; }
 
-bool GLContextCGL::SetupLookupFunction() { return false; }
-
 bool GLContextCGL::IsDoubleBuffered() const { return sCGLLibrary.UseDoubleBufferedWindows(); }
 
 bool GLContextCGL::SwapBuffers() {
@@ -124,6 +118,12 @@ bool GLContextCGL::SwapBuffers() {
 }
 
 void GLContextCGL::GetWSIInfo(nsCString* const out) const { out->AppendLiteral("CGL"); }
+
+Maybe<SymbolLoader> GLContextCGL::GetSymbolLoader() const
+{
+    const auto& lib = sCGLLibrary.Library();
+    return Some(SymbolLoader(*lib));
+}
 
 already_AddRefed<GLContext> GLContextProviderCGL::CreateWrappingExisting(void*, void*) {
   return nullptr;

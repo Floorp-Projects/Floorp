@@ -29,6 +29,7 @@ class EnterpriseCert {
   bool mIsRoot;
 };
 
+// This may block and must not be called from the main thread.
 nsresult GatherEnterpriseCerts(mozilla::Vector<EnterpriseCert>& certs);
 
 #endif  // EnterpriseRoots_h

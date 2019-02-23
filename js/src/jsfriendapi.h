@@ -556,6 +556,10 @@ extern JS_FRIEND_API JSObject* GetFirstGlobalInCompartment(
 // not being collected.
 extern JS_FRIEND_API bool CompartmentHasLiveGlobal(JS::Compartment* comp);
 
+// Returns true if this compartment can be shared across multiple Realms.  Used
+// when we're looking for an existing compartment to place a new Realm in.
+extern JS_FRIEND_API bool IsSharableCompartment(JS::Compartment* comp);
+
 /*
  * Shadow declarations of JS internal structures, for access by inline access
  * functions below. Do not use these structures in any other way. When adding

@@ -30,8 +30,6 @@
 
 "use strict";
 
-/* eslint-disable no-undef */
-
 const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
@@ -97,25 +95,12 @@ const MSG_SHOULD_EQUAL = " should equal the expected value";
 const MSG_SHOULD_EXIST = "the file or directory should exist";
 const MSG_SHOULD_NOT_EXIST = "the file or directory should not exist";
 
-// All we care about is that the last modified time has changed so that Mac OS
-// X Launch Services invalidates its cache so the test allows up to one minute
-// difference in the last modified time.
-const MAC_MAX_TIME_DIFFERENCE = 60000;
-
-// How many of do_execute_soon calls to wait before the test is aborted.
-const MAX_TIMEOUT_RUNS = 20000;
-
 // Time in seconds the helper application should sleep before exiting. The
 // helper can also be made to exit by writing |finish| to its input file.
 const HELPER_SLEEP_TIMEOUT = 180;
 
-// Maximum number of milliseconds the process that is launched can run before
-// the test will try to kill it.
-const APP_TIMER_TIMEOUT = 120000;
-
 // How many of do_timeout calls using FILE_IN_USE_TIMEOUT_MS to wait before the
 // test is aborted.
-const FILE_IN_USE_MAX_TIMEOUT_RUNS = 60;
 const FILE_IN_USE_TIMEOUT_MS = 1000;
 
 const PIPE_TO_NULL = AppConstants.platform == "win" ? ">nul" : "> /dev/null 2>&1";
@@ -124,24 +109,16 @@ const LOG_FUNCTION = info;
 
 const gHTTPHandlerPath = "updates.xml";
 
-// This default value will be overridden when using the http server.
-var gURLData = URL_HOST + "/";
-
+var gIsServiceTest;
 var gTestID;
 
+// This default value will be overridden when using the http server.
+var gURLData = URL_HOST + "/";
 var gTestserver;
 
 var gIncrementalDownloadErrorType;
 
-var gCheckFunc;
 var gResponseBody;
-var gResponseStatusCode = 200;
-var gRequestURL;
-var gUpdateCount;
-var gUpdates;
-var gStatusCode;
-var gStatusText;
-var gStatusResult;
 
 var gProcess;
 var gAppTimer;
@@ -157,14 +134,8 @@ var gPIDPersistProcess;
 var gCallbackBinFile = "callback_app" + mozinfo.bin_suffix;
 var gCallbackArgs = ["./", "callback.log", "Test Arg 2", "Test Arg 3"];
 var gPostUpdateBinFile = "postup_app" + mozinfo.bin_suffix;
-var gSvcOriginalLogContents;
-// Some update staging failures can remove the update. This allows tests to
-// specify that the status file and the active update should not be checked
-// after an update is staged.
-var gStagingRemovedUpdate = false;
 
 var gTimeoutRuns = 0;
-var gFileInUseTimeoutRuns = 0;
 
 // Environment related globals
 var gShouldResetEnv = undefined;
@@ -773,7 +744,7 @@ function setupTestCommon(aAppUpdateAutoEnabled = false) {
   let caller = Components.stack.caller;
   gTestID = caller.filename.toString().split("/").pop().split(".")[0];
 
-  if (gDebugTestLog && !IS_SERVICE_TEST) {
+  if (gDebugTestLog && !gIsServiceTest) {
     if (gTestsToLog.length == 0 || gTestsToLog.includes(gTestID)) {
       let logFile = do_get_file(gTestID + ".log", true);
       if (!logFile.exists()) {
@@ -790,7 +761,7 @@ function setupTestCommon(aAppUpdateAutoEnabled = false) {
 
   createAppInfo("xpcshell@tests.mozilla.org", APP_INFO_NAME, "1.0", "2.0");
 
-  if (IS_SERVICE_TEST && !shouldRunServiceTest()) {
+  if (gIsServiceTest && !shouldRunServiceTest()) {
     return false;
   }
 
@@ -829,7 +800,7 @@ function setupTestCommon(aAppUpdateAutoEnabled = false) {
   }
 
   if (AppConstants.platform == "win") {
-    Services.prefs.setBoolPref(PREF_APP_UPDATE_SERVICE_ENABLED, !!IS_SERVICE_TEST);
+    Services.prefs.setBoolPref(PREF_APP_UPDATE_SERVICE_ENABLED, !!gIsServiceTest);
   }
 
   adjustGeneralPaths();
@@ -1091,6 +1062,10 @@ function checkAppBundleModTime() {
   if (AppConstants.platform != "macosx") {
     return;
   }
+  // All we care about is that the last modified time has changed so that Mac OS
+  // X Launch Services invalidates its cache so the test allows up to one minute
+  // difference in the last modified time.
+  const MAC_MAX_TIME_DIFFERENCE = 60000;
   let now = Date.now();
   let applyToDir = getApplyDirFile();
   let timeDiff = Math.abs(applyToDir.lastModifiedTime - now);
@@ -1147,9 +1122,8 @@ function checkUpdateManager(aStatusFileState, aHasActiveUpdate,
 /**
  * Waits until the update files exist or not based on the parameters specified
  * when calling this function or the default values if the parameters are not
- * specified. After these conditions are met the waitForUpdateXMLFilesFinished
- * function is called.  This is necessary due to the update xml files being
- * written asynchronously by nsIUpdateManager.
+ * specified. This is necessary due to the update xml files being written
+ * asynchronously by nsIUpdateManager.
  *
  * @param   aActiveUpdateExists (optional)
  *          Whether the active-update.xml file should exist (default is false).
@@ -1157,23 +1131,34 @@ function checkUpdateManager(aStatusFileState, aHasActiveUpdate,
  *          Whether the updates.xml file should exist (default is true).
  */
 async function waitForUpdateXMLFiles(aActiveUpdateExists = false, aUpdatesExists = true) {
-  let file = getUpdateDirFile(FILE_ACTIVE_UPDATE_XML_TMP);
-  await TestUtils.waitForCondition(() => (!file.exists()),
-    "Waiting for file to be deleted, path: " + file.path);
+  function areFilesStabilized() {
+    let file = getUpdateDirFile(FILE_ACTIVE_UPDATE_XML_TMP);
+    if (file.exists()) {
+      debugDump("file exists, Path: " + file.path);
+      return false;
+    }
+    file = getUpdateDirFile(FILE_UPDATES_XML_TMP);
+    if (file.exists()) {
+      debugDump("file exists, Path: " + file.path);
+      return false;
+    }
+    file = getUpdateDirFile(FILE_ACTIVE_UPDATE_XML);
+    if (file.exists() != aActiveUpdateExists) {
+      debugDump("file exists should equal: " + aActiveUpdateExists +
+                ", Path: " + file.path);
+      return false;
+    }
+    file = getUpdateDirFile(FILE_UPDATES_XML);
+    if (file.exists() != aUpdatesExists) {
+      debugDump("file exists should equal: " + aActiveUpdateExists +
+                ", Path: " + file.path);
+      return false;
+    }
+    return true;
+  }
 
-  file = getUpdateDirFile(FILE_UPDATES_XML_TMP);
-  await TestUtils.waitForCondition(() => (!file.exists()),
-    "Waiting for file to be deleted, path: " + file.path);
-
-  file = getUpdateDirFile(FILE_ACTIVE_UPDATE_XML);
-  await TestUtils.waitForCondition(() => (file.exists() == aActiveUpdateExists),
-    "Waiting for file to be deleted, path: " + file.path);
-
-  file = getUpdateDirFile(FILE_UPDATES_XML);
-  await TestUtils.waitForCondition(() => (file.exists() == aUpdatesExists),
-    "Waiting for file to be deleted, path: " + file.path);
-
-  executeSoon(waitForUpdateXMLFilesFinished);
+  await TestUtils.waitForCondition(() => (areFilesStabilized()),
+    "Waiting for update xml files to stabilize");
 }
 
 /**
@@ -1667,7 +1652,7 @@ function logUpdateLog(aLogLeafName) {
     logTestInfo("update log doesn't exist, path: " + updateLog.path);
   }
 
-  if (IS_SERVICE_TEST) {
+  if (gIsServiceTest) {
     let serviceLog = getMaintSvcDir();
     serviceLog.append("logs");
     serviceLog.append("maintenanceservice.log");
@@ -1701,7 +1686,7 @@ function readServiceLogFile() {
  * Launches the updater binary to apply an update for updater tests.
  *
  * @param   aExpectedStatus
- *          The expected value of update.status when the test finishes. For
+ *          The expected value of update.status when the update finishes. For
  *          service tests passing STATE_PENDING or STATE_APPLIED will change the
  *          value to STATE_PENDING_SVC and STATE_APPLIED_SVC respectively.
  * @param   aSwitchApp
@@ -1730,10 +1715,10 @@ function runUpdate(aExpectedStatus, aSwitchApp, aExpectedExitValue, aCheckSvcLog
                    aPatchDirPath, aInstallDirPath, aApplyToDirPath,
                    aCallbackPath) {
   let isInvalidArgTest = !!aPatchDirPath || !!aInstallDirPath ||
-                         !!aApplyToDirPath || aCallbackPath;
+                         !!aApplyToDirPath || !!aCallbackPath;
 
   let svcOriginalLog;
-  if (IS_SERVICE_TEST) {
+  if (gIsServiceTest) {
     copyFileToTestAppDir(FILE_MAINTENANCE_SERVICE_BIN, false);
     copyFileToTestAppDir(FILE_MAINTENANCE_SERVICE_INSTALLER_BIN, false);
     if (aCheckSvcLog) {
@@ -1773,12 +1758,12 @@ function runUpdate(aExpectedStatus, aSwitchApp, aExpectedExitValue, aCheckSvcLog
     args[3] = pid;
   }
 
-  let launchBin = IS_SERVICE_TEST && isInvalidArgTest ? callbackApp : updateBin;
+  let launchBin = gIsServiceTest && isInvalidArgTest ? callbackApp : updateBin;
 
   if (!isInvalidArgTest) {
     args = args.concat([callbackApp.parent.path, callbackApp.path]);
     args = args.concat(gCallbackArgs);
-  } else if (IS_SERVICE_TEST) {
+  } else if (gIsServiceTest) {
     args = ["launch-service", updateBin.path].concat(args);
   } else if (aCallbackPath) {
     args = args.concat([callbackApp.parent.path, aCallbackPath]);
@@ -1805,7 +1790,7 @@ function runUpdate(aExpectedStatus, aSwitchApp, aExpectedExitValue, aCheckSvcLog
   }
 
   let status = readStatusFile();
-  if ((!IS_SERVICE_TEST && process.exitValue != aExpectedExitValue) ||
+  if ((!gIsServiceTest && process.exitValue != aExpectedExitValue) ||
       status != aExpectedStatus) {
     if (process.exitValue != aExpectedExitValue) {
       logTestInfo("updater exited with unexpected value! Got: " +
@@ -1818,7 +1803,7 @@ function runUpdate(aExpectedStatus, aSwitchApp, aExpectedExitValue, aCheckSvcLog
     logUpdateLog(FILE_LAST_UPDATE_LOG);
   }
 
-  if (!IS_SERVICE_TEST) {
+  if (!gIsServiceTest) {
     Assert.equal(process.exitValue, aExpectedExitValue,
                  "the process exit value" + MSG_SHOULD_EQUAL);
   }
@@ -1828,7 +1813,7 @@ function runUpdate(aExpectedStatus, aSwitchApp, aExpectedExitValue, aCheckSvcLog
   Assert.ok(!updateHasBinaryTransparencyErrorResult(),
             "binary transparency is not being processed for now");
 
-  if (IS_SERVICE_TEST && aCheckSvcLog) {
+  if (gIsServiceTest && aCheckSvcLog) {
     let contents = readServiceLogFile();
     Assert.notEqual(contents, svcOriginalLog,
                     "the contents of the maintenanceservice.log should not " +
@@ -1839,8 +1824,6 @@ function runUpdate(aExpectedStatus, aSwitchApp, aExpectedExitValue, aCheckSvcLog
                       "contain the successful launch string");
     }
   }
-
-  executeSoon(runUpdateFinished);
 }
 
 /**
@@ -1912,7 +1895,7 @@ function checkSymlink() {
  * Sets the active update and related information for updater tests.
  */
 function setupActiveUpdate() {
-  let pendingState = IS_SERVICE_TEST ? STATE_PENDING_SVC : STATE_PENDING;
+  let pendingState = gIsServiceTest ? STATE_PENDING_SVC : STATE_PENDING;
   let patchProps = {state: pendingState};
   let patches = getLocalPatchString(patchProps);
   let updates = getLocalUpdateString({}, patches);
@@ -1925,40 +1908,24 @@ function setupActiveUpdate() {
 }
 
 /**
- * The update-staged observer for the call to nsIUpdateProcessor:processUpdate.
- */
-const gUpdateStagedObserver = {
-  observe(aSubject, aTopic, aData) {
-    debugDump("observe called with topic: " + aTopic + ", data: " + aData);
-    if (aTopic == "update-staged") {
-      Services.obs.removeObserver(gUpdateStagedObserver, "update-staged");
-      // The environment is reset after the update-staged observer topic because
-      // processUpdate in nsIUpdateProcessor uses a new thread and clearing the
-      // environment immediately after calling processUpdate can clear the
-      // environment before the updater is launched.
-      resetEnvironment();
-      // Use do_execute_soon to prevent any failures from propagating to the
-      // update service.
-      executeSoon(checkUpdateStagedState.bind(null, aData));
-    }
-  },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
-};
-
-/**
  * Stages an update using nsIUpdateProcessor:processUpdate for updater tests.
  *
+ * @param   aStateAfterStage
+ *          The expected update state after the update has been staged.
  * @param   aCheckSvcLog
  *          Whether the service log should be checked for service tests.
+ * @param   aUpdateRemoved (optional)
+ *          Whether the update is removed after staging. This can happen when
+ *          a staging failure occurs.
  */
-function stageUpdate(aCheckSvcLog) {
+async function stageUpdate(aStateAfterStage, aCheckSvcLog,
+                           aUpdateRemoved = false) {
   debugDump("start - attempting to stage update");
 
-  if (IS_SERVICE_TEST && aCheckSvcLog) {
-    gSvcOriginalLogContents = readServiceLogFile();
+  let svcLogOriginalContents;
+  if (gIsServiceTest && aCheckSvcLog) {
+    svcLogOriginalContents = readServiceLogFile();
   }
-
-  Services.obs.addObserver(gUpdateStagedObserver, "update-staged");
 
   setAppBundleModTime();
   setEnvironment();
@@ -1968,48 +1935,26 @@ function stageUpdate(aCheckSvcLog) {
       createInstance(Ci.nsIUpdateProcessor).processUpdate();
   } catch (e) {
     Assert.ok(false,
-              "error thrown while calling processUpdate, exception: " + e);
+              "error thrown while calling processUpdate, Exception: " + e);
   }
+  await waitForEvent("update-staged", aStateAfterStage);
+  resetEnvironment();
 
-  // The environment is not reset here because processUpdate in
-  // nsIUpdateProcessor uses a new thread and clearing the environment
-  // immediately after calling processUpdate can clear the environment before
-  // the updater is launched. Instead it is reset after the update-staged
-  // observer topic.
-
-  debugDump("finish - attempting to stage update");
-}
-
-/**
- * Checks that the update state is correct as well as the expected files are
- * present after staging and update for updater tests and then calls
- * stageUpdateFinished.
- *
- * @param   aUpdateState
- *          The update state received by the observer notification.
- */
-function checkUpdateStagedState(aUpdateState) {
   if (AppConstants.platform == "win") {
-    if (IS_SERVICE_TEST) {
+    if (gIsServiceTest) {
       waitForServiceStop(false);
     } else {
       let updater = getApplyDirFile(FILE_UPDATER_BIN);
-      if (isFileInUse(updater)) {
-        do_timeout(FILE_IN_USE_TIMEOUT_MS,
-                   checkUpdateStagedState.bind(null, aUpdateState));
-        return;
-      }
+      await TestUtils.waitForCondition(() => (!isFileInUse(updater)),
+        "Waiting for the file tp not be in use, Path: " + updater.path);
     }
   }
 
-  Assert.equal(aUpdateState, STATE_AFTER_STAGE,
-               "the notified state" + MSG_SHOULD_EQUAL);
-
-  if (!gStagingRemovedUpdate) {
-    Assert.equal(readStatusState(), STATE_AFTER_STAGE,
+  if (!aUpdateRemoved) {
+    Assert.equal(readStatusState(), aStateAfterStage,
                  "the status file state" + MSG_SHOULD_EQUAL);
 
-    Assert.equal(gUpdateManager.activeUpdate.state, STATE_AFTER_STAGE,
+    Assert.equal(gUpdateManager.activeUpdate.state, aStateAfterStage,
                  "the update state" + MSG_SHOULD_EQUAL);
   }
 
@@ -2026,8 +1971,8 @@ function checkUpdateStagedState(aUpdateState) {
             MSG_SHOULD_NOT_EXIST + getMsgPath(log.path));
 
   let stageDir = getStageDirFile();
-  if (STATE_AFTER_STAGE == STATE_APPLIED ||
-      STATE_AFTER_STAGE == STATE_APPLIED_SVC) {
+  if (aStateAfterStage == STATE_APPLIED ||
+      aStateAfterStage == STATE_APPLIED_SVC) {
     Assert.ok(stageDir.exists(),
               MSG_SHOULD_EXIST + getMsgPath(stageDir.path));
   } else {
@@ -2035,9 +1980,9 @@ function checkUpdateStagedState(aUpdateState) {
               MSG_SHOULD_NOT_EXIST + getMsgPath(stageDir.path));
   }
 
-  if (IS_SERVICE_TEST && gSvcOriginalLogContents !== undefined) {
+  if (gIsServiceTest && aCheckSvcLog) {
     let contents = readServiceLogFile();
-    Assert.notEqual(contents, gSvcOriginalLogContents,
+    Assert.notEqual(contents, svcLogOriginalContents,
                     "the contents of the maintenanceservice.log should not " +
                     "be the same as the original contents");
     Assert.notEqual(contents.indexOf(LOG_SVC_SUCCESSFUL_LAUNCH), -1,
@@ -2045,7 +1990,7 @@ function checkUpdateStagedState(aUpdateState) {
                     "contain the successful launch string");
   }
 
-  executeSoon(stageUpdateFinished);
+  debugDump("finish - attempting to stage update");
 }
 
 /**
@@ -2133,30 +2078,6 @@ function isBinarySigned(aBinPath) {
     return false;
   }
   return true;
-}
-
-/**
- * Helper function for asynchronously setting up the application files required
- * to launch the application for the updater tests by either copying or creating
- * symlinks for the files. This is needed for Windows debug builds which can
- * lock a file that is being copied so that the tests can run in parallel. After
- * the files have been copied the setupUpdaterTestFinished function will be
- * called.
- */
-function setupAppFilesAsync() {
-  gTimeoutRuns++;
-  try {
-    setupAppFiles();
-  } catch (e) {
-    if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
-      do_throw("Exceeded MAX_TIMEOUT_RUNS while trying to setup application " +
-               "files! Exception: " + e);
-    }
-    executeSoon(setupAppFilesAsync);
-    return;
-  }
-
-  executeSoon(setupUpdaterTestFinished);
 }
 
 /**
@@ -2506,8 +2427,7 @@ function lockDirectory(aDirPath) {
 }
 
 /**
- * Launches the test helper binary to make it in use for updater tests and then
- * calls waitForHelperSleep.
+ * Launches the test helper binary to make it in use for updater tests.
  *
  * @param   aRelPath
  *          The relative path in the apply to directory for the helper binary.
@@ -2515,7 +2435,7 @@ function lockDirectory(aDirPath) {
  *          Whether to copy the test helper binary to the relative path in the
  *          apply to directory.
  */
-function runHelperFileInUse(aRelPath, aCopyTestHelper) {
+async function runHelperFileInUse(aRelPath, aCopyTestHelper) {
   debugDump("aRelPath: " + aRelPath);
   // Launch an existing file so it is in use during the update.
   let helperBin = getTestDirFile(FILE_HELPER_BIN);
@@ -2534,12 +2454,12 @@ function runHelperFileInUse(aRelPath, aCopyTestHelper) {
   fileInUseProcess.init(fileInUseBin);
   fileInUseProcess.run(false, args, args.length);
 
-  executeSoon(waitForHelperSleep);
+  await waitForHelperSleep();
 }
 
 /**
  * Launches the test helper binary to provide a pid that is in use for updater
- * tests and then calls waitForHelperSleep.
+ * tests.
  *
  * @param   aRelPath
  *          The relative path in the apply to directory for the helper binary.
@@ -2547,7 +2467,7 @@ function runHelperFileInUse(aRelPath, aCopyTestHelper) {
  *          Whether to copy the test helper binary to the relative path in the
  *          apply to directory.
  */
-function runHelperPIDPersists(aRelPath, aCopyTestHelper) {
+async function runHelperPIDPersists(aRelPath, aCopyTestHelper) {
   debugDump("aRelPath: " + aRelPath);
   // Launch an existing file so it is in use during the update.
   let helperBin = getTestDirFile(FILE_HELPER_BIN);
@@ -2566,17 +2486,19 @@ function runHelperPIDPersists(aRelPath, aCopyTestHelper) {
   gPIDPersistProcess.init(pidPersistsBin);
   gPIDPersistProcess.run(false, args, args.length);
 
-  executeSoon(waitForHelperSleep);
+  await waitForHelperSleep();
+  await TestUtils.waitForCondition(() => (!!gPIDPersistProcess.pid),
+    "Waiting for the process pid");
 }
 
 /**
  * Launches the test helper binary and locks a file specified on the command
- * line for updater tests and then calls waitForHelperSleep.
+ * line for updater tests.
  *
  * @param   aTestFile
  *          The test file object that describes the file to lock.
  */
-function runHelperLockFile(aTestFile) {
+async function runHelperLockFile(aTestFile) {
   // Exclusively lock an existing file so it is in use during the update.
   let helperBin = getTestDirFile(FILE_HELPER_BIN);
   let helperDestDir = getApplyDirFile(DIR_RESOURCES);
@@ -2596,91 +2518,73 @@ function runHelperLockFile(aTestFile) {
   helperProcess.init(helperBin);
   helperProcess.run(false, args, args.length);
 
-  executeSoon(waitForHelperSleep);
+  await waitForHelperSleep();
 }
 
 /**
- * Helper function that waits until the helper has completed its operations and
- * calls waitForHelperSleepFinished when it is finished.
+ * Helper function that waits until the helper has completed its operations.
  */
-function waitForHelperSleep() {
-  gTimeoutRuns++;
+async function waitForHelperSleep() {
   // Give the lock file process time to lock the file before updating otherwise
   // this test can fail intermittently on Windows debug builds.
-  let output = getApplyDirFile(DIR_RESOURCES + "output");
-  if (readFile(output) != "sleeping\n") {
-    if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
-      do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the helper to " +
-               "finish its operation. Path: " + output.path);
-    }
-    // Uses do_timeout instead of do_execute_soon to lessen log spew.
-    do_timeout(FILE_IN_USE_TIMEOUT_MS, waitForHelperSleep);
-    return;
-  }
-  try {
-    output.remove(false);
-  } catch (e) {
-    if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
-      do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the helper " +
-               "message file to no longer be in use. Path: " + output.path);
-    }
-    debugDump("failed to remove file. Path: " + output.path);
-    // Uses do_timeout instead of do_execute_soon to lessen log spew.
-    do_timeout(FILE_IN_USE_TIMEOUT_MS, waitForHelperSleep);
-    return;
-  }
-  waitForHelperSleepFinished();
-}
+  let file = getApplyDirFile(DIR_RESOURCES + "output");
+  await TestUtils.waitForCondition(() => (file.exists()),
+    "Waiting for file to exist, path: " + file.path);
 
-/**
- * Helper function that waits until the helper has finished its operations
- * before calling waitForHelperFinishFileUnlock to verify that the helper's
- * input and output directories are no longer in use.
- */
-function waitForHelperFinished() {
-  // Give the lock file process time to lock the file before updating otherwise
-  // this test can fail intermittently on Windows debug builds.
-  let output = getApplyDirFile(DIR_RESOURCES + "output");
-  if (readFile(output) != "finished\n") {
-    // Uses do_timeout instead of do_execute_soon to lessen log spew.
-    do_timeout(FILE_IN_USE_TIMEOUT_MS, waitForHelperFinished);
-    return;
-  }
-  // Give the lock file process time to unlock the file before deleting the
-  // input and output files.
-  waitForHelperFinishFileUnlock();
-}
+  let expectedContents = "sleeping\n";
+  await TestUtils.waitForCondition(() => (readFile(file) == expectedContents),
+    "Waiting for expected file contents: " + expectedContents);
 
-/**
- * Helper function that waits until the helper's input and output files are no
- * longer in use before calling waitForHelperExitFinished.
- */
-function waitForHelperFinishFileUnlock() {
-  try {
-    let output = getApplyDirFile(DIR_RESOURCES + "output");
-    if (output.exists()) {
-      output.remove(false);
+  await TestUtils.waitForCondition(() => {
+    try {
+      file.remove(false);
+    } catch (e) {
+      debugDump("failed to remove file. Path: " + file.path +
+                ", Exception: " + e);
     }
-    let input = getApplyDirFile(DIR_RESOURCES + "input");
-    if (input.exists()) {
-      input.remove(false);
-    }
-  } catch (e) {
-    // Give the lock file process time to unlock the file before deleting the
-    // input and output files.
-    executeSoon(waitForHelperFinishFileUnlock);
-    return;
-  }
-  executeSoon(waitForHelperExitFinished);
+    return !file.exists();
+  }, "Waiting for file to be removed, Path: " + file.path);
 }
 
 /**
  * Helper function to tell the helper to finish and exit its sleep state.
  */
-function waitForHelperExit() {
-  let input = getApplyDirFile(DIR_RESOURCES + "input");
-  writeFile(input, "finish\n");
-  waitForHelperFinished();
+async function waitForHelperExit() {
+  let file = getApplyDirFile(DIR_RESOURCES + "input");
+  writeFile(file, "finish\n");
+
+  // Give the lock file process time to lock the file before updating otherwise
+  // this test can fail intermittently on Windows debug builds.
+  file = getApplyDirFile(DIR_RESOURCES + "output");
+  await TestUtils.waitForCondition(() => (file.exists()),
+    "Waiting for file to exist, Path: " + file.path);
+
+  let expectedContents = "finished\n";
+  await TestUtils.waitForCondition(() => (readFile(file) == expectedContents),
+    "Waiting for expected file contents: " + expectedContents);
+
+  // Give the lock file process time to unlock the file before deleting the
+  // input and output files.
+  await TestUtils.waitForCondition(() => {
+    try {
+      file.remove(false);
+    } catch (e) {
+      debugDump("failed to remove file. Path: " + file.path +
+                ", Exception: " + e);
+    }
+    return !file.exists();
+  }, "Waiting for file to be removed, Path: " + file.path);
+
+  file = getApplyDirFile(DIR_RESOURCES + "input");
+  await TestUtils.waitForCondition(() => {
+    try {
+      file.remove(false);
+    } catch (e) {
+      debugDump("failed to remove file. Path: " + file.path +
+                ", Exception: " + e);
+    }
+    return !file.exists();
+  }, "Waiting for file to be removed, Path: " + file.path);
 }
 
 /**
@@ -2698,7 +2602,7 @@ function waitForHelperExit() {
  * @param   aSetupActiveUpdate
  *          Whether to setup the active update.
  */
-function setupUpdaterTest(aMarFile, aPostUpdateAsync,
+async function setupUpdaterTest(aMarFile, aPostUpdateAsync,
                           aPostUpdateExeRelPathPrefix = "",
                           aSetupActiveUpdate = true) {
   debugDump("start - updater test setup");
@@ -2796,8 +2700,17 @@ function setupUpdaterTest(aMarFile, aPostUpdateAsync,
     createUpdaterINI(aPostUpdateAsync, aPostUpdateExeRelPathPrefix);
   }
 
+  await TestUtils.waitForCondition(() => {
+    try {
+      setupAppFiles();
+      return true;
+    } catch (e) {
+      logTestInfo("exception when calling setupAppFiles, Exception: " + e);
+    }
+    return false;
+  }, "Waiting to setup app files");
+
   debugDump("finish - updater test setup");
-  setupAppFilesAsync();
 }
 
 /**
@@ -3317,6 +3230,7 @@ function checkCallbackLog() {
   // value. If the contents are never the expected value then the test will
   // fail by timing out after gTimeoutRuns is greater than MAX_TIMEOUT_RUNS or
   // the test harness times out the test.
+  const MAX_TIMEOUT_RUNS = 20000;
   if (logContents != expectedLogContents) {
     gTimeoutRuns++;
     if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
@@ -3367,41 +3281,17 @@ function getPostUpdateFile(aSuffix) {
  * Checks the contents of the updater post update binary log. When completed
  * checkPostUpdateAppLogFinished will be called.
  */
-function checkPostUpdateAppLog() {
+async function checkPostUpdateAppLog() {
   // Only Mac OS X and Windows support post update.
   if (AppConstants.platform == "macosx" || AppConstants.platform == "win") {
-    gTimeoutRuns++;
-    let postUpdateLog = getPostUpdateFile(".log");
-    if (!postUpdateLog.exists()) {
-      debugDump("postUpdateLog does not exist. Path: " + postUpdateLog.path);
-      if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
-        do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the post update " +
-                 "process to create the post update log. Path: " +
-                 postUpdateLog.path);
-      }
-      executeSoon(checkPostUpdateAppLog);
-      return;
-    }
+    let file = getPostUpdateFile(".log");
+    await TestUtils.waitForCondition(() => (file.exists()),
+      "Waiting for file to exist, path: " + file.path);
 
-    let logContents = readFile(postUpdateLog);
-    // It is possible for the log file contents check to occur before the log file
-    // contents are completely written so wait until the contents are the expected
-    // value. If the contents are never the expected value then the test will
-    // fail by timing out after gTimeoutRuns is greater than MAX_TIMEOUT_RUNS or
-    // the test harness times out the test.
-    if (logContents != "post-update\n") {
-      if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
-        do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the post update " +
-                 "process to create the expected contents in the post update log. Path: " +
-                 postUpdateLog.path);
-      }
-      executeSoon(checkPostUpdateAppLog);
-      return;
-    }
-    Assert.ok(true, "the post update log contents" + MSG_SHOULD_EQUAL);
+    let expectedContents = "post-update\n";
+    await TestUtils.waitForCondition(() => (readFile(file) == expectedContents),
+      "Waiting for expected file contents: " + expectedContents);
   }
-
-  executeSoon(checkPostUpdateAppLogFinished);
 }
 
 /**
@@ -3438,14 +3328,14 @@ function isFileInUse(aFile) {
     debugDump("file is not in use, path: " + aFile.path);
     return false;
   } catch (e) {
-    debugDump("file in use, path: " + aFile.path + ", exception: " + e);
+    debugDump("file in use, path: " + aFile.path + ", Exception: " + e);
     try {
       if (fileBak.exists()) {
         fileBak.remove(false);
       }
     } catch (ex) {
       logTestInfo("unable to remove backup file, path: " +
-                  fileBak.path + ", exception: " + ex);
+                  fileBak.path + ", Exception: " + ex);
     }
   }
   return true;
@@ -3557,59 +3447,78 @@ UpdatePrompt.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIClassInfo, Ci.nsIUpdatePrompt]),
 };
 
-/* Update check listener */
-const updateCheckListener = {
-  onProgress: function UCL_onProgress(aRequest, aPosition, aTotalSize) {
-  },
+/**
+ * Waits for an update check request to complete.
+ *
+ * @param   aSuccess
+ *          Whether the update check succeeds or not. If aSuccess is true then
+ *          onCheckComplete should be called and if aSuccess is false then
+ *          onError should be called.
+ * @param   aExpectedValues
+ *          An object with common values to check.
+ * @return  A promise which will resolve the first time either the update check
+ *          onCheckComplete or onError occurs and returns the arguments from
+ *          onCheckComplete or onError.
+ */
+function waitForUpdateCheck(aSuccess, aExpectedValues = {}) {
+  return new Promise(resolve => gUpdateChecker.checkForUpdates({
+    onProgress: (aRequest, aPosition, aTotalSize) => {
+    },
+    onCheckComplete: (request, updates, updateCount) => {
+      Assert.ok(aSuccess, "the update check should succeed");
+      if (aExpectedValues.updateCount) {
+        Assert.equal(aExpectedValues.updateCount, updateCount,
+                     "the update count" + MSG_SHOULD_EQUAL);
+      }
+      resolve({request, updates, updateCount});
+    },
+    onError: (request, update) => {
+      Assert.ok(!aSuccess, "the update check should error");
+      if (aExpectedValues.url) {
+        Assert.equal(aExpectedValues.url, request.channel.originalURI.spec,
+                     "the url" + MSG_SHOULD_EQUAL);
+      }
+      resolve({request, update});
+    },
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIUpdateCheckListener]),
+  }, true));
+}
 
-  onCheckComplete: function UCL_onCheckComplete(aRequest, aUpdates, aUpdateCount) {
-    gRequestURL = aRequest.channel.originalURI.spec;
-    gUpdateCount = aUpdateCount;
-    gUpdates = aUpdates;
-    debugDump("url = " + gRequestURL + ", " +
-              "request.status = " + aRequest.status + ", " +
-              "updateCount = " + aUpdateCount);
-    // Use a timeout to allow the XHR to complete
-    executeSoon(gCheckFunc);
-  },
-
-  onError: function UCL_onError(aRequest, aUpdate) {
-    gRequestURL = aRequest.channel.originalURI.spec;
-    gStatusCode = aRequest.status;
-    if (gStatusCode == 0) {
-      gStatusCode = aRequest.channel.QueryInterface(Ci.nsIRequest).status;
-    }
-    gStatusText = aUpdate.statusText ? aUpdate.statusText : null;
-    debugDump("url = " + gRequestURL + ", " +
-              "request.status = " + gStatusCode + ", " +
-              "update.statusText = " + gStatusText);
-    // Use a timeout to allow the XHR to complete
-    executeSoon(gCheckFunc.bind(null, aRequest, aUpdate));
-  },
-
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIUpdateCheckListener]),
-};
-
-/* Update download listener - nsIRequestObserver */
-const downloadListener = {
-  onStartRequest: function DL_onStartRequest(aRequest, aContext) {
-  },
-
-  onProgress: function DL_onProgress(aRequest, aContext, aProgress, aMaxProgress) {
-  },
-
-  onStatus: function DL_onStatus(aRequest, aContext, aStatus, aStatusText) {
-  },
-
-  onStopRequest: function DL_onStopRequest(aRequest, aContext, aStatus) {
-    gStatusResult = aStatus;
-    // Use a timeout to allow the request to complete
-    executeSoon(downloadListenerStop);
-  },
-
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIRequestObserver,
-                                          Ci.nsIProgressEventSink]),
-};
+/**
+ * Downloads an update and waits for the download onStopRequest.
+ *
+ * @param   aUpdates
+ *          An array of updates to select from to download an update.
+ * @param   aUpdateCount
+ *          The number of updates in the aUpdates array.
+ * @param   aExpectedStatus
+ *          The download onStopRequest expected status.
+ * @return  A promise which will resolve the first time the update download
+ *          onStopRequest occurs and returns the arguments from onStopRequest.
+ */
+function waitForUpdateDownload(aUpdates, aUpdateCount, aExpectedStatus) {
+  let bestUpdate = gAUS.selectUpdate(aUpdates, aUpdateCount);
+  let state = gAUS.downloadUpdate(bestUpdate, false);
+  if (state == STATE_NONE || state == STATE_FAILED) {
+    do_throw("nsIApplicationUpdateService:downloadUpdate returned " + state);
+  }
+  return new Promise(resolve => gAUS.addDownloadListener({
+    onStartRequest: (aRequest, aContext) => {
+    },
+    onProgress: (aRequest, aContext, aProgress, aMaxProgress) => {
+    },
+    onStatus: (aRequest, aContext, aStatus, aStatusText) => {
+    },
+    onStopRequest: (request, context, status) => {
+      gAUS.removeDownloadListener(this);
+      Assert.equal(aExpectedStatus, status,
+                   "the download status" + MSG_SHOULD_EQUAL);
+      resolve(request, context, status);
+    },
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIRequestObserver,
+                                            Ci.nsIProgressEventSink]),
+  }));
+}
 
 /**
  * Helper for starting the http server used by the tests
@@ -3643,7 +3552,7 @@ function start_httpserver() {
  */
 function pathHandler(aMetadata, aResponse) {
   aResponse.setHeader("Content-Type", "text/xml", false);
-  aResponse.setStatusLine(aMetadata.httpVersion, gResponseStatusCode, "OK");
+  aResponse.setStatusLine(aMetadata.httpVersion, 200, "OK");
   aResponse.bodyOutputStream.write(gResponseBody, gResponseBody.length);
 }
 
@@ -3837,7 +3746,7 @@ function adjustGeneralPaths() {
       try {
         gProcess.kill();
       } catch (e) {
-        debugDump("kill process failed. Exception: " + e);
+        debugDump("kill process failed, Exception: " + e);
       }
       gProcess = null;
       debugDump("finish - kill process");
@@ -3848,7 +3757,7 @@ function adjustGeneralPaths() {
       try {
         gPIDPersistProcess.kill();
       } catch (e) {
-        debugDump("kill pid persist process failed. Exception: " + e);
+        debugDump("kill pid persist process failed, Exception: " + e);
       }
       gPIDPersistProcess = null;
       debugDump("finish - kill pid persist process");
@@ -3868,7 +3777,7 @@ function adjustGeneralPaths() {
         gHandle = null;
         debugDump("finish - closing handle");
       } catch (e) {
-        debugDump("call to CloseHandle failed. Exception: " + e);
+        debugDump("call to CloseHandle failed, Exception: " + e);
       }
     }
 
@@ -3896,86 +3805,16 @@ const gAppTimerCallback = {
 
 /**
  * Launches an application to apply an update.
+ *
+ * @param   aExpectedStatus
+ *          The expected value of update.status when the update finishes.
  */
-function runUpdateUsingApp(aExpectedStatus) {
-  /**
-   * The observer for the call to nsIProcess:runAsync. When completed
-   * runUpdateFinished will be called.
-   */
-  const processObserver = {
-    observe: function PO_observe(aSubject, aTopic, aData) {
-      debugDump("topic: " + aTopic + ", process exitValue: " +
-                gProcess.exitValue);
-      resetEnvironment();
-      if (gAppTimer) {
-        gAppTimer.cancel();
-        gAppTimer = null;
-      }
-      Assert.equal(gProcess.exitValue, 0,
-                   "the application process exit value should be 0");
-      Assert.equal(aTopic, "process-finished",
-                   "the application process observer topic should be " +
-                   "process-finished");
-
-      if (IS_SERVICE_TEST) {
-        waitForServiceStop(false);
-      }
-
-      executeSoon(afterAppExits);
-    },
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
-  };
-
-  function afterAppExits() {
-    gTimeoutRuns++;
-
-    if (AppConstants.platform == "win") {
-      waitForApplicationStop(FILE_UPDATER_BIN);
-    }
-
-    let status;
-    try {
-      status = readStatusFile();
-    } catch (e) {
-      logTestInfo("error reading status file, exception: " + e);
-    }
-    // Don't proceed until the update's status is the expected value.
-    if (status != aExpectedStatus) {
-      if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
-        logUpdateLog(FILE_UPDATE_LOG);
-        do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the update " +
-                 "status to equal: " +
-                 aExpectedStatus +
-                 ", current status: " + status);
-      } else {
-        do_timeout(FILE_IN_USE_TIMEOUT_MS, afterAppExits);
-      }
-      return;
-    }
-
-    // Don't check for an update log when the code in nsUpdateDriver.cpp skips
-    // updating.
-    if (aExpectedStatus != STATE_PENDING &&
-        aExpectedStatus != STATE_PENDING_SVC &&
-        aExpectedStatus != STATE_APPLIED &&
-        aExpectedStatus != STATE_APPLIED_SVC) {
-      // Don't proceed until the update log has been created.
-      let log = getUpdateDirFile(FILE_UPDATE_LOG);
-      if (!log.exists()) {
-        if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
-          do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the update " +
-                   "log to be created. Path: " + log.path);
-        }
-        do_timeout(FILE_IN_USE_TIMEOUT_MS, afterAppExits);
-        return;
-      }
-    }
-
-    executeSoon(runUpdateFinished);
-  }
-
+async function runUpdateUsingApp(aExpectedStatus) {
   debugDump("start - launching application to apply update");
 
+  // The maximum number of milliseconds the process that is launched can run
+  // before the test will try to kill it.
+  const APP_TIMER_TIMEOUT = 120000;
   let launchBin = getLaunchBin();
   let args = getProcessArgs();
   debugDump("launching " + launchBin.path + " " + args.join(" "));
@@ -3989,8 +3828,35 @@ function runUpdateUsingApp(aExpectedStatus) {
                              Ci.nsITimer.TYPE_ONE_SHOT);
 
   setEnvironment();
+
   debugDump("launching application");
-  gProcess.runAsync(args, args.length, processObserver);
+  gProcess.run(true, args, args.length);
+  debugDump("launched application exited");
+
+  resetEnvironment();
+
+  if (AppConstants.platform == "win") {
+    waitForApplicationStop(FILE_UPDATER_BIN);
+  }
+
+  let file = getUpdateDirFile(FILE_UPDATE_STATUS);
+  await TestUtils.waitForCondition(() => (file.exists()),
+    "Waiting for file to exist, path: " + file.path);
+
+  await TestUtils.waitForCondition(() => (readStatusFile() == aExpectedStatus),
+    "Waiting for expected status file contents: " + aExpectedStatus);
+
+  // Don't check for an update log when the code in nsUpdateDriver.cpp skips
+  // updating.
+  if (aExpectedStatus != STATE_PENDING &&
+      aExpectedStatus != STATE_PENDING_SVC &&
+      aExpectedStatus != STATE_APPLIED &&
+      aExpectedStatus != STATE_APPLIED_SVC) {
+    // Don't proceed until the update log has been created.
+    file = getUpdateDirFile(FILE_UPDATE_LOG);
+    await TestUtils.waitForCondition(() => (file.exists()),
+      "Waiting for file to exist, path: " + file.path);
+  }
 
   debugDump("finish - launching application to apply update");
 }
@@ -4191,7 +4057,7 @@ function setEnvironment() {
 
   gEnv.set("XPCOM_DEBUG_BREAK", "warn");
 
-  if (IS_SERVICE_TEST) {
+  if (gIsServiceTest) {
     debugDump("setting MOZ_NO_SERVICE_FALLBACK environment variable to 1");
     gEnv.set("MOZ_NO_SERVICE_FALLBACK", "1");
   }
@@ -4247,7 +4113,7 @@ function resetEnvironment() {
     gEnv.set("XRE_NO_WINDOWS_CRASH_DIALOG", "");
   }
 
-  if (IS_SERVICE_TEST) {
+  if (gIsServiceTest) {
     debugDump("removing MOZ_NO_SERVICE_FALLBACK environment variable");
     gEnv.set("MOZ_NO_SERVICE_FALLBACK", "");
   }

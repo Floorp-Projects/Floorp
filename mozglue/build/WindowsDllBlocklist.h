@@ -54,7 +54,9 @@ class DllServicesBase;
 }  // namespace glue
 }  // namespace mozilla
 
-MFBT_API void DllBlocklist_SetDllServices(
+MFBT_API void DllBlocklist_SetFullDllServices(
+    mozilla::glue::detail::DllServicesBase* aSvc);
+MFBT_API void DllBlocklist_SetBasicDllServices(
     mozilla::glue::detail::DllServicesBase* aSvc);
 
 #endif  // defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64))

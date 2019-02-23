@@ -28,7 +28,7 @@ class PBackgroundParent;
 already_AddRefed<nsIInputStream> DeserializeIPCStream(const IPCStream& aValue);
 
 already_AddRefed<nsIInputStream> DeserializeIPCStream(
-    const OptionalIPCStream& aValue);
+    const Maybe<IPCStream>& aValue);
 
 // RAII helper class that serializes an nsIInputStream into an IPCStream struct.
 // Any file descriptor or PChildToParentStream actors are automatically managed
@@ -104,7 +104,7 @@ already_AddRefed<nsIInputStream> DeserializeIPCStream(
 // Note: This example is about child-to-parent inputStream, but AutoIPCStream
 // works also parent-to-child.
 //
-// The AutoIPCStream class also supports OptionalIPCStream values.  As long as
+// The AutoIPCStream class also supports Maybe<IPCStream> values.  As long as
 // you did not initialize the object with a non-optional IPCStream, you can call
 // TakeOptionalValue() instead.
 //
@@ -121,16 +121,16 @@ already_AddRefed<nsIInputStream> DeserializeIPCStream(
 //       array of RAII AutoIPCStream objects or build your own wrapping
 //       RAII object to handle other actors that need to be cleaned up.
 class AutoIPCStream final {
-  OptionalIPCStream mInlineValue;
+  Maybe<IPCStream> mInlineValue;
   IPCStream* mValue;
-  OptionalIPCStream* mOptionalValue;
+  Maybe<IPCStream>* mOptionalValue;
   bool mTaken;
   bool mDelayedStart;
 
   bool IsSet() const;
 
  public:
-  // Implicitly create an OptionalIPCStream value.  Either
+  // Implicitly create an Maybe<IPCStream> value.  Either
   // TakeValue() or TakeOptionalValue() can be used.
   explicit AutoIPCStream(bool aDelayedStart = false);
 
@@ -139,10 +139,9 @@ class AutoIPCStream final {
   // a crash will be forced.
   explicit AutoIPCStream(IPCStream& aTarget, bool aDelayedStart = false);
 
-  // Wrap an existing OptionalIPCStream.  Either TakeValue()
+  // Wrap an existing Maybe<IPCStream>.  Either TakeValue()
   // or TakeOptionalValue can be used.
-  explicit AutoIPCStream(OptionalIPCStream& aTarget,
-                         bool aDelayedStart = false);
+  explicit AutoIPCStream(Maybe<IPCStream>& aTarget, bool aDelayedStart = false);
 
   ~AutoIPCStream();
 
@@ -170,10 +169,10 @@ class AutoIPCStream final {
   // to the other side.
   IPCStream& TakeValue();
 
-  // Get the OptionalIPCStream value.  This will assert if
-  // the value has already been taken.  This should only be called if the value
-  // is being, or has already been, sent to the other side.
-  OptionalIPCStream& TakeOptionalValue();
+  // Get the Maybe<IPCStream> value. This will assert if the value has already
+  // been taken. This should only be called if the value is being, or has
+  // already been, sent to the other side.
+  Maybe<IPCStream>& TakeOptionalValue();
 
  private:
   AutoIPCStream(const AutoIPCStream& aOther) = delete;

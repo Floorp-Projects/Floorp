@@ -3,46 +3,26 @@
  */
 
 /**
- * Test applying an update by staging an update and launching an application to
- * apply it.
+ * Test applying an update by launching an application to apply it.
  */
 
-function run_test() {
+async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
-
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
   // The third parameter will test that a full path to the post update binary
   // doesn't execute.
-  setupUpdaterTest(FILE_COMPLETE_MAR, undefined,
-                   getApplyDirFile(null, true).path + "/");
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-function setupUpdaterTestFinished() {
-  runUpdateUsingApp(STATE_SUCCEEDED);
-}
-
-/**
- * Called after the call to runUpdateUsingApp finishes.
- */
-function runUpdateFinished() {
+  await setupUpdaterTest(FILE_COMPLETE_MAR, undefined,
+                         getApplyDirFile(null, true).path + "/");
+  await runUpdateUsingApp(STATE_SUCCEEDED);
   checkAppBundleModTime();
   standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateSuccess(getApplyDirFile);
   checkUpdateLogContents(LOG_COMPLETE_SUCCESS);
-  executeSoon(waitForUpdateXMLFiles);
-}
-
-/**
- * Called after the call to waitForUpdateXMLFiles finishes.
- */
-function waitForUpdateXMLFilesFinished() {
+  await waitForUpdateXMLFiles();
   checkUpdateManager(STATE_NONE, false, STATE_SUCCEEDED, 0, 1);
 
   let updatesDir = getUpdateDirFile(DIR_PATCH);

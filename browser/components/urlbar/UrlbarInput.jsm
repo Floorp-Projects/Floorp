@@ -114,6 +114,7 @@ class UrlbarInput {
     const inputFieldEvents = [
       "focus", "input", "keyup", "mouseover", "paste", "scrollend", "select",
       "overflow", "underflow", "dragstart", "dragover", "drop",
+      "compositionstart", "compositionend",
     ];
     for (let name of inputFieldEvents) {
       this.inputField.addEventListener(name, this);
@@ -125,6 +126,9 @@ class UrlbarInput {
 
     this.inputField.controllers.insertControllerAt(0, new CopyCutController(this));
     this._initPasteAndGo();
+
+    // Tracks IME composition.
+    this._compositionState == UrlbarUtils.COMPOSITION.NONE;
   }
 
   /**
@@ -989,6 +993,26 @@ class UrlbarInput {
       return;
     }
 
+    // During composition with an IME, the following events happen in order:
+    // 1. a compositionstart event
+    // 2. some input events
+    // 3. a compositionend event
+    // 4. an input event
+
+    // We should do nothing during composition.
+    if (this._compositionState == UrlbarUtils.COMPOSITION.COMPOSING) {
+      return;
+    }
+
+    if (this._compositionState == UrlbarUtils.COMPOSITION.COMMIT) {
+      this._compositionState = UrlbarUtils.COMPOSITION.NONE;
+    }
+
+    // Note: if in the future we should re-implement the legacy optimization
+    // where we didn't search again when the string is the same, skip it if we
+    // are committing a composition; since the search was canceled on
+    // composition start, we should restart it.
+
     // XXX Fill in lastKey, and add anything else we need.
     this.startQuery({
       lastKey: null,
@@ -1085,6 +1109,26 @@ class UrlbarInput {
 
   _on_keyup(event) {
     this._toggleActionOverride(event);
+  }
+
+  _on_compositionstart(event) {
+    if (this._compositionState == UrlbarUtils.COMPOSITION.COMPOSING) {
+      throw new Error("Trying to start a nested composition?");
+    }
+    this._compositionState = UrlbarUtils.COMPOSITION.COMPOSING;
+
+    // Close the view. This will also stop searching.
+    this.closePopup();
+  }
+
+  _on_compositionend(event) {
+    if (this._compositionState != UrlbarUtils.COMPOSITION.COMPOSING) {
+      throw new Error("Trying to stop a non existing composition?");
+    }
+
+    // We can't yet retrieve the committed value from the editor, since it isn't
+    // completely committed yet. We'll handle it at the next input event.
+    this._compositionState = UrlbarUtils.COMPOSITION.COMMIT;
   }
 
   _on_popupshowing() {

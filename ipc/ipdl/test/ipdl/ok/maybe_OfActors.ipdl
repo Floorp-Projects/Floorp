@@ -1,0 +1,10 @@
+include protocol maybe_OfActorsSub;
+
+protocol maybe_OfActors {
+    manages maybe_OfActorsSub;
+
+child:
+    async Msg(maybe_OfActorsSub? p);
+
+    async maybe_OfActorsSub();
+};

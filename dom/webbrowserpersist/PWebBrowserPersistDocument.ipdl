@@ -65,7 +65,7 @@ parent:
   // is either a response to the constructor (if it was parent->child)
   // or sent after it (if it was child->parent).
   async Attributes(WebBrowserPersistDocumentAttrs aAttrs,
-                   OptionalIPCStream stream);
+                   IPCStream? stream);
   async InitFailure(nsresult aStatus);
 
 child:

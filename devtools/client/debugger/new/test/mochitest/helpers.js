@@ -505,9 +505,7 @@ function clearDebuggerPreferences() {
   Services.prefs.clearUserPref("devtools.debugger.pause-on-exceptions");
   Services.prefs.clearUserPref("devtools.debugger.pause-on-caught-exceptions");
   Services.prefs.clearUserPref("devtools.debugger.ignore-caught-exceptions");
-  Services.prefs.clearUserPref("devtools.debugger.tabs");
   Services.prefs.clearUserPref("devtools.debugger.pending-selected-location");
-  Services.prefs.clearUserPref("devtools.debugger.pending-breakpoints");
   Services.prefs.clearUserPref("devtools.debugger.expressions");
   Services.prefs.clearUserPref("devtools.debugger.call-stack-visible");
   Services.prefs.clearUserPref("devtools.debugger.scopes-visible");

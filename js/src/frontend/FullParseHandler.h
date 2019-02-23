@@ -173,7 +173,7 @@ class FullParseHandler {
 
   void addToCallSiteObject(CallSiteNodeType callSiteObj, Node rawNode,
                            Node cookedNode) {
-    MOZ_ASSERT(callSiteObj->isKind(ParseNodeKind::CallSiteObjExpr));
+    MOZ_ASSERT(callSiteObj->isKind(ParseNodeKind::CallSiteObj));
 
     addArrayElement(callSiteObj, cookedNode);
     addArrayElement(callSiteObj->rawNodes(), rawNode);
@@ -461,7 +461,7 @@ class FullParseHandler {
   }
 
   MOZ_MUST_USE bool addClassFieldDefinition(ListNodeType memberList, Node name,
-                                            Node initializer) {
+                                            FunctionNodeType initializer) {
     MOZ_ASSERT(memberList->isKind(ParseNodeKind::ClassMemberList));
     MOZ_ASSERT(isUsableAsObjectPropertyName(name));
 
