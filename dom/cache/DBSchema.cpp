@@ -2496,22 +2496,9 @@ nsresult ReadResponse(mozIStorageConnection* aConn, EntryId aEntryId,
     nsTArray<mozilla::ipc::ContentSecurityPolicy> policies;
 
     nsCString baseDomain;
-    if (url->Scheme() == "file") {
-      // The file scheme is not handled by third party utils properly, use the
-      // origin string for now.
-      baseDomain = origin;
-    } else {
-      nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-          do_GetService(THIRDPARTYUTIL_CONTRACTID);
-      if (!thirdPartyUtil) {
-        return NS_ERROR_FAILURE;
-      }
-
-      rv = thirdPartyUtil->GetBaseDomainFromSchemeHost(url->Scheme(),
-                                                       url->Host(), baseDomain);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+    rv = url->BaseDomain(baseDomain);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
 
     aSavedResponseOut->mValue.principalInfo() =
