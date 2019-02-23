@@ -17,8 +17,8 @@ class ContentProcessSession {
     this.docShell = docShell;
 
     this.domains = new Domains(this, ContentProcessDomains);
-    this.messageManager.addMessageListener("remote-protocol:request", this);
-    this.messageManager.addMessageListener("remote-protocol:destroy", this);
+    this.messageManager.addMessageListener("remote:request", this);
+    this.messageManager.addMessageListener("remote:destroy", this);
 
     this.destroy = this.destroy.bind(this);
     this.content.addEventListener("unload", this.destroy);
@@ -26,12 +26,12 @@ class ContentProcessSession {
 
   destroy() {
     this.content.addEventListener("unload", this.destroy);
-    this.messageManager.removeMessageListener("remote-protocol:request", this);
-    this.messageManager.removeMessageListener("remote-protocol:destroy", this);
+    this.messageManager.removeMessageListener("remote:request", this);
+    this.messageManager.removeMessageListener("remote:destroy", this);
   }
 
-  async receiveMessage({ name, data }) {
-    const { browsingContextId } = data;
+  async receiveMessage({name, data}) {
+    const {browsingContextId} = data;
 
     // We may have more than one tab loaded in the same process,
     // and debug the two at the same time. We want to ensure not
@@ -44,37 +44,39 @@ class ContentProcessSession {
     }
 
     switch (name) {
-      case "remote-protocol:request":
-        try {
-          const { id, domainName, methodName, params } = data.request;
-          const inst = this.domains.get(domainName);
-          const methodFn = inst[methodName];
-          if (!methodFn || typeof methodFn != "function") {
-            throw new Error(`Method implementation of ${methodName} missing`);
-          }
+    case "remote:request":
+      try {
+        const {id, domainName, methodName, params} = data.request;
 
-          const result = await methodFn.call(inst, params);
-
-          this.messageManager.sendAsyncMessage("remote-protocol:result", {
-            browsingContextId,
-            id,
-            result,
-          });
-        } catch (e) {
-          this.messageManager.sendAsyncMessage("remote-protocol:error", {
-            browsingContextId,
-            id: data.request.id,
-            error: {
-              name: e.name || "exception",
-              message: e.message || String(e),
-              stack: e.stack,
-            },
-          });
+        const inst = this.domains.get(domainName);
+        const methodFn = inst[methodName];
+        if (!methodFn || typeof methodFn != "function") {
+          throw new Error(`Method implementation of ${methodName} missing`);
         }
-        break;
-      case "remote-protocol:destroy":
-        this.destroy();
-        break;
+
+        const result = await methodFn.call(inst, params);
+
+        this.messageManager.sendAsyncMessage("remote:result", {
+          browsingContextId,
+          id,
+          result,
+        });
+      } catch (e) {
+        this.messageManager.sendAsyncMessage("remote:error", {
+          browsingContextId,
+          id: data.request.id,
+          error: {
+            name: e.name || "exception",
+            message: e.message || String(e),
+            stack: e.stack,
+          },
+        });
+      }
+      break;
+
+    case "remote:destroy":
+      this.destroy();
+      break;
     }
   }
 
@@ -83,7 +85,7 @@ class ContentProcessSession {
   // This method is called when any Domain emit any event
   // Domains register "*" listener on each instantiated Domain.
   onevent(eventName, params) {
-    this.messageManager.sendAsyncMessage("remote-protocol:event", {
+    this.messageManager.sendAsyncMessage("remote:event", {
       browsingContextId: this.browsingContext.id,
       event: {
         method: eventName,
