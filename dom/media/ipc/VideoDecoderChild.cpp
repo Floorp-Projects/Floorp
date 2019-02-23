@@ -58,11 +58,9 @@ mozilla::ipc::IPCResult VideoDecoderChild::RecvOutput(
       new GPUVideoImage(GetManager(), aData.sd(), aData.frameSize());
 
   RefPtr<VideoData> video = VideoData::CreateFromImage(
-      aData.display(), aData.base().offset(),
-      media::TimeUnit::FromMicroseconds(aData.base().time()),
-      media::TimeUnit::FromMicroseconds(aData.base().duration()), image,
-      aData.base().keyframe(),
-      media::TimeUnit::FromMicroseconds(aData.base().timecode()));
+      aData.display(), aData.base().offset(), aData.base().time(),
+      aData.base().duration(), image, aData.base().keyframe(),
+      aData.base().timecode());
 
   mDecodedData.AppendElement(std::move(video));
   return IPC_OK();
@@ -243,9 +241,8 @@ RefPtr<MediaDataDecoder::DecodePromise> VideoDecoderChild::Decode(
   memcpy(buffer.get<uint8_t>(), aSample->Data(), aSample->Size());
 
   MediaRawDataIPDL sample(
-      MediaDataIPDL(aSample->mOffset, aSample->mTime.ToMicroseconds(),
-                    aSample->mTimecode.ToMicroseconds(),
-                    aSample->mDuration.ToMicroseconds(), aSample->mKeyframe),
+      MediaDataIPDL(aSample->mOffset, aSample->mTime, aSample->mTimecode,
+                    aSample->mDuration, aSample->mKeyframe),
       buffer);
   SendInput(sample);
   return mDecodePromise.Ensure(__func__);
@@ -303,7 +300,7 @@ nsCString VideoDecoderChild::GetDescriptionName() const {
 void VideoDecoderChild::SetSeekThreshold(const media::TimeUnit& aTime) {
   AssertOnManagerThread();
   if (mCanSend) {
-    SendSetSeekThreshold(aTime.IsValid() ? aTime.ToMicroseconds() : INT64_MIN);
+    SendSetSeekThreshold(aTime);
   }
 }
 
