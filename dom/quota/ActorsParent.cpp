@@ -979,6 +979,9 @@ class Quota final : public PQuotaParent {
   virtual mozilla::ipc::IPCResult RecvStartIdleMaintenance() override;
 
   virtual mozilla::ipc::IPCResult RecvStopIdleMaintenance() override;
+
+  virtual mozilla::ipc::IPCResult RecvAbortOperationsForProcess(
+      const ContentParentId& aContentParentId) override;
 };
 
 class QuotaUsageRequestBase : public NormalOriginOperationBase,
@@ -2364,13 +2367,6 @@ nsresult QuotaManager::CreateRunnable::RegisterObserver() {
     return rv;
   }
 
-  QuotaManagerService* qms = QuotaManagerService::GetOrCreate();
-  if (NS_WARN_IF(!qms)) {
-    return rv;
-  }
-
-  qms->NoteLiveManager(mManager);
-
   for (RefPtr<Client>& client : mManager->mClients) {
     client->DidInitialize(mManager);
   }
@@ -2505,11 +2501,6 @@ QuotaManager::ShutdownObserver::Observe(nsISupports* aSubject,
   // nested event loop below will not cause re-entrancy issues.
   Unused << observerService->RemoveObserver(
       this, PROFILE_BEFORE_CHANGE_QM_OBSERVER_ID);
-
-  QuotaManagerService* qms = QuotaManagerService::Get();
-  MOZ_ASSERT(qms);
-
-  qms->NoteShuttingDownManager();
 
   for (RefPtr<Client>& client : gInstance->mClients) {
     client->WillShutdown();
@@ -6765,6 +6756,32 @@ mozilla::ipc::IPCResult Quota::RecvStopIdleMaintenance() {
   }
 
   quotaManager->StopIdleMaintenance();
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult Quota::RecvAbortOperationsForProcess(
+    const ContentParentId& aContentParentId) {
+  AssertIsOnBackgroundThread();
+
+  PBackgroundParent* actor = Manager();
+  MOZ_ASSERT(actor);
+
+  if (BackgroundParent::IsOtherProcessActor(actor)) {
+    ASSERT_UNLESS_FUZZING();
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  if (QuotaManager::IsShuttingDown()) {
+    return IPC_OK();
+  }
+
+  QuotaManager* quotaManager = QuotaManager::Get();
+  if (!quotaManager) {
+    return IPC_OK();
+  }
+
+  quotaManager->AbortOperationsForProcess(aContentParentId);
 
   return IPC_OK();
 }

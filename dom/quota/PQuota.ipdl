@@ -16,6 +16,9 @@ using mozilla::dom::quota::PersistenceType
 using mozilla::dom::quota::Client::Type
   from "mozilla/dom/quota/Client.h";
 
+using mozilla::dom::ContentParentId
+  from "mozilla/dom/ipc/IdType.h";
+
 namespace mozilla {
 namespace dom {
 namespace quota {
@@ -125,6 +128,8 @@ parent:
   async StartIdleMaintenance();
 
   async StopIdleMaintenance();
+
+  async AbortOperationsForProcess(ContentParentId contentParentId);
 };
 
 } // namespace quota
