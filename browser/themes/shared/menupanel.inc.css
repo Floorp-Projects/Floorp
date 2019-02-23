@@ -85,19 +85,23 @@
   list-style-image: url(chrome://browser/skin/history.svg);
 }
 
+#PanelUI-fxa-menu-remotetabs-button,
 #appMenuRecentlyClosedTabs,
 #appMenu-library-remotetabs-button {
   list-style-image: url("chrome://browser/skin/tab.svg");
 }
 
+#PanelUI-fxa-menu-syncnow-button,
 #PanelUI-remotetabs-syncnow {
   list-style-image: url("chrome://browser/skin/sync.svg");
 }
 
+#PanelUI-fxa-menu-view-managedevices
 #PanelUI-remotetabs-view-managedevices {
   list-style-image: url("chrome://browser/skin/device-phone.svg");
 }
 
+#PanelUI-fxa-menu-view-sidebar,
 #appMenuViewHistorySidebar,
 #PanelUI-remotetabs-view-sidebar,
 #panelMenu_viewBookmarksSidebar {

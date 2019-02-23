@@ -1850,3 +1850,10 @@ pref("browser.engagement.recent_visited_origins.expiry", 86400); // 24 * 60 * 60
 pref("browser.aboutConfig.showWarning", true);
 
 pref("browser.toolbars.keyboard_navigation", true);
+
+// Prefs to control the Firefox Account toolbar menu.
+// This pref will surface existing Firefox Account information
+// as a button next to the hamburger menu. It allows
+// quick access to sign-in and manage your Firefox Account.
+pref("identity.fxaccounts.toolbar.enabled", true);
+pref("identity.fxaccounts.toolbar.accessed", false);
