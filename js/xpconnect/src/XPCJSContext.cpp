@@ -144,6 +144,16 @@ class Watchdog {
     }
 
     {
+      // Make sure the debug service is instantiated before we create the
+      // watchdog thread, since we intentionally try to keep the thread's stack
+      // segment as small as possible. It isn't always large enough to
+      // instantiate a new service, and even when it is, we don't want fault in
+      // extra pages if we can avoid it.
+      nsCOMPtr<nsIDebug2> dbg = do_GetService("@mozilla.org/xpcom/debug;1");
+      Unused << dbg;
+    }
+
+    {
       AutoLockWatchdog lock(this);
 
       // Gecko uses thread private for accounting and has to clean up at thread

@@ -348,7 +348,7 @@ impl Default for FontInstancePlatformOptions {
 }
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize, Ord, PartialOrd)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize, Ord, PartialOrd, MallocSizeOf)]
 pub struct FontInstanceKey(pub IdNamespace, pub u32);
 
 impl FontInstanceKey {

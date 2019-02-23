@@ -610,7 +610,7 @@ impl TextureCache {
             for handle in entry_handles {
                 let entry = self.entries.free(handle);
                 entry.evict();
-                self.free(entry);
+                self.free(&entry);
             }
         }
         self.per_doc_data = per_doc_data;
@@ -973,7 +973,7 @@ impl TextureCache {
                 let handle = self.doc_data.handles.select(kind).swap_remove(i);
                 let entry = self.entries.free(handle);
                 entry.evict();
-                self.free(entry);
+                self.free(&entry);
             }
         }
     }
@@ -992,7 +992,7 @@ impl TextureCache {
     }
 
     // Free a cache entry from the standalone list or shared cache.
-    fn free(&mut self, entry: CacheEntry) {
+    fn free(&mut self, entry: &CacheEntry) {
         match entry.details {
             EntryDetails::Standalone => {
                 // This is a standalone texture allocation. Free it directly.
@@ -1238,7 +1238,7 @@ impl TextureCache {
                     let idx = from.iter().position(|h| h.weak() == *handle).unwrap();
                     to.push(from.remove(idx));
                 }
-                self.free(old_entry);
+                self.free(&old_entry);
             }
             UpsertResult::Inserted(new_handle) => {
                 *handle = new_handle.weak();
