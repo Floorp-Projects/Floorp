@@ -93,7 +93,6 @@ static const nsAttrValue::EnumTable* kFormDefaultAutocomplete =
     &kFormAutocompleteTable[0];
 
 bool HTMLFormElement::gFirstFormSubmitted = false;
-bool HTMLFormElement::gPasswordManagerInitialized = false;
 
 HTMLFormElement::HTMLFormElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
@@ -1124,16 +1123,8 @@ nsresult HTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
 
   int32_t type = aChild->ControlType();
 
-  //
-  // If it is a password control, and the password manager has not yet been
-  // initialized, initialize the password manager
-  //
+  // If it is a password control, inform the password manager.
   if (type == NS_FORM_INPUT_PASSWORD) {
-    if (!gPasswordManagerInitialized) {
-      gPasswordManagerInitialized = true;
-      NS_CreateServicesFromCategory(NS_PASSWORDMANAGER_CATEGORY, nullptr,
-                                    NS_PASSWORDMANAGER_CATEGORY);
-    }
     PostPasswordEvent();
   }
 
