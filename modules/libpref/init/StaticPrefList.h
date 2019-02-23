@@ -2301,6 +2301,13 @@ VARCACHE_PREF(
   RelaxedAtomicBool, true
 )
 
+// Whether strict file origin policy is in effect.
+VARCACHE_PREF(
+  "security.fileuri.strict_origin_policy",
+   security_fileuri_strict_origin_policy,
+  RelaxedAtomicBool, true
+)
+
 //---------------------------------------------------------------------------
 // End of prefs
 //---------------------------------------------------------------------------
