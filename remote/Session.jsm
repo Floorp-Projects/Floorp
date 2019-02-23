@@ -80,6 +80,15 @@ class Session {
     return this.target.browsingContext;
   }
 
+  // Domain event listener
+
+  onEvent(eventName, params) {
+    this.connection.send({
+      method: eventName,
+      params,
+    });
+  }
+
   // nsIMessageListener
 
   receiveMessage({name, data}) {
@@ -100,12 +109,7 @@ class Session {
     }
   }
 
-  // EventEmitter
-
-  onevent(eventName, params) {
-    this.connection.send({
-      method: eventName,
-      params,
-    });
+  toString() {
+    return `[object Session ${this.connection.id}]`;
   }
 }
