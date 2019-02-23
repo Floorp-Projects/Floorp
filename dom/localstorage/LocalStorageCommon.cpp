@@ -6,6 +6,7 @@
 
 #include "LocalStorageCommon.h"
 
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/net/MozURL.h"
 
 namespace mozilla {
@@ -15,6 +16,7 @@ using namespace mozilla::net;
 
 namespace {
 
+StaticMutex gNextGenLocalStorageMutex;
 Atomic<int32_t> gNextGenLocalStorageEnabled(-1);
 
 }  // namespace
@@ -22,6 +24,17 @@ Atomic<int32_t> gNextGenLocalStorageEnabled(-1);
 const char16_t* kLocalStorageType = u"localStorage";
 
 bool NextGenLocalStorageEnabled() {
+  if (XRE_IsParentProcess()) {
+    StaticMutexAutoLock lock(gNextGenLocalStorageMutex);
+
+    if (gNextGenLocalStorageEnabled == -1) {
+      bool enabled = GetCurrentNextGenPrefValue();
+      gNextGenLocalStorageEnabled = enabled ? 1 : 0;
+    }
+
+    return !!gNextGenLocalStorageEnabled;
+  }
+
   MOZ_ASSERT(NS_IsMainThread());
 
   if (gNextGenLocalStorageEnabled == -1) {

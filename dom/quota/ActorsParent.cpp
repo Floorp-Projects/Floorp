@@ -2299,8 +2299,6 @@ nsresult QuotaManager::CreateRunnable::Init() {
     return rv;
   }
 
-  Unused << NextGenLocalStorageEnabled();
-
   return NS_OK;
 }
 
@@ -3237,7 +3235,7 @@ nsresult QuotaManager::Init(const nsAString& aBasePath) {
   mClients.AppendElement(asmjscache::CreateClient());
   mClients.AppendElement(cache::CreateQuotaClient());
   mClients.AppendElement(simpledb::CreateQuotaClient());
-  if (CachedNextGenLocalStorageEnabled()) {
+  if (NextGenLocalStorageEnabled()) {
     mClients.AppendElement(localstorage::CreateQuotaClient());
   } else {
     mClients.SetLength(Client::TypeMax());
