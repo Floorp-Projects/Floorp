@@ -221,6 +221,10 @@ SDBConnection::Init(nsIPrincipal* aPrincipal) {
     return NS_ERROR_INVALID_ARG;
   }
 
+  if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(*principalInfo))) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   mPrincipalInfo = std::move(principalInfo);
 
   return NS_OK;
