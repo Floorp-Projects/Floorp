@@ -1383,7 +1383,7 @@ void WebRenderBridgeParent::RemovePipelineIdForCompositable(
   }
   RefPtr<WebRenderImageHost>& wrHost = it->second;
 
-  wrHost->ClearWrBridge();
+  wrHost->ClearWrBridge(this);
   mAsyncImageManager->RemoveAsyncImagePipeline(aPipelineId, aTxn);
   aTxn.RemovePipeline(aPipelineId);
   mAsyncCompositables.erase(wr::AsUint64(aPipelineId));
@@ -2008,7 +2008,7 @@ void WebRenderBridgeParent::ClearResources() {
   for (const auto& entry : mAsyncCompositables) {
     wr::PipelineId pipelineId = wr::AsPipelineId(entry.first);
     RefPtr<WebRenderImageHost> host = entry.second;
-    host->ClearWrBridge();
+    host->ClearWrBridge(this);
     mAsyncImageManager->RemoveAsyncImagePipeline(pipelineId, txn);
     txn.RemovePipeline(pipelineId);
   }

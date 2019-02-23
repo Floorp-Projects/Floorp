@@ -162,6 +162,7 @@ impl HitTester {
         self.spatial_nodes.clear();
         self.clip_chains.clear();
 
+        self.spatial_nodes.reserve(clip_scroll_tree.spatial_nodes.len());
         for (index, node) in clip_scroll_tree.spatial_nodes.iter().enumerate() {
             let index = SpatialNodeIndex::new(index);
 
@@ -178,6 +179,7 @@ impl HitTester {
 
         // For each clip chain node, extract the clip node from the clip
         // data store, and store it inline with the clip chain node.
+        self.clip_chains.reserve(clip_store.clip_chain_nodes.len());
         for node in &clip_store.clip_chain_nodes {
             let clip_node = &clip_data_store[node.handle];
             self.clip_chains.push(HitTestClipChainNode {
