@@ -174,12 +174,14 @@ add_task(async function testArrowsToolbarbuttons() {
     is(document.activeElement.id, "library-button",
        "ArrowLeft at end of button group does nothing");
     await expectFocusAfterKey("ArrowRight", "sidebar-button");
+    await expectFocusAfterKey("ArrowRight", "fxa-toolbar-menu-button");
     // This next check also confirms that the overflow menu button is skipped,
     // since it is currently invisible.
     await expectFocusAfterKey("ArrowRight", "PanelUI-menu-button");
     EventUtils.synthesizeKey("KEY_ArrowRight");
     is(document.activeElement.id, "PanelUI-menu-button",
        "ArrowRight at end of button group does nothing");
+    await expectFocusAfterKey("ArrowLeft", "fxa-toolbar-menu-button");
     await expectFocusAfterKey("ArrowLeft", "sidebar-button");
     await expectFocusAfterKey("ArrowLeft", "library-button");
   });
@@ -229,15 +231,14 @@ add_task(async function testArrowsOverflowButton() {
     startFromUrlBar();
     await expectFocusAfterKey("Tab", "library-button");
     await expectFocusAfterKey("ArrowRight", "sidebar-button");
+    await expectFocusAfterKey("ArrowRight", "fxa-toolbar-menu-button");
     await expectFocusAfterKey("ArrowRight", "nav-bar-overflow-button");
-    await expectFocusAfterKey("ArrowRight", "PanelUI-menu-button");
-    await expectFocusAfterKey("ArrowLeft", "nav-bar-overflow-button");
     // Make sure the button is not reachable once it is invisible again.
     await expectFocusAfterKey("ArrowRight", "PanelUI-menu-button");
     resetToolbarWithoutDevEditionButtons();
     // Flush layout so its invisibility can be detected.
     document.getElementById("nav-bar-overflow-button").clientWidth;
-    await expectFocusAfterKey("ArrowLeft", "sidebar-button");
+    await expectFocusAfterKey("ArrowLeft", "fxa-toolbar-menu-button");
   });
 });
 

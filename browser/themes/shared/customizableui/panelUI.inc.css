@@ -540,6 +540,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 #appMenu-fxa-icon[syncstatus="active"] > .toolbarbutton-icon,
+#PanelUI-fxa-menu-syncnow-button[syncstatus="active"] > .toolbarbutton-icon,
 #PanelUI-remotetabs-syncnow[syncstatus="active"] > .toolbarbutton-icon {
   animation: syncRotate 0.8s linear infinite;
   fill: var(--toolbarbutton-icon-fill-attention);
@@ -671,10 +672,113 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   background-color: @appmenuWarningBackgroundColorActiveBrightText@;
 }
 
+/* Firefox Account Toolbar Panel */
+
+#fxa-menu-avatar,
+#fxa-avatar-image {
+  width: 16px;
+  height: 16px;
+}
+
+:root {
+  --avatar-image-url: url(chrome://browser/skin/fxa/avatar.svg);
+}
+
+:root[fxastatus="unverified"] #fxa-avatar-image {
+  list-style-image: url(chrome://browser/skin/fxa/avatar-confirm.svg);
+}
+
+:root[fxastatus="not_configured"] #fxa-avatar-image {
+  list-style-image: url(chrome://browser/skin/fxa/avatar-empty.svg);
+}
+
+:root[fxastatus="not_configured"][fxa_avatar_badged="badged"] #fxa-avatar-image {
+  list-style-image: url(chrome://browser/skin/fxa/avatar-empty-badged.svg);
+}
+
+:root:not([fxastatus]) #fxa-toolbar-menu-button {
+  display: none;
+}
+
+:root[fxastatus="signedin"] #fxa-menu-avatar,
+:root[fxastatus="signedin"] #fxa-avatar-image {
+  border-radius: 50%;
+  list-style-image: var(--avatar-image-url);
+}
+
+:root[fxastatus="signedin"] #PanelUI-fxa-signin,
+:root[fxastatus="signedin"] #PanelUI-fxa-unverified,
+:root[fxastatus="unverified"] #PanelUI-fxa-signin,
+:root[fxastatus="unverified"] #PanelUI-fxa-menu,
+:root[fxastatus="not_configured"] #PanelUI-fxa-unverified,
+:root[fxastatus="not_configured"] #PanelUI-fxa-menu {
+  display: none;
+}
+
+:root[fxastatus="not_configured"] #PanelUI-fxa > .panel-subview-body,
+:root[fxastatus="unverified"] #PanelUI-fxa > .panel-subview-body {
+  -moz-box-align: center;
+}
+
+#PanelUI-fxa-signin,
+#PanelUI-fxa-unverified {
+  margin-top: 20px;
+  -moz-box-align: center;
+}
+
+.PanelUI-fxa-signin-instruction-callout {
+  font-size: 1.3em;
+  font-weight: normal;
+  padding: .6em 0 .6em;
+}
+
+.PanelUI-fxa-signin-instruction-label {
+  font-weight: lighter;
+}
+
+.fxa-avatar-subpanel {
+  padding-top: 8px;
+  padding-bottom: 4px;
+}
+
+.fxa-avatar-subpanel-description {
+  color: var(--panel-disabled-color);
+}
+
+#fxa-menu-avatar {
+  height: 32px;
+  width: 32px;
+  pointer-events: none;
+  margin-inline-start: 20px;
+  -moz-context-properties: fill, fill-opacity;
+  fill: var(--arrowpanel-color);
+}
+
+/* From the FxA menu -> remote tabs, we don't need to clutter the view with
+   redundant buttons because these are accessible from the main menu */
+panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-view-sidebar,
+panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
+  display: none;
+}
+
+.fxaChooseWhatToSyncDevices {
+  height: 102px;
+  width: 201px;
+  list-style-image: url(chrome://browser/skin/fxa/choose-what-to-sync-devices.svg);
+}
+
+.fxaGraphicMail {
+  height: 71px;
+  width: 143px;
+  list-style-image: url(chrome://browser/skin/fxa/graphic-mail.svg);
+}
+
 #PanelUI-remotetabs {
   --panel-ui-sync-illustration-height: 91px;
 }
 
+.PanelUI-fxa-signin-instruction-label,
+.PanelUI-fxa-signin-instruction-callout,
 .PanelUI-remotetabs-instruction-label {
   /* If you change the margin here, the min-height of the synced tabs panel
     (e.g. #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-setupsync, etc) may
@@ -683,6 +787,9 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   text-align: center;
   text-shadow: none;
   max-width: 15em;
+}
+
+.PanelUI-remotetabs-instruction-label {
   color: var(--panel-disabled-color);
 }
 
@@ -695,6 +802,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   padding-bottom: 30px;
 }
 
+.PanelUI-fxa-signin-button,
 .PanelUI-remotetabs-button {
   -moz-appearance: none;
   background-color: #0060df;
@@ -712,10 +820,16 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   min-width: 200px;
 }
 
+.PanelUI-fxa-signin-button {
+  padding: 1em;
+}
+
+.PanelUI-fxa-signin-button:hover,
 .PanelUI-remotetabs-button:hover {
   background-color: #003eaa;
 }
 
+.PanelUI-fxa-signin-button:hover:active,
 .PanelUI-remotetabs-button:hover:active {
   background-color: #002275;
 }
@@ -754,6 +868,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   list-style-image: url(chrome://browser/skin/fxa/sync-illustration-issue.svg);
 }
 
+.PanelUI-fxa-signin-button > .toolbarbutton-text,
 .PanelUI-remotetabs-button > .toolbarbutton-text {
   /* !important to override ".cui-widget-panel toolbarbutton > .toolbarbutton-text" above. */
   text-align: center !important;
@@ -1206,6 +1321,10 @@ menuitem.panel-subview-footer@menuStateActive@,
 #PanelUI-historyItems > toolbarbutton > .toolbarbutton-icon {
   width: 16px;
   height: 16px;
+}
+
+#appMenu-fxa-avatar {
+  border-radius: 50%;
 }
 
 toolbarpaletteitem[place="palette"] > .toolbarbutton-1 > .toolbarbutton-menu-dropmarker,
