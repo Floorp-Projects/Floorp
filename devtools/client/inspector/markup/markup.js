@@ -2029,6 +2029,11 @@ MarkupView.prototype = {
 
     this._hoveredContainer = null;
 
+    if (this._contextMenu) {
+      this._contextMenu.destroy();
+      this._contextMenu = null;
+    }
+
     if (this._eventDetailsTooltip) {
       this._eventDetailsTooltip.destroy();
       this._eventDetailsTooltip = null;
