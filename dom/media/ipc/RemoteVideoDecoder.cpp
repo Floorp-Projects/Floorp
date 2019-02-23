@@ -94,11 +94,9 @@ mozilla::ipc::IPCResult RemoteVideoDecoderChild::RecvOutput(
   RefPtr<Image> image = DeserializeImage(aData.sdBuffer(), aData.frameSize());
 
   RefPtr<VideoData> video = VideoData::CreateFromImage(
-      aData.display(), aData.base().offset(),
-      media::TimeUnit::FromMicroseconds(aData.base().time()),
-      media::TimeUnit::FromMicroseconds(aData.base().duration()), image,
-      aData.base().keyframe(),
-      media::TimeUnit::FromMicroseconds(aData.base().timecode()));
+      aData.display(), aData.base().offset(), aData.base().time(),
+      aData.base().duration(), image, aData.base().keyframe(),
+      aData.base().timecode());
 
   mDecodedData.AppendElement(std::move(video));
   return IPC_OK();
@@ -191,9 +189,8 @@ void RemoteVideoDecoderParent::ProcessDecodedData(
     }
 
     RemoteVideoDataIPDL output(
-        MediaDataIPDL(data->mOffset, data->mTime.ToMicroseconds(),
-                      data->mTimecode.ToMicroseconds(),
-                      data->mDuration.ToMicroseconds(), data->mKeyframe),
+        MediaDataIPDL(data->mOffset, data->mTime, data->mTimecode,
+                      data->mDuration, data->mKeyframe),
         video->mDisplay, image->GetSize(), sdBuffer, video->mFrameID);
     Unused << SendOutput(output);
   }

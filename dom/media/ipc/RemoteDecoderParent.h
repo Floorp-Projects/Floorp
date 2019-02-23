@@ -32,7 +32,7 @@ class RemoteDecoderParent : public PRemoteDecoderParent {
   IPCResult RecvFlush();
   IPCResult RecvDrain();
   IPCResult RecvShutdown();
-  IPCResult RecvSetSeekThreshold(const int64_t& aTime);
+  IPCResult RecvSetSeekThreshold(const media::TimeUnit& aTime);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

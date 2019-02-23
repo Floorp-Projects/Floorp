@@ -112,9 +112,8 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDecoderChild::Decode(
   memcpy(buffer.get<uint8_t>(), aSample->Data(), aSample->Size());
 
   MediaRawDataIPDL sample(
-      MediaDataIPDL(aSample->mOffset, aSample->mTime.ToMicroseconds(),
-                    aSample->mTimecode.ToMicroseconds(),
-                    aSample->mDuration.ToMicroseconds(), aSample->mKeyframe),
+      MediaDataIPDL(aSample->mOffset, aSample->mTime, aSample->mTimecode,
+                    aSample->mDuration, aSample->mKeyframe),
       buffer);
   SendInput(sample);
 
@@ -167,7 +166,7 @@ nsCString RemoteDecoderChild::GetDescriptionName() const {
 void RemoteDecoderChild::SetSeekThreshold(const media::TimeUnit& aTime) {
   AssertOnManagerThread();
   if (mCanSend) {
-    SendSetSeekThreshold(aTime.IsValid() ? aTime.ToMicroseconds() : INT64_MIN);
+    SendSetSeekThreshold(aTime);
   }
 }
 

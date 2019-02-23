@@ -7,10 +7,10 @@
 #ifndef mozilla_dom_media_MediaIPCUtils_h
 #define mozilla_dom_media_MediaIPCUtils_h
 
-#include "ipc/IPCMessageUtils.h"
-#include "mozilla/gfx/Rect.h"
-#include "mozilla/GfxMessageUtils.h"
 #include "PlatformDecoderModule.h"
+#include "ipc/IPCMessageUtils.h"
+#include "mozilla/GfxMessageUtils.h"
+#include "mozilla/gfx/Rect.h"
 
 namespace IPC {
 template <>
@@ -97,6 +97,52 @@ struct ParamTraits<mozilla::MediaDataDecoder::ConversionRequired>
           mozilla::MediaDataDecoder::ConversionRequired(0),
           mozilla::MediaDataDecoder::ConversionRequired(
               mozilla::MediaDataDecoder::ConversionRequired::kNeedAnnexB)> {};
+
+template <>
+struct ParamTraits<mozilla::media::TimeUnit> {
+  typedef mozilla::media::TimeUnit paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.IsValid());
+    WriteParam(aMsg, aParam.IsValid() ? aParam.ToMicroseconds() : 0);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    bool valid;
+    int64_t value;
+    if (ReadParam(aMsg, aIter, &valid) && ReadParam(aMsg, aIter, &value)) {
+      if (!valid) {
+        *aResult = mozilla::media::TimeUnit::Invalid();
+      } else {
+        *aResult = mozilla::media::TimeUnit::FromMicroseconds(value);
+      }
+      return true;
+    }
+    return false;
+  };
+};
+
+template <>
+struct ParamTraits<mozilla::media::TimeInterval> {
+  typedef mozilla::media::TimeInterval paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mStart);
+    WriteParam(aMsg, aParam.mEnd);
+    WriteParam(aMsg, aParam.mFuzz);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    if (ReadParam(aMsg, aIter, &aResult->mStart) &&
+        ReadParam(aMsg, aIter, &aResult->mEnd) &&
+        ReadParam(aMsg, aIter, &aResult->mFuzz)) {
+      return true;
+    }
+    return false;
+  }
+};
 
 }  // namespace IPC
 
