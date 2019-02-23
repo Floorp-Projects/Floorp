@@ -345,7 +345,9 @@ var FormAutofillContent = {
   /**
    * @type {Set} Set of the fields with usable values in any saved profile.
    */
-  savedFieldNames: null,
+  get savedFieldNames() {
+    return Services.cpmm.sharedData.get("FormAutofill:savedFieldNames");
+  },
 
   /**
    * @type {Object} The object where to store the active items, e.g. element,
@@ -357,7 +359,6 @@ var FormAutofillContent = {
     FormAutofill.defineLazyLogGetter(this, "FormAutofillContent");
 
     Services.cpmm.addMessageListener("FormAutofill:enabledStatus", this);
-    Services.cpmm.addMessageListener("FormAutofill:savedFieldNames", this);
     Services.obs.addObserver(this, "earlyformsubmit");
 
     let autofillEnabled = Services.cpmm.initialProcessData.autofillEnabled;
@@ -370,9 +371,6 @@ var FormAutofillContent = {
     if (autofillEnabled || shouldEnableAutofill) {
       ProfileAutocomplete.ensureRegistered();
     }
-
-    this.savedFieldNames =
-      Services.cpmm.initialProcessData.autofillSavedFieldNames;
   },
 
   /**
@@ -439,9 +437,6 @@ var FormAutofillContent = {
           ProfileAutocomplete.ensureUnregistered();
         }
         break;
-      }
-      case "FormAutofill:savedFieldNames": {
-        this.savedFieldNames = data;
       }
     }
   },
