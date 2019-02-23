@@ -64,22 +64,9 @@ nsresult GetOriginAndBaseDomain(const nsACString& aURL, nsACString& aOrigin,
 
   url->Origin(aOrigin);
 
-  if (url->Scheme() == "file") {
-    // The file scheme is not handled by third party utils properly, use the
-    // origin string for now.
-    aBaseDomain = aOrigin;
-  } else {
-    nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-        do_GetService(THIRDPARTYUTIL_CONTRACTID);
-    if (!thirdPartyUtil) {
-      return NS_ERROR_FAILURE;
-    }
-
-    rv = thirdPartyUtil->GetBaseDomainFromSchemeHost(url->Scheme(), url->Host(),
-                                                     aBaseDomain);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  rv = url->BaseDomain(aBaseDomain);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   return NS_OK;
