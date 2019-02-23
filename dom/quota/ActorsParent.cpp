@@ -2367,10 +2367,6 @@ nsresult QuotaManager::CreateRunnable::RegisterObserver() {
     return rv;
   }
 
-  for (RefPtr<Client>& client : mManager->mClients) {
-    client->DidInitialize(mManager);
-  }
-
   return NS_OK;
 }
 
@@ -2501,10 +2497,6 @@ QuotaManager::ShutdownObserver::Observe(nsISupports* aSubject,
   // nested event loop below will not cause re-entrancy issues.
   Unused << observerService->RemoveObserver(
       this, PROFILE_BEFORE_CHANGE_QM_OBSERVER_ID);
-
-  for (RefPtr<Client>& client : gInstance->mClients) {
-    client->WillShutdown();
-  }
 
   bool done = false;
 
