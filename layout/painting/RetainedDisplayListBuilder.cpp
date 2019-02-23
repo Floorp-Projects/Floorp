@@ -1085,7 +1085,8 @@ static void AddFramesForContainingBlock(nsIFrame* aBlock,
 // so that we can avoid an extra ancestor walk, and we can reuse the flag
 // to detect when we've already visited an ancestor (and thus all further
 // ancestors must also be visited).
-void FindContainingBlocks(nsIFrame* aFrame, nsTArray<nsIFrame*>& aExtraFrames) {
+static void FindContainingBlocks(nsIFrame* aFrame,
+                                 nsTArray<nsIFrame*>& aExtraFrames) {
   for (nsIFrame* f = aFrame; f;
        f = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(f)) {
     if (f->ForceDescendIntoIfVisible()) return;
