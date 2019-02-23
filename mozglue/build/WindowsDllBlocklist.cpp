@@ -31,6 +31,7 @@
 #include "nsAutoPtr.h"
 #include "nsWindowsDllInterceptor.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StackWalk_windows.h"
@@ -1008,9 +1009,9 @@ MFBT_API void DllBlocklist_SetFullDllServices(
 
       MOZ_DIAGNOSTIC_ASSERT(pLdrRegisterDllNotification);
 
-      NTSTATUS ntStatus = pLdrRegisterDllNotification(
+      mozilla::DebugOnly<NTSTATUS> ntStatus = pLdrRegisterDllNotification(
           0, &DllLoadNotification, nullptr, &gNotificationCookie);
-      MOZ_DIAGNOSTIC_ASSERT(NT_SUCCESS(ntStatus));
+      MOZ_ASSERT(NT_SUCCESS(ntStatus));
     }
   }
 
