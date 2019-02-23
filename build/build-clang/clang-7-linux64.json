@@ -19,6 +19,7 @@
       "static-llvm-symbolizer.patch",
       "find_symbolizer_linux.patch",
       "rename_gcov_flush_.patch",
-      "r350774.patch"
+      "r350774.patch",
+      "android-mangling-error.patch"
     ]
 }
