@@ -307,6 +307,7 @@ impl Docopt {
     }
 
     #[doc(hidden)]
+    // Exposed for use in `docopt_macros`.
     pub fn parser(&self) -> &Parser {
         &self.p
     }
