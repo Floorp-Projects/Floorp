@@ -86,7 +86,8 @@ impl<'grammar> LaneTable<'grammar> {
     /// "beachhead states".
     pub fn beachhead_states(&self) -> Set<StateIndex> {
         // set of all states that are reachable from another state
-        let reachable: Set<StateIndex> = self.successors
+        let reachable: Set<StateIndex> = self
+            .successors
             .iter()
             .flat_map(|(_pred, succ)| succ)
             .cloned()
@@ -148,7 +149,8 @@ impl<'grammar> LaneTable<'grammar> {
 
 impl<'grammar> Debug for LaneTable<'grammar> {
     fn fmt(&self, fmt: &mut Formatter) -> Result<(), Error> {
-        let indices: Set<StateIndex> = self.lookaheads
+        let indices: Set<StateIndex> = self
+            .lookaheads
             .keys()
             .map(|&(state, _)| state)
             .chain(self.successors.iter().map(|(key, _)| key.clone()))

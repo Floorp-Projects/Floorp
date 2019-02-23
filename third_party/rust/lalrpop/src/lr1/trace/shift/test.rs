@@ -1,9 +1,9 @@
-use string_cache::DefaultAtom as Atom;
 use grammar::repr::*;
 use lr1::build_states;
 use lr1::core::*;
 use lr1::first::FirstSets;
 use lr1::tls::Lr1Tls;
+use string_cache::DefaultAtom as Atom;
 use test_util::{expect_debug, normalized_grammar};
 use tls::Tls;
 
@@ -56,7 +56,8 @@ pub Ty: () = {
     (Nonterminal(Ty) -([Ty], Some("->"), [Ty])-> Item(Ty = Ty (*) "->" Ty)),
     (Item(Ty = Ty "->" (*) Ty) -([Ty, "->"], Some(Ty), [])-> Nonterminal(Ty))
 ]
-"#.trim(),
+"#
+        .trim(),
     );
 
     let list: Vec<_> = graph
@@ -73,6 +74,7 @@ pub Ty: () = {
         "  └─Ty─────────────┘"
     ]
 ]
-"#.trim(),
+"#
+        .trim(),
     );
 }

@@ -1,9 +1,9 @@
-use string_cache::DefaultAtom as Atom;
+use super::inline_order;
 use grammar::repr::NonterminalString;
 use normalize::lower_helper;
 use parser;
 use session::Session;
-use super::inline_order;
+use string_cache::DefaultAtom as Atom;
 
 #[test]
 fn test_inline_self_cycle() {
@@ -13,7 +13,8 @@ fn test_inline_self_cycle() {
     extern { }
     #[inline] A: () = A;
 "#,
-    ).unwrap();
+    )
+    .unwrap();
     let grammar = lower_helper(&Session::test(), grammar, true).unwrap();
     assert!(inline_order(&grammar).is_err());
 }
@@ -28,7 +29,8 @@ fn test_inline_cycle_3() {
     #[inline] B: () = C;
     #[inline] C: () = A;
 "#,
-    ).unwrap();
+    )
+    .unwrap();
     let grammar = lower_helper(&Session::test(), grammar, true).unwrap();
     assert!(inline_order(&grammar).is_err());
 }
@@ -44,7 +46,8 @@ fn test_inline_order() {
     B: () = C;
     #[inline] C: () = A;
 "#,
-    ).unwrap();
+    )
+    .unwrap();
     let grammar = lower_helper(&Session::test(), grammar, true).unwrap();
     let a = NonterminalString(Atom::from("A"));
     let c = NonterminalString(Atom::from("C"));

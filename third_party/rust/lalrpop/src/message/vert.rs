@@ -1,5 +1,5 @@
-use ascii_canvas::AsciiView;
 use super::*;
+use ascii_canvas::AsciiView;
 
 #[derive(Debug)]
 pub struct Vert {

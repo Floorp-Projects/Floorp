@@ -1,7 +1,7 @@
 use collections::Set;
+use grammar::repr::*;
 use lr1::core::*;
 use lr1::lookahead::Lookahead;
-use grammar::repr::*;
 
 mod construct;
 mod lane;

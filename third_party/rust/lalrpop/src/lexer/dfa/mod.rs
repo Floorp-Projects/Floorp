@@ -3,10 +3,10 @@
 
 use collections::Set;
 use kernel_set::{Kernel, KernelSet};
+use lexer::nfa::{self, NFAConstructionError, NFAStateIndex, Test, NFA};
+use lexer::re;
 use std::fmt::{Debug, Display, Error, Formatter};
 use std::rc::Rc;
-use lexer::re;
-use lexer::nfa::{self, NFAConstructionError, NFAStateIndex, Test, NFA};
 
 #[cfg(test)]
 mod test;
@@ -228,11 +228,13 @@ impl<'nfa> DFABuilder<'nfa> {
     fn accept_test(&self, item: Item, test: Test) -> Option<Item> {
         let nfa = self.nfa(item);
 
-        let matching_test = nfa.edges::<Test>(item.nfa_state)
+        let matching_test = nfa
+            .edges::<Test>(item.nfa_state)
             .filter(|edge| edge.label.intersects(test))
             .map(|edge| item.to(edge.to));
 
-        let matching_other = nfa.edges::<nfa::Other>(item.nfa_state)
+        let matching_other = nfa
+            .edges::<nfa::Other>(item.nfa_state)
             .map(|edge| item.to(edge.to));
 
         matching_test.chain(matching_other).next()
@@ -251,7 +253,8 @@ impl<'nfa> DFABuilder<'nfa> {
         let mut counter = 0;
         while counter < items.len() {
             let item = items[counter];
-            let derived_states = self.nfa(item)
+            let derived_states = self
+                .nfa(item)
                 .edges::<nfa::Noop>(item.nfa_state)
                 .map(|edge| item.to(edge.to))
                 .filter(|&item| observed.insert(item));

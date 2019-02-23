@@ -2,19 +2,19 @@
 
 use grammar::repr::*;
 
-pub mod codegen;
 mod build;
 mod build_lalr;
+pub mod codegen;
 mod core;
 mod error;
 mod example;
 mod first;
 mod lane_table;
 mod lookahead;
+mod report;
 mod state_graph;
 mod tls;
 mod trace;
-mod report;
 use std::io::{self, Write};
 
 #[cfg(test)]

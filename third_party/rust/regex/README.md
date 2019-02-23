@@ -29,7 +29,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-regex = "0.2"
+regex = "1"
 ```
 
 and this to your crate root:
@@ -191,13 +191,9 @@ assert!(matches.matched(6));
 
 ### Usage: enable SIMD optimizations
 
-This crate provides an `unstable` feature that can only be enabled on nightly
-Rust. When this feature is enabled, the regex crate will use SIMD optimizations
-if your CPU supports them. No additional compile time flags are required; the
-regex crate will detect your CPU support at runtime.
-
-When `std::arch` becomes stable, then these optimizations will be enabled
-automatically.
+SIMD optimizations are enabled automatically on Rust stable 1.27 and newer.
+For nightly versions of Rust, this requires a recent version with the SIMD
+features stabilized.
 
 
 ### Usage: a regular expression parser
@@ -216,11 +212,11 @@ recommended for general use.
 
 This crate's minimum supported `rustc` version is `1.20.0`.
 
-The current **tentative** policy is that the minimum Rust version required to
-use this crate can be increased in minor version updates. For example, if
-regex 1.0.0 requires Rust 1.20.0, then regex 1.0.z for all values of `z` will
-also require Rust 1.20.0 or newer. However, regex 1.y for `y > 0` may require
-a newer minimum version of Rust.
+The current **tentative** policy is that the minimum Rust version required
+to use this crate can be increased in minor version updates. For example, if
+regex 1.0 requires Rust 1.20.0, then regex 1.0.z for all values of `z` will
+also require Rust 1.20.0 or newer. However, regex 1.y for `y > 0` may require a
+newer minimum version of Rust.
 
 In general, this crate will be conservative with respect to the minimum
 supported version of Rust.

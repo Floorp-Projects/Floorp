@@ -1,13 +1,13 @@
 //! Mega naive LALR(1) generation algorithm.
 
 use collections::{map, Map, Multimap};
+use grammar::repr::*;
 use itertools::Itertools;
 use lr1::build;
 use lr1::core::*;
 use lr1::lookahead::*;
-use grammar::repr::*;
-use std::rc::Rc;
 use std::mem;
+use std::rc::Rc;
 use tls::Tls;
 
 #[cfg(test)]

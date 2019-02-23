@@ -1,5 +1,6 @@
 //! A tokenizer for use in LALRPOP itself.
 
+use std::borrow::Cow;
 use std::str::CharIndices;
 use unicode_xid::UnicodeXID;
 
@@ -19,6 +20,7 @@ pub struct Error {
 pub enum ErrorCode {
     UnrecognizedToken,
     UnterminatedEscape,
+    UnrecognizedEscape,
     UnterminatedStringLiteral,
     UnterminatedCharacterLiteral,
     UnterminatedAttribute,
@@ -95,6 +97,15 @@ pub enum Tok<'input> {
     Underscore,
     Bang,
     ShebangAttribute(&'input str), // #![...]
+
+    // Dummy tokens for parser sharing
+    StartGrammar,
+    StartPattern,
+    StartMatchMapping,
+    #[allow(dead_code)]
+    StartGrammarWhereClauses,
+    #[allow(dead_code)]
+    StartTypeRef,
 }
 
 pub struct Tokenizer<'input> {
@@ -124,35 +135,29 @@ const KEYWORDS: &'static [(&'static str, Tok<'static>)] = &[
  * Helper for backtracking.
  */
 macro_rules! first {
-    ($this:expr, $action:expr, $fallback:expr) => {
-        {
-            let fallback_state = ($this.chars.clone(), $this.lookahead);
-            let result = $action;
-            match result {
-                Ok(_) => {
-                    Some(result)
-                }
-                _ => {
-                    $this.chars = fallback_state.0;
-                    $this.lookahead = fallback_state.1;
-                    Some($fallback)
-                }
+    ($this:expr, $action:expr, $fallback:expr) => {{
+        let fallback_state = ($this.chars.clone(), $this.lookahead);
+        let result = $action;
+        match result {
+            Ok(_) => Some(result),
+            _ => {
+                $this.chars = fallback_state.0;
+                $this.lookahead = fallback_state.1;
+                Some($fallback)
             }
         }
-    }
+    }};
 }
 
 macro_rules! try_opt {
-    ($e:expr, $err:expr) => {
-        {
-            let r = $e;
-            match r {
-                Some(Ok(val)) => val,
-                Some(Err(err)) => return Err(err),
-                None => return $err,
-            }
+    ($e:expr, $err:expr) => {{
+        let r = $e;
+        match r {
+            Some(Ok(val)) => val,
+            Some(Err(err)) => return Err(err),
+            None => return $err,
         }
-    }
+    }};
 }
 
 impl<'input> Tokenizer<'input> {
@@ -182,7 +187,7 @@ impl<'input> Tokenizer<'input> {
                 '[' => {
                     self.bump();
                     sq_bracket_counter += 1
-                },
+                }
                 ']' => {
                     self.bump();
                     sq_bracket_counter -= 1;
@@ -192,19 +197,19 @@ impl<'input> Tokenizer<'input> {
                             let data = &self.text[idx0..idx2];
                             self.bump();
                             return Ok((idx0, ShebangAttribute(data), idx2));
-                        },
+                        }
                         n if n < 0 => return error(UnrecognizedToken, idx0),
                         _ => (),
                     }
-                },
+                }
                 '"' => {
                     self.bump();
                     let _ = try!(self.string_literal(idx1));
-                },
+                }
                 '\n' => return error(UnrecognizedToken, idx0),
                 _ => {
                     self.bump();
-                },
+                }
             }
         }
         error(UnrecognizedToken, idx0)
@@ -216,45 +221,45 @@ impl<'input> Tokenizer<'input> {
                 Some((idx0, '&')) => {
                     self.bump();
                     Some(Ok((idx0, Ampersand, idx0 + 1)))
-                },
+                }
                 Some((idx0, '!')) => match self.bump() {
                     Some((idx1, '=')) => {
                         self.bump();
                         Some(Ok((idx0, BangEquals, idx1 + 1)))
-                    },
+                    }
                     Some((idx1, '~')) => {
                         self.bump();
                         Some(Ok((idx0, BangTilde, idx1 + 1)))
-                    },
+                    }
                     _ => Some(Ok((idx0, Bang, idx0 + 1))),
                 },
                 Some((idx0, ':')) => match self.bump() {
                     Some((idx1, ':')) => {
                         self.bump();
                         Some(Ok((idx0, ColonColon, idx1 + 1)))
-                    },
+                    }
                     _ => Some(Ok((idx0, Colon, idx0 + 1))),
                 },
                 Some((idx0, ',')) => {
                     self.bump();
                     Some(Ok((idx0, Comma, idx0 + 1)))
-                },
+                }
                 Some((idx0, '.')) => match self.bump() {
                     Some((idx1, '.')) => {
                         self.bump();
                         Some(Ok((idx0, DotDot, idx1 + 1)))
-                    },
+                    }
                     _ => Some(error(UnrecognizedToken, idx0)),
                 },
                 Some((idx0, '=')) => match self.bump() {
                     Some((idx1, '=')) => {
                         self.bump();
                         Some(Ok((idx0, EqualsEquals, idx1 + 1)))
-                    },
+                    }
                     Some((_, '>')) => {
                         self.bump();
                         Some(self.right_arrow(idx0))
-                    },
+                    }
                     _ => Some(Ok((idx0, Equals, idx0 + 1))),
                 },
                 Some((idx0, '#')) => {
@@ -262,97 +267,97 @@ impl<'input> Tokenizer<'input> {
                     first!(self, { self.shebang_attribute(idx0) }, {
                         Ok((idx0, Hash, idx0 + 1))
                     })
-                },
+                }
                 Some((idx0, '>')) => {
                     self.bump();
                     Some(Ok((idx0, GreaterThan, idx0 + 1)))
-                },
+                }
                 Some((idx0, '{')) => {
                     self.bump();
                     Some(Ok((idx0, LeftBrace, idx0 + 1)))
-                },
+                }
                 Some((idx0, '[')) => {
                     self.bump();
                     Some(Ok((idx0, LeftBracket, idx0 + 1)))
-                },
+                }
                 Some((idx0, '(')) => {
                     self.bump();
                     Some(Ok((idx0, LeftParen, idx0 + 1)))
-                },
+                }
                 Some((idx0, '<')) => {
                     self.bump();
                     Some(Ok((idx0, LessThan, idx0 + 1)))
-                },
+                }
                 Some((idx0, '@')) => match self.bump() {
                     Some((idx1, 'L')) => {
                         self.bump();
                         Some(Ok((idx0, Lookahead, idx1 + 1)))
-                    },
+                    }
                     Some((idx1, 'R')) => {
                         self.bump();
                         Some(Ok((idx0, Lookbehind, idx1 + 1)))
-                    },
+                    }
                     _ => Some(error(UnrecognizedToken, idx0)),
                 },
                 Some((idx0, '+')) => {
                     self.bump();
                     Some(Ok((idx0, Plus, idx0 + 1)))
-                },
+                }
                 Some((idx0, '?')) => {
                     self.bump();
                     Some(Ok((idx0, Question, idx0 + 1)))
-                },
+                }
                 Some((idx0, '}')) => {
                     self.bump();
                     Some(Ok((idx0, RightBrace, idx0 + 1)))
-                },
+                }
                 Some((idx0, ']')) => {
                     self.bump();
                     Some(Ok((idx0, RightBracket, idx0 + 1)))
-                },
+                }
                 Some((idx0, ')')) => {
                     self.bump();
                     Some(Ok((idx0, RightParen, idx0 + 1)))
-                },
+                }
                 Some((idx0, ';')) => {
                     self.bump();
                     Some(Ok((idx0, Semi, idx0 + 1)))
-                },
+                }
                 Some((idx0, '*')) => {
                     self.bump();
                     Some(Ok((idx0, Star, idx0 + 1)))
-                },
+                }
                 Some((idx0, '~')) => match self.bump() {
                     Some((idx1, '~')) => {
                         self.bump();
                         Some(Ok((idx0, TildeTilde, idx1 + 1)))
-                    },
+                    }
                     _ => Some(error(UnrecognizedToken, idx0)),
                 },
                 Some((idx0, '`')) => {
                     self.bump();
                     Some(self.escape(idx0))
-                },
+                }
                 Some((idx0, '\'')) => {
                     self.bump();
                     Some(self.lifetimeish(idx0))
-                },
+                }
                 Some((idx0, '"')) => {
                     self.bump();
                     Some(self.string_literal(idx0))
-                },
+                }
                 Some((idx0, '/')) => match self.bump() {
                     Some((_, '/')) => {
                         self.take_until(|c| c == '\n');
                         continue;
-                    },
+                    }
                     _ => Some(error(UnrecognizedToken, idx0)),
                 },
                 Some((idx0, '-')) => match self.bump() {
                     Some((idx1, '>')) => {
                         self.bump();
                         Some(Ok((idx0, MinusGreaterThan, idx1 + 1)))
-                    },
+                    }
                     _ => Some(error(UnrecognizedToken, idx0)),
                 },
                 Some((idx0, c)) if is_identifier_start(c) => {
@@ -366,16 +371,16 @@ impl<'input> Tokenizer<'input> {
                                 // it's ok that we already consumed the 'r', because the
                                 // identifier will run from idx0 (the 'r') to the end
                                 Some(self.identifierish(idx0))
-                            },
+                            }
                         }
                     } else {
                         Some(self.identifierish(idx0))
                     }
-                },
+                }
                 Some((_, c)) if c.is_whitespace() => {
                     self.bump();
                     continue;
-                },
+                }
                 Some((idx, _)) => Some(error(UnrecognizedToken, idx)),
                 None => None,
             };
@@ -400,11 +405,11 @@ impl<'input> Tokenizer<'input> {
                 Some((idx2, 'L')) => {
                     self.bump();
                     Ok((idx0, EqualsGreaterThanLookahead, idx2 + 1))
-                },
+                }
                 Some((idx2, 'R')) => {
                     self.bump();
                     Ok((idx0, EqualsGreaterThanLookbehind, idx2 + 1))
-                },
+                }
                 _ => error(UnrecognizedToken, idx0),
             },
 
@@ -413,13 +418,13 @@ impl<'input> Tokenizer<'input> {
                 let idx2 = try!(self.code(idx0, "([{", "}])"));
                 let code = &self.text[idx1 + 1..idx2];
                 Ok((idx0, EqualsGreaterThanQuestionCode(code), idx2))
-            },
+            }
 
             Some((idx1, _)) => {
                 let idx2 = try!(self.code(idx0, "([{", "}])"));
                 let code = &self.text[idx1..idx2];
                 Ok((idx0, EqualsGreaterThanCode(code), idx2))
-            },
+            }
 
             None => error(UnterminatedCode, idx0),
         }
@@ -430,7 +435,7 @@ impl<'input> Tokenizer<'input> {
         // we have to scan ahead, matching (), [], and {}, and looking
         // for a suitable terminator: `,`, `;`, `]`, `}`, or `)`.
         // Additionaly we had to take into account that we can encounter an character literal
-        // equal to one of delimeters.
+        // equal to one of delimiters.
         let mut balance = 0; // number of unclosed `(` etc
         loop {
             if let Some((idx, c)) = self.lookahead {
@@ -492,13 +497,13 @@ impl<'input> Tokenizer<'input> {
                 self.bump(); // consume the '`'
                 let text: &'input str = &self.text[idx0 + 1..idx1]; // do not include the `` in the str
                 Ok((idx0, Escape(text), idx1 + 1))
-            },
+            }
             None => error(UnterminatedEscape, idx0),
         }
     }
 
     fn take_lifetime_or_character_literal(&mut self) -> Option<usize> {
-        // try to decide if `'` is for lifetime or it oppens a character literal
+        // Try to decide whether `'` is the start of a lifetime or a character literal.
 
         let forget_character = |p: (usize, char)| p.0;
 
@@ -547,7 +552,7 @@ impl<'input> Tokenizer<'input> {
                 self.bump(); // consume the closing quote
                 let text = &self.text[idx0 + 1..idx1]; // do not include quotes in the str
                 Some((idx0, variant(text), idx1 + 1))
-            },
+            }
             None => None,
         }
     }
@@ -591,10 +596,10 @@ impl<'input> Tokenizer<'input> {
                         let start = idx0 + 2 + hashes; // skip the `r###"`
                         let end = idx1 - hashes; // skip the `###`.
                         Ok((idx0, RegexLiteral(&self.text[start..end]), idx1 + 1))
-                    },
+                    }
                     None => error(UnterminatedStringLiteral, idx0),
                 }
-            },
+            }
             Some(idx1) => error(ExpectedStringLiteral, idx1),
             None => error(UnterminatedStringLiteral, idx0),
         }
@@ -613,7 +618,7 @@ impl<'input> Tokenizer<'input> {
                             self.bump();
                             let text = &self.text[idx0 + 1..idx2];
                             Ok((idx0, CharLiteral(text), idx2 + 1))
-                        },
+                        }
                         _ => Ok((start, Lifetime(word), end)),
                     }
                 } else {
@@ -622,7 +627,7 @@ impl<'input> Tokenizer<'input> {
                         None => error(UnterminatedCharacterLiteral, idx0),
                     }
                 }
-            },
+            }
         }
     }
 
@@ -679,14 +684,14 @@ impl<'input> Tokenizer<'input> {
             match self.lookahead {
                 None => {
                     return None;
-                },
+                }
                 Some((idx1, c)) => {
                     if terminate(c) {
                         return Some(idx1);
                     } else {
                         self.bump();
                     }
-                },
+                }
             }
         }
     }
@@ -704,11 +709,11 @@ impl<'input> Tokenizer<'input> {
             Some((idx0, cc)) if c == cc => {
                 self.bump();
                 Some(Ok((idx0)))
-            },
+            }
             Some((idx0, _)) => {
                 self.bump();
                 Some(error(UnrecognizedToken, idx0))
-            },
+            }
             None => None,
         }
     }
@@ -735,4 +740,35 @@ fn is_identifier_start(c: char) -> bool {
 
 fn is_identifier_continue(c: char) -> bool {
     UnicodeXID::is_xid_continue(c) || c == '_'
+}
+
+/// Expand escape characters in a string literal, converting the source code
+/// representation to the text it represents. The `idx0` argument should be the
+/// position in the input stream of the first character of `text`, the position
+/// after the opening double-quote.
+pub fn apply_string_escapes(code: &str, idx0: usize) -> Result<Cow<str>, Error> {
+    if !code.contains('\\') {
+        Ok(code.into())
+    } else {
+        let mut iter = code.char_indices();
+        let mut text = String::new();
+        while let Some((_, mut ch)) = iter.next() {
+            if ch == '\\' {
+                // The parser should never have accepted an ill-formed string
+                // literal, so we know it can't end in a backslash.
+                let (offset, next_ch) = iter.next().unwrap();
+                ch = match next_ch {
+                    '\\' | '\"' => next_ch,
+                    'n' => '\n',
+                    'r' => '\r',
+                    't' => '\t',
+                    _ => {
+                        return error(UnrecognizedEscape, idx0 + offset);
+                    }
+                }
+            }
+            text.push(ch);
+        }
+        Ok(text.into())
+    }
 }

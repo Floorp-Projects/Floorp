@@ -6,9 +6,9 @@ representations.
 
 */
 
-use string_cache::DefaultAtom as Atom;
 use grammar::parse_tree::{Path, Span};
 use std::fmt::{Display, Error, Formatter};
+use string_cache::DefaultAtom as Atom;
 use util::Sep;
 
 #[derive(Clone, Debug, PartialEq, Eq)]

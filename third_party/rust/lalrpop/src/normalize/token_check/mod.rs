@@ -7,13 +7,13 @@
 
 use super::{NormError, NormResult};
 
-use string_cache::DefaultAtom as Atom;
-use lexer::re;
-use lexer::dfa::{self, DFAConstructionError, Precedence};
-use lexer::nfa::NFAConstructionError::*;
+use collections::{Map, Set};
 use grammar::consts::*;
 use grammar::parse_tree::*;
-use collections::{Map, Set};
+use lexer::dfa::{self, DFAConstructionError, Precedence};
+use lexer::nfa::NFAConstructionError::*;
+use lexer::re;
+use string_cache::DefaultAtom as Atom;
 
 #[cfg(test)]
 mod test;
@@ -176,7 +176,8 @@ impl MatchBlock {
 
     fn add_literal_from_grammar(&mut self, sym: TerminalLiteral, span: Span) -> NormResult<()> {
         // Already saw this literal, maybe in a match entry, maybe in the grammar.
-        if self.match_user_names
+        if self
+            .match_user_names
             .contains(&TerminalString::Literal(sym.clone()))
         {
             return Ok(());
@@ -213,9 +214,11 @@ impl<'grammar> Validator<'grammar> {
                 GrammarItem::MatchToken(..) => {}
                 GrammarItem::ExternToken(_) => {}
                 GrammarItem::InternToken(_) => {}
-                GrammarItem::Nonterminal(ref data) => for alternative in &data.alternatives {
-                    try!(self.validate_alternative(alternative));
-                },
+                GrammarItem::Nonterminal(ref data) => {
+                    for alternative in &data.alternatives {
+                        try!(self.validate_alternative(alternative));
+                    }
+                }
             }
         }
         Ok(())

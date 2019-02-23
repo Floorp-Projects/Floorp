@@ -1,16 +1,16 @@
 //! Lower
 //!
 
-use string_cache::DefaultAtom as Atom;
-use normalize::NormResult;
-use normalize::norm_util::{self, Symbols};
+use collections::{map, Map};
 use grammar::consts::*;
-use grammar::pattern::{Pattern, PatternKind};
 use grammar::parse_tree as pt;
 use grammar::parse_tree::{read_algorithm, InternToken, NonterminalString, Path, TerminalString};
+use grammar::pattern::{Pattern, PatternKind};
 use grammar::repr as r;
+use normalize::norm_util::{self, Symbols};
+use normalize::NormResult;
 use session::Session;
-use collections::{map, Map};
+use string_cache::DefaultAtom as Atom;
 
 pub fn lower(session: &Session, grammar: pt::Grammar, types: r::Types) -> NormResult<r::Grammar> {
     let state = LowerState::new(session, types, &grammar);
@@ -116,7 +116,8 @@ impl<'s> LowerState<'s> {
 
                 pt::GrammarItem::Nonterminal(nt) => {
                     let nt_name = &nt.name;
-                    let productions: Vec<_> = nt.alternatives
+                    let productions: Vec<_> = nt
+                        .alternatives
                         .into_iter()
                         .map(|alt| {
                             let nt_type = self.types.nonterminal_type(nt_name).clone();
@@ -169,7 +170,8 @@ impl<'s> LowerState<'s> {
 
         read_algorithm(&grammar.annotations, &mut algorithm);
 
-        let mut all_terminals: Vec<_> = self.conversions
+        let mut all_terminals: Vec<_> = self
+            .conversions
             .iter()
             .map(|c| c.0.clone())
             .chain(if self.uses_error_recovery {
@@ -209,11 +211,13 @@ impl<'s> LowerState<'s> {
         &mut self,
         grammar: &pt::Grammar,
     ) -> Map<NonterminalString, NonterminalString> {
+        let session = self.session;
         grammar
             .items
             .iter()
             .filter_map(|item| item.as_nonterminal())
             .filter(|nt| nt.visibility.is_pub())
+            .filter(|nt| cfg_active(session, nt))
             .map(|nt| {
                 // create a synthetic symbol `__Foo` for each public symbol `Foo`
                 // with a rule like:
@@ -224,9 +228,10 @@ impl<'s> LowerState<'s> {
                 let nt_type = self.types.nonterminal_type(&nt.name).clone();
                 self.types.add_type(fake_name.clone(), nt_type.clone());
                 let expr = pt::ExprSymbol {
-                    symbols: vec![
-                        pt::Symbol::new(nt.span, pt::SymbolKind::Nonterminal(fake_name.clone())),
-                    ],
+                    symbols: vec![pt::Symbol::new(
+                        nt.span,
+                        pt::SymbolKind::Nonterminal(fake_name.clone()),
+                    )],
                 };
                 let symbols = vec![r::Symbol::Nonterminal(nt.name.clone())];
                 let action_fn = self.action_fn(nt_type, false, &expr, &symbols, None);
@@ -456,4 +461,19 @@ where
     debug_assert!(next_chosen.is_none());
 
     result
+}
+
+fn cfg_active(session: &Session, nt: &pt::NonterminalData) -> bool {
+    let cfg_atom = Atom::from(CFG);
+    nt.annotations
+        .iter()
+        .filter(|ann| ann.id == cfg_atom)
+        .all(|ann| {
+            ann.arg.as_ref().map_or(false, |&(_, ref feature)| {
+                session
+                    .features
+                    .as_ref()
+                    .map_or(false, |features| features.contains(feature))
+            })
+        })
 }

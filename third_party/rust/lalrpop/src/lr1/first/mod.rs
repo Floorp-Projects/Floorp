@@ -21,7 +21,8 @@ impl FirstSets {
             for production in grammar.nonterminals.values().flat_map(|p| &p.productions) {
                 let nt = &production.nonterminal;
                 let lookahead = this.first0(&production.symbols);
-                let first_set = this.map
+                let first_set = this
+                    .map
                     .entry(nt.clone())
                     .or_insert_with(|| TokenSet::new());
                 changed |= first_set.union_with(&lookahead);
@@ -58,16 +59,18 @@ impl FirstSets {
                             // way, the resulting first set should be
                             // empty.
                         }
-                        Some(set) => for lookahead in set.iter() {
-                            match lookahead {
-                                Token::EOF => {
-                                    empty_prod = true;
-                                }
-                                Token::Error | Token::Terminal(_) => {
-                                    result.insert(lookahead);
+                        Some(set) => {
+                            for lookahead in set.iter() {
+                                match lookahead {
+                                    Token::EOF => {
+                                        empty_prod = true;
+                                    }
+                                    Token::Error | Token::Terminal(_) => {
+                                        result.insert(lookahead);
+                                    }
                                 }
                             }
-                        },
+                        }
                     }
                     if !empty_prod {
                         return result;

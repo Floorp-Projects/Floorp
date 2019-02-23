@@ -1,5 +1,5 @@
-use parser;
 use grammar::parse_tree::{GrammarItem, MatchItem};
+use parser;
 
 #[test]
 fn match_block() {
@@ -40,7 +40,8 @@ fn match_complex() {
             _
         }
 "#,
-    ).unwrap();
+    )
+    .unwrap();
 
     // We could probably make some nice system for testing this
     let first_item = parsed.items.first().expect("has item");

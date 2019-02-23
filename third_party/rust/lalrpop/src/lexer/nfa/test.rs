@@ -1,5 +1,5 @@
-use lexer::nfa::{NFAConstructionError, Noop, Other, StateKind, Test, NFA};
 use lexer::nfa::interpret::interpret;
+use lexer::nfa::{NFAConstructionError, Noop, Other, StateKind, Test, NFA};
 use lexer::re;
 
 #[test]

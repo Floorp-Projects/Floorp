@@ -6,10 +6,10 @@ use grammar::repr::*;
 use lr1::build;
 use lr1::core::*;
 use lr1::first::FirstSets;
-use lr1::lookahead::{Lookahead, TokenSet};
 use lr1::lane_table::lane::LaneTracer;
-use lr1::lane_table::table::{ConflictIndex, LaneTable};
 use lr1::lane_table::table::context_set::OverlappingLookahead;
+use lr1::lane_table::table::{ConflictIndex, LaneTable};
+use lr1::lookahead::{Lookahead, TokenSet};
 use lr1::state_graph::StateGraph;
 use std::rc::Rc;
 
@@ -109,7 +109,8 @@ impl<'grammar> LaneTableConstruct<'grammar> {
         debug!("promote_lr0_states: all={:?}", all);
         lr0.into_iter()
             .map(|s| {
-                let items = s.items
+                let items = s
+                    .items
                     .vec
                     .iter()
                     .map(|item| Item {
@@ -118,7 +119,8 @@ impl<'grammar> LaneTableConstruct<'grammar> {
                         lookahead: all.clone(),
                     })
                     .collect();
-                let reductions = s.reductions
+                let reductions = s
+                    .reductions
                     .into_iter()
                     .map(|(_, p)| (all.clone(), p))
                     .collect();

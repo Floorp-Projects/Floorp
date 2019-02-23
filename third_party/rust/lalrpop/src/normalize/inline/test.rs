@@ -1,9 +1,9 @@
 use grammar::parse_tree::NonterminalString;
 use grammar::repr::Grammar;
-use string_cache::DefaultAtom as Atom;
 use normalize::{self, NormResult};
 use parser;
 use session::Session;
+use string_cache::DefaultAtom as Atom;
 
 use super::inline;
 
@@ -53,7 +53,8 @@ fn sri() {
             "L"
         };
     "#,
-    ).unwrap();
+    )
+    .unwrap();
 
     let nt = NonterminalString(Atom::from("E"));
 
@@ -92,7 +93,8 @@ ET: () = {
     "enum" "{" "}" => ()
 };
     "#,
-    ).unwrap();
+    )
+    .unwrap();
     let nt = NonterminalString(Atom::from("E"));
 
     // The problem in issue #55 was that we would inline both `AT*`

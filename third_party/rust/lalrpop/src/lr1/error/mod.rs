@@ -1,15 +1,15 @@
 //! Error reporting. For now very stupid and simplistic.
 
 use collections::{set, Set};
-use lr1::trace::Tracer;
+use grammar::repr::*;
+use itertools::Itertools;
 use lr1::core::*;
 use lr1::example::{Example, ExampleStyles, ExampleSymbol};
 use lr1::first::FirstSets;
 use lr1::lookahead::{Token, TokenSet};
-use itertools::Itertools;
-use grammar::repr::*;
-use message::Message;
+use lr1::trace::Tracer;
 use message::builder::{BodyCharacter, Builder, Character, MessageBuilder};
+use message::Message;
 use tls::Tls;
 
 #[cfg(test)]
@@ -351,8 +351,10 @@ impl<'cx, 'grammar> ErrorReportingCx<'cx, 'grammar> {
             .text("with")
             .text(symbol) // intentionally disable coloring here, looks better
             .adjacent_text("`", "?`")
-            .text("(or, alternatively, by adding the annotation `#[inline]` \
-                   to the definition of")
+            .text(
+                "(or, alternatively, by adding the annotation `#[inline]` \
+                 to the definition of",
+            )
             .push(nonterminal)
             .punctuated(").")
             .text("For more information, see the section on inlining")

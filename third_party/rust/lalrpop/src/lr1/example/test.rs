@@ -1,5 +1,5 @@
-use string_cache::DefaultAtom as Atom;
 use grammar::repr::*;
+use string_cache::DefaultAtom as Atom;
 use test_util::expect_debug;
 use tls::Tls;
 
@@ -14,8 +14,12 @@ fn term(t: &str) -> TerminalString {
 }
 
 macro_rules! sym {
-    (ε) => { ExampleSymbol::Epsilon };
-    ($t:ident) => { ExampleSymbol::Symbol(Symbol::Nonterminal(nt(stringify!($t)))) }
+    (ε) => {
+        ExampleSymbol::Epsilon
+    };
+    ($t:ident) => {
+        ExampleSymbol::Symbol(Symbol::Nonterminal(nt(stringify!($t))))
+    };
 }
 
 macro_rules! syms {
@@ -70,7 +74,8 @@ fn long_label_1_strings() {
     "  ├─LongLabel22─┘     │",
     "  └─Label─────────────┘"
 ]
-"#.trim(),
+"#
+        .trim(),
     );
 }
 
@@ -141,7 +146,8 @@ fn empty_labels_strings() {
     "                          └─Y─┘ │   │",
     "                                └─Z─┘"
 ]
-"#.trim(),
+"#
+        .trim(),
     );
 }
 
@@ -190,6 +196,7 @@ fn single_token_strings() {
     "  ├─ExprSuffix─┘                  │",
     "  └─ExprSuffix────────────────────┘"
 ]
-"#.trim(),
+"#
+        .trim(),
     );
 }

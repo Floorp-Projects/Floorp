@@ -1,11 +1,11 @@
 #![allow(dead_code)]
 
-use string_cache::DefaultAtom as Atom;
-use normalize::{NormError, NormResult};
-use petgraph::graph::{Graph, NodeIndex};
+use collections::{map, Map};
 use grammar::consts::INLINE;
 use grammar::repr::*;
-use collections::{map, Map};
+use normalize::{NormError, NormResult};
+use petgraph::graph::{Graph, NodeIndex};
+use string_cache::DefaultAtom as Atom;
 
 #[cfg(test)]
 mod test;
@@ -56,7 +56,8 @@ impl<'grammar> NonterminalGraph<'grammar> {
     }
 
     fn add_edges(&mut self) {
-        for production in self.grammar
+        for production in self
+            .grammar
             .nonterminals
             .values()
             .flat_map(|d| &d.productions)

@@ -7,16 +7,16 @@ use grammar::repr as r;
 use lalrpop_util::ParseError;
 use lexer::intern_token;
 use lr1;
-use message::{Content, Message};
 use message::builder::InlineBuilder;
+use message::{Content, Message};
 use normalize;
 use parser;
 use rust::RustWrite;
 use session::{ColorConfig, Session};
+use sha2::{Digest, Sha256};
 use term;
 use tls::Tls;
 use tok;
-use sha2::{Sha256, Digest};
 
 use std::fs;
 use std::io::{self, BufRead, Write};
@@ -39,10 +39,11 @@ const LALRPOP_VERSION_HEADER: &'static str = concat!(
 
 fn hash_file(file: &Path) -> io::Result<String> {
     let mut file = try!(fs::File::open(&file));
-    let hash = try!(Sha256::digest_reader(&mut file));
+    let mut sha_256 = Sha256::new();
+    try!(io::copy(&mut file, &mut sha_256));
 
     let mut hash_str = "// sha256: ".to_owned();
-    for byte in hash {
+    for byte in sha_256.result() {
         hash_str.push_str(&format!("{:x}", byte));
     }
     Ok(hash_str)
@@ -162,8 +163,8 @@ fn needs_rebuild(lalrpop_file: &Path, rs_file: &Path) -> io::Result<bool> {
             try!(f.read_line(&mut version_str));
             try!(f.read_line(&mut hash_str));
 
-            Ok(hash_str.trim() != try!(hash_file(&lalrpop_file)) 
-               || version_str.trim() != LALRPOP_VERSION_HEADER)
+            Ok(hash_str.trim() != try!(hash_file(&lalrpop_file))
+                || version_str.trim() != LALRPOP_VERSION_HEADER)
         }
         Err(e) => match e.kind() {
             io::ErrorKind::NotFound => Ok(true),
@@ -195,7 +196,8 @@ fn lalrpop_files<P: AsRef<Path>>(root_dir: P) -> io::Result<Vec<PathBuf>> {
             result.extend(try!(lalrpop_files(&path)));
         }
 
-        if file_type.is_file() && path.extension().is_some()
+        if file_type.is_file()
+            && path.extension().is_some()
             && path.extension().unwrap() == "lalrpop"
         {
             result.push(path);
@@ -255,6 +257,9 @@ fn parse_and_normalize_grammar(session: &Session, file_text: &FileText) -> io::R
             let string = match error.code {
                 tok::ErrorCode::UnrecognizedToken => "unrecognized token",
                 tok::ErrorCode::UnterminatedEscape => "unterminated escape; missing '`'?",
+                tok::ErrorCode::UnrecognizedEscape => {
+                    "unrecognized escape; only \\n, \\r, \\t, \\\" and \\\\ are recognized"
+                }
                 tok::ErrorCode::UnterminatedStringLiteral => {
                     "unterminated string literal; missing `\"`?"
                 }
