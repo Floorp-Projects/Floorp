@@ -1,9 +1,9 @@
 use grammar::repr::*;
 use lr1::core::*;
 use lr1::lookahead::Lookahead;
-use petgraph::{EdgeDirection, Graph};
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
+use petgraph::{EdgeDirection, Graph};
 
 // Each state `s` corresponds to the node in the graph with index
 // `s`. The edges are the shift transitions.

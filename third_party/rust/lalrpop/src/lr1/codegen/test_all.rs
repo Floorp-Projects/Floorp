@@ -111,7 +111,8 @@ impl<'ascent, 'grammar, W: Write> CodeGenerator<'ascent, 'grammar, W, TestAll> {
     }
 
     fn call_delegate(&mut self, delegate: &str) -> io::Result<()> {
-        let non_lifetimes: Vec<_> = self.grammar
+        let non_lifetimes: Vec<_> = self
+            .grammar
             .type_parameters
             .iter()
             .filter(|&tp| match *tp {

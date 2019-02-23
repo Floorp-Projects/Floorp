@@ -18,6 +18,7 @@ pub type Slot = Option<usize>;
 ///
 /// Unlike `Captures`, a `Locations` value only stores offsets.
 #[doc(hidden)]
+#[derive(Clone, Debug)]
 pub struct Locations(Vec<Slot>);
 
 impl Locations {
@@ -47,12 +48,11 @@ impl Locations {
     pub fn len(&self) -> usize {
         self.0.len() / 2
     }
-}
 
-/// This is a hack to make Locations -> &mut [Slot] be available internally
-/// without exposing it in the public API.
-pub fn as_slots(locs: &mut Locations) -> &mut [Slot] {
-    &mut locs.0
+    /// Return the individual slots as a slice.
+    pub(crate) fn as_slots(&mut self) -> &mut [Slot] {
+        &mut self.0
+    }
 }
 
 /// An iterator over capture group positions for a particular match of a
@@ -139,7 +139,7 @@ pub trait RegularExpression: Sized {
 
     /// Returns the leftmost-first match location if one exists, and also
     /// fills in any matching capture slot locations.
-    fn read_captures_at(
+    fn captures_read_at(
         &self,
         locs: &mut Locations,
         text: &Self::Text,
@@ -246,7 +246,7 @@ impl<'t, R> Iterator for CaptureMatches<'t, R>
             return None
         }
         let mut locs = self.0.re.locations();
-        let (s, e) = match self.0.re.read_captures_at(
+        let (s, e) = match self.0.re.captures_read_at(
             &mut locs,
             self.0.text,
             self.0.last_end,

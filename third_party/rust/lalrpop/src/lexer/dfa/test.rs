@@ -1,5 +1,5 @@
-use lexer::dfa::{self, DFAConstructionError, NFAIndex, Precedence, DFA};
 use lexer::dfa::interpret::interpret;
+use lexer::dfa::{self, DFAConstructionError, NFAIndex, Precedence, DFA};
 use lexer::re;
 
 pub fn dfa(inputs: &[(&str, Precedence)]) -> Result<DFA, DFAConstructionError> {
@@ -24,7 +24,8 @@ fn tokenizer() {
         /* 3 */ (r#" +"#, P0),
         /* 4 */ (r#">>"#, P0),
         /* 5 */ (r#">"#, P0),
-    ]).unwrap();
+    ])
+    .unwrap();
 
     assert_eq!(interpret(&dfa, "class Foo"), Some((NFAIndex(0), "class")));
     assert_eq!(interpret(&dfa, "classz Foo"), Some((NFAIndex(1), "classz")));

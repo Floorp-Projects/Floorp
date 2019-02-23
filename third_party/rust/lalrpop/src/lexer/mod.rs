@@ -4,5 +4,5 @@
 
 pub mod dfa;
 pub mod intern_token;
-pub mod re;
 pub mod nfa;
+pub mod re;

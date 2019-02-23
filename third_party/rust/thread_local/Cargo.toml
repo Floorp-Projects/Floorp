@@ -12,7 +12,7 @@
 
 [package]
 name = "thread_local"
-version = "0.3.5"
+version = "0.3.6"
 authors = ["Amanieu d'Antras <amanieu@gmail.com>"]
 description = "Per-object thread-local storage"
 documentation = "https://amanieu.github.io/thread_local-rs/thread_local/index.html"
@@ -21,9 +21,6 @@ keywords = ["thread_local", "concurrent", "thread"]
 license = "Apache-2.0/MIT"
 repository = "https://github.com/Amanieu/thread_local-rs"
 [dependencies.lazy_static]
-version = "1.0"
-
-[dependencies.unreachable]
 version = "1.0"
 [badges.travis-ci]
 repository = "Amanieu/thread_local-rs"

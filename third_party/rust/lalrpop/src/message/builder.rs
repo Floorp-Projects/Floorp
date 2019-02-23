@@ -1,11 +1,11 @@
 use grammar::parse_tree::Span;
-use message::{Content, Message};
-use message::indent::Indent;
 use message::horiz::Horiz;
+use message::indent::Indent;
 use message::styled::Styled;
 use message::text::Text;
 use message::vert::Vert;
 use message::wrap::Wrap;
+use message::{Content, Message};
 use style::Style;
 
 pub struct MessageBuilder {
