@@ -13,13 +13,6 @@
   -moz-user-focus: normal;
 }
 
-/* SimpleListWidget */
-
-.simple-list-widget-container {
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-
 /* FastListWidget */
 
 .fast-list-widget-container {
