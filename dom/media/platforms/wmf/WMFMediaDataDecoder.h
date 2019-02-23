@@ -35,12 +35,12 @@ class MFTManager {
   // MP4Reader.
   virtual HRESULT Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutput) = 0;
 
-  virtual void Flush() {
+  void Flush() {
     mDecoder->Flush();
     mSeekTargetThreshold.reset();
   }
 
-  virtual void Drain() {
+  void Drain() {
     if (FAILED(mDecoder->SendMFTMessage(MFT_MESSAGE_COMMAND_DRAIN, 0))) {
       NS_WARNING("Failed to send DRAIN command to MFT");
     }
@@ -142,6 +142,9 @@ class WMFMediaDataDecoder
   // The last offset into the media resource that was passed into Input().
   // This is used to approximate the decoder's position in the media resource.
   int64_t mLastStreamOffset;
+  Maybe<media::TimeUnit> mLastTime;
+  media::TimeUnit mLastDuration;
+  int64_t mSamplesCount = 0;
 
   bool mIsShutDown = false;
 
