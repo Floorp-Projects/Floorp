@@ -20,12 +20,17 @@ UNIFIED_SOURCES += [
     'TestURIMutator.cpp',
 ]
 
+TEST_HARNESS_FILES.gtest += [
+    'urltestdata.json',
+]
+
 TEST_DIRS += [
     'parse-ftp',
 ]
 
 LOCAL_INCLUDES += [
     '/netwerk/base',
+    '/toolkit/components/jsoncpp/include',
     '/xpcom/tests/gtest',
 ]
 
