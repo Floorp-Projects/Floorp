@@ -1152,6 +1152,10 @@ class PersistOp final : public PersistRequestBase {
   void GetResponse(RequestResponse& aResponse) override;
 };
 
+/*******************************************************************************
+ * Other class declarations
+ ******************************************************************************/
+
 class StoragePressureRunnable final : public Runnable {
   const uint64_t mUsage;
 
@@ -1162,6 +1166,31 @@ class StoragePressureRunnable final : public Runnable {
 
  private:
   ~StoragePressureRunnable() = default;
+
+  NS_DECL_NSIRUNNABLE
+};
+
+/*******************************************************************************
+ * Helper classes
+ ******************************************************************************/
+
+class PrincipalVerifier final : public Runnable {
+  nsTArray<PrincipalInfo> mPrincipalInfos;
+
+ public:
+  static already_AddRefed<PrincipalVerifier> CreateAndDispatch(
+      nsTArray<PrincipalInfo>&& aPrincipalInfos);
+
+ private:
+  explicit PrincipalVerifier(nsTArray<PrincipalInfo>&& aPrincipalInfos)
+      : Runnable("dom::quota::PrincipalVerifier"),
+        mPrincipalInfos(std::move(aPrincipalInfos)) {
+    AssertIsOnIOThread();
+  }
+
+  virtual ~PrincipalVerifier() = default;
+
+  bool IsPrincipalInfoValid(const PrincipalInfo& aPrincipalInfo);
 
   NS_DECL_NSIRUNNABLE
 };
@@ -1303,12 +1332,7 @@ Atomic<uint32_t, Relaxed> gChunkSizeKB(kDefaultChunkSizeKB);
 
 Atomic<bool> gTestingEnabled(false);
 
-class StorageOperationBase : public Runnable {
-  mozilla::Mutex mMutex;
-  mozilla::CondVar mCondVar;
-  nsresult mMainThreadResultCode;
-  bool mWaiting;
-
+class StorageOperationBase {
  protected:
   struct OriginProps;
 
@@ -1320,15 +1344,11 @@ class StorageOperationBase : public Runnable {
 
  public:
   StorageOperationBase(nsIFile* aDirectory, bool aPersistent)
-      : Runnable("dom::quota::StorageOperationBase"),
-        mMutex("StorageOperationBase::mMutex"),
-        mCondVar(mMutex, "StorageOperationBase::mCondVar"),
-        mMainThreadResultCode(NS_OK),
-        mWaiting(true),
-        mDirectory(aDirectory),
-        mPersistent(aPersistent) {
+      : mDirectory(aDirectory), mPersistent(aPersistent) {
     AssertIsOnIOThread();
   }
+
+  NS_INLINE_DECL_REFCOUNTING(StorageOperationBase)
 
  protected:
   virtual ~StorageOperationBase() {}
@@ -1352,12 +1372,6 @@ class StorageOperationBase : public Runnable {
   nsresult ProcessOriginDirectories();
 
   virtual nsresult ProcessOriginDirectory(const OriginProps& aOriginProps) = 0;
-
- private:
-  nsresult RunOnMainThread();
-
-  NS_IMETHOD
-  Run() override;
 };
 
 struct StorageOperationBase::OriginProps {
@@ -7731,6 +7745,90 @@ void PersistOp::GetResponse(RequestResponse& aResponse) {
   aResponse = PersistResponse();
 }
 
+// static
+already_AddRefed<PrincipalVerifier> PrincipalVerifier::CreateAndDispatch(
+    nsTArray<PrincipalInfo>&& aPrincipalInfos) {
+  AssertIsOnIOThread();
+
+  RefPtr<PrincipalVerifier> verifier =
+      new PrincipalVerifier(std::move(aPrincipalInfos));
+
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(verifier));
+
+  return verifier.forget();
+}
+
+bool PrincipalVerifier::IsPrincipalInfoValid(
+    const PrincipalInfo& aPrincipalInfo) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  switch (aPrincipalInfo.type()) {
+    // A system principal is acceptable.
+    case PrincipalInfo::TSystemPrincipalInfo: {
+      return true;
+    }
+
+    case PrincipalInfo::TContentPrincipalInfo: {
+      const ContentPrincipalInfo& info =
+          aPrincipalInfo.get_ContentPrincipalInfo();
+
+      nsCOMPtr<nsIURI> uri;
+      nsresult rv = NS_NewURI(getter_AddRefs(uri), info.spec());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return false;
+      }
+
+      nsCOMPtr<nsIPrincipal> principal =
+          BasePrincipal::CreateCodebasePrincipal(uri, info.attrs());
+      if (NS_WARN_IF(!principal)) {
+        return false;
+      }
+
+      nsCString originNoSuffix;
+      rv = principal->GetOriginNoSuffix(originNoSuffix);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return false;
+      }
+
+      if (NS_WARN_IF(originNoSuffix != info.originNoSuffix())) {
+        QM_WARNING("originNoSuffix (%s) doesn't match passed one (%s)!",
+                   originNoSuffix.get(), info.originNoSuffix().get());
+        return false;
+      }
+
+      nsCString baseDomain;
+      rv = principal->GetBaseDomain(baseDomain);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return false;
+      }
+
+      if (NS_WARN_IF(baseDomain != info.baseDomain())) {
+        QM_WARNING("baseDomain (%s) doesn't match passed one (%s)!",
+                   baseDomain.get(), info.baseDomain().get());
+        return false;
+      }
+
+      return true;
+    }
+
+    default: { break; }
+  }
+
+  // Null and expanded principals are not acceptable.
+  return false;
+}
+
+NS_IMETHODIMP
+PrincipalVerifier::Run() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  for (auto& principalInfo : mPrincipalInfos) {
+    MOZ_DIAGNOSTIC_ASSERT(IsPrincipalInfoValid(principalInfo));
+  }
+
+  return NS_OK;
+}
+
 nsresult StorageOperationBase::GetDirectoryMetadata(nsIFile* aDirectory,
                                                     int64_t& aTimestamp,
                                                     nsACString& aGroup,
@@ -7870,26 +7968,65 @@ nsresult StorageOperationBase::ProcessOriginDirectories() {
   AssertIsOnIOThread();
   MOZ_ASSERT(!mOriginProps.IsEmpty());
 
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
+  nsresult rv;
 
-  {
-    mozilla::MutexAutoLock autolock(mMutex);
-    while (mWaiting) {
-      mCondVar.Wait();
+  nsTArray<PrincipalInfo> principalInfos;
+
+  for (auto& originProps : mOriginProps) {
+    switch (originProps.mType) {
+      case OriginProps::eChrome: {
+        QuotaManager::GetInfoForChrome(
+            &originProps.mSuffix, &originProps.mGroup, &originProps.mOrigin);
+        break;
+      }
+
+      case OriginProps::eContent: {
+        RefPtr<MozURL> specURL;
+        nsresult rv = MozURL::Init(getter_AddRefs(specURL), originProps.mSpec);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+
+        nsCString originNoSuffix;
+        specURL->Origin(originNoSuffix);
+
+        nsCString baseDomain;
+        rv = specURL->BaseDomain(baseDomain);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+
+        ContentPrincipalInfo contentPrincipalInfo;
+        contentPrincipalInfo.attrs() = originProps.mAttrs;
+        contentPrincipalInfo.originNoSuffix() = originNoSuffix;
+        contentPrincipalInfo.spec() = originProps.mSpec;
+        contentPrincipalInfo.baseDomain() = baseDomain;
+
+        PrincipalInfo principalInfo(contentPrincipalInfo);
+
+        QuotaManager::GetInfoFromValidatedPrincipalInfo(
+            principalInfo, &originProps.mSuffix, &originProps.mGroup,
+            &originProps.mOrigin);
+
+        principalInfos.AppendElement(principalInfo);
+
+        break;
+      }
+
+      case OriginProps::eObsolete: {
+        // There's no way to get info for obsolete origins.
+        break;
+      }
+
+      default:
+        MOZ_CRASH("Bad type!");
     }
   }
 
-  if (NS_WARN_IF(NS_FAILED(mMainThreadResultCode))) {
-    return mMainThreadResultCode;
+  if (!principalInfos.IsEmpty()) {
+    RefPtr<PrincipalVerifier> principalVerifier =
+        PrincipalVerifier::CreateAndDispatch(std::move(principalInfos));
   }
-
-  // Verify that the bounce to the main thread didn't start the shutdown
-  // sequence.
-  if (NS_WARN_IF(QuotaManager::IsShuttingDown())) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsresult rv;
 
   // Don't try to upgrade obsolete origins, remove them right after we detect
   // them.
@@ -7910,77 +8047,6 @@ nsresult StorageOperationBase::ProcessOriginDirectories() {
       return rv;
     }
   }
-
-  return NS_OK;
-}
-
-nsresult StorageOperationBase::RunOnMainThread() {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!mOriginProps.IsEmpty());
-
-  nsresult rv;
-
-  for (uint32_t count = mOriginProps.Length(), index = 0; index < count;
-       index++) {
-    OriginProps& originProps = mOriginProps[index];
-
-    switch (originProps.mType) {
-      case OriginProps::eChrome: {
-        QuotaManager::GetInfoForChrome(
-            &originProps.mSuffix, &originProps.mGroup, &originProps.mOrigin);
-        break;
-      }
-
-      case OriginProps::eContent: {
-        nsCOMPtr<nsIURI> uri;
-        rv = NS_NewURI(getter_AddRefs(uri), originProps.mSpec);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-
-        nsCOMPtr<nsIPrincipal> principal =
-            BasePrincipal::CreateCodebasePrincipal(uri, originProps.mAttrs);
-        if (NS_WARN_IF(!principal)) {
-          return NS_ERROR_FAILURE;
-        }
-
-        rv = QuotaManager::GetInfoFromPrincipal(principal, &originProps.mSuffix,
-                                                &originProps.mGroup,
-                                                &originProps.mOrigin);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-
-        break;
-      }
-
-      case OriginProps::eObsolete: {
-        // There's no way to get info for obsolete origins.
-        break;
-      }
-
-      default:
-        MOZ_CRASH("Bad type!");
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-StorageOperationBase::Run() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsresult rv = RunOnMainThread();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    mMainThreadResultCode = rv;
-  }
-
-  MutexAutoLock lock(mMutex);
-  MOZ_ASSERT(mWaiting);
-
-  mWaiting = false;
-  mCondVar.Notify();
 
   return NS_OK;
 }
