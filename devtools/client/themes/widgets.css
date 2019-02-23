@@ -101,36 +101,6 @@
   }
 }
 
-/* SimpleListWidget */
-
-.simple-list-widget-container {
-  /* Hack: force hardware acceleration */
-  transform: translateZ(1px);
-}
-
-.simple-list-widget-item.selected {
-  background-color: var(--theme-selection-background);
-  color: var(--theme-selection-color);
-}
-
-.theme-dark .simple-list-widget-item:not(.selected):hover {
-  background-color: rgba(255,255,255,.05);
-}
-
-.theme-light .simple-list-widget-item:not(.selected):hover {
-  background-color: rgba(0,0,0,.05);
-}
-
-.simple-list-widget-empty-text,
-.simple-list-widget-perma-text {
-  padding: 4px 8px;
-}
-
-.simple-list-widget-empty-text,
-.simple-list-widget-perma-text {
-  color: var(--theme-body-color-alt);
-}
-
 /* FastListWidget */
 
 .fast-list-widget-container {
