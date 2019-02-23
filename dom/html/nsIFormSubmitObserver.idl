@@ -26,6 +26,5 @@ interface nsIFormSubmitObserver: nsISupports
 #define NS_FORMSUBMIT_SUBJECT "formsubmit"
 #define NS_EARLYFORMSUBMIT_SUBJECT "earlyformsubmit"
 #define NS_FIRST_FORMSUBMIT_CATEGORY "firstformsubmit"
-#define NS_PASSWORDMANAGER_CATEGORY "passwordmanager"
 #define NS_INVALIDFORMSUBMIT_SUBJECT "invalidformsubmit"
 %}
