@@ -101,9 +101,12 @@ class QuotaManager final : public BackgroundThreadObject {
  private:
   class ShutdownRunnable;
   class ShutdownObserver;
+  class Observer;
 
  public:
   NS_INLINE_DECL_REFCOUNTING(QuotaManager)
+
+  static nsresult Initialize();
 
   static bool IsRunningXPCShellTests() {
     static bool kRunningXPCShellTests =
