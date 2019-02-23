@@ -80,7 +80,7 @@ void VideoFrameContainer::UpdatePrincipalHandleForFrameIDLocked(
   mFrameIDForPendingPrincipalHandle = aFrameID;
 }
 
-static void SetImageToBlackPixel(PlanarYCbCrImage* aImage) {
+static bool SetImageToBlackPixel(PlanarYCbCrImage* aImage) {
   uint8_t blackPixel[] = {0x10, 0x80, 0x80};
 
   PlanarYCbCrData data;
@@ -89,7 +89,7 @@ static void SetImageToBlackPixel(PlanarYCbCrImage* aImage) {
   data.mCrChannel = blackPixel + 2;
   data.mYStride = data.mCbCrStride = 1;
   data.mPicSize = data.mYSize = data.mCbCrSize = gfx::IntSize(1, 1);
-  aImage->CopyData(data);
+  return aImage->CopyData(data);
 }
 
 class VideoFrameContainerInvalidateRunnable : public Runnable {
@@ -142,11 +142,13 @@ void VideoFrameContainer::SetCurrentFrames(const VideoSegment& aSegment) {
 
     if (frame->GetForceBlack()) {
       if (!mBlackImage) {
-        mBlackImage = GetImageContainer()->CreatePlanarYCbCrImage();
-        if (mBlackImage) {
+        RefPtr<Image> blackImage = GetImageContainer()->CreatePlanarYCbCrImage();
+        if (blackImage) {
           // Sets the image to a single black pixel, which will be scaled to
           // fill the rendered size.
-          SetImageToBlackPixel(mBlackImage->AsPlanarYCbCrImage());
+          if (SetImageToBlackPixel(blackImage->AsPlanarYCbCrImage())) {
+            mBlackImage = blackImage;
+          }
         }
       }
       if (mBlackImage) {
