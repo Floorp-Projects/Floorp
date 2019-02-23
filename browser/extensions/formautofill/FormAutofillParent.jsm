@@ -387,6 +387,7 @@ FormAutofillParent.prototype = {
     }
 
     Services.ppmm.sharedData.set("FormAutofill:savedFieldNames", savedFieldNames);
+    Services.ppmm.sharedData.flush();
 
     this._updateStatus();
   },
