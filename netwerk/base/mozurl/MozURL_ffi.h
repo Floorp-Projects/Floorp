@@ -59,6 +59,7 @@ MozURLSpecSlice mozurl_fragment(const mozilla::net::MozURL*);
 bool mozurl_has_fragment(const mozilla::net::MozURL*);
 MozURLSpecSlice mozurl_directory(const mozilla::net::MozURL*);
 void mozurl_origin(const mozilla::net::MozURL*, nsACString* aResult);
+nsresult mozurl_base_domain(const mozilla::net::MozURL*, nsACString* aResult);
 
 nsresult mozurl_common_base(const mozilla::net::MozURL* aUrl1,
                             const mozilla::net::MozURL* aUrl2,
