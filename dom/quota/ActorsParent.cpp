@@ -421,43 +421,6 @@ class DirectoryLockImpl final : public DirectoryLock {
   ~DirectoryLockImpl();
 };
 
-class QuotaManager::CreateRunnable final : public BackgroundThreadObject,
-                                           public Runnable {
-  nsTArray<nsCOMPtr<nsIRunnable>> mCallbacks;
-  RefPtr<QuotaManager> mManager;
-  nsresult mResultCode;
-
-  enum class State { Initial, CallingCallbacks, Completed };
-
-  State mState;
-
- public:
-  CreateRunnable()
-      : Runnable("dom::quota::QuotaManager::CreateRunnable"),
-        mResultCode(NS_OK),
-        mState(State::Initial) {
-    AssertIsOnBackgroundThread();
-  }
-
-  void AddCallback(nsIRunnable* aCallback) {
-    AssertIsOnOwningThread();
-    MOZ_ASSERT(aCallback);
-
-    mCallbacks.AppendElement(aCallback);
-  }
-
- private:
-  ~CreateRunnable() {}
-
-  nsresult Init();
-
-  void CallCallbacks();
-
-  State GetNextState(nsCOMPtr<nsIEventTarget>& aThread);
-
-  NS_DECL_NSIRUNNABLE
-};
-
 class QuotaManager::Observer final : public nsIObserver {
   static Observer* sInstance;
 
@@ -1353,7 +1316,6 @@ bool gQuotaManagerInitialized = false;
 
 StaticRefPtr<QuotaManager> gInstance;
 bool gCreateFailed = false;
-StaticRefPtr<QuotaManager::CreateRunnable> gCreateRunnable;
 mozilla::Atomic<bool> gShutdown(false);
 
 // Constants for temporary storage limit computing.
@@ -2314,95 +2276,6 @@ void DirectoryLockImpl::NotifyOpenListener() {
   mQuotaManager->RemovePendingDirectoryLock(this);
 }
 
-nsresult QuotaManager::CreateRunnable::Init() {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::Initial);
-  MOZ_ASSERT(!gBaseDirPath.IsEmpty());
-
-  mManager = new QuotaManager();
-
-  nsresult rv = mManager->Init(gBaseDirPath);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
-void QuotaManager::CreateRunnable::CallCallbacks() {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::CallingCallbacks);
-
-  gCreateRunnable = nullptr;
-
-  if (NS_FAILED(mResultCode)) {
-    gCreateFailed = true;
-  } else {
-    gInstance = mManager;
-  }
-
-  mManager = nullptr;
-
-  nsTArray<nsCOMPtr<nsIRunnable>> callbacks;
-  mCallbacks.SwapElements(callbacks);
-
-  for (nsCOMPtr<nsIRunnable>& callback : callbacks) {
-    Unused << callback->Run();
-  }
-}
-
-auto QuotaManager::CreateRunnable::GetNextState(
-    nsCOMPtr<nsIEventTarget>& aThread) -> State {
-  switch (mState) {
-    case State::Initial:
-      aThread = mOwningThread;
-      return State::CallingCallbacks;
-    case State::CallingCallbacks:
-      aThread = nullptr;
-      return State::Completed;
-    default:
-      MOZ_CRASH("Bad state!");
-  }
-}
-
-NS_IMETHODIMP
-QuotaManager::CreateRunnable::Run() {
-  nsresult rv;
-
-  switch (mState) {
-    case State::Initial:
-      rv = Init();
-      break;
-
-    case State::CallingCallbacks:
-      CallCallbacks();
-      rv = NS_OK;
-      break;
-
-    case State::Completed:
-    default:
-      MOZ_CRASH("Bad state!");
-  }
-
-  nsCOMPtr<nsIEventTarget> thread;
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    if (NS_SUCCEEDED(mResultCode)) {
-      mResultCode = rv;
-    }
-
-    mState = State::CallingCallbacks;
-    thread = mOwningThread;
-  } else {
-    mState = GetNextState(thread);
-  }
-
-  if (thread) {
-    MOZ_ALWAYS_SUCCEEDS(thread->Dispatch(this, NS_DISPATCH_NORMAL));
-  }
-
-  return NS_OK;
-}
-
 QuotaManager::Observer* QuotaManager::Observer::sInstance = nullptr;
 
 // static
@@ -2903,18 +2776,19 @@ void QuotaManager::GetOrCreate(nsIRunnable* aCallback,
   }
 
   if (gInstance || gCreateFailed) {
-    MOZ_ASSERT(!gCreateRunnable);
     MOZ_ASSERT_IF(gCreateFailed, !gInstance);
-
-    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(aCallback));
   } else {
-    if (!gCreateRunnable) {
-      gCreateRunnable = new CreateRunnable();
-      NS_DispatchToCurrentThread(gCreateRunnable);
-    }
+    RefPtr<QuotaManager> manager = new QuotaManager();
 
-    gCreateRunnable->AddCallback(aCallback);
+    nsresult rv = manager->Init(gBaseDirPath);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      gCreateFailed = true;
+    } else {
+      gInstance = manager;
+    }
   }
+
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(aCallback));
 }
 
 // static
