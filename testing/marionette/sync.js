@@ -213,8 +213,6 @@ function TimedPromise(fn,
   }
 
   return new Promise((resolve, reject) => {
-    let trace;
-
     // Reject only if |throws| is given.  Otherwise it is assumed that
     // the user is OK with the promise timing out.
     let bail = () => {
@@ -222,12 +220,11 @@ function TimedPromise(fn,
         let err = new throws();
         reject(err);
       } else {
-        log.warn(`TimedPromise timed out after ${timeout} ms`, trace);
+        log.warn(`TimedPromise timed out after ${timeout} ms`, stack());
         resolve();
       }
     };
 
-    trace = stack();
     timer.initWithCallback({notify: bail}, timeout, TYPE_ONE_SHOT);
 
     try {
@@ -262,14 +259,7 @@ function Sleep(timeout) {
   if (typeof timeout != "number") {
     throw new TypeError();
   }
-  if (!Number.isInteger(timeout) || timeout < 0) {
-    throw new RangeError();
-  }
-
-  return new Promise(resolve => {
-    const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    timer.initWithCallback({notify: resolve}, timeout, TYPE_ONE_SHOT);
-  });
+  return new TimedPromise(() => {}, {timeout, throws: null});
 }
 
 /**
