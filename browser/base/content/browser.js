@@ -361,6 +361,16 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "gToolbarKeyNavEnabled",
     }
   });
 
+XPCOMUtils.defineLazyPreferenceGetter(this, "gFxaToolbarEnabled",
+  "identity.fxaccounts.toolbar.enabled", false, (aPref, aOldVal, aNewVal) => {
+    showFxaToolbarMenu(aNewVal);
+  });
+
+XPCOMUtils.defineLazyPreferenceGetter(this, "gFxaToolbarAccessed",
+  "identity.fxaccounts.toolbar.accessed", false, (aPref, aOldVal, aNewVal) => {
+    showFxaToolbarMenu(gFxaToolbarEnabled);
+  });
+
 customElements.setElementCreationCallback("translation-notification", () => {
   Services.scriptloader.loadSubScript(
     "chrome://browser/content/translation-notification.js", window);
@@ -459,6 +469,30 @@ var gNavigatorBundle = {
     return gBrowserBundle.formatStringFromName(key, array, array.length);
   },
 };
+
+function showFxaToolbarMenu(enable) {
+  // We only show the Firefox Account toolbar menu if the feature is enabled and
+  // if sync is enabled.
+  const syncEnabled = Services.prefs.getBoolPref("identity.fxaccounts.enabled", false);
+  const mainWindowEl = document.documentElement;
+  if (enable && syncEnabled) {
+    mainWindowEl.setAttribute("fxastatus", "not_configured");
+    // We have to manually update the sync state UI when toggling the FxA toolbar
+    // because it could show an invalid icon if the user is logged in and no sync
+    // event was performed yet.
+    gSync.maybeUpdateUIState();
+
+    // We set an attribute here so that we can toggle the custom
+    // badge depending on whether the FxA menu was ever accessed.
+    if (!gFxaToolbarAccessed) {
+      mainWindowEl.setAttribute("fxa_avatar_badged", "badged");
+    } else {
+      mainWindowEl.removeAttribute("fxa_avatar_badged");
+    }
+  } else {
+    mainWindowEl.removeAttribute("fxastatus");
+  }
+}
 
 function UpdateBackForwardCommands(aWebNavigation) {
   var backCommand = document.getElementById("Browser:Back");
@@ -1402,6 +1436,8 @@ var gBrowserInit = {
     });
 
     this._setInitialFocus();
+
+    showFxaToolbarMenu(gFxaToolbarEnabled);
   },
 
   onLoad() {
