@@ -1356,6 +1356,10 @@ void ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr) {
 
 namespace {
 
+#ifdef DEBUG
+bool gQuotaManagerInitialized = false;
+#endif
+
 StaticRefPtr<QuotaManager> gInstance;
 bool gCreateFailed = false;
 StaticRefPtr<QuotaManager::CreateRunnable> gCreateRunnable;
@@ -2156,6 +2160,16 @@ nsresult GetTemporaryStorageLimit(nsIFile* aDirectory, uint64_t aCurrentUsage,
 /*******************************************************************************
  * Exported functions
  ******************************************************************************/
+
+void InitializeQuotaManager() {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!gQuotaManagerInitialized);
+
+#ifdef DEBUG
+  gQuotaManagerInitialized = true;
+#endif
+}
 
 PQuotaParent* AllocPQuotaParent() {
   AssertIsOnBackgroundThread();
