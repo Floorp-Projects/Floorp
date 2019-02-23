@@ -43,8 +43,10 @@
 #include "mozilla/dom/simpledb/ActorsParent.h"
 #include "mozilla/dom/StorageActivityService.h"
 #include "mozilla/dom/StorageDBUpdater.h"
+#include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/BackgroundUtils.h"
+#include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/net/MozURL.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/Mutex.h"
@@ -465,36 +467,21 @@ class QuotaManager::CreateRunnable final : public BackgroundThreadObject,
   NS_DECL_NSIRUNNABLE
 };
 
-class QuotaManager::ShutdownRunnable final : public Runnable {
-  // Only touched on the main thread.
-  bool& mDone;
-
- public:
-  explicit ShutdownRunnable(bool& aDone)
-      : Runnable("dom::quota::QuotaManager::ShutdownRunnable"), mDone(aDone) {
-    MOZ_ASSERT(NS_IsMainThread());
-  }
-
- private:
-  ~ShutdownRunnable() {}
-
-  NS_DECL_NSIRUNNABLE
-};
-
 class QuotaManager::Observer final : public nsIObserver {
   static Observer* sInstance;
 
-  nsCOMPtr<nsIEventTarget> mBackgroundEventTarget;
   bool mPendingProfileChange;
+  bool mShutdownComplete;
 
  public:
   static nsresult Initialize();
 
-  static nsresult SetBackgroundEventTarget(
-      nsIEventTarget* aBackgroundEventTarget);
+  static void ShutdownCompleted();
 
  private:
-  Observer() : mPendingProfileChange(false) { MOZ_ASSERT(NS_IsMainThread()); }
+  Observer() : mPendingProfileChange(false), mShutdownComplete(false) {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
 
   ~Observer() { MOZ_ASSERT(NS_IsMainThread()); }
 
@@ -2220,6 +2207,14 @@ bool DeallocPQuotaParent(PQuotaParent* aActor) {
   return true;
 }
 
+bool RecvShutdownQuotaManager() {
+  AssertIsOnBackgroundThread();
+
+  QuotaManager::ShutdownInstance();
+
+  return true;
+}
+
 /*******************************************************************************
  * Directory lock
  ******************************************************************************/
@@ -2339,10 +2334,7 @@ nsresult QuotaManager::CreateRunnable::RegisterObserver() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mState == State::RegisteringObserver);
 
-  nsresult rv = Observer::SetBackgroundEventTarget(mOwningThread);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  nsresult rv;
 
   // This service has to be started on the main thread currently.
   nsCOMPtr<mozIStorageService> ss =
@@ -2439,28 +2431,6 @@ QuotaManager::CreateRunnable::Run() {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-QuotaManager::ShutdownRunnable::Run() {
-  if (NS_IsMainThread()) {
-    mDone = true;
-
-    return NS_OK;
-  }
-
-  AssertIsOnBackgroundThread();
-
-  RefPtr<QuotaManager> quotaManager = gInstance.get();
-  if (quotaManager) {
-    quotaManager->Shutdown();
-
-    gInstance = nullptr;
-  }
-
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
-
-  return NS_OK;
-}
-
 QuotaManager::Observer* QuotaManager::Observer::sInstance = nullptr;
 
 // static
@@ -2480,14 +2450,11 @@ nsresult QuotaManager::Observer::Initialize() {
 }
 
 // static
-nsresult QuotaManager::Observer::SetBackgroundEventTarget(
-    nsIEventTarget* aBackgroundEventTarget) {
+void QuotaManager::Observer::ShutdownCompleted() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sInstance);
 
-  sInstance->mBackgroundEventTarget = aBackgroundEventTarget;
-
-  return NS_OK;
+  sInstance->mShutdownComplete = true;
 }
 
 nsresult QuotaManager::Observer::Init() {
@@ -2573,25 +2540,28 @@ QuotaManager::Observer::Observe(nsISupports* aSubject, const char* aTopic,
   }
 
   if (!strcmp(aTopic, PROFILE_BEFORE_CHANGE_QM_OBSERVER_ID)) {
-    // mBackgroundThread can be null if we somehow get here without
-    // receiving SetBackgroundEventTarget() first.  mPendingProfileChange is our
-    // re-entrancy guard (the nested event loop below may cause re-entrancy).
-    if (!mBackgroundEventTarget || mPendingProfileChange) {
+    // mPendingProfileChange is our re-entrancy guard (the nested event loop
+    // below may cause re-entrancy).
+    if (mPendingProfileChange) {
       return NS_OK;
     }
 
     AutoRestore<bool> pending(mPendingProfileChange);
     mPendingProfileChange = true;
 
-    MOZ_ASSERT(gInstance);
+    mShutdownComplete = false;
 
-    bool done = false;
+    PBackgroundChild* backgroundActor =
+        BackgroundChild::GetOrCreateForCurrentThread();
+    if (NS_WARN_IF(!backgroundActor)) {
+      return NS_ERROR_FAILURE;
+    }
 
-    RefPtr<ShutdownRunnable> shutdownRunnable = new ShutdownRunnable(done);
-    MOZ_ALWAYS_SUCCEEDS(
-        mBackgroundEventTarget->Dispatch(shutdownRunnable, NS_DISPATCH_NORMAL));
+    if (NS_WARN_IF(!backgroundActor->SendShutdownQuotaManager())) {
+      return NS_ERROR_FAILURE;
+    }
 
-    MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return done; }));
+    MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return mShutdownComplete; }));
 
     gBaseDirPath.Truncate();
 
@@ -2983,6 +2953,24 @@ QuotaManager* QuotaManager::Get() {
 
 // static
 bool QuotaManager::IsShuttingDown() { return gShutdown; }
+
+// static
+void QuotaManager::ShutdownInstance() {
+  AssertIsOnBackgroundThread();
+
+  if (gInstance) {
+    gInstance->Shutdown();
+
+    gInstance = nullptr;
+  }
+
+  RefPtr<Runnable> runnable =
+      NS_NewRunnableFunction("dom::quota::QuotaManager::ShutdownCompleted",
+                             []() { Observer::ShutdownCompleted(); });
+  MOZ_ASSERT(runnable);
+
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable.forget()));
+}
 
 // static
 bool QuotaManager::IsOSMetadata(const nsAString& aFileName) {
