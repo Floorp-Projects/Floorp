@@ -35,7 +35,8 @@
 //      the dominant output mechanism.
 //   2. Provide a simple powerful mechanism for getting information out of the
 //      compiler and into tools. I'm inspired by tools like CacheIR analyzer,
-//      IR Hydra, and the upcoming tracelogger integration into perf.html.
+//      IR Hydra, and the upcoming tracelogger integration into
+//      profiler.firefox.com.
 //
 // The spewer has four main control knobs, all currently set as
 // environment variables. All but the first are optional.

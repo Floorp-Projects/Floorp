@@ -4,68 +4,31 @@
 
 /* File locked complete MAR file staged patch apply failure test */
 
-const STATE_AFTER_STAGE = STATE_PENDING;
-
-function run_test() {
+async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
+  const STATE_AFTER_STAGE = STATE_PENDING;
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();
-  setupUpdaterTest(FILE_COMPLETE_MAR, false);
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-function setupUpdaterTestFinished() {
-  runHelperLockFile(gTestFiles[3]);
-}
-
-/**
- * Called after the call to waitForHelperSleep finishes.
- */
-function waitForHelperSleepFinished() {
-  stageUpdate(true);
-}
-
-/**
- * Called after the call to stageUpdate finishes.
- */
-function stageUpdateFinished() {
+  await setupUpdaterTest(FILE_COMPLETE_MAR, false);
+  await runHelperLockFile(gTestFiles[3]);
+  await stageUpdate(STATE_AFTER_STAGE, true);
   checkPostUpdateRunningFile(false);
   // Files aren't checked after staging since this test locks a file which
   // prevents reading the file.
   checkUpdateLogContains(ERR_ENSURE_COPY);
   // Switch the application to the staged application that was updated.
   runUpdate(STATE_FAILED_WRITE_ERROR, false, 1, false);
-}
-
-/**
- * Called after the call to runUpdate finishes.
- */
-function runUpdateFinished() {
-  waitForHelperExit();
-}
-
-/**
- * Called after the call to waitForHelperExit finishes.
- */
-function waitForHelperExitFinished() {
+  await waitForHelperExit();
   standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(ERR_RENAME_FILE);
   checkUpdateLogContains(ERR_BACKUP_CREATE_7);
   checkUpdateLogContains(STATE_FAILED_WRITE_ERROR + "\n" + CALL_QUIT);
-  executeSoon(() => waitForUpdateXMLFiles(true, false));
-}
-
-/**
- * Called after the call to waitForUpdateXMLFiles finishes.
- */
-function waitForUpdateXMLFilesFinished() {
+  await waitForUpdateXMLFiles(true, false);
   checkUpdateManager(STATE_PENDING, true, STATE_PENDING, WRITE_ERROR, 0);
   checkCallbackLog();
 }

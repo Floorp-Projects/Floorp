@@ -177,6 +177,38 @@ struct IPDLParamTraits<nsTArray<T>> {
       (mozilla::IsIntegral<T>::value || mozilla::IsFloatingPoint<T>::value);
 };
 
+// Maybe support for IPDLParamTraits
+template <typename T>
+struct IPDLParamTraits<mozilla::Maybe<T>> {
+  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+                    const mozilla::Maybe<T>& aParam) {
+    bool isSome = aParam.isSome();
+    WriteIPDLParam(aMsg, aActor, isSome);
+
+    if (isSome) {
+      WriteIPDLParam(aMsg, aActor, aParam.ref());
+    }
+  }
+
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                   IProtocol* aActor, mozilla::Maybe<T>* aResult) {
+    bool isSome;
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &isSome)) {
+      return false;
+    }
+
+    if (isSome) {
+      aResult->emplace();
+      if (!ReadIPDLParam(aMsg, aIter, aActor, aResult->ptr())) {
+        return false;
+      }
+    } else {
+      aResult->reset();
+    }
+    return true;
+  }
+};
+
 template <typename T>
 struct IPDLParamTraits<mozilla::UniquePtr<T>> {
   typedef mozilla::UniquePtr<T> paramType;

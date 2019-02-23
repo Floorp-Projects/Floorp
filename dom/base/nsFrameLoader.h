@@ -97,8 +97,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
  public:
   static nsFrameLoader* Create(
       mozilla::dom::Element* aOwner, nsPIDOMWindowOuter* aOpener,
-      bool aNetworkCreated,
-      int32_t aJSPluginID = nsFakePluginTag::NOT_JSPLUGIN);
+      bool aNetworkCreated);
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_FRAMELOADER_IID)
 
@@ -356,14 +355,12 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
  private:
   nsFrameLoader(mozilla::dom::Element* aOwner, nsPIDOMWindowOuter* aOpener,
-                bool aNetworkCreated, int32_t aJSPluginID);
+                bool aNetworkCreated);
   ~nsFrameLoader();
 
   void SetOwnerContent(mozilla::dom::Element* aContent);
 
   bool ShouldUseRemoteProcess();
-
-  bool IsForJSPlugin() { return mJSPluginID != nsFakePluginTag::NOT_JSPLUGIN; }
 
   /**
    * Is this a frame loader for an isolated <iframe mozbrowser>?
@@ -458,8 +455,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   // This is used when this refers to a remote sub frame
   RefPtr<mozilla::dom::RemoteFrameChild> mRemoteFrameChild;
-
-  int32_t mJSPluginID;
 
   // Holds the last known size of the frame.
   mozilla::ScreenIntSize mLazySize;

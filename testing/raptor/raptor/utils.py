@@ -114,7 +114,7 @@ def download_file_from_url(url, local_dest):
 
 
 def view_gecko_profile(ffox_bin):
-    # automatically load the latest talos gecko-profile archive in perf-html.io
+    # automatically load the latest talos gecko-profile archive in profiler.firefox.com
     LOG = get_default_logger(component='raptor-view-gecko-profile')
 
     if sys.platform.startswith('win') and not ffox_bin.endswith(".exe"):
@@ -126,7 +126,7 @@ def view_gecko_profile(ffox_bin):
 
     profile_zip = os.environ.get('RAPTOR_LATEST_GECKO_PROFILE_ARCHIVE', None)
     if profile_zip is None or not os.path.exists(profile_zip):
-        LOG.info("No local talos gecko profiles were found so not launching perf-html.io")
+        LOG.info("No local talos gecko profiles were found so not launching profiler.firefox.com")
         return
 
     # need the view-gecko-profile tool, it's in repo/testing/tools

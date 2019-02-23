@@ -81,7 +81,7 @@ class BigIntBox;
   F(TemplateStringListExpr, ListNode)                                        \
   F(TemplateStringExpr, NameNode)                                            \
   F(TaggedTemplateExpr, BinaryNode)                                          \
-  F(CallSiteObjExpr, CallSiteNode)                                           \
+  F(CallSiteObj, CallSiteNode)                                               \
   F(RegExpExpr, RegExpLiteral)                                               \
   F(TrueExpr, BooleanLiteral)                                                \
   F(FalseExpr, BooleanLiteral)                                               \
@@ -381,8 +381,14 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
  *   right: Name node for assignment
  *
  * <Expressions>
+ * The `Expr` suffix is used for nodes that can appear anywhere an expression
+ * could appear.  It is not used on a few weird kinds like Arguments and
+ * CallSiteObj that are always the child node of an expression node, but which
+ * can't stand alone.
+ *
  * All left-associated binary trees of the same type are optimized into lists
  * to avoid recursion when processing expression chains.
+ *
  * CommaExpr (ListNode)
  *   head: list of N comma-separated exprs
  *   count: N >= 2
@@ -481,7 +487,7 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
  *   left: tag expression
  *   right: Arguments, with the first being the call site object, then
  *          arg1, arg2, ... argN
- * CallSiteObjExpr (CallSiteNode)
+ * CallSiteObj (CallSiteNode)
  *   head:  an Array of raw TemplateString, then corresponding cooked
  *          TemplateString nodes
  *            Array [, cooked TemplateString]+
@@ -529,7 +535,6 @@ enum ParseNodeArity {
   PN_MODULE,   /* module node */
   PN_LIST,     /* generic singly linked list */
   PN_NAME,     /* name, label, string */
-  PN_FIELD,    /* field name, optional initializer */
   PN_NUMBER,   /* numeric literal */
   PN_BIGINT,   /* BigInt literal */
   PN_REGEXP,   /* regexp literal */
@@ -1910,10 +1915,10 @@ class PropertyByValue : public BinaryNode {
 class CallSiteNode : public ListNode {
  public:
   explicit CallSiteNode(uint32_t begin)
-      : ListNode(ParseNodeKind::CallSiteObjExpr, TokenPos(begin, begin + 1)) {}
+      : ListNode(ParseNodeKind::CallSiteObj, TokenPos(begin, begin + 1)) {}
 
   static bool test(const ParseNode& node) {
-    bool match = node.isKind(ParseNodeKind::CallSiteObjExpr);
+    bool match = node.isKind(ParseNodeKind::CallSiteObj);
     MOZ_ASSERT_IF(match, node.is<ListNode>());
     return match;
   }
@@ -1954,49 +1959,28 @@ class ClassMethod : public BinaryNode {
   bool isStatic() const { return isStatic_; }
 };
 
-class ClassField : public ParseNode {
-  ParseNode* name_;
-  ParseNode* initializer_; /* field initializer - optional */
-
+class ClassField : public BinaryNode {
  public:
   ClassField(ParseNode* name, ParseNode* initializer)
-      : ParseNode(ParseNodeKind::ClassField, JSOP_NOP,
-                  initializer == nullptr
-                      ? name->pn_pos
-                      : TokenPos::box(name->pn_pos, initializer->pn_pos)),
-        name_(name),
-        initializer_(initializer) {}
+      : BinaryNode(ParseNodeKind::ClassField, JSOP_NOP,
+                   initializer == nullptr
+                       ? name->pn_pos
+                       : TokenPos::box(name->pn_pos, initializer->pn_pos),
+                   name, initializer) {}
 
   static bool test(const ParseNode& node) {
     bool match = node.isKind(ParseNodeKind::ClassField);
-    MOZ_ASSERT_IF(match, node.isArity(PN_FIELD));
+    MOZ_ASSERT_IF(match, node.isArity(PN_BINARY));
     return match;
   }
 
-  static constexpr ParseNodeArity arity() { return PN_FIELD; }
+  static constexpr ParseNodeArity arity() { return PN_BINARY; }
 
-  template <typename Visitor>
-  bool accept(Visitor& visitor) {
-    if (!visitor.visit(name_)) {
-      return false;
-    }
-    if (initializer_) {
-      if (!visitor.visit(initializer_)) {
-        return false;
-      }
-    }
-    return true;
-  }
+  ParseNode& name() const { return *left(); }
 
-  ParseNode& name() const { return *name_; }
+  bool hasInitializer() const { return right() != nullptr; }
 
-  bool hasInitializer() const { return initializer_ != nullptr; }
-
-  ParseNode& initializer() const { return *initializer_; }
-
-#ifdef DEBUG
-  void dump(GenericPrinter& out, int indent);
-#endif
+  FunctionNode& initializer() const { return right()->as<FunctionNode>(); }
 };
 
 class SwitchStatement : public BinaryNode {

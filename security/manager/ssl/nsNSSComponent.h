@@ -56,6 +56,9 @@ class nsNSSComponent final : public nsINSSComponent, public nsIObserver {
   // LoadLoadableRootsTask updates mLoadableRootsLoaded and
   // mLoadableRootsLoadedResult and then signals mLoadableRootsLoadedMonitor.
   friend class LoadLoadableRootsTask;
+  // BackgroundImportEnterpriseCertsTask calls ImportEnterpriseRoots and
+  // UpdateCertVerifierWithEnterpriseRoots.
+  friend class BackgroundImportEnterpriseCertsTask;
 
   nsNSSComponent();
 

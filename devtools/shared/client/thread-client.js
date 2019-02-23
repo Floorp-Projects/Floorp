@@ -13,7 +13,6 @@ const eventSource = require("devtools/shared/client/event-source");
 const {ThreadStateTypes} = require("devtools/shared/client/constants");
 
 loader.lazyRequireGetter(this, "ArrayBufferClient", "devtools/shared/client/array-buffer-client");
-loader.lazyRequireGetter(this, "EnvironmentClient", "devtools/shared/client/environment-client");
 loader.lazyRequireGetter(this, "LongStringClient", "devtools/shared/client/long-string-client");
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/object-client");
 loader.lazyRequireGetter(this, "SourceClient", "devtools/shared/client/source-client");
@@ -693,13 +692,6 @@ ThreadClient.prototype = {
     path: arg(0),
     method: arg(1),
   }),
-
-  /**
-   * Return an EnvironmentClient instance for the given environment actor form.
-   */
-  environment: function(form) {
-    return new EnvironmentClient(this.client, form);
-  },
 
   /**
    * Return an instance of SourceClient for the given source actor form.

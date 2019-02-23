@@ -3,18 +3,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-/*
+/**
  * Handles the validation callback from nsIFormFillController and
  * the display of the help panel on invalid elements.
  */
 
-var EXPORTED_SYMBOLS = ["FormSubmitChild"];
+var EXPORTED_SYMBOLS = ["FormValidationChild"];
 
 const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 const {BrowserUtils} = ChromeUtils.import("resource://gre/modules/BrowserUtils.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-class FormSubmitChild extends ActorChild {
+class FormValidationChild extends ActorChild {
   constructor(dispatcher) {
     super(dispatcher);
 

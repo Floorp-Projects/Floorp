@@ -454,6 +454,7 @@ class RaptorDesktopChrome(RaptorDesktop):
             '--proxy-bypass-list=localhost;127.0.0.1',
             '--ignore-certificate-errors',
             '--no-default-browser-check',
+            '--use-mock-keychain',
         ]
         if self.config['host'] not in ('localhost', '127.0.0.1'):
             chrome_args[0] = chrome_args[0].replace('127.0.0.1', self.config['host'])
@@ -542,9 +543,6 @@ class RaptorAndroid(Raptor):
 
     def launch_firefox_android_app(self):
         self.log.info("starting %s" % self.config['app'])
-        if self.config['app'] == "fennec":
-            self.launch_firefox_fennec()
-            return
 
         extra_args = ["-profile", self.device_profile,
                       "--es", "env0", "LOG_VERBOSE=1",
@@ -554,14 +552,21 @@ class RaptorAndroid(Raptor):
             # make sure the android app is not already running
             self.device.stop_application(self.config['binary'])
 
-            self.device.launch_activity(self.config['binary'],
-                                        self.config['activity'],
-                                        extra_args=extra_args,
-                                        url='about:blank',
-                                        e10s=True,
-                                        fail_if_running=False)
-        except Exception:
+            if self.config['app'] == "fennec":
+                self.device.launch_fennec(self.config['binary'],
+                                          extra_args=extra_args,
+                                          url='about:blank',
+                                          fail_if_running=False)
+            else:
+                self.device.launch_activity(self.config['binary'],
+                                            self.config['activity'],
+                                            extra_args=extra_args,
+                                            url='about:blank',
+                                            e10s=True,
+                                            fail_if_running=False)
+        except Exception as e:
             self.log.error("Exception launching %s" % self.config['binary'])
+            self.log.error("Exception: %s %s" % (type(e).__name__, str(e)))
             if self.config['power_test']:
                 finish_geckoview_power_test(self)
             raise
@@ -569,25 +574,6 @@ class RaptorAndroid(Raptor):
         # give our control server the device and app info
         self.control_server.device = self.device
         self.control_server.app_name = self.config['binary']
-
-    def launch_firefox_fennec(self):
-        self.log.info("starting %s" % self.config['app'])
-        extra_args = ["-profile", self.device_profile,
-                      "--es", "env0", "LOG_VERBOSE=1",
-                      "--es", "env1", "R_LOG_LEVEL=6"]
-
-        try:
-            # if fennec is already running, shut it down first
-            self.device.stop_application(self.config['binary'])
-            self.device.launch_fennec(self.config['binary'],
-                                      extra_args=extra_args,
-                                      url='about:blank',
-                                      fail_if_running=False)
-        except Exception:
-            self.log.error("Exception launching %s" % self.config['binary'])
-            if self.config['power_test']:
-                finish_geckoview_power_test(self)
-            raise
 
     def run_test(self, test, timeout=None):
         if self.config['power_test']:
@@ -723,10 +709,10 @@ def main(args=sys.argv[1:]):
         os.sys.exit(1)
 
     # when running raptor locally with gecko profiling on, use the view-gecko-profile
-    # tool to automatically load the latest gecko profile in perf-html.io
+    # tool to automatically load the latest gecko profile in profiler.firefox.com
     if args.gecko_profile and args.run_local:
         if os.environ.get('DISABLE_PROFILE_LAUNCH', '0') == '1':
-            LOG.info("Not launching perf-html.io because DISABLE_PROFILE_LAUNCH=1")
+            LOG.info("Not launching profiler.firefox.com because DISABLE_PROFILE_LAUNCH=1")
         else:
             view_gecko_profile(args.binary)
 

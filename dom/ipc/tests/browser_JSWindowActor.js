@@ -9,6 +9,10 @@ let windowActorOptions = {
   },
   child: {
     moduleURI: "resource://testing-common/TestChild.jsm",
+
+    events: {
+      "mozshowdropdown": {},
+    },
   },
 };
 
@@ -98,4 +102,42 @@ add_task(async function test_asyncMessage_without_both_side_actor() {
         });
         ChromeUtils.unregisterWindowActor("Test");
     });
+});
+
+add_task(async function test_events() {
+  ChromeUtils.registerWindowActor("Test", windowActorOptions);
+  await BrowserTestUtils.withNewTab({gBrowser, url: URL}, async browser => {
+    // Add a select element to the DOM of the loaded document.
+    await ContentTask.spawn(browser, {}, async function() {
+      content.document.body.innerHTML += `
+        <select id="testSelect">
+          <option>A</option>
+          <option>B</option>
+        </select>`;
+    });
+
+    // Wait for the observer notification.
+    let observePromise = new Promise(resolve => {
+      const TOPIC = "test-js-window-actor-parent-event";
+      Services.obs.addObserver(function obs(subject, topic, data) {
+        is(topic, TOPIC, "topic matches");
+
+        Services.obs.removeObserver(obs, TOPIC);
+        resolve({subject, data});
+      }, TOPIC);
+    });
+
+    // Click on the select to show the dropdown.
+    await BrowserTestUtils.synthesizeMouseAtCenter("#testSelect", {}, browser);
+
+    // Wait for the observer notification to fire, and inspect the results.
+    let {subject, data} = await observePromise;
+    is(data, "mozshowdropdown");
+
+    let parent = browser.browsingContext.currentWindowGlobal;
+    let actorParent = parent.getActor("Test");
+    ok(actorParent, "JSWindowActorParent should have value.");
+    is(subject.wrappedJSObject, actorParent, "Should have been recieved on the right actor");
+  });
+  ChromeUtils.unregisterWindowActor("Test");
 });

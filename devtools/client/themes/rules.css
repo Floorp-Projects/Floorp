@@ -640,3 +640,13 @@
 #class-panel-toggle::before {
   content: ".cls";
 }
+
+.flash-out {
+  animation: flash-out 1s ease-out;
+}
+
+@keyframes flash-out {
+  from {
+    background: var(--theme-contrast-background);
+  }
+}

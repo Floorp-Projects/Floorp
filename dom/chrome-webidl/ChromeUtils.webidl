@@ -537,12 +537,20 @@ dictionary Base64URLEncodeOptions {
 dictionary WindowActorOptions {
   /** This fields are used for configuring individual sides of the actor. */
   required WindowActorSidedOptions parent;
-  required WindowActorSidedOptions child;
+  required WindowActorChildOptions child;
 };
 
 dictionary WindowActorSidedOptions {
   /** The module path which should be loaded for the actor on this side. */
   required ByteString moduleURI;
+};
+
+dictionary WindowActorChildOptions : WindowActorSidedOptions {
+  /**
+   * Events which this actor wants to be listening to. When these events fire,
+   * it will trigger actor creation, and then forward the event to the actor.
+   */
+  record<DOMString, AddEventListenerOptions> events;
 };
 
 enum Base64URLDecodePadding {

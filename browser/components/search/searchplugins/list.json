@@ -821,7 +821,7 @@
     "uk": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-d", "bing", "meta-ua", "ddg", "wikipedia-uk", "hotline-ua"
+          "google-b-d", "bing", "ddg", "wikipedia-uk", "hotline-ua"
         ]
       }
     },

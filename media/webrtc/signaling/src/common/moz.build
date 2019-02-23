@@ -5,6 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 include('/media/webrtc/webrtc.mozbuild')
 
+EXPORTS.mozilla.dom += [
+    'CandidateInfo.h'
+]
+
 LOCAL_INCLUDES += [
     '/media/mtransport/third_party/nrappkit/src/util/libekr',
     '/media/webrtc/trunk',

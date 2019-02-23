@@ -14,6 +14,8 @@
 #ifdef XP_MACOSX
 #  include <Security/Security.h>
 #  include "KeychainSecret.h"  // for ScopedCFType
+
+#  include "nsCocoaFeatures.h"
 #endif                         // XP_MACOSX
 
 extern LazyLogModule gPIPNSSLog;
@@ -234,15 +236,55 @@ OSStatus GatherEnterpriseCertsMacOS(Vector<EnterpriseCert>& certs) {
   uint32_t numImported = 0;
   for (CFIndex i = 0; i < count; i++) {
     const CFTypeRef c = CFArrayGetValueAtIndex(arr.get(), i);
+    SecTrustRef trust;
+    rv = SecTrustCreateWithCertificates(c, sslPolicy.get(), &trust);
+    if (rv != errSecSuccess) {
+      MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+              ("SecTrustCreateWithCertificates failed"));
+      continue;
+    }
+    ScopedCFType<SecTrustRef> trustHandle(trust);
+    bool isTrusted = false;
+    bool fallBackToDeprecatedAPI = true;
+#  if defined MAC_OS_X_VERSION_10_14
+    if (nsCocoaFeatures::OnMojaveOrLater()) {
+      // This is an awkward way to express what we want, but the compiler
+      // complains if we try to put __builtin_available in a compound logical
+      // statement.
+      if (__builtin_available(macOS 10.14, *)) {
+        isTrusted = SecTrustEvaluateWithError(trustHandle.get(), nullptr);
+        fallBackToDeprecatedAPI = false;
+      }
+    }
+#  endif  // MAC_OS_X_VERSION_10_14
+    if (fallBackToDeprecatedAPI) {
+      SecTrustResultType result;
+      rv = SecTrustEvaluate(trustHandle.get(), &result);
+      if (rv != errSecSuccess) {
+        MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("SecTrustEvaluate failed"));
+        continue;
+      }
+      // 'kSecTrustResultProceed' means the trust evaluation succeeded and that
+      // this is a trusted certificate.
+      // 'kSecTrustResultUnspecified' means the trust evaluation succeeded and
+      // that this certificate inherits its trust.
+      isTrusted = result == kSecTrustResultProceed ||
+                  result == kSecTrustResultUnspecified;
+    }
+    if (!isTrusted) {
+      MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("skipping cert not trusted"));
+      continue;
+    }
+    CFIndex count = SecTrustGetCertificateCount(trustHandle.get());
+    bool isRoot = count == 1;
+
     // Because we asked for certificates, each CFTypeRef in the array is really
     // a SecCertificateRef.
     const SecCertificateRef s = (const SecCertificateRef)c;
     ScopedCFType<CFDataRef> der(SecCertificateCopyData(s));
     EnterpriseCert enterpriseCert;
-    // TODO(BUG 1526004) currently we treat all 3rd party certificates as trust
-    // anchors on MacOS. This will be addressed in a follow-up bug.
     if (NS_FAILED(enterpriseCert.Init(CFDataGetBytePtr(der.get()),
-                                      CFDataGetLength(der.get()), true))) {
+                                      CFDataGetLength(der.get()), isRoot))) {
       // Best-effort. We probably ran out of memory.
       continue;
     }
@@ -258,6 +300,11 @@ OSStatus GatherEnterpriseCertsMacOS(Vector<EnterpriseCert>& certs) {
 #endif  // XP_MACOSX
 
 nsresult GatherEnterpriseCerts(Vector<EnterpriseCert>& certs) {
+  MOZ_ASSERT(!NS_IsMainThread());
+  if (NS_IsMainThread()) {
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
+
   certs.clear();
 #ifdef XP_WIN
   GatherEnterpriseCertsWindows(certs);

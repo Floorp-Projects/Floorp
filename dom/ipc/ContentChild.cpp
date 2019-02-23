@@ -2582,6 +2582,13 @@ mozilla::ipc::IPCResult ContentChild::RecvInitJSWindowActorInfos(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentChild::RecvUnregisterJSWindowActor(
+    const nsString& aName) {
+  RefPtr<JSWindowActorService> actSvc = JSWindowActorService::GetSingleton();
+  actSvc->UnregisterWindowActor(aName);
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentChild::RecvLastPrivateDocShellDestroyed() {
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   obs->NotifyObservers(nullptr, "last-pb-context-exited", nullptr);

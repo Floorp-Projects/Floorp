@@ -5,10 +5,7 @@
 
 /* Test update-settings.ini missing channel MAR security check */
 
-const STATE_AFTER_STAGE = STATE_FAILED;
-gStagingRemovedUpdate = true;
-
-function run_test() {
+async function run_test() {
   if (!MOZ_VERIFY_MAR_SIGNATURE) {
     return;
   }
@@ -16,34 +13,17 @@ function run_test() {
   if (!setupTestCommon()) {
     return;
   }
+  const STATE_AFTER_STAGE = STATE_FAILED;
   gTestFiles = gTestFilesCompleteSuccess;
   gTestFiles[gTestFiles.length - 2].originalContents = null;
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();
-  setupUpdaterTest(FILE_COMPLETE_MAR, false);
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-function setupUpdaterTestFinished() {
-  stageUpdate(true);
-}
-
-/**
- * Called after the call to stageUpdate finishes.
- */
-function stageUpdateFinished() {
+  await setupUpdaterTest(FILE_COMPLETE_MAR, false);
+  await stageUpdate(STATE_AFTER_STAGE, true, true);
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(STATE_FAILED_UPDATE_SETTINGS_FILE_CHANNEL);
-  executeSoon(waitForUpdateXMLFiles);
-}
-
-/**
- * Called after the call to waitForUpdateXMLFiles finishes.
- */
-function waitForUpdateXMLFilesFinished() {
+  await waitForUpdateXMLFiles();
   checkUpdateManager(STATE_NONE, false, STATE_FAILED,
                      UPDATE_SETTINGS_FILE_CHANNEL, 1);
   waitForFilesInUse();

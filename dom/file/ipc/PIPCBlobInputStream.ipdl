@@ -28,7 +28,7 @@ parent:
   async Close();
 
 child:
-  async StreamReady(OptionalIPCStream aStream);
+  async StreamReady(IPCStream? aStream);
 
   async LengthReady(int64_t aLength);
 

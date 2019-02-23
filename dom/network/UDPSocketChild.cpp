@@ -181,7 +181,7 @@ UDPSocketChild::SendBinaryStream(const nsACString& aHost, uint16_t aPort,
 
   UDPSOCKET_LOG(
       ("%s: %s:%u", __FUNCTION__, PromiseFlatCString(aHost).get(), aPort));
-  SendOutgoingData(UDPData(autoStream.TakeOptionalValue()),
+  SendOutgoingData(UDPData(autoStream.TakeValue()),
                    UDPSocketAddr(UDPAddressInfo(nsCString(aHost), aPort)));
 
   return NS_OK;

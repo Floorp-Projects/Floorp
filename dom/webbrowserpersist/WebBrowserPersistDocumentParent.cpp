@@ -53,7 +53,7 @@ WebBrowserPersistDocumentParent::~WebBrowserPersistDocumentParent() {
 }
 
 mozilla::ipc::IPCResult WebBrowserPersistDocumentParent::RecvAttributes(
-    const Attrs& aAttrs, const OptionalIPCStream& aPostStream) {
+    const Attrs& aAttrs, const Maybe<IPCStream>& aPostStream) {
   // Deserialize the postData unconditionally so that fds aren't leaked.
   nsCOMPtr<nsIInputStream> postData =
       mozilla::ipc::DeserializeIPCStream(aPostStream);

@@ -37,8 +37,6 @@ class GLContextEAGL : public GLContext {
     return static_cast<GLContextEAGL*>(gl);
   }
 
-  bool Init() override;
-
   bool AttachToWindow(nsIWidget* aWidget);
 
   EAGLContext* GetEAGLContext() const { return mContext; }
@@ -47,7 +45,7 @@ class GLContextEAGL : public GLContext {
 
   virtual bool IsCurrentImpl() const override;
 
-  virtual bool SetupLookupFunction() override;
+  Maybe<SymbolLoader> GetSymbolLoader() const override;
 
   virtual bool IsDoubleBuffered() const override;
 

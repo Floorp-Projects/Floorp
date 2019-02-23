@@ -18,7 +18,6 @@
   "async.js": ["Async"],
   "AsyncSpellCheckTestHelper.jsm": ["onSpellCheck"],
   "base-loader.js": ["Loader", "resolveURI", "Module", "Require", "unload"],
-  "Battery.jsm": ["GetBattery", "Battery"],
   "blocklist-clients.js": ["AddonBlocklistClient", "GfxBlocklistClient", "OneCRLBlocklistClient", "PluginBlocklistClient"],
   "blocklist-updater.js": ["checkVersions", "addTestBlocklistClient"],
   "bogus_element_type.jsm": [],

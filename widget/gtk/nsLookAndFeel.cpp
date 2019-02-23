@@ -19,6 +19,7 @@
 #include <fontconfig/fontconfig.h>
 #include "gfxPlatformGtk.h"
 #include "mozilla/FontPropertyTypes.h"
+#include "mozilla/RelativeLuminanceUtils.h"
 #include "ScreenHelperGTK.h"
 
 #include "gtkdrawing.h"
@@ -689,9 +690,15 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
       EnsureInit();
       aResult = mCSDCloseButton;
       break;
-    case eIntID_GTKCSDTransparentBackground:
-      aResult = nsWindow::TopLevelWindowUseARGBVisual();
+    case eIntID_GTKCSDTransparentBackground: {
+      // Enable transparent titlebar corners for titlebar mode.
+      GdkScreen* screen = gdk_screen_get_default();
+      aResult = gdk_screen_is_composited(screen)
+                    ? (nsWindow::GetSystemCSDSupportLevel() !=
+                       nsWindow::CSD_SUPPORT_NONE)
+                    : false;
       break;
+    }
     case eIntID_GTKCSDReversedPlacement:
       EnsureInit();
       aResult = mCSDReversedPlacement;
@@ -713,7 +720,10 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
       nscolor fg, bg;
       if (NS_SUCCEEDED(NativeGetColor(eColorID_windowtext, fg)) &&
           NS_SUCCEEDED(NativeGetColor(eColorID_window, bg))) {
-        aResult = NS_GetLuminosity(bg) < NS_GetLuminosity(fg) ? 1 : 0;
+        aResult = (RelativeLuminanceUtils::Compute(bg) <
+                   RelativeLuminanceUtils::Compute(fg))
+                      ? 1
+                      : 0;
         break;
       }
       MOZ_FALLTHROUGH;

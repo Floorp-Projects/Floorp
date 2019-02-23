@@ -179,6 +179,7 @@ void VRService::Stop() {
 #if defined(XP_WIN)
   if (mMutex) {
     CloseHandle(mMutex);
+    mMutex = NULL;
   }
 #endif
   mSession = nullptr;

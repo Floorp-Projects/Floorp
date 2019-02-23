@@ -373,7 +373,7 @@ ExtensionPageChild = {
   },
 
   /**
-   * Create a privileged context at document-element-inserted.
+   * Create a privileged context at initial-document-element-inserted.
    *
    * @param {BrowserExtensionContent} extension
    *     The extension for which the context should be created.

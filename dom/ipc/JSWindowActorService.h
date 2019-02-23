@@ -7,13 +7,15 @@
 #ifndef mozilla_dom_JSWindowActorService_h
 #define mozilla_dom_JSWindowActorService_h
 
-#include "nsClassHashtable.h"
+#include "nsRefPtrHashtable.h"
 #include "nsString.h"
 
 namespace mozilla {
 namespace dom {
 struct WindowActorOptions;
 class JSWindowActorInfo;
+class JSWindowActorProtocol;
+class EventTarget;
 
 class JSWindowActorService final {
  public:
@@ -43,11 +45,18 @@ class JSWindowActorService final {
   void ReceiveMessage(JS::RootedObject& aObj, const nsString& aMessageName,
                       ipc::StructuredCloneData& aData);
 
+  // Register or unregister a WindowRoot object from this JSWindowActorService.
+  void RegisterWindowRoot(EventTarget* aRoot);
+
+  // NOTE: This method is static, as it may be called during shutdown.
+  static void UnregisterWindowRoot(EventTarget* aRoot);
+
  private:
   JSWindowActorService();
   ~JSWindowActorService();
 
-  nsClassHashtable<nsStringHashKey, WindowActorOptions> mDescriptors;
+  nsTArray<EventTarget*> mRoots;
+  nsRefPtrHashtable<nsStringHashKey, JSWindowActorProtocol> mDescriptors;
 };
 
 }  // namespace dom

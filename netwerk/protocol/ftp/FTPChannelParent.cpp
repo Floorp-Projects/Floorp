@@ -105,7 +105,7 @@ bool FTPChannelParent::Init(const FTPChannelCreationArgs& aArgs) {
 bool FTPChannelParent::DoAsyncOpen(const URIParams& aURI,
                                    const uint64_t& aStartPos,
                                    const nsCString& aEntityID,
-                                   const OptionalIPCStream& aUploadStream,
+                                   const Maybe<IPCStream>& aUploadStream,
                                    const OptionalLoadInfoArgs& aLoadInfoArgs,
                                    const uint32_t& aLoadFlags) {
   nsresult rv;

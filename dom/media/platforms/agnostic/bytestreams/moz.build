@@ -25,37 +25,7 @@ LOCAL_INCLUDES += [
 
 FINAL_LIBRARY = 'xul'
 
-# Suppress warnings in third-party code.
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    CFLAGS += [
-        '-wd4013', # 'function' undefined; assuming extern returning int
-        '-wd4101', # unreferenced local variable
-    ]
-    CXXFLAGS += [
-        '-wd4018', # '<' : signed/unsigned mismatch
-        '-wd4275', # non dll-interface class used as base for dll-interface class
-        '-wd4305', # '=' : truncation from 'double' to 'float'
-        '-wd4309', # '=' : truncation of constant value
-        '-wd4355', # 'this' : used in base member initializer list
-        '-wd4804', # '>' : unsafe use of type 'bool' in operation
-        '-wd4099', # mismatched class/struct tags
-    ]
-elif CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CFLAGS += [
-        '-Wno-comment',
-        '-Wno-sign-compare',
-        '-Wno-unused-function',
-    ]
-    CXXFLAGS += [
-        '-Werror=format',
-        '-Wno-multichar',
-        '-Wno-sign-compare',
-        '-Wno-unused',
-    ]
-    if CONFIG['CC_TYPE'] == 'clang':
-        CXXFLAGS += [
-            '-Wno-mismatched-tags',
-            '-Wno-tautological-constant-out-of-range-compare',
-            '-Wno-unreachable-code-return',
-            '-Wno-implicit-fallthrough',
-        ]
+# Suppress warnings for now.
+CXXFLAGS += [
+    '-Wno-sign-compare',
+]

@@ -4,11 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 var EXPORTED_SYMBOLS = ["TestParent"];
 
 class TestParent extends JSWindowActorParent {
   constructor() {
     super();
+    this.wrappedJSObject = this;
   }
 
   recvAsyncMessage(aMessage) {
@@ -20,6 +23,11 @@ class TestParent extends JSWindowActorParent {
       case "toParent":
         aMessage.data.toParent = true;
         this.sendAsyncMessage("done", aMessage.data);
+        break;
+
+      case "event":
+        Services.obs.notifyObservers(
+          this, "test-js-window-actor-parent-event", aMessage.data.type);
         break;
     }
   }

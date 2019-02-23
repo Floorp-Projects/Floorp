@@ -1190,7 +1190,8 @@ void WebGLFramebuffer::FramebufferTexture2D(GLenum attachEnum,
   if (level < 0)
     return mContext->ErrorInvalidValue("`level` must not be negative.");
 
-  if (mContext->IsWebGL2()) {
+  if (mContext->IsWebGL2() ||
+      mContext->IsExtensionEnabled(WebGLExtensionID::OES_fbo_render_mipmap)) {
     /* GLES 3.0.4 p208:
      *   If textarget is one of TEXTURE_CUBE_MAP_POSITIVE_X,
      *   TEXTURE_CUBE_MAP_POSITIVE_Y, TEXTURE_CUBE_MAP_POSITIVE_Z,

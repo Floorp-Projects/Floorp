@@ -70,7 +70,7 @@ final public class InputMethods {
         return METHOD_HTC_TOUCH_INPUT.equals(inputMethod);
     }
 
-    public static boolean needsRemoveAutocompleteHack(Context context) {
+    public static boolean needsRestartOnReplaceRemove(Context context) {
         String inputMethod = getCurrentInputMethod(context);
         return METHOD_SONY.equals(inputMethod);
     }

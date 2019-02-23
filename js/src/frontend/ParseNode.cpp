@@ -163,9 +163,6 @@ void ParseNode::dump(GenericPrinter& out, int indent) {
     case PN_NAME:
       as<NameNode>().dump(out, indent);
       return;
-    case PN_FIELD:
-      as<ClassField>().dump(out, indent);
-      return;
     case PN_NUMBER:
       as<NumericLiteral>().dump(out, indent);
       return;
@@ -381,19 +378,6 @@ void NameNode::dump(GenericPrinter& out, int indent) {
       return;
     }
   }
-}
-
-void ClassField::dump(GenericPrinter& out, int indent) {
-  out.printf("(");
-  if (hasInitializer()) {
-    indent += 2;
-  }
-  DumpParseTree(&name(), out, indent);
-  if (hasInitializer()) {
-    IndentNewLine(out, indent);
-    DumpParseTree(&initializer(), out, indent);
-  }
-  out.printf(")");
 }
 
 void LexicalScopeNode::dump(GenericPrinter& out, int indent) {

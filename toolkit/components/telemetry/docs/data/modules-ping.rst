@@ -23,6 +23,7 @@ Structure:
             version: <string>, // Version of the module
             debugID: <string>, // ID of the debug information file
             debugName: <string>, // Name of the debug information file
+            certSubject: <string>, // Name of the organization that signed the binary (Optional, only defined when present)
           },
           ...
         ],

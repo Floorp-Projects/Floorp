@@ -1,0 +1,12 @@
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/"
+                       xmlns:moz="http://www.mozilla.org/2006/browser/search/">
+  <ShortName>FooChromeIcon</ShortName>
+  <Description>Foo Chrome Icon Search</Description>
+  <InputEncoding>utf-8</InputEncoding>
+  <Image width="16" height="16">chrome://browser/skin/info.svg</Image>
+  <Url type="text/html" method="GET" template="http://mochi.test:8888/browser/browser/components/search/test/browser/?search">
+    <Param name="test" value="{searchTerms}"/>
+  </Url>
+  <moz:SearchForm>http://mochi.test:8888/browser/browser/components/search/test/browser/</moz:SearchForm>
+  <moz:Alias>foochromeiconalias</moz:Alias>
+</OpenSearchDescription>

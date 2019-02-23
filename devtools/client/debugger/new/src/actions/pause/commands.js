@@ -22,12 +22,7 @@ import type { ThunkArgs } from "../types";
 import type { Command } from "../../reducers/types";
 
 export function selectThread(thread: string) {
-  return async ({ dispatch, client }: ThunkArgs) => {
-    return dispatch({
-      type: "SELECT_THREAD",
-      thread
-    });
-  };
+  return { type: "SELECT_THREAD", thread }
 }
 
 /**

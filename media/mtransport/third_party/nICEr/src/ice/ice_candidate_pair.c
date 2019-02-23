@@ -447,6 +447,9 @@ int nr_ice_candidate_pair_do_triggered_check(nr_ice_peer_ctx *pctx, nr_ice_cand_
     } else if(pair->state==NR_ICE_PAIR_STATE_SUCCEEDED) {
       r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/CAND_PAIR(%s): No new trigger check for succeeded pair",pctx->label,pair->codeword);
       return(0);
+    } else if (pair->local->stream->obsolete) {
+      r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/CAND_PAIR(%s): No new trigger check for pair with obsolete stream",pctx->label,pair->codeword);
+      return(0);
     }
 
     /* Do not run this logic more than once on a given pair */

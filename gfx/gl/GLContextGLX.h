@@ -50,7 +50,7 @@ class GLContextGLX : public GLContext {
 
   virtual bool IsCurrentImpl() const override;
 
-  virtual bool SetupLookupFunction() override;
+  Maybe<SymbolLoader> GetSymbolLoader() const override;
 
   virtual bool IsDoubleBuffered() const override;
 

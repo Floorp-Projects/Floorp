@@ -50,4 +50,25 @@ bool WebGLExtensionFloatBlend::IsSupported(const WebGLContext* const webgl) {
 
 IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionFloatBlend, EXT_float_blend)
 
+// -
+
+WebGLExtensionFBORenderMipmap::WebGLExtensionFBORenderMipmap(WebGLContext* const webgl)
+    : WebGLExtensionBase(webgl) {
+  MOZ_ASSERT(IsSupported(webgl), "Don't construct extension if unsupported.");
+}
+
+WebGLExtensionFBORenderMipmap::~WebGLExtensionFBORenderMipmap() = default;
+
+bool WebGLExtensionFBORenderMipmap::IsSupported(const WebGLContext* const webgl) {
+  if (webgl->IsWebGL2()) return false;
+  if (!gfxPrefs::WebGLDraftExtensionsEnabled()) return false;
+
+  const auto& gl = webgl->gl;
+  if (!gl->IsGLES()) return true;
+  if (gl->Version() >= 300) return true;
+  return gl->IsExtensionSupported(gl::GLContext::OES_fbo_render_mipmap);
+}
+
+IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionFBORenderMipmap, OES_fbo_render_mipmap)
+
 }  // namespace mozilla

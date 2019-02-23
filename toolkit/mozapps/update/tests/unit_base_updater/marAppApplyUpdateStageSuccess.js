@@ -7,59 +7,27 @@
  * apply it.
  */
 
-const STATE_AFTER_STAGE = IS_SERVICE_TEST ? STATE_APPLIED_SVC : STATE_APPLIED;
-
-function run_test() {
+async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
-
+  const STATE_AFTER_STAGE = gIsServiceTest ? STATE_APPLIED_SVC : STATE_APPLIED;
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
-  setupUpdaterTest(FILE_COMPLETE_MAR, true);
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-function setupUpdaterTestFinished() {
-  stageUpdate(true);
-}
-
-/**
- * Called after the call to stageUpdate finishes.
- */
-function stageUpdateFinished() {
+  await setupUpdaterTest(FILE_COMPLETE_MAR, true);
+  await stageUpdate(STATE_AFTER_STAGE, true);
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateSuccess(getStageDirFile, true);
   checkUpdateLogContents(LOG_COMPLETE_SUCCESS, true);
   // Switch the application to the staged application that was updated.
-  runUpdateUsingApp(STATE_SUCCEEDED);
-}
-
-/**
- * Called after the call to runUpdateUsingApp finishes.
- */
-function runUpdateFinished() {
-  checkPostUpdateAppLog();
-}
-
-/**
- * Called after the call to checkPostUpdateAppLog finishes.
- */
-function checkPostUpdateAppLogFinished() {
+  await runUpdateUsingApp(STATE_SUCCEEDED);
+  await checkPostUpdateAppLog();
   checkAppBundleModTime();
   standardInit();
   checkPostUpdateRunningFile(true);
   checkFilesAfterUpdateSuccess(getApplyDirFile, false, true);
   checkUpdateLogContents(LOG_REPLACE_SUCCESS, false, true);
-  executeSoon(waitForUpdateXMLFiles);
-}
-
-/**
- * Called after the call to waitForUpdateXMLFiles finishes.
- */
-function waitForUpdateXMLFilesFinished() {
+  await waitForUpdateXMLFiles();
   checkUpdateManager(STATE_NONE, false, STATE_SUCCEEDED, 0, 1);
 
   let updatesDir = getUpdateDirFile(DIR_PATCH);

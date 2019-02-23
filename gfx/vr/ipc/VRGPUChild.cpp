@@ -48,7 +48,11 @@ static StaticRefPtr<VRGPUChild> sVRGPUChildSingleton;
   sVRGPUChildSingleton = nullptr;
 }
 
-void VRGPUChild::ActorDestroy(ActorDestroyReason aWhy) { mClosed = true; }
+void VRGPUChild::ActorDestroy(ActorDestroyReason aWhy) {
+  VRManager* vm = VRManager::Get();
+  vm->Destroy();
+  mClosed = true;
+}
 
 bool VRGPUChild::IsClosed() { return mClosed; }
 

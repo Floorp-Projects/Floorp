@@ -15,6 +15,7 @@
 #include "mozilla/dom/WebCryptoTask.h"
 #include "mozilla/Move.h"
 #include "mozilla/Sprintf.h"
+#include "mtransport/dtlsidentity.h"
 
 #include <cstdio>
 

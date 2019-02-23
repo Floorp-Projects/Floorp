@@ -127,11 +127,6 @@ this.formautofill = class extends ExtensionAPI {
     Services.mm.addMessageListener("FormAutoComplete:MaybeOpenPopup", onMaybeOpenPopup);
 
     formAutofillParent.init().catch(Cu.reportError);
-    /* eslint-disable no-unused-vars */
-    Services.ppmm.loadProcessScript("data:,new " + function() {
-      ChromeUtils.import("resource://formautofill/FormAutofillContent.jsm");
-    }, true);
-    /* eslint-enable no-unused-vars */
     Services.mm.loadFrameScript("chrome://formautofill/content/FormAutofillFrameScript.js", true, true);
   }
 

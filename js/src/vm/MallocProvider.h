@@ -67,8 +67,9 @@ struct MallocProvider {
   }
 
   template <class T>
-  T* maybe_pod_realloc(T* prior, size_t oldSize, size_t newSize) {
-    T* p = js_pod_realloc(prior, oldSize, newSize);
+  T* maybe_pod_realloc(T* prior, size_t oldSize, size_t newSize,
+                       arena_id_t arena = js::MallocArena) {
+    T* p = js_pod_arena_realloc<T>(arena, prior, oldSize, newSize);
     if (MOZ_LIKELY(p)) {
       // For compatibility we do not account for realloc that decreases
       // previously allocated memory.
@@ -103,19 +104,19 @@ struct MallocProvider {
   }
 
   template <class T, class U>
-  T* pod_malloc_with_extra(size_t numExtra) {
+  T* pod_malloc_with_extra(size_t numExtra,
+                           arena_id_t arena = js::MallocArena) {
     size_t bytes;
     if (MOZ_UNLIKELY((!CalculateAllocSizeWithExtra<T, U>(numExtra, &bytes)))) {
       client()->reportAllocationOverflow();
       return nullptr;
     }
-    T* p = static_cast<T*>(js_malloc(bytes));
+    T* p = static_cast<T*>(js_arena_malloc(arena, bytes));
     if (MOZ_LIKELY(p)) {
       client()->updateMallocCounter(bytes);
       return p;
     }
-    p = (T*)client()->onOutOfMemory(AllocFunction::Malloc, js::MallocArena,
-                                    bytes);
+    p = (T*)client()->onOutOfMemory(AllocFunction::Malloc, arena, bytes);
     if (p) {
       client()->updateMallocCounter(bytes);
     }
@@ -123,8 +124,9 @@ struct MallocProvider {
   }
 
   template <class T>
-  UniquePtr<T[], JS::FreePolicy> make_pod_array(size_t numElems) {
-    return UniquePtr<T[], JS::FreePolicy>(pod_malloc<T>(numElems));
+  UniquePtr<T[], JS::FreePolicy> make_pod_array(
+      size_t numElems, arena_id_t arena = js::MallocArena) {
+    return UniquePtr<T[], JS::FreePolicy>(pod_malloc<T>(numElems, arena));
   }
 
   template <class T>
@@ -146,19 +148,19 @@ struct MallocProvider {
   }
 
   template <class T, class U>
-  T* pod_calloc_with_extra(size_t numExtra) {
+  T* pod_calloc_with_extra(size_t numExtra,
+                           arena_id_t arena = js::MallocArena) {
     size_t bytes;
     if (MOZ_UNLIKELY((!CalculateAllocSizeWithExtra<T, U>(numExtra, &bytes)))) {
       client()->reportAllocationOverflow();
       return nullptr;
     }
-    T* p = static_cast<T*>(js_calloc(bytes));
+    T* p = static_cast<T*>(js_arena_calloc(arena, bytes));
     if (p) {
       client()->updateMallocCounter(bytes);
       return p;
     }
-    p = (T*)client()->onOutOfMemory(AllocFunction::Calloc, js::MallocArena,
-                                    bytes);
+    p = (T*)client()->onOutOfMemory(AllocFunction::Calloc, arena, bytes);
     if (p) {
       client()->updateMallocCounter(bytes);
     }
@@ -166,13 +168,15 @@ struct MallocProvider {
   }
 
   template <class T>
-  UniquePtr<T[], JS::FreePolicy> make_zeroed_pod_array(size_t numElems) {
-    return UniquePtr<T[], JS::FreePolicy>(pod_calloc<T>(numElems));
+  UniquePtr<T[], JS::FreePolicy> make_zeroed_pod_array(
+      size_t numElems, arena_id_t arena = js::MallocArena) {
+    return UniquePtr<T[], JS::FreePolicy>(pod_calloc<T>(numElems, arena));
   }
 
   template <class T>
-  T* pod_realloc(T* prior, size_t oldSize, size_t newSize) {
-    T* p = maybe_pod_realloc(prior, oldSize, newSize);
+  T* pod_realloc(T* prior, size_t oldSize, size_t newSize,
+                 arena_id_t arena = js::MallocArena) {
+    T* p = maybe_pod_realloc(prior, oldSize, newSize, arena);
     if (MOZ_LIKELY(p)) {
       return p;
     }
@@ -181,8 +185,8 @@ struct MallocProvider {
       client()->reportAllocationOverflow();
       return nullptr;
     }
-    p = (T*)client()->onOutOfMemory(AllocFunction::Realloc, js::MallocArena,
-                                    bytes, prior);
+    p = (T*)client()->onOutOfMemory(AllocFunction::Realloc, arena, bytes,
+                                    prior);
     if (p && newSize > oldSize) {
       client()->updateMallocCounter((newSize - oldSize) * sizeof(T));
     }
@@ -190,7 +194,14 @@ struct MallocProvider {
   }
 
   JS_DECLARE_NEW_METHODS(new_, pod_malloc<uint8_t>, MOZ_ALWAYS_INLINE)
+  JS_DECLARE_NEW_ARENA_METHODS(arena_new_,
+                               [this](arena_id_t arena, size_t size) {
+                                 return pod_malloc<uint8_t>(size, arena);
+                               },
+                               MOZ_ALWAYS_INLINE)
+
   JS_DECLARE_MAKE_METHODS(make_unique, new_, MOZ_ALWAYS_INLINE)
+  JS_DECLARE_MAKE_METHODS(arena_make_unique, arena_new_, MOZ_ALWAYS_INLINE)
 
  private:
   Client* client() { return static_cast<Client*>(this); }

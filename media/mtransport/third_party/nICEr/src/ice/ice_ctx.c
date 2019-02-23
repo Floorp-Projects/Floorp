@@ -519,7 +519,11 @@ void nr_ice_gather_finished_cb(NR_SOCKET s, int h, void *cb_arg)
     ctx = cand->ctx;
 
     ctx->uninitialized_candidates--;
-    r_log(LOG_ICE,LOG_DEBUG,"ICE(%s)/CAND(%s): initialized, %d remaining",ctx->label,cand->codeword,ctx->uninitialized_candidates);
+    if (cand->state == NR_ICE_CAND_STATE_FAILED) {
+      r_log(LOG_ICE,LOG_WARNING,"ICE(%s)/CAND(%s): failed to initialize, %d remaining",ctx->label,cand->label,ctx->uninitialized_candidates);
+    } else {
+      r_log(LOG_ICE,LOG_DEBUG,"ICE(%s)/CAND(%s): initialized, %d remaining",ctx->label,cand->label,ctx->uninitialized_candidates);
+    }
 
     /* Avoid the need for yet another initialization function */
     if (cand->state == NR_ICE_CAND_STATE_INITIALIZING && cand->type == HOST)
@@ -547,12 +551,12 @@ void nr_ice_gather_finished_cb(NR_SOCKET s, int h, void *cb_arg)
     }
 
     if(ctx->uninitialized_candidates==0){
-      r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): All candidates initialized",ctx->label);
+      r_log(LOG_ICE,LOG_INFO,"ICE(%s): All candidates initialized",ctx->label);
       if (ctx->done_cb) {
         ctx->done_cb(0,0,ctx->cb_arg);
       }
       else {
-        r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): No done_cb. We were probably destroyed.",ctx->label);
+        r_log(LOG_ICE,LOG_INFO,"ICE(%s): No done_cb. We were probably destroyed.",ctx->label);
       }
     }
     else {

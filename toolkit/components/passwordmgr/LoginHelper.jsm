@@ -21,49 +21,57 @@ var EXPORTED_SYMBOLS = [
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-// LoginHelper
-
 /**
  * Contains functions shared by different Login Manager components.
  */
 var LoginHelper = {
-  /**
-   * Warning: these only update if a logger was created.
-   */
-  debug: Services.prefs.getBoolPref("signon.debug"),
-  formlessCaptureEnabled: Services.prefs.getBoolPref("signon.formlessCapture.enabled"),
-  schemeUpgrades: Services.prefs.getBoolPref("signon.schemeUpgrades"),
-  insecureAutofill: Services.prefs.getBoolPref("signon.autofillForms.http"),
-  privateBrowsingCaptureEnabled:
-    Services.prefs.getBoolPref("signon.privateBrowsingCapture.enabled"),
+  debug: null,
+  enabled: null,
+  formlessCaptureEnabled: null,
+  schemeUpgrades: null,
+  insecureAutofill: null,
+  privateBrowsingCaptureEnabled: null,
+
+  init() {
+    // Watch for pref changes to update cached pref values.
+    Services.prefs.addObserver("signon.", () => this.updateSignonPrefs());
+    this.updateSignonPrefs();
+  },
+
+  updateSignonPrefs() {
+    this.autofillForms = Services.prefs.getBoolPref("signon.autofillForms");
+    this.debug = Services.prefs.getBoolPref("signon.debug");
+    this.enabled = Services.prefs.getBoolPref("signon.rememberSignons");
+    this.formlessCaptureEnabled = Services.prefs.getBoolPref("signon.formlessCapture.enabled");
+    this.insecureAutofill = Services.prefs.getBoolPref("signon.autofillForms.http");
+    this.privateBrowsingCaptureEnabled =
+      Services.prefs.getBoolPref("signon.privateBrowsingCapture.enabled");
+
+    this.schemeUpgrades = Services.prefs.getBoolPref("signon.schemeUpgrades");
+    this.storeWhenAutocompleteOff = Services.prefs.getBoolPref("signon.storeWhenAutocompleteOff");
+  },
 
   createLogger(aLogPrefix) {
     let getMaxLogLevel = () => {
-      return this.debug ? "debug" : "warn";
+      return this.debug ? "Debug" : "Warn";
     };
 
     let logger;
     function getConsole() {
       if (!logger) {
         // Create a new instance of the ConsoleAPI so we can control the maxLogLevel with a pref.
-        let ConsoleAPI = ChromeUtils.import("resource://gre/modules/Console.jsm", {}).ConsoleAPI;
         let consoleOptions = {
           maxLogLevel: getMaxLogLevel(),
           prefix: aLogPrefix,
         };
-        logger = new ConsoleAPI(consoleOptions);
+        logger = console.createInstance(consoleOptions);
       }
       return logger;
     }
 
     // Watch for pref changes and update this.debug and the maxLogLevel for created loggers
-    Services.prefs.addObserver("signon.", () => {
+    Services.prefs.addObserver("signon.debug", () => {
       this.debug = Services.prefs.getBoolPref("signon.debug");
-      this.formlessCaptureEnabled = Services.prefs.getBoolPref("signon.formlessCapture.enabled");
-      this.schemeUpgrades = Services.prefs.getBoolPref("signon.schemeUpgrades");
-      this.insecureAutofill = Services.prefs.getBoolPref("signon.autofillForms.http");
-      this.privateBrowsingCaptureEnabled =
-        Services.prefs.getBoolPref("signon.privateBrowsingCapture.enabled");
       if (logger) {
         logger.maxLogLevel = getMaxLogLevel();
       }
@@ -208,6 +216,43 @@ var LoginHelper = {
       // No need to warn for javascript:/data:/about:/chrome:/etc.
     }
     return aURL;
+  },
+
+  /**
+   * Get the parts of the URL we want for identification.
+   * Strip out things like the userPass portion and handle javascript:.
+   */
+  getLoginOrigin(uriString, allowJS) {
+    let realm = "";
+    try {
+      let uri = Services.io.newURI(uriString);
+
+      if (allowJS && uri.scheme == "javascript") {
+        return "javascript:";
+      }
+
+      // Build this manually instead of using prePath to avoid including the userPass portion.
+      realm = uri.scheme + "://" + uri.displayHostPort;
+    } catch (e) {
+      // bug 159484 - disallow url types that don't support a hostPort.
+      // (although we handle "javascript:..." as a special case above.)
+      log.warn("Couldn't parse origin for", uriString, e);
+      realm = null;
+    }
+
+    return realm;
+  },
+
+  getFormActionOrigin(form) {
+    let uriString = form.action;
+
+    // A blank or missing action submits to where it came from.
+    if (uriString == "") {
+      // ala bug 297761
+      uriString = form.baseURI;
+    }
+
+    return this.getLoginOrigin(uriString, true);
   },
 
   /**
@@ -785,6 +830,8 @@ var LoginHelper = {
     Services.obs.notifyObservers(dataObject, "passwordmgr-storage-changed", changeType);
   },
 };
+
+LoginHelper.init();
 
 XPCOMUtils.defineLazyPreferenceGetter(LoginHelper, "showInsecureFieldWarning",
                                       "security.insecure_field_warning.contextual.enabled");

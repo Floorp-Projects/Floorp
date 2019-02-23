@@ -11,6 +11,8 @@
 
 do_get_profile(); // must be called before getting nsIX509CertDB
 
+const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+
 async function check_no_enterprise_roots_imported(nssComponent, certDB, dbKey = undefined) {
   let enterpriseRoots = nssComponent.getEnterpriseRoots();
   notEqual(enterpriseRoots, null, "enterprise roots list should not be null");
@@ -61,6 +63,7 @@ add_task(async function run_test() {
   Services.prefs.setBoolPref("security.enterprise_roots.enabled", false);
   await check_no_enterprise_roots_imported(nssComponent, certDB);
   Services.prefs.setBoolPref("security.enterprise_roots.enabled", true);
+  await TestUtils.topicObserved("psm:enterprise-certs-imported");
   let savedDBKey = await check_some_enterprise_roots_imported(nssComponent, certDB);
   Services.prefs.setBoolPref("security.enterprise_roots.enabled", false);
   await check_no_enterprise_roots_imported(nssComponent, certDB, savedDBKey);

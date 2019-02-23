@@ -30,6 +30,9 @@ var EXPORTED_SYMBOLS = ["WebVTT"];
 const {Services} = ChromeUtils.import('resource://gre/modules/Services.jsm');
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
+                                      "media.webvtt.pseudo.enabled", false);
+
 (function(global) {
 
   var _objCreate = Object.create || (function() {
@@ -493,110 +496,41 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
   XPCOMUtils.defineLazyPreferenceGetter(StyleBox.prototype, "supportPseudo",
                                         "media.webvtt.pseudo.enabled", false);
 
+  // TODO(alwu): remove StyleBox and change other style box to class-based.
+  class StyleBoxBase {
+    applyStyles(styles, div) {
+      div = div || this.div;
+      Object.assign(div.style, styles);
+    }
+
+    formatStyle(val, unit) {
+      return val === 0 ? 0 : val + unit;
+    }
+  }
+
   // Constructs the computed display state of the cue (a div). Places the div
   // into the overlay which should be a block level element (usually a div).
-  function CueStyleBox(window, cue, styleOptions) {
-    var isIE8 = (typeof navigator !== "undefined") &&
-      (/MSIE\s8\.0/).test(navigator.userAgent);
+  class CueStyleBox extends StyleBoxBase {
+    constructor(window, cue, containerBox) {
+      super();
+      this.cue = cue;
+      this.div = window.document.createElement("div");
+      this.cueDiv = parseContent(window, cue.text, supportPseudo ?
+        PARSE_CONTENT_MODE.PSUEDO_CUE : PARSE_CONTENT_MODE.NORMAL_CUE);
+      this.div.appendChild(this.cueDiv);
 
-    var isFirefoxSupportPseudo = (/firefox/i.test(window.navigator.userAgent))
-          && this.supportPseudo;
-    var color = "rgba(255, 255, 255, 1)";
-    var backgroundColor = "rgba(0, 0, 0, 0.8)";
-
-    if (isIE8) {
-      color = "rgb(255, 255, 255)";
-      backgroundColor = "rgb(0, 0, 0)";
-    }
-
-    StyleBox.call(this);
-    this.cue = cue;
-
-    // Parse our cue's text into a DOM tree rooted at 'cueDiv'. This div will
-    // have inline positioning and will function as the cue background box.
-    if (isFirefoxSupportPseudo) {
-      this.cueDiv = parseContent(window, cue.text, PARSE_CONTENT_MODE.PSUEDO_CUE);
-    } else {
-      this.cueDiv = parseContent(window, cue.text, PARSE_CONTENT_MODE.NORMAL_CUE);
-    }
-    var styles = {
-      color: color,
-      backgroundColor: backgroundColor,
-      display: "inline",
-      font: styleOptions.font,
-      whiteSpace: "pre-line",
-    };
-    if (isFirefoxSupportPseudo) {
-      delete styles.color;
-      delete styles.backgroundColor;
-      delete styles.font;
-      delete styles.whiteSpace;
-    }
-
-    if (!isIE8) {
-      styles.writingMode = cue.vertical === "" ? "horizontal-tb"
-                                               : cue.vertical === "lr" ? "vertical-lr"
-                                                                       : "vertical-rl";
-      styles.unicodeBidi = "plaintext";
-    }
-    this.applyStyles(styles, this.cueDiv);
-
-    // Create an absolutely positioned div that will be used to position the cue
-    // div.
-    styles = {
-      position: "absolute",
-      textAlign: cue.align,
-      font: styleOptions.font,
-    };
-
-    this.div = window.document.createElement("div");
-    this.applyStyles(styles);
-
-    this.div.appendChild(this.cueDiv);
-
-    // Calculate the distance from the reference edge of the viewport to the text
-    // position of the cue box. The reference edge will be resolved later when
-    // the box orientation styles are applied.
-    function convertCuePostionToPercentage(cuePosition) {
-      if (cuePosition === "auto") {
-        return 50;
+      this.fontSize = this._getFontSize(containerBox.height);
+      // As pseudo element won't inherit the parent div's style, so we have to
+      // set the font size explicitly.
+      if (supportPseudo) {
+        this.cueDiv.style.setProperty("--cue-font-size", this.fontSize);
+      } else {
+        this._applyNonPseudoCueStyles();
       }
-      return cuePosition;
-    }
-    var textPos = 0;
-    let postionPercentage = convertCuePostionToPercentage(cue.position);
-    switch (cue.computedPositionAlign) {
-      // TODO : modify these fomula to follow the spec, see bug 1277437.
-      case "line-left":
-        textPos = postionPercentage;
-        break;
-      case "center":
-        textPos = postionPercentage - (cue.size / 2);
-        break;
-      case "line-right":
-        textPos = postionPercentage - cue.size;
-        break;
+      this.applyStyles(this._getNodeDefaultStyles(cue));
     }
 
-    // Horizontal box orientation; textPos is the distance from the left edge of the
-    // area to the left edge of the box and cue.size is the distance extending to
-    // the right from there.
-    if (cue.vertical === "") {
-      this.applyStyles({
-        left:  this.formatStyle(textPos, "%"),
-        width: this.formatStyle(cue.size, "%")
-      });
-    // Vertical box orientation; textPos is the distance from the top edge of the
-    // area to the top edge of the box and cue.size is the height extending
-    // downwards from there.
-    } else {
-      this.applyStyles({
-        top: this.formatStyle(textPos, "%"),
-        height: this.formatStyle(cue.size, "%")
-      });
-    }
-
-    this.move = function(box) {
+    move(box) {
       this.applyStyles({
         top: this.formatStyle(box.top, "px"),
         bottom: this.formatStyle(box.bottom, "px"),
@@ -605,10 +539,150 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
         height: this.formatStyle(box.height, "px"),
         width: this.formatStyle(box.width, "px")
       });
-    };
+    }
+
+    /**
+     * Following methods are private functions, should not use them outside this
+     * class.
+     */
+    _getFontSize(renderingAreaHeight) {
+      // In https://www.w3.org/TR/webvtt1/#applying-css-properties, the spec
+      // said the font size is '5vh', which means 5% of the viewport height.
+      // However, if we use 'vh' as a basic unit, it would eventually become
+      // 5% of screen height, instead of video's viewport height. Therefore, we
+      // have to use 'px' here to make sure we have the correct font size.
+      return renderingAreaHeight * 0.05 + "px";
+    }
+
+    _applyNonPseudoCueStyles() {
+      // If cue div is not a pseudo element, we should set the default css style
+      // for it, the reason we need to set these attributes to cueDiv is because
+      // if we set background on the root node directly, if would cause filling
+      // too large area for the background color as the size of root node won't
+      // be adjusted by cue size.
+      this.applyStyles({
+        "color": "rgba(255, 255, 255, 1)",
+        "white-space": "pre-line",
+        "font": this.fontSize + " sans-serif",
+        "background-color": "rgba(0, 0, 0, 0.8)",
+        "display": "inline",
+      }, this.cueDiv);
+    }
+
+    // spec https://www.w3.org/TR/webvtt1/#applying-css-properties
+    _getNodeDefaultStyles(cue) {
+      let styles = {
+        "position": "absolute",
+        "unicode-bidi": "plaintext",
+        "overflow-wrap": "break-word",
+        // "text-wrap": "balance", (we haven't supported this CSS attribute yet)
+        "font": this.fontSize + " sans-serif",
+        "white-space": "pre-line",
+        "text-align": cue.align,
+      }
+
+      this._processCueSetting(cue, styles);
+      return styles;
+    }
+
+    // spec https://www.w3.org/TR/webvtt1/#processing-cue-settings
+    _processCueSetting(cue, styles) {
+      // spec 7.2.1, calculate 'writing-mode'.
+      styles["writing-mode"] = this._getCueWritingMode(cue);
+
+      // spec 7.2.2 ~ 7.2.4, calculate 'width' and 'height'.
+      const {width, height} = this._getCueWidthAndHeight(cue);
+      styles["width"] = width;
+      styles["height"] = height;
+
+      // spec 7.2.5 ~ 7.2.7, calculate 'left' and 'top'.
+      const {left, top} = this._getCueLeftAndTop(cue);
+      styles["left"] = left;
+      styles["top"] = top;
+    }
+
+    _getCueWritingMode(cue) {
+      if (cue.vertical == "") {
+        return "horizontal-tb";
+      }
+      return cue.vertical == "lr" ? "vertical-lr" : "vertical-rl";
+    }
+
+    _getCueWidthAndHeight(cue) {
+      // spec 7.2.2, determine the value of maximum size for cue as per the
+      // appropriate rules from the following list.
+      let maximumSize;
+      let computedPosition = cue.computedPosition;
+      switch (cue.computedPositionAlign) {
+        case "line-left":
+          maximumSize = 100 - computedPosition;
+          break;
+        case "line-right":
+          maximumSize = computedPosition;
+          break;
+        case "center":
+          maximumSize = computedPosition <= 50 ?
+            computedPosition * 2 : (100 - computedPosition) * 2;
+          break;
+      }
+      const size = Math.min(cue.size, maximumSize);
+      return cue.vertical == "" ? {
+        width: size + "%",
+        height: "auto",
+      } : {
+        width: "auto",
+        height: size + "%",
+      };
+    }
+
+    _getCueLeftAndTop(cue) {
+      // spec 7.2.5, determine the value of x-position or y-position for cue as
+      // per the appropriate rules from the following list.
+      let xPosition = 0.0, yPosition = 0.0;
+      const isWritingDirectionHorizontal = cue.vertical == "";
+      switch (cue.computedPositionAlign) {
+        case "line-left":
+          if (isWritingDirectionHorizontal) {
+            xPosition = cue.computedPosition;
+          } else {
+            yPosition = cue.computedPosition;
+          }
+          break;
+        case "center":
+          if (isWritingDirectionHorizontal) {
+            xPosition = cue.computedPosition - (cue.size / 2);
+          } else {
+            yPosition = cue.computedPosition - (cue.size / 2);
+          }
+          break;
+        case "line-right":
+          if (isWritingDirectionHorizontal) {
+            xPosition = cue.computedPosition - cue.size;
+          } else {
+            yPosition = cue.computedPosition - cue.size;
+          }
+          break;
+      }
+
+      // spec 7.2.6, determine the value of whichever of x-position or
+      // y-position is not yet calculated for cue as per the appropriate rules
+      // from the following list.
+      if (!cue.snapToLines) {
+        if (isWritingDirectionHorizontal) {
+          yPosition = cue.computedPosition;
+        } else {
+          xPosition = cue.computedPosition;
+        }
+      } else {
+        if (isWritingDirectionHorizontal) {
+          yPosition = 0;
+        } else {
+          xPosition = 0;
+        }
+      }
+      return { left: xPosition + "%", top: yPosition + "%"};
+    }
   }
-  CueStyleBox.prototype = _objCreate(StyleBox.prototype);
-  CueStyleBox.prototype.constructor = CueStyleBox;
 
   function RegionNodeBox(window, region, container) {
     StyleBox.call(this);
@@ -687,9 +761,6 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
   // compute things with such as if it overlaps or intersects with another Element.
   // Can initialize it with either a StyleBox or another BoxPosition.
   function BoxPosition(obj) {
-    var isIE8 = (typeof navigator !== "undefined") &&
-      (/MSIE\s8\.0/).test(navigator.userAgent);
-
     // Either a BoxPosition was passed in and we need to copy it, or a StyleBox
     // was passed in and we need to copy the results of 'getBoundingClientRect'
     // as the object returned is readonly. All co-ordinate values are in reference
@@ -718,10 +789,6 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
     this.bottom = obj.bottom || (top + (obj.height || height));
     this.width = obj.width || width;
     this.lineHeight = lh !== undefined ? lh : obj.lineHeight;
-
-    if (isIE8 && !this.lineHeight) {
-      this.lineHeight = 13;
-    }
   }
 
   // Move the box along a particular axis. Optionally pass in an amount to move
@@ -996,9 +1063,6 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
     return parseContent(window, cuetext, PARSE_CONTENT_MODE.DOCUMENT_FRAGMENT);
   };
 
-  var FONT_SIZE_PERCENT = 0.05;
-  var FONT_STYLE = "sans-serif";
-
   // Runs the processing model over the cues and regions passed to it.
   // @param overlay A block level element (usually a div) that the computed cues
   //                and regions will be placed into.
@@ -1056,11 +1120,7 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
     overlay.appendChild(rootOfCues);
 
     var boxPositions = [],
-        containerBox = BoxPosition.getSimpleBoxPosition(rootOfCues),
-        fontSize = Math.round(containerBox.height * FONT_SIZE_PERCENT * 100) / 100;
-    var styleOptions = {
-      font: fontSize + "px " + FONT_STYLE
-    };
+        containerBox = BoxPosition.getSimpleBoxPosition(rootOfCues);
 
     (function() {
       var styleBox, cue, controlBarBox;
@@ -1110,8 +1170,7 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
           boxPositions.push(BoxPosition.getSimpleBoxPosition(currentRegionBox));
         } else {
           // Compute the intial position and styles of the cue div.
-          styleBox = new CueStyleBox(window, cue, styleOptions);
-          styleBox.cueDiv.style.setProperty("--cue-font-size", fontSize + "px");
+          styleBox = new CueStyleBox(window, cue, containerBox);
           rootOfCues.appendChild(styleBox.div);
 
           // Move the cue div to it's correct line position.

@@ -167,6 +167,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   EmitterScope* innermostEmitterScope_;
   TDZCheckCache* innermostTDZCheckCache;
 
+  /* field info for enclosing class */
+  FieldInitializers fieldInitializers_;
+
 #ifdef DEBUG
   bool unstableEmitterScope;
 
@@ -485,6 +488,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // Emit global, eval, or module code for tree rooted at body. Always
   // encompasses the entire source.
   MOZ_MUST_USE bool emitScript(ParseNode* body);
+
+  MOZ_MUST_USE bool emitInitializeInstanceFields();
 
   // Emit function code for the tree rooted at body.
   enum class TopLevelFunction { No, Yes };

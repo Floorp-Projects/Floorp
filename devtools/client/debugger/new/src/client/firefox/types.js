@@ -226,11 +226,9 @@ export type TabTarget = {
   },
   form: { consoleActor: any },
   root: any,
-  activeTab: {
-    navigateTo: ({ url: string }) => Promise<*>,
-    listWorkers: () => Promise<*>,
-    reload: () => Promise<*>
-  },
+  navigateTo: ({ url: string }) => Promise<*>,
+  listWorkers: () => Promise<*>,
+  reload: () => Promise<*>,
   destroy: () => void,
   isBrowsingContext: boolean,
   isContentProcess: boolean

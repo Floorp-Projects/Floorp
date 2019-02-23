@@ -50,7 +50,6 @@
 
 #define EXTENSION_SCHEME "moz-extension"
 using mozilla::ipc::FileDescriptor;
-using OptionalIPCStream = mozilla::ipc::OptionalIPCStream;
 
 namespace mozilla {
 

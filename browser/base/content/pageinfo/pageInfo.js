@@ -172,18 +172,6 @@ gImageView.getCellProperties = function(row, col) {
   return props;
 };
 
-gImageView.getCellText = function(row, column) {
-  var value = this.data[row][column.index];
-  if (column.index == COL_IMAGE_SIZE) {
-    if (value == -1) {
-      return gStrings.unknown;
-    }
-    var kbSize = Number(Math.round(value / 1024 * 100) / 100);
-    return gBundle.getFormattedString("mediaFileSize", [kbSize]);
-  }
-  return value || "";
-};
-
 gImageView.onPageMediaSort = function(columnname) {
   var tree = document.getElementById(this.treeid);
   var treecol = tree.columns.getNamedColumn(columnname);
@@ -297,21 +285,20 @@ var onUnloadRegistry = [ ];
  *                                the calling window's document will be used
  *                         - initialTab: (optional) id of the inital tab to display
  */
-function onLoadPageInfo() {
-  gBundle = document.getElementById("pageinfobundle");
-  gStrings.unknown = gBundle.getString("unknown");
-  gStrings.notSet = gBundle.getString("notset");
-  gStrings.mediaImg = gBundle.getString("mediaImg");
-  gStrings.mediaBGImg = gBundle.getString("mediaBGImg");
-  gStrings.mediaBorderImg = gBundle.getString("mediaBorderImg");
-  gStrings.mediaListImg = gBundle.getString("mediaListImg");
-  gStrings.mediaCursor = gBundle.getString("mediaCursor");
-  gStrings.mediaObject = gBundle.getString("mediaObject");
-  gStrings.mediaEmbed = gBundle.getString("mediaEmbed");
-  gStrings.mediaLink = gBundle.getString("mediaLink");
-  gStrings.mediaInput = gBundle.getString("mediaInput");
-  gStrings.mediaVideo = gBundle.getString("mediaVideo");
-  gStrings.mediaAudio = gBundle.getString("mediaAudio");
+async function onLoadPageInfo() {
+  gStrings.unknown = await document.l10n.formatValue("image-size-unknown");
+  gStrings.notSet = await document.l10n.formatValue("not-set-alternative-text");
+  gStrings.mediaImg = await document.l10n.formatValue("media-img");
+  gStrings.mediaBGImg = await document.l10n.formatValue("media-bg-img");
+  gStrings.mediaBorderImg = await document.l10n.formatValue("media-border-img");
+  gStrings.mediaListImg = await document.l10n.formatValue("media-list-img");
+  gStrings.mediaCursor = await document.l10n.formatValue("media-cursor");
+  gStrings.mediaObject = await document.l10n.formatValue("media-object");
+  gStrings.mediaEmbed = await document.l10n.formatValue("media-embed");
+  gStrings.mediaLink = await document.l10n.formatValue("media-link");
+  gStrings.mediaInput = await document.l10n.formatValue("media-input");
+  gStrings.mediaVideo = await document.l10n.formatValue("media-video");
+  gStrings.mediaAudio = await document.l10n.formatValue("media-audio");
 
   var args = "arguments" in window &&
              window.arguments.length >= 1 &&
@@ -338,7 +325,7 @@ function loadPageInfo(frameOuterWindowID, imageElement, browser) {
   let pageInfoData;
 
   // Get initial pageInfoData needed to display the general, permission and security tabs.
-  mm.addMessageListener("PageInfo:data", function onmessage(message) {
+  mm.addMessageListener("PageInfo:data", async function onmessage(message) {
     mm.removeMessageListener("PageInfo:data", onmessage);
     pageInfoData = message.data;
     let docInfo = pageInfoData.docInfo;
@@ -348,14 +335,13 @@ function loadPageInfo(frameOuterWindowID, imageElement, browser) {
     gDocInfo = docInfo;
 
     gImageElement = imageInfo;
-
-    var titleFormat = windowInfo.isTopWindow ? "pageInfo.page.title"
-                                             : "pageInfo.frame.title";
-    document.title = gBundle.getFormattedString(titleFormat, [docInfo.location]);
+    var titleFormat = windowInfo.isTopWindow ? "page-info-page"
+                                             : "page-info-frame";
+    document.l10n.setAttributes(document.documentElement, titleFormat, {"website": docInfo.location});
 
     document.getElementById("main-window").setAttribute("relatedUrl", docInfo.location);
 
-    makeGeneralTab(pageInfoData.metaViewRows, docInfo);
+    await makeGeneralTab(pageInfoData.metaViewRows, docInfo);
     onLoadPermission(uri, principal);
     securityOnLoad(uri, windowInfo);
   });
@@ -465,9 +451,13 @@ function openCacheEntry(key, cb) {
   diskStorage.asyncOpenURI(Services.io.newURI(key), "", nsICacheStorage.OPEN_READONLY, checkCacheListener);
 }
 
-function makeGeneralTab(metaViewRows, docInfo) {
-  var title = (docInfo.title) ? docInfo.title : gBundle.getString("noPageTitle");
-  document.getElementById("titletext").value = title;
+async function makeGeneralTab(metaViewRows, docInfo) {
+  // Sets Title in the General Tab, set to "Untitled Page" if no title found
+  if (docInfo.title) {
+    document.getElementById("titletext").value = docInfo.title;
+  } else {
+    document.l10n.setAttributes(document.getElementById("titletext"), "no-page-title");
+  }
 
   var url = docInfo.location;
   setItemValue("urltext", url);
@@ -475,8 +465,8 @@ function makeGeneralTab(metaViewRows, docInfo) {
   var referrer = ("referrer" in docInfo && docInfo.referrer);
   setItemValue("refertext", referrer);
 
-  var mode = ("compatMode" in docInfo && docInfo.compatMode == "BackCompat") ? "generalQuirksMode" : "generalStrictMode";
-  document.getElementById("modetext").value = gBundle.getString(mode);
+  var mode = ("compatMode" in docInfo && docInfo.compatMode == "BackCompat") ? "general-quirks-mode" : "general-strict-mode";
+  document.l10n.setAttributes(document.getElementById("modetext"), mode);
 
   // find out the mime type
   var mimeType = docInfo.contentType;
@@ -492,11 +482,9 @@ function makeGeneralTab(metaViewRows, docInfo) {
   if (!length)
     metaGroup.style.visibility = "hidden";
   else {
-    var metaTagsCaption = document.getElementById("metaTagsCaption");
-    if (length == 1)
-      metaTagsCaption.value = gBundle.getString("generalMetaTag");
-    else
-      metaTagsCaption.value = gBundle.getFormattedString("generalMetaTags", [length]);
+    document.l10n.setAttributes(document.getElementById("metaTagsCaption"),
+                                "general-meta-tags", {"tags": length});
+
     var metaTree = document.getElementById("metatree");
     metaTree.view = gMetaView;
 
@@ -506,8 +494,7 @@ function makeGeneralTab(metaViewRows, docInfo) {
     metaGroup.style.removeProperty("visibility");
   }
 
-  // get the date of last modification
-  var modifiedText = formatDate(docInfo.lastModified, gStrings.notSet);
+  var modifiedText = formatDate(docInfo.lastModified, await document.l10n.formatValue("not-set-date"));
   document.getElementById("modifiedtext").value = modifiedText;
 
   // get cache info
@@ -517,15 +504,17 @@ function makeGeneralTab(metaViewRows, docInfo) {
     if (cacheEntry) {
       var pageSize = cacheEntry.dataSize;
       var kbSize = formatNumber(Math.round(pageSize / 1024 * 100) / 100);
-      sizeText = gBundle.getFormattedString("generalSize", [kbSize, formatNumber(pageSize)]);
+      document.l10n.setAttributes(document.getElementById("sizetext"),
+                                  "properties-general-size",
+                                  {"kb": kbSize, "bytes": formatNumber(pageSize)});
+    } else {
+      setItemValue("sizetext", sizeText);
     }
-    setItemValue("sizetext", sizeText);
   });
 }
 
-function addImage(imageViewRow) {
+async function addImage(imageViewRow) {
   let [url, type, alt, elem, isBg] = imageViewRow;
-
   if (!url)
     return;
 
@@ -535,16 +524,23 @@ function addImage(imageViewRow) {
     gImageHash[url][type] = { };
   if (!gImageHash[url][type].hasOwnProperty(alt)) {
     gImageHash[url][type][alt] = gImageView.data.length;
-    var row = [url, type, -1, alt, 1, elem, isBg];
+    var row = [url, type, gStrings.unknown, alt, 1, elem, isBg];
     gImageView.addRow(row);
 
     // Fill in cache data asynchronously
     openCacheEntry(url, function(cacheEntry) {
       // The data at row[2] corresponds to the data size.
       if (cacheEntry) {
-        row[2] = cacheEntry.dataSize;
-        // Invalidate the row to trigger a repaint.
-        gImageView.tree.invalidateRow(gImageView.data.indexOf(row));
+        let value = cacheEntry.dataSize;
+        // If value is not -1 then replace with actual value, else keep as "unknown"
+        if (value != -1) {
+          let kbSize = Number(Math.round(value / 1024 * 100) / 100);
+          document.l10n.formatValue("media-file-size", {"size": kbSize}).then(function(response) {
+            row[2] = response;
+            // Invalidate the row to trigger a repaint.
+            gImageView.tree.invalidateRow(gImageView.data.indexOf(row));
+          });
+        }
       }
     });
 
@@ -621,10 +617,10 @@ function getSelectedRow(tree) {
   return (rows.length == 1) ? rows[0] : -1;
 }
 
-function selectSaveFolder(aCallback) {
+async function selectSaveFolder(aCallback) {
   const nsIFile = Ci.nsIFile;
   const nsIFilePicker = Ci.nsIFilePicker;
-  let titleText = gBundle.getString("mediaSelectFolder");
+  let titleText = await document.l10n.formatValue("media-select-folder");
   let fp = Cc["@mozilla.org/filepicker;1"].
            createInstance(nsIFilePicker);
   let fpCallback = function fpCallback_done(aResult) {
@@ -759,15 +755,16 @@ function makePreview(row) {
   var cacheKey = url.replace(/#.*$/, "");
   openCacheEntry(cacheKey, function(cacheEntry) {
     // find out the file size
-    var sizeText;
     if (cacheEntry) {
       let imageSize = cacheEntry.dataSize;
       var kbSize = Math.round(imageSize / 1024 * 100) / 100;
-      sizeText = gBundle.getFormattedString("generalSize",
-                                            [formatNumber(kbSize), formatNumber(imageSize)]);
-    } else
-      sizeText = gBundle.getString("mediaUnknownNotCached");
-    setItemValue("imagesizetext", sizeText);
+      document.l10n.setAttributes(document.getElementById("imagesizetext"),
+                                  "properties-general-size",
+                                  {"kb": formatNumber(kbSize), "bytes": formatNumber(imageSize)});
+    } else {
+      document.l10n.setAttributes(document.getElementById("imagesizetext"),
+                                  "media-unknown-not-cached");
+    }
 
     var mimeType = item.mimeType || this.getContentTypeFromHeaders(cacheEntry);
     var numFrames = item.numFrames;
@@ -779,19 +776,21 @@ function makePreview(row) {
       if (imageMimeType) {
         imageType = imageMimeType[1].toUpperCase();
         if (numFrames > 1)
-          imageType = gBundle.getFormattedString("mediaAnimatedImageType",
-                                                 [imageType, numFrames]);
+          document.l10n.setAttributes(document.getElementById("imagetypetext"),
+                                      "media-animated-image-type",
+                                      {"type": imageType, "frames": numFrames});
         else
-          imageType = gBundle.getFormattedString("mediaImageType", [imageType]);
+          document.l10n.setAttributes(document.getElementById("imagetypetext"),
+                                      "media-image-type",
+                                      {"type": imageType});
       } else {
         // the MIME type doesn't begin with image/, display the raw type
-        imageType = mimeType;
+        setItemValue("imagetypetext", mimeType);
       }
     } else {
       // We couldn't find the type, fall back to the value in the treeview
-      imageType = gImageView.data[row][COL_IMAGE_TYPE];
+      setItemValue("imagetypetext", gImageView.data[row][COL_IMAGE_TYPE]);
     }
-    setItemValue("imagetypetext", imageType);
 
     var imageContainer = document.getElementById("theimagecontainer");
     var oldImage = document.getElementById("thepreviewimage");
@@ -847,21 +846,21 @@ function makePreview(row) {
         document.getElementById("theimagecontainer").collapsed = false;
         document.getElementById("brokenimagecontainer").collapsed = true;
 
-        let imageSize = "";
         if (url) {
           if (width != physWidth || height != physHeight) {
-            imageSize = gBundle.getFormattedString("mediaDimensionsScaled",
-                                                   [formatNumber(physWidth),
-                                                    formatNumber(physHeight),
-                                                    formatNumber(width),
-                                                    formatNumber(height)]);
+            document.l10n.setAttributes(document.getElementById("imagedimensiontext"),
+                                        "media-dimensions-scaled",
+                                        {"dimx": formatNumber(physWidth),
+                                         "dimy": formatNumber(physHeight),
+                                         "scaledx": formatNumber(width),
+                                         "scaledy": formatNumber(height)});
           } else {
-            imageSize = gBundle.getFormattedString("mediaDimensions",
-                                                   [formatNumber(width),
-                                                    formatNumber(height)]);
+            document.l10n.setAttributes(document.getElementById("imagedimensiontext"),
+                                        "media-dimensions",
+                                        {"dimx": formatNumber(width),
+                                         "dimy": formatNumber(height)});
           }
         }
-        setItemValue("imagedimensiontext", imageSize);
       }, {once: true});
 
       newImage.setAttribute("triggeringprincipal", triggeringPrinStr);
@@ -896,13 +895,12 @@ function makePreview(row) {
         document.getElementById("theimagecontainer").collapsed = true;
       }
 
-      let imageSize = "";
       if (url && !isAudio) {
-        imageSize = gBundle.getFormattedString("mediaDimensions",
-                                               [formatNumber(width),
-                                                formatNumber(height)]);
+        document.l10n.setAttributes(document.getElementById("imagedimensiontext"),
+                                    "media-dimensions",
+                                    {"dimx": formatNumber(width),
+                                     "dimy": formatNumber(height)});
       }
-      setItemValue("imagedimensiontext", imageSize);
     }
 
     makeBlockImage(url);
@@ -926,7 +924,7 @@ function makeBlockImage(url) {
     var uri = Services.io.newURI(url);
     if (uri.host) {
       checkbox.hidden = false;
-      checkbox.label = gBundle.getFormattedString("mediaBlockImage", [uri.host]);
+      document.l10n.setAttributes(checkbox, "media-block-image", {"website": uri.host});
       var perm = permissionManager.testPermission(uri, "image");
       checkbox.checked = perm == nsIPermissionManager.DENY_ACTION;
     } else

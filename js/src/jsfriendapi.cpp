@@ -1131,6 +1131,26 @@ JS_FRIEND_API JS::Realm* js::GetAnyRealmInZone(JS::Zone* zone) {
   return realm.get();
 }
 
+JS_FRIEND_API bool js::IsSharableCompartment(JS::Compartment* comp) {
+  // If this compartment has nuked outgoing wrappers (because all its globals
+  // got nuked), we won't be able to create any useful CCWs out of it in the
+  // future, and so we shouldn't use it for any new globals.
+  if (comp->nukedOutgoingWrappers) {
+    return false;
+  }
+
+  // If this compartment has no live globals, it might be in the middle of being
+  // GCed.  Don't create any new Realms inside.  There's no point to doing that
+  // anyway, since the idea would be to avoid CCWs from existing Realms in the
+  // compartment to the new Realm, and there are no existing Realms.
+  if (!CompartmentHasLiveGlobal(comp)) {
+    return false;
+  }
+
+  // Good to go.
+  return true;
+}
+
 void JS::ObjectPtr::finalize(JSRuntime* rt) {
   if (IsIncrementalBarrierNeeded(rt->mainContextFromOwnThread())) {
     IncrementalPreWriteBarrier(value);

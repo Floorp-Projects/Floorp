@@ -396,10 +396,10 @@ DllServices* DllServices::Get() {
   sInstance = new DllServices();
   sDllServicesHasBeenSet = true;
 
-  // Enable() winds up calling NotifyUntrustedModuleLoads which requires
-  // sInstance to be valid. So we must call Enable() here rather than the
+  // EnableFull() winds up calling NotifyUntrustedModuleLoads which requires
+  // sInstance to be valid. So we must call EnableFull() here rather than the
   // DllServices constructor.
-  sInstance->Enable();
+  sInstance->EnableFull();
   ClearOnShutdown(&sInstance);
   return sInstance;
 }

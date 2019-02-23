@@ -832,7 +832,8 @@ function asyncTestCertificateUsages(certdb, cert, expectedUsages) {
       let successExpected = expectedUsages.includes(usage);
       let result = new CertVerificationResult(cert.commonName, usageString,
                                               successExpected, resolve);
-      certdb.asyncVerifyCertAtTime(cert, usage, 0, null, now, result);
+      let flags = Ci.nsIX509CertDB.FLAG_LOCAL_ONLY;
+      certdb.asyncVerifyCertAtTime(cert, usage, flags, null, now, result);
     });
     promises.push(promise);
   });

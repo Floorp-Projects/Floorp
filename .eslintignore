@@ -329,6 +329,8 @@ testing/talos/talos/tests/v8_7/**
 testing/talos/talos/tests/kraken/**
 # Runing Talos may extract data here, see bug 1435677.
 testing/talos/talos/tests/tp5n/**
+# Raptor third party
+testing/raptor/raptor/playback/scripts/catapult/**
 
 testing/web-platform/**
 testing/xpcshell/moz-http2/**

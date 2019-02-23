@@ -237,6 +237,8 @@ E.g., |Foo[]| --> |ArrayOfFoo|."""
     # sync with grammar.
     if ipdltype.isIPDL() and ipdltype.isArray():
         return 'ArrayOf' + ipdltype.basetype.name()
+    if ipdltype.isIPDL() and ipdltype.isMaybe():
+        return 'Maybe' + ipdltype.basetype.name()
     return ipdltype.name()
 
 
@@ -246,7 +248,7 @@ For example: |Actor[]| would turn into |Array<ActorParent*>|, so this
 function would return true for |Actor[]|."""
     return (ipdltype.isIPDL()
             and (ipdltype.isActor()
-                 or (ipdltype.isArray()
+                 or ((ipdltype.isArray() or ipdltype.isMaybe())
                      and _hasVisibleActor(ipdltype.basetype))))
 
 
@@ -296,6 +298,11 @@ def _makeResolver(returns, side):
 
 def _cxxArrayType(basetype, const=False, ref=False):
     return Type('nsTArray', T=basetype, const=const, ref=ref, hasimplicitcopyctor=False)
+
+
+def _cxxMaybeType(basetype, const=False, ref=False):
+    return Type('mozilla::Maybe', T=basetype, const=const, ref=ref,
+                hasimplicitcopyctor=basetype.hasimplicitcopyctor)
 
 
 def _cxxManagedContainerType(basetype, const=False, ref=False):
@@ -498,6 +505,10 @@ class _ConvertToCxxType(TypeVisitor):
         basecxxtype = a.basetype.accept(self)
         return _cxxArrayType(basecxxtype)
 
+    def visitMaybeType(self, m):
+        basecxxtype = m.basetype.accept(self)
+        return _cxxMaybeType(basecxxtype)
+
     def visitShmemType(self, s):
         return Type(self.typename(s))
 
@@ -542,7 +553,7 @@ def _cxxConstRefType(ipdltype, side):
     if ipdltype.isIPDL() and ipdltype.isByteBuf():
         t.ref = True
         return t
-    if ipdltype.isIPDL() and ipdltype.isArray():
+    if ipdltype.isIPDL() and (ipdltype.isArray() or ipdltype.isMaybe()):
         # Keep same constness as inner type.
         inner = _cxxConstRefType(ipdltype.basetype, side)
         t.const = inner.const or not inner.ref
@@ -576,6 +587,8 @@ def _cxxTypeNeedsMove(ipdltype):
         return ipdltype.isMoveonly()
 
     if ipdltype.isIPDL():
+        if ipdltype.isMaybe():
+            return _cxxTypeNeedsMove(ipdltype.basetype)
         return (ipdltype.isArray() or
                 ipdltype.isShmem() or
                 ipdltype.isByteBuf() or
@@ -2170,6 +2183,9 @@ before this struct.  Some types generate multiple kinds.'''
 
     def visitArrayType(self, t):
         return TypeVisitor.visitArrayType(self, t)
+
+    def visitMaybeType(self, m):
+        return TypeVisitor.visitMaybeType(self, m)
 
     def visitShmemType(self, s):
         if s in self.visited:

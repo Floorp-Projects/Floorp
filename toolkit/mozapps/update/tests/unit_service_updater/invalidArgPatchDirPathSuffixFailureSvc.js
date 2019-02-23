@@ -5,41 +5,22 @@
 
 /* Patch directory path must end with \updates\0 failure test */
 
-const STATE_AFTER_RUNUPDATE =
-  IS_SERVICE_TEST ? STATE_PENDING_SVC : STATE_PENDING;
-
-function run_test() {
+async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
+  const STATE_AFTER_RUNUPDATE =
+    gIsServiceTest ? STATE_PENDING_SVC : STATE_PENDING;
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();
-  setupUpdaterTest(FILE_COMPLETE_MAR, false);
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-function setupUpdaterTestFinished() {
+  await setupUpdaterTest(FILE_COMPLETE_MAR, false);
   let path = getUpdateDirFile(DIR_PATCH).parent.path;
   runUpdate(STATE_AFTER_RUNUPDATE, false, 1, true, path, null, null, null);
-}
-
-/**
- * Called after the call to runUpdateUsingUpdater finishes.
- */
-function runUpdateFinished() {
   standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
-  executeSoon(waitForUpdateXMLFiles);
-}
-
-/**
- * Called after the call to waitForUpdateXMLFiles finishes.
- */
-function waitForUpdateXMLFilesFinished() {
+  await waitForUpdateXMLFiles();
   checkUpdateManager(STATE_NONE, false, STATE_AFTER_RUNUPDATE, 0, 1);
   waitForFilesInUse();
 }

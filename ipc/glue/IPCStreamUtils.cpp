@@ -129,7 +129,7 @@ bool SerializeInputStream(nsIInputStream* aStream, IPCStream& aValue,
 template <typename M>
 bool SerializeInputStreamChild(nsIInputStream* aStream, M* aManager,
                                IPCStream* aValue,
-                               OptionalIPCStream* aOptionalValue,
+                               Maybe<IPCStream>* aOptionalValue,
                                bool aDelayedStart) {
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(aManager);
@@ -144,7 +144,7 @@ bool SerializeInputStreamChild(nsIInputStream* aStream, M* aManager,
                                               aDelayedStart, aManager);
     }
 
-    return SerializeInputStreamWithFdsChild(serializable, *aOptionalValue,
+    return SerializeInputStreamWithFdsChild(serializable, aOptionalValue->ref(),
                                             aDelayedStart, aManager);
   }
 
@@ -152,14 +152,14 @@ bool SerializeInputStreamChild(nsIInputStream* aStream, M* aManager,
     return SerializeInputStream(aStream, *aValue, aManager, aDelayedStart);
   }
 
-  return SerializeInputStream(aStream, *aOptionalValue, aManager,
+  return SerializeInputStream(aStream, aOptionalValue->ref(), aManager,
                               aDelayedStart);
 }
 
 template <typename M>
 bool SerializeInputStreamParent(nsIInputStream* aStream, M* aManager,
                                 IPCStream* aValue,
-                                OptionalIPCStream* aOptionalValue,
+                                Maybe<IPCStream>* aOptionalValue,
                                 bool aDelayedStart) {
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(aManager);
@@ -174,15 +174,15 @@ bool SerializeInputStreamParent(nsIInputStream* aStream, M* aManager,
                                                aDelayedStart, aManager);
     }
 
-    return SerializeInputStreamWithFdsParent(serializable, *aOptionalValue,
-                                             aDelayedStart, aManager);
+    return SerializeInputStreamWithFdsParent(
+        serializable, aOptionalValue->ref(), aDelayedStart, aManager);
   }
 
   if (aValue) {
     return SerializeInputStream(aStream, *aValue, aManager, aDelayedStart);
   }
 
-  return SerializeInputStream(aStream, *aOptionalValue, aManager,
+  return SerializeInputStream(aStream, aOptionalValue->ref(), aManager,
                               aDelayedStart);
 }
 
@@ -229,31 +229,30 @@ void ActivateAndCleanupIPCStream(IPCStream& aValue, bool aConsumedByIPC,
                                                  aConsumedByIPC, aDelayedStart);
 }
 
-void ActivateAndCleanupIPCStream(OptionalIPCStream& aValue, bool aConsumedByIPC,
+void ActivateAndCleanupIPCStream(Maybe<IPCStream>& aValue, bool aConsumedByIPC,
                                  bool aDelayedStart) {
-  if (aValue.type() == OptionalIPCStream::Tvoid_t) {
+  if (aValue.isNothing()) {
     return;
   }
 
-  ActivateAndCleanupIPCStream(aValue.get_IPCStream(), aConsumedByIPC,
-                              aDelayedStart);
+  ActivateAndCleanupIPCStream(aValue.ref(), aConsumedByIPC, aDelayedStart);
 }
 
 // Returns false if the serialization should not proceed. This means that the
 // inputStream is null.
 bool NormalizeOptionalValue(nsIInputStream* aStream, IPCStream* aValue,
-                            OptionalIPCStream* aOptionalValue) {
+                            Maybe<IPCStream>* aOptionalValue) {
   if (aValue) {
     // if aStream is null, we will crash when serializing.
     return true;
   }
 
   if (!aStream) {
-    *aOptionalValue = void_t();
+    aOptionalValue->reset();
     return false;
   }
 
-  *aOptionalValue = IPCStream();
+  aOptionalValue->emplace();
   return true;
 }
 
@@ -294,35 +293,32 @@ already_AddRefed<nsIInputStream> DeserializeIPCStream(const IPCStream& aValue) {
 }
 
 already_AddRefed<nsIInputStream> DeserializeIPCStream(
-    const OptionalIPCStream& aValue) {
-  if (aValue.type() == OptionalIPCStream::Tvoid_t) {
+    const Maybe<IPCStream>& aValue) {
+  if (aValue.isNothing()) {
     return nullptr;
   }
 
-  return DeserializeIPCStream(aValue.get_IPCStream());
+  return DeserializeIPCStream(aValue.ref());
 }
 
 AutoIPCStream::AutoIPCStream(bool aDelayedStart)
-    : mInlineValue(void_t()),
-      mValue(nullptr),
+    : mValue(nullptr),
       mOptionalValue(&mInlineValue),
       mTaken(false),
       mDelayedStart(aDelayedStart) {}
 
 AutoIPCStream::AutoIPCStream(IPCStream& aTarget, bool aDelayedStart)
-    : mInlineValue(void_t()),
-      mValue(&aTarget),
+    : mValue(&aTarget),
       mOptionalValue(nullptr),
       mTaken(false),
       mDelayedStart(aDelayedStart) {}
 
-AutoIPCStream::AutoIPCStream(OptionalIPCStream& aTarget, bool aDelayedStart)
-    : mInlineValue(void_t()),
-      mValue(nullptr),
+AutoIPCStream::AutoIPCStream(Maybe<IPCStream>& aTarget, bool aDelayedStart)
+    : mValue(nullptr),
       mOptionalValue(&aTarget),
       mTaken(false),
       mDelayedStart(aDelayedStart) {
-  *mOptionalValue = void_t();
+  mOptionalValue->reset();
 }
 
 AutoIPCStream::~AutoIPCStream() {
@@ -423,9 +419,8 @@ bool AutoIPCStream::IsSet() const {
   if (mValue) {
     return mValue->stream().type() != InputStreamParams::T__None;
   } else {
-    return mOptionalValue->type() != OptionalIPCStream::Tvoid_t &&
-           mOptionalValue->get_IPCStream().stream().type() !=
-               InputStreamParams::T__None;
+    return mOptionalValue->isSome() &&
+           mOptionalValue->ref().stream().type() != InputStreamParams::T__None;
   }
 }
 
@@ -440,11 +435,11 @@ IPCStream& AutoIPCStream::TakeValue() {
     return *mValue;
   }
 
-  IPCStream& value = mOptionalValue->get_IPCStream();
+  IPCStream& value = mOptionalValue->ref();
   return value;
 }
 
-OptionalIPCStream& AutoIPCStream::TakeOptionalValue() {
+Maybe<IPCStream>& AutoIPCStream::TakeOptionalValue() {
   MOZ_ASSERT(!mTaken);
   MOZ_ASSERT(!mValue);
   MOZ_ASSERT(mOptionalValue);
@@ -506,7 +501,7 @@ bool IPDLParamTraits<nsIInputStream>::Read(const IPC::Message* aMsg,
                                            PickleIterator* aIter,
                                            IProtocol* aActor,
                                            RefPtr<nsIInputStream>* aResult) {
-  mozilla::ipc::OptionalIPCStream ipcStream;
+  mozilla::Maybe<mozilla::ipc::IPCStream> ipcStream;
   if (!ReadIPDLParam(aMsg, aIter, aActor, &ipcStream)) {
     return false;
   }

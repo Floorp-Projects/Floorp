@@ -56,7 +56,7 @@ class IPCBlobInputStreamChild final
 
   void StreamNeeded(IPCBlobInputStream* aStream, nsIEventTarget* aEventTarget);
 
-  mozilla::ipc::IPCResult RecvStreamReady(const OptionalIPCStream& aStream);
+  mozilla::ipc::IPCResult RecvStreamReady(const Maybe<IPCStream>& aStream);
 
   void LengthNeeded(IPCBlobInputStream* aStream, nsIEventTarget* aEventTarget);
 

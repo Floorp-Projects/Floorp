@@ -7,8 +7,6 @@
 <?xml-stylesheet href="chrome://browser/skin/pageInfo.css" type="text/css"?>
 
 <!DOCTYPE window [
-  <!ENTITY % pageInfoDTD SYSTEM "chrome://browser/locale/pageInfo.dtd">
-  %pageInfoDTD;
 #ifdef XP_MACOSX
 #include ../browser-doctype.inc
 #endif
@@ -16,18 +14,23 @@
 
 <window id="main-window"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  data-l10n-id="page-info-window"
+  data-l10n-attrs="style"
   windowtype="Browser:page-info"
   onload="onLoadPageInfo()"
   onunload="onUnloadPageInfo()"
   align="stretch"
   screenX="10" screenY="10"
-  width="&pageInfoWindow.width;" height="&pageInfoWindow.height;"
   persist="screenX screenY width height sizemode">
 
 #ifdef XP_MACOSX
 #include ../macWindow.inc.xul
 #endif
 
+  <linkset>
+    <html:link rel="localization" href="browser/pageInfo.ftl"/>
+  </linkset>
   <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
   <script type="application/javascript" src="chrome://global/content/treeUtils.js"/>
@@ -37,7 +40,6 @@
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
 
   <stringbundleset id="pageinfobundleset">
-    <stringbundle id="pageinfobundle" src="chrome://browser/locale/pageInfo.properties"/>
     <stringbundle id="pkiBundle" src="chrome://pippki/locale/pippki.properties"/>
     <stringbundle id="browserBundle" src="chrome://browser/locale/browser.properties"/>
   </stringbundleset>
@@ -50,32 +52,32 @@
   </commandset>
 
   <keyset id="pageInfoKeySet">
-    <key key="&closeWindow.key;" modifiers="accel" command="cmd_close"/>
+    <key data-l10n-id="close-window" modifiers="accel" command="cmd_close"/>
     <key keycode="VK_ESCAPE"                       command="cmd_close"/>
 #ifdef XP_MACOSX
     <key key="."                 modifiers="meta"  command="cmd_close"/>
 #else
     <key keycode="VK_F1"                           command="cmd_help"/>
 #endif
-    <key key="&copy.key;"        modifiers="accel" command="cmd_copy"/>
-    <key key="&selectall.key;"   modifiers="accel" command="cmd_selectall"/>
-    <key key="&selectall.key;"   modifiers="alt"   command="cmd_selectall"/>
+    <key data-l10n-id="copy"        modifiers="accel" command="cmd_copy"/>
+    <key data-l10n-id="select-all"  modifiers="accel" command="cmd_selectall"/>
+    <key data-l10n-id="select-all"  modifiers="alt"   command="cmd_selectall"/>
   </keyset>
 
   <menupopup id="picontext">
-    <menuitem id="menu_selectall" label="&selectall.label;" command="cmd_selectall" accesskey="&selectall.accesskey;"/>
-    <menuitem id="menu_copy"      label="&copy.label;"      command="cmd_copy"      accesskey="&copy.accesskey;"/>
+    <menuitem id="menu_selectall" data-l10n-id="menu-select-all" command="cmd_selectall"/>
+    <menuitem id="menu_copy"      data-l10n-id="menu-copy"      command="cmd_copy"/>
   </menupopup>
 
   <vbox id="topBar">
     <radiogroup id="viewGroup" class="chromeclass-toolbar" orient="horizontal">
-      <radio id="generalTab"  label="&generalTab;"  accesskey="&generalTab.accesskey;"
+      <radio id="generalTab"  data-l10n-id="general-tab"
            oncommand="showTab('general');"/>
-      <radio id="mediaTab"    label="&mediaTab;"    accesskey="&mediaTab.accesskey;"
+      <radio id="mediaTab"    data-l10n-id="media-tab"
            oncommand="showTab('media');" hidden="true"/>
-      <radio id="permTab"     label="&permTab;"     accesskey="&permTab.accesskey;"
+      <radio id="permTab"     data-l10n-id="perm-tab"
            oncommand="showTab('perm');"/>
-      <radio id="securityTab" label="&securityTab;" accesskey="&securityTab.accesskey;"
+      <radio id="securityTab" data-l10n-id="security-tab"
            oncommand="showTab('security');"/>
     </radiogroup>
   </vbox>
@@ -91,12 +93,12 @@
         </columns>
         <rows id="generalRows">
           <row id="generalTitle">
-            <label control="titletext" value="&generalTitle;"/>
+            <label control="titletext" data-l10n-id="general-title"/>
             <separator/>
             <textbox readonly="true" id="titletext"/>
           </row>
           <row id="generalURLRow">
-            <label control="urltext" value="&generalURL;"/>
+            <label control="urltext" data-l10n-id="general-url"/>
             <separator/>
             <textbox readonly="true" id="urltext"/>
           </row>
@@ -104,27 +106,27 @@
             <separator class="thin"/>
           </row>
           <row id="generalTypeRow">
-            <label control="typetext" value="&generalType;"/>
+            <label control="typetext" data-l10n-id="general-type"/>
             <separator/>
             <textbox readonly="true" id="typetext"/>
           </row>
           <row id="generalModeRow">
-            <label control="modetext" value="&generalMode;"/>
+            <label control="modetext" data-l10n-id="general-mode"/>
             <separator/>
             <textbox readonly="true" crop="end" id="modetext"/>
           </row>
           <row id="generalEncodingRow">
-            <label control="encodingtext" value="&generalEncoding2;"/>
+            <label control="encodingtext" data-l10n-id="general-encoding"/>
             <separator/>
             <textbox readonly="true" id="encodingtext"/>
           </row>
           <row id="generalSizeRow">
-            <label control="sizetext" value="&generalSize;"/>
+            <label control="sizetext" data-l10n-id="general-size"/>
             <separator/>
             <textbox readonly="true" id="sizetext"/>
           </row>
           <row id="generalReferrerRow">
-            <label control="refertext" value="&generalReferrer;"/>
+            <label control="refertext" data-l10n-id="general-referrer"/>
             <separator/>
             <textbox readonly="true" id="refertext"/>
           </row>
@@ -132,7 +134,7 @@
             <separator class="thin"/>
           </row>
           <row id="generalModifiedRow">
-            <label control="modifiedtext" value="&generalModified;"/>
+            <label control="modifiedtext" data-l10n-id="general-modified"/>
             <separator/>
             <textbox readonly="true" id="modifiedtext"/>
           </row>
@@ -143,19 +145,19 @@
         <label control="metatree" id="metaTagsCaption" class="header"/>
         <tree id="metatree" flex="1" hidecolumnpicker="true" contextmenu="picontext">
           <treecols>
-            <treecol id="meta-name"    label="&generalMetaName;"
+            <treecol id="meta-name"    data-l10n-id="general-meta-name"
                      persist="width" flex="1"
                      onclick="gMetaView.onPageMediaSort('meta-name');"/>
             <splitter class="tree-splitter"/>
-            <treecol id="meta-content" label="&generalMetaContent;"
+            <treecol id="meta-content" data-l10n-id="general-meta-content"
                      persist="width" flex="4"
                      onclick="gMetaView.onPageMediaSort('meta-content');"/>
           </treecols>
           <treechildren id="metatreechildren" flex="1"/>
-        </tree>        
+        </tree>
       </vbox>
       <hbox pack="end">
-        <button command="cmd_help" label="&helpButton.label;" dlgtype="help"/>
+        <button command="cmd_help" data-l10n-id="help-button" dlgtype="help"/>
       </hbox>
     </vbox>
 
@@ -165,23 +167,23 @@
             ondragstart="onBeginLinkDrag(event,'image-address','image-alt')">
         <treecols>
           <treecol primary="true" persist="width" flex="10"
-                        width="10" id="image-address" label="&mediaAddress;"
+                        width="10" id="image-address" data-l10n-id="media-address"
                         onclick="gImageView.onPageMediaSort('image-address');"/>
           <splitter class="tree-splitter"/>
           <treecol persist="hidden width" flex="2"
-                        width="2"  id="image-type"    label="&mediaType;"
+                        width="2"  id="image-type"    data-l10n-id="media-type"
                         onclick="gImageView.onPageMediaSort('image-type');"/>
           <splitter class="tree-splitter"/>
           <treecol hidden="true" persist="hidden width" flex="2"
-                        width="2"  id="image-size"  label="&mediaSize;" value="size"
+                        width="2"  id="image-size"  data-l10n-id="media-size" value="size"
                         onclick="gImageView.onPageMediaSort('image-size');"/>
           <splitter class="tree-splitter"/>
           <treecol hidden="true" persist="hidden width" flex="4"
-                        width="4"  id="image-alt"    label="&mediaAltHeader;"
+                        width="4"  id="image-alt"    data-l10n-id="media-alt-header"
                         onclick="gImageView.onPageMediaSort('image-alt');"/>
           <splitter class="tree-splitter"/>
           <treecol hidden="true" persist="hidden width" flex="1"
-                        width="1"  id="image-count"    label="&mediaCount;"
+                        width="1"  id="image-count"    data-l10n-id="media-count"
                         onclick="gImageView.onPageMediaSort('image-count');"/>
         </treecols>
         <treechildren id="imagetreechildren" flex="1"/>
@@ -196,32 +198,32 @@
           </columns>
           <rows id="mediaRows">
             <row id="mediaLocationRow">
-              <label control="imageurltext" value="&mediaLocation;"/>
+              <label control="imageurltext" data-l10n-id="media-location"/>
               <separator/>
               <textbox readonly="true" id="imageurltext"/>
             </row>
             <row id="mediaTypeRow">
-              <label control="imagetypetext" value="&generalType;"/>
+              <label control="imagetypetext" data-l10n-id="general-type"/>
               <separator/>
-              <textbox readonly="true" id="imagetypetext"/>
+              <textbox id="imagetypetext"/>
             </row>
             <row id="mediaSizeRow">
-              <label control="imagesizetext" value="&generalSize;"/>
+              <label control="imagesizetext" data-l10n-id="general-size"/>
               <separator/>
               <textbox readonly="true" id="imagesizetext"/>
             </row>
             <row id="mediaDimensionRow">
-              <label control="imagedimensiontext" value="&mediaDimension;"/>
+              <label control="imagedimensiontext" data-l10n-id="media-dimension"/>
               <separator/>
               <textbox readonly="true" id="imagedimensiontext"/>
             </row>
             <row id="mediaTextRow">
-              <label control="imagetext" value="&mediaText;"/>
+              <label control="imagetext" data-l10n-id="media-text"/>
               <separator/>
               <textbox readonly="true" id="imagetext"/>
             </row>
             <row id="mediaLongdescRow">
-              <label control="imagelongdesctext" value="&mediaLongdesc;"/>
+              <label control="imagelongdesctext" data-l10n-id="media-long-desc"/>
               <separator/>
               <textbox readonly="true" id="imagelongdesctext"/>
             </row>
@@ -230,14 +232,14 @@
         <hbox id="imageSaveBox" align="end">
           <vbox id="blockImageBox">
             <checkbox id="blockImage" hidden="true" oncommand="onBlockImage()"
-                      accesskey="&mediaBlockImage.accesskey;"/>
-            <label control="thepreviewimage" value="&mediaPreview;" class="header"/>
+                      data-l10n-id="media-block-image"/>
+            <label control="thepreviewimage" data-l10n-id="media-preview" class="header"/>
           </vbox>
           <spacer id="imageSaveBoxSpacer" flex="1"/>
-          <button label="&selectall.label;" accesskey="&selectall.accesskey;"
+          <button data-l10n-id="menu-select-all"
                   id="selectallbutton"
                   oncommand="doSelectAllMedia();"/>
-          <button label="&mediaSaveAs;" accesskey="&mediaSaveAs.accesskey;"
+          <button data-l10n-id="media-save-as"
                   icon="save" id="imagesaveasbutton"
                   oncommand="saveMedia();"/>
         </hbox>
@@ -252,26 +254,26 @@
       </vbox>
       <hbox id="mediaSaveBox" collapsed="true">
         <spacer id="mediaSaveBoxSpacer" flex="1"/>
-        <button label="&mediaSaveAs;" accesskey="&mediaSaveAs2.accesskey;"
+        <button data-l10n-id="media-save-image-as"
                 icon="save" id="mediasaveasbutton"
                 oncommand="saveMedia();"/>
       </hbox>
       <hbox pack="end">
-        <button command="cmd_help" label="&helpButton.label;" dlgtype="help"/>
+        <button command="cmd_help" data-l10n-id="help-button" dlgtype="help"/>
       </hbox>
     </vbox>
 
     <!-- Permissions -->
     <vbox id="permPanel">
       <hbox id="permHostBox">
-        <label value="&permissionsFor;" control="hostText" />
+        <label data-l10n-id="permissions-for" control="hostText" />
         <textbox id="hostText" class="header" readonly="true"
                  crop="end" flex="1"/>
       </hbox>
 
       <vbox id="permList" flex="1"/>
       <hbox pack="end">
-        <button command="cmd_help" label="&helpButton.label;" dlgtype="help"/>
+        <button command="cmd_help" data-l10n-id="help-button" dlgtype="help"/>
       </hbox>
     </vbox>
 
@@ -279,7 +281,7 @@
     <vbox id="securityPanel">
       <!-- Identity Section -->
       <groupbox>
-        <label class="header" value="&securityView.identity.header;"/>
+        <label class="header" data-l10n-id="security-view-identity"/>
         <grid>
           <columns>
             <column/>
@@ -288,7 +290,7 @@
           <rows>
             <!-- Domain -->
             <row>
-              <label value="&securityView.identity.domain;"
+              <label data-l10n-id="security-view-identity-domain"
                      control="security-identity-domain-value"/>
               <textbox id="security-identity-domain-value" readonly="true"/>
             </row>
@@ -296,25 +298,24 @@
             <row>
               <label id="security-identity-owner-label"
                      class="fieldLabel"
-                     value="&securityView.identity.owner;"
+                     data-l10n-id="security-view-identity-owner"
                      control="security-identity-owner-value"/>
               <textbox id="security-identity-owner-value" readonly="true"/>
             </row>
             <!-- Verifier -->
             <row>
-              <label value="&securityView.identity.verifier;"
+              <label data-l10n-id="security-view-identity-verifier"
                      control="security-identity-verifier-value"/>
               <hbox align="center">
                 <textbox id="security-identity-verifier-value" readonly="true"
                          flex="1"/>
-                <button id="security-view-cert" label="&securityView.certView;"
-                        accesskey="&securityView.accesskey;"
+                <button id="security-view-cert" data-l10n-id="security-view"
                         oncommand="security.viewCert();"/>
               </hbox>
             </row>
             <!-- Certificate Validity -->
             <row id="security-identity-validity-row">
-              <label value="&securityView.identity.validity;"
+              <label data-l10n-id="security-view-identity-validity"
                      control="security-identity-validity-value"/>
               <textbox id="security-identity-validity-value" readonly="true"/>
             </row>
@@ -324,7 +325,7 @@
 
       <!-- Privacy & History section -->
       <groupbox>
-        <label class="header" value="&securityView.privacy.header;"/>
+        <label class="header" data-l10n-id="security-view-privacy"/>
         <grid>
           <columns>
             <column flex="1"/>
@@ -333,33 +334,31 @@
           <rows>
             <!-- History -->
             <row>
-              <label control="security-privacy-history-value">&securityView.privacy.history;</label>
+              <label control="security-privacy-history-value" data-l10n-id="security-view-privacy-history-value"/>
               <label id="security-privacy-history-value"
-                     value="&securityView.unknown;"/>
+                     data-l10n-id="security-view-unknown"/>
             </row>
             <!-- Site Data & Cookies -->
-            <row>
-              <label control="security-privacy-sitedata-value">&securityView.privacy.siteData;</label>
+            <row id="security-privacy-sitedata-row">
+              <label control="security-privacy-sitedata-value" data-l10n-id="security-view-privacy-sitedata-value"/>
               <hbox id="security-privacy-sitedata-box" align="center">
-                <label id="security-privacy-sitedata-value"
-                       flex="1">&securityView.unknown;</label>
+                <label id="security-privacy-sitedata-value" data-l10n-id="security-view-unknown"
+                       flex="1"/>
                 <button id="security-clear-sitedata"
                         disabled="true"
-                        label="&securityView.privacy.clearSiteData;"
-                        accesskey="&securityView.privacy.clearSiteData.accessKey;"
+                        data-l10n-id="security-view-privacy-clearsitedata"
                         oncommand="security.clearSiteData();"/>
               </hbox>
             </row>
             <!-- Passwords -->
             <row>
-              <label control="security-privacy-passwords-value">&securityView.privacy.passwords;</label>
+              <label control="security-privacy-passwords-value" data-l10n-id="security-view-privacy-passwords-value"/>
               <hbox id="security-privacy-passwords-box" align="center">
                 <label id="security-privacy-passwords-value"
-                       value="&securityView.unknown;"
+                       data-l10n-id="security-view-unknown"
                        flex="1"/>
                 <button id="security-view-password"
-                        label="&securityView.privacy.viewPasswords;"
-                        accesskey="&securityView.privacy.viewPasswords.accessKey;"
+                        data-l10n-id="security-view-privacy-viewpasswords"
                         oncommand="security.viewPasswords();"/>
               </hbox>
             </row>
@@ -369,7 +368,7 @@
 
       <!-- Technical Details section -->
       <groupbox>
-        <label class="header" value="&securityView.technical.header;"/>
+        <label class="header" data-l10n-id="security-view-technical"/>
         <label id="security-technical-shortform"/>
         <description id="security-technical-longform1"/>
         <description id="security-technical-longform2"/>
@@ -377,7 +376,7 @@
       </groupbox>
 
       <hbox pack="end">
-        <button command="cmd_help" label="&helpButton.label;" dlgtype="help"/>
+        <button command="cmd_help" data-l10n-id="help-button" dlgtype="help"/>
       </hbox>
     </vbox>
     <!-- Others added by overlay -->

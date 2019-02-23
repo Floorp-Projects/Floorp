@@ -1120,4 +1120,8 @@ interface MOZ_debug {
 
 [NoInterfaceObject]
 interface EXT_float_blend {
-}; // interface EXT_float_blend
+};
+
+[NoInterfaceObject]
+interface OES_fbo_render_mipmap {
+};

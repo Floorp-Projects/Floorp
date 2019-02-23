@@ -1,10 +1,8 @@
-/*
+/**
  * Test for LoginManagerContent.getUserNameAndPasswordFields
  */
 
 "use strict";
-
-// Services.prefs.setBoolPref("signon.debug", true);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
@@ -95,7 +93,7 @@ for (let tc of TESTCASES) {
       Object.defineProperty(document, "defaultView", {
         value: win,
       });
-      let formOrigin = LMCBackstagePass.LoginUtils._getPasswordOrigin(document.documentURI);
+      let formOrigin = LoginHelper.getLoginOrigin(document.documentURI);
       LoginRecipesContent.cacheRecipes(formOrigin, win, new Set());
 
       let actual = LoginManagerContent.getUserNameAndPasswordFields(input);

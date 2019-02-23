@@ -4,55 +4,24 @@
 
 /* File in use complete MAR file staged patch apply failure test */
 
-const STATE_AFTER_STAGE = IS_SERVICE_TEST ? STATE_APPLIED_SVC : STATE_APPLIED;
-const STATE_AFTER_RUNUPDATE = IS_SERVICE_TEST ? STATE_PENDING_SVC : STATE_PENDING;
-
-function run_test() {
+async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
+  const STATE_AFTER_STAGE = gIsServiceTest ? STATE_APPLIED_SVC : STATE_APPLIED;
+  const STATE_AFTER_RUNUPDATE = gIsServiceTest ? STATE_PENDING_SVC : STATE_PENDING;
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
-  setupUpdaterTest(FILE_COMPLETE_MAR, false);
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-function setupUpdaterTestFinished() {
-  runHelperFileInUse(gTestFiles[13].relPathDir + gTestFiles[13].fileName,
-                     false);
-}
-
-/**
- * Called after the call to waitForHelperSleep finishes.
- */
-function waitForHelperSleepFinished() {
-  stageUpdate(true);
-}
-
-/**
- * Called after the call to stageUpdate finishes.
- */
-function stageUpdateFinished() {
+  await setupUpdaterTest(FILE_COMPLETE_MAR, false);
+  await runHelperFileInUse(gTestFiles[13].relPathDir + gTestFiles[13].fileName,
+                           false);
+  await stageUpdate(STATE_AFTER_STAGE, true);
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateSuccess(getStageDirFile, true);
   checkUpdateLogContents(LOG_COMPLETE_SUCCESS, true);
   // Switch the application to the staged application that was updated.
   runUpdate(STATE_AFTER_RUNUPDATE, true, 1, true);
-}
-
-/**
- * Called after the call to runUpdate finishes.
- */
-function runUpdateFinished() {
-  waitForHelperExit();
-}
-
-/**
- * Called after the call to waitForHelperExit finishes.
- */
-function waitForHelperExitFinished() {
+  await waitForHelperExit();
   standardInit();
   checkPostUpdateRunningFile(false);
   setTestFilesAndDirsForFailure();
@@ -61,13 +30,7 @@ function waitForHelperExitFinished() {
   checkUpdateLogContains(ERR_MOVE_DESTDIR_7 + "\n" +
                          STATE_FAILED_WRITE_ERROR + "\n" +
                          CALL_QUIT);
-  executeSoon(waitForUpdateXMLFiles);
-}
-
-/**
- * Called after the call to waitForUpdateXMLFiles finishes.
- */
-function waitForUpdateXMLFilesFinished() {
+  await waitForUpdateXMLFiles();
   checkUpdateManager(STATE_NONE, false, STATE_AFTER_RUNUPDATE, 0, 1);
   checkCallbackLog();
 }

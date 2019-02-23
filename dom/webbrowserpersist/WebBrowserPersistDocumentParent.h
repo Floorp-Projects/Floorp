@@ -45,7 +45,7 @@ class WebBrowserPersistDocumentParent final
 
   // IPDL methods:
   mozilla::ipc::IPCResult RecvAttributes(const Attrs& aAttrs,
-                                         const OptionalIPCStream& aPostStream);
+                                         const Maybe<IPCStream>& aPostStream);
   mozilla::ipc::IPCResult RecvInitFailure(const nsresult& aFailure);
 
   PWebBrowserPersistResourcesParent* AllocPWebBrowserPersistResourcesParent();

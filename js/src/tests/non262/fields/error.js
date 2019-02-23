@@ -41,5 +41,15 @@ assertThrowsInstanceOf(() => Function(source), SyntaxError);
 source = `#outside;`;
 assertThrowsInstanceOf(() => eval(source), SyntaxError);
 
+source = `class C {
+    x = super();
+}`;
+assertThrowsInstanceOf(() => Function(source), SyntaxError);
+
+source = `class C {
+    x = sper();
+}`;
+assertThrowsInstanceOf(() => Function(source), SyntaxError);
+
 if (typeof reportCompare === "function")
   reportCompare(true, true);

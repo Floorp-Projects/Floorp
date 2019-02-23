@@ -718,8 +718,9 @@ nsContextMenu.prototype = {
     // don't want to show the form fill option.
     let showFill = loginFillInfo && loginFillInfo.passwordField.found;
 
-    // Disable the fill option if the user has set a master password
+    // Disable the fill option if the user hasn't unlocked with their master password
     // or if the password field or target field are disabled.
+    // XXX: Bug 1529025 to respect signon.rememberSignons
     let disableFill = !loginFillInfo ||
                       !Services.logins ||
                       !Services.logins.isLoggedIn ||

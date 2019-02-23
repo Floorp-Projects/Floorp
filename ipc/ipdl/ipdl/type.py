@@ -67,6 +67,9 @@ class TypeVisitor:
     def visitArrayType(self, a, *args):
         a.basetype.accept(self, *args)
 
+    def visitMaybeType(self, m, *args):
+        m.basetype.accept(self, *args)
+
     def visitShmemType(self, s, *args):
         pass
 
@@ -194,6 +197,8 @@ class IPDLType(Type):
     def isUnion(self): return False
 
     def isArray(self): return False
+
+    def isMaybe(self): return False
 
     def isAtom(self): return True
 
@@ -384,7 +389,7 @@ looks for such a cycle and returns True if found.'''
             return False
         elif t is self or t in self.mutualRec:
             return True
-        elif t.isArray():
+        elif t.isArray() or t.isMaybe():
             isrec = self.mutuallyRecursiveWith(t.basetype, exploring)
             if isrec:
                 self.mutualRec.add(t)
@@ -447,6 +452,19 @@ class ArrayType(IPDLType):
     def name(self): return self.basetype.name() + '[]'
 
     def fullname(self): return self.basetype.fullname() + '[]'
+
+
+class MaybeType(IPDLType):
+    def __init__(self, basetype):
+        self.basetype = basetype
+
+    def isAtom(self): return False
+
+    def isMaybe(self): return True
+
+    def name(self): return self.basetype.name() + '?'
+
+    def fullname(self): return self.basetype.fullname() + '?'
 
 
 class ShmemType(IPDLType):
@@ -524,7 +542,7 @@ def iteractortypes(t, visited=None):
         return
     elif t.isActor():
         yield t
-    elif t.isArray():
+    elif t.isArray() or t.isMaybe():
         for actor in iteractortypes(t.basetype, visited):
             yield actor
     elif t.isCompound() and t not in visited:
@@ -1077,6 +1095,9 @@ class GatherDecls(TcheckVisitor):
         if typespec.array:
             itype = ArrayType(itype)
 
+        if typespec.maybe:
+            itype = MaybeType(itype)
+
         if typespec.uniqueptr:
             itype = UniquePtrType(itype)
 
@@ -1123,7 +1144,7 @@ def fullyDefined(t, exploring=None):
 
     if t.isAtom():
         return True
-    elif t.isArray():
+    elif t.isArray() or t.isMaybe():
         return fullyDefined(t.basetype, exploring)
     elif t.defined:
         return True

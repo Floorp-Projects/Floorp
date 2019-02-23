@@ -31,13 +31,18 @@ namespace image {
 class ImageCacheKey final {
  public:
   ImageCacheKey(nsIURI* aURI, const OriginAttributes& aAttrs,
-                dom::Document* aDocument, nsresult& aRv);
+                dom::Document* aDocument);
 
   ImageCacheKey(const ImageCacheKey& aOther);
   ImageCacheKey(ImageCacheKey&& aOther);
 
   bool operator==(const ImageCacheKey& aOther) const;
-  PLDHashNumber Hash() const { return mHash; }
+  PLDHashNumber Hash() const {
+    if (MOZ_UNLIKELY(mHash.isNothing())) {
+      EnsureHash();
+    }
+    return mHash.value();
+  }
 
   /// A weak pointer to the URI.
   nsIURI* URI() const { return mURI; }
@@ -61,12 +66,15 @@ class ImageCacheKey final {
   static void* GetSpecialCaseDocumentToken(dom::Document* aDocument,
                                            nsIURI* aURI);
 
+  void EnsureHash() const;
+  void EnsureBlobRef() const;
+
   nsCOMPtr<nsIURI> mURI;
   Maybe<uint64_t> mBlobSerial;
-  nsCString mBlobRef;
+  mutable nsCString mBlobRef;
   OriginAttributes mOriginAttributes;
   void* mControlledDocument;
-  PLDHashNumber mHash;
+  mutable Maybe<PLDHashNumber> mHash;
   bool mIsChrome;
 };
 

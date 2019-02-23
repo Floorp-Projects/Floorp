@@ -1,6 +1,7 @@
 union X {
     int;
     Y[];
+    Y?;
 };
 
 union Y {

@@ -32,7 +32,7 @@ class ViewGeckoProfile(object):
         self.browser_bin = browser_binary
         self.gecko_profile_zip = gecko_profile_zip
         self.gecko_profile_dir = os.path.dirname(gecko_profile_zip)
-        self.perfhtmlio_url = "https://perf-html.io/from-url/"
+        self.perfhtmlio_url = "https://profiler.firefox.com/from-url/"
         self.httpd = None
         self.host = None
         self.port = None
@@ -77,7 +77,7 @@ class ViewGeckoProfile(object):
                             routes=[("GET", "*", handlers.file_handler)])
 
     def encode_url(self):
-        # Encode url i.e.: https://perf-html.io/from-url/http... (the profile_zip served locally)
+        # Encode url i.e.: https://profiler.firefox.com/from-url/http... (the profile_zip served locally)
         url = 'http://' + self.host + ':' + self.port + '/' + os.path.basename(self.gecko_profile_zip)
         self.log.info("raw url is:")
         self.log.info(url)
@@ -89,7 +89,7 @@ class ViewGeckoProfile(object):
         self.log.info(self.perfhtmlio_url)
 
     def start_browser_perfhtml(self):
-        self.log.info("Starting browser and opening the gecko profile zip in perf-html.io...")
+        self.log.info("Starting browser and opening the gecko profile zip in profiler.firefox.com...")
 
         self.runner.cmdargs.append(self.perfhtmlio_url)
         self.runner.start()
@@ -146,7 +146,7 @@ def create_parser(mach_interface=False):
     add_arg('-b', '--binary', required=True, dest='binary',
             help="path to browser executable")
     add_arg('-p', '--profile-zip', required=True, dest='profile_zip',
-            help="path to the gecko profiles zip file to open in perf-html.io")
+            help="path to the gecko profiles zip file to open in profiler.firefox.com")
 
     add_logging_group(parser)
     return parser

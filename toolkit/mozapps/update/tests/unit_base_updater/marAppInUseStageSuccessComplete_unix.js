@@ -4,78 +4,34 @@
 
 /* Application in use complete MAR file staged patch apply success test */
 
-const START_STATE = STATE_PENDING;
-const STATE_AFTER_STAGE = STATE_APPLIED;
-
-function run_test() {
+async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
+  const STATE_AFTER_STAGE = STATE_APPLIED;
   gTestFiles = gTestFilesCompleteSuccess;
   gTestFiles[gTestFiles.length - 1].originalContents = null;
   gTestFiles[gTestFiles.length - 1].compareContents = "FromComplete\n";
   gTestFiles[gTestFiles.length - 1].comparePerms = 0o644;
   gTestDirs = gTestDirsCompleteSuccess;
-  setupUpdaterTest(FILE_COMPLETE_MAR, true);
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-function setupUpdaterTestFinished() {
+  await setupUpdaterTest(FILE_COMPLETE_MAR, true);
   setupSymLinks();
-  runHelperFileInUse(DIR_RESOURCES + gCallbackBinFile, false);
-}
-
-/**
- * Called after the call to waitForHelperSleep finishes.
- */
-function waitForHelperSleepFinished() {
-  stageUpdate(true);
-}
-
-/**
- * Called after the call to stageUpdate finishes.
- */
-function stageUpdateFinished() {
+  await runHelperFileInUse(DIR_RESOURCES + gCallbackBinFile, false);
+  await stageUpdate(STATE_AFTER_STAGE, true);
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateSuccess(getStageDirFile, true);
   checkUpdateLogContents(LOG_COMPLETE_SUCCESS, true);
   // Switch the application to the staged application that was updated.
   runUpdate(STATE_SUCCEEDED, true, 0, true);
-}
-
-/**
- * Called after the call to runUpdate finishes.
- */
-function runUpdateFinished() {
-  waitForHelperExit();
-}
-
-/**
- * Called after the call to waitForHelperExit finishes.
- */
-function waitForHelperExitFinished() {
-  checkPostUpdateAppLog();
-}
-
-/**
- * Called after the call to checkPostUpdateAppLog finishes.
- */
-function checkPostUpdateAppLogFinished() {
+  await waitForHelperExit();
+  await checkPostUpdateAppLog();
   checkAppBundleModTime();
   checkSymLinks();
   standardInit();
   checkPostUpdateRunningFile(true);
   checkFilesAfterUpdateSuccess(getApplyDirFile);
   checkUpdateLogContents(LOG_REPLACE_SUCCESS, false, true);
-  executeSoon(waitForUpdateXMLFiles);
-}
-
-/**
- * Called after the call to waitForUpdateXMLFiles finishes.
- */
-function waitForUpdateXMLFilesFinished() {
+  await waitForUpdateXMLFiles();
   checkUpdateManager(STATE_NONE, false, STATE_SUCCEEDED, 0, 1);
   checkCallbackLog();
 }

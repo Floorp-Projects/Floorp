@@ -54,6 +54,7 @@ android-api-16/debug:
         - linux64-rust-size
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 android-api-16-ccov/debug:
@@ -112,6 +113,7 @@ android-api-16-ccov/debug:
         - linux64-rust-size
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 android-x86/opt:
@@ -166,6 +168,7 @@ android-x86/opt:
         - linux64-rust-size
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 android-x86-fuzzing/debug:
@@ -214,6 +217,7 @@ android-x86-fuzzing/debug:
         - linux64-rust-size
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 android-x86-nightly/opt:
@@ -272,6 +276,7 @@ android-x86-nightly/opt:
         - linux64-rust-android
         - linux64-rust-size
         - linux64-cbindgen
+        - linux64-nasm
         - linux64-node
 
 android-api-16/opt:
@@ -326,6 +331,7 @@ android-api-16/opt:
         - linux64-rust-size
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 android-api-16-without-google-play-services/opt:
@@ -377,6 +383,7 @@ android-api-16-without-google-play-services/opt:
         - linux64-rust-size
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 android-api-16-nightly/opt:
@@ -489,6 +496,7 @@ android-aarch64/opt:
         - linux64-rust-size
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 android-aarch64/debug:
@@ -543,6 +551,7 @@ android-aarch64/debug:
         - linux64-rust-size
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 android-aarch64-nightly/opt:
@@ -601,6 +610,7 @@ android-aarch64-nightly/opt:
         - linux64-rust-android
         - linux64-rust-size
         - linux64-cbindgen
+        - linux64-nasm
         - linux64-node
 
 android-x86_64/opt:
@@ -655,6 +665,7 @@ android-x86_64/opt:
         - linux64-rust-size
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 android-x86_64-nightly/opt:
@@ -713,6 +724,7 @@ android-x86_64-nightly/opt:
         - linux64-rust-android
         - linux64-rust-size
         - linux64-cbindgen
+        - linux64-nasm
         - linux64-node
 
 android-x86_64/debug:
@@ -767,4 +779,5 @@ android-x86_64/debug:
         - linux64-rust-size
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
