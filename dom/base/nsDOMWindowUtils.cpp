@@ -3455,7 +3455,8 @@ nsDOMWindowUtils::GetOMTCTransform(Element* aElement,
   }
 
   DisplayItemType itemType = DisplayItemType::TYPE_TRANSFORM;
-  if (nsLayoutUtils::HasEffectiveAnimation(frame, eCSSProperty_opacity) &&
+  if (nsLayoutUtils::HasEffectiveAnimation(
+          frame, nsCSSPropertyIDSet::OpacityProperties()) &&
       !frame->IsTransformed()) {
     itemType = DisplayItemType::TYPE_OPACITY;
   }

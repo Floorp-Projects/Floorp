@@ -258,6 +258,26 @@ const AnimationProperty* KeyframeEffect::GetEffectiveAnimationOfProperty(
   return nullptr;
 }
 
+bool KeyframeEffect::HasEffectiveAnimationOfPropertySet(
+    const nsCSSPropertyIDSet& aPropertySet, const EffectSet& aEffect) const {
+  bool ret = false;
+  for (const AnimationProperty& property : mProperties) {
+    if (!aPropertySet.HasProperty(property.mProperty)) {
+      continue;
+    }
+
+    // Only consider the property if it is not overridden by !important rules in
+    // the transitions level. If one of the properties is overridden by
+    // !important rules, we return false. This is especially for transform-like
+    // properties because all of them should be running on the same thread.
+    if (!IsEffectiveProperty(aEffect, property.mProperty)) {
+      return false;
+    }
+    ret = true;
+  }
+  return ret;
+}
+
 nsCSSPropertyIDSet KeyframeEffect::GetPropertiesForCompositor(
     EffectSet& aEffects, const nsIFrame* aFrame) const {
   MOZ_ASSERT(&aEffects ==

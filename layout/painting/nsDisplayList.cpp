@@ -5829,8 +5829,8 @@ static bool IsItemTooSmallForActiveLayer(nsIFrame* aFrame) {
     bool aEnforceMinimumSize) {
   if (EffectCompositor::HasAnimationsForCompositor(aFrame,
                                                    eCSSProperty_opacity) ||
-      (ActiveLayerTracker::IsStyleAnimated(aBuilder, aFrame,
-                                           eCSSProperty_opacity) &&
+      (ActiveLayerTracker::IsStyleAnimated(
+           aBuilder, aFrame, nsCSSPropertyIDSet::OpacityProperties()) &&
        !(aEnforceMinimumSize && IsItemTooSmallForActiveLayer(aFrame)))) {
     return true;
   }
@@ -7602,8 +7602,8 @@ Matrix4x4 nsDisplayTransform::GetResultingTransformMatrixInternal(
 }
 
 bool nsDisplayOpacity::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder) {
-  if (ActiveLayerTracker::IsStyleAnimated(aBuilder, mFrame,
-                                          eCSSProperty_opacity)) {
+  if (ActiveLayerTracker::IsStyleAnimated(
+          aBuilder, mFrame, nsCSSPropertyIDSet::OpacityProperties())) {
     return true;
   }
 
@@ -7633,8 +7633,7 @@ bool nsDisplayBackgroundColor::CanUseAsyncAnimations(
   // have a compositor-animated transform, can be prerendered. An element
   // might have only just had its transform animated in which case
   // the ActiveLayerManager may not have been notified yet.
-  if (!ActiveLayerTracker::IsStyleMaybeAnimated(aFrame,
-                                                eCSSProperty_transform) &&
+  if (!ActiveLayerTracker::IsTransformMaybeAnimated(aFrame) &&
       !EffectCompositor::HasAnimationsForCompositor(aFrame,
                                                     eCSSProperty_transform)) {
     EffectCompositor::SetPerformanceWarning(
@@ -7909,8 +7908,7 @@ bool nsDisplayTransform::CreateWebRenderCommands(
   }
 
   // Determine if we're possibly animated (= would need an active layer in FLB).
-  bool animated =
-      ActiveLayerTracker::IsStyleMaybeAnimated(Frame(), eCSSProperty_transform);
+  bool animated = ActiveLayerTracker::IsTransformMaybeAnimated(Frame());
 
   wr::StackingContextParams params;
   params.mBoundTransform = &newTransformMatrix;
@@ -8022,14 +8020,13 @@ bool nsDisplayTransform::MayBeAnimated(nsDisplayListBuilder* aBuilder,
   // If EffectCompositor::HasAnimationsForCompositor() is true then we can
   // completely bypass the main thread for this animation, so it is always
   // worthwhile.
-  // For ActiveLayerTracker::IsStyleAnimated() cases the main thread is
+  // For ActiveLayerTracker::IsTransformAnimated() cases the main thread is
   // already involved so there is less to be gained.
   // Therefore we check that the *post-transform* bounds of this item are
   // big enough to justify an active layer.
   if (EffectCompositor::HasAnimationsForCompositor(mFrame,
                                                    eCSSProperty_transform) ||
-      (ActiveLayerTracker::IsStyleAnimated(aBuilder, mFrame,
-                                           eCSSProperty_transform) &&
+      (ActiveLayerTracker::IsTransformAnimated(aBuilder, mFrame) &&
        !(aEnforceMinimumSize && IsItemTooSmallForActiveLayer(mFrame)))) {
     return true;
   }
