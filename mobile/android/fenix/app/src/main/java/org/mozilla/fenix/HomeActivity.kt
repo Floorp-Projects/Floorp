@@ -33,12 +33,13 @@ open class HomeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        browsingModeManager = DefaultBrowsingModeManager(this)
-
-        setContentView(R.layout.activity_home)
 
         setTheme(themeManager.currentTheme)
         DefaultThemeManager.applyStatusBarTheme(window, themeManager, this)
+
+        browsingModeManager = DefaultBrowsingModeManager(this)
+
+        setContentView(R.layout.activity_home)
 
         if (intent?.extras?.getBoolean(OPEN_TO_BROWSER) == true) {
             openToBrowser()

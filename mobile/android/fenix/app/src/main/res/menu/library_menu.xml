@@ -8,14 +8,14 @@
     <item
         android:id="@+id/librarySearch"
         android:icon="@drawable/ic_search"
-        android:iconTint="@color/icons"
+        android:iconTint="?attr/iconColor"
         android:title="@string/library_search"
         app:showAsAction="always"
         tools:targetApi="o" />
     <item
         android:id="@+id/libraryClose"
         android:icon="@drawable/ic_close"
-        android:iconTint="@color/icons"
+        android:iconTint="?attr/iconColor"
         android:title="@string/mozac_close_button_description"
         app:showAsAction="always"
         tools:targetApi="o" />

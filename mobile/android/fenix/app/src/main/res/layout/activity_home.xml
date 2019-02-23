@@ -13,7 +13,7 @@
         android:id="@+id/navigationToolbar"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:background="@color/off_white"
+        android:background="?attr/toolbarColor"
         android:elevation="8dp"/>
 
     <fragment
