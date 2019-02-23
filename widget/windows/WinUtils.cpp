@@ -1193,10 +1193,11 @@ AsyncFaviconDataReady::OnComplete(nsIURI* aFaviconURI, uint32_t aDataLen,
   RefPtr<DataSourceSurface> dataSurface;
   IntSize size;
 
-  if (mURLShortcut) {
-    // Create a 48x48 surface and paint the icon into the central 16x16 rect.
-    size.width = 48;
-    size.height = 48;
+  if (mURLShortcut &&
+      (surface->GetSize().width < 48 || surface->GetSize().height < 48)) {
+    // Create a 48x48 surface and paint the icon into the central rect.
+    size.width = std::max(surface->GetSize().width, 48);
+    size.height = std::max(surface->GetSize().height, 48);
     dataSurface =
         Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
     NS_ENSURE_TRUE(dataSurface, NS_ERROR_FAILURE);
@@ -1216,7 +1217,12 @@ AsyncFaviconDataReady::OnComplete(nsIURI* aFaviconURI, uint32_t aDataLen,
     }
     dt->FillRect(Rect(0, 0, size.width, size.height),
                  ColorPattern(Color(1.0f, 1.0f, 1.0f, 1.0f)));
-    dt->DrawSurface(surface, Rect(16, 16, 16, 16),
+    IntPoint point;
+    point.x = (size.width - surface->GetSize().width) / 2;
+    point.y = (size.height - surface->GetSize().height) / 2;
+    dt->DrawSurface(surface,
+                    Rect(point.x, point.y, surface->GetSize().width,
+                         surface->GetSize().height),
                     Rect(Point(0, 0), Size(surface->GetSize().width,
                                            surface->GetSize().height)));
 
