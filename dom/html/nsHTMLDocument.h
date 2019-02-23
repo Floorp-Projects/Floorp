@@ -343,6 +343,11 @@ class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
   // mHasBeenEditable is set to true when mEditingState is firstly set to
   // eDesignMode or eContentEditable.
   bool mHasBeenEditable;
+
+  /**
+   * Set to true once we know that we are loading plain text content.
+   */
+  bool mIsPlainText;
 };
 
 namespace mozilla {
