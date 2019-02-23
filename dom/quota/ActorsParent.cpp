@@ -28,6 +28,7 @@
 #include <algorithm>
 #include "GeckoProfiler.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/Telemetry.h"
@@ -480,28 +481,20 @@ class QuotaManager::ShutdownRunnable final : public Runnable {
   NS_DECL_NSIRUNNABLE
 };
 
-class QuotaManager::ShutdownObserver final : public nsIObserver {
-  nsCOMPtr<nsIEventTarget> mBackgroundThread;
-
- public:
-  explicit ShutdownObserver(nsIEventTarget* aBackgroundThread)
-      : mBackgroundThread(aBackgroundThread) {
-    MOZ_ASSERT(NS_IsMainThread());
-  }
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-
- private:
-  ~ShutdownObserver() { MOZ_ASSERT(NS_IsMainThread()); }
-};
-
 class QuotaManager::Observer final : public nsIObserver {
+  static Observer* sInstance;
+
+  nsCOMPtr<nsIEventTarget> mBackgroundEventTarget;
+  bool mPendingProfileChange;
+
  public:
   static nsresult Initialize();
 
+  static nsresult SetBackgroundEventTarget(
+      nsIEventTarget* aBackgroundEventTarget);
+
  private:
-  Observer() { MOZ_ASSERT(NS_IsMainThread()); }
+  Observer() : mPendingProfileChange(false) { MOZ_ASSERT(NS_IsMainThread()); }
 
   ~Observer() { MOZ_ASSERT(NS_IsMainThread()); }
 
@@ -2346,16 +2339,7 @@ nsresult QuotaManager::CreateRunnable::RegisterObserver() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mState == State::RegisteringObserver);
 
-  nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
-  if (NS_WARN_IF(!observerService)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIObserver> observer = new ShutdownObserver(mOwningThread);
-
-  nsresult rv = observerService->AddObserver(
-      observer, PROFILE_BEFORE_CHANGE_QM_OBSERVER_ID, false);
+  nsresult rv = Observer::SetBackgroundEventTarget(mOwningThread);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2477,39 +2461,7 @@ QuotaManager::ShutdownRunnable::Run() {
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(QuotaManager::ShutdownObserver, nsIObserver)
-
-NS_IMETHODIMP
-QuotaManager::ShutdownObserver::Observe(nsISupports* aSubject,
-                                        const char* aTopic,
-                                        const char16_t* aData) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!strcmp(aTopic, PROFILE_BEFORE_CHANGE_QM_OBSERVER_ID));
-  MOZ_ASSERT(gInstance);
-
-  nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
-  if (NS_WARN_IF(!observerService)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Unregister ourselves from the observer service first to make sure the
-  // nested event loop below will not cause re-entrancy issues.
-  Unused << observerService->RemoveObserver(
-      this, PROFILE_BEFORE_CHANGE_QM_OBSERVER_ID);
-
-  bool done = false;
-
-  RefPtr<ShutdownRunnable> shutdownRunnable = new ShutdownRunnable(done);
-  MOZ_ALWAYS_SUCCEEDS(
-      mBackgroundThread->Dispatch(shutdownRunnable, NS_DISPATCH_NORMAL));
-
-  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return done; }));
-
-  gBaseDirPath.Truncate();
-
-  return NS_OK;
-}
+QuotaManager::Observer* QuotaManager::Observer::sInstance = nullptr;
 
 // static
 nsresult QuotaManager::Observer::Initialize() {
@@ -2521,6 +2473,19 @@ nsresult QuotaManager::Observer::Initialize() {
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
+  sInstance = observer;
+
+  return NS_OK;
+}
+
+// static
+nsresult QuotaManager::Observer::SetBackgroundEventTarget(
+    nsIEventTarget* aBackgroundEventTarget) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(sInstance);
+
+  sInstance->mBackgroundEventTarget = aBackgroundEventTarget;
 
   return NS_OK;
 }
@@ -2544,6 +2509,13 @@ nsresult QuotaManager::Observer::Init() {
     return rv;
   }
 
+  rv = obs->AddObserver(this, PROFILE_BEFORE_CHANGE_QM_OBSERVER_ID, false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    obs->RemoveObserver(this, kProfileDoChangeTopic);
+    obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+    return rv;
+  }
+
   return NS_OK;
 }
 
@@ -2555,8 +2527,12 @@ nsresult QuotaManager::Observer::Shutdown() {
     return NS_ERROR_FAILURE;
   }
 
+  MOZ_ALWAYS_SUCCEEDS(
+      obs->RemoveObserver(this, PROFILE_BEFORE_CHANGE_QM_OBSERVER_ID));
   MOZ_ALWAYS_SUCCEEDS(obs->RemoveObserver(this, kProfileDoChangeTopic));
   MOZ_ALWAYS_SUCCEEDS(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID));
+
+  sInstance = nullptr;
 
   // In general, the instance will have died after the latter removal call, so
   // it's not safe to do anything after that point.
@@ -2592,6 +2568,32 @@ QuotaManager::Observer::Observe(nsISupports* aSubject, const char* aTopic,
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+
+    return NS_OK;
+  }
+
+  if (!strcmp(aTopic, PROFILE_BEFORE_CHANGE_QM_OBSERVER_ID)) {
+    // mBackgroundThread can be null if we somehow get here without
+    // receiving SetBackgroundEventTarget() first.  mPendingProfileChange is our
+    // re-entrancy guard (the nested event loop below may cause re-entrancy).
+    if (!mBackgroundEventTarget || mPendingProfileChange) {
+      return NS_OK;
+    }
+
+    AutoRestore<bool> pending(mPendingProfileChange);
+    mPendingProfileChange = true;
+
+    MOZ_ASSERT(gInstance);
+
+    bool done = false;
+
+    RefPtr<ShutdownRunnable> shutdownRunnable = new ShutdownRunnable(done);
+    MOZ_ALWAYS_SUCCEEDS(
+        mBackgroundEventTarget->Dispatch(shutdownRunnable, NS_DISPATCH_NORMAL));
+
+    MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return done; }));
+
+    gBaseDirPath.Truncate();
 
     return NS_OK;
   }
