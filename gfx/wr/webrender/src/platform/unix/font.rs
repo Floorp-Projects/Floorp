@@ -657,7 +657,7 @@ impl FontContext {
         key: &GlyphKey,
     ) -> Option<GlyphDimensions> {
         let slot = self.load_glyph(font, key);
-        slot.and_then(|(slot, scale)| self.get_glyph_dimensions_impl(slot, font, key, scale, true))
+        slot.and_then(|(slot, scale)| self.get_glyph_dimensions_impl(slot, &font, key, scale, true))
     }
 
     fn choose_bitmap_size(&self, face: FT_Face, requested_size: f64) -> FT_Error {

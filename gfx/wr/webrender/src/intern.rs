@@ -312,8 +312,8 @@ where
     /// that need to be applied to the data store. Also run
     /// a GC step that removes old entries.
     pub fn end_frame_and_get_pending_updates(&mut self) -> UpdateList<S> {
-        let mut updates = mem::replace(&mut self.updates, Vec::new());
-        let data = mem::replace(&mut self.update_data, Vec::new());
+        let mut updates = self.updates.take_and_preallocate();
+        let data = self.update_data.take_and_preallocate();
 
         let free_list = &mut self.free_list;
         let current_epoch = self.current_epoch.0;
@@ -341,7 +341,6 @@ where
 
             true
         });
-
         let updates = UpdateList {
             updates,
             data,

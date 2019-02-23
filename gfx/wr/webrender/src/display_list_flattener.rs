@@ -312,10 +312,7 @@ impl<'a> DisplayListFlattener<'a> {
         };
 
         // Get the list of existing primitives in the main stacking context.
-        let mut old_prim_list = mem::replace(
-            primitives,
-            Vec::new(),
-        );
+        let mut old_prim_list = primitives.take();
 
         // In the simple case, there are no preceding or trailing primitives,
         // because everything is anchored to the root scroll node. Handle
@@ -409,6 +406,7 @@ impl<'a> DisplayListFlattener<'a> {
 
         // This contains the tile caching picture, with preceding and
         // trailing primitives outside the main scroll root.
+        primitives.reserve(preceding_prims.len() + trailing_prims.len() + 1);
         primitives.extend(preceding_prims);
         primitives.push(instance);
         primitives.extend(trailing_prims);
@@ -2451,15 +2449,10 @@ impl<'a> DisplayListFlattener<'a> {
             }
 
             let font = FontInstance::new(
-                font_instance.font_key,
-                font_instance.size,
-                *text_color,
-                font_instance.bg_color,
+                Arc::clone(font_instance),
+                (*text_color).into(),
                 render_mode,
                 flags,
-                font_instance.synthetic_italics,
-                font_instance.platform_options,
-                font_instance.variations.clone(),
             );
 
             // TODO(gw): We can do better than a hash lookup here...

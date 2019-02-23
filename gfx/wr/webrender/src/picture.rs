@@ -2266,7 +2266,7 @@ impl PicturePrimitive {
     /// gives a picture a chance to retain any cached tiles that
     /// may be useful during the next scene build.
     pub fn destroy(
-        mut self,
+        &mut self,
         retained_tiles: &mut RetainedTiles,
         clip_scroll_tree: &ClipScrollTree,
     ) {
@@ -2279,9 +2279,7 @@ impl PicturePrimitive {
                 clip_scroll_tree,
             );
 
-            for tile in tile_cache.tiles {
-                retained_tiles.tiles.push(tile);
-            }
+            retained_tiles.tiles.extend(tile_cache.tiles);
         }
     }
 

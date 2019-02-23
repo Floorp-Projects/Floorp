@@ -8147,7 +8147,8 @@ nsresult nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos) {
 
         done = current->PeekOffsetWord(
                    movingInFrameDirection, wordSelectEatSpace,
-                   aPos->mIsKeyboardSelect, &offset, &state) == FOUND;
+                   aPos->mIsKeyboardSelect, &offset, &state,
+                   aPos->mTrimSpaces) == FOUND;
 
         if (!done) {
           nsIFrame* nextFrame;
@@ -8398,7 +8399,8 @@ nsIFrame::FrameSearchResult nsFrame::PeekOffsetWord(bool aForward,
                                                     bool aWordSelectEatSpace,
                                                     bool aIsKeyboardSelect,
                                                     int32_t* aOffset,
-                                                    PeekWordState* aState) {
+                                                    PeekWordState* aState,
+                                                    bool aTrimSpaces) {
   NS_ASSERTION(aOffset && *aOffset <= 1, "aOffset out of range");
   int32_t startOffset = *aOffset;
   // This isn't text, so truncate the context

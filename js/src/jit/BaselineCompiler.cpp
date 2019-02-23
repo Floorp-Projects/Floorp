@@ -1551,6 +1551,17 @@ MOZ_MUST_USE bool BaselineCompilerCodeGen::emitTestScriptFlag(
 
 template <>
 template <typename F>
+MOZ_MUST_USE bool BaselineCompilerCodeGen::emitTestScriptFlag(
+    JSScript::MutableFlags flag, bool value, const F& emit,
+    Register scratch) {
+  if (handler.script()->hasFlag(flag) == value) {
+    return emit();
+  }
+  return true;
+}
+
+template <>
+template <typename F>
 MOZ_MUST_USE bool BaselineInterpreterCodeGen::emitTestScriptFlag(
     JSScript::ImmutableFlags flag, bool value, const F& emit,
     Register scratch) {
@@ -1558,6 +1569,26 @@ MOZ_MUST_USE bool BaselineInterpreterCodeGen::emitTestScriptFlag(
   loadScript(scratch);
   masm.branchTest32(value ? Assembler::Zero : Assembler::NonZero,
                     Address(scratch, JSScript::offsetOfImmutableFlags()),
+                    Imm32(uint32_t(flag)), &done);
+  {
+    if (!emit()) {
+      return false;
+    }
+  }
+
+  masm.bind(&done);
+  return true;
+}
+
+template <>
+template <typename F>
+MOZ_MUST_USE bool BaselineInterpreterCodeGen::emitTestScriptFlag(
+    JSScript::MutableFlags flag, bool value, const F& emit,
+    Register scratch) {
+  Label done;
+  loadScript(scratch);
+  masm.branchTest32(value ? Assembler::Zero : Assembler::NonZero,
+                    Address(scratch, JSScript::offsetOfMutableFlags()),
                     Imm32(uint32_t(flag)), &done);
   {
     if (!emit()) {
@@ -1722,7 +1753,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_LOOPENTRY() {
         AbsoluteAddress(mozilla::recordreplay::ExecutionProgressCounter()));
     return true;
   };
-  return emitTestScriptFlag(JSScript::ImmutableFlags::TrackRecordReplayProgress,
+  return emitTestScriptFlag(JSScript::MutableFlags::TrackRecordReplayProgress,
                             true, incCounter, R2.scratchReg());
 }
 
@@ -5855,7 +5886,7 @@ bool BaselineCodeGen<Handler>::emitPrologue() {
         AbsoluteAddress(mozilla::recordreplay::ExecutionProgressCounter()));
     return true;
   };
-  if (!emitTestScriptFlag(JSScript::ImmutableFlags::TrackRecordReplayProgress,
+  if (!emitTestScriptFlag(JSScript::MutableFlags::TrackRecordReplayProgress,
                           true, incCounter, R2.scratchReg())) {
     return false;
   }

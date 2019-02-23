@@ -1399,6 +1399,7 @@ pub extern "C" fn wr_transaction_update_dynamic_properties(
     if transform_count > 0 {
         let transform_slice = make_slice(transform_array, transform_count);
 
+        properties.transforms.reserve(transform_slice.len());
         for element in transform_slice.iter() {
             let prop = PropertyValue {
                 key: PropertyBindingKey::new(element.id),
@@ -1412,6 +1413,7 @@ pub extern "C" fn wr_transaction_update_dynamic_properties(
     if opacity_count > 0 {
         let opacity_slice = make_slice(opacity_array, opacity_count);
 
+        properties.floats.reserve(opacity_slice.len());
         for element in opacity_slice.iter() {
             let prop = PropertyValue {
                 key: PropertyBindingKey::new(element.id),
@@ -1440,7 +1442,7 @@ pub extern "C" fn wr_transaction_append_transform_properties(
     };
 
     let transform_slice = make_slice(transform_array, transform_count);
-
+    properties.transforms.reserve(transform_slice.len());
     for element in transform_slice.iter() {
         let prop = PropertyValue {
             key: PropertyBindingKey::new(element.id),

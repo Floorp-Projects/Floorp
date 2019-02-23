@@ -72,7 +72,8 @@ struct MOZ_STACK_CLASS nsPeekOffsetStruct {
       nsPoint aDesiredPos, bool aJumpLines, bool aScrollViewStop,
       bool aIsKeyboardSelect, bool aVisual, bool aExtend,
       ForceEditableRegion = ForceEditableRegion::No,
-      mozilla::EWordMovementType aWordMovementType = mozilla::eDefaultBehavior);
+      mozilla::EWordMovementType aWordMovementType = mozilla::eDefaultBehavior,
+      bool aTrimSpaces = true);
 
   // Note: Most arguments (input and output) are only used with certain values
   // of mAmount. These values are indicated for each argument below.
@@ -118,6 +119,9 @@ struct MOZ_STACK_CLASS nsPeekOffsetStruct {
   //
   // Used with: eSelectCharacter, eSelectWord.
   bool mJumpLines;
+
+  // mTrimSpaces: Whether we should trim spaces at begin/end of content
+  bool mTrimSpaces;
 
   // Whether to stop when reaching a scroll view boundary.
   //

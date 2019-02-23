@@ -4488,7 +4488,8 @@ class nsIFrame : public nsQueryFrame {
                                            bool aWordSelectEatSpace,
                                            bool aIsKeyboardSelect,
                                            int32_t* aOffset,
-                                           PeekWordState* aState) = 0;
+                                           PeekWordState* aState,
+                                           bool aTrimSpaces) = 0;
 
   /**
    * Search for the first paragraph boundary before or after the given position

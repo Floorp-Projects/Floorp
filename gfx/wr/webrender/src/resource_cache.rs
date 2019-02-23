@@ -4,7 +4,7 @@
 
 use api::{AddFont, BlobImageResources, AsyncBlobImageRasterizer, ResourceUpdate};
 use api::{BlobImageDescriptor, BlobImageHandler, BlobImageRequest, RasterizedBlobImage};
-use api::{ClearCache, ColorF, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
+use api::{ClearCache, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use api::{DebugFlags, FontInstanceKey, FontKey, FontTemplate, GlyphIndex};
 use api::{ExternalImageData, ExternalImageType, BlobImageResult, BlobImageParams};
 use api::{FontInstanceData, FontInstanceOptions, FontInstancePlatformOptions, FontVariation};
@@ -24,7 +24,7 @@ use euclid::{point2, size2};
 use glyph_cache::GlyphCache;
 #[cfg(not(feature = "pathfinder"))]
 use glyph_cache::GlyphCacheEntry;
-use glyph_rasterizer::{FontInstance, GlyphFormat, GlyphKey, GlyphRasterizer};
+use glyph_rasterizer::{BaseFontInstance, FontInstance, GlyphFormat, GlyphKey, GlyphRasterizer};
 use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use gpu_types::UvRectKind;
 use image::{compute_tile_size, compute_tile_range, for_each_tile_in_range};
@@ -373,7 +373,7 @@ impl ImageResult {
 }
 
 type ImageCache = ResourceClassCache<ImageKey, ImageResult, ()>;
-pub type FontInstanceMap = Arc<RwLock<FastHashMap<FontInstanceKey, FontInstance>>>;
+pub type FontInstanceMap = Arc<RwLock<FastHashMap<FontInstanceKey, Arc<BaseFontInstance>>>>;
 
 #[derive(Default)]
 struct Resources {
@@ -405,7 +405,10 @@ impl BlobImageResources for Resources {
     }
 }
 
-pub type GlyphDimensionsCache = FastHashMap<(FontInstance, GlyphIndex), Option<GlyphDimensions>>;
+// We only use this to report glyph dimensions to the user of the API, so using
+// the font instance key should be enough. If we start using it to cache dimensions
+// for internal font instances we should change the hash key accordingly.
+pub type GlyphDimensionsCache = FastHashMap<(FontInstanceKey, GlyphIndex), Option<GlyphDimensions>>;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct BlobImageRasterizerEpoch(usize);
@@ -779,7 +782,7 @@ impl ResourceCache {
         &mut self,
         instance_key: FontInstanceKey,
         font_key: FontKey,
-        glyph_size: Au,
+        size: Au,
         options: Option<FontInstanceOptions>,
         platform_options: Option<FontInstancePlatformOptions>,
         variations: Vec<FontVariation>,
@@ -791,17 +794,17 @@ impl ResourceCache {
             synthetic_italics,
             ..
         } = options.unwrap_or_default();
-        let instance = FontInstance::new(
+        let instance = Arc::new(BaseFontInstance {
+            instance_key,
             font_key,
-            glyph_size,
-            ColorF::new(0.0, 0.0, 0.0, 1.0),
+            size,
             bg_color,
             render_mode,
             flags,
             synthetic_italics,
             platform_options,
             variations,
-        );
+        });
         self.resources.font_instances
             .write()
             .unwrap()
@@ -822,9 +825,9 @@ impl ResourceCache {
         self.resources.font_instances.clone()
     }
 
-    pub fn get_font_instance(&self, instance_key: FontInstanceKey) -> Option<FontInstance> {
+    pub fn get_font_instance(&self, instance_key: FontInstanceKey) -> Option<Arc<BaseFontInstance>> {
         let instance_map = self.resources.font_instances.read().unwrap();
-        instance_map.get(&instance_key).cloned()
+        instance_map.get(&instance_key).map(|instance| { Arc::clone(instance) })
     }
 
     pub fn add_image_template(
@@ -1502,7 +1505,7 @@ impl ResourceCache {
         font: &FontInstance,
         glyph_index: GlyphIndex,
     ) -> Option<GlyphDimensions> {
-        match self.cached_glyph_dimensions.entry((font.clone(), glyph_index)) {
+        match self.cached_glyph_dimensions.entry((font.instance_key, glyph_index)) {
             Occupied(entry) => *entry.get(),
             Vacant(entry) => *entry.insert(
                 self.glyph_rasterizer
@@ -1927,7 +1930,7 @@ struct PlainImageTemplate {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PlainResources {
     font_templates: FastHashMap<FontKey, PlainFontTemplate>,
-    font_instances: FastHashMap<FontInstanceKey, FontInstance>,
+    font_instances: FastHashMap<FontInstanceKey, Arc<BaseFontInstance>>,
     image_templates: FastHashMap<ImageKey, PlainImageTemplate>,
 }
 
