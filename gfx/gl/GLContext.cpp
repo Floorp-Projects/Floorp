@@ -834,28 +834,27 @@ bool GLContext::InitImpl() {
   raw_fGetIntegerv(LOCAL_GL_MAX_RENDERBUFFER_SIZE, &mMaxRenderbufferSize);
   raw_fGetIntegerv(LOCAL_GL_MAX_VIEWPORT_DIMS, mMaxViewportDims);
 
+  if (mWorkAroundDriverBugs) {
 #ifdef XP_MACOSX
-  if (mWorkAroundDriverBugs && nsCocoaFeatures::OSXVersionMajor() == 10 &&
-      nsCocoaFeatures::OSXVersionMinor() < 12) {
-    if (mVendor == GLVendor::Intel) {
-      // see bug 737182 for 2D textures, bug 684882 for cube map textures.
-      mMaxTextureSize = std::min(mMaxTextureSize, 4096);
-      mMaxCubeMapTextureSize = std::min(mMaxCubeMapTextureSize, 512);
-      // for good measure, we align renderbuffers on what we do for 2D textures
-      mMaxRenderbufferSize = std::min(mMaxRenderbufferSize, 4096);
-      mNeedsTextureSizeChecks = true;
-    } else if (mVendor == GLVendor::NVIDIA) {
-      // See bug 879656.  8192 fails, 8191 works.
-      mMaxTextureSize = std::min(mMaxTextureSize, 8191);
-      mMaxRenderbufferSize = std::min(mMaxRenderbufferSize, 8191);
+    if (!nsCocoaFeatures::IsAtLeastVersion(10, 12)) {
+      if (mVendor == GLVendor::Intel) {
+        // see bug 737182 for 2D textures, bug 684882 for cube map textures.
+        mMaxTextureSize = std::min(mMaxTextureSize, 4096);
+        mMaxCubeMapTextureSize = std::min(mMaxCubeMapTextureSize, 512);
+        // for good measure, we align renderbuffers on what we do for 2D textures
+        mMaxRenderbufferSize = std::min(mMaxRenderbufferSize, 4096);
+        mNeedsTextureSizeChecks = true;
+      } else if (mVendor == GLVendor::NVIDIA) {
+        // See bug 879656.  8192 fails, 8191 works.
+        mMaxTextureSize = std::min(mMaxTextureSize, 8191);
+        mMaxRenderbufferSize = std::min(mMaxRenderbufferSize, 8191);
 
-      // Part of the bug 879656, but it also doesn't hurt the 877949
-      mNeedsTextureSizeChecks = true;
+        // Part of the bug 879656, but it also doesn't hurt the 877949
+        mNeedsTextureSizeChecks = true;
+      }
     }
-  }
 #endif
 #ifdef MOZ_X11
-  if (mWorkAroundDriverBugs) {
     if (mVendor == GLVendor::Nouveau) {
       // see bug 814716. Clamp MaxCubeMapTextureSize at 2K for Nouveau.
       mMaxCubeMapTextureSize = std::min(mMaxCubeMapTextureSize, 2048);
@@ -874,34 +873,33 @@ bool GLContext::InitImpl() {
         mSymbols.fVertexAttrib4f(i, 0, 0, 0, 1);
       }
     }
-  }
 #endif
-  if (mWorkAroundDriverBugs && Renderer() == GLRenderer::AdrenoTM420) {
-    // see bug 1194923. Calling glFlush before glDeleteFramebuffers
-    // prevents occasional driver crash.
-    mNeedsFlushBeforeDeleteFB = true;
-  }
+    if (Renderer() == GLRenderer::AdrenoTM420) {
+      // see bug 1194923. Calling glFlush before glDeleteFramebuffers
+      // prevents occasional driver crash.
+      mNeedsFlushBeforeDeleteFB = true;
+    }
 #ifdef MOZ_WIDGET_ANDROID
-  if (mWorkAroundDriverBugs &&
-      (Renderer() == GLRenderer::AdrenoTM305 ||
-       Renderer() == GLRenderer::AdrenoTM320 ||
-       Renderer() == GLRenderer::AdrenoTM330) &&
-      jni::GetAPIVersion() < 21) {
-    // Bug 1164027. Driver crashes when functions such as
-    // glTexImage2D fail due to virtual memory exhaustion.
-    mTextureAllocCrashesOnMapFailure = true;
-  }
+    if ((Renderer() == GLRenderer::AdrenoTM305 ||
+         Renderer() == GLRenderer::AdrenoTM320 ||
+         Renderer() == GLRenderer::AdrenoTM330) &&
+        jni::GetAPIVersion() < 21) {
+      // Bug 1164027. Driver crashes when functions such as
+      // glTexImage2D fail due to virtual memory exhaustion.
+      mTextureAllocCrashesOnMapFailure = true;
+    }
 #endif
 #if MOZ_WIDGET_ANDROID
-  if (mWorkAroundDriverBugs && Renderer() == GLRenderer::SGX540 &&
-      jni::GetAPIVersion() <= 15) {
-    // Bug 1288446. Driver sometimes crashes when uploading data to a
-    // texture if the render target has changed since the texture was
-    // rendered from. Calling glCheckFramebufferStatus after
-    // glFramebufferTexture2D prevents the crash.
-    mNeedsCheckAfterAttachTextureToFb = true;
-  }
+    if (Renderer() == GLRenderer::SGX540 &&
+        jni::GetAPIVersion() <= 15) {
+      // Bug 1288446. Driver sometimes crashes when uploading data to a
+      // texture if the render target has changed since the texture was
+      // rendered from. Calling glCheckFramebufferStatus after
+      // glFramebufferTexture2D prevents the crash.
+      mNeedsCheckAfterAttachTextureToFb = true;
+    }
 #endif
+  }
 
   if (IsSupported(GLFeature::framebuffer_multisample)) {
     fGetIntegerv(LOCAL_GL_MAX_SAMPLES, (GLint*)&mMaxSamples);
@@ -1637,9 +1635,7 @@ void GLContext::InitExtensions() {
     // textures with glCompressedTexSubImage2D. Works on Intel HD 4000
     // and Intel HD 5000/Iris that I tested.
     // Bug 1124996: Appears to be the same on OSX Yosemite (10.10)
-    if (nsCocoaFeatures::OSXVersionMajor() == 10 &&
-        nsCocoaFeatures::OSXVersionMinor() >= 9 &&
-        Renderer() == GLRenderer::IntelHD3000) {
+    if (Renderer() == GLRenderer::IntelHD3000) {
       MarkExtensionUnsupported(EXT_texture_compression_s3tc);
     }
 
