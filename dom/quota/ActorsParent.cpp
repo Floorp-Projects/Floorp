@@ -652,12 +652,6 @@ class OriginOperationBase : public BackgroundThreadObject, public Runnable {
     // Not yet run.
     State_Initial,
 
-    // Running initialization on the main thread.
-    State_Initializing,
-
-    // Running initialization on the owning thread.
-    State_FinishingInit,
-
     // Running quota manager initialization on the owning thread.
     State_CreatingQuotaManager,
 
@@ -724,12 +718,6 @@ class OriginOperationBase : public BackgroundThreadObject, public Runnable {
   void AdvanceState() {
     switch (mState) {
       case State_Initial:
-        mState = State_Initializing;
-        return;
-      case State_Initializing:
-        mState = State_FinishingInit;
-        return;
-      case State_FinishingInit:
         mState = State_CreatingQuotaManager;
         return;
       case State_CreatingQuotaManager:
@@ -752,8 +740,6 @@ class OriginOperationBase : public BackgroundThreadObject, public Runnable {
   NS_IMETHOD
   Run() override;
 
-  virtual nsresult DoInitOnMainThread() { return NS_OK; }
-
   virtual void Open() = 0;
 
   nsresult DirectoryOpen();
@@ -766,8 +752,6 @@ class OriginOperationBase : public BackgroundThreadObject, public Runnable {
 
  private:
   nsresult Init();
-
-  nsresult InitOnMainThread();
 
   nsresult FinishInit();
 
@@ -991,8 +975,6 @@ class GetOriginUsageOp final : public QuotaUsageRequestBase {
  private:
   ~GetOriginUsageOp() {}
 
-  MOZ_IS_CLASS_INIT virtual nsresult DoInitOnMainThread() override;
-
   virtual nsresult DoDirectoryWork(QuotaManager* aQuotaManager) override;
 
   void GetResponse(UsageRequestResponse& aResponse) override;
@@ -1062,8 +1044,6 @@ class InitOriginOp final : public QuotaRequestBase {
  private:
   ~InitOriginOp() {}
 
-  nsresult DoInitOnMainThread() override;
-
   nsresult DoDirectoryWork(QuotaManager* aQuotaManager) override;
 
   void GetResponse(RequestResponse& aResponse) override;
@@ -1115,8 +1095,6 @@ class ClearOriginOp final : public ClearRequestBase {
  private:
   ~ClearOriginOp() {}
 
-  nsresult DoInitOnMainThread() override;
-
   void GetResponse(RequestResponse& aResponse) override;
 };
 
@@ -1130,8 +1108,6 @@ class ClearDataOp final : public ClearRequestBase {
 
  private:
   ~ClearDataOp() {}
-
-  nsresult DoInitOnMainThread() override;
 
   void GetResponse(RequestResponse& aResponse) override;
 };
@@ -1148,9 +1124,6 @@ class PersistRequestBase : public QuotaRequestBase {
 
  protected:
   explicit PersistRequestBase(const PrincipalInfo& aPrincipalInfo);
-
- private:
-  nsresult DoInitOnMainThread() override;
 };
 
 class PersistedOp final : public PersistRequestBase {
@@ -6033,16 +6006,6 @@ OriginOperationBase::Run() {
       break;
     }
 
-    case State_Initializing: {
-      rv = InitOnMainThread();
-      break;
-    }
-
-    case State_FinishingInit: {
-      rv = FinishInit();
-      break;
-    }
-
     case State_CreatingQuotaManager: {
       rv = QuotaManagerOpen();
       break;
@@ -6109,38 +6072,6 @@ void OriginOperationBase::Finish(nsresult aResult) {
 nsresult OriginOperationBase::Init() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State_Initial);
-
-  AdvanceState();
-
-  if (mNeedsMainThreadInit) {
-    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
-  } else {
-    AdvanceState();
-    MOZ_ALWAYS_SUCCEEDS(Run());
-  }
-
-  return NS_OK;
-}
-
-nsresult OriginOperationBase::InitOnMainThread() {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mState == State_Initializing);
-
-  nsresult rv = DoInitOnMainThread();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  AdvanceState();
-
-  MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
-
-  return NS_OK;
-}
-
-nsresult OriginOperationBase::FinishInit() {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State_FinishingInit);
 
   if (QuotaManager::IsShuttingDown()) {
     return NS_ERROR_FAILURE;
@@ -7068,36 +6999,14 @@ bool GetOriginUsageOp::Init(Quota* aQuota) {
     return false;
   }
 
-  mNeedsMainThreadInit = true;
-
-  return true;
-}
-
-nsresult GetOriginUsageOp::DoInitOnMainThread() {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(GetState() == State_Initializing);
-  MOZ_ASSERT(mNeedsMainThreadInit);
-
-  const PrincipalInfo& principalInfo = mParams.principalInfo();
-
-  nsresult rv;
-  nsCOMPtr<nsIPrincipal> principal =
-      PrincipalInfoToPrincipal(principalInfo, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
   // Figure out which origin we're dealing with.
   nsCString origin;
-  rv =
-      QuotaManager::GetInfoFromPrincipal(principal, &mSuffix, &mGroup, &origin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QuotaManager::GetInfoFromValidatedPrincipalInfo(mParams.principalInfo(),
+                                                  &mSuffix, &mGroup, &origin);
 
   mOriginScope.SetFromOrigin(origin);
 
-  return NS_OK;
+  return true;
 }
 
 nsresult GetOriginUsageOp::DoDirectoryWork(QuotaManager* aQuotaManager) {
@@ -7254,36 +7163,14 @@ bool InitOriginOp::Init(Quota* aQuota) {
 
   mPersistenceType.SetValue(mParams.persistenceType());
 
-  mNeedsMainThreadInit = true;
-
-  return true;
-}
-
-nsresult InitOriginOp::DoInitOnMainThread() {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(GetState() == State_Initializing);
-  MOZ_ASSERT(mNeedsMainThreadInit);
-
-  const PrincipalInfo& principalInfo = mParams.principalInfo();
-
-  nsresult rv;
-  nsCOMPtr<nsIPrincipal> principal =
-      PrincipalInfoToPrincipal(principalInfo, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
   // Figure out which origin we're dealing with.
   nsCString origin;
-  rv =
-      QuotaManager::GetInfoFromPrincipal(principal, &mSuffix, &mGroup, &origin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QuotaManager::GetInfoFromValidatedPrincipalInfo(mParams.principalInfo(),
+                                                  &mSuffix, &mGroup, &origin);
 
   mOriginScope.SetFromOrigin(origin);
 
-  return NS_OK;
+  return true;
 }
 
 nsresult InitOriginOp::DoDirectoryWork(QuotaManager* aQuotaManager) {
@@ -7587,37 +7474,10 @@ bool ClearOriginOp::Init(Quota* aQuota) {
     mPersistenceType.SetValue(mParams.persistenceType());
   }
 
-  if (mParams.clientTypeIsExplicit()) {
-    MOZ_ASSERT(mParams.clientType() != Client::TYPE_MAX);
-
-    mClientType.SetValue(mParams.clientType());
-  }
-
-  mNeedsMainThreadInit = true;
-
-  return true;
-}
-
-nsresult ClearOriginOp::DoInitOnMainThread() {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(GetState() == State_Initializing);
-  MOZ_ASSERT(mNeedsMainThreadInit);
-
-  const PrincipalInfo& principalInfo = mParams.principalInfo();
-
-  nsresult rv;
-  nsCOMPtr<nsIPrincipal> principal =
-      PrincipalInfoToPrincipal(principalInfo, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
   // Figure out which origin we're dealing with.
   nsCString origin;
-  rv = QuotaManager::GetInfoFromPrincipal(principal, nullptr, nullptr, &origin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QuotaManager::GetInfoFromValidatedPrincipalInfo(mParams.principalInfo(),
+                                                  nullptr, nullptr, &origin);
 
   if (mParams.matchAll()) {
     mOriginScope.SetFromPrefix(origin);
@@ -7625,7 +7485,13 @@ nsresult ClearOriginOp::DoInitOnMainThread() {
     mOriginScope.SetFromOrigin(origin);
   }
 
-  return NS_OK;
+  if (mParams.clientTypeIsExplicit()) {
+    MOZ_ASSERT(mParams.clientType() != Client::TYPE_MAX);
+
+    mClientType.SetValue(mParams.clientType());
+  }
+
+  return true;
 }
 
 void ClearOriginOp::GetResponse(RequestResponse& aResponse) {
@@ -7653,19 +7519,9 @@ bool ClearDataOp::Init(Quota* aQuota) {
     return false;
   }
 
-  mNeedsMainThreadInit = true;
+  mOriginScope.SetFromPattern(mParams.pattern());
 
   return true;
-}
-
-nsresult ClearDataOp::DoInitOnMainThread() {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(GetState() == State_Initializing);
-  MOZ_ASSERT(mNeedsMainThreadInit);
-
-  mOriginScope.SetFromJSONPattern(mParams.pattern());
-
-  return NS_OK;
 }
 
 void ClearDataOp::GetResponse(RequestResponse& aResponse) {
@@ -7689,34 +7545,14 @@ bool PersistRequestBase::Init(Quota* aQuota) {
 
   mPersistenceType.SetValue(PERSISTENCE_TYPE_DEFAULT);
 
-  mNeedsMainThreadInit = true;
-
-  return true;
-}
-
-nsresult PersistRequestBase::DoInitOnMainThread() {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(GetState() == State_Initializing);
-  MOZ_ASSERT(mNeedsMainThreadInit);
-
-  nsresult rv;
-  nsCOMPtr<nsIPrincipal> principal =
-      PrincipalInfoToPrincipal(mPrincipalInfo, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
   // Figure out which origin we're dealing with.
   nsCString origin;
-  rv =
-      QuotaManager::GetInfoFromPrincipal(principal, &mSuffix, &mGroup, &origin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QuotaManager::GetInfoFromValidatedPrincipalInfo(mPrincipalInfo, &mSuffix,
+                                                  &mGroup, &origin);
 
   mOriginScope.SetFromOrigin(origin);
 
-  return NS_OK;
+  return true;
 }
 
 PersistedOp::PersistedOp(const RequestParams& aParams)
