@@ -358,10 +358,11 @@ var FormAutofillContent = {
   init() {
     FormAutofill.defineLazyLogGetter(this, "FormAutofillContent");
 
-    Services.cpmm.addMessageListener("FormAutofill:enabledStatus", this);
+    // eslint-disable-next-line mozilla/balanced-listeners
+    Services.cpmm.sharedData.addEventListener("change", this);
     Services.obs.addObserver(this, "earlyformsubmit");
 
-    let autofillEnabled = Services.cpmm.initialProcessData.autofillEnabled;
+    let autofillEnabled = Services.cpmm.sharedData.get("FormAutofill:enabled");
     // If storage hasn't be initialized yet autofillEnabled is undefined but we need to ensure
     // autocomplete is registered before the focusin so register it in this case as long as the
     // pref is true.
@@ -428,10 +429,13 @@ var FormAutofillContent = {
     return true;
   },
 
-  receiveMessage({name, data}) {
-    switch (name) {
-      case "FormAutofill:enabledStatus": {
-        if (data) {
+  handleEvent(evt) {
+    switch (evt.type) {
+      case "change": {
+        if (!evt.changedKeys.includes("FormAutofill:enabled")) {
+          return;
+        }
+        if (Services.cpmm.sharedData.get("FormAutofill:enabled")) {
           ProfileAutocomplete.ensureRegistered();
         } else {
           ProfileAutocomplete.ensureUnregistered();
