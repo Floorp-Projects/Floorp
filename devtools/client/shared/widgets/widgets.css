@@ -13,12 +13,6 @@
   -moz-user-focus: normal;
 }
 
-/* FastListWidget */
-
-.fast-list-widget-container {
-  overflow: auto;
-}
-
 /* SideMenuWidget */
 
 .side-menu-widget-container {
