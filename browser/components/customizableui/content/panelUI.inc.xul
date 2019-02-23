@@ -722,6 +722,54 @@
       </vbox>
     </panelview>
 
+    <panelview id="PanelUI-fxa" class="PanelUI-subView" descriptionheightworkaround="true">
+      <vbox class="panel-subview-body">
+        <vbox id="PanelUI-fxa-signin">
+          <image class="fxaChooseWhatToSyncDevices"/>
+          <label class="PanelUI-fxa-signin-instruction-callout">&fxa.signin.callout.label;</label>
+          <label class="PanelUI-fxa-signin-instruction-label">&fxa.signin.description.label;</label>
+          <toolbarbutton class="PanelUI-fxa-signin-button" label="&fxa.signin.button.label;" oncommand="gSync.openFxAEmailFirstPage('fxa_discoverability_native');"/>
+        </vbox>
+        <vbox id="PanelUI-fxa-unverified" class="PanelUI-fxa-unverified-instruction-box">
+          <image class="fxaGraphicMail"/>
+          <label class="PanelUI-fxa-signin-instruction-callout">&fxa.unverified.callout.label;</label>
+          <label class="PanelUI-fxa-signin-instruction-label">&fxa.unverified.description.label;</label>
+          <toolbarbutton class="PanelUI-fxa-signin-button" label="&fxa.unverified.button.label;" oncommand="gSync.openPrefs('fxa_discoverability_native');"/>
+        </vbox>
+        <vbox id="PanelUI-fxa-menu">
+          <hbox flex="1" pack="center" class="fxa-avatar-subpanel">
+            <toolbarbutton align="left" oncommand="gSync.openFxAChangeAvatar('fxa_discoverability_native');">
+              <image id="fxa-menu-avatar"/>
+            </toolbarbutton>
+            <vbox flex="1">
+              <label class="fxa-avatar-subpanel-description" >&fxa.menu.signedInAs.label;</label>
+              <label id="fxa-menu-email"></label>
+            </vbox>
+          </hbox>
+          <toolbarseparator/>
+          <toolbarbutton id="PanelUI-fxa-menu-remotetabs-button"
+                         class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                         label="&appMenuRemoteTabs.label;"
+                         closemenu="none"
+                         oncommand="PanelUI.showSubView('PanelUI-remotetabs', this)"/>
+          <toolbarbutton id="PanelUI-fxa-menu-view-sidebar"
+                         class="subviewbutton subviewbutton-iconic"
+                         label="&appMenuRemoteTabs.sidebar.label;"
+                         oncommand="SidebarUI.toggle('viewTabsSidebar');"/>
+          <toolbarseparator/>
+          <toolbarbutton class="subviewbutton" label="&fxa.menu.connectAnotherDevice.label;" oncommand="gSync.openConnectAnotherDevice('fxa_discoverability_native');"/>
+          <toolbarbutton class="subviewbutton" label="&fxa.menu.manageAccount.label;" oncommand="gSync.openFxAManagePage('fxa_discoverability_native');"/>
+          <toolbarbutton class="subviewbutton" label="&fxa.menu.syncSettings.label;" oncommand="gSync.openPrefs('fxa_discoverability_native');"/>
+          <toolbarseparator/>
+          <toolbarbutton id="PanelUI-fxa-menu-syncnow-button"
+                         label="&syncSyncNowItem.label;"
+                         class="subviewbutton subviewbutton-iconic"
+                         oncommand="gSync.doSync();"
+                         closemenu="none"/>
+        </vbox>
+      </vbox>
+    </panelview>
+
     <panelview id="PanelUI-bookmarkingTools" class="PanelUI-subView">
       <vbox class="panel-subview-body">
         <toolbarbutton id="panelMenu_toggleBookmarksMenu"

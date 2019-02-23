@@ -1087,6 +1087,19 @@
                        tooltiptext="&libraryButton.tooltip;"
                        label="&places.library.title;"/>
 
+        <toolbarbutton id="fxa-toolbar-menu-button" class="toolbarbutton-1 badged-button"
+                       onmousedown="gSync.toggleAccountPanel('PanelUI-fxa', event)"
+                       onkeypress="gSync.toggleAccountPanel('PanelUI-fxa, event)"
+                       consumeanchor="fxa-toolbar-menu-button"
+                       closemenu="none"
+                       label="&fxa.menu.firefoxAccount;"
+                       tooltiptext="&fxa.menu.firefoxAccount;"
+                       cui-areatype="toolbar"
+                       removable="true">
+                       <vbox>
+                        <image id="fxa-avatar-image"/>
+                       </vbox>
+        </toolbarbutton>
       </hbox>
 
       <toolbarbutton id="nav-bar-overflow-button"

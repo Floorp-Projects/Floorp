@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 "use strict";
 
 var EXPORTED_SYMBOLS = ["CustomizableUI"];
@@ -55,7 +54,7 @@ const kSubviewEvents = [
  * The current version. We can use this to auto-add new default widgets as necessary.
  * (would be const but isn't because of testing purposes)
  */
-var kVersion = 15;
+var kVersion = 16;
 
 /**
  * Buttons removed from built-ins by version they were removed. kVersion must be
@@ -202,6 +201,7 @@ var CustomizableUIInternal = {
       "downloads-button",
       "library-button",
       "sidebar-button",
+      "fxa-toolbar-menu-button",
     ];
 
     if (AppConstants.MOZ_DEV_EDITION) {
@@ -270,6 +270,7 @@ var CustomizableUIInternal = {
     }
   },
 
+  // eslint-disable-next-line complexity
   _updateForNewVersion() {
     // We should still enter even if gSavedState.currentVersion >= kVersion
     // because the per-widget pref facility is independent of versioning.
@@ -474,6 +475,15 @@ var CustomizableUIInternal = {
         if (!this._builtinAreas.has(area)) {
           delete gSavedState.placements[area];
         }
+      }
+    }
+
+    // Add the FxA toolbar menu as the right most button item
+    if (currentVersion < 16 && gSavedState.placements) {
+      let navbarPlacements = gSavedState.placements[CustomizableUI.AREA_NAVBAR];
+      // Place the menu item as the first item to the left of the hamburger menu
+      if (navbarPlacements) {
+        navbarPlacements.push("fxa-toolbar-menu-button");
       }
     }
   },

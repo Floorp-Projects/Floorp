@@ -53,7 +53,9 @@ var FxAccountsConfig = {
   },
 
   async promiseEmailFirstURI(entrypoint) {
-    return this._buildURL("", {entrypoint});
+    return this._buildURL("", {
+      extraParams: {entrypoint, action: "email"},
+    });
   },
 
   async promiseForceSigninURI(entrypoint) {

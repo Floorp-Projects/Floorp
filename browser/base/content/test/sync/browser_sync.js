@@ -51,6 +51,8 @@ add_task(async function test_ui_state_signedin() {
   });
   checkRemoteTabsPanel("PanelUI-remotetabs-main", false);
   checkMenuBarItem("sync-syncnowitem");
+  checkFxaToolbarButtonPanel("PanelUI-fxa-menu");
+  checkFxaToolbarButtonAvatar("signedin");
   gSync.relativeTimeFormat = origRelativeTimeFormat;
 });
 
@@ -95,6 +97,8 @@ add_task(async function test_ui_state_unconfigured() {
   });
   checkRemoteTabsPanel("PanelUI-remotetabs-setupsync");
   checkMenuBarItem("sync-setup");
+  checkFxaToolbarButtonPanel("PanelUI-fxa-signin");
+  checkFxaToolbarButtonAvatar("not_configured");
 });
 
 add_task(async function test_ui_state_unverified() {
@@ -119,6 +123,8 @@ add_task(async function test_ui_state_unverified() {
   });
   checkRemoteTabsPanel("PanelUI-remotetabs-unverified", false);
   checkMenuBarItem("sync-unverifieditem");
+  checkFxaToolbarButtonPanel("PanelUI-fxa-unverified");
+  checkFxaToolbarButtonAvatar("unverified");
 });
 
 add_task(async function test_ui_state_loginFailed() {
@@ -141,6 +147,8 @@ add_task(async function test_ui_state_loginFailed() {
   });
   checkRemoteTabsPanel("PanelUI-remotetabs-reauthsync", false);
   checkMenuBarItem("sync-reauthitem");
+  checkFxaToolbarButtonPanel("PanelUI-fxa-unverified");
+  checkFxaToolbarButtonAvatar("unverified");
 });
 
 function checkPanelUIStatusBar({label, tooltip, fxastatus, avatarURL, syncing, syncNowTooltip}) {
@@ -168,11 +176,11 @@ function checkPanelUIStatusBar({label, tooltip, fxastatus, avatarURL, syncing, s
 }
 
 function checkRemoteTabsPanel(expectedShownItemId, syncing, syncNowTooltip) {
-  checkItemsVisiblities(["PanelUI-remotetabs-main",
-                         "PanelUI-remotetabs-setupsync",
-                         "PanelUI-remotetabs-reauthsync",
-                         "PanelUI-remotetabs-unverified"],
-                        expectedShownItemId);
+  checkItemsVisibilities(["PanelUI-remotetabs-main",
+                          "PanelUI-remotetabs-setupsync",
+                          "PanelUI-remotetabs-reauthsync",
+                          "PanelUI-remotetabs-unverified"],
+                          expectedShownItemId);
 
   if (syncing != undefined && syncNowTooltip != undefined) {
     checkSyncNowButton("PanelUI-remotetabs-syncnow", syncing, syncNowTooltip);
@@ -180,8 +188,7 @@ function checkRemoteTabsPanel(expectedShownItemId, syncing, syncNowTooltip) {
 }
 
 function checkMenuBarItem(expectedShownItemId) {
-  checkItemsVisiblities(["sync-setup", "sync-syncnowitem", "sync-reauthitem", "sync-unverifieditem"],
-                        expectedShownItemId);
+  checkItemsVisibilities(["sync-setup", "sync-syncnowitem", "sync-reauthitem", "sync-unverifieditem"], expectedShownItemId);
 }
 
 function checkSyncNowButton(buttonId, syncing, tooltip = null) {
@@ -204,8 +211,39 @@ function checkSyncNowButton(buttonId, syncing, tooltip = null) {
   }
 }
 
+async function checkFxaToolbarButtonPanel(expectedShownItemId) {
+  let panel = document.getElementById("PanelUI-fxa");
+  let promisePanelOpen = BrowserTestUtils.waitForEvent(panel, "ViewShown");
+  document.getElementById("PanelUI-fxa-menu").click();
+  await promisePanelOpen;
+  checkItemsDisplayed(["PanelUI-fxa-signin", "PanelUI-fxa-unverified", "PanelUI-fxa-menu"], expectedShownItemId);
+}
+
+// fxaStatus is one of 'not_configured', 'unverified', or 'signedin'.
+function checkFxaToolbarButtonAvatar(fxaStatus) {
+  const avatar = document.getElementById("fxa-avatar-image");
+  const avatarURL = getComputedStyle(avatar).listStyleImage;
+  const expected = {
+    not_configured: "url(\"chrome://browser/skin/fxa/avatar-empty-badged.svg\")",
+    unverified: "url(\"chrome://browser/skin/fxa/avatar-confirm.svg\")",
+    signedin: "url(\"chrome://browser/skin/fxa/avatar.svg\")",
+  };
+  ok(avatarURL == expected[fxaStatus], `expected avatar URL to be ${expected[fxaStatus]}, but got ${avatarURL}`);
+}
+
+// Only one item displayed at a time.
+function checkItemsDisplayed(itemsIds, expectedShownItemId) {
+  for (let id of itemsIds) {
+    if (id == expectedShownItemId) {
+      ok(BrowserTestUtils.is_visible(document.getElementById(id)), `view ${id} should be visible`);
+    } else {
+      ok(BrowserTestUtils.is_hidden(document.getElementById(id)), `view ${id} should be hidden`);
+    }
+  }
+}
+
 // Only one item visible at a time.
-function checkItemsVisiblities(itemsIds, expectedShownItemId) {
+function checkItemsVisibilities(itemsIds, expectedShownItemId) {
   for (let id of itemsIds) {
     if (id == expectedShownItemId) {
       ok(!document.getElementById(id).hidden, "menuitem " + id + " should be visible");

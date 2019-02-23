@@ -132,7 +132,13 @@
   skin/classic/browser/fxa/fxa-spinner.svg                     (../shared/fxa/fxa-spinner.svg)
   skin/classic/browser/fxa/sync-illustration.svg               (../shared/fxa/sync-illustration.svg)
   skin/classic/browser/fxa/sync-illustration-issue.svg         (../shared/fxa/sync-illustration-issue.svg)
-
+  
+  skin/classic/browser/fxa/avatar.svg                          (../shared/fxa/avatar.svg)
+  skin/classic/browser/fxa/avatar-confirm.svg                  (../shared/fxa/avatar-confirm.svg)
+  skin/classic/browser/fxa/avatar-empty.svg                    (../shared/fxa/avatar-empty.svg)
+  skin/classic/browser/fxa/avatar-empty-badged.svg             (../shared/fxa/avatar-empty-badged.svg)
+  skin/classic/browser/fxa/graphic-mail.svg                    (../shared/fxa/graphic-mail.svg)
+  skin/classic/browser/fxa/choose-what-to-sync-devices.svg     (../shared/fxa/choose-what-to-sync-devices.svg)
 
   skin/classic/browser/accessibility.svg              (../shared/icons/accessibility.svg)
   skin/classic/browser/accessibility-active.svg       (../shared/icons/accessibility-active.svg)
