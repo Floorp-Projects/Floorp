@@ -2573,7 +2573,9 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
   }
 
   nsCOMPtr<nsPIDOMWindowOuter> window = mDocument->GetWindow();
+#ifdef MOZ_GECKO_PROFILER
   nsIDocShell* docShell = window ? window->GetDocShell() : nullptr;
+#endif
   nsAutoCString profilerLabelString;
   GetProfilerLabelForRequest(aRequest, profilerLabelString);
   AUTO_PROFILER_TEXT_MARKER_DOCSHELL("Script", profilerLabelString, JS,
