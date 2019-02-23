@@ -156,7 +156,6 @@
   display: inline;
   padding-inline-end: 25px;
   padding-inline-start: 0px;
-  color: var(--panel-disabled-color);
 }
 
 /* CONTENT */
@@ -683,11 +682,6 @@ description#identity-popup-content-verifier,
 .identity-popup-permission-state-label {
   margin-inline-end: 5px;
   text-align: end;
-}
-
-.identity-popup-content-blocking-category-state-label,
-.identity-popup-permission-state-label {
-  color: var(--panel-disabled-color);
 }
 
 #identity-popup-content-blocking-content[hasException] .identity-popup-content-blocking-category-state-label {
