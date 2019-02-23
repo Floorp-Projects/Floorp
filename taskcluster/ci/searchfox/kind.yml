@@ -118,3 +118,39 @@ jobs:
             - win64-rust
             - win64-cbindgen
             - win64-nasm
+
+    android-armv7-searchfox/debug:
+        description: "Android ARMv7 Debug Searchfox"
+        index:
+            job-name: android-armv7-searchfox-debug
+        treeherder:
+            platform: android-4-0-armv7-api16/debug
+        worker-type: aws-provisioner-v1/gecko-{level}-b-android
+        worker:
+            docker-image: {in-tree: android-build}
+            max-run-time: 36000
+            env:
+                PERFHERDER_EXTRA_OPTIONS: searchfox
+                RUSTC_BOOTSTRAP: "1"
+                MOZSEARCH_PLATFORM: "android-armv7"
+                GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-offline"
+                TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
+        run:
+            using: mozharness
+            actions: [get-secrets, build]
+            config:
+                - builds/releng_base_android_64_builds.py
+            script: "mozharness/scripts/fx_desktop_build.py"
+            secrets: true
+            custom-build-variant-cfg: api-16-debug-searchfox
+            tooltool-downloads: internal
+        toolchains:
+            - android-gradle-dependencies
+            - android-ndk-linux
+            - android-sdk-linux
+            - linux64-clang
+            - linux64-rust-android
+            - linux64-rust-size
+            - linux64-cbindgen
+            - linux64-sccache
+            - linux64-node

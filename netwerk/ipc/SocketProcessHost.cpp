@@ -325,15 +325,7 @@ bool SocketProcessMemoryReporter::SendRequestMemoryReport(
 
 int32_t SocketProcessMemoryReporter::Pid() const {
   MOZ_ASSERT(gIOService);
-
-  if (!gIOService->mSocketProcess) {
-    return 0;
-  }
-
-  if (SocketProcessParent* actor = gIOService->mSocketProcess->GetActor()) {
-    return (int32_t)actor->OtherPid();
-  }
-  return 0;
+  return gIOService->SocketProcessPid();
 }
 
 }  // namespace net

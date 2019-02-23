@@ -157,6 +157,7 @@ EXPORTS.mozilla += [
     'LookAndFeel.h',
     'MiscEvents.h',
     'MouseEvents.h',
+    'ProcInfo.h',
     'TextEventDispatcher.h',
     'TextEventDispatcherListener.h',
     'TextEvents.h',

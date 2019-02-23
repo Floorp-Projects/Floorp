@@ -119,9 +119,6 @@ security-view-technical =
 help-button =
     .label = Help
 
-security-site-data-cookies-only = Yes, cookies
-security-site-data-no = No
-
 ## These strings are used to tell the user if the website is storing cookies
 ## and data on the users computer in the security tab of pageInfo
 ## Variables:

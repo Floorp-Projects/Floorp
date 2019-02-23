@@ -2641,7 +2641,6 @@ SearchService.prototype = {
       this._initObservers.reject(this._initRV);
     }
     Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "init-complete");
-    Services.telemetry.getHistogramById("SEARCH_SERVICE_INIT_SYNC").add(false);
 
     LOG("_init: Completed _init");
     return this._initRV;
