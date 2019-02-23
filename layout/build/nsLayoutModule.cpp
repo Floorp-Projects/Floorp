@@ -125,10 +125,6 @@ void Shutdown() {
   nsLayoutStatics::Release();
 }
 
-#ifdef DEBUG
-nsresult NS_NewLayoutDebugger(nsILayoutDebugger** aResult);
-#endif
-
 nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
 
 already_AddRefed<nsIContentViewer> NS_NewContentViewer();
