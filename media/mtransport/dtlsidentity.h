@@ -25,6 +25,7 @@ namespace mozilla {
 class DtlsDigest {
  public:
   const static size_t kMaxDtlsDigestLength = HASH_LENGTH_MAX;
+  DtlsDigest() = default;
   explicit DtlsDigest(const std::string& algorithm) : algorithm_(algorithm) {}
   DtlsDigest(const std::string& algorithm, const std::vector<uint8_t>& value)
       : algorithm_(algorithm), value_(value) {

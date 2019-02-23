@@ -176,10 +176,10 @@ class HttpChannelChild final : public PHttpChannelChild,
   mozilla::ipc::IPCResult RecvCancelRedirected() override;
 
   mozilla::ipc::IPCResult RecvOriginalCacheInputStreamAvailable(
-      const OptionalIPCStream& aStream) override;
+      const Maybe<IPCStream>& aStream) override;
 
   mozilla::ipc::IPCResult RecvAltDataCacheInputStreamAvailable(
-      const OptionalIPCStream& aStream) override;
+      const Maybe<IPCStream>& aStream) override;
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 

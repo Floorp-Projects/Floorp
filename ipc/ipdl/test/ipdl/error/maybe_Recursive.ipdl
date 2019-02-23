@@ -1,0 +1,5 @@
+//error: bad syntax near `?'
+
+protocol maybe_Recursive {
+child: async Msg(int?? aa);
+};

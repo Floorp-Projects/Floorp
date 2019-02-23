@@ -104,15 +104,17 @@ void gecko_printf_stderr_output(const char* msg) { printf_stderr("%s\n", msg); }
 
 void* get_proc_address_from_glcontext(void* glcontext_ptr,
                                       const char* procname) {
-  MOZ_ASSERT(glcontext_ptr);
-
   mozilla::gl::GLContext* glcontext =
       reinterpret_cast<mozilla::gl::GLContext*>(glcontext_ptr);
+  MOZ_ASSERT(glcontext);
   if (!glcontext) {
     return nullptr;
   }
-  PRFuncPtr p = glcontext->LookupSymbol(procname);
-  return reinterpret_cast<void*>(p);
+  const auto& loader = glcontext->GetSymbolLoader();
+  MOZ_ASSERT(loader);
+
+  const auto ret = loader->GetProcAddress(procname);
+  return reinterpret_cast<void*>(ret);
 }
 
 void gecko_profiler_register_thread(const char* name) {

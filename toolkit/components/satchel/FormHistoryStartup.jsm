@@ -47,8 +47,7 @@ FormHistoryStartup.prototype = {
     Services.obs.addObserver(this, "idle-daily", true);
     Services.obs.addObserver(this, "formhistory-expire-now", true);
 
-    Services.ppmm.loadProcessScript("chrome://satchel/content/formSubmitListener.js", true);
-    Services.ppmm.addMessageListener("FormHistory:FormSubmitEntries", this);
+    Services.mm.addMessageListener("FormHistory:FormSubmitEntries", this);
 
     // For each of these messages, we could receive them from content,
     // or we might receive them from the ppmm if the searchbar is

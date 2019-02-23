@@ -387,7 +387,7 @@ bool HttpChannelParent::DoAsyncOpen(
     const uint32_t& aReferrerPolicy, const OptionalURIParams& aAPIRedirectToURI,
     const OptionalURIParams& aTopWindowURI, nsIPrincipal* aTopWindowPrincipal,
     const uint32_t& aLoadFlags, const RequestHeaderTuples& requestHeaders,
-    const nsCString& requestMethod, const OptionalIPCStream& uploadStream,
+    const nsCString& requestMethod, const Maybe<IPCStream>& uploadStream,
     const bool& uploadStreamHasHeaders, const int16_t& priority,
     const uint32_t& classOfService, const uint8_t& redirectionLimit,
     const bool& allowSTS, const uint32_t& thirdPartyFlags,

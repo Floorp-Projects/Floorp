@@ -6,40 +6,21 @@
 /* Callback file not in install directory or a sub-directory of the install
    directory failure */
 
-const STATE_AFTER_RUNUPDATE = STATE_FAILED_INVALID_CALLBACK_DIR_ERROR;
-
-function run_test() {
+async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
+  const STATE_AFTER_RUNUPDATE = STATE_FAILED_INVALID_CALLBACK_DIR_ERROR;
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();
-  setupUpdaterTest(FILE_COMPLETE_MAR, false);
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-function setupUpdaterTestFinished() {
+  await setupUpdaterTest(FILE_COMPLETE_MAR, false);
   let path = getTestDirFile(FILE_HELPER_BIN).path;
   runUpdate(STATE_AFTER_RUNUPDATE, false, 1, true, null, null, null, path);
-}
-
-/**
- * Called after the call to runUpdateUsingUpdater finishes.
- */
-function runUpdateFinished() {
   standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
-  executeSoon(waitForUpdateXMLFiles);
-}
-
-/**
- * Called after the call to waitForUpdateXMLFiles finishes.
- */
-function waitForUpdateXMLFilesFinished() {
+  await waitForUpdateXMLFiles();
   checkUpdateManager(STATE_NONE, false, STATE_FAILED,
                      INVALID_CALLBACK_DIR_ERROR, 1);
   waitForFilesInUse();

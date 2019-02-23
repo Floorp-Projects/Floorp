@@ -124,8 +124,6 @@ client.attachThread(response.threadActor).then(function([response, threadClient]
   threadClient.addListener("detached", fooListener);
   threadClient.addListener("framesadded", onFrames);
   threadClient.addListener("framescleared", fooListener);
-  threadClient.addListener("scriptsadded", onScripts);
-  threadClient.addListener("scriptscleared", fooListener);
 
   // Resume the thread.
   threadClient.resume();
@@ -191,8 +189,6 @@ function debugTab() {
         threadClient.addListener("detached", fooListener);
         threadClient.addListener("framesadded", onFrames);
         threadClient.addListener("framescleared", fooListener);
-        threadClient.addListener("scriptsadded", onScripts);
-        threadClient.addListener("scriptscleared", fooListener);
 
         // Resume the thread.
         threadClient.resume();
@@ -236,24 +232,6 @@ function onFrames() {
     dump("frame: " + frame.toSource() + "\n");
     inspectFrame(frame);
   }
-}
-
-/**
- * Handler for scriptsadded events.
- */
-function onScripts() {
-  // Get the list of scripts in the server.
-  for (let script of client.activeThread.cachedScripts) {
-    // script is a Debugger.Script grip.
-    dump("script: " + script.toSource() + "\n");
-  }
-
-  // Resume execution, since this is the last thing going on in the paused
-  // state and there is no UI in this program. Wait a bit so that object
-  // inspection has a chance to finish.
-  setTimeout(() => {
-    threadClient.resume();
-  }, 1000);
 }
 
 /**

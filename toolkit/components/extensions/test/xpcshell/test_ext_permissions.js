@@ -1,12 +1,14 @@
 "use strict";
 
 const {AddonManager} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-const {ExtensionParent} = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
 const {ExtensionPermissions} = ChromeUtils.import("resource://gre/modules/ExtensionPermissions.jsm");
 
-const {
-  StartupCache,
-} = ExtensionParent;
+// ExtensionParent.jsm is being imported lazily because when it is imported Services.appinfo will be
+// retrieved and cached (as a side-effect of Schemas.jsm being imported), and so Services.appinfo
+// will not be returning the version set by AddonTestUtils.createAppInfo and this test will
+// fail on non-nightly builds (because the cached appinfo.version will be undefined and
+// AddonManager startup will fail).
+ChromeUtils.defineModuleGetter(this, "ExtensionParent", "resource://gre/modules/ExtensionParent.jsm");
 
 const BROWSER_PROPERTIES = "chrome://browser/locale/browser.properties";
 
@@ -60,6 +62,9 @@ add_task(async function test_permissions_on_startup() {
   let perms = await extension.awaitMessage("permissions");
   equal(perms.permissions.length, 1, "one permission");
   equal(perms.permissions[0], "tabs", "internal permission not present");
+
+  const {StartupCache} = ExtensionParent;
+
   // StartupCache.permissions will not contain the extension permissions.
   let manifestData = await StartupCache.permissions.get(extensionId, () => { return {permissions: [], origins: []}; });
   equal(manifestData.permissions.length, 0, "no permission");

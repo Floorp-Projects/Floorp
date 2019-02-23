@@ -187,10 +187,10 @@ FormAutofillParent.prototype = {
    */
   _onStatusChanged() {
     log.debug("_onStatusChanged: Status changed to", this._active);
-    Services.ppmm.broadcastAsyncMessage("FormAutofill:enabledStatus", this._active);
-    // Sync process data autofillEnabled to make sure the value up to date
+    Services.ppmm.sharedData.set("FormAutofill:enabled", this._active);
+    // Sync autofill enabled to make sure the value is up-to-date
     // no matter when the new content process is initialized.
-    Services.ppmm.initialProcessData.autofillEnabled = this._active;
+    Services.ppmm.sharedData.flush();
   },
 
   /**
@@ -200,7 +200,7 @@ FormAutofillParent.prototype = {
    * @returns {boolean} whether form autofill is active (enabled and has data)
    */
   _computeStatus() {
-    const savedFieldNames = Services.ppmm.initialProcessData.autofillSavedFieldNames;
+    const savedFieldNames = Services.ppmm.sharedData.get("FormAutofill:savedFieldNames");
 
     return (Services.prefs.getBoolPref(ENABLED_AUTOFILL_ADDRESSES_PREF) ||
            Services.prefs.getBoolPref(ENABLED_AUTOFILL_CREDITCARDS_PREF)) &&
@@ -375,18 +375,20 @@ FormAutofillParent.prototype = {
   _updateSavedFieldNames() {
     log.debug("_updateSavedFieldNames");
 
+    let savedFieldNames;
     // Don't access the credit cards store unless it is enabled.
     if (FormAutofill.isAutofillCreditCardsAvailable) {
-      Services.ppmm.initialProcessData.autofillSavedFieldNames =
-        new Set([...this.formAutofillStorage.addresses.getSavedFieldNames(),
-          ...this.formAutofillStorage.creditCards.getSavedFieldNames()]);
+      savedFieldNames = new Set([
+        ...this.formAutofillStorage.addresses.getSavedFieldNames(),
+        ...this.formAutofillStorage.creditCards.getSavedFieldNames(),
+      ]);
     } else {
-      Services.ppmm.initialProcessData.autofillSavedFieldNames =
-        this.formAutofillStorage.addresses.getSavedFieldNames();
+      savedFieldNames = this.formAutofillStorage.addresses.getSavedFieldNames();
     }
 
-    Services.ppmm.broadcastAsyncMessage("FormAutofill:savedFieldNames",
-                                        Services.ppmm.initialProcessData.autofillSavedFieldNames);
+    Services.ppmm.sharedData.set("FormAutofill:savedFieldNames", savedFieldNames);
+    Services.ppmm.sharedData.flush();
+
     this._updateStatus();
   },
 

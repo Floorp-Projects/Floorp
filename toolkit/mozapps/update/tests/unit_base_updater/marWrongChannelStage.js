@@ -5,10 +5,7 @@
 
 /* Test product/channel MAR security check */
 
-const STATE_AFTER_STAGE = STATE_FAILED;
-gStagingRemovedUpdate = true;
-
-function run_test() {
+async function run_test() {
   if (!MOZ_VERIFY_MAR_SIGNATURE) {
     return;
   }
@@ -16,35 +13,18 @@ function run_test() {
   if (!setupTestCommon()) {
     return;
   }
+  const STATE_AFTER_STAGE = STATE_FAILED;
   gTestFiles = gTestFilesCompleteSuccess;
   gTestFiles[gTestFiles.length - 2].originalContents =
     UPDATE_SETTINGS_CONTENTS.replace("xpcshell-test", "wrong-channel");
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();
-  setupUpdaterTest(FILE_COMPLETE_MAR, false);
-}
-
-/**
- * Called after the call to setupUpdaterTest finishes.
- */
-function setupUpdaterTestFinished() {
-  stageUpdate(true);
-}
-
-/**
- * Called after the call to stageUpdate finishes.
- */
-function stageUpdateFinished() {
+  await setupUpdaterTest(FILE_COMPLETE_MAR, false);
+  await stageUpdate(STATE_AFTER_STAGE, true, true);
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(STATE_FAILED_MAR_CHANNEL_MISMATCH_ERROR);
-  executeSoon(waitForUpdateXMLFiles);
-}
-
-/**
- * Called after the call to waitForUpdateXMLFiles finishes.
- */
-function waitForUpdateXMLFilesFinished() {
+  await waitForUpdateXMLFiles();
   checkUpdateManager(STATE_NONE, false, STATE_FAILED,
                      MAR_CHANNEL_MISMATCH_ERROR, 1);
   waitForFilesInUse();

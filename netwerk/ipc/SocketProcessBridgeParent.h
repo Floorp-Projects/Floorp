@@ -29,6 +29,9 @@ class SocketProcessBridgeParent final : public PSocketProcessBridgeParent {
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void DeferredDestroy();
 
+  dom::PMediaTransportParent* AllocPMediaTransportParent();
+  bool DeallocPMediaTransportParent(dom::PMediaTransportParent* aActor);
+
  private:
   ~SocketProcessBridgeParent();
 

@@ -14,7 +14,6 @@ from .registry import register_callback_action
     title='Cancel Task',
     name='cancel',
     symbol='cx',
-    kind='hook',
     generic=True,
     description=(
         'Cancel the given task'

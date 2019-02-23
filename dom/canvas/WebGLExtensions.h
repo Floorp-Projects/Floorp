@@ -185,6 +185,16 @@ class WebGLExtensionEXTColorBufferFloat : public WebGLExtensionBase {
   DECL_WEBGL_EXTENSION_GOOP
 };
 
+class WebGLExtensionFBORenderMipmap : public WebGLExtensionBase {
+ public:
+  explicit WebGLExtensionFBORenderMipmap(WebGLContext* webgl);
+  virtual ~WebGLExtensionFBORenderMipmap();
+
+  static bool IsSupported(const WebGLContext*);
+
+  DECL_WEBGL_EXTENSION_GOOP
+};
+
 class WebGLExtensionFloatBlend : public WebGLExtensionBase {
  public:
   explicit WebGLExtensionFloatBlend(WebGLContext* webgl);

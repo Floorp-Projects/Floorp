@@ -25,3 +25,18 @@ add_task(async function test_default_browser_check() {
 
   is(ShellService.shouldCheckDefaultBrowser, false, "Policy is enforced");
 });
+
+add_task(async function test_default_browser_check() {
+  await setupPolicyEngineWithJson({
+    "policies": {
+      "DontCheckDefaultBrowser": false,
+    },
+  });
+
+  is(ShellService.shouldCheckDefaultBrowser, true, "Policy changed it to check");
+
+  // Try to change it to false and check that it doesn't take effect
+  ShellService.shouldCheckDefaultBrowser = false;
+
+  is(ShellService.shouldCheckDefaultBrowser, true, "Policy is enforced");
+});

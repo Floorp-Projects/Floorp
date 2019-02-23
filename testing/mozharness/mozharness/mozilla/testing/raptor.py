@@ -278,7 +278,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             # Note: Using an older version of Chromium on OSX b/c of an issue with a pop-up
             # dialog appearing with newer Chromium on OSX; please see:
             # Bug 1520523 - Update Chromium version running with Raptor in production
-            chromium_rev = "575625"
+            chromium_rev = "634618"
             chrome_archive_file = "chrome-mac.zip"
             chrome_url = "%s/Mac/%s/%s" % (base_url, chromium_rev, chrome_archive_file)
             self.chrome_path = os.path.join(self.chrome_dest, 'chrome-mac', 'Chromium.app',
@@ -287,7 +287,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         elif 'linux' in self.platform_name():
             # for now hardcoding a revision; but change this to update to newer version; from:
             # http://commondatastorage.googleapis.com/chromium-browser-snapshots/Linux_x64/LAST_CHANGE
-            chromium_rev = "624137"
+            chromium_rev = "634637"
             chrome_archive_file = "chrome-linux.zip"
             chrome_url = "%s/Linux_x64/%s/%s" % (base_url, chromium_rev, chrome_archive_file)
             self.chrome_path = os.path.join(self.chrome_dest, 'chrome-linux', 'chrome')
@@ -296,7 +296,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             # windows 7/10
             # for now hardcoding a revision; but change this to update to newer version; from:
             # http://commondatastorage.googleapis.com/chromium-browser-snapshots/Win_x64/LAST_CHANGE
-            chromium_rev = "624131"
+            chromium_rev = "634634"
             chrome_archive_file = "chrome-win.zip"  # same zip name for win32/64
 
             # one url for Win x64/32
