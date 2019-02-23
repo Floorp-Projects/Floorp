@@ -20,6 +20,7 @@
 #include "mozilla/dom/cache/PCacheChild.h"
 #include "mozilla/dom/cache/ReadStream.h"
 #include "mozilla/dom/cache/TypeUtils.h"
+#include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
@@ -38,6 +39,7 @@ namespace cache {
 
 using mozilla::ErrorResult;
 using mozilla::Unused;
+using mozilla::dom::quota::QuotaManager;
 using mozilla::ipc::BackgroundChild;
 using mozilla::ipc::IProtocol;
 using mozilla::ipc::PBackgroundChild;
@@ -151,6 +153,12 @@ already_AddRefed<CacheStorage> CacheStorage::CreateOnMainThread(
     return nullptr;
   }
 
+  if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(principalInfo))) {
+    NS_WARNING("CacheStorage not supported on invalid origins.");
+    RefPtr<CacheStorage> ref = new CacheStorage(NS_ERROR_DOM_SECURITY_ERR);
+    return ref.forget();
+  }
+
   bool testingEnabled =
       aForceTrustedOrigin ||
       Preferences::GetBool("dom.caches.testing.enabled", false) ||
@@ -190,6 +198,11 @@ already_AddRefed<CacheStorage> CacheStorage::CreateOnWorker(
   }
 
   const PrincipalInfo& principalInfo = aWorkerPrivate->GetPrincipalInfo();
+
+  if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(principalInfo))) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
 
   // We have a number of cases where we want to skip the https scheme
   // validation:

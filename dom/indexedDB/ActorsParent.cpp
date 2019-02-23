@@ -12177,6 +12177,11 @@ Factory::AllocPBackgroundIDBFactoryRequestParent(
     return nullptr;
   }
 
+  if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(principalInfo))) {
+    ASSERT_UNLESS_FUZZING();
+    return nullptr;
+  }
+
   RefPtr<ContentParent> contentParent =
       BackgroundParent::GetContentParent(Manager());
 
