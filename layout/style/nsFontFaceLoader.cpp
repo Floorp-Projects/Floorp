@@ -297,7 +297,7 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
 
 // nsIRequestObserver
 NS_IMETHODIMP
-nsFontFaceLoader::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
+nsFontFaceLoader::OnStartRequest(nsIRequest* aRequest) {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<nsIThreadRetargetableRequest> req = do_QueryInterface(aRequest);

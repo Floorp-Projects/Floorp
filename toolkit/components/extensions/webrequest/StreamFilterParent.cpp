@@ -449,11 +449,8 @@ StreamFilterParent::SetLoadFlags(nsLoadFlags aLoadFlags) {
  *****************************************************************************/
 
 NS_IMETHODIMP
-StreamFilterParent::OnStartRequest(nsIRequest* aRequest,
-                                   nsISupports* aContext) {
+StreamFilterParent::OnStartRequest(nsIRequest* aRequest) {
   AssertIsMainThread();
-
-  mContext = aContext;
 
   if (aRequest != mChannel) {
     mDisconnected = true;
@@ -474,7 +471,7 @@ StreamFilterParent::OnStartRequest(nsIRequest* aRequest,
     }
   }
 
-  nsresult rv = mOrigListener->OnStartRequest(aRequest, aContext);
+  nsresult rv = mOrigListener->OnStartRequest(aRequest);
 
   // Important: Do this only *after* running the next listener in the chain, so
   // that we get the final delivery target after any retargeting that it may do.

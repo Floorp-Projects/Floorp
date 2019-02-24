@@ -331,8 +331,7 @@ WebrtcProxyChannel::OnTransportAvailable(nsISocketTransport* aTransport,
 
 // nsIRequestObserver (from nsIStreamListener)
 NS_IMETHODIMP
-WebrtcProxyChannel::OnStartRequest(nsIRequest* aRequest,
-                                   nsISupports* aContext) {
+WebrtcProxyChannel::OnStartRequest(nsIRequest* aRequest) {
   LOG(("WebrtcProxyChannel::OnStartRequest %p\n", this));
 
   return NS_OK;

@@ -129,14 +129,12 @@ nsDataObj::CStream::OnDataAvailable(
   return rv;
 }
 
-NS_IMETHODIMP nsDataObj::CStream::OnStartRequest(nsIRequest* aRequest,
-                                                 nsISupports* aContext) {
+NS_IMETHODIMP nsDataObj::CStream::OnStartRequest(nsIRequest* aRequest) {
   mChannelResult = NS_OK;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDataObj::CStream::OnStopRequest(nsIRequest* aRequest,
-                                                nsISupports* aContext,
                                                 nsresult aStatusCode) {
   mChannelRead = true;
   mChannelResult = aStatusCode;

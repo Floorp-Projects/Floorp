@@ -417,8 +417,7 @@ nsresult nsCORSListenerProxy::Init(nsIChannel* aChannel,
 }
 
 NS_IMETHODIMP
-nsCORSListenerProxy::OnStartRequest(nsIRequest* aRequest,
-                                    nsISupports* aContext) {
+nsCORSListenerProxy::OnStartRequest(nsIRequest* aRequest) {
   MOZ_ASSERT(mInited, "nsCORSListenerProxy has not been initialized properly");
   nsresult rv = CheckRequestApproved(aRequest);
   mRequestApproved = NS_SUCCEEDED(rv);
@@ -454,7 +453,7 @@ nsCORSListenerProxy::OnStartRequest(nsIRequest* aRequest,
       MutexAutoLock lock(mMutex);
       listener = mOuterListener;
     }
-    listener->OnStartRequest(aRequest, aContext);
+    listener->OnStartRequest(aRequest);
 
     // Reason for NS_ERROR_DOM_BAD_URI already logged in CheckRequestApproved()
     return NS_ERROR_DOM_BAD_URI;
@@ -465,7 +464,7 @@ nsCORSListenerProxy::OnStartRequest(nsIRequest* aRequest,
     MutexAutoLock lock(mMutex);
     listener = mOuterListener;
   }
-  return listener->OnStartRequest(aRequest, aContext);
+  return listener->OnStartRequest(aRequest);
 }
 
 namespace {
@@ -1210,8 +1209,7 @@ void nsCORSPreflightListener::AddResultToCache(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-nsCORSPreflightListener::OnStartRequest(nsIRequest* aRequest,
-                                        nsISupports* aContext) {
+nsCORSPreflightListener::OnStartRequest(nsIRequest* aRequest) {
 #ifdef DEBUG
   {
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);

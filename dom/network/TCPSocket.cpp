@@ -319,7 +319,7 @@ class CopierCallbacks final : public nsIRequestObserver {
 NS_IMPL_ISUPPORTS(CopierCallbacks, nsIRequestObserver)
 
 NS_IMETHODIMP
-CopierCallbacks::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
+CopierCallbacks::OnStartRequest(nsIRequest* aRequest) {
   return NS_OK;
 }
 
@@ -932,7 +932,7 @@ TCPSocket::OnInputStreamReady(nsIAsyncInputStream* aStream) {
 }
 
 NS_IMETHODIMP
-TCPSocket::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
+TCPSocket::OnStartRequest(nsIRequest* aRequest) {
   return NS_OK;
 }
 

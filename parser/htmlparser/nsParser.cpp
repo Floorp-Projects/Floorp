@@ -1069,13 +1069,13 @@ nsresult nsParser::BuildModel() {
   These methods are used to talk to the netlib system...
  *******************************************************************/
 
-nsresult nsParser::OnStartRequest(nsIRequest* request, nsISupports* aContext) {
+nsresult nsParser::OnStartRequest(nsIRequest* request) {
   MOZ_ASSERT(eNone == mParserContext->mStreamListenerState,
              "Parser's nsIStreamListener API was not setup "
              "correctly in constructor.");
 
   if (mObserver) {
-    mObserver->OnStartRequest(request, aContext);
+    mObserver->OnStartRequest(request);
   }
   mParserContext->mStreamListenerState = eOnStart;
   mParserContext->mAutoDetectStatus = eUnknownDetect;

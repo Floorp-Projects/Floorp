@@ -379,13 +379,13 @@ void FTPChannelParent::DivertComplete() {
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-FTPChannelParent::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
+FTPChannelParent::OnStartRequest(nsIRequest* aRequest) {
   LOG(("FTPChannelParent::OnStartRequest [this=%p]\n", this));
 
   if (mDivertingFromChild) {
     MOZ_RELEASE_ASSERT(mDivertToListener,
                        "Cannot divert if listener is unset!");
-    return mDivertToListener->OnStartRequest(aRequest, aContext);
+    return mDivertToListener->OnStartRequest(aRequest);
   }
 
   nsCOMPtr<nsIChannel> chan = do_QueryInterface(aRequest);
@@ -719,7 +719,7 @@ void FTPChannelParent::StartDiversion() {
   {
     AutoEventEnqueuer ensureSerialDispatch(mEventQ);
     // Call OnStartRequest for the "DivertTo" listener.
-    nsresult rv = OnStartRequest(mChannel, nullptr);
+    nsresult rv = OnStartRequest(mChannel);
     if (NS_FAILED(rv)) {
       if (mChannel) {
         mChannel->Cancel(rv);
@@ -799,7 +799,7 @@ void FTPChannelParent::NotifyDiversionFailed(nsresult aErrorCode,
     if (forcePendingIChan) {
       forcePendingIChan->ForcePending(true);
     }
-    mDivertToListener->OnStartRequest(mChannel, nullptr);
+    mDivertToListener->OnStartRequest(mChannel);
 
     if (forcePendingIChan) {
       forcePendingIChan->ForcePending(false);

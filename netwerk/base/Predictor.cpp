@@ -2322,8 +2322,7 @@ NS_IMPL_ISUPPORTS(Predictor::PrefetchListener, nsIStreamListener,
 
 // nsIRequestObserver
 NS_IMETHODIMP
-Predictor::PrefetchListener::OnStartRequest(nsIRequest *aRequest,
-                                            nsISupports *aContext) {
+Predictor::PrefetchListener::OnStartRequest(nsIRequest *aRequest) {
   mStartTime = TimeStamp::Now();
   return NS_OK;
 }

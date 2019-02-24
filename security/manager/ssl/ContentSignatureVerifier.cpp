@@ -520,8 +520,7 @@ nsresult ContentSignatureVerifier::ParseContentSignatureHeader(
 /* nsIStreamListener implementation */
 
 NS_IMETHODIMP
-ContentSignatureVerifier::OnStartRequest(nsIRequest* aRequest,
-                                         nsISupports* aContext) {
+ContentSignatureVerifier::OnStartRequest(nsIRequest* aRequest) {
   MOZ_ASSERT(NS_IsMainThread());
   return NS_OK;
 }
