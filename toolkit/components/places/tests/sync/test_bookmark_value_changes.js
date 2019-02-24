@@ -31,10 +31,12 @@ add_task(async function test_value_combo() {
   });
   await storeRecords(buf, shuffle([{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: ["mozBmk______"],
   }, {
     id: "mozBmk______",
+    parentid: "menu",
     type: "bookmark",
     title: "Mozilla",
     bmkUri: "https://mozilla.org",
@@ -56,27 +58,32 @@ add_task(async function test_value_combo() {
   info("Insert remote bookmarks and folder to apply");
   await storeRecords(buf, shuffle([{
     id: "mozBmk______",
+    parentid: "menu",
     type: "bookmark",
     title: "Mozilla home page",
     bmkUri: "https://mozilla.org",
     tags: ["browsers"],
   }, {
     id: "toolbar",
+    parentid: "places",
     type: "folder",
     children: ["fxBmk_______", "tFolder_____"],
   }, {
     id: "fxBmk_______",
+    parentid: "toolbar",
     type: "bookmark",
     title: "Get Firefox",
     bmkUri: "http://getfirefox.com",
     tags: ["taggy", "browsers"],
   }, {
     id: "tFolder_____",
+    parentid: "toolbar",
     type: "folder",
     title: "Mail",
     children: ["tbBmk_______"],
   }, {
     id: "tbBmk_______",
+    parentid: "tFolder_____",
     type: "bookmark",
     title: "Get Thunderbird",
     bmkUri: "http://getthunderbird.com",
@@ -263,61 +270,73 @@ add_task(async function test_value_only_changes() {
   });
   await storeRecords(buf, shuffle([{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: ["folderAAAAAA", "folderFFFFFF"],
   }, {
     id: "folderAAAAAA",
+    parentid: "menu",
     type: "folder",
     title: "A",
     children: ["bookmarkBBBB", "bookmarkCCCC", "folderJJJJJJ", "bookmarkDDDD",
                "bookmarkEEEE"],
   }, {
     id: "bookmarkBBBB",
+    parentid: "folderAAAAAA",
     type: "bookmark",
     title: "B",
     bmkUri: "http://example.com/b",
   }, {
     id: "bookmarkCCCC",
+    parentid: "folderAAAAAA",
     type: "bookmark",
     title: "C",
     bmkUri: "http://example.com/c",
   }, {
     id: "folderJJJJJJ",
+    parentid: "folderAAAAAA",
     type: "folder",
     title: "J",
     children: ["bookmarkKKKK"],
   }, {
     id: "bookmarkKKKK",
+    parentid: "folderJJJJJJ",
     type: "bookmark",
     title: "K",
     bmkUri: "http://example.com/k",
   }, {
     id: "bookmarkDDDD",
+    parentid: "folderAAAAAA",
     type: "bookmark",
     title: "D",
     bmkUri: "http://example.com/d",
   }, {
     id: "bookmarkEEEE",
+    parentid: "folderAAAAAA",
     type: "bookmark",
     title: "E",
     bmkUri: "http://example.com/e",
   }, {
     id: "folderFFFFFF",
+    parentid: "menu",
     type: "folder",
     title: "F",
     children: ["bookmarkGGGG", "folderHHHHHH"],
   }, {
     id: "bookmarkGGGG",
+    parentid: "folderFFFFFF",
     type: "bookmark",
     title: "G",
     bmkUri: "http://example.com/g",
   }, {
     id: "folderHHHHHH",
+    parentid: "folderFFFFFF",
     type: "folder",
     title: "H",
     children: ["bookmarkIIII"],
   }, {
     id: "bookmarkIIII",
+    parentid: "folderHHHHHH",
     type: "bookmark",
     title: "I",
     bmkUri: "http://example.com/i",
@@ -327,21 +346,25 @@ add_task(async function test_value_only_changes() {
   info("Make remote changes");
   await storeRecords(buf, shuffle([{
     id: "bookmarkCCCC",
+    parentid: "folderAAAAAA",
     type: "bookmark",
     title: "C (remote)",
     bmkUri: "http://example.com/c-remote",
   }, {
     id: "bookmarkEEEE",
+    parentid: "folderAAAAAA",
     type: "bookmark",
     title: "E (remote)",
     bmkUri: "http://example.com/e-remote",
   }, {
     id: "bookmarkIIII",
+    parentid: "folderHHHHHH",
     type: "bookmark",
     title: "I (remote)",
     bmkUri: "http://example.com/i-remote",
   }, {
     id: "folderFFFFFF",
+    parentid: "menu",
     type: "folder",
     title: "F (remote)",
     children: ["bookmarkGGGG", "folderHHHHHH"],
@@ -474,10 +497,12 @@ add_task(async function test_conflicting_keywords() {
   });
   await storeRecords(buf, shuffle([{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: ["bookmarkAAAA"],
   }, {
     id: "bookmarkAAAA",
+    parentid: "menu",
     type: "bookmark",
     title: "A",
     bmkUri: "http://example.com/a",
@@ -500,10 +525,12 @@ add_task(async function test_conflicting_keywords() {
   {
     await storeRecords(buf, shuffle([{
       id: "toolbar",
+      parentid: "places",
       type: "folder",
       children: ["bookmarkAAA1"],
     }, {
       id: "bookmarkAAA1",
+      parentid: "toolbar",
       type: "bookmark",
       title: "A1",
       bmkUri: "http://example.com/a",
@@ -548,6 +575,7 @@ add_task(async function test_conflicting_keywords() {
   {
     await storeRecords(buf, shuffle([{
       id: "bookmarkAAAA",
+      parentid: "menu",
       type: "bookmark",
       title: "A",
       bmkUri: "http://example.com/a",
@@ -622,27 +650,32 @@ add_task(async function test_keywords() {
   });
   await storeRecords(buf, shuffle([{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: ["bookmarkAAAA", "bookmarkBBBB", "bookmarkCCCC", "bookmarkDDDD"],
   }, {
     id: "bookmarkAAAA",
+    parentid: "menu",
     type: "bookmark",
     title: "A",
     bmkUri: "http://example.com/a",
     keyword: "one",
   }, {
     id: "bookmarkBBBB",
+    parentid: "menu",
     type: "bookmark",
     title: "B",
     bmkUri: "http://example.com/b",
     keyword: "two",
   }, {
     id: "bookmarkCCCC",
+    parentid: "menu",
     type: "bookmark",
     title: "C",
     bmkUri: "http://example.com/c",
   }, {
     id: "bookmarkDDDD",
+    parentid: "menu",
     type: "bookmark",
     title: "D",
     bmkUri: "http://example.com/d",
@@ -653,12 +686,14 @@ add_task(async function test_keywords() {
   info("Change keywords remotely");
   await storeRecords(buf, shuffle([{
     id: "bookmarkAAAA",
+    parentid: "menu",
     type: "bookmark",
     title: "A",
     bmkUri: "http://example.com/a",
     keyword: "two",
   }, {
     id: "bookmarkBBBB",
+    parentid: "menu",
     type: "bookmark",
     title: "B",
     bmkUri: "http://example.com/b",
@@ -727,27 +762,32 @@ add_task(async function test_keywords_complex() {
   });
   await storeRecords(buf, shuffle([{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: ["bookmarkBBBB", "bookmarkCCCC", "bookmarkDDDD", "bookmarkEEEE"],
   }, {
     id: "bookmarkBBBB",
+    parentid: "menu",
     type: "bookmark",
     title: "B",
     bmkUri: "http://example.com/b",
     keyword: "four",
   }, {
     id: "bookmarkCCCC",
+    parentid: "menu",
     type: "bookmark",
     title: "C",
     bmkUri: "http://example.com/c",
     keyword: "five",
   }, {
     id: "bookmarkDDDD",
+    parentid: "menu",
     type: "bookmark",
     title: "D",
     bmkUri: "http://example.com/d",
   }, {
     id: "bookmarkEEEE",
+    parentid: "menu",
     type: "bookmark",
     title: "E",
     bmkUri: "http://example.com/e",
@@ -758,28 +798,33 @@ add_task(async function test_keywords_complex() {
   info("Make remote changes");
   await storeRecords(buf, shuffle([{
     id: "menu",
+    parentid: "places",
     type: "folder",
-    children: ["bookmarkAAAA", "bookmarkAAA1", "bookmarkBBBB", "bookmarkCCCC",
-               "bookmarkDDDD", "bookmarkEEEE"],
+    children: ["bookmarkAAAA", "bookmarkAAA1", "bookmarkBBB1", "bookmarkBBBB",
+               "bookmarkCCCC", "bookmarkDDDD", "bookmarkEEEE"],
   }, {
     id: "bookmarkAAAA",
+    parentid: "menu",
     type: "bookmark",
     title: "A",
     bmkUri: "http://example.com/a",
     keyword: "one",
   }, {
     id: "bookmarkAAA1",
+    parentid: "menu",
     type: "bookmark",
     title: "A (copy)",
     bmkUri: "http://example.com/a",
     keyword: "two",
   }, {
     id: "bookmarkBBB1",
+    parentid: "menu",
     type: "bookmark",
     title: "B",
     bmkUri: "http://example.com/b",
   }, {
     id: "bookmarkCCCC",
+    parentid: "menu",
     type: "bookmark",
     title: "C (remote)",
     bmkUri: "http://example.com/c-remote",
@@ -840,11 +885,11 @@ add_task(async function test_keywords_complex() {
   }, {
     name: "bookmark-added",
     params: { itemId: localItemIds.get("bookmarkBBB1"),
-              parentId: unfiledFolderId, index: 0,
+              parentId: PlacesUtils.bookmarksMenuFolderId, index: 2,
               type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
               urlHref: "http://example.com/b", title: "B",
               guid: "bookmarkBBB1",
-              parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+              parentGuid: PlacesUtils.bookmarks.menuGuid,
               source: PlacesUtils.bookmarks.SOURCES.SYNC },
   }, {
     // These `onItemMoved` notifications aren't necessary: we only moved
@@ -856,7 +901,7 @@ add_task(async function test_keywords_complex() {
     params: { itemId: localItemIds.get("bookmarkBBBB"),
               oldParentId: PlacesUtils.bookmarksMenuFolderId,
               oldIndex: 0, newParentId: PlacesUtils.bookmarksMenuFolderId,
-              newIndex: 2, type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+              newIndex: 3, type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
               guid: "bookmarkBBBB",
               oldParentGuid: PlacesUtils.bookmarks.menuGuid,
               newParentGuid: PlacesUtils.bookmarks.menuGuid,
@@ -867,7 +912,7 @@ add_task(async function test_keywords_complex() {
     params: { itemId: localItemIds.get("bookmarkCCCC"),
               oldParentId: PlacesUtils.bookmarksMenuFolderId,
               oldIndex: 1, newParentId: PlacesUtils.bookmarksMenuFolderId,
-              newIndex: 3, type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+              newIndex: 4, type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
               guid: "bookmarkCCCC",
               oldParentGuid: PlacesUtils.bookmarks.menuGuid,
               newParentGuid: PlacesUtils.bookmarks.menuGuid,
@@ -878,7 +923,7 @@ add_task(async function test_keywords_complex() {
     params: { itemId: localItemIds.get("bookmarkDDDD"),
               oldParentId: PlacesUtils.bookmarksMenuFolderId,
               oldIndex: 2, newParentId: PlacesUtils.bookmarksMenuFolderId,
-              newIndex: 4, type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+              newIndex: 5, type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
               guid: "bookmarkDDDD",
               oldParentGuid: PlacesUtils.bookmarks.menuGuid,
               newParentGuid: PlacesUtils.bookmarks.menuGuid,
@@ -889,7 +934,7 @@ add_task(async function test_keywords_complex() {
     params: { itemId: localItemIds.get("bookmarkEEEE"),
               oldParentId: PlacesUtils.bookmarksMenuFolderId,
               oldIndex: 3, newParentId: PlacesUtils.bookmarksMenuFolderId,
-              newIndex: 5, type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+              newIndex: 6, type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
               guid: "bookmarkEEEE",
               oldParentGuid: PlacesUtils.bookmarks.menuGuid,
               newParentGuid: PlacesUtils.bookmarks.menuGuid,
@@ -969,27 +1014,32 @@ add_task(async function test_tags() {
   });
   await storeRecords(buf, shuffle([{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: ["bookmarkAAAA", "bookmarkBBBB", "bookmarkCCCC", "bookmarkDDDD"],
   }, {
     id: "bookmarkAAAA",
+    parentid: "menu",
     type: "bookmark",
     title: "A",
     bmkUri: "http://example.com/a",
     tags: ["one", "two", "three", "four"],
   }, {
     id: "bookmarkBBBB",
+    parentid: "menu",
     type: "bookmark",
     title: "B",
     bmkUri: "http://example.com/b",
     tags: ["five", "six"],
   }, {
     id: "bookmarkCCCC",
+    parentid: "menu",
     type: "bookmark",
     title: "C",
     bmkUri: "http://example.com/c",
   }, {
     id: "bookmarkDDDD",
+    parentid: "menu",
     type: "bookmark",
     title: "D",
     bmkUri: "http://example.com/d",
@@ -1000,12 +1050,14 @@ add_task(async function test_tags() {
   info("Change tags remotely");
   await storeRecords(buf, shuffle([{
     id: "bookmarkAAAA",
+    parentid: "menu",
     type: "bookmark",
     title: "A",
     bmkUri: "http://example.com/a",
     tags: ["one", "two", "ten"],
   }, {
     id: "bookmarkBBBB",
+    parentid: "menu",
     type: "bookmark",
     title: "B",
     bmkUri: "http://example.com/b",
@@ -1065,15 +1117,18 @@ add_task(async function test_rewrite_tag_queries() {
   });
   await storeRecords(buf, [{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: ["bookmarkAAAA", "bookmarkDDDD"],
   }, {
     id: "bookmarkAAAA",
+    parentid: "menu",
     type: "bookmark",
     title: "A",
     bmkUri: "http://example.com/a",
   }, {
     id: "bookmarkDDDD",
+    parentid: "menu",
     type: "bookmark",
     title: "D",
     bmkUri: "http://example.com/d",
@@ -1084,22 +1139,26 @@ add_task(async function test_rewrite_tag_queries() {
   info("Add tag queries for new and existing tags");
   await storeRecords(buf, [{
     id: "toolbar",
+    parentid: "places",
     type: "folder",
     children: ["queryBBBBBBB", "queryCCCCCCC", "bookmarkEEEE"],
   }, {
     id: "queryBBBBBBB",
+    parentid: "toolbar",
     type: "query",
     title: "Tagged stuff",
     bmkUri: "place:type=7&folder=999",
     folderName: "taggy",
   }, {
     id: "queryCCCCCCC",
+    parentid: "toolbar",
     type: "query",
     title: "Cats",
     bmkUri: "place:type=7&folder=888",
     folderName: "kitty",
   }, {
     id: "bookmarkEEEE",
+    parentid: "toolbar",
     type: "bookmark",
     title: "E",
     bmkUri: "http://example.com/e",
@@ -1173,16 +1232,19 @@ add_task(async function test_date_added() {
   });
   await storeRecords(buf, [{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: ["bookmarkAAAA", "bookmarkBBBB"],
   }, {
     id: "bookmarkAAAA",
+    parentid: "menu",
     type: "bookmark",
     title: "A",
     dateAdded: aDateAdded.getTime(),
     bmkUri: "http://example.com/a",
   }, {
     id: "bookmarkBBBB",
+    parentid: "menu",
     type: "bookmark",
     title: "B",
     dateAdded: bDateAdded.getTime(),
@@ -1194,12 +1256,14 @@ add_task(async function test_date_added() {
   let bNewDateAdded = new Date(bDateAdded.getTime() - 1 * 60 * 60 * 1000);
   await storeRecords(buf, [{
     id: "bookmarkAAAA",
+    parentid: "menu",
     type: "bookmark",
     title: "A (remote)",
     dateAdded: Date.now(),
     bmkUri: "http://example.com/a",
   }, {
     id: "bookmarkBBBB",
+    parentid: "menu",
     type: "bookmark",
     title: "B (remote)",
     dateAdded: bNewDateAdded.getTime(),

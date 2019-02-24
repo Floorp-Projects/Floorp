@@ -57,36 +57,50 @@ add_task(async function test_inconsistencies() {
   info("Set up mirror");
   await storeRecords(buf, [{
     id: "menu",
+    parentid: "places",
     type: "folder",
-    children: ["bookmarkAAAA", "bookmarkDDDD"],
+    children: ["bookmarkAAAA", "bookmarkDDDD", "bookmarkGGGG"],
   }, {
     id: "toolbar",
+    parentid: "places",
     type: "folder",
     children: ["bookmarkFFFF"],
   }, {
     id: "bookmarkAAAA",
+    parentid: "menu",
     type: "bookmark",
     title: "A",
     bmkUri: "http://example.com/a",
   }, {
     id: "bookmarkDDDD",
+    parentid: "menu",
     type: "bookmark",
     title: "D",
     bmkUri: "http://example.com/d",
   }, {
     id: "bookmarkFFFF",
+    parentid: "toolbar",
     type: "bookmark",
     title: "F",
     bmkUri: "http://example.com/f",
   }, {
     // Merged bookmark that doesn't exist locally.
     id: "bookmarkGGGG",
+    parentid: "menu",
     type: "bookmark",
     title: "G",
     bmkUri: "http://example.com/g",
   }], { needsMerge: false });
+
   await storeRecords(buf, [{
+    id: "menu",
+    parentid: "places",
+    type: "folder",
+    children: ["bookmarkAAAA", "bookmarkDDDD", "bookmarkGGGG", "bookmarkHHHH"],
+  }, {
+    // New bookmark that doesn't exist locally; not an inconsistency.
     id: "bookmarkHHHH",
+    parentid: "unfiled",
     type: "bookmark",
     title: "H",
     bmkUri: "http://example.com/h",

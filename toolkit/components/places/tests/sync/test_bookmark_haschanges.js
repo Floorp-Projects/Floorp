@@ -15,22 +15,27 @@ add_task(async function test_no_changes() {
   });
   await storeRecords(buf, shuffle([{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: ["mozBmk______"],
   }, {
     id: "toolbar",
+    parentid: "places",
     type: "folder",
     children: [],
   }, {
     id: "unfiled",
+    parentid: "places",
     type: "folder",
     children: [],
   }, {
     id: "mobile",
+    parentid: "places",
     type: "folder",
     children: [],
   }, {
     id: "mozBmk______",
+    parentid: "menu",
     type: "bookmark",
     title: "Mozilla",
     bmkUri: "https://mozilla.org",
@@ -60,10 +65,12 @@ add_task(async function test_changes_remote() {
   });
   await storeRecords(buf, shuffle([{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: ["mozBmk______"],
   }, {
     id: "mozBmk______",
+    parentid: "menu",
     type: "bookmark",
     title: "Mozilla",
     bmkUri: "https://mozilla.org",
@@ -73,6 +80,7 @@ add_task(async function test_changes_remote() {
 
   await storeRecords(buf, [{
     id: "mozBmk______",
+    parentid: "menu",
     type: "bookmark",
     title: "New Mozilla",
     bmkUri: "https://mozilla.org",
@@ -101,10 +109,12 @@ add_task(async function test_changes_local() {
   });
   await storeRecords(buf, shuffle([{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: ["mozBmk______"],
   }, {
     id: "mozBmk______",
+    parentid: "menu",
     type: "bookmark",
     title: "Mozilla",
     bmkUri: "https://mozilla.org",
@@ -139,10 +149,12 @@ add_task(async function test_changes_deleted_bookmark() {
   });
   await storeRecords(buf, shuffle([{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: ["mozBmk______"],
   }, {
     id: "mozBmk______",
+    parentid: "menu",
     type: "bookmark",
     title: "Mozilla",
     bmkUri: "https://mozilla.org",

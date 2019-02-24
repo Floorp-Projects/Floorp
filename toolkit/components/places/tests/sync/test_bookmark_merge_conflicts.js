@@ -20,10 +20,12 @@ add_task(async function test_bookmark_change_during_sync() {
   info("Make remote changes");
   await storeRecords(buf, [{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: ["bookmarkAAAA"],
   }, {
     id: "bookmarkAAAA",
+    parentid: "menu",
     type: "bookmark",
     title: "A",
     bmkUri: "http://example.com/a",

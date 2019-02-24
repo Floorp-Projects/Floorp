@@ -16,10 +16,12 @@ add_task(async function test_duping_local_newer() {
   info("Start with empty local and mirror with merged items");
   await storeRecords(buf, [{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: ["bookmarkAAA5"],
   }, {
     id: "bookmarkAAA5",
+    parentid: "menu",
     type: "bookmark",
     bmkUri: "http://example.com/a",
     title: "A",
@@ -61,11 +63,13 @@ add_task(async function test_duping_local_newer() {
   info("Add older remote dupes");
   await storeRecords(buf, [{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: ["bookmarkAAAA", "bookmarkAAA4", "bookmarkAAA5"],
     modified: localModified / 1000 - 5,
   }, {
     id: "bookmarkAAAA",
+    parentid: "menu",
     type: "bookmark",
     bmkUri: "http://example.com/a",
     title: "A",
@@ -74,6 +78,7 @@ add_task(async function test_duping_local_newer() {
     modified: localModified / 1000 - 5,
   }, {
     id: "bookmarkAAA4",
+    parentid: "menu",
     type: "bookmark",
     bmkUri: "http://example.com/a",
     title: "A",
@@ -220,15 +225,18 @@ add_task(async function test_duping_remote_newer() {
   });
   await storeRecords(buf, shuffle([{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: ["folderAAAAAA"],
   }, {
     id: "folderAAAAAA",
+    parentid: "menu",
     type: "folder",
     title: "A",
     children: ["bookmarkGGGG"],
   }, {
     id: "bookmarkGGGG",
+    parentid: "folderAAAAAA",
     type: "bookmark",
     title: "G",
     bmkUri: "http://example.com/g",
@@ -301,6 +309,7 @@ add_task(async function test_duping_remote_newer() {
   info("Make remote changes");
   await storeRecords(buf, shuffle([{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: ["folderAAAAAA", "folderB11111", "folderA11111",
                "separatorE11", "queryD111111"],
@@ -308,6 +317,7 @@ add_task(async function test_duping_remote_newer() {
     modified: localModified / 1000 + 5,
   }, {
     id: "folderB11111",
+    parentid: "menu",
     type: "folder",
     title: "B",
     children: ["bookmarkC222", "separatorF11"],
@@ -315,6 +325,7 @@ add_task(async function test_duping_remote_newer() {
     modified: localModified / 1000 + 5,
   }, {
     id: "bookmarkC222",
+    parentid: "folderB11111",
     type: "bookmark",
     bmkUri: "http://example.com/c",
     title: "C",
@@ -322,11 +333,13 @@ add_task(async function test_duping_remote_newer() {
     modified: localModified / 1000 + 5,
   }, {
     id: "separatorF11",
+    parentid: "folderB11111",
     type: "separator",
     dateAdded: localModified.getTime(),
     modified: localModified / 1000 + 5,
   }, {
     id: "folderA11111",
+    parentid: "menu",
     type: "folder",
     title: "A",
     children: ["bookmarkG111"],
@@ -334,6 +347,7 @@ add_task(async function test_duping_remote_newer() {
     modified: localModified / 1000 + 5,
   }, {
     id: "bookmarkG111",
+    parentid: "folderA11111",
     type: "bookmark",
     bmkUri: "http://example.com/g",
     title: "G",
@@ -341,11 +355,13 @@ add_task(async function test_duping_remote_newer() {
     modified: localModified / 1000 + 5,
   }, {
     id: "separatorE11",
+    parentid: "menu",
     type: "separator",
     dateAdded: localModified.getTime(),
     modified: localModified / 1000 + 5,
   }, {
     id: "queryD111111",
+    parentid: "menu",
     type: "query",
     bmkUri: "place:maxResults=10&sort=8",
     title: "Most Visited",
@@ -544,10 +560,12 @@ add_task(async function test_duping_both() {
   info("Add remote dupes");
   await storeRecords(buf, [{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: ["folderAAAAAA", "folderDDDDDD", "folderFFFFFF"],
   }, {
     id: "folderAAAAAA",
+    parentid: "menu",
     type: "folder",
     title: "A",
     dateAdded: now - 10000,
@@ -555,6 +573,7 @@ add_task(async function test_duping_both() {
     children: ["bookmarkBBBB"],
   }, {
     id: "bookmarkBBBB",
+    parentid: "folderAAAAAA",
     type: "bookmark",
     bmkUri: "http://example.com/b",
     title: "B",
@@ -562,6 +581,7 @@ add_task(async function test_duping_both() {
     modified: now / 1000 + 5,
   }, {
     id: "folderDDDDDD",
+    parentid: "menu",
     type: "folder",
     title: "D",
     dateAdded: now - 10000,
@@ -569,6 +589,7 @@ add_task(async function test_duping_both() {
     children: ["bookmarkEEEE"],
   }, {
     id: "bookmarkEEEE",
+    parentid: "folderDDDDDD",
     type: "bookmark",
     bmkUri: "http://example.com/e",
     title: "E",
@@ -576,6 +597,7 @@ add_task(async function test_duping_both() {
     modified: now / 1000 + 5,
   }, {
     id: "folderFFFFFF",
+    parentid: "menu",
     type: "folder",
     title: "F",
     dateAdded: now - 10000,
@@ -583,6 +605,7 @@ add_task(async function test_duping_both() {
     children: ["bookmarkGGGG", "bookmarkHHHH"],
   }, {
     id: "bookmarkGGGG",
+    parentid: "folderFFFFFF",
     type: "bookmark",
     bmkUri: "http://example.com/g",
     title: "G",
@@ -590,6 +613,7 @@ add_task(async function test_duping_both() {
     modified: now / 1000 - 5,
   }, {
     id: "bookmarkHHHH",
+    parentid: "folderFFFFFF",
     type: "bookmark",
     bmkUri: "http://example.com/h",
     title: "H",
@@ -737,14 +761,17 @@ add_task(async function test_applying_two_empty_folders_doesnt_smush() {
   info("Make remote changes");
   await storeRecords(buf, shuffle([{
     id: "mobile",
+    parentid: "places",
     type: "folder",
     children: ["emptyempty01", "emptyempty02"],
   }, {
     id: "emptyempty01",
+    parentid: "mobile",
     type: "folder",
     title: "Empty",
   }, {
     id: "emptyempty02",
+    parentid: "mobile",
     type: "folder",
     title: "Empty",
   }]));
@@ -805,18 +832,22 @@ add_task(async function test_applying_two_empty_folders_matches_only_one() {
   info("Make remote changes");
   await storeRecords(buf, shuffle([{
     id: "mobile",
+    parentid: "places",
     type: "folder",
     children: ["emptyempty01", "emptyempty02", "emptyempty03"],
   }, {
     id: "emptyempty01",
+    parentid: "mobile",
     type: "folder",
     title: "Empty",
   }, {
     id: "emptyempty02",
+    parentid: "mobile",
     type: "folder",
     title: "Empty",
   }, {
     id: "emptyempty03",
+    parentid: "mobile",
     type: "folder",
     title: "Empty",
   }]));
@@ -883,10 +914,12 @@ add_task(async function test_duping_mobile_bookmarks() {
   info("Make remote changes");
   await storeRecords(buf, shuffle([{
     id: "mobile",
+    parentid: "places",
     type: "folder",
     children: ["bookmarkAAAA"],
   }, {
     id: "bookmarkAAAA",
+    parentid: "mobile",
     type: "bookmark",
     title: "A",
     bmkUri: "http://example.com/a",
