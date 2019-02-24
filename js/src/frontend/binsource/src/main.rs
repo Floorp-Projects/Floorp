@@ -18,7 +18,6 @@ use refgraph::{ ReferenceGraph };
 use std::collections::{ HashMap, HashSet };
 use std::fs::*;
 use std::io::{ Read, Write };
-use std::path::Path;
 use std::rc::Rc;
 
 use clap::{ App, Arg };
@@ -2119,33 +2118,12 @@ fn main() {
     exporter.generate_reference_graph();
     exporter.trace(Rc::new(TOPLEVEL_INTERFACE.to_string()));
 
-    let get_file_content = |path: &str| {
-        if !Path::new(path).is_file() {
-            return None;
-        }
-
-        let mut f = File::open(path)
-            .expect("File not found");
-        let mut contents = String::new();
-        f.read_to_string(&mut contents)
-            .expect("Failed to read file");
-        Some(contents)
-    };
     let write_to = |description, arg, data: &String| {
         let dest_path = matches.value_of(arg)
             .unwrap();
         print!("...exporting {description}: {path} ... ",
             description = description,
             path = dest_path);
-
-        if let Some(old_data) = get_file_content(dest_path) {
-            if old_data == *data {
-                // To avoid unnecessary rebuild, do not touch the file if the
-                // content is not updated.
-                println!("skip");
-                return;
-            }
-        };
 
         let mut dest = File::create(&dest_path)
             .unwrap_or_else(|e| panic!("Could not create {description} at {path}: {error}",
