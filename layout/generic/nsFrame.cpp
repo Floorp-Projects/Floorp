@@ -3402,15 +3402,6 @@ static nsDisplayItem* WrapInWrapList(nsDisplayListBuilder* aBuilder,
     return item;
   }
 
-  // If the list contains one item, the frame for that item matches the frame
-  // that would be used for the wrapper, and the frame is a leaf (no
-  // children that might have been skipped this time due to building a
-  // partial DL), then we can skip the wrapper.
-  if (!item->GetAbove() && item->Frame() == aFrame && aFrame->PrincipalChildList().IsEmpty()) {
-    aList->RemoveBottom();
-    return item;
-  }
-
   // Clear clip rect for the construction of the items below. Since we're
   // clipping all their contents, they themselves don't need to be clipped.
   return MakeDisplayItem<nsDisplayWrapList>(aBuilder, aFrame, aList,
