@@ -566,7 +566,6 @@ ContentSignatureVerifier::OnStopRequest(nsIRequest* aRequest,
 
 NS_IMETHODIMP
 ContentSignatureVerifier::OnDataAvailable(nsIRequest* aRequest,
-                                          nsISupports* aContext,
                                           nsIInputStream* aInputStream,
                                           uint64_t aOffset, uint32_t aCount) {
   MOZ_ASSERT(NS_IsMainThread());

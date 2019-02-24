@@ -91,10 +91,10 @@ function ChannelListener()
     this.requestStatus |= START_REQUEST;
   }
 
-  this.onDataAvailable = function onDataAvailable(aRequest, aContext, aInputStream, aOffset, aCount)
+  this.onDataAvailable = function onDataAvailable(aRequest, aInputStream, aOffset, aCount)
   {
     if (this.outputListener)
-      this.outputListener.onDataAvailable(aRequest, aContext, aInputStream, aOffset, aCount);
+      this.outputListener.onDataAvailable(aRequest, aInputStream, aOffset, aCount);
 
     this.requestStatus |= DATA_AVAILABLE;
   }

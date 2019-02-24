@@ -745,7 +745,7 @@ imgRequest::OnStopRequest(nsIRequest* aRequest,
   RefPtr<imgRequest> strongThis = this;
 
   if (mIsMultiPartChannel && mNewPartPending) {
-    OnDataAvailable(aRequest, nullptr, nullptr, 0, 0);
+    OnDataAvailable(aRequest, nullptr, 0, 0);
   }
 
   // XXXldb What if this is a non-last part of a multipart request?
@@ -989,7 +989,7 @@ void imgRequest::FinishPreparingForNewPart(const NewPartResult& aResult) {
 }
 
 NS_IMETHODIMP
-imgRequest::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+imgRequest::OnDataAvailable(nsIRequest* aRequest,
                             nsIInputStream* aInStr, uint64_t aOffset,
                             uint32_t aCount) {
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequest::OnDataAvailable", "count", aCount);
@@ -1062,7 +1062,7 @@ imgRequest::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
 
   // Notify the image that it has new data.
   if (aInStr) {
-    nsresult rv = image->OnImageDataAvailable(aRequest, aContext, aInStr,
+    nsresult rv = image->OnImageDataAvailable(aRequest, nullptr, aInStr,
                                               aOffset, aCount);
 
     if (NS_FAILED(rv)) {

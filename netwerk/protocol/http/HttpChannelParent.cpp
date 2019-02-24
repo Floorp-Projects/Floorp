@@ -1090,7 +1090,7 @@ void HttpChannelParent::DivertOnDataAvailable(const nsCString& data,
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
 
-  rv = mParentListener->OnDataAvailable(mChannel, nullptr, stringStream, offset,
+  rv = mParentListener->OnDataAvailable(mChannel, stringStream, offset,
                                         count);
   stringStream->Close();
   if (NS_FAILED(rv)) {
@@ -1565,7 +1565,7 @@ HttpChannelParent::OnStopRequest(nsIRequest* aRequest,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-HttpChannelParent::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+HttpChannelParent::OnDataAvailable(nsIRequest* aRequest,
                                    nsIInputStream* aInputStream,
                                    uint64_t aOffset, uint32_t aCount) {
   LOG(("HttpChannelParent::OnDataAvailable [this=%p aRequest=%p offset=%" PRIu64

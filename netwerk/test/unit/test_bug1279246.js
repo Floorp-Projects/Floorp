@@ -33,7 +33,7 @@ Listener.prototype = {
     this._buffer = "";
   },
 
-  onDataAvailable: function(request, cx, stream, offset, cnt) {
+  onDataAvailable: function(request, stream, offset, cnt) {
     if (pass == 0) {
       this._buffer = this._buffer.concat(read_stream(stream, cnt));
     } else {

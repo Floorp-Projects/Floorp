@@ -216,7 +216,7 @@ nsManifestCheck::OnStartRequest(nsIRequest *aRequest) {
 }
 
 NS_IMETHODIMP
-nsManifestCheck::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
+nsManifestCheck::OnDataAvailable(nsIRequest *aRequest,
                                  nsIInputStream *aStream, uint64_t aOffset,
                                  uint32_t aCount) {
   uint32_t bytesRead;
@@ -399,7 +399,6 @@ nsOfflineCacheUpdateItem::OnStartRequest(nsIRequest *aRequest) {
 
 NS_IMETHODIMP
 nsOfflineCacheUpdateItem::OnDataAvailable(nsIRequest *aRequest,
-                                          nsISupports *aContext,
                                           nsIInputStream *aStream,
                                           uint64_t aOffset, uint32_t aCount) {
   uint32_t bytesRead = 0;
@@ -1061,7 +1060,6 @@ nsOfflineManifestItem::OnStartRequest(nsIRequest *aRequest) {
 
 NS_IMETHODIMP
 nsOfflineManifestItem::OnDataAvailable(nsIRequest *aRequest,
-                                       nsISupports *aContext,
                                        nsIInputStream *aStream,
                                        uint64_t aOffset, uint32_t aCount) {
   uint32_t bytesRead = 0;

@@ -173,7 +173,7 @@ NetworkResponseListener.prototype = {
    * @param unsigned long offset
    * @param unsigned long count
    */
-  onDataAvailable: function(request, context, inputStream, offset, count) {
+  onDataAvailable: function(request, inputStream, offset, count) {
     this._findOpenResponse();
     const data = NetUtil.readInputStreamToString(inputStream, count);
 
@@ -490,10 +490,10 @@ NetworkResponseListener.prototype = {
     if (available != -1) {
       if (available != 0) {
         if (this.converter) {
-          this.converter.onDataAvailable(this.request, null, stream,
+          this.converter.onDataAvailable(this.request, stream,
                                          this.offset, available);
         } else {
-          this.onDataAvailable(this.request, null, stream, this.offset,
+          this.onDataAvailable(this.request, stream, this.offset,
                                available);
         }
       }

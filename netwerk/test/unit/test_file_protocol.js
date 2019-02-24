@@ -87,7 +87,7 @@ FileStreamListener.prototype = {
     }
   },
 
-  onDataAvailable: function(request, context, stream, offset, count) {
+  onDataAvailable: function(request, stream, offset, count) {
     if (!this._got_onstartrequest)
       do_throw("onDataAvailable without onStartRequest event!");
     if (this._got_onstoprequest)

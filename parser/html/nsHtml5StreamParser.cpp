@@ -1309,7 +1309,6 @@ class nsHtml5DataAvailable : public Runnable {
 };
 
 nsresult nsHtml5StreamParser::OnDataAvailable(nsIRequest* aRequest,
-                                              nsISupports* aContext,
                                               nsIInputStream* aInStream,
                                               uint64_t aSourceOffset,
                                               uint32_t aLength) {

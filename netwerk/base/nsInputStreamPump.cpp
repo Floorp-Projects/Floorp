@@ -551,7 +551,7 @@ uint32_t nsInputStreamPump::OnStateTransfer() {
       // deadlocks when calls to RetargetDeliveryTo for multiple
       // nsInputStreamPumps are needed (e.g. nsHttpChannel).
       RecursiveMutexAutoUnlock unlock(mMutex);
-      rv = mListener->OnDataAvailable(this, nullptr, mAsyncStream,
+      rv = mListener->OnDataAvailable(this, mAsyncStream,
                                       mStreamOffset, odaAvail);
     }
 

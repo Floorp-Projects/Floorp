@@ -53,7 +53,7 @@ Canceler.prototype = {
   },
   onStartRequest: function(request) { },
 
-  onDataAvailable: function(request, context, stream, offset, count) {
+  onDataAvailable: function(request, stream, offset, count) {
     request.QueryInterface(Ci.nsIChannel)
            .cancel(Cr.NS_BINDING_ABORTED);
   },
@@ -77,7 +77,7 @@ MyListener.prototype = {
   },
   onStartRequest: function(request) { this._buffer = ""; },
 
-  onDataAvailable: function(request, context, stream, offset, count) {
+  onDataAvailable: function(request, stream, offset, count) {
     this._buffer = this._buffer.concat(read_stream(stream, count));
   },
   onStopRequest: function(request, status) {
@@ -99,7 +99,7 @@ FailedChannelListener.prototype = {
   },
   onStartRequest: function(request) { },
 
-  onDataAvailable: function(request, context, stream, offset, count) { },
+  onDataAvailable: function(request, stream, offset, count) { },
 
   onStopRequest: function(request, status) {
     if (case_8_range_request)

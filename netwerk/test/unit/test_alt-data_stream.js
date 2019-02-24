@@ -99,7 +99,7 @@ function openAltChannel()
 var altDataListener = {
   buffer: "",
   onStartRequest: function(request) { },
-  onDataAvailable: function(request, context, stream, offset, count) {
+  onDataAvailable: function(request, stream, offset, count) {
     let string = NetUtil.readInputStreamToString(stream, count);
     this.buffer += string;
 
@@ -133,7 +133,7 @@ function openAltChannelWithOriginalContent()
 var originalListener = {
   buffer: "",
   onStartRequest: function(request) { },
-  onDataAvailable: function(request, context, stream, offset, count) {
+  onDataAvailable: function(request, stream, offset, count) {
     let string = NetUtil.readInputStreamToString(stream, count);
     this.buffer += string;
   },

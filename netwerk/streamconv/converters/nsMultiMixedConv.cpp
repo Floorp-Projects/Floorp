@@ -55,7 +55,7 @@ nsresult nsPartChannel::SendOnStartRequest(nsISupports *aContext) {
 nsresult nsPartChannel::SendOnDataAvailable(nsISupports *aContext,
                                             nsIInputStream *aStream,
                                             uint64_t aOffset, uint32_t aLen) {
-  return mListener->OnDataAvailable(this, aContext, aStream, aOffset, aLen);
+  return mListener->OnDataAvailable(this, aStream, aOffset, aLen);
 }
 
 nsresult nsPartChannel::SendOnStopRequest(nsISupports *aContext,
@@ -494,7 +494,7 @@ nsMultiMixedConv::OnStartRequest(nsIRequest *request) {
 
 // nsIStreamListener implementation
 NS_IMETHODIMP
-nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
+nsMultiMixedConv::OnDataAvailable(nsIRequest *request,
                                   nsIInputStream *inStr, uint64_t sourceOffset,
                                   uint32_t count) {
   // Failing these assertions may indicate that some of the target listeners of

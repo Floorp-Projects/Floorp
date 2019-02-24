@@ -111,7 +111,6 @@ InterceptStreamListener::OnProgress(nsIRequest* aRequest, nsISupports* aContext,
 
 NS_IMETHODIMP
 InterceptStreamListener::OnDataAvailable(nsIRequest* aRequest,
-                                         nsISupports* aContext,
                                          nsIInputStream* aInputStream,
                                          uint64_t aOffset, uint32_t aCount) {
   if (!mOwner) {
@@ -128,14 +127,14 @@ InterceptStreamListener::OnDataAvailable(nsIRequest* aRequest,
     nsAutoCString host;
     uri->GetHost(host);
 
-    OnStatus(mOwner, aContext, NS_NET_STATUS_READING,
+    OnStatus(mOwner, nullptr, NS_NET_STATUS_READING,
              NS_ConvertUTF8toUTF16(host).get());
 
     int64_t progress = aOffset + aCount;
-    OnProgress(mOwner, aContext, progress, mOwner->mSynthesizedStreamLength);
+    OnProgress(mOwner, nullptr, progress, mOwner->mSynthesizedStreamLength);
   }
 
-  mOwner->DoOnDataAvailable(mOwner, mContext, aInputStream, aOffset, aCount);
+  mOwner->DoOnDataAvailable(mOwner, nullptr, aInputStream, aOffset, aCount);
   return NS_OK;
 }
 
@@ -623,7 +622,7 @@ class SyntheticDiversionListener final : public nsIStreamListener {
   }
 
   NS_IMETHOD
-  OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+  OnDataAvailable(nsIRequest* aRequest,
                   nsIInputStream* aInputStream, uint64_t aOffset,
                   uint32_t aCount) override {
     if (!mChannel->mIPCOpen) {
@@ -962,7 +961,7 @@ void HttpChannelChild::DoOnDataAvailable(nsIRequest* aRequest,
   if (mCanceled) return;
 
   nsresult rv =
-      mListener->OnDataAvailable(aRequest, aContext, aStream, offset, count);
+      mListener->OnDataAvailable(aRequest, aStream, offset, count);
   if (NS_FAILED(rv)) {
     CancelOnMainThread(rv);
   }

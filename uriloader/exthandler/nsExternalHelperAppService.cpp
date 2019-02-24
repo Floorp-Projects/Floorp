@@ -1885,7 +1885,7 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv,
 }
 
 NS_IMETHODIMP
-nsExternalAppHandler::OnDataAvailable(nsIRequest* request, nsISupports* aCtxt,
+nsExternalAppHandler::OnDataAvailable(nsIRequest* request,
                                       nsIInputStream* inStr,
                                       uint64_t sourceOffset, uint32_t count) {
   nsresult rv = NS_OK;
@@ -1900,7 +1900,7 @@ nsExternalAppHandler::OnDataAvailable(nsIRequest* request, nsISupports* aCtxt,
     mProgress += count;
 
     nsCOMPtr<nsIStreamListener> saver = do_QueryInterface(mSaver);
-    rv = saver->OnDataAvailable(request, aCtxt, inStr, sourceOffset, count);
+    rv = saver->OnDataAvailable(request, inStr, sourceOffset, count);
     if (NS_SUCCEEDED(rv)) {
       // Send progress notification.
       if (mTransfer) {

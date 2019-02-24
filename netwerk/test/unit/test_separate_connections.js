@@ -60,7 +60,7 @@ Listener.prototype = {
       previousHashKeys[this.userContextId] = hashKey;
     }
   },
-  onDataAvailable: function(request, ctx, stream, off, cnt) {
+  onDataAvailable: function(request, stream, off, cnt) {
     read_stream(stream, cnt);
   },
   onStopRequest: function() {

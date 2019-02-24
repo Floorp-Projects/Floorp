@@ -104,7 +104,6 @@ HttpChannelParentListener::OnStopRequest(nsIRequest* aRequest,
 
 NS_IMETHODIMP
 HttpChannelParentListener::OnDataAvailable(nsIRequest* aRequest,
-                                           nsISupports* aContext,
                                            nsIInputStream* aInputStream,
                                            uint64_t aOffset, uint32_t aCount) {
   MOZ_RELEASE_ASSERT(!mSuspendedForDiversion,
@@ -113,7 +112,7 @@ HttpChannelParentListener::OnDataAvailable(nsIRequest* aRequest,
   if (!mNextListener) return NS_ERROR_UNEXPECTED;
 
   LOG(("HttpChannelParentListener::OnDataAvailable [this=%p]\n", this));
-  return mNextListener->OnDataAvailable(aRequest, aContext, aInputStream,
+  return mNextListener->OnDataAvailable(aRequest, aInputStream,
                                         aOffset, aCount);
 }
 

@@ -75,7 +75,7 @@ NetworkThrottleListener.prototype = {
   /**
    * @see nsIStreamListener.onDataAvailable.
    */
-  onDataAvailable: function(request, context, inputStream, offset, count) {
+  onDataAvailable: function(request, inputStream, offset, count) {
     if (this.pendingException) {
       throw this.pendingException;
     }
@@ -87,7 +87,7 @@ NetworkThrottleListener.prototype = {
     const stream = new ArrayBufferInputStream();
     stream.setData(bytes, 0, count);
 
-    this.pendingData.push({request, context, stream, count});
+    this.pendingData.push({request, stream, count});
     this.queue.dataAvailable(this);
   },
 
@@ -110,7 +110,7 @@ NetworkThrottleListener.prototype = {
       return {length: 0, done: true};
     }
 
-    const {request, context, stream, count, statusCode} = this.pendingData[0];
+    const {request, stream, count, statusCode} = this.pendingData[0];
 
     if (statusCode !== undefined) {
       this.pendingData.shift();
@@ -123,7 +123,7 @@ NetworkThrottleListener.prototype = {
     }
 
     try {
-      this.originalListener.onDataAvailable(request, context, stream,
+      this.originalListener.onDataAvailable(request, stream,
                                             this.offset, bytesPermitted);
     } catch (e) {
       this.pendingException = e;

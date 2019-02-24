@@ -56,7 +56,6 @@ nsresult nsZipDataStream::Init(nsZipWriter *aWriter, nsIOutputStream *aStream,
 }
 
 NS_IMETHODIMP nsZipDataStream::OnDataAvailable(nsIRequest *aRequest,
-                                               nsISupports *aContext,
                                                nsIInputStream *aInputStream,
                                                uint64_t aOffset,
                                                uint32_t aCount) {
@@ -68,7 +67,7 @@ NS_IMETHODIMP nsZipDataStream::OnDataAvailable(nsIRequest *aRequest,
   nsresult rv = ZW_ReadData(aInputStream, buffer.get(), aCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return ProcessData(aRequest, aContext, buffer.get(), aOffset, aCount);
+  return ProcessData(aRequest, nullptr, buffer.get(), aOffset, aCount);
 }
 
 NS_IMETHODIMP nsZipDataStream::OnStartRequest(nsIRequest *aRequest) {
@@ -121,7 +120,7 @@ nsresult nsZipDataStream::ProcessData(nsIRequest *aRequest,
   nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream), aBuffer, aCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mOutput->OnDataAvailable(aRequest, aContext, stream, aOffset, aCount);
+  rv = mOutput->OnDataAvailable(aRequest, stream, aOffset, aCount);
   mHeader->mUSize += aCount;
 
   return rv;
