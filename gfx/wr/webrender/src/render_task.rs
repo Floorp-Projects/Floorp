@@ -407,7 +407,6 @@ pub enum RenderTaskKind {
     HorizontalBlur(BlurTask),
     #[allow(dead_code)]
     Glyph(GlyphTask),
-    Readback(DeviceIntRect),
     Scaling(ScalingTask),
     Blit(BlitTask),
     Border(BorderTask),
@@ -494,15 +493,6 @@ impl RenderTask {
             clear_mode: ClearMode::Transparent,
             saved_index: None,
         }
-    }
-
-    pub fn new_readback(screen_rect: DeviceIntRect) -> Self {
-        RenderTask::with_dynamic_location(
-            screen_rect.size,
-            Vec::new(),
-            RenderTaskKind::Readback(screen_rect),
-            ClearMode::Transparent,
-        )
     }
 
     pub fn new_blit(
@@ -854,8 +844,7 @@ impl RenderTask {
 
     fn uv_rect_kind(&self) -> UvRectKind {
         match self.kind {
-            RenderTaskKind::CacheMask(..) |
-            RenderTaskKind::Readback(..) => {
+            RenderTaskKind::CacheMask(..) => {
                 unreachable!("bug: unexpected render task");
             }
 
@@ -928,7 +917,6 @@ impl RenderTask {
             RenderTaskKind::Glyph(_) => {
                 [0.0, 1.0, 0.0]
             }
-            RenderTaskKind::Readback(..) |
             RenderTaskKind::Scaling(..) |
             RenderTaskKind::Border(..) |
             RenderTaskKind::LineDecoration(..) |
@@ -969,7 +957,6 @@ impl RenderTask {
                 gpu_cache.get_address(&info.uv_rect_handle)
             }
             RenderTaskKind::ClipRegion(..) |
-            RenderTaskKind::Readback(..) |
             RenderTaskKind::Scaling(..) |
             RenderTaskKind::Blit(..) |
             RenderTaskKind::Border(..) |
@@ -1022,8 +1009,6 @@ impl RenderTask {
 
     pub fn target_kind(&self) -> RenderTargetKind {
         match self.kind {
-            RenderTaskKind::Readback(..) => RenderTargetKind::Color,
-
             RenderTaskKind::LineDecoration(..) => RenderTargetKind::Color,
 
             RenderTaskKind::ClipRegion(..) |
@@ -1076,7 +1061,6 @@ impl RenderTask {
             RenderTaskKind::Picture(ref mut info) => {
                 (&mut info.uv_rect_handle, info.uv_rect_kind)
             }
-            RenderTaskKind::Readback(..) |
             RenderTaskKind::Scaling(..) |
             RenderTaskKind::Blit(..) |
             RenderTaskKind::ClipRegion(..) |
@@ -1126,10 +1110,6 @@ impl RenderTask {
             RenderTaskKind::HorizontalBlur(ref task) => {
                 pt.new_level("HorizontalBlur".to_owned());
                 task.print_with(pt);
-            }
-            RenderTaskKind::Readback(ref rect) => {
-                pt.new_level("Readback".to_owned());
-                pt.add_item(format!("rect: {:?}", rect));
             }
             RenderTaskKind::Scaling(ref kind) => {
                 pt.new_level("Scaling".to_owned());

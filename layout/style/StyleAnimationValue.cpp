@@ -117,16 +117,13 @@ nscolor AnimationValue::GetColor(nscolor aForegroundColor) const {
 already_AddRefed<const nsCSSValueSharedList> AnimationValue::GetTransformList()
     const {
   MOZ_ASSERT(mServo);
-
   RefPtr<nsCSSValueSharedList> transform;
   Servo_AnimationValue_GetTransform(mServo, &transform);
   return transform.forget();
 }
 
 Size AnimationValue::GetScaleValue(const nsIFrame* aFrame) const {
-  MOZ_ASSERT(mServo);
-  RefPtr<nsCSSValueSharedList> list;
-  Servo_AnimationValue_GetTransform(mServo, &list);
+  RefPtr<const nsCSSValueSharedList> list = GetTransformList();
   return nsStyleTransformMatrix::GetScaleValue(list, aFrame);
 }
 

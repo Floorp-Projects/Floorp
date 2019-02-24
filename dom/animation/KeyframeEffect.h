@@ -201,6 +201,13 @@ class KeyframeEffect : public AnimationEffect {
   const AnimationProperty* GetEffectiveAnimationOfProperty(
       nsCSSPropertyID aProperty, const EffectSet& aEffect) const;
 
+  // This is a similar version as the above function, but for a
+  // nsCSSPropertyIDSet, and this returns true if this keyframe effect has
+  // properties in |aPropertySet| and if the properties are not overridden by
+  // !important rule or transition level.
+  bool HasEffectiveAnimationOfPropertySet(
+      const nsCSSPropertyIDSet& aPropertySet, const EffectSet& aEffect) const;
+
   // Returns all the effective animated CSS properties that can be animated on
   // the compositor and are not overridden by a higher cascade level.
   //

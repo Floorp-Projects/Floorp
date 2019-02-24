@@ -214,7 +214,12 @@ def fill_template(config, tasks):
             # Force images built against the in-tree image builder to
             # have a different digest by adding a fixed string to the
             # hashed data.
+            # Append to this data whenever the image builder's output behavior
+            # is changed, in order to force all downstream images to be rebuilt and
+            # cached distinctly.
             digest_data.append('image_builder')
+            # Updated for squashing images in Bug 1527394
+            digest_data.append('squashing layers')
 
         worker['caches'] = [{
             'type': 'persistent',

@@ -335,6 +335,13 @@ textarea.browser-style:focus:hover {
   box-shadow: 0 0 0 2px rgba(97, 181, 255, 0.75);
 }
 
+.browser-style > input[type="text"]:invalid:not(:focus),
+textarea.browser-style:invalid:not(:focus) {
+  border-color: var(--red-60);
+  box-shadow: 0 0 0 1px var(--red-60),
+    0 0 0 4px rgba(251, 0, 34, 0.3);
+}
+
 /* stylelint-disable property-no-vendor-prefix */
 .panel-section {
   display: flex;

@@ -856,22 +856,42 @@ pub extern "C" fn Servo_AnimationValue_Color(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_AnimationValue_GetTransform(
+pub unsafe extern "C" fn Servo_AnimationValue_GetTransform(
     value: RawServoAnimationValueBorrowed,
     list: *mut structs::RefPtr<nsCSSValueSharedList>,
 ) {
+    let list = &mut *list;
     let value = AnimationValue::as_arc(&value);
-    if let AnimationValue::Transform(ref servo_list) = **value {
-        let list = unsafe { &mut *list };
-        if servo_list.0.is_empty() {
-            unsafe {
+    match **value {
+        AnimationValue::Transform(ref servo_list) => {
+            if servo_list.0.is_empty() {
+                list.set_move(RefPtr::from_addrefed(Gecko_NewNoneTransform()));
+            } else {
+                gecko_properties::convert_transform(&servo_list.0, list);
+            }
+        },
+        AnimationValue::Translate(ref v) => {
+            if let Some(v) = v.to_transform_operation() {
+                gecko_properties::convert_transform(&[v], list);
+            } else {
                 list.set_move(RefPtr::from_addrefed(Gecko_NewNoneTransform()));
             }
-        } else {
-            gecko_properties::convert_transform(&servo_list.0, list);
-        }
-    } else {
-        panic!("The AnimationValue should be transform");
+        },
+        AnimationValue::Rotate(ref v) => {
+            if let Some(v) = v.to_transform_operation() {
+                gecko_properties::convert_transform(&[v], list);
+            } else {
+                list.set_move(RefPtr::from_addrefed(Gecko_NewNoneTransform()));
+            }
+        },
+        AnimationValue::Scale(ref v) => {
+            if let Some(v) = v.to_transform_operation() {
+                gecko_properties::convert_transform(&[v], list);
+            } else {
+                list.set_move(RefPtr::from_addrefed(Gecko_NewNoneTransform()));
+            }
+        },
+        _ => unreachable!("Unsupported transform-like animation value"),
     }
 }
 
