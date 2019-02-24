@@ -19,6 +19,7 @@ EXPORTS += [
     'PlatformEncoderModule.h',
     'ReorderQueue.h',
     'SimpleMap.h',
+    'wrappers/AudioTrimmer.h',
     'wrappers/MediaChangeMonitor.h',
     'wrappers/MediaDataDecoderProxy.h'
 ]
@@ -36,6 +37,7 @@ UNIFIED_SOURCES += [
     'AllocationPolicy.cpp',
     'PDMFactory.cpp',
     'PEMFactory.cpp',
+    'wrappers/AudioTrimmer.cpp',
     'wrappers/MediaChangeMonitor.cpp',
     'wrappers/MediaDataDecoderProxy.cpp'
 ]
