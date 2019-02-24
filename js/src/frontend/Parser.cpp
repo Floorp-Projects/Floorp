@@ -148,7 +148,7 @@ ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
       usedNames_(usedNames),
       ss(nullptr),
       sourceObject_(cx, sourceObject),
-      keepAtoms(cx),
+      keepAtoms_(cx),
       foldConstants(foldConstants),
 #ifdef DEBUG
       checkOptionsCalled(false),
@@ -2705,7 +2705,7 @@ GeneralParser<ParseHandler, Unit>::functionDefinition(
   Directives directives(pc_);
   Directives newDirectives = directives;
 
-  Position start(keepAtoms, tokenStream);
+  Position start(keepAtoms_, tokenStream);
 
   // Parse the inner function. The following is a loop as we may attempt to
   // reparse a function due to failed syntax parsing and encountering new
@@ -2764,7 +2764,7 @@ bool Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(
     UsedNameTracker::RewindToken token = usedNames_.getRewindToken();
 
     // Move the syntax parser to the current position in the stream.
-    Position currentPosition(keepAtoms, tokenStream);
+    Position currentPosition(keepAtoms_, tokenStream);
     if (!syntaxParser->tokenStream.seek(currentPosition, anyChars)) {
       return false;
     }
@@ -2799,7 +2799,7 @@ bool Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(
     }
 
     // Advance this parser over tokens processed by the syntax parser.
-    Position currentSyntaxPosition(keepAtoms, syntaxParser->tokenStream);
+    Position currentSyntaxPosition(keepAtoms_, syntaxParser->tokenStream);
     if (!tokenStream.seek(currentSyntaxPosition, syntaxParser->anyChars)) {
       return false;
     }
@@ -8235,7 +8235,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
 
   // Save the tokenizer state in case we find an arrow function and have to
   // rewind.
-  Position start(keepAtoms, tokenStream);
+  Position start(keepAtoms_, tokenStream);
 
   PossibleError possibleErrorInner(*this);
   Node lhs;

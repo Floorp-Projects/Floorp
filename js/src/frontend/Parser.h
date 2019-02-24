@@ -268,7 +268,7 @@ class MOZ_STACK_CLASS ParserBase : private JS::AutoGCRooter,
   RootedScriptSourceObject sourceObject_;
 
   /* Root atoms and objects allocated for the parsed tree. */
-  AutoKeepAtoms keepAtoms;
+  AutoKeepAtoms keepAtoms_;
 
   // Perform constant-folding; must be true when interfacing with the emitter.
   const bool foldConstants : 1;
@@ -731,7 +731,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   using Base::hasUsedFunctionSpecialName;
   using Base::hasValidSimpleStrictParameterNames;
   using Base::isUnexpectedEOF_;
-  using Base::keepAtoms;
+  using Base::keepAtoms_;
   using Base::nameIsArgumentsOrEval;
   using Base::newFunction;
   using Base::newFunctionBox;
@@ -1495,7 +1495,7 @@ class MOZ_STACK_CLASS Parser<SyntaxParseHandler, Unit> final
   using Base::functionFormalParametersAndBody;
   using Base::handler;
   using Base::innerFunction;
-  using Base::keepAtoms;
+  using Base::keepAtoms_;
   using Base::matchOrInsertSemicolon;
   using Base::mustMatchToken;
   using Base::newFunctionBox;
@@ -1646,7 +1646,7 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   using Base::finishLexicalScope;
   using Base::innerFunction;
   using Base::innerFunctionForFunctionBox;
-  using Base::keepAtoms;
+  using Base::keepAtoms_;
   using Base::matchOrInsertSemicolon;
   using Base::mustMatchToken;
   using Base::newEvalScopeData;
