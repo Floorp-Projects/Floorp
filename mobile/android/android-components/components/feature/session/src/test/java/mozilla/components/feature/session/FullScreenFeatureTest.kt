@@ -30,6 +30,7 @@ class FullScreenFeatureTest {
 
         fullscreenFeature.start()
 
+        verify(fullscreenFeature).observeIdOrSelected(null)
         verify(sessionManager, never()).findSessionById(anyString())
         verify(fullscreenFeature).observeSelected()
     }
@@ -41,6 +42,7 @@ class FullScreenFeatureTest {
 
         fullscreenFeature.start()
 
+        verify(fullscreenFeature).observeIdOrSelected(anyString())
         verify(sessionManager).findSessionById(anyString())
         verify(fullscreenFeature).observeFixed(selectedSession)
     }

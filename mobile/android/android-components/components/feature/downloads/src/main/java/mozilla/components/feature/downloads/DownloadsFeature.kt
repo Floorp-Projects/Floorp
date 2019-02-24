@@ -54,8 +54,7 @@ class DownloadsFeature(
      * to be processed.
      */
     override fun start() {
-        val session = sessionId?.let { sessionManager.findSessionById(sessionId) }
-        session?.let { observeFixed(it) } ?: observeSelected()
+        observeIdOrSelected(sessionId)
 
         findPreviousDialogFragment()?.let {
             reAttachOnStartDownloadListener(it)

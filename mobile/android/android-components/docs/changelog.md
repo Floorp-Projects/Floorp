@@ -58,6 +58,9 @@ permalink: /changelog/
 * **feature-sitepermissions**
   * 🆕 A feature for showing site permission request prompts. For more info take a look at the [docs](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/README.md).
 
+* **browser-session**
+  * Added `SelectionAwareSessionObserver.observeIdOrSelected(sessionId: String?)` to observe the session based on a session ID. If the session does not exist, then observe the selected session.
+
 # 0.43.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.42.0...v0.43.0)

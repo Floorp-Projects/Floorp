@@ -26,6 +26,7 @@ class ContextMenuObserverTest {
 
         observer.start("123")
 
+        verify(observer).observeIdOrSelected("123")
         verify(observer).observeFixed(session)
     }
 
@@ -36,6 +37,7 @@ class ContextMenuObserverTest {
 
         observer.start(null)
 
+        verify(observer).observeIdOrSelected(null)
         verify(observer).observeSelected()
     }
 }

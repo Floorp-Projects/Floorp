@@ -45,6 +45,17 @@ abstract class SelectionAwareSessionObserver(
     }
 
     /**
+     * Starts observing changes to the session matching the [sessionId]. If
+     * the session does not exist, then observe the selected session.
+     *
+     * @param sessionId the session ID to observe.
+     */
+    fun observeIdOrSelected(sessionId: String?) {
+        val session = sessionId?.let { sessionManager.findSessionById(sessionId) }
+        session?.let { observeFixed(it) } ?: observeSelected()
+    }
+
+    /**
      * Stops the observer.
      */
     @CallSuper

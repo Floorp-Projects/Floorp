@@ -17,6 +17,7 @@ class SelectionAwareSessionObserverTest {
     private lateinit var sessionManager: SessionManager
     private lateinit var session1: Session
     private lateinit var session2: Session
+    private lateinit var session3: Session
     private lateinit var observer: MockObserver
 
     @Before
@@ -24,6 +25,7 @@ class SelectionAwareSessionObserverTest {
         sessionManager = SessionManager(engine = mock())
         session1 = Session("https://mozilla.org")
         session2 = Session("https://getpocket.com")
+        session3 = Session("https://wiki.mozilla.org", id = "123")
         observer = MockObserver(sessionManager)
     }
 
@@ -44,6 +46,24 @@ class SelectionAwareSessionObserverTest {
 
         session1.url = "changed"
         assertEquals("changed", observer.observedUrl)
+    }
+
+    @Test
+    fun `observe the session based on the provided ID if exists or the selected session`() {
+        sessionManager.add(session1)
+        observer.observeIdOrSelected("123")
+        assertEquals(session1, observer.activeSession)
+
+        sessionManager.add(session2, selected = true)
+        observer.observeIdOrSelected("123")
+        assertEquals(session2, observer.activeSession)
+
+        sessionManager.add(session3)
+        observer.observeIdOrSelected("123")
+        assertEquals(session3, observer.activeSession)
+
+        observer.observeIdOrSelected(null)
+        assertEquals(session2, observer.activeSession)
     }
 
     @Test

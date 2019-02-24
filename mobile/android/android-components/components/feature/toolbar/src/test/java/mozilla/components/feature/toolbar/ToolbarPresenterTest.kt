@@ -29,6 +29,7 @@ class ToolbarPresenterTest {
 
         toolbarPresenter.start()
 
+        verify(toolbarPresenter).observeIdOrSelected(null)
         verify(toolbarPresenter).observeSelected()
         verify(toolbarPresenter).initializeView()
     }
@@ -44,6 +45,7 @@ class ToolbarPresenterTest {
 
         toolbarPresenter.start()
 
+        verify(toolbarPresenter).observeIdOrSelected("123")
         verify(toolbarPresenter).observeFixed(session)
         verify(toolbarPresenter).initializeView()
     }

@@ -62,6 +62,7 @@ class DownloadsFeatureTest {
 
         feature.start()
 
+        verify(feature).observeIdOrSelected(anyString())
         verify(feature).observeFixed(any())
     }
 
@@ -75,6 +76,7 @@ class DownloadsFeatureTest {
 
         feature.start()
 
+        verify(feature).observeIdOrSelected(null)
         verify(feature).observeSelected()
     }
 

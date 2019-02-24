@@ -126,7 +126,7 @@ class ContextMenuFeature(
  * needs to be shown.
  */
 internal class ContextMenuObserver(
-    private val sessionManager: SessionManager,
+    sessionManager: SessionManager,
     private val feature: ContextMenuFeature
 ) : SelectionAwareSessionObserver(sessionManager) {
     override fun onLongPress(session: Session, hitResult: HitResult): Boolean {
@@ -135,7 +135,6 @@ internal class ContextMenuObserver(
     }
 
     fun start(sessionId: String?) {
-        val session = sessionId?.let { sessionManager.findSessionById(sessionId) }
-        session?.let { observeFixed(it) } ?: observeSelected()
+        observeIdOrSelected(sessionId)
     }
 }

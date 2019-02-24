@@ -23,8 +23,7 @@ class ToolbarPresenter(
      * Start presenter: Display data in toolbar.
      */
     fun start() {
-        val session = sessionId?.let { sessionManager.findSessionById(sessionId) }
-        session?.let { observeFixed(it) } ?: observeSelected()
+        observeIdOrSelected(sessionId)
         initializeView()
     }
 
