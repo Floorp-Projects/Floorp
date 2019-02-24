@@ -45,12 +45,12 @@ async function attachRecordingDebugger(url,
 }
 
 // Return a promise that resolves when a breakpoint has been set.
-async function setBreakpoint(threadClient, expectedFile, lineno) {
+async function setBreakpoint(threadClient, expectedFile, lineno, options = {}) {
   const {sources} = await threadClient.getSources();
   ok(sources.length == 1, "Got one source");
   ok(RegExp(expectedFile).test(sources[0].url), "Source is " + expectedFile);
   const location = { sourceUrl: sources[0].url, line: lineno };
-  await threadClient.setBreakpoint(location, {});
+  await threadClient.setBreakpoint(location, options);
   return location;
 }
 
@@ -117,6 +117,16 @@ function findMessages(hud, text, selector = ".message") {
 
 function waitForMessages(hud, text, selector = ".message") {
   return waitUntilPredicate(() => findMessages(hud, text, selector));
+}
+
+async function waitForMessageCount(hud, text, length, selector = ".message") {
+  let messages;
+  await waitUntil(() => {
+    messages = findMessages(hud, text, selector);
+    return messages && messages.length == length;
+  });
+  ok(messages.length == length, "Found expected message count");
+  return messages;
 }
 
 async function warpToMessage(hud, threadClient, text) {

@@ -6,8 +6,6 @@
 
 "use strict";
 
-// To disable all Web Replay tests, see browser.ini
-
 // Test navigating back to earlier breakpoints while recording, then resuming
 // recording.
 add_task(async function() {
