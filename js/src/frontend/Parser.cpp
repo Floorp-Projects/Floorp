@@ -147,7 +147,7 @@ ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
       pc_(nullptr),
       usedNames_(usedNames),
       ss(nullptr),
-      sourceObject(cx, sourceObject),
+      sourceObject_(cx, sourceObject),
       keepAtoms(cx),
       foldConstants(foldConstants),
 #ifdef DEBUG
@@ -1716,7 +1716,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   FunctionBox* funbox = pc_->functionBox();
   RootedFunction fun(cx_, funbox->function());
   LazyScript* lazy = LazyScript::Create(
-      cx_, fun, sourceObject, pc_->closedOverBindingsForLazy(),
+      cx_, fun, sourceObject_, pc_->closedOverBindingsForLazy(),
       pc_->innerFunctionsForLazy, funbox->bufStart, funbox->bufEnd,
       funbox->toStringStart, funbox->startLine, funbox->startColumn,
       parseGoal());
