@@ -417,32 +417,8 @@ bool ParseContext::tryDeclareVarHelper(HandlePropertyName name,
     if (AddDeclaredNamePtr p = scope->lookupDeclaredNameForAdd(name)) {
       DeclarationKind declaredKind = p->value()->kind();
       if (DeclarationKindIsVar(declaredKind)) {
-        // Any vars that are redeclared as body-level functions must
-        // be recorded as body-level functions.
-        //
-        // In the case of global and eval scripts, GlobalDeclaration-
-        // Instantiation [1] and EvalDeclarationInstantiation [2]
-        // check for the declarability of global var and function
-        // bindings via CanDeclareVar [3] and CanDeclareGlobal-
-        // Function [4]. CanDeclareGlobalFunction is strictly more
-        // restrictive than CanDeclareGlobalVar, so record the more
-        // restrictive kind. These semantics are implemented in
-        // CheckCanDeclareGlobalBinding.
-        //
-        // VarForAnnexBLexicalFunction declarations are declared when
-        // the var scope exits. It is not possible for a var to be
-        // previously declared as VarForAnnexBLexicalFunction and
-        // checked for redeclaration.
-        //
-        // [1] ES 15.1.11
-        // [2] ES 18.2.1.3
-        // [3] ES 8.1.1.4.15
-        // [4] ES 8.1.1.4.16
-        if (dryRunOption == NotDryRun &&
-            kind == DeclarationKind::BodyLevelFunction) {
-          MOZ_ASSERT(declaredKind !=
-                     DeclarationKind::VarForAnnexBLexicalFunction);
-          p->value()->alterKind(kind);
+        if (dryRunOption == NotDryRun) {
+          RedeclareVar(p, kind);
         }
       } else if (!DeclarationKindIsParameter(declaredKind)) {
         // Annex B.3.5 allows redeclaring simple (non-destructured)
