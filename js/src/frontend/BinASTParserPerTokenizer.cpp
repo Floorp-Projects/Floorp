@@ -234,12 +234,9 @@ JS::Result<FunctionBox*> BinASTParserPerTokenizer<Tok>::buildFunctionBox(
           "FunctionDeclaration without corresponding AssertedDeclaredName.");
     }
 
-    // FIXME: Should be merged with ParseContext::tryDeclareVarHelper
-    //        (bug 1499044).
     DeclarationKind declaredKind = ptr->value()->kind();
     if (DeclarationKindIsVar(declaredKind)) {
-      MOZ_ASSERT(declaredKind != DeclarationKind::VarForAnnexBLexicalFunction);
-      ptr->value()->alterKind(DeclarationKind::BodyLevelFunction);
+      RedeclareVar(ptr, DeclarationKind::BodyLevelFunction);
     }
   }
 
