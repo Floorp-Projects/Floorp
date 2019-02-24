@@ -201,8 +201,8 @@ class SourceParseContext : public ParseContext {
   template <typename ParseHandler, typename Unit>
   SourceParseContext(GeneralParser<ParseHandler, Unit>* prs, SharedContext* sc,
                      Directives* newDirectives)
-      : ParseContext(prs->context, prs->pc, sc, prs->tokenStream,
-                     prs->usedNames, newDirectives,
+      : ParseContext(prs->cx_, prs->pc, sc, prs->tokenStream, prs->usedNames,
+                     newDirectives,
                      mozilla::IsSame<ParseHandler, FullParseHandler>::value) {}
 };
 
@@ -247,7 +247,7 @@ class MOZ_STACK_CLASS ParserBase : private JS::AutoGCRooter,
                                         JS::AutoGCRooter* parser);
 
  public:
-  JSContext* const context;
+  JSContext* const cx_;
 
   LifoAlloc& alloc;
 
@@ -326,7 +326,7 @@ class MOZ_STACK_CLASS ParserBase : private JS::AutoGCRooter,
  public:
   // Implement ErrorReportMixin.
 
-  JSContext* getContext() const override { return context; }
+  JSContext* getContext() const override { return cx_; }
 
   bool strictMode() const override { return pc->sc()->strict(); }
 
@@ -783,7 +783,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
 
  public:
   using Base::anyChars;
-  using Base::context;
+  using Base::cx_;
   using Base::handler;
   using Base::isValidSimpleAssignmentTarget;
   using Base::pc;
@@ -1453,7 +1453,7 @@ class MOZ_STACK_CLASS Parser<SyntaxParseHandler, Unit> final
  public:
   using Base::anyChars;
   using Base::clearAbortedSyntaxParse;
-  using Base::context;
+  using Base::cx_;
   using Base::hadAbortedSyntaxParse;
   using Base::innerFunctionForFunctionBox;
   using Base::tokenStream;
@@ -1641,7 +1641,7 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
 #if DEBUG
   using Base::checkOptionsCalled;
 #endif
-  using Base::context;
+  using Base::cx_;
   using Base::finishFunctionScopes;
   using Base::finishLexicalScope;
   using Base::innerFunction;

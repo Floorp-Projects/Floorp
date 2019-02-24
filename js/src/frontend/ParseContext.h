@@ -209,8 +209,7 @@ class ParseContext : public Nestable<ParseContext> {
 
    public:
     LabelStatement(ParseContext* pc, JSAtom* label)
-        : Statement(pc, StatementKind::Label),
-          label_(pc->sc_->context, label) {}
+        : Statement(pc, StatementKind::Label), label_(pc->sc_->cx_, label) {}
 
     HandleAtom label() const { return label_; }
   };
@@ -246,7 +245,7 @@ class ParseContext : public Nestable<ParseContext> {
 
     bool maybeReportOOM(ParseContext* pc, bool result) {
       if (!result) {
-        ReportOutOfMemory(pc->sc()->context);
+        ReportOutOfMemory(pc->sc()->cx_);
       }
       return result;
     }
@@ -271,7 +270,7 @@ class ParseContext : public Nestable<ParseContext> {
         return false;
       }
 
-      return declared_.acquire(pc->sc()->context);
+      return declared_.acquire(pc->sc()->cx_);
     }
 
     bool isEmpty() const { return declared_->all().empty(); }
