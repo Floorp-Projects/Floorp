@@ -68,10 +68,7 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
                            UsedNameTracker& usedNames,
                            const JS::ReadOnlyCompileOptions& options,
                            HandleScriptSourceObject sourceObject,
-                           Handle<LazyScript*> lazyScript = nullptr)
-      : BinASTParserBase(cx, alloc, usedNames, sourceObject, lazyScript),
-        options_(options),
-        variableDeclarationKind_(VariableDeclarationKind::Var) {}
+                           Handle<LazyScript*> lazyScript = nullptr);
   ~BinASTParserPerTokenizer() {}
 
   /**
@@ -282,6 +279,9 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
   }
 
  protected:
+  Rooted<LazyScript*> lazyScript_;
+  FullParseHandler handler_;
+
   mozilla::Maybe<Tokenizer> tokenizer_;
   VariableDeclarationKind variableDeclarationKind_;
 

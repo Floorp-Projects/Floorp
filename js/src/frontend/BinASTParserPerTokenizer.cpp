@@ -81,6 +81,20 @@ using UsedNamePtr = UsedNameTracker::UsedNameMap::Ptr;
 // ------------- Toplevel constructions
 
 template <typename Tok>
+BinASTParserPerTokenizer<Tok>::BinASTParserPerTokenizer(
+    JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames,
+    const JS::ReadOnlyCompileOptions& options,
+    HandleScriptSourceObject sourceObject,
+    Handle<LazyScript*> lazyScript /* = nullptr */)
+    : BinASTParserBase(cx, alloc, usedNames, sourceObject),
+      options_(options),
+      lazyScript_(cx, lazyScript),
+      handler_(cx, alloc, nullptr, SourceKind::Binary),
+      variableDeclarationKind_(VariableDeclarationKind::Var) {
+  MOZ_ASSERT_IF(lazyScript_, lazyScript_->isBinAST());
+}
+
+template <typename Tok>
 JS::Result<ParseNode*> BinASTParserPerTokenizer<Tok>::parse(
     GlobalSharedContext* globalsc, const Vector<uint8_t>& data,
     BinASTSourceMetadata** metadataPtr) {
