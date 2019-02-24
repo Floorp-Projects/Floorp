@@ -11,47 +11,15 @@
 namespace js {
 namespace frontend {
 
-using UsedNamePtr = UsedNameTracker::UsedNameMap::Ptr;
-
 BinASTParserBase::BinASTParserBase(JSContext* cx, LifoAlloc& alloc,
                                    UsedNameTracker& usedNames,
                                    HandleScriptSourceObject sourceObject,
                                    Handle<LazyScript*> lazyScript)
-    : AutoGCRooter(cx, AutoGCRooter::Tag::BinParser),
-      cx_(cx),
-      alloc_(alloc),
-      traceListHead_(nullptr),
-      usedNames_(usedNames),
+    : ParserSharedBase(cx, alloc, usedNames, sourceObject),
       nodeAlloc_(cx, alloc),
-      keepAtoms_(cx),
-      sourceObject_(cx, sourceObject),
       lazyScript_(cx, lazyScript),
-      pc_(nullptr),
       handler_(cx, alloc, nullptr, SourceKind::Binary) {
   MOZ_ASSERT_IF(lazyScript, lazyScript->isBinAST());
-  cx->frontendCollectionPool().addActiveCompilation();
-  tempPoolMark_ = alloc.mark();
-}
-
-BinASTParserBase::~BinASTParserBase() {
-  alloc_.release(tempPoolMark_);
-
-  /*
-   * The parser can allocate enormous amounts of memory for large functions.
-   * Eagerly free the memory now (which otherwise won't be freed until the
-   * next GC) to avoid unnecessary OOMs.
-   */
-  alloc_.freeAllIfHugeAndUnused();
-
-  cx_->frontendCollectionPool().removeActiveCompilation();
-}
-
-bool BinASTParserBase::hasUsedName(HandlePropertyName name) {
-  if (UsedNamePtr p = usedNames_.lookup(name)) {
-    return p->value().isUsedInScript(pc_->scriptId());
-  }
-
-  return false;
 }
 
 }  // namespace frontend

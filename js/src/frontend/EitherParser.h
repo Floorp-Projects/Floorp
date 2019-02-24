@@ -93,10 +93,10 @@ struct ParseHandlerMatcher {
   }
 };
 
-struct ParserBaseMatcher {
+struct ParserSharedBaseMatcher {
   template <class Parser>
-  frontend::ParserBase& match(Parser* parser) {
-    return *static_cast<frontend::ParserBase*>(parser);
+  frontend::ParserSharedBase& match(Parser* parser) {
+    return *static_cast<frontend::ParserSharedBase*>(parser);
   }
 };
 

@@ -26,11 +26,22 @@
  * template instantiations wherever possible, mean that Parser exhibits much of
  * the same unholy template/inheritance complexity as token streams.
  *
- * == ParserBase → JS::AutoGCRooter, ErrorReportMixin ==
+ * == ParserSharedBase → JS::AutoGCRooter ==
  *
- * ParserBase is the base parser class, shared by all parsers of all character
- * types and parse-handling behavior.  It stores everything character- and
- * handler-agnostic.
+ * ParserSharedBase is the base class for both regular JS and BinAST parser.
+ * This class contains common fields and methods between both parsers.
+ *
+ * Of particular note: making ParserSharedBase inherit JS::AutoGCRooter (rather
+ * than placing it under one of the more-derived parser classes) means that all
+ * parsers can be traced using the same AutoGCRooter mechanism: it's not
+ * necessary to have separate tracing functionality for syntax/full parsers or
+ * parsers of different character types.
+ *
+ * == ParserBase → ParserSharedBase, ErrorReportMixin ==
+ *
+ * ParserBase is the base class for regular JS parser, shared by all regular JS
+ * parsers of all character types and parse-handling behavior.  It stores
+ * everything character- and handler-agnostic.
  *
  * ParserBase's most important field is the parser's token stream's
  * |TokenStreamAnyChars| component, for all tokenizing aspects that are
@@ -39,12 +50,6 @@
  * live elsewhere in this hierarchy.  These separate locations are the reason
  * for the |AnyCharsAccess| template parameter to |TokenStreamChars| and
  * |TokenStreamSpecific|.
- *
- * Of particular note: making ParserBase inherit JS::AutoGCRooter (rather than
- * placing it under one of the more-derived parser classes) means that all
- * parsers can be traced using the same AutoGCRooter mechanism: it's not
- * necessary to have separate tracing functionality for syntax/full parsers or
- * parsers of different character types.
  *
  * == PerHandlerParser<ParseHandler> → ParserBase ==
  *
@@ -191,8 +196,6 @@ class ModuleObject;
 
 namespace frontend {
 
-class ParserBase;
-
 template <class ParseHandler, typename Unit>
 class GeneralParser;
 
@@ -235,40 +238,67 @@ class AutoAwaitIsKeyword;
 template <class ParseHandler, typename Unit>
 class AutoInParametersOfAsyncFunction;
 
-class MOZ_STACK_CLASS ParserBase : private JS::AutoGCRooter,
-                                   public ErrorReportMixin {
-  using Base = ErrorReportMixin;
-
- private:
-  ParserBase* thisForCtor() { return this; }
-
-  // This is needed to cast a parser to JS::AutoGCRooter.
-  friend void js::frontend::TraceParser(JSTracer* trc,
-                                        JS::AutoGCRooter* parser);
+class MOZ_STACK_CLASS ParserSharedBase : private JS::AutoGCRooter {
+ public:
+  ParserSharedBase(JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames,
+                   ScriptSourceObject* sourceObject);
+  ~ParserSharedBase();
 
  public:
   JSContext* const cx_;
 
   LifoAlloc& alloc_;
 
-  TokenStreamAnyChars anyChars;
   LifoAlloc::Mark tempPoolMark_;
 
-  /* list of parsed objects and BigInts for GC tracing */
+  // list of parsed objects and BigInts for GC tracing
   TraceListNode* traceListHead_;
 
-  /* innermost parse context (stack-allocated) */
+  // innermost parse context (stack-allocated)
   ParseContext* pc_;
 
   // For tracking used names in this parsing session.
   UsedNameTracker& usedNames_;
 
-  ScriptSource* ss;
-
   RootedScriptSourceObject sourceObject_;
 
-  /* Root atoms and objects allocated for the parsed tree. */
+  // Root atoms and objects allocated for the parsed tree.
   AutoKeepAtoms keepAtoms_;
+
+ private:
+  // This is needed to cast a parser to JS::AutoGCRooter.
+  friend void js::frontend::TraceParser(JSTracer* trc,
+                                        JS::AutoGCRooter* parser);
+  friend void js::frontend::TraceBinParser(JSTracer* trc,
+                                           JS::AutoGCRooter* parser);
+
+ protected:
+  bool hasUsedName(HandlePropertyName name);
+
+ private:
+  // Create a new traceable node and store it into the trace list.
+  template <typename BoxT, typename ArgT>
+  BoxT* newTraceListNode(ArgT* arg);
+
+ public:
+  // Create a new JSObject and store it into the trace list.
+  ObjectBox* newObjectBox(JSObject* obj);
+
+  // Create a new BigInt and store it into the trace list.
+  BigIntBox* newBigIntBox(BigInt* val);
+};
+
+class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
+                                   public ErrorReportMixin {
+  using Base = ErrorReportMixin;
+
+ private:
+  ParserBase* thisForCtor() { return this; }
+
+ public:
+  TokenStreamAnyChars anyChars;
+
+  ScriptSource* ss;
 
   // Perform constant-folding; must be true when interfacing with the emitter.
   const bool foldConstants_ : 1;
@@ -394,14 +424,7 @@ class MOZ_STACK_CLASS ParserBase : private JS::AutoGCRooter,
     traceListHead_ = m.traceListHead;
   }
 
- private:
-  template <typename BoxT, typename ArgT>
-  BoxT* newTraceListNode(ArgT* arg);
-
  public:
-  ObjectBox* newObjectBox(JSObject* obj);
-  BigIntBox* newBigIntBox(BigInt* val);
-
   mozilla::Maybe<GlobalScope::Data*> newGlobalScopeData(
       ParseContext::Scope& scope);
   mozilla::Maybe<ModuleScope::Data*> newModuleScopeData(
@@ -423,7 +446,6 @@ class MOZ_STACK_CLASS ParserBase : private JS::AutoGCRooter,
   bool nextTokenContinuesLetDeclaration(TokenKind next);
 
   bool noteUsedNameInternal(HandlePropertyName name);
-  bool hasUsedName(HandlePropertyName name);
   bool hasUsedFunctionSpecialName(HandlePropertyName name);
 
   bool checkAndMarkSuperScope();
