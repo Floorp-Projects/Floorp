@@ -44,6 +44,7 @@ using LengthPercentageOrAuto = StyleLengthPercentageOrAuto;
 using NonNegativeLengthPercentage = StyleNonNegativeLengthPercentage;
 using NonNegativeLengthPercentageOrAuto =
     StyleNonNegativeLengthPercentageOrAuto;
+using BorderRadius = StyleBorderRadius;
 
 nscoord StyleCSSPixelLength::ToAppUnits() const {
   // We want to resolve the length part of the calc() expression rounding 0.5
@@ -249,6 +250,14 @@ template <typename T>
 template <typename Predicate>
 bool StyleRect<T>::Any(Predicate aPredicate) const {
   return aPredicate(_0) || aPredicate(_1) || aPredicate(_2) || aPredicate(_3);
+}
+
+template <>
+inline const LengthPercentage& BorderRadius::Get(HalfCorner aCorner) const {
+  static_assert(sizeof(BorderRadius) == sizeof(LengthPercentage) * 8, "");
+  static_assert(alignof(BorderRadius) == alignof(LengthPercentage), "");
+  auto* self = reinterpret_cast<const LengthPercentage*>(this);
+  return self[aCorner];
 }
 
 }  // namespace mozilla
@@ -589,45 +598,6 @@ class nsStyleSides {
   nsStyleUnion mValues[4];
 };
 
-/**
- * Class that represents a set of top-left/top-right/bottom-right/bottom-left
- * nsStyleCoord pairs.  This is used to hold the dimensions of the
- * corners of a box (for, e.g., border-radius and outline-radius).
- */
-/** <div rustbindgen private accessor="unsafe"></div> */
-class nsStyleCorners {
- public:
-  nsStyleCorners();
-  nsStyleCorners(const nsStyleCorners&);
-  ~nsStyleCorners();
-
-  // use compiler's version
-  nsStyleCorners& operator=(const nsStyleCorners& aCopy);
-  bool operator==(const nsStyleCorners& aOther) const;
-  bool operator!=(const nsStyleCorners& aOther) const;
-
-  // aHalfCorner is always one of enum HalfCorner in gfx/2d/Types.h.
-  inline nsStyleUnit GetUnit(uint8_t aHalfCorner) const;
-
-  inline nsStyleCoord Get(uint8_t aHalfCorner) const;
-
-  // Sets each corner to null and releases any refcounted objects.  Only use
-  // this if the object is initialized (i.e. don't use it in nsStyleCorners
-  // constructors).
-  void Reset();
-
-  inline void Set(uint8_t aHalfCorner, const nsStyleCoord& aCoord);
-
- protected:
-  // Stored as:
-  // top-left.x, top-left.y,
-  // top-right.x, top-right.y,
-  // bottom-right.x, bottom-right.y,
-  // bottom-left.x, bottom-left.y
-  nsStyleUnit mUnits[8];
-  nsStyleUnion mValues[8];
-};
-
 // -------------------------
 // nsStyleCoord inlines
 //
@@ -830,24 +800,4 @@ inline void nsStyleSides::SetRight(const nsStyleCoord& aCoord) {
 inline void nsStyleSides::SetBottom(const nsStyleCoord& aCoord) {
   Set(mozilla::eSideBottom, aCoord);
 }
-
-// -------------------------
-// nsStyleCorners inlines
-//
-inline bool nsStyleCorners::operator!=(const nsStyleCorners& aOther) const {
-  return !((*this) == aOther);
-}
-
-inline nsStyleUnit nsStyleCorners::GetUnit(uint8_t aCorner) const {
-  return (nsStyleUnit)mUnits[aCorner];
-}
-
-inline nsStyleCoord nsStyleCorners::Get(uint8_t aCorner) const {
-  return nsStyleCoord(mValues[aCorner], nsStyleUnit(mUnits[aCorner]));
-}
-
-inline void nsStyleCorners::Set(uint8_t aCorner, const nsStyleCoord& aCoord) {
-  nsStyleCoord::SetValue(mUnits[aCorner], mValues[aCorner], aCoord);
-}
-
 #endif /* nsStyleCoord_h___ */

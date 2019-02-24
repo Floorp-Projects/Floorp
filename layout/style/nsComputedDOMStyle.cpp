@@ -1902,14 +1902,14 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetOutlineRadiusTopRight() {
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::GetEllipseRadii(
-    const nsStyleCorners& aRadius, Corner aFullCorner) {
-  nsStyleCoord radiusX = aRadius.Get(FullToHalfCorner(aFullCorner, false));
-  nsStyleCoord radiusY = aRadius.Get(FullToHalfCorner(aFullCorner, true));
+    const BorderRadius& aRadius, Corner aFullCorner) {
+  const auto& radiusX = aRadius.Get(FullToHalfCorner(aFullCorner, false));
+  const auto& radiusY = aRadius.Get(FullToHalfCorner(aFullCorner, true));
 
   // for compatibility, return a single value if X and Y are equal
   if (radiusX == radiusY) {
     RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    SetValueToCoord(val, radiusX, true);
+    SetValueToLengthPercentage(val, radiusX, true);
     return val.forget();
   }
 
@@ -1918,8 +1918,8 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetEllipseRadii(
   RefPtr<nsROCSSPrimitiveValue> valX = new nsROCSSPrimitiveValue;
   RefPtr<nsROCSSPrimitiveValue> valY = new nsROCSSPrimitiveValue;
 
-  SetValueToCoord(valX, radiusX, true);
-  SetValueToCoord(valY, radiusY, true);
+  SetValueToLengthPercentage(valX, radiusX, true);
+  SetValueToLengthPercentage(valY, radiusY, true);
 
   valueList->AppendCSSValue(valX.forget());
   valueList->AppendCSSValue(valY.forget());
@@ -3273,22 +3273,9 @@ void nsComputedDOMStyle::BoxValuesToString(
   }
 }
 
-void nsComputedDOMStyle::BasicShapeRadiiToString(
-    nsAString& aCssText, const nsStyleCorners& aCorners) {
-  nsTArray<nsStyleCoord> horizontal, vertical;
-  nsAutoString horizontalString, verticalString;
-  NS_FOR_CSS_FULL_CORNERS(corner) {
-    horizontal.AppendElement(aCorners.Get(FullToHalfCorner(corner, false)));
-    vertical.AppendElement(aCorners.Get(FullToHalfCorner(corner, true)));
-  }
-  BoxValuesToString(horizontalString, horizontal, true);
-  BoxValuesToString(verticalString, vertical, true);
-  aCssText.Append(horizontalString);
-  if (horizontalString == verticalString) {
-    return;
-  }
-  aCssText.AppendLiteral(" / ");
-  aCssText.Append(verticalString);
+void nsComputedDOMStyle::BasicShapeRadiiToString(nsAString& aCssText,
+                                                 const BorderRadius& aCorners) {
+  Servo_SerializeBorderRadius(&aCorners, &aCssText);
 }
 
 already_AddRefed<CSSValue>
