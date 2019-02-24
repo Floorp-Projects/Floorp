@@ -135,43 +135,22 @@ bool GeneralParser<ParseHandler, Unit>::mustMatchTokenInternal(
   return true;
 }
 
-ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
-                       const ReadOnlyCompileOptions& options,
-                       bool foldConstants, UsedNameTracker& usedNames,
-                       ScriptSourceObject* sourceObject, ParseGoal parseGoal)
-    : AutoGCRooter(cx, AutoGCRooter::Tag::Parser),
+ParserSharedBase::ParserSharedBase(JSContext* cx, LifoAlloc& alloc,
+                                   UsedNameTracker& usedNames,
+                                   ScriptSourceObject* sourceObject)
+    : JS::AutoGCRooter(cx, AutoGCRooter::Tag::Parser),
       cx_(cx),
       alloc_(alloc),
-      anyChars(cx, options, thisForCtor()),
       traceListHead_(nullptr),
       pc_(nullptr),
       usedNames_(usedNames),
-      ss(nullptr),
       sourceObject_(cx, sourceObject),
-      keepAtoms_(cx),
-      foldConstants_(foldConstants),
-#ifdef DEBUG
-      checkOptionsCalled_(false),
-#endif
-      isUnexpectedEOF_(false),
-      awaitHandling_(AwaitIsName),
-      inParametersOfAsyncFunction_(false),
-      parseGoal_(uint8_t(parseGoal)) {
+      keepAtoms_(cx) {
   cx->frontendCollectionPool().addActiveCompilation();
   tempPoolMark_ = alloc_.mark();
 }
 
-bool ParserBase::checkOptions() {
-#ifdef DEBUG
-  checkOptionsCalled_ = true;
-#endif
-
-  return anyChars.checkOptions();
-}
-
-ParserBase::~ParserBase() {
-  MOZ_ASSERT(checkOptionsCalled_);
-
+ParserSharedBase::~ParserSharedBase() {
   alloc_.release(tempPoolMark_);
 
   /*
@@ -183,6 +162,33 @@ ParserBase::~ParserBase() {
 
   cx_->frontendCollectionPool().removeActiveCompilation();
 }
+
+ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
+                       const ReadOnlyCompileOptions& options,
+                       bool foldConstants, UsedNameTracker& usedNames,
+                       ScriptSourceObject* sourceObject, ParseGoal parseGoal)
+    : ParserSharedBase(cx, alloc, usedNames, sourceObject),
+      anyChars(cx, options, thisForCtor()),
+      ss(nullptr),
+      foldConstants_(foldConstants),
+#ifdef DEBUG
+      checkOptionsCalled_(false),
+#endif
+      isUnexpectedEOF_(false),
+      awaitHandling_(AwaitIsName),
+      inParametersOfAsyncFunction_(false),
+      parseGoal_(uint8_t(parseGoal)) {
+}
+
+bool ParserBase::checkOptions() {
+#ifdef DEBUG
+  checkOptionsCalled_ = true;
+#endif
+
+  return anyChars.checkOptions();
+}
+
+ParserBase::~ParserBase() { MOZ_ASSERT(checkOptionsCalled_); }
 
 template <class ParseHandler>
 PerHandlerParser<ParseHandler>::PerHandlerParser(
@@ -249,7 +255,7 @@ inline void GeneralParser<ParseHandler, Unit>::setInParametersOfAsyncFunction(
 }
 
 template <typename BoxT, typename ArgT>
-BoxT* ParserBase::newTraceListNode(ArgT* arg) {
+BoxT* ParserSharedBase::newTraceListNode(ArgT* arg) {
   MOZ_ASSERT(arg);
 
   /*
@@ -271,11 +277,11 @@ BoxT* ParserBase::newTraceListNode(ArgT* arg) {
   return box;
 }
 
-ObjectBox* ParserBase::newObjectBox(JSObject* obj) {
+ObjectBox* ParserSharedBase::newObjectBox(JSObject* obj) {
   return newTraceListNode<ObjectBox, JSObject>(obj);
 }
 
-BigIntBox* ParserBase::newBigIntBox(BigInt* val) {
+BigIntBox* ParserSharedBase::newBigIntBox(BigInt* val) {
   return newTraceListNode<BigIntBox, BigInt>(val);
 }
 
@@ -800,7 +806,7 @@ bool ParserBase::noteUsedNameInternal(HandlePropertyName name) {
   return usedNames_.noteUse(cx_, name, pc_->scriptId(), scope->id());
 }
 
-bool ParserBase::hasUsedName(HandlePropertyName name) {
+bool ParserSharedBase::hasUsedName(HandlePropertyName name) {
   if (UsedNamePtr p = usedNames_.lookup(name)) {
     return p->value().isUsedInScript(pc_->scriptId());
   }
