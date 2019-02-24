@@ -252,7 +252,7 @@ class MOZ_STACK_CLASS ParserBase : private JS::AutoGCRooter,
   LifoAlloc& alloc_;
 
   TokenStreamAnyChars anyChars;
-  LifoAlloc::Mark tempPoolMark;
+  LifoAlloc::Mark tempPoolMark_;
 
   /* list of parsed objects and BigInts for GC tracing */
   TraceListNode* traceListHead;

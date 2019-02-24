@@ -158,7 +158,7 @@ ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
       inParametersOfAsyncFunction_(false),
       parseGoal_(uint8_t(parseGoal)) {
   cx->frontendCollectionPool().addActiveCompilation();
-  tempPoolMark = alloc_.mark();
+  tempPoolMark_ = alloc_.mark();
 }
 
 bool ParserBase::checkOptions() {
@@ -172,7 +172,7 @@ bool ParserBase::checkOptions() {
 ParserBase::~ParserBase() {
   MOZ_ASSERT(checkOptionsCalled);
 
-  alloc_.release(tempPoolMark);
+  alloc_.release(tempPoolMark_);
 
   /*
    * The parser can allocate enormous amounts of memory for large functions.
