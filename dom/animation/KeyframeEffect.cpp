@@ -1679,7 +1679,9 @@ bool KeyframeEffect::ContainsAnimatedScale(const nsIFrame* aFrame) const {
   }
 
   for (const AnimationProperty& prop : mProperties) {
-    if (prop.mProperty != eCSSProperty_transform) {
+    if (prop.mProperty != eCSSProperty_transform &&
+        prop.mProperty != eCSSProperty_scale &&
+        prop.mProperty != eCSSProperty_rotate) {
       continue;
     }
 
