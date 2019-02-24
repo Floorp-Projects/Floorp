@@ -742,10 +742,10 @@ async function navigate(dbg, url, ...sources) {
  * @return {Promise}
  * @static
  */
-function addBreakpoint(dbg, source, line, column) {
+function addBreakpoint(dbg, source, line, column, options) {
   source = findSource(dbg, source);
   const sourceId = source.id;
-  dbg.actions.addBreakpoint({ sourceId, line, column });
+  dbg.actions.addBreakpoint({ sourceId, line, column }, options);
   return waitForDispatch(dbg, "ADD_BREAKPOINT");
 }
 
@@ -754,6 +754,13 @@ function disableBreakpoint(dbg, source, line, column) {
   const bp = dbg.selectors.getBreakpointForLocation(dbg.getState(), location);
   dbg.actions.disableBreakpoint(bp);
   return waitForDispatch(dbg, "DISABLE_BREAKPOINT");
+}
+
+function setBreakpointOptions(dbg, source, line, column, options) {
+  source = findSource(dbg, source);
+  const sourceId = source.id;
+  dbg.actions.setBreakpointOptions({ sourceId, line, column }, options);
+  return waitForDispatch(dbg, "SET_BREAKPOINT_OPTIONS");
 }
 
 function findBreakpoint(dbg, url, line) {
