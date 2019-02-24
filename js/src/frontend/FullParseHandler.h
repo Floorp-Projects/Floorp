@@ -790,6 +790,10 @@ class FullParseHandler {
     return newBinary(ParseNodeKind::Shorthand, key, value, JSOP_INITPROP);
   }
 
+  ListNodeType newParamsBody(const TokenPos& pos) {
+    return new_<ListNode>(ParseNodeKind::ParamsBody, pos);
+  }
+
   void setFunctionFormalParametersAndBody(FunctionNodeType funNode,
                                           ListNodeType paramsBody) {
     MOZ_ASSERT_IF(paramsBody, paramsBody->isKind(ParseNodeKind::ParamsBody));

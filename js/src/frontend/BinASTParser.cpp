@@ -3135,9 +3135,7 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceGetterContents(
   (void)isThisCaptured;
   MOZ_TRY(parseAssertedVarScope());
 
-  BINJS_TRY_DECL(params,
-                 this->template new_<ListNode>(ParseNodeKind::ParamsBody,
-                                               tokenizer_->pos(start)));
+  BINJS_TRY_DECL(params, handler_.newParamsBody(tokenizer_->pos(start)));
   BINJS_MOZ_TRY_DECL(body, parseFunctionBody());
 
   *paramsOut = params;
@@ -3721,8 +3719,7 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceSetterContents(
   MOZ_TRY(parseAssertedParameterScope(&positionalParams));
 
   BINJS_MOZ_TRY_DECL(param, parseParameter());
-  BINJS_TRY_DECL(params, this->template new_<ListNode>(
-                             ParseNodeKind::ParamsBody, param->pn_pos));
+  BINJS_TRY_DECL(params, handler_.newParamsBody(param->pn_pos));
   handler_.addList(params, param);
   MOZ_TRY(checkPositionalParameterIndices(positionalParams, params));
   MOZ_TRY(parseAssertedVarScope());
@@ -4751,9 +4748,7 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseListOfParameter() {
 
   const auto start = tokenizer_->offset();
   MOZ_TRY(tokenizer_->enterList(length, guard));
-  BINJS_TRY_DECL(result,
-                 this->template new_<ListNode>(ParseNodeKind::ParamsBody,
-                                               tokenizer_->pos(start)));
+  BINJS_TRY_DECL(result, handler_.newParamsBody(tokenizer_->pos(start)));
 
   for (uint32_t i = 0; i < length; ++i) {
     BINJS_MOZ_TRY_DECL(item, parseParameter());

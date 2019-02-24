@@ -41,16 +41,6 @@ class BinASTParserBase : public ParserSharedBase {
     doTrace(trc);
   }
 
- public:
-  ParseNode* allocParseNode(size_t size) {
-    return static_cast<ParseNode*>(nodeAlloc_.allocNode(size));
-  }
-
-  JS_DECLARE_NEW_METHODS(new_, allocParseNode, inline)
-
- private:
-  ParseNodeAllocator nodeAlloc_;
-
   // ---- Parsing-related stuff
  protected:
   Rooted<LazyScript*> lazyScript_;

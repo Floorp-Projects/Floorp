@@ -882,18 +882,14 @@ GetterContents:
   fields:
     body:
       before: |
-        BINJS_TRY_DECL(params,
-                       this->template new_<ListNode>(ParseNodeKind::ParamsBody,
-                                                     tokenizer_->pos(start)));
+        BINJS_TRY_DECL(params, handler_.newParamsBody(tokenizer_->pos(start)));
 
 SetterContents:
   inherits: FunctionExpressionContents
   fields:
     param:
       after: |
-        BINJS_TRY_DECL(params,
-                       this->template new_<ListNode>(ParseNodeKind::ParamsBody,
-                                                     param->pn_pos));
+        BINJS_TRY_DECL(params, handler_.newParamsBody(param->pn_pos));
         handler_.addList(params, param);
         MOZ_TRY(checkPositionalParameterIndices(positionalParams, params));
 
@@ -1213,9 +1209,7 @@ ListOfParameter:
   type-ok:
     ListNode*
   init: |
-    BINJS_TRY_DECL(result,
-                   this->template new_<ListNode>(ParseNodeKind::ParamsBody,
-                                                 tokenizer_->pos(start)));
+    BINJS_TRY_DECL(result, handler_.newParamsBody(tokenizer_->pos(start)));
   append:
     handler_.addList(/* list = */ result, /* kid = */ item);
 
@@ -1232,9 +1226,7 @@ ListOfStatement:
 #  type-ok:
 #    ListNode*
 #  init:
-#    BINJS_TRY_DECL(result,
-#                   this->template new_<ListNode>(ParseNodeKind::ParamsBody,
-#                                                 tokenizer_->pos()));
+#    BINJS_TRY_DECL(result, handler_.newParamsBody(tokenizer_->pos()));
 #  append:
 #    result->appendWithoutOrderAssumption(item);
 

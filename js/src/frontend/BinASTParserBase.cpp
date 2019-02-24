@@ -16,7 +16,6 @@ BinASTParserBase::BinASTParserBase(JSContext* cx, LifoAlloc& alloc,
                                    HandleScriptSourceObject sourceObject,
                                    Handle<LazyScript*> lazyScript)
     : ParserSharedBase(cx, alloc, usedNames, sourceObject),
-      nodeAlloc_(cx, alloc),
       lazyScript_(cx, lazyScript),
       handler_(cx, alloc, nullptr, SourceKind::Binary) {
   MOZ_ASSERT_IF(lazyScript, lazyScript->isBinAST());
