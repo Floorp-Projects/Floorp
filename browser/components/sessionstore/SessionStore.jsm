@@ -3818,7 +3818,7 @@ var SessionStoreInternal = {
       });
       let sc = Services.io.QueryInterface(Ci.nsISpeculativeConnect);
       let uri = Services.io.newURI(url);
-      sc.speculativeConnect2(uri, principal, null);
+      sc.speculativeConnect(uri, principal, null);
       return true;
     }
     return false;

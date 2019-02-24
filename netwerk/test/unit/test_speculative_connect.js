@@ -149,7 +149,7 @@ function test_speculative_connect() {
     var principal = ssm.createCodebasePrincipal(URI, {});
 
     ios.QueryInterface(Ci.nsISpeculativeConnect)
-       .speculativeConnect2(URI, principal, null);
+       .speculativeConnect(URI, principal, null);
 }
 
 /* Speculative connections should not be allowed for hosts with local IP

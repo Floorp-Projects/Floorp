@@ -320,7 +320,7 @@ var UrlbarUtils = {
     try {
       let uri = urlOrEngine instanceof Ci.nsIURI ? urlOrEngine
                                                   : Services.io.newURI(urlOrEngine);
-      Services.io.speculativeConnect2(uri, window.gBrowser.contentPrincipal, null);
+      Services.io.speculativeConnect(uri, window.gBrowser.contentPrincipal, null);
     } catch (ex) {
       // Can't setup speculative connection for this url, just ignore it.
     }
