@@ -33,7 +33,6 @@ namespace frontend {
 class MOZ_STACK_CLASS BinTokenReaderMultipart : public BinTokenReaderBase {
  public:
   class AutoList;
-  class AutoTuple;
   class AutoTaggedTuple;
 
   using CharSlice = BinaryASTSupport::CharSlice;
@@ -175,19 +174,6 @@ class MOZ_STACK_CLASS BinTokenReaderMultipart : public BinTokenReaderBase {
       AutoTaggedTuple& guard);
 
   /**
-   * Start reading an untagged tuple.
-   *
-   * @param guard (OUT) A guard, ensuring that we read the tuple correctly.
-   *
-   * The `guard` is dedicated to ensuring that reading the list has consumed
-   * exactly all the bytes from that tuple. The `guard` MUST therefore be
-   * destroyed at the point where the caller has reached the end of the tuple.
-   * If the caller has consumed too few/too many bytes, this will be reported
-   * in the call go `guard.done()`.
-   */
-  MOZ_MUST_USE JS::Result<Ok> enterUntaggedTuple(AutoTuple& guard);
-
-  /**
    * Read a single unsigned long.
    */
   MOZ_MUST_USE JS::Result<uint32_t> readUnsignedLong() {
@@ -270,15 +256,6 @@ class MOZ_STACK_CLASS BinTokenReaderMultipart : public BinTokenReaderBase {
   class MOZ_STACK_CLASS AutoTaggedTuple : public AutoBase {
    public:
     explicit AutoTaggedTuple(BinTokenReaderMultipart& reader);
-
-    // Check that we have properly read to the end of the tuple.
-    MOZ_MUST_USE JS::Result<Ok> done();
-  };
-
-  // Guard class used to ensure that `readTuple` is used properly.
-  class MOZ_STACK_CLASS AutoTuple : public AutoBase {
-   public:
-    explicit AutoTuple(BinTokenReaderMultipart& reader);
 
     // Check that we have properly read to the end of the tuple.
     MOZ_MUST_USE JS::Result<Ok> done();

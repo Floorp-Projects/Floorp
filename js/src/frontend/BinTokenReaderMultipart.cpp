@@ -41,7 +41,6 @@ const uint32_t MAX_NUMBER_OF_STRINGS = 32768;
 
 using AutoList = BinTokenReaderMultipart::AutoList;
 using AutoTaggedTuple = BinTokenReaderMultipart::AutoTaggedTuple;
-using AutoTuple = BinTokenReaderMultipart::AutoTuple;
 using CharSlice = BinaryASTSupport::CharSlice;
 using Chars = BinTokenReaderMultipart::Chars;
 
@@ -359,13 +358,6 @@ BinTokenReaderMultipart::readSkippableSubTree() {
   return BinTokenReaderBase::SkippableSubTree(start, byteLen);
 }
 
-// Untagged tuple:
-// - contents (specified by the higher-level grammar);
-JS::Result<Ok> BinTokenReaderMultipart::enterUntaggedTuple(AutoTuple& guard) {
-  guard.init();
-  return Ok();
-}
-
 // Tagged tuples:
 // - uint32_t index in table [grammar];
 // - content (specified by the higher-level grammar);
@@ -480,21 +472,6 @@ JS::Result<Ok> BinTokenReaderMultipart::AutoTaggedTuple::done() {
     return reader_.cx_->alreadyReportedError();
   }
 
-  return Ok();
-}
-
-BinTokenReaderMultipart::AutoTuple::AutoTuple(BinTokenReaderMultipart& reader)
-    : AutoBase(reader) {}
-
-JS::Result<Ok> BinTokenReaderMultipart::AutoTuple::done() {
-  MOZ_ASSERT(initialized_);
-  initialized_ = false;
-  if (reader_.hasRaisedError()) {
-    // Already errored, no need to check further.
-    return reader_.cx_->alreadyReportedError();
-  }
-
-  // Check suffix.
   return Ok();
 }
 
