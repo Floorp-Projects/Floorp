@@ -131,7 +131,8 @@ export type Breakpoint = {|
 export type BreakpointOptions = {
   hidden?: boolean,
   condition?: string | null,
-  logValue?: string | null
+  logValue?: string | null,
+  logGroupId?: string | null
 };
 
 export type BreakpointActor = {|
