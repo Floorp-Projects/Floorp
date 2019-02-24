@@ -83,7 +83,6 @@ HttpChannelParentListener::OnStartRequest(nsIRequest* aRequest) {
 
 NS_IMETHODIMP
 HttpChannelParentListener::OnStopRequest(nsIRequest* aRequest,
-                                         nsISupports* aContext,
                                          nsresult aStatusCode) {
   MOZ_RELEASE_ASSERT(!mSuspendedForDiversion,
                      "Cannot call OnStopRequest if suspended for diversion!");
@@ -93,7 +92,7 @@ HttpChannelParentListener::OnStopRequest(nsIRequest* aRequest,
   LOG(("HttpChannelParentListener::OnStopRequest: [this=%p status=%" PRIu32
        "]\n",
        this, static_cast<uint32_t>(aStatusCode)));
-  nsresult rv = mNextListener->OnStopRequest(aRequest, aContext, aStatusCode);
+  nsresult rv = mNextListener->OnStopRequest(aRequest, aStatusCode);
 
   mNextListener = nullptr;
   return rv;

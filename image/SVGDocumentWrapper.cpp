@@ -215,10 +215,10 @@ SVGDocumentWrapper::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-SVGDocumentWrapper::OnStopRequest(nsIRequest* aRequest, nsISupports* ctxt,
+SVGDocumentWrapper::OnStopRequest(nsIRequest* aRequest,
                                   nsresult status) {
   if (mListener) {
-    mListener->OnStopRequest(aRequest, ctxt, status);
+    mListener->OnStopRequest(aRequest, status);
     mListener = nullptr;
   }
 

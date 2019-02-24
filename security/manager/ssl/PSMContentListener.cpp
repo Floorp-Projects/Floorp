@@ -136,7 +136,6 @@ PSMContentStreamListener::OnDataAvailable(nsIRequest* request,
 
 NS_IMETHODIMP
 PSMContentStreamListener::OnStopRequest(nsIRequest* request,
-                                        nsISupports* context,
                                         nsresult aStatus) {
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("CertDownloader::OnStopRequest\n"));
 
@@ -233,8 +232,8 @@ mozilla::ipc::IPCResult PSMContentDownloaderParent::RecvOnStopRequest(
 
 NS_IMETHODIMP
 PSMContentDownloaderParent::OnStopRequest(nsIRequest* request,
-                                          nsISupports* context, nsresult code) {
-  nsresult rv = PSMContentStreamListener::OnStopRequest(request, context, code);
+                                          nsresult code) {
+  nsresult rv = PSMContentStreamListener::OnStopRequest(request, code);
 
   if (mIPCOpen) {
     mozilla::Unused << Send__delete__(this);
@@ -306,7 +305,6 @@ PSMContentDownloaderChild::OnDataAvailable(nsIRequest* request,
 
 NS_IMETHODIMP
 PSMContentDownloaderChild::OnStopRequest(nsIRequest* request,
-                                         nsISupports* context,
                                          nsresult aStatus) {
   mozilla::Unused << SendOnStopRequest(aStatus);
   return NS_OK;

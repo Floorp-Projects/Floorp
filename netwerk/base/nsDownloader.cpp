@@ -67,14 +67,14 @@ nsDownloader::OnStartRequest(nsIRequest *request) {
 }
 
 NS_IMETHODIMP
-nsDownloader::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
+nsDownloader::OnStopRequest(nsIRequest *request,
                             nsresult status) {
   if (mSink) {
     mSink->Close();
     mSink = nullptr;
   }
 
-  mObserver->OnDownloadComplete(this, request, ctxt, status, mLocation);
+  mObserver->OnDownloadComplete(this, request, nullptr, status, mLocation);
   mObserver = nullptr;
 
   return NS_OK;

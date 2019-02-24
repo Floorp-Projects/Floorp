@@ -348,7 +348,6 @@ nsDocumentOpenInfo::OnDataAvailable(nsIRequest* request, nsISupports* aCtxt,
 }
 
 NS_IMETHODIMP nsDocumentOpenInfo::OnStopRequest(nsIRequest* request,
-                                                nsISupports* aCtxt,
                                                 nsresult aStatus) {
   LOG(("[0x%p] nsDocumentOpenInfo::OnStopRequest", this));
 
@@ -359,7 +358,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStopRequest(nsIRequest* request,
     // OnStartRequest after this... reset state.
     m_targetStreamListener = nullptr;
     mContentType.Truncate();
-    listener->OnStopRequest(request, aCtxt, aStatus);
+    listener->OnStopRequest(request, aStatus);
   }
 
   // Remember...

@@ -695,7 +695,6 @@ nsUrlClassifierStreamUpdater::OnDataAvailable(nsIRequest *request,
 
 NS_IMETHODIMP
 nsUrlClassifierStreamUpdater::OnStopRequest(nsIRequest *request,
-                                            nsISupports *context,
                                             nsresult aStatus) {
   if (!mDBService) return NS_ERROR_NOT_INITIALIZED;
 

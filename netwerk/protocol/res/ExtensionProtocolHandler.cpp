@@ -237,7 +237,7 @@ static void CancelRequest(nsIStreamListener* aListener, nsIChannel* aChannel,
   MOZ_ASSERT(aChannel);
 
   aListener->OnStartRequest(aChannel);
-  aListener->OnStopRequest(aChannel, nullptr, aResult);
+  aListener->OnStopRequest(aChannel, aResult);
   aChannel->Cancel(NS_BINDING_ABORTED);
 }
 

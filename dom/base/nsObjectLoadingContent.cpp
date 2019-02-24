@@ -1012,7 +1012,6 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest* aRequest) {
 
 NS_IMETHODIMP
 nsObjectLoadingContent::OnStopRequest(nsIRequest* aRequest,
-                                      nsISupports* aContext,
                                       nsresult aStatusCode) {
   AUTO_PROFILER_LABEL("nsObjectLoadingContent::OnStopRequest", NETWORK);
 
@@ -1038,7 +1037,7 @@ nsObjectLoadingContent::OnStopRequest(nsIRequest* aRequest,
     // This may re-enter in the case of plugin listeners
     nsCOMPtr<nsIStreamListener> listenerGrip(mFinalListener);
     mFinalListener = nullptr;
-    listenerGrip->OnStopRequest(aRequest, aContext, aStatusCode);
+    listenerGrip->OnStopRequest(aRequest, aStatusCode);
   }
 
   // Return value doesn't matter
@@ -2261,7 +2260,7 @@ nsresult nsObjectLoadingContent::CloseChannel() {
     if (listenerGrip) {
       // mFinalListener is only set by LoadObject after OnStartRequest, or
       // by OnStartRequest in the case of late-opened plugin streams
-      listenerGrip->OnStopRequest(channelGrip, nullptr, NS_BINDING_ABORTED);
+      listenerGrip->OnStopRequest(channelGrip, NS_BINDING_ABORTED);
     }
   }
   return NS_OK;

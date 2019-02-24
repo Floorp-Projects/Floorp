@@ -198,7 +198,7 @@ class LoaderListener final : public nsIStreamListener,
   }
 
   NS_IMETHOD
-  OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+  OnStopRequest(nsIRequest* aRequest,
                 nsresult aStatusCode) override {
     if (mStream) {
       mStream->SendEof();

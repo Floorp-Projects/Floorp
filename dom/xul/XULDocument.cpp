@@ -1379,7 +1379,6 @@ XULDocument::CachedChromeStreamListener::OnStartRequest(nsIRequest* request) {
 
 NS_IMETHODIMP
 XULDocument::CachedChromeStreamListener::OnStopRequest(nsIRequest* request,
-                                                       nsISupports* aContext,
                                                        nsresult aStatus) {
   if (!mProtoLoaded) return NS_OK;
 
