@@ -74,7 +74,7 @@ class BinASTParser : public BinASTParserPerTokenizer<Tok> {
   using Base::usedNames_;
 
   using Base::factory_;
-  using Base::parseContext_;
+  using Base::pc_;
   using Base::sourceObject_;
 
  protected:
