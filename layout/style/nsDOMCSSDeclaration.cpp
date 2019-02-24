@@ -53,6 +53,9 @@ nsresult nsDOMCSSDeclaration::SetPropertyValue(
     case eCSSProperty_background_position_x:
     case eCSSProperty_background_position_y:
     case eCSSProperty_transform:
+    case eCSSProperty_translate:
+    case eCSSProperty_rotate:
+    case eCSSProperty_scale:
     case eCSSProperty_top:
     case eCSSProperty_left:
     case eCSSProperty_bottom:
