@@ -58,6 +58,8 @@ const MessageState = overrides => Object.freeze(Object.assign({
   // Map of the form {messageId : networkInformation}
   // `networkInformation` holds request, response, totalTime, ...
   networkMessagesUpdateById: {},
+  // Set of logpoint IDs that have been removed
+  removedLogpointIds: new Set(),
   pausedExecutionPoint: null,
 }, overrides));
 
@@ -74,6 +76,7 @@ function cloneState(state) {
     removedActors: [...state.removedActors],
     repeatById: {...state.repeatById},
     networkMessagesUpdateById: {...state.networkMessagesUpdateById},
+    removedLogpointIds: new Set(state.removedLogpointIds),
     pausedExecutionPoint: state.pausedExecutionPoint,
   };
 }
@@ -92,14 +95,23 @@ function addMessage(state, filtersState, prefsState, newMessage) {
     return state;
   }
 
-  if (newMessage.executionPoint) {
+  if (newMessage.executionPoint && !newMessage.logpointId) {
     // When replaying old behaviors in a tab, we might see the same messages
     // multiple times. Ignore duplicate messages with the same progress values.
+    // We don't need to do this for logpoint messages, which will only arrive once.
     const progress = newMessage.executionPoint.progress;
     if (replayProgressMessages.has(progress)) {
       return state;
     }
     state.replayProgressMessages.add(progress);
+  }
+
+  // After messages with a given logpoint ID have been removed, ignore all
+  // future messages with that ID.
+  if (newMessage.logpointId &&
+      state.removedLogpointIds &&
+      state.removedLogpointIds.has(newMessage.logpointId)) {
+    return state;
   }
 
   if (newMessage.type === constants.MESSAGE_TYPE.END_GROUP) {
@@ -225,7 +237,7 @@ function messages(state = MessageState(), action, filtersState, prefsState) {
         }, []),
       });
 
-    case constants.PRIVATE_MESSAGES_CLEAR:
+    case constants.PRIVATE_MESSAGES_CLEAR: {
       const removedIds = [];
       for (const [id, message] of messagesById) {
         if (message.private === true) {
@@ -241,6 +253,25 @@ function messages(state = MessageState(), action, filtersState, prefsState) {
       return removeMessagesFromState({
         ...state,
       }, removedIds);
+    }
+
+    case constants.MESSAGES_CLEAR_LOGPOINT: {
+      const removedIds = [];
+      for (const [id, message] of messagesById) {
+        if (message.logpointId == action.logpointId) {
+          removedIds.push(id);
+        }
+      }
+
+      if (removedIds.length === 0) {
+        return state;
+      }
+
+      return removeMessagesFromState({
+        ...state,
+        removedLogpointIds: new Set([...state.removedLogpointIds, action.logpointId]),
+      }, removedIds);
+    }
 
     case constants.MESSAGE_OPEN:
       const openState = {...state};
