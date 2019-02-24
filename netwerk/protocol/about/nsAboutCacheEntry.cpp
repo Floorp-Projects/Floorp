@@ -502,8 +502,7 @@ nsAboutCacheEntry::Channel::OnMetaDataElement(char const *key,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsAboutCacheEntry::Channel::OnStartRequest(nsIRequest *request,
-                                           nsISupports *ctx) {
+nsAboutCacheEntry::Channel::OnStartRequest(nsIRequest *request) {
   mHexDumpState = 0;
 
   NS_NAMED_LITERAL_CSTRING(buffer, "<hr/>\n<pre>");

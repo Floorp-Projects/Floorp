@@ -60,8 +60,7 @@ nsSyncStreamListener::GetInputStream(nsIInputStream **result) {
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsSyncStreamListener::OnStartRequest(nsIRequest *request,
-                                     nsISupports *context) {
+nsSyncStreamListener::OnStartRequest(nsIRequest *request) {
   return NS_OK;
 }
 

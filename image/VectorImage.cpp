@@ -1340,12 +1340,12 @@ VectorImage::GetFrameIndex(uint32_t aWhichFrame) {
 
 //******************************************************************************
 NS_IMETHODIMP
-VectorImage::OnStartRequest(nsIRequest* aRequest, nsISupports* aCtxt) {
+VectorImage::OnStartRequest(nsIRequest* aRequest) {
   MOZ_ASSERT(!mSVGDocumentWrapper,
              "Repeated call to OnStartRequest -- can this happen?");
 
   mSVGDocumentWrapper = new SVGDocumentWrapper();
-  nsresult rv = mSVGDocumentWrapper->OnStartRequest(aRequest, aCtxt);
+  nsresult rv = mSVGDocumentWrapper->OnStartRequest(aRequest);
   if (NS_FAILED(rv)) {
     mSVGDocumentWrapper = nullptr;
     mError = true;

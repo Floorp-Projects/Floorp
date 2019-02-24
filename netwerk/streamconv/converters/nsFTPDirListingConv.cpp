@@ -161,10 +161,10 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
 
 // nsIRequestObserver implementation
 NS_IMETHODIMP
-nsFTPDirListingConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
+nsFTPDirListingConv::OnStartRequest(nsIRequest *request) {
   // we don't care about start. move along... but start masqeurading
   // as the http-index channel now.
-  return mFinalListener->OnStartRequest(request, ctxt);
+  return mFinalListener->OnStartRequest(request);
 }
 
 NS_IMETHODIMP

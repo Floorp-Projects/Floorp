@@ -789,7 +789,7 @@ void CompareNetwork::Abort() {
 }
 
 NS_IMETHODIMP
-CompareNetwork::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
+CompareNetwork::OnStartRequest(nsIRequest* aRequest) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mState == Finished) {

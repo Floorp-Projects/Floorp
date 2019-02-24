@@ -51,8 +51,7 @@ nsIncrementalStreamLoader::GetRequest(nsIRequest **aRequest) {
 }
 
 NS_IMETHODIMP
-nsIncrementalStreamLoader::OnStartRequest(nsIRequest *request,
-                                          nsISupports *ctxt) {
+nsIncrementalStreamLoader::OnStartRequest(nsIRequest *request) {
   nsCOMPtr<nsIChannel> chan(do_QueryInterface(request));
   if (chan) {
     int64_t contentLength = -1;
@@ -73,7 +72,6 @@ nsIncrementalStreamLoader::OnStartRequest(nsIRequest *request,
       }
     }
   }
-  mContext = ctxt;
   return NS_OK;
 }
 

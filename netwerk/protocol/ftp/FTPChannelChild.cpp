@@ -316,7 +316,7 @@ void FTPChannelChild::DoOnStartRequest(const nsresult& aChannelStatus,
   }
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
-  rv = mListener->OnStartRequest(this, nullptr);
+  rv = mListener->OnStartRequest(this);
   if (NS_FAILED(rv)) Cancel(rv);
 
   if (mDivertingToParent) {
@@ -554,7 +554,7 @@ void FTPChannelChild::DoFailedAsyncOpen(const nsresult& statusCode) {
   if (mLoadGroup) mLoadGroup->RemoveRequest(this, nullptr, statusCode);
 
   if (mListener) {
-    mListener->OnStartRequest(this, nullptr);
+    mListener->OnStartRequest(this);
     mIsPending = false;
     mListener->OnStopRequest(this, nullptr, statusCode);
   } else {

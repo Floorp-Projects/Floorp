@@ -125,11 +125,10 @@ NS_IMETHODIMP nsDeflateConverter::OnDataAvailable(nsIRequest *aRequest,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeflateConverter::OnStartRequest(nsIRequest *aRequest,
-                                                 nsISupports *aContext) {
+NS_IMETHODIMP nsDeflateConverter::OnStartRequest(nsIRequest *aRequest) {
   if (!mListener) return NS_ERROR_NOT_INITIALIZED;
 
-  return mListener->OnStartRequest(aRequest, mContext);
+  return mListener->OnStartRequest(aRequest);
 }
 
 NS_IMETHODIMP nsDeflateConverter::OnStopRequest(nsIRequest *aRequest,

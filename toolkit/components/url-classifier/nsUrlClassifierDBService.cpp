@@ -1829,8 +1829,7 @@ NS_IMPL_ISUPPORTS(ThreatHitReportListener, nsIStreamListener,
                   nsIRequestObserver)
 
 NS_IMETHODIMP
-ThreatHitReportListener::OnStartRequest(nsIRequest* aRequest,
-                                        nsISupports* aContext) {
+ThreatHitReportListener::OnStartRequest(nsIRequest* aRequest) {
   if (!LOG_ENABLED()) {
     return NS_OK;  // Nothing to do!
   }

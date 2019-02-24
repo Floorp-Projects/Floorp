@@ -923,8 +923,7 @@ nsresult ChannelWrapper::RequestListener::Init() {
 }
 
 NS_IMETHODIMP
-ChannelWrapper::RequestListener::OnStartRequest(nsIRequest* request,
-                                                nsISupports* aCtxt) {
+ChannelWrapper::RequestListener::OnStartRequest(nsIRequest* request) {
   MOZ_ASSERT(mOrigStreamListener, "Should have mOrigStreamListener");
 
   mChannelWrapper->mChannelEntry = nullptr;
@@ -932,7 +931,7 @@ ChannelWrapper::RequestListener::OnStartRequest(nsIRequest* request,
   mChannelWrapper->ErrorCheck();
   mChannelWrapper->FireEvent(NS_LITERAL_STRING("start"));
 
-  return mOrigStreamListener->OnStartRequest(request, aCtxt);
+  return mOrigStreamListener->OnStartRequest(request);
 }
 
 NS_IMETHODIMP

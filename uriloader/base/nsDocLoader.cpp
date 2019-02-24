@@ -352,7 +352,7 @@ void nsDocLoader::DestroyChildren() {
 }
 
 NS_IMETHODIMP
-nsDocLoader::OnStartRequest(nsIRequest* request, nsISupports* aCtxt) {
+nsDocLoader::OnStartRequest(nsIRequest* request) {
   // called each time a request is added to the group.
 
   if (MOZ_LOG_TEST(gDocLoaderLog, LogLevel::Debug)) {

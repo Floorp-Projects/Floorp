@@ -930,8 +930,7 @@ void nsObjectLoadingContent::NotifyOwnerDocumentActivityChanged() {
 
 // nsIRequestObserver
 NS_IMETHODIMP
-nsObjectLoadingContent::OnStartRequest(nsIRequest* aRequest,
-                                       nsISupports* aContext) {
+nsObjectLoadingContent::OnStartRequest(nsIRequest* aRequest) {
   AUTO_PROFILER_LABEL("nsObjectLoadingContent::OnStartRequest", NETWORK);
 
   LOG(("OBJLC [%p]: Channel OnStartRequest", this));
@@ -952,7 +951,7 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest* aRequest,
       return NS_BINDING_ABORTED;
     }
     if (MakePluginListener()) {
-      return mFinalListener->OnStartRequest(aRequest, nullptr);
+      return mFinalListener->OnStartRequest(aRequest);
     }
     MOZ_ASSERT_UNREACHABLE(
         "Failed to create PluginStreamListener, aborting "
@@ -2219,7 +2218,7 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
     // this in the loading block above as it requires an instance.
     if (aLoadingChannel && NS_SUCCEEDED(rv)) {
       if (NS_SUCCEEDED(rv) && MakePluginListener()) {
-        rv = mFinalListener->OnStartRequest(mChannel, nullptr);
+        rv = mFinalListener->OnStartRequest(mChannel);
         if (NS_FAILED(rv)) {
           // Plugins can reject their initial stream, but continue to run.
           CloseChannel();
@@ -2232,7 +2231,7 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
     NS_ASSERTION(mType != eType_Null && mType != eType_Loading,
                  "We should not have a final listener with a non-loaded type");
     mFinalListener = finalListener;
-    rv = finalListener->OnStartRequest(mChannel, nullptr);
+    rv = finalListener->OnStartRequest(mChannel);
   }
 
   if (NS_FAILED(rv) && mIsLoading) {

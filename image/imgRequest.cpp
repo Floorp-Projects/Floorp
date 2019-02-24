@@ -645,7 +645,7 @@ bool imgRequest::HadInsecureRedirect() const {
 /** nsIRequestObserver methods **/
 
 NS_IMETHODIMP
-imgRequest::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt) {
+imgRequest::OnStartRequest(nsIRequest* aRequest) {
   LOG_SCOPE(gImgLog, "imgRequest::OnStartRequest");
 
   RefPtr<Image> image;

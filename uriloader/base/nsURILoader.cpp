@@ -198,8 +198,7 @@ nsresult nsDocumentOpenInfo::Prepare() {
   return rv;
 }
 
-NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest* request,
-                                                 nsISupports* aCtxt) {
+NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest* request) {
   LOG(("[0x%p] nsDocumentOpenInfo::OnStartRequest", this));
   MOZ_ASSERT(request);
   if (!request) {
@@ -297,7 +296,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest* request,
     return NS_OK;
   }
 
-  rv = DispatchContent(request, aCtxt);
+  rv = DispatchContent(request, nullptr);
 
   LOG(("  After dispatch, m_targetStreamListener: 0x%p, rv: 0x%08" PRIX32,
        m_targetStreamListener.get(), static_cast<uint32_t>(rv)));
@@ -309,7 +308,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest* request,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (m_targetStreamListener)
-    rv = m_targetStreamListener->OnStartRequest(request, aCtxt);
+    rv = m_targetStreamListener->OnStartRequest(request);
 
   LOG(("  OnStartRequest returning: 0x%08" PRIX32, static_cast<uint32_t>(rv)));
 

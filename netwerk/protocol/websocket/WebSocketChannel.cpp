@@ -3662,7 +3662,7 @@ WebSocketChannel::OnTransportAvailable(nsISocketTransport *aTransport,
 // nsIRequestObserver (from nsIStreamListener)
 
 NS_IMETHODIMP
-WebSocketChannel::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) {
+WebSocketChannel::OnStartRequest(nsIRequest *aRequest) {
   LOG(("WebSocketChannel::OnStartRequest(): %p [%p %p] recvdhttpupgrade=%d\n",
        this, aRequest, mHttpChannel.get(), mRecvdHttpUpgradeTransport));
   MOZ_ASSERT(NS_IsMainThread(), "not main thread");

@@ -328,7 +328,7 @@ nsAsyncStreamCopier::AsyncCopy(nsIRequestObserver *observer, nsISupports *ctx) {
   mIsPending = true;
 
   if (mObserver) {
-    rv = mObserver->OnStartRequest(AsRequest(), nullptr);
+    rv = mObserver->OnStartRequest(AsRequest());
     if (NS_FAILED(rv)) Cancel(rv);
   }
 

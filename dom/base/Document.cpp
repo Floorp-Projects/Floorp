@@ -876,8 +876,7 @@ NS_IMPL_ISUPPORTS(ExternalResourceMap::PendingLoad, nsIStreamListener,
                   nsIRequestObserver)
 
 NS_IMETHODIMP
-ExternalResourceMap::PendingLoad::OnStartRequest(nsIRequest* aRequest,
-                                                 nsISupports* aContext) {
+ExternalResourceMap::PendingLoad::OnStartRequest(nsIRequest* aRequest) {
   ExternalResourceMap& map = mDisplayDocument->ExternalResourceMap();
   if (map.HaveShutDown()) {
     return NS_BINDING_ABORTED;
@@ -899,7 +898,7 @@ ExternalResourceMap::PendingLoad::OnStartRequest(nsIRequest* aRequest,
     return rv2;
   }
 
-  return mTargetListener->OnStartRequest(aRequest, aContext);
+  return mTargetListener->OnStartRequest(aRequest);
 }
 
 nsresult ExternalResourceMap::PendingLoad::SetupViewer(

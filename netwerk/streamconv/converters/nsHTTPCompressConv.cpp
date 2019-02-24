@@ -116,14 +116,14 @@ nsHTTPCompressConv::AsyncConvertData(const char *aFromType, const char *aToType,
 }
 
 NS_IMETHODIMP
-nsHTTPCompressConv::OnStartRequest(nsIRequest *request, nsISupports *aContext) {
+nsHTTPCompressConv::OnStartRequest(nsIRequest *request) {
   LOG(("nsHttpCompresssConv %p onstart\n", this));
   nsCOMPtr<nsIStreamListener> listener;
   {
     MutexAutoLock lock(mMutex);
     listener = mListener;
   }
-  return listener->OnStartRequest(request, aContext);
+  return listener->OnStartRequest(request);
 }
 
 NS_IMETHODIMP

@@ -78,7 +78,7 @@ WebVTTListener::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
 }
 
 NS_IMETHODIMP
-WebVTTListener::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
+WebVTTListener::OnStartRequest(nsIRequest* aRequest) {
   VTT_LOG("WebVTTListener::OnStartRequest\n");
   return NS_OK;
 }

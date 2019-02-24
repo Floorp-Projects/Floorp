@@ -77,7 +77,7 @@ DataChannelParent::Delete() {
 void DataChannelParent::ActorDestroy(ActorDestroyReason why) {}
 
 NS_IMETHODIMP
-DataChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) {
+DataChannelParent::OnStartRequest(nsIRequest *aRequest) {
   // We don't have a way to prevent nsBaseChannel from calling AsyncOpen on
   // the created nsDataChannel. We don't have anywhere to send the data in the
   // parent, so abort the binding.

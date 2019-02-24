@@ -77,8 +77,7 @@ SimpleChannelParent::Delete() {
 void SimpleChannelParent::ActorDestroy(ActorDestroyReason aWhy) {}
 
 NS_IMETHODIMP
-SimpleChannelParent::OnStartRequest(nsIRequest* aRequest,
-                                    nsISupports* aContext) {
+SimpleChannelParent::OnStartRequest(nsIRequest* aRequest) {
   // We don't have a way to prevent nsBaseChannel from calling AsyncOpen on
   // the created nsSimpleChannel. We don't have anywhere to send the data in the
   // parent, so abort the binding.

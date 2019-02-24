@@ -1149,9 +1149,8 @@ class InterceptFailedOnStop : public nsIStreamListener {
       : mNext(arg), mChannel(chan) {}
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  NS_IMETHOD OnStartRequest(nsIRequest* aRequest,
-                            nsISupports* aContext) override {
-    return mNext->OnStartRequest(aRequest, aContext);
+  NS_IMETHOD OnStartRequest(nsIRequest* aRequest) override {
+    return mNext->OnStartRequest(aRequest);
   }
 
   NS_IMETHOD OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
@@ -3294,7 +3293,7 @@ void HttpBaseChannel::DoNotifyListener() {
 
   if (mListener && !mOnStartRequestCalled) {
     nsCOMPtr<nsIStreamListener> listener = mListener;
-    listener->OnStartRequest(this, nullptr);
+    listener->OnStartRequest(this);
 
     mOnStartRequestCalled = true;
   }

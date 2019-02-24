@@ -966,8 +966,7 @@ BackgroundFileSaverStreamListener::GetProgressCallback() {
 }
 
 NS_IMETHODIMP
-BackgroundFileSaverStreamListener::OnStartRequest(nsIRequest *aRequest,
-                                                  nsISupports *aContext) {
+BackgroundFileSaverStreamListener::OnStartRequest(nsIRequest *aRequest) {
   NS_ENSURE_ARG(aRequest);
 
   return NS_OK;

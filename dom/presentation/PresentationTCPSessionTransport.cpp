@@ -44,7 +44,7 @@ class CopierCallbacks final : public nsIRequestObserver {
 NS_IMPL_ISUPPORTS(CopierCallbacks, nsIRequestObserver)
 
 NS_IMETHODIMP
-CopierCallbacks::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
+CopierCallbacks::OnStartRequest(nsIRequest* aRequest) {
   return NS_OK;
 }
 
@@ -503,8 +503,7 @@ PresentationTCPSessionTransport::OnInputStreamReady(
 
 // nsIRequestObserver
 NS_IMETHODIMP
-PresentationTCPSessionTransport::OnStartRequest(nsIRequest* aRequest,
-                                                nsISupports* aContext) {
+PresentationTCPSessionTransport::OnStartRequest(nsIRequest* aRequest) {
   // Do nothing.
   return NS_OK;
 }

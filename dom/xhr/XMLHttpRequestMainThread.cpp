@@ -1758,14 +1758,13 @@ XMLHttpRequestMainThread::OnDataAvailable(nsIRequest* request,
 }
 
 NS_IMETHODIMP
-XMLHttpRequestMainThread::OnStartRequest(nsIRequest* request,
-                                         nsISupports* ctxt) {
+XMLHttpRequestMainThread::OnStartRequest(nsIRequest* request) {
   AUTO_PROFILER_LABEL("XMLHttpRequestMainThread::OnStartRequest", NETWORK);
 
   nsresult rv = NS_OK;
   if (!mFirstStartRequestSeen && mRequestObserver) {
     mFirstStartRequestSeen = true;
-    mRequestObserver->OnStartRequest(request, ctxt);
+    mRequestObserver->OnStartRequest(request);
   }
 
   if (request != mChannel) {
@@ -1818,7 +1817,6 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest* request,
                           mUploadTotal);
   }
 
-  mContext = ctxt;
   mFlagParseBody = true;
   ChangeState(XMLHttpRequest_Binding::HEADERS_RECEIVED);
 
@@ -2010,7 +2008,7 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest* request,
     mResponseXML->SetReferrer(NS_LITERAL_CSTRING(""));
 
     mXMLParserStreamListener = listener;
-    rv = mXMLParserStreamListener->OnStartRequest(request, ctxt);
+    rv = mXMLParserStreamListener->OnStartRequest(request);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

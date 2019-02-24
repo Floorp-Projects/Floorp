@@ -328,7 +328,7 @@ nsresult nsPingListener::StartTimeout(DocGroup* aDocGroup) {
 }
 
 NS_IMETHODIMP
-nsPingListener::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
+nsPingListener::OnStartRequest(nsIRequest* aRequest) {
   return NS_OK;
 }
 

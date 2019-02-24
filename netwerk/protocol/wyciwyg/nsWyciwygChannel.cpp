@@ -576,14 +576,14 @@ nsWyciwygChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctx,
 //////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsWyciwygChannel::OnStartRequest(nsIRequest *request, nsISupports *ctx) {
+nsWyciwygChannel::OnStartRequest(nsIRequest *request) {
   LOG(("nsWyciwygChannel::OnStartRequest [this=%p request=%p]\n", this,
        request));
 
   nsCOMPtr<nsIStreamListener> listener = mListener;
 
   if (listener) {
-    return listener->OnStartRequest(this, nullptr);
+    return listener->OnStartRequest(this);
   }
 
   MOZ_ASSERT(false, "We must have a listener!");
@@ -714,7 +714,7 @@ void nsWyciwygChannel::NotifyListener() {
   listener.swap(mListener);
 
   if (listener) {
-    listener->OnStartRequest(this, nullptr);
+    listener->OnStartRequest(this);
     mIsPending = false;
     listener->OnStopRequest(this, nullptr, mStatus);
   } else {

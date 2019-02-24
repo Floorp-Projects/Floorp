@@ -180,7 +180,7 @@ NS_IMPL_ISUPPORTS(nsPrefetchNode, nsIRequestObserver, nsIStreamListener,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsPrefetchNode::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) {
+nsPrefetchNode::OnStartRequest(nsIRequest *aRequest) {
   nsresult rv;
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest, &rv);

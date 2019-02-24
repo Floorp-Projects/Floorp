@@ -734,8 +734,7 @@ nsWebBrowserPersist::OnWrite::OnFinish(nsIWebBrowserPersistDocument *aDoc,
 // nsWebBrowserPersist::nsIRequestObserver
 //*****************************************************************************
 
-NS_IMETHODIMP nsWebBrowserPersist::OnStartRequest(nsIRequest *request,
-                                                  nsISupports *ctxt) {
+NS_IMETHODIMP nsWebBrowserPersist::OnStartRequest(nsIRequest *request) {
   if (mProgressListener) {
     uint32_t stateFlags = nsIWebProgressListener::STATE_START |
                           nsIWebProgressListener::STATE_IS_REQUEST;

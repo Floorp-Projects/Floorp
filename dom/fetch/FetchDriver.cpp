@@ -203,8 +203,7 @@ AlternativeDataStreamListener::GetCacheInfoChannel() {
 }
 
 NS_IMETHODIMP
-AlternativeDataStreamListener::OnStartRequest(nsIRequest* aRequest,
-                                              nsISupports* aContext) {
+AlternativeDataStreamListener::OnStartRequest(nsIRequest* aRequest) {
   AssertIsOnMainThread();
   MOZ_ASSERT(!mAlternativeDataType.IsEmpty());
   // Checking the alternative data type is the same between we asked and the
@@ -247,7 +246,7 @@ AlternativeDataStreamListener::OnStartRequest(nsIRequest* aRequest,
     mStatus = AlternativeDataStreamListener::FALLBACK;
     mAlternativeDataCacheEntryId = 0;
     MOZ_ASSERT(mFetchDriver);
-    return mFetchDriver->OnStartRequest(aRequest, aContext);
+    return mFetchDriver->OnStartRequest(aRequest);
   }
   return NS_OK;
 }
@@ -784,7 +783,7 @@ void FetchDriver::FailWithNetworkError(nsresult rv) {
 }
 
 NS_IMETHODIMP
-FetchDriver::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
+FetchDriver::OnStartRequest(nsIRequest* aRequest) {
   AssertIsOnMainThread();
 
   // Note, this can be called multiple times if we are doing an opaqueredirect.

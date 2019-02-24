@@ -736,7 +736,7 @@ void nsJSChannel::EvaluateScript() {
 }
 
 void nsJSChannel::NotifyListener() {
-  mListener->OnStartRequest(this, nullptr);
+  mListener->OnStartRequest(this);
   mListener->OnStopRequest(this, nullptr, mStatus);
 
   CleanupStrongRefs();
@@ -936,10 +936,10 @@ nsJSChannel::SetContentLength(int64_t aContentLength) {
 }
 
 NS_IMETHODIMP
-nsJSChannel::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
+nsJSChannel::OnStartRequest(nsIRequest* aRequest) {
   NS_ENSURE_TRUE(aRequest == mStreamChannel, NS_ERROR_UNEXPECTED);
 
-  return mListener->OnStartRequest(this, aContext);
+  return mListener->OnStartRequest(this);
 }
 
 NS_IMETHODIMP
