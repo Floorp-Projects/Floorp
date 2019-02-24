@@ -148,7 +148,7 @@ hpp:
 
         using Base::sourceObject_;
         using Base::pc_;
-        using Base::factory_;
+        using Base::handler_;
 
        protected:
         // BinASTParserPerTokenizer types.
@@ -347,10 +347,10 @@ hpp:
 
 Arguments:
   init: |
-    BINJS_TRY_DECL(result, factory_.newList(ParseNodeKind::Arguments,
+    BINJS_TRY_DECL(result, handler_.newList(ParseNodeKind::Arguments,
                                             tokenizer_->pos(start)));
   append:
-    factory_.addList(/* list = */ result, /* kid = */ item);
+    handler_.addList(/* list = */ result, /* kid = */ item);
 
 ArrayExpression:
   build: |
@@ -494,7 +494,7 @@ AssertedVarScope:
 AssignmentExpression:
   build: |
     BINJS_TRY_DECL(result,
-                   factory_.newAssignment(ParseNodeKind::AssignExpr,
+                   handler_.newAssignment(ParseNodeKind::AssignExpr,
                                           binding, expression));
 
 AssignmentTargetIdentifier:
@@ -505,7 +505,7 @@ AssignmentTargetIdentifier:
     BINJS_TRY(usedNames_.noteUse(cx_, name, pc_->scriptId(),
                                  pc_->innermostScope()->id()));
     BINJS_TRY_DECL(result,
-                   factory_.newName(name->asPropertyName(),
+                   handler_.newName(name->asPropertyName(),
                                     tokenizer_->pos(start), cx_));
 
 BindingIdentifier:
@@ -514,7 +514,7 @@ BindingIdentifier:
       return raiseError("Invalid identifier");
     }
     BINJS_TRY_DECL(result,
-                   factory_.newName(name->asPropertyName(),
+                   handler_.newName(name->asPropertyName(),
                                     tokenizer_->pos(start), cx_));
 
 BinaryExpression:
@@ -605,7 +605,7 @@ BinaryExpression:
       left->template as<ListNode>().appendWithoutOrderAssumption(right);
       result = left;
     } else {
-      BINJS_TRY_DECL(list, factory_.newList(pnk, tokenizer_->pos(start)));
+      BINJS_TRY_DECL(list, handler_.newList(pnk, tokenizer_->pos(start)));
 
       list->appendWithoutOrderAssumption(left);
       list->appendWithoutOrderAssumption(right);
@@ -621,7 +621,7 @@ Block:
     MOZ_TRY(checkClosedVars(currentScope));
     BINJS_TRY_DECL(bindings,
                    NewLexicalScopeData(cx_, currentScope, alloc_, pc_));
-    BINJS_TRY_DECL(result, factory_.newLexicalScope(*bindings, statements));
+    BINJS_TRY_DECL(result, handler_.newLexicalScope(*bindings, statements));
 
 BreakStatement:
   fields:
@@ -652,7 +652,7 @@ BreakStatement:
     }
 
     BINJS_TRY_DECL(result,
-                   factory_.newBreakStatement(label ? label->asPropertyName()
+                   handler_.newBreakStatement(label ? label->asPropertyName()
                                                     : nullptr,
                                               tokenizer_->pos(start)));
 
@@ -661,7 +661,7 @@ CallExpression:
     auto op = JSOP_CALL;
 
     // Try to optimize funcall and funapply at the bytecode level
-    if (PropertyName* prop = factory_.maybeDottedProperty(callee)) {
+    if (PropertyName* prop = handler_.maybeDottedProperty(callee)) {
       if (prop == cx_->names().apply) {
         op = JSOP_FUNAPPLY;
         if (pc_->isFunctionBox()) {
@@ -673,7 +673,7 @@ CallExpression:
     }
 
     // Check for direct calls to `eval`.
-    if (factory_.isEvalName(callee, cx_)) {
+    if (handler_.isEvalName(callee, cx_)) {
       if (!pc_->varScope().lookupDeclaredNameForAdd(cx_->names().eval) &&
           !pc_->innermostScope()->lookupDeclaredNameForAdd(cx_->names().eval)) {
         // This is a direct call to `eval`.
@@ -685,7 +685,7 @@ CallExpression:
       }
     }
 
-    BINJS_TRY_DECL(result, factory_.newCall(callee, arguments));
+    BINJS_TRY_DECL(result, handler_.newCall(callee, arguments));
     result->setOp(op);
 
 CatchClause:
@@ -699,8 +699,8 @@ CatchClause:
     MOZ_TRY(checkClosedVars(currentScope));
     BINJS_TRY_DECL(bindings,
                    NewLexicalScopeData(cx_, currentScope, alloc_, pc_));
-    BINJS_TRY_DECL(result, factory_.newLexicalScope(*bindings, body));
-    BINJS_TRY(factory_.setupCatchScope(result, binding, body));
+    BINJS_TRY_DECL(result, handler_.newLexicalScope(*bindings, body));
+    BINJS_TRY(handler_.setupCatchScope(result, binding, body));
 
 CompoundAssignmentExpression:
   build: |
@@ -743,24 +743,24 @@ CompoundAssignmentExpression:
         pnk = ParseNodeKind::BitAndAssignExpr;
         break;
     }
-    BINJS_TRY_DECL(result, factory_.newAssignment(pnk, binding, expression));
+    BINJS_TRY_DECL(result, handler_.newAssignment(pnk, binding, expression));
 
 ComputedMemberAssignmentTarget:
   build: |
     BINJS_TRY_DECL(result,
-                   factory_.newPropertyByValue(object, expression,
+                   handler_.newPropertyByValue(object, expression,
                                                tokenizer_->offset()));
 
 ComputedMemberExpression:
   build: |
     BINJS_TRY_DECL(result,
-                   factory_.newPropertyByValue(object, expression,
+                   handler_.newPropertyByValue(object, expression,
                                                tokenizer_->offset()));
 
 ConditionalExpression:
   build: |
     BINJS_TRY_DECL(result,
-                   factory_.newConditional(test, consequent, alternate));
+                   handler_.newConditional(test, consequent, alternate));
 
 ContinueStatement:
   fields:
@@ -791,13 +791,13 @@ ContinueStatement:
     }
 
     BINJS_TRY_DECL(result,
-                   factory_.newContinueStatement(label ? label->asPropertyName()
+                   handler_.newContinueStatement(label ? label->asPropertyName()
                                                        : nullptr,
                                                  tokenizer_->pos(start)));
 
 DataProperty:
   build: |
-    if (!factory_.isUsableAsObjectPropertyName(name)) {
+    if (!handler_.isUsableAsObjectPropertyName(name)) {
       return raiseError("DataProperty key kind");
     }
 
@@ -805,11 +805,11 @@ DataProperty:
     if (name->template is<NameNode>() &&
         name->template as<NameNode>().atom() == cx_->names().proto) {
       BINJS_TRY_VAR(result,
-                    factory_.newUnary(ParseNodeKind::MutateProto, start,
+                    handler_.newUnary(ParseNodeKind::MutateProto, start,
                                       expression));
     } else {
       BINJS_TRY_VAR(result,
-                    factory_.newObjectMethodOrPropertyDefinition(name,
+                    handler_.newObjectMethodOrPropertyDefinition(name,
                                                                  expression,
                                                                  AccessorType::None));
     }
@@ -817,14 +817,14 @@ DataProperty:
 Directive:
   build: |
     TokenPos pos = tokenizer_->pos(start);
-    BINJS_TRY_DECL(result, factory_.newStringLiteral(rawValue, pos));
+    BINJS_TRY_DECL(result, handler_.newStringLiteral(rawValue, pos));
 
 DoWhileStatement:
   init:
     ParseContext::Statement stmt(pc_, StatementKind::DoLoop);
   build: |
     BINJS_TRY_DECL(result,
-                   factory_.newDoWhileStatement(body, test,
+                   handler_.newDoWhileStatement(body, test,
                                                 tokenizer_->pos(start)));
 
 EagerFunctionDeclaration:
@@ -894,7 +894,7 @@ SetterContents:
         BINJS_TRY_DECL(params,
                        this->template new_<ListNode>(ParseNodeKind::ParamsBody,
                                                      param->pn_pos));
-        factory_.addList(params, param);
+        handler_.addList(params, param);
         MOZ_TRY(checkPositionalParameterIndices(positionalParams, params));
 
 EagerFunctionExpression:
@@ -943,7 +943,7 @@ EagerFunctionExpression:
     BINJS_TRY_DECL(lexicalScopeData,
                    NewLexicalScopeData(cx_, lexicalScope, alloc_, pc_));
     BINJS_TRY_DECL(bodyScope,
-                   factory_.newLexicalScope(*lexicalScopeData, body));
+                   handler_.newLexicalScope(*lexicalScopeData, body));
     BINJS_MOZ_TRY_DECL(result,
                        buildFunction(start, kind, name, params, bodyScope,
                                      funbox));
@@ -1015,7 +1015,7 @@ EagerMethod:
     BINJS_MOZ_TRY_DECL(method,
                        buildFunction(start, kind, name, params, body, funbox));
     BINJS_TRY_DECL(result,
-                   factory_.newObjectMethodOrPropertyDefinition(name, method,
+                   handler_.newObjectMethodOrPropertyDefinition(name, method,
                                                                 accessorType));
 
 EagerSetter:
@@ -1028,12 +1028,12 @@ EagerSetter:
 
 EmptyStatement:
   build:
-    BINJS_TRY_DECL(result, factory_.newEmptyStatement(tokenizer_->pos(start)));
+    BINJS_TRY_DECL(result, handler_.newEmptyStatement(tokenizer_->pos(start)));
 
 ExpressionStatement:
   build: |
     BINJS_TRY_DECL(result,
-                   factory_.newExprStatement(expression, tokenizer_->offset()));
+                   handler_.newExprStatement(expression, tokenizer_->offset()));
 
 ForInOfBinding:
   init:
@@ -1053,8 +1053,8 @@ ForInOfBinding:
         return raiseError("Const is not supported in this preview release");
     }
     BINJS_TRY_DECL(result,
-                   factory_.newDeclarationList(pnk, tokenizer_->pos(start)));
-    factory_.addList(result, binding);
+                   handler_.newDeclarationList(pnk, tokenizer_->pos(start)));
+    handler_.addList(result, binding);
 
 
 
@@ -1069,16 +1069,16 @@ ForInStatement:
     BINJS_TRY(scope.init(pc_));
   build: |
     BINJS_TRY_DECL(forHead,
-                   factory_.newForInOrOfHead(ParseNodeKind::ForIn, left, right,
+                   handler_.newForInOrOfHead(ParseNodeKind::ForIn, left, right,
                                              tokenizer_->pos(start)));
     ParseNode* result;
     BINJS_TRY_VAR(result,
-                  factory_.newForStatement(start, forHead, body,
+                  handler_.newForStatement(start, forHead, body,
                                             /* iflags = */ 0));
 
     if (!scope.isEmpty()) {
       BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, scope, alloc_, pc_));
-      BINJS_TRY_VAR(result, factory_.newLexicalScope(*bindings, result));
+      BINJS_TRY_VAR(result, handler_.newLexicalScope(*bindings, result));
     }
 
 FormalParameters:
@@ -1101,17 +1101,17 @@ ForStatement:
     BINJS_TRY(scope.init(pc_));
   build: |
     BINJS_TRY_DECL(forHead,
-                   factory_.newForHead(init, test, update,
+                   handler_.newForHead(init, test, update,
                                        tokenizer_->pos(start)));
     ParseNode* result;
     BINJS_TRY_VAR(result,
-                  factory_.newForStatement(start, forHead, body,
+                  handler_.newForStatement(start, forHead, body,
                                            /* iflags = */ 0));
 
     if (!scope.isEmpty()) {
       BINJS_TRY_DECL(bindings,
                      NewLexicalScopeData(cx_, scope, alloc_, pc_));
-      BINJS_TRY_VAR(result, factory_.newLexicalScope(*bindings, result));
+      BINJS_TRY_VAR(result, handler_.newLexicalScope(*bindings, result));
     }
 
 FunctionBody:
@@ -1125,13 +1125,13 @@ IdentifierExpression:
     BINJS_TRY(usedNames_.noteUse(cx_, name, pc_->scriptId(),
                                  pc_->innermostScope()->id()));
     BINJS_TRY_DECL(result,
-                   factory_.newName(name->asPropertyName(),
+                   handler_.newName(name->asPropertyName(),
                                     tokenizer_->pos(start), cx_));
 
 IfStatement:
   build: |
     BINJS_TRY_DECL(result,
-                   factory_.newIfStatement(start, test, consequent, alternate));
+                   handler_.newIfStatement(start, test, consequent, alternate));
 
 LabelledStatement:
   fields:
@@ -1143,7 +1143,7 @@ LabelledStatement:
         ParseContext::LabelStatement stmt(pc_, label);
   build: |
     BINJS_TRY_DECL(result,
-                   factory_.newLabeledStatement(label->asPropertyName(), body,
+                   handler_.newLabeledStatement(label->asPropertyName(), body,
                                                 start));
 
 ListOfAssertedBoundName:
@@ -1183,15 +1183,15 @@ ListOfDirective:
   type-ok:
     ListNode*
   init:
-    BINJS_TRY_DECL(result, factory_.newStatementList(tokenizer_->pos(start)));
+    BINJS_TRY_DECL(result, handler_.newStatementList(tokenizer_->pos(start)));
   append:
-    factory_.addStatementToList(result, item);
+    handler_.addStatementToList(result, item);
 
 ListOfObjectProperty:
   type-ok:
     ListNode*
   init:
-    BINJS_TRY_DECL(result, factory_.newObjectLiteral(start));
+    BINJS_TRY_DECL(result, handler_.newObjectLiteral(start));
   append: |
     if (!item->isConstant())
       result->setHasNonConstInitializer();
@@ -1201,12 +1201,12 @@ ListOfOptionalSpreadElementOrExpression:
   type-ok:
     ListNode*
   init:
-    BINJS_TRY_DECL(result, factory_.newArrayLiteral(start));
+    BINJS_TRY_DECL(result, handler_.newArrayLiteral(start));
   append: |
     if (item) {
-      factory_.addArrayElement(result, item); // Infallible.
+      handler_.addArrayElement(result, item); // Infallible.
     } else {
-      BINJS_TRY(factory_.addElision(result, tokenizer_->pos(start)));
+      BINJS_TRY(handler_.addElision(result, tokenizer_->pos(start)));
     }
 
 ListOfParameter:
@@ -1217,15 +1217,15 @@ ListOfParameter:
                    this->template new_<ListNode>(ParseNodeKind::ParamsBody,
                                                  tokenizer_->pos(start)));
   append:
-    factory_.addList(/* list = */ result, /* kid = */ item);
+    handler_.addList(/* list = */ result, /* kid = */ item);
 
 ListOfStatement:
   type-ok:
     ListNode*
   init:
-    BINJS_TRY_DECL(result, factory_.newStatementList(tokenizer_->pos(start)));
+    BINJS_TRY_DECL(result, handler_.newStatementList(tokenizer_->pos(start)));
   append:
-    factory_.addStatementToList(result, item);
+    handler_.addStatementToList(result, item);
 
 
 #ListOfSpreadElementOrExpression:
@@ -1242,9 +1242,9 @@ ListOfSwitchCase:
   type-ok:
     ListNode*
   init:
-    BINJS_TRY_DECL(result, factory_.newStatementList(tokenizer_->pos(start)));
+    BINJS_TRY_DECL(result, handler_.newStatementList(tokenizer_->pos(start)));
   append:
-    factory_.addCaseStatementToList(result, item);
+    handler_.addCaseStatementToList(result, item);
 
 ListOfVariableDeclarator:
   extra-params: ParseNodeKind declarationListKind
@@ -1252,22 +1252,22 @@ ListOfVariableDeclarator:
     ListNode*
   init: |
     BINJS_TRY_DECL(result,
-                   factory_.newDeclarationList(declarationListKind,
+                   handler_.newDeclarationList(declarationListKind,
                    tokenizer_->pos(start)));
 
 LiteralBooleanExpression:
   build: |
     BINJS_TRY_DECL(result,
-                   factory_.newBooleanLiteral(value, tokenizer_->pos(start)));
+                   handler_.newBooleanLiteral(value, tokenizer_->pos(start)));
 
 LiteralNumericExpression:
   build: |
     BINJS_TRY_DECL(result,
-                   factory_.newNumber(value, DecimalPoint::HasDecimal, tokenizer_->pos(start)));
+                   handler_.newNumber(value, DecimalPoint::HasDecimal, tokenizer_->pos(start)));
 
 LiteralNullExpression:
   build: |
-    BINJS_TRY_DECL(result, factory_.newNullLiteral(tokenizer_->pos(start)));
+    BINJS_TRY_DECL(result, handler_.newNullLiteral(tokenizer_->pos(start)));
 
 LiteralPropertyName:
   build: |
@@ -1275,11 +1275,11 @@ LiteralPropertyName:
     uint32_t index;
     if (value->isIndex(&index)) {
       BINJS_TRY_VAR(result,
-                    factory_.newNumber(index, NoDecimal,
+                    handler_.newNumber(index, NoDecimal,
                                        TokenPos(start, tokenizer_->offset())));
     } else {
       BINJS_TRY_VAR(result,
-                    factory_.newObjectLiteralPropertyName(value,
+                    handler_.newObjectLiteralPropertyName(value,
                                                           tokenizer_->pos(start)));
     }
 
@@ -1314,17 +1314,17 @@ LiteralRegExpExpression:
                   RegExpObject::create(cx_, pattern, reflags, TenuredObject));
 
     BINJS_TRY_DECL(result,
-                   factory_.newRegExp(reobj, tokenizer_->pos(start), *this));
+                   handler_.newRegExp(reobj, tokenizer_->pos(start), *this));
 
 LiteralStringExpression:
   build: |
     BINJS_TRY_DECL(result,
-                   factory_.newStringLiteral(value, tokenizer_->pos(start)));
+                   handler_.newStringLiteral(value, tokenizer_->pos(start)));
 
 NewExpression:
   build: |
     BINJS_TRY_DECL(result,
-                   factory_.newNewExpression(tokenizer_->pos(start).begin,
+                   handler_.newNewExpression(tokenizer_->pos(start).begin,
                                              callee, arguments));
 
 ObjectExpression:
@@ -1357,7 +1357,7 @@ ReturnStatement:
     pc_->functionBox()->usesReturn = true;
   build: |
     BINJS_TRY_DECL(result,
-                   factory_.newReturnStatement(expression,
+                   handler_.newReturnStatement(expression,
                                                tokenizer_->pos(start)));
 
 Script:
@@ -1373,24 +1373,24 @@ Script:
 ShorthandProperty:
   build: |
     MOZ_ASSERT(name->isKind(ParseNodeKind::Name));
-    MOZ_ASSERT(!factory_.isUsableAsObjectPropertyName(name));
+    MOZ_ASSERT(!handler_.isUsableAsObjectPropertyName(name));
     BINJS_TRY_DECL(propName,
-                   factory_.newObjectLiteralPropertyName(name->template as<NameNode>().name(),
+                   handler_.newObjectLiteralPropertyName(name->template as<NameNode>().name(),
                                                          tokenizer_->pos(start)));
 
     BINJS_TRY_DECL(result,
-                   factory_.newShorthandPropertyDefinition(propName, name));
+                   handler_.newShorthandPropertyDefinition(propName, name));
 
 SwitchCase:
   type-ok:
     CaseClause*
   build: |
-    BINJS_TRY_DECL(result, factory_.newCaseOrDefault(start, test, consequent));
+    BINJS_TRY_DECL(result, handler_.newCaseOrDefault(start, test, consequent));
 
 SwitchDefault:
   build: |
     BINJS_TRY_DECL(result,
-                   factory_.newCaseOrDefault(start, nullptr, consequent));
+                   handler_.newCaseOrDefault(start, nullptr, consequent));
 
 SwitchStatement:
   fields:
@@ -1398,9 +1398,9 @@ SwitchStatement:
       after: |
         ParseContext::Statement stmt(pc_, StatementKind::Switch);
   build: |
-    BINJS_TRY_DECL(scope, factory_.newLexicalScope(nullptr, cases));
+    BINJS_TRY_DECL(scope, handler_.newLexicalScope(nullptr, cases));
     BINJS_TRY_DECL(result,
-                   factory_.newSwitchStatement(start, discriminant, scope,
+                   handler_.newSwitchStatement(start, discriminant, scope,
                                                /* hasDefault = */ false));
 
 SwitchStatementWithDefault:
@@ -1411,16 +1411,16 @@ SwitchStatementWithDefault:
   build: |
     // Concatenate `preDefaultCase`, `defaultCase`, `postDefaultCase`
     auto cases = preDefaultCases;
-    factory_.addList(cases, defaultCase);
+    handler_.addList(cases, defaultCase);
     ParseNode* iter = postDefaultCases->head();
     while (iter) {
       ParseNode* next = iter->pn_next;
-      factory_.addList(cases, iter);
+      handler_.addList(cases, iter);
       iter = next;
     }
-    BINJS_TRY_DECL(scope, factory_.newLexicalScope(nullptr, cases));
+    BINJS_TRY_DECL(scope, handler_.newLexicalScope(nullptr, cases));
     BINJS_TRY_DECL(result,
-                   factory_.newSwitchStatement(start, discriminant, scope,
+                   handler_.newSwitchStatement(start, discriminant, scope,
                                                /* hasDefault = */ true));
 
 StaticMemberAssignmentTarget:
@@ -1433,9 +1433,9 @@ StaticMemberAssignmentTarget:
           nameStart = tokenizer_->offset();
   build: |
     BINJS_TRY_DECL(name,
-                   factory_.newPropertyName(property->asPropertyName(),
+                   handler_.newPropertyName(property->asPropertyName(),
                                             tokenizer_->pos(nameStart)));
-    BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, name));
+    BINJS_TRY_DECL(result, handler_.newPropertyAccess(object, name));
 
 StaticMemberExpression:
   init:
@@ -1447,9 +1447,9 @@ StaticMemberExpression:
           nameStart = tokenizer_->offset();
   build: |
     BINJS_TRY_DECL(name,
-                   factory_.newPropertyName(property->asPropertyName(),
+                   handler_.newPropertyName(property->asPropertyName(),
                    tokenizer_->pos(nameStart)));
-    BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, name));
+    BINJS_TRY_DECL(result, handler_.newPropertyAccess(object, name));
 
 ThisExpression:
   build: |
@@ -1463,15 +1463,15 @@ ThisExpression:
       HandlePropertyName dotThis = cx_->names().dotThis;
       BINJS_TRY(usedNames_.noteUse(cx_, dotThis, pc_->scriptId(),
                                    pc_->innermostScope()->id()));
-      BINJS_TRY_VAR(thisName, factory_.newName(dotThis, pos, cx_));
+      BINJS_TRY_VAR(thisName, handler_.newName(dotThis, pos, cx_));
     }
 
-    BINJS_TRY_DECL(result, factory_.newThisLiteral(pos, thisName));
+    BINJS_TRY_DECL(result, handler_.newThisLiteral(pos, thisName));
 
 ThrowStatement:
   build: |
     BINJS_TRY_DECL(result,
-                   factory_.newThrowStatement(expression,
+                   handler_.newThrowStatement(expression,
                                               tokenizer_->pos(start)));
 
 TryCatchStatement:
@@ -1486,7 +1486,7 @@ TryCatchStatement:
           BINJS_TRY(scope.init(pc_));
   build: |
     BINJS_TRY_DECL(result,
-                   factory_.newTryStatement(start, body, catchClause,
+                   handler_.newTryStatement(start, body, catchClause,
                                             /* finallyBlock = */ nullptr));
 
 TryFinallyStatement:
@@ -1509,7 +1509,7 @@ TryFinallyStatement:
           BINJS_TRY(scope.init(pc_));
   build: |
     BINJS_TRY_DECL(result,
-                   factory_.newTryStatement(start, body, catchClause,
+                   handler_.newTryStatement(start, body, catchClause,
                                             finalizer));
 
 UnaryExpression:
@@ -1559,7 +1559,7 @@ UnaryExpression:
         break;
       }
     }
-    BINJS_TRY_DECL(result, factory_.newUnary(pnk, start, operand));
+    BINJS_TRY_DECL(result, handler_.newUnary(pnk, start, operand));
 
 UpdateExpression:
   build: |
@@ -1574,7 +1574,7 @@ UpdateExpression:
                        : ParseNodeKind::PostDecrementExpr;
         break;
     }
-    BINJS_TRY_DECL(result, factory_.newUnary(pnk, start, operand));
+    BINJS_TRY_DECL(result, handler_.newUnary(pnk, start, operand));
 
 VariableDeclaration:
   init:
@@ -1615,7 +1615,7 @@ VariableDeclarator:
       MOZ_TRY(checkBinding(bindingNameNode->atom()->asPropertyName()));
       result = bindingNameNode;
       if (init) {
-        BINJS_TRY(factory_.finishInitializerAssignment(bindingNameNode, init));
+        BINJS_TRY(handler_.finishInitializerAssignment(bindingNameNode, init));
       }
     } else {
       // `var pattern = bar`
@@ -1627,7 +1627,7 @@ VariableDeclarator:
 
       MOZ_CRASH("Unimplemented: AssertedScope check for BindingPattern variable declaration");
       BINJS_TRY_VAR(result,
-                    factory_.newAssignment(ParseNodeKind::AssignExpr, binding,
+                    handler_.newAssignment(ParseNodeKind::AssignExpr, binding,
                                            init));
     }
 
@@ -1635,7 +1635,7 @@ WhileStatement:
   init:
     ParseContext::Statement stmt(pc_, StatementKind::WhileLoop);
   build:
-    BINJS_TRY_DECL(result, factory_.newWhileStatement(start, test, body));
+    BINJS_TRY_DECL(result, handler_.newWhileStatement(start, test, body));
 
 WithStatement:
   fields:
@@ -1644,4 +1644,4 @@ WithStatement:
         ParseContext::Statement stmt(pc_, StatementKind::With);
   build: |
     pc_->sc()->setBindingsAccessedDynamically();
-    BINJS_TRY_DECL(result, factory_.newWithStatement(start, object, body));
+    BINJS_TRY_DECL(result, handler_.newWithStatement(start, object, body));
