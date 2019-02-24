@@ -456,7 +456,7 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
 
  protected:
   /* State specific to the kind of parse being performed. */
-  ParseHandler handler;
+  ParseHandler handler_;
 
   // When ParseHandler is FullParseHandler:
   //
@@ -516,7 +516,7 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
     // If the we are delazifying, the LazyScript already has all the
     // closed-over info for bindings and there's no need to track used
     // names.
-    if (handler.canSkipLazyClosedOverBindings()) {
+    if (handler_.canSkipLazyClosedOverBindings()) {
       return true;
     }
 
@@ -582,11 +582,11 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
       FunctionCallBehavior behavior = ForbidAssignmentToFunctionCalls);
 
   NameNodeType newPropertyName(PropertyName* key, const TokenPos& pos) {
-    return handler.newPropertyName(key, pos);
+    return handler_.newPropertyName(key, pos);
   }
 
   PropertyAccessType newPropertyAccess(Node expr, NameNodeType key) {
-    return handler.newPropertyAccess(expr, key);
+    return handler_.newPropertyAccess(expr, key);
   }
 
   FunctionBox* newFunctionBox(FunctionNodeType funNode, JSFunction* fun,
@@ -784,7 +784,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
  public:
   using Base::anyChars;
   using Base::cx_;
-  using Base::handler;
+  using Base::handler_;
   using Base::isValidSimpleAssignmentTarget;
   using Base::pc_;
   using Base::usedNames_;
@@ -1386,7 +1386,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                                            PossibleError* possibleError);
 
   NumericLiteralType newNumber(const Token& tok) {
-    return handler.newNumber(tok.number(), tok.decimalPoint(), tok.pos);
+    return handler_.newNumber(tok.number(), tok.decimalPoint(), tok.pos);
   }
 
   inline BigIntLiteralType newBigInt();
@@ -1493,7 +1493,7 @@ class MOZ_STACK_CLASS Parser<SyntaxParseHandler, Unit> final
 #endif
   using Base::finishFunctionScopes;
   using Base::functionFormalParametersAndBody;
-  using Base::handler;
+  using Base::handler_;
   using Base::innerFunction;
   using Base::keepAtoms_;
   using Base::matchOrInsertSemicolon;
@@ -1599,7 +1599,7 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   using Base::clearAbortedSyntaxParse;
   using Base::functionFormalParametersAndBody;
   using Base::hadAbortedSyntaxParse;
-  using Base::handler;
+  using Base::handler_;
   using Base::newFunctionBox;
   using Base::options;
   using Base::pc_;
