@@ -51,7 +51,7 @@ ResourceLoader.load = function(uri, doc) {
 };
 
 ResourceLoader.prototype = {
-  onDataAvailable(request, context, input, offset, count) {
+  onDataAvailable(request, input, offset, count) {
     let stream = Cc["@mozilla.org/scriptableinputstream;1"]
       .createInstance(Ci.nsIScriptableInputStream);
     stream.init(input);

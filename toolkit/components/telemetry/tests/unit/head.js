@@ -154,7 +154,7 @@ function decodeRequestPayload(request) {
     let converter = scs.asyncConvertData("gzip", "uncompressed",
                                          listener, null);
     converter.onStartRequest(null, null);
-    converter.onDataAvailable(null, null, s, 0, s.available());
+    converter.onDataAvailable(null, s, 0, s.available());
     converter.onStopRequest(null, null, null);
     let unicodeConverter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                     .createInstance(Ci.nsIScriptableUnicodeConverter);

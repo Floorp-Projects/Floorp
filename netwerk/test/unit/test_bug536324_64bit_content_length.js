@@ -14,7 +14,7 @@ var listener = {
   onStartRequest: function (req) {
   },
 
-  onDataAvailable: function (req, ctx, stream, off, count) {
+  onDataAvailable: function (req, stream, off, count) {
     Assert.equal(req.getResponseHeader("Content-Length"), CONTENT_LENGTH);
 
     // We're done here, cancel the channel

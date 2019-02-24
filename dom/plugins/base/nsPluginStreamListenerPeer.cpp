@@ -280,11 +280,11 @@ class PluginContextProxy final : public nsIStreamListener {
   }
 
   NS_IMETHOD
-  OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+  OnDataAvailable(nsIRequest* aRequest,
                   nsIInputStream* aIStream, uint64_t aSourceOffset,
                   uint32_t aLength) override {
     // Proxy OnDataAvailable using the internal context
-    return mListener->OnDataAvailable(aRequest, mContext, aIStream,
+    return mListener->OnDataAvailable(aRequest, aIStream,
                                       aSourceOffset, aLength);
   }
 
@@ -320,7 +320,7 @@ nsresult nsPluginStreamListenerPeer::SetStreamOffset(int32_t value) {
 }
 
 NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(
-    nsIRequest* request, nsISupports* aContext, nsIInputStream* aIStream,
+    nsIRequest* request, nsIInputStream* aIStream,
     uint64_t sourceOffset, uint32_t aLength) {
   if (mRequests.IndexOfObject(request) == -1) {
     MOZ_ASSERT(false, "Received OnDataAvailable for untracked request.");

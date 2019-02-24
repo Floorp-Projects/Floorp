@@ -118,7 +118,6 @@ PSMContentStreamListener::OnStartRequest(nsIRequest* request) {
 
 NS_IMETHODIMP
 PSMContentStreamListener::OnDataAvailable(nsIRequest* request,
-                                          nsISupports* context,
                                           nsIInputStream* aIStream,
                                           uint64_t aSourceOffset,
                                           uint32_t aLength) {
@@ -289,7 +288,6 @@ PSMContentDownloaderChild::OnStartRequest(nsIRequest* request) {
 
 NS_IMETHODIMP
 PSMContentDownloaderChild::OnDataAvailable(nsIRequest* request,
-                                           nsISupports* context,
                                            nsIInputStream* aIStream,
                                            uint64_t aSourceOffset,
                                            uint32_t aLength) {

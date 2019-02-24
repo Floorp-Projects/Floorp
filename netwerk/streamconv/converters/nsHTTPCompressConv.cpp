@@ -255,7 +255,7 @@ nsHTTPCompressConv::OnStopRequest(nsIRequest *request,
 }
 
 NS_IMETHODIMP
-nsHTTPCompressConv::OnDataAvailable(nsIRequest *request, nsISupports *aContext,
+nsHTTPCompressConv::OnDataAvailable(nsIRequest *request,
                                     nsIInputStream *iStr,
                                     uint64_t aSourceOffset, uint32_t aCount) {
   nsresult rv = NS_ERROR_INVALID_CONTENT_ENCODING;
@@ -349,7 +349,7 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest *request, nsISupports *aContext,
 
           if (code == Z_STREAM_END) {
             if (bytesWritten) {
-              rv = do_OnDataAvailable(request, aContext, aSourceOffset,
+              rv = do_OnDataAvailable(request, nullptr, aSourceOffset,
                                       (char *)mOutBuffer, bytesWritten);
               if (NS_FAILED(rv)) {
                 return rv;
@@ -361,7 +361,7 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest *request, nsISupports *aContext,
             break;
           } else if (code == Z_OK) {
             if (bytesWritten) {
-              rv = do_OnDataAvailable(request, aContext, aSourceOffset,
+              rv = do_OnDataAvailable(request, nullptr, aSourceOffset,
                                       (char *)mOutBuffer, bytesWritten);
               if (NS_FAILED(rv)) {
                 return rv;
@@ -369,7 +369,7 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest *request, nsISupports *aContext,
             }
           } else if (code == Z_BUF_ERROR) {
             if (bytesWritten) {
-              rv = do_OnDataAvailable(request, aContext, aSourceOffset,
+              rv = do_OnDataAvailable(request, nullptr, aSourceOffset,
                                       (char *)mOutBuffer, bytesWritten);
               if (NS_FAILED(rv)) {
                 return rv;
@@ -431,7 +431,7 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest *request, nsISupports *aContext,
 
           if (code == Z_STREAM_END) {
             if (bytesWritten) {
-              rv = do_OnDataAvailable(request, aContext, aSourceOffset,
+              rv = do_OnDataAvailable(request, nullptr, aSourceOffset,
                                       (char *)mOutBuffer, bytesWritten);
               if (NS_FAILED(rv)) {
                 return rv;
@@ -443,7 +443,7 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest *request, nsISupports *aContext,
             break;
           } else if (code == Z_OK) {
             if (bytesWritten) {
-              rv = do_OnDataAvailable(request, aContext, aSourceOffset,
+              rv = do_OnDataAvailable(request, nullptr, aSourceOffset,
                                       (char *)mOutBuffer, bytesWritten);
               if (NS_FAILED(rv)) {
                 return rv;
@@ -451,7 +451,7 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest *request, nsISupports *aContext,
             }
           } else if (code == Z_BUF_ERROR) {
             if (bytesWritten) {
-              rv = do_OnDataAvailable(request, aContext, aSourceOffset,
+              rv = do_OnDataAvailable(request, nullptr, aSourceOffset,
                                       (char *)mOutBuffer, bytesWritten);
               if (NS_FAILED(rv)) {
                 return rv;
@@ -471,7 +471,7 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest *request, nsISupports *aContext,
       }
 
       mBrotli->mRequest = request;
-      mBrotli->mContext = aContext;
+      mBrotli->mContext = nullptr;
       mBrotli->mSourceOffset = aSourceOffset;
 
       uint32_t countRead;
@@ -490,7 +490,7 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest *request, nsISupports *aContext,
         MutexAutoLock lock(mMutex);
         listener = mListener;
       }
-      rv = listener->OnDataAvailable(request, aContext, iStr, aSourceOffset,
+      rv = listener->OnDataAvailable(request, iStr, aSourceOffset,
                                      aCount);
       if (NS_FAILED(rv)) {
         return rv;
@@ -527,7 +527,7 @@ nsresult nsHTTPCompressConv::do_OnDataAvailable(nsIRequest *request,
     listener = mListener;
   }
   nsresult rv =
-      listener->OnDataAvailable(request, context, mStream, offset, count);
+      listener->OnDataAvailable(request, mStream, offset, count);
 
   // Make sure the stream no longer references |buffer| in case our listener
   // is crazy enough to try to read from |mStream| after ODA.

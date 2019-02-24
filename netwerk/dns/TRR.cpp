@@ -1015,7 +1015,7 @@ TRR::OnStopRequest(nsIRequest *aRequest,
 }
 
 NS_IMETHODIMP
-TRR::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
+TRR::OnDataAvailable(nsIRequest *aRequest,
                      nsIInputStream *aInputStream, uint64_t aOffset,
                      const uint32_t aCount) {
   LOG(("TRR:OnDataAvailable %p %s %d failed=%d aCount=%u\n", this, mHost.get(),

@@ -937,7 +937,7 @@ TCPSocket::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-TCPSocket::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+TCPSocket::OnDataAvailable(nsIRequest* aRequest,
                            nsIInputStream* aStream, uint64_t aOffset,
                            uint32_t aCount) {
   if (mUseArrayBuffers) {

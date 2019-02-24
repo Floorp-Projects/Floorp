@@ -345,7 +345,7 @@ nsresult nsSyncLoadService::PushSyncStreamToListener(
       if (readCount > UINT32_MAX) readCount = UINT32_MAX;
 
       rv = aListener->OnDataAvailable(
-          aChannel, nullptr, in,
+          aChannel, in,
           (uint32_t)std::min(sourceOffset, (uint64_t)UINT32_MAX),
           (uint32_t)readCount);
       if (NS_FAILED(rv)) {

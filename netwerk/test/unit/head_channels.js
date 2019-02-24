@@ -129,7 +129,7 @@ ChannelListener.prototype = {
     }
   },
 
-  onDataAvailable: function(request, context, stream, offset, count) {
+  onDataAvailable: function(request, stream, offset, count) {
     try {
       let current = Date.now();
 

@@ -35,7 +35,7 @@ var listener = {
     do_timeout(RESUME_DELAY + 1000, function() { request.resume(); });
   },
 
-  onDataAvailable: function(request, context, stream, offset, count) {
+  onDataAvailable: function(request, stream, offset, count) {
     Assert.ok(Date.now() - this._lastEvent >= MIN_TIME_DIFFERENCE);
     read_stream(stream, count);
 
