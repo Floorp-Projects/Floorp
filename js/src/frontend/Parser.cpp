@@ -806,13 +806,6 @@ bool ParserBase::noteUsedNameInternal(HandlePropertyName name) {
   return usedNames_.noteUse(cx_, name, pc_->scriptId(), scope->id());
 }
 
-bool ParserSharedBase::hasUsedName(HandlePropertyName name) {
-  if (UsedNamePtr p = usedNames_.lookup(name)) {
-    return p->value().isUsedInScript(pc_->scriptId());
-  }
-  return false;
-}
-
 template <class ParseHandler>
 bool PerHandlerParser<ParseHandler>::
     propagateFreeNamesAndMarkClosedOverBindings(ParseContext::Scope& scope) {
@@ -1559,46 +1552,6 @@ SyntaxParseHandler::ModuleNodeType Parser<SyntaxParseHandler, Unit>::moduleBody(
   return SyntaxParseHandler::NodeFailure;
 }
 
-bool ParserBase::hasUsedFunctionSpecialName(HandlePropertyName name) {
-  MOZ_ASSERT(name == cx_->names().arguments || name == cx_->names().dotThis);
-  return hasUsedName(name) || pc_->functionBox()->bindingsAccessedDynamically();
-}
-
-template <class ParseHandler>
-bool PerHandlerParser<ParseHandler>::declareFunctionThis() {
-  // The asm.js validator does all its own symbol-table management so, as an
-  // optimization, avoid doing any work here.
-  if (pc_->useAsmOrInsideUseAsm()) {
-    return true;
-  }
-
-  // Derived class constructors emit JSOP_CHECKRETURN, which requires
-  // '.this' to be bound.
-  FunctionBox* funbox = pc_->functionBox();
-  HandlePropertyName dotThis = cx_->names().dotThis;
-
-  bool declareThis;
-  if (handler_.canSkipLazyClosedOverBindings()) {
-    declareThis = funbox->function()->lazyScript()->hasThisBinding();
-  } else {
-    declareThis = hasUsedFunctionSpecialName(dotThis) ||
-                  funbox->isDerivedClassConstructor();
-  }
-
-  if (declareThis) {
-    ParseContext::Scope& funScope = pc_->functionScope();
-    AddDeclaredNamePtr p = funScope.lookupDeclaredNameForAdd(dotThis);
-    MOZ_ASSERT(!p);
-    if (!funScope.addDeclaredName(pc_, p, dotThis, DeclarationKind::Var,
-                                  DeclaredNameInfo::npos)) {
-      return false;
-    }
-    funbox->setHasThisBinding();
-  }
-
-  return true;
-}
-
 template <class ParseHandler>
 typename ParseHandler::NameNodeType
 PerHandlerParser<ParseHandler>::newInternalDotName(HandlePropertyName name) {
@@ -1622,20 +1575,6 @@ template <class ParseHandler>
 typename ParseHandler::NameNodeType
 PerHandlerParser<ParseHandler>::newDotGeneratorName() {
   return newInternalDotName(cx_->names().dotGenerator);
-}
-
-bool ParserBase::declareDotGeneratorName() {
-  // The special '.generator' binding must be on the function scope, as
-  // generators expect to find it on the CallObject.
-  ParseContext::Scope& funScope = pc_->functionScope();
-  HandlePropertyName dotGenerator = cx_->names().dotGenerator;
-  AddDeclaredNamePtr p = funScope.lookupDeclaredNameForAdd(dotGenerator);
-  if (!p &&
-      !funScope.addDeclaredName(pc_, p, dotGenerator, DeclarationKind::Var,
-                                DeclaredNameInfo::npos)) {
-    return false;
-  }
-  return true;
 }
 
 template <class ParseHandler>
@@ -1878,83 +1817,6 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
   return funNode;
 }
 
-template <class ParseHandler>
-bool PerHandlerParser<ParseHandler>::declareFunctionArgumentsObject() {
-  FunctionBox* funbox = pc_->functionBox();
-  ParseContext::Scope& funScope = pc_->functionScope();
-  ParseContext::Scope& varScope = pc_->varScope();
-
-  bool hasExtraBodyVarScope = &funScope != &varScope;
-
-  // Time to implement the odd semantics of 'arguments'.
-  HandlePropertyName argumentsName = cx_->names().arguments;
-
-  bool tryDeclareArguments;
-  if (handler_.canSkipLazyClosedOverBindings()) {
-    tryDeclareArguments =
-        funbox->function()->lazyScript()->shouldDeclareArguments();
-  } else {
-    tryDeclareArguments = hasUsedFunctionSpecialName(argumentsName);
-  }
-
-  // ES 9.2.12 steps 19 and 20 say formal parameters, lexical bindings,
-  // and body-level functions named 'arguments' shadow the arguments
-  // object.
-  //
-  // So even if there wasn't a free use of 'arguments' but there is a var
-  // binding of 'arguments', we still might need the arguments object.
-  //
-  // If we have an extra var scope due to parameter expressions and the body
-  // declared 'var arguments', we still need to declare 'arguments' in the
-  // function scope.
-  DeclaredNamePtr p = varScope.lookupDeclaredName(argumentsName);
-  if (p && p->value()->kind() == DeclarationKind::Var) {
-    if (hasExtraBodyVarScope) {
-      tryDeclareArguments = true;
-    } else {
-      funbox->usesArguments = true;
-    }
-  }
-
-  if (tryDeclareArguments) {
-    AddDeclaredNamePtr p = funScope.lookupDeclaredNameForAdd(argumentsName);
-    if (!p) {
-      if (!funScope.addDeclaredName(pc_, p, argumentsName, DeclarationKind::Var,
-                                    DeclaredNameInfo::npos)) {
-        return false;
-      }
-      funbox->declaredArguments = true;
-      funbox->usesArguments = true;
-    } else if (hasExtraBodyVarScope) {
-      // Formal parameters shadow the arguments object.
-      return true;
-    }
-  }
-
-  // Compute if we need an arguments object.
-  if (funbox->usesArguments) {
-    // There is an 'arguments' binding. Is the arguments object definitely
-    // needed?
-    //
-    // Also see the flags' comments in ContextFlags.
-    funbox->setArgumentsHasLocalBinding();
-
-    // Dynamic scope access destroys all hope of optimization.
-    if (pc_->sc()->bindingsAccessedDynamically()) {
-      funbox->setDefinitelyNeedsArgsObj();
-    }
-
-    // If a script contains the debugger statement either directly or
-    // within an inner function, the arguments object should be created
-    // eagerly so the Debugger API may observe bindings.
-    if (pc_->sc()->hasDebuggerStatement()) {
-      funbox->setDefinitelyNeedsArgsObj();
-    }
-  }
-
-  return true;
-}
-
 template <class ParseHandler, typename Unit>
 typename ParseHandler::LexicalScopeNodeType
 GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
@@ -2024,7 +1886,7 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
 
   if (pc_->needsDotGeneratorName()) {
     MOZ_ASSERT_IF(!pc_->isAsync(), type == StatementListBody);
-    if (!declareDotGeneratorName()) {
+    if (!pc_->declareDotGeneratorName()) {
       return null();
     }
     NameNodeType generator = newDotGeneratorName();
@@ -2040,10 +1902,13 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
   // finishing up the scope so these special bindings get marked as closed
   // over if necessary. Arrow functions don't have these bindings.
   if (kind != FunctionSyntaxKind::Arrow) {
-    if (!declareFunctionArgumentsObject()) {
+    bool canSkipLazyClosedOverBindings =
+        handler_.canSkipLazyClosedOverBindings();
+    if (!pc_->declareFunctionArgumentsObject(usedNames_,
+                                             canSkipLazyClosedOverBindings)) {
       return null();
     }
-    if (!declareFunctionThis()) {
+    if (!pc_->declareFunctionThis(usedNames_, canSkipLazyClosedOverBindings)) {
       return null();
     }
   }
@@ -7266,7 +7131,8 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
     return null();
   }
 
-  if (!declareFunctionThis()) {
+  bool canSkipLazyClosedOverBindings = handler_.canSkipLazyClosedOverBindings();
+  if (!pc_->declareFunctionThis(usedNames_, canSkipLazyClosedOverBindings)) {
     return null();
   }
 
@@ -7395,7 +7261,8 @@ GeneralParser<ParseHandler, Unit>::fieldInitializer(YieldHandling yieldHandling,
   handler_.setBeginPosition(initializerAssignment, initializerExpr);
   handler_.setEndPosition(initializerAssignment, initializerExpr);
 
-  if (!declareFunctionThis()) {
+  bool canSkipLazyClosedOverBindings = handler_.canSkipLazyClosedOverBindings();
+  if (!pc_->declareFunctionThis(usedNames_, canSkipLazyClosedOverBindings)) {
     return null();
   }
 

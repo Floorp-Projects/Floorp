@@ -272,9 +272,6 @@ class MOZ_STACK_CLASS ParserSharedBase : private JS::AutoGCRooter {
   friend void js::frontend::TraceBinParser(JSTracer* trc,
                                            JS::AutoGCRooter* parser);
 
- protected:
-  bool hasUsedName(HandlePropertyName name);
-
  private:
   // Create a new traceable node and store it into the trace list.
   template <typename BoxT, typename ArgT>
@@ -446,11 +443,8 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   bool nextTokenContinuesLetDeclaration(TokenKind next);
 
   bool noteUsedNameInternal(HandlePropertyName name);
-  bool hasUsedFunctionSpecialName(HandlePropertyName name);
 
   bool checkAndMarkSuperScope();
-
-  bool declareDotGeneratorName();
 
   bool leaveInnerFunction(ParseContext* outerpc);
 
@@ -552,9 +546,6 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   LexicalScopeNodeType finishLexicalScope(ParseContext::Scope& scope,
                                           Node body);
   bool finishFunction(bool isStandaloneFunction = false);
-
-  bool declareFunctionThis();
-  bool declareFunctionArgumentsObject();
 
   inline NameNodeType newName(PropertyName* name);
   inline NameNodeType newName(PropertyName* name, TokenPos pos);
@@ -750,7 +741,6 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   using Base::finishLexicalScope;
   using Base::foldConstants_;
   using Base::getFilename;
-  using Base::hasUsedFunctionSpecialName;
   using Base::hasValidSimpleStrictParameterNames;
   using Base::isUnexpectedEOF_;
   using Base::keepAtoms_;
@@ -813,11 +803,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
 
  private:
   using Base::checkAndMarkSuperScope;
-  using Base::declareDotGeneratorName;
-  using Base::declareFunctionArgumentsObject;
-  using Base::declareFunctionThis;
   using Base::finishFunction;
-  using Base::hasUsedName;
   using Base::identifierReference;
   using Base::leaveInnerFunction;
   using Base::newDotGeneratorName;

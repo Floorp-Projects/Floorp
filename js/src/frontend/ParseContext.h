@@ -621,6 +621,16 @@ class ParseContext : public Nestable<ParseContext> {
                      mozilla::Maybe<DeclarationKind>* redeclaredKind,
                      uint32_t* prevPos);
 
+  bool hasUsedName(const UsedNameTracker& usedNames, HandlePropertyName name);
+  bool hasUsedFunctionSpecialName(const UsedNameTracker& usedNames,
+                                  HandlePropertyName name);
+
+  bool declareFunctionThis(const UsedNameTracker& usedNames,
+                           bool canSkipLazyClosedOverBindings);
+  bool declareFunctionArgumentsObject(const UsedNameTracker& usedNames,
+                                      bool canSkipLazyClosedOverBindings);
+  bool declareDotGeneratorName();
+
  private:
   mozilla::Maybe<DeclarationKind> isVarRedeclaredInInnermostScope(
       HandlePropertyName name, DeclarationKind kind);
