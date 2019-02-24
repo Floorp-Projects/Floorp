@@ -826,11 +826,8 @@ PopupNotifications.prototype = {
       popupnotification.setAttribute("id", popupnotificationID);
       popupnotification.setAttribute("popupid", n.id);
       popupnotification.setAttribute("oncommand", "PopupNotifications._onCommand(event);");
-      if (Services.prefs.getBoolPref("privacy.permissionPrompts.showCloseButton")) {
-        popupnotification.setAttribute("closebuttoncommand", "PopupNotifications._onButtonEvent(event, '" + n.options.escAction + "', 'esc-press');");
-      } else {
-        popupnotification.setAttribute("closebuttoncommand", `PopupNotifications._dismiss(event, ${TELEMETRY_STAT_DISMISSAL_CLOSE_BUTTON});`);
-      }
+      popupnotification.setAttribute("closebuttoncommand", `PopupNotifications._dismiss(event, {TELEMETRY_STAT_DISMISSAL_CLOSE_BUTTON});`);
+
       if (n.mainAction) {
         popupnotification.setAttribute("buttonlabel", n.mainAction.label);
         popupnotification.setAttribute("buttonaccesskey", n.mainAction.accessKey);
