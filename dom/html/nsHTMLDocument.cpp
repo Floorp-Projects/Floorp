@@ -787,6 +787,16 @@ void nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode) {
   }
 }
 
+bool nsHTMLDocument::UseWidthDeviceWidthFallbackViewport() const {
+  if (mIsPlainText) {
+    // Plain text documents are simple enough that font inflation doesn't offer
+    // any appreciable advantage over defaulting to "width=device-width" and
+    // subsequently turning on word-wrapping.
+    return true;
+  }
+  return Document::UseWidthDeviceWidthFallbackViewport();
+}
+
 Element* nsHTMLDocument::GetUnfocusedKeyEventTarget() {
   if (nsGenericHTMLElement* body = GetBody()) {
     return body;
