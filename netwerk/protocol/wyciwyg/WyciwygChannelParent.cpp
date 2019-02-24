@@ -279,8 +279,7 @@ mozilla::ipc::IPCResult WyciwygChannelParent::RecvCancel(
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-WyciwygChannelParent::OnStartRequest(nsIRequest* aRequest,
-                                     nsISupports* aContext) {
+WyciwygChannelParent::OnStartRequest(nsIRequest* aRequest) {
   LOG(("WyciwygChannelParent::OnStartRequest [this=%p]\n", this));
 
   nsresult rv;

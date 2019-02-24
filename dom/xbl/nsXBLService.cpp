@@ -186,7 +186,7 @@ nsXBLStreamListener::OnDataAvailable(nsIRequest* request, nsISupports* aCtxt,
 }
 
 NS_IMETHODIMP
-nsXBLStreamListener::OnStartRequest(nsIRequest* request, nsISupports* aCtxt) {
+nsXBLStreamListener::OnStartRequest(nsIRequest* request) {
   // Make sure we don't hold on to the sink and binding document past this point
   nsCOMPtr<nsIXMLContentSink> sink;
   mSink.swap(sink);
@@ -208,7 +208,7 @@ nsXBLStreamListener::OnStartRequest(nsIRequest* request, nsISupports* aCtxt) {
   // since that resets the event listners on the document.
   doc->AddEventListener(NS_LITERAL_STRING("load"), this, false);
 
-  return mInner->OnStartRequest(request, aCtxt);
+  return mInner->OnStartRequest(request);
 }
 
 NS_IMETHODIMP

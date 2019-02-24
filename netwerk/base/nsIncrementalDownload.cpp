@@ -182,7 +182,7 @@ nsresult nsIncrementalDownload::CallOnStartRequest() {
   if (!mObserver || mDidOnStartRequest) return NS_OK;
 
   mDidOnStartRequest = true;
-  return mObserver->OnStartRequest(this, mObserverContext);
+  return mObserver->OnStartRequest(this);
 }
 
 void nsIncrementalDownload::CallOnStopRequest() {
@@ -465,8 +465,7 @@ nsIncrementalDownload::Start(nsIRequestObserver *observer,
 // nsIRequestObserver
 
 NS_IMETHODIMP
-nsIncrementalDownload::OnStartRequest(nsIRequest *request,
-                                      nsISupports *context) {
+nsIncrementalDownload::OnStartRequest(nsIRequest *request) {
   nsresult rv;
 
   nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(request, &rv);

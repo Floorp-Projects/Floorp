@@ -568,8 +568,7 @@ nsresult nsUrlClassifierStreamUpdater::AddRequestBody(
 // nsIStreamListenerObserver implementation
 
 NS_IMETHODIMP
-nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest *request,
-                                             nsISupports *context) {
+nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest *request) {
   nsresult rv;
   bool downloadError = false;
   nsAutoCString strStatus;

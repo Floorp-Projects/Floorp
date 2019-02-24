@@ -22,9 +22,8 @@ NS_IMPL_ISUPPORTS(nsSimpleStreamListener, nsISimpleStreamListener,
 //----------------------------------------------------------------------------
 //
 NS_IMETHODIMP
-nsSimpleStreamListener::OnStartRequest(nsIRequest *aRequest,
-                                       nsISupports *aContext) {
-  return mObserver ? mObserver->OnStartRequest(aRequest, aContext) : NS_OK;
+nsSimpleStreamListener::OnStartRequest(nsIRequest *aRequest) {
+  return mObserver ? mObserver->OnStartRequest(aRequest) : NS_OK;
 }
 
 NS_IMETHODIMP

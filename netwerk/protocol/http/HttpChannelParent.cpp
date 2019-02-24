@@ -1309,7 +1309,7 @@ static void GetTimingAttributes(HttpBaseChannel* aChannel,
 }
 
 NS_IMETHODIMP
-HttpChannelParent::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
+HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   nsresult rv;
 
   LOG(("HttpChannelParent::OnStartRequest [this=%p, aRequest=%p]\n", this,
@@ -2239,7 +2239,7 @@ void HttpChannelParent::StartDiversion() {
     AutoEventEnqueuer ensureSerialDispatch(mEventQ);
 
     // Call OnStartRequest for the "DivertTo" listener.
-    nsresult rv = mDivertListener->OnStartRequest(mChannel, nullptr);
+    nsresult rv = mDivertListener->OnStartRequest(mChannel);
     if (NS_FAILED(rv)) {
       if (mChannel) {
         mChannel->Cancel(rv);
@@ -2330,7 +2330,7 @@ void HttpChannelParent::NotifyDiversionFailed(nsresult aErrorCode) {
   // call it here if it hasn't already been called.
   if (!mDivertedOnStartRequest) {
     mChannel->ForcePending(true);
-    mParentListener->OnStartRequest(mChannel, nullptr);
+    mParentListener->OnStartRequest(mChannel);
     mChannel->ForcePending(false);
   }
   // If the channel is pending, it will call OnStopRequest itself; otherwise, do

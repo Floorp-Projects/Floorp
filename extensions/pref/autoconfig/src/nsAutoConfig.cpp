@@ -62,7 +62,7 @@ void nsAutoConfig::SetConfigURL(const char *aConfigURL) {
 }
 
 NS_IMETHODIMP
-nsAutoConfig::OnStartRequest(nsIRequest *request, nsISupports *context) {
+nsAutoConfig::OnStartRequest(nsIRequest *request) {
   return NS_OK;
 }
 
