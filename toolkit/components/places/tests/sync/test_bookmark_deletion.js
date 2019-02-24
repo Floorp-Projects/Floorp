@@ -32,15 +32,18 @@ add_task(async function test_complex_orphaning() {
   });
   await storeRecords(buf, shuffle([{
     id: "toolbar",
+    parentid: "places",
     type: "folder",
     children: ["folderAAAAAA"],
   }, {
     id: "folderAAAAAA",
+    parentid: "toolbar",
     type: "folder",
     title: "A",
     children: ["folderBBBBBB"],
   }, {
     id: "folderBBBBBB",
+    parentid: "folderAAAAAA",
     type: "folder",
     title: "B",
   }]), { needsMerge: false });
@@ -64,20 +67,24 @@ add_task(async function test_complex_orphaning() {
   });
   await storeRecords(buf, shuffle([{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: ["folderGGGGGG"],
   }, {
     id: "folderGGGGGG",
+    parentid: "menu",
     type: "folder",
     title: "G",
     children: ["folderCCCCCC"],
   }, {
     id: "folderCCCCCC",
+    parentid: "folderGGGGGG",
     type: "folder",
     title: "C",
     children: ["folderDDDDDD"],
   }, {
     id: "folderDDDDDD",
+    parentid: "folderCCCCCC",
     type: "folder",
     title: "D",
   }]), { needsMerge: false });
@@ -98,14 +105,17 @@ add_task(async function test_complex_orphaning() {
     deleted: true,
   }, {
     id: "folderAAAAAA",
+    parentid: "toolbar",
     type: "folder",
     title: "A",
   }, {
     id: "folderDDDDDD",
+    parentid: "folderCCCCCC",
     type: "folder",
     children: ["bookmarkFFFF"],
   }, {
     id: "bookmarkFFFF",
+    parentid: "folderDDDDDD",
     type: "bookmark",
     title: "F",
     bmkUri: "http://example.com/f",
@@ -239,30 +249,36 @@ add_task(async function test_locally_modified_remotely_deleted() {
   });
   await storeRecords(buf, [{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: ["bookmarkAAAA", "folderBBBBBB"],
   }, {
     id: "bookmarkAAAA",
+    parentid: "menu",
     type: "bookmark",
     title: "A",
     bmkUri: "http://example.com/a",
   }, {
     id: "folderBBBBBB",
+    parentid: "menu",
     type: "folder",
     title: "B",
     children: ["bookmarkCCCC", "folderDDDDDD"],
   }, {
     id: "bookmarkCCCC",
+    parentid: "folderBBBBBB",
     type: "bookmark",
     title: "C",
     bmkUri: "http://example.com/c",
   }, {
     id: "folderDDDDDD",
+    parentid: "folderBBBBBB",
     type: "folder",
     title: "D",
     children: ["bookmarkEEEE"],
   }, {
     id: "bookmarkEEEE",
+    parentid: "folderDDDDDD",
     type: "bookmark",
     title: "E",
     bmkUri: "http://example.com/e",
@@ -291,6 +307,7 @@ add_task(async function test_locally_modified_remotely_deleted() {
   info("Make remote changes: delete A, B");
   await storeRecords(buf, [{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: [],
   }, {
@@ -398,30 +415,36 @@ add_task(async function test_locally_deleted_remotely_modified() {
   });
   await storeRecords(buf, [{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: ["bookmarkAAAA", "folderBBBBBB"],
   }, {
     id: "bookmarkAAAA",
+    parentid: "menu",
     type: "bookmark",
     title: "A",
     bmkUri: "http://example.com/a",
   }, {
     id: "folderBBBBBB",
+    parentid: "menu",
     type: "folder",
     title: "B",
     children: ["bookmarkCCCC", "folderDDDDDD"],
   }, {
     id: "bookmarkCCCC",
+    parentid: "folderBBBBBB",
     type: "bookmark",
     title: "C",
     bmkUri: "http://example.com/c",
   }, {
     id: "folderDDDDDD",
+    parentid: "folderBBBBBB",
     type: "folder",
     title: "D",
     children: ["bookmarkEEEE"],
   }, {
     id: "bookmarkEEEE",
+    parentid: "folderDDDDDD",
     type: "bookmark",
     title: "E",
     bmkUri: "http://example.com/e",
@@ -435,26 +458,31 @@ add_task(async function test_locally_deleted_remotely_modified() {
   info("Make remote changes: change A; B > ((D > F) G)");
   await storeRecords(buf, [{
     id: "bookmarkAAAA",
+    parentid: "menu",
     type: "bookmark",
     title: "A (remote)",
     bmkUri: "http://example.com/a-remote",
   }, {
     id: "folderBBBBBB",
+    parentid: "menu",
     type: "folder",
     title: "B (remote)",
     children: ["bookmarkCCCC", "folderDDDDDD", "bookmarkGGGG"],
   }, {
     id: "folderDDDDDD",
+    parentid: "folderBBBBBB",
     type: "folder",
     title: "D",
     children: ["bookmarkEEEE", "bookmarkFFFF"],
   }, {
     id: "bookmarkFFFF",
+    parentid: "folderDDDDDD",
     type: "bookmark",
     title: "F (remote)",
     bmkUri: "http://example.com/f-remote",
   }, {
     id: "bookmarkGGGG",
+    parentid: "folderBBBBBB",
     type: "bookmark",
     title: "G (remote)",
     bmkUri: "http://example.com/g-remote",
@@ -541,25 +569,30 @@ add_task(async function test_move_to_new_then_delete() {
   });
   await storeRecords(buf, shuffle([{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: ["folderAAAAAA"],
   }, {
     id: "folderAAAAAA",
+    parentid: "menu",
     type: "folder",
     title: "A",
     children: ["folderBBBBBB"],
   }, {
     id: "folderBBBBBB",
+    parentid: "folderAAAAAA",
     type: "folder",
     title: "B",
     children: ["bookmarkCCCC", "bookmarkDDDD"],
   }, {
     id: "bookmarkCCCC",
+    parentid: "folderBBBBBB",
     type: "bookmark",
     title: "C",
     bmkUri: "http://example.com/c",
   }, {
     id: "bookmarkDDDD",
+    parentid: "folderBBBBBB",
     type: "bookmark",
     title: "D",
     bmkUri: "http://example.com/d",
@@ -584,6 +617,7 @@ add_task(async function test_move_to_new_then_delete() {
   info("Make remote changes");
   await storeRecords(buf, [{
     id: "bookmarkCCCC",
+    parentid: "folderBBBBBB",
     type: "bookmark",
     title: "C (remote)",
     bmkUri: "http://example.com/c-remote",
@@ -723,7 +757,7 @@ add_task(async function test_clear_folder_then_delete() {
         title: "C",
       }],
     }, {
-      guid: "bookmarkDDDD",
+      guid: "folderDDDDDD",
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       title: "D",
       children: [{
@@ -739,35 +773,42 @@ add_task(async function test_clear_folder_then_delete() {
   });
   await storeRecords(buf, [{
     id: "menu",
+    parentid: "places",
     type: "folder",
-    children: ["folderAAAAAA", "bookmarkDDDD"],
+    children: ["folderAAAAAA", "folderDDDDDD"],
   }, {
     id: "folderAAAAAA",
+    parentid: "menu",
     type: "folder",
     title: "A",
     children: ["bookmarkBBBB", "bookmarkCCCC"],
   }, {
     id: "bookmarkBBBB",
+    parentid: "folderAAAAAA",
     type: "bookmark",
     title: "B",
     bmkUri: "http://example.com/b",
   }, {
     id: "bookmarkCCCC",
+    parentid: "folderAAAAAA",
     type: "bookmark",
     title: "C",
     bmkUri: "http://example.com/c",
   }, {
-    id: "bookmarkDDDD",
+    id: "folderDDDDDD",
+    parentid: "menu",
     type: "folder",
     title: "D",
     children: ["bookmarkEEEE", "bookmarkFFFF"],
   }, {
     id: "bookmarkEEEE",
+    parentid: "folderDDDDDD",
     type: "bookmark",
     title: "E",
     bmkUri: "http://example.com/e",
   }, {
     id: "bookmarkFFFF",
+    parentid: "folderDDDDDD",
     type: "bookmark",
     title: "F",
     bmkUri: "http://example.com/f",
@@ -785,17 +826,31 @@ add_task(async function test_clear_folder_then_delete() {
     parentGuid: PlacesUtils.bookmarks.mobileGuid,
     index: 0,
   });
-  await PlacesUtils.bookmarks.remove("bookmarkDDDD");
+  await PlacesUtils.bookmarks.remove("folderDDDDDD");
 
-  info("Make remote changes: Menu > D, Unfiled > C, delete A");
+  info("Make remote changes: Menu > B, Unfiled > C, delete A");
   await storeRecords(buf, [{
     id: "menu",
+    parentid: "places",
     type: "folder",
-    children: ["bookmarkBBBB", "bookmarkDDDD"],
+    children: ["bookmarkBBBB", "folderDDDDDD"],
+  }, {
+    id: "bookmarkBBBB",
+    parentid: "menu",
+    type: "bookmark",
+    title: "B",
+    bmkUri: "http://example.com/b",
   }, {
     id: "unfiled",
+    parentid: "places",
     type: "folder",
     children: ["bookmarkCCCC"],
+  }, {
+    id: "bookmarkCCCC",
+    parentid: "unfiled",
+    type: "bookmark",
+    title: "C",
+    bmkUri: "http://example.com/c",
   }, {
     id: "folderAAAAAA",
     deleted: true,
@@ -808,7 +863,7 @@ add_task(async function test_clear_folder_then_delete() {
   let idsToUpload = inspectChangeRecords(changesToUpload);
   deepEqual(idsToUpload, {
     updated: ["bookmarkEEEE", "bookmarkFFFF", "menu", MobileBookmarksTitle],
-    deleted: ["bookmarkDDDD"],
+    deleted: ["folderDDDDDD"],
   }, "Should upload locally moved and deleted items");
 
   await assertLocalTree(PlacesUtils.bookmarks.rootGuid, {
@@ -867,7 +922,7 @@ add_task(async function test_clear_folder_then_delete() {
   }, "Should not orphan moved children of a deleted folder");
 
   let tombstones = await PlacesTestUtils.fetchSyncTombstones();
-  deepEqual(tombstones.map(({ guid }) => guid), ["bookmarkDDDD"],
+  deepEqual(tombstones.map(({ guid }) => guid), ["folderDDDDDD"],
     "Should store local tombstone for D");
 
   await buf.finalize();
@@ -903,25 +958,30 @@ add_task(async function test_newer_move_to_deleted() {
   });
   await storeRecords(buf, [{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: ["folderAAAAAA", "folderCCCCCC"],
   }, {
     id: "folderAAAAAA",
+    parentid: "menu",
     type: "folder",
     title: "A",
     children: ["bookmarkBBBB"],
   }, {
     id: "bookmarkBBBB",
+    parentid: "folderAAAAAA",
     type: "bookmark",
     title: "B",
     bmkUri: "http://example.com/b",
   }, {
     id: "folderCCCCCC",
+    parentid: "menu",
     type: "folder",
     title: "C",
     children: ["bookmarkDDDD"],
   }, {
     id: "bookmarkDDDD",
+    parentid: "folderCCCCCC",
     type: "bookmark",
     title: "D",
     bmkUri: "http://example.com/d",
@@ -955,20 +1015,35 @@ add_task(async function test_newer_move_to_deleted() {
   // deleted the now-empty C locally).
   info("Make remote changes: C > F, Toolbar > B, delete A");
   await storeRecords(buf, [{
+    id: "menu",
+    parentid: "places",
+    type: "folder",
+    children: ["folderCCCCCC"],
+  }, {
     id: "folderCCCCCC",
+    parentid: "menu",
     type: "folder",
     title: "C",
     children: ["bookmarkDDDD", "bookmarkFFFF"],
     modified: (now / 1000) + 5,
   }, {
     id: "bookmarkFFFF",
+    parentid: "folderCCCCCC",
     type: "bookmark",
     title: "F",
     bmkUri: "http://example.com/f",
   }, {
     id: "toolbar",
+    parentid: "places",
     type: "folder",
     children: ["bookmarkBBBB"],
+    modified: (now / 1000) - 5,
+  }, {
+    id: "bookmarkBBBB",
+    parentid: "toolbar",
+    type: "bookmark",
+    title: "B",
+    bmkUri: "http://example.com/b",
     modified: (now / 1000) - 5,
   }, {
     id: "folderAAAAAA",

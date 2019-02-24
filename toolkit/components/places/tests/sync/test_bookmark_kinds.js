@@ -52,11 +52,13 @@ add_task(async function test_queries() {
   info("Make remote changes");
   await storeRecords(buf, shuffle([{
     id: "toolbar",
+    parentid: "places",
     type: "folder",
     children: ["queryEEEEEEE", "queryFFFFFFF", "queryGGGGGGG", "queryHHHHHHH"],
   }, {
     // Legacy tag query.
     id: "queryEEEEEEE",
+    parentid: "toolbar",
     type: "query",
     title: "E",
     bmkUri: "place:type=7&folder=999",
@@ -64,6 +66,7 @@ add_task(async function test_queries() {
   }, {
     // New tag query.
     id: "queryFFFFFFF",
+    parentid: "toolbar",
     type: "query",
     title: "F",
     bmkUri: "place:tag=a-tag",
@@ -71,6 +74,7 @@ add_task(async function test_queries() {
   }, {
     // Legacy tag query referencing the same tag as the new query.
     id: "queryGGGGGGG",
+    parentid: "toolbar",
     type: "query",
     title: "G",
     bmkUri: "place:type=7&folder=111&something=else",
@@ -78,6 +82,7 @@ add_task(async function test_queries() {
   }, {
     // Legacy folder lookup query.
     id: "queryHHHHHHH",
+    parentid: "toolbar",
     type: "query",
     title: "H",
     bmkUri: "place:folder=1",
@@ -133,7 +138,7 @@ add_task(async function test_mismatched_but_compatible_folder_types() {
 
   info("Set up mirror");
   await PlacesUtils.bookmarks.insertTree({
-    guid: PlacesUtils.bookmarks.menuGuid,
+    guid: PlacesUtils.bookmarks.toolbarGuid,
     children: [{
       guid: "l1nZZXfB8nC7",
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -144,6 +149,11 @@ add_task(async function test_mismatched_but_compatible_folder_types() {
 
   info("Make remote changes");
   await storeRecords(buf, [{
+    id: "toolbar",
+    parentid: "places",
+    type: "folder",
+    children: ["l1nZZXfB8nC7"],
+  }, {
     "id": "l1nZZXfB8nC7",
     "type": "livemark",
     "siteUri": "http://sneglehode.wordpress.com/",
@@ -164,7 +174,7 @@ add_task(async function test_mismatched_but_compatible_folder_types() {
 
   let idsToUpload = inspectChangeRecords(changesToUpload);
   deepEqual(idsToUpload, {
-    updated: ["menu", "unfiled"],
+    updated: ["toolbar"],
     deleted: ["l1nZZXfB8nC7"],
   }, "Legacy livemark should be deleted remotely");
 
@@ -205,6 +215,7 @@ add_task(async function test_different_but_compatible_bookmark_types() {
     // Now pretend that same records are already on the server.
     await storeRecords(buf, [{
       id: "menu",
+      parentid: "places",
       type: "folder",
       children: ["bookmarkAAAA", "bookmarkBBBB"],
     }, {
@@ -275,11 +286,12 @@ add_task(async function test_incompatible_types() {
     // types.
     await storeRecords(buf, [{
       id: "menu",
+      parentid: "places",
       type: "folder",
       children: ["AAAAAAAAAAAA"],
     }, {
       id: "AAAAAAAAAAAA",
-      parentId: PlacesSyncUtils.bookmarks.guidToRecordId(PlacesUtils.bookmarks.menuGuid),
+      parentid: "menu",
       type: "folder",
       title: "conflicting folder",
     }], { needsMerge: true });
