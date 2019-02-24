@@ -215,6 +215,27 @@ var tests = [
       ok(!this.notifyObj.secondaryActionClicked, "secondary action not clicked");
     },
   },
+  // Test that notification close button calls secondary action instead of
+  // dismissal callback if privacy.permissionPrompts.showCloseButton is set.
+  { id: "Test#10",
+    run() {
+      Services.prefs.setBoolPref("privacy.permissionPrompts.showCloseButton", true);
+      this.notifyObj = new BasicNotification(this.id);
+      this.notification = showNotification(this.notifyObj);
+    },
+    onShown(popup) {
+      checkPopup(popup, this.notifyObj);
+      let notification = popup.children[0];
+      EventUtils.synthesizeMouseAtCenter(notification.closebutton, {});
+    },
+    onHidden(popup) {
+      ok(!this.notifyObj.dismissalCallbackTriggered, "dismissal callback not triggered");
+      ok(this.notifyObj.secondaryActionClicked, "secondary action clicked");
+      Services.prefs.clearUserPref("privacy.permissionPrompts.showCloseButton");
+      this.notification.remove();
+      ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
+    },
+  },
   // Test notification when chrome is hidden
   { id: "Test#11",
     run() {
