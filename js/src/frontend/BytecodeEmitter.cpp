@@ -93,7 +93,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
                                  Handle<LazyScript*> lazyScript,
                                  uint32_t lineNum, EmitterMode emitterMode)
     : sc(sc),
-      cx(sc->context),
+      cx(sc->cx_),
       parent(parent),
       script(cx, script),
       lazyScript(cx, lazyScript),

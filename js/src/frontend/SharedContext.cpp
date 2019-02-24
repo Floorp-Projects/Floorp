@@ -106,7 +106,7 @@ EvalSharedContext::EvalSharedContext(JSContext* cx, JSObject* enclosingEnv,
 }
 
 #ifdef DEBUG
-bool FunctionBox::atomsAreKept() { return context->zone()->hasKeptAtoms(); }
+bool FunctionBox::atomsAreKept() { return cx_->zone()->hasKeptAtoms(); }
 #endif
 
 FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,

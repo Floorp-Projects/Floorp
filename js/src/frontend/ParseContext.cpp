@@ -100,7 +100,7 @@ void UsedNameTracker::rewind(RewindToken token) {
 }
 
 void ParseContext::Scope::dump(ParseContext* pc) {
-  JSContext* cx = pc->sc()->context;
+  JSContext* cx = pc->sc()->cx_;
 
   fprintf(stdout, "ParseScope %p", this);
 
@@ -121,7 +121,7 @@ void ParseContext::Scope::dump(ParseContext* pc) {
 bool ParseContext::Scope::addPossibleAnnexBFunctionBox(ParseContext* pc,
                                                        FunctionBox* funbox) {
   if (!possibleAnnexBFunctionBoxes_) {
-    if (!possibleAnnexBFunctionBoxes_.acquire(pc->sc()->context)) {
+    if (!possibleAnnexBFunctionBoxes_.acquire(pc->sc()->cx_)) {
       return false;
     }
   }
@@ -140,7 +140,7 @@ bool ParseContext::Scope::propagateAndMarkAnnexBFunctionBoxes(
   if (this == &pc->varScope()) {
     // Base case: actually declare the Annex B vars and mark applicable
     // function boxes as Annex B.
-    RootedPropertyName name(pc->sc()->context);
+    RootedPropertyName name(pc->sc()->cx_);
     Maybe<DeclarationKind> redeclaredKind;
     uint32_t unused;
     for (FunctionBox* funbox : *possibleAnnexBFunctionBoxes_) {
@@ -222,7 +222,7 @@ ParseContext::ParseContext(JSContext* cx, ParseContext*& parent,
                            class UsedNameTracker& usedNames,
                            Directives* newDirectives, bool isFull)
     : Nestable<ParseContext>(&parent),
-      traceLog_(sc->context,
+      traceLog_(sc->cx_,
                 isFull ? TraceLogger_ParsingFull : TraceLogger_ParsingSyntax,
                 errorReporter),
       sc_(sc),
@@ -253,7 +253,7 @@ bool ParseContext::init() {
     return false;
   }
 
-  JSContext* cx = sc()->context;
+  JSContext* cx = sc()->cx_;
 
   if (isFunctionBox()) {
     // Named lambdas always need a binding for their own name. If this
@@ -295,7 +295,7 @@ bool ParseContext::annexBAppliesToLexicalFunctionInInnermostScope(
     FunctionBox* funbox) {
   MOZ_ASSERT(!sc()->strict());
 
-  RootedPropertyName name(sc()->context,
+  RootedPropertyName name(sc()->cx_,
                           funbox->function()->explicitName()->asPropertyName());
   Maybe<DeclarationKind> redeclaredKind = isVarRedeclaredInInnermostScope(
       name, DeclarationKind::VarForAnnexBLexicalFunction);
@@ -313,7 +313,7 @@ bool ParseContext::annexBAppliesToLexicalFunctionInInnermostScope(
         if (DeclarationKindIsParameter(declaredKind)) {
           redeclaredKind = Some(declaredKind);
         } else {
-          MOZ_ASSERT(FunctionScope::isSpecialName(sc()->context, name));
+          MOZ_ASSERT(FunctionScope::isSpecialName(sc()->cx_, name));
         }
       }
     }
