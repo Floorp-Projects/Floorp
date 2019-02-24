@@ -43,7 +43,7 @@ inline ParseContext::Scope::Scope(ParserBase* parser)
     : Nestable<Scope>(&parser->pc_->innermostScope_),
       declared_(parser->cx_->frontendCollectionPool()),
       possibleAnnexBFunctionBoxes_(parser->cx_->frontendCollectionPool()),
-      id_(parser->usedNames.nextScopeId()) {}
+      id_(parser->usedNames_.nextScopeId()) {}
 
 inline ParseContext::Scope::Scope(JSContext* cx, ParseContext* pc,
                                   UsedNameTracker& usedNames)
