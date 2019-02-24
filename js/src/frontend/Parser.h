@@ -265,7 +265,7 @@ class MOZ_STACK_CLASS ParserBase : private JS::AutoGCRooter,
 
   ScriptSource* ss;
 
-  RootedScriptSourceObject sourceObject;
+  RootedScriptSourceObject sourceObject_;
 
   /* Root atoms and objects allocated for the parsed tree. */
   AutoKeepAtoms keepAtoms;
