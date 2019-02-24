@@ -97,7 +97,7 @@ class ModuleSharedContext;
  */
 class SharedContext {
  public:
-  JSContext* const context;
+  JSContext* const cx_;
 
  protected:
   enum class Kind : uint8_t { FunctionBox, Global, Eval, Module };
@@ -155,7 +155,7 @@ class SharedContext {
  public:
   SharedContext(JSContext* cx, Kind kind, Directives directives,
                 bool extraWarnings)
-      : context(cx),
+      : cx_(cx),
         kind_(kind),
         thisBinding_(ThisBinding::Global),
         strictScript(directives.strict()),
