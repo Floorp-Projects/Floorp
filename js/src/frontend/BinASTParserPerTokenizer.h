@@ -54,7 +54,6 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
 
   using AutoList = typename Tokenizer::AutoList;
   using AutoTaggedTuple = typename Tokenizer::AutoTaggedTuple;
-  using AutoTuple = typename Tokenizer::AutoTuple;
   using BinFields = typename Tokenizer::BinFields;
   using Chars = typename Tokenizer::Chars;
 
