@@ -40,7 +40,7 @@ inline ParseContext::Scope::BindingIter ParseContext::Scope::bindings(
 }
 
 inline ParseContext::Scope::Scope(ParserBase* parser)
-    : Nestable<Scope>(&parser->pc->innermostScope_),
+    : Nestable<Scope>(&parser->pc_->innermostScope_),
       declared_(parser->cx_->frontendCollectionPool()),
       possibleAnnexBFunctionBoxes_(parser->cx_->frontendCollectionPool()),
       id_(parser->usedNames.nextScopeId()) {}
@@ -53,7 +53,7 @@ inline ParseContext::Scope::Scope(JSContext* cx, ParseContext* pc,
       id_(usedNames.nextScopeId()) {}
 
 inline ParseContext::VarScope::VarScope(ParserBase* parser) : Scope(parser) {
-  useAsVarScope(parser->pc);
+  useAsVarScope(parser->pc_);
 }
 
 inline ParseContext::VarScope::VarScope(JSContext* cx, ParseContext* pc,

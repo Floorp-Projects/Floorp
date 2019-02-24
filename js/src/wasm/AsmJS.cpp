@@ -1955,8 +1955,8 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
     asmJSMetadata_->toStringStart =
         moduleFunctionNode_->funbox()->toStringStart;
     asmJSMetadata_->srcStart = moduleFunctionNode_->body()->pn_pos.begin;
-    asmJSMetadata_->strict =
-        parser_.pc->sc()->strict() && !parser_.pc->sc()->hasExplicitUseStrict();
+    asmJSMetadata_->strict = parser_.pc_->sc()->strict() &&
+                             !parser_.pc_->sc()->hasExplicitUseStrict();
     asmJSMetadata_->scriptSource.reset(parser_.ss);
 
     if (!addStandardLibraryMathInfo()) {
@@ -6024,7 +6024,7 @@ static bool ParseFunction(ModuleValidator<Unit>& m, FunctionNode** funNodeOut,
   fun->setAtom(name);
   fun->setArgCount(0);
 
-  ParseContext* outerpc = m.parser().pc;
+  ParseContext* outerpc = m.parser().pc_;
   Directives directives(outerpc);
   FunctionBox* funbox = m.parser().newFunctionBox(
       funNode, fun, toStringStart, directives, GeneratorKind::NotGenerator,
@@ -6353,7 +6353,7 @@ static SharedModule CheckModule(JSContext* cx, AsmJSParser<Unit>& parser,
                                 ParseNode* stmtList, unsigned* time) {
   int64_t before = PRMJ_Now();
 
-  FunctionNode* moduleFunctionNode = parser.pc->functionBox()->functionNode;
+  FunctionNode* moduleFunctionNode = parser.pc_->functionBox()->functionNode;
 
   ModuleValidator<Unit> m(cx, parser, moduleFunctionNode);
   if (!m.init()) {
@@ -7036,20 +7036,20 @@ static bool EstablishPreconditions(JSContext* cx,
       break;
   }
 
-  if (parser.pc->isGenerator()) {
+  if (parser.pc_->isGenerator()) {
     return TypeFailureWarning(parser, "Disabled by generator context");
   }
 
-  if (parser.pc->isAsync()) {
+  if (parser.pc_->isAsync()) {
     return TypeFailureWarning(parser, "Disabled by async context");
   }
 
-  if (parser.pc->isArrowFunction()) {
+  if (parser.pc_->isArrowFunction()) {
     return TypeFailureWarning(parser, "Disabled by arrow function context");
   }
 
   // Class constructors are also methods
-  if (parser.pc->isMethod() || parser.pc->isGetterOrSetter()) {
+  if (parser.pc_->isMethod() || parser.pc_->isGetterOrSetter()) {
     return TypeFailureWarning(
         parser, "Disabled by class constructor or method context");
   }
@@ -7085,7 +7085,7 @@ static bool DoCompileAsmJS(JSContext* cx, AsmJSParser<Unit>& parser,
 
   // The module function dynamically links the AsmJSModule when called and
   // generates a set of functions wrapping all the exports.
-  FunctionBox* funbox = parser.pc->functionBox();
+  FunctionBox* funbox = parser.pc_->functionBox();
   RootedFunction moduleFun(
       cx, NewAsmJSModuleFunction(cx, funbox->function(), moduleObj));
   if (!moduleFun) {
