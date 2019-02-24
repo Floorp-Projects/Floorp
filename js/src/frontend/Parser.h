@@ -276,7 +276,7 @@ class MOZ_STACK_CLASS ParserBase : private JS::AutoGCRooter,
  protected:
 #if DEBUG
   /* Our fallible 'checkOptions' member function has been called. */
-  bool checkOptionsCalled : 1;
+  bool checkOptionsCalled_ : 1;
 #endif
 
   /* Unexpected end of input, i.e. Eof not at top-level. */
@@ -722,7 +722,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   using Base::inParametersOfAsyncFunction;
   using Base::parseGoal;
 #if DEBUG
-  using Base::checkOptionsCalled;
+  using Base::checkOptionsCalled_;
 #endif
   using Base::finishFunctionScopes;
   using Base::finishLexicalScope;
@@ -1489,7 +1489,7 @@ class MOZ_STACK_CLASS Parser<SyntaxParseHandler, Unit> final
  private:
   using Base::alloc_;
 #if DEBUG
-  using Base::checkOptionsCalled;
+  using Base::checkOptionsCalled_;
 #endif
   using Base::finishFunctionScopes;
   using Base::functionFormalParametersAndBody;
@@ -1639,7 +1639,7 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   using Base::alloc_;
   using Base::checkLabelOrIdentifierReference;
 #if DEBUG
-  using Base::checkOptionsCalled;
+  using Base::checkOptionsCalled_;
 #endif
   using Base::cx_;
   using Base::finishFunctionScopes;
