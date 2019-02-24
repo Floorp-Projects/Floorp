@@ -15,10 +15,12 @@ add_task(async function test_explicit_weakupload() {
   });
   await storeRecords(buf, shuffle([{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: ["mozBmk______"],
   }, {
     id: "mozBmk______",
+    parentid: "menu",
     type: "bookmark",
     title: "Mozilla",
     bmkUri: "https://mozilla.org",
@@ -54,10 +56,12 @@ add_task(async function test_explicit_weakupload_with_dateAdded() {
   });
   await storeRecords(buf, shuffle([{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: ["mozBmk______"],
   }, {
     id: "mozBmk______",
+    parentid: "menu",
     type: "bookmark",
     title: "Mozilla",
     bmkUri: "https://mozilla.org",
@@ -68,6 +72,7 @@ add_task(async function test_explicit_weakupload_with_dateAdded() {
   info("Make remote change with older date added");
   await storeRecords(buf, [{
     id: "mozBmk______",
+    parentid: "menu",
     type: "bookmark",
     title: "Firefox",
     bmkUri: "http://getfirefox.com/",

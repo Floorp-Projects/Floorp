@@ -13,11 +13,13 @@ add_task(async function test_highWaterMark() {
 
   await storeRecords(buf, [{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: [],
     modified: 50,
   }, {
     id: "toolbar",
+    parentid: "places",
     type: "folder",
     children: [],
     modified: 123.95,
@@ -27,6 +29,7 @@ add_task(async function test_highWaterMark() {
 
   await storeRecords(buf, [{
     id: "unfiled",
+    parentid: "places",
     type: "folder",
     children: [],
     modified: 125.45,
@@ -47,11 +50,13 @@ add_task(async function test_ensureCurrentSyncId() {
   info("Insert items and set collection last modified");
   await storeRecords(buf, [{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: ["folderAAAAAA"],
     modified: 125.45,
   }, {
     id: "folderAAAAAA",
+    parentid: "menu",
     type: "folder",
     children: [],
   }], { needsMerge: false });
