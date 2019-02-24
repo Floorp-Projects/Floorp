@@ -74,7 +74,7 @@ class BinASTParserBase : private JS::AutoGCRooter {
 
   RootedScriptSourceObject sourceObject_;
   Rooted<LazyScript*> lazyScript_;
-  ParseContext* parseContext_;
+  ParseContext* pc_;
   FullParseHandler factory_;
 
   friend class BinParseContext;

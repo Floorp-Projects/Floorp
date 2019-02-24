@@ -26,7 +26,7 @@ BinASTParserBase::BinASTParserBase(JSContext* cx, LifoAlloc& alloc,
       keepAtoms_(cx),
       sourceObject_(cx, sourceObject),
       lazyScript_(cx, lazyScript),
-      parseContext_(nullptr),
+      pc_(nullptr),
       factory_(cx, alloc, nullptr, SourceKind::Binary) {
   MOZ_ASSERT_IF(lazyScript, lazyScript->isBinAST());
   cx->frontendCollectionPool().addActiveCompilation();
@@ -48,7 +48,7 @@ BinASTParserBase::~BinASTParserBase() {
 
 bool BinASTParserBase::hasUsedName(HandlePropertyName name) {
   if (UsedNamePtr p = usedNames_.lookup(name)) {
-    return p->value().isUsedInScript(parseContext_->scriptId());
+    return p->value().isUsedInScript(pc_->scriptId());
   }
 
   return false;
