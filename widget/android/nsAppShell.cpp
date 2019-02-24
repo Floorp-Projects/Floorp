@@ -140,7 +140,7 @@ class GeckoThreadSupport final
     OriginAttributes attrs;
     nsCOMPtr<nsIPrincipal> principal =
         BasePrincipal::CreateCodebasePrincipal(uri, attrs);
-    specConn->SpeculativeConnect2(uri, principal, nullptr);
+    specConn->SpeculativeConnect(uri, principal, nullptr);
   }
 
   static bool WaitOnGecko(int64_t timeoutMillis) {
