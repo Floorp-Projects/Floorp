@@ -85,7 +85,7 @@ DataChannelParent::OnStartRequest(nsIRequest *aRequest) {
 }
 
 NS_IMETHODIMP
-DataChannelParent::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
+DataChannelParent::OnStopRequest(nsIRequest *aRequest,
                                  nsresult aStatusCode) {
   // See above.
   MOZ_ASSERT(NS_FAILED(aStatusCode));

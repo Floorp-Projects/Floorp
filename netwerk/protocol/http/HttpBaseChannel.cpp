@@ -1153,14 +1153,14 @@ class InterceptFailedOnStop : public nsIStreamListener {
     return mNext->OnStartRequest(aRequest);
   }
 
-  NS_IMETHOD OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+  NS_IMETHOD OnStopRequest(nsIRequest* aRequest,
                            nsresult aStatusCode) override {
     if (NS_FAILED(aStatusCode) && NS_SUCCEEDED(mChannel->mStatus)) {
       LOG(("HttpBaseChannel::InterceptFailedOnStop %p seting status %" PRIx32,
            mChannel, static_cast<uint32_t>(aStatusCode)));
       mChannel->mStatus = aStatusCode;
     }
-    return mNext->OnStopRequest(aRequest, aContext, aStatusCode);
+    return mNext->OnStopRequest(aRequest, aStatusCode);
   }
 
   NS_IMETHOD OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
@@ -3305,7 +3305,7 @@ void HttpBaseChannel::DoNotifyListener() {
 
   if (mListener && !mOnStopRequestCalled) {
     nsCOMPtr<nsIStreamListener> listener = mListener;
-    listener->OnStopRequest(this, nullptr, mStatus);
+    listener->OnStopRequest(this, mStatus);
 
     mOnStopRequestCalled = true;
   }

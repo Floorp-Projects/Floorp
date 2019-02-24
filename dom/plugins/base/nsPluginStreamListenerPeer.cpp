@@ -295,10 +295,10 @@ class PluginContextProxy final : public nsIStreamListener {
   }
 
   NS_IMETHOD
-  OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+  OnStopRequest(nsIRequest* aRequest,
                 nsresult aStatusCode) override {
     // Proxy OnStopRequest using the inernal context
-    return mListener->OnStopRequest(aRequest, mContext, aStatusCode);
+    return mListener->OnStopRequest(aRequest, aStatusCode);
   }
 
  private:
@@ -354,7 +354,6 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(
 }
 
 NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest* request,
-                                                        nsISupports* aContext,
                                                         nsresult aStatus) {
   nsresult rv = NS_OK;
 

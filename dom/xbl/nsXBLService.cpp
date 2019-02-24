@@ -212,11 +212,11 @@ nsXBLStreamListener::OnStartRequest(nsIRequest* request) {
 }
 
 NS_IMETHODIMP
-nsXBLStreamListener::OnStopRequest(nsIRequest* request, nsISupports* aCtxt,
+nsXBLStreamListener::OnStopRequest(nsIRequest* request,
                                    nsresult aStatus) {
   nsresult rv = NS_OK;
   if (mInner) {
-    rv = mInner->OnStopRequest(request, aCtxt, aStatus);
+    rv = mInner->OnStopRequest(request, aStatus);
   }
 
   // Don't hold onto the inner listener; holding onto it can create a cycle

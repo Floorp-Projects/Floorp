@@ -167,7 +167,7 @@ mozilla::ipc::IPCResult ExternalHelperAppParent::RecvOnStopRequest(
 
   mPending = false;
   mListener->OnStopRequest(
-      this, nullptr,
+      this,
       (NS_SUCCEEDED(code) && NS_FAILED(mStatus)) ? mStatus : code);
   Delete();
   return IPC_OK();
@@ -205,10 +205,10 @@ ExternalHelperAppParent::OnStartRequest(nsIRequest* request) {
 }
 
 NS_IMETHODIMP
-ExternalHelperAppParent::OnStopRequest(nsIRequest* request, nsISupports* ctx,
+ExternalHelperAppParent::OnStopRequest(nsIRequest* request,
                                        nsresult status) {
   MOZ_ASSERT(mDiverted);
-  nsresult rv = mListener->OnStopRequest(request, ctx, status);
+  nsresult rv = mListener->OnStopRequest(request, status);
   Delete();
   return rv;
 }

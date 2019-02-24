@@ -425,7 +425,7 @@ nsresult VectorImage::OnImageDataComplete(nsIRequest* aRequest,
                                           nsresult aStatus, bool aLastPart) {
   // Call our internal OnStopRequest method, which only talks to our embedded
   // SVG document. This won't have any effect on our ProgressTracker.
-  nsresult finalStatus = OnStopRequest(aRequest, aContext, aStatus);
+  nsresult finalStatus = OnStopRequest(aRequest, aStatus);
 
   // Give precedence to Necko failure codes.
   if (NS_FAILED(aStatus)) {
@@ -1367,13 +1367,13 @@ VectorImage::OnStartRequest(nsIRequest* aRequest) {
 
 //******************************************************************************
 NS_IMETHODIMP
-VectorImage::OnStopRequest(nsIRequest* aRequest, nsISupports* aCtxt,
+VectorImage::OnStopRequest(nsIRequest* aRequest,
                            nsresult aStatus) {
   if (mError) {
     return NS_ERROR_FAILURE;
   }
 
-  return mSVGDocumentWrapper->OnStopRequest(aRequest, aCtxt, aStatus);
+  return mSVGDocumentWrapper->OnStopRequest(aRequest, aStatus);
 }
 
 void VectorImage::OnSVGDocumentParsed() {

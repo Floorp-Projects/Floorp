@@ -1677,7 +1677,7 @@ PendingLookup::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-PendingLookup::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+PendingLookup::OnStopRequest(nsIRequest* aRequest,
                              nsresult aResult) {
   NS_ENSURE_STATE(mCallback);
 
@@ -1698,7 +1698,7 @@ PendingLookup::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
   uint32_t verdict = nsIApplicationReputationService::VERDICT_SAFE;
   Reason reason = Reason::NotSet;
   nsresult rv =
-      OnStopRequestInternal(aRequest, aContext, aResult, verdict, reason);
+      OnStopRequestInternal(aRequest, nullptr, aResult, verdict, reason);
   OnComplete(verdict, reason, rv);
   return rv;
 }

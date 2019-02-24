@@ -141,7 +141,6 @@ InterceptStreamListener::OnDataAvailable(nsIRequest* aRequest,
 
 NS_IMETHODIMP
 InterceptStreamListener::OnStopRequest(nsIRequest* aRequest,
-                                       nsISupports* aContext,
                                        nsresult aStatusCode) {
   if (mOwner) {
     mOwner->DoPreOnStopRequest(aStatusCode);
@@ -614,7 +613,7 @@ class SyntheticDiversionListener final : public nsIStreamListener {
   }
 
   NS_IMETHOD
-  OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+  OnStopRequest(nsIRequest* aRequest,
                 nsresult aStatus) override {
     if (mChannel->mIPCOpen) {
       mChannel->SendDivertOnStopRequest(aStatus);
@@ -1227,7 +1226,7 @@ void HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest,
   // In theory mListener should not be null, but in practice sometimes it is.
   MOZ_ASSERT(mListener);
   if (mListener) {
-    mListener->OnStopRequest(aRequest, aContext, mStatus);
+    mListener->OnStopRequest(aRequest, mStatus);
   }
   mOnStopRequestCalled = true;
 

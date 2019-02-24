@@ -243,7 +243,7 @@ nsPrefetchNode::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
 }
 
 NS_IMETHODIMP
-nsPrefetchNode::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
+nsPrefetchNode::OnStopRequest(nsIRequest *aRequest,
                               nsresult aStatus) {
   LOG(("done prefetching [status=%" PRIx32 "]\n",
        static_cast<uint32_t>(aStatus)));

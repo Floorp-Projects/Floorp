@@ -974,7 +974,6 @@ BackgroundFileSaverStreamListener::OnStartRequest(nsIRequest *aRequest) {
 
 NS_IMETHODIMP
 BackgroundFileSaverStreamListener::OnStopRequest(nsIRequest *aRequest,
-                                                 nsISupports *aContext,
                                                  nsresult aStatusCode) {
   // If an error occurred, cancel the operation immediately.  On success, wait
   // until the caller has determined whether the file should be renamed.
