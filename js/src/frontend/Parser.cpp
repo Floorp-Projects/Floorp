@@ -192,7 +192,7 @@ PerHandlerParser<ParseHandler>::PerHandlerParser(
     ParseGoal parseGoal, void* internalSyntaxParser)
     : ParserBase(cx, alloc, options, foldConstants, usedNames, sourceObject,
                  parseGoal),
-      handler(cx, alloc, lazyOuterFunction),
+      handler_(cx, alloc, lazyOuterFunction),
       internalSyntaxParser_(internalSyntaxParser) {}
 
 template <class ParseHandler, typename Unit>
@@ -303,7 +303,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
 
   traceListHead_ = funbox;
   if (funNode) {
-    handler.setFunctionBox(funNode, funbox);
+    handler_.setFunctionBox(funNode, funbox);
   }
 
   return funbox;
@@ -396,11 +396,11 @@ typename ParseHandler::ListNodeType GeneralParser<ParseHandler, Unit>::parse() {
     // Don't constant-fold inside "use asm" code, as this could create a parse
     // tree that doesn't type-check as asm.js.
     if (!pc_->useAsmOrInsideUseAsm()) {
-      if (!FoldConstants(cx_, &node, &handler)) {
+      if (!FoldConstants(cx_, &node, &handler_)) {
         return null();
       }
     }
-    stmtList = handler.asList(node);
+    stmtList = handler_.asList(node);
   }
 
   return stmtList;
@@ -559,7 +559,7 @@ bool GeneralParser<ParseHandler, Unit>::notePositionalFormalParameter(
     return false;
   }
 
-  handler.addFunctionFormalParameter(funNode, paramNode);
+  handler_.addFunctionFormalParameter(funNode, paramNode);
   return true;
 }
 
@@ -573,7 +573,7 @@ bool PerHandlerParser<ParseHandler>::noteDestructuredPositionalFormalParameter(
     return false;
   }
 
-  handler.addFunctionFormalParameter(funNode, destruct);
+  handler_.addFunctionFormalParameter(funNode, destruct);
   return true;
 }
 
@@ -816,10 +816,10 @@ bool PerHandlerParser<ParseHandler>::
     return false;
   }
 
-  if (handler.canSkipLazyClosedOverBindings()) {
+  if (handler_.canSkipLazyClosedOverBindings()) {
     // Scopes are nullptr-delimited in the LazyScript closed over bindings
     // array.
-    while (JSAtom* name = handler.nextLazyClosedOverBinding()) {
+    while (JSAtom* name = handler_.nextLazyClosedOverBinding()) {
       scope.lookupDeclaredName(name)->value()->setClosedOver();
     }
     return true;
@@ -1296,7 +1296,7 @@ PerHandlerParser<SyntaxParseHandler>::finishLexicalScope(
     return null();
   }
 
-  return handler.newLexicalScope(body);
+  return handler_.newLexicalScope(body);
 }
 
 template <>
@@ -1311,7 +1311,7 @@ LexicalScopeNode* PerHandlerParser<FullParseHandler>::finishLexicalScope(
     return nullptr;
   }
 
-  return handler.newLexicalScope(*bindings, body);
+  return handler_.newLexicalScope(*bindings, body);
 }
 
 template <typename Unit>
@@ -1379,11 +1379,11 @@ LexicalScopeNode* Parser<FullParseHandler, Unit>::evalBody(
   // Don't constant-fold inside "use asm" code, as this could create a parse
   // tree that doesn't type-check as asm.js.
   if (!pc_->useAsmOrInsideUseAsm()) {
-    if (!FoldConstants(cx_, &node, &handler)) {
+    if (!FoldConstants(cx_, &node, &handler_)) {
       return null();
     }
   }
-  body = handler.asLexicalScope(node);
+  body = handler_.asLexicalScope(node);
 
   if (!this->setSourceMapInfo()) {
     return nullptr;
@@ -1431,7 +1431,7 @@ ListNode* Parser<FullParseHandler, Unit>::globalBody(
   // Don't constant-fold inside "use asm" code, as this could create a parse
   // tree that doesn't type-check as asm.js.
   if (!pc_->useAsmOrInsideUseAsm()) {
-    if (!FoldConstants(cx_, &node, &handler)) {
+    if (!FoldConstants(cx_, &node, &handler_)) {
       return null();
     }
   }
@@ -1472,7 +1472,7 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
     return nullptr;
   }
 
-  ModuleNodeType moduleNode = handler.newModule(pos());
+  ModuleNodeType moduleNode = handler_.newModule(pos());
   if (!moduleNode) {
     return null();
   }
@@ -1523,7 +1523,7 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
   // Don't constant-fold inside "use asm" code, as this could create a parse
   // tree that doesn't type-check as asm.js.
   if (!pc_->useAsmOrInsideUseAsm()) {
-    if (!FoldConstants(cx_, &node, &handler)) {
+    if (!FoldConstants(cx_, &node, &handler_)) {
       return null();
     }
   }
@@ -1572,7 +1572,7 @@ bool PerHandlerParser<ParseHandler>::declareFunctionThis() {
   HandlePropertyName dotThis = cx_->names().dotThis;
 
   bool declareThis;
-  if (handler.canSkipLazyClosedOverBindings()) {
+  if (handler_.canSkipLazyClosedOverBindings()) {
     declareThis = funbox->function()->lazyScript()->hasThisBinding();
   } else {
     declareThis = hasUsedFunctionSpecialName(dotThis) ||
@@ -1812,12 +1812,12 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
   }
 
   FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::Statement;
-  FunctionNodeType funNode = handler.newFunction(syntaxKind, pos());
+  FunctionNodeType funNode = handler_.newFunction(syntaxKind, pos());
   if (!funNode) {
     return null();
   }
 
-  ListNodeType argsbody = handler.newList(ParseNodeKind::ParamsBody, pos());
+  ListNodeType argsbody = handler_.newList(ParseNodeKind::ParamsBody, pos());
   if (!argsbody) {
     return null();
   }
@@ -1859,7 +1859,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
   // Don't constant-fold inside "use asm" code, as this could create a parse
   // tree that doesn't type-check as asm.js.
   if (!pc_->useAsmOrInsideUseAsm()) {
-    if (!FoldConstants(cx_, &node, &handler)) {
+    if (!FoldConstants(cx_, &node, &handler_)) {
       return null();
     }
   }
@@ -1884,7 +1884,7 @@ bool PerHandlerParser<ParseHandler>::declareFunctionArgumentsObject() {
   HandlePropertyName argumentsName = cx_->names().arguments;
 
   bool tryDeclareArguments;
-  if (handler.canSkipLazyClosedOverBindings()) {
+  if (handler_.canSkipLazyClosedOverBindings()) {
     tryDeclareArguments =
         funbox->function()->lazyScript()->shouldDeclareArguments();
   } else {
@@ -1989,7 +1989,7 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
     // assumed to be statement lists, to prepend initial `yield`.
     ListNodeType stmtList = null();
     if (pc_->isAsync()) {
-      stmtList = handler.newStatementList(pos());
+      stmtList = handler_.newStatementList(pos());
       if (!stmtList) {
         return null();
       }
@@ -2000,13 +2000,13 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
       return null();
     }
 
-    body = handler.newExpressionBody(kid);
+    body = handler_.newExpressionBody(kid);
     if (!body) {
       return null();
     }
 
     if (pc_->isAsync()) {
-      handler.addStatementToList(stmtList, body);
+      handler_.addStatementToList(stmtList, body);
       body = stmtList;
     }
   }
@@ -2025,7 +2025,7 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
     if (!generator) {
       return null();
     }
-    if (!handler.prependInitialYield(handler.asList(body), generator)) {
+    if (!handler_.prependInitialYield(handler_.asList(body), generator)) {
       return null();
     }
   }
@@ -2297,11 +2297,11 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
   }
 
   ListNodeType argsbody =
-      handler.newList(ParseNodeKind::ParamsBody, firstTokenPos);
+      handler_.newList(ParseNodeKind::ParamsBody, firstTokenPos);
   if (!argsbody) {
     return false;
   }
-  handler.setFunctionFormalParametersAndBody(funNode, argsbody);
+  handler_.setFunctionFormalParametersAndBody(funNode, argsbody);
 
   bool hasArguments = false;
   if (parenFreeArrow) {
@@ -2473,7 +2473,8 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
         if (!def_expr) {
           return false;
         }
-        if (!handler.setLastFunctionFormalParameterDefault(funNode, def_expr)) {
+        if (!handler_.setLastFunctionFormalParameterDefault(funNode,
+                                                            def_expr)) {
           return false;
         }
       }
@@ -2543,7 +2544,7 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
   // parse recorded the free variables of nested functions and their extents,
   // so we can skip over them after accounting for their free variables.
 
-  RootedFunction fun(cx_, handler.nextLazyInnerFunction());
+  RootedFunction fun(cx_, handler_.nextLazyInnerFunction());
   FunctionBox* funbox = newFunctionBox(funNode, fun, toStringStart,
                                        Directives(/* strict = */ false),
                                        fun->generatorKind(), fun->asyncKind());
@@ -2593,7 +2594,7 @@ bool GeneralParser<ParseHandler, Unit>::addExprAndGetNextTemplStrToken(
   if (!pn) {
     return false;
   }
-  handler.addList(nodeList, pn);
+  handler_.addList(nodeList, pn);
 
   TokenKind tt;
   if (!tokenStream.getToken(&tt, TokenStream::Operand)) {
@@ -2610,11 +2611,11 @@ bool GeneralParser<ParseHandler, Unit>::addExprAndGetNextTemplStrToken(
 template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::taggedTemplate(
     YieldHandling yieldHandling, ListNodeType tagArgsList, TokenKind tt) {
-  CallSiteNodeType callSiteObjNode = handler.newCallSiteObject(pos().begin);
+  CallSiteNodeType callSiteObjNode = handler_.newCallSiteObject(pos().begin);
   if (!callSiteObjNode) {
     return false;
   }
-  handler.addList(tagArgsList, callSiteObjNode);
+  handler_.addList(tagArgsList, callSiteObjNode);
 
   while (true) {
     if (!appendToCallSiteObj(callSiteObjNode)) {
@@ -2628,7 +2629,7 @@ bool GeneralParser<ParseHandler, Unit>::taggedTemplate(
       return false;
     }
   }
-  handler.setEndPosition(tagArgsList, callSiteObjNode);
+  handler_.setEndPosition(tagArgsList, callSiteObjNode);
   return true;
 }
 
@@ -2642,7 +2643,7 @@ GeneralParser<ParseHandler, Unit>::templateLiteral(
   }
 
   ListNodeType nodeList =
-      handler.newList(ParseNodeKind::TemplateStringListExpr, literal);
+      handler_.newList(ParseNodeKind::TemplateStringListExpr, literal);
   if (!nodeList) {
     return null();
   }
@@ -2658,7 +2659,7 @@ GeneralParser<ParseHandler, Unit>::templateLiteral(
       return null();
     }
 
-    handler.addList(nodeList, literal);
+    handler_.addList(nodeList, literal);
   } while (tt == TokenKind::TemplateHead);
   return nodeList;
 }
@@ -2675,7 +2676,7 @@ GeneralParser<ParseHandler, Unit>::functionDefinition(
   // When fully parsing a LazyScript, we do not fully reparse its inner
   // functions, which are also lazy. Instead, their free variables and
   // source extents are recorded and may be skipped.
-  if (handler.canSkipLazyInnerFunctions()) {
+  if (handler_.canSkipLazyInnerFunctions()) {
     if (!skipLazyInnerFunction(funNode, toStringStart, kind, tryAnnexB)) {
       return null();
     }
@@ -2732,7 +2733,7 @@ GeneralParser<ParseHandler, Unit>::functionDefinition(
 
     // functionFormalParametersAndBody may have already set body before
     // failing.
-    handler.setFunctionFormalParametersAndBody(funNode, null());
+    handler_.setFunctionFormalParametersAndBody(funNode, null());
   }
 
   return funNode;
@@ -2937,12 +2938,12 @@ bool GeneralParser<ParseHandler, Unit>::appendToCallSiteObj(
   if (!atom) {
     return false;
   }
-  NameNodeType rawNode = handler.newTemplateStringLiteral(atom, pos());
+  NameNodeType rawNode = handler_.newTemplateStringLiteral(atom, pos());
   if (!rawNode) {
     return false;
   }
 
-  handler.addToCallSiteObject(callSiteObj, rawNode, cookedNode);
+  handler_.addToCallSiteObject(callSiteObj, rawNode, cookedNode);
   return true;
 }
 
@@ -2965,7 +2966,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
     syntaxKind = FunctionSyntaxKind::Arrow;
   }
 
-  FunctionNodeType funNode = handler.newFunction(syntaxKind, pos());
+  FunctionNodeType funNode = handler_.newFunction(syntaxKind, pos());
   if (!funNode) {
     return null();
   }
@@ -3009,7 +3010,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
   // Don't constant-fold inside "use asm" code, as this could create a parse
   // tree that doesn't type-check as asm.js.
   if (!pc_->useAsmOrInsideUseAsm()) {
-    if (!FoldConstants(cx_, &node, &handler)) {
+    if (!FoldConstants(cx_, &node, &handler_)) {
       return null();
     }
   }
@@ -3139,7 +3140,7 @@ bool GeneralParser<ParseHandler, Unit>::functionFormalParametersAndBody(
     // We already use the correct await-handling at this point, therefore
     // we don't need call AutoAwaitIsKeyword here.
 
-    uint32_t nameOffset = handler.getFunctionNameOffset(*funNode, anyChars);
+    uint32_t nameOffset = handler_.getFunctionNameOffset(*funNode, anyChars);
     if (!checkBindingIdentifier(propertyName, nameOffset, nameYieldHandling)) {
       return false;
     }
@@ -3183,9 +3184,9 @@ bool GeneralParser<ParseHandler, Unit>::functionFormalParametersAndBody(
     return false;
   }
 
-  handler.setEndPosition(body, pos().begin);
-  handler.setEndPosition(*funNode, pos().end);
-  handler.setFunctionBody(*funNode, body);
+  handler_.setEndPosition(body, pos().begin);
+  handler_.setEndPosition(*funNode, pos().end);
+  handler_.setFunctionBody(*funNode, body);
 
   return true;
 }
@@ -3267,7 +3268,7 @@ GeneralParser<ParseHandler, Unit>::functionStmt(uint32_t toStringStart,
   }
 
   FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::Statement;
-  FunctionNodeType funNode = handler.newFunction(syntaxKind, pos());
+  FunctionNodeType funNode = handler_.newFunction(syntaxKind, pos());
   if (!funNode) {
     return null();
   }
@@ -3322,13 +3323,13 @@ GeneralParser<ParseHandler, Unit>::functionExpr(uint32_t toStringStart,
   }
 
   FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::Expression;
-  FunctionNodeType funNode = handler.newFunction(syntaxKind, pos());
+  FunctionNodeType funNode = handler_.newFunction(syntaxKind, pos());
   if (!funNode) {
     return null();
   }
 
   if (invoked) {
-    funNode = handler.setLikelyIIFE(funNode);
+    funNode = handler_.setLikelyIIFE(funNode);
   }
 
   return functionDefinition(funNode, toStringStart, InAllowed, yieldHandling,
@@ -3438,7 +3439,7 @@ bool GeneralParser<ParseHandler, Unit>::maybeParseDirective(
     ListNodeType list, Node possibleDirective, bool* cont) {
   TokenPos directivePos;
   JSAtom* directive =
-      handler.isStringExprStatement(possibleDirective, &directivePos);
+      handler_.isStringExprStatement(possibleDirective, &directivePos);
 
   *cont = !!directive;
   if (!*cont) {
@@ -3456,7 +3457,7 @@ bool GeneralParser<ParseHandler, Unit>::maybeParseDirective(
     // directive in the future. We don't want to interfere with people
     // taking advantage of directive-prologue-enabled features that appear
     // in other browsers first.
-    handler.setInDirectivePrologue(handler.asUnary(possibleDirective));
+    handler_.setInDirectivePrologue(handler_.asUnary(possibleDirective));
 
     if (directive == cx_->names().useStrict) {
       // Functions with non-simple parameter lists (destructuring,
@@ -3505,7 +3506,7 @@ GeneralParser<ParseHandler, Unit>::statementList(YieldHandling yieldHandling) {
     return null();
   }
 
-  ListNodeType stmtList = handler.newStatementList(pos());
+  ListNodeType stmtList = handler_.newStatementList(pos());
   if (!stmtList) {
     return null();
   }
@@ -3530,7 +3531,7 @@ GeneralParser<ParseHandler, Unit>::statementList(YieldHandling yieldHandling) {
       if (!tokenStream.peekTokenPos(&pos, TokenStream::Operand)) {
         return null();
       }
-      handler.setListEndPosition(stmtList, pos);
+      handler_.setListEndPosition(stmtList, pos);
       break;
     }
     if (afterReturn) {
@@ -3547,14 +3548,14 @@ GeneralParser<ParseHandler, Unit>::statementList(YieldHandling yieldHandling) {
     }
     if (!warnedAboutStatementsAfterReturn) {
       if (afterReturn) {
-        if (!handler.isStatementPermittedAfterReturnStatement(next)) {
+        if (!handler_.isStatementPermittedAfterReturnStatement(next)) {
           if (!warningAt(statementBegin, JSMSG_STMT_AFTER_RETURN)) {
             return null();
           }
 
           warnedAboutStatementsAfterReturn = true;
         }
-      } else if (handler.isReturnStatement(next)) {
+      } else if (handler_.isReturnStatement(next)) {
         afterReturn = true;
       }
     }
@@ -3565,7 +3566,7 @@ GeneralParser<ParseHandler, Unit>::statementList(YieldHandling yieldHandling) {
       }
     }
 
-    handler.addStatementToList(stmtList, next);
+    handler_.addStatementToList(stmtList, next);
   }
 
   return stmtList;
@@ -3589,7 +3590,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::condition(
   }
 
   /* Check for (a = b) and warn about possible (a == b) mistype. */
-  if (handler.isUnparenthesizedAssignment(pn)) {
+  if (handler_.isUnparenthesizedAssignment(pn)) {
     if (!extraWarning(JSMSG_EQUAL_AS_ASSIGN)) {
       return null();
     }
@@ -3777,7 +3778,7 @@ GeneralParser<ParseHandler, Unit>::bindingInitializer(
   }
 
   BinaryNodeType assign =
-      handler.newAssignment(ParseNodeKind::AssignExpr, lhs, rhs);
+      handler_.newAssignment(ParseNodeKind::AssignExpr, lhs, rhs);
   if (!assign) {
     return null();
   }
@@ -3833,7 +3834,7 @@ GeneralParser<ParseHandler, Unit>::objectBindingPattern(
   }
 
   uint32_t begin = pos().begin;
-  ListNodeType literal = handler.newObjectLiteral(begin);
+  ListNodeType literal = handler_.newObjectLiteral(begin);
   if (!literal) {
     return null();
   }
@@ -3869,7 +3870,7 @@ GeneralParser<ParseHandler, Unit>::objectBindingPattern(
         return null();
       }
 
-      if (!handler.addSpreadProperty(literal, begin, inner)) {
+      if (!handler_.addSpreadProperty(literal, begin, inner)) {
         return null();
       }
     } else {
@@ -3907,7 +3908,7 @@ GeneralParser<ParseHandler, Unit>::objectBindingPattern(
           return null();
         }
 
-        if (!handler.addPropertyDefinition(literal, propName, bindingExpr)) {
+        if (!handler_.addPropertyDefinition(literal, propName, bindingExpr)) {
           return null();
         }
       } else if (propType == PropertyType::Shorthand) {
@@ -3920,7 +3921,8 @@ GeneralParser<ParseHandler, Unit>::objectBindingPattern(
           return null();
         }
 
-        if (!handler.addShorthand(literal, handler.asName(propName), binding)) {
+        if (!handler_.addShorthand(literal, handler_.asName(propName),
+                                   binding)) {
           return null();
         }
       } else if (propType == PropertyType::CoverInitializedName) {
@@ -3941,7 +3943,7 @@ GeneralParser<ParseHandler, Unit>::objectBindingPattern(
           return null();
         }
 
-        if (!handler.addPropertyDefinition(literal, propName, bindingExpr)) {
+        if (!handler_.addPropertyDefinition(literal, propName, bindingExpr)) {
           return null();
         }
       } else {
@@ -3972,7 +3974,7 @@ GeneralParser<ParseHandler, Unit>::objectBindingPattern(
     return null();
   }
 
-  handler.setEndPosition(literal, pos().end);
+  handler_.setEndPosition(literal, pos().end);
   return literal;
 }
 
@@ -3987,7 +3989,7 @@ GeneralParser<ParseHandler, Unit>::arrayBindingPattern(
   }
 
   uint32_t begin = pos().begin;
-  ListNodeType literal = handler.newArrayLiteral(begin);
+  ListNodeType literal = handler_.newArrayLiteral(begin);
   if (!literal) {
     return null();
   }
@@ -4011,7 +4013,7 @@ GeneralParser<ParseHandler, Unit>::arrayBindingPattern(
     }
 
     if (tt == TokenKind::Comma) {
-      if (!handler.addElision(literal, pos())) {
+      if (!handler_.addElision(literal, pos())) {
         return null();
       }
     } else if (tt == TokenKind::TripleDot) {
@@ -4027,7 +4029,7 @@ GeneralParser<ParseHandler, Unit>::arrayBindingPattern(
         return null();
       }
 
-      if (!handler.addSpreadElement(literal, begin, inner)) {
+      if (!handler_.addSpreadElement(literal, begin, inner)) {
         return null();
       }
     } else {
@@ -4049,7 +4051,7 @@ GeneralParser<ParseHandler, Unit>::arrayBindingPattern(
         return null();
       }
 
-      handler.addArrayElement(literal, element);
+      handler_.addArrayElement(literal, element);
     }
 
     if (tt != TokenKind::Comma) {
@@ -4078,7 +4080,7 @@ GeneralParser<ParseHandler, Unit>::arrayBindingPattern(
     return null();
   }
 
-  handler.setEndPosition(literal, pos().end);
+  handler_.setEndPosition(literal, pos().end);
   return literal;
 }
 
@@ -4205,7 +4207,7 @@ GeneralParser<ParseHandler, Unit>::declarationPattern(
     return null();
   }
 
-  return handler.newAssignment(ParseNodeKind::AssignExpr, pattern, init);
+  return handler_.newAssignment(ParseNodeKind::AssignExpr, pattern, init);
 }
 
 template <class ParseHandler, typename Unit>
@@ -4267,7 +4269,7 @@ bool GeneralParser<ParseHandler, Unit>::initializerInNameDeclaration(
     }
   }
 
-  return handler.finishInitializerAssignment(binding, initializer);
+  return handler_.finishInitializerAssignment(binding, initializer);
 }
 
 template <class ParseHandler, typename Unit>
@@ -4380,7 +4382,7 @@ GeneralParser<ParseHandler, Unit>::declarationList(
       MOZ_CRASH("Unknown declaration kind");
   }
 
-  ListNodeType decl = handler.newDeclarationList(kind, pos());
+  ListNodeType decl = handler_.newDeclarationList(kind, pos());
   if (!decl) {
     return null();
   }
@@ -4407,7 +4409,7 @@ GeneralParser<ParseHandler, Unit>::declarationList(
       return null();
     }
 
-    handler.addList(decl, binding);
+    handler_.addList(decl, binding);
 
     // If we have a for-in/of loop, the above call matches the entirety
     // of the loop head (up to the closing parenthesis).
@@ -4522,12 +4524,12 @@ bool Parser<FullParseHandler, Unit>::namedImportsOrNamespaceImport(
       }
 
       BinaryNodeType importSpec =
-          handler.newImportSpec(importNameNode, bindingName);
+          handler_.newImportSpec(importNameNode, bindingName);
       if (!importSpec) {
         return false;
       }
 
-      handler.addList(importSpecSet, importSpec);
+      handler_.addList(importSpecSet, importSpec);
 
       TokenKind next;
       if (!tokenStream.getToken(&next)) {
@@ -4581,12 +4583,12 @@ bool Parser<FullParseHandler, Unit>::namedImportsOrNamespaceImport(
     pc_->varScope().lookupDeclaredName(bindingName)->value()->setClosedOver();
 
     BinaryNodeType importSpec =
-        handler.newImportSpec(importName, bindingNameNode);
+        handler_.newImportSpec(importName, bindingNameNode);
     if (!importSpec) {
       return false;
     }
 
-    handler.addList(importSpecSet, importSpec);
+    handler_.addList(importSpecSet, importSpec);
   }
 
   return true;
@@ -4608,7 +4610,7 @@ BinaryNode* Parser<FullParseHandler, Unit>::importDeclaration() {
   }
 
   ListNodeType importSpecSet =
-      handler.newList(ParseNodeKind::ImportSpecList, pos());
+      handler_.newList(ParseNodeKind::ImportSpecList, pos());
   if (!importSpecSet) {
     return null();
   }
@@ -4647,12 +4649,12 @@ BinaryNode* Parser<FullParseHandler, Unit>::importDeclaration() {
       }
 
       BinaryNodeType importSpec =
-          handler.newImportSpec(importName, bindingName);
+          handler_.newImportSpec(importName, bindingName);
       if (!importSpec) {
         return null();
       }
 
-      handler.addList(importSpecSet, importSpec);
+      handler_.addList(importSpecSet, importSpec);
 
       if (!tokenStream.peekToken(&tt)) {
         return null();
@@ -4696,8 +4698,8 @@ BinaryNode* Parser<FullParseHandler, Unit>::importDeclaration() {
     return null();
   }
 
-  BinaryNode* node = handler.newImportDeclaration(importSpecSet, moduleSpec,
-                                                  TokenPos(begin, pos().end));
+  BinaryNode* node = handler_.newImportDeclaration(importSpecSet, moduleSpec,
+                                                   TokenPos(begin, pos().end));
   if (!node || !pc_->sc()->asModuleContext()->builder.processImport(node)) {
     return null();
   }
@@ -5029,7 +5031,7 @@ GeneralParser<ParseHandler, Unit>::exportFrom(uint32_t begin, Node specList) {
   }
 
   BinaryNodeType node =
-      handler.newExportFromDeclaration(begin, specList, moduleSpec);
+      handler_.newExportFromDeclaration(begin, specList, moduleSpec);
   if (!node) {
     return null();
   }
@@ -5050,19 +5052,19 @@ GeneralParser<ParseHandler, Unit>::exportBatch(uint32_t begin) {
 
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Mul));
 
-  ListNodeType kid = handler.newList(ParseNodeKind::ExportSpecList, pos());
+  ListNodeType kid = handler_.newList(ParseNodeKind::ExportSpecList, pos());
   if (!kid) {
     return null();
   }
 
   // Handle the form |export *| by adding a special export batch
   // specifier to the list.
-  NullaryNodeType exportSpec = handler.newExportBatchSpec(pos());
+  NullaryNodeType exportSpec = handler_.newExportBatchSpec(pos());
   if (!exportSpec) {
     return null();
   }
 
-  handler.addList(kid, exportSpec);
+  handler_.addList(kid, exportSpec);
 
   if (!mustMatchToken(TokenKind::From, JSMSG_FROM_AFTER_EXPORT_STAR)) {
     return null();
@@ -5110,7 +5112,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::exportClause(
 
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::LeftCurly));
 
-  ListNodeType kid = handler.newList(ParseNodeKind::ExportSpecList, pos());
+  ListNodeType kid = handler_.newList(ParseNodeKind::ExportSpecList, pos());
   if (!kid) {
     return null();
   }
@@ -5157,12 +5159,12 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::exportClause(
       return null();
     }
 
-    BinaryNodeType exportSpec = handler.newExportSpec(bindingName, exportName);
+    BinaryNodeType exportSpec = handler_.newExportSpec(bindingName, exportName);
     if (!exportSpec) {
       return null();
     }
 
-    handler.addList(kid, exportSpec);
+    handler_.addList(kid, exportSpec);
 
     TokenKind next;
     if (!tokenStream.getToken(&next)) {
@@ -5211,7 +5213,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::exportClause(
   }
 
   UnaryNodeType node =
-      handler.newExportDeclaration(kid, TokenPos(begin, pos().end));
+      handler_.newExportDeclaration(kid, TokenPos(begin, pos().end));
   if (!node) {
     return null();
   }
@@ -5244,7 +5246,7 @@ GeneralParser<ParseHandler, Unit>::exportVariableStatement(uint32_t begin) {
   }
 
   UnaryNodeType node =
-      handler.newExportDeclaration(kid, TokenPos(begin, pos().end));
+      handler_.newExportDeclaration(kid, TokenPos(begin, pos().end));
   if (!node) {
     return null();
   }
@@ -5272,12 +5274,12 @@ GeneralParser<ParseHandler, Unit>::exportFunctionDeclaration(
     return null();
   }
 
-  if (!checkExportedNameForFunction(handler.asFunction(kid))) {
+  if (!checkExportedNameForFunction(handler_.asFunction(kid))) {
     return null();
   }
 
   UnaryNodeType node =
-      handler.newExportDeclaration(kid, TokenPos(begin, pos().end));
+      handler_.newExportDeclaration(kid, TokenPos(begin, pos().end));
   if (!node) {
     return null();
   }
@@ -5309,7 +5311,7 @@ GeneralParser<ParseHandler, Unit>::exportClassDeclaration(uint32_t begin) {
   }
 
   UnaryNodeType node =
-      handler.newExportDeclaration(kid, TokenPos(begin, pos().end));
+      handler_.newExportDeclaration(kid, TokenPos(begin, pos().end));
   if (!node) {
     return null();
   }
@@ -5344,7 +5346,7 @@ GeneralParser<ParseHandler, Unit>::exportLexicalDeclaration(
   }
 
   UnaryNodeType node =
-      handler.newExportDeclaration(kid, TokenPos(begin, pos().end));
+      handler_.newExportDeclaration(kid, TokenPos(begin, pos().end));
   if (!node) {
     return null();
   }
@@ -5373,7 +5375,7 @@ GeneralParser<ParseHandler, Unit>::exportDefaultFunctionDeclaration(
     return null();
   }
 
-  BinaryNodeType node = handler.newExportDefaultDeclaration(
+  BinaryNodeType node = handler_.newExportDefaultDeclaration(
       kid, null(), TokenPos(begin, pos().end));
   if (!node) {
     return null();
@@ -5402,7 +5404,7 @@ GeneralParser<ParseHandler, Unit>::exportDefaultClassDeclaration(
     return null();
   }
 
-  BinaryNodeType node = handler.newExportDefaultDeclaration(
+  BinaryNodeType node = handler_.newExportDefaultDeclaration(
       kid, null(), TokenPos(begin, pos().end));
   if (!node) {
     return null();
@@ -5440,7 +5442,7 @@ GeneralParser<ParseHandler, Unit>::exportDefaultAssignExpr(uint32_t begin) {
     return null();
   }
 
-  BinaryNodeType node = handler.newExportDefaultDeclaration(
+  BinaryNodeType node = handler_.newExportDefaultDeclaration(
       kid, nameNode, TokenPos(begin, pos().end));
   if (!node) {
     return null();
@@ -5582,7 +5584,7 @@ GeneralParser<ParseHandler, Unit>::expressionStatement(
   if (!matchOrInsertSemicolon()) {
     return null();
   }
-  return handler.newExprStatement(pnexpr, pos().end);
+  return handler_.newExprStatement(pnexpr, pos().end);
 }
 
 template <class ParseHandler, typename Unit>
@@ -5632,12 +5634,12 @@ GeneralParser<ParseHandler, Unit>::consequentOrAlternative(
       return null();
     }
 
-    ListNodeType block = handler.newStatementList(funcPos);
+    ListNodeType block = handler_.newStatementList(funcPos);
     if (!block) {
       return null();
     }
 
-    handler.addStatementToList(block, fun);
+    handler_.addStatementToList(block, fun);
     return finishLexicalScope(scope, block);
   }
 
@@ -5707,8 +5709,8 @@ GeneralParser<ParseHandler, Unit>::ifStatement(YieldHandling yieldHandling) {
 
   TernaryNodeType ifNode;
   for (int i = condList.length() - 1; i >= 0; i--) {
-    ifNode = handler.newIfStatement(posList[i], condList[i], thenList[i],
-                                    elseBranch);
+    ifNode = handler_.newIfStatement(posList[i], condList[i], thenList[i],
+                                     elseBranch);
     if (!ifNode) {
       return null();
     }
@@ -5748,7 +5750,7 @@ GeneralParser<ParseHandler, Unit>::doWhileStatement(
                               TokenStream::Operand)) {
     return null();
   }
-  return handler.newDoWhileStatement(body, cond, TokenPos(begin, pos().end));
+  return handler_.newDoWhileStatement(body, cond, TokenPos(begin, pos().end));
 }
 
 template <class ParseHandler, typename Unit>
@@ -5764,7 +5766,7 @@ GeneralParser<ParseHandler, Unit>::whileStatement(YieldHandling yieldHandling) {
   if (!body) {
     return null();
   }
-  return handler.newWhileStatement(begin, cond, body);
+  return handler_.newWhileStatement(begin, cond, body);
 }
 
 template <class ParseHandler, typename Unit>
@@ -5916,11 +5918,11 @@ bool GeneralParser<ParseHandler, Unit>::forHeadStart(
   *forHeadKind = isForIn ? ParseNodeKind::ForIn : ParseNodeKind::ForOf;
 
   // Verify the left-hand side expression doesn't have a forbidden form.
-  if (handler.isUnparenthesizedDestructuringPattern(*forInitialPart)) {
+  if (handler_.isUnparenthesizedDestructuringPattern(*forInitialPart)) {
     if (!possibleError.checkForDestructuringErrorOrWarning()) {
       return false;
     }
-  } else if (handler.isName(*forInitialPart)) {
+  } else if (handler_.isName(*forInitialPart)) {
     if (const char* chars = nameIsArgumentsOrEval(*forInitialPart)) {
       // |chars| is "arguments" or "eval" here.
       if (!strictModeErrorAt(exprOffset, JSMSG_BAD_STRICT_ASSIGN, chars)) {
@@ -5928,10 +5930,10 @@ bool GeneralParser<ParseHandler, Unit>::forHeadStart(
       }
     }
 
-    handler.adjustGetToSet(*forInitialPart);
-  } else if (handler.isPropertyAccess(*forInitialPart)) {
+    handler_.adjustGetToSet(*forInitialPart);
+  } else if (handler_.isPropertyAccess(*forInitialPart)) {
     // Permitted: no additional testing/fixup needed.
-  } else if (handler.isFunctionCall(*forInitialPart)) {
+  } else if (handler_.isFunctionCall(*forInitialPart)) {
     if (!strictModeErrorAt(exprOffset, JSMSG_BAD_FOR_LEFTSIDE)) {
       return false;
     }
@@ -6083,7 +6085,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::forStatement(
     }
 
     TokenPos headPos(begin, pos().end);
-    forHead = handler.newForHead(init, test, update, headPos);
+    forHead = handler_.newForHead(init, test, update, headPos);
     if (!forHead) {
       return null();
     }
@@ -6112,7 +6114,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::forStatement(
     }
 
     TokenPos headPos(begin, pos().end);
-    forHead = handler.newForInOrOfHead(headKind, target, iteratedExpr, headPos);
+    forHead =
+        handler_.newForInOrOfHead(headKind, target, iteratedExpr, headPos);
     if (!forHead) {
       return null();
     }
@@ -6123,7 +6126,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::forStatement(
     return null();
   }
 
-  ForNodeType forLoop = handler.newForStatement(begin, forHead, body, iflags);
+  ForNodeType forLoop = handler_.newForStatement(begin, forHead, body, iflags);
   if (!forLoop) {
     return null();
   }
@@ -6166,7 +6169,7 @@ GeneralParser<ParseHandler, Unit>::switchStatement(
     return null();
   }
 
-  ListNodeType caseList = handler.newStatementList(pos());
+  ListNodeType caseList = handler_.newStatementList(pos());
   if (!caseList) {
     return null();
   }
@@ -6210,7 +6213,7 @@ GeneralParser<ParseHandler, Unit>::switchStatement(
       return null();
     }
 
-    ListNodeType body = handler.newStatementList(pos());
+    ListNodeType body = handler_.newStatementList(pos());
     if (!body) {
       return null();
     }
@@ -6237,26 +6240,26 @@ GeneralParser<ParseHandler, Unit>::switchStatement(
       }
       if (!warnedAboutStatementsAfterReturn) {
         if (afterReturn) {
-          if (!handler.isStatementPermittedAfterReturnStatement(stmt)) {
+          if (!handler_.isStatementPermittedAfterReturnStatement(stmt)) {
             if (!warningAt(statementBegin, JSMSG_STMT_AFTER_RETURN)) {
               return null();
             }
 
             warnedAboutStatementsAfterReturn = true;
           }
-        } else if (handler.isReturnStatement(stmt)) {
+        } else if (handler_.isReturnStatement(stmt)) {
           afterReturn = true;
         }
       }
-      handler.addStatementToList(body, stmt);
+      handler_.addStatementToList(body, stmt);
     }
 
     CaseClauseType caseClause =
-        handler.newCaseOrDefault(caseBegin, caseExpr, body);
+        handler_.newCaseOrDefault(caseBegin, caseExpr, body);
     if (!caseClause) {
       return null();
     }
-    handler.addCaseStatementToList(caseList, caseClause);
+    handler_.addCaseStatementToList(caseList, caseClause);
   }
 
   LexicalScopeNodeType lexicalForCaseList = finishLexicalScope(scope, caseList);
@@ -6264,10 +6267,10 @@ GeneralParser<ParseHandler, Unit>::switchStatement(
     return null();
   }
 
-  handler.setEndPosition(lexicalForCaseList, pos().end);
+  handler_.setEndPosition(lexicalForCaseList, pos().end);
 
-  return handler.newSwitchStatement(begin, discriminant, lexicalForCaseList,
-                                    seenDefault);
+  return handler_.newSwitchStatement(begin, discriminant, lexicalForCaseList,
+                                     seenDefault);
 }
 
 template <class ParseHandler, typename Unit>
@@ -6299,7 +6302,7 @@ GeneralParser<ParseHandler, Unit>::continueStatement(
     return null();
   }
 
-  return handler.newContinueStatement(label, TokenPos(begin, pos().end));
+  return handler_.newContinueStatement(label, TokenPos(begin, pos().end));
 }
 
 template <class ParseHandler, typename Unit>
@@ -6341,7 +6344,7 @@ GeneralParser<ParseHandler, Unit>::breakStatement(YieldHandling yieldHandling) {
     return null();
   }
 
-  return handler.newBreakStatement(label, TokenPos(begin, pos().end));
+  return handler_.newBreakStatement(label, TokenPos(begin, pos().end));
 }
 
 template <class ParseHandler, typename Unit>
@@ -6381,7 +6384,7 @@ GeneralParser<ParseHandler, Unit>::returnStatement(
     return null();
   }
 
-  return handler.newReturnStatement(exprNode, TokenPos(begin, pos().end));
+  return handler_.newReturnStatement(exprNode, TokenPos(begin, pos().end));
 }
 
 template <class ParseHandler, typename Unit>
@@ -6432,9 +6435,9 @@ GeneralParser<ParseHandler, Unit>::yieldExpression(InHandling inHandling) {
       }
   }
   if (kind == ParseNodeKind::YieldStarExpr) {
-    return handler.newYieldStarExpression(begin, exprNode);
+    return handler_.newYieldStarExpression(begin, exprNode);
   }
-  return handler.newYieldExpression(begin, exprNode);
+  return handler_.newYieldExpression(begin, exprNode);
 }
 
 template <class ParseHandler, typename Unit>
@@ -6479,7 +6482,7 @@ GeneralParser<ParseHandler, Unit>::withStatement(YieldHandling yieldHandling) {
 
   pc_->sc()->setBindingsAccessedDynamically();
 
-  return handler.newWithStatement(begin, objectExpr, innerBlock);
+  return handler_.newWithStatement(begin, objectExpr, innerBlock);
 }
 
 template <class ParseHandler, typename Unit>
@@ -6548,7 +6551,7 @@ GeneralParser<ParseHandler, Unit>::labeledStatement(
     return null();
   }
 
-  return handler.newLabeledStatement(label, pn, begin);
+  return handler_.newLabeledStatement(label, pn, begin);
 }
 
 template <class ParseHandler, typename Unit>
@@ -6581,7 +6584,7 @@ GeneralParser<ParseHandler, Unit>::throwStatement(YieldHandling yieldHandling) {
     return null();
   }
 
-  return handler.newThrowStatement(throwExpr, TokenPos(begin, pos().end));
+  return handler_.newThrowStatement(throwExpr, TokenPos(begin, pos().end));
 }
 
 template <class ParseHandler, typename Unit>
@@ -6725,10 +6728,10 @@ GeneralParser<ParseHandler, Unit>::tryStatement(YieldHandling yieldHandling) {
       return null();
     }
 
-    if (!handler.setupCatchScope(catchScope, catchName, catchBody)) {
+    if (!handler_.setupCatchScope(catchScope, catchName, catchBody)) {
       return null();
     }
-    handler.setEndPosition(catchScope, pos().end);
+    handler_.setEndPosition(catchScope, pos().end);
 
     if (!tokenStream.getToken(&tt, TokenStream::Operand)) {
       return null();
@@ -6776,7 +6779,7 @@ GeneralParser<ParseHandler, Unit>::tryStatement(YieldHandling yieldHandling) {
     return null();
   }
 
-  return handler.newTryStatement(begin, innerBlock, catchScope, finallyBlock);
+  return handler_.newTryStatement(begin, innerBlock, catchScope, finallyBlock);
 }
 
 template <class ParseHandler, typename Unit>
@@ -6835,7 +6838,7 @@ GeneralParser<ParseHandler, Unit>::debuggerStatement() {
   pc_->sc()->setBindingsAccessedDynamically();
   pc_->sc()->setHasDebuggerStatement();
 
-  return handler.newDebuggerStatement(p);
+  return handler_.newDebuggerStatement(p);
 }
 
 static AccessorType ToAccessorType(PropertyType propType) {
@@ -6934,7 +6937,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
     return null();
   }
 
-  ListNodeType classMembers = handler.newClassMemberList(pos().begin);
+  ListNodeType classMembers = handler_.newClassMemberList(pos().begin);
   if (!classMembers) {
     return null();
   }
@@ -7014,8 +7017,8 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
         return null();
       }
 
-      if (!handler.addClassFieldDefinition(classMembers, propName,
-                                           initializer)) {
+      if (!handler_.addClassFieldDefinition(classMembers, propName,
+                                            initializer)) {
         return null();
       }
 
@@ -7083,8 +7086,8 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
     }
 
     AccessorType atype = ToAccessorType(propType);
-    if (!handler.addClassMethodDefinition(classMembers, propName, funNode,
-                                          atype, isStatic)) {
+    if (!handler_.addClassMethodDefinition(classMembers, propName, funNode,
+                                           atype, isStatic)) {
       return null();
     }
   }
@@ -7104,15 +7107,15 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
 
     // Note: the *function* has the name of the class, but the *property*
     // containing the function has the name "constructor"
-    Node constructorNameNode = handler.newObjectLiteralPropertyName(
-        cx_->names().constructor, pos());
+    Node constructorNameNode =
+        handler_.newObjectLiteralPropertyName(cx_->names().constructor, pos());
     if (!constructorNameNode) {
       return null();
     }
 
-    if (!handler.addClassMethodDefinition(classMembers, constructorNameNode,
-                                          synthesizedCtor, AccessorType::None,
-                                          /* isStatic = */ false)) {
+    if (!handler_.addClassMethodDefinition(classMembers, constructorNameNode,
+                                           synthesizedCtor, AccessorType::None,
+                                           /* isStatic = */ false)) {
       return null();
     }
   }
@@ -7181,7 +7184,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
       }
     }
 
-    nameNode = handler.newClassNames(outerName, innerName, namePos);
+    nameNode = handler_.newClassNames(outerName, innerName, namePos);
     if (!nameNode) {
       return null();
     }
@@ -7189,8 +7192,8 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
 
   MOZ_ALWAYS_TRUE(setLocalStrictMode(savedStrictness));
 
-  return handler.newClass(nameNode, classHeritage, membersOrBlock,
-                          TokenPos(classStartOffset, classEndOffset));
+  return handler_.newClass(nameNode, classHeritage, membersOrBlock,
+                           TokenPos(classStartOffset, classEndOffset));
 }
 
 template <class ParseHandler, typename Unit>
@@ -7201,14 +7204,14 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
 
   // Create the function object
   RootedFunction fun(cx_, newFunction(className, functionSyntaxKind,
-                                          GeneratorKind::NotGenerator,
-                                          FunctionAsyncKind::SyncFunction));
+                                      GeneratorKind::NotGenerator,
+                                      FunctionAsyncKind::SyncFunction));
   if (!fun) {
     return null();
   }
 
   // Create the top-level field initializer node
-  FunctionNodeType funNode = handler.newFunction(functionSyntaxKind, pos());
+  FunctionNodeType funNode = handler_.newFunction(functionSyntaxKind, pos());
   if (!funNode) {
     return null();
   }
@@ -7222,7 +7225,7 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
     return null();
   }
   funbox->initWithEnclosingParseContext(pc_, functionSyntaxKind);
-  handler.setFunctionBox(funNode, funbox);
+  handler_.setFunctionBox(funNode, funbox);
   funbox->setEnd(anyChars);
 
   // push a SourceParseContext on to the stack.
@@ -7234,11 +7237,11 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
   TokenPos synthesizedBodyPos = TokenPos(classNameOffset, classNameOffset + 1);
   // Create a ListNode for the parameters + body (there are no parameters)
   ListNodeType argsbody =
-      handler.newList(ParseNodeKind::ParamsBody, synthesizedBodyPos);
+      handler_.newList(ParseNodeKind::ParamsBody, synthesizedBodyPos);
   if (!argsbody) {
     return null();
   }
-  handler.setFunctionFormalParametersAndBody(funNode, argsbody);
+  handler_.setFunctionFormalParametersAndBody(funNode, argsbody);
   funbox->function()->setArgCount(0);
   tokenStream.setFunctionStart(funbox);
 
@@ -7248,7 +7251,7 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
     return null();
   }
 
-  auto stmtList = handler.newStatementList(synthesizedBodyPos);
+  auto stmtList = handler_.newStatementList(synthesizedBodyPos);
   if (!stmtList) {
     return null();
   }
@@ -7266,10 +7269,10 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
   if (!initializerBody) {
     return null();
   }
-  handler.setBeginPosition(initializerBody, stmtList);
-  handler.setEndPosition(initializerBody, stmtList);
+  handler_.setBeginPosition(initializerBody, stmtList);
+  handler_.setEndPosition(initializerBody, stmtList);
 
-  handler.setFunctionBody(funNode, initializerBody);
+  handler_.setFunctionBody(funNode, initializerBody);
 
   if (!finishFunction()) {
     return null();
@@ -7289,17 +7292,16 @@ GeneralParser<ParseHandler, Unit>::fieldInitializer(YieldHandling yieldHandling,
   TokenPos fieldPos = pos();
 
   // Create the function object
-  RootedFunction fun(cx_,
-                     newFunction(propAtom, FunctionSyntaxKind::Expression,
-                                 GeneratorKind::NotGenerator,
-                                 FunctionAsyncKind::SyncFunction));
+  RootedFunction fun(cx_, newFunction(propAtom, FunctionSyntaxKind::Expression,
+                                      GeneratorKind::NotGenerator,
+                                      FunctionAsyncKind::SyncFunction));
   if (!fun) {
     return null();
   }
 
   // Create the top-level field initializer node
   FunctionNodeType funNode =
-      handler.newFunction(FunctionSyntaxKind::Expression, fieldPos);
+      handler_.newFunction(FunctionSyntaxKind::Expression, fieldPos);
   if (!funNode) {
     return null();
   }
@@ -7313,7 +7315,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializer(YieldHandling yieldHandling,
     return null();
   }
   funbox->initWithEnclosingParseContext(pc_, FunctionSyntaxKind::Expression);
-  handler.setFunctionBox(funNode, funbox);
+  handler_.setFunctionBox(funNode, funbox);
 
   // push a SourceParseContext on to the stack.
   SourceParseContext funpc(this, funbox, /* newDirectives = */ nullptr);
@@ -7334,11 +7336,11 @@ GeneralParser<ParseHandler, Unit>::fieldInitializer(YieldHandling yieldHandling,
   }
 
   // Create a ListNode for the parameters + body (there are no parameters)
-  ListNodeType argsbody = handler.newList(ParseNodeKind::ParamsBody, fieldPos);
+  ListNodeType argsbody = handler_.newList(ParseNodeKind::ParamsBody, fieldPos);
   if (!argsbody) {
     return null();
   }
-  handler.setFunctionFormalParametersAndBody(funNode, argsbody);
+  handler_.setFunctionFormalParametersAndBody(funNode, argsbody);
   funbox->function()->setArgCount(0);
 
   tokenStream.setFunctionStart(funbox);
@@ -7359,33 +7361,33 @@ GeneralParser<ParseHandler, Unit>::fieldInitializer(YieldHandling yieldHandling,
   }
 
   // build `this.field` expression
-  ThisLiteralType propAssignThis = handler.newThisLiteral(fieldPos, thisName);
+  ThisLiteralType propAssignThis = handler_.newThisLiteral(fieldPos, thisName);
   if (!propAssignThis) {
     return null();
   }
 
   NameNodeType propAssignName =
-      handler.newPropertyName(propAtom->asPropertyName(), fieldPos);
+      handler_.newPropertyName(propAtom->asPropertyName(), fieldPos);
   if (!propAssignName) {
     return null();
   }
 
   PropertyAccessType propAssignFieldAccess =
-      handler.newPropertyAccess(propAssignThis, propAssignName);
+      handler_.newPropertyAccess(propAssignThis, propAssignName);
   if (!propAssignFieldAccess) {
     return null();
   }
-  handler.setBeginPosition(propAssignFieldAccess, propAssignName);
-  handler.setEndPosition(propAssignFieldAccess, propAssignName);
+  handler_.setBeginPosition(propAssignFieldAccess, propAssignName);
+  handler_.setEndPosition(propAssignFieldAccess, propAssignName);
 
   // Synthesize an assignment expression for the property.
-  AssignmentNodeType initializerAssignment = handler.newAssignment(
+  AssignmentNodeType initializerAssignment = handler_.newAssignment(
       ParseNodeKind::AssignExpr, propAssignFieldAccess, initializerExpr);
   if (!initializerAssignment) {
     return null();
   }
-  handler.setBeginPosition(initializerAssignment, initializerExpr);
-  handler.setEndPosition(initializerAssignment, initializerExpr);
+  handler_.setBeginPosition(initializerAssignment, initializerExpr);
+  handler_.setEndPosition(initializerAssignment, initializerExpr);
 
   if (!declareFunctionThis()) {
     return null();
@@ -7397,10 +7399,10 @@ GeneralParser<ParseHandler, Unit>::fieldInitializer(YieldHandling yieldHandling,
   if (!initializerBody) {
     return null();
   }
-  handler.setBeginPosition(initializerBody, initializerAssignment);
-  handler.setEndPosition(initializerBody, initializerAssignment);
+  handler_.setBeginPosition(initializerBody, initializerAssignment);
+  handler_.setEndPosition(initializerBody, initializerAssignment);
 
-  handler.setFunctionBody(funNode, initializerBody);
+  handler_.setFunctionBody(funNode, initializerBody);
 
   if (!finishFunction()) {
     return null();
@@ -7475,7 +7477,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::statement(
 
     // EmptyStatement
     case TokenKind::Semi:
-      return handler.newEmptyStatement(pos());
+      return handler_.newEmptyStatement(pos());
 
       // ExpressionStatement[?Yield].
 
@@ -7708,7 +7710,7 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
 
     // EmptyStatement
     case TokenKind::Semi:
-      return handler.newEmptyStatement(pos());
+      return handler_.newEmptyStatement(pos());
 
     // ExpressionStatement[?Yield].
     //
@@ -7909,7 +7911,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::expr(
     return pn;
   }
 
-  ListNodeType seq = handler.newCommaExpressionList(pn);
+  ListNodeType seq = handler_.newCommaExpressionList(pn);
   if (!seq) {
     return null();
   }
@@ -7963,7 +7965,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::expr(
       possibleErrorInner.transferErrorsTo(possibleError);
     }
 
-    handler.addList(seq, pn);
+    handler_.addList(seq, pn);
 
     if (!tokenStream.matchToken(&matched, TokenKind::Comma,
                                 TokenStream::Operand)) {
@@ -8063,7 +8065,7 @@ GeneralParser<ParseHandler, Unit>::orExpr(
       }
       // Report an error for unary expressions on the LHS of **.
       if (tok == TokenKind::Pow &&
-          handler.isUnparenthesizedUnaryExpression(pn)) {
+          handler_.isUnparenthesizedUnaryExpression(pn)) {
         error(JSMSG_BAD_POW_LEFTSIDE);
         return null();
       }
@@ -8086,7 +8088,7 @@ GeneralParser<ParseHandler, Unit>::orExpr(
     while (depth > 0 && Precedence(kindStack[depth - 1]) >= Precedence(pnk)) {
       depth--;
       ParseNodeKind combiningPnk = kindStack[depth];
-      pn = handler.appendOrCreateList(combiningPnk, nodeStack[depth], pn, pc_);
+      pn = handler_.appendOrCreateList(combiningPnk, nodeStack[depth], pn, pc_);
       if (!pn) {
         return null();
       }
@@ -8147,7 +8149,7 @@ GeneralParser<ParseHandler, Unit>::condExpr(
     return null();
   }
 
-  return handler.newConditional(condition, thenExpr, elseExpr);
+  return handler_.newConditional(condition, thenExpr, elseExpr);
 }
 
 template <class ParseHandler, typename Unit>
@@ -8317,7 +8319,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
     }
 
     FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::Arrow;
-    FunctionNodeType funNode = handler.newFunction(syntaxKind, startPos);
+    FunctionNodeType funNode = handler_.newFunction(syntaxKind, startPos);
     if (!funNode) {
       return null();
     }
@@ -8386,7 +8388,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
   }
 
   // Verify the left-hand side expression doesn't have a forbidden form.
-  if (handler.isUnparenthesizedDestructuringPattern(lhs)) {
+  if (handler_.isUnparenthesizedDestructuringPattern(lhs)) {
     if (kind != ParseNodeKind::AssignExpr) {
       error(JSMSG_BAD_DESTRUCT_ASS);
       return null();
@@ -8395,7 +8397,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
     if (!possibleErrorInner.checkForDestructuringErrorOrWarning()) {
       return null();
     }
-  } else if (handler.isName(lhs)) {
+  } else if (handler_.isName(lhs)) {
     if (const char* chars = nameIsArgumentsOrEval(lhs)) {
       // |chars| is "arguments" or "eval" here.
       if (!strictModeErrorAt(exprPos.begin, JSMSG_BAD_STRICT_ASSIGN, chars)) {
@@ -8403,10 +8405,10 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
       }
     }
 
-    handler.adjustGetToSet(lhs);
-  } else if (handler.isPropertyAccess(lhs)) {
+    handler_.adjustGetToSet(lhs);
+  } else if (handler_.isPropertyAccess(lhs)) {
     // Permitted: no additional testing/fixup needed.
-  } else if (handler.isFunctionCall(lhs)) {
+  } else if (handler_.isFunctionCall(lhs)) {
     if (!strictModeErrorAt(exprPos.begin, JSMSG_BAD_LEFTSIDE_OF_ASS)) {
       return null();
     }
@@ -8429,7 +8431,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
     return null();
   }
 
-  return handler.newAssignment(kind, lhs, rhs);
+  return handler_.newAssignment(kind, lhs, rhs);
 }
 
 template <class ParseHandler>
@@ -8440,7 +8442,7 @@ bool PerHandlerParser<ParseHandler>::isValidSimpleAssignmentTarget(
   // error for the various syntaxes that fail this, and warning for the
   // various syntaxes that "pass" this but should not, occurs elsewhere.
 
-  if (handler.isName(node)) {
+  if (handler_.isName(node)) {
     if (!pc_->sc()->strict()) {
       return true;
     }
@@ -8448,12 +8450,12 @@ bool PerHandlerParser<ParseHandler>::isValidSimpleAssignmentTarget(
     return !nameIsArgumentsOrEval(node);
   }
 
-  if (handler.isPropertyAccess(node)) {
+  if (handler_.isPropertyAccess(node)) {
     return true;
   }
 
   if (behavior == PermitAssignmentToFunctionCalls) {
-    if (handler.isFunctionCall(node)) {
+    if (handler_.isFunctionCall(node)) {
       return true;
     }
   }
@@ -8463,13 +8465,13 @@ bool PerHandlerParser<ParseHandler>::isValidSimpleAssignmentTarget(
 
 template <class ParseHandler>
 const char* PerHandlerParser<ParseHandler>::nameIsArgumentsOrEval(Node node) {
-  MOZ_ASSERT(handler.isName(node),
+  MOZ_ASSERT(handler_.isName(node),
              "must only call this function on known names");
 
-  if (handler.isEvalName(node, cx_)) {
+  if (handler_.isEvalName(node, cx_)) {
     return js_eval_str;
   }
-  if (handler.isArgumentsName(node, cx_)) {
+  if (handler_.isArgumentsName(node, cx_)) {
     return js_arguments_str;
   }
   return nullptr;
@@ -8478,15 +8480,15 @@ const char* PerHandlerParser<ParseHandler>::nameIsArgumentsOrEval(Node node) {
 template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::checkIncDecOperand(
     Node operand, uint32_t operandOffset) {
-  if (handler.isName(operand)) {
+  if (handler_.isName(operand)) {
     if (const char* chars = nameIsArgumentsOrEval(operand)) {
       if (!strictModeErrorAt(operandOffset, JSMSG_BAD_STRICT_ASSIGN, chars)) {
         return false;
       }
     }
-  } else if (handler.isPropertyAccess(operand)) {
+  } else if (handler_.isPropertyAccess(operand)) {
     // Permitted: no additional testing/fixup needed.
-  } else if (handler.isFunctionCall(operand)) {
+  } else if (handler_.isFunctionCall(operand)) {
     // Assignment to function calls is forbidden in ES6.  We're still
     // somewhat concerned about sites using this in dead code, so forbid it
     // only in strict mode code (or if the werror option has been set), and
@@ -8514,7 +8516,7 @@ GeneralParser<ParseHandler, Unit>::unaryOpExpr(YieldHandling yieldHandling,
   if (!kid) {
     return null();
   }
-  return handler.newUnary(kind, begin, kid);
+  return handler_.newUnary(kind, begin, kid);
 }
 
 template <class ParseHandler, typename Unit>
@@ -8560,7 +8562,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
         return null();
       }
 
-      return handler.newTypeof(begin, kid);
+      return handler_.newTypeof(begin, kid);
     }
 
     case TokenKind::Inc:
@@ -8578,7 +8580,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
       ParseNodeKind pnk = (tt == TokenKind::Inc)
                               ? ParseNodeKind::PreIncrementExpr
                               : ParseNodeKind::PreDecrementExpr;
-      return handler.newUpdate(pnk, begin, operand);
+      return handler_.newUpdate(pnk, begin, operand);
     }
 
     case TokenKind::Delete: {
@@ -8594,7 +8596,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
 
       // Per spec, deleting any unary expression is valid -- it simply
       // returns true -- except for one case that is illegal in strict mode.
-      if (handler.isName(expr)) {
+      if (handler_.isName(expr)) {
         if (!strictModeErrorAt(exprOffset, JSMSG_DEPRECATED_DELETE_OPERAND)) {
           return null();
         }
@@ -8602,7 +8604,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
         pc_->sc()->setBindingsAccessedDynamically();
       }
 
-      return handler.newDelete(begin, expr);
+      return handler_.newDelete(begin, expr);
     }
 
     case TokenKind::Await: {
@@ -8617,7 +8619,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
           return null();
         }
         pc_->lastAwaitOffset = begin;
-        return handler.newAwaitExpression(begin, kid);
+        return handler_.newAwaitExpression(begin, kid);
       }
     }
 
@@ -8648,7 +8650,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
       ParseNodeKind pnk = (tt == TokenKind::Inc)
                               ? ParseNodeKind::PostIncrementExpr
                               : ParseNodeKind::PostDecrementExpr;
-      return handler.newUpdate(pnk, begin, expr);
+      return handler_.newUpdate(pnk, begin, expr);
     }
   }
 }
@@ -8678,7 +8680,7 @@ typename ParseHandler::ListNodeType
 GeneralParser<ParseHandler, Unit>::argumentList(
     YieldHandling yieldHandling, bool* isSpread,
     PossibleError* possibleError /* = nullptr */) {
-  ListNodeType argsList = handler.newArguments(pos());
+  ListNodeType argsList = handler_.newArguments(pos());
   if (!argsList) {
     return null();
   }
@@ -8689,7 +8691,7 @@ GeneralParser<ParseHandler, Unit>::argumentList(
     return null();
   }
   if (matched) {
-    handler.setEndPosition(argsList, pos().end);
+    handler_.setEndPosition(argsList, pos().end);
     return argsList;
   }
 
@@ -8712,13 +8714,13 @@ GeneralParser<ParseHandler, Unit>::argumentList(
       return null();
     }
     if (spread) {
-      argNode = handler.newSpread(begin, argNode);
+      argNode = handler_.newSpread(begin, argNode);
       if (!argNode) {
         return null();
       }
     }
 
-    handler.addList(argsList, argNode);
+    handler_.addList(argsList, argNode);
 
     bool matched;
     if (!tokenStream.matchToken(&matched, TokenKind::Comma,
@@ -8743,7 +8745,7 @@ GeneralParser<ParseHandler, Unit>::argumentList(
     return null();
   }
 
-  handler.setEndPosition(argsList, pos().end);
+  handler_.setEndPosition(argsList, pos().end);
   return argsList;
 }
 
@@ -8809,20 +8811,20 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
       if (matched) {
         args = argumentList(yieldHandling, &isSpread);
       } else {
-        args = handler.newArguments(pos());
+        args = handler_.newArguments(pos());
       }
 
       if (!args) {
         return null();
       }
 
-      lhs = handler.newNewExpression(newBegin, ctorExpr, args);
+      lhs = handler_.newNewExpression(newBegin, ctorExpr, args);
       if (!lhs) {
         return null();
       }
 
       if (isSpread) {
-        handler.setOp(lhs, JSOP_SPREADNEW);
+        handler_.setOp(lhs, JSOP_SPREADNEW);
       }
     }
   } else if (tt == TokenKind::Super) {
@@ -8830,7 +8832,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
     if (!thisName) {
       return null();
     }
-    lhs = handler.newSuperBase(thisName, pos());
+    lhs = handler_.newSuperBase(thisName, pos());
     if (!lhs) {
       return null();
     }
@@ -8847,7 +8849,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
     }
   }
 
-  MOZ_ASSERT_IF(handler.isSuperBase(lhs),
+  MOZ_ASSERT_IF(handler_.isSuperBase(lhs),
                 anyChars.isCurrentTokenType(TokenKind::Super));
 
   while (true) {
@@ -8866,17 +8868,17 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
 
       if (TokenKindIsPossibleIdentifierName(tt)) {
         PropertyName* field = anyChars.currentName();
-        if (handler.isSuperBase(lhs) && !checkAndMarkSuperScope()) {
+        if (handler_.isSuperBase(lhs) && !checkAndMarkSuperScope()) {
           error(JSMSG_BAD_SUPERPROP, "property");
           return null();
         }
 
-        NameNodeType name = handler.newPropertyName(field, pos());
+        NameNodeType name = handler_.newPropertyName(field, pos());
         if (!name) {
           return null();
         }
 
-        nextMember = handler.newPropertyAccess(lhs, name);
+        nextMember = handler_.newPropertyAccess(lhs, name);
         if (!nextMember) {
           return null();
         }
@@ -8895,18 +8897,18 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
         return null();
       }
 
-      if (handler.isSuperBase(lhs) && !checkAndMarkSuperScope()) {
+      if (handler_.isSuperBase(lhs) && !checkAndMarkSuperScope()) {
         error(JSMSG_BAD_SUPERPROP, "member");
         return null();
       }
-      nextMember = handler.newPropertyByValue(lhs, propExpr, pos().end);
+      nextMember = handler_.newPropertyByValue(lhs, propExpr, pos().end);
       if (!nextMember) {
         return null();
       }
     } else if ((allowCallSyntax && tt == TokenKind::LeftParen) ||
                tt == TokenKind::TemplateHead ||
                tt == TokenKind::NoSubsTemplate) {
-      if (handler.isSuperBase(lhs)) {
+      if (handler_.isSuperBase(lhs)) {
         if (!pc_->sc()->allowSuperCall()) {
           error(JSMSG_BAD_SUPERCALL);
           return null();
@@ -8926,13 +8928,13 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
           return null();
         }
 
-        nextMember = handler.newSuperCall(lhs, args);
+        nextMember = handler_.newSuperCall(lhs, args);
         if (!nextMember) {
           return null();
         }
 
         if (isSpread) {
-          handler.setOp(nextMember, JSOP_SPREADSUPERCALL);
+          handler_.setOp(nextMember, JSOP_SPREADSUPERCALL);
         }
 
         NameNodeType thisName = newThisName();
@@ -8940,19 +8942,19 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
           return null();
         }
 
-        nextMember = handler.newSetThis(thisName, nextMember);
+        nextMember = handler_.newSetThis(thisName, nextMember);
         if (!nextMember) {
           return null();
         }
       } else {
-        if (options().selfHostingMode && handler.isPropertyAccess(lhs)) {
+        if (options().selfHostingMode && handler_.isPropertyAccess(lhs)) {
           error(JSMSG_SELFHOSTED_METHOD_CALL);
           return null();
         }
 
         JSOp op = JSOP_CALL;
         bool maybeAsyncArrow = false;
-        if (PropertyName* prop = handler.maybeDottedProperty(lhs)) {
+        if (PropertyName* prop = handler_.maybeDottedProperty(lhs)) {
           // Use the JSOP_FUN{APPLY,CALL} optimizations given the
           // right syntax.
           if (prop == cx_->names().apply) {
@@ -8964,7 +8966,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
             op = JSOP_FUNCALL;
           }
         } else if (tt == TokenKind::LeftParen) {
-          if (handler.isAsyncKeyword(lhs, cx_)) {
+          if (handler_.isAsyncKeyword(lhs, cx_)) {
             // |async (| can be the start of an async arrow
             // function, so we need to defer reporting possible
             // errors from destructuring syntax. To give better
@@ -8972,7 +8974,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
             // part of the CoverCallExpressionAndAsyncArrowHead
             // syntax when the initial name is "async".
             maybeAsyncArrow = true;
-          } else if (handler.isEvalName(lhs, cx_)) {
+          } else if (handler_.isEvalName(lhs, cx_)) {
             // Select the right EVAL op and flag pc_ as having a
             // direct eval.
             op = pc_->sc()->strict() ? JSOP_STRICTEVAL : JSOP_EVAL;
@@ -9012,12 +9014,12 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
             }
           }
 
-          nextMember = handler.newCall(lhs, args);
+          nextMember = handler_.newCall(lhs, args);
           if (!nextMember) {
             return null();
           }
         } else {
-          ListNodeType args = handler.newArguments(pos());
+          ListNodeType args = handler_.newArguments(pos());
           if (!args) {
             return null();
           }
@@ -9026,16 +9028,16 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
             return null();
           }
 
-          nextMember = handler.newTaggedTemplate(lhs, args);
+          nextMember = handler_.newTaggedTemplate(lhs, args);
           if (!nextMember) {
             return null();
           }
         }
-        handler.setOp(nextMember, op);
+        handler_.setOp(nextMember, op);
       }
     } else {
       anyChars.ungetToken();
-      if (handler.isSuperBase(lhs)) {
+      if (handler_.isSuperBase(lhs)) {
         break;
       }
       return lhs;
@@ -9044,7 +9046,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
     lhs = nextMember;
   }
 
-  if (handler.isSuperBase(lhs)) {
+  if (handler_.isSuperBase(lhs)) {
     error(JSMSG_BAD_SUPER);
     return null();
   }
@@ -9061,7 +9063,7 @@ PerHandlerParser<ParseHandler>::newName(PropertyName* name) {
 template <class ParseHandler>
 inline typename ParseHandler::NameNodeType
 PerHandlerParser<ParseHandler>::newName(PropertyName* name, TokenPos pos) {
-  return handler.newName(name, pos, cx_);
+  return handler_.newName(name, pos, cx_);
 }
 
 template <class ParseHandler, typename Unit>
@@ -9215,7 +9217,7 @@ PerHandlerParser<ParseHandler>::identifierReference(
 template <class ParseHandler>
 typename ParseHandler::NameNodeType
 PerHandlerParser<ParseHandler>::stringLiteral() {
-  return handler.newStringLiteral(anyChars.currentToken().atom(), pos());
+  return handler_.newStringLiteral(anyChars.currentToken().atom(), pos());
 }
 
 template <class ParseHandler>
@@ -9223,11 +9225,11 @@ typename ParseHandler::Node
 PerHandlerParser<ParseHandler>::noSubstitutionTaggedTemplate() {
   if (anyChars.hasInvalidTemplateEscape()) {
     anyChars.clearInvalidTemplateEscape();
-    return handler.newRawUndefinedLiteral(pos());
+    return handler_.newRawUndefinedLiteral(pos());
   }
 
-  return handler.newTemplateStringLiteral(anyChars.currentToken().atom(),
-                                          pos());
+  return handler_.newTemplateStringLiteral(anyChars.currentToken().atom(),
+                                           pos());
 }
 
 template <class ParseHandler, typename Unit>
@@ -9237,8 +9239,8 @@ GeneralParser<ParseHandler, Unit>::noSubstitutionUntaggedTemplate() {
     return null();
   }
 
-  return handler.newTemplateStringLiteral(anyChars.currentToken().atom(),
-                                          pos());
+  return handler_.newTemplateStringLiteral(anyChars.currentToken().atom(),
+                                           pos());
 }
 
 template <typename Unit>
@@ -9256,7 +9258,7 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
     return null();
   }
 
-  return handler.newRegExp(reobj, pos(), *this);
+  return handler_.newRegExp(reobj, pos(), *this);
 }
 
 template <typename Unit>
@@ -9277,7 +9279,7 @@ Parser<SyntaxParseHandler, Unit>::newRegExp() {
     }
   }
 
-  return handler.newRegExp(SyntaxParseHandler::NodeGeneric, pos(), *this);
+  return handler_.newRegExp(SyntaxParseHandler::NodeGeneric, pos(), *this);
 }
 
 template <class ParseHandler, typename Unit>
@@ -9303,7 +9305,7 @@ BigIntLiteral* Parser<FullParseHandler, Unit>::newBigInt() {
   // newBigInt immediately puts "b" in a BigIntBox, which is allocated using
   // tempLifoAlloc, avoiding any potential GC.  Therefore it's OK to pass a
   // raw pointer.
-  return handler.newBigInt(b, pos(), *this);
+  return handler_.newBigInt(b, pos(), *this);
 }
 
 template <typename Unit>
@@ -9311,7 +9313,7 @@ SyntaxParseHandler::BigIntLiteralType
 Parser<SyntaxParseHandler, Unit>::newBigInt() {
   // The tokenizer has already checked the syntax of the bigint.
 
-  return handler.newBigInt();
+  return handler_.newBigInt();
 }
 
 template <class ParseHandler, typename Unit>
@@ -9329,7 +9331,7 @@ bool GeneralParser<ParseHandler, Unit>::checkDestructuringAssignmentTarget(
   // Report any pending expression error if we're definitely not in a
   // destructuring context or the possible destructuring target is a
   // property accessor.
-  if (!possibleError || handler.isPropertyAccess(expr)) {
+  if (!possibleError || handler_.isPropertyAccess(expr)) {
     return exprPossibleError->checkForExpressionError();
   }
 
@@ -9345,13 +9347,13 @@ bool GeneralParser<ParseHandler, Unit>::checkDestructuringAssignmentTarget(
     return true;
   }
 
-  if (handler.isName(expr)) {
-    checkDestructuringAssignmentName(handler.asName(expr), exprPos,
+  if (handler_.isName(expr)) {
+    checkDestructuringAssignmentName(handler_.asName(expr), exprPos,
                                      possibleError);
     return true;
   }
 
-  if (handler.isUnparenthesizedDestructuringPattern(expr)) {
+  if (handler_.isUnparenthesizedDestructuringPattern(expr)) {
     if (behavior == TargetBehavior::ForbidAssignmentPattern) {
       possibleError->setPendingDestructuringErrorAt(exprPos,
                                                     JSMSG_BAD_DESTRUCT_TARGET);
@@ -9362,7 +9364,7 @@ bool GeneralParser<ParseHandler, Unit>::checkDestructuringAssignmentTarget(
   // Parentheses are forbidden around destructuring *patterns* (but allowed
   // around names). Use our nicer error message for parenthesized, nested
   // patterns if nested destructuring patterns are allowed.
-  if (handler.isParenthesizedDestructuringPattern(expr) &&
+  if (handler_.isParenthesizedDestructuringPattern(expr) &&
       behavior != TargetBehavior::ForbidAssignmentPattern) {
     possibleError->setPendingDestructuringErrorAt(exprPos,
                                                   JSMSG_BAD_DESTRUCT_PARENS);
@@ -9379,7 +9381,7 @@ void GeneralParser<ParseHandler, Unit>::checkDestructuringAssignmentName(
     NameNodeType name, TokenPos namePos, PossibleError* possibleError) {
 #ifdef DEBUG
   // GCC 8.0.1 crashes if this is a one-liner.
-  bool isName = handler.isName(name);
+  bool isName = handler_.isName(name);
   MOZ_ASSERT(isName);
 #endif
 
@@ -9389,7 +9391,7 @@ void GeneralParser<ParseHandler, Unit>::checkDestructuringAssignmentName(
   }
 
   if (pc_->sc()->needStrictChecks()) {
-    if (handler.isArgumentsName(name, cx_)) {
+    if (handler_.isArgumentsName(name, cx_)) {
       if (pc_->sc()->strict()) {
         possibleError->setPendingDestructuringErrorAt(
             namePos, JSMSG_BAD_STRICT_ASSIGN_ARGUMENTS);
@@ -9400,7 +9402,7 @@ void GeneralParser<ParseHandler, Unit>::checkDestructuringAssignmentName(
       return;
     }
 
-    if (handler.isEvalName(name, cx_)) {
+    if (handler_.isEvalName(name, cx_)) {
       if (pc_->sc()->strict()) {
         possibleError->setPendingDestructuringErrorAt(
             namePos, JSMSG_BAD_STRICT_ASSIGN_EVAL);
@@ -9429,7 +9431,7 @@ bool GeneralParser<ParseHandler, Unit>::checkDestructuringAssignmentElement(
   // If |expr| is an assignment element with an initializer expression, its
   // destructuring assignment target was already validated in assignExpr().
   // Otherwise we need to check that |expr| is a valid destructuring target.
-  if (handler.isUnparenthesizedAssignment(expr)) {
+  if (handler_.isUnparenthesizedAssignment(expr)) {
     // Report any pending expression error if we're definitely not in a
     // destructuring context.
     if (!possibleError) {
@@ -9450,7 +9452,7 @@ GeneralParser<ParseHandler, Unit>::arrayInitializer(
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::LeftBracket));
 
   uint32_t begin = pos().begin;
-  ListNodeType literal = handler.newArrayLiteral(begin);
+  ListNodeType literal = handler_.newArrayLiteral(begin);
   if (!literal) {
     return null();
   }
@@ -9465,7 +9467,7 @@ GeneralParser<ParseHandler, Unit>::arrayInitializer(
      * Mark empty arrays as non-constant, since we cannot easily
      * determine their type.
      */
-    handler.setListHasNonConstInitializer(literal);
+    handler_.setListHasNonConstInitializer(literal);
   } else {
     anyChars.ungetToken();
 
@@ -9485,7 +9487,7 @@ GeneralParser<ParseHandler, Unit>::arrayInitializer(
 
       if (tt == TokenKind::Comma) {
         tokenStream.consumeKnownToken(TokenKind::Comma, TokenStream::Operand);
-        if (!handler.addElision(literal, pos())) {
+        if (!handler_.addElision(literal, pos())) {
           return null();
         }
         continue;
@@ -9512,7 +9514,7 @@ GeneralParser<ParseHandler, Unit>::arrayInitializer(
           return null();
         }
 
-        if (!handler.addSpreadElement(literal, begin, inner)) {
+        if (!handler_.addSpreadElement(literal, begin, inner)) {
           return null();
         }
       } else {
@@ -9531,7 +9533,7 @@ GeneralParser<ParseHandler, Unit>::arrayInitializer(
                 element, elementPos, &possibleErrorInner, possibleError)) {
           return null();
         }
-        handler.addArrayElement(literal, element);
+        handler_.addArrayElement(literal, element);
       }
 
       bool matched;
@@ -9559,7 +9561,7 @@ GeneralParser<ParseHandler, Unit>::arrayInitializer(
     }
   }
 
-  handler.setEndPosition(literal, pos().end);
+  handler_.setEndPosition(literal, pos().end);
   return literal;
 }
 
@@ -9635,7 +9637,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
       propAtom.set(anyChars.currentToken().atom());
       uint32_t index;
       if (propAtom->isIndex(&index)) {
-        propName = handler.newNumber(index, NoDecimal, pos());
+        propName = handler_.newNumber(index, NoDecimal, pos());
         if (!propName) {
           return null();
         }
@@ -9666,7 +9668,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
       // Do not look for accessor syntax on generator or async methods.
       if (isGenerator || isAsync ||
           !(ltok == TokenKind::Get || ltok == TokenKind::Set)) {
-        propName = handler.newObjectLiteralPropertyName(propAtom, pos());
+        propName = handler_.newObjectLiteralPropertyName(propAtom, pos());
         if (!propName) {
           return null();
         }
@@ -9686,7 +9688,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
         tokenStream.consumeKnownToken(tt);
 
         propAtom.set(anyChars.currentName());
-        return handler.newObjectLiteralPropertyName(propAtom, pos());
+        return handler_.newObjectLiteralPropertyName(propAtom, pos());
       }
       if (tt == TokenKind::String) {
         tokenStream.consumeKnownToken(TokenKind::String);
@@ -9699,7 +9701,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
           if (!propAtom.get()) {
             return null();
           }
-          return handler.newNumber(index, NoDecimal, pos());
+          return handler_.newNumber(index, NoDecimal, pos());
         }
         return stringLiteral();
       }
@@ -9720,7 +9722,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
       }
 
       // Not an accessor property after all.
-      propName = handler.newObjectLiteralPropertyName(propAtom.get(), pos());
+      propName = handler_.newObjectLiteralPropertyName(propAtom.get(), pos());
       if (!propName) {
         return null();
       }
@@ -9802,7 +9804,7 @@ GeneralParser<ParseHandler, Unit>::computedPropertyName(
     }
   } else if (propertyNameContext ==
              PropertyNameContext::PropertyNameInLiteral) {
-    handler.setListHasNonConstInitializer(literal);
+    handler_.setListHasNonConstInitializer(literal);
   }
 
   Node assignNode = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
@@ -9814,7 +9816,7 @@ GeneralParser<ParseHandler, Unit>::computedPropertyName(
                       JSMSG_COMP_PROP_UNTERM_EXPR)) {
     return null();
   }
-  return handler.newComputedName(assignNode, begin, pos().end);
+  return handler_.newComputedName(assignNode, begin, pos().end);
 }
 
 template <class ParseHandler, typename Unit>
@@ -9825,7 +9827,7 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
 
   uint32_t openedPos = pos().begin;
 
-  ListNodeType literal = handler.newObjectLiteral(pos().begin);
+  ListNodeType literal = handler_.newObjectLiteral(pos().begin);
   if (!literal) {
     return null();
   }
@@ -9864,7 +9866,7 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
               TargetBehavior::ForbidAssignmentPattern)) {
         return null();
       }
-      if (!handler.addSpreadProperty(literal, begin, inner)) {
+      if (!handler_.addSpreadProperty(literal, begin, inner)) {
         return null();
       }
     } else {
@@ -9916,17 +9918,18 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
           // setters, method/generator definitions, computed
           // property name versions of all of these, and shorthands
           // do not.
-          if (!handler.addPrototypeMutation(literal, namePos.begin, propExpr)) {
+          if (!handler_.addPrototypeMutation(literal, namePos.begin,
+                                             propExpr)) {
             return null();
           }
         } else {
           BinaryNodeType propDef =
-              handler.newPropertyDefinition(propName, propExpr);
+              handler_.newPropertyDefinition(propName, propExpr);
           if (!propDef) {
             return null();
           }
 
-          handler.addPropertyDefinition(literal, propDef);
+          handler_.addPropertyDefinition(literal, propDef);
         }
       } else if (propType == PropertyType::Shorthand) {
         /*
@@ -9948,8 +9951,8 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
           checkDestructuringAssignmentName(nameExpr, namePos, possibleError);
         }
 
-        if (!handler.addShorthand(literal, handler.asName(propName),
-                                  nameExpr)) {
+        if (!handler_.addShorthand(literal, handler_.asName(propName),
+                                   nameExpr)) {
           return null();
         }
       } else if (propType == PropertyType::CoverInitializedName) {
@@ -10006,12 +10009,12 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
         }
 
         BinaryNodeType propExpr =
-            handler.newAssignment(ParseNodeKind::AssignExpr, lhs, rhs);
+            handler_.newAssignment(ParseNodeKind::AssignExpr, lhs, rhs);
         if (!propExpr) {
           return null();
         }
 
-        if (!handler.addPropertyDefinition(literal, propName, propExpr)) {
+        if (!handler_.addPropertyDefinition(literal, propName, propExpr)) {
           return null();
         }
       } else {
@@ -10035,8 +10038,8 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
         }
 
         AccessorType atype = ToAccessorType(propType);
-        if (!handler.addObjectMethodDefinition(literal, propName, funNode,
-                                               atype)) {
+        if (!handler_.addObjectMethodDefinition(literal, propName, funNode,
+                                                atype)) {
           return null();
         }
 
@@ -10070,7 +10073,7 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
     return null();
   }
 
-  handler.setEndPosition(literal, pos().end);
+  handler_.setEndPosition(literal, pos().end);
   return literal;
 }
 
@@ -10120,7 +10123,7 @@ GeneralParser<ParseHandler, Unit>::methodDefinition(uint32_t toStringStart,
 
   YieldHandling yieldHandling = GetYieldHandling(generatorKind);
 
-  FunctionNodeType funNode = handler.newFunction(syntaxKind, pos());
+  FunctionNodeType funNode = handler_.newFunction(syntaxKind, pos());
   if (!funNode) {
     return null();
   }
@@ -10136,7 +10139,7 @@ bool GeneralParser<ParseHandler, Unit>::tryNewTarget(
 
   *newTarget = null();
 
-  NullaryNodeType newHolder = handler.newPosHolder(pos());
+  NullaryNodeType newHolder = handler_.newPosHolder(pos());
   if (!newHolder) {
     return false;
   }
@@ -10169,12 +10172,12 @@ bool GeneralParser<ParseHandler, Unit>::tryNewTarget(
     return false;
   }
 
-  NullaryNodeType targetHolder = handler.newPosHolder(pos());
+  NullaryNodeType targetHolder = handler_.newPosHolder(pos());
   if (!targetHolder) {
     return false;
   }
 
-  *newTarget = handler.newNewTarget(newHolder, targetHolder);
+  *newTarget = handler_.newNewTarget(newHolder, targetHolder);
   return !!*newTarget;
 }
 
@@ -10184,7 +10187,7 @@ GeneralParser<ParseHandler, Unit>::importExpr(YieldHandling yieldHandling,
                                               bool allowCallSyntax) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Import));
 
-  NullaryNodeType importHolder = handler.newPosHolder(pos());
+  NullaryNodeType importHolder = handler_.newPosHolder(pos());
   if (!importHolder) {
     return null();
   }
@@ -10208,12 +10211,12 @@ GeneralParser<ParseHandler, Unit>::importExpr(YieldHandling yieldHandling,
       return null();
     }
 
-    NullaryNodeType metaHolder = handler.newPosHolder(pos());
+    NullaryNodeType metaHolder = handler_.newPosHolder(pos());
     if (!metaHolder) {
       return null();
     }
 
-    return handler.newImportMeta(importHolder, metaHolder);
+    return handler_.newImportMeta(importHolder, metaHolder);
   } else if (next == TokenKind::LeftParen && allowCallSyntax) {
     Node arg = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
     if (!arg) {
@@ -10230,7 +10233,7 @@ GeneralParser<ParseHandler, Unit>::importExpr(YieldHandling yieldHandling,
       return null();
     }
 
-    return handler.newCallImport(importHolder, arg);
+    return handler_.newCallImport(importHolder, arg);
   } else {
     error(JSMSG_UNEXPECTED_TOKEN_NO_EXPECT, TokenKindToDesc(next));
     return null();
@@ -10285,7 +10288,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::primaryExpr(
         // Now just return something that will allow parsing to continue.
         // It doesn't matter what; when we reach the =>, we will rewind and
         // reparse the whole arrow function. See Parser::assignExpr.
-        return handler.newNullLiteral(pos());
+        return handler_.newNullLiteral(pos());
       }
 
       // Pass |possibleError| to support destructuring in arrow parameters.
@@ -10298,7 +10301,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::primaryExpr(
                           JSMSG_PAREN_IN_PAREN)) {
         return null();
       }
-      return handler.parenthesize(expr);
+      return handler_.parenthesize(expr);
     }
 
     case TokenKind::TemplateHead:
@@ -10348,9 +10351,9 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::primaryExpr(
       return newBigInt();
 
     case TokenKind::True:
-      return handler.newBooleanLiteral(true, pos());
+      return handler_.newBooleanLiteral(true, pos());
     case TokenKind::False:
-      return handler.newBooleanLiteral(false, pos());
+      return handler_.newBooleanLiteral(false, pos());
     case TokenKind::This: {
       if (pc_->isFunctionBox()) {
         pc_->functionBox()->usesThis = true;
@@ -10362,10 +10365,10 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::primaryExpr(
           return null();
         }
       }
-      return handler.newThisLiteral(pos(), thisName);
+      return handler_.newThisLiteral(pos(), thisName);
     }
     case TokenKind::Null:
-      return handler.newNullLiteral(pos());
+      return handler_.newNullLiteral(pos());
 
     case TokenKind::TripleDot: {
       // This isn't valid expression syntax, but it's valid in an arrow
@@ -10427,7 +10430,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::primaryExpr(
 
       // Return an arbitrary expression node. See case TokenKind::RightParen
       // above.
-      return handler.newNullLiteral(pos());
+      return handler_.newNullLiteral(pos());
     }
   }
 }
