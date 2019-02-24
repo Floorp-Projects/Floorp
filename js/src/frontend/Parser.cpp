@@ -149,7 +149,7 @@ ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
       ss(nullptr),
       sourceObject_(cx, sourceObject),
       keepAtoms_(cx),
-      foldConstants(foldConstants),
+      foldConstants_(foldConstants),
 #ifdef DEBUG
       checkOptionsCalled(false),
 #endif
@@ -391,7 +391,7 @@ typename ParseHandler::ListNodeType GeneralParser<ParseHandler, Unit>::parse() {
     error(JSMSG_GARBAGE_AFTER_INPUT, "script", TokenKindToDesc(tt));
     return null();
   }
-  if (foldConstants) {
+  if (foldConstants_) {
     Node node = stmtList;
     // Don't constant-fold inside "use asm" code, as this could create a parse
     // tree that doesn't type-check as asm.js.

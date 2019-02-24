@@ -271,7 +271,7 @@ class MOZ_STACK_CLASS ParserBase : private JS::AutoGCRooter,
   AutoKeepAtoms keepAtoms_;
 
   // Perform constant-folding; must be true when interfacing with the emitter.
-  const bool foldConstants : 1;
+  const bool foldConstants_ : 1;
 
  protected:
 #if DEBUG
@@ -726,7 +726,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
 #endif
   using Base::finishFunctionScopes;
   using Base::finishLexicalScope;
-  using Base::foldConstants;
+  using Base::foldConstants_;
   using Base::getFilename;
   using Base::hasUsedFunctionSpecialName;
   using Base::hasValidSimpleStrictParameterNames;
