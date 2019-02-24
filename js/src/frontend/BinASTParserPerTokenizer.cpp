@@ -180,7 +180,7 @@ JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::parseLazyFunction(
 
   BINJS_TRY_DECL(lexicalScopeData,
                  NewLexicalScopeData(cx_, lexicalScope, alloc_, pc_));
-  BINJS_TRY_DECL(body, factory_.newLexicalScope(*lexicalScopeData, tmpBody));
+  BINJS_TRY_DECL(body, handler_.newLexicalScope(*lexicalScopeData, tmpBody));
 
   auto binKind = isExpr ? BinKind::LazyFunctionExpression
                         : BinKind::LazyFunctionDeclaration;
@@ -295,9 +295,9 @@ JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::makeEmptyFunctionNode(
   TokenPos pos = tokenizer_->pos(start);
   FunctionSyntaxKind syntaxKind = BinKindToFunctionSyntaxKind(kind);
 
-  BINJS_TRY_DECL(result, factory_.newFunction(syntaxKind, pos));
+  BINJS_TRY_DECL(result, handler_.newFunction(syntaxKind, pos));
 
-  factory_.setFunctionBox(result, funbox);
+  handler_.setFunctionBox(result, funbox);
 
   return result;
 }
@@ -318,7 +318,7 @@ JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::buildFunction(
 
   BINJS_MOZ_TRY_DECL(result, makeEmptyFunctionNode(start, kind, funbox));
 
-  factory_.setFunctionFormalParametersAndBody(result, params);
+  handler_.setFunctionFormalParametersAndBody(result, params);
 
   HandlePropertyName dotThis = cx_->names().dotThis;
   const bool declareThis = hasUsedName(dotThis) ||
@@ -381,12 +381,12 @@ JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::buildFunction(
                                  pc_->innermostScope()->id()));
 
     BINJS_TRY_DECL(
-        dotGen, factory_.newName(dotGenerator,
+        dotGen, handler_.newName(dotGenerator,
                                  tokenizer_->pos(tokenizer_->offset()), cx_));
 
     ListNode* stmtList =
         &body->as<LexicalScopeNode>().scopeBody()->as<ListNode>();
-    BINJS_TRY(factory_.prependInitialYield(stmtList, dotGen));
+    BINJS_TRY(handler_.prependInitialYield(stmtList, dotGen));
   }
 
   // Check all our bindings after maybe adding function metavars.
@@ -680,7 +680,7 @@ JS::Result<Ok> BinASTParserPerTokenizer<Tok>::prependDirectivesImpl(
   }
 
   BINJS_TRY_DECL(statement,
-                 factory_.newExprStatement(directive, directive->pn_pos.end));
+                 handler_.newExprStatement(directive, directive->pn_pos.end));
   body->prependAndUpdatePos(statement);
 
   return Ok();

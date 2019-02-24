@@ -240,7 +240,7 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
   virtual ErrorReporter& errorReporter() override { return *this; }
   virtual const ErrorReporter& errorReporter() const override { return *this; }
 
-  virtual FullParseHandler& astGenerator() override { return factory_; }
+  virtual FullParseHandler& astGenerator() override { return handler_; }
 
  public:
   // Implement ErrorReporter.

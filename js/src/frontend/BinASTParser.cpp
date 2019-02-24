@@ -1764,7 +1764,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceAssignmentExpression(
 
   BINJS_MOZ_TRY_DECL(expression, parseExpression());
 
-  BINJS_TRY_DECL(result, factory_.newAssignment(ParseNodeKind::AssignExpr,
+  BINJS_TRY_DECL(result, handler_.newAssignment(ParseNodeKind::AssignExpr,
                                                 binding, expression));
   return result;
 }
@@ -1789,7 +1789,7 @@ BinASTParser<Tok>::parseInterfaceAssignmentTargetIdentifier(
   }
   BINJS_TRY(usedNames_.noteUse(cx_, name, pc_->scriptId(),
                                pc_->innermostScope()->id()));
-  BINJS_TRY_DECL(result, factory_.newName(name->asPropertyName(),
+  BINJS_TRY_DECL(result, handler_.newName(name->asPropertyName(),
                                           tokenizer_->pos(start), cx_));
   return result;
 }
@@ -1905,7 +1905,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceBinaryExpression(
     left->template as<ListNode>().appendWithoutOrderAssumption(right);
     result = left;
   } else {
-    BINJS_TRY_DECL(list, factory_.newList(pnk, tokenizer_->pos(start)));
+    BINJS_TRY_DECL(list, handler_.newList(pnk, tokenizer_->pos(start)));
 
     list->appendWithoutOrderAssumption(left);
     list->appendWithoutOrderAssumption(right);
@@ -1954,7 +1954,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceBindingIdentifier(
   if (!IsIdentifier(name)) {
     return raiseError("Invalid identifier");
   }
-  BINJS_TRY_DECL(result, factory_.newName(name->asPropertyName(),
+  BINJS_TRY_DECL(result, handler_.newName(name->asPropertyName(),
                                           tokenizer_->pos(start), cx_));
   return result;
 }
@@ -2010,7 +2010,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceBlock(
 
   MOZ_TRY(checkClosedVars(currentScope));
   BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, currentScope, alloc_, pc_));
-  BINJS_TRY_DECL(result, factory_.newLexicalScope(*bindings, statements));
+  BINJS_TRY_DECL(result, handler_.newLexicalScope(*bindings, statements));
   return result;
 }
 
@@ -2046,7 +2046,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceBreakStatement(
     }
   }
 
-  BINJS_TRY_DECL(result, factory_.newBreakStatement(
+  BINJS_TRY_DECL(result, handler_.newBreakStatement(
                              label ? label->asPropertyName() : nullptr,
                              tokenizer_->pos(start)));
   return result;
@@ -2070,7 +2070,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceCallExpression(
   auto op = JSOP_CALL;
 
   // Try to optimize funcall and funapply at the bytecode level
-  if (PropertyName* prop = factory_.maybeDottedProperty(callee)) {
+  if (PropertyName* prop = handler_.maybeDottedProperty(callee)) {
     if (prop == cx_->names().apply) {
       op = JSOP_FUNAPPLY;
       if (pc_->isFunctionBox()) {
@@ -2082,7 +2082,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceCallExpression(
   }
 
   // Check for direct calls to `eval`.
-  if (factory_.isEvalName(callee, cx_)) {
+  if (handler_.isEvalName(callee, cx_)) {
     if (!pc_->varScope().lookupDeclaredNameForAdd(cx_->names().eval) &&
         !pc_->innermostScope()->lookupDeclaredNameForAdd(cx_->names().eval)) {
       // This is a direct call to `eval`.
@@ -2094,7 +2094,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceCallExpression(
     }
   }
 
-  BINJS_TRY_DECL(result, factory_.newCall(callee, arguments));
+  BINJS_TRY_DECL(result, handler_.newCall(callee, arguments));
   result->setOp(op);
   return result;
 }
@@ -2146,8 +2146,8 @@ JS::Result<LexicalScopeNode*> BinASTParser<Tok>::parseInterfaceCatchClause(
 
   MOZ_TRY(checkClosedVars(currentScope));
   BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, currentScope, alloc_, pc_));
-  BINJS_TRY_DECL(result, factory_.newLexicalScope(*bindings, body));
-  BINJS_TRY(factory_.setupCatchScope(result, binding, body));
+  BINJS_TRY_DECL(result, handler_.newLexicalScope(*bindings, body));
+  BINJS_TRY(handler_.setupCatchScope(result, binding, body));
   return result;
 }
 
@@ -2223,7 +2223,7 @@ BinASTParser<Tok>::parseInterfaceCompoundAssignmentExpression(
       pnk = ParseNodeKind::BitAndAssignExpr;
       break;
   }
-  BINJS_TRY_DECL(result, factory_.newAssignment(pnk, binding, expression));
+  BINJS_TRY_DECL(result, handler_.newAssignment(pnk, binding, expression));
   return result;
 }
 
@@ -2243,7 +2243,7 @@ BinASTParser<Tok>::parseInterfaceComputedMemberAssignmentTarget(
 
   BINJS_MOZ_TRY_DECL(expression, parseExpression());
 
-  BINJS_TRY_DECL(result, factory_.newPropertyByValue(object, expression,
+  BINJS_TRY_DECL(result, handler_.newPropertyByValue(object, expression,
                                                      tokenizer_->offset()));
   return result;
 }
@@ -2264,7 +2264,7 @@ BinASTParser<Tok>::parseInterfaceComputedMemberExpression(
 
   BINJS_MOZ_TRY_DECL(expression, parseExpression());
 
-  BINJS_TRY_DECL(result, factory_.newPropertyByValue(object, expression,
+  BINJS_TRY_DECL(result, handler_.newPropertyByValue(object, expression,
                                                      tokenizer_->offset()));
   return result;
 }
@@ -2295,7 +2295,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceConditionalExpression(
 
   BINJS_MOZ_TRY_DECL(alternate, parseExpression());
 
-  BINJS_TRY_DECL(result, factory_.newConditional(test, consequent, alternate));
+  BINJS_TRY_DECL(result, handler_.newConditional(test, consequent, alternate));
   return result;
 }
 
@@ -2331,7 +2331,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceContinueStatement(
     }
   }
 
-  BINJS_TRY_DECL(result, factory_.newContinueStatement(
+  BINJS_TRY_DECL(result, handler_.newContinueStatement(
                              label ? label->asPropertyName() : nullptr,
                              tokenizer_->pos(start)));
   return result;
@@ -2352,17 +2352,17 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceDataProperty(
 
   BINJS_MOZ_TRY_DECL(expression, parseExpression());
 
-  if (!factory_.isUsableAsObjectPropertyName(name)) {
+  if (!handler_.isUsableAsObjectPropertyName(name)) {
     return raiseError("DataProperty key kind");
   }
 
   ParseNode* result;
   if (name->template is<NameNode>() &&
       name->template as<NameNode>().atom() == cx_->names().proto) {
-    BINJS_TRY_VAR(result, factory_.newUnary(ParseNodeKind::MutateProto, start,
+    BINJS_TRY_VAR(result, handler_.newUnary(ParseNodeKind::MutateProto, start,
                                             expression));
   } else {
-    BINJS_TRY_VAR(result, factory_.newObjectMethodOrPropertyDefinition(
+    BINJS_TRY_VAR(result, handler_.newObjectMethodOrPropertyDefinition(
                               name, expression, AccessorType::None));
   }
   return result;
@@ -2412,7 +2412,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceDirective(
   MOZ_TRY_VAR(rawValue, tokenizer_->readAtom());
 
   TokenPos pos = tokenizer_->pos(start);
-  BINJS_TRY_DECL(result, factory_.newStringLiteral(rawValue, pos));
+  BINJS_TRY_DECL(result, handler_.newStringLiteral(rawValue, pos));
   return result;
 }
 
@@ -2433,7 +2433,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceDoWhileStatement(
   BINJS_MOZ_TRY_DECL(body, parseStatement());
 
   BINJS_TRY_DECL(
-      result, factory_.newDoWhileStatement(body, test, tokenizer_->pos(start)));
+      result, handler_.newDoWhileStatement(body, test, tokenizer_->pos(start)));
   return result;
 }
 
@@ -2513,7 +2513,7 @@ BinASTParser<Tok>::parseInterfaceEagerFunctionDeclaration(
   MOZ_TRY(prependDirectivesToBody(body, directives));
   BINJS_TRY_DECL(lexicalScopeData,
                  NewLexicalScopeData(cx_, lexicalScope, alloc_, pc_));
-  BINJS_TRY_DECL(bodyScope, factory_.newLexicalScope(*lexicalScopeData, body));
+  BINJS_TRY_DECL(bodyScope, handler_.newLexicalScope(*lexicalScopeData, body));
   BINJS_MOZ_TRY_DECL(
       result, buildFunction(start, kind, name, params, bodyScope, funbox));
   return result;
@@ -2576,7 +2576,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerFunctionExpression(
   MOZ_TRY(prependDirectivesToBody(body, directives));
   BINJS_TRY_DECL(lexicalScopeData,
                  NewLexicalScopeData(cx_, lexicalScope, alloc_, pc_));
-  BINJS_TRY_DECL(bodyScope, factory_.newLexicalScope(*lexicalScopeData, body));
+  BINJS_TRY_DECL(bodyScope, handler_.newLexicalScope(*lexicalScopeData, body));
   BINJS_MOZ_TRY_DECL(
       result, buildFunction(start, kind, name, params, bodyScope, funbox));
   return result;
@@ -2631,7 +2631,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerGetter(
   MOZ_TRY(prependDirectivesToBody(body, directives));
   BINJS_MOZ_TRY_DECL(method,
                      buildFunction(start, kind, name, params, body, funbox));
-  BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(
+  BINJS_TRY_DECL(result, handler_.newObjectMethodOrPropertyDefinition(
                              name, method, accessorType));
   return result;
 }
@@ -2694,7 +2694,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerMethod(
   MOZ_TRY(prependDirectivesToBody(body, directives));
   BINJS_MOZ_TRY_DECL(method,
                      buildFunction(start, kind, name, params, body, funbox));
-  BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(
+  BINJS_TRY_DECL(result, handler_.newObjectMethodOrPropertyDefinition(
                              name, method, accessorType));
   return result;
 }
@@ -2750,7 +2750,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerSetter(
   MOZ_TRY(prependDirectivesToBody(body, directives));
   BINJS_MOZ_TRY_DECL(method,
                      buildFunction(start, kind, name, params, body, funbox));
-  BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(
+  BINJS_TRY_DECL(result, handler_.newObjectMethodOrPropertyDefinition(
                              name, method, accessorType));
   return result;
 }
@@ -2762,7 +2762,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEmptyStatement(
   BINJS_TRY(CheckRecursionLimit(cx_));
   MOZ_TRY(tokenizer_->checkFields0(kind, fields));
 
-  BINJS_TRY_DECL(result, factory_.newEmptyStatement(tokenizer_->pos(start)));
+  BINJS_TRY_DECL(result, handler_.newEmptyStatement(tokenizer_->pos(start)));
   return result;
 }
 
@@ -2780,7 +2780,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceExpressionStatement(
   BINJS_MOZ_TRY_DECL(expression, parseExpression());
 
   BINJS_TRY_DECL(result,
-                 factory_.newExprStatement(expression, tokenizer_->offset()));
+                 handler_.newExprStatement(expression, tokenizer_->offset()));
   return result;
 }
 
@@ -2815,8 +2815,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceForInOfBinding(
       return raiseError("Const is not supported in this preview release");
   }
   BINJS_TRY_DECL(result,
-                 factory_.newDeclarationList(pnk, tokenizer_->pos(start)));
-  factory_.addList(result, binding);
+                 handler_.newDeclarationList(pnk, tokenizer_->pos(start)));
+  handler_.addList(result, binding);
   return result;
 }
 
@@ -2846,15 +2846,15 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceForInStatement(
   BINJS_MOZ_TRY_DECL(body, parseStatement());
 
   BINJS_TRY_DECL(forHead,
-                 factory_.newForInOrOfHead(ParseNodeKind::ForIn, left, right,
+                 handler_.newForInOrOfHead(ParseNodeKind::ForIn, left, right,
                                            tokenizer_->pos(start)));
   ParseNode* result;
-  BINJS_TRY_VAR(result, factory_.newForStatement(start, forHead, body,
+  BINJS_TRY_VAR(result, handler_.newForStatement(start, forHead, body,
                                                  /* iflags = */ 0));
 
   if (!scope.isEmpty()) {
     BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, scope, alloc_, pc_));
-    BINJS_TRY_VAR(result, factory_.newLexicalScope(*bindings, result));
+    BINJS_TRY_VAR(result, handler_.newLexicalScope(*bindings, result));
   }
   return result;
 }
@@ -2894,14 +2894,14 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceForStatement(
   BINJS_MOZ_TRY_DECL(body, parseStatement());
 
   BINJS_TRY_DECL(
-      forHead, factory_.newForHead(init, test, update, tokenizer_->pos(start)));
+      forHead, handler_.newForHead(init, test, update, tokenizer_->pos(start)));
   ParseNode* result;
-  BINJS_TRY_VAR(result, factory_.newForStatement(start, forHead, body,
+  BINJS_TRY_VAR(result, handler_.newForStatement(start, forHead, body,
                                                  /* iflags = */ 0));
 
   if (!scope.isEmpty()) {
     BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, scope, alloc_, pc_));
-    BINJS_TRY_VAR(result, factory_.newLexicalScope(*bindings, result));
+    BINJS_TRY_VAR(result, handler_.newLexicalScope(*bindings, result));
   }
   return result;
 }
@@ -3188,7 +3188,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceIdentifierExpression(
   }
   BINJS_TRY(usedNames_.noteUse(cx_, name, pc_->scriptId(),
                                pc_->innermostScope()->id()));
-  BINJS_TRY_DECL(result, factory_.newName(name->asPropertyName(),
+  BINJS_TRY_DECL(result, handler_.newName(name->asPropertyName(),
                                           tokenizer_->pos(start), cx_));
   return result;
 }
@@ -3212,7 +3212,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceIfStatement(
   BINJS_MOZ_TRY_DECL(alternate, parseOptionalStatement());
 
   BINJS_TRY_DECL(result,
-                 factory_.newIfStatement(start, test, consequent, alternate));
+                 handler_.newIfStatement(start, test, consequent, alternate));
   return result;
 }
 
@@ -3235,7 +3235,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLabelledStatement(
   ParseContext::LabelStatement stmt(pc_, label);
   BINJS_MOZ_TRY_DECL(body, parseStatement());
 
-  BINJS_TRY_DECL(result, factory_.newLabeledStatement(label->asPropertyName(),
+  BINJS_TRY_DECL(result, handler_.newLabeledStatement(label->asPropertyName(),
                                                       body, start));
   return result;
 }
@@ -3424,7 +3424,7 @@ BinASTParser<Tok>::parseInterfaceLiteralBooleanExpression(
   BINJS_MOZ_TRY_DECL(value, tokenizer_->readBool());
 
   BINJS_TRY_DECL(result,
-                 factory_.newBooleanLiteral(value, tokenizer_->pos(start)));
+                 handler_.newBooleanLiteral(value, tokenizer_->pos(start)));
   return result;
 }
 
@@ -3444,7 +3444,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLiteralNullExpression(
   BINJS_TRY(CheckRecursionLimit(cx_));
   MOZ_TRY(tokenizer_->checkFields0(kind, fields));
 
-  BINJS_TRY_DECL(result, factory_.newNullLiteral(tokenizer_->pos(start)));
+  BINJS_TRY_DECL(result, handler_.newNullLiteral(tokenizer_->pos(start)));
   return result;
 }
 
@@ -3462,7 +3462,7 @@ BinASTParser<Tok>::parseInterfaceLiteralNumericExpression(
 
   BINJS_MOZ_TRY_DECL(value, tokenizer_->readDouble());
 
-  BINJS_TRY_DECL(result, factory_.newNumber(value, DecimalPoint::HasDecimal,
+  BINJS_TRY_DECL(result, handler_.newNumber(value, DecimalPoint::HasDecimal,
                                             tokenizer_->pos(start)));
   return result;
 }
@@ -3485,10 +3485,10 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLiteralPropertyName(
   uint32_t index;
   if (value->isIndex(&index)) {
     BINJS_TRY_VAR(result,
-                  factory_.newNumber(index, NoDecimal,
+                  handler_.newNumber(index, NoDecimal,
                                      TokenPos(start, tokenizer_->offset())));
   } else {
-    BINJS_TRY_VAR(result, factory_.newObjectLiteralPropertyName(
+    BINJS_TRY_VAR(result, handler_.newObjectLiteralPropertyName(
                               value, tokenizer_->pos(start)));
   }
   return result;
@@ -3532,7 +3532,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLiteralRegExpExpression(
                 RegExpObject::create(cx_, pattern, reflags, TenuredObject));
 
   BINJS_TRY_DECL(result,
-                 factory_.newRegExp(reobj, tokenizer_->pos(start), *this));
+                 handler_.newRegExp(reobj, tokenizer_->pos(start), *this));
   return result;
 }
 
@@ -3551,7 +3551,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLiteralStringExpression(
   MOZ_TRY_VAR(value, tokenizer_->readAtom());
 
   BINJS_TRY_DECL(result,
-                 factory_.newStringLiteral(value, tokenizer_->pos(start)));
+                 handler_.newStringLiteral(value, tokenizer_->pos(start)));
   return result;
 }
 
@@ -3577,7 +3577,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceNewExpression(
 
   BINJS_MOZ_TRY_DECL(arguments, parseArguments());
 
-  BINJS_TRY_DECL(result, factory_.newNewExpression(tokenizer_->pos(start).begin,
+  BINJS_TRY_DECL(result, handler_.newNewExpression(tokenizer_->pos(start).begin,
                                                    callee, arguments));
   return result;
 }
@@ -3642,7 +3642,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceReturnStatement(
   BINJS_MOZ_TRY_DECL(expression, parseOptionalExpression());
 
   BINJS_TRY_DECL(
-      result, factory_.newReturnStatement(expression, tokenizer_->pos(start)));
+      result, handler_.newReturnStatement(expression, tokenizer_->pos(start)));
   return result;
 }
 
@@ -3723,7 +3723,7 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceSetterContents(
   BINJS_MOZ_TRY_DECL(param, parseParameter());
   BINJS_TRY_DECL(params, this->template new_<ListNode>(
                              ParseNodeKind::ParamsBody, param->pn_pos));
-  factory_.addList(params, param);
+  handler_.addList(params, param);
   MOZ_TRY(checkPositionalParameterIndices(positionalParams, params));
   MOZ_TRY(parseAssertedVarScope());
 
@@ -3749,13 +3749,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceShorthandProperty(
   BINJS_MOZ_TRY_DECL(name, parseIdentifierExpression());
 
   MOZ_ASSERT(name->isKind(ParseNodeKind::Name));
-  MOZ_ASSERT(!factory_.isUsableAsObjectPropertyName(name));
-  BINJS_TRY_DECL(propName, factory_.newObjectLiteralPropertyName(
+  MOZ_ASSERT(!handler_.isUsableAsObjectPropertyName(name));
+  BINJS_TRY_DECL(propName, handler_.newObjectLiteralPropertyName(
                                name->template as<NameNode>().name(),
                                tokenizer_->pos(start)));
 
   BINJS_TRY_DECL(result,
-                 factory_.newShorthandPropertyDefinition(propName, name));
+                 handler_.newShorthandPropertyDefinition(propName, name));
   return result;
 }
 
@@ -3786,9 +3786,9 @@ BinASTParser<Tok>::parseInterfaceStaticMemberAssignmentTarget(
     MOZ_TRY_VAR(property, tokenizer_->readPropertyKey());
   }
 
-  BINJS_TRY_DECL(name, factory_.newPropertyName(property->asPropertyName(),
+  BINJS_TRY_DECL(name, handler_.newPropertyName(property->asPropertyName(),
                                                 tokenizer_->pos(nameStart)));
-  BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, name));
+  BINJS_TRY_DECL(result, handler_.newPropertyAccess(object, name));
   return result;
 }
 
@@ -3811,9 +3811,9 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceStaticMemberExpression(
     MOZ_TRY_VAR(property, tokenizer_->readPropertyKey());
   }
 
-  BINJS_TRY_DECL(name, factory_.newPropertyName(property->asPropertyName(),
+  BINJS_TRY_DECL(name, handler_.newPropertyName(property->asPropertyName(),
                                                 tokenizer_->pos(nameStart)));
-  BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, name));
+  BINJS_TRY_DECL(result, handler_.newPropertyAccess(object, name));
   return result;
 }
 
@@ -3862,7 +3862,7 @@ JS::Result<CaseClause*> BinASTParser<Tok>::parseInterfaceSwitchCase(
 
   BINJS_MOZ_TRY_DECL(consequent, parseListOfStatement());
 
-  BINJS_TRY_DECL(result, factory_.newCaseOrDefault(start, test, consequent));
+  BINJS_TRY_DECL(result, handler_.newCaseOrDefault(start, test, consequent));
   return result;
 }
 
@@ -3901,7 +3901,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceSwitchDefault(
 
   BINJS_MOZ_TRY_DECL(consequent, parseListOfStatement());
 
-  BINJS_TRY_DECL(result, factory_.newCaseOrDefault(start, nullptr, consequent));
+  BINJS_TRY_DECL(result, handler_.newCaseOrDefault(start, nullptr, consequent));
   return result;
 }
 
@@ -3920,8 +3920,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceSwitchStatement(
   ParseContext::Statement stmt(pc_, StatementKind::Switch);
   BINJS_MOZ_TRY_DECL(cases, parseListOfSwitchCase());
 
-  BINJS_TRY_DECL(scope, factory_.newLexicalScope(nullptr, cases));
-  BINJS_TRY_DECL(result, factory_.newSwitchStatement(start, discriminant, scope,
+  BINJS_TRY_DECL(scope, handler_.newLexicalScope(nullptr, cases));
+  BINJS_TRY_DECL(result, handler_.newSwitchStatement(start, discriminant, scope,
                                                      /* hasDefault = */ false));
   return result;
 }
@@ -3950,15 +3950,15 @@ BinASTParser<Tok>::parseInterfaceSwitchStatementWithDefault(
 
   // Concatenate `preDefaultCase`, `defaultCase`, `postDefaultCase`
   auto cases = preDefaultCases;
-  factory_.addList(cases, defaultCase);
+  handler_.addList(cases, defaultCase);
   ParseNode* iter = postDefaultCases->head();
   while (iter) {
     ParseNode* next = iter->pn_next;
-    factory_.addList(cases, iter);
+    handler_.addList(cases, iter);
     iter = next;
   }
-  BINJS_TRY_DECL(scope, factory_.newLexicalScope(nullptr, cases));
-  BINJS_TRY_DECL(result, factory_.newSwitchStatement(start, discriminant, scope,
+  BINJS_TRY_DECL(scope, handler_.newLexicalScope(nullptr, cases));
+  BINJS_TRY_DECL(result, handler_.newSwitchStatement(start, discriminant, scope,
                                                      /* hasDefault = */ true));
   return result;
 }
@@ -3988,10 +3988,10 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceThisExpression(
     HandlePropertyName dotThis = cx_->names().dotThis;
     BINJS_TRY(usedNames_.noteUse(cx_, dotThis, pc_->scriptId(),
                                  pc_->innermostScope()->id()));
-    BINJS_TRY_VAR(thisName, factory_.newName(dotThis, pos, cx_));
+    BINJS_TRY_VAR(thisName, handler_.newName(dotThis, pos, cx_));
   }
 
-  BINJS_TRY_DECL(result, factory_.newThisLiteral(pos, thisName));
+  BINJS_TRY_DECL(result, handler_.newThisLiteral(pos, thisName));
   return result;
 }
 
@@ -4009,7 +4009,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceThrowStatement(
   BINJS_MOZ_TRY_DECL(expression, parseExpression());
 
   BINJS_TRY_DECL(
-      result, factory_.newThrowStatement(expression, tokenizer_->pos(start)));
+      result, handler_.newThrowStatement(expression, tokenizer_->pos(start)));
   return result;
 }
 
@@ -4034,7 +4034,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceTryCatchStatement(
   BINJS_MOZ_TRY_DECL(catchClause, parseCatchClause());
 
   BINJS_TRY_DECL(result,
-                 factory_.newTryStatement(start, body, catchClause,
+                 handler_.newTryStatement(start, body, catchClause,
                                           /* finallyBlock = */ nullptr));
   return result;
 }
@@ -4068,7 +4068,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceTryFinallyStatement(
   }
 
   BINJS_TRY_DECL(result,
-                 factory_.newTryStatement(start, body, catchClause, finalizer));
+                 handler_.newTryStatement(start, body, catchClause, finalizer));
   return result;
 }
 
@@ -4132,7 +4132,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceUnaryExpression(
       break;
     }
   }
-  BINJS_TRY_DECL(result, factory_.newUnary(pnk, start, operand));
+  BINJS_TRY_DECL(result, handler_.newUnary(pnk, start, operand));
   return result;
 }
 
@@ -4165,7 +4165,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceUpdateExpression(
                      : ParseNodeKind::PostDecrementExpr;
       break;
   }
-  BINJS_TRY_DECL(result, factory_.newUnary(pnk, start, operand));
+  BINJS_TRY_DECL(result, handler_.newUnary(pnk, start, operand));
   return result;
 }
 
@@ -4252,7 +4252,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceVariableDeclarator(
     MOZ_TRY(checkBinding(bindingNameNode->atom()->asPropertyName()));
     result = bindingNameNode;
     if (init) {
-      BINJS_TRY(factory_.finishInitializerAssignment(bindingNameNode, init));
+      BINJS_TRY(handler_.finishInitializerAssignment(bindingNameNode, init));
     }
   } else {
     // `var pattern = bar`
@@ -4265,7 +4265,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceVariableDeclarator(
     MOZ_CRASH(
         "Unimplemented: AssertedScope check for BindingPattern variable "
         "declaration");
-    BINJS_TRY_VAR(result, factory_.newAssignment(ParseNodeKind::AssignExpr,
+    BINJS_TRY_VAR(result, handler_.newAssignment(ParseNodeKind::AssignExpr,
                                                  binding, init));
   }
   return result;
@@ -4287,7 +4287,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceWhileStatement(
 
   BINJS_MOZ_TRY_DECL(body, parseStatement());
 
-  BINJS_TRY_DECL(result, factory_.newWhileStatement(start, test, body));
+  BINJS_TRY_DECL(result, handler_.newWhileStatement(start, test, body));
   return result;
 }
 
@@ -4308,7 +4308,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceWithStatement(
   BINJS_MOZ_TRY_DECL(body, parseStatement());
 
   pc_->sc()->setBindingsAccessedDynamically();
-  BINJS_TRY_DECL(result, factory_.newWithStatement(start, object, body));
+  BINJS_TRY_DECL(result, handler_.newWithStatement(start, object, body));
   return result;
 }
 
@@ -4583,12 +4583,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseArguments() {
 
   const auto start = tokenizer_->offset();
   MOZ_TRY(tokenizer_->enterList(length, guard));
-  BINJS_TRY_DECL(result, factory_.newList(ParseNodeKind::Arguments,
+  BINJS_TRY_DECL(result, handler_.newList(ParseNodeKind::Arguments,
                                           tokenizer_->pos(start)));
 
   for (uint32_t i = 0; i < length; ++i) {
     BINJS_MOZ_TRY_DECL(item, parseSpreadElementOrExpression());
-    factory_.addList(/* list = */ result, /* kid = */ item);
+    handler_.addList(/* list = */ result, /* kid = */ item);
   }
 
   MOZ_TRY(guard.done());
@@ -4602,11 +4602,11 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseFunctionBody() {
 
   const auto start = tokenizer_->offset();
   MOZ_TRY(tokenizer_->enterList(length, guard));
-  BINJS_TRY_DECL(result, factory_.newStatementList(tokenizer_->pos(start)));
+  BINJS_TRY_DECL(result, handler_.newStatementList(tokenizer_->pos(start)));
 
   for (uint32_t i = 0; i < length; ++i) {
     BINJS_MOZ_TRY_DECL(item, parseStatement());
-    factory_.addStatementToList(result, item);
+    handler_.addStatementToList(result, item);
   }
 
   MOZ_TRY(guard.done());
@@ -4691,11 +4691,11 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseListOfDirective() {
 
   const auto start = tokenizer_->offset();
   MOZ_TRY(tokenizer_->enterList(length, guard));
-  BINJS_TRY_DECL(result, factory_.newStatementList(tokenizer_->pos(start)));
+  BINJS_TRY_DECL(result, handler_.newStatementList(tokenizer_->pos(start)));
 
   for (uint32_t i = 0; i < length; ++i) {
     BINJS_MOZ_TRY_DECL(item, parseDirective());
-    factory_.addStatementToList(result, item);
+    handler_.addStatementToList(result, item);
   }
 
   MOZ_TRY(guard.done());
@@ -4709,7 +4709,7 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseListOfObjectProperty() {
 
   const auto start = tokenizer_->offset();
   MOZ_TRY(tokenizer_->enterList(length, guard));
-  BINJS_TRY_DECL(result, factory_.newObjectLiteral(start));
+  BINJS_TRY_DECL(result, handler_.newObjectLiteral(start));
 
   for (uint32_t i = 0; i < length; ++i) {
     BINJS_MOZ_TRY_DECL(item, parseObjectProperty());
@@ -4729,14 +4729,14 @@ BinASTParser<Tok>::parseListOfOptionalSpreadElementOrExpression() {
 
   const auto start = tokenizer_->offset();
   MOZ_TRY(tokenizer_->enterList(length, guard));
-  BINJS_TRY_DECL(result, factory_.newArrayLiteral(start));
+  BINJS_TRY_DECL(result, handler_.newArrayLiteral(start));
 
   for (uint32_t i = 0; i < length; ++i) {
     BINJS_MOZ_TRY_DECL(item, parseOptionalSpreadElementOrExpression());
     if (item) {
-      factory_.addArrayElement(result, item);  // Infallible.
+      handler_.addArrayElement(result, item);  // Infallible.
     } else {
-      BINJS_TRY(factory_.addElision(result, tokenizer_->pos(start)));
+      BINJS_TRY(handler_.addElision(result, tokenizer_->pos(start)));
     }
   }
 
@@ -4757,7 +4757,7 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseListOfParameter() {
 
   for (uint32_t i = 0; i < length; ++i) {
     BINJS_MOZ_TRY_DECL(item, parseParameter());
-    factory_.addList(/* list = */ result, /* kid = */ item);
+    handler_.addList(/* list = */ result, /* kid = */ item);
   }
 
   MOZ_TRY(guard.done());
@@ -4771,11 +4771,11 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseListOfStatement() {
 
   const auto start = tokenizer_->offset();
   MOZ_TRY(tokenizer_->enterList(length, guard));
-  BINJS_TRY_DECL(result, factory_.newStatementList(tokenizer_->pos(start)));
+  BINJS_TRY_DECL(result, handler_.newStatementList(tokenizer_->pos(start)));
 
   for (uint32_t i = 0; i < length; ++i) {
     BINJS_MOZ_TRY_DECL(item, parseStatement());
-    factory_.addStatementToList(result, item);
+    handler_.addStatementToList(result, item);
   }
 
   MOZ_TRY(guard.done());
@@ -4789,11 +4789,11 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseListOfSwitchCase() {
 
   const auto start = tokenizer_->offset();
   MOZ_TRY(tokenizer_->enterList(length, guard));
-  BINJS_TRY_DECL(result, factory_.newStatementList(tokenizer_->pos(start)));
+  BINJS_TRY_DECL(result, handler_.newStatementList(tokenizer_->pos(start)));
 
   for (uint32_t i = 0; i < length; ++i) {
     BINJS_MOZ_TRY_DECL(item, parseSwitchCase());
-    factory_.addCaseStatementToList(result, item);
+    handler_.addCaseStatementToList(result, item);
   }
 
   MOZ_TRY(guard.done());
@@ -4808,7 +4808,7 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseListOfVariableDeclarator(
 
   const auto start = tokenizer_->offset();
   MOZ_TRY(tokenizer_->enterList(length, guard));
-  BINJS_TRY_DECL(result, factory_.newDeclarationList(declarationListKind,
+  BINJS_TRY_DECL(result, handler_.newDeclarationList(declarationListKind,
                                                      tokenizer_->pos(start)));
 
   for (uint32_t i = 0; i < length; ++i) {

@@ -27,7 +27,7 @@ BinASTParserBase::BinASTParserBase(JSContext* cx, LifoAlloc& alloc,
       sourceObject_(cx, sourceObject),
       lazyScript_(cx, lazyScript),
       pc_(nullptr),
-      factory_(cx, alloc, nullptr, SourceKind::Binary) {
+      handler_(cx, alloc, nullptr, SourceKind::Binary) {
   MOZ_ASSERT_IF(lazyScript, lazyScript->isBinAST());
   cx->frontendCollectionPool().addActiveCompilation();
   tempPoolMark_ = alloc.mark();
