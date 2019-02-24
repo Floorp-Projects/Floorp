@@ -138,10 +138,10 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
   JS::Result<FunctionNode*> makeEmptyFunctionNode(const size_t start,
                                                   const BinKind kind,
                                                   FunctionBox* funbox);
+
   JS::Result<FunctionNode*> buildFunction(const size_t start,
                                           const BinKind kind, ParseNode* name,
-                                          ListNode* params, ParseNode* body,
-                                          FunctionBox* funbox);
+                                          ListNode* params, ParseNode* body);
   JS::Result<FunctionBox*> buildFunctionBox(GeneratorKind generatorKind,
                                             FunctionAsyncKind functionAsyncKind,
                                             FunctionSyntaxKind syntax,

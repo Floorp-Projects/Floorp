@@ -15,6 +15,7 @@ namespace js {
 namespace frontend {
 
 using AddDeclaredNamePtr = ParseContext::Scope::AddDeclaredNamePtr;
+using DeclaredNamePtr = ParseContext::Scope::DeclaredNamePtr;
 
 const char* DeclarationKindString(DeclarationKind kind) {
   switch (kind) {
@@ -469,6 +470,149 @@ bool ParseContext::tryDeclareVarHelper(HandlePropertyName name,
     *prevPos = DeclaredNameInfo::npos;
   }
 
+  return true;
+}
+
+bool ParseContext::hasUsedName(const UsedNameTracker& usedNames,
+                               HandlePropertyName name) {
+  if (auto p = usedNames.lookup(name)) {
+    return p->value().isUsedInScript(scriptId());
+  }
+  return false;
+}
+
+bool ParseContext::hasUsedFunctionSpecialName(const UsedNameTracker& usedNames,
+                                              HandlePropertyName name) {
+  MOZ_ASSERT(name == sc()->cx_->names().arguments ||
+             name == sc()->cx_->names().dotThis);
+  return hasUsedName(usedNames, name) ||
+         functionBox()->bindingsAccessedDynamically();
+}
+
+bool ParseContext::declareFunctionThis(const UsedNameTracker& usedNames,
+                                       bool canSkipLazyClosedOverBindings) {
+  // The asm.js validator does all its own symbol-table management so, as an
+  // optimization, avoid doing any work here.
+  if (useAsmOrInsideUseAsm()) {
+    return true;
+  }
+
+  // Derived class constructors emit JSOP_CHECKRETURN, which requires
+  // '.this' to be bound.
+  FunctionBox* funbox = functionBox();
+  HandlePropertyName dotThis = sc()->cx_->names().dotThis;
+
+  bool declareThis;
+  if (canSkipLazyClosedOverBindings) {
+    declareThis = funbox->function()->lazyScript()->hasThisBinding();
+  } else {
+    declareThis = hasUsedFunctionSpecialName(usedNames, dotThis) ||
+                  funbox->isDerivedClassConstructor();
+  }
+
+  if (declareThis) {
+    ParseContext::Scope& funScope = functionScope();
+    AddDeclaredNamePtr p = funScope.lookupDeclaredNameForAdd(dotThis);
+    MOZ_ASSERT(!p);
+    if (!funScope.addDeclaredName(this, p, dotThis, DeclarationKind::Var,
+                                  DeclaredNameInfo::npos)) {
+      return false;
+    }
+    funbox->setHasThisBinding();
+  }
+
+  return true;
+}
+
+bool ParseContext::declareFunctionArgumentsObject(
+    const UsedNameTracker& usedNames, bool canSkipLazyClosedOverBindings) {
+  FunctionBox* funbox = functionBox();
+  ParseContext::Scope& funScope = functionScope();
+  ParseContext::Scope& _varScope = varScope();
+
+  bool hasExtraBodyVarScope = &funScope != &_varScope;
+
+  // Time to implement the odd semantics of 'arguments'.
+  HandlePropertyName argumentsName = sc()->cx_->names().arguments;
+
+  bool tryDeclareArguments;
+  if (canSkipLazyClosedOverBindings) {
+    tryDeclareArguments =
+        funbox->function()->lazyScript()->shouldDeclareArguments();
+  } else {
+    tryDeclareArguments = hasUsedFunctionSpecialName(usedNames, argumentsName);
+  }
+
+  // ES 9.2.12 steps 19 and 20 say formal parameters, lexical bindings,
+  // and body-level functions named 'arguments' shadow the arguments
+  // object.
+  //
+  // So even if there wasn't a free use of 'arguments' but there is a var
+  // binding of 'arguments', we still might need the arguments object.
+  //
+  // If we have an extra var scope due to parameter expressions and the body
+  // declared 'var arguments', we still need to declare 'arguments' in the
+  // function scope.
+  DeclaredNamePtr p = _varScope.lookupDeclaredName(argumentsName);
+  if (p && p->value()->kind() == DeclarationKind::Var) {
+    if (hasExtraBodyVarScope) {
+      tryDeclareArguments = true;
+    } else {
+      funbox->usesArguments = true;
+    }
+  }
+
+  if (tryDeclareArguments) {
+    AddDeclaredNamePtr p = funScope.lookupDeclaredNameForAdd(argumentsName);
+    if (!p) {
+      if (!funScope.addDeclaredName(this, p, argumentsName,
+                                    DeclarationKind::Var,
+                                    DeclaredNameInfo::npos)) {
+        return false;
+      }
+      funbox->declaredArguments = true;
+      funbox->usesArguments = true;
+    } else if (hasExtraBodyVarScope) {
+      // Formal parameters shadow the arguments object.
+      return true;
+    }
+  }
+
+  // Compute if we need an arguments object.
+  if (funbox->usesArguments) {
+    // There is an 'arguments' binding. Is the arguments object definitely
+    // needed?
+    //
+    // Also see the flags' comments in ContextFlags.
+    funbox->setArgumentsHasLocalBinding();
+
+    // Dynamic scope access destroys all hope of optimization.
+    if (sc()->bindingsAccessedDynamically()) {
+      funbox->setDefinitelyNeedsArgsObj();
+    }
+
+    // If a script contains the debugger statement either directly or
+    // within an inner function, the arguments object should be created
+    // eagerly so the Debugger API may observe bindings.
+    if (sc()->hasDebuggerStatement()) {
+      funbox->setDefinitelyNeedsArgsObj();
+    }
+  }
+
+  return true;
+}
+
+bool ParseContext::declareDotGeneratorName() {
+  // The special '.generator' binding must be on the function scope, as
+  // generators expect to find it on the CallObject.
+  ParseContext::Scope& funScope = functionScope();
+  HandlePropertyName dotGenerator = sc()->cx_->names().dotGenerator;
+  AddDeclaredNamePtr p = funScope.lookupDeclaredNameForAdd(dotGenerator);
+  if (!p &&
+      !funScope.addDeclaredName(this, p, dotGenerator, DeclarationKind::Var,
+                                DeclaredNameInfo::npos)) {
+    return false;
+  }
   return true;
 }
 

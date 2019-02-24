@@ -2514,8 +2514,8 @@ BinASTParser<Tok>::parseInterfaceEagerFunctionDeclaration(
   BINJS_TRY_DECL(lexicalScopeData,
                  NewLexicalScopeData(cx_, lexicalScope, alloc_, pc_));
   BINJS_TRY_DECL(bodyScope, handler_.newLexicalScope(*lexicalScopeData, body));
-  BINJS_MOZ_TRY_DECL(
-      result, buildFunction(start, kind, name, params, bodyScope, funbox));
+  BINJS_MOZ_TRY_DECL(result,
+                     buildFunction(start, kind, name, params, bodyScope));
   return result;
 }
 
@@ -2577,8 +2577,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerFunctionExpression(
   BINJS_TRY_DECL(lexicalScopeData,
                  NewLexicalScopeData(cx_, lexicalScope, alloc_, pc_));
   BINJS_TRY_DECL(bodyScope, handler_.newLexicalScope(*lexicalScopeData, body));
-  BINJS_MOZ_TRY_DECL(
-      result, buildFunction(start, kind, name, params, bodyScope, funbox));
+  BINJS_MOZ_TRY_DECL(result,
+                     buildFunction(start, kind, name, params, bodyScope));
   return result;
 }
 
@@ -2629,8 +2629,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerGetter(
   ListNode* body;
   MOZ_TRY(parseGetterContents(length, &params, &body));
   MOZ_TRY(prependDirectivesToBody(body, directives));
-  BINJS_MOZ_TRY_DECL(method,
-                     buildFunction(start, kind, name, params, body, funbox));
+  BINJS_MOZ_TRY_DECL(method, buildFunction(start, kind, name, params, body));
   BINJS_TRY_DECL(result, handler_.newObjectMethodOrPropertyDefinition(
                              name, method, accessorType));
   return result;
@@ -2692,8 +2691,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerMethod(
   ListNode* body;
   MOZ_TRY(parseFunctionOrMethodContents(length, &params, &body));
   MOZ_TRY(prependDirectivesToBody(body, directives));
-  BINJS_MOZ_TRY_DECL(method,
-                     buildFunction(start, kind, name, params, body, funbox));
+  BINJS_MOZ_TRY_DECL(method, buildFunction(start, kind, name, params, body));
   BINJS_TRY_DECL(result, handler_.newObjectMethodOrPropertyDefinition(
                              name, method, accessorType));
   return result;
@@ -2748,8 +2746,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerSetter(
   ListNode* body;
   MOZ_TRY(parseSetterContents(length, &params, &body));
   MOZ_TRY(prependDirectivesToBody(body, directives));
-  BINJS_MOZ_TRY_DECL(method,
-                     buildFunction(start, kind, name, params, body, funbox));
+  BINJS_MOZ_TRY_DECL(method, buildFunction(start, kind, name, params, body));
   BINJS_TRY_DECL(result, handler_.newObjectMethodOrPropertyDefinition(
                              name, method, accessorType));
   return result;

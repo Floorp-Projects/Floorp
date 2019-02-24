@@ -198,7 +198,7 @@ JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::parseLazyFunction(
 
   auto binKind = isExpr ? BinKind::LazyFunctionExpression
                         : BinKind::LazyFunctionDeclaration;
-  return buildFunction(firstOffset, binKind, nullptr, params, body, funbox);
+  return buildFunction(firstOffset, binKind, nullptr, params, body);
 }
 
 template <typename Tok>
@@ -316,7 +316,9 @@ JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::makeEmptyFunctionNode(
 template <typename Tok>
 JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::buildFunction(
     const size_t start, const BinKind kind, ParseNode* name, ListNode* params,
-    ParseNode* body, FunctionBox* funbox) {
+    ParseNode* body) {
+  FunctionBox* funbox = pc_->functionBox();
+
   // Set the argument count for building argument packets. Function.length is
   // handled by setting the appropriate funbox field during argument parsing.
   if (!lazyScript_ ||
@@ -331,63 +333,10 @@ JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::buildFunction(
 
   handler_.setFunctionFormalParametersAndBody(result, params);
 
-  HandlePropertyName dotThis = cx_->names().dotThis;
-  const bool declareThis = hasUsedName(dotThis) ||
-                           funbox->bindingsAccessedDynamically() ||
-                           funbox->isDerivedClassConstructor();
-
-  if (declareThis) {
-    ParseContext::Scope& funScope = pc_->functionScope();
-    ParseContext::Scope::AddDeclaredNamePtr p =
-        funScope.lookupDeclaredNameForAdd(dotThis);
-    MOZ_ASSERT(!p);
-    BINJS_TRY(funScope.addDeclaredName(pc_, p, dotThis, DeclarationKind::Var,
-                                       DeclaredNameInfo::npos));
-    funbox->setHasThisBinding();
-
-    // TODO (efaust): This capture will have to come from encoder side for arrow
-    // functions.
-  }
-
-  // This models PerHandlerParser::declaeFunctionArgumentsObject, with some
-  // subtleties removed, as they don't yet apply to us.
-  HandlePropertyName arguments = cx_->names().arguments;
-  if (hasUsedName(arguments) ||
-      pc_->functionBox()->bindingsAccessedDynamically()) {
-    funbox->usesArguments = true;
-
-    ParseContext::Scope& funScope = pc_->functionScope();
-    ParseContext::Scope::AddDeclaredNamePtr p =
-        funScope.lookupDeclaredNameForAdd(arguments);
-    if (!p) {
-      BINJS_TRY(funScope.addDeclaredName(
-          pc_, p, arguments, DeclarationKind::Var, DeclaredNameInfo::npos));
-      funbox->declaredArguments = true;
-    } else if (p->value()->kind() != DeclarationKind::Var) {
-      // Lexicals, formal parameters, and body level functions shadow.
-      funbox->usesArguments = false;
-    }
-
-    if (funbox->usesArguments) {
-      funbox->setArgumentsHasLocalBinding();
-
-      if (pc_->sc()->bindingsAccessedDynamically() ||
-          pc_->sc()->hasDebuggerStatement()) {
-        funbox->setDefinitelyNeedsArgsObj();
-      }
-    }
-  }
-
   if (funbox->needsDotGeneratorName()) {
-    ParseContext::Scope& funScope = pc_->functionScope();
-    HandlePropertyName dotGenerator = cx_->names().dotGenerator;
-    ParseContext::Scope::AddDeclaredNamePtr p =
-        funScope.lookupDeclaredNameForAdd(dotGenerator);
-    if (!p) {
-      BINJS_TRY(funScope.addDeclaredName(
-          pc_, p, dotGenerator, DeclarationKind::Var, DeclaredNameInfo::npos));
-    }
+    BINJS_TRY(pc_->declareDotGeneratorName());
 
+    HandlePropertyName dotGenerator = cx_->names().dotGenerator;
     BINJS_TRY(usedNames_.noteUse(cx_, dotGenerator, pc_->scriptId(),
                                  pc_->innermostScope()->id()));
 
@@ -399,6 +348,12 @@ JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::buildFunction(
         &body->as<LexicalScopeNode>().scopeBody()->as<ListNode>();
     BINJS_TRY(handler_.prependInitialYield(stmtList, dotGen));
   }
+
+  const bool canSkipLazyClosedOverBindings = false;
+  BINJS_TRY(pc_->declareFunctionArgumentsObject(usedNames_,
+                                                canSkipLazyClosedOverBindings));
+  BINJS_TRY(
+      pc_->declareFunctionThis(usedNames_, canSkipLazyClosedOverBindings));
 
   // Check all our bindings after maybe adding function metavars.
   MOZ_TRY(checkFunctionClosedVars());
