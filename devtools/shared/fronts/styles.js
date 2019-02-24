@@ -133,9 +133,7 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
     return this._form.cssText;
   }
   get authoredText() {
-    return (typeof this._form.authoredText === "string")
-      ? this._form.authoredText
-      : this._form.cssText;
+    return this._form.authoredText || this._form.cssText;
   }
   get declarations() {
     return this._form.declarations || [];
