@@ -143,7 +143,7 @@ ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
       cx_(cx),
       alloc_(alloc),
       anyChars(cx, options, thisForCtor()),
-      traceListHead(nullptr),
+      traceListHead_(nullptr),
       pc(nullptr),
       usedNames(usedNames),
       ss(nullptr),
@@ -260,13 +260,13 @@ BoxT* ParserBase::newTraceListNode(ArgT* arg) {
    * function.
    */
 
-  BoxT* box = alloc_.template new_<BoxT>(arg, traceListHead);
+  BoxT* box = alloc_.template new_<BoxT>(arg, traceListHead_);
   if (!box) {
     ReportOutOfMemory(cx_);
     return nullptr;
   }
 
-  traceListHead = box;
+  traceListHead_ = box;
 
   return box;
 }
@@ -294,14 +294,14 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
    * function.
    */
   FunctionBox* funbox = alloc_.new_<FunctionBox>(
-      cx_, traceListHead, fun, toStringStart, inheritedDirectives,
+      cx_, traceListHead_, fun, toStringStart, inheritedDirectives,
       options().extraWarningsOption, generatorKind, asyncKind);
   if (!funbox) {
     ReportOutOfMemory(cx_);
     return nullptr;
   }
 
-  traceListHead = funbox;
+  traceListHead_ = funbox;
   if (funNode) {
     handler.setFunctionBox(funNode, funbox);
   }
@@ -310,7 +310,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
 }
 
 void ParserBase::trace(JSTracer* trc) {
-  TraceListNode::TraceList(trc, traceListHead);
+  TraceListNode::TraceList(trc, traceListHead_);
 }
 
 void TraceParser(JSTracer* trc, AutoGCRooter* parser) {
