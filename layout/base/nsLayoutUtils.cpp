@@ -245,46 +245,36 @@ static bool MayHaveAnimationOfPropertySet(
   return aTarget->MayHaveTransformAnimation();
 }
 
-bool nsLayoutUtils::HasAnimationOfPropertySet(
-    EffectSet* aEffectSet, const nsCSSPropertyIDSet& aPropertySet) {
-  if (!aEffectSet || !MayHaveAnimationOfPropertySet(aEffectSet, aPropertySet)) {
+template <typename EffectSetOrFrame>
+static bool HasAnimationOfPropertySetImpl(
+    EffectSetOrFrame* aTarget, const nsCSSPropertyIDSet& aPropertySet) {
+  if (!aTarget || !MayHaveAnimationOfPropertySet(aTarget, aPropertySet)) {
     return false;
   }
 
   return HasMatchingAnimations(
-      aEffectSet, [&aPropertySet](KeyframeEffect& aEffect) {
+      aTarget, [&aPropertySet](KeyframeEffect& aEffect) {
         return (aEffect.IsInEffect() || aEffect.IsCurrent()) &&
                aEffect.HasAnimationOfPropertySet(aPropertySet);
       });
 }
 
 bool nsLayoutUtils::HasAnimationOfPropertySet(
-    const nsIFrame* aFrame, const nsCSSPropertyIDSet& aPropertySet) {
-  if (!MayHaveAnimationOfPropertySet(aFrame, aPropertySet)) {
-    return false;
-  }
+    EffectSet* aEffectSet, const nsCSSPropertyIDSet& aPropertySet) {
+  return HasAnimationOfPropertySetImpl(aEffectSet, aPropertySet);
+}
 
-  return HasMatchingAnimations(
-      aFrame, [&aPropertySet](KeyframeEffect& aEffect) {
-        return (aEffect.IsInEffect() || aEffect.IsCurrent()) &&
-               aEffect.HasAnimationOfPropertySet(aPropertySet);
-      });
+bool nsLayoutUtils::HasAnimationOfPropertySet(
+    const nsIFrame* aFrame, const nsCSSPropertyIDSet& aPropertySet) {
+  return HasAnimationOfPropertySetImpl(aFrame, aPropertySet);
 }
 
 bool nsLayoutUtils::HasEffectiveAnimation(const nsIFrame* aFrame,
                                           nsCSSPropertyID aProperty) {
   EffectSet* effects = EffectSet::GetEffectSet(aFrame);
+  // This function isn't called by opacity or transform, so we don't have to
+  // check MayHaveAnimationOfPropertySet.
   if (!effects) {
-    return false;
-  }
-
-  if (nsCSSPropertyIDSet::TransformLikeProperties().HasProperty(aProperty) &&
-      !effects->MayHaveTransformAnimation()) {
-    return false;
-  }
-
-  if (aProperty == eCSSProperty_opacity &&
-      !effects->MayHaveOpacityAnimation()) {
     return false;
   }
 
@@ -293,6 +283,20 @@ bool nsLayoutUtils::HasEffectiveAnimation(const nsIFrame* aFrame,
         return (aEffect.IsInEffect() || aEffect.IsCurrent()) &&
                aEffect.HasEffectiveAnimationOfProperty(aProperty, *effects);
       });
+}
+
+bool nsLayoutUtils::HasEffectiveAnimation(
+    const nsIFrame* aFrame, const nsCSSPropertyIDSet& aPropertySet) {
+  EffectSet* effects = EffectSet::GetEffectSet(aFrame);
+  if (!effects || !MayHaveAnimationOfPropertySet(aFrame, aPropertySet)) {
+    return false;
+  }
+
+  return HasMatchingAnimations(effects, [&aPropertySet,
+                                         &effects](KeyframeEffect& aEffect) {
+    return (aEffect.IsInEffect() || aEffect.IsCurrent()) &&
+           aEffect.HasEffectiveAnimationOfPropertySet(aPropertySet, *effects);
+  });
 }
 
 /* static */ nsCSSPropertyIDSet
