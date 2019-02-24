@@ -272,7 +272,7 @@ void FTPChannelParent::DivertOnDataAvailable(const nsCString& data,
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
 
-  rv = OnDataAvailable(mChannel, nullptr, stringStream, offset, count);
+  rv = OnDataAvailable(mChannel, stringStream, offset, count);
 
   stringStream->Close();
   if (NS_FAILED(rv)) {
@@ -463,7 +463,7 @@ FTPChannelParent::OnStopRequest(nsIRequest* aRequest,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-FTPChannelParent::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+FTPChannelParent::OnDataAvailable(nsIRequest* aRequest,
                                   nsIInputStream* aInputStream,
                                   uint64_t aOffset, uint32_t aCount) {
   LOG(("FTPChannelParent::OnDataAvailable [this=%p]\n", this));
@@ -471,7 +471,7 @@ FTPChannelParent::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
   if (mDivertingFromChild) {
     MOZ_RELEASE_ASSERT(mDivertToListener,
                        "Cannot divert if listener is unset!");
-    return mDivertToListener->OnDataAvailable(aRequest, aContext, aInputStream,
+    return mDivertToListener->OnDataAvailable(aRequest, aInputStream,
                                               aOffset, aCount);
   }
 

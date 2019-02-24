@@ -55,7 +55,7 @@ var listener = {
     this._done_onStart = true;
   },
 
-  onDataAvailable: function(request, context, stream, offset, count) {
+  onDataAvailable: function(request, stream, offset, count) {
     Assert.ok(this._done_onStart);
     read_stream(stream, count);
     this._done_onData = true;

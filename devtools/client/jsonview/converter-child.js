@@ -68,7 +68,7 @@ Converter.prototype = {
     this.listener = listener;
   },
 
-  onDataAvailable: function(request, context, inputStream, offset, count) {
+  onDataAvailable: function(request, inputStream, offset, count) {
     // Decode and insert data.
     const buffer = new ArrayBuffer(count);
     new BinaryInput(inputStream).readArrayBuffer(count, buffer);
@@ -117,7 +117,7 @@ Converter.prototype = {
     // Send the initial HTML code.
     const buffer = new TextEncoder().encode(initialHTML(win.document)).buffer;
     const stream = new BufferStream(buffer, 0, buffer.byteLength);
-    this.listener.onDataAvailable(request, null, stream, 0, stream.available());
+    this.listener.onDataAvailable(request, stream, 0, stream.available());
   },
 
   onStopRequest: function(request, statusCode) {

@@ -1549,7 +1549,7 @@ nsresult XMLHttpRequestMainThread::StreamReaderFunc(
       NS_ASSERTION(copyStream, "NS_NewByteInputStream lied");
       nsresult parsingResult =
           xmlHttpRequest->mXMLParserStreamListener->OnDataAvailable(
-              xmlHttpRequest->mChannel, xmlHttpRequest->mContext, copyStream,
+              xmlHttpRequest->mChannel, copyStream,
               toOffset, count);
 
       // No use to continue parsing if we failed here, but we
@@ -1679,14 +1679,10 @@ void XMLHttpRequestMainThread::LocalFileToBlobCompleted(Blob* aBlob) {
 
 NS_IMETHODIMP
 XMLHttpRequestMainThread::OnDataAvailable(nsIRequest* request,
-                                          nsISupports* ctxt,
                                           nsIInputStream* inStr,
                                           uint64_t sourceOffset,
                                           uint32_t count) {
   NS_ENSURE_ARG_POINTER(inStr);
-
-  MOZ_ASSERT(mContext.get() == ctxt,
-             "start context different from OnDataAvailable context");
 
   mProgressSinceLastProgressEvent = true;
   XMLHttpRequest_Binding::ClearCachedResponseTextValue(this);

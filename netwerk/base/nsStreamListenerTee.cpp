@@ -46,7 +46,7 @@ nsStreamListenerTee::OnStopRequest(nsIRequest *request,
 }
 
 NS_IMETHODIMP
-nsStreamListenerTee::OnDataAvailable(nsIRequest *request, nsISupports *context,
+nsStreamListenerTee::OnDataAvailable(nsIRequest *request,
                                      nsIInputStream *input, uint64_t offset,
                                      uint32_t count) {
   NS_ENSURE_TRUE(mListener, NS_ERROR_NOT_INITIALIZED);
@@ -73,7 +73,7 @@ nsStreamListenerTee::OnDataAvailable(nsIRequest *request, nsISupports *context,
     tee = mInputTee;
   }
 
-  return mListener->OnDataAvailable(request, context, tee, offset, count);
+  return mListener->OnDataAvailable(request, tee, offset, count);
 }
 
 NS_IMETHODIMP

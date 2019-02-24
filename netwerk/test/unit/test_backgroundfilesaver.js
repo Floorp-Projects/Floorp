@@ -219,11 +219,11 @@ function promisePumpToSaver(aSourceString, aSaverStreamListener,
           reject(new Components.Exception(aResult));
         }
       },
-      onDataAvailable: function PPTS_onDataAvailable(aRequest, aContext,
+      onDataAvailable: function PPTS_onDataAvailable(aRequest,
                                                      aInputStream, aOffset,
                                                      aCount)
       {
-        aSaverStreamListener.onDataAvailable(aRequest, aContext, aInputStream,
+        aSaverStreamListener.onDataAvailable(aRequest, aInputStream,
                                              aOffset, aCount);
       },
     }, null);

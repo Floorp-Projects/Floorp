@@ -57,7 +57,7 @@ function pumpReadStream(inputStream, goon)
     var data = "";
     pump.asyncRead({
       onStartRequest: function (aRequest) { },
-      onDataAvailable: function (aRequest, aContext, aInputStream, aOffset, aCount)
+      onDataAvailable: function (aRequest, aInputStream, aOffset, aCount)
       {
         var wrapper = Cc["@mozilla.org/scriptableinputstream;1"].
                       createInstance(Ci.nsIScriptableInputStream);

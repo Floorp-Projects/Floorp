@@ -49,7 +49,7 @@ Canceler.prototype = {
   onStartRequest: function(request) {
   },
 
-  onDataAvailable: function(request, context, stream, offset, count) {
+  onDataAvailable: function(request, stream, offset, count) {
     request.QueryInterface(Ci.nsIChannel)
            .cancel(Cr.NS_BINDING_ABORTED);
   },

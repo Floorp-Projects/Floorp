@@ -22,7 +22,7 @@ function run_test() {
       do_test_finished();
     },
 
-    onDataAvailable: function(aRequest, aContext, aStream, aOffset, aCount) {
+    onDataAvailable: function(aRequest, aStream, aOffset, aCount) {
       do_throw("The channel must not call onDataAvailable().");
     }
   };

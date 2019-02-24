@@ -286,7 +286,7 @@ loadListener.prototype = {
   },
 
   // nsIStreamListener
-  onDataAvailable: function SRCH_loadDAvailable(aRequest, aContext,
+  onDataAvailable: function SRCH_loadDAvailable(aRequest,
                                                 aInputStream, aOffset,
                                                 aCount) {
     this._stream.setInputStream(aInputStream);

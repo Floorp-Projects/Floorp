@@ -734,11 +734,11 @@ nsIconChannel::OnStopRequest(nsIRequest* aRequest,
 
 // nsIStreamListener methods
 NS_IMETHODIMP
-nsIconChannel::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+nsIconChannel::OnDataAvailable(nsIRequest* aRequest,
                                nsIInputStream* aStream, uint64_t aOffset,
                                uint32_t aCount) {
   if (mListener) {
-    return mListener->OnDataAvailable(this, aContext, aStream, aOffset, aCount);
+    return mListener->OnDataAvailable(this, aStream, aOffset, aCount);
   }
   return NS_OK;
 }

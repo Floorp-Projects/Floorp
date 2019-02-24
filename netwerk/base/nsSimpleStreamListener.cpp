@@ -40,7 +40,6 @@ nsSimpleStreamListener::OnStopRequest(nsIRequest *request,
 //
 NS_IMETHODIMP
 nsSimpleStreamListener::OnDataAvailable(nsIRequest *request,
-                                        nsISupports *aContext,
                                         nsIInputStream *aSource,
                                         uint64_t aOffset, uint32_t aCount) {
   uint32_t writeCount;

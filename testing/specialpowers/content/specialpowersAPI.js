@@ -2124,7 +2124,7 @@ SpecialPowersAPI.prototype = {
           this.httpStatus = request.responseStatus;
         },
 
-        onDataAvailable(request, context, stream, offset, count) {
+        onDataAvailable(request, stream, offset, count) {
           new BinaryInputStream(stream).readByteArray(count);
         },
 

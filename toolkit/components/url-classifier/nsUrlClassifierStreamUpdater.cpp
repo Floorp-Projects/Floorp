@@ -663,7 +663,6 @@ nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest *request) {
 
 NS_IMETHODIMP
 nsUrlClassifierStreamUpdater::OnDataAvailable(nsIRequest *request,
-                                              nsISupports *context,
                                               nsIInputStream *aIStream,
                                               uint64_t aSourceOffset,
                                               uint32_t aLength) {

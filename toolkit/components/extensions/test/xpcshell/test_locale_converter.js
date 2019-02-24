@@ -65,7 +65,7 @@ add_task(async function testAsyncConvert() {
     listener = {
       QueryInterface: ChromeUtils.generateQI([Ci.nsIStreamListener]),
 
-      onDataAvailable(request, context, inputStream, offset, count) {
+      onDataAvailable(request, inputStream, offset, count) {
         this.resultParts.push(NetUtil.readInputStreamToString(inputStream, count));
       },
 
@@ -90,7 +90,7 @@ add_task(async function testAsyncConvert() {
   converter.onStartRequest(null, null);
 
   for (let part of parts) {
-    converter.onDataAvailable(null, null, StringStream(part), 0, part.length);
+    converter.onDataAvailable(null, StringStream(part), 0, part.length);
   }
 
   converter.onStopRequest(null, null, Cr.NS_OK);

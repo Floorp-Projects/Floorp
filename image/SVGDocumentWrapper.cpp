@@ -188,10 +188,10 @@ void SVGDocumentWrapper::TickRefreshDriver() {
 /** nsIStreamListener methods **/
 
 NS_IMETHODIMP
-SVGDocumentWrapper::OnDataAvailable(nsIRequest* aRequest, nsISupports* ctxt,
+SVGDocumentWrapper::OnDataAvailable(nsIRequest* aRequest,
                                     nsIInputStream* inStr,
                                     uint64_t sourceOffset, uint32_t count) {
-  return mListener->OnDataAvailable(aRequest, ctxt, inStr, sourceOffset, count);
+  return mListener->OnDataAvailable(aRequest, inStr, sourceOffset, count);
 }
 
 /** nsIRequestObserver methods **/

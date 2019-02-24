@@ -197,7 +197,7 @@ txStylesheetSink::DidBuildModel(bool aTerminated) {
 }
 
 NS_IMETHODIMP
-txStylesheetSink::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+txStylesheetSink::OnDataAvailable(nsIRequest* aRequest,
                                   nsIInputStream* aInputStream,
                                   uint64_t aOffset, uint32_t aCount) {
   if (!mCheckedForXML) {
@@ -216,7 +216,7 @@ txStylesheetSink::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
     }
   }
 
-  return mListener->OnDataAvailable(aRequest, mParser, aInputStream, aOffset,
+  return mListener->OnDataAvailable(aRequest, aInputStream, aOffset,
                                     aCount);
 }
 

@@ -93,7 +93,6 @@ NS_IMETHODIMP nsDeflateConverter::AsyncConvertData(const char *aFromType,
 }
 
 NS_IMETHODIMP nsDeflateConverter::OnDataAvailable(nsIRequest *aRequest,
-                                                  nsISupports *aContext,
                                                   nsIInputStream *aInputStream,
                                                   uint64_t aOffset,
                                                   uint32_t aCount) {
@@ -116,7 +115,7 @@ NS_IMETHODIMP nsDeflateConverter::OnDataAvailable(nsIRequest *aRequest,
 
     while (mZstream.avail_out == 0) {
       // buffer is full, push the data out to the listener
-      rv = PushAvailableData(aRequest, aContext);
+      rv = PushAvailableData(aRequest, nullptr);
       NS_ENSURE_SUCCESS(rv, rv);
       zerr = deflate(&mZstream, Z_NO_FLUSH);
     }
@@ -161,7 +160,7 @@ nsresult nsDeflateConverter::PushAvailableData(nsIRequest *aRequest,
                                       (char *)mWriteBuffer, bytesToWrite);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mListener->OnDataAvailable(aRequest, mContext, stream, mOffset,
+  rv = mListener->OnDataAvailable(aRequest, stream, mOffset,
                                   bytesToWrite);
 
   // now set the state for 'deflate'

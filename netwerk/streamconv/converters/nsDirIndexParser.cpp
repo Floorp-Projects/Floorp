@@ -297,7 +297,7 @@ nsresult nsDirIndexParser::ParseData(nsIDirIndex *aIdx, char *aDataStr,
 }
 
 NS_IMETHODIMP
-nsDirIndexParser::OnDataAvailable(nsIRequest *aRequest, nsISupports *aCtxt,
+nsDirIndexParser::OnDataAvailable(nsIRequest *aRequest,
                                   nsIInputStream *aStream,
                                   uint64_t aSourceOffset, uint32_t aCount) {
   if (aCount < 1) return NS_OK;
@@ -319,7 +319,7 @@ nsDirIndexParser::OnDataAvailable(nsIRequest *aRequest, nsISupports *aCtxt,
   //       work on other strings.
   mBuf.SetLength(len + count);
 
-  return ProcessData(aRequest, aCtxt);
+  return ProcessData(aRequest, nullptr);
 }
 
 nsresult nsDirIndexParser::ProcessData(nsIRequest *aRequest,

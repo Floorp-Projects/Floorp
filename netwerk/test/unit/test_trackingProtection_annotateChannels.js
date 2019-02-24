@@ -46,7 +46,7 @@ listener.prototype = {
     request.cancel(Cr.NS_ERROR_ABORT);
     this._nextTest();
   },
-  onDataAvailable: (request, context, stream, offset, count) => {},
+  onDataAvailable: (request, stream, offset, count) => {},
   onStopRequest: (request, status) => {},
 };
 

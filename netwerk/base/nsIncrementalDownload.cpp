@@ -671,7 +671,6 @@ nsIncrementalDownload::OnStopRequest(nsIRequest *request,
 
 NS_IMETHODIMP
 nsIncrementalDownload::OnDataAvailable(nsIRequest *request,
-                                       nsISupports *context,
                                        nsIInputStream *input, uint64_t offset,
                                        uint32_t count) {
   while (count) {

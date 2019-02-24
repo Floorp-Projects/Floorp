@@ -1387,7 +1387,6 @@ XULDocument::CachedChromeStreamListener::OnStopRequest(nsIRequest* request,
 
 NS_IMETHODIMP
 XULDocument::CachedChromeStreamListener::OnDataAvailable(nsIRequest* request,
-                                                         nsISupports* aContext,
                                                          nsIInputStream* aInStr,
                                                          uint64_t aSourceOffset,
                                                          uint32_t aCount) {

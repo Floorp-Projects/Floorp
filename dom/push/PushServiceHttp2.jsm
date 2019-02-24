@@ -61,7 +61,7 @@ PushSubscriptionListener.prototype = {
     // We do not do anything here.
   },
 
-  onDataAvailable: function(aRequest, aContext, aStream, aOffset, aCount) {
+  onDataAvailable: function(aRequest, aStream, aOffset, aCount) {
     console.debug("PushSubscriptionListener: onDataAvailable()");
     // Nobody should send data, but just to be sure, otherwise necko will
     // complain.
@@ -115,7 +115,7 @@ PushChannelListener.prototype = {
     this._ackUri = aRequest.URI.spec;
   },
 
-  onDataAvailable: function(aRequest, aContext, aStream, aOffset, aCount) {
+  onDataAvailable: function(aRequest, aStream, aOffset, aCount) {
     console.debug("PushChannelListener: onDataAvailable()");
 
     if (aCount === 0) {
@@ -171,7 +171,7 @@ PushServiceDelete.prototype = {
 
   onStartRequest: function(aRequest) {},
 
-  onDataAvailable: function(aRequest, aContext, aStream, aOffset, aCount) {
+  onDataAvailable: function(aRequest, aStream, aOffset, aCount) {
     // Nobody should send data, but just to be sure, otherwise necko will
     // complain.
     if (aCount === 0) {
@@ -212,7 +212,7 @@ SubscriptionListener.prototype = {
 
   onStartRequest: function(aRequest) {},
 
-  onDataAvailable: function(aRequest, aContext, aStream, aOffset, aCount) {
+  onDataAvailable: function(aRequest, aStream, aOffset, aCount) {
     console.debug("SubscriptionListener: onDataAvailable()");
 
     // We do not expect any data, but necko will complain if we do not consume

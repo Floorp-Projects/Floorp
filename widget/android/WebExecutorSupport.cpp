@@ -207,7 +207,7 @@ class LoaderListener final : public nsIStreamListener,
   }
 
   NS_IMETHOD
-  OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+  OnDataAvailable(nsIRequest* aRequest,
                   nsIInputStream* aInputStream, uint64_t aOffset,
                   uint32_t aCount) override {
     MOZ_ASSERT(mStream);

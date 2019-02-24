@@ -430,7 +430,7 @@ var prefetchListener = {
     Assert.equal(request.status, Cr.NS_OK);
   },
 
-  onDataAvailable: function(request, cx, stream, offset, cnt) {
+  onDataAvailable: function(request, stream, offset, cnt) {
     read_stream(stream, cnt);
   },
 

@@ -1060,7 +1060,6 @@ InterceptedHttpChannel::OnStopRequest(nsIRequest* aRequest,
 
 NS_IMETHODIMP
 InterceptedHttpChannel::OnDataAvailable(nsIRequest* aRequest,
-                                        nsISupports* aContext,
                                         nsIInputStream* aInputStream,
                                         uint64_t aOffset, uint32_t aCount) {
   // Any thread if the channel has been retargeted.
@@ -1079,7 +1078,7 @@ InterceptedHttpChannel::OnDataAvailable(nsIRequest* aRequest,
     }
   }
 
-  return mListener->OnDataAvailable(this, nullptr, aInputStream, aOffset,
+  return mListener->OnDataAvailable(this, aInputStream, aOffset,
                                     aCount);
 }
 

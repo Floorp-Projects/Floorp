@@ -292,7 +292,7 @@ function runHttpTests(testArray, done) {
                 "called...");
         }
       },
-      onDataAvailable(request, cx, inputStream, offset, count) {
+      onDataAvailable(request, inputStream, offset, count) {
         var quantum = 262144; // just above half the argument-count limit
         var bis = makeBIS(inputStream);
         for (var start = 0; start < count; start += quantum) {

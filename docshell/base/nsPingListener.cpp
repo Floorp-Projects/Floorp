@@ -333,7 +333,7 @@ nsPingListener::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-nsPingListener::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+nsPingListener::OnDataAvailable(nsIRequest* aRequest,
                                 nsIInputStream* aStream, uint64_t aOffset,
                                 uint32_t aCount) {
   uint32_t result;

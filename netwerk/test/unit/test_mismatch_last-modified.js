@@ -30,7 +30,7 @@ var listener_3 = {
 
     onStartRequest: function test_onStartR(request) {},
     
-    onDataAvailable: function test_ODA(request, cx, inputStream,
+    onDataAvailable: function test_ODA(request, inputStream,
                                        offset, count) {
 	var data = new BinaryInputStream(inputStream).readByteArray(count);
       
@@ -57,7 +57,7 @@ XPCOMUtils.defineLazyGetter(this, "listener_2", function() {
 
     onStartRequest: function test_onStartR(request) {},
     
-    onDataAvailable: function test_ODA(request, cx, inputStream,
+    onDataAvailable: function test_ODA(request, inputStream,
                                        offset, count) {
 	var data = new BinaryInputStream(inputStream).readByteArray(count);
       
@@ -93,7 +93,7 @@ XPCOMUtils.defineLazyGetter(this, "listener_1", function() {
 
     onStartRequest: function test_onStartR(request) {},
     
-    onDataAvailable: function test_ODA(request, cx, inputStream,
+    onDataAvailable: function test_ODA(request, inputStream,
                                        offset, count) {
 	var data = new BinaryInputStream(inputStream).readByteArray(count);
 	Assert.equal(data[0], "A".charCodeAt(0));

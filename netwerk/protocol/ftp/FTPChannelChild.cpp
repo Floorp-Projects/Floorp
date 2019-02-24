@@ -430,7 +430,7 @@ void FTPChannelChild::DoOnDataAvailable(const nsresult& channelStatus,
   }
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
-  rv = mListener->OnDataAvailable(this, nullptr, stringStream, offset, count);
+  rv = mListener->OnDataAvailable(this, stringStream, offset, count);
   if (NS_FAILED(rv)) Cancel(rv);
   stringStream->Close();
 }

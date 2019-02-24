@@ -753,7 +753,7 @@ HashCompleterRequest.prototype = {
     }
   },
 
-  onDataAvailable: function HCR_onDataAvailable(aRequest, aContext,
+  onDataAvailable: function HCR_onDataAvailable(aRequest,
                                                 aInputStream, aOffset, aCount) {
     let sis = Cc["@mozilla.org/scriptableinputstream;1"].
               createInstance(Ci.nsIScriptableInputStream);

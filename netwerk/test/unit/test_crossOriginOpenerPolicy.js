@@ -22,7 +22,7 @@ class OnStartListener {
     this.callback(request.QueryInterface(Ci.nsIHttpChannel));
   }
 
-  onDataAvailable(request, context, stream, offset, count) {
+  onDataAvailable(request, stream, offset, count) {
     let string = NetUtil.readInputStreamToString(stream, count);
   }
 

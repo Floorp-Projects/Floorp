@@ -777,7 +777,6 @@ TransactionObserver::OnStartRequest(nsIRequest *aRequest) {
 
 NS_IMETHODIMP
 TransactionObserver::OnDataAvailable(nsIRequest *aRequest,
-                                     nsISupports *aContext,
                                      nsIInputStream *aStream, uint64_t aOffset,
                                      uint32_t aCount) {
   MOZ_ASSERT(NS_IsMainThread());

@@ -1218,7 +1218,7 @@ mozTXTToHTMLConv::AsyncConvertData(const char* aFromType, const char* aToType,
 }
 
 NS_IMETHODIMP
-mozTXTToHTMLConv::OnDataAvailable(nsIRequest* request, nsISupports* ctxt,
+mozTXTToHTMLConv::OnDataAvailable(nsIRequest* request,
                                   nsIInputStream* inStr, uint64_t sourceOffset,
                                   uint32_t count) {
   return NS_ERROR_NOT_IMPLEMENTED;

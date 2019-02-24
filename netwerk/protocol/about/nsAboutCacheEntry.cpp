@@ -512,7 +512,6 @@ nsAboutCacheEntry::Channel::OnStartRequest(nsIRequest *request) {
 
 NS_IMETHODIMP
 nsAboutCacheEntry::Channel::OnDataAvailable(nsIRequest *request,
-                                            nsISupports *ctx,
                                             nsIInputStream *aInputStream,
                                             uint64_t aOffset, uint32_t aCount) {
   uint32_t n;

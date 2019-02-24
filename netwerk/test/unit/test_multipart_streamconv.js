@@ -54,7 +54,7 @@ var multipartListener = {
     this._buffer = "";
   },
 
-  onDataAvailable: function(request, context, stream, offset, count) {
+  onDataAvailable: function(request, stream, offset, count) {
     try {
       this._buffer = this._buffer.concat(read_stream(stream, count));
       dump("BUFFEEE: " + this._buffer + "\n\n");

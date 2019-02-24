@@ -238,7 +238,7 @@ HTTPTestLoader.prototype =
               "called...");
       }
     },
-    onDataAvailable(request, cx, inputStream, offset, count) {
+    onDataAvailable(request, inputStream, offset, count) {
       dumpn("*** HTTPTestLoader.onDataAvailable for " + this._path);
 
       Array.prototype.push.apply(this._data,

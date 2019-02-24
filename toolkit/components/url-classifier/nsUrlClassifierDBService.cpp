@@ -1870,7 +1870,6 @@ ThreatHitReportListener::OnStartRequest(nsIRequest* aRequest) {
 
 NS_IMETHODIMP
 ThreatHitReportListener::OnDataAvailable(nsIRequest* aRequest,
-                                         nsISupports* aContext,
                                          nsIInputStream* aInputStream,
                                          uint64_t aOffset, uint32_t aCount) {
   return NS_OK;

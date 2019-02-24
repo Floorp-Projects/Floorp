@@ -77,7 +77,7 @@ function run_gzip_test(num)
         endTests();
     },
 
-    onDataAvailable: function(request, context, stream, offset, count) {}
+    onDataAvailable: function(request, stream, offset, count) {}
   };
 
   let listener = new StreamListener();

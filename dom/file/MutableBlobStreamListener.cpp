@@ -70,7 +70,6 @@ MutableBlobStreamListener::OnStopRequest(nsIRequest* aRequest,
 
 NS_IMETHODIMP
 MutableBlobStreamListener::OnDataAvailable(nsIRequest* aRequest,
-                                           nsISupports* aContext,
                                            nsIInputStream* aStream,
                                            uint64_t aSourceOffset,
                                            uint32_t aCount) {

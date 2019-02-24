@@ -2702,14 +2702,14 @@ ProxyListener::OnStopRequest(nsIRequest* aRequest,
 /** nsIStreamListener methods **/
 
 NS_IMETHODIMP
-ProxyListener::OnDataAvailable(nsIRequest* aRequest, nsISupports* ctxt,
+ProxyListener::OnDataAvailable(nsIRequest* aRequest,
                                nsIInputStream* inStr, uint64_t sourceOffset,
                                uint32_t count) {
   if (!mDestListener) {
     return NS_ERROR_FAILURE;
   }
 
-  return mDestListener->OnDataAvailable(aRequest, ctxt, inStr, sourceOffset,
+  return mDestListener->OnDataAvailable(aRequest, inStr, sourceOffset,
                                         count);
 }
 
@@ -2931,7 +2931,7 @@ imgCacheValidator::OnStopRequest(nsIRequest* aRequest,
 /** nsIStreamListener methods **/
 
 NS_IMETHODIMP
-imgCacheValidator::OnDataAvailable(nsIRequest* aRequest, nsISupports* ctxt,
+imgCacheValidator::OnDataAvailable(nsIRequest* aRequest,
                                    nsIInputStream* inStr, uint64_t sourceOffset,
                                    uint32_t count) {
   if (!mDestListener) {
@@ -2941,7 +2941,7 @@ imgCacheValidator::OnDataAvailable(nsIRequest* aRequest, nsISupports* ctxt,
     return NS_OK;
   }
 
-  return mDestListener->OnDataAvailable(aRequest, ctxt, inStr, sourceOffset,
+  return mDestListener->OnDataAvailable(aRequest, inStr, sourceOffset,
                                         count);
 }
 

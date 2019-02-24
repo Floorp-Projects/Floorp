@@ -451,7 +451,7 @@ nsresult VectorImage::OnImageDataAvailable(nsIRequest* aRequest,
                                            nsIInputStream* aInStr,
                                            uint64_t aSourceOffset,
                                            uint32_t aCount) {
-  return OnDataAvailable(aRequest, aContext, aInStr, aSourceOffset, aCount);
+  return OnDataAvailable(aRequest, aInStr, aSourceOffset, aCount);
 }
 
 nsresult VectorImage::StartAnimation() {
@@ -1468,14 +1468,14 @@ void VectorImage::OnSVGDocumentError() {
 
 //******************************************************************************
 NS_IMETHODIMP
-VectorImage::OnDataAvailable(nsIRequest* aRequest, nsISupports* aCtxt,
+VectorImage::OnDataAvailable(nsIRequest* aRequest,
                              nsIInputStream* aInStr, uint64_t aSourceOffset,
                              uint32_t aCount) {
   if (mError) {
     return NS_ERROR_FAILURE;
   }
 
-  return mSVGDocumentWrapper->OnDataAvailable(aRequest, aCtxt, aInStr,
+  return mSVGDocumentWrapper->OnDataAvailable(aRequest, aInStr,
                                               aSourceOffset, aCount);
 }
 

@@ -23,7 +23,7 @@ TestStreamListener.prototype = {
     this.setState("stop");
   },
 
-  onDataAvailable: function(request, context, inputStream, offset, count) {
+  onDataAvailable: function(request, inputStream, offset, count) {
     const sin = Cc["@mozilla.org/scriptableinputstream;1"]
           .createInstance(nsIScriptableInputStream);
     sin.init(inputStream);
@@ -125,7 +125,7 @@ add_task(async function() {
   );
 
   // onDataAvailable is required to immediately read the data.
-  listener.onDataAvailable(null, null, testInputStream, 0, 6);
+  listener.onDataAvailable(null, testInputStream, 0, 6);
   equal(testInputStream.available(), 0, "no more data should be available");
   equal(testListener.state, "start",
      "test listener should not have received data");

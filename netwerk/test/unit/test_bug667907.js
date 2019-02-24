@@ -33,7 +33,7 @@ var listener_proto = {
     request.cancel(Cr.NS_BINDING_ABORTED);
   },
 
-  onDataAvailable: function(request, context, stream, offset, count) {
+  onDataAvailable: function(request, stream, offset, count) {
     do_throw("Unexpected onDataAvailable");
   },
 

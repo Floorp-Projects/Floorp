@@ -358,7 +358,7 @@ var CastingApps = {
         }
       },
       onStopRequest: function(request, statusCode) {},
-      onDataAvailable: function(request, context, stream, offset, count) {},
+      onDataAvailable: function(request, stream, offset, count) {},
     };
 
     if (channel) {

@@ -46,7 +46,7 @@ function ChannelListener() {
 
 ChannelListener.prototype = {
   onStartRequest(request) { },
-  onDataAvailable(request, context, stream, offset, count) {
+  onDataAvailable(request, stream, offset, count) {
     do_throw("Should not get any data!");
   },
   onStopRequest(request, status) {

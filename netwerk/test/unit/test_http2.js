@@ -63,7 +63,7 @@ Http2CheckListener.prototype = {
     }
   },
 
-  onDataAvailable: function testOnDataAvailable(request, ctx, stream, off, cnt) {
+  onDataAvailable: function testOnDataAvailable(request, stream, off, cnt) {
     this.onDataAvailableFired = true;
     this.isHttp2Connection = checkIsHttp2(request);
     this.accum += cnt;
@@ -111,7 +111,7 @@ Http2MultiplexListener.prototype = new Http2CheckListener();
 Http2MultiplexListener.prototype.streamID = 0;
 Http2MultiplexListener.prototype.buffer = "";
 
-Http2MultiplexListener.prototype.onDataAvailable = function(request, ctx, stream, off, cnt) {
+Http2MultiplexListener.prototype.onDataAvailable = function(request, stream, off, cnt) {
   this.onDataAvailableFired = true;
   this.isHttp2Connection = checkIsHttp2(request);
   this.streamID = parseInt(request.getResponseHeader("X-Http2-StreamID"));
@@ -138,7 +138,7 @@ var Http2HeaderListener = function(name, callback) {
 Http2HeaderListener.prototype = new Http2CheckListener();
 Http2HeaderListener.prototype.value = "";
 
-Http2HeaderListener.prototype.onDataAvailable = function(request, ctx, stream, off, cnt) {
+Http2HeaderListener.prototype.onDataAvailable = function(request, stream, off, cnt) {
   this.onDataAvailableFired = true;
   this.isHttp2Connection = checkIsHttp2(request);
   var hvalue = request.getResponseHeader(this.name);
@@ -153,7 +153,7 @@ var Http2PushListener = function(shouldBePushed) {
 
 Http2PushListener.prototype = new Http2CheckListener();
 
-Http2PushListener.prototype.onDataAvailable = function(request, ctx, stream, off, cnt) {
+Http2PushListener.prototype.onDataAvailable = function(request, stream, off, cnt) {
   this.onDataAvailableFired = true;
   this.isHttp2Connection = checkIsHttp2(request);
   if (request.originalURI.spec == "https://localhost:" + serverPort + "/push.js"  ||
@@ -190,7 +190,7 @@ Http2ContinuedHeaderListener.prototype.getInterface = function(aIID) {
   return this.QueryInterface(aIID);
 };
 
-Http2ContinuedHeaderListener.prototype.onDataAvailable = function (request, ctx, stream, off, cnt) {
+Http2ContinuedHeaderListener.prototype.onDataAvailable = function (request, stream, off, cnt) {
   this.onDataAvailableFired = true;
   this.isHttp2Connection = checkIsHttp2(request);
   if (request.originalURI.spec == "https://localhost:" + serverPort + "/continuedheaders") {
@@ -227,7 +227,7 @@ var Http2BigListener = function() {};
 Http2BigListener.prototype = new Http2CheckListener();
 Http2BigListener.prototype.buffer = "";
 
-Http2BigListener.prototype.onDataAvailable = function(request, ctx, stream, off, cnt) {
+Http2BigListener.prototype.onDataAvailable = function(request, stream, off, cnt) {
   this.onDataAvailableFired = true;
   this.isHttp2Connection = checkIsHttp2(request);
   this.buffer = this.buffer.concat(read_stream(stream, cnt));
@@ -253,7 +253,7 @@ var Http2HugeSuspendedListener = function() {};
 Http2HugeSuspendedListener.prototype = new Http2CheckListener();
 Http2HugeSuspendedListener.prototype.count = 0;
 
-Http2HugeSuspendedListener.prototype.onDataAvailable = function(request, ctx, stream, off, cnt) {
+Http2HugeSuspendedListener.prototype.onDataAvailable = function(request, stream, off, cnt) {
   this.onDataAvailableFired = true;
   this.isHttp2Connection = checkIsHttp2(request);
   this.count += cnt;
@@ -277,7 +277,7 @@ var Http2PostListener = function(expected_md5) {
 Http2PostListener.prototype = new Http2CheckListener();
 Http2PostListener.prototype.expected_md5 = "";
 
-Http2PostListener.prototype.onDataAvailable = function(request, ctx, stream, off, cnt) {
+Http2PostListener.prototype.onDataAvailable = function(request, stream, off, cnt) {
   this.onDataAvailableFired = true;
   this.isHttp2Connection = checkIsHttp2(request);
   read_stream(stream, cnt);
@@ -308,7 +308,7 @@ ResumeStalledChannelListener.prototype = {
     Assert.equal(request.requestSucceeded, true);
   },
 
-  onDataAvailable: function testOnDataAvailable(request, ctx, stream, off, cnt) {
+  onDataAvailable: function testOnDataAvailable(request, stream, off, cnt) {
     this.onDataAvailableFired = true;
     this.isHttp2Connection = checkIsHttp2(request);
     read_stream(stream, cnt);
@@ -602,7 +602,7 @@ var altsvcClientListener = {
     Assert.equal(request.status, Cr.NS_OK);
   },
 
-  onDataAvailable: function test_ODA(request, cx, stream, offset, cnt) {
+  onDataAvailable: function test_ODA(request, stream, offset, cnt) {
    read_stream(stream, cnt);
   },
 
@@ -633,7 +633,7 @@ var altsvcClientListener2 = {
     Assert.equal(request.status, Cr.NS_OK);
   },
 
-  onDataAvailable: function test_ODA(request, cx, stream, offset, cnt) {
+  onDataAvailable: function test_ODA(request, stream, offset, cnt) {
    read_stream(stream, cnt);
   },
 
@@ -735,7 +735,7 @@ Http2PushApiListener.prototype = {
   onStartRequest: function pushAPIOnStart(request) {
   },
 
-  onDataAvailable: function pushAPIOnDataAvailable(request, ctx, stream, offset, cnt) {
+  onDataAvailable: function pushAPIOnDataAvailable(request, stream, offset, cnt) {
     Assert.notEqual(request.originalURI.spec, "https://localhost:" + serverPort + "/pushapi1/2");
 
     var data = read_stream(stream, cnt);
@@ -974,7 +974,7 @@ var PulledDiskCacheListener = function() {};
 PulledDiskCacheListener.prototype = new Http2CheckListener();
 PulledDiskCacheListener.prototype.EXPECTED_DATA = "this was pulled via h2";
 PulledDiskCacheListener.prototype.readData = "";
-PulledDiskCacheListener.prototype.onDataAvailable = function testOnDataAvailable(request, ctx, stream, off, cnt) {
+PulledDiskCacheListener.prototype.onDataAvailable = function testOnDataAvailable(request, stream, off, cnt) {
   this.onDataAvailableFired = true;
   this.isHttp2Connection = checkIsHttp2(request);
   this.accum += cnt;
@@ -1004,7 +1004,7 @@ FromDiskCacheListener.prototype = {
     Assert.equal(request.responseStatus, 200);
   },
 
-  onDataAvailable: function testOnDataAvailable(request, ctx, stream, off, cnt) {
+  onDataAvailable: function testOnDataAvailable(request, stream, off, cnt) {
     this.onDataAvailableFired = true;
     this.readData += read_stream(stream, cnt);
   },
@@ -1094,7 +1094,7 @@ Http2DoublepushListener.prototype.onStopRequest = function (request, status) {
 var Http2DoublypushedListener = function () {};
 Http2DoublypushedListener.prototype = new Http2CheckListener();
 Http2DoublypushedListener.prototype.readData = "";
-Http2DoublypushedListener.prototype.onDataAvailable = function (request, ctx, stream, off, cnt) {
+Http2DoublypushedListener.prototype.onDataAvailable = function (request, stream, off, cnt) {
   this.onDataAvailableFired = true;
   this.accum += cnt;
   this.readData += read_stream(stream, cnt);

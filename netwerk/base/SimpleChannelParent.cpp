@@ -94,7 +94,6 @@ SimpleChannelParent::OnStopRequest(nsIRequest* aRequest,
 
 NS_IMETHODIMP
 SimpleChannelParent::OnDataAvailable(nsIRequest* aRequest,
-                                     nsISupports* aContext,
                                      nsIInputStream* aInputStream,
                                      uint64_t aOffset, uint32_t aCount) {
   // See above.

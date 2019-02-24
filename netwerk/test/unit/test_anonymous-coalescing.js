@@ -90,7 +90,7 @@ Listener.prototype = {
     this.clientPort = parseInt(request.getResponseHeader("x-client-port"));
   },
 
-  onDataAvailable: function testOnDataAvailable(request, ctx, stream, off, cnt) {
+  onDataAvailable: function testOnDataAvailable(request, stream, off, cnt) {
     read_stream(stream, cnt);
   },
 

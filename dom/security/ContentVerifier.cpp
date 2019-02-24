@@ -102,7 +102,7 @@ void ContentVerifier::FinishSignature() {
       break;
     }
     // let the next listener know that there is data in oInStr
-    rv = nextListener->OnDataAvailable(mContentRequest, mContentContext, oInStr,
+    rv = nextListener->OnDataAvailable(mContentRequest, oInStr,
                                        offset, mContent[i].Length());
     offset += mContent[i].Length();
     if (NS_FAILED(rv)) {
@@ -148,7 +148,7 @@ ContentVerifier::OnStopRequest(nsIRequest* aRequest,
 }
 
 NS_IMETHODIMP
-ContentVerifier::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+ContentVerifier::OnDataAvailable(nsIRequest* aRequest,
                                  nsIInputStream* aInputStream, uint64_t aOffset,
                                  uint32_t aCount) {
   // buffer the entire stream

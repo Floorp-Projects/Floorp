@@ -93,7 +93,7 @@ FileChannelParent::OnStopRequest(nsIRequest *aRequest,
 }
 
 NS_IMETHODIMP
-FileChannelParent::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
+FileChannelParent::OnDataAvailable(nsIRequest *aRequest,
                                    nsIInputStream *aInputStream,
                                    uint64_t aOffset, uint32_t aCount) {
   // See above.

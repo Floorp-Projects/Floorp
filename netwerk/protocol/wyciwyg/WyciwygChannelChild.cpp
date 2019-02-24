@@ -234,7 +234,7 @@ void WyciwygChannelChild::OnDataAvailable(const nsCString& data,
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
 
-  rv = mListener->OnDataAvailable(this, nullptr, stringStream, offset,
+  rv = mListener->OnDataAvailable(this, stringStream, offset,
                                   data.Length());
   if (NS_FAILED(rv)) Cancel(rv);
 

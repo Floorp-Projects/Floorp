@@ -30,7 +30,7 @@ BinaryComparer.prototype = {
     this.callback();
   },
 
-  onDataAvailable(aRequest, aContext, aInputStream, aOffset, aCount) {
+  onDataAvailable(aRequest, aInputStream, aOffset, aCount) {
     var stream = Cc["@mozilla.org/binaryinputstream;1"].
       createInstance(Ci.nsIBinaryInputStream);
     stream.setInputStream(aInputStream);

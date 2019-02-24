@@ -19,7 +19,6 @@ interface nsIStreamListener : nsIRequestObserver
      * must read exactly |aCount| bytes of data before returning.
      *
      * @param aRequest request corresponding to the source of the data
-     * @param aContext user defined context
      * @param aInputStream input stream containing the data chunk
      * @param aOffset
      *        Number of bytes that were sent in previous onDataAvailable calls
@@ -33,7 +32,6 @@ interface nsIStreamListener : nsIRequestObserver
      * causing the request to be canceled.
      */
     void onDataAvailable(in nsIRequest aRequest,
-                         in nsISupports aContext, 
                          in nsIInputStream aInputStream,
                          in unsigned long long aOffset,
                          in unsigned long aCount);

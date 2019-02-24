@@ -1055,7 +1055,7 @@ BeaconStreamListener::OnStopRequest(nsIRequest* aRequest,
 }
 
 NS_IMETHODIMP
-BeaconStreamListener::OnDataAvailable(nsIRequest* aRequest, nsISupports* ctxt,
+BeaconStreamListener::OnDataAvailable(nsIRequest* aRequest,
                                       nsIInputStream* inStr,
                                       uint64_t sourceOffset, uint32_t count) {
   MOZ_ASSERT(false);

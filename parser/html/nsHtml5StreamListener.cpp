@@ -52,13 +52,12 @@ nsHtml5StreamListener::OnStopRequest(nsIRequest* aRequest,
 
 NS_IMETHODIMP
 nsHtml5StreamListener::OnDataAvailable(nsIRequest* aRequest,
-                                       nsISupports* aContext,
                                        nsIInputStream* aInStream,
                                        uint64_t aSourceOffset,
                                        uint32_t aLength) {
   if (MOZ_UNLIKELY(!mDelegate)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  return mDelegate->OnDataAvailable(aRequest, aContext, aInStream,
+  return mDelegate->OnDataAvailable(aRequest, aInStream,
                                     aSourceOffset, aLength);
 }

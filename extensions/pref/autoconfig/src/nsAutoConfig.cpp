@@ -67,7 +67,7 @@ nsAutoConfig::OnStartRequest(nsIRequest *request) {
 }
 
 NS_IMETHODIMP
-nsAutoConfig::OnDataAvailable(nsIRequest *request, nsISupports *context,
+nsAutoConfig::OnDataAvailable(nsIRequest *request,
                               nsIInputStream *aIStream, uint64_t aSourceOffset,
                               uint32_t aLength) {
   uint32_t amt, size;

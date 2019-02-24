@@ -2058,9 +2058,9 @@ this.DownloadCopySaver.prototype = {
           }
         },
 
-        onDataAvailable(aRequest, aContext, aInputStream,
+        onDataAvailable(aRequest, aInputStream,
                                   aOffset, aCount) {
-          backgroundFileSaver.onDataAvailable(aRequest, aContext,
+          backgroundFileSaver.onDataAvailable(aRequest,
                                               aInputStream, aOffset,
                                               aCount);
         },

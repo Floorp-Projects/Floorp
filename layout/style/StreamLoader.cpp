@@ -114,7 +114,7 @@ StreamLoader::OnStopRequest(nsIRequest* aRequest,
 
 /* nsIStreamListener implementation */
 NS_IMETHODIMP
-StreamLoader::OnDataAvailable(nsIRequest*, nsISupports*,
+StreamLoader::OnDataAvailable(nsIRequest*,
                               nsIInputStream* aInputStream, uint64_t,
                               uint32_t aCount) {
   if (NS_FAILED(mStatus)) {

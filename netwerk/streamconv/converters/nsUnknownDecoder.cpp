@@ -54,7 +54,7 @@ nsUnknownDecoder::ConvertedStreamListener::OnStartRequest(
 
 NS_IMETHODIMP
 nsUnknownDecoder::ConvertedStreamListener::OnDataAvailable(
-    nsIRequest* request, nsISupports* context, nsIInputStream* stream,
+    nsIRequest* request, nsIInputStream* stream,
     uint64_t offset, uint32_t count) {
   uint32_t read;
   nsAutoCString decodedData;
@@ -152,7 +152,7 @@ nsUnknownDecoder::AsyncConvertData(const char* aFromType, const char* aToType,
 // ----
 
 NS_IMETHODIMP
-nsUnknownDecoder::OnDataAvailable(nsIRequest* request, nsISupports* aCtxt,
+nsUnknownDecoder::OnDataAvailable(nsIRequest* request,
                                   nsIInputStream* aStream,
                                   uint64_t aSourceOffset, uint32_t aCount) {
   nsresult rv = NS_OK;
@@ -198,7 +198,7 @@ nsUnknownDecoder::OnDataAvailable(nsIRequest* request, nsISupports* aCtxt,
 
       DetermineContentType(request);
 
-      rv = FireListenerNotifications(request, aCtxt);
+      rv = FireListenerNotifications(request, nullptr);
     }
   }
 
@@ -227,7 +227,7 @@ nsUnknownDecoder::OnDataAvailable(nsIRequest* request, nsISupports* aCtxt,
       MutexAutoLock lock(mMutex);
       listener = mNextListener;
     }
-    rv = listener->OnDataAvailable(request, aCtxt, aStream, aSourceOffset,
+    rv = listener->OnDataAvailable(request, aStream, aSourceOffset,
                                    aCount);
   }
 
@@ -749,7 +749,7 @@ nsresult nsUnknownDecoder::FireListenerNotifications(nsIRequest* request,
       rv = out->Write(mBuffer, mBufferLen, &len);
       if (NS_SUCCEEDED(rv)) {
         if (len == mBufferLen) {
-          rv = listener->OnDataAvailable(request, aCtxt, in, 0, len);
+          rv = listener->OnDataAvailable(request, in, 0, len);
         } else {
           NS_ERROR("Unable to write all the data into the pipe.");
           rv = NS_ERROR_FAILURE;
@@ -798,7 +798,7 @@ nsresult nsUnknownDecoder::ConvertEncodedData(nsIRequest* request,
         rv = rawStream->SetData((const char*)data, length);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = listener->OnDataAvailable(request, nullptr, rawStream, 0, length);
+        rv = listener->OnDataAvailable(request, rawStream, 0, length);
         NS_ENSURE_SUCCESS(rv, rv);
       }
 

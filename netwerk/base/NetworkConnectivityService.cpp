@@ -292,7 +292,6 @@ NetworkConnectivityService::OnStopRequest(nsIRequest *aRequest,
 
 NS_IMETHODIMP
 NetworkConnectivityService::OnDataAvailable(nsIRequest *aRequest,
-                                            nsISupports *aContext,
                                             nsIInputStream *aInputStream,
                                             uint64_t aOffset, uint32_t aCount) {
   nsAutoCString data;

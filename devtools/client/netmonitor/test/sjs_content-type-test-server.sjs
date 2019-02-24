@@ -16,7 +16,7 @@ function gzipCompressString(string, obs) {
                     .createInstance(Ci.nsIStringInputStream);
   stringStream.data = string;
   converter.onStartRequest(null);
-  converter.onDataAvailable(null, null, stringStream, 0, string.length);
+  converter.onDataAvailable(null, stringStream, 0, string.length);
   converter.onStopRequest(null, null);
 }
 

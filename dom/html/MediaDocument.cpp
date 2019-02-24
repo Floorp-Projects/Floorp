@@ -85,12 +85,11 @@ MediaDocumentStreamListener::OnStopRequest(nsIRequest* request,
 
 NS_IMETHODIMP
 MediaDocumentStreamListener::OnDataAvailable(nsIRequest* request,
-                                             nsISupports* ctxt,
                                              nsIInputStream* inStr,
                                              uint64_t sourceOffset,
                                              uint32_t count) {
   if (mNextStream) {
-    return mNextStream->OnDataAvailable(request, ctxt, inStr, sourceOffset,
+    return mNextStream->OnDataAvailable(request, inStr, sourceOffset,
                                         count);
   }
 

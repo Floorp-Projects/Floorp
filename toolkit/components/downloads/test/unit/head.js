@@ -348,9 +348,9 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
           this.contentListener.onStopRequest(aRequest, aStatusCode);
         },
 
-        onDataAvailable(aRequest, aContext, aInputStream, aOffset,
+        onDataAvailable(aRequest, aInputStream, aOffset,
                                   aCount) {
-          this.contentListener.onDataAvailable(aRequest, aContext, aInputStream,
+          this.contentListener.onDataAvailable(aRequest, aInputStream,
                                                aOffset, aCount);
         },
       });

@@ -1148,10 +1148,10 @@ nsContextMenu.prototype = {
           this.extListener.onStopRequest(aRequest, aStatusCode);
       },
 
-      onDataAvailable: function saveLinkAs_onDataAvailable(aRequest, aContext,
+      onDataAvailable: function saveLinkAs_onDataAvailable(aRequest,
                                                            aInputStream,
                                                            aOffset, aCount) {
-        this.extListener.onDataAvailable(aRequest, aContext, aInputStream,
+        this.extListener.onDataAvailable(aRequest, aInputStream,
                                          aOffset, aCount);
       },
     };

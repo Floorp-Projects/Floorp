@@ -653,12 +653,11 @@ nsViewSourceChannel::OnStopRequest(nsIRequest *aRequest,
 // nsIStreamListener methods
 NS_IMETHODIMP
 nsViewSourceChannel::OnDataAvailable(nsIRequest *aRequest,
-                                     nsISupports *aContext,
                                      nsIInputStream *aInputStream,
                                      uint64_t aSourceOffset, uint32_t aLength) {
   NS_ENSURE_TRUE(mListener, NS_ERROR_FAILURE);
   return mListener->OnDataAvailable(static_cast<nsIViewSourceChannel *>(this),
-                                    aContext, aInputStream, aSourceOffset,
+                                    aInputStream, aSourceOffset,
                                     aLength);
 }
 

@@ -2383,7 +2383,6 @@ Predictor::PrefetchListener::OnStopRequest(nsIRequest *aRequest,
 // nsIStreamListener
 NS_IMETHODIMP
 Predictor::PrefetchListener::OnDataAvailable(nsIRequest *aRequest,
-                                             nsISupports *aContext,
                                              nsIInputStream *aInputStream,
                                              uint64_t aOffset,
                                              const uint32_t aCount) {
