@@ -413,7 +413,7 @@ var PermissionPromptPrototype = {
     }
     // Permission prompts are always persistent; the close button is controlled by a pref.
     options.persistent = true;
-    options.hideClose = !Services.prefs.getBoolPref("privacy.permissionPrompts.showCloseButton");
+    options.hideClose = true;
     options.eventCallback = (topic) => {
       // When the docshell of the browser is aboout to be swapped to another one,
       // the "swapping" event is called. Returning true causes the notification
