@@ -206,9 +206,7 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
 
   JSContext* getContext() const override { return cx_; };
 
-  MOZ_MUST_USE bool strictMode() const override {
-    return parseContext_->sc()->strict();
-  }
+  MOZ_MUST_USE bool strictMode() const override { return pc_->sc()->strict(); }
 
   MOZ_MUST_USE bool computeErrorMetadata(ErrorMetadata* err,
                                          const ErrorOffset& offset) override;
@@ -322,7 +320,7 @@ class BinParseContext : public ParseContext {
   template <typename Tok>
   BinParseContext(JSContext* cx, BinASTParserPerTokenizer<Tok>* parser,
                   SharedContext* sc, Directives* newDirectives)
-      : ParseContext(cx, parser->parseContext_, sc, *parser, parser->usedNames_,
+      : ParseContext(cx, parser->pc_, sc, *parser, parser->usedNames_,
                      newDirectives, /* isFull = */ true) {}
 };
 

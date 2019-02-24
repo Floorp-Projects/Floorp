@@ -693,12 +693,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseSumParameter(
       break;
     case BinKind::BindingIdentifier:
       MOZ_TRY_VAR(result, parseInterfaceBindingIdentifier(start, kind, fields));
-      if (!parseContext_->positionalFormalParameterNames().append(
+      if (!pc_->positionalFormalParameterNames().append(
               result->template as<NameNode>().atom())) {
         return raiseOOM();
       }
-      if (parseContext_->isFunctionBox()) {
-        parseContext_->functionBox()->length++;
+      if (pc_->isFunctionBox()) {
+        pc_->functionBox()->length++;
       }
       break;
     case BinKind::BindingWithInitializer:
@@ -1356,14 +1356,13 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedBlockScope(
 
   BINJS_MOZ_TRY_DECL(hasDirectEval, tokenizer_->readBool());
   if (hasDirectEval) {
-    parseContext_->sc()->setHasDirectEval();
-    parseContext_->sc()->setBindingsAccessedDynamically();
+    pc_->sc()->setHasDirectEval();
+    pc_->sc()->setBindingsAccessedDynamically();
   }
-  if (hasDirectEval && parseContext_->isFunctionBox() &&
-      !parseContext_->sc()->strict()) {
+  if (hasDirectEval && pc_->isFunctionBox() && !pc_->sc()->strict()) {
     // In non-strict mode code, direct calls to eval can
     // add variables to the call object.
-    parseContext_->functionBox()->setHasExtensibleScope();
+    pc_->functionBox()->setHasExtensibleScope();
   }
   auto result = Ok();
   return result;
@@ -1461,14 +1460,13 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedBoundNamesScope(
 
   BINJS_MOZ_TRY_DECL(hasDirectEval, tokenizer_->readBool());
   if (hasDirectEval) {
-    parseContext_->sc()->setHasDirectEval();
-    parseContext_->sc()->setBindingsAccessedDynamically();
+    pc_->sc()->setHasDirectEval();
+    pc_->sc()->setBindingsAccessedDynamically();
   }
-  if (hasDirectEval && parseContext_->isFunctionBox() &&
-      !parseContext_->sc()->strict()) {
+  if (hasDirectEval && pc_->isFunctionBox() && !pc_->sc()->strict()) {
     // In non-strict mode code, direct calls to eval can
     // add variables to the call object.
-    parseContext_->functionBox()->setHasExtensibleScope();
+    pc_->functionBox()->setHasExtensibleScope();
   }
   auto result = Ok();
   return result;
@@ -1580,16 +1578,15 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedParameterScope(
 
   BINJS_MOZ_TRY_DECL(hasDirectEval, tokenizer_->readBool());
   if (hasDirectEval) {
-    parseContext_->sc()->setHasDirectEval();
-    parseContext_->sc()->setBindingsAccessedDynamically();
+    pc_->sc()->setHasDirectEval();
+    pc_->sc()->setBindingsAccessedDynamically();
   }
   BINJS_MOZ_TRY_DECL(isSimpleParameterList, tokenizer_->readBool());
   (void)isSimpleParameterList;
-  if (hasDirectEval && parseContext_->isFunctionBox() &&
-      !parseContext_->sc()->strict()) {
+  if (hasDirectEval && pc_->isFunctionBox() && !pc_->sc()->strict()) {
     // In non-strict mode code, direct calls to eval can
     // add variables to the call object.
-    parseContext_->functionBox()->setHasExtensibleScope();
+    pc_->functionBox()->setHasExtensibleScope();
   }
   auto result = Ok();
   return result;
@@ -1608,7 +1605,7 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedPositionalParameterName(
                                        BinField::IsCaptured};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
-  bool allowDuplicateName = !parseContext_->sc()->strict();
+  bool allowDuplicateName = !pc_->sc()->strict();
 
   BINJS_MOZ_TRY_DECL(index, tokenizer_->readUnsignedLong());
 
@@ -1687,14 +1684,13 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedScriptGlobalScope(
 
   BINJS_MOZ_TRY_DECL(hasDirectEval, tokenizer_->readBool());
   if (hasDirectEval) {
-    parseContext_->sc()->setHasDirectEval();
-    parseContext_->sc()->setBindingsAccessedDynamically();
+    pc_->sc()->setHasDirectEval();
+    pc_->sc()->setBindingsAccessedDynamically();
   }
-  if (hasDirectEval && parseContext_->isFunctionBox() &&
-      !parseContext_->sc()->strict()) {
+  if (hasDirectEval && pc_->isFunctionBox() && !pc_->sc()->strict()) {
     // In non-strict mode code, direct calls to eval can
     // add variables to the call object.
-    parseContext_->functionBox()->setHasExtensibleScope();
+    pc_->functionBox()->setHasExtensibleScope();
   }
   auto result = Ok();
   return result;
@@ -1741,14 +1737,13 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedVarScope(
 
   BINJS_MOZ_TRY_DECL(hasDirectEval, tokenizer_->readBool());
   if (hasDirectEval) {
-    parseContext_->sc()->setHasDirectEval();
-    parseContext_->sc()->setBindingsAccessedDynamically();
+    pc_->sc()->setHasDirectEval();
+    pc_->sc()->setBindingsAccessedDynamically();
   }
-  if (hasDirectEval && parseContext_->isFunctionBox() &&
-      !parseContext_->sc()->strict()) {
+  if (hasDirectEval && pc_->isFunctionBox() && !pc_->sc()->strict()) {
     // In non-strict mode code, direct calls to eval can
     // add variables to the call object.
-    parseContext_->functionBox()->setHasExtensibleScope();
+    pc_->functionBox()->setHasExtensibleScope();
   }
   auto result = Ok();
   return result;
@@ -1792,8 +1787,8 @@ BinASTParser<Tok>::parseInterfaceAssignmentTargetIdentifier(
   if (!IsIdentifier(name)) {
     return raiseError("Invalid identifier");
   }
-  BINJS_TRY(usedNames_.noteUse(cx_, name, parseContext_->scriptId(),
-                               parseContext_->innermostScope()->id()));
+  BINJS_TRY(usedNames_.noteUse(cx_, name, pc_->scriptId(),
+                               pc_->innermostScope()->id()));
   BINJS_TRY_DECL(result, factory_.newName(name->asPropertyName(),
                                           tokenizer_->pos(start), cx_));
   return result;
@@ -2005,17 +2000,16 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceBlock(
   const BinField expected_fields[2] = {BinField::Scope, BinField::Statements};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
-  ParseContext::Statement stmt(parseContext_, StatementKind::Block);
-  ParseContext::Scope currentScope(cx_, parseContext_, usedNames_);
-  BINJS_TRY(currentScope.init(parseContext_));
+  ParseContext::Statement stmt(pc_, StatementKind::Block);
+  ParseContext::Scope currentScope(cx_, pc_, usedNames_);
+  BINJS_TRY(currentScope.init(pc_));
 
   MOZ_TRY(parseAssertedBlockScope());
 
   BINJS_MOZ_TRY_DECL(statements, parseListOfStatement());
 
   MOZ_TRY(checkClosedVars(currentScope));
-  BINJS_TRY_DECL(bindings,
-                 NewLexicalScopeData(cx_, currentScope, alloc_, parseContext_));
+  BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, currentScope, alloc_, pc_));
   BINJS_TRY_DECL(result, factory_.newLexicalScope(*bindings, statements));
   return result;
 }
@@ -2039,8 +2033,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceBreakStatement(
     }
   }
 
-  auto validity = parseContext_->checkBreakStatement(
-      label ? label->asPropertyName() : nullptr);
+  auto validity =
+      pc_->checkBreakStatement(label ? label->asPropertyName() : nullptr);
   if (validity.isErr()) {
     switch (validity.unwrapErr()) {
       case ParseContext::BreakStatementError::ToughBreak:
@@ -2079,8 +2073,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceCallExpression(
   if (PropertyName* prop = factory_.maybeDottedProperty(callee)) {
     if (prop == cx_->names().apply) {
       op = JSOP_FUNAPPLY;
-      if (parseContext_->isFunctionBox()) {
-        parseContext_->functionBox()->usesApply = true;
+      if (pc_->isFunctionBox()) {
+        pc_->functionBox()->usesApply = true;
       }
     } else if (prop == cx_->names().call) {
       op = JSOP_FUNCALL;
@@ -2089,16 +2083,14 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceCallExpression(
 
   // Check for direct calls to `eval`.
   if (factory_.isEvalName(callee, cx_)) {
-    if (!parseContext_->varScope().lookupDeclaredNameForAdd(
-            cx_->names().eval) &&
-        !parseContext_->innermostScope()->lookupDeclaredNameForAdd(
-            cx_->names().eval)) {
+    if (!pc_->varScope().lookupDeclaredNameForAdd(cx_->names().eval) &&
+        !pc_->innermostScope()->lookupDeclaredNameForAdd(cx_->names().eval)) {
       // This is a direct call to `eval`.
-      if (!parseContext_->sc()->hasDirectEval()) {
+      if (!pc_->sc()->hasDirectEval()) {
         return raiseMissingDirectEvalInAssertedScope();
       }
 
-      op = parseContext_->sc()->strict() ? JSOP_STRICTEVAL : JSOP_EVAL;
+      op = pc_->sc()->strict() ? JSOP_STRICTEVAL : JSOP_EVAL;
     }
   }
 
@@ -2142,9 +2134,9 @@ JS::Result<LexicalScopeNode*> BinASTParser<Tok>::parseInterfaceCatchClause(
                                        BinField::Binding, BinField::Body};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
-  ParseContext::Statement stmt(parseContext_, StatementKind::Catch);
-  ParseContext::Scope currentScope(cx_, parseContext_, usedNames_);
-  BINJS_TRY(currentScope.init(parseContext_));
+  ParseContext::Statement stmt(pc_, StatementKind::Catch);
+  ParseContext::Scope currentScope(cx_, pc_, usedNames_);
+  BINJS_TRY(currentScope.init(pc_));
 
   MOZ_TRY(parseAssertedBoundNamesScope());
 
@@ -2153,8 +2145,7 @@ JS::Result<LexicalScopeNode*> BinASTParser<Tok>::parseInterfaceCatchClause(
   BINJS_MOZ_TRY_DECL(body, parseBlock());
 
   MOZ_TRY(checkClosedVars(currentScope));
-  BINJS_TRY_DECL(bindings,
-                 NewLexicalScopeData(cx_, currentScope, alloc_, parseContext_));
+  BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, currentScope, alloc_, pc_));
   BINJS_TRY_DECL(result, factory_.newLexicalScope(*bindings, body));
   BINJS_TRY(factory_.setupCatchScope(result, binding, body));
   return result;
@@ -2327,8 +2318,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceContinueStatement(
     }
   }
 
-  auto validity = parseContext_->checkContinueStatement(
-      label ? label->asPropertyName() : nullptr);
+  auto validity =
+      pc_->checkContinueStatement(label ? label->asPropertyName() : nullptr);
   if (validity.isErr()) {
     switch (validity.unwrapErr()) {
       case ParseContext::ContinueStatementError::NotInALoop:
@@ -2435,7 +2426,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceDoWhileStatement(
   const BinField expected_fields[2] = {BinField::Test, BinField::Body};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
-  ParseContext::Statement stmt(parseContext_, StatementKind::DoLoop);
+  ParseContext::Statement stmt(pc_, StatementKind::DoLoop);
 
   BINJS_MOZ_TRY_DECL(test, parseExpression());
 
@@ -2511,17 +2502,17 @@ BinASTParser<Tok>::parseInterfaceEagerFunctionDeclaration(
   // the function.
   BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
   BINJS_TRY(funpc.init());
-  parseContext_->functionScope().useAsVarScope(parseContext_);
-  MOZ_ASSERT(parseContext_->isFunctionBox());
+  pc_->functionScope().useAsVarScope(pc_);
+  MOZ_ASSERT(pc_->isFunctionBox());
 
-  ParseContext::Scope lexicalScope(cx_, parseContext_, usedNames_);
-  BINJS_TRY(lexicalScope.init(parseContext_));
+  ParseContext::Scope lexicalScope(cx_, pc_, usedNames_);
+  BINJS_TRY(lexicalScope.init(pc_));
   ListNode* params;
   ListNode* body;
   MOZ_TRY(parseFunctionOrMethodContents(length, &params, &body));
   MOZ_TRY(prependDirectivesToBody(body, directives));
   BINJS_TRY_DECL(lexicalScopeData,
-                 NewLexicalScopeData(cx_, lexicalScope, alloc_, parseContext_));
+                 NewLexicalScopeData(cx_, lexicalScope, alloc_, pc_));
   BINJS_TRY_DECL(bodyScope, factory_.newLexicalScope(*lexicalScopeData, body));
   BINJS_MOZ_TRY_DECL(
       result, buildFunction(start, kind, name, params, bodyScope, funbox));
@@ -2574,17 +2565,17 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerFunctionExpression(
   // the function.
   BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
   BINJS_TRY(funpc.init());
-  parseContext_->functionScope().useAsVarScope(parseContext_);
-  MOZ_ASSERT(parseContext_->isFunctionBox());
+  pc_->functionScope().useAsVarScope(pc_);
+  MOZ_ASSERT(pc_->isFunctionBox());
 
-  ParseContext::Scope lexicalScope(cx_, parseContext_, usedNames_);
-  BINJS_TRY(lexicalScope.init(parseContext_));
+  ParseContext::Scope lexicalScope(cx_, pc_, usedNames_);
+  BINJS_TRY(lexicalScope.init(pc_));
   ListNode* params;
   ListNode* body;
   MOZ_TRY(parseFunctionExpressionContents(length, &params, &body));
   MOZ_TRY(prependDirectivesToBody(body, directives));
   BINJS_TRY_DECL(lexicalScopeData,
-                 NewLexicalScopeData(cx_, lexicalScope, alloc_, parseContext_));
+                 NewLexicalScopeData(cx_, lexicalScope, alloc_, pc_));
   BINJS_TRY_DECL(bodyScope, factory_.newLexicalScope(*lexicalScopeData, body));
   BINJS_MOZ_TRY_DECL(
       result, buildFunction(start, kind, name, params, bodyScope, funbox));
@@ -2629,11 +2620,11 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerGetter(
   // the function.
   BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
   BINJS_TRY(funpc.init());
-  parseContext_->functionScope().useAsVarScope(parseContext_);
-  MOZ_ASSERT(parseContext_->isFunctionBox());
+  pc_->functionScope().useAsVarScope(pc_);
+  MOZ_ASSERT(pc_->isFunctionBox());
 
-  ParseContext::Scope lexicalScope(cx_, parseContext_, usedNames_);
-  BINJS_TRY(lexicalScope.init(parseContext_));
+  ParseContext::Scope lexicalScope(cx_, pc_, usedNames_);
+  BINJS_TRY(lexicalScope.init(pc_));
   ListNode* params;
   ListNode* body;
   MOZ_TRY(parseGetterContents(length, &params, &body));
@@ -2692,11 +2683,11 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerMethod(
   // the function.
   BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
   BINJS_TRY(funpc.init());
-  parseContext_->functionScope().useAsVarScope(parseContext_);
-  MOZ_ASSERT(parseContext_->isFunctionBox());
+  pc_->functionScope().useAsVarScope(pc_);
+  MOZ_ASSERT(pc_->isFunctionBox());
 
-  ParseContext::Scope lexicalScope(cx_, parseContext_, usedNames_);
-  BINJS_TRY(lexicalScope.init(parseContext_));
+  ParseContext::Scope lexicalScope(cx_, pc_, usedNames_);
+  BINJS_TRY(lexicalScope.init(pc_));
   ListNode* params;
   ListNode* body;
   MOZ_TRY(parseFunctionOrMethodContents(length, &params, &body));
@@ -2748,11 +2739,11 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerSetter(
   // the function.
   BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
   BINJS_TRY(funpc.init());
-  parseContext_->functionScope().useAsVarScope(parseContext_);
-  MOZ_ASSERT(parseContext_->isFunctionBox());
+  pc_->functionScope().useAsVarScope(pc_);
+  MOZ_ASSERT(pc_->isFunctionBox());
 
-  ParseContext::Scope lexicalScope(cx_, parseContext_, usedNames_);
-  BINJS_TRY(lexicalScope.init(parseContext_));
+  ParseContext::Scope lexicalScope(cx_, pc_, usedNames_);
+  BINJS_TRY(lexicalScope.init(pc_));
   ListNode* params;
   ListNode* body;
   MOZ_TRY(parseSetterContents(length, &params, &body));
@@ -2840,13 +2831,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceForInStatement(
                                        BinField::Body};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
-  ParseContext::Statement stmt(parseContext_, StatementKind::ForInLoop);
+  ParseContext::Statement stmt(pc_, StatementKind::ForInLoop);
 
   // Implicit scope around the `for`, used to store `for (let x in  ...)`
   // or `for (const x in ...)`-style declarations. Detail on the
   // declaration is stored as part of `scope`.
-  ParseContext::Scope scope(cx_, parseContext_, usedNames_);
-  BINJS_TRY(scope.init(parseContext_));
+  ParseContext::Scope scope(cx_, pc_, usedNames_);
+  BINJS_TRY(scope.init(pc_));
 
   BINJS_MOZ_TRY_DECL(left, parseForInOfBindingOrAssignmentTarget());
 
@@ -2862,8 +2853,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceForInStatement(
                                                  /* iflags = */ 0));
 
   if (!scope.isEmpty()) {
-    BINJS_TRY_DECL(bindings,
-                   NewLexicalScopeData(cx_, scope, alloc_, parseContext_));
+    BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, scope, alloc_, pc_));
     BINJS_TRY_VAR(result, factory_.newLexicalScope(*bindings, result));
   }
   return result;
@@ -2887,13 +2877,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceForStatement(
                                        BinField::Update, BinField::Body};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
-  ParseContext::Statement stmt(parseContext_, StatementKind::ForLoop);
+  ParseContext::Statement stmt(pc_, StatementKind::ForLoop);
 
   // Implicit scope around the `for`, used to store `for (let x; ...; ...)`
   // or `for (const x; ...; ...)`-style declarations. Detail on the
   // declaration is stored as part of `BINJS_Scope`.
-  ParseContext::Scope scope(cx_, parseContext_, usedNames_);
-  BINJS_TRY(scope.init(parseContext_));
+  ParseContext::Scope scope(cx_, pc_, usedNames_);
+  BINJS_TRY(scope.init(pc_));
 
   BINJS_MOZ_TRY_DECL(init, parseOptionalVariableDeclarationOrExpression());
 
@@ -2910,8 +2900,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceForStatement(
                                                  /* iflags = */ 0));
 
   if (!scope.isEmpty()) {
-    BINJS_TRY_DECL(bindings,
-                   NewLexicalScopeData(cx_, scope, alloc_, parseContext_));
+    BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, scope, alloc_, pc_));
     BINJS_TRY_VAR(result, factory_.newLexicalScope(*bindings, result));
   }
   return result;
@@ -3015,7 +3004,7 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceFunctionExpressionContents(
   // Per spec, isFunctionNameCaptured can be true for anonymous
   // function.  Check isFunctionNameCaptured only for named
   // function.
-  if (parseContext_->functionBox()->function()->isNamedLambda() &&
+  if (pc_->functionBox()->function()->isNamedLambda() &&
       isFunctionNameCaptured) {
     captureFunctionName();
   }
@@ -3197,8 +3186,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceIdentifierExpression(
   if (!IsIdentifier(name)) {
     return raiseError("Invalid identifier");
   }
-  BINJS_TRY(usedNames_.noteUse(cx_, name, parseContext_->scriptId(),
-                               parseContext_->innermostScope()->id()));
+  BINJS_TRY(usedNames_.noteUse(cx_, name, pc_->scriptId(),
+                               pc_->innermostScope()->id()));
   BINJS_TRY_DECL(result, factory_.newName(name->asPropertyName(),
                                           tokenizer_->pos(start), cx_));
   return result;
@@ -3243,7 +3232,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLabelledStatement(
   if (!IsIdentifier(label)) {
     return raiseError("Invalid identifier");
   }
-  ParseContext::LabelStatement stmt(parseContext_, label);
+  ParseContext::LabelStatement stmt(pc_, label);
   BINJS_MOZ_TRY_DECL(body, parseStatement());
 
   BINJS_TRY_DECL(result, factory_.newLabeledStatement(label->asPropertyName(),
@@ -3319,8 +3308,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLazyFunctionDeclaration(
   auto skipStart = contentsSkip.startOffset();
   BINJS_TRY_DECL(
       lazy, LazyScript::Create(cx_, fun, sourceObject_,
-                               parseContext_->closedOverBindingsForLazy(),
-                               parseContext_->innerFunctionsForLazy, skipStart,
+                               pc_->closedOverBindingsForLazy(),
+                               pc_->innerFunctionsForLazy, skipStart,
                                skipStart + contentsSkip.length(), skipStart, 0,
                                skipStart, ParseGoal::Script));
 
@@ -3384,8 +3373,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLazyFunctionExpression(
   auto skipStart = contentsSkip.startOffset();
   BINJS_TRY_DECL(
       lazy, LazyScript::Create(cx_, fun, sourceObject_,
-                               parseContext_->closedOverBindingsForLazy(),
-                               parseContext_->innerFunctionsForLazy, skipStart,
+                               pc_->closedOverBindingsForLazy(),
+                               pc_->innerFunctionsForLazy, skipStart,
                                skipStart + contentsSkip.length(), skipStart, 0,
                                skipStart, ParseGoal::Script));
 
@@ -3643,12 +3632,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceReturnStatement(
   const BinField expected_fields[1] = {BinField::Expression};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
-  if (!parseContext_->isFunctionBox()) {
+  if (!pc_->isFunctionBox()) {
     // Return statements are permitted only inside functions.
     return raiseInvalidKind("Toplevel Statement", kind);
   }
 
-  parseContext_->functionBox()->usesReturn = true;
+  pc_->functionBox()->usesReturn = true;
 
   BINJS_MOZ_TRY_DECL(expression, parseOptionalExpression());
 
@@ -3672,10 +3661,10 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceScript(
   MOZ_TRY(parseAssertedScriptGlobalScope());
 
   BINJS_MOZ_TRY_DECL(directives, parseListOfDirective());
-  forceStrictIfNecessary(parseContext_->sc(), directives);
+  forceStrictIfNecessary(pc_->sc(), directives);
   BINJS_MOZ_TRY_DECL(statements, parseListOfStatement());
 
-  MOZ_TRY(checkClosedVars(parseContext_->varScope()));
+  MOZ_TRY(checkClosedVars(pc_->varScope()));
   MOZ_TRY(prependDirectivesToBody(/* body = */ statements, directives));
   auto result = statements;
   return result;
@@ -3928,7 +3917,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceSwitchStatement(
 #endif  // defined(DEBUG)
 
   BINJS_MOZ_TRY_DECL(discriminant, parseExpression());
-  ParseContext::Statement stmt(parseContext_, StatementKind::Switch);
+  ParseContext::Statement stmt(pc_, StatementKind::Switch);
   BINJS_MOZ_TRY_DECL(cases, parseListOfSwitchCase());
 
   BINJS_TRY_DECL(scope, factory_.newLexicalScope(nullptr, cases));
@@ -3952,7 +3941,7 @@ BinASTParser<Tok>::parseInterfaceSwitchStatementWithDefault(
 #endif  // defined(DEBUG)
 
   BINJS_MOZ_TRY_DECL(discriminant, parseExpression());
-  ParseContext::Statement stmt(parseContext_, StatementKind::Switch);
+  ParseContext::Statement stmt(pc_, StatementKind::Switch);
   BINJS_MOZ_TRY_DECL(preDefaultCases, parseListOfSwitchCase());
 
   BINJS_MOZ_TRY_DECL(defaultCase, parseSwitchDefault());
@@ -3989,16 +3978,16 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceThisExpression(
   BINJS_TRY(CheckRecursionLimit(cx_));
   MOZ_TRY(tokenizer_->checkFields0(kind, fields));
 
-  if (parseContext_->isFunctionBox()) {
-    parseContext_->functionBox()->usesThis = true;
+  if (pc_->isFunctionBox()) {
+    pc_->functionBox()->usesThis = true;
   }
 
   TokenPos pos = tokenizer_->pos(start);
   ParseNode* thisName(nullptr);
-  if (parseContext_->sc()->thisBinding() == ThisBinding::Function) {
+  if (pc_->sc()->thisBinding() == ThisBinding::Function) {
     HandlePropertyName dotThis = cx_->names().dotThis;
-    BINJS_TRY(usedNames_.noteUse(cx_, dotThis, parseContext_->scriptId(),
-                                 parseContext_->innermostScope()->id()));
+    BINJS_TRY(usedNames_.noteUse(cx_, dotThis, pc_->scriptId(),
+                                 pc_->innermostScope()->id()));
     BINJS_TRY_VAR(thisName, factory_.newName(dotThis, pos, cx_));
   }
 
@@ -4036,9 +4025,9 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceTryCatchStatement(
 #endif  // defined(DEBUG)
   ParseNode* body;
   {
-    ParseContext::Statement stmt(parseContext_, StatementKind::Try);
-    ParseContext::Scope scope(cx_, parseContext_, usedNames_);
-    BINJS_TRY(scope.init(parseContext_));
+    ParseContext::Statement stmt(pc_, StatementKind::Try);
+    ParseContext::Scope scope(cx_, pc_, usedNames_);
+    BINJS_TRY(scope.init(pc_));
     MOZ_TRY_VAR(body, parseBlock());
   }
 
@@ -4063,18 +4052,18 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceTryFinallyStatement(
 #endif  // defined(DEBUG)
   ParseNode* body;
   {
-    ParseContext::Statement stmt(parseContext_, StatementKind::Try);
-    ParseContext::Scope scope(cx_, parseContext_, usedNames_);
-    BINJS_TRY(scope.init(parseContext_));
+    ParseContext::Statement stmt(pc_, StatementKind::Try);
+    ParseContext::Scope scope(cx_, pc_, usedNames_);
+    BINJS_TRY(scope.init(pc_));
     MOZ_TRY_VAR(body, parseBlock());
   }
 
   BINJS_MOZ_TRY_DECL(catchClause, parseOptionalCatchClause());
   ParseNode* finalizer;
   {
-    ParseContext::Statement stmt(parseContext_, StatementKind::Finally);
-    ParseContext::Scope scope(cx_, parseContext_, usedNames_);
-    BINJS_TRY(scope.init(parseContext_));
+    ParseContext::Statement stmt(pc_, StatementKind::Finally);
+    ParseContext::Scope scope(cx_, pc_, usedNames_);
+    BINJS_TRY(scope.init(pc_));
     MOZ_TRY_VAR(finalizer, parseBlock());
   }
 
@@ -4129,7 +4118,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceUnaryExpression(
           operand->setOp(JSOP_DELNAME);
           pnk = ParseNodeKind::DeleteNameExpr;
           BINJS_TRY(this->strictModeError(JSMSG_DEPRECATED_DELETE_OPERAND));
-          parseContext_->sc()->setBindingsAccessedDynamically();
+          pc_->sc()->setBindingsAccessedDynamically();
           break;
         case ParseNodeKind::DotExpr:
           pnk = ParseNodeKind::DeletePropExpr;
@@ -4292,7 +4281,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceWhileStatement(
   const BinField expected_fields[2] = {BinField::Test, BinField::Body};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
-  ParseContext::Statement stmt(parseContext_, StatementKind::WhileLoop);
+  ParseContext::Statement stmt(pc_, StatementKind::WhileLoop);
 
   BINJS_MOZ_TRY_DECL(test, parseExpression());
 
@@ -4315,10 +4304,10 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceWithStatement(
 
   BINJS_MOZ_TRY_DECL(object, parseExpression());
 
-  ParseContext::Statement stmt(parseContext_, StatementKind::With);
+  ParseContext::Statement stmt(pc_, StatementKind::With);
   BINJS_MOZ_TRY_DECL(body, parseStatement());
 
-  parseContext_->sc()->setBindingsAccessedDynamically();
+  pc_->sc()->setBindingsAccessedDynamically();
   BINJS_TRY_DECL(result, factory_.newWithStatement(start, object, body));
   return result;
 }
