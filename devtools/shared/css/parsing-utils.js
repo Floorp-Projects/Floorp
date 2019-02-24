@@ -270,7 +270,7 @@ function cssTrim(str) {
 function parseDeclarationsInternal(isCssPropertyKnown, inputString,
                                    parseComments, inComment, commentOverride) {
   if (inputString === null || inputString === undefined) {
-    throw new Error("empty input string");
+    return [];
   }
 
   const lexer = getCSSLexer(inputString);
