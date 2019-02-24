@@ -85,7 +85,7 @@ nsAutoConfig::OnDataAvailable(nsIRequest *request, nsISupports *context,
 }
 
 NS_IMETHODIMP
-nsAutoConfig::OnStopRequest(nsIRequest *request, nsISupports *context,
+nsAutoConfig::OnStopRequest(nsIRequest *request,
                             nsresult aStatus) {
   nsresult rv;
 

@@ -178,7 +178,7 @@ nsresult nsExtProtocolChannel::OpenURL() {
       MessageLoop::current()->PostTask(NS_NewRunnableFunction(
           "nsExtProtocolChannel::OpenURL", [self, listener]() {
             listener->OnStartRequest(self);
-            listener->OnStopRequest(self, nullptr, self->mStatus);
+            listener->OnStopRequest(self, self->mStatus);
           }));
     }
   }
@@ -428,7 +428,6 @@ NS_IMETHODIMP nsExtProtocolChannel::OnStartRequest(nsIRequest *aRequest) {
 }
 
 NS_IMETHODIMP nsExtProtocolChannel::OnStopRequest(nsIRequest *aRequest,
-                                                  nsISupports *aContext,
                                                   nsresult aStatusCode) {
   // no data is expected
   MOZ_CRASH("No data expected from external protocol channel");

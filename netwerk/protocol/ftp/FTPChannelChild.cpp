@@ -514,7 +514,7 @@ void FTPChannelChild::DoOnStopRequest(const nsresult& aChannelStatus,
     // we initiate protocol deletion below.
     mIsPending = false;
     AutoEventEnqueuer ensureSerialDispatch(mEventQ);
-    (void)mListener->OnStopRequest(this, nullptr, aChannelStatus);
+    (void)mListener->OnStopRequest(this, aChannelStatus);
 
     mListener = nullptr;
 
@@ -556,7 +556,7 @@ void FTPChannelChild::DoFailedAsyncOpen(const nsresult& statusCode) {
   if (mListener) {
     mListener->OnStartRequest(this);
     mIsPending = false;
-    mListener->OnStopRequest(this, nullptr, statusCode);
+    mListener->OnStopRequest(this, statusCode);
   } else {
     mIsPending = false;
   }

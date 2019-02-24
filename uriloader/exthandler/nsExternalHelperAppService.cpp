@@ -1924,7 +1924,6 @@ nsExternalAppHandler::OnDataAvailable(nsIRequest* request, nsISupports* aCtxt,
 }
 
 NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIRequest* request,
-                                                  nsISupports* aCtxt,
                                                   nsresult aStatus) {
   LOG(
       ("nsExternalAppHandler::OnStopRequest\n"

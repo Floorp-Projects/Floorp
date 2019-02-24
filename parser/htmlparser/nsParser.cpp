@@ -1330,7 +1330,7 @@ nsresult nsParser::OnDataAvailable(nsIRequest* request, nsISupports* aContext,
  *  This is called by the networking library once the last block of data
  *  has been collected from the net.
  */
-nsresult nsParser::OnStopRequest(nsIRequest* request, nsISupports* aContext,
+nsresult nsParser::OnStopRequest(nsIRequest* request,
                                  nsresult status) {
   nsresult rv = NS_OK;
 
@@ -1362,7 +1362,7 @@ nsresult nsParser::OnStopRequest(nsIRequest* request, nsISupports* aContext,
   // XXX Should we wait to notify our observers as well if the
   // parser isn't yet enabled?
   if (mObserver) {
-    mObserver->OnStopRequest(request, aContext, status);
+    mObserver->OnStopRequest(request, status);
   }
 
   return rv;

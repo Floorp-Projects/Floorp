@@ -76,7 +76,7 @@ nsIncrementalStreamLoader::OnStartRequest(nsIRequest *request) {
 }
 
 NS_IMETHODIMP
-nsIncrementalStreamLoader::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
+nsIncrementalStreamLoader::OnStopRequest(nsIRequest *request,
                                          nsresult aStatus) {
   AUTO_PROFILER_LABEL("nsIncrementalStreamLoader::OnStopRequest", NETWORK);
 
@@ -97,7 +97,6 @@ nsIncrementalStreamLoader::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
     ReleaseData();
     mRequest = nullptr;
     mObserver = nullptr;
-    mContext = nullptr;
   }
   return NS_OK;
 }

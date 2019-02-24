@@ -80,7 +80,7 @@ nsStreamLoader::OnStartRequest(nsIRequest *request) {
 }
 
 NS_IMETHODIMP
-nsStreamLoader::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
+nsStreamLoader::OnStopRequest(nsIRequest *request,
                               nsresult aStatus) {
   AUTO_PROFILER_LABEL("nsStreamLoader::OnStopRequest", NETWORK);
 
@@ -100,11 +100,10 @@ nsStreamLoader::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
     ReleaseData();
     mRequest = nullptr;
     mObserver = nullptr;
-    mContext = nullptr;
   }
 
   if (mRequestObserver) {
-    mRequestObserver->OnStopRequest(request, ctxt, aStatus);
+    mRequestObserver->OnStopRequest(request, aStatus);
     mRequestObserver = nullptr;
   }
 

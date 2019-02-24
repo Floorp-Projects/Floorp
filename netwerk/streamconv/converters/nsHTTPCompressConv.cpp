@@ -127,7 +127,7 @@ nsHTTPCompressConv::OnStartRequest(nsIRequest *request) {
 }
 
 NS_IMETHODIMP
-nsHTTPCompressConv::OnStopRequest(nsIRequest *request, nsISupports *aContext,
+nsHTTPCompressConv::OnStopRequest(nsIRequest *request,
                                   nsresult aStatus) {
   nsresult status = aStatus;
   LOG(("nsHttpCompresssConv %p onstop %" PRIx32 "\n", this,
@@ -167,7 +167,7 @@ nsHTTPCompressConv::OnStopRequest(nsIRequest *request, nsISupports *aContext,
     MutexAutoLock lock(mMutex);
     listener = mListener;
   }
-  return listener->OnStopRequest(request, aContext, status);
+  return listener->OnStopRequest(request, status);
 }
 
 /* static */ nsresult nsHTTPCompressConv::BrotliHandler(

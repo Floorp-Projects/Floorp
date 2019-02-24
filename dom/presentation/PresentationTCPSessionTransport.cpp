@@ -49,7 +49,7 @@ CopierCallbacks::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-CopierCallbacks::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+CopierCallbacks::OnStopRequest(nsIRequest* aRequest,
                                nsresult aStatus) {
   mOwner->NotifyCopyComplete(aStatus);
   return NS_OK;
@@ -510,7 +510,6 @@ PresentationTCPSessionTransport::OnStartRequest(nsIRequest* aRequest) {
 
 NS_IMETHODIMP
 PresentationTCPSessionTransport::OnStopRequest(nsIRequest* aRequest,
-                                               nsISupports* aContext,
                                                nsresult aStatusCode) {
   PRES_DEBUG("%s:aStatusCode[%" PRIx32 "]\n", __func__,
              static_cast<uint32_t>(aStatusCode));

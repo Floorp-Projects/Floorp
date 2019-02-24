@@ -273,7 +273,6 @@ AlternativeDataStreamListener::OnDataAvailable(nsIRequest* aRequest,
 
 NS_IMETHODIMP
 AlternativeDataStreamListener::OnStopRequest(nsIRequest* aRequest,
-                                             nsISupports* aContext,
                                              nsresult aStatusCode) {
   AssertIsOnMainThread();
 
@@ -288,7 +287,7 @@ AlternativeDataStreamListener::OnStopRequest(nsIRequest* aRequest,
 
   if (mStatus == AlternativeDataStreamListener::FALLBACK) {
     MOZ_ASSERT(fetchDriver);
-    return fetchDriver->OnStopRequest(aRequest, aContext, aStatusCode);
+    return fetchDriver->OnStopRequest(aRequest, aStatusCode);
   }
 
   MOZ_DIAGNOSTIC_ASSERT(mStatus == AlternativeDataStreamListener::LOADING);
@@ -1188,7 +1187,7 @@ FetchDriver::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
 }
 
 NS_IMETHODIMP
-FetchDriver::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+FetchDriver::OnStopRequest(nsIRequest* aRequest,
                            nsresult aStatusCode) {
   AssertIsOnMainThread();
 

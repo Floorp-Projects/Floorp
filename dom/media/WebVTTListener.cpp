@@ -84,7 +84,7 @@ WebVTTListener::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-WebVTTListener::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+WebVTTListener::OnStopRequest(nsIRequest* aRequest,
                               nsresult aStatus) {
   VTT_LOG("WebVTTListener::OnStopRequest\n");
   if (NS_FAILED(aStatus)) {

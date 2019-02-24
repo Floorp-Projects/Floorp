@@ -101,9 +101,9 @@ nsForceXMLListener::OnStartRequest(nsIRequest *aRequest) {
 }
 
 NS_IMETHODIMP
-nsForceXMLListener::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
+nsForceXMLListener::OnStopRequest(nsIRequest *aRequest,
                                   nsresult aStatusCode) {
-  return mListener->OnStopRequest(aRequest, aContext, aStatusCode);
+  return mListener->OnStopRequest(aRequest, aStatusCode);
 }
 
 nsSyncLoader::~nsSyncLoader() {
@@ -244,12 +244,12 @@ nsSyncLoader::OnStartRequest(nsIRequest *aRequest) {
 }
 
 NS_IMETHODIMP
-nsSyncLoader::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
+nsSyncLoader::OnStopRequest(nsIRequest *aRequest,
                             nsresult aStatusCode) {
   if (NS_SUCCEEDED(mAsyncLoadStatus) && NS_FAILED(aStatusCode)) {
     mAsyncLoadStatus = aStatusCode;
   }
-  nsresult rv = mListener->OnStopRequest(aRequest, aContext, aStatusCode);
+  nsresult rv = mListener->OnStopRequest(aRequest, aStatusCode);
   if (NS_SUCCEEDED(mAsyncLoadStatus) && NS_FAILED(rv)) {
     mAsyncLoadStatus = rv;
   }
@@ -357,7 +357,7 @@ nsresult nsSyncLoadService::PushSyncStreamToListener(
   if (NS_FAILED(rv)) {
     aChannel->Cancel(rv);
   }
-  aListener->OnStopRequest(aChannel, nullptr, rv);
+  aListener->OnStopRequest(aChannel, rv);
 
   return rv;
 }

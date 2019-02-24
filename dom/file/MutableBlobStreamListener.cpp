@@ -50,7 +50,6 @@ MutableBlobStreamListener::OnStartRequest(nsIRequest* aRequest) {
 
 NS_IMETHODIMP
 MutableBlobStreamListener::OnStopRequest(nsIRequest* aRequest,
-                                         nsISupports* aContext,
                                          nsresult aStatus) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mStorage);

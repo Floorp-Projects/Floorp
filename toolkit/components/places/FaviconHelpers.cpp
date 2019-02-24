@@ -682,7 +682,6 @@ AsyncFetchAndSetIconForPage::AsyncOnChannelRedirect(
 
 NS_IMETHODIMP
 AsyncFetchAndSetIconForPage::OnStopRequest(nsIRequest* aRequest,
-                                           nsISupports* aContext,
                                            nsresult aStatusCode) {
   MOZ_ASSERT(NS_IsMainThread());
 

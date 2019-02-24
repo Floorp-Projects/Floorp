@@ -341,7 +341,7 @@ nsPingListener::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
 }
 
 NS_IMETHODIMP
-nsPingListener::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+nsPingListener::OnStopRequest(nsIRequest* aRequest,
                               nsresult aStatus) {
   mLoadGroup = nullptr;
 

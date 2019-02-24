@@ -208,7 +208,7 @@ already_AddRefed<Document> DOMParser::ParseFromStream(nsIInputStream* aStream,
     parserChannel->GetStatus(&status);
   }
 
-  rv = listener->OnStopRequest(parserChannel, nullptr, status);
+  rv = listener->OnStopRequest(parserChannel, status);
   // Failure returned from OnStopRequest does not affect the final status of
   // the channel, so we do not need to call Cancel(rv) as we do above.
 

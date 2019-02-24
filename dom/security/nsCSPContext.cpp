@@ -1606,7 +1606,6 @@ CSPViolationReportListener::OnDataAvailable(nsIRequest* aRequest,
 
 NS_IMETHODIMP
 CSPViolationReportListener::OnStopRequest(nsIRequest* aRequest,
-                                          nsISupports* aContext,
                                           nsresult aStatus) {
   return NS_OK;
 }

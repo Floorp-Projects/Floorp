@@ -444,7 +444,7 @@ nsDocLoader::OnStartRequest(nsIRequest* request) {
 }
 
 NS_IMETHODIMP
-nsDocLoader::OnStopRequest(nsIRequest* aRequest, nsISupports* aCtxt,
+nsDocLoader::OnStopRequest(nsIRequest* aRequest,
                            nsresult aStatus) {
   nsresult rv = NS_OK;
 

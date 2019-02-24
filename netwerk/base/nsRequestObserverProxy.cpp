@@ -100,7 +100,7 @@ class nsOnStopRequestEvent : public nsARequestObserverEvent {
     NS_ASSERTION(NS_SUCCEEDED(rv), "GetStatus failed for request!");
 
     LOG(("handle stopevent=%p\n", this));
-    (void)observer->OnStopRequest(mRequest, mProxy->mContext, status);
+    (void)observer->OnStopRequest(mRequest, status);
 
     return NS_OK;
   }
@@ -132,9 +132,8 @@ nsRequestObserverProxy::OnStartRequest(nsIRequest *request) {
 }
 
 NS_IMETHODIMP
-nsRequestObserverProxy::OnStopRequest(nsIRequest *request, nsISupports *context,
+nsRequestObserverProxy::OnStopRequest(nsIRequest *request,
                                       nsresult status) {
-  MOZ_ASSERT(!context || context == mContext);
   LOG(("nsRequestObserverProxy: OnStopRequest [this=%p req=%p status=%" PRIx32
        "]\n",
        this, request, static_cast<uint32_t>(status)));

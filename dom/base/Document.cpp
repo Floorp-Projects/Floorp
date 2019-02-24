@@ -996,13 +996,12 @@ ExternalResourceMap::PendingLoad::OnDataAvailable(nsIRequest* aRequest,
 
 NS_IMETHODIMP
 ExternalResourceMap::PendingLoad::OnStopRequest(nsIRequest* aRequest,
-                                                nsISupports* aContext,
                                                 nsresult aStatus) {
   // mTargetListener might be null if SetupViewer or AddExternalResource failed
   if (mTargetListener) {
     nsCOMPtr<nsIStreamListener> listener;
     mTargetListener.swap(listener);
-    return listener->OnStopRequest(aRequest, aContext, aStatus);
+    return listener->OnStopRequest(aRequest, aStatus);
   }
 
   return NS_OK;

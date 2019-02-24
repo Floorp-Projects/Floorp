@@ -269,7 +269,7 @@ txStylesheetSink::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-txStylesheetSink::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+txStylesheetSink::OnStopRequest(nsIRequest* aRequest,
                                 nsresult aStatusCode) {
   bool success = true;
 
@@ -299,7 +299,7 @@ txStylesheetSink::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
     mCompiler->cancel(result, nullptr, spec.get());
   }
 
-  nsresult rv = mListener->OnStopRequest(aRequest, mParser, aStatusCode);
+  nsresult rv = mListener->OnStopRequest(aRequest, aStatusCode);
   mListener = nullptr;
   mParser = nullptr;
   return rv;

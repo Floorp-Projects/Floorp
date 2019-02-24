@@ -1027,7 +1027,7 @@ InterceptedHttpChannel::OnStartRequest(nsIRequest* aRequest) {
 
 NS_IMETHODIMP
 InterceptedHttpChannel::OnStopRequest(nsIRequest* aRequest,
-                                      nsISupports* aContext, nsresult aStatus) {
+                                      nsresult aStatus) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (NS_SUCCEEDED(mStatus)) {
@@ -1048,7 +1048,7 @@ InterceptedHttpChannel::OnStopRequest(nsIRequest* aRequest,
   MaybeReportTimingData();
 
   if (mListener) {
-    mListener->OnStopRequest(this, nullptr, mStatus);
+    mListener->OnStopRequest(this, mStatus);
   }
 
   gHttpHandler->OnStopRequest(this);

@@ -310,7 +310,7 @@ nsFontFaceLoader::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-nsFontFaceLoader::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+nsFontFaceLoader::OnStopRequest(nsIRequest* aRequest,
                                 nsresult aStatusCode) {
   MOZ_ASSERT(NS_IsMainThread());
   DropChannel();

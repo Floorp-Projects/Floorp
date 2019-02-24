@@ -82,9 +82,9 @@ nsIconChannel::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-nsIconChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext, nsresult aStatus) {
+nsIconChannel::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   if (mListener) {
-    mListener->OnStopRequest(this, aContext, aStatus);
+    mListener->OnStopRequest(this, aStatus);
     mListener = nullptr;
   }
 

@@ -1168,12 +1168,11 @@ class nsHtml5RequestStopper : public Runnable {
 };
 
 nsresult nsHtml5StreamParser::OnStopRequest(nsIRequest* aRequest,
-                                            nsISupports* aContext,
                                             nsresult status) {
   NS_ASSERTION(mRequest == aRequest, "Got Stop on wrong stream.");
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   if (mObserver) {
-    mObserver->OnStopRequest(aRequest, aContext, status);
+    mObserver->OnStopRequest(aRequest, status);
   }
   nsCOMPtr<nsIRunnable> stopper = new nsHtml5RequestStopper(this);
   if (NS_FAILED(mEventTarget->Dispatch(stopper, nsIThread::DISPATCH_NORMAL))) {

@@ -2690,13 +2690,13 @@ ProxyListener::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-ProxyListener::OnStopRequest(nsIRequest* aRequest, nsISupports* ctxt,
+ProxyListener::OnStopRequest(nsIRequest* aRequest,
                              nsresult status) {
   if (!mDestListener) {
     return NS_ERROR_FAILURE;
   }
 
-  return mDestListener->OnStopRequest(aRequest, ctxt, status);
+  return mDestListener->OnStopRequest(aRequest, status);
 }
 
 /** nsIStreamListener methods **/
@@ -2916,7 +2916,7 @@ imgCacheValidator::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-imgCacheValidator::OnStopRequest(nsIRequest* aRequest, nsISupports* ctxt,
+imgCacheValidator::OnStopRequest(nsIRequest* aRequest,
                                  nsresult status) {
   // Be sure we've released the document that we may have been holding on to.
   mContext = nullptr;
@@ -2925,7 +2925,7 @@ imgCacheValidator::OnStopRequest(nsIRequest* aRequest, nsISupports* ctxt,
     return NS_OK;
   }
 
-  return mDestListener->OnStopRequest(aRequest, ctxt, status);
+  return mDestListener->OnStopRequest(aRequest, status);
 }
 
 /** nsIStreamListener methods **/

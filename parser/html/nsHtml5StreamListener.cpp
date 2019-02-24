@@ -43,11 +43,11 @@ nsHtml5StreamListener::OnStartRequest(nsIRequest* aRequest) {
 
 NS_IMETHODIMP
 nsHtml5StreamListener::OnStopRequest(nsIRequest* aRequest,
-                                     nsISupports* aContext, nsresult aStatus) {
+                                     nsresult aStatus) {
   if (MOZ_UNLIKELY(!mDelegate)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  return mDelegate->OnStopRequest(aRequest, aContext, aStatus);
+  return mDelegate->OnStopRequest(aRequest, aStatus);
 }
 
 NS_IMETHODIMP

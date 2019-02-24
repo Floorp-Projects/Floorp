@@ -47,7 +47,7 @@ StreamLoader::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-StreamLoader::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+StreamLoader::OnStopRequest(nsIRequest* aRequest,
                             nsresult aStatus) {
   // Decoded data
   nsCString utf8String;

@@ -338,7 +338,7 @@ WebrtcProxyChannel::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-WebrtcProxyChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+WebrtcProxyChannel::OnStopRequest(nsIRequest* aRequest,
                                   nsresult aStatusCode) {
   LOG(("WebrtcProxyChannel::OnStopRequest %p status=%u\n", this,
        static_cast<uint32_t>(aStatusCode)));

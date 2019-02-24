@@ -641,19 +641,19 @@ nsresult nsIndexedToHTML::DoOnStartRequest(nsIRequest* request,
 }
 
 NS_IMETHODIMP
-nsIndexedToHTML::OnStopRequest(nsIRequest* request, nsISupports* aContext,
+nsIndexedToHTML::OnStopRequest(nsIRequest* request,
                                nsresult aStatus) {
   if (NS_SUCCEEDED(aStatus)) {
     nsCString buffer;
     buffer.AssignLiteral("</tbody></table></body></html>\n");
 
-    aStatus = SendToListener(request, aContext, buffer);
+    aStatus = SendToListener(request, nullptr, buffer);
   }
 
-  mParser->OnStopRequest(request, aContext, aStatus);
+  mParser->OnStopRequest(request, aStatus);
   mParser = nullptr;
 
-  return mListener->OnStopRequest(request, aContext, aStatus);
+  return mListener->OnStopRequest(request, aStatus);
 }
 
 nsresult nsIndexedToHTML::SendToListener(nsIRequest* aRequest,

@@ -502,7 +502,7 @@ StreamFilterParent::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-StreamFilterParent::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+StreamFilterParent::OnStopRequest(nsIRequest* aRequest,
                                   nsresult aStatusCode) {
   AssertIsMainThread();
 
@@ -525,7 +525,7 @@ nsresult StreamFilterParent::EmitStopRequest(nsresult aStatusCode) {
   MOZ_ASSERT(!mSentStop);
 
   mSentStop = true;
-  nsresult rv = mOrigListener->OnStopRequest(mChannel, mContext, aStatusCode);
+  nsresult rv = mOrigListener->OnStopRequest(mChannel, aStatusCode);
 
   if (mLoadGroup && !mDisconnected) {
     Unused << mLoadGroup->RemoveRequest(this, nullptr, aStatusCode);

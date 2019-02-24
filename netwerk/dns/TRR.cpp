@@ -966,7 +966,7 @@ nsresult TRR::On200Response() {
 }
 
 NS_IMETHODIMP
-TRR::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
+TRR::OnStopRequest(nsIRequest *aRequest,
                    nsresult aStatusCode) {
   // The dtor will be run after the function returns
   LOG(("TRR:OnStopRequest %p %s %d failed=%d code=%X\n", this, mHost.get(),

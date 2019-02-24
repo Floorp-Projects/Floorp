@@ -63,7 +63,7 @@ nsresult nsPartChannel::SendOnStopRequest(nsISupports *aContext,
   // Drop the listener
   nsCOMPtr<nsIStreamListener> listener;
   listener.swap(mListener);
-  return listener->OnStopRequest(this, aContext, aStatus);
+  return listener->OnStopRequest(this, aStatus);
 }
 
 void nsPartChannel::SetContentDisposition(
@@ -523,7 +523,7 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
 }
 
 NS_IMETHODIMP
-nsMultiMixedConv::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
+nsMultiMixedConv::OnStopRequest(nsIRequest *request,
                                 nsresult aStatus) {
   nsresult rv;
 
@@ -553,7 +553,7 @@ nsMultiMixedConv::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
     // above, would have been non-null.
 
     (void)mFinalListener->OnStartRequest(request);
-    (void)mFinalListener->OnStopRequest(request, ctxt, aStatus);
+    (void)mFinalListener->OnStopRequest(request, aStatus);
   }
 
   return NS_OK;
