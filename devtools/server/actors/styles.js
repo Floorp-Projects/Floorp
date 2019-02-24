@@ -1265,11 +1265,9 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     // and so that we can safely determine if a declaration is valid rather than
     // have the client guess it.
     if (form.authoredText || form.cssText) {
-      // authoredText may be an empty string when deleting all properties; it's ok to use.
-      const cssText = (typeof form.authoredText === "string")
-        ? form.authoredText
-        : form.cssText;
-      const declarations = parseNamedDeclarations(isCssPropertyKnown, cssText, true);
+      const declarations = parseNamedDeclarations(isCssPropertyKnown,
+                                                form.authoredText || form.cssText,
+                                                true);
 
       // We need to grab CSS from the window, since calling supports() on the
       // one from the current global will fail due to not being an HTML global.
