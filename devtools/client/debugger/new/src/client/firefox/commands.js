@@ -176,10 +176,26 @@ function waitForWorkers(shouldWait: boolean) {
   shouldWaitForWorkers = shouldWait;
 }
 
+function maybeGenerateLogGroupId(options) {
+  if (options.logValue && tabTarget.traits && tabTarget.traits.canRewind) {
+    return { ...options, logGroupId: `logGroup-${Math.random()}` };
+  }
+  return options;
+}
+
+function maybeClearLogpoint(location) {
+  const bp = breakpoints[locationKey(location)];
+  if (bp && bp.options.logGroupId && tabTarget.activeConsole) {
+    tabTarget.activeConsole.emit("clearLogpointMessages", bp.options.logGroupId);
+  }
+}
+
 async function setBreakpoint(
   location: BreakpointLocation,
   options: BreakpointOptions
 ) {
+  maybeClearLogpoint(location);
+  options = maybeGenerateLogGroupId(options);
   breakpoints[locationKey(location)] = { location, options };
   await threadClient.setBreakpoint(location, options);
 
@@ -201,6 +217,7 @@ async function setBreakpoint(
 }
 
 async function removeBreakpoint(location: BreakpointLocation) {
+  maybeClearLogpoint(location);
   delete breakpoints[locationKey(location)];
   await threadClient.removeBreakpoint(location);
 
