@@ -81,8 +81,10 @@ class SearchFragment : Fragment() {
             .subscribe {
                 when (it) {
                     is SearchAction.UrlCommitted -> {
-                        transitionToBrowser()
-                        load(it.url)
+                        if (it.url.isNotBlank()) {
+                            transitionToBrowser()
+                            load(it.url)
+                        }
                     }
                     is SearchAction.TextChanged -> {
                         getManagedEmitter<AwesomeBarChange>().onNext(AwesomeBarChange.UpdateQuery(it.query))
