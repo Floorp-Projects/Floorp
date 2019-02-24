@@ -249,7 +249,7 @@ class MOZ_STACK_CLASS ParserBase : private JS::AutoGCRooter,
  public:
   JSContext* const cx_;
 
-  LifoAlloc& alloc;
+  LifoAlloc& alloc_;
 
   TokenStreamAnyChars anyChars;
   LifoAlloc::Mark tempPoolMark;
@@ -385,12 +385,12 @@ class MOZ_STACK_CLASS ParserBase : private JS::AutoGCRooter,
   };
   Mark mark() const {
     Mark m;
-    m.mark = alloc.mark();
+    m.mark = alloc_.mark();
     m.traceListHead = traceListHead;
     return m;
   }
   void release(Mark m) {
-    alloc.release(m.mark);
+    alloc_.release(m.mark);
     traceListHead = m.traceListHead;
   }
 
@@ -717,7 +717,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   using Base::PredictInvoked;
   using Base::PredictUninvoked;
 
-  using Base::alloc;
+  using Base::alloc_;
   using Base::awaitIsKeyword;
   using Base::inParametersOfAsyncFunction;
   using Base::parseGoal;
@@ -1487,7 +1487,7 @@ class MOZ_STACK_CLASS Parser<SyntaxParseHandler, Unit> final
   using Base::warningWithNotesNoOffset;
 
  private:
-  using Base::alloc;
+  using Base::alloc_;
 #if DEBUG
   using Base::checkOptionsCalled;
 #endif
@@ -1636,7 +1636,7 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   using Base::warningWithNotesNoOffset;
 
  private:
-  using Base::alloc;
+  using Base::alloc_;
   using Base::checkLabelOrIdentifierReference;
 #if DEBUG
   using Base::checkOptionsCalled;
