@@ -31,7 +31,7 @@ add_task(async function test_speculative_connect() {
   let notificationPromise = ExtensionUtils.promiseObserved("speculative-connect-request");
 
   let uri = Services.io.newURI(`http://${proxy.identity.primaryHost}:${proxy.identity.primaryPort}`);
-  Services.io.speculativeConnect2(uri, Services.scriptSecurityManager.getSystemPrincipal(), null);
+  Services.io.speculativeConnect(uri, Services.scriptSecurityManager.getSystemPrincipal(), null);
   await notificationPromise;
 
   await handlingExt.unload();
