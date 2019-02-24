@@ -255,7 +255,7 @@ class MOZ_STACK_CLASS ParserBase : private JS::AutoGCRooter,
   LifoAlloc::Mark tempPoolMark_;
 
   /* list of parsed objects and BigInts for GC tracing */
-  TraceListNode* traceListHead;
+  TraceListNode* traceListHead_;
 
   /* innermost parse context (stack-allocated) */
   ParseContext* pc;
@@ -386,12 +386,12 @@ class MOZ_STACK_CLASS ParserBase : private JS::AutoGCRooter,
   Mark mark() const {
     Mark m;
     m.mark = alloc_.mark();
-    m.traceListHead = traceListHead;
+    m.traceListHead = traceListHead_;
     return m;
   }
   void release(Mark m) {
     alloc_.release(m.mark);
-    traceListHead = m.traceListHead;
+    traceListHead_ = m.traceListHead;
   }
 
  private:
@@ -742,7 +742,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   using Base::propagateFreeNamesAndMarkClosedOverBindings;
   using Base::setLocalStrictMode;
   using Base::stringLiteral;
-  using Base::traceListHead;
+  using Base::traceListHead_;
   using Base::yieldExpressionsSupported;
 
   using Base::abortIfSyntaxParser;
