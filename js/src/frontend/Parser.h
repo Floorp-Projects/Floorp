@@ -201,7 +201,7 @@ class SourceParseContext : public ParseContext {
   template <typename ParseHandler, typename Unit>
   SourceParseContext(GeneralParser<ParseHandler, Unit>* prs, SharedContext* sc,
                      Directives* newDirectives)
-      : ParseContext(prs->cx_, prs->pc_, sc, prs->tokenStream, prs->usedNames,
+      : ParseContext(prs->cx_, prs->pc_, sc, prs->tokenStream, prs->usedNames_,
                      newDirectives,
                      mozilla::IsSame<ParseHandler, FullParseHandler>::value) {}
 };
@@ -261,7 +261,7 @@ class MOZ_STACK_CLASS ParserBase : private JS::AutoGCRooter,
   ParseContext* pc_;
 
   // For tracking used names in this parsing session.
-  UsedNameTracker& usedNames;
+  UsedNameTracker& usedNames_;
 
   ScriptSource* ss;
 
@@ -787,7 +787,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   using Base::handler;
   using Base::isValidSimpleAssignmentTarget;
   using Base::pc_;
-  using Base::usedNames;
+  using Base::usedNames_;
 
  private:
   using Base::checkAndMarkSuperScope;
@@ -1511,7 +1511,7 @@ class MOZ_STACK_CLASS Parser<SyntaxParseHandler, Unit> final
   using Base::ss;
   using Base::statementList;
   using Base::stringLiteral;
-  using Base::usedNames;
+  using Base::usedNames_;
 
  private:
   using Base::abortIfSyntaxParser;
@@ -1661,7 +1661,7 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   using Base::propagateFreeNamesAndMarkClosedOverBindings;
   using Base::statementList;
   using Base::stringLiteral;
-  using Base::usedNames;
+  using Base::usedNames_;
 
   using Base::abortIfSyntaxParser;
   using Base::disableSyntaxParser;

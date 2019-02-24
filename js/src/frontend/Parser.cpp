@@ -145,7 +145,7 @@ ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
       anyChars(cx, options, thisForCtor()),
       traceListHead_(nullptr),
       pc_(nullptr),
-      usedNames(usedNames),
+      usedNames_(usedNames),
       ss(nullptr),
       sourceObject(cx, sourceObject),
       keepAtoms(cx),
@@ -797,11 +797,11 @@ bool ParserBase::noteUsedNameInternal(HandlePropertyName name) {
     return true;
   }
 
-  return usedNames.noteUse(cx_, name, pc_->scriptId(), scope->id());
+  return usedNames_.noteUse(cx_, name, pc_->scriptId(), scope->id());
 }
 
 bool ParserBase::hasUsedName(HandlePropertyName name) {
-  if (UsedNamePtr p = usedNames.lookup(name)) {
+  if (UsedNamePtr p = usedNames_.lookup(name)) {
     return p->value().isUsedInScript(pc_->scriptId());
   }
   return false;
@@ -830,7 +830,7 @@ bool PerHandlerParser<ParseHandler>::
   uint32_t scriptId = pc_->scriptId();
   uint32_t scopeId = scope.id();
   for (BindingIter bi = scope.bindings(pc_); bi; bi++) {
-    if (UsedNamePtr p = usedNames.lookup(bi.name())) {
+    if (UsedNamePtr p = usedNames_.lookup(bi.name())) {
       bool closedOver;
       p->value().noteBoundInScope(scriptId, scopeId, &closedOver);
       if (closedOver) {
@@ -2761,7 +2761,7 @@ bool Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(
       break;
     }
 
-    UsedNameTracker::RewindToken token = usedNames.getRewindToken();
+    UsedNameTracker::RewindToken token = usedNames_.getRewindToken();
 
     // Move the syntax parser to the current position in the stream.
     Position currentPosition(keepAtoms, tokenStream);
@@ -2790,7 +2790,7 @@ bool Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(
         // rewound to just before we tried the syntax parse for
         // correctness.
         syntaxParser->clearAbortedSyntaxParse();
-        usedNames.rewind(token);
+        usedNames_.rewind(token);
         MOZ_ASSERT_IF(!syntaxParser->cx_->helperThread(),
                       !syntaxParser->cx_->isExceptionPending());
         break;
