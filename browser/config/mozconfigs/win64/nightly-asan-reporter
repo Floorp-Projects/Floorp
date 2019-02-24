@@ -1,13 +1,8 @@
 MOZ_AUTOMATION_L10N_CHECK=0
 
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
-if [ -f /c/builds/gapi.data ]; then
-  _gapi_keyfile=c:/builds/gapi.data
-else
-  _gapi_keyfile=e:/builds/gapi.data
-fi
-ac_add_options --with-google-api-keyfile=${_gapi_keyfile}
-ac_add_options --with-mozilla-api-keyfile=c:/builds/mozilla-desktop-geoloc-api.key
+ac_add_options --with-google-api-keyfile=${WORKSPACE}/gapi.data
+ac_add_options --with-mozilla-api-keyfile=${WORKSPACE}/mozilla-desktop-geoloc-api.key
 
 . "$topsrcdir/build/mozconfig.win-common"
 . "$topsrcdir/browser/config/mozconfigs/common"
