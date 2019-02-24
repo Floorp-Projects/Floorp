@@ -141,7 +141,7 @@ ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
                        ScriptSourceObject* sourceObject, ParseGoal parseGoal)
     : AutoGCRooter(cx, AutoGCRooter::Tag::Parser),
       cx_(cx),
-      alloc(alloc),
+      alloc_(alloc),
       anyChars(cx, options, thisForCtor()),
       traceListHead(nullptr),
       pc(nullptr),
@@ -158,7 +158,7 @@ ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
       inParametersOfAsyncFunction_(false),
       parseGoal_(uint8_t(parseGoal)) {
   cx->frontendCollectionPool().addActiveCompilation();
-  tempPoolMark = alloc.mark();
+  tempPoolMark = alloc_.mark();
 }
 
 bool ParserBase::checkOptions() {
@@ -172,14 +172,14 @@ bool ParserBase::checkOptions() {
 ParserBase::~ParserBase() {
   MOZ_ASSERT(checkOptionsCalled);
 
-  alloc.release(tempPoolMark);
+  alloc_.release(tempPoolMark);
 
   /*
    * The parser can allocate enormous amounts of memory for large functions.
    * Eagerly free the memory now (which otherwise won't be freed until the
    * next GC) to avoid unnecessary OOMs.
    */
-  alloc.freeAllIfHugeAndUnused();
+  alloc_.freeAllIfHugeAndUnused();
 
   cx_->frontendCollectionPool().removeActiveCompilation();
 }
@@ -260,7 +260,7 @@ BoxT* ParserBase::newTraceListNode(ArgT* arg) {
    * function.
    */
 
-  BoxT* box = alloc.template new_<BoxT>(arg, traceListHead);
+  BoxT* box = alloc_.template new_<BoxT>(arg, traceListHead);
   if (!box) {
     ReportOutOfMemory(cx_);
     return nullptr;
@@ -293,7 +293,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
    * scanning, parsing and code generation for the whole script or top-level
    * function.
    */
-  FunctionBox* funbox = alloc.new_<FunctionBox>(
+  FunctionBox* funbox = alloc_.new_<FunctionBox>(
       cx_, traceListHead, fun, toStringStart, inheritedDirectives,
       options().extraWarningsOption, generatorKind, asyncKind);
   if (!funbox) {
@@ -995,7 +995,7 @@ Maybe<GlobalScope::Data*> NewGlobalScopeData(JSContext* cx,
 
 Maybe<GlobalScope::Data*> ParserBase::newGlobalScopeData(
     ParseContext::Scope& scope) {
-  return NewGlobalScopeData(cx_, scope, alloc, pc);
+  return NewGlobalScopeData(cx_, scope, alloc_, pc);
 }
 
 Maybe<ModuleScope::Data*> NewModuleScopeData(JSContext* cx,
@@ -1060,7 +1060,7 @@ Maybe<ModuleScope::Data*> NewModuleScopeData(JSContext* cx,
 
 Maybe<ModuleScope::Data*> ParserBase::newModuleScopeData(
     ParseContext::Scope& scope) {
-  return NewModuleScopeData(cx_, scope, alloc, pc);
+  return NewModuleScopeData(cx_, scope, alloc_, pc);
 }
 
 Maybe<EvalScope::Data*> NewEvalScopeData(JSContext* cx,
@@ -1097,7 +1097,7 @@ Maybe<EvalScope::Data*> NewEvalScopeData(JSContext* cx,
 
 Maybe<EvalScope::Data*> ParserBase::newEvalScopeData(
     ParseContext::Scope& scope) {
-  return NewEvalScopeData(cx_, scope, alloc, pc);
+  return NewEvalScopeData(cx_, scope, alloc_, pc);
 }
 
 Maybe<FunctionScope::Data*> NewFunctionScopeData(JSContext* cx,
@@ -1195,7 +1195,7 @@ Maybe<FunctionScope::Data*> NewFunctionScopeData(JSContext* cx,
 
 Maybe<FunctionScope::Data*> ParserBase::newFunctionScopeData(
     ParseContext::Scope& scope, bool hasParameterExprs) {
-  return NewFunctionScopeData(cx_, scope, hasParameterExprs, alloc, pc);
+  return NewFunctionScopeData(cx_, scope, hasParameterExprs, alloc_, pc);
 }
 
 Maybe<VarScope::Data*> NewVarScopeData(JSContext* cx,
@@ -1230,7 +1230,7 @@ Maybe<VarScope::Data*> NewVarScopeData(JSContext* cx,
 }
 
 Maybe<VarScope::Data*> ParserBase::newVarScopeData(ParseContext::Scope& scope) {
-  return NewVarScopeData(cx_, scope, alloc, pc);
+  return NewVarScopeData(cx_, scope, alloc_, pc);
 }
 
 Maybe<LexicalScope::Data*> NewLexicalScopeData(JSContext* cx,
@@ -1283,7 +1283,7 @@ Maybe<LexicalScope::Data*> NewLexicalScopeData(JSContext* cx,
 
 Maybe<LexicalScope::Data*> ParserBase::newLexicalScopeData(
     ParseContext::Scope& scope) {
-  return NewLexicalScopeData(cx_, scope, alloc, pc);
+  return NewLexicalScopeData(cx_, scope, alloc_, pc);
 }
 
 template <>
@@ -9267,7 +9267,7 @@ Parser<SyntaxParseHandler, Unit>::newRegExp() {
 
   mozilla::Range<const char16_t> source(chars.begin(), chars.length());
   {
-    LifoAllocScope scopeAlloc(&alloc);
+    LifoAllocScope scopeAlloc(&alloc_);
     if (!js::irregexp::ParsePatternSyntax(anyChars, scopeAlloc.alloc(), source,
                                           flags & UnicodeFlag)) {
       return null();
