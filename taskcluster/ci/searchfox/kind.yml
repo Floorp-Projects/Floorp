@@ -104,6 +104,7 @@ jobs:
                 MOZSEARCH_PLATFORM: "windows"
         run:
             using: mozharness
+            actions: [build]
             options: [append-env-variables-from-configs]
             script: mozharness/scripts/fx_desktop_build.py
             config:

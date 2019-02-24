@@ -159,7 +159,7 @@ def generic_worker_hg_commands(base_repo, head_repo, head_rev, path):
     return [' '.join(args), ' '.join(logging_args)]
 
 
-def docker_worker_setup_secrets(config, job, taskdesc):
+def setup_secrets(config, job, taskdesc):
     """Set up access to secrets via taskcluster-proxy.  The value of
     run['secrets'] should be a boolean or a list of secret names that
     can be accessed."""
