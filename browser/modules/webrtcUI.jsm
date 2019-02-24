@@ -488,7 +488,7 @@ function prompt(aBrowser, aRequest) {
   let options = {
     name: getHostOrExtensionName(uri),
     persistent: true,
-    hideClose: !Services.prefs.getBoolPref("privacy.permissionPrompts.showCloseButton"),
+    hideClose: true,
     eventCallback(aTopic, aNewBrowser) {
       if (aTopic == "swapping")
         return true;
