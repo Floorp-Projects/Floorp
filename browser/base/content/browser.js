@@ -6819,7 +6819,7 @@ var IndexedDBPromptHelper = {
       browser, topic, message, this._notificationIcon, mainAction, secondaryActions,
       {
         persistent: true,
-        hideClose: true,
+        hideClose: !Services.prefs.getBoolPref("privacy.permissionPrompts.showCloseButton"),
       });
   },
 };
