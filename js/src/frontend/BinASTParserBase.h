@@ -27,26 +27,16 @@ namespace frontend {
 class BinASTParserBase : public ParserSharedBase {
  public:
   BinASTParserBase(JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames,
-                   HandleScriptSourceObject sourceObject,
-                   Handle<LazyScript*> lazyScript);
+                   HandleScriptSourceObject sourceObject);
   ~BinASTParserBase() = default;
 
  public:
-  // --- GC.
-
   virtual void doTrace(JSTracer* trc) {}
 
   void trace(JSTracer* trc) {
     TraceListNode::TraceList(trc, traceListHead_);
     doTrace(trc);
   }
-
-  // ---- Parsing-related stuff
- protected:
-  Rooted<LazyScript*> lazyScript_;
-  FullParseHandler handler_;
-
-  friend class BinParseContext;
 };
 
 }  // namespace frontend
