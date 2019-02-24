@@ -151,7 +151,7 @@ ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
       keepAtoms_(cx),
       foldConstants_(foldConstants),
 #ifdef DEBUG
-      checkOptionsCalled(false),
+      checkOptionsCalled_(false),
 #endif
       isUnexpectedEOF_(false),
       awaitHandling_(AwaitIsName),
@@ -163,14 +163,14 @@ ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
 
 bool ParserBase::checkOptions() {
 #ifdef DEBUG
-  checkOptionsCalled = true;
+  checkOptionsCalled_ = true;
 #endif
 
   return anyChars.checkOptions();
 }
 
 ParserBase::~ParserBase() {
-  MOZ_ASSERT(checkOptionsCalled);
+  MOZ_ASSERT(checkOptionsCalled_);
 
   alloc_.release(tempPoolMark_);
 
@@ -363,7 +363,7 @@ bool ParserBase::setSourceMapInfo() {
  */
 template <class ParseHandler, typename Unit>
 typename ParseHandler::ListNodeType GeneralParser<ParseHandler, Unit>::parse() {
-  MOZ_ASSERT(checkOptionsCalled);
+  MOZ_ASSERT(checkOptionsCalled_);
 
   Directives directives(options().strictOption);
   GlobalSharedContext globalsc(cx_, ScopeKind::Global, directives,
@@ -1460,7 +1460,7 @@ ListNode* Parser<FullParseHandler, Unit>::globalBody(
 template <typename Unit>
 ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
     ModuleSharedContext* modulesc) {
-  MOZ_ASSERT(checkOptionsCalled);
+  MOZ_ASSERT(checkOptionsCalled_);
 
   SourceParseContext modulepc(this, modulesc, nullptr);
   if (!modulepc.init()) {
@@ -1778,7 +1778,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
     const Maybe<uint32_t>& parameterListEnd, GeneratorKind generatorKind,
     FunctionAsyncKind asyncKind, Directives inheritedDirectives,
     Directives* newDirectives) {
-  MOZ_ASSERT(checkOptionsCalled);
+  MOZ_ASSERT(checkOptionsCalled_);
 
   // Skip prelude.
   TokenKind tt;
@@ -2950,7 +2950,7 @@ template <typename Unit>
 FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
     HandleFunction fun, uint32_t toStringStart, bool strict,
     GeneratorKind generatorKind, FunctionAsyncKind asyncKind) {
-  MOZ_ASSERT(checkOptionsCalled);
+  MOZ_ASSERT(checkOptionsCalled_);
 
   FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::Statement;
   if (fun->isClassConstructor()) {
@@ -7453,7 +7453,7 @@ GeneralParser<ParseHandler, Unit>::variableStatement(
 template <class ParseHandler, typename Unit>
 typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::statement(
     YieldHandling yieldHandling) {
-  MOZ_ASSERT(checkOptionsCalled);
+  MOZ_ASSERT(checkOptionsCalled_);
 
   if (!CheckRecursionLimit(cx_)) {
     return null();
@@ -7686,7 +7686,7 @@ template <class ParseHandler, typename Unit>
 typename ParseHandler::Node
 GeneralParser<ParseHandler, Unit>::statementListItem(
     YieldHandling yieldHandling, bool canHaveDirectives /* = false */) {
-  MOZ_ASSERT(checkOptionsCalled);
+  MOZ_ASSERT(checkOptionsCalled_);
 
   if (!CheckRecursionLimit(cx_)) {
     return null();
