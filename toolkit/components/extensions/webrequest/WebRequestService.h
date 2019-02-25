@@ -23,7 +23,7 @@ class nsITraceableChannel;
 namespace mozilla {
 namespace dom {
 class TabParent;
-class ContentParent;
+class nsIContentParent;
 }  // namespace dom
 
 namespace extensions {
@@ -61,7 +61,7 @@ class WebRequestService final {
 
   already_AddRefed<nsITraceableChannel> GetTraceableChannel(
       uint64_t aChannelId, nsAtom* aAddonId,
-      dom::ContentParent* aContentParent);
+      dom::nsIContentParent* aContentParent);
 
  private:
   ~WebRequestService();

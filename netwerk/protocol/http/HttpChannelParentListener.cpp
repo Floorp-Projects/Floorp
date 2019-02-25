@@ -196,7 +196,9 @@ nsresult HttpChannelParentListener::TriggerCrossProcessRedirect(
         MOZ_ALWAYS_SUCCEEDS(httpChannel->GetChannelId(&channelId));
 
         dom::TabParent* tabParent = dom::TabParent::GetFrom(tp);
-        auto result = tabParent->Manager()->SendCrossProcessRedirect(
+        ContentParent* cp = tabParent->Manager()->AsContentParent();
+
+        auto result = cp->SendCrossProcessRedirect(
             self->mRedirectChannelId, uri, newLoadFlags, loadInfoArgs,
             channelId, originalURI, aIdentifier);
 

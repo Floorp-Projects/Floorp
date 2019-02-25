@@ -8,6 +8,7 @@ include protocol PBackground;
 include protocol PBrowser;
 include protocol PClientOpenWindowOp;
 include protocol PCompositorManager;
+include protocol PContentBridge;
 include protocol PContentPermissionRequest;
 include protocol PCycleCollectWithLogs;
 include protocol PPSMContentDownloader;
@@ -62,6 +63,11 @@ include ClientIPCTypes;
 include HangTypes;
 include PrefsTypes;
 include NeckoChannelParams;
+
+// Workaround to prevent error if PContentChild.cpp & PContentBridgeParent.cpp
+// are put into different UnifiedProtocolsXX.cpp files.
+// XXX Remove this once bug 1069073 is fixed
+include "mozilla/dom/PContentBridgeParent.h";
 
 using refcounted class nsIDOMGeoPosition from "nsGeoPositionIPCSerialiser.h";
 using refcounted class nsIAlertNotification from "mozilla/AlertNotificationIPCSerializer.h";
@@ -405,6 +411,7 @@ both:
 child:
     async InitGMPService(Endpoint<PGMPServiceChild> service);
     async InitProcessHangMonitor(Endpoint<PProcessHangMonitorChild> hangMonitor);
+    async InitContentBridgeChild(Endpoint<PContentBridgeChild> endpoint);
     async InitProfiler(Endpoint<PProfilerChild> aEndpoint);
 
     // Give the content process its endpoints to the compositor.
@@ -779,6 +786,14 @@ child:
 
 parent:
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
+
+    sync CreateChildProcess(IPCTabContext context,
+                            ProcessPriority priority,
+                            TabId openerTabId,
+                            TabId tabId)
+        returns (ContentParentId cpId, bool isForBrowser);
+    sync BridgeToChildProcess(ContentParentId cpId)
+        returns (Endpoint<PContentBridgeParent> endpoint);
 
     sync OpenRecordReplayChannel(uint32_t channelId)
         returns (FileDescriptor connection);

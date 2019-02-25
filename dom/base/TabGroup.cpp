@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/TabGroup.h"
 
-#include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/nsIContentChild.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/TimeoutManager.h"

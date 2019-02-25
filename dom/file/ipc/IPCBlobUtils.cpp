@@ -134,7 +134,7 @@ nsresult SerializeInputStreamChild(nsIInputStream* aInputStream,
 
 nsresult SerializeInputStream(nsIInputStream* aInputStream, uint64_t aSize,
                               uint64_t aChildID, IPCBlob& aIPCBlob,
-                              ContentParent* aManager) {
+                              nsIContentParent* aManager) {
   return SerializeInputStreamParent(aInputStream, aSize, aChildID, aIPCBlob,
                                     aManager);
 }
@@ -148,7 +148,7 @@ nsresult SerializeInputStream(nsIInputStream* aInputStream, uint64_t aSize,
 
 nsresult SerializeInputStream(nsIInputStream* aInputStream, uint64_t aSize,
                               uint64_t aChildID, IPCBlob& aIPCBlob,
-                              ContentChild* aManager) {
+                              nsIContentChild* aManager) {
   return SerializeInputStreamChild(aInputStream, aIPCBlob, aManager);
 }
 
@@ -158,7 +158,7 @@ nsresult SerializeInputStream(nsIInputStream* aInputStream, uint64_t aSize,
   return SerializeInputStreamChild(aInputStream, aIPCBlob, aManager);
 }
 
-uint64_t ChildIDFromManager(ContentParent* aManager) {
+uint64_t ChildIDFromManager(nsIContentParent* aManager) {
   return aManager->ChildID();
 }
 
@@ -166,7 +166,7 @@ uint64_t ChildIDFromManager(PBackgroundParent* aManager) {
   return BackgroundParent::GetChildID(aManager);
 }
 
-uint64_t ChildIDFromManager(ContentChild* aManager) { return 0; }
+uint64_t ChildIDFromManager(nsIContentChild* aManager) { return 0; }
 
 uint64_t ChildIDFromManager(PBackgroundChild* aManager) { return 0; }
 
@@ -232,7 +232,7 @@ nsresult SerializeInternal(BlobImpl* aBlobImpl, M* aManager,
   return NS_OK;
 }
 
-nsresult Serialize(BlobImpl* aBlobImpl, ContentChild* aManager,
+nsresult Serialize(BlobImpl* aBlobImpl, nsIContentChild* aManager,
                    IPCBlob& aIPCBlob) {
   return SerializeInternal(aBlobImpl, aManager, aIPCBlob);
 }
@@ -242,7 +242,7 @@ nsresult Serialize(BlobImpl* aBlobImpl, PBackgroundChild* aManager,
   return SerializeInternal(aBlobImpl, aManager, aIPCBlob);
 }
 
-nsresult Serialize(BlobImpl* aBlobImpl, ContentParent* aManager,
+nsresult Serialize(BlobImpl* aBlobImpl, nsIContentParent* aManager,
                    IPCBlob& aIPCBlob) {
   return SerializeInternal(aBlobImpl, aManager, aIPCBlob);
 }

@@ -331,7 +331,7 @@ AutoIPCStream::~AutoIPCStream() {
 }
 
 bool AutoIPCStream::Serialize(nsIInputStream* aStream,
-                              dom::ContentChild* aManager) {
+                              dom::nsIContentChild* aManager) {
   MOZ_ASSERT(aStream || !mValue);
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(mValue || mOptionalValue);
@@ -373,7 +373,7 @@ bool AutoIPCStream::Serialize(nsIInputStream* aStream,
 }
 
 bool AutoIPCStream::Serialize(nsIInputStream* aStream,
-                              dom::ContentParent* aManager) {
+                              dom::nsIContentParent* aManager) {
   MOZ_ASSERT(aStream || !mValue);
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(mValue || mOptionalValue);

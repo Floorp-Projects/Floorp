@@ -31,6 +31,8 @@
 #include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ClientOpenWindowOpActors.h"
 #include "mozilla/dom/ChildProcessMessageManager.h"
+#include "mozilla/dom/ContentBridgeChild.h"
+#include "mozilla/dom/ContentBridgeParent.h"
 #include "mozilla/dom/ContentProcessMessageManager.h"
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/ContentParent.h"
@@ -50,10 +52,10 @@
 #include "mozilla/dom/RemoteWorkerService.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/dom/TabGroup.h"
+#include "mozilla/dom/nsIContentChild.h"
 #include "mozilla/dom/URLClassifierChild.h"
 #include "mozilla/dom/WorkerDebugger.h"
 #include "mozilla/dom/WorkerDebuggerManager.h"
-#include "mozilla/dom/ipc/IPCBlobInputStreamChild.h"
 #include "mozilla/dom/ipc/SharedMap.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Logging.h"
@@ -65,7 +67,6 @@
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/ipc/PChildToParentStreamChild.h"
-#include "mozilla/ipc/PParentToChildStreamChild.h"
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/ipc/TestShellChild.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
@@ -227,9 +228,6 @@
 #include "mozilla/dom/PPresentationChild.h"
 #include "mozilla/dom/PresentationIPCService.h"
 #include "mozilla/ipc/InputStreamUtils.h"
-#include "mozilla/ipc/IPCStreamAlloc.h"
-#include "mozilla/ipc/IPCStreamDestination.h"
-#include "mozilla/ipc/IPCStreamSource.h"
 
 #ifdef MOZ_WEBSPEECH
 #  include "mozilla/dom/PSpeechSynthesisChild.h"
@@ -582,8 +580,9 @@ ContentChild::~ContentChild() {
 #endif
 
 NS_INTERFACE_MAP_BEGIN(ContentChild)
+  NS_INTERFACE_MAP_ENTRY(nsIContentChild)
   NS_INTERFACE_MAP_ENTRY(nsIWindowProvider)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentChild)
 NS_INTERFACE_MAP_END
 
 mozilla::ipc::IPCResult ContentChild::RecvSetXPCOMProcessAttributes(
@@ -1317,6 +1316,12 @@ bool ContentChild::DeallocPCycleCollectWithLogsChild(
   return true;
 }
 
+mozilla::ipc::IPCResult ContentChild::RecvInitContentBridgeChild(
+    Endpoint<PContentBridgeChild>&& aEndpoint) {
+  ContentBridgeChild::Create(std::move(aEndpoint));
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentChild::RecvInitGMPService(
     Endpoint<PGMPServiceChild>&& aGMPService) {
   if (!GMPServiceChild::Create(std::move(aGMPService))) {
@@ -1687,12 +1692,11 @@ static void FirstIdle(void) {
 mozilla::jsipc::PJavaScriptChild* ContentChild::AllocPJavaScriptChild() {
   MOZ_ASSERT(ManagedPJavaScriptChild().IsEmpty());
 
-  return NewJavaScriptChild();
+  return nsIContentChild::AllocPJavaScriptChild();
 }
 
 bool ContentChild::DeallocPJavaScriptChild(PJavaScriptChild* aChild) {
-  ReleaseJavaScriptChild(aChild);
-  return true;
+  return nsIContentChild::DeallocPJavaScriptChild(aChild);
 }
 
 PBrowserChild* ContentChild::AllocPBrowserChild(const TabId& aTabId,
@@ -1701,25 +1705,8 @@ PBrowserChild* ContentChild::AllocPBrowserChild(const TabId& aTabId,
                                                 const uint32_t& aChromeFlags,
                                                 const ContentParentId& aCpID,
                                                 const bool& aIsForBrowser) {
-  // We'll happily accept any kind of IPCTabContext here; we don't need to
-  // check that it's of a certain type for security purposes, because we
-  // believe whatever the parent process tells us.
-
-  MaybeInvalidTabContext tc(aContext);
-  if (!tc.IsValid()) {
-    NS_ERROR(nsPrintfCString("Received an invalid TabContext from "
-                             "the parent process. (%s)  Crashing...",
-                             tc.GetInvalidReason())
-                 .get());
-    MOZ_CRASH("Invalid TabContext received from the parent process.");
-  }
-
-  RefPtr<TabChild> child =
-      TabChild::Create(static_cast<ContentChild*>(this), aTabId,
-                       aSameTabGroupAs, tc.GetTabContext(), aChromeFlags);
-
-  // The ref here is released in DeallocPBrowserChild.
-  return child.forget().take();
+  return nsIContentChild::AllocPBrowserChild(
+      aTabId, aSameTabGroupAs, aContext, aChromeFlags, aCpID, aIsForBrowser);
 }
 
 bool ContentChild::SendPBrowserConstructor(
@@ -1755,20 +1742,9 @@ mozilla::ipc::IPCResult ContentChild::RecvPBrowserConstructor(
     }
   }
 
-  auto tabChild = static_cast<TabChild*>(aActor);
-
-  if (NS_WARN_IF(NS_FAILED(tabChild->Init(/* aOpener */ nullptr)))) {
-    return IPC_FAIL(tabChild, "TabChild::Init failed");
-  }
-
-  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-  if (os) {
-    os->NotifyObservers(static_cast<nsITabChild*>(tabChild),
-                        "tab-child-created", nullptr);
-  }
-  // Notify parent that we are ready to handle input events.
-  tabChild->SendRemoteIsReadyToHandleInputEvents();
-  return IPC_OK();
+  return nsIContentChild::RecvPBrowserConstructor(
+      aActor, aTabId, aSameTabGroupAs, aContext, aChromeFlags, aCpID,
+      aIsForBrowser);
 }
 
 void ContentChild::GetAvailableDictionaries(
@@ -1787,36 +1763,26 @@ PFileDescriptorSetChild* ContentChild::SendPFileDescriptorSetConstructor(
 
 PFileDescriptorSetChild* ContentChild::AllocPFileDescriptorSetChild(
     const FileDescriptor& aFD) {
-  return new FileDescriptorSetChild(aFD);
+  return nsIContentChild::AllocPFileDescriptorSetChild(aFD);
 }
 
 bool ContentChild::DeallocPFileDescriptorSetChild(
     PFileDescriptorSetChild* aActor) {
-  delete static_cast<FileDescriptorSetChild*>(aActor);
-  return true;
+  return nsIContentChild::DeallocPFileDescriptorSetChild(aActor);
 }
 
 bool ContentChild::DeallocPBrowserChild(PBrowserChild* aIframe) {
-  TabChild* child = static_cast<TabChild*>(aIframe);
-  NS_RELEASE(child);
-  return true;
+  return nsIContentChild::DeallocPBrowserChild(aIframe);
 }
 
 PIPCBlobInputStreamChild* ContentChild::AllocPIPCBlobInputStreamChild(
     const nsID& aID, const uint64_t& aSize) {
-  // IPCBlobInputStreamChild is refcounted. Here it's created and in
-  // DeallocPIPCBlobInputStreamChild is released.
-
-  RefPtr<IPCBlobInputStreamChild> actor =
-      new IPCBlobInputStreamChild(aID, aSize);
-  return actor.forget().take();
+  return nsIContentChild::AllocPIPCBlobInputStreamChild(aID, aSize);
 }
 
 bool ContentChild::DeallocPIPCBlobInputStreamChild(
     PIPCBlobInputStreamChild* aActor) {
-  RefPtr<IPCBlobInputStreamChild> actor =
-      dont_AddRef(static_cast<IPCBlobInputStreamChild*>(aActor));
-  return true;
+  return nsIContentChild::DeallocPIPCBlobInputStreamChild(aActor);
 }
 
 mozilla::PRemoteSpellcheckEngineChild*
@@ -1981,23 +1947,21 @@ PChildToParentStreamChild* ContentChild::SendPChildToParentStreamConstructor(
 }
 
 PChildToParentStreamChild* ContentChild::AllocPChildToParentStreamChild() {
-  MOZ_CRASH("PChildToParentStreamChild actors should be manually constructed!");
+  return nsIContentChild::AllocPChildToParentStreamChild();
 }
 
 bool ContentChild::DeallocPChildToParentStreamChild(
     PChildToParentStreamChild* aActor) {
-  delete aActor;
-  return true;
+  return nsIContentChild::DeallocPChildToParentStreamChild(aActor);
 }
 
 PParentToChildStreamChild* ContentChild::AllocPParentToChildStreamChild() {
-  return mozilla::ipc::AllocPParentToChildStreamChild();
+  return nsIContentChild::AllocPParentToChildStreamChild();
 }
 
 bool ContentChild::DeallocPParentToChildStreamChild(
     PParentToChildStreamChild* aActor) {
-  delete aActor;
-  return true;
+  return nsIContentChild::DeallocPParentToChildStreamChild(aActor);
 }
 
 PPSMContentDownloaderChild* ContentChild::AllocPPSMContentDownloaderChild(
@@ -2834,7 +2798,8 @@ void ContentChild::StartForceKillTimer() {
 mozilla::ipc::IPCResult ContentChild::RecvShutdown() {
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
-    os->NotifyObservers(this, "content-child-will-shutdown", nullptr);
+    os->NotifyObservers(static_cast<nsIContentChild*>(this),
+                        "content-child-will-shutdown", nullptr);
   }
 
   ShutdownInternal();
@@ -2881,7 +2846,8 @@ void ContentChild::ShutdownInternal() {
 
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
-    os->NotifyObservers(this, "content-child-shutdown", nullptr);
+    os->NotifyObservers(static_cast<nsIContentChild*>(this),
+                        "content-child-shutdown", nullptr);
   }
 
 #if defined(XP_WIN)
@@ -3324,38 +3290,7 @@ already_AddRefed<nsIEventTarget> ContentChild::GetConstructedEventTarget(
     return nullptr;
   }
 
-  ActorHandle handle;
-  TabId tabId, sameTabGroupAs;
-  PickleIterator iter(aMsg);
-  if (!IPC::ReadParam(&aMsg, &iter, &handle)) {
-    return nullptr;
-  }
-  aMsg.IgnoreSentinel(&iter);
-  if (!IPC::ReadParam(&aMsg, &iter, &tabId)) {
-    return nullptr;
-  }
-  aMsg.IgnoreSentinel(&iter);
-  if (!IPC::ReadParam(&aMsg, &iter, &sameTabGroupAs)) {
-    return nullptr;
-  }
-
-  // If sameTabGroupAs is non-zero, then the new tab will be in the same
-  // TabGroup as a previously created tab. Rather than try to find the
-  // previously created tab (whose constructor message may not even have been
-  // processed yet, in theory) and look up its event target, we just use the
-  // default event target. This means that runnables for this tab will not be
-  // labeled. However, this path is only taken for print preview and view
-  // source, which are not performance-sensitive.
-  if (sameTabGroupAs) {
-    return nullptr;
-  }
-
-  // If the request for a new TabChild is coming from the parent process, then
-  // there is no opener. Therefore, we create a fresh TabGroup.
-  RefPtr<TabGroup> tabGroup = new TabGroup();
-  nsCOMPtr<nsIEventTarget> target =
-      tabGroup->EventTargetFor(TaskCategory::Other);
-  return target.forget();
+  return nsIContentChild::GetConstructedEventTarget(aMsg);
 }
 
 void ContentChild::FileCreationRequest(nsID& aUUID, FileCreatorHelper* aHelper,
