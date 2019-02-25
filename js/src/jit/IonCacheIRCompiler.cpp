@@ -619,7 +619,8 @@ JitCode* IonCacheIRCompiler::compile() {
     }
   }
 
-  Linker linker(masm, "getStubCode");
+  Linker linker(masm);
+  AutoFlushICache afc("getStubCode");
   Rooted<JitCode*> newStubCode(cx_, linker.newCode(cx_, CodeKind::Ion));
   if (!newStubCode) {
     cx_->recoverFromOutOfMemory();

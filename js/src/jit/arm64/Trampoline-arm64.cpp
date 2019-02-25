@@ -835,7 +835,8 @@ JitCode* JitRuntime::generateDebugTrapHandler(JSContext* cx) {
   masm.syncStackPtr();
   masm.abiret();
 
-  Linker linker(masm, "DebugTrapHandler");
+  Linker linker(masm);
+  AutoFlushICache afc("DebugTrapHandler");
   JitCode* codeDbg = linker.newCode(cx, CodeKind::Other);
 
 #ifdef JS_ION_PERF

@@ -324,7 +324,8 @@ static const uintptr_t CLEAR_CONSTRUCTOR_CODE_TOKEN = 0x1;
   masm.movePtr(ImmWord(CLEAR_CONSTRUCTOR_CODE_TOKEN), object);
   masm.jump(&done);
 
-  Linker linker(masm, "UnboxedObject");
+  Linker linker(masm);
+  AutoFlushICache afc("UnboxedObject");
   JitCode* code = linker.newCode(cx, CodeKind::Other);
   if (!code) {
     return false;
