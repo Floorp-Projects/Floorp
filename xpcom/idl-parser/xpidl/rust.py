@@ -242,7 +242,7 @@ infallible_impl_tmpl = """\
 pub unsafe fn %(name)s(&self) -> %(realtype)s {
     let mut result = <%(realtype)s as ::std::default::Default>::default();
     let _rv = ((*self.vtable).%(name)s)(self, &mut result);
-    debug_assert!(::nserror::NsresultExt::succeeded(_rv));
+    debug_assert!(_rv.succeeded());
     result
 }
 """
