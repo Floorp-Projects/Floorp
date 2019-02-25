@@ -431,7 +431,8 @@ int32_t WebrtcGmpVideoEncoder::RegisterEncodeCompleteCallback(
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-/* static */ void WebrtcGmpVideoEncoder::ReleaseGmp_g(
+/* static */
+void WebrtcGmpVideoEncoder::ReleaseGmp_g(
     RefPtr<WebrtcGmpVideoEncoder>& aEncoder) {
   aEncoder->Close_g();
 }
@@ -465,9 +466,10 @@ int32_t WebrtcGmpVideoEncoder::SetRates(uint32_t aNewBitRate,
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-/* static */ int32_t WebrtcGmpVideoEncoder::SetRates_g(
-    RefPtr<WebrtcGmpVideoEncoder> aThis, uint32_t aNewBitRate,
-    uint32_t aFrameRate) {
+/* static */
+int32_t WebrtcGmpVideoEncoder::SetRates_g(RefPtr<WebrtcGmpVideoEncoder> aThis,
+                                          uint32_t aNewBitRate,
+                                          uint32_t aFrameRate) {
   if (!aThis->mGMP) {
     // destroyed via Terminate()
     return WEBRTC_VIDEO_CODEC_ERROR;
@@ -663,7 +665,8 @@ int32_t WebrtcGmpVideoDecoder::InitDecode(
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-/* static */ void WebrtcGmpVideoDecoder::InitDecode_g(
+/* static */
+void WebrtcGmpVideoDecoder::InitDecode_g(
     const RefPtr<WebrtcGmpVideoDecoder>& aThis,
     const webrtc::VideoCodec* aCodecSettings, int32_t aNumberOfCores,
     const RefPtr<GmpInitDoneRunnable>& aInitDone) {
@@ -893,7 +896,8 @@ int32_t WebrtcGmpVideoDecoder::RegisterDecodeCompleteCallback(
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-/* static */ void WebrtcGmpVideoDecoder::ReleaseGmp_g(
+/* static */
+void WebrtcGmpVideoDecoder::ReleaseGmp_g(
     RefPtr<WebrtcGmpVideoDecoder>& aDecoder) {
   aDecoder->Close_g();
 }
