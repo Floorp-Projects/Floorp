@@ -29,7 +29,7 @@ class PBackgroundParent;
 
 namespace dom {
 
-class nsIContentChild;
+class ContentChild;
 class ContentParent;
 
 namespace ipc {
@@ -183,7 +183,7 @@ class StructuredCloneData : public StructuredCloneHolder {
   // be able to create them.)
   bool BuildClonedMessageDataForParent(ContentParent* aParent,
                                        ClonedMessageData& aClonedData);
-  bool BuildClonedMessageDataForChild(nsIContentChild* aChild,
+  bool BuildClonedMessageDataForChild(ContentChild* aChild,
                                       ClonedMessageData& aClonedData);
   bool BuildClonedMessageDataForBackgroundParent(
       mozilla::ipc::PBackgroundParent* aParent, ClonedMessageData& aClonedData);

@@ -269,7 +269,7 @@ class QIInputStream final : public nsIInputStream,
 
   // nsIIPCSerializableInputStream
   void Serialize(mozilla::ipc::InputStreamParams&, FileDescriptorArray&, bool,
-                 uint32_t, uint32_t*, mozilla::dom::nsIContentChild*) override {
+                 uint32_t, uint32_t*, mozilla::dom::ContentChild*) override {
   }
   void Serialize(mozilla::ipc::InputStreamParams&, FileDescriptorArray&, bool,
                  uint32_t, uint32_t*,
