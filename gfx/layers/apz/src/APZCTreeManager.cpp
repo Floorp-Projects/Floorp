@@ -1131,7 +1131,8 @@ static bool WillHandleInput(const PanGestureOrScrollWheelInput& aPanInput) {
   return APZInputBridge::ActionForWheelEvent(&wheelEvent).isSome();
 }
 
-/*static*/ void APZCTreeManager::FlushApzRepaints(LayersId aLayersId) {
+/*static*/
+void APZCTreeManager::FlushApzRepaints(LayersId aLayersId) {
   // Previously, paints were throttled and therefore this method was used to
   // ensure any pending paints were flushed. Now, paints are flushed
   // immediately, so it is safe to simply send a notification now.
@@ -3148,8 +3149,9 @@ already_AddRefed<wr::WebRenderAPI> APZCTreeManager::GetWebRenderAPI() const {
   return api.forget();
 }
 
-/*static*/ already_AddRefed<GeckoContentController>
-APZCTreeManager::GetContentController(LayersId aLayersId) {
+/*static*/
+already_AddRefed<GeckoContentController> APZCTreeManager::GetContentController(
+    LayersId aLayersId) {
   RefPtr<GeckoContentController> controller;
   CompositorBridgeParent::CallWithIndirectShadowTree(
       aLayersId,
@@ -3169,8 +3171,8 @@ bool APZCTreeManager::GetAPZTestData(LayersId aLayersId,
   return true;
 }
 
-/*static*/ LayerToParentLayerMatrix4x4
-APZCTreeManager::ComputeTransformForScrollThumb(
+/*static*/
+LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForScrollThumb(
     const LayerToParentLayerMatrix4x4& aCurrentTransform,
     const Matrix4x4& aScrollableContentTransform, AsyncPanZoomController* aApzc,
     const FrameMetrics& aMetrics, const ScrollbarData& aScrollbarData,

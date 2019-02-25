@@ -1126,23 +1126,25 @@ void SkImageFilterLight::flattenLight(SkWriteBuffer& buffer) const {
     this->onFlattenLight(buffer);
 }
 
-/*static*/ SkImageFilterLight* SkImageFilterLight::UnflattenLight(SkReadBuffer& buffer) {
-    SkImageFilterLight::LightType type = buffer.read32LE(SkImageFilterLight::kLast_LightType);
+/*static*/
+SkImageFilterLight* SkImageFilterLight::UnflattenLight(SkReadBuffer& buffer) {
+  SkImageFilterLight::LightType type =
+      buffer.read32LE(SkImageFilterLight::kLast_LightType);
 
-    switch (type) {
-        // Each of these constructors must first call SkLight's, so we'll read the baseclass
-        // then subclass, same order as flattenLight.
-        case SkImageFilterLight::kDistant_LightType:
-            return new SkDistantLight(buffer);
-        case SkImageFilterLight::kPoint_LightType:
-            return new SkPointLight(buffer);
-        case SkImageFilterLight::kSpot_LightType:
-            return new SkSpotLight(buffer);
-        default:
-            // Should never get here due to prior check of SkSafeRange
-            SkDEBUGFAIL("Unknown LightType.");
-            return nullptr;
-    }
+  switch (type) {
+    // Each of these constructors must first call SkLight's, so we'll read the
+    // baseclass then subclass, same order as flattenLight.
+    case SkImageFilterLight::kDistant_LightType:
+      return new SkDistantLight(buffer);
+    case SkImageFilterLight::kPoint_LightType:
+      return new SkPointLight(buffer);
+    case SkImageFilterLight::kSpot_LightType:
+      return new SkSpotLight(buffer);
+    default:
+      // Should never get here due to prior check of SkSafeRange
+      SkDEBUGFAIL("Unknown LightType.");
+      return nullptr;
+  }
 }
 ///////////////////////////////////////////////////////////////////////////////
 

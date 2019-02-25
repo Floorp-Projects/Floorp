@@ -13,7 +13,8 @@ namespace layers {
 
 StaticRefPtr<VideoBridgeChild> sVideoBridgeChildSingleton;
 
-/* static */ void VideoBridgeChild::Startup() {
+/* static */
+void VideoBridgeChild::Startup() {
   sVideoBridgeChildSingleton = new VideoBridgeChild();
   RefPtr<VideoBridgeParent> parent = new VideoBridgeParent();
 
@@ -25,7 +26,8 @@ StaticRefPtr<VideoBridgeChild> sVideoBridgeChildSingleton;
   parent->SetOtherProcessId(base::GetCurrentProcId());
 }
 
-/* static */ void VideoBridgeChild::Shutdown() {
+/* static */
+void VideoBridgeChild::Shutdown() {
   if (sVideoBridgeChildSingleton) {
     sVideoBridgeChildSingleton->Close();
     sVideoBridgeChildSingleton = nullptr;

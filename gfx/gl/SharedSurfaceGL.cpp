@@ -17,7 +17,8 @@ namespace gl {
 using gfx::IntSize;
 using gfx::SurfaceFormat;
 
-/*static*/ UniquePtr<SharedSurface_Basic> SharedSurface_Basic::Create(
+/*static*/
+UniquePtr<SharedSurface_Basic> SharedSurface_Basic::Create(
     GLContext* gl, const GLFormats& formats, const IntSize& size,
     bool hasAlpha) {
   UniquePtr<SharedSurface_Basic> ret;
@@ -38,8 +39,11 @@ using gfx::SurfaceFormat;
   return ret;
 }
 
-/*static*/ UniquePtr<SharedSurface_Basic> SharedSurface_Basic::Wrap(
-    GLContext* gl, const IntSize& size, bool hasAlpha, GLuint tex) {
+/*static*/
+UniquePtr<SharedSurface_Basic> SharedSurface_Basic::Wrap(GLContext* gl,
+                                                         const IntSize& size,
+                                                         bool hasAlpha,
+                                                         GLuint tex) {
   bool ownsTex = false;
   UniquePtr<SharedSurface_Basic> ret(
       new SharedSurface_Basic(gl, size, hasAlpha, tex, ownsTex));
@@ -83,7 +87,8 @@ SurfaceFactory_Basic::SurfaceFactory_Basic(GLContext* gl,
 ////////////////////////////////////////////////////////////////////////
 // SharedSurface_GLTexture
 
-/*static*/ UniquePtr<SharedSurface_GLTexture> SharedSurface_GLTexture::Create(
+/*static*/
+UniquePtr<SharedSurface_GLTexture> SharedSurface_GLTexture::Create(
     GLContext* prodGL, const GLFormats& formats, const IntSize& size,
     bool hasAlpha) {
   MOZ_ASSERT(prodGL);

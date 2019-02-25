@@ -638,8 +638,8 @@ VRSystemManagerPuppet::VRSystemManagerPuppet()
       mPuppetDisplayInfo{},
       mPuppetDisplaySensorState{} {}
 
-/*static*/ already_AddRefed<VRSystemManagerPuppet>
-VRSystemManagerPuppet::Create() {
+/*static*/
+already_AddRefed<VRSystemManagerPuppet> VRSystemManagerPuppet::Create() {
   if (!gfxPrefs::VREnabled() || !gfxPrefs::VRPuppetEnabled()) {
     return nullptr;
   }

@@ -1962,60 +1962,53 @@ bool SkTypeface_FreeType::Scanner::GetAxes(FT_Face face, AxisDefinitions* axes) 
     return true;
 }
 
-/*static*/ void SkTypeface_FreeType::Scanner::computeAxisValues(
+/*static*/
+void SkTypeface_FreeType::Scanner::computeAxisValues(
     AxisDefinitions axisDefinitions,
-    const SkFontArguments::VariationPosition position,
-    SkFixed* axisValues,
-    const SkString& name)
-{
-    for (int i = 0; i < axisDefinitions.count(); ++i) {
-        const Scanner::AxisDefinition& axisDefinition = axisDefinitions[i];
-        const SkScalar axisMin = SkFixedToScalar(axisDefinition.fMinimum);
-        const SkScalar axisMax = SkFixedToScalar(axisDefinition.fMaximum);
-        axisValues[i] = axisDefinition.fDefault;
-        // The position may be over specified. If there are multiple values for a given axis,
-        // use the last one since that's what css-fonts-4 requires.
-        for (int j = position.coordinateCount; j --> 0;) {
-            const auto& coordinate = position.coordinates[j];
-            if (axisDefinition.fTag == coordinate.axis) {
-                const SkScalar axisValue = SkTPin(coordinate.value, axisMin, axisMax);
-                if (coordinate.value != axisValue) {
-                    SkDEBUGF("Requested font axis value out of range: "
-                             "%s '%c%c%c%c' %f; pinned to %f.\n",
-                             name.c_str(),
-                             (axisDefinition.fTag >> 24) & 0xFF,
-                             (axisDefinition.fTag >> 16) & 0xFF,
-                             (axisDefinition.fTag >>  8) & 0xFF,
-                             (axisDefinition.fTag      ) & 0xFF,
-                             SkScalarToDouble(coordinate.value),
-                             SkScalarToDouble(axisValue));
-                }
-                axisValues[i] = SkScalarToFixed(axisValue);
-                break;
-            }
+    const SkFontArguments::VariationPosition position, SkFixed* axisValues,
+    const SkString& name) {
+  for (int i = 0; i < axisDefinitions.count(); ++i) {
+    const Scanner::AxisDefinition& axisDefinition = axisDefinitions[i];
+    const SkScalar axisMin = SkFixedToScalar(axisDefinition.fMinimum);
+    const SkScalar axisMax = SkFixedToScalar(axisDefinition.fMaximum);
+    axisValues[i] = axisDefinition.fDefault;
+    // The position may be over specified. If there are multiple values for a
+    // given axis, use the last one since that's what css-fonts-4 requires.
+    for (int j = position.coordinateCount; j-- > 0;) {
+      const auto& coordinate = position.coordinates[j];
+      if (axisDefinition.fTag == coordinate.axis) {
+        const SkScalar axisValue = SkTPin(coordinate.value, axisMin, axisMax);
+        if (coordinate.value != axisValue) {
+          SkDEBUGF(
+              "Requested font axis value out of range: "
+              "%s '%c%c%c%c' %f; pinned to %f.\n",
+              name.c_str(), (axisDefinition.fTag >> 24) & 0xFF,
+              (axisDefinition.fTag >> 16) & 0xFF,
+              (axisDefinition.fTag >> 8) & 0xFF, (axisDefinition.fTag) & 0xFF,
+              SkScalarToDouble(coordinate.value), SkScalarToDouble(axisValue));
         }
-        // TODO: warn on defaulted axis?
+        axisValues[i] = SkScalarToFixed(axisValue);
+        break;
+      }
     }
+    // TODO: warn on defaulted axis?
+  }
 
-    SkDEBUGCODE(
-        // Check for axis specified, but not matched in font.
-        for (int i = 0; i < position.coordinateCount; ++i) {
-            SkFourByteTag skTag = position.coordinates[i].axis;
-            bool found = false;
-            for (int j = 0; j < axisDefinitions.count(); ++j) {
-                if (skTag == axisDefinitions[j].fTag) {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                SkDEBUGF("Requested font axis not found: %s '%c%c%c%c'\n",
-                         name.c_str(),
-                         (skTag >> 24) & 0xFF,
-                         (skTag >> 16) & 0xFF,
-                         (skTag >>  8) & 0xFF,
-                         (skTag)       & 0xFF);
-            }
+  SkDEBUGCODE(
+      // Check for axis specified, but not matched in font.
+      for (int i = 0; i < position.coordinateCount; ++i) {
+        SkFourByteTag skTag = position.coordinates[i].axis;
+        bool found = false;
+        for (int j = 0; j < axisDefinitions.count(); ++j) {
+          if (skTag == axisDefinitions[j].fTag) {
+            found = true;
+            break;
+          }
         }
-    )
+        if (!found) {
+          SkDEBUGF("Requested font axis not found: %s '%c%c%c%c'\n",
+                   name.c_str(), (skTag >> 24) & 0xFF, (skTag >> 16) & 0xFF,
+                   (skTag >> 8) & 0xFF, (skTag)&0xFF);
+        }
+      })
 }

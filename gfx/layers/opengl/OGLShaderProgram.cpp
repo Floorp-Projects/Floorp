@@ -154,8 +154,8 @@ void ShaderConfigOGL::SetDynamicGeometry(bool aEnabled) {
   SetFeature(ENABLE_DYNAMIC_GEOMETRY, aEnabled);
 }
 
-/* static */ ProgramProfileOGL ProgramProfileOGL::GetProfileFor(
-    ShaderConfigOGL aConfig) {
+/* static */
+ProgramProfileOGL ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig) {
   ProgramProfileOGL result;
   ostringstream fs, vs;
 

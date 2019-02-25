@@ -16,8 +16,9 @@ PrintTargetRecording::PrintTargetRecording(cairo_surface_t* aCairoSurface,
                                            const IntSize& aSize)
     : PrintTarget(aCairoSurface, aSize) {}
 
-/* static */ already_AddRefed<PrintTargetRecording>
-PrintTargetRecording::CreateOrNull(const IntSize& aSize) {
+/* static */
+already_AddRefed<PrintTargetRecording> PrintTargetRecording::CreateOrNull(
+    const IntSize& aSize) {
   if (!Factory::CheckSurfaceSize(aSize)) {
     return nullptr;
   }

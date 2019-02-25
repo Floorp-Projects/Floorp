@@ -739,12 +739,13 @@ UniquePtr<LayerPropertiesBase> CloneLayerTreePropertiesInternal(
   return MakeUnique<LayerPropertiesBase>(aRoot);
 }
 
-/* static */ UniquePtr<LayerProperties> LayerProperties::CloneFrom(
-    Layer* aRoot) {
+/* static */
+UniquePtr<LayerProperties> LayerProperties::CloneFrom(Layer* aRoot) {
   return CloneLayerTreePropertiesInternal(aRoot);
 }
 
-/* static */ void LayerProperties::ClearInvalidations(Layer* aLayer) {
+/* static */
+void LayerProperties::ClearInvalidations(Layer* aLayer) {
   ForEachNode<ForwardIterator>(aLayer, [](Layer* layer) {
     layer->ClearInvalidRegion();
     if (layer->GetMaskLayer()) {

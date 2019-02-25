@@ -44,7 +44,8 @@ PrintTargetPS::~PrintTargetPS() {
   Finish();
 }
 
-/* static */ already_AddRefed<PrintTargetPS> PrintTargetPS::CreateOrNull(
+/* static */
+already_AddRefed<PrintTargetPS> PrintTargetPS::CreateOrNull(
     nsIOutputStream* aStream, IntSize aSizeInPoints,
     PageOrientation aOrientation) {
   // The PS output does not specify the page size so to print landscape we need
