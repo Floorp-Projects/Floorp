@@ -36,7 +36,8 @@ class ImageMemoryReporter::WebRenderReporter final : public nsIMemoryReporter {
 
 NS_IMPL_ISUPPORTS(ImageMemoryReporter::WebRenderReporter, nsIMemoryReporter)
 
-/* static */ void ImageMemoryReporter::InitForWebRender() {
+/* static */
+void ImageMemoryReporter::InitForWebRender() {
   MOZ_ASSERT(XRE_IsParentProcess() || XRE_IsGPUProcess());
   if (!sWrReporter) {
     sWrReporter = new WebRenderReporter();
@@ -44,7 +45,8 @@ NS_IMPL_ISUPPORTS(ImageMemoryReporter::WebRenderReporter, nsIMemoryReporter)
   }
 }
 
-/* static */ void ImageMemoryReporter::ShutdownForWebRender() {
+/* static */
+void ImageMemoryReporter::ShutdownForWebRender() {
   MOZ_ASSERT(XRE_IsParentProcess() || XRE_IsGPUProcess());
   if (sWrReporter) {
     UnregisterStrongMemoryReporter(sWrReporter);
@@ -52,14 +54,16 @@ NS_IMPL_ISUPPORTS(ImageMemoryReporter::WebRenderReporter, nsIMemoryReporter)
   }
 }
 
-/* static */ void ImageMemoryReporter::ReportSharedSurfaces(
+/* static */
+void ImageMemoryReporter::ReportSharedSurfaces(
     nsIHandleReportCallback* aHandleReport, nsISupports* aData,
     const layers::SharedSurfacesMemoryReport& aSharedSurfaces) {
   ReportSharedSurfaces(aHandleReport, aData,
                        /* aIsForCompositor */ false, aSharedSurfaces);
 }
 
-/* static */ void ImageMemoryReporter::ReportSharedSurfaces(
+/* static */
+void ImageMemoryReporter::ReportSharedSurfaces(
     nsIHandleReportCallback* aHandleReport, nsISupports* aData,
     bool aIsForCompositor,
     const layers::SharedSurfacesMemoryReport& aSharedSurfaces) {
@@ -74,7 +78,8 @@ NS_IMPL_ISUPPORTS(ImageMemoryReporter::WebRenderReporter, nsIMemoryReporter)
   }
 }
 
-/* static */ void ImageMemoryReporter::ReportSharedSurface(
+/* static */
+void ImageMemoryReporter::ReportSharedSurface(
     nsIHandleReportCallback* aHandleReport, nsISupports* aData,
     bool aIsForCompositor, uint64_t aExternalId,
     const layers::SharedSurfacesMemoryReport::SurfaceEntry& aEntry) {
@@ -123,7 +128,8 @@ NS_IMPL_ISUPPORTS(ImageMemoryReporter::WebRenderReporter, nsIMemoryReporter)
                           aData);
 }
 
-/* static */ void ImageMemoryReporter::AppendSharedSurfacePrefix(
+/* static */
+void ImageMemoryReporter::AppendSharedSurfacePrefix(
     nsACString& aPathPrefix, const SurfaceMemoryCounter& aCounter,
     layers::SharedSurfacesMemoryReport& aSharedSurfaces) {
   uint64_t extId = aCounter.Values().ExternalId();
@@ -148,7 +154,8 @@ NS_IMPL_ISUPPORTS(ImageMemoryReporter::WebRenderReporter, nsIMemoryReporter)
   }
 }
 
-/* static */ void ImageMemoryReporter::TrimSharedSurfaces(
+/* static */
+void ImageMemoryReporter::TrimSharedSurfaces(
     const ImageMemoryCounter& aCounter,
     layers::SharedSurfacesMemoryReport& aSharedSurfaces) {
   if (aSharedSurfaces.mSurfaces.empty()) {
