@@ -134,7 +134,7 @@ nsresult SerializeInputStreamChild(nsIInputStream* aInputStream,
 
 nsresult SerializeInputStream(nsIInputStream* aInputStream, uint64_t aSize,
                               uint64_t aChildID, IPCBlob& aIPCBlob,
-                              nsIContentParent* aManager) {
+                              ContentParent* aManager) {
   return SerializeInputStreamParent(aInputStream, aSize, aChildID, aIPCBlob,
                                     aManager);
 }
@@ -158,7 +158,7 @@ nsresult SerializeInputStream(nsIInputStream* aInputStream, uint64_t aSize,
   return SerializeInputStreamChild(aInputStream, aIPCBlob, aManager);
 }
 
-uint64_t ChildIDFromManager(nsIContentParent* aManager) {
+uint64_t ChildIDFromManager(ContentParent* aManager) {
   return aManager->ChildID();
 }
 
@@ -242,7 +242,7 @@ nsresult Serialize(BlobImpl* aBlobImpl, PBackgroundChild* aManager,
   return SerializeInternal(aBlobImpl, aManager, aIPCBlob);
 }
 
-nsresult Serialize(BlobImpl* aBlobImpl, nsIContentParent* aManager,
+nsresult Serialize(BlobImpl* aBlobImpl, ContentParent* aManager,
                    IPCBlob& aIPCBlob) {
   return SerializeInternal(aBlobImpl, aManager, aIPCBlob);
 }

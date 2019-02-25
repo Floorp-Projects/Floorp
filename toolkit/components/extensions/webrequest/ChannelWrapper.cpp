@@ -141,9 +141,9 @@ already_AddRefed<ChannelWrapper> ChannelWrapper::Get(const GlobalObject& global,
 already_AddRefed<ChannelWrapper> ChannelWrapper::GetRegisteredChannel(
     const GlobalObject& global, uint64_t aChannelId,
     const WebExtensionPolicy& aAddon, nsITabParent* aTabParent) {
-  nsIContentParent* contentParent = nullptr;
+  ContentParent* contentParent = nullptr;
   if (TabParent* parent = static_cast<TabParent*>(aTabParent)) {
-    contentParent = static_cast<nsIContentParent*>(parent->Manager());
+    contentParent = parent->Manager();
   }
 
   auto& webreq = WebRequestService::GetSingleton();
@@ -677,13 +677,12 @@ void ChannelWrapper::RegisterTraceableChannel(const WebExtensionPolicy& aAddon,
 }
 
 already_AddRefed<nsITraceableChannel> ChannelWrapper::GetTraceableChannel(
-    nsAtom* aAddonId, dom::nsIContentParent* aContentParent) const {
+    nsAtom* aAddonId, dom::ContentParent* aContentParent) const {
   nsCOMPtr<nsITabParent> tabParent;
   if (mAddonEntries.Get(aAddonId, getter_AddRefs(tabParent))) {
-    nsIContentParent* contentParent = nullptr;
+    ContentParent* contentParent = nullptr;
     if (tabParent) {
-      contentParent = static_cast<nsIContentParent*>(
-          static_cast<TabParent*>(tabParent.get())->Manager());
+      contentParent = static_cast<TabParent*>(tabParent.get())->Manager();
     }
 
     if (contentParent == aContentParent) {

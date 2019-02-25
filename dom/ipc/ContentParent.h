@@ -429,13 +429,19 @@ class ContentParent final : public PContentParent,
   virtual PParentToChildStreamParent* SendPParentToChildStreamConstructor(
       PParentToChildStreamParent*) override;
 
-  virtual PFileDescriptorSetParent* SendPFileDescriptorSetConstructor(
-      const FileDescriptor&) override;
-
   virtual PParentToChildStreamParent* AllocPParentToChildStreamParent()
       override;
   virtual bool DeallocPParentToChildStreamParent(
       PParentToChildStreamParent* aActor) override;
+
+  virtual PIPCBlobInputStreamParent* SendPIPCBlobInputStreamConstructor(
+      PIPCBlobInputStreamParent* aActor, const nsID& aID,
+      const uint64_t& aSize) override;
+
+  virtual PBrowserParent* SendPBrowserConstructor(
+      PBrowserParent* actor, const TabId& aTabId, const TabId& aSameTabGroupsAs,
+      const IPCTabContext& context, const uint32_t& chromeFlags,
+      const ContentParentId& aCpId, const bool& aIsForBrowser) override;
 
   PHalParent* AllocPHalParent();
 
@@ -633,6 +639,8 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvSetUserGestureActivation(
       BrowsingContext* aContext, bool aNewValue);
 
+  FORWARD_SHMEM_ALLOCATOR_TO(PContentParent)
+
  protected:
   void OnChannelConnected(int32_t pid) override;
 
@@ -664,14 +672,6 @@ class ContentParent final : public PContentParent,
   static StaticAutoPtr<std::vector<std::string>> sMacSandboxParams;
 #endif
 
-  // Hide the raw constructor methods since we don't want client code
-  // using them.
-  virtual PBrowserParent* SendPBrowserConstructor(
-      PBrowserParent* actor, const TabId& aTabId, const TabId& aSameTabGroupsAs,
-      const IPCTabContext& context, const uint32_t& chromeFlags,
-      const ContentParentId& aCpId, const bool& aIsForBrowser) override;
-  using PContentParent::SendPTestShellConstructor;
-
   // Set aLoadUri to true to load aURIToLoad and to false to only create the
   // window. aURIToLoad should always be provided, if available, to ensure
   // compatibility with GeckoView.
@@ -685,8 +685,6 @@ class ContentParent final : public PContentParent,
       bool* aWindowIsNew, int32_t& aOpenLocation,
       nsIPrincipal* aTriggeringPrincipal, uint32_t aReferrerPolicy,
       bool aLoadUri, nsIContentSecurityPolicy* aCsp);
-
-  FORWARD_SHMEM_ALLOCATOR_TO(PContentParent)
 
   enum RecordReplayState { eNotRecordingOrReplaying, eRecording, eReplaying };
 
@@ -838,10 +836,6 @@ class ContentParent final : public PContentParent,
       PBrowserParent* actor, const TabId& tabId, const TabId& sameTabGroupAs,
       const IPCTabContext& context, const uint32_t& chromeFlags,
       const ContentParentId& cpId, const bool& isForBrowser) override;
-
-  virtual PIPCBlobInputStreamParent* SendPIPCBlobInputStreamConstructor(
-      PIPCBlobInputStreamParent* aActor, const nsID& aID,
-      const uint64_t& aSize) override;
 
   virtual PIPCBlobInputStreamParent* AllocPIPCBlobInputStreamParent(
       const nsID& aID, const uint64_t& aSize) override;
@@ -1083,11 +1077,10 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvKeygenProvideContent(
       nsString* aAttribute, nsTArray<nsString>* aContent);
 
-  virtual PFileDescriptorSetParent* AllocPFileDescriptorSetParent(
-      const mozilla::ipc::FileDescriptor&) override;
+  PFileDescriptorSetParent* AllocPFileDescriptorSetParent(
+      const mozilla::ipc::FileDescriptor&);
 
-  virtual bool DeallocPFileDescriptorSetParent(
-      PFileDescriptorSetParent*) override;
+  bool DeallocPFileDescriptorSetParent(PFileDescriptorSetParent*);
 
   PWebrtcGlobalParent* AllocPWebrtcGlobalParent();
   bool DeallocPWebrtcGlobalParent(PWebrtcGlobalParent* aActor);

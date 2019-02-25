@@ -36,7 +36,6 @@ class CpowEntry;
 }  // namespace jsipc
 
 namespace ipc {
-class PFileDescriptorSetParent;
 class PChildToParentStreamParent;
 class PParentToChildStreamParent;
 class PIPCBlobInputStreamParent;
@@ -74,9 +73,6 @@ class nsIContentParent : public nsISupports,
       PBrowserParent* actor, const TabId& aTabId, const TabId& aSameTabGroupAs,
       const IPCTabContext& context, const uint32_t& chromeFlags,
       const ContentParentId& aCpId, const bool& aIsForBrowser) = 0;
-
-  virtual mozilla::ipc::PFileDescriptorSetParent*
-  SendPFileDescriptorSetConstructor(const mozilla::ipc::FileDescriptor&) = 0;
 
   virtual bool IsContentParent() const { return false; }
 
@@ -121,12 +117,6 @@ class nsIContentParent : public nsISupports,
 
   virtual bool DeallocPIPCBlobInputStreamParent(
       mozilla::ipc::PIPCBlobInputStreamParent* aActor);
-
-  virtual mozilla::ipc::PFileDescriptorSetParent* AllocPFileDescriptorSetParent(
-      const mozilla::ipc::FileDescriptor& aFD);
-
-  virtual bool DeallocPFileDescriptorSetParent(
-      mozilla::ipc::PFileDescriptorSetParent* aActor);
 
   virtual mozilla::ipc::PChildToParentStreamParent*
   AllocPChildToParentStreamParent();

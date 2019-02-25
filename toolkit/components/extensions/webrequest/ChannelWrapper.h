@@ -45,7 +45,7 @@ class nsITraceableChannel;
 
 namespace mozilla {
 namespace dom {
-class nsIContentParent;
+class ContentParent;
 class Element;
 }  // namespace dom
 namespace extensions {
@@ -151,7 +151,7 @@ class ChannelWrapper final : public DOMEventTargetHelper,
                                 nsITabParent* aTabParent);
 
   already_AddRefed<nsITraceableChannel> GetTraceableChannel(
-      nsAtom* aAddonId, dom::nsIContentParent* aContentParent) const;
+      nsAtom* aAddonId, dom::ContentParent* aContentParent) const;
 
   void GetMethod(nsCString& aRetVal) const;
 

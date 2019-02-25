@@ -8,7 +8,7 @@
 #define mozilla_dom_PresentationSessionInfo_h
 
 #include "base/process.h"
-#include "mozilla/dom/nsIContentParent.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/DebugOnly.h"
@@ -259,7 +259,7 @@ class PresentationPresentingInfo final : public PresentationSessionInfo,
 
   // The content parent communicating with the content process which the OOP
   // receiver page belongs to.
-  nsCOMPtr<nsIContentParent> mContentParent;
+  RefPtr<ContentParent> mContentParent;
 };
 
 }  // namespace dom

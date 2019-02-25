@@ -48,7 +48,7 @@ IPCBlobInputStreamParent::Create(const nsID& aID, uint64_t aSize,
 
 IPCBlobInputStreamParent::IPCBlobInputStreamParent(const nsID& aID,
                                                    uint64_t aSize,
-                                                   nsIContentParent* aManager)
+                                                   ContentParent* aManager)
     : mID(aID),
       mSize(aSize),
       mContentManager(aManager),

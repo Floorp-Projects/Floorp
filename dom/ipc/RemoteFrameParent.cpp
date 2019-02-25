@@ -35,7 +35,7 @@ nsresult RemoteFrameParent::Init(const nsString& aPresentationURL,
   ProcessPriority initialPriority = PROCESS_PRIORITY_FOREGROUND;
 
   // Get our ConstructorSender object.
-  RefPtr<nsIContentParent> constructorSender =
+  RefPtr<ContentParent> constructorSender =
       ContentParent::GetNewOrUsedBrowserProcess(
           nullptr, aRemoteType, initialPriority, nullptr, false);
   if (NS_WARN_IF(!constructorSender)) {

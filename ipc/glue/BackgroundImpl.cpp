@@ -761,7 +761,7 @@ intptr_t ParentImpl::GetRawContentParentForComparison(
     return intptr_t(-1);
   }
 
-  return intptr_t(static_cast<nsIContentParent*>(actor->mContent.get()));
+  return intptr_t(static_cast<ContentParent*>(actor->mContent.get()));
 }
 
 // static
