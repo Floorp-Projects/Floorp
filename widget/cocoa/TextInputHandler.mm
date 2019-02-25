@@ -2603,10 +2603,12 @@ bool TextInputHandler::HandleCommand(Command aCommand) {
   // editor may behave differently if some of them are active.
   bool dispatchFakeKeyPress = !(currentKeyEvent && currentKeyEvent->IsProperKeyEvent(aCommand));
 
+  WidgetKeyboardEvent keydownEvent(true, eKeyDown, widget);
   WidgetKeyboardEvent keypressEvent(true, eKeyPress, widget);
   if (!dispatchFakeKeyPress) {
     // If we're acutally handling a key press, we should dispatch
     // the keypress event as-is.
+    currentKeyEvent->InitKeyEvent(this, keydownEvent, false);
     currentKeyEvent->InitKeyEvent(this, keypressEvent, false);
   } else {
     // Otherwise, we should dispatch "fake" keypress event.
@@ -2615,7 +2617,7 @@ bool TextInputHandler::HandleCommand(Command aCommand) {
     // not same as what we expect since the native keyboard event caused
     // this command.
     NSEvent* keyEvent = currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr;
-    keypressEvent.mNativeKeyEvent = keyEvent;
+    keydownEvent.mNativeKeyEvent = keypressEvent.mNativeKeyEvent = keyEvent;
     NS_WARNING_ASSERTION(keypressEvent.mNativeKeyEvent,
                          "Without native key event, NativeKeyBindings cannot compute aCommand");
     switch (aCommand) {
@@ -2790,9 +2792,36 @@ bool TextInputHandler::HandleCommand(Command aCommand) {
       default:
         return false;
     }
+
+    nsCocoaUtils::InitInputEvent(keydownEvent, keyEvent);
+    keydownEvent.mKeyCode = keypressEvent.mKeyCode;
+    keydownEvent.mKeyNameIndex = keypressEvent.mKeyNameIndex;
+    keydownEvent.mModifiers = keypressEvent.mModifiers;
   }
 
+  // We've stopped dispatching "keypress" events of non-printable keys on
+  // the web.  Therefore, we need to dispatch eKeyDown event here for web
+  // apps.  This is non-standard behavior if we've already dispatched a
+  // "keydown" event.  However, Chrome also dispatches such fake "keydown"
+  // (and "keypress") event for making same behavior as Safari.
   nsEventStatus status = nsEventStatus_eIgnore;
+  if (mDispatcher->DispatchKeyboardEvent(eKeyDown, keydownEvent, status, nullptr)) {
+    bool keydownHandled = status == nsEventStatus_eConsumeNoDefault;
+    if (currentKeyEvent) {
+      currentKeyEvent->mKeyDownDispatched = true;
+      currentKeyEvent->mKeyDownHandled |= keydownHandled;
+    }
+    if (keydownHandled) {
+      // Don't dispatch eKeyPress event if preceding eKeyDown event is
+      // consumed for conforming to UI Events.
+      // XXX Perhaps, we should ignore previous eKeyDown event result
+      //     even if we've already dispatched because it may notify web apps
+      //     of different key information, e.g., it's handled by IME, but
+      //     web apps want to handle only this key.
+      return true;
+    }
+  }
+
   bool keyPressDispatched =
       mDispatcher->MaybeDispatchKeypressEvents(keypressEvent, status, currentKeyEvent);
   bool keyPressHandled = (status == nsEventStatus_eConsumeNoDefault);
