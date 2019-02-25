@@ -49,7 +49,8 @@ SharedMemory::SharedMemory() : mAllocSize(0), mMappedSize(0) {
   }
 }
 
-/*static*/ size_t SharedMemory::PageAlignedSize(size_t aSize) {
+/*static*/
+size_t SharedMemory::PageAlignedSize(size_t aSize) {
   size_t pageSize = SystemPageSize();
   size_t nPagesNeeded = size_t(ceil(double(aSize) / double(pageSize)));
   return pageSize * nPagesNeeded;
@@ -71,7 +72,8 @@ void SharedMemory::Unmapped() {
   mMappedSize = 0;
 }
 
-/*static*/ void SharedMemory::Destroyed() {
+/*static*/
+void SharedMemory::Destroyed() {
   MOZ_ASSERT(gShmemAllocated >= mAllocSize,
              "Can't destroy more than allocated");
   gShmemAllocated -= mAllocSize;

@@ -87,8 +87,8 @@ ActivationContext::~ActivationContext() { Release(); }
   return reinterpret_cast<uintptr_t>(actCtx);
 }
 
-/* static */ HRESULT ActivationContext::GetCurrentManifestPath(
-    nsAString& aOutManifestPath) {
+/* static */
+HRESULT ActivationContext::GetCurrentManifestPath(nsAString& aOutManifestPath) {
   aOutManifestPath.Truncate();
 
   SIZE_T bytesNeeded;

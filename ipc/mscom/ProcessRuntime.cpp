@@ -268,7 +268,8 @@ ProcessRuntime::InitializeSecurity() {
 
 #if defined(MOZILLA_INTERNAL_API)
 
-/* static */ bool ProcessRuntime::IsWin32kLockedDown() {
+/* static */
+bool ProcessRuntime::IsWin32kLockedDown() {
   static const DynamicallyLinkedFunctionPtr<decltype(
       &::GetProcessMitigationPolicy)>
       pGetProcessMitigationPolicy(L"kernel32.dll",
