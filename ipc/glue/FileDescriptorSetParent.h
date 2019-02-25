@@ -16,7 +16,7 @@ namespace mozilla {
 
 namespace dom {
 
-class nsIContentParent;
+class ContentParent;
 
 }  // namespace dom
 
@@ -27,7 +27,7 @@ class FileDescriptor;
 
 class FileDescriptorSetParent final : public PFileDescriptorSetParent {
   friend class BackgroundParentImpl;
-  friend class mozilla::dom::nsIContentParent;
+  friend class mozilla::dom::ContentParent;
   friend class PFileDescriptorSetParent;
 
   nsTArray<FileDescriptor> mFileDescriptors;

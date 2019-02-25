@@ -30,7 +30,7 @@ class PBackgroundParent;
 namespace dom {
 
 class nsIContentChild;
-class nsIContentParent;
+class ContentParent;
 
 namespace ipc {
 
@@ -181,7 +181,7 @@ class StructuredCloneData : public StructuredCloneHolder {
   // by a previous call to Write() into ClonedMessageData IPC representation.
   // (Blobs are represented in IPC by IPCBlob actors, so we need the parent to
   // be able to create them.)
-  bool BuildClonedMessageDataForParent(nsIContentParent* aParent,
+  bool BuildClonedMessageDataForParent(ContentParent* aParent,
                                        ClonedMessageData& aClonedData);
   bool BuildClonedMessageDataForChild(nsIContentChild* aChild,
                                       ClonedMessageData& aClonedData);

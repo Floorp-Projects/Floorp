@@ -223,7 +223,7 @@ namespace dom {
 
 class IPCBlob;
 class nsIContentChild;
-class nsIContentParent;
+class ContentParent;
 
 namespace IPCBlobUtils {
 
@@ -237,7 +237,7 @@ nsresult Serialize(BlobImpl* aBlobImpl, nsIContentChild* aManager,
 nsresult Serialize(BlobImpl* aBlobImpl,
                    mozilla::ipc::PBackgroundChild* aManager, IPCBlob& aIPCBlob);
 
-nsresult Serialize(BlobImpl* aBlobImpl, nsIContentParent* aManager,
+nsresult Serialize(BlobImpl* aBlobImpl, ContentParent* aManager,
                    IPCBlob& aIPCBlob);
 
 nsresult Serialize(BlobImpl* aBlobImpl,

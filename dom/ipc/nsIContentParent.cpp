@@ -179,7 +179,7 @@ PBrowserParent* nsIContentParent::AllocPBrowserParent(
   MaybeInvalidTabContext tc(aContext);
   MOZ_ASSERT(tc.IsValid());
   TabParent* parent =
-      new TabParent(this, aTabId, tc.GetTabContext(), chromeFlags);
+      new TabParent(AsContentParent(), aTabId, tc.GetTabContext(), chromeFlags);
 
   // We release this ref in DeallocPBrowserParent()
   NS_ADDREF(parent);
@@ -257,17 +257,6 @@ mozilla::ipc::IPCResult nsIContentParent::RecvRpcMessage(
                         aRetvals, IgnoreErrors());
   }
   return IPC_OK();
-}
-
-PFileDescriptorSetParent* nsIContentParent::AllocPFileDescriptorSetParent(
-    const FileDescriptor& aFD) {
-  return new FileDescriptorSetParent(aFD);
-}
-
-bool nsIContentParent::DeallocPFileDescriptorSetParent(
-    PFileDescriptorSetParent* aActor) {
-  delete static_cast<FileDescriptorSetParent*>(aActor);
-  return true;
 }
 
 PChildToParentStreamParent*
