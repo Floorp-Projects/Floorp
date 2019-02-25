@@ -59,10 +59,20 @@ describe("getUrl", () => {
     expect(urlObject.filename).toBe("b.js");
   });
 
-  it("handles url with no filename for filename", function() {
+  it("handles url with no file extension for filename", function() {
     const urlObject = getURL(
       createMockSource({
         url: "https://a/c",
+        id: "c"
+      })
+    );
+    expect(urlObject.filename).toBe("c");
+  });
+
+  it("handles url with no name for filename", function() {
+    const urlObject = getURL(
+      createMockSource({
+        url: "https://a/",
         id: "c"
       })
     );
