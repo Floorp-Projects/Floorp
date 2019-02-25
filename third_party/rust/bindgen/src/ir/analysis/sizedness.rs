@@ -5,8 +5,10 @@ use ir::context::{BindgenContext, TypeId};
 use ir::item::IsOpaque;
 use ir::traversal::EdgeKind;
 use ir::ty::TypeKind;
-use std::{cmp, ops};
-use {HashMap, Entry};
+use std::cmp;
+use std::collections::HashMap;
+use std::collections::hash_map::Entry;
+use std::ops;
 
 /// The result of the `Sizedness` analysis for an individual item.
 ///
@@ -192,7 +194,7 @@ impl<'ctx> MonotoneFramework for SizednessAnalysis<'ctx> {
             })
             .collect();
 
-        let sized = HashMap::default();
+        let sized = HashMap::new();
 
         SizednessAnalysis {
             ctx,

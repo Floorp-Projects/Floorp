@@ -41,7 +41,6 @@ macro_rules! link {
     ($($(#[cfg($cfg:meta)])* pub fn $name:ident($($pname:ident: $pty:ty), *) $(-> $ret:ty)*;)+) => (
         use std::cell::{RefCell};
         use std::sync::{Arc};
-        use std::path::{Path, PathBuf};
 
         /// The set of functions loaded dynamically.
         #[derive(Debug, Default)]
@@ -53,19 +52,14 @@ macro_rules! link {
         #[derive(Debug)]
         pub struct SharedLibrary {
             library: libloading::Library,
-            path: PathBuf,
             pub functions: Functions,
         }
 
         impl SharedLibrary {
             //- Constructors -----------------------------
 
-            fn new(library: libloading::Library, path: PathBuf) -> SharedLibrary {
-                SharedLibrary { library, path, functions: Functions::default() }
-            }
-
-            pub fn path(&self) -> &Path {
-                &self.path
+            fn new(library: libloading::Library) -> SharedLibrary {
+                SharedLibrary { library: library, functions: Functions::default() }
             }
         }
 
@@ -136,7 +130,7 @@ macro_rules! link {
                 )
             });
 
-            let mut library = SharedLibrary::new(try!(library), path);
+            let mut library = SharedLibrary::new(try!(library));
             $(load::$name(&mut library);)+
             Ok(library)
         }
