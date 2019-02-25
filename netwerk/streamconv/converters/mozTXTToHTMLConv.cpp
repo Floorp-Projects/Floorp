@@ -20,6 +20,8 @@
 #  include "prinrval.h"
 #endif
 
+using mozilla::IsAscii;
+
 const double growthRate = 1.2;
 
 // Bug 183111, editor now replaces multiple spaces with leading
@@ -214,7 +216,7 @@ bool mozTXTToHTMLConv::FindURLStart(const char16_t* aInString,
              aInString[uint32_t(i)] != '[' && aInString[uint32_t(i)] != '(' &&
              aInString[uint32_t(i)] != '|' && aInString[uint32_t(i)] != '\\' &&
              !IsSpace(aInString[uint32_t(i)]) &&
-             (!isEmail || nsCRT::IsAscii(aInString[uint32_t(i)])) &&
+             (!isEmail || IsAscii(aInString[uint32_t(i)])) &&
              (!isEmail || aInString[uint32_t(i)] != ')');
            i--)
         ;
@@ -270,7 +272,7 @@ bool mozTXTToHTMLConv::FindURLEnd(const char16_t* aInString,
         // Disallow non-ascii-characters for email.
         // Currently correct, but revisit later after standards changed.
         if (isEmail && (aInString[i] == '(' || aInString[i] == '\'' ||
-                        !nsCRT::IsAscii(aInString[i])))
+                        !IsAscii(aInString[i])))
           break;
         if (aInString[i] == '(') seenOpeningParenthesis = true;
         if (aInString[i] == '[') seenOpeningSquareBracket = true;
