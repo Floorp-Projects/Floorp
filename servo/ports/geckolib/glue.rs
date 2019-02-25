@@ -3703,15 +3703,6 @@ pub unsafe extern "C" fn Servo_SerializeEasing(
         .unwrap();
 }
 
-
-#[no_mangle]
-pub unsafe extern "C" fn Servo_SerializeBorderRadius(
-    radius: *const computed::BorderRadius,
-    output: *mut nsAString,
-) {
-    (*radius).to_css(&mut CssWriter::new(&mut *output)).unwrap();
-}
-
 #[no_mangle]
 pub extern "C" fn Servo_GetProperties_Overriding_Animation(
     element: RawGeckoElementBorrowed,

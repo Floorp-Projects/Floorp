@@ -87,16 +87,6 @@ impl BorderCornerRadius {
 }
 
 impl BorderRadius {
-    /// Returns a `0` border radius.
-    pub fn zero() -> Self {
-        Self {
-            top_left: BorderCornerRadius::zero(),
-            top_right: BorderCornerRadius::zero(),
-            bottom_right: BorderCornerRadius::zero(),
-            bottom_left: BorderCornerRadius::zero(),
-        }
-    }
-
     /// Returns whether all the values are `0px`.
     pub fn all_zero(&self) -> bool {
         fn all(corner: &BorderCornerRadius) -> bool {

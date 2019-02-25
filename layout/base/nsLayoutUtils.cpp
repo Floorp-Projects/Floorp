@@ -6862,15 +6862,20 @@ static ImgDrawResult DrawImageInternal(
   return img.forget();
 }
 
-static bool NonZeroCorner(const LengthPercentage& aLength) {
-  // Since negative results are clamped to 0, check > 0.
-  return aLength.Resolve(nscoord_MAX) > 0 || aLength.Resolve(0) > 0;
+static bool NonZeroStyleCoord(const nsStyleCoord& aCoord) {
+  if (aCoord.IsCoordPercentCalcUnit()) {
+    // Since negative results are clamped to 0, check > 0.
+    return aCoord.ComputeCoordPercentCalc(nscoord_MAX) > 0 ||
+           aCoord.ComputeCoordPercentCalc(0) > 0;
+  }
+
+  return true;
 }
 
 /* static */ bool nsLayoutUtils::HasNonZeroCorner(
-    const BorderRadius& aCorners) {
+    const nsStyleCorners& aCorners) {
   NS_FOR_CSS_HALF_CORNERS(corner) {
-    if (NonZeroCorner(aCorners.Get(corner))) return true;
+    if (NonZeroStyleCoord(aCorners.Get(corner))) return true;
   }
   return false;
 }
@@ -6895,7 +6900,7 @@ static bool IsCornerAdjacentToSide(uint8_t aCorner, Side aSide) {
 }
 
 /* static */ bool nsLayoutUtils::HasNonZeroCornerOnSide(
-    const BorderRadius& aCorners, Side aSide) {
+    const nsStyleCorners& aCorners, Side aSide) {
   static_assert(eCornerTopLeftX / 2 == eCornerTopLeft,
                 "Check for Non Zero on side");
   static_assert(eCornerTopLeftY / 2 == eCornerTopLeft,
@@ -6916,7 +6921,7 @@ static bool IsCornerAdjacentToSide(uint8_t aCorner, Side aSide) {
   NS_FOR_CSS_HALF_CORNERS(corner) {
     // corner is a "half corner" value, so dividing by two gives us a
     // "full corner" value.
-    if (NonZeroCorner(aCorners.Get(corner)) &&
+    if (NonZeroStyleCoord(aCorners.Get(corner)) &&
         IsCornerAdjacentToSide(corner / 2, aSide))
       return true;
   }

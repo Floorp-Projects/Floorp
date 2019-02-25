@@ -140,7 +140,7 @@ nsSize ShapeUtils::ComputeEllipseRadii(const StyleBasicShape& aBasicShape,
 /* static */ bool ShapeUtils::ComputeInsetRadii(
     const StyleBasicShape& aBasicShape, const nsRect& aInsetRect,
     const nsRect& aRefBox, nscoord aRadii[8]) {
-  const auto& radius = aBasicShape.GetRadius();
+  const nsStyleCorners& radius = aBasicShape.GetRadius();
   return nsIFrame::ComputeBorderRadii(radius, aInsetRect.Size(), aRefBox.Size(),
                                       Sides(), aRadii);
 }

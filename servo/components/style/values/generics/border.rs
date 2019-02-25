@@ -53,10 +53,7 @@ pub use self::GenericBorderImageSlice as BorderImageSlice;
     ToComputedValue,
     ToCss,
 )]
-#[repr(C)]
-pub struct GenericBorderCornerRadius<L>(#[css(field_bound)] pub Size2D<L>);
-
-pub use self::GenericBorderCornerRadius as BorderCornerRadius;
+pub struct BorderCornerRadius<L>(#[css(field_bound)] pub Size2D<L>);
 
 impl<L> BorderCornerRadius<L> {
     /// Trivially create a `BorderCornerRadius`.
@@ -80,7 +77,6 @@ impl<L> BorderCornerRadius<L> {
     ToComputedValue,
     ToCss,
 )]
-#[repr(transparent)]
 pub struct BorderSpacing<L>(#[css(field_bound)] pub Size2D<L>);
 
 impl<L> BorderSpacing<L> {
@@ -105,19 +101,16 @@ impl<L> BorderSpacing<L> {
     ToAnimatedValue,
     ToComputedValue,
 )]
-#[repr(C)]
-pub struct GenericBorderRadius<LengthPercentage> {
+pub struct BorderRadius<LengthPercentage> {
     /// The top left radius.
-    pub top_left: GenericBorderCornerRadius<LengthPercentage>,
+    pub top_left: BorderCornerRadius<LengthPercentage>,
     /// The top right radius.
-    pub top_right: GenericBorderCornerRadius<LengthPercentage>,
+    pub top_right: BorderCornerRadius<LengthPercentage>,
     /// The bottom right radius.
-    pub bottom_right: GenericBorderCornerRadius<LengthPercentage>,
+    pub bottom_right: BorderCornerRadius<LengthPercentage>,
     /// The bottom left radius.
-    pub bottom_left: GenericBorderCornerRadius<LengthPercentage>,
+    pub bottom_left: BorderCornerRadius<LengthPercentage>,
 }
-
-pub use self::GenericBorderRadius as BorderRadius;
 
 impl<L> BorderRadius<L> {
     /// Returns a new `BorderRadius<L>`.

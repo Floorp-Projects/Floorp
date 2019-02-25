@@ -1644,15 +1644,25 @@ nsRect nsIFrame::GetContentRect() const {
   return GetContentRectRelativeToSelf() + GetPosition();
 }
 
-bool nsIFrame::ComputeBorderRadii(const BorderRadius& aBorderRadius,
+bool nsIFrame::ComputeBorderRadii(const nsStyleCorners& aBorderRadius,
                                   const nsSize& aFrameSize,
                                   const nsSize& aBorderArea, Sides aSkipSides,
                                   nscoord aRadii[8]) {
   // Percentages are relative to whichever side they're on.
   NS_FOR_CSS_HALF_CORNERS(i) {
-    const LengthPercentage& c = aBorderRadius.Get(i);
+    const nsStyleCoord c = aBorderRadius.Get(i);
     nscoord axis = HalfCornerIsX(i) ? aFrameSize.width : aFrameSize.height;
-    aRadii[i] = std::max(0, c.Resolve(axis));
+
+    if (c.IsCoordPercentCalcUnit()) {
+      aRadii[i] = c.ComputeCoordPercentCalc(axis);
+      if (aRadii[i] < 0) {
+        // clamp calc()
+        aRadii[i] = 0;
+      }
+    } else {
+      MOZ_ASSERT_UNREACHABLE("ComputeBorderRadii: bad unit");
+      aRadii[i] = 0;
+    }
   }
 
   if (aSkipSides.Top()) {

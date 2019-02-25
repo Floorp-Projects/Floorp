@@ -518,7 +518,7 @@ static inline Corner operator++(Corner& aCorner) {
 }
 
 // Indices into "half corner" arrays (nsStyleCorners e.g.)
-enum HalfCorner : uint8_t {
+enum HalfCorner {
   // This order is important!
   eCornerTopLeftX = 0,
   eCornerTopLeftY = 1,

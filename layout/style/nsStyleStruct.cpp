@@ -242,14 +242,8 @@ static nscoord TwipsPerPixel(const Document& aDocument) {
   return pc ? pc->AppUnitsPerDevPixel() : mozilla::AppUnitsPerCSSPixel();
 }
 
-static inline BorderRadius ZeroBorderRadius() {
-  auto zero = LengthPercentage::Zero();
-  return {{{zero, zero}}, {{zero, zero}}, {{zero, zero}}, {{zero, zero}}};
-}
-
 nsStyleBorder::nsStyleBorder(const Document& aDocument)
-    : mBorderRadius(ZeroBorderRadius())
-    , mBorderImageOutset(
+    : mBorderImageOutset(
           StyleRectWithAllSides(StyleNonNegativeLengthOrNumber::Number(0.))),
       mBorderImageSlice(
           {StyleRectWithAllSides(StyleNumberOrPercentage::Percentage({1.})),
@@ -265,6 +259,10 @@ nsStyleBorder::nsStyleBorder(const Document& aDocument)
       mComputedBorder(0, 0, 0, 0),
       mTwipsPerPixel(TwipsPerPixel(aDocument)) {
   MOZ_COUNT_CTOR(nsStyleBorder);
+
+  NS_FOR_CSS_HALF_CORNERS(corner) {
+    mBorderRadius.Set(corner, nsStyleCoord(0, nsStyleCoord::CoordConstructor));
+  }
 
   nscoord medium = kMediumBorderWidth;
   NS_FOR_CSS_SIDES(side) {
@@ -402,14 +400,16 @@ nsChangeHint nsStyleBorder::CalcDifference(
 }
 
 nsStyleOutline::nsStyleOutline(const Document& aDocument)
-    : mOutlineRadius(ZeroBorderRadius()),
-      mOutlineWidth(kMediumBorderWidth),
+    : mOutlineWidth(kMediumBorderWidth),
       mOutlineOffset(0),
       mOutlineColor(StyleComplexColor::CurrentColor()),
       mOutlineStyle(StyleOutlineStyle::BorderStyle(StyleBorderStyle::None)),
       mActualOutlineWidth(0),
       mTwipsPerPixel(TwipsPerPixel(aDocument)) {
   MOZ_COUNT_CTOR(nsStyleOutline);
+  // spacing values not inherited
+  nsStyleCoord zero(0, nsStyleCoord::CoordConstructor);
+  NS_FOR_CSS_HALF_CORNERS(corner) { mOutlineRadius.Set(corner, zero); }
 }
 
 nsStyleOutline::nsStyleOutline(const nsStyleOutline& aSrc)
