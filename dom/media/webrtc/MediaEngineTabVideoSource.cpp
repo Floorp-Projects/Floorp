@@ -323,7 +323,8 @@ void MediaEngineTabVideoSource::Draw() {
         layers::ImageContainer::ASYNCHRONOUS);
   }
 
-  RefPtr<layers::SharedRGBImage> rgbImage = mImageContainer->CreateSharedRGBImage();
+  RefPtr<layers::SharedRGBImage> rgbImage =
+      mImageContainer->CreateSharedRGBImage();
   if (!rgbImage) {
     NS_WARNING("Failed to create SharedRGBImage");
     return;
@@ -333,13 +334,15 @@ void MediaEngineTabVideoSource::Draw() {
     return;
   }
 
-  RefPtr<layers::TextureClient> texture = rgbImage->GetTextureClient(/* aForwarder */nullptr);
+  RefPtr<layers::TextureClient> texture =
+      rgbImage->GetTextureClient(/* aForwarder */ nullptr);
   if (!texture) {
     NS_WARNING("Failed to allocate TextureClient");
     return;
   }
 
-  layers::TextureClientAutoLock autoLock(texture, layers::OpenMode::OPEN_WRITE_ONLY);
+  layers::TextureClientAutoLock autoLock(texture,
+                                         layers::OpenMode::OPEN_WRITE_ONLY);
   if (!autoLock.Succeeded()) {
     NS_WARNING("Failed to lock TextureClient");
     return;
