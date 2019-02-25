@@ -99,43 +99,18 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
       lazyScript(cx, lazyScript),
       code_(cx),
       notes_(cx),
-      lastNoteOffset_(0),
       currentLine_(lineNum),
-      lastColumn_(0),
-      lastSeparatorOffet_(0),
-      lastSeparatorLine_(0),
-      lastSeparatorColumn_(0),
-      mainOffset_(),
-      lastTarget{-1 - ptrdiff_t(JSOP_JUMPTARGET_LENGTH)},
-      parser(nullptr),
       atomIndices(cx->frontendCollectionPool()),
       firstLine(lineNum),
-      maxFixedSlots(0),
-      maxStackDepth(0),
-      stackDepth(0),
-      bodyScopeIndex(UINT32_MAX),
-      varEmitterScope(nullptr),
-      innermostNestableControl(nullptr),
-      innermostEmitterScope_(nullptr),
-      innermostTDZCheckCache(nullptr),
       fieldInitializers_(parent
                              ? parent->fieldInitializers_
                              : lazyScript ? lazyScript->getFieldInitializers()
                                           : FieldInitializers::Invalid()),
-#ifdef DEBUG
-      unstableEmitterScope(false),
-#endif
       numberList(cx),
       scopeList(cx),
       tryNoteList(cx),
       scopeNoteList(cx),
       resumeOffsetList(cx),
-      numICEntries(0),
-      numYields(0),
-      typesetCount(0),
-      hasSingletons(false),
-      hasTryFinally(false),
-      emittingRunOnceLambda(false),
       emitterMode(emitterMode) {
   MOZ_ASSERT_IF(emitterMode == LazyFunction, lazyScript);
 
