@@ -30,7 +30,6 @@
 #include "js/PropertySpec.h"
 #include "js/Proxy.h"
 #include "vm/BytecodeUtil.h"
-#include "vm/GeneratorObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
 #include "vm/JSAtom.h"

@@ -733,7 +733,7 @@ bool Debugger::getFrame(JSContext* cx, const FrameIter& iter,
     // Debugger.Frame object that isn't in `frames` because the generator
     // was suspended, popping the stack frame, and later resumed (and we
     // were not stepping, so did not pass through slowPathOnResumeFrame).
-    Rooted<GeneratorObject*> genObj(cx);
+    Rooted<AbstractGeneratorObject*> genObj(cx);
     GeneratorWeakMap::AddPtr gp;
     if (referent.isGeneratorFrame()) {
       {
@@ -757,9 +757,9 @@ bool Debugger::getFrame(JSContext* cx, const FrameIter& iter,
         }
       }
 
-      // If no GeneratorObject exists yet, we create a Debugger.Frame
+      // If no AbstractGeneratorObject exists yet, we create a Debugger.Frame
       // below anyway, and Debugger::onNewGenerator() will associate it
-      // with the GeneratorObject later when we hit JSOP_GENERATOR.
+      // with the AbstractGeneratorObject later when we hit JSOP_GENERATOR.
     }
 
     if (!frame) {
@@ -800,7 +800,8 @@ bool Debugger::getFrame(JSContext* cx, const FrameIter& iter,
   return true;
 }
 
-bool Debugger::addGeneratorFrame(JSContext* cx, Handle<GeneratorObject*> genObj,
+bool Debugger::addGeneratorFrame(JSContext* cx,
+                                 Handle<AbstractGeneratorObject*> genObj,
                                  HandleDebuggerFrame frameObj) {
   GeneratorWeakMap::AddPtr p = generatorFrames.lookupForAdd(genObj);
   if (p) {
@@ -925,7 +926,8 @@ bool Debugger::hasAnyLiveHooks(JSRuntime* rt) const {
   MOZ_ASSERT(frame.isGeneratorFrame());
   MOZ_ASSERT(frame.isDebuggee());
 
-  Rooted<GeneratorObject*> genObj(cx, GetGeneratorObjectForFrame(cx, frame));
+  Rooted<AbstractGeneratorObject*> genObj(
+      cx, GetGeneratorObjectForFrame(cx, frame));
   MOZ_ASSERT(genObj);
 
   // For each debugger, if there is an existing Debugger.Frame object for the
@@ -970,16 +972,16 @@ static void DebuggerFrame_maybeDecrementFrameScriptStepModeCount(
  */
 class MOZ_RAII AutoSetGeneratorRunning {
   int32_t resumeIndex_;
-  Rooted<GeneratorObject*> genObj_;
+  Rooted<AbstractGeneratorObject*> genObj_;
 
  public:
-  AutoSetGeneratorRunning(JSContext* cx, Handle<GeneratorObject*> genObj)
+  AutoSetGeneratorRunning(JSContext* cx,
+                          Handle<AbstractGeneratorObject*> genObj)
       : resumeIndex_(0), genObj_(cx, genObj) {
     if (genObj) {
       if (!genObj->isClosed() && genObj->isSuspended()) {
         // Yielding or awaiting.
-        resumeIndex_ =
-            genObj->getFixedSlot(GeneratorObject::RESUME_INDEX_SLOT).toInt32();
+        resumeIndex_ = genObj->resumeIndex();
         genObj->setRunning();
       } else {
         // Returning or throwing. The generator is already closed, if
@@ -992,8 +994,7 @@ class MOZ_RAII AutoSetGeneratorRunning {
   ~AutoSetGeneratorRunning() {
     if (genObj_) {
       MOZ_ASSERT(genObj_->isRunning());
-      genObj_->setFixedSlot(GeneratorObject::RESUME_INDEX_SLOT,
-                            Int32Value(resumeIndex_));
+      genObj_->setResumeIndex(resumeIndex_);
     }
   }
 };
@@ -1010,7 +1011,7 @@ class MOZ_RAII AutoSetGeneratorRunning {
 
   // Determine if we are suspending this frame or popping it forever.
   bool suspending = false;
-  Rooted<GeneratorObject*> genObj(cx);
+  Rooted<AbstractGeneratorObject*> genObj(cx);
   if (frame.isGeneratorFrame()) {
     // If we're leaving successfully at a yield opcode, we're probably
     // suspending; the `isClosed()` check detects a debugger forced return
@@ -1126,11 +1127,12 @@ class MOZ_RAII AutoSetGeneratorRunning {
 }
 
 /* static */ bool Debugger::slowPathOnNewGenerator(
-    JSContext* cx, AbstractFramePtr frame, Handle<GeneratorObject*> genObj) {
+    JSContext* cx, AbstractFramePtr frame,
+    Handle<AbstractGeneratorObject*> genObj) {
   // This is called from JSOP_GENERATOR, after default parameter expressions
   // are evaluated and well after onEnterFrame, so Debugger.Frame objects for
   // `frame` may already have been exposed to debugger code. The
-  // GeneratorObject for this generator call, though, has just been
+  // AbstractGeneratorObject for this generator call, though, has just been
   // created. It must be associated with any existing Debugger.Frames.
   bool ok = true;
   forEachDebuggerFrame(frame, [&](DebuggerFrame* frameObjPtr) {
@@ -1606,7 +1608,8 @@ static void AdjustGeneratorResumptionValue(JSContext* cx,
     // instructions--and it's simpler to do the work manually than to count
     // on that bytecode sequence existing in the debuggee, somehow jump to
     // it, and then avoid re-entering the debugger from it.
-    Rooted<GeneratorObject*> genObj(cx, GetGeneratorObjectForFrame(cx, frame));
+    Rooted<AbstractGeneratorObject*> genObj(
+        cx, GetGeneratorObjectForFrame(cx, frame));
     if (genObj) {
       // 1.  `return <value>` creates and returns a new object,
       //     `{value: <value>, done: true}`.
@@ -1968,8 +1971,7 @@ ResumeMode Debugger::fireEnterFrame(JSContext* cx, MutableHandleValue vp) {
 #if DEBUG
   // Assert that the hook won't be able to re-enter the generator.
   if (iter.hasScript() && *iter.pc() == JSOP_DEBUGAFTERYIELD) {
-    GeneratorObject* genObj =
-        GetGeneratorObjectForFrame(cx, iter.abstractFramePtr());
+    auto* genObj = GetGeneratorObjectForFrame(cx, iter.abstractFramePtr());
     MOZ_ASSERT(genObj->isRunning() || genObj->isClosing());
   }
 #endif
@@ -4325,7 +4327,7 @@ void Debugger::removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
   // will sweep dead keys from the weakmap.
   if (!global->zone()->isGCSweeping()) {
     generatorFrames.removeIf([global](JSObject* key) {
-      GeneratorObject& genObj = key->as<GeneratorObject>();
+      auto& genObj = key->as<AbstractGeneratorObject>();
       return genObj.isClosed() || &genObj.callee().global() == global;
     });
   }
@@ -7559,7 +7561,7 @@ bool Debugger::observesWasm(wasm::Instance* instance) const {
 
     if (!suspending && frame.isGeneratorFrame()) {
       // Terminally exiting a generator.
-      GeneratorObject* genObj = GetGeneratorObjectForFrame(cx, frame);
+      auto* genObj = GetGeneratorObjectForFrame(cx, frame);
       if (GeneratorWeakMap::Ptr p = dbg->generatorFrames.lookup(genObj)) {
         dbg->generatorFrames.remove(p);
       }
