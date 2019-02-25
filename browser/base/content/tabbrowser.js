@@ -1401,6 +1401,7 @@ window._gBrowser = {
     var aNextTabParentId;
     var aFocusUrlBar;
     var aName;
+    var aCsp;
     if (arguments.length == 2 &&
         typeof arguments[1] == "object" &&
         !(arguments[1] instanceof Ci.nsIURI)) {
@@ -1429,6 +1430,7 @@ window._gBrowser = {
       aNextTabParentId = params.nextTabParentId;
       aFocusUrlBar = params.focusUrlBar;
       aName = params.name;
+      aCsp = params.csp;
     }
 
     // all callers of loadOneTab need to pass a valid triggeringPrincipal.
@@ -1465,6 +1467,7 @@ window._gBrowser = {
       nextTabParentId: aNextTabParentId,
       focusUrlBar: aFocusUrlBar,
       name: aName,
+      csp: aCsp,
     });
     if (!bgLoad)
       this.selectedTab = tab;
@@ -1481,6 +1484,7 @@ window._gBrowser = {
     replace,
     targetTab,
     triggeringPrincipal,
+    csp,
     userContextId,
   } = {}) {
     if (!aURIs.length) {
@@ -1538,6 +1542,7 @@ window._gBrowser = {
           flags,
           postData: postDatas && postDatas[0],
           triggeringPrincipal,
+          csp,
         });
       } catch (e) {
         // Ignore failure in case a URI is wrong, so we can continue
@@ -1553,6 +1558,7 @@ window._gBrowser = {
         userContextId,
         triggeringPrincipal,
         bulkOrderedOpen: multiple,
+        csp,
       };
       if (newIndex > -1) {
         params.index = newIndex;
@@ -1573,6 +1579,7 @@ window._gBrowser = {
         userContextId,
         triggeringPrincipal,
         bulkOrderedOpen: true,
+        csp,
       };
       if (targetTabIndex > -1) {
         params.index = ++tabNum;
@@ -2311,6 +2318,7 @@ window._gBrowser = {
     userContextId,
     recordExecution,
     replayExecution,
+    csp,
   } = {}) {
     // all callers of addTab that pass a params object need to pass
     // a valid triggeringPrincipal.
@@ -2627,6 +2635,7 @@ window._gBrowser = {
             referrerPolicy, !noReferrer, referrerURI),
           charset,
           postData,
+          csp,
         });
       } catch (ex) {
         Cu.reportError(ex);
