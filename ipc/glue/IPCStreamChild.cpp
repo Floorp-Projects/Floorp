@@ -8,7 +8,7 @@
 #include "IPCStreamSource.h"
 
 #include "mozilla/Unused.h"
-#include "mozilla/dom/nsIContentChild.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PChildToParentStreamChild.h"
 #include "mozilla/ipc/PParentToChildStreamChild.h"
@@ -67,7 +67,7 @@ class IPCStreamSourceChild final : public PChildToParentStreamChild,
 }  // anonymous namespace
 
 /* static */ PChildToParentStreamChild* IPCStreamSource::Create(
-    nsIAsyncInputStream* aInputStream, dom::nsIContentChild* aManager) {
+    nsIAsyncInputStream* aInputStream, dom::ContentChild* aManager) {
   MOZ_ASSERT(aInputStream);
   MOZ_ASSERT(aManager);
 

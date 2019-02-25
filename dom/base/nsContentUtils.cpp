@@ -7313,7 +7313,7 @@ nsresult nsContentUtils::IPCTransferableToTransferable(
 
 void nsContentUtils::TransferablesToIPCTransferables(
     nsIArray* aTransferables, nsTArray<IPCDataTransfer>& aIPC,
-    bool aInSyncMessage, mozilla::dom::nsIContentChild* aChild,
+    bool aInSyncMessage, mozilla::dom::ContentChild* aChild,
     mozilla::dom::ContentParent* aParent) {
   aIPC.Clear();
   if (aTransferables) {
@@ -7446,7 +7446,7 @@ bool nsContentUtils::IsFlavorImage(const nsACString& aFlavor) {
          aFlavor.EqualsLiteral(kGIFImageMime);
 }
 
-static Shmem ConvertToShmem(mozilla::dom::nsIContentChild* aChild,
+static Shmem ConvertToShmem(mozilla::dom::ContentChild* aChild,
                             mozilla::dom::ContentParent* aParent,
                             const nsACString& aInput) {
   MOZ_ASSERT((aChild && !aParent) || (!aChild && aParent));
@@ -7467,7 +7467,7 @@ static Shmem ConvertToShmem(mozilla::dom::nsIContentChild* aChild,
 
 void nsContentUtils::TransferableToIPCTransferable(
     nsITransferable* aTransferable, IPCDataTransfer* aIPCDataTransfer,
-    bool aInSyncMessage, mozilla::dom::nsIContentChild* aChild,
+    bool aInSyncMessage, mozilla::dom::ContentChild* aChild,
     mozilla::dom::ContentParent* aParent) {
   MOZ_ASSERT((aChild && !aParent) || (!aChild && aParent));
 

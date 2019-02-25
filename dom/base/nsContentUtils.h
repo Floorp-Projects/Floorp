@@ -144,7 +144,7 @@ struct LifecycleCallbackArgs;
 struct LifecycleAdoptedCallbackArgs;
 class MessageBroadcaster;
 class NodeInfo;
-class nsIContentChild;
+class ContentChild;
 class ContentParent;
 class TabChild;
 class Selection;
@@ -2838,13 +2838,13 @@ class nsContentUtils {
 
   static void TransferablesToIPCTransferables(
       nsIArray* aTransferables, nsTArray<mozilla::dom::IPCDataTransfer>& aIPC,
-      bool aInSyncMessage, mozilla::dom::nsIContentChild* aChild,
+      bool aInSyncMessage, mozilla::dom::ContentChild* aChild,
       mozilla::dom::ContentParent* aParent);
 
   static void TransferableToIPCTransferable(
       nsITransferable* aTransferable,
       mozilla::dom::IPCDataTransfer* aIPCDataTransfer, bool aInSyncMessage,
-      mozilla::dom::nsIContentChild* aChild,
+      mozilla::dom::ContentChild* aChild,
       mozilla::dom::ContentParent* aParent);
 
   /*
