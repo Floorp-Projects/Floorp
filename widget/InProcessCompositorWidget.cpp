@@ -17,7 +17,8 @@ namespace widget {
 // Platforms with no OOP compositor process support use
 // InProcessCompositorWidget by default.
 #if !defined(MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING)
-/* static */ RefPtr<CompositorWidget> CompositorWidget::CreateLocal(
+/* static */
+RefPtr<CompositorWidget> CompositorWidget::CreateLocal(
     const CompositorWidgetInitData& aInitData,
     const layers::CompositorOptions& aOptions, nsIWidget* aWidget) {
   MOZ_ASSERT(aWidget);

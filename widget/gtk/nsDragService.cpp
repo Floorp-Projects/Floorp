@@ -146,7 +146,8 @@ nsDragService::~nsDragService() {
 NS_IMPL_ISUPPORTS_INHERITED(nsDragService, nsBaseDragService, nsIObserver)
 
 mozilla::StaticRefPtr<nsDragService> sDragServiceInstance;
-/* static */ already_AddRefed<nsDragService> nsDragService::GetInstance() {
+/* static */
+already_AddRefed<nsDragService> nsDragService::GetInstance() {
   if (gfxPlatform::IsHeadless()) {
     return nullptr;
   }
@@ -2032,6 +2033,7 @@ gboolean nsDragService::DispatchDropEvent() {
   return mCanDrop;
 }
 
-/* static */ uint32_t nsDragService::GetCurrentModifiers() {
+/* static */
+uint32_t nsDragService::GetCurrentModifiers() {
   return mozilla::widget::KeymapWrapper::ComputeCurrentKeyModifiers();
 }
