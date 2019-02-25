@@ -1476,7 +1476,8 @@ const JSClass* XrayTraits::getExpandoClass(JSContext* cx,
 
 static const size_t JSSLOT_XRAY_HOLDER = 0;
 
-/* static */ JSObject* XrayTraits::getHolder(JSObject* wrapper) {
+/* static */
+JSObject* XrayTraits::getHolder(JSObject* wrapper) {
   MOZ_ASSERT(WrapperFactory::IsXrayWrapper(wrapper));
   js::Value v = js::GetProxyReservedSlot(wrapper, JSSLOT_XRAY_HOLDER);
   return v.isObject() ? &v.toObject() : nullptr;

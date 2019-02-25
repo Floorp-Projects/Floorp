@@ -245,8 +245,9 @@ static int ComparePointers(const void* a, const void* b) {
   return 0;
 }
 
-/* static */ int JitcodeGlobalEntry::compare(const JitcodeGlobalEntry& ent1,
-                                             const JitcodeGlobalEntry& ent2) {
+/* static */
+int JitcodeGlobalEntry::compare(const JitcodeGlobalEntry& ent1,
+                                const JitcodeGlobalEntry& ent2) {
   // Both parts of compare cannot be a query.
   MOZ_ASSERT(!(ent1.isQuery() && ent2.isQuery()));
 
@@ -275,9 +276,9 @@ static int ComparePointers(const void* a, const void* b) {
   return flip * -1;
 }
 
-/* static */ char* JitcodeGlobalEntry::createScriptString(JSContext* cx,
-                                                          JSScript* script,
-                                                          size_t* length) {
+/* static */
+char* JitcodeGlobalEntry::createScriptString(JSContext* cx, JSScript* script,
+                                             size_t* length) {
   // If the script has a function, try calculating its name.
   bool hasName = false;
   size_t nameLength = 0;
@@ -1007,37 +1008,38 @@ void JitcodeGlobalEntry::IonCacheEntry::forEachOptimizationTypeInfo(
   entry.forEachOptimizationTypeInfo(rt, index, op);
 }
 
-/* static */ void JitcodeRegionEntry::WriteHead(CompactBufferWriter& writer,
-                                                uint32_t nativeOffset,
-                                                uint8_t scriptDepth) {
+/* static */
+void JitcodeRegionEntry::WriteHead(CompactBufferWriter& writer,
+                                   uint32_t nativeOffset, uint8_t scriptDepth) {
   writer.writeUnsigned(nativeOffset);
   writer.writeByte(scriptDepth);
 }
 
-/* static */ void JitcodeRegionEntry::ReadHead(CompactBufferReader& reader,
-                                               uint32_t* nativeOffset,
-                                               uint8_t* scriptDepth) {
+/* static */
+void JitcodeRegionEntry::ReadHead(CompactBufferReader& reader,
+                                  uint32_t* nativeOffset,
+                                  uint8_t* scriptDepth) {
   *nativeOffset = reader.readUnsigned();
   *scriptDepth = reader.readByte();
 }
 
-/* static */ void JitcodeRegionEntry::WriteScriptPc(CompactBufferWriter& writer,
-                                                    uint32_t scriptIdx,
-                                                    uint32_t pcOffset) {
+/* static */
+void JitcodeRegionEntry::WriteScriptPc(CompactBufferWriter& writer,
+                                       uint32_t scriptIdx, uint32_t pcOffset) {
   writer.writeUnsigned(scriptIdx);
   writer.writeUnsigned(pcOffset);
 }
 
-/* static */ void JitcodeRegionEntry::ReadScriptPc(CompactBufferReader& reader,
-                                                   uint32_t* scriptIdx,
-                                                   uint32_t* pcOffset) {
+/* static */
+void JitcodeRegionEntry::ReadScriptPc(CompactBufferReader& reader,
+                                      uint32_t* scriptIdx, uint32_t* pcOffset) {
   *scriptIdx = reader.readUnsigned();
   *pcOffset = reader.readUnsigned();
 }
 
-/* static */ void JitcodeRegionEntry::WriteDelta(CompactBufferWriter& writer,
-                                                 uint32_t nativeDelta,
-                                                 int32_t pcDelta) {
+/* static */
+void JitcodeRegionEntry::WriteDelta(CompactBufferWriter& writer,
+                                    uint32_t nativeDelta, int32_t pcDelta) {
   if (pcDelta >= 0) {
     // 1 and 2-byte formats possible.
 
@@ -1090,9 +1092,9 @@ void JitcodeGlobalEntry::IonCacheEntry::forEachOptimizationTypeInfo(
   MOZ_CRASH("pcDelta/nativeDelta values are too large to encode.");
 }
 
-/* static */ void JitcodeRegionEntry::ReadDelta(CompactBufferReader& reader,
-                                                uint32_t* nativeDelta,
-                                                int32_t* pcDelta) {
+/* static */
+void JitcodeRegionEntry::ReadDelta(CompactBufferReader& reader,
+                                   uint32_t* nativeDelta, int32_t* pcDelta) {
   // NB:
   // It's possible to get nativeDeltas with value 0 in two cases:
   //
@@ -1160,8 +1162,9 @@ void JitcodeGlobalEntry::IonCacheEntry::forEachOptimizationTypeInfo(
   MOZ_ASSERT_IF(*nativeDelta == 0, *pcDelta <= 0);
 }
 
-/* static */ uint32_t JitcodeRegionEntry::ExpectedRunLength(
-    const NativeToBytecode* entry, const NativeToBytecode* end) {
+/* static */
+uint32_t JitcodeRegionEntry::ExpectedRunLength(const NativeToBytecode* entry,
+                                               const NativeToBytecode* end) {
   MOZ_ASSERT(entry < end);
 
   // We always use the first entry, so runLength starts at 1
@@ -1251,11 +1254,11 @@ struct JitcodeMapBufferWriteSpewer {
 
 // Write a run, starting at the given NativeToBytecode entry, into the given
 // buffer writer.
-/* static */ bool JitcodeRegionEntry::WriteRun(CompactBufferWriter& writer,
-                                               JSScript** scriptList,
-                                               uint32_t scriptListSize,
-                                               uint32_t runLength,
-                                               const NativeToBytecode* entry) {
+/* static */
+bool JitcodeRegionEntry::WriteRun(CompactBufferWriter& writer,
+                                  JSScript** scriptList,
+                                  uint32_t scriptListSize, uint32_t runLength,
+                                  const NativeToBytecode* entry) {
   MOZ_ASSERT(runLength > 0);
   MOZ_ASSERT(runLength <= MAX_RUN_LENGTH);
 
@@ -1495,7 +1498,8 @@ uint32_t JitcodeIonTable::findRegionEntry(uint32_t nativeOffset) const {
   return idx;
 }
 
-/* static */ bool JitcodeIonTable::WriteIonTable(
+/* static */
+bool JitcodeIonTable::WriteIonTable(
     CompactBufferWriter& writer, JSScript** scriptList, uint32_t scriptListSize,
     const NativeToBytecode* start, const NativeToBytecode* end,
     uint32_t* tableOffsetOut, uint32_t* numRegionsOut) {

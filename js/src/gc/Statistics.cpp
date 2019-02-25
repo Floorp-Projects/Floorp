@@ -814,7 +814,8 @@ Statistics::~Statistics() {
   }
 }
 
-/* static */ bool Statistics::initialize() {
+/* static */
+bool Statistics::initialize() {
 #ifdef DEBUG
   // Sanity check generated tables.
   for (auto i : AllPhases()) {
@@ -1463,7 +1464,8 @@ void Statistics::printProfileHeader() {
   fprintf(stderr, "\n");
 }
 
-/* static */ void Statistics::printProfileTimes(const ProfileDurations& times) {
+/* static */
+void Statistics::printProfileTimes(const ProfileDurations& times) {
   for (auto time : times) {
     fprintf(stderr, " %6" PRIi64, static_cast<int64_t>(time.ToMilliseconds()));
   }

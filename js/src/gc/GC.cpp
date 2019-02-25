@@ -539,7 +539,8 @@ void Arena::checkNoMarkedFreeCells() {
 }
 #endif
 
-/* static */ void Arena::staticAsserts() {
+/* static */
+void Arena::staticAsserts() {
   static_assert(size_t(AllocKind::LIMIT) <= 255,
                 "We must be able to fit the allockind into uint8_t.");
   static_assert(mozilla::ArrayLength(ThingSizes) == size_t(AllocKind::LIMIT),
@@ -1943,7 +1944,8 @@ float ZoneHeapThreshold::eagerAllocTrigger(bool highFrequencyGC) const {
   return eagerTriggerFactor * gcTriggerBytes();
 }
 
-/* static */ float ZoneHeapThreshold::computeZoneHeapGrowthFactorForHeapSize(
+/* static */
+float ZoneHeapThreshold::computeZoneHeapGrowthFactorForHeapSize(
     size_t lastBytes, const GCSchedulingTunables& tunables,
     const GCSchedulingState& state) {
   if (!tunables.isDynamicHeapGrowthEnabled()) {
@@ -1994,7 +1996,8 @@ float ZoneHeapThreshold::eagerAllocTrigger(bool highFrequencyGC) const {
   return factor;
 }
 
-/* static */ size_t ZoneHeapThreshold::computeZoneTriggerBytes(
+/* static */
+size_t ZoneHeapThreshold::computeZoneTriggerBytes(
     float growthFactor, size_t lastBytes, JSGCInvocationKind gckind,
     const GCSchedulingTunables& tunables, const AutoLockGC& lock) {
   size_t base =
@@ -3082,8 +3085,9 @@ inline void ArenaLists::queueForBackgroundSweep(AllocKind thingKind) {
   concurrentUse(thingKind) = ConcurrentUse::BackgroundFinalize;
 }
 
-/*static*/ void ArenaLists::backgroundFinalize(FreeOp* fop, Arena* listHead,
-                                               Arena** empty) {
+/*static*/
+void ArenaLists::backgroundFinalize(FreeOp* fop, Arena* listHead,
+                                    Arena** empty) {
   MOZ_ASSERT(listHead);
   MOZ_ASSERT(empty);
 
@@ -3686,7 +3690,8 @@ void GCRuntime::freeFromBackgroundThread(AutoLockHelperThreadState& lock) {
 
 void GCRuntime::waitBackgroundFreeEnd() { freeTask.join(); }
 
-/* static */ bool UniqueIdGCPolicy::needsSweep(Cell** cellp, uint64_t*) {
+/* static */
+bool UniqueIdGCPolicy::needsSweep(Cell** cellp, uint64_t*) {
   Cell* cell = *cellp;
   return MapGCThingTyped(cell, cell->getTraceKind(), [](auto t) {
     mozilla::DebugOnly<const Cell*> prior = t;
@@ -5019,7 +5024,8 @@ static bool IsGrayListObject(JSObject* obj) {
   return obj->is<CrossCompartmentWrapperObject>() && !IsDeadProxyObject(obj);
 }
 
-/* static */ unsigned ProxyObject::grayLinkReservedSlot(JSObject* obj) {
+/* static */
+unsigned ProxyObject::grayLinkReservedSlot(JSObject* obj) {
   MOZ_ASSERT(IsGrayListObject(obj));
   return CrossCompartmentWrapperObject::GrayLinkReservedSlot;
 }

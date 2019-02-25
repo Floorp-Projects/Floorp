@@ -407,8 +407,8 @@ FunctionBox* ObjectBox::asFunctionBox() {
   return static_cast<FunctionBox*>(this);
 }
 
-/* static */ void TraceListNode::TraceList(JSTracer* trc,
-                                           TraceListNode* listHead) {
+/* static */
+void TraceListNode::TraceList(JSTracer* trc, TraceListNode* listHead) {
   for (TraceListNode* node = listHead; node; node = node->traceLink) {
     node->trace(trc);
   }

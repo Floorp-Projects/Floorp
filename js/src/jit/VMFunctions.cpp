@@ -146,7 +146,8 @@ bool JitRuntime::generateVMWrappers(JSContext* cx, MacroAssembler& masm) {
 }
 
 // Statics are initialized to null.
-/* static */ VMFunction* VMFunction::functions;
+/* static */
+VMFunction* VMFunction::functions;
 
 AutoDetectInvalidation::AutoDetectInvalidation(JSContext* cx,
                                                MutableHandleValue rval)
