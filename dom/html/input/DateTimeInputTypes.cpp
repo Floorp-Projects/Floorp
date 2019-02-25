@@ -20,7 +20,8 @@ const double DateTimeInputTypeBase::kMsPerDay = 24 * 60 * 60 * 1000;
 using namespace mozilla;
 using namespace mozilla::dom;
 
-/* static */ bool DateTimeInputTypeBase::IsInputDateTimeEnabled() {
+/* static */
+bool DateTimeInputTypeBase::IsInputDateTimeEnabled() {
   static bool sDateTimeEnabled = false;
   static bool sDateTimePrefCached = false;
   if (!sDateTimePrefCached) {

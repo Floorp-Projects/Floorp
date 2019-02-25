@@ -24,7 +24,8 @@ DummyPresentationTransportBuilderConstructor::CreateTransportBuilder(
   return NS_OK;
 }
 
-/* static */ already_AddRefed<nsIPresentationTransportBuilderConstructor>
+/* static */
+already_AddRefed<nsIPresentationTransportBuilderConstructor>
 PresentationTransportBuilderConstructor::Create() {
   nsCOMPtr<nsIPresentationTransportBuilderConstructor> constructor;
   if (XRE_IsContentProcess()) {

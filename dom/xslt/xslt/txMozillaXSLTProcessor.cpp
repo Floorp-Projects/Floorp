@@ -1086,7 +1086,8 @@ void txMozillaXSLTProcessor::ContentRemoved(nsIContent* aChild,
   mStylesheet = nullptr;
 }
 
-/* virtual */ JSObject* txMozillaXSLTProcessor::WrapObject(
+/* virtual */
+JSObject* txMozillaXSLTProcessor::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return XSLTProcessor_Binding::Wrap(aCx, this, aGivenProto);
 }
@@ -1095,9 +1096,9 @@ DocGroup* txMozillaXSLTProcessor::GetDocGroup() const {
   return mStylesheetDocument ? mStylesheetDocument->GetDocGroup() : nullptr;
 }
 
-/* static */ already_AddRefed<txMozillaXSLTProcessor>
-txMozillaXSLTProcessor::Constructor(const GlobalObject& aGlobal,
-                                    mozilla::ErrorResult& aRv) {
+/* static */
+already_AddRefed<txMozillaXSLTProcessor> txMozillaXSLTProcessor::Constructor(
+    const GlobalObject& aGlobal, mozilla::ErrorResult& aRv) {
   RefPtr<txMozillaXSLTProcessor> processor =
       new txMozillaXSLTProcessor(aGlobal.GetAsSupports());
   return processor.forget();

@@ -932,8 +932,8 @@ bool OSFileConstantsService::DefineOSFileConstants(
 NS_IMPL_ISUPPORTS(OSFileConstantsService, nsIOSFileConstantsService,
                   nsIObserver)
 
-/* static */ already_AddRefed<OSFileConstantsService>
-OSFileConstantsService::GetOrCreate() {
+/* static */
+already_AddRefed<OSFileConstantsService> OSFileConstantsService::GetOrCreate() {
   if (!gInstance) {
     MOZ_ASSERT(NS_IsMainThread());
 

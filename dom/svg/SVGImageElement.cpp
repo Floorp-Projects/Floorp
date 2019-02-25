@@ -262,7 +262,8 @@ already_AddRefed<Path> SVGImageElement::BuildPath(PathBuilder* aBuilder) {
 //----------------------------------------------------------------------
 // SVGElement methods
 
-/* virtual */ bool SVGImageElement::HasValidDimensions() const {
+/* virtual */
+bool SVGImageElement::HasValidDimensions() const {
   return mLengthAttributes[ATTR_WIDTH].IsExplicitlySet() &&
          mLengthAttributes[ATTR_WIDTH].GetAnimValInSpecifiedUnits() > 0 &&
          mLengthAttributes[ATTR_HEIGHT].IsExplicitlySet() &&

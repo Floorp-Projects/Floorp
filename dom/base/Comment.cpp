@@ -48,8 +48,10 @@ void Comment::List(FILE* out, int32_t aIndent) const {
 }
 #endif
 
-/* static */ already_AddRefed<Comment> Comment::Constructor(
-    const GlobalObject& aGlobal, const nsAString& aData, ErrorResult& aRv) {
+/* static */
+already_AddRefed<Comment> Comment::Constructor(const GlobalObject& aGlobal,
+                                               const nsAString& aData,
+                                               ErrorResult& aRv) {
   nsCOMPtr<nsPIDOMWindowInner> window =
       do_QueryInterface(aGlobal.GetAsSupports());
   if (!window || !window->GetDoc()) {

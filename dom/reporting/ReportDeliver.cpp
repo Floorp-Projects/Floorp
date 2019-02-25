@@ -252,11 +252,10 @@ void SendReport(ReportDeliver::ReportData& aReportData,
 
 }  // namespace
 
-/* static */ void ReportDeliver::Record(nsPIDOMWindowInner* aWindow,
-                                        const nsAString& aType,
-                                        const nsAString& aGroupName,
-                                        const nsAString& aURL,
-                                        ReportBody* aBody) {
+/* static */
+void ReportDeliver::Record(nsPIDOMWindowInner* aWindow, const nsAString& aType,
+                           const nsAString& aGroupName, const nsAString& aURL,
+                           ReportBody* aBody) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aBody);
@@ -311,7 +310,8 @@ void SendReport(ReportDeliver::ReportData& aReportData,
   static_cast<EndpointForReportChild*>(actor)->Initialize(data);
 }
 
-/* static */ void ReportDeliver::Fetch(const ReportData& aReportData) {
+/* static */
+void ReportDeliver::Fetch(const ReportData& aReportData) {
   if (!gReportDeliver) {
     RefPtr<ReportDeliver> rd = new ReportDeliver();
 

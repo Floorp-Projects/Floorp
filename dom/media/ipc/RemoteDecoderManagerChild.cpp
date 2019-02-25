@@ -18,7 +18,8 @@ StaticRefPtr<AbstractThread> sRemoteDecoderManagerChildAbstractThread;
 // Only accessed from sRemoteDecoderManagerChildThread
 static StaticRefPtr<RemoteDecoderManagerChild> sRemoteDecoderManagerChild;
 
-/* static */ void RemoteDecoderManagerChild::InitializeThread() {
+/* static */
+void RemoteDecoderManagerChild::InitializeThread() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!sRemoteDecoderManagerChildThread) {
@@ -32,7 +33,8 @@ static StaticRefPtr<RemoteDecoderManagerChild> sRemoteDecoderManagerChild;
   }
 }
 
-/* static */ void RemoteDecoderManagerChild::InitForContent(
+/* static */
+void RemoteDecoderManagerChild::InitForContent(
     Endpoint<PRemoteDecoderManagerChild>&& aVideoManager) {
   InitializeThread();
   sRemoteDecoderManagerChildThread->Dispatch(
@@ -41,7 +43,8 @@ static StaticRefPtr<RemoteDecoderManagerChild> sRemoteDecoderManagerChild;
       NS_DISPATCH_NORMAL);
 }
 
-/* static */ void RemoteDecoderManagerChild::Shutdown() {
+/* static */
+void RemoteDecoderManagerChild::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (sRemoteDecoderManagerChildThread) {
@@ -62,18 +65,19 @@ static StaticRefPtr<RemoteDecoderManagerChild> sRemoteDecoderManagerChild;
   }
 }
 
-/* static */ RemoteDecoderManagerChild*
-RemoteDecoderManagerChild::GetSingleton() {
+/* static */
+RemoteDecoderManagerChild* RemoteDecoderManagerChild::GetSingleton() {
   MOZ_ASSERT(NS_GetCurrentThread() == GetManagerThread());
   return sRemoteDecoderManagerChild;
 }
 
-/* static */ nsIThread* RemoteDecoderManagerChild::GetManagerThread() {
+/* static */
+nsIThread* RemoteDecoderManagerChild::GetManagerThread() {
   return sRemoteDecoderManagerChildThread;
 }
 
-/* static */ AbstractThread*
-RemoteDecoderManagerChild::GetManagerAbstractThread() {
+/* static */
+AbstractThread* RemoteDecoderManagerChild::GetManagerAbstractThread() {
   return sRemoteDecoderManagerChildAbstractThread;
 }
 

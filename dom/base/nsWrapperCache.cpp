@@ -17,7 +17,8 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 #ifdef DEBUG
-/* static */ bool nsWrapperCache::HasJSObjectMovedOp(JSObject* aWrapper) {
+/* static */
+bool nsWrapperCache::HasJSObjectMovedOp(JSObject* aWrapper) {
   return js::HasObjectMovedOp(aWrapper);
 }
 #endif

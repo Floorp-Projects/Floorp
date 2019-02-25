@@ -15,8 +15,9 @@ bool TokenizerIgnoreNothing(char16_t /* aChar */) { return false; }
 
 }  // anonymous namespace
 
-/* static */ bool FileSystemUtils::IsDescendantPath(
-    const nsAString& aPath, const nsAString& aDescendantPath) {
+/* static */
+bool FileSystemUtils::IsDescendantPath(const nsAString& aPath,
+                                       const nsAString& aDescendantPath) {
   // Check the sub-directory path to see if it has the parent path as prefix.
   if (!aDescendantPath.Equals(aPath) &&
       !StringBeginsWith(aDescendantPath, aPath)) {
@@ -26,8 +27,9 @@ bool TokenizerIgnoreNothing(char16_t /* aChar */) { return false; }
   return true;
 }
 
-/* static */ bool FileSystemUtils::IsValidRelativeDOMPath(
-    const nsAString& aPath, nsTArray<nsString>& aParts) {
+/* static */
+bool FileSystemUtils::IsValidRelativeDOMPath(const nsAString& aPath,
+                                             nsTArray<nsString>& aParts) {
   // We don't allow empty relative path to access the root.
   if (aPath.IsEmpty()) {
     return false;
@@ -62,7 +64,8 @@ bool TokenizerIgnoreNothing(char16_t /* aChar */) { return false; }
   return true;
 }
 
-/* static */ nsresult FileSystemUtils::DispatchRunnable(
+/* static */
+nsresult FileSystemUtils::DispatchRunnable(
     nsIGlobalObject* aGlobal, already_AddRefed<nsIRunnable>&& aRunnable) {
   nsCOMPtr<nsIRunnable> runnable = aRunnable;
 

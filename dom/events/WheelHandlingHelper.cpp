@@ -42,17 +42,16 @@ DeltaValues::DeltaValues(WidgetWheelEvent* aEvent)
 /* mozilla::WheelHandlingUtils                                    */
 /******************************************************************/
 
-/* static */ bool WheelHandlingUtils::CanScrollInRange(nscoord aMin,
-                                                       nscoord aValue,
-                                                       nscoord aMax,
-                                                       double aDirection) {
+/* static */
+bool WheelHandlingUtils::CanScrollInRange(nscoord aMin, nscoord aValue,
+                                          nscoord aMax, double aDirection) {
   return aDirection > 0.0 ? aValue < static_cast<double>(aMax)
                           : static_cast<double>(aMin) < aValue;
 }
 
-/* static */ bool WheelHandlingUtils::CanScrollOn(nsIFrame* aFrame,
-                                                  double aDirectionX,
-                                                  double aDirectionY) {
+/* static */
+bool WheelHandlingUtils::CanScrollOn(nsIFrame* aFrame, double aDirectionX,
+                                     double aDirectionY) {
   nsIScrollableFrame* scrollableFrame = do_QueryFrame(aFrame);
   if (scrollableFrame) {
     return CanScrollOn(scrollableFrame, aDirectionX, aDirectionY);
@@ -61,8 +60,9 @@ DeltaValues::DeltaValues(WidgetWheelEvent* aEvent)
   return pluginFrame && pluginFrame->WantsToHandleWheelEventAsDefaultAction();
 }
 
-/* static */ bool WheelHandlingUtils::CanScrollOn(
-    nsIScrollableFrame* aScrollFrame, double aDirectionX, double aDirectionY) {
+/* static */
+bool WheelHandlingUtils::CanScrollOn(nsIScrollableFrame* aScrollFrame,
+                                     double aDirectionX, double aDirectionY) {
   MOZ_ASSERT(aScrollFrame);
   NS_ASSERTION(aDirectionX || aDirectionY,
                "One of the delta values must be non-zero at least");
@@ -113,18 +113,18 @@ nsITimer* WheelTransaction::sTimer = nullptr;
 int32_t WheelTransaction::sScrollSeriesCounter = 0;
 bool WheelTransaction::sOwnScrollbars = false;
 
-/* static */ bool WheelTransaction::OutOfTime(uint32_t aBaseTime,
-                                              uint32_t aThreshold) {
+/* static */
+bool WheelTransaction::OutOfTime(uint32_t aBaseTime, uint32_t aThreshold) {
   uint32_t now = PR_IntervalToMilliseconds(PR_IntervalNow());
   return (now - aBaseTime > aThreshold);
 }
 
-/* static */ void WheelTransaction::OwnScrollbars(bool aOwn) {
-  sOwnScrollbars = aOwn;
-}
+/* static */
+void WheelTransaction::OwnScrollbars(bool aOwn) { sOwnScrollbars = aOwn; }
 
-/* static */ void WheelTransaction::BeginTransaction(
-    nsIFrame* aTargetFrame, const WidgetWheelEvent* aEvent) {
+/* static */
+void WheelTransaction::BeginTransaction(nsIFrame* aTargetFrame,
+                                        const WidgetWheelEvent* aEvent) {
   NS_ASSERTION(!sTargetFrame, "previous transaction is not finished!");
   MOZ_ASSERT(aEvent->mMessage == eWheel,
              "Transaction must be started with a wheel event");
@@ -137,8 +137,8 @@ bool WheelTransaction::sOwnScrollbars = false;
   }
 }
 
-/* static */ bool WheelTransaction::UpdateTransaction(
-    const WidgetWheelEvent* aEvent) {
+/* static */
+bool WheelTransaction::UpdateTransaction(const WidgetWheelEvent* aEvent) {
   nsIFrame* scrollToFrame = GetTargetFrame();
   nsIScrollableFrame* scrollableFrame = scrollToFrame->GetScrollTargetFrame();
   if (scrollableFrame) {
@@ -169,7 +169,8 @@ bool WheelTransaction::sOwnScrollbars = false;
   return true;
 }
 
-/* static */ void WheelTransaction::MayEndTransaction() {
+/* static */
+void WheelTransaction::MayEndTransaction() {
   if (!sOwnScrollbars && ScrollbarsForWheel::IsActive()) {
     ScrollbarsForWheel::OwnWheelTransaction(true);
   } else {
@@ -177,7 +178,8 @@ bool WheelTransaction::sOwnScrollbars = false;
   }
 }
 
-/* static */ void WheelTransaction::EndTransaction() {
+/* static */
+void WheelTransaction::EndTransaction() {
   if (sTimer) {
     sTimer->Cancel();
   }
@@ -190,7 +192,8 @@ bool WheelTransaction::sOwnScrollbars = false;
   }
 }
 
-/* static */ bool WheelTransaction::WillHandleDefaultAction(
+/* static */
+bool WheelTransaction::WillHandleDefaultAction(
     WidgetWheelEvent* aWheelEvent, AutoWeakFrame& aTargetWeakFrame) {
   nsIFrame* lastTargetFrame = GetTargetFrame();
   if (!lastTargetFrame) {
@@ -214,7 +217,8 @@ bool WheelTransaction::sOwnScrollbars = false;
   return true;
 }
 
-/* static */ void WheelTransaction::OnEvent(WidgetEvent* aEvent) {
+/* static */
+void WheelTransaction::OnEvent(WidgetEvent* aEvent) {
   if (!sTargetFrame) {
     return;
   }
@@ -279,9 +283,11 @@ bool WheelTransaction::sOwnScrollbars = false;
   }
 }
 
-/* static */ void WheelTransaction::Shutdown() { NS_IF_RELEASE(sTimer); }
+/* static */
+void WheelTransaction::Shutdown() { NS_IF_RELEASE(sTimer); }
 
-/* static */ void WheelTransaction::OnFailToScrollTarget() {
+/* static */
+void WheelTransaction::OnFailToScrollTarget() {
   MOZ_ASSERT(sTargetFrame, "We don't have mouse scrolling transaction");
 
   if (Prefs::sTestMouseScroll) {
@@ -298,8 +304,8 @@ bool WheelTransaction::sOwnScrollbars = false;
   }
 }
 
-/* static */ void WheelTransaction::OnTimeout(nsITimer* aTimer,
-                                              void* aClosure) {
+/* static */
+void WheelTransaction::OnTimeout(nsITimer* aTimer, void* aClosure) {
   if (!sTargetFrame) {
     // The transaction target was destroyed already
     EndTransaction();
@@ -320,7 +326,8 @@ bool WheelTransaction::sOwnScrollbars = false;
   }
 }
 
-/* static */ void WheelTransaction::SetTimeout() {
+/* static */
+void WheelTransaction::SetTimeout() {
   if (!sTimer) {
     sTimer = NS_NewTimer().take();
     if (!sTimer) {
@@ -335,14 +342,15 @@ bool WheelTransaction::sOwnScrollbars = false;
                        "nsITimer::InitWithFuncCallback failed");
 }
 
-/* static */ LayoutDeviceIntPoint WheelTransaction::GetScreenPoint(
-    WidgetGUIEvent* aEvent) {
+/* static */
+LayoutDeviceIntPoint WheelTransaction::GetScreenPoint(WidgetGUIEvent* aEvent) {
   NS_ASSERTION(aEvent, "aEvent is null");
   NS_ASSERTION(aEvent->mWidget, "aEvent-mWidget is null");
   return aEvent->mRefPoint + aEvent->mWidget->WidgetToScreenOffset();
 }
 
-/* static */ DeltaValues WheelTransaction::AccelerateWheelDelta(
+/* static */
+DeltaValues WheelTransaction::AccelerateWheelDelta(
     WidgetWheelEvent* aEvent, bool aAllowScrollSpeedOverride) {
   DeltaValues result(aEvent);
 
@@ -368,13 +376,15 @@ bool WheelTransaction::sOwnScrollbars = false;
   return result;
 }
 
-/* static */ double WheelTransaction::ComputeAcceleratedWheelDelta(
-    double aDelta, int32_t aFactor) {
+/* static */
+double WheelTransaction::ComputeAcceleratedWheelDelta(double aDelta,
+                                                      int32_t aFactor) {
   return mozilla::ComputeAcceleratedWheelDelta(aDelta, sScrollSeriesCounter,
                                                aFactor);
 }
 
-/* static */ DeltaValues WheelTransaction::OverrideSystemScrollSpeed(
+/* static */
+DeltaValues WheelTransaction::OverrideSystemScrollSpeed(
     WidgetWheelEvent* aEvent) {
   MOZ_ASSERT(sTargetFrame, "We don't have mouse scrolling transaction");
   MOZ_ASSERT(aEvent->mDeltaMode == WheelEvent_Binding::DOM_DELTA_LINE);
@@ -403,8 +413,10 @@ AutoWeakFrame ScrollbarsForWheel::sActivatedScrollTargets[kNumberOfTargets] = {
 bool ScrollbarsForWheel::sHadWheelStart = false;
 bool ScrollbarsForWheel::sOwnWheelTransaction = false;
 
-/* static */ void ScrollbarsForWheel::PrepareToScrollText(
-    EventStateManager* aESM, nsIFrame* aTargetFrame, WidgetWheelEvent* aEvent) {
+/* static */
+void ScrollbarsForWheel::PrepareToScrollText(EventStateManager* aESM,
+                                             nsIFrame* aTargetFrame,
+                                             WidgetWheelEvent* aEvent) {
   if (aEvent->mMessage == eWheelOperationStart) {
     WheelTransaction::OwnScrollbars(false);
     if (!IsActive()) {
@@ -416,7 +428,8 @@ bool ScrollbarsForWheel::sOwnWheelTransaction = false;
   }
 }
 
-/* static */ void ScrollbarsForWheel::SetActiveScrollTarget(
+/* static */
+void ScrollbarsForWheel::SetActiveScrollTarget(
     nsIScrollableFrame* aScrollTarget) {
   if (!sHadWheelStart) {
     return;
@@ -430,7 +443,8 @@ bool ScrollbarsForWheel::sOwnWheelTransaction = false;
   scrollbarMediator->ScrollbarActivityStarted();
 }
 
-/* static */ void ScrollbarsForWheel::MayInactivate() {
+/* static */
+void ScrollbarsForWheel::MayInactivate() {
   if (!sOwnWheelTransaction && WheelTransaction::GetTargetFrame()) {
     WheelTransaction::OwnScrollbars(true);
   } else {
@@ -438,7 +452,8 @@ bool ScrollbarsForWheel::sOwnWheelTransaction = false;
   }
 }
 
-/* static */ void ScrollbarsForWheel::Inactivate() {
+/* static */
+void ScrollbarsForWheel::Inactivate() {
   nsIScrollbarMediator* scrollbarMediator = do_QueryFrame(sActiveOwner);
   if (scrollbarMediator) {
     scrollbarMediator->ScrollbarActivityStopped();
@@ -452,7 +467,8 @@ bool ScrollbarsForWheel::sOwnWheelTransaction = false;
   }
 }
 
-/* static */ bool ScrollbarsForWheel::IsActive() {
+/* static */
+bool ScrollbarsForWheel::IsActive() {
   if (sActiveOwner) {
     return true;
   }
@@ -464,12 +480,13 @@ bool ScrollbarsForWheel::sOwnWheelTransaction = false;
   return false;
 }
 
-/* static */ void ScrollbarsForWheel::OwnWheelTransaction(bool aOwn) {
+/* static */
+void ScrollbarsForWheel::OwnWheelTransaction(bool aOwn) {
   sOwnWheelTransaction = aOwn;
 }
 
-/* static */ void
-ScrollbarsForWheel::TemporarilyActivateAllPossibleScrollTargets(
+/* static */
+void ScrollbarsForWheel::TemporarilyActivateAllPossibleScrollTargets(
     EventStateManager* aESM, nsIFrame* aTargetFrame, WidgetWheelEvent* aEvent) {
   for (size_t i = 0; i < kNumberOfTargets; i++) {
     const DeltaValues* dir = &directions[i];
@@ -487,8 +504,8 @@ ScrollbarsForWheel::TemporarilyActivateAllPossibleScrollTargets(
   }
 }
 
-/* static */ void
-ScrollbarsForWheel::DeactivateAllTemporarilyActivatedScrollTargets() {
+/* static */
+void ScrollbarsForWheel::DeactivateAllTemporarilyActivatedScrollTargets() {
   for (size_t i = 0; i < kNumberOfTargets; i++) {
     AutoWeakFrame* scrollTarget = &sActivatedScrollTargets[i];
     if (*scrollTarget) {
@@ -511,7 +528,8 @@ uint32_t WheelTransaction::Prefs::sMouseWheelTransactionTimeout = 1500;
 uint32_t WheelTransaction::Prefs::sMouseWheelTransactionIgnoreMoveDelay = 100;
 bool WheelTransaction::Prefs::sTestMouseScroll = false;
 
-/* static */ void WheelTransaction::Prefs::InitializeStatics() {
+/* static */
+void WheelTransaction::Prefs::InitializeStatics() {
   static bool sIsInitialized = false;
   if (!sIsInitialized) {
     Preferences::AddIntVarCache(&sMouseWheelAccelerationStart,

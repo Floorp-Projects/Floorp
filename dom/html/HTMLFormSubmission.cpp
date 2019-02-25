@@ -809,7 +809,8 @@ void GetEnumAttr(nsGenericHTMLElement* aContent, nsAtom* atom,
 
 }  // anonymous namespace
 
-/* static */ nsresult HTMLFormSubmission::GetFromForm(
+/* static */
+nsresult HTMLFormSubmission::GetFromForm(
     HTMLFormElement* aForm, nsGenericHTMLElement* aOriginatingElement,
     HTMLFormSubmission** aFormSubmission) {
   // Get all the information necessary to encode the form data

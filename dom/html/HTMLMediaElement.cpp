@@ -1590,7 +1590,8 @@ already_AddRefed<Promise> HTMLMediaElement::MozRequestDebugInfo(
   return promise.forget();
 }
 
-/* static */ void HTMLMediaElement::MozEnableDebugLog(const GlobalObject&) {
+/* static */
+void HTMLMediaElement::MozEnableDebugLog(const GlobalObject&) {
   DecoderDoctorLogger::EnableLogging();
 }
 

@@ -54,7 +54,8 @@ bool OmxCoreLibLinker::TryLinkingLibrary(const char* libName) {
   return false;
 }
 
-/* static */ bool OmxCoreLibLinker::Link() {
+/* static */
+bool OmxCoreLibLinker::Link() {
   LOG("");
 
   if (sLinkStatus) {
@@ -83,7 +84,8 @@ bool OmxCoreLibLinker::TryLinkingLibrary(const char* libName) {
   return false;
 }
 
-/* static */ bool OmxCoreLibLinker::Bind(const char* aLibName) {
+/* static */
+bool OmxCoreLibLinker::Bind(const char* aLibName) {
 #define OMX_FUNC(func)                                              \
   {                                                                 \
     if (!(func = (typeof(func))PR_FindSymbol(sLinkedLib, #func))) { \
@@ -96,7 +98,8 @@ bool OmxCoreLibLinker::TryLinkingLibrary(const char* libName) {
   return true;
 }
 
-/* static */ void OmxCoreLibLinker::Unlink() {
+/* static */
+void OmxCoreLibLinker::Unlink() {
   LOG("");
 
   if (sLinkedLib) {

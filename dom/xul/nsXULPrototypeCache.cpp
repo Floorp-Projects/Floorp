@@ -76,7 +76,8 @@ nsXULPrototypeCache::~nsXULPrototypeCache() { FlushScripts(); }
 
 NS_IMPL_ISUPPORTS(nsXULPrototypeCache, nsIObserver)
 
-/* static */ nsXULPrototypeCache* nsXULPrototypeCache::GetInstance() {
+/* static */
+nsXULPrototypeCache* nsXULPrototypeCache::GetInstance() {
   if (!sInstance) {
     NS_ADDREF(sInstance = new nsXULPrototypeCache());
 
@@ -543,7 +544,8 @@ static void AppendURIForMemoryReport(nsIURI* aUri, nsACString& aOutput) {
   aOutput += spec;
 }
 
-/* static */ void nsXULPrototypeCache::CollectMemoryReports(
+/* static */
+void nsXULPrototypeCache::CollectMemoryReports(
     nsIHandleReportCallback* aHandleReport, nsISupports* aData) {
   if (!sInstance) {
     return;

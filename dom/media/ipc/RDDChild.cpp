@@ -131,7 +131,8 @@ class DeferredDeleteRDDChild : public Runnable {
   UniquePtr<RDDChild> mChild;
 };
 
-/* static */ void RDDChild::Destroy(UniquePtr<RDDChild>&& aChild) {
+/* static */
+void RDDChild::Destroy(UniquePtr<RDDChild>&& aChild) {
   NS_DispatchToMainThread(new DeferredDeleteRDDChild(std::move(aChild)));
 }
 

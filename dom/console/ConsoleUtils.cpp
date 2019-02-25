@@ -19,7 +19,8 @@ StaticRefPtr<ConsoleUtils> gConsoleUtilsService;
 
 }
 
-/* static */ ConsoleUtils* ConsoleUtils::GetOrCreate() {
+/* static */
+ConsoleUtils* ConsoleUtils::GetOrCreate() {
   if (!gConsoleUtilsService) {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -33,10 +34,13 @@ StaticRefPtr<ConsoleUtils> gConsoleUtilsService;
 ConsoleUtils::ConsoleUtils() = default;
 ConsoleUtils::~ConsoleUtils() = default;
 
-/* static */ void ConsoleUtils::ReportForServiceWorkerScope(
-    const nsAString& aScope, const nsAString& aMessage,
-    const nsAString& aFilename, uint32_t aLineNumber, uint32_t aColumnNumber,
-    Level aLevel) {
+/* static */
+void ConsoleUtils::ReportForServiceWorkerScope(const nsAString& aScope,
+                                               const nsAString& aMessage,
+                                               const nsAString& aFilename,
+                                               uint32_t aLineNumber,
+                                               uint32_t aColumnNumber,
+                                               Level aLevel) {
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<ConsoleUtils> service = ConsoleUtils::GetOrCreate();

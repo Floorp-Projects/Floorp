@@ -22,7 +22,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AbortController)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-/* static */ already_AddRefed<AbortController> AbortController::Constructor(
+/* static */
+already_AddRefed<AbortController> AbortController::Constructor(
     const GlobalObject& aGlobal, ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   if (!global) {

@@ -2835,7 +2835,8 @@ void nsHTMLDocument::RemovedFromDocShell() {
   Document::RemovedFromDocShell();
 }
 
-/* virtual */ void nsHTMLDocument::DocAddSizeOfExcludingThis(
+/* virtual */
+void nsHTMLDocument::DocAddSizeOfExcludingThis(
     nsWindowSizes& aWindowSizes) const {
   Document::DocAddSizeOfExcludingThis(aWindowSizes);
 

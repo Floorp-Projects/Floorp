@@ -19,7 +19,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TestingDeprecatedInterface)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-/* static */ already_AddRefed<TestingDeprecatedInterface>
+/* static */
+already_AddRefed<TestingDeprecatedInterface>
 TestingDeprecatedInterface::Constructor(const GlobalObject& aGlobal,
                                         ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());

@@ -170,7 +170,8 @@ AudioBuffer::~AudioBuffer() {
   mozilla::DropJSObjects(this);
 }
 
-/* static */ already_AddRefed<AudioBuffer> AudioBuffer::Constructor(
+/* static */
+already_AddRefed<AudioBuffer> AudioBuffer::Constructor(
     const GlobalObject& aGlobal, const AudioBufferOptions& aOptions,
     ErrorResult& aRv) {
   if (!aOptions.mNumberOfChannels) {
@@ -199,7 +200,8 @@ void AudioBuffer::SetSharedChannels(
   mSharedChannels.mBufferFormat = AUDIO_FORMAT_FLOAT32;
 }
 
-/* static */ already_AddRefed<AudioBuffer> AudioBuffer::Create(
+/* static */
+already_AddRefed<AudioBuffer> AudioBuffer::Create(
     nsPIDOMWindowInner* aWindow, uint32_t aNumberOfChannels, uint32_t aLength,
     float aSampleRate,
     already_AddRefed<ThreadSharedFloatArrayBufferList> aInitialContents,
@@ -219,7 +221,8 @@ void AudioBuffer::SetSharedChannels(
   return buffer.forget();
 }
 
-/* static */ already_AddRefed<AudioBuffer> AudioBuffer::Create(
+/* static */
+already_AddRefed<AudioBuffer> AudioBuffer::Create(
     nsPIDOMWindowInner* aWindow, float aSampleRate,
     AudioChunk&& aInitialContents) {
   AudioChunk initialContents = aInitialContents;

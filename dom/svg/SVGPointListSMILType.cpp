@@ -14,7 +14,8 @@
 
 namespace mozilla {
 
-/*static*/ SVGPointListSMILType SVGPointListSMILType::sSingleton;
+/*static*/
+SVGPointListSMILType SVGPointListSMILType::sSingleton;
 
 //----------------------------------------------------------------------
 // nsISMILType implementation

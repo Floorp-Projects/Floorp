@@ -38,7 +38,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ReportingObserver)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
 NS_INTERFACE_MAP_END
 
-/* static */ already_AddRefed<ReportingObserver> ReportingObserver::Constructor(
+/* static */
+already_AddRefed<ReportingObserver> ReportingObserver::Constructor(
     const GlobalObject& aGlobal, ReportingObserverCallback& aCallback,
     const ReportingObserverOptions& aOptions, ErrorResult& aRv) {
   nsCOMPtr<nsPIDOMWindowInner> window =

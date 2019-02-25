@@ -304,7 +304,8 @@ void IPCInternetBuffers::CopyTo(LPINTERNET_BUFFERSA& aBufs) const {
   }
 }
 
-/* static */ void IPCInternetBuffers::FreeBuffers(LPINTERNET_BUFFERSA& aBufs) {
+/* static */
+void IPCInternetBuffers::FreeBuffers(LPINTERNET_BUFFERSA& aBufs) {
   if (!aBufs) {
     return;
   }

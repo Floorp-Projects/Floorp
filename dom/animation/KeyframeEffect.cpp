@@ -622,7 +622,8 @@ static KeyframeEffectParams KeyframeEffectParamsFromUnion(
   return result;
 }
 
-/* static */ Maybe<OwningAnimationTarget> KeyframeEffect::ConvertTarget(
+/* static */
+Maybe<OwningAnimationTarget> KeyframeEffect::ConvertTarget(
     const Nullable<ElementOrCSSPseudoElement>& aTarget) {
   // Return value optimization.
   Maybe<OwningAnimationTarget> result;
@@ -645,8 +646,8 @@ static KeyframeEffectParams KeyframeEffectParamsFromUnion(
 }
 
 template <class OptionsType>
-/* static */ already_AddRefed<KeyframeEffect>
-KeyframeEffect::ConstructKeyframeEffect(
+/* static */
+already_AddRefed<KeyframeEffect> KeyframeEffect::ConstructKeyframeEffect(
     const GlobalObject& aGlobal,
     const Nullable<ElementOrCSSPseudoElement>& aTarget,
     JS::Handle<JSObject*> aKeyframes, const OptionsType& aOptions,
@@ -832,7 +833,8 @@ void DumpAnimationProperties(
 }
 #endif
 
-/* static */ already_AddRefed<KeyframeEffect> KeyframeEffect::Constructor(
+/* static */
+already_AddRefed<KeyframeEffect> KeyframeEffect::Constructor(
     const GlobalObject& aGlobal,
     const Nullable<ElementOrCSSPseudoElement>& aTarget,
     JS::Handle<JSObject*> aKeyframes,
@@ -841,7 +843,8 @@ void DumpAnimationProperties(
   return ConstructKeyframeEffect(aGlobal, aTarget, aKeyframes, aOptions, aRv);
 }
 
-/* static */ already_AddRefed<KeyframeEffect> KeyframeEffect::Constructor(
+/* static */
+already_AddRefed<KeyframeEffect> KeyframeEffect::Constructor(
     const GlobalObject& aGlobal,
     const Nullable<ElementOrCSSPseudoElement>& aTarget,
     JS::Handle<JSObject*> aKeyframes,
@@ -850,7 +853,8 @@ void DumpAnimationProperties(
   return ConstructKeyframeEffect(aGlobal, aTarget, aKeyframes, aOptions, aRv);
 }
 
-/* static */ already_AddRefed<KeyframeEffect> KeyframeEffect::Constructor(
+/* static */
+already_AddRefed<KeyframeEffect> KeyframeEffect::Constructor(
     const GlobalObject& aGlobal, KeyframeEffect& aSource, ErrorResult& aRv) {
   Document* doc = AnimationUtils::GetCurrentRealmDocument(aGlobal.Context());
   if (!doc) {
@@ -1362,8 +1366,8 @@ nsIPresShell* KeyframeEffect::GetPresShell() const {
   return doc->GetShell();
 }
 
-/* static */ bool KeyframeEffect::IsGeometricProperty(
-    const nsCSSPropertyID aProperty) {
+/* static */
+bool KeyframeEffect::IsGeometricProperty(const nsCSSPropertyID aProperty) {
   MOZ_ASSERT(!nsCSSProps::IsShorthand(aProperty),
              "Property should be a longhand property");
 
@@ -1388,7 +1392,8 @@ nsIPresShell* KeyframeEffect::GetPresShell() const {
   }
 }
 
-/* static */ bool KeyframeEffect::CanAnimateTransformOnCompositor(
+/* static */
+bool KeyframeEffect::CanAnimateTransformOnCompositor(
     const nsIFrame* aFrame,
     AnimationPerformanceWarning::Type& aPerformanceWarning /* out */) {
   // Disallow OMTA for preserve-3d transform. Note that we check the style
@@ -1652,7 +1657,8 @@ void KeyframeEffect::MarkCascadeNeedsUpdate() {
   effectSet->MarkCascadeNeedsUpdate();
 }
 
-/* static */ bool KeyframeEffect::HasComputedTimingChanged(
+/* static */
+bool KeyframeEffect::HasComputedTimingChanged(
     const ComputedTiming& aComputedTiming,
     IterationCompositeOperation aIterationComposite,
     const Nullable<double>& aProgressOnLastCompose,

@@ -145,7 +145,8 @@ SVGAnimatedTransformList* SVGPatternElement::GetAnimatedTransformList(
   return mPatternTransform;
 }
 
-/* virtual */ bool SVGPatternElement::HasValidDimensions() const {
+/* virtual */
+bool SVGPatternElement::HasValidDimensions() const {
   return mLengthAttributes[ATTR_WIDTH].IsExplicitlySet() &&
          mLengthAttributes[ATTR_WIDTH].GetAnimValInSpecifiedUnits() > 0 &&
          mLengthAttributes[ATTR_HEIGHT].IsExplicitlySet() &&
