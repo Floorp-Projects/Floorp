@@ -1076,7 +1076,8 @@ JitCode* ICStubCompiler::getStubCode() {
   if (!generateStubCode(masm)) {
     return nullptr;
   }
-  Linker linker(masm, "getStubCode");
+  Linker linker(masm);
+  AutoFlushICache afc("getStubCode");
   Rooted<JitCode*> newStubCode(cx, linker.newCode(cx, CodeKind::Baseline));
   if (!newStubCode) {
     return nullptr;
