@@ -249,8 +249,8 @@ var SessionStore = {
     return SessionStoreInternal.getWindowState(aWindow);
   },
 
-  setWindowState: function ss_setWindowState(aWindow, aState, aOverwrite) {
-    SessionStoreInternal.setWindowState(aWindow, aState, aOverwrite);
+  setWindowState: function ss_setWindowState(aWindow, aState, aOverwrite, aFirstWindow) {
+    SessionStoreInternal.setWindowState(aWindow, aState, aOverwrite, aFirstWindow);
   },
 
   getTabState: function ss_getTabState(aTab) {
@@ -2500,12 +2500,15 @@ var SessionStoreInternal = {
     throw Components.Exception("Window is not tracked", Cr.NS_ERROR_INVALID_ARG);
   },
 
-  setWindowState: function ssi_setWindowState(aWindow, aState, aOverwrite) {
+  setWindowState: function ssi_setWindowState(aWindow, aState, aOverwrite, aFirstWindow) {
     if (!aWindow.__SSi) {
       throw Components.Exception("Window is not tracked", Cr.NS_ERROR_INVALID_ARG);
     }
 
-    this.restoreWindows(aWindow, aState, {overwriteTabs: aOverwrite});
+    this.restoreWindows(aWindow, aState, {
+      overwriteTabs: aOverwrite,
+      firstWindow: aFirstWindow,
+    });
 
     // Notify of changes to closed objects.
     this._notifyOfClosedObjectsChange();
