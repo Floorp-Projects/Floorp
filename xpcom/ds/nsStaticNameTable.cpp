@@ -6,10 +6,12 @@
 
 /* Class to manage lookup of static names in a table. */
 
+#include "mozilla/HashFunctions.h"
+#include "mozilla/TextUtils.h"
+
 #include "nsCRT.h"
 
 #include "nscore.h"
-#include "mozilla/HashFunctions.h"
 #include "nsISupportsImpl.h"
 
 #include "nsStaticNameTable.h"
@@ -107,7 +109,7 @@ nsStaticCaseInsensitiveNameTable::nsStaticCaseInsensitiveNameTable(
       nsDependentCString temp2(raw);
       ToLowerCase(temp1);
       MOZ_ASSERT(temp1.Equals(temp2), "upper case char in table");
-      MOZ_ASSERT(nsCRT::IsAscii(raw),
+      MOZ_ASSERT(IsAsciiNullTerminated(raw),
                  "non-ascii string in table -- "
                  "case-insensitive matching won't work right");
     }

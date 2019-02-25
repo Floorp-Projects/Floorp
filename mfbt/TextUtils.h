@@ -41,6 +41,24 @@ constexpr bool IsAscii(Char aChar) {
   return uc < 0x80;
 }
 
+/**
+ * Returns true iff every character in the null-terminated string pointed to by
+ * |aChar| is ASCII, i.e. in the range [0, 0x80).
+ */
+template <typename Char>
+constexpr bool IsAsciiNullTerminated(const Char* aChar) {
+  while (Char c = *aChar++) {
+    if (!IsAscii(c)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Returns true iff |aChar| is Latin-1 but not ASCII, i.e. in the range
+ * [0x80, 0xFF].
+ */
 template <typename Char>
 constexpr bool IsNonAsciiLatin1(Char aChar) {
   using UnsignedChar = typename detail::MakeUnsignedChar<Char>::Type;
