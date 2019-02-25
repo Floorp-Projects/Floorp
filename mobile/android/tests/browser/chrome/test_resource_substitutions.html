@@ -42,7 +42,9 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
        .getProtocolHandler("resource")
        .QueryInterface(Ci.nsIResProtocolHandler);
 
-    ok(protocolHandler.hasSubstitution("android"));
+    ok(protocolHandler.hasSubstitution("app"), "Should have app substitution");
+    ok(protocolHandler.hasSubstitution("gre"), "Should have gre substitution");
+    ok(protocolHandler.hasSubstitution("android"), "Should have android substitution");
 
     // This can be any file that we know exists in the root of every APK.
     let packageName = await readChannel("resource://android/package-name.txt");

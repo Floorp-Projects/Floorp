@@ -38,15 +38,11 @@ class nsResProtocolHandler final
                              nsIURI* aBaseURI) override;
   NS_IMETHOD SetSubstitutionWithFlags(const nsACString& aRoot, nsIURI* aBaseURI,
                                       uint32_t aFlags) override;
+  NS_IMETHOD HasSubstitution(const nsACString& aRoot, bool* aResult) override;
 
   NS_IMETHOD GetSubstitution(const nsACString& aRoot,
                              nsIURI** aResult) override {
     return mozilla::net::SubstitutingProtocolHandler::GetSubstitution(aRoot,
-                                                                      aResult);
-  }
-
-  NS_IMETHOD HasSubstitution(const nsACString& aRoot, bool* aResult) override {
-    return mozilla::net::SubstitutingProtocolHandler::HasSubstitution(aRoot,
                                                                       aResult);
   }
 
