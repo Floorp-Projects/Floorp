@@ -876,7 +876,8 @@ NS_IMPL_ISUPPORTS(ExternalResourceMap::PendingLoad, nsIStreamListener,
                   nsIRequestObserver)
 
 NS_IMETHODIMP
-ExternalResourceMap::PendingLoad::OnStartRequest(nsIRequest* aRequest) {
+ExternalResourceMap::PendingLoad::OnStartRequest(nsIRequest* aRequest,
+                                                 nsISupports* aContext) {
   ExternalResourceMap& map = mDisplayDocument->ExternalResourceMap();
   if (map.HaveShutDown()) {
     return NS_BINDING_ABORTED;
@@ -898,7 +899,7 @@ ExternalResourceMap::PendingLoad::OnStartRequest(nsIRequest* aRequest) {
     return rv2;
   }
 
-  return mTargetListener->OnStartRequest(aRequest);
+  return mTargetListener->OnStartRequest(aRequest, aContext);
 }
 
 nsresult ExternalResourceMap::PendingLoad::SetupViewer(
@@ -981,6 +982,7 @@ nsresult ExternalResourceMap::PendingLoad::SetupViewer(
 
 NS_IMETHODIMP
 ExternalResourceMap::PendingLoad::OnDataAvailable(nsIRequest* aRequest,
+                                                  nsISupports* aContext,
                                                   nsIInputStream* aStream,
                                                   uint64_t aOffset,
                                                   uint32_t aCount) {
@@ -989,18 +991,19 @@ ExternalResourceMap::PendingLoad::OnDataAvailable(nsIRequest* aRequest,
   if (mDisplayDocument->ExternalResourceMap().HaveShutDown()) {
     return NS_BINDING_ABORTED;
   }
-  return mTargetListener->OnDataAvailable(aRequest, aStream, aOffset,
+  return mTargetListener->OnDataAvailable(aRequest, aContext, aStream, aOffset,
                                           aCount);
 }
 
 NS_IMETHODIMP
 ExternalResourceMap::PendingLoad::OnStopRequest(nsIRequest* aRequest,
+                                                nsISupports* aContext,
                                                 nsresult aStatus) {
   // mTargetListener might be null if SetupViewer or AddExternalResource failed
   if (mTargetListener) {
     nsCOMPtr<nsIStreamListener> listener;
     mTargetListener.swap(listener);
-    return listener->OnStopRequest(aRequest, aStatus);
+    return listener->OnStopRequest(aRequest, aContext, aStatus);
   }
 
   return NS_OK;

@@ -753,7 +753,7 @@ HashCompleterRequest.prototype = {
     }
   },
 
-  onDataAvailable: function HCR_onDataAvailable(aRequest,
+  onDataAvailable: function HCR_onDataAvailable(aRequest, aContext,
                                                 aInputStream, aOffset, aCount) {
     let sis = Cc["@mozilla.org/scriptableinputstream;1"].
               createInstance(Ci.nsIScriptableInputStream);
@@ -761,7 +761,7 @@ HashCompleterRequest.prototype = {
     this._response += sis.readBytes(aCount);
   },
 
-  onStartRequest: function HCR_onStartRequest(aRequest) {
+  onStartRequest: function HCR_onStartRequest(aRequest, aContext) {
     // At this point no data is available for us and we have no reason to
     // terminate the connection, so we do nothing until |onStopRequest|.
     this._completer._nextGethashTimeMs[this.gethashUrl] = 0;
@@ -773,7 +773,7 @@ HashCompleterRequest.prototype = {
     }
   },
 
-  onStopRequest: function HCR_onStopRequest(aRequest, aStatusCode) {
+  onStopRequest: function HCR_onStopRequest(aRequest, aContext, aStatusCode) {
     Services.obs.removeObserver(this, "quit-application");
 
     if (this.timer_) {

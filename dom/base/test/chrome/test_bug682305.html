@@ -56,14 +56,15 @@ CustomChannel.prototype = {
     // throws an error if security checks fail
     var outListener = contentSecManager.performSecurityCheck(this, listener);
     let stream = this.open();
+    let context = null;
     try {
-      outListener.onStartRequest(this);
+      outListener.onStartRequest(this, context);
     } catch (e) {}
     try {
-      outListener.onDataAvailable(this, stream, 0, stream.available());
+      outListener.onDataAvailable(this, context, stream, 0, stream.available());
     } catch (e) {}
     try {
-      outListener.onStopRequest(this, Cr.NS_OK);
+      outListener.onStopRequest(this, context, Cr.NS_OK);
     } catch (e) {}
   },
   open() {

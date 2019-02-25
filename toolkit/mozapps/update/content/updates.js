@@ -941,7 +941,7 @@ var gDownloadingPage = {
    * @param   context
    *          Additional data
    */
-  onStartRequest(request) {
+  onStartRequest(request, context) {
     // This !paused test is necessary because onStartRequest may fire after
     // the download was paused (for those speedy clickers...)
     if (this._paused)
@@ -1017,7 +1017,7 @@ var gDownloadingPage = {
    * @param   status
    *          Status code containing the reason for the cessation.
    */
-  onStopRequest(request, status) {
+  onStopRequest(request, context, status) {
     this._downloadProgress.setAttribute("value", "100");
 
     var u = gUpdates.update;

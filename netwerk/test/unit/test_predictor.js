@@ -426,15 +426,15 @@ function prefetchHandler(metadata, response) {
 }
 
 var prefetchListener = {
-  onStartRequest: function(request) {
+  onStartRequest: function(request, ctx) {
     Assert.equal(request.status, Cr.NS_OK);
   },
 
-  onDataAvailable: function(request, stream, offset, cnt) {
+  onDataAvailable: function(request, cx, stream, offset, cnt) {
     read_stream(stream, cnt);
   },
 
-  onStopRequest: function(request, status) {
+  onStopRequest: function(request, ctx, status) {
     run_next_test();
   }
 };

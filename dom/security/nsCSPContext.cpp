@@ -1595,6 +1595,7 @@ nsresult AppendSegmentToString(nsIInputStream* aInputStream, void* aClosure,
 
 NS_IMETHODIMP
 CSPViolationReportListener::OnDataAvailable(nsIRequest* aRequest,
+                                            nsISupports* aContext,
                                             nsIInputStream* aInputStream,
                                             uint64_t aOffset, uint32_t aCount) {
   uint32_t read;
@@ -1605,12 +1606,14 @@ CSPViolationReportListener::OnDataAvailable(nsIRequest* aRequest,
 
 NS_IMETHODIMP
 CSPViolationReportListener::OnStopRequest(nsIRequest* aRequest,
+                                          nsISupports* aContext,
                                           nsresult aStatus) {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CSPViolationReportListener::OnStartRequest(nsIRequest* aRequest) {
+CSPViolationReportListener::OnStartRequest(nsIRequest* aRequest,
+                                           nsISupports* aContext) {
   return NS_OK;
 }
 

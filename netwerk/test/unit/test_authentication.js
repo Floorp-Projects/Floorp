@@ -259,7 +259,7 @@ RealmTestRequestor.prototype = {
 var listener = {
   expectedCode: -1, // Uninitialized
 
-  onStartRequest: function test_onStartR(request) {
+  onStartRequest: function test_onStartR(request, ctx) {
     try {
       if (!Components.isSuccessCode(request.status))
         do_throw("Channel should have a success code!");
@@ -282,7 +282,7 @@ var listener = {
     do_throw("Should not get any data!");
   },
 
-  onStopRequest: function test_onStopR(request, status) {
+  onStopRequest: function test_onStopR(request, ctx, status) {
     Assert.equal(status, Cr.NS_ERROR_ABORT);
 
     moveToNextTest();

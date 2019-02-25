@@ -50,11 +50,11 @@ var multipartListener = {
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
-  onStartRequest: function(request) {
+  onStartRequest: function(request, context) {
     this._buffer = "";
   },
 
-  onDataAvailable: function(request, stream, offset, count) {
+  onDataAvailable: function(request, context, stream, offset, count) {
     try {
       this._buffer = this._buffer.concat(read_stream(stream, count));
       dump("BUFFEEE: " + this._buffer + "\n\n");
@@ -63,7 +63,7 @@ var multipartListener = {
     }
   },
 
-  onStopRequest: function(request, status) {
+  onStopRequest: function(request, context, status) {
     this._index++;
     // Second part should be last part
     Assert.equal(request.QueryInterface(Ci.nsIMultiPartChannel).isLastPart, this._index == testData.length);

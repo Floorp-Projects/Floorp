@@ -1796,13 +1796,13 @@ nsFtpState::OnTransportStatus(nsITransport *transport, nsresult status,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsFtpState::OnStartRequest(nsIRequest *request) {
+nsFtpState::OnStartRequest(nsIRequest *request, nsISupports *context) {
   mStorReplyReceived = false;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFtpState::OnStopRequest(nsIRequest *request,
+nsFtpState::OnStopRequest(nsIRequest *request, nsISupports *context,
                           nsresult status) {
   mUploadRequest = nullptr;
 

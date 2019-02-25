@@ -25,8 +25,8 @@ function streamDefaultFavicon(uri, loadInfo, outputStream, originalChannel) {
     let listener = Cc["@mozilla.org/network/simple-stream-listener;1"]
                      .createInstance(Ci.nsISimpleStreamListener);
     listener.init(outputStream, {
-      onStartRequest(request) {},
-      onStopRequest(request, statusCode) {
+      onStartRequest(request, context) {},
+      onStopRequest(request, context, statusCode) {
         // We must close the outputStream regardless.
         outputStream.close();
       },

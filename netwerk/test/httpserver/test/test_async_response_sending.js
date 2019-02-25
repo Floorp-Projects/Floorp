@@ -1474,9 +1474,10 @@ CopyTest.prototype =
   //
   // see nsIRequestObserver.onStartRequest
   //
-  onStartRequest: function onStartRequest(self) {
+  onStartRequest: function onStartRequest(self, _) {
     dumpn("*** CopyTest.onStartRequest (" + self.name + ")");
 
+    Assert.ok(_ === null);
     Assert.equal(this._receivedData.length, 0);
     Assert.equal(this._lastQuantum.length, 0);
   },
@@ -1484,9 +1485,10 @@ CopyTest.prototype =
   //
   // see nsIRequestObserver.onStopRequest
   //
-  onStopRequest: function onStopRequest(self, status) {
+  onStopRequest: function onStopRequest(self, _, status) {
     dumpn("*** CopyTest.onStopRequest (" + self.name + ", " + status + ")");
 
+    Assert.ok(_ === null);
     this._actualStatus = status;
 
     this._copyingFinished = true;

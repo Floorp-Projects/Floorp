@@ -185,7 +185,7 @@ void WyciwygChannelChild::OnStartRequest(const nsresult& statusCode,
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
 
-  rv = mListener->OnStartRequest(this);
+  rv = mListener->OnStartRequest(this, nullptr);
   if (NS_FAILED(rv)) Cancel(rv);
 }
 
@@ -234,7 +234,7 @@ void WyciwygChannelChild::OnDataAvailable(const nsCString& data,
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
 
-  rv = mListener->OnDataAvailable(this, stringStream, offset,
+  rv = mListener->OnDataAvailable(this, nullptr, stringStream, offset,
                                   data.Length());
   if (NS_FAILED(rv)) Cancel(rv);
 
@@ -278,7 +278,7 @@ void WyciwygChannelChild::OnStopRequest(const nsresult& statusCode) {
 
     if (!mCanceled) mStatus = statusCode;
 
-    mListener->OnStopRequest(this, statusCode);
+    mListener->OnStopRequest(this, nullptr, statusCode);
 
     mListener = nullptr;
 
@@ -320,8 +320,8 @@ void WyciwygChannelChild::CancelEarly(const nsresult& statusCode) {
   if (mLoadGroup) mLoadGroup->RemoveRequest(this, nullptr, mStatus);
 
   if (mListener) {
-    mListener->OnStartRequest(this);
-    mListener->OnStopRequest(this, mStatus);
+    mListener->OnStartRequest(this, nullptr);
+    mListener->OnStopRequest(this, nullptr, mStatus);
   }
   mListener = nullptr;
 

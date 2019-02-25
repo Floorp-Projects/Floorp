@@ -1190,10 +1190,10 @@ function openURL(aURL) {
     var appstartup = Services.startup;
 
     var loadListener = {
-      onStartRequest: function ll_start(aRequest) {
+      onStartRequest: function ll_start(aRequest, aContext) {
         appstartup.enterLastWindowClosingSurvivalArea();
       },
-      onStopRequest: function ll_stop(aRequest, aStatusCode) {
+      onStopRequest: function ll_stop(aRequest, aContext, aStatusCode) {
         appstartup.exitLastWindowClosingSurvivalArea();
       },
       QueryInterface: ChromeUtils.generateQI(["nsIRequestObserver",

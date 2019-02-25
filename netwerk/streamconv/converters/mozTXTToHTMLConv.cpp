@@ -1218,19 +1218,19 @@ mozTXTToHTMLConv::AsyncConvertData(const char* aFromType, const char* aToType,
 }
 
 NS_IMETHODIMP
-mozTXTToHTMLConv::OnDataAvailable(nsIRequest* request,
+mozTXTToHTMLConv::OnDataAvailable(nsIRequest* request, nsISupports* ctxt,
                                   nsIInputStream* inStr, uint64_t sourceOffset,
                                   uint32_t count) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-mozTXTToHTMLConv::OnStartRequest(nsIRequest* request) {
+mozTXTToHTMLConv::OnStartRequest(nsIRequest* request, nsISupports* ctxt) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-mozTXTToHTMLConv::OnStopRequest(nsIRequest* request,
+mozTXTToHTMLConv::OnStopRequest(nsIRequest* request, nsISupports* ctxt,
                                 nsresult aStatus) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

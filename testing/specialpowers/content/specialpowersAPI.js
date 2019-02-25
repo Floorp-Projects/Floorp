@@ -2119,16 +2119,16 @@ SpecialPowersAPI.prototype = {
       let listener = {
         httpStatus: 0,
 
-        onStartRequest(request) {
+        onStartRequest(request, context) {
           request.QueryInterface(Ci.nsIHttpChannel);
           this.httpStatus = request.responseStatus;
         },
 
-        onDataAvailable(request, stream, offset, count) {
+        onDataAvailable(request, context, stream, offset, count) {
           new BinaryInputStream(stream).readByteArray(count);
         },
 
-        onStopRequest(request, status) {
+        onStopRequest(request, context, status) {
          /* testing here that the redirect was not followed. If it was followed
             we would see a http status of 200 and status of NS_OK */
 

@@ -78,13 +78,13 @@ RequestObserver.prototype = {
 }
 
 var listener = {
-  onStartRequest: function test_onStartR(request) {},
+  onStartRequest: function test_onStartR(request, ctx) {},
 
   onDataAvailable: function test_ODA() {
     do_throw("Should not get any data!");
   },
 
-  onStopRequest: function test_onStopR(request, status) {
+  onStopRequest: function test_onStopR(request, ctx, status) {
     if (current_test < (tests.length - 1)) {
       current_test++;
       tests[current_test]();

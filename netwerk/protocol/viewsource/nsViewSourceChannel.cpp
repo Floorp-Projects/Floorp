@@ -617,7 +617,8 @@ nsViewSourceChannel::GetProtocolVersion(nsACString &aProtocolVersion) {
 
 // nsIRequestObserver methods
 NS_IMETHODIMP
-nsViewSourceChannel::OnStartRequest(nsIRequest *aRequest) {
+nsViewSourceChannel::OnStartRequest(nsIRequest *aRequest,
+                                    nsISupports *aContext) {
   NS_ENSURE_TRUE(mListener, NS_ERROR_FAILURE);
   // The channel may have gotten redirected... Time to update our info
   mChannel = do_QueryInterface(aRequest);
@@ -631,11 +632,12 @@ nsViewSourceChannel::OnStartRequest(nsIRequest *aRequest) {
     Cancel(rv);
   }
 
-  return mListener->OnStartRequest(static_cast<nsIViewSourceChannel *>(this));
+  return mListener->OnStartRequest(static_cast<nsIViewSourceChannel *>(this),
+                                   aContext);
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::OnStopRequest(nsIRequest *aRequest,
+nsViewSourceChannel::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
                                    nsresult aStatus) {
   NS_ENSURE_TRUE(mListener, NS_ERROR_FAILURE);
   if (mChannel) {
@@ -647,17 +649,18 @@ nsViewSourceChannel::OnStopRequest(nsIRequest *aRequest,
     }
   }
   return mListener->OnStopRequest(static_cast<nsIViewSourceChannel *>(this),
-                                  aStatus);
+                                  aContext, aStatus);
 }
 
 // nsIStreamListener methods
 NS_IMETHODIMP
 nsViewSourceChannel::OnDataAvailable(nsIRequest *aRequest,
+                                     nsISupports *aContext,
                                      nsIInputStream *aInputStream,
                                      uint64_t aSourceOffset, uint32_t aLength) {
   NS_ENSURE_TRUE(mListener, NS_ERROR_FAILURE);
   return mListener->OnDataAvailable(static_cast<nsIViewSourceChannel *>(this),
-                                    aInputStream, aSourceOffset,
+                                    aContext, aInputStream, aSourceOffset,
                                     aLength);
 }
 

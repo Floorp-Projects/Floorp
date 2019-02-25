@@ -545,7 +545,7 @@ nsWyciwygChannel::OnCacheEntryAvailable(nsICacheEntry *aCacheEntry, bool aNew,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsWyciwygChannel::OnDataAvailable(nsIRequest *request,
+nsWyciwygChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctx,
                                   nsIInputStream *input, uint64_t offset,
                                   uint32_t count) {
   LOG(("nsWyciwygChannel::OnDataAvailable [this=%p request=%p offset=%" PRIu64
@@ -557,7 +557,7 @@ nsWyciwygChannel::OnDataAvailable(nsIRequest *request,
   nsCOMPtr<nsIStreamListener> listener = mListener;
 
   if (listener) {
-    rv = listener->OnDataAvailable(this, input, offset, count);
+    rv = listener->OnDataAvailable(this, nullptr, input, offset, count);
   } else {
     MOZ_ASSERT(false, "We must have a listener!");
     rv = NS_ERROR_UNEXPECTED;
@@ -576,14 +576,14 @@ nsWyciwygChannel::OnDataAvailable(nsIRequest *request,
 //////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsWyciwygChannel::OnStartRequest(nsIRequest *request) {
+nsWyciwygChannel::OnStartRequest(nsIRequest *request, nsISupports *ctx) {
   LOG(("nsWyciwygChannel::OnStartRequest [this=%p request=%p]\n", this,
        request));
 
   nsCOMPtr<nsIStreamListener> listener = mListener;
 
   if (listener) {
-    return listener->OnStartRequest(this);
+    return listener->OnStartRequest(this, nullptr);
   }
 
   MOZ_ASSERT(false, "We must have a listener!");
@@ -591,7 +591,7 @@ nsWyciwygChannel::OnStartRequest(nsIRequest *request) {
 }
 
 NS_IMETHODIMP
-nsWyciwygChannel::OnStopRequest(nsIRequest *request,
+nsWyciwygChannel::OnStopRequest(nsIRequest *request, nsISupports *ctx,
                                 nsresult status) {
   LOG(("nsWyciwygChannel::OnStopRequest [this=%p request=%p status=%" PRIu32
        "]\n",
@@ -605,7 +605,7 @@ nsWyciwygChannel::OnStopRequest(nsIRequest *request,
   listener.swap(mListener);
 
   if (listener) {
-    listener->OnStopRequest(this, mStatus);
+    listener->OnStopRequest(this, nullptr, mStatus);
   } else {
     MOZ_ASSERT(false, "We must have a listener!");
   }
@@ -714,9 +714,9 @@ void nsWyciwygChannel::NotifyListener() {
   listener.swap(mListener);
 
   if (listener) {
-    listener->OnStartRequest(this);
+    listener->OnStartRequest(this, nullptr);
     mIsPending = false;
-    listener->OnStopRequest(this, mStatus);
+    listener->OnStopRequest(this, nullptr, mStatus);
   } else {
     MOZ_ASSERT(false, "We must have the listener!");
     mIsPending = false;

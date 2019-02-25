@@ -18,15 +18,15 @@ class OnStartListener {
     this.done = new Promise(resolve => { this.resolve = resolve; });
   }
 
-  onStartRequest(request) {
+  onStartRequest(request, context) {
     this.callback(request.QueryInterface(Ci.nsIHttpChannel));
   }
 
-  onDataAvailable(request, stream, offset, count) {
+  onDataAvailable(request, context, stream, offset, count) {
     let string = NetUtil.readInputStreamToString(stream, count);
   }
 
-  onStopRequest(request, status) { this.resolve(); }
+  onStopRequest(request, context, status) { this.resolve(); }
 }
 
 

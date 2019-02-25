@@ -89,7 +89,8 @@ nsForceXMLListener::~nsForceXMLListener() {}
 NS_IMPL_ISUPPORTS(nsForceXMLListener, nsIStreamListener, nsIRequestObserver)
 
 NS_IMETHODIMP
-nsForceXMLListener::OnStartRequest(nsIRequest *aRequest) {
+nsForceXMLListener::OnStartRequest(nsIRequest *aRequest,
+                                   nsISupports *aContext) {
   nsresult status;
   aRequest->GetStatus(&status);
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
@@ -97,13 +98,13 @@ nsForceXMLListener::OnStartRequest(nsIRequest *aRequest) {
     channel->SetContentType(NS_LITERAL_CSTRING("text/xml"));
   }
 
-  return mListener->OnStartRequest(aRequest);
+  return mListener->OnStartRequest(aRequest, aContext);
 }
 
 NS_IMETHODIMP
-nsForceXMLListener::OnStopRequest(nsIRequest *aRequest,
+nsForceXMLListener::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
                                   nsresult aStatusCode) {
-  return mListener->OnStopRequest(aRequest, aStatusCode);
+  return mListener->OnStopRequest(aRequest, aContext, aStatusCode);
 }
 
 nsSyncLoader::~nsSyncLoader() {
@@ -239,17 +240,17 @@ nsresult nsSyncLoader::PushSyncStream(nsIStreamListener *aListener) {
 }
 
 NS_IMETHODIMP
-nsSyncLoader::OnStartRequest(nsIRequest *aRequest) {
-  return mListener->OnStartRequest(aRequest);
+nsSyncLoader::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) {
+  return mListener->OnStartRequest(aRequest, aContext);
 }
 
 NS_IMETHODIMP
-nsSyncLoader::OnStopRequest(nsIRequest *aRequest,
+nsSyncLoader::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
                             nsresult aStatusCode) {
   if (NS_SUCCEEDED(mAsyncLoadStatus) && NS_FAILED(aStatusCode)) {
     mAsyncLoadStatus = aStatusCode;
   }
-  nsresult rv = mListener->OnStopRequest(aRequest, aStatusCode);
+  nsresult rv = mListener->OnStopRequest(aRequest, aContext, aStatusCode);
   if (NS_SUCCEEDED(mAsyncLoadStatus) && NS_FAILED(rv)) {
     mAsyncLoadStatus = rv;
   }
@@ -328,7 +329,7 @@ nsresult nsSyncLoadService::PushSyncStreamToListener(
   }
 
   // Load
-  rv = aListener->OnStartRequest(aChannel);
+  rv = aListener->OnStartRequest(aChannel, nullptr);
   if (NS_SUCCEEDED(rv)) {
     uint64_t sourceOffset = 0;
     while (1) {
@@ -345,7 +346,7 @@ nsresult nsSyncLoadService::PushSyncStreamToListener(
       if (readCount > UINT32_MAX) readCount = UINT32_MAX;
 
       rv = aListener->OnDataAvailable(
-          aChannel, in,
+          aChannel, nullptr, in,
           (uint32_t)std::min(sourceOffset, (uint64_t)UINT32_MAX),
           (uint32_t)readCount);
       if (NS_FAILED(rv)) {
@@ -357,7 +358,7 @@ nsresult nsSyncLoadService::PushSyncStreamToListener(
   if (NS_FAILED(rv)) {
     aChannel->Cancel(rv);
   }
-  aListener->OnStopRequest(aChannel, rv);
+  aListener->OnStopRequest(aChannel, nullptr, rv);
 
   return rv;
 }

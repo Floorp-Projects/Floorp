@@ -165,7 +165,7 @@ class LoaderListener final : public nsIStreamListener,
   }
 
   NS_IMETHOD
-  OnStartRequest(nsIRequest* aRequest) override {
+  OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) override {
     MOZ_ASSERT(!mStream);
 
     nsresult status;
@@ -198,7 +198,7 @@ class LoaderListener final : public nsIStreamListener,
   }
 
   NS_IMETHOD
-  OnStopRequest(nsIRequest* aRequest,
+  OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
                 nsresult aStatusCode) override {
     if (mStream) {
       mStream->SendEof();
@@ -207,7 +207,7 @@ class LoaderListener final : public nsIStreamListener,
   }
 
   NS_IMETHOD
-  OnDataAvailable(nsIRequest* aRequest,
+  OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
                   nsIInputStream* aInputStream, uint64_t aOffset,
                   uint32_t aCount) override {
     MOZ_ASSERT(mStream);

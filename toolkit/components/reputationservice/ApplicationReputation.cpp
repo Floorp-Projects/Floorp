@@ -1664,7 +1664,7 @@ static nsresult AppendSegmentToString(nsIInputStream* inputStream,
 }
 
 NS_IMETHODIMP
-PendingLookup::OnDataAvailable(nsIRequest* aRequest,
+PendingLookup::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
                                nsIInputStream* aStream, uint64_t offset,
                                uint32_t count) {
   uint32_t read;
@@ -1672,12 +1672,12 @@ PendingLookup::OnDataAvailable(nsIRequest* aRequest,
 }
 
 NS_IMETHODIMP
-PendingLookup::OnStartRequest(nsIRequest* aRequest) {
+PendingLookup::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PendingLookup::OnStopRequest(nsIRequest* aRequest,
+PendingLookup::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
                              nsresult aResult) {
   NS_ENSURE_STATE(mCallback);
 
@@ -1698,7 +1698,7 @@ PendingLookup::OnStopRequest(nsIRequest* aRequest,
   uint32_t verdict = nsIApplicationReputationService::VERDICT_SAFE;
   Reason reason = Reason::NotSet;
   nsresult rv =
-      OnStopRequestInternal(aRequest, nullptr, aResult, verdict, reason);
+      OnStopRequestInternal(aRequest, aContext, aResult, verdict, reason);
   OnComplete(verdict, reason, rv);
   return rv;
 }

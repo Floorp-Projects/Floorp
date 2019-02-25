@@ -12,18 +12,18 @@ NS_IMPL_ISUPPORTS(nsStreamListenerTee, nsIStreamListener, nsIRequestObserver,
                   nsIStreamListenerTee, nsIThreadRetargetableStreamListener)
 
 NS_IMETHODIMP
-nsStreamListenerTee::OnStartRequest(nsIRequest *request) {
+nsStreamListenerTee::OnStartRequest(nsIRequest *request, nsISupports *context) {
   NS_ENSURE_TRUE(mListener, NS_ERROR_NOT_INITIALIZED);
-  nsresult rv1 = mListener->OnStartRequest(request);
+  nsresult rv1 = mListener->OnStartRequest(request, context);
   nsresult rv2 = NS_OK;
-  if (mObserver) rv2 = mObserver->OnStartRequest(request);
+  if (mObserver) rv2 = mObserver->OnStartRequest(request, context);
 
   // Preserve NS_SUCCESS_XXX in rv1 in case mObserver didn't throw
   return (NS_FAILED(rv2) && NS_SUCCEEDED(rv1)) ? rv2 : rv1;
 }
 
 NS_IMETHODIMP
-nsStreamListenerTee::OnStopRequest(nsIRequest *request,
+nsStreamListenerTee::OnStopRequest(nsIRequest *request, nsISupports *context,
                                    nsresult status) {
   NS_ENSURE_TRUE(mListener, NS_ERROR_NOT_INITIALIZED);
   // it is critical that we close out the input stream tee
@@ -39,14 +39,14 @@ nsStreamListenerTee::OnStopRequest(nsIRequest *request,
     mSink = nullptr;
   }
 
-  nsresult rv = mListener->OnStopRequest(request, status);
-  if (mObserver) mObserver->OnStopRequest(request, status);
+  nsresult rv = mListener->OnStopRequest(request, context, status);
+  if (mObserver) mObserver->OnStopRequest(request, context, status);
   mObserver = nullptr;
   return rv;
 }
 
 NS_IMETHODIMP
-nsStreamListenerTee::OnDataAvailable(nsIRequest *request,
+nsStreamListenerTee::OnDataAvailable(nsIRequest *request, nsISupports *context,
                                      nsIInputStream *input, uint64_t offset,
                                      uint32_t count) {
   NS_ENSURE_TRUE(mListener, NS_ERROR_NOT_INITIALIZED);
@@ -73,7 +73,7 @@ nsStreamListenerTee::OnDataAvailable(nsIRequest *request,
     tee = mInputTee;
   }
 
-  return mListener->OnDataAvailable(request, tee, offset, count);
+  return mListener->OnDataAvailable(request, context, tee, offset, count);
 }
 
 NS_IMETHODIMP

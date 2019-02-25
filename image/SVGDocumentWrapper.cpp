@@ -188,21 +188,21 @@ void SVGDocumentWrapper::TickRefreshDriver() {
 /** nsIStreamListener methods **/
 
 NS_IMETHODIMP
-SVGDocumentWrapper::OnDataAvailable(nsIRequest* aRequest,
+SVGDocumentWrapper::OnDataAvailable(nsIRequest* aRequest, nsISupports* ctxt,
                                     nsIInputStream* inStr,
                                     uint64_t sourceOffset, uint32_t count) {
-  return mListener->OnDataAvailable(aRequest, inStr, sourceOffset, count);
+  return mListener->OnDataAvailable(aRequest, ctxt, inStr, sourceOffset, count);
 }
 
 /** nsIRequestObserver methods **/
 
 NS_IMETHODIMP
-SVGDocumentWrapper::OnStartRequest(nsIRequest* aRequest) {
+SVGDocumentWrapper::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt) {
   nsresult rv = SetupViewer(aRequest, getter_AddRefs(mViewer),
                             getter_AddRefs(mLoadGroup));
 
   if (NS_SUCCEEDED(rv) &&
-      NS_SUCCEEDED(mListener->OnStartRequest(aRequest))) {
+      NS_SUCCEEDED(mListener->OnStartRequest(aRequest, nullptr))) {
     mViewer->GetDocument()->SetIsBeingUsedAsImage();
     StopAnimation();  // otherwise animations start automatically in helper doc
 
@@ -215,10 +215,10 @@ SVGDocumentWrapper::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-SVGDocumentWrapper::OnStopRequest(nsIRequest* aRequest,
+SVGDocumentWrapper::OnStopRequest(nsIRequest* aRequest, nsISupports* ctxt,
                                   nsresult status) {
   if (mListener) {
-    mListener->OnStopRequest(aRequest, status);
+    mListener->OnStopRequest(aRequest, ctxt, status);
     mListener = nullptr;
   }
 
