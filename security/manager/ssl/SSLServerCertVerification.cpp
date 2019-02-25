@@ -1376,7 +1376,8 @@ SECStatus AuthCertificate(CertVerifier& certVerifier,
   return rv == Success ? SECSuccess : SECFailure;
 }
 
-/*static*/ SECStatus SSLServerCertVerificationJob::Dispatch(
+/*static*/
+SECStatus SSLServerCertVerificationJob::Dispatch(
     const RefPtr<SharedCertVerifier>& certVerifier, const void* fdForLogging,
     nsNSSSocketInfo* infoObject, const UniqueCERTCertificate& serverCert,
     const UniqueCERTCertList& peerCertChain, const SECItem* stapledOCSPResponse,
