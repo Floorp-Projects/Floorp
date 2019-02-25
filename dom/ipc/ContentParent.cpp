@@ -69,6 +69,7 @@
 #include "mozilla/dom/quota/QuotaManagerService.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/dom/URLClassifierParent.h"
+#include "mozilla/dom/ipc/IPCBlobInputStreamParent.h"
 #include "mozilla/dom/ipc/SharedMap.h"
 #include "mozilla/embedding/printingui/PrintingParent.h"
 #include "mozilla/extensions/StreamFilterParent.h"
@@ -83,6 +84,9 @@
 #include "mozilla/ipc/PChildToParentStreamParent.h"
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
+#include "mozilla/ipc/IPCStreamAlloc.h"
+#include "mozilla/ipc/IPCStreamDestination.h"
+#include "mozilla/ipc/IPCStreamSource.h"
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layers/PAPZParent.h"
@@ -215,6 +219,7 @@
 #include "nsIObjectLoadingContent.h"
 #include "nsIBidiKeyboard.h"
 #include "nsLayoutStylesheetCache.h"
+#include "MMPrinter.h"
 
 #include "mozilla/Sprintf.h"
 
@@ -289,6 +294,15 @@
 
 // For VP9Benchmark::sBenchmarkFpsPref
 #include "Benchmark.h"
+
+// XXX need another bug to move this to a common header.
+#ifdef DISABLE_ASSERTS_FOR_FUZZING
+#  define ASSERT_UNLESS_FUZZING(...) \
+    do {                             \
+    } while (0)
+#else
+#  define ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(false, __VA_ARGS__)
+#endif
 
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 
@@ -2241,6 +2255,8 @@ ContentParent::ContentParent(ContentParent* aOpener,
   }
   sContentParents->insertBack(this);
 
+  mMessageManager = nsFrameMessageManager::NewProcessMessageManager(true);
+
   // From this point on, NS_WARNING, NS_ASSERTION, etc. should print out the
   // PID along with the warning.
   nsDebugImpl::SetMultiprocessMode("Parent");
@@ -3127,41 +3143,168 @@ mozilla::ipc::IPCResult ContentParent::RecvInitBackground(
 
 mozilla::jsipc::PJavaScriptParent* ContentParent::AllocPJavaScriptParent() {
   MOZ_ASSERT(ManagedPJavaScriptParent().IsEmpty());
-  return nsIContentParent::AllocPJavaScriptParent();
+  return NewJavaScriptParent();
 }
 
 bool ContentParent::DeallocPJavaScriptParent(PJavaScriptParent* parent) {
-  return nsIContentParent::DeallocPJavaScriptParent(parent);
+  ReleaseJavaScriptParent(parent);
+  return true;
+}
+
+bool ContentParent::CanOpenBrowser(const IPCTabContext& aContext) {
+  // (PopupIPCTabContext lets the child process prove that it has access to
+  // the app it's trying to open.)
+  // On e10s we also allow UnsafeTabContext to allow service workers to open
+  // windows. This is enforced in MaybeInvalidTabContext.
+  if (aContext.type() != IPCTabContext::TPopupIPCTabContext &&
+      aContext.type() != IPCTabContext::TUnsafeIPCTabContext) {
+    ASSERT_UNLESS_FUZZING(
+        "Unexpected IPCTabContext type.  Aborting AllocPBrowserParent.");
+    return false;
+  }
+
+  if (aContext.type() == IPCTabContext::TPopupIPCTabContext) {
+    const PopupIPCTabContext& popupContext = aContext.get_PopupIPCTabContext();
+    if (popupContext.opener().type() != PBrowserOrId::TPBrowserParent) {
+      ASSERT_UNLESS_FUZZING(
+          "Unexpected PopupIPCTabContext type.  Aborting AllocPBrowserParent.");
+      return false;
+    }
+
+    auto opener =
+        TabParent::GetFrom(popupContext.opener().get_PBrowserParent());
+    if (!opener) {
+      ASSERT_UNLESS_FUZZING(
+          "Got null opener from child; aborting AllocPBrowserParent.");
+      return false;
+    }
+
+    // Popup windows of isMozBrowserElement frames must be isMozBrowserElement
+    // if the parent isMozBrowserElement.  Allocating a !isMozBrowserElement
+    // frame with same app ID would allow the content to access data it's not
+    // supposed to.
+    if (!popupContext.isMozBrowserElement() && opener->IsMozBrowserElement()) {
+      ASSERT_UNLESS_FUZZING(
+          "Child trying to escalate privileges!  Aborting "
+          "AllocPBrowserParent.");
+      return false;
+    }
+  }
+
+  MaybeInvalidTabContext tc(aContext);
+  if (!tc.IsValid()) {
+    NS_ERROR(nsPrintfCString("Child passed us an invalid TabContext.  (%s)  "
+                             "Aborting AllocPBrowserParent.",
+                             tc.GetInvalidReason())
+                 .get());
+    return false;
+  }
+
+  return true;
 }
 
 PBrowserParent* ContentParent::AllocPBrowserParent(
     const TabId& aTabId, const TabId& aSameTabGroupAs,
     const IPCTabContext& aContext, const uint32_t& aChromeFlags,
     const ContentParentId& aCpId, const bool& aIsForBrowser) {
-  return nsIContentParent::AllocPBrowserParent(
-      aTabId, aSameTabGroupAs, aContext, aChromeFlags, aCpId, aIsForBrowser);
+  MOZ_ASSERT(!aSameTabGroupAs);
+
+  Unused << aCpId;
+  Unused << aIsForBrowser;
+
+  if (!CanOpenBrowser(aContext)) {
+    return nullptr;
+  }
+
+  uint32_t chromeFlags = aChromeFlags;
+  TabId openerTabId(0);
+  ContentParentId openerCpId(0);
+  if (aContext.type() == IPCTabContext::TPopupIPCTabContext) {
+    // CanOpenBrowser has ensured that the IPCTabContext is of
+    // type PopupIPCTabContext, and that the opener TabParent is
+    // reachable.
+    const PopupIPCTabContext& popupContext = aContext.get_PopupIPCTabContext();
+    auto opener =
+        TabParent::GetFrom(popupContext.opener().get_PBrowserParent());
+    openerTabId = opener->GetTabId();
+    openerCpId = opener->Manager()->ChildID();
+
+    // We must ensure that the private browsing and remoteness flags
+    // match those of the opener.
+    nsCOMPtr<nsILoadContext> loadContext = opener->GetLoadContext();
+    if (!loadContext) {
+      return nullptr;
+    }
+
+    bool isPrivate;
+    loadContext->GetUsePrivateBrowsing(&isPrivate);
+    if (isPrivate) {
+      chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW;
+    }
+  }
+
+  if (openerTabId > 0 ||
+      aContext.type() == IPCTabContext::TUnsafeIPCTabContext) {
+    MOZ_ASSERT(XRE_IsParentProcess());
+    if (!XRE_IsParentProcess()) {
+      return nullptr;
+    }
+
+    // The creation of PBrowser was triggered from content process through
+    // either window.open() or service worker's openWindow().
+    // We need to register remote frame with the child generated tab id.
+    ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+    if (!cpm->RegisterRemoteFrame(aTabId, openerCpId, openerTabId, aContext,
+                                  aCpId)) {
+      return nullptr;
+    }
+  }
+
+  // And because we're allocating a remote browser, of course the
+  // window is remote.
+  chromeFlags |= nsIWebBrowserChrome::CHROME_REMOTE_WINDOW;
+
+  MaybeInvalidTabContext tc(aContext);
+  MOZ_ASSERT(tc.IsValid());
+  TabParent* parent = new TabParent(static_cast<ContentParent*>(this), aTabId,
+                                    tc.GetTabContext(), chromeFlags);
+
+  // We release this ref in DeallocPBrowserParent()
+  NS_ADDREF(parent);
+  return parent;
 }
 
 bool ContentParent::DeallocPBrowserParent(PBrowserParent* frame) {
-  return nsIContentParent::DeallocPBrowserParent(frame);
+  TabParent* parent = TabParent::GetFrom(frame);
+  NS_RELEASE(parent);
+  return true;
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvPBrowserConstructor(
     PBrowserParent* actor, const TabId& tabId, const TabId& sameTabGroupAs,
     const IPCTabContext& context, const uint32_t& chromeFlags,
     const ContentParentId& cpId, const bool& isForBrowser) {
-  return nsIContentParent::RecvPBrowserConstructor(
-      actor, tabId, sameTabGroupAs, context, chromeFlags, cpId, isForBrowser);
+  TabParent* parent = TabParent::GetFrom(actor);
+  // When enabling input event prioritization, input events may preempt other
+  // normal priority IPC messages. To prevent the input events preempt
+  // PBrowserConstructor, we use an IPC 'RemoteIsReadyToHandleInputEvents' to
+  // notify parent that TabChild is created. In this case, PBrowser is initiated
+  // from content so that we can set TabParent as ready to handle input events.
+  parent->SetReadyToHandleInputEvents();
+  return IPC_OK();
 }
 
 PIPCBlobInputStreamParent* ContentParent::AllocPIPCBlobInputStreamParent(
     const nsID& aID, const uint64_t& aSize) {
-  return nsIContentParent::AllocPIPCBlobInputStreamParent(aID, aSize);
+  MOZ_CRASH("PIPCBlobInputStreamParent actors should be manually constructed!");
+  return nullptr;
 }
 
 bool ContentParent::DeallocPIPCBlobInputStreamParent(
     PIPCBlobInputStreamParent* aActor) {
-  return nsIContentParent::DeallocPIPCBlobInputStreamParent(aActor);
+  RefPtr<IPCBlobInputStreamParent> actor =
+      dont_AddRef(static_cast<IPCBlobInputStreamParent*>(aActor));
+  return true;
 }
 
 mozilla::PRemoteSpellcheckEngineParent*
@@ -3439,26 +3582,23 @@ mozilla::ipc::IPCResult ContentParent::RecvInitStreamFilter(
 }
 
 PChildToParentStreamParent* ContentParent::AllocPChildToParentStreamParent() {
-  return nsIContentParent::AllocPChildToParentStreamParent();
+  return mozilla::ipc::AllocPChildToParentStreamParent();
 }
 
 bool ContentParent::DeallocPChildToParentStreamParent(
     PChildToParentStreamParent* aActor) {
-  return nsIContentParent::DeallocPChildToParentStreamParent(aActor);
-}
-
-PParentToChildStreamParent* ContentParent::SendPParentToChildStreamConstructor(
-    PParentToChildStreamParent* aActor) {
-  return PContentParent::SendPParentToChildStreamConstructor(aActor);
+  delete aActor;
+  return true;
 }
 
 PParentToChildStreamParent* ContentParent::AllocPParentToChildStreamParent() {
-  return nsIContentParent::AllocPParentToChildStreamParent();
+  MOZ_CRASH("PParentToChildStreamParent actors should be manually constructed!");
 }
 
 bool ContentParent::DeallocPParentToChildStreamParent(
     PParentToChildStreamParent* aActor) {
-  return nsIContentParent::DeallocPParentToChildStreamParent(aActor);
+  delete aActor;
+  return true;
 }
 
 PPSMContentDownloaderParent* ContentParent::AllocPPSMContentDownloaderParent(
@@ -3753,23 +3893,59 @@ mozilla::ipc::IPCResult ContentParent::RecvSyncMessage(
     const nsString& aMsg, const ClonedMessageData& aData,
     InfallibleTArray<CpowEntry>&& aCpows, const IPC::Principal& aPrincipal,
     nsTArray<StructuredCloneData>* aRetvals) {
-  return nsIContentParent::RecvSyncMessage(aMsg, aData, std::move(aCpows),
-                                           aPrincipal, aRetvals);
+  AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("ContentParent::RecvSyncMessage",
+                                             OTHER, aMsg);
+  MMPrinter::Print("ContentParent::RecvSyncMessage", aMsg, aData);
+
+  CrossProcessCpowHolder cpows(this, aCpows);
+  RefPtr<nsFrameMessageManager> ppm = mMessageManager;
+  if (ppm) {
+    ipc::StructuredCloneData data;
+    ipc::UnpackClonedMessageDataForParent(aData, data);
+
+    ppm->ReceiveMessage(ppm, nullptr, aMsg, true, &data, &cpows, aPrincipal,
+                        aRetvals, IgnoreErrors());
+  }
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvRpcMessage(
     const nsString& aMsg, const ClonedMessageData& aData,
     InfallibleTArray<CpowEntry>&& aCpows, const IPC::Principal& aPrincipal,
     nsTArray<StructuredCloneData>* aRetvals) {
-  return nsIContentParent::RecvRpcMessage(aMsg, aData, std::move(aCpows),
-                                          aPrincipal, aRetvals);
+  AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("ContentParent::RecvRpcMessage",
+                                             OTHER, aMsg);
+  MMPrinter::Print("ContentParent::RecvRpcMessage", aMsg, aData);
+
+  CrossProcessCpowHolder cpows(this, aCpows);
+  RefPtr<nsFrameMessageManager> ppm = mMessageManager;
+  if (ppm) {
+    ipc::StructuredCloneData data;
+    ipc::UnpackClonedMessageDataForParent(aData, data);
+
+    ppm->ReceiveMessage(ppm, nullptr, aMsg, true, &data, &cpows, aPrincipal,
+                        aRetvals, IgnoreErrors());
+  }
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvAsyncMessage(
     const nsString& aMsg, InfallibleTArray<CpowEntry>&& aCpows,
     const IPC::Principal& aPrincipal, const ClonedMessageData& aData) {
-  return nsIContentParent::RecvAsyncMessage(aMsg, std::move(aCpows), aPrincipal,
-                                            aData);
+  AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("ContentParent::RecvAsyncMessage",
+                                             OTHER, aMsg);
+  MMPrinter::Print("ContentParent::RecvAsyncMessage", aMsg, aData);
+
+  CrossProcessCpowHolder cpows(this, aCpows);
+  RefPtr<nsFrameMessageManager> ppm = mMessageManager;
+  if (ppm) {
+    ipc::StructuredCloneData data;
+    ipc::UnpackClonedMessageDataForParent(aData, data);
+
+    ppm->ReceiveMessage(ppm, nullptr, aMsg, false, &data, &cpows, aPrincipal,
+                        nullptr, IgnoreErrors());
+  }
+  return IPC_OK();
 }
 
 static int32_t AddGeolocationListener(
@@ -3978,20 +4154,6 @@ nsresult ContentParent::DoSendAsyncMessage(JSContext* aCx,
     return NS_ERROR_UNEXPECTED;
   }
   return NS_OK;
-}
-
-PIPCBlobInputStreamParent* ContentParent::SendPIPCBlobInputStreamConstructor(
-    PIPCBlobInputStreamParent* aActor, const nsID& aID, const uint64_t& aSize) {
-  return PContentParent::SendPIPCBlobInputStreamConstructor(aActor, aID, aSize);
-}
-
-PBrowserParent* ContentParent::SendPBrowserConstructor(
-    PBrowserParent* aActor, const TabId& aTabId, const TabId& aSameTabGroupAs,
-    const IPCTabContext& aContext, const uint32_t& aChromeFlags,
-    const ContentParentId& aCpId, const bool& aIsForBrowser) {
-  return PContentParent::SendPBrowserConstructor(
-      aActor, aTabId, aSameTabGroupAs, aContext, aChromeFlags, aCpId,
-      aIsForBrowser);
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvKeywordToURI(
