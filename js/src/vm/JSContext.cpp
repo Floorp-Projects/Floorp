@@ -258,6 +258,9 @@ static void PopulateReportBlame(JSContext* cx, JSErrorReport* report) {
   }
 
   report->filename = iter.filename();
+  if (iter.hasScript()) {
+    report->sourceId = iter.script()->scriptSource()->id();
+  }
   uint32_t column;
   report->lineno = iter.computeLine(&column);
   report->column = FixupColumnForDisplay(column);

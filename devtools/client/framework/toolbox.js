@@ -3188,8 +3188,8 @@ Toolbox.prototype = {
    * Opens source in debugger. Falls back to plain "view-source:".
    * @see devtools/client/shared/source-utils.js
    */
-  viewSourceInDebugger: function(sourceURL, sourceLine, reason) {
-    return viewSource.viewSourceInDebugger(this, sourceURL, sourceLine, reason);
+  viewSourceInDebugger: function(sourceURL, sourceLine, sourceId, reason) {
+    return viewSource.viewSourceInDebugger(this, sourceURL, sourceLine, sourceId, reason);
   },
 
   /**

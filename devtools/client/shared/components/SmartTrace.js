@@ -209,6 +209,7 @@ class SmartTrace extends Component {
           : onViewSourceInDebugger || onViewSource;
 
         viewSource({
+          sourceId: location.sourceId,
           url: location.filename,
           line: location.line,
           column: location.column,
