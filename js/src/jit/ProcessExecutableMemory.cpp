@@ -86,10 +86,8 @@ JS_FRIEND_API void js::SetJitExceptionHandler(JitExceptionHandler handler) {
 // See the ".xdata records" section of
 // https://docs.microsoft.com/en-us/cpp/build/arm64-exception-handling
 // These records can have various fields present or absent depending on the
-// bits set in the header. We'll be using a mostly-zero dummy structure with
-// no slots for epilogs or unwind codes. But when epilogCount and codeWords are
-// both zero, the interpretation is that there is an additional word containing
-// extended epilog count and code words (which in our case will also be zero).
+// bits set in the header. Our struct will use one 32-bit slot for unwind codes,
+// and no slots for epilog scopes.
 struct UnwindInfo {
   uint32_t functionLength : 18;
   uint32_t version : 2;
@@ -97,9 +95,7 @@ struct UnwindInfo {
   uint32_t packedEpilog : 1;
   uint32_t epilogCount : 5;
   uint32_t codeWords : 5;
-  uint16_t extEpilogCount;
-  uint8_t extCodeWords;
-  uint8_t reserved;
+  uint8_t unwindCodes[4];
   uint32_t exceptionHandler;
 };
 static const unsigned ThunkLength = 20;
@@ -172,6 +168,13 @@ static bool RegisterExecutableMemory(void* p, size_t bytes, size_t pageSize) {
   memset(&r->unwindInfo, 0, sizeof(r->unwindInfo));
   r->unwindInfo.hasExceptionHandler = true;
   r->unwindInfo.exceptionHandler = offsetof(ExceptionHandlerRecord, thunk);
+
+  // Use a fake unwind code to make the Windows unwinder do _something_. If the
+  // PC and SP both stay unchanged, we'll fail the unwinder's sanity checks and
+  // it won't call our exception handler.
+  r->unwindInfo.codeWords = 1; // one 32-bit word gives us up to 4 codes
+  r->unwindInfo.unwindCodes[0] = 0b00000001; // alloc_s small stack of size 1*16
+  r->unwindInfo.unwindCodes[1] = 0b11100100; // end
 
   uint32_t* thunk = (uint32_t*)r->thunk;
   uint16_t* addr = (uint16_t*)&handler;
