@@ -140,6 +140,10 @@ const _getAllGeneratedLocations = dispatcher.task("getAllGeneratedLocations", {
   queue: true
 });
 
+const _getOriginalLocation = dispatcher.task("getOriginalLocation", {
+  queue: true
+});
+
 const setAssetRootURL = exports.setAssetRootURL = async assetRoot => dispatcher.invoke("setAssetRootURL", assetRoot);
 
 const getOriginalURLs = exports.getOriginalURLs = async generatedSource => dispatcher.invoke("getOriginalURLs", generatedSource);
@@ -153,7 +157,7 @@ const getGeneratedLocation = exports.getGeneratedLocation = async (location, ori
 
 const getAllGeneratedLocations = exports.getAllGeneratedLocations = async (location, originalSource) => _getAllGeneratedLocations(location, originalSource);
 
-const getOriginalLocation = exports.getOriginalLocation = async (location, options = {}) => dispatcher.invoke("getOriginalLocation", location, options);
+const getOriginalLocation = exports.getOriginalLocation = async (location, options = {}) => _getOriginalLocation(location, options);
 
 const getFileGeneratedRange = exports.getFileGeneratedRange = async originalSource => dispatcher.invoke("getFileGeneratedRange", originalSource);
 
