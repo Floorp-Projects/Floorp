@@ -81,6 +81,18 @@
                      var(--diff-level-offset) * var(--diff-level));
 }
 
+.changes__copy-all-changes-button {
+  -moz-context-properties: fill;
+  background: url(chrome://devtools/skin/images/copy.svg) no-repeat;
+  background-size: 16px;
+  border: none;
+  color: var(--theme-body-color);
+  fill: currentColor;
+  height: 16px;
+  margin: 7px 10px;
+  padding-left: 21px;
+}
+
 /* Hide the Copy Rule button by default. */
 .changes__copy-rule-button {
   background-color: var(--changes-button-background-color);
