@@ -4,6 +4,7 @@
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion config.compileSdkVersion
@@ -27,6 +28,11 @@ dependencies {
     implementation project(':ui-icons')
     implementation project(':ui-doorhanger')
     implementation project(':support-ktx')
+
+    implementation Dependencies.room_runtime
+    kapt Dependencies.room_compiler
+
+    implementation Dependencies.kotlin_coroutines
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.support_constraintlayout
