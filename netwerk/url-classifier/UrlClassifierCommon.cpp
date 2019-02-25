@@ -31,8 +31,8 @@ const nsCString::size_type UrlClassifierCommon::sMaxSpecLength = 128;
 // MOZ_LOG=nsChannelClassifier:5
 LazyLogModule UrlClassifierCommon::sLog("nsChannelClassifier");
 
-/* static */ bool UrlClassifierCommon::AddonMayLoad(nsIChannel* aChannel,
-                                                    nsIURI* aURI) {
+/* static */
+bool UrlClassifierCommon::AddonMayLoad(nsIChannel* aChannel, nsIURI* aURI) {
   nsCOMPtr<nsILoadInfo> channelLoadInfo = aChannel->LoadInfo();
   // loadingPrincipal is used here to ensure we are loading into an
   // addon principal.  This allows an addon, with explicit permission, to
@@ -45,8 +45,8 @@ LazyLogModule UrlClassifierCommon::sLog("nsChannelClassifier");
   return BasePrincipal::Cast(loadingPrincipal)->AddonAllowsLoad(aURI, true);
 }
 
-/* static */ void
-UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(
+/* static */
+void UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(
     nsIChannel* aChannel, uint32_t aEvent) {
   // Can be called in EITHER the parent or child process.
   nsCOMPtr<nsIParentChannel> parentChannel;
@@ -63,8 +63,10 @@ UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(
   NotifyChannelBlocked(aChannel, uriBeingLoaded, aEvent);
 }
 
-/* static */ void UrlClassifierCommon::NotifyChannelBlocked(
-    nsIChannel* aChannel, nsIURI* aURIBeingLoaded, unsigned aBlockedReason) {
+/* static */
+void UrlClassifierCommon::NotifyChannelBlocked(nsIChannel* aChannel,
+                                               nsIURI* aURIBeingLoaded,
+                                               unsigned aBlockedReason) {
   nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
   if (NS_WARN_IF(!thirdPartyUtil)) {
     return;
@@ -87,8 +89,8 @@ UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(
   pwin->NotifyContentBlockingEvent(aBlockedReason, aChannel, true, uri);
 }
 
-/* static */ bool UrlClassifierCommon::ShouldEnableClassifier(
-    nsIChannel* aChannel) {
+/* static */
+bool UrlClassifierCommon::ShouldEnableClassifier(nsIChannel* aChannel) {
   MOZ_ASSERT(aChannel);
 
   nsCOMPtr<nsIURI> chanURI;
@@ -133,9 +135,12 @@ UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(
   return true;
 }
 
-/* static */ nsresult UrlClassifierCommon::SetBlockedContent(
-    nsIChannel* channel, nsresult aErrorCode, const nsACString& aList,
-    const nsACString& aProvider, const nsACString& aFullHash) {
+/* static */
+nsresult UrlClassifierCommon::SetBlockedContent(nsIChannel* channel,
+                                                nsresult aErrorCode,
+                                                const nsACString& aList,
+                                                const nsACString& aProvider,
+                                                const nsACString& aFullHash) {
   NS_ENSURE_ARG(!aList.IsEmpty());
 
   // Can be called in EITHER the parent or child process.
@@ -207,8 +212,9 @@ UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(
   return NS_OK;
 }
 
-/* static */ nsresult UrlClassifierCommon::CreatePairwiseWhiteListURI(
-    nsIChannel* aChannel, nsIURI** aURI) {
+/* static */
+nsresult UrlClassifierCommon::CreatePairwiseWhiteListURI(nsIChannel* aChannel,
+                                                         nsIURI** aURI) {
   MOZ_ASSERT(aChannel);
   MOZ_ASSERT(aURI);
 

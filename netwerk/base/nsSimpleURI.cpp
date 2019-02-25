@@ -31,7 +31,8 @@ static NS_DEFINE_CID(kThisSimpleURIImplementationCID,
                      NS_THIS_SIMPLEURI_IMPLEMENTATION_CID);
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 
-/* static */ already_AddRefed<nsSimpleURI> nsSimpleURI::From(nsIURI *aURI) {
+/* static */
+already_AddRefed<nsSimpleURI> nsSimpleURI::From(nsIURI *aURI) {
   RefPtr<nsSimpleURI> uri;
   nsresult rv = aURI->QueryInterface(kThisSimpleURIImplementationCID,
                                      getter_AddRefs(uri));
@@ -482,7 +483,8 @@ nsSimpleURI::EqualsExceptRef(nsIURI *other, bool *result) {
   return EqualsInternal(other, eIgnoreRef, result);
 }
 
-/* virtual */ nsresult nsSimpleURI::EqualsInternal(
+/* virtual */
+nsresult nsSimpleURI::EqualsInternal(
     nsIURI *other, nsSimpleURI::RefHandlingEnum refHandlingMode, bool *result) {
   NS_ENSURE_ARG_POINTER(other);
   MOZ_ASSERT(result, "null pointer");
@@ -543,9 +545,10 @@ nsSimpleURI::SchemeIs(const char *i_Scheme, bool *o_Equals) {
   return url;
 }
 
-/* virtual */ void nsSimpleURI::SetRefOnClone(
-    nsSimpleURI *url, nsSimpleURI::RefHandlingEnum refHandlingMode,
-    const nsACString &newRef) {
+/* virtual */
+void nsSimpleURI::SetRefOnClone(nsSimpleURI *url,
+                                nsSimpleURI::RefHandlingEnum refHandlingMode,
+                                const nsACString &newRef) {
   if (refHandlingMode == eHonorRef) {
     url->mRef = mRef;
     url->mIsRefValid = mIsRefValid;
