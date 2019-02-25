@@ -342,7 +342,7 @@ var CastingApps = {
     }
 
     let listener = {
-      onStartRequest: function(request, context) {
+      onStartRequest: function(request) {
         switch (channel.responseStatus) {
           case 301:
           case 302:
@@ -357,7 +357,7 @@ var CastingApps = {
             break;
         }
       },
-      onStopRequest: function(request, context, statusCode) {},
+      onStopRequest: function(request, statusCode) {},
       onDataAvailable: function(request, context, stream, offset, count) {},
     };
 

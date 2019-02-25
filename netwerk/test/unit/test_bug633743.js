@@ -39,13 +39,13 @@ Test.prototype = {
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
-  onStartRequest: function(request, context) { },
+  onStartRequest: function(request) { },
 
   onDataAvailable: function(request, context, stream, offset, count) {
     this._buffer = this._buffer.concat(read_stream(stream, count));
   },
 
-  onStopRequest: function(request, context, status) {
+  onStopRequest: function(request, status) {
     Assert.equal(this._buffer, this._expectVal);
     do_timeout(0, run_next_test);
   },

@@ -98,7 +98,7 @@ function openAltChannel()
 
 var altDataListener = {
   buffer: "",
-  onStartRequest: function(request, context) { },
+  onStartRequest: function(request) { },
   onDataAvailable: function(request, context, stream, offset, count) {
     let string = NetUtil.readInputStreamToString(stream, count);
     this.buffer += string;
@@ -112,7 +112,7 @@ var altDataListener = {
       os.close();
     }
   },
-  onStopRequest: function(request, context, status) {
+  onStopRequest: function(request, status) {
     var cc = request.QueryInterface(Ci.nsICacheInfoChannel);
     Assert.equal(cc.alternativeDataType, altContentType);
     Assert.equal(this.buffer.length, altContent.length);
@@ -132,12 +132,12 @@ function openAltChannelWithOriginalContent()
 
 var originalListener = {
   buffer: "",
-  onStartRequest: function(request, context) { },
+  onStartRequest: function(request) { },
   onDataAvailable: function(request, context, stream, offset, count) {
     let string = NetUtil.readInputStreamToString(stream, count);
     this.buffer += string;
   },
-  onStopRequest: function(request, context, status) {
+  onStopRequest: function(request, status) {
     var cc = request.QueryInterface(Ci.nsICacheInfoChannel);
     Assert.equal(cc.alternativeDataType, altContentType);
     Assert.equal(this.buffer.length, responseContent.length);

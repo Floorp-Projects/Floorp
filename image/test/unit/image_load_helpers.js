@@ -83,10 +83,10 @@ function NS_FAILED(val)
 
 function ChannelListener()
 {
-  this.onStartRequest = function onStartRequest(aRequest, aContext)
+  this.onStartRequest = function onStartRequest(aRequest)
   {
     if (this.outputListener)
-      this.outputListener.onStartRequest(aRequest, aContext);
+      this.outputListener.onStartRequest(aRequest);
 
     this.requestStatus |= START_REQUEST;
   }
@@ -99,10 +99,10 @@ function ChannelListener()
     this.requestStatus |= DATA_AVAILABLE;
   }
 
-  this.onStopRequest = function onStopRequest(aRequest, aContext, aStatusCode)
+  this.onStopRequest = function onStopRequest(aRequest, aStatusCode)
   {
     if (this.outputListener)
-      this.outputListener.onStopRequest(aRequest, aContext, aStatusCode);
+      this.outputListener.onStopRequest(aRequest, aStatusCode);
 
     // If we failed (or were canceled - failure is implied if canceled),
     // there's no use tracking our state, since it's meaningless.

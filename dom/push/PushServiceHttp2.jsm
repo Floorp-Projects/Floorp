@@ -56,7 +56,7 @@ PushSubscriptionListener.prototype = {
     return this.QueryInterface(aIID);
   },
 
-  onStartRequest: function(aRequest, aContext) {
+  onStartRequest: function(aRequest) {
     console.debug("PushSubscriptionListener: onStartRequest()");
     // We do not do anything here.
   },
@@ -76,7 +76,7 @@ PushSubscriptionListener.prototype = {
     var data = inputStream.read(aCount);
   },
 
-  onStopRequest: function(aRequest, aContext, aStatusCode) {
+  onStopRequest: function(aRequest, aStatusCode) {
     console.debug("PushSubscriptionListener: onStopRequest()");
     if (!this._pushService) {
         return;
@@ -111,7 +111,7 @@ var PushChannelListener = function(pushSubscriptionListener) {
 
 PushChannelListener.prototype = {
 
-  onStartRequest: function(aRequest, aContext) {
+  onStartRequest: function(aRequest) {
     this._ackUri = aRequest.URI.spec;
   },
 
@@ -131,7 +131,7 @@ PushChannelListener.prototype = {
     this._message.push(chunk);
   },
 
-  onStopRequest: function(aRequest, aContext, aStatusCode) {
+  onStopRequest: function(aRequest, aStatusCode) {
     console.debug("PushChannelListener: onStopRequest()", "status code",
       aStatusCode);
     if (Components.isSuccessCode(aStatusCode) &&
@@ -169,7 +169,7 @@ var PushServiceDelete = function(resolve, reject) {
 
 PushServiceDelete.prototype = {
 
-  onStartRequest: function(aRequest, aContext) {},
+  onStartRequest: function(aRequest) {},
 
   onDataAvailable: function(aRequest, aContext, aStream, aOffset, aCount) {
     // Nobody should send data, but just to be sure, otherwise necko will
@@ -185,7 +185,7 @@ PushServiceDelete.prototype = {
     var data = inputStream.read(aCount);
   },
 
-  onStopRequest: function(aRequest, aContext, aStatusCode) {
+  onStopRequest: function(aRequest, aStatusCode) {
 
     if (Components.isSuccessCode(aStatusCode)) {
        this._resolve();
@@ -210,7 +210,7 @@ var SubscriptionListener = function(aSubInfo, aResolve, aReject,
 
 SubscriptionListener.prototype = {
 
-  onStartRequest: function(aRequest, aContext) {},
+  onStartRequest: function(aRequest) {},
 
   onDataAvailable: function(aRequest, aContext, aStream, aOffset, aCount) {
     console.debug("SubscriptionListener: onDataAvailable()");
@@ -228,7 +228,7 @@ SubscriptionListener.prototype = {
     this._data.concat(inputStream.read(aCount));
   },
 
-  onStopRequest: function(aRequest, aContext, aStatus) {
+  onStopRequest: function(aRequest, aStatus) {
     console.debug("SubscriptionListener: onStopRequest()");
 
     // Check if pushService is still active.

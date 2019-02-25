@@ -57,7 +57,7 @@ function handleSync(request, response) {
 }
 handlers["/handleSync"] = handleSync;
 
-function start_handleSync(ch, cx) {
+function start_handleSync(ch) {
   Assert.equal(ch.responseStatus, 200);
   Assert.equal(ch.responseStatusText, "handleSync pass");
 }
@@ -103,13 +103,13 @@ function handleAsync1(request, response) {
 }
 handlers["/handleAsync1"] = handleAsync1;
 
-function start_handleAsync1(ch, cx) {
+function start_handleAsync1(ch) {
   Assert.equal(ch.responseStatus, 200);
   Assert.equal(ch.responseStatusText, "New status line!");
   Assert.equal(ch.getResponseHeader("X-Foo"), "new value");
 }
 
-function stop_handleAsync1(ch, cx, status, data) {
+function stop_handleAsync1(ch, status, data) {
   Assert.equal(data.length, 0);
 }
 
@@ -175,7 +175,7 @@ function init_handleAsync2(ch) {
   dumpn("*** init_HandleAsync2: start time " + now);
 }
 
-function start_handleAsync2(ch, cx) {
+function start_handleAsync2(ch) {
   var now = Date.now();
   dumpn("*** start_handleAsync2: onStartRequest time " + now + ", " +
         (now - startTime_handleAsync2) + "ms after start time");
@@ -186,7 +186,7 @@ function start_handleAsync2(ch, cx) {
   Assert.equal(ch.getResponseHeader("X-Custom-Header"), "value");
 }
 
-function stop_handleAsync2(ch, cx, status, data) {
+function stop_handleAsync2(ch, status, data) {
   var now = Date.now();
   dumpn("*** stop_handleAsync2: onStopRequest time " + now + ", " +
         (now - startTime_handleAsync2) + "ms after header time");
@@ -241,7 +241,7 @@ function handleAsyncOrdering(request, response) {
 }
 handlers["/handleAsyncOrdering"] = handleAsyncOrdering;
 
-function stop_handleAsyncOrdering(ch, cx, status, data) {
+function stop_handleAsyncOrdering(ch, status, data) {
   Assert.equal(data.length, 20 * 65536);
   data.forEach(function(v, index) {
     if (v !== 0)

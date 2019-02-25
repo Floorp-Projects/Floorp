@@ -98,7 +98,7 @@ add_task(async function() {
   equal(testListener.state, "initial", "test listener in initial state");
 
   // This method must be passed through immediately.
-  listener.onStartRequest(null, null);
+  listener.onStartRequest(null);
   equal(testListener.state, "start", "test listener started");
 
   const TEST_INPUT = "hi bob";
@@ -137,7 +137,7 @@ add_task(async function() {
   equal(activitySeen, true, "activity has been distributed");
 
   const onChange = testListener.onStateChanged();
-  listener.onStopRequest(null, null, null);
+  listener.onStopRequest(null, null);
   newState = await onChange;
   equal(newState, "stop", "onStateChanged reported");
 });

@@ -48,7 +48,7 @@ Http2CheckListener.prototype = {
   expected: -1,
   shouldSucceed: true,
 
-  onStartRequest: function testOnStartRequest(request, ctx) {
+  onStartRequest: function testOnStartRequest(request) {
     this.onStartRequestFired = true;
     if (this.shouldSucceed && !Components.isSuccessCode(request.status)) {
       do_throw("Channel should have a success code! (" + request.status + ")");
@@ -70,7 +70,7 @@ Http2CheckListener.prototype = {
     read_stream(stream, cnt);
   },
 
-  onStopRequest: function testOnStopRequest(request, ctx, status) {
+  onStopRequest: function testOnStopRequest(request, status) {
     Assert.ok(this.onStartRequestFired);
     if (this.expected != -1) {
       Assert.equal(this.accum, this.expected);
@@ -119,7 +119,7 @@ Http2MultiplexListener.prototype.onDataAvailable = function(request, ctx, stream
   this.buffer = this.buffer.concat(data);
 };
 
-Http2MultiplexListener.prototype.onStopRequest = function(request, ctx, status) {
+Http2MultiplexListener.prototype.onStopRequest = function(request, status) {
   Assert.ok(this.onStartRequestFired);
   Assert.ok(this.onDataAvailableFired);
   Assert.ok(this.isHttp2Connection);
@@ -200,7 +200,7 @@ Http2ContinuedHeaderListener.prototype.onDataAvailable = function (request, ctx,
   read_stream(stream, cnt);
 };
 
-Http2ContinuedHeaderListener.prototype.onStopRequest = function (request, ctx, status) {
+Http2ContinuedHeaderListener.prototype.onStopRequest = function (request, status) {
   Assert.ok(this.onStartRequestFired);
   Assert.ok(Components.isSuccessCode(status));
   Assert.ok(this.onDataAvailableFired);
@@ -236,7 +236,7 @@ Http2BigListener.prototype.onDataAvailable = function(request, ctx, stream, off,
   Assert.equal(bigListenerMD5, request.getResponseHeader("X-Expected-MD5"));
 };
 
-Http2BigListener.prototype.onStopRequest = function(request, ctx, status) {
+Http2BigListener.prototype.onStopRequest = function(request, status) {
   Assert.ok(this.onStartRequestFired);
   Assert.ok(this.onDataAvailableFired);
   Assert.ok(this.isHttp2Connection);
@@ -260,7 +260,7 @@ Http2HugeSuspendedListener.prototype.onDataAvailable = function(request, ctx, st
   read_stream(stream, cnt);
 };
 
-Http2HugeSuspendedListener.prototype.onStopRequest = function(request, ctx, status) {
+Http2HugeSuspendedListener.prototype.onStopRequest = function(request, status) {
   Assert.ok(this.onStartRequestFired);
   Assert.ok(this.onDataAvailableFired);
   Assert.ok(this.isHttp2Connection);
@@ -298,7 +298,7 @@ ResumeStalledChannelListener.prototype = {
   shouldBeHttp2 : true,
   resumable : null,
 
-  onStartRequest: function testOnStartRequest(request, ctx) {
+  onStartRequest: function testOnStartRequest(request) {
     this.onStartRequestFired = true;
     if (!Components.isSuccessCode(request.status))
       do_throw("Channel should have a success code! (" + request.status + ")");
@@ -314,7 +314,7 @@ ResumeStalledChannelListener.prototype = {
     read_stream(stream, cnt);
   },
 
-  onStopRequest: function testOnStopRequest(request, ctx, status) {
+  onStopRequest: function testOnStopRequest(request, status) {
     Assert.ok(this.onStartRequestFired);
     Assert.ok(Components.isSuccessCode(status));
     Assert.ok(this.onDataAvailableFired);
@@ -400,7 +400,7 @@ Http2ConcurrentListener.prototype.target = 0;
 Http2ConcurrentListener.prototype.reset = 0;
 Http2ConcurrentListener.prototype.recvdHdr = 0;
 
-Http2ConcurrentListener.prototype.onStopRequest = function(request, ctx, status) {
+Http2ConcurrentListener.prototype.onStopRequest = function(request, status) {
   this.count++;
   Assert.ok(this.isHttp2Connection);
   if (this.recvdHdr > 0) {
@@ -598,7 +598,7 @@ var ios = Cc["@mozilla.org/network/io-service;1"]
             .getService(Ci.nsIIOService);
 
 var altsvcClientListener = {
-  onStartRequest: function test_onStartR(request, ctx) {
+  onStartRequest: function test_onStartR(request) {
     Assert.equal(request.status, Cr.NS_OK);
   },
 
@@ -606,7 +606,7 @@ var altsvcClientListener = {
    read_stream(stream, cnt);
   },
 
-  onStopRequest: function test_onStopR(request, ctx, status) {
+  onStopRequest: function test_onStopR(request, status) {
     var isHttp2Connection = checkIsHttp2(request.QueryInterface(Ci.nsIHttpChannel));
     if (!isHttp2Connection) {
       dump("/altsvc1 not over h2 yet - retry\n");
@@ -629,7 +629,7 @@ var altsvcClientListener = {
 };
 
 var altsvcClientListener2 = {
-  onStartRequest: function test_onStartR(request, ctx) {
+  onStartRequest: function test_onStartR(request) {
     Assert.equal(request.status, Cr.NS_OK);
   },
 
@@ -637,7 +637,7 @@ var altsvcClientListener2 = {
    read_stream(stream, cnt);
   },
 
-  onStopRequest: function test_onStopR(request, ctx, status) {
+  onStopRequest: function test_onStopR(request, status) {
     var isHttp2Connection = checkIsHttp2(request.QueryInterface(Ci.nsIHttpChannel));
     if (!isHttp2Connection) {
       dump("/altsvc2 not over h2 yet - retry\n");
@@ -732,7 +732,7 @@ Http2PushApiListener.prototype = {
   },
 
  // normal Channel listeners
-  onStartRequest: function pushAPIOnStart(request, ctx) {
+  onStartRequest: function pushAPIOnStart(request) {
   },
 
   onDataAvailable: function pushAPIOnDataAvailable(request, ctx, stream, offset, cnt) {
@@ -754,7 +754,7 @@ Http2PushApiListener.prototype = {
     }
   },
 
-  onStopRequest: function test_onStopR(request, ctx, status) {
+  onStopRequest: function test_onStopR(request, status) {
     if (request.originalURI.spec == "https://localhost:" + serverPort + "/pushapi1/2") {
       Assert.equal(request.status, Cr.NS_ERROR_ABORT);
     } else {
@@ -787,7 +787,7 @@ function test_http2_pushapi_1() {
 var WrongSuiteListener = function() {};
 WrongSuiteListener.prototype = new Http2CheckListener();
 WrongSuiteListener.prototype.shouldBeHttp2 = false;
-WrongSuiteListener.prototype.onStopRequest = function(request, ctx, status) {
+WrongSuiteListener.prototype.onStopRequest = function(request, status) {
   prefs.setBoolPref("security.ssl3.ecdhe_rsa_aes_128_gcm_sha256", true);
   prefs.clearUserPref("security.tls.version.max");
   Http2CheckListener.prototype.onStopRequest.call(this);
@@ -825,7 +825,7 @@ function test_http2_h11required_stream() {
 function H11RequiredSessionListener () { }
 H11RequiredSessionListener.prototype = new Http2CheckListener();
 
-H11RequiredSessionListener.prototype.onStopRequest = function (request, ctx, status) {
+H11RequiredSessionListener.prototype.onStopRequest = function (request, status) {
   var streamReused = request.getResponseHeader("X-H11Required-Stream-Ok");
   Assert.equal(streamReused, "yes");
 
@@ -862,7 +862,7 @@ function Http2IllegalHpackValidationListener() { }
 Http2IllegalHpackValidationListener.prototype = new Http2CheckListener();
 Http2IllegalHpackValidationListener.prototype.shouldGoAway = false;
 
-Http2IllegalHpackValidationListener.prototype.onStopRequest = function (request, ctx, status) {
+Http2IllegalHpackValidationListener.prototype.onStopRequest = function (request, status) {
   var wentAway = (request.getResponseHeader('X-Did-Goaway') === 'yes');
   Assert.equal(wentAway, this.shouldGoAway);
 
@@ -878,7 +878,7 @@ function Http2IllegalHpackListener() { }
 Http2IllegalHpackListener.prototype = new Http2CheckListener();
 Http2IllegalHpackListener.prototype.shouldGoAway = false;
 
-Http2IllegalHpackListener.prototype.onStopRequest = function (request, ctx, status) {
+Http2IllegalHpackListener.prototype.onStopRequest = function (request, status) {
   var chan = makeChan("https://localhost:" + serverPort + "/illegalhpack_validate");
   var listener = new Http2IllegalHpackValidationListener();
   listener.shouldGoAway = this.shouldGoAway;
@@ -980,9 +980,9 @@ PulledDiskCacheListener.prototype.onDataAvailable = function testOnDataAvailable
   this.accum += cnt;
   this.readData += read_stream(stream, cnt);
 };
-PulledDiskCacheListener.prototype.onStopRequest = function testOnStopRequest(request, ctx, status) {
+PulledDiskCacheListener.prototype.onStopRequest = function testOnStopRequest(request, status) {
   Assert.equal(this.EXPECTED_DATA, this.readData);
-  Http2CheckListener.prorotype.onStopRequest.call(this, request, ctx, status);
+  Http2CheckListener.prorotype.onStopRequest.call(this, request, status);
 };
 
 const DISK_CACHE_DATA = "this is from disk cache";
@@ -993,7 +993,7 @@ FromDiskCacheListener.prototype = {
   onDataAvailableFired: false,
   readData: "",
 
-  onStartRequest: function testOnStartRequest(request, ctx) {
+  onStartRequest: function testOnStartRequest(request) {
     this.onStartRequestFired = true;
     if (!Components.isSuccessCode(request.status)) {
       do_throw("Channel should have a success code! (" + request.status + ")");
@@ -1009,7 +1009,7 @@ FromDiskCacheListener.prototype = {
     this.readData += read_stream(stream, cnt);
   },
 
-  onStopRequest: function testOnStopRequest(request, ctx, status) {
+  onStopRequest: function testOnStopRequest(request, status) {
     Assert.ok(this.onStartRequestFired);
     Assert.ok(Components.isSuccessCode(status));
     Assert.ok(this.onDataAvailableFired);
@@ -1032,7 +1032,7 @@ var Http2DiskCachePushListener = function() {};
 
 Http2DiskCachePushListener.prototype = new Http2CheckListener();
 
-Http2DiskCachePushListener.onStopRequest = function(request, ctx, status) {
+Http2DiskCachePushListener.onStopRequest = function(request, status) {
     Assert.ok(this.onStartRequestFired);
     Assert.ok(Components.isSuccessCode(status));
     Assert.ok(this.onDataAvailableFired);
@@ -1079,7 +1079,7 @@ function test_complete() {
 
 var Http2DoublepushListener = function () {};
 Http2DoublepushListener.prototype = new Http2CheckListener();
-Http2DoublepushListener.prototype.onStopRequest = function (request, ctx, status) {
+Http2DoublepushListener.prototype.onStopRequest = function (request, status) {
   Assert.ok(this.onStartRequestFired);
   Assert.ok(Components.isSuccessCode(status));
   Assert.ok(this.onDataAvailableFired);
@@ -1099,7 +1099,7 @@ Http2DoublypushedListener.prototype.onDataAvailable = function (request, ctx, st
   this.accum += cnt;
   this.readData += read_stream(stream, cnt);
 };
-Http2DoublypushedListener.prototype.onStopRequest = function (request, ctx, status) {
+Http2DoublypushedListener.prototype.onStopRequest = function (request, status) {
   Assert.ok(this.onStartRequestFired);
   Assert.ok(Components.isSuccessCode(status));
   Assert.ok(this.onDataAvailableFired);

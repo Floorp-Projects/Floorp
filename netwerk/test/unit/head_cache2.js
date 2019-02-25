@@ -56,7 +56,7 @@ function pumpReadStream(inputStream, goon)
     pump.init(inputStream, 0, 0, true);
     var data = "";
     pump.asyncRead({
-      onStartRequest: function (aRequest, aContext) { },
+      onStartRequest: function (aRequest) { },
       onDataAvailable: function (aRequest, aContext, aInputStream, aOffset, aCount)
       {
         var wrapper = Cc["@mozilla.org/scriptableinputstream;1"].
@@ -66,7 +66,7 @@ function pumpReadStream(inputStream, goon)
         LOG_C2("reading data '" + str.substring(0,5) + "'");
         data += str;
       },
-      onStopRequest: function (aRequest, aContext, aStatusCode)
+      onStopRequest: function (aRequest, aStatusCode)
       {
         LOG_C2("done reading data: " + aStatusCode);
         Assert.equal(aStatusCode, Cr.NS_OK);

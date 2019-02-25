@@ -761,7 +761,7 @@ HashCompleterRequest.prototype = {
     this._response += sis.readBytes(aCount);
   },
 
-  onStartRequest: function HCR_onStartRequest(aRequest, aContext) {
+  onStartRequest: function HCR_onStartRequest(aRequest) {
     // At this point no data is available for us and we have no reason to
     // terminate the connection, so we do nothing until |onStopRequest|.
     this._completer._nextGethashTimeMs[this.gethashUrl] = 0;
@@ -773,7 +773,7 @@ HashCompleterRequest.prototype = {
     }
   },
 
-  onStopRequest: function HCR_onStopRequest(aRequest, aContext, aStatusCode) {
+  onStopRequest: function HCR_onStopRequest(aRequest, aStatusCode) {
     Services.obs.removeObserver(this, "quit-application");
 
     if (this.timer_) {

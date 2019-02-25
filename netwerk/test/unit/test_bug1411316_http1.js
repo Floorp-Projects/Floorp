@@ -68,13 +68,13 @@ function HttpResponseListener(id, onStopRequestStatus)
 
 HttpResponseListener.prototype =
 {
-  onStartRequest: function (request, ctx) {
+  onStartRequest: function (request) {
   },
 
   onDataAvailable: function (request, ctx, stream, off, cnt) {
   },
 
-  onStopRequest: function (request, ctx, status) {
+  onStopRequest: function (request, status) {
     log("STOP id=" + this.id + " status=" + status);
     Assert.ok(this.onStopRequestStatus == status);
     do_test_finished();

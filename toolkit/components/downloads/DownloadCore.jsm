@@ -1963,8 +1963,8 @@ this.DownloadCopySaver.prototype = {
       // Open the channel, directing output to the background file saver.
       backgroundFileSaver.QueryInterface(Ci.nsIStreamListener);
       channel.asyncOpen({
-        onStartRequest: function(aRequest, aContext) {
-          backgroundFileSaver.onStartRequest(aRequest, aContext);
+        onStartRequest: function(aRequest) {
+          backgroundFileSaver.onStartRequest(aRequest);
 
           // Check if the request's response has been blocked by Windows
           // Parental Controls with an HTTP 450 error code.
@@ -2044,9 +2044,9 @@ this.DownloadCopySaver.prototype = {
           }
         }.bind(copySaver),
 
-        onStopRequest(aRequest, aContext, aStatusCode) {
+        onStopRequest(aRequest, aStatusCode) {
           try {
-            backgroundFileSaver.onStopRequest(aRequest, aContext,
+            backgroundFileSaver.onStopRequest(aRequest,
                                               aStatusCode);
           } finally {
             // If the data transfer completed successfully, indicate to the

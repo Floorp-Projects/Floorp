@@ -43,7 +43,7 @@ const tests = [
 
 // A basic listener that reads checks the if we sniffed properly.
 var listener = {
-  onStartRequest(request, context) {
+  onStartRequest(request) {
     info("Sniffing " + tests[testRan].path);
     Assert.equal(request.QueryInterface(Ci.nsIChannel).contentType, tests[testRan].expected);
   },
@@ -59,7 +59,7 @@ var listener = {
     }
   },
 
-  onStopRequest(request, context, status) {
+  onStopRequest(request, status) {
     testRan++;
     runNext();
   },

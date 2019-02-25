@@ -23,7 +23,7 @@ var listener = {
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
-  onStartRequest: function(request, ctx) {
+  onStartRequest: function(request) {
     this._lastEvent = Date.now();
     request.QueryInterface(Ci.nsIRequest);
 
@@ -48,7 +48,7 @@ var listener = {
     this._gotData = true;
   },
 
-  onStopRequest: function(request, ctx, status) {
+  onStopRequest: function(request, status) {
     Assert.ok(this._gotData);
     httpserv.stop(do_test_finished);
   }

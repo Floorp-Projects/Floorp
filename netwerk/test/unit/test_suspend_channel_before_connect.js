@@ -67,14 +67,14 @@ var requestListenerObserver = {
 };
 
 var listener = {
-  onStartRequest: function test_onStartR(request, ctx) {
+  onStartRequest: function test_onStartR(request) {
   },
 
   onDataAvailable: function test_ODA() {
     do_throw("Should not get any data!");
   },
 
-  onStopRequest: function test_onStopR(request, ctx, status) {
+  onStopRequest: function test_onStopR(request, status) {
     executeSoon(run_next_test);
   }
 };

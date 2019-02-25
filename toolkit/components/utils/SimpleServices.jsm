@@ -89,7 +89,7 @@ AddonLocalizationConverter.prototype = {
     this.listener = aListener;
   },
 
-  onStartRequest(aRequest, aContext) {
+  onStartRequest(aRequest) {
     this.parts = [];
     this.decoder = new TextDecoder();
   },
@@ -99,7 +99,7 @@ AddonLocalizationConverter.prototype = {
     this.parts.push(this.decoder.decode(bytes, {stream: true}));
   },
 
-  onStopRequest(aRequest, aContext, aStatusCode) {
+  onStopRequest(aRequest, aStatusCode) {
     try {
       this.listener.onStartRequest(aRequest, null);
       if (Components.isSuccessCode(aStatusCode)) {
@@ -112,7 +112,7 @@ AddonLocalizationConverter.prototype = {
     } catch (e) {
       aStatusCode = e.result || Cr.NS_ERROR_FAILURE;
     }
-    this.listener.onStopRequest(aRequest, null, aStatusCode);
+    this.listener.onStopRequest(aRequest, aStatusCode);
   },
 };
 

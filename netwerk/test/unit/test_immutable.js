@@ -72,7 +72,7 @@ var expectConditional = false;
 
 var Listener = function() {};
 Listener.prototype = {
-  onStartRequest: function testOnStartRequest(request, ctx) {
+  onStartRequest: function testOnStartRequest(request) {
     Assert.ok(request instanceof Ci.nsIHttpChannel);
 
     if (expectPass) {
@@ -89,7 +89,7 @@ Listener.prototype = {
     read_stream(stream, cnt);
   },
 
-  onStopRequest: function testOnStopRequest(request, ctx, status) {
+  onStopRequest: function testOnStopRequest(request, status) {
       if (expectConditional) {
         Assert.equal(request.getResponseHeader("x-conditional"), "true");
       } else {

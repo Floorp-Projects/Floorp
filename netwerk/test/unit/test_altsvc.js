@@ -149,7 +149,7 @@ var originAttributes = {};
 
 var Listener = function() {};
 Listener.prototype = {
-  onStartRequest: function testOnStartRequest(request, ctx) {
+  onStartRequest: function testOnStartRequest(request) {
     Assert.ok(request instanceof Ci.nsIHttpChannel);
 
     if (expectPass) {
@@ -166,7 +166,7 @@ Listener.prototype = {
     read_stream(stream, cnt);
   },
 
-  onStopRequest: function testOnStopRequest(request, ctx, status) {
+  onStopRequest: function testOnStopRequest(request, status) {
     var routed = "";
     try {
       routed = request.getRequestHeader("Alt-Used");

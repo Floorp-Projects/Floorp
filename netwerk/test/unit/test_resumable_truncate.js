@@ -46,7 +46,7 @@ Canceler.prototype = {
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
-  onStartRequest: function(request, context) {
+  onStartRequest: function(request) {
   },
 
   onDataAvailable: function(request, context, stream, offset, count) {
@@ -54,7 +54,7 @@ Canceler.prototype = {
            .cancel(Cr.NS_BINDING_ABORTED);
   },
 
-  onStopRequest: function(request, context, status) {
+  onStopRequest: function(request, status) {
     Assert.equal(status, Cr.NS_BINDING_ABORTED);
     this.continueFn();
   }

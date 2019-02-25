@@ -57,7 +57,7 @@ function run_test() {
  */
 
 var initialStarted = false;
-function initialStart(ch, cx) {
+function initialStart(ch) {
   dumpn("*** initialStart");
 
   if (initialStarted)
@@ -70,7 +70,7 @@ function initialStart(ch, cx) {
 }
 
 var initialStopped = false;
-function initialStop(ch, cx, status, data) {
+function initialStop(ch, status, data) {
   dumpn("*** initialStop");
 
   Assert.equal(data.map(function(v) { return String.fromCharCode(v); }).join(""),
@@ -93,7 +93,7 @@ function initialStop(ch, cx, status, data) {
 }
 
 var intermediateStarted = false;
-function intermediateStart(ch, cx) {
+function intermediateStart(ch) {
   dumpn("*** intermediateStart");
 
   Assert.notEqual(srv.getObjectState("object-state-test"), null);
@@ -107,7 +107,7 @@ function intermediateStart(ch, cx) {
 }
 
 var intermediateStopped = false;
-function intermediateStop(ch, cx, status, data) {
+function intermediateStop(ch, status, data) {
   dumpn("*** intermediateStop");
 
   Assert.equal(data.map(function(v) { return String.fromCharCode(v); }).join(""),
@@ -129,7 +129,7 @@ function intermediateStop(ch, cx, status, data) {
 }
 
 var triggerStarted = false;
-function triggerStart(ch, cx) {
+function triggerStart(ch) {
   dumpn("*** triggerStart");
 
   if (!initialStarted)
@@ -145,7 +145,7 @@ function triggerStart(ch, cx) {
 }
 
 var triggerStopped = false;
-function triggerStop(ch, cx, status, data) {
+function triggerStop(ch, status, data) {
   dumpn("*** triggerStop");
 
   Assert.equal(data.map(function(v) { return String.fromCharCode(v); }).join(""),
@@ -221,7 +221,7 @@ function HTTPTestLoader(path, start, stop) {
 }
 HTTPTestLoader.prototype =
   {
-    onStartRequest(request, cx) {
+    onStartRequest(request) {
       dumpn("*** HTTPTestLoader.onStartRequest for " + this._path);
 
       var ch = request.QueryInterface(Ci.nsIHttpChannel)
@@ -229,7 +229,7 @@ HTTPTestLoader.prototype =
 
       try {
         try {
-          this._start(ch, cx);
+          this._start(ch);
         } catch (e) {
           do_throw(this._path + ": error in onStartRequest: " + e);
         }
@@ -244,13 +244,13 @@ HTTPTestLoader.prototype =
       Array.prototype.push.apply(this._data,
                                  makeBIS(inputStream).readByteArray(count));
     },
-    onStopRequest(request, cx, status) {
+    onStopRequest(request, status) {
       dumpn("*** HTTPTestLoader.onStopRequest for " + this._path);
 
       var ch = request.QueryInterface(Ci.nsIHttpChannel)
                       .QueryInterface(Ci.nsIHttpChannelInternal);
 
-      this._stop(ch, cx, status, this._data);
+      this._stop(ch, status, this._data);
     },
     QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
   };

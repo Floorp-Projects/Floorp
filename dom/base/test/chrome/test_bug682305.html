@@ -58,13 +58,13 @@ CustomChannel.prototype = {
     let stream = this.open();
     let context = null;
     try {
-      outListener.onStartRequest(this, context);
+      outListener.onStartRequest(this);
     } catch (e) {}
     try {
       outListener.onDataAvailable(this, context, stream, 0, stream.available());
     } catch (e) {}
     try {
-      outListener.onStopRequest(this, context, Cr.NS_OK);
+      outListener.onStopRequest(this, Cr.NS_OK);
     } catch (e) {}
   },
   open() {
