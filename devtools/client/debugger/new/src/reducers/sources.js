@@ -234,7 +234,7 @@ function addSources(state: SourcesState, sources: Source[]) {
         [...existingSource.actors, ...source.actors],
         ({ actor }) => actor
       );
-      updatedSource = { ...updatedSource, actors }
+      updatedSource = (({ ...updatedSource, actors }: any): Source);
     }
 
     // 1. Add the source to the sources map
@@ -378,10 +378,10 @@ export function getSourceFromId(state: OuterState, id: string): Source {
   return source;
 }
 
-export function getSourceByActorId(state: OuterState, actorId: string): Source {
+export function getSourceByActorId(state: OuterState, actorId: string): ?Source {
   // We don't index the sources by actor IDs, so this method should be used
   // sparingly.
-  for (const source of Object.values(getSources(state))) {
+  for (const source of getSourceList(state)) {
     if (source.actors.some(({ actor }) => actor == actorId)) {
       return source;
     }
