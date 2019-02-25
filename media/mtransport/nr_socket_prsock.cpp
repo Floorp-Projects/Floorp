@@ -2098,7 +2098,7 @@ int NrSocketBase::CreateSocket(
   }
 
   // create IPC bridge for content process
-  if (XRE_IsParentProcess() || XRE_IsSocketProcess()) {
+  if (XRE_IsParentProcess()) {
     *sock = new NrSocket();
   } else {
     switch (addr->protocol) {

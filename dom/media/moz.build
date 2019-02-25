@@ -175,7 +175,6 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.media.webrtc += [
     'webrtc/WebrtcGlobal.h',
-    'webrtc/WebrtcIPCTraits.h',
 ]
 
 if not CONFIG['MOZ_WEBRTC']:
@@ -184,7 +183,7 @@ if not CONFIG['MOZ_WEBRTC']:
   ]
 
 IPDL_SOURCES += [
-    'webrtc/PWebrtcGlobal.ipdl',
+    'webrtc/PWebrtcGlobal.ipdl'
 ]
 
 EXPORTS.mozilla.dom += [
@@ -207,8 +206,6 @@ EXPORTS.mozilla.dom += [
     'VideoStreamTrack.h',
     'VideoTrack.h',
     'VideoTrackList.h',
-    'webrtc/MediaTransportChild.h',
-    'webrtc/MediaTransportParent.h',
 ]
 
 UNIFIED_SOURCES += [

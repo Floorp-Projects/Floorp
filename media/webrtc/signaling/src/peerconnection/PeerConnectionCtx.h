@@ -72,9 +72,7 @@ class PeerConnectionCtx {
   std::map<const std::string, PeerConnectionImpl*> mPeerConnections;
 
   PeerConnectionCtx()
-      : mGMPReady(false),
-        mTransportHandler(
-            MediaTransportHandler::Create(GetMainThreadSerialEventTarget())) {}
+      : mGMPReady(false), mTransportHandler(MediaTransportHandler::Create()) {}
   // This is a singleton, so don't copy construct it, etc.
   PeerConnectionCtx(const PeerConnectionCtx& other) = delete;
   void operator=(const PeerConnectionCtx& other) = delete;

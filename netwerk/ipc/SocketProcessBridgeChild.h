@@ -22,10 +22,10 @@ class SocketProcessBridgeChild final : public PSocketProcessBridgeChild,
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
+  static bool Create(Endpoint<PSocketProcessBridgeChild>&& aEndpoint);
   static already_AddRefed<SocketProcessBridgeChild> GetSingleton();
-  typedef MozPromise<RefPtr<SocketProcessBridgeChild>, nsCString, false>
-      GetPromise;
-  static RefPtr<GetPromise> GetSocketProcessBridge();
+  static void EnsureSocketProcessBridge(std::function<void()>&& aOnSuccess,
+                                        std::function<void()>&& aOnFailure);
 
   mozilla::ipc::IPCResult RecvTest();
   void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -34,12 +34,8 @@ class SocketProcessBridgeChild final : public PSocketProcessBridgeChild,
   bool Inited() const { return mInited; };
   ProcessId SocketProcessPid() const { return mSocketProcessPid; };
 
-  dom::PMediaTransportChild* AllocPMediaTransportChild();
-  bool DeallocPMediaTransportChild(dom::PMediaTransportChild* aActor);
-
  private:
   DISALLOW_COPY_AND_ASSIGN(SocketProcessBridgeChild);
-  static bool Create(Endpoint<PSocketProcessBridgeChild>&& aEndpoint);
   explicit SocketProcessBridgeChild(
       Endpoint<PSocketProcessBridgeChild>&& aEndpoint);
   virtual ~SocketProcessBridgeChild();

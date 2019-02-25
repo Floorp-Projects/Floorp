@@ -19,7 +19,6 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/dom/CryptoBuffer.h"
 #include "mozilla/dom/CryptoKey.h"
-#include "ipc/IPCMessageUtils.h"
 
 namespace mozilla {
 
