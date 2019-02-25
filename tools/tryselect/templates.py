@@ -66,7 +66,7 @@ class Artifact(Template):
 class Path(Template):
 
     def add_arguments(self, parser):
-        parser.add_argument('paths', nargs='*',
+        parser.add_argument('paths', nargs='*', default=[],
                             help='Run tasks containing tests under the specified path(s).')
 
     def context(self, paths, **kwargs):

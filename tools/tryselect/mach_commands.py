@@ -67,6 +67,54 @@ class TrySelect(MachCommandBase):
         super(TrySelect, self).__init__(context)
         from tryselect import push
         push.MAX_HISTORY = self._mach_context.settings['try']['maxhistory']
+        self.subcommand = self._mach_context.handler.subcommand
+
+    def handle_presets(self, save, preset, **kwargs):
+        """Handle preset related arguments.
+
+        This logic lives here so that the underlying selectors don't need
+        special preset handling. They can all save and load presets the same
+        way.
+        """
+        from tryselect.preset import presets
+        from tryselect.util.dicttools import merge
+
+        default = self._mach_context.handler.parser.get_default
+        if save:
+            selector = self.subcommand or self._mach_context.settings['try']['default']
+
+            # Only save non-default values for simplicity.
+            kwargs = {k: v for k, v in kwargs.items() if v != default(k)}
+            presets.save(save, selector=selector, **kwargs)
+            print('preset saved, run with: --preset={}'.format(save))
+            sys.exit()
+
+        if preset:
+            name = preset
+            preset = presets[name]
+            selector = preset['selector']
+
+            if not self.subcommand:
+                self.subcommand = selector
+            elif self.subcommand != selector:
+                print("error: preset '{}' exists for a different selector "
+                      "(did you mean to run 'mach try {}' instead?)".format(
+                        name, selector))
+                sys.exit(1)
+
+            # Order of precedence is defaults -> presets -> cli. Configuration
+            # from the right overwrites configuration from the left.
+            defaults = {}
+            nondefaults = {}
+            for k, v in kwargs.items():
+                if v == default(k):
+                    defaults[k] = v
+                else:
+                    nondefaults[k] = v
+
+            kwargs = merge(defaults, preset, nondefaults)
+
+        return kwargs
 
     @Command('try',
              category='ci',
@@ -84,18 +132,12 @@ class TrySelect(MachCommandBase):
         default. Run |mach try syntax --help| for more information on
         scheduling with the `syntax` selector.
         """
-        from tryselect import preset
-        if kwargs['mod_presets']:
-            getattr(preset, kwargs['mod_presets'])()
-            return
-
         # We do special handling of presets here so that `./mach try --preset foo`
         # works no matter what subcommand 'foo' was saved with.
-        sub = self._mach_context.settings['try']['default']
         if kwargs['preset']:
-            _, section = preset.load(kwargs['preset'])
-            sub = 'syntax' if section == 'try' else section
+            kwargs = self.handle_presets(**kwargs)
 
+        sub = self.subcommand or self._mach_context.settings['try']['default']
         return self._mach_context.commands.dispatch(
             'try', subcommand=sub, context=self._mach_context, argv=argv, **kwargs)
 
@@ -147,7 +189,14 @@ class TrySelect(MachCommandBase):
           ^start 'exact | !ignore fuzzy end$
         """
         from tryselect.selectors.fuzzy import run_fuzzy_try
-        return run_fuzzy_try(**kwargs)
+        if kwargs.get('save') and not kwargs.get('query'):
+            # If saving preset without -q/--query, allow user to use the
+            # interface to build the query.
+            kwargs_copy = kwargs.copy()
+            kwargs_copy['push'] = False
+            kwargs['query'] = run_fuzzy_try(**kwargs_copy)
+
+        return run_fuzzy_try(**self.handle_presets(**kwargs))
 
     @SubCommand('try',
                 'chooser',
@@ -237,6 +286,7 @@ class TrySelect(MachCommandBase):
         """
         from tryselect.selectors.syntax import AutoTry
 
+        kwargs = self.handle_presets(**kwargs)
         try:
             if self.substs.get("MOZ_ARTIFACT_BUILDS"):
                 kwargs['local_artifact_build'] = True
