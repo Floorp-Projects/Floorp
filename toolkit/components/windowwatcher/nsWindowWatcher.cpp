@@ -1084,6 +1084,15 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     }
   }
 
+  // Currently we query the CSP from the subjectPrincipal. After Bug 965637
+  // we should query the CSP from the doc, similar to the referrerInfo above.
+  if (subjectPrincipal && loadState) {
+    nsCOMPtr<nsIContentSecurityPolicy> csp;
+    rv = subjectPrincipal->GetCsp(getter_AddRefs(csp));
+    NS_ENSURE_SUCCESS(rv, rv);
+    loadState->SetCsp(csp);
+  }
+
   if (isNewToplevelWindow) {
     // Notify observers that the window is open and ready.
     // The window has not yet started to load a document.

@@ -8,6 +8,7 @@
 
 #include <algorithm>
 
+#include "nsIContentSecurityPolicy.h"
 #include "nsDocShellEditorData.h"
 #include "nsDocShellLoadTypes.h"
 #include "nsIContentViewer.h"
@@ -384,7 +385,8 @@ nsSHEntry::Create(nsIURI* aURI, const nsAString& aTitle,
                   nsILayoutHistoryState* aLayoutHistoryState,
                   uint32_t aCacheKey, const nsACString& aContentType,
                   nsIPrincipal* aTriggeringPrincipal,
-                  nsIPrincipal* aPrincipalToInherit, const nsID& aDocShellID,
+                  nsIPrincipal* aPrincipalToInherit,
+                  nsIContentSecurityPolicy* aCsp, const nsID& aDocShellID,
                   bool aDynamicCreation) {
   MOZ_ASSERT(
       aTriggeringPrincipal,
@@ -401,6 +403,7 @@ nsSHEntry::Create(nsIURI* aURI, const nsAString& aTitle,
   mShared->mContentType = aContentType;
   mShared->mTriggeringPrincipal = aTriggeringPrincipal;
   mShared->mPrincipalToInherit = aPrincipalToInherit;
+  mShared->mCsp = aCsp;
   mShared->mDocShellID = aDocShellID;
   mShared->mDynamicallyCreated = aDynamicCreation;
 
@@ -492,6 +495,18 @@ nsSHEntry::GetPrincipalToInherit(nsIPrincipal** aPrincipalToInherit) {
 NS_IMETHODIMP
 nsSHEntry::SetPrincipalToInherit(nsIPrincipal* aPrincipalToInherit) {
   mShared->mPrincipalToInherit = aPrincipalToInherit;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::GetCsp(nsIContentSecurityPolicy** aCsp) {
+  NS_IF_ADDREF(*aCsp = mShared->mCsp);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::SetCsp(nsIContentSecurityPolicy* aCsp) {
+  mShared->mCsp = aCsp;
   return NS_OK;
 }
 
