@@ -88,8 +88,7 @@ void UpdateContentContext(nsIStreamListener* aListener,
   static_cast<nsExternalAppHandler*>(aListener)->SetContentContext(window);
 }
 
-void ExternalHelperAppParent::Init(ContentParent* parent,
-                                   const nsCString& aMimeContentType,
+void ExternalHelperAppParent::Init(const nsCString& aMimeContentType,
                                    const bool& aForceSave,
                                    const OptionalURIParams& aReferrer,
                                    PBrowserParent* aBrowser) {

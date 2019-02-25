@@ -3608,7 +3608,7 @@ PExternalHelperAppParent* ContentParent::AllocPExternalHelperAppParent(
       uri, aLoadInfoArgs, aContentLength, aWasFileChannel, aContentDisposition,
       aContentDispositionHint, aContentDispositionFilename);
   parent->AddRef();
-  parent->Init(this, aMimeContentType, aForceSave, aReferrer, aBrowser);
+  parent->Init(aMimeContentType, aForceSave, aReferrer, aBrowser);
   return parent;
 }
 
