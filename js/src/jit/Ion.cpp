@@ -305,7 +305,8 @@ bool JitRuntime::initialize(JSContext* cx) {
   void* handler = JS_FUNC_TO_DATA_PTR(void*, jit::HandleException);
   generateExceptionTailStub(masm, handler, &profilerExitTail);
 
-  Linker linker(masm, "Trampolines");
+  Linker linker(masm);
+  AutoFlushICache afc("Trampolines");
   trampolineCode_ = linker.newCode(cx, CodeKind::Other);
   if (!trampolineCode_) {
     return false;
