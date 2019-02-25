@@ -6,7 +6,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PContent;
-include protocol PContentBridge;
 include DOMTypes;
 include JavaScriptTypes;
 
@@ -17,7 +16,7 @@ namespace jsipc {
 
 nested(upto inside_sync) sync protocol PJavaScript
 {
-    manager PContent or PContentBridge;
+    manager PContent;
 
 both:
     // Sent when a CPOW has been finalized and table entries can be freed up.
