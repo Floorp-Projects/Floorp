@@ -4,7 +4,6 @@
 
 use error::KeyValueError;
 use libc::int32_t;
-use nserror::NsresultExt;
 use nsstring::nsString;
 use rkv::OwnedValue;
 use storage_variant::{

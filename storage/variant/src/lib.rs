@@ -8,7 +8,7 @@ extern crate nsstring;
 extern crate xpcom;
 
 use libc::{c_double, int64_t, uint16_t};
-use nserror::{nsresult, NsresultExt, NS_OK};
+use nserror::{nsresult, NS_OK};
 use nsstring::{nsACString, nsAString, nsCString, nsString};
 use xpcom::{getter_addrefs, interfaces::nsIVariant, RefPtr};
 
