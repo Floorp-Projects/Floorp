@@ -2396,9 +2396,8 @@ static Tuple<ContentParent*, TabParent*> GetContentParent(Element* aBrowser) {
   }
 
   TabParent* tabParent = TabParent::GetFrom(otherLoader);
-  if (tabParent && tabParent->Manager() &&
-      tabParent->Manager()->IsContentParent()) {
-    return MakeTuple(tabParent->Manager()->AsContentParent(), tabParent);
+  if (tabParent && tabParent->Manager()) {
+    return MakeTuple(tabParent->Manager(), tabParent);
   }
 
   return ReturnTuple(nullptr, nullptr);
@@ -2442,9 +2441,8 @@ bool nsFrameLoader::TryRemoteBrowser() {
   RefPtr<ContentParent> openerContentParent;
   RefPtr<TabParent> sameTabGroupAs;
 
-  if (openingTab && openingTab->Manager() &&
-      openingTab->Manager()->IsContentParent()) {
-    openerContentParent = openingTab->Manager()->AsContentParent();
+  if (openingTab && openingTab->Manager()) {
+    openerContentParent = openingTab->Manager();
   }
 
   // <iframe mozbrowser> gets to skip these checks.
@@ -2969,7 +2967,7 @@ void nsFrameLoader::Print(uint64_t aOuterWindowID,
 #if defined(NS_PRINTING)
   if (mRemoteBrowser) {
     RefPtr<embedding::PrintingParent> printingParent =
-        mRemoteBrowser->Manager()->AsContentParent()->GetPrintingParent();
+        mRemoteBrowser->Manager()->GetPrintingParent();
 
     embedding::PrintData printData;
     nsresult rv = printingParent->SerializeAndEnsureRemotePrintJob(
