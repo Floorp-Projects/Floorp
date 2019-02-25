@@ -94,7 +94,7 @@ void JSWindowActorParent::SendAsyncMessage(JSContext* aCx,
   // actor.
   ClonedMessageData msgData;
   RefPtr<TabParent> tabParent = mManager->GetTabParent();
-  nsIContentParent* cp = tabParent->Manager();
+  ContentParent* cp = tabParent->Manager();
   if (!data.BuildClonedMessageDataForParent(cp, msgData)) {
     aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
     return;

@@ -278,7 +278,7 @@ void InputStreamLengthWrapper::Serialize(
     mozilla::ipc::InputStreamParams& aParams,
     FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
     uint32_t aMaxSize, uint32_t* aSizeUsed,
-    mozilla::dom::nsIContentParent* aManager) {
+    mozilla::dom::ContentParent* aManager) {
   SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
                     aSizeUsed, aManager);
 }
