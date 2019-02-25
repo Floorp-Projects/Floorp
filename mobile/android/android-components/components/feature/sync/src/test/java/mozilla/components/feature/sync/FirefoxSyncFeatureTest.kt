@@ -50,7 +50,7 @@ class FirefoxSyncFeatureTest {
         `when`(mockAccount.getTokenServerEndpointURL()).thenReturn("dummyUrl")
 
         val mockAccessTokenInfo = AccessTokenInfo(
-            key = OAuthScopedKey("kid", "k"), token = "token", expiresAt = 0
+            scope = "scope", key = OAuthScopedKey("kty", "scope", "kid", "k"), token = "token", expiresAt = 0
         )
         `when`(mockAccount.getAccessToken(any())).thenReturn(CompletableDeferred((mockAccessTokenInfo)))
 
@@ -93,7 +93,7 @@ class FirefoxSyncFeatureTest {
         `when`(mockAccount.getTokenServerEndpointURL()).thenReturn("dummyUrl")
 
         val mockAccessTokenInfo = AccessTokenInfo(
-                key = OAuthScopedKey("kid", "k"), token = "token", expiresAt = 0
+                scope = "scope", key = OAuthScopedKey("kty", "scope", "kid", "k"), token = "token", expiresAt = 0
         )
         `when`(mockAccount.getAccessToken(any())).thenReturn(CompletableDeferred((mockAccessTokenInfo)))
 

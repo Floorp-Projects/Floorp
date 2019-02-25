@@ -155,7 +155,7 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : F
      */
     override fun getAccessToken(singleScope: String): Deferred<AccessTokenInfo> {
         return scope.async {
-            inner.getAccessToken(singleScope).let { AccessTokenInfo.fromInternal(it) }
+            inner.getAccessToken(singleScope)
         }
     }
 
