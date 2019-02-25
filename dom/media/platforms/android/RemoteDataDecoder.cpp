@@ -432,7 +432,6 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
 #  error We only support 16-bit integer PCM
 #endif
 
-      const int32_t numFrames = numSamples / mOutputChannels;
       AlignedAudioBuffer audio(numSamples);
       if (!audio) {
         Error(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
@@ -442,10 +441,9 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
       jni::ByteBuffer::LocalRef dest = jni::ByteBuffer::New(audio.get(), size);
       aSample->WriteToByteBuffer(dest);
 
-      RefPtr<AudioData> data = new AudioData(
-          0, TimeUnit::FromMicroseconds(presentationTimeUs),
-          FramesToTimeUnit(numFrames, mOutputSampleRate), numFrames,
-          std::move(audio), mOutputChannels, mOutputSampleRate);
+      RefPtr<AudioData> data =
+          new AudioData(0, TimeUnit::FromMicroseconds(presentationTimeUs),
+                        std::move(audio), mOutputChannels, mOutputSampleRate);
 
       UpdateOutputStatus(std::move(data));
     }

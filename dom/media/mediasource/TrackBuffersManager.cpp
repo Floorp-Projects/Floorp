@@ -8,14 +8,14 @@
 #include "ContainerParser.h"
 #include "MediaSourceDemuxer.h"
 #include "MediaSourceUtils.h"
-#include "mozilla/ErrorResult.h"
-#include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs.h"
-#include "nsMimeTypes.h"
 #include "SourceBuffer.h"
 #include "SourceBufferResource.h"
 #include "SourceBufferTask.h"
 #include "WebMDemuxer.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
+#include "nsMimeTypes.h"
 
 #ifdef MOZ_FMP4
 #  include "MP4Demuxer.h"
@@ -636,7 +636,7 @@ bool TrackBuffersManager::CodedFrameRemoval(TimeInterval aInterval) {
     // in the previous step and the next random access point after those removed
     // frames.
     TimeIntervals removedInterval{TimeInterval(start, removeEndTimestamp)};
-    RemoveFrames(removedInterval, *track, 0);
+    RemoveFrames(removedInterval, *track, 0, RemovalMode::kRemoveFrame);
 
     // 5. If this object is in activeSourceBuffers, the current playback
     // position is greater than or equal to start and less than the remove end
@@ -1613,21 +1613,6 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
   // added to.
   auto& trackBuffer = aTrackData;
 
-  // Some videos do not exactly start at 0, but instead a small negative value.
-  // To avoid evicting the starting frame of those videos, we allow a leeway
-  // of +- mLongestFrameDuration on the append window start.
-  // We only apply the leeway with the default append window start of 0 and
-  // append window end of infinity.
-  // Otherwise do as per spec.
-  TimeInterval targetWindow =
-      (mAppendWindow.mStart != TimeUnit::FromSeconds(0) ||
-       mAppendWindow.mEnd != TimeUnit::FromInfinity())
-          ? mAppendWindow
-          : TimeInterval(mAppendWindow.mStart, mAppendWindow.mEnd,
-                         trackBuffer.mLastFrameDuration.isSome()
-                             ? trackBuffer.mLongestFrameDuration
-                             : aSamples[0]->mDuration);
-
   TimeIntervals samplesRange;
   uint32_t sizeNewSamples = 0;
   TrackBuffer samples;  // array that will contain the frames to be added
@@ -1645,17 +1630,25 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
     aTrackData.mLastParsedEndTime = TimeUnit();
   }
 
-  for (auto& sample : aSamples) {
-    SAMPLE_DEBUG("Processing %s frame(pts:%" PRId64 " end:%" PRId64
-                 ", dts:%" PRId64 ", duration:%" PRId64
-                 ", "
-                 "kf:%d)",
-                 aTrackData.mInfo->mMimeType.get(),
-                 sample->mTime.ToMicroseconds(),
-                 sample->GetEndTime().ToMicroseconds(),
-                 sample->mTimecode.ToMicroseconds(),
-                 sample->mDuration.ToMicroseconds(), sample->mKeyframe);
+  auto addToSamples = [&](MediaRawData* aSample,
+                          const TimeInterval& aInterval) {
+    aSample->mTime = aInterval.mStart;
+    aSample->mDuration = aInterval.Length();
+    aSample->mTrackInfo = trackBuffer.mLastInfo;
+    samplesRange += aInterval;
+    sizeNewSamples += aSample->ComputedSizeOfIncludingThis();
+    samples.AppendElement(aSample);
+  };
 
+  // Will be set to the last frame dropped due to being outside mAppendWindow.
+  // It will be added prior the first following frame which can be added to the
+  // track buffer.
+  // This sample will be set with a duration of only 1us which will cause it to
+  // be dropped once returned by the decoder.
+  // This sample is required to "prime" the decoder so that the following frame
+  // can be fully decoded.
+  RefPtr<MediaRawData> previouslyDroppedSample;
+  for (auto& sample : aSamples) {
     const TimeUnit sampleEndTime = sample->GetEndTime();
     if (sampleEndTime > aTrackData.mLastParsedEndTime) {
       aTrackData.mLastParsedEndTime = sampleEndTime;
@@ -1671,6 +1664,7 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
       // frame and jump to the top of the loop to start processing the next
       // coded frame.
       if (!sample->mKeyframe) {
+        previouslyDroppedSample = nullptr;
         continue;
       }
       // 2. Set the need random access point flag on track buffer to false.
@@ -1705,6 +1699,16 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
     TimeUnit decodeTimestamp = mSourceBufferAttributes->mGenerateTimestamps
                                    ? timestampOffset
                                    : timestampOffset + sampleTimecode;
+
+    SAMPLE_DEBUG(
+        "Processing %s frame [%" PRId64 ",%" PRId64 "] (adjusted:[%" PRId64
+        ",%" PRId64 "]), dts:%" PRId64 ", duration:%" PRId64 ", kf:%d)",
+        aTrackData.mInfo->mMimeType.get(), sample->mTime.ToMicroseconds(),
+        sample->GetEndTime().ToMicroseconds(),
+        sampleInterval.mStart.ToMicroseconds(),
+        sampleInterval.mEnd.ToMicroseconds(),
+        sample->mTimecode.ToMicroseconds(), sample->mDuration.ToMicroseconds(),
+        sample->mKeyframe);
 
     // 6. If last decode timestamp for track buffer is set and decode timestamp
     // is less than last decode timestamp: OR If last decode timestamp for track
@@ -1749,6 +1753,7 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
       CheckSequenceDiscontinuity(presentationTimestamp);
 
       if (!sample->mKeyframe) {
+        previouslyDroppedSample = nullptr;
         continue;
       }
       if (appendMode == SourceBufferAppendMode::Sequence) {
@@ -1778,28 +1783,78 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
     // 9. If frame end timestamp is greater than appendWindowEnd, then set the
     // need random access point flag to true, drop the coded frame, and jump to
     // the top of the loop to start processing the next coded frame.
-    if (!targetWindow.ContainsWithStrictEnd(sampleInterval)) {
-      if (samples.Length()) {
-        // We are creating a discontinuity in the samples.
-        // Insert the samples processed so far.
-        InsertFrames(samples, samplesRange, trackBuffer);
-        samples.Clear();
-        samplesRange = TimeIntervals();
-        trackBuffer.mSizeBuffer += sizeNewSamples;
-        sizeNewSamples = 0;
-        UpdateHighestTimestamp(trackBuffer, highestSampleTime);
+    if (!mAppendWindow.ContainsStrict(sampleInterval)) {
+      if (mAppendWindow.IntersectsStrict(sampleInterval)) {
+        // 8. Note: Some implementations MAY choose to collect some of these
+        //    coded frames with presentation timestamp less than
+        //    appendWindowStart and use them to generate a splice at the first
+        //    coded frame that has a presentation timestamp greater than or
+        //    equal to appendWindowStart even if that frame is not a random
+        //    access point. Supporting this requires multiple decoders or faster
+        //    than real-time decoding so for now this behavior will not be a
+        //    normative requirement.
+        // 9. Note: Some implementations MAY choose to collect coded frames with
+        //    presentation timestamp less than appendWindowEnd and frame end
+        //    timestamp greater than appendWindowEnd and use them to generate a
+        //    splice across the portion of the collected coded frames within the
+        //    append window at time of collection, and the beginning portion of
+        //    later processed frames which only partially overlap the end of the
+        //    collected coded frames. Supporting this requires multiple decoders
+        //    or faster than real-time decoding so for now this behavior will
+        //    not be a normative requirement. In conjunction with collecting
+        //    coded frames that span appendWindowStart, implementations MAY thus
+        //    support gapless audio splicing.
+        TimeInterval intersection = mAppendWindow.Intersection(sampleInterval);
+        sample->mOriginalPresentationWindow = Some(sampleInterval);
+        MSE_DEBUGV("will truncate frame from [%" PRId64 ",%" PRId64
+                   "] to [%" PRId64 ",%" PRId64 "]",
+                   sampleInterval.mStart.ToMicroseconds(),
+                   sampleInterval.mEnd.ToMicroseconds(),
+                   intersection.mStart.ToMicroseconds(),
+                   intersection.mEnd.ToMicroseconds());
+        sampleInterval = intersection;
+      } else {
+        sample->mOriginalPresentationWindow = Some(sampleInterval);
+        sample->mTimecode = decodeTimestamp;
+        previouslyDroppedSample = sample;
+        MSE_DEBUGV("frame [%" PRId64 ",%" PRId64
+                   "] outside appendWindow [%" PRId64 ",%" PRId64 "] dropping",
+                   sampleInterval.mStart.ToMicroseconds(),
+                   sampleInterval.mEnd.ToMicroseconds(),
+                   mAppendWindow.mStart.ToMicroseconds(),
+                   mAppendWindow.mEnd.ToMicroseconds());
+        if (samples.Length()) {
+          // We are creating a discontinuity in the samples.
+          // Insert the samples processed so far.
+          InsertFrames(samples, samplesRange, trackBuffer);
+          samples.Clear();
+          samplesRange = TimeIntervals();
+          trackBuffer.mSizeBuffer += sizeNewSamples;
+          sizeNewSamples = 0;
+          UpdateHighestTimestamp(trackBuffer, highestSampleTime);
+        }
+        trackBuffer.mNeedRandomAccessPoint = true;
+        needDiscontinuityCheck = true;
+        continue;
       }
-      trackBuffer.mNeedRandomAccessPoint = true;
-      needDiscontinuityCheck = true;
-      continue;
+    }
+    if (previouslyDroppedSample) {
+      MSE_DEBUGV("Adding silent frame");
+      // This "silent" sample will be added so that it starts exactly before the
+      // first usable one. The duration of the actual sample will be adjusted so
+      // that the total duration staty the same.
+      // Setting a dummy presentation window of 1us will cause this sample to be
+      // dropped after decoding by the AudioTrimmer (if audio).
+      TimeInterval previouslyDroppedSampleInterval =
+          TimeInterval(sampleInterval.mStart,
+                       sampleInterval.mStart + TimeUnit::FromMicroseconds(1));
+      addToSamples(previouslyDroppedSample, previouslyDroppedSampleInterval);
+      previouslyDroppedSample = nullptr;
+      sampleInterval.mStart += previouslyDroppedSampleInterval.Length();
     }
 
-    samplesRange += sampleInterval;
-    sizeNewSamples += sample->ComputedSizeOfIncludingThis();
-    sample->mTime = sampleInterval.mStart;
     sample->mTimecode = decodeTimestamp;
-    sample->mTrackInfo = trackBuffer.mLastInfo;
-    samples.AppendElement(sample);
+    addToSamples(sample, sampleInterval);
 
     // Steps 11,12,13,14, 15 and 16 will be done in one block in InsertFrames.
 
@@ -1896,7 +1951,6 @@ void TrackBuffersManager::InsertFrames(TrackBuffer& aSamples,
              aIntervals.GetStart().ToMicroseconds(),
              aIntervals.GetEnd().ToMicroseconds());
 
-  // TODO: Handle splicing of audio (and text) frames.
   // 11. Let spliced audio frame be an unset variable for holding audio splice
   // information
   // 12. Let spliced timed text frame be an unset variable for holding timed
@@ -1945,7 +1999,8 @@ void TrackBuffersManager::InsertFrames(TrackBuffer& aSamples,
       trackBuffer.mNextInsertionIndex.reset();
     }
     uint32_t index = RemoveFrames(aIntervals, trackBuffer,
-                                  trackBuffer.mNextInsertionIndex.refOr(0));
+                                  trackBuffer.mNextInsertionIndex.refOr(0),
+                                  RemovalMode::kTruncateFrame);
     if (index) {
       trackBuffer.mNextInsertionIndex = Some(index);
     }
@@ -2004,7 +2059,8 @@ void TrackBuffersManager::UpdateHighestTimestamp(
 
 uint32_t TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
                                            TrackData& aTrackData,
-                                           uint32_t aStartIndex) {
+                                           uint32_t aStartIndex,
+                                           RemovalMode aMode) {
   TrackBuffer& data = aTrackData.GetTrackBuffer();
   Maybe<uint32_t> firstRemovedIndex;
   uint32_t lastRemovedIndex = 0;
@@ -2025,14 +2081,51 @@ uint32_t TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
   //   frame end timestamp"
   TimeUnit intervalsEnd = aIntervals.GetEnd();
   for (uint32_t i = aStartIndex; i < data.Length(); i++) {
-    const RefPtr<MediaRawData> sample = data[i];
-    if (aIntervals.ContainsWithStrictEnd(sample->mTime)) {
+    RefPtr<MediaRawData>& sample = data[i];
+    if (aIntervals.ContainsStrict(sample->mTime)) {
+      // The start of this existing frame will be overwritten, we drop that
+      // entire frame.
+      MSE_DEBUGV("overridding start of frame [%" PRId64 ",%" PRId64
+                 "] with [%" PRId64 ",%" PRId64 "] dropping",
+                 sample->mTime.ToMicroseconds(),
+                 sample->GetEndTime().ToMicroseconds(),
+                 aIntervals.GetStart().ToMicroseconds(),
+                 aIntervals.GetEnd().ToMicroseconds());
       if (firstRemovedIndex.isNothing()) {
         firstRemovedIndex = Some(i);
       }
       lastRemovedIndex = i;
       continue;
     }
+    TimeInterval sampleInterval(sample->mTime, sample->GetEndTime());
+    if (aMode == RemovalMode::kTruncateFrame &&
+        aIntervals.IntersectsStrict(sampleInterval)) {
+      // The sample to be overwritten is only partially covered.
+      TimeIntervals intersection =
+          Intersection(aIntervals, TimeIntervals(sampleInterval));
+      bool found = false;
+      TimeUnit startTime = intersection.GetStart(&found);
+      MOZ_DIAGNOSTIC_ASSERT(found, "Must intersect with added coded frames");
+      Unused << found;
+      // Signal that this frame should be truncated when decoded.
+      if (!sample->mOriginalPresentationWindow) {
+        sample->mOriginalPresentationWindow = Some(sampleInterval);
+      }
+      MOZ_ASSERT(startTime > sample->mTime);
+      sample->mDuration = startTime - sample->mTime;
+      MSE_DEBUGV("partial overwrite of frame [%" PRId64 ",%" PRId64
+                 "] with [%" PRId64 ",%" PRId64
+                 "] trim to "
+                 "[%" PRId64 ",%" PRId64 "]",
+                 sampleInterval.mStart.ToMicroseconds(),
+                 sampleInterval.mEnd.ToMicroseconds(),
+                 aIntervals.GetStart().ToMicroseconds(),
+                 aIntervals.GetEnd().ToMicroseconds(),
+                 sample->mTime.ToMicroseconds(),
+                 sample->GetEndTime().ToMicroseconds());
+      continue;
+    }
+
     if (sample->mTime >= intervalsEnd) {
       // We can break the loop now. All frames up to the next keyframe will be
       // removed during the next step.

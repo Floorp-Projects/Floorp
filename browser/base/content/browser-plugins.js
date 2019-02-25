@@ -280,7 +280,7 @@ var gPluginHandler = {
 
       let options = {
         dismissed: !showNow,
-        hideClose: !Services.prefs.getBoolPref("privacy.permissionPrompts.showCloseButton"),
+        hideClose: true,
         persistent: showNow,
         eventCallback: this._clickToPlayNotificationEventCallback,
         primaryPlugin: primaryPluginPermission,

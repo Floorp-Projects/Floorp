@@ -41,7 +41,6 @@ class BinASTParser : public BinASTParserPerTokenizer<Tok> {
   using BinFields = typename Tokenizer::BinFields;
   using AutoList = typename Tokenizer::AutoList;
   using AutoTaggedTuple = typename Tokenizer::AutoTaggedTuple;
-  using AutoTuple = typename Tokenizer::AutoTuple;
   using Chars = typename Tokenizer::Chars;
 
  public:
@@ -73,8 +72,8 @@ class BinASTParser : public BinASTParserPerTokenizer<Tok> {
   using Base::alloc_;
   using Base::usedNames_;
 
-  using Base::factory_;
-  using Base::parseContext_;
+  using Base::handler_;
+  using Base::pc_;
   using Base::sourceObject_;
 
  protected:

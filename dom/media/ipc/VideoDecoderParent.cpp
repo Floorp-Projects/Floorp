@@ -141,9 +141,9 @@ mozilla::ipc::IPCResult VideoDecoderParent::RecvInput(
     return IPC_OK();
   }
   data->mOffset = aData.base().offset();
-  data->mTime = TimeUnit::FromMicroseconds(aData.base().time());
-  data->mTimecode = TimeUnit::FromMicroseconds(aData.base().timecode());
-  data->mDuration = TimeUnit::FromMicroseconds(aData.base().duration());
+  data->mTime = aData.base().time();
+  data->mTimecode = aData.base().timecode();
+  data->mDuration = aData.base().duration();
   data->mKeyframe = aData.base().keyframe();
 
   DeallocShmem(aData.buffer());
@@ -172,7 +172,7 @@ void VideoDecoderParent::ProcessDecodedData(
   }
 
   for (auto&& data : aData) {
-    MOZ_ASSERT(data->mType == MediaData::VIDEO_DATA,
+    MOZ_ASSERT(data->mType == MediaData::Type::VIDEO_DATA,
                "Can only decode videos using VideoDecoderParent!");
     VideoData* video = static_cast<VideoData*>(data.get());
 
@@ -194,10 +194,8 @@ void VideoDecoderParent::ProcessDecodedData(
     }
 
     VideoDataIPDL output(
-        MediaDataIPDL(data->mOffset, data->mTime.ToMicroseconds(),
-                      data->mTimecode.ToMicroseconds(),
-                      data->mDuration.ToMicroseconds(), data->mFrames,
-                      data->mKeyframe),
+        MediaDataIPDL(data->mOffset, data->mTime, data->mTimecode,
+                      data->mDuration, data->mKeyframe),
         video->mDisplay, texture ? texture->GetSize() : IntSize(),
         texture ? mParent->StoreImage(video->mImage, texture)
                 : SurfaceDescriptorGPUVideo(0, null_t()),
@@ -249,12 +247,10 @@ mozilla::ipc::IPCResult VideoDecoderParent::RecvShutdown() {
 }
 
 mozilla::ipc::IPCResult VideoDecoderParent::RecvSetSeekThreshold(
-    const int64_t& aTime) {
+    const TimeUnit& aTime) {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(OnManagerThread());
-  mDecoder->SetSeekThreshold(aTime == INT64_MIN
-                                 ? TimeUnit::Invalid()
-                                 : TimeUnit::FromMicroseconds(aTime));
+  mDecoder->SetSeekThreshold(aTime);
   return IPC_OK();
 }
 

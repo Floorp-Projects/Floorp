@@ -184,7 +184,8 @@ bool WMFAudioMFTManager::Init() {
 HRESULT
 WMFAudioMFTManager::Input(MediaRawData* aSample) {
   return mDecoder->Input(aSample->Data(), uint32_t(aSample->Size()),
-                         aSample->mTime.ToMicroseconds());
+                         aSample->mTime.ToMicroseconds(),
+                         aSample->mDuration.ToMicroseconds());
 }
 
 HRESULT
@@ -326,9 +327,9 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutData) {
   media::TimeUnit duration = FramesToTimeUnit(numFrames, mAudioRate);
   NS_ENSURE_TRUE(duration.IsValid(), E_FAIL);
 
-  aOutData = new AudioData(aStreamOffset, timestamp, duration, numFrames,
-                           std::move(audioData), mAudioChannels, mAudioRate,
-                           mChannelsMap);
+  aOutData = new AudioData(aStreamOffset, timestamp, std::move(audioData),
+                           mAudioChannels, mAudioRate, mChannelsMap);
+  MOZ_DIAGNOSTIC_ASSERT(duration == aOutData->mDuration, "must be equal");
 
 #ifdef LOG_SAMPLE_DECODE
   LOG("Decoded audio sample! timestamp=%lld duration=%lld currentLength=%u",

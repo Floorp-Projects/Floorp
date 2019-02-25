@@ -72,9 +72,9 @@ mozilla::ipc::IPCResult RemoteDecoderParent::RecvInput(
     return IPC_OK();
   }
   data->mOffset = aData.base().offset();
-  data->mTime = TimeUnit::FromMicroseconds(aData.base().time());
-  data->mTimecode = TimeUnit::FromMicroseconds(aData.base().timecode());
-  data->mDuration = TimeUnit::FromMicroseconds(aData.base().duration());
+  data->mTime = aData.base().time();
+  data->mTimecode = aData.base().timecode();
+  data->mDuration = aData.base().duration();
   data->mKeyframe = aData.base().keyframe();
 
   DeallocShmem(aData.buffer());
@@ -136,12 +136,10 @@ mozilla::ipc::IPCResult RemoteDecoderParent::RecvShutdown() {
 }
 
 mozilla::ipc::IPCResult RemoteDecoderParent::RecvSetSeekThreshold(
-    const int64_t& aTime) {
+    const TimeUnit& aTime) {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(OnManagerThread());
-  mDecoder->SetSeekThreshold(aTime == INT64_MIN
-                                 ? TimeUnit::Invalid()
-                                 : TimeUnit::FromMicroseconds(aTime));
+  mDecoder->SetSeekThreshold(aTime);
   return IPC_OK();
 }
 

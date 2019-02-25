@@ -31,7 +31,7 @@ function mapFilterIterator(iter, fn) {
 add_task(async function test_update_frecencies() {
   let buf = await openMirror("update_frecencies");
 
-  info("Make local changes");
+  info("Set up mirror");
   await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.menuGuid,
     children: [{
@@ -51,7 +51,38 @@ add_task(async function test_update_frecencies() {
       guid: "bookmarkBBB1",
       title: "B1",
       url: "http://example.com/b1",
-    }, {
+    }],
+  });
+  await storeRecords(buf, [{
+    id: "menu",
+    parentid: "places",
+    type: "folder",
+    children: ["bookmarkAAAA", "bookmarkBBBB", "bookmarkBBB1"],
+  }, {
+    id: "bookmarkAAAA",
+    parentid: "menu",
+    type: "bookmark",
+    title: "A",
+    bmkUri: "http://example.com/a",
+  }, {
+    id: "bookmarkBBBB",
+    parentid: "menu",
+    type: "bookmark",
+    title: "B",
+    bmkUri: "http://example.com/b",
+  }, {
+    id: "bookmarkBBB1",
+    parentid: "menu",
+    type: "bookmark",
+    title: "B1",
+    bmkUri: "http://example.com/b1",
+  }], { needsMerge: false });
+  await PlacesTestUtils.markBookmarksAsSynced();
+
+  info("Make local changes");
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.menuGuid,
+    children: [{
       // Query; shouldn't recalculate frecency.
       guid: "queryCCCCCCC",
       title: "C",
@@ -69,37 +100,53 @@ add_task(async function test_update_frecencies() {
 
   info("Make remote changes");
   await storeRecords(buf, [{
+    id: "menu",
+    parentid: "places",
+    type: "folder",
+    children: ["bookmarkAAAA", "bookmarkBBBB", "bookmarkBBB1"],
+  }, {
+    id: "unfiled",
+    parentid: "places",
+    type: "folder",
+    children: ["bookmarkBBB2", "bookmarkDDDD", "bookmarkEEEE", "queryFFFFFFF"],
+  }, {
     // Existing bookmark changed to existing URL.
     id: "bookmarkBBBB",
+    parentid: "menu",
     type: "bookmark",
     title: "B",
     bmkUri: "http://example.com/b1",
   }, {
     // Existing bookmark with new URL; should recalculate frecency first.
     id: "bookmarkBBB1",
+    parentid: "menu",
     type: "bookmark",
     title: "B1",
     bmkUri: "http://example.com/b11",
   }, {
     id: "bookmarkBBB2",
+    parentid: "unfiled",
     type: "bookmark",
     title: "B2",
     bmkUri: "http://example.com/b",
   }, {
     // New bookmark with new URL; should recalculate frecency first.
     id: "bookmarkDDDD",
+    parentid: "unfiled",
     type: "bookmark",
     title: "D",
     bmkUri: "http://example.com/d",
   }, {
     // New bookmark with new URL.
     id: "bookmarkEEEE",
+    parentid: "unfiled",
     type: "bookmark",
     title: "E",
     bmkUri: "http://example.com/e",
   }, {
     // New query; shouldn't count against limit.
     id: "queryFFFFFFF",
+    parentid: "unfiled",
     type: "query",
     title: "F",
     bmkUri: `place:parent=${PlacesUtils.bookmarks.menuGuid}`,
@@ -139,6 +186,7 @@ add_task(async function test_update_frecencies() {
   info("Change non-URL property of D");
   await storeRecords(buf, [{
     id: "bookmarkDDDD",
+    parentid: "unfiled",
     type: "bookmark",
     title: "D (remote)",
     bmkUri: "http://example.com/d",
@@ -221,22 +269,26 @@ add_task(async function test_apply_then_revert() {
   info("Make remote changes");
   await storeRecords(buf, [{
     id: "menu",
+    parentid: "places",
     type: "folder",
     children: ["bookmarkEEEE", "bookmarkFFFF"],
     modified: now,
   }, {
     id: "toolbar",
+    parentid: "places",
     type: "folder",
     children: ["folderAAAAAA"],
     modified: now,
   }, {
     id: "folderAAAAAA",
+    parentid: "toolbar",
     type: "folder",
     title: "A (remote)",
     children: ["bookmarkCCCC", "bookmarkBBBB"],
     modified: now,
   }, {
     id: "bookmarkBBBB",
+    parentid: "folderAAAAAA",
     type: "bookmark",
     title: "B",
     bmkUri: "http://example.com/b-remote",
@@ -247,12 +299,14 @@ add_task(async function test_apply_then_revert() {
     modified: now,
   }, {
     id: "bookmarkEEEE",
+    parentid: "menu",
     type: "bookmark",
     title: "E",
     bmkUri: "http://example.com/e",
     modified: now,
   }, {
     id: "bookmarkFFFF",
+    parentid: "menu",
     type: "bookmark",
     title: "F",
     bmkUri: "http://example.com/f",
