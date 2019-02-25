@@ -38,17 +38,18 @@ static const uint64_t kMicrosecondsPerSecond = 1000000LL;
 static const uint64_t kNanosecondsPerMicrosecond = 1000LL;
 static const uint64_t kCPUCheckInterval = kMicrosecondsPerSecond / 2LL;
 
-uint64_t GetMicroseconds(timeval time) {
+static uint64_t GetMicroseconds(timeval time) {
   return ((uint64_t)time.tv_sec) * kMicrosecondsPerSecond +
          (uint64_t)time.tv_usec;
 }
 
-uint64_t GetMicroseconds(mach_timespec_t time) {
+static uint64_t GetMicroseconds(mach_timespec_t time) {
   return ((uint64_t)time.tv_sec) * kMicrosecondsPerSecond +
          ((uint64_t)time.tv_nsec) / kNanosecondsPerMicrosecond;
 }
 
-Result<CPUStats, CPUUsageWatcherError> GetProcessCPUStats(int32_t numCPUs) {
+static Result<CPUStats, CPUUsageWatcherError> GetProcessCPUStats(
+    int32_t numCPUs) {
   CPUStats result = {};
   rusage usage;
   int32_t rusageResult = getrusage(RUSAGE_SELF, &usage);
@@ -77,7 +78,7 @@ Result<CPUStats, CPUUsageWatcherError> GetProcessCPUStats(int32_t numCPUs) {
   return result;
 }
 
-Result<CPUStats, CPUUsageWatcherError> GetGlobalCPUStats() {
+static Result<CPUStats, CPUUsageWatcherError> GetGlobalCPUStats() {
   CPUStats result = {};
   host_cpu_load_info_data_t loadInfo;
   mach_msg_type_number_t loadInfoCount = HOST_CPU_LOAD_INFO_COUNT;

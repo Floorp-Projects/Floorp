@@ -111,7 +111,7 @@ TEST(Atoms, Invalid) {
 #define SECOND_ATOM_STR "second static atom. @World!"
 #define THIRD_ATOM_STR "third static atom?!"
 
-bool isStaticAtom(nsAtom* atom) {
+static bool isStaticAtom(nsAtom* atom) {
   // Don't use logic && in order to ensure that all addrefs/releases are always
   // run, even if one of the tests fail. This allows us to run this code on a
   // non-static atom without affecting its refcount.
