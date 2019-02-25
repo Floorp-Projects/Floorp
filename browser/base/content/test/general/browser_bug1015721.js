@@ -32,7 +32,7 @@ function zoomTab1() {
     }, browser1);
 
     info("Waiting for tab 1 to be zoomed");
-    await promiseWaitForCondition(() => {
+    await TestUtils.waitForCondition(() => {
       gLevel1 = ZoomManager.getZoomForBrowser(browser1);
       return gLevel1 > 1;
     });
