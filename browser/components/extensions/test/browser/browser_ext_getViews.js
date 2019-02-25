@@ -76,11 +76,20 @@ async function promiseBrowserContentUnloaded(browser) {
   });
 
   await ContentTask.spawn(browser, MSG_WINDOW_DESTROYED, (MSG_WINDOW_DESTROYED) => {
-    this.content.addEventListener("unload", () => {
-      // Use process message manager to ensure that the message is delivered
-      // even after the <browser>'s message manager is disconnected.
-      Services.cpmm.sendAsyncMessage(MSG_WINDOW_DESTROYED);
-    }, {once: true});
+    let innerWindowId = this.content.windowUtils.currentInnerWindowID;
+    let observer = (subject) => {
+      if (innerWindowId === subject.QueryInterface(Ci.nsISupportsPRUint64).data) {
+        Services.obs.removeObserver(observer, "inner-window-destroyed");
+
+        // Use process message manager to ensure that the message is delivered
+        // even after the <browser>'s message manager is disconnected.
+        Services.cpmm.sendAsyncMessage(MSG_WINDOW_DESTROYED);
+      }
+    };
+    // Observe inner-window-destroyed, like ExtensionPageChild, to ensure that
+    // the ExtensionPageContextChild instance has been unloaded when we resolve
+    // the unloadPromise.
+    Services.obs.addObserver(observer, "inner-window-destroyed");
   });
 
   // Return an object so that callers can use "await".
@@ -103,7 +112,9 @@ add_task(async function() {
     files: {
       "tab.html": `
       <!DOCTYPE html>
-      <html><body>
+      <html>
+      <head><meta charset="utf-8"></head>
+      <body>
       <script src="tab.js"></script>
       </body></html>
       `,
@@ -112,7 +123,9 @@ add_task(async function() {
 
       "popup.html": `
       <!DOCTYPE html>
-      <html><body>
+      <html>
+      <head><meta charset="utf-8"></head>
+      <body>
       <script src="popup.js"></script>
       </body></html>
       `,
