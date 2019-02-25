@@ -271,6 +271,10 @@ export CCACHE_CPP2=1
 endif
 endif
 
+ifdef CCACHE_PREFIX
+export CCACHE_PREFIX
+endif
+
 # Set link flags according to whether we want a console.
 ifeq ($(OS_ARCH),WINNT)
 ifdef MOZ_WINCONSOLE
