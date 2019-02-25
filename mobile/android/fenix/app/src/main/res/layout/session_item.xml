@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="8dp"
+    android:layout_marginBottom="8dp"
+    android:background="@android:color/white"
+    app:cardElevation="1dp"
+    app:cardCornerRadius="10dp"
+    android:clipChildren="true">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="16dp">
+
+        <ImageView
+            android:id="@+id/session_card_thumbnail"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_session_thumbnail"
+            android:layout_margin="16dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+        <TextView
+            android:id="@+id/session_card_timestamp"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textColor="@color/photonInk80"
+            android:textSize="16sp"
+            android:layout_marginStart="12dp"
+            android:layout_marginBottom="2dp"
+            android:layout_marginEnd="12dp"
+            app:layout_constraintStart_toEndOf="@+id/session_card_thumbnail"
+            app:layout_constraintTop_toTopOf="@id/session_card_thumbnail"
+            app:layout_constraintEnd_toStartOf="@id/session_card_overflow_button"/>
+
+        <TextView
+            android:id="@+id/session_card_titles"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textColor="@color/photonGrey50"
+            android:textSize="12sp"
+            app:layout_constraintTop_toBottomOf="@+id/session_card_timestamp"
+            app:layout_constraintStart_toStartOf="@id/session_card_timestamp"
+            app:layout_constraintEnd_toEndOf="@id/session_card_timestamp"/>
+
+        <TextView
+            android:id="@+id/session_card_extras"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/photonGrey50"
+            android:textSize="12sp"
+            app:layout_constraintTop_toBottomOf="@+id/session_card_titles"
+            app:layout_constraintStart_toStartOf="@id/session_card_titles" />
+
+        <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/bottomBarrier"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:barrierDirection="bottom"
+            app:constraint_referenced_ids="session_card_thumbnail,session_card_extras" />
+
+        <ImageButton
+            android:id="@+id/session_card_overflow_button"
+            android:layout_width="@dimen/glyph_button_width"
+            android:layout_height="@dimen/glyph_button_height"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_menu"
+            android:tint="?attr/toolbarTextColor"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.cardview.widget.CardView>
