@@ -28,13 +28,13 @@ interface nsISpeculativeConnect : nsISupports
      *        such as nsIBadCertListener. May be null.
      *
      */
-    void speculativeConnect2(in nsIURI aURI,
-                             in nsIPrincipal aPrincipal,
-                             in nsIInterfaceRequestor aCallbacks);
+    void speculativeConnect(in nsIURI aURI,
+                            in nsIPrincipal aPrincipal,
+                            in nsIInterfaceRequestor aCallbacks);
 
-    void speculativeAnonymousConnect2(in nsIURI aURI,
-                                      in nsIPrincipal aPrincipal,
-                                      in nsIInterfaceRequestor aCallbacks);
+    void speculativeAnonymousConnect(in nsIURI aURI,
+                                     in nsIPrincipal aPrincipal,
+                                     in nsIInterfaceRequestor aCallbacks);
 };
 
 /**
