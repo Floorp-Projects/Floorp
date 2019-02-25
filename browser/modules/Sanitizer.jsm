@@ -750,6 +750,7 @@ async function getAllPrincipals(progress) {
   progress.step = "principals-quota-manager";
   let principals = await new Promise(resolve => {
     quotaManagerService.getUsage(request => {
+      progress.step = "principals-quota-manager-getUsage";
       if (request.resultCode != Cr.NS_OK) {
         // We are probably shutting down. We don't want to propagate the
         // error, rejecting the promise.
@@ -765,6 +766,8 @@ async function getAllPrincipals(progress) {
           list.push(principal);
         }
       }
+
+      progress.step = "principals-quota-manager-completed";
       resolve(list);
     });
   }).catch(() => []);
