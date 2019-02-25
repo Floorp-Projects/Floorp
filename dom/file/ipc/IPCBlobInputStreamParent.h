@@ -61,7 +61,7 @@ class IPCBlobInputStreamParent final
 
  private:
   IPCBlobInputStreamParent(const nsID& aID, uint64_t aSize,
-                           ContentParent* aManager);
+                           nsIContentParent* aManager);
 
   IPCBlobInputStreamParent(const nsID& aID, uint64_t aSize,
                            mozilla::ipc::PBackgroundParent* aManager);
@@ -73,7 +73,7 @@ class IPCBlobInputStreamParent final
 
   // Only 1 of these 2 is set. Raw pointer because these 2 managers are keeping
   // the parent actor alive. The pointers will be nullified in ActorDestroyed.
-  ContentParent* mContentManager;
+  nsIContentParent* mContentManager;
   mozilla::ipc::PBackgroundParent* mPBackgroundManager;
 
   RefPtr<IPCBlobInputStreamParentCallback> mCallback;

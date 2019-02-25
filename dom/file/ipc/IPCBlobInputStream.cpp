@@ -567,7 +567,7 @@ void IPCBlobInputStream::Serialize(mozilla::ipc::InputStreamParams& aParams,
                                    FileDescriptorArray& aFileDescriptors,
                                    bool aDelayedStart, uint32_t aMaxSize,
                                    uint32_t* aSizeUsed,
-                                   ContentChild* aManager) {
+                                   nsIContentChild* aManager) {
   MOZ_ASSERT(aSizeUsed);
   *aSizeUsed = 0;
 
@@ -589,7 +589,7 @@ void IPCBlobInputStream::Serialize(mozilla::ipc::InputStreamParams& aParams,
                                    FileDescriptorArray& aFileDescriptors,
                                    bool aDelayedStart, uint32_t aMaxSize,
                                    uint32_t* aSizeUsed,
-                                   ContentParent* aManager) {
+                                   nsIContentParent* aManager) {
   MOZ_ASSERT(aSizeUsed);
   *aSizeUsed = 0;
 

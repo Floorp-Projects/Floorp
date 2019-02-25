@@ -231,13 +231,13 @@ class TabChild final : public TabChildBase,
   /**
    * Create a new TabChild object.
    */
-  TabChild(ContentChild* aManager, const TabId& aTabId, TabGroup* aTabGroup,
+  TabChild(nsIContentChild* aManager, const TabId& aTabId, TabGroup* aTabGroup,
            const TabContext& aContext, uint32_t aChromeFlags);
 
   nsresult Init(mozIDOMWindowProxy* aParent);
 
   /** Return a TabChild with the given attributes. */
-  static already_AddRefed<TabChild> Create(ContentChild* aManager,
+  static already_AddRefed<TabChild> Create(nsIContentChild* aManager,
                                            const TabId& aTabId,
                                            const TabId& aSameTabGroupAs,
                                            const TabContext& aContext,
@@ -468,7 +468,7 @@ class TabChild final : public TabChildBase,
   void MakeHidden();
   bool IsVisible();
 
-  ContentChild* Manager() const { return mManager; }
+  nsIContentChild* Manager() const { return mManager; }
 
   static inline TabChild* GetFrom(nsIDocShell* aDocShell) {
     if (!aDocShell) {
@@ -803,7 +803,7 @@ class TabChild final : public TabChildBase,
   RefPtr<mozilla::dom::TabGroup> mTabGroup;
   RefPtr<PuppetWidget> mPuppetWidget;
   nsCOMPtr<nsIURI> mLastURI;
-  RefPtr<ContentChild> mManager;
+  RefPtr<nsIContentChild> mManager;
   uint32_t mChromeFlags;
   uint32_t mMaxTouchPoints;
   layers::LayersId mLayersId;

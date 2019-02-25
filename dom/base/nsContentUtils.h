@@ -144,8 +144,8 @@ struct LifecycleCallbackArgs;
 struct LifecycleAdoptedCallbackArgs;
 class MessageBroadcaster;
 class NodeInfo;
-class ContentChild;
-class ContentParent;
+class nsIContentChild;
+class nsIContentParent;
 class TabChild;
 class Selection;
 class TabParent;
@@ -2833,19 +2833,19 @@ class nsContentUtils {
       const bool& aIsPrivateData, nsIPrincipal* aRequestingPrincipal,
       const nsContentPolicyType& aContentPolicyType,
       nsITransferable* aTransferable,
-      mozilla::dom::ContentParent* aContentParent,
+      mozilla::dom::nsIContentParent* aContentParent,
       mozilla::dom::TabChild* aTabChild);
 
   static void TransferablesToIPCTransferables(
       nsIArray* aTransferables, nsTArray<mozilla::dom::IPCDataTransfer>& aIPC,
-      bool aInSyncMessage, mozilla::dom::ContentChild* aChild,
-      mozilla::dom::ContentParent* aParent);
+      bool aInSyncMessage, mozilla::dom::nsIContentChild* aChild,
+      mozilla::dom::nsIContentParent* aParent);
 
   static void TransferableToIPCTransferable(
       nsITransferable* aTransferable,
       mozilla::dom::IPCDataTransfer* aIPCDataTransfer, bool aInSyncMessage,
-      mozilla::dom::ContentChild* aChild,
-      mozilla::dom::ContentParent* aParent);
+      mozilla::dom::nsIContentChild* aChild,
+      mozilla::dom::nsIContentParent* aParent);
 
   /*
    * Get the pixel data from the given source surface and return it as a buffer.

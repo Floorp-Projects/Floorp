@@ -348,7 +348,7 @@ void nsStringInputStream::Serialize(InputStreamParams& aParams,
                                     FileDescriptorArray& /* aFDs */,
                                     bool aDelayedStart, uint32_t aMaxSize,
                                     uint32_t* aSizeUsed,
-                                    mozilla::dom::ContentChild* aManager) {
+                                    mozilla::dom::nsIContentChild* aManager) {
   SerializeInternal(aParams, aDelayedStart, aMaxSize, aSizeUsed, aManager);
 }
 
@@ -364,7 +364,7 @@ void nsStringInputStream::Serialize(InputStreamParams& aParams,
                                     FileDescriptorArray& /* aFDs */,
                                     bool aDelayedStart, uint32_t aMaxSize,
                                     uint32_t* aSizeUsed,
-                                    mozilla::dom::ContentParent* aManager) {
+                                    mozilla::dom::nsIContentParent* aManager) {
   SerializeInternal(aParams, aDelayedStart, aMaxSize, aSizeUsed, aManager);
 }
 

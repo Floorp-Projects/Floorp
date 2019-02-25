@@ -273,7 +273,7 @@ StreamWrapper::IsNonBlocking(bool* _retval) {
 void StreamWrapper::Serialize(InputStreamParams& aParams,
                               FileDescriptorArray& aFileDescriptors,
                               bool aDelayedStart, uint32_t aMaxSize,
-                              uint32_t* aSizeUsed, ContentChild* aManager) {
+                              uint32_t* aSizeUsed, nsIContentChild* aManager) {
   SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
                     aSizeUsed, aManager);
 }
@@ -289,7 +289,7 @@ void StreamWrapper::Serialize(InputStreamParams& aParams,
 void StreamWrapper::Serialize(InputStreamParams& aParams,
                               FileDescriptorArray& aFileDescriptors,
                               bool aDelayedStart, uint32_t aMaxSize,
-                              uint32_t* aSizeUsed, ContentParent* aManager) {
+                              uint32_t* aSizeUsed, nsIContentParent* aManager) {
   SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
                     aSizeUsed, aManager);
 }

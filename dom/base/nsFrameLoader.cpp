@@ -2396,8 +2396,9 @@ static Tuple<ContentParent*, TabParent*> GetContentParent(Element* aBrowser) {
   }
 
   TabParent* tabParent = TabParent::GetFrom(otherLoader);
-  if (tabParent && tabParent->Manager()) {
-    return MakeTuple(tabParent->Manager(), tabParent);
+  if (tabParent && tabParent->Manager() &&
+      tabParent->Manager()->IsContentParent()) {
+    return MakeTuple(tabParent->Manager()->AsContentParent(), tabParent);
   }
 
   return ReturnTuple(nullptr, nullptr);
@@ -2441,8 +2442,9 @@ bool nsFrameLoader::TryRemoteBrowser() {
   RefPtr<ContentParent> openerContentParent;
   RefPtr<TabParent> sameTabGroupAs;
 
-  if (openingTab && openingTab->Manager()) {
-    openerContentParent = openingTab->Manager();
+  if (openingTab && openingTab->Manager() &&
+      openingTab->Manager()->IsContentParent()) {
+    openerContentParent = openingTab->Manager()->AsContentParent();
   }
 
   // <iframe mozbrowser> gets to skip these checks.
@@ -2728,7 +2730,7 @@ nsresult nsFrameLoader::DoSendAsyncMessage(JSContext* aCx,
   TabParent* tabParent = mRemoteBrowser;
   if (tabParent) {
     ClonedMessageData data;
-    ContentParent* cp = tabParent->Manager();
+    nsIContentParent* cp = tabParent->Manager();
     if (!BuildClonedMessageDataForParent(cp, aData, data)) {
       MOZ_CRASH();
       return NS_ERROR_DOM_DATA_CLONE_ERR;
@@ -2967,7 +2969,7 @@ void nsFrameLoader::Print(uint64_t aOuterWindowID,
 #if defined(NS_PRINTING)
   if (mRemoteBrowser) {
     RefPtr<embedding::PrintingParent> printingParent =
-        mRemoteBrowser->Manager()->GetPrintingParent();
+        mRemoteBrowser->Manager()->AsContentParent()->GetPrintingParent();
 
     embedding::PrintData printData;
     nsresult rv = printingParent->SerializeAndEnsureRemotePrintJob(

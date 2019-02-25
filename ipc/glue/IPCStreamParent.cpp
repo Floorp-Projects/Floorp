@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IPCStreamDestination.h"
-#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/nsIContentParent.h"
 #include "mozilla/ipc/PBackgroundParent.h"
 #include "mozilla/ipc/PChildToParentStreamParent.h"
 #include "mozilla/ipc/PParentToChildStreamParent.h"
@@ -65,7 +65,7 @@ class IPCStreamSourceParent final : public PParentToChildStreamParent,
 }  // anonymous namespace
 
 /* static */ PParentToChildStreamParent* IPCStreamSource::Create(
-    nsIAsyncInputStream* aInputStream, dom::ContentParent* aManager) {
+    nsIAsyncInputStream* aInputStream, dom::nsIContentParent* aManager) {
   MOZ_ASSERT(aInputStream);
   MOZ_ASSERT(aManager);
 

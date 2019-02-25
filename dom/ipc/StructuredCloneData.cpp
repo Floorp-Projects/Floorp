@@ -195,12 +195,12 @@ bool BuildClonedMessageData(M* aManager, StructuredCloneData& aData,
 }
 
 bool StructuredCloneData::BuildClonedMessageDataForParent(
-    ContentParent* aParent, ClonedMessageData& aClonedData) {
+    nsIContentParent* aParent, ClonedMessageData& aClonedData) {
   return BuildClonedMessageData(aParent, *this, aClonedData);
 }
 
 bool StructuredCloneData::BuildClonedMessageDataForChild(
-    ContentChild* aChild, ClonedMessageData& aClonedData) {
+    nsIContentChild* aChild, ClonedMessageData& aClonedData) {
   return BuildClonedMessageData(aChild, *this, aClonedData);
 }
 

@@ -7,6 +7,7 @@
 
 include protocol PColorPicker;
 include protocol PContent;
+include protocol PContentBridge;
 include protocol PDocAccessible;
 include protocol PFilePicker;
 include protocol PIndexedDBPermissionRequest;
@@ -133,7 +134,7 @@ union OptionalShmem
 
 nested(upto inside_cpow) sync protocol PBrowser
 {
-    manager PContent;
+    manager PContent or PContentBridge;
 
     manages PColorPicker;
     manages PDocAccessible;

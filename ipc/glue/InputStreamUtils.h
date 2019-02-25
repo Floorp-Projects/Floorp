@@ -34,7 +34,7 @@ class InputStreamHelper {
                                    nsTArray<FileDescriptor>& aFileDescriptors,
                                    bool aDelayedStart, uint32_t aMaxSize,
                                    uint32_t* aSizeUsed,
-                                   mozilla::dom::ContentChild* aManager);
+                                   mozilla::dom::nsIContentChild* aManager);
 
   static void SerializeInputStream(nsIInputStream* aInputStream,
                                    InputStreamParams& aParams,
@@ -48,7 +48,7 @@ class InputStreamHelper {
                                    nsTArray<FileDescriptor>& aFileDescriptors,
                                    bool aDelayedStart, uint32_t aMaxSize,
                                    uint32_t* aSizeUsed,
-                                   mozilla::dom::ContentParent* aManager);
+                                   mozilla::dom::nsIContentParent* aManager);
 
   static void SerializeInputStream(nsIInputStream* aInputStream,
                                    InputStreamParams& aParams,
@@ -61,7 +61,7 @@ class InputStreamHelper {
   // these methods.
   static void SerializeInputStreamAsPipe(
       nsIInputStream* aInputStream, InputStreamParams& aParams,
-      bool aDelayedStart, mozilla::dom::ContentChild* aManager);
+      bool aDelayedStart, mozilla::dom::nsIContentChild* aManager);
 
   static void SerializeInputStreamAsPipe(nsIInputStream* aInputStream,
                                          InputStreamParams& aParams,
@@ -70,7 +70,7 @@ class InputStreamHelper {
 
   static void SerializeInputStreamAsPipe(
       nsIInputStream* aInputStream, InputStreamParams& aParams,
-      bool aDelayedStart, mozilla::dom::ContentParent* aManager);
+      bool aDelayedStart, mozilla::dom::nsIContentParent* aManager);
 
   static void SerializeInputStreamAsPipe(nsIInputStream* aInputStream,
                                          InputStreamParams& aParams,
