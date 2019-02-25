@@ -12,6 +12,7 @@ const {
 
 loader.lazyRequireGetter(this, "EditingSession", "devtools/client/inspector/boxmodel/utils/editing-session");
 loader.lazyRequireGetter(this, "InplaceEditor", "devtools/client/shared/inplace-editor", true);
+loader.lazyRequireGetter(this, "RulePreviewTooltip", "devtools/client/shared/widgets/tooltip/RulePreviewTooltip");
 
 const NUMERIC = /^-?[\d\.]+$/;
 
@@ -37,6 +38,7 @@ function BoxModel(inspector, window) {
   this.onNewSelection = this.onNewSelection.bind(this);
   this.onShowBoxModelEditor = this.onShowBoxModelEditor.bind(this);
   this.onShowBoxModelHighlighter = this.onShowBoxModelHighlighter.bind(this);
+  this.onShowRulePreviewTooltip = this.onShowRulePreviewTooltip.bind(this);
   this.onSidebarSelect = this.onSidebarSelect.bind(this);
   this.onToggleGeometryEditor = this.onToggleGeometryEditor.bind(this);
 
@@ -54,9 +56,14 @@ BoxModel.prototype = {
     this.inspector.selection.off("new-node-front", this.onNewSelection);
     this.inspector.sidebar.off("select", this.onSidebarSelect);
 
+    if (this._tooltip) {
+      this._tooltip.destroy();
+    }
+
     this.untrackReflows();
 
     this._highlighters = null;
+    this._tooltip = null;
     this.document = null;
     this.inspector = null;
     this.walker = null;
@@ -71,6 +78,14 @@ BoxModel.prototype = {
     return this._highlighters;
   },
 
+  get rulePreviewTooltip() {
+    if (!this._tooltip) {
+      this._tooltip = new RulePreviewTooltip(this.inspector.toolbox.doc);
+    }
+
+    return this._tooltip;
+  },
+
   /**
    * Returns an object containing the box model's handler functions used in the box
    * model's React component props.
@@ -80,6 +95,7 @@ BoxModel.prototype = {
       onHideBoxModelHighlighter: this.onHideBoxModelHighlighter,
       onShowBoxModelEditor: this.onShowBoxModelEditor,
       onShowBoxModelHighlighter: this.onShowBoxModelHighlighter,
+      onShowRulePreviewTooltip: this.onShowRulePreviewTooltip,
       onToggleGeometryEditor: this.onToggleGeometryEditor,
     };
   },
@@ -257,6 +273,27 @@ BoxModel.prototype = {
     }
 
     this.updateBoxModel("new-selection");
+  },
+
+  /**
+   * Shows the RulePreviewTooltip when a box model editable value is hovered on the
+   * box model panel.
+   *
+   * @param  {Element} target
+   *         The target element.
+   * @param  {String} property
+   *         The name of the property.
+   */
+  onShowRulePreviewTooltip(target, property) {
+    const { highlightProperty } = this.inspector.getPanel("ruleview").view;
+    const isHighlighted = highlightProperty(property);
+
+    // Only show the tooltip if the property is not highlighted.
+    // TODO: In the future, use an associated ruleId for toggling the tooltip instead of
+    // the Boolean returned from highlightProperty.
+    if (!isHighlighted) {
+      this.rulePreviewTooltip.show(target);
+    }
   },
 
   /**
