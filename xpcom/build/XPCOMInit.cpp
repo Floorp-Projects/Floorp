@@ -203,11 +203,6 @@ NS_GetDebug(nsIDebug2** aResult) {
   return nsDebugImpl::Create(nullptr, NS_GET_IID(nsIDebug2), (void**)aResult);
 }
 
-EXPORT_XPCOM_API(nsresult)
-NS_InitXPCOM(nsIServiceManager** aResult, nsIFile* aBinDirectory) {
-  return NS_InitXPCOM2(aResult, aBinDirectory, nullptr);
-}
-
 class ICUReporter final : public nsIMemoryReporter,
                           public CountingAllocatorBase<ICUReporter> {
  public:
