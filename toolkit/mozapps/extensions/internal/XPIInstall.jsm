@@ -395,7 +395,11 @@ async function loadManifestFromWebManifest(aUri, aPackage) {
                 await extension.initAllLocales() : null;
 
   if (extension.errors.length > 0) {
-    throw new Error("Extension is invalid");
+    let error = new Error("Extension is invalid");
+    // Add detailed errors on the error object so that the front end can display them
+    // if needed (eg in about:debugging).
+    error.additionalErrors = extension.errors;
+    throw error;
   }
 
   let bss = (manifest.browser_specific_settings && manifest.browser_specific_settings.gecko)
