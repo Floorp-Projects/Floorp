@@ -62,12 +62,14 @@ AccessibleNode::AccessibleNode(nsINode* aNode)
 
 AccessibleNode::~AccessibleNode() {}
 
-/* virtual */ JSObject* AccessibleNode::WrapObject(
-    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
+/* virtual */
+JSObject* AccessibleNode::WrapObject(JSContext* aCx,
+                                     JS::Handle<JSObject*> aGivenProto) {
   return AccessibleNode_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-/* virtual */ ParentObject AccessibleNode::GetParentObject() const {
+/* virtual */
+ParentObject AccessibleNode::GetParentObject() const {
   return mDOMNode->GetParentObject();
 }
 
