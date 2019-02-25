@@ -777,13 +777,15 @@ bool js::atomics_notify(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-/* static */ bool js::FutexThread::initialize() {
+/* static */
+bool js::FutexThread::initialize() {
   MOZ_ASSERT(!lock_);
   lock_ = js_new<js::Mutex>(mutexid::FutexThread);
   return lock_ != nullptr;
 }
 
-/* static */ void js::FutexThread::destroy() {
+/* static */
+void js::FutexThread::destroy() {
   if (lock_) {
     js::Mutex* lock = lock_;
     js_delete(lock);
@@ -791,7 +793,8 @@ bool js::atomics_notify(JSContext* cx, unsigned argc, Value* vp) {
   }
 }
 
-/* static */ void js::FutexThread::lock() {
+/* static */
+void js::FutexThread::lock() {
   // Load the atomic pointer.
   js::Mutex* lock = lock_;
 
@@ -802,7 +805,8 @@ bool js::atomics_notify(JSContext* cx, unsigned argc, Value* vp) {
                              mozilla::recordreplay::Behavior::DontPreserve>
     FutexThread::lock_;
 
-/* static */ void js::FutexThread::unlock() {
+/* static */
+void js::FutexThread::unlock() {
   // Load the atomic pointer.
   js::Mutex* lock = lock_;
 

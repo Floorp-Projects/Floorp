@@ -520,7 +520,8 @@ bool js::InitDateTimeState() {
   return true;
 }
 
-/* static */ void js::FinishDateTimeState() {
+/* static */
+void js::FinishDateTimeState() {
   js_delete(IcuTimeZoneState);
   IcuTimeZoneState = nullptr;
 

@@ -463,8 +463,9 @@ static uint8_t* NewCopiedBufferContents(JSContext* cx,
   return dataCopy;
 }
 
-/* static */ void ArrayBufferObject::detach(JSContext* cx,
-                                            Handle<ArrayBufferObject*> buffer) {
+/* static */
+void ArrayBufferObject::detach(JSContext* cx,
+                               Handle<ArrayBufferObject*> buffer) {
   cx->check(buffer);
   MOZ_ASSERT(!buffer->isPreparedForAsmJS());
 
@@ -683,7 +684,8 @@ class js::WasmArrayRawBuffer {
 #endif  // WASM_HUGE_MEMORY
 };
 
-/* static */ WasmArrayRawBuffer* WasmArrayRawBuffer::Allocate(
+/* static */
+WasmArrayRawBuffer* WasmArrayRawBuffer::Allocate(
     uint32_t numBytes, const Maybe<uint32_t>& maxSize) {
   MOZ_RELEASE_ASSERT(numBytes <= ArrayBufferObject::MaxBufferByteLength);
 
@@ -715,7 +717,8 @@ class js::WasmArrayRawBuffer {
   return rawBuf;
 }
 
-/* static */ void WasmArrayRawBuffer::Release(void* mem) {
+/* static */
+void WasmArrayRawBuffer::Release(void* mem) {
   WasmArrayRawBuffer* header =
       (WasmArrayRawBuffer*)((uint8_t*)mem - sizeof(WasmArrayRawBuffer));
 
@@ -1029,7 +1032,8 @@ static void CheckStealPreconditions(Handle<ArrayBufferObject*> buffer,
              "asm.js-prepared buffers don't have detachable/stealable data");
 }
 
-/* static */ bool ArrayBufferObject::wasmGrowToSizeInPlace(
+/* static */
+bool ArrayBufferObject::wasmGrowToSizeInPlace(
     uint32_t newSize, HandleArrayBufferObject oldBuf,
     MutableHandleArrayBufferObject newBuf, JSContext* cx) {
   CheckStealPreconditions(oldBuf, cx);
@@ -1073,7 +1077,8 @@ static void CheckStealPreconditions(Handle<ArrayBufferObject*> buffer,
 }
 
 #ifndef WASM_HUGE_MEMORY
-/* static */ bool ArrayBufferObject::wasmMovingGrowToSize(
+/* static */
+bool ArrayBufferObject::wasmMovingGrowToSize(
     uint32_t newSize, HandleArrayBufferObject oldBuf,
     MutableHandleArrayBufferObject newBuf, JSContext* cx) {
   // On failure, do not throw and ensure that the original buffer is
@@ -1403,7 +1408,8 @@ ArrayBufferObject::extractStructuredCloneContents(
   return BufferContents::createFailed();
 }
 
-/* static */ void ArrayBufferObject::addSizeOfExcludingThis(
+/* static */
+void ArrayBufferObject::addSizeOfExcludingThis(
     JSObject* obj, mozilla::MallocSizeOf mallocSizeOf, JS::ClassInfo* info) {
   ArrayBufferObject& buffer = AsArrayBuffer(obj);
   switch (buffer.bufferKind()) {
@@ -1443,13 +1449,16 @@ ArrayBufferObject::extractStructuredCloneContents(
   }
 }
 
-/* static */ void ArrayBufferObject::finalize(FreeOp* fop, JSObject* obj) {
+/* static */
+void ArrayBufferObject::finalize(FreeOp* fop, JSObject* obj) {
   obj->as<ArrayBufferObject>().releaseData(fop);
 }
 
-/* static */ void ArrayBufferObject::copyData(
-    Handle<ArrayBufferObject*> toBuffer, uint32_t toIndex,
-    Handle<ArrayBufferObject*> fromBuffer, uint32_t fromIndex, uint32_t count) {
+/* static */
+void ArrayBufferObject::copyData(Handle<ArrayBufferObject*> toBuffer,
+                                 uint32_t toIndex,
+                                 Handle<ArrayBufferObject*> fromBuffer,
+                                 uint32_t fromIndex, uint32_t count) {
   MOZ_ASSERT(toBuffer->byteLength() >= count);
   MOZ_ASSERT(toBuffer->byteLength() >= toIndex + count);
   MOZ_ASSERT(fromBuffer->byteLength() >= fromIndex);
@@ -1459,8 +1468,8 @@ ArrayBufferObject::extractStructuredCloneContents(
          fromBuffer->dataPointer() + fromIndex, count);
 }
 
-/* static */ size_t ArrayBufferObject::objectMoved(JSObject* obj,
-                                                   JSObject* old) {
+/* static */
+size_t ArrayBufferObject::objectMoved(JSObject* obj, JSObject* old) {
   ArrayBufferObject& dst = obj->as<ArrayBufferObject>();
   const ArrayBufferObject& src = old->as<ArrayBufferObject>();
 
@@ -1568,8 +1577,8 @@ void InnerViewTable::removeViews(ArrayBufferObject* buffer) {
   map.remove(p);
 }
 
-/* static */ bool InnerViewTable::sweepEntry(JSObject** pkey,
-                                             ViewVector& views) {
+/* static */
+bool InnerViewTable::sweepEntry(JSObject** pkey, ViewVector& views) {
   if (IsAboutToBeFinalizedUnbarriered(pkey)) {
     return true;
   }

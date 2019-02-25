@@ -50,7 +50,8 @@ using namespace js;
   return true;
 }
 
-/* static */ bool WeakSetObject::add(JSContext* cx, unsigned argc, Value* vp) {
+/* static */
+bool WeakSetObject::add(JSContext* cx, unsigned argc, Value* vp) {
   // Steps 1-3.
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<WeakSetObject::is, WeakSetObject::add_impl>(cx,
@@ -85,8 +86,8 @@ using namespace js;
   return true;
 }
 
-/* static */ bool WeakSetObject::delete_(JSContext* cx, unsigned argc,
-                                         Value* vp) {
+/* static */
+bool WeakSetObject::delete_(JSContext* cx, unsigned argc, Value* vp) {
   // Steps 1-3.
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<WeakSetObject::is, WeakSetObject::delete_impl>(
@@ -120,7 +121,8 @@ using namespace js;
   return true;
 }
 
-/* static */ bool WeakSetObject::has(JSContext* cx, unsigned argc, Value* vp) {
+/* static */
+bool WeakSetObject::has(JSContext* cx, unsigned argc, Value* vp) {
   // Steps 1-3.
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<WeakSetObject::is, WeakSetObject::has_impl>(cx,

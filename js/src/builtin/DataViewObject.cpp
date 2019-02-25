@@ -247,9 +247,11 @@ bool DataViewObject::construct(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 template <typename NativeType>
-/* static */ SharedMem<uint8_t*> DataViewObject::getDataPointer(
-    JSContext* cx, Handle<DataViewObject*> obj, uint64_t offset,
-    bool* isSharedMemory) {
+/* static */
+SharedMem<uint8_t*> DataViewObject::getDataPointer(JSContext* cx,
+                                                   Handle<DataViewObject*> obj,
+                                                   uint64_t offset,
+                                                   bool* isSharedMemory) {
   const size_t TypeSize = sizeof(NativeType);
   if (offset > UINT32_MAX - TypeSize || offset + TypeSize > obj->byteLength()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
@@ -374,9 +376,9 @@ struct DataViewIO {
 };
 
 template <typename NativeType>
-/* static */ bool DataViewObject::read(JSContext* cx,
-                                       Handle<DataViewObject*> obj,
-                                       const CallArgs& args, NativeType* val) {
+/* static */
+bool DataViewObject::read(JSContext* cx, Handle<DataViewObject*> obj,
+                          const CallArgs& args, NativeType* val) {
   // Steps 1-2. done by the caller
   // Step 3. unnecessary assert
 
@@ -476,9 +478,9 @@ inline bool WebIDLCast<double>(JSContext* cx, HandleValue value, double* out) {
 // https://tc39.github.io/ecma262/#sec-setviewvalue
 // SetViewValue ( view, requestIndex, isLittleEndian, type, value )
 template <typename NativeType>
-/* static */ bool DataViewObject::write(JSContext* cx,
-                                        Handle<DataViewObject*> obj,
-                                        const CallArgs& args) {
+/* static */
+bool DataViewObject::write(JSContext* cx, Handle<DataViewObject*> obj,
+                           const CallArgs& args) {
   // Steps 1-2. done by the caller
   // Step 3. unnecessary assert
 
