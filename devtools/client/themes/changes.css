@@ -4,9 +4,6 @@
 
  /* CSS Variables specific to the Changes panel that aren't defined by the themes */
  :root {
-   --changes-button-background-color: var(--grey-90-a10);
-   --changes-button-background-color-hover: var(--grey-90-a15);
-   --changes-button-background-color-active: var(--grey-90-a20);
    --diff-add-background-color: #f1feec;
    --diff-add-text-color: #54983f;
    --diff-remove-background-color: #fbf2f5;
@@ -22,7 +19,6 @@
  }
 
 :root.theme-dark {
-  --changes-button-background-color: #252526;
   --diff-add-background-color: rgba(18, 188, 0, 0.15);
   --diff-add-text-color: #12BC00;
   --diff-remove-background-color: rgba(255, 0, 57, 0.15);
@@ -81,52 +77,8 @@
                      var(--diff-level-offset) * var(--diff-level));
 }
 
-.changes__copy-all-changes-button {
-  -moz-context-properties: fill;
-  background: url(chrome://devtools/skin/images/copy.svg) no-repeat;
-  background-size: 16px;
-  border: none;
-  color: var(--theme-body-color);
-  fill: currentColor;
-  height: 16px;
-  margin: 7px 10px;
-  padding-left: 21px;
-}
-
-/* Hide the Copy Rule button by default. */
-.changes__copy-rule-button {
-  background-color: var(--changes-button-background-color);
-  border-radius: 5px;
-  border: none;
-  color: var(--theme-body-color);
-  display: none;
-  padding: 1px 5px;
-  position: absolute;
-  right: 5px;
-  top: 2px;
-}
-
-.changes__copy-rule-button:hover {
-  background-color: var(--changes-button-background-color-hover);
-}
-
-.changes__copy-rule-button:active {
-  background-color: var(--changes-button-background-color-active);
-}
-
-.changes__rule {
-  position: relative;
-}
-
-.changes__selector {
+#sidebar-panel-changes .selector {
   word-wrap: break-word;
-}
-
-/* Show the Copy Rule button when hovering over the rule's selector elements */
-.changes__selector:hover + .changes__copy-rule-button,
-.changes__selector:hover + .changes__selector + .changes__copy-rule-button,
-.changes__copy-rule-button:hover {
-  display: block;
 }
 
 #sidebar-panel-changes .declaration-name {

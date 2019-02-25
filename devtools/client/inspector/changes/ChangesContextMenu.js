@@ -28,6 +28,7 @@ class ChangesContextMenu {
     // Window object to which the Changes panel belongs to.
     this.window = this.document.defaultView;
 
+    this._onCopyChanges = this.view.copyChanges.bind(this.view);
     this._onCopyRule = this.view.copyRule.bind(this.view);
     this._onCopySelection = this.view.copySelection.bind(this.view);
     this._onSelectAll = this._onSelectAll.bind(this);
@@ -57,12 +58,34 @@ class ChangesContextMenu {
 
     const ruleEl = target.closest("[data-rule-id]");
     const ruleId = ruleEl ? ruleEl.dataset.ruleId : null;
+    const sourceEl = target.closest("[data-source-id]");
+    const sourceId = sourceEl ? sourceEl.dataset.sourceId : null;
 
-    if (ruleId) {
+    // When both rule id and source id are found, deal with just for that rule.
+    if (ruleId && sourceId) {
+      // Copy Changes option
+      menu.append(new MenuItem({
+        label: getStr("changes.contextmenu.copyChanges"),
+        click: () => this._onCopyChanges(ruleId, sourceId),
+      }));
+
       // Copy Rule option
       menu.append(new MenuItem({
         label: getStr("changes.contextmenu.copyRule"),
         click: () => this._onCopyRule(ruleId),
+      }));
+
+      menu.append(new MenuItem({
+        type: "separator",
+      }));
+    }
+
+    // When only the source id is found, deal with all changed rules in that source.
+    if (!ruleId && sourceId) {
+      // Copy All Changes option
+      menu.append(new MenuItem({
+        label: getStr("changes.contextmenu.copyAllChanges"),
+        click: () => this._onCopyChanges(null, sourceId),
       }));
 
       menu.append(new MenuItem({
