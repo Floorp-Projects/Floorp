@@ -13,8 +13,6 @@ class MozTextLink extends MozElementMixin(XULTextElement) {
   constructor() {
     super();
 
-    this.classList.add("text-link");
-
     this.addEventListener("click", (event) => {
       if (event.button == 0 || event.button == 1) {
         this.open(event);
@@ -27,6 +25,10 @@ class MozTextLink extends MozElementMixin(XULTextElement) {
       }
       this.click();
     });
+  }
+
+  connectedCallback() {
+    this.classList.add("text-link");
   }
 
   set href(val) {
