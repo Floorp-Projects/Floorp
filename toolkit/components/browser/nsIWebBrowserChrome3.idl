@@ -9,6 +9,7 @@ interface nsIDocShell;
 interface nsIInputStream;
 interface nsIRunnable;
 interface nsIPrincipal;
+interface nsIContentSecurityPolicy;
 
 webidl Node;
 
@@ -52,12 +53,16 @@ interface nsIWebBrowserChrome3 : nsIWebBrowserChrome2
    *        boundaries.
    * @param aTriggeringPrincipal
    *        The principal that initiated the load of aURI.
+   * @param aCsp
+   *        The CSP to be used for that load. That is the CSP that e.g. upgrades
+   *        the load to HTTPS in case upgrade-insecure-requests is set.
    */
-  bool shouldLoadURI(in nsIDocShell    aDocShell,
-                     in nsIURI         aURI,
-                     in nsIURI         aReferrer,
-                     in boolean        aHasPostData,
-                     in nsIPrincipal   aTriggeringPrincipal);
+  bool shouldLoadURI(in nsIDocShell              aDocShell,
+                     in nsIURI                   aURI,
+                     in nsIURI                   aReferrer,
+                     in boolean                  aHasPostData,
+                     in nsIPrincipal             aTriggeringPrincipal,
+                     in nsIContentSecurityPolicy aCsp);
 
   bool shouldLoadURIInThisProcess(in nsIURI aURI);
 
@@ -67,10 +72,14 @@ interface nsIWebBrowserChrome3 : nsIWebBrowserChrome2
    *
    * @param aDocShell
    *        The docshell performing the load.
+   * @param aCsp
+   *        The CSP to be used for that load. That is the CSP that e.g. upgrades
+   *        the load to HTTPS in case upgrade-insecure-requests is set.
    */
   bool reloadInFreshProcess(in nsIDocShell aDocShell,
                             in nsIURI aURI,
                             in nsIURI aReferrer,
                             in nsIPrincipal aTriggeringPrincipal,
-                            in uint32_t aLoadFlags);
+                            in uint32_t aLoadFlags,
+                            in nsIContentSecurityPolicy aCsp);
 };
