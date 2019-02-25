@@ -216,6 +216,12 @@ Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
                         const StaticXREAppData& aAppData) {
   SetLauncherErrorAppData(aAppData);
 
+  if (CheckArg(argc, argv, L"log-launcher-error",
+               static_cast<const wchar_t**>(nullptr),
+               mozilla::CheckArgFlag::RemoveArg) == ARG_FOUND) {
+    SetLauncherErrorForceEventLog();
+  }
+
   Maybe<bool> runAsLauncher = RunAsLauncherProcess(argc, argv);
   if (!runAsLauncher || !runAsLauncher.value()) {
     return Nothing();
