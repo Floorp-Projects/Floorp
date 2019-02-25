@@ -61,6 +61,12 @@
   color: var(--theme-body-color);
 }
 
+:root[platform="mac"] .welcomebox .shortcutKey,
+.launchpad-root[platform="mac"] .welcomebox .shortcutKey {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-weight: 500;
+}
+
 .shortcutLabel {
   text-align: start;
   padding-left: 10px;
