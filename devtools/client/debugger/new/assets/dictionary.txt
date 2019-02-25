@@ -208,3 +208,9 @@ asyncStore
 CPG
 TodoMVC
 pseudocode
+Amit
+Zur's
+TravisCI
+Homebrew
+30-60minutes
+myScriptFunction

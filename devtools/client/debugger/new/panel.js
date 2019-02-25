@@ -2,14 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const { Task } = require("devtools/shared/task");
 const { LocalizationHelper } = require("devtools/shared/l10n");
-const { gDevTools } = require("devtools/client/framework/devtools");
 const {
   gDevToolsBrowser
 } = require("devtools/client/framework/devtools-browser");
-const { TargetFactory } = require("devtools/client/framework/target");
-const { Toolbox } = require("devtools/client/framework/toolbox");
 loader.lazyRequireGetter(
   this,
   "openContentLink",

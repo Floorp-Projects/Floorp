@@ -64,7 +64,7 @@ export function isNotJavaScript(source: Source): boolean {
 
 export function isInvalidUrl(url: Object, source: Source) {
   return (
-    IGNORED_URLS.indexOf(url) != -1 ||
+    IGNORED_URLS.includes(url) ||
     !source.url ||
     !url.group ||
     isPretty(source) ||
