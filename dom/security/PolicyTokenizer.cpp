@@ -27,9 +27,14 @@ PolicyTokenizer::~PolicyTokenizer() {
 
 void PolicyTokenizer::generateNextToken() {
   skipWhiteSpaceAndSemicolon();
+  MOZ_ASSERT(mCurToken.Length() == 0);
+  const char16_t* const start = mCurChar;
   while (!atEnd() && !nsContentUtils::IsHTMLWhitespace(*mCurChar) &&
          *mCurChar != SEMICOL) {
-    mCurToken.Append(*mCurChar++);
+    mCurChar++;
+  }
+  if (start != mCurChar) {
+    mCurToken.Append(start, mCurChar - start);
   }
   POLICYTOKENIZERLOG(("PolicyTokenizer::generateNextToken: %s",
                       NS_ConvertUTF16toUTF8(mCurToken).get()));
