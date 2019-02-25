@@ -86,8 +86,9 @@ impl ExtraCheck {
                 x == results.last().unwrap().stats.alpha_target_count,
             ExtraCheck::ColorTargets(x) =>
                 x == results.last().unwrap().stats.color_target_count,
-            ExtraCheck::DirtyRegion { index, ref region } =>
-                *region == format!("{}", results[index].recorded_dirty_regions[0]),
+            ExtraCheck::DirtyRegion { index, ref region } => {
+                *region == format!("{}", results[index].recorded_dirty_regions[0])
+            }
         }
     }
 }
@@ -221,6 +222,7 @@ impl ReftestManifest {
             let mut disable_dual_source_blending = false;
             let mut zoom_factor = 1.0;
             let mut allow_mipmaps = false;
+            let mut dirty_region_index = 0;
 
             let mut paths = vec![];
             for (i, token) in tokens.iter().enumerate() {
@@ -263,11 +265,14 @@ impl ReftestManifest {
                         let (_, args, _) = parse_function(function);
                         extra_checks.push(ExtraCheck::ColorTargets(args[0].parse().unwrap()));
                     }
-                    function if function.starts_with("dirty_region") => {
+                    function if function.starts_with("dirty") => {
                         let (_, args, _) = parse_function(function);
-                        let index: usize = args[0].parse().unwrap();
-                        let region: String = args[1].parse().unwrap();
-                        extra_checks.push(ExtraCheck::DirtyRegion { index, region });
+                        let region: String = args[0].parse().unwrap();
+                        extra_checks.push(ExtraCheck::DirtyRegion {
+                            index: dirty_region_index,
+                            region,
+                        });
+                        dirty_region_index += 1;
                     }
                     options if options.starts_with("options") => {
                         let (_, args, _) = parse_function(options);
@@ -403,21 +408,12 @@ impl<'a> ReftestHarness<'a> {
         }
 
         let window_size = self.window.get_inner_size();
-        let reference = match t.reference.extension().unwrap().to_str().unwrap() {
-            "yaml" => {
-                let output = self.render_yaml(
-                    &t.reference,
-                    window_size,
-                    t.font_render_mode,
-                    t.allow_mipmaps,
-                );
-                output.image
-            }
-            "png" => {
-                self.load_image(t.reference.as_path(), ImageFormat::PNG)
-            }
+        let reference_image = match t.reference.extension().unwrap().to_str().unwrap() {
+            "yaml" => None,
+            "png" => Some(self.load_image(t.reference.as_path(), ImageFormat::PNG)),
             other => panic!("Unknown reftest extension: {}", other),
         };
+        let test_size = reference_image.as_ref().map_or(window_size, |img| img.size);
 
         // The reference can be smaller than the window size, in which case
         // we only compare the intersection.
@@ -428,25 +424,30 @@ impl<'a> ReftestHarness<'a> {
         // a row, we need to render the scene multiple times.
         let mut images = vec![];
         let mut results = vec![];
-        let num_iterations = if t.test.len() > 1 {
-            webrender::FRAMES_BEFORE_PICTURE_CACHING
-        } else {
-            1
-        };
+
         for filename in t.test.iter() {
-            let mut output = None;
-            for _ in 0..num_iterations {
-                output = Some(self.render_yaml(
-                    &filename,
-                    reference.size,
-                    t.font_render_mode,
-                    t.allow_mipmaps,
-                ));
-            }
-            let output = output.unwrap();
+            let output = self.render_yaml(
+                &filename,
+                test_size,
+                t.font_render_mode,
+                t.allow_mipmaps,
+            );
             images.push(output.image);
             results.push(output.results);
         }
+
+        let reference = match reference_image {
+            Some(image) => image,
+            None => {
+                let output = self.render_yaml(
+                    &t.reference,
+                    test_size,
+                    t.font_render_mode,
+                    t.allow_mipmaps,
+                );
+                output.image
+            }
+        };
 
         if t.disable_dual_source_blending {
             self.wrench

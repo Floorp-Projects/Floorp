@@ -1899,7 +1899,7 @@ impl WrenchThing for YamlFrameReader {
                 max_frame_count = max_frame_count.max(values.as_vec().unwrap().len());
             }
         }
-        if self.requested_frame < max_frame_count - 1 {
+        if self.requested_frame + 1 < max_frame_count {
             self.requested_frame += 1;
         }
     }
