@@ -64,7 +64,7 @@ pub use self::sizedness::{Sizedness, SizednessAnalysis, SizednessResult};
 use ir::context::{BindgenContext, ItemId};
 
 use ir::traversal::{EdgeKind, Trace};
-use HashMap;
+use std::collections::HashMap;
 use std::fmt;
 use std::ops;
 
@@ -190,7 +190,7 @@ pub fn generate_dependencies<F>(
 where
     F: Fn(EdgeKind) -> bool,
 {
-    let mut dependencies = HashMap::default();
+    let mut dependencies = HashMap::new();
 
     for &item in ctx.whitelisted_items() {
         dependencies.entry(item).or_insert(vec![]);
@@ -219,7 +219,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use {HashMap, HashSet};
+    use std::collections::{HashMap, HashSet};
 
     // Here we find the set of nodes that are reachable from any given
     // node. This is a lattice mapping nodes to subsets of all nodes. Our join
@@ -334,14 +334,14 @@ mod tests {
             // implementation. Don't copy this code outside of this test!
 
             let original_size =
-                self.reachable.entry(node).or_insert(HashSet::default()).len();
+                self.reachable.entry(node).or_insert(HashSet::new()).len();
 
             for sub_node in self.graph.0[&node].iter() {
                 self.reachable.get_mut(&node).unwrap().insert(*sub_node);
 
                 let sub_reachable = self.reachable
                     .entry(*sub_node)
-                    .or_insert(HashSet::default())
+                    .or_insert(HashSet::new())
                     .clone();
 
                 for transitive in sub_reachable {
@@ -386,7 +386,7 @@ mod tests {
             nodes.as_ref().iter().cloned().map(Node).collect()
         }
 
-        let mut expected = HashMap::default();
+        let mut expected = HashMap::new();
         expected.insert(Node(1), nodes([3, 4, 5, 6, 7, 8]));
         expected.insert(Node(2), nodes([2]));
         expected.insert(Node(3), nodes([3, 4, 5, 6, 7, 8]));

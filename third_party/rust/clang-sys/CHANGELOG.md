@@ -1,18 +1,3 @@
-## [0.26.4] - 2018-12-29
-
-### Changed
-- Added shared library path to `SharedLibrary` struct
-
-## [0.26.3] - 2018-11-14
-
-### Changed
-- Disable default features of `libc` dependency
-
-## [0.26.2] - 2018-11-03
-
-### Fixed
-- Fixed dynamic linking on macOS
-
 ## [0.26.1] - 2018-10-10
 
 ### Fixed

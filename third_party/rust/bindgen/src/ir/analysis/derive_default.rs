@@ -12,7 +12,8 @@ use ir::traversal::EdgeKind;
 use ir::traversal::Trace;
 use ir::ty::RUST_DERIVE_IN_ARRAY_LIMIT;
 use ir::ty::TypeKind;
-use {HashMap, HashSet};
+use std::collections::HashMap;
+use std::collections::HashSet;
 
 /// An analysis that finds for each IR item whether default cannot be derived.
 ///
@@ -98,8 +99,8 @@ impl<'ctx> MonotoneFramework for CannotDeriveDefault<'ctx> {
     type Output = HashSet<ItemId>;
 
     fn new(ctx: &'ctx BindgenContext) -> CannotDeriveDefault<'ctx> {
-        let mut dependencies = HashMap::default();
-        let cannot_derive_default = HashSet::default();
+        let mut dependencies = HashMap::new();
+        let cannot_derive_default = HashSet::new();
 
         let whitelisted_items: HashSet<_> =
             ctx.whitelisted_items().iter().cloned().collect();
