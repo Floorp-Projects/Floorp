@@ -1752,6 +1752,13 @@ nsISerialEventTarget* GetCurrentThreadSerialEventTarget();
 
 nsISerialEventTarget* GetMainThreadSerialEventTarget();
 
+// Returns the number of CPUs, like PR_GetNumberOfProcessors, except
+// that it can return a cached value on platforms where sandboxing
+// would prevent reading the current value (currently Linux).  CPU
+// hotplugging is uncommon, so this is unlikely to make a difference
+// in practice.
+size_t GetNumberOfProcessors();
+
 }  // namespace mozilla
 
 #endif  // nsThreadUtils_h__
