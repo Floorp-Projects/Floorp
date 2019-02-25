@@ -44,7 +44,7 @@ class FileDescriptor;
 
 namespace dom {
 
-class nsIContentParent;
+class ContentParent;
 class nsIContentChild;
 class ChildProcessMessageManager;
 class ChromeMessageBroadcaster;
@@ -110,7 +110,7 @@ class MessageManagerCallback {
                                ErrorResult& aError) const;
 
  protected:
-  bool BuildClonedMessageDataForParent(nsIContentParent* aParent,
+  bool BuildClonedMessageDataForParent(ContentParent* aParent,
                                        StructuredCloneData& aData,
                                        ClonedMessageData& aClonedData);
   bool BuildClonedMessageDataForChild(nsIContentChild* aChild,
