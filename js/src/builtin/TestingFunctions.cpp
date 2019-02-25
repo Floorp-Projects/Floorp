@@ -5443,9 +5443,6 @@ JSScript* js::TestingFunctionArgumentToScript(
   if (IsWrappedAsyncFunction(fun)) {
     fun = GetUnwrappedAsyncFunction(fun);
   }
-  if (IsWrappedAsyncGenerator(fun)) {
-    fun = GetUnwrappedAsyncGenerator(fun);
-  }
 
   if (!fun->isInterpreted()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,

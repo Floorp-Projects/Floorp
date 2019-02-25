@@ -656,7 +656,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   MOZ_MUST_USE bool emitAsyncWrapperLambda(unsigned index, bool isArrow);
   MOZ_MUST_USE bool emitAsyncWrapper(unsigned index, bool needsHomeObject,
-                                     bool isArrow, bool isGenerator);
+                                     bool isArrow);
 
   MOZ_MUST_USE bool emitComputedPropertyName(UnaryNode* computedPropName);
 

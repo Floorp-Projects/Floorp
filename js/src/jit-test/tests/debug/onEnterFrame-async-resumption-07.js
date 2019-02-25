@@ -44,7 +44,7 @@ assertEq(hits, 1);
 let pw2 = gw.makeDebuggeeValue(p2);
 assertEq(pw2.isPromise, true);
 assertEq(pw2.promiseState, "fulfilled");
-assertEq(pw2.promiseValue.getProperty("value").return, 123);
+assertEq(pw2.promiseValue.getProperty("value").return, "moar ponies");
 assertEq(pw2.promiseValue.getProperty("done").return, true);
 
 let pw = gw.makeDebuggeeValue(p);

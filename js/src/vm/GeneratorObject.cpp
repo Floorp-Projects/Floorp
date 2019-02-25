@@ -7,6 +7,7 @@
 #include "vm/GeneratorObject.h"
 
 #include "js/PropertySpec.h"
+#include "vm/AsyncIteration.h"
 #include "vm/JSObject.h"
 
 #include "vm/ArrayObject-inl.h"
@@ -24,44 +25,19 @@ JSObject* AbstractGeneratorObject::create(JSContext* cx,
   MOZ_ASSERT(frame.script()->nfixed() == 0);
   MOZ_ASSERT(!frame.isConstructing());
 
-  Rooted<GlobalObject*> global(cx, cx->global());
-
-  RootedValue pval(cx);
   RootedFunction fun(cx, frame.callee());
 
   Rooted<AbstractGeneratorObject*> genObj(cx);
   if (!fun->isAsync()) {
-    MOZ_ASSERT(fun->isGenerator());
-
-    // FIXME: This would be faster if we could avoid doing a lookup to get
-    // the prototype for the instance.  Bug 906600.
-    if (!GetProperty(cx, fun, fun, cx->names().prototype, &pval)) {
-      return nullptr;
-    }
-    RootedObject proto(cx, pval.isObject() ? &pval.toObject() : nullptr);
-    if (!proto) {
-      proto = GlobalObject::getOrCreateGeneratorObjectPrototype(cx, global);
-      if (!proto) {
-        return nullptr;
-      }
-    }
-
-    genObj = NewObjectWithGivenProto<GeneratorObject>(cx, proto);
-    if (!genObj) {
-      return nullptr;
-    }
+    genObj = GeneratorObject::create(cx, fun);
   } else if (fun->isGenerator()) {
-    RootedObject proto(cx, nullptr);
-    genObj = NewObjectWithGivenProto<AsyncGeneratorGeneratorObject>(cx, proto);
-    if (!genObj) {
-      return nullptr;
-    }
+    genObj = AsyncGeneratorObject::create(cx, fun);
   } else {
     RootedObject proto(cx, nullptr);
     genObj = NewObjectWithGivenProto<AsyncFunctionGeneratorObject>(cx, proto);
-    if (!genObj) {
-      return nullptr;
-    }
+  }
+  if (!genObj) {
+    return nullptr;
   }
 
   genObj->setCallee(*frame.callee());
@@ -218,6 +194,25 @@ bool AbstractGeneratorObject::resume(JSContext* cx,
   return true;
 }
 
+GeneratorObject* GeneratorObject::create(JSContext* cx, HandleFunction fun) {
+  MOZ_ASSERT(fun->isGenerator() && !fun->isAsync());
+
+  // FIXME: This would be faster if we could avoid doing a lookup to get
+  // the prototype for the instance.  Bug 906600.
+  RootedValue pval(cx);
+  if (!GetProperty(cx, fun, fun, cx->names().prototype, &pval)) {
+    return nullptr;
+  }
+  RootedObject proto(cx, pval.isObject() ? &pval.toObject() : nullptr);
+  if (!proto) {
+    proto = GlobalObject::getOrCreateGeneratorObjectPrototype(cx, cx->global());
+    if (!proto) {
+      return nullptr;
+    }
+  }
+  return NewObjectWithGivenProto<GeneratorObject>(cx, proto);
+}
+
 const Class GeneratorObject::class_ = {
     "Generator", JSCLASS_HAS_RESERVED_SLOTS(GeneratorObject::RESERVED_SLOTS)};
 
@@ -229,10 +224,6 @@ static const JSFunctionSpec generator_methods[] = {
 const Class AsyncFunctionGeneratorObject::class_ = {
     "AsyncFunctionGenerator",
     JSCLASS_HAS_RESERVED_SLOTS(AsyncFunctionGeneratorObject::RESERVED_SLOTS)};
-
-const Class AsyncGeneratorGeneratorObject::class_ = {
-    "AsyncGeneratorGenerator",
-    JSCLASS_HAS_RESERVED_SLOTS(AsyncGeneratorGeneratorObject::RESERVED_SLOTS)};
 
 JSObject* js::NewSingletonObjectWithFunctionPrototype(
     JSContext* cx, Handle<GlobalObject*> global) {
@@ -334,5 +325,5 @@ bool AbstractGeneratorObject::isAfterYieldOrAwait(JSOp op) {
 template <>
 bool JSObject::is<js::AbstractGeneratorObject>() const {
   return is<GeneratorObject>() || is<AsyncFunctionGeneratorObject>() ||
-         is<AsyncGeneratorGeneratorObject>();
+         is<AsyncGeneratorObject>();
 }

@@ -4382,17 +4382,6 @@ class MToAsync : public MUnaryInstruction, public SingleObjectPolicy::Data {
   TRIVIAL_NEW_WRAPPERS
 };
 
-class MToAsyncGen : public MUnaryInstruction, public SingleObjectPolicy::Data {
-  explicit MToAsyncGen(MDefinition* unwrapped)
-      : MUnaryInstruction(classOpcode, unwrapped) {
-    setResultType(MIRType::Object);
-  }
-
- public:
-  INSTRUCTION_HEADER(ToAsyncGen)
-  TRIVIAL_NEW_WRAPPERS
-};
-
 class MToAsyncIter : public MBinaryInstruction,
                      public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>>::Data {
   explicit MToAsyncIter(MDefinition* iterator, MDefinition* nextMethod)
@@ -6804,7 +6793,8 @@ struct LambdaFunctionInfo {
     // with delazification on the main thread.
     MOZ_ASSERT_IF(flags & JSFunction::EXTENDED,
                   fun->isArrow() || fun->allowSuperProperty() ||
-                      fun->isSelfHostedBuiltin() || fun->isAsync());
+                      fun->isSelfHostedBuiltin() ||
+                      (fun->isAsync() && !fun->isGenerator()));
   }
 
   // Be careful when calling this off-thread. Don't call any JSFunction*

@@ -18,21 +18,15 @@ dbg.onEnterFrame = frame => {
             hits++;
         };
 
-        // Don't tell anyone, but if we force-return a generator object here,
-        // the robots will still detect it and throw an error. No protection
-        // against Skynet, for us poor humans!
+        // If we force-return a generator object here, the caller will never
+        // receive an async generator object.
         resumption = frame.eval(`(function* f2() { hit2 = true; })()`);
         assertEq(resumption.return.class, "Generator");
         return resumption;
     }
 };
 
-let error;
-try {
-    g.f(0);
-} catch (e) {
-    error = e;
-}
+let it = g.f(0);
 assertEq(hits, 1);
-assertEq(error instanceof g.Error, true);
+assertEq(gw.makeDebuggeeValue(it), resumption.return);
 assertEq(g.hit2, false);

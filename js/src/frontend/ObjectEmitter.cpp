@@ -228,15 +228,14 @@ bool PropertyEmitter::prepareForComputedPropValue() {
 }
 
 bool PropertyEmitter::emitInitHomeObject(
-    FunctionAsyncKind kind /* = FunctionAsyncKind::SyncFunction */) {
+    bool isAsyncNonGenerator /* = false */) {
   MOZ_ASSERT(propertyState_ == PropertyState::PropValue ||
              propertyState_ == PropertyState::IndexValue ||
              propertyState_ == PropertyState::ComputedValue);
 
   //                [stack] CTOR? HOMEOBJ CTOR? KEY? FUN
 
-  bool isAsync = kind == FunctionAsyncKind::AsyncFunction;
-  if (isAsync) {
+  if (isAsyncNonGenerator) {
     //              [stack] CTOR? HOMEOBJ CTOR? KEY? UNWRAPPED WRAPPED
     if (!bce_->emit1(JSOP_SWAP)) {
       //            [stack] CTOR? HOMEOBJ CTOR? KEY? WRAPPED UNWRAPPED
@@ -255,7 +254,7 @@ bool PropertyEmitter::emitInitHomeObject(
   //     (`super.foo` points the super prototype property)
   //   * the 2nd CTOR if isStatic_
   //     (`super.foo` points the super constructor property)
-  if (!bce_->emitDupAt(1 + isIndexOrComputed_ + isAsync)) {
+  if (!bce_->emitDupAt(1 + isIndexOrComputed_ + isAsyncNonGenerator)) {
     //              [stack] # non-static method
     //              [stack] CTOR? HOMEOBJ CTOR KEY? WRAPPED? FUN CTOR
     //              [stack] # static method
@@ -266,7 +265,7 @@ bool PropertyEmitter::emitInitHomeObject(
     //              [stack] CTOR? HOMEOBJ CTOR? KEY? WRAPPED? FUN
     return false;
   }
-  if (isAsync) {
+  if (isAsyncNonGenerator) {
     if (!bce_->emit1(JSOP_POP)) {
       //            [stack] CTOR? HOMEOBJ CTOR? KEY? WRAPPED
       return false;

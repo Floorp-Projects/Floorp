@@ -43,6 +43,7 @@
 #include "js/Wrapper.h"
 #include "util/StringBuffer.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/AsyncIteration.h"
 #include "vm/Compression.h"
 #include "vm/GeneratorObject.h"
 #include "vm/Interpreter.h"
@@ -2560,8 +2561,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
 
     JS_FN("IsAsyncFunctionGeneratorObject",
           intrinsic_IsInstanceOfBuiltin<AsyncFunctionGeneratorObject>, 1, 0),
-    JS_FN("IsAsyncGeneratorGeneratorObject",
-          intrinsic_IsInstanceOfBuiltin<AsyncGeneratorGeneratorObject>, 1, 0),
+    JS_FN("IsAsyncGeneratorObject",
+          intrinsic_IsInstanceOfBuiltin<AsyncGeneratorObject>, 1, 0),
 
     JS_INLINABLE_FN("GuardToArrayBuffer",
                     intrinsic_GuardToBuiltin<ArrayBufferObject>, 1, 0,

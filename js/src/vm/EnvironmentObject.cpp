@@ -3643,7 +3643,7 @@ bool js::InitFunctionEnvironmentObjects(JSContext* cx, AbstractFramePtr frame) {
   // Named lambdas may have an environment that holds itself for recursion.
   if (callee->needsNamedLambdaEnvironment()) {
     NamedLambdaObject* declEnv;
-    if (callee->isAsync()) {
+    if (callee->isAsync() && !callee->isGenerator()) {
       // Named async function needs special environment to return
       // wrapped function for the binding.
       RootedFunction fun(cx, GetWrappedAsyncFunction(callee));
