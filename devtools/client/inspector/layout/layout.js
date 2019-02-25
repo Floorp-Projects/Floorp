@@ -40,6 +40,7 @@ class LayoutView {
       onHideBoxModelHighlighter,
       onShowBoxModelEditor,
       onShowBoxModelHighlighter,
+      onShowRulePreviewTooltip,
       onToggleGeometryEditor,
     } = this.inspector.getPanel("boxmodel").getComponentProps();
 
@@ -67,6 +68,7 @@ class LayoutView {
       onShowBoxModelEditor,
       onShowBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
+      onShowRulePreviewTooltip,
       onShowGridOutlineHighlight,
       onToggleFlexboxHighlighter,
       onToggleGeometryEditor,

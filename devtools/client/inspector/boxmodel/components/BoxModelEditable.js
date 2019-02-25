@@ -4,12 +4,15 @@
 
 "use strict";
 
+const Services = require("Services");
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { editableItem } = require("devtools/client/shared/inplace-editor");
 
 const LONG_TEXT_ROTATE_LIMIT = 3;
+const HIGHLIGHT_RULE_PREF =
+  Services.prefs.getBoolPref("devtools.layout.boxmodel.highlightProperty");
 
 class BoxModelEditable extends PureComponent {
   static get propTypes() {
@@ -19,9 +22,15 @@ class BoxModelEditable extends PureComponent {
       focusable: PropTypes.bool.isRequired,
       level: PropTypes.string,
       onShowBoxModelEditor: PropTypes.func.isRequired,
+      onShowRulePreviewTooltip: PropTypes.func.isRequired,
       property: PropTypes.string.isRequired,
       textContent: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
     };
+  }
+
+  constructor(props) {
+    super(props);
+    this.onMouseOver = this.onMouseOver.bind(this);
   }
 
   componentDidMount() {
@@ -32,6 +41,14 @@ class BoxModelEditable extends PureComponent {
     }, (element, event) => {
       onShowBoxModelEditor(element, event, property);
     });
+  }
+
+  onMouseOver(event) {
+    const { onShowRulePreviewTooltip, property } = this.props;
+
+    if (event.shiftKey && HIGHLIGHT_RULE_PREF) {
+      onShowRulePreviewTooltip(event.target, property);
+    }
   }
 
   render() {
@@ -62,6 +79,7 @@ class BoxModelEditable extends PureComponent {
             "data-box": box,
             tabIndex: box === level && focusable ? 0 : -1,
             title: property,
+            onMouseOver: this.onMouseOver,
             ref: span => {
               this.boxModelEditable = span;
             },
