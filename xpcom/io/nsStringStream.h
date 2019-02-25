@@ -48,8 +48,8 @@
  * determined by scanning the buffer for the first null byte.
  */
 extern nsresult NS_NewByteInputStream(
-    nsIInputStream** aStreamResult, const char* aStringToRead,
-    int32_t aLength = -1, nsAssignmentType aAssignment = NS_ASSIGNMENT_DEPEND);
+    nsIInputStream** aStreamResult, mozilla::Span<const char> aStringToRead,
+    nsAssignmentType aAssignment = NS_ASSIGNMENT_DEPEND);
 
 /**
  * Factory method to get an nsInputStream from an nsACString.  Result will
