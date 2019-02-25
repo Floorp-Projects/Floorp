@@ -106,6 +106,20 @@ function getCleanedPacket(key, packet) {
           return newArgument;
         });
       }
+
+      if (res.message.sourceId) {
+        res.message.sourceId = existingPacket.message.sourceId;
+      }
+
+      if (Array.isArray(res.message.stacktrace)) {
+        res.message.stacktrace = res.message.stacktrace.map((frame, i) => {
+          const existingFrame = existingPacket.message.stacktrace[i];
+          if (frame && existingFrame && frame.sourceId) {
+            frame.sourceId = existingFrame.sourceId;
+          }
+          return frame;
+        });
+      }
     }
 
     if (res.result && existingPacket.result) {
@@ -165,6 +179,20 @@ function getCleanedPacket(key, packet) {
         && res.pageError.errorMessage.type === "longString"
       ) {
         res.pageError.errorMessage.actor = existingPacket.pageError.errorMessage.actor;
+      }
+
+      if (res.pageError.sourceId) {
+        res.pageError.sourceId = existingPacket.pageError.sourceId;
+      }
+
+      if (Array.isArray(res.pageError.stacktrace)) {
+        res.pageError.stacktrace = res.pageError.stacktrace.map((frame, i) => {
+          const existingFrame = existingPacket.pageError.stacktrace[i];
+          if (frame && existingFrame && frame.sourceId) {
+            frame.sourceId = existingFrame.sourceId;
+          }
+          return frame;
+        });
       }
     }
 
