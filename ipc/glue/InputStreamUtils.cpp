@@ -120,7 +120,7 @@ void SerializeInputStreamAsPipeInternal(nsIInputStream* aInputStream,
 void InputStreamHelper::SerializeInputStream(
     nsIInputStream* aInputStream, InputStreamParams& aParams,
     nsTArray<FileDescriptor>& aFileDescriptors, bool aDelayedStart,
-    uint32_t aMaxSize, uint32_t* aSizeUsed, nsIContentChild* aManager) {
+    uint32_t aMaxSize, uint32_t* aSizeUsed, ContentChild* aManager) {
   SerializeInputStreamInternal(aInputStream, aParams, aFileDescriptors,
                                aDelayedStart, aMaxSize, aSizeUsed, aManager);
 }
@@ -152,7 +152,7 @@ void InputStreamHelper::SerializeInputStream(
 void InputStreamHelper::SerializeInputStreamAsPipe(nsIInputStream* aInputStream,
                                                    InputStreamParams& aParams,
                                                    bool aDelayedStart,
-                                                   nsIContentChild* aManager) {
+                                                   ContentChild* aManager) {
   SerializeInputStreamAsPipeInternal(aInputStream, aParams, aDelayedStart,
                                      aManager);
 }
