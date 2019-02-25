@@ -9,12 +9,15 @@
  *
  *  - testUnicodePDB32.dll and testUnicodePDB64.dll; they can be built by
  * compiling this source file using MSVC and setting the target name to be
- * "libmodμles", then renaming the resulting file: cl /Zi modules-test.cpp /link
- * /DLL /OUT:libmodμles.dll cp libmodμles.dll testUnicodePDB*ARCH*.dll
+ * "libmodμles", then renaming the resulting file:
+ *      cl /Os /Zi modules-test.cpp /LINK /DLL /OUT:libmodμles.dll \
+ *        /nodefaultlib /entry:nothing /opt:ref
+ *      copy libmodμles.dll testUnicodePDB*ARCH*.dll
  *
  *  - testNoPDB32.dll and testNoPDB64.dll; they can be built by compiling this
  *    file using MSVC, without enabling generation of a PDB:
- *      cl modules-test.cpp /DLL /OUT:testNoPDB*ARCH*.dll
+ *      cl /Os modules-test.cpp /LINK /DLL /OUT:testNoPDB*ARCH*.dll \
+ *        /nodefaultlib /entry:nothing
  *
  * Clearly, for testUnicodePDB and testNoPDB both a 32-bit and a 64-bit version
  * have to be compiled, using the 32-bit and 64-bit MSVC toolchains.

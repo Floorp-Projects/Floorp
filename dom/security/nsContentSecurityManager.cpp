@@ -1004,10 +1004,13 @@ nsContentSecurityManager::IsOriginPotentiallyTrustworthy(
              "Nobody is expected to call us with an nsIExpandedPrincipal");
 
   nsCOMPtr<nsIURI> uri;
-  aPrincipal->GetURI(getter_AddRefs(uri));
+  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
+  if (NS_FAILED(rv)) {
+    return NS_OK;
+  }
 
   nsAutoCString scheme;
-  nsresult rv = uri->GetScheme(scheme);
+  rv = uri->GetScheme(scheme);
   if (NS_FAILED(rv)) {
     return NS_OK;
   }
