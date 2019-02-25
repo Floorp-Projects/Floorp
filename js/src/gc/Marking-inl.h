@@ -62,6 +62,7 @@ struct MightBeForwarded {
                             mozilla::IsBaseOf<Shape, T>::value ||
                             mozilla::IsBaseOf<BaseShape, T>::value ||
                             mozilla::IsBaseOf<JSString, T>::value ||
+                            mozilla::IsBaseOf<JS::BigInt, T>::value ||
                             mozilla::IsBaseOf<JSScript, T>::value ||
                             mozilla::IsBaseOf<js::LazyScript, T>::value ||
                             mozilla::IsBaseOf<js::Scope, T>::value ||
