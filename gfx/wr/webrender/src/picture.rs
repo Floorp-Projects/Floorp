@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{FilterOp, MixBlendMode, PipelineId, PremultipliedColorF, PictureRect, PicturePoint, WorldPoint};
-use api::{DeviceIntRect, DeviceIntSize, DevicePoint, DeviceRect};
+use api::{DeviceIntRect, DeviceIntSize, DevicePoint, DeviceRect, DeviceSize};
 use api::{LayoutRect, PictureToRasterTransform, LayoutPixel, PropertyBinding, PropertyBindingId};
 use api::{DevicePixelScale, RasterRect, RasterSpace, ColorF, ImageKey, WorldSize, ClipMode, LayoutSize};
 use api::{PicturePixel, RasterPixel, WorldPixel, WorldRect, WorldVector2D, LayoutPoint};
@@ -2927,6 +2927,7 @@ impl PicturePrimitive {
             }
             PictureCompositeMode::Filter(FilterOp::Blur(blur_radius)) => {
                 let blur_std_deviation = blur_radius * device_pixel_scale.0;
+                let blur_std_deviation = DeviceSize::new(blur_std_deviation, blur_std_deviation);
                 let inflation_factor = surfaces[raster_config.surface_index.0].inflation_factor;
                 let inflation_factor = (inflation_factor * device_pixel_scale.0).ceil() as i32;
 
@@ -2989,6 +2990,7 @@ impl PicturePrimitive {
                 let blur_std_deviation = blur_radius * device_pixel_scale.0;
                 let blur_range = (blur_std_deviation * BLUR_SAMPLE_SCALE).ceil() as i32;
                 let rounded_std_dev = blur_std_deviation.round();
+                let rounded_std_dev = DeviceSize::new(rounded_std_dev, rounded_std_dev);
                 // The clipped field is the part of the picture that is visible
                 // on screen. The unclipped field is the screen-space rect of
                 // the complete picture, if no screen / clip-chain was applied
