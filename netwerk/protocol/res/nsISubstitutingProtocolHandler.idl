@@ -17,7 +17,12 @@ interface nsISubstitutingProtocolHandler : nsIProtocolHandler
   /**
    * Content script may access files in this package.
    */
-  const short ALLOW_CONTENT_ACCESS = 1;
+  const short ALLOW_CONTENT_ACCESS = 1 << 0;
+  /**
+   * This substitution exposes nsIJARURI instead of a nsIFileURL.  By default
+   * NewURI will always return a nsIFileURL even when the URL is jar:
+   */
+  const short RESOLVE_JAR_URI = 1 << 1;
 
   /**
    * Sets the substitution for the root key:
