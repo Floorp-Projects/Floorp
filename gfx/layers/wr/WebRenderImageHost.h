@@ -9,6 +9,7 @@
 
 #include "CompositableHost.h"               // for CompositableHost
 #include "mozilla/layers/ImageComposite.h"  // for ImageComposite
+#include "mozilla/WeakPtr.h"
 
 namespace mozilla {
 namespace layers {
@@ -73,7 +74,7 @@ class WebRenderImageHost : public CompositableHost, public ImageComposite {
 
   void SetWrBridge(WebRenderBridgeParent* aWrBridge);
 
-  void ClearWrBridge();
+  void ClearWrBridge(WebRenderBridgeParent* aWrBridge);
 
   void EnableUseAsyncImagePipeline() { mUseAsyncImagePipeline = true; }
 
@@ -85,7 +86,7 @@ class WebRenderImageHost : public CompositableHost, public ImageComposite {
 
   void SetCurrentTextureHost(TextureHost* aTexture);
 
-  WebRenderBridgeParent* MOZ_NON_OWNING_REF mWrBridge;
+  WeakPtr<WebRenderBridgeParent> mWrBridge;
 
   uint32_t mWrBridgeBindings;
   bool mUseAsyncImagePipeline;
