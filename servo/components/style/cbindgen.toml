@@ -13,7 +13,6 @@ autogen_warning = """/* DO NOT MODIFY THIS MANUALLY! This file was generated usi
 class nsAtom;
 namespace mozilla {
   class WritingMode;
-  enum HalfCorner : uint8_t;
   enum LogicalSide : uint8_t;
   namespace css {
     struct URLValue;
@@ -89,8 +88,6 @@ include = [
   "Position",
   "BackgroundSize",
   "BorderImageSlice",
-  "BorderSpacing",
-  "BorderRadius",
   "NonNegativeLengthOrNumberRect",
   "Perspective",
   "ZIndex",
@@ -187,8 +184,4 @@ item_types = ["enums", "structs", "typedefs"]
   inline const T& GetBStart(mozilla::WritingMode) const;
   inline const T& GetIEnd(mozilla::WritingMode) const;
   inline const T& GetBEnd(mozilla::WritingMode) const;
-"""
-
-"GenericBorderRadius" = """
-  inline const StyleLengthPercentage& Get(mozilla::HalfCorner) const;
 """
