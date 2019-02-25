@@ -160,7 +160,7 @@ void moz_container_init(MozContainer *container) {
   // We can draw to x11 window any time.
   container->ready_to_draw = GDK_IS_X11_DISPLAY(gdk_display_get_default());
   container->surface_needs_clear = true;
-  container->egl_surface_needs_update = false;
+  container->inital_draw_cb = nullptr;
 #endif
 }
 
@@ -178,10 +178,16 @@ static void frame_callback_handler(void *data, struct wl_callback *callback,
                                    uint32_t time) {
   MozContainer *container = MOZ_CONTAINER(data);
   g_clear_pointer(&container->frame_callback_handler, wl_callback_destroy);
-  if (!container->ready_to_draw) {
-    container->egl_surface_needs_update = true;
+  if (!container->ready_to_draw && container->inital_draw_cb) {
+    container->inital_draw_cb();
   }
   container->ready_to_draw = true;
+}
+
+void moz_container_set_initial_draw_callback(
+    MozContainer *container,
+    std::function<void(void)> inital_draw_cb) {
+  container->inital_draw_cb = inital_draw_cb;
 }
 
 static const struct wl_callback_listener frame_listener = {
@@ -214,8 +220,8 @@ static void moz_container_unmap_wayland(MozContainer *container) {
   g_clear_pointer(&container->frame_callback_handler, wl_callback_destroy);
 
   container->surface_needs_clear = true;
-  container->egl_surface_needs_update = false;
   container->ready_to_draw = false;
+  container->inital_draw_cb = nullptr;
 }
 
 static gint moz_container_get_scale(MozContainer *container) {
@@ -558,12 +564,6 @@ gboolean moz_container_has_wl_egl_window(MozContainer *container) {
 gboolean moz_container_surface_needs_clear(MozContainer *container) {
   gboolean state = container->surface_needs_clear;
   container->surface_needs_clear = false;
-  return state;
-}
-
-gboolean moz_container_egl_surface_needs_update(MozContainer *container) {
-  gboolean state = container->egl_surface_needs_update;
-  container->egl_surface_needs_update = false;
   return state;
 }
 #endif

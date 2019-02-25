@@ -675,6 +675,12 @@ void nsWindow::Destroy() {
     gFocusWindow = nullptr;
   }
 
+#ifdef MOZ_WAYLAND
+  if (mContainer) {
+    moz_container_set_initial_draw_callback(mContainer, nullptr);
+  }
+#endif
+
   GtkWidget *owningWidget = GetMozContainerWidget();
   if (mShell) {
     gtk_widget_destroy(mShell);
@@ -1860,6 +1866,23 @@ static bool ExtractExposeRegion(LayoutDeviceIntRegion &aRegion, cairo_t *cr) {
   return true;
 }
 
+#ifdef MOZ_WAYLAND
+void nsWindow::WaylandEGLSurfaceForceRedraw() {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  if (mIsDestroyed) {
+    return;
+  }
+
+  if (CompositorBridgeChild* remoteRenderer = GetRemoteRenderer()) {
+    if (mCompositorWidgetDelegate) {
+      mCompositorWidgetDelegate->RequestsUpdatingEGLSurface();
+    }
+    remoteRenderer->SendForcePresent();
+  }
+}
+#endif
+
 gboolean nsWindow::OnExposeEvent(cairo_t *cr) {
   // Send any pending resize events so that layout can update.
   // May run event loop.
@@ -1888,11 +1911,6 @@ gboolean nsWindow::OnExposeEvent(cairo_t *cr) {
   region.ScaleRoundOut(scale, scale);
 
   if (GetLayerManager()->AsKnowsCompositor() && mCompositorSession) {
-#ifdef MOZ_WAYLAND
-    if (mCompositorWidgetDelegate && WaylandRequestsUpdatingEGLSurface()) {
-      mCompositorWidgetDelegate->RequestsUpdatingEGLSurface();
-    }
-#endif
     // We need to paint to the screen even if nothing changed, since if we
     // don't have a compositing window manager, our pixels could be stale.
     GetLayerManager()->SetNeedsComposite(true);
@@ -3454,6 +3472,15 @@ nsresult nsWindow::Create(nsIWidget *aParent, nsNativeWidget aNativeParent,
       // Create a container to hold child windows and child GtkWidgets.
       GtkWidget *container = moz_container_new();
       mContainer = MOZ_CONTAINER(container);
+#ifdef MOZ_WAYLAND
+      if (!mIsX11Display && ComputeShouldAccelerate()) {
+        RefPtr<nsWindow> self(this);
+        moz_container_set_initial_draw_callback(mContainer,
+            [self]() -> void {
+              self->WaylandEGLSurfaceForceRedraw();
+            });
+      }
+#endif
 
       // "csd" style is set when widget is realized so we need to call
       // it explicitly now.
@@ -6564,17 +6591,6 @@ bool nsWindow::WaylandSurfaceNeedsClear() {
       "nsWindow::WaylandSurfaceNeedsClear(): We don't have any mContainer!");
   return false;
 }
-
-bool nsWindow::WaylandRequestsUpdatingEGLSurface() {
-  if (mContainer) {
-    return moz_container_egl_surface_needs_update(MOZ_CONTAINER(mContainer));
-  }
-
-  NS_WARNING(
-      "nsWindow::WaylandSurfaceNeedsClear(): We don't have any mContainer!");
-  return false;
-}
-
 #endif
 
 #ifdef MOZ_X11
