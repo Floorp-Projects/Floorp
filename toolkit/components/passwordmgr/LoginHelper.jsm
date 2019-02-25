@@ -49,6 +49,7 @@ var LoginHelper = {
 
     this.schemeUpgrades = Services.prefs.getBoolPref("signon.schemeUpgrades");
     this.storeWhenAutocompleteOff = Services.prefs.getBoolPref("signon.storeWhenAutocompleteOff");
+    this.showAutoCompleteFooter = Services.prefs.getBoolPref("signon.showAutoCompleteFooter");
   },
 
   createLogger(aLogPrefix) {

@@ -524,6 +524,7 @@ LoginManager.prototype = {
       isSecure = InsecurePasswordUtils.isFormSecure(form);
     }
     let isPasswordField = aElement.type == "password";
+    let hostname = aElement.ownerDocument.documentURIObject.host;
 
     let completeSearch = (autoCompleteLookupPromise, { logins, messageManager }) => {
       // If the search was canceled before we got our
@@ -537,6 +538,7 @@ LoginManager.prototype = {
         messageManager,
         isSecure,
         isPasswordField,
+        hostname,
       });
       aCallback.onSearchCompletion(results);
     };

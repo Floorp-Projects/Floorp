@@ -1443,7 +1443,7 @@ var LoginManagerContent = {
 };
 
 // nsIAutoCompleteResult implementation
-function UserAutoCompleteResult(aSearchString, matchingLogins, {isSecure, messageManager, isPasswordField}) {
+function UserAutoCompleteResult(aSearchString, matchingLogins, {isSecure, messageManager, isPasswordField, hostname}) {
   function loginSort(a, b) {
     var userA = a.username.toLowerCase();
     var userB = b.username.toLowerCase();
@@ -1472,14 +1472,16 @@ function UserAutoCompleteResult(aSearchString, matchingLogins, {isSecure, messag
   }
 
   this._showInsecureFieldWarning = (!isSecure && LoginHelper.showInsecureFieldWarning) ? 1 : 0;
+  this._showAutoCompleteFooter = LoginHelper.showAutoCompleteFooter ? 1 : 0;
   this.searchString = aSearchString;
   this.logins = matchingLogins.sort(loginSort);
-  this.matchCount = matchingLogins.length + this._showInsecureFieldWarning;
+  this.matchCount = matchingLogins.length + this._showInsecureFieldWarning + this._showAutoCompleteFooter;
   this._messageManager = messageManager;
   this._stringBundle = Services.strings.createBundle("chrome://passwordmgr/locale/passwordmgr.properties");
   this._dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined, { dateStyle: "medium" });
 
   this._isPasswordField = isPasswordField;
+  this._hostname = hostname;
 
   this._duplicateUsernames = findDuplicates(matchingLogins);
 
@@ -1518,6 +1520,10 @@ UserAutoCompleteResult.prototype = {
       return "";
     }
 
+    if (this._showAutoCompleteFooter && index === this.matchCount - 1) {
+      return "";
+    }
+
     let selectedLogin = this.logins[index - this._showInsecureFieldWarning];
 
     return this._isPasswordField ? selectedLogin.password : selectedLogin.username;
@@ -1538,6 +1544,11 @@ UserAutoCompleteResult.prototype = {
     if (this._showInsecureFieldWarning && index === 0) {
       let learnMoreString = getLocalizedString("insecureFieldWarningLearnMore");
       return getLocalizedString("insecureFieldWarningDescription2", [learnMoreString]);
+    } else if (this._showAutoCompleteFooter && index === this.matchCount - 1) {
+      return JSON.stringify({
+        label: getLocalizedString("viewSavedLogins.label"),
+        hostname: this._hostname,
+      });
     }
 
     let login = this.logins[index - this._showInsecureFieldWarning];
@@ -1562,6 +1573,8 @@ UserAutoCompleteResult.prototype = {
   getStyleAt(index) {
     if (index == 0 && this._showInsecureFieldWarning) {
       return "insecureWarning";
+    } else if (this._showAutoCompleteFooter && index == this.matchCount - 1) {
+      return "loginsFooter";
     }
 
     return "login";
@@ -1584,8 +1597,14 @@ UserAutoCompleteResult.prototype = {
       // Ignore the warning message item.
       return;
     }
+
     if (this._showInsecureFieldWarning) {
       index--;
+    }
+
+    // The user cannot delete the autocomplete footer.
+    if (this._showAutoCompleteFooter && index === this.matchCount - 1) {
+      return;
     }
 
     var [removedLogin] = this.logins.splice(index, 1);
