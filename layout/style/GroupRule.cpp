@@ -64,7 +64,8 @@ void GroupRule::List(FILE* out, int32_t aIndent) const {
 }
 #endif
 
-/* virtual */ void GroupRule::DropSheetReference() {
+/* virtual */
+void GroupRule::DropSheetReference() {
   if (mRuleList) {
     mRuleList->DropSheetReference();
   }

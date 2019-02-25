@@ -98,8 +98,8 @@ void nsLeafBoxFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       MakeDisplayItem<nsDisplayEventReceiver>(aBuilder, this));
 }
 
-/* virtual */ nscoord nsLeafBoxFrame::GetMinISize(
-    gfxContext* aRenderingContext) {
+/* virtual */
+nscoord nsLeafBoxFrame::GetMinISize(gfxContext* aRenderingContext) {
   nscoord result;
   DISPLAY_MIN_INLINE_SIZE(this, result);
   nsBoxLayoutState state(PresContext(), aRenderingContext);
@@ -119,8 +119,8 @@ void nsLeafBoxFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   return result;
 }
 
-/* virtual */ nscoord nsLeafBoxFrame::GetPrefISize(
-    gfxContext* aRenderingContext) {
+/* virtual */
+nscoord nsLeafBoxFrame::GetPrefISize(gfxContext* aRenderingContext) {
   nscoord result;
   DISPLAY_PREF_INLINE_SIZE(this, result);
   nsBoxLayoutState state(PresContext(), aRenderingContext);
@@ -311,28 +311,31 @@ nsresult nsLeafBoxFrame::CharacterDataChanged(
   return nsLeafFrame::CharacterDataChanged(aInfo);
 }
 
-/* virtual */ nsSize nsLeafBoxFrame::GetXULPrefSize(nsBoxLayoutState& aState) {
+/* virtual */
+nsSize nsLeafBoxFrame::GetXULPrefSize(nsBoxLayoutState& aState) {
   return nsBox::GetXULPrefSize(aState);
 }
 
-/* virtual */ nsSize nsLeafBoxFrame::GetXULMinSize(nsBoxLayoutState& aState) {
+/* virtual */
+nsSize nsLeafBoxFrame::GetXULMinSize(nsBoxLayoutState& aState) {
   return nsBox::GetXULMinSize(aState);
 }
 
-/* virtual */ nsSize nsLeafBoxFrame::GetXULMaxSize(nsBoxLayoutState& aState) {
+/* virtual */
+nsSize nsLeafBoxFrame::GetXULMaxSize(nsBoxLayoutState& aState) {
   return nsBox::GetXULMaxSize(aState);
 }
 
-/* virtual */ nscoord nsLeafBoxFrame::GetXULFlex() {
-  return nsBox::GetXULFlex();
-}
+/* virtual */
+nscoord nsLeafBoxFrame::GetXULFlex() { return nsBox::GetXULFlex(); }
 
-/* virtual */ nscoord nsLeafBoxFrame::GetXULBoxAscent(
-    nsBoxLayoutState& aState) {
+/* virtual */
+nscoord nsLeafBoxFrame::GetXULBoxAscent(nsBoxLayoutState& aState) {
   return nsBox::GetXULBoxAscent(aState);
 }
 
-/* virtual */ void nsLeafBoxFrame::MarkIntrinsicISizesDirty() {
+/* virtual */
+void nsLeafBoxFrame::MarkIntrinsicISizesDirty() {
   // Don't call base class method, since everything it does is within an
   // IsXULBoxWrapped check.
 }

@@ -19,7 +19,8 @@ using namespace mozilla;
 // nsRubyContentFrame Method Implementations
 // ======================================
 
-/* virtual */ bool nsRubyContentFrame::IsFrameOfType(uint32_t aFlags) const {
+/* virtual */
+bool nsRubyContentFrame::IsFrameOfType(uint32_t aFlags) const {
   if (aFlags & eBidiInlineContainer) {
     return false;
   }

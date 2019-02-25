@@ -339,8 +339,9 @@ void nsMathMLmrootFrame::Reflow(nsPresContext* aPresContext,
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
-/* virtual */ void nsMathMLmrootFrame::GetIntrinsicISizeMetrics(
-    gfxContext* aRenderingContext, ReflowOutput& aDesiredSize) {
+/* virtual */
+void nsMathMLmrootFrame::GetIntrinsicISizeMetrics(gfxContext* aRenderingContext,
+                                                  ReflowOutput& aDesiredSize) {
   nsIFrame* baseFrame = mFrames.FirstChild();
   nsIFrame* indexFrame = nullptr;
   if (baseFrame) indexFrame = baseFrame->GetNextSibling();

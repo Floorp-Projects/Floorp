@@ -264,8 +264,8 @@ nsIntSize nsHTMLCanvasFrame::GetCanvasSize() {
   return size;
 }
 
-/* virtual */ nscoord nsHTMLCanvasFrame::GetMinISize(
-    gfxContext* aRenderingContext) {
+/* virtual */
+nscoord nsHTMLCanvasFrame::GetMinISize(gfxContext* aRenderingContext) {
   // XXX The caller doesn't account for constraints of the height,
   // min-height, and max-height properties.
   bool vertical = GetWritingMode().IsVertical();
@@ -275,8 +275,8 @@ nsIntSize nsHTMLCanvasFrame::GetCanvasSize() {
   return result;
 }
 
-/* virtual */ nscoord nsHTMLCanvasFrame::GetPrefISize(
-    gfxContext* aRenderingContext) {
+/* virtual */
+nscoord nsHTMLCanvasFrame::GetPrefISize(gfxContext* aRenderingContext) {
   // XXX The caller doesn't account for constraints of the height,
   // min-height, and max-height properties.
   bool vertical = GetWritingMode().IsVertical();
@@ -286,11 +286,13 @@ nsIntSize nsHTMLCanvasFrame::GetCanvasSize() {
   return result;
 }
 
-/* virtual */ IntrinsicSize nsHTMLCanvasFrame::GetIntrinsicSize() {
+/* virtual */
+IntrinsicSize nsHTMLCanvasFrame::GetIntrinsicSize() {
   return IntrinsicSizeFromCanvasSize(GetCanvasSize());
 }
 
-/* virtual */ nsSize nsHTMLCanvasFrame::GetIntrinsicRatio() {
+/* virtual */
+nsSize nsHTMLCanvasFrame::GetIntrinsicRatio() {
   return IntrinsicRatioFromCanvasSize(GetCanvasSize());
 }
 

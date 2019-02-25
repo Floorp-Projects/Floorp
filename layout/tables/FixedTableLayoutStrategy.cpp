@@ -28,8 +28,8 @@ FixedTableLayoutStrategy::FixedTableLayoutStrategy(nsTableFrame *aTableFrame)
 /* virtual */
 FixedTableLayoutStrategy::~FixedTableLayoutStrategy() {}
 
-/* virtual */ nscoord FixedTableLayoutStrategy::GetMinISize(
-    gfxContext *aRenderingContext) {
+/* virtual */
+nscoord FixedTableLayoutStrategy::GetMinISize(gfxContext *aRenderingContext) {
   DISPLAY_MIN_INLINE_SIZE(mTableFrame, mMinISize);
   if (mMinISize != NS_INTRINSIC_WIDTH_UNKNOWN) {
     return mMinISize;
@@ -117,8 +117,9 @@ FixedTableLayoutStrategy::~FixedTableLayoutStrategy() {}
   return (mMinISize = result);
 }
 
-/* virtual */ nscoord FixedTableLayoutStrategy::GetPrefISize(
-    gfxContext *aRenderingContext, bool aComputingSize) {
+/* virtual */
+nscoord FixedTableLayoutStrategy::GetPrefISize(gfxContext *aRenderingContext,
+                                               bool aComputingSize) {
   // It's theoretically possible to do something much better here that
   // depends only on the columns and the first row (where we look at
   // intrinsic inline sizes inside the first row and then reverse the
@@ -130,7 +131,8 @@ FixedTableLayoutStrategy::~FixedTableLayoutStrategy() {}
   return result;
 }
 
-/* virtual */ void FixedTableLayoutStrategy::MarkIntrinsicISizesDirty() {
+/* virtual */
+void FixedTableLayoutStrategy::MarkIntrinsicISizesDirty() {
   mMinISize = NS_INTRINSIC_WIDTH_UNKNOWN;
   mLastCalcISize = nscoord_MIN;
 }
@@ -146,7 +148,8 @@ static inline nscoord AllocateUnassigned(nscoord aUnassignedSpace,
   return NSToCoordRound(float(aUnassignedSpace) * aShare);
 }
 
-/* virtual */ void FixedTableLayoutStrategy::ComputeColumnISizes(
+/* virtual */
+void FixedTableLayoutStrategy::ComputeColumnISizes(
     const ReflowInput &aReflowInput) {
   nscoord tableISize = aReflowInput.ComputedISize();
 

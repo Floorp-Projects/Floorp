@@ -24,8 +24,9 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 
-/* static*/ void nsCSSClipPathInstance::ApplyBasicShapeOrPathClip(
-    gfxContext& aContext, nsIFrame* aFrame) {
+/* static*/
+void nsCSSClipPathInstance::ApplyBasicShapeOrPathClip(gfxContext& aContext,
+                                                      nsIFrame* aFrame) {
   auto& clipPathStyle = aFrame->StyleSVGReset()->mClipPath;
 
 #ifdef DEBUG
@@ -44,7 +45,8 @@ using namespace mozilla::gfx;
   aContext.Clip();
 }
 
-/* static*/ bool nsCSSClipPathInstance::HitTestBasicShapeOrPathClip(
+/* static*/
+bool nsCSSClipPathInstance::HitTestBasicShapeOrPathClip(
     nsIFrame* aFrame, const gfxPoint& aPoint) {
   auto& clipPathStyle = aFrame->StyleSVGReset()->mClipPath;
   StyleShapeSourceType type = clipPathStyle.GetType();
@@ -65,7 +67,8 @@ using namespace mozilla::gfx;
   return path->ContainsPoint(ToPoint(aPoint) * pixelRatio, Matrix());
 }
 
-/* static */ Rect nsCSSClipPathInstance::GetBoundingRectForBasicShapeOrPathClip(
+/* static */
+Rect nsCSSClipPathInstance::GetBoundingRectForBasicShapeOrPathClip(
     nsIFrame* aFrame, const StyleShapeSource& aClipPathStyle) {
   MOZ_ASSERT(aClipPathStyle.GetType() == StyleShapeSourceType::Shape ||
              aClipPathStyle.GetType() == StyleShapeSourceType::Box ||

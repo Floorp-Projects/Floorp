@@ -133,8 +133,10 @@ void nsMathMLSelectedFrame::Reflow(nsPresContext* aPresContext,
 }
 
 // Only place the selected child ...
-/* virtual */ nsresult nsMathMLSelectedFrame::Place(
-    DrawTarget* aDrawTarget, bool aPlaceOrigin, ReflowOutput& aDesiredSize) {
+/* virtual */
+nsresult nsMathMLSelectedFrame::Place(DrawTarget* aDrawTarget,
+                                      bool aPlaceOrigin,
+                                      ReflowOutput& aDesiredSize) {
   nsIFrame* childFrame = GetSelectedFrame();
 
   if (mInvalidMarkup) {
