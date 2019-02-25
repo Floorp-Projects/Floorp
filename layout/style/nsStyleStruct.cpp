@@ -244,7 +244,7 @@ static nscoord TwipsPerPixel(const Document& aDocument) {
 
 static inline BorderRadius ZeroBorderRadius() {
   auto zero = LengthPercentage::Zero();
-  return {{{zero, zero}}}, {{zero, zero}}, {{zero, zero}}, {{zero, zero}}};
+  return {{{zero, zero}}, {{zero, zero}}, {{zero, zero}}, {{zero, zero}}};
 }
 
 nsStyleBorder::nsStyleBorder(const Document& aDocument)
