@@ -30,7 +30,6 @@ class Principal;
 namespace mozilla {
 namespace ipc {
 class FileDescriptor;
-class PFileDescriptorSetChild;
 class PChildToParentStreamChild;
 class PParentToChildStreamChild;
 class Shmem;
@@ -105,12 +104,6 @@ class nsIContentChild : public nsISupports,
 
   virtual bool DeallocPParentToChildStreamChild(
       mozilla::ipc::PParentToChildStreamChild* aActor);
-
-  virtual mozilla::ipc::PFileDescriptorSetChild* AllocPFileDescriptorSetChild(
-      const mozilla::ipc::FileDescriptor& aFD);
-
-  virtual bool DeallocPFileDescriptorSetChild(
-      mozilla::ipc::PFileDescriptorSetChild* aActor);
 
   virtual mozilla::ipc::IPCResult RecvAsyncMessage(
       const nsString& aMsg, InfallibleTArray<jsipc::CpowEntry>&& aCpows,
