@@ -223,8 +223,8 @@ static bool ParseVersion(const std::string& versionStr,
   return true;
 }
 
-/*static*/ uint8_t GLContext::ChooseDebugFlags(
-    const CreateContextFlags createFlags) {
+/*static*/
+uint8_t GLContext::ChooseDebugFlags(const CreateContextFlags createFlags) {
   uint8_t debugFlags = 0;
 
 #ifdef MOZ_GL_DEBUG
@@ -294,11 +294,11 @@ GLContext::~GLContext() {
 #endif
 }
 
-/*static*/ void GLContext::StaticDebugCallback(GLenum source, GLenum type,
-                                               GLuint id, GLenum severity,
-                                               GLsizei length,
-                                               const GLchar* message,
-                                               const GLvoid* userParam) {
+/*static*/
+void GLContext::StaticDebugCallback(GLenum source, GLenum type, GLuint id,
+                                    GLenum severity, GLsizei length,
+                                    const GLchar* message,
+                                    const GLvoid* userParam) {
   GLContext* gl = (GLContext*)userParam;
   gl->DebugCallback(source, type, id, severity, length, message);
 }
@@ -1931,8 +1931,8 @@ void GLContext::MarkDestroyed() {
 // -
 
 #ifdef MOZ_GL_DEBUG
-/* static */ void GLContext::AssertNotPassingStackBufferToTheGL(
-    const void* ptr) {
+/* static */
+void GLContext::AssertNotPassingStackBufferToTheGL(const void* ptr) {
   int somethingOnTheStack;
   const void* someStackPtr = &somethingOnTheStack;
   const int page_bits = 12;
@@ -2198,9 +2198,8 @@ void GLContext::FlushIfHeavyGLCallsSinceLastFlush() {
   }
 }
 
-/*static*/ bool GLContext::ShouldDumpExts() {
-  return gfxEnv::GlDumpExtensions();
-}
+/*static*/
+bool GLContext::ShouldDumpExts() { return gfxEnv::GlDumpExtensions(); }
 
 bool DoesStringMatch(const char* aString, const char* aWantedString) {
   if (!aString || !aWantedString) return false;
@@ -2220,7 +2219,8 @@ bool DoesStringMatch(const char* aString, const char* aWantedString) {
   return true;
 }
 
-/*static*/ bool GLContext::ShouldSpew() { return gfxEnv::GlSpew(); }
+/*static*/
+bool GLContext::ShouldSpew() { return gfxEnv::GlSpew(); }
 
 void SplitByChar(const nsACString& str, const char delim,
                  std::vector<nsCString>* const out) {
@@ -2888,8 +2888,8 @@ void GLContext::AfterGLCall_Debug(const char* const funcName) const {
   }
 }
 
-/*static*/ void GLContext::OnImplicitMakeCurrentFailure(
-    const char* const funcName) {
+/*static*/
+void GLContext::OnImplicitMakeCurrentFailure(const char* const funcName) {
   gfxCriticalError() << "Ignoring call to " << funcName << " with failed"
                      << " mImplicitMakeCurrent.";
 }

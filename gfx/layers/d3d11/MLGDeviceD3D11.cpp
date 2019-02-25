@@ -625,9 +625,12 @@ MLGTextureD3D11::MLGTextureD3D11(ID3D11Texture2D* aTexture)
   mSize.height = desc.Height;
 }
 
-/* static */ RefPtr<MLGTextureD3D11> MLGTextureD3D11::Create(
-    ID3D11Device* aDevice, const gfx::IntSize& aSize,
-    gfx::SurfaceFormat aFormat, MLGUsage aUsage, MLGTextureFlags aFlags) {
+/* static */
+RefPtr<MLGTextureD3D11> MLGTextureD3D11::Create(ID3D11Device* aDevice,
+                                                const gfx::IntSize& aSize,
+                                                gfx::SurfaceFormat aFormat,
+                                                MLGUsage aUsage,
+                                                MLGTextureFlags aFlags) {
   D3D11_TEXTURE2D_DESC desc;
   ::ZeroMemory(&desc, sizeof(desc));
   desc.Width = aSize.width;

@@ -240,7 +240,8 @@ void TransactionWrapper::UpdatePinchZoom(float aZoom) {
   wr_transaction_pinch_zoom(mTxn, aZoom);
 }
 
-/*static*/ already_AddRefed<WebRenderAPI> WebRenderAPI::Create(
+/*static*/
+already_AddRefed<WebRenderAPI> WebRenderAPI::Create(
     layers::CompositorBridgeParent* aBridge,
     RefPtr<widget::CompositorWidget>&& aWidget, const wr::WrWindowId& aWindowId,
     LayoutDeviceIntSize aSize) {

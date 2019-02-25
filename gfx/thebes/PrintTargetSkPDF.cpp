@@ -29,7 +29,8 @@ PrintTargetSkPDF::~PrintTargetSkPDF() {
   mRefPDFDoc = nullptr;
 }
 
-/* static */ already_AddRefed<PrintTargetSkPDF> PrintTargetSkPDF::CreateOrNull(
+/* static */
+already_AddRefed<PrintTargetSkPDF> PrintTargetSkPDF::CreateOrNull(
     UniquePtr<SkWStream> aStream, const IntSize& aSizeInPoints) {
   return do_AddRef(new PrintTargetSkPDF(aSizeInPoints, std::move(aStream)));
 }

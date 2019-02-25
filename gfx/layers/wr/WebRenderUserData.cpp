@@ -25,7 +25,8 @@ void WebRenderBackgroundData::AddWebRenderCommands(
   aBuilder.PushRect(mBounds, mBounds, true, mColor);
 }
 
-/* static */ bool WebRenderUserData::SupportsAsyncUpdate(nsIFrame* aFrame) {
+/* static */
+bool WebRenderUserData::SupportsAsyncUpdate(nsIFrame* aFrame) {
   if (!aFrame) {
     return false;
   }
@@ -38,7 +39,8 @@ void WebRenderBackgroundData::AddWebRenderCommands(
   return false;
 }
 
-/* static */ bool WebRenderUserData::ProcessInvalidateForImage(
+/* static */
+bool WebRenderUserData::ProcessInvalidateForImage(
     nsIFrame* aFrame, DisplayItemType aType, ContainerProducerID aProducerId) {
   MOZ_ASSERT(aFrame);
 

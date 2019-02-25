@@ -411,7 +411,8 @@ static void LookupAlternateValues(gfxFontFeatureValueSet* featureLookup,
   }
 }
 
-/* static */ void gfxFontShaper::MergeFontFeatures(
+/* static */
+void gfxFontShaper::MergeFontFeatures(
     const gfxFontStyle* aStyle, const nsTArray<gfxFontFeature>& aFontFeatures,
     bool aDisableLigatures, const nsACString& aFamilyName, bool aAddSmallCaps,
     void (*aHandleFeature)(const uint32_t&, uint32_t&, void*),
@@ -3308,7 +3309,8 @@ static void DestroyRefCairo(void* aData) {
   cairo_destroy(refCairo);
 }
 
-/* static */ cairo_t* gfxFont::RefCairo(DrawTarget* aDT) {
+/* static */
+cairo_t* gfxFont::RefCairo(DrawTarget* aDT) {
   // DrawTargets that don't use a Cairo backend can be given a 1x1 "reference"
   // |cairo_t*|, stored in the DrawTarget's user data, for doing font-related
   // operations.
@@ -3990,10 +3992,10 @@ bool gfxFont::TryGetMathTable() {
   return !!mMathTable;
 }
 
-/* static */ void SharedFontList::Initialize() {
-  sEmpty = new SharedFontList();
-}
+/* static */
+void SharedFontList::Initialize() { sEmpty = new SharedFontList(); }
 
-/* static */ void SharedFontList::Shutdown() { sEmpty = nullptr; }
+/* static */
+void SharedFontList::Shutdown() { sEmpty = nullptr; }
 
 StaticRefPtr<SharedFontList> SharedFontList::sEmpty;

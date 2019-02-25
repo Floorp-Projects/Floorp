@@ -61,22 +61,24 @@ void APZUpdater::SetWebRenderWindowId(const wr::WindowId& aWindowId) {
   (*sWindowIdMap)[wr::AsUint64(aWindowId)] = this;
 }
 
-/*static*/ void APZUpdater::SetUpdaterThread(const wr::WrWindowId& aWindowId) {
+/*static*/
+void APZUpdater::SetUpdaterThread(const wr::WrWindowId& aWindowId) {
   if (RefPtr<APZUpdater> updater = GetUpdater(aWindowId)) {
     MutexAutoLock lock(updater->mThreadIdLock);
     updater->mUpdaterThreadId = Some(PlatformThread::CurrentId());
   }
 }
 
-/*static*/ void APZUpdater::PrepareForSceneSwap(
-    const wr::WrWindowId& aWindowId) {
+/*static*/
+void APZUpdater::PrepareForSceneSwap(const wr::WrWindowId& aWindowId) {
   if (RefPtr<APZUpdater> updater = GetUpdater(aWindowId)) {
     updater->mApz->LockTree();
   }
 }
 
-/*static*/ void APZUpdater::CompleteSceneSwap(const wr::WrWindowId& aWindowId,
-                                              const wr::WrPipelineInfo& aInfo) {
+/*static*/
+void APZUpdater::CompleteSceneSwap(const wr::WrWindowId& aWindowId,
+                                   const wr::WrPipelineInfo& aInfo) {
   RefPtr<APZUpdater> updater = GetUpdater(aWindowId);
   if (!updater) {
     // This should only happen in cases where PrepareForSceneSwap also got a
@@ -119,8 +121,8 @@ void APZUpdater::SetWebRenderWindowId(const wr::WindowId& aWindowId) {
   updater->mApz->UnlockTree();
 }
 
-/*static*/ void APZUpdater::ProcessPendingTasks(
-    const wr::WrWindowId& aWindowId) {
+/*static*/
+void APZUpdater::ProcessPendingTasks(const wr::WrWindowId& aWindowId) {
   if (RefPtr<APZUpdater> updater = GetUpdater(aWindowId)) {
     updater->ProcessQueue();
   }
@@ -409,7 +411,8 @@ bool APZUpdater::UsingWebRenderUpdaterThread() const {
   return mIsUsingWebRender;
 }
 
-/*static*/ already_AddRefed<APZUpdater> APZUpdater::GetUpdater(
+/*static*/
+already_AddRefed<APZUpdater> APZUpdater::GetUpdater(
     const wr::WrWindowId& aWindowId) {
   RefPtr<APZUpdater> updater;
   StaticMutexAutoLock lock(sWindowIdLock);
