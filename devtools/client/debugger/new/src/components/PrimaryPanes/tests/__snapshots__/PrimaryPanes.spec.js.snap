@@ -32,7 +32,9 @@ exports[`PrimaryPanes with custom root renders custom root source list 1`] = `
     className="source-outline-panel has-root"
     hasFocusableContent={true}
   >
-    <div>
+    <div
+      className="threads-list"
+    >
       <div
         className="sources-clear-root-container"
         key="root"
@@ -96,7 +98,9 @@ exports[`PrimaryPanes with custom root renders empty custom root source list 1`]
     className="source-outline-panel has-root"
     hasFocusableContent={true}
   >
-    <div>
+    <div
+      className="threads-list"
+    >
       <div
         className="sources-clear-root-container"
         key="root"
