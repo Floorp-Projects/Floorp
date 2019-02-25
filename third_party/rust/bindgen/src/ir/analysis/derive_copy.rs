@@ -11,7 +11,8 @@ use ir::template::TemplateParameters;
 use ir::traversal::EdgeKind;
 use ir::ty::RUST_DERIVE_IN_ARRAY_LIMIT;
 use ir::ty::TypeKind;
-use {HashMap, HashSet};
+use std::collections::HashMap;
+use std::collections::HashSet;
 
 /// An analysis that finds for each IR item whether copy cannot be derived.
 ///
@@ -102,7 +103,7 @@ impl<'ctx> MonotoneFramework for CannotDeriveCopy<'ctx> {
     type Output = HashSet<ItemId>;
 
     fn new(ctx: &'ctx BindgenContext) -> CannotDeriveCopy<'ctx> {
-        let cannot_derive_copy = HashSet::default();
+        let cannot_derive_copy = HashSet::new();
         let dependencies = generate_dependencies(ctx, Self::consider_edge);
 
         CannotDeriveCopy {
