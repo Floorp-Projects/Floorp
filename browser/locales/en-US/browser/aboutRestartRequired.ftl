@@ -4,7 +4,7 @@
 
 restart-required-title = Restart Required
 restart-required-header = Sorry. We just need to do one small thing to keep going.
-restart-required-intro = We have just installed an update in the background. Click Restart { -brand-short-name } to finish
+restart-required-intro-brand = { -brand-short-name } has just been updated in the background. Click Restart { -brand-short-name } to finish
     applying it.
 restart-required-description = We will restore all your pages, windows and tabs afterwards, so you can be on your way quickly.
 
