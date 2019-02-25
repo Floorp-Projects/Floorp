@@ -25,7 +25,7 @@ class SessionsUIView(
         .inflate(R.layout.component_sessions, container, true)
         .findViewById(R.id.session_list)
 
-    private val sessionsAdapter = SessionsAdapter()
+    private val sessionsAdapter = SessionsAdapter(actionEmitter)
 
     init {
         view.apply {

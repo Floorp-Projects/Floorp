@@ -26,6 +26,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.home.sessions.ArchivedSession
+import org.mozilla.fenix.home.sessions.SessionsAction
 import org.mozilla.fenix.home.sessions.SessionsChange
 import org.mozilla.fenix.home.sessions.SessionsComponent
 import org.mozilla.fenix.home.tabs.TabsAction
@@ -33,7 +34,6 @@ import org.mozilla.fenix.home.tabs.TabsChange
 import org.mozilla.fenix.home.tabs.TabsComponent
 import org.mozilla.fenix.home.tabs.TabsState
 import org.mozilla.fenix.home.tabs.toSessionViewState
-import org.mozilla.fenix.isPrivate
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
@@ -75,7 +75,7 @@ class HomeFragment : Fragment() {
 
         bundles.observe(this, Observer {sessionBundles ->
             val archivedSessions = sessionBundles.mapNotNull { sessionBundle ->
-                sessionBundle.id?.let { ArchivedSession(it, sessionBundle.lastSavedAt, sessionBundle.urls) }
+                sessionBundle.id?.let { ArchivedSession(it, sessionBundle, sessionBundle.lastSavedAt, sessionBundle.urls) }
             }
 
             getManagedEmitter<SessionsChange>().onNext(SessionsChange.Changed(archivedSessions))
@@ -158,6 +158,17 @@ class HomeFragment : Fragment() {
                         is TabsAction.Close -> {
                             requireComponents.core.sessionManager.findSessionById(it.sessionId)?.let { session ->
                                 requireComponents.core.sessionManager.remove(session)
+                            }
+                        }
+                    }
+                }
+
+            getAutoDisposeObservable<SessionsAction>()
+                .subscribe {
+                    when (it) {
+                        is SessionsAction.Select -> {
+                            it.archivedSession.bundle.restoreSnapshot(requireComponents.core.engine)?.apply {
+                                requireComponents.core.sessionManager.restore(this)
                             }
                         }
                     }

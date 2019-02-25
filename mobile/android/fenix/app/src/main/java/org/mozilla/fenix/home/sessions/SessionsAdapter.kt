@@ -14,12 +14,13 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.session_item.view.*
+import io.reactivex.Observer
+import kotlinx.android.extensions.LayoutContainer
+import kotlinx.android.synthetic.main.session_item.*
 import org.mozilla.fenix.R
 
-class SessionsAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class SessionsAdapter(private val actionEmitter: Observer<SessionsAction>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private var items = listOf<ArchivedSession>()
-
 
     fun reloadDatat(items: List<ArchivedSession>) {
         this.items = items
@@ -32,7 +33,7 @@ class SessionsAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         return when (viewType) {
             HeaderViewHolder.LAYOUT_ID -> HeaderViewHolder(view)
             EmptyListViewHolder.LAYOUT_ID -> EmptyListViewHolder(view)
-            SessionItemViewHolder.LAYOUT_ID -> SessionItemViewHolder(view)
+            SessionItemViewHolder.LAYOUT_ID -> SessionItemViewHolder(view, actionEmitter)
             PrivateEmptyListViewHolder.LAYOUT_ID -> PrivateEmptyListViewHolder(view)
             else -> EmptyListViewHolder(view)
         }
@@ -84,23 +85,28 @@ class SessionsAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         }
     }
 
-    private class SessionItemViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        private val thumbnail = view.session_card_thumbnail
-        private val timestampLabel = view.session_card_timestamp
-        private val titlesLabel = view.session_card_titles
-        private val extrasLabel = view.session_card_extras
-
+    private class SessionItemViewHolder(
+        view: View,
+        private val actionEmitter: Observer<SessionsAction>,
+        override val containerView: View? = view
+    ) :RecyclerView.ViewHolder(view), LayoutContainer {
         private var session: ArchivedSession? = null
+
+        init {
+            session_item.setOnClickListener {
+                session?.apply { actionEmitter.onNext(SessionsAction.Select(this)) }
+            }
+        }
 
         fun bind(session: ArchivedSession) {
             this.session = session
 
-            thumbnail.setColorFilter(
+            session_card_thumbnail.setColorFilter(
                 ContextCompat.getColor(itemView.context, AVAILABLE_COLOR_IDS.random()),
                 PorterDuff.Mode.MULTIPLY)
-            timestampLabel.text = session.formattedSavedAt
-            titlesLabel.text = session.titles
-            extrasLabel.text = if (session.extrasLabel > 0) {
+            session_card_timestamp.text = session.formattedSavedAt
+            session_card_titles.text = session.titles
+            session_card_extras.text = if (session.extrasLabel > 0) {
                 "+${session.extrasLabel} sites..."
             } else { "" }
         }

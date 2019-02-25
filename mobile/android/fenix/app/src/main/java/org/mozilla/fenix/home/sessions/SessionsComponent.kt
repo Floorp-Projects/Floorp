@@ -6,6 +6,7 @@ package org.mozilla.fenix.home.sessions
 
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import mozilla.components.feature.session.bundling.SessionBundle
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.Change
@@ -15,7 +16,11 @@ import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.*
 
-data class ArchivedSession(val id: Long, private val savedAt: Long, private val _urls: List<String>) {
+data class ArchivedSession(
+    val id: Long,
+    val bundle: SessionBundle,
+    private val savedAt: Long,
+    private val _urls: List<String>) {
     val formattedSavedAt by lazy {
         val isSameDay: (Calendar, Calendar) -> Boolean = { a, b ->
             a.get(Calendar.ERA) == b.get(Calendar.ERA) &&
