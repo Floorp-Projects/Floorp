@@ -53,9 +53,7 @@ class EventTargetWrapper : public AbstractThread {
                                                      std::move(aRunnable));
     }
 
-    RefPtr<nsIRunnable> runner(
-        new Runner(this, std::move(aRunnable),
-                   false /* already drained by TaskGroupRunnable  */));
+    RefPtr<nsIRunnable> runner = new Runner(this, std::move(aRunnable));
     return mTarget->Dispatch(runner.forget(), NS_DISPATCH_NORMAL);
   }
 
@@ -117,25 +115,17 @@ class EventTargetWrapper : public AbstractThread {
 
    public:
     explicit Runner(EventTargetWrapper* aThread,
-                    already_AddRefed<nsIRunnable> aRunnable,
-                    bool aDrainDirectTasks)
+                    already_AddRefed<nsIRunnable> aRunnable)
         : CancelableRunnable("EventTargetWrapper::Runner"),
           mThread(aThread),
-          mRunnable(aRunnable),
-          mDrainDirectTasks(aDrainDirectTasks) {}
+          mRunnable(aRunnable) {}
 
     NS_IMETHOD Run() override {
       AutoTaskGuard taskGuard(mThread);
 
       MOZ_ASSERT(mThread == AbstractThread::GetCurrent());
       MOZ_ASSERT(mThread->IsCurrentThreadIn());
-      nsresult rv = mRunnable->Run();
-
-      if (mDrainDirectTasks) {
-        mThread->TailDispatcher().DrainDirectTasks();
-      }
-
-      return rv;
+      return mRunnable->Run();
     }
 
     nsresult Cancel() override {
@@ -172,7 +162,6 @@ class EventTargetWrapper : public AbstractThread {
    private:
     RefPtr<EventTargetWrapper> mThread;
     RefPtr<nsIRunnable> mRunnable;
-    bool mDrainDirectTasks;
   };
 };
 
