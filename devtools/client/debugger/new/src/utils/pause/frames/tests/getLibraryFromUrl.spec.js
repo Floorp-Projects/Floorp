@@ -69,6 +69,29 @@ describe("getLibraryFromUrl", () => {
     });
   });
 
+  describe("When Angular is in the URL", () => {
+    it("should return Angular for AngularJS (1.x)", () => {
+      const frame = makeMockFrameWithURL(
+        "https://cdnjs.cloudflare.com/ajax/libs/angular/angular.js"
+      );
+      expect(getLibraryFromUrl(frame)).toEqual("Angular");
+    });
+
+    it("should return Angular for Angular (2.x)", () => {
+      const frame = makeMockFrameWithURL(
+        "https://stackblitz.io/turbo_modules/@angular/core@7.2.4/bundles/core.umd.js"
+      );
+      expect(getLibraryFromUrl(frame)).toEqual("Angular");
+    });
+
+    it("should not return Angular for Angular components", () => {
+      const frame = makeMockFrameWithURL(
+        "https://firefox-devtools-angular-log.stackblitz.io/~/src/app/hello.component.ts"
+      );
+      expect(getLibraryFromUrl(frame)).toBeNull();
+    });
+  });
+
   describe("When zone.js is on the frame", () => {
     it("should not return Angular when no callstack", () => {
       const frame = makeMockFrameWithURL("/node_modules/zone/zone.js");
@@ -82,7 +105,7 @@ describe("getLibraryFromUrl", () => {
       expect(getLibraryFromUrl(frame, callstack)).toEqual(null);
     });
 
-    it("should return Angular when stack with Angular frames", () => {
+    it("should return Angular when stack with AngularJS (1.x) frames", () => {
       const frame = makeMockFrameWithURL("/node_modules/zone/zone.js");
       const callstack = [
         frame,
