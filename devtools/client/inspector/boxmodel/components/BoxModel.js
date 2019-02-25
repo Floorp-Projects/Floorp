@@ -22,6 +22,7 @@ class BoxModel extends PureComponent {
       onShowBoxModelEditor: PropTypes.func.isRequired,
       onShowBoxModelHighlighter: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
+      onShowRulePreviewTooltip: PropTypes.func.isRequired,
       onToggleGeometryEditor: PropTypes.func.isRequired,
       showBoxModelProperties: PropTypes.bool.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
@@ -48,6 +49,7 @@ class BoxModel extends PureComponent {
       onShowBoxModelEditor,
       onShowBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
+      onShowRulePreviewTooltip,
       onToggleGeometryEditor,
       setSelectedNode,
       showBoxModelProperties,
@@ -72,6 +74,7 @@ class BoxModel extends PureComponent {
           onHideBoxModelHighlighter,
           onShowBoxModelEditor,
           onShowBoxModelHighlighter,
+          onShowRulePreviewTooltip,
         }),
         BoxModelInfo({
           boxModel,
