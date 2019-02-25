@@ -2064,7 +2064,6 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
       case JSOP_LAMBDA:
       case JSOP_LAMBDA_ARROW:
       case JSOP_TOASYNC:
-      case JSOP_TOASYNCGEN:
         return write("FUN");
 
       case JSOP_TOASYNCITER:

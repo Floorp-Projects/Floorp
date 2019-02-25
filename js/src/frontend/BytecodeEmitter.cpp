@@ -3198,16 +3198,17 @@ bool BytecodeEmitter::emitAnonymousFunctionWithComputedName(
 
   if (node->is<FunctionNode>()) {
     if (!emitTree(node)) {
-      //            [stack] # !isAsync || !needsHomeObject
+      //            [stack] # !isAsync || isGenerator || !needsHomeObject
       //            [stack] NAME FUN
-      //            [stack] # isAsync && needsHomeObject
+      //            [stack] # isAsync && !isGenerator && needsHomeObject
       //            [stack] NAME UNWRAPPED WRAPPED
       return false;
     }
     unsigned depth = 1;
     FunctionNode* funNode = &node->as<FunctionNode>();
     FunctionBox* funbox = funNode->funbox();
-    if (funbox->isAsync() && funbox->needsHomeObject()) {
+    if (funbox->isAsync() && !funbox->isGenerator() &&
+        funbox->needsHomeObject()) {
       depth = 2;
     }
     if (!emitDupAt(depth)) {
@@ -5807,10 +5808,9 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(FunctionNode* funNode,
     // JSOP_LAMBDA_ARROW is always preceded by a new.target
     MOZ_ASSERT(fun->isArrow() ==
                (funNode->syntaxKind() == FunctionSyntaxKind::Arrow));
-    if (funbox->isAsync()) {
+    if (funbox->isAsync() && !funbox->isGenerator()) {
       MOZ_ASSERT(!needsProto);
-      return emitAsyncWrapper(index, funbox->needsHomeObject(), fun->isArrow(),
-                              fun->isGenerator());
+      return emitAsyncWrapper(index, funbox->needsHomeObject(), fun->isArrow());
     }
 
     if (fun->isArrow()) {
@@ -5867,9 +5867,8 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(FunctionNode* funNode,
       MOZ_ASSERT(sc->isGlobalContext() || sc->isEvalContext());
       MOZ_ASSERT(funNode->syntaxKind() == FunctionSyntaxKind::Statement);
       MOZ_ASSERT(inPrologue());
-      if (funbox->isAsync()) {
-        if (!emitAsyncWrapper(index, fun->isMethod(), fun->isArrow(),
-                              fun->isGenerator())) {
+      if (funbox->isAsync() && !funbox->isGenerator()) {
+        if (!emitAsyncWrapper(index, fun->isMethod(), fun->isArrow())) {
           return false;
         }
       } else {
@@ -5889,9 +5888,9 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(FunctionNode* funNode,
     if (!noe.prepareForRhs()) {
       return false;
     }
-    if (funbox->isAsync()) {
+    if (funbox->isAsync() && !funbox->isGenerator()) {
       if (!emitAsyncWrapper(index, /* needsHomeObject = */ false,
-                            /* isArrow = */ false, funbox->isGenerator())) {
+                            /* isArrow = */ false)) {
         return false;
       }
     } else {
@@ -5934,7 +5933,7 @@ bool BytecodeEmitter::emitAsyncWrapperLambda(unsigned index, bool isArrow) {
 }
 
 bool BytecodeEmitter::emitAsyncWrapper(unsigned index, bool needsHomeObject,
-                                       bool isArrow, bool isGenerator) {
+                                       bool isArrow) {
   // needsHomeObject can be true for propertyList for extended class.
   // In that case push both unwrapped and wrapped function, in order to
   // initialize home object of unwrapped function, and set wrapped function
@@ -5969,14 +5968,8 @@ bool BytecodeEmitter::emitAsyncWrapper(unsigned index, bool needsHomeObject,
       return false;
     }
   }
-  if (isGenerator) {
-    if (!emit1(JSOP_TOASYNCGEN)) {
-      return false;
-    }
-  } else {
-    if (!emit1(JSOP_TOASYNC)) {
-      return false;
-    }
+  if (!emit1(JSOP_TOASYNC)) {
+    return false;
   }
   return true;
 }
@@ -7902,7 +7895,8 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
         FunctionBox* funbox = propVal->as<FunctionNode>().funbox();
         MOZ_ASSERT(funbox->function()->allowSuperProperty());
 
-        if (!pe.emitInitHomeObject(funbox->asyncKind())) {
+        bool isAsyncNonGenerator = funbox->isAsync() && !funbox->isGenerator();
+        if (!pe.emitInitHomeObject(isAsyncNonGenerator)) {
           //        [stack] CTOR? OBJ CTOR? KEY? FUN
           return false;
         }

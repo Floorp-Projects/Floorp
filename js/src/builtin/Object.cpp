@@ -368,7 +368,7 @@ JSString* js::ObjectToSource(JSContext* cx, HandleObject obj) {
           return false;
         }
       } else if (kind == PropertyKind::Method && fun) {
-        if (IsWrappedAsyncFunction(fun)) {
+        if (IsWrappedAsyncFunction(fun) || fun->isAsync()) {
           if (!buf.append("async ")) {
             return false;
           }

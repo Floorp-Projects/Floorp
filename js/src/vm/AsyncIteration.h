@@ -8,6 +8,7 @@
 #define vm_AsyncIteration_h
 
 #include "builtin/Promise.h"
+#include "js/Class.h"
 #include "vm/GeneratorObject.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
@@ -15,36 +16,7 @@
 
 namespace js {
 
-// An async generator is implemented using two function objects, which are
-// referred to as the "unwrapped" and the "wrapped" async generator object.
-// The unwrapped function is a generator function compiled from the async
-// generator's script. |await| expressions within the async generator are
-// compiled like |yield| expression for the generator function with dedicated
-// opcode. The unwrapped function is never exposed to user script.
-// The wrapped function is a native function which wraps the generator function,
-// hence its name, and is the publicly exposed object of the async generator.
-//
-// The unwrapped async generator is created while compiling the async generator,
-// and the wrapped async generator is created while executing the async
-// generator declaration or expression.
-
-// Create a wrapped async generator from an unwrapped async generator with given
-// prototype object.
-JSObject* WrapAsyncGeneratorWithProto(JSContext* cx, HandleFunction unwrapped,
-                                      HandleObject proto);
-
-// Create a wrapped async generator from an unwrapped async generator
-// with default prototype object.
-JSObject* WrapAsyncGenerator(JSContext* cx, HandleFunction unwrapped);
-
-// Returns true if the given function is a wrapped async generator.
-bool IsWrappedAsyncGenerator(JSFunction* fun);
-
-// Returns a wrapped async generator from an unwrapped async generator.
-JSFunction* GetWrappedAsyncGenerator(JSFunction* unwrapped);
-
-// Return an unwrapped async generator from a wrapped async generator.
-JSFunction* GetUnwrappedAsyncGenerator(JSFunction* wrapped);
+class AsyncGeneratorObject;
 
 // Resume the async generator when the `await` operand fulfills to `value`.
 MOZ_MUST_USE bool AsyncGeneratorAwaitedFulfilled(
@@ -66,8 +38,6 @@ MOZ_MUST_USE bool AsyncGeneratorYieldReturnAwaitedFulfilled(
 MOZ_MUST_USE bool AsyncGeneratorYieldReturnAwaitedRejected(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     HandleValue reason);
-
-class AsyncGeneratorObject;
 
 // AsyncGeneratorRequest record in the spec.
 // Stores the info from AsyncGenerator#{next,return,throw}.
@@ -128,14 +98,11 @@ class AsyncGeneratorRequest : public NativeObject {
   }
 };
 
-class AsyncGeneratorObject : public NativeObject {
+class AsyncGeneratorObject : public AbstractGeneratorObject {
  private:
   enum AsyncGeneratorObjectSlots {
     // Int32 value containing one of the |State| fields from below.
-    Slot_State = 0,
-
-    // Generator object for the unwrapped async generator.
-    Slot_Generator,
+    Slot_State = AbstractGeneratorObject::RESERVED_SLOTS,
 
     // * null value if this async generator has no requests
     // * AsyncGeneratorRequest if this async generator has only one request
@@ -183,8 +150,6 @@ class AsyncGeneratorObject : public NativeObject {
   }
   void setState(State state_) { setFixedSlot(Slot_State, Int32Value(state_)); }
 
-  void setGenerator(const Value& value) { setFixedSlot(Slot_Generator, value); }
-
   // Queue is implemented in 2 ways.  If only one request is queued ever,
   // request is stored directly to the slot.  Once 2 requests are queued, a
   // list is created and requests are appended into it, and the list is
@@ -221,8 +186,7 @@ class AsyncGeneratorObject : public NativeObject {
  public:
   static const Class class_;
 
-  static AsyncGeneratorObject* create(JSContext* cx, HandleFunction asyncGen,
-                                      HandleValue generatorVal);
+  static AsyncGeneratorObject* create(JSContext* cx, HandleFunction asyncGen);
 
   bool isSuspendedStart() const { return state() == State_SuspendedStart; }
   bool isSuspendedYield() const { return state() == State_SuspendedYield; }
@@ -239,13 +203,6 @@ class AsyncGeneratorObject : public NativeObject {
   void setAwaitingYieldReturn() { setState(State_AwaitingYieldReturn); }
   void setAwaitingReturn() { setState(State_AwaitingReturn); }
   void setCompleted() { setState(State_Completed); }
-
-  JS::Value generatorVal() const { return getFixedSlot(Slot_Generator); }
-  AsyncGeneratorGeneratorObject* generatorObj() const {
-    return &getFixedSlot(Slot_Generator)
-                .toObject()
-                .as<AsyncGeneratorGeneratorObject>();
-  }
 
   static MOZ_MUST_USE bool enqueueRequest(
       JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,

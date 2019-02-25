@@ -746,6 +746,10 @@ static bool EnsureParserCreatedClasses(JSContext* cx, ParseTaskKind kind) {
     return false;  // needed by function*() {}
   }
 
+  if (!GlobalObject::initAsyncGenerators(cx, global)) {
+    return false;  // needed by async function*() {}
+  }
+
   if (kind == ParseTaskKind::Module &&
       !GlobalObject::ensureModulePrototypesCreated(cx, global)) {
     return false;

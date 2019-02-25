@@ -2067,15 +2067,8 @@
      */ \
     MACRO(JSOP_CHECKTHISREINIT, 191, "checkthisreinit", NULL, 1, 1, 1, JOF_BYTE) \
     /*
-     * Pops the top of stack value as 'unwrapped', converts it to async
-     * generator 'wrapped', and pushes 'wrapped' back on the stack.
-     *
-     *   Category: Statements
-     *   Type: Generator
-     *   Operands:
-     *   Stack: unwrapped => wrapped
      */ \
-    MACRO(JSOP_TOASYNCGEN, 192, "toasyncgen", NULL, 1, 1, 1, JOF_BYTE) \
+    MACRO(JSOP_UNUSED192, 192, "unused192", NULL, 1, 0, 0, JOF_BYTE) \
     /*
      * Pops the top two values on the stack as 'propval' and 'obj', pushes
      * 'propval' property of 'obj' onto the stack.

@@ -290,10 +290,11 @@ bool CallerGetterImpl(JSContext* cx, const CallArgs& args) {
     return true;
   }
 
-  RootedObject caller(cx, iter.callee(cx));
-  if (caller->is<JSFunction>() && caller->as<JSFunction>().isAsync()) {
-    caller = GetWrappedAsyncFunction(&caller->as<JSFunction>());
+  JSFunction* callerFun = iter.callee(cx);
+  if (callerFun->isAsync() && !callerFun->isGenerator()) {
+    callerFun = GetWrappedAsyncFunction(callerFun);
   }
+  RootedObject caller(cx, callerFun);
   if (!cx->compartment()->wrap(cx, &caller)) {
     return false;
   }
@@ -317,8 +318,6 @@ bool CallerGetterImpl(JSContext* cx, const CallArgs& args) {
     JSFunction* callerFun = &callerObj->as<JSFunction>();
     if (IsWrappedAsyncFunction(callerFun)) {
       callerFun = GetUnwrappedAsyncFunction(callerFun);
-    } else if (IsWrappedAsyncGenerator(callerFun)) {
-      callerFun = GetUnwrappedAsyncGenerator(callerFun);
     }
     MOZ_ASSERT(!callerFun->isBuiltin(),
                "non-builtin iterator returned a builtin?");
@@ -365,16 +364,13 @@ static const JSPropertySpec function_properties[] = {
 static bool ResolveInterpretedFunctionPrototype(JSContext* cx,
                                                 HandleFunction fun,
                                                 HandleId id) {
-  bool isAsyncGenerator = IsWrappedAsyncGenerator(fun);
-
-  MOZ_ASSERT_IF(!isAsyncGenerator,
-                fun->isInterpreted() || fun->isAsmJSNative());
+  MOZ_ASSERT(fun->isInterpreted() || fun->isAsmJSNative());
   MOZ_ASSERT(id == NameToId(cx->names().prototype));
 
   // Assert that fun is not a compiler-created function object, which
   // must never leak to script or embedding code and then be mutated.
   // Also assert that fun is not bound, per the ES5 15.3.4.5 ref above.
-  MOZ_ASSERT_IF(!isAsyncGenerator, !IsInternalFunctionObject(*fun));
+  MOZ_ASSERT(!IsInternalFunctionObject(*fun));
   MOZ_ASSERT(!fun->isBoundFunction());
 
   // Make the prototype object an instance of Object with the same parent as
@@ -384,7 +380,7 @@ static bool ResolveInterpretedFunctionPrototype(JSContext* cx,
   bool isGenerator = fun->isGenerator();
   Rooted<GlobalObject*> global(cx, &fun->global());
   RootedObject objProto(cx);
-  if (isAsyncGenerator) {
+  if (isGenerator && fun->isAsync()) {
     objProto = GlobalObject::getOrCreateAsyncGeneratorPrototype(cx, global);
   } else if (isGenerator) {
     objProto = GlobalObject::getOrCreateGeneratorObjectPrototype(cx, global);
@@ -405,7 +401,7 @@ static bool ResolveInterpretedFunctionPrototype(JSContext* cx,
   // non-enumerable, and writable.  However, per the 15 July 2013 ES6 draft,
   // section 15.19.3, the .prototype of a generator function does not link
   // back with a .constructor.
-  if (!isGenerator && !isAsyncGenerator) {
+  if (!isGenerator) {
     RootedValue objVal(cx, ObjectValue(*fun));
     if (!DefineDataProperty(cx, proto, cx->names().constructor, objVal, 0)) {
       return false;
@@ -437,12 +433,9 @@ bool JSFunction::needsPrototypeProperty() {
    * - Methods (that are not class-constructors or generators)
    * - Arrow functions
    * - Function.prototype
+   * - Async functions
    */
-  if (isBuiltin()) {
-    return IsWrappedAsyncGenerator(this);
-  }
-
-  return isConstructor() || isGenerator() || isAsync();
+  return !isBuiltin() && (isConstructor() || isGenerator());
 }
 
 static bool fun_mayResolve(const JSAtomState& names, jsid id, JSObject*) {
@@ -546,9 +539,10 @@ XDRResult js::XDRInterpretedFunction(XDRState<mode>* xdr,
                                      MutableHandleFunction objp) {
   enum FirstWordFlag {
     HasAtom = 0x1,
-    HasGeneratorProto = 0x2,
-    IsLazy = 0x4,
-    HasSingletonType = 0x8
+    IsGenerator = 0x2,
+    IsAsync = 0x4,
+    IsLazy = 0x8,
+    HasSingletonType = 0x10
   };
 
   /* NB: Keep this in sync with CloneInnerInterpretedFunction. */
@@ -572,8 +566,12 @@ XDRResult js::XDRInterpretedFunction(XDRState<mode>* xdr,
       firstword |= HasAtom;
     }
 
-    if (fun->isGenerator() || fun->isAsync()) {
-      firstword |= HasGeneratorProto;
+    if (fun->isGenerator()) {
+      firstword |= IsGenerator;
+    }
+
+    if (fun->isAsync()) {
+      firstword |= IsAsync;
     }
 
     if (fun->isInterpretedLazy()) {
@@ -615,9 +613,13 @@ XDRResult js::XDRInterpretedFunction(XDRState<mode>* xdr,
 
   if (mode == XDR_DECODE) {
     RootedObject proto(cx);
-    if (firstword & HasGeneratorProto) {
-      proto =
-          GlobalObject::getOrCreateGeneratorFunctionPrototype(cx, cx->global());
+    if ((firstword & IsGenerator) || (firstword & IsAsync)) {
+      if ((firstword & IsGenerator) && (firstword & IsAsync)) {
+        proto = GlobalObject::getOrCreateAsyncGenerator(cx, cx->global());
+      } else {
+        proto = GlobalObject::getOrCreateGeneratorFunctionPrototype(
+            cx, cx->global());
+      }
       if (!proto) {
         return xdr->fail(JS::TranscodeResult_Throw);
       }
@@ -881,10 +883,6 @@ JSString* js::FunctionToString(JSContext* cx, HandleFunction fun,
 
   if (IsWrappedAsyncFunction(fun)) {
     RootedFunction unwrapped(cx, GetUnwrappedAsyncFunction(fun));
-    return FunctionToString(cx, unwrapped, isToSource);
-  }
-  if (IsWrappedAsyncGenerator(fun)) {
-    RootedFunction unwrapped(cx, GetUnwrappedAsyncGenerator(fun));
     return FunctionToString(cx, unwrapped, isToSource);
   }
 
@@ -1915,11 +1913,15 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
   // Initialize the function with the default prototype:
   // Leave as nullptr to get the default from clasp for normal functions.
   // Use %Generator% for generators and the unwrapped function of async
-  // functions and async generators.
+  // functions. Use %AsyncGenerator% for async generator functions.
   RootedObject defaultProto(cx);
   if (isGenerator || isAsync) {
-    defaultProto =
-        GlobalObject::getOrCreateGeneratorFunctionPrototype(cx, global);
+    if (isGenerator && isAsync) {
+      defaultProto = GlobalObject::getOrCreateAsyncGenerator(cx, cx->global());
+    } else {
+      defaultProto =
+          GlobalObject::getOrCreateGeneratorFunctionPrototype(cx, global);
+    }
     if (!defaultProto) {
       return false;
     }
@@ -1931,8 +1933,9 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
       (isGenerator || isAsync)
           ? JSFunction::INTERPRETED_LAMBDA_GENERATOR_OR_ASYNC
           : JSFunction::INTERPRETED_LAMBDA;
-  gc::AllocKind allocKind =
-      isAsync ? gc::AllocKind::FUNCTION_EXTENDED : gc::AllocKind::FUNCTION;
+  gc::AllocKind allocKind = (isAsync && !isGenerator)
+                                ? gc::AllocKind::FUNCTION_EXTENDED
+                                : gc::AllocKind::FUNCTION;
   RootedFunction fun(
       cx,
       NewFunctionWithProto(cx, nullptr, 0, flags, globalLexical, anonymousAtom,
@@ -1994,17 +1997,12 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
     return false;
   }
 
-  if (isAsync) {
+  if (isAsync && !isGenerator) {
     // Create the async function wrapper.
-    JSObject* wrapped;
-    if (isGenerator) {
-      wrapped = proto ? WrapAsyncGeneratorWithProto(cx, fun, proto)
-                      : WrapAsyncGenerator(cx, fun);
-    } else {
-      // Step 9.d, use %AsyncFunctionPrototype% as the fallback prototype.
-      wrapped = proto ? WrapAsyncFunctionWithProto(cx, fun, proto)
-                      : WrapAsyncFunction(cx, fun);
-    }
+
+    // Step 9.d, use %AsyncFunctionPrototype% as the fallback prototype.
+    JSObject* wrapped = proto ? WrapAsyncFunctionWithProto(cx, fun, proto)
+                              : WrapAsyncFunction(cx, fun);
     if (!wrapped) {
       return false;
     }
@@ -2199,8 +2197,12 @@ static inline JSFunction* NewFunctionClone(JSContext* cx, HandleFunction fun,
                                            HandleObject proto) {
   RootedObject cloneProto(cx, proto);
   if (!proto && (fun->isGenerator() || fun->isAsync())) {
-    cloneProto =
-        GlobalObject::getOrCreateGeneratorFunctionPrototype(cx, cx->global());
+    if (fun->isGenerator() && fun->isAsync()) {
+      cloneProto = GlobalObject::getOrCreateAsyncGenerator(cx, cx->global());
+    } else {
+      cloneProto =
+          GlobalObject::getOrCreateGeneratorFunctionPrototype(cx, cx->global());
+    }
     if (!cloneProto) {
       return nullptr;
     }

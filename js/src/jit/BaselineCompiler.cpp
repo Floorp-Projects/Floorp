@@ -4639,28 +4639,6 @@ bool BaselineCodeGen<Handler>::emit_JSOP_TOASYNC() {
   return true;
 }
 
-typedef JSObject* (*ToAsyncGenFn)(JSContext*, HandleFunction);
-static const VMFunction ToAsyncGenInfo =
-    FunctionInfo<ToAsyncGenFn>(js::WrapAsyncGenerator, "ToAsyncGen");
-
-template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_JSOP_TOASYNCGEN() {
-  frame.syncStack(0);
-  masm.unboxObject(frame.addressOfStackValue(-1), R0.scratchReg());
-
-  prepareVMCall();
-  pushArg(R0.scratchReg());
-
-  if (!callVM(ToAsyncGenInfo)) {
-    return false;
-  }
-
-  masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
-  frame.pop();
-  frame.push(R0);
-  return true;
-}
-
 typedef JSObject* (*ToAsyncIterFn)(JSContext*, HandleObject, HandleValue);
 static const VMFunction ToAsyncIterInfo =
     FunctionInfo<ToAsyncIterFn>(js::CreateAsyncFromSyncIterator, "ToAsyncIter");
@@ -6075,6 +6053,7 @@ MethodStatus BaselineCompiler::emitBody() {
         // Intentionally not implemented.
       case JSOP_UNUSED71:
       case JSOP_UNUSED151:
+      case JSOP_UNUSED192:
       case JSOP_LIMIT:
         // === !! WARNING WARNING WARNING !! ===
         // DO NOT add new ops to this list! All bytecode ops MUST have Baseline
