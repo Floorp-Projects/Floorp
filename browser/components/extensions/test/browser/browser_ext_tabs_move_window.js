@@ -6,16 +6,20 @@ add_task(async function() {
   await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.net/");
   let window1 = await BrowserTestUtils.openNewBrowserWindow();
   await BrowserTestUtils.openNewForegroundTab(window1.gBrowser, "http://example.com/");
+  let window2 = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  await BrowserTestUtils.openNewForegroundTab(window2.gBrowser, "http://example.com/");
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
     },
-
+    incognitoOverride: "spanning",
     async background() {
       let tabs = await browser.tabs.query({url: "<all_urls>"});
       let destination = tabs[0];
       let source = tabs[1]; // skip over about:blank in window1
+      let privateTab = tabs[2];
+      browser.test.assertTrue(privateTab.incognito, "have a private tab.");
 
       browser.tabs.onUpdated.addListener(() => {
         // Bug 1398272: Adding onUpdated listener broke tab IDs across windows.
@@ -26,6 +30,20 @@ add_task(async function() {
         browser.tabs.move(source.id, {windowId: 123144576, index: 0}),
         /Invalid window/,
         "Should receive invalid window error");
+
+      // Test that a tab cannot be moved to a private window.
+      let moved = await browser.tabs.move(source.id, {windowId: privateTab.windowId, index: 0});
+      browser.test.assertEq(moved.length, 0, "tab was not moved to private window");
+      // Test that a private tab cannot be moved to a non-private window.
+      moved = await browser.tabs.move(privateTab.id, {windowId: source.windowId, index: 0});
+      browser.test.assertEq(moved.length, 0, "tab was not moved from private window");
+
+      // Verify tabs did not move between windows via another query.
+      let tabs2 = await browser.tabs.query({url: "<all_urls>"});
+      for (let i = 0; i < 3; i++) {
+        browser.test.assertEq(tabs2[i].windowId, tabs[i].windowId, "tab was not moved to another window");
+        browser.test.assertEq(tabs2[i].incognito, tabs[i].incognito, "tab privateness matches.");
+      }
 
       browser.tabs.move(source.id, {windowId: destination.windowId, index: 0});
 
@@ -46,6 +64,7 @@ add_task(async function() {
     BrowserTestUtils.removeTab(tab);
   }
   await BrowserTestUtils.closeWindow(window1);
+  await BrowserTestUtils.closeWindow(window2);
 });
 
 add_task(async function test_currentWindowAfterTabMoved() {

@@ -869,6 +869,13 @@ this.tabs = class extends ExtensionAPI {
             if (nativeTab.ownerGlobal == window && gBrowser.tabs.length === 1) {
               continue;
             }
+            // If moving between windows, be sure privacy matches.  While gBrowser
+            // prevents this, we want to silently ignore it.
+            if (nativeTab.ownerGlobal != window &&
+                PrivateBrowsingUtils.isBrowserPrivate(window.gBrowser) !=
+                PrivateBrowsingUtils.isBrowserPrivate(nativeTab.ownerGlobal.gBrowser)) {
+              continue;
+            }
 
             let insertionPoint = indexMap.get(window) || moveProperties.index;
             // If the index is -1 it should go to the end of the tabs.
