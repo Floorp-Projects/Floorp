@@ -2274,7 +2274,17 @@ nsNavHistory::Observe(nsISupports* aSubject, const char* aTopic,
 
     nsCOMPtr<nsIAutoCompletePopup> popup;
     input->GetPopup(getter_AddRefs(popup));
-    if (!popup) return NS_OK;
+    if (!popup) {
+      nsCOMPtr<Element> popupEl;
+      input->GetPopupElement(getter_AddRefs(popupEl));
+      if (!popupEl) {
+        return NS_OK;
+      }
+      popup = popupEl->AsAutoCompletePopup();
+      if (!popup) {
+        return NS_OK;
+      }
+    }
 
     nsCOMPtr<nsIAutoCompleteController> controller;
     input->GetController(getter_AddRefs(controller));

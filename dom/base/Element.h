@@ -72,6 +72,7 @@ class nsIDOMXULRelatedElement;
 class nsIDOMXULSelectControlElement;
 class nsIDOMXULSelectControlItemElement;
 class nsIBrowser;
+class nsIAutoCompletePopup;
 
 namespace mozilla {
 class DeclarationBlock;
@@ -1591,6 +1592,7 @@ class Element : public FragmentOrElement {
   already_AddRefed<nsIDOMXULSelectControlElement> AsXULSelectControl();
   already_AddRefed<nsIDOMXULSelectControlItemElement> AsXULSelectControlItem();
   already_AddRefed<nsIBrowser> AsBrowser();
+  already_AddRefed<nsIAutoCompletePopup> AsAutoCompletePopup();
 
  protected:
   /*

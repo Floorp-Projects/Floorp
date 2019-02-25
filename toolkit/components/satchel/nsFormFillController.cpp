@@ -327,6 +327,11 @@ nsFormFillController::GetPopup(nsIAutoCompletePopup** aPopup) {
 }
 
 NS_IMETHODIMP
+nsFormFillController::GetPopupElement(Element** aPopup) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsFormFillController::GetController(nsIAutoCompleteController** aController) {
   *aController = mController;
   NS_IF_ADDREF(*aController);
