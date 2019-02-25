@@ -74,10 +74,6 @@ class nsIContentParent : public nsISupports,
       const IPCTabContext& context, const uint32_t& chromeFlags,
       const ContentParentId& aCpId, const bool& aIsForBrowser) = 0;
 
-  virtual bool IsContentParent() const { return false; }
-
-  ContentParent* AsContentParent();
-
   mozilla::dom::ProcessMessageManager* GetMessageManager() const {
     return mMessageManager;
   }

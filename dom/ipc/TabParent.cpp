@@ -385,8 +385,7 @@ void TabParent::Destroy() {
 
   mIsDestroyed = true;
 
-  ContentParent::NotifyTabDestroying(this->GetTabId(),
-                                     Manager()->AsContentParent()->ChildID());
+  ContentParent::NotifyTabDestroying(this->GetTabId(), Manager()->ChildID());
 
   mMarkedDestroying = true;
 }
@@ -401,8 +400,8 @@ mozilla::ipc::IPCResult TabParent::RecvEnsureLayersConnected(
 
 mozilla::ipc::IPCResult TabParent::Recv__delete__() {
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
-  ContentParent::UnregisterRemoteFrame(
-      mTabId, Manager()->AsContentParent()->ChildID(), mMarkedDestroying);
+  ContentParent::UnregisterRemoteFrame(mTabId, Manager()->ChildID(),
+                                       mMarkedDestroying);
 
   return IPC_OK();
 }
@@ -952,7 +951,6 @@ auto TabParent::AllocPIndexedDBPermissionRequestParent(
     return nullptr;
   }
 
-  RefPtr<ContentParent> manager = Manager();
   if (NS_WARN_IF(!mFrameElement)) {
     return nullptr;
   }
@@ -1063,8 +1061,7 @@ void TabParent::SendRealMouseEvent(WidgetMouseEvent& aEvent) {
   uint64_t blockId;
   ApzAwareEventRoutingToChild(&guid, &blockId, nullptr);
 
-  bool isInputPriorityEventEnabled =
-      Manager()->AsContentParent()->IsInputPriorityEventEnabled();
+  bool isInputPriorityEventEnabled = Manager()->IsInputPriorityEventEnabled();
 
   if (mIsMouseEnterIntoWidgetEventSuppressed) {
     // In the case that the TabParent suppressed the eMouseEnterWidget event due
@@ -1191,7 +1188,7 @@ void TabParent::SendRealDragEvent(WidgetDragEvent& aEvent, uint32_t aDragAction,
   if (mIsDestroyed || !mIsReadyToHandleInputEvents) {
     return;
   }
-  MOZ_ASSERT(!Manager()->AsContentParent()->IsInputPriorityEventEnabled());
+  MOZ_ASSERT(!Manager()->IsInputPriorityEventEnabled());
   aEvent.mRefPoint += GetChildProcessOffset();
   if (aEvent.mMessage == eDrop) {
     if (!QueryDropLinksForVerification()) {
@@ -1214,7 +1211,7 @@ void TabParent::SendMouseWheelEvent(WidgetWheelEvent& aEvent) {
   ApzAwareEventRoutingToChild(&guid, &blockId, nullptr);
   aEvent.mRefPoint += GetChildProcessOffset();
   DebugOnly<bool> ret =
-      Manager()->AsContentParent()->IsInputPriorityEventEnabled()
+      Manager()->IsInputPriorityEventEnabled()
           ? PBrowserParent::SendMouseWheelEvent(aEvent, guid, blockId)
           : PBrowserParent::SendNormalPriorityMouseWheelEvent(aEvent, guid,
                                                               blockId);
@@ -1476,7 +1473,7 @@ void TabParent::SendRealKeyEvent(WidgetKeyboardEvent& aEvent) {
     aEvent.PreventNativeKeyBindings();
   }
   DebugOnly<bool> ret =
-      Manager()->AsContentParent()->IsInputPriorityEventEnabled()
+      Manager()->IsInputPriorityEventEnabled()
           ? PBrowserParent::SendRealKeyEvent(aEvent)
           : PBrowserParent::SendNormalPriorityRealKeyEvent(aEvent);
 
@@ -1515,8 +1512,7 @@ void TabParent::SendRealTouchEvent(WidgetTouchEvent& aEvent) {
     aEvent.mTouches[i]->mRefPoint += offset;
   }
 
-  bool inputPriorityEventEnabled =
-      Manager()->AsContentParent()->IsInputPriorityEventEnabled();
+  bool inputPriorityEventEnabled = Manager()->IsInputPriorityEventEnabled();
 
   if (aEvent.mMessage == eTouchMove) {
     DebugOnly<bool> ret =
@@ -1569,7 +1565,7 @@ bool TabParent::SendHandleTap(TapType aType, const LayoutDevicePoint& aPoint,
     }
   }
   LayoutDeviceIntPoint offset = GetChildProcessOffset();
-  return Manager()->AsContentParent()->IsInputPriorityEventEnabled()
+  return Manager()->IsInputPriorityEventEnabled()
              ? PBrowserParent::SendHandleTap(aType, aPoint + offset, aModifiers,
                                              aGuid, aInputBlockId)
              : PBrowserParent::SendNormalPriorityHandleTap(
@@ -2179,7 +2175,7 @@ bool TabParent::SendCompositionEvent(WidgetCompositionEvent& aEvent) {
     return true;
   }
 
-  bool ret = Manager()->AsContentParent()->IsInputPriorityEventEnabled()
+  bool ret = Manager()->IsInputPriorityEventEnabled()
                  ? PBrowserParent::SendCompositionEvent(aEvent)
                  : PBrowserParent::SendNormalPriorityCompositionEvent(aEvent);
   if (NS_WARN_IF(!ret)) {
@@ -2198,7 +2194,7 @@ bool TabParent::SendSelectionEvent(WidgetSelectionEvent& aEvent) {
     return true;
   }
   mContentCache.OnSelectionEvent(aEvent);
-  bool ret = Manager()->AsContentParent()->IsInputPriorityEventEnabled()
+  bool ret = Manager()->IsInputPriorityEventEnabled()
                  ? PBrowserParent::SendSelectionEvent(aEvent)
                  : PBrowserParent::SendNormalPrioritySelectionEvent(aEvent);
   if (NS_WARN_IF(!ret)) {
@@ -2605,7 +2601,7 @@ TabParent::SetDocShellIsActive(bool isActive) {
 #endif
 
   // Keep track of how many active recording/replaying tabs there are.
-  if (Manager()->AsContentParent()->IsRecordingOrReplaying()) {
+  if (Manager()->IsRecordingOrReplaying()) {
     SetIsActiveRecordReplayTab(isActive);
   }
 
@@ -2702,8 +2698,8 @@ void TabParent::SetRenderLayersInternal(bool aEnabled, bool aForceRepaint) {
   // Ask the child to repaint using the PHangMonitor channel/thread (which may
   // be less congested).
   if (aEnabled) {
-    ContentParent* cp = Manager()->AsContentParent();
-    cp->PaintTabWhileInterruptingJS(this, aForceRepaint, mLayerTreeEpoch);
+    Manager()->PaintTabWhileInterruptingJS(this, aForceRepaint,
+                                           mLayerTreeEpoch);
   }
 }
 
@@ -2720,7 +2716,7 @@ TabParent::SaveRecording(const nsAString& aFilename, bool* aRetval) {
   if (NS_FAILED(rv)) {
     return rv;
   }
-  return Manager()->AsContentParent()->SaveRecording(file, aRetval);
+  return Manager()->SaveRecording(file, aRetval);
 }
 
 NS_IMETHODIMP
@@ -3105,13 +3101,11 @@ mozilla::ipc::IPCResult TabParent::RecvInvokeDragSession(
   mInitialDataTransferItems.Clear();
   nsIPresShell* shell = mFrameElement->OwnerDoc()->GetShell();
   if (!shell) {
-    if (Manager()->IsContentParent()) {
-      Unused << Manager()->AsContentParent()->SendEndDragSession(
-          true, true, LayoutDeviceIntPoint(), 0);
-      // Continue sending input events with input priority when stopping the dnd
-      // session.
-      Manager()->AsContentParent()->SetInputPriorityEventEnabled(true);
-    }
+    Unused << Manager()->SendEndDragSession(true, true, LayoutDeviceIntPoint(),
+                                            0);
+    // Continue sending input events with input priority when stopping the dnd
+    // session.
+    Manager()->SetInputPriorityEventEnabled(true);
     return IPC_OK();
   }
 
@@ -3119,12 +3113,11 @@ mozilla::ipc::IPCResult TabParent::RecvInvokeDragSession(
   for (uint32_t i = 0; i < aTransfers.Length(); ++i) {
     mInitialDataTransferItems.AppendElement(std::move(aTransfers[i].items()));
   }
-  if (Manager()->IsContentParent()) {
-    nsCOMPtr<nsIDragService> dragService =
-        do_GetService("@mozilla.org/widget/dragservice;1");
-    if (dragService) {
-      dragService->MaybeAddChildProcess(Manager()->AsContentParent());
-    }
+
+  nsCOMPtr<nsIDragService> dragService =
+      do_GetService("@mozilla.org/widget/dragservice;1");
+  if (dragService) {
+    dragService->MaybeAddChildProcess(Manager());
   }
 
   if (aVisualDnDData.type() == OptionalShmem::Tvoid_t ||
