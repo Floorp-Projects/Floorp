@@ -9,7 +9,7 @@ use std::marker::PhantomData;
 use std::cell::Cell;
 use std::sync::atomic::{self, AtomicUsize, Ordering};
 
-use nserror::{nsresult, NS_OK};
+use nserror::{NsresultExt, nsresult, NS_OK};
 
 use libc;
 
