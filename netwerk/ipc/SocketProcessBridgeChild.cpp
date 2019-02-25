@@ -9,6 +9,7 @@
 #include "mozilla/net/NeckoChild.h"
 #include "nsIObserverService.h"
 #include "nsThreadUtils.h"
+#include "mozilla/dom/PMediaTransportChild.h"
 
 namespace mozilla {
 namespace net {
@@ -47,35 +48,49 @@ SocketProcessBridgeChild::GetSingleton() {
 }
 
 // static
-void SocketProcessBridgeChild::EnsureSocketProcessBridge(
-    std::function<void()>&& aOnSuccess, std::function<void()>&& aOnFailure) {
-  MOZ_ASSERT(IsNeckoChild() && gNeckoChild);
+RefPtr<SocketProcessBridgeChild::GetPromise>
+SocketProcessBridgeChild::GetSocketProcessBridge() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!gNeckoChild) {
-    aOnFailure();
-    return;
+    return GetPromise::CreateAndReject(nsCString("No NeckoChild!"), __func__);
   }
 
   if (sSocketProcessBridgeChild) {
-    aOnSuccess();
-    return;
+    return GetPromise::CreateAndResolve(sSocketProcessBridgeChild, __func__);
   }
 
-  gNeckoChild->SendInitSocketProcessBridge()->Then(
+  return gNeckoChild->SendInitSocketProcessBridge()->Then(
       GetMainThreadSerialEventTarget(), __func__,
-      [onSuccess = std::move(aOnSuccess), onFailure = std::move(aOnFailure)](
-          Endpoint<PSocketProcessBridgeChild>&& aEndpoint) {
-        if (aEndpoint.IsValid()) {
-          if (SocketProcessBridgeChild::Create(std::move(aEndpoint))) {
-            onSuccess();
-            return;
+      [](NeckoChild::InitSocketProcessBridgePromise::ResolveOrRejectValue&&
+             aResult) {
+        if (!sSocketProcessBridgeChild) {
+          if (aResult.IsReject()) {
+            return GetPromise::CreateAndReject(
+                nsCString("SendInitSocketProcessBridge failed"), __func__);
+          }
+
+          if (!aResult.ResolveValue().IsValid()) {
+            return GetPromise::CreateAndReject(
+                nsCString(
+                    "SendInitSocketProcessBridge resolved with an invalid "
+                    "endpoint!"),
+                __func__);
+          }
+
+          if (!SocketProcessBridgeChild::Create(
+                  std::move(aResult.ResolveValue()))) {
+            return GetPromise::CreateAndReject(
+                nsCString("SendInitSocketProcessBridge resolved with a valid "
+                          "endpoint, "
+                          "but SocketProcessBridgeChild::Create failed!"),
+                __func__);
           }
         }
-        onFailure();
-      },
-      [onFailure = std::move(aOnFailure)](
-          const mozilla::ipc::ResponseRejectReason) { onFailure(); });
+
+        return GetPromise::CreateAndResolve(sSocketProcessBridgeChild,
+                                            __func__);
+      });
 }
 
 SocketProcessBridgeChild::SocketProcessBridgeChild(
@@ -131,6 +146,22 @@ void SocketProcessBridgeChild::DeferredDestroy() {
   MOZ_ASSERT(NS_IsMainThread());
 
   sSocketProcessBridgeChild = nullptr;
+}
+
+dom::PMediaTransportChild*
+SocketProcessBridgeChild::AllocPMediaTransportChild() {
+  // We don't allocate here: MediaTransportHandlerIPC is in charge of that,
+  // so we don't need to know the implementation particulars here.
+  MOZ_ASSERT_UNREACHABLE(
+      "The only thing that ought to be creating a PMediaTransportChild is "
+      "MediaTransportHandlerIPC!");
+  return nullptr;
+}
+
+bool SocketProcessBridgeChild::DeallocPMediaTransportChild(
+    dom::PMediaTransportChild* aActor) {
+  delete aActor;
+  return true;
 }
 
 }  // namespace net
