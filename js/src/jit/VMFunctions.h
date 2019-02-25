@@ -21,7 +21,7 @@ namespace js {
 class NamedLambdaObject;
 class WithScope;
 class InlineTypedObject;
-class GeneratorObject;
+class AbstractGeneratorObject;
 class RegExpObject;
 class TypedArrayObject;
 
@@ -468,7 +468,7 @@ struct TypeToDataType<Handle<ArrayObject*> > {
   static const DataType result = Type_Handle;
 };
 template <>
-struct TypeToDataType<Handle<GeneratorObject*> > {
+struct TypeToDataType<Handle<AbstractGeneratorObject*> > {
   static const DataType result = Type_Handle;
 };
 template <>
@@ -551,9 +551,9 @@ struct TypeToArgProperties<Handle<ArrayObject*> > {
       TypeToArgProperties<ArrayObject*>::result | VMFunction::ByRef;
 };
 template <>
-struct TypeToArgProperties<Handle<GeneratorObject*> > {
+struct TypeToArgProperties<Handle<AbstractGeneratorObject*> > {
   static const uint32_t result =
-      TypeToArgProperties<GeneratorObject*>::result | VMFunction::ByRef;
+      TypeToArgProperties<AbstractGeneratorObject*>::result | VMFunction::ByRef;
 };
 template <>
 struct TypeToArgProperties<Handle<PlainObject*> > {
@@ -680,7 +680,7 @@ struct TypeToRootType<Handle<ArrayObject*> > {
   static const uint32_t result = VMFunction::RootObject;
 };
 template <>
-struct TypeToRootType<Handle<GeneratorObject*> > {
+struct TypeToRootType<Handle<AbstractGeneratorObject*> > {
   static const uint32_t result = VMFunction::RootObject;
 };
 template <>
@@ -1023,9 +1023,10 @@ MOZ_MUST_USE bool InterpretResume(JSContext* cx, HandleObject obj,
                                   MutableHandleValue rval);
 MOZ_MUST_USE bool DebugAfterYield(JSContext* cx, BaselineFrame* frame,
                                   jsbytecode* pc, bool* mustReturn);
-MOZ_MUST_USE bool GeneratorThrowOrReturn(JSContext* cx, BaselineFrame* frame,
-                                         Handle<GeneratorObject*> genObj,
-                                         HandleValue arg, uint32_t resumeKind);
+MOZ_MUST_USE bool GeneratorThrowOrReturn(
+    JSContext* cx, BaselineFrame* frame,
+    Handle<AbstractGeneratorObject*> genObj, HandleValue arg,
+    uint32_t resumeKind);
 
 MOZ_MUST_USE bool GlobalNameConflictsCheckFromIon(JSContext* cx,
                                                   HandleScript script);

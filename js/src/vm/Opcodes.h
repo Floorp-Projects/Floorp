@@ -2213,7 +2213,7 @@
      *
      *   Category: Statements
      *   Type: Generator
-     *   Operands: resume kind (GeneratorObject::ResumeKind)
+     *   Operands: resume kind (AbstractGeneratorObject::ResumeKind)
      *   Stack: gen, val => rval
      */ \
     MACRO(JSOP_RESUME, 205, "resume", NULL, 3, 2, 1, JOF_UINT16|JOF_INVOKE) \
