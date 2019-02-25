@@ -46,6 +46,11 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     ok(protocolHandler.hasSubstitution("gre"), "Should have gre substitution");
     ok(protocolHandler.hasSubstitution("android"), "Should have android substitution");
 
+    let uri = Services.io.newURI("resource://android/package-name.txt");
+    ok(uri instanceof Ci.nsIJARURI);
+    ok(uri.JARFile instanceof Ci.nsIFileURL);
+    is(uri.JAREntry, "package-name.txt");
+
     // This can be any file that we know exists in the root of every APK.
     let packageName = await readChannel("resource://android/package-name.txt");
     info(packageName);
