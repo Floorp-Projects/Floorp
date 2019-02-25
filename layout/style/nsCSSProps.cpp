@@ -113,7 +113,8 @@ void nsCSSProps::ReleaseTable(void) {
   }
 }
 
-/* static */ bool nsCSSProps::IsCustomPropertyName(const nsAString& aProperty) {
+/* static */
+bool nsCSSProps::IsCustomPropertyName(const nsAString& aProperty) {
   return aProperty.Length() >= CSS_CUSTOM_NAME_PREFIX_LENGTH &&
          StringBeginsWith(aProperty, NS_LITERAL_STRING("--"));
 }
@@ -508,8 +509,8 @@ const CSSPropFlags nsCSSProps::kFlagsTable[eCSSProperty_COUNT] = {
 #undef CSS_PROP_LONGHAND
 };
 
-/* static */ bool
-    nsCSSProps::gPropertyEnabled[eCSSProperty_COUNT_with_aliases] = {
+/* static */
+bool nsCSSProps::gPropertyEnabled[eCSSProperty_COUNT_with_aliases] = {
 // If the property has any "ENABLED_IN" flag set, it is disabled by
 // default. Note that, if a property has pref, whatever its default
 // value is, it will later be changed in nsCSSProps::AddRefTable().

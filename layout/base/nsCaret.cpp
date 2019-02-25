@@ -240,9 +240,9 @@ void nsCaret::SetCaretReadOnly(bool inMakeReadonly) {
   SchedulePaint();
 }
 
-/* static */ nsRect nsCaret::GetGeometryForFrame(nsIFrame* aFrame,
-                                                 int32_t aFrameOffset,
-                                                 nscoord* aBidiIndicatorSize) {
+/* static */
+nsRect nsCaret::GetGeometryForFrame(nsIFrame* aFrame, int32_t aFrameOffset,
+                                    nscoord* aBidiIndicatorSize) {
   nsPoint framePos(0, 0);
   nsRect rect;
   nsresult rv = aFrame->GetPointFromOffset(aFrameOffset, &framePos);
@@ -384,8 +384,8 @@ nsIFrame* nsCaret::GetFrameAndOffset(Selection* aSelection,
   return frame;
 }
 
-/* static */ nsIFrame* nsCaret::GetGeometry(Selection* aSelection,
-                                            nsRect* aRect) {
+/* static */
+nsIFrame* nsCaret::GetGeometry(Selection* aSelection, nsRect* aRect) {
   int32_t frameOffset;
   nsIFrame* frame = GetFrameAndOffset(aSelection, nullptr, 0, &frameOffset);
   if (frame) {

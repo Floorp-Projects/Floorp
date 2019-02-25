@@ -69,13 +69,15 @@ void CSSCounterStyleRule::SetName(const nsAString& aName) {
 #include "nsCSSCounterDescList.h"
 #undef CSS_COUNTER_DESC
 
-/* virtual */ size_t CSSCounterStyleRule::SizeOfIncludingThis(
+/* virtual */
+size_t CSSCounterStyleRule::SizeOfIncludingThis(
     MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this);
 }
 
-/* virtual */ JSObject* CSSCounterStyleRule::WrapObject(
-    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
+/* virtual */
+JSObject* CSSCounterStyleRule::WrapObject(JSContext* aCx,
+                                          JS::Handle<JSObject*> aGivenProto) {
   return CSSCounterStyleRule_Binding::Wrap(aCx, this, aGivenProto);
 }
 

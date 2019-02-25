@@ -1293,8 +1293,8 @@ class TextNodeCorrespondenceRecorder {
   uint32_t mNodeCharIndex;
 };
 
-/* static */ void TextNodeCorrespondenceRecorder::RecordCorrespondence(
-    SVGTextFrame* aRoot) {
+/* static */
+void TextNodeCorrespondenceRecorder::RecordCorrespondence(SVGTextFrame* aRoot) {
   if (aRoot->GetStateBits() & NS_STATE_SVG_TEXT_CORRESPONDENCE_DIRTY) {
     // Resolve bidi so that continuation frames are created if necessary:
     aRoot->MaybeResolveBidiForAnonymousBlockChild();

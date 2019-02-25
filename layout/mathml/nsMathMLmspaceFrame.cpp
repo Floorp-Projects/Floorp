@@ -109,8 +109,9 @@ void nsMathMLmspaceFrame::Reflow(nsPresContext* aPresContext,
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
-/* virtual */ nsresult nsMathMLmspaceFrame::MeasureForWidth(
-    DrawTarget* aDrawTarget, ReflowOutput& aDesiredSize) {
+/* virtual */
+nsresult nsMathMLmspaceFrame::MeasureForWidth(DrawTarget* aDrawTarget,
+                                              ReflowOutput& aDesiredSize) {
   ProcessAttributes(PresContext());
   mBoundingMetrics = nsBoundingMetrics();
   mBoundingMetrics.width = mWidth;

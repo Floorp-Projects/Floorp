@@ -579,8 +579,9 @@ static bool HasAltText(const Element& aElement) {
 
 // Check if we want to use an image frame or just let the frame constructor make
 // us into an inline.
-/* static */ bool nsImageFrame::ShouldCreateImageFrameFor(
-    const Element& aElement, ComputedStyle& aStyle) {
+/* static */
+bool nsImageFrame::ShouldCreateImageFrameFor(const Element& aElement,
+                                             ComputedStyle& aStyle) {
   EventStates state = aElement.State();
   if (IMAGE_OK(state, HaveSpecifiedSize(aStyle.StylePosition()))) {
     // Image is fine; do the image frame thing
@@ -945,7 +946,8 @@ nscoord nsImageFrame::GetContinuationOffset() const {
   return offset;
 }
 
-/* virtual */ nscoord nsImageFrame::GetMinISize(gfxContext* aRenderingContext) {
+/* virtual */
+nscoord nsImageFrame::GetMinISize(gfxContext* aRenderingContext) {
   // XXX The caller doesn't account for constraints of the block-size,
   // min-block-size, and max-block-size properties.
   DebugOnly<nscoord> result;
@@ -957,8 +959,8 @@ nscoord nsImageFrame::GetContinuationOffset() const {
   return iSize.GetUnit() == eStyleUnit_Coord ? iSize.GetCoordValue() : 0;
 }
 
-/* virtual */ nscoord nsImageFrame::GetPrefISize(
-    gfxContext* aRenderingContext) {
+/* virtual */
+nscoord nsImageFrame::GetPrefISize(gfxContext* aRenderingContext) {
   // XXX The caller doesn't account for constraints of the block-size,
   // min-block-size, and max-block-size properties.
   DebugOnly<nscoord> result;
@@ -971,13 +973,11 @@ nscoord nsImageFrame::GetContinuationOffset() const {
   return iSize.GetUnit() == eStyleUnit_Coord ? iSize.GetCoordValue() : 0;
 }
 
-/* virtual */ IntrinsicSize nsImageFrame::GetIntrinsicSize() {
-  return mIntrinsicSize;
-}
+/* virtual */
+IntrinsicSize nsImageFrame::GetIntrinsicSize() { return mIntrinsicSize; }
 
-/* virtual */ nsSize nsImageFrame::GetIntrinsicRatio() {
-  return mIntrinsicRatio;
-}
+/* virtual */
+nsSize nsImageFrame::GetIntrinsicRatio() { return mIntrinsicRatio; }
 
 void nsImageFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
                           const ReflowInput& aReflowInput,
@@ -1846,8 +1846,9 @@ LayerState nsDisplayImage::GetLayerState(
   return LAYER_ACTIVE;
 }
 
-/* virtual */ nsRegion nsDisplayImage::GetOpaqueRegion(
-    nsDisplayListBuilder* aBuilder, bool* aSnap) const {
+/* virtual */
+nsRegion nsDisplayImage::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                                         bool* aSnap) const {
   *aSnap = false;
   if (mImage && mImage->WillDrawOpaqueNow()) {
     const nsRect frameContentBox = GetBounds(aSnap);
@@ -2627,8 +2628,9 @@ static bool IsInAutoWidthTableCellForQuirk(nsIFrame* aFrame) {
   return false;
 }
 
-/* virtual */ void nsImageFrame::AddInlineMinISize(
-    gfxContext* aRenderingContext, nsIFrame::InlineMinISizeData* aData) {
+/* virtual */
+void nsImageFrame::AddInlineMinISize(gfxContext* aRenderingContext,
+                                     nsIFrame::InlineMinISizeData* aData) {
   nscoord isize = nsLayoutUtils::IntrinsicForContainer(
       aRenderingContext, this, nsLayoutUtils::MIN_ISIZE);
   bool canBreak = !IsInAutoWidthTableCellForQuirk(this);

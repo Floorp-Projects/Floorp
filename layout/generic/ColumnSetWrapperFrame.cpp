@@ -150,7 +150,8 @@ void ColumnSetWrapperFrame::MarkIntrinsicISizesDirty() {
 
 #ifdef DEBUG
 
-/* static */ void ColumnSetWrapperFrame::AssertColumnSpanWrapperSubtreeIsSane(
+/* static */
+void ColumnSetWrapperFrame::AssertColumnSpanWrapperSubtreeIsSane(
     const nsIFrame* aFrame) {
   MOZ_ASSERT(aFrame->IsColumnSpan(), "aFrame is not column-span?");
 

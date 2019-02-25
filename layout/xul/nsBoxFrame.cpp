@@ -138,8 +138,8 @@ void nsBoxFrame::SetInitialChildList(ChildListID aListID,
   }
 }
 
-/* virtual */ void nsBoxFrame::DidSetComputedStyle(
-    ComputedStyle* aOldComputedStyle) {
+/* virtual */
+void nsBoxFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
   nsContainerFrame::DidSetComputedStyle(aOldComputedStyle);
 
   // The values that CacheAttributes() computes depend on our style,
@@ -511,7 +511,8 @@ static void printSize(char* aDesc, nscoord aSize) {
 }
 #endif
 
-/* virtual */ nscoord nsBoxFrame::GetMinISize(gfxContext* aRenderingContext) {
+/* virtual */
+nscoord nsBoxFrame::GetMinISize(gfxContext* aRenderingContext) {
   nscoord result;
   DISPLAY_MIN_INLINE_SIZE(this, result);
 
@@ -531,7 +532,8 @@ static void printSize(char* aDesc, nscoord aSize) {
   return result;
 }
 
-/* virtual */ nscoord nsBoxFrame::GetPrefISize(gfxContext* aRenderingContext) {
+/* virtual */
+nscoord nsBoxFrame::GetPrefISize(gfxContext* aRenderingContext) {
   nscoord result;
   DISPLAY_PREF_INLINE_SIZE(this, result);
 
@@ -841,7 +843,8 @@ void nsBoxFrame::DestroyFrom(nsIFrame* aDestructRoot,
   nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
-/* virtual */ void nsBoxFrame::MarkIntrinsicISizesDirty() {
+/* virtual */
+void nsBoxFrame::MarkIntrinsicISizesDirty() {
   SizeNeedsRecalc(mPrefSize);
   SizeNeedsRecalc(mMinSize);
   SizeNeedsRecalc(mMaxSize);
@@ -929,7 +932,8 @@ void nsBoxFrame::AppendFrames(ChildListID aListID, nsFrameList& aFrameList) {
   }
 }
 
-/* virtual */ nsContainerFrame* nsBoxFrame::GetContentInsertionFrame() {
+/* virtual */
+nsContainerFrame* nsBoxFrame::GetContentInsertionFrame() {
   if (GetStateBits() & NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK)
     return PrincipalChildList().FirstChild()->GetContentInsertionFrame();
   return nsContainerFrame::GetContentInsertionFrame();

@@ -25,11 +25,13 @@
 namespace mozilla {
 namespace css {
 
-/* static */ void ImageLoader::Init() {
+/* static */
+void ImageLoader::Init() {
   sImages = new nsClassHashtable<nsUint64HashKey, ImageTableEntry>();
 }
 
-/* static */ void ImageLoader::Shutdown() {
+/* static */
+void ImageLoader::Shutdown() {
   delete sImages;
   sImages = nullptr;
 }
@@ -244,8 +246,8 @@ imgRequestProxy* ImageLoader::RegisterCSSImage(URLValue* aImage) {
   return requestWeak;
 }
 
-/* static */ void ImageLoader::DeregisterCSSImageFromAllLoaders(
-    URLValue* aImage) {
+/* static */
+void ImageLoader::DeregisterCSSImageFromAllLoaders(URLValue* aImage) {
   MOZ_ASSERT(aImage);
 
   uint64_t loadID = aImage->LoadID();
@@ -264,8 +266,8 @@ imgRequestProxy* ImageLoader::RegisterCSSImage(URLValue* aImage) {
   }
 }
 
-/* static */ void ImageLoader::DeregisterCSSImageFromAllLoaders(
-    uint64_t aImageLoadID) {
+/* static */
+void ImageLoader::DeregisterCSSImageFromAllLoaders(uint64_t aImageLoadID) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aImageLoadID != 0);
 
@@ -420,8 +422,8 @@ void ImageLoader::ClearFrames(nsPresContext* aPresContext) {
   mFrameToRequestMap.Clear();
 }
 
-/* static */ void ImageLoader::LoadImage(URLValue* aImage,
-                                         Document* aLoadingDoc) {
+/* static */
+void ImageLoader::LoadImage(URLValue* aImage, Document* aLoadingDoc) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aLoadingDoc);
   MOZ_ASSERT(aImage);

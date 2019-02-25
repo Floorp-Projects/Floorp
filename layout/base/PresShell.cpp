@@ -749,7 +749,8 @@ already_AddRefed<nsFrameSelection> nsIPresShell::FrameSelection() {
 static bool sSynthMouseMove = true;
 static uint32_t sNextPresShellId;
 
-/* static */ bool PresShell::AccessibleCaretEnabled(nsIDocShell* aDocShell) {
+/* static */
+bool PresShell::AccessibleCaretEnabled(nsIDocShell* aDocShell) {
   // If the pref forces it on, then enable it.
   if (StaticPrefs::layout_accessiblecaret_enabled()) {
     return true;
@@ -5450,7 +5451,8 @@ void PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll) {
   }
 }
 
-/* static */ void PresShell::MarkFramesInListApproximatelyVisible(
+/* static */
+void PresShell::MarkFramesInListApproximatelyVisible(
     const nsDisplayList& aList) {
   for (nsDisplayItem* item = aList.GetBottom(); item; item = item->GetAbove()) {
     nsDisplayList* sublist = item->GetChildren();
@@ -5477,7 +5479,8 @@ void PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll) {
   }
 }
 
-/* static */ void PresShell::DecApproximateVisibleCount(
+/* static */
+void PresShell::DecApproximateVisibleCount(
     VisibleFrames& aFrames, const Maybe<OnNonvisible>& aNonvisibleAction
     /* = Nothing() */) {
   for (auto iter = aFrames.Iter(); !iter.Done(); iter.Next()) {
@@ -5506,8 +5509,9 @@ void PresShell::RebuildApproximateFrameVisibilityDisplayList(
   DecApproximateVisibleCount(oldApproximatelyVisibleFrames);
 }
 
-/* static */ void PresShell::ClearApproximateFrameVisibilityVisited(
-    nsView* aView, bool aClear) {
+/* static */
+void PresShell::ClearApproximateFrameVisibilityVisited(nsView* aView,
+                                                       bool aClear) {
   nsViewManager* vm = aView->GetViewManager();
   if (aClear) {
     PresShell* presShell = static_cast<PresShell*>(vm->GetPresShell());
@@ -6376,8 +6380,9 @@ bool PresShell::CanDispatchEvent(const WidgetGUIEvent* aEvent) const {
   return rv;
 }
 
-/* static */ PresShell* PresShell::GetShellForEventTarget(
-    nsIFrame* aFrame, nsIContent* aContent) {
+/* static */
+PresShell* PresShell::GetShellForEventTarget(nsIFrame* aFrame,
+                                             nsIContent* aContent) {
   if (aFrame) {
     return static_cast<PresShell*>(aFrame->PresShell());
   }
@@ -6391,8 +6396,8 @@ bool PresShell::CanDispatchEvent(const WidgetGUIEvent* aEvent) const {
   return nullptr;
 }
 
-/* static */ PresShell* PresShell::GetShellForTouchEvent(
-    WidgetGUIEvent* aEvent) {
+/* static */
+PresShell* PresShell::GetShellForTouchEvent(WidgetGUIEvent* aEvent) {
   PresShell* shell = nullptr;
   switch (aEvent->mMessage) {
     case eTouchMove:
@@ -9345,8 +9350,8 @@ bool nsIPresShell::RemoveRefreshObserver(nsARefreshObserver* aObserver,
                             aObserver, aFlushType);
 }
 
-/* virtual */ bool nsIPresShell::AddPostRefreshObserver(
-    nsAPostRefreshObserver* aObserver) {
+/* virtual */
+bool nsIPresShell::AddPostRefreshObserver(nsAPostRefreshObserver* aObserver) {
   nsPresContext* presContext = GetPresContext();
   if (!presContext) {
     return false;
@@ -9355,7 +9360,8 @@ bool nsIPresShell::RemoveRefreshObserver(nsARefreshObserver* aObserver,
   return true;
 }
 
-/* virtual */ bool nsIPresShell::RemovePostRefreshObserver(
+/* virtual */
+bool nsIPresShell::RemovePostRefreshObserver(
     nsAPostRefreshObserver* aObserver) {
   nsPresContext* presContext = GetPresContext();
   if (!presContext) {

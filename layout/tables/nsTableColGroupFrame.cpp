@@ -123,7 +123,8 @@ void nsTableColGroupFrame::SetInitialChildList(ChildListID aListID,
   mFrames.AppendFrames(this, aChildList);
 }
 
-/* virtual */ void nsTableColGroupFrame::DidSetComputedStyle(
+/* virtual */
+void nsTableColGroupFrame::DidSetComputedStyle(
     ComputedStyle* aOldComputedStyle) {
   nsContainerFrame::DidSetComputedStyle(aOldComputedStyle);
 
