@@ -202,7 +202,8 @@ nsDebugImpl::GetIsDebuggerAttached(bool* aResult) {
   return NS_OK;
 }
 
-/* static */ void nsDebugImpl::SetMultiprocessMode(const char* aDesc) {
+/* static */
+void nsDebugImpl::SetMultiprocessMode(const char* aDesc) {
   sMultiprocessDescription = aDesc;
 }
 
