@@ -39,11 +39,6 @@ inline void HandleLauncherError(
   HandleLauncherError(r);
 }
 
-// Forward declaration
-struct StaticXREAppData;
-
-void SetLauncherErrorAppData(const StaticXREAppData& aAppData);
-
 }  // namespace mozilla
 
 #endif  //  mozilla_ErrorHandler_h

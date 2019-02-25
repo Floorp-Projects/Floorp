@@ -172,33 +172,36 @@ static bool DoLauncherProcessChecks(int& argc, wchar_t** argv) {
   return result;
 }
 
-static mozilla::Maybe<bool> RunAsLauncherProcess(int& argc, wchar_t** argv) {
-  // return fast when we're a child process.
-  // (The remainder of this function has some side effects that are
-  // undesirable for content processes)
-  if (mozilla::CheckArg(argc, argv, L"contentproc",
-                        static_cast<const wchar_t**>(nullptr),
-                        mozilla::CheckArgFlag::None) == mozilla::ARG_FOUND) {
-    return mozilla::Some(false);
-  }
+namespace mozilla {
 
+bool RunAsLauncherProcess(int& argc, wchar_t** argv) {
   bool runAsLauncher = DoLauncherProcessChecks(argc, argv);
 
-#if defined(MOZ_LAUNCHER_PROCESS)
-  mozilla::LauncherRegistryInfo::ProcessType desiredType =
-      runAsLauncher ? mozilla::LauncherRegistryInfo::ProcessType::Launcher
-                    : mozilla::LauncherRegistryInfo::ProcessType::Browser;
-  mozilla::LauncherRegistryInfo regInfo;
-  mozilla::LauncherResult<mozilla::LauncherRegistryInfo::ProcessType>
-      runAsType = regInfo.Check(desiredType);
-
-  if (runAsType.isErr()) {
-    mozilla::HandleLauncherError(runAsType);
-    return mozilla::Nothing();
+  // If we're running as browser, return fast when we're a child process.
+  if (!runAsLauncher &&
+      mozilla::CheckArg(argc, argv, L"contentproc",
+                        static_cast<const wchar_t**>(nullptr),
+                        mozilla::CheckArgFlag::None) == mozilla::ARG_FOUND) {
+    return false;
   }
 
-  runAsLauncher = runAsType.unwrap() ==
-                  mozilla::LauncherRegistryInfo::ProcessType::Launcher;
+#if defined(MOZ_LAUNCHER_PROCESS)
+  LauncherRegistryInfo::ProcessType desiredType =
+      runAsLauncher ? LauncherRegistryInfo::ProcessType::Launcher
+                    : LauncherRegistryInfo::ProcessType::Browser;
+  LauncherRegistryInfo regInfo;
+  LauncherResult<LauncherRegistryInfo::ProcessType> runAsType =
+      regInfo.Check(desiredType);
+
+  if (runAsType.isErr()) {
+    HandleLauncherError(runAsType);
+    // If there is an error, we should always fall back to returning false
+    // for safety's sake.
+    return false;
+  }
+
+  runAsLauncher =
+      runAsType.unwrap() == LauncherRegistryInfo::ProcessType::Launcher;
 #endif  // defined(MOZ_LAUNCHER_PROCESS)
 
   if (!runAsLauncher) {
@@ -207,20 +210,10 @@ static mozilla::Maybe<bool> RunAsLauncherProcess(int& argc, wchar_t** argv) {
     MaybeBreakForBrowserDebugging();
   }
 
-  return mozilla::Some(runAsLauncher);
+  return runAsLauncher;
 }
 
-namespace mozilla {
-
-Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
-                        const StaticXREAppData& aAppData) {
-  SetLauncherErrorAppData(aAppData);
-
-  Maybe<bool> runAsLauncher = RunAsLauncherProcess(argc, argv);
-  if (!runAsLauncher || !runAsLauncher.value()) {
-    return Nothing();
-  }
-
+int LauncherMain(int argc, wchar_t* argv[]) {
   // Make sure that the launcher process itself has image load policies set
   if (IsWin10AnniversaryUpdateOrLater()) {
     const DynamicallyLinkedFunctionPtr<decltype(&SetProcessMitigationPolicy)>
@@ -238,7 +231,7 @@ Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
 
   if (!SetArgv0ToFullBinaryPath(argv)) {
     HandleLauncherError(LAUNCHER_ERROR_GENERIC());
-    return Nothing();
+    return 1;
   }
 
   LauncherFlags flags = ProcessCmdLine(argc, argv);
@@ -248,7 +241,7 @@ Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
       GetElevationState(flags, mediumIlToken);
   if (elevationState.isErr()) {
     HandleLauncherError(elevationState);
-    return Nothing();
+    return 1;
   }
 
   // If we're elevated, we should relaunch ourselves as a normal user.
@@ -262,24 +255,23 @@ Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
     bool failed = launchedUnelevated.isErr();
     if (failed) {
       HandleLauncherError(launchedUnelevated);
-      return Nothing();
     }
 
-    return Some(0);
+    return failed;
   }
 
   // Now proceed with setting up the parameters for process creation
   UniquePtr<wchar_t[]> cmdLine(MakeCommandLine(argc, argv));
   if (!cmdLine) {
     HandleLauncherError(LAUNCHER_ERROR_GENERIC());
-    return Nothing();
+    return 1;
   }
 
   const Maybe<bool> isSafeMode =
       IsSafeModeRequested(argc, argv, SafeModeFlag::NoKeyPressCheck);
   if (!isSafeMode) {
     HandleLauncherError(LAUNCHER_ERROR_FROM_WIN32(ERROR_INVALID_PARAMETER));
-    return Nothing();
+    return 1;
   }
 
   ProcThreadAttributes attrs;
@@ -297,7 +289,7 @@ Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
   LauncherResult<bool> attrsOk = attrs.AssignTo(siex);
   if (attrsOk.isErr()) {
     HandleLauncherError(attrsOk);
-    return Nothing();
+    return 1;
   }
 
   BOOL inheritHandles = FALSE;
@@ -333,7 +325,7 @@ Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
 
   if (!createOk) {
     HandleLauncherError(LAUNCHER_ERROR_FROM_LAST());
-    return Nothing();
+    return 1;
   }
 
   nsAutoHandle process(pi.hProcess);
@@ -344,13 +336,13 @@ Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
   if (setupResult.isErr()) {
     HandleLauncherError(setupResult);
     ::TerminateProcess(process.get(), 1);
-    return Nothing();
+    return 1;
   }
 
   if (::ResumeThread(mainThread.get()) == static_cast<DWORD>(-1)) {
     HandleLauncherError(LAUNCHER_ERROR_FROM_LAST());
     ::TerminateProcess(process.get(), 1);
-    return Nothing();
+    return 1;
   }
 
   if (flags & LauncherFlags::eWaitForBrowser) {
@@ -358,7 +350,7 @@ Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
     if (::WaitForSingleObject(process.get(), INFINITE) == WAIT_OBJECT_0 &&
         ::GetExitCodeProcess(process.get(), &exitCode)) {
       // Propagate the browser process's exit code as our exit code.
-      return Some(static_cast<int>(exitCode));
+      return static_cast<int>(exitCode);
     }
   } else {
     const DWORD timeout =
@@ -370,7 +362,7 @@ Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
     mozilla::WaitForInputIdle(process.get(), timeout);
   }
 
-  return Some(0);
+  return 0;
 }
 
 }  // namespace mozilla
