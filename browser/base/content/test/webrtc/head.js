@@ -34,12 +34,6 @@ function waitForCondition(condition, nextTest, errorMsg, retryTimes) {
   var moveOn = function() { clearInterval(interval); nextTest(); };
 }
 
-function promiseWaitForCondition(aConditionFn, retryTimes) {
-  return new Promise(resolve => {
-    waitForCondition(aConditionFn, resolve, "Condition didn't pass.", retryTimes);
-  });
-}
-
 /**
  * Waits for a window with the given URL to exist.
  *
@@ -93,7 +87,7 @@ async function assertWebRTCIndicatorStatus(expected) {
     // It seems the global indicator is not always removed synchronously
     // in some cases.
     info("waiting for the global indicator to be hidden");
-    await promiseWaitForCondition(() => !ui.showGlobalIndicator);
+    await TestUtils.waitForCondition(() => !ui.showGlobalIndicator);
   }
   is(ui.showGlobalIndicator, !!expected, msg);
 
