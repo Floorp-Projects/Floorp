@@ -17,7 +17,7 @@ module.exports = {
     "package.json",
     "<rootDir>/packages"
   ],
-  modulePathIgnorePatterns: ["src/test/mochitest", "firefox"],
+  modulePathIgnorePatterns: ["test/mochitest", "firefox"],
   collectCoverageFrom: [
     "src/**/*.js",
     "!src/**/fixtures/*.js",
@@ -26,7 +26,7 @@ module.exports = {
     "!**/*.mock.js",
     "!**/*.spec.js"
   ],
-  transformIgnorePatterns: ["node_modules/(?!devtools-)"],
+  transformIgnorePatterns: ["node_modules/(?!(devtools-|react-aria-))"],
   setupTestFrameworkScriptFile: "<rootDir>/src/test/tests-setup.js",
   setupFiles: ["<rootDir>/src/test/shim.js", "jest-localstorage-mock"],
   snapshotSerializers: [

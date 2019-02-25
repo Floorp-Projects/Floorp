@@ -45,15 +45,8 @@ Array [
         },
       ],
       "contentType": "text/javascript",
-      "error": undefined,
       "id": "a",
-      "isBlackBoxed": false,
-      "isExtension": false,
-      "isPrettyPrinted": false,
-      "isWasm": false,
       "loadedState": "loaded",
-      "relativeUrl": "/examples/a",
-      "sourceMapURL": undefined,
       "text": "function a() {
   return a 
 }",
@@ -145,15 +138,8 @@ Array [
         },
       ],
       "contentType": "text/javascript",
-      "error": undefined,
       "id": "a",
-      "isBlackBoxed": false,
-      "isExtension": false,
-      "isPrettyPrinted": false,
-      "isWasm": false,
       "loadedState": "loaded",
-      "relativeUrl": "/examples/a",
-      "sourceMapURL": undefined,
       "text": "function a() {
   return a 
 }",
