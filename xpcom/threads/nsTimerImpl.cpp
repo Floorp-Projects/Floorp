@@ -766,15 +766,17 @@ size_t nsTimer::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this);
 }
 
-/* static */ RefPtr<nsTimer> nsTimer::WithEventTarget(nsIEventTarget* aTarget) {
+/* static */
+RefPtr<nsTimer> nsTimer::WithEventTarget(nsIEventTarget* aTarget) {
   if (!aTarget) {
     aTarget = mozilla::GetCurrentThreadEventTarget();
   }
   return do_AddRef(new nsTimer(aTarget));
 }
 
-/* static */ nsresult nsTimer::XPCOMConstructor(nsISupports* aOuter,
-                                                REFNSIID aIID, void** aResult) {
+/* static */
+nsresult nsTimer::XPCOMConstructor(nsISupports* aOuter, REFNSIID aIID,
+                                   void** aResult) {
   *aResult = nullptr;
   if (aOuter != nullptr) {
     return NS_ERROR_NO_AGGREGATION;
