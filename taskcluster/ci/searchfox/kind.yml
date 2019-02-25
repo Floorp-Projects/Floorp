@@ -51,7 +51,6 @@ jobs:
             - linux64-node
             - linux64-rust
             - linux64-cbindgen
-            - linux64-nasm
 
     macosx64-searchfox/debug:
         description: "MacOS X x64 Debug Cross-compile Searchfox"
@@ -87,7 +86,6 @@ jobs:
             - linux64-node
             - linux64-rust-macos
             - linux64-cbindgen
-            - linux64-nasm
 
     win64-searchfox/debug:
         description: "Win64 Searchfox Debug (clang-cl)"
@@ -157,4 +155,3 @@ jobs:
             - linux64-cbindgen
             - linux64-sccache
             - linux64-node
-            - linux64-nasm
