@@ -20,17 +20,26 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlin.coroutines.CoroutineContext
+import java.io.File
 import mozilla.components.support.ktx.android.graphics.toDataUri
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.FenixApplication
-import org.mozilla.fenix.R
-import org.mozilla.fenix.R.string.pref_key_leakcanary
-import org.mozilla.fenix.R.string.pref_key_make_default_browser
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
-import java.io.File
-import kotlin.coroutines.CoroutineContext
+import org.mozilla.fenix.R
+import org.mozilla.fenix.R.string.pref_key_leakcanary
+import org.mozilla.fenix.R.string.pref_key_feedback
+import org.mozilla.fenix.R.string.pref_key_help
+import org.mozilla.fenix.R.string.pref_key_make_default_browser
+import org.mozilla.fenix.R.string.pref_key_rate
+import org.mozilla.fenix.R.string.pref_key_site_permissions
+import org.mozilla.fenix.R.string.pref_key_accessibility
+import org.mozilla.fenix.R.string.pref_key_language
+import org.mozilla.fenix.R.string.pref_key_data_choices
+import org.mozilla.fenix.R.string.pref_key_about
 
+@Suppress("TooManyFunctions")
 class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope {
 
     private lateinit var job: Job
@@ -54,21 +63,34 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope {
         setupPreferences()
     }
 
+    @Suppress("ComplexMethod")
     override fun onPreferenceTreeClick(preference: Preference): Boolean {
         when (preference.key) {
-            resources.getString(R.string.pref_key_help) -> {
+            resources.getString(pref_key_site_permissions) -> {
+                navigateToSitePermissions()
+            }
+            resources.getString(pref_key_accessibility) -> {
+                navigateToAccessibility()
+            }
+            resources.getString(pref_key_language) -> {
+                // TODO open language switcher
+            }
+            resources.getString(pref_key_data_choices) -> {
+                navigateToDataChoices()
+            }
+            resources.getString(pref_key_help) -> {
                 requireComponents.useCases.tabsUseCases.addTab
                     .invoke(SupportUtils.getSumoURLForTopic(context!!, SupportUtils.SumoTopic.HELP))
                 navigateToSettingsArticle()
             }
-            resources.getString(R.string.pref_key_rate) -> {
+            resources.getString(pref_key_rate) -> {
                 startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(SupportUtils.RATE_APP_URL)))
             }
-            resources.getString(R.string.pref_key_feedback) -> {
+            resources.getString(pref_key_feedback) -> {
                 requireComponents.useCases.tabsUseCases.addTab.invoke(SupportUtils.FEEDBACK_URL)
                 navigateToSettingsArticle()
             }
-            resources.getString(R.string.pref_key_about) -> {
+            resources.getString(pref_key_about) -> {
                 requireComponents.useCases.tabsUseCases.addTab.invoke(aboutURL, true)
                 navigateToSettingsArticle()
             }
@@ -144,11 +166,26 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope {
         }
     }
 
+    private fun navigateToSitePermissions() {
+        val directions = SettingsFragmentDirections.actionSettingsFragmentToSitePermissionsFragment()
+        Navigation.findNavController(view!!).navigate(directions)
+    }
+
+    private fun navigateToAccessibility() {
+        val directions = SettingsFragmentDirections.actionSettingsFragmentToAccessibilityFragment()
+        Navigation.findNavController(view!!).navigate(directions)
+    }
+
+    private fun navigateToDataChoices() {
+        val directions = SettingsFragmentDirections.actionSettingsFragmentToDataChoicesFragment()
+        Navigation.findNavController(view!!).navigate(directions)
+    }
+
     private fun navigateToSettingsArticle() {
-        requireComponents.useCases.tabsUseCases.addTab.invoke(aboutURL, true)
+        val newSession = requireComponents.core.sessionManager.selectedSession?.id
         view?.let {
             Navigation.findNavController(it)
-                .navigate(SettingsFragmentDirections.actionGlobalBrowser(null))
+                .navigate(SettingsFragmentDirections.actionGlobalBrowser(newSession))
         }
     }
 

@@ -87,5 +87,23 @@
     <fragment
         android:id="@+id/settingsFragment"
         android:name="org.mozilla.fenix.settings.SettingsFragment"
-        android:label="@string/settings_title" />
+        android:label="@string/settings_title" >
+        <action
+            android:id="@+id/action_settingsFragment_to_browserFragment"
+            app:destination="@id/browserFragment"
+            app:popUpTo="@+id/settingsFragment" />
+        <action android:id="@+id/action_settingsFragment_to_dataChoicesFragment"
+                app:destination="@id/dataChoicesFragment" app:popUpTo="@+id/settingsFragment"/>
+        <action android:id="@+id/action_settingsFragment_to_sitePermissionsFragment"
+                app:destination="@id/sitePermissionsFragment"/>
+        <action android:id="@+id/action_settingsFragment_to_accessibilityFragment"
+                app:destination="@id/accessibilityFragment"/>
+    </fragment>
+    <fragment android:id="@+id/dataChoicesFragment" android:name="org.mozilla.fenix.settings.DataChoicesFragment"
+              android:label="DataChoicesFragment"/>
+    <fragment android:id="@+id/sitePermissionsFragment"
+              android:name="org.mozilla.fenix.settings.SitePermissionsFragment"
+              android:label="SitePermissionsFragment"/>
+    <fragment android:id="@+id/accessibilityFragment" android:name="org.mozilla.fenix.settings.AccessibilityFragment"
+              android:label="AccessibilityFragment"/>
 </navigation>

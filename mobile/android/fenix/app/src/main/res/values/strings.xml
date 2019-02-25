@@ -109,6 +109,16 @@
     <!-- Preference for developers -->
     <string name="preference_leakcanary">Leak Canary</string>
 
+    <!-- Advanced Preferences -->
+    <!-- Preference switch for Telemetry -->
+    <string name="preferences_telemetry">Telemetry</string>
+    <!-- Preference switch for crash reporter -->
+    <string name="preferences_crash_reporter">Crash reporter</string>
+    <!-- Preference switch for Mozilla location service -->
+    <string name="preferences_mozilla_location_service">Mozilla location service</string>
+    <!-- Preference switch for app health report. -->
+    <string name="preferences_fenix_health_report">Fenix health report</string>
+
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
     <string name="library_sessions">Sessions</string>
