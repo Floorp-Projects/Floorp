@@ -54,7 +54,7 @@ this.startup_about_home_paint = class extends ExtensionAPI {
     } else {
       // Got our measurement.
       dump("__start_report" + measurement + "__end_report\n\n");
-
+      // eslint-disable-next-line mozilla/avoid-Date-timing
       dump("__startTimestamp" + Date.now() + "__endTimestamp\n");
 
 
