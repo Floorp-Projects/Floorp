@@ -174,7 +174,7 @@ bool MessageManagerCallback::BuildClonedMessageDataForParent(
 }
 
 bool MessageManagerCallback::BuildClonedMessageDataForChild(
-    nsIContentChild* aChild, StructuredCloneData& aData,
+    ContentChild* aChild, StructuredCloneData& aData,
     ClonedMessageData& aClonedData) {
   return aData.BuildClonedMessageDataForChild(aChild, aClonedData);
 }

@@ -593,7 +593,7 @@ void nsBufferedInputStream::Serialize(InputStreamParams& aParams,
                                       FileDescriptorArray& aFileDescriptors,
                                       bool aDelayedStart, uint32_t aMaxSize,
                                       uint32_t* aSizeUsed,
-                                      mozilla::dom::nsIContentChild* aManager) {
+                                      mozilla::dom::ContentChild* aManager) {
   SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
                     aSizeUsed, aManager);
 }

@@ -1755,12 +1755,13 @@ PFileDescriptorSetChild* ContentChild::SendPFileDescriptorSetConstructor(
 
 PFileDescriptorSetChild* ContentChild::AllocPFileDescriptorSetChild(
     const FileDescriptor& aFD) {
-  return nsIContentChild::AllocPFileDescriptorSetChild(aFD);
+  return new FileDescriptorSetChild(aFD);
 }
 
 bool ContentChild::DeallocPFileDescriptorSetChild(
     PFileDescriptorSetChild* aActor) {
-  return nsIContentChild::DeallocPFileDescriptorSetChild(aActor);
+  delete static_cast<FileDescriptorSetChild*>(aActor);
+  return true;
 }
 
 bool ContentChild::DeallocPBrowserChild(PBrowserChild* aIframe) {
