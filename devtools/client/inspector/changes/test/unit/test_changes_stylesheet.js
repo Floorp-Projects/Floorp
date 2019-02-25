@@ -10,7 +10,7 @@ const { getChangesStylesheet } = require("devtools/client/inspector/changes/sele
 
 const { CHANGES_STATE } = require("resource://test/mocks");
 
-// Wrap multi-line string in backticks to ensure exact check in test, including new lines.
+// Wrap multi-line string in backticks and trim to ensure exact string check in test.
 const STYLESHEET_FOR_ANCESTOR = `
 /* Inline #0 | http://localhost:5000/at-rules-nested.html */
 
@@ -22,9 +22,9 @@ const STYLESHEET_FOR_ANCESTOR = `
     }
   }
 }
-`;
+`.trim();
 
-// Wrap multi-line string in backticks to ensure exact check in test, including new lines.
+// Wrap multi-line string in backticks and trim to ensure exact string check in test.
 const STYLESHEET_FOR_DESCENDANT = `
 /* Inline #0 | http://localhost:5000/at-rules-nested.html */
 
@@ -32,7 +32,7 @@ body {
   /* background-color: royalblue; */
   background-color: red;
 }
-`;
+`.trim();
 
 add_test(() => {
   info("Check stylesheet generated for the first ancestor in the CSS rule tree.");

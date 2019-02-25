@@ -40,10 +40,10 @@ add_task(async function() {
   info("Wait for the change to be tracked");
   await onTrackChange;
 
-  const rules = panel.querySelectorAll(".changes__rule");
+  const rules = panel.querySelectorAll(".rule");
   is(rules.length, 1, "One rule was tracked as changed");
 
-  const selectors = rules.item(0).querySelectorAll(".changes__selector");
+  const selectors = rules.item(0).querySelectorAll(".selector");
   is(selectors.length, 2, "Two selectors were tracked as changed");
 
   const firstSelector = selectors.item(0);
