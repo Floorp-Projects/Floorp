@@ -44,6 +44,15 @@ static bool WrappedAsyncGenerator(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  // Handle the case when the debugger force-returned an unexpected value.
+  if (!generatorVal.isObject() ||
+      !generatorVal.toObject().is<AsyncGeneratorGeneratorObject>()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_UNEXPECTED_TYPE, "return value",
+                              JS::InformalValueTypeName(generatorVal));
+    return false;
+  }
+
   // Step 2.
   AsyncGeneratorObject* asyncGenObj =
       AsyncGeneratorObject::create(cx, wrapped, generatorVal);
@@ -271,7 +280,7 @@ static AsyncGeneratorObject* OrdinaryCreateFromConstructorAsynGen(
 /* static */ AsyncGeneratorObject* AsyncGeneratorObject::create(
     JSContext* cx, HandleFunction asyncGen, HandleValue generatorVal) {
   MOZ_ASSERT(generatorVal.isObject());
-  MOZ_ASSERT(generatorVal.toObject().is<GeneratorObject>());
+  MOZ_ASSERT(generatorVal.toObject().is<AsyncGeneratorGeneratorObject>());
 
   AsyncGeneratorObject* asyncGenObj =
       OrdinaryCreateFromConstructorAsynGen(cx, asyncGen);
@@ -439,17 +448,28 @@ MOZ_MUST_USE bool js::AsyncGeneratorResume(
     CompletionKind completionKind, HandleValue argument) {
   RootedValue generatorVal(cx, asyncGenObj->generatorVal());
 
+  // This case can only happen when the debugger force-returned the same
+  // generator object for two async generator calls. It doesn't matter how we
+  // handle it, as long as we don't crash.
+  if (generatorVal.toObject().as<AbstractGeneratorObject>().isClosed() ||
+      !generatorVal.toObject().as<AbstractGeneratorObject>().isSuspended()) {
+    return AsyncGeneratorReturned(cx, asyncGenObj, UndefinedHandleValue);
+  }
+
   // 11.4.3.5 steps 12-14, 16-20.
   HandlePropertyName funName = completionKind == CompletionKind::Normal
-                                   ? cx->names().GeneratorNext
+                                   ? cx->names().AsyncGeneratorNext
                                    : completionKind == CompletionKind::Throw
-                                         ? cx->names().GeneratorThrow
-                                         : cx->names().GeneratorReturn;
+                                         ? cx->names().AsyncGeneratorThrow
+                                         : cx->names().AsyncGeneratorReturn;
   FixedInvokeArgs<1> args(cx);
   args[0].set(argument);
   RootedValue result(cx);
   if (!CallSelfHostedFunction(cx, funName, generatorVal, args, &result)) {
     // 11.4.3.2 step 5.d, f.
+    if (!generatorVal.toObject().as<AbstractGeneratorObject>().isClosed()) {
+      generatorVal.toObject().as<AbstractGeneratorObject>().setClosed();
+    }
     return AsyncGeneratorThrown(cx, asyncGenObj);
   }
 

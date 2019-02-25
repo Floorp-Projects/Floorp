@@ -622,7 +622,7 @@ class PromiseReactionRecord : public NativeObject {
         getFixedSlot(ReactionRecordSlot_GeneratorOrPromiseToResolve);
     return &promiseToResolve.toObject().as<PromiseObject>();
   }
-  void setIsAsyncFunction(GeneratorObject* genObj) {
+  void setIsAsyncFunction(AsyncFunctionGeneratorObject* genObj) {
     setFlagOnInitialState(REACTION_FLAG_ASYNC_FUNCTION);
     setFixedSlot(ReactionRecordSlot_GeneratorOrPromiseToResolve,
                  ObjectValue(*genObj));
@@ -631,11 +631,11 @@ class PromiseReactionRecord : public NativeObject {
     int32_t flags = this->flags();
     return flags & REACTION_FLAG_ASYNC_FUNCTION;
   }
-  GeneratorObject* asyncFunctionGenerator() {
+  AsyncFunctionGeneratorObject* asyncFunctionGenerator() {
     MOZ_ASSERT(isAsyncFunction());
     const Value& generator =
         getFixedSlot(ReactionRecordSlot_GeneratorOrPromiseToResolve);
-    return &generator.toObject().as<GeneratorObject>();
+    return &generator.toObject().as<AsyncFunctionGeneratorObject>();
   }
   void setIsAsyncGenerator(AsyncGeneratorObject* asyncGenObj) {
     setFlagOnInitialState(REACTION_FLAG_ASYNC_GENERATOR);
@@ -1482,7 +1482,8 @@ static MOZ_MUST_USE bool AsyncFunctionPromiseReactionJob(
   RootedValue argument(cx, reaction->handlerArg());
   Rooted<PromiseObject*> resultPromise(
       cx, &reaction->promise()->as<PromiseObject>());
-  Rooted<GeneratorObject*> generator(cx, reaction->asyncFunctionGenerator());
+  Rooted<AsyncFunctionGeneratorObject*> generator(
+      cx, reaction->asyncFunctionGenerator());
 
   int32_t handlerNum = handlerVal.toInt32();
 
@@ -3584,10 +3585,9 @@ static MOZ_MUST_USE bool InternalAwait(JSContext* cx, HandleValue value,
 }
 
 // ES 2018 draft 25.5.5.3 steps 2-10.
-MOZ_MUST_USE bool js::AsyncFunctionAwait(JSContext* cx,
-                                         Handle<GeneratorObject*> genObj,
-                                         Handle<PromiseObject*> resultPromise,
-                                         HandleValue value) {
+MOZ_MUST_USE bool js::AsyncFunctionAwait(
+    JSContext* cx, Handle<AsyncFunctionGeneratorObject*> genObj,
+    Handle<PromiseObject*> resultPromise, HandleValue value) {
   // Steps 4-5.
   RootedValue onFulfilled(
       cx, Int32Value(PromiseHandlerAsyncFunctionAwaitedFulfilled));
@@ -4845,7 +4845,7 @@ static MOZ_MUST_USE bool IsTopMostAsyncFunctionCall(JSContext* cx) {
   ++iter;
 
   // The parent frame should be the `next` function of the generator that is
-  // internally called in AsyncFunctionResume.
+  // internally called in AsyncFunctionResume resp. AsyncGeneratorResume.
   if (iter.done()) {
     return false;
   }
@@ -4854,7 +4854,9 @@ static MOZ_MUST_USE bool IsTopMostAsyncFunctionCall(JSContext* cx) {
   }
 
   if (!IsSelfHostedFunctionWithName(iter.calleeTemplate(),
-                                    cx->names().GeneratorNext)) {
+                                    cx->names().AsyncFunctionNext) &&
+      !IsSelfHostedFunctionWithName(iter.calleeTemplate(),
+                                    cx->names().AsyncGeneratorNext)) {
     return false;
   }
 

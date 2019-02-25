@@ -2558,6 +2558,11 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("GeneratorIsRunning", intrinsic_GeneratorIsRunning, 1, 0),
     JS_FN("GeneratorSetClosed", intrinsic_GeneratorSetClosed, 1, 0),
 
+    JS_FN("IsAsyncFunctionGeneratorObject",
+          intrinsic_IsInstanceOfBuiltin<AsyncFunctionGeneratorObject>, 1, 0),
+    JS_FN("IsAsyncGeneratorGeneratorObject",
+          intrinsic_IsInstanceOfBuiltin<AsyncGeneratorGeneratorObject>, 1, 0),
+
     JS_INLINABLE_FN("GuardToArrayBuffer",
                     intrinsic_GuardToBuiltin<ArrayBufferObject>, 1, 0,
                     IntrinsicGuardToArrayBuffer),

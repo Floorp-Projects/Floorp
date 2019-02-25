@@ -243,7 +243,7 @@ MOZ_MUST_USE PromiseObject* CreatePromiseObjectForAsync(JSContext* cx);
  */
 MOZ_MUST_USE bool IsPromiseForAsync(JSObject* promise);
 
-class GeneratorObject;
+class AsyncFunctionGeneratorObject;
 
 MOZ_MUST_USE bool AsyncFunctionReturned(JSContext* cx,
                                         Handle<PromiseObject*> resultPromise,
@@ -252,10 +252,9 @@ MOZ_MUST_USE bool AsyncFunctionReturned(JSContext* cx,
 MOZ_MUST_USE bool AsyncFunctionThrown(JSContext* cx,
                                       Handle<PromiseObject*> resultPromise);
 
-MOZ_MUST_USE bool AsyncFunctionAwait(JSContext* cx,
-                                     Handle<GeneratorObject*> genObj,
-                                     Handle<PromiseObject*> resultPromise,
-                                     HandleValue value);
+MOZ_MUST_USE bool AsyncFunctionAwait(
+    JSContext* cx, Handle<AsyncFunctionGeneratorObject*> genObj,
+    Handle<PromiseObject*> resultPromise, HandleValue value);
 
 // If the await operation can be skipped and the resolution value for `val` can
 // be acquired, stored the resolved value to `resolved` and `true` to
