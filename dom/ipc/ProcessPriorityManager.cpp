@@ -440,10 +440,9 @@ void ProcessPriorityManagerImpl::ObserveContentParentCreated(
     nsISupports* aContentParent) {
   // Do nothing; it's sufficient to get the PPPM.  But assign to nsRefPtr so we
   // don't leak the already_AddRefed object.
-  nsCOMPtr<nsIContentParent> cp = do_QueryInterface(aContentParent);
+  RefPtr<ContentParent> cp = do_QueryObject(aContentParent);
   RefPtr<ParticularProcessPriorityManager> pppm =
-      GetParticularProcessPriorityManager(
-          static_cast<ContentParent*>(cp.get()));
+      GetParticularProcessPriorityManager(cp);
 }
 
 void ProcessPriorityManagerImpl::ObserveContentParentDestroyed(
