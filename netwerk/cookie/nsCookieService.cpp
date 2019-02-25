@@ -3275,8 +3275,9 @@ bool nsCookieService::CanSetCookie(nsIURI *aHostURI, const nsCookieKey &aKey,
   int64_t currentTimeInUsec = PR_Now();
 
   // calculate expiry time of cookie.
-  aCookieAttributes.isSession = GetExpiry(aCookieAttributes, aServerTime,
-                                          currentTimeInUsec / PR_USEC_PER_SEC);
+  aCookieAttributes.isSession =
+      GetExpiry(aCookieAttributes, aServerTime,
+                currentTimeInUsec / PR_USEC_PER_SEC, aFromHttp);
   if (aStatus == STATUS_ACCEPT_SESSION) {
     // force lifetime to session. note that the expiration time, if set above,
     // will still apply.
@@ -4235,7 +4236,13 @@ bool nsCookieService::CheckPrefixes(nsCookieAttributes &aCookieAttributes,
 }
 
 bool nsCookieService::GetExpiry(nsCookieAttributes &aCookieAttributes,
-                                int64_t aServerTime, int64_t aCurrentTime) {
+                                int64_t aServerTime, int64_t aCurrentTime,
+                                bool aFromHttp) {
+  // maxageCap is in seconds.
+  // Disabled for HTTP cookies.
+  int64_t maxageCap =
+      aFromHttp ? 0 : StaticPrefs::privacy_documentCookies_maxage();
+
   /* Determine when the cookie should expire. This is done by taking the
    * difference between the server time and the time the server wants the cookie
    * to expire, and adding that difference to the client time. This localizes
@@ -4258,7 +4265,11 @@ bool nsCookieService::GetExpiry(nsCookieAttributes &aCookieAttributes,
 
     // if this addition overflows, expiryTime will be less than currentTime
     // and the cookie will be expired - that's okay.
-    aCookieAttributes.expiryTime = aCurrentTime + maxage;
+    if (maxageCap) {
+      aCookieAttributes.expiryTime = aCurrentTime + std::min(maxage, maxageCap);
+    } else {
+      aCookieAttributes.expiryTime = aCurrentTime + maxage;
+    }
 
     // check for expires attribute
   } else if (!aCookieAttributes.expires.IsEmpty()) {
@@ -4275,9 +4286,16 @@ bool nsCookieService::GetExpiry(nsCookieAttributes &aCookieAttributes,
     // Because if current time be set in the future, but the cookie expire
     // time be set less than current time and more than server time.
     // The cookie item have to be used to the expired cookie.
-    aCookieAttributes.expiryTime = expires / int64_t(PR_USEC_PER_SEC);
+    if (maxageCap) {
+      aCookieAttributes.expiryTime = std::min(
+          expires / int64_t(PR_USEC_PER_SEC), aCurrentTime + maxageCap);
+    } else {
+      aCookieAttributes.expiryTime = expires / int64_t(PR_USEC_PER_SEC);
+    }
 
-    // default to session cookie if no attributes found
+    // default to session cookie if no attributes found.  Here we don't need to
+    // enforce the maxage cap, because session cookies are short-lived by
+    // definition.
   } else {
     return true;
   }
