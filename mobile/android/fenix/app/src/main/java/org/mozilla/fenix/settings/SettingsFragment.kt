@@ -40,7 +40,6 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         job = Job()
-        (activity as AppCompatActivity).supportActionBar?.show()
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -50,6 +49,7 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope {
     override fun onResume() {
         super.onResume()
 
+        (activity as AppCompatActivity).supportActionBar?.show()
         generateWordmark()
         setupPreferences()
     }

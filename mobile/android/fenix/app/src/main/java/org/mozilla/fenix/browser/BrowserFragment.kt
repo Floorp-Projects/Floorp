@@ -102,8 +102,6 @@ class BrowserFragment : Fragment(), BackHandler {
 
         sessionId = BrowserFragmentArgs.fromBundle(arguments!!).sessionId
 
-        (activity as AppCompatActivity).supportActionBar?.hide()
-
         val sessionManager = requireComponents.core.sessionManager
 
         contextMenuFeature.set(
@@ -167,6 +165,11 @@ class BrowserFragment : Fragment(), BackHandler {
             feature = (toolbarComponent.uiView as ToolbarUIView).toolbarIntegration,
             owner = this,
             view = view)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        (activity as AppCompatActivity).supportActionBar?.hide()
     }
 
     override fun onStart() {

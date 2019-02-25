@@ -51,6 +51,10 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
         job = Job()
 
         setHasOptionsMenu(true)
+    }
+
+    override fun onResume() {
+        super.onResume()
         (activity as AppCompatActivity).supportActionBar?.show()
     }
 

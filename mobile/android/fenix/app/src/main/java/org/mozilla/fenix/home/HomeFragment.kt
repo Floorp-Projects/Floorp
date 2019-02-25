@@ -62,7 +62,6 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        (activity as AppCompatActivity).supportActionBar?.hide()
         setupHomeMenu()
 
         val searchIcon = requireComponents.search.searchEngineManager.getDefaultSearchEngine(requireContext()).let {
@@ -120,6 +119,11 @@ class HomeFragment : Fragment() {
                 BrowsingModeManager.Mode.Private -> BrowsingModeManager.Mode.Normal
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        (activity as AppCompatActivity).supportActionBar?.hide()
     }
 
     override fun onStart() {

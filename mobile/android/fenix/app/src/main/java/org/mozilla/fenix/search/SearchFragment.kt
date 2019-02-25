@@ -66,13 +66,16 @@ class SearchFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        (activity as AppCompatActivity).supportActionBar?.hide()
-
         layoutComponents(view.search_layout)
 
         lifecycle.addObserver((toolbarComponent.uiView as ToolbarUIView).toolbarIntegration)
 
         view.toolbar_wrapper.clipToOutline = false
+    }
+
+    override fun onResume() {
+        super.onResume()
+        (activity as AppCompatActivity).supportActionBar?.hide()
     }
 
     override fun onStart() {
