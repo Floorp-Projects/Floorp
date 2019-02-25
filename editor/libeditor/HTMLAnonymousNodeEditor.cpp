@@ -314,7 +314,7 @@ HTMLEditor::CheckSelectionStateForAnonymousButtons() {
 
   nsresult rv = RefereshEditingUI();
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
   return NS_OK;
 }

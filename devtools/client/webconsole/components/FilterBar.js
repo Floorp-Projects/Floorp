@@ -28,7 +28,6 @@ class FilterBar extends Component {
       dispatch: PropTypes.func.isRequired,
       filter: PropTypes.object.isRequired,
       attachRefToWebConsoleUI: PropTypes.func.isRequired,
-      filterBarVisible: PropTypes.bool.isRequired,
       persistLogs: PropTypes.bool.isRequired,
       hidePersistLogsCheckbox: PropTypes.bool.isRequired,
       filteredMessagesCount: PropTypes.object.isRequired,
@@ -64,17 +63,12 @@ class FilterBar extends Component {
   shouldComponentUpdate(nextProps, nextState) {
     const {
       filter,
-      filterBarVisible,
       persistLogs,
       filteredMessagesCount,
       closeButtonVisible,
     } = this.props;
 
     if (nextProps.filter !== filter) {
-      return true;
-    }
-
-    if (nextProps.filterBarVisible !== filterBarVisible) {
       return true;
     }
 
@@ -306,7 +300,6 @@ function mapStateToProps(state) {
   const uiState = getAllUi(state);
   return {
     filter: getAllFilters(state),
-    filterBarVisible: uiState.filterBarVisible,
     persistLogs: uiState.persistLogs,
     filteredMessagesCount: getFilteredMessagesCount(state),
     closeButtonVisible: uiState.closeButtonVisible,

@@ -159,11 +159,6 @@ ClearSiteData::Observe(nsISupports* aSubject, const char* aTopic,
 
   MOZ_ASSERT(!strcmp(aTopic, NS_HTTP_ON_EXAMINE_RESPONSE_TOPIC));
 
-  // Pref disabled.
-  if (!StaticPrefs::dom_clearSiteData_enabled()) {
-    return NS_OK;
-  }
-
   nsCOMPtr<nsIHttpChannel> channel = do_QueryInterface(aSubject);
   if (NS_WARN_IF(!channel)) {
     return NS_OK;

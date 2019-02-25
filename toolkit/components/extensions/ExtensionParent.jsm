@@ -1057,6 +1057,7 @@ ParentAPIManager.init();
 class HiddenXULWindow {
   constructor() {
     this._windowlessBrowser = null;
+    this.unloaded = false;
     this.waitInitialized = this.initWindowlessBrowser();
   }
 
@@ -1067,8 +1068,13 @@ class HiddenXULWindow {
 
     this.unloaded = true;
 
-    this.chromeShell = null;
     this.waitInitialized = null;
+
+    if (!this._windowlessBrowser) {
+      Cu.reportError("HiddenXULWindow was shut down while it was loading.");
+      // initWindowlessBrowser will close windowlessBrowser when possible.
+      return;
+    }
 
     this._windowlessBrowser.close();
     this._windowlessBrowser = null;
@@ -1081,8 +1087,8 @@ class HiddenXULWindow {
   /**
    * Private helper that create a XULDocument in a windowless browser.
    *
-   * @returns {Promise<XULDocument>}
-   *          A promise which resolves to the newly created XULDocument.
+   * @returns {Promise<void>}
+   *          A promise which resolves when the windowless browser is ready.
    */
   async initWindowlessBrowser() {
     if (this.waitInitialized) {
@@ -1092,7 +1098,6 @@ class HiddenXULWindow {
     // The invisible page is currently wrapped in a XUL window to fix an issue
     // with using the canvas API from a background page (See Bug 1274775).
     let windowlessBrowser = Services.appShell.createWindowlessBrowser(true);
-    this._windowlessBrowser = windowlessBrowser;
 
     // The windowless browser is a thin wrapper around a docShell that keeps
     // its related resources alive. It implements nsIWebNavigation and
@@ -1102,26 +1107,31 @@ class HiddenXULWindow {
     // access to the webNav methods that are already available on the
     // windowless browser, but contrary to appearances, they are not the same
     // object.
-    this.chromeShell = this._windowlessBrowser.docShell
-                           .QueryInterface(Ci.nsIWebNavigation);
+    let chromeShell = windowlessBrowser.docShell
+                                       .QueryInterface(Ci.nsIWebNavigation);
 
     if (PrivateBrowsingUtils.permanentPrivateBrowsing) {
-      let attrs = this.chromeShell.getOriginAttributes();
+      let attrs = chromeShell.getOriginAttributes();
       attrs.privateBrowsingId = 1;
-      this.chromeShell.setOriginAttributes(attrs);
+      chromeShell.setOriginAttributes(attrs);
     }
 
     let system = Services.scriptSecurityManager.getSystemPrincipal();
-    this.chromeShell.createAboutBlankContentViewer(system);
-    this.chromeShell.useGlobalHistory = false;
+    chromeShell.createAboutBlankContentViewer(system);
+    chromeShell.useGlobalHistory = false;
     let loadURIOptions = {
       triggeringPrincipal: system,
     };
-    this.chromeShell.loadURI("chrome://extensions/content/dummy.xul", loadURIOptions);
+    chromeShell.loadURI("chrome://extensions/content/dummy.xul", loadURIOptions);
 
     await promiseObserved("chrome-document-global-created",
-                          win => win.document == this.chromeShell.document);
-    return promiseDocumentLoaded(windowlessBrowser.document);
+                          win => win.document == chromeShell.document);
+    await promiseDocumentLoaded(windowlessBrowser.document);
+    if (this.unloaded) {
+      windowlessBrowser.close();
+      return;
+    }
+    this._windowlessBrowser = windowlessBrowser;
   }
 
   /**
@@ -1223,6 +1233,7 @@ class HiddenExtensionPage {
     this.extension = extension;
     this.viewType = viewType;
     this.browser = null;
+    this.unloaded = false;
   }
 
   /**
@@ -1233,11 +1244,17 @@ class HiddenExtensionPage {
       throw new Error("Unable to shutdown an unloaded HiddenExtensionPage instance");
     }
 
+    this.unloaded = true;
+
     if (this.browser) {
-      this.browser.remove();
-      this.browser = null;
-      SharedWindow.release();
+      this._releaseBrowser();
     }
+  }
+
+  _releaseBrowser() {
+    this.browser.remove();
+    this.browser = null;
+    SharedWindow.release();
   }
 
   /**
@@ -1252,12 +1269,22 @@ class HiddenExtensionPage {
     }
 
     let window = SharedWindow.acquire();
-    this.browser = await window.createBrowserElement({
-      "webextension-view-type": this.viewType,
-      "remote": this.extension.remote ? "true" : null,
-      "remoteType": this.extension.remote ?
-        E10SUtils.EXTENSION_REMOTE_TYPE : null,
-    }, this.extension.groupFrameLoader);
+    try {
+      this.browser = await window.createBrowserElement({
+        "webextension-view-type": this.viewType,
+        "remote": this.extension.remote ? "true" : null,
+        "remoteType": this.extension.remote ?
+          E10SUtils.EXTENSION_REMOTE_TYPE : null,
+      }, this.extension.groupFrameLoader);
+    } catch (e) {
+      SharedWindow.release();
+      throw e;
+    }
+
+    if (this.unloaded) {
+      this._releaseBrowser();
+      throw new Error("Extension shut down before browser element was created");
+    }
 
     return this.browser;
   }
@@ -1403,13 +1430,45 @@ const DebugUtils = {
 };
 
 
-function promiseExtensionViewLoaded(browser) {
-  return new Promise(resolve => {
-    browser.messageManager.addMessageListener("Extension:ExtensionViewLoaded", function onLoad({data}) {
-      browser.messageManager.removeMessageListener("Extension:ExtensionViewLoaded", onLoad);
-      resolve(data.childId && ParentAPIManager.getContextById(data.childId));
-    });
+/**
+ * Returns a Promise which resolves with the message data when the given message
+ * was received by the message manager. The promise is rejected if the message
+ * manager was closed before a message was received.
+ *
+ * @param {MessageListenerManager} messageManager
+ *        The message manager on which to listen for messages.
+ * @param {string} messageName
+ *        The message to listen for.
+ * @returns {Promise<*>}
+ */
+function promiseMessageFromChild(messageManager, messageName) {
+  return new Promise((resolve, reject) => {
+    let unregister;
+    function listener(message) {
+      unregister();
+      resolve(message.data);
+    }
+    function observer(subject, topic, data) {
+      if (subject === messageManager) {
+        unregister();
+        reject(new Error(`Message manager was disconnected before receiving ${messageName}`));
+      }
+    }
+    unregister = () => {
+      Services.obs.removeObserver(observer, "message-manager-close");
+      messageManager.removeMessageListener(messageName, listener);
+    };
+    messageManager.addMessageListener(messageName, listener);
+    Services.obs.addObserver(observer, "message-manager-close");
   });
+}
+
+// This should be called before browser.loadURI is invoked.
+async function promiseExtensionViewLoaded(browser) {
+  let {childId} = await promiseMessageFromChild(browser.messageManager, "Extension:ExtensionViewLoaded");
+  if (childId) {
+    return ParentAPIManager.getContextById(childId);
+  }
 }
 
 /**

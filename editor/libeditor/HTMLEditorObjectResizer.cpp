@@ -195,7 +195,7 @@ HTMLEditor::RefreshResizers() {
 
   nsresult rv = RefreshResizersInternal();
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
   return NS_OK;
 }
@@ -435,7 +435,7 @@ HTMLEditor::HideResizers() {
 
   nsresult rv = HideResizersInternal();
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
   return NS_OK;
 }
@@ -622,7 +622,11 @@ nsresult HTMLEditor::OnMouseDown(int32_t aClientX, int32_t aClientY,
     aEvent->PreventDefault();
     mOriginalX = aClientX;
     mOriginalY = aClientY;
-    return StartResizing(aTarget);
+    nsresult rv = StartResizing(aTarget);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return EditorBase::ToGenericNSResult(rv);
+    }
+    return NS_OK;
   }
 
   if (anonclass.EqualsLiteral("mozGrabber")) {
@@ -635,7 +639,11 @@ nsresult HTMLEditor::OnMouseDown(int32_t aClientX, int32_t aClientY,
     // let's start moving the element!
     mOriginalX = aClientX;
     mOriginalY = aClientY;
-    return GrabberClicked();
+    nsresult rv = GrabberClicked();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return EditorBase::ToGenericNSResult(rv);
+    }
+    return NS_OK;
   }
 
   return NS_OK;

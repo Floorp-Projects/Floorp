@@ -198,8 +198,8 @@ nsresult TextEditor::EndEditorInit() {
   }
 
   nsresult rv = InitRules();
-  if (NS_FAILED(rv)) {
-    return rv;
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
   }
   // Throw away the old transaction manager if this is not the first time that
   // we're initializing the editor.
@@ -216,7 +216,9 @@ TextEditor::SetDocumentCharacterSet(const nsACString& characterSet) {
   }
 
   nsresult rv = EditorBase::SetDocumentCharacterSet(characterSet);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
 
   // Update META charset element.
   RefPtr<Document> doc = GetDocument();
@@ -412,7 +414,7 @@ nsresult TextEditor::OnInputText(const nsAString& aStringToInsert) {
   AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::TypingTxnName);
   nsresult rv = InsertTextAsSubAction(aStringToInsert);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
   return NS_OK;
 }
@@ -428,7 +430,7 @@ nsresult TextEditor::InsertLineBreakAsAction() {
   AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::TypingTxnName);
   nsresult rv = InsertLineBreakAsSubAction();
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
   return NS_OK;
 }
@@ -696,7 +698,7 @@ nsresult TextEditor::DeleteSelectionAsAction(EDirection aDirection,
         ErrorResult error;
         SelectionRefPtr()->CollapseToStart(error);
         if (NS_WARN_IF(error.Failed())) {
-          return error.StealNSResult();
+          return EditorBase::ToGenericNSResult(error.StealNSResult());
         }
         break;
       }
@@ -732,7 +734,7 @@ nsresult TextEditor::DeleteSelectionAsAction(EDirection aDirection,
   AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::DeleteTxnName);
   nsresult rv = DeleteSelectionAsSubAction(aDirection, aStripWrappers);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
   return NS_OK;
 }
@@ -992,7 +994,7 @@ nsresult TextEditor::InsertTextAsAction(const nsAString& aStringToInsert) {
   AutoPlaceholderBatch treatAsOneTransaction(*this);
   nsresult rv = InsertTextAsSubAction(aStringToInsert);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
   return NS_OK;
 }
@@ -1057,7 +1059,7 @@ TextEditor::InsertLineBreak() {
   AutoPlaceholderBatch treatAsOneTransaction(*this);
   nsresult rv = InsertLineBreakAsSubAction();
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
   return NS_OK;
 }
@@ -1104,7 +1106,7 @@ nsresult TextEditor::SetText(const nsAString& aString) {
   AutoPlaceholderBatch treatAsOneTransaction(*this);
   nsresult rv = SetTextAsSubAction(aString);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
   return NS_OK;
 }
@@ -1130,7 +1132,7 @@ nsresult TextEditor::ReplaceTextAsAction(
   if (!aReplaceRange) {
     nsresult rv = SetTextAsSubAction(aString);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return EditorBase::ToGenericNSResult(rv);
     }
     return NS_OK;
   }
@@ -1158,7 +1160,7 @@ nsresult TextEditor::ReplaceTextAsAction(
 
   rv = ReplaceSelectionAsSubAction(aString);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
   return NS_OK;
 }
@@ -1367,7 +1369,10 @@ nsresult TextEditor::OnCompositionChange(
     NotifyEditorObservers(eNotifyEditorObserversOfEnd);
   }
 
-  return rv;
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 void TextEditor::OnCompositionEnd(
@@ -1663,7 +1668,10 @@ TextEditor::Undo(uint32_t aCount) {
   }
 
   NotifyEditorObservers(eNotifyEditorObserversOfEnd);
-  return rv;
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1722,7 +1730,10 @@ TextEditor::Redo(uint32_t aCount) {
   }
 
   NotifyEditorObservers(eNotifyEditorObserversOfEnd);
-  return rv;
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 bool TextEditor::CanCutOrCopy(PasswordFieldAllowed aPasswordFieldAllowed) {
@@ -1917,8 +1928,14 @@ TextEditor::OutputToString(const nsAString& aFormatType,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  return ComputeValueInternal(aFormatType, aDocumentEncoderFlags,
-                              aOutputString);
+  nsresult rv =
+      ComputeValueInternal(aFormatType, aDocumentEncoderFlags, aOutputString);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // This is low level API for XUL applcation.  So, we should return raw
+    // error code here.
+    return rv;
+  }
+  return NS_OK;
 }
 
 nsresult TextEditor::ComputeValueInternal(const nsAString& aFormatType,
@@ -1988,7 +2005,7 @@ nsresult TextEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
   nsCOMPtr<nsITransferable> trans;
   rv = PrepareTransferable(getter_AddRefs(trans));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
   if (!trans) {
     return NS_OK;
@@ -2003,8 +2020,8 @@ nsresult TextEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
   nsCOMPtr<nsISupports> genericDataObj;
   nsAutoCString flav;
   rv = trans->GetAnyTransferData(flav, getter_AddRefs(genericDataObj));
-  if (NS_FAILED(rv)) {
-    return rv;
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
   }
 
   if (!flav.EqualsLiteral(kUnicodeMime) &&
@@ -2020,7 +2037,7 @@ nsresult TextEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
       AutoPlaceholderBatch treatAsOneTransaction(*this);
       rv = InsertWithQuotationsAsSubAction(stuffToPaste);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return EditorBase::ToGenericNSResult(rv);
       }
     }
   }
@@ -2184,7 +2201,11 @@ nsresult TextEditor::SetAttributeOrEquivalent(Element* aElement,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  return SetAttributeWithTransaction(*aElement, *aAttribute, aValue);
+  nsresult rv = SetAttributeWithTransaction(*aElement, *aAttribute, aValue);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 nsresult TextEditor::RemoveAttributeOrEquivalent(Element* aElement,
@@ -2199,7 +2220,11 @@ nsresult TextEditor::RemoveAttributeOrEquivalent(Element* aElement,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  return RemoveAttributeWithTransaction(*aElement, *aAttribute);
+  nsresult rv = RemoveAttributeWithTransaction(*aElement, *aAttribute);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 nsresult TextEditor::HideLastPasswordInput() {
@@ -2216,7 +2241,7 @@ nsresult TextEditor::HideLastPasswordInput() {
   RefPtr<TextEditRules> rules(mRules);
   nsresult rv = rules->HideLastPasswordInput();
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
   return NS_OK;
 }

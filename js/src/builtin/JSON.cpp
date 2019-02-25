@@ -288,7 +288,8 @@ static bool PreprocessValue(JSContext* cx, HandleObject holder, KeyType key,
   RootedString keyStr(cx);
 
   // Step 2. Modified by BigInt spec 6.1 to check for a toJSON method on the
-  // BigInt prototype when the value is a BigInt.
+  // BigInt prototype when the value is a BigInt, and to pass the BigInt
+  // primitive value as receiver.
   if (vp.isObject() || vp.isBigInt()) {
     RootedValue toJSON(cx);
     RootedObject obj(cx, JS::ToObject(cx, vp));
@@ -296,7 +297,7 @@ static bool PreprocessValue(JSContext* cx, HandleObject holder, KeyType key,
       return false;
     }
 
-    if (!GetProperty(cx, obj, obj, cx->names().toJSON, &toJSON)) {
+    if (!GetProperty(cx, obj, vp, cx->names().toJSON, &toJSON)) {
       return false;
     }
 

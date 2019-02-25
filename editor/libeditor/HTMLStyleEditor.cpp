@@ -87,18 +87,18 @@ nsresult HTMLEditor::SetInlinePropertyAsAction(nsAtom& aProperty,
     // Superscript and Subscript styles are mutually exclusive.
     nsresult rv = RemoveInlinePropertyInternal(nsGkAtoms::sub, nullptr);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return EditorBase::ToGenericNSResult(rv);
     }
   } else if (&aProperty == nsGkAtoms::sub) {
     // Superscript and Subscript styles are mutually exclusive.
     nsresult rv = RemoveInlinePropertyInternal(nsGkAtoms::sup, nullptr);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return EditorBase::ToGenericNSResult(rv);
     }
   }
   nsresult rv = SetInlinePropertyInternal(aProperty, aAttribute, aValue);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
   return NS_OK;
 }
@@ -131,7 +131,11 @@ HTMLEditor::SetInlineProperty(const nsAString& aProperty,
     default:
       break;
   }
-  return SetInlinePropertyInternal(*property, attribute, aValue);
+  nsresult rv = SetInlinePropertyInternal(*property, attribute, aValue);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 nsresult HTMLEditor::SetInlinePropertyInternal(nsAtom& aProperty,
@@ -1189,8 +1193,12 @@ nsresult HTMLEditor::GetInlineProperty(nsAtom* aProperty, nsAtom* aAttribute,
 
   const nsAString* val = nullptr;
   if (!aValue.IsEmpty()) val = &aValue;
-  return GetInlinePropertyBase(*aProperty, aAttribute, val, aFirst, aAny, aAll,
-                               nullptr);
+  nsresult rv = GetInlinePropertyBase(*aProperty, aAttribute, val, aFirst, aAny,
+                                      aAll, nullptr);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1220,8 +1228,12 @@ nsresult HTMLEditor::GetInlinePropertyWithAttrValue(
 
   const nsAString* val = nullptr;
   if (!aValue.IsEmpty()) val = &aValue;
-  return GetInlinePropertyBase(*aProperty, aAttribute, val, aFirst, aAny, aAll,
-                               &outValue);
+  nsresult rv = GetInlinePropertyBase(*aProperty, aAttribute, val, aFirst, aAny,
+                                      aAll, &outValue);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1237,7 +1249,9 @@ HTMLEditor::RemoveAllInlineProperties() {
       *this, EditSubAction::eRemoveAllTextProperties, nsIEditor::eNext);
 
   nsresult rv = RemoveInlinePropertyInternal(nullptr, nullptr);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
   return NS_OK;
 }
 
@@ -1263,7 +1277,7 @@ nsresult HTMLEditor::RemoveInlinePropertyAsAction(nsAtom& aProperty,
   }
   nsresult rv = RemoveInlinePropertyInternal(&aProperty, aAttribute);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
   return NS_OK;
 }
@@ -1292,7 +1306,11 @@ HTMLEditor::RemoveInlineProperty(const nsAString& aProperty,
     default:
       break;
   }
-  return RemoveInlinePropertyInternal(property, attribute);
+  nsresult rv = RemoveInlinePropertyInternal(property, attribute);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 nsresult HTMLEditor::RemoveInlinePropertyInternal(nsAtom* aProperty,
@@ -1455,7 +1473,11 @@ HTMLEditor::IncreaseFontSize() {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  return RelativeFontChange(FontSize::incr);
+  nsresult rv = RelativeFontChange(FontSize::incr);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1466,7 +1488,11 @@ HTMLEditor::DecreaseFontSize() {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  return RelativeFontChange(FontSize::decr);
+  nsresult rv = RelativeFontChange(FontSize::decr);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 nsresult HTMLEditor::RelativeFontChange(FontSize aDir) {
@@ -1809,7 +1835,9 @@ HTMLEditor::GetFontFaceState(bool* aMixed, nsAString& outFace) {
 
   nsresult rv = GetInlinePropertyBase(*nsGkAtoms::font, nsGkAtoms::face,
                                       nullptr, &first, &any, &all, &outFace);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
   if (any && !all) {
     return NS_OK;  // mixed
   }
@@ -1821,9 +1849,11 @@ HTMLEditor::GetFontFaceState(bool* aMixed, nsAString& outFace) {
   // if there is no font face, check for tt
   rv = GetInlinePropertyBase(*nsGkAtoms::tt, nullptr, nullptr, &first, &any,
                              &all, nullptr);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
   if (any && !all) {
-    return rv;  // mixed
+    return EditorBase::ToGenericNSResult(rv);  // mixed
   }
   if (all) {
     *aMixed = false;
@@ -1855,7 +1885,7 @@ nsresult HTMLEditor::GetFontColorState(bool* aMixed, nsAString& aOutColor) {
   nsresult rv = GetInlinePropertyBase(*nsGkAtoms::font, nsGkAtoms::color,
                                       nullptr, &first, &any, &all, &aOutColor);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
 
   if (any && !all) {

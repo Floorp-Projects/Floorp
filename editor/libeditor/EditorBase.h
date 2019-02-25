@@ -1839,6 +1839,29 @@ class EditorBase : public nsIEditor,
   virtual ~EditorBase();
 
   /**
+   * ToGenericNSResult() computes proper nsresult value for the editor users.
+   * This should be used only when public methods return result of internal
+   * methods.
+   */
+  static inline nsresult ToGenericNSResult(nsresult aRv) {
+    switch (aRv) {
+      // If the editor is destroyed while handling an edit action, editor needs
+      // to stop handling it.  However, editor throw exception in this case
+      // because Chrome does not throw exception even in this case.
+      case NS_ERROR_EDITOR_DESTROYED:
+        return NS_OK;
+      // If editor meets unexpected DOM tree due to modified by mutation event
+      // listener, editor needs to stop handling it.  However, editor shouldn't
+      // return error for the users because Chrome does not throw exception in
+      // this case.
+      case NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE:
+        return NS_OK;
+      default:
+        return aRv;
+    }
+  }
+
+  /**
    * GetDocumentCharsetInternal() returns charset of the document.
    */
   nsresult GetDocumentCharsetInternal(nsACString& aCharset) const;

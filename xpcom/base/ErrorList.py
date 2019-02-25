@@ -674,6 +674,12 @@ with modules["IMGLIB"]:
 with modules["EDITOR"]:
     errors["NS_ERROR_EDITOR_DESTROYED"] = FAILURE(1)
 
+    # A error code that indicates that the DOM tree has been modified by
+    # web app or add-on while the editor modifying the tree.  However,
+    # this shouldn't be exposed to the web because the result should've
+    # been expected by the web app.
+    errors["NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE"] = FAILURE(2)
+
     errors["NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND"] = SUCCESS(1)
     errors["NS_SUCCESS_EDITOR_FOUND_TARGET"] = SUCCESS(2)
 

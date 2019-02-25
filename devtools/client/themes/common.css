@@ -425,10 +425,6 @@ checkbox:-moz-focusring {
   background-image: url("chrome://devtools/skin/images/clear.svg");
 }
 
-.devtools-button.devtools-filter-icon::before {
-  background-image: url("chrome://devtools/skin/images/filter.svg");
-}
-
 .devtools-toolbarbutton.devtools-clear-icon {
   list-style-image: url("chrome://devtools/skin/images/clear.svg");
 }
