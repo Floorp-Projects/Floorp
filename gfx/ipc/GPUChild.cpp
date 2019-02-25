@@ -326,7 +326,8 @@ class DeferredDeleteGPUChild : public Runnable {
   UniquePtr<GPUChild> mChild;
 };
 
-/* static */ void GPUChild::Destroy(UniquePtr<GPUChild>&& aChild) {
+/* static */
+void GPUChild::Destroy(UniquePtr<GPUChild>&& aChild) {
   NS_DispatchToMainThread(new DeferredDeleteGPUChild(std::move(aChild)));
 }
 

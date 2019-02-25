@@ -35,9 +35,9 @@ IMFYCbCrImage::~IMFYCbCrImage() {
   }
 }
 
-/* static */ bool IMFYCbCrImage::CopyDataToTexture(
-    const Data& aData, ID3D11Device* aDevice,
-    DXGIYCbCrTextureData* aTextureData) {
+/* static */
+bool IMFYCbCrImage::CopyDataToTexture(const Data& aData, ID3D11Device* aDevice,
+                                      DXGIYCbCrTextureData* aTextureData) {
   MOZ_ASSERT(aTextureData);
 
   HRESULT hr;

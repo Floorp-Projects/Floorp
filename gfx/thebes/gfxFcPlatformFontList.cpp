@@ -2039,7 +2039,8 @@ void gfxFcPlatformFontList::ClearLangGroupPrefFonts() {
   mAlwaysUseFontconfigGenerics = PrefFontListsUseOnlyGenerics();
 }
 
-/* static */ FT_Library gfxFcPlatformFontList::GetFTLibrary() {
+/* static */
+FT_Library gfxFcPlatformFontList::GetFTLibrary() {
   if (!sCairoFTLibrary) {
     // Use cairo's FT_Library so that cairo takes care of shutdown of the
     // FT_Library after it has destroyed its font_faces, and FT_Done_Face
@@ -2205,8 +2206,8 @@ bool gfxFcPlatformFontList::PrefFontListsUseOnlyGenerics() {
   return prefFontsUseOnlyGenerics;
 }
 
-/* static */ void gfxFcPlatformFontList::CheckFontUpdates(nsITimer* aTimer,
-                                                          void* aThis) {
+/* static */
+void gfxFcPlatformFontList::CheckFontUpdates(nsITimer* aTimer, void* aThis) {
   // A content process is not supposed to check this directly;
   // it will be notified by the parent when the font list changes.
   MOZ_ASSERT(XRE_IsParentProcess());

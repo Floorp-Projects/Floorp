@@ -254,7 +254,8 @@ void CompositorBridgeChild::InitForWidget(uint64_t aProcessToken,
   mIdNamespace = aNamespace;
 }
 
-/*static*/ CompositorBridgeChild* CompositorBridgeChild::Get() {
+/*static*/
+CompositorBridgeChild* CompositorBridgeChild::Get() {
   // This is only expected to be used in child processes. While the parent
   // process does have CompositorBridgeChild instances, it has _multiple_ (one
   // per window), and therefore there is no global singleton available.
@@ -267,7 +268,8 @@ bool CompositorBridgeChild::ChildProcessHasCompositorBridge() {
   return sCompositorBridge != nullptr;
 }
 
-/* static */ bool CompositorBridgeChild::CompositorIsInGPUProcess() {
+/* static */
+bool CompositorBridgeChild::CompositorIsInGPUProcess() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (XRE_IsParentProcess()) {

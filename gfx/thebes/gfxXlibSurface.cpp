@@ -328,9 +328,11 @@ DisplayTable* DisplayTable::sDisplayTable;
 // differ from the visual passed in.  Colormaps are tied to a visual, so
 // should only be used with their visual.
 
-/* static */ bool DisplayTable::GetColormapAndVisual(
-    Screen* aScreen, XRenderPictFormat* aFormat, Visual* aVisual,
-    Colormap* aColormap, Visual** aVisualForColormap)
+/* static */
+bool DisplayTable::GetColormapAndVisual(Screen* aScreen,
+                                        XRenderPictFormat* aFormat,
+                                        Visual* aVisual, Colormap* aColormap,
+                                        Visual** aVisualForColormap)
 
 {
   Display* display = DisplayOfScreen(aScreen);
@@ -397,8 +399,8 @@ DisplayTable* DisplayTable::sDisplayTable;
   return true;
 }
 
-/* static */ int DisplayTable::DisplayClosing(Display* display,
-                                              XExtCodes* codes) {
+/* static */
+int DisplayTable::DisplayClosing(Display* display, XExtCodes* codes) {
   // No need to free the colormaps explicitly as they will be released when
   // the connection is closed.
   sDisplayTable->mDisplays.RemoveElement(display, FindDisplay());

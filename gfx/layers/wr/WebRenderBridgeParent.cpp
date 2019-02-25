@@ -317,7 +317,8 @@ WebRenderBridgeParent::WebRenderBridgeParent(const wr::PipelineId& aPipelineId)
       mIsFirstPaint(false),
       mSkippedComposite(false) {}
 
-/* static */ WebRenderBridgeParent* WebRenderBridgeParent::CreateDestroyed(
+/* static */
+WebRenderBridgeParent* WebRenderBridgeParent::CreateDestroyed(
     const wr::PipelineId& aPipelineId) {
   return new WebRenderBridgeParent(aPipelineId);
 }

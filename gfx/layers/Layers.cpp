@@ -142,7 +142,8 @@ bool LayerManager::AreComponentAlphaLayersEnabled() {
   return gfxPrefs::ComponentAlphaEnabled();
 }
 
-/*static*/ void LayerManager::LayerUserDataDestroy(void* data) {
+/*static*/
+void LayerManager::LayerUserDataDestroy(void* data) {
   delete static_cast<LayerUserData*>(data);
 }
 
@@ -671,7 +672,8 @@ void Layer::ComputeEffectiveTransformForMaskLayers(
   }
 }
 
-/* static */ void Layer::ComputeEffectiveTransformForMaskLayer(
+/* static */
+void Layer::ComputeEffectiveTransformForMaskLayer(
     Layer* aMaskLayer, const gfx::Matrix4x4& aTransformToSurface) {
   aMaskLayer->mEffectiveTransform = aTransformToSurface;
 
@@ -1288,7 +1290,8 @@ void ContainerLayer::ComputeEffectiveTransformsForChildren(
   }
 }
 
-/* static */ bool ContainerLayer::HasOpaqueAncestorLayer(Layer* aLayer) {
+/* static */
+bool ContainerLayer::HasOpaqueAncestorLayer(Layer* aLayer) {
   for (Layer* l = aLayer->GetParent(); l; l = l->GetParent()) {
     if (l->GetContentFlags() & Layer::CONTENT_OPAQUE) return true;
   }
@@ -2222,7 +2225,8 @@ void LayerManager::DumpPacket(layerscope::LayersPacket* aPacket) {
   layer->set_parentptr(0);
 }
 
-/*static*/ bool LayerManager::IsLogEnabled() {
+/*static*/
+bool LayerManager::IsLogEnabled() {
   return MOZ_LOG_TEST(GetLog(), LogLevel::Debug);
 }
 

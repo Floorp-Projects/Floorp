@@ -16,7 +16,8 @@
 namespace mozilla {
 namespace gl {
 
-/*static*/ UniquePtr<SharedSurface_EGLImage> SharedSurface_EGLImage::Create(
+/*static*/
+UniquePtr<SharedSurface_EGLImage> SharedSurface_EGLImage::Create(
     GLContext* prodGL, const GLFormats& formats, const gfx::IntSize& size,
     bool hasAlpha, EGLContext context) {
   auto* egl = gl::GLLibraryEGL::Get();
@@ -139,7 +140,8 @@ bool SharedSurface_EGLImage::ReadbackBySharedHandle(
 
 ////////////////////////////////////////////////////////////////////////
 
-/*static*/ UniquePtr<SurfaceFactory_EGLImage> SurfaceFactory_EGLImage::Create(
+/*static*/
+UniquePtr<SurfaceFactory_EGLImage> SurfaceFactory_EGLImage::Create(
     GLContext* prodGL, const SurfaceCaps& caps,
     const RefPtr<layers::LayersIPCChannel>& allocator,
     const layers::TextureFlags& flags) {
@@ -160,11 +162,10 @@ bool SharedSurface_EGLImage::ReadbackBySharedHandle(
 
 #ifdef MOZ_WIDGET_ANDROID
 
-/*static*/ UniquePtr<SharedSurface_SurfaceTexture>
-SharedSurface_SurfaceTexture::Create(GLContext* prodGL,
-                                     const GLFormats& formats,
-                                     const gfx::IntSize& size, bool hasAlpha,
-                                     java::GeckoSurface::Param surface) {
+/*static*/
+UniquePtr<SharedSurface_SurfaceTexture> SharedSurface_SurfaceTexture::Create(
+    GLContext* prodGL, const GLFormats& formats, const gfx::IntSize& size,
+    bool hasAlpha, java::GeckoSurface::Param surface) {
   MOZ_ASSERT(surface);
 
   UniquePtr<SharedSurface_SurfaceTexture> ret;
@@ -241,8 +242,8 @@ bool SharedSurface_SurfaceTexture::ToSurfaceDescriptor(
 
 ////////////////////////////////////////////////////////////////////////
 
-/*static*/ UniquePtr<SurfaceFactory_SurfaceTexture>
-SurfaceFactory_SurfaceTexture::Create(
+/*static*/
+UniquePtr<SurfaceFactory_SurfaceTexture> SurfaceFactory_SurfaceTexture::Create(
     GLContext* prodGL, const SurfaceCaps& caps,
     const RefPtr<layers::LayersIPCChannel>& allocator,
     const layers::TextureFlags& flags) {

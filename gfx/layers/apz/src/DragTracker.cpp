@@ -16,11 +16,13 @@ namespace layers {
 
 DragTracker::DragTracker() : mInDrag(false) {}
 
-/*static*/ bool DragTracker::StartsDrag(const MouseInput& aInput) {
+/*static*/
+bool DragTracker::StartsDrag(const MouseInput& aInput) {
   return aInput.IsLeftButton() && aInput.mType == MouseInput::MOUSE_DOWN;
 }
 
-/*static*/ bool DragTracker::EndsDrag(const MouseInput& aInput) {
+/*static*/
+bool DragTracker::EndsDrag(const MouseInput& aInput) {
   // On Windows, we don't receive a MOUSE_UP at the end of a drag if an
   // actual drag session took place. As a backup, we detect the end of the
   // drag using the MOUSE_DRAG_END event, which normally is routed directly

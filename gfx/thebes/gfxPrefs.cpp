@@ -118,11 +118,13 @@ void gfxPrefs::Pref::SetChangeCallback(ChangeCallback aCallback) {
 // On lightweight processes such as for GMP and GPU, XPCOM is not initialized,
 // and therefore we don't have access to Preferences. When XPCOM is not
 // available we rely on manual synchronization of gfxPrefs values over IPC.
-/* static */ bool gfxPrefs::IsPrefsServiceAvailable() {
+/* static */
+bool gfxPrefs::IsPrefsServiceAvailable() {
   return Preferences::IsServiceAvailable();
 }
 
-/* static */ bool gfxPrefs::IsParentProcess() { return XRE_IsParentProcess(); }
+/* static */
+bool gfxPrefs::IsParentProcess() { return XRE_IsParentProcess(); }
 
 void gfxPrefs::PrefAddVarCache(bool* aVariable, const nsACString& aPref,
                                bool aDefault) {

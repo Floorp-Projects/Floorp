@@ -1380,7 +1380,8 @@ void gfxWindowsPlatform::InitializeD3D11Config() {
   InitializeAdvancedLayersConfig();
 }
 
-/* static */ void gfxWindowsPlatform::InitializeAdvancedLayersConfig() {
+/* static */
+void gfxWindowsPlatform::InitializeAdvancedLayersConfig() {
   // Only enable Advanced Layers if D3D11 succeeded.
   if (!gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
     return;
@@ -1414,7 +1415,8 @@ void gfxWindowsPlatform::InitializeD3D11Config() {
   }
 }
 
-/* static */ void gfxWindowsPlatform::RecordContentDeviceFailure(
+/* static */
+void gfxWindowsPlatform::RecordContentDeviceFailure(
     TelemetryDeviceCode aDevice) {
   // If the parent process fails to acquire a device, we record this
   // normally as part of the environment. The exceptional case we're

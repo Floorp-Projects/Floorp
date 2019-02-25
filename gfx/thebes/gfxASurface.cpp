@@ -480,7 +480,8 @@ size_t gfxASurface::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
-/* static */ uint8_t gfxASurface::BytesPerPixel(gfxImageFormat aImageFormat) {
+/* static */
+uint8_t gfxASurface::BytesPerPixel(gfxImageFormat aImageFormat) {
   switch (aImageFormat) {
     case SurfaceFormat::A8R8G8B8_UINT32:
       return 4;

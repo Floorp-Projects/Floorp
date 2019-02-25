@@ -32,7 +32,8 @@ void SingleTiledContentClient::UpdatedBuffer(TiledBufferType aType) {
                                   mTiledBuffer->GetSurfaceDescriptorTiles());
 }
 
-/* static */ bool SingleTiledContentClient::ClientSupportsLayerSize(
+/* static */
+bool SingleTiledContentClient::ClientSupportsLayerSize(
     const gfx::IntSize& aSize, ClientLayerManager* aManager) {
   int32_t maxTextureSize = aManager->GetMaxTextureSize();
   return aSize.width <= maxTextureSize && aSize.height <= maxTextureSize;
