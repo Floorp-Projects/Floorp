@@ -14,8 +14,8 @@ using namespace mozilla::ipc;
 
 namespace mozilla {
 
-/* static */ already_AddRefed<ChildProfilerController>
-ChildProfilerController::Create(
+/* static */
+already_AddRefed<ChildProfilerController> ChildProfilerController::Create(
     mozilla::ipc::Endpoint<PProfilerChild>&& aEndpoint) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   RefPtr<ChildProfilerController> cpc = new ChildProfilerController();
