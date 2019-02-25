@@ -1175,10 +1175,12 @@ static bool MakeStructField(JSContext* cx, const ValType& v, bool isMutable,
                             Vector<StructFieldProps>* fieldProps) {
   char buf[20];
   sprintf(buf, format, fieldNo);
-  RootedString str(cx, JS_AtomizeAndPinString(cx, buf));
-  if (!str) {
+
+  JSAtom* atom = Atomize(cx, buf, strlen(buf));
+  if (!atom) {
     return false;
   }
+  RootedId id(cx, AtomToId(atom));
 
   StructFieldProps props;
   props.isMutable = isMutable;
@@ -1218,7 +1220,7 @@ static bool MakeStructField(JSContext* cx, const ValType& v, bool isMutable,
   }
   MOZ_ASSERT(t != nullptr);
 
-  if (!ids->append(INTERNED_STRING_TO_JSID(cx, str))) {
+  if (!ids->append(id)) {
     return false;
   }
 
