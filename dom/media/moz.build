@@ -207,6 +207,8 @@ EXPORTS.mozilla.dom += [
     'VideoStreamTrack.h',
     'VideoTrack.h',
     'VideoTrackList.h',
+    'webrtc/MediaTransportChild.h',
+    'webrtc/MediaTransportParent.h',
 ]
 
 UNIFIED_SOURCES += [

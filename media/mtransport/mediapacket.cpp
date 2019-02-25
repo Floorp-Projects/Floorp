@@ -27,12 +27,12 @@ void MediaPacket::Copy(const uint8_t* data, size_t len, size_t capacity) {
 }
 
 void MediaPacket::Serialize(IPC::Message* aMsg) const {
-  aMsg->WriteSize(len_);
-  aMsg->WriteSize(capacity_);
+  aMsg->WriteUInt32(len_);
+  aMsg->WriteUInt32(capacity_);
   if (len_) {
     aMsg->WriteBytes(data_.get(), len_);
   }
-  aMsg->WriteSize(encrypted_len_);
+  aMsg->WriteUInt32(encrypted_len_);
   if (encrypted_len_) {
     aMsg->WriteBytes(encrypted_data_.get(), encrypted_len_);
   }
@@ -42,12 +42,12 @@ void MediaPacket::Serialize(IPC::Message* aMsg) const {
 
 bool MediaPacket::Deserialize(const IPC::Message* aMsg, PickleIterator* aIter) {
   Reset();
-  size_t len;
-  if (!aMsg->ReadSize(aIter, &len)) {
+  uint32_t len;
+  if (!aMsg->ReadUInt32(aIter, &len)) {
     return false;
   }
-  size_t capacity;
-  if (!aMsg->ReadSize(aIter, &capacity)) {
+  uint32_t capacity;
+  if (!aMsg->ReadUInt32(aIter, &capacity)) {
     return false;
   }
   if (len) {
@@ -61,7 +61,7 @@ bool MediaPacket::Deserialize(const IPC::Message* aMsg, PickleIterator* aIter) {
     capacity_ = capacity;
   }
 
-  if (!aMsg->ReadSize(aIter, &len)) {
+  if (!aMsg->ReadUInt32(aIter, &len)) {
     return false;
   }
   if (len) {

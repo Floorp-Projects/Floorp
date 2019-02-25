@@ -34,8 +34,8 @@ class SocketProcessBridgeChild final : public PSocketProcessBridgeChild,
   bool Inited() const { return mInited; };
   ProcessId SocketProcessPid() const { return mSocketProcessPid; };
 
-  dom::PMediaTransportChild* AllocPMediaTransportChild() override;
-  bool DeallocPMediaTransportChild(dom::PMediaTransportChild* aActor) override;
+  dom::PMediaTransportChild* AllocPMediaTransportChild();
+  bool DeallocPMediaTransportChild(dom::PMediaTransportChild* aActor);
 
  private:
   DISALLOW_COPY_AND_ASSIGN(SocketProcessBridgeChild);

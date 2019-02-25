@@ -10,7 +10,7 @@
 
 namespace mozilla {
 
-class MediaTransportHandlerChild;
+class MediaTransportChild;
 
 // Implementation of MediaTransportHandler that uses IPC (PMediaTransport) to
 // talk to mtransport on another process.
@@ -72,10 +72,10 @@ class MediaTransportHandlerIPC : public MediaTransportHandler {
       std::unique_ptr<dom::RTCStatsReportInternal>&& aReport) override;
 
  private:
-  friend class MediaTransportHandlerChild;
+  friend class MediaTransportChild;
 
   // We do not own this; it will tell us when it is going away.
-  MediaTransportHandlerChild* mChild = nullptr;
+  MediaTransportChild* mChild = nullptr;
 
   // |mChild| can only be initted asynchronously, |mInitPromise| resolves
   // when that happens. The |Then| calls make it convenient to dispatch API
