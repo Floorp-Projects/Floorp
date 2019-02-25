@@ -82,6 +82,8 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     DELAYLOAD_DLLS += [
         'oleaut32.dll',
         'ole32.dll',
+        'rpcrt4.dll',
+        'version.dll',
     ]
 
 if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'Darwin':
