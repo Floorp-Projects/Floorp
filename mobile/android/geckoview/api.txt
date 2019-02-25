@@ -191,7 +191,6 @@ package org.mozilla.geckoview {
     method @android.support.annotation.UiThread public void orientationChanged();
     method @android.support.annotation.UiThread public void orientationChanged(int);
     method @android.support.annotation.AnyThread public void readFromParcel(@android.support.annotation.NonNull android.os.Parcel);
-    method @android.support.annotation.UiThread @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoResult<java.lang.Void> registerWebExtension(@android.support.annotation.NonNull org.mozilla.geckoview.WebExtension);
     method @android.support.annotation.UiThread public void setDelegate(@android.support.annotation.Nullable org.mozilla.geckoview.GeckoRuntime.Delegate);
     method @android.support.annotation.AnyThread public void shutdown();
     field public static final java.lang.String ACTION_CRASHED = "org.mozilla.gecko.ACTION_CRASHED";
@@ -917,13 +916,6 @@ package org.mozilla.geckoview {
     method @android.support.annotation.UiThread public void onProvideAutofillVirtualStructure(@android.support.annotation.NonNull android.view.ViewStructure, int);
     method @android.support.annotation.UiThread public void setDelegate(@android.support.annotation.Nullable org.mozilla.geckoview.GeckoSession.TextInputDelegate);
     method @android.support.annotation.UiThread public synchronized void setView(@android.support.annotation.Nullable android.view.View);
-  }
-
-  public class WebExtension {
-    ctor public WebExtension(@android.support.annotation.NonNull java.lang.String, @android.support.annotation.NonNull java.lang.String);
-    ctor public WebExtension(@android.support.annotation.NonNull java.lang.String);
-    field @android.support.annotation.NonNull public final java.lang.String id;
-    field @android.support.annotation.NonNull public final java.lang.String location;
   }
 
   @android.support.annotation.AnyThread public abstract class WebMessage {
