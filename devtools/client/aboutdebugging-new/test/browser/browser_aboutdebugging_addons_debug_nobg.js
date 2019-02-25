@@ -13,10 +13,6 @@ PromiseTestUtils.whitelistRejectionsGlobally(/File closed/);
 const ADDON_NOBG_ID = "test-devtools-webextension-nobg@mozilla.org";
 const ADDON_NOBG_NAME = "test-devtools-webextension-nobg";
 
-const {
-  BrowserToolboxProcess,
-} = ChromeUtils.import("resource://devtools/client/framework/ToolboxProcess.jsm");
-
 /**
  * This test file ensures that the webextension addon developer toolbox:
  * - the webextension developer toolbox is connected to a fallback page when the
@@ -36,54 +32,29 @@ add_task(async function testWebExtensionsToolboxNoBackgroundPage() {
   }, document);
   const target = findDebugTargetByText(ADDON_NOBG_NAME, document);
 
-  info("Setup the toolbox test function as environment variable");
-  const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
-  env.set("MOZ_TOOLBOX_TEST_SCRIPT", "new " + toolboxTestScript);
-  env.set("MOZ_TOOLBOX_TEST_ADDON_NOBG_NAME", ADDON_NOBG_NAME);
-  registerCleanupFunction(() => {
-    env.set("MOZ_TOOLBOX_TEST_SCRIPT", "");
-    env.set("MOZ_TOOLBOX_TEST_ADDON_NOBG_NAME", "");
-  });
-
-  info("Click inspect to open the addon toolbox, wait for toolbox close event");
-  const onToolboxClose = BrowserToolboxProcess.once("close");
+  info("Open a toolbox to debug the addon");
+  const onToolboxReady = gDevTools.once("toolbox-ready");
+  const onToolboxClose = gDevTools.once("toolbox-destroyed");
   const inspectButton = target.querySelector(".js-debug-target-inspect-button");
   inspectButton.click();
-  await onToolboxClose;
+  const toolbox = await onToolboxReady;
+  toolboxTestScript(toolbox);
 
   // The test script will not close the toolbox and will timeout if it fails, so reaching
   // this point in the test is enough to assume the test was successful.
+  info("Wait for the toolbox to close");
+  await onToolboxClose;
   ok(true, "Addon toolbox closed");
 
   await removeTemporaryExtension(ADDON_NOBG_NAME, document);
   await removeTab(tab);
 });
 
-// Be careful, this JS function is going to be executed in the addon toolbox,
-// which lives in another process. So do not try to use any scope variable!
-function toolboxTestScript() {
-  /* eslint-disable no-undef */
-  // This is webextension toolbox process. So we can't access mochitest framework.
-  const waitUntil = async function(predicate, interval = 10) {
-    if (await predicate()) {
-      return true;
-    }
-    return new Promise(resolve => {
-      toolbox.win.setTimeout(function() {
-        waitUntil(predicate, interval).then(() => resolve(true));
-      }, interval);
-    });
-  };
-
-  // We pass the expected target name as an environment variable because this method
-  // runs in a different process and cannot access the const defined in this test file.
-  const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
-  const expectedName = env.get("MOZ_TOOLBOX_TEST_ADDON_NOBG_NAME");
-
+async function toolboxTestScript(toolbox) {
   const targetName = toolbox.target.name;
   const isAddonTarget = toolbox.target.isAddon;
-  if (!(isAddonTarget && targetName === expectedName)) {
-    dump(`Expected target name "${expectedName}", got ${targetName}`);
+  if (!(isAddonTarget && targetName === ADDON_NOBG_NAME)) {
+    dump(`Expected target name "${ADDON_NOBG_NAME}", got ${targetName}`);
     throw new Error("Toolbox doesn't have the expected target");
   }
 
@@ -91,7 +62,7 @@ function toolboxTestScript() {
     let nodeActor;
 
     dump(`Wait the fallback window to be fully loaded\n`);
-    await waitUntil(async () => {
+    await asyncWaitUntil(async () => {
       nodeActor = await inspector.walker.querySelector(inspector.walker.rootNode, "h1");
       return nodeActor && nodeActor.inlineTextChild;
     });
@@ -108,11 +79,10 @@ function toolboxTestScript() {
 
     dump("Got the expected inline text content in the selected node\n");
 
-    await toolbox.destroy();
+    await toolbox.closeToolbox();
   }).catch((error) => {
     dump("Error while running code in the browser toolbox process:\n");
     dump(error + "\n");
     dump("stack:\n" + error.stack + "\n");
   });
-  /* eslint-enable no-undef */
 }
