@@ -72,7 +72,7 @@ var multipartListener = {
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
-  onStartRequest: function(request, context) {
+  onStartRequest: function(request) {
     this._buffer = "";
   },
 
@@ -85,7 +85,7 @@ var multipartListener = {
     }
   },
 
-  onStopRequest: function(request, context, status) {
+  onStopRequest: function(request, status) {
     try {
       responseHandler(request, this._buffer);
     } catch (ex) {

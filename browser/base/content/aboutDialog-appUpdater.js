@@ -325,13 +325,13 @@ appUpdater.prototype =
   /**
    * See nsIRequestObserver.idl
    */
-  onStartRequest(aRequest, aContext) {
+  onStartRequest(aRequest) {
   },
 
   /**
    * See nsIRequestObserver.idl
    */
-  onStopRequest(aRequest, aContext, aStatusCode) {
+  onStopRequest(aRequest, aStatusCode) {
     switch (aStatusCode) {
     case Cr.NS_ERROR_UNEXPECTED:
       if (this.update.selectedPatch.state == "download-failed" &&

@@ -275,7 +275,7 @@ function runHttpTests(testArray, done) {
       /** Array of bytes of data in body of response. */
       _data: [],
 
-      onStartRequest(request, cx) {
+      onStartRequest(request) {
         Assert.ok(request === this._channel);
         var ch = request.QueryInterface(Ci.nsIHttpChannel)
                         .QueryInterface(Ci.nsIHttpChannelInternal);
@@ -283,7 +283,7 @@ function runHttpTests(testArray, done) {
         this._data.length = 0;
         try {
           try {
-            testArray[testIndex].onStartRequest(ch, cx);
+            testArray[testIndex].onStartRequest(ch);
           } catch (e) {
             do_report_unexpected_exception(e, "testArray[" + testIndex + "].onStartRequest");
           }
@@ -300,7 +300,7 @@ function runHttpTests(testArray, done) {
           Array.prototype.push.apply(this._data, newData);
         }
       },
-      onStopRequest(request, cx, status) {
+      onStopRequest(request, status) {
         this._channel = null;
 
         var ch = request.QueryInterface(Ci.nsIHttpChannel)
@@ -311,7 +311,7 @@ function runHttpTests(testArray, done) {
         //     we want one test to be sequentially processed before the next
         //     one.
         try {
-          testArray[testIndex].onStopRequest(ch, cx, status, this._data);
+          testArray[testIndex].onStopRequest(ch, status, this._data);
         } finally {
           try {
             performNextTest();

@@ -28,7 +28,7 @@ Listener.prototype = {
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
-  onStartRequest: function(request, ctx) {
+  onStartRequest: function(request) {
     Assert.equal(request.status, Cr.NS_OK);
     this._buffer = "";
   },
@@ -46,7 +46,7 @@ Listener.prototype = {
     }
   },
 
-  onStopRequest: function(request, ctx, status) {
+  onStopRequest: function(request, status) {
     if (pass == 0) {
       Assert.equal(this._buffer.length, responseLen);
       pass++;

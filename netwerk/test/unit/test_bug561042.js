@@ -16,13 +16,13 @@ for (let i =0; i < 10000; i++) {
 }
 
 var listener = {
-  onStartRequest: function (request, ctx) {
+  onStartRequest: function (request) {
   },
 
   onDataAvailable: function (request, ctx, stream) {
   },
 
-  onStopRequest: function (request, ctx, status) {
+  onStopRequest: function (request, status) {
       Assert.equal(status, Cr.NS_OK);
       server.stop(do_test_finished);
   },
