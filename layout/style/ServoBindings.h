@@ -513,8 +513,6 @@ bool Servo_ParseEasing(const nsAString* easing, RawGeckoURLExtraData* data,
 
 void Servo_SerializeEasing(nsTimingFunctionBorrowed easing, nsAString* output);
 
-void Servo_SerializeBorderRadius(const mozilla::StyleBorderRadius*, nsAString*);
-
 void Servo_GetComputedKeyframeValues(
     RawGeckoKeyframeListBorrowed keyframes, RawGeckoElementBorrowed element,
     ComputedStyleBorrowed style, RawServoStyleSetBorrowed set,

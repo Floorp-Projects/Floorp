@@ -444,7 +444,6 @@ cbindgen-types = [
     { gecko = "StyleZIndex", servo = "values::computed::ZIndex" },
     { gecko = "StyleGenericZIndex", servo = "values::generics::position::ZIndex" },
     { gecko = "StyleTransformOrigin", servo = "values::computed::TransformOrigin" },
-    { gecko = "StyleGenericBorderRadius", servo = "values::generics::border::BorderRadius" },
 ]
 
 mapped-generic-types = [
@@ -503,7 +502,6 @@ structs-types = [
     "mozilla::OriginFlags",
     "mozilla::StyleMotion",
     "mozilla::UniquePtr",
-    "mozilla::StyleBorderRadius",
     "mozilla::StyleDisplayMode",
     "mozilla::StylePrefersColorScheme",
     "mozilla::StyleIntersectionObserverRootMargin",
