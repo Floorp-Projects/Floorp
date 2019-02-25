@@ -507,11 +507,9 @@ class ContentChild final : public PContentChild,
   virtual PFileDescriptorSetChild* SendPFileDescriptorSetConstructor(
       const FileDescriptor&) override;
 
-  virtual PFileDescriptorSetChild* AllocPFileDescriptorSetChild(
-      const FileDescriptor&) override;
+  PFileDescriptorSetChild* AllocPFileDescriptorSetChild(const FileDescriptor&);
 
-  virtual bool DeallocPFileDescriptorSetChild(
-      PFileDescriptorSetChild*) override;
+  bool DeallocPFileDescriptorSetChild(PFileDescriptorSetChild*);
 
   virtual bool SendPBrowserConstructor(
       PBrowserChild* actor, const TabId& aTabId, const TabId& aSameTabGroupAs,

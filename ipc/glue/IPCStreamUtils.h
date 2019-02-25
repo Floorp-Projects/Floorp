@@ -14,7 +14,7 @@
 namespace mozilla {
 
 namespace dom {
-class nsIContentChild;
+class ContentChild;
 class ContentParent;
 }  // namespace dom
 
@@ -148,7 +148,7 @@ class AutoIPCStream final {
   // Serialize the input stream or create a SendStream actor using the PContent
   // manager.  If neither of these succeed, then crash.  This should only be
   // used on the main thread.
-  bool Serialize(nsIInputStream* aStream, dom::nsIContentChild* aManager);
+  bool Serialize(nsIInputStream* aStream, dom::ContentChild* aManager);
 
   // Serialize the input stream or create a SendStream actor using the
   // PBackground manager.  If neither of these succeed, then crash.  This can

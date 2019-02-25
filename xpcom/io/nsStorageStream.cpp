@@ -553,7 +553,7 @@ nsresult nsStorageInputStream::Seek(uint32_t aPosition) {
 void nsStorageInputStream::Serialize(InputStreamParams& aParams,
                                      FileDescriptorArray&, bool aDelayedStart,
                                      uint32_t aMaxSize, uint32_t* aSizeUsed,
-                                     mozilla::dom::nsIContentChild* aManager) {
+                                     mozilla::dom::ContentChild* aManager) {
   SerializeInternal(aParams, aDelayedStart, aMaxSize, aSizeUsed, aManager);
 }
 

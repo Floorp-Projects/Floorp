@@ -59,8 +59,9 @@ PBrowserChild* nsIContentChild::AllocPBrowserChild(
     MOZ_CRASH("Invalid TabContext received from the parent process.");
   }
 
-  RefPtr<TabChild> child = TabChild::Create(this, aTabId, aSameTabGroupAs,
-                                            tc.GetTabContext(), aChromeFlags);
+  RefPtr<TabChild> child =
+      TabChild::Create(static_cast<ContentChild*>(this), aTabId,
+                       aSameTabGroupAs, tc.GetTabContext(), aChromeFlags);
 
   // The ref here is released in DeallocPBrowserChild.
   return child.forget().take();
@@ -129,17 +130,6 @@ PParentToChildStreamChild* nsIContentChild::AllocPParentToChildStreamChild() {
 bool nsIContentChild::DeallocPParentToChildStreamChild(
     PParentToChildStreamChild* aActor) {
   delete aActor;
-  return true;
-}
-
-PFileDescriptorSetChild* nsIContentChild::AllocPFileDescriptorSetChild(
-    const FileDescriptor& aFD) {
-  return new FileDescriptorSetChild(aFD);
-}
-
-bool nsIContentChild::DeallocPFileDescriptorSetChild(
-    PFileDescriptorSetChild* aActor) {
-  delete static_cast<FileDescriptorSetChild*>(aActor);
   return true;
 }
 
