@@ -1996,7 +1996,7 @@ var DownloadAddonInstall = class extends AddonInstall {
    *
    * @see nsIStreamListener
    */
-  onStartRequest(aRequest, aContext) {
+  onStartRequest(aRequest) {
     if (this.hash) {
       try {
         this.crypto = CryptoHash(this.hash.algorithm);
@@ -2031,7 +2031,7 @@ var DownloadAddonInstall = class extends AddonInstall {
    *
    * @see nsIStreamListener
    */
-  onStopRequest(aRequest, aContext, aStatus) {
+  onStopRequest(aRequest, aStatus) {
     this.stream.close();
     this.channel = null;
     this.badCerthandler = null;

@@ -158,7 +158,7 @@ function RemoteMedia(url, listener) {
 }
 
 RemoteMedia.prototype = {
-  onStartRequest(request, context) {
+  onStartRequest(request) {
   },
 
   onDataAvailable(request, context, stream, offset, count) {
@@ -187,7 +187,7 @@ RemoteMedia.prototype = {
     }
   },
 
-  onStopRequest(request, context, result) {
+  onStopRequest(request, result) {
     if (this._listener && "onRemoteMediaStop" in this._listener)
       this._listener.onRemoteMediaStop(this);
   },

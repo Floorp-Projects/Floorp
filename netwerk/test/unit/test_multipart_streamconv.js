@@ -50,7 +50,7 @@ var multipartListener = {
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
-  onStartRequest: function(request, context) {
+  onStartRequest: function(request) {
     this._buffer = "";
   },
 
@@ -63,7 +63,7 @@ var multipartListener = {
     }
   },
 
-  onStopRequest: function(request, context, status) {
+  onStopRequest: function(request, status) {
     this._index++;
     // Second part should be last part
     Assert.equal(request.QueryInterface(Ci.nsIMultiPartChannel).isLastPart, this._index == testData.length);

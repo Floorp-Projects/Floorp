@@ -46,19 +46,19 @@ function checkStatusLine(channel, httpMaxVer, httpMinVer, httpCode, statusText) 
   Assert.equal(respMin.value, httpMinVer);
 }
 
-function start_throws_exception(ch, cx) {
+function start_throws_exception(ch) {
   checkStatusLine(ch, 1, 1, 500, "Internal Server Error");
 }
 
-function start_nonexistent_404_fails_so_400(ch, cx) {
+function start_nonexistent_404_fails_so_400(ch) {
   checkStatusLine(ch, 1, 1, 400, "Bad Request");
 }
 
-function start_multiple_exceptions_500(ch, cx) {
+function start_multiple_exceptions_500(ch) {
   checkStatusLine(ch, 1, 1, 500, "Internal Server Error");
 }
 
-function succeeded(ch, cx, status, data) {
+function succeeded(ch, status, data) {
   Assert.ok(Components.isSuccessCode(status));
 }
 
