@@ -180,6 +180,7 @@ void xpc::ErrorBase::Init(JSErrorBase* aReport) {
     CopyUTF8toUTF16(mozilla::MakeStringSpan(aReport->filename), mFileName);
   }
 
+  mSourceId = aReport->sourceId;
   mLineNumber = aReport->lineno;
   mColumn = aReport->column;
 }
@@ -240,6 +241,7 @@ void xpc::ErrorReport::Init(JSContext* aCx, mozilla::dom::Exception* aException,
   if (mFileName.IsEmpty()) {
     mFileName.SetIsVoid(true);
   }
+  mSourceId = aException->SourceId(aCx);
   mLineNumber = aException->LineNumber(aCx);
   mColumn = aException->ColumnNumber();
 
@@ -348,12 +350,15 @@ void xpc::ErrorReport::LogToConsoleWithStack(
                                               mCategory, mWindowID);
   NS_ENSURE_SUCCESS_VOID(rv);
 
+  rv = errorObject->InitSourceId(mSourceId);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
   for (size_t i = 0, len = mNotes.Length(); i < len; i++) {
     ErrorNote& note = mNotes[i];
 
     nsScriptErrorNote* noteObject = new nsScriptErrorNote();
-    noteObject->Init(note.mErrorMsg, note.mFileName, note.mLineNumber,
-                     note.mColumn);
+    noteObject->Init(note.mErrorMsg, note.mFileName,
+                     note.mSourceId, note.mLineNumber, note.mColumn);
     errorObject->AddNote(noteObject);
   }
 

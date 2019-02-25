@@ -44,17 +44,24 @@ exports.viewSourceInStyleEditor = async function(toolbox, sourceURL,
  * @param {Toolbox} toolbox
  * @param {string} sourceURL
  * @param {number} sourceLine
+ * @param {string} sourceID
  * @param {string} [reason=unknown]
  *
  * @return {Promise<boolean>}
  */
-exports.viewSourceInDebugger = async function(toolbox, sourceURL, sourceLine,
+exports.viewSourceInDebugger = async function(toolbox, sourceURL, sourceLine, sourceId,
                                               reason = "unknown") {
   const dbg = await toolbox.loadTool("jsdebugger");
-  const source = dbg.getSource(sourceURL);
-  if (source || await toolbox.sourceMapService.hasOriginalURL(sourceURL)) {
+  const source = dbg.getSourceByURL(sourceURL) || dbg.getSourceByActorId(sourceId);
+  if (source) {
     await toolbox.selectTool("jsdebugger", reason);
-    dbg.selectSource(sourceURL, sourceLine);
+    dbg.selectSource(source.id, sourceLine);
+    return true;
+  } else if (await toolbox.sourceMapService.hasOriginalURL(sourceURL)) {
+    // We have seen a source map for the URL but no source. The debugger will
+    // still be able to load the source.
+    await toolbox.selectTool("jsdebugger", reason);
+    dbg.selectSourceURL(sourceURL, sourceLine);
     return true;
   }
 

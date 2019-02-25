@@ -105,6 +105,11 @@ from its prototype:
     **If the instance refers to WebAssembly code**, the URL of the script that
     called `new WebAssembly.Module` with the string `"> wasm"` appended.
 
+`id`
+:   **If the instance refers to JavaScript source**, an int32 counter that identifies
+    the source within the current process.  This ID is used in other places in Gecko
+    that weakly refer to sources, such as nsIScriptError.
+
 `sourceMapURL`
 :   **If the instance refers to JavaScript source**, if this source was
     produced by a minimizer or translated from some other language, and we

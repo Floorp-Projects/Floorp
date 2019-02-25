@@ -22,6 +22,13 @@ interface nsIScriptErrorNote : nsISupports
 {
     readonly attribute AString errorMessage;
     readonly attribute AString sourceName;
+
+    /**
+     * Unique identifier within the process for the script source this note is
+     * associated with, or zero.
+     */
+    readonly attribute uint32_t sourceId;
+
     readonly attribute uint32_t lineNumber;
     readonly attribute uint32_t columnNumber;
 
@@ -57,6 +64,13 @@ interface nsIScriptError : nsIConsoleMessage
 
     readonly attribute AString sourceName;
     readonly attribute AString sourceLine;
+
+    /**
+     * Unique identifier within the process for the script source this error is
+     * associated with, or zero.
+     */
+    readonly attribute uint32_t sourceId;
+
     readonly attribute uint32_t lineNumber;
     readonly attribute uint32_t columnNumber;
     readonly attribute uint32_t flags;
@@ -157,6 +171,9 @@ interface nsIScriptError : nsIConsoleMessage
                            in uint32_t flags,
                            in ACString category,
                            in unsigned long long innerWindowID);
+
+    /* Initialize the script source ID in a new error. */
+    void initSourceId(in uint32_t sourceId);
 
 %{C++
     // These overloads allow passing a literal string for category.

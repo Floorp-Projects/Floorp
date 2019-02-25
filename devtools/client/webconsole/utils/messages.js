@@ -173,6 +173,7 @@ function transformConsoleAPICallPacket(packet) {
 
   const frame = message.filename ? {
     source: message.filename,
+    sourceId: message.sourceId,
     line: message.lineNumber,
     column: message.columnNumber,
   } : null;
@@ -230,6 +231,7 @@ function transformPageErrorPacket(packet) {
 
   const frame = pageError.sourceName ? {
     source: pageError.sourceName,
+    sourceId: pageError.sourceId,
     line: pageError.lineNumber,
     column: pageError.columnNumber,
   } : null;

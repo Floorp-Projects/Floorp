@@ -86,6 +86,8 @@ class Exception : public nsIException, public nsWrapperCache {
 
   void GetFilename(JSContext* aCx, nsAString& aFilename);
 
+  uint32_t SourceId(JSContext* aCx) const;
+
   uint32_t LineNumber(JSContext* aCx) const;
 
   uint32_t ColumnNumber() const;

@@ -1448,6 +1448,11 @@ WebConsoleActor.prototype =
     this.conn.send(packet);
   },
 
+  getActorIdForInternalSourceId(id) {
+    const actor = this.parentActor.sources.getSourceActorByInternalSourceId(id);
+    return actor ? actor.actorID : null;
+  },
+
   /**
    * Prepare an nsIScriptError to be sent to the client.
    *
@@ -1467,6 +1472,7 @@ WebConsoleActor.prototype =
       while (s !== null) {
         stack.push({
           filename: s.source,
+          sourceId: this.getActorIdForInternalSourceId(s.sourceId),
           lineNumber: s.line,
           columnNumber: s.column,
           functionName: s.functionDisplayName,
@@ -1489,6 +1495,7 @@ WebConsoleActor.prototype =
           messageBody: this._createStringGrip(note.errorMessage),
           frame: {
             source: note.sourceName,
+            sourceId: this.getActorIdForInternalSourceId(note.sourceId),
             line: note.lineNumber,
             column: note.columnNumber,
           },
@@ -1501,6 +1508,7 @@ WebConsoleActor.prototype =
       errorMessageName: pageError.errorMessageName,
       exceptionDocURL: ErrorDocs.GetURL(pageError),
       sourceName: pageError.sourceName,
+      sourceId: this.getActorIdForInternalSourceId(pageError.sourceId),
       lineText: lineText,
       lineNumber: pageError.lineNumber,
       columnNumber: pageError.columnNumber,
@@ -1679,6 +1687,8 @@ WebConsoleActor.prototype =
     const result = WebConsoleUtils.cloneObject(message);
 
     result.workerType = WebConsoleUtils.getWorkerType(result) || "none";
+
+    result.sourceId = this.getActorIdForInternalSourceId(result.sourceId);
 
     delete result.wrappedJSObject;
     delete result.ID;

@@ -8325,6 +8325,28 @@ static bool DebuggerSource_getURL(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+class DebuggerSourceGetIdMatcher {
+ public:
+  using ReturnType = uint32_t;
+
+  ReturnType match(HandleScriptSourceObject sourceObject) {
+    ScriptSource* ss = sourceObject->source();
+    return ss->id();
+  }
+  ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
+    return 0;
+  }
+};
+
+static bool DebuggerSource_getId(JSContext* cx, unsigned argc, Value* vp) {
+  THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get id)", args, obj, referent);
+
+  DebuggerSourceGetIdMatcher matcher;
+  uint32_t id = referent.match(matcher);
+  args.rval().setNumber(id);
+  return true;
+}
+
 struct DebuggerSourceGetDisplayURLMatcher {
   using ReturnType = const char16_t*;
   ReturnType match(HandleScriptSourceObject sourceObject) {
@@ -8588,6 +8610,7 @@ static const JSPropertySpec DebuggerSource_properties[] = {
     JS_PSG("text", DebuggerSource_getText, 0),
     JS_PSG("binary", DebuggerSource_getBinary, 0),
     JS_PSG("url", DebuggerSource_getURL, 0),
+    JS_PSG("id", DebuggerSource_getId, 0),
     JS_PSG("element", DebuggerSource_getElement, 0),
     JS_PSG("displayURL", DebuggerSource_getDisplayURL, 0),
     JS_PSG("introductionScript", DebuggerSource_getIntroductionScript, 0),

@@ -2820,6 +2820,10 @@ JSObject* JSStructuredCloneReader::readSavedFrame(uint32_t principalsTag) {
   }
   savedFrame->initColumn(column);
 
+  // Don't specify a source ID when reading a cloned saved frame, as these IDs
+  // are only valid within a specific process.
+  savedFrame->initSourceId(0);
+
   RootedValue name(context());
   if (!startRead(&name) || !(name.isString() || name.isNull())) {
     return nullptr;

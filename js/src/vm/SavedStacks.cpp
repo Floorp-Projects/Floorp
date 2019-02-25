@@ -173,12 +173,13 @@ void LiveSavedFrameCache::findWithoutInvalidation(
 }
 
 struct SavedFrame::Lookup {
-  Lookup(JSAtom* source, uint32_t line, uint32_t column,
+  Lookup(JSAtom* source, uint32_t sourceId, uint32_t line, uint32_t column,
          JSAtom* functionDisplayName, JSAtom* asyncCause, SavedFrame* parent,
          JSPrincipals* principals,
          const Maybe<LiveSavedFrameCache::FramePtr>& framePtr = Nothing(),
          jsbytecode* pc = nullptr, Activation* activation = nullptr)
       : source(source),
+        sourceId(sourceId),
         line(line),
         column(column),
         functionDisplayName(functionDisplayName),
@@ -197,6 +198,7 @@ struct SavedFrame::Lookup {
 
   explicit Lookup(SavedFrame& savedFrame)
       : source(savedFrame.getSource()),
+        sourceId(savedFrame.getSourceId()),
         line(savedFrame.getLine()),
         column(savedFrame.getColumn()),
         functionDisplayName(savedFrame.getFunctionDisplayName()),
@@ -210,6 +212,7 @@ struct SavedFrame::Lookup {
   }
 
   JSAtom* source;
+  uint32_t sourceId;
   uint32_t line;
   uint32_t column;
   JSAtom* functionDisplayName;
@@ -370,6 +373,7 @@ const Class SavedFrame::protoClass_ = {
 
 /* static */ const JSPropertySpec SavedFrame::protoAccessors[] = {
     JS_PSG("source", SavedFrame::sourceProperty, 0),
+    JS_PSG("sourceId", SavedFrame::sourceIdProperty, 0),
     JS_PSG("line", SavedFrame::lineProperty, 0),
     JS_PSG("column", SavedFrame::columnProperty, 0),
     JS_PSG("functionDisplayName", SavedFrame::functionDisplayNameProperty, 0),
@@ -391,6 +395,11 @@ JSAtom* SavedFrame::getSource() {
   const Value& v = getReservedSlot(JSSLOT_SOURCE);
   JSString* s = v.toString();
   return &s->asAtom();
+}
+
+uint32_t SavedFrame::getSourceId() {
+  const Value& v = getReservedSlot(JSSLOT_SOURCEID);
+  return v.toPrivateUint32();
 }
 
 uint32_t SavedFrame::getLine() {
@@ -437,6 +446,10 @@ JSPrincipals* SavedFrame::getPrincipals() {
 void SavedFrame::initSource(JSAtom* source) {
   MOZ_ASSERT(source);
   initReservedSlot(JSSLOT_SOURCE, StringValue(source));
+}
+
+void SavedFrame::initSourceId(uint32_t sourceId) {
+  initReservedSlot(JSSLOT_SOURCEID, PrivateUint32Value(sourceId));
 }
 
 void SavedFrame::initLine(uint32_t line) {
@@ -494,6 +507,7 @@ void SavedFrame::initFromLookup(JSContext* cx,
   }
 
   initSource(lookup->source);
+  initSourceId(lookup->sourceId);
   initLine(lookup->line);
   initColumn(lookup->column);
   initFunctionDisplayName(lookup->functionDisplayName);
@@ -725,6 +739,25 @@ JS_PUBLIC_API SavedFrameResult GetSavedFrameSource(
   if (sourcep->isAtom()) {
     cx->markAtom(&sourcep->asAtom());
   }
+  return SavedFrameResult::Ok;
+}
+
+JS_PUBLIC_API SavedFrameResult GetSavedFrameSourceId(
+    JSContext* cx, JSPrincipals* principals, HandleObject savedFrame,
+    uint32_t* sourceIdp,
+    SavedFrameSelfHosted selfHosted /* = SavedFrameSelfHosted::Include */) {
+  js::AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  MOZ_RELEASE_ASSERT(cx->realm());
+
+  bool skippedAsync;
+  js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, principals, savedFrame,
+                                                  selfHosted, skippedAsync));
+  if (!frame) {
+    *sourceIdp = 0;
+    return SavedFrameResult::AccessDenied;
+  }
+  *sourceIdp = frame->getSourceId();
   return SavedFrameResult::Ok;
 }
 
@@ -1058,6 +1091,20 @@ namespace js {
   return true;
 }
 
+/* static */ bool SavedFrame::sourceIdProperty(JSContext* cx, unsigned argc,
+                                             Value* vp) {
+  THIS_SAVEDFRAME(cx, argc, vp, "(get sourceId)", args, frame);
+  JSPrincipals* principals = cx->realm()->principals();
+  uint32_t sourceId;
+  if (JS::GetSavedFrameSourceId(cx, principals, frame, &sourceId) ==
+      JS::SavedFrameResult::Ok) {
+    args.rval().setNumber(sourceId);
+  } else {
+    args.rval().setNull();
+  }
+  return true;
+}
+
 /* static */ bool SavedFrame::lineProperty(JSContext* cx, unsigned argc,
                                            Value* vp) {
   THIS_SAVEDFRAME(cx, argc, vp, "(get line)", args, frame);
@@ -1346,7 +1393,8 @@ bool SavedStacks::insertFrames(JSContext* cx, MutableHandleSavedFrame frame,
     MOZ_ASSERT_IF(framePtr && !iter.isWasm(), iter.pc());
 
     if (!stackChain->emplaceBack(
-            location.source(), location.line(), location.column(), displayAtom,
+            location.source(), location.sourceId(),
+            location.line(), location.column(), displayAtom,
             nullptr,  // asyncCause
             nullptr,  // parent (not known yet)
             principals, framePtr, iter.pc(), &activation)) {
@@ -1656,11 +1704,12 @@ bool SavedStacks::getLocation(JSContext* cx, const FrameIter& iter,
       return false;
     }
 
+    uint32_t sourceId = script->scriptSource()->id();
     uint32_t column;
     uint32_t line = PCToLineNumber(script, pc, &column);
 
     // Make the column 1-based. See comment above.
-    LocationValue value(source, line, column + 1);
+    LocationValue value(source, sourceId, line, column + 1);
     if (!pcLocationMap.add(p, key, value)) {
       ReportOutOfMemory(cx);
       return false;
@@ -1842,7 +1891,8 @@ JS_PUBLIC_API bool ConstructSavedFrameStackSlow(
     auto principals =
         js::ReconstructedSavedFramePrincipals::getSingleton(ubiFrame.get());
 
-    if (!stackChain->emplaceBack(source, ubiFrame.get().line(),
+    if (!stackChain->emplaceBack(source, ubiFrame.get().sourceId(),
+                                 ubiFrame.get().line(),
                                  ubiFrame.get().column(), functionDisplayName,
                                  /* asyncCause */ nullptr,
                                  /* parent */ nullptr, principals)) {

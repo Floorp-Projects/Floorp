@@ -750,6 +750,11 @@ nsresult nsXPCWrappedJSClass::CheckForException(
             if (NS_FAILED(rv)) {
               scriptError = nullptr;
             }
+
+            rv = scriptError->InitSourceId(location->GetSourceId(cx));
+            if (NS_FAILED(rv)) {
+              scriptError = nullptr;
+            }
           }
         }
         if (nullptr != scriptError) {
