@@ -47,13 +47,6 @@ GeckoViewStartup.prototype = {
           module: "resource://gre/modules/GeckoViewConsole.jsm",
         });
 
-        GeckoViewUtils.addLazyGetter(this, "GeckoViewWebExtension", {
-          module: "resource://gre/modules/GeckoViewWebExtension.jsm",
-          ged: [
-            "GeckoView:RegisterWebExtension",
-          ],
-        });
-
         GeckoViewUtils.addLazyPrefObserver({
           name: "geckoview.console.enabled",
           default: false,

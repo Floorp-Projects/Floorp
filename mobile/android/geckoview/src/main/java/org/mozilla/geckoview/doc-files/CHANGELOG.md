@@ -65,11 +65,6 @@ exclude: true
 
 [67.1]: ../GeckoSession.html#getDefaultUserAgent--
 
-- Initial WebExtension support. [`GeckoRuntime#registerWebExtension`][67.15]
-  allows embedders to register a local web extension.
-
-[67.15]: ../GeckoRuntime.html#registerWebExtension-org.mozilla.geckoview.WebExtension-
-
 ## v66
 - Removed redundant field `trackingMode` from [`SecurityInformation`][66.6].
   Use `TrackingProtectionDelegate.onTrackerBlocked` for notification of blocked
@@ -189,4 +184,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: b26e5e12a78512a9c18d1ba3441864ca66d3dde8
+[api-version]: a1740e5cb61e34b3180b80f33b0b33243a34d588
