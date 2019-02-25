@@ -360,8 +360,8 @@ class ContentParent final : public PContentParent,
   bool IsAlive() const override;
   bool IsDead() const { return mLifecycleState == LifecycleState::DEAD; }
 
-  virtual bool IsForBrowser() const override { return mIsForBrowser; }
-  virtual bool IsForJSPlugin() const override {
+  bool IsForBrowser() const { return mIsForBrowser; }
+  bool IsForJSPlugin() const {
     return mJSPluginID != nsFakePluginTag::NOT_JSPLUGIN;
   }
 
@@ -369,6 +369,10 @@ class ContentParent final : public PContentParent,
 
   ContentParent* Opener() const { return mOpener; }
   nsIContentProcessInfo* ScriptableHelper() const { return mScriptableHelper; }
+
+  mozilla::dom::ProcessMessageManager* GetMessageManager() const {
+    return mMessageManager;
+  }
 
   bool NeedsPermissionsUpdate(const nsACString& aPermissionKey) const;
 
@@ -382,7 +386,7 @@ class ContentParent final : public PContentParent,
    */
   void KillHard(const char* aWhy);
 
-  ContentParentId ChildID() const override { return mChildID; }
+  ContentParentId ChildID() const { return mChildID; }
 
   /**
    * Get a user-friendly name for this ContentParent.  We make no guarantees
@@ -419,27 +423,11 @@ class ContentParent final : public PContentParent,
       const uint64_t& aChannelId, const nsString& aAddonId,
       InitStreamFilterResolver&& aResolver);
 
-  virtual PChildToParentStreamParent* AllocPChildToParentStreamParent()
-      override;
-  virtual bool DeallocPChildToParentStreamParent(
-      PChildToParentStreamParent* aActor) override;
+  PChildToParentStreamParent* AllocPChildToParentStreamParent();
+  bool DeallocPChildToParentStreamParent(PChildToParentStreamParent* aActor);
 
-  virtual PParentToChildStreamParent* SendPParentToChildStreamConstructor(
-      PParentToChildStreamParent*) override;
-
-  virtual PParentToChildStreamParent* AllocPParentToChildStreamParent()
-      override;
-  virtual bool DeallocPParentToChildStreamParent(
-      PParentToChildStreamParent* aActor) override;
-
-  virtual PIPCBlobInputStreamParent* SendPIPCBlobInputStreamConstructor(
-      PIPCBlobInputStreamParent* aActor, const nsID& aID,
-      const uint64_t& aSize) override;
-
-  virtual PBrowserParent* SendPBrowserConstructor(
-      PBrowserParent* actor, const TabId& aTabId, const TabId& aSameTabGroupsAs,
-      const IPCTabContext& context, const uint32_t& chromeFlags,
-      const ContentParentId& aCpId, const bool& aIsForBrowser) override;
+  PParentToChildStreamParent* AllocPParentToChildStreamParent();
+  bool DeallocPParentToChildStreamParent(PParentToChildStreamParent* aActor);
 
   PHalParent* AllocPHalParent();
 
@@ -450,7 +438,7 @@ class ContentParent final : public PContentParent,
 
   PHeapSnapshotTempFileHelperParent* AllocPHeapSnapshotTempFileHelperParent();
 
-  virtual PJavaScriptParent* AllocPJavaScriptParent() override;
+  PJavaScriptParent* AllocPJavaScriptParent();
 
   virtual mozilla::ipc::IPCResult RecvPJavaScriptConstructor(
       PJavaScriptParent* aActor) override {
@@ -576,14 +564,6 @@ class ContentParent final : public PContentParent,
 
   bool DeallocPSessionStorageObserverParent(
       PSessionStorageObserverParent* aActor);
-
-  virtual bool SendActivate(PBrowserParent* aTab) override {
-    return PContentParent::SendActivate(aTab);
-  }
-
-  virtual bool SendDeactivate(PBrowserParent* aTab) override {
-    return PContentParent::SendDeactivate(aTab);
-  }
 
   bool DeallocPURLClassifierLocalParent(PURLClassifierLocalParent* aActor);
 
@@ -803,6 +783,8 @@ class ContentParent final : public PContentParent,
 
   static void ForceKillTimerCallback(nsITimer* aTimer, void* aClosure);
 
+  bool CanOpenBrowser(const IPCTabContext& aContext);
+
   /**
    * Get or create the corresponding content parent array to
    * |aContentProcessType|.
@@ -818,28 +800,28 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvAddPerformanceMetrics(
       const nsID& aID, nsTArray<PerformanceInfo>&& aMetrics);
 
-  virtual bool DeallocPJavaScriptParent(
-      mozilla::jsipc::PJavaScriptParent*) override;
+  bool DeallocPJavaScriptParent(mozilla::jsipc::PJavaScriptParent*);
 
   bool DeallocPRemoteSpellcheckEngineParent(PRemoteSpellcheckEngineParent*);
 
-  virtual PBrowserParent* AllocPBrowserParent(
-      const TabId& aTabId, const TabId& aSameTabGroupAs,
-      const IPCTabContext& aContext, const uint32_t& aChromeFlags,
-      const ContentParentId& aCpId, const bool& aIsForBrowser) override;
+  PBrowserParent* AllocPBrowserParent(const TabId& aTabId,
+                                      const TabId& aSameTabGroupAs,
+                                      const IPCTabContext& aContext,
+                                      const uint32_t& aChromeFlags,
+                                      const ContentParentId& aCpId,
+                                      const bool& aIsForBrowser);
 
-  virtual bool DeallocPBrowserParent(PBrowserParent* frame) override;
+  bool DeallocPBrowserParent(PBrowserParent* frame);
 
   virtual mozilla::ipc::IPCResult RecvPBrowserConstructor(
       PBrowserParent* actor, const TabId& tabId, const TabId& sameTabGroupAs,
       const IPCTabContext& context, const uint32_t& chromeFlags,
       const ContentParentId& cpId, const bool& isForBrowser) override;
 
-  virtual PIPCBlobInputStreamParent* AllocPIPCBlobInputStreamParent(
-      const nsID& aID, const uint64_t& aSize) override;
+  PIPCBlobInputStreamParent* AllocPIPCBlobInputStreamParent(
+      const nsID& aID, const uint64_t& aSize);
 
-  virtual bool DeallocPIPCBlobInputStreamParent(
-      PIPCBlobInputStreamParent* aActor) override;
+  bool DeallocPIPCBlobInputStreamParent(PIPCBlobInputStreamParent* aActor);
 
   mozilla::ipc::IPCResult RecvIsSecureURI(
       const uint32_t& aType, const URIParams& aURI, const uint32_t& aFlags,
@@ -979,17 +961,17 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvSyncMessage(
       const nsString& aMsg, const ClonedMessageData& aData,
       InfallibleTArray<CpowEntry>&& aCpows, const IPC::Principal& aPrincipal,
-      nsTArray<StructuredCloneData>* aRetvals) override;
+      nsTArray<StructuredCloneData>* aRetvals);
 
   mozilla::ipc::IPCResult RecvRpcMessage(
       const nsString& aMsg, const ClonedMessageData& aData,
       InfallibleTArray<CpowEntry>&& aCpows, const IPC::Principal& aPrincipal,
-      nsTArray<StructuredCloneData>* aRetvals) override;
+      nsTArray<StructuredCloneData>* aRetvals);
 
-  mozilla::ipc::IPCResult RecvAsyncMessage(
-      const nsString& aMsg, InfallibleTArray<CpowEntry>&& aCpows,
-      const IPC::Principal& aPrincipal,
-      const ClonedMessageData& aData) override;
+  mozilla::ipc::IPCResult RecvAsyncMessage(const nsString& aMsg,
+                                           InfallibleTArray<CpowEntry>&& aCpows,
+                                           const IPC::Principal& aPrincipal,
+                                           const ClonedMessageData& aData);
 
   mozilla::ipc::IPCResult RecvAddGeolocationListener(
       const IPC::Principal& aPrincipal, const bool& aHighAccuracy);
@@ -1301,6 +1283,8 @@ class ContentParent final : public PContentParent,
   // the initial map is passed in command-line arguments) to be sent
   // when the process can receive IPC messages.
   nsTArray<Pref> mQueuedPrefs;
+
+  RefPtr<mozilla::dom::ProcessMessageManager> mMessageManager;
 
   static uint64_t sNextTabParentId;
   static nsDataHashtable<nsUint64HashKey, TabParent*> sNextTabParents;
