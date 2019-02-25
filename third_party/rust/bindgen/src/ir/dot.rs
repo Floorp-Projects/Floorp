@@ -32,7 +32,7 @@ where
     let mut err: Option<io::Result<_>> = None;
 
     for (id, item) in ctx.items() {
-        let is_whitelisted = ctx.whitelisted_items().contains(id);
+        let is_whitelisted = ctx.whitelisted_items().contains(&id);
 
         writeln!(
             &mut dot_file,

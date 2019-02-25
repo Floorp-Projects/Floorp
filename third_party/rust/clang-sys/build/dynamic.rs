@@ -200,12 +200,12 @@ pub fn link() {
 
         println!("cargo:rustc-link-lib=dylib=libclang");
     } else {
-        let name = filename.replace("lib", "");
+        let name = filename.trim_left_matches("lib");
 
-        // Strip trailing version numbers (e.g., the `.7.0` in `libclang.so.7.0`).
-        let name = match name.find(".so") {
-            None => &name,
+        // Strip extensions and trailing version numbers (e.g., the `.so.7.0` in `libclang.so.7.0`).
+        let name = match name.find(".dylib").or(name.find(".so")) {
             Some(index) => &name[0..index],
+            None => &name,
         };
 
         println!("cargo:rustc-link-lib=dylib={}", name);

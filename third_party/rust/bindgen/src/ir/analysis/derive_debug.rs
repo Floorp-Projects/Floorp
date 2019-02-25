@@ -10,8 +10,7 @@ use ir::item::IsOpaque;
 use ir::traversal::EdgeKind;
 use ir::ty::RUST_DERIVE_IN_ARRAY_LIMIT;
 use ir::ty::TypeKind;
-use std::collections::HashMap;
-use std::collections::HashSet;
+use {HashMap, HashSet};
 
 /// An analysis that finds for each IR item whether debug cannot be derived.
 ///
@@ -104,7 +103,7 @@ impl<'ctx> MonotoneFramework for CannotDeriveDebug<'ctx> {
     type Output = HashSet<ItemId>;
 
     fn new(ctx: &'ctx BindgenContext) -> CannotDeriveDebug<'ctx> {
-        let cannot_derive_debug = HashSet::new();
+        let cannot_derive_debug = HashSet::default();
         let dependencies = generate_dependencies(ctx, Self::consider_edge);
 
         CannotDeriveDebug {
