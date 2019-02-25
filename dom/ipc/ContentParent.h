@@ -132,8 +132,6 @@ class ContentParent final : public PContentParent,
 #endif
 
  public:
-  virtual bool IsContentParent() const override { return true; }
-
   using LaunchError = GeckoChildProcessHost::LaunchError;
   using LaunchPromise =
       GeckoChildProcessHost::LaunchPromise<RefPtr<ContentParent>>;

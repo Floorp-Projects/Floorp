@@ -49,11 +49,6 @@ nsIContentParent::nsIContentParent() {
   mMessageManager = nsFrameMessageManager::NewProcessMessageManager(true);
 }
 
-ContentParent* nsIContentParent::AsContentParent() {
-  MOZ_ASSERT(IsContentParent());
-  return static_cast<ContentParent*>(this);
-}
-
 PJavaScriptParent* nsIContentParent::AllocPJavaScriptParent() {
   return NewJavaScriptParent();
 }
@@ -178,8 +173,8 @@ PBrowserParent* nsIContentParent::AllocPBrowserParent(
 
   MaybeInvalidTabContext tc(aContext);
   MOZ_ASSERT(tc.IsValid());
-  TabParent* parent =
-      new TabParent(AsContentParent(), aTabId, tc.GetTabContext(), chromeFlags);
+  TabParent* parent = new TabParent(static_cast<ContentParent*>(this), aTabId,
+                                    tc.GetTabContext(), chromeFlags);
 
   // We release this ref in DeallocPBrowserParent()
   NS_ADDREF(parent);
