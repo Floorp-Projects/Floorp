@@ -20,6 +20,7 @@ use std::cmp;
 use std::collections::hash_map::Entry;
 use std::marker::PhantomData;
 use std::mem;
+use std::num::NonZeroUsize;
 use std::os::raw::c_void;
 use std::ops::Add;
 use std::path::PathBuf;
@@ -963,6 +964,8 @@ pub struct Device {
     /// Whether the function glCopyImageSubData is available.
     supports_copy_image_sub_data: bool,
 
+    optimal_pbo_stride: NonZeroUsize,
+
     // GL extensions
     extensions: Vec<String>,
 }
@@ -1172,6 +1175,17 @@ impl Device {
         let supports_copy_image_sub_data = supports_extension(&extensions, "GL_EXT_copy_image") ||
             supports_extension(&extensions, "GL_ARB_copy_image");
 
+        // On Adreno GPUs PBO texture upload is only performed asynchronously
+        // if the stride of the data in the PBO is a multiple of 256 bytes.
+        // Other platforms may have similar requirements and should be added
+        // here.
+        // The default value should be 4.
+        let optimal_pbo_stride = if renderer_name.contains("Adreno") {
+            NonZeroUsize::new(256).unwrap()
+        } else {
+            NonZeroUsize::new(4).unwrap()
+        };
+
         Device {
             gl,
             resource_override_path,
@@ -1205,7 +1219,8 @@ impl Device {
             frame_id: GpuFrameId(0),
             extensions,
             texture_storage_usage,
-            supports_copy_image_sub_data
+            supports_copy_image_sub_data,
+            optimal_pbo_stride,
         }
     }
 
@@ -2158,6 +2173,7 @@ impl Device {
             target: UploadTarget {
                 gl: &*self.gl,
                 bgra_format: self.bgra_format_external,
+                optimal_pbo_stride: self.optimal_pbo_stride,
                 texture,
             },
             buffer,
@@ -2879,6 +2895,7 @@ impl PixelBuffer {
 struct UploadTarget<'a> {
     gl: &'a gl::Gl,
     bgra_format: gl::GLuint,
+    optimal_pbo_stride: NonZeroUsize,
     texture: &'a Texture,
 }
 
@@ -2896,6 +2913,13 @@ impl<'a, T> Drop for TextureUploader<'a, T> {
             }
             self.target.gl.bind_buffer(gl::PIXEL_UNPACK_BUFFER, 0);
         }
+    }
+}
+
+fn round_up_to_multiple(val: usize, mul: NonZeroUsize) -> usize {
+    match val % mul.get() {
+        rem if rem > 0 => val - rem + mul.get(),
+        _ => val,
     }
 }
 
@@ -2920,20 +2944,24 @@ impl<'a, T> TextureUploader<'a, T> {
             Some(r) => r,
         };
 
-        let bytes_pp = self.target.texture.format.bytes_per_pixel();
-        let upload_size = match stride {
-            Some(stride) => ((rect.size.height - 1) * stride + rect.size.width * bytes_pp) as usize,
-            None => (rect.size.area() * bytes_pp) as usize,
-        };
-        assert!(upload_size <= data.len() * mem::size_of::<T>());
+        let bytes_pp = self.target.texture.format.bytes_per_pixel() as usize;
+        let width_bytes = rect.size.width as usize * bytes_pp;
+
+        let src_stride = stride.map_or(width_bytes, |stride| {
+            assert!(stride >= 0);
+            stride as usize
+        });
+        let src_size = (rect.size.height as usize - 1) * src_stride + width_bytes;
+        assert!(src_size <= data.len() * mem::size_of::<T>());
+
+        // for optimal PBO texture uploads the stride of the data in
+        // the buffer may have to be a multiple of a certain value.
+        let dst_stride = round_up_to_multiple(src_stride, self.target.optimal_pbo_stride);
+        let dst_size = (rect.size.height as usize - 1) * dst_stride + width_bytes;
 
         match self.buffer {
             Some(ref mut buffer) => {
-                let elem_count = upload_size / mem::size_of::<T>();
-                assert_eq!(elem_count * mem::size_of::<T>(), upload_size);
-                let slice = &data[.. elem_count];
-
-                if buffer.size_used + upload_size > buffer.size_allocated {
+                if buffer.size_used + dst_size > buffer.size_allocated {
                     // flush
                     for chunk in buffer.chunks.drain() {
                         self.target.update_impl(chunk);
@@ -2941,28 +2969,61 @@ impl<'a, T> TextureUploader<'a, T> {
                     buffer.size_used = 0;
                 }
 
-                if upload_size > buffer.size_allocated {
-                    gl::buffer_data(
-                        self.target.gl,
+                if dst_size > buffer.size_allocated {
+                    // allocate a buffer large enough
+                    self.target.gl.buffer_data_untyped(
                         gl::PIXEL_UNPACK_BUFFER,
-                        slice,
+                        dst_size as _,
+                        ptr::null(),
                         buffer.usage,
                     );
-                    buffer.size_allocated = upload_size;
-                } else {
+                    buffer.size_allocated = dst_size;
+                }
+
+                if src_stride == dst_stride {
+                    // the stride is already optimal, so simply copy
+                    // the data as-is in to the buffer
+                    let elem_count = src_size / mem::size_of::<T>();
+                    assert_eq!(elem_count * mem::size_of::<T>(), src_size);
+                    let slice = &data[.. elem_count];
+
                     gl::buffer_sub_data(
                         self.target.gl,
                         gl::PIXEL_UNPACK_BUFFER,
                         buffer.size_used as _,
                         slice,
                     );
+                } else {
+                    // copy the data line-by-line in to the buffer so
+                    // that it has an optimal stride
+                    let ptr = self.target.gl.map_buffer_range(
+                        gl::PIXEL_UNPACK_BUFFER,
+                        buffer.size_used as _,
+                        dst_size as _,
+                        gl::MAP_WRITE_BIT | gl::MAP_INVALIDATE_RANGE_BIT);
+
+                    unsafe {
+                        let src: &[u8] = slice::from_raw_parts(data.as_ptr() as *const u8, src_size);
+                        let dst: &mut [u8] = slice::from_raw_parts_mut(ptr as *mut u8, dst_size);
+
+                        for y in 0..rect.size.height as usize {
+                            let src_start = y * src_stride;
+                            let src_end = src_start + width_bytes;
+                            let dst_start = y * dst_stride;
+                            let dst_end = dst_start + width_bytes;
+
+                            dst[dst_start..dst_end].copy_from_slice(&src[src_start..src_end])
+                        }
+                    }
+
+                    self.target.gl.unmap_buffer(gl::PIXEL_UNPACK_BUFFER);
                 }
 
                 buffer.chunks.push(UploadChunk {
-                    rect, layer_index, stride,
+                    rect, layer_index, stride: Some(dst_stride as i32),
                     offset: buffer.size_used,
                 });
-                buffer.size_used += upload_size;
+                buffer.size_used += dst_size;
             }
             None => {
                 self.target.update_impl(UploadChunk {
@@ -2972,7 +3033,7 @@ impl<'a, T> TextureUploader<'a, T> {
             }
         }
 
-        upload_size
+        dst_size
     }
 }
 
