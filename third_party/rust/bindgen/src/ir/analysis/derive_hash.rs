@@ -10,8 +10,7 @@ use ir::item::IsOpaque;
 use ir::traversal::EdgeKind;
 use ir::ty::RUST_DERIVE_IN_ARRAY_LIMIT;
 use ir::ty::TypeKind;
-use std::collections::HashMap;
-use std::collections::HashSet;
+use {HashMap, HashSet};
 
 /// An analysis that finds for each IR item whether hash cannot be derived.
 ///
@@ -96,7 +95,7 @@ impl<'ctx> MonotoneFramework for CannotDeriveHash<'ctx> {
     type Output = HashSet<ItemId>;
 
     fn new(ctx: &'ctx BindgenContext) -> CannotDeriveHash<'ctx> {
-        let cannot_derive_hash = HashSet::new();
+        let cannot_derive_hash = HashSet::default();
         let dependencies = generate_dependencies(ctx, Self::consider_edge);
 
         CannotDeriveHash {

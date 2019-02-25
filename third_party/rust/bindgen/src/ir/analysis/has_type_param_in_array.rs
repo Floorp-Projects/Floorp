@@ -6,8 +6,7 @@ use ir::comp::FieldMethods;
 use ir::context::{BindgenContext, ItemId};
 use ir::traversal::EdgeKind;
 use ir::ty::TypeKind;
-use std::collections::HashMap;
-use std::collections::HashSet;
+use {HashMap, HashSet};
 
 /// An analysis that finds for each IR item whether it has array or not.
 ///
@@ -92,7 +91,7 @@ impl<'ctx> MonotoneFramework for HasTypeParameterInArray<'ctx> {
     fn new(
         ctx: &'ctx BindgenContext,
     ) -> HasTypeParameterInArray<'ctx> {
-        let has_type_parameter_in_array = HashSet::new();
+        let has_type_parameter_in_array = HashSet::default();
         let dependencies = generate_dependencies(ctx, Self::consider_edge);
 
         HasTypeParameterInArray {

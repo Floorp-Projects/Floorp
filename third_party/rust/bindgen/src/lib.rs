@@ -5,7 +5,7 @@
 //!
 //! See the [`Builder`](./struct.Builder.html) struct for usage.
 //!
-//! See the [Users Guide](https://rust-lang-nursery.github.io/rust-bindgen/) for
+//! See the [Users Guide](https://rust-lang.github.io/rust-bindgen/) for
 //! additional documentation.
 #![deny(missing_docs)]
 #![deny(warnings)]
@@ -23,6 +23,7 @@ extern crate cexpr;
 #[allow(unused_extern_crates)]
 extern crate cfg_if;
 extern crate clang_sys;
+extern crate hashbrown;
 #[macro_use]
 extern crate lazy_static;
 extern crate peeking_take_while;
@@ -88,13 +89,17 @@ use regex_set::RegexSet;
 pub use codegen::EnumVariation;
 
 use std::borrow::Cow;
-use std::collections::HashMap;
 use std::fs::{File, OpenOptions};
 use std::io::{self, Write};
 use std::iter;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::sync::Arc;
+
+// Some convenient typedefs for a fast hash map and hash set.
+type HashMap<K, V> = ::hashbrown::HashMap<K, V>;
+type HashSet<K> = ::hashbrown::HashSet<K>;
+pub(crate) use ::hashbrown::hash_map::Entry;
 
 fn args_are_cpp(clang_args: &[String]) -> bool {
     return clang_args
@@ -233,11 +238,7 @@ impl Builder {
             .iter()
             .map(|item| {
                 output_vector.push("--bitfield-enum".into());
-                output_vector.push(
-                    item.trim_left_matches("^")
-                        .trim_right_matches("$")
-                        .into(),
-                );
+                output_vector.push(item.to_owned());
             })
             .count();
 
@@ -247,11 +248,7 @@ impl Builder {
             .iter()
             .map(|item| {
                 output_vector.push("--rustified-enum".into());
-                output_vector.push(
-                    item.trim_left_matches("^")
-                        .trim_right_matches("$")
-                        .into(),
-                );
+                output_vector.push(item.to_owned());
             })
             .count();
 
@@ -261,11 +258,7 @@ impl Builder {
             .iter()
             .map(|item| {
                 output_vector.push("--constified-enum-module".into());
-                output_vector.push(
-                    item.trim_left_matches("^")
-                        .trim_right_matches("$")
-                        .into(),
-                );
+                output_vector.push(item.to_owned());
             })
             .count();
 
@@ -275,11 +268,7 @@ impl Builder {
             .iter()
             .map(|item| {
                 output_vector.push("--constified-enum".into());
-                output_vector.push(
-                    item.trim_left_matches("^")
-                        .trim_right_matches("$")
-                        .into(),
-                );
+                output_vector.push(item.to_owned());
             })
             .count();
 
@@ -289,11 +278,7 @@ impl Builder {
             .iter()
             .map(|item| {
                 output_vector.push("--blacklist-type".into());
-                output_vector.push(
-                    item.trim_left_matches("^")
-                        .trim_right_matches("$")
-                        .into(),
-                );
+                output_vector.push(item.to_owned());
             })
             .count();
 
@@ -303,11 +288,7 @@ impl Builder {
             .iter()
             .map(|item| {
                 output_vector.push("--blacklist-function".into());
-                output_vector.push(
-                    item.trim_left_matches("^")
-                        .trim_right_matches("$")
-                        .into(),
-                );
+                output_vector.push(item.to_owned());
             })
             .count();
 
@@ -317,11 +298,7 @@ impl Builder {
             .iter()
             .map(|item| {
                 output_vector.push("--blacklist-item".into());
-                output_vector.push(
-                    item.trim_left_matches("^")
-                        .trim_right_matches("$")
-                        .into(),
-                );
+                output_vector.push(item.to_owned());
             })
             .count();
 
@@ -418,6 +395,9 @@ impl Builder {
         if self.options.enable_cxx_namespaces {
             output_vector.push("--enable-cxx-namespaces".into());
         }
+        if self.options.enable_function_attribute_detection {
+            output_vector.push("--enable-function-attribute-detection".into());
+        }
         if self.options.disable_name_namespacing {
             output_vector.push("--disable-name-namespacing".into());
         }
@@ -469,11 +449,7 @@ impl Builder {
             .iter()
             .map(|item| {
                 output_vector.push("--opaque-type".into());
-                output_vector.push(
-                    item.trim_left_matches("^")
-                        .trim_right_matches("$")
-                        .into(),
-                );
+                output_vector.push(item.to_owned());
             })
             .count();
 
@@ -482,11 +458,7 @@ impl Builder {
             .iter()
             .map(|item| {
                 output_vector.push("--raw-line".into());
-                output_vector.push(
-                    item.trim_left_matches("^")
-                        .trim_right_matches("$")
-                        .into(),
-                );
+                output_vector.push(item.to_owned());
             })
             .count();
 
@@ -504,11 +476,7 @@ impl Builder {
             .iter()
             .map(|item| {
                 output_vector.push("--whitelist-function".into());
-                output_vector.push(
-                    item.trim_left_matches("^")
-                        .trim_right_matches("$")
-                        .into(),
-                );
+                output_vector.push(item.to_owned());
             })
             .count();
 
@@ -518,11 +486,7 @@ impl Builder {
             .iter()
             .map(|item| {
                 output_vector.push("--whitelist-type".into());
-                output_vector.push(
-                    item.trim_left_matches("^")
-                        .trim_right_matches("$")
-                        .into(),
-                );
+                output_vector.push(item.to_owned());
             })
             .count();
 
@@ -532,11 +496,7 @@ impl Builder {
             .iter()
             .map(|item| {
                 output_vector.push("--whitelist-var".into());
-                output_vector.push(
-                    item.trim_left_matches("^")
-                        .trim_right_matches("$")
-                        .into(),
-                );
+                output_vector.push(item.to_owned());
             })
             .count();
 
@@ -552,6 +512,10 @@ impl Builder {
                     .iter()
                     .cloned(),
             );
+        }
+
+        if !self.options.record_matches {
+            output_vector.push("--no-record-matches".into());
         }
 
         if !self.options.rustfmt_bindings {
@@ -573,11 +537,7 @@ impl Builder {
             .iter()
             .map(|item| {
                 output_vector.push("--no-partialeq".into());
-                output_vector.push(
-                    item.trim_left_matches("^")
-                        .trim_right_matches("$")
-                        .into(),
-                );
+                output_vector.push(item.to_owned());
             })
             .count();
 
@@ -587,11 +547,7 @@ impl Builder {
             .iter()
             .map(|item| {
                 output_vector.push("--no-copy".into());
-                output_vector.push(
-                    item.trim_left_matches("^")
-                        .trim_right_matches("$")
-                        .into(),
-                );
+                output_vector.push(item.to_owned());
             })
             .count();
 
@@ -601,11 +557,7 @@ impl Builder {
             .iter()
             .map(|item| {
                 output_vector.push("--no-hash".into());
-                output_vector.push(
-                    item.trim_left_matches("^")
-                        .trim_right_matches("$")
-                        .into(),
-                );
+                output_vector.push(item.to_owned());
             })
             .count();
 
@@ -1057,6 +1009,18 @@ impl Builder {
         self
     }
 
+    /// Enable detecting must_use attributes on C functions.
+    ///
+    /// This is quite slow in some cases (see #1465), so it's disabled by
+    /// default.
+    ///
+    /// Note that for this to do something meaningful for now at least, the rust
+    /// target version has to have support for `#[must_use]`.
+    pub fn enable_function_attribute_detection(mut self) -> Self {
+        self.options.enable_function_attribute_detection = true;
+        self
+    }
+
     /// Disable name auto-namespacing.
     ///
     /// By default, bindgen mangles names like `foo::bar::Baz` to look like
@@ -1179,6 +1143,12 @@ impl Builder {
     /// Set whether rustfmt should format the generated bindings.
     pub fn rustfmt_bindings(mut self, doit: bool) -> Self {
         self.options.rustfmt_bindings = doit;
+        self
+    }
+
+    /// Set whether we should record matched items in our regex sets.
+    pub fn record_matches(mut self, doit: bool) -> Self {
+        self.options.record_matches = doit;
         self
     }
 
@@ -1391,6 +1361,10 @@ struct BindgenOptions {
     /// generated bindings.
     enable_cxx_namespaces: bool,
 
+    /// True if we should try to find unexposed attributes in functions, in
+    /// order to be able to generate #[must_use] attributes in Rust.
+    enable_function_attribute_detection: bool,
+
     /// True if we should avoid mangling names with namespaces.
     disable_name_namespacing: bool,
 
@@ -1527,6 +1501,12 @@ struct BindgenOptions {
     /// Features to enable, derived from `rust_target`
     rust_features: RustFeatures,
 
+    /// Whether we should record which items in the regex sets ever matched.
+    ///
+    /// This may be a bit slower, but will enable reporting of unused whitelist
+    /// items via the `error!` log.
+    record_matches: bool,
+
     /// Whether rustfmt should format the generated bindings.
     rustfmt_bindings: bool,
 
@@ -1552,20 +1532,26 @@ impl ::std::panic::UnwindSafe for BindgenOptions {}
 
 impl BindgenOptions {
     fn build(&mut self) {
-        self.whitelisted_vars.build();
-        self.whitelisted_types.build();
-        self.whitelisted_functions.build();
-        self.blacklisted_types.build();
-        self.blacklisted_functions.build();
-        self.blacklisted_items.build();
-        self.opaque_types.build();
-        self.bitfield_enums.build();
-        self.constified_enums.build();
-        self.constified_enum_modules.build();
-        self.rustified_enums.build();
-        self.no_partialeq_types.build();
-        self.no_copy_types.build();
-        self.no_hash_types.build();
+        let mut regex_sets = [
+            &mut self.whitelisted_vars,
+            &mut self.whitelisted_types,
+            &mut self.whitelisted_functions,
+            &mut self.blacklisted_types,
+            &mut self.blacklisted_functions,
+            &mut self.blacklisted_items,
+            &mut self.opaque_types,
+            &mut self.bitfield_enums,
+            &mut self.constified_enums,
+            &mut self.constified_enum_modules,
+            &mut self.rustified_enums,
+            &mut self.no_partialeq_types,
+            &mut self.no_copy_types,
+            &mut self.no_hash_types,
+        ];
+        let record_matches = self.record_matches;
+        for regex_set in &mut regex_sets {
+            regex_set.build(record_matches);
+        }
     }
 
     /// Update rust target version
@@ -1618,6 +1604,7 @@ impl Default for BindgenOptions {
             derive_partialeq: false,
             derive_eq: false,
             enable_cxx_namespaces: false,
+            enable_function_attribute_detection: false,
             disable_name_namespacing: false,
             use_core: false,
             ctypes_prefix: None,
@@ -1641,6 +1628,7 @@ impl Default for BindgenOptions {
             enable_mangling: true,
             prepend_enum_name: true,
             time_phases: false,
+            record_matches: true,
             rustfmt_bindings: true,
             rustfmt_configuration_file: None,
             no_partialeq_types: Default::default(),
@@ -1675,7 +1663,7 @@ fn ensure_libclang_is_loaded() {
 #[derive(Debug)]
 pub struct Bindings {
     options: BindgenOptions,
-    module: quote::Tokens,
+    module: proc_macro2::TokenStream,
 }
 
 impl Bindings {
@@ -1684,6 +1672,8 @@ impl Bindings {
         mut options: BindgenOptions,
     ) -> Result<Bindings, ()> {
         ensure_libclang_is_loaded();
+
+        debug!("Generating bindings, libclang at {}", clang_sys::get_library().unwrap().path().display());
 
         options.build();
 
@@ -1714,11 +1704,15 @@ impl Bindings {
             }).cloned().collect::<Vec<_>>()
         };
 
+        debug!("Trying to find clang with flags: {:?}", clang_args_for_clang_sys);
+
         // TODO: Make this path fixup configurable?
         if let Some(clang) = clang_sys::support::Clang::find(
             None,
             &clang_args_for_clang_sys,
         ) {
+            debug!("Found clang: {:?}", clang);
+
             // If --target is specified, assume caller knows what they're doing
             // and don't mess with include paths for them
             let has_target_arg = options
@@ -1777,6 +1771,8 @@ impl Bindings {
         for f in options.input_unsaved_files.iter() {
             options.clang_args.push(f.name.to_str().unwrap().to_owned())
         }
+
+        debug!("Fixed-up options: {:?}", options);
 
         let time_phases = options.time_phases;
         let mut context = BindgenContext::new(options);
@@ -1839,7 +1835,7 @@ impl Bindings {
                 writer.write(rustfmt_bindings.as_bytes())?;
             },
             Err(err) => {
-                eprintln!("{:?}", err);
+                eprintln!("Failed to run rustfmt: {} (non-fatal, continuing)", err);
                 writer.write(bindings.as_bytes())?;
             },
         }
@@ -1863,7 +1859,7 @@ impl Bindings {
             None => {
                 let path = which::which("rustfmt")
                     .map_err(|e| {
-                        io::Error::new(io::ErrorKind::Other, e.to_owned())
+                        io::Error::new(io::ErrorKind::Other, format!("{}", e))
                     })?;
 
                 Cow::Owned(path)
