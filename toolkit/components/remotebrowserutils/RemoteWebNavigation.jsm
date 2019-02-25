@@ -82,7 +82,7 @@ RemoteWebNavigation.prototype = {
           };
           principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, attrs);
         }
-        Services.io.speculativeConnect2(uri, principal, null);
+        Services.io.speculativeConnect(uri, principal, null);
       } catch (ex) {
         // Can't setup speculative connection for this uri string for some
         // reason (such as failing to parse the URI), just ignore it.

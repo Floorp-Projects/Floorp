@@ -8412,9 +8412,9 @@ void Document::MaybePreconnect(nsIURI* aOrigURI, mozilla::CORSMode aCORSMode) {
   }
 
   if (aCORSMode == CORS_ANONYMOUS) {
-    speculator->SpeculativeAnonymousConnect2(uri, NodePrincipal(), nullptr);
+    speculator->SpeculativeAnonymousConnect(uri, NodePrincipal(), nullptr);
   } else {
-    speculator->SpeculativeConnect2(uri, NodePrincipal(), nullptr);
+    speculator->SpeculativeConnect(uri, NodePrincipal(), nullptr);
   }
 }
 

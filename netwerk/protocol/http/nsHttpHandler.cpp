@@ -2472,15 +2472,15 @@ nsresult nsHttpHandler::SpeculativeConnectInternal(
 }
 
 NS_IMETHODIMP
-nsHttpHandler::SpeculativeConnect2(nsIURI *aURI, nsIPrincipal *aPrincipal,
-                                   nsIInterfaceRequestor *aCallbacks) {
+nsHttpHandler::SpeculativeConnect(nsIURI *aURI, nsIPrincipal *aPrincipal,
+                                  nsIInterfaceRequestor *aCallbacks) {
   return SpeculativeConnectInternal(aURI, aPrincipal, aCallbacks, false);
 }
 
 NS_IMETHODIMP
-nsHttpHandler::SpeculativeAnonymousConnect2(nsIURI *aURI,
-                                            nsIPrincipal *aPrincipal,
-                                            nsIInterfaceRequestor *aCallbacks) {
+nsHttpHandler::SpeculativeAnonymousConnect(nsIURI *aURI,
+                                           nsIPrincipal *aPrincipal,
+                                           nsIInterfaceRequestor *aCallbacks) {
   return SpeculativeConnectInternal(aURI, aPrincipal, aCallbacks, true);
 }
 

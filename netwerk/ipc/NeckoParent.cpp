@@ -632,9 +632,9 @@ mozilla::ipc::IPCResult NeckoParent::RecvSpeculativeConnect(
   nsCOMPtr<nsIPrincipal> principal(aPrincipal);
   if (uri && speculator) {
     if (aAnonymous) {
-      speculator->SpeculativeAnonymousConnect2(uri, principal, nullptr);
+      speculator->SpeculativeAnonymousConnect(uri, principal, nullptr);
     } else {
-      speculator->SpeculativeConnect2(uri, principal, nullptr);
+      speculator->SpeculativeConnect(uri, principal, nullptr);
     }
   }
   return IPC_OK();

@@ -566,7 +566,7 @@ static void ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsIFile *appDir,
       argc += 1;
     }
   }
-  char **argv = new char *[argc + 1];
+  char** argv = static_cast<char**>(malloc((argc + 1) * sizeof(char*)));
   if (!argv) {
     return;
   }
@@ -602,38 +602,42 @@ static void ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsIFile *appDir,
   // process. Instead it spawns a new process, so we gain nothing from using
   // execv on Windows.
   if (restart) {
-    exit(execv(updaterPath.get(), argv));
+    int execResult = execv(updaterPath.get(), argv);
+    free(argv);
+    exit(execResult);
   }
   *outpid = fork();
   if (*outpid == -1) {
-    delete[] argv;
+    free(argv);
     return;
   } else if (*outpid == 0) {
-    exit(execv(updaterPath.get(), argv));
+    int execResult = execv(updaterPath.get(), argv);
+    free(argv);
+    exit(execResult);
   }
-  delete[] argv;
 #elif defined(XP_WIN)
   if (isStaged) {
     // Launch the updater to replace the installation with the staged updated.
     if (!WinLaunchChild(updaterPathW.get(), argc, argv)) {
-      delete[] argv;
+      free(argv);
       return;
     }
   } else {
     // Launch the updater to either stage or apply an update.
     if (!WinLaunchChild(updaterPathW.get(), argc, argv, nullptr, outpid)) {
-      delete[] argv;
+      free(argv);
       return;
     }
   }
-  delete[] argv;
 #elif defined(XP_MACOSX)
 UpdateDriverSetupMacCommandLine(argc, argv, restart);
 // We need to detect whether elevation is required for this update. This can
 // occur when an admin user installs the application, but another admin
 // user attempts to update (see bug 394984).
 if (restart && !IsRecursivelyWritable(installDirPath.get())) {
-  if (!LaunchElevatedUpdate(argc, argv, outpid)) {
+  bool hasLaunched = LaunchElevatedUpdate(argc, argv, outpid);
+  free(argv);
+  if (!hasLaunched) {
     LOG(("Failed to launch elevated update!"));
     exit(1);
   }
@@ -656,6 +660,7 @@ if (isStaged) {
   *outpid = PR_CreateProcess(updaterPath.get(), argv, nullptr, nullptr);
 }
 #endif
+  free(argv);
   if (restart) {
     exit(0);
   }
