@@ -245,6 +245,9 @@ class nsWindow final : public nsBaseWidget {
 
   void DispatchContextMenuEventFromMouseEvent(uint16_t domButton,
                                               GdkEventButton* aEvent);
+#ifdef MOZ_WAYLAND
+  void WaylandEGLSurfaceForceRedraw();
+#endif
 
  public:
   void ThemeChanged(void);
@@ -342,7 +345,6 @@ class nsWindow final : public nsBaseWidget {
   wl_display* GetWaylandDisplay();
   wl_surface* GetWaylandSurface();
   bool WaylandSurfaceNeedsClear();
-  bool WaylandRequestsUpdatingEGLSurface();
 #endif
   virtual void GetCompositorWidgetInitData(
       mozilla::widget::CompositorWidgetInitData* aInitData) override;
