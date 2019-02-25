@@ -40,10 +40,10 @@ inline ParseContext::Scope::BindingIter ParseContext::Scope::bindings(
 }
 
 inline ParseContext::Scope::Scope(ParserBase* parser)
-    : Nestable<Scope>(&parser->pc->innermostScope_),
-      declared_(parser->context->frontendCollectionPool()),
-      possibleAnnexBFunctionBoxes_(parser->context->frontendCollectionPool()),
-      id_(parser->usedNames.nextScopeId()) {}
+    : Nestable<Scope>(&parser->pc_->innermostScope_),
+      declared_(parser->cx_->frontendCollectionPool()),
+      possibleAnnexBFunctionBoxes_(parser->cx_->frontendCollectionPool()),
+      id_(parser->usedNames_.nextScopeId()) {}
 
 inline ParseContext::Scope::Scope(JSContext* cx, ParseContext* pc,
                                   UsedNameTracker& usedNames)
@@ -53,7 +53,7 @@ inline ParseContext::Scope::Scope(JSContext* cx, ParseContext* pc,
       id_(usedNames.nextScopeId()) {}
 
 inline ParseContext::VarScope::VarScope(ParserBase* parser) : Scope(parser) {
-  useAsVarScope(parser->pc);
+  useAsVarScope(parser->pc_);
 }
 
 inline ParseContext::VarScope::VarScope(JSContext* cx, ParseContext* pc,
@@ -134,6 +134,40 @@ ParseContext::checkContinueStatement(PropertyName* label) {
 
       stmt = stmt->enclosing();
     }
+  }
+}
+
+template <typename DeclaredNamePtrT>
+inline void RedeclareVar(DeclaredNamePtrT ptr, DeclarationKind kind) {
+#ifdef DEBUG
+  DeclarationKind declaredKind = ptr->value()->kind();
+  MOZ_ASSERT(DeclarationKindIsVar(declaredKind));
+#endif
+
+  // Any vars that are redeclared as body-level functions must
+  // be recorded as body-level functions.
+  //
+  // In the case of global and eval scripts, GlobalDeclaration-
+  // Instantiation [1] and EvalDeclarationInstantiation [2]
+  // check for the declarability of global var and function
+  // bindings via CanDeclareVar [3] and CanDeclareGlobal-
+  // Function [4]. CanDeclareGlobalFunction is strictly more
+  // restrictive than CanDeclareGlobalVar, so record the more
+  // restrictive kind. These semantics are implemented in
+  // CheckCanDeclareGlobalBinding.
+  //
+  // VarForAnnexBLexicalFunction declarations are declared when
+  // the var scope exits. It is not possible for a var to be
+  // previously declared as VarForAnnexBLexicalFunction and
+  // checked for redeclaration.
+  //
+  // [1] ES 15.1.11
+  // [2] ES 18.2.1.3
+  // [3] ES 8.1.1.4.15
+  // [4] ES 8.1.1.4.16
+  if (kind == DeclarationKind::BodyLevelFunction) {
+    MOZ_ASSERT(declaredKind != DeclarationKind::VarForAnnexBLexicalFunction);
+    ptr->value()->alterKind(kind);
   }
 }
 

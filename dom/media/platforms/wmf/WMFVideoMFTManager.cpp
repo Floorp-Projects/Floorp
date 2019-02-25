@@ -6,6 +6,9 @@
 
 #include "WMFVideoMFTManager.h"
 
+#include <psapi.h>
+#include <winsdkver.h>
+#include <algorithm>
 #include "DXVA2Manager.h"
 #include "GMPUtils.h"  // For SplitAt. TODO: Move SplitAt to a central place.
 #include "IMFYCbCrImage.h"
@@ -16,12 +19,11 @@
 #include "MediaTelemetryConstants.h"
 #include "VPXDecoder.h"
 #include "VideoUtils.h"
+#include "WMFDecoderModule.h"
 #include "WMFUtils.h"
 #include "gfx2DGlue.h"
 #include "gfxPrefs.h"
 #include "gfxWindowsPlatform.h"
-#include "mozilla/gfx/gfxVars.h"
-#include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Logging.h"
@@ -29,14 +31,11 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "nsPrintfCString.h"
 #include "nsThreadUtils.h"
 #include "nsWindowsHelpers.h"
-#include "WMFDecoderModule.h"
-#include <algorithm>
-#include <psapi.h>
-#include <winsdkver.h>
 
 #define LOG(...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
@@ -749,12 +748,11 @@ WMFVideoMFTManager::Input(MediaRawData* aSample) {
   RefPtr<IMFSample> inputSample;
   HRESULT hr = mDecoder->CreateInputSample(
       aSample->Data(), uint32_t(aSample->Size()),
-      aSample->mTime.ToMicroseconds(), &inputSample);
+      aSample->mTime.ToMicroseconds(), aSample->mDuration.ToMicroseconds(),
+      &inputSample);
   NS_ENSURE_TRUE(SUCCEEDED(hr) && inputSample != nullptr, hr);
 
   mLastDuration = aSample->mDuration;
-  mLastTime = aSample->mTime;
-  mSamplesCount++;
 
   // Forward sample data to the decoder.
   return mDecoder->Input(inputSample);
@@ -999,15 +997,6 @@ WMFVideoMFTManager::Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutData) {
   HRESULT hr;
   aOutData = nullptr;
   int typeChangeCount = 0;
-  bool wasDraining = mDraining;
-  int64_t sampleCount = mSamplesCount;
-  if (wasDraining) {
-    mSamplesCount = 0;
-    mDraining = false;
-  }
-
-  TimeUnit pts;
-  TimeUnit duration;
 
   // Loop until we decode a sample, or an unexpected error that we can't
   // handle occurs.
@@ -1088,19 +1077,10 @@ WMFVideoMFTManager::Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutData) {
         }
         continue;
       }
-      pts = GetSampleTime(sample);
-      duration = GetSampleDuration(sample);
+      TimeUnit pts = GetSampleTime(sample);
+      TimeUnit duration = GetSampleDuration(sample);
       if (!pts.IsValid() || !duration.IsValid()) {
         return E_FAIL;
-      }
-      if (wasDraining && sampleCount == 1 && pts == TimeUnit::Zero()) {
-        // WMF is unable to calculate a duration if only a single sample
-        // was parsed. Additionally, the pts always comes out at 0 under those
-        // circumstances.
-        // Seeing that we've only fed the decoder a single frame, the pts
-        // and duration are known, it's of the last sample.
-        pts = mLastTime;
-        duration = mLastDuration;
       }
       if (mSeekTargetThreshold.isSome()) {
         if ((pts + duration) < mSeekTargetThreshold.ref()) {
@@ -1131,14 +1111,12 @@ WMFVideoMFTManager::Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutData) {
   NS_ENSURE_TRUE(frame, E_FAIL);
 
   aOutData = frame;
-  // Set the potentially corrected pts and duration.
-  aOutData->mTime = pts;
-  // The VP9 decoder doesn't provide a valid duration. AS VP9 doesn't have a
+  // The VP9 decoder doesn't provide a valid duration. As VP9 doesn't have a
   // concept of pts vs dts and have no latency. We can as such use the last
   // known input duration.
-  aOutData->mDuration = (mStreamType == VP9 && duration == TimeUnit::Zero())
-                            ? mLastDuration
-                            : duration;
+  if (mStreamType == VP9 && aOutData->mDuration == TimeUnit::Zero()) {
+    aOutData->mDuration = mLastDuration;
+  }
 
   if (mNullOutputCount) {
     mGotValidOutputAfterNullOutput = true;

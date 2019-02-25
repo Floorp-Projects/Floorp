@@ -125,6 +125,11 @@ RefPtr<MediaDataDecoder::DecodePromise> WMFMediaDataDecoder::ProcessDecode(
     return ProcessError(hr, "MFTManager::Input");
   }
 
+  if (!mLastTime || aSample->mTime > *mLastTime) {
+    mLastTime = Some(aSample->mTime);
+    mLastDuration = aSample->mDuration;
+  }
+  mSamplesCount++;
   mDrainStatus = DrainStatus::DRAINABLE;
   mLastStreamOffset = aSample->mOffset;
 
@@ -155,6 +160,8 @@ RefPtr<MediaDataDecoder::FlushPromise> WMFMediaDataDecoder::ProcessFlush() {
     mMFTManager->Flush();
   }
   mDrainStatus = DrainStatus::DRAINED;
+  mSamplesCount = 0;
+  mLastTime.reset();
   return FlushPromise::CreateAndResolve(true, __func__);
 }
 
@@ -183,6 +190,25 @@ RefPtr<MediaDataDecoder::DecodePromise> WMFMediaDataDecoder::ProcessDrain() {
     mDrainStatus = DrainStatus::DRAINED;
   }
   if (SUCCEEDED(hr) || hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
+    if (results.Length() > 0 &&
+        results.LastElement()->mType == MediaData::Type::VIDEO_DATA) {
+      const RefPtr<MediaData>& data = results.LastElement();
+      if (mSamplesCount == 1 && data->mTime == media::TimeUnit::Zero()) {
+        // WMF is unable to calculate a duration if only a single sample
+        // was parsed. Additionally, the pts always comes out at 0 under those
+        // circumstances.
+        // Seeing that we've only fed the decoder a single frame, the pts
+        // and duration are known, it's of the last sample.
+        data->mTime = *mLastTime;
+      }
+      if (data->mTime == *mLastTime) {
+        // The WMF Video decoder is sometimes unable to provide a valid duration
+        // on the last sample even if it has been first set through
+        // SetSampleTime (appears to always happen on Windows 7). So we force
+        // set the duration of the last sample as it was input.
+        data->mDuration = mLastDuration;
+      }
+    }
     return DecodePromise::CreateAndResolve(std::move(results), __func__);
   }
   return ProcessError(hr, "MFTManager::Output");

@@ -88,7 +88,6 @@ class Interval {
     return SelfType(mStart + aVal, mEnd + aVal, mFuzz);
   }
 
-  // Basic interval arithmetic operator definition.
   SelfType operator-(const SelfType& aOther) const {
     return SelfType(mStart - aOther.mEnd, mEnd - aOther.mStart,
                     mFuzz + aOther.mFuzz);
@@ -96,6 +95,32 @@ class Interval {
 
   SelfType operator-(const T& aVal) const {
     return SelfType(mStart - aVal, mEnd - aVal, mFuzz);
+  }
+
+  SelfType& operator+=(const SelfType& aOther) {
+    mStart += aOther.mStart;
+    mEnd += aOther.mEnd;
+    mFuzz += aOther.mFuzz;
+    return *this;
+  }
+
+  SelfType& operator+=(const T& aVal) {
+    mStart += aVal;
+    mEnd += aVal;
+    return *this;
+  }
+
+  SelfType& operator-=(const SelfType& aOther) {
+    mStart -= aOther.mStart;
+    mEnd -= aOther.mEnd;
+    mFuzz += aOther.mFuzz;
+    return *this;
+  }
+
+  SelfType& operator-=(const T& aVal) {
+    mStart -= aVal;
+    mEnd -= aVal;
+    return *this;
   }
 
   bool operator==(const SelfType& aOther) const {
@@ -534,6 +559,33 @@ class IntervalSet {
   bool ContainsWithStrictEnd(const ElemType& aInterval) const {
     for (const auto& interval : mIntervals) {
       if (interval.ContainsWithStrictEnd(aInterval)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool Intersects(const ElemType& aInterval) const {
+    for (const auto& interval : mIntervals) {
+      if (interval.Intersects(aInterval)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool IntersectsStrict(const ElemType& aInterval) const {
+    for (const auto& interval : mIntervals) {
+      if (interval.IntersectsStrict(aInterval)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool IntersectsWithStrictEnd(const ElemType& aInterval) const {
+    for (const auto& interval : mIntervals) {
+      if (interval.IntersectsWithStrictEnd(aInterval)) {
         return true;
       }
     }

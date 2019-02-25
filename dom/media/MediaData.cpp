@@ -40,15 +40,85 @@ bool IsDataLoudnessHearable(const AudioDataValue aData) {
   return 20.0f * std::log10(AudioSampleToFloat(aData)) > -100;
 }
 
+AudioData::AudioData(int64_t aOffset, const media::TimeUnit& aTime,
+                     AlignedAudioBuffer&& aData, uint32_t aChannels,
+                     uint32_t aRate, uint32_t aChannelMap)
+    : MediaData(sType, aOffset, aTime,
+                FramesToTimeUnit(aData.Length() / aChannels, aRate)),
+      mChannels(aChannels),
+      mChannelMap(aChannelMap),
+      mRate(aRate),
+      mOriginalTime(aTime),
+      mAudioData(std::move(aData)),
+      mFrames(mAudioData.Length() / aChannels) {}
+
+Span<AudioDataValue> AudioData::Data() const {
+  return MakeSpan(GetAdjustedData(), mFrames * mChannels);
+}
+
+bool AudioData::AdjustForStartTime(int64_t aStartTime) {
+  const TimeUnit startTimeOffset =
+      media::TimeUnit::FromMicroseconds(aStartTime);
+  mOriginalTime -= startTimeOffset;
+  if (mTrimWindow) {
+    *mTrimWindow -= startTimeOffset;
+  }
+  return MediaData::AdjustForStartTime(aStartTime);
+}
+
+bool AudioData::SetTrimWindow(const media::TimeInterval& aTrim) {
+  if (!mAudioData) {
+    // MoveableData got called. Can no longer work on it.
+    return false;
+  }
+  const size_t originalFrames = mAudioData.Length() / mChannels;
+  const TimeUnit originalDuration = FramesToTimeUnit(originalFrames, mRate);
+  if (aTrim.mStart < mOriginalTime ||
+      aTrim.mEnd > mOriginalTime + originalDuration) {
+    return false;
+  }
+
+  auto trimBefore = TimeUnitToFrames(aTrim.mStart - mOriginalTime, mRate);
+  auto trimAfter = aTrim.mEnd == GetEndTime()
+                       ? originalFrames
+                       : TimeUnitToFrames(aTrim.mEnd - mOriginalTime, mRate);
+  if (!trimBefore.isValid() || !trimAfter.isValid()) {
+    // Overflow.
+    return false;
+  }
+  if (!mTrimWindow && trimBefore == 0 && trimAfter == originalFrames) {
+    // Nothing to change, abort early to prevent rounding errors.
+    return true;
+  }
+
+  mTrimWindow = Some(aTrim);
+  mDataOffset = trimBefore.value() * mChannels;
+  mFrames = (trimAfter - trimBefore).value();
+  mTime = mOriginalTime + FramesToTimeUnit(trimBefore.value(), mRate);
+  mDuration = FramesToTimeUnit(mFrames, mRate);
+
+  return true;
+}
+
+AudioDataValue* AudioData::GetAdjustedData() const {
+  if (!mAudioData) {
+    return nullptr;
+  }
+  return mAudioData.Data() + mDataOffset;
+}
+
 void AudioData::EnsureAudioBuffer() {
-  if (mAudioBuffer) return;
+  if (mAudioBuffer || !mAudioData) {
+    return;
+  }
+  const AudioDataValue* srcData = GetAdjustedData();
   mAudioBuffer =
       SharedBuffer::Create(mFrames * mChannels * sizeof(AudioDataValue));
 
-  AudioDataValue* data = static_cast<AudioDataValue*>(mAudioBuffer->Data());
+  AudioDataValue* destData = static_cast<AudioDataValue*>(mAudioBuffer->Data());
   for (uint32_t i = 0; i < mFrames; ++i) {
     for (uint32_t j = 0; j < mChannels; ++j) {
-      data[j * mFrames + i] = mAudioData[i * mChannels + j];
+      destData[j * mFrames + i] = srcData[i * mChannels + j];
     }
   }
 }
@@ -67,9 +137,11 @@ bool AudioData::IsAudible() const {
     return false;
   }
 
+  const AudioDataValue* data = GetAdjustedData();
+
   for (uint32_t frame = 0; frame < mFrames; ++frame) {
     for (uint32_t channel = 0; channel < mChannels; ++channel) {
-      if (IsDataLoudnessHearable(mAudioData[frame * mChannels + channel])) {
+      if (IsDataLoudnessHearable(data[frame * mChannels + channel])) {
         return true;
       }
     }
@@ -77,15 +149,14 @@ bool AudioData::IsAudible() const {
   return false;
 }
 
-/* static */
-already_AddRefed<AudioData> AudioData::TransferAndUpdateTimestampAndDuration(
-    AudioData* aOther, const TimeUnit& aTimestamp, const TimeUnit& aDuration) {
-  NS_ENSURE_TRUE(aOther, nullptr);
-  RefPtr<AudioData> v =
-      new AudioData(aOther->mOffset, aTimestamp, aDuration, aOther->mFrames,
-                    std::move(aOther->mAudioData), aOther->mChannels,
-                    aOther->mRate, aOther->mChannelMap);
-  return v.forget();
+AlignedAudioBuffer AudioData::MoveableData() {
+  // Trim buffer according to trimming mask.
+  mAudioData.PopFront(mDataOffset);
+  mAudioData.SetLength(mFrames * mChannels);
+  mDataOffset = 0;
+  mFrames = 0;
+  mTrimWindow.reset();
+  return std::move(mAudioData);
 }
 
 static bool ValidatePlane(const VideoData::YCbCrBuffer::Plane& aPlane) {
@@ -136,7 +207,7 @@ VideoData::VideoData(int64_t aOffset, const TimeUnit& aTime,
                      const TimeUnit& aDuration, bool aKeyframe,
                      const TimeUnit& aTimecode, IntSize aDisplay,
                      layers::ImageContainer::FrameID aFrameID)
-    : MediaData(VIDEO_DATA, aOffset, aTime, aDuration, 1),
+    : MediaData(Type::VIDEO_DATA, aOffset, aTime, aDuration),
       mDisplay(aDisplay),
       mFrameID(aFrameID),
       mSentToCompositor(false),
@@ -363,14 +434,16 @@ already_AddRefed<VideoData> VideoData::CreateFromImage(
 }
 
 MediaRawData::MediaRawData()
-    : MediaData(RAW_DATA, 0), mCrypto(mCryptoInternal) {}
+    : MediaData(Type::RAW_DATA), mCrypto(mCryptoInternal) {}
 
 MediaRawData::MediaRawData(const uint8_t* aData, size_t aSize)
-    : MediaData(RAW_DATA, 0), mCrypto(mCryptoInternal), mBuffer(aData, aSize) {}
+    : MediaData(Type::RAW_DATA),
+      mCrypto(mCryptoInternal),
+      mBuffer(aData, aSize) {}
 
 MediaRawData::MediaRawData(const uint8_t* aData, size_t aSize,
                            const uint8_t* aAlphaData, size_t aAlphaSize)
-    : MediaData(RAW_DATA, 0),
+    : MediaData(Type::RAW_DATA),
       mCrypto(mCryptoInternal),
       mBuffer(aData, aSize),
       mAlphaBuffer(aAlphaData, aAlphaSize) {}
@@ -386,6 +459,7 @@ already_AddRefed<MediaRawData> MediaRawData::Clone() const {
   s->mCryptoInternal = mCryptoInternal;
   s->mTrackInfo = mTrackInfo;
   s->mEOS = mEOS;
+  s->mOriginalPresentationWindow = mOriginalPresentationWindow;
   if (!s->mBuffer.Append(mBuffer.Data(), mBuffer.Length())) {
     return nullptr;
   }

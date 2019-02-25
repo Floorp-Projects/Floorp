@@ -7,6 +7,7 @@
 
 #include "RemoteDecoderManagerChild.h"
 #include "VorbisDecoder.h"
+#include "mozilla/PodOperations.h"
 
 namespace mozilla {
 
@@ -19,19 +20,15 @@ mozilla::ipc::IPCResult RemoteAudioDecoderChild::RecvOutput(
   const RemoteAudioDataIPDL& aData = aDecodedData.get_RemoteAudioDataIPDL();
 
   AlignedAudioBuffer alignedAudioBuffer;
-  alignedAudioBuffer.SetLength(aData.buffer().Size<uint8_t>() /
-                               sizeof(*alignedAudioBuffer.Data()));
-  memcpy(alignedAudioBuffer.Data(), aData.buffer().get<uint8_t>(),
-         aData.buffer().Size<uint8_t>());
+  alignedAudioBuffer.SetLength(aData.buffer().Size<AudioDataValue>());
+  PodCopy(alignedAudioBuffer.Data(), aData.buffer().get<AudioDataValue>(),
+          alignedAudioBuffer.Length());
 
   DeallocShmem(aData.buffer());
 
-  RefPtr<AudioData> audio =
-      new AudioData(aData.base().offset(),
-                    media::TimeUnit::FromMicroseconds(aData.base().time()),
-                    media::TimeUnit::FromMicroseconds(aData.base().duration()),
-                    aData.base().frames(), std::move(alignedAudioBuffer),
-                    aData.channels(), aData.rate(), aData.channelMap());
+  RefPtr<AudioData> audio = new AudioData(
+      aData.base().offset(), aData.base().time(), std::move(alignedAudioBuffer),
+      aData.channels(), aData.rate(), aData.channelMap());
 
   mDecodedData.AppendElement(std::move(audio));
   return IPC_OK();
@@ -98,27 +95,25 @@ void RemoteAudioDecoderParent::ProcessDecodedData(
   MOZ_ASSERT(OnManagerThread());
 
   for (const auto& data : aData) {
-    MOZ_ASSERT(data->mType == MediaData::AUDIO_DATA,
+    MOZ_ASSERT(data->mType == MediaData::Type::AUDIO_DATA,
                "Can only decode audio using RemoteAudioDecoderParent!");
     AudioData* audio = static_cast<AudioData*>(data.get());
 
-    MOZ_ASSERT(audio->mAudioData,
+    MOZ_ASSERT(audio->Data().Elements(),
                "Decoded audio must output an AlignedAudioBuffer "
                "to be used with RemoteAudioDecoderParent");
 
     Shmem buffer;
-    if (AllocShmem(audio->mAudioData.Size(), Shmem::SharedMemory::TYPE_BASIC,
-                   &buffer) &&
-        audio->mAudioData.Size() == buffer.Size<uint8_t>()) {
-      memcpy(buffer.get<uint8_t>(), audio->mAudioData.Data(),
-             audio->mAudioData.Size());
+    if (AllocShmem(audio->Data().Length() * sizeof(AudioDataValue),
+                   Shmem::SharedMemory::TYPE_BASIC, &buffer) &&
+        audio->Data().Length() == buffer.Size<AudioDataValue>()) {
+      PodCopy(buffer.get<AudioDataValue>(), audio->Data().Elements(),
+              audio->Data().Length());
     }
 
     RemoteAudioDataIPDL output(
-        MediaDataIPDL(data->mOffset, data->mTime.ToMicroseconds(),
-                      data->mTimecode.ToMicroseconds(),
-                      data->mDuration.ToMicroseconds(), data->mFrames,
-                      data->mKeyframe),
+        MediaDataIPDL(data->mOffset, data->mTime, data->mTimecode,
+                      data->mDuration, data->mKeyframe),
         audio->mChannels, audio->mRate, audio->mChannelMap, buffer);
 
     Unused << SendOutput(output);
