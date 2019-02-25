@@ -234,13 +234,10 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   const EmitterMode emitterMode;
 
-  MOZ_INIT_OUTSIDE_CTOR uint32_t scriptStartOffset;
-  bool scriptStartOffsetSet;
+  mozilla::Maybe<uint32_t> scriptStartOffset;
 
   // The end location of a function body that is being emitted.
-  MOZ_INIT_OUTSIDE_CTOR uint32_t functionBodyEndPos;
-  // Whether functionBodyEndPos was set.
-  bool functionBodyEndPosSet;
+  mozilla::Maybe<uint32_t> functionBodyEndPos;
 
   /*
    * Note that BytecodeEmitters are magic: they own the arena "top-of-stack"
@@ -425,14 +422,12 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   }
 
   void setFunctionBodyEndPos(TokenPos pos) {
-    functionBodyEndPos = pos.end;
-    functionBodyEndPosSet = true;
+    functionBodyEndPos = mozilla::Some(pos.end);
   }
 
   void setScriptStartOffsetIfUnset(TokenPos pos) {
-    if (!scriptStartOffsetSet) {
-      scriptStartOffset = pos.begin;
-      scriptStartOffsetSet = true;
+    if (scriptStartOffset.isNothing()) {
+      scriptStartOffset = mozilla::Some(pos.begin);
     }
   }
 
