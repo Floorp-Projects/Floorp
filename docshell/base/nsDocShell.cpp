@@ -449,7 +449,8 @@ nsDocShell::~nsDocShell() {
 #endif
 }
 
-/* static */ already_AddRefed<nsDocShell> nsDocShell::Create(
+/* static */
+already_AddRefed<nsDocShell> nsDocShell::Create(
     BrowsingContext* aBrowsingContext) {
   MOZ_ASSERT(aBrowsingContext, "DocShell without a BrowsingContext!");
 
@@ -1020,9 +1021,9 @@ nsDOMNavigationTiming* nsDocShell::GetNavigationTiming() const {
 // file: uris are considered the same domain for the purpose of
 // frame navigation regardless of script accessibility (bug 420425)
 //
-/* static */ bool nsDocShell::ValidateOrigin(
-    nsIDocShellTreeItem* aOriginTreeItem,
-    nsIDocShellTreeItem* aTargetTreeItem) {
+/* static */
+bool nsDocShell::ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
+                                nsIDocShellTreeItem* aTargetTreeItem) {
   // We want to bypass this check for chrome callers, but only if there's
   // JS on the stack. System callers still need to do it.
   if (nsContentUtils::GetCurrentJSContext() &&
@@ -2357,7 +2358,8 @@ nsDocShell::SetMetaViewportOverride(
   return NS_OK;
 }
 
-/* virtual */ int32_t nsDocShell::ItemType() { return mItemType; }
+/* virtual */
+int32_t nsDocShell::ItemType() { return mItemType; }
 
 NS_IMETHODIMP
 nsDocShell::GetItemType(int32_t* aItemType) {
@@ -12855,20 +12857,20 @@ nsDocShell::GetCanExecuteScripts(bool* aResult) {
   return NS_OK;
 }
 
-/* [infallible] */ NS_IMETHODIMP nsDocShell::SetFrameType(
-    FrameType aFrameType) {
+/* [infallible] */
+NS_IMETHODIMP nsDocShell::SetFrameType(FrameType aFrameType) {
   mFrameType = aFrameType;
   return NS_OK;
 }
 
-/* [infallible] */ NS_IMETHODIMP nsDocShell::GetFrameType(
-    FrameType* aFrameType) {
+/* [infallible] */
+NS_IMETHODIMP nsDocShell::GetFrameType(FrameType* aFrameType) {
   *aFrameType = mFrameType;
   return NS_OK;
 }
 
-/* [infallible] */ NS_IMETHODIMP nsDocShell::GetIsMozBrowser(
-    bool* aIsMozBrowser) {
+/* [infallible] */
+NS_IMETHODIMP nsDocShell::GetIsMozBrowser(bool* aIsMozBrowser) {
   *aIsMozBrowser = (mFrameType == FRAME_TYPE_BROWSER);
   return NS_OK;
 }
@@ -12889,7 +12891,8 @@ uint32_t nsDocShell::GetInheritedFrameType() {
   return static_cast<nsDocShell*>(parent.get())->GetInheritedFrameType();
 }
 
-/* [infallible] */ NS_IMETHODIMP nsDocShell::GetIsIsolatedMozBrowserElement(
+/* [infallible] */
+NS_IMETHODIMP nsDocShell::GetIsIsolatedMozBrowserElement(
     bool* aIsIsolatedMozBrowserElement) {
   bool result = mFrameType == FRAME_TYPE_BROWSER &&
                 mOriginAttributes.mInIsolatedMozBrowser;
@@ -12897,7 +12900,8 @@ uint32_t nsDocShell::GetInheritedFrameType() {
   return NS_OK;
 }
 
-/* [infallible] */ NS_IMETHODIMP nsDocShell::GetIsInIsolatedMozBrowserElement(
+/* [infallible] */
+NS_IMETHODIMP nsDocShell::GetIsInIsolatedMozBrowserElement(
     bool* aIsInIsolatedMozBrowserElement) {
   MOZ_ASSERT(!mOriginAttributes.mInIsolatedMozBrowser ||
                  (GetInheritedFrameType() == FRAME_TYPE_BROWSER),
@@ -12908,13 +12912,14 @@ uint32_t nsDocShell::GetInheritedFrameType() {
   return NS_OK;
 }
 
-/* [infallible] */ NS_IMETHODIMP nsDocShell::GetIsInMozBrowser(
-    bool* aIsInMozBrowser) {
+/* [infallible] */
+NS_IMETHODIMP nsDocShell::GetIsInMozBrowser(bool* aIsInMozBrowser) {
   *aIsInMozBrowser = (GetInheritedFrameType() == FRAME_TYPE_BROWSER);
   return NS_OK;
 }
 
-/* [infallible] */ NS_IMETHODIMP nsDocShell::GetIsTopLevelContentDocShell(
+/* [infallible] */
+NS_IMETHODIMP nsDocShell::GetIsTopLevelContentDocShell(
     bool* aIsTopLevelContentDocShell) {
   *aIsTopLevelContentDocShell = false;
 
