@@ -52,7 +52,7 @@ XPCOMUtils.defineLazyGetter(this, "tests", function() {
   ];
 });
 
-function check(ch) {
+function check(ch, cx) {
   var headerValue;
 
   headerValue = ch.getResponseHeader("Proxy-Authenticate");

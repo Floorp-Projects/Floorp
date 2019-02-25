@@ -68,13 +68,13 @@ function execute_test(test) {
                  .createInstance(Ci.nsIIncrementalStreamLoader);
   listener.init(observer);
 
-  listener.onStartRequest(channel);
+  listener.onStartRequest(channel, null);
   var offset = 0;
   test.chunks.forEach(function (chunkLength) {
-    listener.onDataAvailable(channel, stream, offset, chunkLength);
+    listener.onDataAvailable(channel, null, stream, offset, chunkLength);
     offset += chunkLength;
   });
-  listener.onStopRequest(channel, test.status);
+  listener.onStopRequest(channel, null, test.status);
 }
 
 function run_test() {

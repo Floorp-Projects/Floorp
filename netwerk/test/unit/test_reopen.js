@@ -70,17 +70,17 @@ function check_async_open_throws(error) {
 }
 
 var listener = {
-  onStartRequest: function test_onStartR(request) {
+  onStartRequest: function test_onStartR(request, ctx) {
     check_async_open_throws(NS_ERROR_IN_PROGRESS);
   },
 
-  onDataAvailable: function test_ODA(request, inputStream,
+  onDataAvailable: function test_ODA(request, cx, inputStream,
                                      offset, count) {
     new BinaryInputStream(inputStream).readByteArray(count); // required by API
     check_async_open_throws(NS_ERROR_IN_PROGRESS);
   },
 
-  onStopRequest: function test_onStopR(request, status) {
+  onStopRequest: function test_onStopR(request, ctx, status) {
     // Once onStopRequest is reached, the channel is marked as having been
     // opened
     check_async_open_throws(NS_ERROR_ALREADY_OPENED);

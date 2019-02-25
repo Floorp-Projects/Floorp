@@ -24,10 +24,12 @@ function run_test() {
   ctx.wrappedJSObject = ctx;
   
   var observer = {
-    onStartRequest: function(aRequest) {
+    onStartRequest: function(aRequest, aContext) {
+      Assert.equal(aContext.wrappedJSObject, ctx);
     },
-    onStopRequest: function(aRequest, aStatusCode) {
+    onStopRequest: function(aRequest, aContext, aStatusCode) {
       Assert.equal(aStatusCode, 0);
+      Assert.equal(aContext.wrappedJSObject, ctx);
       var sis =
         Cc["@mozilla.org/scriptableinputstream;1"]
           .createInstance(Ci.nsIScriptableInputStream);

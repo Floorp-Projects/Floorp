@@ -42,12 +42,12 @@ const tests = [
 
 // A basic listener that reads checks the if we sniffed properly.
 var listener = {
-  onStartRequest(request) {
+  onStartRequest(request, context) {
     Assert.equal(request.QueryInterface(Ci.nsIChannel).contentType,
                  tests[testRan].expectedContentType);
   },
 
-  onDataAvailable(request, stream, offset, count) {
+  onDataAvailable(request, context, stream, offset, count) {
     try {
       var bis = Cc["@mozilla.org/binaryinputstream;1"]
                   .createInstance(Ci.nsIBinaryInputStream);
@@ -58,7 +58,7 @@ var listener = {
     }
   },
 
-  onStopRequest(request, status) {
+  onStopRequest(request, context, status) {
     testRan++;
     runNext();
   },

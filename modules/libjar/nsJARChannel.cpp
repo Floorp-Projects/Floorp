@@ -529,8 +529,8 @@ void nsJARChannel::NotifyError(nsresult aError) {
 
   mStatus = aError;
 
-  OnStartRequest(nullptr);
-  OnStopRequest(nullptr, aError);
+  OnStartRequest(nullptr, nullptr);
+  OnStopRequest(nullptr, nullptr, aError);
 }
 
 void nsJARChannel::FireOnProgress(uint64_t aProgress) {
@@ -985,11 +985,11 @@ nsJARChannel::GetZipEntry(nsIZipEntry **aZipEntry) {
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsJARChannel::OnStartRequest(nsIRequest *req) {
+nsJARChannel::OnStartRequest(nsIRequest *req, nsISupports *ctx) {
   LOG(("nsJARChannel::OnStartRequest [this=%p %s]\n", this, mSpec.get()));
 
   mRequest = req;
-  nsresult rv = mListener->OnStartRequest(this);
+  nsresult rv = mListener->OnStartRequest(this, nullptr);
   mRequest = nullptr;
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1016,7 +1016,7 @@ nsJARChannel::OnStartRequest(nsIRequest *req) {
 }
 
 NS_IMETHODIMP
-nsJARChannel::OnStopRequest(nsIRequest *req,
+nsJARChannel::OnStopRequest(nsIRequest *req, nsISupports *ctx,
                             nsresult status) {
   LOG(("nsJARChannel::OnStopRequest [this=%p %s status=%" PRIx32 "]\n", this,
        mSpec.get(), static_cast<uint32_t>(status)));
@@ -1024,7 +1024,7 @@ nsJARChannel::OnStopRequest(nsIRequest *req,
   if (NS_SUCCEEDED(mStatus)) mStatus = status;
 
   if (mListener) {
-    mListener->OnStopRequest(this, status);
+    mListener->OnStopRequest(this, nullptr, status);
     mListener = nullptr;
   }
 
@@ -1047,14 +1047,14 @@ nsJARChannel::OnStopRequest(nsIRequest *req,
 }
 
 NS_IMETHODIMP
-nsJARChannel::OnDataAvailable(nsIRequest *req,
+nsJARChannel::OnDataAvailable(nsIRequest *req, nsISupports *ctx,
                               nsIInputStream *stream, uint64_t offset,
                               uint32_t count) {
   LOG(("nsJARChannel::OnDataAvailable [this=%p %s]\n", this, mSpec.get()));
 
   nsresult rv;
 
-  rv = mListener->OnDataAvailable(this, stream, offset, count);
+  rv = mListener->OnDataAvailable(this, nullptr, stream, offset, count);
 
   // simply report progress here instead of hooking ourselves up as a
   // nsITransportEventSink implementation.

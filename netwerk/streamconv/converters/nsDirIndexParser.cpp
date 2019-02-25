@@ -87,16 +87,16 @@ nsDirIndexParser::GetEncoding(char **aEncoding) {
 }
 
 NS_IMETHODIMP
-nsDirIndexParser::OnStartRequest(nsIRequest *aRequest) {
+nsDirIndexParser::OnStartRequest(nsIRequest *aRequest, nsISupports *aCtxt) {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDirIndexParser::OnStopRequest(nsIRequest *aRequest,
+nsDirIndexParser::OnStopRequest(nsIRequest *aRequest, nsISupports *aCtxt,
                                 nsresult aStatusCode) {
   // Finish up
   if (mBuf.Length() > (uint32_t)mLineStart) {
-    ProcessData(aRequest, nullptr);
+    ProcessData(aRequest, aCtxt);
   }
 
   return NS_OK;
@@ -297,7 +297,7 @@ nsresult nsDirIndexParser::ParseData(nsIDirIndex *aIdx, char *aDataStr,
 }
 
 NS_IMETHODIMP
-nsDirIndexParser::OnDataAvailable(nsIRequest *aRequest,
+nsDirIndexParser::OnDataAvailable(nsIRequest *aRequest, nsISupports *aCtxt,
                                   nsIInputStream *aStream,
                                   uint64_t aSourceOffset, uint32_t aCount) {
   if (aCount < 1) return NS_OK;
@@ -319,7 +319,7 @@ nsDirIndexParser::OnDataAvailable(nsIRequest *aRequest,
   //       work on other strings.
   mBuf.SetLength(len + count);
 
-  return ProcessData(aRequest, nullptr);
+  return ProcessData(aRequest, aCtxt);
 }
 
 nsresult nsDirIndexParser::ProcessData(nsIRequest *aRequest,

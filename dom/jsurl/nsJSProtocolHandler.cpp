@@ -736,8 +736,8 @@ void nsJSChannel::EvaluateScript() {
 }
 
 void nsJSChannel::NotifyListener() {
-  mListener->OnStartRequest(this);
-  mListener->OnStopRequest(this, mStatus);
+  mListener->OnStartRequest(this, nullptr);
+  mListener->OnStopRequest(this, nullptr, mStatus);
 
   CleanupStrongRefs();
 }
@@ -936,24 +936,24 @@ nsJSChannel::SetContentLength(int64_t aContentLength) {
 }
 
 NS_IMETHODIMP
-nsJSChannel::OnStartRequest(nsIRequest* aRequest) {
+nsJSChannel::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
   NS_ENSURE_TRUE(aRequest == mStreamChannel, NS_ERROR_UNEXPECTED);
 
-  return mListener->OnStartRequest(this);
+  return mListener->OnStartRequest(this, aContext);
 }
 
 NS_IMETHODIMP
-nsJSChannel::OnDataAvailable(nsIRequest* aRequest,
+nsJSChannel::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
                              nsIInputStream* aInputStream, uint64_t aOffset,
                              uint32_t aCount) {
   NS_ENSURE_TRUE(aRequest == mStreamChannel, NS_ERROR_UNEXPECTED);
 
-  return mListener->OnDataAvailable(this, aInputStream, aOffset,
+  return mListener->OnDataAvailable(this, aContext, aInputStream, aOffset,
                                     aCount);
 }
 
 NS_IMETHODIMP
-nsJSChannel::OnStopRequest(nsIRequest* aRequest,
+nsJSChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
                            nsresult aStatus) {
   NS_ENSURE_TRUE(aRequest == mStreamChannel, NS_ERROR_UNEXPECTED);
 
@@ -966,7 +966,7 @@ nsJSChannel::OnStopRequest(nsIRequest* aRequest,
     aStatus = mStatus;
   }
 
-  nsresult rv = listener->OnStopRequest(this, aStatus);
+  nsresult rv = listener->OnStopRequest(this, aContext, aStatus);
 
   nsCOMPtr<nsILoadGroup> loadGroup;
   mStreamChannel->GetLoadGroup(getter_AddRefs(loadGroup));

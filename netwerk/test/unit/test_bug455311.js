@@ -65,7 +65,7 @@ RequestObserver.prototype = {
     }
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
-  onStartRequest: function (req)
+  onStartRequest: function (req, ctx)
   {
     var chan = req.QueryInterface(Ci.nsIChannel);
     Assert.equal(chan.URI.spec, this._origURI.spec);
@@ -73,11 +73,11 @@ RequestObserver.prototype = {
     Assert.equal(chan.originalURI.spec, this._origURI.spec);
     Assert.equal(chan.originalURI, this._origURI);
   },
-  onDataAvailable: function(req, stream, offset, count)
+  onDataAvailable: function(req, ctx, stream, offset, count)
   {
     do_throw("Unexpected call to onDataAvailable");
   },
-  onStopRequest: function (req, status)
+  onStopRequest: function (req, ctx, status)
   {
     var chan = req.QueryInterface(Ci.nsIChannel);
     try {

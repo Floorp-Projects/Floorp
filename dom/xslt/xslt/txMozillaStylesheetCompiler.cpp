@@ -197,7 +197,7 @@ txStylesheetSink::DidBuildModel(bool aTerminated) {
 }
 
 NS_IMETHODIMP
-txStylesheetSink::OnDataAvailable(nsIRequest* aRequest,
+txStylesheetSink::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
                                   nsIInputStream* aInputStream,
                                   uint64_t aOffset, uint32_t aCount) {
   if (!mCheckedForXML) {
@@ -216,12 +216,12 @@ txStylesheetSink::OnDataAvailable(nsIRequest* aRequest,
     }
   }
 
-  return mListener->OnDataAvailable(aRequest, aInputStream, aOffset,
+  return mListener->OnDataAvailable(aRequest, mParser, aInputStream, aOffset,
                                     aCount);
 }
 
 NS_IMETHODIMP
-txStylesheetSink::OnStartRequest(nsIRequest* aRequest) {
+txStylesheetSink::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
   int32_t charsetSource = kCharsetFromDocTypeDefault;
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
@@ -265,11 +265,11 @@ txStylesheetSink::OnStartRequest(nsIRequest* aRequest) {
     }
   }
 
-  return mListener->OnStartRequest(aRequest);
+  return mListener->OnStartRequest(aRequest, mParser);
 }
 
 NS_IMETHODIMP
-txStylesheetSink::OnStopRequest(nsIRequest* aRequest,
+txStylesheetSink::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
                                 nsresult aStatusCode) {
   bool success = true;
 
@@ -299,7 +299,7 @@ txStylesheetSink::OnStopRequest(nsIRequest* aRequest,
     mCompiler->cancel(result, nullptr, spec.get());
   }
 
-  nsresult rv = mListener->OnStopRequest(aRequest, aStatusCode);
+  nsresult rv = mListener->OnStopRequest(aRequest, mParser, aStatusCode);
   mListener = nullptr;
   mParser = nullptr;
   return rv;

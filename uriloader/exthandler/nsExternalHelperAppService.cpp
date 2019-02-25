@@ -1502,7 +1502,8 @@ void nsExternalAppHandler::MaybeApplyDecodingForExtension(
   encChannel->SetApplyConversion(applyConversion);
 }
 
-NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
+NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request,
+                                                   nsISupports* aCtxt) {
   MOZ_ASSERT(request, "OnStartRequest without request?");
 
   // Set mTimeDownloadStarted here as the download has already started and
@@ -1885,7 +1886,7 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv,
 }
 
 NS_IMETHODIMP
-nsExternalAppHandler::OnDataAvailable(nsIRequest* request,
+nsExternalAppHandler::OnDataAvailable(nsIRequest* request, nsISupports* aCtxt,
                                       nsIInputStream* inStr,
                                       uint64_t sourceOffset, uint32_t count) {
   nsresult rv = NS_OK;
@@ -1900,7 +1901,7 @@ nsExternalAppHandler::OnDataAvailable(nsIRequest* request,
     mProgress += count;
 
     nsCOMPtr<nsIStreamListener> saver = do_QueryInterface(mSaver);
-    rv = saver->OnDataAvailable(request, inStr, sourceOffset, count);
+    rv = saver->OnDataAvailable(request, aCtxt, inStr, sourceOffset, count);
     if (NS_SUCCEEDED(rv)) {
       // Send progress notification.
       if (mTransfer) {
@@ -1924,6 +1925,7 @@ nsExternalAppHandler::OnDataAvailable(nsIRequest* request,
 }
 
 NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIRequest* request,
+                                                  nsISupports* aCtxt,
                                                   nsresult aStatus) {
   LOG(
       ("nsExternalAppHandler::OnStopRequest\n"

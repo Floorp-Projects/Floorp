@@ -23,7 +23,7 @@ TestStreamListener.prototype = {
     this.setState("stop");
   },
 
-  onDataAvailable: function(request, inputStream, offset, count) {
+  onDataAvailable: function(request, context, inputStream, offset, count) {
     const sin = Cc["@mozilla.org/scriptableinputstream;1"]
           .createInstance(nsIScriptableInputStream);
     sin.init(inputStream);
@@ -98,7 +98,7 @@ add_task(async function() {
   equal(testListener.state, "initial", "test listener in initial state");
 
   // This method must be passed through immediately.
-  listener.onStartRequest(null);
+  listener.onStartRequest(null, null);
   equal(testListener.state, "start", "test listener started");
 
   const TEST_INPUT = "hi bob";
@@ -125,7 +125,7 @@ add_task(async function() {
   );
 
   // onDataAvailable is required to immediately read the data.
-  listener.onDataAvailable(null, testInputStream, 0, 6);
+  listener.onDataAvailable(null, null, testInputStream, 0, 6);
   equal(testInputStream.available(), 0, "no more data should be available");
   equal(testListener.state, "start",
      "test listener should not have received data");
@@ -137,7 +137,7 @@ add_task(async function() {
   equal(activitySeen, true, "activity has been distributed");
 
   const onChange = testListener.onStateChanged();
-  listener.onStopRequest(null, null);
+  listener.onStopRequest(null, null, null);
   newState = await onChange;
   equal(newState, "stop", "onStateChanged reported");
 });

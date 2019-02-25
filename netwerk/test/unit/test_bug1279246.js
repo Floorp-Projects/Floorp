@@ -28,12 +28,12 @@ Listener.prototype = {
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
-  onStartRequest: function(request) {
+  onStartRequest: function(request, ctx) {
     Assert.equal(request.status, Cr.NS_OK);
     this._buffer = "";
   },
 
-  onDataAvailable: function(request, stream, offset, cnt) {
+  onDataAvailable: function(request, cx, stream, offset, cnt) {
     if (pass == 0) {
       this._buffer = this._buffer.concat(read_stream(stream, cnt));
     } else {
@@ -46,7 +46,7 @@ Listener.prototype = {
     }
   },
 
-  onStopRequest: function(request, status) {
+  onStopRequest: function(request, ctx, status) {
     if (pass == 0) {
       Assert.equal(this._buffer.length, responseLen);
       pass++;

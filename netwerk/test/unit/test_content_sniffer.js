@@ -39,7 +39,7 @@ var sniffer = {
 };
 
 var listener = {
-  onStartRequest: function test_onStartR(request) {
+  onStartRequest: function test_onStartR(request, ctx) {
     try {
       var chan = request.QueryInterface(Ci.nsIChannel);
       if (chan.contentType == unknownType)
@@ -62,7 +62,7 @@ var listener = {
     throw Cr.NS_ERROR_UNEXPECTED;
   },
 
-  onStopRequest: function test_onStopR(request, status) {
+  onStopRequest: function test_onStopR(request, ctx, status) {
     run_test_iteration(this._iteration);
     do_test_finished();
   },

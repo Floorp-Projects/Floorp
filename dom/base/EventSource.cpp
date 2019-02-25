@@ -601,7 +601,7 @@ EventSourceImpl::Observe(nsISupports* aSubject, const char* aTopic,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-EventSourceImpl::OnStartRequest(nsIRequest* aRequest) {
+EventSourceImpl::OnStartRequest(nsIRequest* aRequest, nsISupports* aCtxt) {
   AssertIsOnMainThread();
   if (IsClosed()) {
     return NS_ERROR_ABORT;
@@ -707,7 +707,7 @@ void EventSourceImpl::ParseSegment(const char* aBuffer, uint32_t aLength) {
 }
 
 NS_IMETHODIMP
-EventSourceImpl::OnDataAvailable(nsIRequest* aRequest,
+EventSourceImpl::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
                                  nsIInputStream* aInputStream, uint64_t aOffset,
                                  uint32_t aCount) {
   AssertIsOnTargetThread();
@@ -725,7 +725,7 @@ EventSourceImpl::OnDataAvailable(nsIRequest* aRequest,
 }
 
 NS_IMETHODIMP
-EventSourceImpl::OnStopRequest(nsIRequest* aRequest,
+EventSourceImpl::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
                                nsresult aStatusCode) {
   AssertIsOnMainThread();
 

@@ -25,7 +25,7 @@ streamListener.prototype =
                  "The channel content type is the expected one");
     this.done.resolve();
   },
-  onDataAvailable(aRequest, aInputStream, aOffset, aCount) {
+  onDataAvailable(aRequest, aContext, aInputStream, aOffset, aCount) {
     aRequest.cancel(Cr.NS_ERROR_ABORT);
     throw Cr.NS_ERROR_ABORT;
   },

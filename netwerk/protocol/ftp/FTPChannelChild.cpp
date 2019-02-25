@@ -316,7 +316,7 @@ void FTPChannelChild::DoOnStartRequest(const nsresult& aChannelStatus,
   }
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
-  rv = mListener->OnStartRequest(this);
+  rv = mListener->OnStartRequest(this, nullptr);
   if (NS_FAILED(rv)) Cancel(rv);
 
   if (mDivertingToParent) {
@@ -430,7 +430,7 @@ void FTPChannelChild::DoOnDataAvailable(const nsresult& channelStatus,
   }
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
-  rv = mListener->OnDataAvailable(this, stringStream, offset, count);
+  rv = mListener->OnDataAvailable(this, nullptr, stringStream, offset, count);
   if (NS_FAILED(rv)) Cancel(rv);
   stringStream->Close();
 }
@@ -514,7 +514,7 @@ void FTPChannelChild::DoOnStopRequest(const nsresult& aChannelStatus,
     // we initiate protocol deletion below.
     mIsPending = false;
     AutoEventEnqueuer ensureSerialDispatch(mEventQ);
-    (void)mListener->OnStopRequest(this, aChannelStatus);
+    (void)mListener->OnStopRequest(this, nullptr, aChannelStatus);
 
     mListener = nullptr;
 
@@ -554,9 +554,9 @@ void FTPChannelChild::DoFailedAsyncOpen(const nsresult& statusCode) {
   if (mLoadGroup) mLoadGroup->RemoveRequest(this, nullptr, statusCode);
 
   if (mListener) {
-    mListener->OnStartRequest(this);
+    mListener->OnStartRequest(this, nullptr);
     mIsPending = false;
-    mListener->OnStopRequest(this, statusCode);
+    mListener->OnStopRequest(this, nullptr, statusCode);
   } else {
     mIsPending = false;
   }

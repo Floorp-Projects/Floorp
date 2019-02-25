@@ -930,7 +930,8 @@ void nsObjectLoadingContent::NotifyOwnerDocumentActivityChanged() {
 
 // nsIRequestObserver
 NS_IMETHODIMP
-nsObjectLoadingContent::OnStartRequest(nsIRequest* aRequest) {
+nsObjectLoadingContent::OnStartRequest(nsIRequest* aRequest,
+                                       nsISupports* aContext) {
   AUTO_PROFILER_LABEL("nsObjectLoadingContent::OnStartRequest", NETWORK);
 
   LOG(("OBJLC [%p]: Channel OnStartRequest", this));
@@ -951,7 +952,7 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest* aRequest) {
       return NS_BINDING_ABORTED;
     }
     if (MakePluginListener()) {
-      return mFinalListener->OnStartRequest(aRequest);
+      return mFinalListener->OnStartRequest(aRequest, nullptr);
     }
     MOZ_ASSERT_UNREACHABLE(
         "Failed to create PluginStreamListener, aborting "
@@ -1012,6 +1013,7 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest* aRequest) {
 
 NS_IMETHODIMP
 nsObjectLoadingContent::OnStopRequest(nsIRequest* aRequest,
+                                      nsISupports* aContext,
                                       nsresult aStatusCode) {
   AUTO_PROFILER_LABEL("nsObjectLoadingContent::OnStopRequest", NETWORK);
 
@@ -1037,7 +1039,7 @@ nsObjectLoadingContent::OnStopRequest(nsIRequest* aRequest,
     // This may re-enter in the case of plugin listeners
     nsCOMPtr<nsIStreamListener> listenerGrip(mFinalListener);
     mFinalListener = nullptr;
-    listenerGrip->OnStopRequest(aRequest, aStatusCode);
+    listenerGrip->OnStopRequest(aRequest, aContext, aStatusCode);
   }
 
   // Return value doesn't matter
@@ -1047,6 +1049,7 @@ nsObjectLoadingContent::OnStopRequest(nsIRequest* aRequest,
 // nsIStreamListener
 NS_IMETHODIMP
 nsObjectLoadingContent::OnDataAvailable(nsIRequest* aRequest,
+                                        nsISupports* aContext,
                                         nsIInputStream* aInputStream,
                                         uint64_t aOffset, uint32_t aCount) {
   if (aRequest != mChannel) {
@@ -1056,7 +1059,7 @@ nsObjectLoadingContent::OnDataAvailable(nsIRequest* aRequest,
   if (mFinalListener) {
     // This may re-enter in the case of plugin listeners
     nsCOMPtr<nsIStreamListener> listenerGrip(mFinalListener);
-    return listenerGrip->OnDataAvailable(aRequest, aInputStream,
+    return listenerGrip->OnDataAvailable(aRequest, aContext, aInputStream,
                                          aOffset, aCount);
   }
 
@@ -2216,7 +2219,7 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
     // this in the loading block above as it requires an instance.
     if (aLoadingChannel && NS_SUCCEEDED(rv)) {
       if (NS_SUCCEEDED(rv) && MakePluginListener()) {
-        rv = mFinalListener->OnStartRequest(mChannel);
+        rv = mFinalListener->OnStartRequest(mChannel, nullptr);
         if (NS_FAILED(rv)) {
           // Plugins can reject their initial stream, but continue to run.
           CloseChannel();
@@ -2229,7 +2232,7 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
     NS_ASSERTION(mType != eType_Null && mType != eType_Loading,
                  "We should not have a final listener with a non-loaded type");
     mFinalListener = finalListener;
-    rv = finalListener->OnStartRequest(mChannel);
+    rv = finalListener->OnStartRequest(mChannel, nullptr);
   }
 
   if (NS_FAILED(rv) && mIsLoading) {
@@ -2259,7 +2262,7 @@ nsresult nsObjectLoadingContent::CloseChannel() {
     if (listenerGrip) {
       // mFinalListener is only set by LoadObject after OnStartRequest, or
       // by OnStartRequest in the case of late-opened plugin streams
-      listenerGrip->OnStopRequest(channelGrip, NS_BINDING_ABORTED);
+      listenerGrip->OnStopRequest(channelGrip, nullptr, NS_BINDING_ABORTED);
     }
   }
   return NS_OK;

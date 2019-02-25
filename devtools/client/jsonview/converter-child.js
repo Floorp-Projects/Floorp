@@ -68,14 +68,14 @@ Converter.prototype = {
     this.listener = listener;
   },
 
-  onDataAvailable: function(request, inputStream, offset, count) {
+  onDataAvailable: function(request, context, inputStream, offset, count) {
     // Decode and insert data.
     const buffer = new ArrayBuffer(count);
     new BinaryInput(inputStream).readArrayBuffer(count, buffer);
     this.decodeAndInsertBuffer(buffer);
   },
 
-  onStartRequest: function(request) {
+  onStartRequest: function(request, context) {
     // Set the content type to HTML in order to parse the doctype, styles
     // and scripts. The JSON will be manually inserted as text.
     request.QueryInterface(Ci.nsIChannel);
@@ -105,7 +105,7 @@ Converter.prototype = {
     request.loadInfo.resetPrincipalToInheritToNullPrincipal();
 
     // Start the request.
-    this.listener.onStartRequest(request);
+    this.listener.onStartRequest(request, context);
 
     // Initialize stuff.
     const win = NetworkHelper.getWindowForRequest(request);
@@ -117,15 +117,15 @@ Converter.prototype = {
     // Send the initial HTML code.
     const buffer = new TextEncoder().encode(initialHTML(win.document)).buffer;
     const stream = new BufferStream(buffer, 0, buffer.byteLength);
-    this.listener.onDataAvailable(request, stream, 0, stream.available());
+    this.listener.onDataAvailable(request, context, stream, 0, stream.available());
   },
 
-  onStopRequest: function(request, statusCode) {
+  onStopRequest: function(request, context, statusCode) {
     // Flush data.
     this.decodeAndInsertBuffer(new ArrayBuffer(0), true);
 
     // Stop the request.
-    this.listener.onStopRequest(request, statusCode);
+    this.listener.onStopRequest(request, context, statusCode);
     this.listener = null;
     this.decoder = null;
     this.data = null;

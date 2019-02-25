@@ -32,7 +32,7 @@ function check200(ch) {
   Assert.equal(ch.responseStatusText, "OK");
 }
 
-function checkFile(ch, status, data) {
+function checkFile(ch, cx, status, data) {
   Assert.equal(ch.responseStatus, 200);
   Assert.ok(ch.requestSucceeded);
 
