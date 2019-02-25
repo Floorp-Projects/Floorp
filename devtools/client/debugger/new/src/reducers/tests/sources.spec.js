@@ -11,18 +11,24 @@ import update, { initialSourcesState, getDisplayedSources } from "../sources";
 import { foobar } from "../../test/fixtures";
 import type { Source } from "../../types";
 import { prefs } from "../../utils/prefs";
+import { makeMockSource } from "../../utils/test-mockup";
+
+
 
 const fakeSources = foobar.sources.sources;
 
 const extensionSource = {
+  ...makeMockSource(),
   id: "extensionId",
   url: "http://example.com/script.js",
   actors: [{ actor: "extensionId-actor", source: "extensionId", thread: "foo" }]
-};
+}
 
 const firefoxExtensionSource = {
+  ...makeMockSource(),
   id: "firefoxExtension",
   url: "moz-extension://id/js/content.js",
+  isExtension: true,
   actors: [
     {
       actor: "firefoxExtension-actor",
@@ -33,7 +39,9 @@ const firefoxExtensionSource = {
 };
 
 const chromeExtensionSource = {
+  ...makeMockSource(),
   id: "chromeExtension",
+  isExtension: true,
   url: "chrome-extension://id/js/content.js",
   actors: [
     { actor: "chromeExtension-actor", source: "chromeExtension", thread: "foo" }
@@ -51,8 +59,7 @@ describe("sources reducer", () => {
     let state = initialSourcesState();
     state = update(state, {
       type: "ADD_SOURCE",
-      // coercing to a Source for the purpose of this test
-      source: ((fakeSources.fooSourceActor: any): Source)
+      source: makeMockSource()
     });
     expect(Object.keys(state.sources)).toHaveLength(1);
   });

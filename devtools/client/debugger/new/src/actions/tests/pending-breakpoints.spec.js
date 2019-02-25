@@ -24,6 +24,7 @@ function loadInitialState(opts = {}) {
 
 jest.mock("../../utils/prefs", () => ({
   prefs: {
+    clientSourceMapsEnabled: true,
     expressions: []
   },
   asyncStore: {
@@ -364,9 +365,6 @@ describe("adding sources", () => {
     await dispatch(actions.loadSourceText(source2));
 
     await waitForState(store, state => selectors.getBreakpointCount(state) > 0);
-
-    // N.B. this test is kind of broken and creates different breakpoints for
-    // the generated and original bar.js sources.
-    expect(selectors.getBreakpointCount(getState())).toEqual(2);
+    expect(selectors.getBreakpointCount(getState())).toEqual(1);
   });
 });
