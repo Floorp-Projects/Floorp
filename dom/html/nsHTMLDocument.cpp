@@ -2855,7 +2855,9 @@ bool nsHTMLDocument::ExecCommand(const nsAString& commandID, bool doShowUI,
     RefPtr<nsCommandParams> params = new nsCommandParams();
     if (isBool) {
       rv = params->SetBool("state_attribute", boolVal);
-    } else if (cmdToDispatch.EqualsLiteral("cmd_fontFace")) {
+    } else if (cmdToDispatch.EqualsLiteral("cmd_fontFace") ||
+               cmdToDispatch.EqualsLiteral("cmd_insertImageNoUI") ||
+               cmdToDispatch.EqualsLiteral("cmd_insertLinkNoUI")) {
       rv = params->SetString("state_attribute", value);
     } else if (cmdToDispatch.EqualsLiteral("cmd_insertHTML") ||
                cmdToDispatch.EqualsLiteral("cmd_insertText")) {

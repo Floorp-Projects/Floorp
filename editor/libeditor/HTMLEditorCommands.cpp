@@ -1404,19 +1404,11 @@ InsertTagCommand::DoCommandParams(const char* aCommandName,
     return NS_ERROR_FAILURE;
   }
 
-  // Don't use nsAutoCString here because nsCommandParams stores c-string member
-  // with nsCString*.  Therefore, nsAutoCString always needs to copy the storage
-  // but nsCString may avoid it.
-  // TODO: This does not aware of URL which includes non-ASCII characters.
-  //       A follow up bug will fix this.
-  nsCString asciiValue;
-  // do we have an href to use for creating link?
-  nsresult rv =
-      aParams->AsCommandParams()->GetCString(STATE_ATTRIBUTE, asciiValue);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  NS_ConvertASCIItoUTF16 value(asciiValue);
+  // Don't use nsAutoString here because nsCommandParams stores string member
+  // with nsString*.  Therefore, nsAutoString always needs to copy the storage
+  // but nsString may avoid it.
+  nsString value;
+  nsresult rv = aParams->AsCommandParams()->GetString(STATE_ATTRIBUTE, value);
   if (NS_WARN_IF(value.IsEmpty())) {
     return NS_ERROR_INVALID_ARG;
   }
