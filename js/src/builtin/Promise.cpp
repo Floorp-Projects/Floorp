@@ -1480,23 +1480,20 @@ static MOZ_MUST_USE bool AsyncFunctionPromiseReactionJob(
 
   RootedValue handlerVal(cx, reaction->handler());
   RootedValue argument(cx, reaction->handlerArg());
-  Rooted<PromiseObject*> resultPromise(
-      cx, &reaction->promise()->as<PromiseObject>());
   Rooted<AsyncFunctionGeneratorObject*> generator(
       cx, reaction->asyncFunctionGenerator());
 
   int32_t handlerNum = handlerVal.toInt32();
 
-  // Await's handlers don't return a value, nor throw exception.
+  // Await's handlers don't return a value, nor throw an exception.
   // They fail only on OOM.
   if (handlerNum == PromiseHandlerAsyncFunctionAwaitedFulfilled) {
-    if (!AsyncFunctionAwaitedFulfilled(cx, resultPromise, generator,
-                                       argument)) {
+    if (!AsyncFunctionAwaitedFulfilled(cx, generator, argument)) {
       return false;
     }
   } else {
     MOZ_ASSERT(handlerNum == PromiseHandlerAsyncFunctionAwaitedRejected);
-    if (!AsyncFunctionAwaitedRejected(cx, resultPromise, generator, argument)) {
+    if (!AsyncFunctionAwaitedRejected(cx, generator, argument)) {
       return false;
     }
   }
@@ -3277,6 +3274,7 @@ static PromiseReactionRecord* NewReactionRecord(
   } else {
     // `resultCapability.promise` is null for the following cases:
     //   * resulting Promise is known to be unused
+    //   * Async Function
     //   * Async Generator
     // In any case, other fields are also not used.
     MOZ_ASSERT(!resultCapability.resolve());
@@ -3516,33 +3514,23 @@ bool js::IsPromiseForAsync(JSObject* promise) {
          PromiseHasAnyFlag(promise->as<PromiseObject>(), PROMISE_FLAG_ASYNC);
 }
 
-// ES 2018 draft 25.5.5.2 steps 3.f, 3.g.
+// ES2019 draft rev 7428c89bef626548084cd4e697a19ece7168f24c
+// 25.7.5.1 AsyncFunctionStart, steps 3.f-g.
 MOZ_MUST_USE bool js::AsyncFunctionThrown(
     JSContext* cx, Handle<PromiseObject*> resultPromise) {
-  // Step 3.f.
   RootedValue exc(cx);
   if (!MaybeGetAndClearException(cx, &exc)) {
     return false;
   }
 
-  if (!RejectPromiseInternal(cx, resultPromise, exc)) {
-    return false;
-  }
-
-  // Step 3.g.
-  return true;
+  return RejectPromiseInternal(cx, resultPromise, exc);
 }
 
-// ES 2018 draft 25.5.5.2 steps 3.d-e, 3.g.
+// ES2019 draft rev 7428c89bef626548084cd4e697a19ece7168f24c
+// 25.7.5.1 AsyncFunctionStart, steps 3.d-e, 3.g.
 MOZ_MUST_USE bool js::AsyncFunctionReturned(
     JSContext* cx, Handle<PromiseObject*> resultPromise, HandleValue value) {
-  // Steps 3.d-e.
-  if (!ResolvePromiseInternal(cx, resultPromise, value)) {
-    return false;
-  }
-
-  // Step 3.g.
-  return true;
+  return ResolvePromiseInternal(cx, resultPromise, value);
 }
 
 // Helper function that performs the equivalent steps as
@@ -3587,7 +3575,7 @@ static MOZ_MUST_USE bool InternalAwait(JSContext* cx, HandleValue value,
 // ES 2018 draft 25.5.5.3 steps 2-10.
 MOZ_MUST_USE bool js::AsyncFunctionAwait(
     JSContext* cx, Handle<AsyncFunctionGeneratorObject*> genObj,
-    Handle<PromiseObject*> resultPromise, HandleValue value) {
+    HandleValue value) {
   // Steps 4-5.
   RootedValue onFulfilled(
       cx, Int32Value(PromiseHandlerAsyncFunctionAwaitedFulfilled));
@@ -3598,8 +3586,7 @@ MOZ_MUST_USE bool js::AsyncFunctionAwait(
   auto extra = [&](Handle<PromiseReactionRecord*> reaction) {
     reaction->setIsAsyncFunction(genObj);
   };
-  return InternalAwait(cx, value, resultPromise, onFulfilled, onRejected,
-                       extra);
+  return InternalAwait(cx, value, nullptr, onFulfilled, onRejected, extra);
 }
 
 // Async Iteration proposal 4.1 Await steps 2-9.

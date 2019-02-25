@@ -254,7 +254,7 @@ MOZ_MUST_USE bool AsyncFunctionThrown(JSContext* cx,
 
 MOZ_MUST_USE bool AsyncFunctionAwait(
     JSContext* cx, Handle<AsyncFunctionGeneratorObject*> genObj,
-    Handle<PromiseObject*> resultPromise, HandleValue value);
+    HandleValue value);
 
 // If the await operation can be skipped and the resolution value for `val` can
 // be acquired, stored the resolved value to `resolved` and `true` to
