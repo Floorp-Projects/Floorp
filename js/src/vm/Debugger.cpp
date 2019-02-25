@@ -222,8 +222,6 @@ static const Class DebuggerSource_class = {
 static JSFunction* RemoveAsyncWrapper(JSFunction* fun) {
   if (js::IsWrappedAsyncFunction(fun)) {
     fun = js::GetUnwrappedAsyncFunction(fun);
-  } else if (js::IsWrappedAsyncGenerator(fun)) {
-    fun = js::GetUnwrappedAsyncGenerator(fun);
   }
 
   return fun;
@@ -11202,8 +11200,7 @@ bool DebuggerObject::isAsyncFunction() const {
 bool DebuggerObject::isGeneratorFunction() const {
   MOZ_ASSERT(isDebuggeeFunction());
 
-  JSFunction* fun = RemoveAsyncWrapper(&referent()->as<JSFunction>());
-  return fun->isGenerator();
+  return RemoveAsyncWrapper(&referent()->as<JSFunction>())->isGenerator();
 }
 
 bool DebuggerObject::isGlobal() const { return referent()->is<GlobalObject>(); }

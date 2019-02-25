@@ -11378,15 +11378,6 @@ void CodeGenerator::visitToAsync(LToAsync* lir) {
   callVM(ToAsyncInfo, lir);
 }
 
-typedef JSObject* (*ToAsyncGenFn)(JSContext*, HandleFunction);
-static const VMFunction ToAsyncGenInfo =
-    FunctionInfo<ToAsyncGenFn>(js::WrapAsyncGenerator, "ToAsyncGen");
-
-void CodeGenerator::visitToAsyncGen(LToAsyncGen* lir) {
-  pushArg(ToRegister(lir->unwrapped()));
-  callVM(ToAsyncGenInfo, lir);
-}
-
 typedef JSObject* (*ToAsyncIterFn)(JSContext*, HandleObject, HandleValue);
 static const VMFunction ToAsyncIterInfo =
     FunctionInfo<ToAsyncIterFn>(js::CreateAsyncFromSyncIterator, "ToAsyncIter");

@@ -18,8 +18,6 @@
 #include "js/RootingAPI.h"           // JS::Handle, JS::Rooted
 #include "vm/BytecodeUtil.h"         // JSOp
 #include "vm/JSAtom.h"               // JSAtom
-#include "vm/JSFunction.h"           // JSFunction, FunctionPrefixKind
-#include "vm/JSScript.h"             // FunctionAsyncKind
 #include "vm/NativeObject.h"         // PlainObject
 #include "vm/Scope.h"                // LexicalScope
 
@@ -244,8 +242,7 @@ class MOZ_STACK_CLASS PropertyEmitter {
       const mozilla::Maybe<uint32_t>& keyPos, Kind kind = Kind::Prototype);
   MOZ_MUST_USE bool prepareForComputedPropValue();
 
-  MOZ_MUST_USE bool emitInitHomeObject(
-      FunctionAsyncKind kind = FunctionAsyncKind::SyncFunction);
+  MOZ_MUST_USE bool emitInitHomeObject(bool isAsyncNonGenerator = false);
 
   // @param key
   //        Property key
@@ -518,7 +515,7 @@ class MOZ_RAII AutoSaveLocalStrictMode {
 //     // after emitInitConstructor/emitInitDefaultConstructor
 //     ce.prepareForPropValue(Some(offset_of_m));
 //     emit(function_for_m);
-//     ce.emitInitHomeObject(FunctionAsyncKind::Async);
+//     ce.emitInitHomeObject(true);
 //     ce.emitInitProp(atom_of_m);
 //
 //   `get p() { super.f(); }` in class

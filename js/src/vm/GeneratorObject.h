@@ -206,16 +206,11 @@ class GeneratorObject : public AbstractGeneratorObject {
   enum { RESERVED_SLOTS = AbstractGeneratorObject::RESERVED_SLOTS };
 
   static const Class class_;
+
+  static GeneratorObject* create(JSContext* cx, HandleFunction fun);
 };
 
 class AsyncFunctionGeneratorObject : public AbstractGeneratorObject {
- public:
-  enum { RESERVED_SLOTS = AbstractGeneratorObject::RESERVED_SLOTS };
-
-  static const Class class_;
-};
-
-class AsyncGeneratorGeneratorObject : public AbstractGeneratorObject {
  public:
   enum { RESERVED_SLOTS = AbstractGeneratorObject::RESERVED_SLOTS };
 
