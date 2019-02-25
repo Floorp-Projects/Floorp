@@ -6,6 +6,7 @@
 
 interface nsIDocShell;
 interface nsIAutoCompletePopup;
+webidl Element;
 
 webidl HTMLInputElement;
 
@@ -33,6 +34,7 @@ interface nsIFormFillController : nsISupports
    * @param popup - The popup to show when autocomplete results are available
    */
   void attachToBrowser(in nsIDocShell docShell, in nsIAutoCompletePopup popup);
+  void attachPopupElementToBrowser(in nsIDocShell docShell, in Element popup);
 
   /*
    * Stop controlling form fill behavior for the given browser
