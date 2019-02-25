@@ -5,7 +5,6 @@
 include protocol PBackground;
 include protocol PChildToParentStream;
 include protocol PContent;
-include protocol PContentBridge;
 include protocol PFileDescriptorSet;
 include protocol PParentToChildStream;
 
@@ -16,7 +15,7 @@ namespace ipc {
 
 protocol PIPCBlobInputStream
 {
-  manager PBackground or PContent or PContentBridge;
+  manager PBackground or PContent;
 
 parent:
   async StreamNeeded();

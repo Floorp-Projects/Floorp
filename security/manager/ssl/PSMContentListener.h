@@ -9,6 +9,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIURIContentListener.h"
+#include "nsIStreamListener.h"
 #include "nsWeakReference.h"
 #include "mozilla/psm/PPSMContentDownloaderChild.h"
 #include "mozilla/psm/PPSMContentDownloaderParent.h"

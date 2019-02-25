@@ -9,7 +9,6 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/ContentBridgeParent.h"
 #include "mozilla/dom/nsIContentChild.h"
 #include "mozilla/dom/PBrowserOrId.h"
 #include "mozilla/dom/PContentChild.h"
@@ -155,9 +154,6 @@ class ContentChild final : public PContentChild,
   static void AppendProcessId(nsACString& aName);
 
   static void UpdateCookieStatus(nsIChannel* aChannel);
-
-  mozilla::ipc::IPCResult RecvInitContentBridgeChild(
-      Endpoint<PContentBridgeChild>&& aEndpoint);
 
   mozilla::ipc::IPCResult RecvInitGMPService(
       Endpoint<PGMPServiceChild>&& aGMPService);
