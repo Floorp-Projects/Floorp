@@ -7,7 +7,7 @@ extern crate xpcom;
 use crossbeam_utils::atomic::AtomicCell;
 use error::KeyValueError;
 use moz_task::Task;
-use nserror::{nsresult, NS_ERROR_FAILURE};
+use nserror::{nsresult, NsresultExt, NS_ERROR_FAILURE};
 use nsstring::nsCString;
 use owned_value::owned_to_variant;
 use rkv::{Manager, OwnedValue, Rkv, SingleStore, StoreError, StoreOptions, Value};

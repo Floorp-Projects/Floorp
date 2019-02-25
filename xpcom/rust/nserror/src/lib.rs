@@ -7,19 +7,30 @@ use nsstring::{nsCString, nsACString};
 /// as the C++ equivalent.
 #[repr(transparent)]
 #[allow(non_camel_case_types)]
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Clone, Copy, Debug)]
 pub struct nsresult(pub u32);
 
-impl nsresult {
-    pub fn failed(self) -> bool {
+/// An extension trait that adds methods to `nsresult` types.
+pub trait NsresultExt {
+    fn failed(self) -> bool;
+    fn succeeded(self) -> bool;
+    fn to_result(self) -> Result<(), nsresult>;
+
+    /// Get a printable name for the nsresult error code. This function returns
+    /// a nsCString<'static>, which implements `Display`.
+    fn error_name(self) -> nsCString;
+}
+
+impl NsresultExt for nsresult {
+    fn failed(self) -> bool {
         (self.0 >> 31) != 0
     }
 
-    pub fn succeeded(self) -> bool {
+    fn succeeded(self) -> bool {
         !self.failed()
     }
 
-    pub fn to_result(self) -> Result<(), nsresult> {
+    fn to_result(self) -> Result<(), nsresult> {
         if self.failed() {
             Err(self)
         } else {
@@ -27,9 +38,7 @@ impl nsresult {
         }
     }
 
-    /// Get a printable name for the nsresult error code. This function returns
-    /// a nsCString<'static>, which implements `Display`.
-    pub fn error_name(self) -> nsCString {
+    fn error_name(self) -> nsCString {
         let mut cstr = nsCString::new();
         unsafe {
             Gecko_GetErrorName(self, &mut *cstr);

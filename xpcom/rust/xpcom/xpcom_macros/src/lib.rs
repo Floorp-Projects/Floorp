@@ -619,7 +619,9 @@ fn xpcom(init: DeriveInput) -> Result<Tokens, Box<Error>> {
             {
                 let mut ga = ::xpcom::GetterAddrefs::<T>::new();
                 unsafe {
-                    if self.QueryInterface(&T::IID, ga.void_ptr()).succeeded() {
+                    if ::xpcom::reexports::NsresultExt::succeeded(
+                        self.QueryInterface(&T::IID, ga.void_ptr()),
+                    ) {
                         ga.refptr()
                     } else {
                         None
