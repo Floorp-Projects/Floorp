@@ -65,8 +65,9 @@ JSObject* js::CreateAsyncFromSyncIterator(JSContext* cx, HandleObject iter,
 }
 
 // Async Iteration proposal 11.1.3.1 steps 2-4.
-/* static */ JSObject* AsyncFromSyncIteratorObject::create(
-    JSContext* cx, HandleObject iter, HandleValue nextMethod) {
+/* static */
+JSObject* AsyncFromSyncIteratorObject::create(JSContext* cx, HandleObject iter,
+                                              HandleValue nextMethod) {
   // Step 2.
   RootedObject proto(cx,
                      GlobalObject::getOrCreateAsyncFromSyncIteratorPrototype(
@@ -162,8 +163,9 @@ static AsyncGeneratorObject* OrdinaryCreateFromConstructorAsynGen(
   return NewObjectWithGivenProto<AsyncGeneratorObject>(cx, proto);
 }
 
-/* static */ AsyncGeneratorObject* AsyncGeneratorObject::create(
-    JSContext* cx, HandleFunction asyncGen) {
+/* static */
+AsyncGeneratorObject* AsyncGeneratorObject::create(JSContext* cx,
+                                                   HandleFunction asyncGen) {
   MOZ_ASSERT(asyncGen->isAsync() && asyncGen->isGenerator());
 
   AsyncGeneratorObject* asyncGenObj =
@@ -186,7 +188,8 @@ static AsyncGeneratorObject* OrdinaryCreateFromConstructorAsynGen(
   return asyncGenObj;
 }
 
-/* static */ AsyncGeneratorRequest* AsyncGeneratorObject::createRequest(
+/* static */
+AsyncGeneratorRequest* AsyncGeneratorObject::createRequest(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     CompletionKind completionKind, HandleValue completionValue,
     Handle<PromiseObject*> promise) {
@@ -232,7 +235,8 @@ static AsyncGeneratorObject* OrdinaryCreateFromConstructorAsynGen(
   return queue->append(cx, requestVal);
 }
 
-/* static */ AsyncGeneratorRequest* AsyncGeneratorObject::dequeueRequest(
+/* static */
+AsyncGeneratorRequest* AsyncGeneratorObject::dequeueRequest(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj) {
   if (asyncGenObj->isSingleQueue()) {
     AsyncGeneratorRequest* request = asyncGenObj->singleQueueRequest();
@@ -244,7 +248,8 @@ static AsyncGeneratorObject* OrdinaryCreateFromConstructorAsynGen(
   return &queue->popFirstAs<AsyncGeneratorRequest>(cx);
 }
 
-/* static */ AsyncGeneratorRequest* AsyncGeneratorObject::peekRequest(
+/* static */
+AsyncGeneratorRequest* AsyncGeneratorObject::peekRequest(
     Handle<AsyncGeneratorObject*> asyncGenObj) {
   if (asyncGenObj->isSingleQueue()) {
     return asyncGenObj->singleQueueRequest();
@@ -258,7 +263,8 @@ const Class AsyncGeneratorRequest::class_ = {
     JSCLASS_HAS_RESERVED_SLOTS(AsyncGeneratorRequest::Slots)};
 
 // Async Iteration proposal 11.4.3.1.
-/* static */ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
+/* static */
+AsyncGeneratorRequest* AsyncGeneratorRequest::create(
     JSContext* cx, CompletionKind completionKind, HandleValue completionValue,
     Handle<PromiseObject*> promise) {
   AsyncGeneratorRequest* request =

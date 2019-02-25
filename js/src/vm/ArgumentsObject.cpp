@@ -24,13 +24,15 @@ using namespace js;
 
 using JS::AutoStableStringChars;
 
-/* static */ size_t RareArgumentsData::bytesRequired(size_t numActuals) {
+/* static */
+size_t RareArgumentsData::bytesRequired(size_t numActuals) {
   size_t extraBytes = NumWordsForBitArrayOfLength(numActuals) * sizeof(size_t);
   return offsetof(RareArgumentsData, deletedBits_) + extraBytes;
 }
 
-/* static */ RareArgumentsData* RareArgumentsData::create(
-    JSContext* cx, ArgumentsObject* obj) {
+/* static */
+RareArgumentsData* RareArgumentsData::create(JSContext* cx,
+                                             ArgumentsObject* obj) {
   size_t bytes = RareArgumentsData::bytesRequired(obj->initialLength());
 
   uint8_t* data = AllocateObjectBuffer<uint8_t>(cx, obj, bytes);
@@ -80,8 +82,10 @@ static void CopyStackFrameArguments(const AbstractFramePtr frame,
   }
 }
 
-/* static */ void ArgumentsObject::MaybeForwardToCallObject(
-    AbstractFramePtr frame, ArgumentsObject* obj, ArgumentsData* data) {
+/* static */
+void ArgumentsObject::MaybeForwardToCallObject(AbstractFramePtr frame,
+                                               ArgumentsObject* obj,
+                                               ArgumentsData* data) {
   JSScript* script = frame.script();
   if (frame.callee()->needsCallObject() && script->argumentsAliasesFormals()) {
     obj->initFixedSlot(MAYBE_CALL_SLOT, ObjectValue(frame.callObj()));
@@ -93,9 +97,11 @@ static void CopyStackFrameArguments(const AbstractFramePtr frame,
   }
 }
 
-/* static */ void ArgumentsObject::MaybeForwardToCallObject(
-    jit::JitFrameLayout* frame, HandleObject callObj, ArgumentsObject* obj,
-    ArgumentsData* data) {
+/* static */
+void ArgumentsObject::MaybeForwardToCallObject(jit::JitFrameLayout* frame,
+                                               HandleObject callObj,
+                                               ArgumentsObject* obj,
+                                               ArgumentsData* data) {
   JSFunction* callee = jit::CalleeTokenToFunction(frame->calleeToken());
   JSScript* script = callee->nonLazyScript();
   if (callee->needsCallObject() && script->argumentsAliasesFormals()) {
@@ -263,10 +269,9 @@ ArgumentsObject* Realm::getOrCreateArgumentsTemplateObject(JSContext* cx,
 }
 
 template <typename CopyArgs>
-/* static */ ArgumentsObject* ArgumentsObject::create(JSContext* cx,
-                                                      HandleFunction callee,
-                                                      unsigned numActuals,
-                                                      CopyArgs& copy) {
+/* static */
+ArgumentsObject* ArgumentsObject::create(JSContext* cx, HandleFunction callee,
+                                         unsigned numActuals, CopyArgs& copy) {
   bool mapped = callee->nonLazyScript()->hasMappedArgsObj();
   ArgumentsObject* templateObj =
       cx->realm()->getOrCreateArgumentsTemplateObject(cx, mapped);
@@ -369,9 +374,11 @@ ArgumentsObject* ArgumentsObject::createForIon(JSContext* cx,
   return create(cx, callee, frame->numActualArgs(), copy);
 }
 
-/* static */ ArgumentsObject* ArgumentsObject::finishForIonPure(
-    JSContext* cx, jit::JitFrameLayout* frame, JSObject* scopeChain,
-    ArgumentsObject* obj) {
+/* static */
+ArgumentsObject* ArgumentsObject::finishForIonPure(JSContext* cx,
+                                                   jit::JitFrameLayout* frame,
+                                                   JSObject* scopeChain,
+                                                   ArgumentsObject* obj) {
   // JIT code calls this directly (no callVM), because it's faster, so we're
   // not allowed to GC in here.
   AutoUnsafeCallWithABI unsafe;
@@ -415,10 +422,9 @@ ArgumentsObject* ArgumentsObject::createForIon(JSContext* cx,
   return obj;
 }
 
-/* static */ bool ArgumentsObject::obj_delProperty(JSContext* cx,
-                                                   HandleObject obj,
-                                                   HandleId id,
-                                                   ObjectOpResult& result) {
+/* static */
+bool ArgumentsObject::obj_delProperty(JSContext* cx, HandleObject obj,
+                                      HandleId id, ObjectOpResult& result) {
   ArgumentsObject& argsobj = obj->as<ArgumentsObject>();
   if (JSID_IS_INT(id)) {
     unsigned arg = unsigned(JSID_TO_INT(id));
@@ -438,8 +444,9 @@ ArgumentsObject* ArgumentsObject::createForIon(JSContext* cx,
   return result.succeed();
 }
 
-/* static */ bool ArgumentsObject::obj_mayResolve(const JSAtomState& names,
-                                                  jsid id, JSObject*) {
+/* static */
+bool ArgumentsObject::obj_mayResolve(const JSAtomState& names, jsid id,
+                                     JSObject*) {
   // Arguments might resolve indexes, Symbol.iterator, or length/callee.
   if (JSID_IS_ATOM(id)) {
     JSAtom* atom = JSID_TO_ATOM(id);
@@ -543,8 +550,8 @@ static bool DefineArgumentsIterator(JSContext* cx,
                                   JSPROP_RESOLVING);
 }
 
-/* static */ bool ArgumentsObject::reifyLength(JSContext* cx,
-                                               Handle<ArgumentsObject*> obj) {
+/* static */
+bool ArgumentsObject::reifyLength(JSContext* cx, Handle<ArgumentsObject*> obj) {
   if (obj->hasOverriddenLength()) {
     return true;
   }
@@ -559,8 +566,9 @@ static bool DefineArgumentsIterator(JSContext* cx,
   return true;
 }
 
-/* static */ bool ArgumentsObject::reifyIterator(JSContext* cx,
-                                                 Handle<ArgumentsObject*> obj) {
+/* static */
+bool ArgumentsObject::reifyIterator(JSContext* cx,
+                                    Handle<ArgumentsObject*> obj) {
   if (obj->hasOverriddenIterator()) {
     return true;
   }
@@ -573,10 +581,9 @@ static bool DefineArgumentsIterator(JSContext* cx,
   return true;
 }
 
-/* static */ bool MappedArgumentsObject::obj_resolve(JSContext* cx,
-                                                     HandleObject obj,
-                                                     HandleId id,
-                                                     bool* resolvedp) {
+/* static */
+bool MappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj,
+                                        HandleId id, bool* resolvedp) {
   Rooted<MappedArgumentsObject*> argsobj(cx, &obj->as<MappedArgumentsObject>());
 
   if (JSID_IS_SYMBOL(id) &&
@@ -623,8 +630,8 @@ static bool DefineArgumentsIterator(JSContext* cx,
   return true;
 }
 
-/* static */ bool MappedArgumentsObject::obj_enumerate(JSContext* cx,
-                                                       HandleObject obj) {
+/* static */
+bool MappedArgumentsObject::obj_enumerate(JSContext* cx, HandleObject obj) {
   Rooted<MappedArgumentsObject*> argsobj(cx, &obj->as<MappedArgumentsObject>());
 
   RootedId id(cx);
@@ -657,9 +664,11 @@ static bool DefineArgumentsIterator(JSContext* cx,
 }
 
 // ES 2017 draft 9.4.4.2
-/* static */ bool MappedArgumentsObject::obj_defineProperty(
-    JSContext* cx, HandleObject obj, HandleId id,
-    Handle<PropertyDescriptor> desc, ObjectOpResult& result) {
+/* static */
+bool MappedArgumentsObject::obj_defineProperty(JSContext* cx, HandleObject obj,
+                                               HandleId id,
+                                               Handle<PropertyDescriptor> desc,
+                                               ObjectOpResult& result) {
   // Step 1.
   Rooted<MappedArgumentsObject*> argsobj(cx, &obj->as<MappedArgumentsObject>());
 
@@ -794,10 +803,9 @@ static bool UnmappedArgSetter(JSContext* cx, HandleObject obj, HandleId id,
          NativeDefineDataProperty(cx, argsobj, id, v, attrs, result);
 }
 
-/* static */ bool UnmappedArgumentsObject::obj_resolve(JSContext* cx,
-                                                       HandleObject obj,
-                                                       HandleId id,
-                                                       bool* resolvedp) {
+/* static */
+bool UnmappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj,
+                                          HandleId id, bool* resolvedp) {
   Rooted<UnmappedArgumentsObject*> argsobj(cx,
                                            &obj->as<UnmappedArgumentsObject>());
 
@@ -857,8 +865,8 @@ static bool UnmappedArgSetter(JSContext* cx, HandleObject obj, HandleId id,
   return true;
 }
 
-/* static */ bool UnmappedArgumentsObject::obj_enumerate(JSContext* cx,
-                                                         HandleObject obj) {
+/* static */
+bool UnmappedArgumentsObject::obj_enumerate(JSContext* cx, HandleObject obj) {
   Rooted<UnmappedArgumentsObject*> argsobj(cx,
                                            &obj->as<UnmappedArgumentsObject>());
 
@@ -907,7 +915,8 @@ void ArgumentsObject::trace(JSTracer* trc, JSObject* obj) {
   }
 }
 
-/* static */ size_t ArgumentsObject::objectMoved(JSObject* dst, JSObject* src) {
+/* static */
+size_t ArgumentsObject::objectMoved(JSObject* dst, JSObject* src) {
   ArgumentsObject* ndst = &dst->as<ArgumentsObject>();
   const ArgumentsObject* nsrc = &src->as<ArgumentsObject>();
   MOZ_ASSERT(ndst->data() == nsrc->data());
