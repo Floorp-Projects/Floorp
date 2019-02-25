@@ -4,7 +4,7 @@
 
 package mozilla.components.service.fxa
 
-import org.mozilla.fxaclient.internal.Profile as InternalProfile
+import mozilla.appservices.fxaclient.Profile as InternalProfile
 
 data class Avatar(
     val url: String,

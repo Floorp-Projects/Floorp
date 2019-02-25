@@ -4,4 +4,4 @@
 
 package mozilla.components.service.fxa
 
-typealias Config = org.mozilla.fxaclient.internal.Config
+typealias Config = mozilla.appservices.fxaclient.Config

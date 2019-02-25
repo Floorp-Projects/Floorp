@@ -5,7 +5,7 @@
 package mozilla.components.service.fxa
 
 import org.json.JSONObject
-import org.mozilla.fxaclient.internal.AccessTokenInfo as InternalAccessTokenInfo
+import mozilla.appservices.fxaclient.AccessTokenInfo as InternalAccessTokenInfo
 
 /**
  * Scoped key data.
