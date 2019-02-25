@@ -42,6 +42,7 @@ open class HomeActivity : AppCompatActivity() {
         setContentView(R.layout.activity_home)
 
         if (intent?.extras?.getBoolean(OPEN_TO_BROWSER) == true) {
+            intent?.putExtra(OPEN_TO_BROWSER, false)
             openToBrowser()
         }
 
