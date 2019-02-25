@@ -1,5 +1,4 @@
-[![Travis Build Status](https://travis-ci.org/harryfei/which-rs.svg?branch=master)](https://travis-ci.org/harryfei/which-rs)
-[![Appveyor Build status](https://ci.appveyor.com/api/projects/status/1y40b135iaixs9x6?svg=true)](https://ci.appveyor.com/project/HarryFei/which-rs)
+[![Build Status](https://travis-ci.org/fangyuanziti/which-rs.svg?branch=master)](https://travis-ci.org/fangyuanziti/which-rs)
 
 # which
 
