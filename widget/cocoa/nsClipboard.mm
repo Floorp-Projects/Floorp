@@ -290,8 +290,10 @@ nsresult nsClipboard::TransferableFromPasteboard(nsITransferable* aTransferable,
       if (successfullyConverted) {
         // Put the converted data in a form Gecko can understand
         nsCOMPtr<nsIInputStream> byteStream;
-        NS_NewByteInputStream(getter_AddRefs(byteStream), (const char*)[encodedData bytes],
-                              [encodedData length], NS_ASSIGNMENT_COPY);
+        NS_NewByteInputStream(
+            getter_AddRefs(byteStream),
+            mozilla::MakeSpan((const char*)[encodedData bytes], [encodedData length]),
+            NS_ASSIGNMENT_COPY);
 
         aTransferable->SetTransferData(flavorStr.get(), byteStream);
       }

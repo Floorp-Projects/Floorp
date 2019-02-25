@@ -244,8 +244,9 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard) {
       if (!clipboardData) continue;
 
       nsCOMPtr<nsIInputStream> byteStream;
-      NS_NewByteInputStream(getter_AddRefs(byteStream), clipboardData,
-                            clipboardDataLength, NS_ASSIGNMENT_COPY);
+      NS_NewByteInputStream(getter_AddRefs(byteStream),
+                            MakeSpan(clipboardData, clipboardDataLength),
+                            NS_ASSIGNMENT_COPY);
       aTransferable->SetTransferData(flavorStr.get(), byteStream);
 
       mContext->ReleaseClipboardData(clipboardData);
