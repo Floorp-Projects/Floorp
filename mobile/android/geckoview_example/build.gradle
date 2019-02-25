@@ -29,6 +29,15 @@ android {
         }
     }
 
+    // By default the android plugins ignores folders that start with `_`, but
+    // we need those in web extensions.
+    // See also:
+    //  - https://issuetracker.google.com/issues/36911326
+    //  - https://stackoverflow.com/questions/9206117/how-to-workaround-autoomitting-fiiles-folders-starting-with-underscore-in
+    aaptOptions {
+        ignoreAssetsPattern  '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+    }
+
     project.configureProductFlavors.delegate = it
     project.configureProductFlavors()
 }
