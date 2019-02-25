@@ -909,6 +909,14 @@ class ContentParent final : public PContentParent,
 
   bool DeallocPExternalHelperAppParent(PExternalHelperAppParent* aService);
 
+  mozilla::ipc::IPCResult RecvPExternalHelperAppConstructor(
+      PExternalHelperAppParent* actor, const OptionalURIParams& uri,
+      const OptionalLoadInfoArgs& loadInfoArgs, const nsCString& aMimeContentType,
+      const nsCString& aContentDisposition, const uint32_t& aContentDispositionHint,
+      const nsString& aContentDispositionFilename, const bool& aForceSave,
+      const int64_t& aContentLength, const bool& aWasFileChannel,
+      const OptionalURIParams& aReferrer, PBrowserParent* aBrowser) override;
+
   PHandlerServiceParent* AllocPHandlerServiceParent();
 
   bool DeallocPHandlerServiceParent(PHandlerServiceParent*);
