@@ -35,6 +35,7 @@ macosx64/debug:
         - linux64-rust-size
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 macosx64/opt:
@@ -72,6 +73,7 @@ macosx64/opt:
         - linux64-rust-size
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 macosx64-asan-fuzzing/opt:
@@ -109,6 +111,7 @@ macosx64-asan-fuzzing/opt:
         - linux64-rust-size
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 macosx64-devedition-nightly/opt:
@@ -154,6 +157,7 @@ macosx64-devedition-nightly/opt:
         - linux64-rust-macos
         - linux64-rust-size
         - linux64-cbindgen
+        - linux64-nasm
         - linux64-node
 
 macosx64-noopt/debug:
@@ -193,6 +197,7 @@ macosx64-noopt/debug:
         - linux64-rust-size
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 macosx64-add-on-devel/opt:
@@ -231,6 +236,7 @@ macosx64-add-on-devel/opt:
         - linux64-rust-size
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 macosx64-nightly/opt:
@@ -272,6 +278,7 @@ macosx64-nightly/opt:
         - linux64-rust-macos
         - linux64-rust-size
         - linux64-cbindgen
+        - linux64-nasm
         - linux64-node
 
 macosx64-ccov/debug:
@@ -310,4 +317,5 @@ macosx64-ccov/debug:
         - linux64-rust-size
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
