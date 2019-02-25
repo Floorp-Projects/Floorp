@@ -7,14 +7,14 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use ffi;
+use std::ffi::{CStr, CString};
 use std::mem;
 use std::mem::size_of;
 use std::os::raw::{c_char, c_int, c_void};
 use std::ptr;
 use std::rc::Rc;
 use std::str;
-use std::ffi::{CString, CStr};
-use ffi;
 
 pub use ffi::types::*;
 pub use ffi::*;
@@ -29,11 +29,11 @@ pub enum GlType {
 }
 
 impl Default for GlType {
-    #[cfg(any(target_os="android", target_os="ios"))]
+    #[cfg(any(target_os = "android", target_os = "ios"))]
     fn default() -> GlType {
         GlType::Gles
     }
-    #[cfg(not(any(target_os="android", target_os="ios")))]
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
     fn default() -> GlType {
         GlType::Gl
     }
@@ -102,6 +102,12 @@ declare_gl_apis! {
                                 offset: isize,
                                 size: GLsizeiptr,
                                 data: *const GLvoid);
+    fn map_buffer_range(&self,
+                        target: GLenum,
+                        offset: GLintptr,
+                        length: GLsizeiptr,
+                        access: GLbitfield) -> *mut c_void;
+    fn unmap_buffer(&self, target: GLenum) -> GLboolean;
     fn tex_buffer(&self, target: GLenum, internal_format: GLenum, buffer: GLuint);
     fn shader_source(&self, shader: GLuint, strings: &[&[u8]]);
     fn read_buffer(&self, mode: GLenum);
@@ -554,26 +560,32 @@ impl ErrorCheckingGl {
 
 #[inline]
 pub fn buffer_data<T>(gl_: &Gl, target: GLenum, data: &[T], usage: GLenum) {
-    gl_.buffer_data_untyped(target,
-                            (data.len() * size_of::<T>()) as GLsizeiptr,
-                            data.as_ptr() as *const GLvoid,
-                            usage)
+    gl_.buffer_data_untyped(
+        target,
+        (data.len() * size_of::<T>()) as GLsizeiptr,
+        data.as_ptr() as *const GLvoid,
+        usage,
+    )
 }
 
 #[inline]
 pub fn buffer_data_raw<T>(gl_: &Gl, target: GLenum, data: &T, usage: GLenum) {
-    gl_.buffer_data_untyped(target,
-                            size_of::<T>() as GLsizeiptr,
-                            data as *const T as *const GLvoid,
-                            usage)
+    gl_.buffer_data_untyped(
+        target,
+        size_of::<T>() as GLsizeiptr,
+        data as *const T as *const GLvoid,
+        usage,
+    )
 }
 
 #[inline]
 pub fn buffer_sub_data<T>(gl_: &Gl, target: GLenum, offset: isize, data: &[T]) {
-    gl_.buffer_sub_data_untyped(target,
-                                offset,
-                                (data.len() * size_of::<T>()) as GLsizeiptr,
-                                data.as_ptr() as *const GLvoid);
+    gl_.buffer_sub_data_untyped(
+        target,
+        offset,
+        (data.len() * size_of::<T>()) as GLsizeiptr,
+        data.as_ptr() as *const GLvoid,
+    );
 }
 
 include!("gl_fns.rs");
