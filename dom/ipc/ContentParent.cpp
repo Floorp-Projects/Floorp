@@ -43,6 +43,7 @@
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ClientOpenWindowOpActors.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/File.h"
@@ -56,7 +57,6 @@
 #include "mozilla/dom/LocalStorageCommon.h"
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/dom/Notification.h"
-#include "mozilla/dom/PContentBridgeParent.h"
 #include "mozilla/dom/PContentPermissionRequestParent.h"
 #include "mozilla/dom/PCycleCollectWithLogsParent.h"
 #include "mozilla/dom/PositionError.h"
@@ -950,95 +950,6 @@ extern const wchar_t* kPluginWidgetContentParentProperty;
 }
 #endif  // defined(XP_WIN)
 
-mozilla::ipc::IPCResult ContentParent::RecvCreateChildProcess(
-    const IPCTabContext& aContext, const hal::ProcessPriority& aPriority,
-    const TabId& aOpenerTabId, const TabId& aTabId, ContentParentId* aCpId,
-    bool* aIsForBrowser) {
-#if 0
-  if (!CanOpenBrowser(aContext)) {
-      return false;
-  }
-#endif
-  RefPtr<ContentParent> cp;
-  MaybeInvalidTabContext tc(aContext);
-  if (!tc.IsValid()) {
-    NS_ERROR(nsPrintfCString("Received an invalid TabContext from "
-                             "the child process. (%s)",
-                             tc.GetInvalidReason())
-                 .get());
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  if (tc.GetTabContext().IsJSPlugin()) {
-    cp =
-        GetNewOrUsedJSPluginProcess(tc.GetTabContext().JSPluginId(), aPriority);
-  } else {
-    cp = GetNewOrUsedBrowserProcess(
-        nullptr, NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE), aPriority, this);
-  }
-
-  if (!cp) {
-    *aCpId = 0;
-    *aIsForBrowser = false;
-    return IPC_OK();
-  }
-
-  *aCpId = cp->ChildID();
-  *aIsForBrowser = cp->IsForBrowser();
-
-  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
-  if (cp->IsForJSPlugin()) {
-    // We group all the iframes for a specific JS plugin into one process,
-    // regardless of origin. As a consequence that process can't be a child of
-    // the content process that contains the document with the element loading
-    // the plugin. All content processes need to be able to communicate with the
-    // process for the JS plugin.
-    cpm->RegisterRemoteFrame(aTabId, ChildID(), aOpenerTabId, aContext,
-                             cp->ChildID());
-    return IPC_OK();
-  }
-
-  // cp was already added to the ContentProcessManager, this just sets the
-  // parent ID.
-  cpm->AddContentProcess(cp, this->ChildID());
-
-  if (cpm->AddGrandchildProcess(this->ChildID(), cp->ChildID()) &&
-      cpm->RegisterRemoteFrame(aTabId, ChildID(), aOpenerTabId, aContext,
-                               cp->ChildID())) {
-    return IPC_OK();
-  }
-
-  return IPC_FAIL_NO_REASON(this);
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvBridgeToChildProcess(
-    const ContentParentId& aCpId, Endpoint<PContentBridgeParent>* aEndpoint) {
-  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
-  ContentParent* cp = cpm->GetContentProcessById(aCpId);
-
-  if (cp && cp->CanCommunicateWith(ChildID())) {
-    Endpoint<PContentBridgeParent> parent;
-    Endpoint<PContentBridgeChild> child;
-
-    if (NS_FAILED(PContentBridge::CreateEndpoints(OtherPid(), cp->OtherPid(),
-                                                  &parent, &child))) {
-      return IPC_FAIL(this, "CreateEndpoints failed");
-    }
-
-    *aEndpoint = std::move(parent);
-
-    if (!cp->SendInitContentBridgeChild(std::move(child))) {
-      return IPC_FAIL(this, "SendInitContentBridgeChild failed");
-    }
-
-    return IPC_OK();
-  }
-
-  // You can't bridge to a process you didn't open!
-  KillHard("BridgeToChildProcess");
-  return IPC_FAIL_NO_REASON(this);
-}
-
 static nsIDocShell* GetOpenerDocShellHelper(Element* aFrameElement) {
   // Propagate the private-browsing status of the element's parent
   // docshell to the remote docshell, via the chrome flags.
@@ -1175,7 +1086,6 @@ mozilla::ipc::IPCResult ContentParent::RecvLaunchRDDProcess(
   }
 
   ProcessPriority initialPriority = GetInitialProcessPriority(aFrameElement);
-  bool isInContentProcess = !XRE_IsParentProcess();
   TabId tabId(nsContentUtils::GenerateTabId());
 
   nsIDocShell* docShell = GetOpenerDocShellHelper(aFrameElement);
@@ -1192,31 +1102,27 @@ mozilla::ipc::IPCResult ContentParent::RecvLaunchRDDProcess(
   }
 
   RefPtr<nsIContentParent> constructorSender;
-  if (isInContentProcess) {
-    MOZ_ASSERT(aContext.IsMozBrowserElement() || aContext.IsJSPlugin());
-    constructorSender = CreateContentBridgeParent(aContext, initialPriority,
-                                                  openerTabId, tabId);
+  MOZ_RELEASE_ASSERT(XRE_IsParentProcess(), "Cannot allocate TabParent in content process");
+  if (aOpenerContentParent) {
+    constructorSender = aOpenerContentParent;
   } else {
-    if (aOpenerContentParent) {
-      constructorSender = aOpenerContentParent;
+    if (aContext.IsJSPlugin()) {
+      constructorSender =
+          GetNewOrUsedJSPluginProcess(aContext.JSPluginId(), initialPriority);
     } else {
-      if (aContext.IsJSPlugin()) {
-        constructorSender =
-            GetNewOrUsedJSPluginProcess(aContext.JSPluginId(), initialPriority);
-      } else {
-        constructorSender = GetNewOrUsedBrowserProcess(
-            aFrameElement, remoteType, initialPriority, nullptr,
-            isPreloadBrowser);
-      }
-      if (!constructorSender) {
-        return nullptr;
-      }
+      constructorSender = GetNewOrUsedBrowserProcess(
+          aFrameElement, remoteType, initialPriority, nullptr,
+          isPreloadBrowser);
     }
-    ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
-    cpm->RegisterRemoteFrame(tabId, ContentParentId(0), openerTabId,
-                             aContext.AsIPCTabContext(),
-                             constructorSender->ChildID());
+    if (!constructorSender) {
+      return nullptr;
+    }
   }
+  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+  cpm->RegisterRemoteFrame(tabId, ContentParentId(0), openerTabId,
+                            aContext.AsIPCTabContext(),
+                            constructorSender->ChildID());
+
   if (constructorSender) {
     nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
     docShell->GetTreeOwner(getter_AddRefs(treeOwner));
@@ -1265,34 +1171,6 @@ mozilla::ipc::IPCResult ContentParent::RecvLaunchRDDProcess(
     }
   }
   return nullptr;
-}
-
-/*static*/ ContentBridgeParent* ContentParent::CreateContentBridgeParent(
-    const TabContext& aContext, const hal::ProcessPriority& aPriority,
-    const TabId& aOpenerTabId, const TabId& aTabId) {
-  MOZ_ASSERT(aTabId);
-
-  ContentChild* child = ContentChild::GetSingleton();
-  ContentParentId cpId;
-  bool isForBrowser;
-  if (!child->SendCreateChildProcess(aContext.AsIPCTabContext(), aPriority,
-                                     aOpenerTabId, aTabId, &cpId,
-                                     &isForBrowser)) {
-    return nullptr;
-  }
-  if (cpId == 0) {
-    return nullptr;
-  }
-  Endpoint<PContentBridgeParent> endpoint;
-  if (!child->SendBridgeToChildProcess(cpId, &endpoint)) {
-    return nullptr;
-  }
-  ContentBridgeParent* parent =
-      ContentBridgeParent::Create(std::move(endpoint));
-  parent->SetChildID(cpId);
-  parent->SetIsForBrowser(isForBrowser);
-  parent->SetIsForJSPlugin(aContext.IsJSPlugin());
-  return parent;
 }
 
 void ContentParent::GetAll(nsTArray<ContentParent*>& aArray) {
@@ -5514,20 +5392,6 @@ mozilla::ipc::IPCResult ContentParent::RecvFileCreationRequest(
   }
 
   return IPC_OK();
-}
-
-bool ContentParent::CanCommunicateWith(ContentParentId aOtherProcess) {
-  // Normally a process can only communicate with its parent, but a JS plugin
-  // process can communicate with any process.
-  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
-  ContentParentId parentId;
-  if (!cpm->GetParentProcessId(ChildID(), &parentId)) {
-    return false;
-  }
-  if (IsForJSPlugin()) {
-    return parentId == ContentParentId(0);
-  }
-  return parentId == aOtherProcess;
 }
 
 nsresult ContentParent::SaveRecording(nsIFile* aFile, bool* aRetval) {

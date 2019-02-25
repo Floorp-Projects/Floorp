@@ -14,7 +14,6 @@
 #endif
 #include "mozilla/BrowserElementParent.h"
 #include "mozilla/dom/ChromeMessageSender.h"
-#include "mozilla/dom/ContentBridgeParent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DataTransferItemList.h"
@@ -386,12 +385,8 @@ void TabParent::Destroy() {
 
   mIsDestroyed = true;
 
-  if (XRE_IsParentProcess()) {
-    ContentParent::NotifyTabDestroying(this->GetTabId(),
-                                       Manager()->AsContentParent()->ChildID());
-  } else {
-    ContentParent::NotifyTabDestroying(this->GetTabId(), Manager()->ChildID());
-  }
+  ContentParent::NotifyTabDestroying(this->GetTabId(),
+                                     Manager()->AsContentParent()->ChildID());
 
   mMarkedDestroying = true;
 }
@@ -405,14 +400,9 @@ mozilla::ipc::IPCResult TabParent::RecvEnsureLayersConnected(
 }
 
 mozilla::ipc::IPCResult TabParent::Recv__delete__() {
-  if (XRE_IsParentProcess()) {
-    ContentParent::UnregisterRemoteFrame(
-        mTabId, Manager()->AsContentParent()->ChildID(), mMarkedDestroying);
-  } else {
-    Manager()->AsContentBridgeParent()->NotifyTabDestroyed();
-    ContentParent::UnregisterRemoteFrame(mTabId, Manager()->ChildID(),
-                                         mMarkedDestroying);
-  }
+  MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
+  ContentParent::UnregisterRemoteFrame(
+      mTabId, Manager()->AsContentParent()->ChildID(), mMarkedDestroying);
 
   return IPC_OK();
 }
