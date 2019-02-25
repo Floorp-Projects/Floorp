@@ -1556,9 +1556,40 @@ int32_t nsLayoutUtils::DoCompareTreePosition(
 
   int32_t index1 = parent->ComputeIndexOf(content1Ancestor);
   int32_t index2 = parent->ComputeIndexOf(content2Ancestor);
-  if (index1 < 0 || index2 < 0) {
-    // one of them must be anonymous; we can't determine the order
+
+  // If either of the nodes are anonymous, then handle the relative ordering.
+  // We consider all anonymous content to be behind regular siblings, with the
+  // exception of ::after.
+  if (index1 < 0) {
+    if (content1Ancestor->IsContent() &&
+        content1Ancestor->AsContent()->IsGeneratedContentContainerForAfter()) {
+      // If content1 is ::after, then it must be after content2.
+      MOZ_ASSERT(!content2Ancestor->IsContent() ||
+                 !content2Ancestor->AsContent()
+                      ->IsGeneratedContentContainerForAfter());
+      return 1;
+    }
+    if (index2 >= 0 || (content2Ancestor->IsContent() &&
+                        content2Ancestor->AsContent()
+                            ->IsGeneratedContentContainerForAfter())) {
+      // content1 is anonymous, so if content2 is a regular sibling or ::after,
+      // then we must be before it.
+      return -1;
+    }
+    // Both nodes are anonymous, so no relative ordering.
     return 0;
+  }
+  if (index2 < 0) {
+    // content1 is a regular sibling, so if content2 is ::after, then
+    // content1 comes first.
+    if (content2Ancestor->IsContent() &&
+        content2Ancestor->AsContent()->IsGeneratedContentContainerForAfter()) {
+      MOZ_ASSERT(!content1Ancestor->IsContent() ||
+                 !content1Ancestor->AsContent()
+                      ->IsGeneratedContentContainerForAfter());
+      return -1;
+    }
+    return 1;
   }
 
   return index1 - index2;

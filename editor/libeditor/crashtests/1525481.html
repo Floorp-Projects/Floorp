@@ -1,0 +1,19 @@
+<script>
+function go() {
+  document.execCommand("styleWithCSS", false, true)
+  document.execCommand("delete", false)
+  a.addEventListener("DOMNodeRemoved", function() {
+    var c = window.getSelection()
+    var d = document.createRange()
+    d.setEndAfter(b)
+    c.addRange(d)
+    c.deleteFromDocument()
+  })
+  document.execCommand("outdent", false)
+}
+</script>
+<body onload=go()>
+<ul id="a" contenteditable="true" style="margin: -1px 0px 1px 6px">
+<dd></dd>
+<dd>
+<button id="b">
