@@ -41,11 +41,20 @@ class App {
 var HelperApps =  {
   get defaultBrowsers() {
     delete this.defaultBrowsers;
-    this.defaultBrowsers = this._getHandlers("http://www.example.com", {
+    this.defaultBrowsers = this._collectDefaultBrowsers();
+    return this.defaultBrowsers;
+  },
+
+  _collectDefaultBrowsers() {
+    let httpHandlers = this._getHandlers("http://www.example.com", {
       filterBrowsers: false,
       filterHtml: false,
     });
-    return this.defaultBrowsers;
+    let httpsHandlers = this._getHandlers("https://www.example.com", {
+      filterBrowsers: false,
+      filterHtml: false,
+    });
+    return {...httpHandlers, ...httpsHandlers};
   },
 
   // Finds handlers that have registered for text/html pages or urls ending in html. Some apps, like
