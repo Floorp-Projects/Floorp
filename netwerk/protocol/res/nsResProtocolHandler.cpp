@@ -122,3 +122,14 @@ nsresult nsResProtocolHandler::SetSubstitutionWithFlags(const nsACString& aRoot,
   return SubstitutingProtocolHandler::SetSubstitutionWithFlags(aRoot, aBaseURI,
                                                                aFlags);
 }
+
+nsresult nsResProtocolHandler::HasSubstitution(const nsACString& aRoot,
+                                               bool* aResult) {
+  if (aRoot.EqualsLiteral(kAPP) || aRoot.EqualsLiteral(kGRE)) {
+    *aResult = true;
+    return NS_OK;
+  }
+
+  return mozilla::net::SubstitutingProtocolHandler::HasSubstitution(aRoot,
+                                                                    aResult);
+}
