@@ -9,7 +9,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/dom/ContentBridgeParent.h"
 #include "mozilla/dom/ContentProcessManager.h"
 #include "mozilla/dom/PTabContext.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
@@ -53,11 +52,6 @@ nsIContentParent::nsIContentParent() {
 ContentParent* nsIContentParent::AsContentParent() {
   MOZ_ASSERT(IsContentParent());
   return static_cast<ContentParent*>(this);
-}
-
-ContentBridgeParent* nsIContentParent::AsContentBridgeParent() {
-  MOZ_ASSERT(IsContentBridgeParent());
-  return static_cast<ContentBridgeParent*>(this);
 }
 
 PJavaScriptParent* nsIContentParent::AllocPJavaScriptParent() {
@@ -163,13 +157,6 @@ PBrowserParent* nsIContentParent::AllocPBrowserParent(
 
   if (openerTabId > 0 ||
       aContext.type() == IPCTabContext::TUnsafeIPCTabContext) {
-    // Creation of PBrowser triggered from grandchild process is currently
-    // broken and not supported (i.e. this code path doesn't work in
-    // ContentBridgeParent).
-    //
-    // If you're working on fixing the code path for ContentBridgeParent,
-    // remember to handle the remote frame registration below carefully as it
-    // has to be registered in parent process.
     MOZ_ASSERT(XRE_IsParentProcess());
     if (!XRE_IsParentProcess()) {
       return nullptr;
