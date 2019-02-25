@@ -1,8 +1,7 @@
 //! Determining which types has float.
 
 use super::{ConstrainResult, MonotoneFramework, generate_dependencies};
-use std::collections::HashSet;
-use std::collections::HashMap;
+use {HashSet, HashMap};
 use ir::context::{BindgenContext, ItemId};
 use ir::traversal::EdgeKind;
 use ir::ty::TypeKind;
@@ -84,7 +83,7 @@ impl<'ctx> MonotoneFramework for HasFloat<'ctx> {
     type Output = HashSet<ItemId>;
 
     fn new(ctx: &'ctx BindgenContext) -> HasFloat<'ctx> {
-        let has_float = HashSet::new();
+        let has_float = HashSet::default();
         let dependencies = generate_dependencies(ctx, Self::consider_edge);
 
         HasFloat {

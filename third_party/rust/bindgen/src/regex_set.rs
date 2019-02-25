@@ -1,12 +1,18 @@
 //! A type that represents the union of a set of regular expressions.
 
 use regex::RegexSet as RxSet;
+use std::cell::Cell;
 
 /// A dynamic set of regular expressions.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct RegexSet {
     items: Vec<String>,
+    /// Whether any of the items in the set was ever matched. The length of this
+    /// vector is exactly the length of `items`.
+    matched: Vec<Cell<bool>>,
     set: Option<RxSet>,
+    /// Whether we should record matching items in the `matched` vector or not.
+    record_matches: bool,
 }
 
 impl RegexSet {
@@ -20,7 +26,8 @@ impl RegexSet {
     where
         S: AsRef<str>,
     {
-        self.items.push(format!("^{}$", string.as_ref()));
+        self.items.push(string.as_ref().to_owned());
+        self.matched.push(Cell::new(false));
         self.set = None;
     }
 
@@ -29,12 +36,26 @@ impl RegexSet {
         &self.items[..]
     }
 
+    /// Returns an iterator over regexes in the set which didn't match any
+    /// strings yet.
+    pub fn unmatched_items(&self) -> impl Iterator<Item = &String> {
+        self.items.iter().enumerate().filter_map(move |(i, item)| {
+            if !self.record_matches || self.matched[i].get() {
+                return None;
+            }
+
+            Some(item)
+        })
+    }
+
     /// Construct a RegexSet from the set of entries we've accumulated.
     ///
     /// Must be called before calling `matches()`, or it will always return
     /// false.
-    pub fn build(&mut self) {
-        self.set = match RxSet::new(&self.items) {
+    pub fn build(&mut self, record_matches: bool) {
+        let items = self.items.iter().map(|item| format!("^{}$", item));
+        self.record_matches = record_matches;
+        self.set = match RxSet::new(items) {
             Ok(x) => Some(x),
             Err(e) => {
                 error!("Invalid regex in {:?}: {:?}", self.items, e);
@@ -49,17 +70,23 @@ impl RegexSet {
         S: AsRef<str>,
     {
         let s = string.as_ref();
-        self.set.as_ref().map(|set| set.is_match(s)).unwrap_or(
-            false,
-        )
-    }
-}
+        let set = match self.set {
+            Some(ref set) => set,
+            None => return false,
+        };
 
-impl Default for RegexSet {
-    fn default() -> Self {
-        RegexSet {
-            items: vec![],
-            set: None,
+        if !self.record_matches {
+            return set.is_match(s);
         }
+
+        let matches = set.matches(s);
+        if !matches.matched_any() {
+            return false;
+        }
+        for i in matches.iter() {
+            self.matched[i].set(true);
+        }
+
+        true
     }
 }
