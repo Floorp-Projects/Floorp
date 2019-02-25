@@ -23,11 +23,26 @@ class ChangesApp extends PureComponent {
       onContextMenu: PropTypes.func.isRequired,
       // Event handler for "copy" event
       onCopy: PropTypes.func.isRequired,
+      // Event handler for click on "Copy Rule" button
+      onCopyRule: PropTypes.func.isRequired,
     };
   }
 
   constructor(props) {
     super(props);
+  }
+
+  renderCopyButton(ruleId) {
+    return dom.button(
+      {
+        className: "changes__copy-rule-button",
+        onClick: e => {
+          this.props.onCopyRule(ruleId);
+        },
+        title: getStr("changes.contextmenu.copyRuleDescription"),
+      },
+      getStr("changes.contextmenu.copyRule")
+    );
   }
 
   renderDeclarations(remove = [], add = []) {
@@ -64,13 +79,14 @@ class ChangesApp extends PureComponent {
     return dom.div(
       {
         key: ruleId,
-        className: "rule devtools-monospace",
+        className: "changes__rule devtools-monospace",
         "data-rule-id": ruleId,
         style: {
           "--diff-level": level,
         },
       },
       this.renderSelectors(rule.selectors),
+      this.renderCopyButton(ruleId),
       // Render any nested child rules if they exist.
       rule.children.map(childRule => {
         return this.renderRule(childRule.ruleId, childRule, level + 1);
@@ -107,7 +123,7 @@ class ChangesApp extends PureComponent {
       elements.push(dom.div(
         {
           key: selector,
-          className: `level selector ${diffClass}`,
+          className: `level changes__selector ${diffClass}`,
           title: selector,
         },
         getDiffMarker(diffClass),
