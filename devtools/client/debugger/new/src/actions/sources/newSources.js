@@ -219,18 +219,17 @@ export function newSource(source: Source) {
 
 export function newSources(sources: Source[]) {
   return async ({ dispatch, getState }: ThunkArgs) => {
-
-    const newSources = sources.filter(
+    const _newSources = sources.filter(
       source => !getSource(getState(), source.id)
     );
 
     dispatch({ type: "ADD_SOURCES", sources });
 
-    for (const source of newSources) {
+    for (const source of _newSources) {
       dispatch(checkSelectedSource(source.id));
     }
 
-    dispatch(restoreBlackBoxedSources(newSources));
-    dispatch(loadSourceMaps(newSources));
+    dispatch(restoreBlackBoxedSources(_newSources));
+    dispatch(loadSourceMaps(_newSources));
   };
 }

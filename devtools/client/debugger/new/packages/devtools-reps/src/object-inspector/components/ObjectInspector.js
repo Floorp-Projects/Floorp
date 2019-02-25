@@ -98,7 +98,6 @@ class ObjectInspector extends Component<Props> {
       if (this.props.rootsChanged) {
         this.props.rootsChanged();
       }
-      return;
     }
   }
 

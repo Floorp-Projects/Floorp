@@ -1,0 +1,17 @@
+{
+  "plugins": [
+    "preset-lint-recommended",
+    ["lint-list-item-bullet-indent", false],
+    ["lint-list-item-indent", false],
+    ["lint-ordered-list-marker-style", false],
+    ["lint-no-unused-definitions", false],
+    ["lint-no-shortcut-reference-link", false],
+    ["lint-no-shortcut-reference-image", false],
+    ["lint-no-table-indentation", true],
+    ["lint-table-cell-padding", "consistent"],
+    ["lint-table-pipes", false],
+    ["validate-links", {
+      "repository": ""
+    }]
+  ]
+}
