@@ -26,7 +26,7 @@ class Push(
 
     internal fun onNewToken(newToken: String) {}
 
-    internal fun onMessageReceived(message: String /*PushMessage*/) {}
+    internal fun onMessageReceived(message: PushMessage) {}
 
     internal fun onError(error: Error) {}
 
