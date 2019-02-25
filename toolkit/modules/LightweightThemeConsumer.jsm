@@ -9,6 +9,17 @@ const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
 const ICONS = Services.prefs.getStringPref("extensions.webextensions.themes.icons.buttons", "").split(",");
 
+ChromeUtils.defineModuleGetter(this, "AppConstants",
+  "resource://gre/modules/AppConstants.jsm");
+ChromeUtils.defineModuleGetter(this, "LightweightThemeImageOptimizer",
+  "resource://gre/modules/addons/LightweightThemeImageOptimizer.jsm");
+// Get the theme variables from the app resource directory.
+// This allows per-app variables.
+ChromeUtils.defineModuleGetter(this, "ThemeContentPropertyList",
+  "resource:///modules/ThemeVariableMap.jsm");
+ChromeUtils.defineModuleGetter(this, "ThemeVariableMap",
+  "resource:///modules/ThemeVariableMap.jsm");
+
 const toolkitVariableMap = [
   ["--lwt-accent-color", {
     lwtProperty: "accentcolor",
@@ -113,15 +124,6 @@ const toolkitVariableMap = [
   }],
 ];
 
-// Get the theme variables from the app resource directory.
-// This allows per-app variables.
-ChromeUtils.defineModuleGetter(this, "ThemeContentPropertyList",
-  "resource:///modules/ThemeVariableMap.jsm");
-ChromeUtils.defineModuleGetter(this, "ThemeVariableMap",
-  "resource:///modules/ThemeVariableMap.jsm");
-ChromeUtils.defineModuleGetter(this, "LightweightThemeImageOptimizer",
-  "resource://gre/modules/addons/LightweightThemeImageOptimizer.jsm");
-
 function LightweightThemeConsumer(aDocument) {
   this._doc = aDocument;
   this._win = aDocument.defaultView;
@@ -131,9 +133,14 @@ function LightweightThemeConsumer(aDocument) {
 
   ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm", this);
 
-  this._darkThemeMediaQuery = this._win.matchMedia("(-moz-system-dark-theme)");
-  this._darkThemeMediaQuery.addListener(this.LightweightThemeManager);
-  this.LightweightThemeManager.systemThemeChanged(this._darkThemeMediaQuery);
+  // We're responsible for notifying LightweightThemeManager when the OS is in
+  // dark mode so it can activate the dark theme. We don't want this on Linux
+  // as default theme picks up the right colors from dark GTK themes.
+  if (AppConstants.platform != "linux") {
+    this._darkThemeMediaQuery = this._win.matchMedia("(-moz-system-dark-theme)");
+    this._darkThemeMediaQuery.addListener(this.LightweightThemeManager);
+    this.LightweightThemeManager.systemThemeChanged(this._darkThemeMediaQuery);
+  }
 
   this._update(this.LightweightThemeManager.currentThemeWithPersistedData);
 
@@ -173,8 +180,11 @@ LightweightThemeConsumer.prototype = {
         Services.obs.removeObserver(this, "lightweight-theme-styling-update");
         Services.ppmm.sharedData.delete(`theme/${this._winId}`);
         this._win.removeEventListener("resolutionchange", this);
-        this._darkThemeMediaQuery.removeListener(this.LightweightThemeManager);
-        this._win = this._doc = this._darkThemeMediaQuery = null;
+        this._win = this._doc = null;
+        if (this._darkThemeMediaQuery) {
+          this._darkThemeMediaQuery.removeListener(this.LightweightThemeManager);
+          this._darkThemeMediaQuery = null;
+        }
         break;
     }
   },
@@ -198,6 +208,7 @@ LightweightThemeConsumer.prototype = {
     let isDefaultThemeInDarkMode =
       theme.id == this.LightweightThemeManager.defaultDarkThemeID &&
       this.LightweightThemeManager.selectedThemeID == DEFAULT_THEME_ID &&
+      this._darkThemeMediaQuery &&
       this._darkThemeMediaQuery.matches;
 
     let root = this._doc.documentElement;
