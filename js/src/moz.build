@@ -426,6 +426,7 @@ selfhosted.inputs = [
     'builtin/SelfHostingDefines.h',
     'builtin/Utilities.js',
     'builtin/Array.js',
+    'builtin/AsyncFunction.js',
     'builtin/AsyncIteration.js',
     'builtin/Classes.js',
     'builtin/Date.js',

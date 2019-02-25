@@ -1,11 +1,11 @@
-// A Debugger can {return:} from the first onEnterFrame for an async function.
+// A Debugger can {return:} from the first onEnterFrame for an async generator.
 // (The exact behavior is undocumented; we're testing that it doesn't crash.)
 
 ignoreUnhandledRejections();
 
 let g = newGlobal({newCompartment: true});
 g.hit2 = false;
-g.eval(`async function f(x) { await x; return "ponies"; }`);
+g.eval(`async function* f(x) { await x; return "ponies"; }`);
 
 let dbg = new Debugger;
 let gw = dbg.addDebuggee(g);
