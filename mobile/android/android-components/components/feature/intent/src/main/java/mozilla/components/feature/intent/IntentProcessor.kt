@@ -28,6 +28,7 @@ typealias IntentHandler = (Intent) -> Boolean
  * @property useDefaultHandlers Whether or not the built-in handlers should be used.
  * @property openNewTab Whether a processed intent should open a new tab or
  * open URLs in the currently selected tab.
+ * @property isPrivate Whether a processed intent should open a new tab as private
  */
 class IntentProcessor(
     private val sessionUseCases: SessionUseCases,
@@ -35,7 +36,8 @@ class IntentProcessor(
     private val searchUseCases: SearchUseCases,
     private val context: Context,
     private val useDefaultHandlers: Boolean = true,
-    private val openNewTab: Boolean = true
+    private val openNewTab: Boolean = true,
+    private val isPrivate: Boolean = false
 ) {
     private val defaultActionViewHandler = { intent: Intent ->
         val safeIntent = SafeIntent(intent)
@@ -56,7 +58,7 @@ class IntentProcessor(
             }
 
             else -> {
-                val session = createSession(url, source = Source.ACTION_VIEW)
+                val session = createSession(url, private = isPrivate, source = Source.ACTION_VIEW)
                 sessionUseCases.loadUrl.invoke(url, session)
                 true
             }
@@ -73,7 +75,7 @@ class IntentProcessor(
             else -> {
                 val url = extraText.split(" ").find { it.isUrl() }
                 if (url != null) {
-                    val session = createSession(url, source = Source.ACTION_SEND)
+                    val session = createSession(url, private = isPrivate, source = Source.ACTION_SEND)
                     sessionUseCases.loadUrl.invoke(url, session)
                     true
                 } else {

@@ -53,6 +53,9 @@ permalink: /changelog/
 * **feature-toolbar**
   * `ToolbarPresenter` now handles situations where no `Session` is selected.
 
+* **intent-processor**
+  * Intent processor now lets you set `isPrivate` which will open process intents as private tabs
+
 * **service-fretboard (Kinto)**
   * ⚠️ **This is a breaking API change!**
   * Now makes use of our concept-fetch module when communicating with the server. This allows applications to specify which HTTP client library to use e.g. apps already using GeckoView can now specify that the `GeckoViewFetchClient` should be used. As a consequence, the fetch client instance now needs to be provided when creating a `KintoExperimentSource`. 
