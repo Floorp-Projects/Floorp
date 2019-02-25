@@ -86,14 +86,13 @@ class ExternalHelperAppParent
 
   ExternalHelperAppParent(
       const OptionalURIParams& uri,
-      const mozilla::net::OptionalLoadInfoArgs& aLoadInfoArgs,
       const int64_t& contentLength, const bool& wasFileChannel,
       const nsCString& aContentDispositionHeader,
       const uint32_t& aContentDispositionHint,
       const nsString& aContentDispositionFilename);
-  void Init(ContentParent* parent, const nsCString& aMimeContentType,
-            const bool& aForceSave, const OptionalURIParams& aReferrer,
-            PBrowserParent* aBrowser);
+  void Init(const mozilla::net::OptionalLoadInfoArgs& aLoadInfoArgs,
+            const nsCString& aMimeContentType, const bool& aForceSave,
+            const OptionalURIParams& aReferrer, PBrowserParent* aBrowser);
 
  protected:
   virtual ~ExternalHelperAppParent();

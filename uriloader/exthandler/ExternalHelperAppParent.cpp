@@ -34,7 +34,6 @@ NS_IMPL_ISUPPORTS_INHERITED(ExternalHelperAppParent, nsHashPropertyBag,
 
 ExternalHelperAppParent::ExternalHelperAppParent(
     const OptionalURIParams& uri,
-    const mozilla::net::OptionalLoadInfoArgs& aLoadInfoArgs,
     const int64_t& aContentLength, const bool& aWasFileChannel,
     const nsCString& aContentDispositionHeader,
     const uint32_t& aContentDispositionHint,
@@ -61,8 +60,6 @@ ExternalHelperAppParent::ExternalHelperAppParent(
     mContentDisposition = aContentDispositionHint;
     mContentDispositionFilename = aContentDispositionFilename;
   }
-  mozilla::ipc::LoadInfoArgsToLoadInfo(aLoadInfoArgs,
-                                       getter_AddRefs(mLoadInfo));
 }
 
 already_AddRefed<nsIInterfaceRequestor> GetWindowFromTabParent(
@@ -88,11 +85,14 @@ void UpdateContentContext(nsIStreamListener* aListener,
   static_cast<nsExternalAppHandler*>(aListener)->SetContentContext(window);
 }
 
-void ExternalHelperAppParent::Init(ContentParent* parent,
+void ExternalHelperAppParent::Init(const mozilla::net::OptionalLoadInfoArgs& aLoadInfoArgs,
                                    const nsCString& aMimeContentType,
                                    const bool& aForceSave,
                                    const OptionalURIParams& aReferrer,
                                    PBrowserParent* aBrowser) {
+  mozilla::ipc::LoadInfoArgsToLoadInfo(aLoadInfoArgs,
+                                       getter_AddRefs(mLoadInfo));
+
   nsCOMPtr<nsIExternalHelperAppService> helperAppService =
       do_GetService(NS_EXTERNALHELPERAPPSERVICE_CONTRACTID);
   NS_ASSERTION(helperAppService, "No Helper App Service!");
