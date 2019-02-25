@@ -44,6 +44,9 @@ def test(mod, path, entity=None):
         if re.match(r"toolkit/about/[^/]*Rights.ftl", path):
             # error on toolkit/about/*Rights.ftl
             return "error"
+        if re.match(r"toolkit/about/[^/]*Compat.ftl", path):
+            # error on toolkit/about/*Compat.ftl
+            return "error"
         if re.match(r"toolkit/about/[^/]*Support.ftl", path):
             # error on toolkit/about/*Support.ftl
             return "error"
