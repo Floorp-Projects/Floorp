@@ -47,6 +47,7 @@ object Dependencies {
     const val testing_robolectric = "org.robolectric:robolectric:${Versions.robolectric}"
     const val testing_mockito = "org.mockito:mockito-core:${Versions.mockito}"
     const val testing_mockwebserver = "com.squareup.okhttp3:mockwebserver:${Versions.mockwebserver}"
+    const val testing_coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-test:${Versions.coroutines}"
 
     const val androidx_test_core = "androidx.test:core-ktx:${Versions.androidx_test}"
     const val androidx_test_runner = "androidx.test:runner:${Versions.androidx_test}"

@@ -6,20 +6,35 @@
 
 package mozilla.components.feature.toolbar
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.toolbar.Toolbar
+import mozilla.components.feature.toolbar.internal.URLRenderer
 import mozilla.components.support.test.mock
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.anyString
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
-
 import org.mockito.Mockito.verify
 
 class ToolbarPresenterTest {
+    @Before
+    fun setUp() {
+        // Execute main thread coroutines on same thread as caller.
+        Dispatchers.setMain(Dispatchers.Unconfined)
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
 
     @Test
     fun `start with no sessionId`() {
@@ -51,15 +66,16 @@ class ToolbarPresenterTest {
     }
 
     @Test
-    fun `initializeView calls setup methods`() {
+    fun `start calls initializeView and setup methods`() {
         val toolbar: Toolbar = mock()
         val sessionManager: SessionManager = mock()
         val session = Session("https://mozilla.org")
         val toolbarPresenter = spy(ToolbarPresenter(toolbar, sessionManager, "123"))
         toolbarPresenter.observeFixed(session)
 
-        toolbarPresenter.initializeView()
+        toolbarPresenter.start()
 
+        verify(toolbarPresenter).initializeView()
         verify(toolbar).siteSecure = Toolbar.SiteSecurity.INSECURE
         verify(toolbar).url = anyString()
     }
@@ -161,5 +177,59 @@ class ToolbarPresenterTest {
 
         verify(toolbar, never()).url = ""
         verify(toolbar, never()).url = "https://www.firefox.com"
+    }
+
+    @Test
+    fun `Presenter initializes view if new session gets selected`() {
+        val presenter = spy(ToolbarPresenter(mock(), mock()))
+
+        presenter.onSessionSelected(mock())
+
+        verify(presenter).initializeView()
+    }
+
+    @Test
+    fun `Presenter forwards progress to toolbar`() {
+        val toolbar: Toolbar = mock()
+        val presenter = ToolbarPresenter(toolbar, mock())
+
+        presenter.onProgress(mock(), 79)
+
+        verify(toolbar).displayProgress(79)
+    }
+
+    @Test
+    fun `Presenter starts renderer`() {
+        val presenter = ToolbarPresenter(mock(), mock())
+
+        val renderer: URLRenderer = mock()
+        presenter.renderer = renderer
+
+        presenter.start()
+        verify(renderer).start()
+        verify(renderer).post(anyString())
+    }
+
+    @Test
+    fun `Presenter stops renderer`() {
+        val presenter = ToolbarPresenter(mock(), mock())
+
+        val renderer: URLRenderer = mock()
+        presenter.renderer = renderer
+
+        presenter.stop()
+        verify(renderer).stop()
+    }
+
+    @Test
+    fun `Presenter posts URL to renderer`() {
+        val presenter = ToolbarPresenter(mock(), mock())
+
+        val renderer: URLRenderer = mock()
+        presenter.renderer = renderer
+
+        presenter.onUrlChanged(mock(), "https://www.mozilla.org")
+
+        verify(renderer).post("https://www.mozilla.org")
     }
 }
