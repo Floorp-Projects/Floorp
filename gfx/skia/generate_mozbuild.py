@@ -53,10 +53,6 @@ LOCAL_INCLUDES += [
     'skia/include/utils/mac',
     'skia/src/codec',
     'skia/src/core',
-    'skia/src/gpu',
-    'skia/src/gpu/effects',
-    'skia/src/gpu/gl',
-    'skia/src/gpu/glsl',
     'skia/src/image',
     'skia/src/lazy',
     'skia/src/opts',
@@ -97,9 +93,6 @@ DEFINES['SKIA_IMPLEMENTATION'] = 1
 
 if CONFIG['MOZ_ENABLE_SKIA_PDF_SFNTLY']:
     DEFINES['SK_PDF_USE_SFNTLY'] = 1
-
-if not CONFIG['MOZ_ENABLE_SKIA_GPU']:
-    DEFINES['SK_SUPPORT_GPU'] = 0
 
 if CONFIG['MOZ_TREE_FREETYPE']:
     DEFINES['SK_CAN_USE_DLOPEN'] = 0
@@ -172,7 +165,7 @@ def generate_platform_sources():
     if output:
       sources[plat] = parse_sources(output)
 
-  deps = {':effects' : 'common', ':gpu' : 'gpu', ':pdf' : 'pdf'}
+  deps = {':effects' : 'common', ':pdf' : 'pdf'}
   for dep, key in deps.items():
     output = subprocess.check_output('cd skia && bin/gn desc out/linux {} sources'.format(dep), shell=True)
     if output:
@@ -183,10 +176,6 @@ def generate_platform_sources():
 
 def generate_separated_sources(platform_sources):
   blacklist = [
-    'GrGLMakeNativeInterface',
-    'GrGLCreateNullInterface',
-    'GrGLAssembleInterface',
-    'GrGLTestInterface',
     'skia/src/android/',
     'skia/src/atlastext/',
     'skia/src/c/',
@@ -194,13 +183,11 @@ def generate_separated_sources(platform_sources):
     'skia/src/fonts/',
     'skia/src/ports/SkImageEncoder',
     'skia/src/ports/SkImageGenerator',
-    'skia/src/gpu/vk/',
     'SkBitmapRegion',
     'SkLite',
     'SkLight',
     'SkNormal',
     'codec',
-    'SkWGL',
     'SkMemory_malloc',
     'third_party',
     'Sk3D',
@@ -236,7 +223,6 @@ def generate_separated_sources(platform_sources):
       'skia/src/codec/SkMasks.cpp',
       'skia/src/effects/imagefilters/SkBlurImageFilter.cpp',
       'skia/src/effects/SkDashPathEffect.cpp',
-      'skia/src/gpu/gl/GrGLMakeNativeInterface_none.cpp',
       'skia/src/ports/SkDiscardableMemory_none.cpp',
       'skia/src/ports/SkGlobalInitialization_default.cpp',
       'skia/src/ports/SkGlobalInitialization_default_imagefilters.cpp',
@@ -260,8 +246,7 @@ def generate_separated_sources(platform_sources):
     'arm': set(),
     'arm64': set(),
     'none': set(),
-    'pdf': set(),
-    'gpu': set()
+    'pdf': set()
   })
 
   for plat in platform_sources.keys():
@@ -341,18 +326,6 @@ unified_blacklist = [
   'SkParse.cpp',
   'SkPDFFont.cpp',
   'SkPictureData.cpp',
-  'skia/src/gpu/effects/',
-  'skia/src/gpu/gradients/',
-  'GrResourceCache',
-  'GrResourceProvider',
-  'GrAA',
-  'GrGL',
-  'GrCCPathProcessor',
-  'GrCCStrokeGeometry',
-  'GrMSAAPathRenderer.cpp',
-  'GrNonAAFillRect',
-  'GrPathUtils',
-  'GrShadowRRectOp',
   'SkColorSpace',
   'SkImage_Gpu.cpp',
   'SkPathOpsDebug.cpp',
@@ -420,9 +393,6 @@ def write_mozbuild(sources):
 
   f.write("if CONFIG['MOZ_ENABLE_SKIA_PDF']:\n")
   write_sources(f, sources['pdf'], 4)
-
-  f.write("if CONFIG['MOZ_ENABLE_SKIA_GPU']:\n")
-  write_sources(f, sources['gpu'], 4)
 
   f.write("if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':\n")
   write_sources(f, sources['android'], 4)
