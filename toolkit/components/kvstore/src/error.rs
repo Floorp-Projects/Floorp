@@ -4,7 +4,7 @@
 
 use libc::uint16_t;
 use nserror::{
-    nsresult, NsresultExt, NS_ERROR_FAILURE, NS_ERROR_NOT_IMPLEMENTED, NS_ERROR_NO_INTERFACE,
+    nsresult, NS_ERROR_FAILURE, NS_ERROR_NOT_IMPLEMENTED, NS_ERROR_NO_INTERFACE,
     NS_ERROR_NULL_POINTER, NS_ERROR_UNEXPECTED,
 };
 use nsstring::nsCString;

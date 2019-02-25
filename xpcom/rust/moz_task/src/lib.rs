@@ -12,7 +12,7 @@ extern crate nsstring;
 #[macro_use]
 extern crate xpcom;
 
-use nserror::{nsresult, NsresultExt, NS_OK};
+use nserror::{nsresult, NS_OK};
 use nsstring::{nsACString, nsCString};
 use std::{
     ptr,

@@ -13,7 +13,7 @@ use std::os::raw::c_char;
 use std::ptr;
 use std::ffi::{CStr, CString};
 use xpcom::interfaces;
-use nserror::{NsresultExt, nsresult, NS_OK};
+use nserror::{nsresult, NS_OK};
 
 #[no_mangle]
 pub unsafe extern fn Rust_ObserveFromRust() -> *const interfaces::nsIObserverService {
