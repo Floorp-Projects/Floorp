@@ -6,14 +6,6 @@ if [ "${TRAVIS_OS_NAME}" == "osx" ]; then
     rvm get head || true
 fi
 
-function llvm_linux_target_triple() {
-    if [ "$1" == "5.0" ]; then
-        echo "linux-x86_64-ubuntu14.04"
-    else
-        echo "x86_64-linux-gnu-ubuntu-14.04"
-    fi
-}
-
 function llvm_version_triple() {
     if [ "$1" == "3.5" ]; then
         echo "3.5.2"
@@ -28,7 +20,11 @@ function llvm_version_triple() {
     elif [ "$1" == "4.0" ]; then
         echo "4.0.1"
     elif [ "$1" == "5.0" ]; then
-        echo "5.0.0"
+        echo "5.0.2"
+    elif [ "$1" == "6.0" ]; then
+        echo "6.0.1"
+    elif [ "$1" == "7.0" ]; then
+        echo "7.0.0"
     fi
 }
 
@@ -49,7 +45,7 @@ function llvm_download() {
 }
 
 if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
-    llvm_download `llvm_linux_target_triple ${LLVM_VERSION}`
+    llvm_download x86_64-linux-gnu-ubuntu-14.04
     export LD_LIBRARY_PATH="${LLVM_DIRECTORY}/lib":$LD_LIBRARY_PATH
 else
     llvm_download x86_64-apple-darwin
