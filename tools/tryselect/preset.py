@@ -4,66 +4,54 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import ConfigParser
 import os
 import subprocess
 
+import yaml
 from mozboot.util import get_state_dir
 
 
-CONFIG_PATH = os.path.join(get_state_dir(), "autotry.ini")
+class PresetHandler(object):
+    config_path = os.path.join(get_state_dir(), "try_presets.yml")
+
+    def __init__(self):
+        self._presets = {}
+
+    @property
+    def presets(self):
+        if not self._presets and os.path.isfile(self.config_path):
+            with open(self.config_path, 'r') as fh:
+                self._presets = yaml.safe_load(fh) or {}
+
+        return self._presets
+
+    def __contains__(self, name):
+        return name in self.presets
+
+    def __getitem__(self, name):
+        return self.presets[name]
+
+    def __str__(self):
+        return yaml.safe_dump(self.presets, default_flow_style=False)
+
+    def list(self):
+        if not self.presets:
+            print("no presets found")
+        else:
+            print(self)
+
+    def edit(self):
+        if 'EDITOR' not in os.environ:
+            print("error: must set the $EDITOR environment variable to use --edit-presets")
+            return
+
+        subprocess.call([os.environ['EDITOR'], self.config_path])
+
+    def save(self, name, **data):
+        self.presets[name] = data
+
+        with open(self.config_path, "w") as fh:
+            fh.write(str(self))
 
 
-def list_presets(section=None):
-    config = ConfigParser.RawConfigParser()
-
-    data = []
-    if config.read([CONFIG_PATH]):
-        sections = [section] if section else config.sections()
-        for s in sections:
-            try:
-                data.extend(config.items(s))
-            except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
-                pass
-
-    if not data:
-        print("No presets found")
-
-    for name, value in data:
-        print("%s: %s" % (name, value))
-
-
-def edit_presets(section=None):
-    if 'EDITOR' not in os.environ:
-        print("error: must set the $EDITOR environment variable to use --edit-presets")
-        return
-    subprocess.call([os.environ['EDITOR'], CONFIG_PATH])
-
-
-def load(name, section=None):
-    config = ConfigParser.RawConfigParser()
-    if not config.read([CONFIG_PATH]):
-        return
-
-    sections = [section] if section else config.sections()
-    for s in sections:
-        try:
-            return config.get(s, name), s
-        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
-            pass
-    return None, None
-
-
-def save(section, name, data):
-    config = ConfigParser.RawConfigParser()
-    config.read([CONFIG_PATH])
-
-    if not config.has_section(section):
-        config.add_section(section)
-
-    config.set(section, name, data)
-
-    with open(CONFIG_PATH, "w") as f:
-        config.write(f)
-
-    print('preset saved, run with: --preset={}'.format(name))
+presets = PresetHandler()
