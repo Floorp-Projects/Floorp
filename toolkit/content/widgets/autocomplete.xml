@@ -82,6 +82,8 @@
           return this._popup = popup;
         ]]></getter>
       </property>
+      <property name="popupElement" readonly="true"
+                onget="return this.popup;"/>
 
       <property name="controller" onget="return this.mController;" readonly="true"/>
 
