@@ -45,6 +45,8 @@ permalink: /changelog/
         <item name="cardBackgroundColor">YOUR_COLOR</item>
       </style>
     ```
+    
+  * Added option to style `SimpleBrowserMenuItem` and `BrowserMenuImageText` with `textColorResource`.
 
 * **browser-toolbar**
   * Added option to configure fading edge length by using `browserToolbarFadingEdgeSize` XML attribute.

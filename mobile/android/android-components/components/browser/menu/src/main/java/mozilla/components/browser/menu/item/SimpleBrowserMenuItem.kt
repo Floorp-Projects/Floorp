@@ -4,11 +4,15 @@
 
 package mozilla.components.browser.menu.item
 
+import android.support.annotation.ColorRes
+import android.support.v4.content.ContextCompat
 import android.view.View
 import android.widget.TextView
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.browser.menu.R
+
+private const val NO_ID = -1
 
 /**
  * A simple browser menu item displaying text.
@@ -18,6 +22,8 @@ import mozilla.components.browser.menu.R
  */
 class SimpleBrowserMenuItem(
     private val label: String,
+    @ColorRes
+    private val textColorResource: Int = NO_ID,
     private val listener: () -> Unit
 ) : BrowserMenuItem {
     override var visible: () -> Boolean = { true }
@@ -26,6 +32,9 @@ class SimpleBrowserMenuItem(
 
     override fun bind(menu: BrowserMenu, view: View) {
         (view as TextView).text = label
+        if (textColorResource != NO_ID) {
+            view.setTextColor(ContextCompat.getColor(view.context, textColorResource))
+        }
         view.setOnClickListener {
             listener.invoke()
             menu.dismiss()

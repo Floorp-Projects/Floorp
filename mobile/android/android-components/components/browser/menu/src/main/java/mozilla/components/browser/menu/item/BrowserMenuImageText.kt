@@ -32,6 +32,8 @@ class BrowserMenuImageText(
     private val contentDescription: String,
     @ColorRes
     private val iconTintColorResource: Int = NO_ID,
+    @ColorRes
+    private val textColorResource: Int = NO_ID,
     private val listener: () -> Unit = {}
 ) : BrowserMenuItem {
 
@@ -53,6 +55,9 @@ class BrowserMenuImageText(
     private fun bindText(view: View) {
         val textView = view.findViewById<TextView>(R.id.text)
         textView.text = label
+        if (textColorResource != NO_ID) {
+            textView.setTextColor(ContextCompat.getColor(view.context, textColorResource))
+        }
     }
 
     private fun bindImage(view: View) {
