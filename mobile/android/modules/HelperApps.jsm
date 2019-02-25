@@ -20,6 +20,11 @@ XPCOMUtils.defineLazyGetter(this, "ContentAreaUtils", function() {
   return ContentAreaUtils;
 });
 
+const NON_FILE_URI_IGNORED_MIME_TYPES = new Set([
+  "text/html",
+  "application/xhtml+xml",
+]);
+
 var EXPORTED_SYMBOLS = ["App", "HelperApps"];
 
 class App {
@@ -57,9 +62,8 @@ var HelperApps =  {
     return {...httpHandlers, ...httpsHandlers};
   },
 
-  // Finds handlers that have registered for text/html pages or urls ending in html. Some apps, like
-  // the Samsung Video player will only appear for these urls, while some Browsers (like Link Bubble)
-  // won't register here because of the text/html mime type.
+  // Finds handlers that have registered for urls ending in html. Some apps, like
+  // the Samsung Video player, will only appear for these urls.
   get defaultHtmlHandlers() {
     delete this.defaultHtmlHandlers;
     return this.defaultHtmlHandlers = this._getHandlers("http://www.example.com/index.html", {
@@ -194,6 +198,20 @@ var HelperApps =  {
     let mimeType = options.mimeType;
     if (uri && mimeType == undefined) {
       mimeType = ContentAreaUtils.getMIMETypeForURI(uri) || "";
+      if (uri.scheme != "file" && NON_FILE_URI_IGNORED_MIME_TYPES.has(mimeType)) {
+        // We're guessing the MIME type based on the extension, which especially
+        // with non-local HTML documents will yield inconsistent results, as those
+        // commonly use URLs without any sort of extension, too.
+        // At the same time, apps offering to handle certain URLs in lieu of a
+        // browser often don't expect a MIME type to be used, and correspondingly
+        // register their intent filters without a MIME type.
+        // This means that when we *do* guess a non-empty MIME type because this
+        // time the URL *did* end on .(x)htm(l), Android won't offer any apps whose
+        // intent filter doesn't explicitly include that MIME type.
+        // Therefore, if the MIME type looks like something from that category,
+        // don't bother including it in the Intent for non-local files.
+        mimeType = "";
+      }
     }
 
     return {
