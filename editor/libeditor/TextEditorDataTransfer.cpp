@@ -272,7 +272,7 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
   if (deleteSelection && !SelectionRefPtr()->IsCollapsed()) {
     nsresult rv = PrepareToInsertContent(droppedAt, true);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return EditorBase::ToGenericNSResult(rv);
     }
     // Now, Selection should be collapsed at dropped point.  If somebody
     // changed Selection, we should think what should do it in such case
@@ -291,7 +291,7 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
       RefPtr<DataTransfer> dataTransfer;  // Required due to bug 1506439
       FireInputEvent(EditAction::eDeleteByDrag, VoidString(), dataTransfer);
       if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
+        return NS_OK;
       }
     }
 
@@ -340,7 +340,7 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
     nsContentUtils::PlatformToDOMLineBreaks(data);
     InsertTextAt(data, droppedAt, false);
     if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
+      return NS_OK;
     }
   } else {
     editActionData.InitializeDataTransfer(dataTransfer);
@@ -349,7 +349,7 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
       htmlEditor->InsertFromDataTransfer(dataTransfer, i, srcdoc, droppedAt,
                                          false);
       if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
+        return NS_OK;
       }
     }
   }
@@ -372,7 +372,7 @@ nsresult TextEditor::PasteAsAction(int32_t aClipboardType,
     nsresult rv =
         AsHTMLEditor()->PasteInternal(aClipboardType, aDispatchPasteEvent);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return EditorBase::ToGenericNSResult(rv);
     }
     return NS_OK;
   }
@@ -393,7 +393,7 @@ nsresult TextEditor::PasteAsAction(int32_t aClipboardType,
   nsCOMPtr<nsITransferable> transferable;
   rv = PrepareTransferable(getter_AddRefs(transferable));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
   if (NS_WARN_IF(!transferable)) {
     return NS_OK;  // XXX Why?
@@ -409,7 +409,7 @@ nsresult TextEditor::PasteAsAction(int32_t aClipboardType,
   }
   rv = InsertTextFromTransferable(transferable);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
   return NS_OK;
 }
@@ -432,7 +432,11 @@ TextEditor::PasteTransferable(nsITransferable* aTransferable) {
     return NS_OK;
   }
 
-  return InsertTextFromTransferable(aTransferable);
+  nsresult rv = InsertTextFromTransferable(aTransferable);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
