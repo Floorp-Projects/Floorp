@@ -3608,7 +3608,6 @@ PExternalHelperAppParent* ContentParent::AllocPExternalHelperAppParent(
       uri, aLoadInfoArgs, aContentLength, aWasFileChannel, aContentDisposition,
       aContentDispositionHint, aContentDispositionFilename);
   parent->AddRef();
-  parent->Init(aMimeContentType, aForceSave, aReferrer, aBrowser);
   return parent;
 }
 
@@ -3618,6 +3617,17 @@ bool ContentParent::DeallocPExternalHelperAppParent(
       static_cast<ExternalHelperAppParent*>(aService);
   parent->Release();
   return true;
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvPExternalHelperAppConstructor(
+    PExternalHelperAppParent* actor, const OptionalURIParams& uri,
+    const OptionalLoadInfoArgs& loadInfoArgs, const nsCString& aMimeContentType,
+    const nsCString& aContentDisposition, const uint32_t& aContentDispositionHint,
+    const nsString& aContentDispositionFilename, const bool& aForceSave,
+    const int64_t& aContentLength, const bool& aWasFileChannel,
+    const OptionalURIParams& aReferrer, PBrowserParent* aBrowser) {
+  actor->Init(aMimeContentType, aForceSave, aReferrer, aBrowser);
+  return IPC_OK();
 }
 
 PHandlerServiceParent* ContentParent::AllocPHandlerServiceParent() {
