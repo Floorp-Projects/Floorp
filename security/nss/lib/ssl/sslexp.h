@@ -626,6 +626,80 @@ typedef SECStatus(PR_CALLBACK *SSLRecordWriteCallback)(
                           PRUint16 * _writeEpoch),                 \
                          (fd, readEpoch, writeEpoch))
 
+/*
+ * The following AEAD functions expose an AEAD primitive that uses a ciphersuite
+ * to set parameters.  The ciphersuite determines the Hash function used by
+ * HKDF, the AEAD function, and the size of key and IV.  This is only supported
+ * for TLS 1.3.
+ *
+ * The key and IV are generated using the TLS KDF with a custom label.  That is
+ * HKDF-Expand-Label(secret, labelPrefix + " key" or " iv", "", L).
+ *
+ * The encrypt and decrypt functions use a nonce construction identical to that
+ * used in TLS.  The lower bits of the IV are XORed with the 64-bit counter to
+ * produce the nonce.  Otherwise, this is an AEAD interface similar to that
+ * described in RFC 5116.
+ */
+typedef struct SSLAeadContextStr SSLAeadContext;
+
+#define SSL_MakeAead(version, cipherSuite, secret,                  \
+                     labelPrefix, labelPrefixLen, ctx)              \
+    SSL_EXPERIMENTAL_API("SSL_MakeAead",                            \
+                         (PRUint16 _version, PRUint16 _cipherSuite, \
+                          PK11SymKey * _secret,                     \
+                          const char *_labelPrefix,                 \
+                          unsigned int _labelPrefixLen,             \
+                          SSLAeadContext **_ctx),                   \
+                         (version, cipherSuite, secret,             \
+                          labelPrefix, labelPrefixLen, ctx))
+
+#define SSL_AeadEncrypt(ctx, counter, aad, aadLen, in, inLen,            \
+                        output, outputLen, maxOutputLen)                 \
+    SSL_EXPERIMENTAL_API("SSL_AeadEncrypt",                              \
+                         (const SSLAeadContext *_ctx, PRUint64 _counter, \
+                          const PRUint8 *_aad, unsigned int _aadLen,     \
+                          const PRUint8 *_in, unsigned int _inLen,       \
+                          PRUint8 *_out, unsigned int *_outLen,          \
+                          unsigned int _maxOut),                         \
+                         (ctx, counter, aad, aadLen, in, inLen,          \
+                          output, outputLen, maxOutputLen))
+
+#define SSL_AeadDecrypt(ctx, counter, aad, aadLen, in, inLen,            \
+                        output, outputLen, maxOutputLen)                 \
+    SSL_EXPERIMENTAL_API("SSL_AeadDecrypt",                              \
+                         (const SSLAeadContext *_ctx, PRUint64 _counter, \
+                          const PRUint8 *_aad, unsigned int _aadLen,     \
+                          const PRUint8 *_in, unsigned int _inLen,       \
+                          PRUint8 *_output, unsigned int *_outLen,       \
+                          unsigned int _maxOut),                         \
+                         (ctx, counter, aad, aadLen, in, inLen,          \
+                          output, outputLen, maxOutputLen))
+
+#define SSL_DestroyAead(ctx)                      \
+    SSL_EXPERIMENTAL_API("SSL_DestroyAead",       \
+                         (SSLAeadContext * _ctx), \
+                         (ctx))
+
+/* SSL_HkdfExtract and SSL_HkdfExpandLabel implement the functions from TLS,
+ * using the version and ciphersuite to set parameters. This allows callers to
+ * use these TLS functions as a KDF. This is only supported for TLS 1.3. */
+#define SSL_HkdfExtract(version, cipherSuite, salt, ikm, keyp)      \
+    SSL_EXPERIMENTAL_API("SSL_HkdfExtract",                         \
+                         (PRUint16 _version, PRUint16 _cipherSuite, \
+                          PK11SymKey * _salt, PK11SymKey * _ikm,    \
+                          PK11SymKey * *_keyp),                     \
+                         (version, cipherSuite, salt, ikm, keyp))
+
+#define SSL_HkdfDeriveSecret(version, cipherSuite, prk,               \
+                             label, labelLen, keyp)                   \
+    SSL_EXPERIMENTAL_API("SSL_HkdfDeriveSecret",                      \
+                         (PRUint16 _version, PRUint16 _cipherSuite,   \
+                          PK11SymKey * _prk,                          \
+                          const char *_label, unsigned int _labelLen, \
+                          PK11SymKey **_keyp),                        \
+                         (version, cipherSuite, prk,                  \
+                          label, labelLen, keyp))
+
 /* Deprecated experimental APIs */
 #define SSL_UseAltServerHelloType(fd, enable) SSL_DEPRECATED_EXPERIMENTAL_API
 
