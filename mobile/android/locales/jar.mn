@@ -82,6 +82,8 @@ relativesrcdir toolkit/locales:
   toolkit/about                                    (%toolkit/about/*Support.ftl)
 #about:rights
   toolkit/about                                    (%toolkit/about/*Rights.ftl)
+#about:compat
+  toolkit/about                                    (%toolkit/about/*Compat.ftl)
 #endif
 # Do not add files below the endif. Reviewers, expand more context above
 # for comments.

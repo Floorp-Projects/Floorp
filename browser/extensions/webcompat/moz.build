@@ -8,8 +8,14 @@ DEFINES['MOZ_APP_VERSION'] = CONFIG['MOZ_APP_VERSION']
 DEFINES['MOZ_APP_MAXVERSION'] = CONFIG['MOZ_APP_MAXVERSION']
 
 FINAL_TARGET_FILES.features['webcompat@mozilla.org'] += [
+  'aboutCompat.css',
+  'aboutCompat.html',
+  'aboutCompat.js',
   'aboutConfigPrefs.js',
   'aboutConfigPrefs.json',
+  'aboutPage.js',
+  'aboutPage.json',
+  'background.js',
   'injections.js',
   'manifest.json',
   'ua_overrides.js'
@@ -27,6 +33,8 @@ FINAL_TARGET_FILES.features['webcompat@mozilla.org']['injections']['js'] += [
   'injections/js/bug1472081-election.gov.np-window.sidebar-shim.js',
   'injections/js/bug1482066-portalminasnet.com-window.sidebar-shim.js'
 ]
+
+JAR_MANIFESTS += ['jar.mn']
 
 with Files('**'):
   BUG_COMPONENT = ('Web Compatibility Tools', 'Go Faster')

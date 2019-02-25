@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Web Compat",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "3.0.1",
+  "version": "4.0.0",
 
   "applications": {
     "gecko": {
@@ -19,6 +19,14 @@
         "script": "aboutConfigPrefs.js",
         "paths": [["aboutConfigPrefs"]]
       }
+    },
+    "aboutPage": {
+      "schema": "aboutPage.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "aboutPage.js",
+        "events": ["startup"]
+      }
     }
   },
 
@@ -30,6 +38,7 @@
 
   "background": {
     "scripts": [
+      "background.js",
       "injections.js",
       "ua_overrides.js"
     ]
