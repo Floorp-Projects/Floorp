@@ -7,24 +7,14 @@
 #ifndef mozilla_LauncherProcessWin_h
 #define mozilla_LauncherProcessWin_h
 
-#include "mozilla/Maybe.h"
 #include "mozilla/TypedEnumBits.h"
 
 #include <stdint.h>
 
 namespace mozilla {
 
-// Forward declaration
-struct StaticXREAppData;
-
-/**
- * Determine whether or not the current process should be run as the launcher
- * process, and run if so. If we are not supposed to run as the launcher
- * process, or in the event of a launcher process failure, return Nothing, thus
- * indicating that we should continue on the original startup code path.
- */
-Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
-                        const StaticXREAppData& aAppData);
+bool RunAsLauncherProcess(int& argc, wchar_t* argv[]);
+int LauncherMain(int argc, wchar_t* argv[]);
 
 enum class LauncherFlags : uint32_t {
   eNone = 0,
