@@ -50,7 +50,7 @@ class RuntimePage extends PureComponent {
       showProfilerDialog: PropTypes.bool.isRequired,
       tabs: PropTypes.arrayOf(PropTypes.object).isRequired,
       temporaryExtensions: PropTypes.arrayOf(PropTypes.object).isRequired,
-      temporaryInstallError: PropTypes.string,
+      temporaryInstallError: PropTypes.object,
     };
   }
 
@@ -109,6 +109,23 @@ class RuntimePage extends PureComponent {
       return null;
     }
 
+    let errorMessages = [temporaryInstallError.message];
+
+    // Additional error messages can be found in additionalErrors.
+    if (Array.isArray(temporaryInstallError.additionalErrors)) {
+      errorMessages = errorMessages.concat(temporaryInstallError.additionalErrors);
+    }
+
+    const errors = errorMessages.map((message, index) => {
+      return dom.div(
+        {
+          className: "technical-text",
+          key: "tmp-extension-install-error-" + index,
+        },
+        message
+      );
+    });
+
     return Message(
       {
         level: MESSAGE_LEVEL.ERROR,
@@ -121,12 +138,7 @@ class RuntimePage extends PureComponent {
           },
           dom.span({}, "There was an error during the temporary add-on installation")
         ),
-        dom.div(
-          {
-            className: "technical-text",
-          },
-          temporaryInstallError
-        )
+        errors
       )
     );
   }
