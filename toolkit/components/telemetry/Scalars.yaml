@@ -818,7 +818,7 @@ webrtc.nicer:
 webrtc.sdp:
   parser_diff:
     bug_numbers:
-      - 1432955
+      - 1529787
     description: >
       The number of differences between the C based sipcc SDP parser and
       the new rust based rsdparsa SDP parser keyed by predefined
@@ -827,7 +827,7 @@ webrtc.sdp:
       between the rsdparsa parsing result and the original sdp.
       This should help to improve the new rsdparsa to replace
       the sipcc parser.
-    expires: "64"
+    expires: "73"
     kind: uint
     keyed: true
     notification_emails:
