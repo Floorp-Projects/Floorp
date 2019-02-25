@@ -3244,7 +3244,7 @@ bool nsCookieService::CanSetCookie(nsIURI *aHostURI, const nsCookieKey &aKey,
   // 1 = nonsecure and "https:"
   // 2 = secure and "http:"
   // 3 = secure and "https:"
-  bool isHTTPS;
+  bool isHTTPS = true;
   nsresult rv = aHostURI->SchemeIs("https", &isHTTPS);
   if (NS_SUCCEEDED(rv)) {
     Telemetry::Accumulate(Telemetry::COOKIE_SCHEME_SECURITY,
@@ -3345,15 +3345,10 @@ bool nsCookieService::CanSetCookie(nsIURI *aHostURI, const nsCookieKey &aKey,
     return newCookie;
   }
 
-  bool isSecure = true;
-  if (aHostURI) {
-    aHostURI->SchemeIs("https", &isSecure);
-  }
-
   // If the new cookie is non-https and wants to set secure flag,
   // browser have to ignore this new cookie.
   // (draft-ietf-httpbis-cookie-alone section 3.1)
-  if (aCookieAttributes.isSecure && !isSecure) {
+  if (aCookieAttributes.isSecure && !isHTTPS) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
                       "non-https cookie can't set secure flag");
     return newCookie;
