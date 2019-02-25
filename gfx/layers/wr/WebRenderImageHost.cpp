@@ -30,7 +30,6 @@ class ISurfaceAllocator;
 WebRenderImageHost::WebRenderImageHost(const TextureInfo& aTextureInfo)
     : CompositableHost(aTextureInfo),
       ImageComposite(),
-      mWrBridge(nullptr),
       mWrBridgeBindings(0),
       mUseAsyncImagePipeline(false) {}
 
@@ -251,10 +250,15 @@ void WebRenderImageHost::SetWrBridge(WebRenderBridgeParent* aWrBridge) {
   ++mWrBridgeBindings;
 }
 
-void WebRenderImageHost::ClearWrBridge() {
+void WebRenderImageHost::ClearWrBridge(WebRenderBridgeParent* aWrBridge) {
+  MOZ_ASSERT(aWrBridge);
   MOZ_ASSERT(mWrBridgeBindings > 0);
   --mWrBridgeBindings;
   if (mWrBridgeBindings == 0) {
+    MOZ_ASSERT(aWrBridge == mWrBridge);
+    if (aWrBridge != mWrBridge) {
+      gfxCriticalNote << "WrBridge mismatch happened";
+    }
     SetCurrentTextureHost(nullptr);
     mWrBridge = nullptr;
   }
