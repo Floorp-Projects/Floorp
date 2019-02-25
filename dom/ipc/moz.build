@@ -81,8 +81,6 @@ UNIFIED_SOURCES += [
     'MemMapSnapshot.cpp',
     'MemoryReportRequest.cpp',
     'MMPrinter.cpp',
-    'nsIContentChild.cpp',
-    'nsIContentParent.cpp',
     'PermissionMessageUtils.cpp',
     'PreallocatedProcessManager.cpp',
     'ProcessPriorityManager.cpp',
