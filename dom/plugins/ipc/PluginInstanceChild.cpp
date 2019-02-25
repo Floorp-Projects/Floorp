@@ -279,6 +279,9 @@ NPError PluginInstanceChild::InternalGetNPObjectForValue(NPNVariable aValue,
           actor = mCachedWindowActor =
               static_cast<PluginScriptableObjectChild*>(actorProtocol);
           NS_ASSERTION(actor, "Null actor!");
+          if (!actor->GetObject(false)) {
+            return NPERR_GENERIC_ERROR;
+          }
           PluginModuleChild::sBrowserFuncs.retainobject(
               actor->GetObject(false));
         }
@@ -293,6 +296,9 @@ NPError PluginInstanceChild::InternalGetNPObjectForValue(NPNVariable aValue,
           actor = mCachedElementActor =
               static_cast<PluginScriptableObjectChild*>(actorProtocol);
           NS_ASSERTION(actor, "Null actor!");
+          if (!actor->GetObject(false)) {
+            return NPERR_GENERIC_ERROR;
+          }
           PluginModuleChild::sBrowserFuncs.retainobject(
               actor->GetObject(false));
         }
@@ -335,7 +341,9 @@ NPError PluginInstanceChild::InternalGetNPObjectForValue(NPNVariable aValue,
   }
 
   NPObject* object = actor->GetObject(false);
-  NS_ASSERTION(object, "Null object?!");
+  if (!actor->GetObject(false)) {
+    return NPERR_GENERIC_ERROR;
+  }
 
   *aObject = PluginModuleChild::sBrowserFuncs.retainobject(object);
   return NPERR_NO_ERROR;
