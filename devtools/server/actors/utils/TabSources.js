@@ -30,6 +30,15 @@ function TabSources(threadActor, allowSourceFn = () => true) {
 
   // Debugger.Source -> SourceActor
   this._sourceActors = new Map();
+
+  // Debugger.Source.id -> Debugger.Source
+  //
+  // The IDs associated with ScriptSources and available via DebuggerSource.id
+  // are internal to this process and should not be exposed to the client. This
+  // map associates these IDs with the corresponding source, provided the source
+  // has not been GC'ed and the actor has been created. This is lazily populated
+  // the first time it is needed.
+  this._sourcesByInternalSourceId = null;
 }
 
 /**
@@ -61,6 +70,7 @@ TabSources.prototype = {
    */
   reset: function() {
     this._sourceActors = new Map();
+    this._sourcesByInternalSourceId = null;
   },
 
   /**
@@ -106,6 +116,9 @@ TabSources.prototype = {
     }
 
     this._sourceActors.set(source, actor);
+    if (this._sourcesByInternalSourceId && source.id) {
+      this._sourcesByInternalSourceId.set(source.id, source);
+    }
 
     this.emit("newSource", actor);
     return actor;
@@ -132,6 +145,25 @@ TabSources.prototype = {
     }
 
     return sourceActor;
+  },
+
+  getSourceActorByInternalSourceId: function(id) {
+    if (!this._sourcesByInternalSourceId) {
+      this._sourcesByInternalSourceId = new Map();
+      for (const source of this._thread.dbg.findSources()) {
+        if (source.id) {
+          this._sourcesByInternalSourceId.set(source.id, source);
+        }
+      }
+    }
+    const source = this._sourcesByInternalSourceId.get(id);
+    if (source) {
+      if (this.hasSourceActor(source)) {
+        return this.getSourceActor(source);
+      }
+      return this.createSourceActor(source);
+    }
+    return null;
   },
 
   getSourceActorsByURL: function(url) {
