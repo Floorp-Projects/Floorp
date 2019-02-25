@@ -32,7 +32,8 @@
 
 // this port is based off of v8 svn revision 9837
 
-/* static */ int Thread::GetCurrentId() { return gettid(); }
+/* static */
+int Thread::GetCurrentId() { return gettid(); }
 
 void* GetStackTop(void* aGuess) {
   pthread_t thread = pthread_self();
