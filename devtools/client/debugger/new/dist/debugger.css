@@ -1375,7 +1375,7 @@ html[dir="ltr"] .toggle-button.end:not(.vertical) .img {
 .search-field .img.search {
   position: absolute;
   z-index: 1;
-  left: 6px;
+  inset-inline-start: 6px;
   top: calc(50% - 8px);
   mask-size: 12px;
   background-color: var(--theme-icon-dimmed-color);
@@ -1383,7 +1383,7 @@ html[dir="ltr"] .toggle-button.end:not(.vertical) .img {
 }
 
 .search-field.big .img.search {
-  left: 12px;
+  inset-inline-start: 12px;
   mask-size: 16px;
 }
 
@@ -1514,7 +1514,7 @@ html[dir="ltr"] .toggle-button.end:not(.vertical) .img {
   padding-left: 5px;
   min-width: 33px;
   width: 100%;
-  text-align: right;
+  text-align: end;
   grid-column: 1/2;
 }
 
@@ -3188,11 +3188,7 @@ html .breakpoints-list .breakpoint.paused {
   font-size: 11px;
   color: var(--theme-comment);
   min-width: 16px;
-  text-align: right;
-}
-
-html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
-  text-align: left;
+  text-align: end;
 }
 
 .breakpoints-list .breakpoint:hover .breakpoint-line {
@@ -3240,9 +3236,7 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 }
 
 .breakpoint .close-btn {
-  offset-inline-end: 15px;
   inset-inline-end: 15px;
-  offset-inline-start: auto;
   inset-inline-start: auto;
   position: absolute;
   top: 8px;
@@ -3392,7 +3386,6 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 
 .expression-container__close-btn {
   position: absolute;
-  offset-inline-end: 0px;
   inset-inline-end: 0px;
   top: 1px;
 }
@@ -3808,10 +3801,6 @@ html[dir="rtl"] .command-bar {
   color: var(--theme-highlight-blue);
 }
 
-.command-bar .subSettings {
-  float: right;
-}
-
 .command-bar .active .disable-pausing {
   background-color: var(--theme-icon-checked-color);
 }
@@ -3953,8 +3942,8 @@ html[dir="rtl"] .command-bar {
 }
 
 .xhr-container__close-btn {
-  offset-inline-end: 12px;
-  offset-inline-start: auto;
+  inset-inline-end: 12px;
+  inset-inline-start: auto;
   position: absolute;
   top: 8px;
 }
@@ -4184,9 +4173,7 @@ html[dir="rtl"] .object-node {
 .welcomebox .command-bar-button {
   position: absolute;
   top: auto;
-  offset-inline-end: 0;
   inset-inline-end: 0;
-  offset-inline-start: auto;
   inset-inline-start: auto;
   bottom: 0;
 }
@@ -4216,7 +4203,7 @@ html[dir="rtl"] .object-node {
 }
 
 .shortcutKey {
-  text-align: right;
+  text-align: end;
   padding-right: 10px;
   font-family: var(--monospace-font-family);
   font-size: 14px;
@@ -4225,7 +4212,7 @@ html[dir="rtl"] .object-node {
 }
 
 .shortcutLabel {
-  text-align: left;
+  text-align: start;
   padding-left: 10px;
   font-size: 14px;
   line-height: 18px;
@@ -4377,7 +4364,7 @@ html .welcomebox .toggle-button-end.collapsed {
   box-shadow: 0 4px 4px 0 var(--search-overlays-semitransparent);
   max-height: 300px;
   position: absolute;
-  offset-inline-end: 2px;
+  inset-inline-end: 2px;
   top: 24px;
   width: 150px;
   z-index: 1000;

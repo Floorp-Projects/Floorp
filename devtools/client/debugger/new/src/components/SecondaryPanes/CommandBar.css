@@ -37,10 +37,6 @@ html[dir="rtl"] .command-bar {
   color: var(--theme-highlight-blue);
 }
 
-.command-bar .subSettings {
-  float: right;
-}
-
 .command-bar .active .disable-pausing {
   background-color: var(--theme-icon-checked-color);
 }
