@@ -9,6 +9,7 @@ import android.content.Context
 import android.support.v4.content.ContextCompat
 import android.text.InputType
 import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
@@ -57,28 +58,33 @@ class EditToolbar(
         }
 
         setOnTextChangeListener { text, _ ->
+            updateClearViewVisibility(text)
             editListener?.onTextChanged(text)
         }
     }
 
     private val defaultColor = ContextCompat.getColor(context, R.color.photonWhite)
 
-    internal var cancelViewColor = defaultColor
+    internal var clearViewColor = defaultColor
         set(value) {
             field = value
-            cancelView.setColorFilter(value)
+            clearView.setColorFilter(value)
         }
 
-    private val cancelView = ImageView(context).apply {
-        id = R.id.mozac_browser_toolbar_cancel_view
+    internal fun updateClearViewVisibility(text: String) {
+        clearView.visibility = if (text.isBlank()) View.GONE else View.VISIBLE
+    }
+
+    private val clearView = ImageView(context).apply {
+        id = R.id.mozac_browser_toolbar_clear_view
         val padding = resources.pxToDp(CANCEL_PADDING_DP)
         setPadding(padding, padding, padding, padding)
-        setImageResource(mozilla.components.ui.icons.R.drawable.mozac_ic_close)
+        setImageResource(mozilla.components.ui.icons.R.drawable.mozac_ic_clear)
         contentDescription = context.getString(R.string.mozac_close_button_description)
         scaleType = ImageView.ScaleType.CENTER
 
         setOnClickListener {
-            toolbar.displayMode()
+            urlView.text.clear()
         }
     }
 
@@ -86,7 +92,7 @@ class EditToolbar(
 
     init {
         addView(urlView)
-        addView(cancelView)
+        addView(clearView)
     }
 
     /**
@@ -114,7 +120,7 @@ class EditToolbar(
 
         // The icon fills the whole height and has a square shape
         val iconSquareSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
-        cancelView.measure(iconSquareSpec, iconSquareSpec)
+        clearView.measure(iconSquareSpec, iconSquareSpec)
 
         val urlWidthSpec = MeasureSpec.makeMeasureSpec(width - height, MeasureSpec.EXACTLY)
         urlView.measure(urlWidthSpec, heightMeasureSpec)
@@ -122,9 +128,9 @@ class EditToolbar(
 
     // We layout the toolbar ourselves to avoid the overhead from using complex ViewGroup implementations
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        cancelView.layout(measuredWidth - cancelView.measuredWidth, 0, measuredWidth, measuredHeight)
+        clearView.layout(measuredWidth - clearView.measuredWidth, 0, measuredWidth, measuredHeight)
 
-        urlView.layout(0, 0, measuredWidth - cancelView.measuredWidth, bottom)
+        urlView.layout(0, 0, measuredWidth - clearView.measuredWidth, bottom)
     }
 
     companion object {

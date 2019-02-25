@@ -6,6 +6,9 @@ package mozilla.components.browser.toolbar.edit
 
 import android.content.Context
 import android.view.KeyEvent
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.toolbar.BrowserToolbar
@@ -14,12 +17,15 @@ import mozilla.components.concept.toolbar.AutocompleteDelegate
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.processor.CollectionProcessor
+import mozilla.components.support.ktx.android.view.forEach
+import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.mock
 import org.robolectric.RobolectricTestRunner
 import java.util.concurrent.CountDownLatch
 
@@ -106,11 +112,68 @@ class EditToolbarTest {
     }
 
     @Test
-    fun `cancelView changes image color filter on update`() {
+    fun `clearView clears text in urlView`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val editToolbar = EditToolbar(context, toolbar)
+        val clearView = extractClearView(editToolbar)
+
+        editToolbar.urlView.setText("https://www.mozilla.org")
+        assertTrue(editToolbar.urlView.text.isNotBlank())
+
+        Assert.assertNotNull(clearView)
+        clearView.performClick()
+        assertTrue(editToolbar.urlView.text.isBlank())
+    }
+
+    @Test
+    fun `fun updateClearViewVisibility updates clearView`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val editToolbar = EditToolbar(context, toolbar)
+        val clearView = extractClearView(editToolbar)
+
+        editToolbar.updateClearViewVisibility("")
+        assertTrue(clearView.visibility == View.GONE)
+
+        editToolbar.updateClearViewVisibility("https://www.mozilla.org")
+        assertTrue(clearView.visibility == View.VISIBLE)
+    }
+
+    @Test
+    fun `clearView changes image color filter on update`() {
         val toolbar = BrowserToolbar(context)
         val editToolbar = toolbar.editToolbar
-        editToolbar.cancelViewColor = R.color.photonBlue40
+        editToolbar.clearViewColor = R.color.photonBlue40
 
-        assertEquals(R.color.photonBlue40, editToolbar.cancelViewColor)
+        assertEquals(R.color.photonBlue40, editToolbar.clearViewColor)
+    }
+
+    companion object {
+        private fun extractClearView(editToolbar: EditToolbar): ImageView {
+            var clearView: ImageView? = null
+
+            editToolbar.forEach {
+                if (it is ImageView) {
+                    clearView = it
+                    return@forEach
+                }
+            }
+
+            return clearView ?: throw AssertionError("Could not find clear view")
+        }
+    }
+
+    infix fun View.assertIn(group: ViewGroup) {
+        var found = false
+
+        group.forEach {
+            if (this == it) {
+                println("Checking $this == $it")
+                found = true
+            }
+        }
+
+        if (!found) {
+            throw AssertionError("View not found in ViewGroup")
+        }
     }
 }
