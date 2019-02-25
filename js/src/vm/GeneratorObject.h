@@ -7,6 +7,7 @@
 #ifndef vm_GeneratorObject_h
 #define vm_GeneratorObject_h
 
+#include "js/Class.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ArrayObject.h"
 #include "vm/JSContext.h"
@@ -208,13 +209,6 @@ class GeneratorObject : public AbstractGeneratorObject {
   static const Class class_;
 
   static GeneratorObject* create(JSContext* cx, HandleFunction fun);
-};
-
-class AsyncFunctionGeneratorObject : public AbstractGeneratorObject {
- public:
-  enum { RESERVED_SLOTS = AbstractGeneratorObject::RESERVED_SLOTS };
-
-  static const Class class_;
 };
 
 bool GeneratorThrowOrReturn(JSContext* cx, AbstractFramePtr frame,

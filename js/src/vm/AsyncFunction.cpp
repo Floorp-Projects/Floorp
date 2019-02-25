@@ -15,6 +15,8 @@
 #include "vm/Realm.h"
 #include "vm/SelfHosting.h"
 
+#include "vm/JSObject-inl.h"
+
 using namespace js;
 
 using mozilla::Maybe;
@@ -60,8 +62,7 @@ using mozilla::Maybe;
 }
 
 static MOZ_MUST_USE bool AsyncFunctionStart(
-    JSContext* cx, Handle<PromiseObject*> resultPromise,
-    Handle<AsyncFunctionGeneratorObject*> generator);
+    JSContext* cx, Handle<AsyncFunctionGeneratorObject*> generator);
 
 #define UNWRAPPED_ASYNC_WRAPPED_SLOT 1
 #define WRAPPED_ASYNC_UNWRAPPED_SLOT 0
@@ -92,21 +93,15 @@ static bool WrappedAsyncFunction(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    // Step 1.
-    Rooted<PromiseObject*> resultPromise(cx, CreatePromiseObjectForAsync(cx));
-    if (!resultPromise) {
-      return false;
-    }
-
     // Step 3.
     Rooted<AsyncFunctionGeneratorObject*> generator(
         cx, &generatorVal.toObject().as<AsyncFunctionGeneratorObject>());
-    if (!AsyncFunctionStart(cx, resultPromise, generator)) {
+    if (!AsyncFunctionStart(cx, generator)) {
       return false;
     }
 
     // Step 5.
-    args.rval().setObject(*resultPromise);
+    args.rval().setObject(*generator->promise());
     return true;
   }
 
@@ -191,22 +186,28 @@ enum class ResumeKind { Normal, Throw };
 
 // Async Functions proposal 2.2 steps 3-8, 2.4 steps 2-7, 2.5 steps 2-7.
 static bool AsyncFunctionResume(JSContext* cx,
-                                Handle<PromiseObject*> resultPromise,
                                 Handle<AsyncFunctionGeneratorObject*> generator,
                                 ResumeKind kind, HandleValue valueOrReason) {
-  RootedObject stack(cx, resultPromise->allocationSite());
+  Rooted<PromiseObject*> resultPromise(cx, generator->promise());
+
+  RootedObject stack(cx);
   Maybe<JS::AutoSetAsyncStackForNewCalls> asyncStack;
-  if (stack) {
-    asyncStack.emplace(
-        cx, stack, "async",
-        JS::AutoSetAsyncStackForNewCalls::AsyncCallKind::EXPLICIT);
+  if (JSObject* allocationSite = resultPromise->allocationSite()) {
+    // The promise is created within the activation of the async function, so
+    // use the parent frame as the starting point for async stacks.
+    stack = allocationSite->as<SavedFrame>().getParent();
+    if (stack) {
+      asyncStack.emplace(
+          cx, stack, "async",
+          JS::AutoSetAsyncStackForNewCalls::AsyncCallKind::EXPLICIT);
+    }
   }
 
   // This case can only happen when the debugger force-returned the same
   // generator object for two async function calls. It doesn't matter how we
   // handle it, as long as we don't crash.
   if (generator->isClosed() || !generator->isSuspended()) {
-    return AsyncFunctionReturned(cx, resultPromise, UndefinedHandleValue);
+    return true;
   }
 
   // Execution context switching is handled in generator.
@@ -225,7 +226,7 @@ static bool AsyncFunctionResume(JSContext* cx,
   }
 
   if (generator->isAfterAwait()) {
-    return AsyncFunctionAwait(cx, generator, resultPromise, generatorOrValue);
+    return AsyncFunctionAwait(cx, generator, generatorOrValue);
   }
 
   return AsyncFunctionReturned(cx, resultPromise, generatorOrValue);
@@ -233,9 +234,8 @@ static bool AsyncFunctionResume(JSContext* cx,
 
 // Async Functions proposal 2.2 steps 3-8.
 static MOZ_MUST_USE bool AsyncFunctionStart(
-    JSContext* cx, Handle<PromiseObject*> resultPromise,
-    Handle<AsyncFunctionGeneratorObject*> generator) {
-  return AsyncFunctionResume(cx, resultPromise, generator, ResumeKind::Normal,
+    JSContext* cx, Handle<AsyncFunctionGeneratorObject*> generator) {
+  return AsyncFunctionResume(cx, generator, ResumeKind::Normal,
                              UndefinedHandleValue);
 }
 
@@ -244,24 +244,22 @@ static MOZ_MUST_USE bool AsyncFunctionStart(
 
 // Async Functions proposal 2.4.
 MOZ_MUST_USE bool js::AsyncFunctionAwaitedFulfilled(
-    JSContext* cx, Handle<PromiseObject*> resultPromise,
-    Handle<AsyncFunctionGeneratorObject*> generator, HandleValue value) {
+    JSContext* cx, Handle<AsyncFunctionGeneratorObject*> generator,
+    HandleValue value) {
   // Step 1 (implicit).
 
   // Steps 2-7.
-  return AsyncFunctionResume(cx, resultPromise, generator, ResumeKind::Normal,
-                             value);
+  return AsyncFunctionResume(cx, generator, ResumeKind::Normal, value);
 }
 
 // Async Functions proposal 2.5.
 MOZ_MUST_USE bool js::AsyncFunctionAwaitedRejected(
-    JSContext* cx, Handle<PromiseObject*> resultPromise,
-    Handle<AsyncFunctionGeneratorObject*> generator, HandleValue reason) {
+    JSContext* cx, Handle<AsyncFunctionGeneratorObject*> generator,
+    HandleValue reason) {
   // Step 1 (implicit).
 
   // Step 2-7.
-  return AsyncFunctionResume(cx, resultPromise, generator, ResumeKind::Throw,
-                             reason);
+  return AsyncFunctionResume(cx, generator, ResumeKind::Throw, reason);
 }
 
 JSFunction* js::GetWrappedAsyncFunction(JSFunction* unwrapped) {
@@ -283,4 +281,26 @@ JSFunction* js::GetUnwrappedAsyncFunction(JSFunction* wrapped) {
 
 bool js::IsWrappedAsyncFunction(JSFunction* fun) {
   return fun->maybeNative() == WrappedAsyncFunction;
+}
+
+const Class AsyncFunctionGeneratorObject::class_ = {
+    "AsyncFunctionGenerator",
+    JSCLASS_HAS_RESERVED_SLOTS(AsyncFunctionGeneratorObject::RESERVED_SLOTS)};
+
+AsyncFunctionGeneratorObject* AsyncFunctionGeneratorObject::create(
+    JSContext* cx, HandleFunction fun) {
+  MOZ_ASSERT(fun->isAsync() && !fun->isGenerator());
+
+  Rooted<PromiseObject*> resultPromise(cx, CreatePromiseObjectForAsync(cx));
+  if (!resultPromise) {
+    return nullptr;
+  }
+
+  auto* obj = NewBuiltinClassInstance<AsyncFunctionGeneratorObject>(cx);
+  if (!obj) {
+    return nullptr;
+  }
+  obj->initFixedSlot(PROMISE_SLOT, ObjectValue(*resultPromise));
+
+  return obj;
 }
