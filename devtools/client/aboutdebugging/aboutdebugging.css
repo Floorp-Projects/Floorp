@@ -207,6 +207,12 @@ button {
   fill: #0c0c0d;
 }
 
+.addons-install-error__additional-errors {
+  font-family: monospace;
+  font-size: 13px;
+  margin-block: 8px;
+}
+
 .addons-options {
   flex: 1;
 }

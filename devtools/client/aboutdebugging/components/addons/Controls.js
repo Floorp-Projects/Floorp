@@ -67,7 +67,7 @@ class AddonsControls extends Component {
       })
       .catch(e => {
         console.error(e);
-        this.setState({ installError: e.message, lastInstallErrorFile: file });
+        this.setState({ installError: e, lastInstallErrorFile: file });
       });
   }
 
