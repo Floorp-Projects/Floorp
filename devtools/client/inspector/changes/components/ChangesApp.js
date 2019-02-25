@@ -23,6 +23,8 @@ class ChangesApp extends PureComponent {
       onContextMenu: PropTypes.func.isRequired,
       // Event handler for "copy" event
       onCopy: PropTypes.func.isRequired,
+      // Event handler for click on "Copy All Changes" button
+      onCopyAllChanges: PropTypes.func.isRequired,
       // Event handler for click on "Copy Rule" button
       onCopyRule: PropTypes.func.isRequired,
     };
@@ -30,6 +32,17 @@ class ChangesApp extends PureComponent {
 
   constructor(props) {
     super(props);
+  }
+
+  renderCopyAllChangesButton() {
+    return dom.button(
+      {
+        className: "changes__copy-all-changes-button",
+        onClick: this.props.onCopyAllChanges,
+        title: getStr("changes.contextmenu.copyAllChangesDescription"),
+      },
+      getStr("changes.contextmenu.copyAllChanges")
+    );
   }
 
   renderCopyButton(ruleId) {
@@ -190,6 +203,7 @@ class ChangesApp extends PureComponent {
         onCopy: this.props.onCopy,
       },
       !hasChanges && this.renderEmptyState(),
+      hasChanges && this.renderCopyAllChangesButton(),
       hasChanges && this.renderDiff(this.props.changesTree)
     );
   }
