@@ -1398,7 +1398,8 @@ void DataTransfer::FillInExternalCustomTypes(nsIVariant* aData, uint32_t aIndex,
   }
 
   nsCOMPtr<nsIInputStream> stringStream;
-  NS_NewByteInputStream(getter_AddRefs(stringStream), chrs, checkedLen.value(),
+  NS_NewByteInputStream(getter_AddRefs(stringStream),
+                        MakeSpan(chrs, checkedLen.value()),
                         NS_ASSIGNMENT_ADOPT);
 
   nsCOMPtr<nsIObjectInputStream> stream = NS_NewObjectInputStream(stringStream);

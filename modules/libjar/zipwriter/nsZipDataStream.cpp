@@ -120,7 +120,8 @@ nsresult nsZipDataStream::ProcessData(nsIRequest *aRequest,
 
   MOZ_ASSERT(aCount <= INT32_MAX);
   nsCOMPtr<nsIInputStream> stream;
-  nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream), aBuffer, aCount);
+  nsresult rv =
+      NS_NewByteInputStream(getter_AddRefs(stream), MakeSpan(aBuffer, aCount));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mOutput->OnDataAvailable(aRequest, aContext, stream, aOffset, aCount);

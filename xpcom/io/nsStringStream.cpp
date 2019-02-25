@@ -400,7 +400,7 @@ nsStringInputStream::Clone(nsIInputStream** aCloneOut) {
 }
 
 nsresult NS_NewByteInputStream(nsIInputStream** aStreamResult,
-                               const char* aStringToRead, int32_t aLength,
+                               Span<const char> aStringToRead,
                                nsAssignmentType aAssignment) {
   MOZ_ASSERT(aStreamResult, "null out ptr");
 
@@ -409,13 +409,14 @@ nsresult NS_NewByteInputStream(nsIInputStream** aStreamResult,
   nsresult rv;
   switch (aAssignment) {
     case NS_ASSIGNMENT_COPY:
-      rv = stream->SetData(aStringToRead, aLength);
+      rv = stream->SetData(aStringToRead.Elements(), aStringToRead.Length());
       break;
     case NS_ASSIGNMENT_DEPEND:
-      rv = stream->ShareData(aStringToRead, aLength);
+      rv = stream->ShareData(aStringToRead.Elements(), aStringToRead.Length());
       break;
     case NS_ASSIGNMENT_ADOPT:
-      rv = stream->AdoptData(const_cast<char*>(aStringToRead), aLength);
+      rv = stream->AdoptData(const_cast<char*>(aStringToRead.Elements()),
+                             aStringToRead.Length());
       break;
     default:
       NS_ERROR("invalid assignment type");

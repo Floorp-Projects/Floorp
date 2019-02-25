@@ -290,7 +290,8 @@ nsresult nsJSThunk::EvaluateScript(
     }
     aChannel->SetContentCharset(*charset);
     if (bytes)
-      rv = NS_NewByteInputStream(getter_AddRefs(mInnerStream), bytes, bytesLen,
+      rv = NS_NewByteInputStream(getter_AddRefs(mInnerStream),
+                                 mozilla::MakeSpan(bytes, bytesLen),
                                  NS_ASSIGNMENT_ADOPT);
     else
       rv = NS_ERROR_OUT_OF_MEMORY;

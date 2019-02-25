@@ -36,7 +36,7 @@ nsresult MemoryBlobImpl::DataOwnerAdapter::Create(DataOwner* aDataOwner,
 
   rv = NS_NewByteInputStream(
       getter_AddRefs(stream),
-      static_cast<const char*>(aDataOwner->mData) + aStart, (int32_t)aLength,
+      MakeSpan(static_cast<const char*>(aDataOwner->mData) + aStart, aLength),
       NS_ASSIGNMENT_DEPEND);
   NS_ENSURE_SUCCESS(rv, rv);
 
