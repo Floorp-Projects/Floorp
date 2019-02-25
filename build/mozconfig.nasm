@@ -7,5 +7,6 @@ MINGW*)
     export NASM=$topsrcdir/nasm/nasm.exe
     ;;
 *)
+    export NASM=$topsrcdir/nasm/nasm
     ;;
 esac

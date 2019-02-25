@@ -177,9 +177,17 @@ nasm-2.14.02:
   description: nasm 2.14.02 source code
   fetch:
     type: static-url
-    url: https://ftp.halifax.rwth-aachen.de/gentoo/distfiles/nasm-2.14.02.tar.xz
+    url: https://www.nasm.us/pub/nasm/releasebuilds/2.14.02/nasm-2.14.02.tar.xz
     sha256: e24ade3e928f7253aa8c14aa44726d1edf3f98643f87c9d72ec1df44b26be8f5
     size: 827620
+
+nasm-2.13.02:
+  description: nasm 2.13.02 source code
+  fetch:
+    type: static-url
+    url: https://www.nasm.us/pub/nasm/releasebuilds/2.13.02/nasm-2.13.02.tar.xz
+    sha256: 8ac3235f49a6838ff7a8d7ef7c19a4430d0deecc0c2d3e3e237b5e9f53291757
+    size: 805744
 
 wix-3.1.1:
   description: wix 3.1.1 binary release

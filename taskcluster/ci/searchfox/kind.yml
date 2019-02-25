@@ -48,6 +48,7 @@ jobs:
             keep-artifacts: false
         toolchains:
             - linux64-clang
+            - linux64-nasm
             - linux64-node
             - linux64-rust
             - linux64-cbindgen
@@ -83,6 +84,7 @@ jobs:
             - linux64-hfsplus
             - linux64-libdmg
             - linux64-llvm-dsymutil
+            - linux64-nasm
             - linux64-node
             - linux64-rust-macos
             - linux64-cbindgen
