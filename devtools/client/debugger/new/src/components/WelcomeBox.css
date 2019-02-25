@@ -23,9 +23,7 @@
 .welcomebox .command-bar-button {
   position: absolute;
   top: auto;
-  offset-inline-end: 0;
   inset-inline-end: 0;
-  offset-inline-start: auto;
   inset-inline-start: auto;
   bottom: 0;
 }
@@ -55,7 +53,7 @@
 }
 
 .shortcutKey {
-  text-align: right;
+  text-align: end;
   padding-right: 10px;
   font-family: var(--monospace-font-family);
   font-size: 14px;
@@ -64,7 +62,7 @@
 }
 
 .shortcutLabel {
-  text-align: left;
+  text-align: start;
   padding-left: 10px;
   font-size: 14px;
   line-height: 18px;
