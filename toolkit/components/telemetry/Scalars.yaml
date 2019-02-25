@@ -818,6 +818,7 @@ webrtc.nicer:
 webrtc.sdp:
   parser_diff:
     bug_numbers:
+      - 1432955
       - 1529787
     description: >
       The number of differences between the C based sipcc SDP parser and
