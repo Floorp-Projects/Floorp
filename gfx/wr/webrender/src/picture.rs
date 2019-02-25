@@ -36,7 +36,7 @@ use std::{mem, u16};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use texture_cache::TextureCacheHandle;
 use tiling::RenderTargetKind;
-use util::{ComparableVec, TransformedRectKind, MatrixHelpers, MaxRect};
+use util::{ComparableVec, TransformedRectKind, MatrixHelpers, MaxRect, scale_factors};
 
 /*
  A picture represents a dynamically rendered image. It consists of:
@@ -2927,7 +2927,11 @@ impl PicturePrimitive {
             }
             PictureCompositeMode::Filter(FilterOp::Blur(blur_radius)) => {
                 let blur_std_deviation = blur_radius * device_pixel_scale.0;
-                let blur_std_deviation = DeviceSize::new(blur_std_deviation, blur_std_deviation);
+                let scale_factors = scale_factors(&transform);
+                let blur_std_deviation = DeviceSize::new(
+                    blur_std_deviation * scale_factors.0,
+                    blur_std_deviation * scale_factors.1
+                );
                 let inflation_factor = surfaces[raster_config.surface_index.0].inflation_factor;
                 let inflation_factor = (inflation_factor * device_pixel_scale.0).ceil() as i32;
 
