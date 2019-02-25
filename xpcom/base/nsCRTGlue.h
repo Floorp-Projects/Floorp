@@ -93,16 +93,6 @@ inline char NS_ToLower(char aChar) {
 bool NS_IsUpper(char aChar);
 bool NS_IsLower(char aChar);
 
-constexpr bool NS_IsAscii(const char16_t* aString) {
-  while (*aString) {
-    if (0x0080 <= *aString) {
-      return false;
-    }
-    aString++;
-  }
-  return true;
-}
-
 constexpr bool NS_IsAscii(const char* aString) {
   while (*aString) {
     if (0x80 & *aString) {
