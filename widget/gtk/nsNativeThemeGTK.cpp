@@ -186,8 +186,8 @@ static void SetWidgetStateSafe(uint8_t* aSafeVector,
   aSafeVector[key >> 3] |= (1 << (key & 7));
 }
 
-/* static */ GtkTextDirection nsNativeThemeGTK::GetTextDirection(
-    nsIFrame* aFrame) {
+/* static */
+GtkTextDirection nsNativeThemeGTK::GetTextDirection(nsIFrame* aFrame) {
   // IsFrameRTL() treats vertical-rl modes as right-to-left (in addition to
   // horizontal text with direction=RTL), rather than just considering the
   // text direction.  GtkTextDirection does not have distinct values for

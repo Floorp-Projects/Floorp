@@ -60,14 +60,14 @@ nsApplicationChooser::Open(const nsACString& aContentType,
   return NS_OK;
 }
 
-/* static */ void nsApplicationChooser::OnResponse(GtkWidget* chooser,
-                                                   gint response_id,
-                                                   gpointer user_data) {
+/* static */
+void nsApplicationChooser::OnResponse(GtkWidget* chooser, gint response_id,
+                                      gpointer user_data) {
   static_cast<nsApplicationChooser*>(user_data)->Done(chooser, response_id);
 }
 
-/* static */ void nsApplicationChooser::OnDestroy(GtkWidget* chooser,
-                                                  gpointer user_data) {
+/* static */
+void nsApplicationChooser::OnDestroy(GtkWidget* chooser, gpointer user_data) {
   static_cast<nsApplicationChooser*>(user_data)->Done(chooser,
                                                       GTK_RESPONSE_CANCEL);
 }
