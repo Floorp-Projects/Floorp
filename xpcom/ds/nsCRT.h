@@ -89,13 +89,8 @@ class nsCRT {
   static bool IsUpper(char aChar) { return NS_IsUpper(aChar); }
   static bool IsLower(char aChar) { return NS_IsLower(aChar); }
 
-  static bool IsAscii(const char16_t* aString) { return NS_IsAscii(aString); }
   static bool IsAsciiSpace(char16_t aChar) {
     return NS_IsAsciiWhitespace(aChar);
-  }
-  static bool IsAscii(const char* aString) { return NS_IsAscii(aString); }
-  static bool IsAscii(const char* aString, uint32_t aLength) {
-    return NS_IsAscii(aString, aLength);
   }
 };
 
