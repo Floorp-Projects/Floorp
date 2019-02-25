@@ -49,7 +49,6 @@ class BlobConstructorParams;
 class BlobImpl;
 class ProcessMessageManager;
 class ContentParent;
-class ContentBridgeParent;
 class IPCTabContext;
 class PBrowserParent;
 
@@ -82,10 +81,6 @@ class nsIContentParent : public nsISupports,
   virtual bool IsContentParent() const { return false; }
 
   ContentParent* AsContentParent();
-
-  virtual bool IsContentBridgeParent() const { return false; }
-
-  ContentBridgeParent* AsContentBridgeParent();
 
   mozilla::dom::ProcessMessageManager* GetMessageManager() const {
     return mMessageManager;

@@ -48,12 +48,6 @@ class ContentProcessManager final {
    */
   void RemoveContentProcess(const ContentParentId& aChildCpId);
   /**
-   * Add a grandchild content process into the map.
-   * aParentCpId must be already added in the map by AddContentProcess().
-   */
-  bool AddGrandchildProcess(const ContentParentId& aParentCpId,
-                            const ContentParentId& aChildCpId);
-  /**
    * Get the parent process's id by child process's id.
    * Used to check if a child really belongs to the parent.
    */
