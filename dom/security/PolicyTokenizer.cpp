@@ -51,8 +51,8 @@ void PolicyTokenizer::generateTokens(policyTokens& outTokens) {
     dirAndSrcs.AppendElement(mCurToken);
     skipWhiteSpace();
     if (atEnd() || accept(SEMICOL)) {
-      outTokens.AppendElement(dirAndSrcs);
-      dirAndSrcs.Clear();
+      outTokens.AppendElement(std::move(dirAndSrcs));
+      dirAndSrcs.ClearAndRetainStorage();
     }
   }
 }
