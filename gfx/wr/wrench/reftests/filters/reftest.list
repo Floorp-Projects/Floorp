@@ -41,3 +41,5 @@ platform(linux,mac) == filter-drop-shadow-clip.yaml filter-drop-shadow-clip.png
 != srgb-to-linear-2.yaml srgb-to-linear-ref.yaml
 != filter-blur-huge.yaml blank.yaml
 != filter-drop-shadow-huge.yaml blank.yaml
+== filter-blur-scaled.yaml filter-blur-scaled-ref.yaml
+== filter-blur-scaled-xonly.yaml filter-blur-scaled-xonly.png
