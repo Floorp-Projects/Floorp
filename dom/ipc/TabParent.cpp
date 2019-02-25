@@ -143,7 +143,7 @@ TabParent::LayerToTabParentTable* TabParent::sLayerToTabParentTable = nullptr;
 NS_IMPL_ISUPPORTS(TabParent, nsITabParent, nsIAuthPromptProvider,
                   nsISupportsWeakReference)
 
-TabParent::TabParent(nsIContentParent* aManager, const TabId& aTabId,
+TabParent::TabParent(ContentParent* aManager, const TabId& aTabId,
                      const TabContext& aContext, uint32_t aChromeFlags)
     : TabContext(aContext),
       mFrameElement(nullptr),
@@ -952,11 +952,7 @@ auto TabParent::AllocPIndexedDBPermissionRequestParent(
     return nullptr;
   }
 
-  nsCOMPtr<nsIContentParent> manager = Manager();
-  if (!manager->IsContentParent()) {
-    MOZ_CRASH("Figure out security checks for bridged content!");
-  }
-
+  RefPtr<ContentParent> manager = Manager();
   if (NS_WARN_IF(!mFrameElement)) {
     return nullptr;
   }
@@ -2814,13 +2810,7 @@ void TabParent::NavigateByKey(bool aForward, bool aForDocumentNavigation) {
 
 NS_IMETHODIMP
 TabParent::TransmitPermissionsForPrincipal(nsIPrincipal* aPrincipal) {
-  nsCOMPtr<nsIContentParent> manager = Manager();
-  if (!manager->IsContentParent()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  return manager->AsContentParent()->TransmitPermissionsForPrincipal(
-      aPrincipal);
+  return Manager()->TransmitPermissionsForPrincipal(aPrincipal);
 }
 
 NS_IMETHODIMP
@@ -3230,16 +3220,10 @@ bool TabParent::AsyncPanZoomEnabled() const {
 void TabParent::StartPersistence(uint64_t aOuterWindowID,
                                  nsIWebBrowserPersistDocumentReceiver* aRecv,
                                  ErrorResult& aRv) {
-  nsCOMPtr<nsIContentParent> manager = Manager();
-  if (!manager->IsContentParent()) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
   auto* actor = new WebBrowserPersistDocumentParent();
   actor->SetOnReady(aRecv);
-  bool ok =
-      manager->AsContentParent()->SendPWebBrowserPersistDocumentConstructor(
-          actor, this, aOuterWindowID);
+  bool ok = Manager()->SendPWebBrowserPersistDocumentConstructor(
+      actor, this, aOuterWindowID);
   if (!ok) {
     aRv.Throw(NS_ERROR_FAILURE);
   }

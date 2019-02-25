@@ -78,6 +78,7 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/CrashReporterHost.h"
+#include "mozilla/ipc/FileDescriptorSetParent.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "mozilla/ipc/PChildToParentStreamParent.h"
 #include "mozilla/ipc/TestShellParent.h"
@@ -1101,7 +1102,7 @@ mozilla::ipc::IPCResult ContentParent::RecvLaunchRDDProcess(
     isPreloadBrowser = isPreloadBrowserStr.EqualsLiteral("preloaded");
   }
 
-  RefPtr<nsIContentParent> constructorSender;
+  RefPtr<ContentParent> constructorSender;
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess(), "Cannot allocate TabParent in content process");
   if (aOpenerContentParent) {
     constructorSender = aOpenerContentParent;
@@ -4242,19 +4243,15 @@ mozilla::ipc::IPCResult ContentParent::RecvKeygenProvideContent(
   return IPC_OK();
 }
 
-PFileDescriptorSetParent* ContentParent::SendPFileDescriptorSetConstructor(
-    const FileDescriptor& aFD) {
-  return PContentParent::SendPFileDescriptorSetConstructor(aFD);
-}
-
 PFileDescriptorSetParent* ContentParent::AllocPFileDescriptorSetParent(
     const FileDescriptor& aFD) {
-  return nsIContentParent::AllocPFileDescriptorSetParent(aFD);
+  return new FileDescriptorSetParent(aFD);
 }
 
 bool ContentParent::DeallocPFileDescriptorSetParent(
     PFileDescriptorSetParent* aActor) {
-  return nsIContentParent::DeallocPFileDescriptorSetParent(aActor);
+  delete static_cast<FileDescriptorSetParent*>(aActor);
+  return true;
 }
 
 bool ContentParent::IgnoreIPCPrincipal() {
