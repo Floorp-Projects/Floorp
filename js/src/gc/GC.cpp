@@ -2453,6 +2453,7 @@ void MovingTracer::onScopeEdge(Scope** scopep) { updateEdge(scopep); }
 void MovingTracer::onRegExpSharedEdge(RegExpShared** sharedp) {
   updateEdge(sharedp);
 }
+void MovingTracer::onBigIntEdge(BigInt** bip) { updateEdge(bip); }
 
 void Zone::prepareForCompacting() {
   FreeOp* fop = runtimeFromMainThread()->defaultFreeOp();
