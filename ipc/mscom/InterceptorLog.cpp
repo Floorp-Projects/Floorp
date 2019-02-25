@@ -249,7 +249,8 @@ bool Logger::VariantToString(const VARIANT& aVariant, nsACString& aOut,
   }
 }
 
-/* static */ double Logger::GetElapsedTime() {
+/* static */
+double Logger::GetElapsedTime() {
   TimeStamp ts = TimeStamp::Now();
   TimeDuration duration = ts - TimeStamp::ProcessCreation();
   return duration.ToMicroseconds();
@@ -481,15 +482,17 @@ static bool MaybeCreateLog(const char* aEnvVarName) {
 namespace mozilla {
 namespace mscom {
 
-/* static */ bool InterceptorLog::Init() {
+/* static */
+bool InterceptorLog::Init() {
   static const bool isEnabled = MaybeCreateLog("MOZ_MSCOM_LOG_BASENAME");
   return isEnabled;
 }
 
-/* static */ void InterceptorLog::QI(HRESULT aResult, IUnknown* aTarget,
-                                     REFIID aIid, IUnknown* aInterface,
-                                     const TimeDuration* aOverheadDuration,
-                                     const TimeDuration* aGeckoDuration) {
+/* static */
+void InterceptorLog::QI(HRESULT aResult, IUnknown* aTarget, REFIID aIid,
+                        IUnknown* aInterface,
+                        const TimeDuration* aOverheadDuration,
+                        const TimeDuration* aGeckoDuration) {
   if (!sLogger) {
     return;
   }
@@ -497,18 +500,20 @@ namespace mscom {
                  aGeckoDuration);
 }
 
-/* static */ void InterceptorLog::CaptureFrame(ICallFrame* aCallFrame,
-                                               IUnknown* aTargetInterface,
-                                               nsACString& aCapturedFrame) {
+/* static */
+void InterceptorLog::CaptureFrame(ICallFrame* aCallFrame,
+                                  IUnknown* aTargetInterface,
+                                  nsACString& aCapturedFrame) {
   if (!sLogger) {
     return;
   }
   sLogger->CaptureFrame(aCallFrame, aTargetInterface, aCapturedFrame);
 }
 
-/* static */ void InterceptorLog::Event(const nsACString& aCapturedFrame,
-                                        const TimeDuration& aOverheadDuration,
-                                        const TimeDuration& aGeckoDuration) {
+/* static */
+void InterceptorLog::Event(const nsACString& aCapturedFrame,
+                           const TimeDuration& aOverheadDuration,
+                           const TimeDuration& aGeckoDuration) {
   if (!sLogger) {
     return;
   }

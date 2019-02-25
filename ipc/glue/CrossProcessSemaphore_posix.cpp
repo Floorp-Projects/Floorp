@@ -25,8 +25,9 @@ struct SemaphoreData {
 
 namespace mozilla {
 
-/* static */ CrossProcessSemaphore* CrossProcessSemaphore::Create(
-    const char*, uint32_t aInitialValue) {
+/* static */
+CrossProcessSemaphore* CrossProcessSemaphore::Create(const char*,
+                                                     uint32_t aInitialValue) {
   RefPtr<ipc::SharedMemoryBasic> sharedBuffer = new ipc::SharedMemoryBasic;
   if (!sharedBuffer->Create(sizeof(SemaphoreData))) {
     return nullptr;
@@ -57,7 +58,8 @@ namespace mozilla {
   return sem;
 }
 
-/* static */ CrossProcessSemaphore* CrossProcessSemaphore::Create(
+/* static */
+CrossProcessSemaphore* CrossProcessSemaphore::Create(
     CrossProcessSemaphoreHandle aHandle) {
   RefPtr<ipc::SharedMemoryBasic> sharedBuffer = new ipc::SharedMemoryBasic;
 
