@@ -265,54 +265,6 @@ public final class GeckoRuntime implements Parcelable {
     }
 
     /**
-     * Register a {@link WebExtension} that will be run with this GeckoRuntime.
-     *
-     * <p>At this time, WebExtensions don't have access to any UI element and
-     * cannot communicate with the application. Any UI element will be
-     * ignored.</p>
-     *
-     * Example:
-     * <pre><code>
-     *     runtime.registerWebExtension(new WebExtension(
-     *              "resource://android/assets/web_extensions/my_webextension/"));
-     *
-     *     runtime.registerWebExtension(new WebExtension(
-     *              "file:///path/to/web_extension/my_webextension2.xpi",
-     *              "mywebextension2@example.com"));
-     * </code></pre>
-     *
-     * To learn more about WebExtensions refer to
-     * <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions">
-     *    Mozilla/Add-ons/WebExtensions
-     * </a>.
-     *
-     * @param webExtension {@link WebExtension} to register
-     *
-     * @return A {@link GeckoResult} that will complete when the WebExtension
-     * has been installed.
-     */
-    @UiThread
-    public @NonNull GeckoResult<Void> registerWebExtension(
-            final @NonNull WebExtension webExtension) {
-        final GeckoSession.CallbackResult<Void> result =
-                new GeckoSession.CallbackResult<Void>() {
-                    @Override
-                    public void sendSuccess(Object response) {
-                        complete(null);
-                    }
-                };
-
-        final GeckoBundle bundle = new GeckoBundle(1);
-        bundle.putString("locationUri", webExtension.location.toString());
-        bundle.putString("id", webExtension.id);
-
-        EventDispatcher.getInstance().dispatch("GeckoView:RegisterWebExtension",
-                bundle, result);
-
-        return result;
-    }
-
-    /**
      * Create a new runtime with the given settings and attach it to the given
      * context.
      *
