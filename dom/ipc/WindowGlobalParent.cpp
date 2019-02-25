@@ -81,6 +81,9 @@ void WindowGlobalParent::Init(const WindowGlobalInit& aInit) {
         docShell->GetTopFrameElement(getter_AddRefs(frameElement));
       }
     }
+
+    // We took a reference to our BrowsingContext in WindowGlobalChild::Create.
+    RefPtr<ChromeBrowsingContext> dummy = dont_AddRef(mBrowsingContext.get());
   } else {
     // In the cross-process case, we can get the frame element from our manager.
     MOZ_ASSERT(Manager()->GetProtocolTypeId() == PBrowserMsgStart);
