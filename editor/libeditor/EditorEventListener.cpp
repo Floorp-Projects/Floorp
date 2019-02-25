@@ -805,11 +805,6 @@ nsresult EditorEventListener::Drop(DragEvent* aDragEvent) {
 
   RefPtr<TextEditor> textEditor = mEditorBase->AsTextEditor();
   nsresult rv = textEditor->OnDrop(aDragEvent);
-  if (rv == NS_ERROR_EDITOR_DESTROYED) {
-    // If the editor has been destroyed, it means that this is handled as
-    // expected by the web app.  So, return NS_OK.
-    return NS_OK;
-  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

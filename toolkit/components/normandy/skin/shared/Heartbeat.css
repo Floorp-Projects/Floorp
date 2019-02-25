@@ -5,7 +5,6 @@
 /* Notification overrides for Heartbeat UI */
 
 notification.heartbeat {
-  background-color: #F1F1F1 !important;
   border-bottom: 1px solid #C1C1C1 !important;
   height: 40px;
 }
@@ -49,10 +48,8 @@ notification.heartbeat {
 }
 
 .messageText.heartbeat {
-  color: #333 !important;
   margin-inline-end: 12px !important; /* The !important is required to override OSX default style. */
   margin-inline-start: 0;
-  text-shadow: none;
 }
 
 .messageImage.heartbeat {
@@ -78,17 +75,11 @@ notification.heartbeat {
 
 /* Learn More link styles */
 .heartbeat > hbox > .text-link {
-  color: #0095DD !important;
   margin-inline-start: 0 !important;
 }
 
 .heartbeat > hbox > .text-link:hover {
-  color: #008ACB !important;
   text-decoration: none !important;
-}
-
-.heartbeat > hbox > .text-link:hover:active {
-  color: #006B9D !important;
 }
 
 /* Heartbeat UI Rating Star Classes */

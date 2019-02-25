@@ -233,8 +233,12 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
     if (NS_WARN_IF(!editActionData.CanHandle())) {
       return NS_ERROR_NOT_INITIALIZED;
     }
-    return ComputeValueInternal(NS_LITERAL_STRING("text/plain"),
-                                aDocumentEncoderFlags, aOutputString);
+    nsresult rv = ComputeValueInternal(NS_LITERAL_STRING("text/plain"),
+                                       aDocumentEncoderFlags, aOutputString);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return EditorBase::ToGenericNSResult(rv);
+    }
+    return NS_OK;
   }
 
  protected:  // May be called by friends.
