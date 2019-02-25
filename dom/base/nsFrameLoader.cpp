@@ -396,6 +396,13 @@ nsresult nsFrameLoader::ReallyStartLoadingInternal() {
     loadState->SetTriggeringPrincipal(mOwnerContent->NodePrincipal());
   }
 
+  // Currently we query the CSP from the principal, but after
+  // Bug 1529877 we should query the CSP from within GetURL and
+  // store it as a member, similar to mTriggeringPrincipal.
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  loadState->TriggeringPrincipal()->GetCsp(getter_AddRefs(csp));
+  loadState->SetCsp(csp);
+
   nsCOMPtr<nsIURI> referrer;
 
   nsAutoString srcdoc;
