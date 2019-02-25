@@ -33,8 +33,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PresentationReceiver)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-/* static */ already_AddRefed<PresentationReceiver>
-PresentationReceiver::Create(nsPIDOMWindowInner* aWindow) {
+/* static */
+already_AddRefed<PresentationReceiver> PresentationReceiver::Create(
+    nsPIDOMWindowInner* aWindow) {
   RefPtr<PresentationReceiver> receiver = new PresentationReceiver(aWindow);
   return NS_WARN_IF(!receiver->Init()) ? nullptr : receiver.forget();
 }
@@ -73,8 +74,9 @@ void PresentationReceiver::Shutdown() {
       NS_FAILED(service->UnregisterRespondingListener(mWindowId)));
 }
 
-/* virtual */ JSObject* PresentationReceiver::WrapObject(
-    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
+/* virtual */
+JSObject* PresentationReceiver::WrapObject(JSContext* aCx,
+                                           JS::Handle<JSObject*> aGivenProto) {
   return PresentationReceiver_Binding::Wrap(aCx, this, aGivenProto);
 }
 

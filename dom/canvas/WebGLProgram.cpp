@@ -78,7 +78,8 @@ static void AssembleName(const nsCString& baseName, bool isArray,
 
 ////
 
-/*static*/ const webgl::UniformInfo::TexListT* webgl::UniformInfo::GetTexList(
+/*static*/
+const webgl::UniformInfo::TexListT* webgl::UniformInfo::GetTexList(
     WebGLActiveInfo* activeInfo) {
   const auto& webgl = activeInfo->mWebGL;
 

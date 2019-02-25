@@ -743,7 +743,8 @@ class ADTSContainerParser
 };
 #endif  // MOZ_FMP4
 
-/*static*/ ContainerParser* ContainerParser::CreateForMIMEType(
+/*static*/
+ContainerParser* ContainerParser::CreateForMIMEType(
     const MediaContainerType& aType) {
   if (aType.Type() == MEDIAMIMETYPE(VIDEO_WEBM) ||
       aType.Type() == MEDIAMIMETYPE(AUDIO_WEBM)) {

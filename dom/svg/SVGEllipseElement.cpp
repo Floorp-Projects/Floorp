@@ -68,7 +68,8 @@ already_AddRefed<SVGAnimatedLength> SVGEllipseElement::Ry() {
 //----------------------------------------------------------------------
 // SVGElement methods
 
-/* virtual */ bool SVGEllipseElement::HasValidDimensions() const {
+/* virtual */
+bool SVGEllipseElement::HasValidDimensions() const {
   return mLengthAttributes[RX].IsExplicitlySet() &&
          mLengthAttributes[RX].GetAnimValInSpecifiedUnits() > 0 &&
          mLengthAttributes[RY].IsExplicitlySet() &&

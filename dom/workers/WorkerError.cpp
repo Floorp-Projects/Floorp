@@ -347,7 +347,8 @@ void WorkerErrorReport::AssignErrorReport(JSErrorReport* aReport) {
 // aWorkerPrivate is the worker thread we're on (or the main thread, if null)
 // aTarget is the worker object that we are going to fire an error at
 // (if any).
-/* static */ void WorkerErrorReport::ReportError(
+/* static */
+void WorkerErrorReport::ReportError(
     JSContext* aCx, WorkerPrivate* aWorkerPrivate, bool aFireAtScope,
     DOMEventTargetHelper* aTarget, const WorkerErrorReport& aReport,
     uint64_t aInnerWindowId, JS::Handle<JS::Value> aException) {
@@ -466,8 +467,9 @@ void WorkerErrorReport::AssignErrorReport(JSErrorReport* aReport) {
   WorkerErrorReport::LogErrorToConsole(aReport, aInnerWindowId);
 }
 
-/* static */ void WorkerErrorReport::LogErrorToConsole(
-    const WorkerErrorReport& aReport, uint64_t aInnerWindowId) {
+/* static */
+void WorkerErrorReport::LogErrorToConsole(const WorkerErrorReport& aReport,
+                                          uint64_t aInnerWindowId) {
   nsTArray<ErrorDataNote> notes;
   for (size_t i = 0, len = aReport.mNotes.Length(); i < len; i++) {
     const WorkerErrorNote& note = aReport.mNotes.ElementAt(i);
@@ -481,8 +483,9 @@ void WorkerErrorReport::AssignErrorReport(JSErrorReport* aReport) {
   LogErrorToConsole(errorData, aInnerWindowId);
 }
 
-/* static */ void WorkerErrorReport::LogErrorToConsole(
-    const ErrorData& aReport, uint64_t aInnerWindowId) {
+/* static */
+void WorkerErrorReport::LogErrorToConsole(const ErrorData& aReport,
+                                          uint64_t aInnerWindowId) {
   AssertIsOnMainThread();
 
   RefPtr<nsScriptErrorBase> scriptError = new nsScriptError();
@@ -540,8 +543,8 @@ void WorkerErrorReport::AssignErrorReport(JSErrorReport* aReport) {
   fflush(stderr);
 }
 
-/* static */ void
-WorkerErrorReport::CreateAndDispatchGenericErrorRunnableToParent(
+/* static */
+void WorkerErrorReport::CreateAndDispatchGenericErrorRunnableToParent(
     WorkerPrivate* aWorkerPrivate) {
   ReportGenericErrorRunnable::CreateAndDispatch(aWorkerPrivate);
 }

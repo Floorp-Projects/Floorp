@@ -246,7 +246,8 @@ void nsXBLWindowKeyHandler::RemoveKeyboardEventListenersFrom(
       TrustedEventsAtSystemGroupBubble());
 }
 
-/* static */ KeyboardMap nsXBLWindowKeyHandler::CollectKeyboardShortcuts() {
+/* static */
+KeyboardMap nsXBLWindowKeyHandler::CollectKeyboardShortcuts() {
   nsXBLPrototypeHandler* handlers =
       ShortcutKeys::GetHandlers(HandlerType::eBrowser);
 

@@ -62,7 +62,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(EffectCompositor, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(EffectCompositor, Release)
 
-/* static */ bool EffectCompositor::AllowCompositorAnimationsOnFrame(
+/* static */
+bool EffectCompositor::AllowCompositorAnimationsOnFrame(
     const nsIFrame* aFrame,
     AnimationPerformanceWarning::Type& aWarning /* out */) {
   if (aFrame->RefusedAsyncAnimation()) {
@@ -446,8 +447,9 @@ bool EffectCompositor::HasPendingStyleUpdates() const {
   return false;
 }
 
-/* static */ bool EffectCompositor::HasAnimationsForCompositor(
-    const nsIFrame* aFrame, nsCSSPropertyID aProperty) {
+/* static */
+bool EffectCompositor::HasAnimationsForCompositor(const nsIFrame* aFrame,
+                                                  nsCSSPropertyID aProperty) {
   return FindAnimationsForCompositor(aFrame, aProperty, nullptr);
 }
 
@@ -466,8 +468,9 @@ EffectCompositor::GetAnimationsForCompositor(const nsIFrame* aFrame,
   return result;
 }
 
-/* static */ void EffectCompositor::ClearIsRunningOnCompositor(
-    const nsIFrame* aFrame, nsCSSPropertyID aProperty) {
+/* static */
+void EffectCompositor::ClearIsRunningOnCompositor(const nsIFrame* aFrame,
+                                                  nsCSSPropertyID aProperty) {
   EffectSet* effects = EffectSet::GetEffectSet(aFrame);
   if (!effects) {
     return;
@@ -478,8 +481,9 @@ EffectCompositor::GetAnimationsForCompositor(const nsIFrame* aFrame,
   }
 }
 
-/* static */ void EffectCompositor::MaybeUpdateCascadeResults(
-    Element* aElement, PseudoStyleType aPseudoType) {
+/* static */
+void EffectCompositor::MaybeUpdateCascadeResults(Element* aElement,
+                                                 PseudoStyleType aPseudoType) {
   EffectSet* effects = EffectSet::GetEffectSet(aElement, aPseudoType);
   if (!effects || !effects->CascadeNeedsUpdate()) {
     return;
@@ -490,7 +494,8 @@ EffectCompositor::GetAnimationsForCompositor(const nsIFrame* aFrame,
   MOZ_ASSERT(!effects->CascadeNeedsUpdate(), "Failed to update cascade state");
 }
 
-/* static */ Maybe<NonOwningAnimationTarget>
+/* static */
+Maybe<NonOwningAnimationTarget>
 EffectCompositor::GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame) {
   // Always return the same object to benefit from return-value optimization.
   Maybe<NonOwningAnimationTarget> result;
@@ -525,7 +530,8 @@ EffectCompositor::GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame) {
   return result;
 }
 
-/* static */ nsCSSPropertyIDSet EffectCompositor::GetOverriddenProperties(
+/* static */
+nsCSSPropertyIDSet EffectCompositor::GetOverriddenProperties(
     EffectSet& aEffectSet, Element* aElement, PseudoStyleType aPseudoType) {
   MOZ_ASSERT(aElement, "Should have an element to get style data from");
 
@@ -567,8 +573,10 @@ EffectCompositor::GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame) {
   return result;
 }
 
-/* static */ void EffectCompositor::UpdateCascadeResults(
-    EffectSet& aEffectSet, Element* aElement, PseudoStyleType aPseudoType) {
+/* static */
+void EffectCompositor::UpdateCascadeResults(EffectSet& aEffectSet,
+                                            Element* aElement,
+                                            PseudoStyleType aPseudoType) {
   MOZ_ASSERT(EffectSet::GetEffectSet(aElement, aPseudoType) == &aEffectSet,
              "Effect set should correspond to the specified (pseudo-)element");
   if (aEffectSet.IsEmpty()) {
@@ -668,7 +676,8 @@ EffectCompositor::GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame) {
   }
 }
 
-/* static */ void EffectCompositor::SetPerformanceWarning(
+/* static */
+void EffectCompositor::SetPerformanceWarning(
     const nsIFrame* aFrame, nsCSSPropertyID aProperty,
     const AnimationPerformanceWarning& aWarning) {
   EffectSet* effects = EffectSet::GetEffectSet(aFrame);

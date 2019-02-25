@@ -27,7 +27,8 @@ void DOMPrefs::Initialize() {
 #undef DOM_WEBIDL_PREF
 }
 
-/* static */ bool DOMPrefs::DumpEnabled() {
+/* static */
+bool DOMPrefs::DumpEnabled() {
 #if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
   return StaticPrefs::browser_dom_window_dump_enabled();
 #else

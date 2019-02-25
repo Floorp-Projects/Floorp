@@ -41,7 +41,8 @@ ServiceWorkerManagerService::~ServiceWorkerManagerService() {
   sInstance = nullptr;
 }
 
-/* static */ already_AddRefed<ServiceWorkerManagerService>
+/* static */
+already_AddRefed<ServiceWorkerManagerService>
 ServiceWorkerManagerService::Get() {
   AssertIsOnBackgroundThread();
 
@@ -49,7 +50,8 @@ ServiceWorkerManagerService::Get() {
   return instance.forget();
 }
 
-/* static */ already_AddRefed<ServiceWorkerManagerService>
+/* static */
+already_AddRefed<ServiceWorkerManagerService>
 ServiceWorkerManagerService::GetOrCreate() {
   AssertIsOnBackgroundThread();
 

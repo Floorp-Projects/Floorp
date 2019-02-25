@@ -2587,7 +2587,8 @@ void nsPluginHost::UpdatePluginInfo(nsPluginTag* aPluginTag) {
   UpdateInMemoryPluginInfo(aPluginTag);
 }
 
-/* static */ bool nsPluginHost::IsTypeWhitelisted(const char* aMimeType) {
+/* static */
+bool nsPluginHost::IsTypeWhitelisted(const char* aMimeType) {
   nsAutoCString whitelist;
   Preferences::GetCString(kPrefWhitelist, whitelist);
   if (whitelist.IsEmpty()) {
@@ -2597,8 +2598,8 @@ void nsPluginHost::UpdatePluginInfo(nsPluginTag* aPluginTag) {
   return IsTypeInList(wrap, whitelist);
 }
 
-/* static */ bool nsPluginHost::ShouldLoadTypeInParent(
-    const nsACString& aMimeType) {
+/* static */
+bool nsPluginHost::ShouldLoadTypeInParent(const nsACString& aMimeType) {
   nsCString prefName(kPrefLoadInParentPrefix);
   prefName += aMimeType;
   return Preferences::GetBool(prefName.get(), false);

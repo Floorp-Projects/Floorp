@@ -35,11 +35,11 @@ IPCBlobInputStreamStorage::IPCBlobInputStreamStorage() {}
 
 IPCBlobInputStreamStorage::~IPCBlobInputStreamStorage() {}
 
-/* static */ IPCBlobInputStreamStorage* IPCBlobInputStreamStorage::Get() {
-  return gStorage;
-}
+/* static */
+IPCBlobInputStreamStorage* IPCBlobInputStreamStorage::Get() { return gStorage; }
 
-/* static */ void IPCBlobInputStreamStorage::Initialize() {
+/* static */
+void IPCBlobInputStreamStorage::Initialize() {
   MOZ_ASSERT(!gStorage);
 
   gStorage = new IPCBlobInputStreamStorage();

@@ -47,7 +47,8 @@ static const char* sLibs[] = {
     // clang-format on
 };
 
-/* static */ bool FFmpegRuntimeLinker::Init() {
+/* static */
+bool FFmpegRuntimeLinker::Init() {
   if (sLinkStatus != LinkStatus_INIT) {
     return sLinkStatus == LinkStatus_SUCCEEDED;
   }
@@ -124,7 +125,8 @@ static const char* sLibs[] = {
   return false;
 }
 
-/* static */ already_AddRefed<PlatformDecoderModule>
+/* static */
+already_AddRefed<PlatformDecoderModule>
 FFmpegRuntimeLinker::CreateDecoderModule() {
   if (!Init()) {
     return nullptr;

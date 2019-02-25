@@ -23,8 +23,8 @@ namespace dom {
 
 AutoTArray<RefPtr<DocGroup>, 2>* DocGroup::sPendingDocGroups = nullptr;
 
-/* static */ nsresult DocGroup::GetKey(nsIPrincipal* aPrincipal,
-                                       nsACString& aKey) {
+/* static */
+nsresult DocGroup::GetKey(nsIPrincipal* aPrincipal, nsACString& aKey) {
   // Use GetBaseDomain() to handle things like file URIs, IP address URIs,
   // etc. correctly.
   nsresult rv = aPrincipal->GetBaseDomain(aKey);

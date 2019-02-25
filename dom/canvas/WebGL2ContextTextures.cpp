@@ -24,7 +24,8 @@ void WebGL2Context::TexStorage(uint8_t funcDims, GLenum rawTarget,
 
 ////////////////////
 
-/*virtual*/ bool WebGL2Context::IsTexParamValid(GLenum pname) const {
+/*virtual*/
+bool WebGL2Context::IsTexParamValid(GLenum pname) const {
   switch (pname) {
     case LOCAL_GL_TEXTURE_BASE_LEVEL:
     case LOCAL_GL_TEXTURE_COMPARE_FUNC:

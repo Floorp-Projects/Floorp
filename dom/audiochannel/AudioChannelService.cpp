@@ -203,7 +203,8 @@ const char* AudibleChangedReasonToStr(
 
 StaticRefPtr<AudioChannelService> gAudioChannelService;
 
-/* static */ void AudioChannelService::CreateServiceIfNeeded() {
+/* static */
+void AudioChannelService::CreateServiceIfNeeded() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!gAudioChannelService) {
@@ -211,8 +212,8 @@ StaticRefPtr<AudioChannelService> gAudioChannelService;
   }
 }
 
-/* static */ already_AddRefed<AudioChannelService>
-AudioChannelService::GetOrCreate() {
+/* static */
+already_AddRefed<AudioChannelService> AudioChannelService::GetOrCreate() {
   if (sXPCOMShuttingDown) {
     return nullptr;
   }
@@ -222,7 +223,8 @@ AudioChannelService::GetOrCreate() {
   return service.forget();
 }
 
-/* static */ already_AddRefed<AudioChannelService> AudioChannelService::Get() {
+/* static */
+already_AddRefed<AudioChannelService> AudioChannelService::Get() {
   if (sXPCOMShuttingDown) {
     return nullptr;
   }
@@ -231,11 +233,13 @@ AudioChannelService::GetOrCreate() {
   return service.forget();
 }
 
-/* static */ LogModule* AudioChannelService::GetAudioChannelLog() {
+/* static */
+LogModule* AudioChannelService::GetAudioChannelLog() {
   return gAudioChannelLog;
 }
 
-/* static */ void AudioChannelService::Shutdown() {
+/* static */
+void AudioChannelService::Shutdown() {
   if (gAudioChannelService) {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
@@ -249,7 +253,8 @@ AudioChannelService::GetOrCreate() {
   }
 }
 
-/* static */ bool AudioChannelService::IsEnableAudioCompeting() {
+/* static */
+bool AudioChannelService::IsEnableAudioCompeting() {
   CreateServiceIfNeeded();
   return sAudioChannelCompeting;
 }

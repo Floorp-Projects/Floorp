@@ -11,7 +11,8 @@
 namespace mozilla {
 namespace dom {
 
-/* static */ already_AddRefed<XMLHttpRequest> XMLHttpRequest::Constructor(
+/* static */
+already_AddRefed<XMLHttpRequest> XMLHttpRequest::Constructor(
     const GlobalObject& aGlobal, const MozXMLHttpRequestParameters& aParams,
     ErrorResult& aRv) {
   if (NS_IsMainThread()) {

@@ -86,7 +86,8 @@ void TabGroup::EnsureThrottledEventQueues() {
   }
 }
 
-/* static */ TabGroup* TabGroup::GetChromeTabGroup() {
+/* static */
+TabGroup* TabGroup::GetChromeTabGroup() {
   if (!sChromeTabGroup) {
     sChromeTabGroup = new TabGroup(true /* chrome tab group */);
     ClearOnShutdown(&sChromeTabGroup);
@@ -94,7 +95,8 @@ void TabGroup::EnsureThrottledEventQueues() {
   return sChromeTabGroup;
 }
 
-/* static */ TabGroup* TabGroup::GetFromWindow(mozIDOMWindowProxy* aWindow) {
+/* static */
+TabGroup* TabGroup::GetFromWindow(mozIDOMWindowProxy* aWindow) {
   if (TabChild* tabChild = TabChild::GetFrom(aWindow)) {
     return tabChild->TabGroup();
   }
@@ -102,7 +104,8 @@ void TabGroup::EnsureThrottledEventQueues() {
   return nullptr;
 }
 
-/* static */ TabGroup* TabGroup::GetFromActor(TabChild* aTabChild) {
+/* static */
+TabGroup* TabGroup::GetFromActor(TabChild* aTabChild) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   // Middleman processes do not assign event targets to their tab children.
@@ -155,8 +158,9 @@ already_AddRefed<DocGroup> TabGroup::AddDocument(const nsACString& aKey,
   return docGroup.forget();
 }
 
-/* static */ already_AddRefed<TabGroup> TabGroup::Join(
-    nsPIDOMWindowOuter* aWindow, TabGroup* aTabGroup) {
+/* static */
+already_AddRefed<TabGroup> TabGroup::Join(nsPIDOMWindowOuter* aWindow,
+                                          TabGroup* aTabGroup) {
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<TabGroup> tabGroup = aTabGroup;
   if (!tabGroup) {
@@ -309,7 +313,8 @@ uint32_t TabGroup::Count(bool aActiveOnly) const {
   return count;
 }
 
-/*static*/ bool TabGroup::HasOnlyThrottableTabs() {
+/*static*/
+bool TabGroup::HasOnlyThrottableTabs() {
   if (!sTabGroups) {
     return false;
   }

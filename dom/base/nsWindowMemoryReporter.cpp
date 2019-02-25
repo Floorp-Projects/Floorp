@@ -92,7 +92,8 @@ static nsresult NonJSSizeOfTab(nsPIDOMWindowOuter* aWindow, size_t* aDomSize,
   return NS_OK;
 }
 
-/* static */ void nsWindowMemoryReporter::Init() {
+/* static */
+void nsWindowMemoryReporter::Init() {
   MOZ_ASSERT(!sWindowReporter);
   sWindowReporter = new nsWindowMemoryReporter();
   ClearOnShutdown(&sWindowReporter);
@@ -112,7 +113,8 @@ static nsresult NonJSSizeOfTab(nsPIDOMWindowOuter* aWindow, size_t* aDomSize,
   RegisterGhostWindowsDistinguishedAmount(GhostWindowsDistinguishedAmount);
 }
 
-/* static */ nsWindowMemoryReporter* nsWindowMemoryReporter::Get() {
+/* static */
+nsWindowMemoryReporter* nsWindowMemoryReporter::Get() {
   return sWindowReporter;
 }
 
@@ -874,7 +876,8 @@ void nsWindowMemoryReporter::CheckForGhostWindows(
       Telemetry::ScalarID::MEMORYREPORTER_MAX_GHOST_WINDOWS, mGhostWindowCount);
 }
 
-/* static */ int64_t nsWindowMemoryReporter::GhostWindowsDistinguishedAmount() {
+/* static */
+int64_t nsWindowMemoryReporter::GhostWindowsDistinguishedAmount() {
   return sWindowReporter->mGhostWindowCount;
 }
 
@@ -886,7 +889,8 @@ void nsWindowMemoryReporter::KillCheckTimer() {
 }
 
 #ifdef DEBUG
-/* static */ void nsWindowMemoryReporter::UnlinkGhostWindows() {
+/* static */
+void nsWindowMemoryReporter::UnlinkGhostWindows() {
   if (!sWindowReporter) {
     return;
   }

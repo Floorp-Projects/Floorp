@@ -33,7 +33,8 @@ namespace mozilla {
 
 typedef AutoTArray<RefPtr<RawServoAnimationValue>, 1> ServoAnimationValues;
 
-/*static*/ SMILCSSValueType SMILCSSValueType::sSingleton;
+/*static*/
+SMILCSSValueType SMILCSSValueType::sSingleton;
 
 struct ValueWrapper {
   ValueWrapper(nsCSSPropertyID aPropID, const AnimationValue& aValue)
