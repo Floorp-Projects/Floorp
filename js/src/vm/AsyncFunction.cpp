@@ -61,7 +61,7 @@ using mozilla::Maybe;
 
 static MOZ_MUST_USE bool AsyncFunctionStart(
     JSContext* cx, Handle<PromiseObject*> resultPromise,
-    Handle<GeneratorObject*> generator);
+    Handle<AsyncFunctionGeneratorObject*> generator);
 
 #define UNWRAPPED_ASYNC_WRAPPED_SLOT 1
 #define WRAPPED_ASYNC_UNWRAPPED_SLOT 0
@@ -83,6 +83,15 @@ static bool WrappedAsyncFunction(JSContext* cx, unsigned argc, Value* vp) {
 
   RootedValue generatorVal(cx);
   if (Call(cx, unwrappedVal, args.thisv(), args2, &generatorVal)) {
+    // Handle the case when the debugger force-returned an unexpected value.
+    if (!generatorVal.isObject() ||
+        !generatorVal.toObject().is<AsyncFunctionGeneratorObject>()) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_UNEXPECTED_TYPE, "return value",
+                                JS::InformalValueTypeName(generatorVal));
+      return false;
+    }
+
     // Step 1.
     Rooted<PromiseObject*> resultPromise(cx, CreatePromiseObjectForAsync(cx));
     if (!resultPromise) {
@@ -90,8 +99,8 @@ static bool WrappedAsyncFunction(JSContext* cx, unsigned argc, Value* vp) {
     }
 
     // Step 3.
-    Rooted<GeneratorObject*> generator(
-        cx, &generatorVal.toObject().as<GeneratorObject>());
+    Rooted<AsyncFunctionGeneratorObject*> generator(
+        cx, &generatorVal.toObject().as<AsyncFunctionGeneratorObject>());
     if (!AsyncFunctionStart(cx, resultPromise, generator)) {
       return false;
     }
@@ -183,7 +192,7 @@ enum class ResumeKind { Normal, Throw };
 // Async Functions proposal 2.2 steps 3-8, 2.4 steps 2-7, 2.5 steps 2-7.
 static bool AsyncFunctionResume(JSContext* cx,
                                 Handle<PromiseObject*> resultPromise,
-                                Handle<GeneratorObject*> generator,
+                                Handle<AsyncFunctionGeneratorObject*> generator,
                                 ResumeKind kind, HandleValue valueOrReason) {
   RootedObject stack(cx, resultPromise->allocationSite());
   Maybe<JS::AutoSetAsyncStackForNewCalls> asyncStack;
@@ -193,15 +202,25 @@ static bool AsyncFunctionResume(JSContext* cx,
         JS::AutoSetAsyncStackForNewCalls::AsyncCallKind::EXPLICIT);
   }
 
+  // This case can only happen when the debugger force-returned the same
+  // generator object for two async function calls. It doesn't matter how we
+  // handle it, as long as we don't crash.
+  if (generator->isClosed() || !generator->isSuspended()) {
+    return AsyncFunctionReturned(cx, resultPromise, UndefinedHandleValue);
+  }
+
   // Execution context switching is handled in generator.
   HandlePropertyName funName = kind == ResumeKind::Normal
-                                   ? cx->names().GeneratorNext
-                                   : cx->names().GeneratorThrow;
+                                   ? cx->names().AsyncFunctionNext
+                                   : cx->names().AsyncFunctionThrow;
   FixedInvokeArgs<1> args(cx);
   args[0].set(valueOrReason);
   RootedValue generatorOrValue(cx, ObjectValue(*generator));
   if (!CallSelfHostedFunction(cx, funName, generatorOrValue, args,
                               &generatorOrValue)) {
+    if (!generator->isClosed()) {
+      generator->setClosed();
+    }
     return AsyncFunctionThrown(cx, resultPromise);
   }
 
@@ -215,7 +234,7 @@ static bool AsyncFunctionResume(JSContext* cx,
 // Async Functions proposal 2.2 steps 3-8.
 static MOZ_MUST_USE bool AsyncFunctionStart(
     JSContext* cx, Handle<PromiseObject*> resultPromise,
-    Handle<GeneratorObject*> generator) {
+    Handle<AsyncFunctionGeneratorObject*> generator) {
   return AsyncFunctionResume(cx, resultPromise, generator, ResumeKind::Normal,
                              UndefinedHandleValue);
 }
@@ -226,7 +245,7 @@ static MOZ_MUST_USE bool AsyncFunctionStart(
 // Async Functions proposal 2.4.
 MOZ_MUST_USE bool js::AsyncFunctionAwaitedFulfilled(
     JSContext* cx, Handle<PromiseObject*> resultPromise,
-    Handle<GeneratorObject*> generator, HandleValue value) {
+    Handle<AsyncFunctionGeneratorObject*> generator, HandleValue value) {
   // Step 1 (implicit).
 
   // Steps 2-7.
@@ -237,7 +256,7 @@ MOZ_MUST_USE bool js::AsyncFunctionAwaitedFulfilled(
 // Async Functions proposal 2.5.
 MOZ_MUST_USE bool js::AsyncFunctionAwaitedRejected(
     JSContext* cx, Handle<PromiseObject*> resultPromise,
-    Handle<GeneratorObject*> generator, HandleValue reason) {
+    Handle<AsyncFunctionGeneratorObject*> generator, HandleValue reason) {
   // Step 1 (implicit).
 
   // Step 2-7.

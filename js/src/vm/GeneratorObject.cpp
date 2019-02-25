@@ -50,10 +50,15 @@ JSObject* AbstractGeneratorObject::create(JSContext* cx,
     if (!genObj) {
       return nullptr;
     }
-  } else {
-    // Internal generator instance.
+  } else if (fun->isGenerator()) {
     RootedObject proto(cx, nullptr);
-    genObj = NewObjectWithGivenProto<GeneratorObject>(cx, proto);
+    genObj = NewObjectWithGivenProto<AsyncGeneratorGeneratorObject>(cx, proto);
+    if (!genObj) {
+      return nullptr;
+    }
+  } else {
+    RootedObject proto(cx, nullptr);
+    genObj = NewObjectWithGivenProto<AsyncFunctionGeneratorObject>(cx, proto);
     if (!genObj) {
       return nullptr;
     }
@@ -221,6 +226,14 @@ static const JSFunctionSpec generator_methods[] = {
     JS_SELF_HOSTED_FN("throw", "GeneratorThrow", 1, 0),
     JS_SELF_HOSTED_FN("return", "GeneratorReturn", 1, 0), JS_FS_END};
 
+const Class AsyncFunctionGeneratorObject::class_ = {
+    "AsyncFunctionGenerator",
+    JSCLASS_HAS_RESERVED_SLOTS(AsyncFunctionGeneratorObject::RESERVED_SLOTS)};
+
+const Class AsyncGeneratorGeneratorObject::class_ = {
+    "AsyncGeneratorGenerator",
+    JSCLASS_HAS_RESERVED_SLOTS(AsyncGeneratorGeneratorObject::RESERVED_SLOTS)};
+
 JSObject* js::NewSingletonObjectWithFunctionPrototype(
     JSContext* cx, Handle<GlobalObject*> global) {
   RootedObject proto(cx,
@@ -320,5 +333,6 @@ bool AbstractGeneratorObject::isAfterYieldOrAwait(JSOp op) {
 
 template <>
 bool JSObject::is<js::AbstractGeneratorObject>() const {
-  return is<GeneratorObject>();
+  return is<GeneratorObject>() || is<AsyncFunctionGeneratorObject>() ||
+         is<AsyncGeneratorGeneratorObject>();
 }

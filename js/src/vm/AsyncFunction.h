@@ -12,7 +12,7 @@
 
 namespace js {
 
-class GeneratorObject;
+class AsyncFunctionGeneratorObject;
 
 // An async function is implemented using two function objects, which are
 // referred to as the "unwrapped" and the "wrapped" async function object.
@@ -50,11 +50,11 @@ JSObject* WrapAsyncFunction(JSContext* cx, HandleFunction unwrapped);
 // fulfilled or rejected.
 MOZ_MUST_USE bool AsyncFunctionAwaitedFulfilled(
     JSContext* cx, Handle<PromiseObject*> resultPromise,
-    Handle<GeneratorObject*> generator, HandleValue value);
+    Handle<AsyncFunctionGeneratorObject*> generator, HandleValue value);
 
 MOZ_MUST_USE bool AsyncFunctionAwaitedRejected(
     JSContext* cx, Handle<PromiseObject*> resultPromise,
-    Handle<GeneratorObject*> generator, HandleValue reason);
+    Handle<AsyncFunctionGeneratorObject*> generator, HandleValue reason);
 
 }  // namespace js
 

@@ -241,8 +241,10 @@ class AsyncGeneratorObject : public NativeObject {
   void setCompleted() { setState(State_Completed); }
 
   JS::Value generatorVal() const { return getFixedSlot(Slot_Generator); }
-  GeneratorObject* generatorObj() const {
-    return &getFixedSlot(Slot_Generator).toObject().as<GeneratorObject>();
+  AsyncGeneratorGeneratorObject* generatorObj() const {
+    return &getFixedSlot(Slot_Generator)
+                .toObject()
+                .as<AsyncGeneratorGeneratorObject>();
   }
 
   static MOZ_MUST_USE bool enqueueRequest(

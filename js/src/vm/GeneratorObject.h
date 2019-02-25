@@ -208,6 +208,20 @@ class GeneratorObject : public AbstractGeneratorObject {
   static const Class class_;
 };
 
+class AsyncFunctionGeneratorObject : public AbstractGeneratorObject {
+ public:
+  enum { RESERVED_SLOTS = AbstractGeneratorObject::RESERVED_SLOTS };
+
+  static const Class class_;
+};
+
+class AsyncGeneratorGeneratorObject : public AbstractGeneratorObject {
+ public:
+  enum { RESERVED_SLOTS = AbstractGeneratorObject::RESERVED_SLOTS };
+
+  static const Class class_;
+};
+
 bool GeneratorThrowOrReturn(JSContext* cx, AbstractFramePtr frame,
                             Handle<AbstractGeneratorObject*> obj,
                             HandleValue val, uint32_t resumeKind);
