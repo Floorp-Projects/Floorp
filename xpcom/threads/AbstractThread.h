@@ -122,6 +122,7 @@ class AbstractThread : public nsISerialEventTarget {
 
   struct AutoEnter {
     explicit AutoEnter(AbstractThread* aThread) {
+      MOZ_ASSERT(aThread);
       mLastCurrentThread = sCurrentThreadTLS.get();
       sCurrentThreadTLS.set(aThread);
     }

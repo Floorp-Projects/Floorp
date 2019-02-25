@@ -98,21 +98,6 @@ class EventTargetWrapper : public AbstractThread {
   Maybe<AutoTaskDispatcher> mTailDispatcher;
 
   class Runner : public CancelableRunnable {
-    class MOZ_STACK_CLASS AutoTaskGuard final {
-     public:
-      explicit AutoTaskGuard(EventTargetWrapper* aThread)
-          : mLastCurrentThread(nullptr) {
-        MOZ_ASSERT(aThread);
-        mLastCurrentThread = sCurrentThreadTLS.get();
-        sCurrentThreadTLS.set(aThread);
-      }
-
-      ~AutoTaskGuard() { sCurrentThreadTLS.set(mLastCurrentThread); }
-
-     private:
-      AbstractThread* mLastCurrentThread;
-    };
-
    public:
     explicit Runner(EventTargetWrapper* aThread,
                     already_AddRefed<nsIRunnable> aRunnable)
@@ -121,7 +106,7 @@ class EventTargetWrapper : public AbstractThread {
           mRunnable(aRunnable) {}
 
     NS_IMETHOD Run() override {
-      AutoTaskGuard taskGuard(mThread);
+      AutoEnter taskGuard(mThread);
 
       MOZ_ASSERT(mThread == AbstractThread::GetCurrent());
       MOZ_ASSERT(mThread->IsCurrentThreadIn());
@@ -130,7 +115,7 @@ class EventTargetWrapper : public AbstractThread {
 
     nsresult Cancel() override {
       // Set the TLS during Cancel() just in case it calls Run().
-      AutoTaskGuard taskGuard(mThread);
+      AutoEnter taskGuard(mThread);
 
       nsresult rv = NS_OK;
 
@@ -160,8 +145,8 @@ class EventTargetWrapper : public AbstractThread {
 #endif
 
    private:
-    RefPtr<EventTargetWrapper> mThread;
-    RefPtr<nsIRunnable> mRunnable;
+    const RefPtr<EventTargetWrapper> mThread;
+    const RefPtr<nsIRunnable> mRunnable;
   };
 };
 
