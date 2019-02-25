@@ -278,10 +278,12 @@ nsresult ImageEncoder::ExtractDataAsync(
   return sThreadPool->Dispatch(event, NS_DISPATCH_NORMAL);
 }
 
-/*static*/ nsresult ImageEncoder::GetInputStream(
-    int32_t aWidth, int32_t aHeight, uint8_t* aImageBuffer, int32_t aFormat,
-    imgIEncoder* aEncoder, const char16_t* aEncoderOptions,
-    nsIInputStream** aStream) {
+/*static*/
+nsresult ImageEncoder::GetInputStream(int32_t aWidth, int32_t aHeight,
+                                      uint8_t* aImageBuffer, int32_t aFormat,
+                                      imgIEncoder* aEncoder,
+                                      const char16_t* aEncoderOptions,
+                                      nsIInputStream** aStream) {
   nsresult rv = aEncoder->InitFromData(aImageBuffer, aWidth * aHeight * 4,
                                        aWidth, aHeight, aWidth * 4, aFormat,
                                        nsDependentString(aEncoderOptions));

@@ -17,7 +17,8 @@ namespace dom {
 
 NS_IMPL_ISUPPORTS_INHERITED(StreamBlobImpl, BlobImpl, nsIMemoryReporter)
 
-/* static */ already_AddRefed<StreamBlobImpl> StreamBlobImpl::Create(
+/* static */
+already_AddRefed<StreamBlobImpl> StreamBlobImpl::Create(
     already_AddRefed<nsIInputStream> aInputStream,
     const nsAString& aContentType, uint64_t aLength,
     const nsAString& aBlobImplType) {
@@ -29,7 +30,8 @@ NS_IMPL_ISUPPORTS_INHERITED(StreamBlobImpl, BlobImpl, nsIMemoryReporter)
   return blobImplStream.forget();
 }
 
-/* static */ already_AddRefed<StreamBlobImpl> StreamBlobImpl::Create(
+/* static */
+already_AddRefed<StreamBlobImpl> StreamBlobImpl::Create(
     already_AddRefed<nsIInputStream> aInputStream, const nsAString& aName,
     const nsAString& aContentType, int64_t aLastModifiedDate, uint64_t aLength,
     const nsAString& aBlobImplType) {

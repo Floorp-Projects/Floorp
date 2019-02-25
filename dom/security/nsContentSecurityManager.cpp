@@ -32,7 +32,8 @@ NS_IMPL_ISUPPORTS(nsContentSecurityManager, nsIContentSecurityManager,
 
 static mozilla::LazyLogModule sCSMLog("CSMLog");
 
-/* static */ bool nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
+/* static */
+bool nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
     nsIChannel* aChannel) {
   // Let's block all toplevel document navigations to a data: URI.
   // In all cases where the toplevel document is navigated to a
@@ -110,7 +111,8 @@ static mozilla::LazyLogModule sCSMLog("CSMLog");
   return false;
 }
 
-/* static */ bool nsContentSecurityManager::AllowInsecureRedirectToDataURI(
+/* static */
+bool nsContentSecurityManager::AllowInsecureRedirectToDataURI(
     nsIChannel* aNewChannel) {
   nsCOMPtr<nsILoadInfo> loadInfo = aNewChannel->LoadInfo();
   if (loadInfo->GetExternalContentPolicyType() !=
@@ -155,7 +157,8 @@ static mozilla::LazyLogModule sCSMLog("CSMLog");
   return false;
 }
 
-/* static */ nsresult nsContentSecurityManager::CheckFTPSubresourceLoad(
+/* static */
+nsresult nsContentSecurityManager::CheckFTPSubresourceLoad(
     nsIChannel* aChannel) {
   // We dissallow using FTP resources as a subresource almost everywhere.
   // The only valid way to use FTP resources is loading it as

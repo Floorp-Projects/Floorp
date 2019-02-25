@@ -164,7 +164,8 @@ StereoPannerNode::StereoPannerNode(AudioContext* aContext)
       aContext, engine, AudioNodeStream::NO_STREAM_FLAGS, aContext->Graph());
 }
 
-/* static */ already_AddRefed<StereoPannerNode> StereoPannerNode::Create(
+/* static */
+already_AddRefed<StereoPannerNode> StereoPannerNode::Create(
     AudioContext& aAudioContext, const StereoPannerOptions& aOptions,
     ErrorResult& aRv) {
   if (aAudioContext.CheckClosed(aRv)) {

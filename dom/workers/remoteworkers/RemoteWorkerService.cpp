@@ -36,7 +36,8 @@ StaticRefPtr<RemoteWorkerService> sRemoteWorkerService;
 
 }  // namespace
 
-/* static */ void RemoteWorkerService::Initialize() {
+/* static */
+void RemoteWorkerService::Initialize() {
   MOZ_ASSERT(NS_IsMainThread());
 
   StaticMutexAutoLock lock(sRemoteWorkerServiceMutex);
@@ -67,7 +68,8 @@ StaticRefPtr<RemoteWorkerService> sRemoteWorkerService;
   sRemoteWorkerService = service;
 }
 
-/* static */ nsIThread* RemoteWorkerService::Thread() {
+/* static */
+nsIThread* RemoteWorkerService::Thread() {
   StaticMutexAutoLock lock(sRemoteWorkerServiceMutex);
   MOZ_ASSERT(sRemoteWorkerService);
   MOZ_ASSERT(sRemoteWorkerService->mThread);

@@ -44,8 +44,8 @@ static FeatureMap sSupportedFeatures[] = {
     {"vr", FeaturePolicyUtils::FeaturePolicyValue::eAll},
 };
 
-/* static */ bool FeaturePolicyUtils::IsSupportedFeature(
-    const nsAString& aFeatureName) {
+/* static */
+bool FeaturePolicyUtils::IsSupportedFeature(const nsAString& aFeatureName) {
   uint32_t numFeatures =
       (sizeof(sSupportedFeatures) / sizeof(sSupportedFeatures[0]));
   for (uint32_t i = 0; i < numFeatures; ++i) {
@@ -56,7 +56,8 @@ static FeatureMap sSupportedFeatures[] = {
   return false;
 }
 
-/* static */ void FeaturePolicyUtils::ForEachFeature(
+/* static */
+void FeaturePolicyUtils::ForEachFeature(
     const std::function<void(const char*)>& aCallback) {
   uint32_t numFeatures =
       (sizeof(sSupportedFeatures) / sizeof(sSupportedFeatures[0]));
@@ -78,8 +79,9 @@ FeaturePolicyUtils::DefaultAllowListFeature(const nsAString& aFeatureName) {
   return FeaturePolicyValue::eNone;
 }
 
-/* static */ bool FeaturePolicyUtils::IsFeatureAllowed(
-    Document* aDocument, const nsAString& aFeatureName) {
+/* static */
+bool FeaturePolicyUtils::IsFeatureAllowed(Document* aDocument,
+                                          const nsAString& aFeatureName) {
   MOZ_ASSERT(aDocument);
 
   if (!StaticPrefs::dom_security_featurePolicy_enabled()) {
@@ -101,8 +103,9 @@ FeaturePolicyUtils::DefaultAllowListFeature(const nsAString& aFeatureName) {
   return false;
 }
 
-/* static */ void FeaturePolicyUtils::ReportViolation(
-    Document* aDocument, const nsAString& aFeatureName) {
+/* static */
+void FeaturePolicyUtils::ReportViolation(Document* aDocument,
+                                         const nsAString& aFeatureName) {
   MOZ_ASSERT(aDocument);
 
   nsCOMPtr<nsIURI> uri = aDocument->GetDocumentURI();

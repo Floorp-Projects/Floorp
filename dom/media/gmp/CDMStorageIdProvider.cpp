@@ -15,8 +15,8 @@
 
 namespace mozilla {
 
-/*static*/ nsCString CDMStorageIdProvider::ComputeStorageId(
-    const nsCString& aOriginSalt) {
+/*static*/
+nsCString CDMStorageIdProvider::ComputeStorageId(const nsCString& aOriginSalt) {
 #ifndef SUPPORT_STORAGE_ID
   return EmptyCString();
 #else

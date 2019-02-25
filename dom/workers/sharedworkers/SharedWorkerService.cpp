@@ -179,8 +179,8 @@ class ErrorPropagationRunnable final : public Runnable {
 
 }  // namespace
 
-/* static */ already_AddRefed<SharedWorkerService>
-SharedWorkerService::GetOrCreate() {
+/* static */
+already_AddRefed<SharedWorkerService> SharedWorkerService::GetOrCreate() {
   AssertIsOnBackgroundThread();
 
   StaticMutexAutoLock lock(sSharedWorkerMutex);
@@ -194,7 +194,8 @@ SharedWorkerService::GetOrCreate() {
   return instance.forget();
 }
 
-/* static */ SharedWorkerService* SharedWorkerService::Get() {
+/* static */
+SharedWorkerService* SharedWorkerService::Get() {
   StaticMutexAutoLock lock(sSharedWorkerMutex);
 
   MOZ_ASSERT(sSharedWorkerService);

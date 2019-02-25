@@ -247,9 +247,11 @@ class ReferrerSameOriginChecker final : public WorkerMainThreadRunnable {
 
 }  // namespace
 
-/*static*/ already_AddRefed<Request> Request::Constructor(
-    const GlobalObject& aGlobal, const RequestOrUSVString& aInput,
-    const RequestInit& aInit, ErrorResult& aRv) {
+/*static*/
+already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
+                                               const RequestOrUSVString& aInput,
+                                               const RequestInit& aInit,
+                                               ErrorResult& aRv) {
   bool hasCopiedBody = false;
   RefPtr<InternalRequest> request;
 

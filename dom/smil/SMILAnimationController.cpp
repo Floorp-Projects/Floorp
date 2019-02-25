@@ -538,7 +538,8 @@ void SMILAnimationController::DoMilestoneSamples() {
   }
 }
 
-/*static*/ void SMILAnimationController::SampleTimedElement(
+/*static*/
+void SMILAnimationController::SampleTimedElement(
     SVGAnimationElement* aElement, TimeContainerHashtable* aActiveContainers) {
   SMILTimeContainer* timeContainer = aElement->GetTimeContainer();
   if (!timeContainer) return;
@@ -561,7 +562,8 @@ void SMILAnimationController::DoMilestoneSamples() {
   aElement->TimedElement().SampleAt(containerTime);
 }
 
-/*static*/ void SMILAnimationController::AddAnimationToCompositorTable(
+/*static*/
+void SMILAnimationController::AddAnimationToCompositorTable(
     SVGAnimationElement* aElement, SMILCompositorTable* aCompositorTable,
     bool& aStyleFlushNeeded) {
   // Add a compositor to the hash table if there's not already one there
@@ -609,7 +611,8 @@ static inline bool IsTransformAttribute(int32_t aNamespaceID,
 // Helper function that, given a SVGAnimationElement, looks up its target
 // element & target attribute and populates a SMILTargetIdentifier
 // for this target.
-/*static*/ bool SMILAnimationController::GetTargetIdentifierForAnimation(
+/*static*/
+bool SMILAnimationController::GetTargetIdentifierForAnimation(
     SVGAnimationElement* aAnimElem, SMILTargetIdentifier& aResult) {
   // Look up target (animated) element
   Element* targetElem = aAnimElem->GetTargetElementContent();

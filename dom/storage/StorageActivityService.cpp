@@ -22,8 +22,8 @@ namespace dom {
 static StaticRefPtr<StorageActivityService> gStorageActivityService;
 static bool gStorageActivityShutdown = false;
 
-/* static */ void StorageActivityService::SendActivity(
-    nsIPrincipal* aPrincipal) {
+/* static */
+void StorageActivityService::SendActivity(nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!aPrincipal || BasePrincipal::Cast(aPrincipal)->Kind() !=
@@ -40,7 +40,8 @@ static bool gStorageActivityShutdown = false;
   service->SendActivityInternal(aPrincipal);
 }
 
-/* static */ void StorageActivityService::SendActivity(
+/* static */
+void StorageActivityService::SendActivity(
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo) {
   if (aPrincipalInfo.type() !=
       mozilla::ipc::PrincipalInfo::TContentPrincipalInfo) {
@@ -61,8 +62,8 @@ static bool gStorageActivityShutdown = false;
   SystemGroup::Dispatch(TaskCategory::Other, r.forget());
 }
 
-/* static */ void StorageActivityService::SendActivity(
-    const nsACString& aOrigin) {
+/* static */
+void StorageActivityService::SendActivity(const nsACString& aOrigin) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   nsCString origin;
@@ -87,8 +88,8 @@ static bool gStorageActivityShutdown = false;
   }
 }
 
-/* static */ already_AddRefed<StorageActivityService>
-StorageActivityService::GetOrCreate() {
+/* static */
+already_AddRefed<StorageActivityService> StorageActivityService::GetOrCreate() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!gStorageActivityService && !gStorageActivityShutdown) {

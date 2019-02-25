@@ -157,13 +157,15 @@ static bool IsEnableBlockingWebAudioByUserGesturePolicy() {
                               false);
 }
 
-/* static */ bool AutoplayPolicy::WouldBeAllowedToPlayIfAutoplayDisabled(
+/* static */
+bool AutoplayPolicy::WouldBeAllowedToPlayIfAutoplayDisabled(
     const HTMLMediaElement& aElement) {
   return IsMediaElementAllowedToPlay(aElement) ||
          IsWindowAllowedToPlay(aElement.OwnerDoc()->GetInnerWindow());
 }
 
-/* static */ bool AutoplayPolicy::WouldBeAllowedToPlayIfAutoplayDisabled(
+/* static */
+bool AutoplayPolicy::WouldBeAllowedToPlayIfAutoplayDisabled(
     const AudioContext& aContext) {
   return IsAudioContextAllowedToPlay(aContext);
 }
@@ -206,16 +208,16 @@ static bool IsAllowedToPlayInternal(const HTMLMediaElement& aElement) {
   return IsWindowAllowedToPlay(aElement.OwnerDoc()->GetInnerWindow());
 }
 
-/* static */ bool AutoplayPolicy::IsAllowedToPlay(
-    const HTMLMediaElement& aElement) {
+/* static */
+bool AutoplayPolicy::IsAllowedToPlay(const HTMLMediaElement& aElement) {
   const bool result = IsAllowedToPlayInternal(aElement);
   AUTOPLAY_LOG("IsAllowedToPlay, mediaElement=%p, isAllowToPlay=%s", &aElement,
                result ? "allowed" : "blocked");
   return result;
 }
 
-/* static */ bool AutoplayPolicy::IsAllowedToPlay(
-    const AudioContext& aContext) {
+/* static */
+bool AutoplayPolicy::IsAllowedToPlay(const AudioContext& aContext) {
   /**
    * The autoplay checking has 4 different phases,
    * 1. check whether audio context itself meets the autoplay condition
@@ -253,7 +255,8 @@ static bool IsAllowedToPlayInternal(const HTMLMediaElement& aElement) {
   return IsWindowAllowedToPlay(window);
 }
 
-/* static */ DocumentAutoplayPolicy AutoplayPolicy::IsAllowedToPlay(
+/* static */
+DocumentAutoplayPolicy AutoplayPolicy::IsAllowedToPlay(
     const Document& aDocument) {
   if (DefaultAutoplayBehaviour() == nsIAutoplay::ALLOWED ||
       IsWindowAllowedToPlay(aDocument.GetInnerWindow())) {

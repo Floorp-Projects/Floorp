@@ -1173,8 +1173,9 @@ nsresult nsWebBrowserPersist::GetValidURIFromObject(nsISupports *aObject,
   return NS_ERROR_FAILURE;
 }
 
-/* static */ nsresult nsWebBrowserPersist::GetLocalFileFromURI(
-    nsIURI *aURI, nsIFile **aLocalFile) {
+/* static */
+nsresult nsWebBrowserPersist::GetLocalFileFromURI(nsIURI *aURI,
+                                                  nsIFile **aLocalFile) {
   nsresult rv;
 
   nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(aURI, &rv);
@@ -1190,8 +1191,10 @@ nsresult nsWebBrowserPersist::GetValidURIFromObject(nsISupports *aObject,
   return NS_OK;
 }
 
-/* static */ nsresult nsWebBrowserPersist::AppendPathToURI(
-    nsIURI *aURI, const nsAString &aPath, nsCOMPtr<nsIURI> &aOutURI) {
+/* static */
+nsresult nsWebBrowserPersist::AppendPathToURI(nsIURI *aURI,
+                                              const nsAString &aPath,
+                                              nsCOMPtr<nsIURI> &aOutURI) {
   NS_ENSURE_ARG_POINTER(aURI);
 
   nsAutoCString newPath;

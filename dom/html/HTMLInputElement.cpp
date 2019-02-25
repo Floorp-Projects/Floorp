@@ -915,8 +915,8 @@ static nsresult FireEventForAccessibility(HTMLInputElement* aTarget,
 nsTextEditorState* HTMLInputElement::sCachedTextEditorState = nullptr;
 bool HTMLInputElement::sShutdown = false;
 
-/* static */ void HTMLInputElement::ReleaseTextEditorState(
-    nsTextEditorState* aState) {
+/* static */
+void HTMLInputElement::ReleaseTextEditorState(nsTextEditorState* aState) {
   if (!sShutdown && !sCachedTextEditorState) {
     aState->PrepareForReuse();
     sCachedTextEditorState = aState;
@@ -925,7 +925,8 @@ bool HTMLInputElement::sShutdown = false;
   }
 }
 
-/* static */ void HTMLInputElement::Shutdown() {
+/* static */
+void HTMLInputElement::Shutdown() {
   sShutdown = true;
   delete sCachedTextEditorState;
   sCachedTextEditorState = nullptr;
@@ -1496,8 +1497,8 @@ int32_t HTMLInputElement::MonthsSinceJan1970(uint32_t aYear,
   return (aYear - 1970) * 12 + aMonth - 1;
 }
 
-/* static */ Decimal HTMLInputElement::StringToDecimal(
-    const nsAString& aValue) {
+/* static */
+Decimal HTMLInputElement::StringToDecimal(const nsAString& aValue) {
   if (!IsASCII(aValue)) {
     return Decimal::nan();
   }
@@ -2525,7 +2526,8 @@ void HTMLInputElement::SetFiles(FileList* aFiles) {
   mFileData->mFileList = aFiles;
 }
 
-/* static */ void HTMLInputElement::HandleNumberControlSpin(void* aData) {
+/* static */
+void HTMLInputElement::HandleNumberControlSpin(void* aData) {
   RefPtr<HTMLInputElement> input = static_cast<HTMLInputElement*>(aData);
 
   NS_ASSERTION(input->mNumberControlSpinnerIsSpinning,
@@ -4983,8 +4985,10 @@ uint32_t HTMLInputElement::NumberOfDaysInMonth(uint32_t aMonth,
   return IsLeapYear(aYear) ? 29 : 28;
 }
 
-/* static */ bool HTMLInputElement::DigitSubStringToNumber(
-    const nsAString& aStr, uint32_t aStart, uint32_t aLen, uint32_t* aRetVal) {
+/* static */
+bool HTMLInputElement::DigitSubStringToNumber(const nsAString& aStr,
+                                              uint32_t aStart, uint32_t aLen,
+                                              uint32_t* aRetVal) {
   MOZ_ASSERT(aStr.Length() > (aStart + aLen - 1));
 
   for (uint32_t offset = 0; offset < aLen; ++offset) {
@@ -5004,8 +5008,8 @@ bool HTMLInputElement::IsValidTime(const nsAString& aValue) const {
   return ParseTime(aValue, nullptr);
 }
 
-/* static */ bool HTMLInputElement::ParseTime(const nsAString& aValue,
-                                              uint32_t* aResult) {
+/* static */
+bool HTMLInputElement::ParseTime(const nsAString& aValue, uint32_t* aResult) {
   /* The string must have the following parts:
    * - HOURS: two digits, value being in [0, 23];
    * - Colon (:);
@@ -5085,8 +5089,8 @@ bool HTMLInputElement::IsValidTime(const nsAString& aValue) const {
   return true;
 }
 
-/* static */ bool HTMLInputElement::IsDateTimeTypeSupported(
-    uint8_t aDateTimeInputType) {
+/* static */
+bool HTMLInputElement::IsDateTimeTypeSupported(uint8_t aDateTimeInputType) {
   return ((aDateTimeInputType == NS_FORM_INPUT_DATE ||
            aDateTimeInputType == NS_FORM_INPUT_TIME) &&
           (IsInputDateTimeEnabled() || IsExperimentalFormsEnabled())) ||
@@ -5096,7 +5100,8 @@ bool HTMLInputElement::IsValidTime(const nsAString& aValue) const {
           IsInputDateTimeOthersEnabled());
 }
 
-/* static */ bool HTMLInputElement::IsWebkitFileSystemEnabled() {
+/* static */
+bool HTMLInputElement::IsWebkitFileSystemEnabled() {
   static bool sWebkitFileSystemEnabled = false;
   static bool sWebkitFileSystemPrefCached = false;
   if (!sWebkitFileSystemPrefCached) {
@@ -5108,7 +5113,8 @@ bool HTMLInputElement::IsValidTime(const nsAString& aValue) const {
   return sWebkitFileSystemEnabled;
 }
 
-/* static */ bool HTMLInputElement::IsDirPickerEnabled() {
+/* static */
+bool HTMLInputElement::IsDirPickerEnabled() {
   static bool sDirPickerEnabled = false;
   static bool sDirPickerPrefCached = false;
   if (!sDirPickerPrefCached) {
@@ -5120,7 +5126,8 @@ bool HTMLInputElement::IsValidTime(const nsAString& aValue) const {
   return sDirPickerEnabled;
 }
 
-/* static */ bool HTMLInputElement::IsExperimentalFormsEnabled() {
+/* static */
+bool HTMLInputElement::IsExperimentalFormsEnabled() {
   static bool sExperimentalFormsEnabled = false;
   static bool sExperimentalFormsPrefCached = false;
   if (!sExperimentalFormsPrefCached) {
@@ -5132,7 +5139,8 @@ bool HTMLInputElement::IsValidTime(const nsAString& aValue) const {
   return sExperimentalFormsEnabled;
 }
 
-/* static */ bool HTMLInputElement::IsInputDateTimeEnabled() {
+/* static */
+bool HTMLInputElement::IsInputDateTimeEnabled() {
   static bool sDateTimeEnabled = false;
   static bool sDateTimePrefCached = false;
   if (!sDateTimePrefCached) {
@@ -5144,7 +5152,8 @@ bool HTMLInputElement::IsValidTime(const nsAString& aValue) const {
   return sDateTimeEnabled;
 }
 
-/* static */ bool HTMLInputElement::IsInputDateTimeOthersEnabled() {
+/* static */
+bool HTMLInputElement::IsInputDateTimeOthersEnabled() {
   static bool sDateTimeOthersEnabled = false;
   static bool sDateTimeOthersPrefCached = false;
   if (!sDateTimeOthersPrefCached) {
@@ -5156,7 +5165,8 @@ bool HTMLInputElement::IsValidTime(const nsAString& aValue) const {
   return sDateTimeOthersEnabled;
 }
 
-/* static */ bool HTMLInputElement::IsInputColorEnabled() {
+/* static */
+bool HTMLInputElement::IsInputColorEnabled() {
   static bool sInputColorEnabled = false;
   static bool sInputColorPrefCached = false;
   if (!sInputColorPrefCached) {

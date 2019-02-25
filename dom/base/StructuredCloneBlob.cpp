@@ -27,10 +27,10 @@ StructuredCloneBlob::~StructuredCloneBlob() {
   UnregisterWeakMemoryReporter(this);
 }
 
-/* static */ already_AddRefed<StructuredCloneBlob>
-StructuredCloneBlob::Constructor(GlobalObject& aGlobal, JS::HandleValue aValue,
-                                 JS::HandleObject aTargetGlobal,
-                                 ErrorResult& aRv) {
+/* static */
+already_AddRefed<StructuredCloneBlob> StructuredCloneBlob::Constructor(
+    GlobalObject& aGlobal, JS::HandleValue aValue,
+    JS::HandleObject aTargetGlobal, ErrorResult& aRv) {
   JSContext* cx = aGlobal.Context();
 
   RefPtr<StructuredCloneBlob> holder = StructuredCloneBlob::Create();
@@ -112,7 +112,8 @@ void StructuredCloneBlob::Deserialize(JSContext* aCx,
   }
 }
 
-/* static */ JSObject* StructuredCloneBlob::ReadStructuredClone(
+/* static */
+JSObject* StructuredCloneBlob::ReadStructuredClone(
     JSContext* aCx, JSStructuredCloneReader* aReader,
     StructuredCloneHolder* aHolder) {
   JS::RootedObject obj(aCx);

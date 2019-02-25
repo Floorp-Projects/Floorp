@@ -239,7 +239,8 @@ BiquadFilterNode::BiquadFilterNode(AudioContext* aContext)
       aContext, engine, AudioNodeStream::NO_STREAM_FLAGS, aContext->Graph());
 }
 
-/* static */ already_AddRefed<BiquadFilterNode> BiquadFilterNode::Create(
+/* static */
+already_AddRefed<BiquadFilterNode> BiquadFilterNode::Create(
     AudioContext& aAudioContext, const BiquadFilterOptions& aOptions,
     ErrorResult& aRv) {
   if (aAudioContext.CheckClosed(aRv)) {

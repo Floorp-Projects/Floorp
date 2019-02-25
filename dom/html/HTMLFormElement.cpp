@@ -919,8 +919,10 @@ HTMLFormElement::GetElementAt(int32_t aIndex) const {
  *         > 0 if aControl1 is after aControl2,
  *         0 otherwise
  */
-/* static */ int32_t HTMLFormElement::CompareFormControlPosition(
-    Element* aElement1, Element* aElement2, const nsIContent* aForm) {
+/* static */
+int32_t HTMLFormElement::CompareFormControlPosition(Element* aElement1,
+                                                    Element* aElement2,
+                                                    const nsIContent* aForm) {
   NS_ASSERTION(aElement1 != aElement2, "Comparing a form control to itself");
 
   // If an element has a @form, we can assume it *might* be able to not have
@@ -955,7 +957,8 @@ HTMLFormElement::GetElementAt(int32_t aIndex) const {
  * @param aControls List of form controls to check.
  * @param aForm Parent form of the controls.
  */
-/* static */ void HTMLFormElement::AssertDocumentOrder(
+/* static */
+void HTMLFormElement::AssertDocumentOrder(
     const nsTArray<nsGenericHTMLFormElement*>& aControls, nsIContent* aForm) {
   // TODO: remove the return statement with bug 598468.
   // This is done to prevent asserts in some edge cases.
@@ -979,7 +982,8 @@ HTMLFormElement::GetElementAt(int32_t aIndex) const {
  * @param aControls List of form controls to check.
  * @param aForm Parent form of the controls.
  */
-/* static */ void HTMLFormElement::AssertDocumentOrder(
+/* static */
+void HTMLFormElement::AssertDocumentOrder(
     const nsTArray<RefPtr<nsGenericHTMLFormElement>>& aControls,
     nsIContent* aForm) {
   // TODO: remove the return statement with bug 598468.

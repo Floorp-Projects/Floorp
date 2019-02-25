@@ -50,11 +50,13 @@ MemoryReportRequestHost::~MemoryReportRequestHost() {
 
 NS_IMPL_ISUPPORTS(MemoryReportRequestClient, nsIRunnable)
 
-/* static */ void MemoryReportRequestClient::Start(
-    uint32_t aGeneration, bool aAnonymize, bool aMinimizeMemoryUsage,
-    const MaybeFileDesc& aDMDFile, const nsACString& aProcessString,
-    const ReportCallback& aReportCallback,
-    const FinishCallback& aFinishCallback) {
+/* static */
+void MemoryReportRequestClient::Start(uint32_t aGeneration, bool aAnonymize,
+                                      bool aMinimizeMemoryUsage,
+                                      const MaybeFileDesc& aDMDFile,
+                                      const nsACString& aProcessString,
+                                      const ReportCallback& aReportCallback,
+                                      const FinishCallback& aFinishCallback) {
   RefPtr<MemoryReportRequestClient> request = new MemoryReportRequestClient(
       aGeneration, aAnonymize, aDMDFile, aProcessString, aReportCallback,
       aFinishCallback);

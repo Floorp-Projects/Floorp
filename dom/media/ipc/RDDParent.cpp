@@ -47,7 +47,8 @@ RDDParent::RDDParent() : mLaunchTime(TimeStamp::Now()) { sRDDParent = this; }
 
 RDDParent::~RDDParent() { sRDDParent = nullptr; }
 
-/* static */ RDDParent* RDDParent::GetSingleton() { return sRDDParent; }
+/* static */
+RDDParent* RDDParent::GetSingleton() { return sRDDParent; }
 
 bool RDDParent::Init(base::ProcessId aParentPid, const char* aParentBuildID,
                      MessageLoop* aIOLoop, IPC::Channel* aChannel) {

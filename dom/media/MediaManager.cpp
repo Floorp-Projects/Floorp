@@ -867,13 +867,15 @@ MediaDevice::MediaDevice(const RefPtr<MediaDevice>& aOther, const nsString& aID,
  * http://dev.w3.org/2011/webrtc/editor/getusermedia.html#methods-5
  */
 
-/* static */ bool MediaDevice::StringsContain(
-    const OwningStringOrStringSequence& aStrings, nsString aN) {
+/* static */
+bool MediaDevice::StringsContain(const OwningStringOrStringSequence& aStrings,
+                                 nsString aN) {
   return aStrings.IsString() ? aStrings.GetAsString() == aN
                              : aStrings.GetAsStringSequence().Contains(aN);
 }
 
-/* static */ uint32_t MediaDevice::FitnessDistance(
+/* static */
+uint32_t MediaDevice::FitnessDistance(
     nsString aN, const ConstrainDOMStringParameters& aParams) {
   if (aParams.mExact.WasPassed() &&
       !StringsContain(aParams.mExact.Value(), aN)) {
@@ -888,7 +890,8 @@ MediaDevice::MediaDevice(const RefPtr<MediaDevice>& aOther, const nsString& aID,
 
 // Binding code doesn't templatize well...
 
-/* static */ uint32_t MediaDevice::FitnessDistance(
+/* static */
+uint32_t MediaDevice::FitnessDistance(
     nsString aN,
     const OwningStringOrStringSequenceOrConstrainDOMStringParameters&
         aConstraint) {
@@ -1948,10 +1951,12 @@ MediaManager::MediaManager() : mMediaThread(nullptr), mBackend(nullptr) {
 
 NS_IMPL_ISUPPORTS(MediaManager, nsIMediaManagerService, nsIObserver)
 
-/* static */ StaticRefPtr<MediaManager> MediaManager::sSingleton;
+/* static */
+StaticRefPtr<MediaManager> MediaManager::sSingleton;
 
 #ifdef DEBUG
-/* static */ bool MediaManager::IsInMediaThread() {
+/* static */
+bool MediaManager::IsInMediaThread() {
   return sSingleton ? (sSingleton->mMediaThread->thread_id() ==
                        PlatformThread::CurrentId())
                     : false;
@@ -1985,7 +1990,8 @@ class MTAThread : public base::Thread {
 // from MediaManager thread.
 
 // Guaranteed never to return nullptr.
-/* static */ MediaManager* MediaManager::Get() {
+/* static */
+MediaManager* MediaManager::Get() {
   if (!sSingleton) {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -2076,9 +2082,11 @@ class MTAThread : public base::Thread {
   return sSingleton;
 }
 
-/* static */ MediaManager* MediaManager::GetIfExists() { return sSingleton; }
+/* static */
+MediaManager* MediaManager::GetIfExists() { return sSingleton; }
 
-/* static */ already_AddRefed<MediaManager> MediaManager::GetInstance() {
+/* static */
+already_AddRefed<MediaManager> MediaManager::GetInstance() {
   // so we can have non-refcounted getters
   RefPtr<MediaManager> service = MediaManager::Get();
   return service.forget();
@@ -2091,7 +2099,8 @@ media::Parent<media::NonE10s>* MediaManager::GetNonE10sParent() {
   return mNonE10sParent;
 }
 
-/* static */ void MediaManager::StartupInit() {
+/* static */
+void MediaManager::StartupInit() {
 #ifdef WIN32
   if (!IsWin8OrLater()) {
     // Bug 1107702 - Older Windows fail in GetAdaptersInfo (and others) if the
@@ -2127,8 +2136,9 @@ void MediaManager::PostTask(already_AddRefed<Runnable> task) {
 }
 
 template <typename MozPromiseType, typename FunctionType>
-/* static */ RefPtr<MozPromiseType> MediaManager::PostTask(
-    const char* aName, FunctionType&& aFunction) {
+/* static */
+RefPtr<MozPromiseType> MediaManager::PostTask(const char* aName,
+                                              FunctionType&& aFunction) {
   MozPromiseHolder<MozPromiseType> holder;
   RefPtr<MozPromiseType> promise = holder.Ensure(aName);
   MediaManager::PostTask(NS_NewRunnableFunction(
@@ -2137,7 +2147,8 @@ template <typename MozPromiseType, typename FunctionType>
   return promise;
 }
 
-/* static */ nsresult MediaManager::NotifyRecordingStatusChange(
+/* static */
+nsresult MediaManager::NotifyRecordingStatusChange(
     nsPIDOMWindowInner* aWindow) {
   NS_ENSURE_ARG(aWindow);
 
@@ -2991,8 +3002,9 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetDisplayMedia(
   return MediaManager::GetUserMedia(aWindow, c, aCallerType);
 }
 
-/* static */ void MediaManager::AnonymizeDevices(MediaDeviceSet& aDevices,
-                                                 const nsACString& aOriginKey) {
+/* static */
+void MediaManager::AnonymizeDevices(MediaDeviceSet& aDevices,
+                                    const nsACString& aOriginKey) {
   if (!aOriginKey.IsEmpty()) {
     for (RefPtr<MediaDevice>& device : aDevices) {
       nsString id;
@@ -3004,8 +3016,9 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetDisplayMedia(
   }
 }
 
-/* static */ nsresult MediaManager::AnonymizeId(nsAString& aId,
-                                                const nsACString& aOriginKey) {
+/* static */
+nsresult MediaManager::AnonymizeId(nsAString& aId,
+                                   const nsACString& aOriginKey) {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsresult rv;

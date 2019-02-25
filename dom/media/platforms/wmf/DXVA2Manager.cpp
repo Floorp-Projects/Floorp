@@ -1218,9 +1218,9 @@ bool DXVA2Manager::IsUnsupportedResolution(const uint32_t& aWidth,
          (aWidth >= 1920 || aHeight >= 1088) && aFramerate > 45;
 }
 
-/* static */ bool DXVA2Manager::IsNV12Supported(
-    uint32_t aVendorID, uint32_t aDeviceID,
-    const nsAString& aDriverVersionString) {
+/* static */
+bool DXVA2Manager::IsNV12Supported(uint32_t aVendorID, uint32_t aDeviceID,
+                                   const nsAString& aDriverVersionString) {
   if (aVendorID == 0x1022 || aVendorID == 0x1002) {
     // AMD
     // Block old cards regardless of driver version.

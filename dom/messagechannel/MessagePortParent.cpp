@@ -144,9 +144,10 @@ void MessagePortParent::Close() {
   mEntangled = false;
 }
 
-/* static */ bool MessagePortParent::ForceClose(const nsID& aUUID,
-                                                const nsID& aDestinationUUID,
-                                                const uint32_t& aSequenceID) {
+/* static */
+bool MessagePortParent::ForceClose(const nsID& aUUID,
+                                   const nsID& aDestinationUUID,
+                                   const uint32_t& aSequenceID) {
   MessagePortService* service = MessagePortService::Get();
   if (!service) {
     NS_WARNING(

@@ -304,7 +304,8 @@ DECLARE_Utils(RGBA32) DECLARE_Utils(BGRA32) DECLARE_Utils(RGB24)
     /*
      * ImageBitmapFormatUtils.
      */
-    /* static */ UtilsUniquePtr Utils::GetUtils(ImageBitmapFormat aFormat) {
+    /* static */
+    UtilsUniquePtr Utils::GetUtils(ImageBitmapFormat aFormat) {
   switch (aFormat) {
     case ImageBitmapFormat::RGBA32:
       return UtilsUniquePtr(&Utils_RGBA32::GetInstance());
