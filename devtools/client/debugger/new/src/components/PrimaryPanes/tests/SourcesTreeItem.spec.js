@@ -337,6 +337,17 @@ describe("SourceTreeItem", () => {
       component.simulate("click", { event: "click" });
       expect(props.selectItem).not.toHaveBeenCalled();
     });
+
+    it("should unescape escaped source URLs", async () => {
+      const item = createMockItem({
+        path: "mdn.com/external%20file",
+        name: "external%20file"
+      });
+
+      const node = render({ item });
+
+      expect(node).toMatchSnapshot();
+    });
   });
 });
 
