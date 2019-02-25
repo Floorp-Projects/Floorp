@@ -69,6 +69,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "mozilla/TimeStamp.h"
 #include "mozilla/ClearOnShutdown.h"
 
+// nICEr includes
+extern "C" {
+#include "transport_addr.h"
+#include "async_wait.h"
+}
+
 // Stub declaration for nICEr type
 typedef struct nr_socket_vtbl_ nr_socket_vtbl;
 typedef struct nr_socket_ nr_socket;

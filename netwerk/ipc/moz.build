@@ -62,6 +62,8 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '/caps',
     '/dom/base',
+    '/media/mtransport',
+    '/media/webrtc',
     '/modules/libjar',
     '/netwerk/base',
     '/netwerk/protocol/http',

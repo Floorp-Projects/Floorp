@@ -14,6 +14,24 @@ typedef mozilla::dom::RTCStatsReportInternal StatsReport;
 typedef nsTArray<nsAutoPtr<StatsReport>> RTCReports;
 typedef mozilla::dom::Sequence<nsString> WebrtcGlobalLog;
 
+namespace mozilla {
+namespace dom {
+// webidl dictionaries don't have move semantics, which is something that ipdl
+// needs for async returns. So, we create a "moveable" subclass that just
+// copies. _Really_ lame, but it gets the job done.
+struct MovableRTCStatsReportInternal : public RTCStatsReportInternal {
+  MovableRTCStatsReportInternal() = default;
+  explicit MovableRTCStatsReportInternal(RTCStatsReportInternal&& aReport) {
+    RTCStatsReportInternal::operator=(aReport);
+  }
+  explicit MovableRTCStatsReportInternal(
+      const RTCStatsReportInternal& aReport) {
+    RTCStatsReportInternal::operator=(aReport);
+  }
+};
+}  // namespace dom
+}  // namespace mozilla
+
 namespace IPC {
 
 template <typename T>
@@ -49,6 +67,21 @@ struct ParamTraits<mozilla::dom::RTCIceCandidateType>
           mozilla::dom::RTCIceCandidateType,
           mozilla::dom::RTCIceCandidateType::Host,
           mozilla::dom::RTCIceCandidateType::EndGuard_> {};
+
+template <>
+struct ParamTraits<mozilla::dom::MovableRTCStatsReportInternal> {
+  typedef mozilla::dom::MovableRTCStatsReportInternal paramType;
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(
+        aMsg, static_cast<const mozilla::dom::RTCStatsReportInternal&>(aParam));
+  }
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    return ReadParam(
+        aMsg, aIter,
+        static_cast<mozilla::dom::RTCStatsReportInternal*>(aResult));
+  }
+};
 
 template <>
 struct ParamTraits<mozilla::dom::RTCStatsReportInternal> {

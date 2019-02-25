@@ -132,7 +132,7 @@ class FakeAudioStreamTrack : public mozilla::dom::AudioStreamTrack {
 
 class LoopbackTransport : public MediaTransportHandler {
  public:
-  LoopbackTransport() {
+  LoopbackTransport() : MediaTransportHandler(nullptr) {
     SetState("mux", TransportLayer::TS_INIT, false);
     SetState("mux", TransportLayer::TS_INIT, true);
     SetState("non-mux", TransportLayer::TS_INIT, false);
@@ -157,9 +157,9 @@ class LoopbackTransport : public MediaTransportHandler {
   void EnterPrivateMode() override {}
   void ExitPrivateMode() override {}
 
-  nsresult Init(const std::string& aName,
-                const nsTArray<dom::RTCIceServer>& aIceServers,
-                dom::RTCIceTransportPolicy aIcePolicy) override {
+  nsresult CreateIceCtx(const std::string& aName,
+                        const nsTArray<dom::RTCIceServer>& aIceServers,
+                        dom::RTCIceTransportPolicy aIcePolicy) override {
     return NS_OK;
   }
 
@@ -213,38 +213,17 @@ class LoopbackTransport : public MediaTransportHandler {
     peer_->SignalPacketReceived(aTransportId, aPacket);
   }
 
-  TransportLayer::State GetState(const std::string& aTransportId,
-                                 bool aRtcp) const override {
-    if (aRtcp) {
-      auto it = mRtcpStates.find(aTransportId);
-      if (it != mRtcpStates.end()) {
-        return it->second;
-      }
-    } else {
-      auto it = mRtpStates.find(aTransportId);
-      if (it != mRtpStates.end()) {
-        return it->second;
-      }
-    }
-
-    return TransportLayer::TS_NONE;
-  }
-
   void SetState(const std::string& aTransportId, TransportLayer::State aState,
                 bool aRtcp) {
     if (aRtcp) {
-      mRtcpStates[aTransportId] = aState;
-      SignalRtcpStateChange(aTransportId, aState);
+      MediaTransportHandler::OnRtcpStateChange(aTransportId, aState);
     } else {
-      mRtpStates[aTransportId] = aState;
-      SignalStateChange(aTransportId, aState);
+      MediaTransportHandler::OnStateChange(aTransportId, aState);
     }
   }
 
  private:
   RefPtr<MediaTransportHandler> peer_;
-  std::map<std::string, TransportLayer::State> mRtpStates;
-  std::map<std::string, TransportLayer::State> mRtcpStates;
 };
 
 class TestAgent {

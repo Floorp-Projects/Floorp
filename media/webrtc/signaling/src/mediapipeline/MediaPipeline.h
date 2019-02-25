@@ -197,7 +197,7 @@ class MediaPipeline : public sigslot::has_slots<> {
   virtual void OnRtpPacketReceived(){};
   void IncrementRtcpPacketsReceived();
 
-  virtual void SendPacket(MediaPacket& packet);
+  virtual void SendPacket(MediaPacket&& packet);
 
   // Process slots on transports
   void RtpStateChange(const std::string& aTransportId, TransportLayer::State);

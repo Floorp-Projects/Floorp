@@ -24,6 +24,7 @@
 #include "mozilla/dom/network/UDPSocketChild.h"
 #include "mozilla/net/AltDataOutputStreamChild.h"
 #include "mozilla/net/TrackingDummyChannelChild.h"
+#include "mozilla/net/SocketProcessBridgeChild.h"
 #ifdef MOZ_WEBRTC
 #  include "mozilla/net/StunAddrsRequestChild.h"
 #  include "mozilla/net/WebrtcProxyChannelChild.h"
@@ -67,6 +68,7 @@ void NeckoChild::InitNeckoChild() {
     }
     gNeckoChild = cpc->SendPNeckoConstructor();
     NS_ASSERTION(gNeckoChild, "PNecko Protocol init failed!");
+    SocketProcessBridgeChild::GetSocketProcessBridge();
   }
 }
 
