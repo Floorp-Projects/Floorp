@@ -40,6 +40,7 @@ class ChangesView {
     this.onChangesFront = this.onChangesFront.bind(this);
     this.onContextMenu = this.onContextMenu.bind(this);
     this.onCopy = this.onCopy.bind(this);
+    this.onCopyRule = this.copyRule.bind(this);
     this.destroy = this.destroy.bind(this);
 
     this.init();
@@ -57,6 +58,7 @@ class ChangesView {
     const changesApp = ChangesApp({
       onContextMenu: this.onContextMenu,
       onCopy: this.onCopy,
+      onCopyRule: this.onCopyRule,
     });
 
     // listen to the front for initialization, add listeners
