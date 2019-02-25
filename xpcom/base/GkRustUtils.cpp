@@ -10,6 +10,7 @@
 
 using namespace mozilla;
 
-/* static */ void GkRustUtils::GenerateUUID(nsACString& aResult) {
+/* static */
+void GkRustUtils::GenerateUUID(nsACString& aResult) {
   GkRustUtils_GenerateUUID(&aResult);
 };

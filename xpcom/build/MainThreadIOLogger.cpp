@@ -109,7 +109,8 @@ bool MainThreadIOLoggerImpl::Init() {
   return true;
 }
 
-/* static */ void MainThreadIOLoggerImpl::sIOThreadFunc(void* aArg) {
+/* static */
+void MainThreadIOLoggerImpl::sIOThreadFunc(void* aArg) {
   AUTO_PROFILER_REGISTER_THREAD("MainThreadIOLogger");
 
   NS_SetCurrentThreadName("MainThreadIOLogger");

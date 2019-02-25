@@ -64,8 +64,9 @@ nsMemoryImpl::IsLowMemoryPlatform(bool* aResult) {
   return NS_OK;
 }
 
-/*static*/ nsresult nsMemoryImpl::Create(nsISupports* aOuter, const nsIID& aIID,
-                                         void** aResult) {
+/*static*/
+nsresult nsMemoryImpl::Create(nsISupports* aOuter, const nsIID& aIID,
+                              void** aResult) {
   if (NS_WARN_IF(aOuter)) {
     return NS_ERROR_NO_AGGREGATION;
   }
