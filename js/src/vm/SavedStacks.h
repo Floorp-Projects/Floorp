@@ -243,9 +243,9 @@ class SavedStacks {
 
  public:
   struct LocationValue {
-    LocationValue() : source(nullptr), line(0), column(0) {}
-    LocationValue(JSAtom* source, size_t line, uint32_t column)
-        : source(source), line(line), column(column) {}
+    LocationValue() : source(nullptr), sourceId(0), line(0), column(0) {}
+    LocationValue(JSAtom* source, uint32_t sourceId, size_t line, uint32_t column)
+        : source(source), sourceId(sourceId), line(line), column(column) {}
 
     void trace(JSTracer* trc) {
       TraceNullableEdge(trc, &source, "SavedStacks::LocationValue::source");
@@ -261,6 +261,7 @@ class SavedStacks {
     }
 
     HeapPtr<JSAtom*> source;
+    uint32_t sourceId;
     size_t line;
     uint32_t column;
   };
@@ -299,6 +300,7 @@ class SavedStacks {
 template <typename Wrapper>
 struct WrappedPtrOperations<SavedStacks::LocationValue, Wrapper> {
   JSAtom* source() const { return loc().source; }
+  uint32_t sourceId() const { return loc().sourceId; }
   size_t line() const { return loc().line; }
   uint32_t column() const { return loc().column; }
 
@@ -312,6 +314,7 @@ template <typename Wrapper>
 struct MutableWrappedPtrOperations<SavedStacks::LocationValue, Wrapper>
     : public WrappedPtrOperations<SavedStacks::LocationValue, Wrapper> {
   void setSource(JSAtom* v) { loc().source = v; }
+  void setSourceId(uint32_t v) { loc().sourceId = v; }
   void setLine(size_t v) { loc().line = v; }
   void setColumn(uint32_t v) { loc().column = v; }
 

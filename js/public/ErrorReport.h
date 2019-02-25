@@ -93,6 +93,9 @@ class JSErrorBase {
   // Source file name, URL, etc., or null.
   const char* filename;
 
+  // Unique identifier for the script source.
+  unsigned sourceId;
+
   // Source line number.
   unsigned lineno;
 
@@ -108,6 +111,7 @@ class JSErrorBase {
  public:
   JSErrorBase()
       : filename(nullptr),
+        sourceId(0),
         lineno(0),
         column(0),
         errorNumber(0),
@@ -149,13 +153,16 @@ class JSErrorNotes {
   ~JSErrorNotes();
 
   // Add an note to the given position.
-  bool addNoteASCII(JSContext* cx, const char* filename, unsigned lineno,
+  bool addNoteASCII(JSContext* cx, const char* filename,
+                    unsigned sourceId, unsigned lineno,
                     unsigned column, JSErrorCallback errorCallback,
                     void* userRef, const unsigned errorNumber, ...);
-  bool addNoteLatin1(JSContext* cx, const char* filename, unsigned lineno,
+  bool addNoteLatin1(JSContext* cx, const char* filename,
+                     unsigned sourceId, unsigned lineno,
                      unsigned column, JSErrorCallback errorCallback,
                      void* userRef, const unsigned errorNumber, ...);
-  bool addNoteUTF8(JSContext* cx, const char* filename, unsigned lineno,
+  bool addNoteUTF8(JSContext* cx, const char* filename,
+                   unsigned sourceId, unsigned lineno,
                    unsigned column, JSErrorCallback errorCallback,
                    void* userRef, const unsigned errorNumber, ...);
 

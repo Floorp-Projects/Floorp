@@ -280,6 +280,7 @@ static UniquePtr<T> CopyErrorHelper(JSContext* cx, T* report) {
   MOZ_ASSERT(cursor == (uint8_t*)copy.get() + mallocSize);
 
   /* Copy non-pointer members. */
+  copy->sourceId = report->sourceId;
   copy->lineno = report->lineno;
   copy->column = report->column;
   copy->errorNumber = report->errorNumber;
@@ -417,6 +418,7 @@ bool Error(JSContext* cx, unsigned argc, Value* vp) {
   NonBuiltinFrameIter iter(cx, cx->realm()->principals());
 
   RootedString fileName(cx);
+  uint32_t sourceId = 0;
   if (args.length() > 1) {
     fileName = ToString<CanGC>(cx, args[1]);
   } else {
@@ -424,6 +426,9 @@ bool Error(JSContext* cx, unsigned argc, Value* vp) {
     if (!iter.done()) {
       if (const char* cfilename = iter.filename()) {
         fileName = JS_NewStringCopyZ(cx, cfilename);
+      }
+      if (iter.hasScript()) {
+        sourceId = iter.script()->scriptSource()->id();
       }
     }
   }
@@ -447,8 +452,9 @@ bool Error(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RootedObject obj(cx,
-                   ErrorObject::create(cx, exnType, stack, fileName, lineNumber,
-                                       columnNumber, nullptr, message, proto));
+                   ErrorObject::create(cx, exnType, stack, fileName, sourceId,
+                                       lineNumber, columnNumber, nullptr,
+                                       message, proto));
   if (!obj) {
     return false;
   }
@@ -649,6 +655,7 @@ void js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
     return;
   }
 
+  uint32_t sourceId = reportp->sourceId;
   uint32_t lineNumber = reportp->lineno;
   uint32_t columnNumber = reportp->column;
 
@@ -663,7 +670,7 @@ void js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
   }
 
   ErrorObject* errObject =
-      ErrorObject::create(cx, exnType, stack, fileName, lineNumber,
+    ErrorObject::create(cx, exnType, stack, fileName, sourceId, lineNumber,
                           columnNumber, std::move(report), messageStr);
   if (!errObject) {
     return;
@@ -879,6 +886,7 @@ bool ErrorReport::init(JSContext* cx, HandleValue exn,
     ownedReport.lineno = lineno;
     ownedReport.exnType = JSEXN_INTERNALERR;
     ownedReport.column = column;
+
     if (str) {
       // Note that using |str| for |message_| here is kind of wrong,
       // because |str| is supposed to be of the format
@@ -950,6 +958,8 @@ bool ErrorReport::populateUncaughtExceptionReportUTF8VA(JSContext* cx,
   if (!iter.done()) {
     ownedReport.filename = iter.filename();
     uint32_t column;
+    ownedReport.sourceId =
+      iter.script() ? iter.script()->scriptSource()->id() : 0;
     ownedReport.lineno = iter.computeLine(&column);
     ownedReport.column = FixupColumnForDisplay(column);
     ownedReport.isMuted = iter.mutedErrors();
@@ -987,13 +997,15 @@ JSObject* js::CopyErrorObject(JSContext* cx, Handle<ErrorObject*> err) {
   if (!cx->compartment()->wrap(cx, &stack)) {
     return nullptr;
   }
+  uint32_t sourceId = err->sourceId();
   uint32_t lineNumber = err->lineNumber();
   uint32_t columnNumber = err->columnNumber();
   JSExnType errorType = err->type();
 
   // Create the Error object.
-  return ErrorObject::create(cx, errorType, stack, fileName, lineNumber,
-                             columnNumber, std::move(copyReport), message);
+  return ErrorObject::create(cx, errorType, stack, fileName, sourceId,
+                             lineNumber, columnNumber,
+                             std::move(copyReport), message);
 }
 
 JS_PUBLIC_API bool JS::CreateError(JSContext* cx, JSExnType type,
@@ -1013,7 +1025,7 @@ JS_PUBLIC_API bool JS::CreateError(JSContext* cx, JSExnType type,
   }
 
   JSObject* obj =
-      js::ErrorObject::create(cx, type, stack, fileName, lineNumber,
+      js::ErrorObject::create(cx, type, stack, fileName, 0, lineNumber,
                               columnNumber, std::move(rep), message);
   if (!obj) {
     return false;
