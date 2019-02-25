@@ -2304,8 +2304,7 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
   masm.moveValue(UndefinedValue(), result);
   masm.ret();
 
-  Linker linker(masm);
-  AutoFlushICache afc("RegExpMatcherStub");
+  Linker linker(masm, "RegExpMatcherStub");
   JitCode* code = linker.newCode(cx, CodeKind::Other);
   if (!code) {
     return nullptr;
@@ -2490,8 +2489,7 @@ JitCode* JitRealm::generateRegExpSearcherStub(JSContext* cx) {
   masm.move32(Imm32(RegExpSearcherResultFailed), result);
   masm.ret();
 
-  Linker linker(masm);
-  AutoFlushICache afc("RegExpSearcherStub");
+  Linker linker(masm, "RegExpSearcherStub");
   JitCode* code = linker.newCode(cx, CodeKind::Other);
   if (!code) {
     return nullptr;
@@ -2633,8 +2631,7 @@ JitCode* JitRealm::generateRegExpTesterStub(JSContext* cx) {
   masm.freeStack(sizeof(irregexp::InputOutputData));
   masm.ret();
 
-  Linker linker(masm);
-  AutoFlushICache afc("RegExpTesterStub");
+  Linker linker(masm, "RegExpTesterStub");
   JitCode* code = linker.newCode(cx, CodeKind::Other);
   if (!code) {
     return nullptr;
@@ -8759,8 +8756,7 @@ JitCode* JitRealm::generateStringConcatStub(JSContext* cx) {
   masm.movePtr(ImmPtr(nullptr), output);
   masm.ret();
 
-  Linker linker(masm);
-  AutoFlushICache afc("StringConcatStub");
+  Linker linker(masm, "StringConcatStub");
   JitCode* code = linker.newCode(cx, CodeKind::Other);
 
 #ifdef JS_ION_PERF
@@ -10427,8 +10423,7 @@ bool CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints) {
     js_free(ionScript);
   });
 
-  Linker linker(masm);
-  AutoFlushICache afc("IonLink");
+  Linker linker(masm, "IonLink");
   JitCode* code = linker.newCode(cx, CodeKind::Ion);
   if (!code) {
     return false;
