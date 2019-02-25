@@ -51,12 +51,14 @@ smime_init()
   mkdir -p ${SMIMEDIR}
   cd ${SMIMEDIR}
   cp ${QADIR}/smime/alice.txt ${SMIMEDIR}
+
+  mkdir tb
 }
 
-smime_sign()
+cms_sign()
 {
-  HASH_CMD="-H ${HASH}"
-  SIG=sig.${HASH}
+  HASH_CMD="-H SHA${HASH}"
+  SIG=sig.SHA${HASH}
 
   echo "$SCRIPTNAME: Signing Detached Message {$HASH} ------------------"
   echo "cmsutil -S -T -N Alice ${HASH_CMD} -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice.d${SIG}"
@@ -102,23 +104,166 @@ smime_sign()
   echo "diff alice.txt alice-ec.data.${HASH}"
   diff alice.txt alice-ec.data.${HASH}
   html_msg $? 0 "Compare Attached Signed Data and Original (ECDSA w/ ${HASH})" "."
-
 }
 
+header_mime_from_to_subject="MIME-Version: 1.0
+From: Alice@bogus.com
+To: Bob@bogus.com
+Subject: "
 
+header_opaque_signed="Content-Type: application/pkcs7-mime; name=smime.p7m;
+    smime-type=signed-data
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename=smime.p7m
+Content-Description: S/MIME Cryptographic Signature
+"
+
+header_enveloped="Content-Type: application/pkcs7-mime; name=smime.p7m;
+    smime-type=enveloped-data
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename=smime.p7m
+Content-Description: S/MIME Encrypted Message
+"
+
+header_clearsigned="Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
+Content-Language: en-US
+"
+
+multipart_start="Content-Type: multipart/signed; protocol=\"application/pkcs7-signature\"; micalg=sha-HASHHASH; boundary=\"------------ms030903020902020502030404\"
+
+This is a cryptographically signed message in MIME format.
+
+--------------ms030903020902020502030404"
+
+multipart_middle="
+--------------ms030903020902020502030404
+Content-Type: application/pkcs7-signature; name=smime.p7s
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename=smime.p7s
+Content-Description: S/MIME Cryptographic Signature
+"
+
+multipart_end="--------------ms030903020902020502030404--
+"
+
+header_plaintext="Content-Type: text/plain
+"
+
+CR=$(printf '\r')
+
+mime_init()
+{
+  OUT="tb/alice.mime"
+  echo "${header_clearsigned}" >>${OUT}
+  cat alice.txt >>${OUT}
+  sed -i"" "s/\$/${CR}/" ${OUT}
+
+  OUT="tb/alice.textplain"
+  echo "${header_plaintext}" >>${OUT}
+  cat alice.txt >>${OUT}
+  sed -i"" "s/\$/${CR}/" ${OUT}
+}
+
+smime_enveloped()
+{
+  ${PROFTOOL} ${BINDIR}/cmsutil -E -r bob@bogus.com -i tb/alice.mime -d ${P_R_ALICEDIR} -p nss -o tb/alice.mime.env
+
+  OUT="tb/alice.env.eml"
+  echo -n "${header_mime_from_to_subject}" >>${OUT}
+  echo "enveloped ${SIG}" >>${OUT}
+  echo "${header_enveloped}" >>${OUT}
+  cat "tb/alice.mime.env" | ${BINDIR}/btoa | sed 's/\r$//' >>${OUT}
+  echo >>${OUT}
+  sed -i"" "s/\$/${CR}/" ${OUT}
+}
+
+smime_signed_enveloped()
+{
+  SIG=sig.SHA${HASH}
+
+  ${PROFTOOL} ${BINDIR}/cmsutil -S -T -N Alice ${HASH_CMD} -i tb/alice.mime -d ${P_R_ALICEDIR} -p nss -o tb/alice.mime.d${SIG}
+
+  OUT="tb/alice.d${SIG}.multipart"
+  echo "${multipart_start}" | sed "s/HASHHASH/${HASH}/" >>${OUT}
+  cat tb/alice.mime | sed 's/\r$//' >>${OUT}
+  echo "${multipart_middle}" >>${OUT}
+  cat tb/alice.mime.d${SIG} | ${BINDIR}/btoa | sed 's/\r$//' >>${OUT}
+  echo "${multipart_end}" >>${OUT}
+
+  ${PROFTOOL} ${BINDIR}/cmsutil -E -r bob@bogus.com -i ${OUT} -d ${P_R_ALICEDIR} -p nss -o ${OUT}.env
+
+  OUT="tb/alice.d${SIG}.multipart.eml"
+  echo -n "${header_mime_from_to_subject}" >>${OUT}
+  echo "clear-signed ${SIG}" >>${OUT}
+  cat "tb/alice.d${SIG}.multipart" >>${OUT}
+  sed -i"" "s/\$/$CR/" ${OUT}
+
+  OUT="tb/alice.d${SIG}.multipart.env.eml"
+  echo -n "${header_mime_from_to_subject}" >>${OUT}
+  echo "enveloped clear-signed $SIG" >>${OUT}
+  echo "$header_enveloped" >>${OUT}
+  cat "tb/alice.d${SIG}.multipart.env" | ${BINDIR}/btoa | sed 's/\r$//' >>${OUT}
+  echo >>${OUT}
+  sed -i"" "s/\$/$CR/" ${OUT}
+
+  ${PROFTOOL} ${BINDIR}/cmsutil -S -N Alice ${HASH_CMD} -i tb/alice.textplain -d ${P_R_ALICEDIR} -p nss -o tb/alice.textplain.${SIG}
+
+  OUT="tb/alice.${SIG}.opaque"
+  echo "$header_opaque_signed" >>${OUT}
+  cat tb/alice.textplain.${SIG} | ${BINDIR}/btoa | sed 's/\r$//' >>${OUT}
+
+  ${PROFTOOL} ${BINDIR}/cmsutil -E -r bob@bogus.com -i ${OUT} -d ${P_R_ALICEDIR} -p nss -o ${OUT}.env
+
+  OUT="tb/alice.${SIG}.opaque.eml"
+  echo -n "${header_mime_from_to_subject}" >>${OUT}
+  echo "opaque-signed $SIG" >>${OUT}
+  cat "tb/alice.${SIG}.opaque" >>${OUT}
+  echo >>${OUT}
+  sed -i"" "s/\$/$CR/" ${OUT}
+
+  OUT="tb/alice.${SIG}.opaque.env.eml"
+  echo -n "${header_mime_from_to_subject}" >>${OUT}
+  echo "enveloped opaque-signed $SIG" >>${OUT}
+  echo "$header_enveloped" >>$OUT
+  cat "tb/alice.${SIG}.opaque.env" | ${BINDIR}/btoa | sed 's/\r$//' >>${OUT}
+  echo >>${OUT}
+  sed -i"" "s/\$/$CR/" ${OUT}
+
+  # bad messages below
+
+  OUT="tb/alice.d${SIG}.multipart.bad.eml"
+  echo -n "${header_mime_from_to_subject}" >>${OUT}
+  echo "BAD clear-signed $SIG" >>${OUT}
+  cat "tb/alice.d${SIG}.multipart" | sed 's/test message from Alice/FAKE message NOT from Alice/' >>${OUT}
+  sed -i"" "s/\$/$CR/" ${OUT}
+
+  OUT="tb/alice.d${SIG}.multipart.mismatch-econtent"
+  echo "${multipart_start}" | sed "s/HASHHASH/$HASH/" >>${OUT}
+  cat tb/alice.mime | sed 's/test message from Alice/FAKE message NOT from Alice/' | sed 's/\r$//' >>${OUT}
+  echo "${multipart_middle}" >>${OUT}
+  cat tb/alice.textplain.${SIG} | ${BINDIR}/btoa | sed 's/\r$//' >>${OUT}
+  echo "${multipart_end}" >>${OUT}
+
+  OUT="tb/alice.d${SIG}.multipart.mismatch-econtent.eml"
+  echo -n "${header_mime_from_to_subject}" >>${OUT}
+  echo "BAD mismatch-econtent $SIG" >>${OUT}
+  cat "tb/alice.d${SIG}.multipart.mismatch-econtent" >>${OUT}
+  sed -i"" "s/\$/$CR/" ${OUT}
+}
 
 smime_p7()
 {
   echo "$SCRIPTNAME: p7 util Data Tests ------------------------------"
   echo "p7env -d ${P_R_ALICEDIR} -r Alice -i alice.txt -o alice_p7.env"
-  ${PROFTOOL} ${BINDIR}/p7env -d ${P_R_ALICEDIR} -r Alice -i alice.txt -o alice.env
+  ${PROFTOOL} ${BINDIR}/p7env -d ${P_R_ALICEDIR} -r Alice -i alice.txt -o alice_p7.env
   html_msg $? 0 "Creating envelope for user Alice" "."
 
-  echo "p7content -d ${P_R_ALICEDIR} -i alice.env -o alice_p7.data"
-  ${PROFTOOL} ${BINDIR}/p7content -d ${P_R_ALICEDIR} -i alice.env -o alice_p7.data -p nss
+  echo "p7content -d ${P_R_ALICEDIR} -i alice_p7.env -o alice_p7.data"
+  ${PROFTOOL} ${BINDIR}/p7content -d ${P_R_ALICEDIR} -i alice_p7.env -o alice_p7.data -p nss
   html_msg $? 0 "Verifying file delivered to user Alice" "."
 
-  sed -e '3,8p' -n alice_p7.data > alice_p7.data.sed
+  sed -e '3,3p' -n alice_p7.data > alice_p7.data.sed
 
   echo "diff alice.txt alice_p7.data.sed"
   diff alice.txt alice_p7.data.sed
@@ -139,15 +284,21 @@ smime_p7()
 ########################################################################
 smime_main()
 {
+  mime_init
+  smime_enveloped
 
-  HASH=SHA1
-  smime_sign
-  HASH=SHA256
-  smime_sign
-  HASH=SHA384
-  smime_sign
-  HASH=SHA512
-  smime_sign
+  HASH="1"
+  cms_sign
+  smime_signed_enveloped
+  HASH="256"
+  cms_sign
+  smime_signed_enveloped
+  HASH="384"
+  cms_sign
+  smime_signed_enveloped
+  HASH="512"
+  cms_sign
+  smime_signed_enveloped
 
   echo "$SCRIPTNAME: Enveloped Data Tests ------------------------------"
   echo "cmsutil -E -r bob@bogus.com -i alice.txt -d ${P_R_ALICEDIR} -p nss \\"
@@ -232,6 +383,16 @@ smime_main()
   diff alice.txt alice.data2
   html_msg $? 0 "Compare Decoded and Original Data" "."
 }
+
+smime_data_tb()
+{
+  ${BINDIR}/pk12util -d ${P_R_ALICEDIR} -o tb/Alice.p12 -n Alice -K nss -W ""
+  ${BINDIR}/pk12util -d ${P_R_BOBDIR} -o tb/Bob.p12 -n Bob -K nss -W ""
+  ${BINDIR}/pk12util -d ${P_R_DAVEDIR} -o tb/Dave.p12 -n Dave -K nss -W ""
+  ${BINDIR}/pk12util -d ${P_R_EVEDIR} -o tb/Eve.p12 -n Eve -K nss -W ""
+  CAOUT=tb/TestCA.pem
+  cat ${P_R_CADIR}/TestCA.ca.cert | sed 's/\r$//' | ${BINDIR}/btoa -w c >> ${CAOUT}
+}
   
 ############################## smime_cleanup ###########################
 # local shell function to finish this script (no exit since it might be
@@ -248,6 +409,7 @@ smime_cleanup()
 
 smime_init
 smime_main
+smime_data_tb
 smime_p7
 smime_cleanup
 

@@ -52,6 +52,7 @@ SSLHashType tls13_GetHash(const sslSocket *ss);
 unsigned int tls13_GetHashSizeForHash(SSLHashType hash);
 unsigned int tls13_GetHashSize(const sslSocket *ss);
 CK_MECHANISM_TYPE tls13_GetHkdfMechanism(sslSocket *ss);
+CK_MECHANISM_TYPE tls13_GetHkdfMechanismForHash(SSLHashType hash);
 SECStatus tls13_ComputeHash(sslSocket *ss, SSL3Hashes *hashes,
                             const PRUint8 *buf, unsigned int len);
 SECStatus tls13_ComputeHandshakeHashes(sslSocket *ss,
@@ -130,6 +131,11 @@ SECStatus tls13_SendKeyUpdate(sslSocket *ss, tls13KeyUpdateRequest request,
 SECStatus SSLExp_KeyUpdate(PRFileDesc *fd, PRBool requestUpdate);
 PRBool tls13_MaybeTls13(sslSocket *ss);
 SSLAEADCipher tls13_GetAead(const ssl3BulkCipherDef *cipherDef);
+SECStatus tls13_AEAD(const ssl3KeyMaterial *keys, PRBool doDecrypt,
+                     unsigned char *out, unsigned int *outlen, unsigned int maxout,
+                     const unsigned char *in, unsigned int inlen,
+                     CK_MECHANISM_TYPE mechanism,
+                     unsigned char *aeadParams, unsigned int aeadParamLength);
 void tls13_SetSpecRecordVersion(sslSocket *ss, ssl3CipherSpec *spec);
 SECStatus SSLExp_SendCertificateRequest(PRFileDesc *fd);
 

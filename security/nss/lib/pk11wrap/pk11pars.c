@@ -384,18 +384,26 @@ static const oidValDef kxOptList[] = {
     { CIPHER_NAME("ECDH-RSA"), SEC_OID_TLS_ECDH_RSA, NSS_USE_ALG_IN_SSL_KX },
 };
 
+static const oidValDef signOptList[] = {
+    /* Signatures */
+    { CIPHER_NAME("DSA"), SEC_OID_ANSIX9_DSA_SIGNATURE,
+      NSS_USE_ALG_IN_SSL_KX | NSS_USE_ALG_IN_CERT_SIGNATURE },
+};
+
 typedef struct {
     const oidValDef *list;
     PRUint32 entries;
     const char *description;
+    PRBool allowEmpty;
 } algListsDef;
 
 static const algListsDef algOptLists[] = {
-    { curveOptList, PR_ARRAY_SIZE(curveOptList), "ECC" },
-    { hashOptList, PR_ARRAY_SIZE(hashOptList), "HASH" },
-    { macOptList, PR_ARRAY_SIZE(macOptList), "MAC" },
-    { cipherOptList, PR_ARRAY_SIZE(cipherOptList), "CIPHER" },
-    { kxOptList, PR_ARRAY_SIZE(kxOptList), "OTHER-KX" },
+    { curveOptList, PR_ARRAY_SIZE(curveOptList), "ECC", PR_FALSE },
+    { hashOptList, PR_ARRAY_SIZE(hashOptList), "HASH", PR_FALSE },
+    { macOptList, PR_ARRAY_SIZE(macOptList), "MAC", PR_FALSE },
+    { cipherOptList, PR_ARRAY_SIZE(cipherOptList), "CIPHER", PR_FALSE },
+    { kxOptList, PR_ARRAY_SIZE(kxOptList), "OTHER-KX", PR_FALSE },
+    { signOptList, PR_ARRAY_SIZE(signOptList), "OTHER-SIGN", PR_TRUE },
 };
 
 static const optionFreeDef sslOptList[] = {
@@ -718,7 +726,7 @@ secmod_sanityCheckCryptoPolicy(void)
     for (i = 0; i < PR_ARRAY_SIZE(algOptLists); i++) {
         const algListsDef *algOptList = &algOptLists[i];
         fprintf(stderr, "NSS-POLICY-%s: NUMBER-OF-%s: %u\n", enabledCount[i] ? sInfo : sWarn, algOptList->description, enabledCount[i]);
-        if (!enabledCount[i]) {
+        if (!enabledCount[i] && !algOptList->allowEmpty) {
             haveWarning = PR_TRUE;
         }
     }
