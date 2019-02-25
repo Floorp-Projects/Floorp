@@ -54,7 +54,6 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
 
   using AutoList = typename Tokenizer::AutoList;
   using AutoTaggedTuple = typename Tokenizer::AutoTaggedTuple;
-  using AutoTuple = typename Tokenizer::AutoTuple;
   using BinFields = typename Tokenizer::BinFields;
   using Chars = typename Tokenizer::Chars;
 
@@ -68,10 +67,7 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
                            UsedNameTracker& usedNames,
                            const JS::ReadOnlyCompileOptions& options,
                            HandleScriptSourceObject sourceObject,
-                           Handle<LazyScript*> lazyScript = nullptr)
-      : BinASTParserBase(cx, alloc, usedNames, sourceObject, lazyScript),
-        options_(options),
-        variableDeclarationKind_(VariableDeclarationKind::Var) {}
+                           Handle<LazyScript*> lazyScript = nullptr);
   ~BinASTParserPerTokenizer() {}
 
   /**
@@ -142,10 +138,10 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
   JS::Result<FunctionNode*> makeEmptyFunctionNode(const size_t start,
                                                   const BinKind kind,
                                                   FunctionBox* funbox);
+
   JS::Result<FunctionNode*> buildFunction(const size_t start,
                                           const BinKind kind, ParseNode* name,
-                                          ListNode* params, ParseNode* body,
-                                          FunctionBox* funbox);
+                                          ListNode* params, ParseNode* body);
   JS::Result<FunctionBox*> buildFunctionBox(GeneratorKind generatorKind,
                                             FunctionAsyncKind functionAsyncKind,
                                             FunctionSyntaxKind syntax,
@@ -206,9 +202,7 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
 
   JSContext* getContext() const override { return cx_; };
 
-  MOZ_MUST_USE bool strictMode() const override {
-    return parseContext_->sc()->strict();
-  }
+  MOZ_MUST_USE bool strictMode() const override { return pc_->sc()->strict(); }
 
   MOZ_MUST_USE bool computeErrorMetadata(ErrorMetadata* err,
                                          const ErrorOffset& offset) override;
@@ -242,7 +236,7 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
   virtual ErrorReporter& errorReporter() override { return *this; }
   virtual const ErrorReporter& errorReporter() const override { return *this; }
 
-  virtual FullParseHandler& astGenerator() override { return factory_; }
+  virtual FullParseHandler& astGenerator() override { return handler_; }
 
  public:
   // Implement ErrorReporter.
@@ -284,6 +278,9 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
   }
 
  protected:
+  Rooted<LazyScript*> lazyScript_;
+  FullParseHandler handler_;
+
   mozilla::Maybe<Tokenizer> tokenizer_;
   VariableDeclarationKind variableDeclarationKind_;
 
@@ -322,9 +319,11 @@ class BinParseContext : public ParseContext {
   template <typename Tok>
   BinParseContext(JSContext* cx, BinASTParserPerTokenizer<Tok>* parser,
                   SharedContext* sc, Directives* newDirectives)
-      : ParseContext(cx, parser->parseContext_, sc, *parser, parser->usedNames_,
+      : ParseContext(cx, parser->pc_, sc, *parser, parser->usedNames_,
                      newDirectives, /* isFull = */ true) {}
 };
+
+void TraceBinParser(JSTracer* trc, JS::AutoGCRooter* parser);
 
 extern template class BinASTParserPerTokenizer<BinTokenReaderMultipart>;
 

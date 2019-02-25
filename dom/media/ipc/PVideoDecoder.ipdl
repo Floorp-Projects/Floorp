@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include "mozilla/dom/MediaIPCUtils.h";
-
 include protocol PVideoDecoderManager;
 include PMediaDecoderParams;
 include LayersSurfaces;
@@ -38,7 +36,7 @@ parent:
   async Drain();
   async Shutdown();
   // To clear the threshold, call with INT64_MIN.
-  async SetSeekThreshold(int64_t time);
+  async SetSeekThreshold(TimeUnit time);
 
   async __delete__();
 
