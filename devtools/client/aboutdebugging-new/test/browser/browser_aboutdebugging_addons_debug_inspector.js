@@ -16,10 +16,6 @@ requestLongerTimeout(2);
 const ADDON_ID = "test-devtools-webextension@mozilla.org";
 const ADDON_NAME = "test-devtools-webextension";
 
-const {
-  BrowserToolboxProcess,
-} = ChromeUtils.import("resource://devtools/client/framework/ToolboxProcess.jsm", {});
-
 // This is a migration from:
 // https://searchfox.org/mozilla-central/source/devtools/client/aboutdebugging/test/browser_addons_debug_webextension_inspector.js
 
@@ -42,29 +38,25 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
   }, document);
   const target = findDebugTargetByText(ADDON_NAME, document);
 
-  info("Setup the toolbox test function as environment variable");
-  const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
-  env.set("MOZ_TOOLBOX_TEST_SCRIPT", "new " + toolboxTestScript);
-  registerCleanupFunction(() => env.set("MOZ_TOOLBOX_TEST_SCRIPT", ""));
-
-  info("Click inspect to open the addon toolbox, wait for toolbox close event");
-  const onToolboxClose = BrowserToolboxProcess.once("close");
+  info("Open a toolbox to debug the addon");
+  const onToolboxReady = gDevTools.once("toolbox-ready");
+  const onToolboxClose = gDevTools.once("toolbox-destroyed");
   const inspectButton = target.querySelector(".js-debug-target-inspect-button");
   inspectButton.click();
-  await onToolboxClose;
+  const toolbox = await onToolboxReady;
+  toolboxTestScript(toolbox);
 
   // The test script will not close the toolbox and will timeout if it fails, so reaching
   // this point in the test is enough to assume the test was successful.
+  info("Wait for the toolbox to close");
+  await onToolboxClose;
   ok(true, "Addon toolbox closed");
 
   await removeTemporaryExtension(ADDON_NAME, document);
   await removeTab(tab);
 });
 
-// Be careful, this JS function is going to be executed in the addon toolbox,
-// which lives in another process. So do not try to use any scope variable!
-function toolboxTestScript() {
-  /* eslint-disable no-undef */
+async function toolboxTestScript(toolbox) {
   toolbox.selectTool("inspector")
     .then(inspector => {
       return inspector.walker.querySelector(inspector.walker.rootNode, "body");
@@ -94,11 +86,10 @@ function toolboxTestScript() {
       dump("Got the expected inline text content in the selected node\n");
       return Promise.resolve();
     })
-    .then(() => toolbox.destroy())
+    .then(() => toolbox.closeToolbox())
     .catch((error) => {
       dump("Error while running code in the browser toolbox process:\n");
       dump(error + "\n");
       dump("stack:\n" + error.stack + "\n");
     });
-  /* eslint-enable no-undef */
 }
