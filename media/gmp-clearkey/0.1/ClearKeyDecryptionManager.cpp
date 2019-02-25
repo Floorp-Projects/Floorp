@@ -50,10 +50,11 @@ class ClearKeyDecryptor : public RefCounted {
   Key mKey;
 };
 
-/* static */ ClearKeyDecryptionManager* ClearKeyDecryptionManager::sInstance =
-    nullptr;
+/* static */
+ClearKeyDecryptionManager* ClearKeyDecryptionManager::sInstance = nullptr;
 
-/* static */ ClearKeyDecryptionManager* ClearKeyDecryptionManager::Get() {
+/* static */
+ClearKeyDecryptionManager* ClearKeyDecryptionManager::Get() {
   if (!sInstance) {
     sInstance = new ClearKeyDecryptionManager();
   }
