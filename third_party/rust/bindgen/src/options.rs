@@ -277,6 +277,10 @@ where
                        Useful when debugging bindgen, using C-Reduce, or when \
                        filing issues. The resulting file will be named \
                        something like `__bindgen.i` or `__bindgen.ii`."),
+            Arg::with_name("no-record-matches")
+                .long("no-record-matches")
+                .help("Do not record matching items in the regex sets. \
+                      This disables reporting of unused items."),
             Arg::with_name("no-rustfmt-bindings")
                 .long("no-rustfmt-bindings")
                 .help("Do not format the generated bindings with rustfmt."),
@@ -315,6 +319,10 @@ where
                 .takes_value(true)
                 .multiple(true)
                 .number_of_values(1),
+            Arg::with_name("enable-function-attribute-detection")
+                .long("enable-function-attribute-detection")
+                .help("Enables detecting unexposed attributes in functions (slow).
+                       Used to generate #[must_use] annotations."),
         ]) // .args()
         .get_matches_from(args);
 
@@ -484,6 +492,10 @@ where
         builder = builder.enable_cxx_namespaces();
     }
 
+    if matches.is_present("enable-function-attribute-detection") {
+        builder = builder.enable_function_attribute_detection();
+    }
+
     if matches.is_present("disable-name-namespacing") {
         builder = builder.disable_name_namespacing();
     }
@@ -581,6 +593,10 @@ where
 
     if matches.is_present("dump-preprocessed-input") {
         builder.dump_preprocessed_input()?;
+    }
+
+    if matches.is_present("no-record-matches") {
+        builder = builder.record_matches(false);
     }
 
     let no_rustfmt_bindings = matches.is_present("no-rustfmt-bindings");

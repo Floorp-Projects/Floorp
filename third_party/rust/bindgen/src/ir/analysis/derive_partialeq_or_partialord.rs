@@ -9,8 +9,7 @@ use ir::item::{Item, IsOpaque};
 use ir::traversal::{EdgeKind, Trace};
 use ir::ty::RUST_DERIVE_IN_ARRAY_LIMIT;
 use ir::ty::{TypeKind, Type};
-use std::collections::HashMap;
-use std::collections::hash_map::Entry;
+use {HashMap, Entry};
 
 /// An analysis that finds for each IR item whether `PartialEq`/`PartialOrd`
 /// cannot be derived.
@@ -326,7 +325,7 @@ impl<'ctx> MonotoneFramework for CannotDerivePartialEqOrPartialOrd<'ctx> {
     fn new(
         ctx: &'ctx BindgenContext,
     ) -> CannotDerivePartialEqOrPartialOrd<'ctx> {
-        let can_derive_partialeq_or_partialord = HashMap::new();
+        let can_derive_partialeq_or_partialord = HashMap::default();
         let dependencies = generate_dependencies(ctx, Self::consider_edge);
 
         CannotDerivePartialEqOrPartialOrd {

@@ -12,7 +12,7 @@
 
 [package]
 name = "clang-sys"
-version = "0.26.1"
+version = "0.26.4"
 authors = ["Kyle Mayes <kyle@mayeses.com>"]
 build = "build.rs"
 links = "clang"
@@ -26,6 +26,7 @@ version = "0.2.11"
 
 [dependencies.libc]
 version = "0.2.39"
+default-features = false
 
 [dependencies.libloading]
 version = "0.5.0"

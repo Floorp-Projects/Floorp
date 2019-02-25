@@ -94,7 +94,7 @@ use ir::item::{Item, ItemSet};
 use ir::template::{TemplateInstantiation, TemplateParameters};
 use ir::traversal::{EdgeKind, Trace};
 use ir::ty::TypeKind;
-use std::collections::{HashMap, HashSet};
+use {HashMap, HashSet};
 
 /// An analysis that finds for each IR item its set of template parameters that
 /// it uses.
@@ -373,8 +373,8 @@ impl<'ctx> MonotoneFramework for UsedTemplateParameters<'ctx> {
     fn new(
         ctx: &'ctx BindgenContext,
     ) -> UsedTemplateParameters<'ctx> {
-        let mut used = HashMap::new();
-        let mut dependencies = HashMap::new();
+        let mut used = HashMap::default();
+        let mut dependencies = HashMap::default();
         let whitelisted_items: HashSet<_> =
             ctx.whitelisted_items().iter().cloned().collect();
 
