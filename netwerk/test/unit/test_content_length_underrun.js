@@ -68,16 +68,16 @@ function run_gzip_test(num)
       throw Cr.NS_ERROR_NO_INTERFACE;
     },
 
-    onStartRequest: function(aRequest) {},
+    onStartRequest: function(aRequest, aContext) {},
 
-    onStopRequest: function(aRequest, aStatusCode) {
+    onStopRequest: function(aRequest, aContext, aStatusCode) {
       // Make sure we catch the error NS_ERROR_NET_PARTIAL_TRANSFER here.
       Assert.equal(aStatusCode, Cr.NS_ERROR_NET_PARTIAL_TRANSFER);
       //  do_test_finished();
         endTests();
     },
 
-    onDataAvailable: function(request, stream, offset, count) {}
+    onDataAvailable: function(request, context, stream, offset, count) {}
   };
 
   let listener = new StreamListener();

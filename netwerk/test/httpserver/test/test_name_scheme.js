@@ -64,22 +64,22 @@ function run_test() {
 
 // TEST DATA
 
-function start_bar_html_(ch) {
+function start_bar_html_(ch, cx) {
   Assert.equal(ch.responseStatus, 200);
 
   Assert.equal(ch.getResponseHeader("Content-Type"), "text/html");
 }
 
-function start_foo_html_(ch) {
+function start_foo_html_(ch, cx) {
   Assert.equal(ch.responseStatus, 404);
 }
 
-function start_normal_file_txt(ch) {
+function start_normal_file_txt(ch, cx) {
   Assert.equal(ch.responseStatus, 200);
   Assert.equal(ch.getResponseHeader("Content-Type"), "text/plain");
 }
 
-function start_folder__file_txt(ch) {
+function start_folder__file_txt(ch, cx) {
   Assert.equal(ch.responseStatus, 200);
   Assert.equal(ch.getResponseHeader("Content-Type"), "text/plain");
 }

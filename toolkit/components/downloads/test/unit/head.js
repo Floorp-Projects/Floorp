@@ -337,20 +337,20 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
       channel.asyncOpen({
         contentListener: null,
 
-        onStartRequest(aRequest) {
+        onStartRequest(aRequest, aContext) {
           let requestChannel = aRequest.QueryInterface(Ci.nsIChannel);
           this.contentListener = gExternalHelperAppService.doContent(
                                        requestChannel.contentType, aRequest, null, true);
-          this.contentListener.onStartRequest(aRequest);
+          this.contentListener.onStartRequest(aRequest, aContext);
         },
 
-        onStopRequest(aRequest, aStatusCode) {
-          this.contentListener.onStopRequest(aRequest, aStatusCode);
+        onStopRequest(aRequest, aContext, aStatusCode) {
+          this.contentListener.onStopRequest(aRequest, aContext, aStatusCode);
         },
 
-        onDataAvailable(aRequest, aInputStream, aOffset,
+        onDataAvailable(aRequest, aContext, aInputStream, aOffset,
                                   aCount) {
-          this.contentListener.onDataAvailable(aRequest, aInputStream,
+          this.contentListener.onDataAvailable(aRequest, aContext, aInputStream,
                                                aOffset, aCount);
         },
       });

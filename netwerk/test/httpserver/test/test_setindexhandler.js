@@ -32,19 +32,19 @@ XPCOMUtils.defineLazyGetter(this, "tests", function() {
 function init(ch) {
   ch.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE; // important!
 }
-function startCustomIndexHandler(ch) {
+function startCustomIndexHandler(ch, cx) {
   Assert.equal(ch.getResponseHeader("Content-Length"), "10");
   srv.setIndexHandler(null);
 }
-function stopCustomIndexHandler(ch, status, data) {
+function stopCustomIndexHandler(ch, cx, status, data) {
   Assert.ok(Components.isSuccessCode(status));
   Assert.equal(String.fromCharCode.apply(null, data), "directory!");
 }
 
-function startDefaultIndexHandler(ch) {
+function startDefaultIndexHandler(ch, cx) {
   Assert.equal(ch.responseStatus, 200);
 }
-function stopDefaultIndexHandler(ch, status, data) {
+function stopDefaultIndexHandler(ch, cx, status, data) {
   Assert.ok(Components.isSuccessCode(status));
 }
 

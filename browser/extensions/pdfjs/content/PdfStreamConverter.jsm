@@ -277,26 +277,26 @@ class ChromeActions {
 
       var listener = {
         extListener: null,
-        onStartRequest(aRequest) {
+        onStartRequest(aRequest, aContext) {
           var loadContext = self.domWindow.docShell
                                 .QueryInterface(Ci.nsILoadContext);
           this.extListener = extHelperAppSvc.doContent(
             (data.isAttachment ? "application/octet-stream" :
                                  "application/pdf"),
             aRequest, loadContext, false);
-          this.extListener.onStartRequest(aRequest);
+          this.extListener.onStartRequest(aRequest, aContext);
         },
-        onStopRequest(aRequest, aStatusCode) {
+        onStopRequest(aRequest, aContext, aStatusCode) {
           if (this.extListener) {
-            this.extListener.onStopRequest(aRequest, aStatusCode);
+            this.extListener.onStopRequest(aRequest, aContext, aStatusCode);
           }
           // Notify the content code we're done downloading.
           if (sendResponse) {
             sendResponse(false);
           }
         },
-        onDataAvailable(aRequest, aDataInputStream, aOffset, aCount) {
-          this.extListener.onDataAvailable(aRequest, aDataInputStream,
+        onDataAvailable(aRequest, aContext, aDataInputStream, aOffset, aCount) {
+          this.extListener.onDataAvailable(aRequest, aContext, aDataInputStream,
                                            aOffset, aCount);
         },
       };
@@ -847,7 +847,7 @@ PdfStreamConverter.prototype = {
   },
 
   // nsIStreamListener::onDataAvailable
-  onDataAvailable(aRequest, aInputStream, aOffset, aCount) {
+  onDataAvailable(aRequest, aContext, aInputStream, aOffset, aCount) {
     if (!this.dataListener) {
       return;
     }
@@ -860,7 +860,7 @@ PdfStreamConverter.prototype = {
   },
 
   // nsIRequestObserver::onStartRequest
-  onStartRequest(aRequest) {
+  onStartRequest(aRequest, aContext) {
     // Setup the request so we can use it below.
     var isHttpRequest = false;
     try {
@@ -939,19 +939,19 @@ PdfStreamConverter.prototype = {
     // request(aRequest) below so we don't overwrite the original channel and
     // trigger an assertion.
     var proxy = {
-      onStartRequest(request) {
-        listener.onStartRequest(aRequest);
+      onStartRequest(request, context) {
+        listener.onStartRequest(aRequest, aContext);
       },
-      onDataAvailable(request, inputStream, offset, count) {
-        listener.onDataAvailable(aRequest, inputStream,
+      onDataAvailable(request, context, inputStream, offset, count) {
+        listener.onDataAvailable(aRequest, aContext, inputStream,
                                  offset, count);
       },
-      onStopRequest(request, statusCode) {
+      onStopRequest(request, context, statusCode) {
         var domWindow = getDOMWindow(channel, resourcePrincipal);
         if (!Components.isSuccessCode(statusCode) || !domWindow) {
           // The request may have been aborted and the document may have been
           // replaced with something that is not PDF.js, abort attaching.
-          listener.onStopRequest(aRequest, statusCode);
+          listener.onStopRequest(aRequest, context, statusCode);
           return;
         }
         var actions;
@@ -971,7 +971,7 @@ PdfStreamConverter.prototype = {
           var findEventManager = new FindEventManager(domWindow);
           findEventManager.bind();
         }
-        listener.onStopRequest(aRequest, statusCode);
+        listener.onStopRequest(aRequest, aContext, statusCode);
 
         if (domWindow.frameElement) {
           var isObjectEmbed = domWindow.frameElement.tagName !== "IFRAME" ||
@@ -999,7 +999,7 @@ PdfStreamConverter.prototype = {
   },
 
   // nsIRequestObserver::onStopRequest
-  onStopRequest(aRequest, aStatusCode) {
+  onStopRequest(aRequest, aContext, aStatusCode) {
     if (!this.dataListener) {
       // Do nothing
       return;

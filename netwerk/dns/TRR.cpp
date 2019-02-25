@@ -473,7 +473,7 @@ TRR::OnPush(nsIHttpChannel *associated, nsIHttpChannel *pushed) {
 }
 
 NS_IMETHODIMP
-TRR::OnStartRequest(nsIRequest *aRequest) {
+TRR::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) {
   LOG(("TRR::OnStartRequest %p %s %d\n", this, mHost.get(), mType));
   mStartTime = TimeStamp::Now();
   return NS_OK;
@@ -966,7 +966,7 @@ nsresult TRR::On200Response() {
 }
 
 NS_IMETHODIMP
-TRR::OnStopRequest(nsIRequest *aRequest,
+TRR::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
                    nsresult aStatusCode) {
   // The dtor will be run after the function returns
   LOG(("TRR:OnStopRequest %p %s %d failed=%d code=%X\n", this, mHost.get(),
@@ -1015,7 +1015,7 @@ TRR::OnStopRequest(nsIRequest *aRequest,
 }
 
 NS_IMETHODIMP
-TRR::OnDataAvailable(nsIRequest *aRequest,
+TRR::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
                      nsIInputStream *aInputStream, uint64_t aOffset,
                      const uint32_t aCount) {
   LOG(("TRR:OnDataAvailable %p %s %d failed=%d aCount=%u\n", this, mHost.get(),

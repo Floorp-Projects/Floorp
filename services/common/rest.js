@@ -386,7 +386,7 @@ RESTRequest.prototype = {
     this.delayTimeout();
   },
 
-  onStopRequest(channel, statusCode) {
+  onStopRequest(channel, context, statusCode) {
     if (this.timeoutTimer) {
       // Clear the abort timer now that the channel is done.
       this.timeoutTimer.clear();
@@ -451,7 +451,7 @@ RESTRequest.prototype = {
     this._deferred.resolve(this.response);
   },
 
-  onDataAvailable(channel, stream, off, count) {
+  onDataAvailable(channel, cb, stream, off, count) {
     // We get an nsIRequest, which doesn't have contentCharset.
     try {
       channel.QueryInterface(Ci.nsIHttpChannel);

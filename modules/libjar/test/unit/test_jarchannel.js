@@ -34,7 +34,7 @@ Listener.prototype = {
     available: -1,
     gotStopRequest: false,
     QueryInterface: ChromeUtils.generateQI(["nsIRequestObserver"]),
-    onDataAvailable(request, stream, offset, count) {
+    onDataAvailable(request, ctx, stream, offset, count) {
         try {
             this.available = stream.available();
             Assert.equal(this.available, count);
@@ -44,10 +44,10 @@ Listener.prototype = {
             do_throw(ex);
         }
     },
-    onStartRequest(request) {
+    onStartRequest(request, ctx) {
         this.gotStartRequest = true;
     },
-    onStopRequest(request, status) {
+    onStopRequest(request, ctx, status) {
         this.gotStopRequest = true;
         Assert.equal(status, 0);
         if (this._callback) {

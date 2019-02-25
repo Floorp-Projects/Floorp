@@ -34,13 +34,13 @@ Listener.prototype = {
         throw Cr.NS_ERROR_NO_INTERFACE;
     },
 
-    onStartRequest: function (request) {
+    onStartRequest: function (request, ctx) {
         this._buffer = "";
     },
-    onDataAvailable: function (request, stream, offset, count) {
+    onDataAvailable: function (request, ctx, stream, offset, count) {
         this._buffer = this._buffer.concat(read_stream(stream, count));
     },
-    onStopRequest: function (request, status) {
+    onStopRequest: function (request, ctx, status) {
         Assert.equal(this._buffer, this._response);
         if (--expectedOnStopRequests == 0)
             do_timeout(10, function() {

@@ -27,7 +27,7 @@ function check_request_header(chan, name, value) {
 var cookieVal = "C1=V1";
 
 var listener = {
-  onStartRequest: function test_onStartR(request) {
+  onStartRequest: function test_onStartR(request, ctx) {
     try {
       var chan = request.QueryInterface(Ci.nsIHttpChannel);
       check_request_header(chan, "Cookie", cookieVal);
@@ -42,7 +42,7 @@ var listener = {
     throw Cr.NS_ERROR_UNEXPECTED;
   },
 
-  onStopRequest: function test_onStopR(request, status) {
+  onStopRequest: function test_onStopR(request, ctx, status) {
     if (this._iteration == 1) {
       run_test_continued();
     } else {

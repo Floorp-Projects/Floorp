@@ -104,7 +104,8 @@ NS_IMPL_ISUPPORTS(PSMContentStreamListener, nsIStreamListener,
                   nsIRequestObserver)
 
 NS_IMETHODIMP
-PSMContentStreamListener::OnStartRequest(nsIRequest* request) {
+PSMContentStreamListener::OnStartRequest(nsIRequest* request,
+                                         nsISupports* context) {
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("CertDownloader::OnStartRequest\n"));
 
   int64_t contentLength = ComputeContentLength(request);
@@ -118,6 +119,7 @@ PSMContentStreamListener::OnStartRequest(nsIRequest* request) {
 
 NS_IMETHODIMP
 PSMContentStreamListener::OnDataAvailable(nsIRequest* request,
+                                          nsISupports* context,
                                           nsIInputStream* aIStream,
                                           uint64_t aSourceOffset,
                                           uint32_t aLength) {
@@ -135,6 +137,7 @@ PSMContentStreamListener::OnDataAvailable(nsIRequest* request,
 
 NS_IMETHODIMP
 PSMContentStreamListener::OnStopRequest(nsIRequest* request,
+                                        nsISupports* context,
                                         nsresult aStatus) {
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("CertDownloader::OnStopRequest\n"));
 
@@ -231,8 +234,8 @@ mozilla::ipc::IPCResult PSMContentDownloaderParent::RecvOnStopRequest(
 
 NS_IMETHODIMP
 PSMContentDownloaderParent::OnStopRequest(nsIRequest* request,
-                                          nsresult code) {
-  nsresult rv = PSMContentStreamListener::OnStopRequest(request, code);
+                                          nsISupports* context, nsresult code) {
+  nsresult rv = PSMContentStreamListener::OnStopRequest(request, context, code);
 
   if (mIPCOpen) {
     mozilla::Unused << Send__delete__(this);
@@ -264,7 +267,8 @@ PSMContentDownloaderChild::PSMContentDownloaderChild() {}
 PSMContentDownloaderChild::~PSMContentDownloaderChild() {}
 
 NS_IMETHODIMP
-PSMContentDownloaderChild::OnStartRequest(nsIRequest* request) {
+PSMContentDownloaderChild::OnStartRequest(nsIRequest* request,
+                                          nsISupports* context) {
   nsCOMPtr<nsIDivertableChannel> divertable = do_QueryInterface(request);
   if (divertable) {
     mozilla::net::ChannelDiverterChild* diverter = nullptr;
@@ -288,6 +292,7 @@ PSMContentDownloaderChild::OnStartRequest(nsIRequest* request) {
 
 NS_IMETHODIMP
 PSMContentDownloaderChild::OnDataAvailable(nsIRequest* request,
+                                           nsISupports* context,
                                            nsIInputStream* aIStream,
                                            uint64_t aSourceOffset,
                                            uint32_t aLength) {
@@ -303,6 +308,7 @@ PSMContentDownloaderChild::OnDataAvailable(nsIRequest* request,
 
 NS_IMETHODIMP
 PSMContentDownloaderChild::OnStopRequest(nsIRequest* request,
+                                         nsISupports* context,
                                          nsresult aStatus) {
   mozilla::Unused << SendOnStopRequest(aStatus);
   return NS_OK;

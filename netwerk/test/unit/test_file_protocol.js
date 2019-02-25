@@ -74,7 +74,7 @@ FileStreamListener.prototype = {
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
-  onStartRequest: function(request) {
+  onStartRequest: function(request, context) {
     if (this._got_onstartrequest)
       do_throw("Got second onStartRequest event!");
     this._got_onstartrequest = true;
@@ -87,7 +87,7 @@ FileStreamListener.prototype = {
     }
   },
 
-  onDataAvailable: function(request, stream, offset, count) {
+  onDataAvailable: function(request, context, stream, offset, count) {
     if (!this._got_onstartrequest)
       do_throw("onDataAvailable without onStartRequest event!");
     if (this._got_onstoprequest)
@@ -98,7 +98,7 @@ FileStreamListener.prototype = {
     this._buffer = this._buffer.concat(read_stream(stream, count));
   },
 
-  onStopRequest: function(request, status) {
+  onStopRequest: function(request, context, status) {
     if (!this._got_onstartrequest)
       do_throw("onStopRequest without onStartRequest event!");
     if (this._got_onstoprequest)

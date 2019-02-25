@@ -93,7 +93,7 @@ function storeData(status, entry) {
   };
 
   converter.onStartRequest(channel, null);
-  converter.onDataAvailable(channel, stream, 0, 0);
+  converter.onDataAvailable(channel, null, stream, 0, 0);
   channel.pending = false;
   converter.onStopRequest(channel, null, Cr.NS_OK);
 }

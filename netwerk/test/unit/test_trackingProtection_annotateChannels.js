@@ -33,7 +33,7 @@ function listener(tracking, priority, throttleable, nextTest) {
   this._nextTest = nextTest;
 }
 listener.prototype = {
-  onStartRequest: function(request) {
+  onStartRequest: function(request, context) {
     Assert.equal(request.QueryInterface(Ci.nsIHttpChannel).isTrackingResource,
                  this._tracking, "tracking flag");
     Assert.equal(request.QueryInterface(Ci.nsISupportsPriority).priority,
@@ -46,8 +46,8 @@ listener.prototype = {
     request.cancel(Cr.NS_ERROR_ABORT);
     this._nextTest();
   },
-  onDataAvailable: (request, stream, offset, count) => {},
-  onStopRequest: (request, status) => {},
+  onDataAvailable: (request, context, stream, offset, count) => {},
+  onStopRequest: (request, context, status) => {},
 };
 
 var httpServer;

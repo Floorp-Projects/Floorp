@@ -1090,7 +1090,7 @@ void HttpChannelParent::DivertOnDataAvailable(const nsCString& data,
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
 
-  rv = mParentListener->OnDataAvailable(mChannel, stringStream, offset,
+  rv = mParentListener->OnDataAvailable(mChannel, nullptr, stringStream, offset,
                                         count);
   stringStream->Close();
   if (NS_FAILED(rv)) {
@@ -1149,7 +1149,7 @@ void HttpChannelParent::DivertOnStopRequest(const nsresult& statusCode) {
   }
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
-  mParentListener->OnStopRequest(mChannel, status);
+  mParentListener->OnStopRequest(mChannel, nullptr, status);
 }
 
 class DivertCompleteEvent : public MainThreadChannelEvent {
@@ -1309,7 +1309,7 @@ static void GetTimingAttributes(HttpBaseChannel* aChannel,
 }
 
 NS_IMETHODIMP
-HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
+HttpChannelParent::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
   nsresult rv;
 
   LOG(("HttpChannelParent::OnStartRequest [this=%p, aRequest=%p]\n", this,
@@ -1479,7 +1479,7 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-HttpChannelParent::OnStopRequest(nsIRequest* aRequest,
+HttpChannelParent::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
                                  nsresult aStatusCode) {
   LOG(("HttpChannelParent::OnStopRequest: [this=%p aRequest=%p status=%" PRIx32
        "]\n",
@@ -1565,7 +1565,7 @@ HttpChannelParent::OnStopRequest(nsIRequest* aRequest,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-HttpChannelParent::OnDataAvailable(nsIRequest* aRequest,
+HttpChannelParent::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
                                    nsIInputStream* aInputStream,
                                    uint64_t aOffset, uint32_t aCount) {
   LOG(("HttpChannelParent::OnDataAvailable [this=%p aRequest=%p offset=%" PRIu64
@@ -2239,7 +2239,7 @@ void HttpChannelParent::StartDiversion() {
     AutoEventEnqueuer ensureSerialDispatch(mEventQ);
 
     // Call OnStartRequest for the "DivertTo" listener.
-    nsresult rv = mDivertListener->OnStartRequest(mChannel);
+    nsresult rv = mDivertListener->OnStartRequest(mChannel, nullptr);
     if (NS_FAILED(rv)) {
       if (mChannel) {
         mChannel->Cancel(rv);
@@ -2330,13 +2330,13 @@ void HttpChannelParent::NotifyDiversionFailed(nsresult aErrorCode) {
   // call it here if it hasn't already been called.
   if (!mDivertedOnStartRequest) {
     mChannel->ForcePending(true);
-    mParentListener->OnStartRequest(mChannel);
+    mParentListener->OnStartRequest(mChannel, nullptr);
     mChannel->ForcePending(false);
   }
   // If the channel is pending, it will call OnStopRequest itself; otherwise, do
   // it here.
   if (!isPending) {
-    mParentListener->OnStopRequest(mChannel, aErrorCode);
+    mParentListener->OnStopRequest(mChannel, nullptr, aErrorCode);
   }
 
   if (!mIPCClosed) {

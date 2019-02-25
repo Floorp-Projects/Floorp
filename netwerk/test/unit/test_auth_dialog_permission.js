@@ -146,7 +146,7 @@ Test.prototype = {
   _contentPolicy: Ci.nsIContentPolicy.TYPE_OTHER,
   _expectedCode: 200,
 
-  onStartRequest: function(request) {
+  onStartRequest: function(request, ctx) {
     try {
       if (!Components.isSuccessCode(request.status)) {
         do_throw("Channel should have a success code!");
@@ -167,11 +167,11 @@ Test.prototype = {
     throw Cr.NS_ERROR_ABORT;
   },
 
-  onDataAvailable: function(request, stream, offset, count) {
+  onDataAvailable: function(request, context, stream, offset, count) {
     do_throw("Should not get any data!");
   },
 
-  onStopRequest: function(request, status) {
+  onStopRequest: function(request, ctx, status) {
     Assert.equal(status, Cr.NS_ERROR_ABORT);
 
     // Clear the auth cache.

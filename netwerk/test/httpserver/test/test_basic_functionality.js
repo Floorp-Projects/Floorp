@@ -58,7 +58,7 @@ function commonCheck(ch) {
   Assert.ok(!ch.isPrivateResponse());
 }
 
-function start_objHandler(ch) {
+function start_objHandler(ch, cx) {
   commonCheck(ch);
 
   Assert.equal(ch.responseStatus, 200);
@@ -73,7 +73,7 @@ function start_objHandler(ch) {
             reqMin.value == respMin.value);
 }
 
-function start_functionHandler(ch) {
+function start_functionHandler(ch, cx) {
   commonCheck(ch);
 
   Assert.equal(ch.responseStatus, 404);
@@ -88,14 +88,14 @@ function start_functionHandler(ch) {
   Assert.ok(respMaj.value == 1 && respMin.value == 1);
 }
 
-function start_non_existent_path(ch) {
+function start_non_existent_path(ch, cx) {
   commonCheck(ch);
 
   Assert.equal(ch.responseStatus, 404);
   Assert.ok(!ch.requestSucceeded);
 }
 
-function start_lots_of_headers(ch) {
+function start_lots_of_headers(ch, cx) {
   commonCheck(ch);
 
   Assert.equal(ch.responseStatus, 200);

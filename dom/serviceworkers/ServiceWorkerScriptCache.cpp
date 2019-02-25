@@ -789,7 +789,7 @@ void CompareNetwork::Abort() {
 }
 
 NS_IMETHODIMP
-CompareNetwork::OnStartRequest(nsIRequest* aRequest) {
+CompareNetwork::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mState == Finished) {
@@ -843,7 +843,7 @@ nsresult CompareNetwork::SetPrincipalInfo(nsIChannel* aChannel) {
 }
 
 NS_IMETHODIMP
-CompareNetwork::OnStopRequest(nsIRequest* aRequest,
+CompareNetwork::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
                               nsresult aStatusCode) {
   // Nothing to do here!
   return NS_OK;

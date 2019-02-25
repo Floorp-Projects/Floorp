@@ -32,7 +32,7 @@ function registerConverter() {
     },
 
     // nsIRequestObserver
-    onStartRequest(aRequest) {
+    onStartRequest(aRequest, aContext) {
       let channel = NetUtil.newChannel({
         uri: "resource://testing-common/form_basic.html",
         loadUsingSystemPrincipal: true,

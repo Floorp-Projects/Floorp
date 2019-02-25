@@ -72,7 +72,7 @@ ChannelListener.prototype = {
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
-  onStartRequest: function(request) {
+  onStartRequest: function(request, context) {
     try {
       if (this._got_onstartrequest)
         do_throw("Got second onStartRequest event!");
@@ -129,7 +129,7 @@ ChannelListener.prototype = {
     }
   },
 
-  onDataAvailable: function(request, stream, offset, count) {
+  onDataAvailable: function(request, context, stream, offset, count) {
     try {
       let current = Date.now();
 
@@ -159,7 +159,7 @@ ChannelListener.prototype = {
     }
   },
 
-  onStopRequest: function(request, status) {
+  onStopRequest: function(request, context, status) {
     try {
       var success = Components.isSuccessCode(status);
       if (!this._got_onstartrequest)

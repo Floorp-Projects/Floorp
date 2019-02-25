@@ -211,12 +211,12 @@ nsresult nsManifestCheck::Begin() {
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsManifestCheck::OnStartRequest(nsIRequest *aRequest) {
+nsManifestCheck::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsManifestCheck::OnDataAvailable(nsIRequest *aRequest,
+nsManifestCheck::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
                                  nsIInputStream *aStream, uint64_t aOffset,
                                  uint32_t aCount) {
   uint32_t bytesRead;
@@ -225,7 +225,7 @@ nsManifestCheck::OnDataAvailable(nsIRequest *aRequest,
 }
 
 NS_IMETHODIMP
-nsManifestCheck::OnStopRequest(nsIRequest *aRequest,
+nsManifestCheck::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
                                nsresult aStatus) {
   nsAutoCString manifestHash;
   if (NS_SUCCEEDED(aStatus)) {
@@ -391,7 +391,8 @@ nsresult nsOfflineCacheUpdateItem::Cancel() {
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsOfflineCacheUpdateItem::OnStartRequest(nsIRequest *aRequest) {
+nsOfflineCacheUpdateItem::OnStartRequest(nsIRequest *aRequest,
+                                         nsISupports *aContext) {
   mState = LoadStatus::RECEIVING;
 
   return NS_OK;
@@ -399,6 +400,7 @@ nsOfflineCacheUpdateItem::OnStartRequest(nsIRequest *aRequest) {
 
 NS_IMETHODIMP
 nsOfflineCacheUpdateItem::OnDataAvailable(nsIRequest *aRequest,
+                                          nsISupports *aContext,
                                           nsIInputStream *aStream,
                                           uint64_t aOffset, uint32_t aCount) {
   uint32_t bytesRead = 0;
@@ -414,6 +416,7 @@ nsOfflineCacheUpdateItem::OnDataAvailable(nsIRequest *aRequest,
 
 NS_IMETHODIMP
 nsOfflineCacheUpdateItem::OnStopRequest(nsIRequest *aRequest,
+                                        nsISupports *aContext,
                                         nsresult aStatus) {
   if (LOG_ENABLED()) {
     LOG(("%p: Done fetching offline item %s [status=%" PRIx32 "]\n", this,
@@ -1035,7 +1038,8 @@ void nsOfflineManifestItem::ReadStrictFileOriginPolicyPref() {
 }
 
 NS_IMETHODIMP
-nsOfflineManifestItem::OnStartRequest(nsIRequest *aRequest) {
+nsOfflineManifestItem::OnStartRequest(nsIRequest *aRequest,
+                                      nsISupports *aContext) {
   nsresult rv;
 
   nsCOMPtr<nsIHttpChannel> channel = do_QueryInterface(aRequest, &rv);
@@ -1055,11 +1059,12 @@ nsOfflineManifestItem::OnStartRequest(nsIRequest *aRequest) {
   rv = GetOldManifestContentHash(aRequest);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return nsOfflineCacheUpdateItem::OnStartRequest(aRequest);
+  return nsOfflineCacheUpdateItem::OnStartRequest(aRequest, aContext);
 }
 
 NS_IMETHODIMP
 nsOfflineManifestItem::OnDataAvailable(nsIRequest *aRequest,
+                                       nsISupports *aContext,
                                        nsIInputStream *aStream,
                                        uint64_t aOffset, uint32_t aCount) {
   uint32_t bytesRead = 0;
@@ -1082,7 +1087,7 @@ nsOfflineManifestItem::OnDataAvailable(nsIRequest *aRequest,
 
 NS_IMETHODIMP
 nsOfflineManifestItem::OnStopRequest(nsIRequest *aRequest,
-                                     nsresult aStatus) {
+                                     nsISupports *aContext, nsresult aStatus) {
   if (mBytesRead == 0) {
     // We didn't need to read (because LOAD_ONLY_IF_MODIFIED was
     // specified).
@@ -1099,7 +1104,7 @@ nsOfflineManifestItem::OnStopRequest(nsIRequest *aRequest,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return nsOfflineCacheUpdateItem::OnStopRequest(aRequest, aStatus);
+  return nsOfflineCacheUpdateItem::OnStopRequest(aRequest, aContext, aStatus);
 }
 
 //-----------------------------------------------------------------------------

@@ -36,7 +36,7 @@ nsDownloader::Init(nsIDownloadObserver *observer, nsIFile *location) {
 }
 
 NS_IMETHODIMP
-nsDownloader::OnStartRequest(nsIRequest *request) {
+nsDownloader::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
   nsresult rv;
   if (!mLocation) {
     nsCOMPtr<nsIFile> location;
@@ -67,14 +67,14 @@ nsDownloader::OnStartRequest(nsIRequest *request) {
 }
 
 NS_IMETHODIMP
-nsDownloader::OnStopRequest(nsIRequest *request,
+nsDownloader::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
                             nsresult status) {
   if (mSink) {
     mSink->Close();
     mSink = nullptr;
   }
 
-  mObserver->OnDownloadComplete(this, request, nullptr, status, mLocation);
+  mObserver->OnDownloadComplete(this, request, ctxt, status, mLocation);
   mObserver = nullptr;
 
   return NS_OK;
@@ -92,7 +92,7 @@ nsresult nsDownloader::ConsumeData(nsIInputStream *in, void *closure,
 }
 
 NS_IMETHODIMP
-nsDownloader::OnDataAvailable(nsIRequest *request,
+nsDownloader::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
                               nsIInputStream *inStr, uint64_t sourceOffset,
                               uint32_t count) {
   uint32_t n;

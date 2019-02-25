@@ -43,28 +43,28 @@ var progressCallback = {
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
-  onStartRequest: function(request) {
+  onStartRequest: function(request, context) {
     Assert.equal(this._last_callback_handled, TYPE_ONSTATUS);
     this._got_onstartrequest = true;
     this._last_callback_handled = TYPE_ONSTARTREQUEST;
 
     this._listener = new ChannelListener(checkRequest, request);
-    this._listener.onStartRequest(request);
+    this._listener.onStartRequest(request, context);
   },
 
-  onDataAvailable: function(request, data, offset, count) {
+  onDataAvailable: function(request, context, data, offset, count) {
     Assert.equal(this._last_callback_handled, TYPE_ONPROGRESS);
     this._last_callback_handled = TYPE_ONDATAAVAILABLE;
 
-    this._listener.onDataAvailable(request, data, offset, count);
+    this._listener.onDataAvailable(request, context, data, offset, count);
   },
 
-  onStopRequest: function(request, status) {
+  onStopRequest: function(request, context, status) {
     Assert.equal(this._last_callback_handled, TYPE_ONDATAAVAILABLE);
     Assert.ok(this._got_onstatus_after_onstartrequest);
     this._last_callback_handled = TYPE_ONSTOPREQUEST;
 
-    this._listener.onStopRequest(request, status);
+    this._listener.onStopRequest(request, context, status);
     delete this._listener;
   },
 

@@ -44,12 +44,12 @@ function run_test() {
 
 // TEST DATA
 
-function start_test(ch) {
+function start_test(ch, cx) {
   Assert.equal(ch.responseStatusText, "QI Tests Passed");
   Assert.equal(ch.responseStatus, 200);
 }
 
-function start_sjs_qi(ch) {
+function start_sjs_qi(ch, cx) {
   Assert.equal(ch.responseStatusText, "SJS QI Tests Passed");
   Assert.equal(ch.responseStatus, 200);
 }

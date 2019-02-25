@@ -68,7 +68,7 @@ ImageListener::ImageListener(ImageDocument* aDocument)
 ImageListener::~ImageListener() {}
 
 NS_IMETHODIMP
-ImageListener::OnStartRequest(nsIRequest* request) {
+ImageListener::OnStartRequest(nsIRequest* request, nsISupports* ctxt) {
   NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
 
   ImageDocument* imgDoc = static_cast<ImageDocument*>(mDocument.get());
@@ -124,17 +124,17 @@ ImageListener::OnStartRequest(nsIRequest* request) {
     imageLoader->LoadImageWithChannel(channel, getter_AddRefs(mNextStream));
   }
 
-  return MediaDocumentStreamListener::OnStartRequest(request);
+  return MediaDocumentStreamListener::OnStartRequest(request, ctxt);
 }
 
 NS_IMETHODIMP
-ImageListener::OnStopRequest(nsIRequest* aRequest,
+ImageListener::OnStopRequest(nsIRequest* aRequest, nsISupports* aCtxt,
                              nsresult aStatus) {
   ImageDocument* imgDoc = static_cast<ImageDocument*>(mDocument.get());
   nsContentUtils::DispatchChromeEvent(imgDoc, ToSupports(imgDoc),
                                       NS_LITERAL_STRING("ImageContentLoaded"),
                                       CanBubble::eYes, Cancelable::eYes);
-  return MediaDocumentStreamListener::OnStopRequest(aRequest, aStatus);
+  return MediaDocumentStreamListener::OnStopRequest(aRequest, aCtxt, aStatus);
 }
 
 ImageDocument::ImageDocument()

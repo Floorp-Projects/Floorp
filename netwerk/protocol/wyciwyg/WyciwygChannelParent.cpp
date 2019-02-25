@@ -279,7 +279,8 @@ mozilla::ipc::IPCResult WyciwygChannelParent::RecvCancel(
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-WyciwygChannelParent::OnStartRequest(nsIRequest* aRequest) {
+WyciwygChannelParent::OnStartRequest(nsIRequest* aRequest,
+                                     nsISupports* aContext) {
   LOG(("WyciwygChannelParent::OnStartRequest [this=%p]\n", this));
 
   nsresult rv;
@@ -329,7 +330,7 @@ WyciwygChannelParent::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-WyciwygChannelParent::OnStopRequest(nsIRequest* aRequest,
+WyciwygChannelParent::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
                                     nsresult aStatusCode) {
   LOG(("WyciwygChannelParent::OnStopRequest: [this=%p status=%" PRIu32 "]\n",
        this, static_cast<uint32_t>(aStatusCode)));
@@ -347,6 +348,7 @@ WyciwygChannelParent::OnStopRequest(nsIRequest* aRequest,
 
 NS_IMETHODIMP
 WyciwygChannelParent::OnDataAvailable(nsIRequest* aRequest,
+                                      nsISupports* aContext,
                                       nsIInputStream* aInputStream,
                                       uint64_t aOffset, uint32_t aCount) {
   LOG(("WyciwygChannelParent::OnDataAvailable [this=%p]\n", this));

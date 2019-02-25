@@ -74,10 +74,10 @@ var startupComplete = new Promise(resolve => startupCompleteResolver = resolve);
 
 function proxyChannelListener() { }
 proxyChannelListener.prototype = {
-  onStartRequest(request) {
+  onStartRequest(request, context) {
     startupCompleteResolver();
   },
-  onStopRequest(request, status) { },
+  onStopRequest(request, context, status) { },
 };
 
 var resolveCallback = SpecialPowers.wrapCallbackObject({

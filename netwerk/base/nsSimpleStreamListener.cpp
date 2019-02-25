@@ -22,14 +22,15 @@ NS_IMPL_ISUPPORTS(nsSimpleStreamListener, nsISimpleStreamListener,
 //----------------------------------------------------------------------------
 //
 NS_IMETHODIMP
-nsSimpleStreamListener::OnStartRequest(nsIRequest *aRequest) {
-  return mObserver ? mObserver->OnStartRequest(aRequest) : NS_OK;
+nsSimpleStreamListener::OnStartRequest(nsIRequest *aRequest,
+                                       nsISupports *aContext) {
+  return mObserver ? mObserver->OnStartRequest(aRequest, aContext) : NS_OK;
 }
 
 NS_IMETHODIMP
 nsSimpleStreamListener::OnStopRequest(nsIRequest *request,
-                                      nsresult aStatus) {
-  return mObserver ? mObserver->OnStopRequest(request, aStatus)
+                                      nsISupports *aContext, nsresult aStatus) {
+  return mObserver ? mObserver->OnStopRequest(request, aContext, aStatus)
                    : NS_OK;
 }
 
@@ -40,6 +41,7 @@ nsSimpleStreamListener::OnStopRequest(nsIRequest *request,
 //
 NS_IMETHODIMP
 nsSimpleStreamListener::OnDataAvailable(nsIRequest *request,
+                                        nsISupports *aContext,
                                         nsIInputStream *aSource,
                                         uint64_t aOffset, uint32_t aCount) {
   uint32_t writeCount;

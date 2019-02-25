@@ -1069,13 +1069,13 @@ nsresult nsParser::BuildModel() {
   These methods are used to talk to the netlib system...
  *******************************************************************/
 
-nsresult nsParser::OnStartRequest(nsIRequest* request) {
+nsresult nsParser::OnStartRequest(nsIRequest* request, nsISupports* aContext) {
   MOZ_ASSERT(eNone == mParserContext->mStreamListenerState,
              "Parser's nsIStreamListener API was not setup "
              "correctly in constructor.");
 
   if (mObserver) {
-    mObserver->OnStartRequest(request);
+    mObserver->OnStartRequest(request, aContext);
   }
   mParserContext->mStreamListenerState = eOnStart;
   mParserContext->mAutoDetectStatus = eUnknownDetect;
@@ -1259,7 +1259,7 @@ static nsresult ParserWriteFunc(nsIInputStream* in, void* closure,
   return result;
 }
 
-nsresult nsParser::OnDataAvailable(nsIRequest* request,
+nsresult nsParser::OnDataAvailable(nsIRequest* request, nsISupports* aContext,
                                    nsIInputStream* pIStream,
                                    uint64_t sourceOffset, uint32_t aLength) {
   MOZ_ASSERT((eOnStart == mParserContext->mStreamListenerState ||
@@ -1330,7 +1330,7 @@ nsresult nsParser::OnDataAvailable(nsIRequest* request,
  *  This is called by the networking library once the last block of data
  *  has been collected from the net.
  */
-nsresult nsParser::OnStopRequest(nsIRequest* request,
+nsresult nsParser::OnStopRequest(nsIRequest* request, nsISupports* aContext,
                                  nsresult status) {
   nsresult rv = NS_OK;
 
@@ -1362,7 +1362,7 @@ nsresult nsParser::OnStopRequest(nsIRequest* request,
   // XXX Should we wait to notify our observers as well if the
   // parser isn't yet enabled?
   if (mObserver) {
-    mObserver->OnStopRequest(request, status);
+    mObserver->OnStopRequest(request, aContext, status);
   }
 
   return rv;

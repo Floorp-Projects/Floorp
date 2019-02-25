@@ -198,7 +198,8 @@ nsresult nsDocumentOpenInfo::Prepare() {
   return rv;
 }
 
-NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest* request) {
+NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest* request,
+                                                 nsISupports* aCtxt) {
   LOG(("[0x%p] nsDocumentOpenInfo::OnStartRequest", this));
   MOZ_ASSERT(request);
   if (!request) {
@@ -296,7 +297,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest* request) {
     return NS_OK;
   }
 
-  rv = DispatchContent(request, nullptr);
+  rv = DispatchContent(request, aCtxt);
 
   LOG(("  After dispatch, m_targetStreamListener: 0x%p, rv: 0x%08" PRIX32,
        m_targetStreamListener.get(), static_cast<uint32_t>(rv)));
@@ -308,7 +309,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest* request) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (m_targetStreamListener)
-    rv = m_targetStreamListener->OnStartRequest(request);
+    rv = m_targetStreamListener->OnStartRequest(request, aCtxt);
 
   LOG(("  OnStartRequest returning: 0x%08" PRIX32, static_cast<uint32_t>(rv)));
 
@@ -333,7 +334,7 @@ nsDocumentOpenInfo::CheckListenerChain() {
 }
 
 NS_IMETHODIMP
-nsDocumentOpenInfo::OnDataAvailable(nsIRequest* request,
+nsDocumentOpenInfo::OnDataAvailable(nsIRequest* request, nsISupports* aCtxt,
                                     nsIInputStream* inStr,
                                     uint64_t sourceOffset, uint32_t count) {
   // if we have retarged to the end stream listener, then forward the call....
@@ -342,12 +343,13 @@ nsDocumentOpenInfo::OnDataAvailable(nsIRequest* request,
   nsresult rv = NS_OK;
 
   if (m_targetStreamListener)
-    rv = m_targetStreamListener->OnDataAvailable(request, inStr,
+    rv = m_targetStreamListener->OnDataAvailable(request, aCtxt, inStr,
                                                  sourceOffset, count);
   return rv;
 }
 
 NS_IMETHODIMP nsDocumentOpenInfo::OnStopRequest(nsIRequest* request,
+                                                nsISupports* aCtxt,
                                                 nsresult aStatus) {
   LOG(("[0x%p] nsDocumentOpenInfo::OnStopRequest", this));
 
@@ -358,7 +360,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStopRequest(nsIRequest* request,
     // OnStartRequest after this... reset state.
     m_targetStreamListener = nullptr;
     mContentType.Truncate();
-    listener->OnStopRequest(request, aStatus);
+    listener->OnStopRequest(request, aCtxt, aStatus);
   }
 
   // Remember...

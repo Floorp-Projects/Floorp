@@ -1373,12 +1373,14 @@ NS_IMPL_ISUPPORTS(XULDocument::CachedChromeStreamListener, nsIRequestObserver,
                   nsIStreamListener)
 
 NS_IMETHODIMP
-XULDocument::CachedChromeStreamListener::OnStartRequest(nsIRequest* request) {
+XULDocument::CachedChromeStreamListener::OnStartRequest(nsIRequest* request,
+                                                        nsISupports* acontext) {
   return NS_ERROR_PARSED_DATA_CACHED;
 }
 
 NS_IMETHODIMP
 XULDocument::CachedChromeStreamListener::OnStopRequest(nsIRequest* request,
+                                                       nsISupports* aContext,
                                                        nsresult aStatus) {
   if (!mProtoLoaded) return NS_OK;
 
@@ -1387,6 +1389,7 @@ XULDocument::CachedChromeStreamListener::OnStopRequest(nsIRequest* request,
 
 NS_IMETHODIMP
 XULDocument::CachedChromeStreamListener::OnDataAvailable(nsIRequest* request,
+                                                         nsISupports* aContext,
                                                          nsIInputStream* aInStr,
                                                          uint64_t aSourceOffset,
                                                          uint32_t aCount) {

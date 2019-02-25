@@ -53,13 +53,15 @@ NS_IMPL_ISUPPORTS(ChannelMediaResource::Listener, nsIRequestObserver,
                   nsIStreamListener, nsIChannelEventSink, nsIInterfaceRequestor,
                   nsIThreadRetargetableStreamListener)
 
-nsresult ChannelMediaResource::Listener::OnStartRequest(nsIRequest* aRequest) {
+nsresult ChannelMediaResource::Listener::OnStartRequest(nsIRequest* aRequest,
+                                                        nsISupports* aContext) {
   MOZ_ASSERT(NS_IsMainThread());
   if (!mResource) return NS_OK;
   return mResource->OnStartRequest(aRequest, mOffset);
 }
 
 nsresult ChannelMediaResource::Listener::OnStopRequest(nsIRequest* aRequest,
+                                                       nsISupports* aContext,
                                                        nsresult aStatus) {
   MOZ_ASSERT(NS_IsMainThread());
   if (!mResource) return NS_OK;
@@ -67,7 +69,7 @@ nsresult ChannelMediaResource::Listener::OnStopRequest(nsIRequest* aRequest,
 }
 
 nsresult ChannelMediaResource::Listener::OnDataAvailable(
-    nsIRequest* aRequest, nsIInputStream* aStream,
+    nsIRequest* aRequest, nsISupports* aContext, nsIInputStream* aStream,
     uint64_t aOffset, uint32_t aCount) {
   // This might happen off the main thread.
   RefPtr<ChannelMediaResource> res;

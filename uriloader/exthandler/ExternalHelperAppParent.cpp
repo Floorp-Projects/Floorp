@@ -138,7 +138,7 @@ mozilla::ipc::IPCResult ExternalHelperAppParent::RecvOnStartRequest(
 
   mEntityID = entityID;
   mPending = true;
-  mStatus = mListener->OnStartRequest(this);
+  mStatus = mListener->OnStartRequest(this, nullptr);
   return IPC_OK();
 }
 
@@ -155,7 +155,7 @@ mozilla::ipc::IPCResult ExternalHelperAppParent::RecvOnDataAvailable(
       getter_AddRefs(stringStream), data.get(), count, NS_ASSIGNMENT_DEPEND);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create dependent string!");
   mStatus =
-      mListener->OnDataAvailable(this, stringStream, offset, count);
+      mListener->OnDataAvailable(this, nullptr, stringStream, offset, count);
 
   return IPC_OK();
 }
@@ -167,7 +167,7 @@ mozilla::ipc::IPCResult ExternalHelperAppParent::RecvOnStopRequest(
 
   mPending = false;
   mListener->OnStopRequest(
-      this,
+      this, nullptr,
       (NS_SUCCEEDED(code) && NS_FAILED(mStatus)) ? mStatus : code);
   Delete();
   return IPC_OK();
@@ -191,24 +191,24 @@ mozilla::ipc::IPCResult ExternalHelperAppParent::RecvDivertToParentUsing(
 //
 
 NS_IMETHODIMP
-ExternalHelperAppParent::OnDataAvailable(nsIRequest* request,
+ExternalHelperAppParent::OnDataAvailable(nsIRequest* request, nsISupports* ctx,
                                          nsIInputStream* input, uint64_t offset,
                                          uint32_t count) {
   MOZ_ASSERT(mDiverted);
-  return mListener->OnDataAvailable(request, input, offset, count);
+  return mListener->OnDataAvailable(request, ctx, input, offset, count);
 }
 
 NS_IMETHODIMP
-ExternalHelperAppParent::OnStartRequest(nsIRequest* request) {
+ExternalHelperAppParent::OnStartRequest(nsIRequest* request, nsISupports* ctx) {
   MOZ_ASSERT(mDiverted);
-  return mListener->OnStartRequest(request);
+  return mListener->OnStartRequest(request, ctx);
 }
 
 NS_IMETHODIMP
-ExternalHelperAppParent::OnStopRequest(nsIRequest* request,
+ExternalHelperAppParent::OnStopRequest(nsIRequest* request, nsISupports* ctx,
                                        nsresult status) {
   MOZ_ASSERT(mDiverted);
-  nsresult rv = mListener->OnStopRequest(request, status);
+  nsresult rv = mListener->OnStopRequest(request, ctx, status);
   Delete();
   return rv;
 }

@@ -65,16 +65,16 @@ Test.prototype = {
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
-  onStartRequest: function(request) {
+  onStartRequest: function(request, context) {
     var cachingChannel = request.QueryInterface(Ci.nsICacheInfoChannel);
     this._isFromCache = request.isPending() && cachingChannel.isFromCache();
   },
 
-  onDataAvailable: function(request, stream, offset, count) {
+  onDataAvailable: function(request, context, stream, offset, count) {
     this._buffer = this._buffer.concat(read_stream(stream, count));
   },
 
-  onStopRequest: function(request, status) {
+  onStopRequest: function(request, context, status) {
     Assert.equal(Components.isSuccessCode(status), this.expectSuccess);
     Assert.equal(this._isFromCache, this.readFromCache);
     Assert.equal(gHitServer, this.hitServer);

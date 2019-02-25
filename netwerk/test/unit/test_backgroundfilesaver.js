@@ -171,7 +171,7 @@ function promiseCopyToSaver(aSourceString, aSaverOutputStream, aCloseWhenDone) {
                 aCloseWhenDone);
     copier.asyncCopy({
       onStartRequest: function () { },
-      onStopRequest: function (aRequest, aStatusCode)
+      onStopRequest: function (aRequest, aContext, aStatusCode)
       {
         if (Components.isSuccessCode(aStatusCode)) {
           resolve();
@@ -206,24 +206,24 @@ function promisePumpToSaver(aSourceString, aSaverStreamListener,
                .createInstance(Ci.nsIInputStreamPump);
     pump.init(inputStream, 0, 0, true);
     pump.asyncRead({
-      onStartRequest: function PPTS_onStartRequest(aRequest)
+      onStartRequest: function PPTS_onStartRequest(aRequest, aContext)
       {
-        aSaverStreamListener.onStartRequest(aRequest);
+        aSaverStreamListener.onStartRequest(aRequest, aContext);
       },
-      onStopRequest: function PPTS_onStopRequest(aRequest, aStatusCode)
+      onStopRequest: function PPTS_onStopRequest(aRequest, aContext, aStatusCode)
       {
-        aSaverStreamListener.onStopRequest(aRequest, aStatusCode);
+        aSaverStreamListener.onStopRequest(aRequest, aContext, aStatusCode);
         if (Components.isSuccessCode(aStatusCode)) {
           resolve();
         } else {
           reject(new Components.Exception(aResult));
         }
       },
-      onDataAvailable: function PPTS_onDataAvailable(aRequest,
+      onDataAvailable: function PPTS_onDataAvailable(aRequest, aContext,
                                                      aInputStream, aOffset,
                                                      aCount)
       {
-        aSaverStreamListener.onDataAvailable(aRequest, aInputStream,
+        aSaverStreamListener.onDataAvailable(aRequest, aContext, aInputStream,
                                              aOffset, aCount);
       },
     }, null);

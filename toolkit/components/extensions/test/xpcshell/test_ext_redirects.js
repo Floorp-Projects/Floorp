@@ -33,11 +33,11 @@ function onStopListener(channel) {
       onDataAvailable(...args) {
         orig.onDataAvailable(...args);
       },
-      onStartRequest(request) {
-        orig.onStartRequest(request);
+      onStartRequest(request, context) {
+        orig.onStartRequest(request, context);
       },
-      onStopRequest(request, statusCode) {
-        orig.onStopRequest(request, statusCode);
+      onStopRequest(request, context, statusCode) {
+        orig.onStopRequest(request, context, statusCode);
         let URI = this.getFinalURI(request.QueryInterface(Ci.nsIChannel));
         resolve(URI && URI.spec);
       },

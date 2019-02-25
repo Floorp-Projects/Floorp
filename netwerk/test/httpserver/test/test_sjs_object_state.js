@@ -57,7 +57,7 @@ function run_test() {
  */
 
 var initialStarted = false;
-function initialStart(ch) {
+function initialStart(ch, cx) {
   dumpn("*** initialStart");
 
   if (initialStarted)
@@ -70,7 +70,7 @@ function initialStart(ch) {
 }
 
 var initialStopped = false;
-function initialStop(ch, status, data) {
+function initialStop(ch, cx, status, data) {
   dumpn("*** initialStop");
 
   Assert.equal(data.map(function(v) { return String.fromCharCode(v); }).join(""),
@@ -93,7 +93,7 @@ function initialStop(ch, status, data) {
 }
 
 var intermediateStarted = false;
-function intermediateStart(ch) {
+function intermediateStart(ch, cx) {
   dumpn("*** intermediateStart");
 
   Assert.notEqual(srv.getObjectState("object-state-test"), null);
@@ -107,7 +107,7 @@ function intermediateStart(ch) {
 }
 
 var intermediateStopped = false;
-function intermediateStop(ch, status, data) {
+function intermediateStop(ch, cx, status, data) {
   dumpn("*** intermediateStop");
 
   Assert.equal(data.map(function(v) { return String.fromCharCode(v); }).join(""),
@@ -129,7 +129,7 @@ function intermediateStop(ch, status, data) {
 }
 
 var triggerStarted = false;
-function triggerStart(ch) {
+function triggerStart(ch, cx) {
   dumpn("*** triggerStart");
 
   if (!initialStarted)
@@ -145,7 +145,7 @@ function triggerStart(ch) {
 }
 
 var triggerStopped = false;
-function triggerStop(ch, status, data) {
+function triggerStop(ch, cx, status, data) {
   dumpn("*** triggerStop");
 
   Assert.equal(data.map(function(v) { return String.fromCharCode(v); }).join(""),
@@ -221,7 +221,7 @@ function HTTPTestLoader(path, start, stop) {
 }
 HTTPTestLoader.prototype =
   {
-    onStartRequest(request) {
+    onStartRequest(request, cx) {
       dumpn("*** HTTPTestLoader.onStartRequest for " + this._path);
 
       var ch = request.QueryInterface(Ci.nsIHttpChannel)
@@ -229,7 +229,7 @@ HTTPTestLoader.prototype =
 
       try {
         try {
-          this._start(ch);
+          this._start(ch, cx);
         } catch (e) {
           do_throw(this._path + ": error in onStartRequest: " + e);
         }
@@ -238,19 +238,19 @@ HTTPTestLoader.prototype =
               "called...");
       }
     },
-    onDataAvailable(request, inputStream, offset, count) {
+    onDataAvailable(request, cx, inputStream, offset, count) {
       dumpn("*** HTTPTestLoader.onDataAvailable for " + this._path);
 
       Array.prototype.push.apply(this._data,
                                  makeBIS(inputStream).readByteArray(count));
     },
-    onStopRequest(request, status) {
+    onStopRequest(request, cx, status) {
       dumpn("*** HTTPTestLoader.onStopRequest for " + this._path);
 
       var ch = request.QueryInterface(Ci.nsIHttpChannel)
                       .QueryInterface(Ci.nsIHttpChannelInternal);
 
-      this._stop(ch, status, this._data);
+      this._stop(ch, cx, status, this._data);
     },
     QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
   };

@@ -103,13 +103,13 @@ function HttpResponseListener(id)
 
 HttpResponseListener.prototype =
 {
-  onStartRequest: function (request) {
+  onStartRequest: function (request, ctx) {
   },
 
-  onDataAvailable: function (request, stream, off, cnt) {
+  onDataAvailable: function (request, ctx, stream, off, cnt) {
   },
 
-  onStopRequest: function (request, status) {
+  onStopRequest: function (request, ctx, status) {
     log("STOP id=" + this.id);
     do_test_finished();
   }

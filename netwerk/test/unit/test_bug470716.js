@@ -23,9 +23,9 @@ var test_nr;
 
 var copyObserver =
 {
-  onStartRequest: function(request) { },
+  onStartRequest: function(request, context) { },
 
-  onStopRequest: function(request, statusCode)
+  onStopRequest: function(request, cx, statusCode)
   {
     // check status code
     Assert.equal(statusCode, test_result);

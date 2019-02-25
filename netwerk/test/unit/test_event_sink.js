@@ -52,7 +52,7 @@ var eventsink = {
 var listener = {
   expectSinkCall: true,
 
-  onStartRequest: function test_onStartR(request) {
+  onStartRequest: function test_onStartR(request, ctx) {
     try {
       // Commenting out this check pending resolution of bug 255119
       //if (Components.isSuccessCode(request.status))
@@ -83,7 +83,7 @@ var listener = {
     do_throw("Should not get any data!");
   },
 
-  onStopRequest: function test_onStopR(request, status) {
+  onStopRequest: function test_onStopR(request, ctx, status) {
     if (this._iteration <= 2) {
       run_test_continued();
     } else {

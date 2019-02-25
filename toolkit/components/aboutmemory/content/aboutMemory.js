@@ -670,7 +670,7 @@ function loadMemoryReportsFromFile(aFilename, aTitleNote, aFn) {
     converter.asyncConvertData("gzip", "uncompressed", {
       data: [],
       onStartRequest(aR, aC) {},
-      onDataAvailable(aR, aStream, aO, aCount) {
+      onDataAvailable(aR, aC, aStream, aO, aCount) {
         let bi = new nsBinaryStream(aStream);
         this.data.push(bi.readBytes(aCount));
       },

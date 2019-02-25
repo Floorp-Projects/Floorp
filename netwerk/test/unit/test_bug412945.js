@@ -6,10 +6,10 @@ var httpserv;
 function TestListener() {
 }
 
-TestListener.prototype.onStartRequest = function(request) {
+TestListener.prototype.onStartRequest = function(request, context) {
 }
 
-TestListener.prototype.onStopRequest = function(request, status) {
+TestListener.prototype.onStopRequest = function(request, context, status) {
   httpserv.stop(do_test_finished);
 }
 

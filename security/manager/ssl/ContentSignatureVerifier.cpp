@@ -520,13 +520,15 @@ nsresult ContentSignatureVerifier::ParseContentSignatureHeader(
 /* nsIStreamListener implementation */
 
 NS_IMETHODIMP
-ContentSignatureVerifier::OnStartRequest(nsIRequest* aRequest) {
+ContentSignatureVerifier::OnStartRequest(nsIRequest* aRequest,
+                                         nsISupports* aContext) {
   MOZ_ASSERT(NS_IsMainThread());
   return NS_OK;
 }
 
 NS_IMETHODIMP
 ContentSignatureVerifier::OnStopRequest(nsIRequest* aRequest,
+                                        nsISupports* aContext,
                                         nsresult aStatus) {
   MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIContentSignatureReceiverCallback> callback;
@@ -566,6 +568,7 @@ ContentSignatureVerifier::OnStopRequest(nsIRequest* aRequest,
 
 NS_IMETHODIMP
 ContentSignatureVerifier::OnDataAvailable(nsIRequest* aRequest,
+                                          nsISupports* aContext,
                                           nsIInputStream* aInputStream,
                                           uint64_t aOffset, uint32_t aCount) {
   MOZ_ASSERT(NS_IsMainThread());

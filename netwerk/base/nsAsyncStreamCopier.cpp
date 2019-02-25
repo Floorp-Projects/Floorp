@@ -112,7 +112,7 @@ void nsAsyncStreamCopier::Complete(nsresult status) {
   if (observer) {
     LOG(("  calling OnStopRequest [status=%" PRIx32 "]\n",
          static_cast<uint32_t>(status)));
-    observer->OnStopRequest(AsRequest(), status);
+    observer->OnStopRequest(AsRequest(), ctx, status);
   }
 }
 
@@ -328,7 +328,7 @@ nsAsyncStreamCopier::AsyncCopy(nsIRequestObserver *observer, nsISupports *ctx) {
   mIsPending = true;
 
   if (mObserver) {
-    rv = mObserver->OnStartRequest(AsRequest());
+    rv = mObserver->OnStartRequest(AsRequest(), nullptr);
     if (NS_FAILED(rv)) Cancel(rv);
   }
 

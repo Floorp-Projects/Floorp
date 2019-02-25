@@ -105,7 +105,8 @@ nsresult nsPluginStreamListenerPeer::Initialize(
 }
 
 NS_IMETHODIMP
-nsPluginStreamListenerPeer::OnStartRequest(nsIRequest* request) {
+nsPluginStreamListenerPeer::OnStartRequest(nsIRequest* request,
+                                           nsISupports* aContext) {
   nsresult rv = NS_OK;
   AUTO_PROFILER_LABEL("nsPluginStreamListenerPeer::OnStartRequest", OTHER);
 
@@ -280,25 +281,25 @@ class PluginContextProxy final : public nsIStreamListener {
   }
 
   NS_IMETHOD
-  OnDataAvailable(nsIRequest* aRequest,
+  OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
                   nsIInputStream* aIStream, uint64_t aSourceOffset,
                   uint32_t aLength) override {
     // Proxy OnDataAvailable using the internal context
-    return mListener->OnDataAvailable(aRequest, aIStream,
+    return mListener->OnDataAvailable(aRequest, mContext, aIStream,
                                       aSourceOffset, aLength);
   }
 
   NS_IMETHOD
-  OnStartRequest(nsIRequest* aRequest) override {
+  OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) override {
     // Proxy OnStartRequest using the internal context
-    return mListener->OnStartRequest(aRequest);
+    return mListener->OnStartRequest(aRequest, mContext);
   }
 
   NS_IMETHOD
-  OnStopRequest(nsIRequest* aRequest,
+  OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
                 nsresult aStatusCode) override {
     // Proxy OnStopRequest using the inernal context
-    return mListener->OnStopRequest(aRequest, aStatusCode);
+    return mListener->OnStopRequest(aRequest, mContext, aStatusCode);
   }
 
  private:
@@ -320,7 +321,7 @@ nsresult nsPluginStreamListenerPeer::SetStreamOffset(int32_t value) {
 }
 
 NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(
-    nsIRequest* request, nsIInputStream* aIStream,
+    nsIRequest* request, nsISupports* aContext, nsIInputStream* aIStream,
     uint64_t sourceOffset, uint32_t aLength) {
   if (mRequests.IndexOfObject(request) == -1) {
     MOZ_ASSERT(false, "Received OnDataAvailable for untracked request.");
@@ -354,6 +355,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(
 }
 
 NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest* request,
+                                                        nsISupports* aContext,
                                                         nsresult aStatus) {
   nsresult rv = NS_OK;
 

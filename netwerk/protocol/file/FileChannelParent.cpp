@@ -77,7 +77,7 @@ FileChannelParent::Delete() {
 void FileChannelParent::ActorDestroy(ActorDestroyReason why) {}
 
 NS_IMETHODIMP
-FileChannelParent::OnStartRequest(nsIRequest *aRequest) {
+FileChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) {
   // We don't have a way to prevent nsBaseChannel from calling AsyncOpen on
   // the created nsDataChannel. We don't have anywhere to send the data in the
   // parent, so abort the binding.
@@ -85,7 +85,7 @@ FileChannelParent::OnStartRequest(nsIRequest *aRequest) {
 }
 
 NS_IMETHODIMP
-FileChannelParent::OnStopRequest(nsIRequest *aRequest,
+FileChannelParent::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
                                  nsresult aStatusCode) {
   // See above.
   MOZ_ASSERT(NS_FAILED(aStatusCode));
@@ -93,7 +93,7 @@ FileChannelParent::OnStopRequest(nsIRequest *aRequest,
 }
 
 NS_IMETHODIMP
-FileChannelParent::OnDataAvailable(nsIRequest *aRequest,
+FileChannelParent::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
                                    nsIInputStream *aInputStream,
                                    uint64_t aOffset, uint32_t aCount) {
   // See above.

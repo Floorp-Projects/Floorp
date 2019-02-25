@@ -23,7 +23,7 @@ var listener = {
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
-  onStartRequest: function(request) {
+  onStartRequest: function(request, ctx) {
     this._lastEvent = Date.now();
     request.QueryInterface(Ci.nsIRequest);
 
@@ -35,7 +35,7 @@ var listener = {
     do_timeout(RESUME_DELAY + 1000, function() { request.resume(); });
   },
 
-  onDataAvailable: function(request, stream, offset, count) {
+  onDataAvailable: function(request, context, stream, offset, count) {
     Assert.ok(Date.now() - this._lastEvent >= MIN_TIME_DIFFERENCE);
     read_stream(stream, count);
 
@@ -48,7 +48,7 @@ var listener = {
     this._gotData = true;
   },
 
-  onStopRequest: function(request, status) {
+  onStopRequest: function(request, ctx, status) {
     Assert.ok(this._gotData);
     httpserv.stop(do_test_finished);
   }

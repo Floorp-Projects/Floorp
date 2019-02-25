@@ -67,10 +67,10 @@ XPCOMUtils.defineLazyGetter(this, "tests", function() {
 // /no/setstatusline
 function noSetstatusline(metadata, response) {
 }
-function startNoSetStatusLine(ch) {
+function startNoSetStatusLine(ch, cx) {
   checkStatusLine(ch, 1, 1, 200, "OK");
 }
-function stop(ch, status, data) {
+function stop(ch, cx, status, data) {
   Assert.ok(Components.isSuccessCode(status));
 }
 
@@ -79,7 +79,7 @@ function stop(ch, status, data) {
 function http1_0(metadata, response) {
   response.setStatusLine("1.0", 200, "OK");
 }
-function startHttp1_0(ch) {
+function startHttp1_0(ch, cx) {
   checkStatusLine(ch, 1, 0, 200, "OK");
 }
 
@@ -88,7 +88,7 @@ function startHttp1_0(ch) {
 function http1_1(metadata, response) {
   response.setStatusLine("1.1", 200, "OK");
 }
-function startHttp1_1(ch) {
+function startHttp1_1(ch, cx) {
   checkStatusLine(ch, 1, 1, 200, "OK");
 }
 
@@ -101,7 +101,7 @@ function invalidVersion(metadata, response) {
     response.setHeader("Passed", "true", false);
   }
 }
-function startPassedTrue(ch) {
+function startPassedTrue(ch, cx) {
   checkStatusLine(ch, 1, 1, 200, "OK");
   Assert.equal(ch.getResponseHeader("Passed"), "true");
 }
@@ -131,7 +131,7 @@ function invalidDescription(metadata, response) {
 function crazyCode(metadata, response) {
   response.setStatusLine("1.1", 617, "Crazy");
 }
-function startCrazy(ch) {
+function startCrazy(ch, cx) {
   checkStatusLine(ch, 1, 1, 617, "Crazy");
 }
 
@@ -140,7 +140,7 @@ function startCrazy(ch) {
 function nullVersion(metadata, response) {
   response.setStatusLine(null, 255, "NULL");
 }
-function startNullVersion(ch) {
+function startNullVersion(ch, cx) {
   // currently, this server implementation defaults to 1.1
   checkStatusLine(ch, 1, 1, 255, "NULL");
 }

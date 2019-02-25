@@ -1149,24 +1149,25 @@ class InterceptFailedOnStop : public nsIStreamListener {
       : mNext(arg), mChannel(chan) {}
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  NS_IMETHOD OnStartRequest(nsIRequest* aRequest) override {
-    return mNext->OnStartRequest(aRequest);
+  NS_IMETHOD OnStartRequest(nsIRequest* aRequest,
+                            nsISupports* aContext) override {
+    return mNext->OnStartRequest(aRequest, aContext);
   }
 
-  NS_IMETHOD OnStopRequest(nsIRequest* aRequest,
+  NS_IMETHOD OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
                            nsresult aStatusCode) override {
     if (NS_FAILED(aStatusCode) && NS_SUCCEEDED(mChannel->mStatus)) {
       LOG(("HttpBaseChannel::InterceptFailedOnStop %p seting status %" PRIx32,
            mChannel, static_cast<uint32_t>(aStatusCode)));
       mChannel->mStatus = aStatusCode;
     }
-    return mNext->OnStopRequest(aRequest, aStatusCode);
+    return mNext->OnStopRequest(aRequest, aContext, aStatusCode);
   }
 
-  NS_IMETHOD OnDataAvailable(nsIRequest* aRequest,
+  NS_IMETHOD OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
                              nsIInputStream* aInputStream, uint64_t aOffset,
                              uint32_t aCount) override {
-    return mNext->OnDataAvailable(aRequest, aInputStream, aOffset,
+    return mNext->OnDataAvailable(aRequest, aContext, aInputStream, aOffset,
                                   aCount);
   }
 };
@@ -3293,7 +3294,7 @@ void HttpBaseChannel::DoNotifyListener() {
 
   if (mListener && !mOnStartRequestCalled) {
     nsCOMPtr<nsIStreamListener> listener = mListener;
-    listener->OnStartRequest(this);
+    listener->OnStartRequest(this, nullptr);
 
     mOnStartRequestCalled = true;
   }
@@ -3305,7 +3306,7 @@ void HttpBaseChannel::DoNotifyListener() {
 
   if (mListener && !mOnStopRequestCalled) {
     nsCOMPtr<nsIStreamListener> listener = mListener;
-    listener->OnStopRequest(this, mStatus);
+    listener->OnStopRequest(this, nullptr, mStatus);
 
     mOnStopRequestCalled = true;
   }

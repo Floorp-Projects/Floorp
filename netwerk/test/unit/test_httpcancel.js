@@ -39,7 +39,7 @@ var observer = {
 };
 
 var listener = {
-  onStartRequest: function test_onStartR(request) {
+  onStartRequest: function test_onStartR(request, ctx) {
     Assert.equal(request.status, Cr.NS_BINDING_ABORTED);
 
     // ENSURE_CALLED_BEFORE_CONNECT: setting referrer should now fail
@@ -67,7 +67,7 @@ var listener = {
     do_throw("Should not get any data!");
   },
 
-  onStopRequest: function test_onStopR(request, status) {
+  onStopRequest: function test_onStopR(request, ctx, status) {
     httpserv.stop(do_test_finished);
   }
 };

@@ -34,30 +34,32 @@ nsHtml5StreamListener::CheckListenerChain() {
 }
 
 NS_IMETHODIMP
-nsHtml5StreamListener::OnStartRequest(nsIRequest* aRequest) {
+nsHtml5StreamListener::OnStartRequest(nsIRequest* aRequest,
+                                      nsISupports* aContext) {
   if (MOZ_UNLIKELY(!mDelegate)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  return mDelegate->OnStartRequest(aRequest);
+  return mDelegate->OnStartRequest(aRequest, aContext);
 }
 
 NS_IMETHODIMP
 nsHtml5StreamListener::OnStopRequest(nsIRequest* aRequest,
-                                     nsresult aStatus) {
+                                     nsISupports* aContext, nsresult aStatus) {
   if (MOZ_UNLIKELY(!mDelegate)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  return mDelegate->OnStopRequest(aRequest, aStatus);
+  return mDelegate->OnStopRequest(aRequest, aContext, aStatus);
 }
 
 NS_IMETHODIMP
 nsHtml5StreamListener::OnDataAvailable(nsIRequest* aRequest,
+                                       nsISupports* aContext,
                                        nsIInputStream* aInStream,
                                        uint64_t aSourceOffset,
                                        uint32_t aLength) {
   if (MOZ_UNLIKELY(!mDelegate)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  return mDelegate->OnDataAvailable(aRequest, aInStream,
+  return mDelegate->OnDataAvailable(aRequest, aContext, aInStream,
                                     aSourceOffset, aLength);
 }

@@ -417,7 +417,8 @@ nsresult nsCORSListenerProxy::Init(nsIChannel* aChannel,
 }
 
 NS_IMETHODIMP
-nsCORSListenerProxy::OnStartRequest(nsIRequest* aRequest) {
+nsCORSListenerProxy::OnStartRequest(nsIRequest* aRequest,
+                                    nsISupports* aContext) {
   MOZ_ASSERT(mInited, "nsCORSListenerProxy has not been initialized properly");
   nsresult rv = CheckRequestApproved(aRequest);
   mRequestApproved = NS_SUCCEEDED(rv);
@@ -453,7 +454,7 @@ nsCORSListenerProxy::OnStartRequest(nsIRequest* aRequest) {
       MutexAutoLock lock(mMutex);
       listener = mOuterListener;
     }
-    listener->OnStartRequest(aRequest);
+    listener->OnStartRequest(aRequest, aContext);
 
     // Reason for NS_ERROR_DOM_BAD_URI already logged in CheckRequestApproved()
     return NS_ERROR_DOM_BAD_URI;
@@ -464,7 +465,7 @@ nsCORSListenerProxy::OnStartRequest(nsIRequest* aRequest) {
     MutexAutoLock lock(mMutex);
     listener = mOuterListener;
   }
-  return listener->OnStartRequest(aRequest);
+  return listener->OnStartRequest(aRequest, aContext);
 }
 
 namespace {
@@ -603,7 +604,7 @@ nsresult nsCORSListenerProxy::CheckRequestApproved(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-nsCORSListenerProxy::OnStopRequest(nsIRequest* aRequest,
+nsCORSListenerProxy::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
                                    nsresult aStatusCode) {
   MOZ_ASSERT(mInited, "nsCORSListenerProxy has not been initialized properly");
   nsCOMPtr<nsIStreamListener> listener;
@@ -611,7 +612,7 @@ nsCORSListenerProxy::OnStopRequest(nsIRequest* aRequest,
     MutexAutoLock lock(mMutex);
     listener = mOuterListener.forget();
   }
-  nsresult rv = listener->OnStopRequest(aRequest, aStatusCode);
+  nsresult rv = listener->OnStopRequest(aRequest, aContext, aStatusCode);
   mOuterNotificationCallbacks = nullptr;
   mHttpChannel = nullptr;
   return rv;
@@ -619,6 +620,7 @@ nsCORSListenerProxy::OnStopRequest(nsIRequest* aRequest,
 
 NS_IMETHODIMP
 nsCORSListenerProxy::OnDataAvailable(nsIRequest* aRequest,
+                                     nsISupports* aContext,
                                      nsIInputStream* aInputStream,
                                      uint64_t aOffset, uint32_t aCount) {
   // NB: This can be called on any thread!  But we're guaranteed that it is
@@ -635,7 +637,7 @@ nsCORSListenerProxy::OnDataAvailable(nsIRequest* aRequest,
     MutexAutoLock lock(mMutex);
     listener = mOuterListener;
   }
-  return listener->OnDataAvailable(aRequest, aInputStream, aOffset,
+  return listener->OnDataAvailable(aRequest, aContext, aInputStream, aOffset,
                                    aCount);
 }
 
@@ -1208,7 +1210,8 @@ void nsCORSPreflightListener::AddResultToCache(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-nsCORSPreflightListener::OnStartRequest(nsIRequest* aRequest) {
+nsCORSPreflightListener::OnStartRequest(nsIRequest* aRequest,
+                                        nsISupports* aContext) {
 #ifdef DEBUG
   {
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
@@ -1233,6 +1236,7 @@ nsCORSPreflightListener::OnStartRequest(nsIRequest* aRequest) {
 
 NS_IMETHODIMP
 nsCORSPreflightListener::OnStopRequest(nsIRequest* aRequest,
+                                       nsISupports* aContext,
                                        nsresult aStatus) {
   mCallback = nullptr;
   return NS_OK;
@@ -1242,6 +1246,7 @@ nsCORSPreflightListener::OnStopRequest(nsIRequest* aRequest,
 
 NS_IMETHODIMP
 nsCORSPreflightListener::OnDataAvailable(nsIRequest* aRequest,
+                                         nsISupports* ctxt,
                                          nsIInputStream* inStr,
                                          uint64_t sourceOffset,
                                          uint32_t count) {

@@ -362,7 +362,7 @@ nsresult gfxSVGGlyphsDocument::ParseDocument(const uint8_t *aBuffer,
     return NS_ERROR_FAILURE;
   }
 
-  rv = listener->OnStartRequest(channel);
+  rv = listener->OnStartRequest(channel, nullptr /* aContext */);
   if (NS_FAILED(rv)) {
     channel->Cancel(rv);
   }
@@ -370,7 +370,7 @@ nsresult gfxSVGGlyphsDocument::ParseDocument(const uint8_t *aBuffer,
   nsresult status;
   channel->GetStatus(&status);
   if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(status)) {
-    rv = listener->OnDataAvailable(channel, stream, 0,
+    rv = listener->OnDataAvailable(channel, nullptr /* aContext */, stream, 0,
                                    aBufLen);
     if (NS_FAILED(rv)) {
       channel->Cancel(rv);
@@ -378,7 +378,7 @@ nsresult gfxSVGGlyphsDocument::ParseDocument(const uint8_t *aBuffer,
     channel->GetStatus(&status);
   }
 
-  rv = listener->OnStopRequest(channel, status);
+  rv = listener->OnStopRequest(channel, nullptr /* aContext */, status);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
   document.swap(mDocument);

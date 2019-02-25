@@ -923,7 +923,8 @@ nsresult ChannelWrapper::RequestListener::Init() {
 }
 
 NS_IMETHODIMP
-ChannelWrapper::RequestListener::OnStartRequest(nsIRequest* request) {
+ChannelWrapper::RequestListener::OnStartRequest(nsIRequest* request,
+                                                nsISupports* aCtxt) {
   MOZ_ASSERT(mOrigStreamListener, "Should have mOrigStreamListener");
 
   mChannelWrapper->mChannelEntry = nullptr;
@@ -931,11 +932,12 @@ ChannelWrapper::RequestListener::OnStartRequest(nsIRequest* request) {
   mChannelWrapper->ErrorCheck();
   mChannelWrapper->FireEvent(NS_LITERAL_STRING("start"));
 
-  return mOrigStreamListener->OnStartRequest(request);
+  return mOrigStreamListener->OnStartRequest(request, aCtxt);
 }
 
 NS_IMETHODIMP
 ChannelWrapper::RequestListener::OnStopRequest(nsIRequest* request,
+                                               nsISupports* aCtxt,
                                                nsresult aStatus) {
   MOZ_ASSERT(mOrigStreamListener, "Should have mOrigStreamListener");
 
@@ -943,16 +945,17 @@ ChannelWrapper::RequestListener::OnStopRequest(nsIRequest* request,
   mChannelWrapper->ErrorCheck();
   mChannelWrapper->FireEvent(NS_LITERAL_STRING("stop"));
 
-  return mOrigStreamListener->OnStopRequest(request, aStatus);
+  return mOrigStreamListener->OnStopRequest(request, aCtxt, aStatus);
 }
 
 NS_IMETHODIMP
 ChannelWrapper::RequestListener::OnDataAvailable(nsIRequest* request,
+                                                 nsISupports* aCtxt,
                                                  nsIInputStream* inStr,
                                                  uint64_t sourceOffset,
                                                  uint32_t count) {
   MOZ_ASSERT(mOrigStreamListener, "Should have mOrigStreamListener");
-  return mOrigStreamListener->OnDataAvailable(request, inStr,
+  return mOrigStreamListener->OnDataAvailable(request, aCtxt, inStr,
                                               sourceOffset, count);
 }
 

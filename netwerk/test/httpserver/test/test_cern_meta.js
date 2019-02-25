@@ -40,28 +40,28 @@ function run_test() {
 
 // TEST DATA
 
-function start_testBoth(ch) {
+function start_testBoth(ch, cx) {
   Assert.equal(ch.responseStatus, 501);
   Assert.equal(ch.responseStatusText, "Unimplemented");
 
   Assert.equal(ch.getResponseHeader("Content-Type"), "text/plain");
 }
 
-function start_test_ctype_override_txt(ch) {
+function start_test_ctype_override_txt(ch, cx) {
   Assert.equal(ch.getResponseHeader("Content-Type"), "text/html");
 }
 
-function start_test_status_override_html(ch) {
+function start_test_status_override_html(ch, cx) {
   Assert.equal(ch.responseStatus, 404);
   Assert.equal(ch.responseStatusText, "Can't Find This");
 }
 
-function start_test_status_override_nodesc_txt(ch) {
+function start_test_status_override_nodesc_txt(ch, cx) {
   Assert.equal(ch.responseStatus, 732);
   Assert.equal(ch.responseStatusText, "");
 }
 
-function start_caret_test_txt_(ch) {
+function start_caret_test_txt_(ch, cx) {
   Assert.equal(ch.responseStatus, 500);
   Assert.equal(ch.responseStatusText, "This Isn't A Server Error");
 

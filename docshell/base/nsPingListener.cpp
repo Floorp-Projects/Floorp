@@ -328,12 +328,12 @@ nsresult nsPingListener::StartTimeout(DocGroup* aDocGroup) {
 }
 
 NS_IMETHODIMP
-nsPingListener::OnStartRequest(nsIRequest* aRequest) {
+nsPingListener::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPingListener::OnDataAvailable(nsIRequest* aRequest,
+nsPingListener::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
                                 nsIInputStream* aStream, uint64_t aOffset,
                                 uint32_t aCount) {
   uint32_t result;
@@ -341,7 +341,7 @@ nsPingListener::OnDataAvailable(nsIRequest* aRequest,
 }
 
 NS_IMETHODIMP
-nsPingListener::OnStopRequest(nsIRequest* aRequest,
+nsPingListener::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
                               nsresult aStatus) {
   mLoadGroup = nullptr;
 

@@ -53,14 +53,14 @@ XPCOMUtils.defineLazyGetter(this, "tests", function() {
   return _tests;
 });
 
-function start_thrower(ch) {
+function start_thrower(ch, cx) {
   Assert.equal(ch.responseStatus, 500);
   Assert.ok(!ch.requestSucceeded);
 
   gStartCount++;
 }
 
-function start_last(ch) {
+function start_last(ch, cx) {
   Assert.equal(ch.responseStatus, 200);
   Assert.ok(ch.requestSucceeded);
 

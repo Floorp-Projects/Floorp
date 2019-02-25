@@ -6,9 +6,9 @@ const BUGID = "331825";
 
 function TestListener() {
 }
-TestListener.prototype.onStartRequest = function(request) {
+TestListener.prototype.onStartRequest = function(request, context) {
 }
-TestListener.prototype.onStopRequest = function(request, status) {
+TestListener.prototype.onStopRequest = function(request, context, status) {
   var channel = request.QueryInterface(Ci.nsIHttpChannel);
   Assert.equal(channel.responseStatus, 304);
 

@@ -1008,7 +1008,8 @@ InterceptedHttpChannel::OnRedirectVerifyCallback(nsresult rv) {
 }
 
 NS_IMETHODIMP
-InterceptedHttpChannel::OnStartRequest(nsIRequest* aRequest) {
+InterceptedHttpChannel::OnStartRequest(nsIRequest* aRequest,
+                                       nsISupports* aContext) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mProgressSink) {
@@ -1020,14 +1021,14 @@ InterceptedHttpChannel::OnStartRequest(nsIRequest* aRequest) {
   }
 
   if (mListener) {
-    mListener->OnStartRequest(this);
+    mListener->OnStartRequest(this, nullptr);
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 InterceptedHttpChannel::OnStopRequest(nsIRequest* aRequest,
-                                      nsresult aStatus) {
+                                      nsISupports* aContext, nsresult aStatus) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (NS_SUCCEEDED(mStatus)) {
@@ -1048,7 +1049,7 @@ InterceptedHttpChannel::OnStopRequest(nsIRequest* aRequest,
   MaybeReportTimingData();
 
   if (mListener) {
-    mListener->OnStopRequest(this, mStatus);
+    mListener->OnStopRequest(this, nullptr, mStatus);
   }
 
   gHttpHandler->OnStopRequest(this);
@@ -1060,6 +1061,7 @@ InterceptedHttpChannel::OnStopRequest(nsIRequest* aRequest,
 
 NS_IMETHODIMP
 InterceptedHttpChannel::OnDataAvailable(nsIRequest* aRequest,
+                                        nsISupports* aContext,
                                         nsIInputStream* aInputStream,
                                         uint64_t aOffset, uint32_t aCount) {
   // Any thread if the channel has been retargeted.
@@ -1078,7 +1080,7 @@ InterceptedHttpChannel::OnDataAvailable(nsIRequest* aRequest,
     }
   }
 
-  return mListener->OnDataAvailable(this, aInputStream, aOffset,
+  return mListener->OnDataAvailable(this, nullptr, aInputStream, aOffset,
                                     aCount);
 }
 

@@ -62,12 +62,12 @@ void nsAutoConfig::SetConfigURL(const char *aConfigURL) {
 }
 
 NS_IMETHODIMP
-nsAutoConfig::OnStartRequest(nsIRequest *request) {
+nsAutoConfig::OnStartRequest(nsIRequest *request, nsISupports *context) {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAutoConfig::OnDataAvailable(nsIRequest *request,
+nsAutoConfig::OnDataAvailable(nsIRequest *request, nsISupports *context,
                               nsIInputStream *aIStream, uint64_t aSourceOffset,
                               uint32_t aLength) {
   uint32_t amt, size;
@@ -85,7 +85,7 @@ nsAutoConfig::OnDataAvailable(nsIRequest *request,
 }
 
 NS_IMETHODIMP
-nsAutoConfig::OnStopRequest(nsIRequest *request,
+nsAutoConfig::OnStopRequest(nsIRequest *request, nsISupports *context,
                             nsresult aStatus) {
   nsresult rv;
 
