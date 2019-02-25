@@ -4,7 +4,7 @@ function testDefaultCtor() {
   ok(res.headers instanceof Headers, "Response should have non-null Headers object");
   is(res.url, "", "URL should be empty string");
   is(res.status, 200, "Default status is 200");
-  is(res.statusText, "", "Default statusText is an empty string");
+  is(res.statusText, "OK", "Default statusText is OK");
 }
 
 function testClone() {
