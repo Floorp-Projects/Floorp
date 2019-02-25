@@ -322,6 +322,12 @@ def ccache(value):
 
 ccache = check_prog('CCACHE', progs=(), input=ccache)
 
+js_option(env='CCACHE_PREFIX',
+          nargs=1,
+          help='Compiler prefix to use when using ccache')
+
+set_config('CCACHE_PREFIX', depends_if('CCACHE_PREFIX')(lambda prefix: prefix[0]))
+
 # Distinguish ccache from sccache.
 
 
@@ -1219,6 +1225,15 @@ host_cxx_compiler = compiler('C++', host, c_compiler=host_c_compiler,
 
 # Generic compiler-based conditions.
 building_with_gcc = depends(c_compiler)(lambda info: info.type == 'gcc')
+
+
+@depends(cxx_compiler)
+@imports('os')
+def cxx_is_icecream(info):
+    if (os.path.islink(info.compiler) and os.path.basename(
+            os.readlink(info.compiler)) == 'icecc'):
+        return True
+set_config('CXX_IS_ICECREAM', cxx_is_icecream)
 
 
 @depends(c_compiler)
