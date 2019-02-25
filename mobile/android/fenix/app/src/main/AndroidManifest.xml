@@ -68,7 +68,8 @@
         </activity>
 
         <activity android:name=".browser.BrowserPerformanceTestActivity"
-                  android:exported="true"/>
+                  android:exported="${isRaptorEnabled}"
+                  android:enabled="${isRaptorEnabled}"/>
 
         <service
                 android:name=".customtabs.CustomTabsService"

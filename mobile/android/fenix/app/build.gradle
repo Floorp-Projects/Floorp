@@ -17,6 +17,7 @@ android {
         versionCode Config.versionCode
         versionName Config.versionName + Config.generateVersionSuffix()
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        manifestPlaceholders.isRaptorEnabled = "false"
     }
     buildTypes {
         release {
@@ -28,6 +29,7 @@ android {
             shrinkResources false
             minifyEnabled false
             applicationIdSuffix ".debug"
+            manifestPlaceholders.isRaptorEnabled = "true"
         }
     }
 
@@ -215,6 +217,10 @@ android.applicationVariants.all { variant ->
 
     def buildDate = Config.generateBuildDate()
     buildConfigField 'String', 'BUILD_DATE', '"' + buildDate + '"'
+}
+
+if (project.hasProperty("raptor")) {
+    android.defaultConfig.manifestPlaceholders.isRaptorEnabled = "true"
 }
 
 // Normally this should use the same version as the glean dependency. But since we are currently using AC snapshots we
