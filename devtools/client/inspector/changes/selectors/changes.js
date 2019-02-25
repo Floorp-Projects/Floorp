@@ -225,11 +225,10 @@ function getChangesStylesheet(state, filter) {
   return Object.entries(changeTree).reduce((stylesheetText, [sourceId, source]) => {
     const { href, rules } = source;
     // Write code comment with source origin
-    stylesheetText += `\n/* ${getSourceForDisplay(source)} | ${href} */\n`;
+    stylesheetText += `/* ${getSourceForDisplay(source)} | ${href} */\n`;
     // Write CSS rules
     stylesheetText += Object.entries(rules).reduce((str, [ruleId, rule]) => {
-      // Add a new like only after top-level rules (level == 0)
-      str += writeRule(ruleId, rule, 0) + "\n";
+      str += writeRule(ruleId, rule, 0);
       return str;
     }, "");
 
