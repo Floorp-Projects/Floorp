@@ -4450,9 +4450,9 @@ nsresult HttpBaseChannel::CheckRedirectLimit(uint32_t aRedirectFlags) const {
 
 // NOTE: This function duplicates code from nsBaseChannel. This will go away
 // once HTTP uses nsBaseChannel (part of bug 312760)
-/* static */ void HttpBaseChannel::CallTypeSniffers(void* aClosure,
-                                                    const uint8_t* aData,
-                                                    uint32_t aCount) {
+/* static */
+void HttpBaseChannel::CallTypeSniffers(void* aClosure, const uint8_t* aData,
+                                       uint32_t aCount) {
   nsIChannel* chan = static_cast<nsIChannel*>(aClosure);
 
   nsAutoCString newType;

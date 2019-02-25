@@ -83,8 +83,8 @@ class URIData {
   nsTArray<nsCString> mFragments;
 };
 
-/* static */ nsresult URIData::Create(nsIURI* aURI, nsIURI* aInnermostURI,
-                                      URIData** aData) {
+/* static */
+nsresult URIData::Create(nsIURI* aURI, nsIURI* aInnermostURI, URIData** aData) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aURI);
   MOZ_ASSERT(aInnermostURI);
@@ -511,9 +511,10 @@ class FeatureTask {
 // tracking-annotation feature uses the top-level URI to whitelist the current
 // channel's URI; flash feature always uses the channel's URI.  Because of
 // this, this function aggregates feature per URI and tables.
-/* static */ nsresult FeatureTask::Create(nsIChannel* aChannel,
-                                          std::function<void()>&& aCallback,
-                                          FeatureTask** aTask) {
+/* static */
+nsresult FeatureTask::Create(nsIChannel* aChannel,
+                             std::function<void()>&& aCallback,
+                             FeatureTask** aTask) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aChannel);
   MOZ_ASSERT(aTask);
@@ -735,7 +736,8 @@ nsresult FeatureData::InitializeList(
 
 }  // namespace
 
-/* static */ nsresult AsyncUrlChannelClassifier::CheckChannel(
+/* static */
+nsresult AsyncUrlChannelClassifier::CheckChannel(
     nsIChannel* aChannel, std::function<void()>&& aCallback) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(aChannel);

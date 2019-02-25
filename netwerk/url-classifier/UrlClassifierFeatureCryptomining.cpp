@@ -49,7 +49,8 @@ UrlClassifierFeatureCryptomining::UrlClassifierFeatureCryptomining()
   return CRYPTOMINING_FEATURE_NAME;
 }
 
-/* static */ void UrlClassifierFeatureCryptomining::MaybeInitialize() {
+/* static */
+void UrlClassifierFeatureCryptomining::MaybeInitialize() {
   UC_LOG(("UrlClassifierFeatureCryptomining: MaybeInitialize"));
 
   if (!gFeatureCryptomining) {
@@ -58,7 +59,8 @@ UrlClassifierFeatureCryptomining::UrlClassifierFeatureCryptomining()
   }
 }
 
-/* static */ void UrlClassifierFeatureCryptomining::MaybeShutdown() {
+/* static */
+void UrlClassifierFeatureCryptomining::MaybeShutdown() {
   UC_LOG(("UrlClassifierFeatureCryptomining: MaybeShutdown"));
 
   if (gFeatureCryptomining) {
@@ -67,7 +69,8 @@ UrlClassifierFeatureCryptomining::UrlClassifierFeatureCryptomining()
   }
 }
 
-/* static */ already_AddRefed<UrlClassifierFeatureCryptomining>
+/* static */
+already_AddRefed<UrlClassifierFeatureCryptomining>
 UrlClassifierFeatureCryptomining::MaybeCreate(nsIChannel* aChannel) {
   MOZ_ASSERT(aChannel);
 
@@ -112,7 +115,8 @@ UrlClassifierFeatureCryptomining::MaybeCreate(nsIChannel* aChannel) {
   return self.forget();
 }
 
-/* static */ already_AddRefed<nsIUrlClassifierFeature>
+/* static */
+already_AddRefed<nsIUrlClassifierFeature>
 UrlClassifierFeatureCryptomining::GetIfNameMatches(const nsACString& aName) {
   if (!aName.EqualsLiteral(CRYPTOMINING_FEATURE_NAME)) {
     return nullptr;

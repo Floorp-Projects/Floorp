@@ -42,7 +42,8 @@ SocketProcessChild::~SocketProcessChild() {
   sSocketProcessChild = nullptr;
 }
 
-/* static */ SocketProcessChild* SocketProcessChild::GetSingleton() {
+/* static */
+SocketProcessChild* SocketProcessChild::GetSingleton() {
   return sSocketProcessChild;
 }
 

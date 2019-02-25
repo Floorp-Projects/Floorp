@@ -586,8 +586,9 @@ static const char *gCallbackPrefs[] = {
     nullptr,
 };
 
-/* static */ void nsSocketTransportService::PrefCallback(
-    const char *aPref, nsSocketTransportService *aSelf) {
+/* static */
+void nsSocketTransportService::PrefCallback(const char *aPref,
+                                            nsSocketTransportService *aSelf) {
   aSelf->UpdatePrefs();
 }
 

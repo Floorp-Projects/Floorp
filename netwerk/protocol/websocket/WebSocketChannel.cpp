@@ -1852,8 +1852,8 @@ nsresult WebSocketChannel::ProcessInput(uint8_t *buffer, uint32_t count) {
   return NS_OK;
 }
 
-/* static */ void WebSocketChannel::ApplyMask(uint32_t mask, uint8_t *data,
-                                              uint64_t len) {
+/* static */
+void WebSocketChannel::ApplyMask(uint32_t mask, uint8_t *data, uint64_t len) {
   if (!data || len == 0) return;
 
   // Optimally we want to apply the mask 32 bits at a time,
