@@ -197,24 +197,27 @@ already_AddRefed<WebExtensionPolicy> WebExtensionPolicy::Constructor(
   return policy.forget();
 }
 
-/* static */ void WebExtensionPolicy::GetActiveExtensions(
+/* static */
+void WebExtensionPolicy::GetActiveExtensions(
     dom::GlobalObject& aGlobal,
     nsTArray<RefPtr<WebExtensionPolicy>>& aResults) {
   EPS().GetAll(aResults);
 }
 
-/* static */ already_AddRefed<WebExtensionPolicy> WebExtensionPolicy::GetByID(
+/* static */
+already_AddRefed<WebExtensionPolicy> WebExtensionPolicy::GetByID(
     dom::GlobalObject& aGlobal, const nsAString& aID) {
   return do_AddRef(EPS().GetByID(aID));
 }
 
-/* static */ already_AddRefed<WebExtensionPolicy>
-WebExtensionPolicy::GetByHostname(dom::GlobalObject& aGlobal,
-                                  const nsACString& aHostname) {
+/* static */
+already_AddRefed<WebExtensionPolicy> WebExtensionPolicy::GetByHostname(
+    dom::GlobalObject& aGlobal, const nsACString& aHostname) {
   return do_AddRef(EPS().GetByHost(aHostname));
 }
 
-/* static */ already_AddRefed<WebExtensionPolicy> WebExtensionPolicy::GetByURI(
+/* static */
+already_AddRefed<WebExtensionPolicy> WebExtensionPolicy::GetByURI(
     dom::GlobalObject& aGlobal, nsIURI* aURI) {
   return do_AddRef(EPS().GetByURL(aURI));
 }
@@ -316,13 +319,13 @@ void WebExtensionPolicy::InjectContentScripts(ErrorResult& aRv) {
   }
 }
 
-/* static */ bool WebExtensionPolicy::UseRemoteWebExtensions(
-    GlobalObject& aGlobal) {
+/* static */
+bool WebExtensionPolicy::UseRemoteWebExtensions(GlobalObject& aGlobal) {
   return EPS().UseRemoteExtensions();
 }
 
-/* static */ bool WebExtensionPolicy::IsExtensionProcess(
-    GlobalObject& aGlobal) {
+/* static */
+bool WebExtensionPolicy::IsExtensionProcess(GlobalObject& aGlobal) {
   return EPS().IsExtensionProcess();
 }
 
@@ -382,7 +385,8 @@ AtomSetPref::Observe(nsISupports* aSubject, const char* aTopic,
 NS_IMPL_ISUPPORTS(AtomSetPref, nsIObserver, nsISupportsWeakReference)
 };  // namespace
 
-/* static */ bool WebExtensionPolicy::IsRestrictedDoc(const DocInfo& aDoc) {
+/* static */
+bool WebExtensionPolicy::IsRestrictedDoc(const DocInfo& aDoc) {
   // With the exception of top-level about:blank documents with null
   // principals, we never match documents that have non-codebase principals,
   // including those with null principals or system principals.
@@ -393,7 +397,8 @@ NS_IMPL_ISUPPORTS(AtomSetPref, nsIObserver, nsISupportsWeakReference)
   return IsRestrictedURI(aDoc.PrincipalURL());
 }
 
-/* static */ bool WebExtensionPolicy::IsRestrictedURI(const URLInfo& aURI) {
+/* static */
+bool WebExtensionPolicy::IsRestrictedURI(const URLInfo& aURI) {
   static RefPtr<AtomSetPref> domains;
   if (!domains) {
     domains = AtomSetPref::Create(nsLiteralCString(kRestrictedDomainPref));
@@ -487,10 +492,10 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(WebExtensionPolicy)
  * WebExtensionContentScript / MozDocumentMatcher
  *****************************************************************************/
 
-/* static */ already_AddRefed<MozDocumentMatcher>
-MozDocumentMatcher::Constructor(GlobalObject& aGlobal,
-                                const dom::MozDocumentMatcherInit& aInit,
-                                ErrorResult& aRv) {
+/* static */
+already_AddRefed<MozDocumentMatcher> MozDocumentMatcher::Constructor(
+    GlobalObject& aGlobal, const dom::MozDocumentMatcherInit& aInit,
+    ErrorResult& aRv) {
   RefPtr<MozDocumentMatcher> matcher =
       new MozDocumentMatcher(aGlobal, aInit, false, aRv);
   if (aRv.Failed()) {
@@ -499,7 +504,8 @@ MozDocumentMatcher::Constructor(GlobalObject& aGlobal,
   return matcher.forget();
 }
 
-/* static */ already_AddRefed<WebExtensionContentScript>
+/* static */
+already_AddRefed<WebExtensionContentScript>
 WebExtensionContentScript::Constructor(GlobalObject& aGlobal,
                                        WebExtensionPolicy& aExtension,
                                        const ContentScriptInit& aInit,
@@ -659,7 +665,8 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(MozDocumentMatcher)
  * MozDocumentObserver
  *****************************************************************************/
 
-/* static */ already_AddRefed<DocumentObserver> DocumentObserver::Constructor(
+/* static */
+already_AddRefed<DocumentObserver> DocumentObserver::Constructor(
     GlobalObject& aGlobal, dom::MozDocumentCallback& aCallbacks,
     ErrorResult& aRv) {
   RefPtr<DocumentObserver> matcher =

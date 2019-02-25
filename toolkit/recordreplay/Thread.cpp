@@ -26,9 +26,11 @@ namespace recordreplay {
 
 static MOZ_THREAD_LOCAL(Thread*) gTlsThreadKey;
 
-/* static */ Monitor* Thread::gMonitor;
+/* static */
+Monitor* Thread::gMonitor;
 
-/* static */ Thread* Thread::Current() {
+/* static */
+Thread* Thread::Current() {
   MOZ_ASSERT(IsRecordingOrReplaying());
   Thread* thread = gTlsThreadKey.get();
   if (!thread && IsReplaying()) {
@@ -38,7 +40,8 @@ static MOZ_THREAD_LOCAL(Thread*) gTlsThreadKey;
   return thread;
 }
 
-/* static */ bool Thread::CurrentIsMainThread() {
+/* static */
+bool Thread::CurrentIsMainThread() {
   Thread* thread = Current();
   return thread && thread->IsMainThread();
 }
@@ -71,13 +74,15 @@ void Thread::BindToCurrent() {
 // All threads, indexed by the thread ID.
 static Thread* gThreads;
 
-/* static */ Thread* Thread::GetById(size_t aId) {
+/* static */
+Thread* Thread::GetById(size_t aId) {
   MOZ_ASSERT(aId);
   MOZ_ASSERT(aId <= MaxThreadId);
   return &gThreads[aId];
 }
 
-/* static */ Thread* Thread::GetByNativeId(NativeThreadId aNativeId) {
+/* static */
+Thread* Thread::GetByNativeId(NativeThreadId aNativeId) {
   for (size_t id = MainThreadId; id <= MaxRecordedThreadId; id++) {
     Thread* thread = GetById(id);
     if (thread->mNativeId == aNativeId) {
@@ -87,7 +92,8 @@ static Thread* gThreads;
   return nullptr;
 }
 
-/* static */ Thread* Thread::GetByStackPointer(void* aSp) {
+/* static */
+Thread* Thread::GetByStackPointer(void* aSp) {
   if (!gThreads) {
     return nullptr;
   }
@@ -100,7 +106,8 @@ static Thread* gThreads;
   return nullptr;
 }
 
-/* static */ void Thread::InitializeThreads() {
+/* static */
+void Thread::InitializeThreads() {
   gThreads = new Thread[MaxThreadId + 1];
   for (size_t i = MainThreadId; i <= MaxThreadId; i++) {
     Thread* thread = &gThreads[i];
@@ -121,14 +128,16 @@ static Thread* gThreads;
   }
 }
 
-/* static */ void Thread::WaitUntilInitialized(Thread* aThread) {
+/* static */
+void Thread::WaitUntilInitialized(Thread* aThread) {
   MonitorAutoLock lock(*gMonitor);
   while (!aThread->mStackBase) {
     gMonitor->Wait();
   }
 }
 
-/* static */ void Thread::ThreadMain(void* aArgument) {
+/* static */
+void Thread::ThreadMain(void* aArgument) {
   MOZ_ASSERT(IsRecordingOrReplaying());
 
   Thread* thread = (Thread*)aArgument;
@@ -166,7 +175,8 @@ static Thread* gThreads;
   }
 }
 
-/* static */ void Thread::SpawnAllThreads() {
+/* static */
+void Thread::SpawnAllThreads() {
   MOZ_ASSERT(AreThreadEventsPassedThrough());
 
   InitializeThreadSnapshots(MaxRecordedThreadId + 1);
@@ -185,8 +195,8 @@ static Thread* gThreads;
 static Atomic<size_t, SequentiallyConsistent, Behavior::DontPreserve>
     gNumNonRecordedThreads;
 
-/* static */ Thread* Thread::SpawnNonRecordedThread(Callback aStart,
-                                                    void* aArgument) {
+/* static */
+Thread* Thread::SpawnNonRecordedThread(Callback aStart, void* aArgument) {
   if (IsMiddleman()) {
     DirectSpawnThread(aStart, aArgument);
     return nullptr;
@@ -203,14 +213,15 @@ static Atomic<size_t, SequentiallyConsistent, Behavior::DontPreserve>
   return thread;
 }
 
-/* static */ void Thread::SpawnThread(Thread* aThread) {
+/* static */
+void Thread::SpawnThread(Thread* aThread) {
   DirectSpawnThread(ThreadMain, aThread);
   WaitUntilInitialized(aThread);
 }
 
-/* static */ NativeThreadId Thread::StartThread(Callback aStart,
-                                                void* aArgument,
-                                                bool aNeedsJoin) {
+/* static */
+NativeThreadId Thread::StartThread(Callback aStart, void* aArgument,
+                                   bool aNeedsJoin) {
   Thread* thread = Thread::Current();
   RecordingEventSection res(thread);
   if (!res.CanAccessEvents()) {
@@ -326,7 +337,8 @@ MOZ_EXPORT bool RecordReplayInterface_InternalAreThreadEventsDisallowed() {
 // Thread Coordination
 ///////////////////////////////////////////////////////////////////////////////
 
-/* static */ void Thread::WaitForIdleThreads() {
+/* static */
+void Thread::WaitForIdleThreads() {
   MOZ_RELEASE_ASSERT(CurrentIsMainThread());
 
   MonitorAutoLock lock(*gMonitor);
@@ -379,12 +391,14 @@ MOZ_EXPORT bool RecordReplayInterface_InternalAreThreadEventsDisallowed() {
   }
 }
 
-/* static */ void Thread::ResumeSingleIdleThread(size_t aId) {
+/* static */
+void Thread::ResumeSingleIdleThread(size_t aId) {
   GetById(aId)->mShouldIdle = false;
   Notify(aId);
 }
 
-/* static */ void Thread::ResumeIdleThreads() {
+/* static */
+void Thread::ResumeIdleThreads() {
   MOZ_RELEASE_ASSERT(CurrentIsMainThread());
   for (size_t i = MainThreadId + 1; i <= MaxRecordedThreadId; i++) {
     ResumeSingleIdleThread(i);
@@ -434,14 +448,16 @@ bool Thread::MaybeWaitForCheckpointSave(
   return true;
 }
 
-/* static */ void Thread::WaitNoIdle() {
+/* static */
+void Thread::WaitNoIdle() {
   Thread* thread = Current();
   uint8_t data = 0;
   size_t read = DirectRead(thread->mIdlefd, &data, 1);
   MOZ_RELEASE_ASSERT(read == 1);
 }
 
-/* static */ void Thread::Wait() {
+/* static */
+void Thread::Wait() {
   Thread* thread = Current();
   MOZ_ASSERT(!thread->mIdle);
   MOZ_ASSERT(thread->IsRecordedThread() && !thread->PassThroughEvents());
@@ -486,14 +502,16 @@ bool Thread::MaybeWaitForCheckpointSave(
   thread->SetPassThrough(false);
 }
 
-/* static */ void Thread::WaitForever() {
+/* static */
+void Thread::WaitForever() {
   while (true) {
     Wait();
   }
   Unreachable();
 }
 
-/* static */ void Thread::WaitForeverNoIdle() {
+/* static */
+void Thread::WaitForeverNoIdle() {
   FileHandle writeFd, readFd;
   DirectCreatePipe(&writeFd, &readFd);
   while (true) {
@@ -502,7 +520,8 @@ bool Thread::MaybeWaitForCheckpointSave(
   }
 }
 
-/* static */ void Thread::Notify(size_t aId) {
+/* static */
+void Thread::Notify(size_t aId) {
   uint8_t data = 0;
   DirectWrite(GetById(aId)->mNotifyfd, &data, 1);
 }
