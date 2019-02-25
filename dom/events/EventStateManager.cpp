@@ -1245,7 +1245,10 @@ void EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
     }
     case eDragEventClass: {
       RefPtr<TabParent> tabParent = remote;
-      tabParent->Manager()->MaybeInvokeDragSession(tabParent);
+      if (tabParent->Manager()->IsContentParent()) {
+        tabParent->Manager()->AsContentParent()->MaybeInvokeDragSession(
+            tabParent);
+      }
 
       nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
       uint32_t dropEffect = nsIDragService::DRAGDROP_ACTION_NONE;
@@ -5507,10 +5510,14 @@ nsresult EventStateManager::DoContentCommandEvent(
           nsIContent* focusedContent = fm ? fm->GetFocusedElement() : nullptr;
           RefPtr<TabParent> remote = TabParent::GetFrom(focusedContent);
           if (remote) {
+            NS_ENSURE_TRUE(remote->Manager()->IsContentParent(),
+                           NS_ERROR_FAILURE);
+
             nsCOMPtr<nsITransferable> transferable = aEvent->mTransferable;
             IPCDataTransfer ipcDataTransfer;
+            ContentParent* cp = remote->Manager()->AsContentParent();
             nsContentUtils::TransferableToIPCTransferable(
-                transferable, &ipcDataTransfer, false, nullptr, remote->Manager());
+                transferable, &ipcDataTransfer, false, nullptr, cp);
             bool isPrivateData = transferable->GetIsPrivateData();
             nsCOMPtr<nsIPrincipal> requestingPrincipal =
                 transferable->GetRequestingPrincipal();

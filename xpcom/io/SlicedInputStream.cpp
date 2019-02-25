@@ -424,7 +424,7 @@ void SlicedInputStream::Serialize(mozilla::ipc::InputStreamParams& aParams,
                                   FileDescriptorArray& aFileDescriptors,
                                   bool aDelayedStart, uint32_t aMaxSize,
                                   uint32_t* aSizeUsed,
-                                  mozilla::dom::ContentChild* aManager) {
+                                  mozilla::dom::nsIContentChild* aManager) {
   SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
                     aSizeUsed, aManager);
 }
@@ -442,7 +442,7 @@ void SlicedInputStream::Serialize(mozilla::ipc::InputStreamParams& aParams,
                                   FileDescriptorArray& aFileDescriptors,
                                   bool aDelayedStart, uint32_t aMaxSize,
                                   uint32_t* aSizeUsed,
-                                  mozilla::dom::ContentParent* aManager) {
+                                  mozilla::dom::nsIContentParent* aManager) {
   SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
                     aSizeUsed, aManager);
 }

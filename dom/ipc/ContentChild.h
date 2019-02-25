@@ -9,18 +9,15 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/ContentBridgeParent.h"
+#include "mozilla/dom/nsIContentChild.h"
 #include "mozilla/dom/PBrowserOrId.h"
 #include "mozilla/dom/PContentChild.h"
-#include "mozilla/dom/CPOWManagerGetter.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/ipc/Shmem.h"
-#include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "nsAutoPtr.h"
 #include "nsHashKeys.h"
 #include "nsIObserver.h"
 #include "nsTHashtable.h"
-#include "nsStringFwd.h"
-#include "nsTArrayForwardDeclare.h"
 #include "nsRefPtrHashtable.h"
 
 #include "nsIWindowProvider.h"
@@ -81,8 +78,7 @@ class FileCreatorHelper;
 
 class ContentChild final : public PContentChild,
                            public nsIWindowProvider,
-                           public CPOWManagerGetter,
-                           public mozilla::ipc::IShmemAllocator {
+                           public nsIContentChild {
   typedef mozilla::dom::ClonedMessageData ClonedMessageData;
   typedef mozilla::ipc::FileDescriptor FileDescriptor;
   typedef mozilla::ipc::OptionalURIParams OptionalURIParams;
@@ -160,6 +156,9 @@ class ContentChild final : public PContentChild,
 
   static void UpdateCookieStatus(nsIChannel* aChannel);
 
+  mozilla::ipc::IPCResult RecvInitContentBridgeChild(
+      Endpoint<PContentBridgeChild>&& aEndpoint);
+
   mozilla::ipc::IPCResult RecvInitGMPService(
       Endpoint<PGMPServiceChild>&& aGMPService);
 
@@ -195,19 +194,20 @@ class ContentChild final : public PContentChild,
   virtual mozilla::ipc::IPCResult RecvSetProcessSandbox(
       const MaybeFileDesc& aBroker);
 
-  PBrowserChild* AllocPBrowserChild(const TabId& aTabId,
-                                    const TabId& aSameTabGroupAs,
-                                    const IPCTabContext& aContext,
-                                    const uint32_t& aChromeFlags,
-                                    const ContentParentId& aCpID,
-                                    const bool& aIsForBrowser);
+  virtual PBrowserChild* AllocPBrowserChild(const TabId& aTabId,
+                                            const TabId& aSameTabGroupAs,
+                                            const IPCTabContext& aContext,
+                                            const uint32_t& aChromeFlags,
+                                            const ContentParentId& aCpID,
+                                            const bool& aIsForBrowser) override;
 
-  bool DeallocPBrowserChild(PBrowserChild*);
+  virtual bool DeallocPBrowserChild(PBrowserChild*) override;
 
-  PIPCBlobInputStreamChild* AllocPIPCBlobInputStreamChild(
-      const nsID& aID, const uint64_t& aSize);
+  virtual PIPCBlobInputStreamChild* AllocPIPCBlobInputStreamChild(
+      const nsID& aID, const uint64_t& aSize) override;
 
-  bool DeallocPIPCBlobInputStreamChild(PIPCBlobInputStreamChild* aActor);
+  virtual bool DeallocPIPCBlobInputStreamChild(
+      PIPCBlobInputStreamChild* aActor) override;
 
   PHalChild* AllocPHalChild();
   bool DeallocPHalChild(PHalChild*);
@@ -263,14 +263,16 @@ class ContentChild final : public PContentChild,
 
   bool DeallocPPrintingChild(PPrintingChild*);
 
-  PChildToParentStreamChild* SendPChildToParentStreamConstructor(
-      PChildToParentStreamChild*);
+  virtual PChildToParentStreamChild* SendPChildToParentStreamConstructor(
+      PChildToParentStreamChild*) override;
 
-  PChildToParentStreamChild* AllocPChildToParentStreamChild();
-  bool DeallocPChildToParentStreamChild(PChildToParentStreamChild*);
+  virtual PChildToParentStreamChild* AllocPChildToParentStreamChild() override;
+  virtual bool DeallocPChildToParentStreamChild(
+      PChildToParentStreamChild*) override;
 
-  PParentToChildStreamChild* AllocPParentToChildStreamChild();
-  bool DeallocPParentToChildStreamChild(PParentToChildStreamChild*);
+  virtual PParentToChildStreamChild* AllocPParentToChildStreamChild() override;
+  virtual bool DeallocPParentToChildStreamChild(
+      PParentToChildStreamChild*) override;
 
   PPSMContentDownloaderChild* AllocPPSMContentDownloaderChild(
       const uint32_t& aCertType);
@@ -324,9 +326,10 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvClearImageCache(const bool& privateLoader,
                                               const bool& chrome);
 
-  mozilla::jsipc::PJavaScriptChild* AllocPJavaScriptChild();
+  virtual mozilla::jsipc::PJavaScriptChild* AllocPJavaScriptChild() override;
 
-  bool DeallocPJavaScriptChild(mozilla::jsipc::PJavaScriptChild*);
+  virtual bool DeallocPJavaScriptChild(
+      mozilla::jsipc::PJavaScriptChild*) override;
 
   PRemoteSpellcheckEngineChild* AllocPRemoteSpellcheckEngineChild();
 
@@ -363,10 +366,10 @@ class ContentChild final : public PContentChild,
 
   virtual mozilla::ipc::IPCResult RecvLoadProcessScript(const nsString& aURL);
 
-  mozilla::ipc::IPCResult RecvAsyncMessage(const nsString& aMsg,
-                                           InfallibleTArray<CpowEntry>&& aCpows,
-                                           const IPC::Principal& aPrincipal,
-                                           const ClonedMessageData& aData);
+  virtual mozilla::ipc::IPCResult RecvAsyncMessage(
+      const nsString& aMsg, InfallibleTArray<CpowEntry>&& aCpows,
+      const IPC::Principal& aPrincipal,
+      const ClonedMessageData& aData) override;
 
   mozilla::ipc::IPCResult RecvRegisterStringBundles(
       nsTArray<StringBundleDescriptor>&& stringBundles);
@@ -505,19 +508,19 @@ class ContentChild final : public PContentChild,
 
   bool IsForBrowser() const { return mIsForBrowser; }
 
-  PFileDescriptorSetChild* SendPFileDescriptorSetConstructor(
-      const FileDescriptor&);
+  virtual PFileDescriptorSetChild* SendPFileDescriptorSetConstructor(
+      const FileDescriptor&) override;
 
-  PFileDescriptorSetChild* AllocPFileDescriptorSetChild(const FileDescriptor&);
+  virtual PFileDescriptorSetChild* AllocPFileDescriptorSetChild(
+      const FileDescriptor&) override;
 
-  bool DeallocPFileDescriptorSetChild(PFileDescriptorSetChild*);
+  virtual bool DeallocPFileDescriptorSetChild(
+      PFileDescriptorSetChild*) override;
 
-  bool SendPBrowserConstructor(PBrowserChild* actor, const TabId& aTabId,
-                               const TabId& aSameTabGroupAs,
-                               const IPCTabContext& context,
-                               const uint32_t& chromeFlags,
-                               const ContentParentId& aCpID,
-                               const bool& aIsForBrowser);
+  virtual bool SendPBrowserConstructor(
+      PBrowserChild* actor, const TabId& aTabId, const TabId& aSameTabGroupAs,
+      const IPCTabContext& context, const uint32_t& chromeFlags,
+      const ContentParentId& aCpID, const bool& aIsForBrowser) override;
 
   virtual mozilla::ipc::IPCResult RecvPBrowserConstructor(
       PBrowserChild* aCctor, const TabId& aTabId, const TabId& aSameTabGroupAs,
@@ -661,7 +664,8 @@ class ContentChild final : public PContentChild,
   nsresult AsyncOpenAnonymousTemporaryFile(
       const AnonymousTemporaryFileCallback& aCallback);
 
-  already_AddRefed<nsIEventTarget> GetEventTargetFor(TabChild* aTabChild);
+  virtual already_AddRefed<nsIEventTarget> GetEventTargetFor(
+      TabChild* aTabChild) override;
 
   mozilla::ipc::IPCResult RecvSetPluginList(
       const uint32_t& aPluginEpoch, nsTArray<PluginTag>&& aPluginTags,

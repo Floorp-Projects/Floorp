@@ -16,8 +16,8 @@ namespace mozilla {
 
 namespace dom {
 
-class ContentChild;
-class ContentParent;
+class nsIContentChild;
+class nsIContentParent;
 
 }  // namespace dom
 
@@ -49,7 +49,7 @@ class NS_NO_VTABLE nsIIPCSerializableInputStream : public nsISupports {
                          FileDescriptorArray& aFileDescriptors,
                          bool aDelayedStart, uint32_t aMaxSize,
                          uint32_t* aSizeUsed,
-                         mozilla::dom::ContentChild* aManager) = 0;
+                         mozilla::dom::nsIContentChild* aManager) = 0;
 
   virtual void Serialize(mozilla::ipc::InputStreamParams& aParams,
                          FileDescriptorArray& aFileDescriptors,
@@ -61,7 +61,7 @@ class NS_NO_VTABLE nsIIPCSerializableInputStream : public nsISupports {
                          FileDescriptorArray& aFileDescriptors,
                          bool aDelayedStart, uint32_t aMaxSize,
                          uint32_t* aSizeUsed,
-                         mozilla::dom::ContentParent* aManager) = 0;
+                         mozilla::dom::nsIContentParent* aManager) = 0;
 
   virtual void Serialize(mozilla::ipc::InputStreamParams& aParams,
                          FileDescriptorArray& aFileDescriptors,
@@ -79,7 +79,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIIPCSerializableInputStream,
 #define NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM                             \
   virtual void Serialize(mozilla::ipc::InputStreamParams&,                \
                          FileDescriptorArray&, bool, uint32_t, uint32_t*, \
-                         mozilla::dom::ContentChild*) override;        \
+                         mozilla::dom::nsIContentChild*) override;        \
                                                                           \
   virtual void Serialize(mozilla::ipc::InputStreamParams&,                \
                          FileDescriptorArray&, bool, uint32_t, uint32_t*, \
@@ -87,7 +87,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIIPCSerializableInputStream,
                                                                           \
   virtual void Serialize(mozilla::ipc::InputStreamParams&,                \
                          FileDescriptorArray&, bool, uint32_t, uint32_t*, \
-                         mozilla::dom::ContentParent*) override;       \
+                         mozilla::dom::nsIContentParent*) override;       \
                                                                           \
   virtual void Serialize(mozilla::ipc::InputStreamParams&,                \
                          FileDescriptorArray&, bool, uint32_t, uint32_t*, \
@@ -101,7 +101,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIIPCSerializableInputStream,
                          FileDescriptorArray& aFileDescriptors,                \
                          bool aDelayedStart, uint32_t aMaxSize,                \
                          uint32_t* aSizeUsed,                                  \
-                         mozilla::dom::ContentChild* aManager) override {   \
+                         mozilla::dom::nsIContentChild* aManager) override {   \
     _to Serialize(aParams, aFileDescriptors, aDelayedStart, aMaxSize,          \
                   aSizeUsed, aManager);                                        \
   }                                                                            \
@@ -119,7 +119,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIIPCSerializableInputStream,
                          FileDescriptorArray& aFileDescriptors,                \
                          bool aDelayedStart, uint32_t aMaxSize,                \
                          uint32_t* aSizeUsed,                                  \
-                         mozilla::dom::ContentParent* aManager) override {  \
+                         mozilla::dom::nsIContentParent* aManager) override {  \
     _to Serialize(aParams, aFileDescriptors, aDelayedStart, aMaxSize,          \
                   aSizeUsed, aManager);                                        \
   }                                                                            \
@@ -144,7 +144,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIIPCSerializableInputStream,
                          FileDescriptorArray& aFileDescriptors,                \
                          bool aDelayedStart, uint32_t aMaxSize,                \
                          uint32_t* aSizeUsed,                                  \
-                         mozilla::dom::ContentChild* aManager) override {   \
+                         mozilla::dom::nsIContentChild* aManager) override {   \
     if (_to) {                                                                 \
       _to->Serialize(aParams, aFileDescriptors, aDelayedStart, aMaxSize,       \
                      aSizeUsed, aManager);                                     \
@@ -166,7 +166,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIIPCSerializableInputStream,
                          FileDescriptorArray& aFileDescriptors,                \
                          bool aDelayedStart, uint32_t aMaxSize,                \
                          uint32_t* aSizeUsed,                                  \
-                         mozilla::dom::ContentParent* aManager) override {  \
+                         mozilla::dom::nsIContentParent* aManager) override {  \
     if (_to) {                                                                 \
       _to->Serialize(aParams, aFileDescriptors, aDelayedStart, aMaxSize,       \
                      aSizeUsed, aManager);                                     \
