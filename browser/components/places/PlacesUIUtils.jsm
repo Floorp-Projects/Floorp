@@ -712,7 +712,7 @@ var PlacesUIUtils = {
       aWindow.openTrustedLinkIn(aNode.uri, aWhere, {
         allowPopups: isJavaScriptURL,
         inBackground: this.loadBookmarksInBackground,
-        allowInheritPrincipal: isJavaScriptURL && aWhere == "current",
+        allowInheritPrincipal: isJavaScriptURL,
         private: aPrivate,
       });
     }
