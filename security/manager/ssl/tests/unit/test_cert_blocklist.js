@@ -138,6 +138,7 @@ const certBlocklistJSON = `{
 
 function serveResponse(body) {
   return (req, response) => {
+    response.setHeader("Content-Type", "application/json; charset=UTF-8");
     response.setStatusLine(null, 200, "OK");
     response.write(body);
   };
