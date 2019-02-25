@@ -8,6 +8,9 @@
 // leaking to window scope.
 {
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(this, "LoginHelper",
+                               "resource://gre/modules/LoginHelper.jsm");
+
 
 MozElements.MozAutocompleteRichlistitem = class MozAutocompleteRichlistitem extends MozElements.MozRichlistitem {
   constructor() {
@@ -976,11 +979,39 @@ class MozAutocompleteRichlistitemInsecureWarning extends MozElements.MozAutocomp
   }
 }
 
+class MozAutocompleteRichlistitemLoginsFooter extends MozElements.MozAutocompleteRichlistitem {
+  constructor() {
+    super();
+
+    function handleEvent(event) {
+      if (event.button != 0) {
+        return;
+      }
+
+      LoginHelper.openPasswordManager(this.ownerGlobal, this._data.hostname);
+    }
+
+    this.addEventListener("click", handleEvent);
+  }
+
+  get _data() {
+    return JSON.parse(this.getAttribute("ac-value"));
+  }
+
+  _adjustAcItem() {
+    this._titleText.textContent = this._data.label;
+  }
+}
+
 customElements.define("autocomplete-richlistitem", MozElements.MozAutocompleteRichlistitem, {
   extends: "richlistitem",
 });
 
 customElements.define("autocomplete-richlistitem-insecure-warning", MozAutocompleteRichlistitemInsecureWarning, {
+  extends: "richlistitem",
+});
+
+customElements.define("autocomplete-richlistitem-logins-footer", MozAutocompleteRichlistitemLoginsFooter, {
   extends: "richlistitem",
 });
 }
