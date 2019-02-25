@@ -54,63 +54,6 @@ class nsIContentChild : public nsISupports,
                         public mozilla::ipc::IShmemAllocator {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENTCHILD_IID)
-
-  virtual bool SendPBrowserConstructor(
-      PBrowserChild* aActor, const TabId& aTabId, const TabId& aSameTabGroupAs,
-      const IPCTabContext& aContext, const uint32_t& aChromeFlags,
-      const ContentParentId& aCpID, const bool& aIsForBrowser) = 0;
-
-  virtual mozilla::ipc::PFileDescriptorSetChild*
-  SendPFileDescriptorSetConstructor(const mozilla::ipc::FileDescriptor&) = 0;
-
-  virtual mozilla::ipc::PChildToParentStreamChild*
-  SendPChildToParentStreamConstructor(
-      mozilla::ipc::PChildToParentStreamChild*) = 0;
-
-  virtual already_AddRefed<nsIEventTarget> GetEventTargetFor(
-      TabChild* aTabChild) = 0;
-
- protected:
-  virtual jsipc::PJavaScriptChild* AllocPJavaScriptChild();
-  virtual bool DeallocPJavaScriptChild(jsipc::PJavaScriptChild*);
-
-  virtual PBrowserChild* AllocPBrowserChild(const TabId& aTabId,
-                                            const TabId& aSameTabGroupAs,
-                                            const IPCTabContext& aContext,
-                                            const uint32_t& aChromeFlags,
-                                            const ContentParentId& aCpId,
-                                            const bool& aIsForBrowser);
-  virtual bool DeallocPBrowserChild(PBrowserChild*);
-
-  virtual mozilla::ipc::IPCResult RecvPBrowserConstructor(
-      PBrowserChild* aActor, const TabId& aTabId, const TabId& aSameTabGroupAs,
-      const IPCTabContext& aContext, const uint32_t& aChromeFlags,
-      const ContentParentId& aCpID, const bool& aIsForBrowse);
-
-  virtual mozilla::ipc::PIPCBlobInputStreamChild* AllocPIPCBlobInputStreamChild(
-      const nsID& aID, const uint64_t& aSize);
-
-  virtual bool DeallocPIPCBlobInputStreamChild(
-      mozilla::ipc::PIPCBlobInputStreamChild* aActor);
-
-  virtual mozilla::ipc::PChildToParentStreamChild*
-  AllocPChildToParentStreamChild();
-
-  virtual bool DeallocPChildToParentStreamChild(
-      mozilla::ipc::PChildToParentStreamChild* aActor);
-
-  virtual mozilla::ipc::PParentToChildStreamChild*
-  AllocPParentToChildStreamChild();
-
-  virtual bool DeallocPParentToChildStreamChild(
-      mozilla::ipc::PParentToChildStreamChild* aActor);
-
-  virtual mozilla::ipc::IPCResult RecvAsyncMessage(
-      const nsString& aMsg, InfallibleTArray<jsipc::CpowEntry>&& aCpows,
-      const IPC::Principal& aPrincipal, const ClonedMessageData& aData);
-
-  static already_AddRefed<nsIEventTarget> GetConstructedEventTarget(
-      const IPC::Message& aMsg);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIContentChild, NS_ICONTENTCHILD_IID)
