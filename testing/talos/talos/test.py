@@ -108,6 +108,7 @@ class TsBase(Test):
         'tpmozafterpaint',
         'fnbpaint',
         'tphero',
+        'tpmanifest',
         'profile',
         'firstpaint',
         'userready',
@@ -166,6 +167,14 @@ class ts_paint_heavy(ts_paint):
 @register_test()
 class ts_paint_flex(ts_paint):
     preferences = {'layout.css.emulate-moz-box-with-flex': True}
+
+
+@register_test()
+class startup_about_home_paint(ts_paint):
+    url = None
+    cycles = 20
+    extensions = ['${talos}/startup_test/startup_about_home_paint/addon']
+    tpmanifest = '${talos}/startup_test/startup_about_home_paint/startup_about_home_paint.manifest'
 
 
 @register_test()
