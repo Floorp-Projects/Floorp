@@ -102,8 +102,8 @@ static bool IsZeroSize(const Size& sz) {
   return sz.width == 0.0 || sz.height == 0.0;
 }
 
-/* static */ bool nsCSSBorderRenderer::AllCornersZeroSize(
-    const RectCornerRadii& corners) {
+/* static */
+bool nsCSSBorderRenderer::AllCornersZeroSize(const RectCornerRadii& corners) {
   return IsZeroSize(corners[eCornerTopLeft]) &&
          IsZeroSize(corners[eCornerTopRight]) &&
          IsZeroSize(corners[eCornerBottomRight]) &&
@@ -182,9 +182,10 @@ nsCSSBorderRenderer::nsCSSBorderRenderer(
   mAvoidStroke = false;
 }
 
-/* static */ void nsCSSBorderRenderer::ComputeInnerRadii(
-    const RectCornerRadii& aRadii, const Float* aBorderSizes,
-    RectCornerRadii* aInnerRadiiRet) {
+/* static */
+void nsCSSBorderRenderer::ComputeInnerRadii(const RectCornerRadii& aRadii,
+                                            const Float* aBorderSizes,
+                                            RectCornerRadii* aInnerRadiiRet) {
   RectCornerRadii& iRadii = *aInnerRadiiRet;
 
   iRadii[C_TL].width =
@@ -208,9 +209,10 @@ nsCSSBorderRenderer::nsCSSBorderRenderer(
       std::max(0.f, aRadii[C_BL].height - aBorderSizes[eSideBottom]);
 }
 
-/* static */ void nsCSSBorderRenderer::ComputeOuterRadii(
-    const RectCornerRadii& aRadii, const Float* aBorderSizes,
-    RectCornerRadii* aOuterRadiiRet) {
+/* static */
+void nsCSSBorderRenderer::ComputeOuterRadii(const RectCornerRadii& aRadii,
+                                            const Float* aBorderSizes,
+                                            RectCornerRadii* aOuterRadiiRet) {
   RectCornerRadii& oRadii = *aOuterRadiiRet;
 
   // default all corners to sharp corners
@@ -3329,7 +3331,8 @@ void nsCSSBorderRenderer::CreateWebRenderCommands(
                       wrsides, borderRadius);
 }
 
-/* static */ Maybe<nsCSSBorderImageRenderer>
+/* static */
+Maybe<nsCSSBorderImageRenderer>
 nsCSSBorderImageRenderer::CreateBorderImageRenderer(
     nsPresContext* aPresContext, nsIFrame* aForFrame, const nsRect& aBorderArea,
     const nsStyleBorder& aStyleBorder, const nsRect& aDirtyRect,

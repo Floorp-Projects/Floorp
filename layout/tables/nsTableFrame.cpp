@@ -239,7 +239,8 @@ bool nsTableFrame::PageBreakAfter(nsIFrame* aSourceFrame,
   return false;
 }
 
-/* static */ void nsTableFrame::RegisterPositionedTablePart(nsIFrame* aFrame) {
+/* static */
+void nsTableFrame::RegisterPositionedTablePart(nsIFrame* aFrame) {
   // Supporting relative positioning for table parts other than table cells has
   // the potential to break sites that apply 'position: relative' to those
   // parts, expecting nothing to happen. We warn at the console to make tracking
@@ -274,8 +275,9 @@ bool nsTableFrame::PageBreakAfter(nsIFrame* aSourceFrame,
   positionedParts->AppendElement(aFrame);
 }
 
-/* static */ void nsTableFrame::UnregisterPositionedTablePart(
-    nsIFrame* aFrame, nsIFrame* aDestructRoot) {
+/* static */
+void nsTableFrame::UnregisterPositionedTablePart(nsIFrame* aFrame,
+                                                 nsIFrame* aDestructRoot) {
   // Retrieve the table frame, and check if we hit aDestructRoot on the way.
   bool didPassThrough;
   nsTableFrame* tableFrame =
@@ -1206,9 +1208,10 @@ bool nsDisplayTableBorderCollapse::CreateWebRenderCommands(
   return true;
 }
 
-/* static */ void nsTableFrame::GenericTraversal(
-    nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
-    const nsDisplayListSet& aLists) {
+/* static */
+void nsTableFrame::GenericTraversal(nsDisplayListBuilder* aBuilder,
+                                    nsFrame* aFrame,
+                                    const nsDisplayListSet& aLists) {
   // This is similar to what
   // nsContainerFrame::BuildDisplayListForNonBlockChildren does, except that we
   // allow the children's background and borders to go in our BorderBackground
@@ -1374,7 +1377,8 @@ void nsTableFrame::CalcHasBCBorders() {
   SetHasBCBorders(false);
 }
 
-/* static */ void nsTableFrame::DisplayGenericTablePart(
+/* static */
+void nsTableFrame::DisplayGenericTablePart(
     nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
     const nsDisplayListSet& aLists,
     DisplayGenericTablePartTraversal aTraversal) {
@@ -1627,7 +1631,8 @@ void nsTableFrame::ProcessRowInserted(nscoord aNewBSize) {
   }
 }
 
-/* virtual */ void nsTableFrame::MarkIntrinsicISizesDirty() {
+/* virtual */
+void nsTableFrame::MarkIntrinsicISizesDirty() {
   nsITableLayoutStrategy* tls = LayoutStrategy();
   if (MOZ_UNLIKELY(!tls)) {
     // This is a FrameNeedsReflow() from nsBlockFrame::RemoveFrame()
@@ -1645,7 +1650,8 @@ void nsTableFrame::ProcessRowInserted(nscoord aNewBSize) {
   nsContainerFrame::MarkIntrinsicISizesDirty();
 }
 
-/* virtual */ nscoord nsTableFrame::GetMinISize(gfxContext* aRenderingContext) {
+/* virtual */
+nscoord nsTableFrame::GetMinISize(gfxContext* aRenderingContext) {
   if (NeedToCalcBCBorders()) CalcBCBorders();
 
   ReflowColGroups(aRenderingContext);
@@ -1653,8 +1659,8 @@ void nsTableFrame::ProcessRowInserted(nscoord aNewBSize) {
   return LayoutStrategy()->GetMinISize(aRenderingContext);
 }
 
-/* virtual */ nscoord nsTableFrame::GetPrefISize(
-    gfxContext* aRenderingContext) {
+/* virtual */
+nscoord nsTableFrame::GetPrefISize(gfxContext* aRenderingContext) {
   if (NeedToCalcBCBorders()) CalcBCBorders();
 
   ReflowColGroups(aRenderingContext);
@@ -2350,8 +2356,8 @@ nscoord nsTableFrame::GetCollapsedISize(const WritingMode aWM,
   return iSize;
 }
 
-/* virtual */ void nsTableFrame::DidSetComputedStyle(
-    ComputedStyle* aOldComputedStyle) {
+/* virtual */
+void nsTableFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
   nsContainerFrame::DidSetComputedStyle(aOldComputedStyle);
 
   if (!aOldComputedStyle)  // avoid this on init
@@ -2712,20 +2718,23 @@ void nsTableFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
 #endif
 }
 
-/* virtual */ nsMargin nsTableFrame::GetUsedBorder() const {
+/* virtual */
+nsMargin nsTableFrame::GetUsedBorder() const {
   if (!IsBorderCollapse()) return nsContainerFrame::GetUsedBorder();
 
   WritingMode wm = GetWritingMode();
   return GetIncludedOuterBCBorder(wm).GetPhysicalMargin(wm);
 }
 
-/* virtual */ nsMargin nsTableFrame::GetUsedPadding() const {
+/* virtual */
+nsMargin nsTableFrame::GetUsedPadding() const {
   if (!IsBorderCollapse()) return nsContainerFrame::GetUsedPadding();
 
   return nsMargin(0, 0, 0, 0);
 }
 
-/* virtual */ nsMargin nsTableFrame::GetUsedMargin() const {
+/* virtual */
+nsMargin nsTableFrame::GetUsedMargin() const {
   // The margin is inherited to the table wrapper frame via
   // the ::-moz-table-wrapper rule in ua.css.
   return nsMargin(0, 0, 0, 0);
@@ -3802,7 +3811,8 @@ nscoord nsTableFrame::GetRowSpacing(int32_t aStartRowIndex,
   return GetRowSpacing() * (aEndRowIndex - aStartRowIndex);
 }
 
-/* virtual */ nscoord nsTableFrame::GetLogicalBaseline(WritingMode aWM) const {
+/* virtual */
+nscoord nsTableFrame::GetLogicalBaseline(WritingMode aWM) const {
   nscoord baseline;
   if (!GetNaturalBaselineBOffset(aWM, BaselineSharingGroup::eFirst,
                                  &baseline)) {
@@ -3811,7 +3821,8 @@ nscoord nsTableFrame::GetRowSpacing(int32_t aStartRowIndex,
   return baseline;
 }
 
-/* virtual */ bool nsTableFrame::GetNaturalBaselineBOffset(
+/* virtual */
+bool nsTableFrame::GetNaturalBaselineBOffset(
     WritingMode aWM, BaselineSharingGroup aBaselineGroup,
     nscoord* aBaseline) const {
   RowGroupArray orderedRowGroups;
@@ -7674,7 +7685,8 @@ void nsTableFrame::AppendDirectlyOwnedAnonBoxes(
       OwnedAnonBox(wrapper, &UpdateStyleOfOwnedAnonBoxesForTableWrapper));
 }
 
-/* static */ void nsTableFrame::UpdateStyleOfOwnedAnonBoxesForTableWrapper(
+/* static */
+void nsTableFrame::UpdateStyleOfOwnedAnonBoxesForTableWrapper(
     nsIFrame* aOwningFrame, nsIFrame* aWrapperFrame,
     ServoRestyleState& aRestyleState) {
   MOZ_ASSERT(

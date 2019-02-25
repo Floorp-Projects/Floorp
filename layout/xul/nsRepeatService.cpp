@@ -28,14 +28,16 @@ nsRepeatService::~nsRepeatService() {
                "Callback was not removed before shutdown");
 }
 
-/* static */ nsRepeatService* nsRepeatService::GetInstance() {
+/* static */
+nsRepeatService* nsRepeatService::GetInstance() {
   if (!gRepeatService) {
     gRepeatService = new nsRepeatService();
   }
   return gRepeatService;
 }
 
-/*static*/ void nsRepeatService::Shutdown() { gRepeatService = nullptr; }
+/*static*/
+void nsRepeatService::Shutdown() { gRepeatService = nullptr; }
 
 void nsRepeatService::Start(Callback aCallback, void* aCallbackData,
                             dom::Document* aDocument,

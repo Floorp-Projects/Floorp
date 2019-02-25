@@ -576,8 +576,9 @@ void AccessibleCaretEventHub::CancelLongTapInjector() {
   mLongTapInjectorTimer->Cancel();
 }
 
-/* static */ void AccessibleCaretEventHub::FireLongTap(
-    nsITimer* aTimer, void* aAccessibleCaretEventHub) {
+/* static */
+void AccessibleCaretEventHub::FireLongTap(nsITimer* aTimer,
+                                          void* aAccessibleCaretEventHub) {
   RefPtr<AccessibleCaretEventHub> self =
       static_cast<AccessibleCaretEventHub*>(aAccessibleCaretEventHub);
   self->mState->OnLongTap(self, self->mPressPoint);

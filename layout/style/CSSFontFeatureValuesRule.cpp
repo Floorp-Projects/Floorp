@@ -59,7 +59,8 @@ void CSSFontFeatureValuesRule::SetValueText(const nsAString& aValueText,
 
 bool CSSFontFeatureValuesRule::IsCCLeaf() const { return Rule::IsCCLeaf(); }
 
-/* virtual */ JSObject* CSSFontFeatureValuesRule::WrapObject(
+/* virtual */
+JSObject* CSSFontFeatureValuesRule::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return CSSFontFeatureValuesRule_Binding::Wrap(aCx, this, aGivenProto);
 }

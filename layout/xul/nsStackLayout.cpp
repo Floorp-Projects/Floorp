@@ -39,7 +39,8 @@ nsresult NS_NewStackLayout(nsCOMPtr<nsBoxLayout>& aNewLayout) {
   return NS_OK;
 }
 
-/*static*/ void nsStackLayout::Shutdown() { NS_IF_RELEASE(gInstance); }
+/*static*/
+void nsStackLayout::Shutdown() { NS_IF_RELEASE(gInstance); }
 
 nsStackLayout::nsStackLayout() {}
 

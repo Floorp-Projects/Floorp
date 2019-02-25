@@ -1018,8 +1018,9 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetBottom() {
   return GetOffsetWidthFor(eSideBottom);
 }
 
-/* static */ void nsComputedDOMStyle::SetToRGBAColor(
-    nsROCSSPrimitiveValue* aValue, nscolor aColor) {
+/* static */
+void nsComputedDOMStyle::SetToRGBAColor(nsROCSSPrimitiveValue* aValue,
+                                        nscolor aColor) {
   nsAutoString string;
   nsStyleUtil::GetSerializedColorValue(aColor, string);
   aValue->SetString(string);
@@ -1127,8 +1128,9 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTransform() {
   return GetTransformValue(display->mSpecifiedTransform);
 }
 
-/* static */ already_AddRefed<nsROCSSPrimitiveValue>
-nsComputedDOMStyle::MatrixToCSSValue(const mozilla::gfx::Matrix4x4& matrix) {
+/* static */
+already_AddRefed<nsROCSSPrimitiveValue> nsComputedDOMStyle::MatrixToCSSValue(
+    const mozilla::gfx::Matrix4x4& matrix) {
   bool is3D = !matrix.Is2D();
 
   nsAutoString resultString(NS_LITERAL_STRING("matrix"));
@@ -3654,14 +3656,16 @@ void nsComputedDOMStyle::ParentChainChanged(nsIContent* aContent) {
   ClearComputedStyle();
 }
 
-/* static */ ComputedStyleMap* nsComputedDOMStyle::GetComputedStyleMap() {
+/* static */
+ComputedStyleMap* nsComputedDOMStyle::GetComputedStyleMap() {
   static ComputedStyleMap map{};
   return &map;
 }
 
 static StaticAutoPtr<nsTArray<const char*>> gCallbackPrefs;
 
-/* static */ void nsComputedDOMStyle::RegisterPrefChangeCallbacks() {
+/* static */
+void nsComputedDOMStyle::RegisterPrefChangeCallbacks() {
   // Note that this will register callbacks for all properties with prefs, not
   // just those that are implemented on computed style objects, as it's not
   // easy to grab specific property data from ServoCSSPropList.h based on the
@@ -3692,7 +3696,8 @@ static StaticAutoPtr<nsTArray<const char*>> gCallbackPrefs;
                                  GetComputedStyleMap());
 }
 
-/* static */ void nsComputedDOMStyle::UnregisterPrefChangeCallbacks() {
+/* static */
+void nsComputedDOMStyle::UnregisterPrefChangeCallbacks() {
   if (!gCallbackPrefs) {
     return;
   }
