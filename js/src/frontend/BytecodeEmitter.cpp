@@ -2211,9 +2211,9 @@ bool BytecodeEmitter::allocateResumeIndex(ptrdiff_t offset,
   static constexpr uint32_t MaxResumeIndex = JS_BITMASK(24);
 
   static_assert(
-      MaxResumeIndex < uint32_t(GeneratorObject::RESUME_INDEX_CLOSING),
-      "resumeIndex should not include magic GeneratorObject resumeIndex "
-      "values");
+      MaxResumeIndex < uint32_t(AbstractGeneratorObject::RESUME_INDEX_CLOSING),
+      "resumeIndex should not include magic AbstractGeneratorObject "
+      "resumeIndex values");
   static_assert(
       MaxResumeIndex <= INT32_MAX / sizeof(uintptr_t),
       "resumeIndex * sizeof(uintptr_t) must fit in an int32. JIT code relies "
@@ -7172,8 +7172,8 @@ bool BytecodeEmitter::emitSelfHostedResumeGenerator(BinaryNode* callNode) {
 
   ParseNode* kindNode = valNode->pn_next;
   MOZ_ASSERT(kindNode->isKind(ParseNodeKind::StringExpr));
-  uint16_t operand =
-      GeneratorObject::getResumeKind(cx, kindNode->as<NameNode>().atom());
+  uint16_t operand = AbstractGeneratorObject::getResumeKind(
+      cx, kindNode->as<NameNode>().atom());
   MOZ_ASSERT(!kindNode->pn_next);
 
   if (!emitCall(JSOP_RESUME, operand)) {

@@ -4275,11 +4275,12 @@ bool CacheIRCompiler::emitCallIsSuspendedGeneratorResult() {
 
   // If the resumeIndex slot holds an int32 value < RESUME_INDEX_CLOSING,
   // the generator is suspended.
-  Address addr(scratch, GeneratorObject::offsetOfResumeIndexSlot());
+  Address addr(scratch, AbstractGeneratorObject::offsetOfResumeIndexSlot());
   masm.branchTestInt32(Assembler::NotEqual, addr, &returnFalse);
   masm.unboxInt32(addr, scratch);
   masm.branch32(Assembler::AboveOrEqual, scratch,
-                Imm32(GeneratorObject::RESUME_INDEX_CLOSING), &returnFalse);
+                Imm32(AbstractGeneratorObject::RESUME_INDEX_CLOSING),
+                &returnFalse);
 
   masm.moveValue(BooleanValue(true), output.valueReg());
   masm.jump(&done);
