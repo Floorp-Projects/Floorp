@@ -94,7 +94,6 @@
 
 .expression-container__close-btn {
   position: absolute;
-  offset-inline-end: 0px;
   inset-inline-end: 0px;
   top: 1px;
 }

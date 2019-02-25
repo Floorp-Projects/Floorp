@@ -34,7 +34,7 @@
 .search-field .img.search {
   position: absolute;
   z-index: 1;
-  left: 6px;
+  inset-inline-start: 6px;
   top: calc(50% - 8px);
   mask-size: 12px;
   background-color: var(--theme-icon-dimmed-color);
@@ -42,7 +42,7 @@
 }
 
 .search-field.big .img.search {
-  left: 12px;
+  inset-inline-start: 12px;
   mask-size: 16px;
 }
 
