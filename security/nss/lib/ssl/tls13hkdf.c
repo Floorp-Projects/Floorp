@@ -140,14 +140,13 @@ tls13_HkdfExpandLabel(PK11SymKey *prk, SSLHashType baseHash,
     const char *kLabelPrefix = "tls13 ";
     const unsigned int kLabelPrefixLen = strlen(kLabelPrefix);
 
-    if (handshakeHash) {
-        if (handshakeHashLen > 255) {
-            PORT_Assert(0);
-            PORT_SetError(SEC_ERROR_INVALID_ARGS);
-            return SECFailure;
-        }
-    } else {
-        PORT_Assert(!handshakeHashLen);
+    PORT_Assert(prk);
+    PORT_Assert(keyp);
+    if ((handshakeHashLen > 255) ||
+        (handshakeHash == NULL && handshakeHashLen > 0) ||
+        (labelLen + kLabelPrefixLen > 255)) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
     }
 
     /*

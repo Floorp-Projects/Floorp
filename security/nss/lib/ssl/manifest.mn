@@ -55,6 +55,7 @@ CSRCS = \
         tls13replay.c \
         sslcert.c \
         sslgrp.c \
+        sslprimitive.c \
         tls13esni.c \
         $(NULL)
 
