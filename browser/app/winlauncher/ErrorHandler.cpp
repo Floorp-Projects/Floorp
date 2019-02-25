@@ -57,6 +57,7 @@ static const wchar_t kUrl[] = TELEMETRY_BASE_URL TELEMETRY_NAMESPACE
 static const uint32_t kGuidCharLenWithNul = 39;
 static const uint32_t kGuidCharLenNoBracesNoNul = 36;
 static const mozilla::StaticXREAppData* gAppData;
+static bool gForceEventLog = false;
 
 namespace {
 
@@ -670,7 +671,7 @@ static unsigned __stdcall SendPingThread(void* aContext) {
   mozilla::UniquePtr<PingThreadContext> context(
       reinterpret_cast<PingThreadContext*>(aContext));
 
-  if (!DoSendPing(*context)) {
+  if (!DoSendPing(*context) || gForceEventLog) {
     PostErrorToLog(context->mLauncherError);
   }
 
@@ -724,7 +725,7 @@ void HandleLauncherError(const LauncherError& aError) {
   Unused << regInfo.DisableDueToFailure();
 #endif  // defined(MOZ_LAUNCHER_PROCESS)
 
-  if (SendPing(aError)) {
+  if (SendPing(aError) && !gForceEventLog) {
     return;
   }
 
@@ -733,6 +734,10 @@ void HandleLauncherError(const LauncherError& aError) {
 
 void SetLauncherErrorAppData(const StaticXREAppData& aAppData) {
   gAppData = &aAppData;
+}
+
+void SetLauncherErrorForceEventLog() {
+  gForceEventLog = true;
 }
 
 }  // namespace mozilla

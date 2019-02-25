@@ -44,6 +44,8 @@ struct StaticXREAppData;
 
 void SetLauncherErrorAppData(const StaticXREAppData& aAppData);
 
+void SetLauncherErrorForceEventLog();
+
 }  // namespace mozilla
 
 #endif  //  mozilla_ErrorHandler_h
