@@ -181,8 +181,14 @@ function remoteSettingsFunction() {
     } catch (e) {
       // Report polling error to Uptake Telemetry.
       let reportStatus;
-      if (/Server/.test(e.message)) {
+      if (/JSON\.parse/.test(e.message)) {
+        reportStatus = UptakeTelemetry.STATUS.PARSE_ERROR;
+      } else if (/content-type/.test(e.message)) {
+        reportStatus = UptakeTelemetry.STATUS.CONTENT_ERROR;
+      } else if (/Server/.test(e.message)) {
         reportStatus = UptakeTelemetry.STATUS.SERVER_ERROR;
+      } else if (/Timeout/.test(e.message)) {
+        reportStatus = UptakeTelemetry.STATUS.TIMEOUT_ERROR;
       } else if (/NetworkError/.test(e.message)) {
         reportStatus = UptakeTelemetry.STATUS.NETWORK_ERROR;
       } else {

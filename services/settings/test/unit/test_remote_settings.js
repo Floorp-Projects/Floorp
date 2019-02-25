@@ -64,7 +64,9 @@ function run_test() {
       }
       response.setHeader("Date", (new Date()).toUTCString());
 
-      response.write(JSON.stringify(sample.responseBody));
+      const body = typeof sample.responseBody == "string" ? sample.responseBody
+                                                          : JSON.stringify(sample.responseBody);
+      response.write(body);
       response.finish();
     } catch (e) {
       info(e);
@@ -330,7 +332,39 @@ add_task(async function test_telemetry_reports_if_sync_fails() {
   } catch (e) {}
 
   const endHistogram = getUptakeTelemetrySnapshot(client.identifier);
-  const expectedIncrements = {[UptakeTelemetry.STATUS.SYNC_ERROR]: 1};
+  const expectedIncrements = {[UptakeTelemetry.STATUS.SERVER_ERROR]: 1};
+  checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
+});
+add_task(clear_state);
+
+add_task(async function test_telemetry_reports_if_parsing_fails() {
+  const collection = await client.openCollection();
+  await collection.db.saveLastModified(10000);
+
+  const startHistogram = getUptakeTelemetrySnapshot(client.identifier);
+
+  try {
+    await client.maybeSync(10001);
+  } catch (e) { }
+
+  const endHistogram = getUptakeTelemetrySnapshot(client.identifier);
+  const expectedIncrements = { [UptakeTelemetry.STATUS.PARSE_ERROR]: 1 };
+  checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
+});
+add_task(clear_state);
+
+add_task(async function test_telemetry_reports_if_fetching_signature_fails() {
+  const collection = await client.openCollection();
+  await collection.db.saveLastModified(11000);
+
+  const startHistogram = getUptakeTelemetrySnapshot(client.identifier);
+
+  try {
+    await client.maybeSync(11001);
+  } catch (e) { }
+
+  const endHistogram = getUptakeTelemetrySnapshot(client.identifier);
+  const expectedIncrements = { [UptakeTelemetry.STATUS.SERVER_ERROR]: 1 };
   checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
 });
 add_task(clear_state);
@@ -520,6 +554,48 @@ function getSampleResponse(req, port) {
         "Server: waitress",
       ],
       "status": {status: 503, statusText: "Service Unavailable"},
+      "responseBody": {
+        code: 503,
+        errno: 999,
+        error: "Service Unavailable",
+      },
+    },
+    "GET:/v1/buckets/main/collections/password-fields/records?_expected=10001&_sort=-last_modified&_since=10000": {
+      "sampleHeaders": [
+        "Access-Control-Allow-Origin: *",
+        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+        "Content-Type: application/json; charset=UTF-8",
+        "Server: waitress",
+        "Etag: \"10001\"",
+      ],
+      "status": { status: 200, statusText: "OK" },
+      "responseBody": "<invalid json",
+    },
+    "GET:/v1/buckets/main/collections/password-fields/records?_expected=11001&_sort=-last_modified&_since=11000": {
+      "sampleHeaders": [
+        "Access-Control-Allow-Origin: *",
+        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+        "Content-Type: application/json; charset=UTF-8",
+        "Server: waitress",
+      ],
+      "status": { status: 503, statusText: "Service Unavailable" },
+      "responseBody": {
+        "data": [{
+          "id": "c4f021e3-f68c-4269-ad2a-d4ba87762b35",
+          "last_modified": 4000,
+          "website": "https://www.eff.org",
+          "selector": "#pwd",
+        }],
+      },
+    },
+    "GET:/v1/buckets/main/collections/password-fields?_expected=11001": {
+      "sampleHeaders": [
+        "Access-Control-Allow-Origin: *",
+        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+        "Content-Type: application/json; charset=UTF-8",
+        "Server: waitress",
+      ],
+      "status": { status: 503, statusText: "Service Unavailable" },
       "responseBody": {
         code: 503,
         errno: 999,
