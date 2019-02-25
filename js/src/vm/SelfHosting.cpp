@@ -43,6 +43,7 @@
 #include "js/Wrapper.h"
 #include "util/StringBuffer.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
 #include "vm/Compression.h"
 #include "vm/GeneratorObject.h"

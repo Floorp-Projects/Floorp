@@ -7,6 +7,7 @@
 #include "vm/GeneratorObject.h"
 
 #include "js/PropertySpec.h"
+#include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
 #include "vm/JSObject.h"
 
@@ -33,8 +34,7 @@ JSObject* AbstractGeneratorObject::create(JSContext* cx,
   } else if (fun->isGenerator()) {
     genObj = AsyncGeneratorObject::create(cx, fun);
   } else {
-    RootedObject proto(cx, nullptr);
-    genObj = NewObjectWithGivenProto<AsyncFunctionGeneratorObject>(cx, proto);
+    genObj = AsyncFunctionGeneratorObject::create(cx, fun);
   }
   if (!genObj) {
     return nullptr;
@@ -220,10 +220,6 @@ static const JSFunctionSpec generator_methods[] = {
     JS_SELF_HOSTED_FN("next", "GeneratorNext", 1, 0),
     JS_SELF_HOSTED_FN("throw", "GeneratorThrow", 1, 0),
     JS_SELF_HOSTED_FN("return", "GeneratorReturn", 1, 0), JS_FS_END};
-
-const Class AsyncFunctionGeneratorObject::class_ = {
-    "AsyncFunctionGenerator",
-    JSCLASS_HAS_RESERVED_SLOTS(AsyncFunctionGeneratorObject::RESERVED_SLOTS)};
 
 JSObject* js::NewSingletonObjectWithFunctionPrototype(
     JSContext* cx, Handle<GlobalObject*> global) {

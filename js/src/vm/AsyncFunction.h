@@ -7,12 +7,13 @@
 #ifndef vm_AsyncFunction_h
 #define vm_AsyncFunction_h
 
+#include "builtin/Promise.h"
+#include "js/Class.h"
+#include "vm/GeneratorObject.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 
 namespace js {
-
-class AsyncFunctionGeneratorObject;
 
 // An async function is implemented using two function objects, which are
 // referred to as the "unwrapped" and the "wrapped" async function object.
@@ -45,16 +46,36 @@ JSObject* WrapAsyncFunctionWithProto(JSContext* cx, HandleFunction unwrapped,
 // prototype object.
 JSObject* WrapAsyncFunction(JSContext* cx, HandleFunction unwrapped);
 
+class AsyncFunctionGeneratorObject;
+
 // Resume the async function when the `await` operand resolves.
 // Split into two functions depending on whether the awaited value was
 // fulfilled or rejected.
 MOZ_MUST_USE bool AsyncFunctionAwaitedFulfilled(
-    JSContext* cx, Handle<PromiseObject*> resultPromise,
-    Handle<AsyncFunctionGeneratorObject*> generator, HandleValue value);
+    JSContext* cx, Handle<AsyncFunctionGeneratorObject*> generator,
+    HandleValue value);
 
 MOZ_MUST_USE bool AsyncFunctionAwaitedRejected(
-    JSContext* cx, Handle<PromiseObject*> resultPromise,
-    Handle<AsyncFunctionGeneratorObject*> generator, HandleValue reason);
+    JSContext* cx, Handle<AsyncFunctionGeneratorObject*> generator,
+    HandleValue reason);
+
+class AsyncFunctionGeneratorObject : public AbstractGeneratorObject {
+ public:
+  enum {
+    PROMISE_SLOT = AbstractGeneratorObject::RESERVED_SLOTS,
+
+    RESERVED_SLOTS
+  };
+
+  static const Class class_;
+
+  static AsyncFunctionGeneratorObject* create(JSContext* cx,
+                                              HandleFunction asyncGen);
+
+  PromiseObject* promise() {
+    return &getFixedSlot(PROMISE_SLOT).toObject().as<PromiseObject>();
+  }
+};
 
 }  // namespace js
 

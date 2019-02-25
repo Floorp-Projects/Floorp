@@ -41,7 +41,7 @@ assertEq(hits, 1);
 let pw2 = gw.makeDebuggeeValue(p2);
 assertEq(pw2.isPromise, true);
 assertEq(pw2.promiseState, "fulfilled");
-assertEq(pw2.promiseValue, undefined);
+assertEq(pw2.promiseValue, "moar ponies");
 
 let pw = gw.makeDebuggeeValue(p);
 assertEq(pw.isPromise, true);
