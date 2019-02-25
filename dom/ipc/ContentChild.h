@@ -9,14 +9,18 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/nsIContentChild.h"
 #include "mozilla/dom/PBrowserOrId.h"
 #include "mozilla/dom/PContentChild.h"
+#include "mozilla/dom/CPOWManagerGetter.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/ipc/Shmem.h"
+#include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "nsAutoPtr.h"
 #include "nsHashKeys.h"
 #include "nsIObserver.h"
 #include "nsTHashtable.h"
+#include "nsStringFwd.h"
+#include "nsTArrayForwardDeclare.h"
 #include "nsRefPtrHashtable.h"
 
 #include "nsIWindowProvider.h"
@@ -77,7 +81,8 @@ class FileCreatorHelper;
 
 class ContentChild final : public PContentChild,
                            public nsIWindowProvider,
-                           public nsIContentChild {
+                           public CPOWManagerGetter,
+                           public mozilla::ipc::IShmemAllocator {
   typedef mozilla::dom::ClonedMessageData ClonedMessageData;
   typedef mozilla::ipc::FileDescriptor FileDescriptor;
   typedef mozilla::ipc::OptionalURIParams OptionalURIParams;
