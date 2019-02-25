@@ -102,7 +102,6 @@ SplitNodeTransaction::DoTransaction() {
     // XXX This must be a bug.
     error.SuppressException();
   }
-  MOZ_ASSERT(mStartOfRightNode.Offset() == mNewLeftNode->Length());
   EditorRawDOMPoint atEndOfLeftNode;
   atEndOfLeftNode.SetToEndOf(mNewLeftNode);
   selection->Collapse(atEndOfLeftNode, error);
