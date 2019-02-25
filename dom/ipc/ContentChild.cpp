@@ -31,8 +31,6 @@
 #include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ClientOpenWindowOpActors.h"
 #include "mozilla/dom/ChildProcessMessageManager.h"
-#include "mozilla/dom/ContentBridgeChild.h"
-#include "mozilla/dom/ContentBridgeParent.h"
 #include "mozilla/dom/ContentProcessMessageManager.h"
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/ContentParent.h"
@@ -1314,12 +1312,6 @@ bool ContentChild::DeallocPCycleCollectWithLogsChild(
   RefPtr<CycleCollectWithLogsChild> actor =
       dont_AddRef(static_cast<CycleCollectWithLogsChild*>(aActor));
   return true;
-}
-
-mozilla::ipc::IPCResult ContentChild::RecvInitContentBridgeChild(
-    Endpoint<PContentBridgeChild>&& aEndpoint) {
-  ContentBridgeChild::Create(std::move(aEndpoint));
-  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvInitGMPService(
