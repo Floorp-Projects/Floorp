@@ -1619,3 +1619,15 @@ add_task(async function test_multistore_keyed_individual_snapshot() {
   Assert.deepEqual(undefined, hist.snapshot({store: "main"}));
   Assert.deepEqual({}, hist.snapshot({store: "sync"}));
 });
+
+add_task(async function test_can_record_in_process_regression_bug_1530361() {
+  Telemetry.getSnapshotForHistograms("main", true);
+
+  // The socket and gpu processes should not have any histograms.
+  // Flag and count histograms have defaults, so if we're accidentally recording them
+  // in these processes they'd show up even immediately after being cleared.
+  let snapshot = Telemetry.getSnapshotForHistograms("main", true);
+
+  Assert.deepEqual(snapshot.gpu, {}, "No histograms should have been recorded for the gpu process");
+  Assert.deepEqual(snapshot.socket, {}, "No histograms should have been recorded for the socket process");
+});
