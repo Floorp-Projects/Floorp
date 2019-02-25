@@ -890,6 +890,14 @@ macro_rules! define_string_types {
             }
         }
 
+        impl Clone for $String {
+            fn clone(&self) -> Self {
+                let mut copy = $String::new();
+                copy.assign(self);
+                copy
+            }
+        }
+
         impl AsRef<[$char_t]> for $String {
             fn as_ref(&self) -> &[$char_t] {
                 &self
