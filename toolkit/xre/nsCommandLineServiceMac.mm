@@ -35,6 +35,8 @@ void AddToCommandLine(const char* inArgText) {
   return;
 }
 
+// Caller has ownership of argv and is responsible for freeing the allocated
+// memory.
 void SetupMacCommandLine(int& argc, char**& argv, bool forRestart) {
   sArgs = static_cast<char**>(malloc(kArgsGrowSize * sizeof(char*)));
   if (!sArgs) return;
@@ -71,6 +73,7 @@ void SetupMacCommandLine(int& argc, char**& argv, bool forRestart) {
 
   sBuildingCommandLine = false;
 
+  free(argv);
   argc = sArgsUsed;
   argv = sArgs;
 }
