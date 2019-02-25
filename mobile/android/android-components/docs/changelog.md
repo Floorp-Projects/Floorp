@@ -4,13 +4,21 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 0.44.0-SNAPSHOT  (In Development)
+# 0.45.0-SNAPSHOT  (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.43.0...master)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/46?closed=1)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.44.0...master)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/47?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+
+# 0.44.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.43.0...v0.44.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/46?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v0.44.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v0.44.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v0.44.0/buildSrc/src/main/java/Config.kt)
 
 * **browser-menu**
   * Added option to set background color by overriding `mozac_browser_menu_background` color resource.
@@ -36,18 +44,18 @@ permalink: /changelog/
   * ⚠️ **This is a breaking API change!**
   * Now makes use of our concept-fetch module when communicating with the server. This allows applications to specify which HTTP client library to use e.g. apps already using GeckoView can now specify that the `GeckoViewFetchClient` should be used. As a consequence, the fetch client instance now needs to be provided when creating a `KintoExperimentSource`. 
 
-```kotlin
-  val fretboard = Fretboard(    
-    KintoExperimentSource(
-      baseUrl,
-      bucketName,
-      collectionName,
-      // Specify that the GV-based fetch client should be used.
-      GeckoViewFetchClient(context)
-    ),
-    experimentStorage
-)  
-```
+  ```kotlin
+    val fretboard = Fretboard(    
+      KintoExperimentSource(
+        baseUrl,
+        bucketName,
+        collectionName,
+        // Specify that the GV-based fetch client should be used.
+        GeckoViewFetchClient(context)
+      ),
+      experimentStorage
+  )  
+  ```
 
 * **feature-session-bundling**
   * Added `SessionBundleStorage.autoClose()`: When "auto close" is enabled the currently active `SessionBundle` will automatically be closed and a new `SessionBundle`  will be started if the bundle lifetime expires while the app is in the background.
