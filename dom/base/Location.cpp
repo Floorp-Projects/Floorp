@@ -151,6 +151,15 @@ already_AddRefed<nsDocShellLoadState> Location::CheckURL(
 
   loadState->SetTriggeringPrincipal(triggeringPrincipal);
 
+  // Currently we query the CSP from the triggeringPrincipal, which is the
+  // doc->NodePrincipal() in case there is a doc. In that case we can query
+  // the CSP directly from the doc after Bug 965637. In case there is no doc,
+  // then we also do not need to query the CSP, because only documents can have
+  // a CSP attached.
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  triggeringPrincipal->GetCsp(getter_AddRefs(csp));
+  loadState->SetCsp(csp);
+
   if (sourceURI) {
     nsCOMPtr<nsIReferrerInfo> referrerInfo =
         new ReferrerInfo(sourceURI, referrerPolicy);

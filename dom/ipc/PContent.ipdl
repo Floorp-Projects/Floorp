@@ -1138,6 +1138,7 @@ parent:
                        nsCString aBaseURI,
                        float aFullZoom,
                        Principal aTriggeringPrincipal,
+                       nsIContentSecurityPolicy aCsp,
                        uint32_t aReferrerPolicy)
         returns (CreatedWindowInfo window);
 
@@ -1153,6 +1154,7 @@ parent:
       float aFullZoom,
       nsString aName,
       Principal aTriggeringPrincipal,
+      nsIContentSecurityPolicy aCsp,
       uint32_t aReferrerPolicy);
 
     /**

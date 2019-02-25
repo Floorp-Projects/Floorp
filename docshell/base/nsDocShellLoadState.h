@@ -13,6 +13,7 @@
 #include "nsDocShellLoadTypes.h"
 #include "mozilla/net/ReferrerPolicy.h"
 
+class nsIContentSecurityPolicy;
 class nsIInputStream;
 class nsISHEntry;
 class nsIURI;
@@ -77,6 +78,10 @@ class nsDocShellLoadState final {
   nsIPrincipal* TriggeringPrincipal() const;
 
   void SetTriggeringPrincipal(nsIPrincipal* aTriggeringPrincipal);
+
+  nsIContentSecurityPolicy* Csp() const;
+
+  void SetCsp(nsIContentSecurityPolicy* aCsp);
 
   bool InheritPrincipal() const;
 
@@ -225,6 +230,13 @@ class nsDocShellLoadState final {
   // the argument aURI is provided by the web, then please do not pass a
   // SystemPrincipal as the triggeringPrincipal.
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
+
+  // The CSP of the load, that is, the CSP of the entity responsible for causing
+  // the load to occur. Most likely this is the CSP of the document that started
+  // the load. In case the entity starting the load did not use a CSP, then mCsp
+  // can be null. Please note that this is also the CSP that will be applied to
+  // the load in case the load encounters a server side redirect.
+  nsCOMPtr<nsIContentSecurityPolicy> mCsp;
 
   // If a refresh is caused by http-equiv="refresh" we want to set
   // aResultPrincipalURI, but we do not want to overwrite the channel's

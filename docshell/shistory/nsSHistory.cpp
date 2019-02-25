@@ -1496,6 +1496,8 @@ nsresult nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
       aFrameEntry->GetTriggeringPrincipal();
   loadState->SetTriggeringPrincipal(triggeringPrincipal);
   loadState->SetFirstParty(false);
+  nsCOMPtr<nsIContentSecurityPolicy> csp = aFrameEntry->GetCsp();
+  loadState->SetCsp(csp);
 
   // Time to initiate a document load
   return aFrameDS->LoadURI(loadState);

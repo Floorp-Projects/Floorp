@@ -362,7 +362,8 @@ NS_IMETHODIMP nsContentTreeOwner::OnBeforeLinkTraversal(
 
 NS_IMETHODIMP nsContentTreeOwner::ShouldLoadURI(
     nsIDocShell* aDocShell, nsIURI* aURI, nsIURI* aReferrer, bool aHasPostData,
-    nsIPrincipal* aTriggeringPrincipal, bool* _retval) {
+    nsIPrincipal* aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
+    bool* _retval) {
   NS_ENSURE_STATE(mXULWindow);
 
   nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow;
@@ -371,7 +372,7 @@ NS_IMETHODIMP nsContentTreeOwner::ShouldLoadURI(
   if (xulBrowserWindow)
     return xulBrowserWindow->ShouldLoadURI(aDocShell, aURI, aReferrer,
                                            aHasPostData, aTriggeringPrincipal,
-                                           _retval);
+                                           aCsp, _retval);
 
   *_retval = true;
   return NS_OK;
@@ -386,7 +387,8 @@ NS_IMETHODIMP nsContentTreeOwner::ShouldLoadURIInThisProcess(nsIURI* aURI,
 
 NS_IMETHODIMP nsContentTreeOwner::ReloadInFreshProcess(
     nsIDocShell* aDocShell, nsIURI* aURI, nsIURI* aReferrer,
-    nsIPrincipal* aTriggeringPrincipal, uint32_t aLoadFlags, bool* aRetVal) {
+    nsIPrincipal* aTriggeringPrincipal, uint32_t aLoadFlags,
+    nsIContentSecurityPolicy* aCsp, bool* aRetVal) {
   NS_WARNING("Cannot reload in fresh process from a nsContentTreeOwner!");
   *aRetVal = false;
   return NS_OK;

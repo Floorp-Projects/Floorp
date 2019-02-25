@@ -62,6 +62,7 @@ nsDocShellLoadState::nsDocShellLoadState(DocShellLoadStateInit& aLoadState) {
   mBaseURI = aLoadState.BaseURI();
   mTriggeringPrincipal = aLoadState.TriggeringPrincipal();
   mPrincipalToInherit = aLoadState.PrincipalToInherit();
+  mCsp = aLoadState.Csp();
 }
 
 nsDocShellLoadState::~nsDocShellLoadState() {}
@@ -166,6 +167,12 @@ void nsDocShellLoadState::SetPrincipalToInherit(
     nsIPrincipal* aPrincipalToInherit) {
   mPrincipalToInherit = aPrincipalToInherit;
 }
+
+void nsDocShellLoadState::SetCsp(nsIContentSecurityPolicy* aCsp) {
+  mCsp = aCsp;
+}
+
+nsIContentSecurityPolicy* nsDocShellLoadState::Csp() const { return mCsp; }
 
 bool nsDocShellLoadState::InheritPrincipal() const { return mInheritPrincipal; }
 
@@ -459,6 +466,7 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize() {
   loadState.BaseURI() = mBaseURI;
   loadState.TriggeringPrincipal() = mTriggeringPrincipal;
   loadState.PrincipalToInherit() = mPrincipalToInherit;
+  loadState.Csp() = mCsp;
   loadState.Referrer() = mReferrerInfo->GetOriginalReferrer();
   loadState.SendReferrer() = mReferrerInfo->GetSendReferrer();
   loadState.ReferrerPolicy() = mReferrerInfo->GetReferrerPolicy();
