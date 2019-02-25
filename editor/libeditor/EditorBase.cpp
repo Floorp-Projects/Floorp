@@ -332,7 +332,9 @@ nsresult EditorBase::PostCreate() {
   // value first.
   mFlags = ~mFlags;
   nsresult rv = SetFlags(~mFlags);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
 
   // These operations only need to happen on the first PostCreate call
   if (!mDidPostCreate) {
@@ -341,7 +343,9 @@ nsresult EditorBase::PostCreate() {
     // Set up listeners
     CreateEventListeners();
     rv = InstallEventListeners();
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return EditorBase::ToGenericNSResult(rv);
+    }
 
     // nuke the modification count, so the doc appears unmodified
     // do this before we notify listeners
@@ -363,8 +367,9 @@ nsresult EditorBase::PostCreate() {
     mEventListener->SpellCheckIfNeeded();
 
     IMEState newState;
-    rv = GetPreferredIMEState(&newState);
-    NS_ENSURE_SUCCESS(rv, NS_OK);
+    if (NS_WARN_IF(NS_FAILED(GetPreferredIMEState(&newState)))) {
+      return NS_OK;
+    }
     // May be null in design mode
     nsCOMPtr<nsIContent> content = GetFocusedContentForIME();
     IMEStateManager::UpdateIMEState(newState, content, this);
@@ -710,7 +715,8 @@ EditorBase::DoTransaction(nsITransaction* aTxn) {
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_FAILURE;
   }
-
+  // This is a low level API.  So, the caller might require raw error code.
+  // Therefore, don't need to use EditorBase::ToGenericNSResult().
   return DoTransactionInternal(aTxn);
 }
 
@@ -972,6 +978,8 @@ EditorBase::SelectAll() {
 
   nsresult rv = SelectAllInternal();
   if (NS_WARN_IF(NS_FAILED(rv))) {
+    // This is low level API for XUL applcation.  So, we should return raw
+    // error code here.
     return rv;
   }
   return NS_OK;
@@ -1005,7 +1013,9 @@ EditorBase::BeginningOfDocument() {
 
   // get the root element
   dom::Element* rootElement = GetRoot();
-  NS_ENSURE_TRUE(rootElement, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!rootElement)) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
   // find first editable thingy
   nsCOMPtr<nsINode> firstNode = GetFirstEditableNode(rootElement);
@@ -1037,7 +1047,13 @@ EditorBase::EndOfDocument() {
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  return CollapseSelectionToEnd();
+  nsresult rv = CollapseSelectionToEnd();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // This is low level API for XUL applcation.  So, we should return raw
+    // error code here.
+    return rv;
+  }
+  return NS_OK;
 }
 
 nsresult EditorBase::CollapseSelectionToEnd() {
@@ -1155,7 +1171,11 @@ EditorBase::SetAttribute(Element* aElement, const nsAString& aAttribute,
   }
 
   RefPtr<nsAtom> attribute = NS_Atomize(aAttribute);
-  return SetAttributeWithTransaction(*aElement, *attribute, aValue);
+  nsresult rv = SetAttributeWithTransaction(*aElement, *attribute, aValue);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 nsresult EditorBase::SetAttributeWithTransaction(Element& aElement,
@@ -1198,7 +1218,11 @@ EditorBase::RemoveAttribute(Element* aElement, const nsAString& aAttribute) {
   }
 
   RefPtr<nsAtom> attribute = NS_Atomize(aAttribute);
-  return RemoveAttributeWithTransaction(*aElement, *attribute);
+  nsresult rv = RemoveAttributeWithTransaction(*aElement, *attribute);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 nsresult EditorBase::RemoveAttributeWithTransaction(Element& aElement,
@@ -1367,8 +1391,12 @@ EditorBase::InsertNode(nsINode* aNodeToInsert, nsINode* aContainer,
       aOffset < 0
           ? static_cast<int32_t>(aContainer->Length())
           : std::min(aOffset, static_cast<int32_t>(aContainer->Length()));
-  return InsertNodeWithTransaction(*contentToInsert,
-                                   EditorRawDOMPoint(aContainer, offset));
+  nsresult rv = InsertNodeWithTransaction(
+      *contentToInsert, EditorRawDOMPoint(aContainer, offset));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 template <typename PT, typename CT>
@@ -1424,7 +1452,7 @@ EditorBase::SplitNode(nsINode* aNode, int32_t aOffset, nsINode** aNewLeftNode) {
       SplitNodeWithTransaction(EditorRawDOMPoint(aNode, offset), error);
   newNode.forget(aNewLeftNode);
   if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
+    return EditorBase::ToGenericNSResult(error.StealNSResult());
   }
   return NS_OK;
 }
@@ -1497,7 +1525,11 @@ EditorBase::JoinNodes(nsINode* aLeftNode, nsINode* aRightNode, nsINode*) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  return JoinNodesWithTransaction(*aLeftNode, *aRightNode);
+  nsresult rv = JoinNodesWithTransaction(*aLeftNode, *aRightNode);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 nsresult EditorBase::JoinNodesWithTransaction(nsINode& aLeftNode,
@@ -1569,7 +1601,11 @@ EditorBase::DeleteNode(nsINode* aNode) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  return DeleteNodeWithTransaction(*aNode);
+  nsresult rv = DeleteNodeWithTransaction(*aNode);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 nsresult EditorBase::DeleteNodeWithTransaction(nsINode& aNode) {
@@ -2262,8 +2298,12 @@ EditorBase::CloneAttribute(const nsAString& aAttribute, Element* aDestElement,
   }
 
   RefPtr<nsAtom> attribute = NS_Atomize(aAttribute);
-  return CloneAttributeWithTransaction(*attribute, *aDestElement,
-                                       *aSourceElement);
+  nsresult rv =
+      CloneAttributeWithTransaction(*attribute, *aDestElement, *aSourceElement);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 nsresult EditorBase::CloneAttributeWithTransaction(nsAtom& aAttribute,
@@ -4234,8 +4274,12 @@ EditorBase::SetAttributeOrEquivalent(Element* aElement,
   }
 
   RefPtr<nsAtom> attribute = NS_Atomize(aAttribute);
-  return SetAttributeOrEquivalent(aElement, attribute, aValue,
-                                  aSuppressTransaction);
+  nsresult rv = SetAttributeOrEquivalent(aElement, attribute, aValue,
+                                         aSuppressTransaction);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -4252,7 +4296,12 @@ EditorBase::RemoveAttributeOrEquivalent(Element* aElement,
   }
 
   RefPtr<nsAtom> attribute = NS_Atomize(aAttribute);
-  return RemoveAttributeOrEquivalent(aElement, attribute, aSuppressTransaction);
+  nsresult rv =
+      RemoveAttributeOrEquivalent(aElement, attribute, aSuppressTransaction);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 nsresult EditorBase::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
@@ -4432,7 +4481,9 @@ nsresult EditorBase::FinalizeSelection() {
   SelectionRefPtr()->SetAncestorLimiter(nullptr);
 
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
-  NS_ENSURE_TRUE(presShell, NS_ERROR_NOT_INITIALIZED);
+  if (NS_WARN_IF(!presShell)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
   if (RefPtr<nsCaret> caret = presShell->GetCaret()) {
     caret->SetIgnoreUserModify(true);
@@ -4441,7 +4492,9 @@ nsresult EditorBase::FinalizeSelection() {
   selectionController->SetCaretEnabled(false);
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  NS_ENSURE_TRUE(fm, NS_ERROR_NOT_INITIALIZED);
+  if (NS_WARN_IF(!fm)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
   fm->UpdateCaretForCaretBrowsingMode();
 
   if (!HasIndependentSelection()) {
@@ -4553,20 +4606,20 @@ nsresult EditorBase::ToggleTextDirection() {
 
   nsresult rv = DetermineCurrentDirection();
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
 
   if (IsRightToLeft()) {
     editActionData.SetData(NS_LITERAL_STRING("ltr"));
     nsresult rv = SetTextDirectionTo(TextDirection::eLTR);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return EditorBase::ToGenericNSResult(rv);
     }
   } else if (IsLeftToRight()) {
     editActionData.SetData(NS_LITERAL_STRING("rtl"));
     nsresult rv = SetTextDirectionTo(TextDirection::eRTL);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return EditorBase::ToGenericNSResult(rv);
     }
   } else {
     MOZ_ASSERT_UNREACHABLE(

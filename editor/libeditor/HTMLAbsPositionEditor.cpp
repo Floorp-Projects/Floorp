@@ -71,12 +71,12 @@ nsresult HTMLEditor::SetSelectionToAbsoluteOrStatic(bool aEnabled) {
   RefPtr<TextEditRules> rules(mRules);
   nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
   if (NS_FAILED(rv) || cancel) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
 
   rv = rules->DidDoAction(subActionInfo, rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
   return NS_OK;
 }
@@ -167,12 +167,12 @@ nsresult HTMLEditor::AddZIndex(int32_t aChange) {
   RefPtr<TextEditRules> rules(mRules);
   nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
 
   rv = rules->DidDoAction(subActionInfo, rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
   return NS_OK;
 }
@@ -259,7 +259,7 @@ HTMLEditor::RefreshGrabber() {
 
   nsresult rv = RefreshGrabberInternal();
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
   return NS_OK;
 }
