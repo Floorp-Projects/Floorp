@@ -24,11 +24,13 @@ WinCompositorWindowThread::WinCompositorWindowThread(base::Thread* aThread)
 
 WinCompositorWindowThread::~WinCompositorWindowThread() { delete mThread; }
 
-/* static */ WinCompositorWindowThread* WinCompositorWindowThread::Get() {
+/* static */
+WinCompositorWindowThread* WinCompositorWindowThread::Get() {
   return sWinCompositorWindowThread;
 }
 
-/* static */ void WinCompositorWindowThread::Start() {
+/* static */
+void WinCompositorWindowThread::Start() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sWinCompositorWindowThread);
 
@@ -46,7 +48,8 @@ WinCompositorWindowThread::~WinCompositorWindowThread() { delete mThread; }
   sWinCompositorWindowThread = new WinCompositorWindowThread(thread);
 }
 
-/* static */ void WinCompositorWindowThread::ShutDown() {
+/* static */
+void WinCompositorWindowThread::ShutDown() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sWinCompositorWindowThread);
 
@@ -65,13 +68,15 @@ void WinCompositorWindowThread::ShutDownTask(layers::SynchronousTask* aTask) {
   MOZ_ASSERT(IsInCompositorWindowThread());
 }
 
-/* static */ MessageLoop* WinCompositorWindowThread::Loop() {
+/* static */
+MessageLoop* WinCompositorWindowThread::Loop() {
   return sWinCompositorWindowThread
              ? sWinCompositorWindowThread->mThread->message_loop()
              : nullptr;
 }
 
-/* static */ bool WinCompositorWindowThread::IsInCompositorWindowThread() {
+/* static */
+bool WinCompositorWindowThread::IsInCompositorWindowThread() {
   return sWinCompositorWindowThread &&
          sWinCompositorWindowThread->mThread->thread_id() ==
              PlatformThread::CurrentId();
@@ -124,8 +129,8 @@ void InitializeWindowClass() {
   g_compositor_window_class = ::RegisterClassW(&wc);
 }
 
-/* static */ WinCompositorWnds
-WinCompositorWindowThread::CreateCompositorWindow() {
+/* static */
+WinCompositorWnds WinCompositorWindowThread::CreateCompositorWindow() {
   MOZ_ASSERT(Loop());
 
   if (!Loop()) {
@@ -168,7 +173,8 @@ WinCompositorWindowThread::CreateCompositorWindow() {
   return WinCompositorWnds(compositorWnd, initialParentWnd);
 }
 
-/* static */ void WinCompositorWindowThread::DestroyCompositorWindow(
+/* static */
+void WinCompositorWindowThread::DestroyCompositorWindow(
     WinCompositorWnds aWnds) {
   MOZ_ASSERT(aWnds.mCompositorWnd);
   MOZ_ASSERT(aWnds.mInitialParentWnd);
