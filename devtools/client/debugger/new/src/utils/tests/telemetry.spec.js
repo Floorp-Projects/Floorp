@@ -27,6 +27,7 @@ describe("telemetry.recordEvent()", () => {
       "debugger",
       null,
       {
+        // eslint-disable-next-line camelcase
         session_id: -1,
         bar: 1
       }

@@ -35,7 +35,7 @@ async function setupBundleFixture(name) {
     return { content };
   });
 
-  return await getOriginalURLs(source);
+  return getOriginalURLs(source);
 }
 
 module.exports = {
