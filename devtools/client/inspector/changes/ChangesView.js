@@ -40,6 +40,7 @@ class ChangesView {
     this.onChangesFront = this.onChangesFront.bind(this);
     this.onContextMenu = this.onContextMenu.bind(this);
     this.onCopy = this.onCopy.bind(this);
+    this.onCopyAllChanges = this.copyAllChanges.bind(this);
     this.onCopyRule = this.copyRule.bind(this);
     this.destroy = this.destroy.bind(this);
 
@@ -58,6 +59,7 @@ class ChangesView {
     const changesApp = ChangesApp({
       onContextMenu: this.onContextMenu,
       onCopy: this.onCopy,
+      onCopyAllChanges: this.onCopyAllChanges,
       onCopyRule: this.onCopyRule,
     });
 
@@ -104,6 +106,14 @@ class ChangesView {
       // teardown. Here we just catch the error and silently
       // ignore it.
     }
+  }
+
+  /**
+   * Handler for the "Copy All Changes" button. Simple wrapper that just calls
+   * |this.copyChanges()| with no filters in order to trigger default operation.
+   */
+  copyAllChanges() {
+    this.copyChanges();
   }
 
   /**
