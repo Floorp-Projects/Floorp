@@ -200,6 +200,27 @@ ContentAreaDropListener.prototype =
 
   },
 
+  getCSP: function(aEvent)
+  {
+    let sourceNode = aEvent.dataTransfer.mozSourceNode;
+    if (sourceNode &&
+        (sourceNode.localName !== "browser" ||
+         sourceNode.namespaceURI !== "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul")) {
+      // Use sourceNode's principal only if the sourceNode is not browser.
+      //
+      // If sourceNode is browser, the actual triggering principal may be
+      // differ than sourceNode's principal, since sourceNode's principal is
+      // top level document's one and the drag may be triggered from a frame
+      // with different principal.
+      if (sourceNode.nodePrincipal) {
+        // Currently we query the CSP from the nodePrincipal. After Bug 965637 we can
+        // query the CSP directly from the sourceNode.
+        return sourceNode.nodePrincipal.csp;
+      }
+    }
+    return null;
+  },
+
   canDropLink: function(aEvent, aAllowSameDocument)
   {
     if (this._eventTargetIsDisabled(aEvent))

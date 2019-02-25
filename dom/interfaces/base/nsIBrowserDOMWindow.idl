@@ -9,6 +9,7 @@ interface mozIDOMWindowProxy;
 interface nsIDOMWindow;
 interface nsIURI;
 interface nsIPrincipal;
+interface nsIContentSecurityPolicy;
 webidl Element;
 
 [scriptable, uuid(e774db14-79ac-4156-a7a3-aa3fd0a22c10)]
@@ -18,6 +19,7 @@ interface nsIOpenURIInFrameParams : nsISupports
   attribute unsigned long referrerPolicy;
   readonly attribute boolean isPrivate;
   attribute nsIPrincipal triggeringPrincipal;
+  attribute nsIContentSecurityPolicy csp;
 
   // The browser or frame element in the parent process which holds the
   // opener window in the content process. May be null.

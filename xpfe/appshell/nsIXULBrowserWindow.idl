@@ -14,6 +14,7 @@ interface nsIDocShell;
 interface nsITabParent;
 interface nsIPrincipal;
 interface mozIDOMWindowProxy;
+interface nsIContentSecurityPolicy;
 webidl Element;
 webidl Node;
 
@@ -61,12 +62,16 @@ interface nsIXULBrowserWindow : nsISupports
    *        boundaries.
    * @param aTriggeringPrincipal
    *        The principal that initiated the load of aURI.
+   * @param aCsp
+   *        The CSP to be used for that load. That is the CSP that e.g. upgrades
+   *        the load to HTTPS in case upgrade-insecure-requests is set
    */
   bool shouldLoadURI(in nsIDocShell    aDocShell,
                      in nsIURI         aURI,
                      in nsIURI         aReferrer,
                      in boolean        aHasPostData,
-                     in nsIPrincipal   aTriggeringPrincipal);
+                     in nsIPrincipal   aTriggeringPrincipal,
+                     in nsIContentSecurityPolicy aCsp);
   /**
    * Show/hide a tooltip (when the user mouses over a link, say).
    */

@@ -73,6 +73,19 @@ nsOpenURIInFrameParams::SetTriggeringPrincipal(
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsOpenURIInFrameParams::GetCsp(nsIContentSecurityPolicy** aCsp) {
+  NS_IF_ADDREF(*aCsp = mCsp);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOpenURIInFrameParams::SetCsp(nsIContentSecurityPolicy* aCsp) {
+  NS_ENSURE_TRUE(aCsp, NS_ERROR_INVALID_ARG);
+  mCsp = aCsp;
+  return NS_OK;
+}
+
 nsresult nsOpenURIInFrameParams::GetOpenerBrowser(Element** aOpenerBrowser) {
   RefPtr<Element> owner = mOpenerBrowser;
   owner.forget(aOpenerBrowser);

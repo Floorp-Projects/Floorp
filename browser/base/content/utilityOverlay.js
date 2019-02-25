@@ -319,6 +319,7 @@ function openLinkIn(url, where, params) {
   var aIndicateErrorPageLoad = params.indicateErrorPageLoad;
   var aPrincipal            = params.originPrincipal;
   var aTriggeringPrincipal  = params.triggeringPrincipal;
+  var aCsp                  = params.csp;
   var aForceAboutBlankViewerInCurrent =
       params.forceAboutBlankViewerInCurrent;
   var aResolveOnNewTabCreated = params.resolveOnNewTabCreated;
@@ -430,6 +431,8 @@ function openLinkIn(url, where, params) {
     sa.appendElement(userContextIdSupports);
     sa.appendElement(aPrincipal);
     sa.appendElement(aTriggeringPrincipal);
+    sa.appendElement(null); // allowInheritPrincipal
+    sa.appendElement(aCsp);
 
     const sourceWindow = (w || window);
     let win;
@@ -548,6 +551,7 @@ function openLinkIn(url, where, params) {
                                               "init");
     targetBrowser.loadURI(url, {
       triggeringPrincipal: aTriggeringPrincipal,
+      csp: aCsp,
       referrerInfo: new ReferrerInfo(
         aReferrerPolicy, !aNoReferrer, aReferrerURI),
       flags,
@@ -582,6 +586,7 @@ function openLinkIn(url, where, params) {
       originPrincipal: aPrincipal,
       triggeringPrincipal: aTriggeringPrincipal,
       allowInheritPrincipal: aAllowInheritPrincipal,
+      csp: aCsp,
       focusUrlBar,
     });
     targetBrowser = tabUsedForLoad.linkedBrowser;

@@ -29,6 +29,7 @@ using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
 using refcounted class nsIPrincipal from "mozilla/dom/PermissionMessageUtils.h";
 using refcounted class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingContext.h";
 using refcounted class nsIURI from "mozilla/ipc/URIUtils.h";
+using refcounted class nsIContentSecurityPolicy from "mozilla/dom/CSPMessageUtils.h";
 
 namespace mozilla {
 namespace dom {
@@ -219,6 +220,13 @@ struct DocShellLoadStateInit
   nsCString TypeHint;
   nsString FileName;
   bool IsFromProcessingFrameAttributes;
+  // The Content Security Policy of the load, that is, the CSP of the entity
+  // responsible for causing the load to occur. Most likely this is the CSP
+  // of the document that started the load. In case the entity starting the
+  // load did not use a CSP, then Csp can be null. Please note that this is
+  // also the CSP that will be applied to the load in case the load
+  // encounters a server side redirect.
+  nsIContentSecurityPolicy Csp;
   // Fields missing due to lack of need or serialization
   // nsCOMPtr<nsISHEntry> mSHEntry;
   // nsCOMPtr<nsIDocShell> mSourceDocShell;
