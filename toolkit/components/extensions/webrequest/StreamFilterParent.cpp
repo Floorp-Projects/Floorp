@@ -358,9 +358,9 @@ nsresult StreamFilterParent::Write(Data& aData) {
   AssertIsIOThread();
 
   nsCOMPtr<nsIInputStream> stream;
-  nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream),
-                                      reinterpret_cast<char*>(aData.Elements()),
-                                      aData.Length());
+  nsresult rv = NS_NewByteInputStream(
+      getter_AddRefs(stream),
+      MakeSpan(reinterpret_cast<char*>(aData.Elements()), aData.Length()));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mOrigListener->OnDataAvailable(mChannel, mContext, stream, mOffset,

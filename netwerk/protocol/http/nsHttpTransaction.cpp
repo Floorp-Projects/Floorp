@@ -378,8 +378,7 @@ nsresult nsHttpTransaction::Init(
   // a non-owning reference to the request header data, so we MUST keep
   // mReqHeaderBuf around).
   nsCOMPtr<nsIInputStream> headers;
-  rv = NS_NewByteInputStream(getter_AddRefs(headers), mReqHeaderBuf.get(),
-                             mReqHeaderBuf.Length());
+  rv = NS_NewByteInputStream(getter_AddRefs(headers), mReqHeaderBuf);
   if (NS_FAILED(rv)) return rv;
 
   mHasRequestBody = !!requestBody;

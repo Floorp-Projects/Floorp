@@ -1224,8 +1224,8 @@ nsresult FetchAndConvertUnsupportedPayloads::ConvertPayload(
 
   // Convert the payload to an input stream.
   nsCOMPtr<nsIInputStream> stream;
-  nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream), aPayload.get(),
-                                      aPayload.Length(), NS_ASSIGNMENT_DEPEND);
+  nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream), aPayload,
+                                      NS_ASSIGNMENT_DEPEND);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Decode the input stream to a surface.

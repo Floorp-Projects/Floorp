@@ -87,8 +87,8 @@ already_AddRefed<Document> DOMParser::ParseFromString(const nsAString& aStr,
 
   // The new stream holds a reference to the buffer
   nsCOMPtr<nsIInputStream> stream;
-  nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream), utf8str.get(),
-                                      utf8str.Length(), NS_ASSIGNMENT_DEPEND);
+  nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream), utf8str,
+                                      NS_ASSIGNMENT_DEPEND);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(rv);
     return nullptr;
@@ -111,8 +111,9 @@ already_AddRefed<Document> DOMParser::ParseFromBuffer(Span<const uint8_t> aBuf,
   // The new stream holds a reference to the buffer
   nsCOMPtr<nsIInputStream> stream;
   nsresult rv = NS_NewByteInputStream(
-      getter_AddRefs(stream), reinterpret_cast<const char*>(aBuf.Elements()),
-      aBuf.Length(), NS_ASSIGNMENT_DEPEND);
+      getter_AddRefs(stream),
+      MakeSpan(reinterpret_cast<const char*>(aBuf.Elements()), aBuf.Length()),
+      NS_ASSIGNMENT_DEPEND);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return nullptr;
