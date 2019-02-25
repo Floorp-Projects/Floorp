@@ -3856,9 +3856,8 @@ already_AddRefed<MediaInputPort> MediaStreamGraphImpl::ConnectToCaptureStream(
 void MediaStreamGraph::DispatchToMainThreadStableState(
     already_AddRefed<nsIRunnable> aRunnable) {
   AssertOnGraphThreadOrNotRunning();
-  *static_cast<MediaStreamGraphImpl*>(this)
-       ->mPendingUpdateRunnables.AppendElement() =
-      AbstractMainThread()->CreateDirectTaskDrainer(std::move(aRunnable));
+  static_cast<MediaStreamGraphImpl*>(this)
+      ->mPendingUpdateRunnables.AppendElement(std::move(aRunnable));
 }
 
 Watchable<mozilla::GraphTime>& MediaStreamGraphImpl::CurrentTime() {

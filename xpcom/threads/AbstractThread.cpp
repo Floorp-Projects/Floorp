@@ -99,13 +99,6 @@ class EventTargetWrapper : public AbstractThread {
   RefPtr<nsIEventTarget> mTarget;
   Maybe<AutoTaskDispatcher> mTailDispatcher;
 
-  virtual already_AddRefed<nsIRunnable> CreateDirectTaskDrainer(
-      already_AddRefed<nsIRunnable> aRunnable) override {
-    RefPtr<Runner> runner =
-        new Runner(this, std::move(aRunnable), /* aDrainDirectTasks */ true);
-    return runner.forget();
-  }
-
   class Runner : public CancelableRunnable {
     class MOZ_STACK_CLASS AutoTaskGuard final {
      public:
