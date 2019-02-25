@@ -18,7 +18,8 @@ using namespace mozilla::intl;
 nsCString* DateTimeFormat::mLocale = nullptr;
 nsDataHashtable<nsCStringHashKey, UDateFormat*>* DateTimeFormat::mFormatCache;
 
-/*static*/ nsresult DateTimeFormat::Initialize() {
+/*static*/
+nsresult DateTimeFormat::Initialize() {
   if (mLocale) {
     return NS_OK;
   }
@@ -33,7 +34,8 @@ nsDataHashtable<nsCStringHashKey, UDateFormat*>* DateTimeFormat::mFormatCache;
 }
 
 // performs a locale sensitive date formatting operation on the PRTime parameter
-/*static*/ nsresult DateTimeFormat::FormatPRTime(
+/*static*/
+nsresult DateTimeFormat::FormatPRTime(
     const nsDateFormatSelector aDateFormatSelector,
     const nsTimeFormatSelector aTimeFormatSelector, const PRTime aPrTime,
     nsAString& aStringOut) {
@@ -43,7 +45,8 @@ nsDataHashtable<nsCStringHashKey, UDateFormat*>* DateTimeFormat::mFormatCache;
 
 // performs a locale sensitive date formatting operation on the PRExplodedTime
 // parameter
-/*static*/ nsresult DateTimeFormat::FormatPRExplodedTime(
+/*static*/
+nsresult DateTimeFormat::FormatPRExplodedTime(
     const nsDateFormatSelector aDateFormatSelector,
     const nsTimeFormatSelector aTimeFormatSelector,
     const PRExplodedTime* aExplodedTime, nsAString& aStringOut) {
@@ -53,7 +56,8 @@ nsDataHashtable<nsCStringHashKey, UDateFormat*>* DateTimeFormat::mFormatCache;
 }
 
 // performs a locale sensitive date formatting operation on the UDate parameter
-/*static*/ nsresult DateTimeFormat::FormatUDateTime(
+/*static*/
+nsresult DateTimeFormat::FormatUDateTime(
     const nsDateFormatSelector aDateFormatSelector,
     const nsTimeFormatSelector aTimeFormatSelector, const UDate aUDateTime,
     const PRTimeParameters* aTimeParameters, nsAString& aStringOut) {
@@ -262,7 +266,8 @@ nsDataHashtable<nsCStringHashKey, UDateFormat*>* DateTimeFormat::mFormatCache;
   return rv;
 }
 
-/*static*/ void DateTimeFormat::DeleteCache() {
+/*static*/
+void DateTimeFormat::DeleteCache() {
   if (mFormatCache) {
     for (auto i = mFormatCache->Iter(); !i.Done(); i.Next()) {
       udat_close(i.Data());
@@ -272,7 +277,8 @@ nsDataHashtable<nsCStringHashKey, UDateFormat*>* DateTimeFormat::mFormatCache;
   }
 }
 
-/*static*/ void DateTimeFormat::Shutdown() {
+/*static*/
+void DateTimeFormat::Shutdown() {
   DeleteCache();
   if (mLocale) {
     delete mLocale;
