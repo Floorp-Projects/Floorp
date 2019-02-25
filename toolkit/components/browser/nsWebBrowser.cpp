@@ -99,7 +99,8 @@ nsIWidget* nsWebBrowser::EnsureWidget() {
   return mInternalWidget;
 }
 
-/* static */ already_AddRefed<nsWebBrowser> nsWebBrowser::Create(
+/* static */
+already_AddRefed<nsWebBrowser> nsWebBrowser::Create(
     nsIWebBrowserChrome* aContainerWindow, nsIWidget* aParentWidget,
     const OriginAttributes& aOriginAttributes, mozIDOMWindowProxy* aOpener,
     int aItemType) {
@@ -373,7 +374,8 @@ nsWebBrowser::NameEquals(const nsAString& aName, bool* aResult) {
   return NS_OK;
 }
 
-/* virtual */ int32_t nsWebBrowser::ItemType() { return mContentType; }
+/* virtual */
+int32_t nsWebBrowser::ItemType() { return mContentType; }
 
 NS_IMETHODIMP
 nsWebBrowser::GetItemType(int32_t* aItemType) {

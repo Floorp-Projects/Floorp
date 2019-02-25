@@ -144,8 +144,9 @@ bool StreamFilterParent::Create(dom::ContentParent* aContentParent,
   return true;
 }
 
-/* static */ void StreamFilterParent::Attach(nsIChannel* aChannel,
-                                             ParentEndpoint&& aEndpoint) {
+/* static */
+void StreamFilterParent::Attach(nsIChannel* aChannel,
+                                ParentEndpoint&& aEndpoint) {
   auto self = MakeRefPtr<StreamFilterParent>();
 
   self->ActorThread()->Dispatch(
