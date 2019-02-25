@@ -65,14 +65,12 @@ bool CanRecordDataset(uint32_t aDataset, bool aCanRecordBase,
 
 bool CanRecordInProcess(RecordedProcessType processes,
                         GeckoProcessType processType) {
-  bool recordAllChildren = !!(processes & RecordedProcessType::AllChildren);
   // We can use (1 << ProcessType) due to the way RecordedProcessType is
   // defined.
   bool canRecordProcess =
       !!(processes & static_cast<RecordedProcessType>(1 << processType));
 
-  return canRecordProcess ||
-         ((processType != GeckoProcessType_Default) && recordAllChildren);
+  return canRecordProcess;
 }
 
 bool CanRecordInProcess(RecordedProcessType processes, ProcessID processId) {
