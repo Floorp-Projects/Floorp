@@ -13,8 +13,9 @@
 
 namespace mozilla {
 
-/* static */ ContentProcessSandboxParams
-ContentProcessSandboxParams::ForThisProcess(const dom::MaybeFileDesc& aBroker) {
+/* static */
+ContentProcessSandboxParams ContentProcessSandboxParams::ForThisProcess(
+    const dom::MaybeFileDesc& aBroker) {
   ContentProcessSandboxParams params;
   params.mLevel = GetEffectiveContentSandboxLevel();
 
