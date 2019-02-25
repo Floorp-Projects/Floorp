@@ -82,17 +82,14 @@ SplitNodeTransaction::DoTransaction() {
   // Insert the new node
   mEditorBase->DoSplitNode(EditorDOMPoint(mStartOfRightNode), *mNewLeftNode,
                            error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
 
   if (!mEditorBase->AllowsTransactionsToChangeSelection()) {
-    if (NS_WARN_IF(error.Failed())) {
-      return error.StealNSResult();
-    }
     return NS_OK;
   }
 
-  // XXX Really odd.  The result of DoSplitNode() is respected only when
-  //     we shouldn't set selection.  Otherwise, it's overridden by the
-  //     result of Selection.Collapse().
   NS_WARNING_ASSERTION(
       !mEditorBase->Destroyed(),
       "The editor has gone but SplitNodeTransaction keeps trying to modify "
