@@ -43,6 +43,8 @@
 # directory. When new certificate is added to this dir pgo/ssltunnel
 # must be built then. This is only necessary for cases where we really do
 # want specific certs.
+# You can find instructions on how to add or modify certificates at:
+# https://firefox-source-docs.mozilla.org/build/buildsystem/test_certificates.html
 #
 # "redir=hostname" tells the pgo server is only used for https://
 # hosts while processing the CONNECT tunnel request. It responds
