@@ -246,7 +246,7 @@ void WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
 
 void WebRenderLayerManager::EndTransactionWithoutLayer(
     nsDisplayList* aDisplayList, nsDisplayListBuilder* aDisplayListBuilder,
-    WrFiltersHolder&& aFilters, WebRenderBackgroundData* aBackground) {
+    nsTArray<wr::FilterOp>&& aFilters, WebRenderBackgroundData* aBackground) {
   AUTO_PROFILER_TRACING("Paint", "RenderLayers", GRAPHICS);
 
   // Since we don't do repeat transactions right now, just set the time

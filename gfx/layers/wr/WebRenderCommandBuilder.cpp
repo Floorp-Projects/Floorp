@@ -1425,7 +1425,7 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
     wr::DisplayListBuilder& aBuilder,
     wr::IpcResourceUpdateQueue& aResourceUpdates, nsDisplayList* aDisplayList,
     nsDisplayListBuilder* aDisplayListBuilder, WebRenderScrollData& aScrollData,
-    wr::LayoutSize& aContentSize, WrFiltersHolder&& aFilters) {
+    wr::LayoutSize& aContentSize, nsTArray<wr::FilterOp>&& aFilters) {
   AUTO_PROFILER_LABEL_CATEGORY_PAIR(GRAPHICS_WRDisplayList);
 
   StackingContextHelper sc;
@@ -1451,8 +1451,7 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
         presContext->Document()->IsTopLevelContentDocument();
 
     wr::StackingContextParams params;
-    params.mFilters = std::move(aFilters.filters);
-    params.mFilterDatas = std::move(aFilters.filter_datas);
+    params.mFilters = std::move(aFilters);
     params.animation = mZoomProp.ptrOr(nullptr);
     params.cache_tiles = isTopLevelContent;
     params.clip =
