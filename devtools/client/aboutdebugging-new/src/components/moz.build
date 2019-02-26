@@ -19,6 +19,7 @@ DevToolsModules(
     'ProfilerDialog.js',
     'RuntimeActions.css',
     'RuntimeActions.js',
+    'RuntimeInfo.css',
     'RuntimeInfo.js',
     'RuntimePage.js',
     'ServiceWorkersWarning.js',

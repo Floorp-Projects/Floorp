@@ -29,29 +29,34 @@ class RuntimeInfo extends PureComponent {
 
     return dom.h1(
       {
-        className: "main-heading",
+        className: "main-heading runtime-info",
       },
       dom.img(
         {
-          className: "main-heading__icon",
+          className: "main-heading__icon runtime-info__icon",
           src: icon,
         }
       ),
       Localized(
         {
-          id: deviceName ? "about-debugging-runtime-info-with-model"
-                          : "about-debugging-runtime-info",
+          id: "about-debugging-runtime-name",
           $name: name,
-          $deviceName: deviceName,
           $version: version,
         },
         dom.label(
           {
-            className: "js-runtime-info",
+            className: "js-runtime-name runtime-info__title",
           },
-          `${ name } on ${ deviceName } (${ version })`
+          `${ name } (${ version })`
         )
-      )
+      ),
+      deviceName ?
+        dom.label(
+          {
+            className: "runtime-info__subtitle",
+          },
+          deviceName
+        ) : null
     );
   }
 }
