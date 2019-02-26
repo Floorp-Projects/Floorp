@@ -274,7 +274,8 @@ TEST(ServiceWorkerRegistrar, TestWriteData) {
 
       nsTArray<mozilla::ipc::ContentSecurityPolicy> policies;
       reg.principal() = mozilla::ipc::ContentPrincipalInfo(
-          mozilla::OriginAttributes(i, i % 2), spec, spec, std::move(policies));
+          mozilla::OriginAttributes(i, i % 2), spec, spec, Nothing(),
+          std::move(policies));
 
       swr->TestRegisterServiceWorker(reg);
     }
@@ -863,7 +864,8 @@ TEST(ServiceWorkerRegistrar, TestDedupeWrite) {
 
       nsTArray<mozilla::ipc::ContentSecurityPolicy> policies;
       reg.principal() = mozilla::ipc::ContentPrincipalInfo(
-          mozilla::OriginAttributes(0, false), spec, spec, std::move(policies));
+          mozilla::OriginAttributes(0, false), spec, spec, Nothing(),
+          std::move(policies));
 
       swr->TestRegisterServiceWorker(reg);
     }
