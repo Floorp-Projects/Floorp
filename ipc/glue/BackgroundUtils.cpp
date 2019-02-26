@@ -104,19 +104,6 @@ already_AddRefed<nsIPrincipal> PrincipalInfoToPrincipal(
         MOZ_CRASH("Origin must be available when deserialized");
       }
 
-      if (info.domain()) {
-        nsCOMPtr<nsIURI> domain;
-        rv = NS_NewURI(getter_AddRefs(domain), *info.domain());
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return nullptr;
-        }
-
-        rv = principal->SetDomain(domain);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return nullptr;
-        }
-      }
-
       if (info.securityPolicies().Length() > 0) {
         nsCOMPtr<nsIContentSecurityPolicy> csp =
             do_CreateInstance(NS_CSPCONTEXT_CONTRACTID, &rv);
@@ -289,21 +276,6 @@ nsresult PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
     return rv;
   }
 
-  nsCOMPtr<nsIURI> domainUri;
-  rv = aPrincipal->GetDomain(getter_AddRefs(domainUri));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  Maybe<nsCString> domain;
-  if (domainUri) {
-    domain.emplace();
-    rv = domainUri->GetSpec(domain.ref());
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
   nsCOMPtr<nsIContentSecurityPolicy> csp;
   rv = aPrincipal->GetCsp(getter_AddRefs(csp));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -317,7 +289,7 @@ nsresult PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
 
   *aPrincipalInfo =
       ContentPrincipalInfo(aPrincipal->OriginAttributesRef(), originNoSuffix,
-                           spec, domain, std::move(policies));
+                           spec, std::move(policies));
   return NS_OK;
 }
 
