@@ -100,7 +100,7 @@ function runTests() {
     await secondClient(actor.testActor);
 
     ok(DebuggerServer.initialized,
-      "DebuggerServer isn't destroyed until all clients are disconnected");
+      "DebuggerServer is still alive after disconnecting one client");
 
     // Ensure that our test actor got cleaned up;
     // its destroy method should be called
@@ -118,9 +118,9 @@ function runTests() {
     await onActorDestroyed;
 
     // This test loads a frame in the parent process, so that we end up sharing the same
-    // DebuggerServer instance
-    ok(!DebuggerServer.initialized,
-      "DebuggerServer is destroyed when all clients are disconnected");
+    // DebuggerServer instance.
+    ok(DebuggerServer.initialized, "Shared DebuggerServer in the parent process is " +
+      "still alive after all clients are disconnected");
     cleanup();
   }
 
