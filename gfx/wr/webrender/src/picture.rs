@@ -2866,6 +2866,7 @@ impl PicturePrimitive {
         surface_index: SurfaceIndex,
         frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
+        data_stores: &mut DataStores,
     ) -> bool {
         let (mut pic_state_for_children, pic_context) = self.take_state_and_context();
 
