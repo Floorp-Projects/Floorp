@@ -215,6 +215,190 @@ BEGIN_TEST(testJitMacroAssembler_flexibleQuotient) {
 }
 END_TEST(testJitMacroAssembler_flexibleQuotient)
 
+// To make sure ecx isn't being clobbered; globally scoped to ensure it has the
+// right lifetime.
+const uintptr_t guardEcx = 0xfeedbad;
+
+void shiftTest(StackMacroAssembler& masm, const char* name,
+               void (*operation)(StackMacroAssembler& masm, Register, Register),
+               const uintptr_t* lhsInput, const uintptr_t* rhsInput,
+               const uintptr_t* result) {
+  AllocatableGeneralRegisterSet leftOutputHandSides(GeneralRegisterSet::All());
+
+  while (!leftOutputHandSides.empty()) {
+    Register lhsOutput = leftOutputHandSides.takeAny();
+
+    AllocatableGeneralRegisterSet rightHandSides(GeneralRegisterSet::All());
+    while (!rightHandSides.empty()) {
+      Register rhs = rightHandSides.takeAny();
+
+      // You can only use shift as the same reg if the values are the same
+      if (lhsOutput == rhs && lhsInput != rhsInput) {
+        continue;
+      }
+
+      Label next, outputFail, clobberRhs, clobberEcx, dump;
+      masm.mov(ImmWord(guardEcx), ecx);
+      masm.mov(ImmWord(*lhsInput), lhsOutput);
+      masm.mov(ImmWord(*rhsInput), rhs);
+
+      operation(masm, rhs, lhsOutput);
+
+      // Ensure Result is correct
+      masm.branch32(Assembler::NotEqual, AbsoluteAddress(result), lhsOutput,
+                    &outputFail);
+
+      // Ensure RHS was not clobbered
+      masm.branch32(Assembler::NotEqual, AbsoluteAddress(rhsInput), rhs,
+                    &clobberRhs);
+
+      if (lhsOutput != ecx && rhs != ecx) {
+        // If neither lhsOutput nor rhs is ecx, make sure ecx has been
+        // preserved, otherwise it's expected to be covered by the RHS clobber
+        // check above, or intentionally clobbered as the output.
+        masm.branch32(Assembler::NotEqual, AbsoluteAddress(&guardEcx), ecx,
+                      &clobberEcx);
+      }
+
+      masm.jump(&next);
+
+      masm.bind(&outputFail);
+      masm.printf("Incorrect output (got %d) ", lhsOutput);
+      masm.jump(&dump);
+
+      masm.bind(&clobberRhs);
+      masm.printf("rhs clobbered %d", rhs);
+      masm.jump(&dump);
+
+      masm.bind(&clobberEcx);
+      masm.printf("ecx clobbered");
+      masm.jump(&dump);
+
+      masm.bind(&dump);
+      masm.mov(ImmPtr(lhsOutput.name()), lhsOutput);
+      masm.printf("(lhsOutput/srcDest) %s ", lhsOutput);
+      masm.mov(ImmPtr(name), lhsOutput);
+      masm.printf("%s ", lhsOutput);
+      masm.mov(ImmPtr(rhs.name()), lhsOutput);
+      masm.printf("(shift/rhs) %s \n", lhsOutput);
+      // Breakpoint to force test failure.
+      masm.breakpoint();
+      masm.bind(&next);
+    }
+  }
+}
+
+BEGIN_TEST(testJitMacroAssembler_flexibleRshift) {
+  StackMacroAssembler masm(cx);
+
+  if (!Prepare(masm)) {
+    return false;
+  }
+
+  {
+    // Test case  16 >> 2 == 4;
+    const uintptr_t lhsInput = 16;
+    const uintptr_t rhsInput = 2;
+    const uintptr_t result = 4;
+
+    shiftTest(masm, "flexibleRshift32",
+              [](StackMacroAssembler& masm, Register rhs, Register lhsOutput) {
+                masm.flexibleRshift32(rhs, lhsOutput);
+              },
+              &lhsInput, &rhsInput, &result);
+  }
+
+  {
+    // Test case  16 >> 16 == 0 -- this helps cover the case where the same
+    // register can be passed for source and dest.
+    const uintptr_t lhsInput = 16;
+    const uintptr_t rhsInput = 16;
+    const uintptr_t result = 0;
+
+    shiftTest(masm, "flexibleRshift32",
+              [](StackMacroAssembler& masm, Register rhs, Register lhsOutput) {
+                masm.flexibleRshift32(rhs, lhsOutput);
+              },
+              &lhsInput, &rhsInput, &result);
+  }
+
+  return Execute(cx, masm);
+}
+END_TEST(testJitMacroAssembler_flexibleRshift)
+
+BEGIN_TEST(testJitMacroAssembler_flexibleRshiftArithmetic) {
+  StackMacroAssembler masm(cx);
+
+  if (!Prepare(masm)) {
+    return false;
+  }
+
+  {
+    // Test case  4294967295 >> 2 == 4294967295;
+    const uintptr_t lhsInput = 4294967295;
+    const uintptr_t rhsInput = 2;
+    const uintptr_t result = 4294967295;
+    shiftTest(masm, "flexibleRshift32Arithmetic",
+              [](StackMacroAssembler& masm, Register rhs, Register lhsOutput) {
+                masm.flexibleRshift32Arithmetic(rhs, lhsOutput);
+              },
+              &lhsInput, &rhsInput, &result);
+  }
+
+  {
+    // Test case  16 >> 16 == 0 -- this helps cover the case where the same
+    // register can be passed for source and dest.
+    const uintptr_t lhsInput = 16;
+    const uintptr_t rhsInput = 16;
+    const uintptr_t result = 0;
+
+    shiftTest(masm, "flexibleRshift32Arithmetic",
+              [](StackMacroAssembler& masm, Register rhs, Register lhsOutput) {
+                masm.flexibleRshift32Arithmetic(rhs, lhsOutput);
+              },
+              &lhsInput, &rhsInput, &result);
+  }
+
+  return Execute(cx, masm);
+}
+END_TEST(testJitMacroAssembler_flexibleRshiftArithmetic)
+
+BEGIN_TEST(testJitMacroAssembler_flexibleLshift) {
+  StackMacroAssembler masm(cx);
+
+  if (!Prepare(masm)) {
+    return false;
+  }
+  {
+    // Test case  16 << 2 == 64;
+    const uintptr_t lhsInput = 16;
+    const uintptr_t rhsInput = 2;
+    const uintptr_t result = 64;
+
+    shiftTest(masm, "flexibleLshift32",
+              [](StackMacroAssembler& masm, Register rhs, Register lhsOutput) {
+                masm.flexibleLshift32(rhs, lhsOutput);
+              },
+              &lhsInput, &rhsInput, &result);
+  }
+
+  {
+    // Test case  4 << 4 == 64; duplicated input case
+    const uintptr_t lhsInput = 4;
+    const uintptr_t rhsInput = 4;
+    const uintptr_t result = 64;
+
+    shiftTest(masm, "flexibleLshift32",
+              [](StackMacroAssembler& masm, Register rhs, Register lhsOutput) {
+                masm.flexibleLshift32(rhs, lhsOutput);
+              },
+              &lhsInput, &rhsInput, &result);
+  }
+
+  return Execute(cx, masm);
+}
+END_TEST(testJitMacroAssembler_flexibleLshift)
+
 BEGIN_TEST(testJitMacroAssembler_truncateDoubleToInt64) {
   StackMacroAssembler masm(cx);
 
