@@ -451,6 +451,36 @@ bool MaybeCrossOriginObject<Base>::enumerate(JSContext* cx,
   return js::GetPropertyKeys(cx, self, 0, &props);
 }
 
+template <typename Base>
+bool MaybeCrossOriginObject<Base>::hasInstance(JSContext* cx,
+                                               JS::Handle<JSObject*> proxy,
+                                               JS::MutableHandle<JS::Value> v,
+                                               bool* bp) const {
+  if (!IsPlatformObjectSameOrigin(cx, proxy)) {
+    // In the cross-origin case we never have @@hasInstance, and we're never
+    // callable, so just go ahead and report an error.  If we enter the realm of
+    // "proxy" to do that, our caller won't be able to do anything with the
+    // exception, so instead let's wrap "proxy" into our realm.  We definitely
+    // do NOT want to call JS::InstanceofOperator here after entering "proxy's"
+    // realm, because that would do the wrong thing with @@hasInstance on the
+    // object by seeing any such definitions when we should not.
+    JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*proxy));
+    if (!MaybeWrapValue(cx, &val)) {
+      return false;
+    }
+    return js::ReportIsNotFunction(cx, val);
+  }
+
+  // Safe to enter the realm of "proxy" and do the normal thing of looking up
+  // @@hasInstance, etc.
+  JSAutoRealm ar(cx, proxy);
+  JS::Rooted<JS::Value> val(cx, v);
+  if (!MaybeWrapValue(cx, &val)) {
+    return false;
+  }
+  return JS::InstanceofOperator(cx, proxy, val, bp);
+}
+
 // Force instantiations of the out-of-line template methods we need.
 template class MaybeCrossOriginObject<js::Wrapper>;
 template class MaybeCrossOriginObject<DOMProxyHandler>;
