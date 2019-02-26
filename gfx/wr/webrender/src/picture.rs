@@ -37,6 +37,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use texture_cache::TextureCacheHandle;
 use tiling::RenderTargetKind;
 use util::{ComparableVec, TransformedRectKind, MatrixHelpers, MaxRect, scale_factors};
+use ::filterdata::{FilterDataHandle};
 
 /*
  A picture represents a dynamically rendered image. It consists of:
@@ -1882,7 +1883,7 @@ bitflags! {
 /// Specifies how this Picture should be composited
 /// onto the target it belongs to.
 #[allow(dead_code)]
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 pub enum PictureCompositeMode {
     /// Don't composite this picture in a standard way,
@@ -1899,8 +1900,10 @@ pub enum PictureCompositeMode {
         mode: MixBlendMode,
         backdrop: PictureIndex,
     },
-    /// Apply a CSS filter.
+    /// Apply a CSS filter (except component transfer).
     Filter(FilterOp),
+    /// Apply a component transfer filter.
+    ComponentTransferFilter(FilterDataHandle),
     /// Draw to intermediate surface, copy straight across. This
     /// is used for CSS isolation, and plane splitting.
     Blit(BlitReason),
@@ -3086,6 +3089,33 @@ impl PicturePrimitive {
                         }
                     }
                 }
+
+                let uv_rect_kind = calculate_uv_rect_kind(
+                    &pic_rect,
+                    &transform,
+                    &clipped,
+                    device_pixel_scale,
+                    true,
+                );
+
+                let picture_task = RenderTask::new_picture(
+                    RenderTaskLocation::Dynamic(None, clipped.size),
+                    unclipped.size,
+                    pic_index,
+                    clipped.origin,
+                    child_tasks,
+                    uv_rect_kind,
+                    pic_context.raster_spatial_node_index,
+                    device_pixel_scale,
+                );
+
+                let render_task_id = frame_state.render_tasks.add(picture_task);
+                frame_state.surfaces[surface_index.0].tasks.push(render_task_id);
+                PictureSurface::RenderTask(render_task_id)
+            }
+            PictureCompositeMode::ComponentTransferFilter(handle) => {
+                let filter_data = &mut data_stores.filterdata[handle];
+                filter_data.update(frame_state);
 
                 let uv_rect_kind = calculate_uv_rect_kind(
                     &pic_rect,
