@@ -344,7 +344,7 @@ class nsCookieService final : public nsICookieService,
   static bool CheckPath(nsCookieAttributes &aCookie, nsIURI *aHostURI);
   static bool CheckPrefixes(nsCookieAttributes &aCookie, bool aSecureRequest);
   static bool GetExpiry(nsCookieAttributes &aCookie, int64_t aServerTime,
-                        int64_t aCurrentTime);
+                        int64_t aCurrentTime, bool aFromHttp);
   void RemoveAllFromMemory();
   already_AddRefed<nsIArray> PurgeCookies(int64_t aCurrentTimeInUsec);
   bool FindCookie(const nsCookieKey &aKey, const nsCString &aHost,
