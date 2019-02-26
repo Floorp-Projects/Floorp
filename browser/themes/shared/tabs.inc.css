@@ -502,10 +502,10 @@
   background-repeat: repeat-x;
 }
 
-/* Add a translucent color (current text color at .2 alpha) on top of multiselected tabs */
+/* Add a translucent color on top of multiselected tabs */
 .tab-background[multiselected=true]:not([selected=true]) > .tab-background-inner {
   background: currentColor;
-  opacity: .2;
+  opacity: .1;
 }
 
 .tab-line[multiselected],
