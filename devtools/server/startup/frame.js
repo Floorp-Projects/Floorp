@@ -36,7 +36,6 @@ try {
     }
     const { require } = loader;
 
-    const Services = require("Services");
     const DevToolsUtils = require("devtools/shared/DevToolsUtils");
     const { dumpn } = DevToolsUtils;
     const { DebuggerServer } = require("devtools/server/main");
@@ -144,14 +143,9 @@ try {
     // Destroy the server once its last connection closes. Note that multiple frame
     // scripts may be running in parallel and reuse the same server.
     function destroyServer() {
-      const isContentProcessServer =
-        Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_CONTENT;
       // Only destroy the server if there is no more connections to it. It may be used
       // to debug another tab running in the same process.
-      // Also check if this server is running in a content process. For Firefox running
-      // with e10s disabled (eg Firefox for Android) the DebuggerServer should not be
-      // stopped when all connections are closed.
-      if (DebuggerServer.hasConnection() || !isContentProcessServer) {
+      if (DebuggerServer.hasConnection()) {
         return;
       }
       DebuggerServer.off("connectionchange", destroyServer);
