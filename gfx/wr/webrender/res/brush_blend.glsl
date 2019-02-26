@@ -66,6 +66,16 @@ void brush_vs(
     vOp = user_data.y & 0xffff;
     vAmount = amount;
 
+    // This assignment is only used for component transfer filters but this
+    // assignment has to be done here and not in the component transfer case
+    // below because it doesn't get executed on Windows because of a suspected
+    // miscompile of this shader on Windows. See
+    // https://github.com/servo/webrender/wiki/Driver-issues#bug-1505871---assignment-to-varying-flat-arrays-inside-switch-statement-of-vertex-shader-suspected-miscompile-on-windows
+    vFuncs[0] = (user_data.y >> 28) & 0xf; // R
+    vFuncs[1] = (user_data.y >> 24) & 0xf; // G
+    vFuncs[2] = (user_data.y >> 20) & 0xf; // B
+    vFuncs[3] = (user_data.y >> 16) & 0xf; // A
+
     switch (vOp) {
         case 2: {
             // Grayscale
@@ -120,10 +130,6 @@ void brush_vs(
         case 13: {
             // Component Transfer
             vTableAddress = user_data.z;
-            vFuncs[0] = (user_data.y >> 28) & 0xf; // R
-            vFuncs[1] = (user_data.y >> 24) & 0xf; // G
-            vFuncs[2] = (user_data.y >> 20) & 0xf; // B
-            vFuncs[3] = (user_data.y >> 16) & 0xf; // A
             break;
         }
         default: break;
