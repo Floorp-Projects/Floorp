@@ -20,7 +20,7 @@ add_task(async function test_contextmenu_openlink_after_tabnavigated() {
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:blank");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
-  let awaitNewTabOpen = BrowserTestUtils.waitForNewTab(gBrowser, "http://example.com/");
+  let awaitNewTabOpen = BrowserTestUtils.waitForNewTab(gBrowser, "http://example.com/", true);
 
   info("Click the 'open link in new tab' menu item");
   let openLinkMenuItem = contextMenu.querySelector("#context-openlinkintab");
@@ -32,11 +32,8 @@ add_task(async function test_contextmenu_openlink_after_tabnavigated() {
   // Close the contextMenu popup if it has not been closed yet.
   contextMenu.hidePopup();
 
-  await BrowserTestUtils.browserLoaded(newTab.linkedBrowser);
-  const newTabURL = await ContentTask.spawn(newTab.linkedBrowser, null, async function() {
-    return content.location.href;
-  });
-  is(newTabURL, "http://example.com/", "Got the expected URL loaded in the new tab");
+  is(newTab.linkedBrowser.currentURI.spec, "http://example.com/",
+     "Got the expected URL loaded in the new tab");
 
   BrowserTestUtils.removeTab(newTab);
   BrowserTestUtils.removeTab(tab);
