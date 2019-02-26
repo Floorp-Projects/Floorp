@@ -1,9 +1,0 @@
-include protocol manageSelf;
-
-protocol manageSelf_Toplevel {
-    manages manageSelf;
-
-child:
-    async manageSelf();
-    async __delete__();
-};

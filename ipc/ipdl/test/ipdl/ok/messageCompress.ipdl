@@ -1,4 +1,0 @@
-intr protocol messageCompress {
-child:
-    async foo() compress;
-};
