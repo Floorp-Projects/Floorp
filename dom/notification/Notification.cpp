@@ -46,6 +46,7 @@
 #include "nsIPermissionManager.h"
 #include "nsIPermission.h"
 #include "nsIPushService.h"
+#include "nsIScriptError.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIServiceWorkerManager.h"
 #include "nsISimpleEnumerator.h"
@@ -478,11 +479,23 @@ NotificationPermissionRequest::Run() {
     nsCOMPtr<nsIURI> uri;
     mPrincipal->GetURI(getter_AddRefs(uri));
 
+    bool isFile = false;
     if (uri) {
-      bool isFile;
       uri->SchemeIs("file", &isFile);
       if (isFile) {
         mPermission = NotificationPermission::Granted;
+      }
+    }
+
+    if (!isFile && !StaticPrefs::dom_webnotifications_allowinsecure() &&
+        !mWindow->IsSecureContext()) {
+      mPermission = NotificationPermission::Denied;
+      nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
+      if (doc) {
+        nsContentUtils::ReportToConsole(
+            nsIScriptError::errorFlag, NS_LITERAL_CSTRING("DOM"), doc,
+            nsContentUtils::eDOM_PROPERTIES,
+            "NotificationsInsecureRequestIsForbidden");
       }
     }
   }
