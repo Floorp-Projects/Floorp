@@ -442,6 +442,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
     if (NS_FAILED(rv)) {
       return rv;
     }
+    mOriginalReferrer = referrer;
     mReferrer = referrer;
     mReferrerPolicy = referrerPolicy;
     rv = mRequestHead.SetHeader(nsHttp::Referer, spec);
@@ -545,6 +546,11 @@ class HttpBaseChannel : public nsHashPropertyBag,
   nsCOMPtr<nsILoadInfo> mLoadInfo;
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsIProgressEventSink> mProgressSink;
+  // When the referrer is set before calling AsyncOpen, we remember the referrer
+  // argument passed in case we need to readjust the referrer header being used
+  // depending on the active cookie policy once we have determined whether the
+  // channel is a tracking third-party resource or not.
+  nsCOMPtr<nsIURI> mOriginalReferrer;
   nsCOMPtr<nsIURI> mReferrer;
   nsCOMPtr<nsIApplicationCache> mApplicationCache;
   nsCOMPtr<nsIURI> mAPIRedirectToURI;
