@@ -1744,7 +1744,20 @@ already_AddRefed<DrawTarget> gfxPlatform::CreateOffscreenContentDrawTarget(
     const IntSize& aSize, SurfaceFormat aFormat, bool aFallback) {
   BackendType backend = (aFallback) ? mSoftwareBackend : mContentBackend;
   NS_ASSERTION(backend != BackendType::NONE, "No backend.");
-  return CreateDrawTargetForBackend(backend, aSize, aFormat);
+  RefPtr<DrawTarget> dt = CreateDrawTargetForBackend(backend, aSize, aFormat);
+
+  if (!dt) {
+    return nullptr;
+  }
+
+  // We'd prefer this to take proper care and return a CaptureDT, but for the
+  // moment since we can't and this means we're going to be drawing on the main
+  // thread force it's initialization. See bug 1526045 and bug 1521368.
+  dt->ClearRect(gfx::Rect());
+  if (!dt->IsValid()) {
+
+  }
+  return dt.forget();
 }
 
 already_AddRefed<DrawTarget> gfxPlatform::CreateSimilarSoftwareDrawTarget(
