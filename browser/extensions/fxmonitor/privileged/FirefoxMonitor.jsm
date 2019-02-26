@@ -22,8 +22,7 @@ this.FirefoxMonitor = {
   // Whether we've started observing for the user visiting a breached site.
   observerAdded: false,
 
-  // This is here for documentation, will be redefined to a lazy getter
-  // that creates and returns a string bundle in loadStrings().
+  // loadStrings loads a stringbundle into this property.
   strings: null,
 
   // This is here for documentation, will be redefined to a pref getter
@@ -83,6 +82,7 @@ this.FirefoxMonitor = {
       this.startObserving();
     }
   },
+
 
   // Used to enforce idempotency of delayedInit. delayedInit is
   // called in startObserving() to ensure we load our strings, etc.
@@ -145,27 +145,27 @@ this.FirefoxMonitor = {
     this._delayedInited = true;
   },
 
-  loadStrings() {
-    let l10nManifest;
-    if (this.extension.rootURI instanceof Ci.nsIJARURI) {
-      l10nManifest = this.extension.rootURI.JARFile
-                            .QueryInterface(Ci.nsIFileURL).file;
-    } else if (this.extension.rootURI instanceof Ci.nsIFileURL) {
-      l10nManifest = this.extension.rootURI.file;
+  async loadStrings() {
+    // Services.strings.createBundle has a whitelist of URL schemes that it
+    // accepts. moz-extension: is not one of them, so we work around that
+    // by reading the file manually and creating a data: URL (allowed).
+    let response;
+    let locale = Services.locale.defaultLocale;
+    try {
+      response = await fetch(this.getURL(`locale/${locale}/strings.properties`));
+    } catch (e) {
+      Cu.reportError(`Firefox Monitor: no strings available for ${locale}. Falling back to en-US.`);
+      response = await fetch(this.getURL(`locale/en-US/strings.properties`));
     }
-
-    if (l10nManifest) {
-      Components.manager.addBootstrappedManifestLocation(l10nManifest);
-
-      XPCOMUtils.defineLazyGetter(this, "strings", () => {
-        return Services.strings.createBundle(
-          "chrome://fxmonitor/locale/fxmonitor.properties");
-      });
-    } else {
-      // Something is very strange if we reach this line, so we throw
-      // in order to prevent init from completing and burst the stack.
-      throw "Cannot find fxmonitor chrome.manifest for registering translated strings";
+    let buffer = await response.arrayBuffer();
+    let binary = "";
+    let bytes = new Uint8Array(buffer);
+    let len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+      binary += String.fromCharCode(bytes[i]);
     }
+    let b64 = btoa(binary);
+    this.strings = Services.strings.createBundle(`data:text/plain;base64,${b64}`);
   },
 
   kRemoteSettingsKey: "fxmonitor-breaches",
