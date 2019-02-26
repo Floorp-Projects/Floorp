@@ -344,6 +344,22 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-snap-v1.enabled")) {
   supported_properties["scroll-margin-left"] = [
     test_length_transition,
   ];
+  supported_properties["scroll-padding-top"] = [
+    test_length_transition, test_percent_transition,
+    test_length_clamped, test_percent_clamped,
+  ];
+  supported_properties["scroll-padding-right"] = [
+    test_length_transition, test_percent_transition,
+    test_length_clamped, test_percent_clamped,
+  ];
+  supported_properties["scroll-padding-bottom"] = [
+    test_length_transition, test_percent_transition,
+    test_length_clamped, test_percent_clamped,
+  ];
+  supported_properties["scroll-padding-left"] = [
+    test_length_transition, test_percent_transition,
+    test_length_clamped, test_percent_clamped,
+  ];
 }
 
 // For properties which are well-tested by web-platform-tests, we don't need to
@@ -362,6 +378,7 @@ for (const logical_side of ["inline-start", "inline-end", "block-start", "block-
   supported_properties["inset-" + logical_side] = supported_properties["top"];
   if (IsCSSPropertyPrefEnabled("layout.css.scroll-snap-v1.enabled")) {
     supported_properties["scroll-margin-" + logical_side] = supported_properties["scroll-margin-top"];
+    supported_properties["scroll-padding-" + logical_side] = supported_properties["scroll-padding-top"];
   }
 }
 
