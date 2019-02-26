@@ -32,12 +32,14 @@ class TestInterruptErrorCleanupParent
 };
 
 class TestInterruptErrorCleanupChild : public PTestInterruptErrorCleanupChild {
+  friend class PTestInterruptErrorCleanupChild;
+
  public:
   TestInterruptErrorCleanupChild();
   virtual ~TestInterruptErrorCleanupChild();
 
  protected:
-  virtual mozilla::ipc::IPCResult AnswerError() override;
+  mozilla::ipc::IPCResult AnswerError();
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     fail("should have 'crashed'!");

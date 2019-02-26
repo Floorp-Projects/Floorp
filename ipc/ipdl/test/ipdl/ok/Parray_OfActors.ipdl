@@ -1,0 +1,10 @@
+include protocol Parray_OfActorsSub;
+
+protocol Parray_OfActors {
+    manages Parray_OfActorsSub;
+
+child:
+    async Msg(Parray_OfActorsSub[] p);
+
+    async Parray_OfActorsSub();
+};

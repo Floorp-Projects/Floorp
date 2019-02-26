@@ -1,3 +1,0 @@
-protocol empty {
-child: async Msg();
-};

@@ -449,6 +449,9 @@ impl<'de> Deserialize<'de> for NewSessionParameters {
     {
         let value = serde_json::Value::deserialize(deserializer)?;
         if let Some(caps) = value.get("capabilities") {
+            if !caps.is_object() {
+                return Err(de::Error::custom("capabilities must be objects"));
+            }
             let caps = SpecNewSessionParameters::deserialize(caps).map_err(de::Error::custom)?;
             return Ok(NewSessionParameters::Spec(caps));
         }

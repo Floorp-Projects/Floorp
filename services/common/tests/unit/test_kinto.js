@@ -213,14 +213,14 @@ add_task(async function test_kinto_list() {
 
 add_task(clear_collection);
 
-add_task(async function test_loadDump_ignores_already_imported_records() {
+add_task(async function test_importBulk_ignores_already_imported_records() {
   let sqliteHandle;
   try {
     sqliteHandle = await do_get_kinto_sqliteHandle();
     const collection = do_get_kinto_collection(sqliteHandle);
     const record = {id: "41b71c13-17e9-4ee3-9268-6a41abf9730f", title: "foo", last_modified: 1457896541};
-    await collection.loadDump([record]);
-    let impactedRecords = await collection.loadDump([record]);
+    await collection.importBulk([record]);
+    let impactedRecords = await collection.importBulk([record]);
     Assert.equal(impactedRecords.length, 0);
   } finally {
     await sqliteHandle.close();

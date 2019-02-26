@@ -10,6 +10,8 @@ namespace mozilla {
 namespace _ipdltest {
 
 class TestRacyUndeferParent : public PTestRacyUndeferParent {
+  friend class PTestRacyUndeferParent;
+
  public:
   TestRacyUndeferParent();
   virtual ~TestRacyUndeferParent();
@@ -20,11 +22,11 @@ class TestRacyUndeferParent : public PTestRacyUndeferParent {
   void Main();
 
  protected:
-  virtual mozilla::ipc::IPCResult AnswerSpam() override;
+  mozilla::ipc::IPCResult AnswerSpam();
 
-  virtual mozilla::ipc::IPCResult AnswerRaceWinTwice() override;
+  mozilla::ipc::IPCResult AnswerRaceWinTwice();
 
-  virtual mozilla::ipc::IPCResult RecvDone() override;
+  mozilla::ipc::IPCResult RecvDone();
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");
@@ -34,17 +36,19 @@ class TestRacyUndeferParent : public PTestRacyUndeferParent {
 };
 
 class TestRacyUndeferChild : public PTestRacyUndeferChild {
+  friend class PTestRacyUndeferChild;
+
  public:
   TestRacyUndeferChild();
   virtual ~TestRacyUndeferChild();
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvStart() override;
+  mozilla::ipc::IPCResult RecvStart();
 
-  virtual mozilla::ipc::IPCResult RecvAwakenSpam() override;
-  virtual mozilla::ipc::IPCResult RecvAwakenRaceWinTwice() override;
+  mozilla::ipc::IPCResult RecvAwakenSpam();
+  mozilla::ipc::IPCResult RecvAwakenRaceWinTwice();
 
-  virtual mozilla::ipc::IPCResult AnswerRace() override;
+  mozilla::ipc::IPCResult AnswerRace();
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");
