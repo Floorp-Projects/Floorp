@@ -81,6 +81,21 @@ def assert_interface(obj, expected_name):
         raise Exception('expected {}, got {}'.format(expected_name, actual_name))
 
 
+def set_interface_name(obj, name):
+    """
+    Set the tagged tuple's interface name
+
+    :param obj (dict)
+           The tagged tuple
+    :param name (string)
+           The name of the interface
+    """
+    assert_tagged_tuple(obj)
+    obj['@INTERFACE'] = name
+    if type(name) is not str and type(name) is not unicode:
+        raise Exception('passed value is not string: {}'.format(name))
+
+
 def get_field(obj, name):
     """
     Returns the field of the tagged tuple.
@@ -144,6 +159,29 @@ def remove_field(obj, name):
             return
         i += 1
     raise Exception('No such field: {}'.format(name))
+
+
+def append_field(obj, name, value):
+    """
+    Append a field to the tagged tuple
+
+    :param obj (dict)
+           the tagged tuple
+    :param name (string)
+           the name of the field to add
+    :param value (dict)
+           the value of the field to add
+    """
+    assert_tagged_tuple(obj)
+    fields = obj['@FIELDS']
+    if type(name) is not str and type(name) is not unicode:
+        raise Exception('passed name is not string: {}'.format(name))
+    if type(value) is not dict:
+        raise Exception('passed value is not dict: {}'.format(value))
+    fields.append({
+        '@FIELD_NAME': name,
+        '@FIELD_VALUE': value,
+    })
 
 
 def get_element(obj, i):
@@ -256,7 +294,7 @@ def set_string(obj, value):
            the value to set
     """
     assert_string(obj)
-    if type(value) is not str:
+    if type(value) is not str and type(value) is not unicode:
         raise Exception('passed value is not string: {}'.format(value))
     obj['@VALUE'] = value
 
@@ -271,6 +309,6 @@ def set_identifier_name(obj, value):
            the value to set
     """
     assert_identifier_name(obj)
-    if type(value) is not str:
+    if type(value) is not str and type(value) is not unicode:
         raise Exception('passed value is not string: {}'.format(value))
     obj['@VALUE'] = value
