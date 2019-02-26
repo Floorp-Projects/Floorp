@@ -95,32 +95,10 @@ void nsFilterInstance::PaintFilteredFrame(
   }
 }
 
-static mozilla::wr::ComponentTransferFuncType
-FuncTypeToWr(uint8_t aFuncType) {
-  switch (aFuncType) {
-    case SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY:
-      return mozilla::wr::ComponentTransferFuncType::Identity;
-    case SVG_FECOMPONENTTRANSFER_TYPE_TABLE:
-      return mozilla::wr::ComponentTransferFuncType::Table;
-    case SVG_FECOMPONENTTRANSFER_TYPE_DISCRETE:
-      return mozilla::wr::ComponentTransferFuncType::Discrete;
-    case SVG_FECOMPONENTTRANSFER_TYPE_LINEAR:
-      return mozilla::wr::ComponentTransferFuncType::Linear;
-    case SVG_FECOMPONENTTRANSFER_TYPE_GAMMA:
-      return mozilla::wr::ComponentTransferFuncType::Gamma;
-    default:
-      MOZ_ASSERT(false, "unknown func type?");
-  }
-  MOZ_ASSERT(false, "unknown func type?");
-  return mozilla::wr::ComponentTransferFuncType::Identity;
-}
-
 bool nsFilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
-                                             WrFiltersHolder& aWrFilters,
+                                             nsTArray<wr::FilterOp>& aWrFilters,
                                              Maybe<nsRect>& aPostFilterClip) {
-  aWrFilters.filters.Clear();
-  aWrFilters.filter_datas.Clear();
-  aWrFilters.values.Clear();
+  aWrFilters.Clear();
 
   auto& filterChain = aFilteredFrame->StyleEffects()->mFilters;
   UniquePtr<UserSpaceMetrics> metrics =
@@ -184,9 +162,9 @@ bool nsFilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
     bool previousSrgb = srgb;
     bool primNeedsSrgb = primitive.InputColorSpace(0) == gfx::ColorSpace::SRGB;
     if (srgb && !primNeedsSrgb) {
-      aWrFilters.filters.AppendElement(wr::FilterOp::SrgbToLinear());
+      aWrFilters.AppendElement(wr::FilterOp::SrgbToLinear());
     } else if (!srgb && primNeedsSrgb) {
-      aWrFilters.filters.AppendElement(wr::FilterOp::LinearToSrgb());
+      aWrFilters.AppendElement(wr::FilterOp::LinearToSrgb());
     }
     srgb = primitive.OutputColorSpace() == gfx::ColorSpace::SRGB;
 
@@ -196,7 +174,7 @@ bool nsFilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
 
     if (attr.is<OpacityAttributes>()) {
       float opacity = attr.as<OpacityAttributes>().mOpacity;
-      aWrFilters.filters.AppendElement(wr::FilterOp::Opacity(
+      aWrFilters.AppendElement(wr::FilterOp::Opacity(
           wr::PropertyBinding<float>::Value(opacity), opacity));
     } else if (attr.is<ColorMatrixAttributes>()) {
       const ColorMatrixAttributes& attributes =
@@ -229,7 +207,7 @@ bool nsFilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
           transposed[3], transposed[8], transposed[13], transposed[18],
           transposed[4], transposed[9], transposed[14], transposed[19]};
 
-      aWrFilters.filters.AppendElement(wr::FilterOp::ColorMatrix(matrix));
+      aWrFilters.AppendElement(wr::FilterOp::ColorMatrix(matrix));
     } else if (attr.is<GaussianBlurAttributes>()) {
       if (finalClip) {
         // There's a clip that needs to apply before the blur filter, but
@@ -248,7 +226,7 @@ bool nsFilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
 
       float radius = stdDev.width;
       if (radius != 0.0) {
-        aWrFilters.filters.AppendElement(wr::FilterOp::Blur(radius));
+        aWrFilters.AppendElement(wr::FilterOp::Blur(radius));
       } else {
         filterIsNoop = true;
       }
@@ -277,60 +255,14 @@ bool nsFilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
       wr::FilterOp filterOp = wr::FilterOp::DropShadow(
           offset, radius, wr::ToColorF(ToDeviceColor(color)));
 
-      aWrFilters.filters.AppendElement(filterOp);
-    } else if (attr.is<ComponentTransferAttributes>()) {
-      const ComponentTransferAttributes& attributes =
-          attr.as<ComponentTransferAttributes>();
-
-      size_t numValues = attributes.mValues[0].Length() +
-          attributes.mValues[1].Length() + attributes.mValues[2].Length() +
-          attributes.mValues[3].Length();
-      if (numValues > 1024) {
-        // Depending on how the wr shaders are implemented we may need to
-        // limit the total number of values.
-        return false;
-      }
-
-      wr::FilterOp filterOp = {wr::FilterOp::Tag::ComponentTransfer};
-      wr::WrFilterData filterData;
-      aWrFilters.values.AppendElement(nsTArray<float>());
-      nsTArray<float>* values = &aWrFilters.values[aWrFilters.values.Length()-1];
-      values->SetCapacity(numValues);
-
-      filterData.funcR_type = FuncTypeToWr(attributes.mTypes[0]);
-      size_t R_startindex = values->Length();
-      values->AppendElements(attributes.mValues[0]);
-      filterData.R_values_count = attributes.mValues[0].Length();
-
-      filterData.funcG_type = FuncTypeToWr(attributes.mTypes[1]);
-      size_t G_startindex = values->Length();
-      values->AppendElements(attributes.mValues[1]);
-      filterData.G_values_count = attributes.mValues[1].Length();
-
-      filterData.funcB_type = FuncTypeToWr(attributes.mTypes[2]);
-      size_t B_startindex = values->Length();
-      values->AppendElements(attributes.mValues[2]);
-      filterData.B_values_count = attributes.mValues[2].Length();
-
-      filterData.funcA_type = FuncTypeToWr(attributes.mTypes[3]);
-      size_t A_startindex = values->Length();
-      values->AppendElements(attributes.mValues[3]);
-      filterData.A_values_count = attributes.mValues[3].Length();
-
-      filterData.R_values = filterData.R_values_count > 0 ? &((*values)[R_startindex]) : nullptr;
-      filterData.G_values = filterData.G_values_count > 0 ? &((*values)[G_startindex]) : nullptr;
-      filterData.B_values = filterData.B_values_count > 0 ? &((*values)[B_startindex]) : nullptr;
-      filterData.A_values = filterData.A_values_count > 0 ? &((*values)[A_startindex]) : nullptr;
-
-      aWrFilters.filters.AppendElement(filterOp);
-      aWrFilters.filter_datas.AppendElement(filterData);
+      aWrFilters.AppendElement(filterOp);
     } else {
       return false;
     }
 
-    if (filterIsNoop && aWrFilters.filters.Length() > 0 &&
-        (aWrFilters.filters.LastElement().tag == wr::FilterOp::Tag::SrgbToLinear ||
-         aWrFilters.filters.LastElement().tag == wr::FilterOp::Tag::LinearToSrgb)) {
+    if (filterIsNoop && aWrFilters.Length() > 0 &&
+        (aWrFilters.LastElement().tag == wr::FilterOp::Tag::SrgbToLinear ||
+         aWrFilters.LastElement().tag == wr::FilterOp::Tag::LinearToSrgb)) {
       // We pushed a color space conversion filter in prevision of applying
       // another filter which turned out to be a no-op, so the conversion is
       // unnecessary. Remove it from the filter list.
@@ -338,7 +270,7 @@ bool nsFilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
       // css/filter-effects/filter-scale-001.html for which the needless
       // sRGB->linear->no-op->sRGB roundtrip introduces a slight error and we
       // cannot add fuzziness to the test.
-      Unused << aWrFilters.filters.PopLastElement();
+      Unused << aWrFilters.PopLastElement();
       srgb = previousSrgb;
     }
 
@@ -353,7 +285,7 @@ bool nsFilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
   }
 
   if (!srgb) {
-    aWrFilters.filters.AppendElement(wr::FilterOp::LinearToSrgb());
+    aWrFilters.AppendElement(wr::FilterOp::LinearToSrgb());
   }
 
   if (finalClip) {
