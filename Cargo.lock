@@ -3244,6 +3244,7 @@ dependencies = [
  "libc 0.2.43 (registry+https://github.com/rust-lang/crates.io-index)",
  "nserror 0.1.0",
  "nsstring 0.1.0",
+ "thin-vec 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "threadbound 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "xpcom_macros 0.1.0",
 ]
