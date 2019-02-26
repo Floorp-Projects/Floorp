@@ -477,6 +477,7 @@ class FunctionBox : public ObjectBox, public SharedContext {
   bool needsFinalYield() const { return isGenerator() || isAsync(); }
   bool needsDotGeneratorName() const { return isGenerator() || isAsync(); }
   bool needsIteratorResult() const { return isGenerator(); }
+  bool needsPromiseResult() const { return isAsync() && !isGenerator(); }
 
   bool isArrow() const { return function()->isArrow(); }
 

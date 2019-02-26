@@ -1947,7 +1947,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(JSOP_TRY_DESTRUCTURING)
     CASE(JSOP_UNUSED71)
     CASE(JSOP_UNUSED151)
-    CASE(JSOP_UNUSED192)
     CASE(JSOP_TRY)
     CASE(JSOP_CONDSWITCH) {
       MOZ_ASSERT(CodeSpec[*REGS.pc].length == 1);
@@ -3624,6 +3623,22 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       }
     }
     END_CASE(JSOP_TRYSKIPAWAIT)
+
+    CASE(JSOP_ASYNCRESOLVE) {
+      MOZ_ASSERT(REGS.stackDepth() >= 2);
+      auto resolveKind = AsyncFunctionResolveKind(GET_UINT8(REGS.pc));
+      ReservedRooted<JSObject*> gen(&rootObject1, &REGS.sp[-1].toObject());
+      ReservedRooted<Value> reason(&rootValue0, REGS.sp[-2]);
+      JSObject* promise = AsyncFunctionResolve(
+          cx, gen.as<AsyncFunctionGeneratorObject>(), reason, resolveKind);
+      if (!promise) {
+        goto error;
+      }
+
+      REGS.sp--;
+      REGS.sp[-1].setObject(*promise);
+    }
+    END_CASE(JSOP_ASYNCRESOLVE)
 
     CASE(JSOP_SETFUNNAME) {
       MOZ_ASSERT(REGS.stackDepth() >= 2);

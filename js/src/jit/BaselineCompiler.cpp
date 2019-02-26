@@ -4697,6 +4697,34 @@ bool BaselineCodeGen<Handler>::emit_JSOP_TRYSKIPAWAIT() {
   return true;
 }
 
+typedef JSObject* (*AsyncFunctionResolveFn)(
+    JSContext*, Handle<AsyncFunctionGeneratorObject*>, HandleValue,
+    AsyncFunctionResolveKind);
+static const VMFunction AsyncFunctionResolveInfo =
+    FunctionInfo<AsyncFunctionResolveFn>(js::AsyncFunctionResolve,
+                                         "AsyncFunctionResolve");
+
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_JSOP_ASYNCRESOLVE() {
+  frame.syncStack(0);
+  masm.loadValue(frame.addressOfStackValue(-2), R1);
+  masm.unboxObject(frame.addressOfStackValue(-1), R0.scratchReg());
+
+  prepareVMCall();
+  pushUint8BytecodeOperandArg();
+  pushArg(R1);
+  pushArg(R0.scratchReg());
+
+  if (!callVM(AsyncFunctionResolveInfo)) {
+    return false;
+  }
+
+  masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
+  frame.popn(2);
+  frame.push(R0);
+  return true;
+}
+
 typedef bool (*ThrowObjectCoercibleFn)(JSContext*, HandleValue);
 static const VMFunction ThrowObjectCoercibleInfo =
     FunctionInfo<ThrowObjectCoercibleFn>(ThrowObjectCoercible,
@@ -6053,7 +6081,6 @@ MethodStatus BaselineCompiler::emitBody() {
         // Intentionally not implemented.
       case JSOP_UNUSED71:
       case JSOP_UNUSED151:
-      case JSOP_UNUSED192:
       case JSOP_LIMIT:
         // === !! WARNING WARNING WARNING !! ===
         // DO NOT add new ops to this list! All bytecode ops MUST have Baseline

@@ -1086,9 +1086,9 @@ class MOZ_RAII AutoSetGeneratorRunning {
           AutoSetGeneratorRunning asgr(cx, genObj);
           success = handler->onPop(cx, frameobj, nextResumeMode, &nextValue);
         }
-        adjqi.runJobs();
         nextResumeMode = dbg->processParsedHandlerResult(
             ar, frame, pc, success, nextResumeMode, &nextValue);
+        adjqi.runJobs();
 
         // At this point, we are back in the debuggee compartment, and
         // any error has been wrapped up as a completion value.
@@ -1598,14 +1598,24 @@ static void AdjustGeneratorResumptionValue(JSContext* cx,
                                            AbstractFramePtr frame,
                                            ResumeMode& resumeMode,
                                            MutableHandleValue vp) {
-  if (resumeMode == ResumeMode::Return && frame && frame.isFunctionFrame() &&
-      frame.callee()->isGenerator()) {
-    // Treat `{return: <value>}` like a `return` statement. For generators,
-    // that means doing the work below. It's only what the debuggee would
-    // do for an ordinary `return` statement--using a few bytecode
-    // instructions--and it's simpler to do the work manually than to count
-    // on that bytecode sequence existing in the debuggee, somehow jump to
-    // it, and then avoid re-entering the debugger from it.
+  if (resumeMode != ResumeMode::Return || !frame || !frame.isFunctionFrame()) {
+    return;
+  }
+
+  // To propagate out of memory in debuggee code.
+  auto getAndClearExceptionThenThrow = [&]() {
+    MOZ_ALWAYS_TRUE(cx->getPendingException(vp));
+    cx->clearPendingException();
+    resumeMode = ResumeMode::Throw;
+  };
+
+  // Treat `{return: <value>}` like a `return` statement. Simulate what the
+  // debuggee would do for an ordinary `return` statement--using a few bytecode
+  // instructions--and it's simpler to do the work manually than to count on
+  // that bytecode sequence existing in the debuggee, somehow jump to it, and
+  // then avoid re-entering the debugger from it.
+  if (frame.callee()->isGenerator()) {
+    // For (async) generators, that means doing the work below.
     Rooted<AbstractGeneratorObject*> genObj(
         cx, GetGeneratorObjectForFrame(cx, frame));
     if (genObj) {
@@ -1614,10 +1624,7 @@ static void AdjustGeneratorResumptionValue(JSContext* cx,
       if (!genObj->isBeforeInitialYield()) {
         JSObject* pair = CreateIterResultObject(cx, vp, true);
         if (!pair) {
-          // Out of memory in debuggee code. Arrange for this to propagate.
-          MOZ_ALWAYS_TRUE(cx->getPendingException(vp));
-          cx->clearPendingException();
-          resumeMode = ResumeMode::Throw;
+          getAndClearExceptionThenThrow();
           return;
         }
         vp.setObject(*pair);
@@ -1629,6 +1636,31 @@ static void AdjustGeneratorResumptionValue(JSContext* cx,
       // We're before the initial yield. Carry on with the forced return.
       // The debuggee will see a call to a generator returning the
       // non-generator value *vp.
+    }
+  } else if (frame.callee()->isAsync()) {
+    // For async functions, that means doing the work below.
+    if (AbstractGeneratorObject* genObj =
+            GetGeneratorObjectForFrame(cx, frame)) {
+      Rooted<AsyncFunctionGeneratorObject*> asyncGenObj(
+          cx, &genObj->as<AsyncFunctionGeneratorObject>());
+
+      // 1.  `return <value>` fulfills and returns the async function's promise.
+      if (!asyncGenObj->isBeforeInitialYield()) {
+        JSObject* promise = AsyncFunctionResolve(
+            cx, asyncGenObj, vp, AsyncFunctionResolveKind::Fulfill);
+        if (!promise) {
+          getAndClearExceptionThenThrow();
+          return;
+        }
+        vp.setObject(*promise);
+      }
+
+      // 2.  The generator must be closed.
+      asyncGenObj->setClosed();
+    } else {
+      // We're before the initial yield. Carry on with the forced return.
+      // The debuggee will see a call to an async function returning the
+      // non-promise value *vp.
     }
   }
 }
@@ -2211,9 +2243,10 @@ void Debugger::slowPathOnNewWasmInstance(
         Rooted<JSObject*> handler(cx, bp->handler);
         bool ok = CallMethodIfPresent(cx, handler, "hit", 1,
                                       scriptFrame.address(), &rv);
-        adjqi.runJobs();
         ResumeMode resumeMode = dbg->processHandlerResult(
             ar, ok, rv, iter.abstractFramePtr(), iter.pc(), vp);
+        adjqi.runJobs();
+
         if (resumeMode != ResumeMode::Continue) {
           savedExc.drop();
           return resumeMode;
@@ -2314,9 +2347,10 @@ void Debugger::slowPathOnNewWasmInstance(
 
       ResumeMode resumeMode = ResumeMode::Continue;
       bool success = handler->onStep(cx, frame, resumeMode, vp);
-      adjqi.runJobs();
       resumeMode = dbg->processParsedHandlerResult(
           ar, iter.abstractFramePtr(), iter.pc(), success, resumeMode, vp);
+      adjqi.runJobs();
+
       if (resumeMode != ResumeMode::Continue) {
         savedExc.drop();
         return resumeMode;
@@ -8673,9 +8707,29 @@ bool ScriptedOnPopHandler::onPop(JSContext* cx, HandleDebuggerFrame frame,
                                  MutableHandleValue vp) {
   Debugger* dbg = frame->owner();
 
+  // Make it possible to distinguish 'return' from 'await' completions.
+  // Bug 1470558 will investigate a more robust solution.
+  bool isAfterAwait = false;
+  AbstractFramePtr referent = DebuggerFrame::getReferent(frame);
+  if (resumeMode == ResumeMode::Return && referent &&
+      referent.isFunctionFrame() && referent.callee()->isAsync() &&
+      !referent.callee()->isGenerator()) {
+    AutoRealm ar(cx, referent.callee());
+    if (auto* genObj = GetGeneratorObjectForFrame(cx, referent)) {
+      isAfterAwait = !genObj->isClosed() && genObj->isRunning();
+    }
+  }
+
   RootedValue completion(cx);
   if (!dbg->newCompletionValue(cx, resumeMode, vp, &completion)) {
     return false;
+  }
+
+  if (isAfterAwait) {
+    RootedObject obj(cx, &completion.toObject());
+    if (!DefineDataProperty(cx, obj, cx->names().await, TrueHandleValue)) {
+      return false;
+    }
   }
 
   RootedValue fval(cx, ObjectValue(*object_));
