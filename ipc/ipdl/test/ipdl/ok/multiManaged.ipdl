@@ -1,9 +1,0 @@
-include protocol multiManager1;
-include protocol multiManager2;
-
-protocol multiManaged {
-    manager multiManager1 or multiManager2;
-
-child:
-    async __delete__();
-};

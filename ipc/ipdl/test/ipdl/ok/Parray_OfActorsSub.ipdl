@@ -1,0 +1,7 @@
+include protocol Parray_OfActors;
+
+protocol Parray_OfActorsSub {
+    manager Parray_OfActors;
+
+child: async __delete__();
+};

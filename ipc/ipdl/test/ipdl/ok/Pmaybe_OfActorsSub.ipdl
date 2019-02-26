@@ -1,0 +1,7 @@
+include protocol Pmaybe_OfActors;
+
+protocol Pmaybe_OfActorsSub {
+    manager Pmaybe_OfActors;
+
+child: async __delete__();
+};
