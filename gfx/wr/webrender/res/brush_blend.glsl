@@ -71,6 +71,8 @@ void brush_vs(
     // below because it doesn't get executed on Windows because of a suspected
     // miscompile of this shader on Windows. See
     // https://github.com/servo/webrender/wiki/Driver-issues#bug-1505871---assignment-to-varying-flat-arrays-inside-switch-statement-of-vertex-shader-suspected-miscompile-on-windows
+    // default: just to satisfy angle_shader_validation.rs which needs one
+    // default: for every switch, even in comments.
     vFuncs[0] = (user_data.y >> 28) & 0xf; // R
     vFuncs[1] = (user_data.y >> 24) & 0xf; // G
     vFuncs[2] = (user_data.y >> 20) & 0xf; // B
