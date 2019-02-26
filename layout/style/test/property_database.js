@@ -7835,6 +7835,117 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-snap-v1.enabled")) {
     other_values: [ "-10px", "calc(2em + 3ex)" ],
     invalid_values: [ "auto", "20%", "-30%", "1px 2px" ],
   };
+  gCSSProperties["scroll-padding"] = {
+    domProp: "scrollPadding",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: [ "scroll-padding-top",
+                     "scroll-padding-right",
+                     "scroll-padding-bottom",
+                     "scroll-padding-left" ],
+    initial_values: [ "auto" ],
+    other_values: [ "10px", "0", "20%", "calc(2em + 3ex)", "1px 2px",
+                    "1px 2px 3%", "1px 2px 3% 4px", "1px auto" ],
+    invalid_values: [ "20", "-20px" ]
+  };
+  gCSSProperties["scroll-padding-top"] = {
+    domProp: "scrollPaddingTop",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: [ "0", "10px", "20%", "calc(2em + 3ex)", "calc(50% + 60px)",
+                    "calc(-50px)" ],
+    invalid_values: [ "20", "-20px" ],
+  };
+  gCSSProperties["scroll-padding-right"] = {
+    domProp: "scrollPaddingRight",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: [ "0", "10px", "20%", "calc(2em + 3ex)", "calc(50% + 60px)",
+                    "calc(-50px)" ],
+    invalid_values: [ "20", "-20px" ],
+  };
+  gCSSProperties["scroll-padding-bottom"] = {
+    domProp: "scrollPaddingBottom",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: [ "0", "10px", "20%", "calc(2em + 3ex)", "calc(50% + 60px)",
+                    "calc(-50px)" ],
+    invalid_values: [ "20", "-20px" ],
+  };
+  gCSSProperties["scroll-padding-left"] = {
+    domProp: "scrollPaddingLeft",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: [ "0", "10px", "20%", "calc(2em + 3ex)", "calc(50% + 60px)",
+                    "calc(-50px)" ],
+    invalid_values: [ "20", "-20px" ],
+  };
+  gCSSProperties["scroll-padding-inline"] = {
+    domProp: "scrollPaddingInline",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: [ "scroll-padding-inline-start",
+                     "scroll-padding-inline-end" ],
+    initial_values: [ "auto", "auto auto" ],
+    other_values: [ "10px", "0", "20%", "calc(2em + 3ex)", "1px 2px",
+                    "1px auto" ],
+    invalid_values: [ "20", "-20px" ]
+  };
+  gCSSProperties["scroll-padding-inline-start"] = {
+    domProp: "scrollPaddingInlineStart",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
+    initial_values: [ "auto" ],
+    other_values: [ "0", "10px", "20%", "calc(2em + 3ex)", "calc(50% + 60px)",
+                    "calc(-50px)" ],
+    invalid_values: [ "20", "-20px" ],
+  };
+  gCSSProperties["scroll-padding-inline-end"] = {
+    domProp: "scrollPaddingInlineEnd",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
+    initial_values: [ "auto" ],
+    other_values: [ "0", "10px", "20%", "calc(2em + 3ex)", "calc(50% + 60px)",
+                    "calc(-50px)" ],
+    invalid_values: [ "20", "-20px" ],
+  };
+  gCSSProperties["scroll-padding-block"] = {
+    domProp: "scrollPaddingBlock",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: [ "scroll-padding-block-start",
+                     "scroll-padding-block-end" ],
+    initial_values: [ "auto", "auto auto" ],
+    other_values: [ "10px", "0", "20%", "calc(2em + 3ex)", "1px 2px",
+                    "1px auto" ],
+    invalid_values: [ "20", "-20px" ]
+  };
+  gCSSProperties["scroll-padding-block-start"] = {
+    domProp: "scrollPaddingBlockStart",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
+    initial_values: [ "auto" ],
+    other_values: [ "0", "10px", "20%", "calc(2em + 3ex)", "calc(50% + 60px)",
+                    "calc(-50px)" ],
+    invalid_values: [ "20", "-20px" ],
+  };
+  gCSSProperties["scroll-padding-block-end"] = {
+    domProp: "scrollPaddingBlockEnd",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
+    initial_values: [ "auto" ],
+    other_values: [ "0", "10px", "20%", "calc(2em + 3ex)", "calc(50% + 60px)",
+                    "calc(-50px)" ],
+    invalid_values: [ "20", "-20px" ],
+  };
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
