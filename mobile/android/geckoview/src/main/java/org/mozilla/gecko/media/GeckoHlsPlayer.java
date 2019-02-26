@@ -64,6 +64,9 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     private final int mPlayerId;
     private boolean mExoplayerSuspended = false;
 
+    private static final int DEFAULT_MIN_BUFFER_MS = 5 * 1000;
+    private static final int DEFAULT_MAX_BUFFER_MS = 10 * 1000;
+
     private enum MediaDecoderPlayState {
         PLAY_STATE_PREPARING,
         PLAY_STATE_PAUSED,
@@ -562,15 +565,11 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
         mRenderers[0] = mVRenderer;
         mRenderers[1] = mARenderer;
 
-        // Use default values for constructing DefaultLoadControl except maxBufferMs.
-        // See Bug 1424168.
-        int maxBufferMs = Math.max(DefaultLoadControl.DEFAULT_MIN_BUFFER_MS,
-                                   DefaultLoadControl.DEFAULT_MAX_BUFFER_MS / 2);
         DefaultLoadControl dlc =
             new DefaultLoadControl(
                 new DefaultAllocator(true, C.DEFAULT_BUFFER_SEGMENT_SIZE),
-                DefaultLoadControl.DEFAULT_MIN_BUFFER_MS,
-                maxBufferMs, /*this value can eliminate the memory usage immensely by experiment*/
+                DEFAULT_MIN_BUFFER_MS,
+                DEFAULT_MAX_BUFFER_MS,
                 DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS,
                 DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS);
         // Create ExoPlayer instance with specific components.
