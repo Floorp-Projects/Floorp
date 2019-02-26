@@ -1593,8 +1593,6 @@ impl ToDebugString for SpecificDisplayItem {
             SpecificDisplayItem::PushShadow(..) => String::from("push_shadow"),
             SpecificDisplayItem::PushReferenceFrame(..) => String::from("push_reference_frame"),
             SpecificDisplayItem::PushStackingContext(..) => String::from("push_stacking_context"),
-            SpecificDisplayItem::SetFilterOps => String::from("set_filter_ops"),
-            SpecificDisplayItem::SetFilterData => String::from("set_filter_data"),
             SpecificDisplayItem::RadialGradient(..) => String::from("radial_gradient"),
             SpecificDisplayItem::Rectangle(..) => String::from("rectangle"),
             SpecificDisplayItem::ScrollFrame(..) => String::from("scroll_frame"),
