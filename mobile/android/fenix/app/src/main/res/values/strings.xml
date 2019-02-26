@@ -163,6 +163,14 @@ people before profit. Our mission: keep the Internet open and accessible to all.
     <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
     <string name="current_session_image">Current session image</string>
 
+    <!-- Text for the button to delete a single session -->
+    <string name="session_item_delete">Delete</string>
+
+    <!-- Text to tell the user how many more tabs this session has.
+        The first parameter is how many extra tabs the session has. -->
+    <string name="session_items_more">%1$d sites…</string>
+
+
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Delete History</string>
     <!-- Text for the button to delete a single history item -->

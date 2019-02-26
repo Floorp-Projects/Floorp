@@ -71,11 +71,13 @@ class HomeFragment : Fragment() {
         tabsComponent.view.isNestedScrollingEnabled = false
         sessionsComponent.view.isNestedScrollingEnabled = false
 
-        val bundles = requireComponents.core.sessionStorage.bundles(40)
+        val bundles = requireComponents.core.sessionStorage.bundles(temporaryNumberOfSessions)
 
-        bundles.observe(this, Observer {sessionBundles ->
+        bundles.observe(this, Observer { sessionBundles ->
             val archivedSessions = sessionBundles.mapNotNull { sessionBundle ->
-                sessionBundle.id?.let { ArchivedSession(it, sessionBundle, sessionBundle.lastSavedAt, sessionBundle.urls) }
+                sessionBundle.id?.let {
+                    ArchivedSession(it, sessionBundle, sessionBundle.lastSavedAt, sessionBundle.urls)
+                }
             }
 
             getManagedEmitter<SessionsChange>().onNext(SessionsChange.Changed(archivedSessions))
@@ -171,6 +173,9 @@ class HomeFragment : Fragment() {
                                 requireComponents.core.sessionManager.restore(this)
                             }
                         }
+                        is SessionsAction.Delete -> {
+                            requireComponents.core.sessionStorage.remove(it.archivedSession.bundle)
+                        }
                     }
                 }
         }
@@ -246,5 +251,7 @@ class HomeFragment : Fragment() {
         const val toolbarPaddingDp = 12f
         const val firstKeyTriggerFrame = 55
         const val secondKeyTriggerFrame = 90
+
+        const val temporaryNumberOfSessions = 25
     }
 }

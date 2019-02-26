@@ -19,7 +19,9 @@ import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.session_item.*
 import org.mozilla.fenix.R
 
-class SessionsAdapter(private val actionEmitter: Observer<SessionsAction>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class SessionsAdapter(
+    private val actionEmitter: Observer<SessionsAction>
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private var items = listOf<ArchivedSession>()
 
     fun reloadDatat(items: List<ArchivedSession>) {
@@ -89,12 +91,19 @@ class SessionsAdapter(private val actionEmitter: Observer<SessionsAction>) : Rec
         view: View,
         private val actionEmitter: Observer<SessionsAction>,
         override val containerView: View? = view
-    ) :RecyclerView.ViewHolder(view), LayoutContainer {
+    ) : RecyclerView.ViewHolder(view), LayoutContainer {
         private var session: ArchivedSession? = null
+        private lateinit var sessionMenu: SessionItemMenu
 
         init {
+            setupMenu()
+
             session_item.setOnClickListener {
                 session?.apply { actionEmitter.onNext(SessionsAction.Select(this)) }
+            }
+
+            session_card_overflow_button.setOnClickListener {
+                sessionMenu.menuBuilder.build(itemView.context).show(it)
             }
         }
 
@@ -102,7 +111,7 @@ class SessionsAdapter(private val actionEmitter: Observer<SessionsAction>) : Rec
             this.session = session
 
             session_card_thumbnail.setColorFilter(
-                ContextCompat.getColor(itemView.context, AVAILABLE_COLOR_IDS.random()),
+                ContextCompat.getColor(itemView.context, availableColors.random()),
                 PorterDuff.Mode.MULTIPLY)
             session_card_timestamp.text = session.formattedSavedAt
             session_card_titles.text = session.titles
@@ -111,8 +120,18 @@ class SessionsAdapter(private val actionEmitter: Observer<SessionsAction>) : Rec
             } else { "" }
         }
 
+        private fun setupMenu() {
+            sessionMenu = SessionItemMenu(itemView.context) {
+                if (it is SessionItemMenu.Item.Delete) {
+                    session?.apply {
+                        actionEmitter.onNext(SessionsAction.Delete(this))
+                    }
+                }
+            }
+        }
+
         companion object {
-            private val AVAILABLE_COLOR_IDS = listOf(
+            private val availableColors = listOf(
                 R.color.photonBlue40, R.color.photonGreen50, R.color.photonYellow50, R.color.photonOrange50,
                 R.color.photonPurple50, R.color.photonInk70)
             const val LAYOUT_ID = R.layout.session_item

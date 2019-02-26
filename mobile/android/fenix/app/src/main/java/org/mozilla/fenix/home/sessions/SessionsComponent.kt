@@ -14,19 +14,21 @@ import org.mozilla.fenix.mvi.UIComponent
 import org.mozilla.fenix.mvi.ViewState
 import java.net.URL
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Calendar
+import java.util.Locale
 
 data class ArchivedSession(
     val id: Long,
     val bundle: SessionBundle,
     private val savedAt: Long,
-    private val _urls: List<String>) {
+    private val _urls: List<String>
+) {
     val formattedSavedAt by lazy {
         val isSameDay: (Calendar, Calendar) -> Boolean = { a, b ->
             a.get(Calendar.ERA) == b.get(Calendar.ERA) &&
                     a.get(Calendar.YEAR) == b.get(Calendar.YEAR) &&
                     a.get(Calendar.DAY_OF_YEAR) == b.get(Calendar.DAY_OF_YEAR)
-
         }
 
         val parse: (Date) -> String = { date ->
@@ -34,11 +36,10 @@ data class ArchivedSession(
             val today = Calendar.getInstance()
             val yesterday = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }
 
-            val time = TIME_FORMATTER.format(date)
-            val month = MONTH_FORMATTER.format(date)
-            val day = DAY_FORMATTER.format(date)
-            val dayOfWeek = DAY_OF_WEEK_FORMATTER.format(date)
-
+            val time = timeFormatter.format(date)
+            val month = monthFormatter.format(date)
+            val day = dayFormatter.format(date)
+            val dayOfWeek = dayOfWeekFormatter.format(date)
 
             when {
                 isSameDay(dateCal, today) -> "Today @ $time"
@@ -51,6 +52,9 @@ data class ArchivedSession(
     }
 
     val titles by lazy {
+        // Until we resolve (https://github.com/mozilla-mobile/fenix/issues/532) we
+        // just want to grab the host from the URL
+        @SuppressWarnings("TooGenericExceptionCaught")
         val urlFormatter: (String) -> String = { url ->
             try {
                 URL(url).host
@@ -69,10 +73,10 @@ data class ArchivedSession(
     private companion object {
         private const val NUMBER_OF_URLS_TO_DISPLAY = 5
 
-        private val TIME_FORMATTER = SimpleDateFormat("h:mm a", Locale.US)
-        private val MONTH_FORMATTER = SimpleDateFormat("M", Locale.US)
-        private val DAY_FORMATTER = SimpleDateFormat("d", Locale.US)
-        private val DAY_OF_WEEK_FORMATTER = SimpleDateFormat("EEEE", Locale.US)
+        private val timeFormatter = SimpleDateFormat("h:mm a", Locale.US)
+        private val monthFormatter = SimpleDateFormat("M", Locale.US)
+        private val dayFormatter = SimpleDateFormat("d", Locale.US)
+        private val dayOfWeekFormatter = SimpleDateFormat("EEEE", Locale.US)
     }
 }
 
@@ -88,7 +92,7 @@ class SessionsComponent(
 
     override val reducer: (SessionsState, SessionsChange) -> SessionsState = { state, change ->
         when (change) {
-            is SessionsChange.Changed -> state.copy(archivedSessions = change.archivedSessions) // copy state with changes here
+            is SessionsChange.Changed -> state.copy(archivedSessions = change.archivedSessions)
         }
     }
 
@@ -105,6 +109,7 @@ data class SessionsState(val archivedSessions: List<ArchivedSession>) : ViewStat
 
 sealed class SessionsAction : Action {
     data class Select(val archivedSession: ArchivedSession) : SessionsAction()
+    data class Delete(val archivedSession: ArchivedSession) : SessionsAction()
 }
 
 sealed class SessionsChange : Change {
