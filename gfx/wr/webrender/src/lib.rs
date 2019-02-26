@@ -90,6 +90,7 @@ mod debug_server;
 mod device;
 mod display_list_flattener;
 mod ellipse;
+mod filterdata;
 mod frame_builder;
 mod freelist;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
