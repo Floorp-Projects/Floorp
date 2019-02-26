@@ -1,0 +1,14 @@
+[
+  {
+    "sidebarInfo": {
+      "deviceName": "Pixel 2",
+      "shortName": "Firefox Nightly"
+    },
+    "runtimeDetails": {
+      "info": {
+        "name": "Mozilla Nightly",
+        "version": "64.0a1"
+      }
+    }
+  }
+]
