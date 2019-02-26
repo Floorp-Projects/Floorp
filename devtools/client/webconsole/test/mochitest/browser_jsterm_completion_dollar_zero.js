@@ -41,12 +41,12 @@ async function performTests() {
 
   const {autocompletePopup} = jsterm;
 
-  await setInputValueForAutocompletion(jsterm, "$0.");
+  await setInputValueForAutocompletion(hud, "$0.");
   is(getAutocompletePopupLabels(autocompletePopup).includes("attributes"), true,
     "autocomplete popup has expected items");
   is(autocompletePopup.isOpen, true, "autocomplete popup is open");
 
-  await setInputValueForAutocompletion(jsterm, "$0.attributes.");
+  await setInputValueForAutocompletion(hud, "$0.attributes.");
   is(autocompletePopup.isOpen, true, "autocomplete popup is open");
   is(getAutocompletePopupLabels(autocompletePopup).includes("getNamedItem"), true,
     "autocomplete popup has expected items");
