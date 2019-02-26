@@ -1585,7 +1585,9 @@ class WebGLContext : public nsICanvasRenderingContextInternal,
 
  public:
   // returns true if the extension has been enabled by calling getExtension.
-  bool IsExtensionEnabled(WebGLExtensionID ext) const;
+  bool IsExtensionEnabled(const WebGLExtensionID ext) const {
+    return mExtensions[ext];
+  }
 
  protected:
   // returns true if the extension is supported for this caller type (this

@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 #include "mozilla/dom/EventTarget.h"
+#include "mozilla/layers/LayersTypes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
@@ -478,7 +479,8 @@ class WidgetEvent : public WidgetEventTime {
         mLastRefPoint(0, 0),
         mFocusSequenceNumber(0),
         mSpecifiedEventType(nullptr),
-        mPath(nullptr) {
+        mPath(nullptr),
+        mLayersId(layers::LayersId{0}) {
     MOZ_COUNT_CTOR(WidgetEvent);
     mFlags.Clear();
     mFlags.mIsTrusted = aIsTrusted;
@@ -570,6 +572,11 @@ class WidgetEvent : public WidgetEventTime {
 
   nsTArray<EventTargetChainItem>* mPath;
 
+  // The LayersId of the content process that this event should be
+  // dispatched to. This field is only used in the chrome process
+  // and doesn't get remoted to child processes.
+  layers::LayersId mLayersId;
+
   dom::EventTarget* GetDOMEventTarget() const;
   dom::EventTarget* GetCurrentDOMEventTarget() const;
   dom::EventTarget* GetOriginalDOMEventTarget() const;
@@ -580,6 +587,7 @@ class WidgetEvent : public WidgetEventTime {
     mRefPoint = aEvent.mRefPoint;
     // mLastRefPoint doesn't need to be copied.
     mFocusSequenceNumber = aEvent.mFocusSequenceNumber;
+    // mLayersId intentionally not copied, since it's not used within content
     AssignEventTime(aEvent);
     // mFlags should be copied manually if it's necessary.
     mSpecifiedEventType = aEvent.mSpecifiedEventType;

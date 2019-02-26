@@ -7708,6 +7708,246 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-snap.enabled")) {
   };
 }
 
+if (IsCSSPropertyPrefEnabled("layout.css.scroll-snap-v1.enabled")) {
+  gCSSProperties["scroll-snap-align"] = {
+    domProp: "scrollSnapAlign",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "none" ],
+    other_values: [ "start", "end", "center", "start none", "center end",
+                    "start start" ],
+    invalid_values: [ "auto", "start invalid", "start end center" ]
+  };
+  gCSSProperties["scroll-margin"] = {
+    domProp: "scrollMargin",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: [ "scroll-margin-top",
+                     "scroll-margin-right",
+                     "scroll-margin-bottom",
+                     "scroll-margin-left" ],
+    initial_values: [ "0" ],
+    other_values: [ "-10px", "calc(2em + 3ex)", "1px 2px", "1px 2px 3px",
+                    "1px 2px 3px 4px" ],
+    invalid_values: [ "auto", "20%", "-30%", "1px 2px 3px 4px 5px" ],
+  };
+  gCSSProperties["scroll-margin-top"] = {
+    domProp: "scrollMarginTop",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    initial_values: [ "0" ],
+    other_values: [ "-10px", "calc(2em + 3ex)" ],
+    invalid_values: [ "auto", "20%", "-30%", "1px 2px" ],
+  };
+  gCSSProperties["scroll-margin-right"] = {
+    domProp: "scrollMarginRight",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    initial_values: [ "0" ],
+    other_values: [ "-10px", "calc(2em + 3ex)" ],
+    invalid_values: [ "auto", "20%", "-30%", "1px 2px" ],
+  };
+  gCSSProperties["scroll-margin-bottom"] = {
+    domProp: "scrollMarginBottom",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    initial_values: [ "0" ],
+    other_values: [ "-10px", "calc(2em + 3ex)" ],
+    invalid_values: [ "auto", "20%", "-30%", "1px 2px" ],
+  };
+  gCSSProperties["scroll-margin-left"] = {
+    domProp: "scrollMarginLeft",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    initial_values: [ "0" ],
+    other_values: [ "-10px", "calc(2em + 3ex)" ],
+    invalid_values: [ "auto", "20%", "-30%", "1px 2px" ],
+  };
+  gCSSProperties["scroll-margin-inline"] = {
+    domProp: "scrollMarginInline",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: [ "scroll-margin-inline-start",
+                     "scroll-margin-inline-end" ],
+    initial_values: [ "0" ],
+    other_values: [ "-10px", "calc(2em + 3ex)", "1px 2px" ],
+    invalid_values: [ "auto", "20%", "-30%", "1px 2px 3px" ],
+  };
+  gCSSProperties["scroll-margin-inline-start"] = {
+    domProp: "scrollMarginInlineStart",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    initial_values: [ "0" ],
+    other_values: [ "-10px", "calc(2em + 3ex)" ],
+    invalid_values: [ "auto", "20%", "-30%", "1px 2px" ],
+  };
+  gCSSProperties["scroll-margin-inline-end"] = {
+    domProp: "scrollMarginInlineEnd",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    initial_values: [ "0" ],
+    other_values: [ "-10px", "calc(2em + 3ex)" ],
+    invalid_values: [ "auto", "20%", "-30%", "1px 2px" ],
+  };
+  gCSSProperties["scroll-margin-block"] = {
+    domProp: "scrollMarginBlock",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: [ "scroll-margin-block-start",
+                     "scroll-margin-block-end" ],
+    initial_values: [ "0" ],
+    other_values: [ "-10px", "calc(2em + 3ex)", "1px 2px" ],
+    invalid_values: [ "auto", "20%", "-30%", "1px 2px 3px" ],
+  };
+  gCSSProperties["scroll-margin-block-start"] = {
+    domProp: "scrollMarginBlockStart",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    initial_values: [ "0" ],
+    other_values: [ "-10px", "calc(2em + 3ex)" ],
+    invalid_values: [ "auto", "20%", "-30%", "1px 2px" ],
+  };
+  gCSSProperties["scroll-margin-block-end"] = {
+    domProp: "scrollMarginBlockEnd",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    initial_values: [ "0" ],
+    other_values: [ "-10px", "calc(2em + 3ex)" ],
+    invalid_values: [ "auto", "20%", "-30%", "1px 2px" ],
+  };
+  gCSSProperties["scroll-padding"] = {
+    domProp: "scrollPadding",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: [ "scroll-padding-top",
+                     "scroll-padding-right",
+                     "scroll-padding-bottom",
+                     "scroll-padding-left" ],
+    initial_values: [ "auto" ],
+    other_values: [ "10px", "0", "20%", "calc(2em + 3ex)", "1px 2px",
+                    "1px 2px 3%", "1px 2px 3% 4px", "1px auto" ],
+    invalid_values: [ "20", "-20px" ]
+  };
+  gCSSProperties["scroll-padding-top"] = {
+    domProp: "scrollPaddingTop",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: [ "0", "10px", "20%", "calc(2em + 3ex)", "calc(50% + 60px)",
+                    "calc(-50px)" ],
+    invalid_values: [ "20", "-20px" ],
+  };
+  gCSSProperties["scroll-padding-right"] = {
+    domProp: "scrollPaddingRight",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: [ "0", "10px", "20%", "calc(2em + 3ex)", "calc(50% + 60px)",
+                    "calc(-50px)" ],
+    invalid_values: [ "20", "-20px" ],
+  };
+  gCSSProperties["scroll-padding-bottom"] = {
+    domProp: "scrollPaddingBottom",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: [ "0", "10px", "20%", "calc(2em + 3ex)", "calc(50% + 60px)",
+                    "calc(-50px)" ],
+    invalid_values: [ "20", "-20px" ],
+  };
+  gCSSProperties["scroll-padding-left"] = {
+    domProp: "scrollPaddingLeft",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: [ "0", "10px", "20%", "calc(2em + 3ex)", "calc(50% + 60px)",
+                    "calc(-50px)" ],
+    invalid_values: [ "20", "-20px" ],
+  };
+  gCSSProperties["scroll-padding-inline"] = {
+    domProp: "scrollPaddingInline",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: [ "scroll-padding-inline-start",
+                     "scroll-padding-inline-end" ],
+    initial_values: [ "auto", "auto auto" ],
+    other_values: [ "10px", "0", "20%", "calc(2em + 3ex)", "1px 2px",
+                    "1px auto" ],
+    invalid_values: [ "20", "-20px" ]
+  };
+  gCSSProperties["scroll-padding-inline-start"] = {
+    domProp: "scrollPaddingInlineStart",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
+    initial_values: [ "auto" ],
+    other_values: [ "0", "10px", "20%", "calc(2em + 3ex)", "calc(50% + 60px)",
+                    "calc(-50px)" ],
+    invalid_values: [ "20", "-20px" ],
+  };
+  gCSSProperties["scroll-padding-inline-end"] = {
+    domProp: "scrollPaddingInlineEnd",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
+    initial_values: [ "auto" ],
+    other_values: [ "0", "10px", "20%", "calc(2em + 3ex)", "calc(50% + 60px)",
+                    "calc(-50px)" ],
+    invalid_values: [ "20", "-20px" ],
+  };
+  gCSSProperties["scroll-padding-block"] = {
+    domProp: "scrollPaddingBlock",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: [ "scroll-padding-block-start",
+                     "scroll-padding-block-end" ],
+    initial_values: [ "auto", "auto auto" ],
+    other_values: [ "10px", "0", "20%", "calc(2em + 3ex)", "1px 2px",
+                    "1px auto" ],
+    invalid_values: [ "20", "-20px" ]
+  };
+  gCSSProperties["scroll-padding-block-start"] = {
+    domProp: "scrollPaddingBlockStart",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
+    initial_values: [ "auto" ],
+    other_values: [ "0", "10px", "20%", "calc(2em + 3ex)", "calc(50% + 60px)",
+                    "calc(-50px)" ],
+    invalid_values: [ "20", "-20px" ],
+  };
+  gCSSProperties["scroll-padding-block-end"] = {
+    domProp: "scrollPaddingBlockEnd",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
+    initial_values: [ "auto" ],
+    other_values: [ "0", "10px", "20%", "calc(2em + 3ex)", "calc(50% + 60px)",
+                    "calc(-50px)" ],
+    invalid_values: [ "20", "-20px" ],
+  };
+}
+
 if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
   gCSSProperties["-webkit-animation"] = {
     domProp: "webkitAnimation",
