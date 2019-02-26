@@ -47,9 +47,7 @@ void gecko_profiler_end_marker(const char* name);
   macro(linear_grad);                      \
   macro(radial_grad);                      \
   macro(picture);                          \
-  macro(text_run);                         \
-  macro(filterdata);
-
+  macro(text_run);
 
 // Prelude of types necessary before including webrender_ffi_generated.h
 namespace mozilla {

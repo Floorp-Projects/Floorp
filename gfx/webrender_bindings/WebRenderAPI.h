@@ -329,7 +329,6 @@ struct MOZ_STACK_CLASS StackingContextParams : public WrStackingContextParams {
   }
 
   nsTArray<wr::FilterOp> mFilters;
-  nsTArray<wr::WrFilterData> mFilterDatas;
   wr::LayoutRect mBounds = wr::ToLayoutRect(LayoutDeviceRect());
   const gfx::Matrix4x4* mBoundTransform = nullptr;
   const gfx::Matrix4x4* mTransformPtr = nullptr;
