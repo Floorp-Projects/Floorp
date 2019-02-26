@@ -57,6 +57,7 @@ class HomeFragment : Fragment() {
             TabsState(sessionManager.sessions.map { it.toSessionViewState(it == sessionManager.selectedSession) })
         )
         sessionsComponent = SessionsComponent(view.homeContainer, bus)
+
         ActionBusFactory.get(this).logMergedObservables()
         val activity = activity as HomeActivity
         DefaultThemeManager.applyStatusBarTheme(activity.window, activity.themeManager, activity)
@@ -68,6 +69,8 @@ class HomeFragment : Fragment() {
 
         setupHomeMenu()
 
+        sessionsComponent.view.visibility = if ((activity as HomeActivity).browsingModeManager.isPrivate)
+            View.GONE else View.VISIBLE
         tabsComponent.view.isNestedScrollingEnabled = false
         sessionsComponent.view.isNestedScrollingEnabled = false
 
