@@ -70,10 +70,6 @@ namespace mozilla {
   return sExtensionNamesEnumeratedArray[ext];
 }
 
-bool WebGLContext::IsExtensionEnabled(WebGLExtensionID ext) const {
-  return mExtensions[ext];
-}
-
 bool WebGLContext::IsExtensionSupported(dom::CallerType callerType,
                                         WebGLExtensionID ext) const {
   bool allowPrivilegedExts = false;
