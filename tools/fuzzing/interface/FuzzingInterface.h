@@ -14,8 +14,14 @@
 
 #include "FuzzerRegistry.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Logging.h"
 
 namespace mozilla {
+
+extern LazyLogModule gFuzzingLog;
+
+#define FUZZING_LOG(args) \
+  MOZ_LOG(mozilla::gFuzzingLog, mozilla::LogLevel::Verbose, args)
 
 typedef int (*FuzzingTestFuncRaw)(const uint8_t*, size_t);
 
