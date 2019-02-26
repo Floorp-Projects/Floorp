@@ -14,6 +14,7 @@
 #include "js/PropertySpec.h"
 #include "mozilla/ChaosMode.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/IOInterposer.h"
 #include "mozilla/Preferences.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
@@ -1074,6 +1075,10 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
   NS_LogInit();
 
   mozilla::LogModule::Init(argc, argv);
+
+  // This guard ensures that all threads that attempt to register themselves
+  // with the IOInterposer will be properly tracked.
+  mozilla::IOInterposerInit ioInterposerGuard;
 
 #ifdef MOZ_GECKO_PROFILER
   char aLocal;
