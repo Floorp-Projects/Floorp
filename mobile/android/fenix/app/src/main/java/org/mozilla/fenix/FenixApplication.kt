@@ -56,10 +56,7 @@ open class FenixApplication : Application() {
     private fun loadExperiments() {
         val experimentsFile = File(filesDir, EXPERIMENTS_JSON_FILENAME)
         val experimentSource = KintoExperimentSource(
-            EXPERIMENTS_BASE_URL,
-            EXPERIMENTS_BUCKET_NAME,
-            EXPERIMENTS_COLLECTION_NAME,
-            components.core.client
+            EXPERIMENTS_BASE_URL, EXPERIMENTS_BUCKET_NAME, EXPERIMENTS_COLLECTION_NAME
         )
         // TODO add ValueProvider to keep clientID in sync with Glean when ready
         fretboard = Fretboard(experimentSource, FlatFileExperimentStorage(experimentsFile))

@@ -5,7 +5,8 @@
 private object Versions {
     const val kotlin = "1.3.11"
     const val android_gradle_plugin = "3.2.1"
-    const val geckoNightly = "67.0.20190226093755"
+
+    const val geckoNightly = "67.0.20190213102848"
     const val rxAndroid = "2.1.0"
     const val rxKotlin = "2.3.0"
     const val anko = "0.10.8"
@@ -21,7 +22,7 @@ private object Versions {
     const val androidx_fragment = "1.1.0-alpha04"
     const val androidx_safeargs = "1.0.0-beta01"
 
-    const val mozilla_android_components = "0.45.0-SNAPSHOT"
+    const val mozilla_android_components = "0.43.0-SNAPSHOT"
 
     const val test_tools = "1.0.2"
     const val espresso_core = "2.2.2"
