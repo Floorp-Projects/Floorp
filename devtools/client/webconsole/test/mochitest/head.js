@@ -280,7 +280,7 @@ async function openContextMenu(hud, element) {
   const onConsoleMenuOpened = hud.ui.wrapper.once("menu-open");
   synthesizeContextMenuEvent(element);
   await onConsoleMenuOpened;
-  const doc = hud.chromeWindow.document;
+  const doc = hud.ui.wrapper.owner.chromeWindow.document;
   return doc.getElementById("webconsole-menu");
 }
 
@@ -293,7 +293,7 @@ async function openContextMenu(hud, element) {
  * @return promise
  */
 function hideContextMenu(hud) {
-  const doc = hud.chromeWindow.document;
+  const doc = hud.ui.wrapper.owner.chromeWindow.document;
   const popup = doc.getElementById("webconsole-menu");
   if (!popup) {
     return Promise.resolve();
@@ -393,30 +393,10 @@ function hasFocus(node) {
 }
 
 /**
- * Get the value of the console input .
+ * Set the value of the JsTerm and its caret position, and wait for the autocompletion
+ * to be updated.
  *
- * @param {WebConsole} hud: The webconsole
- * @returns {String}: The value of the console input.
- */
-function getInputValue(hud) {
-  return hud.jsterm._getValue();
-}
-
-/**
- * Set the value of the console input .
- *
- * @param {WebConsole} hud: The webconsole
- * @param {String} value : The value to set the console input to.
- */
-function setInputValue(hud, value) {
-  return hud.jsterm._setValue(value);
-}
-
-/**
- * Set the value of the console input and its caret position, and wait for the
- * autocompletion to be updated.
- *
- * @param {WebConsole} hud: The webconsole
+ * @param {JsTerm} jsterm
  * @param {String} value : The value to set the jsterm to.
  * @param {Integer} caretPosition : The index where to place the cursor. A negative
  *                  number will place the caret at (value.length - offset) position.
@@ -424,13 +404,11 @@ function setInputValue(hud, value) {
  * @returns {Promise} resolves when the jsterm is completed.
  */
 async function setInputValueForAutocompletion(
-  hud,
+  jsterm,
   value,
   caretPosition = value.length,
 ) {
-  const {jsterm} = hud;
-
-  setInputValue(hud, "");
+  jsterm.setInputValue("");
   jsterm.focus();
 
   const updated = jsterm.once("autocomplete-updated");
@@ -455,37 +433,37 @@ async function setInputValueForAutocompletion(
 }
 
 /**
- * Set the value of the console input and wait for the confirm dialog to be displayed.
+ * Set the value of the JsTerm and wait for the confirm dialog to be displayed.
  *
  * @param {Toolbox} toolbox
- * @param {WebConsole} hud
+ * @param {JsTerm} jsterm
  * @param {String} value : The value to set the jsterm to.
  *                  Default to value.length (caret set at the end).
  * @returns {Promise<HTMLElement>} resolves with dialog element when it is opened.
  */
-async function setInputValueForGetterConfirmDialog(toolbox, hud, value) {
-  await setInputValueForAutocompletion(hud, value);
+async function setInputValueForGetterConfirmDialog(toolbox, jsterm, value) {
+  await setInputValueForAutocompletion(jsterm, value);
   await waitFor(() => isConfirmDialogOpened(toolbox));
   ok(true, "The confirm dialog is displayed");
   return getConfirmDialog(toolbox);
 }
 
 /**
- * Checks if the console input has the expected completion value.
+ * Checks if the jsterm has the expected completion value.
  *
- * @param {WebConsole} hud
+ * @param {JsTerm} jsterm
  * @param {String} expectedValue
  * @param {String} assertionInfo: Description of the assertion passed to `is`.
  */
-function checkInputCompletionValue(hud, expectedValue, assertionInfo) {
-  const completionValue = getInputCompletionValue(hud);
+function checkJsTermCompletionValue(jsterm, expectedValue, assertionInfo) {
+  const completionValue = getJsTermCompletionValue(jsterm);
   if (completionValue === null) {
     ok(false, "Couldn't retrieve the completion value");
   }
 
   info(`Expects "${expectedValue}", is "${completionValue}"`);
 
-  if (hud.jsterm.completeNode) {
+  if (jsterm.completeNode) {
     is(completionValue, expectedValue, assertionInfo);
   } else {
     // CodeMirror jsterm doesn't need to add prefix-spaces.
@@ -494,14 +472,13 @@ function checkInputCompletionValue(hud, expectedValue, assertionInfo) {
 }
 
 /**
- * Checks if the cursor on console input is at expected position.
+ * Checks if the cursor on jsterm is at the expected position.
  *
- * @param {WebConsole} hud
+ * @param {JsTerm} jsterm
  * @param {Integer} expectedCursorIndex
  * @param {String} assertionInfo: Description of the assertion passed to `is`.
  */
-function checkInputCursorPosition(hud, expectedCursorIndex, assertionInfo) {
-  const {jsterm} = hud;
+function checkJsTermCursor(jsterm, expectedCursorIndex, assertionInfo) {
   if (jsterm.inputNode) {
     const {selectionStart, selectionEnd} = jsterm.inputNode;
     is(selectionStart, expectedCursorIndex, assertionInfo);
@@ -512,10 +489,10 @@ function checkInputCursorPosition(hud, expectedCursorIndex, assertionInfo) {
 }
 
 /**
- * Checks the console input value and the cursor position given an expected string
- * containing a "|" to indicate the expected cursor position.
+ * Checks the jsterm value and the cursor position given an expected string containing
+ * a "|" to indicate the expected cursor position.
  *
- * @param {WebConsole} hud
+ * @param {JsTerm} jsterm
  * @param {String} expectedStringWithCursor:
  *                  String with a "|" to indicate the expected cursor position.
  *                  For example, this is how you assert an empty value with the focus "|",
@@ -523,7 +500,7 @@ function checkInputCursorPosition(hud, expectedCursorIndex, assertionInfo) {
  *                  end of the input: "test|".
  * @param {String} assertionInfo: Description of the assertion passed to `is`.
  */
-function checkInputValueAndCursorPosition(hud, expectedStringWithCursor, assertionInfo) {
+function checkJsTermValueAndCursor(jsterm, expectedStringWithCursor, assertionInfo) {
   info(`Checking jsterm state: \n${expectedStringWithCursor}`);
   if (!expectedStringWithCursor.includes("|")) {
     ok(false,
@@ -531,8 +508,7 @@ function checkInputValueAndCursorPosition(hud, expectedStringWithCursor, asserti
   }
 
   const inputValue = expectedStringWithCursor.replace("|", "");
-  const {jsterm} = hud;
-  is(getInputValue(hud), inputValue, "console input has expected value");
+  is(jsterm.getInputValue(), inputValue, "jsterm has expected value");
   if (jsterm.inputNode) {
     is(jsterm.inputNode.selectionStart, jsterm.inputNode.selectionEnd);
     is(jsterm.inputNode.selectionStart, expectedStringWithCursor.indexOf("|"),
@@ -547,13 +523,12 @@ function checkInputValueAndCursorPosition(hud, expectedStringWithCursor, asserti
 }
 
 /**
- * Returns the console input completion value.
+ * Returns the jsterm completion value, whether there's CodeMirror enabled or not.
  *
- * @param {WebConsole} hud
+ * @param {JsTerm} jsterm
  * @returns {String}
  */
-function getInputCompletionValue(hud) {
-  const {jsterm} = hud;
+function getJsTermCompletionValue(jsterm) {
   if (jsterm.completeNode) {
     return jsterm.completeNode.value;
   }
@@ -566,13 +541,13 @@ function getInputCompletionValue(hud) {
 }
 
 /**
- * Returns a boolean indicating if the console input is focused.
+ * Returns a boolean indicating if the jsterm is focused, whether there's CodeMirror
+ * enabled or not.
  *
- * @param {WebConsole} hud
+ * @param {JsTerm} jsterm
  * @returns {Boolean}
  */
-function isInputFocused(hud) {
-  const {jsterm} = hud;
+function isJstermFocused(jsterm) {
   const document = jsterm.outputNode.ownerDocument;
   const documentIsFocused = document.hasFocus();
 
@@ -975,7 +950,7 @@ function getReverseSearchInfoElement(hud) {
 /**
  * Returns a boolean indicating if the reverse search input is focused.
  *
- * @param {WebConsole} hud
+ * @param {JsTerm} jsterm
  * @returns {Boolean}
  */
 function isReverseSearchInputFocused(hud) {

@@ -19,29 +19,28 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const hud = await openNewTabAndConsole(TEST_URI);
-  const { jsterm } = hud;
+  const { jsterm } = await openNewTabAndConsole(TEST_URI);
 
   await jsterm.execute("var testObject = {$$aaab: '', $$aaac: ''}");
 
   // Should work with bug 967468.
-  await testAutocomplete(hud, "Object.__d");
-  await testAutocomplete(hud, "testObject.$$a");
+  await testAutocomplete(jsterm, "Object.__d");
+  await testAutocomplete(jsterm, "testObject.$$a");
 
   // Here's when things go wrong in bug 967468.
-  await testAutocomplete(hud, "Object.__de");
-  await testAutocomplete(hud, "testObject.$$aa");
+  await testAutocomplete(jsterm, "Object.__de");
+  await testAutocomplete(jsterm, "testObject.$$aa");
 
   // Should work with bug 1207868.
   await jsterm.execute("let foobar = {a: ''}; const blargh = {a: 1};");
-  await testAutocomplete(hud, "foobar");
-  await testAutocomplete(hud, "blargh");
-  await testAutocomplete(hud, "foobar.a");
-  await testAutocomplete(hud, "blargh.a");
+  await testAutocomplete(jsterm, "foobar");
+  await testAutocomplete(jsterm, "blargh");
+  await testAutocomplete(jsterm, "foobar.a");
+  await testAutocomplete(jsterm, "blargh.a");
 }
 
-async function testAutocomplete(hud, inputString) {
-  await setInputValueForAutocompletion(hud, inputString);
-  const popup = hud.jsterm.autocompletePopup;
+async function testAutocomplete(jsterm, inputString) {
+  await setInputValueForAutocompletion(jsterm, inputString);
+  const popup = jsterm.autocompletePopup;
   ok(popup.itemCount > 0, `There's ${popup.itemCount} suggestions for '${inputString}'`);
 }

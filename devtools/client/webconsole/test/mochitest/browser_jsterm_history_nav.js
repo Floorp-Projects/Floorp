@@ -22,8 +22,7 @@ add_task(async function() {
 });
 
 async function testHistory() {
-  const hud = await openNewTabAndConsole(TEST_URI);
-  const { jsterm } = hud;
+  const { jsterm } = await openNewTabAndConsole(TEST_URI);
   const popup = jsterm.autocompletePopup;
 
   // The autocomplete popup should never be displayed during the test.
@@ -50,7 +49,7 @@ async function testHistory() {
   // before checking the popup status.
   await new Promise(executeSoon);
 
-  is(getInputValue(hud), "window.foobarBug660806.location",
+  is(jsterm.getInputValue(), "window.foobarBug660806.location",
     "input has expected value");
 
   ok(!popup.isOpen, "popup is not open");

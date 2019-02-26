@@ -31,8 +31,7 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const hud = await openNewTabAndConsole(TEST_URI);
-  const { jsterm } = hud;
+  const { jsterm } = await openNewTabAndConsole(TEST_URI);
   info("web console opened");
 
   const { autocompletePopup: popup } = jsterm;
@@ -40,7 +39,7 @@ async function performTests() {
   const onPopUpOpen = popup.once("popup-opened");
 
   info("wait for completion: window.foo.");
-  setInputValue(hud, "window.foo");
+  jsterm.setInputValue("window.foo");
   EventUtils.sendString(".");
 
   await onPopUpOpen;
@@ -54,6 +53,6 @@ async function performTests() {
   await onPopupClose;
 
   ok(!popup.isOpen, "popup is not open after reloading the page");
-  is(getInputValue(hud), "window.foo.", "completion was cancelled");
-  ok(!getInputCompletionValue(hud), "completeNode is empty");
+  is(jsterm.getInputValue(), "window.foo.", "completion was cancelled");
+  ok(!getJsTermCompletionValue(jsterm), "completeNode is empty");
 }

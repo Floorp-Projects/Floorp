@@ -20,15 +20,14 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const hud = await openNewTabAndConsole(TEST_URI);
-  const { jsterm, ui } = hud;
+  const { jsterm, ui } = await openNewTabAndConsole(TEST_URI);
 
   const { autocompletePopup: popup } = jsterm;
 
   ok(!popup.isOpen, "popup is not open");
   const onPopupOpen = popup.once("popup-opened");
 
-  setInputValue(hud, "document.body");
+  jsterm.setInputValue("document.body");
   EventUtils.sendString(".");
 
   await onPopupOpen;
@@ -50,7 +49,7 @@ async function performTests() {
   ok(!popup.isOpen, "popup is not open");
   const onAutoCompleteUpdated = jsterm.once("autocomplete-updated");
   const inputStr = "document.b";
-  setInputValue(hud, inputStr);
+  jsterm.setInputValue(inputStr);
   EventUtils.sendString("o");
 
   await onAutoCompleteUpdated;
@@ -60,5 +59,5 @@ async function performTests() {
   // > document.bo        <-- input
   // > -----------dy      <-- autocomplete
   const spaces = " ".repeat(inputStr.length + 1);
-  checkInputCompletionValue(hud, spaces + "dy", "autocomplete shows document.body");
+  checkJsTermCompletionValue(jsterm, spaces + "dy", "autocomplete shows document.body");
 }
