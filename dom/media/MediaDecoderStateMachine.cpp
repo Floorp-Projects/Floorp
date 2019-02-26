@@ -1291,13 +1291,20 @@ class MediaDecoderStateMachine::AccurateSeekingState
   nsresult DropAudioUpToSeekTarget(AudioData* aAudio) {
     MOZ_ASSERT(aAudio && mSeekJob.mTarget->IsAccurate());
 
-    if (mSeekJob.mTarget->GetTime() >= aAudio->GetEndTime()) {
+    auto sampleDuration =
+        FramesToTimeUnit(aAudio->Frames(), Info().mAudio.mRate);
+    if (!sampleDuration.IsValid()) {
+      return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
+    }
+
+    auto audioTime = aAudio->mTime;
+    if (audioTime + sampleDuration <= mSeekJob.mTarget->GetTime()) {
       // Our seek target lies after the frames in this AudioData. Don't
       // push it onto the audio queue, and keep decoding forwards.
       return NS_OK;
     }
 
-    if (aAudio->mTime > mSeekJob.mTarget->GetTime()) {
+    if (audioTime > mSeekJob.mTarget->GetTime()) {
       // The seek target doesn't lie in the audio block just after the last
       // audio frames we've seen which were before the seek target. This
       // could have been the first audio data we've seen after seek, i.e. the
@@ -1310,6 +1317,14 @@ class MediaDecoderStateMachine::AccurateSeekingState
       mDoneAudioSeeking = true;
       return NS_OK;
     }
+
+    // The seek target lies somewhere in this AudioData's frames, strip off
+    // any frames which lie before the seek target, so we'll begin playback
+    // exactly at the seek target.
+    NS_ASSERTION(mSeekJob.mTarget->GetTime() >= audioTime,
+                 "Target must at or be after data start.");
+    NS_ASSERTION(mSeekJob.mTarget->GetTime() < audioTime + sampleDuration,
+                 "Data must end after target.");
 
     bool ok = aAudio->SetTrimWindow(
         {mSeekJob.mTarget->GetTime(), aAudio->GetEndTime()});
