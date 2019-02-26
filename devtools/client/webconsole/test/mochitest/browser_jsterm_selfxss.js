@@ -28,7 +28,8 @@ add_task(async function() {
 
 async function performTest() {
   await pushPref("devtools.selfxss.count", 0);
-  const {jsterm, ui} = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
+  const {jsterm, ui} = hud;
   const {document} = ui;
 
   info("Self-xss paste tests");
@@ -37,7 +38,7 @@ async function performTest() {
 
   // Input some commands to check if usage counting is working
   for (let i = 0; i <= 3; i++) {
-    jsterm.setInputValue(i.toString());
+    setInputValue(hud, i.toString());
     jsterm.execute();
   }
   is(WebConsoleUtils.usageCount, 4, "Usage count incremented");
@@ -52,7 +53,7 @@ async function performTest() {
   const notification = notificationbox.querySelector(".notification");
   is(notification.getAttribute("data-key"), "selfxss-notification",
     "Self-xss notification shown");
-  is(jsterm.getInputValue(), "", "Paste blocked by self-xss prevention");
+  is(getInputValue(hud), "", "Paste blocked by self-xss prevention");
 
   // Allow pasting
   const allowToken = "allow pasting";
@@ -60,7 +61,7 @@ async function performTest() {
     EventUtils.sendString(char);
   }
 
-  jsterm.setInputValue("");
+  setInputValue(hud, "");
   goDoCommand("cmd_paste");
-  is(jsterm.getInputValue(), stringToCopy, "Paste works");
+  is(getInputValue(hud), stringToCopy, "Paste works");
 }

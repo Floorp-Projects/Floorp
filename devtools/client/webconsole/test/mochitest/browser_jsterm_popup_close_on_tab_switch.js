@@ -25,7 +25,7 @@ async function performTests() {
   const popup = hud.jsterm.autocompletePopup;
   const popupShown = once(popup, "popup-opened");
 
-  hud.jsterm.setInputValue("sc");
+  setInputValue(hud, "sc");
   EventUtils.sendString("r");
 
   await popupShown;

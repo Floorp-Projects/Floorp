@@ -39,7 +39,7 @@ async function performTests() {
 
   info("Execute each test value in the console");
   for (const value of TEST_VALUES) {
-    jsterm.setInputValue(value);
+    setInputValue(hud, value);
     await jsterm.execute();
   }
 
@@ -87,7 +87,7 @@ async function performTests() {
   checkInput("document;\nwindow;\ndocument.body|", "↓: input #3 is correct");
   ok(inputHasNoSelection(jsterm));
 
-  setCursorAtPosition(jsterm, 2);
+  setCursorAtPosition(hud, 2);
   checkInput("do|cument;\nwindow;\ndocument.body");
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
@@ -140,14 +140,15 @@ async function performTests() {
   }
 }
 
-function setCursorAtPosition(jsterm, pos) {
+function setCursorAtPosition(hud, pos) {
+  const {jsterm} = hud;
   const {inputNode, editor} = jsterm;
 
   if (editor) {
     let line = 0;
     let ch = 0;
     let currentPos = 0;
-    jsterm.getInputValue().split("\n").every(l => {
+    getInputValue(hud).split("\n").every(l => {
       if (l.length < pos - currentPos) {
         line++;
         currentPos += l.length;

@@ -157,7 +157,7 @@ async function testInput(hud, {
     `${description} - input was completed as expected`);
   checkInputCompletionValue(hud, "", `${description} - completeNode is empty`);
 
-  jsterm.setInputValue("");
+  setInputValue(hud, "");
 }
 
 async function testCompletionTextUpdateOnPopupNavigate(hud) {
