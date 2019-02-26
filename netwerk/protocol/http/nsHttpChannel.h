@@ -570,6 +570,11 @@ class nsHttpChannel final : public HttpBaseChannel,
   // Proxy release all members above on main thread.
   void ReleaseMainThreadOnlyReferences();
 
+  // Called after the channel is made aware of its tracking status in order
+  // to readjust the referrer if needed according to the referrer default
+  // policy preferences.
+  void ReEvaluateReferrerAfterTrackingStatusIsKnown();
+
  private:
   nsCOMPtr<nsICancelable> mProxyRequest;
 

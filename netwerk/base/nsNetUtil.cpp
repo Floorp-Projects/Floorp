@@ -9,6 +9,7 @@
 
 #include "nsNetUtil.h"
 
+#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/LoadContext.h"
@@ -30,6 +31,7 @@
 #include "nsIChannelEventSink.h"
 #include "nsIContentSniffer.h"
 #include "mozilla/dom/Document.h"
+#include "nsICookieService.h"
 #include "nsIDownloader.h"
 #include "nsIFileProtocolHandler.h"
 #include "nsIFileStreams.h"
@@ -94,10 +96,14 @@ using mozilla::dom::PerformanceStorage;
 using mozilla::dom::ServiceWorkerDescriptor;
 
 #define DEFAULT_RP 3
+#define DEFAULT_TRACKER_RP 3
 #define DEFAULT_PRIVATE_RP 2
+#define DEFAULT_TRACKER_PRIVATE_RP 2
 
 static uint32_t sDefaultRp = DEFAULT_RP;
+static uint32_t sDefaultTrackerRp = DEFAULT_TRACKER_RP;
 static uint32_t defaultPrivateRp = DEFAULT_PRIVATE_RP;
+static uint32_t defaultTrackerPrivateRp = DEFAULT_TRACKER_PRIVATE_RP;
 
 already_AddRefed<nsIIOService> do_GetIOService(nsresult *error /* = 0 */) {
   nsCOMPtr<nsIIOService> io = mozilla::services::GetIOService();
@@ -2733,23 +2739,53 @@ nsresult NS_CompareLoadInfoAndLoadContext(nsIChannel *aChannel) {
   return NS_OK;
 }
 
-uint32_t NS_GetDefaultReferrerPolicy(bool privateBrowsing) {
+uint32_t NS_GetDefaultReferrerPolicy(nsIHttpChannel *aChannel, nsIURI *aURI,
+                                     bool privateBrowsing) {
   static bool preferencesInitialized = false;
 
   if (!preferencesInitialized) {
     mozilla::Preferences::AddUintVarCache(
         &sDefaultRp, "network.http.referer.defaultPolicy", DEFAULT_RP);
     mozilla::Preferences::AddUintVarCache(
+        &sDefaultTrackerRp, "network.http.referer.defaultPolicy.trackers",
+        DEFAULT_TRACKER_RP);
+    mozilla::Preferences::AddUintVarCache(
         &defaultPrivateRp, "network.http.referer.defaultPolicy.pbmode",
         DEFAULT_PRIVATE_RP);
+    mozilla::Preferences::AddUintVarCache(
+        &defaultTrackerPrivateRp,
+        "network.http.referer.defaultPolicy.trackers.pbmode",
+        DEFAULT_TRACKER_PRIVATE_RP);
     preferencesInitialized = true;
   }
 
+  bool thirdPartyTrackerIsolated = false;
+  if (StaticPrefs::network_cookie_cookieBehavior() ==
+      nsICookieService::BEHAVIOR_REJECT_TRACKER) {
+    if (aChannel && aURI) {
+      uint32_t rejectedReason = 0;
+      thirdPartyTrackerIsolated =
+          !AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
+              aChannel, aURI, &rejectedReason);
+      // Here we intentionally do not notify about the rejection reason, if any
+      // in order to avoid this check to have any visible side-effects (e.g. a
+      // web console report.)
+    }
+  }
+
   uint32_t defaultToUse;
-  if (privateBrowsing) {
-    defaultToUse = defaultPrivateRp;
+  if (thirdPartyTrackerIsolated) {
+    if (privateBrowsing) {
+      defaultToUse = defaultTrackerPrivateRp;
+    } else {
+      defaultToUse = sDefaultTrackerRp;
+    }
   } else {
-    defaultToUse = sDefaultRp;
+    if (privateBrowsing) {
+      defaultToUse = defaultPrivateRp;
+    } else {
+      defaultToUse = sDefaultRp;
+    }
   }
 
   switch (defaultToUse) {
