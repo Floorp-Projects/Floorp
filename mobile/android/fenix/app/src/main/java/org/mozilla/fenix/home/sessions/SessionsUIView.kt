@@ -35,6 +35,6 @@ class SessionsUIView(
     }
 
     override fun updateView() = Consumer<SessionsState> {
-        sessionsAdapter.reloadDatat(it.archivedSessions)
+        sessionsAdapter.reloadData(it.archivedSessions)
     }
 }

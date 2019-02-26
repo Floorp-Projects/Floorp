@@ -22,10 +22,36 @@ import org.mozilla.fenix.R
 class SessionsAdapter(
     private val actionEmitter: Observer<SessionsAction>
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-    private var items = listOf<ArchivedSession>()
+    sealed class SessionListState {
+        data class DisplaySessions(val sessions: List<ArchivedSession>) : SessionListState()
+        object Empty : SessionListState()
 
-    fun reloadDatat(items: List<ArchivedSession>) {
-        this.items = items
+        val items: List<ArchivedSession>
+            get() = when (this) {
+                is DisplaySessions -> this.sessions
+                is Empty -> listOf()
+            }
+
+        val size: Int
+            get() = when (this) {
+                is DisplaySessions -> this.sessions.size
+                is Empty -> EMPTY_SIZE
+            }
+
+        companion object {
+            private const val EMPTY_SIZE = 1
+        }
+    }
+
+    private var state: SessionListState = SessionListState.Empty
+
+    fun reloadData(items: List<ArchivedSession>) {
+        this.state = if (items.isEmpty()) {
+            SessionListState.Empty
+        } else {
+            SessionListState.DisplaySessions(items)
+        }
+
         notifyDataSetChanged()
     }
 
@@ -43,15 +69,19 @@ class SessionsAdapter(
 
     override fun getItemViewType(position: Int) = when (position) {
         0 -> HeaderViewHolder.LAYOUT_ID
-        else -> SessionItemViewHolder.LAYOUT_ID
+        else -> if (state is SessionListState.DisplaySessions) {
+            SessionItemViewHolder.LAYOUT_ID
+        } else {
+            EmptyListViewHolder.LAYOUT_ID
+        }
     }
 
-    override fun getItemCount(): Int = items.size + 1
+    override fun getItemCount(): Int = state.size + 1
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder) {
             is HeaderViewHolder -> holder.headerText.text = "Today"
-            is SessionItemViewHolder -> holder.bind(items[position - 1])
+            is SessionItemViewHolder -> holder.bind(state.items[position - 1])
             is PrivateEmptyListViewHolder -> {
                 // Format the description text to include a hyperlink
                 val descriptionText = String
