@@ -566,6 +566,14 @@ class ConfigureSandbox(dict):
                 "'%s' implied by '%s' conflicts with '%s' from the %s"
                 % (e.arg, reason, e.old_arg, e.old_origin))
 
+        if value.origin == 'implied':
+            recursed_value = getattr(self, '__value_for_option').get((option,))
+            if recursed_value is not None:
+                _, filename, line, _, _, _ = implied[value.format(option.option)].caller
+                raise ConfigureError(
+                    "'%s' appears somewhere in the direct or indirect dependencies when "
+                    "resolving imply_option at %s:%d" % (option.option, filename, line))
+
         if option_string:
             self._raw_options[option] = option_string
 
