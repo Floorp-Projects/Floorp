@@ -3407,6 +3407,10 @@ pref("browser.tabs.remote.allowLinkedWebInFileUriProcess", true);
 // Pref to control whether we use separate privileged content processes.
 pref("browser.tabs.remote.separatePrivilegedContentProcess", false);
 
+// When this pref is enabled top level loads with a mismatched
+// Cross-Origin-Opener-Policy header will be loaded in a separate process.
+pref("browser.tabs.remote.useCrossOriginOpenerPolicy", false);
+
 // Enable the use of display-lists for SVG hit-testing and painting.
 pref("svg.display-lists.hit-testing.enabled", true);
 pref("svg.display-lists.painting.enabled", true);
