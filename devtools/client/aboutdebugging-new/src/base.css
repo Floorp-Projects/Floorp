@@ -10,7 +10,6 @@
   --border-color: #d7d7db; /* --in-content-border-color */
 
   --box-background: #fff;
-  --box-background-hover: #ebebeb;
   --box-border-color: #d7d7db;
 
   --category-background-hover: rgba(12,12,13,0.1);
@@ -36,6 +35,10 @@
   --highlight-50: #0a84ff;
   --grey-20: #ededf0;
   --grey-30: #d7d7db; /* for ui, no special semantic */
+  --grey-90: #0c0c0d;
+  --grey-90-a10: rgba(12, 12, 13, 0.1);
+  --grey-90-a20: rgba(12, 12, 13, 0.2);
+  --grey-90-a30: rgba(12, 12, 13, 0.3);
   --grey-90-a60: rgba(12, 12, 13, 0.6);
   --grey-90-a80: rgba(12, 12, 13, 0.8);
   --white-100: #fff; /* for ui, no special semantic */
@@ -48,6 +51,8 @@
   --base-font-style: message-box;
   --base-font-size: 15px; /* root font of 11px * 1.36em = 15px */
   --base-line-height: 1.8;
+  /* --button-font-size should merge with --base-font-size once the base font becomes 13px */
+  --button-font-size: 13px;
   --micro-font-size: 11px;
 
   --monospace-font-family: monospace;
@@ -241,27 +246,31 @@ Form controls
 }
 
 /* standard, normal button */
-.default-button, .default-select {
+.default-button {
   -moz-appearance: none;
-  font-size: 1em;
-  color: var(--text-color);
-  background-color: var(--page-background);
+  color: var(--grey-90); /* Note: this is from Photon Default button */
+  background-color: var(--grey-90-a10); /* Note: this is from Photon Default button */
+  font-size: var(--button-font-size); /* Note: this is from Photon Default button */
 
   margin: 0;
   height: calc(var(--base-unit) * 8); /* Note: this is from Photon, not common.css */
   padding-inline-start: calc(var(--base-unit) * 5);
   padding-inline-end: calc(var(--base-unit) * 5);
 
-  border: 1px solid var(--box-border-color);
+  border: none;
   border-radius: calc(var(--base-unit) / 2);
 }
 
 .default-button:enabled:hover {
-  background: var(--box-background-hover)
+  background: var(--grey-90-a20); /* Note: this is from Photon Default button */
+}
+
+.default-button:enabled:active {
+  background: var(--grey-90-a30); /* Note: this is from Photon Default button */
 }
 
 .default-button:disabled {
-  opacity: 0.4;
+  opacity: 0.4; /* Note: this is from Photon Default button */
 }
 
 /* smaller size for a default button */
