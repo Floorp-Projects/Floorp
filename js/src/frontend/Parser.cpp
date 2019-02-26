@@ -6861,6 +6861,12 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
     }
 
     if (propType == PropertyType::Field) {
+      // TODO(khyperia): Delete the two lines below once fields are fully
+      // supported in the backend. We can't fail in BytecodeCompiler because of
+      // lazy parsing.
+      errorAt(propNameOffset, JSMSG_FIELDS_NOT_SUPPORTED);
+      return null();
+
       if (isStatic) {
         errorAt(propNameOffset, JSMSG_BAD_METHOD_DEF);
         return null();
@@ -6893,11 +6899,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
         return null();
       }
 
-      // TODO(khyperia): Change the below to `continue;` once fields are
-      // fully supported in the backend. We can't fail in BytecodeCompiler
-      // because of lazy parsing.
-      errorAt(propNameOffset, JSMSG_FIELDS_NOT_SUPPORTED);
-      return null();
+      continue;
     }
 
     if (propType != PropertyType::Getter && propType != PropertyType::Setter &&
