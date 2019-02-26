@@ -1530,12 +1530,12 @@ async function openConsoleContextMenu(hud, element) {
   const onConsoleMenuOpened = hud.ui.wrapper.once("menu-open");
   synthesizeContextMenuEvent(element);
   await onConsoleMenuOpened;
-  const doc = hud.ui.wrapper.owner.chromeWindow.document;
+  const doc = hud.chromeWindow.document;
   return doc.getElementById("webconsole-menu");
 }
 
 function hideConsoleContextMenu(hud) {
-  const doc = hud.ui.wrapper.owner.chromeWindow.document;
+  const doc = hud.chromeWindow.document;
   const popup = doc.getElementById("webconsole-menu");
   if (!popup) {
     return Promise.resolve();
