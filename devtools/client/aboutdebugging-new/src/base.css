@@ -358,6 +358,17 @@ Form controls
   background: var(--error-50);
 }
 
+/*
+ * Card style which is used in debug target item and so on.
+ */
+.card {
+  background-color: var(--white-100); /* from common.inc.css */
+  border-radius: var(--base-unit); /* from common.inc.css */
+  box-shadow: 0 1px 4px var(--grey-90-a10); /* from common.inc.css */
+  padding-block: calc(var(--base-unit) * 3) calc(var(--base-unit) * 2);
+  padding-inline: calc(var(--base-unit) * 3) calc(var(--base-unit) * 2);
+}
+
 .undecorated-link,
 .undecorated-link:hover {
   text-decoration: none;
