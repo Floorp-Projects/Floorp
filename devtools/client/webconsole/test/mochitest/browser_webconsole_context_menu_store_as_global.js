@@ -84,7 +84,7 @@ async function storeAsVariable(hud, msg, type, varIdx, equalTo) {
   info("Wait for context menu to be hidden");
   await hideContextMenu(hud);
 
-  is(hud.jsterm.getInputValue(), "temp" + varIdx, "Input was set");
+  is(getInputValue(hud), "temp" + varIdx, "Input was set");
 
   const equal = await hud.jsterm.requestEvaluation("temp" + varIdx + " === " + equalTo);
   is(equal.result, true, "Correct variable assigned into console.");

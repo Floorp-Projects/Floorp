@@ -36,8 +36,7 @@ async function performTests() {
   }
   await onLastMessage;
 
-  const jstermInitialValue = "ado";
-  jsterm.setInputValue(jstermInitialValue);
+  setInputValue(hud, "ado");
 
   info(`Select 2 chars ("do") from the input`);
   if (jsterm.inputNode) {
@@ -61,14 +60,14 @@ async function performTests() {
   ok(previousButton, "Previous navigation button is displayed");
   ok(nextButton, "Next navigation button is displayed");
 
-  is(jsterm.getInputValue(), "document", "JsTerm has the expected input");
+  is(getInputValue(hud), "document", "JsTerm has the expected input");
   is(jsterm.autocompletePopup.isOpen, false,
     "Setting the input value did not trigger the autocompletion");
 
   const onJsTermValueChanged = jsterm.once("set-input-value");
   EventUtils.sendString("g");
   await onJsTermValueChanged;
-  is(jsterm.getInputValue(), `Dog = "Snoopy"`, "JsTerm input was updated");
+  is(getInputValue(hud), `Dog = "Snoopy"`, "JsTerm input was updated");
   is(infoElement.textContent, "1 result", "The reverse info has the expected text");
   ok(
     !reverseSearchElement.querySelector(".search-result-button-prev") &&

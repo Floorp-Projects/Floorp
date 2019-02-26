@@ -25,9 +25,8 @@ add_task(async function() {
 
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const {jsterm} = hud;
 
-  ok(!jsterm.getInputValue(), "jsterm.getInputValue() is empty");
+  ok(!getInputValue(hud), "input is empty");
   checkInputCursorPosition(hud, 0, "Cursor is at the start of the input");
 
   testSingleLineInputNavNoHistory(hud);
@@ -91,10 +90,10 @@ function testMultiLineInputNavNoHistory(hud) {
     checkInputValueAndCursorPosition(hud, expected, assertionInfo);
 
   const lineValues = ["one", "2", "something longer", "", "", "three!"];
-  hud.jsterm.setInputValue("");
+  setInputValue(hud, "");
   // simulate shift-return
   for (const lineValue of lineValues) {
-    hud.jsterm.setInputValue(hud.jsterm.getInputValue() + lineValue);
+    setInputValue(hud, getInputValue(hud) + lineValue);
     EventUtils.synthesizeKey("KEY_Enter", {shiftKey: true});
   }
 
@@ -221,7 +220,7 @@ async function testNavWithHistory(hud) {
 
   // submit to history
   for (const value of values) {
-    hud.jsterm.setInputValue(value);
+    setInputValue(hud, value);
     await hud.jsterm.execute();
   }
 
@@ -265,7 +264,7 @@ async function testNavWithHistory(hud) {
 
   // Simulate editing multi-line
   const inputValue = "one\nlinebreak";
-  hud.jsterm.setInputValue(inputValue);
+  setInputValue(hud, inputValue);
   checkInput("one\nlinebreak|");
 
   // Attempt nav within input

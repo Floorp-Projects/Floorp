@@ -30,7 +30,7 @@ async function performTests() {
   ui.clearOutput();
   ok(!getInputCompletionValue(hud), "no completeNode.value");
 
-  jsterm.setInputValue("doc");
+  setInputValue(hud, "doc");
 
   info("wait for completion value after typing 'docu'");
   let onAutocompleteUpdated = jsterm.once("autocomplete-updated");
@@ -43,7 +43,7 @@ async function performTests() {
   await waitForClipboardPromise(() =>
     clipboardHelper.copyString(stringToCopy), stringToCopy);
 
-  jsterm.setInputValue("docu");
+  setInputValue(hud, "docu");
   info("wait for completion update after clipboard paste");
   onAutocompleteUpdated = jsterm.once("autocomplete-updated");
   EventUtils.synthesizeKey("v", {accelKey: true});
