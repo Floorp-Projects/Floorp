@@ -416,18 +416,16 @@ Result<Ok, nsresult> ExtensionProtocolHandler::SubstituteRemoteChannel(
 nsresult ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
                                                      nsILoadInfo* aLoadInfo,
                                                      nsIChannel** result) {
-  nsresult rv;
-  nsCOMPtr<nsIURL> url = do_QueryInterface(aURI, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   if (mUseRemoteFileChannels) {
     MOZ_TRY(SubstituteRemoteChannel(aURI, aLoadInfo, result));
   }
 
-  nsAutoCString ext;
-  rv = url->GetFileExtension(ext);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv;
+  nsCOMPtr<nsIURL> url = do_QueryInterface(aURI, &rv);
+  MOZ_TRY(rv);
 
+  nsAutoCString ext;
+  MOZ_TRY(url->GetFileExtension(ext));
   if (!ext.LowerCaseEqualsLiteral("css")) {
     return NS_OK;
   }
