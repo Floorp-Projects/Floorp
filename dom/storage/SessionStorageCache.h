@@ -60,6 +60,7 @@ class SessionStorageCache final {
 
   DataSet mDefaultSet;
   DataSet mSessionSet;
+  bool mSessionDataSetActive;
 };
 
 }  // namespace dom
