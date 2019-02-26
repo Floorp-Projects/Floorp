@@ -484,13 +484,11 @@ nsJARURI::SchemeIs(const char *i_Scheme, bool *o_Equals) {
 }
 
 nsresult nsJARURI::Clone(nsIURI **result) {
-  nsresult rv;
-
-  nsCOMPtr<nsIJARURI> uri;
-  rv = CloneWithJARFileInternal(mJARFile, eHonorRef, getter_AddRefs(uri));
-  if (NS_FAILED(rv)) return rv;
-
+  RefPtr<nsJARURI> uri = new nsJARURI();
+  uri->mJARFile = mJARFile;
+  uri->mJAREntry = mJAREntry;
   uri.forget(result);
+
   return NS_OK;
 }
 
@@ -706,48 +704,6 @@ nsJARURI::GetJAREntry(nsACString &entryPath) {
 nsresult nsJARURI::SetJAREntry(const nsACString &entryPath) {
   return CreateEntryURL(entryPath, mCharsetHint.get(),
                         getter_AddRefs(mJAREntry));
-}
-
-NS_IMETHODIMP
-nsJARURI::CloneWithJARFile(nsIURI *jarFile, nsIJARURI **result) {
-  return CloneWithJARFileInternal(jarFile, eHonorRef, result);
-}
-
-nsresult nsJARURI::CloneWithJARFileInternal(
-    nsIURI *jarFile, nsJARURI::RefHandlingEnum refHandlingMode,
-    nsIJARURI **result) {
-  return CloneWithJARFileInternal(jarFile, refHandlingMode, EmptyCString(),
-                                  result);
-}
-
-nsresult nsJARURI::CloneWithJARFileInternal(
-    nsIURI *jarFile, nsJARURI::RefHandlingEnum refHandlingMode,
-    const nsACString &newRef, nsIJARURI **result) {
-  if (!jarFile) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIURI> newJARFile = jarFile;
-  nsCOMPtr<nsIURI> newJAREntryURI;
-  if (refHandlingMode == eHonorRef) {
-    newJAREntryURI = mJAREntry;
-  } else if (refHandlingMode == eReplaceRef) {
-    rv = NS_GetURIWithNewRef(mJAREntry, newRef, getter_AddRefs(newJAREntryURI));
-  } else {
-    rv = NS_GetURIWithoutRef(mJAREntry, getter_AddRefs(newJAREntryURI));
-  }
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIURL> newJAREntry(do_QueryInterface(newJAREntryURI));
-  NS_ASSERTION(newJAREntry, "This had better QI to nsIURL!");
-
-  RefPtr<nsJARURI> uri = new nsJARURI();
-  uri->mJARFile = newJARFile;
-  uri->mJAREntry = newJAREntry;
-  uri.forget(result);
-
-  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
