@@ -3304,7 +3304,9 @@ nsresult nsWindow::Create(nsIWidget *aParent, nsNativeWidget aNativeParent,
             } else {
               // We want to draw a transparent titlebar but we can't use
               // ARGB visual due to Bug 1516224.
-              mTransparencyBitmapForTitlebar = true;
+              // If we're on Mutter/X.org (Bug 1530252) just give up
+              // and don't render transparent corners at all.
+              mTransparencyBitmapForTitlebar = TitlebarCanUseShapeMask();
             }
           }
         }
@@ -6434,7 +6436,7 @@ nsWindow::CSDSupportLevel nsWindow::GetSystemCSDSupportLevel() {
   if (currentDesktop) {
     // GNOME Flashback (fallback)
     if (strstr(currentDesktop, "GNOME-Flashback:GNOME") != nullptr) {
-      sCSDSupportLevel = CSD_SUPPORT_CLIENT;
+      sCSDSupportLevel = CSD_SUPPORT_SYSTEM;
       // gnome-shell
     } else if (strstr(currentDesktop, "GNOME") != nullptr) {
       sCSDSupportLevel = CSD_SUPPORT_SYSTEM;
@@ -6491,14 +6493,41 @@ nsWindow::CSDSupportLevel nsWindow::GetSystemCSDSupportLevel() {
   return sCSDSupportLevel;
 }
 
+// Check for Mutter regression on X.org (Bug 1530252). In that case we
+// don't hide system titlebar by default as we can't draw transparent
+// corners reliably.
+bool nsWindow::TitlebarCanUseShapeMask()
+{
+  static int canUseShapeMask = -1;
+  if (canUseShapeMask != -1) {
+    return canUseShapeMask;
+  }
+  canUseShapeMask = true;
+
+  const char *currentDesktop = getenv("XDG_CURRENT_DESKTOP");
+  if (!currentDesktop) {
+    return canUseShapeMask;
+  }
+
+  if (strstr(currentDesktop, "GNOME-Flashback:GNOME") != nullptr ||
+      strstr(currentDesktop, "GNOME") != nullptr) {
+    const char *sessionType = getenv("XDG_SESSION_TYPE");
+    canUseShapeMask = (sessionType && strstr(sessionType, "x11") == nullptr);
+  }
+
+  return canUseShapeMask;
+}
+
 bool nsWindow::HideTitlebarByDefault() {
   static int hideTitlebar = -1;
   if (hideTitlebar != -1) {
     return hideTitlebar;
   }
 
-  if (!Preferences::GetBool("widget.default-hidden-titlebar", false)) {
-    hideTitlebar = false;
+  // When user defined widget.default-hidden-titlebar don't do any
+  // heuristics and just follow it.
+  if (Preferences::HasUserValue("widget.default-hidden-titlebar")) {
+    hideTitlebar = Preferences::GetBool("widget.default-hidden-titlebar", false);
     return hideTitlebar;
   }
 
@@ -6506,10 +6535,17 @@ bool nsWindow::HideTitlebarByDefault() {
   hideTitlebar =
       (currentDesktop && GetSystemCSDSupportLevel() != CSD_SUPPORT_NONE);
 
+  // Disable system titlebar for Gnome only for now. It uses window
+  // manager decorations and does not suffer from CSD Bugs #1525850, #1527837.
   if (hideTitlebar) {
     hideTitlebar =
         (strstr(currentDesktop, "GNOME-Flashback:GNOME") != nullptr ||
          strstr(currentDesktop, "GNOME") != nullptr);
+  }
+
+  // We use shape mask to render the titlebar by default so check for it.
+  if (hideTitlebar) {
+    hideTitlebar = TitlebarCanUseShapeMask();
   }
 
   return hideTitlebar;
