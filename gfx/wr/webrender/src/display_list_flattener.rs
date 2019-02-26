@@ -11,7 +11,7 @@ use api::{LayoutPrimitiveInfo, LayoutRect, LayoutSize, LayoutTransform, LayoutVe
 use api::{LineOrientation, LineStyle, NinePatchBorderSource, PipelineId};
 use api::{PropertyBinding, ReferenceFrame, ReferenceFrameKind, ScrollFrameDisplayItem, ScrollSensitivity};
 use api::{Shadow, SpaceAndClipInfo, SpatialId, SpecificDisplayItem, StackingContext, StickyFrameDisplayItem, TexelRect};
-use api::{ClipMode, TransformStyle, YuvColorSpace, YuvData, TempFilterData};
+use api::{ClipMode, TransformStyle, YuvColorSpace, YuvData};
 use app_units::Au;
 use clip::{ClipChainId, ClipRegion, ClipItemKey, ClipStore};
 use clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, SpatialNodeIndex};
@@ -43,7 +43,6 @@ use std::collections::vec_deque::VecDeque;
 use std::sync::Arc;
 use tiling::{CompositeOps};
 use util::{MaxRect, VecHelper};
-use ::filterdata::{SFilterDataComponent, SFilterData, SFilterDataKey};
 
 #[derive(Debug, Copy, Clone)]
 struct ClipNode {
@@ -593,7 +592,6 @@ impl<'a> DisplayListFlattener<'a> {
         spatial_node_index: SpatialNodeIndex,
         origin: LayoutPoint,
         filters: ItemRange<FilterOp>,
-        filter_datas: &[TempFilterData],
         reference_frame_relative_offset: &LayoutVector2D,
         is_backface_visible: bool,
         apply_pipeline_clip: bool,
@@ -609,7 +607,6 @@ impl<'a> DisplayListFlattener<'a> {
             let display_list = self.scene.get_display_list_for_pipeline(pipeline_id);
             CompositeOps::new(
                 stacking_context.filter_ops_for_compositing(display_list, filters),
-                stacking_context.filter_datas_for_compositing(display_list, filter_datas),
                 stacking_context.mix_blend_mode_for_compositing(),
             )
         };
@@ -883,7 +880,6 @@ impl<'a> DisplayListFlattener<'a> {
                     clip_and_scroll.spatial_node_index,
                     item.rect().origin,
                     item.filters(),
-                    item.filter_datas(),
                     &reference_frame_relative_offset,
                     prim_info.is_backface_visible,
                     apply_pipeline_clip,
@@ -1010,8 +1006,6 @@ impl<'a> DisplayListFlattener<'a> {
 
             // Do nothing; these are dummy items for the display list parser
             SpecificDisplayItem::SetGradientStops => {}
-            SpecificDisplayItem::SetFilterOps => {}
-            SpecificDisplayItem::SetFilterData => {}
 
             SpecificDisplayItem::PopReferenceFrame |
             SpecificDisplayItem::PopStackingContext => {
@@ -1427,7 +1421,7 @@ impl<'a> DisplayListFlattener<'a> {
             //           perspective present, and skip the plane splitting
             //           completely when that is not the case.
             Picture3DContext::In { ancestor_index, .. } => {
-                assert!(!leaf_composite_mode.is_none());
+                assert_ne!(leaf_composite_mode, None);
                 Picture3DContext::In { root_data: None, ancestor_index }
             }
             Picture3DContext::Out => Picture3DContext::Out,
@@ -1513,41 +1507,9 @@ impl<'a> DisplayListFlattener<'a> {
         }
 
         // For each filter, create a new image with that composite mode.
-        let mut current_filter_data_index = 0;
         for filter in &stacking_context.composite_ops.filters {
             let filter = filter.sanitize();
-
-            let composite_mode = Some(match filter {
-                FilterOp::ComponentTransfer => {
-                    let filter_data =
-                        &stacking_context.composite_ops.filter_datas[current_filter_data_index];
-                    let filter_data = filter_data.sanitize();
-                    current_filter_data_index = current_filter_data_index + 1;
-                    if filter_data.is_identity() {
-                        continue
-                    } else {
-                        let filter_data_key = SFilterDataKey {
-                            data:
-                                SFilterData {
-                                    r_func: SFilterDataComponent::from_functype_values(
-                                        filter_data.func_r_type, &filter_data.r_values),
-                                    g_func: SFilterDataComponent::from_functype_values(
-                                        filter_data.func_g_type, &filter_data.g_values),
-                                    b_func: SFilterDataComponent::from_functype_values(
-                                        filter_data.func_b_type, &filter_data.b_values),
-                                    a_func: SFilterDataComponent::from_functype_values(
-                                        filter_data.func_a_type, &filter_data.a_values),
-                                },
-                        };
-
-                        let handle = self.interners
-                            .filterdata
-                            .intern(&filter_data_key, || ());
-                        PictureCompositeMode::ComponentTransferFilter(handle)
-                    }
-                }
-                _ => PictureCompositeMode::Filter(filter),
-            });
+            let composite_mode = Some(PictureCompositeMode::Filter(filter));
 
             let filter_pic_index = PictureIndex(self.prim_store.pictures
                 .alloc()

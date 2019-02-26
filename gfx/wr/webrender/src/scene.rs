@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BuiltDisplayList, ColorF, DynamicProperties, Epoch, LayoutSize};
-use api::{FilterOp, TempFilterData, FilterData, ComponentTransferFuncType, LayoutTransform};
-use api::{PipelineId, PropertyBinding, PropertyBindingId, ItemRange, MixBlendMode, StackingContext};
+use api::{FilterOp, LayoutTransform, PipelineId, PropertyBinding, PropertyBindingId};
+use api::{ItemRange, MixBlendMode, StackingContext};
 use internal_types::FastHashMap;
 use std::sync::Arc;
 
@@ -225,8 +225,7 @@ impl FilterOpHelpers for FilterOp {
             FilterOp::DropShadow(..) |
             FilterOp::ColorMatrix(..) |
             FilterOp::SrgbToLinear |
-            FilterOp::LinearToSrgb |
-            FilterOp::ComponentTransfer  => true,
+            FilterOp::LinearToSrgb  => true,
             FilterOp::Opacity(_, amount) => {
                 amount > OPACITY_EPSILON
             }
@@ -255,9 +254,7 @@ impl FilterOpHelpers for FilterOp {
                            0.0, 0.0, 0.0, 1.0,
                            0.0, 0.0, 0.0, 0.0]
             }
-            FilterOp::SrgbToLinear |
-            FilterOp::LinearToSrgb |
-            FilterOp::ComponentTransfer => false,
+            FilterOp::SrgbToLinear | FilterOp::LinearToSrgb => false,
         }
     }
 }
@@ -269,11 +266,6 @@ pub trait StackingContextHelpers {
         display_list: &BuiltDisplayList,
         input_filters: ItemRange<FilterOp>,
     ) -> Vec<FilterOp>;
-    fn filter_datas_for_compositing(
-        &self,
-        display_list: &BuiltDisplayList,
-        input_filter_datas: &[TempFilterData],
-    ) -> Vec<FilterData>;
 }
 
 impl StackingContextHelpers for StackingContext {
@@ -297,31 +289,5 @@ impl StackingContextHelpers for StackingContext {
             filters.push(filter);
         }
         filters
-    }
-
-    fn filter_datas_for_compositing(
-        &self,
-        display_list: &BuiltDisplayList,
-        input_filter_datas: &[TempFilterData],
-    ) -> Vec<FilterData> {
-        // TODO(gw): Now that we resolve these later on,
-        //           we could probably make it a bit
-        //           more efficient than cloning these here.
-        let mut filter_datas = vec![];
-        for temp_filter_data in input_filter_datas {
-            let func_types : Vec<ComponentTransferFuncType> = display_list.get(temp_filter_data.func_types).collect();
-            debug_assert!(func_types.len() == 4);
-            filter_datas.push( FilterData {
-                func_r_type: func_types[0],
-                r_values: display_list.get(temp_filter_data.r_values).collect(),
-                func_g_type: func_types[1],
-                g_values: display_list.get(temp_filter_data.g_values).collect(),
-                func_b_type: func_types[2],
-                b_values: display_list.get(temp_filter_data.b_values).collect(),
-                func_a_type: func_types[3],
-                a_values: display_list.get(temp_filter_data.a_values).collect(),
-            });
-        }
-        filter_datas
     }
 }

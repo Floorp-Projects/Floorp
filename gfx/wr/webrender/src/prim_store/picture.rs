@@ -6,7 +6,6 @@ use api::{
     ColorU, FilterOp, LayoutSize, LayoutPrimitiveInfo, MixBlendMode,
     PropertyBinding, PropertyBindingId, LayoutVector2D,
 };
-use intern::ItemUid;
 use app_units::Au;
 use display_list_flattener::{AsInstanceKind, IsVisible};
 use intern::{Internable, InternDebug};
@@ -41,7 +40,6 @@ pub enum PictureCompositeKey {
     ColorMatrix([Au; 20]),
     SrgbToLinear,
     LinearToSrgb,
-    ComponentTransfer(ItemUid),
 
     // MixBlendMode
     Multiply,
@@ -117,11 +115,7 @@ impl From<Option<PictureCompositeMode>> for PictureCompositeKey {
                         }
                         PictureCompositeKey::ColorMatrix(quantized_values)
                     }
-                    FilterOp::ComponentTransfer => unreachable!(),
                 }
-            }
-            Some(PictureCompositeMode::ComponentTransferFilter(handle)) => {
-                PictureCompositeKey::ComponentTransfer(handle.uid())
             }
             Some(PictureCompositeMode::Puppet { .. }) |
             Some(PictureCompositeMode::Blit(_)) |
@@ -231,7 +225,7 @@ fn test_struct_sizes() {
     //     test expectations and move on.
     // (b) You made a structure larger. This is not necessarily a problem, but should only
     //     be done with care, and after checking if talos performance regresses badly.
-    assert_eq!(mem::size_of::<Picture>(), 88, "Picture size changed");
+    assert_eq!(mem::size_of::<Picture>(), 84, "Picture size changed");
     assert_eq!(mem::size_of::<PictureTemplate>(), 20, "PictureTemplate size changed");
-    assert_eq!(mem::size_of::<PictureKey>(), 104, "PictureKey size changed");
+    assert_eq!(mem::size_of::<PictureKey>(), 96, "PictureKey size changed");
 }

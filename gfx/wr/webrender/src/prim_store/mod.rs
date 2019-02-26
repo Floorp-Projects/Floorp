@@ -2304,7 +2304,6 @@ impl PrimitiveStore {
                     pic_context.surface_index,
                     frame_context,
                     frame_state,
-                    data_stores,
                 ) {
                     if let Some(ref mut splitter) = pic_state.plane_splitter {
                         PicturePrimitive::add_split_plane(

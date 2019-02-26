@@ -1388,7 +1388,6 @@ impl AlphaBatchBuilder {
                                             FilterOp::ColorMatrix(..) => 10,
                                             FilterOp::SrgbToLinear => 11,
                                             FilterOp::LinearToSrgb => 12,
-                                            FilterOp::ComponentTransfer => unreachable!(),
                                         };
 
                                         let user_data = match filter {
@@ -1414,7 +1413,6 @@ impl AlphaBatchBuilder {
                                             FilterOp::ColorMatrix(_) => {
                                                 picture.extra_gpu_data_handle.as_int(gpu_cache)
                                             }
-                                            FilterOp::ComponentTransfer => unreachable!(),
                                         };
 
                                         let (uv_rect_address, textures) = surface
@@ -1453,60 +1451,6 @@ impl AlphaBatchBuilder {
                                         );
                                     }
                                 }
-                            }
-                            PictureCompositeMode::ComponentTransferFilter(handle) => {
-                                // This is basically the same as the general filter case above
-                                // except we store a little more data in the filter mode and
-                                // a gpu cache handle in the user data.
-                                let surface = ctx.surfaces[raster_config.surface_index.0]
-                                    .surface
-                                    .as_ref()
-                                    .expect("bug: surface must be allocated by now");
-
-
-                                let filter_data = &ctx.data_stores.filterdata[handle];
-                                let filter_mode : i32 = 13 |
-                                    ((filter_data.data.r_func.to_int() << 28 |
-                                      filter_data.data.g_func.to_int() << 24 |
-                                      filter_data.data.b_func.to_int() << 20 |
-                                      filter_data.data.a_func.to_int() << 16) as i32);
-
-                                let user_data = filter_data.gpu_cache_handle.as_int(gpu_cache);
-
-                                let (uv_rect_address, textures) = surface
-                                    .resolve(
-                                        render_tasks,
-                                        ctx.resource_cache,
-                                        gpu_cache,
-                                    );
-
-                                let key = BatchKey::new(
-                                    BatchKind::Brush(BrushBatchKind::Blend),
-                                    BlendMode::PremultipliedAlpha,
-                                    textures,
-                                );
-
-                                let prim_header_index = prim_headers.push(&prim_header, z_id, [
-                                    uv_rect_address.as_int(),
-                                    filter_mode,
-                                    user_data,
-                                ]);
-
-                                let instance = BrushInstance {
-                                    prim_header_index,
-                                    clip_task_address,
-                                    segment_index: INVALID_SEGMENT_INDEX,
-                                    edge_flags: EdgeAaSegmentMask::empty(),
-                                    brush_flags,
-                                    user_data: 0,
-                                };
-
-                                self.current_batch_list().push_single_instance(
-                                    key,
-                                    bounding_rect,
-                                    z_id,
-                                    PrimitiveInstanceData::from(instance),
-                                );
                             }
                             PictureCompositeMode::Puppet { master: Some(source) } if ctx.is_picture_surface_visible(source) => return,
                             PictureCompositeMode::MixBlend { mode, backdrop } if ctx.is_picture_surface_visible(backdrop) => {
