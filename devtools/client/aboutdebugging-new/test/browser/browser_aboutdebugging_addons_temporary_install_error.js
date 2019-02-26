@@ -11,22 +11,19 @@ Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-addons.js", this);
  * extensions.
  */
 
-const BAD_EXTENSION_PATH = "resources/bad-extension/manifest.json";
+const INVALID_JSON_EXTENSION_PATH = "resources/bad-extensions/invalid-json/manifest.json";
+const INVALID_PROP_EXTENSION_PATH =
+  "resources/bad-extensions/invalid-property/manifest.json";
 const EXTENSION_PATH = "resources/test-temporary-extension/manifest.json";
 const EXTENSION_NAME = "test-temporary-extension";
 
-add_task(async function() {
+// Extension with an invalid JSON manifest will not be parsed. We check the expected
+// error message is displayed
+add_task(async function testInvalidJsonExtension() {
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
-  info("Install a bad extension");
-  // Do not use installTemporaryAddon here since the install will fail.
-  prepareMockFilePicker(BAD_EXTENSION_PATH);
-  document.querySelector(".js-temporary-extension-install-button").click();
-
-  info("Wait until the install error message appears");
-  await waitUntil(() => document.querySelector(".js-message"));
-  const installError = document.querySelector(".js-message");
+  const installError = await installBadExtension(INVALID_JSON_EXTENSION_PATH, document);
   ok(installError.textContent.includes("JSON.parse: unexpected keyword"),
     "The expected installation error is displayed: " + installError.textContent);
 
@@ -43,3 +40,31 @@ add_task(async function() {
 
   await removeTab(tab);
 });
+
+// Extension with a valid JSON manifest but containing an invalid property should display
+// a detailed error message coming from the Addon Manager.
+add_task(async function testInvalidPropertyExtension() {
+  const { document, tab, window } = await openAboutDebugging();
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
+
+  const installError = await installBadExtension(INVALID_PROP_EXTENSION_PATH, document);
+
+  ok(installError.textContent.includes("Extension is invalid"),
+    "The basic installation error is displayed: " + installError.textContent);
+  ok(installError.textContent.includes(
+    "Reading manifest: Error processing content_scripts.0.matches"),
+    "The detailed installation error is also displayed: " + installError.textContent);
+
+  await removeTab(tab);
+});
+
+async function installBadExtension(path, document) {
+  info("Install a bad extension at path: " + path);
+  // Do not use installTemporaryAddon here since the install will fail.
+  prepareMockFilePicker(path);
+  document.querySelector(".js-temporary-extension-install-button").click();
+
+  info("Wait until the install error message appears");
+  await waitUntil(() => document.querySelector(".js-message"));
+  return document.querySelector(".js-message");
+}
