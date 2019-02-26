@@ -78,7 +78,7 @@ const libraryMap = [
   },
   {
     label: "Angular",
-    pattern: /angular/i,
+    pattern: /angular(?!.*\/app\/)/i,
     contextPattern: /(zone\.js)/
   },
   {

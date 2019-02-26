@@ -52,7 +52,7 @@
   padding-left: 5px;
   min-width: 33px;
   width: 100%;
-  text-align: right;
+  text-align: end;
   grid-column: 1/2;
 }
 

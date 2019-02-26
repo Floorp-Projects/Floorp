@@ -45,7 +45,7 @@ SECStatus tls13_ComputeESNIKeys(const sslSocket *ss,
 SECStatus tls13_FormatEsniAADInput(sslBuffer *aadInput,
                                    PRUint8 *keyShare, unsigned int keyShareLen);
 
-SECStatus tls13_ServerDecryptEsniXtn(const sslSocket *ss, PRUint8 *in, unsigned int inLen,
-                                     PRUint8 *out, int *outLen, int maxLen);
+SECStatus tls13_ServerDecryptEsniXtn(const sslSocket *ss, const PRUint8 *in, unsigned int inLen,
+                                     PRUint8 *out, unsigned int *outLen, unsigned int maxLen);
 
 #endif

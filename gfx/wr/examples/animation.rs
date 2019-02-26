@@ -67,6 +67,7 @@ impl App {
             &LayoutPrimitiveInfo::new(LayoutRect::zero()),
             spatial_id,
             &filters,
+            &[],
         );
 
         let space_and_clip = SpaceAndClipInfo {
