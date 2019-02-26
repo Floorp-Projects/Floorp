@@ -23,6 +23,7 @@
 #include "jit/CodeGenerator.h"
 
 #include "wasm/WasmBaselineCompile.h"
+#include "wasm/WasmBuiltins.h"
 #include "wasm/WasmGenerator.h"
 #include "wasm/WasmOpIter.h"
 #include "wasm/WasmSignalHandlers.h"
@@ -986,12 +987,9 @@ class FunctionCompiler {
     return true;
   }
 
-  bool passArg(MDefinition* argDef, ValType type, CallCompileState* call) {
-    if (inDeadCode()) {
-      return true;
-    }
-
-    ABIArg arg = call->abi_.next(ToMIRType(type));
+  // Do not call this directly.  Call one of the passArg() variants instead.
+  bool passArgWorker(MDefinition* argDef, MIRType type, CallCompileState* call) {
+    ABIArg arg = call->abi_.next(type);
     switch (arg.kind()) {
 #ifdef JS_CODEGEN_REGISTER_PAIR
       case ABIArg::GPR_PAIR: {
@@ -1020,6 +1018,20 @@ class FunctionCompiler {
         MOZ_ASSERT_UNREACHABLE("Uninitialized ABIArg kind");
     }
     MOZ_CRASH("Unknown ABIArg kind.");
+  }
+
+  bool passArg(MDefinition* argDef, MIRType type, CallCompileState* call) {
+    if (inDeadCode()) {
+      return true;
+    }
+    return passArgWorker(argDef, type, call);
+  }
+
+  bool passArg(MDefinition* argDef, ValType type, CallCompileState* call) {
+    if (inDeadCode()) {
+      return true;
+    }
+    return passArgWorker(argDef, ToMIRType(type), call);
   }
 
   bool finishCall(CallCompileState* call) {
@@ -1126,8 +1138,8 @@ class FunctionCompiler {
     return true;
   }
 
-  bool builtinCall(SymbolicAddress builtin, uint32_t lineOrBytecode,
-                   const CallCompileState& call, ValType ret,
+  bool builtinCall(const SymbolicAddressSignature& builtin,
+                   uint32_t lineOrBytecode, const CallCompileState& call,
                    MDefinition** def) {
     if (inDeadCode()) {
       *def = nullptr;
@@ -1135,9 +1147,9 @@ class FunctionCompiler {
     }
 
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Symbolic);
-    auto callee = CalleeDesc::builtin(builtin);
+    auto callee = CalleeDesc::builtin(builtin.identity);
     auto* ins =
-        MWasmCall::New(alloc(), desc, callee, call.regArgs_, ToMIRType(ret));
+        MWasmCall::New(alloc(), desc, callee, call.regArgs_, builtin.retType);
     if (!ins) {
       return false;
     }
@@ -1147,9 +1159,9 @@ class FunctionCompiler {
     return true;
   }
 
-  bool builtinInstanceMethodCall(SymbolicAddress builtin,
+  bool builtinInstanceMethodCall(const SymbolicAddressSignature& builtin,
                                  uint32_t lineOrBytecode,
-                                 const CallCompileState& call, MIRType ret,
+                                 const CallCompileState& call,
                                  MDefinition** def) {
     if (inDeadCode()) {
       *def = nullptr;
@@ -1158,7 +1170,8 @@ class FunctionCompiler {
 
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Symbolic);
     auto* ins = MWasmCall::NewBuiltinInstanceMethodCall(
-        alloc(), desc, builtin, call.instanceArg_, call.regArgs_, ret);
+        alloc(), desc, builtin.identity, call.instanceArg_, call.regArgs_,
+        builtin.retType);
     if (!ins) {
       return false;
     }
@@ -1166,14 +1179,6 @@ class FunctionCompiler {
     curBlock_->add(ins);
     *def = ins;
     return true;
-  }
-
-  bool builtinInstanceMethodCall(SymbolicAddress builtin,
-                                 uint32_t lineOrBytecode,
-                                 const CallCompileState& call, ValType ret,
-                                 MDefinition** def) {
-    return builtinInstanceMethodCall(builtin, lineOrBytecode, call,
-                                     ToMIRType(ret), def);
   }
 
   /*********************************************** Control flow generation */
@@ -2201,17 +2206,13 @@ static bool EmitSetGlobal(FunctionCompiler& f) {
     if (!f.passInstance(&args)) {
       return false;
     }
-    // TODO: The argument type here is MIRType::Pointer, Julian's fix will take
-    // care of this.
     if (!f.passArg(barrierAddr, ValType::AnyRef, &args)) {
         return false;
     }
     f.finishCall(&args);
     MDefinition* ret;
-    // TODO: The return type here is void (ExprType::Void or MIRType::None),
-    // Julian's fix will take care of this.
-    if (!f.builtinInstanceMethodCall(SymbolicAddress::PostBarrierFiltering,
-                                     lineOrBytecode, args, ValType::I32, &ret)) {
+    if (!f.builtinInstanceMethodCall(SASigPostBarrierFiltering, lineOrBytecode,
+                                     args, &ret)) {
       return false;
     }
   }
@@ -2591,21 +2592,22 @@ static bool TryInlineUnaryBuiltin(FunctionCompiler& f, SymbolicAddress callee,
 }
 
 static bool EmitUnaryMathBuiltinCall(FunctionCompiler& f,
-                                     SymbolicAddress callee,
-                                     ValType operandType) {
+                                     const SymbolicAddressSignature& callee) {
+  MOZ_ASSERT(callee.numArgs == 1);
+
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
   MDefinition* input;
-  if (!f.iter().readUnary(operandType, &input)) {
+  if (!f.iter().readUnary(ValType(callee.argTypes[0]), &input)) {
     return false;
   }
 
-  if (TryInlineUnaryBuiltin(f, callee, input)) {
+  if (TryInlineUnaryBuiltin(f, callee.identity, input)) {
     return true;
   }
 
   CallCompileState call;
-  if (!f.passArg(input, operandType, &call)) {
+  if (!f.passArg(input, callee.argTypes[0], &call)) {
     return false;
   }
 
@@ -2614,7 +2616,7 @@ static bool EmitUnaryMathBuiltinCall(FunctionCompiler& f,
   }
 
   MDefinition* def;
-  if (!f.builtinCall(callee, lineOrBytecode, call, operandType, &def)) {
+  if (!f.builtinCall(callee, lineOrBytecode, call, &def)) {
     return false;
   }
 
@@ -2623,22 +2625,25 @@ static bool EmitUnaryMathBuiltinCall(FunctionCompiler& f,
 }
 
 static bool EmitBinaryMathBuiltinCall(FunctionCompiler& f,
-                                      SymbolicAddress callee,
-                                      ValType operandType) {
+                                      const SymbolicAddressSignature& callee) {
+  MOZ_ASSERT(callee.numArgs == 2);
+  MOZ_ASSERT(callee.argTypes[0] == callee.argTypes[1]);
+
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
   CallCompileState call;
   MDefinition* lhs;
   MDefinition* rhs;
-  if (!f.iter().readBinary(operandType, &lhs, &rhs)) {
+  // This call to readBinary assumes both operands have the same type.
+  if (!f.iter().readBinary(ValType(callee.argTypes[0]), &lhs, &rhs)) {
     return false;
   }
 
-  if (!f.passArg(lhs, operandType, &call)) {
+  if (!f.passArg(lhs, callee.argTypes[0], &call)) {
     return false;
   }
 
-  if (!f.passArg(rhs, operandType, &call)) {
+  if (!f.passArg(rhs, callee.argTypes[1], &call)) {
     return false;
   }
 
@@ -2647,7 +2652,7 @@ static bool EmitBinaryMathBuiltinCall(FunctionCompiler& f,
   }
 
   MDefinition* def;
-  if (!f.builtinCall(callee, lineOrBytecode, call, operandType, &def)) {
+  if (!f.builtinCall(callee, lineOrBytecode, call, &def)) {
     return false;
   }
 
@@ -2675,8 +2680,8 @@ static bool EmitMemoryGrow(FunctionCompiler& f) {
   f.finishCall(&args);
 
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(SymbolicAddress::MemoryGrow, lineOrBytecode,
-                                   args, ValType::I32, &ret)) {
+  if (!f.builtinInstanceMethodCall(SASigMemoryGrow, lineOrBytecode, args,
+                                   &ret)) {
     return false;
   }
 
@@ -2700,8 +2705,8 @@ static bool EmitMemorySize(FunctionCompiler& f) {
   f.finishCall(&args);
 
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(SymbolicAddress::MemorySize,
-                                   lineOrBytecode, args, ValType::I32, &ret)) {
+  if (!f.builtinInstanceMethodCall(SASigMemorySize, lineOrBytecode, args,
+                                   &ret)) {
     return false;
   }
 
@@ -2820,11 +2825,10 @@ static bool EmitWait(FunctionCompiler& f, ValType type, uint32_t byteSize) {
     return false;
   }
 
-  SymbolicAddress callee = type == ValType::I32 ? SymbolicAddress::WaitI32
-                                                : SymbolicAddress::WaitI64;
+  const SymbolicAddressSignature& callee =
+      type == ValType::I32 ? SASigWaitI32 : SASigWaitI64;
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, ValType::I32,
-                                   &ret)) {
+  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, &ret)) {
     return false;
   }
 
@@ -2870,8 +2874,7 @@ static bool EmitWake(FunctionCompiler& f) {
   }
 
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(SymbolicAddress::Wake, lineOrBytecode, args,
-                                   ValType::I32, &ret)) {
+  if (!f.builtinInstanceMethodCall(SASigWake, lineOrBytecode, args, &ret)) {
     return false;
   }
 
@@ -2952,11 +2955,9 @@ static bool EmitMemOrTableCopy(FunctionCompiler& f, bool isMem) {
     return false;
   }
 
-  SymbolicAddress callee =
-      isMem ? SymbolicAddress::MemCopy : SymbolicAddress::TableCopy;
+  const SymbolicAddressSignature& callee = isMem ? SASigMemCopy : SASigTableCopy;
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, ValType::I32,
-                                   &ret)) {
+  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, &ret)) {
     return false;
   }
 
@@ -2994,11 +2995,10 @@ static bool EmitDataOrElemDrop(FunctionCompiler& f, bool isData) {
     return false;
   }
 
-  SymbolicAddress callee =
-      isData ? SymbolicAddress::DataDrop : SymbolicAddress::ElemDrop;
+  const SymbolicAddressSignature& callee =
+      isData ? SASigDataDrop : SASigElemDrop;
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, ValType::I32,
-                                   &ret)) {
+  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, &ret)) {
     return false;
   }
 
@@ -3041,8 +3041,7 @@ static bool EmitMemFill(FunctionCompiler& f) {
   }
 
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(SymbolicAddress::MemFill, lineOrBytecode,
-                                   args, ValType::I32, &ret)) {
+  if (!f.builtinInstanceMethodCall(SASigMemFill, lineOrBytecode, args, &ret)) {
     return false;
   }
 
@@ -3100,11 +3099,9 @@ static bool EmitMemOrTableInit(FunctionCompiler& f, bool isMem) {
     return false;
   }
 
-  SymbolicAddress callee =
-      isMem ? SymbolicAddress::MemInit : SymbolicAddress::TableInit;
+  const SymbolicAddressSignature& callee = isMem ? SASigMemInit : SASigTableInit;
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, ValType::I32,
-                                   &ret)) {
+  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, &ret)) {
     return false;
   }
 
@@ -3158,8 +3155,8 @@ static bool EmitTableGet(FunctionCompiler& f) {
   // The return value here is either null, denoting an error, or a pointer to an
   // unmovable location containing a possibly-null ref.
   MDefinition* result;
-  if (!f.builtinInstanceMethodCall(SymbolicAddress::TableGet, lineOrBytecode,
-                                   args, MIRType::Pointer, &result)) {
+  if (!f.builtinInstanceMethodCall(SASigTableGet, lineOrBytecode, args,
+                                   &result)) {
     return false;
   }
   if (!f.checkPointerNullMeansFailedResult(result)) {
@@ -3216,8 +3213,8 @@ static bool EmitTableGrow(FunctionCompiler& f) {
   }
 
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(SymbolicAddress::TableGrow, lineOrBytecode,
-                                   args, ValType::I32, &ret)) {
+  if (!f.builtinInstanceMethodCall(SASigTableGrow, lineOrBytecode, args,
+                                   &ret)) {
     return false;
   }
 
@@ -3266,8 +3263,7 @@ static bool EmitTableSet(FunctionCompiler& f) {
   }
 
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(SymbolicAddress::TableSet, lineOrBytecode,
-                                   args, ValType::I32, &ret)) {
+  if (!f.builtinInstanceMethodCall(SASigTableSet, lineOrBytecode, args, &ret)) {
     return false;
   }
   if (!f.checkI32NegativeMeansFailedResult(ret)) {
@@ -3307,8 +3303,8 @@ static bool EmitTableSize(FunctionCompiler& f) {
   }
 
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(SymbolicAddress::TableSize, lineOrBytecode,
-                                   args, ValType::I32, &ret)) {
+  if (!f.builtinInstanceMethodCall(SASigTableSize, lineOrBytecode, args,
+                                   &ret)) {
     return false;
   }
 
@@ -3676,17 +3672,13 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
       case uint16_t(Op::F32Neg):
         CHECK(EmitUnaryWithType<MWasmNeg>(f, ValType::F32, MIRType::Float32));
       case uint16_t(Op::F32Ceil):
-        CHECK(
-            EmitUnaryMathBuiltinCall(f, SymbolicAddress::CeilF, ValType::F32));
+        CHECK(EmitUnaryMathBuiltinCall(f, SASigCeilF));
       case uint16_t(Op::F32Floor):
-        CHECK(
-            EmitUnaryMathBuiltinCall(f, SymbolicAddress::FloorF, ValType::F32));
+        CHECK(EmitUnaryMathBuiltinCall(f, SASigFloorF));
       case uint16_t(Op::F32Trunc):
-        CHECK(
-            EmitUnaryMathBuiltinCall(f, SymbolicAddress::TruncF, ValType::F32));
+        CHECK(EmitUnaryMathBuiltinCall(f, SASigTruncF));
       case uint16_t(Op::F32Nearest):
-        CHECK(EmitUnaryMathBuiltinCall(f, SymbolicAddress::NearbyIntF,
-                                       ValType::F32));
+        CHECK(EmitUnaryMathBuiltinCall(f, SASigNearbyIntF));
       case uint16_t(Op::F32Sqrt):
         CHECK(EmitUnaryWithType<MSqrt>(f, ValType::F32, MIRType::Float32));
       case uint16_t(Op::F32Add):
@@ -3709,17 +3701,13 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
       case uint16_t(Op::F64Neg):
         CHECK(EmitUnaryWithType<MWasmNeg>(f, ValType::F64, MIRType::Double));
       case uint16_t(Op::F64Ceil):
-        CHECK(
-            EmitUnaryMathBuiltinCall(f, SymbolicAddress::CeilD, ValType::F64));
+        CHECK(EmitUnaryMathBuiltinCall(f, SASigCeilD));
       case uint16_t(Op::F64Floor):
-        CHECK(
-            EmitUnaryMathBuiltinCall(f, SymbolicAddress::FloorD, ValType::F64));
+        CHECK(EmitUnaryMathBuiltinCall(f, SASigFloorD));
       case uint16_t(Op::F64Trunc):
-        CHECK(
-            EmitUnaryMathBuiltinCall(f, SymbolicAddress::TruncD, ValType::F64));
+        CHECK(EmitUnaryMathBuiltinCall(f, SASigTruncD));
       case uint16_t(Op::F64Nearest):
-        CHECK(EmitUnaryMathBuiltinCall(f, SymbolicAddress::NearbyIntD,
-                                       ValType::F64));
+        CHECK(EmitUnaryMathBuiltinCall(f, SASigNearbyIntD));
       case uint16_t(Op::F64Sqrt):
         CHECK(EmitUnaryWithType<MSqrt>(f, ValType::F64, MIRType::Double));
       case uint16_t(Op::F64Add):
@@ -4112,35 +4100,25 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
             CHECK(EmitRem(f, ValType::F64, MIRType::Double,
                           /* isUnsigned = */ false));
           case uint16_t(MozOp::F64Sin):
-            CHECK(EmitUnaryMathBuiltinCall(f, SymbolicAddress::SinD,
-                                           ValType::F64));
+            CHECK(EmitUnaryMathBuiltinCall(f, SASigSinD));
           case uint16_t(MozOp::F64Cos):
-            CHECK(EmitUnaryMathBuiltinCall(f, SymbolicAddress::CosD,
-                                           ValType::F64));
+            CHECK(EmitUnaryMathBuiltinCall(f, SASigCosD));
           case uint16_t(MozOp::F64Tan):
-            CHECK(EmitUnaryMathBuiltinCall(f, SymbolicAddress::TanD,
-                                           ValType::F64));
+            CHECK(EmitUnaryMathBuiltinCall(f, SASigTanD));
           case uint16_t(MozOp::F64Asin):
-            CHECK(EmitUnaryMathBuiltinCall(f, SymbolicAddress::ASinD,
-                                           ValType::F64));
+            CHECK(EmitUnaryMathBuiltinCall(f, SASigASinD));
           case uint16_t(MozOp::F64Acos):
-            CHECK(EmitUnaryMathBuiltinCall(f, SymbolicAddress::ACosD,
-                                           ValType::F64));
+            CHECK(EmitUnaryMathBuiltinCall(f, SASigACosD));
           case uint16_t(MozOp::F64Atan):
-            CHECK(EmitUnaryMathBuiltinCall(f, SymbolicAddress::ATanD,
-                                           ValType::F64));
+            CHECK(EmitUnaryMathBuiltinCall(f, SASigATanD));
           case uint16_t(MozOp::F64Exp):
-            CHECK(EmitUnaryMathBuiltinCall(f, SymbolicAddress::ExpD,
-                                           ValType::F64));
+            CHECK(EmitUnaryMathBuiltinCall(f, SASigExpD));
           case uint16_t(MozOp::F64Log):
-            CHECK(EmitUnaryMathBuiltinCall(f, SymbolicAddress::LogD,
-                                           ValType::F64));
+            CHECK(EmitUnaryMathBuiltinCall(f, SASigLogD));
           case uint16_t(MozOp::F64Pow):
-            CHECK(EmitBinaryMathBuiltinCall(f, SymbolicAddress::PowD,
-                                            ValType::F64));
+            CHECK(EmitBinaryMathBuiltinCall(f, SASigPowD));
           case uint16_t(MozOp::F64Atan2):
-            CHECK(EmitBinaryMathBuiltinCall(f, SymbolicAddress::ATan2D,
-                                            ValType::F64));
+            CHECK(EmitBinaryMathBuiltinCall(f, SASigATan2D));
           case uint16_t(MozOp::OldCallDirect):
             CHECK(EmitCall(f, /* asmJSFuncDef = */ true));
           case uint16_t(MozOp::OldCallIndirect):
