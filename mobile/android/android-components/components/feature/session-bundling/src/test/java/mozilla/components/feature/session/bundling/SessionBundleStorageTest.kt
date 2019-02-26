@@ -24,7 +24,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
-import org.mockito.Mockito.anyLong
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
@@ -58,8 +57,8 @@ class SessionBundleStorageTest {
             override fun insertBundle(bundle: BundleEntity): Long = TODO()
             override fun updateBundle(bundle: BundleEntity) = TODO()
             override fun deleteBundle(bundle: BundleEntity) = TODO()
-            override fun getBundles(limit: Int): LiveData<List<BundleEntity>> = TODO()
-            override fun getBundlesPaged(): DataSource.Factory<Int, BundleEntity> = TODO()
+            override fun getBundles(since: Long, limit: Int): LiveData<List<BundleEntity>> = TODO()
+            override fun getBundlesPaged(since: Long): DataSource.Factory<Int, BundleEntity> = TODO()
 
             override fun getLastBundle(since: Long): BundleEntity? = bundle
         }

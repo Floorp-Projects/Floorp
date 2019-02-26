@@ -130,12 +130,16 @@ class SessionBundleStorage(
 
     /**
      * Returns the last saved [SessionBundle] instances (up to [limit]) as a [LiveData] list.
+     *
+     * @param since (Optional) Unix timestamp (milliseconds). If set this method will only return [SessionBundle]
+     * instances that have been saved since the given timestamp.
+     * @param limit (Optional) Maximum number of [SessionBundle] instances that should be returned.
      */
-    fun bundles(limit: Int = 20): LiveData<List<SessionBundle>> {
+    fun bundles(since: Long = 0, limit: Int = 20): LiveData<List<SessionBundle>> {
         return Transformations.map(
             database
             .bundleDao()
-            .getBundles(limit)
+            .getBundles(since, limit)
         ) { list ->
             list.map { SessionBundleAdapter(it) }
         }
@@ -149,11 +153,14 @@ class SessionBundleStorage(
      *
      * - https://developer.android.com/topic/libraries/architecture/paging/data
      * - https://developer.android.com/topic/libraries/architecture/paging/ui
+     *
+     * @param since (Optional) Unix timestamp (milliseconds). If set this method will only return [SessionBundle]
+     * instances that have been saved since the given timestamp.
      */
-    fun bundlesPaged(): DataSource.Factory<Int, SessionBundle> {
+    fun bundlesPaged(since: Long = 0): DataSource.Factory<Int, SessionBundle> {
         return database
             .bundleDao()
-            .getBundlesPaged()
+            .getBundlesPaged(since)
             .map { entity -> SessionBundleAdapter(entity) }
     }
 
