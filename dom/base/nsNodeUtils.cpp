@@ -136,6 +136,7 @@ void nsNodeUtils::CharacterDataWillChange(
 void nsNodeUtils::CharacterDataChanged(nsIContent* aContent,
                                        const CharacterDataChangeInfo& aInfo) {
   Document* doc = aContent->OwnerDoc();
+  doc->Changed();
   IMPL_MUTATION_NOTIFICATION(CharacterDataChanged, aContent, (aContent, aInfo),
                              IsRemoveNotification::No);
 }
@@ -152,6 +153,7 @@ void nsNodeUtils::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
                                    nsAtom* aAttribute, int32_t aModType,
                                    const nsAttrValue* aOldValue) {
   Document* doc = aElement->OwnerDoc();
+  doc->Changed();
   IMPL_MUTATION_NOTIFICATION(
       AttributeChanged, aElement,
       (aElement, aNameSpaceID, aAttribute, aModType, aOldValue),
@@ -170,7 +172,7 @@ void nsNodeUtils::AttributeSetToCurrentValue(Element* aElement,
 void nsNodeUtils::ContentAppended(nsIContent* aContainer,
                                   nsIContent* aFirstNewContent) {
   Document* doc = aContainer->OwnerDoc();
-
+  doc->Changed();
   IMPL_MUTATION_NOTIFICATION(ContentAppended, aContainer, (aFirstNewContent),
                              IsRemoveNotification::No);
 }
@@ -188,6 +190,7 @@ void nsNodeUtils::ContentInserted(nsINode* aContainer, nsIContent* aChild) {
   MOZ_ASSERT(aContainer->IsContent() || aContainer->IsDocument(),
              "container must be an nsIContent or an Document");
   Document* doc = aContainer->OwnerDoc();
+  doc->Changed();
   IMPL_MUTATION_NOTIFICATION(ContentInserted, aContainer, (aChild),
                              IsRemoveNotification::No);
 }
@@ -197,6 +200,7 @@ void nsNodeUtils::ContentRemoved(nsINode* aContainer, nsIContent* aChild,
   MOZ_ASSERT(aContainer->IsContent() || aContainer->IsDocument(),
              "container must be an nsIContent or an Document");
   Document* doc = aContainer->OwnerDoc();
+  doc->Changed();
   MOZ_ASSERT(aChild->GetParentNode() == aContainer,
              "We expect the parent link to be still around at this point");
   IMPL_MUTATION_NOTIFICATION(ContentRemoved, aContainer,
