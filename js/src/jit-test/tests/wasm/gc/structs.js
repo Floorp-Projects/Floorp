@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmGcEnabled()
+// |jit-test| skip-if: !wasmGcEnabled() || wasmCompileMode() != 'baseline'
 
 var conf = getBuildConfiguration();
 

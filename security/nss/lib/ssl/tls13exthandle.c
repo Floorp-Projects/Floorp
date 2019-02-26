@@ -1140,7 +1140,7 @@ tls13_ClientSendEsniXtn(const sslSocket *ss, TLSExtensionData *xtnData,
     ssl3KeyMaterial keyMat;
     SSLAEADCipher aead;
     PRUint8 outBuf[1024];
-    int outLen;
+    unsigned int outLen;
     unsigned int sniStart;
     unsigned int sniLen;
     sslBuffer aadInput = SSL_BUFFER_EMPTY;
@@ -1294,7 +1294,7 @@ tls13_ServerHandleEsniXtn(const sslSocket *ss, TLSExtensionData *xtnData,
 {
     sslReadBuffer buf;
     PRUint8 *plainText = NULL;
-    int ptLen;
+    unsigned int ptLen;
     SECStatus rv;
 
     /* If we are doing < TLS 1.3, then ignore this. */

@@ -132,6 +132,9 @@ class TlsConnectTestBase : public ::testing::Test {
   // Move the DTLS timers for both endpoints to pop the next timer.
   void ShiftDtlsTimers();
 
+  void SaveAlgorithmPolicy();
+  void RestoreAlgorithmPolicy();
+
  protected:
   SSLProtocolVariant variant_;
   std::shared_ptr<TlsAgent> client_;
@@ -148,6 +151,13 @@ class TlsConnectTestBase : public ::testing::Test {
   // which places the preferred (and default) entry at the end of the list.
   // NSS will move this final entry to the front when used with ALPN.
   const uint8_t alpn_dummy_val_[4] = {0x01, 0x62, 0x01, 0x61};
+
+  // A list of algorithm IDs whose policies need to be preserved
+  // around test cases.  In particular, DSA is checked in
+  // ssl_extension_unittest.cc.
+  const std::vector<SECOidTag> algorithms_ = {SEC_OID_APPLY_SSL_POLICY,
+                                              SEC_OID_ANSIX9_DSA_SIGNATURE};
+  std::vector<std::tuple<SECOidTag, uint32_t>> saved_policies_;
 
  private:
   void CheckResumption(SessionResumptionMode expected);

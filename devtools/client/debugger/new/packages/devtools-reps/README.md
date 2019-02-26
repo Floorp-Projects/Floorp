@@ -45,7 +45,7 @@ Supported types:
 You need to clone the debugger.html repository, then install dependencies, for which you'll need the [Yarn](https://yarnpkg.com/en/) tool:
 
 ```
-git clone https://github.com/firefox-devtools/debugger.html.git
+git clone https://github.com/firefox-devtools/debugger.git
 cd debugger.html
 yarn install
 ```
