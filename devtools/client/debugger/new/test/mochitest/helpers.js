@@ -1331,7 +1331,7 @@ async function hoverAtPos(dbg, { line, ch }) {
   const { left, top } = coords;
 
   // Adds a vertical offset due to increased line height
-  // https://github.com/firefox-devtools/debugger.html/pull/7934
+  // https://github.com/firefox-devtools/debugger/pull/7934
   const lineHeightOffset = 3;
 
   const tokenEl = dbg.win.document.elementFromPoint(

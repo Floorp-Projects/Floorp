@@ -1086,7 +1086,7 @@ void nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams) {
 }
 
 bool nsSVGIntegrationUtils::BuildWebRenderFilters(
-    nsIFrame* aFilteredFrame, nsTArray<mozilla::wr::FilterOp>& aWrFilters,
+    nsIFrame* aFilteredFrame, WrFiltersHolder& aWrFilters,
     Maybe<nsRect>& aPostFilterClip) {
   return nsFilterInstance::BuildWebRenderFilters(aFilteredFrame, aWrFilters,
                                                  aPostFilterClip);

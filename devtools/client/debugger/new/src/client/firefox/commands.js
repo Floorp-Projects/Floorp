@@ -166,27 +166,32 @@ function locationKey(location) {
   return `${(sourceUrl: any)}:${(sourceId: any)}:${line}:${(column: any)}`;
 }
 
-function* getAllThreadClients() {
-  yield threadClient;
-  for (const { thread } of (Object.values(workerClients): any)) {
-    yield thread;
-  }
-}
-
 async function setBreakpoint(
   location: BreakpointLocation,
   options: BreakpointOptions
 ) {
   breakpoints[locationKey(location)] = { location, options };
-  for (const thread of getAllThreadClients()) {
-    await thread.setBreakpoint(location, options);
+  await threadClient.setBreakpoint(location, options);
+
+  // Set breakpoints in other threads as well, but do not wait for the requests
+  // to complete, so that we don't get hung up if one of the threads stops
+  // responding. We don't strictly need to wait for the main thread to finish
+  // setting its breakpoint, but this leads to more consistent behavior if the
+  // user sets a breakpoint and immediately starts interacting with the page.
+  // If the main thread stops responding then we're toast regardless.
+  for (const { thread } of (Object.values(workerClients): any)) {
+    thread.setBreakpoint(location, options);
   }
 }
 
 async function removeBreakpoint(location: BreakpointLocation) {
   delete breakpoints[locationKey(location)];
-  for (const thread of getAllThreadClients()) {
-    await thread.removeBreakpoint(location);
+  await threadClient.removeBreakpoint(location);
+
+  // Remove breakpoints without waiting for the thread to respond, for the same
+  // reason as in setBreakpoint.
+  for (const { thread } of (Object.values(workerClients): any)) {
+    thread.removeBreakpoint(location);
   }
 }
 

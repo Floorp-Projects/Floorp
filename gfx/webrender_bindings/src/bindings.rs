@@ -13,7 +13,7 @@ use std::cell::RefCell;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::ops::Range;
-use std::os::raw::{c_void, c_char};
+use std::os::raw::{c_void, c_char, c_float};
 #[cfg(target_os = "android")]
 use std::os::raw::{c_int};
 use gleam::gl;
@@ -487,6 +487,24 @@ impl ExternalImageHandler for WrExternalImageHandler {
             (self.unlock_func)(self.external_image_obj, id.into(), channel_index);
         }
     }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+// Used for ComponentTransfer only
+pub struct WrFilterData {
+    funcR_type: ComponentTransferFuncType,
+    R_values: *mut c_float,
+    R_values_count: usize,
+    funcG_type: ComponentTransferFuncType,
+    G_values: *mut c_float,
+    G_values_count: usize,
+    funcB_type: ComponentTransferFuncType,
+    B_values: *mut c_float,
+    B_values_count: usize,
+    funcA_type: ComponentTransferFuncType,
+    A_values: *mut c_float,
+    A_values_count: usize,
 }
 
 #[repr(u32)]
@@ -1952,6 +1970,8 @@ pub extern "C" fn wr_dp_push_stacking_context(
     transform: *const LayoutTransform,
     filters: *const FilterOp,
     filter_count: usize,
+    filter_datas: *const WrFilterData,
+    filter_datas_count: usize,
     glyph_raster_space: RasterSpace,
 ) -> WrSpatialId {
     debug_assert!(unsafe { !is_in_render_thread() });
@@ -1959,6 +1979,20 @@ pub extern "C" fn wr_dp_push_stacking_context(
     let c_filters = make_slice(filters, filter_count);
     let mut filters : Vec<FilterOp> = c_filters.iter().map(|c_filter| {
                                                            *c_filter
+    }).collect();
+
+    let c_filter_datas = make_slice(filter_datas, filter_datas_count);
+    let r_filter_datas : Vec<FilterData> = c_filter_datas.iter().map(|c_filter_data| {
+        FilterData {
+            func_r_type: c_filter_data.funcR_type,
+            r_values: make_slice(c_filter_data.R_values, c_filter_data.R_values_count).to_vec(),
+            func_g_type: c_filter_data.funcG_type,
+            g_values: make_slice(c_filter_data.G_values, c_filter_data.G_values_count).to_vec(),
+            func_b_type: c_filter_data.funcB_type,
+            b_values: make_slice(c_filter_data.B_values, c_filter_data.B_values_count).to_vec(),
+            func_a_type: c_filter_data.funcA_type,
+            a_values: make_slice(c_filter_data.A_values, c_filter_data.A_values_count).to_vec(),
+        }
     }).collect();
 
     let transform_ref = unsafe { transform.as_ref() };
@@ -2048,6 +2082,7 @@ pub extern "C" fn wr_dp_push_stacking_context(
                                 params.transform_style,
                                 params.mix_blend_mode,
                                 &filters,
+                                &r_filter_datas,
                                 glyph_raster_space,
                                 params.cache_tiles);
 
