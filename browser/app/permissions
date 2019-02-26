@@ -13,9 +13,6 @@ origin	uitour	1	https://support.mozilla.org
 origin	uitour	1	about:home
 origin	uitour	1	about:newtab
 
-# XPInstall
-origin	install	1	https://addons.mozilla.org
-
 # Remote troubleshooting
 origin	remote-troubleshooting	1	https://input.mozilla.org
 origin	remote-troubleshooting	1	https://support.mozilla.org

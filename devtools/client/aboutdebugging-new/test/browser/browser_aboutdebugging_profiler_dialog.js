@@ -65,16 +65,3 @@ function assertDialogHidden(doc) {
   ok(!document.querySelector(".js-profiler-dialog"), "Dialog is removed");
   ok(!document.querySelector(".js-profiler-dialog-mask"), "Dialog mask is removed");
 }
-
-function openProfilerDialog(client, doc) {
-  const onProfilerLoaded = new Promise(r => {
-    client.loadPerformanceProfiler = r;
-  });
-
-  info("Click on the Profile Runtime button");
-  const profileButton = doc.querySelector(".js-profile-runtime-button");
-  profileButton.click();
-
-  info("Wait for the loadPerformanceProfiler callback to be executed on client-wrapper");
-  return onProfilerLoaded;
-}
