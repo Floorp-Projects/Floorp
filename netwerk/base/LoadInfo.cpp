@@ -13,6 +13,7 @@
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/net/CookieSettings.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsFrameLoader.h"
@@ -20,6 +21,8 @@
 #include "nsIContentSecurityPolicy.h"
 #include "nsIDocShell.h"
 #include "mozilla/dom/Document.h"
+#include "nsCookiePermission.h"
+#include "nsICookieService.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsISupportsImpl.h"
 #include "nsISupportsUtils.h"
@@ -205,6 +208,10 @@ LoadInfo::LoadInfo(
           }
         }
       }
+
+      // Let's inherit the cookie behavior and permission from the parent
+      // document.
+      mCookieSettings = aLoadingContext->OwnerDoc()->CookieSettings();
     }
 
     mInnerWindowID = aLoadingContext->OwnerDoc()->InnerWindowID();
@@ -426,6 +433,11 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
                "chrome docshell shouldn't have mPrivateBrowsingId set.");
   }
 #endif
+
+  // Let's take the current cookie behavior and current cookie permission
+  // for the documents' loadInfo. Note that for any other loadInfos,
+  // cookieBehavior will be BEHAVIOR_REJECT for security reasons.
+  mCookieSettings = CookieSettings::Create();
 }
 
 LoadInfo::LoadInfo(const LoadInfo& rhs)
@@ -436,6 +448,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mTopLevelPrincipal(rhs.mTopLevelPrincipal),
       mTopLevelStorageAreaPrincipal(rhs.mTopLevelStorageAreaPrincipal),
       mResultPrincipalURI(rhs.mResultPrincipalURI),
+      mCookieSettings(rhs.mCookieSettings),
       mClientInfo(rhs.mClientInfo),
       // mReservedClientSource must be handled specially during redirect
       // mReservedClientInfo must be handled specially during redirect
@@ -494,7 +507,7 @@ LoadInfo::LoadInfo(
     nsIPrincipal* aPrincipalToInherit, nsIPrincipal* aSandboxedLoadingPrincipal,
     nsIPrincipal* aTopLevelPrincipal,
     nsIPrincipal* aTopLevelStorageAreaPrincipal, nsIURI* aResultPrincipalURI,
-    const Maybe<ClientInfo>& aClientInfo,
+    nsICookieSettings* aCookieSettings, const Maybe<ClientInfo>& aClientInfo,
     const Maybe<ClientInfo>& aReservedClientInfo,
     const Maybe<ClientInfo>& aInitialClientInfo,
     const Maybe<ServiceWorkerDescriptor>& aController,
@@ -526,6 +539,7 @@ LoadInfo::LoadInfo(
       mTopLevelPrincipal(aTopLevelPrincipal),
       mTopLevelStorageAreaPrincipal(aTopLevelStorageAreaPrincipal),
       mResultPrincipalURI(aResultPrincipalURI),
+      mCookieSettings(aCookieSettings),
       mClientInfo(aClientInfo),
       mReservedClientInfo(aReservedClientInfo),
       mInitialClientInfo(aInitialClientInfo),
@@ -768,6 +782,17 @@ LoadInfo::GetCookiePolicy(uint32_t* aResult) {
   }
 
   *aResult = policy;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetCookieSettings(nsICookieSettings** aCookieSettings) {
+  if (!mCookieSettings) {
+    mCookieSettings = CookieSettings::CreateBlockingAll();
+  }
+
+  nsCOMPtr<nsICookieSettings> cookieSettings = mCookieSettings;
+  cookieSettings.forget(aCookieSettings);
   return NS_OK;
 }
 
