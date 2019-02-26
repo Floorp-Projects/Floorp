@@ -655,10 +655,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitPropLHS(PropertyAccess* prop);
   MOZ_MUST_USE bool emitPropIncDec(UnaryNode* incDec);
 
-  MOZ_MUST_USE bool emitAsyncWrapperLambda(unsigned index, bool isArrow);
-  MOZ_MUST_USE bool emitAsyncWrapper(unsigned index, bool needsHomeObject,
-                                     bool isArrow);
-
   MOZ_MUST_USE bool emitComputedPropertyName(UnaryNode* computedPropName);
 
   // Emit bytecode to put operands for a JSOP_GETELEM/CALLELEM/SETELEM/DELELEM

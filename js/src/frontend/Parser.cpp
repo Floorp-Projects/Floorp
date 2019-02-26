@@ -1986,12 +1986,6 @@ JSFunction* AllocNewFunction(JSContext* cx, HandleAtom atom,
                    : JSFunction::INTERPRETED_GENERATOR_OR_ASYNC);
   }
 
-  // We store the async wrapper in a slot for later access.
-  if (asyncKind == FunctionAsyncKind::AsyncFunction &&
-      generatorKind == GeneratorKind::NotGenerator) {
-    allocKind = gc::AllocKind::FUNCTION_EXTENDED;
-  }
-
   fun = NewFunctionWithProto(cx, nullptr, 0, flags, nullptr, atom, proto,
                              allocKind, TenuredObject);
   if (!fun) {
@@ -2567,15 +2561,20 @@ GeneralParser<ParseHandler, Unit>::functionDefinition(
   }
 
   RootedObject proto(cx_);
-  if (generatorKind == GeneratorKind::Generator ||
-      asyncKind == FunctionAsyncKind::AsyncFunction) {
-    if (generatorKind == GeneratorKind::Generator &&
-        asyncKind == FunctionAsyncKind::AsyncFunction) {
-      proto = GlobalObject::getOrCreateAsyncGenerator(cx_, cx_->global());
-    } else {
-      proto = GlobalObject::getOrCreateGeneratorFunctionPrototype(
-          cx_, cx_->global());
+  if (asyncKind == FunctionAsyncKind::AsyncFunction &&
+      generatorKind == GeneratorKind::Generator) {
+    proto = GlobalObject::getOrCreateAsyncGenerator(cx_, cx_->global());
+    if (!proto) {
+      return null();
     }
+  } else if (asyncKind == FunctionAsyncKind::AsyncFunction) {
+    proto = GlobalObject::getOrCreateAsyncFunctionPrototype(cx_, cx_->global());
+    if (!proto) {
+      return null();
+    }
+  } else if (generatorKind == GeneratorKind::Generator) {
+    proto =
+        GlobalObject::getOrCreateGeneratorFunctionPrototype(cx_, cx_->global());
     if (!proto) {
       return null();
     }

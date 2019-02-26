@@ -445,9 +445,6 @@ static const JSFunctionSpec async_generator_methods[] = {
   if (!asyncGenerator) {
     return false;
   }
-  if (!JSObject::setDelegate(cx, asyncGenerator)) {
-    return false;
-  }
   if (!LinkConstructorAndPrototype(cx, asyncGenerator, asyncGenProto,
                                    JSPROP_READONLY, JSPROP_READONLY) ||
       !DefineToStringTag(cx, asyncGenerator,

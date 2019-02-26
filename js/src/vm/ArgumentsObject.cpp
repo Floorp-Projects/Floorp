@@ -474,12 +474,7 @@ static bool MappedArgGetter(JSContext* cx, HandleObject obj, HandleId id,
   } else {
     MOZ_ASSERT(JSID_IS_ATOM(id, cx->names().callee));
     if (!argsobj.hasOverriddenCallee()) {
-      RootedFunction callee(cx, &argsobj.callee());
-      if (callee->isAsync() && !callee->isGenerator()) {
-        vp.setObject(*GetWrappedAsyncFunction(callee));
-      } else {
-        vp.setObject(*callee);
-      }
+      vp.setObject(argsobj.callee());
     }
   }
   return true;

@@ -412,9 +412,10 @@ inline int32_t GlobalObject::OffThreadPlaceholderObject::getSlotIndex() const {
   // compartment.
 
   MOZ_ASSERT(global->zone()->createdForHelperThread());
-  MOZ_ASSERT(slot == GENERATOR_FUNCTION_PROTO || slot == ASYNC_GENERATOR ||
-             slot == MODULE_PROTO || slot == IMPORT_ENTRY_PROTO ||
-             slot == EXPORT_ENTRY_PROTO || slot == REQUESTED_MODULE_PROTO);
+  MOZ_ASSERT(slot == GENERATOR_FUNCTION_PROTO || slot == ASYNC_FUNCTION_PROTO ||
+             slot == ASYNC_GENERATOR || slot == MODULE_PROTO ||
+             slot == IMPORT_ENTRY_PROTO || slot == EXPORT_ENTRY_PROTO ||
+             slot == REQUESTED_MODULE_PROTO);
 
   auto placeholder = OffThreadPlaceholderObject::New(cx, slot);
   if (!placeholder) {

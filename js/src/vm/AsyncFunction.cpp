@@ -61,101 +61,6 @@ using mozilla::Maybe;
   return true;
 }
 
-#define UNWRAPPED_ASYNC_WRAPPED_SLOT 1
-#define WRAPPED_ASYNC_UNWRAPPED_SLOT 0
-
-// Async Functions proposal 1.1.8 and 1.2.14.
-static bool WrappedAsyncFunction(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  RootedValue unwrappedVal(cx);
-  unwrappedVal = args.callee().as<JSFunction>().getExtendedSlot(
-      WRAPPED_ASYNC_UNWRAPPED_SLOT);
-
-  // Step 2.
-  // Also does a part of 2.2 steps 1-2.
-  InvokeArgs args2(cx);
-  if (!FillArgumentsFromArraylike(cx, args2, args)) {
-    return false;
-  }
-
-  if (Call(cx, unwrappedVal, args.thisv(), args2, args.rval())) {
-    return true;
-  }
-
-  if (!cx->isExceptionPending()) {
-    return false;
-  }
-
-  // Steps 1, 4.
-  RootedValue exc(cx);
-  if (!GetAndClearException(cx, &exc)) {
-    return false;
-  }
-  JSObject* rejectPromise = PromiseObject::unforgeableReject(cx, exc);
-  if (!rejectPromise) {
-    return false;
-  }
-
-  // Step 5.
-  args.rval().setObject(*rejectPromise);
-  return true;
-}
-
-// Async Functions proposal 2.1 steps 1, 3 (partially).
-// In the spec it creates a function, but we create 2 functions `unwrapped` and
-// `wrapped`.  `unwrapped` is a generator that corresponds to
-//  the async function's body, replacing `await` with `yield`.  `wrapped` is a
-// function that is visible to the outside, and handles yielded values.
-JSObject* js::WrapAsyncFunctionWithProto(JSContext* cx,
-                                         HandleFunction unwrapped,
-                                         HandleObject proto) {
-  MOZ_ASSERT(unwrapped->isAsync());
-  MOZ_ASSERT(proto,
-             "We need an explicit prototype to avoid the default"
-             "%FunctionPrototype% fallback in NewFunctionWithProto().");
-
-  // Create a new function with AsyncFunctionPrototype, reusing the name and
-  // the length of `unwrapped`.
-
-  RootedAtom funName(cx, unwrapped->explicitName());
-  uint16_t length;
-  if (!JSFunction::getLength(cx, unwrapped, &length)) {
-    return nullptr;
-  }
-
-  // Steps 3 (partially).
-  JSFunction* wrapped = NewFunctionWithProto(
-      cx, WrappedAsyncFunction, length, JSFunction::NATIVE_FUN, nullptr,
-      funName, proto, gc::AllocKind::FUNCTION_EXTENDED);
-  if (!wrapped) {
-    return nullptr;
-  }
-
-  if (unwrapped->hasInferredName()) {
-    wrapped->setInferredName(unwrapped->inferredName());
-  }
-
-  // Link them to each other to make GetWrappedAsyncFunction and
-  // GetUnwrappedAsyncFunction work.
-  unwrapped->setExtendedSlot(UNWRAPPED_ASYNC_WRAPPED_SLOT,
-                             ObjectValue(*wrapped));
-  wrapped->setExtendedSlot(WRAPPED_ASYNC_UNWRAPPED_SLOT,
-                           ObjectValue(*unwrapped));
-
-  return wrapped;
-}
-
-JSObject* js::WrapAsyncFunction(JSContext* cx, HandleFunction unwrapped) {
-  RootedObject proto(
-      cx, GlobalObject::getOrCreateAsyncFunctionPrototype(cx, cx->global()));
-  if (!proto) {
-    return nullptr;
-  }
-
-  return WrapAsyncFunctionWithProto(cx, unwrapped, proto);
-}
-
 enum class ResumeKind { Normal, Throw };
 
 // Async Functions proposal 2.2 steps 3.f, 3.g.
@@ -246,27 +151,6 @@ JSObject* js::AsyncFunctionResolve(
     }
   }
   return promise;
-}
-
-JSFunction* js::GetWrappedAsyncFunction(JSFunction* unwrapped) {
-  MOZ_ASSERT(unwrapped->isAsync());
-  return &unwrapped->getExtendedSlot(UNWRAPPED_ASYNC_WRAPPED_SLOT)
-              .toObject()
-              .as<JSFunction>();
-}
-
-JSFunction* js::GetUnwrappedAsyncFunction(JSFunction* wrapped) {
-  MOZ_ASSERT(IsWrappedAsyncFunction(wrapped));
-  JSFunction* unwrapped =
-      &wrapped->getExtendedSlot(WRAPPED_ASYNC_UNWRAPPED_SLOT)
-           .toObject()
-           .as<JSFunction>();
-  MOZ_ASSERT(unwrapped->isAsync());
-  return unwrapped;
-}
-
-bool js::IsWrappedAsyncFunction(JSFunction* fun) {
-  return fun->maybeNative() == WrappedAsyncFunction;
 }
 
 const Class AsyncFunctionGeneratorObject::class_ = {
