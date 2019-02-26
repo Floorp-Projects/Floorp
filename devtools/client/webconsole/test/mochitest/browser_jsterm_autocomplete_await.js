@@ -28,7 +28,7 @@ async function performTests() {
   checkInputCompletionValue(hud, "  ait", "completeNode has expected value");
 
   EventUtils.synthesizeKey("KEY_Tab");
-  is(jsterm.getInputValue(), "await", "'await' tab completion");
+  is(getInputValue(hud), "await", "'await' tab completion");
 
   const updated = jsterm.once("autocomplete-updated");
   EventUtils.sendString(" ");

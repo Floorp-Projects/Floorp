@@ -24,36 +24,36 @@ async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const {jsterm} = hud;
 
-  ok(!jsterm.getInputValue(), "jsterm.getInputValue() is empty");
+  ok(!getInputValue(hud), "console input is empty");
   checkInputCursorPosition(hud, 0, "Cursor is at expected position");
 
-  jsterm.setInputValue('"first item"');
+  setInputValue(hud, '"first item"');
   EventUtils.synthesizeKey("KEY_ArrowUp");
-  is(jsterm.getInputValue(), '"first item"', "null test history up");
+  is(getInputValue(hud), '"first item"', "null test history up");
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  is(jsterm.getInputValue(), '"first item"', "null test history down");
+  is(getInputValue(hud), '"first item"', "null test history down");
 
   await jsterm.execute();
-  is(jsterm.getInputValue(), "", "cleared input line after submit");
+  is(getInputValue(hud), "", "cleared input line after submit");
 
-  jsterm.setInputValue('"editing input 1"');
+  setInputValue(hud, '"editing input 1"');
   EventUtils.synthesizeKey("KEY_ArrowUp");
-  is(jsterm.getInputValue(), '"first item"', "test history up");
+  is(getInputValue(hud), '"first item"', "test history up");
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  is(jsterm.getInputValue(), '"editing input 1"',
+  is(getInputValue(hud), '"editing input 1"',
     "test history down restores in-progress input");
 
-  jsterm.setInputValue('"second item"');
+  setInputValue(hud, '"second item"');
   await jsterm.execute();
-  jsterm.setInputValue('"editing input 2"');
+  setInputValue(hud, '"editing input 2"');
   EventUtils.synthesizeKey("KEY_ArrowUp");
-  is(jsterm.getInputValue(), '"second item"', "test history up");
+  is(getInputValue(hud), '"second item"', "test history up");
   EventUtils.synthesizeKey("KEY_ArrowUp");
-  is(jsterm.getInputValue(), '"first item"', "test history up");
+  is(getInputValue(hud), '"first item"', "test history up");
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  is(jsterm.getInputValue(), '"second item"', "test history down");
+  is(getInputValue(hud), '"second item"', "test history down");
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  is(jsterm.getInputValue(), '"editing input 2"',
+  is(getInputValue(hud), '"editing input 2"',
      "test history down restores new in-progress input again");
 
   // Appending the same value again should not impact the history.
@@ -62,9 +62,9 @@ async function performTests() {
   await jsterm.execute('"second item"');
   await jsterm.execute('  "second item"    ');
   EventUtils.synthesizeKey("KEY_ArrowUp");
-  is(jsterm.getInputValue(), '"second item"',
+  is(getInputValue(hud), '"second item"',
     "test history up reaches duplicated entry just once");
   EventUtils.synthesizeKey("KEY_ArrowUp");
-  is(jsterm.getInputValue(), '"first item"',
+  is(getInputValue(hud), '"first item"',
     "test history up reaches the previous value");
 }

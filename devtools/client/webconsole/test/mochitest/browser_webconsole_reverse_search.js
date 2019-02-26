@@ -28,8 +28,8 @@ add_task(async function() {
   }
   await onLastMessage;
 
-  const jstermInitialValue = "initialValue";
-  hud.jsterm.setInputValue(jstermInitialValue);
+  const initialValue = "initialValue";
+  setInputValue(hud, initialValue);
 
   info("Check that the reverse search toolbar as the expected initial state");
   let reverseSearchElement = await openReverseSearch(hud);
@@ -41,7 +41,7 @@ add_task(async function() {
     !reverseSearchElement.querySelector(".search-result-button-next"),
     "The results navigation buttons are not displayed by default"
   );
-  is(hud.jsterm.getInputValue(), jstermInitialValue,
+  is(getInputValue(hud), initialValue,
     "The jsterm value is not changed when opening reverse search");
   is(isReverseSearchInputFocused(hud), true, "reverse search input is focused");
 
@@ -59,7 +59,7 @@ add_task(async function() {
   ok(nextButton, "Next navigation button is now displayed");
   is(nextButton.title, `Next result (${isMacOS ? "Ctrl + S" : "Shift + F9"})`,
     "Next navigation button has expected title");
-  is(hud.jsterm.getInputValue(), "document", "JsTerm has the expected input");
+  is(getInputValue(hud), "document", "JsTerm has the expected input");
   is(hud.jsterm.autocompletePopup.isOpen, false,
     "Setting the input value did not trigger the autocompletion");
   is(isReverseSearchInputFocused(hud), true, "reverse search input is focused");
@@ -67,7 +67,7 @@ add_task(async function() {
   let onJsTermValueChanged = hud.jsterm.once("set-input-value");
   EventUtils.sendString("og");
   await onJsTermValueChanged;
-  is(hud.jsterm.getInputValue(), `Dog = "Snoopy"`, "JsTerm input was updated");
+  is(getInputValue(hud), `Dog = "Snoopy"`, "JsTerm input was updated");
   is(infoElement.textContent, "1 result", "The reverse info has the expected text");
   ok(
     !reverseSearchElement.querySelector(".search-result-button-prev") &&
@@ -79,7 +79,7 @@ add_task(async function() {
   onJsTermValueChanged = hud.jsterm.once("set-input-value");
   EventUtils.sendString("g");
   await waitFor(() => reverseSearchElement.classList.contains("no-result"));
-  is(hud.jsterm.getInputValue(), `Dog = "Snoopy"`,
+  is(getInputValue(hud), `Dog = "Snoopy"`,
     "JsTerm input was not updated since there's no results");
   is(infoElement.textContent, "No results", "The reverse info has the expected text");
   ok(
@@ -92,12 +92,12 @@ add_task(async function() {
   EventUtils.synthesizeKey("KEY_Backspace");
   await waitFor(() => !reverseSearchElement.classList.contains("no-result"));
   is(infoElement.textContent, "1 result", "The reverse info has the expected text");
-  is(hud.jsterm.getInputValue(), `Dog = "Snoopy"`, "JsTerm kept its value");
+  is(getInputValue(hud), `Dog = "Snoopy"`, "JsTerm kept its value");
 
   info("Check that Escape does not affect the jsterm value");
   EventUtils.synthesizeKey("KEY_Escape");
   await waitFor(() => !getReverseSearchElement(hud));
-  is(hud.jsterm.getInputValue(), `Dog = "Snoopy"`,
+  is(getInputValue(hud), `Dog = "Snoopy"`,
     "Closing the input did not changed the JsTerm value");
   is(isInputFocused(hud), true, "input is focused");
 

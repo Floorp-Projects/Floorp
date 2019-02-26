@@ -85,7 +85,7 @@ async function performTests() {
   ok(!getInputCompletionValue(hud), "there is no completion text");
 
   info("Test autocomplete inside parens");
-  jsterm.setInputValue("dump()");
+  setInputValue(hud, "dump()");
   EventUtils.synthesizeKey("KEY_ArrowLeft");
   let onAutocompleteUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString("window.testBugA");
@@ -111,7 +111,7 @@ async function performTests() {
   onAutocompleteUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString("t");
   await onAutocompleteUpdated;
-  is(jsterm.getInputValue(), "testBug", "jsterm has expected value");
+  is(getInputValue(hud), "testBug", "jsterm has expected value");
   is(popup.isOpen, false, "popup is not open");
   ok(!getInputCompletionValue(hud), "there is no completion text");
 
@@ -119,7 +119,7 @@ async function performTests() {
   onAutocompleteUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString("t");
   await onAutocompleteUpdated;
-  is(jsterm.getInputValue(), "_t_foo", "jsterm has expected value");
+  is(getInputValue(hud), "_t_foo", "jsterm has expected value");
   is(popup.isOpen, false, "popup is not open");
   ok(!getInputCompletionValue(hud), "there is no completion text");
 
@@ -127,7 +127,7 @@ async function performTests() {
   onAutocompleteUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString("t");
   await onAutocompleteUpdated;
-  is(jsterm.getInputValue(), "$t$bar", "jsterm has expected value");
+  is(getInputValue(hud), "$t$bar", "jsterm has expected value");
   is(popup.isOpen, false, "popup is not open");
   ok(!getInputCompletionValue(hud), "there is no completion text");
 
@@ -135,7 +135,7 @@ async function performTests() {
   onAutocompleteUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString("t");
   await onAutocompleteUpdated;
-  is(jsterm.getInputValue(), "9t9luftballons", "jsterm has expected value");
+  is(getInputValue(hud), "9t9luftballons", "jsterm has expected value");
   is(popup.isOpen, false, "popup is not open");
   ok(!getInputCompletionValue(hud), "there is no completion text");
 }
@@ -143,7 +143,7 @@ async function performTests() {
 async function setInitialState(hud) {
   const {jsterm} = hud;
   jsterm.focus();
-  jsterm.setInputValue("dump()");
+  setInputValue(hud, "dump()");
   EventUtils.synthesizeKey("KEY_ArrowLeft");
 
   const onPopUpOpen = jsterm.autocompletePopup.once("popup-opened");
