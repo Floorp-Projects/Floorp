@@ -1,0 +1,10 @@
+include protocol Pmaybe_OfActorsSub;
+
+protocol Pmaybe_OfActors {
+    manages Pmaybe_OfActorsSub;
+
+child:
+    async Msg(Pmaybe_OfActorsSub? p);
+
+    async Pmaybe_OfActorsSub();
+};

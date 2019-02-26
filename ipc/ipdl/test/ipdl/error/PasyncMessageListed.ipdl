@@ -1,0 +1,6 @@
+//error: IPC message PasyncMessageListed::Msg is async, can be delisted
+
+protocol PasyncMessageListed {
+parent:
+    async Msg();
+};

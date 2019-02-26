@@ -1,7 +1,0 @@
-using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
-using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
-
-protocol multipleUsingCxxTypes {
-child:
-    async Msg(void_t foo);
-};

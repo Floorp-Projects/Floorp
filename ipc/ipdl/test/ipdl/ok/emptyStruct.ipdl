@@ -1,3 +1,0 @@
-struct empty { };
-
-protocol emptyStruct { child:  async __delete__(); };

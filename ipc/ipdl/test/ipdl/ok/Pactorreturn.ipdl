@@ -1,0 +1,6 @@
+sync protocol Pactorreturn {
+
+parent:
+    sync Msg(Pactorreturn p) returns (Pactorreturn r);
+
+};

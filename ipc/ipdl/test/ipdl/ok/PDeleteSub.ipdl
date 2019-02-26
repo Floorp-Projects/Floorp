@@ -1,0 +1,10 @@
+include protocol PDelete;
+
+sync protocol PDeleteSub {
+    manager PDelete;
+
+parent:
+    sync __delete__(int x) returns (double d);
+
+};
+
