@@ -6020,7 +6020,3 @@ pref("prio.enabled", false);
 // External.AddSearchProvider is deprecated and it will be removed in the next
 // cycles.
 pref("dom.sidebar.enabled", true);
-
-#if defined(MOZ_WIDGET_GTK)
-pref("widget.default-hidden-titlebar", true);
-#endif
