@@ -10,6 +10,10 @@ EXPORTS += [
     'FuzzingInterface.h',
 ]
 
+SOURCES += [
+    'FuzzingInterface.cpp',
+]
+
 if CONFIG['JS_STANDALONE']:
     FINAL_LIBRARY = "js"
 else:
