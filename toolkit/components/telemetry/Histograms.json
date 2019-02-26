@@ -306,7 +306,9 @@
     "description": "Composite times in milliseconds",
     "kind": "exponential",
     "high": 1000,
-    "n_buckets": 50
+    "n_buckets": 50,
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1080160, 1529352]
   },
   "COMPOSITE_FRAME_ROUNDTRIP_TIME" : {
     "record_in_processes": ["main", "content", "gpu"],
@@ -545,7 +547,8 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 10,
-    "bug_numbers": [1135408],
+    "bug_numbers": [1135408, 1529352],
+    "releaseChannelCollection": "opt-out",
     "description": "GPU Device Reset Reason (ok, hung, removed, reset, internal error, invalid call, out of memory)"
   },
   "FETCH_IS_MAINTHREAD": {
@@ -1520,7 +1523,8 @@
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "WebGL1 creation success",
-    "bug_numbers": [1247327]
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1247327, 1529352]
   },
   "CANVAS_WEBGL_USED": {
     "record_in_processes": ["main", "content"],
@@ -6156,11 +6160,11 @@
   "FX_TAB_SWITCH_COMPOSITE_E10S_MS": {
     "record_in_processes": ["main"],
     "alert_emails": ["mwoodrow@mozilla.com"],
-    "expires_in_version": "70",
+    "expires_in_version": "73",
     "kind": "exponential",
     "high": 1000,
     "n_buckets": 20,
-    "bug_numbers": [1481704],
+    "bug_numbers": [1481704, 1529352],
     "releaseChannelCollection": "opt-out",
     "description": "Firefox: Time in ms between tab selection and first composite of the tab content in e10s windows"
   },
