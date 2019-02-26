@@ -65,6 +65,8 @@ class SessionStorage final : public Storage {
                                    const nsAString& aOldValue,
                                    const nsAString& aNewValue);
 
+  bool ShouldThrowWhenStorageAccessDenied(uint32_t aRejectedReason) override;
+
   RefPtr<SessionStorageCache> mCache;
   RefPtr<SessionStorageManager> mManager;
 

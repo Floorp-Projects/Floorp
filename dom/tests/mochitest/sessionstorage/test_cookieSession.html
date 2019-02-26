@@ -1,0 +1,124 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>cookie per-session only test</title>
+
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+
+/*
+  Set cookie access to be just per session and store to the sessionStorage.
+  Content stored must prevail only for session of the browser, so it must
+  be accessible in another window we try to access that key in the same
+  storage.
+ */
+
+function pushCookie(aValue, aNext) {
+  SpecialPowers.pushPermissions([{'type': 'cookie', 'allow': aValue, 'context': document}], pushPermissionAndTest);
+}
+
+function pushPermissionAndTest() {
+  var test = tests.shift();
+  if (test) {
+    document.getElementById('testframe').onload = test;
+    /* After every permission change, an iframe has to be reloaded,
+       otherwise this test causes failures in b2g (oop) mochitest, because
+       the permission changes don't seem to be always picked up
+       by the code that excercises it */
+    document.getElementById('testframe').contentWindow.location.reload();
+  } else {
+    ok(false, 'should not be reached');
+    SimpleTest.finish();
+  }
+}
+
+function startTest() {
+  pushCookie(SpecialPowers.Ci.nsICookiePermission.ACCESS_DEFAULT);
+}
+
+var tests = [
+  function test1() {
+    sessionStorage.setItem("persistent1", "persistent value 1");
+    sessionStorage.setItem("persistent2", "persistent value 2");
+
+    pushCookie(SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION);
+  },
+
+  function test2() {
+    sessionStorage.setItem("session only", "session value");
+    is(sessionStorage.getItem("session only"), "session value", "Value present when cookies in session-only mode");
+    is(sessionStorage.getItem("persistent1"), "persistent value 1", "Persistent value present");
+    is(sessionStorage.getItem("persistent2"), "persistent value 2", "Persistent value present");
+
+    sessionStorage.setItem("persistent1", "changed persistent value 1");
+    sessionStorage.removeItem("persistent2");
+
+    is(sessionStorage.getItem("session only"), "session value", "Value present when cookies in session-only mode");
+    is(sessionStorage.getItem("persistent1"), "changed persistent value 1", "Persistent value present");
+    is(sessionStorage.getItem("persistent2"), null, "Persistent value removed");
+
+    // This clear has to delete only changes made in session only mode
+    sessionStorage.clear();
+
+    is(sessionStorage.getItem("session only"), null, "Value not present when cookies in session-only mode after delete");
+    is(sessionStorage.getItem("persistent1"), null, "Persistent value not present in session only after delete");
+    is(sessionStorage.getItem("persistent2"), null, "Persistent value not present in session only after delete");
+
+    sessionStorage.setItem("session only 2", "must be deleted on drop of session-only cookies permissions");
+
+    pushCookie(SpecialPowers.Ci.nsICookiePermission.ACCESS_DEFAULT);
+  },
+
+  function test3() {
+    is(sessionStorage.getItem("session only"), null, "No value when cookies are in default mode");
+    is(sessionStorage.getItem("session only 2"), null, "No value when cookies are in default mode");
+    is(sessionStorage.getItem("persistent1"), "persistent value 1", "Persistent value present");
+    is(sessionStorage.getItem("persistent2"), "persistent value 2", "Persistent value present");
+
+    pushCookie(SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION);
+  },
+
+  function test4() {
+    is(sessionStorage.getItem("session only"), null, "Value not present when cookies in session-only mode after delete");
+    is(sessionStorage.getItem("session only 2"), null, "Value not present when cookies in session-only mode after delete");
+    is(sessionStorage.getItem("persistent1"), "persistent value 1", "Persistent value present again");
+    is(sessionStorage.getItem("persistent2"), "persistent value 2", "Persistent value present again");
+
+    pushCookie(SpecialPowers.Ci.nsICookiePermission.ACCESS_DEFAULT);
+  },
+
+  function test5() {
+    sessionStorage.clear();
+
+    is(sessionStorage.getItem("session only"), null, "No value when cookies are in default mode");
+    is(sessionStorage.getItem("persistent1"), null, "Persistent value not present after delete");
+    is(sessionStorage.getItem("persistent2"), null, "Persistent value not present after delete");
+
+    pushCookie(SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION);
+  },
+
+  function test6() {
+    is(sessionStorage.getItem("session only"), null, "Value not present when cookies in session-only mode after delete");
+    is(sessionStorage.getItem("session only 2"), null, "No value when cookies are in default mode");
+    is(sessionStorage.getItem("persistent1"), null, "Persistent value not present in session only after delete");
+    is(sessionStorage.getItem("persistent2"), null, "Persistent value not present in session only after delete");
+
+    pushCookie(SpecialPowers.Ci.nsICookiePermission.ACCESS_DEFAULT);
+  },
+
+  function test7() {
+    SimpleTest.finish();
+  }
+];
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body onload="startTest();">
+<iframe id="testframe" srcdoc="<meta charset=utf-8>"></iframe>
+</body>
+</html>
