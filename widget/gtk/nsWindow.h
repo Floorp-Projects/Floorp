@@ -386,6 +386,7 @@ class nsWindow final : public nsBaseWidget {
 
   static bool HideTitlebarByDefault();
   static bool GetTopLevelWindowActiveState(nsIFrame* aFrame);
+  static bool TitlebarCanUseShapeMask();
 
  protected:
   virtual ~nsWindow();
