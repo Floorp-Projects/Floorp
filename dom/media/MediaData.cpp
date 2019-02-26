@@ -86,8 +86,6 @@ bool AudioData::SetTrimWindow(const media::TimeInterval& aTrim) {
     // Overflow.
     return false;
   }
-  MOZ_DIAGNOSTIC_ASSERT(trimAfter.value() >= trimBefore.value(),
-                        "Something went wrong with trimming value");
   if (!mTrimWindow && trimBefore == 0 && trimAfter == originalFrames) {
     // Nothing to change, abort early to prevent rounding errors.
     return true;
@@ -95,11 +93,7 @@ bool AudioData::SetTrimWindow(const media::TimeInterval& aTrim) {
 
   mTrimWindow = Some(aTrim);
   mDataOffset = trimBefore.value() * mChannels;
-  MOZ_DIAGNOSTIC_ASSERT(mDataOffset <= mAudioData.Length(),
-                        "Data offset outside original buffer");
   mFrames = (trimAfter - trimBefore).value();
-  MOZ_DIAGNOSTIC_ASSERT(mFrames <= originalFrames,
-                        "More frames than found in container");
   mTime = mOriginalTime + FramesToTimeUnit(trimBefore.value(), mRate);
   mDuration = FramesToTimeUnit(mFrames, mRate);
 

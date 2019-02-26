@@ -45,7 +45,7 @@ class Interval {
       : mStart(std::forward<StartArg>(aStart)),
         mEnd(std::forward<EndArg>(aEnd)),
         mFuzz() {
-    MOZ_DIAGNOSTIC_ASSERT(aStart <= aEnd, "Invalid Interval");
+    MOZ_ASSERT(aStart <= aEnd);
   }
 
   template <typename StartArg, typename EndArg, typename FuzzArg>
@@ -53,7 +53,7 @@ class Interval {
       : mStart(std::forward<StartArg>(aStart)),
         mEnd(std::forward<EndArg>(aEnd)),
         mFuzz(std::forward<FuzzArg>(aFuzz)) {
-    MOZ_DIAGNOSTIC_ASSERT(aStart <= aEnd, "Invalid Interval");
+    MOZ_ASSERT(aStart <= aEnd);
   }
 
   Interval(const SelfType& aOther)
