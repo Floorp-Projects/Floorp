@@ -105,7 +105,6 @@ Usage(char *progName)
             "-i input");
     fprintf(stderr, "%-20s Define an output file to use (default is stdout)\n",
             "-o output");
-    exit(-1);
 }
 
 int
@@ -113,12 +112,12 @@ main(int argc, char **argv)
 {
     char *progName;
     SECStatus rv;
-    FILE *inFile, *outFile;
-    PLOptState *optstate;
+    FILE *inFile = NULL, *outFile = NULL;
+    PRBool closeIn = PR_TRUE, closeOut = PR_TRUE;
+    PLOptState *optstate = NULL;
     PLOptStatus status;
+    int exitCode = -1;
 
-    inFile = 0;
-    outFile = 0;
     progName = strrchr(argv[0], '/');
     progName = progName ? progName + 1 : argv[0];
 
@@ -129,6 +128,7 @@ main(int argc, char **argv)
             case '?':
             case 'h':
                 Usage(progName);
+                goto loser;
                 break;
 
             case 'i':
@@ -136,7 +136,7 @@ main(int argc, char **argv)
                 if (!inFile) {
                     fprintf(stderr, "%s: unable to open \"%s\" for reading\n",
                             progName, optstate->value);
-                    return -1;
+                    goto loser;
                 }
                 break;
 
@@ -145,13 +145,15 @@ main(int argc, char **argv)
                 if (!outFile) {
                     fprintf(stderr, "%s: unable to open \"%s\" for writing\n",
                             progName, optstate->value);
-                    return -1;
+                    goto loser;
                 }
                 break;
         }
     }
-    if (!inFile)
+    if (!inFile) {
         inFile = stdin;
+        closeIn = PR_FALSE;
+    }
     if (!outFile) {
 #if defined(WIN32)
         int smrv = _setmode(_fileno(stdout), _O_BINARY);
@@ -159,16 +161,28 @@ main(int argc, char **argv)
             fprintf(stderr,
                     "%s: Cannot change stdout to binary mode. Use -o option instead.\n",
                     progName);
-            return smrv;
+            goto loser;
         }
 #endif
         outFile = stdout;
+        closeOut = PR_FALSE;
     }
     rv = decode_file(outFile, inFile);
     if (rv != SECSuccess) {
         fprintf(stderr, "%s: lossage: error=%d errno=%d\n",
                 progName, PORT_GetError(), errno);
-        return -1;
+        goto loser;
     }
-    return 0;
+    exitCode = 0;
+loser:
+    if (optstate) {
+        PL_DestroyOptState(optstate);
+    }
+    if (inFile && closeIn) {
+        fclose(inFile);
+    }
+    if (outFile && closeOut) {
+        fclose(outFile);
+    }
+    return exitCode;
 }

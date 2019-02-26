@@ -36,6 +36,7 @@
         'ssl_keyupdate_unittest.cc',
         'ssl_loopback_unittest.cc',
         'ssl_misc_unittest.cc',
+        'ssl_primitive_unittest.cc',
         'ssl_record_unittest.cc',
         'ssl_recordsep_unittest.cc',
         'ssl_recordsize_unittest.cc',

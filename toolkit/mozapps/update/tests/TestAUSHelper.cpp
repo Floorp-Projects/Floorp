@@ -62,6 +62,7 @@ typedef char NS_tchar;
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <errno.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -92,10 +93,6 @@ static void WriteMsg(const NS_tchar *path, const char *status) {
 }
 
 static bool CheckMsg(const NS_tchar *path, const char *expected) {
-  if (NS_taccess(path, F_OK)) {
-    return false;
-  }
-
   FILE *inFP = NS_tfopen(path, NS_T("rb"));
   if (!inFP) {
     return false;
@@ -145,7 +142,8 @@ int NS_main(int argc, NS_tchar **argv) {
         return 1;
       }
 #else
-      strcpy(exePath, argv[0]);
+      NS_tsnprintf(exePath, sizeof(exePath) / sizeof(exePath[0]), NS_T("%s"),
+                   argv[0]);
 #endif
       NS_tchar runFilePath[MAXPATHLEN];
       NS_tsnprintf(runFilePath, sizeof(runFilePath) / sizeof(runFilePath[0]),
@@ -238,10 +236,14 @@ int NS_main(int argc, NS_tchar **argv) {
     NS_tchar path[MAXPATHLEN];
     NS_tsnprintf(path, sizeof(path) / sizeof(path[0]), NS_T("%s/%s"),
                  NS_T("/tmp"), argv[2]);
-    mkdir(path, 0755);
+    if (mkdir(path, 0755)) {
+      return 1;
+    }
     NS_tsnprintf(path, sizeof(path) / sizeof(path[0]), NS_T("%s/%s/%s"),
                  NS_T("/tmp"), argv[2], argv[3]);
-    mkdir(path, 0755);
+    if (mkdir(path, 0755)) {
+      return 1;
+    }
     NS_tsnprintf(path, sizeof(path) / sizeof(path[0]), NS_T("%s/%s/%s/%s"),
                  NS_T("/tmp"), argv[2], argv[3], argv[4]);
     FILE *file = NS_tfopen(path, NS_T("w"));
@@ -255,7 +257,9 @@ int NS_main(int argc, NS_tchar **argv) {
     NS_tsnprintf(path, sizeof(path) / sizeof(path[0]), NS_T("%s/%s"),
                  NS_T("/tmp"), argv[2]);
     if (argc > 6 && !NS_tstrcmp(argv[6], NS_T("change-perm"))) {
-      chmod(path, 0644);
+      if (chmod(path, 0644)) {
+        return 1;
+      }
     }
     return 0;
 #else
@@ -266,19 +270,31 @@ int NS_main(int argc, NS_tchar **argv) {
 
   if (!NS_tstrcmp(argv[1], NS_T("remove-symlink"))) {
 #ifdef XP_UNIX
+    // The following can be called at the start of a test in case these symlinks
+    // need to be removed if they already exist and at the end of a test to
+    // remove the symlinks created by the test so ignore file doesn't exist
+    // errors.
     NS_tchar path[MAXPATHLEN];
     NS_tsnprintf(path, sizeof(path) / sizeof(path[0]), NS_T("%s/%s"),
                  NS_T("/tmp"), argv[2]);
-    chmod(path, 0755);
+    if (chmod(path, 0755) && errno != ENOENT) {
+      return 1;
+    }
     NS_tsnprintf(path, sizeof(path) / sizeof(path[0]), NS_T("%s/%s/%s/%s"),
                  NS_T("/tmp"), argv[2], argv[3], argv[4]);
-    unlink(path);
+    if (unlink(path) && errno != ENOENT) {
+      return 1;
+    }
     NS_tsnprintf(path, sizeof(path) / sizeof(path[0]), NS_T("%s/%s/%s"),
                  NS_T("/tmp"), argv[2], argv[3]);
-    rmdir(path);
+    if (rmdir(path) && errno != ENOENT) {
+      return 1;
+    }
     NS_tsnprintf(path, sizeof(path) / sizeof(path[0]), NS_T("%s/%s"),
                  NS_T("/tmp"), argv[2]);
-    rmdir(path);
+    if (rmdir(path) && errno != ENOENT) {
+      return 1;
+    }
     return 0;
 #else
     // Not implemented on non-Unix platforms
@@ -289,7 +305,9 @@ int NS_main(int argc, NS_tchar **argv) {
   if (!NS_tstrcmp(argv[1], NS_T("check-symlink"))) {
 #ifdef XP_UNIX
     struct stat ss;
-    lstat(argv[2], &ss);
+    if (lstat(argv[2], &ss)) {
+      return 1;
+    }
     return S_ISLNK(ss.st_mode) ? 0 : 1;
 #else
     // Not implemented on non-Unix platforms
@@ -430,6 +448,9 @@ int NS_main(int argc, NS_tchar **argv) {
                  NS_T("%s"), argv[2]);
 
     FILE *logFP = NS_tfopen(logFilePath, NS_T("wb"));
+    if (!logFP) {
+      return 1;
+    }
     for (int i = 1; i < argc; ++i) {
       fprintf(logFP, LOG_S "\n", argv[i]);
     }

@@ -186,9 +186,9 @@ function update(
 function updateSource(state: SourcesState, source: Object) {
   const existingSource = state.sources[source.id];
   return {
-    ...state, 
+    ...state,
     sources: {
-      ...state.sources, 
+      ...state.sources,
       [source.id]: { ...existingSource, ...source }
     }
   };
@@ -198,14 +198,11 @@ function updateSource(state: SourcesState, source: Object) {
  * Update all of the sources when an event occurs.
  * e.g. workers are updated, project directory root changes
  */
-function updateAllSources(
-  state: SourcesState,
-  callback: any
-) {
+function updateAllSources(state: SourcesState, callback: any) {
   const updatedSources = Object.values(state.sources).map(source => ({
     ...source,
     ...callback(source)
-  }))
+  }));
 
   return addSources({ ...state, ...emptySources }, updatedSources);
 }
@@ -234,6 +231,7 @@ function addSources(state: SourcesState, sources: Source[]) {
         [...existingSource.actors, ...source.actors],
         ({ actor }) => actor
       );
+
       updatedSource = (({ ...updatedSource, actors }: any): Source);
     }
 
@@ -249,11 +247,12 @@ function addSources(state: SourcesState, sources: Source[]) {
     // 3. Update the displayed actor map
     if (
       underRoot(source, state.projectDirectoryRoot) &&
-      (!source.isExtension || getChromeAndExtenstionsEnabled({ sources: state }))
+      (!source.isExtension ||
+        getChromeAndExtenstionsEnabled({ sources: state }))
     ) {
       for (const actor of getSourceActors(state, source)) {
         if (!state.displayed[actor.thread]) {
-          state.displayed[actor.thread] = {}
+          state.displayed[actor.thread] = {};
         }
         state.displayed[actor.thread][source.id] = true;
       }
@@ -285,10 +284,9 @@ function updateWorkers(state: SourcesState, action: Object) {
 function updateProjectDirectoryRoot(state: SourcesState, root: string) {
   prefs.projectDirectoryRoot = root;
 
-  return updateAllSources(
-    { ...state, projectDirectoryRoot: root },
-    source => ({ relativeUrl: getRelativeUrl(source, root) })
-  );
+  return updateAllSources({ ...state, projectDirectoryRoot: root }, source => ({
+    relativeUrl: getRelativeUrl(source, root)
+  }));
 }
 
 /*
@@ -301,12 +299,9 @@ function updateLoadedState(state, action: LoadSourceAction): SourcesState {
 
   if (action.status === "start") {
     source = { id: sourceId, loadedState: "loading" };
-
   } else if (action.status === "error") {
     source = { id: sourceId, error: action.error, loadedState: "loaded" };
-
   } else {
-
     if (!action.value) {
       return state;
     }
@@ -378,7 +373,10 @@ export function getSourceFromId(state: OuterState, id: string): Source {
   return source;
 }
 
-export function getSourceByActorId(state: OuterState, actorId: string): ?Source {
+export function getSourceByActorId(
+  state: OuterState,
+  actorId: string
+): ?Source {
   // We don't index the sources by actor IDs, so this method should be used
   // sparingly.
   for (const source of getSourceList(state)) {

@@ -20,7 +20,6 @@ exports[`SourcesTree After changing expanded nodes Shows the tree with four.js, 
   <div
     className="sources-list"
     key="tree"
-    onKeyDown={[Function]}
   >
     <ManagedTree
       autoExpandAll={false}
@@ -38,6 +37,7 @@ exports[`SourcesTree After changing expanded nodes Shows the tree with four.js, 
       getRoots={[Function]}
       itemHeight={21}
       key="full"
+      onActivate={[Function]}
       onCollapse={[Function]}
       onExpand={[Function]}
       onFocus={[Function]}
@@ -68,7 +68,6 @@ exports[`SourcesTree Should show the tree with nothing expanded 1`] = `
   <div
     className="sources-list"
     key="tree"
-    onKeyDown={[Function]}
   >
     <ManagedTree
       autoExpandAll={false}
@@ -79,6 +78,7 @@ exports[`SourcesTree Should show the tree with nothing expanded 1`] = `
       getRoots={[Function]}
       itemHeight={21}
       key="full"
+      onActivate={[Function]}
       onCollapse={[Function]}
       onExpand={[Function]}
       onFocus={[Function]}
@@ -109,7 +109,6 @@ exports[`SourcesTree When loading initial source Shows the tree with one.js, two
   <div
     className="sources-list"
     key="tree"
-    onKeyDown={[Function]}
   >
     <ManagedTree
       autoExpandAll={false}
@@ -127,6 +126,7 @@ exports[`SourcesTree When loading initial source Shows the tree with one.js, two
       getRoots={[Function]}
       itemHeight={21}
       key="full"
+      onActivate={[Function]}
       onCollapse={[Function]}
       onExpand={[Function]}
       onFocus={[Function]}
@@ -157,7 +157,6 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
   <div
     className="sources-list"
     key="tree"
-    onKeyDown={[Function]}
   >
     <ManagedTree
       autoExpandAll={false}
@@ -299,6 +298,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
       }
       itemHeight={21}
       key="full"
+      onActivate={[Function]}
       onCollapse={[Function]}
       onExpand={[Function]}
       onFocus={[Function]}
