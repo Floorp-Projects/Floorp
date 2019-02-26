@@ -666,7 +666,7 @@ this.tabs = class extends ExtensionAPI {
 
         async discard(tabIds) {
           for (let nativeTab of getNativeTabsFromIDArray(tabIds)) {
-            nativeTab.ownerGlobal.gBrowser.discardBrowser(nativeTab.linkedBrowser);
+            nativeTab.ownerGlobal.gBrowser.discardBrowser(nativeTab);
           }
         },
 
