@@ -9,6 +9,7 @@ color_targets(1) alpha_targets(0) == opacity-combined.yaml opacity-combined-ref.
 == filter-brightness-2.yaml filter-brightness-2-ref.yaml
 == filter-brightness-3.yaml filter-brightness-3-ref.yaml
 == filter-brightness-4.yaml filter-brightness-4-ref.yaml
+== filter-component-transfer.yaml filter-component-transfer-ref.yaml
 == filter-color-matrix.yaml filter-color-matrix-ref.yaml
 == filter-contrast-gray-alpha-1.yaml filter-contrast-gray-alpha-1-ref.yaml
 == filter-invert.yaml filter-invert-ref.yaml
