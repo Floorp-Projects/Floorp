@@ -44,9 +44,8 @@ class RuntimeActions extends PureComponent {
     // do not show the connection prompt setting in 'This Firefox'
     return runtimeId !== RUNTIMES.THIS_FIREFOX
              ? ConnectionPromptSetting({
-               className: "runtime-actions__end",
-               connectionPromptEnabled,
-               dispatch,
+                 connectionPromptEnabled,
+                 dispatch,
              })
              : null;
   }
@@ -56,7 +55,6 @@ class RuntimeActions extends PureComponent {
     const { extensionDebugEnabled, info } = runtimeDetails;
     return isExtensionDebugSettingNeeded(info.type)
              ? ExtensionDebugSetting({
-                 className: "runtime-actions__start",
                  dispatch,
                  extensionDebugEnabled,
              })
@@ -73,8 +71,7 @@ class RuntimeActions extends PureComponent {
            },
            dom.button(
              {
-               className: "default-button runtime-actions__start " +
-                          "js-profile-runtime-button",
+               className: "default-button js-profile-runtime-button",
                onClick: () => this.onProfilerButtonClick(),
              },
              "Profile Runtime"
@@ -87,22 +84,22 @@ class RuntimeActions extends PureComponent {
     const { dispatch, runtimeDetails } = this.props;
     const { type } = runtimeDetails.info;
     return isSupportedDebugTargetPane(type, DEBUG_TARGET_PANE.TEMPORARY_EXTENSION)
-             ? TemporaryExtensionInstaller({
-                 className: "runtime-actions__end",
-                 dispatch,
-             })
+             ? TemporaryExtensionInstaller({ dispatch })
              : null;
   }
 
   render() {
     return dom.div(
-      {
-        className: "runtime-actions",
-      },
-      this.renderConnectionPromptSetting(),
-      this.renderProfileButton(),
+      {},
+      dom.div(
+        {
+          className: "runtime-actions__toolbar",
+        },
+        this.renderTemporaryExtensionInstaller(),
+        this.renderProfileButton(),
+        this.renderConnectionPromptSetting(),
+      ),
       this.renderExtensionDebugSetting(),
-      this.renderTemporaryExtensionInstaller(),
     );
   }
 }
