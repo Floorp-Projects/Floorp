@@ -2,4 +2,4 @@
 
 # toolbar
 
-`val toolbar: `[`Toolbar`](../../mozilla.components.concept.toolbar/-toolbar/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/toolbar/src/main/java/mozilla/components/feature/toolbar/ToolbarFeature.kt#L23)
+`val toolbar: `[`Toolbar`](../../mozilla.components.concept.toolbar/-toolbar/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/toolbar/src/main/java/mozilla/components/feature/toolbar/ToolbarFeature.kt#L25)

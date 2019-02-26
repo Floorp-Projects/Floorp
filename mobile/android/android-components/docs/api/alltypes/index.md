@@ -54,7 +54,6 @@
 | [mozilla.components.browser.toolbar.BrowserToolbar](../mozilla.components.browser.toolbar/-browser-toolbar/index.md) | A customizable toolbar for browsers. |
 | [mozilla.components.browser.toolbar.behavior.BrowserToolbarBottomBehavior](../mozilla.components.browser.toolbar.behavior/-browser-toolbar-bottom-behavior/index.md) | A [CoordinatorLayout.Behavior](#) implementation to be used when placing [BrowserToolbar](../mozilla.components.browser.toolbar/-browser-toolbar/index.md) at the bottom of the screen. |
 | [mozilla.components.support.utils.Browsers](../mozilla.components.support.utils/-browsers/index.md) | Helpful tools for dealing with other browsers on this device. |
-| [mozilla.components.browser.engine.gecko.fetch.ByteBufferInputStream](../mozilla.components.browser.engine.gecko.fetch/-byte-buffer-input-stream/index.md) |  |
 | [kotlin.Char](../mozilla.components.support.ktx.kotlin/kotlin.-char/index.md) (extensions in package mozilla.components.support.ktx.kotlin) |  |
 | [mozilla.components.concept.engine.prompt.Choice](../mozilla.components.concept.engine.prompt/-choice/index.md) | Value type that represents a select option, optgroup or menuitem html element. |
 | [mozilla.components.concept.fetch.Client](../mozilla.components.concept.fetch/-client/index.md) | A generic [Client](../mozilla.components.concept.fetch/-client/index.md) for fetching resources via HTTP/s. |
