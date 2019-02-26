@@ -1604,15 +1604,8 @@
      */ \
     MACRO(JSOP_NEWTARGET, 148, "newtarget", NULL, 1, 0, 1, JOF_BYTE) \
     /*
-     * Pops the top of stack value as 'unwrapped', converts it to async
-     * function 'wrapped', and pushes 'wrapped' back on the stack.
-     *
-     *   Category: Statements
-     *   Type: Function
-     *   Operands:
-     *   Stack: unwrapped => wrapped
      */ \
-    MACRO(JSOP_TOASYNC, 149, "toasync", NULL, 1, 1, 1, JOF_BYTE) \
+    MACRO(JSOP_UNUSED149, 149, "unused149", NULL, 1, 0, 0, JOF_BYTE) \
     /*
      * Pops the top two values 'lval' and 'rval' from the stack, then pushes
      * the result of 'Math.pow(lval, rval)'.

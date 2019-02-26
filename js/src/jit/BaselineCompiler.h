@@ -191,7 +191,6 @@ namespace jit {
   _(JSOP_DEBUGGER)              \
   _(JSOP_ARGUMENTS)             \
   _(JSOP_REST)                  \
-  _(JSOP_TOASYNC)               \
   _(JSOP_TOASYNCITER)           \
   _(JSOP_TOID)                  \
   _(JSOP_TOSTRING)              \

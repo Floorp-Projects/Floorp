@@ -368,7 +368,7 @@ JSString* js::ObjectToSource(JSContext* cx, HandleObject obj) {
           return false;
         }
       } else if (kind == PropertyKind::Method && fun) {
-        if (IsWrappedAsyncFunction(fun) || fun->isAsync()) {
+        if (fun->isAsync()) {
           if (!buf.append("async ")) {
             return false;
           }
@@ -412,7 +412,6 @@ JSString* js::ObjectToSource(JSContext* cx, HandleObject obj) {
   RootedId id(cx);
   Rooted<PropertyDescriptor> desc(cx);
   RootedValue val(cx);
-  RootedFunction fun(cx);
   for (size_t i = 0; i < idv.length(); ++i) {
     id = idv[i];
     if (!GetOwnPropertyDescriptor(cx, obj, id, &desc)) {
@@ -440,17 +439,13 @@ JSString* js::ObjectToSource(JSContext* cx, HandleObject obj) {
     }
 
     val.set(desc.value());
-    if (IsFunctionObject(val, fun.address())) {
-      if (IsWrappedAsyncFunction(fun)) {
-        fun = GetUnwrappedAsyncFunction(fun);
-      }
 
-      if (fun->isMethod()) {
-        if (!AddProperty(id, val, PropertyKind::Method)) {
-          return nullptr;
-        }
-        continue;
+    JSFunction* fun;
+    if (IsFunctionObject(val, &fun) && fun->isMethod()) {
+      if (!AddProperty(id, val, PropertyKind::Method)) {
+        return nullptr;
       }
+      continue;
     }
 
     if (!AddProperty(id, val, PropertyKind::Normal)) {

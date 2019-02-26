@@ -1946,6 +1946,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(JSOP_NOP_DESTRUCTURING)
     CASE(JSOP_TRY_DESTRUCTURING)
     CASE(JSOP_UNUSED71)
+    CASE(JSOP_UNUSED149)
     CASE(JSOP_TRY)
     CASE(JSOP_CONDSWITCH) {
       MOZ_ASSERT(CodeSpec[*REGS.pc].length == 1);
@@ -3583,18 +3584,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       REGS.sp[-1].setObject(*obj);
     }
     END_CASE(JSOP_LAMBDA_ARROW)
-
-    CASE(JSOP_TOASYNC) {
-      ReservedRooted<JSFunction*> unwrapped(
-          &rootFunction0, &REGS.sp[-1].toObject().as<JSFunction>());
-      JSObject* wrapped = WrapAsyncFunction(cx, unwrapped);
-      if (!wrapped) {
-        goto error;
-      }
-
-      REGS.sp[-1].setObject(*wrapped);
-    }
-    END_CASE(JSOP_TOASYNC)
 
     CASE(JSOP_TOASYNCITER) {
       ReservedRooted<Value> nextMethod(&rootValue0, REGS.sp[-1]);

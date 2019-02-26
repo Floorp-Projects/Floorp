@@ -4371,17 +4371,6 @@ class MTypeOf : public MUnaryInstruction, public BoxInputsPolicy::Data {
   bool canRecoverOnBailout() const override { return true; }
 };
 
-class MToAsync : public MUnaryInstruction, public SingleObjectPolicy::Data {
-  explicit MToAsync(MDefinition* unwrapped)
-      : MUnaryInstruction(classOpcode, unwrapped) {
-    setResultType(MIRType::Object);
-  }
-
- public:
-  INSTRUCTION_HEADER(ToAsync)
-  TRIVIAL_NEW_WRAPPERS
-};
-
 class MToAsyncIter : public MBinaryInstruction,
                      public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>>::Data {
   explicit MToAsyncIter(MDefinition* iterator, MDefinition* nextMethod)
@@ -6791,10 +6780,9 @@ struct LambdaFunctionInfo {
     // right thing. We can't assert this off-thread in CodeGenerator,
     // because fun->isAsync() accesses the script/lazyScript and can race
     // with delazification on the main thread.
-    MOZ_ASSERT_IF(flags & JSFunction::EXTENDED,
-                  fun->isArrow() || fun->allowSuperProperty() ||
-                      fun->isSelfHostedBuiltin() ||
-                      (fun->isAsync() && !fun->isGenerator()));
+    MOZ_ASSERT_IF(flags & JSFunction::EXTENDED, fun->isArrow() ||
+                                                    fun->allowSuperProperty() ||
+                                                    fun->isSelfHostedBuiltin());
   }
 
   // Be careful when calling this off-thread. Don't call any JSFunction*

@@ -202,31 +202,6 @@ static const Class DebuggerSource_class = {
 
 /*** Utils ******************************************************************/
 
-/*
- * If fun is an interpreted function, remove any async function/generator
- * wrapper and return the underlying scripted function. Otherwise, return fun
- * unchanged.
- *
- * Async functions are implemented as native functions wrapped around a scripted
- * function. JSScripts hold ordinary inner JSFunctions in their object arrays,
- * and when we need to actually create a JS-visible function object, we build an
- * ordinary JS closure and apply the async wrapper to it. Async generators are
- * similar.
- *
- * This means that JSFunction::isInterpreted returns false for such functions,
- * even though their actual code is indeed JavaScript. Debugger should treat
- * async functions and generators like any other scripted function, so we must
- * carefully check for them whenever we want inspect a function.
- */
-
-static JSFunction* RemoveAsyncWrapper(JSFunction* fun) {
-  if (js::IsWrappedAsyncFunction(fun)) {
-    fun = js::GetUnwrappedAsyncFunction(fun);
-  }
-
-  return fun;
-}
-
 static inline bool EnsureFunctionHasScript(JSContext* cx, HandleFunction fun) {
   if (fun->isInterpretedLazy()) {
     AutoRealm ar(cx, fun);
@@ -10229,7 +10204,7 @@ static DebuggerObject* DebuggerObject_checkThis(JSContext* cx,
     return true;
   }
 
-  RootedFunction fun(cx, RemoveAsyncWrapper(&obj->as<JSFunction>()));
+  RootedFunction fun(cx, &obj->as<JSFunction>());
   if (!fun->isInterpreted()) {
     args.rval().setUndefined();
     return true;
@@ -10267,7 +10242,7 @@ static DebuggerObject* DebuggerObject_checkThis(JSContext* cx,
     return true;
   }
 
-  RootedFunction fun(cx, RemoveAsyncWrapper(&obj->as<JSFunction>()));
+  RootedFunction fun(cx, &obj->as<JSFunction>());
   if (!fun->isInterpreted()) {
     args.rval().setUndefined();
     return true;
@@ -11267,19 +11242,19 @@ bool DebuggerObject::isBoundFunction() const {
 bool DebuggerObject::isArrowFunction() const {
   MOZ_ASSERT(isDebuggeeFunction());
 
-  return RemoveAsyncWrapper(&referent()->as<JSFunction>())->isArrow();
+  return referent()->as<JSFunction>().isArrow();
 }
 
 bool DebuggerObject::isAsyncFunction() const {
   MOZ_ASSERT(isDebuggeeFunction());
 
-  return RemoveAsyncWrapper(&referent()->as<JSFunction>())->isAsync();
+  return referent()->as<JSFunction>().isAsync();
 }
 
 bool DebuggerObject::isGeneratorFunction() const {
   MOZ_ASSERT(isDebuggeeFunction());
 
-  return RemoveAsyncWrapper(&referent()->as<JSFunction>())->isGenerator();
+  return referent()->as<JSFunction>().isGenerator();
 }
 
 bool DebuggerObject::isGlobal() const { return referent()->is<GlobalObject>(); }
@@ -11360,8 +11335,7 @@ double DebuggerObject::promiseTimeToResolution() const {
     MutableHandle<StringVector> result) {
   MOZ_ASSERT(object->isDebuggeeFunction());
 
-  RootedFunction referent(
-      cx, RemoveAsyncWrapper(&object->referent()->as<JSFunction>()));
+  RootedFunction referent(cx, &object->referent()->as<JSFunction>());
 
   if (!result.growBy(referent->nargs())) {
     return false;
