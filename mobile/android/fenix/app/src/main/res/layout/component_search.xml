@@ -10,7 +10,6 @@
     android:clickable="true"
     android:focusable="true"
     android:focusableInTouchMode="true"
-    app:browserToolbarCancelColor="?attr/browserToolbarIcons"
     app:browserToolbarInsecureColor="?attr/browserToolbarIcons"
     app:browserToolbarMenuColor="?attr/browserToolbarIcons"
     app:browserToolbarSecureColor="?attr/browserToolbarIcons" />
