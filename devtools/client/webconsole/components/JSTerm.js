@@ -201,7 +201,7 @@ class JSTerm extends Component {
               // No need to handle shift + Enter as it's natively handled by CodeMirror.
 
               const hasSuggestion = this.hasAutocompletionSuggestion();
-              if (!hasSuggestion && !Debugger.isCompilableUnit(this.getInputValue())) {
+              if (!hasSuggestion && !Debugger.isCompilableUnit(this._getValue())) {
                 // incomplete statement
                 return "CodeMirror.Pass";
               }
@@ -329,7 +329,7 @@ class JSTerm extends Component {
                 return null;
               }
 
-              if (!this.getInputValue()) {
+              if (!this._getValue()) {
                 this.webConsoleUI.outputScroller.scrollTop = 0;
                 return null;
               }
@@ -348,7 +348,7 @@ class JSTerm extends Component {
                 return null;
               }
 
-              if (!this.getInputValue()) {
+              if (!this._getValue()) {
                 const {outputScroller} = this.webConsoleUI;
                 outputScroller.scrollTop = outputScroller.scrollHeight;
                 return null;
@@ -407,7 +407,7 @@ class JSTerm extends Component {
     this._paddingInlineStart = this.editor ? null : this._getInputPaddingInlineStart();
 
     this.webConsoleUI.window.addEventListener("blur", this._blurEventHandler);
-    this.lastInputValue && this.setInputValue(this.lastInputValue);
+    this.lastInputValue && this._setValue(this.lastInputValue);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -577,13 +577,13 @@ class JSTerm extends Component {
    *
    * @param {String} executeString
    *        The string you want to execute. If this is not provided, the current
-   *        user input is used - taken from |this.getInputValue()|.
+   *        user input is used - taken from |this._getValue()|.
    * @returns {Promise}
    *          Resolves with the message once the result is displayed.
    */
   async execute(executeString) {
     // attempt to execute the content of the inputNode
-    executeString = executeString || this.getInputValue();
+    executeString = executeString || this._getValue();
     if (!executeString) {
       return null;
     }
@@ -592,7 +592,7 @@ class JSTerm extends Component {
     this.props.appendToHistory(executeString);
 
     WebConsoleUtils.usageCount++;
-    this.setInputValue("");
+    this._setValue("");
     this.clearCompletion();
 
     let selectedNodeActor = null;
@@ -717,7 +717,7 @@ class JSTerm extends Component {
    *        The new value to set.
    * @returns void
    */
-  setInputValue(newValue) {
+  _setValue(newValue) {
     newValue = newValue || "";
     this.lastInputValue = newValue;
 
@@ -756,7 +756,7 @@ class JSTerm extends Component {
    * Gets the value from the input field
    * @returns string
    */
-  getInputValue() {
+  _getValue() {
     if (this.props.codeMirrorEnabled) {
       return this.editor ? this.editor.getText() || "" : "";
     }
@@ -795,7 +795,7 @@ class JSTerm extends Component {
    * @private
    */
   _inputEventHandler() {
-    const value = this.getInputValue();
+    const value = this._getValue();
     if (this.lastInputValue !== value) {
       this.resizeInput();
       this.props.autocompleteUpdate();
@@ -822,7 +822,7 @@ class JSTerm extends Component {
    */
   _keyPress(event) {
     const inputNode = this.inputNode;
-    const inputValue = this.getInputValue();
+    const inputValue = this._getValue();
     let inputUpdated = false;
 
     if (event.ctrlKey) {
@@ -907,7 +907,7 @@ class JSTerm extends Component {
       return;
     } else if (event.keyCode == KeyCodes.DOM_VK_RETURN) {
       if (!this.autocompletePopup.isOpen && (
-        event.shiftKey || !Debugger.isCompilableUnit(this.getInputValue())
+        event.shiftKey || !Debugger.isCompilableUnit(this._getValue())
       )) {
         // shift return or incomplete statement
         return;
@@ -1061,11 +1061,11 @@ class JSTerm extends Component {
     }
 
     const newInputValue = getValueFromHistory(direction);
-    const expression = this.getInputValue();
+    const expression = this._getValue();
     updateHistoryPosition(direction, expression);
 
     if (newInputValue != null) {
-      this.setInputValue(newInputValue);
+      this._setValue(newInputValue);
       return true;
     }
 
@@ -1078,7 +1078,7 @@ class JSTerm extends Component {
    * @return boolean
    */
   hasEmptyInput() {
-    return this.getInputValue() === "";
+    return this._getValue() === "";
   }
 
   /**
@@ -1088,7 +1088,7 @@ class JSTerm extends Component {
    *         True if CR or LF found in node value; else false.
    */
   hasMultilineInput() {
-    return /[\r\n]/.test(this.getInputValue());
+    return /[\r\n]/.test(this._getValue());
   }
 
   /**
@@ -1101,7 +1101,7 @@ class JSTerm extends Component {
    *         otherwise false.
    */
   canCaretGoPrevious() {
-    const inputValue = this.getInputValue();
+    const inputValue = this._getValue();
 
     if (this.editor) {
       const {line, ch} = this.editor.getCursor();
@@ -1128,7 +1128,7 @@ class JSTerm extends Component {
    *         false.
    */
   canCaretGoNext() {
-    const inputValue = this.getInputValue();
+    const inputValue = this._getValue();
     const multiline = /[\r\n]/.test(inputValue);
 
     if (this.editor) {
@@ -1191,7 +1191,7 @@ class JSTerm extends Component {
         if (!matchProp) {
           suffix = label;
         }
-        const inputAfterCursor = this.getInputValue().substring(inputUntilCursor.length);
+        const inputAfterCursor = this._getValue().substring(inputUntilCursor.length);
         // If there's not a bracket after the cursor, add it to the completionText.
         if (!inputAfterCursor.trimLeft().startsWith("]")) {
           suffix = suffix + "]";
@@ -1264,7 +1264,7 @@ class JSTerm extends Component {
           suffix = label;
         }
 
-        const inputAfterCursor = this.getInputValue().substring(inputBeforeCursor.length);
+        const inputAfterCursor = this._getValue().substring(inputBeforeCursor.length);
         // If there's no closing bracket after the cursor, add it to the completionText.
         if (!inputAfterCursor.trimLeft().startsWith("]")) {
           suffix = suffix + "]";
@@ -1327,7 +1327,7 @@ class JSTerm extends Component {
             inputBeforeCursor.substring(lastOpeningBracketIndex + 1).length;
         }
 
-        const inputAfterCursor = this.getInputValue().substring(inputBeforeCursor.length);
+        const inputAfterCursor = this._getValue().substring(inputBeforeCursor.length);
         // If there's not a bracket after the cursor, add it.
         if (!inputAfterCursor.trimLeft().startsWith("]")) {
           completionText = completionText + "]";
@@ -1349,7 +1349,7 @@ class JSTerm extends Component {
 
     if (this.inputNode) {
       const cursor = this.inputNode.selectionStart;
-      return this.getInputValue().substring(0, cursor);
+      return this._getValue().substring(0, cursor);
     }
 
     return null;
@@ -1363,7 +1363,7 @@ class JSTerm extends Component {
    * @param {int} numberOfCharsToReplaceCharsBeforeCursor - defaults to 0
    */
   insertStringAtCursor(str, numberOfCharsToReplaceCharsBeforeCursor = 0) {
-    const value = this.getInputValue();
+    const value = this._getValue();
     let prefix = this.getInputValueBeforeCursor();
     const suffix = value.replace(prefix, "");
 
@@ -1377,7 +1377,7 @@ class JSTerm extends Component {
 
     const scrollPosition = this.inputNode ? this.inputNode.parentElement.scrollTop : null;
 
-    this.setInputValue(prefix + str + suffix);
+    this._setValue(prefix + str + suffix);
 
     if (this.inputNode) {
       const newCursor = prefix.length + str.length;
@@ -1456,7 +1456,7 @@ class JSTerm extends Component {
     }
 
     if (this.inputNode) {
-      const value = this.getInputValue();
+      const value = this._getValue();
       const textAfterCursor = value.substring(this.inputNode.selectionStart);
       return textAfterCursor.split("\n")[0] === "";
     }
