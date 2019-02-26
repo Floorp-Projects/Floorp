@@ -33,6 +33,15 @@ vec4[2] fetch_from_gpu_cache_2(int address) {
     );
 }
 
+vec4 fetch_from_gpu_cache_1_direct(ivec2 address) {
+    return texelFetch(sGpuCache, address, 0);
+}
+
+vec4 fetch_from_gpu_cache_1(int address) {
+    ivec2 uv = get_gpu_cache_uv(address);
+    return texelFetch(sGpuCache, uv, 0);
+}
+
 #ifdef WR_VERTEX_SHADER
 
 vec4[8] fetch_from_gpu_cache_8(int address) {
@@ -83,15 +92,6 @@ vec4[4] fetch_from_gpu_cache_4(int address) {
         TEXEL_FETCH(sGpuCache, uv, 0, ivec2(2, 0)),
         TEXEL_FETCH(sGpuCache, uv, 0, ivec2(3, 0))
     );
-}
-
-vec4 fetch_from_gpu_cache_1_direct(ivec2 address) {
-    return texelFetch(sGpuCache, address, 0);
-}
-
-vec4 fetch_from_gpu_cache_1(int address) {
-    ivec2 uv = get_gpu_cache_uv(address);
-    return texelFetch(sGpuCache, uv, 0);
 }
 
 //TODO: image resource is too specific for this module

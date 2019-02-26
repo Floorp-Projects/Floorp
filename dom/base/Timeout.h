@@ -89,7 +89,7 @@ class Timeout final : public LinkedListElement<RefPtr<Timeout>> {
   // when sync loops trigger nested firing.
   uint32_t mFiringId;
 
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#ifdef DEBUG
   int64_t mFiringIndex;
 #endif
 

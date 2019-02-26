@@ -164,6 +164,10 @@ class SourcesTree extends Component<Props, State> {
     this.props.focusItem({ thread: this.props.thread, item });
   };
 
+  onActivate = (item: TreeNode) => {
+    this.selectItem(item);
+  };
+
   // NOTE: we get the source from sources because item.contents is cached
   getSource(item: TreeNode): ?Source {
     const source = getSourceFromNode(item);
@@ -192,13 +196,6 @@ class SourcesTree extends Component<Props, State> {
 
   onCollapse = (item: Item, expandedState: Set<string>) => {
     this.props.setExpandedState(this.props.thread, expandedState);
-  };
-
-  onKeyDown = (e: KeyboardEvent) => {
-    const { focused } = this.props;
-    if (e.keyCode === 13 && focused) {
-      this.selectItem(focused);
-    }
   };
 
   isEmpty() {
@@ -280,6 +277,7 @@ class SourcesTree extends Component<Props, State> {
       onCollapse: this.onCollapse,
       onExpand: this.onExpand,
       onFocus: this.onFocus,
+      onActivate: this.onActivate,
       renderItem: this.renderItem,
       preventBlur: true
     };
@@ -336,7 +334,7 @@ class SourcesTree extends Component<Props, State> {
 
     return this.renderPane(
       this.renderThreadHeader(),
-      <div key="tree" className="sources-list" onKeyDown={this.onKeyDown}>
+      <div key="tree" className="sources-list">
         {this.renderTree()}
       </div>
     );

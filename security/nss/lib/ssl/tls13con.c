@@ -28,18 +28,24 @@
 static SECStatus tls13_SetCipherSpec(sslSocket *ss, PRUint16 epoch,
                                      SSLSecretDirection install,
                                      PRBool deleteSecret);
-static SECStatus tls13_AESGCM(
-    ssl3KeyMaterial *keys,
-    PRBool doDecrypt,
-    unsigned char *out, int *outlen, int maxout,
-    const unsigned char *in, int inlen,
-    const unsigned char *additionalData, int additionalDataLen);
-static SECStatus tls13_ChaCha20Poly1305(
-    ssl3KeyMaterial *keys,
-    PRBool doDecrypt,
-    unsigned char *out, int *outlen, int maxout,
-    const unsigned char *in, int inlen,
-    const unsigned char *additionalData, int additionalDataLen);
+static SECStatus tls13_AESGCM(const ssl3KeyMaterial *keys,
+                              PRBool doDecrypt,
+                              unsigned char *out,
+                              unsigned int *outlen,
+                              unsigned int maxout,
+                              const unsigned char *in,
+                              unsigned int inlen,
+                              const unsigned char *additionalData,
+                              unsigned int additionalDataLen);
+static SECStatus tls13_ChaCha20Poly1305(const ssl3KeyMaterial *keys,
+                                        PRBool doDecrypt,
+                                        unsigned char *out,
+                                        unsigned int *outlen,
+                                        unsigned int maxout,
+                                        const unsigned char *in,
+                                        unsigned int inlen,
+                                        const unsigned char *additionalData,
+                                        unsigned int additionalDataLen);
 static SECStatus tls13_SendServerHelloSequence(sslSocket *ss);
 static SECStatus tls13_SendEncryptedExtensions(sslSocket *ss);
 static void tls13_SetKeyExchangeType(sslSocket *ss, const sslNamedGroupDef *group);
@@ -293,7 +299,7 @@ tls13_GetHashSize(const sslSocket *ss)
     return tls13_GetHashSizeForHash(tls13_GetHash(ss));
 }
 
-static CK_MECHANISM_TYPE
+CK_MECHANISM_TYPE
 tls13_GetHkdfMechanismForHash(SSLHashType hash)
 {
     switch (hash) {
@@ -3711,7 +3717,7 @@ tls13_DestroyEarlyData(PRCList *list)
  * See RFC 5288 and https://tools.ietf.org/html/draft-ietf-tls-chacha20-poly1305-04#section-2
  */
 static void
-tls13_WriteNonce(ssl3KeyMaterial *keys,
+tls13_WriteNonce(const ssl3KeyMaterial *keys,
                  const unsigned char *seqNumBuf, unsigned int seqNumLen,
                  unsigned char *nonce, unsigned int nonceLen)
 {
@@ -3734,41 +3740,35 @@ tls13_WriteNonce(ssl3KeyMaterial *keys,
  * a sequence number. In TLS 1.3 there is no additional data so this value is
  * just the encoded sequence number.
  */
-static SECStatus
-tls13_AEAD(ssl3KeyMaterial *keys, PRBool doDecrypt,
-           unsigned char *out, int *outlen, int maxout,
-           const unsigned char *in, int inlen,
+SECStatus
+tls13_AEAD(const ssl3KeyMaterial *keys, PRBool doDecrypt,
+           unsigned char *out, unsigned int *outlen, unsigned int maxout,
+           const unsigned char *in, unsigned int inlen,
            CK_MECHANISM_TYPE mechanism,
            unsigned char *aeadParams, unsigned int aeadParamLength)
 {
-    SECStatus rv;
-    unsigned int uOutLen = 0;
     SECItem param = {
         siBuffer, aeadParams, aeadParamLength
     };
 
     if (doDecrypt) {
-        rv = PK11_Decrypt(keys->key, mechanism, &param,
-                          out, &uOutLen, maxout, in, inlen);
-    } else {
-        rv = PK11_Encrypt(keys->key, mechanism, &param,
-                          out, &uOutLen, maxout, in, inlen);
+        return PK11_Decrypt(keys->key, mechanism, &param,
+                            out, outlen, maxout, in, inlen);
     }
-    *outlen = (int)uOutLen;
-
-    return rv;
+    return PK11_Encrypt(keys->key, mechanism, &param,
+                        out, outlen, maxout, in, inlen);
 }
 
 static SECStatus
-tls13_AESGCM(ssl3KeyMaterial *keys,
+tls13_AESGCM(const ssl3KeyMaterial *keys,
              PRBool doDecrypt,
              unsigned char *out,
-             int *outlen,
-             int maxout,
+             unsigned int *outlen,
+             unsigned int maxout,
              const unsigned char *in,
-             int inlen,
+             unsigned int inlen,
              const unsigned char *additionalData,
-             int additionalDataLen)
+             unsigned int additionalDataLen)
 {
     CK_GCM_PARAMS gcmParams;
     unsigned char nonce[12];
@@ -3789,11 +3789,11 @@ tls13_AESGCM(ssl3KeyMaterial *keys,
 }
 
 static SECStatus
-tls13_ChaCha20Poly1305(ssl3KeyMaterial *keys, PRBool doDecrypt,
-                       unsigned char *out, int *outlen, int maxout,
-                       const unsigned char *in, int inlen,
+tls13_ChaCha20Poly1305(const ssl3KeyMaterial *keys, PRBool doDecrypt,
+                       unsigned char *out, unsigned int *outlen, unsigned int maxout,
+                       const unsigned char *in, unsigned int inlen,
                        const unsigned char *additionalData,
-                       int additionalDataLen)
+                       unsigned int additionalDataLen)
 {
     CK_NSS_AEAD_PARAMS aeadParams;
     unsigned char nonce[12];
@@ -5145,7 +5145,7 @@ tls13_ProtectRecord(sslSocket *ss,
         PRBool needsLength;
         PRUint8 aad[21];
         unsigned int aadLen;
-        int len;
+        unsigned int len;
 
         PORT_Assert(cipher_def->type == type_aead);
 
@@ -5266,12 +5266,12 @@ tls13_UnprotectRecord(sslSocket *ss,
         return SECFailure;
     }
     rv = spec->aead(&spec->keyMaterial,
-                    PR_TRUE,                /* do decrypt */
-                    plaintext->buf,         /* out */
-                    (int *)&plaintext->len, /* outlen */
-                    plaintext->space,       /* maxout */
-                    cText->buf->buf,        /* in */
-                    cText->buf->len,        /* inlen */
+                    PR_TRUE,          /* do decrypt */
+                    plaintext->buf,   /* out */
+                    &plaintext->len,  /* outlen */
+                    plaintext->space, /* maxout */
+                    cText->buf->buf,  /* in */
+                    cText->buf->len,  /* inlen */
                     aad, aadLen);
     if (rv != SECSuccess) {
         SSL_TRC(3,

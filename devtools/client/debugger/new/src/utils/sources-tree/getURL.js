@@ -19,7 +19,7 @@ export function getFilenameFromPath(pathname?: string) {
   if (pathname) {
     filename = pathname.substring(pathname.lastIndexOf("/") + 1);
     // This file does not have a name. Default should be (index).
-    if (filename == "" || !filename.includes(".")) {
+    if (filename == "") {
       filename = "(index)";
     }
   }

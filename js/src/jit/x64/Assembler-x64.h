@@ -960,6 +960,9 @@ class Assembler : public AssemblerX86Shared {
     }
   }
 
+  void cmovz32(const Operand& src, Register dest) { return cmovzl(src, dest); }
+  void cmovzPtr(const Operand& src, Register dest) { return cmovzq(src, dest); }
+
   CodeOffset loadRipRelativeInt32(Register dest) {
     return CodeOffset(masm.movl_ripr(dest.encoding()).offset());
   }

@@ -61,6 +61,14 @@ impl<T> ItemRange<T> {
     }
 }
 
+pub struct TempFilterData {
+    pub func_types: ItemRange<di::ComponentTransferFuncType>,
+    pub r_values: ItemRange<f32>,
+    pub g_values: ItemRange<f32>,
+    pub b_values: ItemRange<f32>,
+    pub a_values: ItemRange<f32>,
+}
+
 /// A display list.
 #[derive(Clone, Default)]
 pub struct BuiltDisplayList {
@@ -95,6 +103,7 @@ pub struct BuiltDisplayListIter<'a> {
     cur_stops: ItemRange<di::GradientStop>,
     cur_glyphs: ItemRange<GlyphInstance>,
     cur_filters: ItemRange<di::FilterOp>,
+    cur_filter_data: Vec<TempFilterData>,
     cur_clip_chain_items: ItemRange<di::ClipId>,
     cur_complex_clip: (ItemRange<di::ComplexClipRegion>, usize),
     peeking: Peek,
@@ -215,6 +224,7 @@ impl<'a> BuiltDisplayListIter<'a> {
             cur_stops: ItemRange::default(),
             cur_glyphs: ItemRange::default(),
             cur_filters: ItemRange::default(),
+            cur_filter_data: Vec::new(),
             cur_clip_chain_items: ItemRange::default(),
             cur_complex_clip: (ItemRange::default(), 0),
             peeking: Peek::NotPeeking,
@@ -250,6 +260,15 @@ impl<'a> BuiltDisplayListIter<'a> {
                 // SetGradientStops is a dummy item that most consumers should ignore
                 continue;
             }
+            if let SetFilterOps = self.cur_item.item {
+                // SetFilterOps is a dummy item that most consumers should ignore
+                continue;
+            }
+            if let SetFilterData = self.cur_item.item {
+                // SetFilterData is a dummy item that most consumers should ignore
+                continue;
+            }
+
             break;
         }
 
@@ -276,6 +295,18 @@ impl<'a> BuiltDisplayListIter<'a> {
             SetGradientStops => {
                 self.cur_stops = skip_slice::<di::GradientStop>(self.list, &mut self.data).0;
             }
+            SetFilterOps => {
+                self.cur_filters = skip_slice::<di::FilterOp>(self.list, &mut self.data).0;
+            }
+            SetFilterData => {
+                self.cur_filter_data.push(TempFilterData {
+                    func_types: skip_slice::<di::ComponentTransferFuncType>(self.list, &mut self.data).0,
+                    r_values: skip_slice::<f32>(self.list, &mut self.data).0,
+                    g_values: skip_slice::<f32>(self.list, &mut self.data).0,
+                    b_values: skip_slice::<f32>(self.list, &mut self.data).0,
+                    a_values: skip_slice::<f32>(self.list, &mut self.data).0,
+                });
+            }
             ClipChain(_) => {
                 self.cur_clip_chain_items = skip_slice::<di::ClipId>(self.list, &mut self.data).0;
             }
@@ -283,7 +314,6 @@ impl<'a> BuiltDisplayListIter<'a> {
                 self.cur_complex_clip = self.skip_slice::<di::ComplexClipRegion>()
             }
             Text(_) => self.cur_glyphs = self.skip_slice::<GlyphInstance>().0,
-            PushStackingContext(_) => self.cur_filters = self.skip_slice::<di::FilterOp>().0,
             _ => { /* do nothing */ }
         }
 
@@ -389,6 +419,10 @@ impl<'a, 'b> DisplayItemRef<'a, 'b> {
         self.iter.cur_filters
     }
 
+    pub fn filter_datas(&self) -> &Vec<TempFilterData> {
+        &self.iter.cur_filter_data
+    }
+
     pub fn clip_chain_items(&self) -> ItemRange<di::ClipId> {
         self.iter.cur_clip_chain_items
     }
@@ -487,11 +521,29 @@ impl Serialize for BuiltDisplayList {
                     di::SpecificDisplayItem::Iframe(v) => Iframe(v),
                     di::SpecificDisplayItem::PushReferenceFrame(v) => PushReferenceFrame(v),
                     di::SpecificDisplayItem::PopReferenceFrame => PopReferenceFrame,
-                    di::SpecificDisplayItem::PushStackingContext(v) => PushStackingContext(
-                        v,
+                    di::SpecificDisplayItem::PushStackingContext(v) => PushStackingContext(v),
+                    di::SpecificDisplayItem::PopStackingContext => PopStackingContext,
+                    di::SpecificDisplayItem::SetFilterOps => SetFilterOps(
                         item.iter.list.get(item.iter.cur_filters).collect()
                     ),
-                    di::SpecificDisplayItem::PopStackingContext => PopStackingContext,
+                    di::SpecificDisplayItem::SetFilterData => {
+                        debug_assert!(!item.iter.cur_filter_data.is_empty());
+                        let temp_filter_data = &item.iter.cur_filter_data[item.iter.cur_filter_data.len()-1];
+
+                        let func_types: Vec<di::ComponentTransferFuncType> =
+                            item.iter.list.get(temp_filter_data.func_types).collect();
+                        debug_assert!(func_types.len() == 4);
+                        SetFilterData(di::FilterData {
+                            func_r_type: func_types[0],
+                            r_values: item.iter.list.get(temp_filter_data.r_values).collect(),
+                            func_g_type: func_types[1],
+                            g_values: item.iter.list.get(temp_filter_data.g_values).collect(),
+                            func_b_type: func_types[2],
+                            b_values: item.iter.list.get(temp_filter_data.b_values).collect(),
+                            func_a_type: func_types[3],
+                            a_values: item.iter.list.get(temp_filter_data.a_values).collect(),
+                        })
+                    },
                     di::SpecificDisplayItem::SetGradientStops => SetGradientStops(
                         item.iter.list.get(item.iter.cur_stops).collect()
                     ),
@@ -574,9 +626,25 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                         di::SpecificDisplayItem::PushReferenceFrame(v)
                     }
                     PopReferenceFrame => di::SpecificDisplayItem::PopReferenceFrame,
-                    PushStackingContext(specific_item, filters) => {
-                        DisplayListBuilder::push_iter_impl(&mut temp, filters);
+                    PushStackingContext(specific_item) => {
                         di::SpecificDisplayItem::PushStackingContext(specific_item)
+                    },
+                    SetFilterOps(filters) => {
+                        DisplayListBuilder::push_iter_impl(&mut temp, filters);
+                        di::SpecificDisplayItem::SetFilterOps
+                    },
+                    SetFilterData(filter_data) => {
+                        let func_types: Vec<di::ComponentTransferFuncType> =
+                            [filter_data.func_r_type,
+                             filter_data.func_g_type,
+                             filter_data.func_b_type,
+                             filter_data.func_a_type].to_vec();
+                        DisplayListBuilder::push_iter_impl(&mut temp, func_types);
+                        DisplayListBuilder::push_iter_impl(&mut temp, filter_data.r_values);
+                        DisplayListBuilder::push_iter_impl(&mut temp, filter_data.g_values);
+                        DisplayListBuilder::push_iter_impl(&mut temp, filter_data.b_values);
+                        DisplayListBuilder::push_iter_impl(&mut temp, filter_data.a_values);
+                        di::SpecificDisplayItem::SetFilterData
                     },
                     PopStackingContext => di::SpecificDisplayItem::PopStackingContext,
                     SetGradientStops(stops) => {
@@ -1299,9 +1367,25 @@ impl DisplayListBuilder {
         transform_style: di::TransformStyle,
         mix_blend_mode: di::MixBlendMode,
         filters: &[di::FilterOp],
+        filter_datas: &[di::FilterData],
         raster_space: di::RasterSpace,
         cache_tiles: bool,
     ) {
+        self.push_new_empty_item(&di::SpecificDisplayItem::SetFilterOps);
+        self.push_iter(filters);
+
+        for filter_data in filter_datas {
+            let func_types = [
+                filter_data.func_r_type, filter_data.func_g_type,
+                filter_data.func_b_type, filter_data.func_a_type];
+            self.push_new_empty_item(&di::SpecificDisplayItem::SetFilterData);
+            self.push_iter(&func_types);
+            self.push_iter(&filter_data.r_values);
+            self.push_iter(&filter_data.g_values);
+            self.push_iter(&filter_data.b_values);
+            self.push_iter(&filter_data.a_values);
+        }
+
         let item = di::SpecificDisplayItem::PushStackingContext(di::PushStackingContextDisplayItem {
             stacking_context: di::StackingContext {
                 transform_style,
@@ -1316,7 +1400,6 @@ impl DisplayListBuilder {
             spatial_id,
             clip_id: di::ClipId::invalid(),
         });
-        self.push_iter(filters);
     }
 
     /// Helper for examples/ code.
@@ -1325,7 +1408,7 @@ impl DisplayListBuilder {
         layout: &di::LayoutPrimitiveInfo,
         spatial_id: di::SpatialId,
     ) {
-        self.push_simple_stacking_context_with_filters(layout, spatial_id, &[]);
+        self.push_simple_stacking_context_with_filters(layout, spatial_id, &[], &[]);
     }
 
     /// Helper for examples/ code.
@@ -1334,6 +1417,7 @@ impl DisplayListBuilder {
         layout: &di::LayoutPrimitiveInfo,
         spatial_id: di::SpatialId,
         filters: &[di::FilterOp],
+        filter_datas: &[di::FilterData],
     ) {
         self.push_stacking_context(
             layout,
@@ -1342,6 +1426,7 @@ impl DisplayListBuilder {
             di::TransformStyle::Flat,
             di::MixBlendMode::Normal,
             filters,
+            filter_datas,
             di::RasterSpace::Screen,
             /* cache_tiles = */ false,
         );

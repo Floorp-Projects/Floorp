@@ -837,6 +837,7 @@ macro_rules! enumerate_interners {
             radial_grad,
             picture,
             text_run,
+            filterdata,
         }
     }
 }

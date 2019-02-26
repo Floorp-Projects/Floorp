@@ -690,7 +690,7 @@ Maybe<wr::WrSpatialId> DisplayListBuilder::PushStackingContext(
   auto spatialId = wr_dp_push_stacking_context(
       mWrState, aBounds, mCurrentSpaceAndClipChain.space, &aParams,
       maybeTransform, aParams.mFilters.Elements(), aParams.mFilters.Length(),
-      aRasterSpace);
+      aParams.mFilterDatas.Elements(), aParams.mFilterDatas.Length(), aRasterSpace);
 
   return spatialId.id != 0 ? Some(spatialId) : Nothing();
 }

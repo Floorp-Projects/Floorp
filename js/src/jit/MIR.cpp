@@ -1245,6 +1245,10 @@ bool MWasmFloatConstant::congruentTo(const MDefinition* ins) const {
          u.bits_ == ins->toWasmFloatConstant()->u.bits_;
 }
 
+HashNumber MWasmNullConstant::valueHash() const {
+  return ConstantValueHash(MIRType::Pointer, 0);
+}
+
 #ifdef JS_JITSPEW
 void MControlInstruction::printOpcode(GenericPrinter& out) const {
   MDefinition::printOpcode(out);

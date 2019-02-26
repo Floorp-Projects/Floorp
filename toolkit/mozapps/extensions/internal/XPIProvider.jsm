@@ -855,7 +855,7 @@ class TemporaryLocation extends XPIStateLocation {
    *        The string identifier for the install location.
    */
   constructor(name) {
-    super(name, null, null);
+    super(name, null, AddonManager.SCOPE_TEMPORARY);
     this.locked = false;
   }
 
@@ -888,7 +888,7 @@ var TemporaryInstallLocation = new TemporaryLocation(KEY_APP_TEMPORARY);
  */
 var BuiltInLocation = new class _BuiltInLocation extends XPIStateLocation {
   constructor() {
-    super(KEY_APP_BUILTINS, null, null);
+    super(KEY_APP_BUILTINS, null, AddonManager.SCOPE_APPLICATION);
     this.locked = false;
   }
 

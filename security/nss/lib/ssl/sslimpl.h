@@ -1209,9 +1209,9 @@ extern SECStatus ssl_CipherPrefSetDefault(PRInt32 which, PRBool enabled);
 extern SECStatus ssl3_ConstrainRangeByPolicy(void);
 
 extern SECStatus ssl3_InitState(sslSocket *ss);
-extern SECStatus Null_Cipher(void *ctx, unsigned char *output, int *outputLen,
-                             int maxOutputLen, const unsigned char *input,
-                             int inputLen);
+extern SECStatus Null_Cipher(void *ctx, unsigned char *output, unsigned int *outputLen,
+                             unsigned int maxOutputLen, const unsigned char *input,
+                             unsigned int inputLen);
 extern void ssl3_RestartHandshakeHashes(sslSocket *ss);
 extern SECStatus ssl3_UpdateHandshakeHashes(sslSocket *ss,
                                             const unsigned char *b,
@@ -1663,6 +1663,8 @@ SECStatus ssl3_FillInCachedSID(sslSocket *ss, sslSessionID *sid,
 const ssl3CipherSuiteDef *ssl_LookupCipherSuiteDef(ssl3CipherSuite suite);
 const ssl3CipherSuiteCfg *ssl_LookupCipherSuiteCfg(ssl3CipherSuite suite,
                                                    const ssl3CipherSuiteCfg *suites);
+PRBool ssl3_CipherSuiteAllowedForVersionRange(ssl3CipherSuite cipherSuite,
+                                              const SSLVersionRange *vrange);
 
 SECStatus ssl3_SelectServerCert(sslSocket *ss);
 SECStatus ssl_PickSignatureScheme(sslSocket *ss,
@@ -1757,6 +1759,25 @@ SECStatus SSLExp_GetCurrentEpoch(PRFileDesc *fd, PRUint16 *readEpoch,
                                  PRUint16 *writeEpoch);
 
 #define SSLResumptionTokenVersion 2
+
+SECStatus SSLExp_MakeAead(PRUint16 version, PRUint16 cipherSuite, PK11SymKey *secret,
+                          const char *labelPrefix, unsigned int labelPrefixLen,
+                          SSLAeadContext **ctx);
+SECStatus SSLExp_DestroyAead(SSLAeadContext *ctx);
+SECStatus SSLExp_AeadEncrypt(const SSLAeadContext *ctx, PRUint64 counter,
+                             const PRUint8 *aad, unsigned int aadLen,
+                             const PRUint8 *plaintext, unsigned int plaintextLen,
+                             PRUint8 *out, unsigned int *outLen, unsigned int maxOut);
+SECStatus SSLExp_AeadDecrypt(const SSLAeadContext *ctx, PRUint64 counter,
+                             const PRUint8 *aad, unsigned int aadLen,
+                             const PRUint8 *plaintext, unsigned int plaintextLen,
+                             PRUint8 *out, unsigned int *outLen, unsigned int maxOut);
+
+SECStatus SSLExp_HkdfExtract(PRUint16 version, PRUint16 cipherSuite,
+                             PK11SymKey *salt, PK11SymKey *ikm, PK11SymKey **keyp);
+SECStatus SSLExp_HkdfDeriveSecret(PRUint16 version, PRUint16 cipherSuite, PK11SymKey *prk,
+                                  const char *label, unsigned int labelLen,
+                                  PK11SymKey **key);
 
 SEC_END_PROTOS
 

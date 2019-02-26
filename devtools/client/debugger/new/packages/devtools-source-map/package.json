@@ -4,10 +4,10 @@
   "description": "DevTools utilities for working with source maps",
   "license": "MPL-2.0",
   "author": "Jason Laster <jlaster@mozilla.com>",
-  "repository": "github:devtools-html/debugger.html",
-  "bugs": "https://github.com/firefox-devtools/debugger.html/issues",
+  "repository": "github:devtools-html/debugger",
+  "bugs": "https://github.com/firefox-devtools/debugger/issues",
   "homepage":
-    "https://github.com/firefox-devtools/debugger.html/tree/master/packages/source-maps#readme",
+    "https://github.com/firefox-devtools/debugger/tree/master/packages/source-maps#readme",
   "main": "src/index.js",
   "browser": {
     "./src/utils/wasmAsset.js": "./src/utils/wasmAssetBrowser.js"

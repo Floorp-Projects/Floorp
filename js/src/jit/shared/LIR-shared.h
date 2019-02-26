@@ -6727,6 +6727,17 @@ class LWasmDerivedPointer : public LInstructionHelper<1, 1, 0> {
   size_t offset() { return mirRaw()->toWasmDerivedPointer()->offset(); }
 };
 
+class LWasmLoadRef : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(WasmLoadRef);
+  explicit LWasmLoadRef(const LAllocation& ptr)
+    : LInstructionHelper(classOpcode) {
+    setOperand(0, ptr);
+  }
+  MWasmLoadRef* mir() const { return mirRaw()->toWasmLoadRef(); }
+  const LAllocation* ptr() { return getOperand(0); }
+};
+
 class LWasmStoreRef : public LInstructionHelper<0, 3, 1> {
  public:
   LIR_HEADER(WasmStoreRef);
@@ -6809,6 +6820,25 @@ inline bool IsWasmCall(LNode::Opcode op) {
   return (op == LNode::Opcode::WasmCall || op == LNode::Opcode::WasmCallVoid ||
           op == LNode::Opcode::WasmCallI64);
 }
+
+class LWasmNullConstant : public LInstructionHelper<1, 0, 0> {
+ public:
+  LIR_HEADER(WasmNullConstant);
+  explicit LWasmNullConstant()
+      : LInstructionHelper(classOpcode) {
+  }
+};
+
+class LIsNullPointer : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(IsNullPointer);
+  explicit LIsNullPointer(const LAllocation& value)
+    : LInstructionHelper(classOpcode) {
+    setOperand(0, value);
+  }
+  MIsNullPointer* mir() const { return mirRaw()->toIsNullPointer(); }
+  const LAllocation* value() { return getOperand(0); }
+};
 
 template <size_t Defs>
 class LWasmCallBase : public LVariadicInstruction<Defs, 0> {

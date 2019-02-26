@@ -35,6 +35,7 @@
         'sslinit.c',
         'sslmutex.c',
         'sslnonce.c',
+        'sslprimitive.c',
         'sslreveal.c',
         'sslsecur.c',
         'sslsnce.c',

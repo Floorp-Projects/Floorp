@@ -9,7 +9,7 @@
   box-shadow: 0 4px 4px 0 var(--search-overlays-semitransparent);
   max-height: 300px;
   position: absolute;
-  offset-inline-end: 2px;
+  inset-inline-end: 2px;
   top: 24px;
   width: 150px;
   z-index: 1000;

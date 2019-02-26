@@ -101,20 +101,20 @@ typedef struct {
 
 typedef SECStatus (*SSLCipher)(void *context,
                                unsigned char *out,
-                               int *outlen,
-                               int maxout,
+                               unsigned int *outlen,
+                               unsigned int maxout,
                                const unsigned char *in,
-                               int inlen);
+                               unsigned int inlen);
 typedef SECStatus (*SSLAEADCipher)(
-    ssl3KeyMaterial *keys,
+    const ssl3KeyMaterial *keys,
     PRBool doDecrypt,
     unsigned char *out,
-    int *outlen,
-    int maxout,
+    unsigned int *outlen,
+    unsigned int maxout,
     const unsigned char *in,
-    int inlen,
+    unsigned int inlen,
     const unsigned char *additionalData,
-    int additionalDataLen);
+    unsigned int additionalDataLen);
 
 /* The DTLS anti-replay window in number of packets. Defined here because we
  * need it in the cipher spec. Note that this is a ring buffer but left and

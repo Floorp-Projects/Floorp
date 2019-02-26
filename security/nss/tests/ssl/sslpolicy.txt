@@ -74,6 +74,8 @@
 #	SECT409R1
 #	SECT571K1
 #	SECT571R1
+# Signatures:
+#	DSA
 # Hashes:
 #	MD2
 #	MD4
@@ -172,3 +174,4 @@
   1 noECC  SSL3   d    allow=tls-version-min=tls1.0:tls-version-max=tls1.2 Disallow Version Exlicitly
   1 noECC  SSL3   d    disallow=all_allow=hmac-sha1:sha256:rsa:des-ede3-cbc:tls-version-min=tls1.0:tls-version-max=tls1.2 Disallow Version Implicitly Narrow.
   1 noECC  SSL3   d    disallow=all_allow=md2/all:md4/all:md5/all:sha1/all:sha256/all:sha384/all:sha512/all:hmac-sha1/all:hmac-sha224/all:hmac-sha256/all:hmac-sha384/all:hmac-sha512/all:hmac-md5/all:camellia128-cbc/all:camellia192-cbc/all:camellia256-cbc/all:seed-cbc/all:des-ede3-cbc/all:des-40-cbc/all:des-cbc/all:null-cipher/all:rc2/all:rc4/all:idea/all:rsa/all:rsa-export/all:dhe-rsa/all:dhe-dss/all:ecdhe-ecdsa/all:ecdhe-rsa/all:ecdh-ecdsa/all:ecdh-rsa/all:tls-version-min=tls1.0:tls-version-max=tls1.2 Disallow Version Implicitly.
+  0 noECC  SSL3   d    disallow=dsa Disallow DSA Signatures Explicitly.

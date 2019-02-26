@@ -147,6 +147,7 @@ class FunctionCompiler {
     }
 
     for (ABIArgIter<ValTypeVector> i(args); !i.done(); i++) {
+      MOZ_ASSERT(i.mirType() != MIRType::Pointer);
       MWasmParameter* ins = MWasmParameter::New(alloc(), *i, i.mirType());
       curBlock_->add(ins);
       curBlock_->initSlot(info().localSlot(i.index()), ins);
@@ -180,7 +181,7 @@ class FunctionCompiler {
           break;
         case ValType::Ref:
         case ValType::AnyRef:
-          MOZ_CRASH("ion support for ref/anyref value NYI");
+          ins = MWasmNullConstant::New(alloc());
           break;
         case ValType::NullRef:
           MOZ_CRASH("NullRef not expressible");
@@ -260,6 +261,16 @@ class FunctionCompiler {
       return nullptr;
     }
     MConstant* constant = MConstant::NewInt64(alloc(), i);
+    curBlock_->add(constant);
+    return constant;
+  }
+
+  MDefinition* nullRefConstant() {
+    if (inDeadCode()) {
+      return nullptr;
+    }
+    // MConstant has a lot of baggage so we don't use that here.
+    MWasmNullConstant* constant = MWasmNullConstant::New(alloc());
     curBlock_->add(constant);
     return constant;
   }
@@ -689,6 +700,38 @@ class FunctionCompiler {
     return true;
   }
 
+  bool checkPointerNullMeansFailedResult(MDefinition* value) {
+    if (inDeadCode()) {
+      return true;
+    }
+
+    auto* cond = MIsNullPointer::New(alloc(), value);
+    curBlock_->add(cond);
+
+    MBasicBlock* failBlock;
+    if (!newBlock(curBlock_, &failBlock)) {
+      return false;
+    }
+
+    MBasicBlock* okBlock;
+    if (!newBlock(curBlock_, &okBlock)) {
+      return false;
+    }
+
+    curBlock_->end(MTest::New(alloc(), cond, failBlock, okBlock));
+    failBlock->end(
+        MWasmTrap::New(alloc(), wasm::Trap::ThrowReported, bytecodeOffset()));
+    curBlock_ = okBlock;
+    return true;
+  }
+
+  MDefinition* derefTableElementPointer(MDefinition* base) {
+    MWasmLoadRef* load =
+      MWasmLoadRef::New(alloc(), base, AliasSet::WasmTableElement);
+    curBlock_->add(load);
+    return load;
+  }
+
   MDefinition* load(MDefinition* base, MemoryAccessDesc* access,
                     ValType result) {
     if (inDeadCode()) {
@@ -1106,7 +1149,7 @@ class FunctionCompiler {
 
   bool builtinInstanceMethodCall(SymbolicAddress builtin,
                                  uint32_t lineOrBytecode,
-                                 const CallCompileState& call, ValType ret,
+                                 const CallCompileState& call, MIRType ret,
                                  MDefinition** def) {
     if (inDeadCode()) {
       *def = nullptr;
@@ -1115,8 +1158,7 @@ class FunctionCompiler {
 
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Symbolic);
     auto* ins = MWasmCall::NewBuiltinInstanceMethodCall(
-        alloc(), desc, builtin, call.instanceArg_, call.regArgs_,
-        ToMIRType(ret));
+        alloc(), desc, builtin, call.instanceArg_, call.regArgs_, ret);
     if (!ins) {
       return false;
     }
@@ -1124,6 +1166,14 @@ class FunctionCompiler {
     curBlock_->add(ins);
     *def = ins;
     return true;
+  }
+
+  bool builtinInstanceMethodCall(SymbolicAddress builtin,
+                                 uint32_t lineOrBytecode,
+                                 const CallCompileState& call, ValType ret,
+                                 MDefinition** def) {
+    return builtinInstanceMethodCall(builtin, lineOrBytecode, call,
+                                     ToMIRType(ret), def);
   }
 
   /*********************************************** Control flow generation */
@@ -2116,6 +2166,10 @@ static bool EmitGetGlobal(FunctionCompiler& f) {
     case ValType::F64:
       result = f.constant(value.f64());
       break;
+    case ValType::AnyRef:
+      MOZ_ASSERT(value.anyref().isNull());
+      result = f.nullRefConstant();
+      break;
     default:
       MOZ_CRASH("unexpected type in EmitGetGlobal");
   }
@@ -3063,12 +3117,8 @@ static bool EmitMemOrTableInit(FunctionCompiler& f, bool isMem) {
 #endif  // ENABLE_WASM_BULKMEM_OPS
 
 #ifdef ENABLE_WASM_GENERALIZED_TABLES
-// About these implementations: table.{get,grow,set} on table(anyfunc) is
-// rejected by the verifier, while table.{get,grow,set} on table(anyref)
-// requires gc_feature_opt_in and will always be handled by the baseline
-// compiler; we should never get here in that case.
-//
-// table.size must however be handled properly here.
+// Note, table.{get,grow,set} on table(anyfunc) are currently rejected by the
+// verifier.
 
 static bool EmitTableGet(FunctionCompiler& f) {
   uint32_t tableIndex;
@@ -3077,7 +3127,52 @@ static bool EmitTableGet(FunctionCompiler& f) {
     return false;
   }
 
-  MOZ_CRASH("Should not happen");  // See above
+  if (f.inDeadCode()) {
+    return false;
+  }
+
+  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
+  CallCompileState args;
+  if (!f.passInstance(&args)) {
+    return false;
+  }
+
+  if (!f.passArg(index, ValType::I32, &args)) {
+    return false;
+  }
+
+  MDefinition* tableIndexArg = f.constant(Int32Value(tableIndex),
+                                          MIRType::Int32);
+  if (!tableIndexArg) {
+    return false;
+  }
+  if (!f.passArg(tableIndexArg, ValType::I32, &args)) {
+    return false;
+  }
+
+  if (!f.finishCall(&args)) {
+    return false;
+  }
+
+  // The return value here is either null, denoting an error, or a pointer to an
+  // unmovable location containing a possibly-null ref.
+  MDefinition* result;
+  if (!f.builtinInstanceMethodCall(SymbolicAddress::TableGet, lineOrBytecode,
+                                   args, MIRType::Pointer, &result)) {
+    return false;
+  }
+  if (!f.checkPointerNullMeansFailedResult(result)) {
+    return false;
+  }
+
+  MDefinition* ret = f.derefTableElementPointer(result);
+  if (!ret) {
+    return false;
+  }
+
+  f.iter().setResult(ret);
+  return true;
 }
 
 static bool EmitTableGrow(FunctionCompiler& f) {
@@ -3088,7 +3183,46 @@ static bool EmitTableGrow(FunctionCompiler& f) {
     return false;
   }
 
-  MOZ_CRASH("Should not happen");  // See above
+  if (f.inDeadCode()) {
+    return false;
+  }
+
+  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
+  CallCompileState args;
+  if (!f.passInstance(&args)) {
+    return false;
+  }
+
+  if (!f.passArg(delta, ValType::I32, &args)) {
+    return false;
+  }
+
+  if (!f.passArg(initValue, ValType::AnyRef, &args)) {
+    return false;
+  }
+
+  MDefinition* tableIndexArg = f.constant(Int32Value(tableIndex),
+                                          MIRType::Int32);
+  if (!tableIndexArg) {
+    return false;
+  }
+  if (!f.passArg(tableIndexArg, ValType::I32, &args)) {
+    return false;
+  }
+
+  if (!f.finishCall(&args)) {
+    return false;
+  }
+
+  MDefinition* ret;
+  if (!f.builtinInstanceMethodCall(SymbolicAddress::TableGrow, lineOrBytecode,
+                                   args, ValType::I32, &ret)) {
+    return false;
+  }
+
+  f.iter().setResult(ret);
+  return true;
 }
 
 static bool EmitTableSet(FunctionCompiler& f) {
@@ -3099,7 +3233,47 @@ static bool EmitTableSet(FunctionCompiler& f) {
     return false;
   }
 
-  MOZ_CRASH("Should not happen");  // See above
+  if (f.inDeadCode()) {
+    return false;
+  }
+
+  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
+  CallCompileState args;
+  if (!f.passInstance(&args)) {
+    return false;
+  }
+
+  if (!f.passArg(index, ValType::I32, &args)) {
+    return false;
+  }
+
+  if (!f.passArg(value, ValType::AnyRef, &args)) {
+    return false;
+  }
+
+  MDefinition* tableIndexArg = f.constant(Int32Value(tableIndex),
+                                          MIRType::Int32);
+  if (!tableIndexArg) {
+    return false;
+  }
+  if (!f.passArg(tableIndexArg, ValType::I32, &args)) {
+    return false;
+  }
+
+  if (!f.finishCall(&args)) {
+    return false;
+  }
+
+  MDefinition* ret;
+  if (!f.builtinInstanceMethodCall(SymbolicAddress::TableSet, lineOrBytecode,
+                                   args, ValType::I32, &ret)) {
+    return false;
+  }
+  if (!f.checkI32NegativeMeansFailedResult(ret)) {
+    return false;
+  }
+  return true;
 }
 
 static bool EmitTableSize(FunctionCompiler& f) {
@@ -3142,6 +3316,44 @@ static bool EmitTableSize(FunctionCompiler& f) {
   return true;
 }
 #endif  // ENABLE_WASM_GENERALIZED_TABLES
+
+#ifdef ENABLE_WASM_REFTYPES
+static bool EmitRefNull(FunctionCompiler& f) {
+  if (!f.iter().readRefNull()) {
+    return false;
+  }
+
+  if (f.inDeadCode()) {
+    return false;
+  }
+
+  MDefinition* nullVal = f.nullRefConstant();
+  if (!nullVal) {
+    return false;
+  }
+  f.iter().setResult(nullVal);
+  return true;
+}
+
+static bool EmitRefIsNull(FunctionCompiler& f) {
+  MDefinition* input;
+  if (!f.iter().readConversion(ValType::AnyRef, ValType::I32, &input)) {
+    return false;
+  }
+
+  if (f.inDeadCode()) {
+    return false;
+  }
+
+  MDefinition* nullVal = f.nullRefConstant();
+  if (!nullVal) {
+    return false;
+  }
+  f.iter().setResult(f.compare(input, nullVal, JSOP_EQ,
+                               MCompare::Compare_RefOrNull));
+  return true;
+}
+#endif
 
 static bool EmitBodyExprs(FunctionCompiler& f) {
   if (!f.iter().readFunctionStart(f.funcType().ret())) {
@@ -3583,12 +3795,23 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
 
 #ifdef ENABLE_WASM_GC
       case uint16_t(Op::RefEq):
+        if (!f.env().gcTypesEnabled()) {
+          return f.iter().unrecognizedOpcode(&op);
+        }
+        CHECK(EmitComparison(f, ValType::AnyRef, JSOP_EQ,
+                             MCompare::Compare_RefOrNull));
 #endif
 #ifdef ENABLE_WASM_REFTYPES
       case uint16_t(Op::RefNull):
+        if (!f.env().gcTypesEnabled()) {
+          return f.iter().unrecognizedOpcode(&op);
+        }
+        CHECK(EmitRefNull(f));
       case uint16_t(Op::RefIsNull):
-        // Not yet supported
-        return f.iter().unrecognizedOpcode(&op);
+        if (!f.env().gcTypesEnabled()) {
+          return f.iter().unrecognizedOpcode(&op);
+        }
+        CHECK(EmitRefIsNull(f));
 #endif
 
       // Sign extensions

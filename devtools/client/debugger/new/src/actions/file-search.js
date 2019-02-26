@@ -173,9 +173,8 @@ export function traverseResults(rev: boolean, editor: Editor) {
 
     if (modifiers) {
       const matchedLocations = matches || [];
-      const results = rev
-        ? findPrev(ctx, query, true, modifiers.toJS())
-        : findNext(ctx, query, true, modifiers.toJS());
+      const findArgs = [ctx, query, true, modifiers.toJS()];
+      const results = rev ? findPrev(...findArgs) : findNext(...findArgs);
 
       if (!results) {
         return;

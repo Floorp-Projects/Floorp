@@ -214,12 +214,6 @@ class TestPolicyVersionRange
       ASSERT_EQ(SECSuccess, rv);
       rv = NSS_OptionSet(NSS_DTLS_VERSION_MAX_POLICY, saved_max_dtls_);
       ASSERT_EQ(SECSuccess, rv);
-      // If it wasn't set initially, clear the bit that we set.
-      if (!(saved_algorithm_policy_ & NSS_USE_POLICY_IN_SSL)) {
-        rv = NSS_SetAlgorithmPolicy(SEC_OID_APPLY_SSL_POLICY, 0,
-                                    NSS_USE_POLICY_IN_SSL);
-        ASSERT_EQ(SECSuccess, rv);
-      }
     }
 
    private:
@@ -233,16 +227,12 @@ class TestPolicyVersionRange
       ASSERT_EQ(SECSuccess, rv);
       rv = NSS_OptionGet(NSS_DTLS_VERSION_MAX_POLICY, &saved_max_dtls_);
       ASSERT_EQ(SECSuccess, rv);
-      rv = NSS_GetAlgorithmPolicy(SEC_OID_APPLY_SSL_POLICY,
-                                  &saved_algorithm_policy_);
-      ASSERT_EQ(SECSuccess, rv);
     }
 
     int32_t saved_min_tls_;
     int32_t saved_max_tls_;
     int32_t saved_min_dtls_;
     int32_t saved_max_dtls_;
-    uint32_t saved_algorithm_policy_;
   };
 
   VersionPolicy saved_version_policy_;
