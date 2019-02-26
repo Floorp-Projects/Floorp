@@ -23,12 +23,13 @@ const RootContainer = require("devtools/client/inspector/markup/views/root-conta
 
 loader.lazyRequireGetter(this, "MarkupContextMenu", "devtools/client/inspector/markup/markup-context-menu");
 loader.lazyRequireGetter(this, "SlottedNodeContainer", "devtools/client/inspector/markup/views/slotted-node-container");
-loader.lazyRequireGetter(this, "copyLongString", "devtools/client/inspector/shared/utils", true);
 loader.lazyRequireGetter(this, "getLongString", "devtools/client/inspector/shared/utils", true);
 loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link", true);
 loader.lazyRequireGetter(this, "HTMLTooltip", "devtools/client/shared/widgets/tooltip/HTMLTooltip", true);
 loader.lazyRequireGetter(this, "UndoStack", "devtools/client/shared/undo", true);
 loader.lazyRequireGetter(this, "clipboardHelper", "devtools/shared/platform/clipboard");
+loader.lazyRequireGetter(this, "beautify", "devtools/shared/jsbeautify/beautify");
+loader.lazyRequireGetter(this, "getTabPrefs", "devtools/shared/indentation", true);
 
 const INSPECTOR_L10N =
   new LocalizationHelper("devtools/client/locales/inspector.properties");
@@ -46,6 +47,7 @@ const DRAG_DROP_HEIGHT_TO_SPEED_MIN = 0.5;
 const DRAG_DROP_HEIGHT_TO_SPEED_MAX = 1;
 const ATTR_COLLAPSE_ENABLED_PREF = "devtools.markup.collapseAttributes";
 const ATTR_COLLAPSE_LENGTH_PREF = "devtools.markup.collapseAttributeLength";
+const BEAUTIFY_HTML_ON_COPY_PREF = "devtools.markup.beautifyOnCopy";
 
 /**
  * Vocabulary for the purposes of this file:
@@ -802,7 +804,7 @@ MarkupView.prototype = {
 
     switch (node.nodeType) {
       case nodeConstants.ELEMENT_NODE :
-        copyLongString(this.walker.outerHTML(node));
+        copyLongHTMLString(this.walker.outerHTML(node));
         break;
       case nodeConstants.COMMENT_NODE :
         getLongString(node.getNodeValue()).then(comment => {
@@ -813,6 +815,17 @@ MarkupView.prototype = {
         clipboardHelper.copyString(node.doctypeString);
         break;
     }
+  },
+
+  /**
+   * Copy the innerHTML of the selected Node to the clipboard.
+   */
+  copyInnerHTML: function() {
+    if (!this.inspector.selection.isNode()) {
+      return;
+    }
+
+    copyLongHTMLString(this.walker.innerHTML(this.inspector.selection.nodeFront));
   },
 
   /**
@@ -1467,12 +1480,7 @@ MarkupView.prototype = {
       walkerPromise = this.walker.innerHTML(node);
     }
 
-    return walkerPromise.then(longstr => {
-      return longstr.string().then(html => {
-        longstr.release().catch(console.error);
-        return html;
-      });
-    });
+    return getLongString(walkerPromise);
   },
 
   /**
@@ -2187,6 +2195,33 @@ MarkupView.prototype = {
     return {parent, nextSibling};
   },
 };
+
+/**
+ * Copy the content of a longString containing HTML code to the clipboard.
+ * The string is retrieved, and possibly beautified if the user has the right pref set and
+ * then placed in the clipboard.
+ *
+ * @param  {Promise} longStringActorPromise
+ *         The promise expected to resolve a LongStringActor instance
+ */
+async function copyLongHTMLString(longStringActorPromise) {
+  let string = await getLongString(longStringActorPromise);
+
+  if (Services.prefs.getBoolPref(BEAUTIFY_HTML_ON_COPY_PREF)) {
+    const { indentUnit, indentWithTabs } = getTabPrefs();
+    string = beautify.html(string, {
+      // eslint-disable-next-line camelcase
+      preserve_newlines: false,
+      // eslint-disable-next-line camelcase
+      indent_size: indentWithTabs ? 1 : indentUnit,
+      // eslint-disable-next-line camelcase
+      indent_char: indentWithTabs ? "\t" : " ",
+      unformatted: [],
+    });
+  }
+
+  clipboardHelper.copyString(string);
+}
 
 /**
  * Map a number from one range to another.

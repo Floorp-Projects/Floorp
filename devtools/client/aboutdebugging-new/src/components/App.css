@@ -32,6 +32,7 @@
   grid-template-columns: var(--sidebar-width) auto;
 
   font-size: var(--base-font-size);
+  font-weight: var(--base-font-weight);
   line-height: var(--base-line-height);
 }
 

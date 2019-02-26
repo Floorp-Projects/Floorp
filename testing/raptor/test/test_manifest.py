@@ -126,13 +126,17 @@ def test_get_raptor_test_list_chrome(create_args):
     assert test_list[0]['name'] == 'raptor-speedometer-chrome'
 
 
-def test_get_raptor_test_list_geckoview(create_args):
+# Commented test_get_raptor_test_list_geckoview
+# in order to disable raptor-unity-webgl-geckoview - Bug 1524495
+"""
+ def test_get_raptor_test_list_geckoview(create_args):
     args = create_args(app="geckoview",
-                       test="raptor-unity-webgl")
+                         test="raptor-unity-webgl")
 
     test_list = get_raptor_test_list(args, mozinfo.os)
     assert len(test_list) == 1
     assert test_list[0]['name'] == 'raptor-unity-webgl-geckoview'
+"""
 
 
 def test_get_raptor_test_list_gecko_profiling(create_args):

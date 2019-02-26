@@ -1341,7 +1341,9 @@ Document::Document(const char* aContentType)
       mIgnoreOpensDuringUnloadCounter(0),
       mDocLWTheme(Doc_Theme_Uninitialized),
       mSavedResolution(1.0f),
-      mPendingInitialTranslation(false) {
+      mPendingInitialTranslation(false),
+      mGeneration(0),
+      mCachedTabSizeGeneration(0) {
   MOZ_LOG(gDocumentLeakPRLog, LogLevel::Debug, ("DOCUMENT %p created", this));
 
   SetIsInDocument();
@@ -12547,6 +12549,24 @@ void Document::ReportShadowDOMUsage() {
 bool Document::StorageAccessSandboxed() const {
   return StaticPrefs::dom_storage_access_enabled() &&
          (GetSandboxFlags() & SANDBOXED_STORAGE_ACCESS) != 0;
+}
+
+bool Document::GetCachedSizes(nsTabSizes* aSizes) {
+  if (mCachedTabSizeGeneration == 0 ||
+      GetGeneration() != mCachedTabSizeGeneration) {
+    return false;
+  }
+  aSizes->mDom += mCachedTabSizes.mDom;
+  aSizes->mStyle += mCachedTabSizes.mStyle;
+  aSizes->mOther += mCachedTabSizes.mOther;
+  return true;
+}
+
+void Document::SetCachedSizes(nsTabSizes* aSizes) {
+  mCachedTabSizes.mDom = aSizes->mDom;
+  mCachedTabSizes.mStyle = aSizes->mStyle;
+  mCachedTabSizes.mOther = aSizes->mOther;
+  mCachedTabSizeGeneration = GetGeneration();
 }
 
 already_AddRefed<nsAtom> Document::GetContentLanguageAsAtomForStyle() const {

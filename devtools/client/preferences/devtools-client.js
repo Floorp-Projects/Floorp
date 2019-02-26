@@ -93,6 +93,9 @@ pref("devtools.markup.collapseAttributes", true);
 // Length to collapse attributes
 pref("devtools.markup.collapseAttributeLength", 120);
 
+// Whether to auto-beautify the HTML on copy.
+pref("devtools.markup.beautifyOnCopy", false);
+
 // DevTools default color unit
 pref("devtools.defaultColorUnit", "authored");
 

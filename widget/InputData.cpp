@@ -23,7 +23,11 @@ using namespace dom;
 InputData::~InputData() {}
 
 InputData::InputData(InputType aInputType)
-    : mInputType(aInputType), mTime(0), mFocusSequenceNumber(0), modifiers(0) {}
+    : mInputType(aInputType),
+      mTime(0),
+      mFocusSequenceNumber(0),
+      mLayersId{0},
+      modifiers(0) {}
 
 InputData::InputData(InputType aInputType, uint32_t aTime, TimeStamp aTimeStamp,
                      Modifiers aModifiers)
@@ -31,6 +35,7 @@ InputData::InputData(InputType aInputType, uint32_t aTime, TimeStamp aTimeStamp,
       mTime(aTime),
       mTimeStamp(aTimeStamp),
       mFocusSequenceNumber(0),
+      mLayersId{0},
       modifiers(aModifiers) {}
 
 SingleTouchData::SingleTouchData(int32_t aIdentifier,

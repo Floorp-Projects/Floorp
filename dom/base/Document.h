@@ -1490,6 +1490,21 @@ class Document : public nsINode,
   // flag.
   bool StorageAccessSandboxed() const;
 
+  // Increments the document generation.
+  inline void Changed() { ++mGeneration; }
+
+  // Returns the current generation.
+  inline int32_t GetGeneration() const { return mGeneration; }
+
+  // Adds cached sizes values to aSizes if there's any
+  // cached value and if the document generation hasn't
+  // changed since the cache was created.
+  // Returns true if sizes were added.
+  bool GetCachedSizes(nsTabSizes* aSizes);
+
+  // Sets the cache sizes for the current generation.
+  void SetCachedSizes(nsTabSizes* aSizes);
+
  protected:
   friend class nsUnblockOnloadEvent;
 
@@ -4640,6 +4655,13 @@ class Document : public nsINode,
   float mSavedResolution;
 
   bool mPendingInitialTranslation;
+
+  // Document generation. Gets incremented everytime it changes.
+  int32_t mGeneration;
+
+  // Cached TabSizes values for the document.
+  int32_t mCachedTabSizeGeneration;
+  nsTabSizes mCachedTabSizes;
 
  public:
   // Needs to be public because the bindings code pokes at it.

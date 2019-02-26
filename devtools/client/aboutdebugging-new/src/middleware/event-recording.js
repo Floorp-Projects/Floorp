@@ -15,12 +15,15 @@ const {
   REMOTE_RUNTIMES_UPDATED,
   RUNTIMES,
   SELECT_PAGE_SUCCESS,
+  SHOW_PROFILER_DIALOG,
   TELEMETRY_RECORD,
+  UPDATE_CONNECTION_PROMPT_SETTING_SUCCESS,
 } = require("../constants");
 
 const {
   findRuntimeById,
   getAllRuntimes,
+  getCurrentRuntime,
 } = require("../modules/runtimes-state-helper");
 
 function recordEvent(method, details) {
@@ -38,6 +41,11 @@ function getTelemetryRuntimeId(id) {
     telemetryRuntimeIds.set(id, "runtime-" + randomId);
   }
   return telemetryRuntimeIds.get(id);
+}
+
+function getCurrentRuntimeIdForTelemetry(store) {
+  const id = getCurrentRuntime(store.getState().runtimes).id;
+  return getTelemetryRuntimeId(id);
 }
 
 function getRuntimeEventExtras(runtime) {
@@ -145,6 +153,11 @@ function eventRecordingMiddleware(store) {
       case SELECT_PAGE_SUCCESS:
         recordEvent("select_page", { "page_type": action.page });
         break;
+      case SHOW_PROFILER_DIALOG:
+        recordEvent("show_profiler", {
+          "runtime_id": getCurrentRuntimeIdForTelemetry(store),
+        });
+        break;
       case TELEMETRY_RECORD:
         const { method, details } = action;
         if (method) {
@@ -152,6 +165,12 @@ function eventRecordingMiddleware(store) {
         } else {
           console.error(`[RECORD EVENT FAILED] ${action.type}: no "method" property`);
         }
+        break;
+      case UPDATE_CONNECTION_PROMPT_SETTING_SUCCESS:
+        recordEvent("update_conn_prompt", {
+          "prompt_enabled": `${action.connectionPromptEnabled}`,
+          "runtime_id": getCurrentRuntimeIdForTelemetry(store),
+        });
         break;
     }
 

@@ -23,6 +23,8 @@ loader.lazyRequireGetter(this, "isCssPropertyKnown",
   "devtools/server/actors/css-properties", true);
 loader.lazyRequireGetter(this, "parseNamedDeclarations",
   "devtools/shared/css/parsing-utils", true);
+loader.lazyRequireGetter(this, "prettifyCSS",
+  "devtools/shared/inspector/css-logic", true);
 loader.lazyRequireGetter(this, "UPDATE_PRESERVING_RULES",
   "devtools/server/actors/stylesheets", true);
 loader.lazyRequireGetter(this, "UPDATE_GENERAL",
@@ -1397,13 +1399,18 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    * authored form is available, this also sets |this.authoredText|.
    * The authored text will include invalid and otherwise ignored
    * properties.
+   *
+   * @param {Boolean} skipCache
+   *        If a value for authoredText was previously found and cached,
+   *        ignore it and parse the stylehseet again. The authoredText
+   *        may be outdated if a descendant of this rule has changed.
    */
-  getAuthoredCssText: function() {
+  getAuthoredCssText: function(skipCache = false) {
     if (!this.canSetRuleText || !SUPPORTED_RULE_TYPES.includes(this.type)) {
       return Promise.resolve("");
     }
 
-    if (typeof this.authoredText === "string") {
+    if (typeof this.authoredText === "string" && !skipCache) {
       return Promise.resolve(this.authoredText);
     }
 
@@ -1424,29 +1431,37 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    * method includes the CSS selectors and at-rules (@media, @supports, @keyframes, etc.)
    *
    * If the rule type is unrecongized, the promise resolves to an empty string.
-   * If the rule is an element inline style, the promise resolves to the text content of
+   * If the rule is an element inline style, the promise resolves with the generated
+   * selector that uniquely identifies the element and with the rule body consisting of
    * the element's style attribute.
    *
    * @return {String}
    */
   getRuleText: async function() {
-    if (this.type === ELEMENT_STYLE) {
-      return Promise.resolve(this.rawNode.getAttribute("style"));
-    }
-
-    if (!SUPPORTED_RULE_TYPES.includes(this.type)) {
+    // Bail out if the rule is not supported or not an element inline style.
+    if (![...SUPPORTED_RULE_TYPES, ELEMENT_STYLE].includes(this.type)) {
       return Promise.resolve("");
     }
 
-    const ruleBodyText = await this.getAuthoredCssText();
-    const { str: stylesheetText } = await this.sheetActor.getText();
-    const [start, end] = getSelectorOffsets(stylesheetText, this.line, this.column);
-    const selectorText = stylesheetText.substring(start, end);
+    let ruleBodyText;
+    let selectorText;
+    let text;
+
+    // For element inline styles, use the style attribute and generated unique selector.
+    if (this.type === ELEMENT_STYLE) {
+      ruleBodyText = this.rawNode.getAttribute("style");
+      selectorText = this.metadata.selector;
+    } else {
+      // Get the rule's authored text and skip any cached value.
+      ruleBodyText = await this.getAuthoredCssText(true);
+      const { str: stylesheetText } = await this.sheetActor.getText();
+      const [start, end] = getSelectorOffsets(stylesheetText, this.line, this.column);
+      selectorText = stylesheetText.substring(start, end);
+    }
 
     // CSS rule type as a string "@media", "@supports", "@keyframes", etc.
     const typeName = CSSRuleTypeName[this.type];
 
-    let text;
     // When dealing with at-rules, getSelectorOffsets() will not return the rule type.
     // We prepend it ourselves.
     if (typeName) {
@@ -1455,7 +1470,8 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       text = `${selectorText} {${ruleBodyText}}`;
     }
 
-    return text;
+    const prettyCSS = prettifyCSS(text);
+    return Promise.resolve(prettyCSS);
   },
 
   /**

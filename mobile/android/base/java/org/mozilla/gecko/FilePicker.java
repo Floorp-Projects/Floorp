@@ -114,13 +114,13 @@ public class FilePicker implements BundleEventListener {
 
     private static String[] getPermissionsForMimeType(final String mimeType) {
         if (mimeType.startsWith("audio/")) {
-            return new String[] { Manifest.permission.READ_EXTERNAL_STORAGE };
+            return new String[] { Manifest.permission.WRITE_EXTERNAL_STORAGE };
         } else if (mimeType.startsWith("image/")) {
-            return new String[] { Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE };
+            return new String[] { Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE };
         } else if (mimeType.startsWith("video/")) {
-            return new String[] { Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE };
+            return new String[] { Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE };
         }
-        return new String[] { Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE };
+        return new String[] { Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE };
     }
 
     private static boolean hasPermissionsForMimeType(final String mimeType, final String[] availPermissions) {
