@@ -2886,7 +2886,6 @@ impl PicturePrimitive {
                 surface_info.device_pixel_scale,
             )
         };
-        let surfaces = &mut frame_state.surfaces;
 
         let (map_raster_to_world, map_pic_to_raster) = create_raster_mappers(
             prim_instance.spatial_node_index,
@@ -2920,14 +2919,14 @@ impl PicturePrimitive {
             PictureCompositeMode::TileCache { .. } => {
                 // For a picture surface, just push any child tasks and tile
                 // blits up to the parent surface.
-                let surface = &mut surfaces[surface_index.0];
+                let surface = &mut frame_state.surfaces[surface_index.0];
                 surface.tasks.extend(child_tasks);
 
                 return true;
             }
             PictureCompositeMode::Filter(FilterOp::Blur(blur_radius)) => {
                 let blur_std_deviation = blur_radius * device_pixel_scale.0;
-                let inflation_factor = surfaces[raster_config.surface_index.0].inflation_factor;
+                let inflation_factor = frame_state.surfaces[raster_config.surface_index.0].inflation_factor;
                 let inflation_factor = (inflation_factor * device_pixel_scale.0).ceil() as i32;
 
                 // The clipped field is the part of the picture that is visible
@@ -2981,7 +2980,7 @@ impl PicturePrimitive {
 
                 let render_task_id = frame_state.render_tasks.add(blur_render_task);
 
-                surfaces[surface_index.0].tasks.push(render_task_id);
+                frame_state.surfaces[surface_index.0].tasks.push(render_task_id);
 
                 PictureSurface::RenderTask(render_task_id)
             }
@@ -3038,7 +3037,7 @@ impl PicturePrimitive {
                 self.secondary_render_task_id = Some(picture_task_id);
 
                 let render_task_id = frame_state.render_tasks.add(blur_render_task);
-                surfaces[surface_index.0].tasks.push(render_task_id);
+                frame_state.surfaces[surface_index.0].tasks.push(render_task_id);
 
                 if let Some(mut request) = frame_state.gpu_cache.request(&mut self.extra_gpu_data_handle) {
                     // TODO(gw): This is very hacky code below! It stores an extra
@@ -3099,7 +3098,7 @@ impl PicturePrimitive {
                 );
 
                 let render_task_id = frame_state.render_tasks.add(picture_task);
-                surfaces[surface_index.0].tasks.push(render_task_id);
+                frame_state.surfaces[surface_index.0].tasks.push(render_task_id);
                 PictureSurface::RenderTask(render_task_id)
             }
             PictureCompositeMode::Puppet { .. } |
@@ -3132,12 +3131,12 @@ impl PicturePrimitive {
                 );
 
                 let render_task_id = frame_state.render_tasks.add(picture_task);
-                surfaces[surface_index.0].tasks.push(render_task_id);
+                frame_state.surfaces[surface_index.0].tasks.push(render_task_id);
                 PictureSurface::RenderTask(render_task_id)
             }
         };
 
-        surfaces[raster_config.surface_index.0].surface = Some(surface);
+        frame_state.surfaces[raster_config.surface_index.0].surface = Some(surface);
 
         true
     }
