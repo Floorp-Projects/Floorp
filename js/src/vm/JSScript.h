@@ -2973,12 +2973,14 @@ class LazyScript : public gc::TenuredCell {
     uint32_t hasDebuggerStatement : 1;
     uint32_t hasDirectEval : 1;
     uint32_t isLikelyConstructorWrapper : 1;
-    uint32_t hasBeenCloned : 1;
     uint32_t treatAsRunOnce : 1;
     uint32_t isDerivedClassConstructor : 1;
     uint32_t needsHomeObject : 1;
     uint32_t hasRest : 1;
     uint32_t parseGoal : 1;
+
+    // Runtime flags
+    uint32_t hasBeenCloned : 1;
   };
 
   union {
