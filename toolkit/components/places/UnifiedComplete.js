@@ -970,22 +970,26 @@ Search.prototype = {
             "";
           searchSuggestionsCompletePromise =
             this._matchSearchSuggestions(engine, query, alias);
-          // If the user has used a search engine token alias, then the only
-          // results we want to show are suggestions from that engine, so we're
-          // done.  We're also done if we're restricting results to suggestions.
-          if ((this._searchEngineAliasMatch &&
-               this._searchEngineAliasMatch.isTokenAlias) ||
-              this.hasBehavior("restrict")) {
-            // Wait for the suggestions to be added.
-            await searchSuggestionsCompletePromise;
-            this._cleanUpNonCurrentMatches(null);
-            this._autocompleteSearch.finishSearch(true);
-            return;
-          }
         }
       }
     }
-    // In any case, clear previous suggestions.
+
+    // If the user used a search engine token alias, then the only results we
+    // want to show are suggestions from that engine, so we're done.  We're also
+    // done if we're restricting results to suggestions.
+    if ((this._searchEngineAliasMatch &&
+         this._searchEngineAliasMatch.isTokenAlias) ||
+        (this._enableActions &&
+         this.hasBehavior("search") &&
+         this.hasBehavior("restrict"))) {
+      // Wait for the suggestions to be added.
+      await searchSuggestionsCompletePromise;
+      this._cleanUpNonCurrentMatches(null);
+      this._autocompleteSearch.finishSearch(true);
+      return;
+    }
+
+    // Clear previous search suggestions.
     searchSuggestionsCompletePromise.then(() => {
       this._cleanUpNonCurrentMatches(UrlbarUtils.MATCH_GROUP.SUGGESTION);
     });
