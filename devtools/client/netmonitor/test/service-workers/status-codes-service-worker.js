@@ -9,6 +9,6 @@ self.addEventListener("activate", event => {
 });
 
 self.addEventListener("fetch", event => {
-  const response = new Response("Service worker response");
+  const response = new Response("Service worker response", { statusText: "OK" });
   event.respondWith(response);
 });
