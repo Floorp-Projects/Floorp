@@ -331,6 +331,10 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
     });
   }
 
+  async loadDump(records) {
+    return this.importBulk(records);
+  }
+
   /**
    * Load a list of records into the local database.
    *
@@ -341,7 +345,7 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
    * @param  {Array} records.
    * @return {Array} imported records.
    */
-  async loadDump(records) {
+  async importBulk(records) {
     const connection = this._connection;
     const collection_name = this.collection;
     await connection.executeTransaction(async function doImport() {

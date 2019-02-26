@@ -342,12 +342,12 @@ public final class IntentHelper implements BundleEventListener {
         // custom handlers that would apply.
         // Start with the original URI. If we end up modifying it, we'll
         // overwrite it.
-        final String extension = MimeTypeMap.getFileExtensionFromUrl(targetURI);
         final Intent intent = getIntentForActionString(action);
         intent.setData(uri);
 
         if ("file".equals(scheme)) {
             // Only set explicit mimeTypes on file://.
+            final String extension = MimeTypeMap.getFileExtensionFromUrl(targetURI);
             final String mimeType2 = GeckoAppShell.getMimeTypeFromExtension(extension);
             intent.setType(mimeType2);
             return intent;

@@ -44,6 +44,9 @@ inline bool CanReuseFunctionForClone(JSContext* cx, HandleFunction fun) {
       return false;
     }
     script->setHasBeenCloned();
+    if (LazyScript* lazy = script->maybeLazyScript()) {
+      lazy->setHasBeenCloned();
+    }
   }
   return true;
 }

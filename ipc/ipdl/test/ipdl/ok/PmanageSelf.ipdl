@@ -1,0 +1,10 @@
+include protocol PmanageSelf_Toplevel;
+
+protocol PmanageSelf {
+    manager PmanageSelf_Toplevel or PmanageSelf;
+    manages PmanageSelf;
+
+child:
+    async PmanageSelf();
+    async __delete__();
+};

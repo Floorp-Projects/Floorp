@@ -2973,12 +2973,14 @@ class LazyScript : public gc::TenuredCell {
     uint32_t hasDebuggerStatement : 1;
     uint32_t hasDirectEval : 1;
     uint32_t isLikelyConstructorWrapper : 1;
-    uint32_t hasBeenCloned : 1;
     uint32_t treatAsRunOnce : 1;
     uint32_t isDerivedClassConstructor : 1;
     uint32_t needsHomeObject : 1;
     uint32_t hasRest : 1;
     uint32_t parseGoal : 1;
+
+    // Runtime flags
+    uint32_t hasBeenCloned : 1;
   };
 
   union {
@@ -3043,8 +3045,6 @@ class LazyScript : public gc::TenuredCell {
                                   uint64_t packedData, uint32_t begin,
                                   uint32_t end, uint32_t toStringStart,
                                   uint32_t lineno, uint32_t column);
-
-  void initRuntimeFields(uint64_t packedFields);
 
   static inline JSFunction* functionDelazifying(JSContext* cx,
                                                 Handle<LazyScript*>);
@@ -3218,7 +3218,7 @@ class LazyScript : public gc::TenuredCell {
     return mallocSizeOf(table_);
   }
 
-  uint64_t packedFields() const { return packedFields_; }
+  uint64_t packedFieldsForXDR() const;
 };
 
 /* If this fails, add/remove padding within LazyScript. */

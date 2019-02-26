@@ -73,7 +73,10 @@ class ConsoleOutput extends Component {
   }
 
   componentDidMount() {
-    scrollToBottom(this.outputNode);
+    if (this.props.visibleMessages.length > 0) {
+      scrollToBottom(this.outputNode);
+    }
+
     const {
       serviceContainer,
       onFirstMeaningfulPaint,
@@ -207,7 +210,9 @@ class ConsoleOutput extends Component {
 }
 
 function scrollToBottom(node) {
-  node.scrollTop = node.scrollHeight;
+  if (node.scrollHeight > node.clientHeight) {
+    node.scrollTop = node.scrollHeight;
+  }
 }
 
 function isScrolledToBottom(outputNode, scrollNode) {

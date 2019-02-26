@@ -29,12 +29,14 @@ class TestCrashCleanupParent : public PTestCrashCleanupParent {
 };
 
 class TestCrashCleanupChild : public PTestCrashCleanupChild {
+  friend class PTestCrashCleanupChild;
+
  public:
   TestCrashCleanupChild();
   virtual ~TestCrashCleanupChild();
 
  protected:
-  virtual mozilla::ipc::IPCResult AnswerDIEDIEDIE() override;
+  mozilla::ipc::IPCResult AnswerDIEDIEDIE();
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     fail("should have 'crashed'!");

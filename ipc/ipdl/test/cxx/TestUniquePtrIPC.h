@@ -43,10 +43,9 @@ class TestUniquePtrIPCChild : public PTestUniquePtrIPCChild {
   mozilla::ipc::IPCResult RecvTestMessage(UniquePtr<int>&& aA1,
                                           UniquePtr<DummyStruct>&& aA2,
                                           const DummyStruct& aA3,
-                                          UniquePtr<int>&& aA4) override;
+                                          UniquePtr<int>&& aA4);
 
-  mozilla::ipc::IPCResult RecvTestSendReference(
-      UniquePtr<DummyStruct>&& aA) override;
+  mozilla::ipc::IPCResult RecvTestSendReference(UniquePtr<DummyStruct>&& aA);
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) {

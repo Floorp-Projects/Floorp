@@ -214,10 +214,20 @@ function getFilterBoxURL() {
     `#Filtering_by_properties`;
 }
 
+/**
+ * Get the MDN URL for Tracking Protection
+ *
+ * @return {string} The MDN URL for the documentation of Tracking Protection.
+ */
+function getTrackingProtectionURL() {
+  return `${MDN_URL}Mozilla/Firefox/Privacy/Tracking_Protection${getGAParams()}`;
+}
+
 module.exports = {
   getHeadersURL,
   getHTTPStatusCodeURL,
   getNetMonitorTimingsURL,
   getPerformanceAnalysisURL,
   getFilterBoxURL,
+  getTrackingProtectionURL,
 };

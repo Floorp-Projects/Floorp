@@ -385,7 +385,7 @@ class RemoteSettingsClient extends EventEmitter {
       }
     } catch (e) {
       // IndexedDB errors. See https://developer.mozilla.org/en-US/docs/Web/API/IDBRequest/error
-      if (/(AbortError|ConstraintError|QuotaExceededError|VersionError)/.test(e.message)) {
+      if (/(IndexedDB|AbortError|ConstraintError|QuotaExceededError|VersionError)/.test(e.message)) {
         reportStatus = UptakeTelemetry.STATUS.CUSTOM_1_ERROR;
       }
       // No specific error was tracked, mark it as unknown.

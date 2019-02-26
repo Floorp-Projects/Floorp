@@ -10,6 +10,8 @@ namespace mozilla {
 namespace _ipdltest {
 
 class TestShmemParent : public PTestShmemParent {
+  friend class PTestShmemParent;
+
  public:
   TestShmemParent() {}
   virtual ~TestShmemParent() {}
@@ -20,8 +22,8 @@ class TestShmemParent : public PTestShmemParent {
   void Main();
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvTake(Shmem&& mem, Shmem&& unsafe,
-                                           const size_t& expectedSize) override;
+  mozilla::ipc::IPCResult RecvTake(Shmem&& mem, Shmem&& unsafe,
+                                   const size_t& expectedSize);
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");
@@ -31,13 +33,15 @@ class TestShmemParent : public PTestShmemParent {
 };
 
 class TestShmemChild : public PTestShmemChild {
+  friend class PTestShmemChild;
+
  public:
   TestShmemChild() {}
   virtual ~TestShmemChild() {}
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvGive(Shmem&& mem, Shmem&& unsafe,
-                                           const size_t& expectedSize) override;
+  mozilla::ipc::IPCResult RecvGive(Shmem&& mem, Shmem&& unsafe,
+                                   const size_t& expectedSize);
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");

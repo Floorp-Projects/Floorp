@@ -9914,7 +9914,7 @@ class CGStaticMethodJitinfo(CGGeneric):
             "static const JSJitInfo %s_methodinfo = {\n"
             "  { (JSJitGetterOp)%s },\n"
             "  { prototypes::id::_ID_Count }, { 0 }, JSJitInfo::StaticMethod,\n"
-            "  JSJitInfo::AliasEverything, JSVAL_TYPE_MISSING, false, false,\n"
+            "  JSJitInfo::AliasEverything, JSVAL_TYPE_OBJECT, false, false,\n"
             "  false, false, 0\n"
             "};\n" %
             (IDLToCIdentifier(method.identifier.name),

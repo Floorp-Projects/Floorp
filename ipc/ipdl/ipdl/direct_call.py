@@ -138,6 +138,298 @@ DIRECT_CALL_OVERRIDES = {
 
     ("PWebSocket", "child"): ("WebSocketChannelChild", "mozilla/net/WebSocketChannelChild.h"),
     ("PWebSocket", "parent"): ("WebSocketChannelParent", "mozilla/net/WebSocketChannelParent.h"),
+
+    # _ipdltest
+    ("PTestActorPunning", "child"): (
+        "TestActorPunningChild", "mozilla/_ipdltest/TestActorPunning.h"
+    ),
+    ("PTestActorPunning", "parent"): (
+        "TestActorPunningParent", "mozilla/_ipdltest/TestActorPunning.h"
+    ),
+    ("PTestActorPunningPunned", "child"): (
+        "TestActorPunningPunnedChild", "mozilla/_ipdltest/TestActorPunning.h"
+    ),
+    ("PTestActorPunningPunned", "parent"): (
+        "TestActorPunningPunnedParent", "mozilla/_ipdltest/TestActorPunning.h"
+    ),
+    ("PTestActorPunningSub", "child"): (
+        "TestActorPunningSubChild", "mozilla/_ipdltest/TestActorPunning.h"
+    ),
+    ("PTestActorPunningSub", "parent"): (
+        "TestActorPunningSubParent", "mozilla/_ipdltest/TestActorPunning.h"
+    ),
+
+    ("PTestAsyncReturns", "child"): (
+        "TestAsyncReturnsChild", "mozilla/_ipdltest/TestAsyncReturns.h"
+    ),
+    ("PTestAsyncReturns", "parent"): (
+        "TestAsyncReturnsParent", "mozilla/_ipdltest/TestAsyncReturns.h"
+    ),
+
+    ("PTestBadActor", "parent"): ("TestBadActorParent", "mozilla/_ipdltest/TestBadActor.h"),
+    ("PTestBadActor", "child"): ("TestBadActorChild", "mozilla/_ipdltest/TestBadActor.h"),
+    ("PTestBadActorSub", "child"): ("TestBadActorSubChild", "mozilla/_ipdltest/TestBadActor.h"),
+    ("PTestBadActorSub", "parent"): ("TestBadActorSubParent", "mozilla/_ipdltest/TestBadActor.h"),
+
+    ("PTestCancel", "child"): ("TestCancelChild", "mozilla/_ipdltest/TestCancel.h"),
+    ("PTestCancel", "parent"): ("TestCancelParent", "mozilla/_ipdltest/TestCancel.h"),
+
+    ("PTestCrashCleanup", "child"): (
+        "TestCrashCleanupChild", "mozilla/_ipdltest/TestCrashCleanup.h"
+    ),
+    ("PTestCrashCleanup", "parent"): (
+        "TestCrashCleanupParent", "mozilla/_ipdltest/TestCrashCleanup.h"
+    ),
+
+    ("PTestDataStructures", "child"): (
+        "TestDataStructuresChild", "mozilla/_ipdltest/TestDataStructures.h"
+    ),
+    ("PTestDataStructures", "parent"): (
+        "TestDataStructuresParent", "mozilla/_ipdltest/TestDataStructures.h"
+    ),
+    ("PTestDataStructuresSub", "child"): (
+        "TestDataStructuresSub", "mozilla/_ipdltest/TestDataStructures.h"
+    ),
+    ("PTestDataStructuresSub", "parent"): (
+        "TestDataStructuresSub", "mozilla/_ipdltest/TestDataStructures.h"
+    ),
+
+    ("PTestDemon", "child"): ("TestDemonChild", "mozilla/_ipdltest/TestDemon.h"),
+    ("PTestDemon", "parent"): ("TestDemonParent", "mozilla/_ipdltest/TestDemon.h"),
+
+    ("PTestDesc", "child"): ("TestDescChild", "mozilla/_ipdltest/TestDesc.h"),
+    ("PTestDesc", "parent"): ("TestDescParent", "mozilla/_ipdltest/TestDesc.h"),
+    ("PTestDescSub", "child"): ("TestDescSubChild", "mozilla/_ipdltest/TestDesc.h"),
+    ("PTestDescSub", "parent"): ("TestDescSubParent", "mozilla/_ipdltest/TestDesc.h"),
+    ("PTestDescSubsub", "child"): ("TestDescSubsubChild", "mozilla/_ipdltest/TestDesc.h"),
+    ("PTestDescSubsub", "parent"): ("TestDescSubsubParent", "mozilla/_ipdltest/TestDesc.h"),
+
+    ("PTestEndpointBridgeMain", "child"): (
+        "TestEndpointBridgeMainChild", "mozilla/_ipdltest/TestEndpointBridgeMain.h"
+    ),
+    ("PTestEndpointBridgeMain", "parent"): (
+        "TestEndpointBridgeMainParent", "mozilla/_ipdltest/TestEndpointBridgeMain.h"
+    ),
+    ("PTestEndpointBridgeMainSub", "child"): (
+        "TestEndpointBridgeMainSubChild", "mozilla/_ipdltest/TestEndpointBridgeMain.h"
+    ),
+    ("PTestEndpointBridgeMainSub", "parent"): (
+        "TestEndpointBridgeMainSubParent", "mozilla/_ipdltest/TestEndpointBridgeMain.h"
+    ),
+    ("PTestEndpointBridgeSub", "child"): (
+        "TestEndpointBridgeSubChild", "mozilla/_ipdltest/TestEndpointBridgeMain.h"
+    ),
+    ("PTestEndpointBridgeSub", "parent"): (
+        "TestEndpointBridgeSubParent", "mozilla/_ipdltest/TestEndpointBridgeMain.h"
+    ),
+
+    ("PTestEndpointOpens", "child"): (
+        "TestEndpointOpensChild", "mozilla/_ipdltest/TestEndpointOpens.h"
+    ),
+    ("PTestEndpointOpens", "parent"): (
+        "TestEndpointOpensParent", "mozilla/_ipdltest/TestEndpointOpens.h"
+    ),
+    ("PTestEndpointOpensOpened", "child"): (
+        "TestEndpointOpensOpenedChild", "mozilla/_ipdltest/TestEndpointOpens.h"
+    ),
+    ("PTestEndpointOpensOpened", "parent"): (
+        "TestEndpointOpensOpenedParent", "mozilla/_ipdltest/TestEndpointOpens.h"
+    ),
+
+    ("PTestFailedCtor", "child"): ("TestFailedCtorChild", "mozilla/_ipdltest/TestFailedCtor.h"),
+    ("PTestFailedCtor", "parent"): ("TestFailedCtorParent", "mozilla/_ipdltest/TestFailedCtor.h"),
+    ("PTestFailedCtorSub", "child"): (
+        "TestFailedCtorSubChild", "mozilla/_ipdltest/TestFailedCtor.h"
+    ),
+    ("PTestFailedCtorSub", "parent"): (
+        "TestFailedCtorSubParent", "mozilla/_ipdltest/TestFailedCtor.h"
+    ),
+    ("PTestFailedCtorSubsub", "child"): (
+        "TestFailedCtorSubsub", "mozilla/_ipdltest/TestFailedCtor.h"
+    ),
+    ("PTestFailedCtorSubsub", "parent"): (
+        "TestFailedCtorSubsub", "mozilla/_ipdltest/TestFailedCtor.h"
+    ),
+
+    ("PTestHandle", "child"): ("TestHandleChild", "mozilla/_ipdltest/TestJSON.h"),
+    ("PTestHandle", "parent"): ("TestHandleParent", "mozilla/_ipdltest/TestJSON.h"),
+    ("PTestJSON", "child"): ("TestJSONChild", "mozilla/_ipdltest/TestJSON.h"),
+    ("PTestJSON", "parent"): ("TestJSONParent", "mozilla/_ipdltest/TestJSON.h"),
+
+    ("PTestHangs", "child"): ("TestHangsChild", "mozilla/_ipdltest/TestHangs.h"),
+    ("PTestHangs", "parent"): ("TestHangsParent", "mozilla/_ipdltest/TestHangs.h"),
+
+    ("PTestHighestPrio", "child"): ("TestHighestPrioChild", "mozilla/_ipdltest/TestHighestPrio.h"),
+    ("PTestHighestPrio", "parent"): (
+        "TestHighestPrioParent", "mozilla/_ipdltest/TestHighestPrio.h"
+    ),
+
+    ("PTestInterruptErrorCleanup", "child"): (
+        "TestInterruptErrorCleanupChild", "mozilla/_ipdltest/TestInterruptErrorCleanup.h"
+    ),
+    ("PTestInterruptErrorCleanup", "parent"): (
+        "TestInterruptErrorCleanupParent", "mozilla/_ipdltest/TestInterruptErrorCleanup.h"
+    ),
+
+    ("PTestInterruptRaces", "child"): (
+        "TestInterruptRacesChild", "mozilla/_ipdltest/TestInterruptRaces.h"
+    ),
+    ("PTestInterruptRaces", "parent"): (
+        "TestInterruptRacesParent", "mozilla/_ipdltest/TestInterruptRaces.h"
+    ),
+
+    ("PTestInterruptShutdownRace", "child"): (
+        "TestInterruptShutdownRaceChild", "mozilla/_ipdltest/TestInterruptShutdownRace.h"
+    ),
+    ("PTestInterruptShutdownRace", "parent"): (
+        "TestInterruptShutdownRaceParent", "mozilla/_ipdltest/TestInterruptShutdownRace.h"
+    ),
+
+    ("PTestLatency", "child"): ("TestLatencyChild", "mozilla/_ipdltest/TestLatency.h"),
+    ("PTestLatency", "parent"): ("TestLatencyParent", "mozilla/_ipdltest/TestLatency.h"),
+
+    ("PTestLayoutThread", "child"): (
+        "TestOffMainThreadPaintingChild", "mozilla/_ipdltest/TestOffMainThreadPainting.h"
+    ),
+    ("PTestLayoutThread", "parent"): (
+        "TestOffMainThreadPaintingParent", "mozilla/_ipdltest/TestOffMainThreadPainting.h"
+    ),
+    ("PTestPaintThread", "child"): (
+        "TestPaintThreadChild", "mozilla/_ipdltest/TestOffMainThreadPainting.h"
+    ),
+    ("PTestPaintThread", "parent"): (
+        "TestPaintThreadParent", "mozilla/_ipdltest/TestOffMainThreadPainting.h"
+    ),
+
+    ("PTestManyChildAllocs", "child"): (
+        "TestManyChildAllocsChild", "mozilla/_ipdltest/TestManyChildAllocs.h"
+    ),
+    ("PTestManyChildAllocs", "parent"): (
+        "TestManyChildAllocsParent", "mozilla/_ipdltest/TestManyChildAllocs.h"
+    ),
+    ("PTestManyChildAllocsSub", "child"): (
+        "TestManyChildAllocsSubChild", "mozilla/_ipdltest/TestManyChildAllocs.h"
+    ),
+    ("PTestManyChildAllocsSub", "parent"): (
+        "TestManyChildAllocsSubParent", "mozilla/_ipdltest/TestManyChildAllocs.h"
+    ),
+
+    ("PTestMultiMgrs", "child"): ("TestMultiMgrsChild", "mozilla/_ipdltest/TestMultiMgrs.h"),
+    ("PTestMultiMgrs", "parent"): ("TestMultiMgrsParent", "mozilla/_ipdltest/TestMultiMgrs.h"),
+    ("PTestMultiMgrsBottom", "child"): (
+        "TestMultiMgrsBottomChild", "mozilla/_ipdltest/TestMultiMgrs.h"
+    ),
+    ("PTestMultiMgrsBottom", "parent"): (
+        "TestMultiMgrsBottomParent", "mozilla/_ipdltest/TestMultiMgrs.h"
+    ),
+    ("PTestMultiMgrsLeft", "child"): (
+        "TestMultiMgrsLeftChild", "mozilla/_ipdltest/TestMultiMgrs.h"
+    ),
+    ("PTestMultiMgrsLeft", "parent"): (
+        "TestMultiMgrsLeftParent", "mozilla/_ipdltest/TestMultiMgrs.h"
+    ),
+    ("PTestMultiMgrsRight", "child"): (
+        "TestMultiMgrsRightChild", "mozilla/_ipdltest/TestMultiMgrs.h"
+    ),
+    ("PTestMultiMgrsRight", "parent"): (
+        "TestMultiMgrsRightParent", "mozilla/_ipdltest/TestMultiMgrs.h"
+    ),
+
+    ("PTestNestedLoops", "child"): ("TestNestedLoopsChild", "mozilla/_ipdltest/TestNestedLoops.h"),
+    ("PTestNestedLoops", "parent"): (
+        "TestNestedLoopsParent", "mozilla/_ipdltest/TestNestedLoops.h"
+    ),
+
+    ("PTestRaceDeadlock", "child"): (
+        "TestRaceDeadlockChild", "mozilla/_ipdltest/TestRaceDeadlock.h"
+    ),
+    ("PTestRaceDeadlock", "parent"): (
+        "TestRaceDeadlockParent", "mozilla/_ipdltest/TestRaceDeadlock.h"
+    ),
+
+    ("PTestRaceDeferral", "child"): (
+        "TestRaceDeferralChild", "mozilla/_ipdltest/TestRaceDeferral.h"
+    ),
+    ("PTestRaceDeferral", "parent"): (
+        "TestRaceDeferralParent", "mozilla/_ipdltest/TestRaceDeferral.h"
+    ),
+
+    ("PTestRacyInterruptReplies", "child"): (
+        "TestRacyInterruptRepliesChild", "mozilla/_ipdltest/TestRacyInterruptReplies.h"
+    ),
+    ("PTestRacyInterruptReplies", "parent"): (
+        "TestRacyInterruptRepliesParent", "mozilla/_ipdltest/TestRacyInterruptReplies.h"
+    ),
+
+    ("PTestRacyReentry", "child"): ("TestRacyReentryChild", "mozilla/_ipdltest/TestRacyReentry.h"),
+    ("PTestRacyReentry", "parent"): (
+        "TestRacyReentryParent", "mozilla/_ipdltest/TestRacyReentry.h"
+    ),
+
+    ("PTestRacyUndefer", "child"): ("TestRacyUndeferChild", "mozilla/_ipdltest/TestRacyUndefer.h"),
+    ("PTestRacyUndefer", "parent"): (
+        "TestRacyUndeferParent", "mozilla/_ipdltest/TestRacyUndefer.h"
+    ),
+
+    ("PTestRPC", "child"): ("TestRPCChild", "mozilla/_ipdltest/TestRPC.h"),
+    ("PTestRPC", "parent"): ("TestRPCParent", "mozilla/_ipdltest/TestRPC.h"),
+
+    ("PTestSanity", "child"): ("TestSanityChild", "mozilla/_ipdltest/TestSanity.h"),
+    ("PTestSanity", "parent"): ("TestSanityParent", "mozilla/_ipdltest/TestSanity.h"),
+
+    ("PTestSelfManage", "child"): (
+        "TestSelfManageChild", "mozilla/_ipdltest/TestSelfManageRoot.h"
+    ),
+    ("PTestSelfManage", "parent"): (
+        "TestSelfManageParent", "mozilla/_ipdltest/TestSelfManageRoot.h"
+    ),
+    ("PTestSelfManageRoot", "child"): (
+        "TestSelfManageRootChild", "mozilla/_ipdltest/TestSelfManageRoot.h"
+    ),
+    ("PTestSelfManageRoot", "parent"): (
+        "TestSelfManageRootParent", "mozilla/_ipdltest/TestSelfManageRoot.h"
+    ),
+
+    ("PTestShmem", "child"): ("TestShmemChild", "mozilla/_ipdltest/TestShmem.h"),
+    ("PTestShmem", "parent"): ("TestShmemParent", "mozilla/_ipdltest/TestShmem.h"),
+
+    ("PTestShutdown", "child"): ("TestShutdownChild", "mozilla/_ipdltest/TestShutdown.h"),
+    ("PTestShutdown", "parent"): ("TestShutdownParent", "mozilla/_ipdltest/TestShutdown.h"),
+    ("PTestShutdownSub", "child"): ("TestShutdownSubChild", "mozilla/_ipdltest/TestShutdown.h"),
+    ("PTestShutdownSub", "parent"): ("TestShutdownSubParent", "mozilla/_ipdltest/TestShutdown.h"),
+    ("PTestShutdownSubsub", "child"): (
+        "TestShutdownSubsubChild", "mozilla/_ipdltest/TestShutdown.h"
+    ),
+    ("PTestShutdownSubsub", "parent"): (
+        "TestShutdownSubsubParent", "mozilla/_ipdltest/TestShutdown.h"
+    ),
+
+    ("PTestStackHooks", "child"): ("TestStackHooksChild", "mozilla/_ipdltest/TestStackHooks.h"),
+    ("PTestStackHooks", "parent"): ("TestStackHooksParent", "mozilla/_ipdltest/TestStackHooks.h"),
+
+    ("PTestSyncError", "child"): ("TestSyncErrorChild", "mozilla/_ipdltest/TestSyncError.h"),
+    ("PTestSyncError", "parent"): ("TestSyncErrorParent", "mozilla/_ipdltest/TestSyncError.h"),
+
+    ("PTestSyncHang", "child"): ("TestSyncHangChild", "mozilla/_ipdltest/TestSyncHang.h"),
+    ("PTestSyncHang", "parent"): ("TestSyncHangParent", "mozilla/_ipdltest/TestSyncHang.h"),
+
+    ("PTestSyncWakeup", "child"): ("TestSyncWakeupChild", "mozilla/_ipdltest/TestSyncWakeup.h"),
+    ("PTestSyncWakeup", "parent"): ("TestSyncWakeupParent", "mozilla/_ipdltest/TestSyncWakeup.h"),
+
+    ("PTestUniquePtrIPC", "child"): (
+        "TestUniquePtrIPCChild", "mozilla/_ipdltest/TestUniquePtrIPC.h"
+    ),
+    ("PTestUniquePtrIPC", "parent"): (
+        "TestUniquePtrIPCParent", "mozilla/_ipdltest/TestUniquePtrIPC.h"
+    ),
+
+    ("PTestUrgency", "child"): ("TestUrgencyChild", "mozilla/_ipdltest/TestUrgency.h"),
+    ("PTestUrgency", "parent"): ("TestUrgencyParent", "mozilla/_ipdltest/TestUrgency.h"),
+
+    ("PTestUrgentHangs", "child"): ("TestUrgentHangsChild", "mozilla/_ipdltest/TestUrgentHangs.h"),
+    ("PTestUrgentHangs", "parent"): (
+        "TestUrgentHangsParent", "mozilla/_ipdltest/TestUrgentHangs.h"
+    ),
 }
 
 # Our long term goal is to burn this list down, so new entries should be added
@@ -324,4 +616,15 @@ VIRTUAL_CALL_CLASSES = set([
     ("PLoginReputation", "child"),
     ("PPluginSurface", "child"),
     ("PTestShellCommand", "child"),
+
+    # _ipdltest
+    # Not actually subclassed
+    ("PTestIndirectProtocolParamFirst", "child"),
+    ("PTestIndirectProtocolParamFirst", "parent"),
+    ("PTestIndirectProtocolParamManage", "child"),
+    ("PTestIndirectProtocolParamManage", "parent"),
+    ("PTestIndirectProtocolParamSecond", "child"),
+    ("PTestIndirectProtocolParamSecond", "parent"),
+    ("PTestPriority", "child"),
+    ("PTestPriority", "parent"),
 ])

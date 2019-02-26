@@ -15,6 +15,8 @@ namespace _ipdltest {
 // Parent side
 
 class TestSelfManageParent : public PTestSelfManageParent {
+  friend class PTestSelfManageParent;
+
  public:
   TestSelfManageParent() { MOZ_COUNT_CTOR(TestSelfManageParent); }
   virtual ~TestSelfManageParent() { MOZ_COUNT_DTOR(TestSelfManageParent); }
@@ -22,18 +24,18 @@ class TestSelfManageParent : public PTestSelfManageParent {
   ActorDestroyReason mWhy;
 
  protected:
-  virtual PTestSelfManageParent* AllocPTestSelfManageParent() override {
+  PTestSelfManageParent* AllocPTestSelfManageParent() {
     return new TestSelfManageParent();
   }
 
-  virtual bool DeallocPTestSelfManageParent(PTestSelfManageParent* a) override {
-    return true;
-  }
+  bool DeallocPTestSelfManageParent(PTestSelfManageParent* a) { return true; }
 
   virtual void ActorDestroy(ActorDestroyReason why) override { mWhy = why; }
 };
 
 class TestSelfManageRootParent : public PTestSelfManageRootParent {
+  friend class PTestSelfManageRootParent;
+
  public:
   TestSelfManageRootParent() { MOZ_COUNT_CTOR(TestSelfManageRootParent); }
   virtual ~TestSelfManageRootParent() {
@@ -46,13 +48,11 @@ class TestSelfManageRootParent : public PTestSelfManageRootParent {
   void Main();
 
  protected:
-  virtual PTestSelfManageParent* AllocPTestSelfManageParent() override {
+  PTestSelfManageParent* AllocPTestSelfManageParent() {
     return new TestSelfManageParent();
   }
 
-  virtual bool DeallocPTestSelfManageParent(PTestSelfManageParent* a) override {
-    return true;
-  }
+  bool DeallocPTestSelfManageParent(PTestSelfManageParent* a) { return true; }
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");
@@ -65,16 +65,18 @@ class TestSelfManageRootParent : public PTestSelfManageRootParent {
 // Child side
 
 class TestSelfManageChild : public PTestSelfManageChild {
+  friend class PTestSelfManageChild;
+
  public:
   TestSelfManageChild() { MOZ_COUNT_CTOR(TestSelfManageChild); }
   virtual ~TestSelfManageChild() { MOZ_COUNT_DTOR(TestSelfManageChild); }
 
  protected:
-  virtual PTestSelfManageChild* AllocPTestSelfManageChild() override {
+  PTestSelfManageChild* AllocPTestSelfManageChild() {
     return new TestSelfManageChild();
   }
 
-  virtual bool DeallocPTestSelfManageChild(PTestSelfManageChild* a) override {
+  bool DeallocPTestSelfManageChild(PTestSelfManageChild* a) {
     delete a;
     return true;
   }
@@ -83,6 +85,8 @@ class TestSelfManageChild : public PTestSelfManageChild {
 };
 
 class TestSelfManageRootChild : public PTestSelfManageRootChild {
+  friend class PTestSelfManageRootChild;
+
  public:
   TestSelfManageRootChild() { MOZ_COUNT_CTOR(TestSelfManageRootChild); }
   virtual ~TestSelfManageRootChild() {
@@ -92,11 +96,11 @@ class TestSelfManageRootChild : public PTestSelfManageRootChild {
   void Main();
 
  protected:
-  virtual PTestSelfManageChild* AllocPTestSelfManageChild() override {
+  PTestSelfManageChild* AllocPTestSelfManageChild() {
     return new TestSelfManageChild();
   }
 
-  virtual bool DeallocPTestSelfManageChild(PTestSelfManageChild* a) override {
+  bool DeallocPTestSelfManageChild(PTestSelfManageChild* a) {
     delete a;
     return true;
   }

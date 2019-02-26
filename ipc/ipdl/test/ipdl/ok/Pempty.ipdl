@@ -1,0 +1,3 @@
+protocol Pempty {
+child: async Msg();
+};

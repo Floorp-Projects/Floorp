@@ -64,10 +64,8 @@ enum JSValueType : uint8_t {
   JSVAL_TYPE_BIGINT = 0x09,
   JSVAL_TYPE_OBJECT = 0x0c,
 
-  // These never appear in a jsval; they are only provided as an out-of-band
-  // value.
-  JSVAL_TYPE_UNKNOWN = 0x20,
-  JSVAL_TYPE_MISSING = 0x21
+  // This type never appears in a Value; it's only an out-of-band value.
+  JSVAL_TYPE_UNKNOWN = 0x20
 };
 
 namespace JS {

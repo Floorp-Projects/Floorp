@@ -1107,7 +1107,7 @@ class UrlbarInput {
   }
 
   _on_TabSelect(event) {
-    this.controller.tabContextChanged();
+    this.controller.viewContextChanged();
   }
 
   _on_keydown(event) {

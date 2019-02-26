@@ -29,12 +29,14 @@ class TestSyncHangParent : public PTestSyncHangParent {
 };
 
 class TestSyncHangChild : public PTestSyncHangChild {
+  friend class PTestSyncHangChild;
+
  public:
   TestSyncHangChild();
   virtual ~TestSyncHangChild();
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvUnusedMessage() override;
+  mozilla::ipc::IPCResult RecvUnusedMessage();
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");

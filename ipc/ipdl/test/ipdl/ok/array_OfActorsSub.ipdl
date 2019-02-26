@@ -1,7 +1,0 @@
-include protocol array_OfActors;
-
-protocol array_OfActorsSub {
-    manager array_OfActors;
-
-child: async __delete__();
-};

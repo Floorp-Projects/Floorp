@@ -19,10 +19,10 @@ class TestHighestPrioParent : public PTestHighestPrioParent {
 
   void Main();
 
-  mozilla::ipc::IPCResult RecvMsg1() override;
-  mozilla::ipc::IPCResult RecvMsg2() override;
-  mozilla::ipc::IPCResult RecvMsg3() override;
-  mozilla::ipc::IPCResult RecvMsg4() override;
+  mozilla::ipc::IPCResult RecvMsg1();
+  mozilla::ipc::IPCResult RecvMsg2();
+  mozilla::ipc::IPCResult RecvMsg3();
+  mozilla::ipc::IPCResult RecvMsg4();
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");
@@ -40,8 +40,8 @@ class TestHighestPrioChild : public PTestHighestPrioChild {
   TestHighestPrioChild();
   virtual ~TestHighestPrioChild();
 
-  mozilla::ipc::IPCResult RecvStart() override;
-  mozilla::ipc::IPCResult RecvStartInner() override;
+  mozilla::ipc::IPCResult RecvStart();
+  mozilla::ipc::IPCResult RecvStartInner();
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");
