@@ -84,7 +84,7 @@ export function setupHelper(obj: Object) {
 
   if (isDevelopment() && !isTesting()) {
     console.group("Development Notes");
-    const baseUrl = "https://firefox-devtools.github.io/debugger.html";
+    const baseUrl = "https://firefox-devtools.github.io/debugger";
     const localDevelopmentUrl = `${baseUrl}/docs/dbg.html`;
     console.log("Debugging Tips", localDevelopmentUrl);
     console.log("dbg", window.dbg);

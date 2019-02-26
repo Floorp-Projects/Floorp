@@ -217,6 +217,8 @@ fn write_stacking_context(
     sc: &StackingContext,
     properties: &SceneProperties,
     filter_iter: AuxIter<FilterOp>,
+    filter_data_iter: &[TempFilterData],
+    display_list: &BuiltDisplayList,
 ) {
     enum_node(parent, "transform-style", sc.transform_style);
 
@@ -266,10 +268,50 @@ fn write_stacking_context(
             FilterOp::LinearToSrgb => {
                 filters.push(Yaml::String("linear-to-srgb".to_string()))
             }
+            FilterOp::ComponentTransfer => {
+                filters.push(Yaml::String("component-transfer".to_string()))
+            }
         }
     }
 
     yaml_node(parent, "filters", Yaml::Array(filters));
+
+    // filter datas
+    let mut filter_datas = vec![];
+    for filter_data in filter_data_iter {
+        let func_types = display_list.get(filter_data.func_types).map(|func_type| {
+            match func_type {
+                ComponentTransferFuncType::Identity => { Yaml::String("Identity".to_string()) }
+                ComponentTransferFuncType::Table => { Yaml::String("Table".to_string()) }
+                ComponentTransferFuncType::Discrete => { Yaml::String("Discrete".to_string()) }
+                ComponentTransferFuncType::Linear => { Yaml::String("Linear".to_string()) }
+                ComponentTransferFuncType::Gamma => { Yaml::String("Gamma".to_string()) }
+            }
+        }).collect();
+        let r_values = display_list.get(filter_data.r_values).map(|value| {
+            Yaml::String(format!("{}", value))
+        }).collect();
+        let g_values = display_list.get(filter_data.g_values).map(|value| {
+            Yaml::String(format!("{}", value))
+        }).collect();
+        let b_values = display_list.get(filter_data.b_values).map(|value| {
+            Yaml::String(format!("{}", value))
+        }).collect();
+        let a_values = display_list.get(filter_data.a_values).map(|value| {
+            Yaml::String(format!("{}", value))
+        }).collect();
+
+        let avec: Vec<Yaml> = [
+            Yaml::Array(func_types),
+            Yaml::Array(r_values),
+            Yaml::Array(g_values),
+            Yaml::Array(b_values),
+            Yaml::Array(a_values),
+        ].to_vec();
+        filter_datas.push(Yaml::Array(avec));
+    }
+
+    yaml_node(parent, "filter-datas", Yaml::Array(filter_datas));
 }
 
 #[cfg(target_os = "macos")]
@@ -1034,6 +1076,8 @@ impl YamlFrameWriter {
                         &item.stacking_context,
                         &scene.properties,
                         filters,
+                        base.filter_datas(),
+                        display_list,
                     );
 
                     let mut sub_iter = base.sub_iter();
@@ -1152,6 +1196,8 @@ impl YamlFrameWriter {
                 }
 
                 Sdi::SetGradientStops => panic!("dummy item yielded?"),
+                Sdi::SetFilterOps => panic!("dummy item yielded?"),
+                Sdi::SetFilterData => panic!("dummy item yielded?"),
                 Sdi::PushShadow(shadow) => {
                     str_node(&mut v, "type", "shadow");
                     vector_node(&mut v, "offset", &shadow.offset);
