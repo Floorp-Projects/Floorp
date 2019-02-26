@@ -33,7 +33,7 @@ add_task(async function() {
   info("Opening a tab while there is a true user setting on split console pref");
   toolbox = await openNewTabAndToolbox(TEST_URI, "inspector");
   ok(toolbox.splitConsole, "Split console is visible by default.");
-  ok(isJstermFocused(toolbox.getPanel("webconsole").hud.jsterm),
+  ok(isInputFocused(toolbox.getPanel("webconsole").hud),
      "Split console input is focused by default");
   ok(await doesMenuSayHide(toolbox),
      "Split console menu item initially says hide");
