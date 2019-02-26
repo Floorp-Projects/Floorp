@@ -1057,7 +1057,7 @@ class ExtensionStorageSync {
           e instanceof ServerKeyringDeleted ||
           // This is another way that ServerKeyringDeleted can
           // manifest; see bug 1350088 for more details.
-          e.message == "Server has been flushed.") {
+          e.message.includes("Server has been flushed.")) {
         // Check if our token is still valid, or if we got locked out
         // between starting the sync and talking to Kinto.
         const isSessionValid = await this._fxaService.sessionStatus();
