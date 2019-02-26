@@ -127,8 +127,6 @@ pub enum SpecificDisplayItem {
     PopAllShadows,
     PushCacheMarker(CacheMarkerDisplayItem),
     PopCacheMarker,
-    SetFilterOps,
-    SetFilterData,
 }
 
 /// This is a "complete" version of the DI specifics,
@@ -155,15 +153,13 @@ pub enum CompletelySpecificDisplayItem {
     Iframe(IframeDisplayItem),
     PushReferenceFrame(ReferenceFrameDisplayListItem),
     PopReferenceFrame,
-    PushStackingContext(PushStackingContextDisplayItem),
+    PushStackingContext(PushStackingContextDisplayItem, Vec<FilterOp>),
     PopStackingContext,
     SetGradientStops(Vec<GradientStop>),
     PushShadow(Shadow),
     PopAllShadows,
     PushCacheMarker(CacheMarkerDisplayItem),
     PopCacheMarker,
-    SetFilterOps(Vec<FilterOp>),
-    SetFilterData(FilterData),
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
@@ -566,7 +562,8 @@ pub struct StackingContext {
     pub raster_space: RasterSpace,
     /// True if picture caching should be used on this stacking context.
     pub cache_tiles: bool,
-} // IMPLICIT: filters: Vec<FilterOp>, filter_datas: Vec<FilterData>
+} // IMPLICIT: filters: Vec<FilterOp>
+
 
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
@@ -644,7 +641,6 @@ pub enum FilterOp {
     ColorMatrix([f32; 20]),
     SrgbToLinear,
     LinearToSrgb,
-    ComponentTransfer,
 }
 
 impl FilterOp {
@@ -662,103 +658,6 @@ impl FilterOp {
             }
             filter => filter,
         }
-    }
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize)]
-pub enum ComponentTransferFuncType {
-  Identity = 0,
-  Table = 1,
-  Discrete = 2,
-  Linear = 3,
-  Gamma = 4,
-}
-
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub struct FilterData {
-    pub func_r_type: ComponentTransferFuncType,
-    pub r_values: Vec<f32>,
-    pub func_g_type: ComponentTransferFuncType,
-    pub g_values: Vec<f32>,
-    pub func_b_type: ComponentTransferFuncType,
-    pub b_values: Vec<f32>,
-    pub func_a_type: ComponentTransferFuncType,
-    pub a_values: Vec<f32>,
-}
-
-fn sanitize_func_type(
-    func_type: ComponentTransferFuncType,
-    values: &[f32],
-) -> ComponentTransferFuncType {
-    if values.is_empty() {
-        return ComponentTransferFuncType::Identity;
-    }
-    if values.len() < 2 && func_type == ComponentTransferFuncType::Linear {
-        return ComponentTransferFuncType::Identity;
-    }
-    if values.len() < 3 && func_type == ComponentTransferFuncType::Gamma {
-        return ComponentTransferFuncType::Identity;
-    }
-    func_type
-}
-
-fn sanitize_values(
-    func_type: ComponentTransferFuncType,
-    values: &[f32],
-) -> bool {
-    if values.len() < 2 && func_type == ComponentTransferFuncType::Linear {
-        return false;
-    }
-    if values.len() < 3 && func_type == ComponentTransferFuncType::Gamma {
-        return false;
-    }
-    true
-}
-
-impl FilterData {
-    /// Ensure that the number of values matches up with the function type.
-    pub fn sanitize(&self) -> FilterData {
-        FilterData {
-            func_r_type: sanitize_func_type(self.func_r_type, &self.r_values),
-            r_values:
-                    if sanitize_values(self.func_r_type, &self.r_values) {
-                        self.r_values.clone()
-                    } else {
-                        Vec::new()
-                    },
-            func_g_type: sanitize_func_type(self.func_g_type, &self.g_values),
-            g_values:
-                    if sanitize_values(self.func_g_type, &self.g_values) {
-                        self.g_values.clone()
-                    } else {
-                        Vec::new()
-                    },
-
-            func_b_type: sanitize_func_type(self.func_b_type, &self.b_values),
-            b_values:
-                    if sanitize_values(self.func_b_type, &self.b_values) {
-                        self.b_values.clone()
-                    } else {
-                        Vec::new()
-                    },
-
-            func_a_type: sanitize_func_type(self.func_a_type, &self.a_values),
-            a_values:
-                    if sanitize_values(self.func_a_type, &self.a_values) {
-                        self.a_values.clone()
-                    } else {
-                        Vec::new()
-                    },
-
-        }
-    }
-
-    pub fn is_identity(&self) -> bool {
-        self.func_r_type == ComponentTransferFuncType::Identity &&
-        self.func_g_type == ComponentTransferFuncType::Identity &&
-        self.func_b_type == ComponentTransferFuncType::Identity &&
-        self.func_a_type == ComponentTransferFuncType::Identity
     }
 }
 

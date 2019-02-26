@@ -64,7 +64,6 @@ class nsDisplayCompositorHitTestInfo;
 class nsDisplayScrollInfoLayer;
 class nsCaret;
 enum class nsDisplayOwnLayerFlags;
-struct WrFiltersHolder;
 
 namespace mozilla {
 class FrameLayerBuilder;
@@ -6390,7 +6389,7 @@ class nsDisplayFilters : public nsDisplayEffectsBase {
       nsDisplayListBuilder* aDisplayListBuilder) override;
   bool CanCreateWebRenderCommands(nsDisplayListBuilder* aBuilder);
 
-  bool CreateWebRenderCSSFilters(WrFiltersHolder& wrFilters);
+  bool CreateWebRenderCSSFilters(nsTArray<mozilla::wr::FilterOp>& wrFilters);
 
  private:
   // relative to mFrame
