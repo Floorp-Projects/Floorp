@@ -827,7 +827,7 @@ def _log_info(text):
 
 def _download_file(url, filename, path):
     _log_debug("Download %s to %s/%s..." % (url, path, filename))
-    f = urllib.urlopen(url)
+    f = urllib.request.urlopen(url)
     if not os.path.isdir(path):
         try:
             os.makedirs(path)
