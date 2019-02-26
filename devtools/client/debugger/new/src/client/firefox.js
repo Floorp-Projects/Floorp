@@ -35,9 +35,7 @@ export async function onConnect(connection: any, actions: Object) {
     supportsWasm
   });
 
-  if (actions) {
-    setupEvents({ threadClient, actions, supportsWasm });
-  }
+  setupEvents({ threadClient, tabTarget, actions, supportsWasm });
 
   tabTarget.on("will-navigate", actions.willNavigate);
   tabTarget.on("navigate", actions.navigated);
