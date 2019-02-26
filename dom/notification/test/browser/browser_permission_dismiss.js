@@ -1,11 +1,11 @@
 "use strict";
 
-const ORIGIN_URI = Services.io.newURI("http://mochi.test:8888");
+const ORIGIN_URI = Services.io.newURI("https://example.com");
 const PERMISSION_NAME = "desktop-notification";
 const PROMPT_ALLOW_BUTTON = -1;
 const PROMPT_NOT_NOW_BUTTON = 0;
 const PROMPT_NEVER_BUTTON = 1;
-const TEST_URL = "http://mochi.test:8888/browser/dom/notification/test/browser/notification.html";
+const TEST_URL = "https://example.com/browser/dom/notification/test/browser/notification.html";
 
 /**
  * Clicks the specified web-notifications prompt button.
