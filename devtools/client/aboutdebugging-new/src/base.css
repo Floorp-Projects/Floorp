@@ -46,6 +46,10 @@
   /* Typography from Photon */
   --body-10-font-size: 13px;
   --body-10-font-weight: 400;
+  --body-20-font-size: 15px;
+  --body-20-font-weight: 700;
+  --caption-20-font-size: 13px;
+  --caption-20-font-weight: 400;
   --title-20-font-size: 17px;
   --title-20-font-weight: 600;
 
