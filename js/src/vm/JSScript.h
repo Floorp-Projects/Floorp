@@ -3046,8 +3046,6 @@ class LazyScript : public gc::TenuredCell {
                                   uint32_t end, uint32_t toStringStart,
                                   uint32_t lineno, uint32_t column);
 
-  void initRuntimeFields(uint64_t packedFields);
-
   static inline JSFunction* functionDelazifying(JSContext* cx,
                                                 Handle<LazyScript*>);
   JSFunction* functionNonDelazifying() const { return function_; }
@@ -3220,7 +3218,7 @@ class LazyScript : public gc::TenuredCell {
     return mallocSizeOf(table_);
   }
 
-  uint64_t packedFields() const { return packedFields_; }
+  uint64_t packedFieldsForXDR() const;
 };
 
 /* If this fails, add/remove padding within LazyScript. */
