@@ -29,20 +29,6 @@ NS_INTERFACE_MAP_END
 Storage::Storage(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
     : mWindow(aWindow), mPrincipal(aPrincipal), mIsSessionOnly(false) {
   MOZ_ASSERT(aPrincipal);
-
-  if (nsContentUtils::IsSystemPrincipal(mPrincipal)) {
-    mIsSessionOnly = false;
-  } else if (mWindow) {
-    uint32_t rejectedReason = 0;
-    nsContentUtils::StorageAccess access =
-        nsContentUtils::StorageAllowedForWindow(mWindow, &rejectedReason);
-
-    MOZ_ASSERT(access != nsContentUtils::StorageAccess::eDeny ||
-               rejectedReason ==
-                   nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN);
-
-    mIsSessionOnly = access <= nsContentUtils::StorageAccess::eSessionScoped;
-  }
 }
 
 Storage::~Storage() {}
@@ -52,8 +38,26 @@ Storage::~Storage() {}
 }
 
 bool Storage::CanUseStorage(nsIPrincipal& aSubjectPrincipal) {
+  // This method is responsible for correct setting of mIsSessionOnly.
   if (!StoragePrefIsEnabled()) {
     return false;
+  }
+
+  if (nsContentUtils::IsSystemPrincipal(mPrincipal)) {
+    mIsSessionOnly = false;
+  } else if (mWindow) {
+    uint32_t rejectedReason = 0;
+    nsContentUtils::StorageAccess access =
+        nsContentUtils::StorageAllowedForWindow(mWindow, &rejectedReason);
+
+    // Note that we allow StorageAccess::ePartitionedOrDeny because we want
+    // tracker to have access to their sessionStorage.
+    if (access == nsContentUtils::StorageAccess::eDeny &&
+        ShouldThrowWhenStorageAccessDenied(rejectedReason)) {
+      return false;
+    }
+
+    mIsSessionOnly = access <= nsContentUtils::StorageAccess::eSessionScoped;
   }
 
   return aSubjectPrincipal.Subsumes(mPrincipal);
