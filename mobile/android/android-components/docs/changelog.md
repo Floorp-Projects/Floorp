@@ -25,6 +25,9 @@ permalink: /changelog/
     )
   ```
 
+* **browser-toolbar**
+  * `BrowserToolbar` `cancelView` is now `clearView` with new text clearing behavior and color attribute updated from `browserToolbarCancelColor` to `browserToolbarClearColor`
+
 # 0.44.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.43.0...v0.44.0)
@@ -51,8 +54,6 @@ permalink: /changelog/
 * **browser-toolbar**
   * Added option to configure fading edge length by using `browserToolbarFadingEdgeSize` XML attribute.
   * Added `BrowserToolbar` attribute `browserToolbarCancelColor` to color the cancel icon.
-  * `BrowserToolbar` `cancelView` is now `clearView` with new text clearing behavior and color attribute updated from `browserToolbarCancelColor` to `browserToolbarClearColor`
-
 
 * **feature-toolbar**
   * `ToolbarPresenter` now handles situations where no `Session` is selected.
