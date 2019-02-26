@@ -53,7 +53,7 @@ class RuntimeInfo extends PureComponent {
       deviceName ?
         dom.label(
           {
-            className: "runtime-info__subtitle",
+            className: "main-heading-subtitle runtime-info__subtitle",
           },
           deviceName
         ) : null,

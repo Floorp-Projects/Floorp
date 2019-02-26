@@ -50,8 +50,12 @@
   --body-20-font-weight: 700;
   --caption-20-font-size: 13px;
   --caption-20-font-weight: 400;
+  --display-20-font-size: 36px;
+  --display-20-font-weight: 200;
   --title-20-font-size: 17px;
   --title-20-font-weight: 600;
+  --title-30-font-size: 22px;
+  --title-30-font-weight: 300;
 
   /* Global layout vars */
   --page-width: 664px;
@@ -150,14 +154,19 @@ p, h1 {
 
 /* Main style for heading (i.e. h1) */
 .main-heading {
-  font-size: 2.5em;
-  font-weight: lighter;
+  font-size: var(--display-20-font-size);
+  font-weight: var(--display-20-font-weight);
   line-height: 1.2;
   color: var(--in-content-text-color);
 }
 
 .main-heading__icon {
   width: 100%;
+}
+
+.main-heading-subtitle {
+  font-size: var(--title-30-font-size);
+  font-weight: var(--title-30-font-weight);
 }
 
 /* Main style for a subheading (i.e. h2). It features an icon */
