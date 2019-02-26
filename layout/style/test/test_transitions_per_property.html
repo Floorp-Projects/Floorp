@@ -331,6 +331,21 @@ if (IsCSSPropertyPrefEnabled("layout.css.scrollbar-color.enabled")) {
   ];
 }
 
+if (IsCSSPropertyPrefEnabled("layout.css.scroll-snap-v1.enabled")) {
+  supported_properties["scroll-margin-top"] = [
+    test_length_transition,
+  ];
+  supported_properties["scroll-margin-right"] = [
+    test_length_transition,
+  ];
+  supported_properties["scroll-margin-bottom"] = [
+    test_length_transition,
+  ];
+  supported_properties["scroll-margin-left"] = [
+    test_length_transition,
+  ];
+}
+
 // For properties which are well-tested by web-platform-tests, we don't need to
 // test animations/transitions again on them.
 var skipped_transitionable_properties = [
@@ -345,6 +360,9 @@ for (const logical_side of ["inline-start", "inline-end", "block-start", "block-
   supported_properties["margin-" + logical_side] = supported_properties["margin-top"];
   supported_properties["padding-" + logical_side] = supported_properties["padding-top"];
   supported_properties["inset-" + logical_side] = supported_properties["top"];
+  if (IsCSSPropertyPrefEnabled("layout.css.scroll-snap-v1.enabled")) {
+    supported_properties["scroll-margin-" + logical_side] = supported_properties["scroll-margin-top"];
+  }
 }
 
 for (const logical_size of ["inline", "block"]) {
