@@ -5,9 +5,10 @@
 package org.mozilla.fenix
 
 import android.annotation.SuppressLint
+import android.app.ActivityManager
 import android.app.Application
 import android.content.Context
-import com.squareup.leakcanary.LeakCanary
+import android.os.Process
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -29,13 +30,19 @@ open class FenixApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        Log.addSink(AndroidLogSink())
 
-        if (LeakCanary.isInAnalyzerProcess(this)) {
-            return // don't perform extra init in analyzer
-        }
-        setupLeakCanary()
+        Log.addSink(AndroidLogSink())
         setupCrashReporting()
+
+        if (!isMainProcess(this)) {
+            // If this is not the main process then do not continue with the initialization here. Everything that
+            // follows only needs to be done in our app's main process and should not be done in other processes like
+            // a GeckoView child process or the crash handling process. Most importantly we never want to end up in a
+            // situation where we create a GeckoRuntime from the Gecko child process (
+            return
+        }
+
+        setupLeakCanary()
         setupGlean(this)
         loadExperiments()
     }
@@ -56,7 +63,10 @@ open class FenixApplication : Application() {
     private fun loadExperiments() {
         val experimentsFile = File(filesDir, EXPERIMENTS_JSON_FILENAME)
         val experimentSource = KintoExperimentSource(
-            EXPERIMENTS_BASE_URL, EXPERIMENTS_BUCKET_NAME, EXPERIMENTS_COLLECTION_NAME
+            EXPERIMENTS_BASE_URL,
+            EXPERIMENTS_BUCKET_NAME,
+            EXPERIMENTS_COLLECTION_NAME,
+            components.core.client
         )
         // TODO add ValueProvider to keep clientID in sync with Glean when ready
         fretboard = Fretboard(experimentSource, FlatFileExperimentStorage(experimentsFile))
@@ -81,4 +91,25 @@ open class FenixApplication : Application() {
             .crashReporter
             .install(this)
     }
+}
+
+/**
+ * Are we running in the main process?
+ *
+ * Let's move this code to Android Components:
+ * https://github.com/mozilla-mobile/android-components/issues/2207
+ */
+private fun isMainProcess(context: Context): Boolean {
+    val pid = Process.myPid()
+
+    val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE)
+        as ActivityManager
+
+    activityManager.runningAppProcesses?.forEach { processInfo ->
+        if (processInfo.pid == pid) {
+            return processInfo.processName == context.packageName
+        }
+    }
+
+    return false
 }
