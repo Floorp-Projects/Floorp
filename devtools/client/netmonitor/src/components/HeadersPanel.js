@@ -15,6 +15,7 @@ const { L10N } = require("../utils/l10n");
 const {
   getHeadersURL,
   getHTTPStatusCodeURL,
+  getTrackingProtectionURL,
 } = require("../utils/mdn-utils");
 const {
   fetchNetworkUpdatePacket,
@@ -358,6 +359,7 @@ class HeadersPanel extends Component {
         statusText,
         urlDetails,
         referrerPolicy,
+        isThirdPartyTrackingResource,
       },
     } = this.props;
     const item = { fromCache, fromServiceWorker, status, statusText };
@@ -416,6 +418,27 @@ class HeadersPanel extends Component {
       );
     }
 
+    let trackingProtectionStatus;
+
+    if (isThirdPartyTrackingResource) {
+      const trackingProtectionDocURL = getTrackingProtectionURL();
+
+      trackingProtectionStatus = (
+        div({ className: "tabpanel-summary-container tracking-protection" },
+          div({
+            className: "tracking-resource",
+          }),
+          L10N.getStr("netmonitor.trackingResource.tooltip"),
+          trackingProtectionDocURL ? MDNLink({
+            url: trackingProtectionDocURL,
+            title: SUMMARY_STATUS_LEARN_MORE,
+          }) : span({
+            className: "headers-summary learn-more-link",
+          }),
+        )
+      );
+    }
+
     const summaryVersion = httpVersion ?
       this.renderSummary(SUMMARY_VERSION, httpVersion) : null;
 
@@ -437,6 +460,7 @@ class HeadersPanel extends Component {
       div({ className: "panel-container" },
         div({ className: "headers-overview" },
           summaryUrl,
+          trackingProtectionStatus,
           summaryMethod,
           summaryAddress,
           summaryStatus,

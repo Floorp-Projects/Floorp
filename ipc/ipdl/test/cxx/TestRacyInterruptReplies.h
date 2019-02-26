@@ -10,6 +10,8 @@ namespace mozilla {
 namespace _ipdltest {
 
 class TestRacyInterruptRepliesParent : public PTestRacyInterruptRepliesParent {
+  friend class PTestRacyInterruptRepliesParent;
+
  public:
   TestRacyInterruptRepliesParent();
   virtual ~TestRacyInterruptRepliesParent();
@@ -20,9 +22,9 @@ class TestRacyInterruptRepliesParent : public PTestRacyInterruptRepliesParent {
   void Main();
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvA_() override;
+  mozilla::ipc::IPCResult RecvA_();
 
-  virtual mozilla::ipc::IPCResult Answer_R(int* replyNum) override;
+  mozilla::ipc::IPCResult Answer_R(int* replyNum);
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");
@@ -35,16 +37,18 @@ class TestRacyInterruptRepliesParent : public PTestRacyInterruptRepliesParent {
 };
 
 class TestRacyInterruptRepliesChild : public PTestRacyInterruptRepliesChild {
+  friend class PTestRacyInterruptRepliesChild;
+
  public:
   TestRacyInterruptRepliesChild();
   virtual ~TestRacyInterruptRepliesChild();
 
  protected:
-  virtual mozilla::ipc::IPCResult AnswerR_(int* replyNum) override;
+  mozilla::ipc::IPCResult AnswerR_(int* replyNum);
 
-  virtual mozilla::ipc::IPCResult RecvChildTest() override;
+  mozilla::ipc::IPCResult RecvChildTest();
 
-  virtual mozilla::ipc::IPCResult Recv_A() override;
+  mozilla::ipc::IPCResult Recv_A();
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");

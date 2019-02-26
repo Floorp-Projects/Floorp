@@ -156,6 +156,22 @@ function validateAndParseParamRecursive(param, properties) {
       }
       return [true, parsedObj];
     }
+
+    case "JSON":
+      if (typeof(param) == "object") {
+        return [true, param];
+      }
+      try {
+        let json = JSON.parse(param);
+        if (typeof(json) != "object") {
+          log.error("JSON was not an object");
+          return [false, null];
+        }
+        return [true, json];
+      } catch (e) {
+        log.error("JSON string couldn't be parsed");
+        return [false, null];
+      }
   }
 
   return [false, null];

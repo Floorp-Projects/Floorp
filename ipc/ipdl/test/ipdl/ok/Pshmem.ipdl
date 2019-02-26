@@ -1,0 +1,13 @@
+union Foo {
+    int;
+    Shmem;
+};
+
+intr protocol Pshmem {
+parent:
+    async Msg(Shmem s, Foo f);
+    sync SyncMsg(Shmem s, Foo f)
+        returns (Shmem t, Foo g);
+    intr InterruptMsg(Shmem s, Foo f)
+        returns (Shmem t, Foo g);
+};

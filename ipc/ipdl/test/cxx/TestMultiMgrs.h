@@ -29,6 +29,8 @@ class TestMultiMgrsBottomParent : public PTestMultiMgrsBottomParent {
 };
 
 class TestMultiMgrsLeftParent : public PTestMultiMgrsLeftParent {
+  friend class PTestMultiMgrsLeftParent;
+
  public:
   TestMultiMgrsLeftParent() {}
   virtual ~TestMultiMgrsLeftParent() {}
@@ -40,19 +42,19 @@ class TestMultiMgrsLeftParent : public PTestMultiMgrsLeftParent {
  protected:
   virtual void ActorDestroy(ActorDestroyReason why) override {}
 
-  virtual PTestMultiMgrsBottomParent* AllocPTestMultiMgrsBottomParent()
-      override {
+  PTestMultiMgrsBottomParent* AllocPTestMultiMgrsBottomParent() {
     return new TestMultiMgrsBottomParent();
   }
 
-  virtual bool DeallocPTestMultiMgrsBottomParent(
-      PTestMultiMgrsBottomParent* actor) override {
+  bool DeallocPTestMultiMgrsBottomParent(PTestMultiMgrsBottomParent* actor) {
     delete actor;
     return true;
   }
 };
 
 class TestMultiMgrsRightParent : public PTestMultiMgrsRightParent {
+  friend class PTestMultiMgrsRightParent;
+
  public:
   TestMultiMgrsRightParent() {}
   virtual ~TestMultiMgrsRightParent() {}
@@ -64,19 +66,19 @@ class TestMultiMgrsRightParent : public PTestMultiMgrsRightParent {
  protected:
   virtual void ActorDestroy(ActorDestroyReason why) override {}
 
-  virtual PTestMultiMgrsBottomParent* AllocPTestMultiMgrsBottomParent()
-      override {
+  PTestMultiMgrsBottomParent* AllocPTestMultiMgrsBottomParent() {
     return new TestMultiMgrsBottomParent();
   }
 
-  virtual bool DeallocPTestMultiMgrsBottomParent(
-      PTestMultiMgrsBottomParent* actor) override {
+  bool DeallocPTestMultiMgrsBottomParent(PTestMultiMgrsBottomParent* actor) {
     delete actor;
     return true;
   }
 };
 
 class TestMultiMgrsParent : public PTestMultiMgrsParent {
+  friend class PTestMultiMgrsParent;
+
  public:
   TestMultiMgrsParent() {}
   virtual ~TestMultiMgrsParent() {}
@@ -87,24 +89,22 @@ class TestMultiMgrsParent : public PTestMultiMgrsParent {
   void Main();
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvOK() override;
+  mozilla::ipc::IPCResult RecvOK();
 
-  virtual PTestMultiMgrsLeftParent* AllocPTestMultiMgrsLeftParent() override {
+  PTestMultiMgrsLeftParent* AllocPTestMultiMgrsLeftParent() {
     return new TestMultiMgrsLeftParent();
   }
 
-  virtual bool DeallocPTestMultiMgrsLeftParent(
-      PTestMultiMgrsLeftParent* actor) override {
+  bool DeallocPTestMultiMgrsLeftParent(PTestMultiMgrsLeftParent* actor) {
     delete actor;
     return true;
   }
 
-  virtual PTestMultiMgrsRightParent* AllocPTestMultiMgrsRightParent() override {
+  PTestMultiMgrsRightParent* AllocPTestMultiMgrsRightParent() {
     return new TestMultiMgrsRightParent();
   }
 
-  virtual bool DeallocPTestMultiMgrsRightParent(
-      PTestMultiMgrsRightParent* actor) override {
+  bool DeallocPTestMultiMgrsRightParent(PTestMultiMgrsRightParent* actor) {
     delete actor;
     return true;
   }
@@ -127,6 +127,8 @@ class TestMultiMgrsBottomChild : public PTestMultiMgrsBottomChild {
 };
 
 class TestMultiMgrsLeftChild : public PTestMultiMgrsLeftChild {
+  friend class PTestMultiMgrsLeftChild;
+
  public:
   TestMultiMgrsLeftChild() {}
   virtual ~TestMultiMgrsLeftChild() {}
@@ -139,18 +141,19 @@ class TestMultiMgrsLeftChild : public PTestMultiMgrsLeftChild {
   virtual mozilla::ipc::IPCResult RecvPTestMultiMgrsBottomConstructor(
       PTestMultiMgrsBottomChild* actor) override;
 
-  virtual PTestMultiMgrsBottomChild* AllocPTestMultiMgrsBottomChild() override {
+  PTestMultiMgrsBottomChild* AllocPTestMultiMgrsBottomChild() {
     return new TestMultiMgrsBottomChild();
   }
 
-  virtual bool DeallocPTestMultiMgrsBottomChild(
-      PTestMultiMgrsBottomChild* actor) override {
+  bool DeallocPTestMultiMgrsBottomChild(PTestMultiMgrsBottomChild* actor) {
     delete actor;
     return true;
   }
 };
 
 class TestMultiMgrsRightChild : public PTestMultiMgrsRightChild {
+  friend class PTestMultiMgrsRightChild;
+
  public:
   TestMultiMgrsRightChild() {}
   virtual ~TestMultiMgrsRightChild() {}
@@ -163,18 +166,19 @@ class TestMultiMgrsRightChild : public PTestMultiMgrsRightChild {
   virtual mozilla::ipc::IPCResult RecvPTestMultiMgrsBottomConstructor(
       PTestMultiMgrsBottomChild* actor) override;
 
-  virtual PTestMultiMgrsBottomChild* AllocPTestMultiMgrsBottomChild() override {
+  PTestMultiMgrsBottomChild* AllocPTestMultiMgrsBottomChild() {
     return new TestMultiMgrsBottomChild();
   }
 
-  virtual bool DeallocPTestMultiMgrsBottomChild(
-      PTestMultiMgrsBottomChild* actor) override {
+  bool DeallocPTestMultiMgrsBottomChild(PTestMultiMgrsBottomChild* actor) {
     delete actor;
     return true;
   }
 };
 
 class TestMultiMgrsChild : public PTestMultiMgrsChild {
+  friend class PTestMultiMgrsChild;
+
  public:
   TestMultiMgrsChild() {}
   virtual ~TestMultiMgrsChild() {}
@@ -185,24 +189,22 @@ class TestMultiMgrsChild : public PTestMultiMgrsChild {
   PTestMultiMgrsBottomChild* mBottomR;
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvCheck() override;
+  mozilla::ipc::IPCResult RecvCheck();
 
-  virtual PTestMultiMgrsLeftChild* AllocPTestMultiMgrsLeftChild() override {
+  PTestMultiMgrsLeftChild* AllocPTestMultiMgrsLeftChild() {
     return new TestMultiMgrsLeftChild();
   }
 
-  virtual bool DeallocPTestMultiMgrsLeftChild(
-      PTestMultiMgrsLeftChild* actor) override {
+  bool DeallocPTestMultiMgrsLeftChild(PTestMultiMgrsLeftChild* actor) {
     delete actor;
     return true;
   }
 
-  virtual PTestMultiMgrsRightChild* AllocPTestMultiMgrsRightChild() override {
+  PTestMultiMgrsRightChild* AllocPTestMultiMgrsRightChild() {
     return new TestMultiMgrsRightChild();
   }
 
-  virtual bool DeallocPTestMultiMgrsRightChild(
-      PTestMultiMgrsRightChild* actor) override {
+  bool DeallocPTestMultiMgrsRightChild(PTestMultiMgrsRightChild* actor) {
     delete actor;
     return true;
   }

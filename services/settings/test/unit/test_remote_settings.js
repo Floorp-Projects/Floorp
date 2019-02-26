@@ -385,6 +385,23 @@ add_task(async function test_telemetry_reports_unknown_errors() {
 });
 add_task(clear_state);
 
+add_task(async function test_telemetry_reports_indexeddb_as_custom_1() {
+  const backup = client.openCollection;
+  const msg = "IndexedDB getLastModified() The operation failed for reasons unrelated to the database itself";
+  client.openCollection = () => { throw new Error(msg); };
+  const startHistogram = getUptakeTelemetrySnapshot(client.identifier);
+
+  try {
+    await client.maybeSync(2000);
+  } catch (e) { }
+
+  client.openCollection = backup;
+  const endHistogram = getUptakeTelemetrySnapshot(client.identifier);
+  const expectedIncrements = {[UptakeTelemetry.STATUS.CUSTOM_1_ERROR]: 1};
+  checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
+});
+add_task(clear_state);
+
 add_task(async function test_bucketname_changes_when_bucket_pref_changes() {
   equal(client.bucketName, "main");
 

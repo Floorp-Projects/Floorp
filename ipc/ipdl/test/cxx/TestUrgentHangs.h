@@ -21,9 +21,9 @@ class TestUrgentHangsParent : public PTestUrgentHangsParent {
   void SecondStage();
   void ThirdStage();
 
-  mozilla::ipc::IPCResult RecvTest1_2() override;
-  mozilla::ipc::IPCResult RecvTestInner() override;
-  mozilla::ipc::IPCResult RecvTestInnerUrgent() override;
+  mozilla::ipc::IPCResult RecvTest1_2();
+  mozilla::ipc::IPCResult RecvTestInner();
+  mozilla::ipc::IPCResult RecvTestInnerUrgent();
 
   bool ShouldContinueFromReplyTimeout() override { return false; }
   virtual void ActorDestroy(ActorDestroyReason why) override {
@@ -46,14 +46,14 @@ class TestUrgentHangsChild : public PTestUrgentHangsChild {
   TestUrgentHangsChild();
   virtual ~TestUrgentHangsChild();
 
-  mozilla::ipc::IPCResult RecvTest1_1() override;
-  mozilla::ipc::IPCResult RecvTest1_3() override;
-  mozilla::ipc::IPCResult RecvTest2() override;
-  mozilla::ipc::IPCResult RecvTest3() override;
-  mozilla::ipc::IPCResult RecvTest4() override;
-  mozilla::ipc::IPCResult RecvTest4_1() override;
-  mozilla::ipc::IPCResult RecvTest5() override;
-  mozilla::ipc::IPCResult RecvTest5_1() override;
+  mozilla::ipc::IPCResult RecvTest1_1();
+  mozilla::ipc::IPCResult RecvTest1_3();
+  mozilla::ipc::IPCResult RecvTest2();
+  mozilla::ipc::IPCResult RecvTest3();
+  mozilla::ipc::IPCResult RecvTest4();
+  mozilla::ipc::IPCResult RecvTest4_1();
+  mozilla::ipc::IPCResult RecvTest5();
+  mozilla::ipc::IPCResult RecvTest5_1();
 
   virtual void ActorDestroy(ActorDestroyReason why) override { QuitChild(); }
 };

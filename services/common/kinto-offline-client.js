@@ -33,7 +33,7 @@ const global = this;
 var EXPORTED_SYMBOLS = ["Kinto"];
 
 /*
- * Version 12.2.4 - 8fb687a
+ * Version 12.3.0 - f7a9e81
  */
 
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Kinto = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
@@ -565,7 +565,7 @@ class IDB extends _base.default {
   }
 
   _handleError(method, err) {
-    const error = new Error(method + "() " + err.message);
+    const error = new Error(`IndexedDB ${method}() ${err.message}`);
     error.stack = err.stack;
     throw error;
   }
@@ -614,7 +614,7 @@ class IDB extends _base.default {
         records,
         timestamp
       } = dataToMigrate;
-      await this.loadDump(records);
+      await this.importBulk(records);
       await this.saveLastModified(timestamp);
       console.log(`${this.cid}: data was migrated successfully.`); // Delete the old database.
 
@@ -886,6 +886,7 @@ class IDB extends _base.default {
   /**
    * Load a dump of records exported from a server.
    *
+   * @deprecated Use {@link importBulk} instead.
    * @abstract
    * @param  {Array} records The records to load.
    * @return {Promise}
@@ -893,6 +894,18 @@ class IDB extends _base.default {
 
 
   async loadDump(records) {
+    return this.importBulk(records);
+  }
+  /**
+   * Load records in bulk that were exported from a server.
+   *
+   * @abstract
+   * @param  {Array} records The records to load.
+   * @return {Promise}
+   */
+
+
+  async importBulk(records) {
     try {
       await this.execute(transaction => {
         // Since the put operations are asynchronous, we chain
@@ -920,7 +933,7 @@ class IDB extends _base.default {
 
       return records;
     } catch (e) {
-      this._handleError("loadDump", e);
+      this._handleError("importBulk", e);
     }
   }
 
@@ -1117,8 +1130,21 @@ class BaseAdapter {
     throw new Error("Not Implemented.");
   }
   /**
+   * Load records in bulk that were exported from a server.
+   *
+   * @abstract
+   * @param  {Array} records The records to load.
+   * @return {Promise}
+   */
+
+
+  importBulk(records) {
+    throw new Error("Not Implemented.");
+  }
+  /**
    * Load a dump of records exported from a server.
    *
+   * @deprecated Use {@link importBulk} instead.
    * @abstract
    * @param  {Array} records The records to load.
    * @return {Promise}
@@ -1140,7 +1166,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.recordsEqual = recordsEqual;
-exports.CollectionTransaction = exports.default = exports.SyncResultObject = void 0;
+exports.CollectionTransaction = exports.default = exports.ServerWasFlushedError = exports.SyncResultObject = void 0;
 
 var _base = _interopRequireDefault(require("./adapters/base"));
 
@@ -1262,6 +1288,22 @@ class SyncResultObject {
 }
 
 exports.SyncResultObject = SyncResultObject;
+
+class ServerWasFlushedError extends Error {
+  constructor(clientTimestamp, serverTimestamp, message) {
+    super(message);
+
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, ServerWasFlushedError);
+    }
+
+    this.clientTimestamp = clientTimestamp;
+    this.serverTimestamp = serverTimestamp;
+  }
+
+}
+
+exports.ServerWasFlushedError = ServerWasFlushedError;
 
 function createUUIDSchema() {
   return {
@@ -2262,7 +2304,8 @@ class Collection {
     const emptyCollection = data.length === 0;
 
     if (!options.exclude && localSynced && serverChanged && emptyCollection) {
-      throw Error("Server has been flushed.");
+      const e = new ServerWasFlushedError(localSynced, unquoted, "Server has been flushed. Client Side Timestamp: " + localSynced + " Server Side Timestamp: " + unquoted);
+      throw e;
     }
 
     syncResultObject.lastModified = unquoted; // Decode incoming changes.
@@ -2578,12 +2621,27 @@ class Collection {
    * The local records which are unsynced or whose timestamp is either missing
    * or superior to those being loaded will be ignored.
    *
+   * @deprecated Use {@link importBulk} instead.
    * @param  {Array} records The previously exported list of records to load.
    * @return {Promise} with the effectively imported records.
    */
 
 
   async loadDump(records) {
+    return this.importBulk(records);
+  }
+  /**
+   * Load a list of records already synced with the remote server.
+   *
+   * The local records which are unsynced or whose timestamp is either missing
+   * or superior to those being loaded will be ignored.
+   *
+   * @param  {Array} records The previously exported list of records to load.
+   * @return {Promise} with the effectively imported records.
+   */
+
+
+  async importBulk(records) {
     if (!Array.isArray(records)) {
       throw new Error("Records is not an array.");
     }
@@ -2619,7 +2677,7 @@ class Collection {
       record.last_modified > localRecord.last_modified;
       return shouldKeep;
     });
-    return await this.db.loadDump(newRecords.map(markSynced));
+    return await this.db.importBulk(newRecords.map(markSynced));
   }
 
 }

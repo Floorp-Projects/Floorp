@@ -19,10 +19,10 @@ class TestRPCParent : public PTestRPCParent {
 
   void Main();
 
-  mozilla::ipc::IPCResult RecvTest1_Start(uint32_t* aResult) override;
-  mozilla::ipc::IPCResult RecvTest1_InnerEvent(uint32_t* aResult) override;
-  mozilla::ipc::IPCResult RecvTest2_Start() override;
-  mozilla::ipc::IPCResult RecvTest2_OutOfOrder() override;
+  mozilla::ipc::IPCResult RecvTest1_Start(uint32_t* aResult);
+  mozilla::ipc::IPCResult RecvTest1_InnerEvent(uint32_t* aResult);
+  mozilla::ipc::IPCResult RecvTest2_Start();
+  mozilla::ipc::IPCResult RecvTest2_OutOfOrder();
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");
@@ -42,11 +42,11 @@ class TestRPCChild : public PTestRPCChild {
   TestRPCChild();
   virtual ~TestRPCChild();
 
-  mozilla::ipc::IPCResult RecvStart() override;
-  mozilla::ipc::IPCResult RecvTest1_InnerQuery(uint32_t* aResult) override;
-  mozilla::ipc::IPCResult RecvTest1_NoReenter(uint32_t* aResult) override;
-  mozilla::ipc::IPCResult RecvTest2_FirstUrgent() override;
-  mozilla::ipc::IPCResult RecvTest2_SecondUrgent() override;
+  mozilla::ipc::IPCResult RecvStart();
+  mozilla::ipc::IPCResult RecvTest1_InnerQuery(uint32_t* aResult);
+  mozilla::ipc::IPCResult RecvTest1_NoReenter(uint32_t* aResult);
+  mozilla::ipc::IPCResult RecvTest2_FirstUrgent();
+  mozilla::ipc::IPCResult RecvTest2_SecondUrgent();
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");
