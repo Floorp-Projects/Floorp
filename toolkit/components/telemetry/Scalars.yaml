@@ -506,6 +506,19 @@ contentblocking:
     release_channel_collection: opt-out
     record_in_processes:
       - main
+  category:
+    bug_numbers:
+      - 1529425
+    description: >
+      This scalar reports the value of the content blocking category pref (0 = "standard", 1 = "strict", 2 = "custom", 3 = some other value, this is not supported).
+    expires: never
+    kind: uint
+    notification_emails:
+      - aedelstein@mozilla.com
+      - seceng-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
 
 sandbox:
   no_job:
