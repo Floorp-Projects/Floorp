@@ -29,12 +29,12 @@ class TestDemonParent : public PTestDemonParent {
   void ArtificialSleep() override;
 #endif
 
-  mozilla::ipc::IPCResult RecvAsyncMessage(const int& n) override;
-  mozilla::ipc::IPCResult RecvHiPrioSyncMessage() override;
+  mozilla::ipc::IPCResult RecvAsyncMessage(const int& n);
+  mozilla::ipc::IPCResult RecvHiPrioSyncMessage();
 
-  mozilla::ipc::IPCResult RecvSyncMessage(const int& n) override;
-  mozilla::ipc::IPCResult RecvUrgentAsyncMessage(const int& n) override;
-  mozilla::ipc::IPCResult RecvUrgentSyncMessage(const int& n) override;
+  mozilla::ipc::IPCResult RecvSyncMessage(const int& n);
+  mozilla::ipc::IPCResult RecvUrgentAsyncMessage(const int& n);
+  mozilla::ipc::IPCResult RecvUrgentSyncMessage(const int& n);
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     mDone = true;
@@ -62,15 +62,15 @@ class TestDemonChild : public PTestDemonChild {
   TestDemonChild();
   virtual ~TestDemonChild();
 
-  mozilla::ipc::IPCResult RecvStart() override;
+  mozilla::ipc::IPCResult RecvStart();
 
 #ifdef DEBUG
   bool NeedArtificialSleep() override { return true; }
   void ArtificialSleep() override;
 #endif
 
-  mozilla::ipc::IPCResult RecvAsyncMessage(const int& n) override;
-  mozilla::ipc::IPCResult RecvHiPrioSyncMessage() override;
+  mozilla::ipc::IPCResult RecvAsyncMessage(const int& n);
+  mozilla::ipc::IPCResult RecvHiPrioSyncMessage();
 
   virtual void ActorDestroy(ActorDestroyReason why) override { _exit(0); }
 

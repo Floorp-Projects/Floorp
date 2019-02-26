@@ -10,6 +10,8 @@ namespace mozilla {
 namespace _ipdltest {
 
 class TestSyncErrorParent : public PTestSyncErrorParent {
+  friend class PTestSyncErrorParent;
+
  public:
   TestSyncErrorParent();
   virtual ~TestSyncErrorParent();
@@ -20,7 +22,7 @@ class TestSyncErrorParent : public PTestSyncErrorParent {
   void Main();
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvError() override;
+  mozilla::ipc::IPCResult RecvError();
 
   virtual void ProcessingError(Result aCode, const char* aReason) override {
     // Ignore errors
@@ -34,12 +36,14 @@ class TestSyncErrorParent : public PTestSyncErrorParent {
 };
 
 class TestSyncErrorChild : public PTestSyncErrorChild {
+  friend class PTestSyncErrorChild;
+
  public:
   TestSyncErrorChild();
   virtual ~TestSyncErrorChild();
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvStart() override;
+  mozilla::ipc::IPCResult RecvStart();
 
   virtual void ProcessingError(Result aCode, const char* aReason) override {
     // Ignore errors

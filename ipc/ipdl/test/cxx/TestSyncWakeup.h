@@ -10,6 +10,8 @@ namespace mozilla {
 namespace _ipdltest {
 
 class TestSyncWakeupParent : public PTestSyncWakeupParent {
+  friend class PTestSyncWakeupParent;
+
  public:
   TestSyncWakeupParent();
   virtual ~TestSyncWakeupParent();
@@ -20,11 +22,11 @@ class TestSyncWakeupParent : public PTestSyncWakeupParent {
   void Main();
 
  protected:
-  virtual mozilla::ipc::IPCResult AnswerStackFrame() override;
+  mozilla::ipc::IPCResult AnswerStackFrame();
 
-  virtual mozilla::ipc::IPCResult RecvSync1() override;
+  mozilla::ipc::IPCResult RecvSync1();
 
-  virtual mozilla::ipc::IPCResult RecvSync2() override;
+  mozilla::ipc::IPCResult RecvSync2();
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");
@@ -34,18 +36,20 @@ class TestSyncWakeupParent : public PTestSyncWakeupParent {
 };
 
 class TestSyncWakeupChild : public PTestSyncWakeupChild {
+  friend class PTestSyncWakeupChild;
+
  public:
   TestSyncWakeupChild();
   virtual ~TestSyncWakeupChild();
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvStart() override;
+  mozilla::ipc::IPCResult RecvStart();
 
-  virtual mozilla::ipc::IPCResult RecvNote1() override;
+  mozilla::ipc::IPCResult RecvNote1();
 
-  virtual mozilla::ipc::IPCResult AnswerStackFrame() override;
+  mozilla::ipc::IPCResult AnswerStackFrame();
 
-  virtual mozilla::ipc::IPCResult RecvNote2() override;
+  mozilla::ipc::IPCResult RecvNote2();
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");

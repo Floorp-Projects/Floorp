@@ -10,6 +10,8 @@ namespace mozilla {
 namespace _ipdltest {
 
 class TestStackHooksParent : public PTestStackHooksParent {
+  friend class PTestStackHooksParent;
+
  public:
   TestStackHooksParent();
   virtual ~TestStackHooksParent();
@@ -20,22 +22,22 @@ class TestStackHooksParent : public PTestStackHooksParent {
   void Main();
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvAsync() override {
+  mozilla::ipc::IPCResult RecvAsync() {
     if (!mOnStack) fail("not on C++ stack?!");
     return IPC_OK();
   }
 
-  virtual mozilla::ipc::IPCResult RecvSync() override {
+  mozilla::ipc::IPCResult RecvSync() {
     if (!mOnStack) fail("not on C++ stack?!");
     return IPC_OK();
   }
 
-  virtual mozilla::ipc::IPCResult AnswerRpc() override {
+  mozilla::ipc::IPCResult AnswerRpc() {
     if (!mOnStack) fail("not on C++ stack?!");
     return IPC_OK();
   }
 
-  virtual mozilla::ipc::IPCResult AnswerStackFrame() override;
+  mozilla::ipc::IPCResult AnswerStackFrame();
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");
@@ -55,6 +57,8 @@ class TestStackHooksParent : public PTestStackHooksParent {
 };
 
 class TestStackHooksChild : public PTestStackHooksChild {
+  friend class PTestStackHooksChild;
+
  public:
   TestStackHooksChild();
   virtual ~TestStackHooksChild();
@@ -62,9 +66,9 @@ class TestStackHooksChild : public PTestStackHooksChild {
   void RunTests();
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvStart() override;
+  mozilla::ipc::IPCResult RecvStart();
 
-  virtual mozilla::ipc::IPCResult AnswerStackFrame() override;
+  mozilla::ipc::IPCResult AnswerStackFrame();
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");

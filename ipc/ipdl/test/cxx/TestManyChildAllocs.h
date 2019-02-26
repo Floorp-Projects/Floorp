@@ -15,6 +15,8 @@ namespace _ipdltest {
 // top-level protocol
 
 class TestManyChildAllocsParent : public PTestManyChildAllocsParent {
+  friend class PTestManyChildAllocsParent;
+
  public:
   TestManyChildAllocsParent();
   virtual ~TestManyChildAllocsParent();
@@ -25,11 +27,9 @@ class TestManyChildAllocsParent : public PTestManyChildAllocsParent {
   void Main();
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvDone() override;
-  virtual bool DeallocPTestManyChildAllocsSubParent(
-      PTestManyChildAllocsSubParent* __a) override;
-  virtual PTestManyChildAllocsSubParent* AllocPTestManyChildAllocsSubParent()
-      override;
+  mozilla::ipc::IPCResult RecvDone();
+  bool DeallocPTestManyChildAllocsSubParent(PTestManyChildAllocsSubParent* __a);
+  PTestManyChildAllocsSubParent* AllocPTestManyChildAllocsSubParent();
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");
@@ -39,16 +39,16 @@ class TestManyChildAllocsParent : public PTestManyChildAllocsParent {
 };
 
 class TestManyChildAllocsChild : public PTestManyChildAllocsChild {
+  friend class PTestManyChildAllocsChild;
+
  public:
   TestManyChildAllocsChild();
   virtual ~TestManyChildAllocsChild();
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvGo() override;
-  virtual bool DeallocPTestManyChildAllocsSubChild(
-      PTestManyChildAllocsSubChild* __a) override;
-  virtual PTestManyChildAllocsSubChild* AllocPTestManyChildAllocsSubChild()
-      override;
+  mozilla::ipc::IPCResult RecvGo();
+  bool DeallocPTestManyChildAllocsSubChild(PTestManyChildAllocsSubChild* __a);
+  PTestManyChildAllocsSubChild* AllocPTestManyChildAllocsSubChild();
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");
@@ -59,13 +59,15 @@ class TestManyChildAllocsChild : public PTestManyChildAllocsChild {
 // do-nothing sub-protocol actors
 
 class TestManyChildAllocsSubParent : public PTestManyChildAllocsSubParent {
+  friend class PTestManyChildAllocsSubParent;
+
  public:
   TestManyChildAllocsSubParent() {}
   virtual ~TestManyChildAllocsSubParent() {}
 
  protected:
   virtual void ActorDestroy(ActorDestroyReason why) override {}
-  virtual mozilla::ipc::IPCResult RecvHello() override { return IPC_OK(); }
+  mozilla::ipc::IPCResult RecvHello() { return IPC_OK(); }
 };
 
 class TestManyChildAllocsSubChild : public PTestManyChildAllocsSubChild {

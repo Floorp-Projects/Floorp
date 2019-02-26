@@ -10,6 +10,8 @@ namespace mozilla {
 namespace _ipdltest {
 
 class TestSanityParent : public PTestSanityParent {
+  friend class PTestSanityParent;
+
  public:
   TestSanityParent();
   virtual ~TestSanityParent();
@@ -20,9 +22,8 @@ class TestSanityParent : public PTestSanityParent {
   void Main();
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvPong(const int& one,
-                                           const float& zeroPtTwoFive,
-                                           const uint8_t& dummy) override;
+  mozilla::ipc::IPCResult RecvPong(const int& one, const float& zeroPtTwoFive,
+                                   const uint8_t& dummy);
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");
@@ -32,14 +33,15 @@ class TestSanityParent : public PTestSanityParent {
 };
 
 class TestSanityChild : public PTestSanityChild {
+  friend class PTestSanityChild;
+
  public:
   TestSanityChild();
   virtual ~TestSanityChild();
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvPing(const int& zero,
-                                           const float& zeroPtFive,
-                                           const int8_t& dummy) override;
+  mozilla::ipc::IPCResult RecvPing(const int& zero, const float& zeroPtFive,
+                                   const int8_t& dummy);
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");

@@ -10,6 +10,8 @@ namespace mozilla {
 namespace _ipdltest {
 
 class TestNestedLoopsParent : public PTestNestedLoopsParent {
+  friend class PTestNestedLoopsParent;
+
  public:
   TestNestedLoopsParent();
   virtual ~TestNestedLoopsParent();
@@ -20,7 +22,7 @@ class TestNestedLoopsParent : public PTestNestedLoopsParent {
   void Main();
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvNonce() override;
+  mozilla::ipc::IPCResult RecvNonce();
 
   void BreakNestedLoop();
 
@@ -34,14 +36,16 @@ class TestNestedLoopsParent : public PTestNestedLoopsParent {
 };
 
 class TestNestedLoopsChild : public PTestNestedLoopsChild {
+  friend class PTestNestedLoopsChild;
+
  public:
   TestNestedLoopsChild();
   virtual ~TestNestedLoopsChild();
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvStart() override;
+  mozilla::ipc::IPCResult RecvStart();
 
-  virtual mozilla::ipc::IPCResult AnswerR() override;
+  mozilla::ipc::IPCResult AnswerR();
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");

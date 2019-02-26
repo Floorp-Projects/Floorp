@@ -26,10 +26,10 @@ class TestOffMainThreadPaintingParent final : public PTestLayoutThreadParent {
   MOZ_IMPLICIT TestOffMainThreadPaintingParent();
   ~TestOffMainThreadPaintingParent() override;
 
-  ipc::IPCResult RecvFinishedLayout(const uint64_t& aTxnId) override;
-  ipc::IPCResult RecvAsyncMessage(const uint64_t& aTxnId) override;
-  ipc::IPCResult RecvSyncMessage(const uint64_t& aTxnId) override;
-  ipc::IPCResult RecvEndTest() override;
+  ipc::IPCResult RecvFinishedLayout(const uint64_t& aTxnId);
+  ipc::IPCResult RecvAsyncMessage(const uint64_t& aTxnId);
+  ipc::IPCResult RecvSyncMessage(const uint64_t& aTxnId);
+  ipc::IPCResult RecvEndTest();
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   void NotifyFinishedPaint(const uint64_t& aTxnId);
@@ -49,7 +49,7 @@ class TestOffMainThreadPaintingChild final : public PTestLayoutThreadChild {
   ~TestOffMainThreadPaintingChild() override;
 
   ipc::IPCResult RecvStartTest(
-      ipc::Endpoint<PTestPaintThreadChild>&& aEndpoint) override;
+      ipc::Endpoint<PTestPaintThreadChild>&& aEndpoint);
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void ProcessingError(Result aCode, const char* aReason) override;
 
@@ -73,7 +73,7 @@ class TestPaintThreadParent final : public PTestPaintThreadParent {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TestPaintThreadParent);
 
   bool Bind(ipc::Endpoint<PTestPaintThreadParent>&& aEndpoint);
-  ipc::IPCResult RecvFinishedPaint(const uint64_t& aTxnId) override;
+  ipc::IPCResult RecvFinishedPaint(const uint64_t& aTxnId);
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void DeallocPTestPaintThreadParent() override;
 

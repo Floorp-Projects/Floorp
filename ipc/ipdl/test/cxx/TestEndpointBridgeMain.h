@@ -22,6 +22,8 @@ namespace _ipdltest {
 // "Main" process
 //
 class TestEndpointBridgeMainParent : public PTestEndpointBridgeMainParent {
+  friend class PTestEndpointBridgeMainParent;
+
  public:
   TestEndpointBridgeMainParent() {}
   virtual ~TestEndpointBridgeMainParent() {}
@@ -33,22 +35,23 @@ class TestEndpointBridgeMainParent : public PTestEndpointBridgeMainParent {
 
  protected:
   mozilla::ipc::IPCResult RecvBridged(
-      mozilla::ipc::Endpoint<PTestEndpointBridgeMainSubParent>&& endpoint)
-      override;
+      mozilla::ipc::Endpoint<PTestEndpointBridgeMainSubParent>&& endpoint);
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 };
 
 class TestEndpointBridgeMainSubParent
     : public PTestEndpointBridgeMainSubParent {
+  friend class PTestEndpointBridgeMainSubParent;
+
  public:
   explicit TestEndpointBridgeMainSubParent() {}
   virtual ~TestEndpointBridgeMainSubParent() {}
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvHello() override;
-  virtual mozilla::ipc::IPCResult RecvHelloSync() override;
-  virtual mozilla::ipc::IPCResult AnswerHelloRpc() override;
+  mozilla::ipc::IPCResult RecvHello();
+  mozilla::ipc::IPCResult RecvHelloSync();
+  mozilla::ipc::IPCResult AnswerHelloRpc();
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 };
@@ -59,12 +62,14 @@ class TestEndpointBridgeMainSubParent
 class TestEndpointBridgeSubParent;
 
 class TestEndpointBridgeMainChild : public PTestEndpointBridgeMainChild {
+  friend class PTestEndpointBridgeMainChild;
+
  public:
   TestEndpointBridgeMainChild();
   virtual ~TestEndpointBridgeMainChild() {}
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvStart() override;
+  mozilla::ipc::IPCResult RecvStart();
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
@@ -72,6 +77,8 @@ class TestEndpointBridgeMainChild : public PTestEndpointBridgeMainChild {
 };
 
 class TestEndpointBridgeSubParent : public PTestEndpointBridgeSubParent {
+  friend class PTestEndpointBridgeSubParent;
+
  public:
   TestEndpointBridgeSubParent() {}
   virtual ~TestEndpointBridgeSubParent() {}
@@ -79,7 +86,7 @@ class TestEndpointBridgeSubParent : public PTestEndpointBridgeSubParent {
   void Main();
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvBridgeEm() override;
+  mozilla::ipc::IPCResult RecvBridgeEm();
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 };
@@ -88,27 +95,31 @@ class TestEndpointBridgeSubParent : public PTestEndpointBridgeSubParent {
 // "Subsub" process --- child of "sub"
 //
 class TestEndpointBridgeSubChild : public PTestEndpointBridgeSubChild {
+  friend class PTestEndpointBridgeSubChild;
+
  public:
   TestEndpointBridgeSubChild();
   virtual ~TestEndpointBridgeSubChild() {}
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvPing() override;
+  mozilla::ipc::IPCResult RecvPing();
 
   mozilla::ipc::IPCResult RecvBridged(
-      Endpoint<PTestEndpointBridgeMainSubChild>&& endpoint) override;
+      Endpoint<PTestEndpointBridgeMainSubChild>&& endpoint);
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 };
 
 class TestEndpointBridgeMainSubChild : public PTestEndpointBridgeMainSubChild {
+  friend class PTestEndpointBridgeMainSubChild;
+
  public:
   explicit TestEndpointBridgeMainSubChild() : mGotHi(false) {}
   virtual ~TestEndpointBridgeMainSubChild() {}
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvHi() override;
-  virtual mozilla::ipc::IPCResult AnswerHiRpc() override;
+  mozilla::ipc::IPCResult RecvHi();
+  mozilla::ipc::IPCResult AnswerHiRpc();
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
