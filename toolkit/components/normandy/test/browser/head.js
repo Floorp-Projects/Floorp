@@ -351,10 +351,8 @@ this.withSendEventStub = function(testFunction) {
   return async function wrappedTestFunction(...args) {
     const stub = sinon.spy(TelemetryEvents, "sendEvent");
     stub.assertEvents = (expected) => {
-      let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
-      events = (events.parent || []).filter(e => e[1] == "normandy");
       expected = expected.map(event => ["normandy"].concat(event));
-      TelemetryTestUtils.assertEvents(events, expected);
+      TelemetryTestUtils.assertEvents(expected, {category: "normandy"}, {clear: false});
     };
     Services.telemetry.clearEvents();
     try {
