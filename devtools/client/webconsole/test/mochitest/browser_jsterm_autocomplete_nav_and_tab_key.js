@@ -33,8 +33,7 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const hud = await openNewTabAndConsole(TEST_URI);
-  const { jsterm } = hud;
+  const { jsterm } = await openNewTabAndConsole(TEST_URI);
   info("web console opened");
 
   const { autocompletePopup: popup } = jsterm;
@@ -42,7 +41,7 @@ async function performTests() {
   ok(!popup.isOpen, "popup is not open");
 
   const onPopUpOpen = popup.once("popup-opened");
-  setInputValue(hud, "window.foo");
+  jsterm.setInputValue("window.foo");
 
   // Shows the popup
   EventUtils.sendString(".");
@@ -65,22 +64,22 @@ async function performTests() {
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
 
-  let prefix = getInputValue(hud).replace(/[\S]/g, " ");
+  let prefix = jsterm.getInputValue().replace(/[\S]/g, " ");
   is(popup.selectedIndex, 3, "index 3 is selected");
   is(popup.selectedItem.label, "item3", "item3 is selected");
-  checkInputCompletionValue(hud, prefix + "item3", "completeNode.value holds item3");
+  checkJsTermCompletionValue(jsterm, prefix + "item3", "completeNode.value holds item3");
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
 
   is(popup.selectedIndex, 2, "index 2 is selected");
   is(popup.selectedItem.label, "item2", "item2 is selected");
-  checkInputCompletionValue(hud, prefix + "item2", "completeNode.value holds item2");
+  checkJsTermCompletionValue(jsterm, prefix + "item2", "completeNode.value holds item2");
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
 
   is(popup.selectedIndex, 3, "index 3 is selected");
   is(popup.selectedItem.label, "item3", "item3 is selected");
-  checkInputCompletionValue(hud, prefix + "item3", "completeNode.value holds item3");
+  checkJsTermCompletionValue(jsterm, prefix + "item3", "completeNode.value holds item3");
 
   let currentSelectionIndex = popup.selectedIndex;
 
@@ -105,21 +104,21 @@ async function performTests() {
 
   // At this point the completion suggestion should be accepted.
   ok(!popup.isOpen, "popup is not open");
-  is(getInputValue(hud), "window.foo.item3",
+  is(jsterm.getInputValue(), "window.foo.item3",
      "completion was successful after KEY_Tab");
-  ok(!getInputCompletionValue(hud), "completeNode is empty");
+  ok(!getJsTermCompletionValue(jsterm), "completeNode is empty");
 
   info("Check that hitting Home hides the completion text when the popup is hidden");
-  await setInputValueForAutocompletion(hud, "window.foo.item0");
-  prefix = getInputValue(hud).replace(/[\S]/g, " ");
-  checkInputCompletionValue(hud, prefix + "0", "completeNode has expected value");
+  await setInputValueForAutocompletion(jsterm, "window.foo.item0");
+  prefix = jsterm.getInputValue().replace(/[\S]/g, " ");
+  checkJsTermCompletionValue(jsterm, prefix + "0", "completeNode has expected value");
   EventUtils.synthesizeKey("KEY_Home");
-  checkInputCompletionValue(hud, "", "completeNode was cleared after hitting Home");
+  checkJsTermCompletionValue(jsterm, "", "completeNode was cleared after hitting Home");
 
   info("Check that hitting End hides the completion text when the popup is hidden");
-  await setInputValueForAutocompletion(hud, "window.foo.item0");
-  prefix = getInputValue(hud).replace(/[\S]/g, " ");
-  checkInputCompletionValue(hud, prefix + "0", "completeNode has expected value");
+  await setInputValueForAutocompletion(jsterm, "window.foo.item0");
+  prefix = jsterm.getInputValue().replace(/[\S]/g, " ");
+  checkJsTermCompletionValue(jsterm, prefix + "0", "completeNode has expected value");
   EventUtils.synthesizeKey("KEY_End");
-  checkInputCompletionValue(hud, "", "completeNode was cleared after hitting End");
+  checkJsTermCompletionValue(jsterm, "", "completeNode was cleared after hitting End");
 }

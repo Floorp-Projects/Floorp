@@ -25,32 +25,31 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const hud = await openNewTabAndConsole(TEST_URI);
-  const {jsterm, ui} = hud;
+  const {jsterm, ui} = await openNewTabAndConsole(TEST_URI);
   ui.clearOutput();
-  ok(!getInputCompletionValue(hud), "no completeNode.value");
+  ok(!getJsTermCompletionValue(jsterm), "no completeNode.value");
 
-  setInputValue(hud, "doc");
+  jsterm.setInputValue("doc");
 
   info("wait for completion value after typing 'docu'");
   let onAutocompleteUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString("u");
   await onAutocompleteUpdated;
 
-  const completionValue = getInputCompletionValue(hud);
+  const completionValue = getJsTermCompletionValue(jsterm);
 
   info(`Copy "${stringToCopy}" in clipboard`);
   await waitForClipboardPromise(() =>
     clipboardHelper.copyString(stringToCopy), stringToCopy);
 
-  setInputValue(hud, "docu");
+  jsterm.setInputValue("docu");
   info("wait for completion update after clipboard paste");
   onAutocompleteUpdated = jsterm.once("autocomplete-updated");
   EventUtils.synthesizeKey("v", {accelKey: true});
 
   await onAutocompleteUpdated;
 
-  ok(!getInputCompletionValue(hud), "no completion value after paste");
+  ok(!getJsTermCompletionValue(jsterm), "no completion value after paste");
 
   info("wait for completion update after undo");
   onAutocompleteUpdated = jsterm.once("autocomplete-updated");
@@ -59,7 +58,8 @@ async function performTests() {
 
   await onAutocompleteUpdated;
 
-  checkInputCompletionValue(hud, completionValue, "same completeNode.value after undo");
+  checkJsTermCompletionValue(jsterm, completionValue,
+    "same completeNode.value after undo");
 
   info("wait for completion update after clipboard paste (ctrl-v)");
   onAutocompleteUpdated = jsterm.once("autocomplete-updated");
@@ -67,5 +67,5 @@ async function performTests() {
   EventUtils.synthesizeKey("v", {accelKey: true});
 
   await onAutocompleteUpdated;
-  ok(!getInputCompletionValue(hud), "no completion value after paste (ctrl-v)");
+  ok(!getJsTermCompletionValue(jsterm), "no completion value after paste (ctrl-v)");
 }

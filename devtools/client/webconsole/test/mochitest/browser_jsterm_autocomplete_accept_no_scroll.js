@@ -22,14 +22,13 @@ add_task(async function() {
   // Only run test with legacy JsTerm.
   await pushPref("devtools.webconsole.jsterm.codeMirror", false);
 
-  const hud = await openNewTabAndConsole(TEST_URI);
-  const { jsterm, ui } = hud;
+  const { jsterm, ui } = await openNewTabAndConsole(TEST_URI);
   const { autocompletePopup: popup } = jsterm;
 
   info("Insert multiple new lines so the input overflows");
   const onPopUpOpen = popup.once("popup-opened");
   const lines = "\n".repeat(200);
-  setInputValue(hud, lines);
+  jsterm.setInputValue(lines);
 
   info("Fire the autocompletion popup");
   EventUtils.sendString("window.foobar.");
@@ -46,7 +45,7 @@ add_task(async function() {
   await onPopupClose;
 
   ok(!popup.isOpen, "popup is not open after KEY_Enter");
-  is(getInputValue(hud), lines + "window.foobar.item0",
+  is(jsterm.getInputValue(), lines + "window.foobar.item0",
     "completion was successful after KEY_Enter");
   is(inputContainer.scrollTop, scrollTop,
     "The scrolling position stayed the same when accepting the completion");

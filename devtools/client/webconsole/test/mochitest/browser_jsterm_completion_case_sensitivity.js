@@ -28,12 +28,11 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const hud = await openNewTabAndConsole(TEST_URI);
-  const {jsterm} = hud;
+  const {jsterm} = await openNewTabAndConsole(TEST_URI);
   const {autocompletePopup} = jsterm;
 
   const checkInput = (expected, assertionInfo) =>
-    checkInputValueAndCursorPosition(hud, expected, assertionInfo);
+    checkJsTermValueAndCursor(jsterm, expected, assertionInfo);
 
   info("Check that lowercased input is case-insensitive");
   let onPopUpOpen = autocompletePopup.once("popup-opened");
@@ -42,7 +41,7 @@ async function performTests() {
 
   is(getAutocompletePopupLabels(autocompletePopup).join(" - "), "fooBar - FooBar",
     "popup has expected item, in expected order");
-  checkInputCompletionValue(hud, "    ar", "completeNode has expected value");
+  checkJsTermCompletionValue(jsterm, "    ar", "completeNode has expected value");
 
   info("Check that filtering the autocomplete cache is also case insensitive");
   let onAutoCompleteUpdated = jsterm.once("autocomplete-updated");
@@ -53,14 +52,14 @@ async function performTests() {
   checkInput("fooba|");
   is(getAutocompletePopupLabels(autocompletePopup).join(" - "), "fooBar - FooBar",
     "popup cache filtering is also case-insensitive");
-  checkInputCompletionValue(hud, "     r", "completeNode has expected value");
+  checkJsTermCompletionValue(jsterm, "     r", "completeNode has expected value");
 
   info("Check that accepting the completion value will change the input casing");
   let onPopupClose = autocompletePopup.once("popup-closed");
   EventUtils.synthesizeKey("KEY_Tab");
   await onPopupClose;
   checkInput("fooBar|", "The input was completed with the correct casing");
-  checkInputCompletionValue(hud, "", "completeNode is empty");
+  checkJsTermCompletionValue(jsterm, "", "completeNode is empty");
 
   info("Check that the popup is displayed with only 1 matching item");
   onPopUpOpen = autocompletePopup.once("popup-opened");
@@ -73,15 +72,15 @@ async function performTests() {
   ok(true, "The popup was opened even if there's 1 item matching");
   is(getAutocompletePopupLabels(autocompletePopup).join(" - "), "Foo",
     "popup has expected item");
-  checkInputCompletionValue(hud, "        oo", "completeNode has expected value");
+  checkJsTermCompletionValue(jsterm, "        oo", "completeNode has expected value");
 
   onPopupClose = autocompletePopup.once("popup-closed");
   EventUtils.synthesizeKey("KEY_Tab");
   await onPopupClose;
   checkInput("fooBar.Foo|", "The input was completed with the correct casing");
-  checkInputCompletionValue(hud, "", "completeNode is empty");
+  checkJsTermCompletionValue(jsterm, "", "completeNode is empty");
 
-  setInputValue(hud, "");
+  jsterm.setInputValue("");
 
   info("Check that Javascript keywords are displayed first");
   onPopUpOpen = autocompletePopup.once("popup-opened");
@@ -90,15 +89,15 @@ async function performTests() {
 
   is(getAutocompletePopupLabels(autocompletePopup).join(" - "), "function - Function",
     "popup has expected item");
-  checkInputCompletionValue(hud, "    tion", "completeNode has expected value");
+  checkJsTermCompletionValue(jsterm, "    tion", "completeNode has expected value");
 
   onPopupClose = autocompletePopup.once("popup-closed");
   EventUtils.synthesizeKey("KEY_Tab");
   await onPopupClose;
   checkInput("function|", "The input was completed as expected");
-  checkInputCompletionValue(hud, "", "completeNode is empty");
+  checkJsTermCompletionValue(jsterm, "", "completeNode is empty");
 
-  setInputValue(hud, "");
+  jsterm.setInputValue("");
 
   info("Check that filtering the cache works like on the server");
   onPopUpOpen = autocompletePopup.once("popup-opened");

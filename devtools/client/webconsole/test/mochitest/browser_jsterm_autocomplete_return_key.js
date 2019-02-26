@@ -35,15 +35,14 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const hud = await openNewTabAndConsole(TEST_URI);
-  const { jsterm } = hud;
+  const { jsterm } = await openNewTabAndConsole(TEST_URI);
   const { autocompletePopup: popup } = jsterm;
 
   let onPopUpOpen = popup.once("popup-opened");
 
   info("wait for completion suggestions: window.foobar.");
 
-  setInputValue(hud, "window.fooba");
+  jsterm.setInputValue("window.fooba");
   EventUtils.sendString("r.");
 
   await onPopUpOpen;
@@ -64,8 +63,9 @@ async function performTests() {
 
   is(popup.selectedIndex, expectedPopupItems.length - 1, "last index is selected");
   is(popup.selectedItem.label, "item33", "item33 is selected");
-  const prefix = getInputValue(hud).replace(/[\S]/g, " ");
-  checkInputCompletionValue(hud, prefix + "item33", "completeNode.value holds item33");
+  const prefix = jsterm.getInputValue().replace(/[\S]/g, " ");
+  checkJsTermCompletionValue(jsterm, prefix + "item33",
+    "completeNode.value holds item33");
 
   info("press Return to accept suggestion. wait for popup to hide");
   let onPopupClose = popup.once("popup-closed");
@@ -74,25 +74,25 @@ async function performTests() {
   await onPopupClose;
 
   ok(!popup.isOpen, "popup is not open after KEY_Enter");
-  is(getInputValue(hud), "window.foobar.item33",
+  is(jsterm.getInputValue(), "window.foobar.item33",
     "completion was successful after KEY_Enter");
-  ok(!getInputCompletionValue(hud), "completeNode is empty");
+  ok(!getJsTermCompletionValue(jsterm), "completeNode is empty");
 
   info("Test that hitting enter when the completeNode is empty closes the popup");
   onPopUpOpen = popup.once("popup-opened");
   info("wait for completion suggestions: window.foobar.item3");
-  setInputValue(hud, "window.foobar.item");
+  jsterm.setInputValue("window.foobar.item");
   EventUtils.sendString("3");
   await onPopUpOpen;
 
   is(popup.selectedItem.label, "item3", "item3 is selected");
-  ok(!getInputCompletionValue(hud), "completeNode is empty");
+  ok(!getJsTermCompletionValue(jsterm), "completeNode is empty");
 
   onPopupClose = popup.once("popup-closed");
   EventUtils.synthesizeKey("KEY_Enter");
   await onPopupClose;
 
   ok(!popup.isOpen, "popup is not open after KEY_Enter");
-  is(getInputValue(hud), "window.foobar.item3",
+  is(jsterm.getInputValue(), "window.foobar.item3",
     "completion was successful after KEY_Enter");
 }

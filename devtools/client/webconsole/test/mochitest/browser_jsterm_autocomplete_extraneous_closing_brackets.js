@@ -20,10 +20,10 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const hud = await openNewTabAndConsole(TEST_URI);
+  const { jsterm } = await openNewTabAndConsole(TEST_URI);
 
   try {
-    await setInputValueForAutocompletion(hud, "document.getElementById)");
+    await setInputValueForAutocompletion(jsterm, "document.getElementById)");
     ok(true, "no error was thrown when an extraneous bracket was inserted");
   } catch (ex) {
     ok(false, "an error was thrown when an extraneous bracket was inserted");
