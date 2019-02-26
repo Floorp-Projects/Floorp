@@ -1125,12 +1125,6 @@ void LIRGenerator::visitTypeOf(MTypeOf* ins) {
   define(lir, ins);
 }
 
-void LIRGenerator::visitToAsync(MToAsync* ins) {
-  LToAsync* lir = new (alloc()) LToAsync(useRegisterAtStart(ins->input()));
-  defineReturn(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
 void LIRGenerator::visitToAsyncIter(MToAsyncIter* ins) {
   LToAsyncIter* lir =
       new (alloc()) LToAsyncIter(useRegisterAtStart(ins->getIterator()),

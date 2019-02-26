@@ -5439,11 +5439,6 @@ JSScript* js::TestingFunctionArgumentToScript(
     }
   }
 
-  // Get unwrapped async function.
-  if (IsWrappedAsyncFunction(fun)) {
-    fun = GetUnwrappedAsyncFunction(fun);
-  }
-
   if (!fun->isInterpreted()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TESTING_SCRIPTS_ONLY);

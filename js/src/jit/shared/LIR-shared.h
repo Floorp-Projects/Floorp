@@ -780,18 +780,6 @@ class LTypeOfV : public LInstructionHelper<1, BOX_PIECES, 1> {
   MTypeOf* mir() const { return mir_->toTypeOf(); }
 };
 
-class LToAsync : public LCallInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(ToAsync)
-
-  explicit LToAsync(const LAllocation& input)
-      : LCallInstructionHelper(classOpcode) {
-    setOperand(0, input);
-  }
-
-  const LAllocation* unwrapped() { return getOperand(0); }
-};
-
 class LToAsyncIter : public LCallInstructionHelper<1, 1 + BOX_PIECES, 0> {
  public:
   LIR_HEADER(ToAsyncIter)

@@ -3199,31 +3199,15 @@ bool BytecodeEmitter::emitAnonymousFunctionWithComputedName(
 
   if (node->is<FunctionNode>()) {
     if (!emitTree(node)) {
-      //            [stack] # !isAsync || isGenerator || !needsHomeObject
       //            [stack] NAME FUN
-      //            [stack] # isAsync && !isGenerator && needsHomeObject
-      //            [stack] NAME UNWRAPPED WRAPPED
       return false;
     }
-    unsigned depth = 1;
-    FunctionNode* funNode = &node->as<FunctionNode>();
-    FunctionBox* funbox = funNode->funbox();
-    if (funbox->isAsync() && !funbox->isGenerator() &&
-        funbox->needsHomeObject()) {
-      depth = 2;
-    }
-    if (!emitDupAt(depth)) {
-      //            [stack] # !isAsync || !needsHomeObject
+    if (!emitDupAt(1)) {
       //            [stack] NAME FUN NAME
-      //            [stack] # isAsync && needsHomeObject
-      //            [stack] NAME UNWRAPPED WRAPPED NAME
       return false;
     }
     if (!emit2(JSOP_SETFUNNAME, uint8_t(prefixKind))) {
-      //            [stack] # !isAsync || !needsHomeObject
       //            [stack] NAME FUN
-      //            [stack] # isAsync && needsHomeObject
-      //            [stack] NAME UNWRAPPED WRAPPED
       return false;
     }
     return true;
@@ -5809,10 +5793,6 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(FunctionNode* funNode,
     // JSOP_LAMBDA_ARROW is always preceded by a new.target
     MOZ_ASSERT(fun->isArrow() ==
                (funNode->syntaxKind() == FunctionSyntaxKind::Arrow));
-    if (funbox->isAsync() && !funbox->isGenerator()) {
-      MOZ_ASSERT(!needsProto);
-      return emitAsyncWrapper(index, funbox->needsHomeObject(), fun->isArrow());
-    }
 
     if (fun->isArrow()) {
       if (sc->allowNewTarget()) {
@@ -5868,14 +5848,8 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(FunctionNode* funNode,
       MOZ_ASSERT(sc->isGlobalContext() || sc->isEvalContext());
       MOZ_ASSERT(funNode->syntaxKind() == FunctionSyntaxKind::Statement);
       MOZ_ASSERT(inPrologue());
-      if (funbox->isAsync() && !funbox->isGenerator()) {
-        if (!emitAsyncWrapper(index, fun->isMethod(), fun->isArrow())) {
-          return false;
-        }
-      } else {
-        if (!emitIndex32(JSOP_LAMBDA, index)) {
-          return false;
-        }
+      if (!emitIndex32(JSOP_LAMBDA, index)) {
+        return false;
       }
       if (!emit1(JSOP_DEFFUN)) {
         return false;
@@ -5889,15 +5863,8 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(FunctionNode* funNode,
     if (!noe.prepareForRhs()) {
       return false;
     }
-    if (funbox->isAsync() && !funbox->isGenerator()) {
-      if (!emitAsyncWrapper(index, /* needsHomeObject = */ false,
-                            /* isArrow = */ false)) {
-        return false;
-      }
-    } else {
-      if (!emitIndexOp(JSOP_LAMBDA, index)) {
-        return false;
-      }
+    if (!emitIndexOp(JSOP_LAMBDA, index)) {
+      return false;
     }
     if (!noe.emitAssignment()) {
       return false;
@@ -5907,71 +5874,6 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(FunctionNode* funNode,
     }
   }
 
-  return true;
-}
-
-bool BytecodeEmitter::emitAsyncWrapperLambda(unsigned index, bool isArrow) {
-  if (isArrow) {
-    if (sc->allowNewTarget()) {
-      if (!emit1(JSOP_NEWTARGET)) {
-        return false;
-      }
-    } else {
-      if (!emit1(JSOP_NULL)) {
-        return false;
-      }
-    }
-    if (!emitIndex32(JSOP_LAMBDA_ARROW, index)) {
-      return false;
-    }
-  } else {
-    if (!emitIndex32(JSOP_LAMBDA, index)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-bool BytecodeEmitter::emitAsyncWrapper(unsigned index, bool needsHomeObject,
-                                       bool isArrow) {
-  // needsHomeObject can be true for propertyList for extended class.
-  // In that case push both unwrapped and wrapped function, in order to
-  // initialize home object of unwrapped function, and set wrapped function
-  // as a property.
-  //
-  //   lambda       // unwrapped
-  //   dup          // unwrapped unwrapped
-  //   toasync      // unwrapped wrapped
-  //
-  // Emitted code is surrounded by the following code.
-  //
-  //                    // classObj classCtor classProto
-  //   (emitted code)   // classObj classCtor classProto unwrapped wrapped
-  //   swap             // classObj classCtor classProto wrapped unwrapped
-  //   dupat 2          // classObj classCtor classProto wrapped unwrapped
-  //   classProto inithomeobject   // classObj classCtor classProto wrapped
-  //   unwrapped
-  //                    //   initialize the home object of unwrapped
-  //                    //   with classProto here
-  //   pop              // classObj classCtor classProto wrapped
-  //   inithiddenprop   // classObj classCtor classProto wrapped
-  //                    //   initialize the property of the classProto
-  //                    //   with wrapped function here
-  //   pop              // classObj classCtor classProto
-  //
-  // needsHomeObject is false for other cases, push wrapped function only.
-  if (!emitAsyncWrapperLambda(index, isArrow)) {
-    return false;
-  }
-  if (needsHomeObject) {
-    if (!emit1(JSOP_DUP)) {
-      return false;
-    }
-  }
-  if (!emit1(JSOP_TOASYNC)) {
-    return false;
-  }
   return true;
 }
 
@@ -6175,9 +6077,7 @@ bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
       return false;
     }
 
-    bool isAsyncGenerator =
-        sc->asFunctionBox()->isAsync() && sc->asFunctionBox()->isGenerator();
-    if (isAsyncGenerator) {
+    if (sc->asFunctionBox()->isAsync() && sc->asFunctionBox()->isGenerator()) {
       if (!emitAwaitInInnermostScope()) {
         return false;
       }
@@ -6334,8 +6234,7 @@ bool BytecodeEmitter::emitYield(UnaryNode* yieldNode) {
   }
 
   // 11.4.3.7 AsyncGeneratorYield step 5.
-  bool isAsyncGenerator = sc->asFunctionBox()->isAsync();
-  if (isAsyncGenerator) {
+  if (sc->asFunctionBox()->isAsync()) {
     if (!emitAwaitInInnermostScope()) {
       //            [stack] ITEROBJ RESULT
       return false;
@@ -7926,11 +7825,12 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
 
       if (propVal->is<FunctionNode>() &&
           propVal->as<FunctionNode>().funbox()->needsHomeObject()) {
-        FunctionBox* funbox = propVal->as<FunctionNode>().funbox();
-        MOZ_ASSERT(funbox->function()->allowSuperProperty());
+        MOZ_ASSERT(propVal->as<FunctionNode>()
+                       .funbox()
+                       ->function()
+                       ->allowSuperProperty());
 
-        bool isAsyncNonGenerator = funbox->isAsync() && !funbox->isGenerator();
-        if (!pe.emitInitHomeObject(isAsyncNonGenerator)) {
+        if (!pe.emitInitHomeObject()) {
           //        [stack] CTOR? OBJ CTOR? KEY? FUN
           return false;
         }

@@ -228,7 +228,15 @@ JSObject* js::NewSingletonObjectWithFunctionPrototype(
   if (!proto) {
     return nullptr;
   }
-  return NewObjectWithGivenProto<PlainObject>(cx, proto, SingletonObject);
+  RootedObject obj(
+      cx, NewObjectWithGivenProto<PlainObject>(cx, proto, SingletonObject));
+  if (!obj) {
+    return nullptr;
+  }
+  if (!JSObject::setDelegate(cx, obj)) {
+    return nullptr;
+  }
+  return obj;
 }
 
 /* static */ bool GlobalObject::initGenerators(JSContext* cx,
@@ -256,7 +264,7 @@ JSObject* js::NewSingletonObjectWithFunctionPrototype(
 
   RootedObject genFunctionProto(
       cx, NewSingletonObjectWithFunctionPrototype(cx, global));
-  if (!genFunctionProto || !JSObject::setDelegate(cx, genFunctionProto)) {
+  if (!genFunctionProto) {
     return false;
   }
   if (!LinkConstructorAndPrototype(cx, genFunctionProto, genObjectProto,

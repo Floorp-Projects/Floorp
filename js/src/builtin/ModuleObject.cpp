@@ -1000,14 +1000,6 @@ bool ModuleObject::noteFunctionDeclaration(JSContext* cx, HandleAtom name,
       return false;
     }
 
-    if (fun->isAsync() && !fun->isGenerator()) {
-      obj = WrapAsyncFunction(cx, obj.as<JSFunction>());
-    }
-
-    if (!obj) {
-      return false;
-    }
-
     value = ObjectValue(*obj);
     if (!SetProperty(cx, env, funDecl.name->asPropertyName(), value)) {
       return false;

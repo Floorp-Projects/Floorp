@@ -2332,9 +2332,6 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op) {
     case JSOP_TYPEOFEXPR:
       return jsop_typeof();
 
-    case JSOP_TOASYNC:
-      return jsop_toasync();
-
     case JSOP_TOASYNCITER:
       return jsop_toasynciter();
 
@@ -2531,6 +2528,7 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op) {
       break;
 
     case JSOP_UNUSED71:
+    case JSOP_UNUSED149:
     case JSOP_LIMIT:
       break;
   }
@@ -13121,18 +13119,6 @@ AbortReasonOr<Ok> IonBuilder::jsop_typeof() {
   current->push(ins);
 
   return Ok();
-}
-
-AbortReasonOr<Ok> IonBuilder::jsop_toasync() {
-  MDefinition* unwrapped = current->pop();
-  MOZ_ASSERT(unwrapped->type() == MIRType::Object);
-
-  MToAsync* ins = MToAsync::New(alloc(), unwrapped);
-
-  current->add(ins);
-  current->push(ins);
-
-  return resumeAfter(ins);
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_toasynciter() {
