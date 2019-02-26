@@ -2,24 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*
- *  Style for the heading of a debug target pane
- *  +-----------------+---------------+-----------------+
- *  | [Category icon] | Category name | [Collapse icon] |
- *  +-----------------+---------------+-----------------+
- */
-.debug-target-pane__heading {
-  grid-template-columns: var(--main-subheading-icon-size) max-content calc(var(--base-unit) * 3);
-  -moz-user-select: none;
-}
-
 .debug-target-pane__icon {
   transition: transform 150ms cubic-bezier(.07, .95, 0, 1);
-  transform: rotate(90deg);
 }
 
 .debug-target-pane__icon--collapsed {
-  transform: rotate(0deg);
+  transform: rotate(-90deg);
 }
 
 .debug-target-pane__title {
