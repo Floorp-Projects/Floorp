@@ -76,8 +76,8 @@ class HTMLFormatter(base.BaseFormatter):
                 if version_info.get("application_repository"):
                     self.env["Gecko revision"] = html.a(
                         version_info.get("application_changeset"),
-                        href="/".join([version_info.get("application_repository"),
-                                       version_info.get("application_changeset")]),
+                        href="/rev/".join([version_info.get("application_repository"),
+                                           version_info.get("application_changeset")]),
                         target="_blank")
 
             if version_info.get("gaia_changeset"):
