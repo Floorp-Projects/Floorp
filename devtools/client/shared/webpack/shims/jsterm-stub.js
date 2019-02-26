@@ -48,7 +48,7 @@ JSTerm.prototype = {
    *        The new value to set.
    * @returns void
    */
-  _setValue(newValue) {
+  setInputValue(newValue) {
     this.inputNode.value = newValue;
     // this.resizeInput();
   },
@@ -57,14 +57,14 @@ JSTerm.prototype = {
    * Gets the value from the input field
    * @returns string
    */
-  _getValue() {
+  getInputValue() {
     return this.inputNode.value || "";
   },
 
   execute(executeString) {
     return new Promise(resolve => {
       // attempt to execute the content of the inputNode
-      executeString = executeString || this._getValue();
+      executeString = executeString || this.getInputValue();
       if (!executeString) {
         return;
       }
@@ -95,7 +95,7 @@ JSTerm.prototype = {
       };
 
       this.requestEvaluation(executeString, options).then(onResult, onResult);
-      this._setValue("");
+      this.setInputValue("");
     });
   },
 

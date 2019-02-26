@@ -24,19 +24,19 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const hud = await openNewTabAndConsole(TEST_URI);
+  const {jsterm} = await openNewTabAndConsole(TEST_URI);
 
-  ok(!getInputValue(hud), "input is empty");
-  checkInputCursorPosition(hud, 0, "Cursor is at the start of the input");
+  ok(!jsterm.getInputValue(), "jsterm.getInputValue() is empty");
+  checkJsTermCursor(jsterm, 0, "Cursor is at the start of the input");
 
-  testSingleLineInputNavNoHistory(hud);
-  testMultiLineInputNavNoHistory(hud);
-  await testNavWithHistory(hud);
+  testSingleLineInputNavNoHistory(jsterm);
+  testMultiLineInputNavNoHistory(jsterm);
+  await testNavWithHistory(jsterm);
 }
 
-function testSingleLineInputNavNoHistory(hud) {
+function testSingleLineInputNavNoHistory(jsterm) {
   const checkInput = (expected, assertionInfo) =>
-    checkInputValueAndCursorPosition(hud, expected, assertionInfo);
+    checkJsTermValueAndCursor(jsterm, expected, assertionInfo);
 
   // Single char input
   EventUtils.sendString("1");
@@ -85,15 +85,15 @@ function testSingleLineInputNavNoHistory(hud) {
   checkInput("12|", "ctrl-n moves to end of line");
 }
 
-function testMultiLineInputNavNoHistory(hud) {
+function testMultiLineInputNavNoHistory(jsterm) {
   const checkInput = (expected, assertionInfo) =>
-    checkInputValueAndCursorPosition(hud, expected, assertionInfo);
+    checkJsTermValueAndCursor(jsterm, expected, assertionInfo);
 
   const lineValues = ["one", "2", "something longer", "", "", "three!"];
-  setInputValue(hud, "");
+  jsterm.setInputValue("");
   // simulate shift-return
   for (const lineValue of lineValues) {
-    setInputValue(hud, getInputValue(hud) + lineValue);
+    jsterm.setInputValue(jsterm.getInputValue() + lineValue);
     EventUtils.synthesizeKey("KEY_Enter", {shiftKey: true});
   }
 
@@ -206,9 +206,9 @@ three!
 `);
 }
 
-async function testNavWithHistory(hud) {
+async function testNavWithHistory(jsterm) {
   const checkInput = (expected, assertionInfo) =>
-    checkInputValueAndCursorPosition(hud, expected, assertionInfo);
+    checkJsTermValueAndCursor(jsterm, expected, assertionInfo);
 
   // NOTE: Tests does NOT currently define behaviour for ctrl-p/ctrl-n with
   // caret placed _within_ single line input
@@ -220,8 +220,8 @@ async function testNavWithHistory(hud) {
 
   // submit to history
   for (const value of values) {
-    setInputValue(hud, value);
-    await hud.jsterm.execute();
+    jsterm.setInputValue(value);
+    await jsterm.execute();
   }
 
   checkInput("|", "caret location at start of empty line");
@@ -264,7 +264,7 @@ async function testNavWithHistory(hud) {
 
   // Simulate editing multi-line
   const inputValue = "one\nlinebreak";
-  setInputValue(hud, inputValue);
+  jsterm.setInputValue(inputValue);
   checkInput("one\nlinebreak|");
 
   // Attempt nav within input

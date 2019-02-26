@@ -21,36 +21,41 @@ var gHudId = 0;
  * This object only wraps the iframe that holds the Web Console UI. This is
  * meant to be an integration point between the Firefox UI and the Web Console
  * UI and features.
+ *
+ * @constructor
+ * @param object target
+ *        The target that the web console will connect to.
+ * @param nsIDOMWindow iframeWindow
+ *        The window where the web console UI is already loaded.
+ * @param nsIDOMWindow chromeWindow
+ *        The window of the web console owner.
+ * @param object hudService
+ *        The parent HUD Service
  */
-class WebConsole {
-  /*
-  * @constructor
-  * @param object target
-  *        The target that the web console will connect to.
-  * @param nsIDOMWindow iframeWindow
-  *        The window where the web console UI is already loaded.
-  * @param nsIDOMWindow chromeWindow
-  *        The window of the web console owner.
-  * @param object hudService
-  *        The parent HUD Service
-  * @param bool isBrowserConsole
-  */
-  constructor(target, iframeWindow, chromeWindow, hudService, isBrowserConsole = false) {
-    this.iframeWindow = iframeWindow;
-    this.chromeWindow = chromeWindow;
-    this.hudId = "hud_" + ++gHudId;
-    this.target = target;
-    this.browserWindow = this.chromeWindow.top;
-    this.hudService = hudService;
-    this._browserConsole = isBrowserConsole;
+function WebConsole(target, iframeWindow, chromeWindow, hudService) {
+  this.iframeWindow = iframeWindow;
+  this.chromeWindow = chromeWindow;
+  this.hudId = "hud_" + ++gHudId;
+  this.target = target;
+  this.browserWindow = this.chromeWindow.top;
+  this.hudService = hudService;
 
-    const element = this.browserWindow.document.documentElement;
-    if (element.getAttribute("windowtype") != gDevTools.chromeWindowType) {
-      this.browserWindow = this.hudService.currentContext();
-    }
-    this.ui = new WebConsoleUI(this);
-    this._destroyer = null;
+  const element = this.browserWindow.document.documentElement;
+  if (element.getAttribute("windowtype") != gDevTools.chromeWindowType) {
+    this.browserWindow = this.hudService.currentContext();
   }
+  this.ui = new WebConsoleUI(this);
+}
+
+WebConsole.prototype = {
+  iframeWindow: null,
+  chromeWindow: null,
+  browserWindow: null,
+  hudId: null,
+  target: null,
+  ui: null,
+  _browserConsole: false,
+  _destroyer: null,
 
   /**
    * Getter for a function to to listen for every request that completes. Used
@@ -61,7 +66,7 @@ class WebConsole {
    */
   get lastFinishedRequestCallback() {
     return this.hudService.lastFinishedRequest.callback;
-  }
+  },
 
   /**
    * Getter for the window that can provide various utilities that the web
@@ -76,7 +81,7 @@ class WebConsole {
       return this.browserWindow;
     }
     return this.chromeWindow.top;
-  }
+  },
 
   /**
    * Getter for the output element that holds messages we display.
@@ -84,11 +89,11 @@ class WebConsole {
    */
   get outputNode() {
     return this.ui ? this.ui.outputNode : null;
-  }
+  },
 
   get gViewSourceUtils() {
     return this.chromeUtilsWindow.gViewSourceUtils;
-  }
+  },
 
   /**
    * Initialize the Web Console instance.
@@ -98,7 +103,7 @@ class WebConsole {
    */
   init() {
     return this.ui.init().then(() => this);
-  }
+  },
 
   /**
    * The JSTerm object that manages the console's input.
@@ -107,32 +112,7 @@ class WebConsole {
    */
   get jsterm() {
     return this.ui ? this.ui.jsterm : null;
-  }
-
-  /**
-   * Get the value from the input field.
-   * @returns {String|null} returns null if there's no input.
-   */
-  getInputValue() {
-    if (!this.jsterm) {
-      return null;
-    }
-
-    return this.jsterm._getValue();
-  }
-
-  /**
-   * Sets the value of the input field (command line)
-   *
-   * @param {String} newValue: The new value to set.
-   */
-  setInputValue(newValue) {
-    if (!this.jsterm) {
-      return;
-    }
-
-    this.jsterm._setValue(newValue);
-  }
+  },
 
   /**
    * Alias for the WebConsoleUI.setFilterState() method.
@@ -140,7 +120,7 @@ class WebConsole {
    */
   setFilterState() {
     this.ui && this.ui.setFilterState.apply(this.ui, arguments);
-  }
+  },
 
   /**
    * Open a link in a new tab.
@@ -150,7 +130,7 @@ class WebConsole {
    */
   openLink(link, e) {
     openDocLink(link);
-  }
+  },
 
   /**
    * Open a link in Firefox's view source.
@@ -162,7 +142,7 @@ class WebConsole {
    */
   viewSource(sourceURL, sourceLine) {
     this.gViewSourceUtils.viewSource({ URL: sourceURL, lineNumber: sourceLine || 0 });
-  }
+  },
 
   /**
    * Tries to open a Stylesheet file related to the web page for the web console
@@ -183,7 +163,7 @@ class WebConsole {
       return;
     }
     toolbox.viewSourceInStyleEditor(sourceURL, sourceLine);
-  }
+  },
 
   /**
    * Tries to open a JavaScript file related to the web page for the web console
@@ -206,7 +186,7 @@ class WebConsole {
     toolbox.viewSourceInDebugger(sourceURL, sourceLine).then(() => {
       this.ui.emit("source-in-debugger-opened");
     });
-  }
+  },
 
   /**
    * Tries to open a JavaScript file related to the web page for the web console
@@ -217,7 +197,7 @@ class WebConsole {
    */
   viewSourceInScratchpad(sourceURL, sourceLine) {
     viewSource.viewSourceInScratchpad(sourceURL, sourceLine);
-  }
+  },
 
   /**
    * Retrieve information about the JavaScript debugger's stackframes list. This
@@ -244,7 +224,7 @@ class WebConsole {
     }
 
     return panel.getFrames();
-  }
+  },
 
   /**
    * Given an expression, returns an object containing a new expression, mapped by the
@@ -281,7 +261,7 @@ class WebConsole {
     }
 
     return null;
-  }
+  },
 
   /**
    * A common access point for the client-side parser service that any panel can use.
@@ -298,7 +278,7 @@ class WebConsole {
       "resource://devtools/client/debugger/new/dist/parser-worker.js",
       this.chromeUtilsWindow);
     return this._parserService;
-  }
+  },
 
   /**
    * Retrieves the current selection from the Inspector, if such a selection
@@ -321,7 +301,7 @@ class WebConsole {
       return null;
     }
     return panel.selection;
-  }
+  },
 
   /**
    * Destroy the object. Call this method to avoid memory leaks when the Web
@@ -360,7 +340,7 @@ class WebConsole {
     })();
 
     return this._destroyer;
-  }
-}
+  },
+};
 
 module.exports = WebConsole;

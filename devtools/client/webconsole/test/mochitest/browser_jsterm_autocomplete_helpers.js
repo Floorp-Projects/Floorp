@@ -20,16 +20,15 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const hud = await openNewTabAndConsole(TEST_URI);
-  await testInspectAutoCompletion(hud, "i", true);
-  await testInspectAutoCompletion(hud, "window.", false);
-  await testInspectAutoCompletion(hud, "dump(i", true);
-  await testInspectAutoCompletion(hud, "window.dump(i", true);
+  const {jsterm} = await openNewTabAndConsole(TEST_URI);
+  await testInspectAutoCompletion(jsterm, "i", true);
+  await testInspectAutoCompletion(jsterm, "window.", false);
+  await testInspectAutoCompletion(jsterm, "dump(i", true);
+  await testInspectAutoCompletion(jsterm, "window.dump(i", true);
 }
 
-async function testInspectAutoCompletion(hud, inputValue, expectInspect) {
-  setInputValue(hud, "");
-  const {jsterm} = hud;
+async function testInspectAutoCompletion(jsterm, inputValue, expectInspect) {
+  jsterm.setInputValue("");
   jsterm.focus();
   const updated = jsterm.once("autocomplete-updated");
   EventUtils.sendString(inputValue);

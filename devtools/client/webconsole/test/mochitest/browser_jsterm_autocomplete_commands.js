@@ -17,8 +17,7 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const hud = await openNewTabAndConsole(TEST_URI);
-  const { jsterm } = hud;
+  const { jsterm } = await openNewTabAndConsole(TEST_URI);
   const { autocompletePopup } = jsterm;
 
   const onPopUpOpen = autocompletePopup.once("popup-opened");
@@ -36,24 +35,24 @@ async function performTests() {
   let onAutocompleUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString("s");
   await onAutocompleUpdated;
-  checkInputCompletionValue(hud, "  creenshot",
+  checkJsTermCompletionValue(jsterm, "  creenshot",
     "completion node has expected :screenshot value");
 
   EventUtils.synthesizeKey("KEY_Tab");
-  is(getInputValue(hud), ":screenshot", "Tab key correctly completed :screenshot");
+  is(jsterm.getInputValue(), ":screenshot", "Tab key correctly completed :screenshot");
 
   ok(!autocompletePopup.isOpen, "popup is closed after Tab");
 
   info("Test :hel completion");
-  setInputValue(hud, ":he");
+  jsterm.setInputValue(":he");
   onAutocompleUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString("l");
 
   await onAutocompleUpdated;
-  checkInputCompletionValue(hud, "    p", "completion node has expected :help value");
+  checkJsTermCompletionValue(jsterm, "    p", "completion node has expected :help value");
 
   EventUtils.synthesizeKey("KEY_Tab");
-  is(getInputValue(hud), ":help", "Tab key correctly completes :help");
+  is(jsterm.getInputValue(), ":help", "Tab key correctly completes :help");
 }
 
 function getPopupItems(popup) {

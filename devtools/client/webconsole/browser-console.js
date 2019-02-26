@@ -5,9 +5,9 @@
 "use strict";
 
 var Services = require("Services");
-var WebConsole = require("devtools/client/webconsole/webconsole");
-
+loader.lazyRequireGetter(this, "extend", "devtools/shared/extend", true);
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
+loader.lazyRequireGetter(this, "WebConsole", "devtools/client/webconsole/webconsole");
 
 /**
  * A BrowserConsole instance is an interactive console initialized *per target*
@@ -19,26 +19,28 @@ loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
  * UI and features.
  *
  * This object extends the WebConsole object located in webconsole.js
+ *
+ * @constructor
+ * @param object target
+ *        The target that the browser console will connect to.
+ * @param nsIDOMWindow iframeWindow
+ *        The window where the browser console UI is already loaded.
+ * @param nsIDOMWindow chromeWindow
+ *        The window of the browser console owner.
+ * @param object hudService
+ *        The parent HUD Service
  */
-class BrowserConsole extends WebConsole {
-  /*
-  * @constructor
-  * @param object target
-  *        The target that the browser console will connect to.
-  * @param nsIDOMWindow iframeWindow
-  *        The window where the browser console UI is already loaded.
-  * @param nsIDOMWindow chromeWindow
-  *        The window of the browser console owner.
-  * @param object hudService
-  *        The parent HUD Service
-  */
-  constructor(target, iframeWindow, chromeWindow, hudService) {
-    super(target, iframeWindow, chromeWindow, hudService, true);
+function BrowserConsole(target, iframeWindow, chromeWindow, hudService) {
+  WebConsole.call(this, target, iframeWindow, chromeWindow, hudService);
+  this._telemetry = new Telemetry();
+}
 
-    this._telemetry = new Telemetry();
-    this._bcInitializer = null;
-    this._bcDestroyer = null;
-  }
+BrowserConsole.prototype = extend(WebConsole.prototype, {
+  _browserConsole: true,
+  _bcInit: null,
+  _bcDestroyer: null,
+
+  $init: WebConsole.prototype.init,
 
   /**
    * Initialize the Browser Console instance.
@@ -47,8 +49,8 @@ class BrowserConsole extends WebConsole {
    *         A promise for the initialization.
    */
   init() {
-    if (this._bcInitializer) {
-      return this._bcInitializer;
+    if (this._bcInit) {
+      return this._bcInit;
     }
 
     // Only add the shutdown observer if we've opened a Browser Console window.
@@ -66,9 +68,11 @@ class BrowserConsole extends WebConsole {
     // toolbox session id.
     this._telemetry.toolOpened("browserconsole", -1, this);
 
-    this._bcInitializer = super.init();
-    return this._bcInitializer;
-  }
+    this._bcInit = this.$init();
+    return this._bcInit;
+  },
+
+  $destroy: WebConsole.prototype.destroy,
 
   /**
    * Destroy the object.
@@ -86,15 +90,15 @@ class BrowserConsole extends WebConsole {
       // toolbox session id.
       this._telemetry.toolClosed("browserconsole", -1, this);
 
-      await super.destroy();
+      await this.$destroy();
       await this.target.destroy();
       this.hudService._browserConsoleID = null;
       this.chromeWindow.close();
     })();
 
     return this._bcDestroyer;
-  }
-}
+  },
+});
 
 /**
  * The ShutdownObserver listens for app shutdown and saves the current state

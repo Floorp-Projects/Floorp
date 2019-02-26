@@ -25,15 +25,16 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const hud = await openNewTabAndConsole(TEST_URI);
+  const { jsterm } = await openNewTabAndConsole(TEST_URI);
+
   const {
     autocompletePopup: popup,
-  } = hud.jsterm;
+  } = jsterm;
 
   const onPopUpOpen = popup.once("popup-opened");
 
   info("wait for popup to show");
-  setInputValue(hud, "foo");
+  jsterm.setInputValue("foo");
   EventUtils.sendString(".");
 
   await onPopUpOpen;

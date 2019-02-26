@@ -33,7 +33,7 @@ async function performTests() {
   const node = jsterm.node || jsterm.inputNode;
 
   EventUtils.synthesizeMouse(node, 30, 10, {button: 1}, hud.iframeWindow);
-  is(getInputValue(hud), clipboardContent,
+  is(jsterm.getInputValue(), clipboardContent,
     "clipboard content was pasted in the console input");
 }
 

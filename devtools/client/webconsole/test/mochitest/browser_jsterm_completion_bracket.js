@@ -30,14 +30,14 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const hud = await openNewTabAndConsole(TEST_URI);
+  const {jsterm} = await openNewTabAndConsole(TEST_URI);
 
-  await testInputs(hud);
-  await testCompletionTextUpdateOnPopupNavigate(hud);
-  await testAcceptCompletionExistingClosingBracket(hud);
+  await testInputs(jsterm);
+  await testCompletionTextUpdateOnPopupNavigate(jsterm);
+  await testAcceptCompletionExistingClosingBracket(jsterm);
 }
 
-async function testInputs(hud) {
+async function testInputs(jsterm) {
   const tests = [{
     description: "Check that the popup is opened when typing `[`",
     input: "window.testObject[",
@@ -125,18 +125,17 @@ async function testInputs(hud) {
   }];
 
   for (const test of tests) {
-    await testInput(hud, test);
+    await testInput(jsterm, test);
   }
 }
 
-async function testInput(hud, {
+async function testInput(jsterm, {
   description,
   input,
   expectedItems,
   expectedCompletionText,
   expectedInputAfterCompletion,
 }) {
-  const {jsterm} = hud;
   const {autocompletePopup} = jsterm;
 
   info(`${description} - test popup opening`);
@@ -146,22 +145,21 @@ async function testInput(hud, {
 
   is(getAutocompletePopupLabels(autocompletePopup).join("|"), expectedItems.join("|"),
     `${description} - popup has expected item, in expected order`);
-  checkInputCompletionValue(hud, " ".repeat(input.length) + expectedCompletionText,
+  checkJsTermCompletionValue(jsterm, " ".repeat(input.length) + expectedCompletionText,
     `${description} - completeNode has expected value`);
 
   info(`${description} - test accepting completion`);
   const onPopupClose = autocompletePopup.once("popup-closed");
   EventUtils.synthesizeKey("KEY_Tab");
   await onPopupClose;
-  checkInputValueAndCursorPosition(hud, expectedInputAfterCompletion + "|",
+  checkJsTermValueAndCursor(jsterm, expectedInputAfterCompletion + "|",
     `${description} - input was completed as expected`);
-  checkInputCompletionValue(hud, "", `${description} - completeNode is empty`);
+  checkJsTermCompletionValue(jsterm, "", `${description} - completeNode is empty`);
 
-  setInputValue(hud, "");
+  jsterm.setInputValue("");
 }
 
-async function testCompletionTextUpdateOnPopupNavigate(hud) {
-  const {jsterm} = hud;
+async function testCompletionTextUpdateOnPopupNavigate(jsterm) {
   const {autocompletePopup} = jsterm;
 
   info("Test that navigating the popup list update the completionText as expected");
@@ -172,31 +170,30 @@ async function testCompletionTextUpdateOnPopupNavigate(hud) {
 
   is(getAutocompletePopupLabels(autocompletePopup).join("|"),
     `"data-test"|"dataTest"|"DATA-TEST"`, `popup has expected items, in expected order`);
-  checkInputCompletionValue(hud, " ".repeat(input.length) + `-test"]`,
+  checkJsTermCompletionValue(jsterm, " ".repeat(input.length) + `-test"]`,
     `completeNode has expected value`);
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  checkInputCompletionValue(hud, " ".repeat(input.length) + `Test"]`,
+  checkJsTermCompletionValue(jsterm, " ".repeat(input.length) + `Test"]`,
     `completeNode has expected value`);
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  checkInputCompletionValue(hud, " ".repeat(input.length) + `-TEST"]`,
+  checkJsTermCompletionValue(jsterm, " ".repeat(input.length) + `-TEST"]`,
     `completeNode has expected value`);
 
   const onPopupClose = autocompletePopup.once("popup-closed");
   EventUtils.synthesizeKey("KEY_Tab");
   await onPopupClose;
-  checkInputValueAndCursorPosition(hud, `window.testObject["DATA-TEST"]|`,
+  checkJsTermValueAndCursor(jsterm, `window.testObject["DATA-TEST"]|`,
     `input was completed as expected after navigating the popup`);
 }
 
-async function testAcceptCompletionExistingClosingBracket(hud) {
-  const {jsterm} = hud;
+async function testAcceptCompletionExistingClosingBracket(jsterm) {
   const {autocompletePopup} = jsterm;
 
   info("Check that accepting completion when there's a closing bracket does not append " +
     "another closing bracket");
-  await setInputValueForAutocompletion(hud, "window.testObject[]", -1);
+  await setInputValueForAutocompletion(jsterm, "window.testObject[]", -1);
   const onPopUpOpen = autocompletePopup.once("popup-opened");
   EventUtils.sendString("b");
   await onPopUpOpen;
@@ -206,7 +203,7 @@ async function testAcceptCompletionExistingClosingBracket(hud) {
   const onPopupClose = autocompletePopup.once("popup-closed");
   EventUtils.synthesizeKey("KEY_Tab");
   await onPopupClose;
-  checkInputValueAndCursorPosition(hud, `window.testObject["bar"|]`,
+  checkJsTermValueAndCursor(jsterm, `window.testObject["bar"|]`,
     `input was completed as expected, without adding a closing bracket`);
 }
 

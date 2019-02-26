@@ -14,6 +14,7 @@ loader.lazyRequireGetter(this, "Debugger", "Debugger");
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "AutocompletePopup", "devtools/client/shared/autocomplete-popup");
 loader.lazyRequireGetter(this, "PropTypes", "devtools/client/shared/vendor/react-prop-types");
+loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 loader.lazyRequireGetter(this, "KeyCodes", "devtools/client/shared/keycodes", true);
 loader.lazyRequireGetter(this, "Editor", "devtools/client/shared/sourceeditor/editor");
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
@@ -124,7 +125,7 @@ class JSTerm extends Component {
     };
 
     const doc = this.webConsoleUI.document;
-    const toolbox = this.webConsoleUI.wrapper.toolbox;
+    const toolbox = gDevTools.getToolbox(this.webConsoleUI.owner.target);
     const tooltipDoc = toolbox ? toolbox.doc : doc;
     // The popup will be attached to the toolbox document or HUD document in the case
     // such as the browser console which doesn't have a toolbox.
@@ -201,7 +202,7 @@ class JSTerm extends Component {
               // No need to handle shift + Enter as it's natively handled by CodeMirror.
 
               const hasSuggestion = this.hasAutocompletionSuggestion();
-              if (!hasSuggestion && !Debugger.isCompilableUnit(this._getValue())) {
+              if (!hasSuggestion && !Debugger.isCompilableUnit(this.getInputValue())) {
                 // incomplete statement
                 return "CodeMirror.Pass";
               }
@@ -329,7 +330,7 @@ class JSTerm extends Component {
                 return null;
               }
 
-              if (!this._getValue()) {
+              if (!this.getInputValue()) {
                 this.webConsoleUI.outputScroller.scrollTop = 0;
                 return null;
               }
@@ -348,7 +349,7 @@ class JSTerm extends Component {
                 return null;
               }
 
-              if (!this._getValue()) {
+              if (!this.getInputValue()) {
                 const {outputScroller} = this.webConsoleUI;
                 outputScroller.scrollTop = outputScroller.scrollHeight;
                 return null;
@@ -407,7 +408,7 @@ class JSTerm extends Component {
     this._paddingInlineStart = this.editor ? null : this._getInputPaddingInlineStart();
 
     this.webConsoleUI.window.addEventListener("blur", this._blurEventHandler);
-    this.lastInputValue && this._setValue(this.lastInputValue);
+    this.lastInputValue && this.setInputValue(this.lastInputValue);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -539,7 +540,7 @@ class JSTerm extends Component {
           }
           break;
         case "help":
-          this.webConsoleUI.hud.openLink(HELP_URL);
+          this.webConsoleUI.owner.openLink(HELP_URL);
           break;
         case "copyValueToClipboard":
           clipboardHelper.copyString(helperResult.value);
@@ -577,13 +578,13 @@ class JSTerm extends Component {
    *
    * @param {String} executeString
    *        The string you want to execute. If this is not provided, the current
-   *        user input is used - taken from |this._getValue()|.
+   *        user input is used - taken from |this.getInputValue()|.
    * @returns {Promise}
    *          Resolves with the message once the result is displayed.
    */
   async execute(executeString) {
     // attempt to execute the content of the inputNode
-    executeString = executeString || this._getValue();
+    executeString = executeString || this.getInputValue();
     if (!executeString) {
       return null;
     }
@@ -592,11 +593,11 @@ class JSTerm extends Component {
     this.props.appendToHistory(executeString);
 
     WebConsoleUtils.usageCount++;
-    this._setValue("");
+    this.setInputValue("");
     this.clearCompletion();
 
     let selectedNodeActor = null;
-    const inspectorSelection = this.webConsoleUI.hud.getInspectorSelection();
+    const inspectorSelection = this.webConsoleUI.owner.getInspectorSelection();
     if (inspectorSelection && inspectorSelection.nodeFront) {
       selectedNodeActor = inspectorSelection.nodeFront.actorID;
     }
@@ -611,7 +612,7 @@ class JSTerm extends Component {
     let mappedExpressionRes = null;
     try {
       mappedExpressionRes =
-        await this.webConsoleUI.hud.getMappedExpression(executeString);
+        await this.webConsoleUI.owner.getMappedExpression(executeString);
     } catch (e) {
       console.warn("Error when calling getMappedExpression", e);
     }
@@ -717,7 +718,7 @@ class JSTerm extends Component {
    *        The new value to set.
    * @returns void
    */
-  _setValue(newValue) {
+  setInputValue(newValue) {
     newValue = newValue || "";
     this.lastInputValue = newValue;
 
@@ -756,7 +757,7 @@ class JSTerm extends Component {
    * Gets the value from the input field
    * @returns string
    */
-  _getValue() {
+  getInputValue() {
     if (this.props.codeMirrorEnabled) {
       return this.editor ? this.editor.getText() || "" : "";
     }
@@ -795,7 +796,7 @@ class JSTerm extends Component {
    * @private
    */
   _inputEventHandler() {
-    const value = this._getValue();
+    const value = this.getInputValue();
     if (this.lastInputValue !== value) {
       this.resizeInput();
       this.props.autocompleteUpdate();
@@ -822,7 +823,7 @@ class JSTerm extends Component {
    */
   _keyPress(event) {
     const inputNode = this.inputNode;
-    const inputValue = this._getValue();
+    const inputValue = this.getInputValue();
     let inputUpdated = false;
 
     if (event.ctrlKey) {
@@ -907,7 +908,7 @@ class JSTerm extends Component {
       return;
     } else if (event.keyCode == KeyCodes.DOM_VK_RETURN) {
       if (!this.autocompletePopup.isOpen && (
-        event.shiftKey || !Debugger.isCompilableUnit(this._getValue())
+        event.shiftKey || !Debugger.isCompilableUnit(this.getInputValue())
       )) {
         // shift return or incomplete statement
         return;
@@ -1061,11 +1062,11 @@ class JSTerm extends Component {
     }
 
     const newInputValue = getValueFromHistory(direction);
-    const expression = this._getValue();
+    const expression = this.getInputValue();
     updateHistoryPosition(direction, expression);
 
     if (newInputValue != null) {
-      this._setValue(newInputValue);
+      this.setInputValue(newInputValue);
       return true;
     }
 
@@ -1078,7 +1079,7 @@ class JSTerm extends Component {
    * @return boolean
    */
   hasEmptyInput() {
-    return this._getValue() === "";
+    return this.getInputValue() === "";
   }
 
   /**
@@ -1088,7 +1089,7 @@ class JSTerm extends Component {
    *         True if CR or LF found in node value; else false.
    */
   hasMultilineInput() {
-    return /[\r\n]/.test(this._getValue());
+    return /[\r\n]/.test(this.getInputValue());
   }
 
   /**
@@ -1101,7 +1102,7 @@ class JSTerm extends Component {
    *         otherwise false.
    */
   canCaretGoPrevious() {
-    const inputValue = this._getValue();
+    const inputValue = this.getInputValue();
 
     if (this.editor) {
       const {line, ch} = this.editor.getCursor();
@@ -1128,7 +1129,7 @@ class JSTerm extends Component {
    *         false.
    */
   canCaretGoNext() {
-    const inputValue = this._getValue();
+    const inputValue = this.getInputValue();
     const multiline = /[\r\n]/.test(inputValue);
 
     if (this.editor) {
@@ -1191,7 +1192,7 @@ class JSTerm extends Component {
         if (!matchProp) {
           suffix = label;
         }
-        const inputAfterCursor = this._getValue().substring(inputUntilCursor.length);
+        const inputAfterCursor = this.getInputValue().substring(inputUntilCursor.length);
         // If there's not a bracket after the cursor, add it to the completionText.
         if (!inputAfterCursor.trimLeft().startsWith("]")) {
           suffix = suffix + "]";
@@ -1264,7 +1265,7 @@ class JSTerm extends Component {
           suffix = label;
         }
 
-        const inputAfterCursor = this._getValue().substring(inputBeforeCursor.length);
+        const inputAfterCursor = this.getInputValue().substring(inputBeforeCursor.length);
         // If there's no closing bracket after the cursor, add it to the completionText.
         if (!inputAfterCursor.trimLeft().startsWith("]")) {
           suffix = suffix + "]";
@@ -1327,7 +1328,7 @@ class JSTerm extends Component {
             inputBeforeCursor.substring(lastOpeningBracketIndex + 1).length;
         }
 
-        const inputAfterCursor = this._getValue().substring(inputBeforeCursor.length);
+        const inputAfterCursor = this.getInputValue().substring(inputBeforeCursor.length);
         // If there's not a bracket after the cursor, add it.
         if (!inputAfterCursor.trimLeft().startsWith("]")) {
           completionText = completionText + "]";
@@ -1349,7 +1350,7 @@ class JSTerm extends Component {
 
     if (this.inputNode) {
       const cursor = this.inputNode.selectionStart;
-      return this._getValue().substring(0, cursor);
+      return this.getInputValue().substring(0, cursor);
     }
 
     return null;
@@ -1363,7 +1364,7 @@ class JSTerm extends Component {
    * @param {int} numberOfCharsToReplaceCharsBeforeCursor - defaults to 0
    */
   insertStringAtCursor(str, numberOfCharsToReplaceCharsBeforeCursor = 0) {
-    const value = this._getValue();
+    const value = this.getInputValue();
     let prefix = this.getInputValueBeforeCursor();
     const suffix = value.replace(prefix, "");
 
@@ -1377,7 +1378,7 @@ class JSTerm extends Component {
 
     const scrollPosition = this.inputNode ? this.inputNode.parentElement.scrollTop : null;
 
-    this._setValue(prefix + str + suffix);
+    this.setInputValue(prefix + str + suffix);
 
     if (this.inputNode) {
       const newCursor = prefix.length + str.length;
@@ -1456,7 +1457,7 @@ class JSTerm extends Component {
     }
 
     if (this.inputNode) {
-      const value = this._getValue();
+      const value = this.getInputValue();
       const textAfterCursor = value.substring(this.inputNode.selectionStart);
       return textAfterCursor.split("\n")[0] === "";
     }

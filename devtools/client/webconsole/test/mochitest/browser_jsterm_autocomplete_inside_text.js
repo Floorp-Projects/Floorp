@@ -32,30 +32,29 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const hud = await openNewTabAndConsole(TEST_URI);
-  const { jsterm } = hud;
+  const { jsterm } = await openNewTabAndConsole(TEST_URI);
   info("web console opened");
 
   const { autocompletePopup: popup } = jsterm;
 
-  await setInitialState(hud);
+  await setInitialState(jsterm);
 
   ok(popup.isOpen, "popup is open");
   is(popup.itemCount, 2, "popup.itemCount is correct");
   is(popup.selectedIndex, 0, "popup.selectedIndex is correct");
-  ok(!getInputCompletionValue(hud), "there is no completion text");
+  ok(!getJsTermCompletionValue(jsterm), "there is no completion text");
 
   info("Pressing arrow right");
   let onPopupClose = popup.once("popup-closed");
   EventUtils.synthesizeKey("KEY_ArrowRight");
   await onPopupClose;
   ok(true, "popup was closed");
-  checkInputValueAndCursorPosition(hud, "dump(window.testB)|", "input wasn't modified");
+  checkJsTermValueAndCursor(jsterm, "dump(window.testB)|", "input wasn't modified");
 
-  await setInitialState(hud);
+  await setInitialState(jsterm);
   EventUtils.synthesizeKey("KEY_ArrowDown");
   is(popup.selectedIndex, 1, "popup.selectedIndex is correct");
-  ok(!getInputCompletionValue(hud), "completeNode.value is empty");
+  ok(!getJsTermCompletionValue(jsterm), "completeNode.value is empty");
 
   const items = popup.getItems().map(e => e.label);
   const expectedItems = ["testBugAA", "testBugBB"];
@@ -68,30 +67,30 @@ async function performTests() {
 
   // At this point the completion suggestion should be accepted.
   ok(!popup.isOpen, "popup is not open");
-  checkInputValueAndCursorPosition(hud, "dump(window.testBugBB|)",
+  checkJsTermValueAndCursor(jsterm, "dump(window.testBugBB|)",
     "completion was successful after VK_TAB");
-  ok(!getInputCompletionValue(hud), "there is no completion text");
+  ok(!getJsTermCompletionValue(jsterm), "there is no completion text");
 
   info("Test ENTER key when popup is visible with a selected item");
-  await setInitialState(hud);
+  await setInitialState(jsterm);
   info("press Enter and wait for popup to hide");
   onPopupClose = popup.once("popup-closed");
   EventUtils.synthesizeKey("KEY_Enter");
   await onPopupClose;
 
   ok(!popup.isOpen, "popup is not open");
-  checkInputValueAndCursorPosition(hud, "dump(window.testBugAA|)",
+  checkJsTermValueAndCursor(jsterm, "dump(window.testBugAA|)",
     "completion was successful after Enter");
-  ok(!getInputCompletionValue(hud), "there is no completion text");
+  ok(!getJsTermCompletionValue(jsterm), "there is no completion text");
 
   info("Test autocomplete inside parens");
-  setInputValue(hud, "dump()");
+  jsterm.setInputValue("dump()");
   EventUtils.synthesizeKey("KEY_ArrowLeft");
   let onAutocompleteUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString("window.testBugA");
   await onAutocompleteUpdated;
   ok(popup.isOpen, "popup is open");
-  ok(!getInputCompletionValue(hud), "there is no completion text");
+  ok(!getJsTermCompletionValue(jsterm), "there is no completion text");
 
   info("Matching the completion proposal should close the popup");
   onPopupClose = popup.once("popup-closed");
@@ -100,54 +99,53 @@ async function performTests() {
 
   info("Test TAB key when there is no autocomplete suggestion");
   ok(!popup.isOpen, "popup is not open");
-  ok(!getInputCompletionValue(hud), "there is no completion text");
+  ok(!getJsTermCompletionValue(jsterm), "there is no completion text");
 
   EventUtils.synthesizeKey("KEY_Tab");
-  checkInputValueAndCursorPosition(hud, "dump(window.testBugAA\t|)",
+  checkJsTermValueAndCursor(jsterm, "dump(window.testBugAA\t|)",
     "completion was successful after Enter");
 
   info("Check that we don't show the popup when editing words");
-  await setInputValueForAutocompletion(hud, "estBug", 0);
+  await setInputValueForAutocompletion(jsterm, "estBug", 0);
   onAutocompleteUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString("t");
   await onAutocompleteUpdated;
-  is(getInputValue(hud), "testBug", "jsterm has expected value");
+  is(jsterm.getInputValue(), "testBug", "jsterm has expected value");
   is(popup.isOpen, false, "popup is not open");
-  ok(!getInputCompletionValue(hud), "there is no completion text");
+  ok(!getJsTermCompletionValue(jsterm), "there is no completion text");
 
-  await setInputValueForAutocompletion(hud, "__foo", 1);
+  await setInputValueForAutocompletion(jsterm, "__foo", 1);
   onAutocompleteUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString("t");
   await onAutocompleteUpdated;
-  is(getInputValue(hud), "_t_foo", "jsterm has expected value");
+  is(jsterm.getInputValue(), "_t_foo", "jsterm has expected value");
   is(popup.isOpen, false, "popup is not open");
-  ok(!getInputCompletionValue(hud), "there is no completion text");
+  ok(!getJsTermCompletionValue(jsterm), "there is no completion text");
 
-  await setInputValueForAutocompletion(hud, "$$bar", 1);
+  await setInputValueForAutocompletion(jsterm, "$$bar", 1);
   onAutocompleteUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString("t");
   await onAutocompleteUpdated;
-  is(getInputValue(hud), "$t$bar", "jsterm has expected value");
+  is(jsterm.getInputValue(), "$t$bar", "jsterm has expected value");
   is(popup.isOpen, false, "popup is not open");
-  ok(!getInputCompletionValue(hud), "there is no completion text");
+  ok(!getJsTermCompletionValue(jsterm), "there is no completion text");
 
-  await setInputValueForAutocompletion(hud, "99luftballons", 1);
+  await setInputValueForAutocompletion(jsterm, "99luftballons", 1);
   onAutocompleteUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString("t");
   await onAutocompleteUpdated;
-  is(getInputValue(hud), "9t9luftballons", "jsterm has expected value");
+  is(jsterm.getInputValue(), "9t9luftballons", "jsterm has expected value");
   is(popup.isOpen, false, "popup is not open");
-  ok(!getInputCompletionValue(hud), "there is no completion text");
+  ok(!getJsTermCompletionValue(jsterm), "there is no completion text");
 }
 
-async function setInitialState(hud) {
-  const {jsterm} = hud;
+async function setInitialState(jsterm) {
   jsterm.focus();
-  setInputValue(hud, "dump()");
+  jsterm.setInputValue("dump()");
   EventUtils.synthesizeKey("KEY_ArrowLeft");
 
   const onPopUpOpen = jsterm.autocompletePopup.once("popup-opened");
   EventUtils.sendString("window.testB");
-  checkInputValueAndCursorPosition(hud, "dump(window.testB|)");
+  checkJsTermValueAndCursor(jsterm, "dump(window.testB|)");
   await onPopUpOpen;
 }

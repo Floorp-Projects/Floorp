@@ -35,10 +35,11 @@ add_task(async function() {
 
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
+  const { jsterm } = hud;
   const target = await TargetFactory.forTab(gBrowser.selectedTab);
   const toolbox = gDevTools.getToolbox(target);
 
-  const tooltip = await setInputValueForGetterConfirmDialog(toolbox, hud,
+  const tooltip = await setInputValueForGetterConfirmDialog(toolbox, jsterm,
     "window.foo.bar.");
   const labelEl = tooltip.querySelector(".confirm-label");
   is(labelEl.textContent, "Invoke getter window.foo.bar to retrieve the property list?",
