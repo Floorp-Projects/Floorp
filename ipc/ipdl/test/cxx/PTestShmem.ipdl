@@ -3,10 +3,10 @@ namespace _ipdltest {
 
 protocol PTestShmem {
 child:
-    async Give(Shmem mem, Shmem unsafe, size_t expectedSize);
+    async Give(Shmem mem, Shmem unsafe, uint32_t expectedSize);
 
 parent:
-    async Take(Shmem mem, Shmem unsafe, size_t expectedSize);
+    async Take(Shmem mem, Shmem unsafe, uint32_t expectedSize);
     async __delete__();
 
 /*
