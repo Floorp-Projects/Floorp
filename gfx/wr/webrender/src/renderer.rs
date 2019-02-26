@@ -4246,6 +4246,10 @@ impl Renderer {
     }
 
     fn draw_frame_debug_items(&mut self, items: &[DebugItem]) {
+        if items.is_empty() {
+            return;
+        }
+
         let debug_renderer = match self.debug.get_mut(&mut self.device) {
             Some(render) => render,
             None => return,
