@@ -61,7 +61,7 @@ using mozilla::Maybe;
 
 static MOZ_MUST_USE bool AsyncFunctionStart(
     JSContext* cx, Handle<PromiseObject*> resultPromise,
-    HandleValue generatorVal);
+    Handle<GeneratorObject*> generator);
 
 #define UNWRAPPED_ASYNC_WRAPPED_SLOT 1
 #define WRAPPED_ASYNC_UNWRAPPED_SLOT 0
@@ -84,14 +84,15 @@ static bool WrappedAsyncFunction(JSContext* cx, unsigned argc, Value* vp) {
   RootedValue generatorVal(cx);
   if (Call(cx, unwrappedVal, args.thisv(), args2, &generatorVal)) {
     // Step 1.
-    Rooted<PromiseObject*> resultPromise(
-        cx, CreatePromiseObjectForAsync(cx, generatorVal));
+    Rooted<PromiseObject*> resultPromise(cx, CreatePromiseObjectForAsync(cx));
     if (!resultPromise) {
       return false;
     }
 
     // Step 3.
-    if (!AsyncFunctionStart(cx, resultPromise, generatorVal)) {
+    Rooted<GeneratorObject*> generator(
+        cx, &generatorVal.toObject().as<GeneratorObject>());
+    if (!AsyncFunctionStart(cx, resultPromise, generator)) {
       return false;
     }
 
@@ -182,8 +183,8 @@ enum class ResumeKind { Normal, Throw };
 // Async Functions proposal 2.2 steps 3-8, 2.4 steps 2-7, 2.5 steps 2-7.
 static bool AsyncFunctionResume(JSContext* cx,
                                 Handle<PromiseObject*> resultPromise,
-                                HandleValue generatorVal, ResumeKind kind,
-                                HandleValue valueOrReason) {
+                                Handle<GeneratorObject*> generator,
+                                ResumeKind kind, HandleValue valueOrReason) {
   RootedObject stack(cx, resultPromise->allocationSite());
   Maybe<JS::AutoSetAsyncStackForNewCalls> asyncStack;
   if (stack) {
@@ -198,24 +199,25 @@ static bool AsyncFunctionResume(JSContext* cx,
                                    : cx->names().GeneratorThrow;
   FixedInvokeArgs<1> args(cx);
   args[0].set(valueOrReason);
-  RootedValue value(cx);
-  if (!CallSelfHostedFunction(cx, funName, generatorVal, args, &value)) {
+  RootedValue generatorOrValue(cx, ObjectValue(*generator));
+  if (!CallSelfHostedFunction(cx, funName, generatorOrValue, args,
+                              &generatorOrValue)) {
     return AsyncFunctionThrown(cx, resultPromise);
   }
 
-  if (generatorVal.toObject().as<GeneratorObject>().isAfterAwait()) {
-    return AsyncFunctionAwait(cx, resultPromise, value);
+  if (generator->isAfterAwait()) {
+    return AsyncFunctionAwait(cx, generator, resultPromise, generatorOrValue);
   }
 
-  return AsyncFunctionReturned(cx, resultPromise, value);
+  return AsyncFunctionReturned(cx, resultPromise, generatorOrValue);
 }
 
 // Async Functions proposal 2.2 steps 3-8.
 static MOZ_MUST_USE bool AsyncFunctionStart(
     JSContext* cx, Handle<PromiseObject*> resultPromise,
-    HandleValue generatorVal) {
-  return AsyncFunctionResume(cx, resultPromise, generatorVal,
-                             ResumeKind::Normal, UndefinedHandleValue);
+    Handle<GeneratorObject*> generator) {
+  return AsyncFunctionResume(cx, resultPromise, generator, ResumeKind::Normal,
+                             UndefinedHandleValue);
 }
 
 // Async Functions proposal 2.3 steps 1-8.
@@ -224,22 +226,22 @@ static MOZ_MUST_USE bool AsyncFunctionStart(
 // Async Functions proposal 2.4.
 MOZ_MUST_USE bool js::AsyncFunctionAwaitedFulfilled(
     JSContext* cx, Handle<PromiseObject*> resultPromise,
-    HandleValue generatorVal, HandleValue value) {
+    Handle<GeneratorObject*> generator, HandleValue value) {
   // Step 1 (implicit).
 
   // Steps 2-7.
-  return AsyncFunctionResume(cx, resultPromise, generatorVal,
-                             ResumeKind::Normal, value);
+  return AsyncFunctionResume(cx, resultPromise, generator, ResumeKind::Normal,
+                             value);
 }
 
 // Async Functions proposal 2.5.
 MOZ_MUST_USE bool js::AsyncFunctionAwaitedRejected(
     JSContext* cx, Handle<PromiseObject*> resultPromise,
-    HandleValue generatorVal, HandleValue reason) {
+    Handle<GeneratorObject*> generator, HandleValue reason) {
   // Step 1 (implicit).
 
   // Step 2-7.
-  return AsyncFunctionResume(cx, resultPromise, generatorVal, ResumeKind::Throw,
+  return AsyncFunctionResume(cx, resultPromise, generator, ResumeKind::Throw,
                              reason);
 }
 
