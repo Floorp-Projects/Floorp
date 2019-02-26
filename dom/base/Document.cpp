@@ -78,6 +78,7 @@
 #include "mozilla/dom/ShadowIncludingTreeIterator.h"
 #include "mozilla/dom/StyleSheetList.h"
 #include "mozilla/dom/SVGUseElement.h"
+#include "mozilla/net/CookieSettings.h"
 #include "nsGenericHTMLElement.h"
 #include "mozilla/dom/CDATASection.h"
 #include "mozilla/dom/ProcessingInstruction.h"
@@ -128,6 +129,7 @@
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsFocusManager.h"
+#include "nsICookiePermission.h"
 #include "nsICookieService.h"
 
 #include "nsBidiUtils.h"
@@ -2568,6 +2570,18 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
             ("XFO doesn't like frame's ancestry, not loading."));
     // stop!  ERROR page!
     aChannel->Cancel(NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION);
+  }
+
+  // Let's take the CookieSettings from the loadInfo or from the parent
+  // document.
+  if (loadInfo) {
+    rv = loadInfo->GetCookieSettings(getter_AddRefs(mCookieSettings));
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    nsCOMPtr<Document> parentDocument = GetParentDocument();
+    if (parentDocument) {
+      mCookieSettings = parentDocument->CookieSettings();
+    }
   }
 
   return NS_OK;
@@ -12624,6 +12638,16 @@ void Document::RecomputeLanguageFromCharset() {
 
   ResetLangPrefs();
   mLanguageFromCharset = language.forget();
+}
+
+nsICookieSettings* Document::CookieSettings() {
+  // If we are here, this is probably a javascript: URL document. In any case,
+  // we must have a nsCookieSettings. Let's create it.
+  if (!mCookieSettings) {
+    mCookieSettings = net::CookieSettings::Create();
+  }
+
+  return mCookieSettings;
 }
 
 }  // namespace dom

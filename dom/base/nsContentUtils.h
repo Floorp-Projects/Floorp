@@ -3385,13 +3385,14 @@ class nsContentUtils {
       CallOnRemoteChildFunction aCallback, void* aArg);
 
   /**
-   * Gets the current cookie lifetime policy for a given principal by checking
-   * with preferences and the permission manager.
+   * Gets the cookie lifetime policy for a given cookieSettings and a given
+   * principal by checking the permission value.
    *
    * Used in the implementation of InternalStorageAllowedCheck.
    */
-  static void GetCookieLifetimePolicyForPrincipal(nsIPrincipal* aPrincipal,
-                                                  uint32_t* aLifetimePolicy);
+  static void GetCookieLifetimePolicyFromCookieSettings(
+      nsICookieSettings* aCookieSettings, nsIPrincipal* aPrincipal,
+      uint32_t* aLifetimePolicy);
 
   /*
    * Checks if storage for a given principal is permitted by the user's
