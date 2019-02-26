@@ -110,6 +110,31 @@ class WebConsole {
   }
 
   /**
+   * Get the value from the input field.
+   * @returns {String|null} returns null if there's no input.
+   */
+  getInputValue() {
+    if (!this.jsterm) {
+      return null;
+    }
+
+    return this.jsterm._getValue();
+  }
+
+  /**
+   * Sets the value of the input field (command line)
+   *
+   * @param {String} newValue: The new value to set.
+   */
+  setInputValue(newValue) {
+    if (!this.jsterm) {
+      return;
+    }
+
+    this.jsterm._setValue(newValue);
+  }
+
+  /**
    * Alias for the WebConsoleUI.setFilterState() method.
    * @see webconsole.js::WebConsoleUI.setFilterState()
    */

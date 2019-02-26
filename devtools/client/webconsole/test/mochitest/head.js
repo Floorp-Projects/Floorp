@@ -399,7 +399,7 @@ function hasFocus(node) {
  * @returns {String}: The value of the console input.
  */
 function getInputValue(hud) {
-  return hud.jsterm.getInputValue();
+  return hud.jsterm._getValue();
 }
 
 /**
@@ -409,7 +409,7 @@ function getInputValue(hud) {
  * @param {String} value : The value to set the console input to.
  */
 function setInputValue(hud, value) {
-  return hud.jsterm.setInputValue(value);
+  return hud.jsterm._setValue(value);
 }
 
 /**

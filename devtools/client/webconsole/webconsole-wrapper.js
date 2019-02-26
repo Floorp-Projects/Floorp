@@ -154,7 +154,19 @@ class WebConsoleWrapper {
         },
 
         getInputValue: () => {
-          return webConsoleUI.jsterm && webConsoleUI.jsterm.getInputValue();
+          return this.hud.getInputValue();
+        },
+
+        setInputValue: (value) => {
+          this.hud.setInputValue(value);
+        },
+
+        focusInput: () => {
+          return webConsoleUI.jsterm && webConsoleUI.jsterm.focus();
+        },
+
+        evaluateInput: (expression) => {
+          return webConsoleUI.jsterm && webConsoleUI.jsterm.execute(expression);
         },
 
         getInputCursor: () => {
