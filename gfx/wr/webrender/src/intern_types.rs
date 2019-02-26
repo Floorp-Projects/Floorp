@@ -103,12 +103,5 @@ pub type UpdateList = intern::UpdateList<TextRunKey>;
 pub type Interner = intern::Interner<TextRunKey, PrimitiveSceneData, Marker>;
 }
 
-pub mod filterdata {
-common!();
-use ::filterdata::{SFilterDataKey, SFilterDataTemplate};
-pub type Store = intern::DataStore<SFilterDataKey, SFilterDataTemplate, Marker>;
-pub type UpdateList = intern::UpdateList<SFilterDataKey>;
-pub type Interner = intern::Interner<SFilterDataKey, (), Marker>;
-}
 
 

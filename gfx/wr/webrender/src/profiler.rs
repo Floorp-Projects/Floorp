@@ -534,7 +534,6 @@ impl BackendProfileCounters {
                 text_run: ResourceProfileCounter::new("Interned text runs"),
                 yuv_image: ResourceProfileCounter::new("Interned YUV images"),
                 clip: ResourceProfileCounter::new("Interned clips"),
-                filterdata: ResourceProfileCounter::new("Interned filterdata"),
             },
         }
     }
