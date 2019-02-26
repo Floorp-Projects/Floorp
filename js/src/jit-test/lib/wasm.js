@@ -30,6 +30,30 @@ function wasmFailValidateText(str, pattern) {
     assertErrorMessage(() => new WebAssembly.Module(binary), WebAssembly.CompileError, pattern);
 }
 
+// Expected compilation failure can happen in a couple of ways:
+//
+// - The compiler can be available but not capable of recognizing some opcodes:
+//   Compilation will start, but will fail with a CompileError.  This is what
+//   happens without --wasm-gc if opcodes enabled by --wasm-gc are used.
+//
+// - The compiler can be unavailable: Compilation will not start at all but will
+//   throw an Error.  This is what happens with "--wasm-gc --wasm-compiler=X" if
+//   X does not support the features enabled by --wasm-gc.
+
+function wasmCompilationShouldFail(bin, compile_error_regex) {
+    try {
+        new WebAssembly.Module(bin);
+    } catch (e) {
+        if (e instanceof WebAssembly.CompileError) {
+            assertEq(compile_error_regex.test(e), true);
+        } else if (e instanceof Error) {
+            assertEq(/can't use wasm debug\/gc without baseline/.test(e), true);
+        } else {
+            throw new Error("Unexpected exception value:\n" + e);
+        }
+    }
+}
+
 function mismatchError(actual, expect) {
     var str = `type mismatch: expression has type ${actual} but expected ${expect}`;
     return RegExp(str);
