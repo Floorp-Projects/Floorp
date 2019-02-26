@@ -792,7 +792,7 @@ class NullaryNode : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dump(GenericPrinter& out);
+  void dumpImpl(GenericPrinter& out, int indent);
 #endif
 };
 
@@ -829,7 +829,7 @@ class NameNode : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dump(GenericPrinter& out, int indent);
+  void dumpImpl(GenericPrinter& out, int indent);
 #endif
 
   JSAtom* atom() const { return atom_; }
@@ -875,7 +875,7 @@ class UnaryNode : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dump(GenericPrinter& out, int indent);
+  void dumpImpl(GenericPrinter& out, int indent);
 #endif
 
   ParseNode* kid() const { return kid_; }
@@ -950,7 +950,7 @@ class BinaryNode : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dump(GenericPrinter& out, int indent);
+  void dumpImpl(GenericPrinter& out, int indent);
 #endif
 
   ParseNode* left() const { return left_; }
@@ -1050,7 +1050,7 @@ class TernaryNode : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dump(GenericPrinter& out, int indent);
+  void dumpImpl(GenericPrinter& out, int indent);
 #endif
 
   ParseNode* kid1() const { return kid1_; }
@@ -1157,7 +1157,7 @@ class ListNode : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dump(GenericPrinter& out, int indent);
+  void dumpImpl(GenericPrinter& out, int indent);
 #endif
 
   ParseNode* head() const { return head_; }
@@ -1442,7 +1442,7 @@ class FunctionNode : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dump(GenericPrinter& out, int indent);
+  void dumpImpl(GenericPrinter& out, int indent);
 #endif
 
   FunctionBox* funbox() const { return funbox_; }
@@ -1484,7 +1484,7 @@ class ModuleNode : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dump(GenericPrinter& out, int indent);
+  void dumpImpl(GenericPrinter& out, int indent);
 #endif
 
   ListNode* body() const { return &body_->as<ListNode>(); }
@@ -1516,7 +1516,7 @@ class NumericLiteral : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dump(GenericPrinter& out, int indent);
+  void dumpImpl(GenericPrinter& out, int indent);
 #endif
 
   double value() const { return value_; }
@@ -1549,7 +1549,7 @@ class BigIntLiteral : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dump(GenericPrinter& out, int indent);
+  void dumpImpl(GenericPrinter& out, int indent);
 #endif
 
   BigIntBox* box() const { return box_; }
@@ -1579,7 +1579,7 @@ class LexicalScopeNode : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dump(GenericPrinter& out, int indent);
+  void dumpImpl(GenericPrinter& out, int indent);
 #endif
 
   Handle<LexicalScope::Data*> scopeBindings() const {
@@ -1654,7 +1654,7 @@ class LoopControlStatement : public ParseNode {
   PropertyName* label() const { return label_; }
 
 #ifdef DEBUG
-  void dump(GenericPrinter& out, int indent);
+  void dumpImpl(GenericPrinter& out, int indent);
 #endif
 
   static bool test(const ParseNode& node) {
@@ -1828,7 +1828,7 @@ class RegExpLiteral : public ParseNode {
   ObjectBox* objbox() const { return objbox_; }
 
 #ifdef DEBUG
-  void dump(GenericPrinter& out, int indent);
+  void dumpImpl(GenericPrinter& out, int indent);
 #endif
 
   static bool test(const ParseNode& node) {
