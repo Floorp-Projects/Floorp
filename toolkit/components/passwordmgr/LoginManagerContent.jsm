@@ -164,7 +164,7 @@ var LoginManagerContent = {
   _formLikeByRootElement: new WeakMap(),
 
   /**
-   * WeakMap of the root element of a WeakMap to the DeferredTask to fill its fields.
+   * WeakMap of the root element of a FormLike to the DeferredTask to fill its fields.
    *
    * This is used to be able to throttle fills for a FormLike since onDOMInputPasswordAdded gets
    * dispatched for each password field added to a document but we only want to fill once per
@@ -173,6 +173,17 @@ var LoginManagerContent = {
    * @type {WeakMap}
    */
   _deferredPasswordAddedTasksByRootElement: new WeakMap(),
+
+  /**
+   * WeakMap of a document to the array of callbacks to execute when it becomes visible
+   *
+   * This is used to defer handling DOMFormHasPassword and onDOMInputPasswordAdded events when the
+   * containing document is hidden.
+   * When the document first becomes visible, any queued events will be handled as normal.
+   *
+   * @type {WeakMap}
+   */
+  _onVisibleTasksByDocument: new WeakMap(),
 
   // Map from form login requests to information about that request.
   _requests: new Map(),
@@ -353,14 +364,55 @@ var LoginManagerContent = {
     LoginManagerContent._onFormSubmit(formLike);
   },
 
+  onDocumentVisibilityChange(event) {
+    if (!event.isTrusted) {
+      return;
+    }
+    let document = event.target;
+    let onVisibleTasks = this._onVisibleTasksByDocument.get(document);
+    if (!onVisibleTasks) {
+      return;
+    }
+    for (let task of onVisibleTasks) {
+      log("onDocumentVisibilityChange, executing queued task");
+      task();
+    }
+    this._onVisibleTasksByDocument.delete(document);
+  },
+
+  _deferHandlingEventUntilDocumentVisible(event, document, fn) {
+    log(`document.visibilityState: ${document.visibilityState}, defer handling ${event.type}`);
+    let onVisibleTasks = this._onVisibleTasksByDocument.get(document);
+    if (!onVisibleTasks) {
+      log(`deferHandling, first queued event, register the visibilitychange handler`);
+      onVisibleTasks = [];
+      this._onVisibleTasksByDocument.set(document, onVisibleTasks);
+      document.addEventListener("visibilitychange", event => {
+        this.onDocumentVisibilityChange(event);
+      }, { once: true });
+    }
+    onVisibleTasks.push(fn);
+  },
+
   onDOMFormHasPassword(event) {
     if (!event.isTrusted) {
       return;
     }
+    let document = event.target.ownerDocument;
+    if (document.visibilityState == "visible") {
+      this._processDOMFormHasPasswordEvent(event);
+    } else {
+      // wait until the document becomes visible before handling this event
+      this._deferHandlingEventUntilDocumentVisible(event, document, () => {
+        this._processDOMFormHasPasswordEvent(event);
+      });
+    }
+  },
 
+  _processDOMFormHasPasswordEvent(event) {
     let form = event.target;
     let formLike = LoginFormFactory.createFromForm(form);
-    log("onDOMFormHasPassword:", form, formLike);
+    log("_processDOMFormHasPasswordEvent:", form, formLike);
     this._fetchLoginsFromParentAndFillForm(formLike);
   },
 
@@ -375,12 +427,25 @@ var LoginManagerContent = {
       return;
     }
 
+    let document = pwField.ownerDocument;
+    if (document.visibilityState == "visible") {
+      this._processDOMInputPasswordAddedEvent(event, topWindow);
+    } else {
+      // wait until the document becomes visible before handling this event
+      this._deferHandlingEventUntilDocumentVisible(event, document, () => {
+        this._processDOMInputPasswordAddedEvent(event, topWindow);
+      });
+    }
+  },
+
+  _processDOMInputPasswordAddedEvent(event, topWindow) {
+    let pwField = event.originalTarget;
     // Only setup the listener for formless inputs.
     // Capture within a <form> but without a submit event is bug 1287202.
     this.setupProgressListener(topWindow);
 
     let formLike = LoginFormFactory.createFromField(pwField);
-    log("onDOMInputPasswordAdded:", pwField, formLike);
+    log(" _processDOMInputPasswordAddedEvent:", pwField, formLike);
 
     let deferredTask = this._deferredPasswordAddedTasksByRootElement.get(formLike.rootElement);
     if (!deferredTask) {
