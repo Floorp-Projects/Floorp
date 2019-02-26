@@ -1981,6 +1981,20 @@ pub extern "C" fn wr_dp_push_stacking_context(
                                                            *c_filter
     }).collect();
 
+    let c_filter_datas = make_slice(filter_datas, filter_datas_count);
+    let r_filter_datas : Vec<FilterData> = c_filter_datas.iter().map(|c_filter_data| {
+        FilterData {
+            func_r_type: c_filter_data.funcR_type,
+            r_values: make_slice(c_filter_data.R_values, c_filter_data.R_values_count).to_vec(),
+            func_g_type: c_filter_data.funcG_type,
+            g_values: make_slice(c_filter_data.G_values, c_filter_data.G_values_count).to_vec(),
+            func_b_type: c_filter_data.funcB_type,
+            b_values: make_slice(c_filter_data.B_values, c_filter_data.B_values_count).to_vec(),
+            func_a_type: c_filter_data.funcA_type,
+            a_values: make_slice(c_filter_data.A_values, c_filter_data.A_values_count).to_vec(),
+        }
+    }).collect();
+
     let transform_ref = unsafe { transform.as_ref() };
     let mut transform_binding = match transform_ref {
         Some(t) => Some(PropertyBinding::Value(t.clone())),
@@ -2068,6 +2082,7 @@ pub extern "C" fn wr_dp_push_stacking_context(
                                 params.transform_style,
                                 params.mix_blend_mode,
                                 &filters,
+                                &r_filter_datas,
                                 glyph_raster_space,
                                 params.cache_tiles);
 
