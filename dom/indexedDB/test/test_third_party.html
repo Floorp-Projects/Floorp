@@ -46,29 +46,25 @@
                                        "third_party_iframe2.html");
 
     let testIndex = 0;
-    let testRunning = false;
+    let openedWindow;
 
-    function iframeLoaded() {
-      let message = { source: "parent", href: iframe2URL };
-      let iframe = document.getElementById("iframe1");
-      iframe.contentWindow.postMessage(message.toSource(), "*");
-    }
-
-    function setiframe() {
-      let iframe = document.getElementById("iframe1");
-
-      if (!testRunning) {
-        testRunning = true;
-        iframe.addEventListener("load", iframeLoaded);
-      }
+    // Cookie preference changes are only applied to top-level tabs/windows
+    // when they are loaded. We need a window-proxy to continue the test.
+    function openWindow() {
       SpecialPowers.pushPrefEnv({
         "set": [
           ["network.cookie.cookieBehavior", testData[testIndex].cookieBehavior],
         ],
       }, () => {
-        iframe.src = testData[testIndex].host + iframe1Path;
+        openedWindow = window.open("third_party_window.html");
+        openedWindow.onload = _ => {
+          openedWindow.postMessage({
+            source: "parent",
+            href: iframe2URL,
+            iframeUrl: testData[testIndex].host + iframe1Path,
+          }, "*");
+        };
       });
-      // SpecialPowers.setIntPref("network.cookie.cookieBehavior", testData[testIndex].cookieBehavior);
     }
 
     function messageListener(event) {
@@ -78,9 +74,11 @@
       is(message.source, "iframe", "Good source");
       is(message.result, testData[testIndex].expectedResult, "Good result");
 
+      openedWindow.close();
+
       if (testIndex < testData.length - 1) {
         testIndex++;
-        setiframe();
+        openWindow();
         return;
       }
 
@@ -93,14 +91,13 @@
       SpecialPowers.addPermission("indexedDB", true, document);
 
       window.addEventListener("message", messageListener);
-      setiframe();
+      openWindow();
     }
   </script>
 
 </head>
 
 <body onload="runTest();">
-  <iframe id="iframe1"></iframe>
 </body>
 
 </html>

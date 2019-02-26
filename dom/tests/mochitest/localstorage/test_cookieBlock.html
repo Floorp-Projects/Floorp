@@ -9,23 +9,28 @@
 
 function startTest()
 {
-  try {
-    localStorage.setItem("blocked", "blockedvalue");
-    ok(false, "Exception for localStorage.setItem, ACCESS_DENY");
-  }
-  catch (ex) {
-    ok(true, "Exception for localStorage.setItem, ACCESS_DENY");
-  }
+  // Let's use a new window to have the cookie permission applied.
+  let w = window.open("windowProxy.html");
+  w.onload = _ => {
+    try {
+      w.localStorage.setItem("blocked", "blockedvalue");
+      ok(false, "Exception for localStorage.setItem, ACCESS_DENY");
+    }
+    catch (ex) {
+      ok(true, "Exception for localStorage.setItem, ACCESS_DENY");
+    }
 
-  try {
-    localStorage.getItem("blocked");
-    ok(false, "Exception for localStorage.getItem, ACCESS_DENY");
-  }
-  catch (ex) {
-    ok(true, "Exception for localStorage.getItem, ACCESS_DENY");
-  }
+    try {
+      w.localStorage.getItem("blocked");
+      ok(false, "Exception for localStorage.getItem, ACCESS_DENY");
+    }
+    catch (ex) {
+      ok(true, "Exception for localStorage.getItem, ACCESS_DENY");
+    }
 
-  SimpleTest.finish();
+    w.close();
+    SimpleTest.finish();
+  }
 }
 
 SimpleTest.waitForExplicitFinish();

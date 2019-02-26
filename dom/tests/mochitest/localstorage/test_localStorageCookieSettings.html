@@ -8,7 +8,6 @@
 
 </head>
 <body>
-<iframe></iframe>
 
 <script type="text/javascript">
 
@@ -20,39 +19,47 @@ SpecialPowers.pushPrefEnv({"set": [
 ]}, test1);
 
 function test1() {
-  try {
-    localStorage.setItem("contentkey", "test-value");
-    ok(false, "Setting localStorageItem should throw a type error exception");
-  }
-  catch(ex) {
-    is(ex.name, "TypeError");
-  }
+  let w = window.open("windowProxy.html");
+  w.onload = _ => {
+    try {
+      w.localStorage.setItem("contentkey", "test-value");
+      ok(false, "Setting localStorageItem should throw a security exception");
+    }
+    catch(ex) {
+      is(ex.name, "TypeError");
+    }
 
-  // Set cookies behavior to "reject 3rd party"
-  SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 1]],
-                             "clear": [["network.cookie.lifetimePolicy"]]},
-                            test3);
+    w.close();
+
+    // Set cookies behavior to "reject 3rd party"
+    SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 1]],
+                               "clear": [["network.cookie.lifetimePolicy"]]},
+                              test2);
+  }
 }
 
-function test3() {
-  try {
-    localStorage.setItem("contentkey", "test-value");
-    ok(true, "Setting localStorageItem should not throw a type error exception");
+function test2() {
+  let w = window.open("windowProxy.html");
+  w.onload = _ => {
+    try {
+      w.localStorage.setItem("contentkey", "test-value");
+      ok(true, "Setting localStorageItem should not throw a security exception");
+    }
+    catch(ex) {
+      ok(false, "Setting localStorageItem should not throw a security exception");
+    }
+
+    var fileTest = (location.protocol + "//example.com" + location.pathname)
+                   .replace("test_l", "frameL");
+
+    var myframe = w.document.createElement("iframe");
+    w.document.body.appendChild(myframe);
+    myframe.src = fileTest;
+    myframe.onload = _ => {
+      w.close();
+      SimpleTest.finish();
+    }
   }
-  catch(ex) {
-    ok(false, "Setting localStorageItem should not throw a type error exception");
-  }
-
-  var fileTest = (location.protocol + "//example.com" + location.pathname)
-                 .replace("test_l", "frameL");
-
-  var myframe = document.querySelector("iframe");
-  myframe.src = fileTest;
-}
-
-// Called by interOriginTest.js
-function doNextTest() {
-  SimpleTest.finish();
 }
 
 </script>
