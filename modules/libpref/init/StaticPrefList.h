@@ -1941,6 +1941,13 @@ VARCACHE_PREF(
   uint32_t, 1800 // 30 minutes (in seconds)
 )
 
+// Maximum client-side cookie life-time cap
+VARCACHE_PREF(
+  "privacy.documentCookies.maxage",
+   privacy_documentCookies_maxage,
+  uint32_t, 0 // Disabled (in seconds, set to 0 to disable)
+)
+
 // Anti-fingerprinting, disabled by default
 VARCACHE_PREF(
   "privacy.resistFingerprinting",
