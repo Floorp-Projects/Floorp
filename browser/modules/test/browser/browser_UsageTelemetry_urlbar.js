@@ -154,9 +154,9 @@ add_task(async function test_simpleQuery() {
   TelemetryTestUtils.assertKeyedHistogramSum(search_hist, "other-MozSearch.alias", undefined);
 
   // Also check events.
-  let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
-  events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
-  TelemetryTestUtils.assertEvents(events, [["navigation", "search", "urlbar", "enter", {engine: "other-MozSearch"}]]);
+  TelemetryTestUtils.assertEvents(
+    [["navigation", "search", "urlbar", "enter", {engine: "other-MozSearch"}]],
+    {category: "navigation", method: "search"});
 
   // Check the histograms as well.
   TelemetryTestUtils.assertHistogram(resultIndexHist, 0, 1);
@@ -202,9 +202,9 @@ add_task(async function test_searchAlias() {
   TelemetryTestUtils.assertKeyedHistogramSum(search_hist, "other-MozSearch.alias", undefined);
 
   // Also check events.
-  let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
-  events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
-  TelemetryTestUtils.assertEvents(events, [["navigation", "search", "urlbar", "alias", {engine: "other-MozSearch"}]]);
+  TelemetryTestUtils.assertEvents(
+    [["navigation", "search", "urlbar", "alias", {engine: "other-MozSearch"}]],
+    {category: "navigation", method: "search"});
 
   // Check the histograms as well.
   TelemetryTestUtils.assertHistogram(resultIndexHist, 0, 1);
@@ -281,9 +281,9 @@ add_task(async function test_oneOff_enter() {
   TelemetryTestUtils.assertKeyedHistogramSum(search_hist, "other-MozSearch.alias", undefined);
 
   // Also check events.
-  let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
-  events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
-  TelemetryTestUtils.assertEvents(events, [["navigation", "search", "urlbar", "oneoff", {engine: "other-MozSearch"}]]);
+  TelemetryTestUtils.assertEvents(
+    [["navigation", "search", "urlbar", "oneoff", {engine: "other-MozSearch"}]],
+    {category: "navigation", method: "search"});
 
   // Check the histograms as well.
   TelemetryTestUtils.assertHistogram(resultIndexHist, 0, 1);
@@ -382,9 +382,9 @@ add_task(async function test_suggestion_click() {
     TelemetryTestUtils.assertKeyedHistogramSum(search_hist, searchEngineId + ".urlbar", 1);
 
     // Also check events.
-    let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
-    events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
-    TelemetryTestUtils.assertEvents(events, [["navigation", "search", "urlbar", "suggestion", {engine: searchEngineId}]]);
+    TelemetryTestUtils.assertEvents(
+      [["navigation", "search", "urlbar", "suggestion", {engine: searchEngineId}]],
+      {category: "navigation", method: "search"});
 
     // Check the histograms as well.
     TelemetryTestUtils.assertHistogram(resultIndexHist, 3, 1);
