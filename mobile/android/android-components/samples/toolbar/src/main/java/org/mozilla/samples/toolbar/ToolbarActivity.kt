@@ -13,11 +13,11 @@ import android.support.v7.widget.LinearLayoutManager
 import android.view.View
 import kotlinx.android.synthetic.main.activity_toolbar.*
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import mozilla.components.browser.domains.autocomplete.CustomDomainsProvider
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.menu.BrowserMenu
@@ -204,10 +204,19 @@ class ToolbarActivity : AppCompatActivity() {
             simulateReload()
         }
 
-        val reload = BrowserMenuItemToolbar.Button(
-            mozilla.components.ui.icons.R.drawable.mozac_ic_refresh,
-            "Reload") {
-            simulateReload()
+        val reload = BrowserMenuItemToolbar.TwoStateButton(
+            primaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_refresh,
+            primaryContentDescription = "Reload",
+            secondaryImageResource = R.drawable.mozac_ic_stop,
+            secondaryContentDescription = "Stop",
+            isInPrimaryState = { !loading },
+            disableInSecondaryState = false
+        ) {
+            if (loading) {
+                job?.cancel()
+            } else {
+                simulateReload()
+            }
         }
 
         val menuToolbar = BrowserMenuItemToolbar(listOf(forward, reload))

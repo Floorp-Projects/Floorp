@@ -36,7 +36,7 @@ class BrowserMenuItemToolbarTest {
         val toolbar = BrowserMenuItemToolbar(emptyList())
 
         val view = LayoutInflater.from(
-                RuntimeEnvironment.application
+            RuntimeEnvironment.application
         ).inflate(toolbar.getLayoutResource(), null)
 
         assertNotNull(view)
@@ -73,12 +73,21 @@ class BrowserMenuItemToolbarTest {
     @Test
     fun `items are added as ImageButton to view group`() {
         val buttons = listOf(
-                BrowserMenuItemToolbar.Button(
-                        R.drawable.abc_ic_ab_back_material,
-                        "Button01") {},
-                BrowserMenuItemToolbar.Button(
-                        R.drawable.abc_ic_ab_back_material,
-                        "Button02") {})
+            BrowserMenuItemToolbar.Button(
+                R.drawable.abc_ic_ab_back_material,
+                "Button01"
+            ) {},
+            BrowserMenuItemToolbar.Button(
+                R.drawable.abc_ic_ab_back_material,
+                "Button02"
+            ) {},
+            BrowserMenuItemToolbar.TwoStateButton(
+                primaryImageResource = R.drawable.abc_ic_go_search_api_material,
+                primaryContentDescription = "TwoStatePrimary",
+                secondaryImageResource = R.drawable.abc_ic_clear_material,
+                secondaryContentDescription = "TwoStateSecondary"
+            ) {}
+        )
 
         val menu = mock(BrowserMenu::class.java)
         val layout = LinearLayout(RuntimeEnvironment.application)
@@ -86,16 +95,66 @@ class BrowserMenuItemToolbarTest {
         val toolbar = BrowserMenuItemToolbar(buttons)
         toolbar.bind(menu, layout)
 
-        assertEquals(2, layout.childCount)
+        assertEquals(3, layout.childCount)
 
         val child1 = layout.getChildAt(0)
         val child2 = layout.getChildAt(1)
+        val child3 = layout.getChildAt(2)
 
         assertTrue(child1 is ImageButton)
         assertTrue(child2 is ImageButton)
+        assertTrue(child3 is ImageButton)
 
         assertEquals("Button01", child1.contentDescription)
         assertEquals("Button02", child2.contentDescription)
+        assertEquals("TwoStatePrimary", child3.contentDescription)
+    }
+
+    @Test
+    fun `Disabled TwoState Button in secondary state is disabled`() {
+        val buttons = listOf(
+            BrowserMenuItemToolbar.TwoStateButton(
+                primaryImageResource = R.drawable.abc_ic_go_search_api_material,
+                primaryContentDescription = "TwoStateEnabled",
+                secondaryImageResource = R.drawable.abc_ic_clear_material,
+                secondaryContentDescription = "TwoStateDisabled",
+                isInPrimaryState = { false },
+                disableInSecondaryState = true
+            ) {}
+        )
+
+        val menu = mock(BrowserMenu::class.java)
+        val layout = LinearLayout(RuntimeEnvironment.application)
+
+        val toolbar = BrowserMenuItemToolbar(buttons)
+        toolbar.bind(menu, layout)
+
+        val child1 = layout.getChildAt(0)
+        assertEquals("TwoStateDisabled", child1.contentDescription)
+        assertFalse(child1.isEnabled)
+    }
+
+    @Test
+    fun `TwoStateButton has primary and secondary state invoked`() {
+        val primaryResource = R.drawable.abc_ic_go_search_api_material
+        val secondaryResource = R.drawable.abc_ic_clear_material
+
+        var reloadPageAction = BrowserMenuItemToolbar.TwoStateButton(
+            primaryImageResource = primaryResource,
+            primaryContentDescription = "primary",
+            secondaryImageResource = secondaryResource,
+            secondaryContentDescription = "secondary"
+        ) {}
+        assertTrue(reloadPageAction.isInPrimaryState.invoke())
+
+        reloadPageAction = BrowserMenuItemToolbar.TwoStateButton(
+            primaryImageResource = primaryResource,
+            primaryContentDescription = "primary",
+            secondaryImageResource = secondaryResource,
+            secondaryContentDescription = "secondary",
+            isInPrimaryState = { false }
+        ) {}
+        assertFalse(reloadPageAction.isInPrimaryState.invoke())
     }
 
     @Test
