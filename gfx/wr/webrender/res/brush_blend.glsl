@@ -4,6 +4,12 @@
 
 #define VECS_PER_SPECIFIC_BRUSH 3
 
+#define COMPONENT_TRANSFER_IDENTITY 0
+#define COMPONENT_TRANSFER_TABLE 1
+#define COMPONENT_TRANSFER_DISCRETE 2
+#define COMPONENT_TRANSFER_LINEAR 3
+#define COMPONENT_TRANSFER_GAMMA 4
+
 #include shared,prim_shared,brush
 
 // Interpolated UV coordinates to sample.
@@ -16,6 +22,8 @@ flat varying int vOp;
 flat varying mat3 vColorMat;
 flat varying vec3 vColorOffset;
 flat varying vec4 vUvClipBounds;
+flat varying int vTableAddress;
+flat varying int vFuncs[4];
 
 #ifdef WR_VERTEX_SHADER
 
@@ -55,7 +63,7 @@ void brush_vs(
     float amount = float(user_data.z) / 65536.0;
     float invAmount = 1.0 - amount;
 
-    vOp = user_data.y;
+    vOp = user_data.y & 0xffff;
     vAmount = amount;
 
     switch (vOp) {
@@ -107,6 +115,15 @@ void brush_vs(
             vec4 offset_data = fetch_from_gpu_cache_1(user_data.z + 4);
             vColorMat = mat3(mat_data[0].xyz, mat_data[1].xyz, mat_data[2].xyz);
             vColorOffset = offset_data.rgb;
+            break;
+        }
+        case 13: {
+            // Component Transfer
+            vTableAddress = user_data.z;
+            vFuncs[0] = (user_data.y >> 28) & 0xf; // R
+            vFuncs[1] = (user_data.y >> 24) & 0xf; // G
+            vFuncs[2] = (user_data.y >> 20) & 0xf; // B
+            vFuncs[3] = (user_data.y >> 16) & 0xf; // A
             break;
         }
         default: break;
@@ -176,6 +193,58 @@ Fragment brush_fs() {
             break;
         case 12:
             color = LinearToSrgb(color);
+            break;
+        case 13: // Component Transfer
+            int offset = 0;
+            vec4 texel;
+            int k;
+
+            // We push a different amount of data to the gpu cache depending
+            // on the function type.
+            // Identity => 0 blocks
+            // Table/Discrete => 64 blocks (256 values)
+            // Linear => 1 block (2 values)
+            // Gamma => 1 block (3 values)
+            // We loop through the color components and increment the offset
+            // (for the next color component) into the gpu cache based on how
+            // many blocks that function type put into the gpu cache.
+            // Table/Discrete use a 256 entry look up table.
+            // Linear/Gamma are a simple calculation.
+            vec4 colora = alpha != 0.0 ? Cs / alpha : Cs;
+            for (int i = 0; i < 4; i++) {
+                switch (vFuncs[i]) {
+                    case COMPONENT_TRANSFER_IDENTITY:
+                        break;
+                    case COMPONENT_TRANSFER_TABLE:
+                    case COMPONENT_TRANSFER_DISCRETE:
+                        // fetch value from lookup table
+                        k = int(floor(colora[i]*255.0));
+                        texel = fetch_from_gpu_cache_1(vTableAddress + offset + k/4);
+                        colora[i] = clamp(texel[k % 4], 0.0, 1.0);
+                        // offset plus 256/4 blocks
+                        offset = offset + 64;
+                        break;
+                    case COMPONENT_TRANSFER_LINEAR:
+                        // fetch the two values for use in the linear equation
+                        texel = fetch_from_gpu_cache_1(vTableAddress + offset);
+                        colora[i] = clamp(texel[0] * colora[i] + texel[1], 0.0, 1.0);
+                        // offset plus 1 block
+                        offset = offset + 1;
+                        break;
+                    case COMPONENT_TRANSFER_GAMMA:
+                        // fetch the three values for use in the gamma equation
+                        texel = fetch_from_gpu_cache_1(vTableAddress + offset);
+                        colora[i] = clamp(texel[0] * pow(colora[i], texel[1]) + texel[2], 0.0, 1.0);
+                        // offset plus 1 block
+                        offset = offset + 1;
+                        break;
+                    default:
+                        // shouldn't happen
+                        break;
+                }
+            }
+            color = colora.rgb;
+            alpha = colora.a;
             break;
         default:
             color = vColorMat * color + vColorOffset;
