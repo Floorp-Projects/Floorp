@@ -84,11 +84,9 @@ add_task(async function test_context_menu() {
   TelemetryTestUtils.assertKeyedHistogramSum(search_hist, "other-MozSearch.contextmenu", 1);
 
   // Also check events.
-  let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
-  events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
-  TelemetryTestUtils.assertEvents(events, [
-    ["navigation", "search", "contextmenu", null, {engine: "other-MozSearch"}],
-  ]);
+  TelemetryTestUtils.assertEvents(
+    [{object: "contextmenu", value: null, extra: {engine: "other-MozSearch"}}],
+    {category: "navigation", method: "search"});
 
   contextMenu.hidePopup();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
@@ -122,11 +120,9 @@ add_task(async function test_about_newtab() {
   TelemetryTestUtils.assertKeyedHistogramSum(search_hist, "other-MozSearch.newtab", 1);
 
   // Also check events.
-  let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
-  events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
-  TelemetryTestUtils.assertEvents(events, [
-    ["navigation", "search", "about_newtab", "enter", {engine: "other-MozSearch"}],
-  ]);
+  TelemetryTestUtils.assertEvents(
+    [{object: "about_newtab", value: "enter", extra: {engine: "other-MozSearch"}}],
+    {category: "navigation", method: "search"});
 
   BrowserTestUtils.removeTab(tab);
 });
