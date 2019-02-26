@@ -39,6 +39,9 @@ const L10N = new MultiLocalizationHelper(
   "devtools/startup/locales/key-shortcuts.properties"
 );
 
+// URL to direct people to the deprecated tools panel
+const DEPRECATION_URL = "https://developer.mozilla.org/en-US/docs/Tools/Deprecated_tools";
+
 var Tools = {};
 exports.Tools = Tools;
 
@@ -176,6 +179,8 @@ Tools.styleEditor = {
 
 Tools.shaderEditor = {
   id: "shadereditor",
+  deprecated: true,
+  deprecationURL: DEPRECATION_URL,
   ordinal: 5,
   visibilityswitch: "devtools.shadereditor.enabled",
   icon: "chrome://devtools/skin/images/tool-shadereditor.svg",
@@ -201,6 +206,8 @@ Tools.shaderEditor = {
 
 Tools.canvasDebugger = {
   id: "canvasdebugger",
+  deprecated: true,
+  deprecationURL: DEPRECATION_URL,
   ordinal: 6,
   visibilityswitch: "devtools.canvasdebugger.enabled",
   icon: "chrome://devtools/skin/images/tool-canvas.svg",
@@ -340,6 +347,8 @@ Tools.storage = {
 
 Tools.webAudioEditor = {
   id: "webaudioeditor",
+  deprecated: true,
+  deprecationURL: DEPRECATION_URL,
   ordinal: 11,
   visibilityswitch: "devtools.webaudioeditor.enabled",
   icon: "chrome://devtools/skin/images/tool-webaudio.svg",
