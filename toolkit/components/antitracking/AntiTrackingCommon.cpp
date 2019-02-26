@@ -154,59 +154,31 @@ void CreatePermissionKey(const nsCString& aTrackingOrigin,
   aPermissionKey.Append(aGrantedOrigin);
 }
 
-// This internal method returns ACCESS_DENY if the access is denied,
-// ACCESS_DEFAULT if unknown, some other access code if granted.
-nsCookieAccess CheckCookiePermissionForPrincipal(nsIPrincipal* aPrincipal) {
-  nsCookieAccess access = nsICookiePermission::ACCESS_DEFAULT;
-  if (!aPrincipal->GetIsCodebasePrincipal()) {
-    return access;
-  }
+int32_t CookiesBehavior(Document* aTopLevelDocument,
+                        Document* a3rdPartyDocument) {
+  MOZ_ASSERT(aTopLevelDocument);
+  MOZ_ASSERT(a3rdPartyDocument);
 
-  nsCOMPtr<nsICookiePermission> cps = nsCookiePermission::GetOrCreate();
-
-  nsresult rv = cps->CanAccess(aPrincipal, &access);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nsICookiePermission::ACCESS_DEFAULT;
-  }
-
-  // If we have a custom cookie permission, let's use it.
-  return access;
-}
-
-// This internal method returns ACCESS_DENY if the access is denied,
-// ACCESS_DEFAULT if unknown, some other access code if granted.
-nsCookieAccess CheckCookiePermissionForURI(nsIURI* aURI) {
-  nsCookieAccess access = nsICookiePermission::ACCESS_DEFAULT;
-
-  nsCOMPtr<nsICookiePermission> cps = nsCookiePermission::GetOrCreate();
-
-  nsresult rv = cps->CanAccessURI(aURI, &access);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nsICookiePermission::ACCESS_DEFAULT;
-  }
-
-  // If we have a custom cookie permission, let's use it.
-  return access;
-}
-
-int32_t CookiesBehavior(nsIPrincipal* aTopLevelPrincipal,
-                        nsIPrincipal* a3rdPartyPrincipal) {
   // WebExtensions principals always get BEHAVIOR_ACCEPT as cookieBehavior
   // (See Bug 1406675 for rationale).
-  if (BasePrincipal::Cast(aTopLevelPrincipal)->AddonPolicy()) {
+  if (BasePrincipal::Cast(aTopLevelDocument->NodePrincipal())->AddonPolicy()) {
     return nsICookieService::BEHAVIOR_ACCEPT;
   }
 
-  if (a3rdPartyPrincipal &&
-      BasePrincipal::Cast(a3rdPartyPrincipal)->AddonPolicy()) {
+  if (BasePrincipal::Cast(a3rdPartyDocument->NodePrincipal())->AddonPolicy()) {
     return nsICookieService::BEHAVIOR_ACCEPT;
   }
 
-  return StaticPrefs::network_cookie_cookieBehavior();
+  return a3rdPartyDocument->CookieSettings()->GetCookieBehavior();
 }
 
-int32_t CookiesBehavior(nsIPrincipal* aTopLevelPrincipal,
+int32_t CookiesBehavior(nsILoadInfo* aLoadInfo,
+                        nsIPrincipal* aTopLevelPrincipal,
                         nsIURI* a3rdPartyURI) {
+  MOZ_ASSERT(aLoadInfo);
+  MOZ_ASSERT(aTopLevelPrincipal);
+  MOZ_ASSERT(a3rdPartyURI);
+
   // WebExtensions principals always get BEHAVIOR_ACCEPT as cookieBehavior
   // (See Bug 1406675 for rationale).
   if (BasePrincipal::Cast(aTopLevelPrincipal)->AddonPolicy()) {
@@ -215,10 +187,27 @@ int32_t CookiesBehavior(nsIPrincipal* aTopLevelPrincipal,
 
   // This is semantically equivalent to the principal having a AddonPolicy().
   bool is3rdPartyMozExt = false;
-  if (a3rdPartyURI &&
-      NS_SUCCEEDED(
+  if (NS_SUCCEEDED(
           a3rdPartyURI->SchemeIs("moz-extension", &is3rdPartyMozExt)) &&
       is3rdPartyMozExt) {
+    return nsICookieService::BEHAVIOR_ACCEPT;
+  }
+
+  nsCOMPtr<nsICookieSettings> cookieSettings;
+  nsresult rv = aLoadInfo->GetCookieSettings(getter_AddRefs(cookieSettings));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nsICookieService::BEHAVIOR_REJECT;
+  }
+
+  return cookieSettings->GetCookieBehavior();
+}
+
+int32_t CookiesBehavior(nsIPrincipal* aPrincipal) {
+  MOZ_ASSERT(aPrincipal);
+
+  // WebExtensions principals always get BEHAVIOR_ACCEPT as cookieBehavior
+  // (See Bug 1406675 for rationale).
+  if (BasePrincipal::Cast(aPrincipal)->AddonPolicy()) {
     return nsICookieService::BEHAVIOR_ACCEPT;
   }
 
@@ -1066,31 +1055,51 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
            aURI);
 
   nsGlobalWindowInner* innerWindow = nsGlobalWindowInner::Cast(aWindow);
-  nsIPrincipal* windowPrincipal = innerWindow->GetPrincipal();
-  if (!windowPrincipal) {
-    LOG(("Our window has no principal"));
+  Document* document = innerWindow->GetExtantDoc();
+  if (!document) {
+    LOG(("Our window has no document"));
     return false;
   }
 
-  nsIPrincipal* toplevelPrincipal = innerWindow->GetTopLevelPrincipal();
-  if (!toplevelPrincipal) {
-    // We are already the top-level principal. Let's use the window's principal.
-    LOG(
-        ("Our inner window lacks a top-level principal, use the window's "
-         "principal instead"));
-    toplevelPrincipal = windowPrincipal;
+  nsGlobalWindowOuter* outerWindow =
+      nsGlobalWindowOuter::Cast(aWindow->GetOuterWindow());
+  if (!outerWindow) {
+    LOG(("Our window has no outer window"));
+    return false;
   }
 
-  MOZ_ASSERT(toplevelPrincipal);
+  nsCOMPtr<nsPIDOMWindowOuter> topOuterWindow = outerWindow->GetTop();
+  nsGlobalWindowOuter* topWindow = nsGlobalWindowOuter::Cast(topOuterWindow);
+  if (NS_WARN_IF(!topWindow)) {
+    LOG(("No top outer window"));
+    return false;
+  }
 
-  nsCookieAccess access = CheckCookiePermissionForPrincipal(toplevelPrincipal);
-  if (access != nsICookiePermission::ACCESS_DEFAULT) {
+  nsPIDOMWindowInner* topInnerWindow = topWindow->GetCurrentInnerWindow();
+  if (NS_WARN_IF(!topInnerWindow)) {
+    LOG(("No top inner window."));
+    return false;
+  }
+
+  Document* toplevelDocument = topInnerWindow->GetExtantDoc();
+  if (!toplevelDocument) {
+    LOG(("No top level document."));
+    return false;
+  }
+
+  MOZ_ASSERT(toplevelDocument);
+
+  uint32_t cookiePermission = nsICookiePermission::ACCESS_DEFAULT;
+  if (NS_SUCCEEDED(toplevelDocument->CookieSettings()->CookiePermission(
+          toplevelDocument->NodePrincipal(), &cookiePermission)) &&
+      cookiePermission != nsICookiePermission::ACCESS_DEFAULT) {
     LOG(
-        ("CheckCookiePermissionForPrincipal() returned a non-default access "
-         "code (%d) for top-level window's principal, returning %s",
-         int(access),
-         access != nsICookiePermission::ACCESS_DENY ? "success" : "failure"));
-    if (access != nsICookiePermission::ACCESS_DENY) {
+        ("Top level document returned a non-default access code (%d), "
+         "returning %s",
+         int(cookiePermission),
+         cookiePermission != nsICookiePermission::ACCESS_DENY ? "success"
+                                                              : "failure"));
+    if (cookiePermission != nsICookiePermission::ACCESS_DENY) {
       return true;
     }
 
@@ -1099,14 +1108,16 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     return false;
   }
 
-  access = CheckCookiePermissionForPrincipal(windowPrincipal);
-  if (access != nsICookiePermission::ACCESS_DEFAULT) {
+  if (NS_SUCCEEDED(document->CookieSettings()->CookiePermission(
+          document->NodePrincipal(), &cookiePermission)) &&
+      cookiePermission != nsICookiePermission::ACCESS_DEFAULT) {
     LOG(
-        ("CheckCookiePermissionForPrincipal() returned a non-default access "
-         "code (%d) for window's principal, returning %s",
-         int(access),
-         access != nsICookiePermission::ACCESS_DENY ? "success" : "failure"));
-    if (access != nsICookiePermission::ACCESS_DENY) {
+        ("The document returned a non-default access code (%d) for window's "
+         "principal, returning %s",
+         int(cookiePermission),
+         cookiePermission != nsICookiePermission::ACCESS_DENY ? "success"
+                                                              : "failure"));
+    if (cookiePermission != nsICookiePermission::ACCESS_DENY) {
       return true;
     }
 
@@ -1115,7 +1126,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     return false;
   }
 
-  int32_t behavior = CookiesBehavior(toplevelPrincipal, windowPrincipal);
+  int32_t behavior = CookiesBehavior(toplevelDocument, document);
   if (behavior == nsICookieService::BEHAVIOR_ACCEPT) {
     LOG(("The cookie behavior pref mandates accepting all cookies!"));
     return true;
@@ -1194,26 +1205,6 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     return false;
   }
 
-  nsGlobalWindowOuter* outerWindow =
-      nsGlobalWindowOuter::Cast(aWindow->GetOuterWindow());
-  if (NS_WARN_IF(!outerWindow)) {
-    LOG(("No outer window."));
-    return false;
-  }
-
-  nsCOMPtr<nsPIDOMWindowOuter> topOuterWindow = outerWindow->GetTop();
-  nsGlobalWindowOuter* topWindow = nsGlobalWindowOuter::Cast(topOuterWindow);
-  if (NS_WARN_IF(!topWindow)) {
-    LOG(("No top outer window."));
-    return false;
-  }
-
-  nsPIDOMWindowInner* topInnerWindow = topWindow->GetCurrentInnerWindow();
-  if (NS_WARN_IF(!topInnerWindow)) {
-    LOG(("No top inner window."));
-    return false;
-  }
-
   nsAutoCString type;
   CreatePermissionKey(trackingOrigin, grantedOrigin, type);
 
@@ -1229,8 +1220,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
   }
 
   uint32_t result = 0;
-  rv = permManager->TestPermissionWithoutDefaultsFromPrincipal(parentPrincipal,
-                                                               type, &result);
+  rv = permManager->TestPermissionFromPrincipal(parentPrincipal, type, &result);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG(("Failed to test the permission"));
     return false;
@@ -1260,6 +1250,10 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
   if (!aRejectedReason) {
     aRejectedReason = &rejectedReason;
   }
+
+  nsIScriptSecurityManager* ssm =
+      nsScriptSecurityManager::GetScriptSecurityManager();
+  MOZ_ASSERT(ssm);
 
   nsCOMPtr<nsIURI> channelURI;
   nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
@@ -1296,8 +1290,6 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     bool isDocument = false;
     rv = aChannel->GetIsMainDocumentChannel(&isDocument);
     if (NS_SUCCEEDED(rv) && isDocument) {
-      nsIScriptSecurityManager* ssm =
-          nsScriptSecurityManager::GetScriptSecurityManager();
       rv = ssm->GetChannelResultPrincipal(aChannel,
                                           getter_AddRefs(toplevelPrincipal));
       if (NS_SUCCEEDED(rv)) {
@@ -1325,14 +1317,30 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     return false;
   }
 
-  nsCookieAccess access = CheckCookiePermissionForPrincipal(toplevelPrincipal);
-  if (access != nsICookiePermission::ACCESS_DEFAULT) {
+  nsCOMPtr<nsICookieSettings> cookieSettings;
+  rv = loadInfo->GetCookieSettings(getter_AddRefs(cookieSettings));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG(
-        ("CheckCookiePermissionForPrincipal() returned a non-default access "
-         "code (%d) for top-level window's principal, returning %s",
-         int(access),
-         access != nsICookiePermission::ACCESS_DENY ? "success" : "failure"));
-    if (access != nsICookiePermission::ACCESS_DENY) {
+        ("Failed to get the cookie settings from the loadinfo, bail out "
+         "early"));
+    return true;
+  }
+
+  uint32_t cookiePermission = nsICookiePermission::ACCESS_DEFAULT;
+  rv = cookieSettings->CookiePermission(toplevelPrincipal, &cookiePermission);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    LOG(("CookiePermission() failed for top-level principal, bail out early"));
+    return false;
+  }
+
+  if (cookiePermission != nsICookiePermission::ACCESS_DEFAULT) {
+    LOG(
+        ("nsILoadInfo returned a non-default access code (%d) for top-level "
+         "window's principal, returning %s",
+         int(cookiePermission),
+         cookiePermission != nsICookiePermission::ACCESS_DENY ? "success"
+                                                              : "failure"));
+    if (cookiePermission != nsICookiePermission::ACCESS_DENY) {
       return true;
     }
 
@@ -1341,19 +1349,28 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     return false;
   }
 
-  if (NS_WARN_IF(NS_FAILED(rv) || !channelURI)) {
+  nsCOMPtr<nsIPrincipal> channelPrincipal;
+  rv = ssm->GetChannelResultPrincipal(aChannel,
+                                      getter_AddRefs(channelPrincipal));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG(("No channel principal, bail out early"));
     return false;
   }
 
-  access = CheckCookiePermissionForURI(channelURI);
-  if (access != nsICookiePermission::ACCESS_DEFAULT) {
+  rv = cookieSettings->CookiePermission(channelPrincipal, &cookiePermission);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    LOG(("CookiePermission() failed for channel principal, bail out early"));
+    return false;
+  }
+
+  if (cookiePermission != nsICookiePermission::ACCESS_DEFAULT) {
     LOG(
-        ("CheckCookiePermissionForPrincipal() returned a non-default access "
-         "code (%d) for channel's principal, returning %s",
-         int(access),
-         access != nsICookiePermission::ACCESS_DENY ? "success" : "failure"));
-    if (access != nsICookiePermission::ACCESS_DENY) {
+        ("loadInfo->CookiePermission() returned a non-default access code "
+         "(%d) for channel's principal, returning %s",
+         int(cookiePermission),
+         cookiePermission != nsICookiePermission::ACCESS_DENY ? "success"
+                                                              : "failure"));
+    if (cookiePermission != nsICookiePermission::ACCESS_DENY) {
       return true;
     }
 
@@ -1362,7 +1379,12 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     return false;
   }
 
-  int32_t behavior = CookiesBehavior(toplevelPrincipal, channelURI);
+  if (!channelURI) {
+    LOG(("No channel uri, bail out early"));
+    return false;
+  }
+
+  int32_t behavior = CookiesBehavior(loadInfo, toplevelPrincipal, channelURI);
   if (behavior == nsICookieService::BEHAVIOR_ACCEPT) {
     LOG(("The cookie behavior pref mandates accepting all cookies!"));
     return true;
@@ -1497,13 +1519,17 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(aPrincipal);
 
-  nsCookieAccess access = CheckCookiePermissionForPrincipal(aPrincipal);
+  nsCookieAccess access = nsICookiePermission::ACCESS_DEFAULT;
+  if (aPrincipal->GetIsCodebasePrincipal()) {
+    nsCOMPtr<nsICookiePermission> cps = nsCookiePermission::GetOrCreate();
+    Unused << NS_WARN_IF(NS_FAILED(cps->CanAccess(aPrincipal, &access)));
+  }
+
   if (access != nsICookiePermission::ACCESS_DEFAULT) {
     return access != nsICookiePermission::ACCESS_DENY;
   }
 
-  int32_t behavior =
-      CookiesBehavior(aPrincipal, static_cast<nsIPrincipal*>(nullptr));
+  int32_t behavior = CookiesBehavior(aPrincipal);
   return behavior != nsICookieService::BEHAVIOR_REJECT;
 }
 
@@ -1517,7 +1543,14 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
        aFirstPartyWindow, _spec),
       aURI);
 
-  if (StaticPrefs::network_cookie_cookieBehavior() !=
+  Document* parentDocument =
+      nsGlobalWindowInner::Cast(aFirstPartyWindow)->GetExtantDoc();
+  if (NS_WARN_IF(!parentDocument)) {
+    LOG(("Failed to get the first party window's document"));
+    return false;
+  }
+
+  if (parentDocument->CookieSettings()->GetCookieBehavior() !=
       nsICookieService::BEHAVIOR_REJECT_TRACKER) {
     LOG(("Disabled by the pref (%d), bail out early",
          StaticPrefs::network_cookie_cookieBehavior()));
@@ -1534,21 +1567,17 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     return true;
   }
 
-  nsCOMPtr<nsIPrincipal> parentPrincipal =
-      nsGlobalWindowInner::Cast(aFirstPartyWindow)->GetPrincipal();
-  if (NS_WARN_IF(!parentPrincipal)) {
-    LOG(("Failed to get the first party window's principal"));
-    return false;
-  }
-
-  nsCookieAccess access = CheckCookiePermissionForPrincipal(parentPrincipal);
-  if (access != nsICookiePermission::ACCESS_DEFAULT) {
+  uint32_t cookiePermission = nsICookiePermission::ACCESS_DEFAULT;
+  if (NS_SUCCEEDED(parentDocument->CookieSettings()->CookiePermission(
+          parentDocument->NodePrincipal(), &cookiePermission)) &&
+      cookiePermission != nsICookiePermission::ACCESS_DEFAULT) {
     LOG(
-        ("CheckCookiePermissionForPrincipal() returned a non-default access "
-         "code (%d), returning %s",
-         int(access),
-         access != nsICookiePermission::ACCESS_DENY ? "success" : "failure"));
-    return access != nsICookiePermission::ACCESS_DENY;
+        ("Parent window's document returned a non-default access code (%d), "
+         "returning %s",
+         int(cookiePermission),
+         cookiePermission != nsICookiePermission::ACCESS_DENY ? "success"
+                                                              : "failure"));
+    return cookiePermission != nsICookiePermission::ACCESS_DENY;
   }
 
   nsAutoCString origin;
@@ -1568,8 +1597,8 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
   }
 
   uint32_t result = 0;
-  rv = permManager->TestPermissionWithoutDefaultsFromPrincipal(parentPrincipal,
-                                                               type, &result);
+  rv = permManager->TestPermissionWithoutDefaultsFromPrincipal(
+      parentDocument->NodePrincipal(), type, &result);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG(("Failed to test the permission"));
     return false;
@@ -1577,7 +1606,8 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
 
   if (MOZ_LOG_TEST(gAntiTrackingLog, LogLevel::Debug)) {
     nsCOMPtr<nsIURI> parentPrincipalURI;
-    Unused << parentPrincipal->GetURI(getter_AddRefs(parentPrincipalURI));
+    Unused << parentDocument->NodePrincipal()->GetURI(
+        getter_AddRefs(parentPrincipalURI));
     LOG_SPEC(
         ("Testing permission type %s for %s resulted in %d (%s)", type.get(),
          _spec, int(result),
