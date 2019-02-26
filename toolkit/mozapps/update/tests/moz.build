@@ -53,6 +53,9 @@ if CONFIG['MOZ_MAINTENANCE_SERVICE']:
 # For debugging purposes only
 #DEFINES['DISABLE_UPDATER_AUTHENTICODE_CHECK'] = True
 
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    WIN32_EXE_LDFLAGS += ['-ENTRY:wmainCRTStartup']
+
 if CONFIG['OS_ARCH'] == 'WINNT':
     DEFINES['UNICODE'] = True
     DEFINES['_UNICODE'] = True
