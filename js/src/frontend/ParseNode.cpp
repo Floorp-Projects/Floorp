@@ -138,51 +138,19 @@ void ParseNode::dump() {
 }
 
 void ParseNode::dump(GenericPrinter& out, int indent) {
-  switch (getArity()) {
-    case PN_NULLARY:
-      as<NullaryNode>().dump(out);
-      return;
-    case PN_UNARY:
-      as<UnaryNode>().dump(out, indent);
-      return;
-    case PN_BINARY:
-      as<BinaryNode>().dump(out, indent);
-      return;
-    case PN_TERNARY:
-      as<TernaryNode>().dump(out, indent);
-      return;
-    case PN_FUNCTION:
-      as<FunctionNode>().dump(out, indent);
-      return;
-    case PN_MODULE:
-      as<ModuleNode>().dump(out, indent);
-      return;
-    case PN_LIST:
-      as<ListNode>().dump(out, indent);
-      return;
-    case PN_NAME:
-      as<NameNode>().dump(out, indent);
-      return;
-    case PN_NUMBER:
-      as<NumericLiteral>().dump(out, indent);
-      return;
-    case PN_BIGINT:
-      as<BigIntLiteral>().dump(out, indent);
-      return;
-    case PN_REGEXP:
-      as<RegExpLiteral>().dump(out, indent);
-      return;
-    case PN_LOOP:
-      as<LoopControlStatement>().dump(out, indent);
-      return;
-    case PN_SCOPE:
-      as<LexicalScopeNode>().dump(out, indent);
-      return;
+  switch (getKind()) {
+#  define DUMP(K, T)                 \
+    case ParseNodeKind::K:           \
+      as<T>().dumpImpl(out, indent); \
+      break;
+    FOR_EACH_PARSE_NODE_KIND(DUMP)
+#  undef DUMP
+    default:
+      out.printf("#<BAD NODE %p, kind=%u>", (void*)this, unsigned(getKind()));
   }
-  out.printf("#<BAD NODE %p, kind=%u>", (void*)this, unsigned(getKind()));
 }
 
-void NullaryNode::dump(GenericPrinter& out) {
+void NullaryNode::dumpImpl(GenericPrinter& out, int indent) {
   switch (getKind()) {
     case ParseNodeKind::TrueExpr:
       out.put("#true");
@@ -202,7 +170,7 @@ void NullaryNode::dump(GenericPrinter& out) {
   }
 }
 
-void NumericLiteral::dump(GenericPrinter& out, int indent) {
+void NumericLiteral::dumpImpl(GenericPrinter& out, int indent) {
   ToCStringBuf cbuf;
   const char* cstr = NumberToCString(nullptr, &cbuf, value());
   if (!IsFinite(value())) {
@@ -215,15 +183,15 @@ void NumericLiteral::dump(GenericPrinter& out, int indent) {
   }
 }
 
-void BigIntLiteral::dump(GenericPrinter& out, int indent) {
+void BigIntLiteral::dumpImpl(GenericPrinter& out, int indent) {
   out.printf("(%s)", parseNodeNames[size_t(getKind())]);
 }
 
-void RegExpLiteral::dump(GenericPrinter& out, int indent) {
+void RegExpLiteral::dumpImpl(GenericPrinter& out, int indent) {
   out.printf("(%s)", parseNodeNames[size_t(getKind())]);
 }
 
-void LoopControlStatement::dump(GenericPrinter& out, int indent) {
+void LoopControlStatement::dumpImpl(GenericPrinter& out, int indent) {
   const char* name = parseNodeNames[size_t(getKind())];
   out.printf("(%s", name);
   if (label()) {
@@ -233,7 +201,7 @@ void LoopControlStatement::dump(GenericPrinter& out, int indent) {
   out.printf(")");
 }
 
-void UnaryNode::dump(GenericPrinter& out, int indent) {
+void UnaryNode::dumpImpl(GenericPrinter& out, int indent) {
   const char* name = parseNodeNames[size_t(getKind())];
   out.printf("(%s ", name);
   indent += strlen(name) + 2;
@@ -241,7 +209,7 @@ void UnaryNode::dump(GenericPrinter& out, int indent) {
   out.printf(")");
 }
 
-void BinaryNode::dump(GenericPrinter& out, int indent) {
+void BinaryNode::dumpImpl(GenericPrinter& out, int indent) {
   if (isKind(ParseNodeKind::DotExpr)) {
     out.put("(.");
 
@@ -267,7 +235,7 @@ void BinaryNode::dump(GenericPrinter& out, int indent) {
   out.printf(")");
 }
 
-void TernaryNode::dump(GenericPrinter& out, int indent) {
+void TernaryNode::dumpImpl(GenericPrinter& out, int indent) {
   const char* name = parseNodeNames[size_t(getKind())];
   out.printf("(%s ", name);
   indent += strlen(name) + 2;
@@ -279,7 +247,7 @@ void TernaryNode::dump(GenericPrinter& out, int indent) {
   out.printf(")");
 }
 
-void FunctionNode::dump(GenericPrinter& out, int indent) {
+void FunctionNode::dumpImpl(GenericPrinter& out, int indent) {
   const char* name = parseNodeNames[size_t(getKind())];
   out.printf("(%s ", name);
   indent += strlen(name) + 2;
@@ -287,7 +255,7 @@ void FunctionNode::dump(GenericPrinter& out, int indent) {
   out.printf(")");
 }
 
-void ModuleNode::dump(GenericPrinter& out, int indent) {
+void ModuleNode::dumpImpl(GenericPrinter& out, int indent) {
   const char* name = parseNodeNames[size_t(getKind())];
   out.printf("(%s ", name);
   indent += strlen(name) + 2;
@@ -295,7 +263,7 @@ void ModuleNode::dump(GenericPrinter& out, int indent) {
   out.printf(")");
 }
 
-void ListNode::dump(GenericPrinter& out, int indent) {
+void ListNode::dumpImpl(GenericPrinter& out, int indent) {
   const char* name = parseNodeNames[size_t(getKind())];
   out.printf("(%s [", name);
   if (ParseNode* listHead = head()) {
@@ -327,7 +295,7 @@ static void DumpName(GenericPrinter& out, const CharT* s, size_t len) {
   }
 }
 
-void NameNode::dump(GenericPrinter& out, int indent) {
+void NameNode::dumpImpl(GenericPrinter& out, int indent) {
   switch (getKind()) {
     case ParseNodeKind::StringExpr:
     case ParseNodeKind::TemplateStringExpr:
@@ -380,7 +348,7 @@ void NameNode::dump(GenericPrinter& out, int indent) {
   }
 }
 
-void LexicalScopeNode::dump(GenericPrinter& out, int indent) {
+void LexicalScopeNode::dumpImpl(GenericPrinter& out, int indent) {
   const char* name = parseNodeNames[size_t(getKind())];
   out.printf("(%s [", name);
   int nameIndent = indent + strlen(name) + 3;
