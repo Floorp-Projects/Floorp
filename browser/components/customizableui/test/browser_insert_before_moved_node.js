@@ -15,7 +15,7 @@ add_task(async function() {
     let otherButton = document.createXULElement("toolbarbutton");
     otherButton.id = "moved-button-not-here";
     if (toolbar == "nav-bar") {
-      gURLBar.parentNode.appendChild(otherButton);
+      gURLBar.textbox.parentNode.appendChild(otherButton);
     } else {
       gBrowser.tabContainer.appendChild(otherButton);
     }
@@ -34,4 +34,3 @@ add_task(async function() {
     CustomizableUI.reset();
   }
 });
-
