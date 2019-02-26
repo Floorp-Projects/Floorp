@@ -2345,17 +2345,13 @@ impl Device {
         ibo_id: IBOId,
         owns_vertices_and_indices: bool,
     ) -> VAO {
-        debug_assert!(self.inside_frame);
-
         let instance_stride = descriptor.instance_stride() as usize;
         let vao_id = self.gl.gen_vertex_arrays(1)[0];
 
-        self.gl.bind_vertex_array(vao_id);
+        self.bind_vao_impl(vao_id);
 
         descriptor.bind(self.gl(), main_vbo_id, instance_vbo_id);
         ibo_id.bind(self.gl()); // force it to be a part of VAO
-
-        self.gl.bind_vertex_array(0);
 
         VAO {
             id: vao_id,
@@ -2374,7 +2370,7 @@ impl Device {
         debug_assert!(self.inside_frame);
 
         let vao_id = self.gl.gen_vertex_arrays(1)[0];
-        self.gl.bind_vertex_array(vao_id);
+        self.bind_vao_impl(vao_id);
 
         let mut attrib_index = 0;
         for stream in streams {
@@ -2387,8 +2383,6 @@ impl Device {
             );
             attrib_index += stream.attributes.len();
         }
-
-        self.gl.bind_vertex_array(0);
 
         CustomVAO {
             id: vao_id,
