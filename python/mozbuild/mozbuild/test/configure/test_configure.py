@@ -787,6 +787,43 @@ class TestConfigure(unittest.TestCase):
                 'QUX': NegativeOptionValue(),
             })
 
+    def test_imply_option_recursion(self):
+        config_path = mozpath.abspath(
+            mozpath.join(test_data_path, 'moz.configure'))
+
+        message = ("'--without-foo' appears somewhere in the direct or indirect dependencies "
+                   "when resolving imply_option at %s:8" % config_path)
+
+        with self.moz_configure('''
+            option('--without-foo', help='foo')
+
+            imply_option('--with-qux', depends('--with-foo')(lambda x: x or None))
+
+            option('--with-qux', help='qux')
+
+            imply_option('--with-foo', depends('--with-qux')(lambda x: x or None))
+
+            set_config('FOO', depends('--with-foo')(lambda x: x))
+            set_config('QUX', depends('--with-qux')(lambda x: x))
+        '''):
+            # Note: no error is detected when the depends function in the
+            # imply_options resolve to None, which disables the imply_option.
+
+            with self.assertRaises(ConfigureError) as e:
+                config = self.get_config()
+
+            self.assertEquals(e.exception.message, message)
+
+            with self.assertRaises(ConfigureError) as e:
+                config = self.get_config(['--with-qux'])
+
+            self.assertEquals(e.exception.message, message)
+
+            with self.assertRaises(ConfigureError) as e:
+                config = self.get_config(['--without-foo', '--with-qux'])
+
+            self.assertEquals(e.exception.message, message)
+
     def test_option_failures(self):
         with self.assertRaises(ConfigureError) as e:
             with self.moz_configure('option("--with-foo", help="foo")'):
