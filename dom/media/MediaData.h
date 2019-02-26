@@ -182,7 +182,7 @@ class AlignedBuffer {
   static size_t AlignmentPaddingSize() { return AlignmentOffset() * 2; }
 
   void PopFront(size_t aSize) {
-    MOZ_DIAGNOSTIC_ASSERT(mLength >= aSize, "Popping too many frames");
+    MOZ_ASSERT(mLength >= aSize);
     PodMove(mData, mData + aSize, mLength - aSize);
     mLength -= aSize;
   }
