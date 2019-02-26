@@ -11,7 +11,7 @@ use api::{LayoutPrimitiveInfo, LayoutRect, LayoutSize, LayoutTransform, LayoutVe
 use api::{LineOrientation, LineStyle, NinePatchBorderSource, PipelineId};
 use api::{PropertyBinding, ReferenceFrame, ReferenceFrameKind, ScrollFrameDisplayItem, ScrollSensitivity};
 use api::{Shadow, SpaceAndClipInfo, SpatialId, SpecificDisplayItem, StackingContext, StickyFrameDisplayItem, TexelRect};
-use api::{ClipMode, TransformStyle, YuvColorSpace, YuvData};
+use api::{ClipMode, TransformStyle, YuvColorSpace, YuvData, TempFilterData};
 use app_units::Au;
 use clip::{ClipChainId, ClipRegion, ClipItemKey, ClipStore};
 use clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, SpatialNodeIndex};
@@ -592,6 +592,7 @@ impl<'a> DisplayListFlattener<'a> {
         spatial_node_index: SpatialNodeIndex,
         origin: LayoutPoint,
         filters: ItemRange<FilterOp>,
+        filter_datas: &[TempFilterData],
         reference_frame_relative_offset: &LayoutVector2D,
         is_backface_visible: bool,
         apply_pipeline_clip: bool,
@@ -880,6 +881,7 @@ impl<'a> DisplayListFlattener<'a> {
                     clip_and_scroll.spatial_node_index,
                     item.rect().origin,
                     item.filters(),
+                    item.filter_datas(),
                     &reference_frame_relative_offset,
                     prim_info.is_backface_visible,
                     apply_pipeline_clip,
@@ -1006,6 +1008,8 @@ impl<'a> DisplayListFlattener<'a> {
 
             // Do nothing; these are dummy items for the display list parser
             SpecificDisplayItem::SetGradientStops => {}
+            SpecificDisplayItem::SetFilterOps => {}
+            SpecificDisplayItem::SetFilterData => {}
 
             SpecificDisplayItem::PopReferenceFrame |
             SpecificDisplayItem::PopStackingContext => {
