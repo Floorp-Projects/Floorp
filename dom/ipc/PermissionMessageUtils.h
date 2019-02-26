@@ -47,6 +47,17 @@ struct IPDLParamTraits<nsIPrincipal> {
                     nsIPrincipal* aParam);
   static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
                    IProtocol* aActor, RefPtr<nsIPrincipal>* aResult);
+
+  // Overload to support deserializing nsCOMPtr<nsIPrincipal> directly.
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                   IProtocol* aActor, nsCOMPtr<nsIPrincipal>* aResult) {
+    RefPtr<nsIPrincipal> result;
+    if (!Read(aMsg, aIter, aActor, &result)) {
+      return false;
+    }
+    *aResult = result.forget();
+    return true;
+  }
 };
 
 template <>
