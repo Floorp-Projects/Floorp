@@ -7,6 +7,9 @@ package org.mozilla.fenix.home
 import android.content.res.Resources
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
+import android.text.SpannableString
+import android.text.style.ClickableSpan
+import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -68,6 +71,8 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         setupHomeMenu()
+        setupPrivateBrowsingDescription()
+        updatePrivateSessionDescriptionVisibility()
 
         sessionsComponent.view.visibility = if ((activity as HomeActivity).browsingModeManager.isPrivate)
             View.GONE else View.VISIBLE
@@ -206,31 +211,66 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun setupPrivateBrowsingDescription() {
+        // Format the description text to include a hyperlink
+        val descriptionText = String
+            .format(private_session_description.text.toString(), System.getProperty("line.separator"))
+        val linkStartIndex = descriptionText.indexOf("\n\n") + 2
+        val linkAction = object : ClickableSpan() {
+            override fun onClick(widget: View?) {
+                // TODO Go to SUMO page
+            }
+        }
+        val textWithLink = SpannableString(descriptionText).apply {
+            setSpan(linkAction, linkStartIndex, descriptionText.length, 0)
+
+            val colorSpan = ForegroundColorSpan(private_session_description.currentTextColor)
+            setSpan(colorSpan, linkStartIndex, descriptionText.length, 0)
+        }
+        private_session_description.text = textWithLink
+    }
+
+    private fun updatePrivateSessionDescriptionVisibility() {
+        val isPrivate = (activity as HomeActivity).browsingModeManager.isPrivate
+        val hasNoTabs = requireComponents.core.sessionManager.all.none { it.private }
+
+        private_session_description_wrapper.visibility = if (isPrivate && hasNoTabs) {
+            View.VISIBLE
+        } else {
+            View.GONE
+        }
+    }
+
     private fun subscribeToSessions(): SessionManager.Observer {
         val observer = object : SessionManager.Observer {
             override fun onSessionAdded(session: Session) {
                 super.onSessionAdded(session)
                 emitSessionChanges()
+                updatePrivateSessionDescriptionVisibility()
             }
 
             override fun onSessionRemoved(session: Session) {
                 super.onSessionRemoved(session)
                 emitSessionChanges()
+                updatePrivateSessionDescriptionVisibility()
             }
 
             override fun onSessionSelected(session: Session) {
                 super.onSessionSelected(session)
                 emitSessionChanges()
+                updatePrivateSessionDescriptionVisibility()
             }
 
             override fun onSessionsRestored() {
                 super.onSessionsRestored()
                 emitSessionChanges()
+                updatePrivateSessionDescriptionVisibility()
             }
 
             override fun onAllSessionsRemoved() {
                 super.onAllSessionsRemoved()
                 emitSessionChanges()
+                updatePrivateSessionDescriptionVisibility()
             }
         }
         requireComponents.core.sessionManager.register(observer)

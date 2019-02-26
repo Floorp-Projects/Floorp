@@ -5,9 +5,6 @@
 package org.mozilla.fenix.home.sessions
 
 import android.graphics.PorterDuff
-import android.text.SpannableString
-import android.text.style.ClickableSpan
-import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -62,7 +59,6 @@ class SessionsAdapter(
             HeaderViewHolder.LAYOUT_ID -> HeaderViewHolder(view)
             EmptyListViewHolder.LAYOUT_ID -> EmptyListViewHolder(view)
             SessionItemViewHolder.LAYOUT_ID -> SessionItemViewHolder(view, actionEmitter)
-            PrivateEmptyListViewHolder.LAYOUT_ID -> PrivateEmptyListViewHolder(view)
             else -> EmptyListViewHolder(view)
         }
     }
@@ -82,24 +78,6 @@ class SessionsAdapter(
         when (holder) {
             is HeaderViewHolder -> holder.headerText.text = "Today"
             is SessionItemViewHolder -> holder.bind(state.items[position - 1])
-            is PrivateEmptyListViewHolder -> {
-                // Format the description text to include a hyperlink
-                val descriptionText = String
-                    .format(holder.description.text.toString(), System.getProperty("line.separator"))
-                val linkStartIndex = descriptionText.indexOf("\n\n") + 2
-                val linkAction = object : ClickableSpan() {
-                    override fun onClick(widget: View?) {
-                        // TODO Go to SUMO page
-                    }
-                }
-                val textWithLink = SpannableString(descriptionText).apply {
-                    setSpan(linkAction, linkStartIndex, descriptionText.length, 0)
-
-                    val colorSpan = ForegroundColorSpan(holder.description.currentTextColor)
-                    setSpan(colorSpan, linkStartIndex, descriptionText.length, 0)
-                }
-                holder.description.text = textWithLink
-            }
         }
     }
 
@@ -107,13 +85,6 @@ class SessionsAdapter(
         val headerText = view.findViewById<TextView>(R.id.header_text)
         companion object {
             const val LAYOUT_ID = R.layout.session_list_header
-        }
-    }
-
-    private class PrivateEmptyListViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val description = view.findViewById<TextView>(R.id.session_description)
-        companion object {
-            const val LAYOUT_ID = R.layout.session_list_empty_private
         }
     }
 

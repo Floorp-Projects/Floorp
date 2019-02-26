@@ -102,7 +102,33 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:descendantFocusability="blocksDescendants"/>
+                android:descendantFocusability="blocksDescendants">
+                <LinearLayout
+                    android:id="@+id/private_session_description_wrapper"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="16dp"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+                    <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+                        android:textColor="?attr/toolbarTextColor"
+                        android:text="@string/private_browsing_title"
+                        android:layout_marginBottom="8dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                    <TextView
+                        android:id="@+id/private_session_description"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="none"
+                        android:gravity="center_vertical"
+                        android:scrollHorizontally="false"
+                        android:text="@string/private_browsing_explanation"
+                        android:textColor="@color/off_white"
+                        android:textSize="14sp" />
+                </LinearLayout>
+            </LinearLayout>
         </androidx.core.widget.NestedScrollView>
 
     </androidx.constraintlayout.motion.widget.MotionLayout>
