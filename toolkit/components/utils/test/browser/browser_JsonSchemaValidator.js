@@ -447,3 +447,44 @@ add_task(async function test_patternProperties() {
     [valid, parsed] = JsonSchemaValidator.validateAndParseParameters({}, schema);
   }, /Invalid property pattern/, "Checking that invalid property patterns throw");
 });
+
+add_task(async function test_JSON_type() {
+  let schema = {
+    type: "JSON",
+  };
+
+  let valid, parsed;
+  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters({
+    "a": "b",
+  }, schema);
+
+  ok(valid, "Object is valid");
+  ok(typeof(parsed) == "object", "parsed in an object");
+  is(parsed.a, "b", "parsedProperty is correct");
+
+  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
+    "{\"a\": \"b\"}"
+  , schema);
+
+  ok(valid, "Object is valid");
+  ok(typeof(parsed) == "object", "parsed in an object");
+  is(parsed.a, "b", "parsedProperty is correct");
+
+  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
+    "{This{is{not{JSON}}}}"
+  , schema);
+
+  ok(!valid, "Object is not valid since JSON was incorrect");
+
+  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
+    "0"
+  , schema);
+
+  ok(!valid, "Object is not valid since input wasn't an object");
+
+  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
+    "true"
+  , schema);
+
+  ok(!valid, "Object is not valid since input wasn't an object");
+});
