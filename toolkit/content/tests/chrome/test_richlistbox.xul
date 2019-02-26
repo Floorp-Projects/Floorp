@@ -90,6 +90,16 @@ function test_richlistbox()
     sendKey("HOME");
     is(richListBox.selectedIndex, 1, "A stopped event should return indexing to normal");
   }
+
+  // Test attempting to select a disabled item.
+  richListBox.clearSelection();
+  richListBox.selectedItem = richListBox.firstChild;
+  richListBox.firstChild.nextSibling.setAttribute("disabled", true);
+  richListBox.focus();
+  synthesizeKey("KEY_ArrowDown", {}, window);
+  is(richListBox.selectedItems.length, 1, "one item selected");
+  is(richListBox.selectedItems[0], richListBox.firstChild, "first item selected");
+
   SimpleTest.finish();
 }
 
