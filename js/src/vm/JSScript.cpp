@@ -4841,7 +4841,6 @@ ScriptSource* LazyScript::maybeForwardedScriptSource() const {
 
   // Reset runtime flags to obtain a fresh LazyScript.
   p.hasBeenCloned = false;
-  p.treatAsRunOnce = false;
 
   size_t bytes = (p.numClosedOverBindings * sizeof(JSAtom*)) +
                  (p.numInnerFunctions * sizeof(GCPtrFunction));
@@ -4889,6 +4888,7 @@ ScriptSource* LazyScript::maybeForwardedScriptSource() const {
   p.hasDebuggerStatement = false;
   p.hasDirectEval = false;
   p.isLikelyConstructorWrapper = false;
+  p.treatAsRunOnce = false;
   p.isDerivedClassConstructor = false;
   p.needsHomeObject = false;
   p.isBinAST = false;
@@ -4975,7 +4975,6 @@ void LazyScript::initRuntimeFields(uint64_t packedFields) {
 
   packed = packedFields;
   p_.hasBeenCloned = p.hasBeenCloned;
-  p_.treatAsRunOnce = p.treatAsRunOnce;
 }
 
 void JSScript::updateJitCodeRaw(JSRuntime* rt) {
