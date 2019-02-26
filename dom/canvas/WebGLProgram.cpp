@@ -473,6 +473,8 @@ static RefPtr<const webgl::LinkedProgramInfo> QueryProgramInfo(
 
   {
     const auto& fragShader = prog->FragShader();
+    MOZ_RELEASE_ASSERT(fragShader);
+    MOZ_RELEASE_ASSERT(fragShader->Validator());
     const auto& handle = fragShader->Validator()->Handle();
     const auto version = sh::GetShaderVersion(handle);
 
