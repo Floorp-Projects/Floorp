@@ -68,11 +68,11 @@
   --monospace-font-family: monospace;
 
   /*
-  * Variables particular to about:debugging
-  */
+   * Variables particular to about:debugging
+   */
   --alt-heading-icon-size: calc(var(--base-unit) * 6);
   --alt-heading-icon-gap: var(--base-unit);
-  --main-heading-icon-size: calc(var(--base-unit) * 16);
+  --main-heading-icon-size: calc(var(--base-unit) * 17); /* 4px * 17 = 68px */
   --main-heading-icon-gap: calc(var(--base-unit) * 3);
   --main-subheading-icon-size: calc(var(--base-unit) * 4);
   --main-subheading-heading-icon-gap: calc(var(--base-unit) * 2);
@@ -118,8 +118,7 @@ a:active {
   color: var(--link-color-active);
 }
 
-p {
-  /* remove default browser margins on <p> elements */
+p, h1 {
   margin: 0;
 }
 
@@ -150,22 +149,11 @@ p {
 */
 
 /* Main style for heading (i.e. h1) */
-/* +--------+-------------+
-*  | [Icon] | Lorem ipsum |
-*  +--------+-------------+
-*/
 .main-heading {
   font-size: 2.5em;
   font-weight: lighter;
   line-height: 1.2;
   color: var(--in-content-text-color);
-  margin: 0;
-  margin-bottom: .5em;
-
-  display: grid;
-  grid-template-columns: var(--main-heading-icon-size) 1fr;
-  grid-column-gap: var(--main-heading-icon-gap);
-  align-items: center;
 }
 
 .main-heading__icon {
