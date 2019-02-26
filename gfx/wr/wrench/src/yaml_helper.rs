@@ -36,8 +36,6 @@ pub trait YamlHelper {
     fn as_mix_blend_mode(&self) -> Option<MixBlendMode>;
     fn as_filter_op(&self) -> Option<FilterOp>;
     fn as_vec_filter_op(&self) -> Option<Vec<FilterOp>>;
-    fn as_filter_data(&self) -> Option<FilterData>;
-    fn as_vec_filter_data(&self) -> Option<Vec<FilterData>>;
 }
 
 fn string_to_color(color: &str) -> Option<ColorF> {
@@ -140,17 +138,6 @@ define_string_enum!(
 );
 
 define_string_enum!(ClipMode, [Clip = "clip", ClipOut = "clip-out"]);
-
-define_string_enum!(
-    ComponentTransferFuncType,
-    [
-        Identity = "Identity",
-        Table = "Table",
-        Discrete = "Discrete",
-        Linear = "Linear",
-        Gamma = "Gamma"
-    ]
-);
 
 // Rotate around `axis` by `degrees` angle
 fn make_rotation(
@@ -561,9 +548,6 @@ impl YamlHelper for Yaml {
                 ("identity", _, _) => {
                     Some(FilterOp::Identity)
                 }
-                ("component-transfer", _, _) => {
-                    Some(FilterOp::ComponentTransfer)
-                }
                 ("blur", ref args, _) if args.len() == 1 => {
                     Some(FilterOp::Blur(args[0].parse().unwrap()))
                 }
@@ -620,54 +604,6 @@ impl YamlHelper for Yaml {
             Some(v.iter().map(|x| x.as_filter_op().unwrap()).collect())
         } else {
             self.as_filter_op().map(|op| vec![op])
-        }
-    }
-
-    fn as_filter_data(&self) -> Option<FilterData> {
-        // Parse an array with five entries. First entry is an array of func types (4).
-        // The remaining entries are arrays of floats.
-        if let Yaml::Array(ref array) = *self {
-            if array.len() != 5 {
-                panic!("Invalid filter data specified, base array doesn't have five entries: {:?}", self);
-            }
-            if let Some(func_types_p) = array[0].as_vec_string() {
-                if func_types_p.len() != 4 {
-                    panic!("Invalid filter data specified, func type array doesn't have five entries: {:?}", self);
-                }
-                let func_types: Vec<ComponentTransferFuncType> =
-                    func_types_p.into_iter().map(|x| { match StringEnum::from_str(&x) {
-                        Some(y) => y,
-                        None => panic!("Invalid filter data specified, invalid func type name: {:?}", self),
-                    }}).collect();
-                if let Some(r_values_p) = array[1].as_vec_f32() {
-                    if let Some(g_values_p) = array[2].as_vec_f32() {
-                        if let Some(b_values_p) = array[3].as_vec_f32() {
-                            if let Some(a_values_p) = array[4].as_vec_f32() {
-                                let filter_data = FilterData {
-                                    func_r_type: func_types[0],
-                                    r_values: r_values_p,
-                                    func_g_type: func_types[1],
-                                    g_values: g_values_p,
-                                    func_b_type: func_types[2],
-                                    b_values: b_values_p,
-                                    func_a_type: func_types[3],
-                                    a_values: a_values_p,
-                                };
-                                return Some(filter_data)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        None
-    }
-
-    fn as_vec_filter_data(&self) -> Option<Vec<FilterData>> {
-        if let Some(v) = self.as_vec() {
-            Some(v.iter().map(|x| x.as_filter_data().unwrap()).collect())
-        } else {
-            self.as_filter_data().map(|data| vec![data])
         }
     }
 }
