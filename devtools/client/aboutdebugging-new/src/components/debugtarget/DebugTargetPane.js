@@ -8,6 +8,8 @@ const { createFactory, PureComponent } = require("devtools/client/shared/vendor/
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
+const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+
 const DebugTargetList = createFactory(require("./DebugTargetList"));
 
 const Actions = require("../../actions/index");
@@ -23,6 +25,8 @@ class DebugTargetPane extends PureComponent {
       collapsibilityKey: PropTypes.string.isRequired,
       detailComponent: PropTypes.any.isRequired,
       dispatch: PropTypes.func.isRequired,
+      // Provided by wrapping the component with FluentReact.withLocalization.
+      getString: PropTypes.func.isRequired,
       icon: PropTypes.string.isRequired,
       isCollapsed: PropTypes.bool.isRequired,
       name: PropTypes.string.isRequired,
@@ -40,11 +44,14 @@ class DebugTargetPane extends PureComponent {
       actionComponent,
       detailComponent,
       dispatch,
+      getString,
       icon,
       isCollapsed,
       name,
       targets,
     } = this.props;
+
+    const title = getString("about-debugging-collapse-expand-debug-targets");
 
     return dom.section(
       {
@@ -53,7 +60,8 @@ class DebugTargetPane extends PureComponent {
       dom.a(
         {
           className: "undecorated-link debug-target-pane__title " +
-            "js-debug-target-pane-title",
+                     "js-debug-target-pane-title",
+          title,
           onClick: e => this.toggleCollapsibility(),
         },
         dom.h2(
@@ -85,4 +93,4 @@ class DebugTargetPane extends PureComponent {
   }
 }
 
-module.exports = DebugTargetPane;
+module.exports = FluentReact.withLocalization(DebugTargetPane);
