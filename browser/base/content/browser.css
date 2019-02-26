@@ -718,6 +718,19 @@ html|input.urlbar-input {
   display: none;
 }
 
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginsFooter"] {
+  color: var(--btn-text-color);
+  padding: 0 20px;
+  min-height: 40px;
+  border-top: 1px solid rgba(38,38,38,.15);
+  background-color: #EDEDED;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginsFooter"]:hover,
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginsFooter"][selected] {
+  background-color: #DCDCDE;
+}
+
 #PopupAutoComplete[firstresultstyle="insecureWarning"] {
   min-width: 200px;
 }

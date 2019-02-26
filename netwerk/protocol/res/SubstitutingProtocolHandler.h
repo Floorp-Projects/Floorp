@@ -11,6 +11,8 @@
 
 #include "nsISubstitutionObserver.h"
 #include "nsDataHashtable.h"
+#include "nsStandardURL.h"
+#include "nsJARURI.h"
 #include "mozilla/chrome/RegistryMessageUtils.h"
 #include "mozilla/Maybe.h"
 
@@ -101,6 +103,10 @@ class SubstitutingProtocolHandler {
   // The list of observers added with AddObserver that will be
   // notified when substitutions are set or unset.
   nsTArray<nsCOMPtr<nsISubstitutionObserver>> mObservers;
+
+  // Returns a SubstitutingJARURI if |aUrl| maps to a |jar:| URI,
+  // otherwise will return |aURL|
+  nsresult ResolveJARURI(nsIURL* aURL, nsIURI** aResult);
 
   // In general, we expect the principal of a document loaded from a
   // substituting URI to be a codebase principal for that URI (rather than

@@ -1,63 +1,7 @@
 ---
 flake8:
     description: Python linter
-    include:
-        - accessible/
-        - browser/
-        - build/
-        - config/
-        - configure.py
-        - gfx/gl/
-        - gfx/layers/
-        - intl/
-        - ipc/pull-chromium.py
-        - ipc/ipdl/
-        - js/
-        - memory/
-        - mobile/
-        - mozglue/
-        - layout/tools/reftest
-        - python/mach
-        - python/mach_commands.py
-        - python/mozboot
-        - python/mozbuild/mozpack/path.py
-        - python/mozlint
-        - python/mozrelease
-        - python/mozterm
-        - python/mozversioncontrol
-        - python/safety
-        - security/
-        - security/manager
-        - taskcluster
-        - testing/awsy
-        - testing/firefox-ui
-        - testing/geckodriver
-        - testing/gtest
-        - testing/mach_commands.py
-        - testing/marionette/client
-        - testing/marionette/harness
-        - testing/marionette/puppeteer
-        - testing/mochitest
-        - testing/mozbase
-        - testing/mozharness/configs
-        - testing/mozharness/mozfile
-        - testing/mozharness/mozharness
-        - testing/mozharness/mozharness/mozilla/tooltool.py
-        - testing/mozharness/mozinfo
-        - testing/mozharness/scripts
-        - testing/mozharness/test
-        - testing/raptor
-        - testing/remotecppunittests.py
-        - testing/runcppunittests.py
-        - testing/talos/
-        - testing/tps/
-        - testing/xpcshell
-        - toolkit/components/telemetry
-        - toolkit/crashreporter/tools/upload_symbols.py
-        - tools/
-        - xpcom/
-    # Excludes should be added to topsrcdir/.flake8 due to a bug in flake8 where
-    # specifying --exclude causes custom configuration files to be ignored.
+    # Excludes should be added to topsrcdir/.flake8.
     exclude: []
     # The configure option is used by the build system
     extensions: ['configure', 'py']

@@ -86,6 +86,7 @@ const whitelist = {
     "data:,ChromeUtils.import('resource://gre/modules/ExtensionProcessScript.jsm')",
     "resource://devtools/client/jsonview/converter-observer.js",
     "resource://gre/modules/WebRequestContent.js",
+    "resource://webcompat/aboutPageProcessScript.js",
   ]),
 };
 
@@ -96,6 +97,9 @@ const intermittently_loaded_whitelist = {
   modules: new Set([
     "resource://gre/modules/nsAsyncShutdown.jsm",
     "resource://gre/modules/sessionstore/Utils.jsm",
+
+    // Webcompat about:config front-end
+    "resource://webcompat/AboutCompat.jsm",
   ]),
   frameScripts: new Set([]),
   processScripts: new Set([]),

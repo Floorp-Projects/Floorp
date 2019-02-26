@@ -15,8 +15,8 @@ class nsIAsyncInputStream;
 namespace mozilla {
 
 namespace dom {
-class nsIContentChild;
-class nsIContentParent;
+class ContentChild;
+class ContentParent;
 }  // namespace dom
 
 namespace wr {
@@ -61,7 +61,7 @@ class IPCStreamSource {
   // main thread.  This can return nullptr if the provided stream is
   // blocking.
   static PChildToParentStreamChild* Create(nsIAsyncInputStream* aInputStream,
-                                           dom::nsIContentChild* aManager);
+                                           dom::ContentChild* aManager);
 
   // Create a IPCStreamSource using a PBackground IPC manager on the
   // main thread or a Worker thread.  This can return nullptr if the provided
@@ -73,7 +73,7 @@ class IPCStreamSource {
   // main thread.  This can return nullptr if the provided stream is
   // blocking.
   static PParentToChildStreamParent* Create(nsIAsyncInputStream* aInputStream,
-                                            dom::nsIContentParent* aManager);
+                                            dom::ContentParent* aManager);
 
   // Create a IPCStreamSource using a PBackground IPC manager on the
   // main thread or a Worker thread.  This can return nullptr if the provided

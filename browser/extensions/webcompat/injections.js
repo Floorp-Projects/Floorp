@@ -4,74 +4,132 @@
  *
  * https://wiki.mozilla.org/Compatibility/Go_Faster_Addon/Override_Policies_and_Workflows#User_Agent_overrides
  */
-const contentScripts = {
-  universal: [
-    {
+
+"use strict";
+
+/* globals browser, filterOverrides, Injections, portsToAboutCompatTabs */
+
+let InjectionsEnabled = true;
+
+for (const injection of [
+  {
+    id: "testinjection",
+    platform: "all",
+    domain: "webcompat-addon-testcases.schub.io",
+    bug: "1287966",
+    contentScripts: {
       matches: ["*://webcompat-addon-testcases.schub.io/*"],
       css: [{file: "injections/css/bug0000000-dummy-css-injection.css"}],
       js: [{file: "injections/js/bug0000000-dummy-js-injection.js"}],
       runAt: "document_start",
     },
-  ],
-  desktop: [
-    {
+  }, {
+    id: "bug1452707",
+    platform: "desktop",
+    domain: "ib.absa.co.za",
+    bug: "1452707",
+    contentScripts: {
       matches: ["https://ib.absa.co.za/*"],
       js: [{file: "injections/js/bug1452707-window.controllers-shim-ib.absa.co.za.js"}],
       runAt: "document_start",
     },
-    {
+  }, {
+    id: "bug1457335",
+    platform: "desktop",
+    domain: "histography.io",
+    bug: "1457335",
+    contentScripts: {
       matches: ["*://histography.io/*"],
       js: [{file: "injections/js/bug1457335-histography.io-ua-change.js"}],
       runAt: "document_start",
     },
-    {
+  }, {
+    id: "bug1472075",
+    platform: "desktop",
+    domain: "bankofamerica.com",
+    bug: "1472075",
+    contentScripts: {
       matches: ["*://*.bankofamerica.com/*"],
       js: [{file: "injections/js/bug1472075-bankofamerica.com-ua-change.js"}],
       runAt: "document_start",
     },
-    {
+  }, {
+    id: "bug1472081",
+    platform: "desktop",
+    domain: "election.gov.np",
+    bug: "1472081",
+    contentScripts: {
       matches: ["http://202.166.205.141/bbvrs/*"],
       js: [{file: "injections/js/bug1472081-election.gov.np-window.sidebar-shim.js"}],
       runAt: "document_start",
       allFrames: true,
     },
-    {
+  }, {
+    id: "bug1482066",
+    platform: "desktop",
+    domain: "portalminasnet.com",
+    bug: "1482066",
+    contentScripts: {
       matches: ["*://portalminasnet.com/*"],
       js: [{file: "injections/js/bug1482066-portalminasnet.com-window.sidebar-shim.js"}],
       runAt: "document_start",
       allFrames: true,
     },
-  ],
-  android: [],
-};
-
-/* globals browser */
+  },
+]) {
+  Injections.push(injection);
+}
 
 let port = browser.runtime.connect();
-let registeredContentScripts = [];
+const ActiveInjections = new Map();
 
 async function registerContentScripts() {
-  let platform = "desktop";
+  const platformMatches = ["all"];
   let platformInfo = await browser.runtime.getPlatformInfo();
-  if (platformInfo.os == "android") {
-    platform = "android";
+  platformMatches.push(platformInfo.os == "android" ? "android" : "desktop");
+
+  for (const injection of Injections) {
+    if (platformMatches.includes(injection.platform)) {
+      injection.availableOnPlatform = true;
+      await enableInjection(injection);
+    }
   }
 
-  let targetContentScripts = contentScripts.universal.concat(contentScripts[platform]);
-  targetContentScripts.forEach(async (contentScript) => {
-    try {
-      let handle = await browser.contentScripts.register(contentScript);
-      registeredContentScripts.push(handle);
-    } catch (ex) {
-      console.error("Registering WebCompat GoFaster content scripts failed: ", ex);
-    }
-  });
+  InjectionsEnabled = true;
+  portsToAboutCompatTabs.broadcast({interventionsChanged: filterOverrides(Injections)});
+}
+
+async function enableInjection(injection) {
+  if (injection.active) {
+    return;
+  }
+
+  try {
+    const handle = await browser.contentScripts.register(injection.contentScripts);
+    ActiveInjections.set(injection, handle);
+    injection.active = true;
+  } catch (ex) {
+    console.error("Registering WebCompat GoFaster content scripts failed: ", ex);
+  }
 }
 
 function unregisterContentScripts() {
-  registeredContentScripts.forEach((contentScript) => {
-    contentScript.unregister();
-  });
+  for (const injection of Injections) {
+    disableInjection(injection);
+  }
+  InjectionsEnabled = false;
+  portsToAboutCompatTabs.broadcast({interventionsChanged: false});
+}
+
+async function disableInjection(injection) {
+  if (!injection.active) {
+    return;
+  }
+
+  const contentScript = ActiveInjections.get(injection);
+  await contentScript.unregister();
+  ActiveInjections.delete(injection);
+  injection.active = false;
 }
 
 port.onMessage.addListener((message) => {

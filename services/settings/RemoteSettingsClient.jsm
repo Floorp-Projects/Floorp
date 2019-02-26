@@ -332,9 +332,8 @@ class RemoteSettingsClient extends EventEmitter {
         syncResult = await collection.sync({ remote: gServerURL, strategy, expectedTimestamp });
         const { ok } = syncResult;
         if (!ok) {
-          // Some synchronization conflicts occured.
-          reportStatus = UptakeTelemetry.STATUS.CONFLICT_ERROR;
-          throw new Error("Sync failed");
+          // With SERVER_WINS, there cannot be any conflicts, but don't silent it anyway.
+          throw new Error("Synced failed");
         }
       } catch (e) {
         if (e.message.includes(INVALID_SIGNATURE)) {
@@ -357,8 +356,14 @@ class RemoteSettingsClient extends EventEmitter {
           if (e.message == MISSING_SIGNATURE) {
             // Collection metadata has no signature info, no need to retry.
             reportStatus = UptakeTelemetry.STATUS.SIGNATURE_ERROR;
+          } else if (/unparseable/.test(e.message)) {
+            reportStatus = UptakeTelemetry.STATUS.PARSE_ERROR;
           } else if (/NetworkError/.test(e.message)) {
             reportStatus = UptakeTelemetry.STATUS.NETWORK_ERROR;
+          } else if (/Timeout/.test(e.message)) {
+            reportStatus = UptakeTelemetry.STATUS.TIMEOUT_ERROR;
+          } else if (/HTTP 5??/.test(e.message)) {
+            reportStatus = UptakeTelemetry.STATUS.SERVER_ERROR;
           } else if (/Backoff/.test(e.message)) {
             reportStatus = UptakeTelemetry.STATUS.BACKOFF;
           } else {
@@ -379,6 +384,10 @@ class RemoteSettingsClient extends EventEmitter {
         }
       }
     } catch (e) {
+      // IndexedDB errors. See https://developer.mozilla.org/en-US/docs/Web/API/IDBRequest/error
+      if (/(AbortError|ConstraintError|QuotaExceededError|VersionError)/.test(e.message)) {
+        reportStatus = UptakeTelemetry.STATUS.CUSTOM_1_ERROR;
+      }
       // No specific error was tracked, mark it as unknown.
       if (reportStatus === null) {
         reportStatus = UptakeTelemetry.STATUS.UNKNOWN_ERROR;

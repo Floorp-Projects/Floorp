@@ -8,7 +8,7 @@ Support for running spidermonkey jobs via dedicated scripts
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.util.schema import Schema
-from voluptuous import Required, Any
+from voluptuous import Required, Any, Optional
 
 from taskgraph.transforms.job import run_job_using
 from taskgraph.transforms.job.common import (
@@ -23,8 +23,9 @@ sm_run_schema = Schema({
     Required('using'): Any('spidermonkey', 'spidermonkey-package', 'spidermonkey-mozjs-crate',
                            'spidermonkey-rust-bindings'),
 
-    # The SPIDERMONKEY_VARIANT
+    # SPIDERMONKEY_VARIANT and SPIDERMONKEY_PLATFORM
     Required('spidermonkey-variant'): basestring,
+    Optional('spidermonkey-platform'): basestring,
 
     # Base work directory used to set up the task.
     Required('workdir'): basestring,
@@ -59,6 +60,8 @@ def docker_worker_spidermonkey(config, job, taskdesc):
         'MOZ_BUILD_DATE': config.params['moz_build_date'],
         'MOZ_SCM_LEVEL': config.params['level'],
     })
+    if 'spidermonkey-platform' in run:
+        env['SPIDERMONKEY_PLATFORM'] = run['spidermonkey-platform']
 
     support_vcs_checkout(config, job, taskdesc)
 

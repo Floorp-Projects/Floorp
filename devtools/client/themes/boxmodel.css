@@ -349,6 +349,29 @@
   border-bottom-color: hsl(0, 0%, 50%);
 }
 
+.boxmodel-editable[data-box="margin"]:hover {
+  background-color: var(--marginbox-border-color);
+}
+
+.boxmodel-editable[data-box="padding"]:hover {
+  background-color: #c78fc7b3;
+}
+
+.boxmodel-editable[data-box="border"]:hover {
+  background-color: #545454;
+}
+
+.boxmodel-editable[data-box="content"]:hover {
+  background-color: var(--contentbox-border-color);
+}
+
+.boxmodel-editable[data-box="margin"]:hover,
+.boxmodel-editable[data-box="padding"]:hover,
+.boxmodel-editable[data-box="border"]:hover,
+.boxmodel-editable[data-box="content"]:hover {
+  border-radius: 3px;
+}
+
 .boxmodel-size > span {
   cursor: default;
 }

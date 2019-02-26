@@ -82,6 +82,8 @@
           return this._popup = popup;
         ]]></getter>
       </property>
+      <property name="popupElement" readonly="true"
+                onget="return this.popup;"/>
 
       <property name="controller" onget="return this.mController;" readonly="true"/>
 
@@ -1049,6 +1051,7 @@
                 "autofill-clear-button",
                 "autofill-insecureWarning",
                 "insecureWarning",
+                "loginsFooter",
               ];
               // Reuse the item when its style is exactly equal to the previous style or
               // neither of their style are in the UNREUSEABLE_STYLES.
@@ -1074,6 +1077,9 @@
                   break;
                 case "insecureWarning":
                   options = { is: "autocomplete-richlistitem-insecure-warning" };
+                  break;
+                case "loginsFooter":
+                  options = { is: "autocomplete-richlistitem-logins-footer" };
                   break;
                 default:
                   options = { is: "autocomplete-richlistitem" };

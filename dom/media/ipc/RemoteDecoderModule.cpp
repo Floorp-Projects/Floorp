@@ -66,7 +66,7 @@ already_AddRefed<MediaDataDecoder> RemoteDecoderModule::CreateAudioDecoder(
   SynchronousTask task("InitIPDL");
   MediaResult result(NS_OK);
   RemoteDecoderManagerChild::GetManagerThread()->Dispatch(
-      NS_NewRunnableFunction("dom::RemoteDecoderModule::CreateAudioDecoder",
+      NS_NewRunnableFunction("RemoteDecoderModule::CreateAudioDecoder",
                              [&, child]() {
                                AutoCompleteTask complete(&task);
                                result = child->InitIPDL(aParams.AudioConfig(),
@@ -106,7 +106,7 @@ already_AddRefed<MediaDataDecoder> RemoteDecoderModule::CreateVideoDecoder(
   SynchronousTask task("InitIPDL");
   MediaResult result(NS_OK);
   RemoteDecoderManagerChild::GetManagerThread()->Dispatch(
-      NS_NewRunnableFunction("dom::RemoteDecoderModule::CreateVideoDecoder",
+      NS_NewRunnableFunction("RemoteDecoderModule::CreateVideoDecoder",
                              [&, child]() {
                                AutoCompleteTask complete(&task);
                                result = child->InitIPDL(aParams.VideoConfig(),

@@ -69,6 +69,7 @@ class MachRegistrar(object):
                 prerun(context, handler, args=kwargs)
 
         if handler.pass_context:
+            context.handler = handler
             instance = cls(context)
         else:
             instance = cls()

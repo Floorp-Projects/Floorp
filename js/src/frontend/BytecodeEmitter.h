@@ -106,72 +106,76 @@ class PropertyEmitter;
 class TDZCheckCache;
 
 struct MOZ_STACK_CLASS BytecodeEmitter {
-  SharedContext* const
-      sc; /* context shared between parsing and bytecode generation */
+  // Context shared between parsing and bytecode generation.
+  SharedContext* const sc = nullptr;
 
-  JSContext* const cx;
+  JSContext* const cx = nullptr;
 
-  BytecodeEmitter* const parent; /* enclosing function or global context */
+  // Enclosing function or global context.
+  BytecodeEmitter* const parent = nullptr;
 
-  Rooted<JSScript*> script; /* the JSScript we're ultimately producing */
+  // The JSScript we're ultimately producing.
+  Rooted<JSScript*> script;
 
-  Rooted<LazyScript*> lazyScript; /* the lazy script if mode is LazyFunction,
-                                      nullptr otherwise. */
+  // The lazy script if mode is LazyFunction, nullptr otherwise.
+  Rooted<LazyScript*> lazyScript;
 
  private:
   BytecodeVector code_;  /* bytecode */
   SrcNotesVector notes_; /* source notes, see below */
 
-  ptrdiff_t lastNoteOffset_; /* code offset for last source note */
+  // Code offset for last source note
+  ptrdiff_t lastNoteOffset_ = 0;
 
   // Line number for srcnotes.
   //
   // WARNING: If this becomes out of sync with already-emitted srcnotes,
   // we can get undefined behavior.
-  uint32_t currentLine_;
+  uint32_t currentLine_ = 0;
 
   // Zero-based column index on currentLine of last SRC_COLSPAN-annotated
   // opcode.
   //
   // WARNING: If this becomes out of sync with already-emitted srcnotes,
   // we can get undefined behavior.
-  uint32_t lastColumn_;
+  uint32_t lastColumn_ = 0;
 
-  uint32_t lastSeparatorOffet_;
-  uint32_t lastSeparatorLine_;
-  uint32_t lastSeparatorColumn_;
+  uint32_t lastSeparatorOffet_ = 0;
+  uint32_t lastSeparatorLine_ = 0;
+  uint32_t lastSeparatorColumn_ = 0;
 
   // switchToMain sets this to the bytecode offset of the main section.
-  mozilla::Maybe<uint32_t> mainOffset_;
+  mozilla::Maybe<uint32_t> mainOffset_ = {};
 
  public:
-  JumpTarget lastTarget;  // Last jump target emitted.
+  // Last jump target emitted.
+  JumpTarget lastTarget = {-1 - ptrdiff_t(JSOP_JUMPTARGET_LENGTH)};
 
   // Private storage for parser wrapper. DO NOT REFERENCE INTERNALLY. May not be
   // initialized. Use |parser| instead.
-  mozilla::Maybe<EitherParser> ep_;
-  BCEParserHandle* parser;
+  mozilla::Maybe<EitherParser> ep_ = {};
+  BCEParserHandle* parser = nullptr;
 
   PooledMapPtr<AtomIndexMap> atomIndices; /* literals indexed for mapping */
-  unsigned firstLine; /* first line, for JSScript::initFromEmitter */
+  unsigned firstLine = 0; /* first line, for JSScript::initFromEmitter */
 
-  uint32_t maxFixedSlots; /* maximum number of fixed frame slots so far */
-  uint32_t maxStackDepth; /* maximum number of expression stack slots so far */
+  uint32_t maxFixedSlots = 0; /* maximum number of fixed frame slots so far */
+  uint32_t maxStackDepth = 0; /* maximum number of expression stack slots so far */
 
-  int32_t stackDepth; /* current stack depth in script frame */
+  int32_t stackDepth = 0; /* current stack depth in script frame */
 
-  uint32_t bodyScopeIndex; /* index into scopeList of the body scope */
+  uint32_t bodyScopeIndex = UINT32_MAX; /* index into scopeList of the body scope */
 
-  EmitterScope* varEmitterScope;
-  NestableControl* innermostNestableControl;
-  EmitterScope* innermostEmitterScope_;
-  TDZCheckCache* innermostTDZCheckCache;
+  EmitterScope* varEmitterScope = nullptr;
+  NestableControl* innermostNestableControl = nullptr;
+  EmitterScope* innermostEmitterScope_ = nullptr;
+  TDZCheckCache* innermostTDZCheckCache = nullptr;
 
   /* field info for enclosing class */
   FieldInitializers fieldInitializers_;
 
 #ifdef DEBUG
-  bool unstableEmitterScope;
+  bool unstableEmitterScope = false;
 
   friend class AutoCheckUnstableEmitterScope;
 #endif
@@ -198,49 +202,44 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   CGResumeOffsetList resumeOffsetList;
 
   // Number of JOF_IC opcodes emitted.
-  size_t numICEntries;
+  size_t numICEntries = 0;
 
   // Number of yield instructions emitted. Does not include JSOP_AWAIT.
-  uint32_t numYields;
+  uint32_t numYields = 0;
 
-  uint16_t typesetCount; /* Number of JOF_TYPESET opcodes generated */
+  // Number of JOF_TYPESET opcodes generated.
+  uint16_t typesetCount = 0;
 
-  bool
-      hasSingletons : 1; /* script contains singleton initializer JSOP_OBJECT */
+  // Script contains singleton initializer JSOP_OBJECT.
+  bool hasSingletons = false;
 
-  bool hasTryFinally : 1; /* script contains finally block */
+  // Script contains finally block.
+  bool hasTryFinally = false;
 
-  bool emittingRunOnceLambda : 1; /* true while emitting a lambda which is only
-                                     expected to run once. */
+  // True while emitting a lambda which is only expected to run once.
+  bool emittingRunOnceLambda = false;
 
   bool isRunOnceLambda();
 
   enum EmitterMode {
     Normal,
 
-    /*
-     * Emit JSOP_GETINTRINSIC instead of JSOP_GETNAME and assert that
-     * JSOP_GETNAME and JSOP_*GNAME don't ever get emitted. See the comment
-     * for the field |selfHostingMode| in Parser.h for details.
-     */
+    // Emit JSOP_GETINTRINSIC instead of JSOP_GETNAME and assert that
+    // JSOP_GETNAME and JSOP_*GNAME don't ever get emitted. See the comment for
+    // the field |selfHostingMode| in Parser.h for details.
     SelfHosting,
 
-    /*
-     * Check the static scope chain of the root function for resolving free
-     * variable accesses in the script.
-     */
+    // Check the static scope chain of the root function for resolving free
+    // variable accesses in the script.
     LazyFunction
   };
 
-  const EmitterMode emitterMode;
+  const EmitterMode emitterMode = Normal;
 
-  MOZ_INIT_OUTSIDE_CTOR uint32_t scriptStartOffset;
-  bool scriptStartOffsetSet;
+  mozilla::Maybe<uint32_t> scriptStartOffset = {};
 
   // The end location of a function body that is being emitted.
-  MOZ_INIT_OUTSIDE_CTOR uint32_t functionBodyEndPos;
-  // Whether functionBodyEndPos was set.
-  bool functionBodyEndPosSet;
+  mozilla::Maybe<uint32_t> functionBodyEndPos = {};
 
   /*
    * Note that BytecodeEmitters are magic: they own the arena "top-of-stack"
@@ -425,14 +424,12 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   }
 
   void setFunctionBodyEndPos(TokenPos pos) {
-    functionBodyEndPos = pos.end;
-    functionBodyEndPosSet = true;
+    functionBodyEndPos = mozilla::Some(pos.end);
   }
 
   void setScriptStartOffsetIfUnset(TokenPos pos) {
-    if (!scriptStartOffsetSet) {
-      scriptStartOffset = pos.begin;
-      scriptStartOffsetSet = true;
+    if (scriptStartOffset.isNothing()) {
+      scriptStartOffset = mozilla::Some(pos.begin);
     }
   }
 

@@ -99,46 +99,19 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
       lazyScript(cx, lazyScript),
       code_(cx),
       notes_(cx),
-      lastNoteOffset_(0),
       currentLine_(lineNum),
-      lastColumn_(0),
-      lastSeparatorOffet_(0),
-      lastSeparatorLine_(0),
-      lastSeparatorColumn_(0),
-      mainOffset_(),
-      lastTarget{-1 - ptrdiff_t(JSOP_JUMPTARGET_LENGTH)},
-      parser(nullptr),
       atomIndices(cx->frontendCollectionPool()),
       firstLine(lineNum),
-      maxFixedSlots(0),
-      maxStackDepth(0),
-      stackDepth(0),
-      bodyScopeIndex(UINT32_MAX),
-      varEmitterScope(nullptr),
-      innermostNestableControl(nullptr),
-      innermostEmitterScope_(nullptr),
-      innermostTDZCheckCache(nullptr),
       fieldInitializers_(parent
                              ? parent->fieldInitializers_
                              : lazyScript ? lazyScript->getFieldInitializers()
                                           : FieldInitializers::Invalid()),
-#ifdef DEBUG
-      unstableEmitterScope(false),
-#endif
       numberList(cx),
       scopeList(cx),
       tryNoteList(cx),
       scopeNoteList(cx),
       resumeOffsetList(cx),
-      numICEntries(0),
-      numYields(0),
-      typesetCount(0),
-      hasSingletons(false),
-      hasTryFinally(false),
-      emittingRunOnceLambda(false),
-      emitterMode(emitterMode),
-      scriptStartOffsetSet(false),
-      functionBodyEndPosSet(false) {
+      emitterMode(emitterMode) {
   MOZ_ASSERT_IF(emitterMode == LazyFunction, lazyScript);
 
   if (sc->isFunctionBox()) {
@@ -1622,8 +1595,7 @@ void BytecodeEmitter::reportNeedMoreArgsError(ParseNode* pn,
 }
 
 void BytecodeEmitter::reportError(ParseNode* pn, unsigned errorNumber, ...) {
-  MOZ_ASSERT_IF(!pn, this->scriptStartOffsetSet);
-  uint32_t offset = pn ? pn->pn_pos.begin : this->scriptStartOffset;
+  uint32_t offset = pn ? pn->pn_pos.begin : *scriptStartOffset;
 
   va_list args;
   va_start(args, errorNumber);
@@ -1636,8 +1608,7 @@ void BytecodeEmitter::reportError(ParseNode* pn, unsigned errorNumber, ...) {
 
 void BytecodeEmitter::reportError(const Maybe<uint32_t>& maybeOffset,
                                   unsigned errorNumber, ...) {
-  MOZ_ASSERT_IF(!maybeOffset, this->scriptStartOffsetSet);
-  uint32_t offset = maybeOffset ? *maybeOffset : this->scriptStartOffset;
+  uint32_t offset = maybeOffset ? *maybeOffset : *scriptStartOffset;
 
   va_list args;
   va_start(args, errorNumber);
@@ -1650,8 +1621,7 @@ void BytecodeEmitter::reportError(const Maybe<uint32_t>& maybeOffset,
 
 bool BytecodeEmitter::reportExtraWarning(ParseNode* pn, unsigned errorNumber,
                                          ...) {
-  MOZ_ASSERT_IF(!pn, this->scriptStartOffsetSet);
-  uint32_t offset = pn ? pn->pn_pos.begin : this->scriptStartOffset;
+  uint32_t offset = pn ? pn->pn_pos.begin : *scriptStartOffset;
 
   va_list args;
   va_start(args, errorNumber);
@@ -1665,8 +1635,7 @@ bool BytecodeEmitter::reportExtraWarning(ParseNode* pn, unsigned errorNumber,
 
 bool BytecodeEmitter::reportExtraWarning(const Maybe<uint32_t>& maybeOffset,
                                          unsigned errorNumber, ...) {
-  MOZ_ASSERT_IF(!maybeOffset, this->scriptStartOffsetSet);
-  uint32_t offset = maybeOffset ? *maybeOffset : this->scriptStartOffset;
+  uint32_t offset = maybeOffset ? *maybeOffset : *scriptStartOffset;
 
   va_list args;
   va_start(args, errorNumber);
@@ -6247,8 +6216,7 @@ bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
   // We know functionBodyEndPos is set because "return" is only
   // valid in a function, and so we've passed through
   // emitFunctionScript.
-  MOZ_ASSERT(functionBodyEndPosSet);
-  if (!updateSourceCoordNotes(functionBodyEndPos)) {
+  if (!updateSourceCoordNotes(*functionBodyEndPos)) {
     return false;
   }
 
