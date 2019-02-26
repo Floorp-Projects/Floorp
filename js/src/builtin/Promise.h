@@ -33,10 +33,7 @@ enum PromiseSlots {
   //   This slot holds only the reject function. The resolve function is
   //   reachable from the reject function's extended slot.
   // * if this promise is either fulfilled or rejected, undefined
-  // * (special case) if this promise is the return value of an async function
-  //   invocation, the generator object for the function's internal generator
   PromiseSlot_RejectFunction,
-  PromiseSlot_AwaitGenerator = PromiseSlot_RejectFunction,
 
   // Promise object's debug info, which is created on demand.
   // * if this promise has no debug info, undefined
@@ -238,14 +235,15 @@ MOZ_MUST_USE bool RejectPromiseWithPendingError(JSContext* cx,
  * Create the promise object which will be used as the return value of an async
  * function.
  */
-MOZ_MUST_USE PromiseObject* CreatePromiseObjectForAsync(
-    JSContext* cx, HandleValue generatorVal);
+MOZ_MUST_USE PromiseObject* CreatePromiseObjectForAsync(JSContext* cx);
 
 /**
  * Returns true if the given object is a promise created by
  * CreatePromiseObjectForAsync function.
  */
 MOZ_MUST_USE bool IsPromiseForAsync(JSObject* promise);
+
+class GeneratorObject;
 
 MOZ_MUST_USE bool AsyncFunctionReturned(JSContext* cx,
                                         Handle<PromiseObject*> resultPromise,
@@ -255,6 +253,7 @@ MOZ_MUST_USE bool AsyncFunctionThrown(JSContext* cx,
                                       Handle<PromiseObject*> resultPromise);
 
 MOZ_MUST_USE bool AsyncFunctionAwait(JSContext* cx,
+                                     Handle<GeneratorObject*> genObj,
                                      Handle<PromiseObject*> resultPromise,
                                      HandleValue value);
 
