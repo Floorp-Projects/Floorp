@@ -127,6 +127,8 @@ pub enum SpecificDisplayItem {
     PopAllShadows,
     PushCacheMarker(CacheMarkerDisplayItem),
     PopCacheMarker,
+    SetFilterOps,
+    SetFilterData,
 }
 
 /// This is a "complete" version of the DI specifics,
@@ -153,13 +155,15 @@ pub enum CompletelySpecificDisplayItem {
     Iframe(IframeDisplayItem),
     PushReferenceFrame(ReferenceFrameDisplayListItem),
     PopReferenceFrame,
-    PushStackingContext(PushStackingContextDisplayItem, Vec<FilterOp>),
+    PushStackingContext(PushStackingContextDisplayItem),
     PopStackingContext,
     SetGradientStops(Vec<GradientStop>),
     PushShadow(Shadow),
     PopAllShadows,
     PushCacheMarker(CacheMarkerDisplayItem),
     PopCacheMarker,
+    SetFilterOps(Vec<FilterOp>),
+    SetFilterData(FilterData),
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
@@ -562,8 +566,7 @@ pub struct StackingContext {
     pub raster_space: RasterSpace,
     /// True if picture caching should be used on this stacking context.
     pub cache_tiles: bool,
-} // IMPLICIT: filters: Vec<FilterOp>
-
+} // IMPLICIT: filters: Vec<FilterOp>, filter_datas: Vec<FilterData>
 
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
@@ -641,6 +644,7 @@ pub enum FilterOp {
     ColorMatrix([f32; 20]),
     SrgbToLinear,
     LinearToSrgb,
+    ComponentTransfer,
 }
 
 impl FilterOp {
@@ -659,6 +663,28 @@ impl FilterOp {
             filter => filter,
         }
     }
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize)]
+pub enum ComponentTransferFuncType {
+  Identity = 0,
+  Table = 1,
+  Discrete = 2,
+  Linear = 3,
+  Gamma = 4,
+}
+
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+pub struct FilterData {
+    pub func_r_type: ComponentTransferFuncType,
+    pub r_values: Vec<f32>,
+    pub func_g_type: ComponentTransferFuncType,
+    pub g_values: Vec<f32>,
+    pub func_b_type: ComponentTransferFuncType,
+    pub b_values: Vec<f32>,
+    pub func_a_type: ComponentTransferFuncType,
+    pub a_values: Vec<f32>,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
