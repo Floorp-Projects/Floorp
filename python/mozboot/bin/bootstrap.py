@@ -133,6 +133,10 @@ def ensure_environment(repo_url=None, repo_rev=None, repo_type=None):
 
 def main(args):
     parser = OptionParser()
+    parser.add_option('--vcs', dest='vcs',
+                      default='hg',
+                      help='VCS (hg or git) to use for downloading the source code. '
+                      'Uses hg if omitted.')
     parser.add_option('-r', '--repo-url', dest='repo_url',
                       default='https://hg.mozilla.org/mozilla-central/',
                       help='Base URL of source control repository where bootstrap files can '
@@ -163,7 +167,8 @@ def main(args):
             print('\n')
             print(e)
             return 1
-        dasboot = cls(choice=options.application_choice, no_interactive=options.no_interactive)
+        dasboot = cls(choice=options.application_choice, no_interactive=options.no_interactive,
+                      vcs=options.vcs)
         dasboot.bootstrap()
 
         return 0
