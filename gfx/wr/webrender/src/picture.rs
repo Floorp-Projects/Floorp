@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{FilterOp, MixBlendMode, PipelineId, PremultipliedColorF, PictureRect, PicturePoint, WorldPoint};
-use api::{DeviceIntRect, DeviceIntSize, DevicePoint, DeviceRect};
+use api::{DeviceIntRect, DeviceIntSize, DevicePoint, DeviceRect, DeviceSize};
 use api::{LayoutRect, PictureToRasterTransform, LayoutPixel, PropertyBinding, PropertyBindingId};
 use api::{DevicePixelScale, RasterRect, RasterSpace, ColorF, ImageKey, WorldSize, ClipMode, LayoutSize};
 use api::{PicturePixel, RasterPixel, WorldPixel, WorldRect, WorldVector2D, LayoutPoint};
@@ -36,7 +36,7 @@ use std::{mem, u16};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use texture_cache::TextureCacheHandle;
 use tiling::RenderTargetKind;
-use util::{ComparableVec, TransformedRectKind, MatrixHelpers, MaxRect};
+use util::{ComparableVec, TransformedRectKind, MatrixHelpers, MaxRect, scale_factors};
 
 /*
  A picture represents a dynamically rendered image. It consists of:
@@ -104,7 +104,7 @@ const TILE_SIZE_WIDTH: i32 = 1024;
 const TILE_SIZE_HEIGHT: i32 = 256;
 const TILE_SIZE_TESTING: i32 = 64;
 
-pub const FRAMES_BEFORE_PICTURE_CACHING: usize = 2;
+const FRAMES_BEFORE_PICTURE_CACHING: usize = 2;
 const MAX_DIRTY_RECTS: usize = 3;
 
 /// The maximum size per axis of a surface,
@@ -1535,7 +1535,9 @@ impl TileCache {
                 // Only cache tiles that have had the same content for at least two
                 // frames. This skips caching on pages / benchmarks that are changing
                 // every frame, which is wasteful.
-                if tile.same_frames >= FRAMES_BEFORE_PICTURE_CACHING {
+                // When we are testing invalidation, we want WR to try to cache tiles each
+                // frame, to make it simpler to define the expected dirty rects.
+                if tile.same_frames >= FRAMES_BEFORE_PICTURE_CACHING || frame_context.config.testing {
                     // Ensure that this texture is allocated.
                     if !resource_cache.texture_cache.is_allocated(&tile.handle) {
                         resource_cache.texture_cache.update_picture_cache(
@@ -2927,6 +2929,11 @@ impl PicturePrimitive {
             }
             PictureCompositeMode::Filter(FilterOp::Blur(blur_radius)) => {
                 let blur_std_deviation = blur_radius * device_pixel_scale.0;
+                let scale_factors = scale_factors(&transform);
+                let blur_std_deviation = DeviceSize::new(
+                    blur_std_deviation * scale_factors.0,
+                    blur_std_deviation * scale_factors.1
+                );
                 let inflation_factor = surfaces[raster_config.surface_index.0].inflation_factor;
                 let inflation_factor = (inflation_factor * device_pixel_scale.0).ceil() as i32;
 
@@ -2989,6 +2996,7 @@ impl PicturePrimitive {
                 let blur_std_deviation = blur_radius * device_pixel_scale.0;
                 let blur_range = (blur_std_deviation * BLUR_SAMPLE_SCALE).ceil() as i32;
                 let rounded_std_dev = blur_std_deviation.round();
+                let rounded_std_dev = DeviceSize::new(rounded_std_dev, rounded_std_dev);
                 // The clipped field is the part of the picture that is visible
                 // on screen. The unclipped field is the screen-space rect of
                 // the complete picture, if no screen / clip-chain was applied

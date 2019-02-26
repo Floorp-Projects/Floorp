@@ -714,3 +714,26 @@
   background-repeat: no-repeat;
   margin-inline-start: 4px;
 }
+
+/* Tooltip: Rule Preview */
+
+.rule-preview-tooltip-container {
+  display: flex;
+  flex-direction: column;
+  max-width: 200px;
+  color: var(--theme-body-color);
+  padding: 5px;
+}
+
+.rule-preview-tooltip-message {
+  white-space: pre-wrap;
+}
+
+.rule-preview-tooltip-source-rule-footer {
+  align-self: center;
+  border-top: 1px solid var(--theme-body-color);
+  margin-top: 5px;
+  margin-right: 5px;
+  margin-left: 5px;
+  padding: 3px;
+}

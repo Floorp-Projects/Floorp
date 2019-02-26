@@ -15,7 +15,6 @@ from mozboot.util import get_state_dir
 from mozterm import Terminal
 from six import string_types
 
-from .. import preset as pset
 from ..cli import BaseTryParser
 from ..tasks import generate_tasks, filter_tasks_by_paths
 from ..push import check_working_directory, push_to_try, vcs
@@ -205,11 +204,7 @@ def filter_target_task(task):
 
 
 def run_fuzzy_try(update=False, query=None, templates=None, full=False, parameters=None,
-                  save=False, preset=None, mod_presets=False, push=True, message='{msg}',
-                  paths=None, **kwargs):
-    if mod_presets:
-        return getattr(pset, mod_presets)(section='fuzzy')
-
+                  save=False, push=True, message='{msg}', paths=None, **kwargs):
     fzf = fzf_bootstrap(update)
 
     if not fzf:
@@ -247,9 +242,6 @@ def run_fuzzy_try(update=False, query=None, templates=None, full=False, paramete
     if isinstance(query, string_types):
         query = [query]
 
-    if preset:
-        query.append(pset.load(preset, section='fuzzy')[0])
-
     commands = []
     if query:
         for q in query:
@@ -270,7 +262,7 @@ def run_fuzzy_try(update=False, query=None, templates=None, full=False, paramete
         return
 
     if save:
-        pset.save('fuzzy', save, queries[0])
+        return queries
 
     # build commit message
     msg = "Fuzzy"

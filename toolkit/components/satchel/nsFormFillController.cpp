@@ -227,6 +227,20 @@ nsFormFillController::AttachToBrowser(nsIDocShell* aDocShell,
 }
 
 NS_IMETHODIMP
+nsFormFillController::AttachPopupElementToBrowser(nsIDocShell* aDocShell,
+                                                  dom::Element* aPopupEl) {
+  MOZ_LOG(sLogger, LogLevel::Debug,
+          ("AttachPopupElementToBrowser for docShell %p with popup %p",
+           aDocShell, aPopupEl));
+  NS_ENSURE_TRUE(aDocShell && aPopupEl, NS_ERROR_ILLEGAL_VALUE);
+
+  nsCOMPtr<nsIAutoCompletePopup> popup = aPopupEl->AsAutoCompletePopup();
+  NS_ENSURE_STATE(popup);
+
+  return AttachToBrowser(aDocShell, popup);
+}
+
+NS_IMETHODIMP
 nsFormFillController::DetachFromBrowser(nsIDocShell* aDocShell) {
   int32_t index = GetIndexOfDocShell(aDocShell);
   NS_ENSURE_TRUE(index >= 0, NS_ERROR_FAILURE);
@@ -324,6 +338,11 @@ nsFormFillController::GetPopup(nsIAutoCompletePopup** aPopup) {
   *aPopup = mFocusedPopup;
   NS_IF_ADDREF(*aPopup);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::GetPopupElement(Element** aPopup) {
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

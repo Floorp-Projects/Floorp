@@ -56,7 +56,13 @@ KITKAT_WATCH = 20
 # Lollilop
 LOLLIPOP = 21
 LOLLIPOP_MR1 = 22
-# M
+# Marshmallow
 M = 23
-# N
+# Nougat
 N = 24
+N_MR1 = 25
+# Oreo
+O = 26
+O_MR1 = 27
+# Pie
+P = 28

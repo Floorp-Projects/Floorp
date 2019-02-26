@@ -440,9 +440,9 @@ void ProcessPriorityManagerImpl::ObserveContentParentCreated(
     nsISupports* aContentParent) {
   // Do nothing; it's sufficient to get the PPPM.  But assign to nsRefPtr so we
   // don't leak the already_AddRefed object.
-  nsCOMPtr<nsIContentParent> cp = do_QueryInterface(aContentParent);
+  RefPtr<ContentParent> cp = do_QueryObject(aContentParent);
   RefPtr<ParticularProcessPriorityManager> pppm =
-      GetParticularProcessPriorityManager(cp->AsContentParent());
+      GetParticularProcessPriorityManager(cp);
 }
 
 void ProcessPriorityManagerImpl::ObserveContentParentDestroyed(
@@ -477,9 +477,8 @@ void ProcessPriorityManagerImpl::NotifyProcessPriorityChanged(
 
 void ProcessPriorityManagerImpl::TabActivityChanged(TabParent* aTabParent,
                                                     bool aIsActive) {
-  ContentParent* cp = aTabParent->Manager()->AsContentParent();
   RefPtr<ParticularProcessPriorityManager> pppm =
-      GetParticularProcessPriorityManager(cp);
+      GetParticularProcessPriorityManager(aTabParent->Manager());
   if (!pppm) {
     return;
   }

@@ -161,6 +161,7 @@ struct MovingTracer : JS::CallbackTracer {
   void onBaseShapeEdge(BaseShape** basep) override;
   void onScopeEdge(Scope** basep) override;
   void onRegExpSharedEdge(RegExpShared** sharedp) override;
+  void onBigIntEdge(BigInt** bip) override;
   void onChild(const JS::GCCellPtr& thing) override {
     MOZ_ASSERT(!thing.asCell()->isForwarded());
   }

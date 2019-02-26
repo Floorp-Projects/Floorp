@@ -77,6 +77,13 @@ pref("devtools.layout.flexbox.opened", true);
 // Whether or not the grid inspector panel is opened in the layout view
 pref("devtools.layout.grid.opened", true);
 
+// Enable hovering Box Model values and jumping to their source CSS rule in the rule-view
+#if defined(NIGHTLY_BUILD)
+pref("devtools.layout.boxmodel.highlightProperty", true);
+#else
+pref("devtools.layout.boxmodel.highlightProperty", false);
+#endif
+
 // By how many times eyedropper will magnify pixels
 pref("devtools.eyedropper.zoom", 6);
 

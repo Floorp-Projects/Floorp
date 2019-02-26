@@ -58,7 +58,7 @@ bool RenderFrame::Initialize(TabParent* aTabParent) {
   RefPtr<LayerManager> lm = GetLayerManager(mTabParent);
   PCompositorBridgeChild* compositor =
       lm ? lm->GetCompositorBridgeChild() : nullptr;
-  mTabProcessId = mTabParent->Manager()->AsContentParent()->OtherPid();
+  mTabProcessId = mTabParent->Manager()->OtherPid();
 
   // Our remote frame will push layers updates to the compositor,
   // and we'll keep an indirect reference to that tree.

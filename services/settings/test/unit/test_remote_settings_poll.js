@@ -63,6 +63,7 @@ add_task(clear_state);
 add_task(async function test_an_event_is_sent_on_start() {
   server.registerPathHandler(CHANGES_PATH, (request, response) => {
     response.write(JSON.stringify({ data: [] }));
+    response.setHeader("Content-Type", "application/json; charset=UTF-8");
     response.setHeader("ETag", '"42"');
     response.setHeader("Date", (new Date()).toUTCString());
     response.setStatusLine(null, 200, "OK");
@@ -235,6 +236,7 @@ add_task(async function test_expected_timestamp() {
         data: entries,
       }));
     }
+    response.setHeader("Content-Type", "application/json; charset=UTF-8");
     response.setHeader("ETag", '"1100"');
     response.setHeader("Date", (new Date()).toUTCString());
     response.setStatusLine(null, 200, "OK");
@@ -263,6 +265,7 @@ add_task(async function test_client_last_check_is_saved() {
         collection: "models-recipes",
       }],
     }));
+    response.setHeader("Content-Type", "application/json; charset=UTF-8");
     response.setHeader("ETag", '"42"');
     response.setHeader("Date", (new Date()).toUTCString());
     response.setStatusLine(null, 200, "OK");
@@ -307,6 +310,7 @@ add_task(async function test_success_with_partial_list() {
       }));
       response.setHeader("ETag", '"42"');
     }
+    response.setHeader("Content-Type", "application/json; charset=UTF-8");
     response.setHeader("Date", (new Date()).toUTCString());
     response.setStatusLine(null, 200, "OK");
   }
@@ -327,6 +331,8 @@ add_task(clear_state);
 
 
 add_task(async function test_server_bad_json() {
+  const startHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
+
   function simulateBadJSON(request, response) {
     response.setHeader("Content-Type", "application/json; charset=UTF-8");
     response.write("<html></html>");
@@ -341,6 +347,39 @@ add_task(async function test_server_bad_json() {
     error = e;
   }
   Assert.ok(/JSON.parse: unexpected character/.test(error.message));
+
+  const endHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
+  const expectedIncrements = {
+    [UptakeTelemetry.STATUS.PARSE_ERROR]: 1,
+  };
+  checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
+});
+add_task(clear_state);
+
+
+add_task(async function test_server_bad_content_type() {
+  const startHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
+
+  function simulateBadContentType(request, response) {
+    response.setHeader("Content-Type", "text/html");
+    response.write("<html></html>");
+    response.setStatusLine(null, 200, "OK");
+  }
+  server.registerPathHandler(CHANGES_PATH, simulateBadContentType);
+
+  let error;
+  try {
+    await RemoteSettings.pollChanges();
+  } catch (e) {
+    error = e;
+  }
+  Assert.ok(/Unexpected content-type/.test(error.message));
+
+  const endHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
+  const expectedIncrements = {
+    [UptakeTelemetry.STATUS.CONTENT_ERROR]: 1,
+  };
+  checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
 });
 add_task(clear_state);
 
@@ -640,6 +679,7 @@ add_task(async function test_adding_client_resets_last_etag() {
       response.setHeader("ETag", '"42"');
       response.setStatusLine(null, 200, "OK");
     }
+    response.setHeader("Content-Type", "application/json; charset=UTF-8");
     response.setHeader("Date", (new Date()).toUTCString());
   }
   server.registerPathHandler(CHANGES_PATH, serve200or304);

@@ -53,9 +53,7 @@ class EventTargetWrapper : public AbstractThread {
                                                      std::move(aRunnable));
     }
 
-    RefPtr<nsIRunnable> runner(
-        new Runner(this, std::move(aRunnable),
-                   false /* already drained by TaskGroupRunnable  */));
+    RefPtr<nsIRunnable> runner = new Runner(this, std::move(aRunnable));
     return mTarget->Dispatch(runner.forget(), NS_DISPATCH_NORMAL);
   }
 
@@ -99,55 +97,25 @@ class EventTargetWrapper : public AbstractThread {
   RefPtr<nsIEventTarget> mTarget;
   Maybe<AutoTaskDispatcher> mTailDispatcher;
 
-  virtual already_AddRefed<nsIRunnable> CreateDirectTaskDrainer(
-      already_AddRefed<nsIRunnable> aRunnable) override {
-    RefPtr<Runner> runner =
-        new Runner(this, std::move(aRunnable), /* aDrainDirectTasks */ true);
-    return runner.forget();
-  }
-
   class Runner : public CancelableRunnable {
-    class MOZ_STACK_CLASS AutoTaskGuard final {
-     public:
-      explicit AutoTaskGuard(EventTargetWrapper* aThread)
-          : mLastCurrentThread(nullptr) {
-        MOZ_ASSERT(aThread);
-        mLastCurrentThread = sCurrentThreadTLS.get();
-        sCurrentThreadTLS.set(aThread);
-      }
-
-      ~AutoTaskGuard() { sCurrentThreadTLS.set(mLastCurrentThread); }
-
-     private:
-      AbstractThread* mLastCurrentThread;
-    };
-
    public:
     explicit Runner(EventTargetWrapper* aThread,
-                    already_AddRefed<nsIRunnable> aRunnable,
-                    bool aDrainDirectTasks)
+                    already_AddRefed<nsIRunnable> aRunnable)
         : CancelableRunnable("EventTargetWrapper::Runner"),
           mThread(aThread),
-          mRunnable(aRunnable),
-          mDrainDirectTasks(aDrainDirectTasks) {}
+          mRunnable(aRunnable) {}
 
     NS_IMETHOD Run() override {
-      AutoTaskGuard taskGuard(mThread);
+      AutoEnter taskGuard(mThread);
 
       MOZ_ASSERT(mThread == AbstractThread::GetCurrent());
       MOZ_ASSERT(mThread->IsCurrentThreadIn());
-      nsresult rv = mRunnable->Run();
-
-      if (mDrainDirectTasks) {
-        mThread->TailDispatcher().DrainDirectTasks();
-      }
-
-      return rv;
+      return mRunnable->Run();
     }
 
     nsresult Cancel() override {
       // Set the TLS during Cancel() just in case it calls Run().
-      AutoTaskGuard taskGuard(mThread);
+      AutoEnter taskGuard(mThread);
 
       nsresult rv = NS_OK;
 
@@ -177,9 +145,8 @@ class EventTargetWrapper : public AbstractThread {
 #endif
 
    private:
-    RefPtr<EventTargetWrapper> mThread;
-    RefPtr<nsIRunnable> mRunnable;
-    bool mDrainDirectTasks;
+    const RefPtr<EventTargetWrapper> mThread;
+    const RefPtr<nsIRunnable> mRunnable;
   };
 };
 
