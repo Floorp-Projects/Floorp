@@ -63,7 +63,7 @@ class DebugTargetItem extends PureComponent {
   render() {
     return dom.li(
       {
-        className: "debug-target-item js-debug-target-item",
+        className: "card debug-target-item js-debug-target-item",
       },
       this.renderIcon(),
       this.renderName(),
