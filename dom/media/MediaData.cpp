@@ -73,7 +73,8 @@ bool AudioData::SetTrimWindow(const media::TimeInterval& aTrim) {
   }
   const size_t originalFrames = mAudioData.Length() / mChannels;
   const TimeUnit originalDuration = FramesToTimeUnit(originalFrames, mRate);
-  if (aTrim.mStart < mOriginalTime ||
+  if (!aTrim.mStart.IsValid() || !aTrim.mEnd.IsValid() ||
+      aTrim.mStart < mOriginalTime ||
       aTrim.mEnd > mOriginalTime + originalDuration) {
     return false;
   }
