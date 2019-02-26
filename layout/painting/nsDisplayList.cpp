@@ -2604,11 +2604,11 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
       auto* wrManager = static_cast<WebRenderLayerManager*>(layerManager.get());
 
       nsIDocShell* docShell = presContext->GetDocShell();
-      WrFiltersHolder wrFilters;
+      nsTArray<wr::FilterOp> wrFilters;
       gfx::Matrix5x4* colorMatrix =
           nsDocShell::Cast(docShell)->GetColorMatrix();
       if (colorMatrix) {
-        wrFilters.filters.AppendElement(
+        wrFilters.AppendElement(
             wr::FilterOp::ColorMatrix(colorMatrix->components));
       }
 
@@ -9321,7 +9321,7 @@ static float ClampStdDeviation(float aStdDeviation) {
 }
 
 bool nsDisplayFilters::CreateWebRenderCSSFilters(
-    WrFiltersHolder& wrFilters) {
+    nsTArray<mozilla::wr::FilterOp>& wrFilters) {
   // All CSS filters are supported by WebRender. SVG filters are not fully
   // supported, those use NS_STYLE_FILTER_URL and are handled separately.
   const nsTArray<nsStyleFilter>& filters = mFrame->StyleEffects()->mFilters;
@@ -9331,50 +9331,50 @@ bool nsDisplayFilters::CreateWebRenderCSSFilters(
   if (filters.Length() > gfxPrefs::WebRenderMaxFilterOpsPerChain()) {
     return true;
   }
-  wrFilters.filters.SetCapacity(filters.Length());
+  wrFilters.SetCapacity(filters.Length());
 
   for (const nsStyleFilter& filter : filters) {
     switch (filter.GetType()) {
       case NS_STYLE_FILTER_BRIGHTNESS:
-        wrFilters.filters.AppendElement(wr::FilterOp::Brightness(
+        wrFilters.AppendElement(wr::FilterOp::Brightness(
             filter.GetFilterParameter().GetFactorOrPercentValue()));
         break;
       case NS_STYLE_FILTER_CONTRAST:
-        wrFilters.filters.AppendElement(wr::FilterOp::Contrast(
+        wrFilters.AppendElement(wr::FilterOp::Contrast(
             filter.GetFilterParameter().GetFactorOrPercentValue()));
         break;
       case NS_STYLE_FILTER_GRAYSCALE:
-        wrFilters.filters.AppendElement(wr::FilterOp::Grayscale(
+        wrFilters.AppendElement(wr::FilterOp::Grayscale(
             filter.GetFilterParameter().GetFactorOrPercentValue()));
         break;
       case NS_STYLE_FILTER_INVERT:
-        wrFilters.filters.AppendElement(wr::FilterOp::Invert(
+        wrFilters.AppendElement(wr::FilterOp::Invert(
             filter.GetFilterParameter().GetFactorOrPercentValue()));
         break;
       case NS_STYLE_FILTER_OPACITY: {
         float opacity = filter.GetFilterParameter().GetFactorOrPercentValue();
-        wrFilters.filters.AppendElement(wr::FilterOp::Opacity(
+        wrFilters.AppendElement(wr::FilterOp::Opacity(
             wr::PropertyBinding<float>::Value(opacity), opacity));
         break;
       }
       case NS_STYLE_FILTER_SATURATE:
-        wrFilters.filters.AppendElement(wr::FilterOp::Saturate(
+        wrFilters.AppendElement(wr::FilterOp::Saturate(
             filter.GetFilterParameter().GetFactorOrPercentValue()));
         break;
       case NS_STYLE_FILTER_SEPIA: {
-        wrFilters.filters.AppendElement(wr::FilterOp::Sepia(
+        wrFilters.AppendElement(wr::FilterOp::Sepia(
             filter.GetFilterParameter().GetFactorOrPercentValue()));
         break;
       }
       case NS_STYLE_FILTER_HUE_ROTATE: {
-        wrFilters.filters.AppendElement(wr::FilterOp::HueRotate(
+        wrFilters.AppendElement(wr::FilterOp::HueRotate(
             (float)filter.GetFilterParameter().GetAngleValueInDegrees()));
         break;
       }
       case NS_STYLE_FILTER_BLUR: {
         float appUnitsPerDevPixel =
             mFrame->PresContext()->AppUnitsPerDevPixel();
-        wrFilters.filters.AppendElement(mozilla::wr::FilterOp::Blur(ClampStdDeviation(
+        wrFilters.AppendElement(mozilla::wr::FilterOp::Blur(ClampStdDeviation(
             NSAppUnitsToFloatPixels(filter.GetFilterParameter().GetCoordValue(),
                                     appUnitsPerDevPixel))));
         break;
@@ -9406,7 +9406,7 @@ bool nsDisplayFilters::CreateWebRenderCSSFilters(
                 NS_GET_A(color) / 255.0f,
             });
 
-        wrFilters.filters.AppendElement(filterOp);
+        wrFilters.AppendElement(filterOp);
         break;
       }
       default:
@@ -9419,7 +9419,7 @@ bool nsDisplayFilters::CreateWebRenderCSSFilters(
 
 bool nsDisplayFilters::CanCreateWebRenderCommands(
     nsDisplayListBuilder* aBuilder) {
-  WrFiltersHolder wrFilters;
+  nsTArray<mozilla::wr::FilterOp> wrFilters;
   Maybe<nsRect> filterClip;
   if (!CreateWebRenderCSSFilters(wrFilters) &&
       !nsSVGIntegrationUtils::BuildWebRenderFilters(mFrame, wrFilters,
@@ -9437,7 +9437,7 @@ bool nsDisplayFilters::CreateWebRenderCommands(
     nsDisplayListBuilder* aDisplayListBuilder) {
   float auPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
 
-  WrFiltersHolder wrFilters;
+  nsTArray<mozilla::wr::FilterOp> wrFilters;
   Maybe<nsRect> filterClip;
   if (!CreateWebRenderCSSFilters(wrFilters) &&
       !nsSVGIntegrationUtils::BuildWebRenderFilters(mFrame, wrFilters,
@@ -9458,8 +9458,7 @@ bool nsDisplayFilters::CreateWebRenderCommands(
 
   float opacity = mFrame->StyleEffects()->mOpacity;
   wr::StackingContextParams params;
-  params.mFilters = std::move(wrFilters.filters);
-  params.mFilterDatas = std::move(wrFilters.filter_datas);
+  params.mFilters = std::move(wrFilters);
   params.opacity = opacity != 1.0f && mHandleOpacity ? &opacity : nullptr;
   params.clip = clip;
   StackingContextHelper sc(aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder,
