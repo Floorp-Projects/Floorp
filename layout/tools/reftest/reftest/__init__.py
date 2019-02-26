@@ -121,7 +121,7 @@ class ReftestManifest(object):
                     break
 
             for f in tests:
-                # We can't package about: or data: URIs.
+                # We can't package about:, data:, or chrome: URIs.
                 # Discarding data isn't correct for a parser. But retaining
                 # all data isn't currently a requirement.
                 if RE_PROTOCOL.match(f):
