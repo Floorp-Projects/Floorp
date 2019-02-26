@@ -21,6 +21,7 @@ add_task(async function() {
 
   let dummyPage = getChromeDir(getResolvedURI(gTestPath));
   dummyPage.append(DUMMY_FILE);
+  dummyPage.normalize();
   const uriString = Services.io.newFileURI(dummyPage).spec;
 
   let viewSourceBrowser = viewSourceTab.linkedBrowser;
