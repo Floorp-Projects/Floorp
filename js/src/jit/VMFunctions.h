@@ -22,6 +22,7 @@ class NamedLambdaObject;
 class WithScope;
 class InlineTypedObject;
 class AbstractGeneratorObject;
+class AsyncFunctionGeneratorObject;
 class RegExpObject;
 class TypedArrayObject;
 
@@ -472,6 +473,10 @@ struct TypeToDataType<Handle<AbstractGeneratorObject*> > {
   static const DataType result = Type_Handle;
 };
 template <>
+struct TypeToDataType<Handle<AsyncFunctionGeneratorObject*> > {
+  static const DataType result = Type_Handle;
+};
+template <>
 struct TypeToDataType<Handle<PlainObject*> > {
   static const DataType result = Type_Handle;
 };
@@ -554,6 +559,12 @@ template <>
 struct TypeToArgProperties<Handle<AbstractGeneratorObject*> > {
   static const uint32_t result =
       TypeToArgProperties<AbstractGeneratorObject*>::result | VMFunction::ByRef;
+};
+template <>
+struct TypeToArgProperties<Handle<AsyncFunctionGeneratorObject*> > {
+  static const uint32_t result =
+      TypeToArgProperties<AsyncFunctionGeneratorObject*>::result |
+      VMFunction::ByRef;
 };
 template <>
 struct TypeToArgProperties<Handle<PlainObject*> > {
@@ -681,6 +692,10 @@ struct TypeToRootType<Handle<ArrayObject*> > {
 };
 template <>
 struct TypeToRootType<Handle<AbstractGeneratorObject*> > {
+  static const uint32_t result = VMFunction::RootObject;
+};
+template <>
+struct TypeToRootType<Handle<AsyncFunctionGeneratorObject*> > {
   static const uint32_t result = VMFunction::RootObject;
 };
 template <>

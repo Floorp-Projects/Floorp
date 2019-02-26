@@ -222,14 +222,17 @@ static bool AsyncFunctionResume(JSContext* cx,
     if (!generator->isClosed()) {
       generator->setClosed();
     }
-    return AsyncFunctionThrown(cx, resultPromise);
+    return false;
   }
 
-  if (generator->isAfterAwait()) {
-    return AsyncFunctionAwait(cx, generator, generatorOrValue);
+  if (generator->isClosed()) {
+    MOZ_ASSERT(generatorOrValue.isObject());
+    MOZ_ASSERT(&generatorOrValue.toObject() == resultPromise);
+    return true;
   }
 
-  return AsyncFunctionReturned(cx, resultPromise, generatorOrValue);
+  MOZ_ASSERT(generator->isAfterAwait());
+  return AsyncFunctionAwait(cx, generator, generatorOrValue);
 }
 
 // Async Functions proposal 2.2 steps 3-8.
@@ -260,6 +263,22 @@ MOZ_MUST_USE bool js::AsyncFunctionAwaitedRejected(
 
   // Step 2-7.
   return AsyncFunctionResume(cx, generator, ResumeKind::Throw, reason);
+}
+
+JSObject* js::AsyncFunctionResolve(
+    JSContext* cx, Handle<AsyncFunctionGeneratorObject*> generator,
+    HandleValue valueOrReason, AsyncFunctionResolveKind resolveKind) {
+  Rooted<PromiseObject*> promise(cx, generator->promise());
+  if (resolveKind == AsyncFunctionResolveKind::Fulfill) {
+    if (!AsyncFunctionReturned(cx, promise, valueOrReason)) {
+      return nullptr;
+    }
+  } else {
+    if (!AsyncFunctionThrown(cx, promise, valueOrReason)) {
+      return nullptr;
+    }
+  }
+  return promise;
 }
 
 JSFunction* js::GetWrappedAsyncFunction(JSFunction* unwrapped) {

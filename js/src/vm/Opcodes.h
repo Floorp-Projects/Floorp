@@ -2067,8 +2067,17 @@
      */ \
     MACRO(JSOP_CHECKTHISREINIT, 191, "checkthisreinit", NULL, 1, 1, 1, JOF_BYTE) \
     /*
+     * Pops the top two values 'valueOrReason' and 'gen' from the stack, then
+     * pushes the promise resolved with 'valueOrReason'. `gen` must be the
+     * internal generator object created in async functions. The pushed promise
+     * is the async function's result promise, which is stored in `gen`.
+     *
+     *   Category: Statements
+     *   Type: Generator
+     *   Operands: uint8_t fulfillOrReject
+     *   Stack: valueOrReason, gen => promise
      */ \
-    MACRO(JSOP_UNUSED192, 192, "unused192", NULL, 1, 0, 0, JOF_BYTE) \
+    MACRO(JSOP_ASYNCRESOLVE, 192, "async-resolve", NULL, 2, 2, 1, JOF_UINT8) \
     /*
      * Pops the top two values on the stack as 'propval' and 'obj', pushes
      * 'propval' property of 'obj' onto the stack.

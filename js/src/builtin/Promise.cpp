@@ -3516,14 +3516,10 @@ bool js::IsPromiseForAsync(JSObject* promise) {
 
 // ES2019 draft rev 7428c89bef626548084cd4e697a19ece7168f24c
 // 25.7.5.1 AsyncFunctionStart, steps 3.f-g.
-MOZ_MUST_USE bool js::AsyncFunctionThrown(
-    JSContext* cx, Handle<PromiseObject*> resultPromise) {
-  RootedValue exc(cx);
-  if (!MaybeGetAndClearException(cx, &exc)) {
-    return false;
-  }
-
-  return RejectPromiseInternal(cx, resultPromise, exc);
+MOZ_MUST_USE bool js::AsyncFunctionThrown(JSContext* cx,
+                                          Handle<PromiseObject*> resultPromise,
+                                          HandleValue reason) {
+  return RejectPromiseInternal(cx, resultPromise, reason);
 }
 
 // ES2019 draft rev 7428c89bef626548084cd4e697a19ece7168f24c

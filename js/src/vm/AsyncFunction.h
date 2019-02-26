@@ -59,6 +59,15 @@ MOZ_MUST_USE bool AsyncFunctionAwaitedRejected(
     JSContext* cx, Handle<AsyncFunctionGeneratorObject*> generator,
     HandleValue reason);
 
+enum class AsyncFunctionResolveKind { Fulfill, Reject };
+
+// Resolve the async function's promise object with the given value and then
+// return the promise object.
+JSObject* AsyncFunctionResolve(JSContext* cx,
+                               Handle<AsyncFunctionGeneratorObject*> generator,
+                               HandleValue valueOrReason,
+                               AsyncFunctionResolveKind resolveKind);
+
 class AsyncFunctionGeneratorObject : public AbstractGeneratorObject {
  public:
   enum {

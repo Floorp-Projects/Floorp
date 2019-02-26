@@ -50,6 +50,7 @@
 #include "frontend/TryEmitter.h"
 #include "frontend/WhileEmitter.h"
 #include "js/CompileOptions.h"
+#include "vm/AsyncFunction.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/Debugger.h"
 #include "vm/GeneratorObject.h"
@@ -6244,6 +6245,28 @@ bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
     // all nested scopes.
     NameLocation loc = *locationOfNameBoundInFunctionScope(
         cx->names().dotGenerator, varEmitterScope);
+
+    // Resolve the return value before emitting the final yield.
+    if (sc->asFunctionBox()->needsPromiseResult()) {
+      if (!emit1(JSOP_GETRVAL)) {
+        //          [stack] RVAL
+        return false;
+      }
+      if (!emitGetNameAtLocation(cx->names().dotGenerator, loc)) {
+        //          [stack] RVAL GEN
+        return false;
+      }
+      if (!emit2(JSOP_ASYNCRESOLVE,
+                 uint8_t(AsyncFunctionResolveKind::Fulfill))) {
+        //          [stack] PROMISE
+        return false;
+      }
+      if (!emit1(JSOP_SETRVAL)) {
+        //          [stack]
+        return false;
+      }
+    }
+
     if (!emitGetNameAtLocation(cx->names().dotGenerator, loc)) {
       return false;
     }
@@ -8635,6 +8658,13 @@ bool BytecodeEmitter::emitInitializeFunctionSpecialNames() {
 bool BytecodeEmitter::emitFunctionBody(ParseNode* funBody) {
   FunctionBox* funbox = sc->asFunctionBox();
 
+  Maybe<TryEmitter> rejectTryCatch;
+  if (funbox->needsPromiseResult()) {
+    if (!emitAsyncFunctionRejectPrologue(rejectTryCatch)) {
+      return false;
+    }
+  }
+
   if (funbox->function()->kind() ==
       JSFunction::FunctionKind::ClassConstructor) {
     if (!emitInitializeInstanceFields()) {
@@ -8661,6 +8691,19 @@ bool BytecodeEmitter::emitFunctionBody(ParseNode* funBody) {
 
     if (needsIteratorResult) {
       if (!emitFinishIteratorResult(true)) {
+        return false;
+      }
+    }
+
+    if (funbox->needsPromiseResult()) {
+      if (!emitGetDotGeneratorInInnermostScope()) {
+        //          [stack] RVAL GEN
+        return false;
+      }
+
+      if (!emit2(JSOP_ASYNCRESOLVE,
+                 uint8_t(AsyncFunctionResolveKind::Fulfill))) {
+        //          [stack] PROMISE
         return false;
       }
     }
@@ -8699,6 +8742,12 @@ bool BytecodeEmitter::emitFunctionBody(ParseNode* funBody) {
     }
   }
 
+  if (rejectTryCatch) {
+    if (!emitAsyncFunctionRejectEpilogue(*rejectTryCatch)) {
+      return false;
+    }
+  }
+
   return true;
 }
 
@@ -8722,6 +8771,83 @@ bool BytecodeEmitter::emitLexicalInitialization(JSAtom* name) {
   }
 
   return true;
+}
+
+bool BytecodeEmitter::emitAsyncFunctionRejectPrologue(
+    Maybe<TryEmitter>& tryCatch) {
+  tryCatch.emplace(this, TryEmitter::Kind::TryCatch,
+                   TryEmitter::ControlKind::NonSyntactic);
+  return tryCatch->emitTry();
+}
+
+bool BytecodeEmitter::emitAsyncFunctionRejectEpilogue(TryEmitter& tryCatch) {
+  if (!tryCatch.emitCatch()) {
+    return false;
+  }
+
+  if (!emit1(JSOP_EXCEPTION)) {
+    //              [stack] EXC
+    return false;
+  }
+  if (!emitGetDotGeneratorInInnermostScope()) {
+    //              [stack] EXC GEN
+    return false;
+  }
+
+  // TODO: Remove when .generator is created outside of try-catch.
+  if (!emit1(JSOP_DUP)) {
+    //              [stack] EXC GEN GEN
+    return false;
+  }
+  if (!emit1(JSOP_UNDEFINED)) {
+    //              [stack] EXC GEN GEN UNDEF
+    return false;
+  }
+  if (!emit1(JSOP_STRICTEQ)) {
+    //              [stack] EXC GEN EQ
+    return false;
+  }
+
+  InternalIfEmitter ifGeneratorIsUndef(this);
+  if (!ifGeneratorIsUndef.emitThen()) {
+    //              [stack] EXC GEN
+    return false;
+  }
+
+  if (!emit1(JSOP_POP)) {
+    //              [stack] EXC
+    return false;
+  }
+  if (!emit1(JSOP_THROW)) {
+    //              [stack]
+    return false;
+  }
+
+  this->stackDepth += 2;  // Fixup stack depth.
+
+  if (!ifGeneratorIsUndef.emitEnd()) {
+    //              [stack] EXC GEN
+    return false;
+  }
+
+  if (!emit2(JSOP_ASYNCRESOLVE, uint8_t(AsyncFunctionResolveKind::Reject))) {
+    //              [stack] PROMISE
+    return false;
+  }
+  if (!emit1(JSOP_SETRVAL)) {
+    //              [stack]
+    return false;
+  }
+  if (!emitGetDotGeneratorInInnermostScope()) {
+    //              [stack] GEN
+    return false;
+  }
+  if (!emit1(JSOP_FINALYIELDRVAL)) {
+    //              [stack]
+    return false;
+  }
+
+  return tryCatch.emitEnd();
 }
 
 static MOZ_ALWAYS_INLINE FunctionNode* FindConstructor(JSContext* cx,
