@@ -10,6 +10,8 @@ namespace mozilla {
 namespace _ipdltest {
 
 class TestAsyncReturnsParent : public PTestAsyncReturnsParent {
+  friend class PTestAsyncReturnsParent;
+
  public:
   TestAsyncReturnsParent();
   virtual ~TestAsyncReturnsParent();
@@ -20,7 +22,7 @@ class TestAsyncReturnsParent : public PTestAsyncReturnsParent {
   void Main();
 
  protected:
-  mozilla::ipc::IPCResult RecvPong(PongResolver&& aResolve) override;
+  mozilla::ipc::IPCResult RecvPong(PongResolver&& aResolve);
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");
@@ -30,13 +32,15 @@ class TestAsyncReturnsParent : public PTestAsyncReturnsParent {
 };
 
 class TestAsyncReturnsChild : public PTestAsyncReturnsChild {
+  friend class PTestAsyncReturnsChild;
+
  public:
   TestAsyncReturnsChild();
   virtual ~TestAsyncReturnsChild();
 
  protected:
-  mozilla::ipc::IPCResult RecvPing(PingResolver&& aResolve) override;
-  mozilla::ipc::IPCResult RecvNoReturn(NoReturnResolver&& aResolve) override;
+  mozilla::ipc::IPCResult RecvPing(PingResolver&& aResolve);
+  mozilla::ipc::IPCResult RecvNoReturn(NoReturnResolver&& aResolve);
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");

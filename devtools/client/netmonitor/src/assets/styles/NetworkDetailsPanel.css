@@ -208,6 +208,21 @@
   color: var(--theme-selection-color);
 }
 
+.network-monitor .tracking-protection {
+  background-color: var(--toolbarbutton-background);
+  color: inherit;
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+.theme-dark .network-monitor .tracking-protection .tracking-resource {
+  filter: brightness(500%);
+}
+
+.theme-light .network-monitor .tracking-protection .tracking-resource {
+  filter: brightness(0);
+}
+
 .theme-dark .network-monitor .edit-and-resend-button  {
   background-color: var(--toolbarbutton-background);
   color: var(--theme-selection-color);

@@ -1,5 +1,0 @@
-sync protocol jetpack {
-child:
-    async __delete__();
-
-};

@@ -51,6 +51,43 @@ add_task(async function test_implicit_id_temp() {
   await addon.uninstall();
 });
 
+// Test that extension install error attach the detailed error messages to the
+// Error object.
+add_task(async function test_invalid_extension_install_errors() {
+  const manifest = {
+    name: "invalid",
+    applications: {
+      gecko: {
+        id: "invalid@tests.mozilla.org",
+      },
+    },
+    description: "extension with an invalid 'matches' value",
+    manifest_version: 2,
+    content_scripts: [{
+      "matches": "*://*.foo.com/*",
+      "js": ["content.js"],
+    }],
+    version: "1.0",
+  };
+
+  const addonDir = await promiseWriteWebManifestForExtension(manifest, gTmpD,
+                                                "the-addon-sub-dir");
+
+  await Assert.rejects(
+    AddonManager.installTemporaryAddon(addonDir),
+    err => {
+      return err.additionalErrors.length == 1 &&
+             err.additionalErrors[0] ==
+              `Reading manifest: Error processing content_scripts.0.matches: ` +
+              `Expected array instead of "*://*.foo.com/*"`;
+    },
+    "Exception has the proper additionalErrors details"
+  );
+
+  Services.obs.notifyObservers(addonDir, "flush-cache-entry");
+  addonDir.remove(true);
+});
+
 // We should be able to temporarily install an unsigned web extension
 // that does not have an ID in its manifest.
 add_task(async function test_unsigned_no_id_temp_install() {

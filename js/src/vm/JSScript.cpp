@@ -282,7 +282,7 @@ static XDRResult XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun,
     uint32_t numFieldInitializers;
 
     if (mode == XDR_ENCODE) {
-      packedFields = lazy->packedFields();
+      packedFields = lazy->packedFieldsForXDR();
       MOZ_ASSERT(sourceStart == lazy->sourceStart());
       MOZ_ASSERT(sourceEnd == lazy->sourceEnd());
       MOZ_ASSERT(toStringStart == lazy->toStringStart());
@@ -318,11 +318,6 @@ static XDRResult XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun,
         lazy->setFieldInitializers(
             FieldInitializers((size_t)numFieldInitializers));
       }
-
-      // As opposed to XDRLazyScript, we need to restore the runtime bits
-      // of the script, as we are trying to match the fact this function
-      // has already been parsed and that it would need to be re-lazified.
-      lazy->initRuntimeFields(packedFields);
     }
   }
 
@@ -1010,7 +1005,7 @@ XDRResult js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
       toStringEnd = lazy->toStringEnd();
       lineno = lazy->lineno();
       column = lazy->column();
-      packedFields = lazy->packedFields();
+      packedFields = lazy->packedFieldsForXDR();
       if (fun->kind() == JSFunction::FunctionKind::ClassConstructor) {
         numFieldInitializers =
             (uint32_t)lazy->getFieldInitializers().numFieldInitializers;
@@ -4825,6 +4820,20 @@ ScriptSource* LazyScript::maybeForwardedScriptSource() const {
       .source();
 }
 
+uint64_t LazyScript::packedFieldsForXDR() const {
+  union {
+    PackedView p;
+    uint64_t packedFields;
+  };
+
+  packedFields = packedFields_;
+
+  // Reset runtime flags
+  p.hasBeenCloned = false;
+
+  return packedFields;
+}
+
 /* static */ LazyScript* LazyScript::CreateRaw(
     JSContext* cx, HandleFunction fun, HandleScriptSourceObject sourceObject,
     uint64_t packedFields, uint32_t sourceStart, uint32_t sourceEnd,
@@ -4841,7 +4850,6 @@ ScriptSource* LazyScript::maybeForwardedScriptSource() const {
 
   // Reset runtime flags to obtain a fresh LazyScript.
   p.hasBeenCloned = false;
-  p.treatAsRunOnce = false;
 
   size_t bytes = (p.numClosedOverBindings * sizeof(JSAtom*)) +
                  (p.numInnerFunctions * sizeof(GCPtrFunction));
@@ -4889,6 +4897,7 @@ ScriptSource* LazyScript::maybeForwardedScriptSource() const {
   p.hasDebuggerStatement = false;
   p.hasDirectEval = false;
   p.isLikelyConstructorWrapper = false;
+  p.treatAsRunOnce = false;
   p.isDerivedClassConstructor = false;
   p.needsHomeObject = false;
   p.isBinAST = false;
@@ -4965,17 +4974,6 @@ ScriptSource* LazyScript::maybeForwardedScriptSource() const {
   }
 
   return res;
-}
-
-void LazyScript::initRuntimeFields(uint64_t packedFields) {
-  union {
-    PackedView p;
-    uint64_t packed;
-  };
-
-  packed = packedFields;
-  p_.hasBeenCloned = p.hasBeenCloned;
-  p_.treatAsRunOnce = p.treatAsRunOnce;
 }
 
 void JSScript::updateJitCodeRaw(JSRuntime* rt) {
