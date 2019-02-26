@@ -960,11 +960,7 @@ pref("app.productInfo.baseURL", "https://www.mozilla.org/firefox/features/");
 pref("security.alternate_certificate_error_page", "certerror");
 
 // Enable the new certificate error pages.
-#ifdef EARLY_BETA_OR_EARLIER
 pref("browser.security.newcerterrorpage.enabled", true);
-#else
-pref("browser.security.newcerterrorpage.enabled", false);
-#endif
 
 pref("browser.security.newcerterrorpage.mitm.enabled", true);
 pref("security.certerrors.recordEventTelemetry", true);
