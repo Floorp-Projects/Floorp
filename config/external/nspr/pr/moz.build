@@ -110,6 +110,12 @@ LOCAL_INCLUDES += [
 ]
 
 SOURCES += [
+    '/nsprpub/pr/src/io/prpolevt.c', # conflicting definition of PRFilePrivate
+    '/nsprpub/pr/src/misc/praton.c', # duplicate definition of index_hex
+    '/nsprpub/pr/src/misc/prcountr.c', # duplicate definition of QName, RName
+ ]
+
+UNIFIED_SOURCES += [
     '/nsprpub/pr/src/io/prfdcach.c',
     '/nsprpub/pr/src/io/priometh.c',
     '/nsprpub/pr/src/io/pripv6.c',
@@ -118,7 +124,6 @@ SOURCES += [
     '/nsprpub/pr/src/io/prmapopt.c',
     '/nsprpub/pr/src/io/prmmap.c',
     '/nsprpub/pr/src/io/prmwait.c',
-    '/nsprpub/pr/src/io/prpolevt.c',
     '/nsprpub/pr/src/io/prprf.c',
     '/nsprpub/pr/src/io/prscanf.c',
     '/nsprpub/pr/src/io/prstdio.c',
@@ -131,8 +136,6 @@ SOURCES += [
     '/nsprpub/pr/src/memory/prshma.c',
     '/nsprpub/pr/src/misc/pralarm.c',
     '/nsprpub/pr/src/misc/pratom.c',
-    '/nsprpub/pr/src/misc/praton.c',
-    '/nsprpub/pr/src/misc/prcountr.c',
     '/nsprpub/pr/src/misc/prdtoa.c',
     '/nsprpub/pr/src/misc/prenv.c',
     '/nsprpub/pr/src/misc/prerr.c',
@@ -158,7 +161,7 @@ SOURCES += [
 
 if CONFIG['OS_TARGET'] != 'WINNT':
     DEFINES['_PR_PTHREADS'] = True
-    SOURCES += [
+    UNIFIED_SOURCES += [
         '/nsprpub/pr/src/md/unix/unix.c',
         '/nsprpub/pr/src/md/unix/unix_errors.c',
         '/nsprpub/pr/src/md/unix/uxproces.c',
@@ -172,17 +175,22 @@ if CONFIG['OS_TARGET'] != 'WINNT':
     ]
 else:
     SOURCES += [
+        # ntinrval.c needs windows.h without WIN32_LEAN_AND_MEAN, so it can't be
+        # unified after any file that pulled in windows.h in lean-and-mean mode.
+        '/nsprpub/pr/src/md/windows/ntinrval.c',
+        # w32poll.c needs a custom value of FD_SETSIZE for winsock.h.
+        '/nsprpub/pr/src/md/windows/w32poll.c',
+    ]
+    UNIFIED_SOURCES += [
         '/nsprpub/pr/src/io/prdir.c',
         '/nsprpub/pr/src/io/prfile.c',
         '/nsprpub/pr/src/io/prio.c',
         '/nsprpub/pr/src/io/prsocket.c',
         '/nsprpub/pr/src/md/windows/ntgc.c',
-        '/nsprpub/pr/src/md/windows/ntinrval.c',
         '/nsprpub/pr/src/md/windows/ntmisc.c',
         '/nsprpub/pr/src/md/windows/ntsec.c',
         '/nsprpub/pr/src/md/windows/ntsem.c',
         '/nsprpub/pr/src/md/windows/w32ipcsem.c',
-        '/nsprpub/pr/src/md/windows/w32poll.c',
         '/nsprpub/pr/src/md/windows/w32rng.c',
         '/nsprpub/pr/src/md/windows/w32shm.c',
         '/nsprpub/pr/src/md/windows/w95cv.c',
