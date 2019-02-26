@@ -6187,27 +6187,15 @@ GeneralParser<ParseHandler, Unit>::breakStatement(YieldHandling yieldHandling) {
     return null();
   }
 
-  // Labeled 'break' statements target the nearest labeled statements (could
-  // be any kind) with the same label. Unlabeled 'break' statements target
-  // the innermost loop or switch statement.
-  if (label) {
-    auto hasSameLabel = [&label](ParseContext::LabelStatement* stmt) {
-      return stmt->label() == label;
-    };
-
-    if (!pc_->template findInnermostStatement<ParseContext::LabelStatement>(
-            hasSameLabel)) {
-      error(JSMSG_LABEL_NOT_FOUND);
-      return null();
-    }
-  } else {
-    auto isBreakTarget = [](ParseContext::Statement* stmt) {
-      return StatementKindIsUnlabeledBreakTarget(stmt->kind());
-    };
-
-    if (!pc_->findInnermostStatement(isBreakTarget)) {
-      errorAt(begin, JSMSG_TOUGH_BREAK);
-      return null();
+  auto validity = pc_->checkBreakStatement(label);
+  if (validity.isErr()) {
+    switch (validity.unwrapErr()) {
+      case ParseContext::BreakStatementError::ToughBreak:
+        errorAt(begin, JSMSG_TOUGH_BREAK);
+        return null();
+      case ParseContext::BreakStatementError::LabelNotFound:
+        error(JSMSG_LABEL_NOT_FOUND);
+        return null();
     }
   }
 

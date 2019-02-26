@@ -1,9 +1,0 @@
-include protocol EndpointDecl;
-
-// Basic test that Endpoint types are declared for included protocols.
-
-protocol EndpointUse {
-  child:
-    async Message(Endpoint<EndpointDeclParent> aEndpointParent,
-                  Endpoint<EndpointDeclChild> aEndpointChild);
-};

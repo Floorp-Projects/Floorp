@@ -384,7 +384,7 @@
   width: 16px;
   height: 16px;
   margin: 0 3px 0 -3px;
-  vertical-align: text-bottom;
+  vertical-align: middle;
   background-image: url(chrome://devtools/content/netmonitor/src/assets/icons/shield.svg);
   background-repeat: no-repeat;
 }

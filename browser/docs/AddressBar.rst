@@ -259,9 +259,9 @@ View (e.g. showing/hiding a panel). It is also responsible for reporting Telemet
     // Used by the View to listen for results.
     addQueryListener(listener);
     removeQueryListener(listener);
-    // Used to indicate the View context changed, as such any cached information
-    // should be reset.
-    tabContextChanged();
+    // Used to indicate the View context changed, so that cached information
+    // about the latest search is no more relevant and can be dropped.
+    viewContextChanged();
   }
 
 
@@ -347,7 +347,11 @@ Represents the base *View* implementation, communicates with the *Controller*.
     onQueryCancelled(queryContext);
     // Invoked when the query is done.
     onQueryFinished(queryContext);
+    // Invoked when the view context changed, so that cached information about
+    // the latest search is no more relevant and can be dropped.
+    onViewContextChanged();
   }
+
 
 UrlbarResult
 ===========
@@ -398,6 +402,7 @@ The following RESULT_TYPEs are supported:
     OMNIBOX: 5,
     // Payload: { icon, url, device, title }
     REMOTE_TAB: 6,
+
 
 Shared Modules
 ==============

@@ -1,0 +1,21 @@
+union X {
+    int;
+    Y[];
+    Y?;
+};
+
+union Y {
+    X;
+    Z;
+};
+
+union Z {
+    double;
+    X;
+};
+
+protocol PmutualRecUnion {
+child:
+    async Test(X x, Y y, Z z);
+    async __delete__();
+};

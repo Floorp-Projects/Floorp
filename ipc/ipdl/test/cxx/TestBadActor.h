@@ -13,6 +13,8 @@ namespace mozilla {
 namespace _ipdltest {
 
 class TestBadActorParent : public PTestBadActorParent {
+  friend class PTestBadActorParent;
+
  public:
   TestBadActorParent() {}
   virtual ~TestBadActorParent() {}
@@ -31,26 +33,29 @@ class TestBadActorParent : public PTestBadActorParent {
 
   virtual void HandleFatalError(const char* aErrorMsg) const override;
 
-  virtual PTestBadActorSubParent* AllocPTestBadActorSubParent() override;
+  PTestBadActorSubParent* AllocPTestBadActorSubParent();
 
-  virtual bool DeallocPTestBadActorSubParent(
-      PTestBadActorSubParent* actor) override {
+  bool DeallocPTestBadActorSubParent(PTestBadActorSubParent* actor) {
     delete actor;
     return true;
   }
 };
 
 class TestBadActorSubParent : public PTestBadActorSubParent {
+  friend class PTestBadActorSubParent;
+
  public:
   TestBadActorSubParent() {}
   virtual ~TestBadActorSubParent() {}
 
  protected:
   virtual void ActorDestroy(ActorDestroyReason why) override {}
-  virtual mozilla::ipc::IPCResult RecvPing() override;
+  mozilla::ipc::IPCResult RecvPing();
 };
 
 class TestBadActorChild : public PTestBadActorChild {
+  friend class PTestBadActorChild;
+
  public:
   TestBadActorChild() {}
   virtual ~TestBadActorChild() {}

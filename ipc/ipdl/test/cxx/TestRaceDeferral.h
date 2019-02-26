@@ -10,6 +10,8 @@ namespace mozilla {
 namespace _ipdltest {
 
 class TestRaceDeferralParent : public PTestRaceDeferralParent {
+  friend class PTestRaceDeferralParent;
+
  public:
   TestRaceDeferralParent();
   virtual ~TestRaceDeferralParent();
@@ -22,7 +24,7 @@ class TestRaceDeferralParent : public PTestRaceDeferralParent {
  protected:
   void Test1();
 
-  virtual mozilla::ipc::IPCResult AnswerLose() override;
+  mozilla::ipc::IPCResult AnswerLose();
 
   virtual mozilla::ipc::RacyInterruptPolicy MediateInterruptRace(
       const MessageInfo& parent, const MessageInfo& child) override;
@@ -37,16 +39,18 @@ class TestRaceDeferralParent : public PTestRaceDeferralParent {
 };
 
 class TestRaceDeferralChild : public PTestRaceDeferralChild {
+  friend class PTestRaceDeferralChild;
+
  public:
   TestRaceDeferralChild();
   virtual ~TestRaceDeferralChild();
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvStartRace() override;
+  mozilla::ipc::IPCResult RecvStartRace();
 
-  virtual mozilla::ipc::IPCResult AnswerWin() override;
+  mozilla::ipc::IPCResult AnswerWin();
 
-  virtual mozilla::ipc::IPCResult AnswerRpc() override;
+  mozilla::ipc::IPCResult AnswerRpc();
 
   virtual mozilla::ipc::RacyInterruptPolicy MediateInterruptRace(
       const MessageInfo& parent, const MessageInfo& child) override;

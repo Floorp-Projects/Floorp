@@ -78,18 +78,19 @@ def migrate_old_presets():
             kwargs = {}
             if section == 'fuzzy':  # try fuzzy
                 kwargs['query'] = [value]
+                kwargs['selector'] = 'fuzzy'
 
             elif section == 'try':  # try syntax
-                section = 'syntax'
                 parser = SyntaxParser()
                 kwargs = vars(parser.parse_args(AutoTry.split_try_string(value)))
                 kwargs = {k: v for k, v in kwargs.items() if v != parser.get_default(k)}
+                kwargs['selector'] = 'syntax'
 
             else:
                 unknown[section].append("{} = {}".format(name, value))
                 continue
 
-            presets.save(name, selector=section, **kwargs)
+            presets.save(name, **kwargs)
 
     os.remove(old_preset_path)
 

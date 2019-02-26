@@ -10,6 +10,8 @@ namespace mozilla {
 namespace _ipdltest {
 
 class TestHangsParent : public PTestHangsParent {
+  friend class PTestHangsParent;
+
  public:
   TestHangsParent();
   virtual ~TestHangsParent();
@@ -25,9 +27,9 @@ class TestHangsParent : public PTestHangsParent {
  protected:
   virtual bool ShouldContinueFromReplyTimeout() override;
 
-  virtual mozilla::ipc::IPCResult RecvNonce() override { return IPC_OK(); }
+  mozilla::ipc::IPCResult RecvNonce() { return IPC_OK(); }
 
-  virtual mozilla::ipc::IPCResult AnswerStackFrame() override;
+  mozilla::ipc::IPCResult AnswerStackFrame();
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (AbnormalShutdown != why) fail("unexpected destruction!");
@@ -42,22 +44,24 @@ class TestHangsParent : public PTestHangsParent {
 };
 
 class TestHangsChild : public PTestHangsChild {
+  friend class PTestHangsChild;
+
  public:
   TestHangsChild();
   virtual ~TestHangsChild();
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvStart() override {
+  mozilla::ipc::IPCResult RecvStart() {
     if (!SendNonce()) fail("sending Nonce");
     return IPC_OK();
   }
 
-  virtual mozilla::ipc::IPCResult AnswerStackFrame() override {
+  mozilla::ipc::IPCResult AnswerStackFrame() {
     if (CallStackFrame()) fail("should have failed");
     return IPC_OK();
   }
 
-  virtual mozilla::ipc::IPCResult AnswerHang() override;
+  mozilla::ipc::IPCResult AnswerHang();
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (AbnormalShutdown != why) fail("unexpected destruction!");

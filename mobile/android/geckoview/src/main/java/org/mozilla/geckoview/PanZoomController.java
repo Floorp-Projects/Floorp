@@ -55,6 +55,8 @@ public class PanZoomController extends JNIObject {
 
     private ArrayList<Pair<Integer, MotionEvent>> mQueuedEvents;
 
+    private boolean mSynthesizedEvent = false;
+
     @WrapForJNI(calledFrom = "ui")
     private native boolean handleMotionEvent(
             int action, int actionIndex, long time, int metaState,  float screenX, float screenY,
@@ -117,7 +119,10 @@ public class PanZoomController extends JNIObject {
 
         // Take this opportunity to update screen origin of session. This gets
         // dispatched to the gecko thread, so we also pass the new screen x/y directly to apz.
-        mSession.onScreenOriginChanged((int)screenX, (int)screenY);
+        // If this is a synthesized touch, the screen offset is bogus so ignore it.
+        if (!mSynthesizedEvent) {
+            mSession.onScreenOriginChanged((int)screenX, (int)screenY);
+        }
 
         return handleMotionEvent(action, event.getActionIndex(), event.getEventTime(),
                 event.getMetaState(), screenX, screenY, pointerId, x, y, orientation, pressure,
@@ -520,7 +525,10 @@ public class PanZoomController extends JNIObject {
             /*edgeFlags*/ 0,
             /*source*/ source,
             /*flags*/ 0);
+
+        mSynthesizedEvent = true;
         onTouchEvent(event);
+        mSynthesizedEvent = false;
 
         // Forget about removed pointers
         if (eventType == MotionEvent.ACTION_POINTER_UP ||

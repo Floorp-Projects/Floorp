@@ -1,8 +1,0 @@
-include protocol multiManaged;
-
-protocol multiManager1 {
-    manages multiManaged;
-
-child:
-    async multiManaged();
-};

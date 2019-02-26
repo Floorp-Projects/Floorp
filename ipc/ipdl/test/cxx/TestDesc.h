@@ -19,6 +19,8 @@ namespace _ipdltest {
 // Top-level
 //
 class TestDescParent : public PTestDescParent {
+  friend class PTestDescParent;
+
  public:
   TestDescParent() {}
   virtual ~TestDescParent() {}
@@ -28,12 +30,11 @@ class TestDescParent : public PTestDescParent {
 
   void Main();
 
-  virtual mozilla::ipc::IPCResult RecvOk(PTestDescSubsubParent* a) override;
+  mozilla::ipc::IPCResult RecvOk(PTestDescSubsubParent* a);
 
  protected:
-  virtual PTestDescSubParent* AllocPTestDescSubParent(
-      PTestDescSubsubParent*) override;
-  virtual bool DeallocPTestDescSubParent(PTestDescSubParent* actor) override;
+  PTestDescSubParent* AllocPTestDescSubParent(PTestDescSubsubParent*);
+  bool DeallocPTestDescSubParent(PTestDescSubParent* actor);
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");
@@ -43,17 +44,18 @@ class TestDescParent : public PTestDescParent {
 };
 
 class TestDescChild : public PTestDescChild {
+  friend class PTestDescChild;
+
  public:
   TestDescChild() {}
   virtual ~TestDescChild() {}
 
  protected:
-  virtual PTestDescSubChild* AllocPTestDescSubChild(
-      PTestDescSubsubChild*) override;
+  PTestDescSubChild* AllocPTestDescSubChild(PTestDescSubsubChild*);
 
-  virtual bool DeallocPTestDescSubChild(PTestDescSubChild* actor) override;
+  bool DeallocPTestDescSubChild(PTestDescSubChild* actor);
 
-  virtual mozilla::ipc::IPCResult RecvTest(PTestDescSubsubChild* a) override;
+  mozilla::ipc::IPCResult RecvTest(PTestDescSubsubChild* a);
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");
@@ -65,26 +67,28 @@ class TestDescChild : public PTestDescChild {
 // First descendent
 //
 class TestDescSubParent : public PTestDescSubParent {
+  friend class PTestDescSubParent;
+
  public:
   TestDescSubParent() {}
   virtual ~TestDescSubParent() {}
 
  protected:
   virtual void ActorDestroy(ActorDestroyReason why) override {}
-  virtual PTestDescSubsubParent* AllocPTestDescSubsubParent() override;
-  virtual bool DeallocPTestDescSubsubParent(
-      PTestDescSubsubParent* actor) override;
+  PTestDescSubsubParent* AllocPTestDescSubsubParent();
+  bool DeallocPTestDescSubsubParent(PTestDescSubsubParent* actor);
 };
 
 class TestDescSubChild : public PTestDescSubChild {
+  friend class PTestDescSubChild;
+
  public:
   TestDescSubChild() {}
   virtual ~TestDescSubChild() {}
 
  protected:
-  virtual PTestDescSubsubChild* AllocPTestDescSubsubChild() override;
-  virtual bool DeallocPTestDescSubsubChild(
-      PTestDescSubsubChild* actor) override;
+  PTestDescSubsubChild* AllocPTestDescSubsubChild();
+  bool DeallocPTestDescSubsubChild(PTestDescSubsubChild* actor);
 };
 
 //-----------------------------------------------------------------------------
