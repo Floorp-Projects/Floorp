@@ -44,6 +44,8 @@
   --white-100: #fff; /* for ui, no special semantic */
 
   /* Typography from Photon */
+  --body-10-font-size: 13px;
+  --body-10-font-weight: 400;
   --title-20-font-size: 17px;
   --title-20-font-weight: 600;
 
@@ -53,10 +55,10 @@
 
   /* Global styles */
   --base-font-style: message-box;
-  --base-font-size: 15px; /* root font of 11px * 1.36em = 15px */
+  --base-font-size: var(--body-10-font-size);
+  --base-font-weight: var(--body-10-font-weight);
   --base-line-height: 1.8;
-  /* --button-font-size should merge with --base-font-size once the base font becomes 13px */
-  --button-font-size: 13px;
+  --button-font-size: var(--base-font-size);
   --micro-font-size: 11px;
 
   --monospace-font-family: monospace;
@@ -85,6 +87,8 @@ body {
   padding: 0;
   color: var(--text-color);
   font-size: var(--base-font-size);
+  font-weight: var(--base-font-weight);
+  line-height: var(--base-line-height);
   background: var(--bg-color);
 }
 
