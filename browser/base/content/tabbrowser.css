@@ -22,11 +22,6 @@
   display: none;
 }
 
-.tab-icon-pending[preopened],
-.tab-icon-image[preopened] {
-  visibility: hidden;
-}
-
 .tab-sharing-icon-overlay[sharing]:not([selected]),
 .tab-icon-overlay[soundplaying][pinned],
 .tab-icon-overlay[muted][pinned],
