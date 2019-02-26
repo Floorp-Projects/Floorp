@@ -1624,8 +1624,17 @@
      */ \
     MACRO(JSOP_POW, 150, "pow", "**", 1, 2, 1, JOF_BYTE|JOF_IC) \
     /*
+     * Pops the top two values 'value' and 'gen' from the stack, then starts
+     * "awaiting" for 'value' to be resolved, which will then resume the
+     * execution of 'gen'. Pushes the async function promise on the stack, so
+     * that it'll be returned to the caller on the very first "await".
+     *
+     *   Category: Statements
+     *   Type: Generator
+     *   Operands:
+     *   Stack: value, gen => promise
      */ \
-    MACRO(JSOP_UNUSED151, 151, "unused151", NULL, 1, 0, 0, JOF_BYTE) \
+    MACRO(JSOP_ASYNCAWAIT, 151, "async-await", NULL, 1, 2, 1, JOF_BYTE) \
     /*
      * Pops the top of stack value as 'rval', sets the return value in stack
      * frame as 'rval'.

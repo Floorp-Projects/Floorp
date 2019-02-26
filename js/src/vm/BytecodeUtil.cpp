@@ -2113,6 +2113,7 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
         // the result object, not 10.
         return write("RVAL");
 
+      case JSOP_ASYNCAWAIT:
       case JSOP_ASYNCRESOLVE:
         return write("PROMISE");
 

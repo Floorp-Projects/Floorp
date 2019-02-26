@@ -1946,7 +1946,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(JSOP_NOP_DESTRUCTURING)
     CASE(JSOP_TRY_DESTRUCTURING)
     CASE(JSOP_UNUSED71)
-    CASE(JSOP_UNUSED151)
     CASE(JSOP_TRY)
     CASE(JSOP_CONDSWITCH) {
       MOZ_ASSERT(CodeSpec[*REGS.pc].length == 1);
@@ -2114,7 +2113,11 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 
         goto error;
       } else {
-        MOZ_ASSERT(REGS.stackDepth() == 0);
+        // Stack should be empty for the outer frame, unless we executed the
+        // first |await| expression in an async function.
+        MOZ_ASSERT(
+            REGS.stackDepth() == 0 ||
+            (*REGS.pc == JSOP_AWAIT && !REGS.fp()->isResumedGenerator()));
       }
       goto exit;
     }
@@ -3624,13 +3627,29 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(JSOP_TRYSKIPAWAIT)
 
+    CASE(JSOP_ASYNCAWAIT) {
+      MOZ_ASSERT(REGS.stackDepth() >= 2);
+      ReservedRooted<JSObject*> gen(&rootObject1, &REGS.sp[-1].toObject());
+      ReservedRooted<Value> value(&rootValue0, REGS.sp[-2]);
+      JSObject* promise =
+          AsyncFunctionAwait(cx, gen.as<AsyncFunctionGeneratorObject>(), value);
+      if (!promise) {
+        goto error;
+      }
+
+      REGS.sp--;
+      REGS.sp[-1].setObject(*promise);
+    }
+    END_CASE(JSOP_ASYNCAWAIT)
+
     CASE(JSOP_ASYNCRESOLVE) {
       MOZ_ASSERT(REGS.stackDepth() >= 2);
       auto resolveKind = AsyncFunctionResolveKind(GET_UINT8(REGS.pc));
       ReservedRooted<JSObject*> gen(&rootObject1, &REGS.sp[-1].toObject());
-      ReservedRooted<Value> reason(&rootValue0, REGS.sp[-2]);
-      JSObject* promise = AsyncFunctionResolve(
-          cx, gen.as<AsyncFunctionGeneratorObject>(), reason, resolveKind);
+      ReservedRooted<Value> valueOrReason(&rootValue0, REGS.sp[-2]);
+      JSObject* promise =
+          AsyncFunctionResolve(cx, gen.as<AsyncFunctionGeneratorObject>(),
+                               valueOrReason, resolveKind);
       if (!promise) {
         goto error;
       }

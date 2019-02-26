@@ -1598,7 +1598,10 @@ static void AdjustGeneratorResumptionValue(JSContext* cx,
                                            AbstractFramePtr frame,
                                            ResumeMode& resumeMode,
                                            MutableHandleValue vp) {
-  if (resumeMode != ResumeMode::Return || !frame || !frame.isFunctionFrame()) {
+  if (resumeMode != ResumeMode::Return && resumeMode != ResumeMode::Throw) {
+    return;
+  }
+  if (!frame || !frame.isFunctionFrame()) {
     return;
   }
 
@@ -1614,7 +1617,13 @@ static void AdjustGeneratorResumptionValue(JSContext* cx,
   // instructions--and it's simpler to do the work manually than to count on
   // that bytecode sequence existing in the debuggee, somehow jump to it, and
   // then avoid re-entering the debugger from it.
+  // Similarly treat `{throw: <value>}` like a `throw` statement.
   if (frame.callee()->isGenerator()) {
+    // Throw doesn't require any special processing for (async) generators.
+    if (resumeMode == ResumeMode::Throw) {
+      return;
+    }
+
     // For (async) generators, that means doing the work below.
     Rooted<AbstractGeneratorObject*> genObj(
         cx, GetGeneratorObjectForFrame(cx, frame));
@@ -1641,26 +1650,42 @@ static void AdjustGeneratorResumptionValue(JSContext* cx,
     // For async functions, that means doing the work below.
     if (AbstractGeneratorObject* genObj =
             GetGeneratorObjectForFrame(cx, frame)) {
+      // Throw doesn't require any special processing for async functions when
+      // the internal generator object is already present.
+      if (resumeMode == ResumeMode::Throw) {
+        return;
+      }
+
       Rooted<AsyncFunctionGeneratorObject*> asyncGenObj(
           cx, &genObj->as<AsyncFunctionGeneratorObject>());
 
       // 1.  `return <value>` fulfills and returns the async function's promise.
-      if (!asyncGenObj->isBeforeInitialYield()) {
-        JSObject* promise = AsyncFunctionResolve(
-            cx, asyncGenObj, vp, AsyncFunctionResolveKind::Fulfill);
-        if (!promise) {
-          getAndClearExceptionThenThrow();
-          return;
-        }
-        vp.setObject(*promise);
+      JSObject* promise = AsyncFunctionResolve(
+          cx, asyncGenObj, vp, AsyncFunctionResolveKind::Fulfill);
+      if (!promise) {
+        getAndClearExceptionThenThrow();
+        return;
       }
+      vp.setObject(*promise);
 
       // 2.  The generator must be closed.
       asyncGenObj->setClosed();
     } else {
-      // We're before the initial yield. Carry on with the forced return.
-      // The debuggee will see a call to an async function returning the
-      // non-promise value *vp.
+      // We're before entering the actual function code.
+
+      // 1.  `throw <value>` creates a promise rejected with the value *vp.
+      // 1.  `return <value>` creates a promise resolved with the value *vp.
+      JSObject* promise = resumeMode == ResumeMode::Throw
+                              ? PromiseObject::unforgeableReject(cx, vp)
+                              : PromiseObject::unforgeableResolve(cx, vp);
+      if (!promise) {
+        getAndClearExceptionThenThrow();
+        return;
+      }
+      vp.setObject(*promise);
+
+      // 2.  Return normally in both cases.
+      resumeMode = ResumeMode::Return;
     }
   }
 }
