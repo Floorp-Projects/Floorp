@@ -12,7 +12,6 @@ const { LocalizationHelper } = require("devtools/shared/l10n");
 
 loader.lazyRequireGetter(this, "Menu", "devtools/client/framework/menu");
 loader.lazyRequireGetter(this, "MenuItem", "devtools/client/framework/menu-item");
-loader.lazyRequireGetter(this, "copyLongString", "devtools/client/inspector/shared/utils", true);
 loader.lazyRequireGetter(this, "clipboardHelper", "devtools/shared/platform/clipboard");
 
 loader.lazyGetter(this, "TOOLBOX_L10N", function() {
@@ -101,21 +100,13 @@ class MarkupContextMenu {
    * Copy the innerHTML of the selected Node to the clipboard.
    */
   _copyInnerHTML() {
-    if (!this.selection.isNode()) {
-      return;
-    }
-
-    copyLongString(this.walker.innerHTML(this.selection.nodeFront));
+    this.markup.copyInnerHTML();
   }
 
   /**
    * Copy the outerHTML of the selected Node to the clipboard.
    */
   _copyOuterHTML() {
-    if (!this.selection.isNode()) {
-      return;
-    }
-
     this.markup.copyOuterHTML();
   }
 

@@ -60,22 +60,41 @@ nsTArray<RefPtr<PerformanceInfoPromise>> CollectPerformanceInfo() {
   return promises;
 }
 
-nsresult GetTabSizes(nsGlobalWindowOuter* aWindow, nsTabSizes* aSizes) {
+void AddWindowTabSizes(nsGlobalWindowOuter* aWindow, nsTabSizes* aSizes) {
+  Document* document = aWindow->GetDocument();
+  if (document && document->GetCachedSizes(aSizes)) {
+    // We got a cached version
+    return;
+  }
+  // We measure the sizes on a fresh nsTabSizes instance
+  // because we want to cache the value and aSizes might
+  // already have some values from other windows.
+  nsTabSizes sizes;
+
   // Measure the window.
   SizeOfState state(moz_malloc_size_of);
   nsWindowSizes windowSizes(state);
   aWindow->AddSizeOfIncludingThis(windowSizes);
-
   // Measure the inner window, if there is one.
   nsGlobalWindowInner* inner = aWindow->GetCurrentInnerWindowInternal();
   if (inner != nullptr) {
     inner->AddSizeOfIncludingThis(windowSizes);
   }
+  windowSizes.addToTabSizes(&sizes);
+  if (document) {
+    document->SetCachedSizes(&sizes);
+  }
+  aSizes->mDom += sizes.mDom;
+  aSizes->mStyle += sizes.mStyle;
+  aSizes->mOther += sizes.mOther;
+}
 
-  windowSizes.addToTabSizes(aSizes);
+nsresult GetTabSizes(nsGlobalWindowOuter* aWindow, nsTabSizes* aSizes) {
+  // Add the window (and inner window) sizes. Might be cached.
+  AddWindowTabSizes(aWindow, aSizes);
+
   nsDOMWindowList* frames = aWindow->GetFrames();
   uint32_t length = frames->GetLength();
-
   // Measure this window's descendents.
   for (uint32_t i = 0; i < length; i++) {
     nsCOMPtr<nsPIDOMWindowOuter> child = frames->IndexedGetter(i);

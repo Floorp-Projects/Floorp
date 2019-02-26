@@ -8,6 +8,7 @@ const { editableField } = require("devtools/client/shared/inplace-editor");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
 loader.lazyRequireGetter(this, "getAutocompleteMaxWidth", "devtools/client/inspector/markup/utils", true);
+loader.lazyRequireGetter(this, "getLongString", "devtools/client/inspector/shared/utils", true);
 
 const INSPECTOR_L10N =
   new LocalizationHelper("devtools/client/locales/inspector.properties");
@@ -42,15 +43,11 @@ function TextEditor(container, node, type) {
       if (!commit) {
         return;
       }
-      this.node.getNodeValue().then(longstr => {
-        longstr.string().then(oldValue => {
-          longstr.release().catch(console.error);
-
-          this.container.undo.do(() => {
-            this.node.setNodeValue(val);
-          }, () => {
-            this.node.setNodeValue(oldValue);
-          });
+      getLongString(this.node.getNodeValue()).then(oldValue => {
+        this.container.undo.do(() => {
+          this.node.setNodeValue(val);
+        }, () => {
+          this.node.setNodeValue(oldValue);
         });
       });
     },
@@ -98,12 +95,7 @@ TextEditor.prototype = {
   },
 
   update: function() {
-    let longstr = null;
-    this.node.getNodeValue().then(ret => {
-      longstr = ret;
-      return longstr.string();
-    }).then(str => {
-      longstr.release().catch(console.error);
+    getLongString(this.node.getNodeValue()).then(str => {
       this.value.textContent = str;
 
       const isWhitespace = !/[^\s]/.exec(str);
