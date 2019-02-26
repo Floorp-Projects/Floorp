@@ -7,18 +7,24 @@
 #ifndef mozilla_dom_permission_message_utils_h__
 #define mozilla_dom_permission_message_utils_h__
 
-#include "mozilla/ipc/IPDLParamTraits.h"
 #include "ipc/IPCMessageUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIPrincipal.h"
 
 namespace IPC {
 
+template <>
+struct ParamTraits<nsIPrincipal> {
+  static void Write(Message* aMsg, nsIPrincipal* aParam);
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   RefPtr<nsIPrincipal>* aResult);
+};
+
 /**
  * Legacy IPC::Principal type. Use nsIPrincipal directly in new IPDL code.
  */
 class Principal {
-  friend struct mozilla::ipc::IPDLParamTraits<Principal>;
+  friend struct ParamTraits<Principal>;
 
  public:
   Principal() : mPrincipal(nullptr) {}
@@ -36,44 +42,18 @@ class Principal {
   RefPtr<nsIPrincipal> mPrincipal;
 };
 
+template <>
+struct ParamTraits<Principal> {
+  typedef Principal paramType;
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mPrincipal);
+  }
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    return ReadParam(aMsg, aIter, &aResult->mPrincipal);
+  }
+};
+
 }  // namespace IPC
-
-namespace mozilla {
-namespace ipc {
-
-template <>
-struct IPDLParamTraits<nsIPrincipal> {
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
-                    nsIPrincipal* aParam);
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, RefPtr<nsIPrincipal>* aResult);
-
-  // Overload to support deserializing nsCOMPtr<nsIPrincipal> directly.
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, nsCOMPtr<nsIPrincipal>* aResult) {
-    RefPtr<nsIPrincipal> result;
-    if (!Read(aMsg, aIter, aActor, &result)) {
-      return false;
-    }
-    *aResult = result.forget();
-    return true;
-  }
-};
-
-template <>
-struct IPDLParamTraits<IPC::Principal> {
-  typedef IPC::Principal paramType;
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
-                    const paramType& aParam) {
-    WriteIPDLParam(aMsg, aActor, aParam.mPrincipal);
-  }
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, paramType* aResult) {
-    return ReadIPDLParam(aMsg, aIter, aActor, &aResult->mPrincipal);
-  }
-};
-
-}  // namespace ipc
-}  // namespace mozilla
 
 #endif  // mozilla_dom_permission_message_utils_h__
