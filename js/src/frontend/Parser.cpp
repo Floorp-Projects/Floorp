@@ -1897,12 +1897,14 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
     if (!pc_->declareDotGeneratorName()) {
       return null();
     }
-    NameNodeType generator = newDotGeneratorName();
-    if (!generator) {
-      return null();
-    }
-    if (!handler_.prependInitialYield(handler_.asList(body), generator)) {
-      return null();
+    if (pc_->isGenerator()) {
+      NameNodeType generator = newDotGeneratorName();
+      if (!generator) {
+        return null();
+      }
+      if (!handler_.prependInitialYield(handler_.asList(body), generator)) {
+        return null();
+      }
     }
   }
 

@@ -14,25 +14,22 @@ let resumption = undefined;
 dbg.onEnterFrame = frame => {
     if (frame.type == "call" && frame.callee.name === "f") {
         frame.onPop = completion => {
-            assertEq(completion.return, resumption.return);
+            assertEq(completion.return.isPromise, true);
             hits++;
         };
 
-        // Don't tell anyone, but if we force-return a generator object here,
-        // the robots will still detect it and throw an error. No protection
-        // against Skynet, for us poor humans!
+        // If we force-return a generator object here, the caller will receive
+        // a promise object resolved with that generator.
         resumption = frame.eval(`(function* f2() { hit2 = true; })()`);
         assertEq(resumption.return.class, "Generator");
         return resumption;
     }
 };
 
-let error;
-try {
-    g.f(0);
-} catch (e) {
-    error = e;
-}
+let p = g.f(0);
 assertEq(hits, 1);
-assertEq(error instanceof g.Error, true);
 assertEq(g.hit2, false);
+let pw = gw.makeDebuggeeValue(p);
+assertEq(pw.isPromise, true);
+assertEq(pw.promiseState, "fulfilled");
+assertEq(pw.promiseValue, resumption.return);
