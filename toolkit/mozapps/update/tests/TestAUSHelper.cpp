@@ -145,27 +145,19 @@ int NS_main(int argc, NS_tchar **argv) {
         return 1;
       }
 #else
-      if (!NS_tsnprintf(exePath, sizeof(exePath) / sizeof(exePath[0]),
-                        NS_T("%s"), argv[0])) {
-        return 1;
-      }
+      strcpy(exePath, argv[0]);
 #endif
       NS_tchar runFilePath[MAXPATHLEN];
-      if (!NS_tsnprintf(runFilePath,
-                        sizeof(runFilePath) / sizeof(runFilePath[0]),
-                        NS_T("%s.running"), exePath)) {
-        return 1;
-      }
+      NS_tsnprintf(runFilePath, sizeof(runFilePath) / sizeof(runFilePath[0]),
+                   NS_T("%s.running"), exePath);
 #ifdef XP_WIN
       if (!NS_taccess(runFilePath, F_OK)) {
         // This makes it possible to check if the post update process was
         // launched twice which happens when the service performs an update.
         NS_tchar runFilePathBak[MAXPATHLEN];
-        if (!NS_tsnprintf(runFilePathBak,
-                          sizeof(runFilePathBak) / sizeof(runFilePathBak[0]),
-                          NS_T("%s.bak"), runFilePath)) {
-          return 1;
-        }
+        NS_tsnprintf(runFilePathBak,
+                     sizeof(runFilePathBak) / sizeof(runFilePathBak[0]),
+                     NS_T("%s.bak"), runFilePath);
         MoveFileExW(runFilePath, runFilePathBak, MOVEFILE_REPLACE_EXISTING);
       }
 #endif
@@ -180,11 +172,8 @@ int NS_main(int argc, NS_tchar **argv) {
       }
 
       NS_tchar logFilePath[MAXPATHLEN];
-      if (!NS_tsnprintf(logFilePath,
-                        sizeof(logFilePath) / sizeof(logFilePath[0]),
-                        NS_T("%s.log"), exePath)) {
-        return 1;
-      }
+      NS_tsnprintf(logFilePath, sizeof(logFilePath) / sizeof(logFilePath[0]),
+                   NS_T("%s.log"), exePath);
       WriteMsg(logFilePath, "post-update");
       return 0;
     }
@@ -247,24 +236,14 @@ int NS_main(int argc, NS_tchar **argv) {
   if (!NS_tstrcmp(argv[1], NS_T("setup-symlink"))) {
 #ifdef XP_UNIX
     NS_tchar path[MAXPATHLEN];
-    if (!NS_tsnprintf(path, sizeof(path) / sizeof(path[0]), NS_T("%s/%s"),
-                      NS_T("/tmp"), argv[2])) {
-      return 1;
-    }
-    if (mkdir(path, 0755)) {
-      return 1;
-    }
-    if (!NS_tsnprintf(path, sizeof(path) / sizeof(path[0]), NS_T("%s/%s/%s"),
-                      NS_T("/tmp"), argv[2], argv[3])) {
-      return 1;
-    }
-    if (mkdir(path, 0755)) {
-      return 1;
-    }
-    if (!NS_tsnprintf(path, sizeof(path) / sizeof(path[0]), NS_T("%s/%s/%s/%s"),
-                      NS_T("/tmp"), argv[2], argv[3], argv[4])) {
-      return 1;
-    }
+    NS_tsnprintf(path, sizeof(path) / sizeof(path[0]), NS_T("%s/%s"),
+                 NS_T("/tmp"), argv[2]);
+    mkdir(path, 0755);
+    NS_tsnprintf(path, sizeof(path) / sizeof(path[0]), NS_T("%s/%s/%s"),
+                 NS_T("/tmp"), argv[2], argv[3]);
+    mkdir(path, 0755);
+    NS_tsnprintf(path, sizeof(path) / sizeof(path[0]), NS_T("%s/%s/%s/%s"),
+                 NS_T("/tmp"), argv[2], argv[3], argv[4]);
     FILE *file = NS_tfopen(path, NS_T("w"));
     if (file) {
       NS_tfputs(NS_T("test"), file);
@@ -273,14 +252,10 @@ int NS_main(int argc, NS_tchar **argv) {
     if (symlink(path, argv[5]) != 0) {
       return 1;
     }
-    if (!NS_tsnprintf(path, sizeof(path) / sizeof(path[0]), NS_T("%s/%s"),
-                      NS_T("/tmp"), argv[2])) {
-      return 1;
-    }
+    NS_tsnprintf(path, sizeof(path) / sizeof(path[0]), NS_T("%s/%s"),
+                 NS_T("/tmp"), argv[2]);
     if (argc > 6 && !NS_tstrcmp(argv[6], NS_T("change-perm"))) {
-      if (chmod(path, 0644)) {
-        return 1;
-      }
+      chmod(path, 0644);
     }
     return 0;
 #else
@@ -292,26 +267,18 @@ int NS_main(int argc, NS_tchar **argv) {
   if (!NS_tstrcmp(argv[1], NS_T("remove-symlink"))) {
 #ifdef XP_UNIX
     NS_tchar path[MAXPATHLEN];
-    if (!NS_tsnprintf(path, sizeof(path) / sizeof(path[0]), NS_T("%s/%s"),
-                      NS_T("/tmp"), argv[2])) {
-      return 1;
-    }
-    (void)chmod(path, 0755);
-    if (!NS_tsnprintf(path, sizeof(path) / sizeof(path[0]), NS_T("%s/%s/%s/%s"),
-                      NS_T("/tmp"), argv[2], argv[3], argv[4])) {
-      return 1;
-    }
-    (void)unlink(path);
-    if (!NS_tsnprintf(path, sizeof(path) / sizeof(path[0]), NS_T("%s/%s/%s"),
-                      NS_T("/tmp"), argv[2], argv[3])) {
-      return 1;
-    }
-    (void)rmdir(path);
-    if (!NS_tsnprintf(path, sizeof(path) / sizeof(path[0]), NS_T("%s/%s"),
-                      NS_T("/tmp"), argv[2])) {
-      return 1;
-    }
-    (void)rmdir(path);
+    NS_tsnprintf(path, sizeof(path) / sizeof(path[0]), NS_T("%s/%s"),
+                 NS_T("/tmp"), argv[2]);
+    chmod(path, 0755);
+    NS_tsnprintf(path, sizeof(path) / sizeof(path[0]), NS_T("%s/%s/%s/%s"),
+                 NS_T("/tmp"), argv[2], argv[3], argv[4]);
+    unlink(path);
+    NS_tsnprintf(path, sizeof(path) / sizeof(path[0]), NS_T("%s/%s/%s"),
+                 NS_T("/tmp"), argv[2], argv[3]);
+    rmdir(path);
+    NS_tsnprintf(path, sizeof(path) / sizeof(path[0]), NS_T("%s/%s"),
+                 NS_T("/tmp"), argv[2]);
+    rmdir(path);
     return 0;
 #else
     // Not implemented on non-Unix platforms
@@ -322,9 +289,7 @@ int NS_main(int argc, NS_tchar **argv) {
   if (!NS_tstrcmp(argv[1], NS_T("check-symlink"))) {
 #ifdef XP_UNIX
     struct stat ss;
-    if (lstat(argv[2], &ss)) {
-      return 1;
-    }
+    lstat(argv[2], &ss);
     return S_ISLNK(ss.st_mode) ? 0 : 1;
 #else
     // Not implemented on non-Unix platforms
@@ -419,15 +384,11 @@ int NS_main(int argc, NS_tchar **argv) {
     // if buf (the 1st param) is NULL so free cwd when it is no longer needed.
     NS_tchar *cwd = NS_tgetcwd(nullptr, 0);
     NS_tchar inFilePath[MAXPATHLEN];
-    if (!NS_tsnprintf(inFilePath, sizeof(inFilePath) / sizeof(inFilePath[0]),
-                      NS_T("%s/%s"), cwd, argv[2])) {
-      return 1;
-    }
+    NS_tsnprintf(inFilePath, sizeof(inFilePath) / sizeof(inFilePath[0]),
+                 NS_T("%s/%s"), cwd, argv[2]);
     NS_tchar outFilePath[MAXPATHLEN];
-    if (!NS_tsnprintf(outFilePath, sizeof(outFilePath) / sizeof(outFilePath[0]),
-                      NS_T("%s/%s"), cwd, argv[3])) {
-      return 1;
-    }
+    NS_tsnprintf(outFilePath, sizeof(outFilePath) / sizeof(outFilePath[0]),
+                 NS_T("%s/%s"), cwd, argv[3]);
     free(cwd);
 
     int seconds = NS_ttoi(argv[5]);
@@ -465,14 +426,10 @@ int NS_main(int argc, NS_tchar **argv) {
   {
     // Command line argument test helper section
     NS_tchar logFilePath[MAXPATHLEN];
-    if (!NS_tsnprintf(logFilePath, sizeof(logFilePath) / sizeof(logFilePath[0]),
-                      NS_T("%s"), argv[2])) {
-      return 1;
-    }
+    NS_tsnprintf(logFilePath, sizeof(logFilePath) / sizeof(logFilePath[0]),
+                 NS_T("%s"), argv[2]);
+
     FILE *logFP = NS_tfopen(logFilePath, NS_T("wb"));
-    if (!logFP) {
-      return 1;
-    }
     for (int i = 1; i < argc; ++i) {
       fprintf(logFP, LOG_S "\n", argv[i]);
     }
