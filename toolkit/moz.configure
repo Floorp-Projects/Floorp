@@ -92,21 +92,32 @@ set_define('MOZ_GECKO_PROFILER_PARSE_ELF', gecko_profiler_parse_elf)
 set_config('MOZ_PROFILER_MEMORY', gecko_profiler_define)
 set_define('MOZ_PROFILER_MEMORY', gecko_profiler_define)
 
-option('--enable-dmd', env='MOZ_DMD',
-       help='Enable Dark Matter Detector (heap profiler). '
+
+@depends('--enable-debug', milestone, build_project,
+         # Artifact builds are included because the downloaded artifacts can
+         # have DMD enabled.
+         when=artifact_builds | depends(when='--enable-replace-malloc')(lambda: True))
+def dmd_default(debug, milestone, build_project):
+    return bool(build_project == 'browser' and (debug or milestone.is_nightly))
+
+
+option('--enable-dmd', env='MOZ_DMD', default=dmd_default,
+       help='{Enable|Disable} Dark Matter Detector (heap profiler). '
             'Also enables jemalloc, replace-malloc and profiling')
+
 
 @depends('--enable-dmd')
 def dmd(value):
     if value:
         return True
 
+
 set_config('MOZ_DMD', dmd)
 set_define('MOZ_DMD', dmd)
 add_old_configure_assignment('MOZ_DMD', dmd)
 imply_option('--enable-profiling', dmd)
-imply_option('--enable-jemalloc', dmd)
-imply_option('--enable-replace-malloc', dmd)
+imply_option('--enable-jemalloc', dmd, when=compile_environment)
+imply_option('--enable-replace-malloc', dmd, when=compile_environment)
 
 # ALSA cubeb backend
 # ==============================================================
