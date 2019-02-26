@@ -44,7 +44,7 @@ partial interface Response {
 
 dictionary ResponseInit {
   unsigned short status = 200;
-  ByteString statusText = "OK";
+  ByteString statusText = "";
   HeadersInit headers;
 };
 
