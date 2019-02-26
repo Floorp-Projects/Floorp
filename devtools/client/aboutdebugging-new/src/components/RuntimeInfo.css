@@ -6,13 +6,13 @@
 /**
  * Layout for the runtime info container is:
  *
- *      <- 68px --x--------- 1fr ---------->
- *   ∧  +---------+------------------------+
- *  1fr |         | Runtime Info           |
- *   |  |  Icon   | eg "Firefox (70.0a1)"  |
- *   x  |         +------------------------+
- *  max |         | Device Name (optional) |
- *   ∨  +---------+------------------------+
+ *      <- 68px --x--------- 1fr ----------><---- max ---->
+ *   ∧  +---------+------------------------+--------------+
+ *  1fr |         | Runtime Info           |   [Action]   |
+ *   |  |  Icon   | eg "Firefox (70.0a1)"  |              |
+ *   x  |         +------------------------+              |
+ *  max |         | Device Name (optional) |              |
+ *   ∨  +---------+------------------------+--------------+
  */
 .runtime-info {
   align-items: center;
@@ -20,9 +20,9 @@
 
   grid-column-gap: var(--main-heading-icon-gap);
   grid-template-areas:
-  "icon title"
-  "icon subtitle";
-  grid-template-columns: var(--main-heading-icon-size) 1fr;
+  "icon title    action"
+  "icon subtitle action";
+  grid-template-columns: var(--main-heading-icon-size) 1fr max-content;
   grid-template-rows: 1fr max-content;
 
   margin-block-end: calc(var(--base-unit) * 5);
@@ -36,4 +36,11 @@
 }
 .runtime-info__subtitle {
   grid-area: subtitle;
+}
+.runtime-info__action {
+  align-self: start;
+  /* The default-button has a font-size of 1em at the moment, this rule should not be
+   * necessary after the first patch from Bug 1525615 lands. */
+  font-size: var(--base-font-size);
+  grid-area: action;
 }
