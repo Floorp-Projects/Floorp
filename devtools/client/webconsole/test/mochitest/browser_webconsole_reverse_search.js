@@ -99,7 +99,7 @@ add_task(async function() {
   await waitFor(() => !getReverseSearchElement(hud));
   is(hud.jsterm.getInputValue(), `Dog = "Snoopy"`,
     "Closing the input did not changed the JsTerm value");
-  is(isJstermFocused(hud.jsterm), true, "JsTerm is focused");
+  is(isInputFocused(hud), true, "input is focused");
 
   info("Check that the search works with emojis");
   reverseSearchElement = await openReverseSearch(hud);

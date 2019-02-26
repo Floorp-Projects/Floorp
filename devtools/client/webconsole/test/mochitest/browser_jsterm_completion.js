@@ -22,13 +22,14 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const {jsterm, ui} = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
+  const {jsterm, ui} = hud;
   const {autocompletePopup} = jsterm;
 
   // Test typing 'docu'.
-  await setInputValueForAutocompletion(jsterm, "foob");
+  await setInputValueForAutocompletion(hud, "foob");
   is(jsterm.getInputValue(), "foob", "'foob' completion (input.value)");
-  checkJsTermCompletionValue(jsterm, "    ar", "'foob' completion (completeNode)");
+  checkInputCompletionValue(hud, "    ar", "'foob' completion (completeNode)");
   is(autocompletePopup.items.length, 1, "autocomplete popup has 1 item");
   is(autocompletePopup.isOpen, false, "autocomplete popup is not open");
 
@@ -36,44 +37,44 @@ async function performTests() {
   EventUtils.synthesizeKey("KEY_Tab");
   is(jsterm.getInputValue(), "foobar", "'foob' tab completion");
 
-  checkJsTermCursor(jsterm, "foobar".length, "cursor is at the end of 'foobar'");
-  is(getJsTermCompletionValue(jsterm).replace(/ /g, ""), "", "'foob' completed");
+  checkInputCursorPosition(hud, "foobar".length, "cursor is at the end of 'foobar'");
+  is(getInputCompletionValue(hud).replace(/ /g, ""), "", "'foob' completed");
 
   // Test typing 'window.Ob' and press tab.  Just 'window.O' is
   // ambiguous: could be window.Object, window.Option, etc.
-  await setInputValueForAutocompletion(jsterm, "window.Ob");
+  await setInputValueForAutocompletion(hud, "window.Ob");
   EventUtils.synthesizeKey("KEY_Tab");
   is(jsterm.getInputValue(), "window.Object", "'window.Ob' tab completion");
 
   // Test typing 'document.getElem'.
   const onPopupOpened = autocompletePopup.once("popup-opened");
-  await setInputValueForAutocompletion(jsterm, "document.getElem");
+  await setInputValueForAutocompletion(hud, "document.getElem");
   is(jsterm.getInputValue(), "document.getElem", "'document.getElem' completion");
-  checkJsTermCompletionValue(jsterm, "                entById",
+  checkInputCompletionValue(hud, "                entById",
      "'document.getElem' completion");
 
   // Test pressing key down.
   await onPopupOpened;
   EventUtils.synthesizeKey("KEY_ArrowDown");
   is(jsterm.getInputValue(), "document.getElem", "'document.getElem' completion");
-  checkJsTermCompletionValue(jsterm, "                entsByClassName",
+  checkInputCompletionValue(hud, "                entsByClassName",
      "'document.getElem' another tab completion");
 
   // Test pressing key up.
   EventUtils.synthesizeKey("KEY_ArrowUp");
-  await waitFor(() => (getJsTermCompletionValue(jsterm) || "").includes("entById"));
+  await waitFor(() => (getInputCompletionValue(hud) || "").includes("entById"));
   is(jsterm.getInputValue(), "document.getElem", "'document.getElem' untab completion");
-  checkJsTermCompletionValue(jsterm, "                entById",
+  checkInputCompletionValue(hud, "                entById",
      "'document.getElem' completion");
 
   ui.clearOutput();
 
-  await setInputValueForAutocompletion(jsterm, "docu");
-  checkJsTermCompletionValue(jsterm, "    ment", "'docu' completion");
+  await setInputValueForAutocompletion(hud, "docu");
+  checkInputCompletionValue(hud, "    ment", "'docu' completion");
 
   let onAutocompletUpdated = jsterm.once("autocomplete-updated");
   await jsterm.execute();
-  checkJsTermCompletionValue(jsterm, "", "clear completion on execute()");
+  checkInputCompletionValue(hud, "", "clear completion on execute()");
 
   // Test multi-line completion works. We can't use setInputValueForAutocompletion because
   // it would trigger an evaluation (because of the new line, an Enter keypress is
@@ -82,7 +83,7 @@ async function performTests() {
   jsterm.setInputValue("console.log('one');\n");
   EventUtils.sendString("consol");
   await onAutocompletUpdated;
-  checkJsTermCompletionValue(jsterm, "\n      e", "multi-line completion");
+  checkInputCompletionValue(hud, "\n      e", "multi-line completion");
 
   // Test multi-line completion works even if there is text after the cursor
   onAutocompletUpdated = jsterm.once("autocomplete-updated");
@@ -90,15 +91,15 @@ async function performTests() {
   EventUtils.synthesizeKey("KEY_ArrowUp");
   EventUtils.sendString("console.g");
   await onAutocompletUpdated;
-  checkJsTermValueAndCursor(jsterm, "{\nconsole.g|\n}");
-  checkJsTermCompletionValue(jsterm, "\n         roup", "multi-line completion");
+  checkInputValueAndCursorPosition(hud, "{\nconsole.g|\n}");
+  checkInputCompletionValue(hud, "\n         roup", "multi-line completion");
   is(autocompletePopup.isOpen, true, "popup is opened");
 
   // Test non-object autocompletion.
-  await setInputValueForAutocompletion(jsterm, "Object.name.sl");
-  checkJsTermCompletionValue(jsterm, "              ice", "non-object completion");
+  await setInputValueForAutocompletion(hud, "Object.name.sl");
+  checkInputCompletionValue(hud, "              ice", "non-object completion");
 
   // Test string literal autocompletion.
-  await setInputValueForAutocompletion(jsterm, "'Asimov'.sl");
-  checkJsTermCompletionValue(jsterm, "           ice", "string literal completion");
+  await setInputValueForAutocompletion(hud, "'Asimov'.sl");
+  checkInputCompletionValue(hud, "           ice", "string literal completion");
 }

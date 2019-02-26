@@ -67,7 +67,7 @@ add_task(async function() {
   await onSidebarShown;
   sidebar = hud.ui.document.querySelector(".sidebar");
   ok(!sidebar, "Sidebar hidden after sending esc");
-  ok(isJstermFocused(hud.jsterm), "console input is focused after closing the sidebar");
+  ok(isInputFocused(hud), "console input is focused after closing the sidebar");
 });
 
 async function showSidebar(hud) {
