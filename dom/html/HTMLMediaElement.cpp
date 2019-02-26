@@ -1717,6 +1717,53 @@ void HTMLMediaElement::ShutdownDecoder() {
   ReportAudioTrackSilenceProportionTelemetry();
 }
 
+void HTMLMediaElement::ReportPlayedTimeAfterBlockedTelemetry() {
+  if (!mHasPlayEverBeenBlocked) {
+    return;
+  }
+  mHasPlayEverBeenBlocked = false;
+
+  const double playTimeThreshold = 7.0;
+  const double playTimeAfterBlocked = mCurrentLoadPlayTime.Total();
+  if (playTimeAfterBlocked <= 0.0) {
+    return;
+  }
+
+  const bool isDurationLessThanTimeThresholdAndMediaPlayedToTheEnd =
+      Duration() < playTimeThreshold && Ended();
+  LOG(LogLevel::Debug, ("%p PLAYED_TIME_AFTER_AUTOPLAY_BLOCKED=%f, isVideo=%d",
+                        this, playTimeAfterBlocked, IsVideo()));
+  if (IsVideo() && playTimeAfterBlocked >= playTimeThreshold) {
+    AccumulateCategorical(
+        mozilla::Telemetry::LABELS_MEDIA_PLAYED_TIME_AFTER_AUTOPLAY_BLOCKED::
+            VPlayedMoreThan7s);
+  } else if (IsVideo() && playTimeAfterBlocked < playTimeThreshold) {
+    if (isDurationLessThanTimeThresholdAndMediaPlayedToTheEnd) {
+      AccumulateCategorical(
+          mozilla::Telemetry::LABELS_MEDIA_PLAYED_TIME_AFTER_AUTOPLAY_BLOCKED::
+              VPlayedToTheEnd);
+    } else {
+      AccumulateCategorical(
+          mozilla::Telemetry::LABELS_MEDIA_PLAYED_TIME_AFTER_AUTOPLAY_BLOCKED::
+              VPlayedLessThan7s);
+    }
+  } else if (!IsVideo() && playTimeAfterBlocked >= playTimeThreshold) {
+    AccumulateCategorical(
+        mozilla::Telemetry::LABELS_MEDIA_PLAYED_TIME_AFTER_AUTOPLAY_BLOCKED::
+            APlayedMoreThan7s);
+  } else if (!IsVideo() && playTimeAfterBlocked < playTimeThreshold) {
+    if (isDurationLessThanTimeThresholdAndMediaPlayedToTheEnd) {
+      AccumulateCategorical(
+          mozilla::Telemetry::LABELS_MEDIA_PLAYED_TIME_AFTER_AUTOPLAY_BLOCKED::
+              APlayedToTheEnd);
+    } else {
+      AccumulateCategorical(
+          mozilla::Telemetry::LABELS_MEDIA_PLAYED_TIME_AFTER_AUTOPLAY_BLOCKED::
+              APlayedLessThan7s);
+    }
+  }
+}
+
 void HTMLMediaElement::AbortExistingLoads() {
   // Abort any already-running instance of the resource selection algorithm.
   mLoadWaitStatus = NOT_WAITING;
@@ -1838,6 +1885,7 @@ void HTMLMediaElement::AbortExistingLoads() {
 
   mEventDeliveryPaused = false;
   mPendingEvents.Clear();
+  mCurrentLoadPlayTime.Reset();
 
   AssertReadyStateIsNothing();
 }
@@ -3529,6 +3577,7 @@ HTMLMediaElement::~HTMLMediaElement() {
   }
 
   WakeLockRelease();
+  ReportPlayedTimeAfterBlockedTelemetry();
 
   DecoderDoctorLogger::LogDestruction(this);
 }
@@ -3670,6 +3719,7 @@ void HTMLMediaElement::DispatchEventsWhenPlayWasNotAllowed() {
 #endif
   OwnerDoc()->MaybeNotifyAutoplayBlocked();
   ReportToConsole(nsIScriptError::warningFlag, "BlockAutoplayError");
+  mHasPlayEverBeenBlocked = true;
 }
 
 void HTMLMediaElement::PlayInternal(bool aHandlingUserInput) {
@@ -5727,15 +5777,24 @@ void HTMLMediaElement::DispatchAsyncEvent(const nsAString& aName) {
 
   if ((aName.EqualsLiteral("play") || aName.EqualsLiteral("playing"))) {
     mPlayTime.Start();
+    mCurrentLoadPlayTime.Start();
     if (IsHidden()) {
       HiddenVideoStart();
     }
   } else if (aName.EqualsLiteral("waiting")) {
     mPlayTime.Pause();
+    mCurrentLoadPlayTime.Pause();
     HiddenVideoStop();
   } else if (aName.EqualsLiteral("pause")) {
     mPlayTime.Pause();
+    mCurrentLoadPlayTime.Pause();
     HiddenVideoStop();
+  }
+
+  // It would happen when (1) media aborts current load (2) media pauses (3)
+  // media end (4) media unbind from tree (because we would pause it)
+  if (aName.EqualsLiteral("pause")) {
+    ReportPlayedTimeAfterBlockedTelemetry();
   }
 }
 
@@ -5871,6 +5930,7 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aPauseElement,
     UpdateSrcMediaStreamPlaying();
     UpdateAudioChannelPlayingState();
     if (aPauseElement) {
+      mCurrentLoadPlayTime.Pause();
       ReportTelemetry();
 
       // For EME content, we may force destruction of the CDM client (and CDM
@@ -5888,6 +5948,9 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aPauseElement,
       }
       mEventDeliveryPaused = aSuspendEvents;
     } else {
+      if (!mPaused) {
+        mCurrentLoadPlayTime.Start();
+      }
       if (mDecoder) {
         mDecoder->Resume();
         if (!mPaused && !mDecoder->IsEnded()) {
