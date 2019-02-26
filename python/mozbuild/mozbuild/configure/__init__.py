@@ -18,10 +18,8 @@ from mozbuild.configure.options import (
     CommandLineHelper,
     ConflictingOptionError,
     InvalidOptionError,
-    NegativeOptionValue,
     Option,
     OptionValue,
-    PositiveOptionValue,
 )
 from mozbuild.configure.help import HelpFormatter
 from mozbuild.configure.util import (
@@ -446,10 +444,28 @@ class ConfigureSandbox(dict):
         for implied_option in self._implied_options:
             value = self._resolve(implied_option.value)
             if value is not None:
-                raise ConfigureError(
-                    '`%s`, emitted from `%s` line %d, is unknown.'
-                    % (implied_option.option, implied_option.caller[1],
-                       implied_option.caller[2]))
+                # There are two ways to end up here: either the implied option
+                # is unknown, or it's known but there was a dependency loop
+                # that prevented the implication from being applied.
+                option = self._options.get(implied_option.name)
+                if not option:
+                    raise ConfigureError(
+                        '`%s`, emitted from `%s` line %d, is unknown.'
+                        % (implied_option.option, implied_option.caller[1],
+                           implied_option.caller[2]))
+                # If the option is known, check that the implied value doesn't
+                # conflict with what value was attributed to the option.
+                option_value = self._value_for_option(option)
+                if value != option_value:
+                    reason = implied_option.reason
+                    if isinstance(reason, Option):
+                        reason = self._raw_options.get(reason) or reason.option
+                        reason = reason.split('=', 1)[0]
+                    value = OptionValue.from_(value)
+                    raise InvalidOptionError(
+                        "'%s' implied by '%s' conflicts with '%s' from the %s"
+                        % (value.format(option.option), reason,
+                           option_value.format(option.option), option_value.origin))
 
         # All options should have been removed (handled) by now.
         for arg in self._helper:
@@ -534,20 +550,7 @@ class ConfigureSandbox(dict):
             value = self._resolve(implied_option.value)
 
             if value is not None:
-                if isinstance(value, OptionValue):
-                    pass
-                elif value is True:
-                    value = PositiveOptionValue()
-                elif value is False or value == ():
-                    value = NegativeOptionValue()
-                elif isinstance(value, types.StringTypes):
-                    value = PositiveOptionValue((value,))
-                elif isinstance(value, tuple):
-                    value = PositiveOptionValue(value)
-                else:
-                    raise TypeError("Unexpected type: '%s'"
-                                    % type(value).__name__)
-
+                value = OptionValue.from_(value)
                 opt = value.format(implied_option.option)
                 self._helper.add(opt, 'implied')
                 implied[opt] = implied_option

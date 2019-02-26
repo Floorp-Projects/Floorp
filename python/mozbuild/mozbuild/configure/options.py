@@ -69,6 +69,8 @@ class OptionValue(tuple):
         # Allow explicit tuples to be compared.
         if type(other) == tuple:
             return tuple.__eq__(self, other)
+        elif isinstance(other, bool):
+            return bool(self) == other
         # Else we're likely an OptionValue class.
         elif type(other) != type(self):
             return False
@@ -81,6 +83,22 @@ class OptionValue(tuple):
     def __repr__(self):
         return '%s%s' % (self.__class__.__name__,
                          super(OptionValue, self).__repr__())
+
+    @staticmethod
+    def from_(value):
+        if isinstance(value, OptionValue):
+            return value
+        elif value is True:
+            return PositiveOptionValue()
+        elif value is False or value == ():
+            return NegativeOptionValue()
+        elif isinstance(value, types.StringTypes):
+            return PositiveOptionValue((value,))
+        elif isinstance(value, tuple):
+            return PositiveOptionValue(value)
+        else:
+            raise TypeError("Unexpected type: '%s'"
+                            % type(value).__name__)
 
 
 class PositiveOptionValue(OptionValue):
