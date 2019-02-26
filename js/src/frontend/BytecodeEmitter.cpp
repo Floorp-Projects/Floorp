@@ -6389,8 +6389,19 @@ bool BytecodeEmitter::emitAwaitInScope(EmitterScope& currentScope) {
     return false;
   }
 
+  if (sc->asFunctionBox()->needsPromiseResult()) {
+    if (!emitGetDotGeneratorInScope(currentScope)) {
+      //            [stack] VALUE GENERATOR
+      return false;
+    }
+    if (!emit1(JSOP_ASYNCAWAIT)) {
+      //            [stack] PROMISE
+      return false;
+    }
+  }
+
   if (!emitGetDotGeneratorInScope(currentScope)) {
-    //              [stack] VALUE GENERATOR
+    //              [stack] VALUE|PROMISE GENERATOR
     return false;
   }
   if (!emitYieldOp(JSOP_AWAIT)) {
@@ -8494,6 +8505,18 @@ bool BytecodeEmitter::emitFunctionFormalParameters(ListNode* paramsBody) {
   bool hasParameterExprs = funbox->hasParameterExprs;
   bool hasRest = funbox->hasRest();
 
+  // Parameters can't reuse the reject try-catch block from the function body,
+  // because the body may have pushed an additional var-environment. This
+  // messes up scope resolution for the |.generator| variable, because we'd
+  // need different hops to reach |.generator| depending on whether the error
+  // was thrown from the parameters or the function body.
+  Maybe<TryEmitter> rejectTryCatch;
+  if (hasParameterExprs && funbox->needsPromiseResult()) {
+    if (!emitAsyncFunctionRejectPrologue(rejectTryCatch)) {
+      return false;
+    }
+  }
+
   uint16_t argSlot = 0;
   for (ParseNode* arg = paramsBody->head(); arg != funBody;
        arg = arg->pn_next, argSlot++) {
@@ -8605,6 +8628,12 @@ bool BytecodeEmitter::emitFunctionFormalParameters(ListNode* paramsBody) {
     }
   }
 
+  if (rejectTryCatch) {
+    if (!emitAsyncFunctionRejectEpilogue(*rejectTryCatch)) {
+      return false;
+    }
+  }
+
   return true;
 }
 
@@ -8648,6 +8677,14 @@ bool BytecodeEmitter::emitInitializeFunctionSpecialNames() {
   if (funbox->hasThisBinding()) {
     if (!emitInitializeFunctionSpecialName(this, cx->names().dotThis,
                                            JSOP_FUNCTIONTHIS)) {
+      return false;
+    }
+  }
+
+  // Do nothing if the function doesn't implicitly return a promise result.
+  if (funbox->needsPromiseResult()) {
+    if (!emitInitializeFunctionSpecialName(this, cx->names().dotGenerator,
+                                           JSOP_GENERATOR)) {
       return false;
     }
   }
@@ -8793,43 +8830,6 @@ bool BytecodeEmitter::emitAsyncFunctionRejectEpilogue(TryEmitter& tryCatch) {
     //              [stack] EXC GEN
     return false;
   }
-
-  // TODO: Remove when .generator is created outside of try-catch.
-  if (!emit1(JSOP_DUP)) {
-    //              [stack] EXC GEN GEN
-    return false;
-  }
-  if (!emit1(JSOP_UNDEFINED)) {
-    //              [stack] EXC GEN GEN UNDEF
-    return false;
-  }
-  if (!emit1(JSOP_STRICTEQ)) {
-    //              [stack] EXC GEN EQ
-    return false;
-  }
-
-  InternalIfEmitter ifGeneratorIsUndef(this);
-  if (!ifGeneratorIsUndef.emitThen()) {
-    //              [stack] EXC GEN
-    return false;
-  }
-
-  if (!emit1(JSOP_POP)) {
-    //              [stack] EXC
-    return false;
-  }
-  if (!emit1(JSOP_THROW)) {
-    //              [stack]
-    return false;
-  }
-
-  this->stackDepth += 2;  // Fixup stack depth.
-
-  if (!ifGeneratorIsUndef.emitEnd()) {
-    //              [stack] EXC GEN
-    return false;
-  }
-
   if (!emit2(JSOP_ASYNCRESOLVE, uint8_t(AsyncFunctionResolveKind::Reject))) {
     //              [stack] PROMISE
     return false;

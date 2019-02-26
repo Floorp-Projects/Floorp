@@ -2510,6 +2510,7 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op) {
     case JSOP_AWAIT:
     case JSOP_TRYSKIPAWAIT:
     case JSOP_GENERATOR:
+    case JSOP_ASYNCAWAIT:
     case JSOP_ASYNCRESOLVE:
 
     // Misc
@@ -2530,7 +2531,6 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op) {
       break;
 
     case JSOP_UNUSED71:
-    case JSOP_UNUSED151:
     case JSOP_LIMIT:
       break;
   }
