@@ -6,8 +6,8 @@ CookiePolicyHelper.runTest("ServiceWorker", {
     ["dom.serviceWorkers.testing.enabled", true],
   ],
 
-  cookieJarAccessAllowed: async _ => {
-    await content.navigator.serviceWorker.register("file_empty.js").then(
+  cookieJarAccessAllowed: async w => {
+    await w.navigator.serviceWorker.register("file_empty.js").then(
       reg => { ok(true, "ServiceWorker can be used!"); return reg; },
       _ => { ok(false, "ServiceWorker cannot be used! " + _); }).then(
       reg => reg.unregister(),
@@ -15,8 +15,8 @@ CookiePolicyHelper.runTest("ServiceWorker", {
       catch(e => ok(false, "Promise rejected: " + e));
   },
 
-  cookieJarAccessDenied: async _ => {
-    await content.navigator.serviceWorker.register("file_empty.js").then(
+  cookieJarAccessDenied: async w => {
+    await w.navigator.serviceWorker.register("file_empty.js").then(
       _ => { ok(false, "ServiceWorker cannot be used!"); },
       _ => { ok(true, "ServiceWorker cannot be used!"); }).
       catch(e => ok(false, "Promise rejected: " + e));
