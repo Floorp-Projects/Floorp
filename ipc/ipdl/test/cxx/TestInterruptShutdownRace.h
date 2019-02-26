@@ -21,9 +21,9 @@ class TestInterruptShutdownRaceParent
 
   void Main();
 
-  virtual mozilla::ipc::IPCResult RecvStartDeath() override;
+  mozilla::ipc::IPCResult RecvStartDeath();
 
-  virtual mozilla::ipc::IPCResult RecvOrphan() override;
+  mozilla::ipc::IPCResult RecvOrphan();
 
  protected:
   void StartShuttingDown();
@@ -34,14 +34,16 @@ class TestInterruptShutdownRaceParent
 };
 
 class TestInterruptShutdownRaceChild : public PTestInterruptShutdownRaceChild {
+  friend class PTestInterruptShutdownRaceChild;
+
  public:
   TestInterruptShutdownRaceChild();
   virtual ~TestInterruptShutdownRaceChild();
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvStart() override;
+  mozilla::ipc::IPCResult RecvStart();
 
-  virtual mozilla::ipc::IPCResult AnswerExit() override;
+  mozilla::ipc::IPCResult AnswerExit();
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     fail("should have 'crashed'!");

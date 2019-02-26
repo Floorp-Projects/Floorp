@@ -1,8 +1,0 @@
-include protocol managerProtocol;
-
-protocol managedProtocol {
-    manager managerProtocol;
-
-child:
-    async __delete__();
-};

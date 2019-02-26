@@ -22,6 +22,8 @@ class TestHandleParent : public PTestHandleParent {
 };
 
 class TestJSONParent : public PTestJSONParent {
+  friend class PTestJSONParent;
+
  public:
   TestJSONParent() {}
   virtual ~TestJSONParent() {}
@@ -32,14 +34,13 @@ class TestJSONParent : public PTestJSONParent {
   void Main();
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvTest(const JSONVariant& i,
-                                           JSONVariant* o) override;
+  mozilla::ipc::IPCResult RecvTest(const JSONVariant& i, JSONVariant* o);
 
-  virtual PTestHandleParent* AllocPTestHandleParent() override {
+  PTestHandleParent* AllocPTestHandleParent() {
     return mKid = new TestHandleParent();
   }
 
-  virtual bool DeallocPTestHandleParent(PTestHandleParent* actor) override {
+  bool DeallocPTestHandleParent(PTestHandleParent* actor) {
     delete actor;
     return true;
   }
@@ -60,18 +61,20 @@ class TestHandleChild : public PTestHandleChild {
 };
 
 class TestJSONChild : public PTestJSONChild {
+  friend class PTestJSONChild;
+
  public:
   TestJSONChild() {}
   virtual ~TestJSONChild() {}
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvStart() override;
+  mozilla::ipc::IPCResult RecvStart();
 
-  virtual PTestHandleChild* AllocPTestHandleChild() override {
+  PTestHandleChild* AllocPTestHandleChild() {
     return mKid = new TestHandleChild();
   }
 
-  virtual bool DeallocPTestHandleChild(PTestHandleChild* actor) override {
+  bool DeallocPTestHandleChild(PTestHandleChild* actor) {
     delete actor;
     return true;
   }

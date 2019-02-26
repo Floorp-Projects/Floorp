@@ -1,0 +1,11 @@
+include protocol PmanagedProtocol;
+
+// sanity check of managed/manager protocols
+
+protocol PmanagerProtocol {
+    manages PmanagedProtocol;
+
+parent:
+    async PmanagedProtocol(int i);
+
+};

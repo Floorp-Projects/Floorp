@@ -19,6 +19,8 @@ namespace _ipdltest {
 // Top-level
 //
 class TestFailedCtorParent : public PTestFailedCtorParent {
+  friend class PTestFailedCtorParent;
+
  public:
   TestFailedCtorParent() {}
   virtual ~TestFailedCtorParent() {}
@@ -33,9 +35,8 @@ class TestFailedCtorParent : public PTestFailedCtorParent {
   void Main();
 
  protected:
-  virtual PTestFailedCtorSubParent* AllocPTestFailedCtorSubParent() override;
-  virtual bool DeallocPTestFailedCtorSubParent(
-      PTestFailedCtorSubParent* actor) override;
+  PTestFailedCtorSubParent* AllocPTestFailedCtorSubParent();
+  bool DeallocPTestFailedCtorSubParent(PTestFailedCtorSubParent* actor);
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (AbnormalShutdown != why) fail("unexpected destruction!");
@@ -45,18 +46,19 @@ class TestFailedCtorParent : public PTestFailedCtorParent {
 };
 
 class TestFailedCtorChild : public PTestFailedCtorChild {
+  friend class PTestFailedCtorChild;
+
  public:
   TestFailedCtorChild() {}
   virtual ~TestFailedCtorChild() {}
 
  protected:
-  virtual PTestFailedCtorSubChild* AllocPTestFailedCtorSubChild() override;
+  PTestFailedCtorSubChild* AllocPTestFailedCtorSubChild();
 
-  virtual mozilla::ipc::IPCResult AnswerPTestFailedCtorSubConstructor(
+  mozilla::ipc::IPCResult AnswerPTestFailedCtorSubConstructor(
       PTestFailedCtorSubChild* actor) override;
 
-  virtual bool DeallocPTestFailedCtorSubChild(
-      PTestFailedCtorSubChild* actor) override;
+  bool DeallocPTestFailedCtorSubChild(PTestFailedCtorSubChild* actor);
 
   virtual void ProcessingError(Result aCode, const char* aReason) override;
 
@@ -71,17 +73,17 @@ class TestFailedCtorChild : public PTestFailedCtorChild {
 class TestFailedCtorSubsub;
 
 class TestFailedCtorSubParent : public PTestFailedCtorSubParent {
+  friend class PTestFailedCtorSubParent;
+
  public:
   TestFailedCtorSubParent() : mOne(nullptr), mTwo(nullptr), mThree(nullptr) {}
   virtual ~TestFailedCtorSubParent();
 
  protected:
-  virtual PTestFailedCtorSubsubParent* AllocPTestFailedCtorSubsubParent()
-      override;
+  PTestFailedCtorSubsubParent* AllocPTestFailedCtorSubsubParent();
 
-  virtual bool DeallocPTestFailedCtorSubsubParent(
-      PTestFailedCtorSubsubParent* actor) override;
-  virtual mozilla::ipc::IPCResult RecvSync() override { return IPC_OK(); }
+  bool DeallocPTestFailedCtorSubsubParent(PTestFailedCtorSubsubParent* actor);
+  mozilla::ipc::IPCResult RecvSync() { return IPC_OK(); }
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
@@ -91,15 +93,15 @@ class TestFailedCtorSubParent : public PTestFailedCtorSubParent {
 };
 
 class TestFailedCtorSubChild : public PTestFailedCtorSubChild {
+  friend class PTestFailedCtorSubChild;
+
  public:
   TestFailedCtorSubChild() {}
   virtual ~TestFailedCtorSubChild() {}
 
  protected:
-  virtual PTestFailedCtorSubsubChild* AllocPTestFailedCtorSubsubChild()
-      override;
-  virtual bool DeallocPTestFailedCtorSubsubChild(
-      PTestFailedCtorSubsubChild* actor) override;
+  PTestFailedCtorSubsubChild* AllocPTestFailedCtorSubsubChild();
+  bool DeallocPTestFailedCtorSubsubChild(PTestFailedCtorSubsubChild* actor);
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 };

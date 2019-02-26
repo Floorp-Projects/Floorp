@@ -959,7 +959,7 @@ bool ErrorReport::populateUncaughtExceptionReportUTF8VA(JSContext* cx,
     ownedReport.filename = iter.filename();
     uint32_t column;
     ownedReport.sourceId =
-      iter.script() ? iter.script()->scriptSource()->id() : 0;
+      iter.hasScript() ? iter.script()->scriptSource()->id() : 0;
     ownedReport.lineno = iter.computeLine(&column);
     ownedReport.column = FixupColumnForDisplay(column);
     ownedReport.isMuted = iter.mutedErrors();

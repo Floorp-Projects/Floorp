@@ -19,6 +19,8 @@ namespace mozilla {
 namespace _ipdltest {
 
 class TestEndpointOpensParent : public PTestEndpointOpensParent {
+  friend class PTestEndpointOpensParent;
+
  public:
   TestEndpointOpensParent() {}
   virtual ~TestEndpointOpensParent() {}
@@ -29,9 +31,8 @@ class TestEndpointOpensParent : public PTestEndpointOpensParent {
   void Main();
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvStartSubprotocol(
-      mozilla::ipc::Endpoint<PTestEndpointOpensOpenedParent>&& endpoint)
-      override;
+  mozilla::ipc::IPCResult RecvStartSubprotocol(
+      mozilla::ipc::Endpoint<PTestEndpointOpensOpenedParent>&& endpoint);
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 };
@@ -41,14 +42,16 @@ class TestEndpointOpensParent : public PTestEndpointOpensParent {
 namespace _ipdltest2 {
 
 class TestEndpointOpensOpenedParent : public PTestEndpointOpensOpenedParent {
+  friend class PTestEndpointOpensOpenedParent;
+
  public:
   explicit TestEndpointOpensOpenedParent() {}
   virtual ~TestEndpointOpensOpenedParent() {}
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvHello() override;
-  virtual mozilla::ipc::IPCResult RecvHelloSync() override;
-  virtual mozilla::ipc::IPCResult AnswerHelloRpc() override;
+  mozilla::ipc::IPCResult RecvHello();
+  mozilla::ipc::IPCResult RecvHelloSync();
+  mozilla::ipc::IPCResult AnswerHelloRpc();
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 };
@@ -60,12 +63,14 @@ class TestEndpointOpensOpenedParent : public PTestEndpointOpensOpenedParent {
 namespace _ipdltest {
 
 class TestEndpointOpensChild : public PTestEndpointOpensChild {
+  friend class PTestEndpointOpensChild;
+
  public:
   TestEndpointOpensChild();
   virtual ~TestEndpointOpensChild() {}
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvStart() override;
+  mozilla::ipc::IPCResult RecvStart();
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 };
@@ -75,13 +80,15 @@ class TestEndpointOpensChild : public PTestEndpointOpensChild {
 namespace _ipdltest2 {
 
 class TestEndpointOpensOpenedChild : public PTestEndpointOpensOpenedChild {
+  friend class PTestEndpointOpensOpenedChild;
+
  public:
   explicit TestEndpointOpensOpenedChild() : mGotHi(false) {}
   virtual ~TestEndpointOpensOpenedChild() {}
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvHi() override;
-  virtual mozilla::ipc::IPCResult AnswerHiRpc() override;
+  mozilla::ipc::IPCResult RecvHi();
+  mozilla::ipc::IPCResult AnswerHiRpc();
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 

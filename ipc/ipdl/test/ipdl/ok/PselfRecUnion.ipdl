@@ -1,0 +1,11 @@
+union R {
+    int;
+    double;
+    R;
+};
+
+protocol PselfRecUnion {
+child:
+    async Test(R r);
+    async __delete__();
+};

@@ -1,0 +1,7 @@
+include protocol PmessageVerify;
+
+intr protocol PmessageVerifyTopLevel{
+  manages PmessageVerify;
+  parent:
+    sync PmessageVerify(uint32_t aParam1) returns (double rv1) verify;
+};

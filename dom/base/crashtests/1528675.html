@@ -1,0 +1,28 @@
+<script>
+function start() {
+  o14=window.document;
+  o432=document.createElement('audio');
+  o433=document.createElement('track');
+  o432.appendChild(o433);
+  o493=o432.textTracks;
+    o14.write('<html></html>');
+  o757=document.createElement('iframe');
+  o757.addEventListener('load', fun0, false);
+    document.documentElement.appendChild(o757);
+  o432.controls^=1;
+}
+function fun0(e) {
+  o1062=e.target;
+  o1063=o1062.contentWindow;
+  o1064=o1063.document;
+  document.documentElement.appendChild(o432);
+  setTimeout(fun1,240);
+}
+function fun1() {
+  o433.parentNode.removeChild(o433);
+  document.replaceChild(o1064.documentElement,document.documentElement);
+  SpecialPowers.forceGC();
+  SpecialPowers.forceCC();
+}
+</script>
+<body onload="start()"></body>

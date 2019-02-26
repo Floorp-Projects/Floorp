@@ -25,19 +25,19 @@ function changeKeys()
 </script>
 
 <hbox align="start">
-  <label control="b1">Label1</label><textbox id="b1" accesskey="L" size="2"/>
-  <label control="b2">Label2</label><textbox id="b2" accesskey="l" size="2"/>
-  <label control="b3">Label3</label><textbox id="b3" accesskey="b" size="2"/>
-  <label control="b4">Label4</label><textbox id="b4" accesskey="x" size="2"/>
-  <label control="b5" maxwidth="50">Quite a long label. Hopefully it will wrap</label><textbox id="b5" accesskey="l" size="2"/>
+  <label control="b1" accesskey="L">Label1</label><textbox id="b1" size="2"/>
+  <label control="b2" accesskey="l">Label2</label><textbox id="b2" size="2"/>
+  <label control="b3" accesskey="b">Label3</label><textbox id="b3" size="2"/>
+  <label control="b4" accesskey="x">Label4</label><textbox id="b4" size="2"/>
+  <label control="b5" accesskey="l" maxwidth="50">Quite a long label. Hopefully it will wrap</label><textbox id="b5" size="2"/>
 </hbox>
 
 <hbox id="d" align="start">
-  <label control="d1">Label1</label><textbox id="d1" accesskey="z" size="2"/>
+  <label control="d1" accesskey="z">Label1</label><textbox id="d1" size="2"/>
   <label control="d2">Label2</label><textbox id="d2" size="2"/>
-  <label control="d3">Label3</label><textbox id="d3" accesskey="t" size="2"/>
-  <label control="d4">Label4</label><textbox id="d4" accesskey="b" size="2"/>
-  <label control="d5" maxwidth="50">Quite a long label. Hopefully it will wrap</label><textbox id="d5" accesskey="l" size="2"/>
+  <label control="d3" accesskey="t">Label3</label><textbox id="d3" size="2"/>
+  <label control="d4" accesskey="b">Label4</label><textbox id="d4" size="2"/>
+  <label control="d5" accesskey="l" maxwidth="50">Quite a long label. Hopefully it will wrap</label><textbox id="d5" size="2"/>
 </hbox>
 
 </window>

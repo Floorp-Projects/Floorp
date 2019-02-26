@@ -203,42 +203,6 @@ void nsStyleSides::Reset() {
   NS_FOR_CSS_SIDES(i) { nsStyleCoord::Reset(mUnits[i], mValues[i]); }
 }
 
-nsStyleCorners::nsStyleCorners() {
-  NS_FOR_CSS_HALF_CORNERS(i) { mUnits[i] = eStyleUnit_Null; }
-  mozilla::PodArrayZero(mValues);
-}
-
-nsStyleCorners::nsStyleCorners(const nsStyleCorners& aOther) {
-  NS_FOR_CSS_HALF_CORNERS(i) { mUnits[i] = eStyleUnit_Null; }
-  *this = aOther;
-}
-
-nsStyleCorners::~nsStyleCorners() { Reset(); }
-
-nsStyleCorners& nsStyleCorners::operator=(const nsStyleCorners& aCopy) {
-  if (this != &aCopy) {
-    NS_FOR_CSS_HALF_CORNERS(i) {
-      nsStyleCoord::SetValue(mUnits[i], mValues[i], aCopy.mUnits[i],
-                             aCopy.mValues[i]);
-    }
-  }
-  return *this;
-}
-
-bool nsStyleCorners::operator==(const nsStyleCorners& aOther) const {
-  NS_FOR_CSS_HALF_CORNERS(i) {
-    if (nsStyleCoord(mValues[i], (nsStyleUnit)mUnits[i]) !=
-        nsStyleCoord(aOther.mValues[i], (nsStyleUnit)aOther.mUnits[i])) {
-      return false;
-    }
-  }
-  return true;
-}
-
-void nsStyleCorners::Reset() {
-  NS_FOR_CSS_HALF_CORNERS(i) { nsStyleCoord::Reset(mUnits[i], mValues[i]); }
-}
-
 // Validation of SideIsVertical.
 #define CASE(side, result) \
   static_assert(SideIsVertical(side) == result, "SideIsVertical is wrong")

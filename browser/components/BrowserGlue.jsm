@@ -1419,9 +1419,26 @@ BrowserGlue.prototype = {
 
     let fpEnabled = Services.prefs.getBoolPref("privacy.trackingprotection.fingerprinting.enabled");
     let cmEnabled = Services.prefs.getBoolPref("privacy.trackingprotection.cryptomining.enabled");
+    let categoryPref;
+    switch (Services.prefs.getStringPref("browser.contentblocking.category", null)) {
+    case "standard":
+      categoryPref = 0;
+      break;
+    case "strict":
+      categoryPref = 1;
+      break;
+    case "custom":
+      categoryPref = 2;
+      break;
+    default:
+      // Any other value is unsupported.
+      categoryPref = 3;
+      break;
+    }
 
     Services.telemetry.scalarSet("contentblocking.fingerprinting_blocking_enabled", fpEnabled);
     Services.telemetry.scalarSet("contentblocking.cryptomining_blocking_enabled", cmEnabled);
+    Services.telemetry.scalarSet("contentblocking.category", categoryPref);
   },
 
   _sendMediaTelemetry() {

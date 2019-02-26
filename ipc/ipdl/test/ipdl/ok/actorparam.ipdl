@@ -1,5 +1,0 @@
-protocol actorparam {
-
-child: async Msg(actorparam p);
-
-};

@@ -15,6 +15,8 @@ namespace mozilla {
 namespace _ipdltest {
 
 class TestLatencyParent : public PTestLatencyParent {
+  friend class PTestLatencyParent;
+
  private:
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
@@ -29,8 +31,8 @@ class TestLatencyParent : public PTestLatencyParent {
   void Main();
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvPong() override;
-  virtual mozilla::ipc::IPCResult RecvPong5() override;
+  mozilla::ipc::IPCResult RecvPong();
+  mozilla::ipc::IPCResult RecvPong5();
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");
@@ -73,20 +75,21 @@ class TestLatencyParent : public PTestLatencyParent {
 };
 
 class TestLatencyChild : public PTestLatencyChild {
+  friend class PTestLatencyChild;
+
  public:
   TestLatencyChild();
   virtual ~TestLatencyChild();
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvPing() override;
-  virtual mozilla::ipc::IPCResult RecvPing5() override;
-  virtual mozilla::ipc::IPCResult AnswerRpc() override;
-  virtual mozilla::ipc::IPCResult RecvSpam() override;
-  virtual mozilla::ipc::IPCResult AnswerSynchro() override;
-  virtual mozilla::ipc::IPCResult RecvCompressedSpam(
-      const uint32_t& seqno) override;
-  virtual mozilla::ipc::IPCResult AnswerSynchro2(
-      uint32_t* lastSeqno, uint32_t* numMessagesDispatched) override;
+  mozilla::ipc::IPCResult RecvPing();
+  mozilla::ipc::IPCResult RecvPing5();
+  mozilla::ipc::IPCResult AnswerRpc();
+  mozilla::ipc::IPCResult RecvSpam();
+  mozilla::ipc::IPCResult AnswerSynchro();
+  mozilla::ipc::IPCResult RecvCompressedSpam(const uint32_t& seqno);
+  mozilla::ipc::IPCResult AnswerSynchro2(uint32_t* lastSeqno,
+                                         uint32_t* numMessagesDispatched);
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");

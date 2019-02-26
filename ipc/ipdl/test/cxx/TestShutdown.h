@@ -33,6 +33,8 @@ class TestShutdownSubsubParent : public PTestShutdownSubsubParent {
 };
 
 class TestShutdownSubParent : public PTestShutdownSubParent {
+  friend class PTestShutdownSubParent;
+
  public:
   explicit TestShutdownSubParent(bool expectCrash)
       : mExpectCrash(expectCrash), mDeletedCount(0) {}
@@ -42,20 +44,19 @@ class TestShutdownSubParent : public PTestShutdownSubParent {
   }
 
  protected:
-  virtual mozilla::ipc::IPCResult AnswerStackFrame() override {
+  mozilla::ipc::IPCResult AnswerStackFrame() {
     if (!CallStackFrame()) {
       return IPC_FAIL_NO_REASON(this);
     }
     return IPC_OK();
   }
 
-  virtual PTestShutdownSubsubParent* AllocPTestShutdownSubsubParent(
-      const bool& expectParentDelete) override {
+  PTestShutdownSubsubParent* AllocPTestShutdownSubsubParent(
+      const bool& expectParentDelete) {
     return new TestShutdownSubsubParent(expectParentDelete);
   }
 
-  virtual bool DeallocPTestShutdownSubsubParent(
-      PTestShutdownSubsubParent* actor) override {
+  bool DeallocPTestShutdownSubsubParent(PTestShutdownSubsubParent* actor) {
     delete actor;
     ++mDeletedCount;
     return true;
@@ -69,6 +70,8 @@ class TestShutdownSubParent : public PTestShutdownSubParent {
 };
 
 class TestShutdownParent : public PTestShutdownParent {
+  friend class PTestShutdownParent;
+
  public:
   TestShutdownParent() {}
   virtual ~TestShutdownParent() {}
@@ -80,15 +83,13 @@ class TestShutdownParent : public PTestShutdownParent {
   void Main();
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvSync() override { return IPC_OK(); }
+  mozilla::ipc::IPCResult RecvSync() { return IPC_OK(); }
 
-  virtual PTestShutdownSubParent* AllocPTestShutdownSubParent(
-      const bool& expectCrash) override {
+  PTestShutdownSubParent* AllocPTestShutdownSubParent(const bool& expectCrash) {
     return new TestShutdownSubParent(expectCrash);
   }
 
-  virtual bool DeallocPTestShutdownSubParent(
-      PTestShutdownSubParent* actor) override {
+  bool DeallocPTestShutdownSubParent(PTestShutdownSubParent* actor) {
     delete actor;
     return true;
   }
@@ -113,21 +114,22 @@ class TestShutdownSubsubChild : public PTestShutdownSubsubChild {
 };
 
 class TestShutdownSubChild : public PTestShutdownSubChild {
+  friend class PTestShutdownSubChild;
+
  public:
   explicit TestShutdownSubChild(bool expectCrash) : mExpectCrash(expectCrash) {}
 
   virtual ~TestShutdownSubChild() {}
 
  protected:
-  virtual mozilla::ipc::IPCResult AnswerStackFrame() override;
+  mozilla::ipc::IPCResult AnswerStackFrame();
 
-  virtual PTestShutdownSubsubChild* AllocPTestShutdownSubsubChild(
-      const bool& expectParentDelete) override {
+  PTestShutdownSubsubChild* AllocPTestShutdownSubsubChild(
+      const bool& expectParentDelete) {
     return new TestShutdownSubsubChild(expectParentDelete);
   }
 
-  virtual bool DeallocPTestShutdownSubsubChild(
-      PTestShutdownSubsubChild* actor) override {
+  bool DeallocPTestShutdownSubsubChild(PTestShutdownSubsubChild* actor) {
     delete actor;
     return true;
   }
@@ -139,20 +141,20 @@ class TestShutdownSubChild : public PTestShutdownSubChild {
 };
 
 class TestShutdownChild : public PTestShutdownChild {
+  friend class PTestShutdownChild;
+
  public:
   TestShutdownChild() {}
   virtual ~TestShutdownChild() {}
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvStart() override;
+  mozilla::ipc::IPCResult RecvStart();
 
-  virtual PTestShutdownSubChild* AllocPTestShutdownSubChild(
-      const bool& expectCrash) override {
+  PTestShutdownSubChild* AllocPTestShutdownSubChild(const bool& expectCrash) {
     return new TestShutdownSubChild(expectCrash);
   }
 
-  virtual bool DeallocPTestShutdownSubChild(
-      PTestShutdownSubChild* actor) override {
+  bool DeallocPTestShutdownSubChild(PTestShutdownSubChild* actor) {
     delete actor;
     return true;
   }

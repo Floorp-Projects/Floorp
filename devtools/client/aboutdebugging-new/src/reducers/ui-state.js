@@ -80,7 +80,7 @@ function uiReducer(state = UiState(), action) {
 
     case TEMPORARY_EXTENSION_INSTALL_FAILURE: {
       const { error } = action;
-      return Object.assign({}, state, { temporaryInstallError: error.message });
+      return Object.assign({}, state, { temporaryInstallError: error });
     }
 
     default:
