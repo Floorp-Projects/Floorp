@@ -206,7 +206,11 @@ projects:
     publish: true
   support-test:
     path: components/support/test
-    description: 'A collection of helpers for testing components.'
+    description: 'A collection of helpers for testing components (local unit tests).'
+    publish: true
+  support-android-test:
+    path: components/support/android-test
+    description: 'A collection of helpers for testing components from instrumented (on device) tests.'
     publish: true
   support-utils:
     path: components/support/utils

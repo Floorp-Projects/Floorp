@@ -1,6 +1,6 @@
-# [Android Components](../../../README.md) > Support > Test
+# [Android Components](../../../README.md) > Support > Android Test
 
-A collection of helpers for testing components in local unit tests (`src/test`).
+A collection of helpers for testing components in instrumented (on device) tests (`src/androidTest`)
 
 ## Usage
 
@@ -9,7 +9,7 @@ A collection of helpers for testing components in local unit tests (`src/test`).
 Use Gradle to download the library from [maven.mozilla.org](https://maven.mozilla.org/) ([Setup repository](../../../README.md#maven-repository)):
 
 ```Groovy
-implementation "org.mozilla.components:support-test:{latest-version}"
+implementation "org.mozilla.components:support-android-test:{latest-version}"
 ```
 
 ## License

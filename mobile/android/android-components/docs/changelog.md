@@ -53,6 +53,10 @@ permalink: /changelog/
 * **feature-customtabs**
  * Now returns false in `onBackPressed()` if feature is not initialized
 
+* **support-android-test**
+  * 🆕 New component to be used for helpers used in instrumented (on device) tests (`src/androidTest`). This component complements `support-test` which is focused on helpers used in local unit tests (`src/test`).
+  * Added helper `LiveData.awaitValue()` which subscribes to the `LiveData` object and blocks until a value was observed. Returns the value or throws an `InterruptedException` if no value was observed (customizable timeout).
+
 # 0.44.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.43.0...v0.44.0)

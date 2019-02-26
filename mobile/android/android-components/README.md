@@ -168,11 +168,13 @@ _Components and libraries to interact with backend services._
 
 _Supporting components with generic helper code._
 
+* 🔵 [**Android Test**](components/support/android-test/README.md) - A collection of helpers for testing components in instrumented (on device) tests (`src/androidTest`).
+
 * 🔵 [**Base**](components/support/base/README.md) - Base component containing building blocks for components.
 
 * 🔵 [**Ktx**](components/support/ktx/README.md) - A set of Kotlin extensions on top of the Android framework and Kotlin standard library.
 
-* 🔵 [**Test**](components/support/test/README.md) - A collection of helpers for testing components.
+* 🔵 [**Test**](components/support/test/README.md) - A collection of helpers for testing components in local unit tests (`src/test`).
 
 * 🔵 [**Utils**](components/support/utils/README.md) - Generic utility classes to be shared between projects.
 
