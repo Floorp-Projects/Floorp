@@ -101,8 +101,7 @@ UrlClassifierFeatureCryptomining::MaybeCreate(nsIChannel* aChannel) {
     return nullptr;
   }
 
-  if (!UrlClassifierCommon::ShouldEnableClassifier(
-          aChannel, AntiTrackingCommon::eCryptomining)) {
+  if (!UrlClassifierCommon::ShouldEnableClassifier(aChannel)) {
     return nullptr;
   }
 
@@ -133,22 +132,37 @@ UrlClassifierFeatureCryptomining::ProcessChannel(nsIChannel* aChannel,
   NS_ENSURE_ARG_POINTER(aChannel);
   NS_ENSURE_ARG_POINTER(aShouldContinue);
 
+  bool isAllowListed =
+      IsAllowListed(aChannel, AntiTrackingCommon::eCryptomining);
+
   // This is a blocking feature.
-  *aShouldContinue = false;
+  *aShouldContinue = isAllowListed;
 
-  UrlClassifierCommon::SetBlockedContent(aChannel, NS_ERROR_CRYPTOMINING_URI,
-                                         aList, EmptyCString(), EmptyCString());
-
-  UC_LOG(
-      ("UrlClassifierFeatureCryptomining::ProcessChannel, cancelling "
-       "channel[%p]",
-       aChannel));
-  nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aChannel);
-
-  if (httpChannel) {
-    Unused << httpChannel->CancelByChannelClassifier(NS_ERROR_CRYPTOMINING_URI);
+  if (isAllowListed) {
+    // Even with cryptomining blocking disabled, we still want to show the user
+    // that there are unblocked cryptominers on the site, so notify the UI that
+    // we loaded cryptomining content.  UI code can treat this notification
+    // differently depending on whether cryptomining blocking is enabled or
+    // disabled.
+    UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(
+        aChannel, nsIWebProgressListener::STATE_LOADED_CRYPTOMINING_CONTENT);
   } else {
-    Unused << aChannel->Cancel(NS_ERROR_CRYPTOMINING_URI);
+    UrlClassifierCommon::SetBlockedContent(aChannel, NS_ERROR_CRYPTOMINING_URI,
+                                           aList, EmptyCString(),
+                                           EmptyCString());
+
+    UC_LOG(
+        ("UrlClassifierFeatureCryptomining::ProcessChannel, cancelling "
+         "channel[%p]",
+         aChannel));
+    nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aChannel);
+
+    if (httpChannel) {
+      Unused << httpChannel->CancelByChannelClassifier(
+          NS_ERROR_CRYPTOMINING_URI);
+    } else {
+      Unused << aChannel->Cancel(NS_ERROR_CRYPTOMINING_URI);
+    }
   }
 
   return NS_OK;
