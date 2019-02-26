@@ -4349,6 +4349,48 @@ Storage* nsGlobalWindowInner::GetSessionStorage(ErrorResult& aError) {
       return nullptr;
     }
 
+    uint32_t rejectedReason = 0;
+    nsContentUtils::StorageAccess access =
+        nsContentUtils::StorageAllowedForWindow(this, &rejectedReason);
+
+    // SessionStorage is an ephemeral per-tab per-origin storage that only lives
+    // as long as the tab is open, although it may survive browser restarts
+    // thanks to the session store. So we interpret storage access differently
+    // than we would for persistent per-origin storage like LocalStorage and so
+    // it may be okay to provide SessionStorage even when we receive a value of
+    // eDeny.
+    //
+    // AntiTrackingCommon::IsFirstPartyStorageAccessGranted will return false
+    // for 3 main reasons.
+    //
+    // 1. Cookies are entirely blocked due to a per-origin permission
+    // (nsICookiePermission::ACCESS_DENY for the top-level principal or this
+    // window's principal) or the very broad BEHAVIOR_REJECT. This will return
+    // eDeny with a reason of STATE_COOKIES_BLOCKED_BY_PERMISSION or
+    // STATE_COOKIES_BLOCKED_ALL.
+    //
+    // 2. Third-party cookies are limited via BEHAVIOR_REJECT_FOREIGN and
+    // BEHAVIOR_LIMIT_FOREIGN and this is a third-party window. This will return
+    // eDeny with a reason of STATE_COOKIES_BLOCKED_FOREIGN.
+    //
+    // 3. Tracking protection (BEHAVIOR_REJECT_TRACKER) is in effect and
+    // IsThirdPartyTrackingResourceWindow() returned true and there wasn't a
+    // permission that allows it. This will return ePartitionedOrDeny with a
+    // reason of STATE_COOKIES_BLOCKED_TRACKER.
+    //
+    // In the 1st case, the user has explicitly indicated that they don't want
+    // to allow any storage to the origin or all origins and so we throw an
+    // error and deny access to SessionStorage. In the 2nd case, a legacy
+    // decision reasoned that there's no harm in providing SessionStorage
+    // because the information is not durable and cannot escape the current tab.
+    // The rationale is similar for the 3rd case.
+    if (access == nsContentUtils::StorageAccess::eDeny &&
+        rejectedReason !=
+            nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN) {
+      aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+      return nullptr;
+    }
+
     nsresult rv;
 
     nsCOMPtr<nsIDOMStorageManager> storageManager =
