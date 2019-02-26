@@ -7708,6 +7708,18 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-snap.enabled")) {
   };
 }
 
+if (IsCSSPropertyPrefEnabled("layout.css.scroll-snap-v1.enabled")) {
+  gCSSProperties["scroll-snap-align"] = {
+    domProp: "scrollSnapAlign",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "none" ],
+    other_values: [ "start", "end", "center", "start none", "center end",
+                    "start start" ],
+    invalid_values: [ "auto", "start invalid", "start end center" ]
+  };
+}
+
 if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
   gCSSProperties["-webkit-animation"] = {
     domProp: "webkitAnimation",
