@@ -29,6 +29,7 @@ linux64/opt:
         - linux64-rust-size
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 linux64-plain/opt:
@@ -61,6 +62,7 @@ linux64-plain/opt:
         - linux64-binutils
         - linux64-clang
         - linux64-rust
+        - linux64-nasm
         - linux64-node
         - linux64-cbindgen
 
@@ -101,6 +103,7 @@ linux64/pgo:
         - linux64-rust-size
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 linux64-fuzzing/debug:
@@ -136,6 +139,7 @@ linux64-fuzzing/debug:
         - linux64-sccache
         - linux64-rust
         - linux64-rust-size
+        - linux64-nasm
         - linux64-node
 
 linux64/debug:
@@ -170,6 +174,7 @@ linux64/debug:
         - linux64-sccache
         - linux64-rust
         - linux64-rust-size
+        - linux64-nasm
         - linux64-node
 
 linux64-plain/debug:
@@ -202,6 +207,7 @@ linux64-plain/debug:
         - linux64-binutils
         - linux64-clang
         - linux64-rust
+        - linux64-nasm
         - linux64-node
         - linux64-cbindgen
 
@@ -243,6 +249,7 @@ linux64-devedition-nightly/opt:
         - linux64-rust
         - linux64-rust-size
         - linux64-cbindgen
+        - linux64-nasm
         - linux64-node
 
 linux64-base-toolchains/opt:
@@ -276,6 +283,7 @@ linux64-base-toolchains/opt:
         - linux64-rust-1.32
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm-2.13.02
         - linux64-node
 
 linux64-base-toolchains/debug:
@@ -311,6 +319,7 @@ linux64-base-toolchains/debug:
         - linux64-rust-1.32
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm-2.13.02
         - linux64-node
 
 linux64-base-toolchains-clang/opt:
@@ -341,6 +350,7 @@ linux64-base-toolchains-clang/opt:
         - linux64-clang-4.0
         - linux64-rust-1.32
         - linux64-cbindgen
+        - linux64-nasm-2.13.02
         - linux64-node
 
 linux64-base-toolchains-clang/debug:
@@ -373,6 +383,7 @@ linux64-base-toolchains-clang/debug:
         - linux64-clang-4.0
         - linux64-rust-1.32
         - linux64-cbindgen
+        - linux64-nasm-2.13.02
         - linux64-node
 
 linux/opt:
@@ -406,6 +417,7 @@ linux/opt:
         - linux64-rust-size
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 linux/debug:
@@ -441,6 +453,7 @@ linux/debug:
         - linux64-rust-size
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 linux/pgo:
@@ -475,6 +488,7 @@ linux/pgo:
         - linux64-rust-size
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 linux-rusttests/opt:
@@ -512,6 +526,7 @@ linux-rusttests/opt:
         - linux64-rust
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 linux-rusttests/debug:
@@ -549,6 +564,7 @@ linux-rusttests/debug:
         - linux64-rust
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 linux-devedition-nightly/opt:
@@ -590,6 +606,7 @@ linux-devedition-nightly/opt:
         - linux64-rust
         - linux64-rust-size
         - linux64-cbindgen
+        - linux64-nasm
         - linux64-node
 
 linux-nightly/opt:
@@ -627,6 +644,7 @@ linux-nightly/opt:
         - linux64-rust
         - linux64-rust-size
         - linux64-cbindgen
+        - linux64-nasm
         - linux64-node
 
 linux64-asan/opt:
@@ -661,6 +679,7 @@ linux64-asan/opt:
         - linux64-rust-size
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 linux64-asan-fuzzing/opt:
@@ -695,6 +714,7 @@ linux64-asan-fuzzing/opt:
         - linux64-rust-size
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 linux64-asan-fuzzing-ccov/opt:
@@ -729,6 +749,7 @@ linux64-asan-fuzzing-ccov/opt:
         - linux64-rust-size
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 linux64-fuzzing-ccov/opt:
@@ -764,6 +785,7 @@ linux64-fuzzing-ccov/opt:
         - linux64-rust-nightly
         - linux64-rust-size
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 linux64-asan-reporter-nightly/opt:
@@ -806,6 +828,7 @@ linux64-asan-reporter-nightly/opt:
         - linux64-rust
         - linux64-rust-size
         - linux64-cbindgen
+        - linux64-nasm
         - linux64-node
 
 linux64-asan/debug:
@@ -840,6 +863,7 @@ linux64-asan/debug:
         - linux64-rust-size
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 linux64-nightly/opt:
@@ -876,6 +900,7 @@ linux64-nightly/opt:
         - linux64-rust
         - linux64-rust-size
         - linux64-cbindgen
+        - linux64-nasm
         - linux64-node
 
 linux64-noopt/debug:
@@ -911,6 +936,7 @@ linux64-noopt/debug:
         - linux64-rust-size
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 linux64-rusttests/opt:
@@ -947,6 +973,7 @@ linux64-rusttests/opt:
         - linux64-rust
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 linux64-rusttests/debug:
@@ -983,6 +1010,7 @@ linux64-rusttests/debug:
         - linux64-rust
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 linux64-tup/opt:
@@ -1019,6 +1047,7 @@ linux64-tup/opt:
         - linux64-cbindgen
         - linux64-sccache
         - linux64-tup
+        - linux64-nasm
         - linux64-node
 
 linux64-ccov/debug:
@@ -1058,6 +1087,7 @@ linux64-ccov/debug:
         - linux64-gcc
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
     fetches:
         toolchain:
@@ -1096,6 +1126,7 @@ linux64-ccov/opt:
         - linux64-gcc
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node
 
 linux64-add-on-devel/opt:
@@ -1130,4 +1161,5 @@ linux64-add-on-devel/opt:
         - linux64-rust-size
         - linux64-cbindgen
         - linux64-sccache
+        - linux64-nasm
         - linux64-node

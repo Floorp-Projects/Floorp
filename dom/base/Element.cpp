@@ -159,6 +159,7 @@
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIBrowser.h"
+#include "nsIAutoCompletePopup.h"
 
 #include "nsISpeculativeConnect.h"
 #include "nsIIOService.h"
@@ -4080,6 +4081,12 @@ Element::AsXULSelectControlItem() {
 
 already_AddRefed<nsIBrowser> Element::AsBrowser() {
   nsCOMPtr<nsIBrowser> value;
+  GetCustomInterface(getter_AddRefs(value));
+  return value.forget();
+}
+
+already_AddRefed<nsIAutoCompletePopup> Element::AsAutoCompletePopup() {
+  nsCOMPtr<nsIAutoCompletePopup> value;
   GetCustomInterface(getter_AddRefs(value));
   return value.forget();
 }

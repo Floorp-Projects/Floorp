@@ -350,7 +350,7 @@ already_AddRefed<TabChild> TabChild::FindTabChild(const TabId& aTabId) {
 }
 
 /*static*/ already_AddRefed<TabChild> TabChild::Create(
-    nsIContentChild* aManager, const TabId& aTabId,
+    ContentChild* aManager, const TabId& aTabId,
     const TabId& aSameTabGroupAs, const TabContext& aContext,
     uint32_t aChromeFlags) {
   RefPtr<TabChild> groupChild = FindTabChild(aSameTabGroupAs);
@@ -360,7 +360,7 @@ already_AddRefed<TabChild> TabChild::FindTabChild(const TabId& aTabId) {
   return iframe.forget();
 }
 
-TabChild::TabChild(nsIContentChild* aManager, const TabId& aTabId,
+TabChild::TabChild(ContentChild* aManager, const TabId& aTabId,
                    dom::TabGroup* aTabGroup, const TabContext& aContext,
                    uint32_t aChromeFlags)
     : TabContext(aContext),

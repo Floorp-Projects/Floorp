@@ -1443,8 +1443,8 @@ SpecialPowersAPI.prototype = {
   },
   attachFormFillControllerTo(window) {
     this.getFormFillController()
-        .attachToBrowser(this._getDocShell(window),
-                         this._getAutoCompletePopup(window));
+        .attachPopupElementToBrowser(this._getDocShell(window),
+                                     this._getAutoCompletePopup(window));
   },
   detachFormFillControllerFrom(window) {
     this.getFormFillController().detachFromBrowser(this._getDocShell(window));

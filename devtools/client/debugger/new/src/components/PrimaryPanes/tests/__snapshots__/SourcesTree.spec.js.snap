@@ -6,6 +6,18 @@ exports[`SourcesTree After changing expanded nodes Shows the tree with four.js, 
   key="pane"
 >
   <div
+    className="node thread-header"
+  >
+    <AccessibleImage
+      className="file"
+    />
+    <span
+      className="label"
+    >
+      Main Thread
+    </span>
+  </div>
+  <div
     className="sources-list"
     key="tree"
   >
@@ -42,6 +54,18 @@ exports[`SourcesTree Should show the tree with nothing expanded 1`] = `
   key="pane"
 >
   <div
+    className="node thread-header"
+  >
+    <AccessibleImage
+      className="file"
+    />
+    <span
+      className="label"
+    >
+      Main Thread
+    </span>
+  </div>
+  <div
     className="sources-list"
     key="tree"
   >
@@ -70,6 +94,18 @@ exports[`SourcesTree When loading initial source Shows the tree with one.js, two
   className="sources-pane thread"
   key="pane"
 >
+  <div
+    className="node thread-header"
+  >
+    <AccessibleImage
+      className="file"
+    />
+    <span
+      className="label"
+    >
+      Main Thread
+    </span>
+  </div>
   <div
     className="sources-list"
     key="tree"
@@ -106,6 +142,18 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
   className="sources-pane thread"
   key="pane"
 >
+  <div
+    className="node thread-header"
+  >
+    <AccessibleImage
+      className="file"
+    />
+    <span
+      className="label"
+    >
+      Main Thread
+    </span>
+  </div>
   <div
     className="sources-list"
     key="tree"

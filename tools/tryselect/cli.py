@@ -6,9 +6,11 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import subprocess
+import sys
 import tempfile
 from argparse import ArgumentParser
 
+from .preset import presets
 from .templates import all_templates
 
 
@@ -44,17 +46,15 @@ COMMON_ARGUMENT_GROUPS = {
           'help': 'Load a saved selection.',
           }],
         [['--list-presets'],
-         {'action': 'store_const',
-          'const': 'list_presets',
-          'dest': 'mod_presets',
-          'default': None,
+         {'action': 'store_true',
+          'dest': 'list_presets',
+          'default': False,
           'help': 'List available preset selections.',
           }],
         [['--edit-presets'],
-         {'action': 'store_const',
-          'const': 'edit_presets',
-          'dest': 'mod_presets',
-          'default': None,
+         {'action': 'store_true',
+          'dest': 'edit_presets',
+          'default': False,
           'help': 'Edit the preset file.',
           }],
     ],
@@ -90,10 +90,16 @@ class BaseTryParser(ArgumentParser):
         for name in self.common_groups:
             group = self.add_argument_group("{} arguments".format(name))
             arguments = COMMON_ARGUMENT_GROUPS[name]
+
+            # Preset arguments are all mutually exclusive.
+            if name == 'preset':
+                group = group.add_mutually_exclusive_group()
+
             for cli, kwargs in arguments:
                 group.add_argument(*cli, **kwargs)
 
         group = self.add_argument_group("template arguments")
+        self.set_defaults(templates={})
         self.templates = {t: all_templates[t]() for t in self.templates}
         for template in self.templates.values():
             template.add_arguments(group)
@@ -111,12 +117,20 @@ class BaseTryParser(ArgumentParser):
             if '{msg}' not in args.message:
                 args.message = '{}\n\n{}'.format(args.message, '{msg}')
 
+        if 'preset' in self.common_groups:
+            if args.list_presets:
+                presets.list()
+                sys.exit()
+
+            if args.edit_presets:
+                presets.edit()
+                sys.exit()
+
     def parse_known_args(self, *args, **kwargs):
         args, remainder = ArgumentParser.parse_known_args(self, *args, **kwargs)
         self.validate(args)
 
         if self.templates:
-            args.templates = {}
             for cls in self.templates.itervalues():
                 context = cls.context(**vars(args))
                 if context is not None:

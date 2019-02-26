@@ -4,7 +4,6 @@
 
 use std::ffi::CStr;
 use std::ptr;
-use nserror::NsresultExt;
 use {
     RefPtr,
     GetterAddrefs,

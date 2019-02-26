@@ -7,12 +7,12 @@ add_task(async function() {
     });
     function waitForActive() { return gBrowser.selectedTab.linkedBrowser.docShellIsActive; }
     function waitForInactive() { return !gBrowser.selectedTab.linkedBrowser.docShellIsActive; }
-    await promiseWaitForCondition(waitForActive);
+    await TestUtils.waitForCondition(waitForActive);
     is(gBrowser.selectedTab.linkedBrowser.docShellIsActive, true, "Docshell should be active");
     window.minimize();
-    await promiseWaitForCondition(waitForInactive);
+    await TestUtils.waitForCondition(waitForInactive);
     is(gBrowser.selectedTab.linkedBrowser.docShellIsActive, false, "Docshell should be Inactive");
     window.restore();
-    await promiseWaitForCondition(waitForActive);
+    await TestUtils.waitForCondition(waitForActive);
     is(gBrowser.selectedTab.linkedBrowser.docShellIsActive, true, "Docshell should be active again");
 });

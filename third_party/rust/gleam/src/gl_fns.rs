@@ -11,13 +11,13 @@ pub struct GlFns {
     ffi_gl_: GlFfi,
 }
 
-impl GlFns
-{
-    pub unsafe fn load_with<'a, F>(loadfn: F) -> Rc<Gl> where F: FnMut(&str) -> *const c_void {
+impl GlFns {
+    pub unsafe fn load_with<'a, F>(loadfn: F) -> Rc<Gl>
+    where
+        F: FnMut(&str) -> *const c_void,
+    {
         let ffi_gl_ = GlFfi::load_with(loadfn);
-        Rc::new(GlFns {
-            ffi_gl_: ffi_gl_,
-        }) as Rc<Gl>
+        Rc::new(GlFns { ffi_gl_: ffi_gl_ }) as Rc<Gl>
     }
 }
 
@@ -26,21 +26,43 @@ impl Gl for GlFns {
         GlType::Gl
     }
 
-    fn buffer_data_untyped(&self, target: GLenum, size: GLsizeiptr, data: *const GLvoid, usage: GLenum) {
+    fn buffer_data_untyped(
+        &self,
+        target: GLenum,
+        size: GLsizeiptr,
+        data: *const GLvoid,
+        usage: GLenum,
+    ) {
         unsafe {
-            self.ffi_gl_.BufferData(target,
-                                    size,
-                                    data,
-                                    usage);
+            self.ffi_gl_.BufferData(target, size, data, usage);
         }
     }
 
-    fn buffer_sub_data_untyped(&self, target: GLenum, offset: isize, size: GLsizeiptr, data: *const GLvoid) {
+    fn buffer_sub_data_untyped(
+        &self,
+        target: GLenum,
+        offset: isize,
+        size: GLsizeiptr,
+        data: *const GLvoid,
+    ) {
         unsafe {
-            self.ffi_gl_.BufferSubData(target,
-                                       offset,
-                                       size,
-                                       data);
+            self.ffi_gl_.BufferSubData(target, offset, size, data);
+        }
+    }
+
+    fn map_buffer_range(&self,
+                        target: GLenum,
+                        offset: GLintptr,
+                        length: GLsizeiptr,
+                        access: GLbitfield) -> *mut c_void {
+        unsafe {
+            return self.ffi_gl_.MapBufferRange(target, offset, length, access);
+        }
+    }
+
+    fn unmap_buffer(&self, target: GLenum) -> GLboolean {
+        unsafe {
+            return self.ffi_gl_.UnmapBuffer(target);
         }
     }
 
@@ -48,8 +70,12 @@ impl Gl for GlFns {
         let pointers: Vec<*const u8> = strings.iter().map(|string| (*string).as_ptr()).collect();
         let lengths: Vec<GLint> = strings.iter().map(|string| string.len() as GLint).collect();
         unsafe {
-            self.ffi_gl_.ShaderSource(shader, pointers.len() as GLsizei,
-                                      pointers.as_ptr() as *const *const GLchar, lengths.as_ptr());
+            self.ffi_gl_.ShaderSource(
+                shader,
+                pointers.len() as GLsizei,
+                pointers.as_ptr() as *const *const GLchar,
+                lengths.as_ptr(),
+            );
         }
         drop(lengths);
         drop(pointers);
@@ -67,25 +93,59 @@ impl Gl for GlFns {
         }
     }
 
-    fn read_pixels_into_buffer(&self, x: GLint, y: GLint, width: GLsizei, height: GLsizei,
-                               format: GLenum, pixel_type: GLenum, dst_buffer: &mut [u8]) {
+    fn read_pixels_into_buffer(
+        &self,
+        x: GLint,
+        y: GLint,
+        width: GLsizei,
+        height: GLsizei,
+        format: GLenum,
+        pixel_type: GLenum,
+        dst_buffer: &mut [u8],
+    ) {
         // Assumes that the user properly allocated the size for dst_buffer.
         assert!(calculate_length(width, height, format, pixel_type) == dst_buffer.len());
 
         unsafe {
             // We don't want any alignment padding on pixel rows.
             self.ffi_gl_.PixelStorei(ffi::PACK_ALIGNMENT, 1);
-            self.ffi_gl_.ReadPixels(x, y, width, height, format, pixel_type, dst_buffer.as_mut_ptr() as *mut c_void);
+            self.ffi_gl_.ReadPixels(
+                x,
+                y,
+                width,
+                height,
+                format,
+                pixel_type,
+                dst_buffer.as_mut_ptr() as *mut c_void,
+            );
         }
     }
 
-    fn read_pixels(&self, x: GLint, y: GLint, width: GLsizei, height: GLsizei, format: GLenum, pixel_type: GLenum) -> Vec<u8> {
+    fn read_pixels(
+        &self,
+        x: GLint,
+        y: GLint,
+        width: GLsizei,
+        height: GLsizei,
+        format: GLenum,
+        pixel_type: GLenum,
+    ) -> Vec<u8> {
         let len = calculate_length(width, height, format, pixel_type);
         let mut pixels: Vec<u8> = Vec::new();
         pixels.reserve(len);
-        unsafe { pixels.set_len(len); }
+        unsafe {
+            pixels.set_len(len);
+        }
 
-        self.read_pixels_into_buffer(x, y, width, height, format, pixel_type, pixels.as_mut_slice());
+        self.read_pixels_into_buffer(
+            x,
+            y,
+            width,
+            height,
+            format,
+            pixel_type,
+            pixels.as_mut_slice(),
+        );
 
         pixels
     }
@@ -208,63 +268,73 @@ impl Gl for GlFns {
 
     fn delete_queries(&self, queries: &[GLuint]) {
         unsafe {
-            self.ffi_gl_.DeleteQueries(queries.len() as GLsizei, queries.as_ptr());
+            self.ffi_gl_
+                .DeleteQueries(queries.len() as GLsizei, queries.as_ptr());
         }
     }
 
     fn delete_vertex_arrays(&self, vertex_arrays: &[GLuint]) {
         unsafe {
-            self.ffi_gl_.DeleteVertexArrays(vertex_arrays.len() as GLsizei, vertex_arrays.as_ptr());
+            self.ffi_gl_
+                .DeleteVertexArrays(vertex_arrays.len() as GLsizei, vertex_arrays.as_ptr());
         }
     }
 
     fn delete_buffers(&self, buffers: &[GLuint]) {
         unsafe {
-            self.ffi_gl_.DeleteBuffers(buffers.len() as GLsizei, buffers.as_ptr());
+            self.ffi_gl_
+                .DeleteBuffers(buffers.len() as GLsizei, buffers.as_ptr());
         }
     }
 
     fn delete_renderbuffers(&self, renderbuffers: &[GLuint]) {
         unsafe {
-            self.ffi_gl_.DeleteRenderbuffers(renderbuffers.len() as GLsizei, renderbuffers.as_ptr());
+            self.ffi_gl_
+                .DeleteRenderbuffers(renderbuffers.len() as GLsizei, renderbuffers.as_ptr());
         }
     }
 
     fn delete_framebuffers(&self, framebuffers: &[GLuint]) {
         unsafe {
-            self.ffi_gl_.DeleteFramebuffers(framebuffers.len() as GLsizei, framebuffers.as_ptr());
+            self.ffi_gl_
+                .DeleteFramebuffers(framebuffers.len() as GLsizei, framebuffers.as_ptr());
         }
     }
 
     fn delete_textures(&self, textures: &[GLuint]) {
         unsafe {
-            self.ffi_gl_.DeleteTextures(textures.len() as GLsizei, textures.as_ptr());
+            self.ffi_gl_
+                .DeleteTextures(textures.len() as GLsizei, textures.as_ptr());
         }
     }
 
-    fn framebuffer_renderbuffer(&self,
-                                target: GLenum,
-                                attachment: GLenum,
-                                renderbuffertarget: GLenum,
-                                renderbuffer: GLuint) {
+    fn framebuffer_renderbuffer(
+        &self,
+        target: GLenum,
+        attachment: GLenum,
+        renderbuffertarget: GLenum,
+        renderbuffer: GLuint,
+    ) {
         unsafe {
-            self.ffi_gl_.FramebufferRenderbuffer(target,
-                                                 attachment,
-                                                 renderbuffertarget,
-                                                 renderbuffer);
+            self.ffi_gl_.FramebufferRenderbuffer(
+                target,
+                attachment,
+                renderbuffertarget,
+                renderbuffer,
+            );
         }
     }
 
-    fn renderbuffer_storage(&self,
-                                target: GLenum,
-                                internalformat: GLenum,
-                                width: GLsizei,
-                                height: GLsizei) {
+    fn renderbuffer_storage(
+        &self,
+        target: GLenum,
+        internalformat: GLenum,
+        width: GLsizei,
+        height: GLsizei,
+    ) {
         unsafe {
-            self.ffi_gl_.RenderbufferStorage(target,
-                                             internalformat,
-                                             width,
-                                             height);
+            self.ffi_gl_
+                .RenderbufferStorage(target, internalformat, width, height);
         }
     }
 
@@ -289,39 +359,45 @@ impl Gl for GlFns {
     fn bind_attrib_location(&self, program: GLuint, index: GLuint, name: &str) {
         let c_string = CString::new(name).unwrap();
         unsafe {
-            self.ffi_gl_.BindAttribLocation(program, index, c_string.as_ptr())
+            self.ffi_gl_
+                .BindAttribLocation(program, index, c_string.as_ptr())
         }
     }
 
     // https://www.khronos.org/registry/OpenGL-Refpages/es2.0/xhtml/glGetUniform.xml
     unsafe fn get_uniform_iv(&self, program: GLuint, location: GLint, result: &mut [GLint]) {
         assert!(!result.is_empty());
-        self.ffi_gl_.GetUniformiv(program, location, result.as_mut_ptr());
+        self.ffi_gl_
+            .GetUniformiv(program, location, result.as_mut_ptr());
     }
 
     // https://www.khronos.org/registry/OpenGL-Refpages/es2.0/xhtml/glGetUniform.xml
     unsafe fn get_uniform_fv(&self, program: GLuint, location: GLint, result: &mut [GLfloat]) {
         assert!(!result.is_empty());
-        self.ffi_gl_.GetUniformfv(program, location, result.as_mut_ptr());
+        self.ffi_gl_
+            .GetUniformfv(program, location, result.as_mut_ptr());
     }
 
     fn get_uniform_block_index(&self, program: GLuint, name: &str) -> GLuint {
         let c_string = CString::new(name).unwrap();
         unsafe {
-            self.ffi_gl_.GetUniformBlockIndex(program, c_string.as_ptr())
+            self.ffi_gl_
+                .GetUniformBlockIndex(program, c_string.as_ptr())
         }
     }
 
-    fn get_uniform_indices(&self,  program: GLuint, names: &[&str]) -> Vec<GLuint> {
+    fn get_uniform_indices(&self, program: GLuint, names: &[&str]) -> Vec<GLuint> {
         let c_strings: Vec<CString> = names.iter().map(|n| CString::new(*n).unwrap()).collect();
         let pointers: Vec<*const GLchar> = c_strings.iter().map(|string| string.as_ptr()).collect();
         let mut result = Vec::with_capacity(c_strings.len());
         unsafe {
             result.set_len(c_strings.len());
-            self.ffi_gl_.GetUniformIndices(program,
-                                           pointers.len() as GLsizei,
-                                           pointers.as_ptr(),
-                                           result.as_mut_ptr());
+            self.ffi_gl_.GetUniformIndices(
+                program,
+                pointers.len() as GLsizei,
+                pointers.as_ptr(),
+                result.as_mut_ptr(),
+            );
         }
         result
     }
@@ -332,15 +408,29 @@ impl Gl for GlFns {
         }
     }
 
-    fn bind_buffer_range(&self, target: GLenum, index: GLuint, buffer: GLuint, offset: GLintptr, size: GLsizeiptr) {
+    fn bind_buffer_range(
+        &self,
+        target: GLenum,
+        index: GLuint,
+        buffer: GLuint,
+        offset: GLintptr,
+        size: GLsizeiptr,
+    ) {
         unsafe {
-            self.ffi_gl_.BindBufferRange(target, index, buffer, offset, size);
+            self.ffi_gl_
+                .BindBufferRange(target, index, buffer, offset, size);
         }
     }
 
-    fn uniform_block_binding(&self, program: GLuint, uniform_block_index: GLuint, uniform_block_binding: GLuint) {
+    fn uniform_block_binding(
+        &self,
+        program: GLuint,
+        uniform_block_index: GLuint,
+        uniform_block_binding: GLuint,
+    ) {
         unsafe {
-            self.ffi_gl_.UniformBlockBinding(program, uniform_block_index, uniform_block_binding);
+            self.ffi_gl_
+                .UniformBlockBinding(program, uniform_block_index, uniform_block_binding);
         }
     }
 
@@ -376,335 +466,387 @@ impl Gl for GlFns {
 
     fn draw_buffers(&self, bufs: &[GLenum]) {
         unsafe {
-            self.ffi_gl_.DrawBuffers(bufs.len() as GLsizei, bufs.as_ptr());
+            self.ffi_gl_
+                .DrawBuffers(bufs.len() as GLsizei, bufs.as_ptr());
         }
     }
 
     // FIXME: Does not verify buffer size -- unsafe!
-    fn tex_image_2d(&self,
-                    target: GLenum,
-                    level: GLint,
-                    internal_format: GLint,
-                    width: GLsizei,
-                    height: GLsizei,
-                    border: GLint,
-                    format: GLenum,
-                    ty: GLenum,
-                    opt_data: Option<&[u8]>) {
+    fn tex_image_2d(
+        &self,
+        target: GLenum,
+        level: GLint,
+        internal_format: GLint,
+        width: GLsizei,
+        height: GLsizei,
+        border: GLint,
+        format: GLenum,
+        ty: GLenum,
+        opt_data: Option<&[u8]>,
+    ) {
         match opt_data {
-            Some(data) => {
-                unsafe {
-                    self.ffi_gl_.TexImage2D(target, level, internal_format, width, height, border, format, ty,
-                                            data.as_ptr() as *const GLvoid);
-                }
-            }
-            None => {
-                unsafe {
-                    self.ffi_gl_.TexImage2D(target, level, internal_format, width, height, border, format, ty,
-                                            ptr::null());
-                }
-            }
+            Some(data) => unsafe {
+                self.ffi_gl_.TexImage2D(
+                    target,
+                    level,
+                    internal_format,
+                    width,
+                    height,
+                    border,
+                    format,
+                    ty,
+                    data.as_ptr() as *const GLvoid,
+                );
+            },
+            None => unsafe {
+                self.ffi_gl_.TexImage2D(
+                    target,
+                    level,
+                    internal_format,
+                    width,
+                    height,
+                    border,
+                    format,
+                    ty,
+                    ptr::null(),
+                );
+            },
         }
     }
 
-    fn compressed_tex_image_2d(&self,
-                               target: GLenum,
-                               level: GLint,
-                               internal_format: GLenum,
-                               width: GLsizei,
-                               height: GLsizei,
-                               border: GLint,
-                               data: &[u8]) {
+    fn compressed_tex_image_2d(
+        &self,
+        target: GLenum,
+        level: GLint,
+        internal_format: GLenum,
+        width: GLsizei,
+        height: GLsizei,
+        border: GLint,
+        data: &[u8],
+    ) {
         unsafe {
-            self.ffi_gl_.CompressedTexImage2D(target, level, internal_format, width, height, border,
-                                              data.len() as GLsizei, data.as_ptr() as *const GLvoid);
+            self.ffi_gl_.CompressedTexImage2D(
+                target,
+                level,
+                internal_format,
+                width,
+                height,
+                border,
+                data.len() as GLsizei,
+                data.as_ptr() as *const GLvoid,
+            );
         }
     }
 
-    fn compressed_tex_sub_image_2d(&self,
-                                   target: GLenum,
-                                   level: GLint,
-                                   xoffset: GLint,
-                                   yoffset: GLint,
-                                   width: GLsizei,
-                                   height: GLsizei,
-                                   format: GLenum,
-                                   data: &[u8]) {
+    fn compressed_tex_sub_image_2d(
+        &self,
+        target: GLenum,
+        level: GLint,
+        xoffset: GLint,
+        yoffset: GLint,
+        width: GLsizei,
+        height: GLsizei,
+        format: GLenum,
+        data: &[u8],
+    ) {
         unsafe {
-            self.ffi_gl_.CompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format,
-                                                 data.len() as GLsizei, data.as_ptr() as *const GLvoid);
+            self.ffi_gl_.CompressedTexSubImage2D(
+                target,
+                level,
+                xoffset,
+                yoffset,
+                width,
+                height,
+                format,
+                data.len() as GLsizei,
+                data.as_ptr() as *const GLvoid,
+            );
         }
     }
 
     // FIXME: Does not verify buffer size -- unsafe!
-    fn tex_image_3d(&self,
-                    target: GLenum,
-                    level: GLint,
-                    internal_format: GLint,
-                    width: GLsizei,
-                    height: GLsizei,
-                    depth: GLsizei,
-                    border: GLint,
-                    format: GLenum,
-                    ty: GLenum,
-                    opt_data: Option<&[u8]>) {
+    fn tex_image_3d(
+        &self,
+        target: GLenum,
+        level: GLint,
+        internal_format: GLint,
+        width: GLsizei,
+        height: GLsizei,
+        depth: GLsizei,
+        border: GLint,
+        format: GLenum,
+        ty: GLenum,
+        opt_data: Option<&[u8]>,
+    ) {
         unsafe {
             let pdata = match opt_data {
                 Some(data) => mem::transmute(data.as_ptr()),
                 None => ptr::null(),
             };
-            self.ffi_gl_.TexImage3D(target,
-                                    level,
-                                    internal_format,
-                                    width,
-                                    height,
-                                    depth,
-                                    border,
-                                    format,
-                                    ty,
-                                    pdata);
+            self.ffi_gl_.TexImage3D(
+                target,
+                level,
+                internal_format,
+                width,
+                height,
+                depth,
+                border,
+                format,
+                ty,
+                pdata,
+            );
         }
     }
 
-    fn copy_tex_image_2d(&self,
-                         target: GLenum,
-                         level: GLint,
-                         internal_format: GLenum,
-                         x: GLint,
-                         y: GLint,
-                         width: GLsizei,
-                         height: GLsizei,
-                         border: GLint) {
+    fn copy_tex_image_2d(
+        &self,
+        target: GLenum,
+        level: GLint,
+        internal_format: GLenum,
+        x: GLint,
+        y: GLint,
+        width: GLsizei,
+        height: GLsizei,
+        border: GLint,
+    ) {
         unsafe {
-            self.ffi_gl_.CopyTexImage2D(target,
-                                        level,
-                                        internal_format,
-                                        x,
-                                        y,
-                                        width,
-                                        height,
-                                        border);
+            self.ffi_gl_.CopyTexImage2D(
+                target,
+                level,
+                internal_format,
+                x,
+                y,
+                width,
+                height,
+                border,
+            );
         }
     }
 
-    fn copy_tex_sub_image_2d(&self,
-                             target: GLenum,
-                             level: GLint,
-                             xoffset: GLint,
-                             yoffset: GLint,
-                             x: GLint,
-                             y: GLint,
-                             width: GLsizei,
-                             height: GLsizei) {
+    fn copy_tex_sub_image_2d(
+        &self,
+        target: GLenum,
+        level: GLint,
+        xoffset: GLint,
+        yoffset: GLint,
+        x: GLint,
+        y: GLint,
+        width: GLsizei,
+        height: GLsizei,
+    ) {
         unsafe {
-            self.ffi_gl_.CopyTexSubImage2D(target,
-                                           level,
-                                           xoffset,
-                                           yoffset,
-                                           x,
-                                           y,
-                                           width,
-                                           height);
+            self.ffi_gl_
+                .CopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
         }
     }
 
-    fn copy_tex_sub_image_3d(&self,
-                             target: GLenum,
-                             level: GLint,
-                             xoffset: GLint,
-                             yoffset: GLint,
-                             zoffset: GLint,
-                             x: GLint,
-                             y: GLint,
-                             width: GLsizei,
-                             height: GLsizei) {
+    fn copy_tex_sub_image_3d(
+        &self,
+        target: GLenum,
+        level: GLint,
+        xoffset: GLint,
+        yoffset: GLint,
+        zoffset: GLint,
+        x: GLint,
+        y: GLint,
+        width: GLsizei,
+        height: GLsizei,
+    ) {
         unsafe {
-            self.ffi_gl_.CopyTexSubImage3D(target,
-                                           level,
-                                           xoffset,
-                                           yoffset,
-                                           zoffset,
-                                           x,
-                                           y,
-                                           width,
-                                           height);
+            self.ffi_gl_.CopyTexSubImage3D(
+                target, level, xoffset, yoffset, zoffset, x, y, width, height,
+            );
         }
     }
 
-    fn tex_sub_image_2d(&self,
-                        target: GLenum,
-                        level: GLint,
-                        xoffset: GLint,
-                        yoffset: GLint,
-                        width: GLsizei,
-                        height: GLsizei,
-                        format: GLenum,
-                        ty: GLenum,
-                        data: &[u8]) {
+    fn tex_sub_image_2d(
+        &self,
+        target: GLenum,
+        level: GLint,
+        xoffset: GLint,
+        yoffset: GLint,
+        width: GLsizei,
+        height: GLsizei,
+        format: GLenum,
+        ty: GLenum,
+        data: &[u8],
+    ) {
         unsafe {
-            self.ffi_gl_.TexSubImage2D(target, level, xoffset, yoffset, width, height, format, ty, data.as_ptr() as *const c_void);
+            self.ffi_gl_.TexSubImage2D(
+                target,
+                level,
+                xoffset,
+                yoffset,
+                width,
+                height,
+                format,
+                ty,
+                data.as_ptr() as *const c_void,
+            );
         }
     }
 
-    fn tex_sub_image_2d_pbo(&self,
-                            target: GLenum,
-                            level: GLint,
-                            xoffset: GLint,
-                            yoffset: GLint,
-                            width: GLsizei,
-                            height: GLsizei,
-                            format: GLenum,
-                            ty: GLenum,
-                            offset: usize) {
+    fn tex_sub_image_2d_pbo(
+        &self,
+        target: GLenum,
+        level: GLint,
+        xoffset: GLint,
+        yoffset: GLint,
+        width: GLsizei,
+        height: GLsizei,
+        format: GLenum,
+        ty: GLenum,
+        offset: usize,
+    ) {
         unsafe {
-            self.ffi_gl_.TexSubImage2D(target, level, xoffset, yoffset, width, height, format, ty, offset as *const c_void);
+            self.ffi_gl_.TexSubImage2D(
+                target,
+                level,
+                xoffset,
+                yoffset,
+                width,
+                height,
+                format,
+                ty,
+                offset as *const c_void,
+            );
         }
     }
 
-    fn tex_sub_image_3d(&self,
-                        target: GLenum,
-                        level: GLint,
-                        xoffset: GLint,
-                        yoffset: GLint,
-                        zoffset: GLint,
-                        width: GLsizei,
-                        height: GLsizei,
-                        depth: GLsizei,
-                        format: GLenum,
-                        ty: GLenum,
-                        data: &[u8]) {
+    fn tex_sub_image_3d(
+        &self,
+        target: GLenum,
+        level: GLint,
+        xoffset: GLint,
+        yoffset: GLint,
+        zoffset: GLint,
+        width: GLsizei,
+        height: GLsizei,
+        depth: GLsizei,
+        format: GLenum,
+        ty: GLenum,
+        data: &[u8],
+    ) {
         unsafe {
-            self.ffi_gl_.TexSubImage3D(target,
-                                       level,
-                                       xoffset,
-                                       yoffset,
-                                       zoffset,
-                                       width,
-                                       height,
-                                       depth,
-                                       format,
-                                       ty,
-                                       data.as_ptr() as *const c_void);
+            self.ffi_gl_.TexSubImage3D(
+                target,
+                level,
+                xoffset,
+                yoffset,
+                zoffset,
+                width,
+                height,
+                depth,
+                format,
+                ty,
+                data.as_ptr() as *const c_void,
+            );
         }
     }
 
-    fn tex_sub_image_3d_pbo(&self,
-                            target: GLenum,
-                            level: GLint,
-                            xoffset: GLint,
-                            yoffset: GLint,
-                            zoffset: GLint,
-                            width: GLsizei,
-                            height: GLsizei,
-                            depth: GLsizei,
-                            format: GLenum,
-                            ty: GLenum,
-                            offset: usize) {
+    fn tex_sub_image_3d_pbo(
+        &self,
+        target: GLenum,
+        level: GLint,
+        xoffset: GLint,
+        yoffset: GLint,
+        zoffset: GLint,
+        width: GLsizei,
+        height: GLsizei,
+        depth: GLsizei,
+        format: GLenum,
+        ty: GLenum,
+        offset: usize,
+    ) {
         unsafe {
-            self.ffi_gl_.TexSubImage3D(target,
-                                       level,
-                                       xoffset,
-                                       yoffset,
-                                       zoffset,
-                                       width,
-                                       height,
-                                       depth,
-                                       format,
-                                       ty,
-                                       offset as *const c_void);
+            self.ffi_gl_.TexSubImage3D(
+                target,
+                level,
+                xoffset,
+                yoffset,
+                zoffset,
+                width,
+                height,
+                depth,
+                format,
+                ty,
+                offset as *const c_void,
+            );
         }
     }
 
-    fn tex_storage_2d(&self,
-                      target: GLenum,
-                      levels: GLint,
-                      internal_format: GLenum,
-                      width: GLsizei,
-                      height: GLsizei) {
+    fn tex_storage_2d(
+        &self,
+        target: GLenum,
+        levels: GLint,
+        internal_format: GLenum,
+        width: GLsizei,
+        height: GLsizei,
+    ) {
         if self.ffi_gl_.TexStorage2D.is_loaded() {
             unsafe {
-                self.ffi_gl_.TexStorage2D(target,
-                                          levels,
-                                          internal_format,
-                                          width,
-                                          height);
+                self.ffi_gl_
+                    .TexStorage2D(target, levels, internal_format, width, height);
             }
         }
     }
 
-    fn tex_storage_3d(&self,
-                      target: GLenum,
-                      levels: GLint,
-                      internal_format: GLenum,
-                      width: GLsizei,
-                      height: GLsizei,
-                      depth: GLsizei) {
+    fn tex_storage_3d(
+        &self,
+        target: GLenum,
+        levels: GLint,
+        internal_format: GLenum,
+        width: GLsizei,
+        height: GLsizei,
+        depth: GLsizei,
+    ) {
         if self.ffi_gl_.TexStorage3D.is_loaded() {
             unsafe {
-                self.ffi_gl_.TexStorage3D(target,
-                                          levels,
-                                          internal_format,
-                                          width,
-                                          height,
-                                          depth);
+                self.ffi_gl_
+                    .TexStorage3D(target, levels, internal_format, width, height, depth);
             }
         }
     }
 
-
-    fn get_tex_image_into_buffer(&self,
-                                 target: GLenum,
-                                 level: GLint,
-                                 format: GLenum,
-                                 ty: GLenum,
-                                 output: &mut [u8]) {
+    fn get_tex_image_into_buffer(
+        &self,
+        target: GLenum,
+        level: GLint,
+        format: GLenum,
+        ty: GLenum,
+        output: &mut [u8],
+    ) {
         unsafe {
-            self.ffi_gl_.GetTexImage(target,
-                                     level,
-                                     format,
-                                     ty,
-                                     output.as_mut_ptr() as *mut _);
+            self.ffi_gl_
+                .GetTexImage(target, level, format, ty, output.as_mut_ptr() as *mut _);
         }
     }
 
-    unsafe fn copy_image_sub_data(&self,
-                                  src_name: GLuint,
-                                  src_target: GLenum,
-                                  src_level: GLint,
-                                  src_x: GLint,
-                                  src_y: GLint,
-                                  src_z: GLint,
-                                  dst_name: GLuint,
-                                  dst_target: GLenum,
-                                  dst_level: GLint,
-                                  dst_x: GLint,
-                                  dst_y: GLint,
-                                  dst_z: GLint,
-                                  src_width: GLsizei,
-                                  src_height: GLsizei,
-                                  src_depth: GLsizei) {
+    unsafe fn copy_image_sub_data(
+        &self,
+        src_name: GLuint,
+        src_target: GLenum,
+        src_level: GLint,
+        src_x: GLint,
+        src_y: GLint,
+        src_z: GLint,
+        dst_name: GLuint,
+        dst_target: GLenum,
+        dst_level: GLint,
+        dst_x: GLint,
+        dst_y: GLint,
+        dst_z: GLint,
+        src_width: GLsizei,
+        src_height: GLsizei,
+        src_depth: GLsizei,
+    ) {
         self.ffi_gl_.CopyImageSubData(
-            src_name,
-            src_target,
-            src_level,
-            src_x,
-            src_y,
-            src_z,
-            dst_name,
-            dst_target,
-            dst_level,
-            dst_x,
-            dst_y,
-            dst_z,
-            src_width,
-            src_height,
-            src_depth,
+            src_name, src_target, src_level, src_x, src_y, src_z, dst_name, dst_target, dst_level,
+            dst_x, dst_y, dst_z, src_width, src_height, src_depth,
         );
     }
 
-    fn invalidate_framebuffer(&self,
-                              target: GLenum,
-                              attachments: &[GLenum]) {
+    fn invalidate_framebuffer(&self, target: GLenum, attachments: &[GLenum]) {
         if self.ffi_gl_.InvalidateFramebuffer.is_loaded() {
             unsafe {
                 self.ffi_gl_.InvalidateFramebuffer(
@@ -716,13 +858,15 @@ impl Gl for GlFns {
         }
     }
 
-    fn invalidate_sub_framebuffer(&self,
-                                  target: GLenum,
-                                  attachments: &[GLenum],
-                                  xoffset: GLint,
-                                  yoffset: GLint,
-                                  width: GLsizei,
-                                  height: GLsizei) {
+    fn invalidate_sub_framebuffer(
+        &self,
+        target: GLenum,
+        attachments: &[GLenum],
+        xoffset: GLint,
+        yoffset: GLint,
+        width: GLsizei,
+        height: GLsizei,
+    ) {
         if self.ffi_gl_.InvalidateSubFramebuffer.is_loaded() {
             unsafe {
                 self.ffi_gl_.InvalidateSubFramebuffer(
@@ -759,7 +903,8 @@ impl Gl for GlFns {
     #[inline]
     unsafe fn get_integer_64iv(&self, name: GLenum, index: GLuint, result: &mut [GLint64]) {
         assert!(!result.is_empty());
-        self.ffi_gl_.GetInteger64i_v(name, index, result.as_mut_ptr());
+        self.ffi_gl_
+            .GetInteger64i_v(name, index, result.as_mut_ptr());
     }
 
     #[inline]
@@ -774,10 +919,20 @@ impl Gl for GlFns {
         self.ffi_gl_.GetFloatv(name, result.as_mut_ptr());
     }
 
-    fn get_framebuffer_attachment_parameter_iv(&self, target: GLenum, attachment: GLenum, pname: GLenum) -> GLint {
+    fn get_framebuffer_attachment_parameter_iv(
+        &self,
+        target: GLenum,
+        attachment: GLenum,
+        pname: GLenum,
+    ) -> GLint {
         let mut result: GLint = 0;
         unsafe {
-            self.ffi_gl_.GetFramebufferAttachmentParameteriv(target, attachment, pname, &mut result);
+            self.ffi_gl_.GetFramebufferAttachmentParameteriv(
+                target,
+                attachment,
+                pname,
+                &mut result,
+            );
         }
         result
     }
@@ -785,7 +940,8 @@ impl Gl for GlFns {
     fn get_renderbuffer_parameter_iv(&self, target: GLenum, pname: GLenum) -> GLint {
         let mut result: GLint = 0;
         unsafe {
-            self.ffi_gl_.GetRenderbufferParameteriv(target, pname, &mut result);
+            self.ffi_gl_
+                .GetRenderbufferParameteriv(target, pname, &mut result);
         }
         result
     }
@@ -818,116 +974,115 @@ impl Gl for GlFns {
         }
     }
 
-    fn framebuffer_texture_2d(&self,
-                              target: GLenum,
-                              attachment: GLenum,
-                              textarget: GLenum,
-                              texture: GLuint,
-                              level: GLint) {
+    fn framebuffer_texture_2d(
+        &self,
+        target: GLenum,
+        attachment: GLenum,
+        textarget: GLenum,
+        texture: GLuint,
+        level: GLint,
+    ) {
         unsafe {
-            self.ffi_gl_.FramebufferTexture2D(target, attachment, textarget, texture, level);
+            self.ffi_gl_
+                .FramebufferTexture2D(target, attachment, textarget, texture, level);
         }
     }
 
-    fn framebuffer_texture_layer(&self,
-                                 target: GLenum,
-                                 attachment: GLenum,
-                                 texture: GLuint,
-                                 level: GLint,
-                                 layer: GLint) {
+    fn framebuffer_texture_layer(
+        &self,
+        target: GLenum,
+        attachment: GLenum,
+        texture: GLuint,
+        level: GLint,
+        layer: GLint,
+    ) {
         unsafe {
-            self.ffi_gl_.FramebufferTextureLayer(target, attachment, texture, level, layer);
+            self.ffi_gl_
+                .FramebufferTextureLayer(target, attachment, texture, level, layer);
         }
     }
 
-    fn blit_framebuffer(&self,
-                        src_x0: GLint,
-                        src_y0: GLint,
-                        src_x1: GLint,
-                        src_y1: GLint,
-                        dst_x0: GLint,
-                        dst_y0: GLint,
-                        dst_x1: GLint,
-                        dst_y1: GLint,
-                        mask: GLbitfield,
-                        filter: GLenum) {
+    fn blit_framebuffer(
+        &self,
+        src_x0: GLint,
+        src_y0: GLint,
+        src_x1: GLint,
+        src_y1: GLint,
+        dst_x0: GLint,
+        dst_y0: GLint,
+        dst_x1: GLint,
+        dst_y1: GLint,
+        mask: GLbitfield,
+        filter: GLenum,
+    ) {
         unsafe {
-            self.ffi_gl_.BlitFramebuffer(src_x0,
-                                         src_y0,
-                                         src_x1,
-                                         src_y1,
-                                         dst_x0,
-                                         dst_y0,
-                                         dst_x1,
-                                         dst_y1,
-                                         mask,
-                                         filter);
+            self.ffi_gl_.BlitFramebuffer(
+                src_x0, src_y0, src_x1, src_y1, dst_x0, dst_y0, dst_x1, dst_y1, mask, filter,
+            );
         }
     }
 
-    fn vertex_attrib_4f(&self,
-                        index: GLuint,
-                        x: GLfloat,
-                        y: GLfloat,
-                        z: GLfloat,
-                        w: GLfloat) {
+    fn vertex_attrib_4f(&self, index: GLuint, x: GLfloat, y: GLfloat, z: GLfloat, w: GLfloat) {
+        unsafe { self.ffi_gl_.VertexAttrib4f(index, x, y, z, w) }
+    }
+
+    fn vertex_attrib_pointer_f32(
+        &self,
+        index: GLuint,
+        size: GLint,
+        normalized: bool,
+        stride: GLsizei,
+        offset: GLuint,
+    ) {
         unsafe {
-            self.ffi_gl_.VertexAttrib4f(index, x, y, z, w)
+            self.ffi_gl_.VertexAttribPointer(
+                index,
+                size,
+                ffi::FLOAT,
+                normalized as GLboolean,
+                stride,
+                offset as *const GLvoid,
+            )
         }
     }
 
-    fn vertex_attrib_pointer_f32(&self,
-                                 index: GLuint,
-                                 size: GLint,
-                                 normalized: bool,
-                                 stride: GLsizei,
-                                 offset: GLuint) {
+    fn vertex_attrib_pointer(
+        &self,
+        index: GLuint,
+        size: GLint,
+        type_: GLenum,
+        normalized: bool,
+        stride: GLsizei,
+        offset: GLuint,
+    ) {
         unsafe {
-            self.ffi_gl_.VertexAttribPointer(index,
-                                             size,
-                                             ffi::FLOAT,
-                                             normalized as GLboolean,
-                                             stride,
-                                             offset as *const GLvoid)
+            self.ffi_gl_.VertexAttribPointer(
+                index,
+                size,
+                type_,
+                normalized as GLboolean,
+                stride,
+                offset as *const GLvoid,
+            )
         }
     }
 
-    fn vertex_attrib_pointer(&self,
-                                 index: GLuint,
-                                 size: GLint,
-                                 type_: GLenum,
-                                 normalized: bool,
-                                 stride: GLsizei,
-                                 offset: GLuint) {
+    fn vertex_attrib_i_pointer(
+        &self,
+        index: GLuint,
+        size: GLint,
+        type_: GLenum,
+        stride: GLsizei,
+        offset: GLuint,
+    ) {
         unsafe {
-            self.ffi_gl_.VertexAttribPointer(index,
-                                             size,
-                                             type_,
-                                             normalized as GLboolean,
-                                             stride,
-                                             offset as *const GLvoid)
-        }
-    }
-
-    fn vertex_attrib_i_pointer(&self,
-                               index: GLuint,
-                               size: GLint,
-                               type_: GLenum,
-                               stride: GLsizei,
-                               offset: GLuint) {
-        unsafe {
-            self.ffi_gl_.VertexAttribIPointer(index,
-                                              size,
-                                              type_,
-                                              stride,
-                                              offset as *const GLvoid)
+            self.ffi_gl_
+                .VertexAttribIPointer(index, size, type_, stride, offset as *const GLvoid)
         }
     }
 
     fn vertex_attrib_divisor(&self, index: GLuint, divisor: GLuint) {
-        unsafe {
-            self.ffi_gl_.VertexAttribDivisor(index, divisor)
-        }
+        unsafe { self.ffi_gl_.VertexAttribDivisor(index, divisor) }
     }
 
     fn viewport(&self, x: GLint, y: GLint, width: GLsizei, height: GLsizei) {
@@ -966,30 +1121,53 @@ impl Gl for GlFns {
         }
     }
 
-    fn draw_arrays_instanced(&self, mode: GLenum, first: GLint, count: GLsizei, primcount: GLsizei) {
+    fn draw_arrays_instanced(
+        &self,
+        mode: GLenum,
+        first: GLint,
+        count: GLsizei,
+        primcount: GLsizei,
+    ) {
         unsafe {
-            return self.ffi_gl_.DrawArraysInstanced(mode, first, count, primcount);
+            return self
+                .ffi_gl_
+                .DrawArraysInstanced(mode, first, count, primcount);
         }
     }
 
-    fn draw_elements(&self, mode: GLenum, count: GLsizei, element_type: GLenum, indices_offset: GLuint) {
+    fn draw_elements(
+        &self,
+        mode: GLenum,
+        count: GLsizei,
+        element_type: GLenum,
+        indices_offset: GLuint,
+    ) {
         unsafe {
-            return self.ffi_gl_.DrawElements(mode, count, element_type, indices_offset as *const c_void)
+            return self.ffi_gl_.DrawElements(
+                mode,
+                count,
+                element_type,
+                indices_offset as *const c_void,
+            );
         }
     }
 
-    fn draw_elements_instanced(&self,
-                                   mode: GLenum,
-                                   count: GLsizei,
-                                   element_type: GLenum,
-                                   indices_offset: GLuint,
-                                   primcount: GLsizei) {
+    fn draw_elements_instanced(
+        &self,
+        mode: GLenum,
+        count: GLsizei,
+        element_type: GLenum,
+        indices_offset: GLuint,
+        primcount: GLsizei,
+    ) {
         unsafe {
-            return self.ffi_gl_.DrawElementsInstanced(mode,
-                                                      count,
-                                                      element_type,
-                                                      indices_offset as *const c_void,
-                                                      primcount)
+            return self.ffi_gl_.DrawElementsInstanced(
+                mode,
+                count,
+                element_type,
+                indices_offset as *const c_void,
+                primcount,
+            );
         }
     }
 
@@ -1005,9 +1183,16 @@ impl Gl for GlFns {
         }
     }
 
-    fn blend_func_separate(&self, src_rgb: GLenum, dest_rgb: GLenum, src_alpha: GLenum, dest_alpha: GLenum) {
+    fn blend_func_separate(
+        &self,
+        src_rgb: GLenum,
+        dest_rgb: GLenum,
+        src_alpha: GLenum,
+        dest_alpha: GLenum,
+    ) {
         unsafe {
-            self.ffi_gl_.BlendFuncSeparate(src_rgb, dest_rgb, src_alpha, dest_alpha);
+            self.ffi_gl_
+                .BlendFuncSeparate(src_rgb, dest_rgb, src_alpha, dest_alpha);
         }
     }
 
@@ -1025,7 +1210,12 @@ impl Gl for GlFns {
 
     fn color_mask(&self, r: bool, g: bool, b: bool, a: bool) {
         unsafe {
-            self.ffi_gl_.ColorMask(r as GLboolean, g as GLboolean, b as GLboolean, a as GLboolean);
+            self.ffi_gl_.ColorMask(
+                r as GLboolean,
+                g as GLboolean,
+                b as GLboolean,
+                a as GLboolean,
+            );
         }
     }
 
@@ -1060,39 +1250,27 @@ impl Gl for GlFns {
     }
 
     fn is_enabled(&self, cap: GLenum) -> GLboolean {
-        unsafe {
-            self.ffi_gl_.IsEnabled(cap)
-        }
+        unsafe { self.ffi_gl_.IsEnabled(cap) }
     }
 
     fn is_shader(&self, shader: GLuint) -> GLboolean {
-        unsafe {
-            self.ffi_gl_.IsShader(shader)
-        }
+        unsafe { self.ffi_gl_.IsShader(shader) }
     }
 
     fn is_texture(&self, texture: GLenum) -> GLboolean {
-        unsafe {
-            self.ffi_gl_.IsTexture(texture)
-        }
+        unsafe { self.ffi_gl_.IsTexture(texture) }
     }
 
     fn is_framebuffer(&self, framebuffer: GLenum) -> GLboolean {
-        unsafe {
-            self.ffi_gl_.IsFramebuffer(framebuffer)
-        }
+        unsafe { self.ffi_gl_.IsFramebuffer(framebuffer) }
     }
 
     fn is_renderbuffer(&self, renderbuffer: GLenum) -> GLboolean {
-        unsafe {
-            self.ffi_gl_.IsRenderbuffer(renderbuffer)
-        }
+        unsafe { self.ffi_gl_.IsRenderbuffer(renderbuffer) }
     }
 
     fn check_frame_buffer_status(&self, target: GLenum) -> GLenum {
-        unsafe {
-            self.ffi_gl_.CheckFramebufferStatus(target)
-        }
+        unsafe { self.ffi_gl_.CheckFramebufferStatus(target) }
     }
 
     fn enable_vertex_attrib_array(&self, index: GLuint) {
@@ -1115,9 +1293,8 @@ impl Gl for GlFns {
 
     fn uniform_1fv(&self, location: GLint, values: &[f32]) {
         unsafe {
-            self.ffi_gl_.Uniform1fv(location,
-                                    values.len() as GLsizei,
-                                    values.as_ptr());
+            self.ffi_gl_
+                .Uniform1fv(location, values.len() as GLsizei, values.as_ptr());
         }
     }
 
@@ -1129,9 +1306,8 @@ impl Gl for GlFns {
 
     fn uniform_1iv(&self, location: GLint, values: &[i32]) {
         unsafe {
-            self.ffi_gl_.Uniform1iv(location,
-                                    values.len() as GLsizei,
-                                    values.as_ptr());
+            self.ffi_gl_
+                .Uniform1iv(location, values.len() as GLsizei, values.as_ptr());
         }
     }
 
@@ -1149,9 +1325,8 @@ impl Gl for GlFns {
 
     fn uniform_2fv(&self, location: GLint, values: &[f32]) {
         unsafe {
-            self.ffi_gl_.Uniform2fv(location,
-                                    (values.len() / 2) as GLsizei,
-                                    values.as_ptr());
+            self.ffi_gl_
+                .Uniform2fv(location, (values.len() / 2) as GLsizei, values.as_ptr());
         }
     }
 
@@ -1163,9 +1338,8 @@ impl Gl for GlFns {
 
     fn uniform_2iv(&self, location: GLint, values: &[i32]) {
         unsafe {
-            self.ffi_gl_.Uniform2iv(location,
-                                    (values.len() / 2) as GLsizei,
-                                    values.as_ptr());
+            self.ffi_gl_
+                .Uniform2iv(location, (values.len() / 2) as GLsizei, values.as_ptr());
         }
     }
 
@@ -1183,9 +1357,8 @@ impl Gl for GlFns {
 
     fn uniform_3fv(&self, location: GLint, values: &[f32]) {
         unsafe {
-            self.ffi_gl_.Uniform3fv(location,
-                                    (values.len() / 3) as GLsizei,
-                                    values.as_ptr());
+            self.ffi_gl_
+                .Uniform3fv(location, (values.len() / 3) as GLsizei, values.as_ptr());
         }
     }
 
@@ -1197,9 +1370,8 @@ impl Gl for GlFns {
 
     fn uniform_3iv(&self, location: GLint, values: &[i32]) {
         unsafe {
-            self.ffi_gl_.Uniform3iv(location,
-                                    (values.len() / 3) as GLsizei,
-                                    values.as_ptr());
+            self.ffi_gl_
+                .Uniform3iv(location, (values.len() / 3) as GLsizei, values.as_ptr());
         }
     }
 
@@ -1223,9 +1395,8 @@ impl Gl for GlFns {
 
     fn uniform_4iv(&self, location: GLint, values: &[i32]) {
         unsafe {
-            self.ffi_gl_.Uniform4iv(location,
-                                    (values.len() / 4) as GLsizei,
-                                    values.as_ptr());
+            self.ffi_gl_
+                .Uniform4iv(location, (values.len() / 4) as GLsizei, values.as_ptr());
         }
     }
 
@@ -1237,36 +1408,41 @@ impl Gl for GlFns {
 
     fn uniform_4fv(&self, location: GLint, values: &[f32]) {
         unsafe {
-            self.ffi_gl_.Uniform4fv(location,
-                                    (values.len() / 4) as GLsizei,
-                                    values.as_ptr());
+            self.ffi_gl_
+                .Uniform4fv(location, (values.len() / 4) as GLsizei, values.as_ptr());
         }
     }
 
     fn uniform_matrix_2fv(&self, location: GLint, transpose: bool, value: &[f32]) {
         unsafe {
-            self.ffi_gl_.UniformMatrix2fv(location,
-                                          (value.len() / 4) as GLsizei,
-                                          transpose as GLboolean,
-                                          value.as_ptr());
+            self.ffi_gl_.UniformMatrix2fv(
+                location,
+                (value.len() / 4) as GLsizei,
+                transpose as GLboolean,
+                value.as_ptr(),
+            );
         }
     }
 
     fn uniform_matrix_3fv(&self, location: GLint, transpose: bool, value: &[f32]) {
         unsafe {
-            self.ffi_gl_.UniformMatrix3fv(location,
-                                          (value.len() / 9) as GLsizei,
-                                          transpose as GLboolean,
-                                          value.as_ptr());
+            self.ffi_gl_.UniformMatrix3fv(
+                location,
+                (value.len() / 9) as GLsizei,
+                transpose as GLboolean,
+                value.as_ptr(),
+            );
         }
     }
 
     fn uniform_matrix_4fv(&self, location: GLint, transpose: bool, value: &[f32]) {
         unsafe {
-            self.ffi_gl_.UniformMatrix4fv(location,
-                                          (value.len() / 16) as GLsizei,
-                                          transpose as GLboolean,
-                                          value.as_ptr());
+            self.ffi_gl_.UniformMatrix4fv(
+                location,
+                (value.len() / 16) as GLsizei,
+                transpose as GLboolean,
+                value.as_ptr(),
+            );
         }
     }
 
@@ -1302,7 +1478,7 @@ impl Gl for GlFns {
                 name.as_mut_ptr() as *mut GLchar,
             );
         }
-        name.truncate(if length > 0 {length as usize} else {0});
+        name.truncate(if length > 0 { length as usize } else { 0 });
         (size, type_, String::from_utf8(name).unwrap())
     }
 
@@ -1333,15 +1509,22 @@ impl Gl for GlFns {
         (size, type_, String::from_utf8(name).unwrap())
     }
 
-    fn get_active_uniforms_iv(&self, program: GLuint, indices: Vec<GLuint>, pname: GLenum) -> Vec<GLint> {
+    fn get_active_uniforms_iv(
+        &self,
+        program: GLuint,
+        indices: Vec<GLuint>,
+        pname: GLenum,
+    ) -> Vec<GLint> {
         let mut result = Vec::with_capacity(indices.len());
         unsafe {
             result.set_len(indices.len());
-            self.ffi_gl_.GetActiveUniformsiv(program,
-                                             indices.len() as GLsizei,
-                                             indices.as_ptr(),
-                                             pname,
-                                             result.as_mut_ptr());
+            self.ffi_gl_.GetActiveUniformsiv(
+                program,
+                indices.len() as GLsizei,
+                indices.as_ptr(),
+                pname,
+                result.as_mut_ptr(),
+            );
         }
         result
     }
@@ -1349,31 +1532,42 @@ impl Gl for GlFns {
     fn get_active_uniform_block_i(&self, program: GLuint, index: GLuint, pname: GLenum) -> GLint {
         let mut result = 0;
         unsafe {
-            self.ffi_gl_.GetActiveUniformBlockiv(program, index, pname, &mut result);
+            self.ffi_gl_
+                .GetActiveUniformBlockiv(program, index, pname, &mut result);
         }
         result
     }
 
-    fn get_active_uniform_block_iv(&self, program: GLuint, index: GLuint, pname: GLenum) -> Vec<GLint> {
-        let count = self.get_active_uniform_block_i(program, index, ffi::UNIFORM_BLOCK_ACTIVE_UNIFORMS);
+    fn get_active_uniform_block_iv(
+        &self,
+        program: GLuint,
+        index: GLuint,
+        pname: GLenum,
+    ) -> Vec<GLint> {
+        let count =
+            self.get_active_uniform_block_i(program, index, ffi::UNIFORM_BLOCK_ACTIVE_UNIFORMS);
         let mut result = Vec::with_capacity(count as usize);
         unsafe {
             result.set_len(count as usize);
-            self.ffi_gl_.GetActiveUniformBlockiv(program, index, pname, result.as_mut_ptr());
+            self.ffi_gl_
+                .GetActiveUniformBlockiv(program, index, pname, result.as_mut_ptr());
         }
         result
     }
 
     fn get_active_uniform_block_name(&self, program: GLuint, index: GLuint) -> String {
-        let buf_size = self.get_active_uniform_block_i(program, index, ffi::UNIFORM_BLOCK_NAME_LENGTH);
+        let buf_size =
+            self.get_active_uniform_block_i(program, index, ffi::UNIFORM_BLOCK_NAME_LENGTH);
         let mut name = vec![0 as u8; buf_size as usize];
         let mut length: GLsizei = 0;
         unsafe {
-            self.ffi_gl_.GetActiveUniformBlockName(program,
-                                                   index,
-                                                   buf_size,
-                                                   &mut length,
-                                                   name.as_mut_ptr() as *mut GLchar);
+            self.ffi_gl_.GetActiveUniformBlockName(
+                program,
+                index,
+                buf_size,
+                &mut length,
+                name.as_mut_ptr() as *mut GLchar,
+            );
         }
         name.truncate(if length > 0 { length as usize } else { 0 });
 
@@ -1382,23 +1576,17 @@ impl Gl for GlFns {
 
     fn get_attrib_location(&self, program: GLuint, name: &str) -> c_int {
         let name = CString::new(name).unwrap();
-        unsafe {
-            self.ffi_gl_.GetAttribLocation(program, name.as_ptr())
-        }
+        unsafe { self.ffi_gl_.GetAttribLocation(program, name.as_ptr()) }
     }
 
     fn get_frag_data_location(&self, program: GLuint, name: &str) -> c_int {
         let name = CString::new(name).unwrap();
-        unsafe {
-            self.ffi_gl_.GetFragDataLocation(program, name.as_ptr())
-        }
+        unsafe { self.ffi_gl_.GetFragDataLocation(program, name.as_ptr()) }
     }
 
     fn get_uniform_location(&self, program: GLuint, name: &str) -> c_int {
         let name = CString::new(name).unwrap();
-        unsafe {
-            self.ffi_gl_.GetUniformLocation(program, name.as_ptr())
-        }
+        unsafe { self.ffi_gl_.GetUniformLocation(program, name.as_ptr()) }
     }
 
     fn get_program_info_log(&self, program: GLuint) -> String {
@@ -1416,14 +1604,19 @@ impl Gl for GlFns {
                 result.as_mut_ptr() as *mut GLchar,
             );
         }
-        result.truncate(if result_len > 0 {result_len as usize} else {0});
+        result.truncate(if result_len > 0 {
+            result_len as usize
+        } else {
+            0
+        });
         String::from_utf8(result).unwrap()
     }
 
     #[inline]
     unsafe fn get_program_iv(&self, program: GLuint, pname: GLenum, result: &mut [GLint]) {
         assert!(!result.is_empty());
-        self.ffi_gl_.GetProgramiv(program, pname, result.as_mut_ptr());
+        self.ffi_gl_
+            .GetProgramiv(program, pname, result.as_mut_ptr());
     }
 
     fn get_program_binary(&self, program: GLuint) -> (Vec<u8>, GLenum) {
@@ -1462,10 +1655,12 @@ impl Gl for GlFns {
             return;
         }
         unsafe {
-            self.ffi_gl_.ProgramBinary(program,
-                                       format,
-                                       binary.as_ptr() as *const c_void,
-                                       binary.len() as GLsizei);
+            self.ffi_gl_.ProgramBinary(
+                program,
+                format,
+                binary.as_ptr() as *const c_void,
+                binary.len() as GLsizei,
+            );
         }
     }
 
@@ -1481,19 +1676,22 @@ impl Gl for GlFns {
     #[inline]
     unsafe fn get_vertex_attrib_iv(&self, index: GLuint, pname: GLenum, result: &mut [GLint]) {
         assert!(!result.is_empty());
-        self.ffi_gl_.GetVertexAttribiv(index, pname, result.as_mut_ptr());
+        self.ffi_gl_
+            .GetVertexAttribiv(index, pname, result.as_mut_ptr());
     }
 
     #[inline]
     unsafe fn get_vertex_attrib_fv(&self, index: GLuint, pname: GLenum, result: &mut [GLfloat]) {
         assert!(!result.is_empty());
-        self.ffi_gl_.GetVertexAttribfv(index, pname, result.as_mut_ptr());
+        self.ffi_gl_
+            .GetVertexAttribfv(index, pname, result.as_mut_ptr());
     }
 
     fn get_vertex_attrib_pointer_v(&self, index: GLuint, pname: GLenum) -> GLsizeiptr {
         let mut result = 0 as *mut GLvoid;
         unsafe {
-            self.ffi_gl_.GetVertexAttribPointerv(index, pname, &mut result)
+            self.ffi_gl_
+                .GetVertexAttribPointerv(index, pname, &mut result)
         }
         result as GLsizeiptr
     }
@@ -1501,7 +1699,8 @@ impl Gl for GlFns {
     fn get_buffer_parameter_iv(&self, target: GLuint, pname: GLenum) -> GLint {
         let mut result = 0 as GLint;
         unsafe {
-            self.ffi_gl_.GetBufferParameteriv(target, pname, &mut result);
+            self.ffi_gl_
+                .GetBufferParameteriv(target, pname, &mut result);
         }
         result
     }
@@ -1521,7 +1720,11 @@ impl Gl for GlFns {
                 result.as_mut_ptr() as *mut GLchar,
             );
         }
-        result.truncate(if result_len > 0 {result_len as usize} else {0});
+        result.truncate(if result_len > 0 {
+            result_len as usize
+        } else {
+            0
+        });
         String::from_utf8(result).unwrap()
     }
 
@@ -1529,7 +1732,8 @@ impl Gl for GlFns {
         unsafe {
             let llstr = self.ffi_gl_.GetString(which);
             if !llstr.is_null() {
-                return str::from_utf8_unchecked(CStr::from_ptr(llstr as *const c_char).to_bytes()).to_string();
+                return str::from_utf8_unchecked(CStr::from_ptr(llstr as *const c_char).to_bytes())
+                    .to_string();
             } else {
                 return "".to_string();
             }
@@ -1540,7 +1744,8 @@ impl Gl for GlFns {
         unsafe {
             let llstr = self.ffi_gl_.GetStringi(which, index);
             if !llstr.is_null() {
-                str::from_utf8_unchecked(CStr::from_ptr(llstr as *const c_char).to_bytes()).to_string()
+                str::from_utf8_unchecked(CStr::from_ptr(llstr as *const c_char).to_bytes())
+                    .to_string()
             } else {
                 "".to_string()
             }
@@ -1552,7 +1757,11 @@ impl Gl for GlFns {
         self.ffi_gl_.GetShaderiv(shader, pname, result.as_mut_ptr());
     }
 
-    fn get_shader_precision_format(&self, _shader_type: GLuint, precision_type: GLuint) -> (GLint, GLint, GLint) {
+    fn get_shader_precision_format(
+        &self,
+        _shader_type: GLuint,
+        precision_type: GLuint,
+    ) -> (GLint, GLint, GLint) {
         // gl.GetShaderPrecisionFormat is not available until OpenGL 4.1.
         // Fallback to OpenGL standard precissions that most desktop hardware support.
         match precision_type {
@@ -1561,16 +1770,14 @@ impl Gl for GlFns {
                 // Range: from -2^127 to 2^127
                 // Significand precision: 23 bits
                 (127, 127, 23)
-            },
+            }
             ffi::LOW_INT | ffi::MEDIUM_INT | ffi::HIGH_INT => {
                 // Fallback to single precision integer
                 // Range: from -2^24 to 2^24
                 // Precision: For integer formats this value is always 0
                 (24, 24, 0)
-            },
-            _ => {
-                (0, 0, 0)
             }
+            _ => (0, 0, 0),
         }
     }
 
@@ -1653,59 +1860,31 @@ impl Gl for GlFns {
     }
 
     fn get_error(&self) -> GLenum {
-        unsafe {
-            self.ffi_gl_.GetError()
-        }
+        unsafe { self.ffi_gl_.GetError() }
     }
 
     fn stencil_mask(&self, mask: GLuint) {
-        unsafe {
-            self.ffi_gl_.StencilMask(mask)
-        }
+        unsafe { self.ffi_gl_.StencilMask(mask) }
     }
 
     fn stencil_mask_separate(&self, face: GLenum, mask: GLuint) {
-        unsafe {
-            self.ffi_gl_.StencilMaskSeparate(face, mask)
-        }
+        unsafe { self.ffi_gl_.StencilMaskSeparate(face, mask) }
     }
 
-    fn stencil_func(&self,
-                    func: GLenum,
-                    ref_: GLint,
-                    mask: GLuint) {
-        unsafe {
-            self.ffi_gl_.StencilFunc(func, ref_, mask)
-        }
+    fn stencil_func(&self, func: GLenum, ref_: GLint, mask: GLuint) {
+        unsafe { self.ffi_gl_.StencilFunc(func, ref_, mask) }
     }
 
-    fn stencil_func_separate(&self,
-                             face: GLenum,
-                             func: GLenum,
-                             ref_: GLint,
-                             mask: GLuint) {
-        unsafe {
-            self.ffi_gl_.StencilFuncSeparate(face, func, ref_, mask)
-        }
+    fn stencil_func_separate(&self, face: GLenum, func: GLenum, ref_: GLint, mask: GLuint) {
+        unsafe { self.ffi_gl_.StencilFuncSeparate(face, func, ref_, mask) }
     }
 
-    fn stencil_op(&self,
-                  sfail: GLenum,
-                  dpfail: GLenum,
-                  dppass: GLenum) {
-        unsafe {
-            self.ffi_gl_.StencilOp(sfail, dpfail, dppass)
-        }
+    fn stencil_op(&self, sfail: GLenum, dpfail: GLenum, dppass: GLenum) {
+        unsafe { self.ffi_gl_.StencilOp(sfail, dpfail, dppass) }
     }
 
-    fn stencil_op_separate(&self,
-                           face: GLenum,
-                           sfail: GLenum,
-                           dpfail: GLenum,
-                           dppass: GLenum) {
-        unsafe {
-            self.ffi_gl_.StencilOpSeparate(face, sfail, dpfail, dppass)
-        }
+    fn stencil_op_separate(&self, face: GLenum, sfail: GLenum, dpfail: GLenum, dppass: GLenum) {
+        unsafe { self.ffi_gl_.StencilOpSeparate(face, sfail, dpfail, dppass) }
     }
 
     #[allow(unused_variables)]
@@ -1714,15 +1893,14 @@ impl Gl for GlFns {
     }
 
     fn generate_mipmap(&self, target: GLenum) {
-        unsafe {
-            self.ffi_gl_.GenerateMipmap(target)
-        }
+        unsafe { self.ffi_gl_.GenerateMipmap(target) }
     }
 
     fn insert_event_marker_ext(&self, message: &str) {
         if self.ffi_gl_.InsertEventMarkerEXT.is_loaded() {
             unsafe {
-                self.ffi_gl_.InsertEventMarkerEXT(message.len() as GLsizei, message.as_ptr() as *const _);
+                self.ffi_gl_
+                    .InsertEventMarkerEXT(message.len() as GLsizei, message.as_ptr() as *const _);
             }
         }
     }
@@ -1730,7 +1908,8 @@ impl Gl for GlFns {
     fn push_group_marker_ext(&self, message: &str) {
         if self.ffi_gl_.PushGroupMarkerEXT.is_loaded() {
             unsafe {
-                self.ffi_gl_.PushGroupMarkerEXT(message.len() as GLsizei, message.as_ptr() as *const _);
+                self.ffi_gl_
+                    .PushGroupMarkerEXT(message.len() as GLsizei, message.as_ptr() as *const _);
             }
         }
     }
@@ -1744,14 +1923,13 @@ impl Gl for GlFns {
     }
 
     fn fence_sync(&self, condition: GLenum, flags: GLbitfield) -> GLsync {
-        unsafe {
-           self.ffi_gl_.FenceSync(condition, flags) as *const _
-        }
+        unsafe { self.ffi_gl_.FenceSync(condition, flags) as *const _ }
     }
 
     fn client_wait_sync(&self, sync: GLsync, flags: GLbitfield, timeout: GLuint64) {
         unsafe {
-            self.ffi_gl_.ClientWaitSync(sync as *const _, flags, timeout);
+            self.ffi_gl_
+                .ClientWaitSync(sync as *const _, flags, timeout);
         }
     }
 
@@ -1763,7 +1941,11 @@ impl Gl for GlFns {
 
     fn texture_range_apple(&self, target: GLenum, data: &[u8]) {
         unsafe {
-            self.ffi_gl_.TextureRangeAPPLE(target, data.len() as GLsizei, data.as_ptr() as *const c_void);
+            self.ffi_gl_.TextureRangeAPPLE(
+                target,
+                data.len() as GLsizei,
+                data.as_ptr() as *const c_void,
+            );
         }
     }
 
@@ -1783,7 +1965,8 @@ impl Gl for GlFns {
 
     fn delete_fences_apple(&self, fences: &[GLuint]) {
         unsafe {
-            self.ffi_gl_.DeleteFencesAPPLE(fences.len() as GLsizei, fences.as_ptr());
+            self.ffi_gl_
+                .DeleteFencesAPPLE(fences.len() as GLsizei, fences.as_ptr());
         }
     }
 
@@ -1829,23 +2012,14 @@ impl Gl for GlFns {
         }
     }
 
-    fn get_frag_data_index(
-        &self,
-        program: GLuint,
-        name: &str,
-    ) -> GLint {
+    fn get_frag_data_index(&self, program: GLuint, name: &str) -> GLint {
         if !self.ffi_gl_.GetFragDataIndex.is_loaded() {
             return -1;
         }
 
         let c_string = CString::new(name).unwrap();
 
-        unsafe {
-            self.ffi_gl_.GetFragDataIndex(
-                program,
-                c_string.as_ptr(),
-            )
-        }
+        unsafe { self.ffi_gl_.GetFragDataIndex(program, c_string.as_ptr()) }
     }
 
     // GL_KHR_debug
@@ -1856,10 +2030,8 @@ impl Gl for GlFns {
 
         let mut max_message_len = 0;
         unsafe {
-            self.ffi_gl_.GetIntegerv(
-                ffi::MAX_DEBUG_MESSAGE_LENGTH,
-                &mut max_message_len
-            )
+            self.ffi_gl_
+                .GetIntegerv(ffi::MAX_DEBUG_MESSAGE_LENGTH, &mut max_message_len)
         }
 
         let mut output = Vec::new();
@@ -1887,9 +2059,9 @@ impl Gl for GlFns {
             };
 
             let mut offset = 0;
-            output.extend((0 .. count as usize).map(|i| {
+            output.extend((0..count as usize).map(|i| {
                 let len = lengths[i] as usize;
-                let slice = &msg_data[offset .. offset + len];
+                let slice = &msg_data[offset..offset + len];
                 offset += len;
                 DebugMessage {
                     message: String::from_utf8_lossy(slice).to_string(),
@@ -1901,9 +2073,8 @@ impl Gl for GlFns {
             }));
 
             if (count as usize) < CAPACITY {
-                return output
+                return output;
             }
         }
     }
 }
-

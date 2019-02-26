@@ -8,6 +8,7 @@
 interface nsIAutoCompletePopup;
 
 webidl Event;
+webidl Element;
 
 [scriptable, uuid(B068E70F-F82C-4C12-AD87-82E271C5C180)]
 interface nsIAutoCompleteInput : nsISupports
@@ -15,6 +16,7 @@ interface nsIAutoCompleteInput : nsISupports
   /*
    * The result view that will be used to display results
    */
+  readonly attribute Element popupElement;
   readonly attribute nsIAutoCompletePopup popup;
 
   /*
