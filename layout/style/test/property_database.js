@@ -7718,6 +7718,123 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-snap-v1.enabled")) {
                     "start start" ],
     invalid_values: [ "auto", "start invalid", "start end center" ]
   };
+  gCSSProperties["scroll-margin"] = {
+    domProp: "scrollMargin",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: [ "scroll-margin-top",
+                     "scroll-margin-right",
+                     "scroll-margin-bottom",
+                     "scroll-margin-left" ],
+    initial_values: [ "0" ],
+    other_values: [ "-10px", "calc(2em + 3ex)", "1px 2px", "1px 2px 3px",
+                    "1px 2px 3px 4px" ],
+    invalid_values: [ "auto", "20%", "-30%", "1px 2px 3px 4px 5px" ],
+  };
+  gCSSProperties["scroll-margin-top"] = {
+    domProp: "scrollMarginTop",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    initial_values: [ "0" ],
+    other_values: [ "-10px", "calc(2em + 3ex)" ],
+    invalid_values: [ "auto", "20%", "-30%", "1px 2px" ],
+  };
+  gCSSProperties["scroll-margin-right"] = {
+    domProp: "scrollMarginRight",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    initial_values: [ "0" ],
+    other_values: [ "-10px", "calc(2em + 3ex)" ],
+    invalid_values: [ "auto", "20%", "-30%", "1px 2px" ],
+  };
+  gCSSProperties["scroll-margin-bottom"] = {
+    domProp: "scrollMarginBottom",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    initial_values: [ "0" ],
+    other_values: [ "-10px", "calc(2em + 3ex)" ],
+    invalid_values: [ "auto", "20%", "-30%", "1px 2px" ],
+  };
+  gCSSProperties["scroll-margin-left"] = {
+    domProp: "scrollMarginLeft",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    initial_values: [ "0" ],
+    other_values: [ "-10px", "calc(2em + 3ex)" ],
+    invalid_values: [ "auto", "20%", "-30%", "1px 2px" ],
+  };
+  gCSSProperties["scroll-margin-inline"] = {
+    domProp: "scrollMarginInline",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: [ "scroll-margin-inline-start",
+                     "scroll-margin-inline-end" ],
+    initial_values: [ "0" ],
+    other_values: [ "-10px", "calc(2em + 3ex)", "1px 2px" ],
+    invalid_values: [ "auto", "20%", "-30%", "1px 2px 3px" ],
+  };
+  gCSSProperties["scroll-margin-inline-start"] = {
+    domProp: "scrollMarginInlineStart",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    initial_values: [ "0" ],
+    other_values: [ "-10px", "calc(2em + 3ex)" ],
+    invalid_values: [ "auto", "20%", "-30%", "1px 2px" ],
+  };
+  gCSSProperties["scroll-margin-inline-end"] = {
+    domProp: "scrollMarginInlineEnd",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    initial_values: [ "0" ],
+    other_values: [ "-10px", "calc(2em + 3ex)" ],
+    invalid_values: [ "auto", "20%", "-30%", "1px 2px" ],
+  };
+  gCSSProperties["scroll-margin-block"] = {
+    domProp: "scrollMarginBlock",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: [ "scroll-margin-block-start",
+                     "scroll-margin-block-end" ],
+    initial_values: [ "0" ],
+    other_values: [ "-10px", "calc(2em + 3ex)", "1px 2px" ],
+    invalid_values: [ "auto", "20%", "-30%", "1px 2px 3px" ],
+  };
+  gCSSProperties["scroll-margin-block-start"] = {
+    domProp: "scrollMarginBlockStart",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    initial_values: [ "0" ],
+    other_values: [ "-10px", "calc(2em + 3ex)" ],
+    invalid_values: [ "auto", "20%", "-30%", "1px 2px" ],
+  };
+  gCSSProperties["scroll-margin-block-end"] = {
+    domProp: "scrollMarginBlockEnd",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    initial_values: [ "0" ],
+    other_values: [ "-10px", "calc(2em + 3ex)" ],
+    invalid_values: [ "auto", "20%", "-30%", "1px 2px" ],
+  };
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
