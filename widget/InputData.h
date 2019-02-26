@@ -89,6 +89,10 @@ class InputData {
   // content, and focus can be reconfirmed for async keyboard scrolling.
   uint64_t mFocusSequenceNumber;
 
+  // The LayersId of the content process that the corresponding WidgetEvent
+  // should be dispatched to.
+  layers::LayersId mLayersId;
+
   Modifiers modifiers;
 
   INPUTDATA_AS_CHILD_TYPE(MultiTouchInput, MULTITOUCH_INPUT)
