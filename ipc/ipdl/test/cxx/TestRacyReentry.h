@@ -10,6 +10,8 @@ namespace mozilla {
 namespace _ipdltest {
 
 class TestRacyReentryParent : public PTestRacyReentryParent {
+  friend class PTestRacyReentryParent;
+
  public:
   TestRacyReentryParent();
   virtual ~TestRacyReentryParent();
@@ -20,7 +22,7 @@ class TestRacyReentryParent : public PTestRacyReentryParent {
   void Main();
 
  protected:
-  virtual mozilla::ipc::IPCResult AnswerE() override;
+  mozilla::ipc::IPCResult AnswerE();
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");
@@ -32,16 +34,18 @@ class TestRacyReentryParent : public PTestRacyReentryParent {
 };
 
 class TestRacyReentryChild : public PTestRacyReentryChild {
+  friend class PTestRacyReentryChild;
+
  public:
   TestRacyReentryChild();
   virtual ~TestRacyReentryChild();
 
  protected:
-  virtual mozilla::ipc::IPCResult RecvStart() override;
+  mozilla::ipc::IPCResult RecvStart();
 
-  virtual mozilla::ipc::IPCResult RecvN() override;
+  mozilla::ipc::IPCResult RecvN();
 
-  virtual mozilla::ipc::IPCResult AnswerH() override;
+  mozilla::ipc::IPCResult AnswerH();
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     if (NormalShutdown != why) fail("unexpected destruction!");

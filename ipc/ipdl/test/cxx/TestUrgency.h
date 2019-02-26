@@ -19,12 +19,12 @@ class TestUrgencyParent : public PTestUrgencyParent {
 
   void Main();
 
-  mozilla::ipc::IPCResult RecvTest1(uint32_t *value) override;
-  mozilla::ipc::IPCResult RecvTest2() override;
-  mozilla::ipc::IPCResult RecvTest3(uint32_t *value) override;
+  mozilla::ipc::IPCResult RecvTest1(uint32_t *value);
+  mozilla::ipc::IPCResult RecvTest2();
+  mozilla::ipc::IPCResult RecvTest3(uint32_t *value);
   mozilla::ipc::IPCResult RecvTest4_Begin();
   mozilla::ipc::IPCResult RecvTest4_NestedSync();
-  mozilla::ipc::IPCResult RecvFinalTest_Begin() override;
+  mozilla::ipc::IPCResult RecvFinalTest_Begin();
 
   bool ShouldContinueFromReplyTimeout() override { return false; }
   virtual void ActorDestroy(ActorDestroyReason why) override {
@@ -41,9 +41,9 @@ class TestUrgencyChild : public PTestUrgencyChild {
   TestUrgencyChild();
   virtual ~TestUrgencyChild();
 
-  mozilla::ipc::IPCResult RecvStart() override;
-  mozilla::ipc::IPCResult RecvReply1(uint32_t *reply) override;
-  mozilla::ipc::IPCResult RecvReply2(uint32_t *reply) override;
+  mozilla::ipc::IPCResult RecvStart();
+  mozilla::ipc::IPCResult RecvReply1(uint32_t *reply);
+  mozilla::ipc::IPCResult RecvReply2(uint32_t *reply);
 
   virtual void ActorDestroy(ActorDestroyReason why) override { QuitChild(); }
 

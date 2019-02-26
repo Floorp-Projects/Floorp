@@ -19,13 +19,13 @@ class TestCancelParent : public PTestCancelParent {
 
   void Main();
 
-  virtual mozilla::ipc::IPCResult RecvDone1() override;
-  virtual mozilla::ipc::IPCResult RecvTest2_1() override;
-  virtual mozilla::ipc::IPCResult RecvStart3() override;
-  virtual mozilla::ipc::IPCResult RecvTest3_2() override;
-  virtual mozilla::ipc::IPCResult RecvDone() override;
+  mozilla::ipc::IPCResult RecvDone1();
+  mozilla::ipc::IPCResult RecvTest2_1();
+  mozilla::ipc::IPCResult RecvStart3();
+  mozilla::ipc::IPCResult RecvTest3_2();
+  mozilla::ipc::IPCResult RecvDone();
 
-  virtual mozilla::ipc::IPCResult RecvCheckParent(uint32_t *reply) override;
+  mozilla::ipc::IPCResult RecvCheckParent(uint32_t *reply);
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     passed("ok");
@@ -38,12 +38,12 @@ class TestCancelChild : public PTestCancelChild {
   TestCancelChild();
   virtual ~TestCancelChild();
 
-  virtual mozilla::ipc::IPCResult RecvTest1_1() override;
-  virtual mozilla::ipc::IPCResult RecvStart2() override;
-  virtual mozilla::ipc::IPCResult RecvTest2_2() override;
-  virtual mozilla::ipc::IPCResult RecvTest3_1() override;
+  mozilla::ipc::IPCResult RecvTest1_1();
+  mozilla::ipc::IPCResult RecvStart2();
+  mozilla::ipc::IPCResult RecvTest2_2();
+  mozilla::ipc::IPCResult RecvTest3_1();
 
-  virtual mozilla::ipc::IPCResult RecvCheckChild(uint32_t *reply) override;
+  mozilla::ipc::IPCResult RecvCheckChild(uint32_t *reply);
 
   virtual void ActorDestroy(ActorDestroyReason why) override { QuitChild(); }
 };
