@@ -51,5 +51,7 @@ async function assertDebugTargetExpanded(paneEl, title) {
   ok(true, "Height of list element is greater than zero");
   // check title
   const titleEl = paneEl.querySelector(".js-debug-target-pane-title");
-  is(titleEl.textContent, title, "Expanded title is correct");
+  const expectedTitle =
+    `${ title } (${ listEl.querySelectorAll(".js-debug-target-item").length })`;
+  is(titleEl.textContent, expectedTitle, "Expanded title is correct");
 }
