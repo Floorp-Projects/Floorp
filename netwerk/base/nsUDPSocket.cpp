@@ -270,9 +270,6 @@ void nsUDPSocket::OnMsgAttach() {
 
   // if we hit an error while trying to attach then bail...
   if (NS_FAILED(mCondition)) {
-    UDPSOCKET_LOG(("nsUDPSocket::OnMsgAttach: TryAttach FAILED err=0x%" PRIx32
-                   " [this=%p]\n",
-                   static_cast<uint32_t>(mCondition), this));
     NS_ASSERTION(!mAttached, "should not be attached already");
     OnSocketDetached(mFD);
   }
@@ -386,8 +383,6 @@ UDPMessageProxy::GetOutputStream(nsIOutputStream** aOutputStream) {
 //-----------------------------------------------------------------------------
 
 void nsUDPSocket::OnSocketReady(PRFileDesc* fd, int16_t outFlags) {
-  UDPSOCKET_LOG(
-      ("nsUDPSocket::OnSocketReady: flags=%d [this=%p]\n", outFlags, this));
   NS_ASSERTION(NS_SUCCEEDED(mCondition), "oops");
   NS_ASSERTION(mFD == fd, "wrong file descriptor");
   NS_ASSERTION(outFlags != -1, "unexpected timeout condition reached");
@@ -399,24 +394,16 @@ void nsUDPSocket::OnSocketReady(PRFileDesc* fd, int16_t outFlags) {
   }
 
   PRNetAddr prClientAddr;
-  int32_t count;
+  uint32_t count;
   // Bug 1252755 - use 9216 bytes to allign with nICEr and transportlayer to
   // support the maximum size of jumbo frames
   char buff[9216];
   count = PR_RecvFrom(mFD, buff, sizeof(buff), 0, &prClientAddr,
                       PR_INTERVAL_NO_WAIT);
-  if (count <= 0) {
-    UDPSOCKET_LOG(
-        ("nsUDPSocket::OnSocketReady: PR_RecvFrom returned no data [this=%p]\n",
-         this));
-    return;
-  }
   mByteReadCount += count;
 
   FallibleTArray<uint8_t> data;
   if (!data.AppendElements(buff, count, fallible)) {
-    UDPSOCKET_LOG((
-        "nsUDPSocket::OnSocketReady: AppendElements FAILED [this=%p]\n", this));
     mCondition = NS_ERROR_UNEXPECTED;
     return;
   }
@@ -450,7 +437,6 @@ void nsUDPSocket::OnSocketReady(PRFileDesc* fd, int16_t outFlags) {
 }
 
 void nsUDPSocket::OnSocketDetached(PRFileDesc* fd) {
-  UDPSOCKET_LOG(("nsUDPSocket::OnSocketDetached [this=%p]\n", this));
   // force a failure condition if none set; maybe the STS is shutting down :-/
   if (NS_SUCCEEDED(mCondition)) mCondition = NS_ERROR_ABORT;
 
