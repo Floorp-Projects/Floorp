@@ -316,7 +316,7 @@
                 <hbox class="message-bar" align="start">
                   <image class="message-bar-icon"/>
                   <vbox class="message-container">
-                    <description class="message-bar-description" data-l10n-id="private-browsing-description">
+                    <description class="message-bar-description" data-l10n-id="private-browsing-description2">
                       <label class="plain" id="private-browsing-learnmore-link" data-l10n-name="private-browsing-learn-more" is="text-link"/>
                     </description>
                   </vbox>
