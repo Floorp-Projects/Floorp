@@ -635,7 +635,7 @@ nsViewSourceChannel::OnStartRequest(nsIRequest *aRequest) {
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
+nsViewSourceChannel::OnStopRequest(nsIRequest *aRequest,
                                    nsresult aStatus) {
   NS_ENSURE_TRUE(mListener, NS_ERROR_FAILURE);
   if (mChannel) {
@@ -647,7 +647,7 @@ nsViewSourceChannel::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
     }
   }
   return mListener->OnStopRequest(static_cast<nsIViewSourceChannel *>(this),
-                                  aContext, aStatus);
+                                  aStatus);
 }
 
 // nsIStreamListener methods

@@ -379,7 +379,7 @@ nsresult gfxSVGGlyphsDocument::ParseDocument(const uint8_t *aBuffer,
     channel->GetStatus(&status);
   }
 
-  rv = listener->OnStopRequest(channel, nullptr /* aContext */, status);
+  rv = listener->OnStopRequest(channel, status);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
   document.swap(mDocument);

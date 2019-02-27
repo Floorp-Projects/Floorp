@@ -23,7 +23,7 @@ nsStreamListenerTee::OnStartRequest(nsIRequest *request) {
 }
 
 NS_IMETHODIMP
-nsStreamListenerTee::OnStopRequest(nsIRequest *request, nsISupports *context,
+nsStreamListenerTee::OnStopRequest(nsIRequest *request,
                                    nsresult status) {
   NS_ENSURE_TRUE(mListener, NS_ERROR_NOT_INITIALIZED);
   // it is critical that we close out the input stream tee
@@ -39,8 +39,8 @@ nsStreamListenerTee::OnStopRequest(nsIRequest *request, nsISupports *context,
     mSink = nullptr;
   }
 
-  nsresult rv = mListener->OnStopRequest(request, context, status);
-  if (mObserver) mObserver->OnStopRequest(request, context, status);
+  nsresult rv = mListener->OnStopRequest(request, status);
+  if (mObserver) mObserver->OnStopRequest(request, status);
   mObserver = nullptr;
   return rv;
 }

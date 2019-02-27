@@ -112,7 +112,7 @@ void nsAsyncStreamCopier::Complete(nsresult status) {
   if (observer) {
     LOG(("  calling OnStopRequest [status=%" PRIx32 "]\n",
          static_cast<uint32_t>(status)));
-    observer->OnStopRequest(AsRequest(), ctx, status);
+    observer->OnStopRequest(AsRequest(), status);
   }
 }
 

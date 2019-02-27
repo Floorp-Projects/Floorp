@@ -1230,7 +1230,7 @@ mozTXTToHTMLConv::OnStartRequest(nsIRequest* request) {
 }
 
 NS_IMETHODIMP
-mozTXTToHTMLConv::OnStopRequest(nsIRequest* request, nsISupports* ctxt,
+mozTXTToHTMLConv::OnStopRequest(nsIRequest* request,
                                 nsresult aStatus) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
