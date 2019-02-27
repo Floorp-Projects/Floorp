@@ -178,8 +178,6 @@ class IDBFactory final : public nsISupports, public nsWrapperCache {
       const IDBOpenDBOptions& aOptions, SystemCallerGuarantee,
       ErrorResult& aRv);
 
-  void RebindToNewWindow(nsPIDOMWindowInner* aNewWindow);
-
   void DisconnectFromWindow(nsPIDOMWindowInner* aOldWindow);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
