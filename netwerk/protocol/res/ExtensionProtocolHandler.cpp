@@ -8,6 +8,8 @@
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/Promise-inl.h"
 #include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
@@ -48,6 +50,7 @@
 #endif
 
 #define EXTENSION_SCHEME "moz-extension"
+using mozilla::dom::Promise;
 using mozilla::ipc::FileDescriptor;
 using OptionalIPCStream = mozilla::ipc::OptionalIPCStream;
 
@@ -413,6 +416,25 @@ Result<Ok, nsresult> ExtensionProtocolHandler::SubstituteRemoteChannel(
   return Ok();
 }
 
+void OpenWhenReady(
+    Promise* aPromise, nsIStreamListener* aListener, nsIChannel* aChannel,
+    const std::function<nsresult(nsIStreamListener*, nsIChannel*)>& aCallback) {
+  nsCOMPtr<nsIStreamListener> listener(aListener);
+  nsCOMPtr<nsIChannel> channel(aChannel);
+
+  Unused << aPromise->ThenWithCycleCollectedArgs(
+      [channel, aCallback](
+          JSContext* aCx, JS::HandleValue aValue,
+          nsIStreamListener* aListener) -> already_AddRefed<Promise> {
+        nsresult rv = aCallback(aListener, channel);
+        if (NS_FAILED(rv)) {
+          CancelRequest(aListener, channel, rv);
+        }
+        return nullptr;
+      },
+      listener);
+}
+
 nsresult ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
                                                      nsILoadInfo* aLoadInfo,
                                                      nsIChannel** result) {
@@ -420,47 +442,82 @@ nsresult ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
     MOZ_TRY(SubstituteRemoteChannel(aURI, aLoadInfo, result));
   }
 
+  auto* policy = EPS().GetByURL(aURI);
+  NS_ENSURE_TRUE(policy, NS_ERROR_UNEXPECTED);
+
+  RefPtr<dom::Promise> readyPromise(policy->ReadyPromise());
+
   nsresult rv;
   nsCOMPtr<nsIURL> url = do_QueryInterface(aURI, &rv);
   MOZ_TRY(rv);
 
   nsAutoCString ext;
   MOZ_TRY(url->GetFileExtension(ext));
-  if (!ext.LowerCaseEqualsLiteral("css")) {
+
+  nsCOMPtr<nsIChannel> channel;
+  bool haveLoadInfo = aLoadInfo;
+  if (ext.LowerCaseEqualsLiteral("css")) {
+    // Filter CSS files to replace locale message tokens with localized strings.
+    static const auto convert = [haveLoadInfo](nsIStreamListener* listener,
+                                               nsIChannel* channel,
+                                               nsIChannel* origChannel) -> nsresult {
+      nsresult rv;
+      nsCOMPtr<nsIStreamConverterService> convService =
+          do_GetService(NS_STREAMCONVERTERSERVICE_CONTRACTID, &rv);
+      MOZ_TRY(rv);
+
+      nsCOMPtr<nsIURI> uri;
+      MOZ_TRY(channel->GetURI(getter_AddRefs(uri)));
+
+      const char* kFromType = "application/vnd.mozilla.webext.unlocalized";
+      const char* kToType = "text/css";
+
+      nsCOMPtr<nsIStreamListener> converter;
+      MOZ_TRY(convService->AsyncConvertData(kFromType, kToType, listener, uri,
+                                            getter_AddRefs(converter)));
+
+      if (haveLoadInfo) {
+        return origChannel->AsyncOpen2(converter);
+      }
+      return origChannel->AsyncOpen(converter, nullptr);
+    };
+
+    channel = NS_NewSimpleChannel(
+        aURI, aLoadInfo, *result,
+        [readyPromise](nsIStreamListener* listener, nsIChannel* channel,
+                       nsIChannel* origChannel) -> RequestOrReason {
+          if (readyPromise) {
+            nsCOMPtr<nsIChannel> chan(channel);
+            OpenWhenReady(
+                readyPromise, listener, origChannel,
+                [chan](nsIStreamListener* aListener, nsIChannel* aChannel) {
+                  return convert(aListener, chan, aChannel);
+                });
+          } else {
+            MOZ_TRY(convert(listener, channel, origChannel));
+          }
+          return RequestOrReason(origChannel);
+        });
+  } else if (readyPromise) {
+    channel = NS_NewSimpleChannel(
+        aURI, aLoadInfo, *result,
+        [readyPromise, haveLoadInfo](nsIStreamListener* listener, nsIChannel* channel,
+                                     nsIChannel* origChannel) -> RequestOrReason {
+          OpenWhenReady(readyPromise, listener, origChannel,
+                        [haveLoadInfo](nsIStreamListener* aListener, nsIChannel* aChannel) {
+                          if (haveLoadInfo) {
+                            return aChannel->AsyncOpen2(aListener);
+                          }
+                          return aChannel->AsyncOpen(aListener, nullptr);
+                        });
+
+          return RequestOrReason(origChannel);
+        });
+  } else {
     return NS_OK;
   }
 
-  // Filter CSS files to replace locale message tokens with localized strings.
-
-  bool haveLoadInfo = aLoadInfo;
-  nsCOMPtr<nsIChannel> channel = NS_NewSimpleChannel(
-      aURI, aLoadInfo, *result,
-      [haveLoadInfo](nsIStreamListener* listener, nsIChannel* channel,
-                     nsIChannel* origChannel) -> RequestOrReason {
-        nsresult rv;
-        nsCOMPtr<nsIStreamConverterService> convService =
-            do_GetService(NS_STREAMCONVERTERSERVICE_CONTRACTID, &rv);
-        MOZ_TRY(rv);
-
-        nsCOMPtr<nsIURI> uri;
-        MOZ_TRY(channel->GetURI(getter_AddRefs(uri)));
-
-        const char* kFromType = "application/vnd.mozilla.webext.unlocalized";
-        const char* kToType = "text/css";
-
-        nsCOMPtr<nsIStreamListener> converter;
-        MOZ_TRY(convService->AsyncConvertData(kFromType, kToType, listener, uri,
-                                              getter_AddRefs(converter)));
-        if (haveLoadInfo) {
-          MOZ_TRY(origChannel->AsyncOpen2(converter));
-        } else {
-          MOZ_TRY(origChannel->AsyncOpen(converter, nullptr));
-        }
-
-        return RequestOrReason(origChannel);
-      });
   NS_ENSURE_TRUE(channel, NS_ERROR_OUT_OF_MEMORY);
-
   if (aLoadInfo) {
     nsCOMPtr<nsILoadInfo> loadInfo =
         static_cast<LoadInfo*>(aLoadInfo)->CloneForNewRequest();
@@ -468,7 +525,6 @@ nsresult ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
   }
 
   channel.swap(*result);
-
   return NS_OK;
 }
 
