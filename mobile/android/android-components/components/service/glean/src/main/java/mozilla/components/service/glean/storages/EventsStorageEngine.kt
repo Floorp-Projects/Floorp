@@ -9,6 +9,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.SystemClock
 import android.support.annotation.VisibleForTesting
+import mozilla.components.service.glean.scheduler.PingUploadWorker
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -60,8 +61,10 @@ internal object EventsStorageEngine : StorageEngine {
             for (storeName in stores) {
                 val storeData = eventStores.getOrPut(storeName) { mutableListOf() }
                 storeData.add(event.copy())
-                if (storeData.size == Glean.configuration.maxEvents) {
-                    Glean.sendPing(storeName, "events")
+                if (storeData.size == Glean.configuration.maxEvents &&
+                    Glean.assembleAndSerializePing(storeName)) {
+                    // Queue background worker to upload the newly created ping
+                    PingUploadWorker.enqueueWorker()
                 }
             }
         }

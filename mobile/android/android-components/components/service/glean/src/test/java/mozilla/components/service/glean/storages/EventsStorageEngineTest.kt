@@ -5,6 +5,7 @@ package mozilla.components.service.glean.storages
 
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
+import androidx.work.testing.WorkManagerTestInitHelper
 import mozilla.components.service.glean.checkPingSchema
 import mozilla.components.service.glean.Lifetime
 import mozilla.components.service.glean.EventMetricType
@@ -12,8 +13,10 @@ import mozilla.components.service.glean.FakeDispatchersInTest
 import mozilla.components.service.glean.getContextWithMockedInfo
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.resetGlean
+import mozilla.components.service.glean.triggerWorkManager
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.junit.Assert.assertEquals
@@ -21,6 +24,7 @@ import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.util.concurrent.TimeUnit
 
 @RunWith(RobolectricTestRunner::class)
 class EventsStorageEngineTest {
@@ -34,6 +38,9 @@ class EventsStorageEngineTest {
         Glean.initialize(ApplicationProvider.getApplicationContext())
         assert(Glean.initialized)
         EventsStorageEngine.clearAllStores()
+
+        // Initialize WorkManager using the WorkManagerTestInitHelper.
+        WorkManagerTestInitHelper.initializeTestWorkManager(ApplicationProvider.getApplicationContext())
     }
 
     @Test
@@ -207,7 +214,12 @@ class EventsStorageEngineTest {
                 click.record(extra = mapOf("test_event_number" to "$i"))
             }
 
-            val request = server.takeRequest()
+            Assert.assertTrue(click.testHasValue())
+
+            // Trigger worker task to upload the pings in the background
+            triggerWorkManager()
+
+            val request = server.takeRequest(20L, TimeUnit.SECONDS)
             val applicationId = "mozilla-components-service-glean"
             assert(request.path.startsWith("/submit/$applicationId/events/${Glean.SCHEMA_VERSION}/"))
             val eventsJsonData = request.body.readUtf8()

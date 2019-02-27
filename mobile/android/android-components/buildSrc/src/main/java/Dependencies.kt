@@ -52,6 +52,7 @@ object Dependencies {
     const val androidx_test_core = "androidx.test:core-ktx:${Versions.androidx_test}"
     const val androidx_test_runner = "androidx.test:runner:${Versions.androidx_test}"
     const val androidx_test_rules = "androidx.test:rules:${Versions.androidx_test}"
+    const val androidx_work_testing = "android.arch.work:work-testing:${Versions.workmanager}"
 
     const val support_annotations = "com.android.support:support-annotations:${Versions.support_libraries}"
     const val support_cardview = "com.android.support:cardview-v7:${Versions.support_libraries}"

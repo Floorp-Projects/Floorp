@@ -9,6 +9,7 @@ import android.arch.lifecycle.LifecycleOwner
 import android.arch.lifecycle.LifecycleRegistry
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import androidx.work.testing.WorkManagerTestInitHelper
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.service.glean.storages.EventsStorageEngine
@@ -30,12 +31,12 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mockito.doThrow
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
 import org.robolectric.RobolectricTestRunner
+import java.io.BufferedReader
 import java.io.File
+import java.io.FileReader
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
@@ -50,6 +51,9 @@ class GleanTest {
     @Before
     fun setup() {
         resetGlean()
+
+        WorkManagerTestInitHelper.initializeTestWorkManager(
+            ApplicationProvider.getApplicationContext())
     }
 
     @After
@@ -115,13 +119,17 @@ class GleanTest {
             )
             Glean.setExperimentActive(
                 "experiment2", "branch_b",
-                    mapOf("key" to "value")
+                mapOf("key" to "value")
             )
             Glean.setExperimentInactive("experiment1")
 
+            Glean.metricsPingScheduler.clearSchedulerData()
             Glean.handleEvent(Glean.PingEvent.Default)
 
-            val request = server.takeRequest()
+            // Trigger worker task to upload the pings in the background
+            triggerWorkManager()
+
+            val request = server.takeRequest(20L, TimeUnit.SECONDS)
             assertEquals("POST", request.method)
             val metricsJsonData = request.body.readUtf8()
             val metricsJson = JSONObject(metricsJsonData)
@@ -176,9 +184,12 @@ class GleanTest {
             // Simulate going to background.
             lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
 
+            // Trigger worker task to upload the pings in the background
+            triggerWorkManager()
+
             val requests: MutableMap<String, String> = mutableMapOf()
             for (i in 0..1) {
-                val request = server.takeRequest()
+                val request = server.takeRequest(20L, TimeUnit.SECONDS)
                 val docType = request.path.split("/")[3]
                 requests.set(docType, request.body.readUtf8())
             }
@@ -221,11 +232,11 @@ class GleanTest {
 
         StringsStorageEngine.clearAllStores()
         val metricToSend = StringMetricType(
-                disabled = false,
-                category = "telemetry",
-                lifetime = Lifetime.Ping,
-                name = "metrics_ping",
-                sendInPings = listOf("default")
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Ping,
+            name = "metrics_ping",
+            sendInPings = listOf("default")
         )
 
         val metricsPingScheduler = MetricsPingScheduler(getContextWithMockedInfo())
@@ -233,11 +244,11 @@ class GleanTest {
 
         // Store a ping timestamp from 25 hours ago to compare to so that the ping will get sent
         metricsPingScheduler.updateSentTimestamp(
-                System.currentTimeMillis() - TimeUnit.HOURS.toMillis(25))
+            System.currentTimeMillis() - TimeUnit.HOURS.toMillis(25))
 
         resetGlean(getContextWithMockedInfo(), Glean.configuration.copy(
-                serverEndpoint = "http://" + server.hostName + ":" + server.port,
-                logPings = true
+            serverEndpoint = "http://" + server.hostName + ":" + server.port,
+            logPings = true
         ))
 
         // Fake calling the lifecycle observer.
@@ -255,9 +266,12 @@ class GleanTest {
             // Simulate going to background so that the metrics ping schedule will be checked
             lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
 
+            // Trigger worker task to upload the pings in the background
+            triggerWorkManager()
+
             val requests: MutableMap<String, String> = mutableMapOf()
             for (i in 0..1) {
-                val request = server.takeRequest()
+                val request = server.takeRequest(20L, TimeUnit.SECONDS)
                 val docType = request.path.split("/")[3]
                 requests[docType] = request.body.readUtf8()
             }
@@ -333,67 +347,41 @@ class GleanTest {
     fun `Don't handle events when uninitialized`() {
         val gleanSpy = spy<GleanInternalAPI>(GleanInternalAPI::class.java)
 
-        doThrow(IllegalStateException("Shouldn't send ping")).`when`(gleanSpy).sendPing(anyString(), anyString())
         gleanSpy.initialized = false
-        gleanSpy.handleEvent(Glean.PingEvent.Default)
+        gleanSpy.handleEvent(Glean.PingEvent.Background)
+        assertFalse(isWorkScheduled())
     }
 
     @Test
-    fun `Don't send pings if metrics disabled`() {
-        val server = MockWebServer()
-        server.enqueue(MockResponse().setBody("OK"))
-
+    fun `Don't schedule pings if metrics disabled`() {
         Glean.testClearAllData()
 
-        resetGlean(config = Glean.configuration.copy(
-            serverEndpoint = "http://" + server.hostName + ":" + server.port
-        ))
+        resetGlean()
         Glean.setUploadEnabled(false)
 
-        try {
-            Glean.handleEvent(Glean.PingEvent.Background)
+        Glean.handleEvent(Glean.PingEvent.Background)
 
-            // Note: this only works because we are faking the dispatchers with the @Rule above,
-            // otherwise this would probably fail due to some async weirdness
-            val request = server.takeRequest(2, TimeUnit.SECONDS)
-
-            // request will be null if no pings were sent
-            assertNull(request)
-        } finally {
-            server.shutdown()
-        }
+        assertFalse(isWorkScheduled())
     }
 
     @Test
-    fun `Don't send pings if there is no ping content`() {
-        val server = MockWebServer()
-        server.enqueue(MockResponse().setBody("OK"))
-
+    fun `Don't schedule pings if there is no ping content`() {
         EventsStorageEngine.clearAllStores()
 
-        resetGlean(getContextWithMockedInfo(), Glean.configuration.copy(
-            serverEndpoint = "http://" + server.hostName + ":" + server.port
-        ))
+        resetGlean(getContextWithMockedInfo())
 
-        try {
-            Glean.handleEvent(Glean.PingEvent.Background)
+        Glean.handleEvent(Glean.PingEvent.Background)
 
-            val requests: MutableMap<String, String> = mutableMapOf()
-            for (i in 0..1) {
-                server.takeRequest(2, TimeUnit.SECONDS)?.let { request ->
-                    val docType = request.path.split("/")[3]
-                    requests[docType] = request.body.readUtf8()
-                }
-            }
+        // We should only have a baseline ping and no events or metrics pings since nothing was
+        // recorded
+        val files = Glean.pingStorageEngine.storageDirectory.listFiles()
 
-            // Make sure the baseline ping is there
-            val baselineJson = JSONObject(requests["baseline"])
-            checkPingSchema(baselineJson)
-
-            // Make sure the events ping is NOT there since no events should have been recorded
-            assertNull("Events request should be null since there was no event data", requests["events"])
-        } finally {
-            server.shutdown()
+        // Make sure only the baseline ping is present and no events or metrics pings
+        assertEquals(1, files.count())
+        val file = files.first()
+        BufferedReader(FileReader(file)).use {
+            val lines = it.readLines()
+            assert(lines[0].contains("baseline"))
         }
     }
 
