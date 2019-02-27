@@ -184,6 +184,7 @@ nsEventStatus APZInputBridge::ReceiveInputEvent(
 
       keyboardEvent.mFlags.mHandledByAPZ = input.mHandledByAPZ;
       keyboardEvent.mFocusSequenceNumber = input.mFocusSequenceNumber;
+      aEvent.mLayersId = input.mLayersId;
       return status;
     }
     default: {
