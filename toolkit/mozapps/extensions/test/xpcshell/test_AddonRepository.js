@@ -120,6 +120,10 @@ var GET_TEST = {
                     "test2%40tests.mozilla.org%2C" +
                     "%7B00000000-1111-2222-3333-444444444444%7D%2C" +
                     "test_AddonRepository_1%40tests.mozilla.org",
+  successfulRTAURL: "/XPCShell/1/rta%3AdGVzdDFAdGVzdHMubW96aWxsYS5vcmc%2C" +
+                    "test2%40tests.mozilla.org%2C" +
+                    "%7B00000000-1111-2222-3333-444444444444%7D%2C" +
+                    "test_AddonRepository_1%40tests.mozilla.org",
 };
 
 // Test that actual results and expected results are equal
@@ -153,6 +157,9 @@ add_task(async function setup() {
 
   // Register files used to test search success
   gServer.registerFile(GET_TEST.successfulURL,
+                       do_get_file("data/test_AddonRepository_getAddonsByIDs.json"));
+  // Register file for RTA test
+  gServer.registerFile(GET_TEST.successfulRTAURL,
                        do_get_file("data/test_AddonRepository_getAddonsByIDs.json"));
 
   await promiseStartupManager();
@@ -242,6 +249,15 @@ add_task(async function test_getAddonsByID_fails() {
 
 // Tests success of AddonRepository.getAddonsByIDs()
 add_task(async function test_getAddonsByID_succeeds() {
+  let result = await AddonRepository.getAddonsByIDs(GET_TEST.successfulIDs);
+
+  check_results(result, GET_RESULTS);
+});
+
+// Tests success of AddonRepository.getAddonsByIDs() with rta ID.
+add_task(async function test_getAddonsByID_rta() {
+  let id = `rta:${btoa(GET_TEST.successfulIDs[0])}`.slice(0, -1);
+  GET_TEST.successfulIDs[0] = id;
   let result = await AddonRepository.getAddonsByIDs(GET_TEST.successfulIDs);
 
   check_results(result, GET_RESULTS);
