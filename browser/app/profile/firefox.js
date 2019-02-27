@@ -480,6 +480,13 @@ pref("browser.tabs.remote.separatePrivilegedContentProcess", true);
 // Turn on HTTP response process selection.
 pref("browser.tabs.remote.useHTTPResponseProcessSelection", true);
 
+// Unload tabs on low-memory on nightly.
+#ifdef RELEASE_OR_BETA
+pref("browser.tabs.unloadOnLowMemory", false);
+#else
+pref("browser.tabs.unloadOnLowMemory", true);
+#endif
+
 pref("browser.ctrlTab.recentlyUsedOrder", true);
 
 // By default, do not export HTML at shutdown.
