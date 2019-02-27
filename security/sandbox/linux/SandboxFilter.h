@@ -19,9 +19,9 @@ class Policy;
 }  // namespace sandbox
 
 namespace mozilla {
+class SandboxBrokerClient;
 
 #ifdef MOZ_CONTENT_SANDBOX
-class SandboxBrokerClient;
 struct ContentProcessSandboxParams;
 
 UniquePtr<sandbox::bpf_dsl::Policy> GetContentSandboxPolicy(
@@ -35,6 +35,9 @@ class SandboxOpenedFiles;
 UniquePtr<sandbox::bpf_dsl::Policy> GetMediaSandboxPolicy(
     const SandboxOpenedFiles* aFiles);
 #endif
+
+UniquePtr<sandbox::bpf_dsl::Policy> GetDecoderSandboxPolicy(
+    SandboxBrokerClient* aMaybeBroker);
 
 }  // namespace mozilla
 
