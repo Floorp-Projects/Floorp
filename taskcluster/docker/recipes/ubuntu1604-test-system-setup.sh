@@ -73,6 +73,13 @@ apt_packages+=('yasm')
 apt_packages+=('zip')
 apt_packages+=('libsecret-1-0:i386')
 
+# Make sure we have X libraries for 32-bit tests
+apt_packages+=('libxt6:i386')
+apt_packages+=('libpulse0:i386')
+apt_packages+=('libasound2:i386')
+apt_packages+=('libxtst6:i386')
+apt_packages+=('libgtk2.0-0:i386')
+
 # get xvinfo for test-linux.sh to monitor Xvfb startup
 apt_packages+=('x11-utils')
 
@@ -162,8 +169,7 @@ apt-get update
 apt-get -q -y -f install \
     libavcodec-ffmpeg-extra56:i386 \
     libgtk-3-0:i386 \
-    libdbus-glib-1-2:i386 \
-    openjdk-8-jdk:i386
+    libdbus-glib-1-2:i386
 
 # use fc-cache:i386 to pre-build the font cache for i386 binaries
 apt-get -q -y -f install \
@@ -174,6 +180,27 @@ cp sources.list.orig /etc/apt/sources.list
 apt-get update
 
 # clean up
+# Purge unneeded stuff from the image
+apt-get -y purge cheese 'libcheese*'
+apt-get -y purge gnome-user-guide
+apt-get -y purge 'libreoffice*'
+#apt-get -y purge firefox thunderbird
+apt-get -y purge 'liboxideqt*'
+apt-get -y purge gnome-mahjongg
+apt-get -y purge ubuntu-docs
+apt-get -y purge llvm-3.8-dev libllvm3.8
+apt-get -y purge git
+apt-get -y purge lintian
+apt-get -y purge freepats
+apt-get -y purge ubuntu-mobile-icons
+apt-get -y purge hplip
+apt-get -y purge rhythmbox
+apt-get -y purge thunderbird
+apt-get -y autoremove
+
+# We don't need no docs!
+rm -rf /usr/share/help /usr/share/doc /usr/share/man
+
 cd /
 rm -rf /setup ~/.ccache ~/.cache ~/.npm
 apt-get clean

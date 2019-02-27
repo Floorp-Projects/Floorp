@@ -611,9 +611,9 @@ nsresult nsZipArchive::BuildFileList(PRFileDesc *aFd) {
       madvise(const_cast<uint8_t *>(startp), readaheadLength, MADV_WILLNEED);
 #elif defined(XP_WIN)
       static auto prefetchVirtualMemory =
-          reinterpret_cast<BOOL (*)(HANDLE, ULONG_PTR, PVOID, ULONG)>(
+          reinterpret_cast<BOOL (WINAPI *)(HANDLE, ULONG_PTR, PVOID, ULONG)>(
               GetProcAddress(GetModuleHandle(L"kernel32.dll"),
-                               "PrefetchVirtualMemory"));
+                             "PrefetchVirtualMemory"));
       if (prefetchVirtualMemory) {
         // Normally, we'd use WIN32_MEMORY_RANGE_ENTRY, but that requires
         // a different _WIN32_WINNT value before including windows.h, but

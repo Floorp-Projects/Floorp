@@ -319,6 +319,12 @@ VARCACHE_PREF(
 )
 
 VARCACHE_PREF(
+  "dom.webnotifications.allowinsecure",
+   dom_webnotifications_allowinsecure,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
   "dom.webnotifications.serviceworker.enabled",
    dom_webnotifications_serviceworker_enabled,
   RelaxedAtomicBool, true

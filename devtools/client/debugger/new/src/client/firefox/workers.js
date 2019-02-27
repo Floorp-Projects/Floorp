@@ -38,7 +38,7 @@ export async function updateWorkerClients({
       addThreadEventListeners(workerThread);
       workerThread.resume();
 
-      const consoleFront = await tabTarget.getFront("console");
+      const consoleFront = await workerTargetFront.getFront("console");
       await consoleFront.startListeners([]);
 
       newWorkerClients[workerThread.actor] = {

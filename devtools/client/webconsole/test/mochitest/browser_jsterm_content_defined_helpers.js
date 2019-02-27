@@ -51,7 +51,7 @@ async function performTests() {
   const {autocompletePopup} = jsterm;
 
   for (const helper of HELPERS) {
-    await setInputValueForAutocompletion(jsterm, helper);
+    await setInputValueForAutocompletion(hud, helper);
     const autocompleteItems = getPopupLabels(autocompletePopup).filter(l => l === helper);
     is(autocompleteItems.length, 1,
       `There's no duplicated "${helper}" item in the autocomplete popup`);

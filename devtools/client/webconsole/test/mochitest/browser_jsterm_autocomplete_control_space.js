@@ -30,15 +30,15 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const { jsterm } = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
   info("web console opened");
 
-  const { autocompletePopup: popup } = jsterm;
+  const { autocompletePopup: popup } = hud.jsterm;
 
   let onPopUpOpen = popup.once("popup-opened");
 
   info("wait for completion: window.foo.");
-  jsterm.setInputValue("window.foo");
+  setInputValue(hud, "window.foo");
   EventUtils.sendString(".");
 
   await onPopUpOpen;

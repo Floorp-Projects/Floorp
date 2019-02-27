@@ -65,7 +65,6 @@ var connect = async function() {
   const env = Cc["@mozilla.org/process/environment;1"]
     .getService(Ci.nsIEnvironment);
   const port = env.get("MOZ_BROWSER_TOOLBOX_PORT");
-  const addonID = env.get("MOZ_BROWSER_TOOLBOX_ADDONID");
 
   // A port needs to be passed in from the environment, for instance:
   //    MOZ_BROWSER_TOOLBOX_PORT=6080 ./mach run -chrome \
@@ -87,14 +86,8 @@ var connect = async function() {
   await gClient.connect();
 
   appendStatusMessage("Get root form for toolbox");
-  if (addonID) {
-    const addonFront = await gClient.mainRoot.getAddon({ id: addonID });
-    const addonTargetFront = await addonFront.connect();
-    await openToolbox(addonTargetFront);
-  } else {
-    const front = await gClient.mainRoot.getMainProcess();
-    await openToolbox(front);
-  }
+  const front = await gClient.mainRoot.getMainProcess();
+  await openToolbox(front);
 };
 
 // Certain options should be toggled since we can assume chrome debugging here

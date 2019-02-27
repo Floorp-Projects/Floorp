@@ -414,7 +414,7 @@ MozElements.RichListBox = class RichListBox extends MozElements.BaseControl {
 
   // nsIDOMXULMultiSelectControlElement
   selectItem(aItem) {
-    if (!aItem) {
+    if (!aItem || aItem.disabled) {
       return;
     }
 

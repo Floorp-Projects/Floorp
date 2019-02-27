@@ -24,7 +24,7 @@ function expectCommandUpdate(count, testWindow = window) {
         }
 
         if (!--count) {
-          testWindow.gURLBar.controllers.removeControllerAt(0, overrideController);
+          testWindow.gURLBar.inputField.controllers.removeControllerAt(0, overrideController);
           testWindow.gBrowser.selectedBrowser.controllers.removeControllerAt(0, overrideController);
           resolve(true);
         }
@@ -33,13 +33,13 @@ function expectCommandUpdate(count, testWindow = window) {
 
     if (!count) {
       SimpleTest.executeSoon(() => {
-        testWindow.gURLBar.controllers.removeControllerAt(0, overrideController);
+        testWindow.gURLBar.inputField.controllers.removeControllerAt(0, overrideController);
         testWindow.gBrowser.selectedBrowser.controllers.removeControllerAt(0, overrideController);
         resolve(false);
       });
     }
 
-    testWindow.gURLBar.controllers.insertControllerAt(0, overrideController);
+    testWindow.gURLBar.inputField.controllers.insertControllerAt(0, overrideController);
     testWindow.gBrowser.selectedBrowser.controllers.insertControllerAt(0, overrideController);
   });
 }

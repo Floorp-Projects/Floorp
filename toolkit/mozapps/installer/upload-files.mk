@@ -317,7 +317,6 @@ ifndef MOZ_PACKAGER_FORMAT
 endif
 
 ifneq (android,$(MOZ_WIDGET_TOOLKIT))
-  OPTIMIZEJARS = 1
   JAR_COMPRESSION ?= none
 endif
 

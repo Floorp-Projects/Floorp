@@ -235,7 +235,7 @@ def write_zip(zip_path, prefix=None):
     if isinstance(prefix, unicode): # noqa Special case for Python 2
         prefix = prefix.encode('utf-8')
 
-    with JarWriter(file=zip_path, optimize=False, compress_level=5) as zip:
+    with JarWriter(file=zip_path, compress_level=5) as zip:
         manifest = {}
         for p, data, mode in resolve_files_and_hash(manifest):
             print(p)
