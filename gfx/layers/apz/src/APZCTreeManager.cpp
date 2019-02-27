@@ -1468,6 +1468,7 @@ nsEventStatus APZCTreeManager::ReceiveInputEvent(
       break;
     }
     case KEYBOARD_INPUT: {
+      aEvent.mLayersId = mFocusState.GetFocusLayersId();
       // Disable async keyboard scrolling when accessibility.browsewithcaret is
       // enabled
       if (!gfxPrefs::APZKeyboardEnabled() ||
