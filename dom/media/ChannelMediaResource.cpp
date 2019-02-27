@@ -53,8 +53,7 @@ NS_IMPL_ISUPPORTS(ChannelMediaResource::Listener, nsIRequestObserver,
                   nsIStreamListener, nsIChannelEventSink, nsIInterfaceRequestor,
                   nsIThreadRetargetableStreamListener)
 
-nsresult ChannelMediaResource::Listener::OnStartRequest(nsIRequest* aRequest,
-                                                        nsISupports* aContext) {
+nsresult ChannelMediaResource::Listener::OnStartRequest(nsIRequest* aRequest) {
   MOZ_ASSERT(NS_IsMainThread());
   if (!mResource) return NS_OK;
   return mResource->OnStartRequest(aRequest, mOffset);

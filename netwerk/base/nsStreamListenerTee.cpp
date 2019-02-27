@@ -12,11 +12,11 @@ NS_IMPL_ISUPPORTS(nsStreamListenerTee, nsIStreamListener, nsIRequestObserver,
                   nsIStreamListenerTee, nsIThreadRetargetableStreamListener)
 
 NS_IMETHODIMP
-nsStreamListenerTee::OnStartRequest(nsIRequest *request, nsISupports *context) {
+nsStreamListenerTee::OnStartRequest(nsIRequest *request) {
   NS_ENSURE_TRUE(mListener, NS_ERROR_NOT_INITIALIZED);
-  nsresult rv1 = mListener->OnStartRequest(request, context);
+  nsresult rv1 = mListener->OnStartRequest(request);
   nsresult rv2 = NS_OK;
-  if (mObserver) rv2 = mObserver->OnStartRequest(request, context);
+  if (mObserver) rv2 = mObserver->OnStartRequest(request);
 
   // Preserve NS_SUCCESS_XXX in rv1 in case mObserver didn't throw
   return (NS_FAILED(rv2) && NS_SUCCEEDED(rv1)) ? rv2 : rv1;

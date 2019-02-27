@@ -17,7 +17,7 @@ MemoryDownloader::MemoryDownloader(IObserver* aObserver)
     : mObserver(aObserver), mStatus(NS_ERROR_NOT_INITIALIZED) {}
 
 NS_IMETHODIMP
-MemoryDownloader::OnStartRequest(nsIRequest* aRequest, nsISupports* aCtxt) {
+MemoryDownloader::OnStartRequest(nsIRequest* aRequest) {
   MOZ_ASSERT(!mData);
   mData.reset(new FallibleTArray<uint8_t>());
   mStatus = NS_OK;

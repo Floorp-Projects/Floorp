@@ -115,7 +115,7 @@ void ContentVerifier::FinishSignature() {
 }
 
 NS_IMETHODIMP
-ContentVerifier::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
+ContentVerifier::OnStartRequest(nsIRequest* aRequest) {
   MOZ_CRASH("This OnStartRequest should've never been called!");
   return NS_OK;
 }

@@ -48,7 +48,7 @@ nsresult nsUnknownDecoder::ConvertedStreamListener::AppendDataToString(
 
 NS_IMETHODIMP
 nsUnknownDecoder::ConvertedStreamListener::OnStartRequest(
-    nsIRequest* request, nsISupports* context) {
+    nsIRequest* request) {
   return NS_OK;
 }
 
@@ -242,7 +242,7 @@ nsUnknownDecoder::OnDataAvailable(nsIRequest* request, nsISupports* aCtxt,
 // ----
 
 NS_IMETHODIMP
-nsUnknownDecoder::OnStartRequest(nsIRequest* request, nsISupports* aCtxt) {
+nsUnknownDecoder::OnStartRequest(nsIRequest* request) {
   nsresult rv = NS_OK;
 
   {
@@ -689,7 +689,7 @@ nsresult nsUnknownDecoder::FireListenerNotifications(nsIRequest* request,
       // Cancel the request to make sure it has the correct status if
       // mNextListener looks at it.
       request->Cancel(rv);
-      listener->OnStartRequest(request, aCtxt);
+      listener->OnStartRequest(request);
 
       nsCOMPtr<nsIDivertableChannel> divertable = do_QueryInterface(request);
       if (divertable) {
@@ -701,7 +701,7 @@ nsresult nsUnknownDecoder::FireListenerNotifications(nsIRequest* request,
   }
 
   // Fire the OnStartRequest(...)
-  rv = listener->OnStartRequest(request, aCtxt);
+  rv = listener->OnStartRequest(request);
 
   nsCOMPtr<nsIDivertableChannel> divertable = do_QueryInterface(request);
   if (divertable) {
@@ -789,7 +789,7 @@ nsresult nsUnknownDecoder::ConvertEncodedData(nsIRequest* request,
     }
 
     if (listener) {
-      listener->OnStartRequest(request, nullptr);
+      listener->OnStartRequest(request);
 
       if (length) {
         nsCOMPtr<nsIStringInputStream> rawStream =

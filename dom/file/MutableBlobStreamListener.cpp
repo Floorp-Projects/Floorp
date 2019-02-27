@@ -39,8 +39,7 @@ NS_IMPL_ISUPPORTS(MutableBlobStreamListener, nsIStreamListener,
                   nsIThreadRetargetableStreamListener, nsIRequestObserver)
 
 NS_IMETHODIMP
-MutableBlobStreamListener::OnStartRequest(nsIRequest* aRequest,
-                                          nsISupports* aContext) {
+MutableBlobStreamListener::OnStartRequest(nsIRequest* aRequest) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mStorage);
   MOZ_ASSERT(mEventTarget);
