@@ -9,7 +9,6 @@ all_platforms = ['win64', 'win64-aarch64', 'win32', 'linux32', 'linux64', 'macos
 
 for platform in all_platforms:
     whitelist['nightly'][platform] = [
-        'ac_add_options --enable-dmd',
         'ac_add_options --with-branding=browser/branding/nightly',
     ]
 

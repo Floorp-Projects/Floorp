@@ -220,7 +220,7 @@ struct HttpChannelOpenArgs
   // chrome channel would ever need to know.  Get rid of next arg?
   OptionalURIParams           original;
   OptionalURIParams           doc;
-  OptionalURIParams           referrer;
+  OptionalURIParams           originalReferrer;
   uint32_t                    referrerPolicy;
   OptionalURIParams           apiRedirectTo;
   OptionalURIParams           topWindowURI;

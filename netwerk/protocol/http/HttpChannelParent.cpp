@@ -133,11 +133,11 @@ bool HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs) {
     case HttpChannelCreationArgs::THttpChannelOpenArgs: {
       const HttpChannelOpenArgs& a = aArgs.get_HttpChannelOpenArgs();
       return DoAsyncOpen(
-          a.uri(), a.original(), a.doc(), a.referrer(), a.referrerPolicy(),
-          a.apiRedirectTo(), a.topWindowURI(), a.topWindowPrincipal(),
-          a.loadFlags(), a.requestHeaders(), a.requestMethod(),
-          a.uploadStream(), a.uploadStreamHasHeaders(), a.priority(),
-          a.classOfService(), a.redirectionLimit(), a.allowSTS(),
+          a.uri(), a.original(), a.doc(), a.originalReferrer(),
+          a.referrerPolicy(), a.apiRedirectTo(), a.topWindowURI(),
+          a.topWindowPrincipal(), a.loadFlags(), a.requestHeaders(),
+          a.requestMethod(), a.uploadStream(), a.uploadStreamHasHeaders(),
+          a.priority(), a.classOfService(), a.redirectionLimit(), a.allowSTS(),
           a.thirdPartyFlags(), a.resumeAt(), a.startPos(), a.entityID(),
           a.chooseApplicationCache(), a.appCacheClientID(), a.allowSpdy(),
           a.allowAltSvc(), a.beConservative(), a.tlsFlags(), a.loadInfo(),
@@ -383,7 +383,8 @@ void HttpChannelParent::InvokeAsyncOpen(nsresult rv) {
 
 bool HttpChannelParent::DoAsyncOpen(
     const URIParams& aURI, const OptionalURIParams& aOriginalURI,
-    const OptionalURIParams& aDocURI, const OptionalURIParams& aReferrerURI,
+    const OptionalURIParams& aDocURI,
+    const OptionalURIParams& aOriginalReferrerURI,
     const uint32_t& aReferrerPolicy, const OptionalURIParams& aAPIRedirectToURI,
     const OptionalURIParams& aTopWindowURI, nsIPrincipal* aTopWindowPrincipal,
     const uint32_t& aLoadFlags, const RequestHeaderTuples& requestHeaders,
@@ -424,7 +425,7 @@ bool HttpChannelParent::DoAsyncOpen(
   }
   nsCOMPtr<nsIURI> originalUri = DeserializeURI(aOriginalURI);
   nsCOMPtr<nsIURI> docUri = DeserializeURI(aDocURI);
-  nsCOMPtr<nsIURI> referrerUri = DeserializeURI(aReferrerURI);
+  nsCOMPtr<nsIURI> referrerUri = DeserializeURI(aOriginalReferrerURI);
   nsCOMPtr<nsIURI> apiRedirectToUri = DeserializeURI(aAPIRedirectToURI);
   nsCOMPtr<nsIURI> topWindowUri = DeserializeURI(aTopWindowURI);
 

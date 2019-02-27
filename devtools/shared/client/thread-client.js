@@ -705,19 +705,6 @@ ThreadClient.prototype = {
     return this._threadGrips[form.actor];
   },
 
-  /**
-   * Request the prototype and own properties of mutlipleObjects.
-   *
-   * @param onResponse function
-   *        Called with the request's response.
-   * @param actors [string]
-   *        List of actor ID of the queried objects.
-   */
-  getPrototypesAndProperties: DebuggerClient.requester({
-    type: "prototypesAndProperties",
-    actors: arg(0),
-  }),
-
   events: ["newSource", "progress"],
 };
 

@@ -24,7 +24,6 @@
 }
 
 .profiler-dialog__header__title {
-  margin: 0;
   margin-inline-start: calc(var(--base-unit) * 2);
 
   /* Reset <h1> styles */

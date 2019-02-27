@@ -14,6 +14,16 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Move.h"
 
+extern "C" {
+
+// This function uses C linkage because it's exposed to Rust to support the
+// `HashPropertyBag` wrapper in the `storage_variant` crate.
+void NS_NewHashPropertyBag(nsIWritablePropertyBag** aBag) {
+  MakeRefPtr<nsHashPropertyBag>().forget(aBag);
+}
+
+}  // extern "C"
+
 /*
  * nsHashPropertyBagBase implementation.
  */

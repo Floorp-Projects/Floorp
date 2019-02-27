@@ -10,6 +10,7 @@ path = "lib.rs"
 
 [dependencies]
 baldrdash = { path = "../../wasm/cranelift" }
+mozilla-central-workspace-hack = { path = "../../../../build/workspace-hack" }
 
 # Uncomment this to enable perf support in release mode.
 #[profile.release]

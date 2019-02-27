@@ -1,5 +1,6 @@
 reftest.jar:
   content/moz-bool-pref.css (../../../layout/reftests/css-parsing/moz-bool-pref.css)
+  content/osx-theme (../../../toolkit/themes/osx/reftests/*)
   content/reftest.xul (reftest.xul)
 
   res/globals.jsm (globals.jsm)

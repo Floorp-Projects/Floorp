@@ -292,6 +292,7 @@ var ExtensionsUI = {
 
     let strings = ExtensionData.formatPermissionStrings(info2, bundle);
     strings.addonName = info.addon.name;
+    strings.learnMore = bundle.GetStringFromName("webextPerms.learnMore");
     return strings;
   },
 
@@ -316,6 +317,11 @@ var ExtensionsUI = {
           let listIntroEl = doc.getElementById("addon-webext-perm-intro");
           listIntroEl.textContent = strings.listIntro;
           listIntroEl.hidden = (strings.msgs.length == 0);
+
+          let listInfoEl = doc.getElementById("addon-webext-perm-info");
+          listInfoEl.textContent = strings.learnMore;
+          listInfoEl.href = Services.urlFormatter.formatURLPref("app.support.baseURL") + "extension-permissions";
+          listInfoEl.hidden = (strings.msgs.length == 0);
 
           let list = doc.getElementById("addon-webext-perm-list");
           while (list.firstChild) {

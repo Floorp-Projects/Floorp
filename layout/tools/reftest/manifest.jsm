@@ -644,7 +644,6 @@ function CreateUrls(test) {
                     .getService(Ci.nsIScriptSecurityManager);
 
     let manifestURL = g.ioService.newURI(test.manifest);
-    let principal = secMan.createCodebasePrincipal(manifestURL, {});
 
     let testbase = manifestURL;
     if (test.runHttp)
@@ -656,6 +655,9 @@ function CreateUrls(test) {
             return file;
 
         var testURI = g.ioService.newURI(file, null, testbase);
+        let isChrome = testURI.scheme == "chrome";
+        let principal = isChrome ? secMan.getSystemPrincipal() :
+                                   secMan.createCodebasePrincipal(manifestURL, {});
         secMan.checkLoadURIWithPrincipal(principal, testURI,
                                          Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
         return testURI;
