@@ -11,6 +11,11 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe></iframe>
+</div>
+<pre id="test"></pre>
 <script class="testbody" type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
@@ -34,7 +39,6 @@ function next() {
 onload = next;
 
 let iframe;
-let proxyWindow;
 let basePath = "/tests/dom/serviceworkers/test/thirdparty/";
 let origin = window.location.protocol + "//" + window.location.host;
 let thirdPartyOrigin = "https://example.com";
@@ -58,26 +62,22 @@ function loadThirdPartyIframe() {
 }
 
 function runTest(aExpectedResponses) {
-  // Let's use a proxy window to have the new cookie policy applied.
-  proxyWindow = window.open("window_party_iframes.html");
-  proxyWindow.onload = _ => {
-    iframe = proxyWindow.document.querySelector("iframe");
-    iframe.src = thirdPartyOrigin + basePath + "register.html";
-    let responsesIndex = 0;
-    window.onmessage = function(e) {
-      let status = e.data.status;
-      let expected = aExpectedResponses[responsesIndex];
-      if (status == expected.status) {
-        ok(true, "Received expected " + expected.status);
-        if (expected.next) {
-          expected.next();
-        }
-      } else {
-        ok(false, "Expected " + expected.status + " got " + status);
+  iframe = document.querySelector("iframe");
+  iframe.src = thirdPartyOrigin + basePath + "register.html";
+  let responsesIndex = 0;
+  window.onmessage = function(e) {
+    let status = e.data.status;
+    let expected = aExpectedResponses[responsesIndex];
+    if (status == expected.status) {
+      ok(true, "Received expected " + expected.status);
+      if (expected.next) {
+        expected.next();
       }
-      responsesIndex++;
-    };
-  }
+    } else {
+      ok(false, "Expected " + expected.status + " got " + status);
+    }
+    responsesIndex++;
+  };
 }
 
 // Verify that we can register and intercept a 3rd party iframe with
@@ -113,7 +113,6 @@ function testShouldIntercept(behavior, lifetime, done) {
       status: "unregistrationdone",
       next: function() {
         window.onmessage = null;
-        proxyWindow.close();
         ok(true, "Test finished successfully");
         done();
       }
@@ -145,7 +144,6 @@ function testShouldNotRegister(behavior, lifetime, done) {
       status: "worker-networkresponse",
       next: function() {
         window.onmessage = null;
-        proxyWindow.close();
         ok(true, "Test finished successfully");
         done();
       }
@@ -166,17 +164,12 @@ function testShouldNotIntercept(behavior, lifetime, done) {
     }, {
       status: "registrationdone",
       next: function() {
+        iframe.addEventListener("load", testIframeLoaded);
         SpecialPowers.pushPrefEnv({"set": [
             ["network.cookie.cookieBehavior", behavior],
             ["network.cookie.lifetimePolicy", lifetime],
           ]}, function() {
-            proxyWindow.close();
-            proxyWindow = window.open("window_party_iframes.html");
-            proxyWindow.onload = _ => {
-              iframe = proxyWindow.document.querySelector("iframe");
-              iframe.addEventListener("load", testIframeLoaded);
-              iframe.src = origin + basePath + "iframe1.html";
-            }
+            iframe.src = origin + basePath + "iframe1.html";
           });
       }
     }, {
@@ -200,13 +193,7 @@ function testShouldNotIntercept(behavior, lifetime, done) {
             ["network.cookie.cookieBehavior", BEHAVIOR_ACCEPT],
             ["network.cookie.lifetimePolicy", LIFETIME_EXPIRE],
           ]}, function() {
-            proxyWindow.close();
-            proxyWindow = window.open("window_party_iframes.html");
-            proxyWindow.onload = _ => {
-              iframe = proxyWindow.document.querySelector("iframe");
-              iframe.addEventListener("load", testIframeLoaded);
-              iframe.src = thirdPartyOrigin + basePath + "unregister.html";
-            }
+            iframe.src = thirdPartyOrigin + basePath + "unregister.html";
           });
       }
     }, {
@@ -215,7 +202,6 @@ function testShouldNotIntercept(behavior, lifetime, done) {
       status: "unregistrationdone",
       next: function() {
         window.onmessage = null;
-        proxyWindow.close();
         ok(true, "Test finished successfully");
         done();
       }

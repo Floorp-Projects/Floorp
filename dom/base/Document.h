@@ -12,8 +12,7 @@
 #include "nsCOMArray.h"         // for member
 #include "nsCompatibility.h"    // for member
 #include "nsCOMPtr.h"           // for member
-#include "nsICookieSettings.h"
-#include "nsGkAtoms.h"  // for static class members
+#include "nsGkAtoms.h"          // for static class members
 #include "nsIApplicationCache.h"
 #include "nsIApplicationCacheContainer.h"
 #include "nsIContentViewer.h"
@@ -1505,9 +1504,6 @@ class Document : public nsINode,
 
   // Sets the cache sizes for the current generation.
   void SetCachedSizes(nsTabSizes* aSizes);
-
-  // Returns the cookie settings for this and sub contexts.
-  nsICookieSettings* CookieSettings();
 
  protected:
   friend class nsUnblockOnloadEvent;
@@ -4666,8 +4662,6 @@ class Document : public nsINode,
   // Cached TabSizes values for the document.
   int32_t mCachedTabSizeGeneration;
   nsTabSizes mCachedTabSizes;
-
-  nsCOMPtr<nsICookieSettings> mCookieSettings;
 
  public:
   // Needs to be public because the bindings code pokes at it.
