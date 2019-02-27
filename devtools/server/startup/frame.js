@@ -128,7 +128,7 @@ try {
     function destroyServer() {
       // Only destroy the server if there is no more connections to it. It may be used
       // to debug another tab running in the same process.
-      if (DebuggerServer.hasConnection()) {
+      if (DebuggerServer.hasConnection() || DebuggerServer.keepAlive) {
         return;
       }
       DebuggerServer.off("connectionchange", destroyServer);
