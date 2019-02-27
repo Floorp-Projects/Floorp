@@ -1,5 +1,8 @@
-commit 8175f6c05eef922c062e8f5bfae0faaef9404202
+commit 3468dad291251d4759ab6270d4fb8b75befa8d93
 Author: Mike Pennisi <mike@mikepennisi.com>
-Date:   Tue Jan 1 13:57:23 2019 -0500
+Date:   Tue Jan 1 12:03:27 2019 -0500
 
-    Improve name of line terminator tests
+    Improve coverage for line terminators
+    
+    Previous commits restructured the tests for line terminators and made
+    coverage gaps more apparent. Introduce new files to improve coverage.
