@@ -6181,6 +6181,13 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
       behaviors.setDisableLazyParsing(v.toBoolean());
     }
 
+    if (!JS_GetProperty(cx, opts, "enableBigInt", &v)) {
+      return false;
+    }
+    if (v.isBoolean()) {
+      creationOptions.setBigIntEnabled(v.toBoolean());
+    }
+
     if (!JS_GetProperty(cx, opts, "systemPrincipal", &v)) {
       return false;
     }
