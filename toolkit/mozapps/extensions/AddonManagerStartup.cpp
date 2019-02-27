@@ -32,10 +32,10 @@
 #include "nsIDOMWindowUtils.h"  // for nsIJSRAIIHelper
 #include "nsIFileURL.h"
 #include "nsIIOService.h"
-#include "nsIJARProtocolHandler.h"
 #include "nsIJARURI.h"
 #include "nsIStringEnumerator.h"
 #include "nsIZipReader.h"
+#include "nsJARProtocolHandler.h"
 #include "nsJSUtils.h"
 #include "nsReadableUtils.h"
 #include "nsXULAppAPI.h"
@@ -191,12 +191,10 @@ static Result<nsCOMPtr<nsIZipReaderCache>, nsresult> GetJarCache() {
   nsCOMPtr<nsIProtocolHandler> jarProto;
   MOZ_TRY(ios->GetProtocolHandler("jar", getter_AddRefs(jarProto)));
 
-  nsCOMPtr<nsIJARProtocolHandler> jar = do_QueryInterface(jarProto);
+  auto jar = static_cast<nsJARProtocolHandler*>(jarProto.get());
   MOZ_ASSERT(jar);
 
-  nsCOMPtr<nsIZipReaderCache> zipCache;
-  MOZ_TRY(jar->GetJARCache(getter_AddRefs(zipCache)));
-
+  nsCOMPtr<nsIZipReaderCache> zipCache = jar->JarCache();
   return std::move(zipCache);
 }
 

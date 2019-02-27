@@ -7,10 +7,14 @@ extern crate nserror;
 extern crate nsstring;
 extern crate xpcom;
 
+mod bag;
+
 use libc::{c_double, int64_t, uint16_t};
 use nserror::{nsresult, NS_OK};
 use nsstring::{nsACString, nsAString, nsCString, nsString};
 use xpcom::{getter_addrefs, interfaces::nsIVariant, RefPtr};
+
+pub use crate::bag::HashPropertyBag;
 
 extern "C" {
     fn NS_GetDataType(variant: *const nsIVariant) -> uint16_t;

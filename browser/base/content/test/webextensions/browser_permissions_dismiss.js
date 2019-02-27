@@ -35,6 +35,13 @@ add_task(async function test_tab_switch_dismiss() {
   let permsUL = document.getElementById("addon-webext-perm-list");
   is(permsUL.childElementCount, 5, `Permissions list has 5 entries`);
 
+  let permsLearnMore = document.getElementById("addon-webext-perm-info");
+  ok(BrowserTestUtils.is_visible(permsLearnMore),
+     "Learn more link is shown on Permission popup");
+  is(permsLearnMore.href,
+     Services.urlFormatter.formatURLPref("app.support.baseURL") +
+     "extension-permissions", "Learn more link has desired URL");
+
   // Switching tabs dismisses the notification and cancels the install.
   let switchTo = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   BrowserTestUtils.removeTab(switchTo);

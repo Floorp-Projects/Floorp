@@ -306,7 +306,9 @@
     "description": "Composite times in milliseconds",
     "kind": "exponential",
     "high": 1000,
-    "n_buckets": 50
+    "n_buckets": 50,
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1080160, 1529352]
   },
   "COMPOSITE_FRAME_ROUNDTRIP_TIME" : {
     "record_in_processes": ["main", "content", "gpu"],
@@ -545,7 +547,8 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 10,
-    "bug_numbers": [1135408],
+    "bug_numbers": [1135408, 1529352],
+    "releaseChannelCollection": "opt-out",
     "description": "GPU Device Reset Reason (ok, hung, removed, reset, internal error, invalid call, out of memory)"
   },
   "FETCH_IS_MAINTHREAD": {
@@ -1531,7 +1534,8 @@
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "WebGL1 creation success",
-    "bug_numbers": [1247327]
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1247327, 1529352]
   },
   "CANVAS_WEBGL_USED": {
     "record_in_processes": ["main", "content"],
@@ -6135,11 +6139,11 @@
   "FX_TAB_SWITCH_COMPOSITE_E10S_MS": {
     "record_in_processes": ["main"],
     "alert_emails": ["mwoodrow@mozilla.com"],
-    "expires_in_version": "70",
+    "expires_in_version": "73",
     "kind": "exponential",
     "high": 1000,
     "n_buckets": 20,
-    "bug_numbers": [1481704],
+    "bug_numbers": [1481704, 1529352],
     "releaseChannelCollection": "opt-out",
     "description": "Firefox: Time in ms between tab selection and first composite of the tab content in e10s windows"
   },
@@ -14385,6 +14389,20 @@
     "labels": ["AddAllow", "RemoveAllow", "AddBlock", "RemoveBlock"],
     "bug_numbers": [1520361],
     "description": "The number of times the user adds a site to the allow list, removes a site from the allow list, adds a site to the block list and removes a site from the block list.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "MEDIA_PLAYED_TIME_AFTER_AUTOPLAY_BLOCKED": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": [
+      "alwu@mozilla.com",
+      "cpearce@mozilla.com",
+      "nohlmeier@mozilla.com"
+    ],
+    "expires_in_version": "72",
+    "kind": "categorical",
+    "labels": ["VPlayedMoreThan7s", "VPlayedLessThan7s", "VPlayedToTheEnd", "APlayedMoreThan7s", "APlayedLessThan7s", "APlayedToTheEnd"],
+    "bug_numbers": [1525156],
+    "description": "The number of times autoplay media (audio and video), which has been blocked by autoplay policy, played exactly 7 seconds or more, or less than 7 seconds after it has been resumed from the blocked state. If media's duration is less than 7 seconds and it played to the end before user pauses it, it would be in another category which is different from 'play >= 7 seconds' and 'play < 7 seconds'.",
     "releaseChannelCollection": "opt-out"
   },
   "QM_REPOSITORIES_INITIALIZATION_TIME": {

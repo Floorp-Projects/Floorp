@@ -259,7 +259,7 @@ async function selectRuntime(deviceName, name, document) {
   sidebarItem.querySelector(".js-sidebar-link").click();
 
   await waitUntil(() => {
-    const runtimeInfo = document.querySelector(".js-runtime-info");
+    const runtimeInfo = document.querySelector(".js-runtime-name");
     return runtimeInfo && runtimeInfo.textContent.includes(name);
   });
 }

@@ -1284,12 +1284,37 @@ bool jit::EliminateDeadResumePointOperands(MIRGenerator* mir, MIRGraph& graph) {
 
 // Test whether |def| would be needed if it had no uses.
 bool js::jit::DeadIfUnused(const MDefinition* def) {
-  return !def->isEffectful() &&
-         (!def->isGuard() ||
-          (def->block() == def->block()->graph().osrBlock() &&
-           !def->isImplicitlyUsed())) &&
-         !def->isGuardRangeBailouts() && !def->isControlInstruction() &&
-         (!def->isInstruction() || !def->toInstruction()->resumePoint());
+  // Effectful instructions of course cannot be removed.
+  if (def->isEffectful()) {
+    return false;
+  }
+
+  // Guard instructions by definition are live if they have no uses, however,
+  // in the OSR block we are able to eliminate these guards, as some are
+  // artificially created and superceeded by failible unboxes.
+  if (def->isGuard() && (def->block() != def->block()->graph().osrBlock() ||
+                         def->isImplicitlyUsed())) {
+    return false;
+  }
+
+  // Required to be preserved, as the type guard related to this instruction
+  // is part of the semantics of a transformation.
+  if (def->isGuardRangeBailouts()) {
+    return false;
+  }
+
+  // Control instructions have no uses, but also shouldn't be optimized out
+  if (def->isControlInstruction()) {
+    return false;
+  }
+
+  // Used when lowering to generate the corresponding snapshots and aggregate
+  // the list of recover instructions to be repeated.
+  if (def->isInstruction() && def->toInstruction()->resumePoint()) {
+    return false;
+  }
+
+  return true;
 }
 
 // Test whether |def| may be safely discarded, due to being dead or due to being

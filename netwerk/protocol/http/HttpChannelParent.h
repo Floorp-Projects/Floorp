@@ -139,7 +139,8 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
 
   MOZ_MUST_USE bool DoAsyncOpen(
       const URIParams& uri, const OptionalURIParams& originalUri,
-      const OptionalURIParams& docUri, const OptionalURIParams& referrerUri,
+      const OptionalURIParams& docUri,
+      const OptionalURIParams& originalReferrerUri,
       const uint32_t& referrerPolicy,
       const OptionalURIParams& internalRedirectUri,
       const OptionalURIParams& topWindowUri, nsIPrincipal* aTopWindowPrincipal,

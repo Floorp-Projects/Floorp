@@ -523,6 +523,13 @@ BEGIN_TEST(testHashLazyStorage) {
   set.compact();
   CHECK(set.capacity() == 0);
 
+  // Lowest length for which reserve() will fail.
+  static const uint32_t toobig = (1 << 29) + 1;
+  CHECK(!set.reserve(toobig));
+  CHECK(set.capacity() == 0);  // unchanged
+  CHECK(set.reserve(16));
+  CHECK(set.capacity() == 32);
+
   return true;
 }
 END_TEST(testHashLazyStorage)
