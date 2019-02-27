@@ -26,6 +26,7 @@ add_task(async function() {
 
     // cut text from URL bar
     gURLBar.value = testText;
+    gURLBar.valueIsTyped = true;
     gURLBar.focus();
     gURLBar.select();
     await document.getElementById("nav-bar").overflowable.show();

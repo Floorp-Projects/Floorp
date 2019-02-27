@@ -427,11 +427,14 @@ class GCSchedulingTunables {
 
   /*
    * JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION
+   * JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_FRACTION
    *
    * Attempt to run a minor GC in the idle time if the free space falls
-   * below this threshold.
+   * below this threshold. The absolute threshold is used when the nursery is
+   * large and the percentage when it is small.  See Nursery::shouldCollect()
    */
   UnprotectedData<uint32_t> nurseryFreeThresholdForIdleCollection_;
+  UnprotectedData<float> nurseryFreeThresholdForIdleCollectionFraction_;
 
   /*
    * JSGC_PRETENURE_THRESHOLD
@@ -487,6 +490,9 @@ class GCSchedulingTunables {
   unsigned maxEmptyChunkCount() const { return maxEmptyChunkCount_; }
   uint32_t nurseryFreeThresholdForIdleCollection() const {
     return nurseryFreeThresholdForIdleCollection_;
+  }
+  float nurseryFreeThresholdForIdleCollectionFraction() const {
+    return nurseryFreeThresholdForIdleCollectionFraction_;
   }
 
   bool attemptPretenuring() const { return pretenureThreshold_ < 1.0f; }

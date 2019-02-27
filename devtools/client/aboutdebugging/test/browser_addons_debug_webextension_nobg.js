@@ -13,10 +13,6 @@ requestLongerTimeout(2);
 const ADDON_NOBG_ID = "test-devtools-webextension-nobg@mozilla.org";
 const ADDON_NOBG_NAME = "test-devtools-webextension-nobg";
 
-const {
-  BrowserToolboxProcess,
-} = ChromeUtils.import("resource://devtools/client/framework/ToolboxProcess.jsm");
-
 /**
  * This test file ensures that the webextension addon developer toolbox:
  * - the webextension developer toolbox is connected to a fallback page when the
@@ -39,64 +35,45 @@ add_task(async function testWebExtensionsToolboxNoBackgroundPage() {
     tab, document, debugBtn,
   } = await setupTestAboutDebuggingWebExtension(ADDON_NOBG_NAME, addonFile);
 
-  // Be careful, this JS function is going to be executed in the addon toolbox,
-  // which lives in another process. So do not try to use any scope variable!
-  const env = Cc["@mozilla.org/process/environment;1"]
-        .getService(Ci.nsIEnvironment);
-  const testScript = function() {
-    /* eslint-disable no-undef */
-    // This is webextension toolbox process. So we can't access mochitest framework.
-    const waitUntil = async function(predicate, interval = 10) {
-      if (await predicate()) {
-        return true;
-      }
-      return new Promise(resolve => {
-        toolbox.win.setTimeout(function() {
-          waitUntil(predicate, interval).then(() => resolve(true));
-        }, interval);
-      });
-    };
-
-    toolbox.selectTool("inspector").then(async inspector => {
-      let nodeActor;
-
-      dump(`Wait the fallback window to be fully loaded\n`);
-      await waitUntil(async () => {
-        nodeActor = await inspector.walker.querySelector(inspector.walker.rootNode, "h1");
-        return nodeActor && nodeActor.inlineTextChild;
-      });
-
-      dump("Got a nodeActor with an inline text child\n");
-      const expectedValue = "Your addon does not have any document opened yet.";
-      const actualValue = nodeActor.inlineTextChild._form.nodeValue;
-
-      if (actualValue !== expectedValue) {
-        throw new Error(
-          `mismatched inlineTextchild value: "${actualValue}" !== "${expectedValue}"`
-        );
-      }
-
-      dump("Got the expected inline text content in the selected node\n");
-
-      await toolbox.destroy();
-    }).catch((error) => {
-      dump("Error while running code in the browser toolbox process:\n");
-      dump(error + "\n");
-      dump("stack:\n" + error.stack + "\n");
-    });
-    /* eslint-enable no-undef */
-  };
-  env.set("MOZ_TOOLBOX_TEST_SCRIPT", "new " + testScript);
-  registerCleanupFunction(() => {
-    env.set("MOZ_TOOLBOX_TEST_SCRIPT", "");
-  });
-
-  const onToolboxClose = BrowserToolboxProcess.once("close");
+  const onToolboxReady = gDevTools.once("toolbox-ready");
+  const onToolboxClose = gDevTools.once("toolbox-destroyed");
   debugBtn.click();
-  await onToolboxClose;
+  const toolbox = await onToolboxReady;
+  testScript(toolbox);
 
+  await onToolboxClose;
   ok(true, "Addon toolbox closed");
 
   await uninstallAddon({document, id: ADDON_NOBG_ID, name: ADDON_NOBG_NAME});
   await closeAboutDebugging(tab);
 });
+
+const testScript = function(toolbox) {
+  toolbox.selectTool("inspector").then(async inspector => {
+    let nodeActor;
+
+    dump(`Wait the fallback window to be fully loaded\n`);
+    await asyncWaitUntil(async () => {
+      nodeActor = await inspector.walker.querySelector(inspector.walker.rootNode, "h1");
+      return nodeActor && nodeActor.inlineTextChild;
+    });
+
+    dump("Got a nodeActor with an inline text child\n");
+    const expectedValue = "Your addon does not have any document opened yet.";
+    const actualValue = nodeActor.inlineTextChild._form.nodeValue;
+
+    if (actualValue !== expectedValue) {
+      throw new Error(
+        `mismatched inlineTextchild value: "${actualValue}" !== "${expectedValue}"`
+      );
+    }
+
+    dump("Got the expected inline text content in the selected node\n");
+
+    await toolbox.destroy();
+  }).catch((error) => {
+    dump("Error while running code in the browser toolbox process:\n");
+    dump(error + "\n");
+    dump("stack:\n" + error.stack + "\n");
+  });
+};

@@ -60,8 +60,7 @@ ac_add_options --enable-application=mobile/android
 # ac_add_options --target=x86_64
 
 {extra_lines}
-# With the following Android SDK and NDK:
-ac_add_options --with-android-sdk="{sdk_path}"
+# With the following Android NDK:
 ac_add_options --with-android-ndk="{ndk_path}"
 
 # With the following compiler toolchain:
@@ -81,9 +80,6 @@ ac_add_options --target=arm-linux-androideabi
 ac_add_options --enable-artifact-builds
 
 {extra_lines}
-# With the following Android SDK:
-ac_add_options --with-android-sdk="{sdk_path}"
-
 # Write build artifacts to:
 mk_add_options MOZ_OBJDIR=./objdir-frontend
 <<<

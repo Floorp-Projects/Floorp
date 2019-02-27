@@ -56,7 +56,7 @@ impl Example for App {
                 vec![],
                 None,
                 ScrollSensitivity::ScriptAndInputEvents,
-                LayoutPoint::zero(),
+                LayoutVector2D::zero(),
             );
 
             // now put some content into it.
@@ -88,7 +88,7 @@ impl Example for App {
                 vec![],
                 None,
                 ScrollSensitivity::ScriptAndInputEvents,
-                LayoutPoint::zero(),
+                LayoutVector2D::zero(),
             );
 
             // give it a giant gray background just to distinguish it and to easily

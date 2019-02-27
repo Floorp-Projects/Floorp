@@ -1409,6 +1409,9 @@ InsertTagCommand::DoCommandParams(const char* aCommandName,
   // but nsString may avoid it.
   nsString value;
   nsresult rv = aParams->AsCommandParams()->GetString(STATE_ATTRIBUTE, value);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
   if (NS_WARN_IF(value.IsEmpty())) {
     return NS_ERROR_INVALID_ARG;
   }

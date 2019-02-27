@@ -210,8 +210,6 @@ def main():
                         'minification verification will not be performed.')
     parser.add_argument('--jarlog', default='', help='File containing jar ' +
                         'access logs')
-    parser.add_argument('--optimizejars', action='store_true', default=False,
-                        help='Enable jar optimizations')
     parser.add_argument('--compress', choices=('none', 'deflate', 'brotli'),
                         default='deflate',
                         help='Use given jar compression (default: deflate)')
@@ -242,12 +240,11 @@ def main():
     if args.format == 'flat':
         formatter = FlatFormatter(copier)
     elif args.format == 'jar':
-        formatter = JarFormatter(copier, compress=compress, optimize=args.optimizejars)
+        formatter = JarFormatter(copier, compress=compress)
     elif args.format == 'omni':
         formatter = OmniJarFormatter(copier,
                                      buildconfig.substs['OMNIJAR_NAME'],
                                      compress=compress,
-                                     optimize=args.optimizejars,
                                      non_resources=args.non_resource)
     else:
         errors.fatal('Unknown format: %s' % args.format)

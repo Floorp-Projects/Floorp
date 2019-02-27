@@ -31,7 +31,7 @@ add_task(async function() {
   const infoElement = await waitFor(() => getReverseSearchInfoElement(hud));
   is(infoElement.textContent, "3 of 3 results", "The reverse info has the expected text");
 
-  is(hud.jsterm.getInputValue(), jstermHistory[2], "JsTerm has the expected input");
+  is(getInputValue(hud), jstermHistory[2], "JsTerm has the expected input");
   is(hud.jsterm.autocompletePopup.isOpen, false,
     "Setting the input value did not trigger the autocompletion");
 
@@ -98,7 +98,7 @@ async function navigateResultsAndCheckState(hud, {
   }
   await onJsTermValueChanged;
 
-  is(hud.jsterm.getInputValue(), expectedJsTermInputValue, "JsTerm has expected value");
+  is(getInputValue(hud), expectedJsTermInputValue, "JsTerm has expected value");
 
   const infoElement = getReverseSearchInfoElement(hud);
   is(infoElement.textContent, expectedInfoText, "The reverse info has the expected text");

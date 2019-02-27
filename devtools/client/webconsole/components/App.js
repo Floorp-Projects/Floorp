@@ -244,7 +244,9 @@ class App extends Component {
             codeMirrorEnabled: jstermCodeMirror,
           }),
           ReverseSearchInput({
-            webConsoleUI,
+            setInputValue: serviceContainer.setInputValue,
+            focusInput: serviceContainer.focusInput,
+            evaluateInput: serviceContainer.evaluateInput,
             initialValue: reverseSearchInitialValue,
           })
         ),
