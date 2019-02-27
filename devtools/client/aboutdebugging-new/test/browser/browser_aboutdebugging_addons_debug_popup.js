@@ -16,10 +16,6 @@ requestLongerTimeout(2);
 const ADDON_ID = "test-devtools-webextension@mozilla.org";
 const ADDON_NAME = "test-devtools-webextension";
 
-const {
-  BrowserToolboxProcess,
-} = ChromeUtils.import("resource://devtools/client/framework/ToolboxProcess.jsm", {});
-
 // This is a migration from:
 // https://searchfox.org/mozilla-central/source/devtools/client/aboutdebugging/test/browser_addons_debug_webextension_popup.js
 
@@ -120,15 +116,13 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
 
   const target = findDebugTargetByText(ADDON_NAME, document);
 
-  info("Setup the toolbox test function as environment variable");
-  const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
-  env.set("MOZ_TOOLBOX_TEST_SCRIPT", "new " + toolboxTestScript);
-  registerCleanupFunction(() => env.set("MOZ_TOOLBOX_TEST_SCRIPT", ""));
-
-  info("Click inspect to open the addon toolbox");
-  const onToolboxClose = BrowserToolboxProcess.once("close");
+  info("Open a toolbox to debug the addon");
+  const onToolboxReady = gDevTools.once("toolbox-ready");
+  const onToolboxClose = gDevTools.once("toolbox-destroyed");
   const inspectButton = target.querySelector(".js-debug-target-inspect-button");
   inspectButton.click();
+  const toolbox = await onToolboxReady;
+  toolboxTestScript(toolbox);
 
   info("Wait until the addon popup is opened from the test script");
   await onReadyForOpenPopup;
@@ -161,10 +155,7 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
   await removeTab(tab);
 });
 
-// Be careful, this JS function is going to be executed in the addon toolbox,
-// which lives in another process. So do not try to use any scope variable!
-function toolboxTestScript() {
-  /* eslint-disable no-undef */
+async function toolboxTestScript(toolbox) {
   let jsterm;
   const popupFramePromise = new Promise(resolve => {
     const listener = data => {
@@ -210,20 +201,6 @@ function toolboxTestScript() {
       const btn = toolbox.doc.getElementById("command-button-frames");
       btn.click();
 
-      // This is webextension toolbox process. So we can't access mochitest framework.
-      const waitUntil = function(predicate, interval = 10) {
-        if (predicate()) {
-          return Promise.resolve(true);
-        }
-        return new Promise(resolve => {
-          toolbox.win.setTimeout(function() {
-            waitUntil(predicate, interval).then(() => resolve(true));
-          }, interval);
-        });
-      };
-      await waitUntil(() => btn.style.pointerEvents === "none");
-      dump(`Clicked the frame list button\n`);
-
       const menuList = toolbox.doc.getElementById("toolbox-frame-menu");
       const frames = Array.from(menuList.querySelectorAll(".command"));
 
@@ -240,19 +217,19 @@ function toolboxTestScript() {
       }
 
       const waitForNavigated = toolbox.target.once("navigate");
-
       popupFrameBtn.click();
-
+      // Clicking the menu item may do highlighting.
+      await waitUntil(() => toolbox.highlighter);
+      await Promise.race([toolbox.highlighter.once("node-highlight"), wait(1000)]);
       await waitForNavigated;
 
       await jsterm.execute("myWebExtensionPopupAddonFunction()");
 
-      await toolbox.destroy();
+      await toolbox.closeToolbox();
     })
     .catch((error) => {
       dump("Error while running code in the browser toolbox process:\n");
       dump(error + "\n");
       dump("stack:\n" + error.stack + "\n");
     });
-  /* eslint-enable no-undef */
 }

@@ -283,6 +283,16 @@ typedef enum JSGCParamKey {
    * Pref: None
    */
   JSGC_PRETENURE_GROUP_THRESHOLD = 29,
+
+  /**
+   * Attempt to run a minor GC in the idle time if the free space falls
+   * below this percentage (from 0 to 99).
+   *
+   * Default: 25
+   * Pref: None
+   */
+  JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_PERCENT = 30,
+
 } JSGCParamKey;
 
 /*

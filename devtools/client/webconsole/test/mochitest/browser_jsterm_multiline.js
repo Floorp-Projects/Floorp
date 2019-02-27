@@ -92,24 +92,25 @@ async function performTests() {
   const snapshot = Services.telemetry.snapshotEvents(OPTOUT, true);
   ok(!snapshot.parent, "No events have been logged for the main process");
 
-  const {jsterm} = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
+  const {jsterm} = hud;
 
   for (const {input, shiftKey} of SHOULD_ENTER_MULTILINE) {
-    jsterm.setInputValue(input);
+    setInputValue(hud, input);
     EventUtils.synthesizeKey("VK_RETURN", { shiftKey });
 
     // We need to remove the spaces at the end of the input since code mirror do some
     // automatic indent in some case.
-    const newValue = jsterm.getInputValue().replace(/ +$/g, "");
+    const newValue = getInputValue(hud).replace(/ +$/g, "");
     is(newValue, input + "\n", "A new line was added");
   }
 
   for (const {input, shiftKey} of SHOULD_EXECUTE) {
-    jsterm.setInputValue(input);
+    setInputValue(hud, input);
     EventUtils.synthesizeKey("VK_RETURN", { shiftKey });
 
-    await waitFor(() => !jsterm.getInputValue());
-    is(jsterm.getInputValue(), "", "Input is cleared");
+    await waitFor(() => !getInputValue(hud));
+    is(getInputValue(hud), "", "Input is cleared");
   }
 
   await jsterm.execute("document.\nlocation.\nhref");

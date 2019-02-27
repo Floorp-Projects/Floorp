@@ -298,11 +298,9 @@ def repack(source, l10n, extra_l10n={}, non_resources=[], non_chrome=set()):
         formatter = FlatFormatter(copier)
     elif app_finder.kind == 'jar':
         formatter = JarFormatter(copier,
-                                 optimize=app_finder.optimizedjars,
                                  compress=compress)
     elif app_finder.kind == 'omni':
         formatter = OmniJarFormatter(copier, app_finder.omnijar,
-                                     optimize=app_finder.optimizedjars,
                                      compress=compress,
                                      non_resources=non_resources)
 

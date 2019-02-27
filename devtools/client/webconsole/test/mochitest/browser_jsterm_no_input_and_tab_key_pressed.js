@@ -24,16 +24,16 @@ async function performTests(codeMirror) {
 
   info("Check that hitting Tab when input is empty insert blur the input");
   jsterm.focus();
-  jsterm.setInputValue("");
+  setInputValue(hud, "");
   EventUtils.synthesizeKey("KEY_Tab");
-  is(jsterm.getInputValue(), "", "inputnode is empty - matched");
-  ok(!isJstermFocused(jsterm), "input isn't focused anymore");
+  is(getInputValue(hud), "", "inputnode is empty - matched");
+  ok(!isInputFocused(hud), "input isn't focused anymore");
 
   info("Check that hitting Shift+Tab when input is not empty insert a tab");
   jsterm.focus();
   EventUtils.synthesizeKey("KEY_Tab", {shiftKey: true});
-  is(jsterm.getInputValue(), "", "inputnode is empty - matched");
-  ok(!isJstermFocused(jsterm), "input isn't focused anymore");
+  is(getInputValue(hud), "", "inputnode is empty - matched");
+  ok(!isInputFocused(hud), "input isn't focused anymore");
   ok(hasFocus(hud.ui.outputNode.querySelector(".devtools-button.net")),
     `The "Requests" filter button is now focused`);
 
@@ -41,21 +41,21 @@ async function performTests(codeMirror) {
   jsterm.focus();
 
   const testString = "window.Bug583816";
-  await setInputValueForAutocompletion(jsterm, testString, 0);
-  checkJsTermValueAndCursor(jsterm, `|${testString}`,
+  await setInputValueForAutocompletion(hud, testString, 0);
+  checkInputValueAndCursorPosition(hud, `|${testString}`,
     "cursor is at the start of the input");
 
   EventUtils.synthesizeKey("KEY_Tab");
-  checkJsTermValueAndCursor(jsterm, `\t|${testString}`,
+  checkInputValueAndCursorPosition(hud, `\t|${testString}`,
     "a tab char was added at the start of the input after hitting Tab");
-  ok(isJstermFocused(jsterm), "input is still focused");
+  ok(isInputFocused(hud), "input is still focused");
 
   // We only check the 'unindent' feature for CodeMirror JsTerm.
   if (codeMirror) {
     info("Check that hitting Shift+Tab when input is not empty removed leading tabs");
     EventUtils.synthesizeKey("KEY_Tab", {shiftKey: true});
-    checkJsTermValueAndCursor(jsterm, `|${testString}`,
+    checkInputValueAndCursorPosition(hud, `|${testString}`,
       "The tab char at the the start of the input was removed after hitting Shift+Tab");
-    ok(isJstermFocused(jsterm), "input is still focused");
+    ok(isInputFocused(hud), "input is still focused");
   }
 }

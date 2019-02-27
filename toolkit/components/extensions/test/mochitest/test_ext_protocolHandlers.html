@@ -1,6 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
+  <meta charset="utf-8">
   <title>Test for protocol handlers</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/AddTask.js"></script>
@@ -43,6 +44,9 @@ function protocolChromeScript() {
 }
 
 add_task(async function test_protocolHandler() {
+  await SpecialPowers.pushPrefEnv({set: [
+    ["extensions.allowPrivateBrowsingByDefault", false],
+  ]});
   let extensionData = {
     manifest: {
       "protocol_handlers": [
@@ -81,6 +85,22 @@ add_task(async function test_protocolHandler() {
     },
   };
 
+  let pb_extension = ExtensionTestUtils.loadExtension({
+    background() {
+      browser.test.onMessage.addListener(async (msg, arg) => {
+        if (msg == "open") {
+          let tab = await browser.windows.create({url: arg, incognito: true});
+          browser.test.sendMessage("opened", tab.id);
+        } else if (msg == "close") {
+          await browser.windows.remove(arg);
+          browser.test.sendMessage("closed");
+        }
+      });
+    },
+    incognitoOverride: "spanning",
+  });
+  await pb_extension.startup();
+
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
   let handlerUrl = await extension.awaitMessage("test-url");
@@ -108,6 +128,37 @@ add_task(async function test_protocolHandler() {
 
   extension.sendMessage("close", id);
   await extension.awaitMessage("closed");
+
+  // Test the protocol in a private window, watch for the
+  // console error.
+  consoleMonitor.start([{message: /NS_ERROR_FILE_NOT_FOUND/}]);
+
+  // Expect the chooser window to be open, close it.
+  chromeScript = SpecialPowers.loadChromeScript(async () => {
+    const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+
+    let window = await BrowserTestUtils.domWindowOpened(undefined, win => {
+      return BrowserTestUtils.waitForEvent(win, "load", false, event => {
+        let win = event.target.defaultView;
+        return win.document.documentElement.getAttribute("id") === "handling";
+      });
+    });
+    let entry =  window.document.getElementById("items").firstChild;
+    sendAsyncMessage("handling", {name: entry.getAttribute("name"), disabled: entry.disabled});
+    window.close();
+  });
+
+  let testData = chromeScript.promiseOneMessage("handling");
+  pb_extension.sendMessage("open", "ext+foo:test");
+  id = await pb_extension.awaitMessage("opened");
+  await consoleMonitor.finished();
+  let entry = await testData;
+  is(entry.name, "a foo protocol handler", "entry is correct");
+  ok(entry.disabled, "handler is disabled");
+
+  pb_extension.sendMessage("close", id);
+  await pb_extension.awaitMessage("closed");
+  await pb_extension.unload();
 
   // Shutdown the addon, then ensure the protocol was removed.
   await extension.unload();

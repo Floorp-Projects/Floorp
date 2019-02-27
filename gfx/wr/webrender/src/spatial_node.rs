@@ -125,6 +125,7 @@ impl SpatialNode {
         content_size: &LayoutSize,
         scroll_sensitivity: ScrollSensitivity,
         frame_kind: ScrollFrameKind,
+        external_scroll_offset: LayoutVector2D,
     ) -> Self {
         let node_type = SpatialNodeType::ScrollFrame(ScrollFrameInfo::new(
                 *frame_rect,
@@ -135,6 +136,7 @@ impl SpatialNode {
                 ),
                 external_id,
                 frame_kind,
+                external_scroll_offset,
             )
         );
 
@@ -655,6 +657,10 @@ pub struct ScrollFrameInfo {
     ///           to define scroll frames. However, that involves API changes
     ///           so we will use this as a temporary hack!
     pub frame_kind: ScrollFrameKind,
+
+    /// Amount that visual components attached to this scroll node have been
+    /// pre-scrolled in their local coordinates.
+    pub external_scroll_offset: LayoutVector2D,
 }
 
 /// Manages scrolling offset.
@@ -665,6 +671,7 @@ impl ScrollFrameInfo {
         scrollable_size: LayoutSize,
         external_id: Option<ExternalScrollId>,
         frame_kind: ScrollFrameKind,
+        external_scroll_offset: LayoutVector2D,
     ) -> ScrollFrameInfo {
         ScrollFrameInfo {
             viewport_rect,
@@ -673,6 +680,7 @@ impl ScrollFrameInfo {
             scrollable_size,
             external_id,
             frame_kind,
+            external_scroll_offset,
         }
     }
 
@@ -694,6 +702,7 @@ impl ScrollFrameInfo {
             scrollable_size: self.scrollable_size,
             external_id: self.external_id,
             frame_kind: self.frame_kind,
+            external_scroll_offset: self.external_scroll_offset,
         }
     }
 }

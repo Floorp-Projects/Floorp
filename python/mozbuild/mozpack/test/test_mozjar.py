@@ -139,11 +139,9 @@ class TestDeflaterMemoryView(TestDeflater):
 
 
 class TestJar(unittest.TestCase):
-    optimize = False
-
     def test_jar(self):
         s = MockDest()
-        with JarWriter(fileobj=s, optimize=self.optimize) as jar:
+        with JarWriter(fileobj=s) as jar:
             jar.add('foo', 'foo')
             self.assertRaises(JarWriterError, jar.add, 'foo', 'bar')
             jar.add('bar', 'aaaaaaaaaaaaanopqrstuvwxyz')
@@ -172,8 +170,7 @@ class TestJar(unittest.TestCase):
                 'backslashes in filenames on POSIX platform are untouched')
 
         s = MockDest()
-        with JarWriter(fileobj=s, compress=False,
-                       optimize=self.optimize) as jar:
+        with JarWriter(fileobj=s, compress=False) as jar:
             jar.add('bar', 'aaaaaaaaaaaaanopqrstuvwxyz')
             jar.add('foo', 'foo')
             jar.add('baz/qux', 'aaaaaaaaaaaaanopqrstuvwxyz', True)
@@ -225,13 +222,13 @@ class TestJar(unittest.TestCase):
 
     def test_rejar(self):
         s = MockDest()
-        with JarWriter(fileobj=s, optimize=self.optimize) as jar:
+        with JarWriter(fileobj=s) as jar:
             jar.add('foo', 'foo')
             jar.add('bar', 'aaaaaaaaaaaaanopqrstuvwxyz')
             jar.add('baz/qux', 'aaaaaaaaaaaaanopqrstuvwxyz', False)
 
         new = MockDest()
-        with JarWriter(fileobj=new, optimize=self.optimize) as jar:
+        with JarWriter(fileobj=new) as jar:
             for j in JarReader(fileobj=s):
                 jar.add(j.filename, j)
 
@@ -252,7 +249,7 @@ class TestJar(unittest.TestCase):
 
     def test_add_from_finder(self):
         s = MockDest()
-        with JarWriter(fileobj=s, optimize=self.optimize) as jar:
+        with JarWriter(fileobj=s) as jar:
             finder = FileFinder(test_data_path)
             for p, f in finder.find('test_data'):
                 jar.add('test_data', f)
@@ -263,10 +260,6 @@ class TestJar(unittest.TestCase):
         self.assertEqual(files[0].filename, 'test_data')
         self.assertFalse(files[0].compressed)
         self.assertEqual(files[0].read(), 'test_data')
-
-
-class TestOptimizeJar(TestJar):
-    optimize = True
 
 
 class TestPreload(unittest.TestCase):
