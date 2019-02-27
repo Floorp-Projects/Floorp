@@ -1741,15 +1741,6 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
   },
 
   /**
-   * Calls modifySelector2() which needs to be kept around for backwards compatibility.
-   * TODO: Once Firefox 64 is no longer supported, inline that mehtod's content,
-   * then remove its definition from this file and from specs/styles.js
-   */
-  modifySelector: function(node, value, editAuthored = false) {
-    return this.modifySelector2(node, value, editAuthored);
-  },
-
-  /**
    * Modify the current rule's selector by inserting a new rule with the new
    * selector value and removing the current rule.
    *
@@ -1771,7 +1762,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    *        new rule and a boolean indicating whether or not the new selector
    *        matches the current selected element
    */
-  modifySelector2: function(node, value, editAuthored = false) {
+  modifySelector: function(node, value, editAuthored = false) {
     if (this.type === ELEMENT_STYLE ||
         this.rawRule.selectorText === value) {
       return { ruleProps: null, isMatching: true };
