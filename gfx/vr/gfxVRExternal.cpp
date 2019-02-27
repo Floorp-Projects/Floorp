@@ -896,10 +896,6 @@ void VRSystemManagerExternal::PushState(VRBrowserState* aBrowserState,
       memcpy((void*)&(mExternalShmem->geckoState), (void*)aBrowserState,
              sizeof(VRBrowserState));
       mExternalShmem->geckoGenerationB++;
-      mExternalShmem->geckoGenerationA++;
-      memcpy((void*)&(mExternalShmem->geckoState), (void*)aBrowserState,
-             sizeof(VRBrowserState));
-      mExternalShmem->geckoGenerationB++;
     }
 #endif    // defined(MOZ_WIDGET_ANDROID)
   }

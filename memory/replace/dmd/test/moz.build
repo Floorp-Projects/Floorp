@@ -9,7 +9,7 @@ GeckoSimplePrograms([
 ], linkage=None)
 
 # See the comment at the top of SmokeDMD.cpp:RunTests().
-if CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG['CXX_TYPE'] == 'clang-cl':
     CXXFLAGS += ['-Og-']
 else:
     CXXFLAGS += ['-O0']

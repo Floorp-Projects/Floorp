@@ -588,7 +588,7 @@ nsresult FetchDriver::HttpFetch(
       nsCOMPtr<nsILoadInfo> loadInfo = httpChan->LoadInfo();
       bool isPrivate = loadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
       net::ReferrerPolicy referrerPolicy = static_cast<net::ReferrerPolicy>(
-          NS_GetDefaultReferrerPolicy(isPrivate));
+          NS_GetDefaultReferrerPolicy(httpChan, uri, isPrivate));
       mRequest->SetReferrerPolicy(referrerPolicy);
     }
 
