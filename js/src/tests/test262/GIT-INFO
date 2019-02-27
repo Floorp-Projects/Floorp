@@ -1,5 +1,7 @@
-commit 4f1155c566a222238fd86f179c6635ecb4c289bb
-Author: Frank Yung-Fong Tang <41213225+FrankYFTang@users.noreply.github.com>
-Date:   Fri Jan 18 08:15:37 2019 -0800
+commit d7c8a12e68af1f8713082b73ff25a945c9c597d5
+Author: Mathias Bynens <mathias@qiwi.be>
+Date:   Wed Jan 23 10:56:03 2019 -0500
 
-    Change tests according to ecma402/pull/278 (#2031)
+    Remove invalid line terminator tests (#2044)
+    
+    https://github.com/tc39/test262/pull/2020#issuecomment-456581449
