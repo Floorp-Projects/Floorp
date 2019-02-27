@@ -1,11 +1,11 @@
-// |reftest| skip -- class-methods-private,class-fields-public is not supported
+// |reftest| skip -- class-methods-private,class-fields-private,class-fields-public is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-elements/rs-private-method.case
 // - src/class-elements/productions/cls-decl-new-no-sc-line-method.template
 /*---
 description: Valid PrivateName as private method (field definitions followed by a method in a new line without a semicolon)
 esid: prod-FieldDefinition
-features: [class-methods-private, class, class-fields-public]
+features: [class-methods-private, class-fields-private, class, class-fields-public]
 flags: [generated]
 includes: [propertyHelper.js]
 info: |

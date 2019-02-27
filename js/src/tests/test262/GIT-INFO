@@ -1,5 +1,8 @@
-commit a338b5f744adedbe6e548ae712c44d85b05f5157
-Author: Nicolò Ribaudo <nicolo.ribaudo@gmail.com>
-Date:   Sat Jan 12 01:07:23 2019 +0100
+commit d53256c971f3b6b6d709a909446919b7bb56f3b5
+Merge: 5331ca05a2 f624ca52d1
+Author: Leo Balter <leonardo.balter@gmail.com>
+Date:   Fri Jan 18 11:17:04 2019 -0200
 
-    Space
+    Merge pull request #2038 from nicolo-ribaudo/patch-3
+    
+    Add missing features to private elements tests
