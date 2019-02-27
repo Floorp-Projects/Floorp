@@ -53,6 +53,7 @@ elif CONFIG['OS_TARGET'] == 'Darwin':
         HAVE_BSD_FLOCK=True,
         HAVE_SOCKLEN_T=True,
         HAVE_POINTER_LOCALTIME_R=True,
+        _PR_POLL_AVAILABLE=True,
     )
     SOURCES += [
         '/nsprpub/pr/src/md/unix/darwin.c',
