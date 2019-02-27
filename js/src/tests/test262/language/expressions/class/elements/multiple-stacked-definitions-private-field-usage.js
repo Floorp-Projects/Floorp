@@ -1,11 +1,11 @@
-// |reftest| skip -- class-methods-private,class-fields-public is not supported
+// |reftest| skip -- class-fields-private,class-fields-public is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-elements/private-field-usage.case
 // - src/class-elements/productions/cls-expr-multiple-stacked-definitions.template
 /*---
 description: PrivateName CallExpression usage (private field) (multiple stacked fields definitions through ASI)
 esid: prod-FieldDefinition
-features: [class-methods-private, class, class-fields-public]
+features: [class-fields-private, class, class-fields-public]
 flags: [generated]
 includes: [propertyHelper.js]
 info: |
