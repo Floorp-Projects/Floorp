@@ -1,10 +1,5 @@
 const Cm = Components.manager;
 
-function waitForEvent(elem, event) {
-  return new Promise(resolve => {
-    elem.addEventListener(event, resolve, {capture: true, once: true});
-  });
-}
 
 function testFirstPartyDomain(pageInfo) {
   return new Promise(resolve => {
@@ -32,9 +27,9 @@ function testFirstPartyDomain(pageInfo) {
         // the triggeringprincipal attribute on the node, so we simply wait for
         // loadstart.
         if (i == 0) {
-          await waitForEvent(preview, "loadend");
+          await BrowserTestUtils.waitForEvent(preview, "loadend");
         } else {
-          await waitForEvent(preview, "loadstart");
+          await BrowserTestUtils.waitForEvent(preview, "loadstart");
         }
 
         info("preview load " + i);
@@ -81,7 +76,7 @@ async function test() {
   // see bug 1403365.
   let pageInfo = BrowserPageInfo(url, "mediaTab", {});
   info("waitForEvent pageInfo");
-  await waitForEvent(pageInfo, "load");
+  await BrowserTestUtils.waitForEvent(pageInfo, "load");
 
   info("calling testFirstPartyDomain");
   await testFirstPartyDomain(pageInfo);
