@@ -30,7 +30,7 @@ class AltDataOutputStreamParent : public PAltDataOutputStreamParent,
   mozilla::ipc::IPCResult RecvWriteData(const nsCString& data);
   // Called when AltDataOutputStreamChild::Close() is
   // Closes and nulls the output stream.
-  mozilla::ipc::IPCResult RecvClose();
+  mozilla::ipc::IPCResult RecvClose(const nsresult& aStatus);
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   // Sets an error that will be reported to the content process.
