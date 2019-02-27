@@ -74,24 +74,120 @@ var TelemetryTestUtils = {
   /* Events */
 
   /**
-   * Asserts if snapshotted events telemetry match the expected values.
+   * Asserts that the number of events, after filtering, is equal to numEvents.
    *
-   * @param {Array} events Snapshotted telemetry events to test.
-   * @param {Array} expectedEvents The expected event data.
+   * @param {Number} numEvents The number of events to assert.
+   * @param {Object} filter As per assertEvents.
+   * @param {Object} options As per assertEvents.
    */
-  assertEvents(events, expectedEvents) {
-    if (!Services.telemetry.canRecordExtended) {
-      console.log("Not asserting event telemetry - canRecordExtended is disabled.");
+  assertNumberOfEvents(numEvents, filter, options) {
+    // Create an array of empty objects of length numEvents
+    TelemetryTestUtils.assertEvents(
+      Array.from({length: numEvents}, () => ({})), filter, options);
+  },
+
+  /**
+   * Asserts that, after optional filtering, the current events snapshot
+   * matches expectedEvents.
+   *
+   * @param {Array} expectedEvents An array of event structures of the form
+   *                [category, method, object, value, extra]
+   *                or the same as an object with fields named as above.
+   *                The array can be empty to assert that there are no events
+   *                that match the filter.
+   *                Each field can be absent/undefined (to match
+   *                everything), a string or null (to match that value), a
+   *                RegExp to match what it can match, or a function which
+   *                matches by returning true when called with the field.
+   *                `extra` is slightly different. If present it must be an
+   *                object whose fields are treated the same way as the others.
+   * @param {Object} filter An object of strings or RegExps for first filtering
+   *                 the event snapshot. Of the form {category, method, object}.
+   *                 Absent filters filter nothing.
+   * @param {Object} options An object containing any of
+   *                     - clear {bool} clear events. Default true.
+   *                     - process {string} the process to examine. Default parent.
+   */
+  assertEvents(expectedEvents, filter = {}, {clear = true, process = "parent"} = {}) {
+    // Step 0: Snapshot and clear.
+    let snapshots = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, clear);
+    if (expectedEvents.length === 0 && !(process in snapshots)) {
+      // Job's done!
+      return;
+    }
+    Assert.ok(process in snapshots, `${process} must be in snapshot. Has [${Object.keys(snapshots)}].`);
+    let snapshot = snapshots[process];
+
+    // Step 1: Filter.
+    let {category: filterCategory, method: filterMethod, object: filterObject} = filter;
+    let matches = (expected, actual) => {
+      if (expected === undefined) {
+        return true;
+      } else if (expected instanceof RegExp) {
+        return expected.test(actual);
+      } else if ((typeof expected) === "function") {
+        return expected(actual);
+      }
+      return expected === actual;
+    };
+
+    let filtered = snapshot
+      .map(([/* timestamp */, category, method, object, value, extra]) => {
+        // We don't care about the `timestamp` value.
+        // Tests that examine that value should use `snapshotEvents` directly.
+        return [category, method, object, value, extra];
+      }).filter(([category, method, object]) => {
+        return matches(filterCategory, category)
+          && matches(filterMethod, method)
+          && matches(filterObject, object);
+      });
+
+    // Step 2: Match.
+    Assert.equal(expectedEvents.length, filtered.length,
+      "After filtering we must have the expected number of events.");
+    if (expectedEvents.length === 0) {
+      // Job's done!
       return;
     }
 
-    Assert.equal(events.length, expectedEvents.length, "Should have matching amount of events.");
+    // Transform object-type expected events to array-type to match snapshot.
+    if (!Array.isArray(expectedEvents[0])) {
+      expectedEvents = expectedEvents.map(
+        ({category, method, object, value, extra}) =>
+          [category, method, object, value, extra]);
+    }
 
-    // Strip timestamps from the events for easier comparison.
-    events = events.map(e => e.slice(1));
+    const FIELD_NAMES = ["category", "method", "object", "value", "extra"];
+    const EXTRA_INDEX = 4;
+    for (let i = 0; i < expectedEvents.length; ++i) {
+      let expected = expectedEvents[i];
+      let actual = filtered[i];
 
-    for (let i = 0; i < events.length; ++i) {
-      Assert.deepEqual(events[i], expectedEvents[i], "Events should match.");
+      // Match everything up to `extra`
+      for (let j = 0; j < EXTRA_INDEX; ++j) {
+        if (expected[j] === undefined) {
+          // Don't spam the assert log with unspecified fields.
+          continue;
+        }
+        Assert.report(!matches(expected[j], actual[j]), actual[j], expected[j],
+            `${FIELD_NAMES[j]} in event ${actual[0]}#${actual[1]}#${actual[2]} must match.`,
+            "matches");
+      }
+
+      // Match extra
+      if (expected.length > EXTRA_INDEX && expected[EXTRA_INDEX] !== undefined) {
+        Assert.ok(actual.length > EXTRA_INDEX,
+            `Actual event ${actual[0]}#${actual[1]}#${actual[2]} expected to have extra.`);
+        let expectedExtra = expected[EXTRA_INDEX];
+        let actualExtra = actual[EXTRA_INDEX];
+        for (let [key, value] of Object.entries(expectedExtra)) {
+          Assert.ok(key in actualExtra,
+              `Expected key ${key} must be in actual extra. Actual keys: [${Object.keys(actualExtra)}].`);
+          Assert.report(!matches(value, actualExtra[key]), actualExtra[key], value,
+              `extra[${key}] must match in event ${actual[0]}#${actual[1]}#${actual[2]}.`,
+              "matches");
+        }
+      }
     }
   },
 
