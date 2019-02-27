@@ -1,10 +1,22 @@
+// Copyright 2017 Serde Developers
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
 //! Building blocks for deserializing basic values using the `IntoDeserializer`
 //! trait.
 //!
-//! ```edition2018
+//! ```rust
+//! #[macro_use]
+//! extern crate serde_derive;
+//!
+//! extern crate serde;
+//!
 //! use std::str::FromStr;
-//! use serde::Deserialize;
-//! use serde::de::{value, IntoDeserializer};
+//! use serde::de::{value, Deserialize, IntoDeserializer};
 //!
 //! #[derive(Deserialize)]
 //! enum Setting {
@@ -19,6 +31,8 @@
 //!         Self::deserialize(s.into_deserializer())
 //!     }
 //! }
+//! #
+//! # fn main() {}
 //! ```
 
 use lib::*;
