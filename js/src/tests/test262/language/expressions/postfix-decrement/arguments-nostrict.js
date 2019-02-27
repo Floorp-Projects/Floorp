@@ -22,6 +22,8 @@ info: |
 flags: [noStrict]
 ---*/
 
-arguments--;
+if (false) {
+  arguments--;
+}
 
 reportCompare(0, 0);

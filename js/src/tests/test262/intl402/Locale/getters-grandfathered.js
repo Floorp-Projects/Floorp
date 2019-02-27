@@ -27,13 +27,6 @@ features: [Intl.Locale]
 ---*/
 
 // Regular grandfathered language tag.
-var loc = new Intl.Locale("cel-gaulish");
-assert.sameValue(loc.baseName, "cel-gaulish"); // Step 5.
-assert.sameValue(loc.language, "cel-gaulish");
-assert.sameValue(loc.script, undefined);
-assert.sameValue(loc.region, undefined);
-
-// Regular grandfathered language tag.
 assert.throws(RangeError, () => new Intl.Locale("zh-min"));
 
 assert.throws(RangeError, () => new Intl.Locale("i-default"));
