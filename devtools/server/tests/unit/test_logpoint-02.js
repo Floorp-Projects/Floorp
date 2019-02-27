@@ -8,6 +8,8 @@
  * Check that conditions are respected when specified in a logpoint.
  */
 
+const { getLastThreadActor } = require("xpcshell-test/testactors");
+
 var gDebuggee;
 var gClient;
 var gThreadClient;
@@ -27,6 +29,13 @@ function run_test() {
 }
 
 function test_simple_breakpoint() {
+  let lastMessage;
+  getLastThreadActor()._parent._consoleActor = {
+    onConsoleAPICall(message) {
+      lastMessage = message;
+    },
+  };
+
   gThreadClient.addOneTimeListener("paused", async function(event, packet) {
     const source = await getSourceById(
       gThreadClient,
@@ -36,20 +45,18 @@ function test_simple_breakpoint() {
     // Set a logpoint which should invoke console.log.
     gThreadClient.setBreakpoint({
       sourceUrl: source.url,
-      line: 5,
+      line: 4,
     }, { logValue: "a", condition: "a === 5" });
 
     // Execute the rest of the code.
     gThreadClient.resume();
   });
 
-  // Sandboxes don't have a console available so we add our own.
   /* eslint-disable */
-  Cu.evalInSandbox("var console = { log: v => { this.logValue = v } };\n" + // 1
-                   "debugger;\n" + // 2
-                   "var a = 1;\n" +  // 3
-                   "while (a < 10) {\n" + // 4
-                   "  a++;\n" + // 5
+  Cu.evalInSandbox("debugger;\n" + // 1
+                   "var a = 1;\n" +  // 2
+                   "while (a < 10) {\n" + // 3
+                   "  a++;\n" + // 4
                    "}",
                    gDebuggee,
                    "1.8",
@@ -57,6 +64,6 @@ function test_simple_breakpoint() {
                    1);
   /* eslint-enable */
 
-  Assert.equal(gDebuggee.logValue, 5);
+  Assert.equal(lastMessage.arguments[0], 5);
   finishClient(gClient);
 }
