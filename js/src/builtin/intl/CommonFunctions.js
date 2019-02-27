@@ -1334,20 +1334,9 @@ function SupportedLocales(availableLocales, requestedLocales, options) {
     }
 
     // Steps 2-5.
-    var subset = (matcher === undefined || matcher === "best fit")
-                 ? BestFitSupportedLocales(availableLocales, requestedLocales)
-                 : LookupSupportedLocales(availableLocales, requestedLocales);
-
-    // Steps 6-7.
-    for (var i = 0; i < subset.length; i++) {
-        _DefineDataProperty(subset, i, subset[i],
-                            ATTR_ENUMERABLE | ATTR_NONCONFIGURABLE | ATTR_NONWRITABLE);
-    }
-    _DefineDataProperty(subset, "length", subset.length,
-                        ATTR_NONENUMERABLE | ATTR_NONCONFIGURABLE | ATTR_NONWRITABLE);
-
-    // Step 8.
-    return subset;
+    return (matcher === undefined || matcher === "best fit")
+           ? BestFitSupportedLocales(availableLocales, requestedLocales)
+           : LookupSupportedLocales(availableLocales, requestedLocales);
 }
 
 /**
