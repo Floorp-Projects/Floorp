@@ -40,7 +40,7 @@ async function performTests() {
   const onPopUpOpen = popup.once("popup-opened");
 
   info("wait for completion: window.foo.");
-  jsterm.setInputValue("window.foo");
+  setInputValue(hud, "window.foo");
   EventUtils.sendString(".");
 
   await onPopUpOpen;
@@ -54,6 +54,6 @@ async function performTests() {
   await onPopupClose;
 
   ok(!popup.isOpen, "popup is not open after reloading the page");
-  is(jsterm.getInputValue(), "window.foo.", "completion was cancelled");
+  is(getInputValue(hud), "window.foo.", "completion was cancelled");
   ok(!getInputCompletionValue(hud), "completeNode is empty");
 }

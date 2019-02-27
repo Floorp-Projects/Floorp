@@ -40,12 +40,12 @@ async function performTests() {
     "completion node has expected :screenshot value");
 
   EventUtils.synthesizeKey("KEY_Tab");
-  is(jsterm.getInputValue(), ":screenshot", "Tab key correctly completed :screenshot");
+  is(getInputValue(hud), ":screenshot", "Tab key correctly completed :screenshot");
 
   ok(!autocompletePopup.isOpen, "popup is closed after Tab");
 
   info("Test :hel completion");
-  jsterm.setInputValue(":he");
+  setInputValue(hud, ":he");
   onAutocompleUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString("l");
 
@@ -53,7 +53,7 @@ async function performTests() {
   checkInputCompletionValue(hud, "    p", "completion node has expected :help value");
 
   EventUtils.synthesizeKey("KEY_Tab");
-  is(jsterm.getInputValue(), ":help", "Tab key correctly completes :help");
+  is(getInputValue(hud), ":help", "Tab key correctly completes :help");
 }
 
 function getPopupItems(popup) {

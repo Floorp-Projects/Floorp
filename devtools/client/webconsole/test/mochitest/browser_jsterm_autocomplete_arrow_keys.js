@@ -33,7 +33,7 @@ async function performTests() {
     checkInputValueAndCursorPosition(hud, expected, assertionInfo);
 
   let onPopUpOpen = popup.once("popup-opened");
-  jsterm.setInputValue("window.foo");
+  setInputValue(hud, "window.foo");
   EventUtils.sendString(".");
   await onPopUpOpen;
 
@@ -53,7 +53,7 @@ async function performTests() {
 
   info("Trigger autocomplete popup opening again");
   onPopUpOpen = popup.once("popup-opened");
-  jsterm.setInputValue("window.foo");
+  setInputValue(hud, "window.foo");
   EventUtils.sendString(".");
   await onPopUpOpen;
 
@@ -71,7 +71,7 @@ async function performTests() {
 
   info("Test that Ctrl/Cmd + Left removes complete node");
   await setInputValueForAutocompletion(hud, "window.foo.a");
-  const prefix = jsterm.getInputValue().replace(/[\S]/g, " ");
+  const prefix = getInputValue(hud).replace(/[\S]/g, " ");
   checkInputCompletionValue(hud, prefix + "a", "completeNode has expected value");
 
   const isOSX = Services.appinfo.OS == "Darwin";
@@ -82,7 +82,7 @@ async function performTests() {
     "completeNode was cleared after Ctrl/Cmd + left");
 
   info("Test that Ctrl/Cmd + Right closes the popup if there's text after cursor");
-  jsterm.setInputValue(".");
+  setInputValue(hud, ".");
   EventUtils.synthesizeKey("KEY_ArrowLeft");
   onPopUpOpen = popup.once("popup-opened");
   EventUtils.sendString("win");
@@ -94,5 +94,5 @@ async function performTests() {
     [isOSX ? "metaKey" : "ctrlKey"]: true,
   });
   await onPopUpClose;
-  is(jsterm.getInputValue(), "win.", "input value wasn't modified");
+  is(getInputValue(hud), "win.", "input value wasn't modified");
 }

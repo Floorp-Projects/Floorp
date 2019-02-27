@@ -24,15 +24,15 @@ async function performTests(codeMirror) {
 
   info("Check that hitting Tab when input is empty insert blur the input");
   jsterm.focus();
-  jsterm.setInputValue("");
+  setInputValue(hud, "");
   EventUtils.synthesizeKey("KEY_Tab");
-  is(jsterm.getInputValue(), "", "inputnode is empty - matched");
+  is(getInputValue(hud), "", "inputnode is empty - matched");
   ok(!isInputFocused(hud), "input isn't focused anymore");
 
   info("Check that hitting Shift+Tab when input is not empty insert a tab");
   jsterm.focus();
   EventUtils.synthesizeKey("KEY_Tab", {shiftKey: true});
-  is(jsterm.getInputValue(), "", "inputnode is empty - matched");
+  is(getInputValue(hud), "", "inputnode is empty - matched");
   ok(!isInputFocused(hud), "input isn't focused anymore");
   ok(hasFocus(hud.ui.outputNode.querySelector(".devtools-button.net")),
     `The "Requests" filter button is now focused`);
