@@ -62,10 +62,11 @@ class SearchUseCases(
     class NewTabSearchUseCase(
         private val context: Context,
         private val searchEngineManager: SearchEngineManager,
-        private val sessionManager: SessionManager
+        private val sessionManager: SessionManager,
+        private val isPrivate: Boolean
     ) : SearchUseCase {
         override fun invoke(searchTerms: String) {
-            invoke(searchTerms, source = Session.Source.NONE, selected = true)
+            invoke(searchTerms, source = Session.Source.NONE, selected = true, private = isPrivate)
         }
 
         /**
@@ -97,6 +98,10 @@ class SearchUseCases(
     }
 
     val newTabSearch: NewTabSearchUseCase by lazy {
-        NewTabSearchUseCase(context, searchEngineManager, sessionManager)
+        NewTabSearchUseCase(context, searchEngineManager, sessionManager, false)
+    }
+
+    val newPrivateTabSearch: NewTabSearchUseCase by lazy {
+        NewTabSearchUseCase(context, searchEngineManager, sessionManager, true)
     }
 }

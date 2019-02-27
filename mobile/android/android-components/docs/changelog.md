@@ -22,6 +22,9 @@ permalink: /changelog/
   }
   ```
 
+* **feature-search**
+  * Added `newPrivateTabSearch` `NewTabSearchUseCase`
+
 * **feature-toolbar**
   * Added ability to color parts of the domain (e.g. [registrable domain](https://url.spec.whatwg.org/#host-registrable-domain)) by providing a `UrlRenderConfiguration`:
 
