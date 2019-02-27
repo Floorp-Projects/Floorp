@@ -1,5 +1,9 @@
-commit b7c9c6c78b65f63df93650c11476225f38bcd1fa
+commit 116c95d97ce3982c45d955ab596c7b55efd51a8f
 Author: Frank Yung-Fong Tang <41213225+FrankYFTang@users.noreply.github.com>
-Date:   Thu Jan 24 09:34:03 2019 -0800
+Date:   Thu Jan 24 09:45:49 2019 -0800
 
-    Remove unsupported irregular grandfathered tags. (#2029)
+    Change test for -kn (#1995)
+    
+    Add test for case of -kn-true
+    Verify no -kn-true nor -kn-false in the returned locale.
+    Change expectation per https://github.com/tc39/ecma402/pull/302
