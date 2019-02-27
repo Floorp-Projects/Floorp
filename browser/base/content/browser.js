@@ -1691,11 +1691,7 @@ var gBrowserInit = {
             userContextId: window.arguments[6],
             triggeringPrincipal: window.arguments[8] || Services.scriptSecurityManager.getSystemPrincipal(),
             allowInheritPrincipal: window.arguments[9],
-<<<<<<< HEAD
             csp: window.arguments[10],
-=======
-            fromExternal: true
->>>>>>> Bug 1524992 - Treat command line URIs as external r?mconley
           });
         } catch (e) {}
       } else if (window.arguments.length >= 3) {
