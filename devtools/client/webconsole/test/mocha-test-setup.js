@@ -19,7 +19,6 @@ pref("devtools.webconsole.filter.debug", true);
 pref("devtools.webconsole.filter.css", false);
 pref("devtools.webconsole.filter.net", false);
 pref("devtools.webconsole.filter.netxhr", false);
-pref("devtools.webconsole.ui.filterbar", false);
 pref("devtools.webconsole.inputHistoryCount", 300);
 pref("devtools.webconsole.persistlog", false);
 pref("devtools.webconsole.timestampMessages", false);
@@ -28,12 +27,34 @@ pref("devtools.webconsole.jsterm.codeMirror", true);
 
 global.loader = {
   lazyServiceGetter: () => {},
-  lazyRequireGetter: (context, name, path) => {
+  lazyGetter: (context, name, fn) => {
+
+  },
+  lazyRequireGetter: (context, name, path, destruct) => {
     if (path === "devtools/shared/async-storage") {
       global[name] = require("devtools/client/webconsole/test/fixtures/async-storage");
     }
+    const excluded = [
+      "Debugger",
+      "devtools/shared/event-emitter",
+      "devtools/client/shared/autocomplete-popup",
+      "devtools/client/framework/devtools",
+      "devtools/client/shared/keycodes",
+      "devtools/client/shared/sourceeditor/editor",
+      "devtools/client/shared/telemetry",
+      "devtools/shared/screenshot/save",
+      "devtools/client/shared/focus",
+    ];
+    if (!excluded.includes(path)) {
+      const module = require(path);
+      global[name] = destruct ? module[name] : module;
+    }
   },
 };
+
+// Setting up globals used in some modules.
+global.isWorker = false;
+global.indexedDB = {open: () => ({})};
 
 // Point to vendored-in files and mocks when needed.
 const requireHacker = require("require-hacker");
@@ -54,6 +75,8 @@ requireHacker.global_hook("default", (path, module) => {
       return getModule("devtools/client/shared/vendor/react-dev");
     case "chrome":
       return `module.exports = { Cc: {}, Ci: {}, Cu: {} }`;
+    case "ChromeUtils":
+      return `module.exports = { import: () => {} }`;
   }
 
   // Some modules depend on Chrome APIs which don't work in mocha. When such a module
@@ -71,17 +94,23 @@ requireHacker.global_hook("default", (path, module) => {
     case "devtools/shared/client/object-client":
     case "devtools/shared/client/long-string-client":
       return `() => {}`;
+    case "devtools/client/shared/components/SmartTrace":
     case "devtools/client/netmonitor/src/components/TabboxPanel":
     case "devtools/client/webconsole/utils/context-menu":
       return "{}";
     case "devtools/client/shared/telemetry":
       return `module.exports = function() {
         this.recordEvent = () => {};
+        this.getKeyedHistogramById = () => ({add: () => {}});
       }`;
     case "devtools/shared/event-emitter":
       return `module.exports = require("devtools-modules/src/utils/event-emitter")`;
     case "devtools/client/shared/unicode-url":
       return `module.exports = require("devtools-modules/src/unicode-url")`;
+    case "devtools/shared/DevToolsUtils":
+      return "{}";
+    case "devtools/server/actors/reflow":
+      return "{}";
   }
 
   // We need to rewrite all the modules assuming the root is mozilla-central and give them

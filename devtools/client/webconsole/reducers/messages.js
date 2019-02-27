@@ -1019,3 +1019,6 @@ function maybeSortVisibleMessages(state) {
 }
 
 exports.messages = messages;
+
+// Export for testing purpose.
+exports.ensureExecutionPoint = ensureExecutionPoint;

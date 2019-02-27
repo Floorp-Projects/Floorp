@@ -12,6 +12,8 @@ const {
   getAllMessagesById,
   getVisibleMessages,
 } = require("devtools/client/webconsole/selectors/messages");
+const { ensureExecutionPoint } = require("devtools/client/webconsole/reducers/messages");
+
 const {
   clonePacket,
   getFirstMessage,
@@ -38,9 +40,15 @@ describe("Message reducer:", () => {
     it("adds a message to an empty store", () => {
       const { dispatch, getState } = setupStore();
 
+      // Retrieve the store before adding the message to not pollute the
+      // ensureExecutionPoint results.
+      const state = getState();
+
       const packet = stubPackets.get("console.log('foobar', 'test')");
-      const message = stubPreparedMessages.get("console.log('foobar', 'test')");
       dispatch(actions.messagesAdd([packet]));
+
+      const message = stubPreparedMessages.get("console.log('foobar', 'test')");
+      ensureExecutionPoint(state.messages, message);
 
       expect(getFirstMessage(getState())).toEqual(message);
     });
