@@ -1188,7 +1188,7 @@ function TypedArrayCompareInt(x, y) {
     return 0;
 }
 
-// ES2018 draft rev 3bbc87cd1b9d3bf64c3e68ca2fe9c5a3f2c304c0
+// ES2019 draft rev 8a16cb8d18660a1106faae693f0f39b9f1a30748
 // 22.2.3.26 %TypedArray%.prototype.sort ( comparefn )
 function TypedArraySort(comparefn) {
     // This function is not generic.
@@ -1283,13 +1283,15 @@ function TypedArraySort(comparefn) {
             ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
         }
 
-        // Step c. is redundant, see:
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=1121937#c36
+        // Step c.
+        if (v !== v)
+            return 0;
+
         // Step d.
         return v;
     };
 
-    return QuickSort(obj, len, wrappedCompareFn);
+    return MergeSortTypedArray(obj, len, wrappedCompareFn);
 }
 
 // ES2017 draft rev f8a9be8ea4bd97237d176907a1e3080dce20c68f
