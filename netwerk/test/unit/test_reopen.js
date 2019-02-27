@@ -74,7 +74,7 @@ var listener = {
     check_async_open_throws(NS_ERROR_IN_PROGRESS);
   },
 
-  onDataAvailable: function test_ODA(request, cx, inputStream,
+  onDataAvailable: function test_ODA(request, inputStream,
                                      offset, count) {
     new BinaryInputStream(inputStream).readByteArray(count); // required by API
     check_async_open_throws(NS_ERROR_IN_PROGRESS);

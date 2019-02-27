@@ -52,11 +52,11 @@ var progressCallback = {
     this._listener.onStartRequest(request);
   },
 
-  onDataAvailable: function(request, context, data, offset, count) {
+  onDataAvailable: function(request, data, offset, count) {
     Assert.equal(this._last_callback_handled, TYPE_ONPROGRESS);
     this._last_callback_handled = TYPE_ONDATAAVAILABLE;
 
-    this._listener.onDataAvailable(request, context, data, offset, count);
+    this._listener.onDataAvailable(request, data, offset, count);
   },
 
   onStopRequest: function(request, status) {

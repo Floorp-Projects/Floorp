@@ -253,7 +253,6 @@ AlternativeDataStreamListener::OnStartRequest(nsIRequest* aRequest) {
 
 NS_IMETHODIMP
 AlternativeDataStreamListener::OnDataAvailable(nsIRequest* aRequest,
-                                               nsISupports* aContext,
                                                nsIInputStream* aInputStream,
                                                uint64_t aOffset,
                                                uint32_t aCount) {
@@ -265,7 +264,7 @@ AlternativeDataStreamListener::OnDataAvailable(nsIRequest* aRequest,
   }
   if (mStatus == AlternativeDataStreamListener::FALLBACK) {
     MOZ_ASSERT(mFetchDriver);
-    return mFetchDriver->OnDataAvailable(aRequest, aContext, aInputStream,
+    return mFetchDriver->OnDataAvailable(aRequest, aInputStream,
                                          aOffset, aCount);
   }
   return NS_OK;
@@ -1130,7 +1129,7 @@ nsresult CopySegmentToStreamAndSRI(nsIInputStream* aInStr, void* aClosure,
 }  // anonymous namespace
 
 NS_IMETHODIMP
-FetchDriver::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+FetchDriver::OnDataAvailable(nsIRequest* aRequest,
                              nsIInputStream* aInputStream, uint64_t aOffset,
                              uint32_t aCount) {
   // NB: This can be called on any thread!  But we're guaranteed that it is

@@ -93,7 +93,7 @@ DataChannelParent::OnStopRequest(nsIRequest *aRequest,
 }
 
 NS_IMETHODIMP
-DataChannelParent::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
+DataChannelParent::OnDataAvailable(nsIRequest *aRequest,
                                    nsIInputStream *aInputStream,
                                    uint64_t aOffset, uint32_t aCount) {
   // See above.

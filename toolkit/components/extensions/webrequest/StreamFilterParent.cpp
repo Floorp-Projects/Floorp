@@ -363,7 +363,7 @@ nsresult StreamFilterParent::Write(Data& aData) {
       MakeSpan(reinterpret_cast<char*>(aData.Elements()), aData.Length()));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mOrigListener->OnDataAvailable(mChannel, mContext, stream, mOffset,
+  rv = mOrigListener->OnDataAvailable(mChannel, stream, mOffset,
                                       aData.Length());
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -547,7 +547,7 @@ void StreamFilterParent::DoSendData(Data&& aData) {
 }
 
 NS_IMETHODIMP
-StreamFilterParent::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+StreamFilterParent::OnDataAvailable(nsIRequest* aRequest,
                                     nsIInputStream* aInputStream,
                                     uint64_t aOffset, uint32_t aCount) {
   AssertIsIOThread();
@@ -565,7 +565,7 @@ StreamFilterParent::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
     }
 
     mOffset += aCount;
-    return mOrigListener->OnDataAvailable(aRequest, aContext, aInputStream,
+    return mOrigListener->OnDataAvailable(aRequest, aInputStream,
                                           mOffset - aCount, aCount);
   }
 

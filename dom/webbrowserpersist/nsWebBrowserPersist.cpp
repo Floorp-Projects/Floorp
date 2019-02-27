@@ -867,7 +867,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStopRequest(nsIRequest *request,
 //*****************************************************************************
 
 NS_IMETHODIMP
-nsWebBrowserPersist::OnDataAvailable(nsIRequest *request, nsISupports *aContext,
+nsWebBrowserPersist::OnDataAvailable(nsIRequest *request,
                                      nsIInputStream *aIStream, uint64_t aOffset,
                                      uint32_t aLength) {
   bool cancel = mCancel;

@@ -167,7 +167,7 @@ Test.prototype = {
     throw Cr.NS_ERROR_ABORT;
   },
 
-  onDataAvailable: function(request, context, stream, offset, count) {
+  onDataAvailable: function(request, stream, offset, count) {
     do_throw("Should not get any data!");
   },
 

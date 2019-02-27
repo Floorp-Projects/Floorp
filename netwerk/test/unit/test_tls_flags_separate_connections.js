@@ -80,7 +80,7 @@ Listener.prototype = {
       previousHashKeys[this.tlsFlags] = hashKey;
     }
   },
-  onDataAvailable: function(request, ctx, stream, off, cnt) {
+  onDataAvailable: function(request, stream, off, cnt) {
     read_stream(stream, cnt);
   },
   onStopRequest: function() {

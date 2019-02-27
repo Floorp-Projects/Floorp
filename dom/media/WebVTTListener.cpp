@@ -119,7 +119,7 @@ nsresult WebVTTListener::ParseChunk(nsIInputStream* aInStream, void* aClosure,
 }
 
 NS_IMETHODIMP
-WebVTTListener::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+WebVTTListener::OnDataAvailable(nsIRequest* aRequest,
                                 nsIInputStream* aStream, uint64_t aOffset,
                                 uint32_t aCount) {
   VTT_LOG("WebVTTListener::OnDataAvailable\n");

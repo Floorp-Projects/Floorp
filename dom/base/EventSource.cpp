@@ -707,7 +707,7 @@ void EventSourceImpl::ParseSegment(const char* aBuffer, uint32_t aLength) {
 }
 
 NS_IMETHODIMP
-EventSourceImpl::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+EventSourceImpl::OnDataAvailable(nsIRequest* aRequest,
                                  nsIInputStream* aInputStream, uint64_t aOffset,
                                  uint32_t aCount) {
   AssertIsOnTargetThread();

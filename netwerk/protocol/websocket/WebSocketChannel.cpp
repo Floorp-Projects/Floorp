@@ -4004,7 +4004,7 @@ WebSocketChannel::OnOutputStreamReady(nsIAsyncOutputStream *aStream) {
 // nsIStreamListener
 
 NS_IMETHODIMP
-WebSocketChannel::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
+WebSocketChannel::OnDataAvailable(nsIRequest *aRequest,
                                   nsIInputStream *aInputStream,
                                   uint64_t aOffset, uint32_t aCount) {
   LOG(("WebSocketChannel::OnDataAvailable() %p [%p %p %p %" PRIu64 " %u]\n",

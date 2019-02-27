@@ -537,7 +537,6 @@ PresentationTCPSessionTransport::OnStopRequest(nsIRequest* aRequest,
 // nsIStreamListener
 NS_IMETHODIMP
 PresentationTCPSessionTransport::OnDataAvailable(nsIRequest* aRequest,
-                                                 nsISupports* aContext,
                                                  nsIInputStream* aStream,
                                                  uint64_t aOffset,
                                                  uint32_t aCount) {

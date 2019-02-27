@@ -163,7 +163,7 @@ class FaviconLoad {
   onStartRequest(request) {
   }
 
-  onDataAvailable(request, context, inputStream, offset, count) {
+  onDataAvailable(request, inputStream, offset, count) {
     this.stream.writeFrom(inputStream, count);
   }
 

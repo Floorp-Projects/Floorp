@@ -333,7 +333,7 @@ nsDocumentOpenInfo::CheckListenerChain() {
 }
 
 NS_IMETHODIMP
-nsDocumentOpenInfo::OnDataAvailable(nsIRequest* request, nsISupports* aCtxt,
+nsDocumentOpenInfo::OnDataAvailable(nsIRequest* request,
                                     nsIInputStream* inStr,
                                     uint64_t sourceOffset, uint32_t count) {
   // if we have retarged to the end stream listener, then forward the call....
@@ -342,7 +342,7 @@ nsDocumentOpenInfo::OnDataAvailable(nsIRequest* request, nsISupports* aCtxt,
   nsresult rv = NS_OK;
 
   if (m_targetStreamListener)
-    rv = m_targetStreamListener->OnDataAvailable(request, aCtxt, inStr,
+    rv = m_targetStreamListener->OnDataAvailable(request, inStr,
                                                  sourceOffset, count);
   return rv;
 }

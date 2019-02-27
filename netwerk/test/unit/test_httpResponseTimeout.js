@@ -30,7 +30,7 @@ TimeoutListener.prototype = {
   onStartRequest: function (request) {
   },
 
-  onDataAvailable: function (request, ctx, stream) {
+  onDataAvailable: function (request, stream) {
   },
 
   onStopRequest: function (request, status) {
