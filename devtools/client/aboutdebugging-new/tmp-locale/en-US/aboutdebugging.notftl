@@ -264,13 +264,7 @@ about-debugging-worker-push-service =
 # Displayed for runtime info in runtime pages.
 # { $name } is brand name such as "Firefox Nightly"
 # { $version } is version such as "64.0a1"
-about-debugging-runtime-info = { $name } ({ $version })
-
-# Displayed for runtime info in runtime page when we display the device model as well.
-# { $name } is brand name such as "Firefox Nightly"
-# { $version } is version such as "64.0a1"
-# { $deviceName } is model name of device
-about-debugging-runtime-info-with-model = { $name } on { $deviceName } ({ $version })
+about-debugging-runtime-name = { $name } ({ $version })
 
 # Text of the connection prompt button displayed in Runtime pages, when the preference
 # "devtools.debugger.prompt-connection" is false on the target runtime.

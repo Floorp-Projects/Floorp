@@ -211,6 +211,7 @@ function checkNotification(panel, checkIcon, permissions) {
   let icon = panel.getAttribute("icon");
   let ul = document.getElementById("addon-webext-perm-list");
   let header = document.getElementById("addon-webext-perm-intro");
+  let learnMoreLink = document.getElementById("addon-webext-perm-info");
 
   if (checkIcon instanceof RegExp) {
     ok(checkIcon.test(icon), `Notification icon is correct ${JSON.stringify(icon)} ~= ${checkIcon}`);
@@ -223,8 +224,10 @@ function checkNotification(panel, checkIcon, permissions) {
   is(ul.childElementCount, permissions.length, `Permissions list has ${permissions.length} entries`);
   if (permissions.length == 0) {
     is(header.getAttribute("hidden"), "true", "Permissions header is hidden");
+    is(learnMoreLink.getAttribute("hidden"), "true", "Permissions learn more is hidden");
   } else {
     is(header.getAttribute("hidden"), "", "Permissions header is visible");
+    is(learnMoreLink.getAttribute("hidden"), "", "Permissions learn more is visible");
   }
 
   for (let i in permissions) {

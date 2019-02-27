@@ -1569,6 +1569,9 @@ class HashTable : private AllocPolicy {
         sMaxInit * sAlphaDenominator <= UINT32_MAX - sMaxAlphaNumerator,
         "numerator calculation below could potentially overflow");
 
+    // Callers should ensure this is true.
+    MOZ_ASSERT(aLen <= sMaxInit);
+
     // Compute the smallest capacity allowing |aLen| elements to be
     // inserted without rehashing: ceil(aLen / max-alpha).  (Ceiling
     // integral division: <http://stackoverflow.com/a/2745086>.)
@@ -1986,6 +1989,10 @@ class HashTable : private AllocPolicy {
   MOZ_MUST_USE bool reserve(uint32_t aLen) {
     if (aLen == 0) {
       return true;
+    }
+
+    if (MOZ_UNLIKELY(aLen > sMaxInit)) {
+      return false;
     }
 
     uint32_t bestCapacity = this->bestCapacity(aLen);
