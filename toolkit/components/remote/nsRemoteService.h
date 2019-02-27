@@ -8,31 +8,27 @@
 #ifndef __nsRemoteService_h__
 #define __nsRemoteService_h__
 
-#include "nsIRemoteService.h"
+#include "nsRemoteServer.h"
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
 #include "nsPIDOMWindow.h"
+#include "mozilla/UniquePtr.h"
 
-class nsRemoteService final : public nsIRemoteService, public nsIObserver {
+class nsRemoteService final : public nsIObserver {
  public:
   // We will be a static singleton, so don't use the ordinary methods.
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIREMOTESERVICE
   NS_DECL_NSIOBSERVER
 
-  static const char* HandleCommandLine(const char* aBuffer,
-                                       uint32_t aTimestamp);
+  nsRemoteService() = default;
 
-  nsCOMPtr<nsIRemoteService> mDBusRemoteService;
-  nsCOMPtr<nsIRemoteService> mGtkRemoteService;
-
-  nsRemoteService() {}
+  void Startup(const char* aAppName, const char* aProfileName);
+  void Shutdown();
 
  private:
   ~nsRemoteService();
 
-  static void SetDesktopStartupIDOrTimestamp(
-      const nsACString& aDesktopStartupID, uint32_t aTimestamp);
+  mozilla::UniquePtr<nsRemoteServer> mRemoteServer;
 };
 
 #endif  // __nsRemoteService_h__
