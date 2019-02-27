@@ -1,5 +1,5 @@
-commit dab8c8983adc37ed3da672442e0e378ff6cd2714
-Author: Frank Yung-Fong Tang <41213225+FrankYFTang@users.noreply.github.com>
-Date:   Wed Dec 19 16:36:10 2018 -0800
+commit 73705f88014183b3eab8593f91ec769d957cd200
+Author: Rick Waldron <waldron.rick@gmail.com>
+Date:   Tue Dec 18 12:56:34 2018 -0500
 
-    remove "TypeError: Cannot convert a Symbol value to a string" (#2009)
+    UpdateExpressions: add necessary changes to tests to reflect latest specification.

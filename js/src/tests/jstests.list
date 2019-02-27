@@ -1109,6 +1109,25 @@ skip script test262/annexB/language/eval-code/indirect/global-if-decl-else-decl-
 skip script test262/annexB/language/eval-code/indirect/global-block-decl-eval-global-existing-global-init.js
 skip script test262/annexB/language/eval-code/indirect/global-switch-case-eval-global-existing-global-init.js
 
+# Need to fix increment/decrement of arguments or eval -- bug 1530883.
+skip script test262/language/expressions/postfix-increment/eval.js
+skip script test262/language/expressions/postfix-increment/eval-nostrict.js
+skip script test262/language/expressions/postfix-increment/arguments-nostrict.js
+skip script test262/language/expressions/postfix-increment/arguments.js
+skip script test262/language/expressions/prefix-decrement/eval.js
+skip script test262/language/expressions/prefix-decrement/eval-nostrict.js
+skip script test262/language/expressions/prefix-decrement/arguments-nostrict.js
+skip script test262/language/expressions/prefix-decrement/arguments.js
+skip script test262/language/expressions/prefix-increment/eval.js
+skip script test262/language/expressions/prefix-increment/eval-nostrict.js
+skip script test262/language/expressions/prefix-increment/arguments-nostrict.js
+skip script test262/language/expressions/prefix-increment/arguments.js
+skip script test262/language/expressions/postfix-decrement/eval.js
+skip script test262/language/expressions/postfix-decrement/eval-nostrict.js
+skip script test262/language/expressions/postfix-decrement/arguments-nostrict.js
+skip script test262/language/expressions/postfix-decrement/arguments.js
+
+
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1340307
 skip script test262/language/module-code/instn-resolve-empty-export.js
 skip script test262/language/module-code/instn-resolve-empty-import.js
