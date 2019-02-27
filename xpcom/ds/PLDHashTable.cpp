@@ -135,6 +135,9 @@ static inline uint32_t MinLoad(uint32_t aCapacity) {
 // - capacity cannot be too small.
 static inline void BestCapacity(uint32_t aLength, uint32_t* aCapacityOut,
                                 uint32_t* aLog2CapacityOut) {
+  // Callers should ensure this is true.
+  MOZ_ASSERT(aLength <= PLDHashTable::kMaxInitialLength);
+
   // Compute the smallest capacity allowing |aLength| elements to be inserted
   // without rehashing.
   uint32_t capacity = (aLength * 4 + (3 - 1)) / 3;  // == ceil(aLength * 4 / 3)
