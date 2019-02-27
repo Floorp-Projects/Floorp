@@ -20,10 +20,10 @@ BinaryComparer.prototype = {
   length: null,
   callback: null,
 
-  onStartRequest(aRequest, aContext) {
+  onStartRequest(aRequest) {
   },
 
-  onStopRequest(aRequest, aContext, aStatusCode) {
+  onStopRequest(aRequest, aStatusCode) {
     this.fileStream.close();
     Assert.equal(aStatusCode, Cr.NS_OK);
     Assert.equal(this.offset, this.length);

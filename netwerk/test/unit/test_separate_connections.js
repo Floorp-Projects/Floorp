@@ -38,7 +38,7 @@ function Listener(userContextId) {
 
 let gTestsRun = 0;
 Listener.prototype = {
-  onStartRequest: function(request, context) {
+  onStartRequest: function(request) {
     request.QueryInterface(Ci.nsIHttpChannel)
            .QueryInterface(Ci.nsIHttpChannelInternal);
 

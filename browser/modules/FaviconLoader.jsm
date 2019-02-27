@@ -160,7 +160,7 @@ class FaviconLoad {
     this.channel.cancel(Cr.NS_BINDING_ABORTED);
   }
 
-  onStartRequest(request, context) {
+  onStartRequest(request) {
   }
 
   onDataAvailable(request, context, inputStream, offset, count) {
@@ -175,7 +175,7 @@ class FaviconLoad {
     callback.onRedirectVerifyCallback(Cr.NS_OK);
   }
 
-  async onStopRequest(request, context, statusCode) {
+  async onStopRequest(request, statusCode) {
     if (request != this.channel) {
       // Indicates that a redirect has occurred. We don't care about the result
       // of the original channel.

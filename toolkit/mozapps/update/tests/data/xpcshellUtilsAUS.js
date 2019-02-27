@@ -3503,17 +3503,17 @@ function waitForUpdateDownload(aUpdates, aUpdateCount, aExpectedStatus) {
     do_throw("nsIApplicationUpdateService:downloadUpdate returned " + state);
   }
   return new Promise(resolve => gAUS.addDownloadListener({
-    onStartRequest: (aRequest, aContext) => {
+    onStartRequest: (aRequest) => {
     },
     onProgress: (aRequest, aContext, aProgress, aMaxProgress) => {
     },
     onStatus: (aRequest, aContext, aStatus, aStatusText) => {
     },
-    onStopRequest: (request, context, status) => {
+    onStopRequest: (request, status) => {
       gAUS.removeDownloadListener(this);
       Assert.equal(aExpectedStatus, status,
                    "the download status" + MSG_SHOULD_EQUAL);
-      resolve(request, context, status);
+      resolve(request, status);
     },
     QueryInterface: ChromeUtils.generateQI([Ci.nsIRequestObserver,
                                             Ci.nsIProgressEventSink]),
@@ -3893,7 +3893,7 @@ IncrementalDownload.prototype = {
     Services.tm.dispatchToMainThread(() => {
       this._observer = observer.QueryInterface(Ci.nsIRequestObserver);
       this._ctxt = ctxt;
-      this._observer.onStartRequest(this, this._ctxt);
+      this._observer.onStartRequest(this);
       let mar = getTestDirFile(FILE_SIMPLE_MAR);
       mar.copyTo(this._destination.parent, this._destination.leafName);
       let status = Cr.NS_OK;
@@ -3921,7 +3921,7 @@ IncrementalDownload.prototype = {
           });
           break;
       }
-      this._observer.onStopRequest(this, this._ctxt, status);
+      this._observer.onStopRequest(this, status);
     });
   },
 

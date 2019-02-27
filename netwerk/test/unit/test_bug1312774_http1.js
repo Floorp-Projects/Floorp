@@ -89,13 +89,13 @@ function HttpResponseListener(id)
 var testOrder = 0;
 HttpResponseListener.prototype =
 {
-  onStartRequest: function (request, ctx) {
+  onStartRequest: function (request) {
   },
 
   onDataAvailable: function (request, ctx, stream, off, cnt) {
   },
 
-  onStopRequest: function (request, ctx, status) {
+  onStopRequest: function (request, status) {
     log("STOP id=" + this.id);
     do_test_finished();
   }
