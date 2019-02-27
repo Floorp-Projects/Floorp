@@ -271,6 +271,11 @@ release-snap-push
 -----------------
 Pushes Snap repackage on Snap store.
 
+release-secondary-snap-push
+---------------------------
+Performs the same function as `release-snap-push`, except for the beta channel as part of RC
+Releases.
+
 release-notify-push
 -------------------
 Notify when a release has been pushed to CDNs.
