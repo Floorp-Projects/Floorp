@@ -586,16 +586,11 @@ class RTCPeerConnection {
 
   // This implements the fairly common "Queue a task" logic
   async _queueTaskWithClosedCheck(func) {
-    let pc = this;
-    return new this._win.Promise((resolve,reject) => {
+    return new this._win.Promise(resolve => {
       Services.tm.dispatchToMainThread({ run() {
-        try {
-          if (!pc._closed) {
-            func();
-            resolve();
-          }
-        } catch (e) {
-          reject(e);
+        if (!this._closed) {
+          func();
+          resolve();
         }
       }});
     });
@@ -1927,34 +1922,38 @@ class RTCRtpSender {
   }
 
   async _replaceTrack(withTrack) {
-    let pc = this._pc;
+    this._pc._checkClosed();
+
+    if (this._transceiver.stopped) {
+      throw new this._pc._win.DOMException(
+          "Cannot call replaceTrack when transceiver is stopped",
+          "InvalidStateError");
+    }
+
     if (withTrack && (withTrack.kind != this._transceiver.getKind())) {
-      throw new pc._win.DOMException(
+      throw new this._pc._win.DOMException(
           "Cannot replaceTrack with a different kind!",
           "TypeError");
     }
 
-    pc._checkClosed();
+    // Updates the track on the MediaPipeline; this is needed whether or not
+    // we've associated this transceiver, the spec language notwithstanding.
+    // Synchronous, and will throw on failure.
+    this._pc._replaceTrackNoRenegotiation(this._transceiverImpl, withTrack);
 
-    await pc._chain(async () => {
-      if (this._transceiver.stopped) {
-        throw new pc._win.DOMException(
-            "Cannot call replaceTrack when transceiver is stopped",
-            "InvalidStateError");
-      }
+    let setTrack = () => {
+      this.track = withTrack;
+      this._transceiver.sync();
+    };
 
-      await pc._queueTaskWithClosedCheck(() => {
-        // Updates the track on the MediaPipeline, will throw on failure.
-        try {
-          pc._replaceTrackNoRenegotiation(this._transceiverImpl, withTrack);
-        } catch (e) {
-          throw new pc._win.DOMException("Track could not be replaced without renegotiation",
-                                         "InvalidModificationError");
-        }
-        this.track = withTrack;
-        this._transceiver.sync();
-      });
-    });
+    // Spec is a little weird here; we only queue if the transceiver was
+    // associated, otherwise we update the track synchronously.
+    if (this._transceiver.mid == null) {
+      setTrack();
+    } else {
+      // We're supposed to queue a task if the transceiver is associated
+      await this._pc._queueTaskWithClosedCheck(setTrack);
+    }
   }
 
   setParameters(parameters) {
