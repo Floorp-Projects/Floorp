@@ -58,9 +58,9 @@ ResourceLoader.prototype = {
     this.data += stream.read(count);
   },
 
-  onStartRequest(request, context) {},
+  onStartRequest(request) {},
 
-  onStopRequest(request, context, status) {
+  onStopRequest(request, status) {
     if (Components.isSuccessCode(status)) {
       var statusCode = request.QueryInterface(Ci.nsIHttpChannel).responseStatus;
       if (statusCode === 200) {

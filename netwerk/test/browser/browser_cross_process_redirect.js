@@ -122,13 +122,13 @@ add_task(async function() {
   await ContentTask.spawn(browser2, null, async function(arg) {
     function ChannelListener(childListener) { this.childListener = childListener; }
     ChannelListener.prototype = {
-      onStartRequest: function(aRequest, aContext) {
+      onStartRequest: function(aRequest) {
         info("onStartRequest");
         let channel = aRequest.QueryInterface(Ci.nsIChannel);
         Assert.equal(channel.URI.spec, this.childListener.URI, "Make sure the channel has the proper URI");
         Assert.equal(channel.originalURI.spec, this.childListener.originalURI, "Make sure the originalURI is correct");
       },
-      onStopRequest: function(aRequest, aContext, aStatusCode) {
+      onStopRequest: function(aRequest, aStatusCode) {
         info("onStopRequest");
         Assert.equal(aStatusCode, Cr.NS_OK, "Check the status code");
         Assert.equal(this.gotData, true, "Check that the channel received data");

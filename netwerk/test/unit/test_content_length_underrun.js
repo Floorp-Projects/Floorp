@@ -68,9 +68,9 @@ function run_gzip_test(num)
       throw Cr.NS_ERROR_NO_INTERFACE;
     },
 
-    onStartRequest: function(aRequest, aContext) {},
+    onStartRequest: function(aRequest) {},
 
-    onStopRequest: function(aRequest, aContext, aStatusCode) {
+    onStopRequest: function(aRequest, aStatusCode) {
       // Make sure we catch the error NS_ERROR_NET_PARTIAL_TRANSFER here.
       Assert.equal(aStatusCode, Cr.NS_ERROR_NET_PARTIAL_TRANSFER);
       //  do_test_finished();

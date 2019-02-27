@@ -386,7 +386,7 @@ RESTRequest.prototype = {
     this.delayTimeout();
   },
 
-  onStopRequest(channel, context, statusCode) {
+  onStopRequest(channel, statusCode) {
     if (this.timeoutTimer) {
       // Clear the abort timer now that the channel is done.
       this.timeoutTimer.clear();

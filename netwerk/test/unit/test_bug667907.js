@@ -27,7 +27,7 @@ var listener_proto = {
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
-  onStartRequest: function(request, context) {
+  onStartRequest: function(request) {
     Assert.equal(request.QueryInterface(Ci.nsIChannel).contentType,
 		this.contentType);
     request.cancel(Cr.NS_BINDING_ABORTED);
@@ -37,7 +37,7 @@ var listener_proto = {
     do_throw("Unexpected onDataAvailable");
   },
 
-  onStopRequest: function(request, context, status) {
+  onStopRequest: function(request, status) {
     Assert.equal(status, Cr.NS_BINDING_ABORTED);
     this.termination_func();
   }  

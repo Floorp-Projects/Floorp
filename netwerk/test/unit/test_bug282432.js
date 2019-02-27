@@ -14,9 +14,9 @@ function run_test() {
       throw Cr.NS_NOINTERFACE;
     },
 
-    onStartRequest: function(aRequest, aContext) {},
+    onStartRequest: function(aRequest) {},
 
-    onStopRequest: function(aRequest, aContext, aStatusCode) {
+    onStopRequest: function(aRequest, aStatusCode) {
       // Make sure we can catch the error NS_ERROR_FILE_NOT_FOUND here.
       Assert.equal(aStatusCode, Cr.NS_ERROR_FILE_NOT_FOUND);
       do_test_finished();

@@ -44,10 +44,10 @@ Listener.prototype = {
             do_throw(ex);
         }
     },
-    onStartRequest(request, ctx) {
+    onStartRequest(request) {
         this.gotStartRequest = true;
     },
-    onStopRequest(request, ctx, status) {
+    onStopRequest(request, status) {
         this.gotStopRequest = true;
         Assert.equal(status, 0);
         if (this._callback) {

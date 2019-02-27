@@ -33,7 +33,7 @@ var listener = {
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
-  onStartRequest: function(request, ctx) {
+  onStartRequest: function(request) {
     switch(this._test) {
       case 0:
         request.suspend();
@@ -61,7 +61,7 @@ var listener = {
     this._done_onData = true;
   },
 
-  onStopRequest: function(request, ctx, status) {
+  onStopRequest: function(request, status) {
     Assert.ok(this._done_onData);
     this._reset();
     if (this._test <= MAX_TESTS)

@@ -59,16 +59,16 @@ NetworkThrottleListener.prototype = {
   /**
    * @see nsIStreamListener.onStartRequest.
    */
-  onStartRequest: function(request, context) {
-    this.originalListener.onStartRequest(request, context);
+  onStartRequest: function(request) {
+    this.originalListener.onStartRequest(request);
     this.queue.start(this);
   },
 
   /**
    * @see nsIStreamListener.onStopRequest.
    */
-  onStopRequest: function(request, context, statusCode) {
-    this.pendingData.push({request, context, statusCode});
+  onStopRequest: function(request, statusCode) {
+    this.pendingData.push({request, statusCode});
     this.queue.dataAvailable(this);
   },
 
@@ -114,7 +114,7 @@ NetworkThrottleListener.prototype = {
 
     if (statusCode !== undefined) {
       this.pendingData.shift();
-      this.originalListener.onStopRequest(request, context, statusCode);
+      this.originalListener.onStopRequest(request, statusCode);
       return {length: 0, done: true};
     }
 

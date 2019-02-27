@@ -9,10 +9,10 @@ var TESTS = [
 ];
 
 var observer = {
-  onStartRequest(request, context) {
+  onStartRequest(request) {
   },
 
-  onStopRequest(request, context, status) {
+  onStopRequest(request, status) {
     Assert.equal(status, Cr.NS_OK);
 
     zipW.close();

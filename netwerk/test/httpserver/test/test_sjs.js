@@ -53,7 +53,7 @@ function setupTests(throwing) {
     skipCache(ch);
   }
 
-  function verifyRawText(channel, cx, status, bytes) {
+  function verifyRawText(channel, status, bytes) {
     dumpn(channel.originalURI.spec);
     Assert.equal(bytesToString(bytes), fileContents(sjs));
   }
@@ -69,7 +69,7 @@ function setupTests(throwing) {
     skipCache(ch);
   }
 
-  function checkType(ch, cx) {
+  function checkType(ch) {
     if (throwing) {
       Assert.ok(!ch.requestSucceeded);
       Assert.equal(ch.responseStatus, 500);
@@ -78,7 +78,7 @@ function setupTests(throwing) {
     }
   }
 
-  function checkContents(ch, cx, status, data) {
+  function checkContents(ch, status, data) {
     if (!throwing)
       Assert.equal("PASS", bytesToString(data));
   }
@@ -103,8 +103,8 @@ function setupTests(throwing) {
 
   //   add mapping, => interpreted
 
-  function contentAndCleanup(ch, cx, status, data) {
-    checkContents(ch, cx, status, data);
+  function contentAndCleanup(ch, status, data) {
+    checkContents(ch, status, data);
 
     // clean up state we've set up
     srv.registerDirectory("/", null);
@@ -138,7 +138,7 @@ function init(ch) {
   skipCache(ch);
 }
 
-function checkNotSJS(ch, cx, status, data) {
+function checkNotSJS(ch, status, data) {
   Assert.notEqual("FAIL", bytesToString(data));
 }
 
@@ -154,7 +154,7 @@ function rangeInit(expectedRangeHeader) {
   };
 }
 
-function checkRangeResult(ch, cx) {
+function checkRangeResult(ch) {
   try {
     var val = ch.getResponseHeader("Content-Range");
   } catch (e) { /* IDL doesn't specify a particular exception to require */ }
@@ -195,11 +195,11 @@ function setupFileMapping(ch) {
   srv.registerFile("/script.html", sjs);
 }
 
-function onStart(ch, cx) {
+function onStart(ch) {
   Assert.equal(ch.contentType, "text/plain");
 }
 
-function onStop(ch, cx, status, data) {
+function onStop(ch, status, data) {
   Assert.equal("PASS", bytesToString(data));
 }
 
