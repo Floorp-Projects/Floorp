@@ -14,7 +14,6 @@ loader.lazyRequireGetter(this, "Debugger", "Debugger");
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "AutocompletePopup", "devtools/client/shared/autocomplete-popup");
 loader.lazyRequireGetter(this, "PropTypes", "devtools/client/shared/vendor/react-prop-types");
-loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 loader.lazyRequireGetter(this, "KeyCodes", "devtools/client/shared/keycodes", true);
 loader.lazyRequireGetter(this, "Editor", "devtools/client/shared/sourceeditor/editor");
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
@@ -125,7 +124,7 @@ class JSTerm extends Component {
     };
 
     const doc = this.webConsoleUI.document;
-    const toolbox = gDevTools.getToolbox(this.webConsoleUI.owner.target);
+    const toolbox = this.webConsoleUI.wrapper.toolbox;
     const tooltipDoc = toolbox ? toolbox.doc : doc;
     // The popup will be attached to the toolbox document or HUD document in the case
     // such as the browser console which doesn't have a toolbox.
@@ -540,7 +539,7 @@ class JSTerm extends Component {
           }
           break;
         case "help":
-          this.webConsoleUI.owner.openLink(HELP_URL);
+          this.webConsoleUI.hud.openLink(HELP_URL);
           break;
         case "copyValueToClipboard":
           clipboardHelper.copyString(helperResult.value);
@@ -597,7 +596,7 @@ class JSTerm extends Component {
     this.clearCompletion();
 
     let selectedNodeActor = null;
-    const inspectorSelection = this.webConsoleUI.owner.getInspectorSelection();
+    const inspectorSelection = this.webConsoleUI.hud.getInspectorSelection();
     if (inspectorSelection && inspectorSelection.nodeFront) {
       selectedNodeActor = inspectorSelection.nodeFront.actorID;
     }
@@ -612,7 +611,7 @@ class JSTerm extends Component {
     let mappedExpressionRes = null;
     try {
       mappedExpressionRes =
-        await this.webConsoleUI.owner.getMappedExpression(executeString);
+        await this.webConsoleUI.hud.getMappedExpression(executeString);
     } catch (e) {
       console.warn("Error when calling getMappedExpression", e);
     }
