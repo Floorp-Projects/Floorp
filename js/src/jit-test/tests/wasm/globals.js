@@ -91,11 +91,11 @@ for (let i = 0; i < 5; i++) {
 }
 
 // Initializer expressions can also be used in elem section initializers.
-wasmFailValidateText(`(module (import "globals" "a" (global f32)) (table 4 anyfunc) (elem (get_global 0) $f) (func $f))`, /type mismatch/);
+wasmFailValidateText(`(module (import "globals" "a" (global f32)) (table 4 funcref) (elem (get_global 0) $f) (func $f))`, /type mismatch/);
 
 module = wasmEvalText(`(module
     (import "globals" "a" (global i32))
-    (table (export "tbl") 4 anyfunc)
+    (table (export "tbl") 4 funcref)
     (elem (get_global 0) $f)
     (func $f)
     (export "f" $f)

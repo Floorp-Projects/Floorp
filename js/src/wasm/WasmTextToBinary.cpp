@@ -58,7 +58,6 @@ class WasmToken {
 
   enum Kind {
     Align,
-    AnyFunc,
     AtomicCmpXchg,
     AtomicLoad,
     AtomicRMW,
@@ -91,6 +90,7 @@ class WasmToken {
     Field,
     Float,
     Func,
+    FuncRef,
 #ifdef ENABLE_WASM_REFTYPES
     GcFeatureOptIn,
 #endif
@@ -359,7 +359,6 @@ class WasmToken {
       case Wake:
         return true;
       case Align:
-      case AnyFunc:
       case CloseParen:
       case Data:
 #ifdef ENABLE_WASM_BULKMEM_OPS
@@ -375,6 +374,7 @@ class WasmToken {
       case Field:
       case Float:
       case Func:
+      case FuncRef:
 #ifdef ENABLE_WASM_REFTYPES
       case GcFeatureOptIn:
 #endif
@@ -952,7 +952,7 @@ WasmToken WasmTokenStream::next() {
         return WasmToken(WasmToken::Align, begin, cur_);
       }
       if (consume(u"anyfunc")) {
-        return WasmToken(WasmToken::AnyFunc, begin, cur_);
+        return WasmToken(WasmToken::FuncRef, begin, cur_);
       }
       if (consume(u"anyref")) {
         return WasmToken(WasmToken::ValueType, ValType::AnyRef, begin, cur_);
@@ -1032,6 +1032,10 @@ WasmToken WasmTokenStream::next() {
     case 'f':
       if (consume(u"field")) {
         return WasmToken(WasmToken::Field, begin, cur_);
+      }
+
+      if (consume(u"funcref")) {
+        return WasmToken(WasmToken::FuncRef, begin, cur_);
       }
 
       if (consume(u"func")) {
@@ -4636,7 +4640,7 @@ static bool ParseGlobalType(WasmParseContext& c, AstValType* type,
 
 static bool ParseElemType(WasmParseContext& c, TableKind* tableKind) {
   WasmToken token;
-  if (c.ts.getIf(WasmToken::AnyFunc, &token)) {
+  if (c.ts.getIf(WasmToken::FuncRef, &token)) {
     *tableKind = TableKind::AnyFunction;
     return true;
   }

@@ -2084,7 +2084,9 @@ bool WasmTableObject::isNewborn() const {
   }
 
   TableKind tableKind;
-  if (StringEqualsAscii(elementLinearStr, "anyfunc")) {
+  if (StringEqualsAscii(elementLinearStr, "anyfunc") ||
+      StringEqualsAscii(elementLinearStr, "funcref"))
+  {
     tableKind = TableKind::AnyFunction;
 #ifdef ENABLE_WASM_GENERALIZED_TABLES
   } else if (StringEqualsAscii(elementLinearStr, "anyref")) {

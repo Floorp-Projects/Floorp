@@ -16,7 +16,7 @@ function unary(name) {
         (import $f32 "math" "func" (param f32) (result f32))
         (import $f64 "math" "func" (param f64) (result f64))
 
-        (table $t 10 anyfunc)
+        (table $t 10 funcref)
         (type $f_f (func (param f32) (result f32)))
         (type $d_d (func (param f64) (result f64)))
         (elem (i32.const 0) $f32 $f64)
@@ -65,7 +65,7 @@ function binary(name) {
         (import $f32 "math" "func" (param f32) (param f32) (result f32))
         (import $f64 "math" "func" (param f64) (param f64) (result f64))
 
-        (table $t 10 anyfunc)
+        (table $t 10 funcref)
         (type $ff_f (func (param f32) (param f32) (result f32)))
         (type $dd_d (func (param f64) (param f64) (result f64)))
         (elem (i32.const 0) $f32 $f64)

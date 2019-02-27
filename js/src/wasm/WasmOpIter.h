@@ -1560,7 +1560,7 @@ inline bool OpIter<Policy>::readCallIndirect(uint32_t* funcTypeIndex,
     return fail("table index out of range for call_indirect");
   }
   if (env_.tables[*tableIndex].kind != TableKind::AnyFunction) {
-    return fail("indirect calls must go through a table of 'anyfunc'");
+    return fail("indirect calls must go through a table of 'funcref'");
   }
 
   if (!popWithType(ValType::I32, callee)) {
@@ -1961,7 +1961,7 @@ inline bool OpIter<Policy>::readMemOrTableInit(bool isMem, uint32_t* segIndex,
     // Element segments must carry functions exclusively and anyfunc is not
     // yet a subtype of anyref.
     if (env_.tables[*dstTableIndex].kind != TableKind::AnyFunction) {
-      return fail("only tables of 'anyfunc' may have element segments");
+      return fail("only tables of 'funcref' may have element segments");
     }
     if (*segIndex >= env_.elemSegments.length()) {
       return fail("table.init segment index out of range");

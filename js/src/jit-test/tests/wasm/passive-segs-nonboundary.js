@@ -36,7 +36,7 @@ function gen_tab_impmod_t(insn)
      ;; -------- Types --------
      (type (func (result i32)))  ;; type #0
      ;; -------- Tables --------
-     (table 30 30 anyfunc)
+     (table 30 30 funcref)
      ;; -------- Table initialisers --------
      (elem (i32.const 2) 3 1 4 1)
      (elem passive 2 7 1 8)
@@ -340,7 +340,7 @@ checkPassiveElemSegment("end", /failed to read end of initializer expression/);
 {
     let txt =
         `(module
-           (table (export "t") 10 anyfunc)
+           (table (export "t") 10 funcref)
            (elem (i32.const 1) $m)
            (elem (i32.const 3) $m)
            (elem (i32.const 6) $m)
