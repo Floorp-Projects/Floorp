@@ -13453,3 +13453,43 @@ nsDocShell::GetBrowsingContext(BrowsingContext** aBrowsingContext) {
   *aBrowsingContext = do_AddRef(mBrowsingContext).take();
   return NS_OK;
 }
+
+bool nsDocShell::GetIsAttemptingToNavigate() {
+  // XXXbz the document.open spec says to abort even if there's just a
+  // queued navigation task, sort of.  It's not clear whether browsers
+  // actually do that, and we didn't use to do it, so for now let's
+  // not do that.
+  // https://github.com/whatwg/html/issues/3447 tracks the spec side of this.
+  if (mDocumentRequest) {
+    // There's definitely a navigation in progress.
+    return true;
+  }
+
+  // javascript: channels have slightly weird behavior: they're LOAD_BACKGROUND
+  // until the script runs, which means they're not sending loadgroup
+  // notifications and hence not getting set as mDocumentRequest.  Look through
+  // our loadgroup for document-level javascript: loads.
+  if (!mLoadGroup) {
+    return false;
+  }
+
+  nsCOMPtr<nsISimpleEnumerator> requests;
+  mLoadGroup->GetRequests(getter_AddRefs(requests));
+  bool hasMore = false;
+  while (NS_SUCCEEDED(requests->HasMoreElements(&hasMore)) && hasMore) {
+    nsCOMPtr<nsISupports> elem;
+    requests->GetNext(getter_AddRefs(elem));
+    nsCOMPtr<nsIScriptChannel> scriptChannel(do_QueryInterface(elem));
+    if (!scriptChannel) {
+      continue;
+    }
+
+    if (scriptChannel->GetIsDocumentLoad()) {
+      // This is a javascript: load that might lead to a new document,
+      // hence a navigation.
+      return true;
+    }
+  }
+
+  return false;
+}
