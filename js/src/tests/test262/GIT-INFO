@@ -1,5 +1,5 @@
-commit d0f57bff727cc8e06e4a7c2202edc0521a678fe9
-Author: Ross Kirsling <rkirsling@gmail.com>
-Date:   Mon Jan 7 05:40:39 2019 -0800
+commit 08d827565b6d573973aa870ea40f3f7f6936ebfd
+Author: Peter Wong <peter.wm.wong@gmail.com>
+Date:   Mon Jan 7 08:34:35 2019 -0600
 
-    Ensure test file YAML blocks don't have a trailing space. (#2018)
+    Increase coverage for %TypedArray%.prototype.map with species constructor (#2019)
