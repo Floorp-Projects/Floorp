@@ -1158,7 +1158,7 @@ nsDataObj ::GetFileContentsInternetShortcut(FORMATETC& aFE, STGMEDIUM& aSTG) {
     rv = icoFile->GetPath(path);
     NS_ENSURE_SUCCESS(rv, E_FAIL);
 
-    if (IsAsciiNullTerminated(path.get())) {
+    if (IsAsciiNullTerminated(static_cast<const char16_t*>(path.get()))) {
       LossyCopyUTF16toASCII(path, asciiPath);
       shortcutFormatStr =
           "[InternetShortcut]\r\nURL=%s\r\n"
