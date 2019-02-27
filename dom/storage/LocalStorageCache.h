@@ -267,12 +267,6 @@ class LocalStorageCache : public LocalStorageCacheBridge {
   // default data set.)
   bool mPersistent : 1;
 
-  // - False when the session-only data set was never used.
-  // - True after access to session-only data has been made for the first time.
-  // We also fill session-only data set with the default one at that moment.
-  // Drops back to false when session-only data are cleared from chrome.
-  bool mSessionOnlyDataSetActive : 1;
-
   // Whether we have already captured state of the cache preload on our first
   // access.
   bool mPreloadTelemetryRecorded : 1;
