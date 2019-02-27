@@ -33,10 +33,11 @@ android {
         }
     }
 
-    flavorDimensions "abi"
+    flavorDimensions "abi", "channel"
 
     productFlavors {
-        // Processor architectures
+        // Processor architectures (abi dimension)
+
         arm {
             dimension "abi"
             ndk {
@@ -54,6 +55,32 @@ android {
             ndk {
                 abiFilter "arm64-v8a"
             }
+        }
+
+        // Product channels (channel dimension)
+
+        // "Greenfield" is our clean version of Fenix without any of the "Fennec transition" code.
+        greenfield {
+            dimension "channel"
+        }
+        firefoxNightly {
+            dimension "channel"
+
+            // Aurora was a channel between nightly builds and beta versions. Aurora builds were published on Google
+            // Play. When the Aurora channel was shutdown in April 2017 the decision was made to instead ship Nightly
+            // builds to Google Play using the existing application id. Previously Nightly builds were not available
+            // on Google Play. Since then our Nightly package name is "fennec_aurora" instead of "fennec_nightly".
+            applicationId "org.mozilla.fennec_aurora"
+        }
+        firefoxBeta {
+            dimension "channel"
+
+            applicationId "org.mozilla.firefox_beta"
+        }
+        firefoxRelease {
+            dimension "channel"
+
+            applicationId "org.mozilla.firefox"
         }
     }
 

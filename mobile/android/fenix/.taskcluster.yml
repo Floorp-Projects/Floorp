@@ -89,9 +89,9 @@ tasks:
                 --track ${track} \
                 --commit \
                 --output /opt/fenix/app/build/outputs/apk \
-                --apk arm/release/app-arm-release-unsigned.apk \
-                --apk x86/release/app-x86-release-unsigned.apk \
-                --apk aarch64/release/app-aarch64-release-unsigned.apk \
+                --apk armGreenfield/release/app-arm-greenfield-release-unsigned.apk \
+                --apk x86Greenfield/release/app-x86-greenfield-release-unsigned.apk \
+                --apk aarch64Greenfield/release/app-aarch64-greenfield-release-unsigned.apk \
                 --date ${now}
           artifacts:
             public/task-graph.json:
