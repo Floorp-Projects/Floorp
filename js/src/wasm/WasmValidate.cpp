@@ -2263,7 +2263,7 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
       // touch the field.
       tableIndex = (uint32_t)-1;
     } else if (env->tables[tableIndex].kind != TableKind::AnyFunction) {
-      return d.fail("only tables of 'anyfunc' may have element segments");
+      return d.fail("only tables of 'funcref' may have element segments");
     }
 
     seg->tableIndex = tableIndex;
