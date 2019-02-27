@@ -396,6 +396,16 @@ class ValType {
 
   explicit ValType(PackedTypeCode ptc) : tc_(ptc) { MOZ_ASSERT(isValidCode()); }
 
+  explicit ValType(jit::MIRType mty) {
+    switch (mty) {
+      case jit::MIRType::Int32: tc_ = PackTypeCode(TypeCode::I32); break;
+      case jit::MIRType::Int64: tc_ = PackTypeCode(TypeCode::I64); break;
+      case jit::MIRType::Float32: tc_ = PackTypeCode(TypeCode::F32); break;
+      case jit::MIRType::Double: tc_ = PackTypeCode(TypeCode::F64); break;
+      default: MOZ_CRASH("ValType(MIRType): unexpected type");
+    }
+  }
+
   static ValType fromBitsUnsafe(uint32_t bits) {
     return ValType(PackedTypeCodeFromBits(bits));
   }
@@ -2090,6 +2100,40 @@ enum class SymbolicAddress {
 #endif
   Limit
 };
+
+// SymbolicAddressSignature carries type information for a function referred
+// to by a SymbolicAddress.  In order that |argTypes| can be written out as a
+// static initialiser, it has to have fixed length.  At present
+// SymbolicAddressType is used to describe functions with at most 6 arguments,
+// so |argTypes| has 7 entries in order to allow the last value to be
+// MIRType::None, in the hope of catching any accidental overruns of the
+// defined section of the array.
+
+static constexpr size_t SymbolicAddressSignatureMaxArgs = 6;
+
+struct SymbolicAddressSignature {
+  // The SymbolicAddress that is described.
+  const SymbolicAddress identity;
+  // The return type, or MIRType::None to denote 'void'.
+  const jit::MIRType retType;
+  // The number of arguments, 0 .. SymbolicAddressSignatureMaxArgs only.
+  const uint8_t numArgs;
+  // The argument types; SymbolicAddressSignatureMaxArgs + 1 guard, which
+  // should be MIRType::None.
+  const jit::MIRType argTypes[SymbolicAddressSignatureMaxArgs + 1];
+};
+
+// The 16 in this assertion is derived as follows: SymbolicAddress is probably
+// size-4 aligned-4, but it's at the start of the struct, so there's no
+// alignment hole before it.  All other components (MIRType and uint8_t) are
+// size-1 aligned-1, and there are 8 in total, so it is reasonable to assume
+// that they also don't create any alignment holes.  Hence it is also
+// reasonable to assume that the actual size is 1 * 4 + 8 * 1 == 12.  The
+// worst-plausible-case rounding will take that up to 16.  Hence, the
+// assertion uses 16.
+
+static_assert(sizeof(SymbolicAddressSignature) <= 16,
+              "SymbolicAddressSignature unexpectedly large");
 
 bool IsRoundingFunction(SymbolicAddress callee, jit::RoundingMode* mode);
 

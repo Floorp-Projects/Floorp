@@ -2425,7 +2425,6 @@ struct StackMapGenerator {
 class BaseCompiler final : public BaseCompilerInterface {
   using Local = BaseStackFrame::Local;
   using LabelVector = Vector<NonAssertingLabel, 8, SystemAllocPolicy>;
-  using MIRTypeVector = Vector<MIRType, 8, SystemAllocPolicy>;
 
   // Bit set used for simple bounds check elimination.  Capping this at 64
   // locals makes sense; even 32 locals would probably be OK in practice.
@@ -2546,17 +2545,6 @@ class BaseCompiler final : public BaseCompilerInterface {
       bceSafe_;  // Locals that have been bounds checked and not updated since
   ValTypeVector SigD_;
   ValTypeVector SigF_;
-  MIRTypeVector SigP_;
-  MIRTypeVector SigPI_;
-  MIRTypeVector SigPL_;
-  MIRTypeVector SigPII_;
-  MIRTypeVector SigPIRI_;
-  MIRTypeVector SigPIII_;
-  MIRTypeVector SigPIIL_;
-  MIRTypeVector SigPIIR_;
-  MIRTypeVector SigPILL_;
-  MIRTypeVector SigPIIII_;
-  MIRTypeVector SigPIIIII_;
   NonAssertingLabel returnLabel_;
 
   LatentOp latentOp_;   // Latent operation for branch (seen next)
@@ -6478,19 +6466,13 @@ class BaseCompiler final : public BaseCompilerInterface {
     // postbarrier call is active, so push a uintptr_t value.
 #ifdef JS_64BIT
     pushI64(RegI64(Register64(valueAddr)));
-    if (!emitInstanceCall(bytecodeOffset, SigPL_, ExprType::Void,
-                          SymbolicAddress::PostBarrier,
-                          /*pushReturnedValue=*/false)) {
-      return false;
-    }
 #else
     pushI32(RegI32(valueAddr));
-    if (!emitInstanceCall(bytecodeOffset, SigPI_, ExprType::Void,
-                          SymbolicAddress::PostBarrier,
+#endif
+    if (!emitInstanceCall(bytecodeOffset, SASigPostBarrier,
                           /*pushReturnedValue=*/false)) {
       return false;
     }
-#endif
     return true;
   }
 
@@ -6708,6 +6690,7 @@ class BaseCompiler final : public BaseCompilerInterface {
 
   void doReturn(ExprType returnType, bool popStack);
   void pushReturnValueOfCall(const FunctionCall& call, ExprType type);
+  void pushReturnValueOfCall(const FunctionCall& call, MIRType type);
 
   void emitCompareI32(Assembler::Condition compareOp, ValType compareType);
   void emitCompareI64(Assembler::Condition compareOp, ValType compareType);
@@ -6824,8 +6807,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   void emitReinterpretI64AsF64();
   void emitRound(RoundingMode roundingMode, ValType operandType);
   MOZ_MUST_USE bool emitInstanceCall(uint32_t lineOrBytecode,
-                                     const MIRTypeVector& sig, ExprType retType,
-                                     SymbolicAddress builtin,
+                                     const SymbolicAddressSignature& builtin,
                                      bool pushReturnedValue = true);
   MOZ_MUST_USE bool emitMemoryGrow();
   MOZ_MUST_USE bool emitMemorySize();
@@ -8587,41 +8569,44 @@ bool BaseCompiler::emitCallArgs(const ValTypeVector& argTypes,
 }
 
 void BaseCompiler::pushReturnValueOfCall(const FunctionCall& call,
-                                         ExprType type) {
-  switch (type.code()) {
-    case ExprType::I32: {
+                                         MIRType type) {
+  switch (type) {
+    case MIRType::Int32: {
       RegI32 rv = captureReturnedI32();
       pushI32(rv);
       break;
     }
-    case ExprType::I64: {
+    case MIRType::Int64: {
       RegI64 rv = captureReturnedI64();
       pushI64(rv);
       break;
     }
-    case ExprType::F32: {
+    case MIRType::Float32: {
       RegF32 rv = captureReturnedF32(call);
       pushF32(rv);
       break;
     }
-    case ExprType::F64: {
+    case MIRType::Double: {
       RegF64 rv = captureReturnedF64(call);
       pushF64(rv);
       break;
     }
-    case ExprType::Ref:
-    case ExprType::AnyRef: {
+    case MIRType::RefOrNull: {
       RegPtr rv = captureReturnedRef();
       pushRef(rv);
       break;
     }
-    case ExprType::NullRef:
-      MOZ_CRASH("NullRef not expressible");
     default:
-      // In particular, passing |type| == ExprType::Void to this function is
-      // an error.
+      // In particular, passing |type| as MIRType::Void or MIRType::Pointer to
+      // this function is an error.
       MOZ_CRASH("Function return type");
   }
+}
+
+void BaseCompiler::pushReturnValueOfCall(const FunctionCall& call,
+                                         ExprType type) {
+  MOZ_ASSERT(type.code() != ExprType::NullRef);
+  pushReturnValueOfCall(call, ToMIRType(type));
 }
 
 // For now, always sync() at the beginning of the call to easily save live
@@ -9730,25 +9715,25 @@ void BaseCompiler::emitCompareRef(Assembler::Condition compareOp,
 }
 
 bool BaseCompiler::emitInstanceCall(uint32_t lineOrBytecode,
-                                    const MIRTypeVector& sig, ExprType retType,
-                                    SymbolicAddress builtin,
+                                    const SymbolicAddressSignature& builtin,
                                     bool pushReturnedValue /*=true*/) {
-  MOZ_ASSERT(sig[0] == MIRType::Pointer);
+  const MIRType* argTypes = builtin.argTypes;
+  MOZ_ASSERT(argTypes[0] == MIRType::Pointer);
 
   sync();
 
-  uint32_t numArgs = sig.length() - 1 /* instance */;
-  size_t stackSpace = stackConsumed(numArgs);
+  uint32_t numNonInstanceArgs = builtin.numArgs - 1 /* instance */;
+  size_t stackSpace = stackConsumed(numNonInstanceArgs);
 
   FunctionCall baselineCall(lineOrBytecode);
   beginCall(baselineCall, UseABI::System, InterModule::True);
 
   ABIArg instanceArg = reservePointerArgument(&baselineCall);
 
-  startCallArgs(StackArgAreaSizeUnaligned(sig), &baselineCall);
-  for (uint32_t i = 1; i < sig.length(); i++) {
+  startCallArgs(StackArgAreaSizeUnaligned(builtin), &baselineCall);
+  for (uint32_t i = 1; i < builtin.numArgs; i++) {
     ValType t;
-    switch (sig[i]) {
+    switch (argTypes[i]) {
       case MIRType::Int32:
         t = ValType::I32;
         break;
@@ -9758,34 +9743,39 @@ bool BaseCompiler::emitInstanceCall(uint32_t lineOrBytecode,
       case MIRType::RefOrNull:
         t = ValType::AnyRef;
         break;
+      case MIRType::Pointer:
+        // Instance function args can now be uninterpreted pointers (eg, for
+        // the cases PostBarrier and PostBarrierFilter) so we simply treat
+        // them like the equivalently sized integer.
+        t = sizeof(void*) == 4 ? ValType::I32 : ValType::I64;
+        break;
       default:
         MOZ_CRASH("Unexpected type");
     }
-    passArg(t, peek(numArgs - i), &baselineCall);
+    passArg(t, peek(numNonInstanceArgs - i), &baselineCall);
   }
   CodeOffset raOffset =
-      builtinInstanceMethodCall(builtin, instanceArg, baselineCall);
+      builtinInstanceMethodCall(builtin.identity, instanceArg, baselineCall);
   if (!createStackMap("emitInstanceCall", raOffset)) {
     return false;
   }
 
   endCall(baselineCall, stackSpace);
 
-  popValueStackBy(numArgs);
+  popValueStackBy(numNonInstanceArgs);
 
   // Note, many clients of emitInstanceCall currently assume that pushing the
   // result here does not destroy ReturnReg.
   //
-  // Furthermore, clients assume that even if retType == ExprType::Void, the
-  // callee may have returned a status result and left it in ReturnReg for us
-  // to find, and that that register will not be destroyed here (or above).
-  // In this case the callee will have a C++ declaration stating that there is
-  // a return value.  Examples include memory and table operations that are
-  // implemented as callouts.
+  // Furthermore, clients assume that if builtin.retType != MIRType::None, the
+  // callee will have returned a result and left it in ReturnReg for us to
+  // find, and that that register will not be destroyed here (or above).
 
   if (pushReturnedValue) {
-    MOZ_ASSERT(retType != ExprType::Void);
-    pushReturnValueOfCall(baselineCall, retType);
+    // For the return type only, MIRType::None is used to indicate that the
+    // call doesn't return a result, that is, returns a C/C++ "void".
+    MOZ_ASSERT(builtin.retType != MIRType::None);
+    pushReturnValueOfCall(baselineCall, builtin.retType);
   }
   return true;
 }
@@ -9802,8 +9792,7 @@ bool BaseCompiler::emitMemoryGrow() {
     return true;
   }
 
-  return emitInstanceCall(lineOrBytecode, SigPI_, ExprType::I32,
-                          SymbolicAddress::MemoryGrow);
+  return emitInstanceCall(lineOrBytecode, SASigMemoryGrow);
 }
 
 bool BaseCompiler::emitMemorySize() {
@@ -9817,8 +9806,7 @@ bool BaseCompiler::emitMemorySize() {
     return true;
   }
 
-  return emitInstanceCall(lineOrBytecode, SigP_, ExprType::I32,
-                          SymbolicAddress::MemorySize);
+  return emitInstanceCall(lineOrBytecode, SASigMemorySize);
 }
 
 bool BaseCompiler::emitRefNull() {
@@ -10132,14 +10120,12 @@ bool BaseCompiler::emitWait(ValType type, uint32_t byteSize) {
   // Returns -1 on trap, otherwise nonnegative result.
   switch (type.code()) {
     case ValType::I32:
-      if (!emitInstanceCall(lineOrBytecode, SigPIIL_, ExprType::I32,
-                            SymbolicAddress::WaitI32)) {
+      if (!emitInstanceCall(lineOrBytecode, SASigWaitI32)) {
         return false;
       }
       break;
     case ValType::I64:
-      if (!emitInstanceCall(lineOrBytecode, SigPILL_, ExprType::I32,
-                            SymbolicAddress::WaitI64)) {
+      if (!emitInstanceCall(lineOrBytecode, SASigWaitI64)) {
         return false;
       }
       break;
@@ -10169,8 +10155,7 @@ bool BaseCompiler::emitWake() {
   }
 
   // Returns -1 on trap, otherwise nonnegative result.
-  if (!emitInstanceCall(lineOrBytecode, SigPII_, ExprType::I32,
-                        SymbolicAddress::Wake)) {
+  if (!emitInstanceCall(lineOrBytecode, SASigWake)) {
     return false;
   }
 
@@ -10202,16 +10187,14 @@ bool BaseCompiler::emitMemOrTableCopy(bool isMem) {
   if (isMem) {
     MOZ_ASSERT(srcMemOrTableIndex == 0);
     MOZ_ASSERT(dstMemOrTableIndex == 0);
-    if (!emitInstanceCall(lineOrBytecode, SigPIII_, ExprType::I32,
-                          SymbolicAddress::MemCopy,
+    if (!emitInstanceCall(lineOrBytecode, SASigMemCopy,
                           /*pushReturnedValue=*/false)) {
       return false;
     }
   } else {
     pushI32(dstMemOrTableIndex);
     pushI32(srcMemOrTableIndex);
-    if (!emitInstanceCall(lineOrBytecode, SigPIIIII_, ExprType::I32,
-                          SymbolicAddress::TableCopy,
+    if (!emitInstanceCall(lineOrBytecode, SASigTableCopy,
                           /*pushReturnedValue=*/false)) {
       return false;
     }
@@ -10241,10 +10224,9 @@ bool BaseCompiler::emitDataOrElemDrop(bool isData) {
   //
   // Returns -1 on trap, otherwise 0.
   pushI32(int32_t(segIndex));
-  SymbolicAddress callee =
-      isData ? SymbolicAddress::DataDrop : SymbolicAddress::ElemDrop;
-  if (!emitInstanceCall(lineOrBytecode, SigPI_, ExprType::Void, callee,
-                        /*pushReturnedValue=*/false)) {
+  const SymbolicAddressSignature& callee =
+      isData ? SASigDataDrop : SASigElemDrop;
+  if (!emitInstanceCall(lineOrBytecode, callee, /*pushReturnedValue=*/false)) {
     return false;
   }
 
@@ -10269,8 +10251,7 @@ bool BaseCompiler::emitMemFill() {
   }
 
   // Returns -1 on trap, otherwise 0.
-  if (!emitInstanceCall(lineOrBytecode, SigPIII_, ExprType::Void,
-                        SymbolicAddress::MemFill,
+  if (!emitInstanceCall(lineOrBytecode, SASigMemFill,
                         /*pushReturnedValue=*/false)) {
     return false;
   }
@@ -10301,15 +10282,13 @@ bool BaseCompiler::emitMemOrTableInit(bool isMem) {
   // Returns -1 on trap, otherwise 0.
   pushI32(int32_t(segIndex));
   if (isMem) {
-    if (!emitInstanceCall(lineOrBytecode, SigPIIII_, ExprType::Void,
-                          SymbolicAddress::MemInit,
+    if (!emitInstanceCall(lineOrBytecode, SASigMemInit,
                           /*pushReturnedValue=*/false)) {
       return false;
     }
   } else {
     pushI32(dstTableIndex);
-    if (!emitInstanceCall(lineOrBytecode, SigPIIIII_, ExprType::Void,
-                          SymbolicAddress::TableInit,
+    if (!emitInstanceCall(lineOrBytecode, SASigTableInit,
                           /*pushReturnedValue=*/false)) {
       return false;
     }
@@ -10340,15 +10319,22 @@ bool BaseCompiler::emitTableGet() {
   // Returns nullptr for error, otherwise a pointer to a nonmoveable memory
   // location that holds the anyref value.
   pushI32(tableIndex);
-  if (!emitInstanceCall(lineOrBytecode, SigPII_, ExprType::AnyRef,
-                        SymbolicAddress::TableGet)) {
+  if (!emitInstanceCall(lineOrBytecode, SASigTableGet,
+                        /*pushReturnedValue=*/false)) {
     return false;
   }
   Label noTrap;
   masm.branchTestPtr(Assembler::NonZero, ReturnReg, ReturnReg, &noTrap);
   trap(Trap::ThrowReported);
   masm.bind(&noTrap);
+
   masm.loadPtr(Address(ReturnReg, 0), ReturnReg);
+
+  // Push the resulting anyref back on the eval stack.  NOTE: needRef() must
+  // not kill the value in the register.
+  RegPtr r = RegPtr(ReturnReg);
+  needRef(r);
+  pushRef(r);
 
   return true;
 }
@@ -10369,8 +10355,7 @@ bool BaseCompiler::emitTableGrow() {
   //
   // infallible.
   pushI32(tableIndex);
-  return emitInstanceCall(lineOrBytecode, SigPIRI_, ExprType::I32,
-                          SymbolicAddress::TableGrow);
+  return emitInstanceCall(lineOrBytecode, SASigTableGrow);
 }
 
 MOZ_MUST_USE
@@ -10388,8 +10373,7 @@ bool BaseCompiler::emitTableSet() {
   //
   // Returns -1 on range error, otherwise 0 (which is then ignored).
   pushI32(tableIndex);
-  if (!emitInstanceCall(lineOrBytecode, SigPIRI_, ExprType::I32,
-                        SymbolicAddress::TableSet,
+  if (!emitInstanceCall(lineOrBytecode, SASigTableSet,
                         /*pushReturnedValue=*/false)) {
     return false;
   }
@@ -10414,8 +10398,7 @@ bool BaseCompiler::emitTableSize() {
   //
   // infallible.
   pushI32(tableIndex);
-  return emitInstanceCall(lineOrBytecode, SigPI_, ExprType::I32,
-                          SymbolicAddress::TableSize);
+  return emitInstanceCall(lineOrBytecode, SASigTableSize);
 }
 
 bool BaseCompiler::emitStructNew() {
@@ -10439,8 +10422,7 @@ bool BaseCompiler::emitStructNew() {
   const StructType& structType = env_.types[typeIndex].structType();
 
   pushI32(structType.moduleIndex_);
-  if (!emitInstanceCall(lineOrBytecode, SigPI_, ExprType::AnyRef,
-                        SymbolicAddress::StructNew)) {
+  if (!emitInstanceCall(lineOrBytecode, SASigStructNew)) {
     return false;
   }
 
@@ -10773,8 +10755,7 @@ bool BaseCompiler::emitStructNarrow() {
   pushI32(mustUnboxAnyref);
   pushI32(outputStruct.moduleIndex_);
   pushRef(rp);
-  return emitInstanceCall(lineOrBytecode, SigPIIR_, ExprType::AnyRef,
-                          SymbolicAddress::StructNarrow);
+  return emitInstanceCall(lineOrBytecode, SASigStructNarrow);
 }
 
 bool BaseCompiler::emitBody() {
@@ -11850,54 +11831,6 @@ bool BaseCompiler::init() {
     return false;
   }
   if (!SigF_.append(ValType::F32)) {
-    return false;
-  }
-  if (!SigP_.append(MIRType::Pointer)) {
-    return false;
-  }
-  if (!SigPI_.append(MIRType::Pointer) || !SigPI_.append(MIRType::Int32)) {
-    return false;
-  }
-  if (!SigPL_.append(MIRType::Pointer) || !SigPL_.append(MIRType::Int64)) {
-    return false;
-  }
-  if (!SigPII_.append(MIRType::Pointer) || !SigPII_.append(MIRType::Int32) ||
-      !SigPII_.append(MIRType::Int32)) {
-    return false;
-  }
-  if (!SigPIRI_.append(MIRType::Pointer) || !SigPIRI_.append(MIRType::Int32) ||
-      !SigPIRI_.append(MIRType::RefOrNull) ||
-      !SigPIRI_.append(MIRType::Int32)) {
-    return false;
-  }
-  if (!SigPIII_.append(MIRType::Pointer) || !SigPIII_.append(MIRType::Int32) ||
-      !SigPIII_.append(MIRType::Int32) || !SigPIII_.append(MIRType::Int32)) {
-    return false;
-  }
-  if (!SigPIIL_.append(MIRType::Pointer) || !SigPIIL_.append(MIRType::Int32) ||
-      !SigPIIL_.append(MIRType::Int32) || !SigPIIL_.append(MIRType::Int64)) {
-    return false;
-  }
-  if (!SigPIIR_.append(MIRType::Pointer) || !SigPIIR_.append(MIRType::Int32) ||
-      !SigPIIR_.append(MIRType::Int32) ||
-      !SigPIIR_.append(MIRType::RefOrNull)) {
-    return false;
-  }
-  if (!SigPILL_.append(MIRType::Pointer) || !SigPILL_.append(MIRType::Int32) ||
-      !SigPILL_.append(MIRType::Int64) || !SigPILL_.append(MIRType::Int64)) {
-    return false;
-  }
-  if (!SigPIIII_.append(MIRType::Pointer) ||
-      !SigPIIII_.append(MIRType::Int32) || !SigPIIII_.append(MIRType::Int32) ||
-      !SigPIIII_.append(MIRType::Int32) || !SigPIIII_.append(MIRType::Int32)) {
-    return false;
-  }
-  if (!SigPIIIII_.append(MIRType::Pointer) ||
-      !SigPIIIII_.append(MIRType::Int32) ||
-      !SigPIIIII_.append(MIRType::Int32) ||
-      !SigPIIIII_.append(MIRType::Int32) ||
-      !SigPIIIII_.append(MIRType::Int32) ||
-      !SigPIIIII_.append(MIRType::Int32)) {
     return false;
   }
 
