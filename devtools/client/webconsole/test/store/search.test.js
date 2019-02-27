@@ -69,7 +69,7 @@ describe("Searching in grips", () => {
 
   describe("Search in frame", () => {
     it("matches on file name", () => {
-      store.dispatch(actions.filterTextSet("test-console-api.html:1:27"));
+      store.dispatch(actions.filterTextSet("test-console-api.html:1:35"));
       expect(getVisibleMessages(store.getState()).length).toEqual(7);
     });
 
