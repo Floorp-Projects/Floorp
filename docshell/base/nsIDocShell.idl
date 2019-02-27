@@ -1124,4 +1124,10 @@ interface nsIDocShell : nsIDocShellTreeItem
    * see nsISecureBrowserUI.contentBlockingLogJSON.
    */
   Promise getContentBlockingLog();
+
+  /**
+   * Return whether this docshell is "attempting to navigate" in the
+   * sense that's relevant to document.open.
+   */
+  [notxpcom, nostdcall] readonly attribute boolean isAttemptingToNavigate;
 };
