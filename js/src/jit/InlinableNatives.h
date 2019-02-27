@@ -136,6 +136,7 @@
   _(IntrinsicNewArrayIterator)                     \
   _(IntrinsicNewStringIterator)                    \
   _(IntrinsicNewRegExpStringIterator)              \
+  _(IntrinsicArrayIteratorPrototypeOptimizable)    \
                                                    \
   _(IntrinsicGuardToArrayBuffer)                   \
   _(IntrinsicArrayBufferByteLength)                \

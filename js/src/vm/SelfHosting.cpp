@@ -2501,8 +2501,9 @@ static const JSFunctionSpec intrinsic_functions[] = {
 
     JS_INLINABLE_FN("NewArrayIterator", intrinsic_NewArrayIterator, 0, 0,
                     IntrinsicNewArrayIterator),
-    JS_FN("ArrayIteratorPrototypeOptimizable",
-          intrinsic_ArrayIteratorPrototypeOptimizable, 0, 0),
+    JS_INLINABLE_FN("ArrayIteratorPrototypeOptimizable",
+                    intrinsic_ArrayIteratorPrototypeOptimizable, 0, 0,
+                    IntrinsicArrayIteratorPrototypeOptimizable),
 
     JS_FN("CallArrayIteratorMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<ArrayIteratorObject>>, 2, 0),
