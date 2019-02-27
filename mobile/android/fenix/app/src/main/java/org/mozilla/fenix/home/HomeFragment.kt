@@ -45,7 +45,9 @@ import kotlin.math.roundToInt
 
 fun SessionBundleStorage.archive(sessionManager: SessionManager) {
         save(sessionManager.createSnapshot())
-        sessionManager.removeAll()
+        sessionManager.sessions.filter { !it.private }.forEach {
+            sessionManager.remove(it)
+        }
         new()
 }
 

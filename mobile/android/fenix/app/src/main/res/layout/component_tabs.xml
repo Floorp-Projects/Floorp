@@ -30,6 +30,7 @@
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_new"
             android:tint="?attr/toolbarTextColor"
+            android:contentDescription="@string/add_tab"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/tabs_overflow_button"
             app:layout_constraintTop_toTopOf="parent" />
@@ -41,6 +42,7 @@
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_menu"
             android:tint="?attr/toolbarTextColor"
+            android:contentDescription="@string/tab_menu"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
