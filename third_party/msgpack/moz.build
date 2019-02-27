@@ -12,17 +12,18 @@ LOCAL_INCLUDES += [
 
 EXPORTS += [
     'include/msgpack.h',
+    'include/msgpack/util.h',
 ]
 
 # We allow warnings for third-party code that can be updated from upstream.
 AllowCompilerWarnings()
 
 SOURCES += [
-    'objectc.c',
-    'unpack.c',
-    'version.c',
-    'vrefbuffer.c',
-    'zone.c',
+    'src/objectc.c',
+    'src/unpack.c',
+    'src/version.c',
+    'src/vrefbuffer.c',
+    'src/zone.c',
 ]
 
 FINAL_LIBRARY = 'xul'
