@@ -14,6 +14,7 @@ XPIDL_SOURCES += [
     'nsICookieManager.idl',
     'nsICookiePermission.idl',
     'nsICookieService.idl',
+    'nsICookieSettings.idl',
 ]
 
 XPIDL_MODULE = 'necko_cookie'
@@ -22,11 +23,13 @@ if CONFIG['NECKO_COOKIES']:
     EXPORTS.mozilla.net = [
         'CookieServiceChild.h',
         'CookieServiceParent.h',
+        'CookieSettings.h',
         'nsCookieKey.h',
     ]
     UNIFIED_SOURCES += [
         'CookieServiceChild.cpp',
         'CookieServiceParent.cpp',
+        'CookieSettings.cpp',
         'nsCookie.cpp',
     ]
     # nsCookieService.cpp can't be unified because of symbol conflicts
@@ -34,6 +37,7 @@ if CONFIG['NECKO_COOKIES']:
         'nsCookieService.cpp',
     ]
     LOCAL_INCLUDES += [
+        '/extensions/cookie',
         '/intl/uconv',
     ]
 

@@ -8229,31 +8229,30 @@ nsContentUtils::StorageAccess nsContentUtils::StorageAllowedForServiceWorker(
 }
 
 // static, private
-void nsContentUtils::GetCookieLifetimePolicyForPrincipal(
-    nsIPrincipal* aPrincipal, uint32_t* aLifetimePolicy) {
+void nsContentUtils::GetCookieLifetimePolicyFromCookieSettings(
+    nsICookieSettings* aCookieSettings, nsIPrincipal* aPrincipal,
+    uint32_t* aLifetimePolicy) {
   *aLifetimePolicy = sCookiesLifetimePolicy;
 
-  // Any permissions set for the given principal will override our default
-  // settings from preferences.
-  nsCOMPtr<nsIPermissionManager> permissionManager =
-      services::GetPermissionManager();
-  if (!permissionManager) {
-    return;
-  }
+  if (aCookieSettings) {
+    uint32_t cookiePermission = 0;
+    nsresult rv =
+        aCookieSettings->CookiePermission(aPrincipal, &cookiePermission);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
 
-  uint32_t perm;
-  permissionManager->TestPermissionFromPrincipal(
-      aPrincipal, NS_LITERAL_CSTRING("cookie"), &perm);
-  switch (perm) {
-    case nsICookiePermission::ACCESS_ALLOW:
-      *aLifetimePolicy = nsICookieService::ACCEPT_NORMALLY;
-      break;
-    case nsICookiePermission::ACCESS_DENY:
-      *aLifetimePolicy = nsICookieService::ACCEPT_NORMALLY;
-      break;
-    case nsICookiePermission::ACCESS_SESSION:
-      *aLifetimePolicy = nsICookieService::ACCEPT_SESSION;
-      break;
+    switch (cookiePermission) {
+      case nsICookiePermission::ACCESS_ALLOW:
+        *aLifetimePolicy = nsICookieService::ACCEPT_NORMALLY;
+        break;
+      case nsICookiePermission::ACCESS_DENY:
+        *aLifetimePolicy = nsICookieService::ACCEPT_NORMALLY;
+        break;
+      case nsICookiePermission::ACCESS_SESSION:
+        *aLifetimePolicy = nsICookieService::ACCEPT_SESSION;
+        break;
+    }
   }
 }
 
@@ -8424,6 +8423,7 @@ nsContentUtils::StorageAccess nsContentUtils::InternalStorageAllowedCheck(
   aRejectedReason = 0;
 
   StorageAccess access = StorageAccess::eAllow;
+  nsCOMPtr<nsICookieSettings> cookieSettings;
 
   // We don't allow storage on the null principal, in general. Even if the
   // calling context is chrome.
@@ -8442,6 +8442,15 @@ nsContentUtils::StorageAccess nsContentUtils::InternalStorageAllowedCheck(
     if (IsInPrivateBrowsing(document)) {
       access = StorageAccess::ePrivateBrowsing;
     }
+
+    if (document) {
+      cookieSettings = document->CookieSettings();
+    }
+  }
+
+  if (aChannel) {
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+    loadInfo->GetCookieSettings(getter_AddRefs(cookieSettings));
   }
 
   uint32_t lifetimePolicy;
@@ -8453,7 +8462,8 @@ nsContentUtils::StorageAccess nsContentUtils::InternalStorageAllowedCheck(
   if (policy) {
     lifetimePolicy = nsICookieService::ACCEPT_NORMALLY;
   } else {
-    GetCookieLifetimePolicyForPrincipal(aPrincipal, &lifetimePolicy);
+    GetCookieLifetimePolicyFromCookieSettings(cookieSettings, aPrincipal,
+                                              &lifetimePolicy);
   }
 
   // Check if we should only allow storage for the session, and record that fact
