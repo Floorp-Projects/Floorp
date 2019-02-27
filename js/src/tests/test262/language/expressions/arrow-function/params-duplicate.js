@@ -3,13 +3,20 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-esid: sec-method-definitions
+esid: sec-arrow-function-definitions
 description: Formal parameters may not contain duplicates
 info: |
-  # 14.3 Method Definitions
+  # 14.2 Arrow Function Definitions
 
-  MethodDefinition[Yield, Await]:
-    PropertyName[?Yield, ?Await](UniqueFormalParameters[~Yield, ~Await]){FunctionBody[~Yield, ~Await]}
+  When the production
+
+    ArrowParameters:CoverParenthesizedExpressionAndArrowParameterList
+
+  is recognized the following grammar is used to refine the interpretation
+  of CoverParenthesizedExpressionAndArrowParameterList:
+
+    ArrowFormalParameters[Yield, Await]:
+      (UniqueFormalParameters[?Yield, ?Await])
 
   # 14.1.2 Static Semantics: Early Errors
 
@@ -23,6 +30,5 @@ negative:
 ---*/
 
 $DONOTEVALUATE();
-({
-  foo(a, a) { }
-})
+
+0, (a, a) => { };

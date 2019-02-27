@@ -1,7 +1,5 @@
-commit d7c8a12e68af1f8713082b73ff25a945c9c597d5
-Author: Mathias Bynens <mathias@qiwi.be>
-Date:   Wed Jan 23 10:56:03 2019 -0500
+commit b7c9c6c78b65f63df93650c11476225f38bcd1fa
+Author: Frank Yung-Fong Tang <41213225+FrankYFTang@users.noreply.github.com>
+Date:   Thu Jan 24 09:34:03 2019 -0800
 
-    Remove invalid line terminator tests (#2044)
-    
-    https://github.com/tc39/test262/pull/2020#issuecomment-456581449
+    Remove unsupported irregular grandfathered tags. (#2029)

@@ -1,15 +1,16 @@
 // |reftest| error:SyntaxError
-// Copyright 2019 Mike Pennisi. All rights reserved.
+// Copyright 2016 Microsoft, Inc. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-esid: sec-method-definitions
+author: Brian Terlson <brian.terlson@microsoft.com>
+esid: sec-async-function-definitions
 description: Formal parameters may not contain duplicates
 info: |
-  # 14.3 Method Definitions
+  # 14.7 Arrow Function Definitions
 
-  MethodDefinition[Yield, Await]:
-    PropertyName[?Yield, ?Await](UniqueFormalParameters[~Yield, ~Await]){FunctionBody[~Yield, ~Await]}
+  AsyncMethod[Yield, Await]:
+    async[no LineTerminator here]PropertyName[?Yield, ?Await](UniqueFormalParameters[~Yield, +Await]){AsyncFunctionBody}
 
   # 14.1.2 Static Semantics: Early Errors
 
@@ -23,6 +24,7 @@ negative:
 ---*/
 
 $DONOTEVALUATE();
-({
-  foo(a, a) { }
-})
+
+class Foo {
+  async foo(a, a) { }
+}
