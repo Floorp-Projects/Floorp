@@ -108,7 +108,7 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   // under demand inside the touchFrameValues call.
 
   // Give sp 16-byte alignment and sync stack pointers.
-  masm.andToStackPtr(Imm32(~0xff));
+  masm.andToStackPtr(Imm32(~0xf));
   // We needn't worry about the Gecko Profiler mark because touchFrameValues
   // touches in large increments.
   masm.touchFrameValues(reg_argc, r20, r21);
@@ -138,7 +138,7 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
              Operand(tmp_argc, vixl::SXTX, 3));
 
     // Give sp 16-byte alignment and sync stack pointers.
-    masm.andToStackPtr(Imm32(~0xff));
+    masm.andToStackPtr(Imm32(~0xf));
     masm.moveStackPtrTo(tmp_sp.asUnsized());
 
     masm.branchTestPtr(Assembler::Zero, reg_argc, reg_argc, &noArguments);
