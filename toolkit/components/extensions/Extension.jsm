@@ -1312,6 +1312,8 @@ class LangpackBootstrapScope {
 
 let activeExtensionIDs = new Set();
 
+let pendingExtensions = new Map();
+
 /**
  * This class is the main representation of an active WebExtension
  * in the main process.
@@ -1719,6 +1721,9 @@ class Extension extends ExtensionData {
     activeExtensionIDs.add(this.id);
     sharedData.set("extensions/activeIDs", activeExtensionIDs);
 
+    pendingExtensions.delete(this.id);
+    sharedData.set("extensions/pending", pendingExtensions);
+
     Services.ppmm.sharedData.flush();
     this.broadcast("Extension:Startup", this.id);
 
@@ -1830,6 +1835,12 @@ class Extension extends ExtensionData {
     if (!WebExtensionPolicy.getByID(this.id)) {
       this.policy.active = true;
     }
+
+    pendingExtensions.set(this.id, {
+      mozExtensionHostname: this.uuid,
+      baseURL: this.resourceURL,
+    });
+    sharedData.set("extensions/pending", pendingExtensions);
 
     ExtensionTelemetry.extensionStartup.stopwatchStart(this);
     try {
