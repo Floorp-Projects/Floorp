@@ -444,6 +444,12 @@ var AddonRepository = {
   _fetchPaged(ids, pref, handler) {
     let startURL = this._formatURLPref(pref, {IDS: ids.join(",")});
     let results = [];
+    let idCheck = ids.map(id => {
+      if (id.startsWith("rta:")) {
+        return atob(id.split(":")[1]);
+      }
+      return id;
+    });
 
     const fetchNextPage = (url) => {
       return new Promise((resolve, reject) => {
@@ -466,7 +472,7 @@ var AddonRepository = {
           }
 
           try {
-            let newResults = handler(response.results).filter(e => ids.includes(e.id));
+            let newResults = handler(response.results).filter(e => idCheck.includes(e.id));
             results.push(...newResults);
           } catch (err) {
             reject(err);
