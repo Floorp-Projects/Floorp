@@ -117,3 +117,26 @@
   fill: var(--theme-toolbar-color);
   opacity: 0.6;
 }
+
+.deprecation-notice::before {
+  background-image: url("chrome://global/skin/icons/warning.svg");
+  content: '';
+  display: inline-block;
+  flex-shrink: 0;
+  height: 15px;
+  margin-inline-end: 5px;
+  width: 15px;
+}
+
+.deprecation-notice {
+  align-items: center;
+  background-color: hsl(54, 100%, 92%);
+  color: var(--yellow-80);
+  display: flex;
+  box-shadow: 0 0 0px 4px hsl(54, 100%, 92%);
+  margin-inline-start: 8px;
+}
+
+.deprecation-notice a:hover{
+  text-decoration: underline;
+}

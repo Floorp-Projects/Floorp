@@ -10,7 +10,7 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Focus after console is opened");
-  ok(isJstermFocused(hud.jsterm), "input node is focused after console is opened");
+  ok(isInputFocused(hud), "input node is focused after console is opened");
 
   info("Closing console");
   await closeConsole();

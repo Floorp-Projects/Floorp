@@ -6,23 +6,17 @@
 chrome.jar:
 % skin browser classic/1.0 %skin/
   skin/aboutPage.css                        (aboutPage.css)
-  skin/about.css                            (about.css)
   skin/aboutAccounts.css                    (aboutAccounts.css)
   skin/aboutAddons.css                      (aboutAddons.css)
   skin/aboutBase.css                        (aboutBase.css)
   skin/aboutDownloads.css                   (aboutDownloads.css)
   skin/aboutExperiments.css                 (aboutExperiments.css)
-  skin/aboutMemory.css                      (aboutMemory.css)
   skin/aboutPrivateBrowsing.css             (aboutPrivateBrowsing.css)
   skin/aboutReader.css                      (aboutReader.css)
-  skin/aboutSupport.css                     (aboutSupport.css)
   skin/defines.css                          (defines.css)
   skin/netError.css                         (netError.css)
   skin/spinner.css                          (spinner.css)
-% override chrome://global/skin/about.css chrome://browser/skin/about.css
-% override chrome://global/skin/aboutMemory.css chrome://browser/skin/aboutMemory.css
 % override chrome://global/skin/aboutReader.css chrome://browser/skin/aboutReader.css
-% override chrome://global/skin/aboutSupport.css chrome://browser/skin/aboutSupport.css
 % override chrome://global/skin/netError.css chrome://browser/skin/netError.css
 
   skin/aboutLogins.css                      (aboutLogins.css)

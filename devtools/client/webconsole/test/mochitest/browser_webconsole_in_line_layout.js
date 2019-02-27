@@ -24,7 +24,7 @@ async function performTests() {
   // The style is only enabled in the new jsterm.
   await pushPref("devtools.webconsole.jsterm.codeMirror", true);
   const hud = await openNewTabAndConsole(TEST_URI);
-  const {jsterm, ui} = hud;
+  const {ui} = hud;
   const {document} = ui;
   const appNode = document.querySelector(".webconsole-app");
   const [
@@ -62,7 +62,7 @@ async function performTests() {
   testLayout(appNode);
 
   info("Make sure setting a tall value in the input does not break the layout");
-  jsterm.setInputValue("multiline\n".repeat(200));
+  setInputValue(hud, "multiline\n".repeat(200));
   is(outputNode.clientHeight, MINIMUM_MESSAGE_HEIGHT,
     "One message is still visible in the output node");
   testLayout(appNode);
@@ -89,7 +89,7 @@ async function performTests() {
   hostWindow.resizeTo(window.screen.availWidth, window.screen.availHeight);
   testLayout(appNode);
 
-  jsterm.setInputValue("");
+  setInputValue(hud, "");
   testLayout(appNode);
 
   ui.clearOutput();

@@ -507,13 +507,12 @@ class Jarrer(FileRegistry, BaseFile):
     FileRegistry with the ability to copy and pack the registered files as a
     jar file. Also acts as a BaseFile instance, to be copied with a FileCopier.
     '''
-    def __init__(self, compress=True, optimize=True):
+    def __init__(self, compress=True):
         '''
         Create a Jarrer instance. See mozpack.mozjar.JarWriter documentation
-        for details on the compress and optimize arguments.
+        for details on the compress argument.
         '''
         self.compress = compress
-        self.optimize = optimize
         self._preload = []
         self._compress_options = {}  # Map path to compress boolean option.
         FileRegistry.__init__(self)
@@ -574,8 +573,7 @@ class Jarrer(FileRegistry, BaseFile):
 
         old_contents = dict([(f.filename, f) for f in old_jar])
 
-        with JarWriter(fileobj=dest, compress=self.compress,
-                       optimize=self.optimize) as jar:
+        with JarWriter(fileobj=dest, compress=self.compress) as jar:
             for path, file in self:
                 compress = self._compress_options.get(path, self.compress)
                 # Temporary: Because l10n repacks can't handle brotli just yet,

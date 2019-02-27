@@ -5,6 +5,9 @@
 toolkit.jar:
 % skin global classic/1.0 %skin/classic/global/
 # These are the CSS files that must exist
+   skin/classic/global/about.css                           (global/about.css)
+   skin/classic/global/aboutMemory.css                     (global/aboutMemory.css)
+   skin/classic/global/aboutSupport.css                    (global/aboutSupport.css)
    skin/classic/global/autocomplete.css                    (global/empty.css)
    skin/classic/global/button.css                          (global/empty.css)
    skin/classic/global/checkbox.css                        (global/empty.css)

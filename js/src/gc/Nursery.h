@@ -142,10 +142,12 @@ class Nursery {
   static const size_t ChunkShift = gc::ChunkShift;
 
   /*
+   * SubChunkStep is the minimum amount to adjust the nursery's size by.
+   */
+  static const size_t SubChunkStep = gc::ArenaSize;
+
+  /*
    * SubChunkLimit is the lower limit of the nursery's capacity.
-   * SubChunkStep is the minimum amount to adjust the nursery's size by (to
-   * avoid too many size adjustments and allow quicker changes in size than eg:
-   * 4k).
    */
 #ifndef JS_GC_SMALL_CHUNK_SIZE
   /*
@@ -153,14 +155,12 @@ class Nursery {
    * should be a multiple of the Step.
    */
   static const size_t SubChunkLimit = 192 * 1024;
-  static const size_t SubChunkStep = 64 * 1024;
 #else
   /*
    * With small chunk sizes (256K) we need to use smaller sub chunk limits and
    * steps so that a full chunk minus one step is still larger than the limit.
    */
   static const size_t SubChunkLimit = 64 * 1024;
-  static const size_t SubChunkStep = 16 * 1024;
 #endif
 
   struct alignas(gc::CellAlignBytes) CellAlignedByte {

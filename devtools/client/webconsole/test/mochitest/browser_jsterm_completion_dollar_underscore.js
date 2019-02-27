@@ -19,12 +19,13 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const {jsterm} = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
+  const {jsterm} = hud;
   const {autocompletePopup} = jsterm;
 
   info("Test that there's no issue when trying to do an autocompletion without last " +
     "evaluation result");
-  await setInputValueForAutocompletion(jsterm, "$_.");
+  await setInputValueForAutocompletion(hud, "$_.");
   is(autocompletePopup.items.length, 0, "autocomplete popup has no items");
   is(autocompletePopup.isOpen, false, "autocomplete popup is not open");
 
@@ -34,18 +35,18 @@ async function performTests() {
     y: "hello"
   }))`);
 
-  await setInputValueForAutocompletion(jsterm, "$_.");
-  checkJsTermCompletionValue(jsterm, "   x", "'$_.' completion (completeNode)");
+  await setInputValueForAutocompletion(hud, "$_.");
+  checkInputCompletionValue(hud, "   x", "'$_.' completion (completeNode)");
   is(getAutocompletePopupLabels(autocompletePopup).join("|"), "x|y",
     "autocomplete popup has expected items");
   is(autocompletePopup.isOpen, true, "autocomplete popup is open");
 
-  await setInputValueForAutocompletion(jsterm, "$_.x.");
+  await setInputValueForAutocompletion(hud, "$_.x.");
   is(autocompletePopup.isOpen, true, "autocomplete popup is open");
   is(getAutocompletePopupLabels(autocompletePopup).includes("toExponential"), true,
     "autocomplete popup has expected items");
 
-  await setInputValueForAutocompletion(jsterm, "$_.y.");
+  await setInputValueForAutocompletion(hud, "$_.y.");
   is(autocompletePopup.isOpen, true, "autocomplete popup is open");
   is(getAutocompletePopupLabels(autocompletePopup).includes("trim"), true,
     "autocomplete popup has expected items");

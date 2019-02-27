@@ -2,33 +2,72 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-// There are shutdown issues for which multiple rejections are left uncaught.
-// See bug 1018184 for resolving these issues.
-PromiseTestUtils.whitelistRejectionsGlobally(/File closed/);
+const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 
-ChromeUtils.defineModuleGetter(this, "BrowserToolboxProcess",
-                               "resource://devtools/client/framework/ToolboxProcess.jsm");
+const {DebuggerClient} = require("devtools/shared/client/debugger-client");
+const {DebuggerServer} = require("devtools/server/main");
+const {gDevTools} = require("devtools/client/framework/devtools");
+const {Toolbox} = require("devtools/client/framework/toolbox");
 
-async function setupToolboxProcessTest(toolboxProcessScript) {
-  // Enable addon debugging.
-  await SpecialPowers.pushPrefEnv({
-    "set": [
-      // Force enabling of addons debugging
-      ["devtools.chrome.enabled", true],
-      ["devtools.debugger.remote-enabled", true],
-      // Disable security prompt
-      ["devtools.debugger.prompt-connection", false],
-      // Enable Browser toolbox test script execution via env variable
-      ["devtools.browser-toolbox.allow-unsafe-script", true],
-    ],
+async function setupToolboxTest(extensionId) {
+  DebuggerServer.init();
+  DebuggerServer.registerAllActors();
+  const transport = DebuggerServer.connectPipe();
+  const client = new DebuggerClient(transport);
+  await client.connect();
+  const addonFront = await client.mainRoot.getAddon({id: extensionId});
+  const target = await addonFront.connect();
+  const toolbox = await gDevTools.showToolbox(target, null, Toolbox.HostType.WINDOW);
+
+  async function waitFor(condition) {
+    while (!condition()) {
+      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+      await new Promise(done => window.setTimeout(done, 1000));
+    }
+  }
+
+  const console = await toolbox.selectTool("webconsole");
+  const {hud} = console;
+  const {jsterm} = hud;
+
+  const netmonitor = await toolbox.selectTool("netmonitor");
+
+  const expectedURL = "http://mochi.test:8888/?test_netmonitor=1";
+
+  // Call a function defined in the target extension to make it
+  // fetch from an expected http url.
+  await jsterm.execute(`doFetchHTTPRequest("${expectedURL}");`);
+
+  await waitFor(() => {
+    return !netmonitor.panelWin.document.querySelector(".request-list-empty-notice");
   });
 
-  let env = Cc["@mozilla.org/process/environment;1"]
-              .getService(Ci.nsIEnvironment);
-  env.set("MOZ_TOOLBOX_TEST_SCRIPT", `(${toolboxProcessScript})();`);
-  registerCleanupFunction(() => {
-    env.set("MOZ_TOOLBOX_TEST_SCRIPT", "");
+  let {store} = netmonitor.panelWin;
+
+  // NOTE: we need to filter the requests to the ones that we expect until
+  // the network monitor is not yet filtering out the requests that are not
+  // coming from an extension window or a descendent of an extension window,
+  // in both oop and non-oop extension mode (filed as Bug 1442621).
+  function filterRequest(request) {
+    return request.url === expectedURL;
+  }
+
+  let requests;
+
+  await waitFor(() => {
+    requests = Array.from(store.getState().requests.requests.values())
+                    .filter(filterRequest);
+
+    return requests.length > 0;
   });
+
+  // Call a function defined in the target extension to make assertions
+  // on the network requests collected by the netmonitor panel.
+  await jsterm.execute(`testNetworkRequestReceived(${JSON.stringify(requests)});`);
+
+  const onToolboxClosed = gDevTools.once("toolbox-destroyed");
+  await toolbox.destroy();
+  return onToolboxClosed;
 }
 
 add_task(async function test_addon_debugging_netmonitor_panel() {
@@ -66,68 +105,11 @@ add_task(async function test_addon_debugging_netmonitor_panel() {
   await extension.startup();
   await extension.awaitMessage("ready");
 
-  // Be careful, this JS function is going to be executed in the addon toolbox,
-  // which lives in another process. So do not try to use any scope variable!
-  const toolboxProcessScript = async function() {
-    /* eslint-disable no-undef */
-    async function waitFor(condition) {
-      while (!condition()) {
-        // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-        await new Promise(done => window.setTimeout(done, 1000));
-      }
-    }
-
-    const console = await toolbox.selectTool("webconsole");
-    const {hud} = console;
-    const {jsterm} = hud;
-
-    const netmonitor = await toolbox.selectTool("netmonitor");
-
-    const expectedURL = "http://mochi.test:8888/?test_netmonitor=1";
-
-    // Call a function defined in the target extension to make it
-    // fetch from an expected http url.
-    await jsterm.execute(`doFetchHTTPRequest("${expectedURL}");`);
-
-    await waitFor(() => {
-      return !netmonitor.panelWin.document.querySelector(".request-list-empty-notice");
-    });
-
-    let {store} = netmonitor.panelWin;
-
-    // NOTE: we need to filter the requests to the ones that we expect until
-    // the network monitor is not yet filtering out the requests that are not
-    // coming from an extension window or a descendent of an extension window,
-    // in both oop and non-oop extension mode (filed as Bug 1442621).
-    function filterRequest(request) {
-      return request.url === expectedURL;
-    }
-
-    let requests;
-
-    await waitFor(() => {
-      requests = Array.from(store.getState().requests.requests.values())
-                      .filter(filterRequest);
-
-      return requests.length > 0;
-    });
-
-    // Call a function defined in the target extension to make assertions
-    // on the network requests collected by the netmonitor panel.
-    await jsterm.execute(`testNetworkRequestReceived(${JSON.stringify(requests)});`);
-
-    await toolbox.destroy();
-    /* eslint-enable no-undef */
-  };
-
-  await setupToolboxProcessTest(toolboxProcessScript);
-  const browserToolboxProcess = new BrowserToolboxProcess({
-    addonID: EXTENSION_ID,
-  });
-
-  let onToolboxClose = browserToolboxProcess.once("close");
-  await extension.awaitFinish("netmonitor_request_logged");
-  await onToolboxClose;
+  const onToolboxClose = setupToolboxTest(EXTENSION_ID);
+  await Promise.all([
+    extension.awaitFinish("netmonitor_request_logged"),
+    onToolboxClose,
+  ]);
 
   info("Addon Toolbox closed");
 

@@ -1505,7 +1505,7 @@ impl YamlFrameReader {
             .expect("scroll frame must have a bounds");
         let content_size = yaml["content-size"].as_size().unwrap_or(clip_rect.size);
         let content_rect = LayoutRect::new(clip_rect.origin, content_size);
-        let external_scroll_offset = yaml["external-scroll-offset"].as_point().unwrap_or(LayoutPoint::zero());
+        let external_scroll_offset = yaml["external-scroll-offset"].as_vector().unwrap_or(LayoutVector2D::zero());
 
         let numeric_id = yaml["id"].as_i64().map(|id| id as u64);
 

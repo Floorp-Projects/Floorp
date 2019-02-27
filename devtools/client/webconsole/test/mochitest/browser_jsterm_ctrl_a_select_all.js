@@ -19,20 +19,21 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const {jsterm} = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
+  const {jsterm} = hud;
 
-  jsterm.setInputValue("Ignore These Four Words");
+  setInputValue(hud, "Ignore These Four Words");
 
   // Test select all with (cmd|control) + a.
   EventUtils.synthesizeKey("a", { accelKey: true });
 
   const inputLength = getSelectionTextLength(jsterm);
-  is(inputLength, jsterm.getInputValue().length, "Select all of input");
+  is(inputLength, getInputValue(hud).length, "Select all of input");
 
   // (cmd|control) + e cannot be disabled on Linux so skip this section on that OS.
   if (Services.appinfo.OS !== "Linux") {
    // Test do nothing on Control + E.
-    jsterm.setInputValue("Ignore These Four Words");
+    setInputValue(hud, "Ignore These Four Words");
     setCursorAtStart(jsterm);
     EventUtils.synthesizeKey("e", { accelKey: true });
     checkSelectionStart(jsterm, 0, "control|cmd + e does not move to end of input");

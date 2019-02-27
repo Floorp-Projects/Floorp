@@ -214,7 +214,7 @@ class ArtifactJob(object):
         from mozbuild.action.test_archive import OBJDIR_TEST_FILES
         added_entry = False
 
-        with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
+        with JarWriter(file=processed_filename, compress_level=5) as writer:
             reader = JarReader(filename)
             for filename, entry in reader.entries.iteritems():
                 for pattern, (src_prefix, dest_prefix) in self.test_artifact_patterns:
@@ -250,7 +250,7 @@ class ArtifactJob(object):
         from mozbuild.action.test_archive import OBJDIR_TEST_FILES
         added_entry = False
 
-        with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
+        with JarWriter(file=processed_filename, compress_level=5) as writer:
             with tarfile.open(filename) as reader:
                 for filename, entry in TarFinder(filename, reader):
                     for pattern, (src_prefix, dest_prefix) in self.test_artifact_patterns:
@@ -284,7 +284,7 @@ class ArtifactJob(object):
                                  patterns=LinuxArtifactJob.test_artifact_patterns))
 
     def process_symbols_archive(self, filename, processed_filename):
-        with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
+        with JarWriter(file=processed_filename, compress_level=5) as writer:
             reader = JarReader(filename)
             for filename in reader.entries:
                 destpath = mozpath.join('crashreporter-symbols', filename)
@@ -294,7 +294,7 @@ class ArtifactJob(object):
                 writer.add(destpath.encode('utf-8'), reader[filename])
 
     def process_host_bin(self, filename, processed_filename):
-        with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
+        with JarWriter(file=processed_filename, compress_level=5) as writer:
             # Turn 'HASH-mar.exe' into 'mar.exe'.  `filename` is a path on disk
             # without any of the path parts of the artifact, so we must inject
             # the desired `host/bin` prefix here.
@@ -315,7 +315,7 @@ class AndroidArtifactJob(ArtifactJob):
 
     def process_package_artifact(self, filename, processed_filename):
         # Extract all .so files into the root, which will get copied into dist/bin.
-        with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
+        with JarWriter(file=processed_filename, compress_level=5) as writer:
             for p, f in UnpackFinder(JarFinder(filename, JarReader(filename))):
                 if not any(mozpath.match(p, pat) for pat in self.package_artifact_patterns):
                     continue
@@ -353,7 +353,7 @@ class LinuxArtifactJob(ArtifactJob):
     def process_package_artifact(self, filename, processed_filename):
         added_entry = False
 
-        with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
+        with JarWriter(file=processed_filename, compress_level=5) as writer:
             with tarfile.open(filename) as reader:
                 for p, f in UnpackFinder(TarFinder(filename, reader)):
                     if not any(mozpath.match(p, pat) for pat in self.package_artifact_patterns):
@@ -449,7 +449,7 @@ class MacArtifactJob(ArtifactJob):
                 ]),
             ]
 
-            with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
+            with JarWriter(file=processed_filename, compress_level=5) as writer:
                 root, paths = paths_no_keep_path
                 finder = UnpackFinder(mozpath.join(source, root))
                 for path in paths:
@@ -514,7 +514,7 @@ class WinArtifactJob(ArtifactJob):
 
     def process_package_artifact(self, filename, processed_filename):
         added_entry = False
-        with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
+        with JarWriter(file=processed_filename, compress_level=5) as writer:
             for p, f in UnpackFinder(JarFinder(filename, JarReader(filename))):
                 if not any(mozpath.match(p, pat) for pat in self.package_artifact_patterns):
                     continue

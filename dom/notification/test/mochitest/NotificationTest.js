@@ -12,6 +12,9 @@ var NotificationTest = (function() {
   }
 
   function teardown_testing_env() {
+    SpecialPowers.clearUserPref("notification.prompt.testing");
+    SpecialPowers.clearUserPref("notification.prompt.testing.allow");
+
     SimpleTest.finish();
   }
 

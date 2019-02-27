@@ -19,7 +19,7 @@ def make_archive(archive_name, base, exclude, include):
         include = ['*']
     archive_basename = os.path.basename(archive_name)
     with open(archive_name, 'wb') as fh:
-        with JarWriter(fileobj=fh, optimize=False, compress_level=5) as writer:
+        with JarWriter(fileobj=fh, compress_level=5) as writer:
             for pat in include:
                 for p, f in finder.find(pat):
                     print('  Adding to "%s":\n\t"%s"' % (archive_basename, p))

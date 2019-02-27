@@ -30,7 +30,8 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const {jsterm} = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
+  const {jsterm} = hud;
 
   info("Test that the autocomplete cache works with brackets");
   const {autocompletePopup} = jsterm;
@@ -124,7 +125,7 @@ async function performTests() {
 
     is(getAutocompletePopupLabels(autocompletePopup).join("|"),
       test.expectedItems.join("|"), `popup has expected items, in expected order`);
-    checkJsTermCompletionValue(jsterm,
+    checkInputCompletionValue(hud,
       " ".repeat(test.initialInput.length) + test.expectedCompletionText,
       `completeNode has expected value`);
     for (const {char, expectedItems, expectedCompletionText} of test.sequence) {
@@ -134,12 +135,12 @@ async function performTests() {
 
       is(getAutocompletePopupLabels(autocompletePopup).join("|"), expectedItems.join("|"),
         `popup has expected items, in expected order`);
-      checkJsTermCompletionValue(jsterm,
-        " ".repeat(jsterm.getInputValue().length) + expectedCompletionText,
+      checkInputCompletionValue(hud,
+        " ".repeat(getInputValue(hud).length) + expectedCompletionText,
         `completeNode has expected value`);
     }
 
-    jsterm.setInputValue("");
+    setInputValue(hud, "");
     const onPopupClose = autocompletePopup.once("popup-closed");
     EventUtils.synthesizeKey("KEY_Escape");
     await onPopupClose;
