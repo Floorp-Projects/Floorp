@@ -4244,13 +4244,6 @@ class Document : public nsINode,
   // This should only be set on top level content documents.
   bool mDocTreeHadPlayRevoked : 1;
 
-#ifdef DEBUG
- public:
-  bool mWillReparent : 1;
-
- protected:
-#endif
-
   // Whether an event triggered by the refresh driver was delayed because this
   // document has suppressed events.
   bool mHasDelayedRefreshEvent : 1;
