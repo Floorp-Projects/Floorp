@@ -201,7 +201,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "4d1a9a150249"
+        "revision": "147b9276a55f"
     },
     "ga-IE": {
         "platforms": [
@@ -543,7 +543,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "887912ad22d7"
+        "revision": "d4526e6ac69d"
     },
     "wo": {
         "platforms": [
