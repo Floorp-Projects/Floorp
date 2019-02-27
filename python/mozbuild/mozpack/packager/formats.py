@@ -190,20 +190,19 @@ class JarFormatter(PiecemealFormatter):
     manifest entries for resources are registered after chrome manifest
     entries.
     '''
-    def __init__(self, copier, compress=True, optimize=True):
+    def __init__(self, copier, compress=True):
         PiecemealFormatter.__init__(self, copier)
         self._compress=compress
-        self._optimize=optimize
 
     def _add_base(self, base, addon=False):
         if addon is True:
-            jarrer = Jarrer(self._compress, self._optimize)
+            jarrer = Jarrer(self._compress)
             self.copier.add(base + '.xpi', jarrer)
             self._sub_formatter[base] = FlatSubFormatter(jarrer)
         else:
             self._sub_formatter[base] = JarSubFormatter(
                 FileRegistrySubtree(base, self.copier),
-                self._compress, self._optimize)
+                self._compress)
 
 
 class JarSubFormatter(PiecemealFormatter):
@@ -213,11 +212,10 @@ class JarSubFormatter(PiecemealFormatter):
     dispatches the chrome data to, and a FlatSubFormatter for the non-chrome
     files.
     '''
-    def __init__(self, copier, compress=True, optimize=True):
+    def __init__(self, copier, compress=True):
         PiecemealFormatter.__init__(self, copier)
         self._frozen_chrome = False
         self._compress = compress
-        self._optimize = optimize
         self._sub_formatter[''] = FlatSubFormatter(copier)
 
     def _jarize(self, entry, relpath):
@@ -239,7 +237,7 @@ class JarSubFormatter(PiecemealFormatter):
             chromepath, entry = self._jarize(entry, entry.relpath)
             assert not self._frozen_chrome
             if chromepath not in self._sub_formatter:
-                jarrer = Jarrer(self._compress, self._optimize)
+                jarrer = Jarrer(self._compress)
                 self.copier.add(chromepath + '.jar', jarrer)
                 self._sub_formatter[chromepath] = FlatSubFormatter(jarrer)
         elif isinstance(entry, ManifestResource) and \
@@ -254,9 +252,8 @@ class OmniJarFormatter(JarFormatter):
     '''
     Formatter for the omnijar package format.
     '''
-    def __init__(self, copier, omnijar_name, compress=True, optimize=True,
-                 non_resources=()):
-        JarFormatter.__init__(self, copier, compress, optimize)
+    def __init__(self, copier, omnijar_name, compress=True, non_resources=()):
+        JarFormatter.__init__(self, copier, compress)
         self._omnijar_name = omnijar_name
         self._non_resources = non_resources
 
@@ -271,7 +268,7 @@ class OmniJarFormatter(JarFormatter):
                 self.copier.add(path, ManifestFile(''))
             self._sub_formatter[base] = OmniJarSubFormatter(
                 FileRegistrySubtree(base, self.copier), self._omnijar_name,
-                self._compress, self._optimize, self._non_resources)
+                self._compress, self._non_resources)
 
 
 class OmniJarSubFormatter(PiecemealFormatter):
@@ -280,15 +277,13 @@ class OmniJarSubFormatter(PiecemealFormatter):
     that dispatches between a FlatSubFormatter for the resources data and
     another FlatSubFormatter for the other files.
     '''
-    def __init__(self, copier, omnijar_name, compress=True, optimize=True,
-                 non_resources=()):
+    def __init__(self, copier, omnijar_name, compress=True, non_resources=()):
         PiecemealFormatter.__init__(self, copier)
         self._omnijar_name = omnijar_name
         self._compress = compress
-        self._optimize = optimize
         self._non_resources = non_resources
         self._sub_formatter[''] = FlatSubFormatter(copier)
-        jarrer = Jarrer(self._compress, self._optimize)
+        jarrer = Jarrer(self._compress)
         self._sub_formatter[omnijar_name] = FlatSubFormatter(jarrer)
 
     def _get_base(self, path):
