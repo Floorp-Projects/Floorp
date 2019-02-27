@@ -294,6 +294,9 @@ pref("devtools.webconsole.input.editor", false);
 // Disable the new performance recording panel by default
 pref("devtools.performance.new-panel-enabled", false);
 
+// Enable message grouping in the console, false by default
+pref("devtools.webconsole.groupWarningMessages", false);
+
 // Enable client-side mapping service for source maps
 pref("devtools.source-map.client-service.enabled", true);
 
