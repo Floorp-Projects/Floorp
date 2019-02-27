@@ -43,7 +43,7 @@ def package_coverage_data(root, output_file):
         root = root.encode('utf-8')
 
     finder = FileFinder(root)
-    jarrer = Jarrer(optimize=False)
+    jarrer = Jarrer()
     for p, f in finder.find("**/*.gcno"):
         jarrer.add(p, f)
 
