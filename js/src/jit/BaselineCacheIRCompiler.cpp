@@ -219,7 +219,8 @@ JitCode* BaselineCacheIRCompiler::compile() {
     EmitStubGuardFailure(masm);
   }
 
-  Linker linker(masm, "getStubCode");
+  Linker linker(masm);
+  AutoFlushICache afc("getStubCode");
   Rooted<JitCode*> newStubCode(cx_, linker.newCode(cx_, CodeKind::Baseline));
   if (!newStubCode) {
     cx_->recoverFromOutOfMemory();

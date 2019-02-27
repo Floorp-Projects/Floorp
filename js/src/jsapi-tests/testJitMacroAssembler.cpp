@@ -44,7 +44,7 @@ static bool Execute(JSContext* cx, MacroAssembler& masm) {
     return false;
   }
 
-  Linker linker(masm, "Test");
+  Linker linker(masm);
   JitCode* code = linker.newCode(cx, CodeKind::Other);
   if (!code) {
     return false;
