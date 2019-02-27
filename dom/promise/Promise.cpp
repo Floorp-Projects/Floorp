@@ -234,7 +234,11 @@ void Promise::Then(JSContext* aCx,
 void PromiseNativeThenHandlerBase::ResolvedCallback(
     JSContext* aCx, JS::Handle<JS::Value> aValue) {
   RefPtr<Promise> promise = CallResolveCallback(aCx, aValue);
-  mPromise->MaybeResolve(promise);
+  if (promise) {
+    mPromise->MaybeResolve(promise);
+  } else {
+    mPromise->MaybeResolve(JS::UndefinedHandleValue);
+  }
 }
 
 void PromiseNativeThenHandlerBase::RejectedCallback(
