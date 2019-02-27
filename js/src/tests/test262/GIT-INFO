@@ -1,5 +1,5 @@
-commit 72381359409f06933889943d94d6c8f6812def94
-Author: Michael Ficarra <git@michael.ficarra.me>
-Date:   Tue Jan 29 15:00:43 2019 -0800
+commit e39604fa41b1ad0effdcf586e4d554ff2d8c3eb7
+Author: Timothy Gu <timothygu99@gmail.com>
+Date:   Thu Jan 31 09:49:27 2019 -0800
 
-    add flat/flatMap to Array unscopables
+    Fix missing ) (#2059)

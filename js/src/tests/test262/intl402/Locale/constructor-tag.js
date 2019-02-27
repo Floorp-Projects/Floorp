@@ -44,16 +44,16 @@ for (const [langtag, canonical] of Object.entries(validLanguageTags)) {
 }
 
 // unicode_language_subtag	= alpha{2,3} | alpha{5,8};
-const invalidLanguageTags = {
+const invalidLanguageTags = [
   "X-u-foo", 
   "Flob",
   "ZORK",
   "Blah-latn",
   "QuuX-latn-us",
   "SPAM-gb-x-Sausages-BACON-eggs",
-};
+];
 
-for (const langtag of Object.entries(invalidLanguageTags)) {
+for (const langtag of invalidLanguageTags) {
   assert.throws(RangeError, () => new Intl.Locale(langtag));
 }
 
