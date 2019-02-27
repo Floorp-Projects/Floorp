@@ -27,10 +27,6 @@ struct SeekTarget {
       : mTime(media::TimeUnit::Invalid()),
         mType(SeekTarget::Invalid),
         mVideoOnly(false) {}
-  SeekTarget(int64_t aTimeUsecs, Type aType, bool aVideoOnly = false)
-      : mTime(media::TimeUnit::FromMicroseconds(aTimeUsecs)),
-        mType(aType),
-        mVideoOnly(aVideoOnly) {}
   SeekTarget(const media::TimeUnit& aTime, Type aType, bool aVideoOnly = false)
       : mTime(aTime), mType(aType), mVideoOnly(aVideoOnly) {}
   SeekTarget(const SeekTarget& aOther)

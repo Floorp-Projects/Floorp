@@ -590,12 +590,12 @@ void MediaDecoder::Seek(double aTime, SeekTarget::Type aSeekType) {
   AbstractThread::AutoEnter context(AbstractMainThread());
   MOZ_ASSERT(aTime >= 0.0, "Cannot seek to a negative value.");
 
-  int64_t timeUsecs = TimeUnit::FromSeconds(aTime).ToMicroseconds();
+  auto time = TimeUnit::FromSeconds(aTime);
 
   mLogicalPosition = aTime;
 
   mLogicallySeeking = true;
-  SeekTarget target = SeekTarget(timeUsecs, aSeekType);
+  SeekTarget target = SeekTarget(time, aSeekType);
   CallSeek(target);
 
   if (mPlayState == PLAY_STATE_ENDED) {
