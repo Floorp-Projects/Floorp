@@ -1286,6 +1286,8 @@ Document::Document(const char* aContentType)
       mWillReparent(false),
 #endif
       mHasDelayedRefreshEvent(false),
+      mLoadEventFiring(false),
+      mSkipLoadEventAfterClose(false),
       mPendingFullscreenRequests(0),
       mXMLDeclarationBits(0),
       mOnloadBlockCount(0),
@@ -2056,22 +2058,10 @@ bool PrincipalAllowsL10n(nsIPrincipal* principal) {
   return hasFlags;
 }
 
-void Document::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
-                          nsIPrincipal* aPrincipal) {
-  MOZ_ASSERT(aURI, "Null URI passed to ResetToURI");
-
-  MOZ_LOG(gDocumentLeakPRLog, LogLevel::Debug,
-          ("DOCUMENT %p ResetToURI %s", this, aURI->GetSpecOrDefault().get()));
-
-  mSecurityInfo = nullptr;
-
-  nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
-  if (!aLoadGroup || group != aLoadGroup) {
-    mDocumentLoadGroup = nullptr;
-  }
-
+void Document::DisconnectNodeTree() {
   // Delete references to sub-documents and kill the subdocument map,
-  // if any. It holds strong references
+  // if any. This is not strictly needed, but makes the node tree
+  // teardown a bit faster.
   delete mSubDocuments;
   mSubDocuments = nullptr;
 
@@ -2104,6 +2094,23 @@ void Document::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
                "After removing all children, there should be no root elem");
   }
   mInUnlinkOrDeletion = oldVal;
+}
+
+void Document::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
+                          nsIPrincipal* aPrincipal) {
+  MOZ_ASSERT(aURI, "Null URI passed to ResetToURI");
+
+  MOZ_LOG(gDocumentLeakPRLog, LogLevel::Debug,
+          ("DOCUMENT %p ResetToURI %s", this, aURI->GetSpecOrDefault().get()));
+
+  mSecurityInfo = nullptr;
+
+  nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
+  if (!aLoadGroup || group != aLoadGroup) {
+    mDocumentLoadGroup = nullptr;
+  }
+
+  DisconnectNodeTree();
 
   // Reset our stylesheets
   ResetStylesheetsToURI(aURI);
@@ -8166,7 +8173,8 @@ void Document::NotifyLoading(const bool& aCurrentParentIsLoading,
   }
 }
 
-void Document::SetReadyStateInternal(ReadyState rs) {
+void Document::SetReadyStateInternal(ReadyState rs,
+                                     bool updateTimingInformation) {
   if (rs == READYSTATE_UNINITIALIZED) {
     // Transition back to uninitialized happens only to keep assertions happy
     // right before readyState transitions to something else. Make this
@@ -8175,12 +8183,12 @@ void Document::SetReadyStateInternal(ReadyState rs) {
     return;
   }
 
-  if (READYSTATE_LOADING == rs) {
+  if (updateTimingInformation && READYSTATE_LOADING == rs) {
     mLoadingTimeStamp = mozilla::TimeStamp::Now();
   }
   NotifyLoading(mAncestorIsLoading, mAncestorIsLoading, mReadyState, rs);
   mReadyState = rs;
-  if (mTiming) {
+  if (updateTimingInformation && mTiming) {
     switch (rs) {
       case READYSTATE_LOADING:
         mTiming->NotifyDOMLoading(Document::GetDocumentURI());
@@ -8208,7 +8216,9 @@ void Document::SetReadyStateInternal(ReadyState rs) {
     }
   }
 
-  RecordNavigationTiming(rs);
+  if (updateTimingInformation) {
+    RecordNavigationTiming(rs);
+  }
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
       new AsyncEventDispatcher(this, NS_LITERAL_STRING("readystatechange"),

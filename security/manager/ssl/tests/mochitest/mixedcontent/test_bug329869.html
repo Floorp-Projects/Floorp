@@ -24,7 +24,7 @@
 
   function afterNavigationTest()
   {
-    isSecurityState("broken", "security still broken after navigation");
+    isSecurityState("secure", "when we navigate back, we're loading our secure page again and not loading an insecure script, so our security state is secure");
     finish();
   }
 
