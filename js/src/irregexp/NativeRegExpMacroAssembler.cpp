@@ -505,8 +505,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext* cx, bool match_only)
         masm.jump(&return_temp0);
     }
 
-    Linker linker(masm);
-    AutoFlushICache afc("RegExp");
+    Linker linker(masm, "RegExp");
     JitCode* code = linker.newCode(cx, CodeKind::RegExp);
     if (!code)
         return RegExpCode();
