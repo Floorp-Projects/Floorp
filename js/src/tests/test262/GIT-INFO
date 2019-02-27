@@ -1,5 +1,5 @@
-commit 5eab51827b434131d71c6aa0d306284eb50f3cc9
-Author: Frank Yung-Fong Tang <41213225+FrankYFTang@users.noreply.github.com>
-Date:   Mon Jan 28 07:59:54 2019 -0800
+commit afe1b5adc7d961e4daf261867ffa9fd3d22b1235
+Author: Ross Kirsling <rkirsling@gmail.com>
+Date:   Tue Jan 29 21:33:39 2019 -0800
 
-    Add "numberingSystem" to resolvedOptions() (#2011)
+    Align copyright line with repo license.
