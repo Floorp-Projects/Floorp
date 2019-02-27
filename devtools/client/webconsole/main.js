@@ -8,7 +8,7 @@
 
 const { BrowserLoader } = ChromeUtils.import("resource://devtools/client/shared/browser-loader.js");
 
-this.WebConsoleWrapper = function(parentNode, hud, toolbox, owner, document) {
+this.WebConsoleWrapper = function(parentNode, webConsoleUI, toolbox, document) {
   // Initialize module loader and load all modules of the new inline
   // preview feature. The entire code-base doesn't need any extra
   // privileges and runs entirely in content scope.
@@ -16,5 +16,5 @@ this.WebConsoleWrapper = function(parentNode, hud, toolbox, owner, document) {
     baseURI: "resource://devtools/client/webconsole/",
     window,
   }).require("./webconsole-wrapper");
-  return new WebConsoleWrapper(parentNode, hud, toolbox, owner, document);
+  return new WebConsoleWrapper(parentNode, webConsoleUI, toolbox, document);
 };

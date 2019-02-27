@@ -50,7 +50,6 @@ class UnpackFinder(BaseFinder):
         self.kind = 'flat'
         self.omnijar = None
         self.jarlogs = {}
-        self.optimizedjars = False
         self.compressed = False
 
         jars = set()
@@ -141,8 +140,6 @@ class UnpackFinder(BaseFinder):
         the preloaded entries it has.
         '''
         jar = JarReader(fileobj=file.open())
-        if jar.is_optimized:
-            self.optimizedjars = True
         self.compressed = max(self.compressed, jar.compression)
         if jar.last_preloaded:
             jarlog = jar.entries.keys()

@@ -16,12 +16,12 @@ add_task(async function() {
   const filterInput = hud.ui.outputNode.querySelector(".text-filter");
 
   info("Focus after console is opened");
-  ok(isJstermFocused(hud.jsterm), "jsterm is focused after console is opened");
+  ok(isInputFocused(hud), "input is focused after console is opened");
 
   filterInput.focus();
   ok(hasFocus(filterInput), "filter input should be focused");
 
-  is(isJstermFocused(hud.jsterm), false, "input node is not focused anymore");
+  is(isInputFocused(hud), false, "input node is not focused anymore");
 
   info("Go to the inspector panel");
   await openInspector();
@@ -29,5 +29,5 @@ add_task(async function() {
   info("Go back to the console");
   await openConsole();
 
-  ok(isJstermFocused(hud.jsterm), "jsterm is focused when coming from a different panel");
+  ok(isInputFocused(hud), "input is focused when coming from a different panel");
 });

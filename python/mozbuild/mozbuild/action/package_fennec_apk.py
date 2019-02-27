@@ -30,7 +30,7 @@ def package_fennec_apk(inputs=[], omni_ja=None,
                        features_dirs=[],
                        root_files=[],
                        verbose=False):
-    jarrer = Jarrer(optimize=False)
+    jarrer = Jarrer()
 
     # First, take input files.  The contents of the later files overwrites the
     # content of earlier files.  Multidexing requires special care: we want a

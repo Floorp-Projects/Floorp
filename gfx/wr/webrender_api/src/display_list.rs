@@ -1468,7 +1468,7 @@ impl DisplayListBuilder {
         complex_clips: I,
         image_mask: Option<di::ImageMask>,
         scroll_sensitivity: di::ScrollSensitivity,
-        external_scroll_offset: LayoutPoint,
+        external_scroll_offset: LayoutVector2D,
     ) -> di::SpaceAndClipInfo
     where
         I: IntoIterator<Item = di::ComplexClipRegion>,

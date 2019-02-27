@@ -126,5 +126,5 @@ async function addUsbRuntime(runtime, mocks, doc) {
 async function removeUsbRuntime(runtime, mocks, doc) {
   mocks.removeRuntime(runtime.id);
   mocks.emitUSBUpdate();
-  await waitUntil(() => !findSidebarItemByText(runtime.shortName, document));
+  await waitUntil(() => !findSidebarItemByText(runtime.shortName, doc));
 }

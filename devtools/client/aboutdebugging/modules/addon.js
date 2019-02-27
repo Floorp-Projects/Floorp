@@ -7,8 +7,7 @@
 loader.lazyImporter(this, "AddonManagerPrivate", "resource://gre/modules/AddonManager.jsm");
 
 const {
-  debugLocalAddon,
-  debugRemoteAddon,
+  debugAddon,
   getExtensionUuid,
   openTemporaryExtension,
   parseFileUri,
@@ -30,8 +29,7 @@ exports.isTemporaryID = function(addonID) {
  * the methods exposed below.
  */
 
-exports.debugLocalAddon = debugLocalAddon;
-exports.debugRemoteAddon = debugRemoteAddon;
+exports.debugAddon = debugAddon;
 exports.getExtensionUuid = getExtensionUuid;
 exports.openTemporaryExtension = openTemporaryExtension;
 exports.parseFileUri = parseFileUri;

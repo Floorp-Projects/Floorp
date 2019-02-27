@@ -28,13 +28,20 @@ loader.lazyRequireGetter(this, "getElementText", "devtools/client/webconsole/uti
 let store = null;
 
 class WebConsoleWrapper {
-  constructor(parentNode, webConsoleUI, toolbox, owner, document) {
+  /**
+   *
+   * @param {HTMLElement} parentNode
+   * @param {WebConsoleUI} webConsoleUI
+   * @param {Toolbox} toolbox
+   * @param {Document} document
+   */
+  constructor(parentNode, webConsoleUI, toolbox, document) {
     EventEmitter.decorate(this);
 
     this.parentNode = parentNode;
     this.webConsoleUI = webConsoleUI;
     this.toolbox = toolbox;
-    this.owner = owner;
+    this.hud = this.webConsoleUI.hud;
     this.document = document;
 
     this.init = this.init.bind(this);
@@ -53,7 +60,7 @@ class WebConsoleWrapper {
         this.webConsoleUI[id] = node;
       };
       const { webConsoleUI } = this;
-      const debuggerClient = this.owner.target.client;
+      const debuggerClient = this.hud.target.client;
 
       const serviceContainer = {
         attachRefToWebConsoleUI,
@@ -66,18 +73,18 @@ class WebConsoleWrapper {
         },
         proxy: webConsoleUI.proxy,
         openLink: (url, e) => {
-          webConsoleUI.owner.openLink(url, e);
+          webConsoleUI.hud.openLink(url, e);
         },
         canRewind: () => {
           if (!(
-            webConsoleUI.owner
-            && webConsoleUI.owner.target
-            && webConsoleUI.owner.target.traits
+            webConsoleUI.hud
+            && webConsoleUI.hud.target
+            && webConsoleUI.hud.target.traits
           )) {
             return false;
           }
 
-          return webConsoleUI.owner.target.traits.canRewind;
+          return webConsoleUI.hud.target.traits.canRewind;
         },
         createElement: nodename => {
           return this.document.createElement(nodename);
@@ -89,8 +96,8 @@ class WebConsoleWrapper {
           return webConsoleUI.proxy.networkDataProvider.requestData(id, type);
         },
         onViewSource(frame) {
-          if (webConsoleUI && webConsoleUI.owner && webConsoleUI.owner.viewSource) {
-            webConsoleUI.owner.viewSource(frame.url, frame.line);
+          if (webConsoleUI && webConsoleUI.hud && webConsoleUI.hud.viewSource) {
+            webConsoleUI.hud.viewSource(frame.url, frame.line);
           }
         },
         recordTelemetryEvent: (eventName, extra = {}) => {
@@ -128,7 +135,7 @@ class WebConsoleWrapper {
          *                        selected frame if it exists).
          */
         getFrameActor: (frame = null) => {
-          const state = this.owner.getDebuggerFrames();
+          const state = this.hud.getDebuggerFrames();
           if (!state) {
             return null;
           }
@@ -147,7 +154,19 @@ class WebConsoleWrapper {
         },
 
         getInputValue: () => {
-          return webConsoleUI.jsterm && webConsoleUI.jsterm.getInputValue();
+          return this.hud.getInputValue();
+        },
+
+        setInputValue: (value) => {
+          this.hud.setInputValue(value);
+        },
+
+        focusInput: () => {
+          return webConsoleUI.jsterm && webConsoleUI.jsterm.focus();
+        },
+
+        evaluateInput: (expression) => {
+          return webConsoleUI.jsterm && webConsoleUI.jsterm.execute(expression);
         },
 
         getInputCursor: () => {
@@ -155,7 +174,7 @@ class WebConsoleWrapper {
         },
 
         getSelectedNodeActor: () => {
-          const inspectorSelection = this.owner.getInspectorSelection();
+          const inspectorSelection = this.hud.getInspectorSelection();
           if (inspectorSelection && inspectorSelection.nodeFront) {
             return inspectorSelection.nodeFront.actorID;
           }
@@ -218,7 +237,7 @@ class WebConsoleWrapper {
 
         // Emit the "menu-open" event for testing.
         menu.once("open", () => this.emit("menu-open"));
-        menu.popup(screenX, screenY, { doc: this.owner.chromeWindow.document });
+        menu.popup(screenX, screenY, { doc: this.hud.chromeWindow.document });
 
         return menu;
       };
@@ -228,7 +247,7 @@ class WebConsoleWrapper {
         const menu = createEditContextMenu(window, "webconsole-menu");
         // Emit the "menu-open" event for testing.
         menu.once("open", () => this.emit("menu-open"));
-        menu.popup(screenX, screenY, { doc: this.owner.chromeWindow.document });
+        menu.popup(screenX, screenY, { doc: this.hud.chromeWindow.document });
 
         return menu;
       };

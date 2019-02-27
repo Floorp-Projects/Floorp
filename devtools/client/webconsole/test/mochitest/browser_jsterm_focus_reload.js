@@ -19,15 +19,14 @@ add_task(async function() {
 
 async function performTests() {
   info("Testing that messages disappear on a refresh if logs aren't persisted");
-  const {jsterm} = await openNewTabAndConsole(TEST_URI);
-  is(isJstermFocused(jsterm), true, "JsTerm is focused when opening the console");
+  const hud = await openNewTabAndConsole(TEST_URI);
+  is(isInputFocused(hud), true, "JsTerm is focused when opening the console");
 
   info("Put the focus on the content page");
   ContentTask.spawn(gBrowser.selectedBrowser, null, () => content.focus());
-  await waitFor(() => isJstermFocused(jsterm) === false);
+  await waitFor(() => isInputFocused(hud) === false);
 
   info("Reload the page to check that JsTerm does not steal the content page focus");
   await refreshTab();
-  is(isJstermFocused(jsterm), false,
-    "JsTerm is still unfocused after reloading the page");
+  is(isInputFocused(hud), false, "JsTerm is still unfocused after reloading the page");
 }

@@ -13,11 +13,11 @@
 
     <content>
       <xul:vbox pack="center">
-        <xul:image xbl:inherits="src=image" height="32" width="32"/>
+        <xul:image xbl:inherits="src=image,disabled" height="32" width="32"/>
       </xul:vbox>
       <xul:vbox flex="1">
-        <xul:label class="name" xbl:inherits="value=name"/>
-        <xul:label class="description" xbl:inherits="value=description"/>
+        <xul:label class="name" xbl:inherits="value=name,disabled"/>
+        <xul:label class="description" xbl:inherits="value=description,disabled"/>
       </xul:vbox>
     </content>
     <implementation>

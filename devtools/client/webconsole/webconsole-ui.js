@@ -32,13 +32,13 @@ const PREF_SIDEBAR_ENABLED = "devtools.webconsole.sidebarToggle";
  */
 class WebConsoleUI {
   /*
-   * @param {object} webConsoleOwner: The WebConsole owner object.
+   * @param {WebConsole} hud: The WebConsole owner object.
    */
-  constructor(webConsoleOwner) {
-    this.owner = webConsoleOwner;
-    this.hudId = this.owner.hudId;
-    this.isBrowserConsole = this.owner._browserConsole;
-    this.window = this.owner.iframeWindow;
+  constructor(hud) {
+    this.hud = hud;
+    this.hudId = this.hud.hudId;
+    this.isBrowserConsole = this.hud._browserConsole;
+    this.window = this.hud.iframeWindow;
 
     this._onToolboxPrefChanged = this._onToolboxPrefChanged.bind(this);
     this._onPanelSelected = this._onPanelSelected.bind(this);
@@ -86,14 +86,14 @@ class WebConsoleUI {
       this.jsterm = null;
     }
 
-    const toolbox = gDevTools.getToolbox(this.owner.target);
+    const toolbox = gDevTools.getToolbox(this.hud.target);
     if (toolbox) {
       toolbox.off("webconsole-selected", this._onPanelSelected);
       toolbox.off("split-console", this._onChangeSplitConsoleState);
       toolbox.off("select", this._onChangeSplitConsoleState);
     }
 
-    this.window = this.owner = this.wrapper = null;
+    this.window = this.hud = this.wrapper = null;
 
     const onDestroy = () => {
       this._destroyer.resolve(null);
@@ -151,7 +151,7 @@ class WebConsoleUI {
   }
 
   logWarningAboutReplacedAPI() {
-    return this.owner.target.logWarningInPage(l10n.getStr("ConsoleAPIDisabled"),
+    return this.hud.target.logWarningInPage(l10n.getStr("ConsoleAPIDisabled"),
       "ConsoleAPIDisabled");
   }
 
@@ -190,7 +190,7 @@ class WebConsoleUI {
     }
 
     this._initDefer = defer();
-    this.proxy = new WebConsoleConnectionProxy(this, this.owner.target);
+    this.proxy = new WebConsoleConnectionProxy(this, this.hud.target);
 
     this.proxy.connect().then(() => {
       // on success
@@ -210,10 +210,10 @@ class WebConsoleUI {
 
     this.outputNode = this.document.getElementById("app-wrapper");
 
-    const toolbox = gDevTools.getToolbox(this.owner.target);
+    const toolbox = gDevTools.getToolbox(this.hud.target);
 
     this.wrapper = new this.window.WebConsoleWrapper(
-      this.outputNode, this, toolbox, this.owner, this.document);
+      this.outputNode, this, toolbox, this.document);
 
     this._initShortcuts();
     this._initOutputSyntaxHighlighting();
@@ -299,8 +299,8 @@ class WebConsoleUI {
    */
   onLocationChange(uri, title) {
     this.contentLocation = uri;
-    if (this.owner.onLocationChange) {
-      this.owner.onLocationChange(uri, title);
+    if (this.hud.onLocationChange) {
+      this.hud.onLocationChange(uri, title);
     }
   }
 
