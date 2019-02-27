@@ -1228,6 +1228,11 @@ skip script test262/harness/detachArrayBuffer.js
 # Tests disabled due to invalid test expectations  #
 ####################################################
 
+# https://github.com/tc39/proposal-json-superset going to stage 4 invalidates
+# these tests.  https://github.com/tc39/test262/pull/2044 later removes them.
+skip script test262/language/line-terminators/invalid-string-ls.js
+skip script test262/language/line-terminators/invalid-string-ps.js
+
 # https://github.com/tc39/test262/pull/1965
 skip script test262/language/expressions/dynamic-import/indirect-resolution.js
 skip script test262/language/expressions/dynamic-import/namespace/default-property-not-set-own.js
