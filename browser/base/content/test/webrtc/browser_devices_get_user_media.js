@@ -530,6 +530,10 @@ var gTests = [
   desc: "'Always Allow' disabled on http pages",
   run: async function checkNoAlwaysOnHttp() {
     // Load an http page instead of the https version.
+    await SpecialPowers.pushPrefEnv({ set: [
+        ["media.devices.insecure.enabled", true],
+        ["media.getusermedia.insecure.enabled", true],
+    ]});
     let browser = gBrowser.selectedBrowser;
     BrowserTestUtils.loadURI(browser, browser.documentURI.spec.replace("https://", "http://"));
     await BrowserTestUtils.browserLoaded(browser);
