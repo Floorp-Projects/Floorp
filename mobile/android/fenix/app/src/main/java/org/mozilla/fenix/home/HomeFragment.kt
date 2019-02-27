@@ -23,6 +23,7 @@ import kotlinx.android.synthetic.main.fragment_home.view.*
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.feature.session.bundling.SessionBundleStorage
 import org.mozilla.fenix.BrowsingModeManager
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.HomeActivity
@@ -42,6 +43,12 @@ import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
 import kotlin.math.roundToInt
 
+fun SessionBundleStorage.archive(sessionManager: SessionManager) {
+        save(sessionManager.createSnapshot())
+        sessionManager.removeAll()
+        new()
+}
+
 class HomeFragment : Fragment() {
     private val bus = ActionBusFactory.get(this)
     private var sessionObserver: SessionManager.Observer? = null
@@ -56,7 +63,9 @@ class HomeFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_home, container, false)
         val sessionManager = requireComponents.core.sessionManager
-        tabsComponent = TabsComponent(view.homeContainer, bus, (activity as HomeActivity).browsingModeManager.isPrivate,
+        tabsComponent = TabsComponent(
+            view.homeContainer,
+            bus,
             TabsState(sessionManager.sessions.map { it.toSessionViewState(it == sessionManager.selectedSession) })
         )
         sessionsComponent = SessionsComponent(view.homeContainer, bus)
@@ -76,7 +85,7 @@ class HomeFragment : Fragment() {
 
         sessionsComponent.view.visibility = if ((activity as HomeActivity).browsingModeManager.isPrivate)
             View.GONE else View.VISIBLE
-        tabsComponent.view.isNestedScrollingEnabled = false
+        tabsComponent.tabList.isNestedScrollingEnabled = false
         sessionsComponent.view.isNestedScrollingEnabled = false
 
         val bundles = requireComponents.core.sessionStorage.bundles(temporaryNumberOfSessions)
@@ -159,6 +168,9 @@ class HomeFragment : Fragment() {
             getAutoDisposeObservable<TabsAction>()
                 .subscribe {
                     when (it) {
+                        is TabsAction.Archive -> {
+                            requireComponents.core.sessionStorage.archive(requireComponents.core.sessionManager)
+                        }
                         is TabsAction.Select -> {
                             val session = requireComponents.core.sessionManager.findSessionById(it.sessionId)
                             requireComponents.core.sessionManager.select(session!!)
@@ -177,6 +189,7 @@ class HomeFragment : Fragment() {
                 .subscribe {
                     when (it) {
                         is SessionsAction.Select -> {
+                            requireComponents.core.sessionStorage.archive(requireComponents.core.sessionManager)
                             it.archivedSession.bundle.restoreSnapshot(requireComponents.core.engine)?.apply {
                                 requireComponents.core.sessionManager.restore(this)
                             }

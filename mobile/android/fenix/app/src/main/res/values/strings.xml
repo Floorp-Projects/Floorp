@@ -165,6 +165,10 @@ people before profit. Our mission: keep the Internet open and accessible to all.
     <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
     <string name="current_session_image">Current session image</string>
 
+
+    <!-- Text for the button to save a session -->
+    <string name="session_save">Save Session</string>
+
     <!-- Text for the button to delete a single session -->
     <string name="session_item_delete">Delete</string>
 

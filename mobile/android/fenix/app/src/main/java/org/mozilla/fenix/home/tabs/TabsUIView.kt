@@ -8,16 +8,15 @@ import android.app.Activity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.navigation.Navigation
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observable
 import io.reactivex.Observer
 import io.reactivex.functions.Consumer
-import kotlinx.android.synthetic.main.tab_list_header.view.*
+import kotlinx.android.synthetic.main.component_tabs.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.home.HomeFragment
@@ -28,46 +27,57 @@ import org.mozilla.fenix.mvi.UIView
 class TabsUIView(
     container: ViewGroup,
     actionEmitter: Observer<TabsAction>,
-    isPrivate: Boolean,
     changesObservable: Observable<TabsChange>
 ) :
     UIView<TabsState, TabsAction, TabsChange>(container, actionEmitter, changesObservable) {
 
-    private val header: ConstraintLayout = LayoutInflater.from(container.context)
-        .inflate(R.layout.tab_list_header, container, true)
-        .findViewById(R.id.tabs_header)
-
-    override val view: RecyclerView = LayoutInflater.from(container.context)
+    override val view: View = LayoutInflater.from(container.context)
         .inflate(R.layout.component_tabs, container, true)
-        .findViewById(R.id.tabs_list)
 
     private val tabsAdapter = TabsAdapter(actionEmitter)
 
     init {
-        view.apply {
+        view.tabs_list.apply {
             layoutManager = LinearLayoutManager(container.context)
             adapter = tabsAdapter
             itemAnimator = DefaultItemAnimator()
         }
-        header.add_tab_button.increaseTapArea(HomeFragment.addTabButtonIncreaseDps)
-        header.add_tab_button.setOnClickListener {
-            val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null)
-            Navigation.findNavController(it).navigate(directions)
-        }
-        header.tabs_overflow_button.increaseTapArea(HomeFragment.overflowButtonIncreaseDps)
-        header.tabs_overflow_button.setOnClickListener {
-            if (view.context as? Activity != null) {
-                CurrentSessionBottomSheetFragment().show(
-                    (view.context as FragmentActivity).supportFragmentManager,
-                    overflowFragmentTag
-                )
+        view.apply {
+            add_tab_button.increaseTapArea(HomeFragment.addTabButtonIncreaseDps)
+            add_tab_button.setOnClickListener {
+                val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null)
+                Navigation.findNavController(it).navigate(directions)
+            }
+            tabs_overflow_button.increaseTapArea(HomeFragment.overflowButtonIncreaseDps)
+            tabs_overflow_button.setOnClickListener {
+                if (view.context as? Activity != null) {
+                    CurrentSessionBottomSheetFragment().show(
+                        (view.context as FragmentActivity).supportFragmentManager,
+                        overflowFragmentTag
+                    )
+                }
+            }
+
+            save_session_button_text.apply {
+                val color = ContextCompat.getColor(context, R.color.photonWhite)
+                val drawable = ContextCompat.getDrawable(context, R.drawable.ic_archive)
+                drawable?.setTint(color)
+                this.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
+            }
+
+            save_session_button.setOnClickListener {
+                actionEmitter.onNext(TabsAction.Archive)
             }
         }
     }
 
     override fun updateView() = Consumer<TabsState> {
         tabsAdapter.sessions = it.sessions
-        header.visibility = if (it.sessions.isEmpty()) View.GONE else View.VISIBLE
+
+        (if (it.sessions.isEmpty()) View.GONE else View.VISIBLE).also { visibility ->
+            view.tabs_header.visibility = visibility
+            view.save_session_button.visibility = visibility
+        }
     }
 
     companion object {

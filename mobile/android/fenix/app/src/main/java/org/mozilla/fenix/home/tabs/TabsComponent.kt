@@ -6,6 +6,7 @@ package org.mozilla.fenix.home.tabs
 
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.android.synthetic.main.component_tabs.view.*
 import mozilla.components.browser.session.Session
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
@@ -16,7 +17,6 @@ import org.mozilla.fenix.mvi.ViewState
 class TabsComponent(
     private val container: ViewGroup,
     bus: ActionBusFactory,
-    private val isPrivate: Boolean,
     override var initialState: TabsState = TabsState(listOf())
 ) :
     UIComponent<TabsState, TabsAction, TabsChange>(
@@ -30,9 +30,9 @@ class TabsComponent(
         }
     }
 
-    override fun initView() = TabsUIView(container, actionEmitter, isPrivate, changesObservable)
-    val view: RecyclerView
-        get() = uiView.view as RecyclerView
+    override fun initView() = TabsUIView(container, actionEmitter, changesObservable)
+    val tabList: RecyclerView
+        get() = uiView.view.tabs_list as RecyclerView
 
     init {
         render(reducer)
@@ -47,6 +47,7 @@ fun Session.toSessionViewState(selected: Boolean): SessionViewState {
 }
 
 sealed class TabsAction : Action {
+    object Archive : TabsAction()
     data class Select(val sessionId: String) : TabsAction()
     data class Close(val sessionId: String) : TabsAction()
 }
