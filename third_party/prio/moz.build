@@ -31,14 +31,6 @@ SOURCES += [
 ]
 
 SOURCES += [
-    '/third_party/msgpack/src/objectc.c',
-    '/third_party/msgpack/src/unpack.c',
-    '/third_party/msgpack/src/version.c',
-    '/third_party/msgpack/src/vrefbuffer.c',
-    '/third_party/msgpack/src/zone.c',
-]
-
-SOURCES += [
     'prio/client.c',
     'prio/config.c',
     'prio/encrypt.c',
