@@ -1,11 +1,11 @@
-// |reftest| skip -- class-methods-private,class-fields-public is not supported
+// |reftest| skip -- class-methods-private,class-fields-private,class-fields-public is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-elements/rs-private-getter.case
 // - src/class-elements/productions/cls-decl-after-same-line-async-gen.template
 /*---
 description: Valid PrivateName as private getter (field definitions after an async generator in the same line)
 esid: prod-FieldDefinition
-features: [class-methods-private, class, class-fields-public, async-iteration]
+features: [class-methods-private, class-fields-private, class, class-fields-public, async-iteration]
 flags: [generated, async]
 includes: [propertyHelper.js]
 info: |
