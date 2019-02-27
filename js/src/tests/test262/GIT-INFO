@@ -1,5 +1,5 @@
-commit 73705f88014183b3eab8593f91ec769d957cd200
-Author: Rick Waldron <waldron.rick@gmail.com>
-Date:   Tue Dec 18 12:56:34 2018 -0500
+commit 8175f6c05eef922c062e8f5bfae0faaef9404202
+Author: Mike Pennisi <mike@mikepennisi.com>
+Date:   Tue Jan 1 13:57:23 2019 -0500
 
-    UpdateExpressions: add necessary changes to tests to reflect latest specification.
+    Improve name of line terminator tests
