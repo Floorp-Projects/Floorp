@@ -5,7 +5,6 @@
 esid: sec-object.fromentries
 description: Throws when called without an argument.
 info: |
-
   Object.fromEntries ( iterable )
 
   1. Perform ? RequireObjectCoercible(iterable).
