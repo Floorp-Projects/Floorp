@@ -1282,9 +1282,6 @@ Document::Document(const char* aContentType)
       mHasReportedShadowDOMUsage(false),
       mDocTreeHadAudibleMedia(false),
       mDocTreeHadPlayRevoked(false),
-#ifdef DEBUG
-      mWillReparent(false),
-#endif
       mHasDelayedRefreshEvent(false),
       mLoadEventFiring(false),
       mSkipLoadEventAfterClose(false),
@@ -4401,18 +4398,6 @@ void Document::SetScriptGlobalObject(
     mLayoutHistoryState = nullptr;
     SetScopeObject(aScriptGlobalObject);
     mHasHadDefaultView = true;
-#ifdef DEBUG
-    if (!mWillReparent) {
-      // We really shouldn't have a wrapper here but if we do we need to make
-      // sure it has the correct parent.
-      JSObject* obj = GetWrapperPreserveColor();
-      if (obj) {
-        JSObject* newScope = aScriptGlobalObject->GetGlobalJSObject();
-        NS_ASSERTION(JS::GetNonCCWObjectGlobal(obj) == newScope,
-                     "Wrong scope, this is really bad!");
-      }
-    }
-#endif
 
     if (mAllowDNSPrefetch) {
       nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);
