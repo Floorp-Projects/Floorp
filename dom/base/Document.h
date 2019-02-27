@@ -52,6 +52,7 @@
 #include "mozilla/dom/ContentBlockingLog.h"
 #include "mozilla/dom/DispatcherTrait.h"
 #include "mozilla/dom/DocumentOrShadowRoot.h"
+#include "mozilla/HashTable.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/SegmentedVector.h"
@@ -2939,6 +2940,13 @@ class Document : public nsINode,
   void CancelFrameRequestCallback(int32_t aHandle);
 
   /**
+   * Returns true if the handle refers to a callback that was canceled that
+   * we did not find in our list of callbacks (e.g. because it is one of those
+   * in the set of callbacks currently queued to be run).
+   */
+  bool IsCanceledFrameRequestCallback(int32_t aHandle) const;
+
+  /**
    * Put this document's frame request callbacks into the provided
    * list, and forget about them.
    */
@@ -4392,6 +4400,10 @@ class Document : public nsINode,
   nsCOMPtr<nsIDocumentEncoder> mCachedEncoder;
 
   nsTArray<FrameRequest> mFrameRequestCallbacks;
+
+  // The set of frame request callbacks that were canceled but which we failed
+  // to find in mFrameRequestCallbacks.
+  HashSet<int32_t> mCanceledFrameRequestCallbacks;
 
   // This object allows us to evict ourself from the back/forward cache.  The
   // pointer is non-null iff we're currently in the bfcache.
