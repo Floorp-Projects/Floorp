@@ -5,7 +5,7 @@ const PERM_DEFAULT = Ci.nsICookiePermission.ACCESS_DEFAULT;
 const PERM_ALLOW = Ci.nsICookiePermission.ACCESS_ALLOW;
 const PERM_DENY = Ci.nsICookiePermission.ACCESS_DENY;
 
-const TEST_DOMAIN = "http://example.net/";
+const TEST_DOMAIN = "https://example.com/";
 const TEST_PATH = "browser/netwerk/cookie/test/browser/";
 const TEST_TOP_PAGE = TEST_DOMAIN + TEST_PATH + "file_empty.html";
 
