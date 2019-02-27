@@ -8,13 +8,11 @@ package org.mozilla.geckoview;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.util.ThreadUtils;
 
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
 
-import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +21,13 @@ import java.util.List;
 public final class CompositorController {
     private final GeckoSession.Compositor mCompositor;
 
+    public interface GetPixelsCallback {
+        @UiThread
+        void onPixelsResult(int width, int height, @Nullable IntBuffer pixels);
+    }
+
     private List<Runnable> mDrawCallbacks;
+    private GetPixelsCallback mGetPixelsCallback;
     private int mDefaultClearColor = Color.WHITE;
     private Runnable mFirstPaintCallback;
 
@@ -86,6 +90,32 @@ public final class CompositorController {
         if (mDrawCallbacks.remove(callback) && mDrawCallbacks.isEmpty() &&
                 mCompositor.isReady()) {
             mCompositor.enableLayerUpdateNotifications(false);
+        }
+    }
+
+    /* package */ void recvScreenPixels(final int width, final int height,
+                                        final int[] pixels) {
+        if (mGetPixelsCallback != null) {
+            mGetPixelsCallback.onPixelsResult(width, height, IntBuffer.wrap(pixels));
+            mGetPixelsCallback = null;
+        }
+    }
+
+    /**
+     * Request current pixel values from the compositor. May be called on any thread. Must
+     * not be called again until the callback is invoked.
+     *
+     * @param callback Callback for getting pixels.
+     */
+    @RobocopTarget
+    public void getPixels(final @NonNull GetPixelsCallback callback) {
+        ThreadUtils.assertOnUiThread();
+
+        if (mCompositor.isReady()) {
+            mGetPixelsCallback = callback;
+            mCompositor.requestScreenPixels();
+        } else {
+            callback.onPixelsResult(0, 0, null);
         }
     }
 
