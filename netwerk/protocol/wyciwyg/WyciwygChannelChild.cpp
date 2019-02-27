@@ -278,7 +278,7 @@ void WyciwygChannelChild::OnStopRequest(const nsresult& statusCode) {
 
     if (!mCanceled) mStatus = statusCode;
 
-    mListener->OnStopRequest(this, nullptr, statusCode);
+    mListener->OnStopRequest(this, statusCode);
 
     mListener = nullptr;
 
@@ -321,7 +321,7 @@ void WyciwygChannelChild::CancelEarly(const nsresult& statusCode) {
 
   if (mListener) {
     mListener->OnStartRequest(this);
-    mListener->OnStopRequest(this, nullptr, mStatus);
+    mListener->OnStopRequest(this, mStatus);
   }
   mListener = nullptr;
 

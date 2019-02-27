@@ -527,7 +527,6 @@ ContentSignatureVerifier::OnStartRequest(nsIRequest* aRequest) {
 
 NS_IMETHODIMP
 ContentSignatureVerifier::OnStopRequest(nsIRequest* aRequest,
-                                        nsISupports* aContext,
                                         nsresult aStatus) {
   MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIContentSignatureReceiverCallback> callback;

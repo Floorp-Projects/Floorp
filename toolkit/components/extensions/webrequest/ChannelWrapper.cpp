@@ -935,7 +935,6 @@ ChannelWrapper::RequestListener::OnStartRequest(nsIRequest* request) {
 
 NS_IMETHODIMP
 ChannelWrapper::RequestListener::OnStopRequest(nsIRequest* request,
-                                               nsISupports* aCtxt,
                                                nsresult aStatus) {
   MOZ_ASSERT(mOrigStreamListener, "Should have mOrigStreamListener");
 
@@ -943,7 +942,7 @@ ChannelWrapper::RequestListener::OnStopRequest(nsIRequest* request,
   mChannelWrapper->ErrorCheck();
   mChannelWrapper->FireEvent(NS_LITERAL_STRING("stop"));
 
-  return mOrigStreamListener->OnStopRequest(request, aCtxt, aStatus);
+  return mOrigStreamListener->OnStopRequest(request, aStatus);
 }
 
 NS_IMETHODIMP

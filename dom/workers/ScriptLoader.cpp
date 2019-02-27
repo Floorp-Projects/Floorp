@@ -535,7 +535,7 @@ class LoaderListener final : public nsIStreamLoaderObserver,
   OnStartRequest(nsIRequest* aRequest) override;
 
   NS_IMETHOD
-  OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+  OnStopRequest(nsIRequest* aRequest,
                 nsresult aStatusCode) override {
     // Nothing to do here!
     return NS_OK;

@@ -329,7 +329,7 @@ WyciwygChannelParent::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-WyciwygChannelParent::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+WyciwygChannelParent::OnStopRequest(nsIRequest* aRequest,
                                     nsresult aStatusCode) {
   LOG(("WyciwygChannelParent::OnStopRequest: [this=%p status=%" PRIu32 "]\n",
        this, static_cast<uint32_t>(aStatusCode)));

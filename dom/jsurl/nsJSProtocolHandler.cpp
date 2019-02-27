@@ -738,7 +738,7 @@ void nsJSChannel::EvaluateScript() {
 
 void nsJSChannel::NotifyListener() {
   mListener->OnStartRequest(this);
-  mListener->OnStopRequest(this, nullptr, mStatus);
+  mListener->OnStopRequest(this, mStatus);
 
   CleanupStrongRefs();
 }
@@ -954,7 +954,7 @@ nsJSChannel::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
 }
 
 NS_IMETHODIMP
-nsJSChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+nsJSChannel::OnStopRequest(nsIRequest* aRequest,
                            nsresult aStatus) {
   NS_ENSURE_TRUE(aRequest == mStreamChannel, NS_ERROR_UNEXPECTED);
 
@@ -967,7 +967,7 @@ nsJSChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
     aStatus = mStatus;
   }
 
-  nsresult rv = listener->OnStopRequest(this, aContext, aStatus);
+  nsresult rv = listener->OnStopRequest(this, aStatus);
 
   nsCOMPtr<nsILoadGroup> loadGroup;
   mStreamChannel->GetLoadGroup(getter_AddRefs(loadGroup));

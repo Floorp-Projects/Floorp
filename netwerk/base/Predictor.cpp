@@ -2329,7 +2329,6 @@ Predictor::PrefetchListener::OnStartRequest(nsIRequest *aRequest) {
 
 NS_IMETHODIMP
 Predictor::PrefetchListener::OnStopRequest(nsIRequest *aRequest,
-                                           nsISupports *aContext,
                                            nsresult aStatusCode) {
   PREDICTOR_LOG(("OnStopRequest this=%p aStatusCode=0x%" PRIX32, this,
                  static_cast<uint32_t>(aStatusCode)));

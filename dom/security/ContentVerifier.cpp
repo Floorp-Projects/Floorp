@@ -86,7 +86,7 @@ void ContentVerifier::FinishSignature() {
   // ContentSignatureVerifier on destruction.
   if (NS_FAILED(mVerifier->End(&verified)) || !verified) {
     CSV_LOG(("failed to verify content\n"));
-    (void)nextListener->OnStopRequest(mContentRequest, mContentContext,
+    (void)nextListener->OnStopRequest(mContentRequest,
                                       NS_ERROR_INVALID_SIGNATURE);
     return;
   }
@@ -111,7 +111,7 @@ void ContentVerifier::FinishSignature() {
   }
 
   // propagate OnStopRequest and return
-  nextListener->OnStopRequest(mContentRequest, mContentContext, rv);
+  nextListener->OnStopRequest(mContentRequest, rv);
 }
 
 NS_IMETHODIMP
@@ -121,7 +121,7 @@ ContentVerifier::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-ContentVerifier::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+ContentVerifier::OnStopRequest(nsIRequest* aRequest,
                                nsresult aStatus) {
   // If we don't have a next listener, we handed off this request already.
   // Return, there's nothing to do here.
@@ -133,7 +133,7 @@ ContentVerifier::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
     CSV_LOG(("Stream failed\n"));
     nsCOMPtr<nsIStreamListener> nextListener;
     nextListener.swap(mNextListener);
-    return nextListener->OnStopRequest(aRequest, aContext, aStatus);
+    return nextListener->OnStopRequest(aRequest, aStatus);
   }
 
   mContentRead = true;
@@ -189,7 +189,7 @@ ContentVerifier::ContextCreated(bool successful) {
     if (mContentRequest && nextListener) {
       mContentRequest->Cancel(NS_ERROR_INVALID_SIGNATURE);
       nsresult rv = nextListener->OnStopRequest(
-          mContentRequest, mContentContext, NS_ERROR_INVALID_SIGNATURE);
+          mContentRequest, NS_ERROR_INVALID_SIGNATURE);
       mContentRequest = nullptr;
       mContentContext = nullptr;
       return rv;

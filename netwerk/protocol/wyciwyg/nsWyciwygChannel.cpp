@@ -591,7 +591,7 @@ nsWyciwygChannel::OnStartRequest(nsIRequest *request) {
 }
 
 NS_IMETHODIMP
-nsWyciwygChannel::OnStopRequest(nsIRequest *request, nsISupports *ctx,
+nsWyciwygChannel::OnStopRequest(nsIRequest *request,
                                 nsresult status) {
   LOG(("nsWyciwygChannel::OnStopRequest [this=%p request=%p status=%" PRIu32
        "]\n",
@@ -605,7 +605,7 @@ nsWyciwygChannel::OnStopRequest(nsIRequest *request, nsISupports *ctx,
   listener.swap(mListener);
 
   if (listener) {
-    listener->OnStopRequest(this, nullptr, mStatus);
+    listener->OnStopRequest(this, mStatus);
   } else {
     MOZ_ASSERT(false, "We must have a listener!");
   }
@@ -716,7 +716,7 @@ void nsWyciwygChannel::NotifyListener() {
   if (listener) {
     listener->OnStartRequest(this);
     mIsPending = false;
-    listener->OnStopRequest(this, nullptr, mStatus);
+    listener->OnStopRequest(this, mStatus);
   } else {
     MOZ_ASSERT(false, "We must have the listener!");
     mIsPending = false;

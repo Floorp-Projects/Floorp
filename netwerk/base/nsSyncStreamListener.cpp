@@ -87,7 +87,7 @@ nsSyncStreamListener::OnDataAvailable(nsIRequest *request, nsISupports *context,
 }
 
 NS_IMETHODIMP
-nsSyncStreamListener::OnStopRequest(nsIRequest *request, nsISupports *context,
+nsSyncStreamListener::OnStopRequest(nsIRequest *request,
                                     nsresult status) {
   mStatus = status;
   mKeepWaiting = false;  // unblock Read

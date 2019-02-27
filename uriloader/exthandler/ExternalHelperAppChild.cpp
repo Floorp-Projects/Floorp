@@ -90,11 +90,11 @@ ExternalHelperAppChild::OnStartRequest(nsIRequest *request) {
 }
 
 NS_IMETHODIMP
-ExternalHelperAppChild::OnStopRequest(nsIRequest *request, nsISupports *ctx,
+ExternalHelperAppChild::OnStopRequest(nsIRequest *request,
                                       nsresult status) {
   // mHandler can be null if we diverted the request to the parent
   if (mHandler) {
-    nsresult rv = mHandler->OnStopRequest(request, ctx, status);
+    nsresult rv = mHandler->OnStopRequest(request, status);
     SendOnStopRequest(status);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
   }

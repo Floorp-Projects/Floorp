@@ -1049,7 +1049,7 @@ BeaconStreamListener::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-BeaconStreamListener::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+BeaconStreamListener::OnStopRequest(nsIRequest* aRequest,
                                     nsresult aStatus) {
   return NS_OK;
 }

@@ -282,7 +282,7 @@ void nsBaseChannel::ContinueHandleAsyncRedirect(nsresult result) {
   if (NS_FAILED(result) && mListener) {
     // Notify our consumer ourselves
     mListener->OnStartRequest(this);
-    mListener->OnStopRequest(this, nullptr, mStatus);
+    mListener->OnStopRequest(this, mStatus);
     ChannelDone();
   }
 
@@ -765,7 +765,7 @@ nsBaseChannel::OnStartRequest(nsIRequest *request) {
 }
 
 NS_IMETHODIMP
-nsBaseChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
+nsBaseChannel::OnStopRequest(nsIRequest *request,
                              nsresult status) {
   // If both mStatus and status are failure codes, we keep mStatus as-is since
   // that is consistent with our GetStatus and Cancel methods.
@@ -777,7 +777,7 @@ nsBaseChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
   mPumpingData = false;
 
   if (mListener)  // null in case of redirect
-    mListener->OnStopRequest(this, nullptr, mStatus);
+    mListener->OnStopRequest(this, mStatus);
   ChannelDone();
 
   // No need to suspend pump in this scope since we will not be receiving

@@ -1151,7 +1151,7 @@ void HttpChannelParent::DivertOnStopRequest(const nsresult& statusCode) {
   }
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
-  mParentListener->OnStopRequest(mChannel, nullptr, status);
+  mParentListener->OnStopRequest(mChannel, status);
 }
 
 class DivertCompleteEvent : public MainThreadChannelEvent {
@@ -1481,7 +1481,7 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-HttpChannelParent::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+HttpChannelParent::OnStopRequest(nsIRequest* aRequest,
                                  nsresult aStatusCode) {
   LOG(("HttpChannelParent::OnStopRequest: [this=%p aRequest=%p status=%" PRIx32
        "]\n",
@@ -2338,7 +2338,7 @@ void HttpChannelParent::NotifyDiversionFailed(nsresult aErrorCode) {
   // If the channel is pending, it will call OnStopRequest itself; otherwise, do
   // it here.
   if (!isPending) {
-    mParentListener->OnStopRequest(mChannel, nullptr, aErrorCode);
+    mParentListener->OnStopRequest(mChannel, aErrorCode);
   }
 
   if (!mIPCClosed) {

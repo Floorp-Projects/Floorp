@@ -25,7 +25,7 @@ MemoryDownloader::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-MemoryDownloader::OnStopRequest(nsIRequest* aRequest, nsISupports* aCtxt,
+MemoryDownloader::OnStopRequest(nsIRequest* aRequest,
                                 nsresult aStatus) {
   MOZ_ASSERT_IF(NS_FAILED(mStatus), NS_FAILED(aStatus));
   MOZ_ASSERT(!mData == NS_FAILED(mStatus));
@@ -33,7 +33,7 @@ MemoryDownloader::OnStopRequest(nsIRequest* aRequest, nsISupports* aCtxt,
   data.swap(mData);
   RefPtr<IObserver> observer;
   observer.swap(mObserver);
-  observer->OnDownloadComplete(this, aRequest, aCtxt, aStatus, std::move(data));
+  observer->OnDownloadComplete(this, aRequest, nullptr, aStatus, std::move(data));
   return NS_OK;
 }
 

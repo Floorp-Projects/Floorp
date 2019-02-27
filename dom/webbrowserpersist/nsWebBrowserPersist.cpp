@@ -829,7 +829,6 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStartRequest(nsIRequest *request) {
 }
 
 NS_IMETHODIMP nsWebBrowserPersist::OnStopRequest(nsIRequest *request,
-                                                 nsISupports *ctxt,
                                                  nsresult status) {
   nsCOMPtr<nsISupports> keyPtr = do_QueryInterface(request);
   OutputData *data = mOutputMap.Get(keyPtr);

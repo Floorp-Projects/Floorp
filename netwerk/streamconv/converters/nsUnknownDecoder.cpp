@@ -74,7 +74,6 @@ nsUnknownDecoder::ConvertedStreamListener::OnDataAvailable(
 
 NS_IMETHODIMP
 nsUnknownDecoder::ConvertedStreamListener::OnStopRequest(nsIRequest* request,
-                                                         nsISupports* context,
                                                          nsresult status) {
   return NS_OK;
 }
@@ -269,7 +268,7 @@ nsUnknownDecoder::OnStartRequest(nsIRequest* request) {
 }
 
 NS_IMETHODIMP
-nsUnknownDecoder::OnStopRequest(nsIRequest* request, nsISupports* aCtxt,
+nsUnknownDecoder::OnStopRequest(nsIRequest* request,
                                 nsresult aStatus) {
   nsresult rv = NS_OK;
 
@@ -297,7 +296,7 @@ nsUnknownDecoder::OnStopRequest(nsIRequest* request, nsISupports* aCtxt,
       forcePendingChannel->ForcePending(true);
     }
 
-    rv = FireListenerNotifications(request, aCtxt);
+    rv = FireListenerNotifications(request, nullptr);
 
     if (NS_FAILED(rv)) {
       aStatus = rv;
@@ -315,7 +314,7 @@ nsUnknownDecoder::OnStopRequest(nsIRequest* request, nsISupports* aCtxt,
     listener = mNextListener;
     mNextListener = nullptr;
   }
-  rv = listener->OnStopRequest(request, aCtxt, aStatus);
+  rv = listener->OnStopRequest(request, aStatus);
 
   return rv;
 }
@@ -803,7 +802,7 @@ nsresult nsUnknownDecoder::ConvertEncodedData(nsIRequest* request,
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      listener->OnStopRequest(request, nullptr, NS_OK);
+      listener->OnStopRequest(request, NS_OK);
     }
   }
   return rv;

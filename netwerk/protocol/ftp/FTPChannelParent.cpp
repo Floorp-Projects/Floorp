@@ -333,7 +333,7 @@ void FTPChannelParent::DivertOnStopRequest(const nsresult& statusCode) {
   }
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
-  OnStopRequest(mChannel, nullptr, status);
+  OnStopRequest(mChannel, status);
 }
 
 class FTPDivertCompleteEvent : public MainThreadChannelEvent {
@@ -441,7 +441,7 @@ FTPChannelParent::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-FTPChannelParent::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+FTPChannelParent::OnStopRequest(nsIRequest* aRequest,
                                 nsresult aStatusCode) {
   LOG(("FTPChannelParent::OnStopRequest: [this=%p status=%" PRIu32 "]\n", this,
        static_cast<uint32_t>(aStatusCode)));
@@ -449,7 +449,7 @@ FTPChannelParent::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
   if (mDivertingFromChild) {
     MOZ_RELEASE_ASSERT(mDivertToListener,
                        "Cannot divert if listener is unset!");
-    return mDivertToListener->OnStopRequest(aRequest, aContext, aStatusCode);
+    return mDivertToListener->OnStopRequest(aRequest, aStatusCode);
   }
 
   if (mIPCClosed || !SendOnStopRequest(aStatusCode, mErrorMsg, mUseUTF8)) {
@@ -809,7 +809,7 @@ void FTPChannelParent::NotifyDiversionFailed(nsresult aErrorCode,
   // If the channel is pending, it will call OnStopRequest itself; otherwise, do
   // it here.
   if (!isPending) {
-    mDivertToListener->OnStopRequest(mChannel, nullptr, aErrorCode);
+    mDivertToListener->OnStopRequest(mChannel, aErrorCode);
   }
   mDivertToListener = nullptr;
   mChannel = nullptr;

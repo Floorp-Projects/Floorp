@@ -257,7 +257,6 @@ NetworkConnectivityService::OnStartRequest(nsIRequest *aRequest) {
 
 NS_IMETHODIMP
 NetworkConnectivityService::OnStopRequest(nsIRequest *aRequest,
-                                          nsISupports *aContext,
                                           nsresult aStatusCode) {
   if (aStatusCode == NS_ERROR_ABORT) {
     return NS_OK;

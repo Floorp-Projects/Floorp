@@ -92,11 +92,11 @@ nsDirIndexParser::OnStartRequest(nsIRequest *aRequest) {
 }
 
 NS_IMETHODIMP
-nsDirIndexParser::OnStopRequest(nsIRequest *aRequest, nsISupports *aCtxt,
+nsDirIndexParser::OnStopRequest(nsIRequest *aRequest,
                                 nsresult aStatusCode) {
   // Finish up
   if (mBuf.Length() > (uint32_t)mLineStart) {
-    ProcessData(aRequest, aCtxt);
+    ProcessData(aRequest, nullptr);
   }
 
   return NS_OK;
