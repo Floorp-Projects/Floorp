@@ -4,28 +4,23 @@
 /*---
 esid: sec-update-expressions
 description: >
-  It is an early Reference Error if AssignmentTargetType of UnaryExpression is invalid. (arguments)
+  In non-strict code, "++arguments" does not produce an early error.
 info: |
 
-  sec-update-expressions-static-semantics-assignmenttargettype
+  sec-identifiers-static-semantics-assignmenttargettype
 
-    UpdateExpression : ++ UnaryExpression
-
-    Return invalid.
+    1. If this IdentifierReference is contained in strict mode code and StringValue of Identifier is "eval" or  "arguments", return strict.
+    2. Return simple.
 
   sec-update-expressions-static-semantics-early-errors
 
     UpdateExpression ++ UnaryExpression
 
     It is an early Reference Error if AssignmentTargetType of UnaryExpression is invalid.
+    It is an early Syntax Error if AssignmentTargetType of UnaryExpression is strict.
 
 flags: [noStrict]
-negative:
-  phase: parse
-  type: ReferenceError
 ---*/
-
-$DONOTEVALUATE();
 
 ++arguments;
 
