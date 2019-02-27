@@ -851,3 +851,17 @@ function callPropertyOnObject(object, name) {
 }
 
 exports.callPropertyOnObject = callPropertyOnObject;
+
+// Convert a Debugger.Object wrapping an iterator into an iterator in the
+// debugger's realm.
+function* makeDebuggeeIterator(object) {
+  while (true) {
+    const nextValue = callPropertyOnObject(object, "next");
+    if (exports.getProperty(nextValue, "done")) {
+      break;
+    }
+    yield exports.getProperty(nextValue, "value");
+  }
+}
+
+exports.makeDebuggeeIterator = makeDebuggeeIterator;
