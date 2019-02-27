@@ -1400,4 +1400,23 @@ UniquePtr<sandbox::bpf_dsl::Policy> GetMediaSandboxPolicy(
 
 #endif  // MOZ_GMP_SANDBOX
 
+// The policy for the data decoder process is similar to the one for
+// media plugins, but the codec code is all in-tree so it's better
+// behaved and doesn't need special exceptions (or the ability to load
+// a plugin file).  However, it does directly create shared memory
+// segments, so it may need file brokering.
+class RDDSandboxPolicy final : public SandboxPolicyCommon {
+ public:
+  explicit RDDSandboxPolicy(SandboxBrokerClient* aBroker)
+      : SandboxPolicyCommon(aBroker) {}
+
+  // Pass through EvaluateSyscall.
+};
+
+UniquePtr<sandbox::bpf_dsl::Policy> GetDecoderSandboxPolicy(
+    SandboxBrokerClient* aMaybeBroker) {
+  return UniquePtr<sandbox::bpf_dsl::Policy>(
+      new RDDSandboxPolicy(aMaybeBroker));
+}
+
 }  // namespace mozilla
