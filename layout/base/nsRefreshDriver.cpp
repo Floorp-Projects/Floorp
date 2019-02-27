@@ -1482,7 +1482,7 @@ struct DocumentFrameCallbacks {
   explicit DocumentFrameCallbacks(Document* aDocument) : mDocument(aDocument) {}
 
   RefPtr<Document> mDocument;
-  nsTArray<Document::FrameRequest> mCallbacks;
+  Document::FrameRequestCallbackList mCallbacks;
 };
 
 static nsDocShell* GetDocShell(nsPresContext* aPresContext) {
@@ -1674,11 +1674,7 @@ void nsRefreshDriver::RunFrameRequestCallbacks(TimeStamp aNowTime) {
         // else window is partially torn down already
       }
       for (auto& callback : docCallbacks.mCallbacks) {
-        if (docCallbacks.mDocument->IsCanceledFrameRequestCallback(
-                callback.mHandle)) {
-          continue;
-        }
-        callback.mCallback->Call(timeStamp);
+        callback->Call(timeStamp);
       }
     }
   }
