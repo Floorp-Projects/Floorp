@@ -1,7 +1,8 @@
-commit 9280e1f872151f68cac99bc0c674527813a91cf9
-Author: Mathias Bynens <mathias@qiwi.be>
-Date:   Mon Feb 4 11:58:05 2019 -0700
+commit 33a306d1026b72227eb50a918db19ada16f12b3d
+Merge: 04ae1c1359 4e3e82ee3f
+Author: Leo Balter <leonardo.balter@gmail.com>
+Date:   Wed Feb 6 15:26:57 2019 -0500
 
-    Add tests for %TypedArray%.prototype.sort stability (#2062)
+    Merge pull request #2067 from caiolima/private-field-function
     
-    https://github.com/tc39/ecma262/pull/1433
+    Adding case where private field stores a function
