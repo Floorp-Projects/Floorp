@@ -76,7 +76,7 @@ class Core(private val context: Context) {
     }
 
     val sessionStorage by lazy {
-        SessionBundleStorage(context, bundleLifetime = Pair(1, TimeUnit.HOURS))
+        SessionBundleStorage(context, bundleLifetime = Pair(BUNDLE_LIFETIME_IN_MINUTES, TimeUnit.MINUTES))
     }
 
     /**
@@ -104,10 +104,13 @@ class Core(private val context: Context) {
 
                 // Now that we have restored our previous state (if there's one) let's setup auto saving the state while
                 // the app is used.
-                sessionStorage.autoSave(sessionManager)
-                    .periodicallyInForeground(interval = 30, unit = TimeUnit.SECONDS)
-                    .whenGoingToBackground()
-                    .whenSessionsChange()
+                sessionStorage.apply {
+                    autoSave(sessionManager)
+                        .periodicallyInForeground(interval = 30, unit = TimeUnit.SECONDS)
+                        .whenGoingToBackground()
+                        .whenSessionsChange()
+                    autoClose(sessionManager)
+                }
             }
         }
     }
@@ -141,5 +144,9 @@ class Core(private val context: Context) {
             !normalMode && privateMode -> TrackingProtectionPolicy.all().forPrivateSessionsOnly()
             else -> TrackingProtectionPolicy.none()
         }
+    }
+
+    companion object {
+        private const val BUNDLE_LIFETIME_IN_MINUTES = 5L
     }
 }
