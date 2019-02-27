@@ -43,7 +43,7 @@ for (const [langtag, canonical] of Object.entries(validLanguageTags)) {
   );
 }
 
-// unicode_language_subtag	= alpha{2,3} | alpha{5,8};
+// unicode_language_subtag = alpha{2,3} | alpha{5,8};
 const invalidLanguageTags = [
   "X-u-foo", 
   "Flob",
