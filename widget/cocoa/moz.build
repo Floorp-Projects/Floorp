@@ -145,7 +145,6 @@ RESOURCE_FILES.touchbar += [
     'touchbar/fullscreen.pdf',
     'touchbar/home.pdf',
     'touchbar/new.pdf',
-    'touchbar/private-browsing.pdf',
     'touchbar/reader-mode.pdf',
     'touchbar/refresh.pdf',
     'touchbar/search.pdf',
