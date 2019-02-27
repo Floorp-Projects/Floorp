@@ -13,6 +13,8 @@ info: |
 features: [Intl.Locale]
 ---*/
 
+assert.sameValue(typeof Intl.Locale, "function");
+
 assert.throws(TypeError, function() {
   Intl.Locale();
 }, 'Intl.Locale() throws TypeError');
