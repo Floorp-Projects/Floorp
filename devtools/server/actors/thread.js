@@ -1426,6 +1426,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       return undefined;
     }
 
+    this._state = "paused";
+
     // Clear stepping hooks.
     this.dbg.onEnterFrame = undefined;
     this.dbg.replayingOnPopFrame = undefined;
@@ -1445,8 +1447,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       }
       this._hiddenBreakpoints.clear();
     }
-
-    this._state = "paused";
 
     // Create the actor pool that will hold the pause actor and its
     // children.
