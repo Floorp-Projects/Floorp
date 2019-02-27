@@ -91,6 +91,10 @@ elif 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     UNIFIED_SOURCES += [
         'nsNativeAppSupportUnix.cpp',
     ]
+
+    LOCAL_INCLUDES += [
+        '../components/remote',
+    ]
 else:
     UNIFIED_SOURCES += [
         'nsNativeAppSupportDefault.cpp',
