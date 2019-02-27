@@ -186,6 +186,20 @@ interface WebExtensionPolicy {
    * Returns true if the URI is restricted for any extension.
    */
   static boolean isRestrictedURI(URI uri);
+
+  /**
+   * When present, the extension is not yet ready to load URLs. In that case,
+   * this policy object is a stub, and the attribute contains a promise which
+   * resolves to a new, non-stub policy object when the extension is ready.
+   *
+   * This may be used to delay operations, such as loading extension pages,
+   * which depend on extensions being fully initialized.
+   *
+   * Note: This will always be either a Promise<WebExtensionPolicy> or null,
+   * but the WebIDL grammar does not allow us to specify a nullable Promise
+   * type.
+   */
+  readonly attribute object? readyPromise;
 };
 
 dictionary WebExtensionInit {
@@ -211,5 +225,8 @@ dictionary WebExtensionInit {
 
   sequence<DOMString>? backgroundScripts = null;
 
+
   boolean privateBrowsingAllowed = true;
+
+  Promise<WebExtensionPolicy> readyPromise;
 };
