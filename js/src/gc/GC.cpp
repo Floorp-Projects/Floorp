@@ -347,6 +347,9 @@ static const bool CompactingEnabled = true;
 static const uint32_t NurseryFreeThresholdForIdleCollection =
     Nursery::NurseryChunkUsableSize / 4;
 
+/* JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_PERCENT */
+static const float NurseryFreeThresholdForIdleCollectionFraction = 0.25f;
+
 /* JSGC_PRETENURE_THRESHOLD */
 static const float PretenureThreashold = 0.6f;
 
@@ -1476,6 +1479,12 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
       }
       nurseryFreeThresholdForIdleCollection_ = value;
       break;
+    case JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_PERCENT:
+      if (value == 0 || value > 100) {
+        return false;
+      }
+      nurseryFreeThresholdForIdleCollectionFraction_ = value / 100.0f;
+      break;
     case JSGC_PRETENURE_THRESHOLD: {
       // 100 disables pretenuring
       if (value == 0 || value > 100) {
@@ -1578,6 +1587,8 @@ GCSchedulingTunables::GCSchedulingTunables()
       maxEmptyChunkCount_(TuningDefaults::MaxEmptyChunkCount),
       nurseryFreeThresholdForIdleCollection_(
           TuningDefaults::NurseryFreeThresholdForIdleCollection),
+      nurseryFreeThresholdForIdleCollectionFraction_(
+          TuningDefaults::NurseryFreeThresholdForIdleCollectionFraction),
       pretenureThreshold_(TuningDefaults::PretenureThreashold),
       pretenureGroupThreshold_(TuningDefaults::PretenureGroupThreshold) {}
 
@@ -1660,6 +1671,10 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key,
     case JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION:
       nurseryFreeThresholdForIdleCollection_ =
           TuningDefaults::NurseryFreeThresholdForIdleCollection;
+      break;
+    case JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_PERCENT:
+      nurseryFreeThresholdForIdleCollectionFraction_ =
+          TuningDefaults::NurseryFreeThresholdForIdleCollectionFraction;
       break;
     case JSGC_PRETENURE_THRESHOLD:
       pretenureThreshold_ = TuningDefaults::PretenureThreashold;
