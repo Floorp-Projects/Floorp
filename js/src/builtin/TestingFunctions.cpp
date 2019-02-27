@@ -2331,59 +2331,39 @@ static bool ResetFinalizeCount(JSContext* cx, unsigned argc, Value* vp) {
 static bool DumpHeap(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  DumpHeapNurseryBehaviour nurseryBehaviour = js::IgnoreNurseryObjects;
-  FILE* dumpFile = nullptr;
+  FILE* dumpFile = stdout;
 
-  unsigned i = 0;
-  if (args.length() > i) {
-    Value v = args[i];
-    if (v.isString()) {
-      JSString* str = v.toString();
-      bool same = false;
-      if (!JS_StringEqualsAscii(cx, str, "collectNurseryBeforeDump", &same)) {
-        return false;
-      }
-      if (same) {
-        nurseryBehaviour = js::CollectNurseryBeforeDump;
-        ++i;
-      }
-    }
-  }
-
-  if (args.length() > i) {
-    Value v = args[i];
-    if (v.isString()) {
-      if (!fuzzingSafe) {
-        RootedString str(cx, v.toString());
-        UniqueChars fileNameBytes = JS_EncodeStringToLatin1(cx, str);
-        if (!fileNameBytes) {
-          return false;
-        }
-        dumpFile = fopen(fileNameBytes.get(), "w");
-        if (!dumpFile) {
-          fileNameBytes = JS_EncodeStringToUTF8(cx, str);
-          if (!fileNameBytes) {
-            return false;
-          }
-          JS_ReportErrorUTF8(cx, "can't open %s", fileNameBytes.get());
-          return false;
-        }
-      }
-      ++i;
-    }
-  }
-
-  if (i != args.length()) {
-    JS_ReportErrorASCII(cx, "bad arguments passed to dumpHeap");
-    if (dumpFile) {
-      fclose(dumpFile);
-    }
+  if (args.length() > 1) {
+    RootedObject callee(cx, &args.callee());
+    ReportUsageErrorASCII(cx, callee, "Too many arguments");
     return false;
   }
 
-  js::DumpHeap(cx, dumpFile ? dumpFile : stdout, nurseryBehaviour);
+  if (!args.get(0).isUndefined()) {
+    RootedString str(cx, ToString(cx, args[0]));
+    if (!str) {
+      return false;
+    }
+    if (!fuzzingSafe) {
+      UniqueChars fileNameBytes = JS_EncodeStringToLatin1(cx, str);
+      if (!fileNameBytes) {
+        return false;
+      }
+      dumpFile = fopen(fileNameBytes.get(), "w");
+      if (!dumpFile) {
+        fileNameBytes = JS_EncodeStringToLatin1(cx, str);
+        if (!fileNameBytes) {
+          return false;
+        }
+        JS_ReportErrorLatin1(cx, "can't open %s", fileNameBytes.get());
+        return false;
+      }
+    }
+  }
 
-  if (dumpFile) {
+  js::DumpHeap(cx, dumpFile, js::IgnoreNurseryObjects);
+
+  if (dumpFile != stdout) {
     fclose(dumpFile);
   }
 
@@ -5918,10 +5898,10 @@ gc::ZealModeHelpText),
 "  If true, obj is a proxy of some sort"),
 
     JS_FN_HELP("dumpHeap", DumpHeap, 1, 0,
-"dumpHeap(['collectNurseryBeforeDump'], [filename])",
-"  Dump reachable and unreachable objects to the named file, or to stdout.  If\n"
-"  'collectNurseryBeforeDump' is specified, a minor GC is performed first,\n"
-"  otherwise objects in the nursery are ignored."),
+"dumpHeap([filename])",
+"  Dump reachable and unreachable objects to the named file, or to stdout. Objects\n"
+"  in the nursery are ignored, so if you wish to include them, consider calling\n"
+"  minorgc() first."),
 
     JS_FN_HELP("terminate", Terminate, 0, 0,
 "terminate()",
