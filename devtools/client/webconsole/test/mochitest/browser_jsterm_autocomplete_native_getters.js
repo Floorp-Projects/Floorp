@@ -20,7 +20,8 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const { jsterm, ui } = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
+  const { jsterm, ui } = hud;
 
   const { autocompletePopup: popup } = jsterm;
 
@@ -59,5 +60,5 @@ async function performTests() {
   // > document.bo        <-- input
   // > -----------dy      <-- autocomplete
   const spaces = " ".repeat(inputStr.length + 1);
-  checkJsTermCompletionValue(jsterm, spaces + "dy", "autocomplete shows document.body");
+  checkInputCompletionValue(hud, spaces + "dy", "autocomplete shows document.body");
 }

@@ -19,12 +19,13 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const { jsterm } = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
+  const { jsterm } = hud;
   const { autocompletePopup } = jsterm;
 
   info("Check that the await keyword is in the autocomplete");
-  await setInputValueForAutocompletion(jsterm, "aw");
-  checkJsTermCompletionValue(jsterm, "  ait", "completeNode has expected value");
+  await setInputValueForAutocompletion(hud, "aw");
+  checkInputCompletionValue(hud, "  ait", "completeNode has expected value");
 
   EventUtils.synthesizeKey("KEY_Tab");
   is(jsterm.getInputValue(), "await", "'await' tab completion");
