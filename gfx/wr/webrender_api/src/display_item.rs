@@ -240,7 +240,7 @@ pub struct ScrollFrameDisplayItem {
     /// will have their coordinates shifted by this amount, and this offset
     /// should be added to those display item coordinates in order to get a
     /// normalized value that is consistent across display lists.
-    pub external_scroll_offset: LayoutPoint,
+    pub external_scroll_offset: LayoutVector2D,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
