@@ -1163,8 +1163,8 @@ void nsHTMLDocument::SetCookie(const nsAString& aCookie, ErrorResult& rv) {
 }
 
 mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> nsHTMLDocument::Open(
-    JSContext* /* unused */, const nsAString& aURL, const nsAString& aName,
-    const nsAString& aFeatures, bool aReplace, ErrorResult& rv) {
+    const nsAString& aURL, const nsAString& aName, const nsAString& aFeatures,
+    bool aReplace, ErrorResult& rv) {
   MOZ_ASSERT(nsContentUtils::CanCallerAccess(this),
              "XOW should have caught this!");
 
@@ -1189,8 +1189,7 @@ mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> nsHTMLDocument::Open(
   return WindowProxyHolder(newWindow->GetBrowsingContext());
 }
 
-Document* nsHTMLDocument::Open(JSContext* cx,
-                               const Optional<nsAString>& /* unused */,
+Document* nsHTMLDocument::Open(const Optional<nsAString>& /* unused */,
                                const nsAString& /* unused */,
                                ErrorResult& aError) {
   // Implements
@@ -1477,12 +1476,12 @@ void nsHTMLDocument::Close(ErrorResult& rv) {
   }
 }
 
-void nsHTMLDocument::WriteCommon(JSContext* cx, const Sequence<nsString>& aText,
+void nsHTMLDocument::WriteCommon(const Sequence<nsString>& aText,
                                  bool aNewlineTerminate,
                                  mozilla::ErrorResult& rv) {
   // Fast path the common case
   if (aText.Length() == 1) {
-    WriteCommon(cx, aText[0], aNewlineTerminate, rv);
+    WriteCommon(aText[0], aNewlineTerminate, rv);
   } else {
     // XXXbz it would be nice if we could pass all the strings to the parser
     // without having to do all this copying and then ask it to start
@@ -1491,12 +1490,12 @@ void nsHTMLDocument::WriteCommon(JSContext* cx, const Sequence<nsString>& aText,
     for (uint32_t i = 0; i < aText.Length(); ++i) {
       text.Append(aText[i]);
     }
-    WriteCommon(cx, text, aNewlineTerminate, rv);
+    WriteCommon(text, aNewlineTerminate, rv);
   }
 }
 
-void nsHTMLDocument::WriteCommon(JSContext* cx, const nsAString& aText,
-                                 bool aNewlineTerminate, ErrorResult& aRv) {
+void nsHTMLDocument::WriteCommon(const nsAString& aText, bool aNewlineTerminate,
+                                 ErrorResult& aRv) {
   mTooDeepWriteRecursion =
       (mWriteLevel > NS_MAX_DOCUMENT_WRITE_DEPTH || mTooDeepWriteRecursion);
   if (NS_WARN_IF(mTooDeepWriteRecursion)) {
@@ -1556,7 +1555,7 @@ void nsHTMLDocument::WriteCommon(JSContext* cx, const nsAString& aText,
       return;
     }
 
-    Open(cx, Optional<nsAString>(), EmptyString(), aRv);
+    Open(Optional<nsAString>(), EmptyString(), aRv);
 
     // If Open() fails, or if it didn't create a parser (as it won't
     // if the user chose to not discard the current document through
@@ -1564,8 +1563,6 @@ void nsHTMLDocument::WriteCommon(JSContext* cx, const nsAString& aText,
     if (aRv.Failed() || !mParser) {
       return;
     }
-    MOZ_ASSERT(!JS_IsExceptionPending(cx),
-               "Open() succeeded but JS exception is pending");
   }
 
   static NS_NAMED_LITERAL_STRING(new_line, "\n");
@@ -1600,14 +1597,12 @@ void nsHTMLDocument::WriteCommon(JSContext* cx, const nsAString& aText,
   mTooDeepWriteRecursion = (mWriteLevel != 0 && mTooDeepWriteRecursion);
 }
 
-void nsHTMLDocument::Write(JSContext* cx, const Sequence<nsString>& aText,
-                           ErrorResult& rv) {
-  WriteCommon(cx, aText, false, rv);
+void nsHTMLDocument::Write(const Sequence<nsString>& aText, ErrorResult& rv) {
+  WriteCommon(aText, false, rv);
 }
 
-void nsHTMLDocument::Writeln(JSContext* cx, const Sequence<nsString>& aText,
-                             ErrorResult& rv) {
-  WriteCommon(cx, aText, true, rv);
+void nsHTMLDocument::Writeln(const Sequence<nsString>& aText, ErrorResult& rv) {
+  WriteCommon(aText, true, rv);
 }
 
 void nsHTMLDocument::AddedForm() { ++mNumForms; }

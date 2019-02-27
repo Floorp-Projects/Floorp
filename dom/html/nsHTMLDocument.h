@@ -155,16 +155,15 @@ class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
     }
   }
   void GetSupportedNames(nsTArray<nsString>& aNames);
-  Document* Open(JSContext* cx,
-                 const mozilla::dom::Optional<nsAString>& /* unused */,
+  Document* Open(const mozilla::dom::Optional<nsAString>& /* unused */,
                  const nsAString& /* unused */, mozilla::ErrorResult& aError);
   mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> Open(
-      JSContext* cx, const nsAString& aURL, const nsAString& aName,
-      const nsAString& aFeatures, bool aReplace, mozilla::ErrorResult& rv);
+      const nsAString& aURL, const nsAString& aName, const nsAString& aFeatures,
+      bool aReplace, mozilla::ErrorResult& rv);
   void Close(mozilla::ErrorResult& rv);
-  void Write(JSContext* cx, const mozilla::dom::Sequence<nsString>& aText,
+  void Write(const mozilla::dom::Sequence<nsString>& aText,
              mozilla::ErrorResult& rv);
-  void Writeln(JSContext* cx, const mozilla::dom::Sequence<nsString>& aText,
+  void Writeln(const mozilla::dom::Sequence<nsString>& aText,
                mozilla::ErrorResult& rv);
   void GetDesignMode(nsAString& aDesignMode);
   void SetDesignMode(const nsAString& aDesignMode,
@@ -230,10 +229,10 @@ class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
   already_AddRefed<nsIURI> RegistrableDomainSuffixOfInternal(
       const nsAString& aHostSuffixString, nsIURI* aOrigHost);
 
-  void WriteCommon(JSContext* cx, const nsAString& aText,
-                   bool aNewlineTerminate, mozilla::ErrorResult& aRv);
+  void WriteCommon(const nsAString& aText, bool aNewlineTerminate,
+                   mozilla::ErrorResult& aRv);
   // A version of WriteCommon used by WebIDL bindings
-  void WriteCommon(JSContext* cx, const mozilla::dom::Sequence<nsString>& aText,
+  void WriteCommon(const mozilla::dom::Sequence<nsString>& aText,
                    bool aNewlineTerminate, mozilla::ErrorResult& rv);
 
   nsresult CreateAndAddWyciwygChannel(void);
