@@ -2,9 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils", "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 function nsWebHandlerApp() {}
 
@@ -63,16 +64,37 @@ nsWebHandlerApp.prototype = {
     var uriSpecToSend = this.uriTemplate.replace("%s", escapedUriSpecToHandle);
     var uriToSend = Services.io.newURI(uriSpecToSend);
 
+    let policy = WebExtensionPolicy.getByURI(uriToSend);
+    let privateAllowed = !policy || policy.privateBrowsingAllowed;
+
     // if we have a window context, use the URI loader to load there
     if (aWindowContext) {
       try {
+        let remoteWindow = aWindowContext.getInterface(Ci.nsIRemoteWindowContext);
+        if (remoteWindow.usePrivateBrowsing && !privateAllowed) {
+          throw Components.Exception("Extension not allowed in private windows.",
+                                     Cr.NS_ERROR_FILE_NOT_FOUND);
+        }
         // getInterface throws if the object doesn't implement the given
         // interface, so this try/catch statement is more of an if.
         // If aWindowContext refers to a remote docshell, send the load
         // request to the correct process.
-        aWindowContext.getInterface(Ci.nsIRemoteWindowContext)
-                      .openURI(uriToSend);
+        remoteWindow.openURI(uriToSend);
         return;
+      } catch (e) {
+        if (e.result != Cr.NS_NOINTERFACE) {
+          throw e;
+        }
+      }
+
+      try {
+        let isPrivate = aWindowContext.getInterface(Ci.nsIDocShell)
+                                      .QueryInterface(Ci.nsILoadContext)
+                                      .usePrivateBrowsing;
+        if (isPrivate && !privateAllowed) {
+          throw Components.Exception("Extension not allowed in private windows.",
+                                      Cr.NS_ERROR_FILE_NOT_FOUND);
+        }
       } catch (e) {
         if (e.result != Cr.NS_NOINTERFACE) {
           throw e;
@@ -99,12 +121,16 @@ nsWebHandlerApp.prototype = {
       return;
     }
 
-    // get browser dom window
-    var browserDOMWin = Services.wm.getMostRecentWindow("navigator:browser")
-                                   .QueryInterface(Ci.nsIDOMChromeWindow)
-                                   .browserDOMWindow;
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
 
-    // if we got an exception, there are several possible reasons why:
+    // If this is an extension handler, check private browsing access.
+    if (!privateAllowed &&
+        PrivateBrowsingUtils.isContentWindowPrivate(win)) {
+      throw Components.Exception("Extension not allowed in private windows.",
+                                 Cr.NS_ERROR_FILE_NOT_FOUND);
+    }
+
+    // If we get an exception, there are several possible reasons why:
     // a) this gecko embedding doesn't provide an nsIBrowserDOMWindow
     //    implementation (i.e. doesn't support browser-style functionality),
     //    so we need to kick the URL out to the OS default browser.  This is
@@ -117,15 +143,15 @@ nsWebHandlerApp.prototype = {
     //    command line handler.
     // c) something else went wrong
     //
-    // it's not clear how one would differentiate between the three cases
-    // above, so for now we don't catch the exception
+    // It's not clear how one would differentiate between the three cases
+    // above, so for now we don't catch the exception.
 
     // openURI
-    browserDOMWin.openURI(uriToSend,
-                          null, // no window.opener
-                          Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW,
-                          Ci.nsIBrowserDOMWindow.OPEN_NEW,
-                          Services.scriptSecurityManager.getSystemPrincipal());
+    win.browserDOMWindow.openURI(uriToSend,
+                                 null, // no window.opener
+                                 Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW,
+                                 Ci.nsIBrowserDOMWindow.OPEN_NEW,
+                                 Services.scriptSecurityManager.getSystemPrincipal());
   },
 
   // nsIWebHandlerApp
