@@ -29,11 +29,11 @@ async function performTests() {
 
   // Make sure we don't throw when trying to autocomplete
   const autocompleteUpdated = hud.jsterm.once("autocomplete-updated");
-  jsterm.setInputValue("window[0].document");
+  setInputValue(hud, "window[0].document");
   EventUtils.sendString(".");
   await autocompleteUpdated;
 
-  hud.jsterm.setInputValue("window[0].document.title");
+  setInputValue(hud, "window[0].document.title");
   const onPermissionDeniedMessage = waitForMessage(hud, "Permission denied");
   EventUtils.synthesizeKey("KEY_Enter");
   const permissionDenied = await onPermissionDeniedMessage;

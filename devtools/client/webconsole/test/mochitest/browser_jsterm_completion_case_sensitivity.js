@@ -81,7 +81,7 @@ async function performTests() {
   checkInput("fooBar.Foo|", "The input was completed with the correct casing");
   checkInputCompletionValue(hud, "", "completeNode is empty");
 
-  jsterm.setInputValue("");
+  setInputValue(hud, "");
 
   info("Check that Javascript keywords are displayed first");
   onPopUpOpen = autocompletePopup.once("popup-opened");
@@ -98,7 +98,7 @@ async function performTests() {
   checkInput("function|", "The input was completed as expected");
   checkInputCompletionValue(hud, "", "completeNode is empty");
 
-  jsterm.setInputValue("");
+  setInputValue(hud, "");
 
   info("Check that filtering the cache works like on the server");
   onPopUpOpen = autocompletePopup.once("popup-opened");
