@@ -73,7 +73,7 @@ var forceFailListener = false;
 var Listener = function() {};
 Listener.prototype.clientPort = 0;
 Listener.prototype = {
-  onStartRequest: function testOnStartRequest(request, ctx) {
+  onStartRequest: function testOnStartRequest(request) {
     Assert.ok(request instanceof Ci.nsIHttpChannel);
 
     if (!Components.isSuccessCode(request.status)) {
@@ -87,7 +87,7 @@ Listener.prototype = {
     read_stream(stream, cnt);
   },
 
-  onStopRequest: function testOnStopRequest(request, ctx, status) {
+  onStopRequest: function testOnStopRequest(request, status) {
     Assert.ok(Components.isSuccessCode(status));
     if (nextPortExpectedToBeSame) {
      Assert.equal(currentPort, this.clientPort);
@@ -102,14 +102,14 @@ Listener.prototype = {
 
 var FailListener = function() {};
 FailListener.prototype = {
-  onStartRequest: function testOnStartRequest(request, ctx) {
+  onStartRequest: function testOnStartRequest(request) {
     Assert.ok(request instanceof Ci.nsIHttpChannel);
     Assert.ok(!Components.isSuccessCode(request.status));
   },
   onDataAvailable: function testOnDataAvailable(request, ctx, stream, off, cnt) {
     read_stream(stream, cnt);
   },
-  onStopRequest: function testOnStopRequest(request, ctx, status) {
+  onStopRequest: function testOnStopRequest(request, status) {
     Assert.ok(!Components.isSuccessCode(request.status));
     nextTest();
     do_test_finished();
@@ -294,7 +294,7 @@ Http2PushApiListener.prototype = {
   },
 
  // normal Channel listeners
-  onStartRequest: function pushAPIOnStart(request, ctx) {
+  onStartRequest: function pushAPIOnStart(request) {
     dump("push api onstart " + request.originalURI.spec + "\n");
   },
 
@@ -302,7 +302,7 @@ Http2PushApiListener.prototype = {
     var data = read_stream(stream, cnt);
   },
 
-  onStopRequest: function test_onStopR(request, ctx, status) {
+  onStopRequest: function test_onStopR(request, status) {
     dump("push api onstop " + request.originalURI.spec + "\n");
     Assert.ok(this.fooOK);
     Assert.ok(this.alt1OK);

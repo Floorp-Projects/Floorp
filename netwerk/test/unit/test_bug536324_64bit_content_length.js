@@ -11,7 +11,7 @@ const CONTENT_LENGTH = "1152921504606846975";
 var httpServer = null;
 
 var listener = {
-  onStartRequest: function (req, ctx) {
+  onStartRequest: function (req) {
   },
 
   onDataAvailable: function (req, ctx, stream, off, count) {
@@ -21,7 +21,7 @@ var listener = {
     req.cancel(NS_BINDING_ABORT);
   },
 
-  onStopRequest: function (req, ctx, stat) {
+  onStopRequest: function (req, stat) {
     httpServer.stop(do_test_finished);
   }
 };

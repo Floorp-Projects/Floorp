@@ -51,13 +51,13 @@ Canceler.prototype = {
       return this;
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
-  onStartRequest: function(request, context) { },
+  onStartRequest: function(request) { },
 
   onDataAvailable: function(request, context, stream, offset, count) {
     request.QueryInterface(Ci.nsIChannel)
            .cancel(Cr.NS_BINDING_ABORTED);
   },
-  onStopRequest: function(request, context, status) {
+  onStopRequest: function(request, status) {
     Assert.equal(status, Cr.NS_BINDING_ABORTED);
     this.continueFn(request, null);
   }
@@ -75,12 +75,12 @@ MyListener.prototype = {
       return this;
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
-  onStartRequest: function(request, context) { this._buffer = ""; },
+  onStartRequest: function(request) { this._buffer = ""; },
 
   onDataAvailable: function(request, context, stream, offset, count) {
     this._buffer = this._buffer.concat(read_stream(stream, count));
   },
-  onStopRequest: function(request, context, status) {
+  onStopRequest: function(request, status) {
     this.continueFn(request, this._buffer);
   }
 };
@@ -97,11 +97,11 @@ FailedChannelListener.prototype = {
       return this;
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
-  onStartRequest: function(request, context) { },
+  onStartRequest: function(request) { },
 
   onDataAvailable: function(request, context, stream, offset, count) { },
 
-  onStopRequest: function(request, context, status) {
+  onStopRequest: function(request, status) {
     if (case_8_range_request)
       Assert.equal(status, Cr.NS_ERROR_CORRUPTED_CONTENT);
     this.continueFn(request, null);

@@ -262,13 +262,13 @@ loadListener.prototype = {
   ]),
 
   // nsIRequestObserver
-  onStartRequest: function SRCH_loadStartR(aRequest, aContext) {
+  onStartRequest: function SRCH_loadStartR(aRequest) {
     LOG("loadListener: Starting request: " + aRequest.name);
     this._stream = Cc["@mozilla.org/binaryinputstream;1"].
                    createInstance(Ci.nsIBinaryInputStream);
   },
 
-  onStopRequest: function SRCH_loadStopR(aRequest, aContext, aStatusCode) {
+  onStopRequest: function SRCH_loadStopR(aRequest, aStatusCode) {
     LOG("loadListener: Stopping request: " + aRequest.name);
 
     var requestFailed = !Components.isSuccessCode(aStatusCode);

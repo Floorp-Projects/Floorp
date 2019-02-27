@@ -3685,10 +3685,8 @@ Downloader.prototype = {
    * When the async request begins
    * @param   request
    *          The nsIRequest object for the transfer
-   * @param   context
-   *          Additional data
    */
-  onStartRequest: function Downloader_onStartRequest(request, context) {
+  onStartRequest: function Downloader_onStartRequest(request) {
     if (request instanceof Ci.nsIIncrementalDownload)
       LOG("Downloader:onStartRequest - original URI spec: " + request.URI.spec +
           ", final URI spec: " + request.finalURI.spec);
@@ -3702,7 +3700,7 @@ Downloader.prototype = {
     let listeners = this._listeners.concat();
     let listenerCount = listeners.length;
     for (let i = 0; i < listenerCount; ++i) {
-      listeners[i].onStartRequest(request, context);
+      listeners[i].onStartRequest(request);
     }
   },
 
@@ -3778,13 +3776,11 @@ Downloader.prototype = {
    * When data transfer ceases
    * @param   request
    *          The nsIRequest object for the transfer
-   * @param   context
-   *          Additional data
    * @param   status
    *          Status code containing the reason for the cessation.
    */
    /* eslint-disable-next-line complexity */
-  onStopRequest: function Downloader_onStopRequest(request, context, status) {
+  onStopRequest: function Downloader_onStopRequest(request, status) {
     if (request instanceof Ci.nsIIncrementalDownload)
       LOG("Downloader:onStopRequest - original URI spec: " + request.URI.spec +
           ", final URI spec: " + request.finalURI.spec + ", status: " + status);
@@ -3939,7 +3935,7 @@ Downloader.prototype = {
       var listeners = this._listeners.concat();
       var listenerCount = listeners.length;
       for (var i = 0; i < listenerCount; ++i) {
-        listeners[i].onStopRequest(request, context, status);
+        listeners[i].onStopRequest(request, status);
       }
     }
 

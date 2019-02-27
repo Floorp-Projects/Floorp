@@ -12,7 +12,7 @@ var gotOnStartRequest = false;
 function CheckGetHostListener() {}
 
 CheckGetHostListener.prototype = {
-  onStartRequest: function(request, context) {
+  onStartRequest: function(request) {
     dump("*** listener onStartRequest\n");
 
     gotOnStartRequest = true;
@@ -29,7 +29,7 @@ CheckGetHostListener.prototype = {
     }
   },
 
-  onStopRequest: function(request, context, statusCode) {
+  onStopRequest: function(request, statusCode) {
     dump("*** listener onStopRequest\n");
 
     Assert.equal(gotOnStartRequest, true);
