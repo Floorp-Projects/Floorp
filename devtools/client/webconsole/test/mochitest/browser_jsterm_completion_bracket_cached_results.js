@@ -136,11 +136,11 @@ async function performTests() {
       is(getAutocompletePopupLabels(autocompletePopup).join("|"), expectedItems.join("|"),
         `popup has expected items, in expected order`);
       checkInputCompletionValue(hud,
-        " ".repeat(jsterm.getInputValue().length) + expectedCompletionText,
+        " ".repeat(getInputValue(hud).length) + expectedCompletionText,
         `completeNode has expected value`);
     }
 
-    jsterm.setInputValue("");
+    setInputValue(hud, "");
     const onPopupClose = autocompletePopup.once("popup-closed");
     EventUtils.synthesizeKey("KEY_Escape");
     await onPopupClose;

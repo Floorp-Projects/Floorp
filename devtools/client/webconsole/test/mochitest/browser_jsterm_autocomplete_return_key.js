@@ -43,7 +43,7 @@ async function performTests() {
 
   info("wait for completion suggestions: window.foobar.");
 
-  jsterm.setInputValue("window.fooba");
+  setInputValue(hud, "window.fooba");
   EventUtils.sendString("r.");
 
   await onPopUpOpen;
@@ -64,7 +64,7 @@ async function performTests() {
 
   is(popup.selectedIndex, expectedPopupItems.length - 1, "last index is selected");
   is(popup.selectedItem.label, "item33", "item33 is selected");
-  const prefix = jsterm.getInputValue().replace(/[\S]/g, " ");
+  const prefix = getInputValue(hud).replace(/[\S]/g, " ");
   checkInputCompletionValue(hud, prefix + "item33", "completeNode.value holds item33");
 
   info("press Return to accept suggestion. wait for popup to hide");
@@ -74,14 +74,14 @@ async function performTests() {
   await onPopupClose;
 
   ok(!popup.isOpen, "popup is not open after KEY_Enter");
-  is(jsterm.getInputValue(), "window.foobar.item33",
+  is(getInputValue(hud), "window.foobar.item33",
     "completion was successful after KEY_Enter");
   ok(!getInputCompletionValue(hud), "completeNode is empty");
 
   info("Test that hitting enter when the completeNode is empty closes the popup");
   onPopUpOpen = popup.once("popup-opened");
   info("wait for completion suggestions: window.foobar.item3");
-  jsterm.setInputValue("window.foobar.item");
+  setInputValue(hud, "window.foobar.item");
   EventUtils.sendString("3");
   await onPopUpOpen;
 
@@ -93,6 +93,6 @@ async function performTests() {
   await onPopupClose;
 
   ok(!popup.isOpen, "popup is not open after KEY_Enter");
-  is(jsterm.getInputValue(), "window.foobar.item3",
+  is(getInputValue(hud), "window.foobar.item3",
     "completion was successful after KEY_Enter");
 }

@@ -28,7 +28,7 @@ async function performTests() {
   ok(!popup.isOpen, "popup is not open");
   const onPopupOpen = popup.once("popup-opened");
 
-  jsterm.setInputValue("document.body");
+  setInputValue(hud, "document.body");
   EventUtils.sendString(".");
 
   await onPopupOpen;
@@ -50,7 +50,7 @@ async function performTests() {
   ok(!popup.isOpen, "popup is not open");
   const onAutoCompleteUpdated = jsterm.once("autocomplete-updated");
   const inputStr = "document.b";
-  jsterm.setInputValue(inputStr);
+  setInputValue(hud, inputStr);
   EventUtils.sendString("o");
 
   await onAutoCompleteUpdated;

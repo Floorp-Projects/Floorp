@@ -28,7 +28,7 @@ async function performTests() {
 
   // Test if 'doc' gives 'document'
   await jstermComplete("doc");
-  is(jsterm.getInputValue(), "doc", "'docu' completion (input.value)");
+  is(getInputValue(hud), "doc", "'docu' completion (input.value)");
   checkInputCompletionValue(hud, "   ument", "'docu' completion (completeNode)");
 
   // Test typing 'window.'.'
