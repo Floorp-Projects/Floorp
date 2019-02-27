@@ -1243,7 +1243,6 @@ Document::Document(const char* aContentType)
       mHasHadDefaultView(false),
       mStyleSheetChangeEventsEnabled(false),
       mIsSrcdocDocument(false),
-      mDidDocumentOpen(false),
       mHasDisplayDocument(false),
       mFontFaceSetDirty(true),
       mDidFireDOMContentLoaded(true),
