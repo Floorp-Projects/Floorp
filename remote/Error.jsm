@@ -19,6 +19,7 @@ XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 
 class RemoteAgentError extends Error {
   constructor(message = "", cause = undefined) {
+    cause = cause || message;
     super(cause);
 
     this.name = this.constructor.name;
