@@ -2,7 +2,7 @@
 
 # IntentProcessor
 
-`class IntentProcessor` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/intent/src/main/java/mozilla/components/feature/intent/IntentProcessor.kt#L32)
+`class IntentProcessor` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/intent/src/main/java/mozilla/components/feature/intent/IntentProcessor.kt#L33)
 
 Processor for intents which should trigger session-related actions.
 
@@ -10,7 +10,7 @@ Processor for intents which should trigger session-related actions.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `IntentProcessor(sessionUseCases: `[`SessionUseCases`](../../mozilla.components.feature.session/-session-use-cases/index.md)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, searchUseCases: `[`SearchUseCases`](../../mozilla.components.feature.search/-search-use-cases/index.md)`, context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, useDefaultHandlers: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true, openNewTab: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true)`<br>Processor for intents which should trigger session-related actions. |
+| [&lt;init&gt;](-init-.md) | `IntentProcessor(sessionUseCases: `[`SessionUseCases`](../../mozilla.components.feature.session/-session-use-cases/index.md)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, searchUseCases: `[`SearchUseCases`](../../mozilla.components.feature.search/-search-use-cases/index.md)`, context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, useDefaultHandlers: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true, openNewTab: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true, isPrivate: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false)`<br>Processor for intents which should trigger session-related actions. |
 
 ### Functions
 

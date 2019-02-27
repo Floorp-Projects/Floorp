@@ -2,7 +2,7 @@
 
 # SimpleBrowserMenuItem
 
-`class SimpleBrowserMenuItem : `[`BrowserMenuItem`](../../mozilla.components.browser.menu/-browser-menu-item/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/SimpleBrowserMenuItem.kt#L19)
+`class SimpleBrowserMenuItem : `[`BrowserMenuItem`](../../mozilla.components.browser.menu/-browser-menu-item/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/SimpleBrowserMenuItem.kt#L23)
 
 A simple browser menu item displaying text.
 
@@ -16,7 +16,7 @@ A simple browser menu item displaying text.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SimpleBrowserMenuItem(label: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, listener: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`<br>A simple browser menu item displaying text. |
+| [&lt;init&gt;](-init-.md) | `SimpleBrowserMenuItem(label: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, textColorResource: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = NO_ID, listener: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`<br>A simple browser menu item displaying text. |
 
 ### Properties
 

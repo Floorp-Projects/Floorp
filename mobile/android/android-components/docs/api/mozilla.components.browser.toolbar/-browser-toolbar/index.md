@@ -41,7 +41,7 @@ implemented by the DisplayToolbar and EditToolbar classes.
 | Name | Summary |
 |---|---|
 | [browserActionMargin](browser-action-margin.md) | `var browserActionMargin: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Gets/Sets the margin to be used between browser actions. |
-| [cancelViewColor](cancel-view-color.md) | `var cancelViewColor: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Gets/Sets the color tint of the cancel button. |
+| [clearViewColor](clear-view-color.md) | `var clearViewColor: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Gets/Sets the color tint of the cancel button. |
 | [displaySiteSecurityIcon](display-site-security-icon.md) | `var displaySiteSecurityIcon: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Set/Get whether a site security icon (usually a lock or globe icon) should be visible next to the URL. |
 | [hint](hint.md) | `var hint: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Sets the text to be displayed when the URL of the toolbar is empty. |
 | [hintColor](hint-color.md) | `var hintColor: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Sets the colour of the text to be displayed when the URL of the toolbar is empty. |
