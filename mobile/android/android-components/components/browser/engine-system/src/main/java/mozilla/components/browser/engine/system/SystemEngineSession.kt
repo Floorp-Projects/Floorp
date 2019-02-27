@@ -53,7 +53,7 @@ class SystemEngineSession(
     // This is public for FFTV which needs access to the WebView instance. We can mark it internal once
     // https://github.com/mozilla-mobile/android-components/issues/1616 is resolved.
     @Volatile var webView: WebView = NestedWebView(context)
-        internal set(value) {
+        set(value) {
             field = value
             initSettings()
         }
