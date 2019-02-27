@@ -853,8 +853,12 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
       }
       return Allow();
     }
-    if (mBroker) {
+
+    // Level 1 allows direct filesystem access; higher levels use
+    // brokering.
+    if (!BelowLevel(2)) {
       // Have broker; route the appropriate syscalls to it.
+      MOZ_RELEASE_ASSERT(mBroker != nullptr);
       switch (sysno) {
         case __NR_open:
           return Trap(OpenTrap, mBroker);
@@ -891,6 +895,7 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
       }
     } else {
       // No broker; allow the syscalls directly.  )-:
+      MOZ_ASSERT(!mBroker);
       switch (sysno) {
         case __NR_open:
         case __NR_openat:
