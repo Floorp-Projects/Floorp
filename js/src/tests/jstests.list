@@ -116,6 +116,24 @@ skip-if(!xulRuntime.shell) script test262/language/global-code/decl-var.js
 # %ThrowTypeError% should be anonymous
 skip script test262/built-ins/ThrowTypeError/name.js
 
+# BigInt typed arrays -- BigInt64Array, BigUint64Array -- aren't implemented
+# yet -- bug 1456569.
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-returns-throws.js
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species.js
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-use-default-ctor.js
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-custom-ctor-throws.js
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-custom-ctor-invocation.js
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-custom-ctor-returns-another-instance.js
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-ctor-inherited.js
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-ctor.js
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-custom-ctor-length.js
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-custom-ctor-length-throws.js
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-ctor-returns-throws.js
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-custom-ctor.js
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-abrupt.js
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-ctor-abrupt.js
+
+
 # Anonymous functions have own name property in SpiderMonkey
 skip script test262/language/expressions/assignment/fn-name-lhs-cover.js
 skip script test262/language/expressions/assignment/fn-name-lhs-member.js
