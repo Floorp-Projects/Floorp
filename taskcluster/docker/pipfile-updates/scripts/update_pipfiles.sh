@@ -122,7 +122,7 @@ ${PIP} install --user pip==18.0
 
 update_pipfile "${PIPFILE_DIRECTORY}"
 echo "INFO: diffing old/new Pipfile.lock into ${DIFF_ARTIFACT}"
-hg -R "${REPODIR}" diff "${BASEDIR}/${BRANCH}/${PIPFILE_DIRECTORY}/Pipfile.lock" | tee "${DIFF_ARTIFACT}"
+${HG} -R "${REPODIR}" diff "${BASEDIR}/${BRANCH}/${PIPFILE_DIRECTORY}/Pipfile.lock" | tee "${DIFF_ARTIFACT}"
 
 COMMIT_MESSAGE="No Bug, ${PIPFILE_DIRECTORY} pipfile-update."
 
