@@ -363,9 +363,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   virtual nsresult FireDelayedDOMEvents() override;
 
-  virtual nsresult SetNewDocument(Document* aDocument, nsISupports* aState,
-                                  bool aForceReuseInnerWindow) override;
-
   virtual void MaybeUpdateTouchState() override;
 
   // Inner windows only.
@@ -1045,7 +1042,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   // Object Management
   virtual ~nsGlobalWindowInner();
 
-  void FreeInnerObjects(bool aForDocumentOpen = false);
+  void FreeInnerObjects();
 
   // Only to be called on an inner window.
   // aDocument must not be null.
@@ -1104,8 +1101,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   CallState ShouldReportForServiceWorkerScopeInternal(const nsACString& aScope,
                                                       bool* aResultOut);
-
-  void MigrateStateForDocumentOpen(nsGlobalWindowInner* aOldInner);
 
  public:
   // Timeout Functions
