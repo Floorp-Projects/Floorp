@@ -113,6 +113,20 @@ BreakpointActor.prototype = {
     }
   },
 
+  // Get a string message to display when a frame evaluation throws.
+  getThrownMessage(completion) {
+    try {
+      if (completion.throw.getOwnPropertyDescriptor) {
+        return completion.throw.getOwnPropertyDescriptor("message").value;
+      } else if (completion.toString) {
+        return completion.toString();
+      }
+    } catch (ex) {
+      // ignore
+    }
+    return "Unknown exception";
+  },
+
   /**
    * Check if this breakpoint has a condition that doesn't error and
    * evaluates to true in frame.
@@ -132,20 +146,9 @@ BreakpointActor.prototype = {
     if (completion) {
       if (completion.throw) {
         // The evaluation failed and threw
-        let message = "Unknown exception";
-        try {
-          if (completion.throw.getOwnPropertyDescriptor) {
-            message = completion.throw.getOwnPropertyDescriptor("message")
-                      .value;
-          } else if (completion.toString) {
-            message = completion.toString();
-          }
-        } catch (ex) {
-          // ignore
-        }
         return {
           result: true,
-          message: message,
+          message: this.getThrownMessage(completion),
         };
       } else if (completion.yield) {
         assert(false, "Shouldn't ever get yield completions from an eval");
@@ -188,41 +191,55 @@ BreakpointActor.prototype = {
       return undefined;
     }
 
-    const reason = {};
+    const reason = { type: "breakpoint", actors: [ this.actorID ] };
     const { condition, logValue } = this.options || {};
 
-    if (!condition && !logValue) {
-      reason.type = "breakpoint";
-      // TODO: add the rest of the breakpoints on that line (bug 676602).
-      reason.actors = [ this.actorID ];
-    } else {
-      // When replaying, breakpoints with log values are handled separately.
-      if (logValue && this.threadActor.dbg.replaying) {
-        return undefined;
-      }
+    // When replaying, breakpoints with log values are handled via
+    // _updateOptionsForScript.
+    if (logValue && this.threadActor.dbg.replaying) {
+      return undefined;
+    }
 
-      let condstr = condition;
-      if (logValue) {
-        // In the non-replaying case, log values are handled by treating them as
-        // conditions. console.log() never returns true so we will not pause.
-        condstr = condition
-          ? `(${condition}) && console.log(${logValue})`
-          : `console.log(${logValue})`;
-      }
-      const { result, message } = this.checkCondition(frame, condstr);
+    if (condition) {
+      const { result, message } = this.checkCondition(frame, condition);
 
       if (result) {
-        if (!message) {
-          reason.type = "breakpoint";
-        } else {
+        if (message) {
           reason.type = "breakpointConditionThrown";
           reason.message = message;
         }
-        reason.actors = [ this.actorID ];
       } else {
         return undefined;
       }
     }
+
+    if (logValue) {
+      const completion = frame.eval(logValue);
+      let value;
+      if (!completion) {
+        // The evaluation was killed (possibly by the slow script dialog).
+        value = "Log value evaluation incomplete";
+      } else if ("return" in completion) {
+        value = completion.return;
+      } else {
+        value = this.getThrownMessage(completion);
+      }
+      if (value && typeof value.unsafeDereference === "function") {
+        value = value.unsafeDereference();
+      }
+
+      const message = {
+        filename: url,
+        lineNumber: generatedLine,
+        columnNumber: generatedColumn,
+        "arguments": [value],
+      };
+      this.threadActor._parent._consoleActor.onConsoleAPICall(message);
+
+      // Never stop at log points.
+      return undefined;
+    }
+
     return this.threadActor._pauseAndRespond(frame, reason);
   },
 
