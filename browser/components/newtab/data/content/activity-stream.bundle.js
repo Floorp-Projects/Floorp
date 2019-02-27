@@ -7486,6 +7486,7 @@ class Hero_Hero extends external_React_default.a.PureComponent {
 
     // Note that `{index + 1}` is necessary below for telemetry since we treat heroRec as index 0.
     let cards = otherRecs.map((rec, index) => external_React_default.a.createElement(DSCard_DSCard, {
+      campaignId: rec.campaign_id,
       key: `dscard-${index}`,
       image_src: rec.image_src,
       title: rec.title,
