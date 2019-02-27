@@ -418,8 +418,8 @@ UniquePtr<SandboxBroker::Policy> SandboxBrokerPolicyFactory::GetContentPolicy(
   // in early startup.
 
   MOZ_ASSERT(NS_IsMainThread());
-  // File broker usage is controlled through a pref.
-  if (!IsContentSandboxEnabled()) {
+  // The file broker is used at level 2 and up.
+  if (GetEffectiveContentSandboxLevel() <= 1) {
     return nullptr;
   }
 
