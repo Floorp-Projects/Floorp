@@ -351,7 +351,7 @@ static const uint32_t NurseryFreeThresholdForIdleCollection =
 static const float NurseryFreeThresholdForIdleCollectionFraction = 0.25f;
 
 /* JSGC_PRETENURE_THRESHOLD */
-static const float PretenureThreashold = 0.6f;
+static const float PretenureThreshold = 0.6f;
 
 /* JSGC_PRETENURE_GROUP_THRESHOLD */
 static const float PretenureGroupThreshold = 3000;
@@ -1589,7 +1589,7 @@ GCSchedulingTunables::GCSchedulingTunables()
           TuningDefaults::NurseryFreeThresholdForIdleCollection),
       nurseryFreeThresholdForIdleCollectionFraction_(
           TuningDefaults::NurseryFreeThresholdForIdleCollectionFraction),
-      pretenureThreshold_(TuningDefaults::PretenureThreashold),
+      pretenureThreshold_(TuningDefaults::PretenureThreshold),
       pretenureGroupThreshold_(TuningDefaults::PretenureGroupThreshold) {}
 
 void GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock) {
@@ -1677,7 +1677,7 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key,
           TuningDefaults::NurseryFreeThresholdForIdleCollectionFraction;
       break;
     case JSGC_PRETENURE_THRESHOLD:
-      pretenureThreshold_ = TuningDefaults::PretenureThreashold;
+      pretenureThreshold_ = TuningDefaults::PretenureThreshold;
       break;
     case JSGC_PRETENURE_GROUP_THRESHOLD:
       pretenureGroupThreshold_ = TuningDefaults::PretenureGroupThreshold;
