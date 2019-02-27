@@ -562,7 +562,7 @@ pub struct RendererProfileCounters {
 
 pub struct RendererProfileTimers {
     pub cpu_time: TimeProfileCounter,
-    pub gpu_time: TimeProfileCounter,
+    pub gpu_graph: TimeProfileCounter,
     pub gpu_samples: Vec<GpuTimer<GpuProfileTag>>,
 }
 
@@ -592,9 +592,9 @@ impl RendererProfileCounters {
 impl RendererProfileTimers {
     pub fn new() -> Self {
         RendererProfileTimers {
-            cpu_time: TimeProfileCounter::new("Compositor CPU Time", false),
+            cpu_time: TimeProfileCounter::new("Renderer CPU Time", false),
             gpu_samples: Vec::new(),
-            gpu_time: TimeProfileCounter::new("GPU Time", false),
+            gpu_graph: TimeProfileCounter::new("GPU Time", false),
         }
     }
 }
@@ -881,11 +881,15 @@ struct DrawState {
 
 pub struct Profiler {
     draw_state: DrawState,
-    backend_time: ProfileGraph,
-    compositor_time: ProfileGraph,
-    gpu_time: ProfileGraph,
+    backend_graph: ProfileGraph,
+    renderer_graph: ProfileGraph,
+    gpu_graph: ProfileGraph,
+    ipc_graph: ProfileGraph,
+    backend_time: AverageTimeProfileCounter,
+    renderer_time: AverageTimeProfileCounter,
+    gpu_time: AverageTimeProfileCounter,
+    ipc_time: AverageTimeProfileCounter,
     gpu_frames: GpuFrameCollection,
-    ipc_time: ProfileGraph,
 }
 
 impl Profiler {
@@ -897,11 +901,15 @@ impl Profiler {
                 x_right: 0.0,
                 y_right: 0.0,
             },
-            backend_time: ProfileGraph::new(600, "Backend:"),
-            compositor_time: ProfileGraph::new(600, "Compositor:"),
-            gpu_time: ProfileGraph::new(600, "GPU:"),
+            backend_graph: ProfileGraph::new(600, "Backend:"),
+            renderer_graph: ProfileGraph::new(600, "Renderer:"),
+            gpu_graph: ProfileGraph::new(600, "GPU:"),
+            ipc_graph: ProfileGraph::new(600, "IPC:"),
             gpu_frames: GpuFrameCollection::new(),
-            ipc_time: ProfileGraph::new(600, "IPC:"),
+            backend_time: AverageTimeProfileCounter::new("Backend:", false, ONE_SECOND_NS / 2),
+            renderer_time: AverageTimeProfileCounter::new("Renderer:", false, ONE_SECOND_NS / 2),
+            ipc_time: AverageTimeProfileCounter::new("IPC:", false, ONE_SECOND_NS / 2),
+            gpu_time: AverageTimeProfileCounter::new("GPU:", false, ONE_SECOND_NS / 2),
         }
     }
 
@@ -1121,8 +1129,9 @@ impl Profiler {
                 &renderer_profile.draw_calls,
                 &renderer_profile.vertices,
                 &renderer_profile.texture_data_uploaded,
+                &self.ipc_time,
                 &self.backend_time,
-                &self.compositor_time,
+                &self.renderer_time,
                 &self.gpu_time,
             ],
             debug_renderer,
@@ -1210,7 +1219,7 @@ impl Profiler {
             &[
                 &backend_profile.total_time,
                 &renderer_timers.cpu_time,
-                &renderer_timers.gpu_time,
+                &renderer_timers.gpu_graph,
             ],
             debug_renderer,
             false,
@@ -1251,21 +1260,21 @@ impl Profiler {
         }
 
         let rect =
-            self.backend_time
+            self.backend_graph
                 .draw_graph(self.draw_state.x_right, self.draw_state.y_right, "CPU (backend)", debug_renderer);
         self.draw_state.y_right += rect.size.height + PROFILE_PADDING;
-        let rect = self.compositor_time.draw_graph(
+        let rect = self.renderer_graph.draw_graph(
             self.draw_state.x_right,
             self.draw_state.y_right,
-            "CPU (compositor)",
+            "CPU (renderer)",
             debug_renderer,
         );
         self.draw_state.y_right += rect.size.height + PROFILE_PADDING;
         let rect =
-            self.ipc_time
+            self.ipc_graph
                 .draw_graph(self.draw_state.x_right, self.draw_state.y_right, "DisplayList IPC", debug_renderer);
         self.draw_state.y_right += rect.size.height + PROFILE_PADDING;
-        let rect = self.gpu_time
+        let rect = self.gpu_graph
             .draw_graph(self.draw_state.x_right, self.draw_state.y_right, "GPU", debug_renderer);
         self.draw_state.y_right += rect.size.height + PROFILE_PADDING;
         let rect = self.gpu_frames
@@ -1289,21 +1298,25 @@ impl Profiler {
         self.draw_state.x_right = 450.0;
         self.draw_state.y_right = 40.0;
 
-        let mut gpu_time = 0;
-        let gpu_timers = mem::replace(&mut renderer_timers.gpu_samples, Vec::new());
-        for sample in &gpu_timers {
-            gpu_time += sample.time_ns;
+        let mut gpu_graph = 0;
+        let gpu_graphrs = mem::replace(&mut renderer_timers.gpu_samples, Vec::new());
+        for sample in &gpu_graphrs {
+            gpu_graph += sample.time_ns;
         }
-        renderer_timers.gpu_time.set(gpu_time);
+        renderer_timers.gpu_graph.set(gpu_graph);
 
-        self.backend_time
+        self.backend_graph
             .push(backend_profile.total_time.nanoseconds);
-        self.compositor_time
+        self.backend_time.set(backend_profile.total_time.nanoseconds);
+        self.renderer_graph
             .push(renderer_timers.cpu_time.nanoseconds);
-        self.ipc_time
+        self.renderer_time.set(renderer_timers.cpu_time.nanoseconds);
+        self.ipc_graph
             .push(backend_profile.ipc.total_time.nanoseconds);
-        self.gpu_time.push(gpu_time);
-        self.gpu_frames.push(gpu_time, gpu_timers);
+        self.ipc_time.set(backend_profile.ipc.total_time.nanoseconds);
+        self.gpu_graph.push(gpu_graph);
+        self.gpu_time.set(gpu_graph);
+        self.gpu_frames.push(gpu_graph, gpu_graphrs);
 
         if compact {
             self.draw_compact_profile(
