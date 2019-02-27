@@ -7,8 +7,7 @@
 
 #include "mozilla/ArrayUtils.h"
 
-#include "nsXRemoteService.h"
-#include "nsRemoteService.h"
+#include "nsXRemoteServer.h"
 #include "nsIObserverService.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
@@ -54,18 +53,18 @@ static const char *XAtomNames[] = {
     MOZILLA_COMMANDLINE_PROP};
 static Atom XAtoms[MOZ_ARRAY_LENGTH(XAtomNames)];
 
-Atom nsXRemoteService::sMozVersionAtom;
-Atom nsXRemoteService::sMozLockAtom;
-Atom nsXRemoteService::sMozResponseAtom;
-Atom nsXRemoteService::sMozUserAtom;
-Atom nsXRemoteService::sMozProfileAtom;
-Atom nsXRemoteService::sMozProgramAtom;
-Atom nsXRemoteService::sMozCommandLineAtom;
+Atom nsXRemoteServer::sMozVersionAtom;
+Atom nsXRemoteServer::sMozLockAtom;
+Atom nsXRemoteServer::sMozResponseAtom;
+Atom nsXRemoteServer::sMozUserAtom;
+Atom nsXRemoteServer::sMozProfileAtom;
+Atom nsXRemoteServer::sMozProgramAtom;
+Atom nsXRemoteServer::sMozCommandLineAtom;
 
-nsXRemoteService::nsXRemoteService() = default;
+nsXRemoteServer::nsXRemoteServer() = default;
 
-void nsXRemoteService::XRemoteBaseStartup(const char *aAppName,
-                                          const char *aProfileName) {
+void nsXRemoteServer::XRemoteBaseStartup(const char *aAppName,
+                                         const char *aProfileName) {
   EnsureAtoms();
 
   mAppName = aAppName;
@@ -74,7 +73,7 @@ void nsXRemoteService::XRemoteBaseStartup(const char *aAppName,
   mProfileName = aProfileName;
 }
 
-void nsXRemoteService::HandleCommandsFor(Window aWindowId) {
+void nsXRemoteServer::HandleCommandsFor(Window aWindowId) {
   // set our version
   XChangeProperty(mozilla::DefaultXDisplay(), aWindowId, sMozVersionAtom,
                   XA_STRING, 8, PropModeReplace, kRemoteVersion,
@@ -101,8 +100,8 @@ void nsXRemoteService::HandleCommandsFor(Window aWindowId) {
   }
 }
 
-bool nsXRemoteService::HandleNewProperty(XID aWindowId, Display *aDisplay,
-                                         Time aEventTime, Atom aChangedAtom) {
+bool nsXRemoteServer::HandleNewProperty(XID aWindowId, Display *aDisplay,
+                                        Time aEventTime, Atom aChangedAtom) {
   if (aChangedAtom == sMozCommandLineAtom) {
     // We got a new command atom.
     int result;
@@ -132,7 +131,7 @@ bool nsXRemoteService::HandleNewProperty(XID aWindowId, Display *aDisplay,
       return false;
 
     // cool, we got the property data.
-    const char *response = nsRemoteService::HandleCommandLine(data, aEventTime);
+    const char *response = HandleCommandLine(data, aEventTime);
 
     // put the property onto the window as the response
     XChangeProperty(aDisplay, aWindowId, sMozResponseAtom, XA_STRING, 8,
@@ -155,7 +154,7 @@ bool nsXRemoteService::HandleNewProperty(XID aWindowId, Display *aDisplay,
   return false;
 }
 
-void nsXRemoteService::EnsureAtoms(void) {
+void nsXRemoteServer::EnsureAtoms(void) {
   if (sMozVersionAtom) return;
 
   XInternAtoms(mozilla::DefaultXDisplay(), const_cast<char **>(XAtomNames),
