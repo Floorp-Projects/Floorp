@@ -433,6 +433,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
+  TabUnloader: "resource:///modules/TabUnloader.jsm",
   UIState: "resource://services-sync/UIState.jsm",
   UITour: "resource:///modules/UITour.jsm",
   WebChannel: "resource://gre/modules/WebChannel.jsm",
@@ -1714,6 +1715,10 @@ BrowserGlue.prototype = {
         LiveBookmarkMigrator.migrate().catch(Cu.reportError);
       });
     }
+
+    Services.tm.idleDispatchToMainThread(() => {
+      TabUnloader.init();
+    });
   },
 
   /**
