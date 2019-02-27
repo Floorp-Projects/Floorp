@@ -1223,6 +1223,11 @@ skip script test262/built-ins/Reflect/ownKeys/return-on-corresponding-order-larg
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1473229
 skip include test262/intl402/RelativeTimeFormat/prototype/formatToParts/jstests.list
 
+# SupportedLocales in the Intl spec returns a non-frozen array after
+# https://github.com/tc39/ecma402/pull/278 -- bug 1530848.
+skip script test262/intl402/RelativeTimeFormat/constructor/supportedLocalesOf/result-type.js
+skip script test262/intl402/supportedLocalesOf-returned-array-elements-are-not-frozen.js
+
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1508683
 skip script test262/built-ins/RegExp/prototype/multiline/cross-realm.js
 skip script test262/built-ins/RegExp/prototype/global/cross-realm.js
