@@ -1126,7 +1126,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
 
     let opts = RendererOptions {
         enable_aa: true,
-        enable_subpixel_aa: true,
+        enable_subpixel_aa: cfg!(not(target_os = "android")),
         support_low_priority_transactions,
         recorder: recorder,
         blob_image_handler: Some(Box::new(Moz2dBlobImageHandler::new(workers.clone()))),

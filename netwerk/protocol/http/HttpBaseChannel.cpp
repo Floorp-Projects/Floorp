@@ -1564,8 +1564,8 @@ HttpBaseChannel::GetReferrer(nsIURI** referrer) {
 NS_IMETHODIMP
 HttpBaseChannel::SetReferrer(nsIURI* referrer) {
   bool isPrivate = mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
-  return SetReferrerWithPolicy(referrer,
-                               NS_GetDefaultReferrerPolicy(isPrivate));
+  return SetReferrerWithPolicy(
+      referrer, NS_GetDefaultReferrerPolicy(this, mURI, isPrivate));
 }
 
 NS_IMETHODIMP
@@ -1611,6 +1611,8 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI* referrer,
                                        uint32_t referrerPolicy) {
   ENSURE_CALLED_BEFORE_CONNECT();
 
+  nsIURI* originalReferrer = referrer;
+
   mReferrerPolicy = referrerPolicy;
 
   // clear existing referrer, if any
@@ -1622,7 +1624,7 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI* referrer,
 
   if (mReferrerPolicy == REFERRER_POLICY_UNSET) {
     bool isPrivate = mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
-    mReferrerPolicy = NS_GetDefaultReferrerPolicy(isPrivate);
+    mReferrerPolicy = NS_GetDefaultReferrerPolicy(this, mURI, isPrivate);
   }
 
   if (!referrer) {
@@ -1925,6 +1927,7 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI* referrer,
   rv = SetRequestHeader(NS_LITERAL_CSTRING("Referer"), spec, false);
   if (NS_FAILED(rv)) return rv;
 
+  mOriginalReferrer = originalReferrer;
   mReferrer = clone;
   return NS_OK;
 }

@@ -58,6 +58,17 @@ class CompositorD3D11 : public Compositor {
       const override {
     return do_AddRef(mCurrentRT);
   }
+  virtual already_AddRefed<CompositingRenderTarget> GetWindowRenderTarget()
+      const override;
+
+  virtual bool ReadbackRenderTarget(CompositingRenderTarget* aSource,
+                                    AsyncReadbackBuffer* aDest) override;
+  virtual already_AddRefed<AsyncReadbackBuffer> CreateAsyncReadbackBuffer(
+      const gfx::IntSize& aSize) override;
+
+  virtual bool BlitRenderTarget(CompositingRenderTarget* aSource,
+                                const gfx::IntSize& aSourceSize,
+                                const gfx::IntSize& aDestSize) override;
 
   virtual void SetDestinationSurfaceSize(const gfx::IntSize& aSize) override {}
 
@@ -206,6 +217,7 @@ class CompositorD3D11 : public Compositor {
   RefPtr<IDXGISwapChain> mSwapChain;
   RefPtr<CompositingRenderTargetD3D11> mDefaultRT;
   RefPtr<CompositingRenderTargetD3D11> mCurrentRT;
+  mutable RefPtr<CompositingRenderTargetD3D11> mWindowRTCopy;
 
   RefPtr<ID3D11Query> mQuery;
 

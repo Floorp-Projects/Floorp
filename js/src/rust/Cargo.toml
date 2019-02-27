@@ -10,4 +10,3 @@ path = "lib.rs"
 
 [dependencies]
 jsrust_shared = { path = "./shared" }
-mozilla-central-workspace-hack = { path = "../../../build/workspace-hack" }

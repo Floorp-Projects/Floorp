@@ -54,7 +54,7 @@ add_task(async function() {
   await requestsSuccess;
 
   info("Check that the runtime info is rendered for This Firefox");
-  const thisFirefoxRuntimeInfo = document.querySelector(".js-runtime-info");
+  const thisFirefoxRuntimeInfo = document.querySelector(".js-runtime-name");
   ok(thisFirefoxRuntimeInfo, "Runtime info for this-firefox runtime is displayed");
 
   const text = thisFirefoxRuntimeInfo.textContent;
