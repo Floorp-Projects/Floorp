@@ -51,6 +51,7 @@ interface nsISHEntry;
 interface nsILayoutHistoryState;
 interface nsISecureBrowserUI;
 interface nsIScriptGlobalObject;
+interface nsIStructuredCloneContainer;
 interface nsIDOMStorage;
 interface nsIPrincipal;
 interface nsIWebBrowserPrint;
@@ -68,6 +69,7 @@ native nsDocShellLoadStatePtr(nsDocShellLoadState*);
 webidl BrowsingContext;
 webidl ContentFrameMessageManager;
 webidl EventTarget;
+webidl Document;
 
 [scriptable, builtinclass, uuid(049234fe-da10-478b-bc5d-bc6f9a1ba63d)]
 interface nsIDocShell : nsIDocShellTreeItem
@@ -89,6 +91,30 @@ interface nsIDocShell : nsIDocShellTreeItem
   [implicit_jscontext]
   void addState(in jsval aData, in AString aTitle,
                 in AString aURL, in boolean aReplace);
+
+  /**
+   * Helper for addState and document.open that does just the
+   * history-manipulation guts.
+   *
+   * Arguments the spec defines:
+   *
+   * @param aDocument the document we're manipulating.  This will get the new URI.
+   * @param aNewURI the new URI.
+   * @param aData The serialized state data.  May be null.
+   * @param aTitle The new title.  May be empty.
+   * @param aReplace whether this should replace the exising SHEntry.
+   *
+   * Arguments we need internally because deriving them from the
+   * others is a bit complicated:
+   *
+   * @param aCurrentURI the current URI we're working with.  Might be null.
+   * @param aEqualURIs whether the two URIs involved are equal.
+   */
+  [nostdcall]
+  void updateURLAndHistory(in Document aDocument, in nsIURI aNewURI,
+                           in nsIStructuredCloneContainer aData, in AString aTitle,
+                           in boolean aReplace, in nsIURI aCurrentURI,
+                           in boolean aEqualURIs);
 
   /**
    * Reset state to a new content model within the current document and the document
