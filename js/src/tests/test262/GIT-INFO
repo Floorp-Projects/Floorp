@@ -1,5 +1,5 @@
-commit b337eaf7c7b9bb90991132d0018fdd1d441545ae
+commit 5eab51827b434131d71c6aa0d306284eb50f3cc9
 Author: Frank Yung-Fong Tang <41213225+FrankYFTang@users.noreply.github.com>
-Date:   Mon Jan 28 07:59:07 2019 -0800
+Date:   Mon Jan 28 07:59:54 2019 -0800
 
-    change irregular grandfather tag to it's canonical (#2048)
+    Add "numberingSystem" to resolvedOptions() (#2011)
