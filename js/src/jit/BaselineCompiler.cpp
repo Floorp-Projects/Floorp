@@ -190,13 +190,12 @@ MethodStatus BaselineCompiler::compile() {
     return Method_Error;
   }
 
-  Linker linker(masm);
+  Linker linker(masm, "Baseline");
   if (masm.oom()) {
     ReportOutOfMemory(cx);
     return Method_Error;
   }
 
-  AutoFlushICache afc("Baseline");
   JitCode* code = linker.newCode(cx, CodeKind::Baseline);
   if (!code) {
     return Method_Error;
