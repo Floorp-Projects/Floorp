@@ -1012,6 +1012,13 @@ nsJSChannel::GetExecuteAsync(bool* aIsAsync) {
   return NS_OK;
 }
 
+bool nsJSChannel::GetIsDocumentLoad() {
+  // Our LOAD_DOCUMENT_URI flag, if any, lives on our stream channel.
+  nsLoadFlags flags;
+  mStreamChannel->GetLoadFlags(&flags);
+  return flags & LOAD_DOCUMENT_URI;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 nsJSProtocolHandler::nsJSProtocolHandler() {}
