@@ -33,6 +33,7 @@ UNSUPPORTED_FEATURES = set([
     "numeric-separator-literal",
     "Intl.Locale",
     "global",
+    "hashbang",
     "export-star-as-namespace-from-module",
     "Intl.ListFormat",
     "Intl.Segmenter",
