@@ -4416,22 +4416,12 @@ void ScrollFrameHelper::ScrollToRestoredPosition() {
   // logical scroll position, but we scroll to the physical scroll position in
   // all cases
 
-  // Continue restoring until both the layout and visual scroll positions
-  // reach the destination. (Note that the two can only be different for
-  // the root content document's root scroll frame, and when zoomed in).
-  // This is necessary to avoid situations where the two offsets get stuck
-  // at different values and nothing reconciles them (see bug 1519621 comment
-  // 8).
-  nsPoint logicalLayoutScrollPos = GetLogicalScrollPosition();
-
   // if we didn't move, we still need to restore
-  if (GetLogicalVisualViewportOffset() == mLastPos ||
-      logicalLayoutScrollPos == mLastPos) {
+  if (GetLogicalVisualViewportOffset() == mLastPos) {
     // if our desired position is different to the scroll position, scroll.
     // remember that we could be incrementally loading so we may enter
     // and scroll many times.
-    if (mRestorePos != mLastPos /* GetLogicalVisualViewportOffset() */ ||
-        mRestorePos != logicalLayoutScrollPos) {
+    if (mRestorePos != mLastPos /* GetLogicalVisualViewportOffset() */) {
       LoadingState state = GetPageLoadingState();
       if (state == LoadingState::Stopped && !NS_SUBTREE_DIRTY(mOuter)) {
         return;
