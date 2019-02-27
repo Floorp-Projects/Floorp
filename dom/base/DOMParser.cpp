@@ -203,7 +203,7 @@ already_AddRefed<Document> DOMParser::ParseFromStream(nsIInputStream* aStream,
   parserChannel->GetStatus(&status);
 
   if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(status)) {
-    rv = listener->OnDataAvailable(parserChannel, nullptr, stream, 0,
+    rv = listener->OnDataAvailable(parserChannel, stream, 0,
                                    aContentLength);
     if (NS_FAILED(rv)) parserChannel->Cancel(rv);
     parserChannel->GetStatus(&status);

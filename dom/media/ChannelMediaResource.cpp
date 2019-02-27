@@ -67,7 +67,7 @@ nsresult ChannelMediaResource::Listener::OnStopRequest(nsIRequest* aRequest,
 }
 
 nsresult ChannelMediaResource::Listener::OnDataAvailable(
-    nsIRequest* aRequest, nsISupports* aContext, nsIInputStream* aStream,
+    nsIRequest* aRequest, nsIInputStream* aStream,
     uint64_t aOffset, uint32_t aCount) {
   // This might happen off the main thread.
   RefPtr<ChannelMediaResource> res;

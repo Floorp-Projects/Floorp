@@ -545,7 +545,7 @@ nsWyciwygChannel::OnCacheEntryAvailable(nsICacheEntry *aCacheEntry, bool aNew,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsWyciwygChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctx,
+nsWyciwygChannel::OnDataAvailable(nsIRequest *request,
                                   nsIInputStream *input, uint64_t offset,
                                   uint32_t count) {
   LOG(("nsWyciwygChannel::OnDataAvailable [this=%p request=%p offset=%" PRIu64
@@ -557,7 +557,7 @@ nsWyciwygChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctx,
   nsCOMPtr<nsIStreamListener> listener = mListener;
 
   if (listener) {
-    rv = listener->OnDataAvailable(this, nullptr, input, offset, count);
+    rv = listener->OnDataAvailable(this, input, offset, count);
   } else {
     MOZ_ASSERT(false, "We must have a listener!");
     rv = NS_ERROR_UNEXPECTED;

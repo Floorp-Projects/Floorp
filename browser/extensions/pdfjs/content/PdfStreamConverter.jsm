@@ -295,8 +295,8 @@ class ChromeActions {
             sendResponse(false);
           }
         },
-        onDataAvailable(aRequest, aContext, aDataInputStream, aOffset, aCount) {
-          this.extListener.onDataAvailable(aRequest, aContext, aDataInputStream,
+        onDataAvailable(aRequest, aDataInputStream, aOffset, aCount) {
+          this.extListener.onDataAvailable(aRequest, aDataInputStream,
                                            aOffset, aCount);
         },
       };
@@ -847,7 +847,7 @@ PdfStreamConverter.prototype = {
   },
 
   // nsIStreamListener::onDataAvailable
-  onDataAvailable(aRequest, aContext, aInputStream, aOffset, aCount) {
+  onDataAvailable(aRequest, aInputStream, aOffset, aCount) {
     if (!this.dataListener) {
       return;
     }
@@ -942,8 +942,8 @@ PdfStreamConverter.prototype = {
       onStartRequest(request) {
         listener.onStartRequest(aRequest);
       },
-      onDataAvailable(request, context, inputStream, offset, count) {
-        listener.onDataAvailable(aRequest, null, inputStream,
+      onDataAvailable(request, inputStream, offset, count) {
+        listener.onDataAvailable(aRequest, inputStream,
                                  offset, count);
       },
       onStopRequest(request, statusCode) {

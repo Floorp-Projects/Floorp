@@ -944,12 +944,12 @@ nsJSChannel::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-nsJSChannel::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+nsJSChannel::OnDataAvailable(nsIRequest* aRequest,
                              nsIInputStream* aInputStream, uint64_t aOffset,
                              uint32_t aCount) {
   NS_ENSURE_TRUE(aRequest == mStreamChannel, NS_ERROR_UNEXPECTED);
 
-  return mListener->OnDataAvailable(this, aContext, aInputStream, aOffset,
+  return mListener->OnDataAvailable(this, aInputStream, aOffset,
                                     aCount);
 }
 

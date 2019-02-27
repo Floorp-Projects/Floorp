@@ -110,7 +110,7 @@ HttpResponseListener.prototype =
   onStartRequest: function (request) {
   },
 
-  onDataAvailable: function (request, ctx, stream, off, cnt) {
+  onDataAvailable: function (request, stream, off, cnt) {
   },
 
   onStopRequest: function (request, status) {

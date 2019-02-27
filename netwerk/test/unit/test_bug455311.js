@@ -73,7 +73,7 @@ RequestObserver.prototype = {
     Assert.equal(chan.originalURI.spec, this._origURI.spec);
     Assert.equal(chan.originalURI, this._origURI);
   },
-  onDataAvailable: function(req, ctx, stream, offset, count)
+  onDataAvailable: function(req, stream, offset, count)
   {
     do_throw("Unexpected call to onDataAvailable");
   },

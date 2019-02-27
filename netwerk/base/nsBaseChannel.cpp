@@ -796,13 +796,13 @@ nsBaseChannel::OnStopRequest(nsIRequest *request,
 // nsBaseChannel::nsIStreamListener
 
 NS_IMETHODIMP
-nsBaseChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
+nsBaseChannel::OnDataAvailable(nsIRequest *request,
                                nsIInputStream *stream, uint64_t offset,
                                uint32_t count) {
   SUSPEND_PUMP_FOR_SCOPE();
 
   nsresult rv =
-      mListener->OnDataAvailable(this, nullptr, stream, offset, count);
+      mListener->OnDataAvailable(this, stream, offset, count);
   if (mSynthProgressEvents && NS_SUCCEEDED(rv)) {
     int64_t prog = offset + count;
     if (NS_IsMainThread()) {

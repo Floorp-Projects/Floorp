@@ -8010,7 +8010,7 @@ class OnTransportStatusAsyncEvent : public Runnable {
 };
 
 NS_IMETHODIMP
-nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
+nsHttpChannel::OnDataAvailable(nsIRequest *request,
                                nsIInputStream *input, uint64_t offset,
                                uint32_t count) {
   nsresult rv;
@@ -8099,7 +8099,7 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
     }
 
     nsresult rv =
-        mListener->OnDataAvailable(this, nullptr, input, mLogicalOffset, count);
+        mListener->OnDataAvailable(this, input, mLogicalOffset, count);
     if (NS_SUCCEEDED(rv)) {
       // by contract mListener must read all of "count" bytes, but
       // nsInputStreamPump is tolerant to seekable streams that violate that

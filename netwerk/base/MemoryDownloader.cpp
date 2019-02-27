@@ -53,7 +53,7 @@ nsresult MemoryDownloader::ConsumeData(nsIInputStream* aIn, void* aClosure,
 }
 
 NS_IMETHODIMP
-MemoryDownloader::OnDataAvailable(nsIRequest* aRequest, nsISupports* aCtxt,
+MemoryDownloader::OnDataAvailable(nsIRequest* aRequest,
                                   nsIInputStream* aInStr,
                                   uint64_t aSourceOffset, uint32_t aCount) {
   uint32_t n;

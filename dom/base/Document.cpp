@@ -981,7 +981,6 @@ nsresult ExternalResourceMap::PendingLoad::SetupViewer(
 
 NS_IMETHODIMP
 ExternalResourceMap::PendingLoad::OnDataAvailable(nsIRequest* aRequest,
-                                                  nsISupports* aContext,
                                                   nsIInputStream* aStream,
                                                   uint64_t aOffset,
                                                   uint32_t aCount) {
@@ -990,7 +989,7 @@ ExternalResourceMap::PendingLoad::OnDataAvailable(nsIRequest* aRequest,
   if (mDisplayDocument->ExternalResourceMap().HaveShutDown()) {
     return NS_BINDING_ABORTED;
   }
-  return mTargetListener->OnDataAvailable(aRequest, aContext, aStream, aOffset,
+  return mTargetListener->OnDataAvailable(aRequest, aStream, aOffset,
                                           aCount);
 }
 

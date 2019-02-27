@@ -27,7 +27,7 @@ ExternalHelperAppChild::~ExternalHelperAppChild() {}
 // nsIStreamListener
 //-----------------------------------------------------------------------------
 NS_IMETHODIMP
-ExternalHelperAppChild::OnDataAvailable(nsIRequest *request, nsISupports *ctx,
+ExternalHelperAppChild::OnDataAvailable(nsIRequest *request,
                                         nsIInputStream *input, uint64_t offset,
                                         uint32_t count) {
   if (NS_FAILED(mStatus)) return mStatus;

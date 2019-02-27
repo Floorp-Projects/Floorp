@@ -646,7 +646,7 @@ var CommonUtils = {
     let converter = this._converterService.asyncConvertData(source, dest,
                                                             listener, null);
     converter.onStartRequest(null, null);
-    converter.onDataAvailable(null, null, is, 0, s.length);
+    converter.onDataAvailable(null, is, 0, s.length);
     converter.onStopRequest(null, null, null);
 
     return result;
