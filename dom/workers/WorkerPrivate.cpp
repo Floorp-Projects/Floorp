@@ -2572,15 +2572,9 @@ void WorkerPrivate::DoRunLoop(JSContext* aCx) {
     {
       MutexAutoLock lock(mMutex);
 
-      // Wait for a runnable to arrive that we can execute, or for it to be okay
-      // to shutdown this worker once all holders have been removed.
-      // Holders may be removed from inside normal runnables, but we don't check
-      // for that after processing normal runnables, so we need to let control
-      // flow to the shutdown logic without blocking.
       while (mControlQueue.IsEmpty() &&
              !(debuggerRunnablesPending = !mDebuggerQueue.IsEmpty()) &&
-             !(normalRunnablesPending = NS_HasPendingEvents(mThread)) &&
-             !(mStatus != Running && !HasActiveHolders())) {
+             !(normalRunnablesPending = NS_HasPendingEvents(mThread))) {
         WaitForWorkerEvents();
       }
 
