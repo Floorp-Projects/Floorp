@@ -474,8 +474,7 @@ class JarWriter(object):
     archives as well as jar archives optimized for Gecko. See the documentation
     for the close() member function for a description of both layouts.
     '''
-    def __init__(self, file=None, fileobj=None, compress=True, optimize=True,
-                 compress_level=9):
+    def __init__(self, file=None, fileobj=None, compress=True, compress_level=9):
         '''
         Initialize a Jar archive in the given file. Use the given file-like
         object if one is given instead of opening the given file name.
@@ -495,7 +494,6 @@ class JarWriter(object):
         self._compress_level = compress_level
         self._contents = OrderedDict()
         self._last_preloaded = None
-        self._optimize = optimize
 
     def __enter__(self):
         '''
@@ -565,11 +563,10 @@ class JarWriter(object):
                                   self._contents.values(), 0)
         # On optimized archives, store the preloaded size and the central
         # directory entries, followed by the first end of central directory.
-        if self._optimize:
+        if preload_size:
             end['cdir_offset'] = 4
             offset = end['cdir_size'] + end['cdir_offset'] + end.size
-            if preload_size:
-                preload_size += offset
+            preload_size += offset
             self._data.write(struct.pack('<I', preload_size))
             for entry, _ in self._contents.itervalues():
                 entry['offset'] += offset
@@ -580,7 +577,7 @@ class JarWriter(object):
             self._data.write(headers[entry].serialize())
             self._data.write(content)
         # On non optimized archives, store the central directory entries.
-        if not self._optimize:
+        if not preload_size:
             end['cdir_offset'] = offset
             for entry, _ in self._contents.itervalues():
                 self._data.write(entry.serialize())
