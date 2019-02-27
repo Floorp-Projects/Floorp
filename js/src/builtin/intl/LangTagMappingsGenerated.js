@@ -2,7 +2,7 @@
 
 /* eslint-disable complexity */
 // Mappings from complete tags to preferred values.
-// Derived from IANA Language Subtag Registry, file date 2018-03-30.
+// Derived from IANA Language Subtag Registry, file date 2019-02-20.
 // https://www.iana.org/assignments/language-subtag-registry
 function updateLangTagMappings(tag) {
     assert(IsObject(tag), "tag is an object");
@@ -313,7 +313,7 @@ function updateLangTagMappings(tag) {
 /* eslint-enable complexity */
 
 // Mappings from grandfathered tags to preferred values.
-// Derived from IANA Language Subtag Registry, file date 2018-03-30.
+// Derived from IANA Language Subtag Registry, file date 2019-02-20.
 // https://www.iana.org/assignments/language-subtag-registry
 var grandfatheredMappings = {
     "art-lojban": "jbo",
@@ -345,7 +345,7 @@ var grandfatheredMappings = {
 };
 
 // Mappings from language subtags to preferred values.
-// Derived from IANA Language Subtag Registry, file date 2018-03-30.
+// Derived from IANA Language Subtag Registry, file date 2019-02-20.
 // https://www.iana.org/assignments/language-subtag-registry
 var languageMappings = {
     "aam": "aas",
@@ -429,7 +429,7 @@ var languageMappings = {
 };
 
 // Mappings from region subtags to preferred values.
-// Derived from IANA Language Subtag Registry, file date 2018-03-30.
+// Derived from IANA Language Subtag Registry, file date 2019-02-20.
 // https://www.iana.org/assignments/language-subtag-registry
 var regionMappings = {
     "BU": "MM",
@@ -444,7 +444,7 @@ var regionMappings = {
 // All current deprecated extlang subtags have the form `<prefix>-<extlang>`
 // and their preferred value is exactly equal to `<extlang>`. So each key in
 // extlangMappings acts both as the extlang subtag and its preferred value.
-// Derived from IANA Language Subtag Registry, file date 2018-03-30.
+// Derived from IANA Language Subtag Registry, file date 2019-02-20.
 // https://www.iana.org/assignments/language-subtag-registry
 var extlangMappings = {
     "aao": "ar",
@@ -570,6 +570,7 @@ var extlangMappings = {
     "lcf": "ms",
     "liw": "ms",
     "lls": "sgn",
+    "lsg": "sgn",
     "lsl": "sgn",
     "lso": "sgn",
     "lsp": "sgn",
@@ -623,6 +624,7 @@ var extlangMappings = {
     "psr": "sgn",
     "pys": "sgn",
     "rms": "sgn",
+    "rsi": "sgn",
     "rsl": "sgn",
     "rsm": "sgn",
     "sdl": "sgn",
@@ -670,6 +672,7 @@ var extlangMappings = {
     "xml": "sgn",
     "xmm": "ms",
     "xms": "sgn",
+    "yds": "sgn",
     "ygs": "sgn",
     "yhs": "sgn",
     "ysl": "sgn",
