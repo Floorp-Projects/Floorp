@@ -18,15 +18,23 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 
 class RemoteAgentError extends Error {
-  constructor(...args) {
-    super(...args);
+  constructor(message = "", cause = undefined) {
+    super(cause);
+
     this.name = this.constructor.name;
+    this.message = message;
+    this.cause = cause;
+
     this.notify();
   }
 
   notify() {
     Cu.reportError(this);
-    log.error(formatError(this), this);
+    log.error(formatError(this));
+  }
+
+  format() {
+    return formatError(this);
   }
 }
 
@@ -34,7 +42,7 @@ class RemoteAgentError extends Error {
  * A fatal error that it is not possible to recover from
  * or send back to the client.
  *
- * Constructing this error will cause the application to quit.
+ * Constructing this error will force the application to quit.
  */
 class FatalError extends RemoteAgentError {
   constructor(...args) {
@@ -43,7 +51,11 @@ class FatalError extends RemoteAgentError {
   }
 
   notify() {
-    log.fatal(formatError(this, {stack: true}));
+    log.fatal(this.format());
+  }
+
+  format() {
+    return formatError(this, {stack: true});
   }
 
   quit(mode = Ci.nsIAppStartup.eForceQuit) {
@@ -51,18 +63,25 @@ class FatalError extends RemoteAgentError {
   }
 }
 
+/** When an operation is not yet implemented. */
 class UnsupportedError extends RemoteAgentError {}
 
+/** The requested remote method does not exist. */
 class UnknownMethodError extends RemoteAgentError {}
 
 function formatError(error, {stack = false} = {}) {
-  const s = [];
-  s.push(`${error.name}: ${error.message}`);
-  s.push("");
-  if (stack) {
-    s.push("Stacktrace:");
-  }
-  s.push(error.stack);
+  const ls = [];
 
-  return s.join("\n");
+  ls.push(`${error.name}: ${error.message ? `${error.message}:` : ""}`);
+
+  if (stack) {
+    const stack = error.stack.trim().split("\n");
+    ls.push(stack.map(line => `\t${line}`).join("\n"));
+
+    if (error.cause) {
+      ls.push("caused by: " + formatError(error.cause, {stack}));
+    }
+  }
+
+  return ls.join("\n");
 }
