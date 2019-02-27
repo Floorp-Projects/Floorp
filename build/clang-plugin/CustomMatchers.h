@@ -246,8 +246,10 @@ AST_MATCHER(CallExpr, isSnprintfLikeFunc) {
     return false;
   }
 
-  return !isIgnoredPathForSprintfLiteral(
-      &Node, Finder->getASTContext().getSourceManager());
+  return !inThirdPartyPath(Node.getBeginLoc(),
+                           Finder->getASTContext().getSourceManager()) &&
+         !isIgnoredPathForSprintfLiteral(
+             &Node, Finder->getASTContext().getSourceManager());
 }
 
 AST_MATCHER(CXXRecordDecl, isLambdaDecl) { return Node.isLambda(); }
