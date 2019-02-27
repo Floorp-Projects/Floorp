@@ -30,7 +30,7 @@
 
 const {EnableDelayHelper} = ChromeUtils.import("resource://gre/modules/SharedPromptUtils.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
+const {PrivateBrowsingUtils} = ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 var dialog = {
   // Member Variables
@@ -51,8 +51,26 @@ var dialog = {
     this._handlerInfo = window.arguments[7].QueryInterface(Ci.nsIHandlerInfo);
     this._URI         = window.arguments[8].QueryInterface(Ci.nsIURI);
     this._windowCtxt  = window.arguments[9];
-    if (this._windowCtxt)
+    let usePrivateBrowsing = false;
+    if (this._windowCtxt) {
+      // The context should be nsIRemoteWindowContext in OOP, or nsIDOMWindow otherwise.
+      try {
+        usePrivateBrowsing = this._windowCtxt.getInterface(Ci.nsIRemoteWindowContext)
+                                             .usePrivateBrowsing;
+      } catch (e) {
+        try {
+          let opener = this._windowCtxt.getInterface(Ci.nsIDOMWindow);
+          usePrivateBrowsing = PrivateBrowsingUtils.isContentWindowPrivate(opener);
+        } catch (e) {
+          Cu.reportError(`No interface to determine privateness: ${e}`);
+        }
+      }
       this._windowCtxt.QueryInterface(Ci.nsIInterfaceRequestor);
+    }
+
+    this.isPrivate = usePrivateBrowsing ||
+                     (window.opener && PrivateBrowsingUtils.isWindowPrivate(window.opener));
+
     this._itemChoose  = document.getElementById("item-choose");
     this._okButton    = document.documentElement.getButton("accept");
 
@@ -125,6 +143,21 @@ var dialog = {
           elm.setAttribute("image", uri.prePath + "/favicon.ico");
         }
         elm.setAttribute("description", uri.prePath);
+
+        // Check for extensions needing private browsing access before
+        // creating UI elements.
+        if (this.isPrivate) {
+          let policy = WebExtensionPolicy.getByURI(uri);
+          if (policy && !policy.privateBrowsingAllowed) {
+            var bundle = document.getElementById("base-strings");
+            var disabledLabel = bundle.getString("privatebrowsing.disabled.label");
+            elm.setAttribute("disabled", true);
+            elm.setAttribute("description", disabledLabel);
+            if (app == preferredHandler) {
+              preferredHandler = null;
+            }
+          }
+        }
       } else if (app instanceof Ci.nsIDBusHandlerApp) {
         elm.setAttribute("description", app.method);
       } else if (!(app instanceof Ci.nsIGIOMimeApp)) {
