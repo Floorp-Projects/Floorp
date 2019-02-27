@@ -1106,8 +1106,13 @@ void TrackBuffersManager::OnDemuxerInitDone(const MediaResult& aResult) {
   // logical init data. If this case is encountered in the wild then these
   // checks could be revised to compare MediaInfo rather than init segment
   // bytes.
+  // For audio only source buffer we can check that only the AudioInfo has
+  // changed.
   bool isRepeatInitData =
-      mInitData && *(mInitData.get()) == *(mParser->InitData());
+      !mChangeTypeReceived && mInitData &&
+      ((*mInitData.get() == *mParser->InitData()) ||
+       (numVideos == 0 && numAudios > 0 && mAudioTracks.mLastInfo &&
+        *mAudioTracks.mLastInfo->GetAsAudioInfo() == info.mAudio));
 
   MOZ_ASSERT(mFirstInitializationSegmentReceived || !isRepeatInitData,
              "Should never detect repeat init data for first segment!");
