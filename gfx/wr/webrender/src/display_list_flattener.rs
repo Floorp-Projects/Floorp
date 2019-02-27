@@ -631,6 +631,7 @@ impl<'a> DisplayListFlattener<'a> {
             &content_size,
             info.scroll_sensitivity,
             ScrollFrameKind::Explicit,
+            info.external_scroll_offset,
         );
     }
 
@@ -786,6 +787,7 @@ impl<'a> DisplayListFlattener<'a> {
             &pipeline.content_size,
             ScrollSensitivity::ScriptAndInputEvents,
             ScrollFrameKind::PipelineRoot,
+            LayoutVector2D::zero(),
         );
 
         self.rf_mapper.push_scope();
@@ -1803,6 +1805,7 @@ impl<'a> DisplayListFlattener<'a> {
             content_size,
             ScrollSensitivity::ScriptAndInputEvents,
             ScrollFrameKind::PipelineRoot,
+            LayoutVector2D::zero(),
         );
     }
 
@@ -1900,6 +1903,7 @@ impl<'a> DisplayListFlattener<'a> {
         content_size: &LayoutSize,
         scroll_sensitivity: ScrollSensitivity,
         frame_kind: ScrollFrameKind,
+        external_scroll_offset: LayoutVector2D,
     ) -> SpatialNodeIndex {
         let node_index = self.clip_scroll_tree.add_scroll_frame(
             parent_node_index,
@@ -1909,6 +1913,7 @@ impl<'a> DisplayListFlattener<'a> {
             content_size,
             scroll_sensitivity,
             frame_kind,
+            external_scroll_offset,
         );
         self.id_to_index_mapper.map_spatial_node(new_node_id, node_index);
         node_index
