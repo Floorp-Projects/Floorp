@@ -1168,9 +1168,22 @@ void Document::SelectorCache::NotifyExpired(SelectorCacheKey* aSelector) {
   delete aSelector;
 }
 
-Document::FrameRequest::FrameRequest(FrameRequestCallback& aCallback,
-                                     int32_t aHandle)
-    : mCallback(&aCallback), mHandle(aHandle) {}
+struct Document::FrameRequest {
+  FrameRequest(FrameRequestCallback& aCallback, int32_t aHandle)
+      : mCallback(&aCallback), mHandle(aHandle) {}
+
+  // Conversion operator so that we can append these to a
+  // FrameRequestCallbackList
+  operator const RefPtr<FrameRequestCallback>&() const { return mCallback; }
+
+  // Comparator operators to allow RemoveElementSorted with an
+  // integer argument on arrays of FrameRequest
+  bool operator==(int32_t aHandle) const { return mHandle == aHandle; }
+  bool operator<(int32_t aHandle) const { return mHandle < aHandle; }
+
+  RefPtr<FrameRequestCallback> mCallback;
+  int32_t mHandle;
+};
 
 // ==================================================================
 // =
@@ -3660,10 +3673,9 @@ void Document::UpdateFrameRequestCallbackSchedulingState(
   mFrameRequestCallbacksScheduled = shouldBeScheduled;
 }
 
-void Document::TakeFrameRequestCallbacks(nsTArray<FrameRequest>& aCallbacks) {
-  MOZ_ASSERT(aCallbacks.IsEmpty());
-  aCallbacks.SwapElements(mFrameRequestCallbacks);
-  mCanceledFrameRequestCallbacks.clear();
+void Document::TakeFrameRequestCallbacks(FrameRequestCallbackList& aCallbacks) {
+  aCallbacks.AppendElements(mFrameRequestCallbacks);
+  mFrameRequestCallbacks.Clear();
   // No need to manually remove ourselves from the refresh driver; it will
   // handle that part.  But we do have to update our state.
   mFrameRequestCallbacksScheduled = false;
@@ -8975,14 +8987,7 @@ void Document::CancelFrameRequestCallback(int32_t aHandle) {
   // mFrameRequestCallbacks is stored sorted by handle
   if (mFrameRequestCallbacks.RemoveElementSorted(aHandle)) {
     UpdateFrameRequestCallbackSchedulingState();
-  } else {
-    Unused << mCanceledFrameRequestCallbacks.put(aHandle);
   }
-}
-
-bool Document::IsCanceledFrameRequestCallback(int32_t aHandle) const {
-  return !mCanceledFrameRequestCallbacks.empty() &&
-         mCanceledFrameRequestCallbacks.has(aHandle);
 }
 
 nsresult Document::GetStateObject(nsIVariant** aState) {
