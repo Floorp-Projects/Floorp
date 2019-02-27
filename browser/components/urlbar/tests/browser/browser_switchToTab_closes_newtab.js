@@ -2,52 +2,46 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-add_task(async function listener() {
-  let testURL = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
-  let tabSelected = false;
+/**
+ * This tests that switch to tab from a blank tab switches and then closes
+ * the blank tab.
+ */
+
+"use strict";
+
+add_task(async function test_switchToTab_closes() {
+  let testURL = "http://example.org/browser/browser/components/urlbar/tests/browser/dummy_page.html";
 
   // Open the base tab
-  let baseTab = BrowserTestUtils.addTab(gBrowser, testURL);
+  let baseTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, testURL);
 
-  // Wait for the tab to be fully loaded so matching happens correctly
-  await promiseTabLoaded(baseTab);
   if (baseTab.linkedBrowser.currentURI.spec == "about:blank")
     return;
-  baseTab.linkedBrowser.removeEventListener("load", listener, true);
 
-  let testTab = BrowserTestUtils.addTab(gBrowser);
-
-  // Select the testTab
-  gBrowser.selectedTab = testTab;
-
-  // Set the urlbar to include the moz-action
-  gURLBar.value = "moz-action:switchtab," + JSON.stringify({url: testURL});
-  // Focus the urlbar so we can press enter
-  gURLBar.focus();
+  // Open a blank tab to start the test from.
+  let testTab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
   // Functions for TabClose and TabSelect
-  function onTabClose(aEvent) {
-    gBrowser.tabContainer.removeEventListener("TabClose", onTabClose);
-    // Make sure we get the TabClose event for testTab
-    is(aEvent.originalTarget, testTab, "Got the TabClose event for the right tab");
-    // Confirm that we did select the tab
-    ok(tabSelected, "Confirming that the tab was selected");
-    gBrowser.removeTab(baseTab);
-    finish();
-  }
-  function onTabSelect(aEvent) {
-    gBrowser.tabContainer.removeEventListener("TabSelect", onTabSelect);
-    // Make sure we got the TabSelect event for baseTab
-    is(aEvent.originalTarget, baseTab, "Got the TabSelect event for the right tab");
-    // Confirm that the selected tab is in fact base tab
-    is(gBrowser.selectedTab, baseTab, "We've switched to the correct tab");
-    tabSelected = true;
-  }
+  let tabClosePromise = BrowserTestUtils.waitForEvent(gBrowser.tabContainer,
+    "TabClose", false, event => {
+      return event.originalTarget == testTab;
+    });
+  let tabSelectPromise = BrowserTestUtils.waitForEvent(gBrowser.tabContainer,
+    "TabSelect", false, event => {
+      return event.originalTarget == baseTab;
+    });
 
-  // Add the TabClose, TabSelect event listeners before we press enter
-  gBrowser.tabContainer.addEventListener("TabClose", onTabClose);
-  gBrowser.tabContainer.addEventListener("TabSelect", onTabSelect);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup(window, "dummy", waitForFocus);
 
-  // Press enter!
-  EventUtils.synthesizeKey("KEY_Enter");
+  // The first result is the heuristic, the second will be the switch to tab.
+  let element = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1);
+  EventUtils.synthesizeMouseAtCenter(element, {}, window);
+
+  await Promise.all([tabSelectPromise, tabClosePromise]);
+
+  // Confirm that the selected tab is now the base tab
+  Assert.equal(gBrowser.selectedTab, baseTab,
+    "Should have switched to the correct tab");
+
+  gBrowser.removeTab(baseTab);
 });
