@@ -5,8 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsDBusRemoteService.h"
-#include "nsRemoteService.h"
+#include "nsDBusRemoteServer.h"
 
 #include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
@@ -28,8 +27,6 @@
 
 #include <dlfcn.h>
 
-NS_IMPL_ISUPPORTS(nsDBusRemoteService, nsIRemoteService)
-
 const char *introspect_template =
     "<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection "
     "1.0//EN\"\n"
@@ -47,7 +44,7 @@ const char *introspect_template =
     " </interface>\n"
     "</node>\n";
 
-DBusHandlerResult nsDBusRemoteService::Introspect(DBusMessage *msg) {
+DBusHandlerResult nsDBusRemoteServer::Introspect(DBusMessage *msg) {
   DBusMessage *reply;
 
   reply = dbus_message_new_method_return(msg);
@@ -66,7 +63,7 @@ DBusHandlerResult nsDBusRemoteService::Introspect(DBusMessage *msg) {
   return DBUS_HANDLER_RESULT_HANDLED;
 }
 
-DBusHandlerResult nsDBusRemoteService::OpenURL(DBusMessage *msg) {
+DBusHandlerResult nsDBusRemoteServer::OpenURL(DBusMessage *msg) {
   DBusMessage *reply = nullptr;
   const char *commandLine;
   int length;
@@ -82,7 +79,7 @@ DBusHandlerResult nsDBusRemoteService::OpenURL(DBusMessage *msg) {
     if (timestamp == GDK_CURRENT_TIME) {
       timestamp = guint32(g_get_monotonic_time() / 1000);
     }
-    nsRemoteService::HandleCommandLine(commandLine, timestamp);
+    HandleCommandLine(commandLine, timestamp);
     reply = dbus_message_new_method_return(msg);
   }
 
@@ -92,7 +89,7 @@ DBusHandlerResult nsDBusRemoteService::OpenURL(DBusMessage *msg) {
   return DBUS_HANDLER_RESULT_HANDLED;
 }
 
-DBusHandlerResult nsDBusRemoteService::HandleDBusMessage(
+DBusHandlerResult nsDBusRemoteServer::HandleDBusMessage(
     DBusConnection *aConnection, DBusMessage *msg) {
   NS_ASSERTION(mConnection == aConnection, "Wrong D-Bus connection.");
 
@@ -115,19 +112,19 @@ DBusHandlerResult nsDBusRemoteService::HandleDBusMessage(
   return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 }
 
-void nsDBusRemoteService::UnregisterDBusInterface(DBusConnection *aConnection) {
+void nsDBusRemoteServer::UnregisterDBusInterface(DBusConnection *aConnection) {
   NS_ASSERTION(mConnection == aConnection, "Wrong D-Bus connection.");
   // Not implemented
 }
 
 static DBusHandlerResult message_handler(DBusConnection *conn, DBusMessage *msg,
                                          void *user_data) {
-  auto interface = static_cast<nsDBusRemoteService *>(user_data);
+  auto interface = static_cast<nsDBusRemoteServer *>(user_data);
   return interface->HandleDBusMessage(conn, msg);
 }
 
 static void unregister(DBusConnection *conn, void *user_data) {
-  auto interface = static_cast<nsDBusRemoteService *>(user_data);
+  auto interface = static_cast<nsDBusRemoteServer *>(user_data);
   interface->UnregisterDBusInterface(conn);
 }
 
@@ -136,8 +133,8 @@ static DBusObjectPathVTable remoteHandlersTable = {
     .message_function = message_handler,
 };
 
-NS_IMETHODIMP
-nsDBusRemoteService::Startup(const char *aAppName, const char *aProfileName) {
+nsresult nsDBusRemoteServer::Startup(const char *aAppName,
+                                     const char *aProfileName) {
   if (mConnection && dbus_connection_get_is_connected(mConnection)) {
     // We're already connected so we don't need to reconnect
     return NS_ERROR_ALREADY_INITIALIZED;
@@ -210,11 +207,13 @@ nsDBusRemoteService::Startup(const char *aAppName, const char *aProfileName) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDBusRemoteService::Shutdown() {
+void nsDBusRemoteServer::Shutdown() {
+  if (!mConnection) {
+    return;
+  }
+
   dbus_connection_unregister_object_path(mConnection, mPathName.get());
 
   // dbus_connection_unref() will be called by RefPtr here.
   mConnection = nullptr;
-  return NS_OK;
 }
