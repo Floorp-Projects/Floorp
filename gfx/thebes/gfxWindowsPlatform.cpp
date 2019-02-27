@@ -424,6 +424,13 @@ void gfxWindowsPlatform::InitAcceleration() {
   DeviceManagerDx::Init();
 
   InitializeConfig();
+  // Ensure devices initialization. SharedSurfaceANGLE and
+  // SharedSurfaceD3D11Interop use them. The devices are lazily initialized
+  // with WebRender to reduce memory usage.
+  // Initialize them now when running non-e10s.
+  if (!BrowserTabsRemoteAutostart()) {
+    EnsureDevicesInitialized();
+  }
   UpdateANGLEConfig();
   UpdateRenderMode();
 
