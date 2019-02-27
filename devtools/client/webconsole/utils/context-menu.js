@@ -117,7 +117,7 @@ function createContextMenu(webConsoleUI, parentNode, {
 
       webConsoleUI.jsterm.requestEvaluation(evalString, options).then((res) => {
         webConsoleUI.jsterm.focus();
-        webConsoleUI.jsterm.setInputValue(res.result);
+        webConsoleUI.hud.setInputValue(res.result);
       });
     },
   }));

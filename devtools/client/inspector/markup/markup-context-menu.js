@@ -324,8 +324,7 @@ class MarkupContextMenu {
    */
   _useInConsole() {
     this.toolbox.openSplitConsole().then(() => {
-      const panel = this.toolbox.getPanel("webconsole");
-      const jsterm = panel.hud.jsterm;
+      const {hud} = this.toolbox.getPanel("webconsole");
 
       const evalString = `{ let i = 0;
         while (window.hasOwnProperty("temp" + i) && i < 1000) {
@@ -338,8 +337,8 @@ class MarkupContextMenu {
       const options = {
         selectedNodeActor: this.selection.nodeFront.actorID,
       };
-      jsterm.requestEvaluation(evalString, options).then((res) => {
-        jsterm.setInputValue(res.result);
+      hud.jsterm.requestEvaluation(evalString, options).then((res) => {
+        hud.setInputValue(res.result);
         this.inspector.emit("console-var-ready");
       });
     });
