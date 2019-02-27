@@ -1040,8 +1040,7 @@ class BeaconStreamListener final : public nsIStreamListener {
 NS_IMPL_ISUPPORTS(BeaconStreamListener, nsIStreamListener, nsIRequestObserver)
 
 NS_IMETHODIMP
-BeaconStreamListener::OnStartRequest(nsIRequest* aRequest,
-                                     nsISupports* aContext) {
+BeaconStreamListener::OnStartRequest(nsIRequest* aRequest) {
   // release the loadgroup first
   mLoadGroup = nullptr;
 

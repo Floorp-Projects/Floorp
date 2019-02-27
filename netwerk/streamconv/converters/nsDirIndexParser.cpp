@@ -87,7 +87,7 @@ nsDirIndexParser::GetEncoding(char **aEncoding) {
 }
 
 NS_IMETHODIMP
-nsDirIndexParser::OnStartRequest(nsIRequest *aRequest, nsISupports *aCtxt) {
+nsDirIndexParser::OnStartRequest(nsIRequest *aRequest) {
   return NS_OK;
 }
 

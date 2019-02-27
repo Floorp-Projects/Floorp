@@ -1672,7 +1672,7 @@ PendingLookup::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
 }
 
 NS_IMETHODIMP
-PendingLookup::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
+PendingLookup::OnStartRequest(nsIRequest* aRequest) {
   return NS_OK;
 }
 

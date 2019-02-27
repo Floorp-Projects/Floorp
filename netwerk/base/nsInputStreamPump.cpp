@@ -484,7 +484,7 @@ uint32_t nsInputStreamPump::OnStateStart() {
     // deadlocks when calls to RetargetDeliveryTo for multiple
     // nsInputStreamPumps are needed (e.g. nsHttpChannel).
     RecursiveMutexAutoUnlock unlock(mMutex);
-    rv = mListener->OnStartRequest(this, nullptr);
+    rv = mListener->OnStartRequest(this);
   }
 
   // an error returned from OnStartRequest should cause us to abort; however,

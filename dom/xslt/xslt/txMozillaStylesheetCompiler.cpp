@@ -221,7 +221,7 @@ txStylesheetSink::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
 }
 
 NS_IMETHODIMP
-txStylesheetSink::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
+txStylesheetSink::OnStartRequest(nsIRequest* aRequest) {
   int32_t charsetSource = kCharsetFromDocTypeDefault;
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
@@ -265,7 +265,7 @@ txStylesheetSink::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
     }
   }
 
-  return mListener->OnStartRequest(aRequest, mParser);
+  return mListener->OnStartRequest(aRequest);
 }
 
 NS_IMETHODIMP

@@ -251,8 +251,7 @@ NetworkConnectivityService::RecheckIPConnectivity() {
 }
 
 NS_IMETHODIMP
-NetworkConnectivityService::OnStartRequest(nsIRequest *aRequest,
-                                           nsISupports *aContext) {
+NetworkConnectivityService::OnStartRequest(nsIRequest *aRequest) {
   return NS_OK;
 }
 

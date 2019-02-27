@@ -165,7 +165,7 @@ class LoaderListener final : public nsIStreamListener,
   }
 
   NS_IMETHOD
-  OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) override {
+  OnStartRequest(nsIRequest* aRequest) override {
     MOZ_ASSERT(!mStream);
 
     nsresult status;

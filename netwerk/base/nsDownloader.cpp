@@ -36,7 +36,7 @@ nsDownloader::Init(nsIDownloadObserver *observer, nsIFile *location) {
 }
 
 NS_IMETHODIMP
-nsDownloader::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
+nsDownloader::OnStartRequest(nsIRequest *request) {
   nsresult rv;
   if (!mLocation) {
     nsCOMPtr<nsIFile> location;

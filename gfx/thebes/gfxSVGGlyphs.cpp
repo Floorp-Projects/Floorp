@@ -363,7 +363,7 @@ nsresult gfxSVGGlyphsDocument::ParseDocument(const uint8_t *aBuffer,
     return NS_ERROR_FAILURE;
   }
 
-  rv = listener->OnStartRequest(channel, nullptr /* aContext */);
+  rv = listener->OnStartRequest(channel);
   if (NS_FAILED(rv)) {
     channel->Cancel(rv);
   }

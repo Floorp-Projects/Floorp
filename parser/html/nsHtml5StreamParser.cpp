@@ -886,8 +886,7 @@ class MaybeRunCollector : public Runnable {
   nsCOMPtr<nsIDocShell> mDocShell;
 };
 
-nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest,
-                                             nsISupports* aContext) {
+nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
   MOZ_RELEASE_ASSERT(STREAM_NOT_STARTED == mStreamState,
                      "Got OnStartRequest when the stream had already started.");
   MOZ_ASSERT(
@@ -895,7 +894,7 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest,
       "Got OnStartRequest at the wrong stage in the executor life cycle.");
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   if (mObserver) {
-    mObserver->OnStartRequest(aRequest, aContext);
+    mObserver->OnStartRequest(aRequest);
   }
   mRequest = aRequest;
 

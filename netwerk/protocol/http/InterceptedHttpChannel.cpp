@@ -1008,8 +1008,7 @@ InterceptedHttpChannel::OnRedirectVerifyCallback(nsresult rv) {
 }
 
 NS_IMETHODIMP
-InterceptedHttpChannel::OnStartRequest(nsIRequest* aRequest,
-                                       nsISupports* aContext) {
+InterceptedHttpChannel::OnStartRequest(nsIRequest* aRequest) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mProgressSink) {
@@ -1021,7 +1020,7 @@ InterceptedHttpChannel::OnStartRequest(nsIRequest* aRequest,
   }
 
   if (mListener) {
-    mListener->OnStartRequest(this, nullptr);
+    mListener->OnStartRequest(this);
   }
   return NS_OK;
 }

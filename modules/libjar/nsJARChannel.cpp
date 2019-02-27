@@ -530,7 +530,7 @@ void nsJARChannel::NotifyError(nsresult aError) {
 
   mStatus = aError;
 
-  OnStartRequest(nullptr, nullptr);
+  OnStartRequest(nullptr);
   OnStopRequest(nullptr, nullptr, aError);
 }
 
@@ -984,11 +984,11 @@ nsJARChannel::GetZipEntry(nsIZipEntry **aZipEntry) {
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsJARChannel::OnStartRequest(nsIRequest *req, nsISupports *ctx) {
+nsJARChannel::OnStartRequest(nsIRequest *req) {
   LOG(("nsJARChannel::OnStartRequest [this=%p %s]\n", this, mSpec.get()));
 
   mRequest = req;
-  nsresult rv = mListener->OnStartRequest(this, nullptr);
+  nsresult rv = mListener->OnStartRequest(this);
   mRequest = nullptr;
   NS_ENSURE_SUCCESS(rv, rv);
 

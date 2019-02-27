@@ -105,8 +105,7 @@ nsresult nsPluginStreamListenerPeer::Initialize(
 }
 
 NS_IMETHODIMP
-nsPluginStreamListenerPeer::OnStartRequest(nsIRequest* request,
-                                           nsISupports* aContext) {
+nsPluginStreamListenerPeer::OnStartRequest(nsIRequest* request) {
   nsresult rv = NS_OK;
   AUTO_PROFILER_LABEL("nsPluginStreamListenerPeer::OnStartRequest", OTHER);
 

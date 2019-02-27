@@ -185,7 +185,7 @@ void WyciwygChannelChild::OnStartRequest(const nsresult& statusCode,
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
 
-  rv = mListener->OnStartRequest(this, nullptr);
+  rv = mListener->OnStartRequest(this);
   if (NS_FAILED(rv)) Cancel(rv);
 }
 
@@ -320,7 +320,7 @@ void WyciwygChannelChild::CancelEarly(const nsresult& statusCode) {
   if (mLoadGroup) mLoadGroup->RemoveRequest(this, nullptr, mStatus);
 
   if (mListener) {
-    mListener->OnStartRequest(this, nullptr);
+    mListener->OnStartRequest(this);
     mListener->OnStopRequest(this, nullptr, mStatus);
   }
   mListener = nullptr;

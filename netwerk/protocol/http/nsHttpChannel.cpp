@@ -1630,7 +1630,7 @@ nsresult nsHttpChannel::CallOnStartRequest() {
 
     if (mListener) {
       nsCOMPtr<nsIStreamListener> deleteProtector(mListener);
-      deleteProtector->OnStartRequest(this, nullptr);
+      deleteProtector->OnStartRequest(this);
     }
 
     mOnStartRequestCalled = true;
@@ -1702,7 +1702,7 @@ nsresult nsHttpChannel::CallOnStartRequest() {
     MOZ_ASSERT(!mOnStartRequestCalled,
                "We should not call OsStartRequest twice");
     nsCOMPtr<nsIStreamListener> deleteProtector(mListener);
-    rv = deleteProtector->OnStartRequest(this, nullptr);
+    rv = deleteProtector->OnStartRequest(this);
     mOnStartRequestCalled = true;
     if (NS_FAILED(rv)) return rv;
   } else {
@@ -7311,7 +7311,7 @@ nsHttpChannel::HasCrossOriginOpenerPolicyMismatch(bool *aMismatch) {
 }
 
 NS_IMETHODIMP
-nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
+nsHttpChannel::OnStartRequest(nsIRequest *request) {
   nsresult rv;
 
   MOZ_ASSERT(mRequestObserversCalled);
@@ -7740,7 +7740,7 @@ nsresult nsHttpChannel::ContinueOnStopRequestAfterAuthRetry(
     if (mListener) {
       MOZ_ASSERT(!mOnStartRequestCalled,
                  "We should not call OnStartRequest twice.");
-      mListener->OnStartRequest(this, nullptr);
+      mListener->OnStartRequest(this);
       mOnStartRequestCalled = true;
     } else {
       NS_WARNING("OnStartRequest skipped because of null listener");

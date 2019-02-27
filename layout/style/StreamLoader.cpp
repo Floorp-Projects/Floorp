@@ -25,7 +25,7 @@ NS_IMPL_ISUPPORTS(StreamLoader, nsIStreamListener)
 
 /* nsIRequestObserver implementation */
 NS_IMETHODIMP
-StreamLoader::OnStartRequest(nsIRequest* aRequest, nsISupports*) {
+StreamLoader::OnStartRequest(nsIRequest* aRequest) {
   // It's kinda bad to let Web content send a number that results
   // in a potentially large allocation directly, but efficiency of
   // compression bombs is so great that it doesn't make much sense

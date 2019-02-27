@@ -1612,8 +1612,7 @@ CSPViolationReportListener::OnStopRequest(nsIRequest* aRequest,
 }
 
 NS_IMETHODIMP
-CSPViolationReportListener::OnStartRequest(nsIRequest* aRequest,
-                                           nsISupports* aContext) {
+CSPViolationReportListener::OnStartRequest(nsIRequest* aRequest) {
   return NS_OK;
 }
 

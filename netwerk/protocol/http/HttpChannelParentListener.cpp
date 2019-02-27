@@ -71,15 +71,14 @@ NS_INTERFACE_MAP_END
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-HttpChannelParentListener::OnStartRequest(nsIRequest* aRequest,
-                                          nsISupports* aContext) {
+HttpChannelParentListener::OnStartRequest(nsIRequest* aRequest) {
   MOZ_RELEASE_ASSERT(!mSuspendedForDiversion,
                      "Cannot call OnStartRequest if suspended for diversion!");
 
   if (!mNextListener) return NS_ERROR_UNEXPECTED;
 
   LOG(("HttpChannelParentListener::OnStartRequest [this=%p]\n", this));
-  return mNextListener->OnStartRequest(aRequest, aContext);
+  return mNextListener->OnStartRequest(aRequest);
 }
 
 NS_IMETHODIMP
