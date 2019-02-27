@@ -47,6 +47,37 @@ static inline size_t StackArgAreaSizeUnaligned(const T& argTypes) {
   return i.stackBytesConsumedSoFar();
 }
 
+static inline size_t StackArgAreaSizeUnaligned(
+                         const SymbolicAddressSignature& saSig) {
+  // ABIArgIter::ABIArgIter wants the items to be iterated over to be
+  // presented in some type that has methods length() and operator[].  So we
+  // have to wrap up |saSig|'s array of types in this API-matching class.
+  class MOZ_STACK_CLASS ItemsAndLength {
+    const MIRType* items_;
+    size_t length_;
+   public:
+    ItemsAndLength(const MIRType* items, size_t length)
+      : items_(items), length_(length)
+    {}
+    size_t length() const { return length_; }
+    MIRType operator[](size_t i) const { return items_[i]; }
+  };
+
+  // Assert, at least crudely, that we're not accidentally going to run off
+  // the end of the array of types, nor into undefined parts of it, while
+  // iterating.
+  MOZ_ASSERT(saSig.numArgs < sizeof(saSig.argTypes) / sizeof(saSig.argTypes[0]));
+  MOZ_ASSERT(saSig.argTypes[saSig.numArgs] == MIRType::None/*the end marker*/);
+
+  ItemsAndLength itemsAndLength(saSig.argTypes, saSig.numArgs);
+
+  ABIArgIter<ItemsAndLength> i(itemsAndLength);
+  while (!i.done()) {
+     i++;
+  }
+  return i.stackBytesConsumedSoFar();
+}
+
 static inline size_t AlignStackArgAreaSize(size_t unalignedSize) {
   return AlignBytes(unalignedSize, 16u);
 }

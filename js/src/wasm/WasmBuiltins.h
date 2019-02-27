@@ -26,6 +26,48 @@ namespace wasm {
 
 class WasmFrameIter;
 
+// These provide argument type information for a subset of the SymbolicAddress
+// targets, for which type info is needed to generate correct stackmaps.
+
+extern const SymbolicAddressSignature SASigSinD;
+extern const SymbolicAddressSignature SASigCosD;
+extern const SymbolicAddressSignature SASigTanD;
+extern const SymbolicAddressSignature SASigASinD;
+extern const SymbolicAddressSignature SASigACosD;
+extern const SymbolicAddressSignature SASigATanD;
+extern const SymbolicAddressSignature SASigCeilD;
+extern const SymbolicAddressSignature SASigCeilF;
+extern const SymbolicAddressSignature SASigFloorD;
+extern const SymbolicAddressSignature SASigFloorF;
+extern const SymbolicAddressSignature SASigTruncD;
+extern const SymbolicAddressSignature SASigTruncF;
+extern const SymbolicAddressSignature SASigNearbyIntD;
+extern const SymbolicAddressSignature SASigNearbyIntF;
+extern const SymbolicAddressSignature SASigExpD;
+extern const SymbolicAddressSignature SASigLogD;
+extern const SymbolicAddressSignature SASigPowD;
+extern const SymbolicAddressSignature SASigATan2D;
+extern const SymbolicAddressSignature SASigMemoryGrow;
+extern const SymbolicAddressSignature SASigMemorySize;
+extern const SymbolicAddressSignature SASigWaitI32;
+extern const SymbolicAddressSignature SASigWaitI64;
+extern const SymbolicAddressSignature SASigWake;
+extern const SymbolicAddressSignature SASigMemCopy;
+extern const SymbolicAddressSignature SASigDataDrop;
+extern const SymbolicAddressSignature SASigMemFill;
+extern const SymbolicAddressSignature SASigMemInit;
+extern const SymbolicAddressSignature SASigTableCopy;
+extern const SymbolicAddressSignature SASigElemDrop;
+extern const SymbolicAddressSignature SASigTableGet;
+extern const SymbolicAddressSignature SASigTableGrow;
+extern const SymbolicAddressSignature SASigTableInit;
+extern const SymbolicAddressSignature SASigTableSet;
+extern const SymbolicAddressSignature SASigTableSize;
+extern const SymbolicAddressSignature SASigPostBarrier;
+extern const SymbolicAddressSignature SASigPostBarrierFiltering;
+extern const SymbolicAddressSignature SASigStructNew;
+extern const SymbolicAddressSignature SASigStructNarrow;
+
 // A SymbolicAddress that NeedsBuiltinThunk() will call through a thunk to the
 // C++ function. This will be true for all normal calls from normal wasm
 // function code. Only calls to C++ from other exits/thunks do not need a thunk.
