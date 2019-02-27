@@ -16,6 +16,8 @@ using class mozilla::TapGestureInput from "InputData.h";
 using class mozilla::ScrollWheelInput from "InputData.h";
 using class mozilla::KeyboardInput from "InputData.h";
 
+using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
+
 include protocol PGPU;
 
 namespace mozilla {
@@ -84,7 +86,8 @@ parent:
   sync ProcessUnhandledEvent(LayoutDeviceIntPoint aRefPoint)
     returns (LayoutDeviceIntPoint   aOutRefPoint,
              ScrollableLayerGuid    aOutTargetGuid,
-             uint64_t               aOutFocusSequenceNumber);
+             uint64_t               aOutFocusSequenceNumber,
+             LayersId               aOutLayersId);
 
   async __delete__();
 };
