@@ -138,13 +138,13 @@ internal class StorageEngineManager(
         internal fun <T> getStorageEngineForMetric(subMetric: T): StorageEngine? {
             // Every metric that supports labels needs an entry here
             return when (subMetric) {
-                is BooleanMetricType -> BooleansStorageEngine as StorageEngine
-                is CounterMetricType -> CountersStorageEngine as StorageEngine
-                is DatetimeMetricType -> DatetimesStorageEngine as StorageEngine
-                is StringListMetricType -> StringListsStorageEngine as StorageEngine
-                is StringMetricType -> StringsStorageEngine as StorageEngine
-                is TimespanMetricType -> TimespansStorageEngine as StorageEngine
-                is UuidMetricType -> UuidsStorageEngine as StorageEngine
+                is BooleanMetricType -> BooleansStorageEngine
+                is CounterMetricType -> CountersStorageEngine
+                is DatetimeMetricType -> DatetimesStorageEngine
+                is StringListMetricType -> StringListsStorageEngine
+                is StringMetricType -> StringsStorageEngine
+                is TimespanMetricType -> TimespansStorageEngine
+                is UuidMetricType -> UuidsStorageEngine
                 else -> null
             }
         }

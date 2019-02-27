@@ -46,6 +46,7 @@ data class BooleanMetricType(
             return
         }
 
+        @Suppress("EXPERIMENTAL_API_USAGE")
         ioTask = Dispatchers.API.launch {
             // Delegate storing the boolean to the storage engine.
             BooleansStorageEngine.record(

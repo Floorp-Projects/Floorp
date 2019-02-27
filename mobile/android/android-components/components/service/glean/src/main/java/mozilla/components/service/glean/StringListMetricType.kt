@@ -65,6 +65,7 @@ data class StringListMetricType(
             it
         }
 
+        @Suppress("EXPERIMENTAL_API_USAGE")
         ioTask = Dispatchers.API.launch {
             // Delegate storing the string to the storage engine.
             StringListsStorageEngine.add(
@@ -97,6 +98,7 @@ data class StringListMetricType(
             it.take(MAX_STRING_LENGTH)
         }
 
+        @Suppress("EXPERIMENTAL_API_USAGE")
         ioTask = Dispatchers.API.launch {
             // Delegate storing the string list to the storage engine.
             StringListsStorageEngine.set(

@@ -28,8 +28,8 @@ import java.util.concurrent.TimeUnit
 
 @RunWith(RobolectricTestRunner::class)
 class EventsStorageEngineTest {
-
     @get:Rule
+    @Suppress("EXPERIMENTAL_API_USAGE")
     val fakeDispatchers = FakeDispatchersInTest()
 
     @Before

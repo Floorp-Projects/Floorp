@@ -20,6 +20,7 @@ class DispatchersTest {
         var threadCanary = false
 
         runBlocking {
+            @Suppress("EXPERIMENTAL_API_USAGE")
             Dispatchers.API.launch {
                 assertNotSame(mainThread, Thread.currentThread())
                 // Use the canary bool to make sure this is getting called before

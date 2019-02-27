@@ -35,6 +35,7 @@ class GleanDebugActivityTest {
         resolveInfo.activityInfo = ActivityInfo()
         resolveInfo.activityInfo.packageName = testPackageName
         resolveInfo.activityInfo.name = "LauncherActivity"
+        @Suppress("DEPRECATION")
         shadowOf(pm).addResolveInfoForIntent(launchIntent, resolveInfo)
     }
 

@@ -4,7 +4,6 @@
 
 package mozilla.components.service.glean.ping
 
-import android.content.Context
 import android.os.Build
 import mozilla.components.service.glean.GleanMetrics.GleanBaseline
 import mozilla.components.support.base.log.logger.Logger
@@ -13,7 +12,7 @@ import java.util.Locale
 /**
  * BaselinePing facilitates setup and initialization of baseline pings.
  */
-internal class BaselinePing(applicationContext: Context) {
+internal class BaselinePing {
     private val logger = Logger("glean/BaselinePing")
 
     companion object {

@@ -52,6 +52,7 @@ data class CounterMetricType(
             return
         }
 
+        @Suppress("EXPERIMENTAL_API_USAGE")
         ioTask = Dispatchers.API.launch {
             // Delegate storing the new counter value to the storage engine.
             CountersStorageEngine.record(

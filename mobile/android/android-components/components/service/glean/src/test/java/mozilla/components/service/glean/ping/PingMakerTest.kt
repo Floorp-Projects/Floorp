@@ -5,6 +5,7 @@
 package mozilla.components.service.glean.ping
 
 import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import mozilla.components.service.glean.BuildConfig
 import mozilla.components.service.glean.storages.MockStorageEngine
 import mozilla.components.service.glean.storages.StorageEngineManager
@@ -20,7 +21,6 @@ import org.junit.Assert.assertTrue
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -139,7 +139,7 @@ class PingMakerTest {
     fun `seq number must be sequential`() {
         // NOTE: Using a "real" ApplicationContext here so that it will have
         // a working SharedPreferences implementation
-        var applicationContext = RuntimeEnvironment.application.applicationContext
+        var applicationContext = ApplicationProvider.getApplicationContext<Context>()
         val maker = PingMaker(
             StorageEngineManager(
                 storageEngines = mapOf(

@@ -46,6 +46,7 @@ data class DatetimeMetricType(
             return
         }
 
+        @Suppress("EXPERIMENTAL_API_USAGE")
         ioTask = Dispatchers.API.launch {
             // Delegate storing the datetime to the storage engine.
             DatetimesStorageEngine.set(
@@ -71,6 +72,7 @@ data class DatetimeMetricType(
             return
         }
 
+        @Suppress("EXPERIMENTAL_API_USAGE")
         ioTask = Dispatchers.API.launch {
             // Delegate storing the datetime to the storage engine.
             DatetimesStorageEngine.set(

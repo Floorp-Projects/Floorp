@@ -60,6 +60,7 @@ data class StringMetricType(
             it
         }
 
+        @Suppress("EXPERIMENTAL_API_USAGE")
         ioTask = Dispatchers.API.launch {
             // Delegate storing the string to the storage engine.
             StringsStorageEngine.record(

@@ -4,6 +4,8 @@
 
 package mozilla.components.service.glean.scheduler
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
@@ -12,14 +14,15 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import java.util.concurrent.TimeUnit
 
 @RunWith(RobolectricTestRunner::class)
 class MetricsPingSchedulerTest {
     // NOTE: Using a "real" ApplicationContext here so that it will have
     // a working SharedPreferences implementation
-    private val metricsPingScheduler = MetricsPingScheduler(RuntimeEnvironment.application.applicationContext)
+    private val metricsPingScheduler = MetricsPingScheduler(
+        ApplicationProvider.getApplicationContext<Context>()
+    )
 
     @Before
     fun setup() {

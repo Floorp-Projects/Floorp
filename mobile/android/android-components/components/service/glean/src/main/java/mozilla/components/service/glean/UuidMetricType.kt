@@ -65,6 +65,7 @@ data class UuidMetricType(
             return
         }
 
+        @Suppress("EXPERIMENTAL_API_USAGE")
         ioTask = Dispatchers.API.launch {
             // Delegate storing the event to the storage engine.
             UuidsStorageEngine.record(

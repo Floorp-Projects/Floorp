@@ -105,6 +105,7 @@ data class LabeledMetricType<T>(
      * @return A copy of subMetric with the new name.
      * @throws IllegalStateException If this metric type does not support labels.
      */
+    @Suppress("UNCHECKED_CAST")
     internal fun getMetricWithNewName(newName: String): T {
         // function is "internal" so we can mock it in testing
 

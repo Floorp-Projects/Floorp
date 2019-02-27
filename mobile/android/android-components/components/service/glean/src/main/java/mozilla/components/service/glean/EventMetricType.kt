@@ -86,6 +86,7 @@ data class EventMetricType(
         // might get executed.
         val monotonicElapsed = SystemClock.elapsedRealtime()
 
+        @Suppress("EXPERIMENTAL_API_USAGE")
         ioTask = Dispatchers.API.launch {
             // Delegate storing the event to the storage engine.
             EventsStorageEngine.record(

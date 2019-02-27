@@ -194,6 +194,7 @@ open class GleanInternalAPI internal constructor () {
             val packageInfo = applicationContext.packageManager.getPackageInfo(
                 applicationContext.packageName, 0
             )
+            @Suppress("DEPRECATION")
             StringsStorageEngine.record(
                 GleanInternalMetrics.appBuild,
                 packageInfo.versionCode.toString()
@@ -209,7 +210,7 @@ open class GleanInternalAPI internal constructor () {
 
         // Set up information and scheduling for glean owned pings
         metricsPingScheduler = MetricsPingScheduler(applicationContext)
-        baselinePing = BaselinePing(applicationContext)
+        baselinePing = BaselinePing()
     }
 
     /**

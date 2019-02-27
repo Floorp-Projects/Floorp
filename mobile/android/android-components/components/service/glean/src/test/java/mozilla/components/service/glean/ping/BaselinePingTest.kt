@@ -4,8 +4,6 @@
 
 package mozilla.components.service.glean.ping
 
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -18,7 +16,7 @@ import java.util.Locale
 class BaselinePingTest {
     @Test
     fun `getLanguageTag() reports the tag for the default locale`() {
-        val baselinePing = BaselinePing(ApplicationProvider.getApplicationContext<Context>())
+        val baselinePing = BaselinePing()
         val defaultLanguageTag = baselinePing.getLanguageTag()
 
         assertNotNull(defaultLanguageTag)
@@ -28,7 +26,7 @@ class BaselinePingTest {
 
     @Test
     fun `getLanguageTag reports the correct tag for a non-default language`() {
-        val baselinePing = BaselinePing(ApplicationProvider.getApplicationContext<Context>())
+        val baselinePing = BaselinePing()
         val defaultLocale = Locale.getDefault()
 
         try {
@@ -46,7 +44,7 @@ class BaselinePingTest {
 
     @Test
     fun `getLanguage reports the modern translation for some languages`() {
-        val baselinePing = BaselinePing(ApplicationProvider.getApplicationContext<Context>())
+        val baselinePing = BaselinePing()
 
         assertEquals("he", baselinePing.getLanguage(Locale("iw", "IL")))
         assertEquals("id", baselinePing.getLanguage(Locale("in", "ID")))
