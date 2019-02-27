@@ -1,8 +1,5 @@
-commit 3468dad291251d4759ab6270d4fb8b75befa8d93
-Author: Mike Pennisi <mike@mikepennisi.com>
-Date:   Tue Jan 1 12:03:27 2019 -0500
+commit d0f57bff727cc8e06e4a7c2202edc0521a678fe9
+Author: Ross Kirsling <rkirsling@gmail.com>
+Date:   Mon Jan 7 05:40:39 2019 -0800
 
-    Improve coverage for line terminators
-    
-    Previous commits restructured the tests for line terminators and made
-    coverage gaps more apparent. Introduce new files to improve coverage.
+    Ensure test file YAML blocks don't have a trailing space. (#2018)
