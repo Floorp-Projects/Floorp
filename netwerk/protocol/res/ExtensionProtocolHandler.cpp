@@ -528,19 +528,17 @@ nsresult ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
   return NS_OK;
 }
 
-Result<Ok, nsresult> ExtensionProtocolHandler::AllowExternalResource(
-    nsIFile* aExtensionDir, nsIFile* aRequestedFile, bool* aResult) {
+Result<bool, nsresult> ExtensionProtocolHandler::AllowExternalResource(
+    nsIFile* aExtensionDir, nsIFile* aRequestedFile) {
   MOZ_ASSERT(!IsNeckoChild());
-  MOZ_ASSERT(aResult);
-  *aResult = false;
 
 #if defined(XP_WIN)
   // On Windows, dev builds don't use symlinks so we never need to
   // allow a resource from outside of the extension dir.
-  return Ok();
+  return false;
 #else
   if (!mozilla::IsDevelopmentBuild()) {
-    return Ok();
+    return false;
   }
 
   // On Mac and Linux unpackaged dev builds, system extensions use
@@ -548,30 +546,29 @@ Result<Ok, nsresult> ExtensionProtocolHandler::AllowExternalResource(
   // allow loading. Before we allow an unpacked extension to load a
   // resource outside of the extension dir, we make sure the extension
   // dir is within the app directory.
-  MOZ_TRY(AppDirContains(aExtensionDir, aResult));
-  if (!*aResult) {
-    return Ok();
+  bool result;
+  MOZ_TRY_VAR(result, AppDirContains(aExtensionDir));
+  if (!result) {
+    return false;
   }
 
 #  if defined(XP_MACOSX)
   // Additionally, on Mac dev builds, we make sure that the requested
   // resource is within the repo dir. We don't perform this check on Linux
   // because we don't have a reliable path to the repo dir on Linux.
-  MOZ_TRY(DevRepoContains(aRequestedFile, aResult));
-#  endif /* XP_MACOSX */
-
-  return Ok();
-#endif   /* defined(XP_WIN) */
+  return DevRepoContains(aRequestedFile);
+#  else /* XP_MACOSX */
+  return true;
+#  endif
+#endif /* defined(XP_WIN) */
 }
 
 #if defined(XP_MACOSX)
 // The |aRequestedFile| argument must already be Normalize()'d
-Result<Ok, nsresult> ExtensionProtocolHandler::DevRepoContains(
-    nsIFile* aRequestedFile, bool* aResult) {
+Result<bool, nsresult> ExtensionProtocolHandler::DevRepoContains(
+    nsIFile* aRequestedFile) {
   MOZ_ASSERT(mozilla::IsDevelopmentBuild());
   MOZ_ASSERT(!IsNeckoChild());
-  MOZ_ASSERT(aResult);
-  *aResult = false;
 
   // On the first invocation, set mDevRepo
   if (!mAlreadyCheckedDevRepo) {
@@ -584,21 +581,19 @@ Result<Ok, nsresult> ExtensionProtocolHandler::DevRepoContains(
     }
   }
 
+  bool result = false;
   if (mDevRepo) {
-    MOZ_TRY(mDevRepo->Contains(aRequestedFile, aResult));
+    MOZ_TRY(mDevRepo->Contains(aRequestedFile, &result));
   }
-
-  return Ok();
+  return result;
 }
 #endif /* XP_MACOSX */
 
 #if !defined(XP_WIN)
-Result<Ok, nsresult> ExtensionProtocolHandler::AppDirContains(
-    nsIFile* aExtensionDir, bool* aResult) {
+Result<bool, nsresult> ExtensionProtocolHandler::AppDirContains(
+    nsIFile* aExtensionDir) {
   MOZ_ASSERT(mozilla::IsDevelopmentBuild());
   MOZ_ASSERT(!IsNeckoChild());
-  MOZ_ASSERT(aResult);
-  *aResult = false;
 
   // On the first invocation, set mAppDir
   if (!mAlreadyCheckedAppDir) {
@@ -611,11 +606,11 @@ Result<Ok, nsresult> ExtensionProtocolHandler::AppDirContains(
     }
   }
 
+  bool result = false;
   if (mAppDir) {
-    MOZ_TRY(mAppDir->Contains(aExtensionDir, aResult));
+    MOZ_TRY(mAppDir->Contains(aExtensionDir, &result));
   }
-
-  return Ok();
+  return result;
 }
 #endif /* !defined(XP_WIN) */
 
@@ -734,8 +729,8 @@ Result<nsCOMPtr<nsIInputStream>, nsresult> ExtensionProtocolHandler::NewStream(
   bool isResourceFromExtensionDir = false;
   MOZ_TRY(extensionDir->Contains(requestedFile, &isResourceFromExtensionDir));
   if (!isResourceFromExtensionDir) {
-    bool isAllowed = false;
-    MOZ_TRY(AllowExternalResource(extensionDir, requestedFile, &isAllowed));
+    bool isAllowed;
+    MOZ_TRY_VAR(isAllowed, AllowExternalResource(extensionDir, requestedFile));
     if (!isAllowed) {
       LogExternalResourceError(extensionDir, requestedFile);
       return Err(NS_ERROR_FILE_ACCESS_DENIED);
