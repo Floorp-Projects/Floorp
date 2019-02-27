@@ -1,8 +1,5 @@
-commit 8e3c6d048449a2e47c7748eafa350f49c0b8b7bc
-Merge: e2119bece6 5303404d54
-Author: Leo Balter <leonardo.balter@gmail.com>
-Date:   Mon Dec 10 10:59:09 2018 -0500
+commit dab8c8983adc37ed3da672442e0e378ff6cd2714
+Author: Frank Yung-Fong Tang <41213225+FrankYFTang@users.noreply.github.com>
+Date:   Wed Dec 19 16:36:10 2018 -0800
 
-    Merge pull request #1987 from test262-automation/v8-test262-automation-export-07b313100e
-    
-    Import test changes from V8
+    remove "TypeError: Cannot convert a Symbol value to a string" (#2009)

@@ -10,6 +10,8 @@ info: |
 features: [Intl.RelativeTimeFormat]
 ---*/
 
+assert.sameValue(typeof Intl.RelativeTimeFormat, "function");
+
 const invalidOptions = [
   null,
   1,
