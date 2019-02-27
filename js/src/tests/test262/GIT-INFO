@@ -1,5 +1,7 @@
-commit e39604fa41b1ad0effdcf586e4d554ff2d8c3eb7
-Author: Timothy Gu <timothygu99@gmail.com>
-Date:   Thu Jan 31 09:49:27 2019 -0800
+commit 9280e1f872151f68cac99bc0c674527813a91cf9
+Author: Mathias Bynens <mathias@qiwi.be>
+Date:   Mon Feb 4 11:58:05 2019 -0700
 
-    Fix missing ) (#2059)
+    Add tests for %TypedArray%.prototype.sort stability (#2062)
+    
+    https://github.com/tc39/ecma262/pull/1433
