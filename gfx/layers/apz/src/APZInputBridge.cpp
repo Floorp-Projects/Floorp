@@ -79,11 +79,12 @@ nsEventStatus APZInputBridge::ReceiveInputEvent(
         mouseEvent.mRefPoint.y = input.mOrigin.y;
         mouseEvent.mFlags.mHandledByAPZ = input.mHandledByAPZ;
         mouseEvent.mFocusSequenceNumber = input.mFocusSequenceNumber;
+        aEvent.mLayersId = input.mLayersId;
         return status;
       }
 
       ProcessUnhandledEvent(&mouseEvent.mRefPoint, aOutTargetGuid,
-                            &aEvent.mFocusSequenceNumber);
+                            &aEvent.mFocusSequenceNumber, &aEvent.mLayersId);
       return nsEventStatus_eIgnore;
     }
     case eTouchEventClass: {
@@ -103,6 +104,7 @@ nsEventStatus APZInputBridge::ReceiveInputEvent(
       }
       touchEvent.mFlags.mHandledByAPZ = touchInput.mHandledByAPZ;
       touchEvent.mFocusSequenceNumber = touchInput.mFocusSequenceNumber;
+      aEvent.mLayersId = touchInput.mLayersId;
       return result;
     }
     case eWheelEventClass: {
@@ -161,13 +163,15 @@ nsEventStatus APZInputBridge::ReceiveInputEvent(
           wheelEvent.mRefPoint.y = input.mOrigin.y;
           wheelEvent.mFlags.mHandledByAPZ = input.mHandledByAPZ;
           wheelEvent.mFocusSequenceNumber = input.mFocusSequenceNumber;
+          aEvent.mLayersId = input.mLayersId;
+
           return status;
         }
       }
 
       UpdateWheelTransaction(aEvent.mRefPoint, aEvent.mMessage);
       ProcessUnhandledEvent(&aEvent.mRefPoint, aOutTargetGuid,
-                            &aEvent.mFocusSequenceNumber);
+                            &aEvent.mFocusSequenceNumber, &aEvent.mLayersId);
       return nsEventStatus_eIgnore;
     }
     case eKeyboardEventClass: {
@@ -185,7 +189,7 @@ nsEventStatus APZInputBridge::ReceiveInputEvent(
     default: {
       UpdateWheelTransaction(aEvent.mRefPoint, aEvent.mMessage);
       ProcessUnhandledEvent(&aEvent.mRefPoint, aOutTargetGuid,
-                            &aEvent.mFocusSequenceNumber);
+                            &aEvent.mFocusSequenceNumber, &aEvent.mLayersId);
       return nsEventStatus_eIgnore;
     }
   }
