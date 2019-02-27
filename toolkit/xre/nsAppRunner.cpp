@@ -189,7 +189,7 @@
 // for X remote support
 #if defined(MOZ_WIDGET_GTK)
 #  include "XRemoteClient.h"
-#  include "nsIRemoteService.h"
+#  include "nsRemoteService.h"
 #  include "nsProfileLock.h"
 #  include "SpecialSystemDirectory.h"
 #  include <sched.h>
@@ -2925,7 +2925,7 @@ class XREMain {
   nsCOMPtr<nsIFile> mProfLD;
   nsCOMPtr<nsIProfileLock> mProfileLock;
 #if defined(MOZ_WIDGET_GTK)
-  nsCOMPtr<nsIRemoteService> mRemoteService;
+  RefPtr<nsRemoteService> mRemoteService;
   nsProfileLock mRemoteLock;
   nsCOMPtr<nsIFile> mRemoteLockDir;
 #endif
@@ -4628,10 +4628,12 @@ nsresult XREMain::XRE_mainRun() {
 #if defined(MOZ_WIDGET_GTK)
     // if we have X remote support, start listening for requests on the
     // proxy window.
-    if (!mDisableRemote)
-      mRemoteService = do_GetService("@mozilla.org/toolkit/remote-service;1");
-    if (mRemoteService)
+    if (!mDisableRemote) {
+      mRemoteService = new nsRemoteService();
+    }
+    if (mRemoteService) {
       mRemoteService->Startup(mAppData->remotingName, mProfileName.get());
+    }
     if (mRemoteLockDir) {
       mRemoteLock.Unlock();
       mRemoteLock.Cleanup();
