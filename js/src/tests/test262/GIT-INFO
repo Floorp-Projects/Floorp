@@ -1,8 +1,5 @@
-commit d53256c971f3b6b6d709a909446919b7bb56f3b5
-Merge: 5331ca05a2 f624ca52d1
-Author: Leo Balter <leonardo.balter@gmail.com>
-Date:   Fri Jan 18 11:17:04 2019 -0200
+commit 4f1155c566a222238fd86f179c6635ecb4c289bb
+Author: Frank Yung-Fong Tang <41213225+FrankYFTang@users.noreply.github.com>
+Date:   Fri Jan 18 08:15:37 2019 -0800
 
-    Merge pull request #2038 from nicolo-ribaudo/patch-3
-    
-    Add missing features to private elements tests
+    Change tests according to ecma402/pull/278 (#2031)

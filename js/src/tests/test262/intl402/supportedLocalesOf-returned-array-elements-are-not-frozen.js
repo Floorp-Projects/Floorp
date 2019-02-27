@@ -5,14 +5,20 @@
 es5id: 9.2.8_4
 description: >
     Tests that the array returned by SupportedLocales is extensible,
-    but its properties are non-writable/non-configurable.
+    writable and configurable.
 author: Norbert Lindenberg
 includes: [testIntl.js]
 ---*/
 
-function testFrozenProperty(obj, property) {
+function testNormalProperty(obj, property) {
     var desc = Object.getOwnPropertyDescriptor(obj, property);
-    assert.sameValue(desc.writable, false, "Property " + property + " of object returned by SupportedLocales is writable.");
+    assert.sameValue(desc.writable, true, "Property " + property + " of object returned by SupportedLocales is not writable.");
+    assert.sameValue(desc.configurable, true, "Property " + property + " of object returned by SupportedLocales is not configurable.");
+}
+
+function testLengthProperty(obj, property) {
+    var desc = Object.getOwnPropertyDescriptor(obj, property);
+    assert.sameValue(desc.writable, true, "Property " + property + " of object returned by SupportedLocales is not writable.");
     assert.sameValue(desc.configurable, false, "Property " + property + " of object returned by SupportedLocales is configurable.");
 }
 
@@ -21,9 +27,9 @@ testWithIntlConstructors(function (Constructor) {
     var supported = Constructor.supportedLocalesOf([defaultLocale]);
     assert(Object.isExtensible(supported), "Object returned by SupportedLocales is not extensible.");
     for (var i = 0; i < supported.length; i++) {
-        testFrozenProperty(supported, i);
+        testNormalProperty(supported, i);
     }
-    testFrozenProperty(supported, "length");
+    testLengthProperty(supported, "length");
 });
 
 reportCompare(0, 0);
