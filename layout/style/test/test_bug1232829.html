@@ -19,7 +19,6 @@ function boom() {
   setTimeout(function() {
     var frameDoc = document.querySelector("iframe").contentDocument;
     frameDoc.write("3");
-    frameDoc.defaultView.history.back();
     requestAnimationFrame(function() {
       popup.close();
       ok(true, "Didn't crash");

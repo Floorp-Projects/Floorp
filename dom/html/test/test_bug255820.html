@@ -28,7 +28,7 @@ SimpleTest.waitForExplicitFinish();
 is(document.characterSet, "UTF-8",
    "Unexpected character set for our document");
 
-var testsLeft = 4;
+var testsLeft = 3;
 
 function testFinished() {
   --testsLeft;
@@ -42,29 +42,11 @@ function charsetTestFinished(id, doc, charsetTarget) {
   testFinished();
 }
 
-function f2Continue() {
-//   Commented out pending discussion at the WHATWG
-//   $("f2").
-//     setAttribute("onload",
-//                  "charsetTestFinished('f2 reloaded', this.contentDocument, 'us-ascii');");
-  $("f2").
-    setAttribute("onload",
-                 "testFinished();");
-  $("f2").contentWindow.location.reload();
-}
-
 function f3Continue() {
   var doc = $("f3").contentDocument;
   is(doc.defaultView.getComputedStyle(doc.body).color, "rgb(0, 180, 0)",
-     "Wrong color before reload");
-  $("f3").
-    setAttribute("onload",
-                 'var doc = this.contentDocument; ' + 
-                 'is(doc.defaultView.getComputedStyle(doc.body, "").color, ' +
-                 '   "rgb(0, 180, 0)",' +
-                 '   "Wrong color after reload");' +
-                 "charsetTestFinished('f1', this.contentDocument, 'UTF-8')");
-  $("f3").contentWindow.location.reload();
+     "Wrong color");
+  charsetTestFinished('f3', doc, "UTF-8");
 }
 
 function runTest() {
@@ -74,12 +56,7 @@ function runTest() {
   doc.open();
   doc.write('<html></html>');
   doc.close();
-  is(doc.characterSet, "UTF-8",
-     "Unexpected character set for first frame after write");
-  $("f1").
-    setAttribute("onload",
-                 "charsetTestFinished('f1', this.contentDocument, 'UTF-8')");
-  $("f1").contentWindow.location.reload();
+  charsetTestFinished("f1", doc, "UTF-8");
 
   doc = $("f2").contentDocument;
   is(doc.characterSet, "UTF-8",
@@ -96,12 +73,11 @@ function runTest() {
      "Unexpected character set for second frame after write");
   $("f2").
     setAttribute("onload",
-      "charsetTestFinished('f2', this.contentDocument, 'UTF-8');" +
-      "f2Continue()");
+      "charsetTestFinished('f2', this.contentDocument, 'UTF-8');");
 
   doc = $("f3").contentDocument;
   is(doc.characterSet, "UTF-8",
-     "Unexpected initial character set for first frame");
+     "Unexpected initial character set for third frame");
   doc.open();
   var str = '<html><head>';
   str += '<style>body { color: rgb(255, 0, 0) }</style>';
@@ -111,7 +87,7 @@ function runTest() {
   doc.write(str);
   doc.close();
   is(doc.characterSet, "UTF-8",
-     "Unexpected character set for first frame after write");
+     "Unexpected character set for third frame after write");
   $("f3").setAttribute("onload", "f3Continue()");
 }
 
