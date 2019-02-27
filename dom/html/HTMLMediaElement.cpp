@@ -3498,13 +3498,27 @@ HTMLMediaElement::HTMLMediaElement(
       mShutdownObserver(new ShutdownObserver),
       mPlayed(new TimeRanges(ToSupports(OwnerDoc()))),
       mPaused(true, "HTMLMediaElement::mPaused"),
-      mAudioTrackList(new AudioTrackList(OwnerDoc()->GetParentObject(), this)),
-      mVideoTrackList(new VideoTrackList(OwnerDoc()->GetParentObject(), this)),
       mErrorSink(new ErrorSink(this)),
       mAudioChannelWrapper(new AudioChannelAgentCallback(this)),
       mSink(MakePair(nsString(), RefPtr<AudioDeviceInfo>())) {
   MOZ_ASSERT(mMainThreadEventTarget);
   MOZ_ASSERT(mAbstractMainThread);
+  // Please don't add anything to this constructor or the initialization
+  // list that can cause AddRef to be called. This prevents subclasses
+  // from overriding AddRef in a way that works with our refcount
+  // logging mechanisms. Put these things inside of the ::Init method
+  // instead.
+}
+
+nsresult HTMLMediaElement::Init() {
+  MOZ_ASSERT(mRefCnt == 0 && !mRefCnt.IsPurple(),
+             "HTMLMediaElement::Init called when AddRef has been called "
+             "at least once already, probably in the constructor. Please "
+             "see the documentation in the HTMLMediaElement constructor.");
+  MOZ_ASSERT(!mRefCnt.IsPurple());
+
+  mAudioTrackList = new AudioTrackList(OwnerDoc()->GetParentObject(), this);
+  mVideoTrackList = new VideoTrackList(OwnerDoc()->GetParentObject(), this);
 
   DecoderDoctorLogger::LogConstruction(this);
 
@@ -3525,9 +3539,13 @@ HTMLMediaElement::HTMLMediaElement(
   MediaShutdownManager::InitStatics();
 
   mShutdownObserver->Subscribe(this);
+  mInitialized = true;
+  return NS_OK;
 }
 
 HTMLMediaElement::~HTMLMediaElement() {
+  MOZ_ASSERT(mInitialized,
+             "HTMLMediaElement must be initialized before it is destroyed.");
   NS_ASSERTION(
       !mHasSelfReference,
       "How can we be destroyed if we're still holding a self reference?");
