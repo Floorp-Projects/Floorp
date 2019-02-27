@@ -1805,32 +1805,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return true;
   },
 
-  /**
-   * Get prototypes and properties of multiple objects.
-   */
-  onPrototypesAndProperties: function(request) {
-    const result = {};
-    for (const actorID of request.actors) {
-      // This code assumes that there are no lazily loaded actors returned
-      // by this call.
-      const actor = this.conn.getActor(actorID);
-      if (!actor) {
-        return { from: this.actorID,
-                 error: "noSuchActor" };
-      }
-      const handler = actor.prototypeAndProperties;
-      if (!handler) {
-        return { from: this.actorID,
-                 error: "unrecognizedPacketType",
-                 message: ('Actor "' + actorID +
-                           '" does not recognize the packet type ' +
-                           '"prototypeAndProperties"') };
-      }
-      result[actorID] = handler.call(actor, {});
-    }
-    return { from: this.actorID,
-             actors: result };
-  },
 });
 
 Object.assign(ThreadActor.prototype.requestTypes, {
@@ -1845,7 +1819,6 @@ Object.assign(ThreadActor.prototype.requestTypes, {
   "releaseMany": ThreadActor.prototype.onReleaseMany,
   "sources": ThreadActor.prototype.onSources,
   "threadGrips": ThreadActor.prototype.onThreadGrips,
-  "prototypesAndProperties": ThreadActor.prototype.onPrototypesAndProperties,
   "skipBreakpoints": ThreadActor.prototype.onSkipBreakpoints,
 });
 

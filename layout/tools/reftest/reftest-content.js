@@ -20,6 +20,9 @@ Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://reftest/AsyncSpellCheckTestHelper.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+// This will load chrome Custom Elements inside chrome documents:
+ChromeUtils.import("resource://gre/modules/CustomElementsListener.jsm", null);
+
 var gBrowserIsRemote;
 var gIsWebRenderEnabled;
 var gHaveCanvasSnapshot = false;

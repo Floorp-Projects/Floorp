@@ -27,6 +27,7 @@
 #include "private/pprio.h"
 #include "nsInputStreamPump.h"
 #include "nsThreadUtils.h"
+#include "nsJARProtocolHandler.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -949,12 +950,10 @@ nsJARChannel::EnsureCached(bool *aIsCached) {
   rv = ioService->GetProtocolHandler("jar", getter_AddRefs(handler));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIJARProtocolHandler> jarHandler = do_QueryInterface(handler);
+  auto jarHandler = static_cast<nsJARProtocolHandler *>(handler.get());
   MOZ_ASSERT(jarHandler);
 
-  nsCOMPtr<nsIZipReaderCache> jarCache;
-  rv = jarHandler->GetJARCache(getter_AddRefs(jarCache));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsIZipReaderCache *jarCache = jarHandler->JarCache();
 
   rv = jarCache->GetZipIfCached(jarFile, getter_AddRefs(mPreCachedJarReader));
   if (rv == NS_ERROR_CACHE_KEY_NOT_FOUND) {

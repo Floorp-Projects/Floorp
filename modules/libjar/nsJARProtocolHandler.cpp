@@ -47,8 +47,8 @@ nsIMIMEService *nsJARProtocolHandler::MimeService() {
   return mMimeService.get();
 }
 
-NS_IMPL_ISUPPORTS(nsJARProtocolHandler, nsIJARProtocolHandler,
-                  nsIProtocolHandler, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsJARProtocolHandler, nsIProtocolHandler,
+                  nsISupportsWeakReference)
 
 already_AddRefed<nsJARProtocolHandler> nsJARProtocolHandler::GetSingleton() {
   if (!gJarHandler) {
@@ -60,13 +60,6 @@ already_AddRefed<nsJARProtocolHandler> nsJARProtocolHandler::GetSingleton() {
     }
   }
   return do_AddRef(gJarHandler);
-}
-
-NS_IMETHODIMP
-nsJARProtocolHandler::GetJARCache(nsIZipReaderCache **result) {
-  *result = mJARCache;
-  NS_ADDREF(*result);
-  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -29,12 +29,6 @@ interface nsIJARURI : nsIURL {
      * value may contain %-escaped byte sequences.
      */
     readonly attribute AUTF8String JAREntry;
-
-    /**
-     * Create a clone of the JAR URI with a new root URI (the URI for the
-     * actual JAR file).
-     */
-    nsIJARURI cloneWithJARFile(in nsIURI jarFile);
 };
 
 [builtinclass, uuid(d66df117-eda7-4324-b4e4-1f670ff6718e)]

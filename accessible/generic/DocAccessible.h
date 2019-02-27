@@ -560,7 +560,7 @@ class DocAccessible : public HyperTextAccessibleWrap,
    * Set the object responsible for communicating with the main process on
    * behalf of this document.
    */
-  void SetIPCDoc(DocAccessibleChild* aIPCDoc) { mIPCDoc = aIPCDoc; }
+  void SetIPCDoc(DocAccessibleChild* aIPCDoc);
 
   friend class DocAccessibleChildBase;
 

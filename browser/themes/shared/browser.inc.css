@@ -172,6 +172,11 @@
   margin: 2px 4px;
 }
 
+/* Permissions popup learn more link. */
+#addon-webext-perm-info {
+  margin-inline-start: 0;
+}
+
 /* Contextual Feature Recommendation popup-notification */
 
 #cfr-notification-header {
