@@ -1,5 +1,5 @@
-commit afe1b5adc7d961e4daf261867ffa9fd3d22b1235
-Author: Ross Kirsling <rkirsling@gmail.com>
-Date:   Tue Jan 29 21:33:39 2019 -0800
+commit 72381359409f06933889943d94d6c8f6812def94
+Author: Michael Ficarra <git@michael.ficarra.me>
+Date:   Tue Jan 29 15:00:43 2019 -0800
 
-    Align copyright line with repo license.
+    add flat/flatMap to Array unscopables
