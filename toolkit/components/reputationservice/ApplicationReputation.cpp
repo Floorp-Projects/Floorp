@@ -1664,7 +1664,7 @@ static nsresult AppendSegmentToString(nsIInputStream* inputStream,
 }
 
 NS_IMETHODIMP
-PendingLookup::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+PendingLookup::OnDataAvailable(nsIRequest* aRequest,
                                nsIInputStream* aStream, uint64_t offset,
                                uint32_t count) {
   uint32_t read;

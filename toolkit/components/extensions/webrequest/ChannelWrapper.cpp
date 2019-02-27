@@ -947,12 +947,11 @@ ChannelWrapper::RequestListener::OnStopRequest(nsIRequest* request,
 
 NS_IMETHODIMP
 ChannelWrapper::RequestListener::OnDataAvailable(nsIRequest* request,
-                                                 nsISupports* aCtxt,
                                                  nsIInputStream* inStr,
                                                  uint64_t sourceOffset,
                                                  uint32_t count) {
   MOZ_ASSERT(mOrigStreamListener, "Should have mOrigStreamListener");
-  return mOrigStreamListener->OnDataAvailable(request, aCtxt, inStr,
+  return mOrigStreamListener->OnDataAvailable(request, inStr,
                                               sourceOffset, count);
 }
 

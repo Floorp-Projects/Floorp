@@ -83,7 +83,7 @@ Listener.prototype = {
     this.clientPort = parseInt(request.getResponseHeader("x-client-port"));
   },
 
-  onDataAvailable: function testOnDataAvailable(request, ctx, stream, off, cnt) {
+  onDataAvailable: function testOnDataAvailable(request, stream, off, cnt) {
     read_stream(stream, cnt);
   },
 
@@ -106,7 +106,7 @@ FailListener.prototype = {
     Assert.ok(request instanceof Ci.nsIHttpChannel);
     Assert.ok(!Components.isSuccessCode(request.status));
   },
-  onDataAvailable: function testOnDataAvailable(request, ctx, stream, off, cnt) {
+  onDataAvailable: function testOnDataAvailable(request, stream, off, cnt) {
     read_stream(stream, cnt);
   },
   onStopRequest: function testOnStopRequest(request, status) {
@@ -298,7 +298,7 @@ Http2PushApiListener.prototype = {
     dump("push api onstart " + request.originalURI.spec + "\n");
   },
 
-  onDataAvailable: function pushAPIOnDataAvailable(request, ctx, stream, offset, cnt) {
+  onDataAvailable: function pushAPIOnDataAvailable(request, stream, offset, cnt) {
     var data = read_stream(stream, cnt);
   },
 

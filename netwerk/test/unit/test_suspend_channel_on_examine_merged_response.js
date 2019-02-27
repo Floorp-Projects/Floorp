@@ -45,7 +45,7 @@ var listener = {
     buffer = "";
   },
 
-  onDataAvailable: function (request, ctx, stream, offset, count) {
+  onDataAvailable: function (request, stream, offset, count) {
     buffer = buffer.concat(read_stream(stream, count));
   },
 

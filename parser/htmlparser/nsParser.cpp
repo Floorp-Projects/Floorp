@@ -1259,7 +1259,7 @@ static nsresult ParserWriteFunc(nsIInputStream* in, void* closure,
   return result;
 }
 
-nsresult nsParser::OnDataAvailable(nsIRequest* request, nsISupports* aContext,
+nsresult nsParser::OnDataAvailable(nsIRequest* request,
                                    nsIInputStream* pIStream,
                                    uint64_t sourceOffset, uint32_t aLength) {
   MOZ_ASSERT((eOnStart == mParserContext->mStreamListenerState ||

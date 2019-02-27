@@ -41,7 +41,7 @@ Test.prototype = {
 
   onStartRequest: function(request) { },
 
-  onDataAvailable: function(request, context, stream, offset, count) {
+  onDataAvailable: function(request, stream, offset, count) {
     this._buffer = this._buffer.concat(read_stream(stream, count));
   },
 

@@ -371,7 +371,7 @@ nsresult gfxSVGGlyphsDocument::ParseDocument(const uint8_t *aBuffer,
   nsresult status;
   channel->GetStatus(&status);
   if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(status)) {
-    rv = listener->OnDataAvailable(channel, nullptr /* aContext */, stream, 0,
+    rv = listener->OnDataAvailable(channel, stream, 0,
                                    aBufLen);
     if (NS_FAILED(rv)) {
       channel->Cancel(rv);

@@ -619,7 +619,6 @@ nsCORSListenerProxy::OnStopRequest(nsIRequest* aRequest,
 
 NS_IMETHODIMP
 nsCORSListenerProxy::OnDataAvailable(nsIRequest* aRequest,
-                                     nsISupports* aContext,
                                      nsIInputStream* aInputStream,
                                      uint64_t aOffset, uint32_t aCount) {
   // NB: This can be called on any thread!  But we're guaranteed that it is
@@ -636,7 +635,7 @@ nsCORSListenerProxy::OnDataAvailable(nsIRequest* aRequest,
     MutexAutoLock lock(mMutex);
     listener = mOuterListener;
   }
-  return listener->OnDataAvailable(aRequest, aContext, aInputStream, aOffset,
+  return listener->OnDataAvailable(aRequest, aInputStream, aOffset,
                                    aCount);
 }
 
@@ -1243,7 +1242,6 @@ nsCORSPreflightListener::OnStopRequest(nsIRequest* aRequest,
 
 NS_IMETHODIMP
 nsCORSPreflightListener::OnDataAvailable(nsIRequest* aRequest,
-                                         nsISupports* ctxt,
                                          nsIInputStream* inStr,
                                          uint64_t sourceOffset,
                                          uint32_t count) {

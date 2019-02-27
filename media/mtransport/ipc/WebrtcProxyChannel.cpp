@@ -354,7 +354,7 @@ WebrtcProxyChannel::OnStopRequest(nsIRequest* aRequest,
 
 // nsIStreamListener
 NS_IMETHODIMP
-WebrtcProxyChannel::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+WebrtcProxyChannel::OnDataAvailable(nsIRequest* aRequest,
                                     nsIInputStream* aInputStream,
                                     uint64_t aOffset, uint32_t aCount) {
   LOG(("WebrtcProxyChannel::OnDataAvailable %p count=%u\n", this, aCount));

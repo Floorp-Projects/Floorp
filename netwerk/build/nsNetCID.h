@@ -201,11 +201,11 @@
 
 // component implementing nsIStreamLoader.
 #define NS_STREAMLOADER_CONTRACTID "@mozilla.org/network/stream-loader;1"
-#define NS_STREAMLOADER_CID                        \
-  { /* 5BA6D920-D4E9-11d3-A1A5-0050041CAF44 */     \
-    0x5ba6d920, 0xd4e9, 0x11d3, {                  \
-      0xa1, 0xa5, 0x0, 0x50, 0x4, 0x1c, 0xaf, 0x44 \
-    }                                              \
+#define NS_STREAMLOADER_CID                          \
+  { /* 9879908a-2972-40c0-890b-a91dd7dfb954 */       \
+    0x9879908a, 0x2972, 0x40c0, {                    \
+      0x89, 0x0b, 0xa9, 0x1d, 0xd7, 0xdf, 0xb9, 0x54 \
+    }                                                \
   }
 
 // component implementing nsIStreamLoader.

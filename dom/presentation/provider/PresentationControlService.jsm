@@ -622,7 +622,7 @@ TCPControlChannel.prototype = {
   },
 
   // nsIStreamListener (Triggered by nsIInputStreamPump.asyncRead)
-  onDataAvailable(aRequest, aContext, aInputStream) {
+  onDataAvailable(aRequest, aInputStream) {
     let data = NetUtil.readInputStreamToString(aInputStream,
                                                aInputStream.available());
     DEBUG && log("TCPControlChannel - onDataAvailable: " + data); // jshint ignore:line

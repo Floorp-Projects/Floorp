@@ -1046,14 +1046,14 @@ nsJARChannel::OnStopRequest(nsIRequest *req,
 }
 
 NS_IMETHODIMP
-nsJARChannel::OnDataAvailable(nsIRequest *req, nsISupports *ctx,
+nsJARChannel::OnDataAvailable(nsIRequest *req,
                               nsIInputStream *stream, uint64_t offset,
                               uint32_t count) {
   LOG(("nsJARChannel::OnDataAvailable [this=%p %s]\n", this, mSpec.get()));
 
   nsresult rv;
 
-  rv = mListener->OnDataAvailable(this, nullptr, stream, offset, count);
+  rv = mListener->OnDataAvailable(this, stream, offset, count);
 
   // simply report progress here instead of hooking ourselves up as a
   // nsITransportEventSink implementation.
