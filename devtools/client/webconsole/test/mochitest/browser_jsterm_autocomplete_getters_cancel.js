@@ -32,7 +32,7 @@ async function performTests() {
   const target = await TargetFactory.forTab(gBrowser.selectedTab);
   const toolbox = gDevTools.getToolbox(target);
 
-  let tooltip = await setInputValueForGetterConfirmDialog(toolbox, jsterm, "foo.rab.");
+  let tooltip = await setInputValueForGetterConfirmDialog(toolbox, hud, "foo.rab.");
   let labelEl = tooltip.querySelector(".confirm-label");
   is(labelEl.textContent, "Invoke getter foo.rab to retrieve the property list?",
     "Dialog has expected text content");

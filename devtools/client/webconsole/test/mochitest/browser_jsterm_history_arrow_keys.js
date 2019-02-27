@@ -32,7 +32,7 @@ async function performTests() {
   const { jsterm } = hud;
 
   const checkInput = (expected, assertionInfo) =>
-    checkJsTermValueAndCursor(jsterm, expected, assertionInfo);
+    checkInputValueAndCursorPosition(hud, expected, assertionInfo);
 
   jsterm.focus();
   checkInput("|", "input is empty");

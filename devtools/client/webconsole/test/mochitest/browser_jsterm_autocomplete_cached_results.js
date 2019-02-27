@@ -20,16 +20,16 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const { jsterm } = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
+  const { jsterm } = hud;
   const { autocompletePopup: popup } = jsterm;
 
-  const jstermComplete = (value, caretPosition) =>
-    setInputValueForAutocompletion(jsterm, value, caretPosition);
+  const jstermComplete = (value, pos) => setInputValueForAutocompletion(hud, value, pos);
 
   // Test if 'doc' gives 'document'
   await jstermComplete("doc");
   is(jsterm.getInputValue(), "doc", "'docu' completion (input.value)");
-  checkJsTermCompletionValue(jsterm, "   ument", "'docu' completion (completeNode)");
+  checkInputCompletionValue(hud, "   ument", "'docu' completion (completeNode)");
 
   // Test typing 'window.'.'
   await jstermComplete("window.");
