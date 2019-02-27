@@ -19,7 +19,8 @@ const WebConsoleWrapper = require("devtools/client/webconsole/webconsole-wrapper
 const { messagesAdd } = require("devtools/client/webconsole/actions/messages");
 
 async function getWebConsoleWrapper() {
-  const hud = {
+  const webConsoleUi = {
+    emit: () => {},
     proxy: {
       releaseActor: () => {},
       target: {
@@ -28,8 +29,8 @@ async function getWebConsoleWrapper() {
     },
   };
 
-  const owner = { target: {client: {} } };
-  const wcow = new WebConsoleWrapper(null, hud, null, owner);
+  const hud = { target: {client: {} } };
+  const wcow = new WebConsoleWrapper(null, webConsoleUi, null, hud);
   await wcow.init();
   return wcow;
 }
