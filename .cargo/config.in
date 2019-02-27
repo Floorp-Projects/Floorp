@@ -9,7 +9,7 @@ replace-with = 'vendored-sources'
 
 [source."https://github.com/servo/serde"]
 git = "https://github.com/servo/serde"
-branch = "deserialize_from_enums9"
+branch = "deserialize_from_enums10"
 replace-with = "vendored-sources"
 
 [source."https://github.com/retep998/winapi-rs"]
