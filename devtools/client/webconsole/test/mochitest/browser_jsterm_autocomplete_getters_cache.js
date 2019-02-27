@@ -45,7 +45,7 @@ async function performTests() {
   const target = await TargetFactory.forTab(gBrowser.selectedTab);
   const toolbox = gDevTools.getToolbox(target);
 
-  let tooltip = await setInputValueForGetterConfirmDialog(toolbox, jsterm, "foo.bar.");
+  let tooltip = await setInputValueForGetterConfirmDialog(toolbox, hud, "foo.bar.");
   let labelEl = tooltip.querySelector(".confirm-label");
   is(labelEl.textContent, "Invoke getter foo.bar to retrieve the property list?",
     "Dialog has expected text content");
@@ -57,7 +57,7 @@ async function performTests() {
   ok(autocompletePopup.isOpen, "popup is open after Enter");
   is(getAutocompletePopupLabels(autocompletePopup).join("-"), "baz-bloop",
     "popup has expected items");
-  checkJsTermValueAndCursor(jsterm, "foo.bar.|");
+  checkInputValueAndCursorPosition(hud, "foo.bar.|");
   is(isConfirmDialogOpened(toolbox), false, "confirm tooltip is now closed");
 
   info("Close autocomplete popup");
@@ -71,7 +71,7 @@ async function performTests() {
   await onPopUpOpen;
   is(getAutocompletePopupLabels(autocompletePopup).join("-"), "baz-bloop",
     "popup has expected items");
-  checkJsTermValueAndCursor(jsterm, "foo.bar.|");
+  checkInputValueAndCursorPosition(hud, "foo.bar.|");
   is(isConfirmDialogOpened(toolbox), false, "confirm tooltip is not open");
 
   info("Type a space, then backspace and ensure the autocomplete popup is displayed");

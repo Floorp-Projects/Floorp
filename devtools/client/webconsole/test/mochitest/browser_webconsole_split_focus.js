@@ -34,8 +34,8 @@ async function testHistory() {
 
   ok(toolbox.splitConsole, "Split console is now visible");
 
-  const {jsterm} = toolbox.getPanel("webconsole").hud;
-  ok(isJstermFocused(jsterm), "Split console input is focused by default");
+  const {hud} = toolbox.getPanel("webconsole");
+  ok(isInputFocused(hud), "Split console input is focused by default");
 
   await toolbox.closeSplitConsole();
 

@@ -49,7 +49,7 @@ async function performTests() {
   const target = await TargetFactory.forTab(gBrowser.selectedTab);
   const toolbox = gDevTools.getToolbox(target);
 
-  let tooltip = await setInputValueForGetterConfirmDialog(toolbox, jsterm,
+  let tooltip = await setInputValueForGetterConfirmDialog(toolbox, hud,
     "window.foo.bar.");
   let labelEl = tooltip.querySelector(".confirm-label");
   is(labelEl.textContent, "Invoke getter window.foo.bar to retrieve the property list?",
@@ -62,13 +62,13 @@ async function performTests() {
   ok(autocompletePopup.isOpen, "popup is open after Enter");
   is(getAutocompletePopupLabels(autocompletePopup).join("-"), "baz-bloop",
     "popup has expected items");
-  checkJsTermValueAndCursor(jsterm, "window.foo.bar.|");
+  checkInputValueAndCursorPosition(hud, "window.foo.bar.|");
   is(isConfirmDialogOpened(toolbox), false, "confirm tooltip is now closed");
 
   let onPopUpClose = autocompletePopup.once("popup-closed");
   EventUtils.synthesizeKey("KEY_Enter");
   await onPopUpClose;
-  checkJsTermValueAndCursor(jsterm, "window.foo.bar.baz|");
+  checkInputValueAndCursorPosition(hud, "window.foo.bar.baz|");
 
   info("Check that the invoke tooltip is displayed when performing an element access");
   EventUtils.sendString("[");
@@ -87,13 +87,13 @@ async function performTests() {
   ok(autocompletePopup.isOpen, "popup is open after Tab");
   is(getAutocompletePopupLabels(autocompletePopup).join("-"), `"hello"-"world"`,
     "popup has expected items");
-  checkJsTermValueAndCursor(jsterm, "window.foo.bar.baz[|");
+  checkInputValueAndCursorPosition(hud, "window.foo.bar.baz[|");
   is(isConfirmDialogOpened(toolbox), false, "confirm tooltip is now closed");
 
   onPopUpClose = autocompletePopup.once("popup-closed");
   EventUtils.synthesizeKey("KEY_Tab");
   await onPopUpClose;
-  checkJsTermValueAndCursor(jsterm, `window.foo.bar.baz["hello"]|`);
+  checkInputValueAndCursorPosition(hud, `window.foo.bar.baz["hello"]|`);
 
   info("Check that autocompletion work on a getter result");
   onPopUpOpen = autocompletePopup.once("popup-opened");
@@ -103,7 +103,7 @@ async function performTests() {
   ok(getAutocompletePopupLabels(autocompletePopup).includes("toExponential"),
     "popup has expected items");
 
-  tooltip = await setInputValueForGetterConfirmDialog(toolbox, jsterm, "window.foo.rab.");
+  tooltip = await setInputValueForGetterConfirmDialog(toolbox, hud, "window.foo.rab.");
   labelEl = tooltip.querySelector(".confirm-label");
   is(labelEl.textContent, "Invoke getter window.foo.rab to retrieve the property list?",
     "Dialog has expected text content");
@@ -117,11 +117,11 @@ async function performTests() {
   ok(autocompletePopup.isOpen, "popup is open after clicking on the confirm button");
   ok(getAutocompletePopupLabels(autocompletePopup).includes("startsWith"),
     "popup has expected items");
-  checkJsTermValueAndCursor(jsterm, "window.foo.rab.|");
+  checkInputValueAndCursorPosition(hud, "window.foo.rab.|");
   is(isConfirmDialogOpened(toolbox), false, "confirm tooltip is now closed");
 
   info("Open the tooltip again");
-  tooltip = await setInputValueForGetterConfirmDialog(toolbox, jsterm, "window.foo.bar.");
+  tooltip = await setInputValueForGetterConfirmDialog(toolbox, hud, "window.foo.bar.");
   labelEl = tooltip.querySelector(".confirm-label");
   is(labelEl.textContent, "Invoke getter window.foo.bar to retrieve the property list?",
     "Dialog has expected text content");
@@ -133,6 +133,6 @@ async function performTests() {
   ok(autocompletePopup.isOpen, "popup is open after space");
   is(getAutocompletePopupLabels(autocompletePopup).join("-"), "baz-bloop",
     "popup has expected items");
-  checkJsTermValueAndCursor(jsterm, "window.foo.bar.|");
+  checkInputValueAndCursorPosition(hud, "window.foo.bar.|");
   is(isConfirmDialogOpened(toolbox), false, "confirm tooltip is now closed");
 }

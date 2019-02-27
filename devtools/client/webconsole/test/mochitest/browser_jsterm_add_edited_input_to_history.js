@@ -21,10 +21,11 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const {jsterm} = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
+  const {jsterm} = hud;
 
   ok(!jsterm.getInputValue(), "jsterm.getInputValue() is empty");
-  checkJsTermCursor(jsterm, 0, "Cursor is at expected position");
+  checkInputCursorPosition(hud, 0, "Cursor is at expected position");
 
   jsterm.setInputValue('"first item"');
   EventUtils.synthesizeKey("KEY_ArrowUp");

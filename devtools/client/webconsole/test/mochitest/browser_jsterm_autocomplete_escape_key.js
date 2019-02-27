@@ -32,7 +32,8 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const { jsterm } = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
+  const { jsterm } = hud;
   info("web console opened");
 
   const { autocompletePopup: popup } = jsterm;
@@ -56,5 +57,5 @@ async function performTests() {
 
   ok(!popup.isOpen, "popup is not open after VK_ESCAPE");
   is(jsterm.getInputValue(), "window.foo.", "completion was cancelled");
-  ok(!getJsTermCompletionValue(jsterm), "completeNode is empty");
+  ok(!getInputCompletionValue(hud), "completeNode is empty");
 }

@@ -25,9 +25,10 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const {jsterm, ui} = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
+  const {jsterm, ui} = hud;
   ui.clearOutput();
-  ok(!getJsTermCompletionValue(jsterm), "no completeNode.value");
+  ok(!getInputCompletionValue(hud), "no completeNode.value");
 
   jsterm.setInputValue("doc");
 
@@ -36,7 +37,7 @@ async function performTests() {
   EventUtils.sendString("u");
   await onAutocompleteUpdated;
 
-  const completionValue = getJsTermCompletionValue(jsterm);
+  const completionValue = getInputCompletionValue(hud);
 
   info(`Copy "${stringToCopy}" in clipboard`);
   await waitForClipboardPromise(() =>
@@ -49,7 +50,7 @@ async function performTests() {
 
   await onAutocompleteUpdated;
 
-  ok(!getJsTermCompletionValue(jsterm), "no completion value after paste");
+  ok(!getInputCompletionValue(hud), "no completion value after paste");
 
   info("wait for completion update after undo");
   onAutocompleteUpdated = jsterm.once("autocomplete-updated");
@@ -58,8 +59,7 @@ async function performTests() {
 
   await onAutocompleteUpdated;
 
-  checkJsTermCompletionValue(jsterm, completionValue,
-    "same completeNode.value after undo");
+  checkInputCompletionValue(hud, completionValue, "same completeNode.value after undo");
 
   info("wait for completion update after clipboard paste (ctrl-v)");
   onAutocompleteUpdated = jsterm.once("autocomplete-updated");
@@ -67,5 +67,5 @@ async function performTests() {
   EventUtils.synthesizeKey("v", {accelKey: true});
 
   await onAutocompleteUpdated;
-  ok(!getJsTermCompletionValue(jsterm), "no completion value after paste (ctrl-v)");
+  ok(!getInputCompletionValue(hud), "no completion value after paste (ctrl-v)");
 }

@@ -33,7 +33,8 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const { jsterm } = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
+  const { jsterm } = hud;
   info("web console opened");
 
   const { autocompletePopup: popup } = jsterm;
@@ -67,19 +68,19 @@ async function performTests() {
   let prefix = jsterm.getInputValue().replace(/[\S]/g, " ");
   is(popup.selectedIndex, 3, "index 3 is selected");
   is(popup.selectedItem.label, "item3", "item3 is selected");
-  checkJsTermCompletionValue(jsterm, prefix + "item3", "completeNode.value holds item3");
+  checkInputCompletionValue(hud, prefix + "item3", "completeNode.value holds item3");
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
 
   is(popup.selectedIndex, 2, "index 2 is selected");
   is(popup.selectedItem.label, "item2", "item2 is selected");
-  checkJsTermCompletionValue(jsterm, prefix + "item2", "completeNode.value holds item2");
+  checkInputCompletionValue(hud, prefix + "item2", "completeNode.value holds item2");
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
 
   is(popup.selectedIndex, 3, "index 3 is selected");
   is(popup.selectedItem.label, "item3", "item3 is selected");
-  checkJsTermCompletionValue(jsterm, prefix + "item3", "completeNode.value holds item3");
+  checkInputCompletionValue(hud, prefix + "item3", "completeNode.value holds item3");
 
   let currentSelectionIndex = popup.selectedIndex;
 
@@ -106,19 +107,19 @@ async function performTests() {
   ok(!popup.isOpen, "popup is not open");
   is(jsterm.getInputValue(), "window.foo.item3",
      "completion was successful after KEY_Tab");
-  ok(!getJsTermCompletionValue(jsterm), "completeNode is empty");
+  ok(!getInputCompletionValue(hud), "completeNode is empty");
 
   info("Check that hitting Home hides the completion text when the popup is hidden");
-  await setInputValueForAutocompletion(jsterm, "window.foo.item0");
+  await setInputValueForAutocompletion(hud, "window.foo.item0");
   prefix = jsterm.getInputValue().replace(/[\S]/g, " ");
-  checkJsTermCompletionValue(jsterm, prefix + "0", "completeNode has expected value");
+  checkInputCompletionValue(hud, prefix + "0", "completeNode has expected value");
   EventUtils.synthesizeKey("KEY_Home");
-  checkJsTermCompletionValue(jsterm, "", "completeNode was cleared after hitting Home");
+  checkInputCompletionValue(hud, "", "completeNode was cleared after hitting Home");
 
   info("Check that hitting End hides the completion text when the popup is hidden");
-  await setInputValueForAutocompletion(jsterm, "window.foo.item0");
+  await setInputValueForAutocompletion(hud, "window.foo.item0");
   prefix = jsterm.getInputValue().replace(/[\S]/g, " ");
-  checkJsTermCompletionValue(jsterm, prefix + "0", "completeNode has expected value");
+  checkInputCompletionValue(hud, prefix + "0", "completeNode has expected value");
   EventUtils.synthesizeKey("KEY_End");
-  checkJsTermCompletionValue(jsterm, "", "completeNode was cleared after hitting End");
+  checkInputCompletionValue(hud, "", "completeNode was cleared after hitting End");
 }
