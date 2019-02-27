@@ -3663,6 +3663,7 @@ void Document::UpdateFrameRequestCallbackSchedulingState(
 void Document::TakeFrameRequestCallbacks(nsTArray<FrameRequest>& aCallbacks) {
   MOZ_ASSERT(aCallbacks.IsEmpty());
   aCallbacks.SwapElements(mFrameRequestCallbacks);
+  mCanceledFrameRequestCallbacks.clear();
   // No need to manually remove ourselves from the refresh driver; it will
   // handle that part.  But we do have to update our state.
   mFrameRequestCallbacksScheduled = false;
@@ -8974,7 +8975,14 @@ void Document::CancelFrameRequestCallback(int32_t aHandle) {
   // mFrameRequestCallbacks is stored sorted by handle
   if (mFrameRequestCallbacks.RemoveElementSorted(aHandle)) {
     UpdateFrameRequestCallbackSchedulingState();
+  } else {
+    Unused << mCanceledFrameRequestCallbacks.put(aHandle);
   }
+}
+
+bool Document::IsCanceledFrameRequestCallback(int32_t aHandle) const {
+  return !mCanceledFrameRequestCallbacks.empty() &&
+         mCanceledFrameRequestCallbacks.has(aHandle);
 }
 
 nsresult Document::GetStateObject(nsIVariant** aState) {
