@@ -282,6 +282,17 @@ LoadInfo::LoadInfo(
     }
   }
 
+  // Create a new CookieSettings for SharedWorkers and ServiceWorkers because
+  // they cannot inherit it from other contexts:
+  // - ServiceWorkers does not belong to any windows.
+  // - SharedWorkers belong to many windows which could have different
+  //   CookieSettings objects.
+  if (!mCookieSettings &&
+      (aContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER ||
+       aContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER)) {
+    mCookieSettings = CookieSettings::Create();
+  }
+
   // If CSP requires SRI (require-sri-for), then store that information
   // in the loadInfo so we can enforce SRI before loading the subresource.
   if (!mEnforceSRI) {
