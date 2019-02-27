@@ -27,6 +27,8 @@
 #include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/TreeIterator.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLOptionElement.h"
+#include "mozilla/dom/HTMLSelectElement.h"
 #include "mozilla/dom/Text.h"
 
 using namespace mozilla;
@@ -153,12 +155,27 @@ static bool IsTextFormControl(nsIContent& aContent) {
 static bool SkipNode(const nsIContent* aContent) {
   const nsIContent* content = aContent;
   while (content) {
-    if (!IsDisplayedNode(content) || content->IsComment() ||
+    if (!IsVisibleNode(content) || content->IsComment() ||
         content->IsAnyOfHTMLElements(nsGkAtoms::script, nsGkAtoms::noframes,
                                      nsGkAtoms::select)) {
       DEBUG_FIND_PRINTF("Skipping node: ");
       DumpNode(content);
       return true;
+    }
+
+    // Skip option nodes if their select is a combo box, or if they
+    // have no select (somehow).
+    if (content->IsHTMLElement(nsGkAtoms::option)) {
+      const HTMLOptionElement* option = HTMLOptionElement::FromNode(content);
+      if (option) {
+        HTMLSelectElement* select =
+            HTMLSelectElement::FromNodeOrNull(option->GetParent());
+        if (!select || select->IsCombobox()) {
+          DEBUG_FIND_PRINTF("Skipping node: ");
+          DumpNode(content);
+          return true;
+        }
+      }
     }
 
     // Skip NAC in non-form-control.
