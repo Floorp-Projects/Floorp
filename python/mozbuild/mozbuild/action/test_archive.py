@@ -775,7 +775,7 @@ def main(argv):
             create_tar_gz_from_files(fh, files, compresslevel=5)
             file_count = len(files)
         elif out_file.endswith('.zip'):
-            with JarWriter(fileobj=fh, optimize=False, compress_level=5) as writer:
+            with JarWriter(fileobj=fh, compress_level=5) as writer:
                 for p, f in res:
                     writer.add(p.encode('utf-8'), f.read(), mode=f.mode,
                                skip_duplicates=True)

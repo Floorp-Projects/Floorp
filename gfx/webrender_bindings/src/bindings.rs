@@ -2220,7 +2220,9 @@ pub extern "C" fn wr_dp_define_scroll_layer(state: &mut WrState,
         vec![],
         None,
         ScrollSensitivity::Script,
-        scroll_offset,
+        // TODO(gw): We should also update the Gecko-side APIs to provide
+        //           this as a vector rather than a point.
+        scroll_offset.to_vector(),
     );
 
     WrSpaceAndClip::from_webrender(space_and_clip)

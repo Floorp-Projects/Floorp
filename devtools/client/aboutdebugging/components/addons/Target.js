@@ -10,8 +10,7 @@ const { Component } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const {
-  debugLocalAddon,
-  debugRemoteAddon,
+  debugAddon,
   getExtensionUuid,
   isTemporaryID,
   parseFileUri,
@@ -175,13 +174,8 @@ class AddonTarget extends Component {
   }
 
   debug() {
-    const { client, connect, target } = this.props;
-
-    if (connect.type === "REMOTE") {
-      debugRemoteAddon(target.addonID, client);
-    } else if (connect.type === "LOCAL") {
-      debugLocalAddon(target.addonID);
-    }
+    const { client, target } = this.props;
+    debugAddon(target.addonID, client);
   }
 
   uninstall() {

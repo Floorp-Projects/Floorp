@@ -5,64 +5,36 @@
 "use strict";
 
 const { Cc, Ci } = require("chrome");
-loader.lazyImporter(this, "BrowserToolboxProcess",
-  "resource://devtools/client/framework/ToolboxProcess.jsm");
 loader.lazyImporter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
 
 const {Toolbox} = require("devtools/client/framework/toolbox");
 
 const {gDevTools} = require("devtools/client/framework/devtools");
 
-let browserToolboxProcess = null;
-let remoteAddonToolbox = null;
-function closeToolbox() {
-  if (browserToolboxProcess) {
-    browserToolboxProcess.close();
-  }
-
-  if (remoteAddonToolbox) {
-    remoteAddonToolbox.destroy();
-  }
-}
+let addonToolbox = null;
 
 /**
- * Start debugging an addon in the current instance of Firefox.
- *
- * @param {String} addonID
- *        String id of the addon to debug.
- */
-exports.debugLocalAddon = async function(addonID) {
-  // Close previous addon debugging toolbox.
-  closeToolbox();
-
-  browserToolboxProcess = BrowserToolboxProcess.init({
-    addonID,
-    onClose: () => {
-      browserToolboxProcess = null;
-    },
-  });
-};
-
-/**
- * Start debugging an addon in a remote instance of Firefox.
+ * Start debugging an addon.
  *
  * @param {String} id
  *        The addon id to debug.
  * @param {DebuggerClient} client
- *        Required for remote debugging.
+ *        Required for debugging.
  */
-exports.debugRemoteAddon = async function(id, client) {
+exports.debugAddon = async function(id, client) {
   const addonFront = await client.mainRoot.getAddon({ id });
 
   const target = await addonFront.connect();
 
   // Close previous addon debugging toolbox.
-  closeToolbox();
+  if (addonToolbox) {
+    addonToolbox.destroy();
+  }
 
   const hostType = Toolbox.HostType.WINDOW;
-  remoteAddonToolbox = await gDevTools.showToolbox(target, null, hostType);
-  remoteAddonToolbox.once("destroy", () => {
-    remoteAddonToolbox = null;
+  addonToolbox = await gDevTools.showToolbox(target, null, hostType);
+  addonToolbox.once("destroy", () => {
+    addonToolbox = null;
   });
 };
 

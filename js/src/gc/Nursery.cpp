@@ -698,8 +698,35 @@ inline void js::Nursery::endProfile(ProfileKey key) {
 }
 
 bool js::Nursery::shouldCollect() const {
-  uint32_t threshold = tunables().nurseryFreeThresholdForIdleCollection();
-  return !isEmpty() && (minorGCRequested() || freeSpace() < threshold);
+  if (minorGCRequested()) {
+    return true;
+  }
+
+  bool belowBytesThreshold =
+      freeSpace() < tunables().nurseryFreeThresholdForIdleCollection();
+  bool belowFractionThreshold =
+      float(freeSpace()) / float(capacity()) <
+      tunables().nurseryFreeThresholdForIdleCollectionFraction();
+
+  // We want to use belowBytesThreshold when the nursery is sufficiently large,
+  // and belowFractionThreshold when it's small.
+  //
+  // When the nursery is small then belowBytesThreshold is a lower threshold
+  // (triggered earlier) than belowFractionThreshold.  So if the fraction
+  // threshold is true, the bytes one will be true also.  The opposite is true
+  // when the nursery is large.
+  //
+  // Therefore, by the time we cross the threshold we care about, we've already
+  // crossed the other one, and we can boolean AND to use either condition
+  // without encoding any "is the nursery big/small" test/threshold.  The point
+  // at which they cross is when the nursery is:  BytesThreshold /
+  // FractionThreshold large.
+  //
+  // With defaults that's:
+  //
+  //   1MB = 256KB / 0.25
+  //
+  return belowBytesThreshold && belowFractionThreshold;
 }
 
 static inline bool IsFullStoreBufferReason(JS::GCReason reason) {

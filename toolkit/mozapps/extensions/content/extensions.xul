@@ -141,18 +141,18 @@
                       priority="1000"/>
         <richlistitem id="category-legacy" value="addons://legacy/"
                       class="category" priority="20000"
-                      disabled="true"/>
+                      hidden="true"/>
         <richlistitem id="category-availableUpdates" value="addons://updates/available"
                       class="category"
                       data-l10n-id="extensions-view-available-updates"
                       data-l10n-attrs="name"
-                      disabled="true"/>
+                      hidden="true"/>
         <richlistitem id="category-recentUpdates" value="addons://updates/recent"
                       class="category"
                       data-l10n-id="extensions-view-recent-updates"
                       data-l10n-attrs="name"
                       priority="101000"
-                      disabled="true"/>
+                      hidden="true"/>
       </richlistbox>
 
       <spacer flex="1"/>

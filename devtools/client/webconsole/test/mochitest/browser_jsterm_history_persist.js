@@ -71,7 +71,7 @@ async function testHistory() {
 
   // Set input value separately from execute so UP arrow accurately navigates
   // history.
-  hud3.jsterm.setInputValue('"hello from third tab"');
+  setInputValue(hud3, '"hello from third tab"');
   await hud3.jsterm.execute();
 
   state1 = hud1.ui.wrapper.getStore().getState();
@@ -124,7 +124,7 @@ async function populateInputHistory(hud) {
 
   for (let i = 0; i < INPUT_HISTORY_COUNT; i++) {
     // Set input value separately from execute so UP arrow accurately navigates history.
-    jsterm.setInputValue(i.toString());
+    setInputValue(hud, i.toString());
     await jsterm.execute();
   }
 }
@@ -141,6 +141,6 @@ function testNavigatingHistoryInUI(hud) {
   // restores this.
   for (let i = INPUT_HISTORY_COUNT - 1; i >= 0; i--) {
     EventUtils.synthesizeKey("KEY_ArrowUp");
-    is(jsterm.getInputValue(), i, "Pressing up restores last input");
+    is(getInputValue(hud), i, "Pressing up restores last input");
   }
 }

@@ -27,7 +27,7 @@ class MachCommands(MachCommandBase):
         if os.path.isfile(dest):
             os.unlink(dest)
 
-        jarrer = Jarrer(optimize=False)
+        jarrer = Jarrer()
         for p, f in FileFinder(src).find('*'):
             jarrer.add(p, f)
         jarrer.copy(dest)

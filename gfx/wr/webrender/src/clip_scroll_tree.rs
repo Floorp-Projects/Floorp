@@ -433,6 +433,7 @@ impl ClipScrollTree {
         content_size: &LayoutSize,
         scroll_sensitivity: ScrollSensitivity,
         frame_kind: ScrollFrameKind,
+        external_scroll_offset: LayoutVector2D,
     ) -> SpatialNodeIndex {
         let node = SpatialNode::new_scroll_frame(
             pipeline_id,
@@ -442,6 +443,7 @@ impl ClipScrollTree {
             content_size,
             scroll_sensitivity,
             frame_kind,
+            external_scroll_offset,
         );
         self.add_spatial_node(node)
     }

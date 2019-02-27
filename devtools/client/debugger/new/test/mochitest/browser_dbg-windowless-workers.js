@@ -16,6 +16,14 @@ function threadIsSelected(dbg, index) {
   );
 }
 
+function getLabel(dbg, index) {
+  return findElement(dbg, "expressionNode", index).innerText;
+}
+
+function getValue(dbg, index) {
+  return findElement(dbg, "expressionValue", index).innerText;
+}
+
 // Test basic windowless worker functionality: the main thread and worker can be
 // separately controlled from the same debugger.
 add_task(async function() {
@@ -45,9 +53,20 @@ add_task(async function() {
   await waitForPaused(dbg, "simple-worker.js");
   assertPausedAtSourceAndLine(dbg, workerSource.id, 3);
 
+  await addExpression(dbg, "count");
+  is(getLabel(dbg, 1), "count");
+  const v = getValue(dbg, 1);
+  ok(v == "" + +v, "Value of count should be a number");
+
   info("Test stepping in a worker");
   await stepOver(dbg);
   assertPausedAtSourceAndLine(dbg, workerSource.id, 4);
+
+  // The watch expression should update with an incremented value.
+  await waitUntil(() => {
+    const v2 = getValue(dbg, 1);
+    return +v2 == +v + 1;
+  });
 
   info("Test resuming in a worker");
   await resume(dbg);
