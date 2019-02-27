@@ -104,8 +104,7 @@ NS_IMPL_ISUPPORTS(PSMContentStreamListener, nsIStreamListener,
                   nsIRequestObserver)
 
 NS_IMETHODIMP
-PSMContentStreamListener::OnStartRequest(nsIRequest* request,
-                                         nsISupports* context) {
+PSMContentStreamListener::OnStartRequest(nsIRequest* request) {
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("CertDownloader::OnStartRequest\n"));
 
   int64_t contentLength = ComputeContentLength(request);
@@ -267,8 +266,7 @@ PSMContentDownloaderChild::PSMContentDownloaderChild() {}
 PSMContentDownloaderChild::~PSMContentDownloaderChild() {}
 
 NS_IMETHODIMP
-PSMContentDownloaderChild::OnStartRequest(nsIRequest* request,
-                                          nsISupports* context) {
+PSMContentDownloaderChild::OnStartRequest(nsIRequest* request) {
   nsCOMPtr<nsIDivertableChannel> divertable = do_QueryInterface(request);
   if (divertable) {
     mozilla::net::ChannelDiverterChild* diverter = nullptr;

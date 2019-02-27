@@ -68,7 +68,7 @@ ImageListener::ImageListener(ImageDocument* aDocument)
 ImageListener::~ImageListener() {}
 
 NS_IMETHODIMP
-ImageListener::OnStartRequest(nsIRequest* request, nsISupports* ctxt) {
+ImageListener::OnStartRequest(nsIRequest* request) {
   NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
 
   ImageDocument* imgDoc = static_cast<ImageDocument*>(mDocument.get());
@@ -124,7 +124,7 @@ ImageListener::OnStartRequest(nsIRequest* request, nsISupports* ctxt) {
     imageLoader->LoadImageWithChannel(channel, getter_AddRefs(mNextStream));
   }
 
-  return MediaDocumentStreamListener::OnStartRequest(request, ctxt);
+  return MediaDocumentStreamListener::OnStartRequest(request);
 }
 
 NS_IMETHODIMP

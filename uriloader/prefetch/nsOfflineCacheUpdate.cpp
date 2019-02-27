@@ -211,7 +211,7 @@ nsresult nsManifestCheck::Begin() {
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsManifestCheck::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) {
+nsManifestCheck::OnStartRequest(nsIRequest *aRequest) {
   return NS_OK;
 }
 
@@ -391,8 +391,7 @@ nsresult nsOfflineCacheUpdateItem::Cancel() {
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsOfflineCacheUpdateItem::OnStartRequest(nsIRequest *aRequest,
-                                         nsISupports *aContext) {
+nsOfflineCacheUpdateItem::OnStartRequest(nsIRequest *aRequest) {
   mState = LoadStatus::RECEIVING;
 
   return NS_OK;
@@ -1038,8 +1037,7 @@ void nsOfflineManifestItem::ReadStrictFileOriginPolicyPref() {
 }
 
 NS_IMETHODIMP
-nsOfflineManifestItem::OnStartRequest(nsIRequest *aRequest,
-                                      nsISupports *aContext) {
+nsOfflineManifestItem::OnStartRequest(nsIRequest *aRequest) {
   nsresult rv;
 
   nsCOMPtr<nsIHttpChannel> channel = do_QueryInterface(aRequest, &rv);
@@ -1059,7 +1057,7 @@ nsOfflineManifestItem::OnStartRequest(nsIRequest *aRequest,
   rv = GetOldManifestContentHash(aRequest);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return nsOfflineCacheUpdateItem::OnStartRequest(aRequest, aContext);
+  return nsOfflineCacheUpdateItem::OnStartRequest(aRequest);
 }
 
 NS_IMETHODIMP

@@ -1796,7 +1796,7 @@ nsFtpState::OnTransportStatus(nsITransport *transport, nsresult status,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsFtpState::OnStartRequest(nsIRequest *request, nsISupports *context) {
+nsFtpState::OnStartRequest(nsIRequest *request) {
   mStorReplyReceived = false;
   return NS_OK;
 }

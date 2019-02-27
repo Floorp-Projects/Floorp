@@ -89,8 +89,7 @@ nsForceXMLListener::~nsForceXMLListener() {}
 NS_IMPL_ISUPPORTS(nsForceXMLListener, nsIStreamListener, nsIRequestObserver)
 
 NS_IMETHODIMP
-nsForceXMLListener::OnStartRequest(nsIRequest *aRequest,
-                                   nsISupports *aContext) {
+nsForceXMLListener::OnStartRequest(nsIRequest *aRequest) {
   nsresult status;
   aRequest->GetStatus(&status);
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
@@ -98,7 +97,7 @@ nsForceXMLListener::OnStartRequest(nsIRequest *aRequest,
     channel->SetContentType(NS_LITERAL_CSTRING("text/xml"));
   }
 
-  return mListener->OnStartRequest(aRequest, aContext);
+  return mListener->OnStartRequest(aRequest);
 }
 
 NS_IMETHODIMP
@@ -240,8 +239,8 @@ nsresult nsSyncLoader::PushSyncStream(nsIStreamListener *aListener) {
 }
 
 NS_IMETHODIMP
-nsSyncLoader::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) {
-  return mListener->OnStartRequest(aRequest, aContext);
+nsSyncLoader::OnStartRequest(nsIRequest *aRequest) {
+  return mListener->OnStartRequest(aRequest);
 }
 
 NS_IMETHODIMP
@@ -329,7 +328,7 @@ nsresult nsSyncLoadService::PushSyncStreamToListener(
   }
 
   // Load
-  rv = aListener->OnStartRequest(aChannel, nullptr);
+  rv = aListener->OnStartRequest(aChannel);
   if (NS_SUCCEEDED(rv)) {
     uint64_t sourceOffset = 0;
     while (1) {

@@ -138,7 +138,7 @@ mozilla::ipc::IPCResult ExternalHelperAppParent::RecvOnStartRequest(
 
   mEntityID = entityID;
   mPending = true;
-  mStatus = mListener->OnStartRequest(this, nullptr);
+  mStatus = mListener->OnStartRequest(this);
   return IPC_OK();
 }
 
@@ -200,9 +200,9 @@ ExternalHelperAppParent::OnDataAvailable(nsIRequest* request, nsISupports* ctx,
 }
 
 NS_IMETHODIMP
-ExternalHelperAppParent::OnStartRequest(nsIRequest* request, nsISupports* ctx) {
+ExternalHelperAppParent::OnStartRequest(nsIRequest* request) {
   MOZ_ASSERT(mDiverted);
-  return mListener->OnStartRequest(request, ctx);
+  return mListener->OnStartRequest(request);
 }
 
 NS_IMETHODIMP

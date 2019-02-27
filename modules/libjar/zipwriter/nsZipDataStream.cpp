@@ -71,11 +71,10 @@ NS_IMETHODIMP nsZipDataStream::OnDataAvailable(nsIRequest *aRequest,
   return ProcessData(aRequest, aContext, buffer.get(), aOffset, aCount);
 }
 
-NS_IMETHODIMP nsZipDataStream::OnStartRequest(nsIRequest *aRequest,
-                                              nsISupports *aContext) {
+NS_IMETHODIMP nsZipDataStream::OnStartRequest(nsIRequest *aRequest) {
   if (!mOutput) return NS_ERROR_NOT_INITIALIZED;
 
-  return mOutput->OnStartRequest(aRequest, aContext);
+  return mOutput->OnStartRequest(aRequest);
 }
 
 NS_IMETHODIMP nsZipDataStream::OnStopRequest(nsIRequest *aRequest,
@@ -133,7 +132,7 @@ nsresult nsZipDataStream::ProcessData(nsIRequest *aRequest,
 nsresult nsZipDataStream::ReadStream(nsIInputStream *aStream) {
   if (!mOutput) return NS_ERROR_NOT_INITIALIZED;
 
-  nsresult rv = OnStartRequest(nullptr, nullptr);
+  nsresult rv = OnStartRequest(nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   auto buffer = MakeUnique<char[]>(4096);

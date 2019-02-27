@@ -60,8 +60,8 @@ ExternalHelperAppChild::OnDataAvailable(nsIRequest *request, nsISupports *ctx,
 //////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-ExternalHelperAppChild::OnStartRequest(nsIRequest *request, nsISupports *ctx) {
-  nsresult rv = mHandler->OnStartRequest(request, ctx);
+ExternalHelperAppChild::OnStartRequest(nsIRequest *request) {
+  nsresult rv = mHandler->OnStartRequest(request);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
 
   // Calling OnStartRequest could cause mHandler to close the window it was

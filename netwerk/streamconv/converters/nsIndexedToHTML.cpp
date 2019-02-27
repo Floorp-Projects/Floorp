@@ -95,14 +95,14 @@ nsIndexedToHTML::AsyncConvertData(const char* aFromType, const char* aToType,
 }
 
 NS_IMETHODIMP
-nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports* aContext) {
+nsIndexedToHTML::OnStartRequest(nsIRequest* request) {
   nsCString buffer;
-  nsresult rv = DoOnStartRequest(request, aContext, buffer);
+  nsresult rv = DoOnStartRequest(request, nullptr, buffer);
   if (NS_FAILED(rv)) {
     request->Cancel(rv);
   }
 
-  rv = mListener->OnStartRequest(request, aContext);
+  rv = mListener->OnStartRequest(request);
   if (NS_FAILED(rv)) return rv;
 
   // The request may have been canceled, and if that happens, we want to
@@ -112,7 +112,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports* aContext) {
 
   // Push our buffer to the listener.
 
-  rv = SendToListener(request, aContext, buffer);
+  rv = SendToListener(request, nullptr, buffer);
   return rv;
 }
 
@@ -145,7 +145,7 @@ nsresult nsIndexedToHTML::DoOnStartRequest(nsIRequest* request,
   rv = mParser->SetListener(this);
   if (NS_FAILED(rv)) return rv;
 
-  rv = mParser->OnStartRequest(request, aContext);
+  rv = mParser->OnStartRequest(request);
   if (NS_FAILED(rv)) return rv;
 
   nsAutoCString baseUri, titleUri;
