@@ -16,7 +16,15 @@ import org.junit.Before
 import org.robolectric.Robolectric
 import android.content.pm.ActivityInfo
 import android.content.pm.ResolveInfo
+import androidx.work.testing.WorkManagerTestInitHelper
+import mozilla.components.service.glean.BooleanMetricType
+import mozilla.components.service.glean.Lifetime
+import mozilla.components.service.glean.resetGlean
+import mozilla.components.service.glean.triggerWorkManager
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
 import org.robolectric.Shadows.shadowOf
+import java.util.concurrent.TimeUnit
 
 @RunWith(RobolectricTestRunner::class)
 class GleanDebugActivityTest {
@@ -25,6 +33,11 @@ class GleanDebugActivityTest {
 
     @Before
     fun setup() {
+        resetGlean()
+
+        WorkManagerTestInitHelper.initializeTestWorkManager(
+            ApplicationProvider.getApplicationContext())
+
         // This makes sure we have a "launch" intent in our package, otherwise
         // it will fail looking for it in `GleanDebugActivityTest`.
         val pm = ApplicationProvider.getApplicationContext<Context>().packageManager
@@ -88,5 +101,43 @@ class GleanDebugActivityTest {
         // Check that our main activity was launched.
         assertEquals(testPackageName,
             shadowOf(activity.get()).peekNextStartedActivityForResult().intent.`package`!!)
+    }
+
+    @Test
+    fun `pings are sent using sendPing`() {
+        val server = MockWebServer()
+        server.enqueue(MockResponse().setBody("OK"))
+
+        resetGlean(config = Glean.configuration.copy(
+            serverEndpoint = "http://" + server.hostName + ":" + server.port
+        ))
+
+        // Put some metric data in the store, otherwise we won't get a ping out
+        // Define a 'booleanMetric' boolean metric, which will be stored in "store1"
+        val booleanMetric = BooleanMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Application,
+            name = "boolean_metric",
+            sendInPings = listOf("store1")
+        )
+
+        booleanMetric.set(true)
+        assertTrue(booleanMetric.testHasValue())
+
+        // Set the extra values and start the intent.
+        val intent = Intent(ApplicationProvider.getApplicationContext<Context>(),
+        GleanDebugActivity::class.java)
+        intent.putExtra("sendPing", "store1")
+        val activity = Robolectric.buildActivity(GleanDebugActivity::class.java, intent)
+        activity.create().start().resume()
+        triggerWorkManager()
+        val request = server.takeRequest(10L, TimeUnit.SECONDS)
+
+        assertTrue(
+            request.requestUrl.encodedPath().startsWith("/submit/mozilla-components-service-glean/store1")
+        )
+
+        server.shutdown()
     }
 }

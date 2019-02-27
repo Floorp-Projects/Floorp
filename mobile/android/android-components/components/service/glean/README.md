@@ -117,12 +117,16 @@ for the command line switches used to pass the extra keys. These are the current
 
 |key|type|description|
 |---|----|-----------|
-| logPings | boolean | if set to `true`, glean dumps pings to logcat; defaults to `false`|
+| logPings | boolean (--ez) | If set to `true`, glean dumps pings to logcat; defaults to `false` |
+| sendPing | string (--es) | Sends the ping with the given name immediately. |
 
-For example, to start the glean sample application with the option to dump pings to logcat turned on,
-the following command can be used:
+For example, to direct the glean sample application to dump pings to logcat, and send the "metrics" ping immediately, the following command can be used:
 
-`adb shell am start -n org.mozilla.samples.glean/mozilla.components.service.glean.debug.GleanDebugActivity --ez logPings true`
+```
+adb shell am start -n org.mozilla.samples.glean/mozilla.components.service.glean.debug.GleanDebugActivity \
+  --ez logPings true \
+  --es sendPing metrics
+```
 
 ## Contact
 

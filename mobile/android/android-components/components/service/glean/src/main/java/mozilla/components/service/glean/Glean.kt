@@ -237,44 +237,53 @@ open class GleanInternalAPI internal constructor () {
      * @param pingEvent The type of the event.
      */
     fun handleEvent(pingEvent: Glean.PingEvent) {
-        if (!isInitialized()) {
-            logger.error("Glean must be initialized before handling events.")
-            return
-        }
-
-        if (!uploadEnabled) {
-            logger.error("Glean must be enabled before handling events.")
-            return
-        }
-
-        val availableToSend = when (pingEvent) {
+        when (pingEvent) {
             Glean.PingEvent.Background -> {
-                // Schedule the baseline and event pings and save the result to determine whether or not
-                // we need to schedule the upload worker
-                assembleAndSerializePing(BaselinePing.STORE_NAME)
-                assembleAndSerializePing("events")
-
-                // Always true since baseline is always sent
-                true
+                // Schedule the baseline and event pings
+                sendPings(listOf(BaselinePing.STORE_NAME, "events"))
             }
             Glean.PingEvent.Default -> {
                 // Check the metrics ping schedule to determine whether it's time to schedule a new
                 // metrics ping or not
                 if (metricsPingScheduler.canSendPing() &&
-                    assembleAndSerializePing(MetricsPingScheduler.STORE_NAME)) {
+                    sendPings(listOf(MetricsPingScheduler.STORE_NAME))) {
                     metricsPingScheduler.updateSentTimestamp()
-                    true
-                } else {
-                    false
                 }
             }
+        }
+    }
+
+    /**
+     * Send a list of pings by name.
+     *
+     * Both the ping collection and ping uploading happens asyncronously.
+     *
+     * @param pingNames List of pings to send.
+     */
+    internal fun sendPings(pingNames: List<String>): Boolean {
+        if (!isInitialized()) {
+            logger.error("Glean must be initialized before sending pings.")
+            return false
+        }
+
+        if (!uploadEnabled) {
+            logger.error("Glean must be enabled before sending pings.")
+            return false
+        }
+
+        var hasPingContent = false
+        for (pingName in pingNames) {
+            val hasContent = assembleAndSerializePing(pingName)
+            hasPingContent = hasPingContent || hasContent
         }
 
         // It should only take a single PingUploadWorker to process all queued pings, so we only
         // want to have one scheduled at a time.
-        if (availableToSend) {
+        if (hasPingContent) {
             PingUploadWorker.enqueueWorker()
         }
+
+        return hasPingContent
     }
 
     /**

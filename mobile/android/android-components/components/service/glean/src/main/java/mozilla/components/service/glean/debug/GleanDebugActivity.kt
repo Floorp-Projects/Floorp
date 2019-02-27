@@ -22,6 +22,12 @@ import mozilla.components.support.base.log.logger.Logger
 class GleanDebugActivity : Activity() {
     private val logger = Logger("glean/GleanDebugActivity")
 
+    // IMPORTANT: These activities are unsecured, and may be triggered by
+    // any other application on the device, including in release builds.
+    // Therefore, care should be taken in selecting what features are
+    // exposed this way.  For example, it would be dangerous to change the
+    // submission URL.
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -35,6 +41,10 @@ class GleanDebugActivity : Activity() {
             // the real product's activity.
             logger.info("Setting debug config $debugConfig")
             Glean.configuration = debugConfig
+
+            intent.getStringExtra("sendPing")?.let {
+                Glean.sendPings(listOf(it))
+            }
         }
 
         val intent = packageManager.getLaunchIntentForPackage(packageName)
