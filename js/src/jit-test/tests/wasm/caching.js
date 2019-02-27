@@ -66,7 +66,7 @@ testCached(
        (func $t2 (import "" "t2") (type $T))
        (func $t3 (type $T) (i32.const 30))
        (func $t4 (type $T) (i32.const 40))
-       (table anyfunc (elem $t1 $t2 $t3 $t4))
+       (table funcref (elem $t1 $t2 $t3 $t4))
        (func (export "run") (param i32) (result i32)
          (call_indirect $T (get_local 0))))`,
     {'':{ t1() { return 10 }, t2() { return 20 } }},

@@ -20,7 +20,7 @@ function main() {
          get_local 1
          i32.add
         )
-        (table (export "table") 10 anyfunc)
+        (table (export "table") 10 funcref)
         (elem (i32.const 0) $add)
     )`).exports;
 
@@ -40,7 +40,7 @@ function withTier2() {
          get_local 1
          i32.add
         )
-        (table (export "table") 10 anyfunc)
+        (table (export "table") 10 funcref)
         (elem (i32.const 0) $add)
     )`));
     var { table } = new WebAssembly.Instance(module).exports;
