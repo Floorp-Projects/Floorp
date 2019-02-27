@@ -97,6 +97,18 @@ this.CookiePolicyHelper = {
       let browser = gBrowser.getBrowserForTab(tab);
       await BrowserTestUtils.browserLoaded(browser);
 
+      // Let's create an iframe.
+      await ContentTask.spawn(browser, { url: TEST_TOP_PAGE },
+                              async obj => {
+        return new content.Promise(resolve => {
+          let ifr = content.document.createElement('iframe');
+          ifr.setAttribute("id", "iframe");
+          ifr.src = obj.url;
+          ifr.onload = resolve;
+          content.document.body.appendChild(ifr);
+        });
+      });
+
       // Let's exec the "good" callback.
       info("Executing the test after setting the cookie behavior to " + config.fromBehavior + " and permission to " + config.fromPermission);
       await ContentTask.spawn(browser,
@@ -104,7 +116,10 @@ this.CookiePolicyHelper = {
                               async obj => {
         let runnableStr = `(() => {return (${obj.callback});})();`;
         let runnable = eval(runnableStr); // eslint-disable-line no-eval
-        await runnable();
+        await runnable(content);
+
+        let ifr = content.document.getElementById("iframe");
+        await runnable(ifr.contentWindow);
       });
 
       // Now, let's change the cookie settings
@@ -120,7 +135,10 @@ this.CookiePolicyHelper = {
                               async obj => {
         let runnableStr = `(() => {return (${obj.callback});})();`;
         let runnable = eval(runnableStr); // eslint-disable-line no-eval
-        await runnable.call(content.window);
+        await runnable(content);
+
+        let ifr = content.document.getElementById("iframe");
+        await runnable(ifr.contentWindow);
       });
 
       // Let's close the tab.
@@ -140,7 +158,7 @@ this.CookiePolicyHelper = {
                               async obj => {
         let runnableStr = `(() => {return (${obj.callback});})();`;
         let runnable = eval(runnableStr); // eslint-disable-line no-eval
-        await runnable.call(content.window);
+        await runnable(content);
       });
 
       // Let's close the tab.

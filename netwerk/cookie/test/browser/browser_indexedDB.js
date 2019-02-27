@@ -1,12 +1,12 @@
 CookiePolicyHelper.runTest("IndexedDB", {
-  cookieJarAccessAllowed: async _ => {
-    content.indexedDB.open("test", "1");
+  cookieJarAccessAllowed: async w => {
+    w.indexedDB.open("test", "1");
     ok(true, "IDB should be allowed");
   },
 
-  cookieJarAccessDenied: async _ => {
+  cookieJarAccessDenied: async w => {
     try {
-      content.indexedDB.open("test", "1");
+      w.indexedDB.open("test", "1");
       ok(false, "IDB should be blocked");
     } catch (e) {
       ok(true, "IDB should be blocked");
@@ -16,22 +16,22 @@ CookiePolicyHelper.runTest("IndexedDB", {
 });
 
 CookiePolicyHelper.runTest("IndexedDB in workers", {
-  cookieJarAccessAllowed: async _ => {
+  cookieJarAccessAllowed: async w => {
     function nonBlockCode() {
       indexedDB.open("test", "1");
       postMessage(true);
     }
 
-    let blob = new content.Blob([nonBlockCode.toString() + "; nonBlockCode();"]);
+    let blob = new w.Blob([nonBlockCode.toString() + "; nonBlockCode();"]);
     ok(blob, "Blob has been created");
 
-    let blobURL = content.URL.createObjectURL(blob);
+    let blobURL = w.URL.createObjectURL(blob);
     ok(blobURL, "Blob URL has been created");
 
-    let worker = new content.Worker(blobURL);
+    let worker = new w.Worker(blobURL);
     ok(worker, "Worker has been created");
 
-    await new content.Promise((resolve, reject) => {
+    await new w.Promise((resolve, reject) => {
       worker.onmessage = function(e) {
         if (e.data) {
           resolve();
@@ -46,7 +46,7 @@ CookiePolicyHelper.runTest("IndexedDB in workers", {
     });
   },
 
-  cookieJarAccessDenied: async _ => {
+  cookieJarAccessDenied: async w => {
     function blockCode() {
       try {
         indexedDB.open("test", "1");
@@ -56,16 +56,16 @@ CookiePolicyHelper.runTest("IndexedDB in workers", {
       }
     }
 
-    let blob = new content.Blob([blockCode.toString() + "; blockCode();"]);
+    let blob = new w.Blob([blockCode.toString() + "; blockCode();"]);
     ok(blob, "Blob has been created");
 
-    let blobURL = content.URL.createObjectURL(blob);
+    let blobURL = w.URL.createObjectURL(blob);
     ok(blobURL, "Blob URL has been created");
 
-    let worker = new content.Worker(blobURL);
+    let worker = new w.Worker(blobURL);
     ok(worker, "Worker has been created");
 
-    await new content.Promise((resolve, reject) => {
+    await new w.Promise((resolve, reject) => {
       worker.onmessage = function(e) {
         if (e.data) {
           resolve();
