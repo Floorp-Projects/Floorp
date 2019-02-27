@@ -1810,24 +1810,26 @@ class Extension extends ExtensionData {
   async startup() {
     this.state = "Startup";
 
+    let resolveReadyPromise;
+    let readyPromise = new Promise(resolve => {
+      resolveReadyPromise = resolve;
+    });
+
     // Create a temporary policy object for the devtools and add-on
     // manager callers that depend on it being available early.
     this.policy = new WebExtensionPolicy({
       id: this.id,
       mozExtensionHostname: this.uuid,
-      baseURL: this.baseURI.spec,
+      baseURL: this.resourceURL,
       allowedOrigins: new MatchPatternSet([]),
       localizeCallback() {},
+      readyPromise,
     });
-    if (!WebExtensionPolicy.getByID(this.id)) {
-      // The add-on manager doesn't handle async startup and shutdown,
-      // so during upgrades and add-on restarts, startup() gets called
-      // before the last shutdown has completed, and this fails when
-      // there's another active add-on with the same ID.
-      this.policy.active = true;
-    }
 
     this.policy.extension = this;
+    if (!WebExtensionPolicy.getByID(this.id)) {
+      this.policy.active = true;
+    }
 
     ExtensionTelemetry.extensionStartup.stopwatchStart(this);
     try {
@@ -1875,6 +1877,8 @@ class Extension extends ExtensionData {
           this.setSharedData("storageIDBPrincipal", ExtensionStorageIDB.getStoragePrincipal(this));
         }
       }
+
+      resolveReadyPromise(this.policy);
 
       // The "startup" Management event sent on the extension instance itself
       // is emitted just before the Management "startup" event,
