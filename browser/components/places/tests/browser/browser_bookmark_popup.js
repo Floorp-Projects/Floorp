@@ -29,7 +29,7 @@ add_task(async function setup() {
 function mouseout() {
   let mouseOutPromise = BrowserTestUtils.waitForEvent(bookmarkPanel, "mouseout");
   EventUtils.synthesizeMouse(bookmarkPanel, 0, 0, {type: "mouseout"});
-  EventUtils.synthesizeMouseAtCenter(gURLBar, {type: "mousemove"});
+  EventUtils.synthesizeMouseAtCenter(gURLBar.textbox, {type: "mousemove"});
   info("Waiting for mouseout event");
   return mouseOutPromise;
 }

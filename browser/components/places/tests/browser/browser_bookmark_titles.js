@@ -6,7 +6,7 @@
 
 var tests = [
   // Common page.
-  ["http://example.com/browser/browser/base/content/test/general/dummy_page.html",
+  ["http://example.com/browser/browser/components/places/tests/browser/dummy_page.html",
    "Dummy test page"],
   // Data URI.
   ["data:text/html;charset=utf-8,<title>test%20data:%20url</title>",
