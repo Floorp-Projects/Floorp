@@ -121,10 +121,11 @@ mozilla::ipc::IPCResult APZInputBridgeParent::RecvUpdateWheelTransaction(
 
 mozilla::ipc::IPCResult APZInputBridgeParent::RecvProcessUnhandledEvent(
     const LayoutDeviceIntPoint& aRefPoint, LayoutDeviceIntPoint* aOutRefPoint,
-    ScrollableLayerGuid* aOutTargetGuid, uint64_t* aOutFocusSequenceNumber) {
+    ScrollableLayerGuid* aOutTargetGuid, uint64_t* aOutFocusSequenceNumber,
+    LayersId* aOutLayersId) {
   LayoutDeviceIntPoint refPoint = aRefPoint;
-  mTreeManager->InputBridge()->ProcessUnhandledEvent(&refPoint, aOutTargetGuid,
-                                                     aOutFocusSequenceNumber);
+  mTreeManager->InputBridge()->ProcessUnhandledEvent(
+      &refPoint, aOutTargetGuid, aOutFocusSequenceNumber, aOutLayersId);
   *aOutRefPoint = refPoint;
 
   return IPC_OK();
