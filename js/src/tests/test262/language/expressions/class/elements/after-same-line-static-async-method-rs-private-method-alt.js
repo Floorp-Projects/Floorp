@@ -1,11 +1,11 @@
-// |reftest| skip -- class-methods-private,class-fields-public is not supported
+// |reftest| skip -- class-methods-private,class-fields-private,class-fields-public is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-elements/rs-private-method-alt.case
 // - src/class-elements/productions/cls-expr-after-same-line-static-async-method.template
 /*---
 description: Valid PrivateName as private method (field definitions after a static async method in the same line)
 esid: prod-FieldDefinition
-features: [class-methods-private, class, class-fields-public, async-functions]
+features: [class-methods-private, class-fields-private, class, class-fields-public, async-functions]
 flags: [generated, async]
 includes: [propertyHelper.js]
 info: |

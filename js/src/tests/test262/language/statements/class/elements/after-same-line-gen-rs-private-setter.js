@@ -1,11 +1,11 @@
-// |reftest| skip -- class-methods-private,class-fields-public is not supported
+// |reftest| skip -- class-methods-private,class-fields-private,class-fields-public is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-elements/rs-private-setter.case
 // - src/class-elements/productions/cls-decl-after-same-line-gen.template
 /*---
 description: Valid PrivateName as private setter (field definitions after a generator in the same line)
 esid: prod-FieldDefinition
-features: [class-methods-private, generators, class, class-fields-public]
+features: [class-methods-private, class-fields-private, generators, class, class-fields-public]
 flags: [generated]
 includes: [propertyHelper.js]
 info: |
