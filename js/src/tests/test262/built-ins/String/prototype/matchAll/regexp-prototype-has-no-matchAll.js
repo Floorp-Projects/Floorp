@@ -19,6 +19,8 @@ features: [Symbol.matchAll, String.prototype.matchAll]
 includes: [compareArray.js, compareIterator.js, regExpUtils.js]
 ---*/
 
+assert.sameValue(typeof String.prototype.matchAll, "function");
+
 delete RegExp.prototype[Symbol.matchAll];
 var str = '/a/g*/b/g';
 
