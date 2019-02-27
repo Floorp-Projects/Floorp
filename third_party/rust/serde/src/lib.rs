@@ -1,11 +1,3 @@
-// Copyright 2017 Serde Developers
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 //! # Serde
 //!
 //! Serde is a framework for ***ser***ializing and ***de***serializing Rust data
@@ -50,17 +42,17 @@
 //! - [MessagePack], an efficient binary format that resembles a compact JSON.
 //! - [TOML], a minimal configuration format used by [Cargo].
 //! - [Pickle], a format common in the Python world.
-//! - [Hjson], a variant of JSON designed to be readable and writable by humans.
+//! - [RON], a Rusty Object Notation.
 //! - [BSON], the data storage and network transfer format used by MongoDB.
 //! - [Avro], a binary format used within Apache Hadoop, with support for schema
 //!   definition.
+//! - [Hjson], a variant of JSON designed to be readable and writable by humans.
+//! - [JSON5], A superset of JSON including some productions from ES5.
 //! - [URL], the x-www-form-urlencoded format.
-//! - [XML], the flexible machine-friendly W3C standard.
-//!   *(deserialization only)*
 //! - [Envy], a way to deserialize environment variables into Rust structs.
 //!   *(deserialization only)*
-//! - [Redis], deserialize values from Redis when using [redis-rs].
-//!   *(deserialization only)*
+//! - [Envy Store], a way to deserialize [AWS Parameter Store] parameters into
+//!   Rust structs. *(deserialization only)*
 //!
 //! [JSON]: https://github.com/serde-rs/json
 //! [Bincode]: https://github.com/TyOverby/bincode
@@ -69,20 +61,21 @@
 //! [MessagePack]: https://github.com/3Hren/msgpack-rust
 //! [TOML]: https://github.com/alexcrichton/toml-rs
 //! [Pickle]: https://github.com/birkenfeld/serde-pickle
-//! [Hjson]: https://github.com/laktak/hjson-rust
+//! [RON]: https://github.com/ron-rs/ron
 //! [BSON]: https://github.com/zonyitoo/bson-rs
 //! [Avro]: https://github.com/flavray/avro-rs
+//! [Hjson]: https://github.com/laktak/hjson-rust
+//! [JSON5]: https://github.com/callum-oakley/json5-rs
 //! [URL]: https://github.com/nox/serde_urlencoded
-//! [XML]: https://github.com/RReverser/serde-xml-rs
 //! [Envy]: https://github.com/softprops/envy
-//! [Redis]: https://github.com/OneSignal/serde-redis
+//! [Envy Store]: https://github.com/softprops/envy-store
 //! [Cargo]: http://doc.crates.io/manifest.html
-//! [redis-rs]: https://crates.io/crates/redis
+//! [AWS Parameter Store]: https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // Serde types in rustdoc of other crates get linked to here.
-#![doc(html_root_url = "https://docs.rs/serde/1.0.80")]
+#![doc(html_root_url = "https://docs.rs/serde/1.0.88")]
 // Support using Serde without the standard library!
 #![cfg_attr(not(feature = "std"), no_std)]
 // Unstable functionality only if the user asks for it. For tracking and
@@ -93,52 +86,35 @@
 #![cfg_attr(feature = "alloc", feature(alloc))]
 #![cfg_attr(feature = "cargo-clippy", allow(renamed_and_removed_lints))]
 #![cfg_attr(feature = "cargo-clippy", deny(clippy, clippy_pedantic))]
-// Whitelisted clippy lints
+// Ignored clippy and clippy_pedantic lints
 #![cfg_attr(
     feature = "cargo-clippy",
     allow(
-        cast_lossless,
+        // not available in our oldest supported compiler
         const_static_lifetime,
-        doc_markdown,
-        linkedlist,
-        needless_pass_by_value,
+        empty_enum,
         redundant_field_names,
+        // integer and float ser/de requires these sorts of casts
+        cast_possible_truncation,
+        cast_possible_wrap,
+        cast_precision_loss,
+        cast_sign_loss,
+        // things are often more readable this way
+        cast_lossless,
+        module_name_repetitions,
+        single_match_else,
         type_complexity,
-        unreadable_literal,
-        zero_prefixed_literal
+        use_self,
+        zero_prefixed_literal,
+        // not practical
+        needless_pass_by_value,
+        similar_names,
+        // preference
+        doc_markdown,
     )
 )]
-// Whitelisted clippy_pedantic lints
-#![cfg_attr(feature = "cargo-clippy", allow(
-// integer and float ser/de requires these sorts of casts
-    cast_possible_truncation,
-    cast_possible_wrap,
-    cast_precision_loss,
-    cast_sign_loss,
-// simplifies some macros
-    invalid_upcast_comparisons,
-// things are often more readable this way
-    decimal_literal_representation,
-    option_unwrap_used,
-    result_unwrap_used,
-    shadow_reuse,
-    single_match_else,
-    stutter,
-    use_self,
-// not practical
-    indexing_slicing,
-    many_single_char_names,
-    missing_docs_in_private_items,
-    similar_names,
-// alternative is not stable
-    empty_enum,
-    use_debug,
-))]
-// Blacklisted Rust lints.
-//
-// Compiler bug involving unused_imports:
-// https://github.com/rust-lang/rust/issues/51661
-#![deny(missing_docs, /*unused_imports*/)]
+// Rustc lints.
+#![deny(missing_docs, unused_imports)]
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -231,6 +207,12 @@ mod lib {
 
     #[cfg(range_inclusive)]
     pub use self::core::ops::RangeInclusive;
+
+    #[cfg(all(feature = "std", collections_bound))]
+    pub use std::collections::Bound;
+
+    #[cfg(ops_bound)]
+    pub use self::core::ops::Bound;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -258,40 +240,6 @@ pub mod export;
 pub mod private;
 
 // Re-export #[derive(Serialize, Deserialize)].
-//
-// This is a workaround for https://github.com/rust-lang/cargo/issues/1286.
-// Without this re-export, crates that put Serde derives behind a cfg_attr would
-// need to use some silly feature name that depends on both serde and
-// serde_derive.
-//
-//     [features]
-//     serde-impls = ["serde", "serde_derive"]
-//
-//     [dependencies]
-//     serde = { version = "1.0", optional = true }
-//     serde_derive = { version = "1.0", optional = true }
-//
-//     # Used like this:
-//     # #[cfg(feature = "serde-impls")]
-//     # #[macro_use]
-//     # extern crate serde_derive;
-//     #
-//     # #[cfg_attr(feature = "serde-impls", derive(Serialize, Deserialize))]
-//     # struct S { /* ... */ }
-//
-// The re-exported derives allow crates to use "serde" as the name of their
-// Serde feature which is more intuitive.
-//
-//     [dependencies]
-//     serde = { version = "1.0", optional = true, features = ["derive"] }
-//
-//     # Used like this:
-//     # #[cfg(feature = "serde")]
-//     # #[macro_use]
-//     # extern crate serde;
-//     #
-//     # #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-//     # struct S { /* ... */ }
 //
 // The reason re-exporting is not enabled by default is that disabling it would
 // be annoying for crates that provide handwritten impls or data formats. They

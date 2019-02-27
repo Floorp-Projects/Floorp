@@ -1,11 +1,3 @@
-// Copyright 2017 Serde Developers
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 use lib::*;
 
 use de::{Deserialize, DeserializeSeed, Deserializer, Error, IntoDeserializer, Visitor};
@@ -1427,6 +1419,7 @@ mod content {
                 Content::Str(v) => visitor.visit_borrowed_str(v),
                 Content::ByteBuf(v) => visitor.visit_byte_buf(v),
                 Content::Bytes(v) => visitor.visit_borrowed_bytes(v),
+                Content::U8(v) => visitor.visit_u8(v),
                 _ => Err(self.invalid_type(&visitor)),
             }
         }
@@ -1763,7 +1756,7 @@ mod content {
         V: Visitor<'de>,
         E: de::Error,
     {
-        let seq = content.into_iter().map(ContentRefDeserializer::new);
+        let seq = content.iter().map(ContentRefDeserializer::new);
         let mut seq_visitor = de::value::SeqDeserializer::new(seq);
         let value = try!(visitor.visit_seq(&mut seq_visitor));
         try!(seq_visitor.end());
@@ -1778,7 +1771,7 @@ mod content {
         V: Visitor<'de>,
         E: de::Error,
     {
-        let map = content.into_iter().map(|&(ref k, ref v)| {
+        let map = content.iter().map(|&(ref k, ref v)| {
             (
                 ContentRefDeserializer::new(k),
                 ContentRefDeserializer::new(v),
@@ -2085,7 +2078,7 @@ mod content {
         {
             let (variant, value) = match *self.content {
                 Content::Map(ref value) => {
-                    let mut iter = value.into_iter();
+                    let mut iter = value.iter();
                     let &(ref variant, ref value) = match iter.next() {
                         Some(v) => v,
                         None => {
@@ -2129,6 +2122,7 @@ mod content {
                 Content::Str(v) => visitor.visit_borrowed_str(v),
                 Content::ByteBuf(ref v) => visitor.visit_bytes(v),
                 Content::Bytes(v) => visitor.visit_borrowed_bytes(v),
+                Content::U8(v) => visitor.visit_u8(v),
                 _ => Err(self.invalid_type(&visitor)),
             }
         }
@@ -2272,9 +2266,9 @@ mod content {
     where
         E: de::Error,
     {
-        fn new(vec: &'a [Content<'de>]) -> Self {
+        fn new(slice: &'a [Content<'de>]) -> Self {
             SeqRefDeserializer {
-                iter: vec.into_iter(),
+                iter: slice.iter(),
                 err: PhantomData,
             }
         }
@@ -2350,7 +2344,7 @@ mod content {
     {
         fn new(map: &'a [(Content<'de>, Content<'de>)]) -> Self {
             MapRefDeserializer {
-                iter: map.into_iter(),
+                iter: map.iter(),
                 value: None,
                 err: PhantomData,
             }
@@ -2715,7 +2709,7 @@ where
         }
 
         Err(Error::custom(format_args!(
-            "no variant of enum {} not found in flattened data",
+            "no variant of enum {} found in flattened data",
             name
         )))
     }
