@@ -2,22 +2,19 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<androidx.cardview.widget.CardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="8dp"
     android:layout_marginBottom="8dp"
     android:background="@android:color/white"
-    app:cardElevation="1dp"
+    android:clipChildren="true"
     app:cardCornerRadius="10dp"
-    android:clipChildren="true">
+    app:cardElevation="5dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/session_item"
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingBottom="@dimen/session_card_padding">
@@ -26,23 +23,23 @@
             android:id="@+id/session_card_thumbnail"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_session_thumbnail_placeholder_blue"
             android:layout_margin="@dimen/session_card_padding"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"/>
+            android:src="@drawable/ic_session_thumbnail_placeholder_blue"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/session_card_timestamp"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:layout_marginBottom="2dp"
             android:textColor="@color/photonInk80"
             android:textSize="16sp"
-            android:layout_marginStart="12dp"
-            android:layout_marginBottom="2dp"
-            android:layout_marginEnd="12dp"
+            app:layout_constraintEnd_toStartOf="@id/session_card_overflow_button"
             app:layout_constraintStart_toEndOf="@+id/session_card_thumbnail"
-            app:layout_constraintTop_toTopOf="@id/session_card_thumbnail"
-            app:layout_constraintEnd_toStartOf="@id/session_card_overflow_button"/>
+            app:layout_constraintTop_toTopOf="@id/session_card_thumbnail" />
 
         <TextView
             android:id="@+id/session_card_titles"
@@ -50,9 +47,9 @@
             android:layout_height="wrap_content"
             android:textColor="@color/photonGrey50"
             android:textSize="12sp"
-            app:layout_constraintTop_toBottomOf="@+id/session_card_timestamp"
+            app:layout_constraintEnd_toEndOf="@id/session_card_timestamp"
             app:layout_constraintStart_toStartOf="@id/session_card_timestamp"
-            app:layout_constraintEnd_toEndOf="@id/session_card_timestamp"/>
+            app:layout_constraintTop_toBottomOf="@+id/session_card_timestamp" />
 
         <TextView
             android:id="@+id/session_card_extras"
@@ -60,8 +57,8 @@
             android:layout_height="wrap_content"
             android:textColor="@color/photonGrey50"
             android:textSize="12sp"
-            app:layout_constraintTop_toBottomOf="@+id/session_card_titles"
-            app:layout_constraintStart_toStartOf="@id/session_card_titles" />
+            app:layout_constraintStart_toStartOf="@id/session_card_titles"
+            app:layout_constraintTop_toBottomOf="@+id/session_card_titles" />
 
         <androidx.constraintlayout.widget.Barrier
             android:id="@+id/bottomBarrier"

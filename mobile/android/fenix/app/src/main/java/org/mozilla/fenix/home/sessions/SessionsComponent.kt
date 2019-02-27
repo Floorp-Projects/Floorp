@@ -14,8 +14,8 @@ import org.mozilla.fenix.mvi.UIComponent
 import org.mozilla.fenix.mvi.ViewState
 import java.net.URL
 import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 
 data class ArchivedSession(
@@ -56,11 +56,15 @@ data class ArchivedSession(
         // just want to grab the host from the URL
         @SuppressWarnings("TooGenericExceptionCaught")
         val urlFormatter: (String) -> String = { url ->
-            try {
+            var formattedURL = try {
                 URL(url).host
             } catch (e: Exception) {
                 url
             }
+            if (formattedURL.length > LONGEST_HOST_ON_INTERNET_LENGTH) {
+                formattedURL = formattedURL.take(LONGEST_HOST_ON_INTERNET_LENGTH).plus("...")
+            }
+            formattedURL
         }
 
         _urls
@@ -72,6 +76,7 @@ data class ArchivedSession(
 
     private companion object {
         private const val NUMBER_OF_URLS_TO_DISPLAY = 5
+        private const val LONGEST_HOST_ON_INTERNET_LENGTH = 64
 
         private val timeFormatter = SimpleDateFormat("h:mm a", Locale.US)
         private val monthFormatter = SimpleDateFormat("M", Locale.US)
