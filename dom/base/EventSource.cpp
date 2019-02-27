@@ -725,7 +725,7 @@ EventSourceImpl::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
 }
 
 NS_IMETHODIMP
-EventSourceImpl::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+EventSourceImpl::OnStopRequest(nsIRequest* aRequest,
                                nsresult aStatusCode) {
   AssertIsOnMainThread();
 

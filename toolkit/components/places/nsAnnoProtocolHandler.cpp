@@ -158,7 +158,7 @@ class faviconAsyncLoader : public AsyncStatementCallback {
     rv = GetDefaultIcon(mChannel, getter_AddRefs(newChannel));
     if (NS_FAILED(rv)) {
       mListener->OnStartRequest(mChannel);
-      mListener->OnStopRequest(mChannel, nullptr, rv);
+      mListener->OnStopRequest(mChannel, rv);
       return rv;
     }
     return newChannel->AsyncOpen(mListener);

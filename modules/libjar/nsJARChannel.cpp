@@ -531,7 +531,7 @@ void nsJARChannel::NotifyError(nsresult aError) {
   mStatus = aError;
 
   OnStartRequest(nullptr);
-  OnStopRequest(nullptr, nullptr, aError);
+  OnStopRequest(nullptr, aError);
 }
 
 void nsJARChannel::FireOnProgress(uint64_t aProgress) {
@@ -1015,7 +1015,7 @@ nsJARChannel::OnStartRequest(nsIRequest *req) {
 }
 
 NS_IMETHODIMP
-nsJARChannel::OnStopRequest(nsIRequest *req, nsISupports *ctx,
+nsJARChannel::OnStopRequest(nsIRequest *req,
                             nsresult status) {
   LOG(("nsJARChannel::OnStopRequest [this=%p %s status=%" PRIx32 "]\n", this,
        mSpec.get(), static_cast<uint32_t>(status)));
@@ -1023,7 +1023,7 @@ nsJARChannel::OnStopRequest(nsIRequest *req, nsISupports *ctx,
   if (NS_SUCCEEDED(mStatus)) mStatus = status;
 
   if (mListener) {
-    mListener->OnStopRequest(this, nullptr, status);
+    mListener->OnStopRequest(this, status);
     mListener = nullptr;
   }
 

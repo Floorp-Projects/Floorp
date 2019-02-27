@@ -3847,7 +3847,7 @@ WebSocketChannel::OnStartRequest(nsIRequest *aRequest) {
 }
 
 NS_IMETHODIMP
-WebSocketChannel::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
+WebSocketChannel::OnStopRequest(nsIRequest *aRequest,
                                 nsresult aStatusCode) {
   LOG(("WebSocketChannel::OnStopRequest() %p [%p %p %" PRIx32 "]\n", this,
        aRequest, mHttpChannel.get(), static_cast<uint32_t>(aStatusCode)));

@@ -225,7 +225,7 @@ nsManifestCheck::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
 }
 
 NS_IMETHODIMP
-nsManifestCheck::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
+nsManifestCheck::OnStopRequest(nsIRequest *aRequest,
                                nsresult aStatus) {
   nsAutoCString manifestHash;
   if (NS_SUCCEEDED(aStatus)) {
@@ -415,7 +415,6 @@ nsOfflineCacheUpdateItem::OnDataAvailable(nsIRequest *aRequest,
 
 NS_IMETHODIMP
 nsOfflineCacheUpdateItem::OnStopRequest(nsIRequest *aRequest,
-                                        nsISupports *aContext,
                                         nsresult aStatus) {
   if (LOG_ENABLED()) {
     LOG(("%p: Done fetching offline item %s [status=%" PRIx32 "]\n", this,
@@ -1085,7 +1084,7 @@ nsOfflineManifestItem::OnDataAvailable(nsIRequest *aRequest,
 
 NS_IMETHODIMP
 nsOfflineManifestItem::OnStopRequest(nsIRequest *aRequest,
-                                     nsISupports *aContext, nsresult aStatus) {
+                                     nsresult aStatus) {
   if (mBytesRead == 0) {
     // We didn't need to read (because LOAD_ONLY_IF_MODIFIED was
     // specified).
@@ -1102,7 +1101,7 @@ nsOfflineManifestItem::OnStopRequest(nsIRequest *aRequest,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return nsOfflineCacheUpdateItem::OnStopRequest(aRequest, aContext, aStatus);
+  return nsOfflineCacheUpdateItem::OnStopRequest(aRequest, aStatus);
 }
 
 //-----------------------------------------------------------------------------

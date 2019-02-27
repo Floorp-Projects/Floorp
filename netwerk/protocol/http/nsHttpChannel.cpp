@@ -7535,7 +7535,7 @@ nsresult nsHttpChannel::ContinueOnStartRequest4(nsresult result) {
 }
 
 NS_IMETHODIMP
-nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
+nsHttpChannel::OnStopRequest(nsIRequest *request,
                              nsresult status) {
   AUTO_PROFILER_LABEL("nsHttpChannel::OnStopRequest", NETWORK);
 
@@ -7943,7 +7943,7 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
     MOZ_ASSERT(mOnStartRequestCalled,
                "OnStartRequest should be called before OnStopRequest");
     MOZ_ASSERT(!mOnStopRequestCalled, "We should not call OnStopRequest twice");
-    mListener->OnStopRequest(this, nullptr, aStatus);
+    mListener->OnStopRequest(this, aStatus);
     mOnStopRequestCalled = true;
   }
 

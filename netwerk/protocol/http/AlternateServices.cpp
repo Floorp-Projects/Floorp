@@ -804,7 +804,7 @@ TransactionObserver::OnDataAvailable(nsIRequest *aRequest,
 }
 
 NS_IMETHODIMP
-TransactionObserver::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
+TransactionObserver::OnStopRequest(nsIRequest *aRequest,
                                    nsresult code) {
   MOZ_ASSERT(NS_IsMainThread());
   LOG(("TransactionObserver onStopRequest %p code %" PRIx32 "\n", this,

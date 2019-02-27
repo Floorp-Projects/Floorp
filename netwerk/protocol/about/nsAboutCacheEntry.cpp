@@ -538,7 +538,7 @@ nsAboutCacheEntry::Channel::OnDataAvailable(nsIRequest *request,
 }
 
 NS_IMETHODIMP
-nsAboutCacheEntry::Channel::OnStopRequest(nsIRequest *request, nsISupports *ctx,
+nsAboutCacheEntry::Channel::OnStopRequest(nsIRequest *request,
                                           nsresult result) {
   NS_NAMED_LITERAL_CSTRING(buffer, "</pre>\n");
   uint32_t n;

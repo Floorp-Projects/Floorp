@@ -60,7 +60,6 @@ nsresult ChannelMediaResource::Listener::OnStartRequest(nsIRequest* aRequest) {
 }
 
 nsresult ChannelMediaResource::Listener::OnStopRequest(nsIRequest* aRequest,
-                                                       nsISupports* aContext,
                                                        nsresult aStatus) {
   MOZ_ASSERT(NS_IsMainThread());
   if (!mResource) return NS_OK;
