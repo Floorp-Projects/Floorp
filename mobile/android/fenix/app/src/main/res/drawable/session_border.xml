@@ -4,10 +4,6 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <stroke android:width="2dp"
-        android:color="?attr/sessionBorderColor"/>
-
-    <padding android:left="1dp"  android:top="1dp" android:right="1dp" android:bottom="1dp"/>
-
+    <solid android:color="?attr/sessionBackgroundColor"/>
     <corners android:radius="8dp"/>
 </shape>

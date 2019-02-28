@@ -27,6 +27,7 @@
         <item name="toolbarWrapperBackground">@drawable/home_search_background_light</item>
         <item name="toolbarTextColor">@color/search_text</item>
         <item name="homeDividerColor">@color/photonGrey30</item>
+        <item name="sessionBackgroundColor">@color/photonWhite</item>
         <item name="sessionBorderColor">@color/session_border_color</item>
 
         <!-- Search fragment colors -->
@@ -71,6 +72,7 @@
         <item name="toolbarWrapperBackground">@drawable/home_search_background_private</item>
         <item name="toolbarTextColor">@color/off_white</item>
         <item name="homeDividerColor">@color/search_private_background</item>
+        <item name="sessionBackgroundColor">@color/session_list_private_header</item>
         <item name="sessionBorderColor">@color/private_browsing_primary</item>
 
         <!-- Search fragment colors -->

@@ -1,67 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/session_card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="8dp"
     android:layout_marginBottom="8dp"
+    android:clipToPadding="false"
     android:padding="10dp"
-    android:elevation="5dp"
+    app:cardBackgroundColor="?attr/sessionBorderColor"
     app:cardCornerRadius="10dp"
-    android:clipChildren="true">
+    app:cardElevation="5dp"
+    app:cardUseCompatPadding="true">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-            android:background="@drawable/session_border"
-            android:id="@+id/item_tab"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:paddingTop="10dp">
+        android:id="@+id/item_tab"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="2dp"
+        android:background="@drawable/session_border"
+        android:paddingTop="10dp">
 
-        <ImageView android:id="@+id/favicon_image"
-                   android:layout_width="wrap_content"
-                   android:layout_height="wrap_content"
-                   android:src="@drawable/ic_link"
-                   android:tint="@android:color/black"
-                   android:paddingStart="10dp"
-                   android:paddingEnd="10dp"
-                   android:paddingTop="4dp"
-                   app:layout_constraintStart_toStartOf="parent"
-                   app:layout_constraintTop_toTopOf="parent"
-                   android:contentDescription="@string/favicon_content_description"/>
+        <ImageView
+            android:id="@+id/favicon_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/favicon_content_description"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:src="@drawable/ic_link"
+            android:tint="@android:color/black"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView android:id="@+id/text_url"
-                  android:textSize="18sp"
-                  android:maxLines="1"
-                  android:ellipsize="end"
-                  android:layout_width="0dp"
-                  android:layout_height="wrap_content"
-                  android:layout_marginBottom="4dp"
-                  app:layout_constraintHorizontal_bias="0"
-                  app:layout_constraintTop_toTopOf="parent"
-                  app:layout_constraintStart_toEndOf="@id/favicon_image"
-                  app:layout_constraintEnd_toStartOf="@id/close_tab_button"/>
+        <TextView
+            android:id="@+id/text_url"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="?attr/toolbarTextColor"
+            android:textSize="18sp"
+            app:layout_constraintEnd_toStartOf="@id/close_tab_button"
+            app:layout_constraintHorizontal_bias="0"
+            app:layout_constraintStart_toEndOf="@id/favicon_image"
+            app:layout_constraintTop_toTopOf="parent" />
 
-        <ImageView android:id="@+id/close_tab_button"
-                   android:layout_width="wrap_content"
-                   android:layout_height="wrap_content"
-                   android:src="@drawable/ic_close"
-                   android:paddingEnd="10dp"
-                   android:contentDescription="@string/close_tab"
-                   app:layout_constraintBottom_toBottomOf="@id/text_url"
-                   app:layout_constraintEnd_toEndOf="parent"/>
+        <ImageView
+            android:id="@+id/close_tab_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/close_tab"
+            android:paddingEnd="10dp"
+            android:src="@drawable/ic_close"
+            app:layout_constraintBottom_toBottomOf="@id/text_url"
+            app:layout_constraintEnd_toEndOf="parent" />
 
-        <ImageView android:layout_width="0dp"
-                   android:layout_height="100dp"
-                   android:layout_marginStart="1dp"
-                   android:layout_marginEnd="1dp"
-                   android:layout_marginBottom="1dp"
-                   android:background="@drawable/session_background"
-                   app:layout_constraintTop_toBottomOf="@id/text_url"
-                   app:layout_constraintBottom_toBottomOf="parent"
-                   app:layout_constraintStart_toStartOf="parent"
-                   app:layout_constraintEnd_toEndOf="parent"
-                   android:contentDescription="TODO"/>
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="100dp"
+            android:background="@drawable/session_background"
+            android:contentDescription="TODO"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/text_url" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>

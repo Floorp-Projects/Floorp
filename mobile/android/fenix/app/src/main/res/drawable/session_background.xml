@@ -6,6 +6,6 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle" >
     <solid android:color="@color/photonGrey40" />
     <corners
-        android:bottomLeftRadius="7dp"
-        android:bottomRightRadius="7dp" />
+        android:bottomLeftRadius="8dp"
+        android:bottomRightRadius="8dp" />
 </shape>

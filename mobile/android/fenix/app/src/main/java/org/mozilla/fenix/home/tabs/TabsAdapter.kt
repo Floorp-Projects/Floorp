@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.tab_list_row.*
+import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.increaseTapArea
 
@@ -85,8 +86,10 @@ class TabsAdapter(private val actionEmitter: Observer<TabsAction>) :
         }
 
         fun updateSelected(selected: Boolean) {
-            item_tab.background = if (selected)
-                view.context.getDrawable(R.drawable.session_border) else null
+            if (selected)
+                DefaultThemeManager.resolveAttribute(R.attr.sessionBorderColor, view.context)
+            else
+                session_card.setCardBackgroundColor(view.context.getColor(android.R.color.transparent))
         }
 
         companion object {
