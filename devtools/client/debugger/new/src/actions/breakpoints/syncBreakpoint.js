@@ -17,7 +17,7 @@ import {
 import { getGeneratedLocation } from "../../utils/source-maps";
 import { getTextAtPosition } from "../../utils/source";
 import { originalToGeneratedId, isOriginalId } from "devtools-source-map";
-import { getSource } from "../../selectors";
+import { getSource, getBreakpointPositionsForSource } from "../../selectors";
 import { features } from "../../utils/prefs";
 
 import type { ThunkArgs, Action } from "../types";
@@ -35,15 +35,17 @@ type BreakpointSyncData = {
   breakpoint: ?Breakpoint
 };
 
-async function isPossiblePosition(location, dispatch) {
-  if (features.columnBreakpoints && location.column != undefined) {
-    const { positions } = await dispatch(setBreakpointPositions(location));
-    if (!positions.some(({ generatedLocation }) => generatedLocation.column)) {
-      return false;
-    }
+async function isPossiblePosition(state, location, dispatch) {
+  if (!features.columnBreakpoints || location.column != undefined) {
+    return true;
   }
 
-  return true;
+  await dispatch(setBreakpointPositions(location.sourceId));
+  const positions = getBreakpointPositionsForSource(state, location.sourceId);
+  return (
+    positions &&
+    positions.some(({ generatedLocation }) => generatedLocation.column)
+  );
 }
 
 async function makeScopedLocation(
@@ -148,6 +150,7 @@ export async function syncBreakpointPromise(
   );
 
   const possiblePosition = await isPossiblePosition(
+    getState(),
     generatedLocation,
     dispatch
   );
