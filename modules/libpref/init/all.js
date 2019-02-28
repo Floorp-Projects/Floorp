@@ -1600,11 +1600,7 @@ pref("javascript.options.spectre.jit_to_C++_calls", true);
 pref("javascript.options.streams", true);
 
 // BigInt API
-#ifdef NIGHTLY_BUILD
-pref("javascript.options.bigint", true);
-#else
 pref("javascript.options.bigint", false);
-#endif
 
 // Dynamic module import.
 #ifdef NIGHTLY_BUILD
