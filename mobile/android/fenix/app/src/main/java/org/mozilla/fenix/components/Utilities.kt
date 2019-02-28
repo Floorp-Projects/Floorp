@@ -26,4 +26,8 @@ class Utilities(
     val intentProcessor by lazy {
         IntentProcessor(sessionUseCases, sessionManager, searchUseCases, context)
     }
+
+    val privateIntentProcessor by lazy {
+        IntentProcessor(sessionUseCases, sessionManager, searchUseCases, context, isPrivate = true)
+    }
 }

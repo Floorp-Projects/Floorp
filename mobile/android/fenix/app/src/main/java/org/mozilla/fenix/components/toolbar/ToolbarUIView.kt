@@ -38,7 +38,7 @@ class ToolbarUIView(
     init {
         view.apply {
             setOnUrlCommitListener {
-                actionEmitter.onNext(SearchAction.UrlCommitted(it))
+                actionEmitter.onNext(SearchAction.UrlCommitted(it, sessionId))
             false
             }
             onUrlClicked = {

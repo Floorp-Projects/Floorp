@@ -15,9 +15,12 @@ import androidx.appcompat.widget.Toolbar
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
+import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.intent.IntentProcessor
 import mozilla.components.support.base.feature.BackHandler
+import mozilla.components.support.ktx.kotlin.isUrl
+import mozilla.components.support.ktx.kotlin.toNormalizedUrl
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.fenix.ext.components
 
@@ -41,17 +44,16 @@ open class HomeActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_home)
 
-        if (intent?.extras?.getBoolean(OPEN_TO_BROWSER) == true) {
-            intent?.putExtra(OPEN_TO_BROWSER, false)
-            openToBrowser()
-        }
-
         val host = supportFragmentManager.findFragmentById(R.id.container) as NavHostFragment
         val hostNavController = host.navController
         val appBarConfiguration = AppBarConfiguration.Builder(setOf(R.id.libraryFragment)).build()
         val navigationToolbar = findViewById<Toolbar>(R.id.navigationToolbar)
         setSupportActionBar(navigationToolbar)
         NavigationUI.setupWithNavController(navigationToolbar, hostNavController, appBarConfiguration)
+
+        if (intent?.extras?.getBoolean(OPEN_TO_BROWSER) == true) {
+            handleOpenedFromExternalSource()
+        }
     }
 
     override fun onCreateView(
@@ -88,11 +90,46 @@ open class HomeActivity : AppCompatActivity() {
         }
     }
 
-    private fun openToBrowser() {
-        val sessionId = SafeIntent(intent).getStringExtra(IntentProcessor.ACTIVE_SESSION_ID)
+    private fun handleOpenedFromExternalSource() {
+        intent?.putExtra(OPEN_TO_BROWSER, false)
+        openToBrowser(SafeIntent(intent).getStringExtra(IntentProcessor.ACTIVE_SESSION_ID))
+    }
+
+    // Since we must always call load after navigation, we only directly expose the load when coupled with open.
+    fun openToBrowserAndLoad(text: String, sessionId: String? = null) {
+        openToBrowser(sessionId)
+        load(text, sessionId)
+    }
+
+    fun openToBrowser(sessionId: String?) {
         val host = supportFragmentManager.findFragmentById(R.id.container) as NavHostFragment
         val directions = NavGraphDirections.actionGlobalBrowser(sessionId)
         host.navController.navigate(directions)
+    }
+
+    private fun load(text: String, sessionId: String?) {
+        val isPrivate = this.browsingModeManager.isPrivate
+
+        val loadUrlUseCase = if (sessionId == null) {
+            if (isPrivate) {
+                components.useCases.tabsUseCases.addPrivateTab
+            } else {
+                components.useCases.tabsUseCases.addTab
+            }
+        } else components.useCases.sessionUseCases.loadUrl
+
+        val searchUseCase: (String) -> Unit = { searchTerms ->
+            if (sessionId == null) {
+                components.useCases.searchUseCases.newTabSearch
+                    .invoke(searchTerms, Session.Source.USER_ENTERED, true, isPrivate)
+            } else components.useCases.searchUseCases.defaultSearch.invoke(searchTerms)
+        }
+
+        if (text.isUrl()) {
+            loadUrlUseCase.invoke(text.toNormalizedUrl())
+        } else {
+            searchUseCase.invoke(text)
+        }
     }
 
     companion object {

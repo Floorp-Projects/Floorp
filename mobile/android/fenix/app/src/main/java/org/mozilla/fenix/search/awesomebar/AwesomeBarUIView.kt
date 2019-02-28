@@ -3,6 +3,7 @@ package org.mozilla.fenix.search.awesomebar
    License, v. 2.0. If a copy of the MPL was not distributed with this
    file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import io.reactivex.Observable
@@ -13,6 +14,9 @@ import mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvide
 import mozilla.components.feature.awesomebar.provider.HistoryStorageSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
+import mozilla.components.feature.search.SearchUseCases
+import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.feature.toolbar.SearchUseCase
 import mozilla.components.support.ktx.android.graphics.drawable.toBitmap
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
@@ -20,6 +24,7 @@ import org.mozilla.fenix.mvi.UIView
 
 class AwesomeBarUIView(
     useNewTab: Boolean,
+    isPrivate: Boolean,
     container: ViewGroup,
     actionEmitter: Observer<AwesomeBarAction>,
     changesObservable: Observable<AwesomeBarChange>
@@ -33,11 +38,7 @@ class AwesomeBarUIView(
         with(container.context) {
             view.addProviders(ClipboardSuggestionProvider(
                 this,
-                if (useNewTab) {
-                    components.useCases.tabsUseCases.addTab
-                } else {
-                    components.useCases.sessionUseCases.loadUrl
-                },
+                getSessionUseCase(this, isPrivate, useNewTab),
                 getDrawable(R.drawable.ic_link).toBitmap(),
                 getString(R.string.awesomebar_clipboard_title)
                 )
@@ -50,15 +51,10 @@ class AwesomeBarUIView(
                 ),
                 HistoryStorageSuggestionProvider(
                     components.core.historyStorage,
-                    if (useNewTab) {
-                        components.useCases.tabsUseCases.addTab
-                    } else components.useCases.sessionUseCases.loadUrl
-                ),
+                    getSessionUseCase(this, isPrivate, useNewTab)),
                 SearchSuggestionProvider(
                     components.search.searchEngineManager.getDefaultSearchEngine(this),
-                    if (useNewTab) {
-                        components.useCases.searchUseCases.newTabSearch
-                    } else components.useCases.searchUseCases.defaultSearch,
+                    getSearchUseCase(this, isPrivate, useNewTab),
                     components.core.client,
                     SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS
                 )
@@ -68,6 +64,32 @@ class AwesomeBarUIView(
         view.setOnStopListener { actionEmitter.onNext(AwesomeBarAction.ItemSelected) }
     }
 
+    private fun getSearchUseCase(
+        context: Context,
+        isPrivate: Boolean,
+        useNewTab: Boolean
+    ): SearchUseCases.SearchUseCase {
+        if (!useNewTab) {
+            return context.components.useCases.searchUseCases.defaultSearch
+        }
+
+        return when (isPrivate) {
+            true -> context.components.useCases.searchUseCases.newPrivateTabSearch
+            false -> context.components.useCases.searchUseCases.newTabSearch
+        }
+    }
+
+    private fun getSessionUseCase(context: Context, isPrivate: Boolean, useNewTab: Boolean):
+            SessionUseCases.LoadUrlUseCase {
+        if (!useNewTab) {
+            return context.components.useCases.sessionUseCases.loadUrl
+        }
+
+        return when (isPrivate) {
+            true -> context.components.useCases.tabsUseCases.addPrivateTab
+            false -> context.components.useCases.tabsUseCases.addTab
+        }
+    }
     override fun updateView() = Consumer<AwesomeBarState> {
         view.onInputChanged(it.query)
     }

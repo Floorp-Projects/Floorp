@@ -10,11 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_search.view.*
-import mozilla.components.browser.session.Session
-import mozilla.components.support.ktx.kotlin.isUrl
-import mozilla.components.support.ktx.kotlin.toNormalizedUrl
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.SearchAction
@@ -57,7 +53,7 @@ class SearchFragment : Fragment() {
         )
         awesomeBarComponent = AwesomeBarComponent(
             view.search_layout, ActionBusFactory.get(this),
-            AwesomeBarState("", sessionId == null)
+            AwesomeBarState("", sessionId == null, isPrivate)
         )
         ActionBusFactory.get(this).logMergedObservables()
         return view
@@ -85,8 +81,7 @@ class SearchFragment : Fragment() {
                 when (it) {
                     is SearchAction.UrlCommitted -> {
                         if (it.url.isNotBlank()) {
-                            transitionToBrowser()
-                            load(it.url)
+                            (activity as HomeActivity).openToBrowserAndLoad(it.url, it.session)
                         }
                     }
                     is SearchAction.TextChanged -> {
@@ -98,46 +93,12 @@ class SearchFragment : Fragment() {
         getAutoDisposeObservable<AwesomeBarAction>()
             .subscribe {
                 when (it) {
-                    is AwesomeBarAction.ItemSelected -> transitionToBrowser()
+                    is AwesomeBarAction.ItemSelected -> {
+                        requireComponents.core.sessionManager.selectedSession?.let { session ->
+                            (activity as HomeActivity).openToBrowser(session.id)
+                        }
+                    }
                 }
             }
-    }
-
-    // Issue: https://github.com/mozilla-mobile/fenix/issues/626
-    // Currently we were kind of forcing all this logic through the Toolbar Feature.
-    // But since we cannot actually load a page without an available GeckoSession
-    // we have to wait until after we navigate to call the use case.
-    // We should move this logic into a place that makes more sense.
-    private fun load(text: String) {
-        val sessionId = SearchFragmentArgs.fromBundle(arguments!!).sessionId
-        val isPrivate = (activity as HomeActivity).browsingModeManager.isPrivate
-
-        val loadUrlUseCase = if (sessionId == null) {
-            if (isPrivate) {
-                requireComponents.useCases.tabsUseCases.addPrivateTab
-            } else {
-                requireComponents.useCases.tabsUseCases.addTab
-            }
-        } else requireComponents.useCases.sessionUseCases.loadUrl
-
-        val searchUseCase: (String) -> Unit = { searchTerms ->
-            if (sessionId == null) {
-                requireComponents.useCases.searchUseCases.newTabSearch
-                    .invoke(searchTerms, Session.Source.USER_ENTERED, true, isPrivate)
-            } else requireComponents.useCases.searchUseCases.defaultSearch.invoke(searchTerms)
-        }
-
-        if (text.isUrl()) {
-            loadUrlUseCase.invoke(text.toNormalizedUrl())
-        } else {
-            searchUseCase.invoke(text)
-        }
-    }
-
-    private fun transitionToBrowser() {
-        val sessionId = SearchFragmentArgs.fromBundle(arguments!!).sessionId
-        val directions = SearchFragmentDirections.actionSearchFragmentToBrowserFragment(sessionId)
-
-        Navigation.findNavController(view!!.search_layout).navigate(directions)
     }
 }

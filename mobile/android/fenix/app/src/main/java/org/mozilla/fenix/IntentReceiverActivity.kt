@@ -7,6 +7,7 @@ package org.mozilla.fenix
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.preference.PreferenceManager
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.fenix.customtabs.CustomTabActivity
@@ -17,8 +18,16 @@ class IntentReceiverActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        components.utils.intentProcessor.process(intent)
-        var openToBrowser = false
+        val isPrivate = PreferenceManager
+            .getDefaultSharedPreferences(this).getBoolean(getString(R.string.pref_key_private_mode), false)
+
+        if (isPrivate) {
+            components.utils.privateIntentProcessor.process(intent)
+        } else {
+            components.utils.intentProcessor.process(intent)
+        }
+
+        val openToBrowser: Boolean
 
         val intent = Intent(intent)
         openToBrowser = when {
