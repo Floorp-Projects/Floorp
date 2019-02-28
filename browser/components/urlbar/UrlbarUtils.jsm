@@ -114,6 +114,12 @@ var UrlbarUtils = {
     COMMIT: 3,
   },
 
+  // This defines possible reasons for canceling a query.
+  CANCEL_REASON: {
+    // 1 is intentionally left in case we want a none/undefined/other later.
+    BLUR: 2,
+  },
+
   /**
    * Adds a url to history as long as it isn't in a private browsing window,
    * and it is valid.

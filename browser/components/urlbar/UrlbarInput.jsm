@@ -153,7 +153,6 @@ class UrlbarInput {
   }
 
   closePopup() {
-    this.controller.cancelQuery();
     this.view.close();
   }
 
@@ -953,7 +952,7 @@ class UrlbarInput {
 
   _on_blur(event) {
     this.formatValue();
-    this.closePopup();
+    this.view.close(UrlbarUtils.CANCEL_REASON.BLUR);
   }
 
   _on_focus(event) {
