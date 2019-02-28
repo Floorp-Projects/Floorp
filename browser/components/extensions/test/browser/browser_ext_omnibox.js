@@ -2,6 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+const {UrlbarTestUtils} = ChromeUtils.import("resource://testing-common/UrlbarTestUtils.jsm");
+
 add_task(async function() {
   // This keyword needs to be unique to prevent history entries from unrelated
   // tests from appearing in the suggestions list.
@@ -81,25 +83,22 @@ add_task(async function() {
     }
   }
 
-  async function waitForAutocompleteResultAt(index) {
-    let searchString = gURLBar.controller.searchString;
-    await BrowserTestUtils.waitForCondition(
-      () => gURLBar.popup.richlistbox.itemChildren.length > index &&
-            gURLBar.popup.richlistbox.itemChildren[index].getAttribute("ac-text") == searchString,
-      `Waiting for the autocomplete result for "${searchString}" at [${index}] to appear`);
+  async function waitForResult(index, searchString) {
+    let result = await UrlbarTestUtils.getDetailsOfResultAt(window, index);
     // Ensure the addition is complete, for proper mouse events on the entries.
     await new Promise(resolve => window.requestIdleCallback(resolve, {timeout: 1000}));
-    return gURLBar.popup.richlistbox.itemChildren[index];
+    return result;
   }
 
-  async function promiseClickOnItem(item, details) {
+  async function promiseClickOnItem(index, details) {
     // The Address Bar panel is animated and updated on a timer, thus it may not
     // yet be listening to events when we try to click on it.  This uses a
     // polling strategy to repeat the click, if it doesn't go through.
     let clicked = false;
-    item.addEventListener("mousedown", () => { clicked = true; }, {once: true});
+    let element = await UrlbarTestUtils.waitForAutocompleteResultAt(window, index);
+    element.addEventListener("mousedown", () => { clicked = true; }, {once: true});
     while (!clicked) {
-      EventUtils.synthesizeMouseAtCenter(item, details);
+      EventUtils.synthesizeMouseAtCenter(element, details);
       await new Promise(r => window.requestIdleCallback(r, {timeout: 1000}));
     }
   }
@@ -111,7 +110,7 @@ add_task(async function() {
     EventUtils.sendString(" ");
     await expectEvent("on-input-started-fired");
     // Always use a different input at every invokation, so that
-    // waitForAutocompleteResultAt can distinguish different cases.
+    // waitForResult can distinguish different cases.
     let char = ((inputSessionSerial++) % 10).toString();
     EventUtils.sendString(char);
 
@@ -187,27 +186,25 @@ add_task(async function() {
     }
 
     let text = await startInputSession();
-    await waitForAutocompleteResultAt(0);
+    let result = await waitForResult(0);
 
-    let item = gURLBar.popup.richlistbox.itemChildren[0];
+    Assert.equal(result.displayed.title, expectedText,
+                 `Expected heuristic result to have title: "${expectedText}".`);
 
-    is(item.getAttribute("title"), expectedText,
-       `Expected heuristic result to have title: "${expectedText}".`);
-
-    is(item.getAttribute("displayurl"), `${keyword} ${text}`,
-       `Expected heuristic result to have displayurl: "${keyword} ${text}".`);
+    Assert.equal(result.displayed.action, `${keyword} ${text}`,
+                 `Expected heuristic result to have displayurl: "${keyword} ${text}".`);
 
     let promiseEvent = expectEvent("on-input-entered-fired", {
       text,
       disposition: "currentTab",
     });
-    await promiseClickOnItem(item, {});
+    await promiseClickOnItem(0, {});
     await promiseEvent;
   }
 
   async function testDisposition(suggestionIndex, expectedDisposition, expectedText) {
     await startInputSession();
-    await waitForAutocompleteResultAt(suggestionIndex);
+    await waitForResult(suggestionIndex);
 
     // Select the suggestion.
     EventUtils.synthesizeKey("KEY_ArrowDown", {repeat: suggestionIndex});
@@ -217,13 +214,12 @@ add_task(async function() {
       disposition: expectedDisposition,
     });
 
-    let item = gURLBar.popup.richlistbox.itemChildren[suggestionIndex];
     if (expectedDisposition == "currentTab") {
-      await promiseClickOnItem(item, {});
+      await promiseClickOnItem(suggestionIndex, {});
     } else if (expectedDisposition == "newForegroundTab") {
-      await promiseClickOnItem(item, {accelKey: true});
+      await promiseClickOnItem(suggestionIndex, {accelKey: true});
     } else if (expectedDisposition == "newBackgroundTab") {
-      await promiseClickOnItem(item, {shiftKey: true, accelKey: true});
+      await promiseClickOnItem(suggestionIndex, {shiftKey: true, accelKey: true});
     }
     await promiseEvent;
   }
@@ -232,33 +228,33 @@ add_task(async function() {
     extension.sendMessage("set-synchronous", {synchronous: false});
     await extension.awaitMessage("set-synchronous-set");
 
-    function expectSuggestion({content, description}, index) {
-      let item = gURLBar.popup.richlistbox.itemChildren[index + 1]; // Skip the heuristic result.
-
-      ok(!!item, "Expected item to exist");
-      is(item.getAttribute("title"), description,
-         `Expected suggestion to have title: "${description}".`);
-
-      is(item.getAttribute("displayurl"), `${keyword} ${content}`,
-         `Expected suggestion to have displayurl: "${keyword} ${content}".`);
-    }
-
     let text = await startInputSession();
-    // Even if the results are generated asynchronously,
-    // the heuristic result should always be present.
-    await waitForAutocompleteResultAt(0);
+    if (!UrlbarPrefs.get("quantumbar")) {
+      // TODO Bug 1530338: We can't yet wait for a specific result for the
+      // quantumbar. Therefore we just skip this for now.
+      await waitForResult(0);
+    }
 
     extension.sendMessage(info.test);
     await extension.awaitMessage("test-ready");
 
-    await waitForAutocompleteResultAt(info.suggestions.length - 1);
-    info.suggestions.forEach(expectSuggestion);
+    await waitForResult(info.suggestions.length - 1);
+    // Skip the heuristic result.
+    let index = 1;
+    for (let {content, description} of info.suggestions) {
+      let item = await UrlbarTestUtils.getDetailsOfResultAt(window, index);
+      Assert.equal(item.displayed.title, description,
+                   `Expected suggestion to have title: "${description}".`);
+      Assert.equal(item.displayed.action, `${keyword} ${content}`,
+                   `Expected suggestion to have displayurl: "${keyword} ${content}".`);
+      index++;
+    }
 
     let promiseEvent = expectEvent("on-input-entered-fired", {
       text,
       disposition: "currentTab",
     });
-    await promiseClickOnItem(gURLBar.popup.richlistbox.itemChildren[0], {});
+    await promiseClickOnItem(0, {});
     await promiseEvent;
   }
 
