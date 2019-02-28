@@ -19,8 +19,8 @@ jobs-from:
    - doc.yml
    - file-metadata.yml
    - jsshell.yml
-   - mocha.yml
    - mozlint.yml
+   - node.yml
    - python.yml
    - webidl.yml
    - wpt-manifest.yml
