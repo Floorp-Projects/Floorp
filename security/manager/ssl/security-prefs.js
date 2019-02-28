@@ -155,7 +155,11 @@ pref("security.pki.mitm_canary_issuer.enabled", true);
 pref("security.pki.mitm_detected", false);
 
 // Intermediate CA Preloading settings
+#ifdef RELEASE_OR_BETA
 pref("security.remote_settings.intermediates.enabled", false);
+#else
+pref("security.remote_settings.intermediates.enabled", true);
+#endif
 pref("security.remote_settings.intermediates.bucket", "security-state");
 pref("security.remote_settings.intermediates.collection", "intermediates");
 pref("security.remote_settings.intermediates.checked", 0);
