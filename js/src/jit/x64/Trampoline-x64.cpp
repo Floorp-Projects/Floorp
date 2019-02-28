@@ -591,10 +591,11 @@ void JitRuntime::generateBailoutHandler(MacroAssembler& masm,
 }
 
 bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
-                                   const VMFunction& f) {
+                                   const VMFunctionData& f,
+                                   uint32_t* wrapperOffset) {
   MOZ_ASSERT(functionWrappers_);
 
-  uint32_t wrapperOffset = startTrampolineCode(masm);
+  *wrapperOffset = startTrampolineCode(masm);
 
   // Avoid conflicts with argument registers while discarding the result after
   // the function call.
@@ -772,7 +773,7 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
                   f.explicitStackSlots() * sizeof(void*) +
                   f.extraValuesToPop * sizeof(Value)));
 
-  return functionWrappers_->putNew(&f, wrapperOffset);
+  return true;
 }
 
 uint32_t JitRuntime::generatePreBarrier(JSContext* cx, MacroAssembler& masm,
