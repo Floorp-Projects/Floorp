@@ -67,14 +67,15 @@ bool AudioData::AdjustForStartTime(int64_t aStartTime) {
 }
 
 bool AudioData::SetTrimWindow(const media::TimeInterval& aTrim) {
+  MOZ_DIAGNOSTIC_ASSERT(aTrim.mStart.IsValid() && aTrim.mEnd.IsValid(),
+                        "An overflow occurred on the provided TimeInterval");
   if (!mAudioData) {
     // MoveableData got called. Can no longer work on it.
     return false;
   }
   const size_t originalFrames = mAudioData.Length() / mChannels;
   const TimeUnit originalDuration = FramesToTimeUnit(originalFrames, mRate);
-  if (!aTrim.mStart.IsValid() || !aTrim.mEnd.IsValid() ||
-      aTrim.mStart < mOriginalTime ||
+  if (aTrim.mStart < mOriginalTime ||
       aTrim.mEnd > mOriginalTime + originalDuration) {
     return false;
   }
