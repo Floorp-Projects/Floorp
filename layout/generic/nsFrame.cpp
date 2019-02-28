@@ -909,6 +909,22 @@ bool nsIFrame::HasDisplayItem(nsDisplayItem* aItem) {
 }
 
 void nsIFrame::RemoveDisplayItemDataForDeletion() {
+  // Destroying a WebRenderUserDataTable can cause destruction of other objects
+  // which can remove frame properties in their destructor. If we delete a frame
+  // property it runs the destructor of the stored object in the middle of
+  // updating the frame property table, so if the destruction of that object
+  // causes another update to the frame property table it would leave the frame
+  // property table in an inconsistent state. So we remove it from the table and
+  // then destroy it. (bug 1530657)
+  WebRenderUserDataTable* userDataTable =
+      RemoveProperty(WebRenderUserDataProperty::Key());
+  if (userDataTable) {
+    for (auto iter = userDataTable->Iter(); !iter.Done(); iter.Next()) {
+      iter.UserData()->RemoveFromTable();
+    }
+    delete userDataTable;
+  }
+
   FrameLayerBuilder::RemoveFrameFromLayerManager(this, DisplayItemData());
   DisplayItemData().Clear();
 
