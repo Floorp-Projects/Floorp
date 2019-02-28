@@ -261,7 +261,7 @@ var CaptivePortalWatcher = {
 
     gBrowser.selectedTab = tab;
 
-    let canonicalURI = makeURI(this.canonicalURL);
+    let canonicalURI = Services.io.newURI(this.canonicalURL);
 
     // When we are no longer captive, close the tab if it's at the canonical URL.
     let tabCloser = () => {
