@@ -19,10 +19,10 @@
   }
 
   async function runTest(test, token) {
-    let video = appendVideoToDoc(test.name, token);
+    let video = appendVideoToDocWithoutLoad(token);
     manager.started(token);
 
-    let visible = waitUntilVisible(video)
+    let visible = waitUntilVisible(video);
     let ended = nextVideoEnded(video);
     let playing = nextVideoPlaying(video);
     let resumes = nextVideoResumes(video);
@@ -30,6 +30,9 @@
 
     Log(token, "Waiting until video becomes visible");
     await visible;
+
+    Log(token, "Waiting for metadata loaded");
+    await loadAndWaitUntilLoadedmetadata(video, test.name);
 
     Log(token, "Start playing");
     video.play();
