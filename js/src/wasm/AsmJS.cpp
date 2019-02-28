@@ -609,10 +609,6 @@ static inline ParseNode* ObjectNormalFieldInitializer(ParseNode* pn) {
   return BinaryRight(pn);
 }
 
-static inline ParseNode* MaybeInitializer(ParseNode* pn) {
-  return pn->as<NameNode>().initializer();
-}
-
 static inline bool IsUseOfName(ParseNode* pn, PropertyName* name) {
   return pn->isName(name);
 }
@@ -3040,8 +3036,15 @@ static bool CheckGlobalDotImport(ModuleValidatorShared& m,
   return m.addFFI(varName, field);
 }
 
-static bool CheckModuleGlobal(ModuleValidatorShared& m, ParseNode* var,
+static bool CheckModuleGlobal(ModuleValidatorShared& m, ParseNode* decl,
                               bool isConst) {
+  if (!decl->isKind(ParseNodeKind::AssignExpr)) {
+    return m.fail(decl, "module import needs initializer");
+  }
+  AssignmentNode* assignNode = &decl->as<AssignmentNode>();
+
+  ParseNode* var = assignNode->left();
+
   if (!var->isKind(ParseNodeKind::Name)) {
     return m.fail(var, "import variable is not a plain name");
   }
@@ -3051,10 +3054,7 @@ static bool CheckModuleGlobal(ModuleValidatorShared& m, ParseNode* var,
     return false;
   }
 
-  ParseNode* initNode = MaybeInitializer(var);
-  if (!initNode) {
-    return m.fail(var, "module import needs initializer");
-  }
+  ParseNode* initNode = assignNode->right();
 
   if (IsNumericLiteral(m, initNode)) {
     return CheckGlobalVariableInitConstant(m, varName, initNode, isConst);
@@ -3254,8 +3254,17 @@ static bool CheckFinalReturn(FunctionValidatorShared& f,
   return true;
 }
 
-static bool CheckVariable(FunctionValidatorShared& f, ParseNode* var,
+static bool CheckVariable(FunctionValidatorShared& f, ParseNode* decl,
                           ValTypeVector* types, Vector<NumLit>* inits) {
+  if (!decl->isKind(ParseNodeKind::AssignExpr)) {
+    return f.failName(
+        decl, "var '%s' needs explicit type declaration via an initial value",
+        decl->as<NameNode>().name());
+  }
+  AssignmentNode* assignNode = &decl->as<AssignmentNode>();
+
+  ParseNode* var = assignNode->left();
+
   if (!var->isKind(ParseNodeKind::Name)) {
     return f.fail(var, "local variable is not a plain name");
   }
@@ -3266,12 +3275,7 @@ static bool CheckVariable(FunctionValidatorShared& f, ParseNode* var,
     return false;
   }
 
-  ParseNode* initNode = MaybeInitializer(var);
-  if (!initNode) {
-    return f.failName(
-        var, "var '%s' needs explicit type declaration via an initial value",
-        name);
-  }
+  ParseNode* initNode = assignNode->right();
 
   NumLit lit;
   if (!IsLiteralOrConst(f, initNode, &lit)) {
@@ -6154,13 +6158,21 @@ static bool CheckFunctions(ModuleValidator<Unit>& m) {
 }
 
 template <typename Unit>
-static bool CheckFuncPtrTable(ModuleValidator<Unit>& m, ParseNode* var) {
+static bool CheckFuncPtrTable(ModuleValidator<Unit>& m, ParseNode* decl) {
+  if (!decl->isKind(ParseNodeKind::AssignExpr)) {
+    return m.fail(decl, "function-pointer table must have initializer");
+  }
+  AssignmentNode* assignNode = &decl->as<AssignmentNode>();
+
+  ParseNode* var = assignNode->left();
+
   if (!var->isKind(ParseNodeKind::Name)) {
     return m.fail(var, "function-pointer table name is not a plain name");
   }
 
-  ParseNode* arrayLiteral = MaybeInitializer(var);
-  if (!arrayLiteral || !arrayLiteral->isKind(ParseNodeKind::ArrayExpr)) {
+  ParseNode* arrayLiteral = assignNode->right();
+
+  if (!arrayLiteral->isKind(ParseNodeKind::ArrayExpr)) {
     return m.fail(
         var, "function-pointer table's initializer must be an array literal");
   }
