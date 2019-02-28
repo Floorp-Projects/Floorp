@@ -18,7 +18,7 @@ parent:
   // Sends data from the child to the parent that will be written to the cache.
   async WriteData(nsCString data);
   // Signals that writing to the output stream is done.
-  async Close();
+  async Close(nsresult status);
 
   async __delete__();
 

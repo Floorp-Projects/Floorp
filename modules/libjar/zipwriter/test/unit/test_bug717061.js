@@ -20,17 +20,17 @@ BinaryComparer.prototype = {
   length: null,
   callback: null,
 
-  onStartRequest(aRequest, aContext) {
+  onStartRequest(aRequest) {
   },
 
-  onStopRequest(aRequest, aContext, aStatusCode) {
+  onStopRequest(aRequest, aStatusCode) {
     this.fileStream.close();
     Assert.equal(aStatusCode, Cr.NS_OK);
     Assert.equal(this.offset, this.length);
     this.callback();
   },
 
-  onDataAvailable(aRequest, aContext, aInputStream, aOffset, aCount) {
+  onDataAvailable(aRequest, aInputStream, aOffset, aCount) {
     var stream = Cc["@mozilla.org/binaryinputstream;1"].
       createInstance(Ci.nsIBinaryInputStream);
     stream.setInputStream(aInputStream);

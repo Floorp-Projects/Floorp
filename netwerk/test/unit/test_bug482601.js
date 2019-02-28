@@ -24,15 +24,15 @@ var observer = {
 };
 
 var listener = {
-  onStartRequest: function (request, ctx) {
+  onStartRequest: function (request) {
     buffer = "";
   },
 
-  onDataAvailable: function (request, ctx, stream, offset, count) {
+  onDataAvailable: function (request, stream, offset, count) {
     buffer = buffer.concat(read_stream(stream, count));
   },
 
-  onStopRequest: function (request, ctx, status) {
+  onStopRequest: function (request, status) {
     Assert.equal(status, Cr.NS_OK);
     Assert.equal(buffer, "0123456789");
     Assert.equal(observers_called, results[test_nr]);

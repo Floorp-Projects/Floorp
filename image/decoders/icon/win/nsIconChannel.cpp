@@ -706,19 +706,18 @@ nsIconChannel::GetSecurityInfo(nsISupports** aSecurityInfo) {
 }
 
 // nsIRequestObserver methods
-NS_IMETHODIMP nsIconChannel::OnStartRequest(nsIRequest* aRequest,
-                                            nsISupports* aContext) {
+NS_IMETHODIMP nsIconChannel::OnStartRequest(nsIRequest* aRequest) {
   if (mListener) {
-    return mListener->OnStartRequest(this, aContext);
+    return mListener->OnStartRequest(this);
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIconChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+nsIconChannel::OnStopRequest(nsIRequest* aRequest,
                              nsresult aStatus) {
   if (mListener) {
-    mListener->OnStopRequest(this, aContext, aStatus);
+    mListener->OnStopRequest(this, aStatus);
     mListener = nullptr;
   }
 
@@ -735,11 +734,11 @@ nsIconChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
 
 // nsIStreamListener methods
 NS_IMETHODIMP
-nsIconChannel::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+nsIconChannel::OnDataAvailable(nsIRequest* aRequest,
                                nsIInputStream* aStream, uint64_t aOffset,
                                uint32_t aCount) {
   if (mListener) {
-    return mListener->OnDataAvailable(this, aContext, aStream, aOffset, aCount);
+    return mListener->OnDataAvailable(this, aStream, aOffset, aCount);
   }
   return NS_OK;
 }

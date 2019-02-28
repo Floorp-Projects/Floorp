@@ -201,11 +201,11 @@
 
 // component implementing nsIStreamLoader.
 #define NS_STREAMLOADER_CONTRACTID "@mozilla.org/network/stream-loader;1"
-#define NS_STREAMLOADER_CID                        \
-  { /* 5BA6D920-D4E9-11d3-A1A5-0050041CAF44 */     \
-    0x5ba6d920, 0xd4e9, 0x11d3, {                  \
-      0xa1, 0xa5, 0x0, 0x50, 0x4, 0x1c, 0xaf, 0x44 \
-    }                                              \
+#define NS_STREAMLOADER_CID                          \
+  { /* 9879908a-2972-40c0-890b-a91dd7dfb954 */       \
+    0x9879908a, 0x2972, 0x40c0, {                    \
+      0x89, 0x0b, 0xa9, 0x1d, 0xd7, 0xdf, 0xb9, 0x54 \
+    }                                                \
   }
 
 // component implementing nsIStreamLoader.
@@ -573,17 +573,6 @@
   { /* {0x9c7ec5d1-23f9-11d5-aea8-8fcc0793e97f} */   \
     0x9c7ec5d1, 0x23f9, 0x11d5, {                    \
       0xae, 0xa8, 0x8f, 0xcc, 0x07, 0x93, 0xe9, 0x7f \
-    }                                                \
-  }
-
-/******************************************************************************
- * netwerk/protocol/wyciwyg/ classes
- */
-
-#define NS_WYCIWYGPROTOCOLHANDLER_CID                \
-  { /* {0xe7509b46-2eB2-410a-9d7c-c3ce73284d01} */   \
-    0xe7509b46, 0x2eb2, 0x410a, {                    \
-      0x9d, 0x7c, 0xc3, 0xce, 0x73, 0x28, 0x4d, 0x01 \
     }                                                \
   }
 

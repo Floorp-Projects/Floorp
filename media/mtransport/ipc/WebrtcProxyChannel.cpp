@@ -331,15 +331,14 @@ WebrtcProxyChannel::OnTransportAvailable(nsISocketTransport* aTransport,
 
 // nsIRequestObserver (from nsIStreamListener)
 NS_IMETHODIMP
-WebrtcProxyChannel::OnStartRequest(nsIRequest* aRequest,
-                                   nsISupports* aContext) {
+WebrtcProxyChannel::OnStartRequest(nsIRequest* aRequest) {
   LOG(("WebrtcProxyChannel::OnStartRequest %p\n", this));
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-WebrtcProxyChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+WebrtcProxyChannel::OnStopRequest(nsIRequest* aRequest,
                                   nsresult aStatusCode) {
   LOG(("WebrtcProxyChannel::OnStopRequest %p status=%u\n", this,
        static_cast<uint32_t>(aStatusCode)));
@@ -355,7 +354,7 @@ WebrtcProxyChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
 
 // nsIStreamListener
 NS_IMETHODIMP
-WebrtcProxyChannel::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+WebrtcProxyChannel::OnDataAvailable(nsIRequest* aRequest,
                                     nsIInputStream* aInputStream,
                                     uint64_t aOffset, uint32_t aCount) {
   LOG(("WebrtcProxyChannel::OnDataAvailable %p count=%u\n", this, aCount));

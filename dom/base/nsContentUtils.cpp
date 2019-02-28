@@ -748,33 +748,6 @@ nsresult nsContentUtils::Init() {
   return NS_OK;
 }
 
-nsresult nsContentUtils::RemoveWyciwygScheme(nsIURI* aURI, nsIURI** aReturn) {
-#ifdef DEBUG
-  bool isWyciwyg = false;
-  aURI->SchemeIs("wyciwyg", &isWyciwyg);
-  MOZ_ASSERT(isWyciwyg, "Scheme should be wyciwyg");
-#endif
-  nsAutoCString path;
-  nsresult rv = aURI->GetPathQueryRef(path);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  uint32_t pathLength = path.Length();
-  if (pathLength <= 2) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Path is of the form "//123/http://foo/bar", with a variable number of
-  // digits. To figure out where the "real" URL starts, search path for a '/',
-  // starting at the third character.
-  int32_t slashIndex = path.FindChar('/', 2);
-  if (slashIndex == kNotFound) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_NewURI(
-      aReturn, Substring(path, slashIndex + 1, pathLength - slashIndex - 1));
-}
-
 void nsContentUtils::GetShiftText(nsAString& text) {
   if (!sShiftText) InitializeModifierStrings();
   text.Assign(*sShiftText);

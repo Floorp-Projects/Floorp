@@ -180,7 +180,7 @@ NS_IMPL_ISUPPORTS(nsPrefetchNode, nsIRequestObserver, nsIStreamListener,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsPrefetchNode::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) {
+nsPrefetchNode::OnStartRequest(nsIRequest *aRequest) {
   nsresult rv;
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest, &rv);
@@ -232,7 +232,7 @@ nsPrefetchNode::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) {
 }
 
 NS_IMETHODIMP
-nsPrefetchNode::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
+nsPrefetchNode::OnDataAvailable(nsIRequest *aRequest,
                                 nsIInputStream *aStream, uint64_t aOffset,
                                 uint32_t aCount) {
   uint32_t bytesRead = 0;
@@ -243,7 +243,7 @@ nsPrefetchNode::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
 }
 
 NS_IMETHODIMP
-nsPrefetchNode::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
+nsPrefetchNode::OnStopRequest(nsIRequest *aRequest,
                               nsresult aStatus) {
   LOG(("done prefetching [status=%" PRIx32 "]\n",
        static_cast<uint32_t>(aStatus)));

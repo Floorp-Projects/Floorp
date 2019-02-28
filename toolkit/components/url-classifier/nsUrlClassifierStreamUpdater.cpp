@@ -568,8 +568,7 @@ nsresult nsUrlClassifierStreamUpdater::AddRequestBody(
 // nsIStreamListenerObserver implementation
 
 NS_IMETHODIMP
-nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest *request,
-                                             nsISupports *context) {
+nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest *request) {
   nsresult rv;
   bool downloadError = false;
   nsAutoCString strStatus;
@@ -664,7 +663,6 @@ nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest *request,
 
 NS_IMETHODIMP
 nsUrlClassifierStreamUpdater::OnDataAvailable(nsIRequest *request,
-                                              nsISupports *context,
                                               nsIInputStream *aIStream,
                                               uint64_t aSourceOffset,
                                               uint32_t aLength) {
@@ -696,7 +694,6 @@ nsUrlClassifierStreamUpdater::OnDataAvailable(nsIRequest *request,
 
 NS_IMETHODIMP
 nsUrlClassifierStreamUpdater::OnStopRequest(nsIRequest *request,
-                                            nsISupports *context,
                                             nsresult aStatus) {
   if (!mDBService) return NS_ERROR_NOT_INITIALIZED;
 

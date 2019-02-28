@@ -25,7 +25,7 @@ CHECKPOINTS = [
 PERF_SUITES = [
     {'name': "Base Content Resident Unique Memory", 'node': "resident-unique"},
     {'name': "Base Content Heap Unclassified", 'node': "explicit/heap-unclassified"},
-    {'name': "Base Content JS", 'node': "js-main-runtime/"},
+    {'name': "Base Content JS", 'node': "js-main-runtime/", 'alertThreshold': 0.25},
     {'name': "Base Content Explicit", 'node': "explicit/"},
 ]
 

@@ -260,6 +260,7 @@ effective-content-sandbox-level = Effective Content Process Sandbox Level
 sandbox-proc-type-content = content
 sandbox-proc-type-file = file content
 sandbox-proc-type-media-plugin = media plugin
+sandbox-proc-type-data-decoder = data decoder
 
 launcher-process-status-0 = Enabled
 launcher-process-status-1 = Disabled due to failure

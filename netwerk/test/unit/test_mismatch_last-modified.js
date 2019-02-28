@@ -28,16 +28,16 @@ var listener_3 = {
 	throw Cr.NS_ERROR_NO_INTERFACE;
     },
 
-    onStartRequest: function test_onStartR(request, ctx) {},
+    onStartRequest: function test_onStartR(request) {},
     
-    onDataAvailable: function test_ODA(request, cx, inputStream,
+    onDataAvailable: function test_ODA(request, inputStream,
                                        offset, count) {
 	var data = new BinaryInputStream(inputStream).readByteArray(count);
       
 	Assert.equal(data[0], "B".charCodeAt(0));
     },
 
-    onStopRequest: function test_onStopR(request, ctx, status) {
+    onStopRequest: function test_onStopR(request, status) {
 	httpserver.stop(do_test_finished);
     }
 };
@@ -55,9 +55,9 @@ XPCOMUtils.defineLazyGetter(this, "listener_2", function() {
 	throw Cr.NS_ERROR_NO_INTERFACE;
     },
 
-    onStartRequest: function test_onStartR(request, ctx) {},
+    onStartRequest: function test_onStartR(request) {},
     
-    onDataAvailable: function test_ODA(request, cx, inputStream,
+    onDataAvailable: function test_ODA(request, inputStream,
                                        offset, count) {
 	var data = new BinaryInputStream(inputStream).readByteArray(count);
       
@@ -67,7 +67,7 @@ XPCOMUtils.defineLazyGetter(this, "listener_2", function() {
 	Assert.equal(data[0], "A".charCodeAt(0));
     },
 
-    onStopRequest: function test_onStopR(request, ctx, status) {
+    onStopRequest: function test_onStopR(request, status) {
     var channel = request.QueryInterface(Ci.nsIHttpChannel);
     var chan = NetUtil.newChannel({
       uri: "http://localhost:" + httpserver.identity.primaryPort + "/test1",
@@ -91,15 +91,15 @@ XPCOMUtils.defineLazyGetter(this, "listener_1", function() {
 	throw Cr.NS_ERROR_NO_INTERFACE;
     },
 
-    onStartRequest: function test_onStartR(request, ctx) {},
+    onStartRequest: function test_onStartR(request) {},
     
-    onDataAvailable: function test_ODA(request, cx, inputStream,
+    onDataAvailable: function test_ODA(request, inputStream,
                                        offset, count) {
 	var data = new BinaryInputStream(inputStream).readByteArray(count);
 	Assert.equal(data[0], "A".charCodeAt(0));
     },
 
-    onStopRequest: function test_onStopR(request, ctx, status) {
+    onStopRequest: function test_onStopR(request, status) {
     var channel = request.QueryInterface(Ci.nsIHttpChannel);
     var chan = NetUtil.newChannel({
       uri: "http://localhost:" + httpserver.identity.primaryPort + "/test1",

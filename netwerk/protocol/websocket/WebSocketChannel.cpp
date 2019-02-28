@@ -3662,7 +3662,7 @@ WebSocketChannel::OnTransportAvailable(nsISocketTransport *aTransport,
 // nsIRequestObserver (from nsIStreamListener)
 
 NS_IMETHODIMP
-WebSocketChannel::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) {
+WebSocketChannel::OnStartRequest(nsIRequest *aRequest) {
   LOG(("WebSocketChannel::OnStartRequest(): %p [%p %p] recvdhttpupgrade=%d\n",
        this, aRequest, mHttpChannel.get(), mRecvdHttpUpgradeTransport));
   MOZ_ASSERT(NS_IsMainThread(), "not main thread");
@@ -3847,7 +3847,7 @@ WebSocketChannel::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) {
 }
 
 NS_IMETHODIMP
-WebSocketChannel::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
+WebSocketChannel::OnStopRequest(nsIRequest *aRequest,
                                 nsresult aStatusCode) {
   LOG(("WebSocketChannel::OnStopRequest() %p [%p %p %" PRIx32 "]\n", this,
        aRequest, mHttpChannel.get(), static_cast<uint32_t>(aStatusCode)));
@@ -4004,7 +4004,7 @@ WebSocketChannel::OnOutputStreamReady(nsIAsyncOutputStream *aStream) {
 // nsIStreamListener
 
 NS_IMETHODIMP
-WebSocketChannel::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
+WebSocketChannel::OnDataAvailable(nsIRequest *aRequest,
                                   nsIInputStream *aInputStream,
                                   uint64_t aOffset, uint32_t aCount) {
   LOG(("WebSocketChannel::OnDataAvailable() %p [%p %p %p %" PRIu64 " %u]\n",

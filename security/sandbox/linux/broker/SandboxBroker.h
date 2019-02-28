@@ -111,6 +111,8 @@ class SandboxBroker final : private SandboxBrokerCommon,
       return Lookup(nsDependentCString(aPath));
     }
 
+    bool IsEmpty() const { return mMap.Count() == 0; }
+
    private:
     // ValidatePath checks |path| and returns true if these conditions are met
     // * Greater than 0 length

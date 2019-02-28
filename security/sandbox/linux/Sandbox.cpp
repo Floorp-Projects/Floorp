@@ -653,4 +653,24 @@ void SetMediaPluginSandbox(const char* aFilePath) {
 }
 #endif  // MOZ_GMP_SANDBOX
 
+void SetRemoteDataDecoderSandbox(int aBroker) {
+  if (PR_GetEnv("MOZ_DISABLE_RDD_SANDBOX") != nullptr) {
+    if (aBroker >= 0) {
+      close(aBroker);
+    }
+    return;
+  }
+
+  gSandboxReporterClient =
+      new SandboxReporterClient(SandboxReport::ProcType::RDD);
+
+  // FIXME(bug 1513773): merge this with the one for content?
+  static SandboxBrokerClient* sBroker;
+  if (aBroker >= 0) {
+    sBroker = new SandboxBrokerClient(aBroker);
+  }
+
+  SetCurrentProcessSandbox(GetDecoderSandboxPolicy(sBroker));
+}
+
 }  // namespace mozilla

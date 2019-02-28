@@ -57,8 +57,7 @@ static js::jit::JitCode* linkAndAllocate(JSContext* cx,
                                          js::jit::MacroAssembler* masm) {
   using namespace js;
   using namespace js::jit;
-  AutoFlushICache afc("test");
-  Linker l(*masm);
+  Linker l(*masm, "test");
   return l.newCode(cx, CodeKind::Ion);
 }
 

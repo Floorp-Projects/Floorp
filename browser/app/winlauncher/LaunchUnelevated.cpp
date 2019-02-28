@@ -9,7 +9,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/LauncherResult.h"
-#include "mozilla/mscom/ApartmentRegion.h"
+#include "mozilla/mscom/ProcessRuntime.h"
 #include "mozilla/RefPtr.h"
 #include "nsWindowsHelpers.h"
 
@@ -102,10 +102,11 @@ namespace mozilla {
 // See https://blogs.msdn.microsoft.com/oldnewthing/20131118-00/?p=2643
 
 LauncherVoidResult LaunchUnelevated(int aArgc, wchar_t* aArgv[]) {
-  // We require a single-threaded apartment to talk to Explorer.
-  mscom::STARegion sta;
-  if (!sta.IsValid()) {
-    return LAUNCHER_ERROR_FROM_HRESULT(sta.GetHResult());
+  // We need COM to talk to Explorer. Using ProcessRuntime so that
+  // process-global COM configuration is done correctly
+  mozilla::mscom::ProcessRuntime mscom(GeckoProcessType_Default);
+  if (!mscom) {
+    return LAUNCHER_ERROR_FROM_HRESULT(mscom.GetHResult());
   }
 
   // NB: Explorer is a local server, not an inproc server

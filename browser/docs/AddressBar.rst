@@ -294,8 +294,8 @@ Implements an input box *View*, owns an *UrlbarView*.
     // Manage view visibility.
     closePopup();
     openResults();
-    // Converts an internal URI (e.g. a wyciwyg URI) into one which we can
-    // expose to the user.
+    // Converts an internal URI (e.g. a URI with a username or password) into
+    // one which we can expose to the user.
     makeURIReadable(uri);
     // Handles an event which would cause a url or text to be opened.
     handleCommand();

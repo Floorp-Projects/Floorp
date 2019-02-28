@@ -114,23 +114,25 @@ var testFramesLoaded = function() {
 
 // test that a document can be framed under a javascript: URL opened by the
 // same site as the frame
+// We can't set a load event listener before calling document.open/document.write, because those will remove such listeners.  So we need to define a function that the new window will be able to call.
+function frameInJSURILoaded(win) {
+  var test = win.document.getElementById("sameorigin3")
+                .contentDocument.getElementById("test");
+  ok(test != null, "frame under javascript: URL should have loaded.");
+  win.close();
+
+  // run last test
+  if (!isUnique) {
+    testFrameInDataURI();
+  } else {
+    testFrameNotLoadedInDataURI();
+  }
+}
+
 var testFrameInJSURI = function() {
   var html = '<iframe id="sameorigin3" src="http://mochi.test:8888/tests/dom/base/test/file_x-frame-options_page.sjs?testid=sameorigin3&xfo=sameorigin"></iframe>';
   var win = window.open();
-  win.onload = function() {
-    var test = win.document.getElementById("sameorigin3")
-              .contentDocument.getElementById("test");
-    ok(test != null, "frame under javascript: URL should have loaded.");
-    win.close();
-
-    // run last test
-    if (!isUnique) {
-      testFrameInDataURI();
-    } else {
-      testFrameNotLoadedInDataURI();
-    }
-  };
-  win.location.href = "javascript:document.write('"+html+"');document.close();";
+  win.location.href = "javascript:document.open(); onload = opener.frameInJSURILoaded.bind(null, window); document.write('"+html+"');document.close();";
 };
 
 // test that a document can be framed under a data: URL opened by the

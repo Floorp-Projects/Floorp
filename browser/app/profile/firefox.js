@@ -480,6 +480,13 @@ pref("browser.tabs.remote.separatePrivilegedContentProcess", true);
 // Turn on HTTP response process selection.
 pref("browser.tabs.remote.useHTTPResponseProcessSelection", true);
 
+// Unload tabs on low-memory on nightly.
+#ifdef RELEASE_OR_BETA
+pref("browser.tabs.unloadOnLowMemory", false);
+#else
+pref("browser.tabs.unloadOnLowMemory", true);
+#endif
+
 pref("browser.ctrlTab.recentlyUsedOrder", true);
 
 // By default, do not export HTML at shutdown.
@@ -1821,8 +1828,13 @@ pref("browser.engagement.recent_visited_origins.expiry", 86400); // 24 * 60 * 60
 pref("browser.aboutConfig.showWarning", true);
 
 #if defined(XP_WIN) && defined(MOZ_LAUNCHER_PROCESS)
+#if defined(NIGHTLY_BUILD)
+// Enable launcher process by default on Nightly
+pref("browser.launcherProcess.enabled", true);
+#else
 // Launcher process is disabled by default, will be selectively enabled via SHIELD
 pref("browser.launcherProcess.enabled", false);
+#endif  // defined(NIGHTLY_BUILD)
 #endif // defined(XP_WIN) && defined(MOZ_LAUNCHER_PROCESS)
 
 pref("browser.toolbars.keyboard_navigation", false);

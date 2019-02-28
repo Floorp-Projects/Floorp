@@ -177,10 +177,6 @@ nsresult Attr::Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const {
   const_cast<Attr*>(this)->GetValue(value);
 
   *aResult = new Attr(nullptr, do_AddRef(aNodeInfo), value);
-  if (!*aResult) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   NS_ADDREF(*aResult);
 
   return NS_OK;

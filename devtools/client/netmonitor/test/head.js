@@ -118,12 +118,16 @@ Services.prefs.setCharPref(
   "\"startTime\",\"status\",\"transferred\",\"type\",\"waterfall\"]"
 );
 
+// Increase UI limit for responses rendered using CodeMirror in tests.
+Services.prefs.setIntPref("devtools.netmonitor.response.ui.limit", 1024 * 105);
+
 registerCleanupFunction(() => {
   info("finish() was called, cleaning up...");
 
   Services.prefs.setBoolPref("devtools.debugger.log", gEnableLogging);
   Services.prefs.setCharPref("devtools.netmonitor.filters", gDefaultFilters);
   Services.prefs.clearUserPref("devtools.cache.disabled");
+  Services.prefs.clearUserPref("devtools.netmonitor.response.ui.limit");
   Services.cookies.removeAll();
 });
 

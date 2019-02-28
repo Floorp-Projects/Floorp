@@ -931,8 +931,7 @@ nsNavHistory::CanAddURI(nsIURI* aURI, bool* canAdd) {
       scheme.EqualsLiteral("imap") || scheme.EqualsLiteral("javascript") ||
       scheme.EqualsLiteral("mailbox") || scheme.EqualsLiteral("moz-anno") ||
       scheme.EqualsLiteral("news") || scheme.EqualsLiteral("page-icon") ||
-      scheme.EqualsLiteral("resource") || scheme.EqualsLiteral("view-source") ||
-      scheme.EqualsLiteral("wyciwyg")) {
+      scheme.EqualsLiteral("resource") || scheme.EqualsLiteral("view-source")) {
     return NS_OK;
   }
   *canAdd = true;

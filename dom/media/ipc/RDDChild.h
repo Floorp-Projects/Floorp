@@ -12,6 +12,10 @@
 
 namespace mozilla {
 
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
+class SandboxBroker;
+#endif
+
 namespace ipc {
 class CrashReporterHost;
 }  // namespace ipc
@@ -28,7 +32,7 @@ class RDDChild final : public PRDDChild {
   explicit RDDChild(RDDProcessHost* aHost);
   ~RDDChild();
 
-  void Init();
+  bool Init();
 
   bool EnsureRDDReady();
 
@@ -53,6 +57,9 @@ class RDDChild final : public PRDDChild {
   RDDProcessHost* mHost;
   UniquePtr<ipc::CrashReporterHost> mCrashReporter;
   UniquePtr<MemoryReportRequestHost> mMemoryReportRequest;
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
+  UniquePtr<SandboxBroker> mSandboxBroker;
+#endif
   bool mRDDReady;
 };
 

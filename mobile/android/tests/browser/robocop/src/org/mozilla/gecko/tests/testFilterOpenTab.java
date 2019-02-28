@@ -87,10 +87,8 @@ public class testFilterOpenTab extends ContentProviderTest {
             final String URL2 = "about:home";
             final String TITLE3 = "Chrome Weave URL";
             final String URL3 = "chrome://weave/";
-            final String TITLE4 = "What You Cache Is What You Get";
-            final String URL4 = "wyciwyg://1/test.com";
-            final String TITLE5 = "Root Folder";
-            final String URL5 = "file:///";
+            final String TITLE4 = "Root Folder";
+            final String URL4 = "file:///";
 
             // Create a list of local tabs.
             List<Tab> tabs = new ArrayList<Tab>(6);
@@ -98,14 +96,12 @@ public class testFilterOpenTab extends ContentProviderTest {
             Tab tab2 = createTab(2, URL2, false, 0, TITLE2);
             Tab tab3 = createTab(3, URL3, false, 0, TITLE3);
             Tab tab4 = createTab(4, URL4, false, 0, TITLE4);
-            Tab tab5 = createTab(5, URL5, false, 0, TITLE5);
-            Tab tab6 = createPrivateTab(6, URL1, false, 0, TITLE1);
+            Tab tab5 = createPrivateTab(5, URL1, false, 0, TITLE1);
             tabs.add(tab1);
             tabs.add(tab2);
             tabs.add(tab3);
             tabs.add(tab4);
             tabs.add(tab5);
-            tabs.add(tab6);
 
             // Persist the created tabs. Normally, you should be careful that you get a profile on the
             // original thread, and do the work in a background one, but for testing we don't.

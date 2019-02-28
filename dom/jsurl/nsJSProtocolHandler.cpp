@@ -737,8 +737,8 @@ void nsJSChannel::EvaluateScript() {
 }
 
 void nsJSChannel::NotifyListener() {
-  mListener->OnStartRequest(this, nullptr);
-  mListener->OnStopRequest(this, nullptr, mStatus);
+  mListener->OnStartRequest(this);
+  mListener->OnStopRequest(this, mStatus);
 
   CleanupStrongRefs();
 }
@@ -937,24 +937,24 @@ nsJSChannel::SetContentLength(int64_t aContentLength) {
 }
 
 NS_IMETHODIMP
-nsJSChannel::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
+nsJSChannel::OnStartRequest(nsIRequest* aRequest) {
   NS_ENSURE_TRUE(aRequest == mStreamChannel, NS_ERROR_UNEXPECTED);
 
-  return mListener->OnStartRequest(this, aContext);
+  return mListener->OnStartRequest(this);
 }
 
 NS_IMETHODIMP
-nsJSChannel::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+nsJSChannel::OnDataAvailable(nsIRequest* aRequest,
                              nsIInputStream* aInputStream, uint64_t aOffset,
                              uint32_t aCount) {
   NS_ENSURE_TRUE(aRequest == mStreamChannel, NS_ERROR_UNEXPECTED);
 
-  return mListener->OnDataAvailable(this, aContext, aInputStream, aOffset,
+  return mListener->OnDataAvailable(this, aInputStream, aOffset,
                                     aCount);
 }
 
 NS_IMETHODIMP
-nsJSChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+nsJSChannel::OnStopRequest(nsIRequest* aRequest,
                            nsresult aStatus) {
   NS_ENSURE_TRUE(aRequest == mStreamChannel, NS_ERROR_UNEXPECTED);
 
@@ -967,7 +967,7 @@ nsJSChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
     aStatus = mStatus;
   }
 
-  nsresult rv = listener->OnStopRequest(this, aContext, aStatus);
+  nsresult rv = listener->OnStopRequest(this, aStatus);
 
   nsCOMPtr<nsILoadGroup> loadGroup;
   mStreamChannel->GetLoadGroup(getter_AddRefs(loadGroup));
@@ -1010,6 +1010,13 @@ NS_IMETHODIMP
 nsJSChannel::GetExecuteAsync(bool* aIsAsync) {
   *aIsAsync = mIsAsync;
   return NS_OK;
+}
+
+bool nsJSChannel::GetIsDocumentLoad() {
+  // Our LOAD_DOCUMENT_URI flag, if any, lives on our stream channel.
+  nsLoadFlags flags;
+  mStreamChannel->GetLoadFlags(&flags);
+  return flags & LOAD_DOCUMENT_URI;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -532,10 +532,10 @@ class LoaderListener final : public nsIStreamLoaderObserver,
                    const uint8_t* aString) override;
 
   NS_IMETHOD
-  OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) override;
+  OnStartRequest(nsIRequest* aRequest) override;
 
   NS_IMETHOD
-  OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+  OnStopRequest(nsIRequest* aRequest,
                 nsresult aStatusCode) override {
     // Nothing to do here!
     return NS_OK;
@@ -1400,7 +1400,7 @@ LoaderListener::OnStreamComplete(nsIStreamLoader* aLoader,
 }
 
 NS_IMETHODIMP
-LoaderListener::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
+LoaderListener::OnStartRequest(nsIRequest* aRequest) {
   return mRunnable->OnStartRequest(aRequest, mIndex);
 }
 

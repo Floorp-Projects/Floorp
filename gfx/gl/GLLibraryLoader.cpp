@@ -21,31 +21,6 @@ void ClearSymbols(const SymLoadStruct* const firstStruct) {
   }
 }
 
-/*
-PRFuncPtr GLLibraryLoader::LookupSymbol(PRLibrary& lib, const char* const sym,
-                                        const PlatformLookupFunction lookupFunction) {
-  PRFuncPtr res = nullptr;
-
-  // try finding it in the library directly, if we have one
-  if (lib) {
-    res = PR_FindFunctionSymbol(lib, sym);
-  }
-
-  // then try looking it up via the lookup symbol
-  if (!res && lookupFunction) {
-    res = lookupFunction(sym);
-  }
-
-  // finally just try finding it in the process
-  if (!res) {
-    PRLibrary* leakedLibRef;
-    res = PR_FindFunctionSymbolAndLibrary(sym, &leakedLibRef);
-  }
-
-  return res;
-}
-*/
-
 bool SymbolLoader::LoadSymbols(const SymLoadStruct* const firstStruct,
                                const bool warnOnFailures) const {
   bool ok = true;
@@ -85,11 +60,11 @@ PRFuncPtr SymbolLoader::GetProcAddress(const char* const name) const {
 #endif
 
   PRFuncPtr ret = nullptr;
-  if (!ret && mPfn) {
-    ret = mPfn(name);
-  }
   if (!ret && mLib) {
     ret = PR_FindFunctionSymbol(mLib, name);
+  }
+  if (!ret && mPfn) {
+    ret = mPfn(name);
   }
   return ret;
 }

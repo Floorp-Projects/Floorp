@@ -235,12 +235,7 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
   }
 
   async modifySelector(node, value) {
-    let response;
-    if (this.canSetRuleText) {
-      response = await super.modifySelector(node, value, true);
-    } else {
-      response = await super.modifySelector(node, value);
-    }
+    const response = await super.modifySelector(node, value, this.canSetRuleText);
 
     if (response.ruleProps) {
       response.ruleProps = response.ruleProps.entries[0];

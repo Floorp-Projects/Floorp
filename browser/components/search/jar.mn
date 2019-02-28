@@ -9,4 +9,4 @@ browser.jar:
 
         searchplugins/                                              (searchplugins/**)
 
-% resource search-plugins %searchplugins/
+% resource search-plugins %searchplugins/ contentaccessible=yes

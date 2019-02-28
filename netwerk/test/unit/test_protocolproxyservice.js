@@ -942,10 +942,10 @@ function failed_script_callback(pi)
 var directFilterListener = {
   onModifyRequestCalled : false,
 
-  onStartRequest: function test_onStart(request, ctx) {  },
+  onStartRequest: function test_onStart(request) {  },
   onDataAvailable: function test_OnData() { },
 
-  onStopRequest: function test_onStop(request, ctx, status) {
+  onStopRequest: function test_onStop(request, status) {
     // check on the PI from the channel itself
     request.QueryInterface(Ci.nsIProxiedChannel);
     check_proxy(request.proxyInfo, "http", "127.0.0.1", 7246, 0, 0, false);

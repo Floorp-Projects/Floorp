@@ -173,12 +173,6 @@ static bool XPC_WN_Shared_toPrimitive(JSContext* cx, unsigned argc, Value* vp) {
  * conditions are met:
  *
  * 1) 'foo' really is an XPConnect wrapper around a JSObject.
- * 2) The underlying JSObject actually implements a "wrappedJSObject"
- *    property that returns a JSObject. This is called by XPConnect. This
- *    restriction allows wrapped objects to only allow access to the underlying
- *    JSObject if they choose to do so. Usually this just means that 'foo'
- *    would have a property that looks like:
- *       this.wrappedJSObject = this.
  * 3) The caller must be system JS and not content. Double-wrapped XPCWJS should
  *    not be exposed to content except with enablePrivilege or a remote-XUL
  *    domain.
@@ -188,16 +182,10 @@ static bool XPC_WN_Shared_toPrimitive(JSContext* cx, unsigned argc, Value* vp) {
  * a) If 'foo' above were the underlying JSObject and not a wrapper at all,
  *    then this all just works and XPConnect is not part of the picture at all.
  * b) One might ask why 'foo' should not just implement an interface through
- *    which callers might get at the underlying object. There are three reasons:
+ *    which callers might get at the underlying object. There are two reasons:
  *   i)   XPConnect would still have to do magic since JSObject is not a
  *        scriptable type.
- *   ii)  JS Components might use aggregation (like C++ objects) and have
- *        different JSObjects for different interfaces 'within' an aggregate
- *        object. But, using an additional interface only allows returning one
- *        underlying JSObject. However, this allows for the possibility that
- *        each of the aggregte JSObjects could return something different.
- *        Note that one might do: this.wrappedJSObject = someOtherObject;
- *   iii) Avoiding the explicit interface makes it easier for both the caller
+ *   ii)  Avoiding the explicit interface makes it easier for both the caller
  *        and the component.
  */
 
@@ -209,14 +197,20 @@ static JSObject* GetDoubleWrappedJSObject(XPCCallContext& ccx,
   if (underware) {
     RootedObject mainObj(ccx, underware->GetJSObject());
     if (mainObj) {
-      RootedId id(ccx, ccx.GetContext()->GetStringID(
-                           XPCJSContext::IDX_WRAPPED_JSOBJECT));
-
       JSAutoRealm ar(ccx, underware->GetJSObjectGlobal());
 
+      // We don't have to root this ID, as it's already rooted by our context.
+      HandleId id =
+          ccx.GetContext()->GetStringID(XPCJSContext::IDX_WRAPPED_JSOBJECT);
+
+      // If the `wrappedJSObject` property is defined, use the result of getting
+      // that property, otherwise fall back to the `mainObj` object which is
+      // directly being wrapped.
       RootedValue val(ccx);
       if (JS_GetPropertyById(ccx, mainObj, id, &val) && !val.isPrimitive()) {
         obj = val.toObjectOrNull();
+      } else {
+        obj = mainObj;
       }
     }
   }

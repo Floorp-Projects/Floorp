@@ -182,7 +182,7 @@ nsresult nsIncrementalDownload::CallOnStartRequest() {
   if (!mObserver || mDidOnStartRequest) return NS_OK;
 
   mDidOnStartRequest = true;
-  return mObserver->OnStartRequest(this, mObserverContext);
+  return mObserver->OnStartRequest(this);
 }
 
 void nsIncrementalDownload::CallOnStopRequest() {
@@ -194,7 +194,7 @@ void nsIncrementalDownload::CallOnStopRequest() {
 
   mIsPending = false;
 
-  mObserver->OnStopRequest(this, mObserverContext, mStatus);
+  mObserver->OnStopRequest(this, mStatus);
   mObserver = nullptr;
   mObserverContext = nullptr;
 }
@@ -465,8 +465,7 @@ nsIncrementalDownload::Start(nsIRequestObserver *observer,
 // nsIRequestObserver
 
 NS_IMETHODIMP
-nsIncrementalDownload::OnStartRequest(nsIRequest *request,
-                                      nsISupports *context) {
+nsIncrementalDownload::OnStartRequest(nsIRequest *request) {
   nsresult rv;
 
   nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(request, &rv);
@@ -638,7 +637,7 @@ nsIncrementalDownload::OnStartRequest(nsIRequest *request,
 }
 
 NS_IMETHODIMP
-nsIncrementalDownload::OnStopRequest(nsIRequest *request, nsISupports *context,
+nsIncrementalDownload::OnStopRequest(nsIRequest *request,
                                      nsresult status) {
   // Not a real error; just a trick to kill off the channel without our
   // listener having to care.
@@ -672,7 +671,6 @@ nsIncrementalDownload::OnStopRequest(nsIRequest *request, nsISupports *context,
 
 NS_IMETHODIMP
 nsIncrementalDownload::OnDataAvailable(nsIRequest *request,
-                                       nsISupports *context,
                                        nsIInputStream *input, uint64_t offset,
                                        uint32_t count) {
   while (count) {

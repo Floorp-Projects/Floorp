@@ -424,6 +424,9 @@ browsing-search-on-start-typing =
 browsing-cfr-recommendations =
     .label = Recommend extensions as you browse
     .accesskey = R
+browsing-cfr-features =
+    .label = Recommend features as you browse
+    .accesskey = f
 
 browsing-cfr-recommendations-learn-more = Learn more
 

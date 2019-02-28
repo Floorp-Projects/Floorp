@@ -30,12 +30,12 @@ function run_test() {
 
 // TEST DATA
 
-function succeeded(ch, cx, status, data) {
+function succeeded(ch, status, data) {
   Assert.ok(Components.isSuccessCode(status));
   Assert.equal(data.map(v => String.fromCharCode(v)).join(""), "1234");
 }
 
-function check_1234(ch, cx) {
+function check_1234(ch) {
   Assert.equal(ch.getResponseHeader("Content-Length"), "4");
 }
 

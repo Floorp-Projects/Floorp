@@ -10,6 +10,9 @@
 #  include <linux/ipc.h>
 #endif
 #include <linux/net.h>
+#include <sys/socket.h>
+#include <sys/syscall.h>
+#include <unistd.h>
 
 #include "mozilla/UniquePtr.h"
 #include "sandbox/linux/bpf_dsl/bpf_dsl.h"
@@ -118,6 +121,25 @@ sandbox::bpf_dsl::ResultExpr SandboxPolicyBase::EvaluateSyscall(
     default:
       return InvalidSyscall();
   }
+}
+
+/* static */ bool SandboxPolicyBase::HasSeparateSocketCalls() {
+#ifdef __NR_socket
+  // If there's no socketcall, then obviously there are separate syscalls.
+#  ifdef __NR_socketcall
+  // This could be memoized, but currently it's called at most once
+  // per process.
+  int fd = syscall(__NR_socket, AF_LOCAL, SOCK_STREAM, 0);
+  if (fd < 0) {
+    MOZ_DIAGNOSTIC_ASSERT(errno == ENOSYS);
+    return false;
+  }
+  close(fd);
+#  endif  // __NR_socketcall
+  return true;
+#else   // ifndef __NR_socket
+  return false;
+#endif  // __NR_socket
 }
 
 }  // namespace mozilla

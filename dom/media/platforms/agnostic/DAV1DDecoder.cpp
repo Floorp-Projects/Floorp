@@ -6,6 +6,8 @@
 
 #include "DAV1DDecoder.h"
 
+#include "nsThreadUtils.h"
+
 #undef LOG
 #define LOG(arg, ...)                                                  \
   DDMOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, "::%s: " arg, __func__, \
@@ -21,14 +23,14 @@ DAV1DDecoder::DAV1DDecoder(const CreateDecoderParams& aParams)
 RefPtr<MediaDataDecoder::InitPromise> DAV1DDecoder::Init() {
   Dav1dSettings settings;
   dav1d_default_settings(&settings);
-  int decoder_threads = 2;
+  size_t decoder_threads = 2;
   if (mInfo.mDisplay.width >= 2048) {
     decoder_threads = 8;
   } else if (mInfo.mDisplay.width >= 1024) {
     decoder_threads = 4;
   }
   settings.n_frame_threads =
-      std::min(decoder_threads, PR_GetNumberOfProcessors());
+      static_cast<int>(std::min(decoder_threads, GetNumberOfProcessors()));
 
   int res = dav1d_open(&mContext, &settings);
   if (res < 0) {

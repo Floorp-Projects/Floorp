@@ -3,8 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEFINES['PRIO_BUILD_LIBRARY'] = True
-
 LOCAL_INCLUDES += [
     '/security/nss/lib/freebl/mpi',
     '/third_party/msgpack/include',
@@ -28,14 +26,6 @@ SOURCES += [
     '/security/nss/lib/freebl/mpi/mplogic.c',
     '/security/nss/lib/freebl/mpi/mpmontg.c',
     '/security/nss/lib/freebl/mpi/mpprime.c',
-]
-
-SOURCES += [
-    '/third_party/msgpack/src/objectc.c',
-    '/third_party/msgpack/src/unpack.c',
-    '/third_party/msgpack/src/version.c',
-    '/third_party/msgpack/src/vrefbuffer.c',
-    '/third_party/msgpack/src/zone.c',
 ]
 
 SOURCES += [

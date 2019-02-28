@@ -10,6 +10,7 @@
 #include "gc/FreeOp.h"
 #include "js/PropertySpec.h"
 #include "js/Utility.h"
+#include "vm/BigIntType.h"
 #include "vm/EqualityOperations.h"  // js::SameValue
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
@@ -100,13 +101,9 @@ bool HashableValue::operator==(const HashableValue& other) const {
   bool b = (value.asRawBits() == other.value.asRawBits());
 
   // BigInt values are considered equal if they represent the same
-  // integer. This test should use a comparison function that doesn't
-  // require a JSContext once one is defined in the BigInt class.
+  // mathematical value.
   if (!b && (value.isBigInt() && other.value.isBigInt())) {
-    JSContext* cx = TlsContext.get();
-    RootedValue valueRoot(cx, value);
-    RootedValue otherRoot(cx, other.value);
-    SameValue(cx, valueRoot, otherRoot, &b);
+    b = BigInt::equal(value.toBigInt(), other.value.toBigInt());
   }
 
 #ifdef DEBUG

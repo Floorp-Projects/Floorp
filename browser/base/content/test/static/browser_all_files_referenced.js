@@ -280,8 +280,11 @@ function parseManifest(manifestUri) {
         // The webcompat reporter's locale directory may not exist if
         // the addon is preffed-off, and since it's a hack until we
         // get bz1425104 landed, we'll just skip it for now.
+        // Same issue with fxmonitor, which is also pref'd off.
         if (chromeUri === "chrome://webcompat-reporter/locale/") {
           gChromeMap.set("chrome://webcompat-reporter/locale/", true);
+        } else if (chromeUri === "chrome://fxmonitor/locale/") {
+          gChromeMap.set("chrome://fxmonitor/locale/", true);
         } else {
           trackChromeUri(chromeUri);
         }

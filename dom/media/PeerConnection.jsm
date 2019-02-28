@@ -586,11 +586,16 @@ class RTCPeerConnection {
 
   // This implements the fairly common "Queue a task" logic
   async _queueTaskWithClosedCheck(func) {
-    return new this._win.Promise(resolve => {
+    const pc = this;
+    return new this._win.Promise((resolve, reject) => {
       Services.tm.dispatchToMainThread({ run() {
-        if (!this._closed) {
-          func();
-          resolve();
+        try {
+          if (!pc._closed) {
+            func();
+            resolve();
+          }
+        } catch (e) {
+          reject(e);
         }
       }});
     });
@@ -1922,38 +1927,34 @@ class RTCRtpSender {
   }
 
   async _replaceTrack(withTrack) {
-    this._pc._checkClosed();
-
-    if (this._transceiver.stopped) {
-      throw new this._pc._win.DOMException(
-          "Cannot call replaceTrack when transceiver is stopped",
-          "InvalidStateError");
-    }
-
+    let pc = this._pc;
     if (withTrack && (withTrack.kind != this._transceiver.getKind())) {
-      throw new this._pc._win.DOMException(
+      throw new pc._win.DOMException(
           "Cannot replaceTrack with a different kind!",
           "TypeError");
     }
 
-    // Updates the track on the MediaPipeline; this is needed whether or not
-    // we've associated this transceiver, the spec language notwithstanding.
-    // Synchronous, and will throw on failure.
-    this._pc._replaceTrackNoRenegotiation(this._transceiverImpl, withTrack);
+    pc._checkClosed();
 
-    let setTrack = () => {
-      this.track = withTrack;
-      this._transceiver.sync();
-    };
+    await pc._chain(async () => {
+      if (this._transceiver.stopped) {
+        throw new pc._win.DOMException(
+            "Cannot call replaceTrack when transceiver is stopped",
+            "InvalidStateError");
+      }
 
-    // Spec is a little weird here; we only queue if the transceiver was
-    // associated, otherwise we update the track synchronously.
-    if (this._transceiver.mid == null) {
-      setTrack();
-    } else {
-      // We're supposed to queue a task if the transceiver is associated
-      await this._pc._queueTaskWithClosedCheck(setTrack);
-    }
+      await pc._queueTaskWithClosedCheck(() => {
+        // Updates the track on the MediaPipeline, will throw on failure.
+        try {
+          pc._replaceTrackNoRenegotiation(this._transceiverImpl, withTrack);
+        } catch (e) {
+          throw new pc._win.DOMException("Track could not be replaced without renegotiation",
+                                         "InvalidModificationError");
+        }
+        this.track = withTrack;
+        this._transceiver.sync();
+      });
+    });
   }
 
   setParameters(parameters) {

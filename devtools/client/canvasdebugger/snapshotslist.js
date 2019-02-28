@@ -5,6 +5,9 @@
 /* globals window, document */
 "use strict";
 
+var promise = require("promise");
+var defer = require("devtools/shared/defer");
+
 /**
  * Functions handling the recorded animation frame snapshots UI.
  */
@@ -421,7 +424,7 @@ var SnapshotsListView = extend(WidgetMethods, {
       const screenshot = snapshotItem.attachment.screenshot;
 
       // Prepare all the function calls for serialization.
-      await DevToolsUtils.yieldingEach(functionCalls, (call, i) => {
+      await yieldingEach(functionCalls, (call, i) => {
         const { type, name, file, line, timestamp, argsPreview, callerPreview } = call;
         return call.getDetails().then(({ stack }) => {
           data.calls[i] = {
@@ -438,7 +441,7 @@ var SnapshotsListView = extend(WidgetMethods, {
       });
 
       // Prepare all the thumbnails for serialization.
-      await DevToolsUtils.yieldingEach(thumbnails, (thumbnail, i) => {
+      await yieldingEach(thumbnails, (thumbnail, i) => {
         const { index, width, height, flipped, pixels } = thumbnail;
         data.thumbnails.push({ index, width, height, flipped, pixels });
       });
@@ -494,4 +497,53 @@ function showNotification(toolbox, name, message) {
   if (!notification) {
     notificationBox.appendNotification(message, name, "", notificationBox.PRIORITY_WARNING_HIGH);
   }
+}
+
+/**
+ * Like Array.prototype.forEach, but doesn't cause jankiness when iterating over
+ * very large arrays by yielding to the browser and continuing execution on the
+ * next tick.
+ *
+ * @param Array array
+ *        The array being iterated over.
+ * @param Function fn
+ *        The function called on each item in the array. If a promise is
+ *        returned by this function, iterating over the array will be paused
+ *        until the respective promise is resolved.
+ * @returns Promise
+ *          A promise that is resolved once the whole array has been iterated
+ *          over, and all promises returned by the fn callback are resolved.
+ */
+function yieldingEach(array, fn) {
+  const deferred = defer();
+
+  let i = 0;
+  const len = array.length;
+  const outstanding = [deferred.promise];
+
+  (function loop() {
+    const start = Date.now();
+
+    while (i < len) {
+      // Don't block the main thread for longer than 16 ms at a time. To
+      // maintain 60fps, you have to render every frame in at least 16ms; we
+      // aren't including time spent in non-JS here, but this is Good
+      // Enough(tm).
+      if (Date.now() - start > 16) {
+        DevToolsUtils.executeSoon(loop);
+        return;
+      }
+
+      try {
+        outstanding.push(fn(array[i], i++));
+      } catch (e) {
+        deferred.reject(e);
+        return;
+      }
+    }
+
+    deferred.resolve();
+  }());
+
+  return promise.all(outstanding);
 }

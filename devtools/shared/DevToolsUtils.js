@@ -10,8 +10,6 @@
 
 var { Ci, Cu, components } = require("chrome");
 var Services = require("Services");
-var promise = require("promise");
-var defer = require("devtools/shared/defer");
 var flags = require("./flags");
 var {getStack, callFunctionWithAsyncStack} = require("devtools/shared/platform/stack");
 
@@ -74,9 +72,9 @@ exports.executeSoon = function(fn) {
  *         A promise that is resolved after the next tick in the event loop.
  */
 exports.waitForTick = function() {
-  const deferred = defer();
-  exports.executeSoon(deferred.resolve);
-  return deferred.promise;
+  return new Promise(resolve => {
+    exports.executeSoon(resolve);
+  });
 };
 
 /**
@@ -88,58 +86,7 @@ exports.waitForTick = function() {
  *         A promise that is resolved after the specified amount of time passes.
  */
 exports.waitForTime = function(delay) {
-  const deferred = defer();
-  setTimeout(deferred.resolve, delay);
-  return deferred.promise;
-};
-
-/**
- * Like Array.prototype.forEach, but doesn't cause jankiness when iterating over
- * very large arrays by yielding to the browser and continuing execution on the
- * next tick.
- *
- * @param Array array
- *        The array being iterated over.
- * @param Function fn
- *        The function called on each item in the array. If a promise is
- *        returned by this function, iterating over the array will be paused
- *        until the respective promise is resolved.
- * @returns Promise
- *          A promise that is resolved once the whole array has been iterated
- *          over, and all promises returned by the fn callback are resolved.
- */
-exports.yieldingEach = function(array, fn) {
-  const deferred = defer();
-
-  let i = 0;
-  const len = array.length;
-  const outstanding = [deferred.promise];
-
-  (function loop() {
-    const start = Date.now();
-
-    while (i < len) {
-      // Don't block the main thread for longer than 16 ms at a time. To
-      // maintain 60fps, you have to render every frame in at least 16ms; we
-      // aren't including time spent in non-JS here, but this is Good
-      // Enough(tm).
-      if (Date.now() - start > 16) {
-        exports.executeSoon(loop);
-        return;
-      }
-
-      try {
-        outstanding.push(fn(array[i], i++));
-      } catch (e) {
-        deferred.reject(e);
-        return;
-      }
-    }
-
-    deferred.resolve();
-  }());
-
-  return promise.all(outstanding);
+  return new Promise(resolve => setTimeout(resolve, delay));
 };
 
 /**
@@ -562,130 +509,130 @@ function mainThreadFetch(urlIn, aOptions = { loadFromCache: true,
                                              charset: null,
                                              principal: null,
                                              cacheKey: 0 }) {
-  // Create a channel.
-  const url = urlIn.split(" -> ").pop();
-  let channel;
-  try {
-    channel = newChannelForURL(url, aOptions);
-  } catch (ex) {
-    return promise.reject(ex);
-  }
-
-  // Set the channel options.
-  channel.loadFlags = aOptions.loadFromCache
-    ? channel.LOAD_FROM_CACHE
-    : channel.LOAD_BYPASS_CACHE;
-
-  // When loading from cache, the cacheKey allows us to target a specific
-  // SHEntry and offer ways to restore POST requests from cache.
-  if (aOptions.loadFromCache &&
-      aOptions.cacheKey != 0 && channel instanceof Ci.nsICacheInfoChannel) {
-    channel.cacheKey = aOptions.cacheKey;
-  }
-
-  if (aOptions.window) {
-    // Respect private browsing.
-    channel.loadGroup = aOptions.window.docShell
-                          .QueryInterface(Ci.nsIDocumentLoader)
-                          .loadGroup;
-  }
-
-  const deferred = defer();
-  const onResponse = (stream, status, request) => {
-    if (!components.isSuccessCode(status)) {
-      deferred.reject(new Error(`Failed to fetch ${url}. Code ${status}.`));
+  return new Promise((resolve, reject) =>{
+    // Create a channel.
+    const url = urlIn.split(" -> ").pop();
+    let channel;
+    try {
+      channel = newChannelForURL(url, aOptions);
+    } catch (ex) {
+      reject(ex);
       return;
     }
 
-    try {
-      // We cannot use NetUtil to do the charset conversion as if charset
-      // information is not available and our default guess is wrong the method
-      // might fail and we lose the stream data. This means we can't fall back
-      // to using the locale default encoding (bug 1181345).
+    // Set the channel options.
+    channel.loadFlags = aOptions.loadFromCache
+      ? channel.LOAD_FROM_CACHE
+      : channel.LOAD_BYPASS_CACHE;
 
-      // Read and decode the data according to the locale default encoding.
-      const available = stream.available();
-      let source = NetUtil.readInputStreamToString(stream, available);
-      stream.close();
+    // When loading from cache, the cacheKey allows us to target a specific
+    // SHEntry and offer ways to restore POST requests from cache.
+    if (aOptions.loadFromCache &&
+        aOptions.cacheKey != 0 && channel instanceof Ci.nsICacheInfoChannel) {
+      channel.cacheKey = aOptions.cacheKey;
+    }
 
-      // We do our own BOM sniffing here because there's no convenient
-      // implementation of the "decode" algorithm
-      // (https://encoding.spec.whatwg.org/#decode) exposed to JS.
-      let bomCharset = null;
-      if (available >= 3 && source.codePointAt(0) == 0xef &&
-          source.codePointAt(1) == 0xbb && source.codePointAt(2) == 0xbf) {
-        bomCharset = "UTF-8";
-        source = source.slice(3);
-      } else if (available >= 2 && source.codePointAt(0) == 0xfe &&
-                 source.codePointAt(1) == 0xff) {
-        bomCharset = "UTF-16BE";
-        source = source.slice(2);
-      } else if (available >= 2 && source.codePointAt(0) == 0xff &&
-                 source.codePointAt(1) == 0xfe) {
-        bomCharset = "UTF-16LE";
-        source = source.slice(2);
+    if (aOptions.window) {
+      // Respect private browsing.
+      channel.loadGroup = aOptions.window.docShell
+                            .QueryInterface(Ci.nsIDocumentLoader)
+                            .loadGroup;
+    }
+
+    const onResponse = (stream, status, request) => {
+      if (!components.isSuccessCode(status)) {
+        reject(new Error(`Failed to fetch ${url}. Code ${status}.`));
+        return;
       }
 
-      // If the channel or the caller has correct charset information, the
-      // content will be decoded correctly. If we have to fall back to UTF-8 and
-      // the guess is wrong, the conversion fails and convertToUnicode returns
-      // the input unmodified. Essentially we try to decode the data as UTF-8
-      // and if that fails, we use the locale specific default encoding. This is
-      // the best we can do if the source does not provide charset info.
-      let charset = bomCharset;
-      if (!charset) {
-        try {
-          charset = channel.contentCharset;
-        } catch (e) {
-          // Accessing `contentCharset` on content served by a service worker in
-          // non-e10s may throw.
+      try {
+        // We cannot use NetUtil to do the charset conversion as if charset
+        // information is not available and our default guess is wrong the method
+        // might fail and we lose the stream data. This means we can't fall back
+        // to using the locale default encoding (bug 1181345).
+
+        // Read and decode the data according to the locale default encoding.
+        const available = stream.available();
+        let source = NetUtil.readInputStreamToString(stream, available);
+        stream.close();
+
+        // We do our own BOM sniffing here because there's no convenient
+        // implementation of the "decode" algorithm
+        // (https://encoding.spec.whatwg.org/#decode) exposed to JS.
+        let bomCharset = null;
+        if (available >= 3 && source.codePointAt(0) == 0xef &&
+            source.codePointAt(1) == 0xbb && source.codePointAt(2) == 0xbf) {
+          bomCharset = "UTF-8";
+          source = source.slice(3);
+        } else if (available >= 2 && source.codePointAt(0) == 0xfe &&
+                  source.codePointAt(1) == 0xff) {
+          bomCharset = "UTF-16BE";
+          source = source.slice(2);
+        } else if (available >= 2 && source.codePointAt(0) == 0xff &&
+                  source.codePointAt(1) == 0xfe) {
+          bomCharset = "UTF-16LE";
+          source = source.slice(2);
+        }
+
+        // If the channel or the caller has correct charset information, the
+        // content will be decoded correctly. If we have to fall back to UTF-8 and
+        // the guess is wrong, the conversion fails and convertToUnicode returns
+        // the input unmodified. Essentially we try to decode the data as UTF-8
+        // and if that fails, we use the locale specific default encoding. This is
+        // the best we can do if the source does not provide charset info.
+        let charset = bomCharset;
+        if (!charset) {
+          try {
+            charset = channel.contentCharset;
+          } catch (e) {
+            // Accessing `contentCharset` on content served by a service worker in
+            // non-e10s may throw.
+          }
+        }
+        if (!charset) {
+          charset = aOptions.charset || "UTF-8";
+        }
+        const unicodeSource = NetworkHelper.convertToUnicode(source, charset);
+
+        resolve({
+          content: unicodeSource,
+          contentType: request.contentType,
+        });
+      } catch (ex) {
+        const uri = request.originalURI;
+        if (ex.name === "NS_BASE_STREAM_CLOSED" && uri instanceof Ci.nsIFileURL) {
+          // Empty files cause NS_BASE_STREAM_CLOSED exception. Use OS.File to
+          // differentiate between empty files and other errors (bug 1170864).
+          // This can be removed when bug 982654 is fixed.
+
+          uri.QueryInterface(Ci.nsIFileURL);
+          const result = OS.File.read(uri.file.path).then(bytes => {
+            // Convert the bytearray to a String.
+            const decoder = new TextDecoder();
+            const content = decoder.decode(bytes);
+
+            // We can't detect the contentType without opening a channel
+            // and that failed already. This is the best we can do here.
+            return {
+              content,
+              contentType: "text/plain",
+            };
+          });
+
+          resolve(result);
+        } else {
+          reject(ex);
         }
       }
-      if (!charset) {
-        charset = aOptions.charset || "UTF-8";
-      }
-      const unicodeSource = NetworkHelper.convertToUnicode(source, charset);
+    };
 
-      deferred.resolve({
-        content: unicodeSource,
-        contentType: request.contentType,
-      });
+    // Open the channel
+    try {
+      NetUtil.asyncFetch(channel, onResponse);
     } catch (ex) {
-      const uri = request.originalURI;
-      if (ex.name === "NS_BASE_STREAM_CLOSED" && uri instanceof Ci.nsIFileURL) {
-        // Empty files cause NS_BASE_STREAM_CLOSED exception. Use OS.File to
-        // differentiate between empty files and other errors (bug 1170864).
-        // This can be removed when bug 982654 is fixed.
-
-        uri.QueryInterface(Ci.nsIFileURL);
-        const result = OS.File.read(uri.file.path).then(bytes => {
-          // Convert the bytearray to a String.
-          const decoder = new TextDecoder();
-          const content = decoder.decode(bytes);
-
-          // We can't detect the contentType without opening a channel
-          // and that failed already. This is the best we can do here.
-          return {
-            content,
-            contentType: "text/plain",
-          };
-        });
-
-        deferred.resolve(result);
-      } else {
-        deferred.reject(ex);
-      }
+      reject(ex);
     }
-  };
-
-  // Open the channel
-  try {
-    NetUtil.asyncFetch(channel, onResponse);
-  } catch (ex) {
-    return promise.reject(ex);
-  }
-
-  return deferred.promise;
+  });
 }
 
 /**

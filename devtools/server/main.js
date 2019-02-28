@@ -63,6 +63,13 @@ var DebuggerServer = {
   allowChromeProcess: false,
 
   /**
+   * Flag used to check if the server can be destroyed when all connections have been
+   * removed. Firefox on Android runs a single shared DebuggerServer, and should not be
+   * closed even if no client is connected.
+   */
+  keepAlive: false,
+
+  /**
    * We run a special server in child process whose main actor is an instance
    * of FrameTargetActor, but that isn't a root actor. Instead there is no root
    * actor registered on DebuggerServer.

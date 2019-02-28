@@ -73,7 +73,7 @@ async function waitForProgressNotification(aPanelOpen = false, aExpectedCount = 
   return PopupNotifications.panel;
 }
 
-function acceptAppMenuNotificationWhenShown(id, dismiss = false) {
+function acceptAppMenuNotificationWhenShown(id, {dismiss = false, checkIncognito = false} = {}) {
   const {AppMenuNotifications} = ChromeUtils.import("resource://gre/modules/AppMenuNotifications.jsm");
   return new Promise(resolve => {
     function appMenuPopupHidden() {
@@ -95,6 +95,14 @@ function acceptAppMenuNotificationWhenShown(id, dismiss = false) {
       ok(PanelUI.isNotificationPanelOpen, "notification panel open");
 
       PanelUI.notificationPanel.removeEventListener("popupshown", popupshown);
+
+      let allowPrivate = Services.prefs.getBoolPref("extensions.allowPrivateBrowsingByDefault", true);
+      let checkbox = document.getElementById("addon-incognito-checkbox");
+      is(checkbox.hidden, allowPrivate && !checkIncognito, "checkbox visibility is correct");
+      is(checkbox.checked, false, "checkbox is not initially checked");
+      if (checkIncognito) {
+        checkbox.checked = true;
+      }
 
       if (dismiss) {
         // Dismiss the panel by clicking on the appMenu button.
@@ -282,6 +290,7 @@ async function test_blockedInstall() {
 },
 
 async function test_whitelistedInstall() {
+  Services.prefs.setBoolPref("extensions.allowPrivateBrowsingByDefault", false);
   let originalTab = gBrowser.selectedTab;
   let tab;
   gBrowser.selectedTab = originalTab;
@@ -302,7 +311,7 @@ async function test_whitelistedInstall() {
   is(gBrowser.selectedTab, tab,
      "tab selected in response to the addon-install-confirmation notification");
 
-  let notificationPromise = acceptAppMenuNotificationWhenShown("addon-installed", true);
+  let notificationPromise = acceptAppMenuNotificationWhenShown("addon-installed", {dismiss: true});
   acceptInstallDialog(installDialog);
   await notificationPromise;
 
@@ -310,9 +319,18 @@ async function test_whitelistedInstall() {
   is(installs.length, 0, "Should be no pending installs");
 
   let addon = await AddonManager.getAddonByID("amosigned-xpi@tests.mozilla.org");
+
+  // Test that the addon does not have permission. Reload it to ensure it would
+  // have been set if possible.
+  await addon.reload();
+  let policy = WebExtensionPolicy.getByID(addon.id);
+  ok(!policy.privateBrowsingAllowed, "private browsing permission was not granted");
+
   addon.uninstall();
 
   Services.perms.remove(makeURI("http://example.com/"), "install");
+
+  Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
   await removeTabAndWaitForNotificationClose();
 },
 
@@ -420,6 +438,7 @@ async function test_localFile() {
 },
 
 async function test_urlBar() {
+  Services.prefs.setBoolPref("extensions.allowPrivateBrowsingByDefault", false);
   let progressPromise = waitForProgressNotification();
   let dialogPromise = waitForInstallDialog();
 
@@ -432,7 +451,7 @@ async function test_urlBar() {
   await progressPromise;
   let installDialog = await dialogPromise;
 
-  let notificationPromise = acceptAppMenuNotificationWhenShown("addon-installed");
+  let notificationPromise = acceptAppMenuNotificationWhenShown("addon-installed", {checkIncognito: true});
   installDialog.button.click();
   await notificationPromise;
 
@@ -440,7 +459,18 @@ async function test_urlBar() {
   is(installs.length, 0, "Should be no pending installs");
 
   let addon = await AddonManager.getAddonByID("amosigned-xpi@tests.mozilla.org");
+  // The panel is reloading the addon due to the permission change, we need some way
+  // to wait for the reload to finish. addon.startupPromise doesn't do it for
+  // us, so we'll just restart again.
+  await addon.reload();
+
+  // This addon should have private browsing permission.
+  let policy = WebExtensionPolicy.getByID(addon.id);
+  ok(policy.privateBrowsingAllowed, "private browsing permission granted");
+
   addon.uninstall();
+
+  Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
 
   await removeTabAndWaitForNotificationClose();
 },
@@ -625,6 +655,7 @@ add_task(async function() {
     Services.prefs.clearUserPref("extensions.strictCompatibility");
     Services.prefs.clearUserPref("extensions.install.requireSecureOrigin");
     Services.prefs.clearUserPref("security.dialog_enable_delay");
+    Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
 
     Services.obs.removeObserver(XPInstallObserver, "addon-install-started");
     Services.obs.removeObserver(XPInstallObserver, "addon-install-blocked");

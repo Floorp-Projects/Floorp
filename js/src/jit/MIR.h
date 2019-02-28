@@ -11932,7 +11932,7 @@ class MWasmLoadRef : public MUnaryInstruction,
   AliasSet::Flag aliasSet_;
 
   explicit MWasmLoadRef(MDefinition* valueAddr, AliasSet::Flag aliasSet)
-      : MUnaryInstruction(classOpcode, valueAddr) {
+      : MUnaryInstruction(classOpcode, valueAddr), aliasSet_(aliasSet) {
     MOZ_ASSERT(valueAddr->type() == MIRType::Pointer);
     setResultType(MIRType::RefOrNull);
     setMovable();

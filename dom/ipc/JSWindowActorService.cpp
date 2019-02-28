@@ -432,8 +432,7 @@ void JSWindowActorService::ReceiveMessage(JS::RootedObject& aObj,
                                           const nsString& aMessageName,
                                           ipc::StructuredCloneData& aData) {
   IgnoredErrorResult error;
-  AutoEntryScript aes(js::CheckedUnwrap(aObj),
-                      "WindowGlobalChild Message Handler");
+  AutoEntryScript aes(aObj, "WindowGlobalChild Message Handler");
   JSContext* cx = aes.cx();
 
   // We passed the unwrapped object to AutoEntryScript so we now need to

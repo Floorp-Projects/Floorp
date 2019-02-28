@@ -12,6 +12,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsExceptionHandler.h"
 #include "nsITimer.h"
+#include "prsystem.h"
 
 #ifdef MOZILLA_INTERNAL_API
 #  include "nsThreadManager.h"
@@ -568,6 +569,16 @@ nsISerialEventTarget* GetMainThreadSerialEventTarget() {
   }
 
   return thread->SerialEventTarget();
+}
+
+size_t GetNumberOfProcessors() {
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
+  static const PRInt32 procs = PR_GetNumberOfProcessors();
+#else
+  PRInt32 procs = PR_GetNumberOfProcessors();
+#endif
+  MOZ_ASSERT(procs > 0);
+  return static_cast<size_t>(procs);
 }
 
 }  // namespace mozilla

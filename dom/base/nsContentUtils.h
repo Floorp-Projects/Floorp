@@ -219,9 +219,6 @@ class nsContentUtils {
  public:
   static nsresult Init();
 
-  // Strip off "wyciwyg://n/" part of a URL. aURI must have "wyciwyg" scheme.
-  static nsresult RemoveWyciwygScheme(nsIURI* aURI, nsIURI** aReturn);
-
   static bool IsCallerChrome();
   static bool ThreadsafeIsCallerChrome();
   static bool IsCallerContentXBL();

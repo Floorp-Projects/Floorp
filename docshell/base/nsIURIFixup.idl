@@ -97,8 +97,8 @@ interface nsIURIFixup : nsISupports
     /* NB: If adding an extra flag, 4 is free (again) */
 
     /**
-     * Converts an internal URI (e.g. a wyciwyg URI) into one which we can
-     * expose to the user, for example on the URL bar.
+     * Converts an internal URI (e.g. one that has a username and password in
+     * it) into one which we can expose to the user, for example on the URL bar.
      *
      * @param  aURI       The URI to be converted
      * @return nsIURI     The converted, exposable URI

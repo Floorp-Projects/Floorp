@@ -9,7 +9,6 @@ include protocol PContent;
 include protocol PHttpChannel;
 include protocol PCookieService;
 include protocol PBrowser;
-include protocol PWyciwygChannel;
 include protocol PFTPChannel;
 include protocol PWebSocket;
 include protocol PWebSocketEventListener;
@@ -51,7 +50,6 @@ nested(upto inside_cpow) sync protocol PNecko
   manager PContent;
   manages PHttpChannel;
   manages PCookieService;
-  manages PWyciwygChannel;
   manages PFTPChannel;
   manages PWebSocket;
   manages PWebSocketEventListener;
@@ -76,7 +74,6 @@ parent:
   async PHttpChannel(PBrowserOrId browser,
                      SerializedLoadContext loadContext,
                      HttpChannelCreationArgs args);
-  async PWyciwygChannel();
   async PFTPChannel(PBrowserOrId browser, SerializedLoadContext loadContext,
                     FTPChannelCreationArgs args);
 

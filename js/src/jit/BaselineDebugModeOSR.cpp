@@ -1007,8 +1007,7 @@ JitCode* JitRuntime::generateBaselineDebugModeOSRHandler(
                                       /* returnFromCallVM = */ true);
   masm.bind(&end);
 
-  Linker linker(masm);
-  AutoFlushICache afc("BaselineDebugModeOSRHandler");
+  Linker linker(masm, "BaselineDebugModeOSRHandler");
   JitCode* code = linker.newCode(cx, CodeKind::Other);
   if (!code) {
     return nullptr;

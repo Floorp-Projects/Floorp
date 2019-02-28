@@ -1303,7 +1303,7 @@ void MClampToUint8::computeRange(TempAllocator& alloc) {
 }
 
 void MBitAnd::computeRange(TempAllocator& alloc) {
-  if (specialization_ == MIRType::Int64) {
+  if (specialization_ != MIRType::Int32) {
     return;
   }
 
@@ -1316,7 +1316,7 @@ void MBitAnd::computeRange(TempAllocator& alloc) {
 }
 
 void MBitOr::computeRange(TempAllocator& alloc) {
-  if (specialization_ == MIRType::Int64) {
+  if (specialization_ != MIRType::Int32) {
     return;
   }
 
@@ -1329,7 +1329,7 @@ void MBitOr::computeRange(TempAllocator& alloc) {
 }
 
 void MBitXor::computeRange(TempAllocator& alloc) {
-  if (specialization_ == MIRType::Int64) {
+  if (specialization_ != MIRType::Int32) {
     return;
   }
 
@@ -1342,6 +1342,10 @@ void MBitXor::computeRange(TempAllocator& alloc) {
 }
 
 void MBitNot::computeRange(TempAllocator& alloc) {
+  if (specialization_ != MIRType::Int32) {
+    return;
+  }
+
   Range op(getOperand(0));
   op.wrapAroundToInt32();
 
@@ -1349,7 +1353,7 @@ void MBitNot::computeRange(TempAllocator& alloc) {
 }
 
 void MLsh::computeRange(TempAllocator& alloc) {
-  if (specialization_ == MIRType::Int64) {
+  if (specialization_ != MIRType::Int32) {
     return;
   }
 
@@ -1369,7 +1373,7 @@ void MLsh::computeRange(TempAllocator& alloc) {
 }
 
 void MRsh::computeRange(TempAllocator& alloc) {
-  if (specialization_ == MIRType::Int64) {
+  if (specialization_ != MIRType::Int32) {
     return;
   }
 
@@ -1389,7 +1393,7 @@ void MRsh::computeRange(TempAllocator& alloc) {
 }
 
 void MUrsh::computeRange(TempAllocator& alloc) {
-  if (specialization_ == MIRType::Int64) {
+  if (specialization_ != MIRType::Int32) {
     return;
   }
 

@@ -91,7 +91,7 @@
         [new Promise((y, n) => pc.setLocalDescription(offer, y, n)), "Legacy setLocalDescription"],
         [new Promise((y, n) => pc.setRemoteDescription(answer, y, n)), "Legacy setRemoteDescription"],
         [new Promise((y, n) => pc.addIceCandidate(candidate, y, n)), "Legacy addIceCandidate"],
-        [sender.replaceTrack(getBlackTrack()), "replaceTrack"],
+        [sender.replaceTrack(getSilentTrack()), "replaceTrack"],
       ].map(([p, name]) => doesFail(p, name + " fails on close")))
       .catch(reason => ok(false, "unexpected failure: " + reason))
       .then(finish);

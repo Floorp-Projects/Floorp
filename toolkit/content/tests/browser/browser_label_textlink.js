@@ -1,5 +1,5 @@
 add_task(async function() {
-  await BrowserTestUtils.withNewTab({gBrowser, url: "about:config"}, async function(browser) {
+  await BrowserTestUtils.withNewTab({gBrowser, url: "about:preferences"}, async function(browser) {
     let newTabURL = "http://www.example.com/";
     await ContentTask.spawn(browser, newTabURL, async function(newTabURL) {
       let doc = content.document;
@@ -7,7 +7,7 @@ add_task(async function() {
       label.href = newTabURL;
       label.id = "textlink-test";
       label.textContent = "click me";
-      doc.body.prepend(label);
+      doc.documentElement.append(label);
     });
 
     // Test that click will open tab in foreground.

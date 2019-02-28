@@ -19,7 +19,7 @@ var gotOnStartRequest = false;
 function TracingListener() {}
 
 TracingListener.prototype = {
-  onStartRequest: function(request, context) {
+  onStartRequest: function(request) {
     dump("*** tracing listener onStartRequest\n");
 
     gotOnStartRequest = true;
@@ -45,7 +45,7 @@ TracingListener.prototype = {
     do_throw("replaced channel's listener during onStartRequest.");
   },
 
-  onStopRequest: function(request, context, statusCode) {
+  onStopRequest: function(request, statusCode) {
     dump("*** tracing listener onStopRequest\n");
     
     Assert.equal(gotOnStartRequest, true);
