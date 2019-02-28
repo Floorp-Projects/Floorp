@@ -24,12 +24,7 @@ function onConnect(connection) {
   const client = {
     clientCommands: {
       evaluate: input =>
-        new Promise(resolve => {
-          connection.tabConnection.tabTarget.activeConsole.evaluateJS(
-            input,
-            result => resolve(result)
-          );
-        })
+        connection.tabConnection.tabTarget.activeConsole.evaluateJSAsync(input)
     },
 
     createObjectClient: function(grip) {
