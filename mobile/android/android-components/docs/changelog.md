@@ -782,6 +782,18 @@ permalink: /changelog/
   * Added support for alerts dialogs.
   * Added support for date picker dialogs.
 
+* **feature-tabs**
+  * Added support to remove all or specific types of tabs to the `TabsUseCases`.
+  
+  ```kotlin
+  // Remove all tabs
+  tabsUseCases.removeAllTabs()
+  // Remove all regular tabs
+  tabsUseCases.removeAllTabsOfType(private = false)
+  // Remove all private tabs
+  tabsUseCases.removeAllTabsOfType(private = true)
+  ```
+
 * **support-ktx**
   New extension function `toDate` that converts a string to a Date object from a formatter input.
   ```kotlin
