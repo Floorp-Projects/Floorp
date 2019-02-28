@@ -1631,32 +1631,3 @@ add_task(async function test_can_record_in_process_regression_bug_1530361() {
   Assert.deepEqual(snapshot.gpu, {}, "No histograms should have been recorded for the gpu process");
   Assert.deepEqual(snapshot.socket, {}, "No histograms should have been recorded for the socket process");
 });
-
-add_task(function test_knows_its_name() {
-  let h;
-
-  // Plain histograms
-  const histNames = [
-    "TELEMETRY_TEST_FLAG",
-    "TELEMETRY_TEST_COUNT",
-    "TELEMETRY_TEST_CATEGORICAL",
-    "TELEMETRY_TEST_EXPIRED"
-  ];
-
-  for (let name of histNames) {
-    h = Telemetry.getHistogramById(name);
-    Assert.equal(name, h.name());
-  }
-
-  // Keyed histograms
-  const keyedHistNames = [
-    "TELEMETRY_TEST_KEYED_EXPONENTIAL",
-    "TELEMETRY_TEST_KEYED_BOOLEAN",
-    "TELEMETRY_TEST_EXPIRED_KEYED",
-  ];
-
-  for (let name of keyedHistNames) {
-    h = Telemetry.getKeyedHistogramById(name);
-    Assert.equal(name, h.name());
-  }
-})
