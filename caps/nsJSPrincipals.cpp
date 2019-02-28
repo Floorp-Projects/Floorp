@@ -245,8 +245,9 @@ static bool ReadPrincipalInfo(JSStructuredCloneReader* aReader, uint32_t aTag,
 
     MOZ_DIAGNOSTIC_ASSERT(!originNoSuffix.IsEmpty());
 
-    aInfo =
-        ContentPrincipalInfo(attrs, originNoSuffix, spec, std::move(policies));
+    // XXX: Do we care about mDomain for structured clone?
+    aInfo = ContentPrincipalInfo(attrs, originNoSuffix, spec, Nothing(),
+                                 std::move(policies));
   } else {
 #ifdef FUZZING
     return false;
