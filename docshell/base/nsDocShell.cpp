@@ -149,7 +149,6 @@
 #include "nsIWidget.h"
 #include "nsIWindowWatcher.h"
 #include "nsIWritablePropertyBag2.h"
-#include "nsIWyciwygChannel.h"
 
 #include "nsCommandManager.h"
 #include "nsPIDOMWindow.h"
@@ -3276,18 +3275,11 @@ nsDocShell::AddChild(nsIDocShellTreeItem* aChild) {
     return NS_OK;
   }
 
-  if (!(mCurrentURI && SchemeIsWYCIWYG(mCurrentURI))) {
-    // If this docshell is loaded from a wyciwyg: URI, don't
-    // advertise our charset since it does not in any way reflect
-    // the actual source charset, which is what we're trying to
-    // expose here.
-
-    const Encoding* parentCS = doc->GetDocumentCharacterSet();
-    int32_t charsetSource = doc->GetDocumentCharacterSetSource();
-    // set the child's parentCharset
-    childAsDocShell->SetParentCharset(parentCS, charsetSource,
-                                      doc->NodePrincipal());
-  }
+  const Encoding* parentCS = doc->GetDocumentCharacterSet();
+  int32_t charsetSource = doc->GetDocumentCharacterSetSource();
+  // set the child's parentCharset
+  childAsDocShell->SetParentCharset(parentCS, charsetSource,
+                                    doc->NodePrincipal());
 
   // printf("### 1 >>> Adding child. Parent CS = %s. ItemType = %d.\n",
   //        NS_LossyConvertUTF16toASCII(parentCS).get(), mItemType);
@@ -6251,18 +6243,6 @@ nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer,
   nsresult rv = SetupNewViewer(aContentViewer);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // If we are loading a wyciwyg url from history, change the base URI for
-  // the document to the original http url that created the document.write().
-  // This makes sure that all relative urls in a document.written page loaded
-  // via history work properly.
-  if (mCurrentURI &&
-      (mLoadType & LOAD_CMD_HISTORY || mLoadType == LOAD_RELOAD_NORMAL ||
-       mLoadType == LOAD_RELOAD_CHARSET_CHANGE ||
-       mLoadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_CACHE ||
-       mLoadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_PROXY_AND_CACHE) &&
-      SchemeIsWYCIWYG(mCurrentURI)) {
-    SetBaseUrlForWyciwyg(aContentViewer);
-  }
   // XXX What if SetupNewViewer fails?
   if (mLSHE) {
     // Restore the editing state, if it's stored in session history.
@@ -6321,62 +6301,12 @@ nsDocShell::OnStateChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
     nsAutoCString aURI;
     uri->GetAsciiSpec(aURI);
 
-    nsCOMPtr<nsIWyciwygChannel> wcwgChannel(do_QueryInterface(aRequest));
-    nsCOMPtr<nsIWebProgress> webProgress =
-        do_QueryInterface(GetAsSupports(this));
-
-    // We don't update navigation timing for wyciwyg channels
-    if (this == aProgress && !wcwgChannel) {
+    if (this == aProgress) {
       mozilla::Unused << MaybeInitTiming();
       mTiming->NotifyFetchStart(uri,
                                 ConvertLoadTypeToNavigationType(mLoadType));
     }
 
-    // Was the wyciwyg document loaded on this docshell?
-    if (wcwgChannel && !mLSHE && (mItemType == typeContent) &&
-        aProgress == webProgress.get()) {
-      bool equalUri = true;
-      // Store the wyciwyg url in session history, only if it is
-      // being loaded fresh for the first time. We don't want
-      // multiple entries for successive loads
-      if (mCurrentURI && NS_SUCCEEDED(uri->Equals(mCurrentURI, &equalUri)) &&
-          !equalUri) {
-        nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
-        GetSameTypeParent(getter_AddRefs(parentAsItem));
-        nsCOMPtr<nsIDocShell> parentDS(do_QueryInterface(parentAsItem));
-        bool inOnLoadHandler = false;
-        if (parentDS) {
-          parentDS->GetIsExecutingOnLoadHandler(&inOnLoadHandler);
-        }
-        if (inOnLoadHandler) {
-          // We're handling parent's load event listener, which causes
-          // document.write in a subdocument.
-          // Need to clear the session history for all child
-          // docshells so that we can handle them like they would
-          // all be added dynamically.
-          nsCOMPtr<nsIDocShell> parent = do_QueryInterface(parentAsItem);
-          if (parent) {
-            bool oshe = false;
-            nsCOMPtr<nsISHEntry> entry;
-            parent->GetCurrentSHEntry(getter_AddRefs(entry), &oshe);
-            static_cast<nsDocShell*>(parent.get())->ClearFrameHistory(entry);
-          }
-        }
-
-        // This is a document.write(). Get the made-up url
-        // from the channel and store it in session history.
-        // Pass false for aCloneChildren, since we're creating
-        // a new DOM here.
-        AddToSessionHistory(uri, wcwgChannel, nullptr, nullptr, nullptr, false,
-                            getter_AddRefs(mLSHE));
-        SetCurrentURI(uri, aRequest, true, 0);
-        // Save history state of the previous page
-        PersistLayoutHistoryState();
-        // We'll never get an Embed() for this load, so just go ahead
-        // and SetHistoryEntry now.
-        SetHistoryEntry(&mOSHE, mLSHE);
-      }
-    }
     // Page has begun to load
     mBusyFlags = (BusyFlags)(BUSY_FLAGS_BUSY | BUSY_FLAGS_BEFORE_PAGE_LOAD);
 
@@ -7747,8 +7677,6 @@ nsresult nsDocShell::RestoreFromHistory() {
 
   // mLSHE is now our currently-loaded document.
   SetHistoryEntry(&mOSHE, mLSHE);
-
-  // XXX special wyciwyg handling in Embed()?
 
   // We aren't going to restore any items from the LayoutHistoryState,
   // but we don't want them to stay around in case the page is reloaded.
@@ -9171,13 +9099,6 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   nsresult rv = EnsureScriptEnvironment();
   if (NS_FAILED(rv)) {
     return rv;
-  }
-
-  // wyciwyg urls can only be loaded through history. Any normal load of
-  // wyciwyg through docshell is  illegal. Disallow such loads.
-  if ((aLoadState->LoadType() & LOAD_CMD_NORMAL) &&
-      SchemeIsWYCIWYG(aLoadState->URI())) {
-    return NS_ERROR_FAILURE;
   }
 
   // If we have a target to move to, do that now.
@@ -12226,28 +12147,6 @@ nsDocShell::InterfaceRequestorProxy::GetInterface(const nsIID& aIID,
   }
   *aSink = nullptr;
   return NS_NOINTERFACE;
-}
-
-nsresult nsDocShell::SetBaseUrlForWyciwyg(nsIContentViewer* aContentViewer) {
-  if (!aContentViewer) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIURI> baseURI;
-  nsresult rv = NS_ERROR_NOT_AVAILABLE;
-
-  if (sURIFixup) {
-    rv = sURIFixup->CreateExposableURI(mCurrentURI, getter_AddRefs(baseURI));
-  }
-
-  // Get the current document and set the base uri
-  if (baseURI) {
-    Document* document = aContentViewer->GetDocument();
-    if (document) {
-      document->SetBaseURI(baseURI);
-    }
-  }
-  return rv;
 }
 
 //*****************************************************************************
