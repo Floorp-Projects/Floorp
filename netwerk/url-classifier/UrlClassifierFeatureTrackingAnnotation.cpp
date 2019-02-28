@@ -154,7 +154,8 @@ UrlClassifierFeatureTrackingAnnotation::MaybeCreate(nsIChannel* aChannel) {
     return nullptr;
   }
 
-  if (!UrlClassifierCommon::ShouldEnableClassifier(aChannel)) {
+  if (!UrlClassifierCommon::ShouldEnableClassifier(
+          aChannel, AntiTrackingCommon::eTrackingAnnotations)) {
     return nullptr;
   }
 
@@ -204,9 +205,6 @@ UrlClassifierFeatureTrackingAnnotation::ProcessChannel(nsIChannel* aChannel,
   bool isThirdPartyWithTopLevelWinURI =
       nsContentUtils::IsThirdPartyWindowOrChannel(nullptr, aChannel, chanURI);
 
-  bool isAllowListed =
-      IsAllowListed(aChannel, AntiTrackingCommon::eTrackingAnnotations);
-
   UC_LOG(
       ("UrlClassifierFeatureTrackingAnnotation::ProcessChannel, annotating "
        "channel[%p]",
@@ -214,18 +212,17 @@ UrlClassifierFeatureTrackingAnnotation::ProcessChannel(nsIChannel* aChannel,
 
   SetIsTrackingResourceHelper(aChannel, isThirdPartyWithTopLevelWinURI);
 
-  if (isThirdPartyWithTopLevelWinURI || isAllowListed) {
+  if (isThirdPartyWithTopLevelWinURI) {
     // Even with TP disabled, we still want to show the user that there
     // are unblocked trackers on the site, so notify the UI that we loaded
     // tracking content. UI code can treat this notification differently
     // depending on whether TP is enabled or disabled.
     UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(
         aChannel, nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT);
-  }
 
-  if (isThirdPartyWithTopLevelWinURI &&
-      StaticPrefs::privacy_trackingprotection_lower_network_priority()) {
-    LowerPriorityHelper(aChannel);
+    if (StaticPrefs::privacy_trackingprotection_lower_network_priority()) {
+      LowerPriorityHelper(aChannel);
+    }
   }
 
   return NS_OK;

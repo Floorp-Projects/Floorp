@@ -101,7 +101,8 @@ UrlClassifierFeatureTrackingProtection::MaybeCreate(nsIChannel* aChannel) {
     return nullptr;
   }
 
-  if (!UrlClassifierCommon::ShouldEnableClassifier(aChannel)) {
+  if (!UrlClassifierCommon::ShouldEnableClassifier(
+          aChannel, AntiTrackingCommon::eTrackingProtection)) {
     return nullptr;
   }
 
@@ -135,26 +136,21 @@ UrlClassifierFeatureTrackingProtection::ProcessChannel(nsIChannel* aChannel,
   NS_ENSURE_ARG_POINTER(aChannel);
   NS_ENSURE_ARG_POINTER(aShouldContinue);
 
-  bool isAllowListed =
-      IsAllowListed(aChannel, AntiTrackingCommon::eTrackingProtection);
-
   // This is a blocking feature.
-  *aShouldContinue = isAllowListed;
+  *aShouldContinue = false;
 
-  if (isAllowListed) {
-    UrlClassifierCommon::SetBlockedContent(
-        aChannel, NS_ERROR_TRACKING_URI, aList, EmptyCString(), EmptyCString());
+  UrlClassifierCommon::SetBlockedContent(aChannel, NS_ERROR_TRACKING_URI, aList,
+                                         EmptyCString(), EmptyCString());
 
-    UC_LOG(
-        ("UrlClassifierFeatureTrackingProtection::ProcessChannel, cancelling "
-         "channel[%p]",
-         aChannel));
-    nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aChannel);
-    if (httpChannel) {
-      Unused << httpChannel->CancelByChannelClassifier(NS_ERROR_TRACKING_URI);
-    } else {
-      Unused << aChannel->Cancel(NS_ERROR_TRACKING_URI);
-    }
+  UC_LOG(
+      ("UrlClassifierFeatureTrackingProtection::ProcessChannel, cancelling "
+       "channel[%p]",
+       aChannel));
+  nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aChannel);
+  if (httpChannel) {
+    Unused << httpChannel->CancelByChannelClassifier(NS_ERROR_TRACKING_URI);
+  } else {
+    Unused << aChannel->Cancel(NS_ERROR_TRACKING_URI);
   }
 
   return NS_OK;
