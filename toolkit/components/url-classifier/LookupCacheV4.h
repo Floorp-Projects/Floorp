@@ -56,8 +56,6 @@ class LookupCacheV4 final : public LookupCache {
 
   virtual int Ver() const override { return VER; }
 
-  nsresult VerifySHA256(const nsACString& aSHA256);
-
   RefPtr<VariableLengthPrefixSet> mVLPrefixSet;
 };
 
