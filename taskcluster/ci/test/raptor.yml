@@ -675,10 +675,7 @@ raptor-unity-webgl-geckoview:
     try-name: raptor-unity-webgl-geckoview
     treeherder-symbol: Rap(ugl)
     target: geckoview_example.apk
-    run-on-projects:
-        by-test-platform:
-            android-hw-p2-8-0-arm7.*: ['try', 'mozilla-central']
-            default: ['try', 'trunk', 'mozilla-beta']
+    run-on-projects: ['try']
     max-run-time: 900
     mozharness:
         extra-options:
