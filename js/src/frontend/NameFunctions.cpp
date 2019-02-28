@@ -419,7 +419,9 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
         MOZ_ASSERT(spec->isKind(isImport ? ParseNodeKind::ImportSpec
                                          : ParseNodeKind::ExportSpec));
         MOZ_ASSERT(spec->left()->isKind(ParseNodeKind::Name));
+        MOZ_ASSERT(!spec->left()->as<NameNode>().initializer());
         MOZ_ASSERT(spec->right()->isKind(ParseNodeKind::Name));
+        MOZ_ASSERT(!spec->right()->as<NameNode>().initializer());
       }
     }
 #endif
