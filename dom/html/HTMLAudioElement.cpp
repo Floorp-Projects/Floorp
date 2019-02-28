@@ -19,21 +19,13 @@
 #include "nsIHttpChannel.h"
 #include "mozilla/dom/TimeRanges.h"
 #include "AudioStream.h"
-#include "mozilla/Unused.h"
 
-nsGenericHTMLElement* NS_NewHTMLAudioElement(
-    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-    mozilla::dom::FromParser aFromParser) {
-  mozilla::dom::HTMLAudioElement* element =
-      new mozilla::dom::HTMLAudioElement(std::move(aNodeInfo));
-  mozilla::Unused << element->Init();
-  return element;
-}
+NS_IMPL_NS_NEW_HTML_ELEMENT(Audio)
 
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(HTMLAudioElement)
+NS_IMPL_ELEMENT_CLONE(HTMLAudioElement)
 
 HTMLAudioElement::HTMLAudioElement(already_AddRefed<NodeInfo>&& aNodeInfo)
     : HTMLMediaElement(std::move(aNodeInfo)) {
@@ -62,8 +54,7 @@ already_AddRefed<HTMLAudioElement> HTMLAudioElement::Audio(
   RefPtr<mozilla::dom::NodeInfo> nodeInfo = doc->NodeInfoManager()->GetNodeInfo(
       nsGkAtoms::audio, nullptr, kNameSpaceID_XHTML, ELEMENT_NODE);
 
-  RefPtr<HTMLAudioElement> audio =
-      static_cast<HTMLAudioElement*>(NS_NewHTMLAudioElement(nodeInfo.forget()));
+  RefPtr<HTMLAudioElement> audio = new HTMLAudioElement(nodeInfo.forget());
   audio->SetHTMLAttr(nsGkAtoms::preload, NS_LITERAL_STRING("auto"), aRv);
   if (aRv.Failed()) {
     return nullptr;
