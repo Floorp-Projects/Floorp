@@ -4,10 +4,16 @@
 
 // @flow
 
-export default function defer() {
+type Deferred<T> = {
+  promise: Promise<T>,
+  resolve: (arg: T) => mixed,
+  reject: (arg: mixed) => mixed
+};
+
+export default function defer<T>(): Deferred<T> {
   let resolve = () => {};
   let reject = () => {};
-  const promise: Promise<any> = new Promise((_res, _rej) => {
+  const promise = new Promise((_res, _rej) => {
     resolve = _res;
     reject = _rej;
   });

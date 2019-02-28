@@ -47,6 +47,8 @@ import type {
 
 import { recordEvent } from "../../utils/telemetry";
 
+export * from "./breakpointPositions";
+
 async function removeBreakpointsPromise(client, state, breakpoint) {
   const breakpointLocation = makeBreakpointLocation(
     state,
