@@ -618,6 +618,9 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvDetachBrowsingContext(BrowsingContext* aContext,
                                                     bool aMoveToBFCache);
 
+  mozilla::ipc::IPCResult RecvSetOpenerBrowsingContext(
+      BrowsingContext* aContext, BrowsingContext* aOpener);
+
   mozilla::ipc::IPCResult RecvWindowClose(BrowsingContext* aContext,
                                           bool aTrustedCaller);
   mozilla::ipc::IPCResult RecvWindowFocus(BrowsingContext* aContext);
@@ -625,6 +628,9 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvWindowPostMessage(
       BrowsingContext* aContext, const ClonedMessageData& aMessage,
       const PostMessageData& aData);
+
+  mozilla::ipc::IPCResult RecvSetUserGestureActivation(
+      BrowsingContext* aContext, bool aNewValue);
 
   FORWARD_SHMEM_ALLOCATOR_TO(PContentParent)
 
