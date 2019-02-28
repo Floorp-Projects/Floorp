@@ -32,7 +32,6 @@ class Result extends Component {
     e.stopPropagation();
 
     const textField = document.createElement("textarea");
-    // eslint-disable-next-line no-unsanitized/property
     textField.innerHTML = JSON.stringify(packet, null, "  ");
     document.body.appendChild(textField);
     textField.select();

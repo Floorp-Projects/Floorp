@@ -894,7 +894,6 @@ class Tree extends Component {
         if (this.treeRef.current !== document.activeElement) {
           this.treeRef.current.focus();
         }
-        return;
     }
   }
 
@@ -3657,7 +3656,6 @@ class ObjectInspector extends Component {
       if (this.props.rootsChanged) {
         this.props.rootsChanged();
       }
-      return;
     }
   }
 

@@ -6,13 +6,14 @@
 
 import React from "react";
 import ReactDOM from "react-dom";
+
 import { onConnect } from "./client";
 
 const { bootstrap, L10N } = require("devtools-launchpad");
 
 window.L10N = L10N;
 // $FlowIgnore:
-window.L10N.setBundle(require("../../../locales/en-us/debugger.properties"));
+window.L10N.setBundle(require("../assets/panel/debugger.properties"));
 
 bootstrap(React, ReactDOM).then(connection => {
   onConnect(connection, require("devtools-source-map"), {
