@@ -732,6 +732,10 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
 #endif
   nsCycleCollector_shutdown(shutdownCollect);
 
+  // There can be code trying to refer to global objects during the final cc
+  // shutdown. This is the phase for such global objects to correctly release.
+  mozilla::KillClearOnShutdown(ShutdownPhase::ShutdownPostLastCycleCollection);
+
   PROFILER_ADD_MARKER("Shutdown xpcom", OTHER);
   // If we are doing any shutdown checks, poison writes.
   if (gShutdownChecks != SCM_NOTHING) {

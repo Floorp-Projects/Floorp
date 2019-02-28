@@ -32,7 +32,7 @@ function run_test() {
 
 // TEST DATA
 
-function ensureEmpty(ch, cx) {
+function ensureEmpty(ch) {
   Assert.ok(ch.contentLength == 0);
 }
 

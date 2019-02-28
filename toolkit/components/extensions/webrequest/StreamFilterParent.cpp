@@ -363,7 +363,7 @@ nsresult StreamFilterParent::Write(Data& aData) {
       MakeSpan(reinterpret_cast<char*>(aData.Elements()), aData.Length()));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mOrigListener->OnDataAvailable(mChannel, mContext, stream, mOffset,
+  rv = mOrigListener->OnDataAvailable(mChannel, stream, mOffset,
                                       aData.Length());
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -449,11 +449,8 @@ StreamFilterParent::SetLoadFlags(nsLoadFlags aLoadFlags) {
  *****************************************************************************/
 
 NS_IMETHODIMP
-StreamFilterParent::OnStartRequest(nsIRequest* aRequest,
-                                   nsISupports* aContext) {
+StreamFilterParent::OnStartRequest(nsIRequest* aRequest) {
   AssertIsMainThread();
-
-  mContext = aContext;
 
   if (aRequest != mChannel) {
     mDisconnected = true;
@@ -474,7 +471,7 @@ StreamFilterParent::OnStartRequest(nsIRequest* aRequest,
     }
   }
 
-  nsresult rv = mOrigListener->OnStartRequest(aRequest, aContext);
+  nsresult rv = mOrigListener->OnStartRequest(aRequest);
 
   // Important: Do this only *after* running the next listener in the chain, so
   // that we get the final delivery target after any retargeting that it may do.
@@ -505,7 +502,7 @@ StreamFilterParent::OnStartRequest(nsIRequest* aRequest,
 }
 
 NS_IMETHODIMP
-StreamFilterParent::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+StreamFilterParent::OnStopRequest(nsIRequest* aRequest,
                                   nsresult aStatusCode) {
   AssertIsMainThread();
 
@@ -528,7 +525,7 @@ nsresult StreamFilterParent::EmitStopRequest(nsresult aStatusCode) {
   MOZ_ASSERT(!mSentStop);
 
   mSentStop = true;
-  nsresult rv = mOrigListener->OnStopRequest(mChannel, mContext, aStatusCode);
+  nsresult rv = mOrigListener->OnStopRequest(mChannel, aStatusCode);
 
   if (mLoadGroup && !mDisconnected) {
     Unused << mLoadGroup->RemoveRequest(this, nullptr, aStatusCode);
@@ -550,7 +547,7 @@ void StreamFilterParent::DoSendData(Data&& aData) {
 }
 
 NS_IMETHODIMP
-StreamFilterParent::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+StreamFilterParent::OnDataAvailable(nsIRequest* aRequest,
                                     nsIInputStream* aInputStream,
                                     uint64_t aOffset, uint32_t aCount) {
   AssertIsIOThread();
@@ -568,7 +565,7 @@ StreamFilterParent::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
     }
 
     mOffset += aCount;
-    return mOrigListener->OnDataAvailable(aRequest, aContext, aInputStream,
+    return mOrigListener->OnDataAvailable(aRequest, aInputStream,
                                           mOffset - aCount, aCount);
   }
 

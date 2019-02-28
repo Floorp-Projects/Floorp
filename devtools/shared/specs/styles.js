@@ -227,16 +227,6 @@ const styleRuleSpec = generateActorSpec({
       },
       response: RetVal("modifiedStylesReturn"),
     },
-    // Remove once Firefox 64 is no longer supported.
-    // @See StyleRuleActor.modifySelector()
-    modifySelector2: {
-      request: {
-        node: Arg(0, "domnode"),
-        value: Arg(1, "string"),
-        editAuthored: Arg(2, "boolean"),
-      },
-      response: RetVal("modifiedStylesReturn"),
-    },
   },
 });
 

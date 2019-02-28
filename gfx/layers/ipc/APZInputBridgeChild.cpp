@@ -124,9 +124,9 @@ nsEventStatus APZInputBridgeChild::ReceiveInputEvent(
 
 void APZInputBridgeChild::ProcessUnhandledEvent(
     LayoutDeviceIntPoint* aRefPoint, ScrollableLayerGuid* aOutTargetGuid,
-    uint64_t* aOutFocusSequenceNumber) {
+    uint64_t* aOutFocusSequenceNumber, LayersId* aOutLayersId) {
   SendProcessUnhandledEvent(*aRefPoint, aRefPoint, aOutTargetGuid,
-                            aOutFocusSequenceNumber);
+                            aOutFocusSequenceNumber, aOutLayersId);
 }
 
 void APZInputBridgeChild::UpdateWheelTransaction(LayoutDeviceIntPoint aRefPoint,

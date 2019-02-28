@@ -55,7 +55,7 @@ class nsOnStartRequestEvent : public nsARequestObserverEvent {
     }
 
     LOG(("handle startevent=%p\n", this));
-    nsresult rv = mProxy->mObserver->OnStartRequest(mRequest, mProxy->mContext);
+    nsresult rv = mProxy->mObserver->OnStartRequest(mRequest);
     if (NS_FAILED(rv)) {
       LOG(("OnStartRequest failed [rv=%" PRIx32 "] canceling request!\n",
            static_cast<uint32_t>(rv)));
@@ -100,7 +100,7 @@ class nsOnStopRequestEvent : public nsARequestObserverEvent {
     NS_ASSERTION(NS_SUCCEEDED(rv), "GetStatus failed for request!");
 
     LOG(("handle stopevent=%p\n", this));
-    (void)observer->OnStopRequest(mRequest, mProxy->mContext, status);
+    (void)observer->OnStopRequest(mRequest, status);
 
     return NS_OK;
   }
@@ -118,9 +118,7 @@ NS_IMPL_ISUPPORTS(nsRequestObserverProxy, nsIRequestObserver,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsRequestObserverProxy::OnStartRequest(nsIRequest *request,
-                                       nsISupports *context) {
-  MOZ_ASSERT(!context || context == mContext);
+nsRequestObserverProxy::OnStartRequest(nsIRequest *request) {
   LOG(("nsRequestObserverProxy::OnStartRequest [this=%p req=%p]\n", this,
        request));
 
@@ -134,9 +132,8 @@ nsRequestObserverProxy::OnStartRequest(nsIRequest *request,
 }
 
 NS_IMETHODIMP
-nsRequestObserverProxy::OnStopRequest(nsIRequest *request, nsISupports *context,
+nsRequestObserverProxy::OnStopRequest(nsIRequest *request,
                                       nsresult status) {
-  MOZ_ASSERT(!context || context == mContext);
   LOG(("nsRequestObserverProxy: OnStopRequest [this=%p req=%p status=%" PRIx32
        "]\n",
        this, request, static_cast<uint32_t>(status)));

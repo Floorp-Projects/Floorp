@@ -264,7 +264,7 @@ uint32_t GetContentSize(nsIRequest* aRequest) {
 
   newImage->SetInnerWindowID(aInnerWindowId);
 
-  rv = newImage->OnStartRequest(aRequest, nullptr);
+  rv = newImage->OnStartRequest(aRequest);
   if (NS_FAILED(rv)) {
     return BadImage("VectorImage::OnStartRequest failed", newImage);
   }

@@ -53,7 +53,7 @@ nsStreamLoader::GetRequest(nsIRequest **aRequest) {
 }
 
 NS_IMETHODIMP
-nsStreamLoader::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
+nsStreamLoader::OnStartRequest(nsIRequest *request) {
   nsCOMPtr<nsIChannel> chan(do_QueryInterface(request));
   if (chan) {
     int64_t contentLength = -1;
@@ -73,15 +73,14 @@ nsStreamLoader::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
       }
     }
   }
-  mContext = ctxt;
   if (mRequestObserver) {
-    mRequestObserver->OnStartRequest(request, ctxt);
+    mRequestObserver->OnStartRequest(request);
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsStreamLoader::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
+nsStreamLoader::OnStopRequest(nsIRequest *request,
                               nsresult aStatus) {
   AUTO_PROFILER_LABEL("nsStreamLoader::OnStopRequest", NETWORK);
 
@@ -101,11 +100,10 @@ nsStreamLoader::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
     ReleaseData();
     mRequest = nullptr;
     mObserver = nullptr;
-    mContext = nullptr;
   }
 
   if (mRequestObserver) {
-    mRequestObserver->OnStopRequest(request, ctxt, aStatus);
+    mRequestObserver->OnStopRequest(request, aStatus);
     mRequestObserver = nullptr;
   }
 
@@ -129,7 +127,7 @@ nsresult nsStreamLoader::WriteSegmentFun(nsIInputStream *inStr, void *closure,
 }
 
 NS_IMETHODIMP
-nsStreamLoader::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
+nsStreamLoader::OnDataAvailable(nsIRequest *request,
                                 nsIInputStream *inStr, uint64_t sourceOffset,
                                 uint32_t count) {
   uint32_t countRead;

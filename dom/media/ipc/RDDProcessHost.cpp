@@ -128,7 +128,9 @@ void RDDProcessHost::InitAfterConnect(bool aSucceeded) {
         mRDDChild->Open(GetChannel(), base::GetProcId(GetChildProcessHandle()));
     MOZ_ASSERT(rv);
 
-    mRDDChild->Init();
+    if (!mRDDChild->Init()) {
+      KillHard("ActorInitFailed");
+    }
   }
 
   if (mListener) {

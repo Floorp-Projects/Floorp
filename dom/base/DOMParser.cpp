@@ -198,18 +198,18 @@ already_AddRefed<Document> DOMParser::ParseFromStream(nsIInputStream* aStream,
   // Now start pumping data to the listener
   nsresult status;
 
-  rv = listener->OnStartRequest(parserChannel, nullptr);
+  rv = listener->OnStartRequest(parserChannel);
   if (NS_FAILED(rv)) parserChannel->Cancel(rv);
   parserChannel->GetStatus(&status);
 
   if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(status)) {
-    rv = listener->OnDataAvailable(parserChannel, nullptr, stream, 0,
+    rv = listener->OnDataAvailable(parserChannel, stream, 0,
                                    aContentLength);
     if (NS_FAILED(rv)) parserChannel->Cancel(rv);
     parserChannel->GetStatus(&status);
   }
 
-  rv = listener->OnStopRequest(parserChannel, nullptr, status);
+  rv = listener->OnStopRequest(parserChannel, status);
   // Failure returned from OnStopRequest does not affect the final status of
   // the channel, so we do not need to call Cancel(rv) as we do above.
 

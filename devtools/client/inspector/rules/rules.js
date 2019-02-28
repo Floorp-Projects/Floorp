@@ -108,9 +108,6 @@ function CssRuleView(inspector, document, store) {
   this.styleDocument = document;
   this.styleWindow = this.styleDocument.defaultView;
   this.store = store || {};
-  // References to rules marked by various editors where they intend to write changes.
-  // @see selectRule(), unselectRule()
-  this.selectedRules = new Map();
   this.pageStyle = inspector.pageStyle;
 
   // Allow tests to override debouncing behavior, as this can cause intermittents.
@@ -727,8 +724,6 @@ CssRuleView.prototype = {
 
     this.tooltips.destroy();
 
-    this.unselectAllRules();
-
     // Remove bound listeners
     this.shortcuts.destroy();
     this.element.removeEventListener("copy", this._onCopy);
@@ -811,7 +806,6 @@ CssRuleView.prototype = {
 
     this.clearPseudoClassPanel();
     this.refreshAddRuleButtonState();
-    this.unselectAllRules();
 
     if (!this._viewedElement) {
       this._stopSelectingElement();
@@ -1212,99 +1206,6 @@ CssRuleView.prototype = {
     }
 
     return isHighlighted;
-  },
-
-  /**
-  * Mark a rule as selected for the given editor id.
-  *
-  * Editing tools can mark one or more rules as selected for themselves so they have
-  * a reference of where to make changes, like add / remove properties.
-  * Each editor has an identifier string (aka editorId) which is used as a key in a map
-  * that holds references to Rule objects.
-  *
-  * Many editors may operate at the same time (ex: Font Editor and Shape Path Editor) so
-  * there are multiple possible selected rules at any given time. A rule can be selected
-  * by different editors at the same time, with each editor operating independently on it.
-  *
-  * @param {Rule} rule
-  *        Rule object for which to hold a reference.
-  * @param {String} editorId
-  *        Key to use for collecting references to selected rules.
-  * @param {Boolean} [unselectOthers=true]
-  *        Optional. Default: `true`. If true, unselect all other rules that were
-  *        selected for the given editor. Ensures only one rule at a time is selected for
-  *        a particular editor. Set to `false` if an editor may operate on multiple rules
-  *        at a time.
-  */
-  selectRule(rule, editorId, unselectOthers = true) {
-    const rules = this.getSelectedRules(editorId);
-    if (!rules.includes(rule)) {
-      this.selectedRules.set(editorId, [...rules, rule]);
-    }
-
-    // Mark other rules for this editorId as unselected.
-    if (unselectOthers) {
-      rules
-        .filter(item => item !== rule)
-        .map(item => this.unselectRule(item, editorId));
-    }
-
-    this.emit("ruleview-rule-selected", {editorId, rule});
-  },
-
-  /**
-   * Unmark a rule as selected for the given editor id.
-   *
-   * @param {Rule} rule
-   *        Rule object for which to remove the reference.
-   * @param {String} editorId
-   *        Key for which to mark the given rule as selected.
-   */
-  unselectRule(rule, editorId) {
-    const rules = this.selectedRules.get(editorId);
-    if (!Array.isArray(rules)) {
-      return;
-    }
-
-    const index = rules.findIndex(item => item === rule);
-    if (index === -1) {
-      return;
-    }
-
-    rules.splice(index, 1);
-    this.selectedRules.set(editorId, rules);
-    this.emit("ruleview-rule-unselected", {editorId, rule});
-  },
-
-  /**
-  * Unmark all selected rules for all editors. If an editor id is provided, unmark all
-  * selected rules just for that editor leaving others untouched.
-  *
-  * @param {String} editorId
-  *        Optional editor id for which to restrict unselect operation.
-  */
-  unselectAllRules(editorId) {
-    for (const [id, rules] of this.selectedRules) {
-      // If we're supposed to unselect rules from just one editorId but it did not match,
-      // skip this iteration.
-      if (editorId && id !== editorId) {
-        continue;
-      }
-      rules.map(rule => this.unselectRule(rule, id));
-    }
-  },
-
-  /**
-   * Return an array of selected rules for the given editor id.
-   * If no rules match, return an empty arrary;
-   *
-   * @param {String} editorId
-   *        Editor id for which to return selected rules.
-   * @return {Array}
-   */
-  getSelectedRules(editorId) {
-    const rules = this.selectedRules.get(editorId);
-    return Array.isArray(rules) ? rules : [];
   },
 
   /**

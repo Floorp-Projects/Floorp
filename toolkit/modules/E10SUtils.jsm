@@ -42,7 +42,7 @@ function getAboutModule(aURL) {
 
 const NOT_REMOTE = null;
 
-// These must match any similar ones in ContentParent.h.
+// These must match any similar ones in ContentParent.h and ProcInfo.h
 const WEB_REMOTE_TYPE = "web";
 const FILE_REMOTE_TYPE = "file";
 const EXTENSION_REMOTE_TYPE = "extension";

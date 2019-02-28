@@ -84,10 +84,9 @@ NS_IMPL_ISUPPORTS(InterceptStreamListener, nsIStreamListener,
                   nsIRequestObserver, nsIProgressEventSink)
 
 NS_IMETHODIMP
-InterceptStreamListener::OnStartRequest(nsIRequest* aRequest,
-                                        nsISupports* aContext) {
+InterceptStreamListener::OnStartRequest(nsIRequest* aRequest) {
   if (mOwner) {
-    mOwner->DoOnStartRequest(mOwner, mContext);
+    mOwner->DoOnStartRequest(mOwner, nullptr);
   }
   return NS_OK;
 }
@@ -112,7 +111,6 @@ InterceptStreamListener::OnProgress(nsIRequest* aRequest, nsISupports* aContext,
 
 NS_IMETHODIMP
 InterceptStreamListener::OnDataAvailable(nsIRequest* aRequest,
-                                         nsISupports* aContext,
                                          nsIInputStream* aInputStream,
                                          uint64_t aOffset, uint32_t aCount) {
   if (!mOwner) {
@@ -129,20 +127,19 @@ InterceptStreamListener::OnDataAvailable(nsIRequest* aRequest,
     nsAutoCString host;
     uri->GetHost(host);
 
-    OnStatus(mOwner, aContext, NS_NET_STATUS_READING,
+    OnStatus(mOwner, nullptr, NS_NET_STATUS_READING,
              NS_ConvertUTF8toUTF16(host).get());
 
     int64_t progress = aOffset + aCount;
-    OnProgress(mOwner, aContext, progress, mOwner->mSynthesizedStreamLength);
+    OnProgress(mOwner, nullptr, progress, mOwner->mSynthesizedStreamLength);
   }
 
-  mOwner->DoOnDataAvailable(mOwner, mContext, aInputStream, aOffset, aCount);
+  mOwner->DoOnDataAvailable(mOwner, nullptr, aInputStream, aOffset, aCount);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 InterceptStreamListener::OnStopRequest(nsIRequest* aRequest,
-                                       nsISupports* aContext,
                                        nsresult aStatusCode) {
   if (mOwner) {
     mOwner->DoPreOnStopRequest(aStatusCode);
@@ -608,14 +605,14 @@ class SyntheticDiversionListener final : public nsIStreamListener {
   }
 
   NS_IMETHOD
-  OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) override {
+  OnStartRequest(nsIRequest* aRequest) override {
     MOZ_ASSERT_UNREACHABLE(
         "SyntheticDiversionListener should never see OnStartRequest");
     return NS_OK;
   }
 
   NS_IMETHOD
-  OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+  OnStopRequest(nsIRequest* aRequest,
                 nsresult aStatus) override {
     if (mChannel->mIPCOpen) {
       mChannel->SendDivertOnStopRequest(aStatus);
@@ -625,7 +622,7 @@ class SyntheticDiversionListener final : public nsIStreamListener {
   }
 
   NS_IMETHOD
-  OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+  OnDataAvailable(nsIRequest* aRequest,
                   nsIInputStream* aInputStream, uint64_t aOffset,
                   uint32_t aCount) override {
     if (!mChannel->mIPCOpen) {
@@ -665,7 +662,7 @@ void HttpChannelChild::DoOnStartRequest(nsIRequest* aRequest,
                                          static_cast<nsIChannel*>(this));
   }
 
-  nsresult rv = mListener->OnStartRequest(aRequest, aContext);
+  nsresult rv = mListener->OnStartRequest(aRequest);
   if (NS_FAILED(rv)) {
     Cancel(rv);
     return;
@@ -965,7 +962,7 @@ void HttpChannelChild::DoOnDataAvailable(nsIRequest* aRequest,
   if (mCanceled) return;
 
   nsresult rv =
-      mListener->OnDataAvailable(aRequest, aContext, aStream, offset, count);
+      mListener->OnDataAvailable(aRequest, aStream, offset, count);
   if (NS_FAILED(rv)) {
     CancelOnMainThread(rv);
   }
@@ -1229,7 +1226,7 @@ void HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest,
   // In theory mListener should not be null, but in practice sometimes it is.
   MOZ_ASSERT(mListener);
   if (mListener) {
-    mListener->OnStopRequest(aRequest, aContext, mStatus);
+    mListener->OnStopRequest(aRequest, mStatus);
   }
   mOnStopRequestCalled = true;
 

@@ -44,23 +44,11 @@ class WMFAudioMFTManager : public MFTManager {
   uint32_t mAudioRate;
   nsTArray<BYTE> mUserData;
 
-  // The offset, at which playback started since the
-  // last discontinuity.
-  media::TimeUnit mAudioTimeOffset;
-  // The number of audio frames that we've played since the last
-  // discontinuity.
-  int64_t mAudioFrameSum = 0;
-
   enum StreamType { Unknown, AAC, MP3 };
   StreamType mStreamType;
 
   const GUID& GetMFTGUID();
   const GUID& GetMediaSubtypeGUID();
-
-  // True if we need to re-initialize mAudioTimeOffset and mAudioFrameSum
-  // from the next audio packet we decode. This happens after a seek, since
-  // WMF doesn't mark a stream as having a discontinuity after a seek(0).
-  bool mMustRecaptureAudioPosition = true;
 };
 
 }  // namespace mozilla

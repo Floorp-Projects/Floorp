@@ -25,7 +25,7 @@ NS_IMPL_ISUPPORTS(StreamLoader, nsIStreamListener)
 
 /* nsIRequestObserver implementation */
 NS_IMETHODIMP
-StreamLoader::OnStartRequest(nsIRequest* aRequest, nsISupports*) {
+StreamLoader::OnStartRequest(nsIRequest* aRequest) {
   // It's kinda bad to let Web content send a number that results
   // in a potentially large allocation directly, but efficiency of
   // compression bombs is so great that it doesn't make much sense
@@ -47,7 +47,7 @@ StreamLoader::OnStartRequest(nsIRequest* aRequest, nsISupports*) {
 }
 
 NS_IMETHODIMP
-StreamLoader::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+StreamLoader::OnStopRequest(nsIRequest* aRequest,
                             nsresult aStatus) {
   // Decoded data
   nsCString utf8String;
@@ -114,7 +114,7 @@ StreamLoader::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
 
 /* nsIStreamListener implementation */
 NS_IMETHODIMP
-StreamLoader::OnDataAvailable(nsIRequest*, nsISupports*,
+StreamLoader::OnDataAvailable(nsIRequest*,
                               nsIInputStream* aInputStream, uint64_t,
                               uint32_t aCount) {
   if (NS_FAILED(mStatus)) {

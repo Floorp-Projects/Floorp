@@ -368,6 +368,14 @@ class GlobalObject : public NativeObject {
     return &global->getPrototype(JSProto_Symbol).toObject().as<NativeObject>();
   }
 
+  static NativeObject* getOrCreateBigIntPrototype(
+      JSContext* cx, Handle<GlobalObject*> global) {
+    if (!ensureConstructor(cx, global, JSProto_BigInt)) {
+      return nullptr;
+    }
+    return &global->getPrototype(JSProto_BigInt).toObject().as<NativeObject>();
+  }
+
   static NativeObject* getOrCreatePromisePrototype(
       JSContext* cx, Handle<GlobalObject*> global) {
     if (!ensureConstructor(cx, global, JSProto_Promise)) {

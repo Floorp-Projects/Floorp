@@ -126,40 +126,40 @@ function expectValues(ch, oldShared, newShared, oldPrivate, newPrivate) {
   Assert.equal(getHeader("X-New-Private-Value"), newPrivate);
 }
 
-function start_initial(ch, cx) {
+function start_initial(ch) {
 dumpn("XXX start_initial");
   expectValues(ch, "", "newShared", "", "newPrivate");
 }
 
-function start_overwrite(ch, cx) {
+function start_overwrite(ch) {
   expectValues(ch, "newShared", "newShared2", "newPrivate", "newPrivate2");
 }
 
-function start_remove(ch, cx) {
+function start_remove(ch) {
   expectValues(ch, "newShared2", "", "newPrivate2", "newPrivate3");
 }
 
-function start_handler(ch, cx) {
+function start_handler(ch) {
   expectValues(ch, "", "pathHandlerShared", "", "pathHandlerPrivate");
 }
 
-function start_handler_again(ch, cx) {
+function start_handler_again(ch) {
   expectValues(ch, "pathHandlerShared", "",
                "pathHandlerPrivate", "pathHandlerPrivate2");
 }
 
-function start_other_initial(ch, cx) {
+function start_other_initial(ch) {
   expectValues(ch, "", "newShared4", "", "newPrivate4");
 }
 
-function start_other_remove_ignore(ch, cx) {
+function start_other_remove_ignore(ch) {
   expectValues(ch, "newShared4", "", "newPrivate4", "");
 }
 
-function start_other_set_new(ch, cx) {
+function start_other_set_new(ch) {
   expectValues(ch, "", "newShared5", "newPrivate4", "newPrivate5");
 }
 
-function start_set_remove_original(ch, cx) {
+function start_set_remove_original(ch) {
   expectValues(ch, "newShared5", "done!", "newPrivate3", "");
 }

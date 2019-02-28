@@ -98,7 +98,7 @@ void VRParent::ActorDestroy(ActorDestroyReason aWhy) {
     NS_WARNING("Shutting down VR process early due to a crash!");
     ProcessChild::QuickExit();
   }
-  if (!mVRGPUParent->IsClosed()) {
+  if (mVRGPUParent && !mVRGPUParent->IsClosed()) {
     mVRGPUParent->Close();
   }
   mVRGPUParent = nullptr;

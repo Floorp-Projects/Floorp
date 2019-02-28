@@ -203,11 +203,12 @@ legacy-extensions =
 legacy-extensions-description =
     These extensions do not meet current { -brand-short-name } standards so they have been deactivated. <label data-l10n-name="legacy-learn-more">Learn about the changes to add-ons</label>
 
-private-browsing-description =
-    Extensions are not allowed to run by default in Private Windows. This means they won’t work
-    while private browsing, and they won’t have access to your online activities there. To allow
-    an extension to run in Private Windows, select the extension card below and change your setting.
-    <label data-l10n-name="private-browsing-learn-more">Learn More.</label>
+private-browsing-description2 =
+    { -brand-short-name } is changing how extensions work in private browsing. Any new extensions you add to
+    { -brand-short-name } won’t run by default in Private Windows. Unless you allow it in settings, the
+    extension won’t work while private browsing, and won’t have access to your online activities
+    there. We’ve made this change to keep your private browsing private.
+    <label data-l10n-name="private-browsing-learn-more">Learn how to manage extension settings.</label>
 
 extensions-view-discover =
     .name = Get Add-ons

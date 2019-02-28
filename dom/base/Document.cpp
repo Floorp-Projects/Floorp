@@ -876,8 +876,7 @@ NS_IMPL_ISUPPORTS(ExternalResourceMap::PendingLoad, nsIStreamListener,
                   nsIRequestObserver)
 
 NS_IMETHODIMP
-ExternalResourceMap::PendingLoad::OnStartRequest(nsIRequest* aRequest,
-                                                 nsISupports* aContext) {
+ExternalResourceMap::PendingLoad::OnStartRequest(nsIRequest* aRequest) {
   ExternalResourceMap& map = mDisplayDocument->ExternalResourceMap();
   if (map.HaveShutDown()) {
     return NS_BINDING_ABORTED;
@@ -899,7 +898,7 @@ ExternalResourceMap::PendingLoad::OnStartRequest(nsIRequest* aRequest,
     return rv2;
   }
 
-  return mTargetListener->OnStartRequest(aRequest, aContext);
+  return mTargetListener->OnStartRequest(aRequest);
 }
 
 nsresult ExternalResourceMap::PendingLoad::SetupViewer(
@@ -982,7 +981,6 @@ nsresult ExternalResourceMap::PendingLoad::SetupViewer(
 
 NS_IMETHODIMP
 ExternalResourceMap::PendingLoad::OnDataAvailable(nsIRequest* aRequest,
-                                                  nsISupports* aContext,
                                                   nsIInputStream* aStream,
                                                   uint64_t aOffset,
                                                   uint32_t aCount) {
@@ -991,19 +989,18 @@ ExternalResourceMap::PendingLoad::OnDataAvailable(nsIRequest* aRequest,
   if (mDisplayDocument->ExternalResourceMap().HaveShutDown()) {
     return NS_BINDING_ABORTED;
   }
-  return mTargetListener->OnDataAvailable(aRequest, aContext, aStream, aOffset,
+  return mTargetListener->OnDataAvailable(aRequest, aStream, aOffset,
                                           aCount);
 }
 
 NS_IMETHODIMP
 ExternalResourceMap::PendingLoad::OnStopRequest(nsIRequest* aRequest,
-                                                nsISupports* aContext,
                                                 nsresult aStatus) {
   // mTargetListener might be null if SetupViewer or AddExternalResource failed
   if (mTargetListener) {
     nsCOMPtr<nsIStreamListener> listener;
     mTargetListener.swap(listener);
-    return listener->OnStopRequest(aRequest, aContext, aStatus);
+    return listener->OnStopRequest(aRequest, aStatus);
   }
 
   return NS_OK;
@@ -1246,7 +1243,6 @@ Document::Document(const char* aContentType)
       mHasHadDefaultView(false),
       mStyleSheetChangeEventsEnabled(false),
       mIsSrcdocDocument(false),
-      mDidDocumentOpen(false),
       mHasDisplayDocument(false),
       mFontFaceSetDirty(true),
       mDidFireDOMContentLoaded(true),
@@ -1285,10 +1281,9 @@ Document::Document(const char* aContentType)
       mHasReportedShadowDOMUsage(false),
       mDocTreeHadAudibleMedia(false),
       mDocTreeHadPlayRevoked(false),
-#ifdef DEBUG
-      mWillReparent(false),
-#endif
       mHasDelayedRefreshEvent(false),
+      mLoadEventFiring(false),
+      mSkipLoadEventAfterClose(false),
       mPendingFullscreenRequests(0),
       mXMLDeclarationBits(0),
       mOnloadBlockCount(0),
@@ -1985,17 +1980,6 @@ void Document::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) {
     // Note: this should match nsDocShell::OnLoadingSite
     NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
 
-    bool isWyciwyg = false;
-    uri->SchemeIs("wyciwyg", &isWyciwyg);
-    if (isWyciwyg) {
-      nsCOMPtr<nsIURI> cleanURI;
-      nsresult rv =
-          nsContentUtils::RemoveWyciwygScheme(uri, getter_AddRefs(cleanURI));
-      if (NS_SUCCEEDED(rv)) {
-        uri = cleanURI;
-      }
-    }
-
     nsIScriptSecurityManager* securityManager =
         nsContentUtils::GetSecurityManager();
     if (securityManager) {
@@ -2059,22 +2043,10 @@ bool PrincipalAllowsL10n(nsIPrincipal* principal) {
   return hasFlags;
 }
 
-void Document::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
-                          nsIPrincipal* aPrincipal) {
-  MOZ_ASSERT(aURI, "Null URI passed to ResetToURI");
-
-  MOZ_LOG(gDocumentLeakPRLog, LogLevel::Debug,
-          ("DOCUMENT %p ResetToURI %s", this, aURI->GetSpecOrDefault().get()));
-
-  mSecurityInfo = nullptr;
-
-  nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
-  if (!aLoadGroup || group != aLoadGroup) {
-    mDocumentLoadGroup = nullptr;
-  }
-
+void Document::DisconnectNodeTree() {
   // Delete references to sub-documents and kill the subdocument map,
-  // if any. It holds strong references
+  // if any. This is not strictly needed, but makes the node tree
+  // teardown a bit faster.
   delete mSubDocuments;
   mSubDocuments = nullptr;
 
@@ -2107,6 +2079,23 @@ void Document::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
                "After removing all children, there should be no root elem");
   }
   mInUnlinkOrDeletion = oldVal;
+}
+
+void Document::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
+                          nsIPrincipal* aPrincipal) {
+  MOZ_ASSERT(aURI, "Null URI passed to ResetToURI");
+
+  MOZ_LOG(gDocumentLeakPRLog, LogLevel::Debug,
+          ("DOCUMENT %p ResetToURI %s", this, aURI->GetSpecOrDefault().get()));
+
+  mSecurityInfo = nullptr;
+
+  nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
+  if (!aLoadGroup || group != aLoadGroup) {
+    mDocumentLoadGroup = nullptr;
+  }
+
+  DisconnectNodeTree();
 
   // Reset our stylesheets
   ResetStylesheetsToURI(aURI);
@@ -4397,18 +4386,6 @@ void Document::SetScriptGlobalObject(
     mLayoutHistoryState = nullptr;
     SetScopeObject(aScriptGlobalObject);
     mHasHadDefaultView = true;
-#ifdef DEBUG
-    if (!mWillReparent) {
-      // We really shouldn't have a wrapper here but if we do we need to make
-      // sure it has the correct parent.
-      JSObject* obj = GetWrapperPreserveColor();
-      if (obj) {
-        JSObject* newScope = aScriptGlobalObject->GetGlobalJSObject();
-        NS_ASSERTION(JS::GetNonCCWObjectGlobal(obj) == newScope,
-                     "Wrong scope, this is really bad!");
-      }
-    }
-#endif
 
     if (mAllowDNSPrefetch) {
       nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);
@@ -8169,7 +8146,8 @@ void Document::NotifyLoading(const bool& aCurrentParentIsLoading,
   }
 }
 
-void Document::SetReadyStateInternal(ReadyState rs) {
+void Document::SetReadyStateInternal(ReadyState rs,
+                                     bool updateTimingInformation) {
   if (rs == READYSTATE_UNINITIALIZED) {
     // Transition back to uninitialized happens only to keep assertions happy
     // right before readyState transitions to something else. Make this
@@ -8178,12 +8156,12 @@ void Document::SetReadyStateInternal(ReadyState rs) {
     return;
   }
 
-  if (READYSTATE_LOADING == rs) {
+  if (updateTimingInformation && READYSTATE_LOADING == rs) {
     mLoadingTimeStamp = mozilla::TimeStamp::Now();
   }
   NotifyLoading(mAncestorIsLoading, mAncestorIsLoading, mReadyState, rs);
   mReadyState = rs;
-  if (mTiming) {
+  if (updateTimingInformation && mTiming) {
     switch (rs) {
       case READYSTATE_LOADING:
         mTiming->NotifyDOMLoading(Document::GetDocumentURI());
@@ -8211,7 +8189,9 @@ void Document::SetReadyStateInternal(ReadyState rs) {
     }
   }
 
-  RecordNavigationTiming(rs);
+  if (updateTimingInformation) {
+    RecordNavigationTiming(rs);
+  }
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
       new AsyncEventDispatcher(this, NS_LITERAL_STRING("readystatechange"),

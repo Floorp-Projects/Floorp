@@ -36,14 +36,14 @@
                   "Exactly 1 receiver of kind " + kind);
             }
             // Remove tracks from senders
-            senders.forEach(async sender => {
+            for (const sender of senders) {
               await sender.replaceTrack(null);
               is(sender.track, null, "Sender track removed");
               let stats = await sender.getStats();
               ok(stats instanceof window.RTCStatsReport, "Stats is instance of RTCStatsReport");
               // Number of stats in the report. This should be 0.
               is(stats.size, 0, "Trackless sender stats report is empty");
-            });
+            }
           })
         });
     test.setMediaConstraints([{audio: true}, {video: true}], []);

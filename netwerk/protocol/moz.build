@@ -7,4 +7,4 @@
 DIRS += ['about', 'data', 'file', 'ftp']
 if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     DIRS += ['gio']
-DIRS += ['http', 'res', 'viewsource', 'websocket', 'wyciwyg']
+DIRS += ['http', 'res', 'viewsource', 'websocket' ]
