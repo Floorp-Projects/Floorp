@@ -1077,6 +1077,16 @@ class PresShell final : public nsIPresShell,
     void RecordEventHandlingResponsePerformance(const WidgetEvent* aEvent);
 
     /**
+     * PrepareToDispatchContextMenuEvent() prepares to dispatch aEvent into
+     * the DOM.
+     *
+     * @param aEvent            Must be eContextMenu event.
+     * @return                  true if it can be dispatched into the DOM.
+     *                          Otherwise, false.
+     */
+    bool PrepareToDispatchContextMenuEvent(WidgetEvent* aEvent);
+
+    /**
      * This and the next two helper methods are used to target and position the
      * context menu when the keyboard shortcut is used to open it.
      *
