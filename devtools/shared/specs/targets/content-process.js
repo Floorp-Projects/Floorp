@@ -24,6 +24,15 @@ const contentProcessTargetSpec = generateActorSpec({
     workerListChanged: {
       type: "workerListChanged",
     },
+
+    // The thread actor is no longer emitting newSource event in the name of the target
+    // actor (bug 1269919), but as we may still connect to older servers which still do,
+    // we have to keep it being mentioned here. Otherwise the event is considered as a
+    // response to a request and confuses the packet ordering.
+    // We can remove that once FF57 is no longer supported.
+    newSource: {
+      type: "newSource",
+    },
   },
 });
 
