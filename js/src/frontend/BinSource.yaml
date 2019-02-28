@@ -1006,12 +1006,8 @@ EagerMethod:
     const auto accessorType = AccessorType::None;
   inherits: EagerFunctionExpression
   build: |
-    BINJS_TRY_DECL(lexicalScopeData,
-                   NewLexicalScopeData(cx_, lexicalScope, alloc_, pc_));
-    BINJS_TRY_DECL(bodyScope,
-                   handler_.newLexicalScope(*lexicalScopeData, body));
     BINJS_MOZ_TRY_DECL(method,
-                       buildFunction(start, kind, name, params, bodyScope));
+                       buildFunction(start, kind, name, params, body));
     BINJS_TRY_DECL(result,
                    handler_.newObjectMethodOrPropertyDefinition(name, method,
                                                                 accessorType));
@@ -1607,11 +1603,9 @@ VariableDeclarator:
       // `var foo [= bar]``
       NameNode* bindingNameNode = &binding->template as<NameNode>();
       MOZ_TRY(checkBinding(bindingNameNode->atom()->asPropertyName()));
+      result = bindingNameNode;
       if (init) {
-        BINJS_TRY_VAR(result,
-                      handler_.finishInitializerAssignment(bindingNameNode, init));
-      } else {
-        result = bindingNameNode;
+        BINJS_TRY(handler_.finishInitializerAssignment(bindingNameNode, init));
       }
     } else {
       // `var pattern = bar`

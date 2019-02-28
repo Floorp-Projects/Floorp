@@ -1939,7 +1939,8 @@ bool ASTSerializer::variableDeclarator(ParseNode* pn, MutableHandleValue dst) {
 
   if (pn->isKind(ParseNodeKind::Name)) {
     patternNode = pn;
-    initNode = nullptr;
+    initNode = pn->as<NameNode>().initializer();
+    MOZ_ASSERT_IF(initNode, pn->pn_pos.encloses(initNode->pn_pos));
   } else if (pn->isKind(ParseNodeKind::AssignExpr)) {
     AssignmentNode* assignNode = &pn->as<AssignmentNode>();
     patternNode = assignNode->left();

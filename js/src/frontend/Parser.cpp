@@ -4090,8 +4090,7 @@ GeneralParser<ParseHandler, Unit>::declarationPattern(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::Node
-GeneralParser<ParseHandler, Unit>::initializerInNameDeclaration(
+bool GeneralParser<ParseHandler, Unit>::initializerInNameDeclaration(
     NameNodeType binding, DeclarationKind declKind, bool initialDeclaration,
     YieldHandling yieldHandling, ParseNodeKind* forHeadKind,
     Node* forInOrOfExpression) {
@@ -4099,19 +4098,19 @@ GeneralParser<ParseHandler, Unit>::initializerInNameDeclaration(
 
   uint32_t initializerOffset;
   if (!tokenStream.peekOffset(&initializerOffset, TokenStream::Operand)) {
-    return null();
+    return false;
   }
 
   Node initializer = assignExpr(forHeadKind ? InProhibited : InAllowed,
                                 yieldHandling, TripledotProhibited);
   if (!initializer) {
-    return null();
+    return false;
   }
 
   if (forHeadKind && initialDeclaration) {
     bool isForIn, isForOf;
     if (!matchInOrOf(&isForIn, &isForOf)) {
-      return null();
+      return false;
     }
 
     // An initialized declaration can't appear in a for-of:
@@ -4119,7 +4118,7 @@ GeneralParser<ParseHandler, Unit>::initializerInNameDeclaration(
     //   for (var/let/const x = ... of ...); // BAD
     if (isForOf) {
       errorAt(initializerOffset, JSMSG_OF_AFTER_FOR_LOOP_DECL);
-      return null();
+      return false;
     }
 
     if (isForIn) {
@@ -4128,7 +4127,7 @@ GeneralParser<ParseHandler, Unit>::initializerInNameDeclaration(
       //   for (let/const x = ... in ...); // BAD
       if (DeclarationKindIsLexical(declKind)) {
         errorAt(initializerOffset, JSMSG_IN_AFTER_LEXICAL_FOR_DECL);
-        return null();
+        return false;
       }
 
       // This leaves only initialized for-in |var| declarations.  ES6
@@ -4136,13 +4135,13 @@ GeneralParser<ParseHandler, Unit>::initializerInNameDeclaration(
       *forHeadKind = ParseNodeKind::ForIn;
       if (!strictModeErrorAt(initializerOffset,
                              JSMSG_INVALID_FOR_IN_DECL_WITH_INIT)) {
-        return null();
+        return false;
       }
 
       *forInOrOfExpression =
           expressionAfterForInOrOf(ParseNodeKind::ForIn, yieldHandling);
       if (!*forInOrOfExpression) {
-        return null();
+        return false;
       }
     } else {
       *forHeadKind = ParseNodeKind::ForHead;
@@ -4153,10 +4152,13 @@ GeneralParser<ParseHandler, Unit>::initializerInNameDeclaration(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::declarationName(
-    DeclarationKind declKind, TokenKind tt, bool initialDeclaration,
-    YieldHandling yieldHandling, ParseNodeKind* forHeadKind,
-    Node* forInOrOfExpression) {
+typename ParseHandler::NameNodeType
+GeneralParser<ParseHandler, Unit>::declarationName(DeclarationKind declKind,
+                                                   TokenKind tt,
+                                                   bool initialDeclaration,
+                                                   YieldHandling yieldHandling,
+                                                   ParseNodeKind* forHeadKind,
+                                                   Node* forInOrOfExpression) {
   // Anything other than possible identifier is an error.
   if (!TokenKindIsPossibleIdentifier(tt)) {
     error(JSMSG_NO_VARIABLE_NAME);
@@ -4188,17 +4190,13 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::declarationName(
     return null();
   }
 
-  Node declaration;
   if (matched) {
-    declaration = initializerInNameDeclaration(
-        binding, declKind, initialDeclaration, yieldHandling, forHeadKind,
-        forInOrOfExpression);
-    if (!declaration) {
+    if (!initializerInNameDeclaration(binding, declKind, initialDeclaration,
+                                      yieldHandling, forHeadKind,
+                                      forInOrOfExpression)) {
       return null();
     }
   } else {
-    declaration = binding;
-
     if (initialDeclaration && forHeadKind) {
       bool isForIn, isForOf;
       if (!matchInOrOf(&isForIn, &isForOf)) {
@@ -4236,7 +4234,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::declarationName(
     return null();
   }
 
-  return declaration;
+  return binding;
 }
 
 template <class ParseHandler, typename Unit>

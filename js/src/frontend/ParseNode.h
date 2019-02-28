@@ -796,11 +796,20 @@ class NullaryNode : public ParseNode {
 };
 
 class NameNode : public ParseNode {
-  JSAtom* atom_; /* lexical name or label atom */
+  JSAtom* atom_;         /* lexical name or label atom */
+  ParseNode* initOrStmt; /* var initializer, argument default, or label
+                            statement target */
+
+ protected:
+  NameNode(ParseNodeKind kind, JSOp op, JSAtom* atom, ParseNode* initOrStmt,
+           const TokenPos& pos)
+      : ParseNode(kind, op, pos), atom_(atom), initOrStmt(initOrStmt) {
+    MOZ_ASSERT(is<NameNode>());
+  }
 
  public:
   NameNode(ParseNodeKind kind, JSOp op, JSAtom* atom, const TokenPos& pos)
-      : ParseNode(kind, op, pos), atom_(atom) {
+      : ParseNode(kind, op, pos), atom_(atom), initOrStmt(nullptr) {
     MOZ_ASSERT(is<NameNode>());
   }
 
@@ -812,6 +821,11 @@ class NameNode : public ParseNode {
 
   template <typename Visitor>
   bool accept(Visitor& visitor) {
+    if (initOrStmt) {
+      if (!visitor.visit(initOrStmt)) {
+        return false;
+      }
+    }
     return true;
   }
 
@@ -826,7 +840,11 @@ class NameNode : public ParseNode {
     return atom()->asPropertyName();
   }
 
+  ParseNode* initializer() const { return initOrStmt; }
+
   void setAtom(JSAtom* atom) { atom_ = atom; }
+
+  void setInitializer(ParseNode* init) { initOrStmt = init; }
 };
 
 inline bool ParseNode::isName(PropertyName* name) const {
@@ -1578,17 +1596,14 @@ class LexicalScopeNode : public ParseNode {
 };
 
 class LabeledStatement : public NameNode {
-  ParseNode* statement_;
-
  public:
   LabeledStatement(PropertyName* label, ParseNode* stmt, uint32_t begin)
-      : NameNode(ParseNodeKind::LabelStmt, JSOP_NOP, label,
-                 TokenPos(begin, stmt->pn_pos.end)),
-        statement_(stmt) {}
+      : NameNode(ParseNodeKind::LabelStmt, JSOP_NOP, label, stmt,
+                 TokenPos(begin, stmt->pn_pos.end)) {}
 
   PropertyName* label() const { return atom()->asPropertyName(); }
 
-  ParseNode* statement() const { return statement_; }
+  ParseNode* statement() const { return initializer(); }
 
   static bool test(const ParseNode& node) {
     return node.isKind(ParseNodeKind::LabelStmt);
@@ -1616,20 +1631,6 @@ class CaseClause : public BinaryNode {
     MOZ_ASSERT_IF(match, node.isOp(JSOP_NOP));
     return match;
   }
-
-  template <typename Visitor>
-  bool accept(Visitor& visitor) {
-    if (statement_) {
-      if (!visitor.visit(statement_)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-#ifdef DEBUG
-  void dump(GenericPrinter& out, int indent);
-#endif
 };
 
 class LoopControlStatement : public ParseNode {
