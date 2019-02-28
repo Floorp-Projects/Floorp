@@ -36,7 +36,9 @@ async function bundle() {
     updateAssets,
     onFinish: () => onBundleFinish({bundlePath, projectPath })
   })
-    .then()
+    .then(() => {
+      console.log("[copy-assets] bundle is done")
+    })
     .catch(err => {
       console.log(
         "[copy-assets] Uhoh, something went wrong. " +
@@ -87,8 +89,6 @@ function onBundleFinish({ bundlePath, projectPath }) {
     path.join(clientPath, "shared/components/reps/reps.css"),
     { cwd: projectPath }
   );
-
-
 
   console.log("[copy-assets] done");
 }
