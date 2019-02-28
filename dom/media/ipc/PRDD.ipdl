@@ -21,7 +21,7 @@ protocol PRDD
 parent:
 
   // args TBD, sent by UI process to initiate core settings
-  async Init(MaybeFileDesc sandboxBroker);
+  async Init(FileDescriptor? sandboxBroker);
 
   async InitProfiler(Endpoint<PProfilerChild> endpoint);
 
@@ -31,7 +31,7 @@ parent:
   async RequestMemoryReport(uint32_t generation,
                             bool anonymize,
                             bool minimizeMemoryUsage,
-                            MaybeFileDesc DMDFile);
+                            FileDescriptor? DMDFile);
 
 child:
   // args TBD, sent when init complete. Occurs once, after Init().

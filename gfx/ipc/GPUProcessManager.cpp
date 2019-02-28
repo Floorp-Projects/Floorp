@@ -1037,7 +1037,7 @@ class GPUMemoryReporter : public MemoryReportingProcess {
   bool SendRequestMemoryReport(const uint32_t& aGeneration,
                                const bool& aAnonymize,
                                const bool& aMinimizeMemoryUsage,
-                               const dom::MaybeFileDesc& aDMDFile) override {
+                               const Maybe<FileDescriptor>& aDMDFile) override {
     GPUChild* child = GetChild();
     if (!child) {
       return false;

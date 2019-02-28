@@ -18,7 +18,6 @@ class nsMemoryReporterManager;
 namespace mozilla {
 namespace dom {
 
-class MaybeFileDesc;
 class MemoryReport;
 
 class MemoryReportRequestHost final {
@@ -44,7 +43,8 @@ class MemoryReportRequestClient final : public nsIRunnable {
   NS_DECL_ISUPPORTS
 
   static void Start(uint32_t aGeneration, bool aAnonymize,
-                    bool aMinimizeMemoryUsage, const MaybeFileDesc& aDMDFile,
+                    bool aMinimizeMemoryUsage,
+                    const Maybe<mozilla::ipc::FileDescriptor>& aDMDFile,
                     const nsACString& aProcessString,
                     const ReportCallback& aReportCallback,
                     const FinishCallback& aFinishCallback);
@@ -53,7 +53,7 @@ class MemoryReportRequestClient final : public nsIRunnable {
 
  private:
   MemoryReportRequestClient(uint32_t aGeneration, bool aAnonymize,
-                            const MaybeFileDesc& aDMDFile,
+                            const Maybe<mozilla::ipc::FileDescriptor>& aDMDFile,
                             const nsACString& aProcessString,
                             const ReportCallback& aReportCallback,
                             const FinishCallback& aFinishCallback);

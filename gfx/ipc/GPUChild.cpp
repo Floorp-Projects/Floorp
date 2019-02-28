@@ -240,7 +240,7 @@ mozilla::ipc::IPCResult GPUChild::RecvNotifyDeviceReset(
 bool GPUChild::SendRequestMemoryReport(const uint32_t& aGeneration,
                                        const bool& aAnonymize,
                                        const bool& aMinimizeMemoryUsage,
-                                       const MaybeFileDesc& aDMDFile) {
+                                       const Maybe<FileDescriptor>& aDMDFile) {
   mMemoryReportRequest = MakeUnique<MemoryReportRequestHost>(aGeneration);
   Unused << PGPUChild::SendRequestMemoryReport(aGeneration, aAnonymize,
                                                aMinimizeMemoryUsage, aDMDFile);
