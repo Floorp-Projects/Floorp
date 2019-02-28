@@ -1063,9 +1063,7 @@ static void FillArgumentArray(MacroAssembler& masm, const ValTypeVector& args,
             masm.storeDouble(ScratchDoubleReg, dst);
           } else {
             // Preserve the NaN pattern in the input.
-            masm.moveFloat32(srcReg, ScratchFloat32Reg);
-            masm.canonicalizeFloat(ScratchFloat32Reg);
-            masm.storeFloat32(ScratchFloat32Reg, dst);
+            masm.storeFloat32(srcReg, dst);
           }
         }
         break;
@@ -1401,7 +1399,7 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
   argOffset += sizeof(Value);
 
   // 5. Fill the arguments
-  unsigned offsetToCallerStackArgs = jitFramePushed + sizeof(Frame);
+  unsigned offsetToCallerStackArgs = jitFramePushed + sizeof(Frame) + frameAlignExtra;
   FillArgumentArray(masm, fi.funcType().args(), argOffset,
                     offsetToCallerStackArgs, scratch, ToValue(true));
   argOffset += fi.funcType().args().length() * sizeof(Value);
