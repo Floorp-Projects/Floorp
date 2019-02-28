@@ -471,42 +471,6 @@ add_task(async function test_overriding_home_page_incognito_not_allowed() {
   await BrowserTestUtils.closeWindow(win);
 });
 
-add_task(async function test_overriding_home_page_incognito_not_allowed_bypass() {
-  await SpecialPowers.pushPrefEnv({set: [["extensions.allowPrivateBrowsingByDefault", false]]});
-
-  let extension = ExtensionTestUtils.loadExtension({
-    manifest: {
-      name: "extension",
-    },
-    background() {
-      browser.test.sendMessage("url", browser.runtime.getURL("home.html"));
-    },
-    files: {"home.html": "<h1>1</h1>"},
-    useAddonManager: "temporary",
-  });
-
-  await extension.startup();
-  let url = await extension.awaitMessage("url");
-
-  // Verify manually setting the pref to the extension page does not work.
-  let changed = promisePrefChangeObserved(HOMEPAGE_URL_PREF);
-  Services.prefs.setStringPref(HOMEPAGE_URL_PREF, url);
-  await changed;
-  let windowOpenedPromise = BrowserTestUtils.waitForNewWindow();
-  let win = OpenBrowserWindow({private: true});
-  await windowOpenedPromise;
-  win.BrowserHome();
-  await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
-
-  is(win.gURLBar.value, "", "home page not used in private window");
-  changed = promisePrefChangeObserved(HOMEPAGE_URL_PREF);
-  Services.prefs.clearUserPref(HOMEPAGE_URL_PREF);
-  await changed;
-
-  await extension.unload();
-  await BrowserTestUtils.closeWindow(win);
-});
-
 add_task(async function test_overriding_home_page_incognito_spanning() {
   await SpecialPowers.pushPrefEnv({set: [["extensions.allowPrivateBrowsingByDefault", false]]});
 
@@ -542,6 +506,33 @@ add_task(async function test_overriding_home_page_incognito_spanning() {
   let popupHidden = promisePopupHidden(panel);
   panel.hidePopup();
   await popupHidden;
+
+  await extension.unload();
+  await BrowserTestUtils.closeWindow(win);
+});
+
+add_task(async function test_overriding_home_page_incognito_external() {
+  await SpecialPowers.pushPrefEnv({set: [["extensions.allowPrivateBrowsingByDefault", false]]});
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      chrome_settings_overrides: {"homepage": "https://example.com/home.html"},
+      name: "extension",
+    },
+    useAddonManager: "temporary",
+  });
+
+  await extension.startup();
+
+  // Verify a private window does not open the extension page.
+  let windowOpenedPromise = BrowserTestUtils.waitForNewWindow();
+  let win = OpenBrowserWindow({private: true});
+  await windowOpenedPromise;
+  win.BrowserHome();
+  await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+
+  is(win.gURLBar.value, "", "home page not used in private window");
+  is(gBrowser.selectedBrowser.currentURI.spec, "about:home", "home page not used in private window");
 
   await extension.unload();
   await BrowserTestUtils.closeWindow(win);
