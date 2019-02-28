@@ -34,7 +34,6 @@ LOCAL_INCLUDES += [
     '/netwerk/protocol/res',
     '/netwerk/protocol/viewsource',
     '/netwerk/protocol/websocket',
-    '/netwerk/protocol/wyciwyg',
     '/netwerk/socket',
     '/netwerk/streamconv',
     '/netwerk/streamconv/converters',

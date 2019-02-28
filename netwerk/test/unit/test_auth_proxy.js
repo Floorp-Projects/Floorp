@@ -159,7 +159,7 @@ Requestor.prototype = {
 var listener = {
   expectedCode: -1, // uninitialized
 
-  onStartRequest: function test_onStartR(request, ctx) {
+  onStartRequest: function test_onStartR(request) {
     try {
       // Proxy auth cancellation return failures to avoid spoofing
       if (!Components.isSuccessCode(request.status) &&
@@ -190,7 +190,7 @@ var listener = {
     do_throw("Should not get any data!");
   },
 
-  onStopRequest: function test_onStopR(request, ctx, status) {
+  onStopRequest: function test_onStopR(request, status) {
     Assert.equal(status, Cr.NS_ERROR_ABORT);
 
     if (current_test < (tests.length - 1)) {

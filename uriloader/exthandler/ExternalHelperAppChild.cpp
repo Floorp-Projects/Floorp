@@ -27,7 +27,7 @@ ExternalHelperAppChild::~ExternalHelperAppChild() {}
 // nsIStreamListener
 //-----------------------------------------------------------------------------
 NS_IMETHODIMP
-ExternalHelperAppChild::OnDataAvailable(nsIRequest *request, nsISupports *ctx,
+ExternalHelperAppChild::OnDataAvailable(nsIRequest *request,
                                         nsIInputStream *input, uint64_t offset,
                                         uint32_t count) {
   if (NS_FAILED(mStatus)) return mStatus;
@@ -60,8 +60,8 @@ ExternalHelperAppChild::OnDataAvailable(nsIRequest *request, nsISupports *ctx,
 //////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-ExternalHelperAppChild::OnStartRequest(nsIRequest *request, nsISupports *ctx) {
-  nsresult rv = mHandler->OnStartRequest(request, ctx);
+ExternalHelperAppChild::OnStartRequest(nsIRequest *request) {
+  nsresult rv = mHandler->OnStartRequest(request);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
 
   // Calling OnStartRequest could cause mHandler to close the window it was
@@ -90,11 +90,11 @@ ExternalHelperAppChild::OnStartRequest(nsIRequest *request, nsISupports *ctx) {
 }
 
 NS_IMETHODIMP
-ExternalHelperAppChild::OnStopRequest(nsIRequest *request, nsISupports *ctx,
+ExternalHelperAppChild::OnStopRequest(nsIRequest *request,
                                       nsresult status) {
   // mHandler can be null if we diverted the request to the parent
   if (mHandler) {
-    nsresult rv = mHandler->OnStopRequest(request, ctx, status);
+    nsresult rv = mHandler->OnStopRequest(request, status);
     SendOnStopRequest(status);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
   }

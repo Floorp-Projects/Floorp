@@ -734,8 +734,7 @@ nsWebBrowserPersist::OnWrite::OnFinish(nsIWebBrowserPersistDocument *aDoc,
 // nsWebBrowserPersist::nsIRequestObserver
 //*****************************************************************************
 
-NS_IMETHODIMP nsWebBrowserPersist::OnStartRequest(nsIRequest *request,
-                                                  nsISupports *ctxt) {
+NS_IMETHODIMP nsWebBrowserPersist::OnStartRequest(nsIRequest *request) {
   if (mProgressListener) {
     uint32_t stateFlags = nsIWebProgressListener::STATE_START |
                           nsIWebProgressListener::STATE_IS_REQUEST;
@@ -830,7 +829,6 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStartRequest(nsIRequest *request,
 }
 
 NS_IMETHODIMP nsWebBrowserPersist::OnStopRequest(nsIRequest *request,
-                                                 nsISupports *ctxt,
                                                  nsresult status) {
   nsCOMPtr<nsISupports> keyPtr = do_QueryInterface(request);
   OutputData *data = mOutputMap.Get(keyPtr);
@@ -869,7 +867,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStopRequest(nsIRequest *request,
 //*****************************************************************************
 
 NS_IMETHODIMP
-nsWebBrowserPersist::OnDataAvailable(nsIRequest *request, nsISupports *aContext,
+nsWebBrowserPersist::OnDataAvailable(nsIRequest *request,
                                      nsIInputStream *aIStream, uint64_t aOffset,
                                      uint32_t aLength) {
   bool cancel = mCancel;

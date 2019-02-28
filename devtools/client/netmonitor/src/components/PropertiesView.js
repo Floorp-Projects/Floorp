@@ -6,6 +6,7 @@
 
 "use strict";
 
+const Services = require("Services");
 const { Component, createFactory } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
@@ -36,7 +37,7 @@ loader.lazyGetter(this, "MODE", function() {
   return require("devtools/client/shared/components/reps/reps").MODE;
 });
 
-const { div, tr, td } = dom;
+const { div, tr, td, pre } = dom;
 const AUTO_EXPAND_MAX_LEVEL = 7;
 const AUTO_EXPAND_MAX_NODES = 50;
 const EDITOR_CONFIG_ID = "EDITOR_CONFIG";
@@ -112,12 +113,23 @@ class PropertiesView extends Component {
   renderRowWithExtras(props) {
     const { level, name, value, path } = props.member;
 
+    // To prevent performance issues, switch from SourceEditor to pre()
+    // if response size is greater than specified limit.
+    let responseTextComponent = SourceEditor(value);
+    const limit = Services.prefs.getIntPref("devtools.netmonitor.response.ui.limit");
+    if (value && value.text && value.text.length > limit) {
+      responseTextComponent =
+        div({className: "responseTextContainer"},
+          pre({}, value.text)
+        );
+    }
+
     // Display source editor when specifying to EDITOR_CONFIG_ID along with config
     if (level === 1 && name === EDITOR_CONFIG_ID) {
       return (
         tr({ key: EDITOR_CONFIG_ID, className: "editor-row-container" },
           td({ colSpan: 2 },
-            SourceEditor(value)
+            responseTextComponent
           )
         )
       );

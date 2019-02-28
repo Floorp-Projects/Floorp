@@ -14,7 +14,6 @@
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/net/HttpChannelParent.h"
 #include "mozilla/net/CookieServiceParent.h"
-#include "mozilla/net/WyciwygChannelParent.h"
 #include "mozilla/net/FTPChannelParent.h"
 #include "mozilla/net/WebSocketChannelParent.h"
 #include "mozilla/net/WebSocketEventListenerParent.h"
@@ -424,18 +423,6 @@ PCookieServiceParent* NeckoParent::AllocPCookieServiceParent() {
 
 bool NeckoParent::DeallocPCookieServiceParent(PCookieServiceParent* cs) {
   delete cs;
-  return true;
-}
-
-PWyciwygChannelParent* NeckoParent::AllocPWyciwygChannelParent() {
-  WyciwygChannelParent* p = new WyciwygChannelParent();
-  p->AddRef();
-  return p;
-}
-
-bool NeckoParent::DeallocPWyciwygChannelParent(PWyciwygChannelParent* channel) {
-  WyciwygChannelParent* p = static_cast<WyciwygChannelParent*>(channel);
-  p->Release();
   return true;
 }
 

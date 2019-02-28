@@ -456,7 +456,7 @@ nsLoadGroup::AddRequest(nsIRequest *request, nsISupports *ctxt) {
            "(foreground count=%d).\n",
            this, request, mForegroundCount));
 
-      rv = observer->OnStartRequest(request, ctxt);
+      rv = observer->OnStartRequest(request);
       if (NS_FAILED(rv)) {
         LOG(("LOADGROUP [%p]: OnStartRequest for request %p FAILED.\n", this,
              request));
@@ -572,7 +572,7 @@ nsLoadGroup::RemoveRequest(nsIRequest *request, nsISupports *ctxt,
            "(foreground count=%d).\n",
            this, request, mForegroundCount));
 
-      rv = observer->OnStopRequest(request, ctxt, aStatus);
+      rv = observer->OnStopRequest(request, aStatus);
 
       if (NS_FAILED(rv)) {
         LOG(("LOADGROUP [%p]: OnStopRequest for request %p FAILED.\n", this,

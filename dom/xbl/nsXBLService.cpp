@@ -176,17 +176,17 @@ nsXBLStreamListener::~nsXBLStreamListener() {
 }
 
 NS_IMETHODIMP
-nsXBLStreamListener::OnDataAvailable(nsIRequest* request, nsISupports* aCtxt,
+nsXBLStreamListener::OnDataAvailable(nsIRequest* request,
                                      nsIInputStream* aInStr,
                                      uint64_t aSourceOffset, uint32_t aCount) {
   if (mInner)
-    return mInner->OnDataAvailable(request, aCtxt, aInStr, aSourceOffset,
+    return mInner->OnDataAvailable(request, aInStr, aSourceOffset,
                                    aCount);
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsXBLStreamListener::OnStartRequest(nsIRequest* request, nsISupports* aCtxt) {
+nsXBLStreamListener::OnStartRequest(nsIRequest* request) {
   // Make sure we don't hold on to the sink and binding document past this point
   nsCOMPtr<nsIXMLContentSink> sink;
   mSink.swap(sink);
@@ -208,15 +208,15 @@ nsXBLStreamListener::OnStartRequest(nsIRequest* request, nsISupports* aCtxt) {
   // since that resets the event listners on the document.
   doc->AddEventListener(NS_LITERAL_STRING("load"), this, false);
 
-  return mInner->OnStartRequest(request, aCtxt);
+  return mInner->OnStartRequest(request);
 }
 
 NS_IMETHODIMP
-nsXBLStreamListener::OnStopRequest(nsIRequest* request, nsISupports* aCtxt,
+nsXBLStreamListener::OnStopRequest(nsIRequest* request,
                                    nsresult aStatus) {
   nsresult rv = NS_OK;
   if (mInner) {
-    rv = mInner->OnStopRequest(request, aCtxt, aStatus);
+    rv = mInner->OnStopRequest(request, aStatus);
   }
 
   // Don't hold onto the inner listener; holding onto it can create a cycle

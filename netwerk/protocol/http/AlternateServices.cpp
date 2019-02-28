@@ -768,8 +768,7 @@ void TransactionObserver::Complete(nsHttpTransaction *aTrans, nsresult reason) {
 #define MAX_WK 32768
 
 NS_IMETHODIMP
-TransactionObserver::OnStartRequest(nsIRequest *aRequest,
-                                    nsISupports *aContext) {
+TransactionObserver::OnStartRequest(nsIRequest *aRequest) {
   MOZ_ASSERT(NS_IsMainThread());
   // only consider the first 32KB.. because really.
   mWKResponse.SetCapacity(MAX_WK);
@@ -778,7 +777,6 @@ TransactionObserver::OnStartRequest(nsIRequest *aRequest,
 
 NS_IMETHODIMP
 TransactionObserver::OnDataAvailable(nsIRequest *aRequest,
-                                     nsISupports *aContext,
                                      nsIInputStream *aStream, uint64_t aOffset,
                                      uint32_t aCount) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -805,7 +803,7 @@ TransactionObserver::OnDataAvailable(nsIRequest *aRequest,
 }
 
 NS_IMETHODIMP
-TransactionObserver::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
+TransactionObserver::OnStopRequest(nsIRequest *aRequest,
                                    nsresult code) {
   MOZ_ASSERT(NS_IsMainThread());
   LOG(("TransactionObserver onStopRequest %p code %" PRIx32 "\n", this,

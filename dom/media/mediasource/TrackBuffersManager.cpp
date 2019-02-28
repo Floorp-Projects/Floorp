@@ -521,9 +521,12 @@ void TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
   if (lastKeyFrameIndex > 0) {
     MSE_DEBUG("Step1. Evicting %" PRId64 " bytes prior currentTime",
               aSizeToEvict - toEvict);
-    CodedFrameRemoval(TimeInterval(
-        TimeUnit::Zero(),
-        buffer[lastKeyFrameIndex]->mTime - TimeUnit::FromMicroseconds(1)));
+    TimeUnit start = track.mBufferedRanges[0].mStart;
+    TimeUnit end =
+        buffer[lastKeyFrameIndex]->mTime - TimeUnit::FromMicroseconds(1);
+    if (end > start) {
+      CodedFrameRemoval(TimeInterval(start, end));
+    }
   }
 
   if (mSizeSourceBuffer <= finalSize) {
@@ -1106,8 +1109,13 @@ void TrackBuffersManager::OnDemuxerInitDone(const MediaResult& aResult) {
   // logical init data. If this case is encountered in the wild then these
   // checks could be revised to compare MediaInfo rather than init segment
   // bytes.
+  // For audio only source buffer we can check that only the AudioInfo has
+  // changed.
   bool isRepeatInitData =
-      mInitData && *(mInitData.get()) == *(mParser->InitData());
+      !mChangeTypeReceived && mInitData &&
+      ((*mInitData.get() == *mParser->InitData()) ||
+       (numVideos == 0 && numAudios > 0 && mAudioTracks.mLastInfo &&
+        *mAudioTracks.mLastInfo->GetAsAudioInfo() == info.mAudio));
 
   MOZ_ASSERT(mFirstInitializationSegmentReceived || !isRepeatInitData,
              "Should never detect repeat init data for first segment!");

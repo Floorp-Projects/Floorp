@@ -105,7 +105,8 @@ class APZInputBridge {
 
   virtual void ProcessUnhandledEvent(LayoutDeviceIntPoint* aRefPoint,
                                      ScrollableLayerGuid* aOutTargetGuid,
-                                     uint64_t* aOutFocusSequenceNumber) = 0;
+                                     uint64_t* aOutFocusSequenceNumber,
+                                     LayersId* aOutLayersId) = 0;
 
   virtual void UpdateWheelTransaction(LayoutDeviceIntPoint aRefPoint,
                                       EventMessage aEventMessage) = 0;

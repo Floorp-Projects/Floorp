@@ -251,14 +251,12 @@ NetworkConnectivityService::RecheckIPConnectivity() {
 }
 
 NS_IMETHODIMP
-NetworkConnectivityService::OnStartRequest(nsIRequest *aRequest,
-                                           nsISupports *aContext) {
+NetworkConnectivityService::OnStartRequest(nsIRequest *aRequest) {
   return NS_OK;
 }
 
 NS_IMETHODIMP
 NetworkConnectivityService::OnStopRequest(nsIRequest *aRequest,
-                                          nsISupports *aContext,
                                           nsresult aStatusCode) {
   if (aStatusCode == NS_ERROR_ABORT) {
     return NS_OK;
@@ -294,7 +292,6 @@ NetworkConnectivityService::OnStopRequest(nsIRequest *aRequest,
 
 NS_IMETHODIMP
 NetworkConnectivityService::OnDataAvailable(nsIRequest *aRequest,
-                                            nsISupports *aContext,
                                             nsIInputStream *aInputStream,
                                             uint64_t aOffset, uint32_t aCount) {
   nsAutoCString data;

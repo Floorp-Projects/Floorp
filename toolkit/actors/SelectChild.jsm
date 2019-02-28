@@ -20,9 +20,14 @@ const kStateActive = 0x00000001; // NS_EVENT_STATE_ACTIVE
 const kStateHover = 0x00000004; // NS_EVENT_STATE_HOVER
 
 const SUPPORTED_PROPERTIES = [
+  "direction",
   "color",
   "background-color",
   "text-shadow",
+  "font-family",
+  "font-weight",
+  "font-size",
+  "font-style",
 ];
 
 // A process global state for whether or not content thinks
@@ -37,8 +42,6 @@ var SelectContentHelper = function(aElement, aOptions, aGlobal) {
   this.global = aGlobal;
   this.closedWithClickOn = false;
   this.isOpenedViaTouch = aOptions.isOpenedViaTouch;
-  this._selectBackgroundColor = null;
-  this._selectColor = null;
   this._closeAfterBlur = true;
   this._pseudoStylesSetup = false;
   this._lockedDescendants = null;
@@ -102,22 +105,15 @@ this.SelectContentHelper.prototype = {
     this._setupPseudoClassStyles();
     let rect = this._getBoundingContentRect();
     let computedStyles = getComputedStyles(this.element);
-    this._selectBackgroundColor = computedStyles.backgroundColor;
-    this._selectColor = computedStyles.color;
-    this._selectTextShadow = computedStyles.textShadow;
     let options = this._buildOptionList();
     let defaultStyles = this.element.ownerGlobal.getDefaultComputedStyle(this.element);
     this.global.sendAsyncMessage("Forms:ShowDropDown", {
-      direction: computedStyles.direction,
       isOpenedViaTouch: this.isOpenedViaTouch,
       options,
       rect,
       selectedIndex: this.element.selectedIndex,
-      selectBackgroundColor: this._selectBackgroundColor,
-      selectColor: this._selectColor,
-      selectTextShadow: this._selectTextShadow,
-      uaSelectBackgroundColor: defaultStyles.backgroundColor,
-      uaSelectColor: defaultStyles.color,
+      style: supportedStyles(computedStyles),
+      defaultStyle: supportedStyles(defaultStyles),
     });
     this._clearPseudoClassStyles();
     gOpen = true;
@@ -164,7 +160,9 @@ this.SelectContentHelper.prototype = {
     if (!this._pseudoStylesSetup) {
       throw new Error("pseudo styles must be set up");
     }
-    return buildOptionListForChildren(this.element);
+    let uniqueStyles = [];
+    let options = buildOptionListForChildren(this.element, uniqueStyles);
+    return { options, uniqueStyles };
   },
 
   _update() {
@@ -175,19 +173,12 @@ this.SelectContentHelper.prototype = {
     // have :focus, though it is here for belt-and-suspenders.
     this._setupPseudoClassStyles();
     let computedStyles = getComputedStyles(this.element);
-    this._selectBackgroundColor = computedStyles.backgroundColor;
-    this._selectColor = computedStyles.color;
-    this._selectTextShadow = computedStyles.textShadow;
-
     let defaultStyles = this.element.ownerGlobal.getDefaultComputedStyle(this.element);
     this.global.sendAsyncMessage("Forms:UpdateDropDown", {
       options: this._buildOptionList(),
       selectedIndex: this.element.selectedIndex,
-      selectBackgroundColor: this._selectBackgroundColor,
-      selectColor: this._selectColor,
-      selectTextShadow: this._selectTextShadow,
-      uaSelectBackgroundColor: defaultStyles.backgroundColor,
-      uaSelectColor: defaultStyles.color,
+      style: supportedStyles(computedStyles),
+      defaultStyle: supportedStyles(defaultStyles),
     });
     this._clearPseudoClassStyles();
   },
@@ -316,14 +307,41 @@ this.SelectContentHelper.prototype = {
         break;
     }
   },
-
 };
 
 function getComputedStyles(element) {
   return element.ownerGlobal.getComputedStyle(element);
 }
 
-function buildOptionListForChildren(node) {
+function supportedStyles(cs) {
+  let styles = {};
+  for (let property of SUPPORTED_PROPERTIES) {
+    styles[property] = cs.getPropertyValue(property);
+  }
+  return styles;
+}
+
+function supportedStylesEqual(styles, otherStyles) {
+  for (let property of SUPPORTED_PROPERTIES) {
+    if (styles[property] !== otherStyles[property]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function uniqueStylesIndex(cs, uniqueStyles) {
+  let styles = supportedStyles(cs);
+  for (let i = uniqueStyles.length; i--; ) {
+    if (supportedStylesEqual(uniqueStyles[i], styles)) {
+      return i;
+    }
+  }
+  uniqueStyles.push(styles);
+  return uniqueStyles.length - 1;
+}
+
+function buildOptionListForChildren(node, uniqueStyles) {
   let result = [];
 
   for (let child of node.children) {
@@ -342,29 +360,20 @@ function buildOptionListForChildren(node) {
       }
 
       let cs = getComputedStyles(child);
-
-      // Note: If you add any more CSS properties support here,
-      // please add the property name to the SUPPORTED_PROPERTIES
-      // list so that the menu can be correctly updated when CSS
-      // transitions are used.
       let info = {
         index: child.index,
         tagName,
         textContent,
         disabled: child.disabled,
         display: cs.display,
-        // We need to do this for every option element as each one can have
-        // an individual style set for direction
-        textDirection: cs.direction,
         tooltip: child.title,
-        backgroundColor: cs.backgroundColor,
-        color: cs.color,
-        children: tagName == "OPTGROUP" ? buildOptionListForChildren(child) : [],
+        children: tagName == "OPTGROUP"
+          ? buildOptionListForChildren(child, uniqueStyles)
+          : [],
+        // Most options have the same style. In order to reduce the size of the
+        // IPC message, coalesce them in uniqueStyles.
+        styleIndex: uniqueStylesIndex(cs, uniqueStyles),
       };
-
-      if (cs.textShadow != "none") {
-        info.textShadow = cs.textShadow;
-      }
 
       result.push(info);
     }

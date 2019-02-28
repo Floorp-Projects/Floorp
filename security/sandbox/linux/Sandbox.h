@@ -62,6 +62,8 @@ MOZ_EXPORT bool SetContentProcessSandbox(ContentProcessSandboxParams&& aParams);
 MOZ_EXPORT void SetMediaPluginSandbox(const char* aFilePath);
 #endif
 
+MOZ_EXPORT void SetRemoteDataDecoderSandbox(int aBroker);
+
 }  // namespace mozilla
 
 #endif  // mozilla_Sandbox_h

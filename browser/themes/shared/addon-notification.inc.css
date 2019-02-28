@@ -1,0 +1,63 @@
+%if 0
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+%endif
+
+.popup-notification-body[popupid="addon-progress"],
+.popup-notification-body[popupid="addon-install-confirmation"] {
+  width: 28em;
+  max-width: 28em;
+}
+
+.addon-install-confirmation-name {
+  font-weight: bold;
+}
+
+html|*.addon-webext-perm-list {
+  margin-block-end: 0;
+  padding-inline-start: 10px;
+}
+
+.addon-webext-perm-text {
+  margin-inline-start: 0;
+}
+
+.popup-notification-description[popupid="addon-webext-permissions"],
+.popup-notification-description[popupid="addon-webext-permissions-notification"] {
+  margin-inline-start: -1px;
+}
+
+.addon-webext-perm-notification-content,
+.addon-installed-notification-content {
+  margin-top: 0;
+}
+
+.addon-installed-notification-content > checkbox {
+  margin: 8px 4px 2px;
+  flex-wrap: wrap;
+}
+
+.addon-webext-name {
+  display: inline;
+  font-weight: bold;
+  margin: 0;
+}
+
+.addon-addon-icon,
+.addon-toolbar-icon {
+  width: 14px;
+  height: 14px;
+  vertical-align: bottom;
+  margin-bottom: 1px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.addon-addon-icon {
+  list-style-image: url("chrome://mozapps/skin/extensions/extensionGeneric-16.svg");
+}
+
+.addon-toolbar-icon {
+  list-style-image: url("chrome://browser/skin/menu.svg");
+}

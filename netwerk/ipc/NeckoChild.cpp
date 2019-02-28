@@ -12,7 +12,6 @@
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/net/HttpChannelChild.h"
 #include "mozilla/net/CookieServiceChild.h"
-#include "mozilla/net/WyciwygChannelChild.h"
 #include "mozilla/net/FTPChannelChild.h"
 #include "mozilla/net/WebSocketChannelChild.h"
 #include "mozilla/net/WebSocketEventListenerChild.h"
@@ -172,21 +171,6 @@ bool NeckoChild::DeallocPCookieServiceChild(PCookieServiceChild* cs) {
 
   CookieServiceChild* p = static_cast<CookieServiceChild*>(cs);
   p->Release();
-  return true;
-}
-
-PWyciwygChannelChild* NeckoChild::AllocPWyciwygChannelChild() {
-  // We don't allocate here: see nsWyciwygProtocolHandler::NewChannel2()
-  MOZ_ASSERT_UNREACHABLE("AllocPWyciwygChannelChild should not be called");
-  return nullptr;
-}
-
-bool NeckoChild::DeallocPWyciwygChannelChild(PWyciwygChannelChild* channel) {
-  MOZ_ASSERT(IsNeckoChild(),
-             "DeallocPWyciwygChannelChild called by non-child!");
-
-  WyciwygChannelChild* p = static_cast<WyciwygChannelChild*>(channel);
-  p->ReleaseIPDLReference();
   return true;
 }
 

@@ -19,6 +19,10 @@
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/ProcessChild.h"
 
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
+#  include "mozilla/Sandbox.h"
+#endif
+
 #ifdef MOZ_GECKO_PROFILER
 #  include "ChildProfilerController.h"
 #endif
@@ -123,12 +127,19 @@ static void StartRDDMacSandbox() {
 }
 #endif
 
-mozilla::ipc::IPCResult RDDParent::RecvInit() {
+mozilla::ipc::IPCResult RDDParent::RecvInit(const MaybeFileDesc& aBrokerFd) {
   Unused << SendInitComplete();
-
-#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+#if defined(MOZ_SANDBOX)
+#  if defined(XP_MACOSX)
   StartRDDMacSandbox();
-#endif
+#  elif defined(XP_LINUX)
+  int fd = -1;
+  if (aBrokerFd.type() == MaybeFileDesc::TFileDescriptor) {
+    fd = aBrokerFd.get_FileDescriptor().ClonePlatformHandle().release();
+  }
+  SetRemoteDataDecoderSandbox(fd);
+#  endif  // XP_MACOSX/XP_LINUX
+#endif    // MOZ_SANDBOX
 
   return IPC_OK();
 }

@@ -14,7 +14,8 @@ if not CONFIG['MOZ_SYSTEM_JPEG']:
     external_dirs += ['media/libjpeg']
 
 DIRS += [
-    'prio',
+    '/third_party/prio',
+    '/third_party/msgpack',
 ]
 
 # There's no "native" brotli or woff2 yet, but probably in the future...

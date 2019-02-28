@@ -793,6 +793,31 @@ nsresult nsToolkitProfileService::GetProfileDescriptor(
   return NS_OK;
 }
 
+nsresult nsToolkitProfileService::CreateDefaultProfile(nsIToolkitProfile** aResult) {
+  // Create a new default profile
+  nsAutoCString name;
+  if (mUseDedicatedProfile) {
+    name.AssignLiteral("default-" NS_STRINGIFY(MOZ_UPDATE_CHANNEL));
+  } else if (mUseDevEditionProfile) {
+    name.AssignLiteral(DEV_EDITION_NAME);
+  } else {
+    name.AssignLiteral(DEFAULT_NAME);
+  }
+
+  nsresult rv = CreateUniqueProfile(nullptr, name, aResult);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mUseDedicatedProfile) {
+    SetDefaultProfile(mCurrent);
+  } else if (mUseDevEditionProfile) {
+    mDevEditionDefault = mCurrent;
+  } else {
+    mNormalDefault = mCurrent;
+  }
+
+  return NS_OK;
+}
+
 /**
  * An implementation of SelectStartupProfile callable from JavaScript via XPCOM.
  * See nsIToolkitProfileService.idl.
@@ -868,6 +893,54 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
       localDir = lf;
     }
 
+    // Clear out flags that we handled (or should have handled!) last startup.
+    const char* dummy;
+    CheckArg(*aArgc, aArgv, "p", &dummy);
+    CheckArg(*aArgc, aArgv, "profile", &dummy);
+    CheckArg(*aArgc, aArgv, "profilemanager");
+
+    nsCOMPtr<nsIToolkitProfile> profile;
+    GetProfileByDir(lf, localDir, getter_AddRefs(profile));
+
+    if (profile && mIsFirstRun && mUseDedicatedProfile) {
+      if (profile == (mUseDevEditionProfile ? mDevEditionDefault : mNormalDefault)) {
+        // This is the first run of a dedicated profile build where the selected
+        // profile is the previous default so we should either make it the
+        // default profile for this install or push the user to a new profile.
+
+        if (MaybeMakeDefaultDedicatedProfile(profile)) {
+          mStartupReason = NS_LITERAL_STRING("restart-claimed-default");
+
+          mCurrent = profile;
+        } else {
+          if (aIsResetting) {
+            // We don't want to create a fresh profile when we're attempting a
+            // profile reset so just bail out here, the calling code will handle it.
+            *aProfile = nullptr;
+            return NS_OK;
+          }
+
+          rv = CreateDefaultProfile(getter_AddRefs(mCurrent));
+          if (NS_FAILED(rv)) {
+            *aProfile = nullptr;
+            return rv;
+          }
+
+          Flush();
+
+          mStartupReason = NS_LITERAL_STRING("restart-skipped-default");
+          *aDidCreate = true;
+          mCreatedAlternateProfile = true;
+        }
+
+        NS_IF_ADDREF(*aProfile = mCurrent);
+        mCurrent->GetRootDir(aRootDir);
+        mCurrent->GetLocalDir(aLocalDir);
+
+        return NS_OK;
+      }
+    }
+
     if (EnvHasValue("XRE_RESTARTED_BY_PROFILE_MANAGER")) {
       mStartupReason = NS_LITERAL_STRING("profile-manager");
     } else if (aIsResetting) {
@@ -876,16 +949,10 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
       mStartupReason = NS_LITERAL_STRING("restart");
     }
 
-    // Clear out flags that we handled (or should have handled!) last startup.
-    const char* dummy;
-    CheckArg(*aArgc, aArgv, "p", &dummy);
-    CheckArg(*aArgc, aArgv, "profile", &dummy);
-    CheckArg(*aArgc, aArgv, "profilemanager");
-
-    GetProfileByDir(lf, localDir, getter_AddRefs(mCurrent));
+    mCurrent = profile;
     lf.forget(aRootDir);
     localDir.forget(aLocalDir);
-    NS_IF_ADDREF(*aProfile = mCurrent);
+    NS_IF_ADDREF(*aProfile = profile);
     return NS_OK;
   }
 
@@ -1082,26 +1149,8 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
       }
     }
 
-    // Create a new default profile
-    nsAutoCString name;
-    if (mUseDedicatedProfile) {
-      name.AssignLiteral("default-" NS_STRINGIFY(MOZ_UPDATE_CHANNEL));
-    } else if (mUseDevEditionProfile) {
-      name.AssignLiteral(DEV_EDITION_NAME);
-    } else {
-      name.AssignLiteral(DEFAULT_NAME);
-    }
-
-    rv = CreateUniqueProfile(nullptr, name, getter_AddRefs(mCurrent));
+    rv = CreateDefaultProfile(getter_AddRefs(mCurrent));
     if (NS_SUCCEEDED(rv)) {
-      if (mUseDedicatedProfile) {
-        SetDefaultProfile(mCurrent);
-      } else if (mUseDevEditionProfile) {
-        mDevEditionDefault = mCurrent;
-      } else {
-        mNormalDefault = mCurrent;
-      }
-
       // If there is only one profile and it isn't meant to be the profile that
       // older versions of Firefox use then we must create a default profile
       // for older versions of Firefox to avoid the existing profile being

@@ -60,7 +60,8 @@ class APZInputBridgeParent : public PAPZInputBridgeParent {
 
   mozilla::ipc::IPCResult RecvProcessUnhandledEvent(
       const LayoutDeviceIntPoint& aRefPoint, LayoutDeviceIntPoint* aOutRefPoint,
-      ScrollableLayerGuid* aOutTargetGuid, uint64_t* aOutFocusSequenceNumber);
+      ScrollableLayerGuid* aOutTargetGuid, uint64_t* aOutFocusSequenceNumber,
+      LayersId* aOutLayersId);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

@@ -2196,67 +2196,77 @@ window._gBrowser = {
     aTab.dispatchEvent(evt);
   },
 
-  discardBrowser(aBrowser, aForceDiscard) {
-    "use strict";
+  _mayDiscardBrowser(aTab, aForceDiscard) {
+    let browser = aTab.linkedBrowser;
+    let permitUnloadFlags = aForceDiscard ? browser.dontPromptAndUnload
+                                          : browser.dontPromptAndDontUnload;
 
-    let tab = this.getTabForBrowser(aBrowser);
-
-    let permitUnloadFlags = aForceDiscard ? aBrowser.dontPromptAndUnload : aBrowser.dontPromptAndDontUnload;
-
-    if (!tab ||
-        tab.selected ||
-        tab.closing ||
+    if (!aTab ||
+        aTab.selected ||
+        aTab.closing ||
         this._windowIsClosing ||
-        !aBrowser.isConnected ||
-        !aBrowser.isRemoteBrowser ||
-        !aBrowser.permitUnload(permitUnloadFlags).permitUnload) {
-      return;
+        !browser.isConnected ||
+        !browser.isRemoteBrowser ||
+        !browser.permitUnload(permitUnloadFlags).permitUnload) {
+      return false;
+    }
+
+    return true;
+  },
+
+  discardBrowser(aTab, aForceDiscard) {
+    "use strict";
+    let browser = aTab.linkedBrowser;
+
+    if (!this._mayDiscardBrowser(aTab, aForceDiscard)) {
+      return false;
     }
 
     // Reset webrtc sharing state.
-    if (tab._sharingState) {
-      this.setBrowserSharing(aBrowser, {});
+    if (aTab._sharingState) {
+      this.setBrowserSharing(browser, {});
     }
-    webrtcUI.forgetStreamsFromBrowser(aBrowser);
+    webrtcUI.forgetStreamsFromBrowser(browser);
 
     // Set browser parameters for when browser is restored.  Also remove
     // listeners and set up lazy restore data in SessionStore. This must
-    // be done before aBrowser is destroyed and removed from the document.
-    tab._browserParams = {
-      uriIsAboutBlank: aBrowser.currentURI.spec == "about:blank",
-      remoteType: aBrowser.remoteType,
+    // be done before browser is destroyed and removed from the document.
+    aTab._browserParams = {
+      uriIsAboutBlank: browser.currentURI.spec == "about:blank",
+      remoteType: browser.remoteType,
       usingPreloadedContent: false,
     };
 
-    SessionStore.resetBrowserToLazyState(tab);
+    SessionStore.resetBrowserToLazyState(aTab);
 
-    this._outerWindowIDBrowserMap.delete(aBrowser.outerWindowID);
+    this._outerWindowIDBrowserMap.delete(browser.outerWindowID);
 
     // Remove the tab's filter and progress listener.
-    let filter = this._tabFilters.get(tab);
-    let listener = this._tabListeners.get(tab);
-    aBrowser.webProgress.removeProgressListener(filter);
+    let filter = this._tabFilters.get(aTab);
+    let listener = this._tabListeners.get(aTab);
+    browser.webProgress.removeProgressListener(filter);
     filter.removeProgressListener(listener);
     listener.destroy();
 
-    this._tabListeners.delete(tab);
-    this._tabFilters.delete(tab);
+    this._tabListeners.delete(aTab);
+    this._tabFilters.delete(aTab);
 
     // Reset the findbar and remove it if it is attached to the tab.
-    if (tab._findBar) {
-      tab._findBar.close(true);
-      tab._findBar.remove();
-      delete tab._findBar;
+    if (aTab._findBar) {
+      aTab._findBar.close(true);
+      aTab._findBar.remove();
+      delete aTab._findBar;
     }
 
-    aBrowser.destroy();
-    this.getPanel(aBrowser).remove();
-    tab.removeAttribute("linkedpanel");
+    browser.destroy();
+    this.getPanel(browser).remove();
+    aTab.removeAttribute("linkedpanel");
 
-    this._createLazyBrowser(tab);
+    this._createLazyBrowser(aTab);
 
     let evt = new CustomEvent("TabBrowserDiscarded", { bubbles: true });
-    tab.dispatchEvent(evt);
+    aTab.dispatchEvent(evt);
+    return true;
   },
 
   /**

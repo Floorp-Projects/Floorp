@@ -89,12 +89,7 @@
 }
 
 .network-monitor .tree-container .treeTable tbody {
-  /* Apply flex to table will create an anonymous table element outside of tbody
-   * See also http://stackoverflow.com/a/30851678
-   * Therefore, we set height with this magic number in order to remove the
-   * redundant scrollbar when source editor appears.
-   */
-  height: calc(100% - 4px);
+  height: 100%;
 }
 
 .network-monitor .tree-container .treeTable tr {
@@ -139,7 +134,7 @@
   padding-inline-end: 5px;
 }
 
-.network-monitor .tree-container .treeTable .treeValueCell input{
+.network-monitor .tree-container .treeTable .treeValueCell input {
   color: var(--string-color);
 }
 
@@ -162,6 +157,13 @@
   height: 100%;
   flex: 1;
   overflow-x: auto;
+}
+
+.network-monitor .tree-container .treeTable .editor-row-container .responseTextContainer {
+  overflow-x: auto;
+  width: 100%;
+  height: 100%;
+  padding-left: 5px;
 }
 
 /* If there is a source editor shows up in the last row of TreeView,

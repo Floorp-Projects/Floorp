@@ -106,6 +106,8 @@ def generic_worker_spidermonkey(config, job, taskdesc):
         'SRCDIR': "./src",  # with values suiteable for windows generic worker
         'UPLOAD_DIR': "./public/build"
     })
+    if 'spidermonkey-platform' in run:
+        env['SPIDERMONKEY_PLATFORM'] = run['spidermonkey-platform']
 
     script = "build-sm.sh"
     if run['using'] == 'spidermonkey-package':

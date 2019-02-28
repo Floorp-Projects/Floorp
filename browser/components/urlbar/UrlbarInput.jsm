@@ -166,8 +166,8 @@ class UrlbarInput {
   }
 
   /**
-   * Converts an internal URI (e.g. a wyciwyg URI) into one which we can
-   * expose to the user.
+   * Converts an internal URI (e.g. a URI with a username or password) into one
+   * which we can expose to the user.
    *
    * @param {nsIURI} uri
    *   The URI to be converted

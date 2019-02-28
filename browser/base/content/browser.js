@@ -2663,7 +2663,7 @@ function URLBarSetURI(aURI, updatePopupNotifications) {
   // back. See bug 304198.
   if (value === null) {
     let uri = aURI || gBrowser.currentURI;
-    // Strip off "wyciwyg://" and passwords for the location bar
+    // Strip off usernames and passwords for the location bar
     try {
       uri = Services.uriFixup.createExposableURI(uri);
     } catch (e) {}

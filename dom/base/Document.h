@@ -594,7 +594,7 @@ class Document : public nsINode,
                                      nsIStreamListener** aDocListener,
                                      bool aReset,
                                      nsIContentSink* aSink = nullptr) = 0;
-  virtual void StopDocumentLoad();
+  void StopDocumentLoad();
 
   virtual void SetSuppressParserErrorElement(bool aSuppress) {}
   virtual bool SuppressParserErrorElement() { return false; }
@@ -833,7 +833,7 @@ class Document : public nsINode,
   /**
    * Set the document's character encoding.
    */
-  virtual void SetDocumentCharacterSet(NotNull<const Encoding*> aEncoding);
+  void SetDocumentCharacterSet(NotNull<const Encoding*> aEncoding);
 
   int32_t GetDocumentCharacterSetSource() const { return mCharacterSetSource; }
 
@@ -1396,8 +1396,6 @@ class Document : public nsINode,
    */
   nsresult GetSrcdocData(nsAString& aSrcdocData);
 
-  bool DidDocumentOpen() { return mDidDocumentOpen; }
-
   already_AddRefed<mozilla::dom::AnonymousContent> InsertAnonymousContent(
       mozilla::dom::Element& aElement, mozilla::ErrorResult& aError);
   void RemoveAnonymousContent(mozilla::dom::AnonymousContent& aContent,
@@ -1558,6 +1556,11 @@ class Document : public nsINode,
    * Returns the top window root from the outer window.
    */
   already_AddRefed<nsPIWindowRoot> GetWindowRoot();
+
+  /**
+   * Do the tree-disconnection that ResetToURI and document.open need to do.
+   */
+  void DisconnectNodeTree();
 
  private:
   class SelectorCacheKey {
@@ -2001,7 +2004,12 @@ class Document : public nsINode,
     READYSTATE_INTERACTIVE = 3,
     READYSTATE_COMPLETE = 4
   };
-  void SetReadyStateInternal(ReadyState rs);
+  // Set the readystate of the document.  If updateTimingInformation is true,
+  // this will record relevant timestamps in the document's performance timing.
+  // Some consumers (document.open is the only one right now, actually) don't
+  // want to do that, though.
+  void SetReadyStateInternal(ReadyState rs,
+                             bool updateTimingInformation = true);
   ReadyState GetReadyStateEnum() { return mReadyState; }
 
   void SetAncestorLoading(bool aAncestorIsLoading);
@@ -2692,6 +2700,29 @@ class Document : public nsINode,
   void AddSuspendedChannelEventQueue(mozilla::net::ChannelEventQueue* aQueue);
 
   void SetHasDelayedRefreshEvent() { mHasDelayedRefreshEvent = true; }
+
+  /**
+   * Flag whether we're about to fire the window's load event for this document.
+   */
+  void SetLoadEventFiring(bool aFiring) { mLoadEventFiring = aFiring; }
+
+  /**
+   * Test whether we should be firing a load event for this document after a
+   * document.close().  This is public and on Document, instead of being private
+   * to nsHTMLDocument, because we need to go through the normal docloader logic
+   * for the readystate change to READYSTATE_COMPLETE with the normal timing and
+   * semantics of firing the load event; we just don't want to fire the load
+   * event if this tests true.  So we need the docloader to be able to access
+   * this state.
+   *
+   * This method should only be called at the point when the load event is about
+   * to be fired.  It resets the "skip" flag, so it is not idempotent.
+   */
+  bool SkipLoadEventAfterClose() {
+    bool skip = mSkipLoadEventAfterClose;
+    mSkipLoadEventAfterClose = false;
+    return skip;
+  }
 
   /**
    * Increment https://html.spec.whatwg.org/#ignore-destructive-writes-counter
@@ -4097,11 +4128,6 @@ class Document : public nsINode,
   // Whether the document was created by a srcdoc iframe.
   bool mIsSrcdocDocument : 1;
 
-  // Records whether we've done a document.open. If this is true, it's possible
-  // for nodes from this document to have outdated wrappers in their wrapper
-  // caches.
-  bool mDidDocumentOpen : 1;
-
   // Whether this document has a display document and thus is considered to
   // be a resource document.  Normally this is the same as !!mDisplayDocument,
   // but mDisplayDocument is cleared during Unlink.  mHasDisplayDocument is
@@ -4211,16 +4237,24 @@ class Document : public nsINode,
   // This should only be set on top level content documents.
   bool mDocTreeHadPlayRevoked : 1;
 
-#ifdef DEBUG
- public:
-  bool mWillReparent : 1;
-
- protected:
-#endif
-
   // Whether an event triggered by the refresh driver was delayed because this
   // document has suppressed events.
   bool mHasDelayedRefreshEvent : 1;
+
+  // The HTML spec has a "iframe load in progress" flag, but that doesn't seem
+  // to have the right semantics.  See
+  // <https://github.com/whatwg/html/issues/4292>. What we have instead is a
+  // flag that is set while the window's 'load' event is firing if this document
+  // is the window's document.
+  bool mLoadEventFiring : 1;
+
+  // The HTML spec has a "mute iframe load" flag, but that doesn't seem to have
+  // the right semantics.  See <https://github.com/whatwg/html/issues/4292>.
+  // What we have instead is a flag that is set if completion of our document
+  // via document.close() should skip firing the load event.  Note that this
+  // flag is only relevant for HTML documents, but lives here for reasons that
+  // are documented above on SkipLoadEventAfterClose().
+  bool mSkipLoadEventAfterClose : 1;
 
   uint8_t mPendingFullscreenRequests;
 

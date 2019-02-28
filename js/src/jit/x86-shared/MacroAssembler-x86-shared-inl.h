@@ -308,28 +308,58 @@ void MacroAssembler::lshift32(Register shift, Register srcDest) {
   shll_cl(srcDest);
 }
 
-inline void FlexibleShift32(MacroAssembler& masm, Register shift, Register dest,
-                            bool left, bool arithmetic = false) {
-  if (shift != ecx) {
-    if (dest != ecx) {
-      masm.push(ecx);
-    }
-    masm.mov(shift, ecx);
+// All the shift instructions have the same requirement; the shift amount
+// must be in ecx. In order to handle arbitrary input registers, we divide this
+// operation into phases:
+//
+// [PUSH]     Preserve any registers which may be clobbered
+// [MOVE]     Move the shift to ecx and the amount to be shifted to an
+//            arbitrarily chosen preserved register that is not ecx.
+// [SHIFT]    Do the shift operation
+// [MOVE]     Move the result back to the destination
+// [POP]      Restore the registers which were preserved.
+inline void FlexibleShift32(MacroAssembler& masm, Register shift,
+                            Register srcDest, bool left,
+                            bool arithmetic = false) {
+  // Choose an arbitrary register that's not ecx
+  Register internalSrcDest = (srcDest != ecx) ? srcDest : ebx;
+  MOZ_ASSERT(internalSrcDest != ecx);
+
+  // Add registers we may clobber and want to ensure are restored as live, and
+  // remove what we definitely clobber (the destination)
+  LiveRegisterSet preserve;
+  preserve.add(ecx);
+  preserve.add(internalSrcDest);
+
+  preserve.takeUnchecked(srcDest);
+
+  // [PUSH]
+  masm.PushRegsInMask(preserve);
+
+  // [MOVE]
+  masm.moveRegPair(shift, srcDest, ecx, internalSrcDest);
+  if (masm.oom()) {
+    return;
   }
 
+  // [SHIFT]
   if (left) {
-    masm.lshift32(ecx, dest);
+    masm.lshift32(ecx, internalSrcDest);
   } else {
     if (arithmetic) {
-      masm.rshift32Arithmetic(ecx, dest);
+      masm.rshift32Arithmetic(ecx, internalSrcDest);
     } else {
-      masm.rshift32(ecx, dest);
+      masm.rshift32(ecx, internalSrcDest);
     }
   }
 
-  if (shift != ecx && dest != ecx) {
-    masm.pop(ecx);
+  // [MOVE]
+  if (internalSrcDest != srcDest) {
+    masm.mov(internalSrcDest, srcDest);
   }
+
+  // [POP]
+  masm.PopRegsInMask(preserve);
 }
 
 void MacroAssembler::flexibleLshift32(Register shift, Register srcDest) {

@@ -1028,6 +1028,9 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
   // will depend on whether it's cached!
   if (window &&
       (NS_SUCCEEDED(aStatus) || aStatus == NS_ERROR_PARSED_DATA_CACHED)) {
+    // If this code changes, the code in nsDocLoader::DocLoaderIsEmpty
+    // that fires load events for document.open() cases might need to
+    // be updated too.
     nsEventStatus status = nsEventStatus_eIgnore;
     WidgetEvent event(true, eLoad);
     event.mFlags.mBubbles = false;
@@ -1094,7 +1097,9 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
             docShell, MakeUnique<DocLoadingTimelineMarker>("document::Load"));
       }
 
+      d->SetLoadEventFiring(true);
       EventDispatcher::Dispatch(window, mPresContext, &event, nullptr, &status);
+      d->SetLoadEventFiring(false);
       if (timing) {
         timing->NotifyLoadEventEnd();
       }
@@ -2664,28 +2669,6 @@ NS_IMETHODIMP nsDocumentViewer::SetCommandNode(nsINode* aNode) {
   NS_ENSURE_STATE(root);
 
   root->SetPopupNode(aNode);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocumentViewer::ScrollToNode(nsINode* aNode) {
-  NS_ENSURE_ARG(aNode);
-  NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
-  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
-
-  // Get the nsIContent interface, because that's what we need to
-  // get the primary frame
-
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
-  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
-
-  // Tell the PresShell to scroll to the primary frame of the content.
-  NS_ENSURE_SUCCESS(
-      presShell->ScrollContentIntoView(
-          content,
-          nsIPresShell::ScrollAxis(nsIPresShell::SCROLL_TOP,
-                                   nsIPresShell::SCROLL_ALWAYS),
-          nsIPresShell::ScrollAxis(), nsIPresShell::SCROLL_OVERFLOW_HIDDEN),
-      NS_ERROR_FAILURE);
   return NS_OK;
 }
 

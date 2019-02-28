@@ -1087,7 +1087,7 @@ void nsGlobalWindowInner::CleanupCachedXBLHandlers() {
   }
 }
 
-void nsGlobalWindowInner::FreeInnerObjects(bool aForDocumentOpen) {
+void nsGlobalWindowInner::FreeInnerObjects() {
   if (IsDying()) {
     return;
   }
@@ -1150,10 +1150,8 @@ void nsGlobalWindowInner::FreeInnerObjects(bool aForDocumentOpen) {
     mDocumentURI = mDoc->GetDocumentURI();
     mDocBaseURI = mDoc->GetDocBaseURI();
 
-    if (!aForDocumentOpen) {
-      while (mDoc->EventHandlingSuppressed()) {
-        mDoc->UnsuppressEventHandlingAndFireEvents(false);
-      }
+    while (mDoc->EventHandlingSuppressed()) {
+      mDoc->UnsuppressEventHandlingAndFireEvents(false);
     }
 
     if (mObservingDidRefresh) {
@@ -1606,27 +1604,6 @@ bool nsGlobalWindowInner::ShouldResetBrowsingContextUserGestureActivation() {
   return mWindowGlobalChild && GetOuterWindowInternal() &&
          GetOuterWindowInternal()->IsTopLevelWindow() && Window() &&
          Window()->GetUserGestureActivation();
-}
-
-nsresult nsGlobalWindowInner::SetNewDocument(Document* aDocument,
-                                             nsISupports* aState,
-                                             bool aForceReuseInnerWindow) {
-  MOZ_ASSERT(mDocumentPrincipal == nullptr,
-             "mDocumentPrincipal prematurely set!");
-  MOZ_ASSERT(aDocument);
-
-  if (!mOuterWindow) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  // Refuse to set a new document if the call came from an inner
-  // window that's not the current inner window.
-  if (mOuterWindow->GetCurrentInnerWindow() != this) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  return GetOuterWindowInternal()->SetNewDocument(aDocument, aState,
-                                                  aForceReuseInnerWindow);
 }
 
 void nsGlobalWindowInner::InnerSetNewDocument(JSContext* aCx,
@@ -2373,31 +2350,6 @@ void nsGlobalWindowInner::NoteDOMContentLoaded() {
   }
 
   mClientSource->NoteDOMContentLoaded();
-}
-
-void nsGlobalWindowInner::MigrateStateForDocumentOpen(
-    nsGlobalWindowInner* aOldInner) {
-  MOZ_DIAGNOSTIC_ASSERT(aOldInner);
-  MOZ_DIAGNOSTIC_ASSERT(aOldInner != this);
-  MOZ_DIAGNOSTIC_ASSERT(mDoc);
-
-  // Rebind DETH objects to the new global created by document.open().
-  // XXX: Is this correct?  We should consider if the spec and our
-  //      implementation should change to match other browsers by
-  //      just reusing the current window.  (Bug 1449992)
-  aOldInner->ForEachEventTargetObject(
-      [&](DOMEventTargetHelper* aDETH, bool* aDoneOut) {
-        aDETH->BindToOwner(this->AsInner());
-      });
-
-  // Move the old Performance object from the old window to the new window.
-  // The Performance object was also rebound in the DETH loop above.
-  mPerformance = aOldInner->mPerformance.forget();
-
-  if (aOldInner->mIndexedDB) {
-    aOldInner->mIndexedDB->RebindToNewWindow(this);
-    mIndexedDB = aOldInner->mIndexedDB.forget();
-  }
 }
 
 void nsGlobalWindowInner::UpdateTopInnerWindow() {

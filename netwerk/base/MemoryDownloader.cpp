@@ -17,7 +17,7 @@ MemoryDownloader::MemoryDownloader(IObserver* aObserver)
     : mObserver(aObserver), mStatus(NS_ERROR_NOT_INITIALIZED) {}
 
 NS_IMETHODIMP
-MemoryDownloader::OnStartRequest(nsIRequest* aRequest, nsISupports* aCtxt) {
+MemoryDownloader::OnStartRequest(nsIRequest* aRequest) {
   MOZ_ASSERT(!mData);
   mData.reset(new FallibleTArray<uint8_t>());
   mStatus = NS_OK;
@@ -25,7 +25,7 @@ MemoryDownloader::OnStartRequest(nsIRequest* aRequest, nsISupports* aCtxt) {
 }
 
 NS_IMETHODIMP
-MemoryDownloader::OnStopRequest(nsIRequest* aRequest, nsISupports* aCtxt,
+MemoryDownloader::OnStopRequest(nsIRequest* aRequest,
                                 nsresult aStatus) {
   MOZ_ASSERT_IF(NS_FAILED(mStatus), NS_FAILED(aStatus));
   MOZ_ASSERT(!mData == NS_FAILED(mStatus));
@@ -33,7 +33,7 @@ MemoryDownloader::OnStopRequest(nsIRequest* aRequest, nsISupports* aCtxt,
   data.swap(mData);
   RefPtr<IObserver> observer;
   observer.swap(mObserver);
-  observer->OnDownloadComplete(this, aRequest, aCtxt, aStatus, std::move(data));
+  observer->OnDownloadComplete(this, aRequest, nullptr, aStatus, std::move(data));
   return NS_OK;
 }
 
@@ -53,7 +53,7 @@ nsresult MemoryDownloader::ConsumeData(nsIInputStream* aIn, void* aClosure,
 }
 
 NS_IMETHODIMP
-MemoryDownloader::OnDataAvailable(nsIRequest* aRequest, nsISupports* aCtxt,
+MemoryDownloader::OnDataAvailable(nsIRequest* aRequest,
                                   nsIInputStream* aInStr,
                                   uint64_t aSourceOffset, uint32_t aCount) {
   uint32_t n;

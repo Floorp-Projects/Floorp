@@ -871,7 +871,6 @@ class nsDocShell final : public nsDocLoader,
   nsresult CheckLoadingPermissions();
   nsresult PersistLayoutHistoryState();
   nsresult LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType);
-  nsresult SetBaseUrlForWyciwyg(nsIContentViewer* aContentViewer);
   nsresult GetHttpChannel(nsIChannel* aChannel, nsIHttpChannel** aReturn);
   nsresult ConfirmRepost(bool* aRepost);
   nsresult GetPromptAndStringBundle(nsIPrompt** aPrompt,

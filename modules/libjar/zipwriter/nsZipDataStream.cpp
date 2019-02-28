@@ -56,7 +56,6 @@ nsresult nsZipDataStream::Init(nsZipWriter *aWriter, nsIOutputStream *aStream,
 }
 
 NS_IMETHODIMP nsZipDataStream::OnDataAvailable(nsIRequest *aRequest,
-                                               nsISupports *aContext,
                                                nsIInputStream *aInputStream,
                                                uint64_t aOffset,
                                                uint32_t aCount) {
@@ -68,22 +67,20 @@ NS_IMETHODIMP nsZipDataStream::OnDataAvailable(nsIRequest *aRequest,
   nsresult rv = ZW_ReadData(aInputStream, buffer.get(), aCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return ProcessData(aRequest, aContext, buffer.get(), aOffset, aCount);
+  return ProcessData(aRequest, nullptr, buffer.get(), aOffset, aCount);
 }
 
-NS_IMETHODIMP nsZipDataStream::OnStartRequest(nsIRequest *aRequest,
-                                              nsISupports *aContext) {
+NS_IMETHODIMP nsZipDataStream::OnStartRequest(nsIRequest *aRequest) {
   if (!mOutput) return NS_ERROR_NOT_INITIALIZED;
 
-  return mOutput->OnStartRequest(aRequest, aContext);
+  return mOutput->OnStartRequest(aRequest);
 }
 
 NS_IMETHODIMP nsZipDataStream::OnStopRequest(nsIRequest *aRequest,
-                                             nsISupports *aContext,
                                              nsresult aStatusCode) {
   if (!mOutput) return NS_ERROR_NOT_INITIALIZED;
 
-  nsresult rv = mOutput->OnStopRequest(aRequest, aContext, aStatusCode);
+  nsresult rv = mOutput->OnStopRequest(aRequest, aStatusCode);
   mOutput = nullptr;
   if (NS_FAILED(rv)) {
     mWriter->EntryCompleteCallback(mHeader, rv);
@@ -124,7 +121,7 @@ nsresult nsZipDataStream::ProcessData(nsIRequest *aRequest,
       NS_NewByteInputStream(getter_AddRefs(stream), MakeSpan(aBuffer, aCount));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mOutput->OnDataAvailable(aRequest, aContext, stream, aOffset, aCount);
+  rv = mOutput->OnDataAvailable(aRequest, stream, aOffset, aCount);
   mHeader->mUSize += aCount;
 
   return rv;
@@ -133,7 +130,7 @@ nsresult nsZipDataStream::ProcessData(nsIRequest *aRequest,
 nsresult nsZipDataStream::ReadStream(nsIInputStream *aStream) {
   if (!mOutput) return NS_ERROR_NOT_INITIALIZED;
 
-  nsresult rv = OnStartRequest(nullptr, nullptr);
+  nsresult rv = OnStartRequest(nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   auto buffer = MakeUnique<char[]>(4096);
@@ -144,19 +141,19 @@ nsresult nsZipDataStream::ReadStream(nsIInputStream *aStream) {
   do {
     rv = aStream->Read(buffer.get(), 4096, &read);
     if (NS_FAILED(rv)) {
-      OnStopRequest(nullptr, nullptr, rv);
+      OnStopRequest(nullptr, rv);
       return rv;
     }
 
     if (read > 0) {
       rv = ProcessData(nullptr, nullptr, buffer.get(), offset, read);
       if (NS_FAILED(rv)) {
-        OnStopRequest(nullptr, nullptr, rv);
+        OnStopRequest(nullptr, rv);
         return rv;
       }
       offset += read;
     }
   } while (read > 0);
 
-  return OnStopRequest(nullptr, nullptr, NS_OK);
+  return OnStopRequest(nullptr, NS_OK);
 }

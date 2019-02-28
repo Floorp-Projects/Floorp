@@ -44,8 +44,6 @@ class NeckoChild : public PNeckoChild {
 
   PCookieServiceChild* AllocPCookieServiceChild();
   bool DeallocPCookieServiceChild(PCookieServiceChild*);
-  PWyciwygChannelChild* AllocPWyciwygChannelChild();
-  bool DeallocPWyciwygChannelChild(PWyciwygChannelChild*);
   PFTPChannelChild* AllocPFTPChannelChild(
       const PBrowserOrId& aBrowser, const SerializedLoadContext& aSerialized,
       const FTPChannelCreationArgs& aOpenArgs);

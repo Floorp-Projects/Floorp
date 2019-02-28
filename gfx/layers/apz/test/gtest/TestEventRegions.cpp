@@ -274,7 +274,7 @@ TEST_F(APZEventRegionsTester, Obscuration) {
 
   gfx::CompositorHitTestInfo result;
   RefPtr<AsyncPanZoomController> hit =
-      manager->GetTargetAPZC(ScreenPoint(50, 75), &result);
+      manager->GetTargetAPZC(ScreenPoint(50, 75), &result, nullptr);
   EXPECT_EQ(child, hit.get());
   EXPECT_EQ(result, CompositorHitTestFlags::eVisibleToHitTest);
 }
@@ -284,7 +284,7 @@ TEST_F(APZEventRegionsTester, Bug1119497) {
 
   gfx::CompositorHitTestInfo result;
   RefPtr<AsyncPanZoomController> hit =
-      manager->GetTargetAPZC(ScreenPoint(50, 50), &result);
+      manager->GetTargetAPZC(ScreenPoint(50, 50), &result, nullptr);
   // We should hit layers[2], so |result| will be eVisibleToHitTest but there's
   // no actual APZC on layers[2], so it will be the APZC of the root layer.
   EXPECT_EQ(ApzcOf(layers[0]), hit.get());

@@ -176,7 +176,7 @@ document.getElementById('form').submit();
           aListener.onStartRequest(this, null);
         } catch(e) {}
         try {
-          aListener.onDataAvailable(this, null, stream, 0, stream.available());
+          aListener.onDataAvailable(this, stream, 0, stream.available());
         } catch(e) {}
         try {
           aListener.onStopRequest(this, null, Cr.NS_OK);

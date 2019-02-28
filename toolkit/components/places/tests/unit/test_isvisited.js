@@ -42,7 +42,6 @@ add_task(async function test_execute() {
     "chrome://browser/content/browser.xul",
     "resource://gre-resources/hiddenWindow.html",
     "data:,Hello%2C%20World!",
-    "wyciwyg:/0/http://mozilla.org",
     "javascript:alert('hello wolrd!');",
     "http://localhost/" + "a".repeat(1984),
   ];

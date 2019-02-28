@@ -242,7 +242,8 @@ var SessionHistoryInternal = {
 
         if (child) {
           // Don't try to restore framesets containing wyciwyg URLs.
-          // (cf. bug 424689 and bug 450595)
+          // (cf. bug 424689 and bug 450595).  Note that these may be left
+          // over from pre-wyciwyg-removal profiles.
           if (child.URI.schemeIs("wyciwyg")) {
             children.length = 0;
             break;

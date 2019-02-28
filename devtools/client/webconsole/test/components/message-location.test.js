@@ -32,7 +32,7 @@ describe("Message - location element", () => {
     // There should be the location
     const locationLink = wrapper.find(`.message-location a`);
     expect(locationLink.length).toBe(1);
-    expect(locationLink.text()).toBe("test-console-api.html:1:27");
+    expect(locationLink.text()).toBe("test-console-api.html:1:35");
 
     locationLink.simulate("click");
 

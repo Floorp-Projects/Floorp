@@ -116,9 +116,14 @@ async function extractFiles() {
     //      ]
     //    },
     // ...
-    filesForAdb =
-      // XPCOMABI looks this; x86_64-gcc3, so drop the compiler name.
-      adbInfo[Services.appinfo.OS][Services.appinfo.XPCOMABI.split("-")[0]];
+
+    // XPCOMABI looks this; x86_64-gcc3, so drop the compiler name.
+    let architecture = Services.appinfo.XPCOMABI.split("-")[0];
+    if (architecture === "aarch64") {
+      // Reuse x86 binaries for aarch64 - See Bug 1522149
+      architecture = "x86";
+    }
+    filesForAdb = adbInfo[Services.appinfo.OS][architecture];
   } catch (e) {
     return false;
   }

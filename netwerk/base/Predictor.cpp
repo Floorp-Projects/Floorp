@@ -2322,15 +2322,13 @@ NS_IMPL_ISUPPORTS(Predictor::PrefetchListener, nsIStreamListener,
 
 // nsIRequestObserver
 NS_IMETHODIMP
-Predictor::PrefetchListener::OnStartRequest(nsIRequest *aRequest,
-                                            nsISupports *aContext) {
+Predictor::PrefetchListener::OnStartRequest(nsIRequest *aRequest) {
   mStartTime = TimeStamp::Now();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 Predictor::PrefetchListener::OnStopRequest(nsIRequest *aRequest,
-                                           nsISupports *aContext,
                                            nsresult aStatusCode) {
   PREDICTOR_LOG(("OnStopRequest this=%p aStatusCode=0x%" PRIX32, this,
                  static_cast<uint32_t>(aStatusCode)));
@@ -2385,7 +2383,6 @@ Predictor::PrefetchListener::OnStopRequest(nsIRequest *aRequest,
 // nsIStreamListener
 NS_IMETHODIMP
 Predictor::PrefetchListener::OnDataAvailable(nsIRequest *aRequest,
-                                             nsISupports *aContext,
                                              nsIInputStream *aInputStream,
                                              uint64_t aOffset,
                                              const uint32_t aCount) {

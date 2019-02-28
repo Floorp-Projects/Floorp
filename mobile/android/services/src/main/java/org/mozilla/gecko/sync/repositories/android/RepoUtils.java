@@ -172,7 +172,6 @@ public class RepoUtils {
         scheme.equals("chrome") ||
         scheme.equals("resource") ||
         scheme.equals("data") ||
-        scheme.equals("wyciwyg") ||
         scheme.equals("javascript")) {
       return false;
     }

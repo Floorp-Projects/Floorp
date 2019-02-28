@@ -151,6 +151,7 @@ EXTRA_JS_MODULES += [
     'SiteDataManager.jsm',
     'SitePermissions.jsm',
     'TabsList.jsm',
+    'TabUnloader.jsm',
     'ThemeVariableMap.jsm',
     'TransientPrefs.jsm',
     'webrtcUI.jsm',

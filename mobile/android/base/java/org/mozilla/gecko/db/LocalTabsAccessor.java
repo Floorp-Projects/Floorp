@@ -62,7 +62,7 @@ public class LocalTabsAccessor implements TabsAccessor {
 
     private static final String LOCAL_CLIENT_SELECTION = BrowserContract.Clients.GUID + " IS NULL";
 
-    private static final Pattern FILTERED_URL_PATTERN = Pattern.compile("^(about|chrome|wyciwyg|file):");
+    private static final Pattern FILTERED_URL_PATTERN = Pattern.compile("^(about|chrome|file):");
 
     private final Uri clientsNoStaleSortedUriWithProfile;
     private final Uri tabsUriWithProfile;

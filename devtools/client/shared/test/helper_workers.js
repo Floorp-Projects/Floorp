@@ -114,11 +114,6 @@ function findTab(tabs, url) {
   return null;
 }
 
-function attachTarget(client, tab) {
-  info("Attaching to tab with url '" + tab.url + "'.");
-  return client.attachTarget(tab);
-}
-
 function listWorkers(targetFront) {
   info("Listing workers.");
   return targetFront.listWorkers();

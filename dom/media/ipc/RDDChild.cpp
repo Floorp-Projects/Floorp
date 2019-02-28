@@ -8,6 +8,11 @@
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/ipc/CrashReporterHost.h"
 
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
+#  include "mozilla/SandboxBroker.h"
+#  include "mozilla/SandboxBrokerPolicyFactory.h"
+#endif
+
 #ifdef MOZ_GECKO_PROFILER
 #  include "ProfilerParent.h"
 #endif
@@ -23,12 +28,31 @@ RDDChild::RDDChild(RDDProcessHost* aHost) : mHost(aHost), mRDDReady(false) {
 
 RDDChild::~RDDChild() { MOZ_COUNT_DTOR(RDDChild); }
 
-void RDDChild::Init() {
-  SendInit();
+bool RDDChild::Init() {
+  MaybeFileDesc brokerFd = void_t();
+
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
+  auto policy = SandboxBrokerPolicyFactory::GetUtilityPolicy(OtherPid());
+  if (policy != nullptr) {
+    brokerFd = FileDescriptor();
+    mSandboxBroker =
+        SandboxBroker::Create(std::move(policy), OtherPid(), brokerFd);
+    // This is unlikely to fail and probably indicates OS resource
+    // exhaustion, but we can at least try to recover.
+    if (NS_WARN_IF(mSandboxBroker == nullptr)) {
+      return false;
+    }
+    MOZ_ASSERT(static_cast<const FileDescriptor&>(brokerFd).IsValid());
+  }
+#endif  // XP_LINUX && MOZ_SANDBOX
+
+  SendInit(brokerFd);
 
 #ifdef MOZ_GECKO_PROFILER
   Unused << SendInitProfiler(ProfilerParent::CreateForProcess(OtherPid()));
 #endif
+
+  return true;
 }
 
 bool RDDChild::EnsureRDDReady() {

@@ -40,7 +40,7 @@ describe("ConsoleAPICall component:", () => {
       // There should be the location
       const locationLink = wrapper.find(`.message-location`);
       expect(locationLink.length).toBe(1);
-      expect(locationLink.text()).toBe("test-console-api.html:1:27");
+      expect(locationLink.text()).toBe("test-console-api.html:1:35");
     });
 
     it("renders string grips with custom style", () => {
@@ -292,7 +292,8 @@ describe("ConsoleAPICall component:", () => {
     });
   });
 
-  describe("console.trace", () => {
+  // Unskip will happen in Bug 1529548.
+  describe.skip("console.trace", () => {
     it("renders", () => {
       const message = stubPreparedMessages.get("console.trace()");
       const wrapper = render(ConsoleApiCall({ message, serviceContainer, open: true }));

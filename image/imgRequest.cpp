@@ -645,7 +645,7 @@ bool imgRequest::HadInsecureRedirect() const {
 /** nsIRequestObserver methods **/
 
 NS_IMETHODIMP
-imgRequest::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt) {
+imgRequest::OnStartRequest(nsIRequest* aRequest) {
   LOG_SCOPE(gImgLog, "imgRequest::OnStartRequest");
 
   RefPtr<Image> image;
@@ -735,7 +735,7 @@ imgRequest::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt) {
 }
 
 NS_IMETHODIMP
-imgRequest::OnStopRequest(nsIRequest* aRequest, nsISupports* ctxt,
+imgRequest::OnStopRequest(nsIRequest* aRequest,
                           nsresult status) {
   LOG_FUNC(gImgLog, "imgRequest::OnStopRequest");
   MOZ_ASSERT(NS_IsMainThread(), "Can't send notifications off-main-thread");
@@ -745,7 +745,7 @@ imgRequest::OnStopRequest(nsIRequest* aRequest, nsISupports* ctxt,
   RefPtr<imgRequest> strongThis = this;
 
   if (mIsMultiPartChannel && mNewPartPending) {
-    OnDataAvailable(aRequest, ctxt, nullptr, 0, 0);
+    OnDataAvailable(aRequest, nullptr, 0, 0);
   }
 
   // XXXldb What if this is a non-last part of a multipart request?
@@ -779,7 +779,7 @@ imgRequest::OnStopRequest(nsIRequest* aRequest, nsISupports* ctxt,
   // trigger a failure, since the image might be waiting for more non-optional
   // data and this is the point where we break the news that it's not coming.
   if (image) {
-    nsresult rv = image->OnImageDataComplete(aRequest, ctxt, status, lastPart);
+    nsresult rv = image->OnImageDataComplete(aRequest, nullptr, status, lastPart);
 
     // If we got an error in the OnImageDataComplete() call, we don't want to
     // proceed as if nothing bad happened. However, we also want to give
@@ -989,7 +989,7 @@ void imgRequest::FinishPreparingForNewPart(const NewPartResult& aResult) {
 }
 
 NS_IMETHODIMP
-imgRequest::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+imgRequest::OnDataAvailable(nsIRequest* aRequest,
                             nsIInputStream* aInStr, uint64_t aOffset,
                             uint32_t aCount) {
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequest::OnDataAvailable", "count", aCount);
@@ -1062,7 +1062,7 @@ imgRequest::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
 
   // Notify the image that it has new data.
   if (aInStr) {
-    nsresult rv = image->OnImageDataAvailable(aRequest, aContext, aInStr,
+    nsresult rv = image->OnImageDataAvailable(aRequest, nullptr, aInStr,
                                               aOffset, aCount);
 
     if (NS_FAILED(rv)) {

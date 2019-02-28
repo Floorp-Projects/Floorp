@@ -502,8 +502,7 @@ nsAboutCacheEntry::Channel::OnMetaDataElement(char const *key,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsAboutCacheEntry::Channel::OnStartRequest(nsIRequest *request,
-                                           nsISupports *ctx) {
+nsAboutCacheEntry::Channel::OnStartRequest(nsIRequest *request) {
   mHexDumpState = 0;
 
   NS_NAMED_LITERAL_CSTRING(buffer, "<hr/>\n<pre>");
@@ -513,7 +512,6 @@ nsAboutCacheEntry::Channel::OnStartRequest(nsIRequest *request,
 
 NS_IMETHODIMP
 nsAboutCacheEntry::Channel::OnDataAvailable(nsIRequest *request,
-                                            nsISupports *ctx,
                                             nsIInputStream *aInputStream,
                                             uint64_t aOffset, uint32_t aCount) {
   uint32_t n;
@@ -539,7 +537,7 @@ nsAboutCacheEntry::Channel::OnDataAvailable(nsIRequest *request,
 }
 
 NS_IMETHODIMP
-nsAboutCacheEntry::Channel::OnStopRequest(nsIRequest *request, nsISupports *ctx,
+nsAboutCacheEntry::Channel::OnStopRequest(nsIRequest *request,
                                           nsresult result) {
   NS_NAMED_LITERAL_CSTRING(buffer, "</pre>\n");
   uint32_t n;

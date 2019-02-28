@@ -6592,16 +6592,10 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
     EventTargetData eventTargetData(mPresShell, rootFrameToHandleEvent);
     if (!isCaptureRetargeted && !isWindowLevelMouseExit &&
         !pointerCapturingContent) {
-      if (aGUIEvent->mClass == eTouchEventClass) {
-        eventTargetData.SetFrameAndComputePresShell(TouchManager::SetupTarget(
-            aGUIEvent->AsTouchEvent(), rootFrameToHandleEvent));
-      } else {
-        eventTargetData.SetFrameAndComputePresShell(
-            GetFrameToHandleNonTouchEvent(rootFrameToHandleEvent, aGUIEvent));
-        if (!eventTargetData.mFrame) {
-          *aEventStatus = nsEventStatus_eIgnore;
-          return NS_OK;
-        }
+      if (!ComputeEventTargetFrameAndPresShellAtEventPoint(
+              rootFrameToHandleEvent, aGUIEvent, &eventTargetData)) {
+        *aEventStatus = nsEventStatus_eIgnore;
+        return NS_OK;
       }
     }
 
@@ -6923,6 +6917,26 @@ nsIFrame* PresShell::EventHandler::GetFrameToHandleNonTouchEvent(
       aGUIEvent, aRootFrameToHandleEvent, eventPoint, flags);
 
   return targetFrame ? targetFrame : aRootFrameToHandleEvent;
+}
+
+bool PresShell::EventHandler::ComputeEventTargetFrameAndPresShellAtEventPoint(
+    nsIFrame* aRootFrameToHandleEvent, WidgetGUIEvent* aGUIEvent,
+    EventTargetData* aEventTargetData) {
+  MOZ_ASSERT(aRootFrameToHandleEvent);
+  MOZ_ASSERT(aGUIEvent);
+  MOZ_ASSERT(aEventTargetData);
+
+  if (aGUIEvent->mClass == eTouchEventClass) {
+    nsIFrame* targetFrameAtTouchEvent = TouchManager::SetupTarget(
+        aGUIEvent->AsTouchEvent(), aRootFrameToHandleEvent);
+    aEventTargetData->SetFrameAndComputePresShell(targetFrameAtTouchEvent);
+    return true;
+  }
+
+  nsIFrame* targetFrame =
+      GetFrameToHandleNonTouchEvent(aRootFrameToHandleEvent, aGUIEvent);
+  aEventTargetData->SetFrameAndComputePresShell(targetFrame);
+  return !!aEventTargetData->mFrame;
 }
 
 bool PresShell::EventHandler::MaybeHandleEventWithAccessibleCaret(

@@ -105,8 +105,7 @@ nsresult nsPluginStreamListenerPeer::Initialize(
 }
 
 NS_IMETHODIMP
-nsPluginStreamListenerPeer::OnStartRequest(nsIRequest* request,
-                                           nsISupports* aContext) {
+nsPluginStreamListenerPeer::OnStartRequest(nsIRequest* request) {
   nsresult rv = NS_OK;
   AUTO_PROFILER_LABEL("nsPluginStreamListenerPeer::OnStartRequest", OTHER);
 
@@ -277,7 +276,7 @@ nsresult nsPluginStreamListenerPeer::SetStreamOffset(int32_t value) {
 }
 
 NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(
-    nsIRequest* request, nsISupports* aContext, nsIInputStream* aIStream,
+    nsIRequest* request, nsIInputStream* aIStream,
     uint64_t sourceOffset, uint32_t aLength) {
   if (mRequests.IndexOfObject(request) == -1) {
     MOZ_ASSERT(false, "Received OnDataAvailable for untracked request.");
@@ -311,7 +310,6 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(
 }
 
 NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest* request,
-                                                        nsISupports* aContext,
                                                         nsresult aStatus) {
   nsresult rv = NS_OK;
 

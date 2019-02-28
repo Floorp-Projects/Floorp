@@ -1106,7 +1106,7 @@ nsContextMenu.prototype = {
     saveAsListener.prototype = {
       extListener: null,
 
-      onStartRequest: function saveLinkAs_onStartRequest(aRequest, aContext) {
+      onStartRequest: function saveLinkAs_onStartRequest(aRequest) {
         // if the timer fired, the error status will have been caused by that,
         // and we'll be restarting in onStopRequest, so no reason to notify
         // the user
@@ -1137,10 +1137,10 @@ nsContextMenu.prototype = {
         this.extListener =
           extHelperAppSvc.doContent(channel.contentType, aRequest,
                                     null, true, window);
-        this.extListener.onStartRequest(aRequest, aContext);
+        this.extListener.onStartRequest(aRequest);
       },
 
-      onStopRequest: function saveLinkAs_onStopRequest(aRequest, aContext,
+      onStopRequest: function saveLinkAs_onStopRequest(aRequest,
                                                        aStatusCode) {
         if (aStatusCode == NS_ERROR_SAVE_LINK_AS_TIMEOUT) {
           // do it the old fashioned way, which will pick the best filename
@@ -1149,13 +1149,13 @@ nsContextMenu.prototype = {
                   doc, isContentWindowPrivate);
         }
         if (this.extListener)
-          this.extListener.onStopRequest(aRequest, aContext, aStatusCode);
+          this.extListener.onStopRequest(aRequest, aStatusCode);
       },
 
-      onDataAvailable: function saveLinkAs_onDataAvailable(aRequest, aContext,
+      onDataAvailable: function saveLinkAs_onDataAvailable(aRequest,
                                                            aInputStream,
                                                            aOffset, aCount) {
-        this.extListener.onDataAvailable(aRequest, aContext, aInputStream,
+        this.extListener.onDataAvailable(aRequest, aInputStream,
                                          aOffset, aCount);
       },
     };

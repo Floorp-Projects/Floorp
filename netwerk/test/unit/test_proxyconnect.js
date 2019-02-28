@@ -65,14 +65,14 @@ var transportAvailable = false;
 var listener = {
   expectedCode: -1, // uninitialized
 
-  onStartRequest: function test_onStartR(request, ctx) {
+  onStartRequest: function test_onStartR(request) {
   },
 
   onDataAvailable: function test_ODA() {
     do_throw("Should not get any data!");
   },
 
-  onStopRequest: function test_onStopR(request, ctx, status) {
+  onStopRequest: function test_onStopR(request, status) {
     if (state === STATE_COMPLETED) {
       Assert.equal(transportAvailable, false, 'transport available not called');
       Assert.equal(status, 0x80004005, 'error code matches');

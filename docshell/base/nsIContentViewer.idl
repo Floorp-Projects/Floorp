@@ -232,10 +232,6 @@ interface nsIContentViewer : nsISupports
    * Set collector for navigation timing data (load, unload events).
    */
   [noscript,notxpcom,nostdcall] void setNavigationTiming(in nsDOMNavigationTimingPtr aTiming);
-  /*
-  Scrolls to a given DOM content node. 
-  */
-  void scrollToNode(in Node node);
 
   /** The amount by which to scale all text. Default is 1.0. */
   attribute float textZoom;

@@ -228,6 +228,8 @@ static int GetEffectiveSandboxLevel(GeckoProcessType aType) {
       }
       return 0;
 #endif
+    case GeckoProcessType_RDD:
+      return PR_GetEnv("MOZ_DISABLE_RDD_SANDBOX") == nullptr ? 1 : 0;
     default:
       return 0;
   }
@@ -277,12 +279,13 @@ void SandboxLaunchPrepare(GeckoProcessType aType,
   switch (aType) {
 #ifdef MOZ_GMP_SANDBOX
     case GeckoProcessType_GMPlugin:
+#endif
+    case GeckoProcessType_RDD:
       if (level >= 1) {
         canChroot = true;
         flags |= CLONE_NEWNET | CLONE_NEWIPC;
       }
       break;
-#endif
 #ifdef MOZ_CONTENT_SANDBOX
     case GeckoProcessType_Content:
       if (level >= 4) {

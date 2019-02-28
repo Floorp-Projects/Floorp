@@ -78,13 +78,13 @@ WebVTTListener::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
 }
 
 NS_IMETHODIMP
-WebVTTListener::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
+WebVTTListener::OnStartRequest(nsIRequest* aRequest) {
   VTT_LOG("WebVTTListener::OnStartRequest\n");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-WebVTTListener::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+WebVTTListener::OnStopRequest(nsIRequest* aRequest,
                               nsresult aStatus) {
   VTT_LOG("WebVTTListener::OnStopRequest\n");
   if (NS_FAILED(aStatus)) {
@@ -119,7 +119,7 @@ nsresult WebVTTListener::ParseChunk(nsIInputStream* aInStream, void* aClosure,
 }
 
 NS_IMETHODIMP
-WebVTTListener::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+WebVTTListener::OnDataAvailable(nsIRequest* aRequest,
                                 nsIInputStream* aStream, uint64_t aOffset,
                                 uint32_t aCount) {
   VTT_LOG("WebVTTListener::OnDataAvailable\n");

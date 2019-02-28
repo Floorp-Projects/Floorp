@@ -71,7 +71,7 @@ def update_checkpoint_paths(checkpoint_files, checkpoints):
                 print "found files but couldn't find %s" % name
 
 
-def create_suite(name, node, data_path, checkpoints=CHECKPOINTS):
+def create_suite(name, node, data_path, checkpoints=CHECKPOINTS, alertThreshold=None):
     """
     Creates a suite suitable for adding to a perfherder blob. Calculates the
     geometric mean of the checkpoint values and adds that to the suite as
@@ -81,6 +81,7 @@ def create_suite(name, node, data_path, checkpoints=CHECKPOINTS):
     :param node: The path of the data node to extract data from.
     :param data_path: The directory to retrieve data from.
     :param checkpoints: Which checkpoints to include.
+    :param alertThreshold: The percentage of change that triggers an alert.
     """
     suite = {
         'name': name,
@@ -88,6 +89,9 @@ def create_suite(name, node, data_path, checkpoints=CHECKPOINTS):
         'lowerIsBetter': True,
         'units': 'bytes'
     }
+
+    if alertThreshold:
+        suite['alertThreshold'] = alertThreshold
 
     extra_opts = []
     # The stylo attributes override each other.
@@ -161,7 +165,8 @@ def create_perf_data(data_path, perf_suites=PERF_SUITES, checkpoints=CHECKPOINTS
 
     for suite in perf_suites:
         perf_blob['suites'].append(create_suite(
-            suite['name'], suite['node'], data_path, checkpoints))
+            suite['name'], suite['node'], data_path, checkpoints,
+            suite.get('alertThreshold')))
 
     return perf_blob
 
