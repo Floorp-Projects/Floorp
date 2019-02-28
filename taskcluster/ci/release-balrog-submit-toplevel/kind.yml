@@ -26,7 +26,6 @@ job-defaults:
          by-release-level:
             production: download.mozilla.org
             staging: bouncer-bouncer-releng.stage.mozaws.net
-      platforms: ["linux", "linux64", "macosx64", "win32", "win64", "win64-aarch64"]
    whats-new-config: browser/config/whats_new_page.yml
 
 jobs:
@@ -62,6 +61,7 @@ jobs:
                release(-rc)?: ["firefox-release-cdntest", "firefox-release-localtest"]
                esr60: ["firefox-esr60-cdntest", "firefox-esr60-localtest"]
                default: []
+         platforms: ["linux", "linux64", "macosx64", "win32", "win64", "win64-aarch64"]
       treeherder:
          platform: firefox-release/opt
          symbol: Rel(BPFx)
@@ -81,6 +81,7 @@ jobs:
                production: [521]
                staging: [521]
          rules-to-update: ["esr52-cdntest", "esr52-localtest"]
+         platforms: ["linux", "linux64", "macosx64", "win32", "win64"]
          blob-suffix: -bz2
          complete-mar-filename-pattern: '%s-%s.bz2.complete.mar'
          complete-mar-bouncer-product-pattern: '%s-%s-complete-bz2'
@@ -100,6 +101,7 @@ jobs:
          channel-names: ["aurora", "aurora-localtest", "aurora-cdntest"]
          publish-rules: [10]
          rules-to-update: ["devedition-cdntest", "devedition-localtest"]
+         platforms: ["linux", "linux64", "macosx64", "win32", "win64"]
       treeherder:
          platform: devedition-release/opt
          symbol: Rel(BPDev)
