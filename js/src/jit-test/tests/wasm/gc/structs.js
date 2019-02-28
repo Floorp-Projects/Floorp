@@ -6,7 +6,7 @@ var bin = wasmTextToBinary(
     `(module
       (gc_feature_opt_in 3)
 
-      (table 2 anyfunc)
+      (table 2 funcref)
       (elem (i32.const 0) $doit $doitagain)
 
       ;; Type array has a mix of types

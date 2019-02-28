@@ -177,7 +177,7 @@ assertErrorMessage(() => wasmCompile(
     `(module
       (gc_feature_opt_in 3)
       (type $box (struct (field $val i32)))
-      (table (export "tbl") 1 anyfunc)
+      (table (export "tbl") 1 funcref)
       (elem (i32.const 0) $f1)
       (func $f1 (param (ref $box)) (unreachable)))`),
                    WebAssembly.CompileError,
@@ -187,7 +187,7 @@ assertErrorMessage(() => wasmCompile(
     `(module
       (gc_feature_opt_in 3)
       (type $box (struct (field $val i32)))
-      (table (export "tbl") 1 anyfunc)
+      (table (export "tbl") 1 funcref)
       (elem (i32.const 0) $f1)
       (func $f1 (result (ref $box)) (ref.null)))`),
                    WebAssembly.CompileError,
@@ -196,7 +196,7 @@ assertErrorMessage(() => wasmCompile(
 assertEq(typeof wasmCompile(
     `(module
       (gc_feature_opt_in 3)
-      (table (export "tbl") 1 anyfunc)
+      (table (export "tbl") 1 funcref)
       (elem (i32.const 0) $f1)
       (func $f1 (param anyref) (unreachable)))`),
          "object");
@@ -204,7 +204,7 @@ assertEq(typeof wasmCompile(
 assertEq(typeof wasmCompile(
     `(module
       (gc_feature_opt_in 3)
-      (table (export "tbl") 1 anyfunc)
+      (table (export "tbl") 1 funcref)
       (elem (i32.const 0) $f1)
       (func $f1 (result anyref) (ref.null)))`),
          "object");
@@ -215,7 +215,7 @@ assertErrorMessage(() => wasmCompile(
     `(module
       (gc_feature_opt_in 3)
       (type $box (struct (field $val i32)))
-      (import "m" "tbl" (table 1 anyfunc))
+      (import "m" "tbl" (table 1 funcref))
       (elem (i32.const 0) $f1)
       (func $f1 (param (ref $box)) (unreachable)))`),
                    WebAssembly.CompileError,
@@ -225,7 +225,7 @@ assertErrorMessage(() => wasmCompile(
     `(module
       (gc_feature_opt_in 3)
       (type $box (struct (field $val i32)))
-      (import "m" "tbl" (table 1 anyfunc))
+      (import "m" "tbl" (table 1 funcref))
       (elem (i32.const 0) $f1)
       (func $f1 (result (ref $box)) (ref.null)))`),
                    WebAssembly.CompileError,
@@ -234,7 +234,7 @@ assertErrorMessage(() => wasmCompile(
 assertEq(typeof wasmCompile(
     `(module
       (gc_feature_opt_in 3)
-      (import "m" "tbl" (table 1 anyfunc))
+      (import "m" "tbl" (table 1 funcref))
       (elem (i32.const 0) $f1)
       (func $f1 (param anyref) (unreachable)))`),
          "object");
@@ -242,7 +242,7 @@ assertEq(typeof wasmCompile(
 assertEq(typeof wasmCompile(
     `(module
       (gc_feature_opt_in 3)
-      (import "m" "tbl" (table 1 anyfunc))
+      (import "m" "tbl" (table 1 funcref))
       (elem (i32.const 0) $f1)
       (func $f1 (result anyref) (ref.null)))`),
          "object");
@@ -254,7 +254,7 @@ assertErrorMessage(() => wasmCompile(
       (gc_feature_opt_in 3)
       (type $box (struct (field $val i32)))
       (type $fn (func (param (ref $box))))
-      (table (export "tbl") 1 anyfunc)
+      (table (export "tbl") 1 funcref)
       (func (param i32)
        (call_indirect $fn (ref.null) (get_local 0))))`),
                    WebAssembly.CompileError,
@@ -265,7 +265,7 @@ assertErrorMessage(() => wasmCompile(
       (gc_feature_opt_in 3)
       (type $box (struct (field $val i32)))
       (type $fn (func (result (ref $box))))
-      (table (export "tbl") 1 anyfunc)
+      (table (export "tbl") 1 funcref)
       (func (param i32) (result (ref $box))
        (call_indirect $fn (get_local 0))))`),
                    WebAssembly.CompileError,
@@ -275,7 +275,7 @@ assertEq(typeof wasmCompile(
     `(module
       (gc_feature_opt_in 3)
       (type $fn (func (param anyref)))
-      (table (export "tbl") 1 anyfunc)
+      (table (export "tbl") 1 funcref)
       (func (param i32)
        (call_indirect $fn (ref.null) (get_local 0))))`),
          "object");
@@ -284,7 +284,7 @@ assertEq(typeof wasmCompile(
     `(module
       (gc_feature_opt_in 3)
       (type $fn (func (result anyref)))
-      (table (export "tbl") 1 anyfunc)
+      (table (export "tbl") 1 funcref)
       (func (param i32) (result anyref)
        (call_indirect $fn (get_local 0))))`),
          "object");
@@ -296,7 +296,7 @@ assertErrorMessage(() => wasmCompile(
       (gc_feature_opt_in 3)
       (type $box (struct (field $val i32)))
       (type $fn (func (param (ref $box))))
-      (import "m" "tbl" (table 1 anyfunc))
+      (import "m" "tbl" (table 1 funcref))
       (func (param i32)
        (call_indirect $fn (ref.null) (get_local 0))))`),
                    WebAssembly.CompileError,
@@ -307,7 +307,7 @@ assertErrorMessage(() => wasmCompile(
       (gc_feature_opt_in 3)
       (type $box (struct (field $val i32)))
       (type $fn (func (result (ref $box))))
-      (import "m" "tbl" (table 1 anyfunc))
+      (import "m" "tbl" (table 1 funcref))
       (func (param i32) (result (ref $box))
        (call_indirect $fn (get_local 0))))`),
                    WebAssembly.CompileError,
@@ -317,7 +317,7 @@ assertEq(typeof wasmCompile(
     `(module
       (gc_feature_opt_in 3)
       (type $fn (func (param anyref)))
-      (import "m" "tbl" (table 1 anyfunc))
+      (import "m" "tbl" (table 1 funcref))
       (func (param i32)
        (call_indirect $fn (ref.null) (get_local 0))))`),
          "object");
@@ -326,7 +326,7 @@ assertEq(typeof wasmCompile(
     `(module
       (gc_feature_opt_in 3)
       (type $fn (func (result anyref)))
-      (import "m" "tbl" (table 1 anyfunc))
+      (import "m" "tbl" (table 1 funcref))
       (func (param i32) (result anyref)
        (call_indirect $fn (get_local 0))))`),
          "object");
@@ -339,7 +339,7 @@ assertEq(typeof wasmCompile(
           (gc_feature_opt_in 3)
           (type $box (struct (field $val i32)))
           (type $fn (func (param (ref $box)) (result i32)))
-          (table 1 anyfunc)
+          (table 1 funcref)
           (elem (i32.const 0) $f1)
           (func $f1 (param (ref $box)) (result i32) (i32.const 37))
           (func (export "f") (param i32) (result i32)

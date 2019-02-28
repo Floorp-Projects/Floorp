@@ -82,7 +82,7 @@ static HashNumber HashValue(const Value& v,
     return v.toSymbol()->hash();
   }
   if (v.isBigInt()) {
-    return v.toBigInt()->hash();
+    return MaybeForwarded(v.toBigInt())->hash();
   }
   if (v.isObject()) {
     return hcs.scramble(v.asRawBits());
@@ -423,8 +423,9 @@ static void TraceKey(Range& r, const HashableValue& key, JSTracer* trc) {
   HashableValue newKey = key.trace(trc);
 
   if (newKey.get() != key.get()) {
-    // The hash function only uses the bits of the Value, so it is safe to
-    // rekey even when the object or string has been modified by the GC.
+    // The hash function must take account of the fact that the thing being
+    // hashed may have been moved by GC. This is only an issue for BigInt as for
+    // other types the hash function only uses the bits of the Value.
     r.rekeyFront(newKey);
   }
 }

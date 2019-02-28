@@ -4,6 +4,9 @@
 
 #ifdef MOZILLA_INTERNAL_API
 
+#include "mozilla/Assertions.h"
+#include "mozilla/UniquePtr.h"
+
 #  include "ICUUtils.h"
 #  include "mozilla/Preferences.h"
 #  include "mozilla/intl/LocaleService.h"
@@ -15,6 +18,17 @@
 
 using namespace mozilla;
 using mozilla::intl::LocaleService;
+
+class NumberFormatDeleter {
+ public:
+  void operator()(UNumberFormat* aPtr) {
+    MOZ_ASSERT(aPtr != nullptr,
+               "UniquePtr deleter shouldn't be called for nullptr");
+    unum_close(aPtr);
+  }
+};
+
+using UniqueUNumberFormat = UniquePtr<UNumberFormat, NumberFormatDeleter>;
 
 /**
  * This pref just controls whether we format the number with grouping separator
@@ -91,7 +105,7 @@ void ICUUtils::LanguageTagIterForContent::GetNext(nsACString& aBCP47LangTag) {
   aLangTags.GetNext(langTag);
   while (!langTag.IsEmpty()) {
     UErrorCode status = U_ZERO_ERROR;
-    AutoCloseUNumberFormat format(
+    UniqueUNumberFormat format(
         unum_open(UNUM_DECIMAL, nullptr, 0, langTag.get(), nullptr, &status));
     // Since unum_setAttribute have no UErrorCode parameter, we have to
     // check error status.
@@ -99,14 +113,14 @@ void ICUUtils::LanguageTagIterForContent::GetNext(nsACString& aBCP47LangTag) {
       aLangTags.GetNext(langTag);
       continue;
     }
-    unum_setAttribute(format, UNUM_GROUPING_USED,
+    unum_setAttribute(format.get(), UNUM_GROUPING_USED,
                       LocaleNumberGroupingIsEnabled());
     // ICU default is a maximum of 3 significant fractional digits. We don't
     // want that limit, so we set it to the maximum that a double can represent
     // (14-16 decimal fractional digits).
-    unum_setAttribute(format, UNUM_MAX_FRACTION_DIGITS, 16);
-    int32_t length = unum_formatDouble(format, aValue, buffer, kBufferSize,
-                                       nullptr, &status);
+    unum_setAttribute(format.get(), UNUM_MAX_FRACTION_DIGITS, 16);
+    int32_t length = unum_formatDouble(format.get(), aValue, buffer,
+                                       kBufferSize, nullptr, &status);
     NS_ASSERTION(length < kBufferSize && status != U_BUFFER_OVERFLOW_ERROR &&
                      status != U_STRING_NOT_TERMINATED_WARNING,
                  "Need a bigger buffer?!");
@@ -133,16 +147,17 @@ void ICUUtils::LanguageTagIterForContent::GetNext(nsACString& aBCP47LangTag) {
   aLangTags.GetNext(langTag);
   while (!langTag.IsEmpty()) {
     UErrorCode status = U_ZERO_ERROR;
-    AutoCloseUNumberFormat format(
+    UniqueUNumberFormat format(
         unum_open(UNUM_DECIMAL, nullptr, 0, langTag.get(), nullptr, &status));
     if (!LocaleNumberGroupingIsEnabled()) {
-      unum_setAttribute(format.rwget(), UNUM_GROUPING_USED, UBool(0));
+      unum_setAttribute(format.get(), UNUM_GROUPING_USED, UBool(0));
     }
     int32_t parsePos = 0;
     static_assert(sizeof(UChar) == 2 && sizeof(nsAString::char_type) == 2,
                   "Unexpected character size - the following cast is unsafe");
     double val =
-        unum_parseDouble(format, (const UChar*)PromiseFlatString(aValue).get(),
+        unum_parseDouble(format.get(),
+                         (const UChar*)PromiseFlatString(aValue).get(),
                          length, &parsePos, &status);
     if (U_SUCCESS(status) && parsePos == (int32_t)length) {
       return val;

@@ -30,7 +30,7 @@ function do_test(insn1, insn2, errKind, errText, isMem, haveMemOrTable)
                ${mem_init}
               `;
     } else {
-        let tab_def  = haveMemOrTable ? "(table 30 30 anyfunc)" : "";
+        let tab_def  = haveMemOrTable ? "(table 30 30 funcref)" : "";
         let tab_init = haveMemOrTable
                        ? `(elem (i32.const 2) 3 1 4 1)
                           (elem passive 2 7 1 8)
