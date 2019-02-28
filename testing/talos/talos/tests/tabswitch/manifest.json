@@ -5,19 +5,19 @@
     }
   },
   "manifest_version": 2,
-  "name": "TPS (tabswitch) Talos Test",
+  "name": "Tabswitch Talos Test",
   "version": "0.1",
   "permissions": [],
   "background": {
     "scripts": ["background.js"]
   },
   "experiment_apis": {
-    "tps": {
+    "tabswitch": {
       "schema": "schema.json",
       "parent": {
         "scopes": ["addon_parent"],
         "script": "api.js",
-        "paths": [["tps"]]
+        "paths": [["tabswitch"]]
       }
     }
   }

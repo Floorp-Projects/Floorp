@@ -27,9 +27,9 @@ var FontBuilder = {
     let defaultFont = null;
     // Load Font Lists
     let fonts = await this.enumerator.EnumerateFontsAsync(aLanguage, aFontType);
-    if (fonts.length > 0)
+    if (fonts.length > 0) {
       defaultFont = this.enumerator.getDefaultFont(aLanguage, aFontType);
-    else {
+    } else {
       fonts = await this.enumerator.EnumerateFontsAsync(aLanguage, "");
       if (fonts.length > 0)
         defaultFont = this.enumerator.getDefaultFont(aLanguage, "");

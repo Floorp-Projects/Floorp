@@ -465,7 +465,7 @@ static const char* const kBinaryFileExtensions[] = {
     ".bash",  // Linux shell
     ".bat",   // Windows shell
     //".bhx",
-    //".bin",
+    ".bin",
     ".btapp",      // uTorrent and Transmission
     ".btinstall",  // uTorrent and Transmission
     ".btkey",      // uTorrent and Transmission

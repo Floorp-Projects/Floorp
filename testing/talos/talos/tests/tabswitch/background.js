@@ -1,7 +1,7 @@
 /* globals browser */
 
 /**
- * The TPS test is a Pageloader test, meaning that the tps.manifest file
+ * The tabswitch test is a Pageloader test, meaning that the tabswitch.manifest file
  * tells Talos to load a particular page. The loading of that page signals
  * the start of the test. It's also where results need to go, as the
  * Talos gunk augments the loaded page with a special tpRecordTime
@@ -10,4 +10,4 @@
 
 let processScriptPath = "content/tabswitch-content-process.js";
 
-browser.tps.setup({ processScriptPath });
+browser.tabswitch.setup({ processScriptPath });

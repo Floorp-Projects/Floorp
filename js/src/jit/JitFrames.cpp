@@ -1022,7 +1022,8 @@ uint8_t* alignDoubleSpillWithOffset(uint8_t* pointer, int32_t offset) {
   return reinterpret_cast<uint8_t*>(address);
 }
 
-static void TraceJitExitFrameCopiedArguments(JSTracer* trc, const VMFunction* f,
+static void TraceJitExitFrameCopiedArguments(JSTracer* trc,
+                                             const VMFunctionData* f,
                                              ExitFooterFrame* footer) {
   uint8_t* doubleArgs = reinterpret_cast<uint8_t*>(footer);
   doubleArgs = alignDoubleSpillWithOffset(doubleArgs, sizeof(intptr_t));
@@ -1044,7 +1045,8 @@ static void TraceJitExitFrameCopiedArguments(JSTracer* trc, const VMFunction* f,
   }
 }
 #else
-static void TraceJitExitFrameCopiedArguments(JSTracer* trc, const VMFunction* f,
+static void TraceJitExitFrameCopiedArguments(JSTracer* trc,
+                                             const VMFunctionData* f,
                                              ExitFooterFrame* footer) {
   // This is NO-OP on other platforms.
 }
@@ -1127,7 +1129,7 @@ static void TraceJitExitFrame(JSTracer* trc, const JSJitFrameIter& frame) {
 
   MOZ_ASSERT(frame.exitFrame()->isWrapperExit());
 
-  const VMFunction* f = footer->function();
+  const VMFunctionData* f = footer->function();
   MOZ_ASSERT(f);
 
   // Trace arguments of the VM wrapper.

@@ -389,31 +389,33 @@ nsBrowserContentHandler.prototype = {
           chromeParam == "chrome://browser/content/preferences/preferences.xul") {
         openPreferences(cmdLine, {origin: "commandLineLegacy"});
         cmdLine.preventDefault = true;
-      } else try {
-        let resolvedURI = resolveURIInternal(cmdLine, chromeParam);
-        let isLocal = uri => {
-          let localSchemes = new Set(["chrome", "file", "resource"]);
-          if (uri instanceof Ci.nsINestedURI) {
-            uri = uri.QueryInterface(Ci.nsINestedURI).innerMostURI;
+      } else {
+        try {
+          let resolvedURI = resolveURIInternal(cmdLine, chromeParam);
+          let isLocal = uri => {
+            let localSchemes = new Set(["chrome", "file", "resource"]);
+            if (uri instanceof Ci.nsINestedURI) {
+              uri = uri.QueryInterface(Ci.nsINestedURI).innerMostURI;
+            }
+            return localSchemes.has(uri.scheme);
+          };
+          if (isLocal(resolvedURI)) {
+            // If the URI is local, we are sure it won't wrongly inherit chrome privs
+            let features = "chrome,dialog=no,all" + this.getFeatures(cmdLine);
+            // Provide 1 null argument, as openWindow has a different behavior
+            // when the arg count is 0.
+            let argArray = Cc["@mozilla.org/array;1"]
+                            .createInstance(Ci.nsIMutableArray);
+            argArray.appendElement(null);
+            Services.ww.openWindow(null, resolvedURI.spec, "_blank", features, argArray);
+            cmdLine.preventDefault = true;
+          } else {
+            dump("*** Preventing load of web URI as chrome\n");
+            dump("    If you're trying to load a webpage, do not pass --chrome.\n");
           }
-          return localSchemes.has(uri.scheme);
-        };
-        if (isLocal(resolvedURI)) {
-          // If the URI is local, we are sure it won't wrongly inherit chrome privs
-          let features = "chrome,dialog=no,all" + this.getFeatures(cmdLine);
-          // Provide 1 null argument, as openWindow has a different behavior
-          // when the arg count is 0.
-          let argArray = Cc["@mozilla.org/array;1"]
-                           .createInstance(Ci.nsIMutableArray);
-          argArray.appendElement(null);
-          Services.ww.openWindow(null, resolvedURI.spec, "_blank", features, argArray);
-          cmdLine.preventDefault = true;
-        } else {
-          dump("*** Preventing load of web URI as chrome\n");
-          dump("    If you're trying to load a webpage, do not pass --chrome.\n");
+        } catch (e) {
+          Cu.reportError(e);
         }
-      } catch (e) {
-        Cu.reportError(e);
       }
     }
     if (cmdLine.handleFlag("preferences", false)) {

@@ -189,7 +189,7 @@ add_task(async function testBrowserActionTelemetryResults() {
   await extension.startup();
 
   // Make sure the mouse isn't hovering over the browserAction widget to start.
-  EventUtils.synthesizeMouseAtCenter(gURLBar, {type: "mouseover"}, window);
+  EventUtils.synthesizeMouseAtCenter(gURLBar.textbox, {type: "mouseover"}, window);
 
   let widget = getBrowserActionWidget(extension).forWindow(window);
 

@@ -153,7 +153,6 @@ class UrlbarInput {
   }
 
   closePopup() {
-    this.controller.cancelQuery();
     this.view.close();
   }
 
@@ -371,6 +370,9 @@ class UrlbarInput {
         break;
       }
       case UrlbarUtils.RESULT_TYPE.OMNIBOX: {
+        // The urlbar needs to revert to the loaded url when a command is
+        // handled by the extension.
+        this.handleRevert();
         // We don't directly handle a load when an Omnibox API result is picked,
         // instead we forward the request to the WebExtension itself, because
         // the value may not even be a url.
@@ -950,7 +952,7 @@ class UrlbarInput {
 
   _on_blur(event) {
     this.formatValue();
-    this.closePopup();
+    this.view.close(UrlbarUtils.CANCEL_REASON.BLUR);
   }
 
   _on_focus(event) {

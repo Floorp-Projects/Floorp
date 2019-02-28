@@ -64,52 +64,6 @@ var Utils = Object.freeze({
   },
 
   /**
-   * A function that will recursively call |cb| to collect data for all
-   * non-dynamic frames in the current frame/docShell tree.
-   *
-   * @param {mozIDOMWindowProxy} frame A DOM window or content frame for which
-   *                                   data will be collected.
-   * @param {...function} dataCollectors One or more data collection functions
-   *                                     that will be called once for each non-
-   *                                     dynamic frame in the given frame tree,
-   *                                     and which should return the data they
-   *                                     wish to save for that respective frame.
-   * @return {object[]} An array with one entry per dataCollector, containing
-   *                    the collected data as a nested data structure according
-   *                    to the layout of the frame tree, or null if no data was
-   *                    returned by the respective dataCollector.
-   */
-  mapFrameTree(frame, ...dataCollectors) {
-    // Collect data for the current frame.
-    let objs = dataCollectors.map(dataCollector => dataCollector(frame.document) || {});
-    let children = dataCollectors.map(() => []);
-
-    // Recurse into child frames.
-    SessionStoreUtils.forEachNonDynamicChildFrame(frame, (subframe, index) => {
-      let results = this.mapFrameTree(subframe, ...dataCollectors);
-      if (!results) {
-        return;
-      }
-
-      for (let j = results.length - 1; j >= 0; --j) {
-        if (!results[j] || !Object.getOwnPropertyNames(results[j]).length) {
-          continue;
-        }
-        children[j][index] = results[j];
-      }
-    });
-
-    for (let i = objs.length - 1; i >= 0; --i) {
-      if (!children[i].length) {
-        continue;
-      }
-      objs[i].children = children[i];
-    }
-
-    return objs.map((obj) => Object.getOwnPropertyNames(obj).length ? obj : null);
-  },
-
-  /**
    * Restores frame tree |data|, starting at the given root |frame|. As the
    * function recurses into descendant frames it will call cb(frame, data) for
    * each frame it encounters, starting with the given root.
