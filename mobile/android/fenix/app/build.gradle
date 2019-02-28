@@ -106,6 +106,11 @@ android {
 }
 
 android.applicationVariants.all { variant ->
+
+// -------------------------------------------------------------------------------------------------
+// Set up kotlin-allopen plugin for writing tests
+// -------------------------------------------------------------------------------------------------
+
     boolean hasTest = gradle.startParameter.taskNames.find {it.contains("test") || it.contains("Test")} != null
     if (hasTest) {
         apply plugin: 'kotlin-allopen'
@@ -113,12 +118,14 @@ android.applicationVariants.all { variant ->
             annotation("org.mozilla.fenix.test.Mockable")
         }
     }
-}
 
-android.applicationVariants.all { variant ->
+// -------------------------------------------------------------------------------------------------
+// Generate version codes for builds
+// -------------------------------------------------------------------------------------------------
+
     def buildType = variant.buildType.name
 
-    if (buildType == "release" || buildType == "nightly") {
+    if (buildType == "release") {
         def versionCode = generatedVersionCode
 
         // The Google Play Store does not allow multiple APKs for the same app that all have the
@@ -144,6 +151,57 @@ android.applicationVariants.all { variant ->
     println("Build type:   " + buildType)
     println("Flavor:       " + variant.flavorName)
     println("Version code: " + variant.mergedFlavor.versionCode)
+
+// -------------------------------------------------------------------------------------------------
+// BuildConfig: Set variables for Sentry, Crash Reporting, and Telemetry
+// -------------------------------------------------------------------------------------------------
+
+    // Reading sentry token from local file (if it exists). In a release task on taskcluster it will be available.
+    try {
+        def token = new File("${rootDir}/.sentry_token").text.trim()
+        buildConfigField 'String', 'SENTRY_TOKEN', '"' + token + '"'
+    } catch (FileNotFoundException ignored) {
+        buildConfigField 'String', 'SENTRY_TOKEN', 'null'
+    }
+
+    // Activating crash reporting only if command line parameter was provided (in automation)
+    if (project.hasProperty("crashReports") && project.property("crashReports") == "true") {
+        buildConfigField 'boolean', 'CRASH_REPORTING', 'true'
+    } else {
+        buildConfigField 'boolean', 'CRASH_REPORTING', 'false'
+    }
+
+    // Activating telemetry only if command line parameter was provided (in automation)
+    if (project.hasProperty("telemetry") && project.property("telemetry") == "true") {
+        buildConfigField 'boolean', 'TELEMETRY', 'true'
+    } else {
+        buildConfigField 'boolean', 'TELEMETRY', 'false'
+    }
+
+    def buildDate = Config.generateBuildDate()
+    buildConfigField 'String', 'BUILD_DATE', '"' + buildDate + '"'
+
+// -------------------------------------------------------------------------------------------------
+// Adjust: Read token from locale file if it exists (Only release builds)
+// -------------------------------------------------------------------------------------------------
+
+    def variantName = variant.getName()
+
+    print("Adjust token: ")
+
+    if (variantName.contains("Release")) {
+        try {
+            def token = new File("${rootDir}/.adjust_token").text.trim()
+            buildConfigField 'String', 'ADJUST_TOKEN', '"' + token + '"'
+            println "(Added from .adjust_token file)"
+        } catch (FileNotFoundException ignored) {
+            buildConfigField 'String', 'ADJUST_TOKEN', 'null'
+            println("X_X")
+        }
+    } else {
+        buildConfigField 'String', 'ADJUST_TOKEN', 'null'
+        println("--")
+    }
 }
 
 androidExtensions {
@@ -219,6 +277,9 @@ dependencies {
 
     implementation Deps.autodispose
 
+    implementation Deps.adjust
+    implementation Deps.installreferrer // Required by Adjust
+
     androidTestImplementation Deps.tools_test_runner
     androidTestImplementation Deps.tools_espresso_core
 
@@ -232,34 +293,6 @@ dependencies {
 
     implementation Deps.glide
     annotationProcessor Deps.glideAnnotationProcessor
-}
-
-
-android.applicationVariants.all { variant ->
-    // Reading sentry token from local file (if it exists). In a release task on taskcluster it will be available.
-    try {
-        def token = new File("${rootDir}/.sentry_token").text.trim()
-        buildConfigField 'String', 'SENTRY_TOKEN', '"' + token + '"'
-    } catch (FileNotFoundException ignored) {
-        buildConfigField 'String', 'SENTRY_TOKEN', 'null'
-    }
-
-    // Activating crash reporting only if command line parameter was provided (in automation)
-    if (project.hasProperty("crashReports") && project.property("crashReports") == "true") {
-        buildConfigField 'boolean', 'CRASH_REPORTING', 'true'
-    } else {
-        buildConfigField 'boolean', 'CRASH_REPORTING', 'false'
-    }
-
-    // Activating telemetry only if command line parameter was provided (in automation)
-    if (project.hasProperty("telemetry") && project.property("telemetry") == "true") {
-        buildConfigField 'boolean', 'TELEMETRY', 'true'
-    } else {
-        buildConfigField 'boolean', 'TELEMETRY', 'false'
-    }
-
-    def buildDate = Config.generateBuildDate()
-    buildConfigField 'String', 'BUILD_DATE', '"' + buildDate + '"'
 }
 
 if (project.hasProperty("raptor")) {

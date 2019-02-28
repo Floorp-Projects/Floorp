@@ -30,6 +30,8 @@ private object Versions {
     const val android_arch_navigation = "1.0.0-rc02"
 
     const val autodispose = "1.1.0"
+    const val adjust = "4.11.4"
+    const val installreferrer = "1.0"
 
     const val junit_jupiter = "5.3.2"
     const val mockito = "2.23.0"
@@ -127,6 +129,9 @@ object Deps {
     const val autodispose_android = "com.uber.autodispose:autodispose-android:${Versions.autodispose}"
     const val autodispose_android_aac = "com.uber.autodispose:autodispose-android-archcomponents:${Versions.autodispose}"
     const val autodispose_android_aac_test = "com.uber.autodispose:autodispose-android-archcomponents-test:${Versions.autodispose}"
+
+    const val adjust = "com.adjust.sdk:adjust-android:${Versions.adjust}"
+    const val installreferrer = "com.android.installreferrer:installreferrer:${Versions.installreferrer}"
 
     const val junit_jupiter_api = "org.junit.jupiter:junit-jupiter-api:${Versions.junit_jupiter}"
     const val junit_jupiter_params = "org.junit.jupiter:junit-jupiter-params:${Versions.junit_jupiter}"
