@@ -1695,11 +1695,10 @@ bool nsIFrame::ComputeBorderRadii(const BorderRadius& aBorderRadius,
     nscoord sum = aRadii[hc1] + aRadii[hc2];
     if (sum) {
       haveRadius = true;
-    }
-
-    // avoid floating point division in the normal case
-    if (length < sum) {
-      ratio = std::min(ratio, double(length) / sum);
+      // avoid floating point division in the normal case
+      if (length < sum) {
+        ratio = std::min(ratio, double(length) / sum);
+      }
     }
   }
   if (ratio < 1.0) {
