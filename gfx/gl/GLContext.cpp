@@ -1447,7 +1447,7 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
                                       CORE_SYMBOL(GetTexLevelParameteriv),
                                       END_SYMBOLS};
   const bool warnOnFailures = ShouldSpew();
-  loader.LoadSymbols(devSymbols, warnOnFailures);
+  (void)loader.LoadSymbols(devSymbols, warnOnFailures);
 }
 
 #undef CORE_SYMBOL
