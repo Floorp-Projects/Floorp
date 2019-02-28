@@ -22,7 +22,8 @@ class HistoryItemMenu(
     private val menuItems by lazy {
         listOf(
             SimpleBrowserMenuItem(
-                context.getString(R.string.history_delete_item)
+                context.getString(R.string.history_delete_item),
+                R.color.photonRed60
             ) {
                 onItemTapped.invoke(Item.Delete)
             }
