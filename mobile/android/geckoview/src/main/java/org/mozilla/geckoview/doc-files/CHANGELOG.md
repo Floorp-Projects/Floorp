@@ -63,7 +63,10 @@ exclude: true
 - Added `GeckoWebExecutor.FETCH_FLAGS_NO_REDIRECTS`, which will cause `GeckoWebExecutor.fetch()` to not
   automatically follow HTTP redirects (e.g., 302).
 
+- Moved [`GeckoVRManager`][67.2] into the org.mozilla.geckoview package.
+
 [67.1]: ../GeckoSession.html#getDefaultUserAgent--
+[67.2]: ../GeckoVRManager.html
 
 - Initial WebExtension support. [`GeckoRuntime#registerWebExtension`][67.15]
   allows embedders to register a local web extension.
@@ -189,4 +192,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: b26e5e12a78512a9c18d1ba3441864ca66d3dde8
+[api-version]: df89fa914cfd095b37e696f3e767b55fc03a4835
