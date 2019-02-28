@@ -137,13 +137,13 @@ var TelemetryTestUtils = {
       if (i == index) {
         found = true;
         Assert.equal(val, expected,
-          `expected counts should match for ${histogram.name()} at index ${i}`);
+          `expected counts should match for the histogram index ${i}`);
       } else {
         Assert.equal(val, 0,
-          `unexpected counts should be zero for ${histogram.name()} at index ${i}`);
+          `unexpected counts should be zero for the histogram index ${i}`);
       }
     }
-    Assert.ok(found, `Should have found an entry for ${histogram.name()} at index ${index}`);
+    Assert.ok(found, `Should have found an entry for histogram index ${index}`);
   },
 
   /**
@@ -156,12 +156,12 @@ var TelemetryTestUtils = {
   assertKeyedHistogramSum(histogram, key, expected) {
     const snapshot = histogram.snapshot();
     if (expected === undefined) {
-      Assert.ok(!(key in snapshot), `The histogram ${histogram.name()} must not contain ${key}.`);
+      Assert.ok(!(key in snapshot), `The histogram must not contain ${key}.`);
       return;
     }
-    Assert.ok(key in snapshot, `The histogram ${histogram.name()} must contain ${key}.`);
+    Assert.ok(key in snapshot, `The histogram must contain ${key}.`);
     Assert.equal(snapshot[key].sum, expected,
-      `The key ${key} must contain the expected sum in ${histogram.name()}.`);
+      `The key ${key} must contain the expected sum.`);
   },
 
   /**
@@ -176,16 +176,16 @@ var TelemetryTestUtils = {
   assertKeyedHistogramValue(histogram, key, index, expected) {
     const snapshot = histogram.snapshot();
     if (!(key in snapshot)) {
-      Assert.ok(false, `The histogram ${histogram.name()} must contain ${key}`);
+      Assert.ok(false, `The histogram must contain ${key}`);
       return;
     }
     for (let [i, val] of Object.entries(snapshot[key].values)) {
       if (i == index) {
         Assert.equal(val, expected,
-          `expected counts should match for ${histogram.name()} at index ${i}`);
+          `expected counts should match for the histogram index ${i}`);
       } else {
         Assert.equal(val, 0,
-          `unexpected counts should be zero for ${histogram.name() } at index ${i}`);
+          `unexpected counts should be zero for the histogram index ${i}`);
       }
     }
   },
