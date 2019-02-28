@@ -8,11 +8,13 @@
 #include "nsISerializable.h"
 #include "nsSerializationHelper.h"
 
-namespace IPC {
+namespace mozilla {
+namespace ipc {
 
-void ParamTraits<nsIPrincipal>::Write(Message* aMsg, nsIPrincipal* aParam) {
+void IPDLParamTraits<nsIPrincipal>::Write(IPC::Message* aMsg, IProtocol* aActor,
+                                          nsIPrincipal* aParam) {
   bool isNull = !aParam;
-  WriteParam(aMsg, isNull);
+  WriteIPDLParam(aMsg, aActor, isNull);
   if (isNull) {
     return;
   }
@@ -24,13 +26,15 @@ void ParamTraits<nsIPrincipal>::Write(Message* aMsg, nsIPrincipal* aParam) {
     return;
   }
 
-  WriteParam(aMsg, principalString);
+  WriteIPDLParam(aMsg, aActor, principalString);
 }
 
-bool ParamTraits<nsIPrincipal>::Read(const Message* aMsg, PickleIterator* aIter,
-                                     RefPtr<nsIPrincipal>* aResult) {
+bool IPDLParamTraits<nsIPrincipal>::Read(const IPC::Message* aMsg,
+                                         PickleIterator* aIter,
+                                         IProtocol* aActor,
+                                         RefPtr<nsIPrincipal>* aResult) {
   bool isNull;
-  if (!ReadParam(aMsg, aIter, &isNull)) {
+  if (!ReadIPDLParam(aMsg, aIter, aActor, &isNull)) {
     return false;
   }
 
@@ -40,7 +44,7 @@ bool ParamTraits<nsIPrincipal>::Read(const Message* aMsg, PickleIterator* aIter,
   }
 
   nsCString principalString;
-  if (!ReadParam(aMsg, aIter, &principalString)) {
+  if (!ReadIPDLParam(aMsg, aIter, aActor, &principalString)) {
     return false;
   }
 
@@ -56,4 +60,5 @@ bool ParamTraits<nsIPrincipal>::Read(const Message* aMsg, PickleIterator* aIter,
   return true;
 }
 
-}  // namespace IPC
+}  // namespace ipc
+}  // namespace mozilla
