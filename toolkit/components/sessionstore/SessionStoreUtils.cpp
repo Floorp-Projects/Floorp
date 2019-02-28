@@ -252,26 +252,24 @@ SessionStoreUtils::AddDynamicFrameFilteredListener(
   }
 }
 
-/* static */ void SessionStoreUtils::CollectScrollPosition(
-    const GlobalObject& aGlobal, Document& aDocument,
-    SSScrollPositionDict& aRetVal) {
+static void CollectCurrentScrollPosition(JSContext* aCx, Document& aDocument,
+                                         Nullable<CollectedData>& aRetVal) {
   nsIPresShell* presShell = aDocument.GetShell();
   if (!presShell) {
     return;
   }
-
   nsPoint scrollPos = presShell->GetVisualViewportOffset();
   int scrollX = nsPresContext::AppUnitsToIntCSSPixels(scrollPos.x);
   int scrollY = nsPresContext::AppUnitsToIntCSSPixels(scrollPos.y);
 
   if ((scrollX != 0) || (scrollY != 0)) {
-    aRetVal.mScroll.Construct() = nsPrintfCString("%d,%d", scrollX, scrollY);
+    aRetVal.SetValue().mScroll.Construct() = nsPrintfCString("%d,%d", scrollX, scrollY);
   }
 }
 
 /* static */ void SessionStoreUtils::RestoreScrollPosition(
     const GlobalObject& aGlobal, nsGlobalWindowInner& aWindow,
-    const SSScrollPositionDict& aData) {
+    const CollectedData& aData) {
   if (!aData.mScroll.WasPassed()) {
     return;
   }
@@ -326,24 +324,24 @@ static bool IsValidCCNumber(nsAString& aValue) {
 // 477564.
 static const uint16_t kMaxTraversedXPaths = 100;
 
-// A helper function to append a element into mId or mXpath of CollectedFormData
+// A helper function to append a element into mId or mXpath of CollectedData
 static Record<nsString, OwningStringOrBooleanOrObject>::EntryType*
 AppendEntryToCollectedData(nsINode* aNode, const nsAString& aId,
                            uint16_t& aGeneratedCount,
-                           CollectedFormData& aRetVal) {
+                           Nullable<CollectedData>& aRetVal) {
   Record<nsString, OwningStringOrBooleanOrObject>::EntryType* entry;
   if (!aId.IsEmpty()) {
-    if (!aRetVal.mId.WasPassed()) {
-      aRetVal.mId.Construct();
+    if (!aRetVal.SetValue().mId.WasPassed()) {
+      aRetVal.SetValue().mId.Construct();
     }
-    auto& recordEntries = aRetVal.mId.Value().Entries();
+    auto& recordEntries = aRetVal.SetValue().mId.Value().Entries();
     entry = recordEntries.AppendElement();
     entry->mKey = aId;
   } else {
-    if (!aRetVal.mXpath.WasPassed()) {
-      aRetVal.mXpath.Construct();
+    if (!aRetVal.SetValue().mXpath.WasPassed()) {
+      aRetVal.SetValue().mXpath.Construct();
     }
-    auto& recordEntries = aRetVal.mXpath.Value().Entries();
+    auto& recordEntries = aRetVal.SetValue().mXpath.Value().Entries();
     entry = recordEntries.AppendElement();
     nsAutoString xpath;
     aNode->GenerateXPath(xpath);
@@ -361,7 +359,7 @@ AppendEntryToCollectedData(nsINode* aNode, const nsAString& aId,
  */
 static void CollectFromTextAreaElement(Document& aDocument,
                                        uint16_t& aGeneratedCount,
-                                       CollectedFormData& aRetVal) {
+                                       Nullable<CollectedData>& aRetVal) {
   RefPtr<nsContentList> textlist = NS_GetContentList(
       &aDocument, kNameSpaceID_XHTML, NS_LITERAL_STRING("textarea"));
   uint32_t length = textlist->Length(true);
@@ -405,7 +403,7 @@ static void CollectFromTextAreaElement(Document& aDocument,
  */
 static void CollectFromInputElement(JSContext* aCx, Document& aDocument,
                                     uint16_t& aGeneratedCount,
-                                    CollectedFormData& aRetVal) {
+                                    Nullable<CollectedData>& aRetVal) {
   RefPtr<nsContentList> inputlist = NS_GetContentList(
       &aDocument, kNameSpaceID_XHTML, NS_LITERAL_STRING("input"));
   uint32_t length = inputlist->Length(true);
@@ -517,7 +515,7 @@ static void CollectFromInputElement(JSContext* aCx, Document& aDocument,
  */
 static void CollectFromSelectElement(JSContext* aCx, Document& aDocument,
                                      uint16_t& aGeneratedCount,
-                                     CollectedFormData& aRetVal) {
+                                     Nullable<CollectedData>& aRetVal) {
   RefPtr<nsContentList> selectlist = NS_GetContentList(
       &aDocument, kNameSpaceID_XHTML, NS_LITERAL_STRING("select"));
   uint32_t length = selectlist->Length(true);
@@ -598,7 +596,7 @@ static void CollectFromSelectElement(JSContext* aCx, Document& aDocument,
   @return aRetVal: Form data encoded in an object.
  */
 static void CollectFromXULTextbox(Document& aDocument,
-                                  CollectedFormData& aRetVal) {
+                                  Nullable<CollectedData>& aRetVal) {
   nsAutoCString url;
   Unused << aDocument.GetDocumentURI()->GetSpecIgnoringRef(url);
   if (!url.EqualsLiteral("about:config")) {
@@ -643,34 +641,32 @@ static void CollectFromXULTextbox(Document& aDocument,
   }
 }
 
-/* static */ void SessionStoreUtils::CollectFormData(
-    const GlobalObject& aGlobal, Document& aDocument,
-    CollectedFormData& aRetVal) {
+static void CollectCurrentFormData(JSContext* aCx, Document& aDocument,
+                                   Nullable<CollectedData>& aRetVal) {
   uint16_t generatedCount = 0;
   /* textarea element */
   CollectFromTextAreaElement(aDocument, generatedCount, aRetVal);
   /* input element */
-  CollectFromInputElement(aGlobal.Context(), aDocument, generatedCount,
-                          aRetVal);
+  CollectFromInputElement(aCx, aDocument, generatedCount, aRetVal);
   /* select element */
-  CollectFromSelectElement(aGlobal.Context(), aDocument, generatedCount,
-                           aRetVal);
+  CollectFromSelectElement(aCx, aDocument, generatedCount, aRetVal);
   /* special case for about:config's search field */
   CollectFromXULTextbox(aDocument, aRetVal);
 
   Element* bodyElement = aDocument.GetBody();
   if (aDocument.HasFlag(NODE_IS_EDITABLE) && bodyElement) {
-    bodyElement->GetInnerHTML(aRetVal.mInnerHTML.Construct(), IgnoreErrors());
+    bodyElement->GetInnerHTML(aRetVal.SetValue().mInnerHTML.Construct(), IgnoreErrors());
   }
-  if (!aRetVal.mId.WasPassed() && !aRetVal.mXpath.WasPassed() &&
-      !aRetVal.mInnerHTML.WasPassed()) {
+
+  if (aRetVal.IsNull()) {
     return;
   }
+
   // Store the frame's current URL with its form data so that we can compare
   // it when restoring data to not inject form data into the wrong document.
   nsIURI* uri = aDocument.GetDocumentURI();
   if (uri) {
-    uri->GetSpecIgnoringRef(aRetVal.mUrl.Construct());
+    uri->GetSpecIgnoringRef(aRetVal.SetValue().mUrl.Construct());
   }
 }
 
@@ -854,7 +850,7 @@ static void SetRestoreData(JSContext* aCx, Element* aElement,
 }
 
 MOZ_CAN_RUN_SCRIPT
-static void SetInnerHTML(Document& aDocument, const CollectedFormData& aData) {
+static void SetInnerHTML(Document& aDocument, const CollectedData& aData) {
   RefPtr<Element> bodyElement = aDocument.GetBody();
   if (aDocument.HasFlag(NODE_IS_EDITABLE) && bodyElement) {
     IgnoredErrorResult rv;
@@ -915,7 +911,7 @@ static Element* FindNodeByXPath(JSContext* aCx, Document& aDocument,
 MOZ_CAN_RUN_SCRIPT_BOUNDARY
 /* static */ bool SessionStoreUtils::RestoreFormData(
     const GlobalObject& aGlobal, Document& aDocument,
-    const CollectedFormData& aData) {
+    const CollectedData& aData) {
   if (!aData.mUrl.WasPassed()) {
     return true;
   }
@@ -1154,4 +1150,74 @@ static void CollectedSessionStorageInternal(
       }
     }
   }
+}
+
+typedef void (*CollectorFunc)(JSContext* aCx, Document& aDocument, Nullable<CollectedData>& aRetVal);
+
+/**
+ * A function that will recursively call |CollectorFunc| to collect data for all
+ * non-dynamic frames in the current frame/docShell tree.
+ */
+static void CollectFrameTreeData(JSContext* aCx,
+                                 BrowsingContext* aBrowsingContext,
+                                 Nullable<CollectedData>& aRetVal,
+                                 CollectorFunc aFunc) {
+  nsPIDOMWindowOuter* window = aBrowsingContext->GetDOMWindow();
+  if (!window) {
+    return;
+  }
+
+  nsIDocShell* docShell = window->GetDocShell();
+  if (!docShell || docShell->GetCreatedDynamically()) {
+    return;
+  }
+
+  Document* document = window->GetDoc();
+  if (!document) {
+    return;
+  }
+
+  /* Collect data from current frame */
+  aFunc(aCx, *document, aRetVal);
+
+  /* Collect data from all child frame */
+  nsTArray<JSObject*> childrenData;
+  SequenceRooter<JSObject*> rooter(aCx, &childrenData);
+  uint32_t trailingNullCounter = 0;
+
+  nsTArray<RefPtr<BrowsingContext>> children;
+  aBrowsingContext->GetChildren(children);
+  for (uint32_t i = 0; i < children.Length(); i++) {
+    NullableRootedDictionary<CollectedData> data(aCx);
+    CollectFrameTreeData(aCx, children[i], data, aFunc);
+    if (data.IsNull()) {
+      childrenData.AppendElement(nullptr);
+      trailingNullCounter++;
+      continue;
+    }
+    JS::Rooted<JS::Value> jsval(aCx);
+    if (!ToJSValue(aCx, data.SetValue(), &jsval)) {
+      JS_ClearPendingException(aCx);
+      continue;
+    }
+    childrenData.AppendElement(&jsval.toObject());
+    trailingNullCounter = 0;
+  }
+
+  if (trailingNullCounter != childrenData.Length()) {
+    childrenData.TruncateLength(childrenData.Length() - trailingNullCounter);
+    aRetVal.SetValue().mChildren.Construct().SwapElements(childrenData);
+  }
+}
+
+/* static */ void SessionStoreUtils::CollectScrollPosition(
+    const GlobalObject& aGlobal, WindowProxyHolder& aWindow,
+    Nullable<CollectedData>& aRetVal) {
+  CollectFrameTreeData(aGlobal.Context(), aWindow.get(), aRetVal, CollectCurrentScrollPosition);
+}
+
+/* static */ void SessionStoreUtils::CollectFormData(
+    const GlobalObject& aGlobal, WindowProxyHolder& aWindow,
+    Nullable<CollectedData>& aRetVal) {
+  CollectFrameTreeData(aGlobal.Context(), aWindow.get(), aRetVal, CollectCurrentFormData);
 }

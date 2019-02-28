@@ -877,7 +877,7 @@ SessionStore.prototype = {
 
     // Store the form data.
     let content = aBrowser.contentWindow;
-    let [formdata] = Utils.mapFrameTree(content, SessionStoreUtils.collectFormData);
+    let formdata = SessionStoreUtils.collectFormData(content);
     formdata = PrivacyFilter.filterFormData(formdata || {});
 
     // If we found any form data, main content or frames, let's save it
@@ -916,8 +916,7 @@ SessionStore.prototype = {
 
     // Save the scroll position itself.
     let content = aBrowser.contentWindow;
-    let [scrolldata] =
-        Utils.mapFrameTree(content, SessionStoreUtils.collectScrollPosition);
+    let scrolldata = SessionStoreUtils.collectScrollPosition(content);
     scrolldata = scrolldata || {};
 
     // Save the current document resolution.

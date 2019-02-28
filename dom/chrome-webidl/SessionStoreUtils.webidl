@@ -77,7 +77,7 @@ namespace SessionStoreUtils {
    *         Returns null when there is no scroll data we want to store for the
    *         given |frame|.
    */
-  SSScrollPositionDict collectScrollPosition(Document document);
+  CollectedData? collectScrollPosition(WindowProxy window);
 
   /**
    * Restores scroll position data for any given |frame| in the frame hierarchy.
@@ -85,7 +85,7 @@ namespace SessionStoreUtils {
    * @param frame (DOMWindow)
    * @param value (object, see collectScrollPosition())
    */
-  void restoreScrollPosition(Window frame, optional SSScrollPositionDict data);
+  void restoreScrollPosition(Window frame, optional CollectedData data);
 
   /**
    * Collect form data for a given |frame| *not* including any subframes.
@@ -105,13 +105,12 @@ namespace SessionStoreUtils {
    *     }
    *   }
    *
-   * @param  doc
-   *         DOMDocument instance to obtain form data for.
    * @return object
-   *         Form data encoded in an object.
+   *         Returns null when there is no scroll data
    */
-  CollectedFormData collectFormData(Document document);
-  boolean restoreFormData(Document document, optional CollectedFormData data);
+  CollectedData? collectFormData(WindowProxy window);
+
+  boolean restoreFormData(Document document, optional CollectedData data);
 
   /**
    * Updates all sessionStorage "super cookies"
@@ -135,10 +134,6 @@ namespace SessionStoreUtils {
    void restoreSessionStorage(nsIDocShell docShell, record<DOMString, record<DOMString, DOMString>> data);
 };
 
-dictionary SSScrollPositionDict {
-  ByteString scroll;
-};
-
 dictionary CollectedFileListValue
 {
   required DOMString type;
@@ -154,10 +149,13 @@ dictionary CollectedNonMultipleSelectValue
 // object contains either a CollectedFileListValue or a CollectedNonMultipleSelectValue or Sequence<DOMString>
 typedef (DOMString or boolean or object) CollectedFormDataValue;
 
-dictionary CollectedFormData
+dictionary CollectedData
 {
+  ByteString scroll;
   record<DOMString, CollectedFormDataValue> id;
   record<DOMString, CollectedFormDataValue> xpath;
   DOMString innerHTML;
   ByteString url;
+  // mChildren contains CollectedData instances
+  sequence<object?> children;
 };
