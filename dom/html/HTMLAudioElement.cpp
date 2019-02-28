@@ -20,12 +20,31 @@
 #include "mozilla/dom/TimeRanges.h"
 #include "AudioStream.h"
 
-NS_IMPL_NS_NEW_HTML_ELEMENT(Audio)
+nsGenericHTMLElement* NS_NewHTMLAudioElement(
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
+    mozilla::dom::FromParser aFromParser) {
+  mozilla::dom::HTMLAudioElement* element =
+      new mozilla::dom::HTMLAudioElement(std::move(aNodeInfo));
+  element->Init();
+  return element;
+}
 
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ELEMENT_CLONE(HTMLAudioElement)
+nsresult HTMLAudioElement::Clone(mozilla::dom::NodeInfo* aNodeInfo,
+                                 nsINode** aResult) const {
+  *aResult = nullptr;
+  RefPtr<mozilla::dom::NodeInfo> ni(aNodeInfo);
+  HTMLAudioElement* it = new HTMLAudioElement(ni.forget());
+  it->Init();
+  nsCOMPtr<nsINode> kungFuDeathGrip = it;
+  nsresult rv = const_cast<HTMLAudioElement*>(this)->CopyInnerTo(it);
+  if (NS_SUCCEEDED(rv)) {
+    kungFuDeathGrip.swap(*aResult);
+  }
+  return rv;
+}
 
 HTMLAudioElement::HTMLAudioElement(already_AddRefed<NodeInfo>&& aNodeInfo)
     : HTMLMediaElement(std::move(aNodeInfo)) {
@@ -54,7 +73,8 @@ already_AddRefed<HTMLAudioElement> HTMLAudioElement::Audio(
   RefPtr<mozilla::dom::NodeInfo> nodeInfo = doc->NodeInfoManager()->GetNodeInfo(
       nsGkAtoms::audio, nullptr, kNameSpaceID_XHTML, ELEMENT_NODE);
 
-  RefPtr<HTMLAudioElement> audio = new HTMLAudioElement(nodeInfo.forget());
+  RefPtr<HTMLAudioElement> audio =
+      static_cast<HTMLAudioElement*>(NS_NewHTMLAudioElement(nodeInfo.forget()));
   audio->SetHTMLAttr(nsGkAtoms::preload, NS_LITERAL_STRING("auto"), aRv);
   if (aRv.Failed()) {
     return nullptr;

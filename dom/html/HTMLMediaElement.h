@@ -117,6 +117,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   explicit HTMLMediaElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+  void Init();
 
   void ReportCanPlayTelemetry();
 
@@ -1749,6 +1750,9 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // Report the Telemetry about whether media played over the specific time
   // threshold.
   void ReportPlayedTimeAfterBlockedTelemetry();
+
+  // True if Init() has been called after construction
+  bool mInitialized = false;
 
   // True if user has called load(), seek() or element has started playing
   // before. It's *only* use for checking autoplay policy
