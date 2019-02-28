@@ -42,7 +42,7 @@
 #define CHILD_PROCESS_SHUTDOWN_MESSAGE \
   NS_LITERAL_STRING("child-process-shutdown")
 
-// These must match the similar ones in E10SUtils.jsm.
+// These must match the similar ones in E10SUtils.jsm and ProcInfo.h.
 // Process names as reported by about:memory are defined in
 // ContentChild:RecvRemoteType.  Add your value there too or it will be called
 // "Web Content".
