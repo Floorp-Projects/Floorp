@@ -202,33 +202,6 @@ static const Class DebuggerSource_class = {
 
 /*** Utils ******************************************************************/
 
-/*
- * If fun is an interpreted function, remove any async function/generator
- * wrapper and return the underlying scripted function. Otherwise, return fun
- * unchanged.
- *
- * Async functions are implemented as native functions wrapped around a scripted
- * function. JSScripts hold ordinary inner JSFunctions in their object arrays,
- * and when we need to actually create a JS-visible function object, we build an
- * ordinary JS closure and apply the async wrapper to it. Async generators are
- * similar.
- *
- * This means that JSFunction::isInterpreted returns false for such functions,
- * even though their actual code is indeed JavaScript. Debugger should treat
- * async functions and generators like any other scripted function, so we must
- * carefully check for them whenever we want inspect a function.
- */
-
-static JSFunction* RemoveAsyncWrapper(JSFunction* fun) {
-  if (js::IsWrappedAsyncFunction(fun)) {
-    fun = js::GetUnwrappedAsyncFunction(fun);
-  } else if (js::IsWrappedAsyncGenerator(fun)) {
-    fun = js::GetUnwrappedAsyncGenerator(fun);
-  }
-
-  return fun;
-}
-
 static inline bool EnsureFunctionHasScript(JSContext* cx, HandleFunction fun) {
   if (fun->isInterpretedLazy()) {
     AutoRealm ar(cx, fun);
@@ -733,7 +706,7 @@ bool Debugger::getFrame(JSContext* cx, const FrameIter& iter,
     // Debugger.Frame object that isn't in `frames` because the generator
     // was suspended, popping the stack frame, and later resumed (and we
     // were not stepping, so did not pass through slowPathOnResumeFrame).
-    Rooted<GeneratorObject*> genObj(cx);
+    Rooted<AbstractGeneratorObject*> genObj(cx);
     GeneratorWeakMap::AddPtr gp;
     if (referent.isGeneratorFrame()) {
       {
@@ -757,9 +730,9 @@ bool Debugger::getFrame(JSContext* cx, const FrameIter& iter,
         }
       }
 
-      // If no GeneratorObject exists yet, we create a Debugger.Frame
+      // If no AbstractGeneratorObject exists yet, we create a Debugger.Frame
       // below anyway, and Debugger::onNewGenerator() will associate it
-      // with the GeneratorObject later when we hit JSOP_GENERATOR.
+      // with the AbstractGeneratorObject later when we hit JSOP_GENERATOR.
     }
 
     if (!frame) {
@@ -800,7 +773,8 @@ bool Debugger::getFrame(JSContext* cx, const FrameIter& iter,
   return true;
 }
 
-bool Debugger::addGeneratorFrame(JSContext* cx, Handle<GeneratorObject*> genObj,
+bool Debugger::addGeneratorFrame(JSContext* cx,
+                                 Handle<AbstractGeneratorObject*> genObj,
                                  HandleDebuggerFrame frameObj) {
   GeneratorWeakMap::AddPtr p = generatorFrames.lookupForAdd(genObj);
   if (p) {
@@ -925,7 +899,8 @@ bool Debugger::hasAnyLiveHooks(JSRuntime* rt) const {
   MOZ_ASSERT(frame.isGeneratorFrame());
   MOZ_ASSERT(frame.isDebuggee());
 
-  Rooted<GeneratorObject*> genObj(cx, GetGeneratorObjectForFrame(cx, frame));
+  Rooted<AbstractGeneratorObject*> genObj(
+      cx, GetGeneratorObjectForFrame(cx, frame));
   MOZ_ASSERT(genObj);
 
   // For each debugger, if there is an existing Debugger.Frame object for the
@@ -970,16 +945,16 @@ static void DebuggerFrame_maybeDecrementFrameScriptStepModeCount(
  */
 class MOZ_RAII AutoSetGeneratorRunning {
   int32_t resumeIndex_;
-  Rooted<GeneratorObject*> genObj_;
+  Rooted<AbstractGeneratorObject*> genObj_;
 
  public:
-  AutoSetGeneratorRunning(JSContext* cx, Handle<GeneratorObject*> genObj)
+  AutoSetGeneratorRunning(JSContext* cx,
+                          Handle<AbstractGeneratorObject*> genObj)
       : resumeIndex_(0), genObj_(cx, genObj) {
     if (genObj) {
       if (!genObj->isClosed() && genObj->isSuspended()) {
         // Yielding or awaiting.
-        resumeIndex_ =
-            genObj->getFixedSlot(GeneratorObject::RESUME_INDEX_SLOT).toInt32();
+        resumeIndex_ = genObj->resumeIndex();
         genObj->setRunning();
       } else {
         // Returning or throwing. The generator is already closed, if
@@ -992,8 +967,7 @@ class MOZ_RAII AutoSetGeneratorRunning {
   ~AutoSetGeneratorRunning() {
     if (genObj_) {
       MOZ_ASSERT(genObj_->isRunning());
-      genObj_->setFixedSlot(GeneratorObject::RESUME_INDEX_SLOT,
-                            Int32Value(resumeIndex_));
+      genObj_->setResumeIndex(resumeIndex_);
     }
   }
 };
@@ -1010,7 +984,7 @@ class MOZ_RAII AutoSetGeneratorRunning {
 
   // Determine if we are suspending this frame or popping it forever.
   bool suspending = false;
-  Rooted<GeneratorObject*> genObj(cx);
+  Rooted<AbstractGeneratorObject*> genObj(cx);
   if (frame.isGeneratorFrame()) {
     // If we're leaving successfully at a yield opcode, we're probably
     // suspending; the `isClosed()` check detects a debugger forced return
@@ -1087,9 +1061,9 @@ class MOZ_RAII AutoSetGeneratorRunning {
           AutoSetGeneratorRunning asgr(cx, genObj);
           success = handler->onPop(cx, frameobj, nextResumeMode, &nextValue);
         }
-        adjqi.runJobs();
         nextResumeMode = dbg->processParsedHandlerResult(
             ar, frame, pc, success, nextResumeMode, &nextValue);
+        adjqi.runJobs();
 
         // At this point, we are back in the debuggee compartment, and
         // any error has been wrapped up as a completion value.
@@ -1126,11 +1100,12 @@ class MOZ_RAII AutoSetGeneratorRunning {
 }
 
 /* static */ bool Debugger::slowPathOnNewGenerator(
-    JSContext* cx, AbstractFramePtr frame, Handle<GeneratorObject*> genObj) {
+    JSContext* cx, AbstractFramePtr frame,
+    Handle<AbstractGeneratorObject*> genObj) {
   // This is called from JSOP_GENERATOR, after default parameter expressions
   // are evaluated and well after onEnterFrame, so Debugger.Frame objects for
   // `frame` may already have been exposed to debugger code. The
-  // GeneratorObject for this generator call, though, has just been
+  // AbstractGeneratorObject for this generator call, though, has just been
   // created. It must be associated with any existing Debugger.Frames.
   bool ok = true;
   forEachDebuggerFrame(frame, [&](DebuggerFrame* frameObjPtr) {
@@ -1598,25 +1573,42 @@ static void AdjustGeneratorResumptionValue(JSContext* cx,
                                            AbstractFramePtr frame,
                                            ResumeMode& resumeMode,
                                            MutableHandleValue vp) {
-  if (resumeMode == ResumeMode::Return && frame && frame.isFunctionFrame() &&
-      frame.callee()->isGenerator()) {
-    // Treat `{return: <value>}` like a `return` statement. For generators,
-    // that means doing the work below. It's only what the debuggee would
-    // do for an ordinary `return` statement--using a few bytecode
-    // instructions--and it's simpler to do the work manually than to count
-    // on that bytecode sequence existing in the debuggee, somehow jump to
-    // it, and then avoid re-entering the debugger from it.
-    Rooted<GeneratorObject*> genObj(cx, GetGeneratorObjectForFrame(cx, frame));
+  if (resumeMode != ResumeMode::Return && resumeMode != ResumeMode::Throw) {
+    return;
+  }
+  if (!frame || !frame.isFunctionFrame()) {
+    return;
+  }
+
+  // To propagate out of memory in debuggee code.
+  auto getAndClearExceptionThenThrow = [&]() {
+    MOZ_ALWAYS_TRUE(cx->getPendingException(vp));
+    cx->clearPendingException();
+    resumeMode = ResumeMode::Throw;
+  };
+
+  // Treat `{return: <value>}` like a `return` statement. Simulate what the
+  // debuggee would do for an ordinary `return` statement--using a few bytecode
+  // instructions--and it's simpler to do the work manually than to count on
+  // that bytecode sequence existing in the debuggee, somehow jump to it, and
+  // then avoid re-entering the debugger from it.
+  // Similarly treat `{throw: <value>}` like a `throw` statement.
+  if (frame.callee()->isGenerator()) {
+    // Throw doesn't require any special processing for (async) generators.
+    if (resumeMode == ResumeMode::Throw) {
+      return;
+    }
+
+    // For (async) generators, that means doing the work below.
+    Rooted<AbstractGeneratorObject*> genObj(
+        cx, GetGeneratorObjectForFrame(cx, frame));
     if (genObj) {
       // 1.  `return <value>` creates and returns a new object,
       //     `{value: <value>, done: true}`.
       if (!genObj->isBeforeInitialYield()) {
         JSObject* pair = CreateIterResultObject(cx, vp, true);
         if (!pair) {
-          // Out of memory in debuggee code. Arrange for this to propagate.
-          MOZ_ALWAYS_TRUE(cx->getPendingException(vp));
-          cx->clearPendingException();
-          resumeMode = ResumeMode::Throw;
+          getAndClearExceptionThenThrow();
           return;
         }
         vp.setObject(*pair);
@@ -1628,6 +1620,47 @@ static void AdjustGeneratorResumptionValue(JSContext* cx,
       // We're before the initial yield. Carry on with the forced return.
       // The debuggee will see a call to a generator returning the
       // non-generator value *vp.
+    }
+  } else if (frame.callee()->isAsync()) {
+    // For async functions, that means doing the work below.
+    if (AbstractGeneratorObject* genObj =
+            GetGeneratorObjectForFrame(cx, frame)) {
+      // Throw doesn't require any special processing for async functions when
+      // the internal generator object is already present.
+      if (resumeMode == ResumeMode::Throw) {
+        return;
+      }
+
+      Rooted<AsyncFunctionGeneratorObject*> asyncGenObj(
+          cx, &genObj->as<AsyncFunctionGeneratorObject>());
+
+      // 1.  `return <value>` fulfills and returns the async function's promise.
+      JSObject* promise = AsyncFunctionResolve(
+          cx, asyncGenObj, vp, AsyncFunctionResolveKind::Fulfill);
+      if (!promise) {
+        getAndClearExceptionThenThrow();
+        return;
+      }
+      vp.setObject(*promise);
+
+      // 2.  The generator must be closed.
+      asyncGenObj->setClosed();
+    } else {
+      // We're before entering the actual function code.
+
+      // 1.  `throw <value>` creates a promise rejected with the value *vp.
+      // 1.  `return <value>` creates a promise resolved with the value *vp.
+      JSObject* promise = resumeMode == ResumeMode::Throw
+                              ? PromiseObject::unforgeableReject(cx, vp)
+                              : PromiseObject::unforgeableResolve(cx, vp);
+      if (!promise) {
+        getAndClearExceptionThenThrow();
+        return;
+      }
+      vp.setObject(*promise);
+
+      // 2.  Return normally in both cases.
+      resumeMode = ResumeMode::Return;
     }
   }
 }
@@ -1968,8 +2001,7 @@ ResumeMode Debugger::fireEnterFrame(JSContext* cx, MutableHandleValue vp) {
 #if DEBUG
   // Assert that the hook won't be able to re-enter the generator.
   if (iter.hasScript() && *iter.pc() == JSOP_DEBUGAFTERYIELD) {
-    GeneratorObject* genObj =
-        GetGeneratorObjectForFrame(cx, iter.abstractFramePtr());
+    auto* genObj = GetGeneratorObjectForFrame(cx, iter.abstractFramePtr());
     MOZ_ASSERT(genObj->isRunning() || genObj->isClosing());
   }
 #endif
@@ -2211,9 +2243,10 @@ void Debugger::slowPathOnNewWasmInstance(
         Rooted<JSObject*> handler(cx, bp->handler);
         bool ok = CallMethodIfPresent(cx, handler, "hit", 1,
                                       scriptFrame.address(), &rv);
-        adjqi.runJobs();
         ResumeMode resumeMode = dbg->processHandlerResult(
             ar, ok, rv, iter.abstractFramePtr(), iter.pc(), vp);
+        adjqi.runJobs();
+
         if (resumeMode != ResumeMode::Continue) {
           savedExc.drop();
           return resumeMode;
@@ -2314,9 +2347,10 @@ void Debugger::slowPathOnNewWasmInstance(
 
       ResumeMode resumeMode = ResumeMode::Continue;
       bool success = handler->onStep(cx, frame, resumeMode, vp);
-      adjqi.runJobs();
       resumeMode = dbg->processParsedHandlerResult(
           ar, iter.abstractFramePtr(), iter.pc(), success, resumeMode, vp);
+      adjqi.runJobs();
+
       if (resumeMode != ResumeMode::Continue) {
         savedExc.drop();
         return resumeMode;
@@ -4325,7 +4359,7 @@ void Debugger::removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
   // will sweep dead keys from the weakmap.
   if (!global->zone()->isGCSweeping()) {
     generatorFrames.removeIf([global](JSObject* key) {
-      GeneratorObject& genObj = key->as<GeneratorObject>();
+      auto& genObj = key->as<AbstractGeneratorObject>();
       return genObj.isClosed() || &genObj.callee().global() == global;
     });
   }
@@ -7559,7 +7593,7 @@ bool Debugger::observesWasm(wasm::Instance* instance) const {
 
     if (!suspending && frame.isGeneratorFrame()) {
       // Terminally exiting a generator.
-      GeneratorObject* genObj = GetGeneratorObjectForFrame(cx, frame);
+      auto* genObj = GetGeneratorObjectForFrame(cx, frame);
       if (GeneratorWeakMap::Ptr p = dbg->generatorFrames.lookup(genObj)) {
         dbg->generatorFrames.remove(p);
       }
@@ -8673,9 +8707,29 @@ bool ScriptedOnPopHandler::onPop(JSContext* cx, HandleDebuggerFrame frame,
                                  MutableHandleValue vp) {
   Debugger* dbg = frame->owner();
 
+  // Make it possible to distinguish 'return' from 'await' completions.
+  // Bug 1470558 will investigate a more robust solution.
+  bool isAfterAwait = false;
+  AbstractFramePtr referent = DebuggerFrame::getReferent(frame);
+  if (resumeMode == ResumeMode::Return && referent &&
+      referent.isFunctionFrame() && referent.callee()->isAsync() &&
+      !referent.callee()->isGenerator()) {
+    AutoRealm ar(cx, referent.callee());
+    if (auto* genObj = GetGeneratorObjectForFrame(cx, referent)) {
+      isAfterAwait = !genObj->isClosed() && genObj->isRunning();
+    }
+  }
+
   RootedValue completion(cx);
   if (!dbg->newCompletionValue(cx, resumeMode, vp, &completion)) {
     return false;
+  }
+
+  if (isAfterAwait) {
+    RootedObject obj(cx, &completion.toObject());
+    if (!DefineDataProperty(cx, obj, cx->names().await, TrueHandleValue)) {
+      return false;
+    }
   }
 
   RootedValue fval(cx, ObjectValue(*object_));
@@ -10150,7 +10204,7 @@ static DebuggerObject* DebuggerObject_checkThis(JSContext* cx,
     return true;
   }
 
-  RootedFunction fun(cx, RemoveAsyncWrapper(&obj->as<JSFunction>()));
+  RootedFunction fun(cx, &obj->as<JSFunction>());
   if (!fun->isInterpreted()) {
     args.rval().setUndefined();
     return true;
@@ -10188,7 +10242,7 @@ static DebuggerObject* DebuggerObject_checkThis(JSContext* cx,
     return true;
   }
 
-  RootedFunction fun(cx, RemoveAsyncWrapper(&obj->as<JSFunction>()));
+  RootedFunction fun(cx, &obj->as<JSFunction>());
   if (!fun->isInterpreted()) {
     args.rval().setUndefined();
     return true;
@@ -11188,20 +11242,19 @@ bool DebuggerObject::isBoundFunction() const {
 bool DebuggerObject::isArrowFunction() const {
   MOZ_ASSERT(isDebuggeeFunction());
 
-  return RemoveAsyncWrapper(&referent()->as<JSFunction>())->isArrow();
+  return referent()->as<JSFunction>().isArrow();
 }
 
 bool DebuggerObject::isAsyncFunction() const {
   MOZ_ASSERT(isDebuggeeFunction());
 
-  return RemoveAsyncWrapper(&referent()->as<JSFunction>())->isAsync();
+  return referent()->as<JSFunction>().isAsync();
 }
 
 bool DebuggerObject::isGeneratorFunction() const {
   MOZ_ASSERT(isDebuggeeFunction());
 
-  JSFunction* fun = RemoveAsyncWrapper(&referent()->as<JSFunction>());
-  return fun->isGenerator();
+  return referent()->as<JSFunction>().isGenerator();
 }
 
 bool DebuggerObject::isGlobal() const { return referent()->is<GlobalObject>(); }
@@ -11282,8 +11335,7 @@ double DebuggerObject::promiseTimeToResolution() const {
     MutableHandle<StringVector> result) {
   MOZ_ASSERT(object->isDebuggeeFunction());
 
-  RootedFunction referent(
-      cx, RemoveAsyncWrapper(&object->referent()->as<JSFunction>()));
+  RootedFunction referent(cx, &object->referent()->as<JSFunction>());
 
   if (!result.growBy(referent->nargs())) {
     return false;

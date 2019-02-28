@@ -227,50 +227,33 @@ bool PropertyEmitter::prepareForComputedPropValue() {
   return true;
 }
 
-bool PropertyEmitter::emitInitHomeObject(
-    FunctionAsyncKind kind /* = FunctionAsyncKind::SyncFunction */) {
+bool PropertyEmitter::emitInitHomeObject() {
   MOZ_ASSERT(propertyState_ == PropertyState::PropValue ||
              propertyState_ == PropertyState::IndexValue ||
              propertyState_ == PropertyState::ComputedValue);
 
   //                [stack] CTOR? HOMEOBJ CTOR? KEY? FUN
 
-  bool isAsync = kind == FunctionAsyncKind::AsyncFunction;
-  if (isAsync) {
-    //              [stack] CTOR? HOMEOBJ CTOR? KEY? UNWRAPPED WRAPPED
-    if (!bce_->emit1(JSOP_SWAP)) {
-      //            [stack] CTOR? HOMEOBJ CTOR? KEY? WRAPPED UNWRAPPED
-      return false;
-    }
-  }
-
   // There are the following values on the stack conditionally, between
   // HOMEOBJ and FUN:
   //   * the 2nd CTOR if isStatic_
   //   * KEY if isIndexOrComputed_
-  //   * WRAPPED if isAsync
   //
   // JSOP_INITHOMEOBJECT uses one of the following:
   //   * HOMEOBJ if !isStatic_
   //     (`super.foo` points the super prototype property)
   //   * the 2nd CTOR if isStatic_
   //     (`super.foo` points the super constructor property)
-  if (!bce_->emitDupAt(1 + isIndexOrComputed_ + isAsync)) {
+  if (!bce_->emitDupAt(1 + isIndexOrComputed_)) {
     //              [stack] # non-static method
-    //              [stack] CTOR? HOMEOBJ CTOR KEY? WRAPPED? FUN CTOR
+    //              [stack] CTOR? HOMEOBJ CTOR KEY? FUN CTOR
     //              [stack] # static method
-    //              [stack] CTOR? HOMEOBJ KEY? WRAPPED? FUN HOMEOBJ
+    //              [stack] CTOR? HOMEOBJ KEY? FUN HOMEOBJ
     return false;
   }
   if (!bce_->emit1(JSOP_INITHOMEOBJECT)) {
-    //              [stack] CTOR? HOMEOBJ CTOR? KEY? WRAPPED? FUN
+    //              [stack] CTOR? HOMEOBJ CTOR? KEY? FUN
     return false;
-  }
-  if (isAsync) {
-    if (!bce_->emit1(JSOP_POP)) {
-      //            [stack] CTOR? HOMEOBJ CTOR? KEY? WRAPPED
-      return false;
-    }
   }
 
 #ifdef DEBUG

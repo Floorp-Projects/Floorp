@@ -76,6 +76,9 @@ async function check_installed(conditions) {
       Assert.ok(file.isFile());
 
       let uri = addon.getResourceURI(null);
+      if (uri instanceof Ci.nsIJARURI) {
+        uri = uri.JARFile;
+      }
       Assert.ok(uri instanceof Ci.nsIFileURL);
       Assert.equal(uri.file.path, file.path);
 

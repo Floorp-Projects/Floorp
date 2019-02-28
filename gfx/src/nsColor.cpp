@@ -206,6 +206,18 @@ bool NS_ColorNameToRGB(const nsAString& aColorName, nscolor* aResult) {
   return false;
 }
 
+// Fast approximate division by 255. It has the property that
+// for all 0 <= n <= 255*255, FAST_DIVIDE_BY_255(n) == n/255.
+// But it only uses two adds and two shifts instead of an
+// integer division (which is expensive on many processors).
+//
+// equivalent to target=v/255
+#define FAST_DIVIDE_BY_255(target, v)        \
+  PR_BEGIN_MACRO                             \
+  unsigned tmp_ = v;                         \
+  target = ((tmp_ << 8) + tmp_ + 255) >> 16; \
+  PR_END_MACRO
+
 // Macro to blend two colors
 //
 // equivalent to target = (bg*(255-fgalpha) + fg*fgalpha)/255
@@ -236,38 +248,6 @@ nscolor NS_ComposeColors(nscolor aBG, nscolor aFG) {
   MOZ_BLEND(b, NS_GET_B(aBG), NS_GET_B(aFG), blendAlpha);
 
   return NS_RGBA(r, g, b, a);
-}
-
-// Functions to convert from HSL color space to RGB color space.
-// This is the algorithm described in the CSS3 specification
-
-// helper
-static float HSL_HueToRGB(float m1, float m2, float h) {
-  if (h < 0.0f) h += 1.0f;
-  if (h > 1.0f) h -= 1.0f;
-  if (h < (float)(1.0 / 6.0)) return m1 + (m2 - m1) * h * 6.0f;
-  if (h < (float)(1.0 / 2.0)) return m2;
-  if (h < (float)(2.0 / 3.0))
-    return m1 + (m2 - m1) * ((float)(2.0 / 3.0) - h) * 6.0f;
-  return m1;
-}
-
-// The float parameters are all expected to be in the range 0-1
-nscolor NS_HSL2RGB(float h, float s, float l) {
-  uint8_t r, g, b;
-  float m1, m2;
-  if (l <= 0.5f) {
-    m2 = l * (s + 1);
-  } else {
-    m2 = l + s - l * s;
-  }
-  m1 = l * 2 - m2;
-  // We round, not floor, because that's how we handle
-  // percentage RGB values.
-  r = ClampColor(255 * HSL_HueToRGB(m1, m2, h + 1.0f / 3.0f));
-  g = ClampColor(255 * HSL_HueToRGB(m1, m2, h));
-  b = ClampColor(255 * HSL_HueToRGB(m1, m2, h - 1.0f / 3.0f));
-  return NS_RGB(r, g, b);
 }
 
 const char* NS_RGBToColorName(nscolor aColor) {

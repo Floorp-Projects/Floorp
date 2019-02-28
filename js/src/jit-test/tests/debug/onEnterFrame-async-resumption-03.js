@@ -26,5 +26,4 @@ function test(when) {
 
 // onEnterFrame with hits==0 is not a resume point; {return:} behaves differently there
 // (see onEnterFrame-async-resumption-02.js).
-test(1);  // force return from first resume point, immediately after the initial suspend
-test(2);  // force return from second resume point, immediately after the await instruction
+test(1);  // force return from first resume point, immediately after the await instruction

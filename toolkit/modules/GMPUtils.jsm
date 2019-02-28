@@ -12,6 +12,7 @@ var EXPORTED_SYMBOLS = [ "GMP_PLUGIN_IDS",
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {UpdateUtils} = ChromeUtils.import("resource://gre/modules/UpdateUtils.jsm");
 
 // GMP IDs
 const OPEN_H264_ID  = "gmp-gmpopenh264";
@@ -31,13 +32,14 @@ var GMPUtils = {
       // See bug 1291537.
       return true;
     }
-    if (!aPlugin.isEME) {
-      return false;
-    }
 
     if (!this._isPluginSupported(aPlugin) ||
         !this._isPluginVisible(aPlugin)) {
       return true;
+    }
+
+    if (!aPlugin.isEME) {
+      return false;
     }
 
     if (!GMPPrefs.getBool(GMPPrefs.KEY_EME_ENABLED, true)) {
@@ -94,6 +96,20 @@ var GMPUtils = {
    */
   _isPluginForceSupported(aPlugin) {
     return GMPPrefs.getBool(GMPPrefs.KEY_PLUGIN_FORCE_SUPPORTED, false, aPlugin.id);
+  },
+
+  _isWindowsOnARM64() {
+    return AppConstants.platform == "win" && UpdateUtils.ABI.match(/aarch64/);
+  },
+
+  _expectedABI(aPlugin) {
+    let defaultABI = UpdateUtils.ABI;
+    if (aPlugin.id == WIDEVINE_ID && this._isWindowsOnARM64()) {
+      // On Windows on aarch64, we need the x86 plugin,
+      // as there's no native aarch64 plugins yet.
+      defaultABI = defaultABI.replace(/aarch64/g, "x86");
+    }
+    return defaultABI;
   },
 };
 

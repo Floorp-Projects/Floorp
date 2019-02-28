@@ -18,7 +18,7 @@ for (const func of ["next", "following", "preceding"]) {
   });
 }
 
-for (const property of ["position", "breakType"]) {
+for (const property of ["index", "breakType"]) {
   let desc = Object.getOwnPropertyDescriptor(prototype, property);
   assert.sameValue(desc.get.name, `get ${property}`);
   assert.sameValue(typeof desc.get, "function")

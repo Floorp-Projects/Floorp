@@ -38,13 +38,13 @@ static const float ONE_TOUCH_PINCH_SPEED = 0.005f;
 
 static bool sLongTapEnabled = true;
 
-ScreenPoint GetCurrentFocus(const MultiTouchInput& aEvent) {
+static ScreenPoint GetCurrentFocus(const MultiTouchInput& aEvent) {
   const ScreenPoint& firstTouch = aEvent.mTouches[0].mScreenPoint;
   const ScreenPoint& secondTouch = aEvent.mTouches[1].mScreenPoint;
   return (firstTouch + secondTouch) / 2;
 }
 
-ScreenCoord GetCurrentSpan(const MultiTouchInput& aEvent) {
+static ScreenCoord GetCurrentSpan(const MultiTouchInput& aEvent) {
   const ScreenPoint& firstTouch = aEvent.mTouches[0].mScreenPoint;
   const ScreenPoint& secondTouch = aEvent.mTouches[1].mScreenPoint;
   ScreenPoint delta = secondTouch - firstTouch;
@@ -59,8 +59,8 @@ ScreenCoord GestureEventListener::GetYSpanFromGestureStartPoint() {
   return current.y - start.y;
 }
 
-TapGestureInput CreateTapEvent(const MultiTouchInput& aTouch,
-                               TapGestureInput::TapGestureType aType) {
+static TapGestureInput CreateTapEvent(const MultiTouchInput& aTouch,
+                                      TapGestureInput::TapGestureType aType) {
   return TapGestureInput(aType, aTouch.mTime, aTouch.mTimeStamp,
                          aTouch.mTouches[0].mScreenPoint, aTouch.modifiers);
 }

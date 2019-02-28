@@ -6,8 +6,10 @@
 #include "jsapi-tests/tests.h"
 #include "vm/ArrayBufferObject.h"
 
-char test_data[] =
+char testData[] =
     "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+constexpr size_t testDataLength = sizeof(testData);
 
 static void GC(JSContext* cx) {
   JS_GC(cx);
@@ -16,11 +18,10 @@ static void GC(JSContext* cx) {
 }
 
 BEGIN_TEST(testArrayBufferWithUserOwnedContents) {
-  size_t length = sizeof(test_data);
   JS::RootedObject obj(
-      cx, JS_NewArrayBufferWithUserOwnedContents(cx, length, test_data));
+      cx, JS_NewArrayBufferWithUserOwnedContents(cx, testDataLength, testData));
   GC(cx);
-  CHECK(VerifyObject(obj, length));
+  CHECK(VerifyObject(obj, testDataLength));
   GC(cx);
   JS_DetachArrayBuffer(cx, obj);
   GC(cx);
@@ -38,8 +39,10 @@ bool VerifyObject(JS::HandleObject obj, uint32_t length) {
   bool sharedDummy;
   const char* data = reinterpret_cast<const char*>(
       JS_GetArrayBufferData(obj, &sharedDummy, nogc));
-  CHECK(data);
-  CHECK(test_data == data);
+  if (length == testDataLength) {
+    CHECK(data);
+    CHECK(testData == data);
+  }
 
   return true;
 }

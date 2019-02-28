@@ -25,6 +25,7 @@
 #include "vm/EnvironmentObject.h"
 #include "vm/Opcodes.h"
 #include "vm/RegExpStatics.h"
+#include "vm/SelfHosting.h"
 #include "vm/TraceLogging.h"
 
 #include "gc/Nursery-inl.h"
@@ -2332,12 +2333,6 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op) {
     case JSOP_TYPEOFEXPR:
       return jsop_typeof();
 
-    case JSOP_TOASYNC:
-      return jsop_toasync();
-
-    case JSOP_TOASYNCGEN:
-      return jsop_toasyncgen();
-
     case JSOP_TOASYNCITER:
       return jsop_toasynciter();
 
@@ -2440,14 +2435,8 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op) {
       pushConstant(MagicValue(JS_IS_CONSTRUCTING));
       return Ok();
 
-    case JSOP_OPTIMIZE_SPREADCALL: {
-      // Assuming optimization isn't available doesn't affect correctness.
-      // TODO: Investigate dynamic checks.
-      MDefinition* arr = current->peek(-1);
-      arr->setImplicitlyUsedUnchecked();
-      pushConstant(BooleanValue(false));
-      return Ok();
-    }
+    case JSOP_OPTIMIZE_SPREADCALL:
+      return jsop_optimize_spreadcall();
 
     case JSOP_IMPORTMETA:
       return jsop_importmeta();
@@ -2513,6 +2502,8 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op) {
     case JSOP_AWAIT:
     case JSOP_TRYSKIPAWAIT:
     case JSOP_GENERATOR:
+    case JSOP_ASYNCAWAIT:
+    case JSOP_ASYNCRESOLVE:
 
     // Misc
     case JSOP_DELNAME:
@@ -2532,7 +2523,7 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op) {
       break;
 
     case JSOP_UNUSED71:
-    case JSOP_UNUSED151:
+    case JSOP_UNUSED149:
     case JSOP_LIMIT:
       break;
   }
@@ -5619,6 +5610,115 @@ AbortReasonOr<Ok> IonBuilder::jsop_spreadcall() {
   // TypeBarrier the call result
   TemporaryTypeSet* types = bytecodeTypes(pc);
   return pushTypeBarrier(apply, types, BarrierKind::TypeSet);
+}
+
+bool IonBuilder::propertyIsConstantFunction(NativeObject* nobj, jsid id,
+                                            bool (*test)(IonBuilder* builder,
+                                                         JSFunction* fun)) {
+  if (!nobj->isSingleton()) {
+    return false;
+  }
+
+  TypeSet::ObjectKey* objKey = TypeSet::ObjectKey::get(nobj);
+  if (analysisContext) {
+    objKey->ensureTrackedProperty(analysisContext, id);
+  }
+
+  if (objKey->unknownProperties()) {
+    return false;
+  }
+
+  HeapTypeSetKey property = objKey->property(id);
+  Value value = UndefinedValue();
+  if (!property.constant(constraints(), &value)) {
+    return false;
+  }
+  return value.isObject() && value.toObject().is<JSFunction>() &&
+         test(this, &value.toObject().as<JSFunction>());
+}
+
+bool IonBuilder::ensureArrayPrototypeIteratorNotModified() {
+  NativeObject* obj = script()->global().maybeGetArrayPrototype();
+  if (!obj) {
+    return false;
+  }
+
+  jsid id = SYMBOL_TO_JSID(realm->runtime()->wellKnownSymbols().iterator);
+  return propertyIsConstantFunction(obj, id, [](auto* builder, auto* fun) {
+    return IsSelfHostedFunctionWithName(fun,
+                                        builder->runtime->names().ArrayValues);
+  });
+}
+
+bool IonBuilder::ensureArrayIteratorPrototypeNextNotModified() {
+  NativeObject* obj = script()->global().maybeGetArrayIteratorPrototype();
+  if (!obj) {
+    return false;
+  }
+
+  jsid id = NameToId(runtime->names().next);
+  return propertyIsConstantFunction(obj, id, [](auto* builder, auto* fun) {
+    return IsSelfHostedFunctionWithName(
+        fun, builder->runtime->names().ArrayIteratorNext);
+  });
+}
+
+AbortReasonOr<Ok> IonBuilder::jsop_optimize_spreadcall() {
+  MDefinition* arr = current->peek(-1);
+  arr->setImplicitlyUsedUnchecked();
+
+  // Assuming optimization isn't available doesn't affect correctness.
+  // TODO: Investigate dynamic checks.
+  bool result = false;
+  do {
+    // Inline with a constant if the conditions described in
+    // js::OptimizeSpreadCall() are all met or can be expressed through
+    // compiler constraints.
+
+    // The argument is an array.
+    TemporaryTypeSet* types = arr->resultTypeSet();
+    if (!types || types->getKnownClass(constraints()) != &ArrayObject::class_) {
+      break;
+    }
+
+    // The array has no hole.
+    if (types->hasObjectFlags(constraints(), OBJECT_FLAG_NON_PACKED)) {
+      break;
+    }
+
+    // The array's prototype is Array.prototype.
+    JSObject* proto;
+    if (!types->getCommonPrototype(constraints(), &proto)) {
+      break;
+    }
+    NativeObject* arrayProto = script()->global().maybeGetArrayPrototype();
+    if (!arrayProto || arrayProto != proto) {
+      break;
+    }
+
+    // The array doesn't define an own @@iterator property.
+    jsid id = SYMBOL_TO_JSID(realm->runtime()->wellKnownSymbols().iterator);
+    bool res;
+    MOZ_TRY_VAR(res, testNotDefinedProperty(arr, id, true));
+    if (!res) {
+      break;
+    }
+
+    // Array.prototype[@@iterator] is not modified.
+    if (!ensureArrayPrototypeIteratorNotModified()) {
+      break;
+    }
+
+    // %ArrayIteratorPrototype%.next is not modified.
+    if (!ensureArrayIteratorPrototypeNextNotModified()) {
+      break;
+    }
+
+    result = true;
+  } while (false);
+
+  pushConstant(BooleanValue(result));
+  return Ok();
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_funapplyarray(uint32_t argc) {
@@ -13125,30 +13225,6 @@ AbortReasonOr<Ok> IonBuilder::jsop_typeof() {
   return Ok();
 }
 
-AbortReasonOr<Ok> IonBuilder::jsop_toasync() {
-  MDefinition* unwrapped = current->pop();
-  MOZ_ASSERT(unwrapped->type() == MIRType::Object);
-
-  MToAsync* ins = MToAsync::New(alloc(), unwrapped);
-
-  current->add(ins);
-  current->push(ins);
-
-  return resumeAfter(ins);
-}
-
-AbortReasonOr<Ok> IonBuilder::jsop_toasyncgen() {
-  MDefinition* unwrapped = current->pop();
-  MOZ_ASSERT(unwrapped->type() == MIRType::Object);
-
-  MToAsyncGen* ins = MToAsyncGen::New(alloc(), unwrapped);
-
-  current->add(ins);
-  current->push(ins);
-
-  return resumeAfter(ins);
-}
-
 AbortReasonOr<Ok> IonBuilder::jsop_toasynciter() {
   MDefinition* nextMethod = current->pop();
   MDefinition* iterator = current->pop();
@@ -14255,7 +14331,7 @@ MInstruction* IonBuilder::setInitializedLength(MDefinition* obj, size_t count) {
 
   // MSetInitializedLength takes the index of the last element, rather
   // than the count itself.
-  MInstruction* elements = MElements::New(alloc(), obj, /* unboxed = */ false);
+  MInstruction* elements = MElements::New(alloc(), obj);
   current->add(elements);
   MInstruction* res = MSetInitializedLength::New(
       alloc(), elements, constant(Int32Value(count - 1)));

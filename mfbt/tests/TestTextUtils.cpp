@@ -13,6 +13,7 @@ using mozilla::IsAsciiAlpha;
 using mozilla::IsAsciiAlphanumeric;
 using mozilla::IsAsciiDigit;
 using mozilla::IsAsciiLowercaseAlpha;
+using mozilla::IsAsciiNullTerminated;
 using mozilla::IsAsciiUppercaseAlpha;
 
 static void TestIsAscii() {
@@ -99,6 +100,84 @@ static void TestIsAscii() {
 
   static_assert(IsAscii(U'\x7F'), "U'\\x7F' is ASCII");
   static_assert(!IsAscii(U'\x80'), "U'\\x80' isn't ASCII");
+}
+
+static void TestIsAsciiNullTerminated() {
+  // char
+
+  constexpr char allChar[] =
+      "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\0x0C\x0D\x0E\x0F"
+      "\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\0x1C\x1D\x1E\x1F"
+      "\x21\x22\x23\x24\x25\x26\x27\x28\x29\x2A\x2B\0x2C\x2D\x2E\x2F"
+      "\x31\x32\x33\x34\x35\x36\x37\x38\x39\x3A\x3B\0x3C\x3D\x3E\x3F"
+      "\x41\x42\x43\x44\x45\x46\x47\x48\x49\x4A\x4B\0x4C\x4D\x4E\x4F"
+      "\x51\x52\x53\x54\x55\x56\x57\x58\x59\x5A\x5B\0x5C\x5D\x5E\x5F"
+      "\x61\x62\x63\x64\x65\x66\x67\x68\x69\x6A\x6B\0x6C\x6D\x6E\x6F"
+      "\x71\x72\x73\x74\x75\x76\x77\x78\x79\x7A\x7B\0x7C\x7D\x7E\x7F";
+
+  static_assert(IsAsciiNullTerminated(allChar), "allChar is ASCII");
+
+  constexpr char loBadChar[] = "\x80";
+
+  static_assert(!IsAsciiNullTerminated(loBadChar), "loBadChar isn't ASCII");
+
+  constexpr char hiBadChar[] = "\xFF";
+
+  static_assert(!IsAsciiNullTerminated(hiBadChar), "hiBadChar isn't ASCII");
+
+  // char16_t
+
+  constexpr char16_t allChar16[] =
+      u"\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\0x0C\x0D\x0E\x0F"
+      "\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\0x1C\x1D\x1E\x1F"
+      "\x21\x22\x23\x24\x25\x26\x27\x28\x29\x2A\x2B\0x2C\x2D\x2E\x2F"
+      "\x31\x32\x33\x34\x35\x36\x37\x38\x39\x3A\x3B\0x3C\x3D\x3E\x3F"
+      "\x41\x42\x43\x44\x45\x46\x47\x48\x49\x4A\x4B\0x4C\x4D\x4E\x4F"
+      "\x51\x52\x53\x54\x55\x56\x57\x58\x59\x5A\x5B\0x5C\x5D\x5E\x5F"
+      "\x61\x62\x63\x64\x65\x66\x67\x68\x69\x6A\x6B\0x6C\x6D\x6E\x6F"
+      "\x71\x72\x73\x74\x75\x76\x77\x78\x79\x7A\x7B\0x7C\x7D\x7E\x7F";
+
+  static_assert(IsAsciiNullTerminated(allChar16), "allChar16 is ASCII");
+
+  constexpr char16_t loBadChar16[] = u"\x80";
+
+  static_assert(!IsAsciiNullTerminated(loBadChar16), "loBadChar16 isn't ASCII");
+
+  constexpr char16_t hiBadChar16[] = u"\xFF";
+
+  static_assert(!IsAsciiNullTerminated(hiBadChar16), "hiBadChar16 isn't ASCII");
+
+  constexpr char16_t highestChar16[] = u"\uFFFF";
+
+  static_assert(!IsAsciiNullTerminated(highestChar16),
+                "highestChar16 isn't ASCII");
+
+  // char32_t
+
+  constexpr char32_t allChar32[] =
+      U"\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\0x0C\x0D\x0E\x0F"
+      "\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\0x1C\x1D\x1E\x1F"
+      "\x21\x22\x23\x24\x25\x26\x27\x28\x29\x2A\x2B\0x2C\x2D\x2E\x2F"
+      "\x31\x32\x33\x34\x35\x36\x37\x38\x39\x3A\x3B\0x3C\x3D\x3E\x3F"
+      "\x41\x42\x43\x44\x45\x46\x47\x48\x49\x4A\x4B\0x4C\x4D\x4E\x4F"
+      "\x51\x52\x53\x54\x55\x56\x57\x58\x59\x5A\x5B\0x5C\x5D\x5E\x5F"
+      "\x61\x62\x63\x64\x65\x66\x67\x68\x69\x6A\x6B\0x6C\x6D\x6E\x6F"
+      "\x71\x72\x73\x74\x75\x76\x77\x78\x79\x7A\x7B\0x7C\x7D\x7E\x7F";
+
+  static_assert(IsAsciiNullTerminated(allChar32), "allChar32 is ASCII");
+
+  constexpr char32_t loBadChar32[] = U"\x80";
+
+  static_assert(!IsAsciiNullTerminated(loBadChar32), "loBadChar32 isn't ASCII");
+
+  constexpr char32_t hiBadChar32[] = U"\xFF";
+
+  static_assert(!IsAsciiNullTerminated(hiBadChar32), "hiBadChar32 isn't ASCII");
+
+  constexpr char32_t highestChar32[] = {static_cast<char32_t>(-1), 0};
+
+  static_assert(!IsAsciiNullTerminated(highestChar32),
+                "highestChar32 isn't ASCII");
 }
 
 static void TestIsAsciiAlpha() {
@@ -975,6 +1054,7 @@ static void TestIsAsciiDigit() {
 
 int main() {
   TestIsAscii();
+  TestIsAsciiNullTerminated();
   TestIsAsciiAlpha();
   TestIsAsciiUppercaseAlpha();
   TestIsAsciiLowercaseAlpha();

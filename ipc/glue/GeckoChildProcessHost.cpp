@@ -680,6 +680,16 @@ AddAppDirToCommandLine(std::vector<std::string>& aCmdLine)
   }
 }
 
+#ifdef XP_WIN
+static bool Contains(const std::vector<std::string>& aExtraOpts,
+                     const char* aValue) {
+  return std::any_of(aExtraOpts.begin(), aExtraOpts.end(),
+                     [&](const std::string arg) {
+                       return arg.find(aValue) != std::string::npos;
+                     });
+}
+#endif  // XP_WIN
+
 bool GeckoChildProcessHost::PerformAsyncLaunch(
     std::vector<std::string> aExtraOpts) {
 #ifdef MOZ_GECKO_PROFILER
@@ -846,24 +856,25 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
 
   childArgv.insert(childArgv.end(), aExtraOpts.begin(), aExtraOpts.end());
 
-  if (Omnijar::IsInitialized()) {
-    // Make sure that child processes can find the omnijar
-    // See XRE_InitCommandLine in nsAppRunner.cpp
-    nsAutoCString path;
-    nsCOMPtr<nsIFile> file = Omnijar::GetPath(Omnijar::GRE);
-    if (file && NS_SUCCEEDED(file->GetNativePath(path))) {
-      childArgv.push_back("-greomni");
-      childArgv.push_back(path.get());
+  if (mProcessType != GeckoProcessType_GMPlugin) {
+    if (Omnijar::IsInitialized()) {
+      // Make sure that child processes can find the omnijar
+      // See XRE_InitCommandLine in nsAppRunner.cpp
+      nsAutoCString path;
+      nsCOMPtr<nsIFile> file = Omnijar::GetPath(Omnijar::GRE);
+      if (file && NS_SUCCEEDED(file->GetNativePath(path))) {
+        childArgv.push_back("-greomni");
+        childArgv.push_back(path.get());
+      }
+      file = Omnijar::GetPath(Omnijar::APP);
+      if (file && NS_SUCCEEDED(file->GetNativePath(path))) {
+        childArgv.push_back("-appomni");
+        childArgv.push_back(path.get());
+      }
     }
-    file = Omnijar::GetPath(Omnijar::APP);
-    if (file && NS_SUCCEEDED(file->GetNativePath(path))) {
-      childArgv.push_back("-appomni");
-      childArgv.push_back(path.get());
-    }
+    // Add the application directory path (-appdir path)
+    AddAppDirToCommandLine(childArgv);
   }
-
-  // Add the application directory path (-appdir path)
-  AddAppDirToCommandLine(childArgv);
 
   childArgv.push_back(pidstring);
 
@@ -1008,6 +1019,18 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
   FilePath exePath;
   BinaryPathType pathType = GetPathToBinary(exePath, mProcessType);
 
+  const bool isGMP = mProcessType == GeckoProcessType_GMPlugin;
+  const bool isWidevine = isGMP && Contains(aExtraOpts, "gmp-widevinecdm");
+#  if defined(_ARM64_) && defined(XP_WIN)
+  const bool isClearKey = isGMP && Contains(aExtraOpts, "gmp-clearkey");
+  if (isGMP && (isClearKey || isWidevine)) {
+    // On Windows on ARM64 for ClearKey and Widevine, we want to run the
+    // x86 plugin-container.exe in the "i686" subdirectory, instead of the
+    // aarch64 plugin-container.exe. So insert "i686" into the exePath.
+    exePath = exePath.DirName().AppendASCII("i686").Append(exePath.BaseName());
+  }
+#  endif
+
   CommandLine cmdLine(exePath.ToWStringHack());
 
   if (pathType == BinaryPathType::Self) {
@@ -1076,10 +1099,6 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
         // not at USER_LOCKDOWN. So look in the command line arguments
         // to see if we're loading the path to the Widevine CDM, and if
         // so use sandbox level USER_RESTRICTED instead of USER_LOCKDOWN.
-        bool isWidevine = std::any_of(
-            aExtraOpts.begin(), aExtraOpts.end(), [](const std::string arg) {
-              return arg.find("gmp-widevinecdm") != std::string::npos;
-            });
         auto level =
             isWidevine ? SandboxBroker::Restricted : SandboxBroker::LockDown;
         bool ok = mSandboxBroker.SetSecurityLevelForGMPlugin(level);

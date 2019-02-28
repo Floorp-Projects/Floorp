@@ -13,6 +13,8 @@ info: |
 features: [Intl.Segmenter]
 ---*/
 
+assert.sameValue(typeof Intl.Segmenter, "function");
+
 assert.throws(TypeError, function() { new Intl.Segmenter([], null) })
 
 reportCompare(0, 0);

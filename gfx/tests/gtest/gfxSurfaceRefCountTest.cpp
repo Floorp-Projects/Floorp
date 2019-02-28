@@ -13,12 +13,12 @@
 
 #include "cairo.h"
 
-int GetASurfaceRefCount(gfxASurface *s) {
+static int GetASurfaceRefCount(gfxASurface *s) {
   NS_ADDREF(s);
   return s->Release();
 }
 
-int CheckInt(int value, int expected) {
+static int CheckInt(int value, int expected) {
   if (value != expected) {
     fprintf(stderr, "Expected %d got %d\n", expected, value);
     return 1;
@@ -27,7 +27,7 @@ int CheckInt(int value, int expected) {
   return 0;
 }
 
-int CheckPointer(void *value, void *expected) {
+static int CheckPointer(void *value, void *expected) {
   if (value != expected) {
     fprintf(stderr, "Expected %p got %p\n", expected, value);
     return 1;
@@ -37,9 +37,9 @@ int CheckPointer(void *value, void *expected) {
 }
 
 static cairo_user_data_key_t destruction_key;
-void SurfaceDestroyNotifier(void *data) { *(int *)data = 1; }
+static void SurfaceDestroyNotifier(void *data) { *(int *)data = 1; }
 
-int TestNewSurface() {
+static int TestNewSurface() {
   int failures = 0;
   int destroyed = 0;
 
@@ -87,7 +87,7 @@ int TestNewSurface() {
   return failures;
 }
 
-int TestExistingSurface() {
+static int TestExistingSurface() {
   int failures = 0;
   int destroyed = 0;
 

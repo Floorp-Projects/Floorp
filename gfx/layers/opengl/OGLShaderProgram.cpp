@@ -26,7 +26,7 @@ using namespace std;
 #define GAUSSIAN_KERNEL_HALF_WIDTH 11
 #define GAUSSIAN_KERNEL_STEP 0.2
 
-void AddUniforms(ProgramProfileOGL &aProfile) {
+static void AddUniforms(ProgramProfileOGL &aProfile) {
   // This needs to be kept in sync with the KnownUniformName enum
   static const char *sKnownUniformNames[] = {"uLayerTransform",
                                              "uLayerTransformInverse",

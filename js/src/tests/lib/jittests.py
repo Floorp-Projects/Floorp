@@ -294,9 +294,9 @@ class JitTest:
                     elif name == 'tz-pacific':
                         test.tz_pacific = True
                     elif name.startswith('test-also='):
-                        test.test_also.append([name[len('test-also='):]])
+                        test.test_also.append(re.split(r'\s+', name[len('test-also='):]))
                     elif name.startswith('test-join='):
-                        test.test_join.append([name[len('test-join='):]])
+                        test.test_join.append(re.split(r'\s+', name[len('test-join='):]))
                     elif name == 'module':
                         test.is_module = True
                     elif name == 'crash':

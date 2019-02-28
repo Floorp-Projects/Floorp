@@ -12,6 +12,6 @@ const segmenter = new Intl.Segmenter();
 const text = "Hello World, Test 123! Foo Bar. How are you?";
 const iter = segmenter.segment(text);
 
-assert.sameValue(iter.position, 0);
+assert.sameValue(iter.index, 0);
 
 reportCompare(0, 0);

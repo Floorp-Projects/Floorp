@@ -1007,9 +1007,7 @@ AddonWrapper = class {
     logger.debug(`reloading add-on ${addon.id}`);
 
     if (!this.temporarilyInstalled) {
-      let addonFile = addon.getResourceURI;
       await XPIDatabase.updateAddonDisabledState(addon, true);
-      Services.obs.notifyObservers(addonFile, "flush-cache-entry");
       await XPIDatabase.updateAddonDisabledState(addon, false);
     } else {
       // This function supports re-installing an existing add-on.
@@ -1030,10 +1028,14 @@ AddonWrapper = class {
    */
   getResourceURI(aPath) {
     let addon = addonFor(this);
-    if (!aPath)
-      return Services.io.newFileURI(addon._sourceBundle);
-
-    return XPIInternal.getURIForResourceInFile(addon._sourceBundle, aPath);
+    let url = Services.io.newURI(addon.rootURI);
+    if (aPath) {
+      if (aPath.startsWith("/")) {
+        throw new Error("getResourceURI() must receive a relative path");
+      }
+      url = Services.io.newURI(aPath, null, url);
+    }
+    return url;
   }
 };
 
@@ -2444,7 +2446,7 @@ this.XPIDatabaseReconcile = {
         let file = new nsIFile(aAddonState.path);
         aNewAddon = XPIInstall.syncLoadManifestFromFile(file, aLocation, aOldAddon);
         aNewAddon.rootURI = XPIInternal.getURIForResourceInFile(file, "").spec;
-      } else if (!aNewAddon.rootURI) {
+      } else {
         aNewAddon.rootURI = aOldAddon.rootURI;
       }
 
@@ -2490,6 +2492,7 @@ this.XPIDatabaseReconcile = {
     logger.debug(`Add-on ${aOldAddon.id} moved to ${aAddonState.path}`);
     aOldAddon.path = aAddonState.path;
     aOldAddon._sourceBundle = new nsIFile(aAddonState.path);
+    aOldAddon.rootURI = XPIInternal.getURIForResourceInFile(aOldAddon._sourceBundle, "").spec;
 
     return aOldAddon;
   },

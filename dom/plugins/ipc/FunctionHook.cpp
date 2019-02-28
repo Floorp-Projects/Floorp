@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/TextUtils.h"
+
 #include "FunctionHook.h"
 #include "FunctionBroker.h"
 #include "nsClassHashtable.h"
@@ -65,7 +67,7 @@ WindowsDllInterceptor* FunctionHook::GetDllInterceptorFor(
     sDllInterceptorCache = new DllInterceptors();
   }
 
-  MOZ_ASSERT(NS_IsAscii(aModuleName),
+  MOZ_ASSERT(IsAsciiNullTerminated(aModuleName),
              "Non-ASCII module names are not supported");
   NS_ConvertASCIItoUTF16 moduleName(aModuleName);
 

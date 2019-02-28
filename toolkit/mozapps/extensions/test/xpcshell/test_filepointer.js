@@ -70,7 +70,7 @@ add_task(async function test_new_pointer_install() {
   equal(file.parent.path, sourceDir.path);
 
   let rootUri = do_get_addon_root_uri(sourceDir, ID1);
-  let uri = addon.getResourceURI("/");
+  let uri = addon.getResourceURI();
   equal(uri.spec, rootUri);
 
   // Check that upgrade is disabled for addons installed by file-pointers.
@@ -94,11 +94,15 @@ add_task(async function test_addon_over_pointer() {
   notEqual(addon, null);
   equal(addon.version, "2.0");
 
-  let file = addon.getResourceURI().QueryInterface(Ci.nsIFileURL).file;
+  let url = addon.getResourceURI();
+  if (url instanceof Ci.nsIJARURI) {
+    url = url.JARFile;
+  }
+  let {file} = url.QueryInterface(Ci.nsIFileURL);
   equal(file.parent.path, profileDir.path);
 
   let rootUri = do_get_addon_root_uri(profileDir, ID1);
-  let uri = addon.getResourceURI("/");
+  let uri = addon.getResourceURI();
   equal(uri.spec, rootUri);
 
   let source = sourceDir.clone();
@@ -310,11 +314,11 @@ add_task(async function test_new_relative_pointer() {
   let addon = await AddonManager.getAddonByID(ID1);
   equal(addon.version, "1.0");
 
-  let file = addon.getResourceURI().QueryInterface(Ci.nsIFileURL).file;
+  let {file} = addon.getResourceURI().QueryInterface(Ci.nsIFileURL);
   equal(file.parent.path, sourceDir.path);
 
   let rootUri = do_get_addon_root_uri(sourceDir, ID1);
-  let uri = addon.getResourceURI("/");
+  let uri = addon.getResourceURI();
   equal(uri.spec, rootUri);
 
   // Check that upgrade is disabled for addons installed by file-pointers.

@@ -1897,12 +1897,14 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
     if (!pc_->declareDotGeneratorName()) {
       return null();
     }
-    NameNodeType generator = newDotGeneratorName();
-    if (!generator) {
-      return null();
-    }
-    if (!handler_.prependInitialYield(handler_.asList(body), generator)) {
-      return null();
+    if (pc_->isGenerator()) {
+      NameNodeType generator = newDotGeneratorName();
+      if (!generator) {
+        return null();
+      }
+      if (!handler_.prependInitialYield(handler_.asList(body), generator)) {
+        return null();
+      }
     }
   }
 
@@ -1982,11 +1984,6 @@ JSFunction* AllocNewFunction(JSContext* cx, HandleAtom atom,
                        asyncKind == FunctionAsyncKind::SyncFunction
                    ? JSFunction::INTERPRETED_NORMAL
                    : JSFunction::INTERPRETED_GENERATOR_OR_ASYNC);
-  }
-
-  // We store the async wrapper in a slot for later access.
-  if (asyncKind == FunctionAsyncKind::AsyncFunction) {
-    allocKind = gc::AllocKind::FUNCTION_EXTENDED;
   }
 
   fun = NewFunctionWithProto(cx, nullptr, 0, flags, nullptr, atom, proto,
@@ -2564,8 +2561,18 @@ GeneralParser<ParseHandler, Unit>::functionDefinition(
   }
 
   RootedObject proto(cx_);
-  if (generatorKind == GeneratorKind::Generator ||
-      asyncKind == FunctionAsyncKind::AsyncFunction) {
+  if (asyncKind == FunctionAsyncKind::AsyncFunction &&
+      generatorKind == GeneratorKind::Generator) {
+    proto = GlobalObject::getOrCreateAsyncGenerator(cx_, cx_->global());
+    if (!proto) {
+      return null();
+    }
+  } else if (asyncKind == FunctionAsyncKind::AsyncFunction) {
+    proto = GlobalObject::getOrCreateAsyncFunctionPrototype(cx_, cx_->global());
+    if (!proto) {
+      return null();
+    }
+  } else if (generatorKind == GeneratorKind::Generator) {
     proto =
         GlobalObject::getOrCreateGeneratorFunctionPrototype(cx_, cx_->global());
     if (!proto) {

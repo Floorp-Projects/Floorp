@@ -441,10 +441,11 @@ static IntSize ComputeMinSizeForShadowShape(const RectCornerRadii* aCornerRadii,
   return minSize;
 }
 
-void CacheBlur(DrawTarget* aDT, const IntSize& aMinSize,
-               const IntSize& aBlurRadius, const RectCornerRadii* aCornerRadii,
-               const Color& aShadowColor, const IntMargin& aBlurMargin,
-               SourceSurface* aBoxShadow) {
+static void CacheBlur(DrawTarget* aDT, const IntSize& aMinSize,
+                      const IntSize& aBlurRadius,
+                      const RectCornerRadii* aCornerRadii,
+                      const Color& aShadowColor, const IntMargin& aBlurMargin,
+                      SourceSurface* aBoxShadow) {
   BlurCacheKey key(aMinSize, aBlurRadius, aCornerRadii, aShadowColor,
                    aDT->GetBackendType());
   BlurCacheData* data =

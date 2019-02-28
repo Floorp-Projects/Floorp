@@ -2204,9 +2204,19 @@ struct StackMapGenerator {
 #ifndef DEBUG
     // An important optimization.  If there are obviously no pointers, as
     // we expect in the majority of cases, exit quickly.
-    if (countedPointers == 0 && extras.empty() &&
-        refDebugFrame == HasRefTypedDebugFrame::No) {
-      return true;
+    if (countedPointers == 0 && refDebugFrame == HasRefTypedDebugFrame::No) {
+      // We can skip creating the map if there are no |true| elements in
+      // |extras|.
+      bool extrasHasRef = false;
+      for (bool b : extras) {
+        if (b) {
+          extrasHasRef = true;
+          break;
+        }
+      }
+      if (!extrasHasRef) {
+        return true;
+      }
     }
 #else
     // In the debug case, create the stack map regardless, and cross-check

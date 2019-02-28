@@ -68,7 +68,9 @@ dbg.onEnterFrame = frame => {
         // Popping the frame. But async function frames are popped multiple
         // times: for the "initial suspend", at each await, and on return. The
         // debugger offers no easy way to distinguish them (bug 1470558).
-        if (typeof completion.return === "string") {
+        // For now there's an "await" property, but bug 1470558 may come up
+        // with a different solution, so don't rely on it!
+        if (!completion.await) {
             // Returning (not awaiting or at initial suspend).
             assertEq(asyncStack.pop(), frame);
             log += ")";

@@ -12,7 +12,7 @@
     phase: parse
     type: SyntaxError
   flags: [onlyStrict]
- ---*/
+---*/
 
 $DONOTEVALUATE();
 
