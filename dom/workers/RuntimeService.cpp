@@ -822,8 +822,7 @@ JSObject* Wrap(JSContext* cx, JS::HandleObject existing, JS::HandleObject obj) {
   JSObject* targetGlobal = JS::CurrentGlobalOrNull(cx);
   if (!IsWorkerDebuggerGlobal(targetGlobal) &&
       !IsWorkerDebuggerSandbox(targetGlobal)) {
-    JS_ReportErrorASCII(cx, "There should be no edges from the debuggee to the debugger.");
-    return nullptr;
+    MOZ_CRASH("There should be no edges from the debuggee to the debugger.");
   }
 
   // Note: the JS engine unwraps CCWs before calling this callback.

@@ -82,17 +82,11 @@ exports.createRootActor = function createRootActor(connection) {
   return root;
 };
 
-var gLastThreadActor;
-
-exports.getLastThreadActor = function() {
-  return gLastThreadActor;
-};
-
 function TestTargetActor(connection, global) {
   this.conn = connection;
   this._global = global;
   this._global.wrappedJSObject = global;
-  this.threadActor = gLastThreadActor = new ThreadActor(this, this._global);
+  this.threadActor = new ThreadActor(this, this._global);
   this.conn.addActor(this.threadActor);
   this._attached = false;
   this._extraActors = {};
