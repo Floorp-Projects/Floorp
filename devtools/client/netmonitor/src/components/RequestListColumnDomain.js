@@ -49,7 +49,7 @@ class RequestListColumnDomain extends Component {
     }
 
     return (
-      div({ className: "requests-list-column requests-list-domain", title },
+      dom.td({ className: "requests-list-column requests-list-domain", title },
         div({
           className: iconClassList.join(" "),
           onMouseDown: onSecurityIconMouseDown,

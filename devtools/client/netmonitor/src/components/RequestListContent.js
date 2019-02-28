@@ -276,11 +276,11 @@ class RequestListContent extends Component {
         ref: "scrollEl",
         className: "requests-list-scroll",
       },
-        div({
+        dom.table({
           className: "requests-list-table",
         },
           RequestListHeader(),
-          div({
+          dom.tbody({
             ref: "rowGroupEl",
             className: "requests-list-row-group",
             tabIndex: 0,

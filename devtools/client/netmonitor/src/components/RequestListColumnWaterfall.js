@@ -125,7 +125,7 @@ class RequestListColumnWaterfall extends Component {
     } = this.props;
 
     return (
-      div({
+      dom.td({
         className: "requests-list-column requests-list-waterfall",
         onMouseOver: ({ target }) => {
           if (!target.title) {

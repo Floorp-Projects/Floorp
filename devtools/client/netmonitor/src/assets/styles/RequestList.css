@@ -57,15 +57,11 @@
 }
 
 .requests-list-table {
-  display: table;
-}
-
-.requests-list-row-group {
-  display: table-row-group;
+  /* Reset default browser style of <table> */
+  border-spacing: 0;
 }
 
 .requests-list-column {
-  display: table-cell;
   cursor: default;
   white-space: nowrap;
   overflow: hidden;
@@ -73,6 +69,9 @@
   vertical-align: middle;
   max-width: 50px;
   min-width: 50px;
+
+  /* Reset default browser style of <td> */
+  padding: 0;
 }
 
 .requests-list-column > * {
@@ -82,6 +81,7 @@
 /* Requests list headers */
 
 .requests-list-headers-group {
+  /* Avoid .devtools-toolbar to override <thead> display type */
   display: table-header-group;
 
   position: sticky;
@@ -92,7 +92,6 @@
 }
 
 .requests-list-headers {
-  display: table-row;
   height: 24px;
   padding: 0;
 }
@@ -567,7 +566,6 @@
 /* Request list item */
 
 .request-list-item {
-  display: table-row;
   height: 24px;
   line-height: 24px;
 }
