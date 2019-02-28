@@ -5,59 +5,37 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/PermissionMessageUtils.h"
-#include "nsISerializable.h"
-#include "nsSerializationHelper.h"
+#include "mozilla/ipc/BackgroundUtils.h"
 
 namespace mozilla {
 namespace ipc {
 
 void IPDLParamTraits<nsIPrincipal>::Write(IPC::Message* aMsg, IProtocol* aActor,
                                           nsIPrincipal* aParam) {
-  bool isNull = !aParam;
-  WriteIPDLParam(aMsg, aActor, isNull);
-  if (isNull) {
-    return;
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
+
+  Maybe<PrincipalInfo> info;
+  if (aParam) {
+    info.emplace();
+    nsresult rv = PrincipalToPrincipalInfo(aParam, info.ptr());
+    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
   }
 
-  nsCString principalString;
-  nsresult rv = NS_SerializeToString(aParam, principalString);
-  if (NS_FAILED(rv)) {
-    MOZ_CRASH("Unable to serialize principal.");
-    return;
-  }
-
-  WriteIPDLParam(aMsg, aActor, principalString);
+  WriteIPDLParam(aMsg, aActor, info);
 }
 
 bool IPDLParamTraits<nsIPrincipal>::Read(const IPC::Message* aMsg,
                                          PickleIterator* aIter,
                                          IProtocol* aActor,
                                          RefPtr<nsIPrincipal>* aResult) {
-  bool isNull;
-  if (!ReadIPDLParam(aMsg, aIter, aActor, &isNull)) {
+  Maybe<PrincipalInfo> info;
+  if (!ReadIPDLParam(aMsg, aIter, aActor, &info)) {
     return false;
   }
 
-  if (isNull) {
-    *aResult = nullptr;
-    return true;
-  }
-
-  nsCString principalString;
-  if (!ReadIPDLParam(aMsg, aIter, aActor, &principalString)) {
-    return false;
-  }
-
-  nsCOMPtr<nsISupports> iSupports;
-  nsresult rv =
-      NS_DeserializeObject(principalString, getter_AddRefs(iSupports));
-  NS_ENSURE_SUCCESS(rv, false);
-
-  nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(iSupports);
-  NS_ENSURE_TRUE(principal, false);
-
-  *aResult = principal.forget();
-  return true;
+  nsresult rv = NS_OK;
+  *aResult = info ? PrincipalInfoToPrincipal(info.ref(), &rv) : nullptr;
+  return NS_SUCCEEDED(rv);
 }
 
 }  // namespace ipc
