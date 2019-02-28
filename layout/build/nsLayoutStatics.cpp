@@ -255,7 +255,7 @@ nsresult nsLayoutStatics::Initialize() {
   nsCookieService::AppClearDataObserverInit();
   nsApplicationCacheService::AppClearDataObserverInit();
 
-  HTMLVideoElement::InitStatics();
+  HTMLVideoElement::Init();
   nsGenericHTMLFrameElement::InitStatics();
 
 #ifdef MOZ_XUL

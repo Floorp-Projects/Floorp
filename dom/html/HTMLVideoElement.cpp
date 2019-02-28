@@ -31,26 +31,18 @@
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/TimeRanges.h"
 #include "mozilla/dom/VideoPlaybackQuality.h"
-#include "mozilla/Unused.h"
 
 #include <algorithm>
 #include <limits>
 
-nsGenericHTMLElement* NS_NewHTMLVideoElement(
-    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-    mozilla::dom::FromParser aFromParser) {
-  mozilla::dom::HTMLVideoElement* element =
-      new mozilla::dom::HTMLVideoElement(std::move(aNodeInfo));
-  mozilla::Unused << element->Init();
-  return element;
-}
+NS_IMPL_NS_NEW_HTML_ELEMENT(Video)
 
 namespace mozilla {
 namespace dom {
 
 static bool sVideoStatsEnabled;
 
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(HTMLVideoElement)
+NS_IMPL_ELEMENT_CLONE(HTMLVideoElement)
 
 HTMLVideoElement::HTMLVideoElement(already_AddRefed<NodeInfo>&& aNodeInfo)
     : HTMLMediaElement(std::move(aNodeInfo)), mIsOrientationLocked(false) {
@@ -316,8 +308,7 @@ void HTMLVideoElement::ReleaseVideoWakeLockIfExists() {
   }
 }
 
-/* static */
-void HTMLVideoElement::InitStatics() {
+void HTMLVideoElement::Init() {
   Preferences::AddBoolVarCache(&sVideoStatsEnabled,
                                "media.video_stats.enabled");
 }
