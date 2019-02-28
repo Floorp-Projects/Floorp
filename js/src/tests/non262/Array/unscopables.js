@@ -26,6 +26,8 @@ assertDeepEq(keys, [
     "fill",
     "find",
     "findIndex",
+    "flat",
+    "flatMap",
     "includes",
     "keys",
     "values"

@@ -15,6 +15,10 @@
 namespace mozilla {
 namespace layers {
 
+already_AddRefed<TextureHost> CreateTextureHostBasic(
+    const SurfaceDescriptor& aDesc, ISurfaceAllocator* aDeallocator,
+    LayersBackend aBackend, TextureFlags aFlags);
+
 /**
  * A texture source interface that can be used by the software Compositor.
  */

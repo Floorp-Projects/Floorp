@@ -193,7 +193,8 @@ void RotatedBuffer::DrawBufferWithRotation(
                      aMaskTransform);
 }
 
-bool IsClippingCheap(gfx::DrawTarget* aTarget, const nsIntRegion& aRegion) {
+static bool IsClippingCheap(gfx::DrawTarget* aTarget,
+                            const nsIntRegion& aRegion) {
   // Assume clipping is cheap if the draw target just has an integer
   // translation, and the visible region is simple.
   return !aTarget->GetTransform().HasNonIntegerTranslation() &&

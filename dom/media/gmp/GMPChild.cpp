@@ -20,6 +20,7 @@
 #include "mozilla/Algorithm.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/ProcessChild.h"
+#include "mozilla/TextUtils.h"
 #include "GMPUtils.h"
 #include "prio.h"
 #include "base/task.h"
@@ -264,7 +265,8 @@ mozilla::ipc::IPCResult GMPChild::RecvPreloadLibs(const nsCString& aLibs) {
       u"msmpeg2vdec.dll",  // H.264 decoder
       u"psapi.dll",        // For GetMappedFileNameW, see bug 1383611
   };
-  constexpr static bool (*IsASCII)(const char16_t*) = NS_IsAscii;
+  constexpr static bool (*IsASCII)(const char16_t*) =
+      IsAsciiNullTerminated<char16_t>;
   static_assert(AllOf(std::begin(whitelist), std::end(whitelist), IsASCII),
                 "Items in the whitelist must not contain non-ASCII "
                 "characters!");

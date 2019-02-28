@@ -16,7 +16,6 @@
 #include "jit/RematerializedFrame.h"
 #include "js/Debug.h"
 #include "vm/EnvironmentObject.h"
-#include "vm/GeneratorObject.h"
 #include "vm/JSContext.h"
 #include "vm/JSScript.h"
 

@@ -12,6 +12,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/TextUtils.h"
 #include "mozilla/Unused.h"
 
 #include "nsAtom.h"
@@ -508,7 +509,7 @@ void nsAtomTable::RegisterStaticAtoms(const nsStaticAtom* aAtoms,
 
   for (uint32_t i = 0; i < aAtomsLen; ++i) {
     const nsStaticAtom* atom = &aAtoms[i];
-    MOZ_ASSERT(nsCRT::IsAscii(atom->String()));
+    MOZ_ASSERT(IsAsciiNullTerminated(atom->String()));
     MOZ_ASSERT(NS_strlen(atom->String()) == atom->GetLength());
     MOZ_ASSERT(atom->IsAsciiLowercase() ==
                ::IsAsciiLowercase(atom->String(), atom->GetLength()));

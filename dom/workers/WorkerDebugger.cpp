@@ -88,6 +88,17 @@ class CompileDebuggerScriptRunnable final : public WorkerDebuggerRunnable {
       return false;
     }
 
+    if (NS_WARN_IF(!aWorkerPrivate->EnsureCSPEventListener())) {
+      return false;
+    }
+
+    // Initialize performance state which might be used on the main thread, as
+    // in CompileScriptRunnable. This runnable might execute first.
+    aWorkerPrivate->EnsurePerformanceStorage();
+    if (mozilla::StaticPrefs::dom_performance_enable_scheduler_timing()) {
+      aWorkerPrivate->EnsurePerformanceCounter();
+    }
+
     JS::Rooted<JSObject*> global(aCx, globalScope->GetWrapper());
 
     ErrorResult rv;
@@ -366,6 +377,12 @@ WorkerDebugger::RemoveListener(nsIWorkerDebuggerListener* aListener) {
 
   mListeners.RemoveElement(aListener);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+WorkerDebugger::SetDebuggerReady(bool aReady)
+{
+  return mWorkerPrivate->SetIsDebuggerReady(aReady);
 }
 
 void WorkerDebugger::Close() {

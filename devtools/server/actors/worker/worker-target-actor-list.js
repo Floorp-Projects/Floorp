@@ -31,11 +31,40 @@ function matchWorkerDebugger(dbg, options) {
   return true;
 }
 
+// When a new worker appears, in some cases (i.e. the debugger is running) we
+// want it to pause during registration until a later time (i.e. the debugger
+// finishes attaching to the worker). This is an optional WorkderDebuggerManager
+// listener that can be installed in addition to the WorkerTargetActorList
+// listener. It always listens to new workers and pauses any which are matched
+// by the WorkerTargetActorList.
+function PauseMatchingWorkers(options) {
+  this._options = options;
+  this.onRegister = this._onRegister.bind(this);
+  this.onUnregister = () => {};
+
+  wdm.addListener(this);
+}
+
+PauseMatchingWorkers.prototype = {
+  destroy() {
+    wdm.removeListener(this);
+  },
+
+  _onRegister(dbg) {
+    if (matchWorkerDebugger(dbg, this._options)) {
+      // Prevent the debuggee from executing in this worker until the debugger
+      // has finished attaching to it.
+      dbg.setDebuggerReady(false);
+    }
+  },
+};
+
 function WorkerTargetActorList(conn, options) {
   this._conn = conn;
   this._options = options;
   this._actors = new Map();
   this._onListChanged = null;
+  this._pauseMatchingWorkers = null;
   this._mustNotify = false;
   this.onRegister = this.onRegister.bind(this);
   this.onUnregister = this.onUnregister.bind(this);
@@ -121,6 +150,17 @@ WorkerTargetActorList.prototype = {
   onUnregister(dbg) {
     if (matchWorkerDebugger(dbg, this._options)) {
       this._notifyListChanged();
+    }
+  },
+
+  setPauseMatchingWorkers(shouldPause) {
+    if (shouldPause != !!this._pauseMatchingWorkers) {
+      if (shouldPause) {
+        this._pauseMatchingWorkers = new PauseMatchingWorkers(this._options);
+      } else {
+        this._pauseMatchingWorkers.destroy();
+        this._pauseMatchingWorkers = null;
+      }
     }
   },
 };

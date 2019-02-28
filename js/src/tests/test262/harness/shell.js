@@ -1,3 +1,4 @@
+// GENERATED, DO NOT EDIT
 // file: arrayContains.js
 // Copyright (C) 2017 Ecma International.  All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.

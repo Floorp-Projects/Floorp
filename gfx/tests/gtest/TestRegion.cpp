@@ -1191,7 +1191,8 @@ struct RegionBitmap {
   int height;
 };
 
-void VisitEdge(void *closure, VisitSide side, int x1, int y1, int x2, int y2) {
+static void VisitEdge(void *closure, VisitSide side, int x1, int y1,
+                      int x2, int y2) {
   EXPECT_GE(x2, x1);
   RegionBitmap *visitor = static_cast<RegionBitmap *>(closure);
   unsigned char *bitmap = visitor->bitmap;
@@ -1220,7 +1221,7 @@ void VisitEdge(void *closure, VisitSide side, int x1, int y1, int x2, int y2) {
   }
 }
 
-void TestVisit(nsRegion &r) {
+static void TestVisit(nsRegion &r) {
   auto reference = mozilla::MakeUnique<unsigned char[]>(600 * 600);
   auto result = mozilla::MakeUnique<unsigned char[]>(600 * 600);
   RegionBitmap ref(reference.get(), 600, 600);

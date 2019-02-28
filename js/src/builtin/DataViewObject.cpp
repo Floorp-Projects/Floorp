@@ -9,8 +9,10 @@
 #include "mozilla/Alignment.h"
 #include "mozilla/Casting.h"
 #include "mozilla/EndianUtils.h"
+#include "mozilla/WrappingOperations.h"
 
 #include <string.h>
+#include <type_traits>
 
 #include "jsapi.h"
 #include "jsnum.h"
@@ -39,6 +41,7 @@ using namespace js;
 using JS::CanonicalizeNaN;
 using JS::ToInt32;
 using mozilla::AssertedCast;
+using mozilla::WrapToSigned;
 
 DataViewObject* DataViewObject::create(
     JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
@@ -412,17 +415,24 @@ template <typename NativeType>
   return true;
 }
 
+template <typename T>
+static inline T WrappingConvert(int32_t value) {
+  if (std::is_unsigned<T>::value) {
+    return static_cast<T>(value);
+  }
+
+  return WrapToSigned(static_cast<typename std::make_unsigned<T>::type>(value));
+}
+
 template <typename NativeType>
 static inline bool WebIDLCast(JSContext* cx, HandleValue value,
                               NativeType* out) {
-  int32_t temp;
-  if (!ToInt32(cx, value, &temp)) {
+  int32_t i;
+  if (!ToInt32(cx, value, &i)) {
     return false;
   }
-  // Technically, the behavior of assigning an out of range value to a signed
-  // variable is undefined. In practice, compilers seem to do what we want
-  // without issuing any warnings.
-  *out = static_cast<NativeType>(temp);
+
+  *out = WrappingConvert<NativeType>(i);
   return true;
 }
 
