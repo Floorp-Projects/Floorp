@@ -2496,7 +2496,7 @@ nsresult ReadResponse(mozIStorageConnection* aConn, EntryId aEntryId,
     nsTArray<mozilla::ipc::ContentSecurityPolicy> policies;
     aSavedResponseOut->mValue.principalInfo() =
         mozilla::ipc::ContentPrincipalInfo(attrs, origin, specNoSuffix,
-                                           std::move(policies));
+                                           Nothing(), std::move(policies));
   }
 
   bool nullPadding = false;
