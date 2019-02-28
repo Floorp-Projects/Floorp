@@ -66,6 +66,12 @@ struct ProcInfo {
 
 typedef MozPromise<ProcInfo, nsresult, true> ProcInfoPromise;
 
+/*
+ * GetProcInfo() uses a background thread to perform system calls.
+ *
+ * Depending on the platform, this call can be quite expensive and the
+ * promise may return after several ms.
+ */
 RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId,
                                     const ProcType& type);
 
