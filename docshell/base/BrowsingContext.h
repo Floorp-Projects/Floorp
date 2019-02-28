@@ -350,6 +350,7 @@ class BrowsingContext : public nsWrapperCache,
                  ErrorResult& aError);
 
    private:
+    friend class RemoteLocationProxy;
     BrowsingContext* GetBrowsingContext() {
       return reinterpret_cast<BrowsingContext*>(
           uintptr_t(this) - offsetof(BrowsingContext, mLocation));

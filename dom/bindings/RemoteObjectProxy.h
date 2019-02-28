@@ -76,6 +76,9 @@ class RemoteObjectProxyBase : public js::BaseProxyHandler,
   bool isCallable(JSObject* aObj) const final { return false; }
   bool isConstructor(JSObject* aObj) const final { return false; }
 
+  virtual void NoteChildren(JSObject* aProxy,
+                            nsCycleCollectionTraversalCallback& aCb) const = 0;
+
   static void* GetNative(JSObject* aProxy) {
     return js::GetProxyPrivate(aProxy).toPrivate();
   }
