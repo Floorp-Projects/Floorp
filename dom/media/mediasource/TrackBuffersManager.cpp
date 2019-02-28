@@ -521,9 +521,12 @@ void TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
   if (lastKeyFrameIndex > 0) {
     MSE_DEBUG("Step1. Evicting %" PRId64 " bytes prior currentTime",
               aSizeToEvict - toEvict);
-    CodedFrameRemoval(TimeInterval(
-        TimeUnit::Zero(),
-        buffer[lastKeyFrameIndex]->mTime - TimeUnit::FromMicroseconds(1)));
+    TimeUnit start = track.mBufferedRanges[0].mStart;
+    TimeUnit end =
+        buffer[lastKeyFrameIndex]->mTime - TimeUnit::FromMicroseconds(1);
+    if (end > start) {
+      CodedFrameRemoval(TimeInterval(start, end));
+    }
   }
 
   if (mSizeSourceBuffer <= finalSize) {
