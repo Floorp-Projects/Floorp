@@ -52,7 +52,7 @@ const TPSProcessScript = {
   },
 
   receiveMessage(msg) {
-    if (msg.name == "TPS:Teardown") {
+    if (msg.name == "Tabswitch:Teardown") {
       this.teardown();
     }
   },

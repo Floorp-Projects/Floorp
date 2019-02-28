@@ -1,12 +1,12 @@
 [
   {
-    "namespace": "tps",
-    "description": "Special powers for the TPS Talos test",
+    "namespace": "tabswitch",
+    "description": "Special powers for the tabswitch Talos test",
     "functions": [
       {
         "name": "setup",
         "type": "function",
-        "description": "Prepares the TPS test to be run by the Talos framework.",
+        "description": "Prepares the tabswitch test to be run by the Talos framework.",
         "parameters": [{
           "type": "object",
           "name": "setupArgs",
