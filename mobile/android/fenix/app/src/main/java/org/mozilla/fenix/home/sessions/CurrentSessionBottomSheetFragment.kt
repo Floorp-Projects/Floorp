@@ -46,5 +46,6 @@ class CurrentSessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutCon
 
     companion object {
         const val maxTitleLength = 20
+        const val overflowFragmentTag = "sessionOverflow"
     }
 }

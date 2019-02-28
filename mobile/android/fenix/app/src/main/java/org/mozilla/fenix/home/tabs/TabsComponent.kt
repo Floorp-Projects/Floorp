@@ -49,6 +49,7 @@ fun Session.toSessionViewState(selected: Boolean): SessionViewState {
 
 sealed class TabsAction : Action {
     object Archive : TabsAction()
+    object MenuTapped : TabsAction()
     data class CloseAll(val private: Boolean) : TabsAction()
     data class Select(val sessionId: String) : TabsAction()
     data class Close(val sessionId: String) : TabsAction()

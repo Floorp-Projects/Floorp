@@ -4,12 +4,10 @@
 
 package org.mozilla.fenix.home.tabs
 
-import android.app.Activity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.FragmentActivity
 import androidx.navigation.Navigation
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -21,7 +19,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.home.HomeFragmentDirections
-import org.mozilla.fenix.home.sessions.CurrentSessionBottomSheetFragment
 import org.mozilla.fenix.mvi.UIView
 
 class TabsUIView(
@@ -51,12 +48,7 @@ class TabsUIView(
             }
             tabs_overflow_button.increaseTapArea(HomeFragment.overflowButtonIncreaseDps)
             tabs_overflow_button.setOnClickListener {
-                if (view.context as? Activity != null) {
-                    CurrentSessionBottomSheetFragment().show(
-                        (view.context as FragmentActivity).supportFragmentManager,
-                        overflowFragmentTag
-                    )
-                }
+                actionEmitter.onNext(TabsAction.MenuTapped)
             }
 
             save_session_button_text.apply {
@@ -84,9 +76,5 @@ class TabsUIView(
             view.tabs_header.visibility = visibility
             sessionButton.visibility = visibility
         }
-    }
-
-    companion object {
-        const val overflowFragmentTag = "current session overflow"
     }
 }
