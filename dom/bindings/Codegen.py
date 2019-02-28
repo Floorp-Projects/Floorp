@@ -9132,7 +9132,6 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
                 # We'll use a JSObject. It might make more sense to use remoteType's
                 # RemoteProxy, but it's not easy to construct a type for that from here.
                 remoteType = BuiltinTypes[IDLBuiltinType.Types.object]
-                extendedAttributes.append('canOOM')
                 extendedAttributes.remove('infallible')
             prototypeID, _ = PrototypeIDAndDepth(self.descriptor)
             prefix = fill("""

@@ -70,6 +70,8 @@ class RemoteObjectProxyBase : public js::BaseProxyHandler,
   bool getOwnEnumerablePropertyKeys(JSContext* aCx,
                                     JS::Handle<JSObject*> aProxy,
                                     JS::AutoIdVector& aProps) const override;
+  const char* className(JSContext* aCx,
+                        JS::Handle<JSObject*> aProxy) const final;
 
   bool isCallable(JSObject* aObj) const final { return false; }
   bool isConstructor(JSObject* aObj) const final { return false; }
@@ -101,8 +103,17 @@ class RemoteObjectProxyBase : public js::BaseProxyHandler,
   }
 
  protected:
-  JSObject* CreateProxyObject(JSContext* aCx, void* aNative,
-                              const js::Class* aClasp) const;
+  /**
+   * Gets an existing cached proxy object, or creates a new one and caches it.
+   * aProxy will be null on failure. aNewObjectCreated is set to true if a new
+   * object was created, callers probably need to addref the native in that
+   * case. aNewObjectCreated can be true even if aProxy is null, if something
+   * failed after creating the object.
+   */
+  void GetOrCreateProxyObject(JSContext* aCx, void* aNative,
+                              const js::Class* aClasp,
+                              JS::MutableHandle<JSObject*> aProxy,
+                              bool& aNewObjectCreated) const;
 
   const prototypes::ID mPrototypeID;
 
@@ -126,9 +137,18 @@ class RemoteObjectProxyBase : public js::BaseProxyHandler,
 template <class Native, JSPropertySpec* P, JSFunctionSpec* F>
 class RemoteObjectProxy : public RemoteObjectProxyBase {
  public:
-  JSObject* CreateProxyObject(JSContext* aCx, Native* aNative,
-                              const js::Class* aClasp) const {
-    return RemoteObjectProxyBase::CreateProxyObject(aCx, aNative, aClasp);
+  void finalize(JSFreeOp* aFop, JSObject* aProxy) const final {
+    auto native = static_cast<Native*>(GetNative(aProxy));
+    RefPtr<Native> self(dont_AddRef(native));
+  }
+
+  void GetProxyObject(JSContext* aCx, Native* aNative,
+                      JS::MutableHandle<JSObject*> aProxy) const {
+    bool objectCreated = false;
+    GetOrCreateProxyObject(aCx, aNative, &sClass, aProxy, objectCreated);
+    if (objectCreated) {
+      NS_ADDREF(aNative);
+    }
   }
 
  protected:
@@ -140,6 +160,8 @@ class RemoteObjectProxy : public RemoteObjectProxyBase {
     return MaybeCrossOriginObjectMixins::EnsureHolder(
         aCx, aProxy, /* slot = */ 0, P, F, aHolder);
   }
+
+  static const js::Class sClass;
 };
 
 /**
