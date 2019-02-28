@@ -53,6 +53,10 @@ void ApplySamplingFilterToBoundTexture(gl::GLContext* aGL,
                                        gfx::SamplingFilter aSamplingFilter,
                                        GLuint aTarget = LOCAL_GL_TEXTURE_2D);
 
+already_AddRefed<TextureHost> CreateTextureHostOGL(
+    const SurfaceDescriptor& aDesc, ISurfaceAllocator* aDeallocator,
+    LayersBackend aBackend, TextureFlags aFlags);
+
 /*
  * TextureHost implementations for the OpenGL backend.
  *

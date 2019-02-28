@@ -10,12 +10,12 @@ features: [Intl.RelativeTimeFormat]
 ---*/
 
 Object.defineProperties(Object.prototype, {
-  "style": {
+  style: {
     get() {
       throw new Error("Should not call style getter");
     }
   },
-  "numeric": {
+  numeric: {
     get() {
       throw new Error("Should not call numeric getter");
     }
@@ -32,9 +32,9 @@ for (const args of optionsArguments) {
   const rtf = new Intl.RelativeTimeFormat(...args);
   const resolvedOptions = rtf.resolvedOptions();
   assert.sameValue(resolvedOptions.style, "long",
-    `Calling with ${args.length} empty arguments should yield the correct value for "style"`);
+    `Calling with ${args.length} empty arguments should yield the fallback value for "style"`);
   assert.sameValue(resolvedOptions.numeric, "always",
-    `Calling with ${args.length} empty arguments should yield the correct value for "numeric"`);
+    `Calling with ${args.length} empty arguments should yield the fallback value for "numeric"`);
 }
 
 reportCompare(0, 0);

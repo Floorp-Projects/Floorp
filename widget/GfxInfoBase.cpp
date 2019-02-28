@@ -79,7 +79,7 @@ class ShutdownObserver : public nsIObserver {
 
 NS_IMPL_ISUPPORTS(ShutdownObserver, nsIObserver)
 
-void InitGfxDriverInfoShutdownObserver() {
+static void InitGfxDriverInfoShutdownObserver() {
   if (GfxInfoBase::sDriverInfoObserverInitialized) return;
 
   GfxInfoBase::sDriverInfoObserverInitialized = true;

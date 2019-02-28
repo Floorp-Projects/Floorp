@@ -301,9 +301,9 @@ void ContentClient::EndPaint(
   }
 }
 
-nsIntRegion ExpandDrawRegion(ContentClient::PaintState& aPaintState,
-                             RotatedBuffer::DrawIterator* aIter,
-                             BackendType aBackendType) {
+static nsIntRegion ExpandDrawRegion(ContentClient::PaintState& aPaintState,
+                                    RotatedBuffer::DrawIterator* aIter,
+                                    BackendType aBackendType) {
   nsIntRegion* drawPtr = &aPaintState.mRegionToDraw;
   if (aIter) {
     // The iterators draw region currently only contains the bounds of the

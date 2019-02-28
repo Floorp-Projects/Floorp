@@ -11,8 +11,10 @@ includes: [testIntl.js]
 features: [Intl.RelativeTimeFormat]
 ---*/
 
+assert.sameValue(typeof Intl.RelativeTimeFormat, "function");
+
 for (const [locales, expectedError] of getInvalidLocaleArguments()) {
-    assert.throws(expectedError, function() { new Intl.RelativeTimeFormat(locales) })
+    assert.throws(expectedError, function() { new Intl.RelativeTimeFormat(locales) });
 }
 
 reportCompare(0, 0);

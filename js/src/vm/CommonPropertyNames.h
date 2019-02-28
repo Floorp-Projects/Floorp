@@ -32,9 +32,14 @@
   MACRO(AsyncFromSyncIterator, AsyncFromSyncIterator,                          \
         "Async-from-Sync Iterator")                                            \
   MACRO(AsyncFunction, AsyncFunction, "AsyncFunction")                         \
+  MACRO(AsyncFunctionNext, AsyncFunctionNext, "AsyncFunctionNext")             \
+  MACRO(AsyncFunctionThrow, AsyncFunctionThrow, "AsyncFunctionThrow")          \
   MACRO(AsyncGenerator, AsyncGenerator, "AsyncGenerator")                      \
   MACRO(AsyncGeneratorFunction, AsyncGeneratorFunction,                        \
         "AsyncGeneratorFunction")                                              \
+  MACRO(AsyncGeneratorNext, AsyncGeneratorNext, "AsyncGeneratorNext")          \
+  MACRO(AsyncGeneratorReturn, AsyncGeneratorReturn, "AsyncGeneratorReturn")    \
+  MACRO(AsyncGeneratorThrow, AsyncGeneratorThrow, "AsyncGeneratorThrow")       \
   MACRO(AsyncWrapped, AsyncWrapped, "AsyncWrapped")                            \
   MACRO(async, async, "async")                                                 \
   MACRO(autoAllocateChunkSize, autoAllocateChunkSize, "autoAllocateChunkSize") \
@@ -60,6 +65,8 @@
   MACRO(callee, callee, "callee")                                              \
   MACRO(caller, caller, "caller")                                              \
   MACRO(callFunction, callFunction, "callFunction")                            \
+  MACRO(CallRegExpMethodIfWrapped, CallRegExpMethodIfWrapped,                  \
+        "CallRegExpMethodIfWrapped")                                           \
   MACRO(cancel, cancel, "cancel")                                              \
   MACRO(case, case_, "case")                                                   \
   MACRO(caseFirst, caseFirst, "caseFirst")                                     \
@@ -143,6 +150,8 @@
   MACRO(firstDayOfWeek, firstDayOfWeek, "firstDayOfWeek")                      \
   MACRO(fix, fix, "fix")                                                       \
   MACRO(flags, flags, "flags")                                                 \
+  MACRO(flat, flat, "flat")                                                    \
+  MACRO(flatMap, flatMap, "flatMap")                                           \
   MACRO(float32, float32, "float32")                                           \
   MACRO(Float32x4, Float32x4, "Float32x4")                                     \
   MACRO(float64, float64, "float64")                                           \
