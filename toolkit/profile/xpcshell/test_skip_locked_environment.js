@@ -16,7 +16,7 @@ add_task(async () => {
       startWithLastProfile: true,
     },
     profiles: [{
-      name: "Profile1",
+      name: PROFILE_DEFAULT,
       path: root.leafName,
       default: true,
     }, {
@@ -61,9 +61,16 @@ add_task(async () => {
   Assert.equal(service.currentProfile, profile, "Should be the current profile.");
 
   profileData = readProfilesIni();
+
+  if (!AppConstants.MOZ_DEV_EDITION) {
+    // On non-dev-edition builds the first two profiles are in the opposite order.
+    [profileData.profiles[1], profileData.profiles[0]] =
+        [profileData.profiles[0], profileData.profiles[1]];
+  }
+
   Assert.equal(profileData.profiles[0].name, DEDICATED_NAME, "Should be the right profile.");
   Assert.ok(!profileData.profiles[0].default, "Should not be the old default profile.");
-  Assert.equal(profileData.profiles[1].name, "Profile1", "Should be the right profile.");
+  Assert.equal(profileData.profiles[1].name, PROFILE_DEFAULT, "Should be the right profile.");
   Assert.ok(profileData.profiles[1].default, "Should be the old default profile.");
   Assert.equal(profileData.profiles[1].path, root.leafName, "Should be the correct path.");
 
