@@ -10,7 +10,7 @@ wasmFailValidateText(`(module (global i32 (f32.const 13.37)))`, /type mismatch/)
 wasmFailValidateText(`(module (global f64 (f32.const 13.37)))`, /type mismatch/);
 wasmFailValidateText(`(module (global i32 (i32.add (i32.const 13) (i32.const 37))))`, /failed to read end/);
 
-wasmFailValidateText(`(module (global i32 (get_global 0)))`, /out of range/);
+wasmFailValidateText(`(module (global i32 (global.get 0)))`, /out of range/);
 wasmFailValidateText(`(module (global i32 (get_global 1)) (global i32 (i32.const 1)))`, /out of range/);
 
 // Test a well-defined global section.
@@ -21,7 +21,7 @@ function testInner(type, initialValue, nextValue, coercion)
         (global ${type} (${type}.const ${initialValue}))
 
         (func $get (result ${type}) (get_global 0))
-        (func $set (param ${type}) (set_global 0 (get_local 0)))
+        (func $set (param ${type}) (global.set 0 (get_local 0)))
 
         (func $get_cst (result ${type}) (get_global 1))
 
