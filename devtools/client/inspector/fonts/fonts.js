@@ -64,6 +64,9 @@ class FontInspector {
     this.inspector = inspector;
     // Set of unique keyword values supported by designated font properties.
     this.keywordValues = new Set(this.getFontPropertyValueKeywords());
+    // Selected node in the markup view. For text nodes, this points to their parent node
+    // element. Font faces and font properties for this node will be shown in the editor.
+    this.node = null;
     this.nodeComputedStyle = {};
     this.pageStyle = this.inspector.pageStyle;
     this.ruleViewTool = this.inspector.getPanel("ruleview");
@@ -164,8 +167,8 @@ class FontInspector {
     const fromPx = fromUnit === "px";
     // Determine the target CSS unit for conversion.
     const unit = toUnit === "px" ? fromUnit : toUnit;
-    // NodeFront instance of selected element.
-    const node = this.inspector.selection.nodeFront;
+    // NodeFront instance of selected/target element.
+    const node = this.node;
     // Reference node based on which to convert relative sizes like "em" and "%".
     const referenceNode = (property === "line-height") ? node : node.parentNode();
     // Default output value to input value for a 1-to-1 conversion as a guard against
@@ -298,6 +301,7 @@ class FontInspector {
 
     this.document = null;
     this.inspector = null;
+    this.node = null;
     this.nodeComputedStyle = {};
     this.pageStyle = null;
     this.ruleView = null;
@@ -542,17 +546,6 @@ class FontInspector {
            this.inspector.sidebar &&
            this.inspector.sidebar.getCurrentTabID() === "fontinspector";
   }
-  /**
-   * Check if a selected node exists and fonts can apply to it.
-   *
-   * @return {Boolean}
-   */
-  isSelectedNodeValid() {
-    return this.inspector &&
-           this.inspector.selection.nodeFront &&
-           this.inspector.selection.isConnected() &&
-           this.inspector.selection.isElementNode();
-  }
 
   /**
    * Upon a new node selection, log some interesting telemetry probes.
@@ -665,10 +658,30 @@ class FontInspector {
   }
 
   /**
-   * Selection 'new-node' event handler.
+   * Event handler for "new-node-front" event fired when a new node is selected in the
+   * markup view.
+   *
+   * Sets the selected node for which font faces and font properties will be
+   * shown in the font editor. If the selection is a text node, use its parent element.
+   *
+   * Triggers a refresh of the font editor and font overview if the panel is visible.
    */
   onNewNode() {
     this.ruleView.off("property-value-updated", this.onRulePropertyUpdated);
+    // First, reset the selected node.
+    this.node = null;
+    // Then attempt to assign a selected node according to its type.
+    const selection = this.inspector && this.inspector.selection;
+    if (selection && selection.isConnected()) {
+      if (selection.isElementNode()) {
+        this.node = selection.nodeFront;
+      }
+
+      if (selection.isTextNode()) {
+        this.node = selection.nodeFront.parentNode();
+      }
+    }
+
     if (this.isPanelVisible()) {
       Promise.all([this.update(), this.refreshFontEditor()]).then(() => {
         this.logTelemetryProbesOnNewNode();
@@ -764,9 +777,7 @@ class FontInspector {
 
     try {
       if (show) {
-        const node = isForCurrentElement
-                   ? this.inspector.selection.nodeFront
-                   : this.inspector.walker.rootNode;
+        const node = isForCurrentElement ? this.node : this.inspector.walker.rootNode;
 
         await this.fontsHighlighter.show(node, {
           CSSFamilyName: font.CSSFamilyName,
@@ -796,21 +807,13 @@ class FontInspector {
    * - the computed style CSS font properties of the current node.
    *
    * This method is called:
-   * - during initial setup;
    * - when a new node is selected;
    * - when any property is changed in the Rule view.
    * For the latter case, we compare between the latest computed style font properties
    * and the ones already in the store to decide if to update the font editor state.
    */
   async refreshFontEditor() {
-    if (!this.store || !this.isSelectedNodeValid()) {
-      // If the selection is a TextNode, switch selection to be its parent node.
-      if (this.inspector.selection.isTextNode()) {
-        const selection = this.inspector.selection;
-        selection.setNodeFront(selection.nodeFront.parentNode());
-        return;
-      }
-
+    if (!this.node) {
       this.store.dispatch(resetFontEditor());
       return;
     }
@@ -820,12 +823,11 @@ class FontInspector {
       options.includeVariations = true;
     }
 
-    const node = this.inspector.selection.nodeFront;
-    const fonts = await this.getFontsForNode(node, options);
+    const fonts = await this.getFontsForNode(this.node, options);
 
     try {
       // Get computed styles for the selected node, but filter by CSS font properties.
-      this.nodeComputedStyle = await this.pageStyle.getComputed(node, {
+      this.nodeComputedStyle = await this.pageStyle.getComputed(this.node, {
         filterProperties: FONT_PROPERTIES,
       });
     } catch (e) {
@@ -853,7 +855,7 @@ class FontInspector {
     // been created yet. For example, in 2-pane mode when Fonts is opened as the default
     // panel. Select the current node to force the Rule view to create the rule models.
     if (!this.ruleViewTool.isSidebarActive()) {
-      await this.ruleView.selectElement(node, false);
+      await this.ruleView.selectElement(this.node, false);
     }
 
     // Select the node's inline style as the rule where to write property value changes.
@@ -867,9 +869,8 @@ class FontInspector {
       this.writers.set(axis, this.getWriterForAxis(axis));
     });
 
-    this.store.dispatch(updateFontEditor(fonts, properties, node.actorID));
-    const isPseudo = this.inspector.selection.isPseudoElementNode();
-    this.store.dispatch(setEditorDisabled(isPseudo));
+    this.store.dispatch(updateFontEditor(fonts, properties, this.node.actorID));
+    this.store.dispatch(setEditorDisabled(this.node.isPseudoElement));
 
     this.inspector.emit("fonteditor-updated");
     // Listen to manual changes in the Rule view that could update the Font Editor state
@@ -893,7 +894,7 @@ class FontInspector {
 
     let allFonts = [];
 
-    if (!this.isSelectedNodeValid()) {
+    if (!this.node) {
       this.store.dispatch(updateFonts(allFonts));
       return;
     }
