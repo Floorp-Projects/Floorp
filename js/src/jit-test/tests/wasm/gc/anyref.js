@@ -350,7 +350,7 @@ exports = wasmEvalText(`(module
         call $mirror
     )
 
-    (table (export "table") 10 anyfunc)
+    (table (export "table") 10 funcref)
     (elem (i32.const 0) $f $g $mirror $augment)
     (type $table_type (func (param anyref) (result anyref)))
 

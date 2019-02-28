@@ -44,7 +44,7 @@ test(
 `(module
     (func $foo (call_indirect 0 (i32.const 0)))
     (func $bar)
-    (table anyfunc (elem $bar))
+    (table funcref (elem $bar))
     (export "" $foo)
 )`,
 {},
@@ -53,7 +53,7 @@ test(
 test(
 `(module
     (import $foo "" "foo")
-    (table anyfunc (elem $foo))
+    (table funcref (elem $foo))
     (func $bar (call_indirect 0 (i32.const 0)))
     (export "" $bar)
 )`,
@@ -151,7 +151,7 @@ for (let type of ['f32', 'f64']) {
         (type $bad (func (param i32)))
         (func $foo (call_indirect $bad (i32.const 1) (i32.const 0)))
         (func $bar (type $good))
-        (table anyfunc (elem $bar))
+        (table funcref (elem $bar))
         (export "" $foo)
     )`,
     WebAssembly.RuntimeError,
@@ -165,7 +165,7 @@ for (let type of ['f32', 'f64']) {
         (func $foo (result i32) (i32.const 42))
         (export "foo" $foo)
         (func $bar (result i32) (i32.const 13))
-        (table 10 anyfunc)
+        (table 10 funcref)
         (elem (i32.const 0) $foo $bar)
         (export "tbl" table)
     )`).exports;
@@ -203,7 +203,7 @@ for (let type of ['f32', 'f64']) {
     var e2 = wasmEvalText(`
     (module
         (type $v2i (func (result i32)))
-        (import "a" "b" (table 10 anyfunc))
+        (import "a" "b" (table 10 funcref))
         (elem (i32.const 2) $bar)
         (func $bar (result i32) (i32.const 99))
         (func $baz (param $i i32) (result i32) (call_indirect $v2i (get_local $i)))

@@ -15,7 +15,7 @@ var callee = i => `(func $f${i} (type $v2i) (i32.const ${i}))`;
 // hold instances alive and instances hold imported tables alive. Nothing
 // should hold the export object alive.
 resetFinalizeCount();
-var i = wasmEvalText(`(module (table 2 anyfunc) (export "tbl" table) (elem (i32.const 0) $f0) ${callee(0)} ${caller})`);
+var i = wasmEvalText(`(module (table 2 funcref) (export "tbl" table) (elem (i32.const 0) $f0) ${callee(0)} ${caller})`);
 var e = i.exports;
 var t = e.tbl;
 var f = t.get(0);
@@ -53,7 +53,7 @@ assertEq(finalizeCount(), 3);
 
 // A table should hold the instance of any of its elements alive.
 resetFinalizeCount();
-var i = wasmEvalText(`(module (table 1 anyfunc) (export "tbl" table) (elem (i32.const 0) $f0) ${callee(0)} ${caller})`);
+var i = wasmEvalText(`(module (table 1 funcref) (export "tbl" table) (elem (i32.const 0) $f0) ${callee(0)} ${caller})`);
 var e = i.exports;
 var t = e.tbl;
 var f = t.get(0);
@@ -78,7 +78,7 @@ assertEq(finalizeCount(), 3);
 
 // Null elements shouldn't keep anything alive.
 resetFinalizeCount();
-var i = wasmEvalText(`(module (table 2 anyfunc) (export "tbl" table) ${caller})`);
+var i = wasmEvalText(`(module (table 2 funcref) (export "tbl" table) ${caller})`);
 var e = i.exports;
 var t = e.tbl;
 i.edge = makeFinalizeObserver();
@@ -99,7 +99,7 @@ assertEq(finalizeCount(), 2);
 // Before initialization, a table is not bound to any instance.
 resetFinalizeCount();
 var i = wasmEvalText(`(module (func $f0 (result i32) (i32.const 0)) (export "f0" $f0))`);
-var t = new Table({initial:4, element:"anyfunc"});
+var t = new Table({initial:4, element:"funcref"});
 i.edge = makeFinalizeObserver();
 t.edge = makeFinalizeObserver();
 gc();
@@ -116,7 +116,7 @@ assertEq(finalizeCount(), 2);
 resetFinalizeCount();
 var i = wasmEvalText(`(module (func $f (result i32) (i32.const 42)) (export "f" $f))`);
 var f = i.exports.f;
-var t = new Table({initial:1, element:"anyfunc"});
+var t = new Table({initial:1, element:"funcref"});
 i.edge = makeFinalizeObserver();
 f.edge = makeFinalizeObserver();
 t.edge = makeFinalizeObserver();
@@ -148,7 +148,7 @@ var i1 = wasmEvalText(`(module (func $f1 (result i32) (i32.const 13)) (export "f
 var i2 = wasmEvalText(`(module (func $f2 (result i32) (i32.const 42)) (export "f2" $f2))`);
 var f1 = i1.exports.f1;
 var f2 = i2.exports.f2;
-var t = new Table({initial:2, element:"anyfunc"});
+var t = new Table({initial:2, element:"funcref"});
 i1.edge = makeFinalizeObserver();
 i2.edge = makeFinalizeObserver();
 f1.edge = makeFinalizeObserver();
@@ -182,7 +182,7 @@ assertEq(finalizeCount(), 5);
 // there are no outstanding references.
 resetFinalizeCount();
 const N = 10;
-var tbl = new Table({initial:N, element:"anyfunc"});
+var tbl = new Table({initial:N, element:"funcref"});
 tbl.edge = makeFinalizeObserver();
 function runTest() {
     tbl = null;
@@ -201,7 +201,7 @@ var i = wasmEvalText(
 i.edge = makeFinalizeObserver();
 tbl.set(0, i.exports.f);
 var m = new Module(wasmTextToBinary(`(module
-    (import "a" "b" (table ${N} anyfunc))
+    (import "a" "b" (table ${N} funcref))
     (type $i2i (func (param i32) (result i32)))
     (func $f (param $i i32) (result i32)
         (set_local $i (i32.sub (get_local $i) (i32.const 1)))
