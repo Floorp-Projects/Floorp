@@ -18,6 +18,7 @@
                   "*://*.amazon.com/*",
                   "*://*.bing.com/*",
                   "*://*.ebay.com/*",
+                  "*://*.ebay-kleinanzeigen.de/*",
                   "*://*.facebook.com/*",
                   "*://*.google.com/*",
                   "*://*.imdb.com/*",
