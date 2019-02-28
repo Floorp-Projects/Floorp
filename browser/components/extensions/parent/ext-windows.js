@@ -191,13 +191,8 @@ this.windows = class extends ExtensionAPI {
               args.appendElement(mkstr(createData.url));
             }
           } else {
-            let url;
-            if (createData.incognito) {
-              url = PrivateBrowsingUtils.permanentPrivateBrowsing ?
-                HomePage.getPrivate().split("|", 1)[0] : "about:privatebrowsing";
-            } else {
-              url = HomePage.get().split("|", 1)[0];
-            }
+            let url = createData.incognito && !PrivateBrowsingUtils.permanentPrivateBrowsing ?
+              "about:privatebrowsing" : HomePage.get().split("|", 1)[0];
             args.appendElement(mkstr(url));
 
             if (url.startsWith("about:") &&
