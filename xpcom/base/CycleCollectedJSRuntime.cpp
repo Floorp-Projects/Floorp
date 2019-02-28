@@ -638,7 +638,7 @@ void CycleCollectedJSRuntime::NoteGCThingXPCOMChildren(
     return;
   }
 
-  const DOMJSClass* domClass = GetDOMClass(aObj);
+  const DOMJSClass* domClass = GetDOMClass(aClasp);
   if (domClass) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "UnwrapDOMObject(obj)");
     // It's possible that our object is an unforgeable holder object, in
@@ -653,6 +653,12 @@ void CycleCollectedJSRuntime::NoteGCThingXPCOMChildren(
                           domClass->mParticipant);
     }
     return;
+  }
+
+  if (IsRemoteObjectProxy(aObj)) {
+    auto handler =
+        static_cast<const RemoteObjectProxyBase*>(js::GetProxyHandler(aObj));
+    return handler->NoteChildren(aObj, aCb);
   }
 
   JS::Value value = js::MaybeGetScriptPrivate(aObj);

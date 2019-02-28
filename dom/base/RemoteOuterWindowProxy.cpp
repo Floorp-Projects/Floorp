@@ -47,6 +47,13 @@ class RemoteOuterWindowProxy
   // SpiderMonkey extensions
   bool getOwnEnumerablePropertyKeys(JSContext* cx, JS::Handle<JSObject*> proxy,
                                     JS::AutoIdVector& props) const final;
+
+  void NoteChildren(JSObject* aProxy,
+                    nsCycleCollectionTraversalCallback& aCb) const override {
+    CycleCollectionNoteChild(aCb,
+                             static_cast<BrowsingContext*>(GetNative(aProxy)),
+                             "js::GetObjectPrivate(obj)");
+  }
 };
 
 static const RemoteOuterWindowProxy sSingleton;
