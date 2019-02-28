@@ -42,11 +42,12 @@ env.testing = true;
 const rootPath = path.join(__dirname, "../../");
 
 function getL10nBundle() {
-  const read = file => readFileSync(path.join(__dirname, file));
+  const read = file => readFileSync(path.join(rootPath, file));
+
   try {
-    return read("../../assets/panel/debugger.properties");
+    return read("./assets/panel/debugger.properties");
   } catch (e) {
-    return read("../../../../locales/en-us/debugger.properties");
+    return read("../../locales/en-US/debugger.properties");
   }
 }
 
@@ -109,5 +110,22 @@ function mockIndexeddDB() {
     setItem: async (key, value) => {
       store[key] = value;
     }
+  };
+}
+
+// NOTE: We polyfill finally because TRY uses node 8
+if (!global.Promise.prototype.finally) {
+  global.Promise.prototype.finally = function finallyPolyfill(callback) {
+    var constructor = this.constructor;
+
+    return this.then(function(value) {
+        return constructor.resolve(callback()).then(function() {
+          return value;
+        });
+      }, function(reason) {
+        return constructor.resolve(callback()).then(function() {
+          throw reason;
+        });
+      });
   };
 }
