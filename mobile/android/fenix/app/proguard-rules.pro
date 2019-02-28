@@ -35,3 +35,9 @@
 -keepclassmembernames class kotlinx.** {
     volatile <fields>;
 }
+
+####################################################################################################
+# Mozilla Application Services
+####################################################################################################
+
+-keep class mozilla.appservices.FenixMegazord  { *; }
