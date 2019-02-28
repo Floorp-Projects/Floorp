@@ -24,6 +24,11 @@ function autoplayBlockedIcon() {
                                 ".blocked-permission-icon.autoplay-media-icon");
 }
 
+function sleep(ms) {
+  /* eslint-disable mozilla/no-arbitrary-setTimeout */
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function blockedIconShown(browser) {
   // May need to wait for `GloballyAutoplayBlocked` event before showing icon.
   if (BrowserTestUtils.is_hidden(autoplayBlockedIcon())) {
@@ -117,4 +122,30 @@ add_task(async function testGloballyBlockedOnNewWindow() {
 
   SitePermissions.remove(uri, AUTOPLAY_PERM, tab.linkedBrowser);
   await BrowserTestUtils.closeWindow(win);
+});
+
+add_task(async function testBFCache() {
+  Services.prefs.setIntPref(AUTOPLAY_PREF, Ci.nsIAutoplay.BLOCKED);
+
+  await BrowserTestUtils.withNewTab("about:home", async function(browser) {
+    await BrowserTestUtils.loadURI(browser, AUTOPLAY_PAGE);
+    await blockedIconShown(browser);
+    Services.prefs.setIntPref(AUTOPLAY_PREF, Ci.nsIAutoplay.ALLOWED);
+
+    gBrowser.goBack();
+    await TestUtils.waitForCondition(() => {
+      return BrowserTestUtils.is_hidden(autoplayBlockedIcon());
+    });
+
+    gBrowser.goForward();
+
+    // Sleep here to prevent false positives, the icon gets shown with an
+    // async `GloballyAutoplayBlocked` event. The sleep gives it a little
+    // time for it to show otherwise there is a chance it passes before it
+    // would have shown.
+    await sleep(100);
+    ok(BrowserTestUtils.is_hidden(autoplayBlockedIcon()), "Blocked icon is hidden");
+  });
+
+  Services.perms.removeAll();
 });
