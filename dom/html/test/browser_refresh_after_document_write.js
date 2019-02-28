@@ -3,12 +3,11 @@
 
 /*
 Test that after using document.write(...), refreshing the document and calling write again,
-resulting document.URL does not contain 'wyciwyg' schema
-and instead is identical to the original URL.
+resulting document.URL is identical to the original URL.
 
 This testcase is aimed at preventing bug 619092
 */
-var testURL = "http://mochi.test:8888/browser/dom/html/test/file_refresh_wyciwyg_url.html";
+var testURL = "http://mochi.test:8888/browser/dom/html/test/file_refresh_after_document_write.html";
 let aTab, aBrowser;
 
 function test(){

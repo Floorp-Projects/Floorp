@@ -1344,8 +1344,8 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
     PContentParent* pcp = Manager()->Manager();
     MOZ_ASSERT(pcp, "We should have a manager if our IPC isn't closed");
     DebugOnly<nsresult> rv =
-        static_cast<ContentParent*>(pcp)
-            ->AboutToLoadHttpFtpWyciwygDocumentForChild(chan);
+        static_cast<ContentParent*>(pcp)->AboutToLoadHttpFtpDocumentForChild(
+            chan);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 

@@ -62,7 +62,6 @@ HelperAppLauncherDialog.prototype = {
     if (url.schemeIs("chrome") ||
         url.schemeIs("jar") ||
         url.schemeIs("resource") ||
-        url.schemeIs("wyciwyg") ||
         url.schemeIs("file")) {
       return false;
     }
