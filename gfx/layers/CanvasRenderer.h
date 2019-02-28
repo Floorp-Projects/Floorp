@@ -37,7 +37,6 @@ struct CanvasInitializeData {
         mPreTransCallbackData(nullptr),
         mDidTransCallback(nullptr),
         mDidTransCallbackData(nullptr),
-        mFrontbufferGLTex(0),
         mSize(0, 0),
         mHasAlpha(false),
         mIsGLAlphaPremult(true) {}
@@ -53,9 +52,6 @@ struct CanvasInitializeData {
   void* mPreTransCallbackData;
   TransactionCallback mDidTransCallback;
   void* mDidTransCallbackData;
-
-  // Frontbuffer override
-  uint32_t mFrontbufferGLTex;
 
   // The size of the canvas content
   gfx::IntSize mSize;
