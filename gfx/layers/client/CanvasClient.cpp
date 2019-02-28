@@ -385,14 +385,7 @@ void CanvasClientSharedSurface::UpdateRenderer(gfx::IntSize aSize,
   RefPtr<TextureClient> newFront;
 
   mShSurfClient = nullptr;
-  if (canvasRenderer && canvasRenderer->mGLFrontbuffer) {
-    mShSurfClient = CloneSurface(canvasRenderer->mGLFrontbuffer.get(),
-                                 canvasRenderer->mFactory.get());
-    if (!mShSurfClient) {
-      gfxCriticalError() << "Invalid canvas front buffer";
-      return;
-    }
-  } else if (gl->Screen()) {
+  if (gl->Screen()) {
     mShSurfClient = gl->Screen()->Front();
     if (mShSurfClient && mShSurfClient->GetAllocator() &&
         mShSurfClient->GetAllocator() !=
