@@ -315,7 +315,7 @@ void TestScan(int aSeven) {
 
   ResetEverything("--mode=scan");
 
-  uintptr_t* p = (uintptr_t*)malloc(6 * sizeof(uintptr_t*));
+  uintptr_t* p = (uintptr_t*)malloc(6 * sizeof(uintptr_t));
   UseItOrLoseIt(p, aSeven);
 
   // Hard-coded values checked by scan-test.py
