@@ -251,7 +251,7 @@ static bool IsContainerLayerItem(nsDisplayItem* aItem) {
 
 #include <sstream>
 
-bool DetectContainerLayerPropertiesBoundsChange(
+static bool DetectContainerLayerPropertiesBoundsChange(
     nsDisplayItem* aItem, BlobItemData* aData,
     nsDisplayItemGeometry& aGeometry) {
   switch (aItem->GetType()) {

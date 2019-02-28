@@ -33,6 +33,7 @@ UNSUPPORTED_FEATURES = set([
     "numeric-separator-literal",
     "Intl.Locale",
     "global",
+    "hashbang",
     "export-star-as-namespace-from-module",
     "Intl.ListFormat",
     "Intl.Segmenter",
@@ -202,7 +203,9 @@ def writeShellAndBrowserFiles(test262OutDir, harnessDir, includesMap, localInclu
 
     # Write the concatenated include sources to shell.js.
     with io.open(os.path.join(test262OutDir, relPath, "shell.js"), "wb") as shellFile:
-        shellFile.write(includeSource)
+        if includeSource:
+            shellFile.write("// GENERATED, DO NOT EDIT\n")
+            shellFile.write(includeSource)
 
     # The browser.js file is always empty for test262 tests.
     with io.open(os.path.join(test262OutDir, relPath, "browser.js"), "wb") as browserFile:

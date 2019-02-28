@@ -3568,14 +3568,14 @@ static bool ResolveResponse(JSContext* cx, CallArgs callArgs,
 
   RootedFunction onResolved(
       cx, NewNativeFunction(cx, ResolveResponse_OnFulfilled, 1, nullptr,
-                            gc::AllocKind::FUNCTION_EXTENDED));
+                            gc::AllocKind::FUNCTION_EXTENDED, GenericObject));
   if (!onResolved) {
     return false;
   }
 
   RootedFunction onRejected(
       cx, NewNativeFunction(cx, ResolveResponse_OnRejected, 1, nullptr,
-                            gc::AllocKind::FUNCTION_EXTENDED));
+                            gc::AllocKind::FUNCTION_EXTENDED, GenericObject));
   if (!onRejected) {
     return false;
   }

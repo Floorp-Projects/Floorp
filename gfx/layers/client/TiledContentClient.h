@@ -51,6 +51,8 @@ enum class TilePaintFlags : uint8_t {
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(TilePaintFlags)
 
+void ShutdownTileCache();
+
 struct AcquiredBackBuffer {
   AcquiredBackBuffer(gfx::DrawTarget* aTarget, gfx::DrawTargetCapture* aCapture,
                      gfx::DrawTarget* aBackBuffer,

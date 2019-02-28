@@ -170,6 +170,8 @@ class WorkerPrivate : public RelativeTimeline {
     }
   }
 
+  nsresult SetIsDebuggerReady(bool aReady);
+
   WorkerDebugger* Debugger() const {
     AssertIsOnMainThread();
 
@@ -907,6 +909,12 @@ class WorkerPrivate : public RelativeTimeline {
              data->mHolders.IsEmpty());
   }
 
+  // Internal logic to dispatch a runnable. This is separate from Dispatch()
+  // to allow runnables to be atomically dispatched in bulk.
+  nsresult DispatchLockHeld(already_AddRefed<WorkerRunnable> aRunnable,
+                            nsIEventTarget* aSyncLoopTarget,
+                            const MutexAutoLock& aProofOfLock);
+
   class EventTarget;
   friend class EventTarget;
   friend class mozilla::dom::WorkerHolder;
@@ -1073,6 +1081,13 @@ class WorkerPrivate : public RelativeTimeline {
   const bool mIsSecureContext;
 
   bool mDebuggerRegistered;
+
+  // During registration, this worker may be marked as not being ready to
+  // execute debuggee runnables or content.
+  //
+  // Protected by mMutex.
+  bool mDebuggerReady;
+  nsTArray<RefPtr<WorkerRunnable>> mDelayedDebuggeeRunnables;
 
   // mIsInAutomation is true when we're running in test automation.
   // We expose some extra testing functions in that case.

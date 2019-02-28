@@ -91,7 +91,7 @@ inline static MOZ_MUST_USE JSFunction* NewHandler(JSContext* cx, Native handler,
                                                   HandleObject target) {
   cx->check(target);
 
-  RootedAtom funName(cx, cx->names().empty);
+  HandlePropertyName funName = cx->names().empty;
   RootedFunction handlerFun(
       cx, NewNativeFunction(cx, handler, 0, funName,
                             gc::AllocKind::FUNCTION_EXTENDED, GenericObject));
@@ -1433,9 +1433,10 @@ static MOZ_MUST_USE JSObject* ReadableStreamCancel(
 
   // Step 6: Return the result of transforming sourceCancelPromise with a
   //         fulfillment handler that returns undefined.
-  RootedAtom funName(cx, cx->names().empty);
+  HandlePropertyName funName = cx->names().empty;
   RootedFunction returnUndefined(
-      cx, NewNativeFunction(cx, ReturnUndefined, 0, funName));
+      cx, NewNativeFunction(cx, ReturnUndefined, 0, funName,
+                            gc::AllocKind::FUNCTION, GenericObject));
   if (!returnUndefined) {
     return nullptr;
   }

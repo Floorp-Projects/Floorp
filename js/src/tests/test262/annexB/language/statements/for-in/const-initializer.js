@@ -11,6 +11,6 @@ negative:
 ---*/
 
 $DONOTEVALUATE();
-throw NotEarlyError;
+
 for (const a = 0 in {});
 

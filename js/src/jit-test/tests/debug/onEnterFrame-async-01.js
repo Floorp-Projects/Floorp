@@ -27,7 +27,6 @@ dbg.onEnterFrame = frame => {
 g.job();
 drainJobQueue();
 assertEq(log,
-         "(job)(job(t5)(t5)(t3)(t3))" +
+         "(job(t5)(t3))" +
          "(t5)(t3)".repeat(3) + "(job)" +
          "(t5)(t5)(job)");
-
