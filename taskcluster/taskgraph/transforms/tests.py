@@ -1109,6 +1109,8 @@ def set_worker_type(config, tests):
                 # some jobs like talos and reftest run on real h/w - those are all win10
                 if test_platform.startswith('windows10-64-ux'):
                     win_worker_type_platform = WINDOWS_WORKER_TYPES['windows10-64-ux']
+                elif test_platform.startswith('windows10-aarch64'):
+                    win_worker_type_platform = WINDOWS_WORKER_TYPES['windows10-aarch64']
                 else:
                     win_worker_type_platform = WINDOWS_WORKER_TYPES['windows10-64']
             else:
