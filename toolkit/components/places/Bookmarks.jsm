@@ -1261,15 +1261,15 @@ var Bookmarks = Object.freeze({
 
     return (async function() {
       let results;
-      if (fetchInfo.hasOwnProperty("url"))
+      if (fetchInfo.hasOwnProperty("url")) {
         results = await fetchBookmarksByURL(fetchInfo, options && options.concurrent);
-      else if (fetchInfo.hasOwnProperty("guid"))
+      } else if (fetchInfo.hasOwnProperty("guid")) {
         results = await fetchBookmark(fetchInfo, options && options.concurrent);
-      else if (fetchInfo.hasOwnProperty("parentGuid") && fetchInfo.hasOwnProperty("index"))
+      } else if (fetchInfo.hasOwnProperty("parentGuid") && fetchInfo.hasOwnProperty("index")) {
         results = await fetchBookmarkByPosition(fetchInfo, options && options.concurrent);
-      else if (fetchInfo.hasOwnProperty("guidPrefix"))
+      } else if (fetchInfo.hasOwnProperty("guidPrefix")) {
         results = await fetchBookmarksByGUIDPrefix(fetchInfo, options && options.concurrent);
-      else if (fetchInfo.hasOwnProperty("tags")) {
+      } else if (fetchInfo.hasOwnProperty("tags")) {
         results = await fetchBookmarksByTags(fetchInfo, options && options.concurrent);
       }
 

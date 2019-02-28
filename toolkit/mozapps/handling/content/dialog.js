@@ -268,8 +268,9 @@ var dialog = {
         // default OS handler doesn't have this property
         this._handlerInfo.preferredAction = Ci.nsIHandlerInfo.useHelperApp;
         this._handlerInfo.preferredApplicationHandler = this.selectedItem.obj;
-      } else
+      } else {
         this._handlerInfo.preferredAction = Ci.nsIHandlerInfo.useSystemDefault;
+      }
     }
     this._handlerInfo.alwaysAskBeforeHandling = !checkbox.checked;
 

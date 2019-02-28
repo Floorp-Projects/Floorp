@@ -238,8 +238,9 @@ function securityOnLoad(uri, windowInfo) {
   if (info.cert) {
     security._cert = info.cert;
     viewCert.collapsed = false;
-  } else
+  } else {
     viewCert.collapsed = true;
+  }
 
   /* Set Privacy & History section text */
 
@@ -316,9 +317,8 @@ function setText(id, value) {
     return;
   if (element.localName == "textbox" || element.localName == "label")
     element.value = value;
-  else {
+  else
     element.textContent = value;
-  }
 }
 
 function viewCertHelper(parent, cert) {

@@ -357,8 +357,9 @@ class MozSearchbar extends MozXULElement {
         // Select the installed engine if the installation succeeds.
         Services.search.addEngine(target.getAttribute("uri"), null,
           target.getAttribute("src"), false).then(engine => this.currentEngine = engine);
-      } else
+      } else {
         return;
+      }
 
       this.focus();
       this.select();

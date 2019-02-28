@@ -507,8 +507,9 @@ var TPS = {
               Logger.AssertTrue(itemGuid == null,
                 "places item exists but it shouldn't: " +
                 JSON.stringify(bookmark));
-            } else
+            } else {
               Logger.AssertTrue(itemGuid, "places item not found", true);
+            }
           }
 
           last_item_pos = await placesItem.GetItemIndex();

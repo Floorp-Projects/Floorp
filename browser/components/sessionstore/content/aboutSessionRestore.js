@@ -207,8 +207,9 @@ function onListClick(aEvent) {
         !treeView.isContainer(cell.row)) {
       restoreSingleTab(cell.row, aEvent.shiftKey);
       aEvent.stopPropagation();
-    } else if (cell.col.id == "restore")
+    } else if (cell.col.id == "restore") {
       toggleRowChecked(cell.row);
+    }
   }
 }
 

@@ -138,9 +138,9 @@ var pktApi = (function() {
         // TODO : Move this to sqlite or a local file so it's not editable (and is safer)
         // https://developer.mozilla.org/en-US/Add-ons/Overlay_Extensions/XUL_School/Local_Storage
 
-        if (!value)
+        if (!value) {
             prefBranch.clearUserPref(key);
-        else {
+        } else {
             // We use complexValue as tags can have utf-8 characters in them
             prefBranch.setStringPref(key, value);
         }

@@ -81,9 +81,9 @@ var workerManager = {
   // results. Otherwise, reschedule termination until after the next
   // idle timeout.
   _flushWorker() {
-    if (this.detectionQueue.length)
+    if (this.detectionQueue.length) {
       this.flushWorker();
-    else {
+    } else {
       if (this._worker)
         this._worker.terminate();
 
