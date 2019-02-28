@@ -13,6 +13,7 @@ const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
+  ExtensionSearchHandler: "resource://gre/modules/ExtensionSearchHandler.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
@@ -108,9 +109,12 @@ class UrlbarController {
 
   /**
    * Cancels an in-progress query. Note, queries may continue running if they
-   * can't be canceled.
+   * can't be cancelled.
+   *
+   * @param {UrlbarUtils.CANCEL_REASON} [reason]
+   *   The reason the query was cancelled.
    */
-  cancelQuery() {
+  cancelQuery(reason) {
     if (!this._lastQueryContext) {
       return;
     }
@@ -121,6 +125,11 @@ class UrlbarController {
     this.manager.cancelQuery(this._lastQueryContext);
     this._notify("onQueryCancelled", this._lastQueryContext);
     delete this._lastQueryContext;
+
+    if (reason == UrlbarUtils.CANCEL_REASON.BLUR &&
+        ExtensionSearchHandler.hasActiveInputSession()) {
+      ExtensionSearchHandler.handleInputCancelled();
+    }
   }
 
   /**

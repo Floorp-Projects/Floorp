@@ -286,13 +286,22 @@ bool JitRuntime::initialize(JSContext* cx) {
   generateDoubleToInt32ValueStub(masm);
 
   JitSpew(JitSpew_Codegen, "# Emitting VM function wrappers");
+  if (!generateVMWrappers(cx, masm)) {
+    return false;
+  }
+
+  // TODO(bug 1530937): remove this after converting all VM functions.
   for (VMFunction* fun = VMFunction::functions; fun; fun = fun->next) {
     if (functionWrappers_->has(fun)) {
       // Duplicate VMFunction definition. See VMFunction::hash.
       continue;
     }
     JitSpew(JitSpew_Codegen, "# VM function wrapper (%s)", fun->name());
-    if (!generateVMWrapper(cx, masm, *fun)) {
+    uint32_t offset;
+    if (!generateVMWrapper(cx, masm, *fun, &offset)) {
+      return false;
+    }
+    if (!functionWrappers_->putNew(fun, offset)) {
       return false;
     }
   }

@@ -168,6 +168,7 @@ module.exports = {
     "max-nested-callbacks": ["error", 10],
 
     "mozilla/avoid-removeChild": "error",
+    "mozilla/consistent-if-bracing": "error",
     "mozilla/import-browser-window-globals": "error",
     "mozilla/import-globals": "error",
     "mozilla/no-compare-against-boolean-literals": "error",

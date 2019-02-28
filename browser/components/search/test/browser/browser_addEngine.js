@@ -95,8 +95,9 @@ function nextTest() {
     gCurrentTest = gTests.shift();
     info("Running " + gCurrentTest.name);
     gCurrentTest.run();
-  } else
+  } else {
     executeSoon(finish);
+  }
 }
 
 function test() {

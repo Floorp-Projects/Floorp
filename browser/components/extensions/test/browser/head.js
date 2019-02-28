@@ -672,7 +672,7 @@ async function startIncognitoMonitorExtension() {
   return extension;
 }
 
-async function getIncognitoWindow(url) {
+async function getIncognitoWindow(url = "about:privatebrowsing") {
   // Since events will be limited based on incognito, we need a
   // spanning extension to get the tab id so we can test access failure.
 

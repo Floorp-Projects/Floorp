@@ -17,6 +17,7 @@ namespace js {
 namespace jit {
 
 struct SafepointSlotEntry;
+struct VMFunctionData;
 
 enum CalleeTokenTag {
   CalleeToken_Function = 0x0,  // untagged
@@ -418,7 +419,7 @@ enum class ExitFrameType : uint8_t {
 // GC related data used to keep alive data surrounding the Exit frame.
 class ExitFooterFrame {
   // Stores the ExitFrameType or, for ExitFrameType::VMFunction, the
-  // VMFunction*.
+  // VMFunctionData*.
   uintptr_t data_;
 
  public:
@@ -433,9 +434,9 @@ class ExitFooterFrame {
     MOZ_ASSERT(ExitFrameType(data_) != ExitFrameType::VMFunction);
     return ExitFrameType(data_);
   }
-  inline const VMFunction* function() const {
+  inline const VMFunctionData* function() const {
     MOZ_ASSERT(type() == ExitFrameType::VMFunction);
-    return reinterpret_cast<const VMFunction*>(data_);
+    return reinterpret_cast<const VMFunctionData*>(data_);
   }
 
   // This should only be called for function()->outParam == Type_Handle

@@ -26,8 +26,8 @@
             "tests": ["damp"],
             "pagesets_name": "tp5n.zip"
         },
-        "tps-e10s": {
-            "tests": ["tps"],
+        "tabswitch-e10s": {
+            "tests": ["tabswitch"],
             "pagesets_name": "tp5n.zip"
         },
         "g3-e10s": {

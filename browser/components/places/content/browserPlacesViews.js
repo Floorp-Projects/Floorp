@@ -369,8 +369,9 @@ PlacesViewBase.prototype = {
         }
 
         this._domNodes.set(aPlacesNode, popup);
-      } else
+      } else {
         throw "Unexpected node";
+      }
 
       element.setAttribute("label", PlacesUIUtils.getBestTitle(aPlacesNode));
 
@@ -1573,9 +1574,9 @@ PlacesToolbar.prototype = {
         halfInd = Math.ceil(halfInd);
         translateX = 0 - this._rootElt.getBoundingClientRect().right - halfInd;
         if (this._rootElt.firstElementChild) {
-          if (dropPoint.beforeIndex == -1)
+          if (dropPoint.beforeIndex == -1) {
             translateX += this._rootElt.lastElementChild.getBoundingClientRect().left;
-          else {
+          } else {
             translateX += this._rootElt.children[dropPoint.beforeIndex]
                               .getBoundingClientRect().right;
           }
@@ -1585,9 +1586,9 @@ PlacesToolbar.prototype = {
         translateX = 0 - this._rootElt.getBoundingClientRect().left +
                      halfInd;
         if (this._rootElt.firstElementChild) {
-          if (dropPoint.beforeIndex == -1)
+          if (dropPoint.beforeIndex == -1) {
             translateX += this._rootElt.lastElementChild.getBoundingClientRect().right;
-          else {
+          } else {
             translateX += this._rootElt.children[dropPoint.beforeIndex]
                               .getBoundingClientRect().left;
           }

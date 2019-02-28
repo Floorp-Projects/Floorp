@@ -204,7 +204,7 @@ class Test_get_config(object):
         cls.argv_tpaint = '--activeTests tpaint -e /some/random/path'.split()
         cls.argv_cpstartup = '--activeTests cpstartup -e /some/random/path'.split()
         cls.argv_tabpaint = '--activeTests tabpaint -e /some/random/path'.split()
-        cls.argv_tps = '--activeTests tps -e /some/random/path'.split()
+        cls.argv_tabswitch = '--activeTests tabswitch -e /some/random/path'.split()
         cls.argv_tart = '--activeTests tart -e /some/random/path'.split()
         cls.argv_damp = '--activeTests damp -e /some/random/path'.split()
         cls.argv_glterrain = '--activeTests glterrain -e /some/random/path'.split()
@@ -444,13 +444,13 @@ class Test_get_config(object):
             'browser.link.open_newwindow.restriction': 2,
         }
 
-    def test_tps_has_expected_attributes(self):
-        config = get_config(self.argv_tps)
+    def test_tabswitch_has_expected_attributes(self):
+        config = get_config(self.argv_tabswitch)
         test_config = config['tests'][0]
 
-        assert test_config['name'] == 'tps'
+        assert test_config['name'] == 'tabswitch'
         assert test_config['tpcycles'] == 1
-        assert test_config['tpmanifest'] != '${talos}/tests/tabswitch/tps.manifest'
+        assert test_config['tpmanifest'] != '${talos}/tests/tabswitch/tabswitch.manifest'
         assert test_config['tppagecycles'] == 5
         assert test_config['gecko_profile_entries'] == 5000000
         assert test_config['tploadnocache'] is True

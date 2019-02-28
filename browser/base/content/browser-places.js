@@ -794,9 +794,9 @@ var BookmarksEventHandler = {
       // Check whether the tooltipNode is a Places node.
       // In such a case use it, otherwise check for targetURI attribute.
       var tooltipNode = aDocument.tooltipNode;
-      if (tooltipNode._placesNode)
+      if (tooltipNode._placesNode) {
         node = tooltipNode._placesNode;
-      else {
+      } else {
         // This is a static non-Places node.
         targetURI = tooltipNode.getAttribute("targetURI");
       }

@@ -888,8 +888,9 @@ ContentPrefService2.prototype = {
       if (!this._observers[aName])
         this._observers[aName] = [];
       observers = this._observers[aName];
-    } else
+    } else {
       observers = this._genericObservers;
+    }
 
     if (!observers.includes(aObserver))
       observers.push(aObserver);
@@ -901,8 +902,9 @@ ContentPrefService2.prototype = {
       if (!this._observers[aName])
         return;
       observers = this._observers[aName];
-    } else
+    } else {
       observers = this._genericObservers;
+    }
 
     if (observers.includes(aObserver))
       observers.splice(observers.indexOf(aObserver), 1);
