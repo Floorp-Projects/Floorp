@@ -10,8 +10,10 @@
 #  include "mmsystem.h"
 #endif
 
-#include "MediaQueue.h"
 #include "VideoSink.h"
+
+#include "GeckoProfiler.h"
+#include "MediaQueue.h"
 #include "VideoUtils.h"
 
 #include "mozilla/IntegerPrintfMacros.h"
@@ -449,6 +451,10 @@ void VideoSink::UpdateRenderedVideoFrames() {
                   " clock_time=%" PRId64,
                   frame->mTime.ToMicroseconds(), clockTime.ToMicroseconds());
     }
+  }
+
+  if (droppedCount > 0) {
+    PROFILER_ADD_MARKER("DroppedUncompositedVideoFrames", GRAPHICS);
   }
 
   if (droppedCount || sentToCompositorCount) {
