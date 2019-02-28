@@ -110,9 +110,10 @@ class SessionsAdapter(
 
         fun bind(session: ArchivedSession) {
             this.session = session
+            val color = availableColors[(session.id % availableColors.size).toInt()]
 
             session_card_thumbnail.setColorFilter(
-                ContextCompat.getColor(itemView.context, availableColors.random()),
+                ContextCompat.getColor(itemView.context, color),
                 PorterDuff.Mode.MULTIPLY)
             session_card_timestamp.text = session.formattedSavedAt
             session_card_titles.text = session.titles
