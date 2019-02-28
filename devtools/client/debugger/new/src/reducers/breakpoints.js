@@ -371,7 +371,7 @@ export function getBreakpointPositionsForLine(
 ): ?BreakpointPositions {
   const positions = getBreakpointPositionsForSource(state, sourceId);
   if (!positions) {
-    return [];
+    return null;
   }
   return positions.filter(({ location, generatedLocation }) => {
     const loc = isOriginalId(sourceId) ? location : generatedLocation;
