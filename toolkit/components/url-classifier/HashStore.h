@@ -159,7 +159,7 @@ class TableUpdateV4 : public TableUpdate {
     return mRemovalIndiceArray;
   }
   const nsACString& ClientState() const { return mClientState; }
-  const nsACString& Checksum() const { return mChecksum; }
+  const nsACString& SHA256() const { return mSHA256; }
   const FullHashResponseMap& FullHashResponse() const {
     return mFullHashResponseMap;
   }
@@ -170,7 +170,7 @@ class TableUpdateV4 : public TableUpdate {
   void SetFullUpdate(bool aIsFullUpdate) { mFullUpdate = aIsFullUpdate; }
   void NewPrefixes(int32_t aSize, const nsACString& aPrefixes);
   void SetNewClientState(const nsACString& aState) { mClientState = aState; }
-  void NewChecksum(const std::string& aChecksum);
+  void SetSHA256(const std::string& aSHA256);
 
   nsresult NewRemovalIndices(const uint32_t* aIndices, size_t aNumOfIndices);
   nsresult NewFullHashResponse(const Prefix& aPrefix,
@@ -183,7 +183,7 @@ class TableUpdateV4 : public TableUpdate {
   PrefixStringMap mPrefixesMap;
   RemovalIndiceArray mRemovalIndiceArray;
   nsCString mClientState;
-  nsCString mChecksum;
+  nsCString mSHA256;
 
   // This is used to store response from fullHashes.find.
   FullHashResponseMap mFullHashResponseMap;
