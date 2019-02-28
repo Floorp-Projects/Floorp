@@ -16,6 +16,7 @@ add_task(async function() {
   const bodyNode = await getNodeFront("body", inspector);
   const { nodes } = await inspector.walker.children(bodyNode);
   const onInspectorUpdated = inspector.once("fontinspector-updated");
+  info("Select the text node");
   await selectNode(nodes[0], inspector);
 
   info("Waiting for font editor to render");
