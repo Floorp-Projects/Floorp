@@ -242,24 +242,42 @@ struct SavedFrame::Lookup {
   }
 };
 
-class MOZ_STACK_CLASS SavedFrame::AutoLookupVector
-    : public JS::CustomAutoRooter {
+using GCLookupVector = GCVector<SavedFrame::Lookup, ASYNC_STACK_MAX_FRAME_COUNT>;
+
+template <class Wrapper>
+class WrappedPtrOperations<SavedFrame::Lookup, Wrapper> {
+  const SavedFrame::Lookup& value() const {
+    return static_cast<const Wrapper*>(this)->get();
+  }
+
  public:
-  explicit AutoLookupVector(JSContext* cx)
-      : JS::CustomAutoRooter(cx), lookups(cx) {}
+  JSAtom* source() { return value().source; }
+  uint32_t sourceId() { return value().sourceId; }
+  uint32_t line() { return value().line; }
+  uint32_t column() { return value().column; }
+  JSAtom* functionDisplayName() { return value().functionDisplayName; }
+  JSAtom* asyncCause() { return value().asyncCause; }
+  SavedFrame* parent() { return value().parent; }
+  JSPrincipals* principals() { return value().principals; }
+  Maybe<LiveSavedFrameCache::FramePtr> framePtr() { return value().framePtr; }
+  jsbytecode* pc() { return value().pc; }
+  Activation* activation() { return value().activation; }
+};
 
-  typedef Vector<Lookup, ASYNC_STACK_MAX_FRAME_COUNT> LookupVector;
-  inline LookupVector* operator->() { return &lookups; }
-  inline HandleLookup operator[](size_t i) { return HandleLookup(lookups[i]); }
-  inline HandleLookup back() { return HandleLookup(lookups.back()); }
+template <typename Wrapper>
+class MutableWrappedPtrOperations<SavedFrame::Lookup, Wrapper>
+    : public WrappedPtrOperations<SavedFrame::Lookup, Wrapper> {
+  SavedFrame::Lookup& value() {
+    return static_cast<Wrapper*>(this)->get();
+  }
 
- private:
-  LookupVector lookups;
+ public:
+  void setParent(SavedFrame* parent) {
+    value().parent = parent;
+  }
 
-  virtual void trace(JSTracer* trc) override {
-    for (size_t i = 0; i < lookups.length(); i++) {
-      lookups[i].trace(trc);
-    }
+  void setAsyncCause(HandleAtom asyncCause) {
+    value().asyncCause = asyncCause;
   }
 };
 
@@ -490,30 +508,30 @@ void SavedFrame::initParent(SavedFrame* maybeParent) {
 }
 
 void SavedFrame::initFromLookup(JSContext* cx,
-                                SavedFrame::HandleLookup lookup) {
+                                Handle<Lookup> lookup) {
   // Make sure any atoms used in the lookup are marked in the current zone.
   // Normally we would try to keep these mark bits up to date around the
   // points where the context moves between compartments, but Lookups live on
   // the stack (where the atoms are kept alive regardless) and this is a
   // more convenient pinchpoint.
-  if (lookup->source) {
-    cx->markAtom(lookup->source);
+  if (lookup.source()) {
+    cx->markAtom(lookup.source());
   }
-  if (lookup->functionDisplayName) {
-    cx->markAtom(lookup->functionDisplayName);
+  if (lookup.functionDisplayName()) {
+    cx->markAtom(lookup.functionDisplayName());
   }
-  if (lookup->asyncCause) {
-    cx->markAtom(lookup->asyncCause);
+  if (lookup.asyncCause()) {
+    cx->markAtom(lookup.asyncCause());
   }
 
-  initSource(lookup->source);
-  initSourceId(lookup->sourceId);
-  initLine(lookup->line);
-  initColumn(lookup->column);
-  initFunctionDisplayName(lookup->functionDisplayName);
-  initAsyncCause(lookup->asyncCause);
-  initParent(lookup->parent);
-  initPrincipals(lookup->principals);
+  initSource(lookup.source());
+  initSourceId(lookup.sourceId());
+  initLine(lookup.line());
+  initColumn(lookup.column());
+  initFunctionDisplayName(lookup.functionDisplayName());
+  initAsyncCause(lookup.asyncCause());
+  initParent(lookup.parent());
+  initPrincipals(lookup.principals());
 }
 
 /* static */ SavedFrame* SavedFrame::create(JSContext* cx) {
@@ -1314,7 +1332,7 @@ bool SavedStacks::insertFrames(JSContext* cx, MutableHandleSavedFrame frame,
   // return in the second pass.
 
   // Accumulate the vector of Lookup objects here, youngest to oldest.
-  SavedFrame::AutoLookupVector stackChain(cx);
+  Rooted<js::GCLookupVector> stackChain(cx, js::GCLookupVector(cx));
 
   // If we find an async parent or a cached saved frame, then that supplies
   // the parent of the frames we have placed in stackChain. If we walk the
@@ -1392,7 +1410,7 @@ bool SavedStacks::insertFrames(JSContext* cx, MutableHandleSavedFrame frame,
     auto principals = iter.realm()->principals();
     MOZ_ASSERT_IF(framePtr && !iter.isWasm(), iter.pc());
 
-    if (!stackChain->emplaceBack(
+    if (!stackChain.emplaceBack(
             location.source(), location.sourceId(),
             location.line(), location.column(), displayAtom,
             nullptr,  // asyncCause
@@ -1466,16 +1484,16 @@ bool SavedStacks::insertFrames(JSContext* cx, MutableHandleSavedFrame frame,
   // Iterate through |stackChain| in reverse order and get or create the
   // actual SavedFrame instances.
   frame.set(parent);
-  for (size_t i = stackChain->length(); i != 0; i--) {
-    SavedFrame::HandleLookup lookup = stackChain[i - 1];
-    lookup->parent = frame;
+  for (size_t i = stackChain.length(); i != 0; i--) {
+    MutableHandle<SavedFrame::Lookup> lookup = stackChain[i - 1];
+    lookup.setParent(frame);
 
     // If necessary, adjust the parent of a debugger eval frame to point to
     // the frame in whose scope the eval occurs - if we're using
     // LiveSavedFrameCache. Otherwise, we simply ask the FrameIter to follow
     // evalInFramePrev links, so that the parent is always the last frame we
     // created.
-    if (capture.is<JS::AllFrames>() && lookup->framePtr) {
+    if (capture.is<JS::AllFrames>() && lookup.framePtr()) {
       if (!checkForEvalInFramePrev(cx, lookup)) {
         return false;
       }
@@ -1486,9 +1504,9 @@ bool SavedStacks::insertFrames(JSContext* cx, MutableHandleSavedFrame frame,
       return false;
     }
 
-    if (capture.is<JS::AllFrames>() && lookup->framePtr) {
-      auto* cache = lookup->activation->getLiveSavedFrameCache(cx);
-      if (!cache || !cache->insert(cx, *lookup->framePtr, lookup->pc, frame)) {
+    if (capture.is<JS::AllFrames>() && lookup.framePtr()) {
+      auto* cache = lookup.activation()->getLiveSavedFrameCache(cx);
+      if (!cache || !cache->insert(cx, *lookup.framePtr(), lookup.pc(), frame)) {
         return false;
       }
     }
@@ -1512,10 +1530,10 @@ bool SavedStacks::adoptAsyncStack(JSContext* cx,
 
   // Turn the chain of frames starting with asyncStack into a vector of Lookup
   // objects in |stackChain|, youngest to oldest.
-  SavedFrame::AutoLookupVector stackChain(cx);
+  Rooted<js::GCLookupVector> stackChain(cx, js::GCLookupVector(cx));
   SavedFrame* currentSavedFrame = asyncStack;
-  while (currentSavedFrame && stackChain->length() < maxFrames) {
-    if (!stackChain->emplaceBack(*currentSavedFrame)) {
+  while (currentSavedFrame && stackChain.length() < maxFrames) {
+    if (!stackChain.emplaceBack(*currentSavedFrame)) {
       ReportOutOfMemory(cx);
       return false;
     }
@@ -1524,15 +1542,15 @@ bool SavedStacks::adoptAsyncStack(JSContext* cx,
   }
 
   // Attach the asyncCause to the youngest frame.
-  stackChain[0]->asyncCause = asyncCause;
+  stackChain[0].setAsyncCause(asyncCause);
 
   // If we walked the entire stack, and it's in cx's realm, we don't
   // need to rebuild the full chain again using the lookup objects - we can
   // just use the existing chain. Only the asyncCause on the youngest frame
   // needs to be changed.
   if (currentSavedFrame == nullptr && asyncStack->realm() == cx->realm()) {
-    SavedFrame::HandleLookup lookup = stackChain[0];
-    lookup->parent = asyncStack->getParent();
+    MutableHandle<SavedFrame::Lookup> lookup = stackChain[0];
+    lookup.setParent(asyncStack->getParent());
     asyncStack.set(getOrCreateSavedFrame(cx, lookup));
     return !!asyncStack;
   }
@@ -1542,20 +1560,20 @@ bool SavedStacks::adoptAsyncStack(JSContext* cx,
   // many subsequent captures with the same async stack, it's likely we can
   // use the optimization above.
   if (maxFrameCount.isNothing() && currentSavedFrame) {
-    stackChain->shrinkBy(ASYNC_STACK_MAX_FRAME_COUNT / 2);
+    stackChain.shrinkBy(ASYNC_STACK_MAX_FRAME_COUNT / 2);
   }
 
   // Iterate through |stackChain| in reverse order and get or create the
   // actual SavedFrame instances.
   asyncStack.set(nullptr);
-  while (!stackChain->empty()) {
-    SavedFrame::HandleLookup lookup = stackChain.back();
-    lookup->parent = asyncStack;
+  while (!stackChain.empty()) {
+    Rooted<SavedFrame::Lookup> lookup(cx, stackChain.back());
+    lookup.setParent(asyncStack);
     asyncStack.set(getOrCreateSavedFrame(cx, lookup));
     if (!asyncStack) {
       return false;
     }
-    stackChain->popBack();
+    stackChain.popBack();
   }
 
   return true;
@@ -1574,13 +1592,13 @@ bool SavedStacks::adoptAsyncStack(JSContext* cx,
 // Call this function only if we are using the LiveSavedFrameCache; otherwise,
 // FrameIter has already taken care of getting us the right parent.
 bool SavedStacks::checkForEvalInFramePrev(JSContext* cx,
-                                          SavedFrame::HandleLookup lookup) {
-  MOZ_ASSERT(lookup->framePtr);
-  if (!lookup->framePtr->isInterpreterFrame()) {
+                                          MutableHandle<SavedFrame::Lookup> lookup) {
+  MOZ_ASSERT(lookup.framePtr());
+  if (!lookup.framePtr()->isInterpreterFrame()) {
     return true;
   }
 
-  InterpreterFrame& interpreterFrame = lookup->framePtr->asInterpreterFrame();
+  InterpreterFrame& interpreterFrame = lookup.framePtr()->asInterpreterFrame();
   if (!interpreterFrame.isDebuggerEvalFrame()) {
     return true;
   }
@@ -1595,7 +1613,7 @@ bool SavedStacks::checkForEvalInFramePrev(JSContext* cx,
   // Search the chain of activations for a LiveSavedFrameCache that has an
   // entry for target.
   RootedSavedFrame saved(cx, nullptr);
-  for (Activation* act = lookup->activation; act; act = act->prev()) {
+  for (Activation* act = lookup.activation(); act; act = act->prev()) {
     // It's okay to force allocation of a cache here; we're about to put
     // something in the top cache, and all the lower ones should exist
     // already.
@@ -1613,12 +1631,12 @@ bool SavedStacks::checkForEvalInFramePrev(JSContext* cx,
   // Since |target| has its cached bit set, we should have found it.
   MOZ_ALWAYS_TRUE(saved);
 
-  lookup->parent = saved;
+  lookup.setParent(saved);
   return true;
 }
 
 SavedFrame* SavedStacks::getOrCreateSavedFrame(
-    JSContext* cx, SavedFrame::HandleLookup lookup) {
+    JSContext* cx, Handle<SavedFrame::Lookup> lookup) {
   const SavedFrame::Lookup& lookupInstance = lookup.get();
   DependentAddPtr<SavedFrame::Set> p(cx, frames, lookupInstance);
   if (p) {
@@ -1639,7 +1657,7 @@ SavedFrame* SavedStacks::getOrCreateSavedFrame(
 }
 
 SavedFrame* SavedStacks::createFrameFromLookup(
-    JSContext* cx, SavedFrame::HandleLookup lookup) {
+    JSContext* cx, Handle<SavedFrame::Lookup> lookup) {
   RootedSavedFrame frame(cx, SavedFrame::create(cx));
   if (!frame) {
     return nullptr;
@@ -1864,7 +1882,7 @@ struct MOZ_STACK_CLASS AtomizingMatcher {
 JS_PUBLIC_API bool ConstructSavedFrameStackSlow(
     JSContext* cx, JS::ubi::StackFrame& frame,
     MutableHandleObject outSavedFrameStack) {
-  SavedFrame::AutoLookupVector stackChain(cx);
+  Rooted<js::GCLookupVector> stackChain(cx, js::GCLookupVector(cx));
   Rooted<JS::ubi::StackFrame> ubiFrame(cx, frame);
 
   while (ubiFrame.get()) {
@@ -1891,7 +1909,7 @@ JS_PUBLIC_API bool ConstructSavedFrameStackSlow(
     auto principals =
         js::ReconstructedSavedFramePrincipals::getSingleton(ubiFrame.get());
 
-    if (!stackChain->emplaceBack(source, ubiFrame.get().sourceId(),
+    if (!stackChain.emplaceBack(source, ubiFrame.get().sourceId(),
                                  ubiFrame.get().line(),
                                  ubiFrame.get().column(), functionDisplayName,
                                  /* asyncCause */ nullptr,
@@ -1904,9 +1922,9 @@ JS_PUBLIC_API bool ConstructSavedFrameStackSlow(
   }
 
   js::RootedSavedFrame parentFrame(cx);
-  for (size_t i = stackChain->length(); i != 0; i--) {
-    SavedFrame::HandleLookup lookup = stackChain[i - 1];
-    lookup->parent = parentFrame;
+  for (size_t i = stackChain.length(); i != 0; i--) {
+    MutableHandle<SavedFrame::Lookup> lookup = stackChain[i - 1];
+    lookup.setParent(parentFrame);
     parentFrame = cx->realm()->savedStacks().getOrCreateSavedFrame(cx, lookup);
     if (!parentFrame) {
       return false;

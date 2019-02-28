@@ -22,7 +22,7 @@ var refmod = new WebAssembly.Module(wasmTextToBinary(
     `(module
       (gc_feature_opt_in 3)
 
-      (import $tbl "" "tbl" (table 4 anyfunc))
+      (import $tbl "" "tbl" (table 4 funcref))
       (import $print "" "print" (func (param i32)))
 
       (type $htype (func (param anyref)))
@@ -47,7 +47,7 @@ var refmod = new WebAssembly.Module(wasmTextToBinary(
 
 var nonrefmod = new WebAssembly.Module(wasmTextToBinary(
     `(module
-      (import $tbl "" "tbl" (table 4 anyfunc))
+      (import $tbl "" "tbl" (table 4 funcref))
       (import $print "" "print" (func (param i32)))
 
       (type $ftype (func (param i32)))
@@ -71,7 +71,7 @@ var nonrefmod = new WebAssembly.Module(wasmTextToBinary(
        (i32.const 37))
      )`));
 
-var tbl = new WebAssembly.Table({initial:4, element:"anyfunc"});
+var tbl = new WebAssembly.Table({initial:4, element:"funcref"});
 var refins = new WebAssembly.Instance(refmod, {"":{print, tbl}}).exports;
 var nonrefins = new WebAssembly.Instance(nonrefmod, {"":{print, tbl}}).exports;
 
