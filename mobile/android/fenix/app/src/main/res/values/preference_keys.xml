@@ -26,5 +26,10 @@
     <string name="pref_key_mozilla_location_service" translatable="false">pref_key_mozilla_location_service</string>
     <string name="pref_key_fenix_health_report" translatable="false">pref_key_fenix_health_report</string>
 
+    <!-- Account Settings -->
+    <string name="pref_key_account_category" translatable="false">pref_key_account_category</string>
+    <string name="pref_key_sync_now" translatable="false">pref_key_sync_now</string>
+    <string name="pref_key_sync_history" translatable="false">pref_key_sync_history</string>
+    <string name="pref_key_sign_out" translatable="false">pref_key_sign_out</string>
 
 </resources>

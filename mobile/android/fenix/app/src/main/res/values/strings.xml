@@ -108,6 +108,18 @@
     <string name="preferences_data_choices">Data choices</string>
     <!-- Preference for developers -->
     <string name="preference_leakcanary">Leak Canary</string>
+    <!-- Preference for account settings -->
+    <string name="preferences_account_settings">Account Settings</string>
+
+    <!-- Account Preferences -->
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">Sync now</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">Choose what to sync</string>
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">History</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">Sign out</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference switch for Telemetry -->

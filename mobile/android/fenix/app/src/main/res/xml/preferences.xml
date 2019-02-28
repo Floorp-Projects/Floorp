@@ -13,8 +13,11 @@
         android:title="@string/preferences_sign_in" />
 
     <androidx.preference.PreferenceCategory
+        android:key = "@string/pref_key_account_category"
         android:title="@string/preferences_category_account"
-        app:iconSpaceReserved="false">
+        app:iconSpaceReserved="false"
+        app:isPreferenceVisible="false">
+
         <androidx.preference.Preference
             android:icon="@drawable/ic_shortcuts"
             android:key="@string/pref_key_account"

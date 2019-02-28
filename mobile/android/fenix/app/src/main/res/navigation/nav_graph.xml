@@ -98,6 +98,8 @@
                 app:destination="@id/sitePermissionsFragment"/>
         <action android:id="@+id/action_settingsFragment_to_accessibilityFragment"
                 app:destination="@id/accessibilityFragment"/>
+        <action android:id="@+id/action_settingsFragment_to_accountSettingsFragment"
+                app:destination="@id/accountSettingsFragment"/>
     </fragment>
     <fragment android:id="@+id/dataChoicesFragment" android:name="org.mozilla.fenix.settings.DataChoicesFragment"
               android:label="DataChoicesFragment"/>
@@ -106,4 +108,6 @@
               android:label="SitePermissionsFragment"/>
     <fragment android:id="@+id/accessibilityFragment" android:name="org.mozilla.fenix.settings.AccessibilityFragment"
               android:label="AccessibilityFragment"/>
+    <fragment android:id="@+id/accountSettingsFragment" android:name="org.mozilla.fenix.settings.AccountSettingsFragment"
+              android:label="AccountSettingsFragment"/>
 </navigation>

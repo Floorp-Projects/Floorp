@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.Navigation
 import androidx.preference.Preference
 import androidx.preference.Preference.OnPreferenceClickListener
+import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -44,6 +45,7 @@ import org.mozilla.fenix.R.string.pref_key_data_choices
 import org.mozilla.fenix.R.string.pref_key_about
 import org.mozilla.fenix.R.string.pref_key_sign_in
 import org.mozilla.fenix.R.string.pref_key_account
+import org.mozilla.fenix.R.string.pref_key_account_category
 
 @SuppressWarnings("TooManyFunctions")
 class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObserver {
@@ -54,7 +56,6 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         job = Job()
-        setupAccountUI()
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -67,6 +68,7 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
         (activity as AppCompatActivity).supportActionBar?.show()
         generateWordmark()
         setupPreferences()
+        setupAccountUI()
     }
 
     @Suppress("ComplexMethod")
@@ -100,6 +102,9 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
                 requireComponents.useCases.tabsUseCases.addTab.invoke(aboutURL, true)
                 navigateToSettingsArticle()
             }
+            resources.getString(pref_key_account) -> {
+                navigateToAccountSettings()
+            }
         }
         return super.onPreferenceTreeClick(preference)
     }
@@ -110,16 +115,6 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
     }
 
     private fun setupAccountUI() {
-        val signIn = context?.getPreferenceKey(pref_key_sign_in)
-        val firefoxAccountKey = context?.getPreferenceKey(pref_key_account)
-
-        val preferenceSignIn = findPreference<Preference>(signIn)
-        val preferenceFirefoxAccount = findPreference<Preference>(firefoxAccountKey)
-
-        preferenceSignIn.isVisible = true
-        preferenceFirefoxAccount.isVisible = false
-        preferenceSignIn.onPreferenceClickListener = getClickListenerForSignIn()
-
         val accountManager = requireComponents.backgroundServices.accountManager
         // Observe account changes to keep the UI up-to-date.
         accountManager.register(this, owner = this)
@@ -127,7 +122,7 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
         // TODO an authenticated state will mark 'preferenceSignIn' as invisible; currently that behaviour is non-ideal:
         // a "sign in" UI will be displayed at first, and then quickly animate away.
         // Ideally we don't want it to be displayed at all.
-        accountManager.authenticatedAccount()?.let { setIsAuthenticated(it) }
+        updateAuthState(accountManager.authenticatedAccount())
         accountManager.accountProfile()?.let { updateAccountProfile(it) }
     }
 
@@ -235,9 +230,14 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
         }
     }
 
+    private fun navigateToAccountSettings() {
+        val directions = SettingsFragmentDirections.actionSettingsFragmentToAccountSettingsFragment()
+        Navigation.findNavController(view!!).navigate(directions)
+    }
+
     // --- AccountObserver interfaces ---
     override fun onAuthenticated(account: FirefoxAccountShaped) {
-        setIsAuthenticated(account)
+        updateAuthState(account)
     }
 
     override fun onError(error: Exception) {
@@ -248,7 +248,7 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
     }
 
     override fun onLoggedOut() {
-        setIsLoggedOut()
+        updateAuthState()
     }
 
     override fun onProfileUpdated(profile: Profile) {
@@ -256,30 +256,31 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
     }
 
     // --- Account UI helpers ---
-    private fun setIsAuthenticated(account: FirefoxAccountShaped) {
+    private fun updateAuthState(account: FirefoxAccountShaped? = null) {
         val preferenceSignIn = findPreference<Preference>(context?.getPreferenceKey(pref_key_sign_in))
         val preferenceFirefoxAccount = findPreference<Preference>(context?.getPreferenceKey(pref_key_account))
+        val accountPreferenceCategory =
+            findPreference<PreferenceCategory>(context?.getPreferenceKey(pref_key_account_category))
 
-        preferenceSignIn.isVisible = false
-        preferenceSignIn.onPreferenceClickListener = null
-        preferenceFirefoxAccount.isVisible = true
-    }
-
-    private fun setIsLoggedOut() {
-        val preferenceSignIn = findPreference<Preference>(context?.getPreferenceKey(pref_key_sign_in))
-        val preferenceFirefoxAccount = findPreference<Preference>(context?.getPreferenceKey(pref_key_account))
-
-        preferenceSignIn.isVisible = true
-
-        // TODO this isn't quite right, as we'll have an "Account" preference category title still visible on the screen
-        preferenceFirefoxAccount.isVisible = false
-        preferenceSignIn.onPreferenceClickListener = getClickListenerForSignIn()
+        if (account != null) {
+            preferenceSignIn.isVisible = false
+            preferenceSignIn.onPreferenceClickListener = null
+            preferenceFirefoxAccount.isVisible = true
+            accountPreferenceCategory.isVisible = true
+        } else {
+            preferenceSignIn.isVisible = true
+            preferenceSignIn.onPreferenceClickListener = getClickListenerForSignIn()
+            preferenceFirefoxAccount.isVisible = false
+            accountPreferenceCategory.isVisible = false
+        }
     }
 
     private fun updateAccountProfile(profile: Profile) {
-        val preferenceFirefoxAccount = findPreference<Preference>(context?.getPreferenceKey(pref_key_account))
-        preferenceFirefoxAccount.title = profile.displayName.orEmpty()
-        preferenceFirefoxAccount.summary = profile.email.orEmpty()
+        launch {
+            val preferenceFirefoxAccount = findPreference<Preference>(context?.getPreferenceKey(pref_key_account))
+            preferenceFirefoxAccount.title = profile.displayName.orEmpty()
+            preferenceFirefoxAccount.summary = profile.email.orEmpty()
+        }
     }
 
     companion object {
