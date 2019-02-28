@@ -28,6 +28,7 @@ class ChangesContextMenu {
     // Window object to which the Changes panel belongs to.
     this.window = this.document.defaultView;
 
+    this._onCopyDeclaration = this.view.copyDeclaration.bind(this.view);
     this._onCopyRule = this.view.copyRule.bind(this.view);
     this._onCopySelection = this.view.copySelection.bind(this.view);
     this._onSelectAll = this._onSelectAll.bind(this);
@@ -55,14 +56,22 @@ class ChangesContextMenu {
     });
     menu.append(menuitemCopy);
 
+    const declEl = target.closest(".changes__declaration");
     const ruleEl = target.closest("[data-rule-id]");
     const ruleId = ruleEl ? ruleEl.dataset.ruleId : null;
 
-    if (ruleId) {
+    if (ruleId || declEl) {
       // Copy Rule option
       menu.append(new MenuItem({
         label: getStr("changes.contextmenu.copyRule"),
         click: () => this._onCopyRule(ruleId),
+      }));
+
+      // Copy Declaration option. Visible only if there is a declaration element target.
+      menu.append(new MenuItem({
+        label: getStr("changes.contextmenu.copyDeclaration"),
+        click: () => this._onCopyDeclaration(declEl),
+        visible: !!declEl,
       }));
 
       menu.append(new MenuItem({

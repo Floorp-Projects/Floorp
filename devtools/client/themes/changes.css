@@ -157,7 +157,7 @@
   display: block;
 }
 
-#sidebar-panel-changes .declaration-name {
+.changes__declaration-name {
   margin-left: 10px;
 }
 
