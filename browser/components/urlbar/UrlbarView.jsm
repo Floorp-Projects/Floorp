@@ -469,6 +469,9 @@ class UrlbarView {
           setAction(bundle.GetStringFromName("visit"));
         }
         break;
+      case UrlbarUtils.RESULT_TYPE.OMNIBOX:
+        setAction(result.payload.content);
+        break;
       default:
         if (result.heuristic) {
           setAction(bundle.GetStringFromName("visit"));
