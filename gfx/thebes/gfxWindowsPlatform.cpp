@@ -585,11 +585,6 @@ void gfxWindowsPlatform::UpdateRenderMode() {
   }
 }
 
-bool gfxWindowsPlatform::AllowOpenGLCanvas() {
-  // OpenGL canvas is not supported on windows
-  return false;
-}
-
 mozilla::gfx::BackendType gfxWindowsPlatform::GetContentBackendFor(
     mozilla::layers::LayersBackend aLayers) {
   mozilla::gfx::BackendType defaultBackend =

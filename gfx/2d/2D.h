@@ -66,7 +66,6 @@ struct IDWriteRenderingParams;
 struct IDWriteFontFace;
 struct IDWriteFontCollection;
 
-class GrContext;
 class SkCanvas;
 struct gfxFontStyle;
 
@@ -1508,13 +1507,6 @@ class DrawTarget : public external::AtomicRefCounted<DrawTarget> {
    */
   virtual void DetachAllSnapshots() = 0;
 
-#ifdef USE_SKIA_GPU
-  virtual bool InitWithGrContext(GrContext *aGrContext, const IntSize &aSize,
-                                 SurfaceFormat aFormat) {
-    MOZ_CRASH("GFX: InitWithGrContext");
-  }
-#endif
-
  protected:
   UserData mUserData;
   Matrix mTransform;
@@ -1749,11 +1741,6 @@ class GFX2D_API Factory {
   static Config *sConfig;
 
  public:
-#ifdef USE_SKIA_GPU
-  static already_AddRefed<DrawTarget> CreateDrawTargetSkiaWithGrContext(
-      GrContext *aGrContext, const IntSize &aSize, SurfaceFormat aFormat);
-#endif
-
   static void PurgeAllCaches();
 
   static already_AddRefed<DrawTarget> CreateDualDrawTarget(DrawTarget *targetA,
