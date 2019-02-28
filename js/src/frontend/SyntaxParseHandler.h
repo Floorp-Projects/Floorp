@@ -517,9 +517,9 @@ class SyntaxParseHandler {
     return NodeGeneric;
   }
 
-  MOZ_MUST_USE bool finishInitializerAssignment(NameNodeType nameNode,
-                                                Node init) {
-    return true;
+  AssignmentNodeType finishInitializerAssignment(NameNodeType nameNode,
+                                                 Node init) {
+    return NodeUnparenthesizedAssignment;
   }
 
   void setBeginPosition(Node pn, Node oth) {}
