@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* Mozilla App Services dependency upgraded: **0.18.0** 🔺
+  * [0.18.0 release notes](https://github.com/mozilla/application-services/releases/tag/v0.18.0)
+
 * **browser-engine-gecko-nightly**
   * Added API to install web extensions:
 
