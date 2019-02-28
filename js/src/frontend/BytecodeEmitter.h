@@ -104,6 +104,7 @@ class EmitterScope;
 class NestableControl;
 class PropertyEmitter;
 class TDZCheckCache;
+class TryEmitter;
 
 struct MOZ_STACK_CLASS BytecodeEmitter {
   // Context shared between parsing and bytecode generation.
@@ -654,10 +655,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitPropLHS(PropertyAccess* prop);
   MOZ_MUST_USE bool emitPropIncDec(UnaryNode* incDec);
 
-  MOZ_MUST_USE bool emitAsyncWrapperLambda(unsigned index, bool isArrow);
-  MOZ_MUST_USE bool emitAsyncWrapper(unsigned index, bool needsHomeObject,
-                                     bool isArrow, bool isGenerator);
-
   MOZ_MUST_USE bool emitComputedPropertyName(UnaryNode* computedPropName);
 
   // Emit bytecode to put operands for a JSOP_GETELEM/CALLELEM/SETELEM/DELELEM
@@ -850,6 +847,12 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitFunctionBody(ParseNode* funBody);
   MOZ_MUST_USE bool emitLexicalInitialization(NameNode* name);
   MOZ_MUST_USE bool emitLexicalInitialization(JSAtom* name);
+
+  // Async functions have implicit try-catch blocks to convert exceptions
+  // into promise rejections.
+  MOZ_MUST_USE bool emitAsyncFunctionRejectPrologue(
+      mozilla::Maybe<TryEmitter>& tryCatch);
+  MOZ_MUST_USE bool emitAsyncFunctionRejectEpilogue(TryEmitter& tryCatch);
 
   // Emit bytecode for the spread operator.
   //

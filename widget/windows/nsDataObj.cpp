@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/TextUtils.h"
 
 #include <ole2.h>
 #include <shlobj.h>
@@ -1155,7 +1156,7 @@ nsDataObj ::GetFileContentsInternetShortcut(FORMATETC& aFE, STGMEDIUM& aSTG) {
     rv = icoFile->GetPath(path);
     NS_ENSURE_SUCCESS(rv, E_FAIL);
 
-    if (NS_IsAscii(path.get())) {
+    if (IsAsciiNullTerminated(static_cast<const char16_t*>(path.get()))) {
       LossyCopyUTF16toASCII(path, asciiPath);
       shortcutFormatStr =
           "[InternetShortcut]\r\nURL=%s\r\n"

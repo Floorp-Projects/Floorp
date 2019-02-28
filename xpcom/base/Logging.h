@@ -14,7 +14,6 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
-#include "mozilla/Poison.h"
 
 // We normally have logging enabled everywhere, but measurements showed that
 // having logging enabled on Android is quite expensive (hundreds of kilobytes
@@ -173,7 +172,6 @@ class LazyLogModule final {
 
  private:
   const char* const mLogName;
-  const CorruptionCanaryForStatics mCanary;
 
   // As for LogModule::mLevel, don't preserve behavior for this atomic when
   // recording/replaying.

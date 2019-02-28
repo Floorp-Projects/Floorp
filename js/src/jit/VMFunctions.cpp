@@ -792,7 +792,7 @@ void FrameIsDebuggeeCheck(BaselineFrame* frame) {
 }
 
 JSObject* CreateGenerator(JSContext* cx, BaselineFrame* frame) {
-  return GeneratorObject::create(cx, frame);
+  return AbstractGeneratorObject::create(cx, frame);
 }
 
 bool NormalSuspend(JSContext* cx, HandleObject obj, BaselineFrame* frame,
@@ -820,19 +820,19 @@ bool NormalSuspend(JSContext* cx, HandleObject obj, BaselineFrame* frame,
 
   MOZ_ASSERT(exprStack.length() == stackDepth - 1);
 
-  return GeneratorObject::normalSuspend(cx, obj, frame, pc, exprStack.begin(),
-                                        stackDepth - 1);
+  return AbstractGeneratorObject::normalSuspend(
+      cx, obj, frame, pc, exprStack.begin(), stackDepth - 1);
 }
 
 bool FinalSuspend(JSContext* cx, HandleObject obj, jsbytecode* pc) {
   MOZ_ASSERT(*pc == JSOP_FINALYIELDRVAL);
-  GeneratorObject::finalSuspend(obj);
+  AbstractGeneratorObject::finalSuspend(obj);
   return true;
 }
 
 bool InterpretResume(JSContext* cx, HandleObject obj, HandleValue val,
                      HandlePropertyName kind, MutableHandleValue rval) {
-  MOZ_ASSERT(obj->is<GeneratorObject>());
+  MOZ_ASSERT(obj->is<AbstractGeneratorObject>());
 
   FixedInvokeArgs<3> args(cx);
 
@@ -862,8 +862,8 @@ bool DebugAfterYield(JSContext* cx, BaselineFrame* frame, jsbytecode* pc,
 }
 
 bool GeneratorThrowOrReturn(JSContext* cx, BaselineFrame* frame,
-                            Handle<GeneratorObject*> genObj, HandleValue arg,
-                            uint32_t resumeKind) {
+                            Handle<AbstractGeneratorObject*> genObj,
+                            HandleValue arg, uint32_t resumeKind) {
   // Set the frame's pc to the current resume pc, so that frame iterators
   // work. This function always returns false, so we're guaranteed to enter
   // the exception handler where we will clear the pc.
@@ -872,8 +872,8 @@ bool GeneratorThrowOrReturn(JSContext* cx, BaselineFrame* frame,
   jsbytecode* pc = script->offsetToPC(offset);
   frame->setOverridePc(pc);
 
-  // In the interpreter, GeneratorObject::resume marks the generator as running,
-  // so we do the same.
+  // In the interpreter, AbstractGeneratorObject::resume marks the generator as
+  // running, so we do the same.
   genObj->setRunning();
 
   bool mustReturn = false;
@@ -881,7 +881,7 @@ bool GeneratorThrowOrReturn(JSContext* cx, BaselineFrame* frame,
     return false;
   }
   if (mustReturn) {
-    resumeKind = GeneratorObject::RETURN;
+    resumeKind = AbstractGeneratorObject::RETURN;
   }
 
   MOZ_ALWAYS_FALSE(

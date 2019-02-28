@@ -35,15 +35,14 @@ export async function onConnect(connection: any, actions: Object) {
     supportsWasm
   });
 
-  if (actions) {
-    setupEvents({ threadClient, actions, supportsWasm });
-  }
+  setupEvents({ threadClient, tabTarget, actions, supportsWasm });
 
   tabTarget.on("will-navigate", actions.willNavigate);
   tabTarget.on("navigate", actions.navigated);
 
   await threadClient.reconfigure({
     observeAsmJS: true,
+    pauseWorkersUntilAttach: true,
     wasmBinarySource: supportsWasm,
     skipBreakpoints: prefs.skipPausing
   });

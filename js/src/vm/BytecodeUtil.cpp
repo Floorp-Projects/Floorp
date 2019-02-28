@@ -2063,8 +2063,6 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
 
       case JSOP_LAMBDA:
       case JSOP_LAMBDA_ARROW:
-      case JSOP_TOASYNC:
-      case JSOP_TOASYNCGEN:
         return write("FUN");
 
       case JSOP_TOASYNCITER:
@@ -2113,6 +2111,10 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
         // match to the syntax, since the stack operand for "yield 10" is
         // the result object, not 10.
         return write("RVAL");
+
+      case JSOP_ASYNCAWAIT:
+      case JSOP_ASYNCRESOLVE:
+        return write("PROMISE");
 
       default:
         break;

@@ -53,7 +53,7 @@ struct WaitForTexturesRequest {
   pid_t pid;
 };
 
-std::unordered_set<uint64_t>* GetLockedTextureIdsForProcess(pid_t pid) {
+static std::unordered_set<uint64_t>* GetLockedTextureIdsForProcess(pid_t pid) {
   gTextureLockMonitor.AssertCurrentThreadOwns();
 
   if (gProcessTextureIds.find(pid) == gProcessTextureIds.end()) {
@@ -63,8 +63,8 @@ std::unordered_set<uint64_t>* GetLockedTextureIdsForProcess(pid_t pid) {
   return &gProcessTextureIds.at(pid);
 }
 
-bool WaitForTextureIdsToUnlock(pid_t pid,
-                               const Span<const uint64_t>& textureIds) {
+static bool WaitForTextureIdsToUnlock(pid_t pid,
+                                      const Span<const uint64_t>& textureIds) {
   {
     StaticMonitorAutoLock lock(gTextureLockMonitor);
     std::unordered_set<uint64_t>* freedTextureIds =
@@ -99,7 +99,7 @@ bool WaitForTextureIdsToUnlock(pid_t pid,
   }
 }
 
-void CheckTexturesForUnlock() {
+static void CheckTexturesForUnlock() {
   if (gTextureSourceProviders) {
     for (auto it = gTextureSourceProviders->begin();
          it != gTextureSourceProviders->end(); ++it) {

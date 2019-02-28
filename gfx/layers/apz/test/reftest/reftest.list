@@ -1,9 +1,9 @@
 # The following tests test the async positioning of the scrollbars.
 # Basic root-frame scrollbar with async scrolling
-fuzzy-if(Android,1-1,1-2) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-v.html async-scrollbar-1-v-ref.html # bug 1392259
+fuzzy-if(Android,1-1,1-2) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-v.html async-scrollbar-1-v-ref.html
 fuzzy-if(Android,0-4,0-5) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-h.html async-scrollbar-1-h-ref.html
 fuzzy-if(Android,0-3,0-5) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-vh.html async-scrollbar-1-vh-ref.html
-fuzzy-if(Android,1-1,1-2) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-v-rtl.html async-scrollbar-1-v-rtl-ref.html # bug 1392259
+fuzzy-if(Android,1-1,1-2) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-v-rtl.html async-scrollbar-1-v-rtl-ref.html
 fuzzy-if(Android,0-4,0-5) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-h-rtl.html async-scrollbar-1-h-rtl-ref.html
 fuzzy-if(Android,0-3,0-7) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-vh-rtl.html async-scrollbar-1-vh-rtl-ref.html
 

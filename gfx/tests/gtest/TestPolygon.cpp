@@ -44,8 +44,8 @@ TEST(MozPolygon, TriangulatePentagon) {
   AssertArrayEQ(triangles, expected);
 }
 
-void TestClipRect(const MozPolygon& aPolygon, const MozPolygon& aExpected,
-                  const Rect& aRect) {
+static void TestClipRect(const MozPolygon& aPolygon,
+                         const MozPolygon& aExpected, const Rect& aRect) {
   const MozPolygon res = aPolygon.ClipPolygon(MozPolygon::FromRect(aRect));
   EXPECT_TRUE(res == aExpected);
 }

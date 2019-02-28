@@ -2326,7 +2326,8 @@ static bool IsRegExpHoistableCall(CompileRuntime* runtime, MCall* call,
     return IsExclusiveFirstArg(call, def);
   }
 
-  if (name == runtime->names().RegExp_prototype_Exec) {
+  if (name == runtime->names().RegExp_prototype_Exec ||
+      name == runtime->names().CallRegExpMethodIfWrapped) {
     return IsExclusiveThisArg(call, def);
   }
 

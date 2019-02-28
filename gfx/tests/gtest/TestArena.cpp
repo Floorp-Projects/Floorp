@@ -64,7 +64,7 @@ struct BigStruct {
   explicit BigStruct(uint64_t val) : mVal(val) {}
 };
 
-void TestArenaAlloc(IterableArena::ArenaType aType) {
+static void TestArenaAlloc(IterableArena::ArenaType aType) {
   sDtorItemA = 0;
   sDtorItemB = 0;
   IterableArena arena(aType, 256);
@@ -133,7 +133,8 @@ void TestArenaAlloc(IterableArena::ArenaType aType) {
   }
 }
 
-void TestArenaLimit(IterableArena::ArenaType aType, bool aShouldReachLimit) {
+static void TestArenaLimit(IterableArena::ArenaType aType,
+                           bool aShouldReachLimit) {
   IterableArena arena(aType, 128);
 
   // A non-growable arena should return a negative offset when running out

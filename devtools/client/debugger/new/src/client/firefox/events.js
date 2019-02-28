@@ -9,7 +9,8 @@ import type {
   ResumedPacket,
   PausedPacket,
   ThreadClient,
-  Actions
+  Actions,
+  TabTarget
 } from "./types";
 
 import { createPause, createSource } from "./create";
@@ -19,6 +20,7 @@ const CALL_STACK_PAGE_SIZE = 1000;
 
 type Dependencies = {
   threadClient: ThreadClient,
+  tabTarget: TabTarget,
   actions: Actions,
   supportsWasm: boolean
 };
@@ -35,26 +37,13 @@ function addThreadEventListeners(client: ThreadClient) {
 
 function setupEvents(dependencies: Dependencies) {
   const threadClient = dependencies.threadClient;
+  const tabTarget = dependencies.tabTarget;
   actions = dependencies.actions;
   supportsWasm = dependencies.supportsWasm;
   sourceQueue.initialize(actions);
 
-  if (threadClient) {
-    addThreadEventListeners(threadClient);
-
-    if (threadClient._parent) {
-      // Parent may be BrowsingContextTargetFront/WorkerTargetFront and
-      // be protocol.js.  Or DebuggerClient and still be old fashion actor.
-      if (threadClient._parent.on) {
-        threadClient._parent.on("workerListChanged", workerListChanged);
-      } else {
-        threadClient._parent.addListener(
-          "workerListChanged",
-          workerListChanged
-        );
-      }
-    }
-  }
+  addThreadEventListeners(threadClient);
+  tabTarget.on("workerListChanged", workerListChanged);
 }
 
 async function paused(

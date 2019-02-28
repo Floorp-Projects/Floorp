@@ -270,8 +270,22 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       thread: this,
     });
 
+    if (request.options.breakpoints) {
+      for (const { location, options } of Object.values(request.options.breakpoints)) {
+        this.setBreakpoint(location, options);
+      }
+    }
+
     this.dbg.addDebuggees();
     this.dbg.enabled = true;
+
+    // Notify the parent that we've finished attaching. If this is a worker
+    // thread which was paused until attaching, this will allow content to
+    // begin executing.
+    if (this._parent.onThreadAttached) {
+      this._parent.onThreadAttached();
+    }
+
     try {
       // Put ourselves in the paused state.
       const packet = this._paused();
@@ -447,6 +461,12 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     if ("skipBreakpoints" in options) {
       this.skipBreakpoints = options.skipBreakpoints;
+    }
+
+    if ("pauseWorkersUntilAttach" in options) {
+      if (this._parent.pauseWorkersUntilAttach) {
+        this._parent.pauseWorkersUntilAttach(options.pauseWorkersUntilAttach);
+      }
     }
 
     Object.assign(this._options, options);
@@ -1104,6 +1124,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   onSources: function(request) {
+    // FIXME bug 1530699 we should make sure that existing breakpoints are
+    // applied to any sources we find here.
     for (const source of this.dbg.findSources()) {
       this.sources.createSourceActor(source);
     }

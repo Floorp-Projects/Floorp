@@ -23,9 +23,9 @@ const tests = [
   [text.length, text.length - 1],
 ];
 
-for (const [input, position] of tests) {
+for (const [input, index] of tests) {
   assert.sameValue(iter.preceding(input), false);
-  assert.sameValue(iter.position, position, String(input));
+  assert.sameValue(iter.index, index, String(input));
 }
 
 assert.throws(RangeError, () => iter.preceding("ABC"));

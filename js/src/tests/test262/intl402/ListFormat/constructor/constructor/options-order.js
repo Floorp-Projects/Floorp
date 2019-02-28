@@ -49,12 +49,12 @@ new Intl.ListFormat([], {
 });
 
 assert.compareArray(callOrder, [
+  "localeMatcher",
+  "localeMatcher toString",
   "type",
   "type toString",
   "style",
   "style toString",
-  "localeMatcher",
-  "localeMatcher toString",
 ]);
 
 reportCompare(0, 0);

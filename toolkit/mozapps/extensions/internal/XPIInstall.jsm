@@ -205,10 +205,6 @@ class Package {
 
   close() {}
 
-  getURI(...path) {
-    return Services.io.newURI(path.join("/"), null, this.rootURI);
-  }
-
   async readString(...path) {
     let buffer = await this.readBinary(...path);
     return new TextDecoder().decode(buffer);
@@ -372,20 +368,14 @@ function waitForAllPromises(promises) {
 /**
  * Reads an AddonInternal object from a webextension manifest.json
  *
- * @param {nsIURI} aUri
- *        A |file:| or |jar:| URL for the manifest
  * @param {Package} aPackage
  *        The install package for the add-on
  * @returns {AddonInternal}
  * @throws if the install manifest in the stream is corrupt or could not
  *         be read
  */
-async function loadManifestFromWebManifest(aUri, aPackage) {
-  // We're passed the URI for the manifest file. Get the URI for its
-  // parent directory.
-  let uri = Services.io.newURI("./", null, aUri);
-
-  let extension = new ExtensionData(uri);
+async function loadManifestFromWebManifest(aPackage) {
+  let extension = new ExtensionData(aPackage.rootURI);
 
   let manifest = await extension.loadManifest();
 
@@ -537,7 +527,7 @@ function generateTemporaryInstallID(aFile) {
 var loadManifest = async function(aPackage, aLocation, aOldAddon) {
   let addon;
   if (await aPackage.hasResource("manifest.json")) {
-    addon = await loadManifestFromWebManifest(aPackage.rootURI, aPackage);
+    addon = await loadManifestFromWebManifest(aPackage);
   } else {
     for (let loader of AddonManagerPrivate.externalExtensionLoaders.values()) {
       if (await aPackage.hasResource(loader.manifestFile)) {
@@ -553,6 +543,7 @@ var loadManifest = async function(aPackage, aLocation, aOldAddon) {
   }
 
   addon._sourceBundle = aPackage.file;
+  addon.rootURI = aPackage.rootURI.spec;
   addon.location = aLocation;
 
   let {signedState, cert} = await aPackage.verifySignedState(addon);
@@ -3314,7 +3305,8 @@ var XPIInstall = {
           let newVersion = existingAddon.version;
           let reason = newVersionReason(existingAddon.version, newVersion);
 
-          XPIInternal.get(existingAddon).uninstall(reason, {newVersion});
+          XPIInternal.BootstrapScope.get(existingAddon)
+                     .uninstall(reason, {newVersion});
         }
       } catch (e) {
         Cu.reportError(e);
@@ -3669,7 +3661,7 @@ var XPIInstall = {
 
     // Enough of the Package interface to allow loadManifest() to work.
     let pkg = {
-      rootURI: Services.io.newURI("manifest.json", null, rootURI),
+      rootURI,
       filePath: baseURL,
       file: null,
       verifySignedState() {

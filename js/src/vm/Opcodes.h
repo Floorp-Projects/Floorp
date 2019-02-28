@@ -1604,15 +1604,8 @@
      */ \
     MACRO(JSOP_NEWTARGET, 148, "newtarget", NULL, 1, 0, 1, JOF_BYTE) \
     /*
-     * Pops the top of stack value as 'unwrapped', converts it to async
-     * function 'wrapped', and pushes 'wrapped' back on the stack.
-     *
-     *   Category: Statements
-     *   Type: Function
-     *   Operands:
-     *   Stack: unwrapped => wrapped
      */ \
-    MACRO(JSOP_TOASYNC, 149, "toasync", NULL, 1, 1, 1, JOF_BYTE) \
+    MACRO(JSOP_UNUSED149, 149, "unused149", NULL, 1, 0, 0, JOF_BYTE) \
     /*
      * Pops the top two values 'lval' and 'rval' from the stack, then pushes
      * the result of 'Math.pow(lval, rval)'.
@@ -1624,8 +1617,17 @@
      */ \
     MACRO(JSOP_POW, 150, "pow", "**", 1, 2, 1, JOF_BYTE|JOF_IC) \
     /*
+     * Pops the top two values 'value' and 'gen' from the stack, then starts
+     * "awaiting" for 'value' to be resolved, which will then resume the
+     * execution of 'gen'. Pushes the async function promise on the stack, so
+     * that it'll be returned to the caller on the very first "await".
+     *
+     *   Category: Statements
+     *   Type: Generator
+     *   Operands:
+     *   Stack: value, gen => promise
      */ \
-    MACRO(JSOP_UNUSED151, 151, "unused151", NULL, 1, 0, 0, JOF_BYTE) \
+    MACRO(JSOP_ASYNCAWAIT, 151, "async-await", NULL, 1, 2, 1, JOF_BYTE) \
     /*
      * Pops the top of stack value as 'rval', sets the return value in stack
      * frame as 'rval'.
@@ -2067,15 +2069,17 @@
      */ \
     MACRO(JSOP_CHECKTHISREINIT, 191, "checkthisreinit", NULL, 1, 1, 1, JOF_BYTE) \
     /*
-     * Pops the top of stack value as 'unwrapped', converts it to async
-     * generator 'wrapped', and pushes 'wrapped' back on the stack.
+     * Pops the top two values 'valueOrReason' and 'gen' from the stack, then
+     * pushes the promise resolved with 'valueOrReason'. `gen` must be the
+     * internal generator object created in async functions. The pushed promise
+     * is the async function's result promise, which is stored in `gen`.
      *
      *   Category: Statements
      *   Type: Generator
-     *   Operands:
-     *   Stack: unwrapped => wrapped
+     *   Operands: uint8_t fulfillOrReject
+     *   Stack: valueOrReason, gen => promise
      */ \
-    MACRO(JSOP_TOASYNCGEN, 192, "toasyncgen", NULL, 1, 1, 1, JOF_BYTE) \
+    MACRO(JSOP_ASYNCRESOLVE, 192, "async-resolve", NULL, 2, 2, 1, JOF_UINT8) \
     /*
      * Pops the top two values on the stack as 'propval' and 'obj', pushes
      * 'propval' property of 'obj' onto the stack.
@@ -2213,7 +2217,7 @@
      *
      *   Category: Statements
      *   Type: Generator
-     *   Operands: resume kind (GeneratorObject::ResumeKind)
+     *   Operands: resume kind (AbstractGeneratorObject::ResumeKind)
      *   Stack: gen, val => rval
      */ \
     MACRO(JSOP_RESUME, 205, "resume", NULL, 3, 2, 1, JOF_UINT16|JOF_INVOKE) \

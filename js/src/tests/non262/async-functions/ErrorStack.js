@@ -10,7 +10,7 @@ let COOKIE = "C0F5DBB89807";
 async function thrower() {
     let stack = new Error().stack; // line 11
     assertEq(/^thrower@.+ErrorStack.js:11/m.test(stack), true, toMessage(stack));
-    assertEq(/^async\*inner@.+ErrorStack.js:38/m.test(stack), true, toMessage(stack));
+    assertEq(/^inner@.+ErrorStack.js:38/m.test(stack), true, toMessage(stack));
     assertEq(/^async\*middle@.+ErrorStack.js:58/m.test(stack), true, toMessage(stack));
     assertEq(/^async\*outer@.+ErrorStack.js:78/m.test(stack), true, toMessage(stack));
     assertEq(/^async\*@.+ErrorStack.js:82/m.test(stack), true, toMessage(stack));
@@ -22,7 +22,7 @@ async function inner() {
     let stack = new Error().stack; // line 22
     assertEq(/thrower@.+ErrorStack.js/m.test(stack), false, toMessage(stack));
     assertEq(/^inner@.+ErrorStack.js:22/m.test(stack), true, toMessage(stack));
-    assertEq(/^async\*middle@.+ErrorStack.js:58/m.test(stack), true, toMessage(stack));
+    assertEq(/^middle@.+ErrorStack.js:58/m.test(stack), true, toMessage(stack));
     assertEq(/^async\*outer@.+ErrorStack.js:78/m.test(stack), true, toMessage(stack));
     assertEq(/^async\*@.+ErrorStack.js:82/m.test(stack), true, toMessage(stack));
 
@@ -43,7 +43,7 @@ async function middle() {
     assertEq(/thrower@.+ErrorStack.js/m.test(stack), false, toMessage(stack));
     assertEq(/inner@.+ErrorStack.js/m.test(stack), false, toMessage(stack));
     assertEq(/^middle@.+ErrorStack.js:42/m.test(stack), true, toMessage(stack));
-    assertEq(/^async\*outer@.+ErrorStack.js:78/m.test(stack), true, toMessage(stack));
+    assertEq(/^outer@.+ErrorStack.js:78/m.test(stack), true, toMessage(stack));
     assertEq(/^async\*@.+ErrorStack.js:82/m.test(stack), true, toMessage(stack));
 
     await Promise.resolve(1000);
@@ -64,7 +64,7 @@ async function outer() {
     assertEq(/inner@.+ErrorStack.js/m.test(stack), false, toMessage(stack));
     assertEq(/middle@.+ErrorStack.js/m.test(stack), false, toMessage(stack));
     assertEq(/^outer@.+ErrorStack.js:62/m.test(stack), true, toMessage(stack));
-    assertEq(/^async\*@.+ErrorStack.js:82/m.test(stack), true, toMessage(stack));
+    assertEq(/^@.+ErrorStack.js:82/m.test(stack), true, toMessage(stack));
 
     await Promise.resolve(10000);
 
@@ -88,7 +88,7 @@ try {
 
     let stack = e.stack;
     assertEq(/^thrower@.+ErrorStack.js:18/m.test(stack), true, toMessage(stack));
-    assertEq(/^async\*inner@.+ErrorStack.js:38/m.test(stack), true, toMessage(stack));
+    assertEq(/^inner@.+ErrorStack.js:38/m.test(stack), true, toMessage(stack));
     assertEq(/^async\*middle@.+ErrorStack.js:58/m.test(stack), true, toMessage(stack));
     assertEq(/^async\*outer@.+ErrorStack.js:78/m.test(stack), true, toMessage(stack));
     assertEq(/^async\*@.+ErrorStack.js:82/m.test(stack), true, toMessage(stack));

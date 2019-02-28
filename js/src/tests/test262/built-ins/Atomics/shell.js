@@ -1,3 +1,4 @@
+// GENERATED, DO NOT EDIT
 // file: testAtomics.js
 // Copyright (C) 2017 Mozilla Corporation. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.

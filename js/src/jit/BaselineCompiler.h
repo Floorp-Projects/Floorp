@@ -191,8 +191,6 @@ namespace jit {
   _(JSOP_DEBUGGER)              \
   _(JSOP_ARGUMENTS)             \
   _(JSOP_REST)                  \
-  _(JSOP_TOASYNC)               \
-  _(JSOP_TOASYNCGEN)            \
   _(JSOP_TOASYNCITER)           \
   _(JSOP_TOID)                  \
   _(JSOP_TOSTRING)              \
@@ -210,6 +208,8 @@ namespace jit {
   _(JSOP_DEBUGAFTERYIELD)       \
   _(JSOP_FINALYIELDRVAL)        \
   _(JSOP_RESUME)                \
+  _(JSOP_ASYNCAWAIT)            \
+  _(JSOP_ASYNCRESOLVE)          \
   _(JSOP_CALLEE)                \
   _(JSOP_ENVCALLEE)             \
   _(JSOP_SUPERBASE)             \

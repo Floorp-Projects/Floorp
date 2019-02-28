@@ -1833,17 +1833,9 @@ bool JSStructuredCloneWriter::transferOwnership() {
         return false;
       }
 
-      size_t nbytes = arrayBuffer->byteLength();
-
-      if (arrayBuffer->isWasm() || arrayBuffer->isPreparedForAsmJS()) {
+      if (arrayBuffer->isPreparedForAsmJS()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                   JSMSG_WASM_NO_TRANSFER);
-        return false;
-      }
-
-      if (arrayBuffer->isDetached()) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_TYPED_ARRAY_DETACHED);
         return false;
       }
 
@@ -1874,11 +1866,12 @@ bool JSStructuredCloneWriter::transferOwnership() {
           return false;
         }
       } else {
-        bool hasStealableContents = arrayBuffer->hasStealableContents();
+        size_t nbytes = arrayBuffer->byteLength();
 
-        ArrayBufferObject::BufferContents bufContents =
-            ArrayBufferObject::stealContents(cx, arrayBuffer,
-                                             hasStealableContents);
+        using BufferContents = ArrayBufferObject::BufferContents;
+
+        BufferContents bufContents =
+            ArrayBufferObject::extractStructuredCloneContents(cx, arrayBuffer);
         if (!bufContents) {
           return false;  // out of memory
         }

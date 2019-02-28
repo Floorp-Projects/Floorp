@@ -47,4 +47,17 @@ interface nsIWorkerDebugger : nsISupports
   void addListener(in nsIWorkerDebuggerListener listener);
 
   void removeListener(in nsIWorkerDebuggerListener listener);
+
+  // Indicate whether the debugger has finished initializing. By default the
+  // debugger will be considered initialized when the onRegister hooks in all
+  // nsIWorkerDebuggerManagerListener have been called.
+  //
+  // setDebuggerReady(false) can be called during an onRegister hook to mark
+  // the debugger as not being ready yet. This will prevent all content from
+  // running in the worker, including the worker's main script and any messages
+  // posted to it. Other runnables will still execute in the worker as normal.
+  //
+  // When the debugger is ready, setDebuggerReady(true) should then be called
+  // to allow the worker to begin executing content.
+  void setDebuggerReady(in boolean ready);
 };

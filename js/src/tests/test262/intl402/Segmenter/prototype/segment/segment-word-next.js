@@ -38,9 +38,9 @@ for (const text of [
     assert.sameValue("string", typeof v.segment);
     assert(v.segment.length > 0);
     segments.push(v.segment);
-    assert.sameValue(typeof v.position, "number");
-    assert(oldPos < v.position);
-    oldPos = v.position;
+    assert.sameValue(typeof v.index, "number");
+    assert(oldPos < v.index);
+    oldPos = v.index;
   }
   assert.sameValue(text, segments.join(''));
 }
