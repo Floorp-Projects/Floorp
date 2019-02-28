@@ -11,9 +11,6 @@
   },
   "homepage": "https://github.com/firefox-devtools/debugger.html#readme",
   "engineStrict": true,
-  "engines": {
-    "node": ">=10.15.0"
-  },
   "scripts": {
     "start": "node bin/dev-server",
     "start-app": "TARGET=application node bin/dev-server",
