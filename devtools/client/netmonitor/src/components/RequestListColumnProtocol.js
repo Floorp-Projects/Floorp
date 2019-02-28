@@ -9,8 +9,6 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { getFormattedProtocol } = require("../utils/request-utils");
 
-const { div } = dom;
-
 class RequestListColumnProtocol extends Component {
   static get propTypes() {
     return {
@@ -27,7 +25,7 @@ class RequestListColumnProtocol extends Component {
     const protocol = getFormattedProtocol(this.props.item);
 
     return (
-      div({
+      dom.td({
         className: "requests-list-column requests-list-protocol",
         title: protocol,
       },

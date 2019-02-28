@@ -15,8 +15,6 @@ const {
   getEndTime,
 } = require("../utils/request-utils");
 
-const { div } = dom;
-
 /**
  * This component represents a column displaying selected
  * timing value. There are following possible values this
@@ -85,7 +83,7 @@ class RequestListColumnTime extends Component {
     const time = getFormattedTime(this.getTime(this.props));
 
     return (
-      div({
+      dom.td({
         className: "requests-list-column requests-list-" + type + "-time",
         title: time,
       },
