@@ -172,9 +172,14 @@ class UrlbarView {
   }
 
   /**
-   * Closes the autocomplete results popup.
+   * Closes the autocomplete popup, cancelling the query if necessary.
+   *
+   * @param {UrlbarUtils.CANCEL_REASON} [cancelReason]
+   *   Indicates if this close is being triggered as a result of a user action
+   *   which would cancel a query, e.g. on blur.
    */
-  close() {
+  close(cancelReason) {
+    this.controller.cancelQuery(cancelReason);
     this.panel.hidePopup();
   }
 
