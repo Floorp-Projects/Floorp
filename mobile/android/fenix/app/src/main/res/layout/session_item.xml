@@ -9,7 +9,6 @@
     android:layout_marginTop="8dp"
     android:layout_marginBottom="8dp"
     android:background="@android:color/white"
-    android:clipChildren="true"
     app:cardCornerRadius="10dp"
     app:cardElevation="5dp">
 
