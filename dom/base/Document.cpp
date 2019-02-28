@@ -1980,17 +1980,6 @@ void Document::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) {
     // Note: this should match nsDocShell::OnLoadingSite
     NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
 
-    bool isWyciwyg = false;
-    uri->SchemeIs("wyciwyg", &isWyciwyg);
-    if (isWyciwyg) {
-      nsCOMPtr<nsIURI> cleanURI;
-      nsresult rv =
-          nsContentUtils::RemoveWyciwygScheme(uri, getter_AddRefs(cleanURI));
-      if (NS_SUCCEEDED(rv)) {
-        uri = cleanURI;
-      }
-    }
-
     nsIScriptSecurityManager* securityManager =
         nsContentUtils::GetSecurityManager();
     if (securityManager) {

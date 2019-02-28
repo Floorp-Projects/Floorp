@@ -2866,11 +2866,6 @@ bool SchemeIsData(nsIURI *aURI) {
   return aURI->SchemeIs("data");
 }
 
-bool SchemeIsWYCIWYG(nsIURI *aURI) {
-  MOZ_ASSERT(aURI);
-  return aURI->SchemeIs("wyciwyg");
-}
-
 bool SchemeIsViewSource(nsIURI *aURI) {
   MOZ_ASSERT(aURI);
   return aURI->SchemeIs("view-source");

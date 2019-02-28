@@ -113,8 +113,6 @@ class NeckoParent : public PNeckoParent {
   bool DeallocPAltDataOutputStreamParent(PAltDataOutputStreamParent* aActor);
 
   bool DeallocPCookieServiceParent(PCookieServiceParent*);
-  PWyciwygChannelParent* AllocPWyciwygChannelParent();
-  bool DeallocPWyciwygChannelParent(PWyciwygChannelParent*);
   PFTPChannelParent* AllocPFTPChannelParent(
       const PBrowserOrId& aBrowser, const SerializedLoadContext& aSerialized,
       const FTPChannelCreationArgs& aOpenArgs);

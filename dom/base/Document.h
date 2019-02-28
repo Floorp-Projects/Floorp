@@ -594,7 +594,7 @@ class Document : public nsINode,
                                      nsIStreamListener** aDocListener,
                                      bool aReset,
                                      nsIContentSink* aSink = nullptr) = 0;
-  virtual void StopDocumentLoad();
+  void StopDocumentLoad();
 
   virtual void SetSuppressParserErrorElement(bool aSuppress) {}
   virtual bool SuppressParserErrorElement() { return false; }
@@ -833,7 +833,7 @@ class Document : public nsINode,
   /**
    * Set the document's character encoding.
    */
-  virtual void SetDocumentCharacterSet(NotNull<const Encoding*> aEncoding);
+  void SetDocumentCharacterSet(NotNull<const Encoding*> aEncoding);
 
   int32_t GetDocumentCharacterSetSource() const { return mCharacterSetSource; }
 

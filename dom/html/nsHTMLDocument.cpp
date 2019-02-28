@@ -68,7 +68,6 @@
 #include "nsIDocumentEncoder.h"  //for outputting selection
 #include "nsICachingChannel.h"
 #include "nsIContentViewer.h"
-#include "nsIWyciwygChannel.h"
 #include "nsIScriptElement.h"
 #include "nsIScriptError.h"
 #include "nsIMutableArray.h"
@@ -127,8 +126,6 @@ using namespace mozilla::dom;
 //#define DEBUG_charset
 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
-
-uint32_t nsHTMLDocument::gWyciwygSessionCnt = 0;
 
 // this function will return false if the command is not recognized
 // inCommandID will be converted as necessary for internal operations
@@ -191,7 +188,7 @@ nsHTMLDocument::nsHTMLDocument()
 nsHTMLDocument::~nsHTMLDocument() {}
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(nsHTMLDocument, Document, mAll,
-                                   mWyciwygChannel, mMidasCommandManager)
+                                   mMidasCommandManager)
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(nsHTMLDocument, Document,
                                              nsIHTMLDocument)
@@ -234,11 +231,6 @@ void nsHTMLDocument::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
   mScripts = nullptr;
 
   mForms = nullptr;
-
-  NS_ASSERTION(!mWyciwygChannel,
-               "nsHTMLDocument::Reset() - Wyciwyg Channel  still exists!");
-
-  mWyciwygChannel = nullptr;
 
   // Make the content type default to "text/html", we are a HTML
   // document, after all. Once we start getting data, this may be
@@ -447,20 +439,6 @@ void nsHTMLDocument::TryFallback(int32_t& aCharsetSource,
   aEncoding = FallbackEncoding::FromLocale();
 }
 
-void nsHTMLDocument::SetDocumentCharacterSet(
-    NotNull<const Encoding*> aEncoding) {
-  Document::SetDocumentCharacterSet(aEncoding);
-  // Make sure to stash this charset on our channel as needed if it's a wyciwyg
-  // channel.
-  nsCOMPtr<nsIWyciwygChannel> wyciwygChannel = do_QueryInterface(mChannel);
-  if (wyciwygChannel) {
-    nsAutoCString charset;
-    aEncoding->Name(charset);
-    wyciwygChannel->SetCharsetAndSource(GetDocumentCharacterSetSource(),
-                                        charset);
-  }
-}
-
 nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                                            nsIChannel* aChannel,
                                            nsILoadGroup* aLoadGroup,
@@ -538,7 +516,7 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     return rv;
   }
 
-  // Store the security info for future use with wyciwyg channels.
+  // Store the security info for future use.
   aChannel->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
 
   nsCOMPtr<nsIURI> uri;
@@ -605,13 +583,6 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   int32_t charsetSource;
   auto encoding = UTF_8_ENCODING;
 
-  // These are the charset source and charset for the parser.  This can differ
-  // from that for the document if the channel is a wyciwyg channel.
-  int32_t parserCharsetSource;
-  auto parserCharset = UTF_8_ENCODING;
-
-  nsCOMPtr<nsIWyciwygChannel> wyciwygChannel;
-
   // For error reporting and referrer policy setting
   nsHtml5TreeOpExecutor* executor = nullptr;
   if (loadAsHtml5) {
@@ -626,18 +597,14 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
   if (forceUtf8) {
     charsetSource = kCharsetFromUtf8OnlyMime;
-    parserCharsetSource = charsetSource;
   } else if (!IsHTMLDocument() || !docShell) {  // no docshell for text/html XHR
     charsetSource =
         IsHTMLDocument() ? kCharsetFromFallback : kCharsetFromDocTypeDefault;
     TryChannelCharset(aChannel, charsetSource, encoding, executor);
-    parserCharset = encoding;
-    parserCharsetSource = charsetSource;
   } else {
     NS_ASSERTION(docShell, "Unexpected null value");
 
     charsetSource = kCharsetUninitialized;
-    wyciwygChannel = do_QueryInterface(aChannel);
 
     // The following will try to get the character encoding from various
     // sources. Each Try* function will return early if the source is already
@@ -646,18 +613,14 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     // charsetSource to various values depending on where the charset they
     // end up finding originally comes from.
 
-    // Don't actually get the charset from the channel if this is a
-    // wyciwyg channel; it'll always be UTF-16
-    if (!wyciwygChannel) {
-      // Otherwise, try the channel's charset (e.g., charset from HTTP
-      // "Content-Type" header) first. This way, we get to reject overrides in
-      // TryParentCharset and TryUserForcedCharset if the channel said UTF-16.
-      // This is to avoid socially engineered XSS by adding user-supplied
-      // content to a UTF-16 site such that the byte have a dangerous
-      // interpretation as ASCII and the user can be lured to using the
-      // charset menu.
-      TryChannelCharset(aChannel, charsetSource, encoding, executor);
-    }
+    // Try the channel's charset (e.g., charset from HTTP
+    // "Content-Type" header) first. This way, we get to reject overrides in
+    // TryParentCharset and TryUserForcedCharset if the channel said UTF-16.
+    // This is to avoid socially engineered XSS by adding user-supplied
+    // content to a UTF-16 site such that the byte have a dangerous
+    // interpretation as ASCII and the user can be lured to using the
+    // charset menu.
+    TryChannelCharset(aChannel, charsetSource, encoding, executor);
 
     TryUserForcedCharset(cv, docShell, charsetSource, encoding);
 
@@ -670,42 +633,12 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
     TryTLD(charsetSource, encoding);
     TryFallback(charsetSource, encoding);
-
-    if (wyciwygChannel) {
-      // We know for sure that the parser needs to be using UTF16.
-      parserCharset = UTF_16LE_ENCODING;
-      parserCharsetSource = charsetSource < kCharsetFromChannel
-                                ? kCharsetFromChannel
-                                : charsetSource;
-
-      nsAutoCString cachedCharset;
-      int32_t cachedSource;
-      rv = wyciwygChannel->GetCharsetAndSource(&cachedSource, cachedCharset);
-      if (NS_SUCCEEDED(rv)) {
-        if (cachedSource > charsetSource) {
-          auto cachedEncoding = Encoding::ForLabel(cachedCharset);
-          if (cachedEncoding) {
-            charsetSource = cachedSource;
-            encoding = WrapNotNull(cachedEncoding);
-          }
-        }
-      } else {
-        // Don't propagate this error.
-        rv = NS_OK;
-      }
-    } else {
-      parserCharset = encoding;
-      parserCharsetSource = charsetSource;
-    }
   }
 
   SetDocumentCharacterSetSource(charsetSource);
   SetDocumentCharacterSet(encoding);
 
   if (cachingChan) {
-    NS_ASSERTION(encoding == parserCharset,
-                 "How did those end up different here?  wyciwyg channels are "
-                 "not nsICachingChannel");
     nsAutoCString charset;
     encoding->Name(charset);
     rv = cachingChan->SetCacheTokenCachedCharset(charset);
@@ -721,7 +654,7 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 #ifdef DEBUG_charset
   printf(" charset = %s source %d\n", charset.get(), charsetSource);
 #endif
-  mParser->SetDocumentCharset(parserCharset, parserCharsetSource);
+  mParser->SetDocumentCharset(encoding, charsetSource);
   mParser->SetCommand(aCommand);
 
   if (!IsHTMLDocument()) {
@@ -765,20 +698,6 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   mParser->Parse(uri, nullptr, (void*)this);
 
   return rv;
-}
-
-void nsHTMLDocument::StopDocumentLoad() {
-  BlockOnload();
-
-  // Remove the wyciwyg channel request from the document load group
-  // that we added in Open() if Open() was called on this doc.
-  RemoveWyciwygChannel();
-  NS_ASSERTION(!mWyciwygChannel,
-               "nsHTMLDocument::StopDocumentLoad(): "
-               "nsIWyciwygChannel could not be removed!");
-
-  Document::StopDocumentLoad();
-  UnblockOnload(false);
 }
 
 void nsHTMLDocument::BeginLoad() {
@@ -1567,17 +1486,6 @@ void nsHTMLDocument::WriteCommon(const nsAString& aText, bool aNewlineTerminate,
 
   static NS_NAMED_LITERAL_STRING(new_line, "\n");
 
-  // Save the data in cache if the write isn't from within the doc
-  if (mWyciwygChannel && !key) {
-    if (!aText.IsEmpty()) {
-      mWyciwygChannel->WriteToCacheEntry(aText);
-    }
-
-    if (aNewlineTerminate) {
-      mWyciwygChannel->WriteToCacheEntry(new_line);
-    }
-  }
-
   ++mWriteLevel;
 
   // This could be done with less code, but for performance reasons it
@@ -1760,84 +1668,6 @@ void nsHTMLDocument::GetSupportedNames(nsTArray<nsString>& aNames) {
 bool nsHTMLDocument::MatchFormControls(Element* aElement, int32_t aNamespaceID,
                                        nsAtom* aAtom, void* aData) {
   return aElement->IsNodeOfType(nsIContent::eHTML_FORM_CONTROL);
-}
-
-nsresult nsHTMLDocument::CreateAndAddWyciwygChannel(void) {
-  nsresult rv = NS_OK;
-  nsAutoCString url, originalSpec;
-
-  mDocumentURI->GetSpec(originalSpec);
-
-  // Generate the wyciwyg url
-  url = NS_LITERAL_CSTRING("wyciwyg://") +
-        nsPrintfCString("%d", gWyciwygSessionCnt++) + NS_LITERAL_CSTRING("/") +
-        originalSpec;
-
-  nsCOMPtr<nsIURI> wcwgURI;
-  NS_NewURI(getter_AddRefs(wcwgURI), url);
-
-  // Create the nsIWyciwygChannel to store out-of-band
-  // document.write() script to cache
-  nsCOMPtr<nsIChannel> channel;
-  // Create a wyciwyg Channel
-  rv = NS_NewChannel(getter_AddRefs(channel), wcwgURI, NodePrincipal(),
-                     nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
-                     nsIContentPolicy::TYPE_OTHER);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
-  loadInfo->SetPrincipalToInherit(NodePrincipal());
-
-  mWyciwygChannel = do_QueryInterface(channel);
-
-  mWyciwygChannel->SetSecurityInfo(mSecurityInfo);
-
-  // Note: we want to treat this like a "previous document" hint so that,
-  // e.g. a <meta> tag in the document.write content can override it.
-  SetDocumentCharacterSetSource(kCharsetFromHintPrevDoc);
-  nsAutoCString charset;
-  GetDocumentCharacterSet()->Name(charset);
-  mWyciwygChannel->SetCharsetAndSource(kCharsetFromHintPrevDoc, charset);
-
-  // Inherit load flags from the original document's channel
-  channel->SetLoadFlags(mLoadFlags);
-
-  nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
-
-  // Use the Parent document's loadgroup to trigger load notifications
-  if (loadGroup && channel) {
-    rv = channel->SetLoadGroup(loadGroup);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsLoadFlags loadFlags = 0;
-    channel->GetLoadFlags(&loadFlags);
-    loadFlags |= nsIChannel::LOAD_DOCUMENT_URI;
-    if (nsDocShell::SandboxFlagsImplyCookies(mSandboxFlags)) {
-      loadFlags |= nsIRequest::LOAD_DOCUMENT_NEEDS_COOKIE;
-    }
-    channel->SetLoadFlags(loadFlags);
-
-    channel->SetOriginalURI(wcwgURI);
-
-    rv = loadGroup->AddRequest(mWyciwygChannel, nullptr);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to add request to load group.");
-  }
-
-  return rv;
-}
-
-nsresult nsHTMLDocument::RemoveWyciwygChannel(void) {
-  nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
-
-  // note there can be a write request without a load group if
-  // this is a synchronously constructed about:blank document
-  if (loadGroup && mWyciwygChannel) {
-    mWyciwygChannel->CloseCacheEntry(NS_OK);
-    loadGroup->RemoveRequest(mWyciwygChannel, nullptr, NS_OK);
-  }
-
-  mWyciwygChannel = nullptr;
-
-  return NS_OK;
 }
 
 void* nsHTMLDocument::GenerateParserKey(void) {
@@ -3013,7 +2843,6 @@ void nsHTMLDocument::RemovedFromDocShell() {
   // worthwhile:
   // - mLinks
   // - mAnchors
-  // - mWyciwygChannel
   // - mMidasCommandManager
 }
 
@@ -3030,10 +2859,6 @@ bool nsHTMLDocument::WillIgnoreCharsetOverride() {
   }
   if (!mCharacterSet->IsAsciiCompatible() &&
       mCharacterSet != ISO_2022_JP_ENCODING) {
-    return true;
-  }
-  nsCOMPtr<nsIWyciwygChannel> wyciwyg = do_QueryInterface(mChannel);
-  if (wyciwyg) {
     return true;
   }
   nsIURI* uri = GetOriginalURI();

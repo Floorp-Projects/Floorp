@@ -4660,7 +4660,9 @@ Tab.prototype = {
     let contentType = contentWin.document.contentType;
 
     // If fixedURI matches browser.lastURI, we assume this isn't a real location
-    // change but rather a spurious addition like a wyciwyg URI prefix. See Bug 747883.
+    // change but rather a spurious addition like adding a username/password. See Bug 747883.
+    // XXXbz Is this still relevant now that document.open doesn't do such
+    // things?  See bug 1528448.
     // Note that we have to ensure fixedURI is not the same as aLocationURI so we
     // don't false-positive page reloads as spurious additions.
     let sameDocument = (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) != 0 ||
