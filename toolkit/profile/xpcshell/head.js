@@ -70,11 +70,10 @@ function getProfileService() {
 }
 
 let PROFILE_DEFAULT = "default";
-if (AppConstants.MOZ_DEV_EDITION) {
-  PROFILE_DEFAULT = "dev-edition-default";
-}
-
 let DEDICATED_NAME = `default-${AppConstants.MOZ_UPDATE_CHANNEL}`;
+if (AppConstants.MOZ_DEV_EDITION) {
+  DEDICATED_NAME = PROFILE_DEFAULT = "dev-edition-default";
+}
 
 /**
  * Creates a random profile path for use.

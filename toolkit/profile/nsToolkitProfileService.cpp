@@ -796,10 +796,10 @@ nsresult nsToolkitProfileService::GetProfileDescriptor(
 nsresult nsToolkitProfileService::CreateDefaultProfile(nsIToolkitProfile** aResult) {
   // Create a new default profile
   nsAutoCString name;
-  if (mUseDedicatedProfile) {
-    name.AssignLiteral("default-" NS_STRINGIFY(MOZ_UPDATE_CHANNEL));
-  } else if (mUseDevEditionProfile) {
+  if (mUseDevEditionProfile) {
     name.AssignLiteral(DEV_EDITION_NAME);
+  } else if (mUseDedicatedProfile) {
+    name.AssignLiteral("default-" NS_STRINGIFY(MOZ_UPDATE_CHANNEL));
   } else {
     name.AssignLiteral(DEFAULT_NAME);
   }
