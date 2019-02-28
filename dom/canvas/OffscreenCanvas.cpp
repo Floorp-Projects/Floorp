@@ -16,6 +16,7 @@
 #include "mozilla/Telemetry.h"
 #include "CanvasRenderingContext2D.h"
 #include "CanvasUtils.h"
+#include "GLContext.h"
 #include "GLScreenBuffer.h"
 #include "WebGL1Context.h"
 #include "WebGL2Context.h"
