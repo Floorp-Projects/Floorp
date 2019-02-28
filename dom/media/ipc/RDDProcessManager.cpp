@@ -221,10 +221,10 @@ class RDDMemoryReporter : public MemoryReportingProcess {
 
   bool IsAlive() const override { return !!GetChild(); }
 
-  bool SendRequestMemoryReport(const uint32_t& aGeneration,
-                               const bool& aAnonymize,
-                               const bool& aMinimizeMemoryUsage,
-                               const dom::MaybeFileDesc& aDMDFile) override {
+  bool SendRequestMemoryReport(
+      const uint32_t& aGeneration, const bool& aAnonymize,
+      const bool& aMinimizeMemoryUsage,
+      const Maybe<ipc::FileDescriptor>& aDMDFile) override {
     RDDChild* child = GetChild();
     if (!child) {
       return false;

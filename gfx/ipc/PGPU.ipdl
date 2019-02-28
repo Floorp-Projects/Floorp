@@ -91,7 +91,7 @@ parent:
   async RequestMemoryReport(uint32_t generation,
                             bool anonymize,
                             bool minimizeMemoryUsage,
-                            MaybeFileDesc DMDFile);
+                            FileDescriptor? DMDFile);
   async ShutdownVR();
 
 child:

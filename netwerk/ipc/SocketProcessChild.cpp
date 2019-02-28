@@ -108,7 +108,8 @@ IPCResult SocketProcessChild::RecvPreferenceUpdate(const Pref& aPref) {
 
 mozilla::ipc::IPCResult SocketProcessChild::RecvRequestMemoryReport(
     const uint32_t& aGeneration, const bool& aAnonymize,
-    const bool& aMinimizeMemoryUsage, const MaybeFileDesc& aDMDFile) {
+    const bool& aMinimizeMemoryUsage,
+    const Maybe<ipc::FileDescriptor>& aDMDFile) {
   nsPrintfCString processName("SocketProcess");
 
   mozilla::dom::MemoryReportRequestClient::Start(

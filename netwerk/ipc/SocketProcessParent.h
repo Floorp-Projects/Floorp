@@ -56,7 +56,7 @@ class SocketProcessParent final : public PSocketProcessParent {
   bool SendRequestMemoryReport(const uint32_t& aGeneration,
                                const bool& aAnonymize,
                                const bool& aMinimizeMemoryUsage,
-                               const MaybeFileDesc& aDMDFile);
+                               const Maybe<ipc::FileDescriptor>& aDMDFile);
 
  private:
   SocketProcessHost* mHost;
