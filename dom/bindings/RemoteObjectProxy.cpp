@@ -11,12 +11,6 @@
 namespace mozilla {
 namespace dom {
 
-// Give RemoteObjectProxy 2 reserved slots, like the other wrappers, so
-// JSObject::swap can swap it with CrossCompartmentWrappers without requiring
-// malloc.
-const js::Class RemoteObjectProxyClass =
-    PROXY_CLASS_DEF("Proxy", JSCLASS_HAS_RESERVED_SLOTS(2));
-
 bool RemoteObjectProxyBase::getOwnPropertyDescriptor(
     JSContext* aCx, JS::Handle<JSObject*> aProxy, JS::Handle<jsid> aId,
     JS::MutableHandle<JS::PropertyDescriptor> aDesc) const {
@@ -169,12 +163,41 @@ bool RemoteObjectProxyBase::getOwnEnumerablePropertyKeys(
   return true;
 }
 
-JSObject* RemoteObjectProxyBase::CreateProxyObject(
-    JSContext* aCx, void* aNative, const js::Class* aClasp) const {
+const char* RemoteObjectProxyBase::className(
+    JSContext* aCx, JS::Handle<JSObject*> aProxy) const {
+  MOZ_ASSERT(js::IsProxy(aProxy));
+
+  return "Object";
+}
+
+void RemoteObjectProxyBase::GetOrCreateProxyObject(
+    JSContext* aCx, void* aNative, const js::Class* aClasp,
+    JS::MutableHandle<JSObject*> aProxy, bool& aNewObjectCreated) const {
+  xpc::CompartmentPrivate* priv =
+      xpc::CompartmentPrivate::Get(JS::CurrentGlobalOrNull(aCx));
+  xpc::CompartmentPrivate::RemoteProxyMap& map = priv->GetRemoteProxyMap();
+  auto result = map.lookupForAdd(aNative);
+  if (result) {
+    aProxy.set(result->value());
+    return;
+  }
+
   js::ProxyOptions options;
   options.setClass(aClasp);
   JS::Rooted<JS::Value> native(aCx, JS::PrivateValue(aNative));
-  return js::NewProxyObject(aCx, this, native, nullptr, options);
+  JS::Rooted<JSObject*> obj(
+      aCx, js::NewProxyObject(aCx, this, native, nullptr, options));
+  if (!obj) {
+    return;
+  }
+
+  aNewObjectCreated = true;
+
+  if (!map.add(result, aNative, obj)) {
+    return;
+  }
+
+  aProxy.set(obj);
 }
 
 const char RemoteObjectProxyBase::sCrossOriginProxyFamily = 0;
