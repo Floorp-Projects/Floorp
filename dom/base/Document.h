@@ -52,7 +52,6 @@
 #include "mozilla/dom/ContentBlockingLog.h"
 #include "mozilla/dom/DispatcherTrait.h"
 #include "mozilla/dom/DocumentOrShadowRoot.h"
-#include "mozilla/HashTable.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/SegmentedVector.h"
@@ -2923,34 +2922,16 @@ class Document : public nsINode,
 
   SVGSVGElement* GetSVGRootElement() const;
 
-  struct FrameRequest {
-    FrameRequest(FrameRequestCallback& aCallback, int32_t aHandle);
-
-    // Comparator operators to allow RemoveElementSorted with an
-    // integer argument on arrays of FrameRequest
-    bool operator==(int32_t aHandle) const { return mHandle == aHandle; }
-    bool operator<(int32_t aHandle) const { return mHandle < aHandle; }
-
-    RefPtr<FrameRequestCallback> mCallback;
-    int32_t mHandle;
-  };
-
   nsresult ScheduleFrameRequestCallback(FrameRequestCallback& aCallback,
                                         int32_t* aHandle);
   void CancelFrameRequestCallback(int32_t aHandle);
 
-  /**
-   * Returns true if the handle refers to a callback that was canceled that
-   * we did not find in our list of callbacks (e.g. because it is one of those
-   * in the set of callbacks currently queued to be run).
-   */
-  bool IsCanceledFrameRequestCallback(int32_t aHandle) const;
-
+  typedef nsTArray<RefPtr<FrameRequestCallback>> FrameRequestCallbackList;
   /**
    * Put this document's frame request callbacks into the provided
    * list, and forget about them.
    */
-  void TakeFrameRequestCallbacks(nsTArray<FrameRequest>& aCallbacks);
+  void TakeFrameRequestCallbacks(FrameRequestCallbackList& aCallbacks);
 
   /**
    * @return true if this document's frame request callbacks should be
@@ -4399,11 +4380,9 @@ class Document : public nsINode,
 
   nsCOMPtr<nsIDocumentEncoder> mCachedEncoder;
 
-  nsTArray<FrameRequest> mFrameRequestCallbacks;
+  struct FrameRequest;
 
-  // The set of frame request callbacks that were canceled but which we failed
-  // to find in mFrameRequestCallbacks.
-  HashSet<int32_t> mCanceledFrameRequestCallbacks;
+  nsTArray<FrameRequest> mFrameRequestCallbacks;
 
   // This object allows us to evict ourself from the back/forward cache.  The
   // pointer is non-null iff we're currently in the bfcache.
