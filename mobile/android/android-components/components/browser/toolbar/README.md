@@ -31,10 +31,10 @@ implementation "org.mozilla.components:browser-toolbar:{latest-version}"
 
 This component emits the following [Facts](../../support/base/README.md#Facts):
 
-| Action | Item | Description |
-|---|---|---|---|---|
-| CLICK | menu | The user opened the overflow menu. |
-| COMMIT | toolbar | The user has edited the URL. |
+| Action | Item    | Description                        |
+|--------|---------|------------------------------------|
+| CLICK  | menu    | The user opened the overflow menu. |
+| COMMIT | toolbar | The user has edited the URL.       |
 
 ## License
 
