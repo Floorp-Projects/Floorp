@@ -40,26 +40,26 @@ assertErrorMessage(() => wasmEvalText('(module (table (local $a)))'), SyntaxErro
 assertErrorMessage(() => wasmEvalText('(module (table $t))'), SyntaxError, parsingError);
 assertErrorMessage(() => wasmEvalText('(module (table $t 1))'), SyntaxError, parsingError);
 assertErrorMessage(() => wasmEvalText('(module (table $t 1 10))'), SyntaxError, parsingError);
-wasmEvalText('(module (table $t 1 10 anyfunc))');
-wasmEvalText('(module (table $t 1 anyfunc))');
-wasmEvalText('(module (table 0 anyfunc))');
+wasmEvalText('(module (table $t 1 10 funcref))');
+wasmEvalText('(module (table $t 1 funcref))');
+wasmEvalText('(module (table 0 funcref))');
 
-assertErrorMessage(() => wasmEvalText('(module (table $t anyfunc))'), SyntaxError, parsingError);
-wasmEvalText('(module (table $t anyfunc (elem)))');
-wasmEvalText('(module (func) (table $t anyfunc (elem 0 0 0)))');
+assertErrorMessage(() => wasmEvalText('(module (table $t funcref))'), SyntaxError, parsingError);
+wasmEvalText('(module (table $t funcref (elem)))');
+wasmEvalText('(module (func) (table $t funcref (elem 0 0 0)))');
 
 const { Table } = WebAssembly;
-const table = new Table({initial:1, element:"anyfunc"});
-assertErrorMessage(() => wasmEvalText('(module (table $t (import) 1 anyfunc))'), SyntaxError, parsingError);
-assertErrorMessage(() => wasmEvalText('(module (table $t (import "mod") 1 anyfunc))'), SyntaxError, parsingError);
-assertErrorMessage(() => wasmEvalText('(module (table $t (import "mod" "field") 1 anyfunc (elem 1 2 3)))'), SyntaxError, parsingError);
-wasmEvalText('(module (table $t (import "mod" "field") 1 anyfunc))', {mod: {field: table}});
+const table = new Table({initial:1, element:"funcref"});
+assertErrorMessage(() => wasmEvalText('(module (table $t (import) 1 funcref))'), SyntaxError, parsingError);
+assertErrorMessage(() => wasmEvalText('(module (table $t (import "mod") 1 funcref))'), SyntaxError, parsingError);
+assertErrorMessage(() => wasmEvalText('(module (table $t (import "mod" "field") 1 funcref (elem 1 2 3)))'), SyntaxError, parsingError);
+wasmEvalText('(module (table $t (import "mod" "field") 1 funcref))', {mod: {field: table}});
 
 assertErrorMessage(() => wasmEvalText('(module (table $t (export "mod") 1))'), SyntaxError, parsingError);
-assertErrorMessage(() => wasmEvalText('(module (table $t (export "mod") anyfunc))'), SyntaxError, parsingError);
-assertErrorMessage(() => wasmEvalText('(module (table $t (export "mod") anyfunc 1 2 3))'), SyntaxError, parsingError);
-assertEq(wasmEvalText('(module (table $t (export "tbl") anyfunc (elem)))').exports.tbl instanceof Table, true);
-assertEq(wasmEvalText('(module (func) (table $t (export "tbl") anyfunc (elem 0 0 0)))').exports.tbl instanceof Table, true);
+assertErrorMessage(() => wasmEvalText('(module (table $t (export "mod") funcref))'), SyntaxError, parsingError);
+assertErrorMessage(() => wasmEvalText('(module (table $t (export "mod") funcref 1 2 3))'), SyntaxError, parsingError);
+assertEq(wasmEvalText('(module (table $t (export "tbl") funcref (elem)))').exports.tbl instanceof Table, true);
+assertEq(wasmEvalText('(module (func) (table $t (export "tbl") funcref (elem 0 0 0)))').exports.tbl instanceof Table, true);
 
 // Functions.
 assertErrorMessage(() => wasmEvalText('(module (func $t import))'), SyntaxError, parsingError);

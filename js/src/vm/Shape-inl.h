@@ -226,11 +226,10 @@ template <class ObjectSubclass>
   return true;
 }
 
-inline AutoRooterGetterSetter::Inner::Inner(JSContext* cx, uint8_t attrs,
+inline AutoRooterGetterSetter::Inner::Inner(uint8_t attrs,
                                             GetterOp* pgetter_,
                                             SetterOp* psetter_)
-    : CustomAutoRooter(cx),
-      attrs(attrs),
+    : attrs(attrs),
       pgetter(pgetter_),
       psetter(psetter_) {}
 
@@ -238,7 +237,7 @@ inline AutoRooterGetterSetter::AutoRooterGetterSetter(
     JSContext* cx, uint8_t attrs, GetterOp* pgetter,
     SetterOp* psetter MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL) {
   if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
-    inner.emplace(cx, attrs, pgetter, psetter);
+    inner.emplace(cx, Inner(attrs, pgetter, psetter));
   }
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 }

@@ -141,22 +141,33 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
 
 template <class Key, class Value>
 class WeakMap
-    : public HashMap<Key, Value, MovableCellHasher<Key>, ZoneAllocPolicy>,
+    : private HashMap<Key, Value, MovableCellHasher<Key>, ZoneAllocPolicy>,
       public WeakMapBase {
  public:
-  typedef HashMap<Key, Value, MovableCellHasher<Key>, ZoneAllocPolicy> Base;
-  typedef typename Base::Enum Enum;
-  typedef typename Base::Lookup Lookup;
-  typedef typename Base::Entry Entry;
-  typedef typename Base::Range Range;
-  typedef typename Base::Ptr Ptr;
-  typedef typename Base::AddPtr AddPtr;
+  using Base = HashMap<Key, Value, MovableCellHasher<Key>, ZoneAllocPolicy>;
+
+  using Lookup = typename Base::Lookup;
+  using Entry = typename Base::Entry;
+  using Range = typename Base::Range;
+  using Ptr = typename Base::Ptr;
+  using AddPtr = typename Base::AddPtr;
+
+  struct Enum : public Base::Enum {
+    explicit Enum(WeakMap& map) : Base::Enum(static_cast<Base&>(map)) {}
+  };
+
+  using Base::all;
+  using Base::has;
+  using Base::clear;
+  using Base::shallowSizeOfExcludingThis;
+
+  // Resolve ambiguity with LinkedListElement<>::remove.
+  using Base::remove;
 
   explicit WeakMap(JSContext* cx, JSObject* memOf = nullptr);
 
-  // Overwritten to add a read barrier to prevent an incorrectly gray value
-  // from escaping the weak map. See the UnmarkGrayTracer::onChild comment in
-  // gc/Marking.cpp.
+  // Add a read barrier to prevent an incorrectly gray value from escaping the
+  // weak map. See the UnmarkGrayTracer::onChild comment in gc/Marking.cpp.
   Ptr lookup(const Lookup& l) const {
     Ptr p = Base::lookup(l);
     if (p) {
@@ -173,8 +184,20 @@ class WeakMap
     return p;
   }
 
-  // Resolve ambiguity with LinkedListElement<>::remove.
-  using Base::remove;
+  template <typename KeyInput, typename ValueInput>
+  MOZ_MUST_USE bool put(KeyInput&& key, ValueInput&& value) {
+    MOZ_ASSERT(key);
+    return Base::put(std::forward<KeyInput>(key),
+                     std::forward<ValueInput>(value));
+  }
+
+  template <typename KeyInput, typename ValueInput>
+  MOZ_MUST_USE bool relookupOrAdd(AddPtr& ptr, KeyInput&& key,
+                                  ValueInput&& value) {
+    MOZ_ASSERT(key);
+    return Base::relookupOrAdd(ptr, std::forward<KeyInput>(key),
+                               std::forward<ValueInput>(value));
+  }
 
   void markEntry(GCMarker* marker, gc::Cell* markedCell,
                  JS::GCCellPtr origKey) override;

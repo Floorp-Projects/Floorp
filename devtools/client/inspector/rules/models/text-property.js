@@ -141,7 +141,7 @@ class TextProperty {
   setValue(value, priority, force = false) {
     const store = this.rule.elementStyle.store;
 
-    if (this.editor && value !== this.editor.committed.value || force) {
+    if (value !== this.value || force) {
       store.userProperties.setProperty(this.rule.domRule, this.name, value);
     }
 
@@ -164,10 +164,9 @@ class TextProperty {
   }
 
   async setName(name) {
-    if (name !== this.name && this.editor) {
+    if (name !== this.name) {
       const store = this.rule.elementStyle.store;
-      store.userProperties.setProperty(this.rule.domRule, name,
-                                       this.editor.committed.value);
+      store.userProperties.setProperty(this.rule.domRule, name, this.value);
     }
 
     await this.rule.setPropertyName(this, name);
@@ -188,8 +187,13 @@ class TextProperty {
    */
   stringifyProperty() {
     // Get the displayed property value
-    let declaration = this.name + ": " + this.editor.valueSpan.textContent +
-      ";";
+    let declaration = this.name + ": " + this.value;
+
+    if (this.priority) {
+      declaration += " !" + this.priority;
+    }
+
+    declaration += ";";
 
     // Comment out property declarations that are not enabled
     if (!this.enabled) {

@@ -110,26 +110,12 @@ class SavedFrame : public NativeObject {
                         SystemAllocPolicy>
       Set;
 
-  class AutoLookupVector;
-
-  class MOZ_STACK_CLASS HandleLookup {
-    friend class AutoLookupVector;
-
-    Lookup& lookup;
-
-    explicit HandleLookup(Lookup& lookup) : lookup(lookup) {}
-
-   public:
-    inline Lookup& get() { return lookup; }
-    inline Lookup* operator->() { return &lookup; }
-  };
-
  private:
   static SavedFrame* create(JSContext* cx);
   static MOZ_MUST_USE bool finishSavedFrameInit(JSContext* cx,
                                                 HandleObject ctor,
                                                 HandleObject proto);
-  void initFromLookup(JSContext* cx, HandleLookup lookup);
+  void initFromLookup(JSContext* cx, Handle<Lookup> lookup);
   void initSource(JSAtom* source);
   void initSourceId(uint32_t id);
   void initLine(uint32_t line);
