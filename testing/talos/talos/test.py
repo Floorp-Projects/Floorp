@@ -339,12 +339,12 @@ class tabpaint(PageloaderTest):
 
 
 @register_test()
-class tps(PageloaderTest):
+class tabswitch(PageloaderTest):
     """
     Tests the amount of time it takes to switch between tabs
     """
     extensions = ['${talos}/tests/tabswitch', '${talos}/pageloader']
-    tpmanifest = '${talos}/tests/tabswitch/tps.manifest'
+    tpmanifest = '${talos}/tests/tabswitch/tabswitch.manifest'
     tppagecycles = 5
     gecko_profile_entries = 5000000
     tploadnocache = True
