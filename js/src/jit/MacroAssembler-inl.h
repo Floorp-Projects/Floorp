@@ -260,7 +260,7 @@ uint32_t MacroAssembler::buildFakeExitFrame(Register scratch) {
 // Exit frame footer.
 
 void MacroAssembler::enterExitFrame(Register cxreg, Register scratch,
-                                    const VMFunction* f) {
+                                    const VMFunctionData* f) {
   MOZ_ASSERT(f);
   linkExitFrame(cxreg, scratch);
   // Push VMFunction pointer, to mark arguments.

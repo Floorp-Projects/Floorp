@@ -55,6 +55,8 @@ enum MaybeTailCall : bool { TailCall, NonTailCall };
 
 // [SMDOC] JIT-to-C++ Function Calls. (callVM)
 //
+// TODO(bug 1530937): update this comment after converting all VM functions.
+//
 // Sometimes it is easier to reuse C++ code by calling VM's functions. Calling a
 // function from the VM can be achieved with the use of callWithABI but this is
 // discouraged when the called functions might trigger exceptions and/or
@@ -123,11 +125,9 @@ enum MaybeTailCall : bool { TailCall, NonTailCall };
 //      }
 //
 // After this, the result value is in the return value register.
-struct VMFunction {
-  // Global linked list of all VMFunctions.
-  static VMFunction* functions;
-  VMFunction* next;
 
+// Data for a VM function. All VMFunctionDatas are stored in a constexpr array.
+struct VMFunctionData {
   // Address of the C function.
   void* wrapped;
 
@@ -293,15 +293,14 @@ struct VMFunction {
     return count;
   }
 
-  constexpr VMFunction(void* wrapped, const char* name, uint32_t explicitArgs,
-                       uint32_t argumentProperties,
-                       uint32_t argumentPassedInFloatRegs,
-                       uint64_t argRootTypes, DataType outParam,
-                       RootType outParamRootType, DataType returnType,
-                       uint8_t extraValuesToPop = 0,
-                       MaybeTailCall expectTailCall = NonTailCall)
-      : next(nullptr),
-        wrapped(wrapped),
+  constexpr VMFunctionData(void* wrapped, const char* name,
+                           uint32_t explicitArgs, uint32_t argumentProperties,
+                           uint32_t argumentPassedInFloatRegs,
+                           uint64_t argRootTypes, DataType outParam,
+                           RootType outParamRootType, DataType returnType,
+                           uint8_t extraValuesToPop = 0,
+                           MaybeTailCall expectTailCall = NonTailCall)
+      : wrapped(wrapped),
 #if defined(JS_JITSPEW) || defined(JS_TRACE_LOGGING)
         name_(name),
 #endif
@@ -314,11 +313,18 @@ struct VMFunction {
         returnType(returnType),
         extraValuesToPop(extraValuesToPop),
         expectTailCall(expectTailCall) {
+    // Check for valid failure/return type.
+    MOZ_ASSERT_IF(outParam != Type_Void,
+                  returnType == Type_Void || returnType == Type_Bool);
+    MOZ_ASSERT(returnType == Type_Void || returnType == Type_Bool ||
+               returnType == Type_Object);
   }
 
-  VMFunction(const VMFunction& o)
-      : next(functions),
-        wrapped(o.wrapped),
+  // Note: clang-tidy suggests using |= auto| here but that generates extra
+  // static initializers for old-style VMFunction definitions with Clang. We can
+  // do this after bug 1530937 converts all of them.
+  constexpr VMFunctionData(const VMFunctionData& o)
+      : wrapped(o.wrapped),
 #if defined(JS_JITSPEW) || defined(JS_TRACE_LOGGING)
         name_(o.name_),
 #endif
@@ -331,14 +337,32 @@ struct VMFunction {
         returnType(o.returnType),
         extraValuesToPop(o.extraValuesToPop),
         expectTailCall(o.expectTailCall) {
+  }
+};
+
+// TODO(bug 1530937): remove VMFunction and FunctionInfo after converting all VM
+// functions to the new design.
+struct VMFunction : public VMFunctionData {
+  // Global linked list of all VMFunctions.
+  static VMFunction* functions;
+  VMFunction* next;
+
+  constexpr VMFunction(void* wrapped, const char* name, uint32_t explicitArgs,
+                       uint32_t argumentProperties,
+                       uint32_t argumentPassedInFloatRegs,
+                       uint64_t argRootTypes, DataType outParam,
+                       RootType outParamRootType, DataType returnType,
+                       uint8_t extraValuesToPop = 0,
+                       MaybeTailCall expectTailCall = NonTailCall)
+      : VMFunctionData(wrapped, name, explicitArgs, argumentProperties,
+                       argumentPassedInFloatRegs, argRootTypes, outParam,
+                       outParamRootType, returnType, extraValuesToPop,
+                       expectTailCall),
+        next(nullptr) {}
+
+  VMFunction(const VMFunction& o) : VMFunctionData(o), next(functions) {
     // Add this to the global list of VMFunctions.
     functions = this;
-
-    // Check for valid failure/return type.
-    MOZ_ASSERT_IF(outParam != Type_Void,
-                  returnType == Type_Void || returnType == Type_Bool);
-    MOZ_ASSERT(returnType == Type_Void || returnType == Type_Bool ||
-               returnType == Type_Object);
   }
 
   typedef const VMFunction* Lookup;
@@ -1214,6 +1238,10 @@ extern const VMFunction ToNumericInfo;
 
 // TailCall VMFunctions
 extern const VMFunction DoConcatStringObjectInfo;
+
+enum class VMFunctionId;
+
+extern const VMFunctionData& GetVMFunction(VMFunctionId id);
 
 }  // namespace jit
 }  // namespace js

@@ -31,6 +31,7 @@
 
 #include "jit/BaselineFrameInfo-inl.h"
 #include "jit/MacroAssembler-inl.h"
+#include "jit/VMFunctionList-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
@@ -584,10 +585,8 @@ void BaselineInterpreterCodeGen::storeFrameSizeAndPushDescriptor(
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::callVM(const VMFunction& fun,
-                                      CallVMPhase phase) {
-  TrampolinePtr code = cx->runtime()->jitRuntime()->getVMWrapper(fun);
-
+bool BaselineCodeGen<Handler>::callVM(const VMFunctionData& fun,
+                                      TrampolinePtr code, CallVMPhase phase) {
 #ifdef DEBUG
   // Assert prepareVMCall() has been called.
   MOZ_ASSERT(inCall_);
@@ -663,6 +662,21 @@ bool BaselineCodeGen<Handler>::callVM(const VMFunction& fun,
 #endif
 
   return handler.appendRetAddrEntry(cx, RetAddrEntry::Kind::CallVM, callOffset);
+}
+
+template <typename Handler>
+bool BaselineCodeGen<Handler>::callVM(const VMFunction& fun,
+                                      CallVMPhase phase) {
+  TrampolinePtr code = cx->runtime()->jitRuntime()->getVMWrapper(fun);
+  return callVM(fun, code, phase);
+}
+
+template <typename Handler>
+template <typename Fn, Fn fn>
+bool BaselineCodeGen<Handler>::callVM(CallVMPhase phase) {
+  VMFunctionId fnId = VMFunctionToId<Fn, fn>::id;
+  TrampolinePtr code = cx->runtime()->jitRuntime()->getVMWrapper(fnId);
+  return callVM(GetVMFunction(fnId), code, phase);
 }
 
 typedef bool (*CheckOverRecursedBaselineFn)(JSContext*, BaselineFrame*);
@@ -887,10 +901,6 @@ void BaselineInterpreterCodeGen::loadResumeIndexBytecodeOperand(Register dest) {
   MOZ_CRASH("NYI: interpreter loadResumeIndexBytecodeOperand");
 }
 
-typedef bool (*DebugPrologueFn)(JSContext*, BaselineFrame*, jsbytecode*, bool*);
-static const VMFunction DebugPrologueInfo =
-    FunctionInfo<DebugPrologueFn>(jit::DebugPrologue, "DebugPrologue");
-
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emitDebugPrologue() {
   auto ifDebuggee = [this]() {
@@ -900,7 +910,9 @@ bool BaselineCodeGen<Handler>::emitDebugPrologue() {
     prepareVMCall();
     pushBytecodePCArg();
     pushArg(R0.scratchReg());
-    if (!callVM(DebugPrologueInfo)) {
+
+    using Fn = bool (*)(JSContext*, BaselineFrame*, jsbytecode*, bool*);
+    if (!callVM<Fn, jit::DebugPrologue>()) {
       return false;
     }
 
@@ -1009,10 +1021,6 @@ bool BaselineInterpreterCodeGen::initEnvironmentChain() {
   MOZ_CRASH("NYI: interpreter initEnvironmentChain");
 }
 
-typedef bool (*InterruptCheckFn)(JSContext*);
-static const VMFunction InterruptCheckInfo =
-    FunctionInfo<InterruptCheckFn>(InterruptCheck, "InterruptCheck");
-
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emitInterruptCheck() {
   frame.syncStack(0);
@@ -1022,19 +1030,15 @@ bool BaselineCodeGen<Handler>::emitInterruptCheck() {
                 Imm32(0), &done);
 
   prepareVMCall();
-  if (!callVM(InterruptCheckInfo)) {
+
+  using Fn = bool (*)(JSContext*);
+  if (!callVM<Fn, InterruptCheck>()) {
     return false;
   }
 
   masm.bind(&done);
   return true;
 }
-
-typedef bool (*IonCompileScriptForBaselineFn)(JSContext*, BaselineFrame*,
-                                              jsbytecode*);
-static const VMFunction IonCompileScriptForBaselineInfo =
-    FunctionInfo<IonCompileScriptForBaselineFn>(IonCompileScriptForBaseline,
-                                                "IonCompileScriptForBaseline");
 
 template <>
 bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
@@ -1099,7 +1103,8 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
     pushBytecodePCArg();
     masm.PushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
-    if (!callVM(IonCompileScriptForBaselineInfo)) {
+    using Fn = bool (*)(JSContext*, BaselineFrame*, jsbytecode*);
+    if (!callVM<Fn, IonCompileScriptForBaseline>()) {
       return false;
     }
 
@@ -1782,11 +1787,6 @@ bool BaselineCodeGen<Handler>::emit_JSOP_NULL() {
   return true;
 }
 
-typedef bool (*ThrowCheckIsObjectFn)(JSContext*, CheckIsObjectKind);
-static const VMFunction ThrowCheckIsObjectInfo =
-    FunctionInfo<ThrowCheckIsObjectFn>(ThrowCheckIsObject,
-                                       "ThrowCheckIsObject");
-
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_CHECKISOBJ() {
   frame.syncStack(0);
@@ -1798,17 +1798,15 @@ bool BaselineCodeGen<Handler>::emit_JSOP_CHECKISOBJ() {
   prepareVMCall();
 
   pushUint8BytecodeOperandArg();
-  if (!callVM(ThrowCheckIsObjectInfo)) {
+
+  using Fn = bool (*)(JSContext*, CheckIsObjectKind);
+  if (!callVM<Fn, ThrowCheckIsObject>()) {
     return false;
   }
 
   masm.bind(&ok);
   return true;
 }
-
-typedef bool (*CheckIsCallableFn)(JSContext*, HandleValue, CheckIsCallableKind);
-static const VMFunction CheckIsCallableInfo =
-    FunctionInfo<CheckIsCallableFn>(CheckIsCallable, "CheckIsCallable");
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_CHECKISCALLABLE() {
@@ -1819,22 +1817,14 @@ bool BaselineCodeGen<Handler>::emit_JSOP_CHECKISCALLABLE() {
 
   pushUint8BytecodeOperandArg();
   pushArg(R0);
-  if (!callVM(CheckIsCallableInfo)) {
+
+  using Fn = bool (*)(JSContext*, HandleValue, CheckIsCallableKind);
+  if (!callVM<Fn, CheckIsCallable>()) {
     return false;
   }
 
   return true;
 }
-
-typedef bool (*ThrowUninitializedThisFn)(JSContext*, BaselineFrame* frame);
-static const VMFunction ThrowUninitializedThisInfo =
-    FunctionInfo<ThrowUninitializedThisFn>(BaselineThrowUninitializedThis,
-                                           "BaselineThrowUninitializedThis");
-
-typedef bool (*ThrowInitializedThisFn)(JSContext*);
-static const VMFunction ThrowInitializedThisInfo =
-    FunctionInfo<ThrowInitializedThisFn>(BaselineThrowInitializedThis,
-                                         "BaselineThrowInitializedThis");
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_CHECKTHIS() {
@@ -1864,14 +1854,16 @@ bool BaselineCodeGen<Handler>::emitCheckThis(ValueOperand val, bool reinit) {
   prepareVMCall();
 
   if (reinit) {
-    if (!callVM(ThrowInitializedThisInfo)) {
+    using Fn = bool (*)(JSContext*);
+    if (!callVM<Fn, BaselineThrowInitializedThis>()) {
       return false;
     }
   } else {
     masm.loadBaselineFramePtr(BaselineFrameReg, val.scratchReg());
     pushArg(val.scratchReg());
 
-    if (!callVM(ThrowUninitializedThisInfo)) {
+    using Fn = bool (*)(JSContext*, BaselineFrame*);
+    if (!callVM<Fn, BaselineThrowUninitializedThis>()) {
       return false;
     }
   }
@@ -1879,11 +1871,6 @@ bool BaselineCodeGen<Handler>::emitCheckThis(ValueOperand val, bool reinit) {
   masm.bind(&thisOK);
   return true;
 }
-
-typedef bool (*ThrowBadDerivedReturnFn)(JSContext*, HandleValue);
-static const VMFunction ThrowBadDerivedReturnInfo =
-    FunctionInfo<ThrowBadDerivedReturnFn>(jit::ThrowBadDerivedReturn,
-                                          "ThrowBadDerivedReturn");
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_CHECKRETURN() {
@@ -1900,7 +1887,9 @@ bool BaselineCodeGen<Handler>::emit_JSOP_CHECKRETURN() {
 
   prepareVMCall();
   pushArg(R1);
-  if (!callVM(ThrowBadDerivedReturnInfo)) {
+
+  using Fn = bool (*)(JSContext*, HandleValue);
+  if (!callVM<Fn, ThrowBadDerivedReturn>()) {
     return false;
   }
   masm.assumeUnreachable("Should throw on bad derived constructor return");
@@ -1919,11 +1908,6 @@ bool BaselineCodeGen<Handler>::emit_JSOP_CHECKRETURN() {
   return true;
 }
 
-typedef bool (*GetFunctionThisFn)(JSContext*, BaselineFrame*,
-                                  MutableHandleValue);
-static const VMFunction GetFunctionThisInfo = FunctionInfo<GetFunctionThisFn>(
-    jit::BaselineGetFunctionThis, "BaselineGetFunctionThis");
-
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_FUNCTIONTHIS() {
   MOZ_ASSERT_IF(handler.maybeFunction(), !handler.maybeFunction()->isArrow());
@@ -1941,7 +1925,8 @@ bool BaselineCodeGen<Handler>::emit_JSOP_FUNCTIONTHIS() {
 
     pushArg(R1.scratchReg());
 
-    if (!callVM(GetFunctionThisInfo)) {
+    using Fn = bool (*)(JSContext*, BaselineFrame*, MutableHandleValue);
+    if (!callVM<Fn, BaselineGetFunctionThis>()) {
       return false;
     }
 
@@ -1955,12 +1940,6 @@ bool BaselineCodeGen<Handler>::emit_JSOP_FUNCTIONTHIS() {
                             R2.scratchReg());
 }
 
-typedef void (*GetNonSyntacticGlobalThisFn)(JSContext*, HandleObject,
-                                            MutableHandleValue);
-static const VMFunction GetNonSyntacticGlobalThisInfo =
-    FunctionInfo<GetNonSyntacticGlobalThisFn>(js::GetNonSyntacticGlobalThis,
-                                              "GetNonSyntacticGlobalThis");
-
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_GLOBALTHIS() {
   frame.syncStack(0);
@@ -1971,7 +1950,8 @@ bool BaselineCodeGen<Handler>::emit_JSOP_GLOBALTHIS() {
     masm.loadPtr(frame.addressOfEnvironmentChain(), R0.scratchReg());
     pushArg(R0.scratchReg());
 
-    if (!callVM(GetNonSyntacticGlobalThisInfo)) {
+    using Fn = void (*)(JSContext*, HandleObject, MutableHandleValue);
+    if (!callVM<Fn, GetNonSyntacticGlobalThis>()) {
       return false;
     }
 
