@@ -72,7 +72,7 @@ talos:
     - talos-perf-reftest
     - talos-perf-reftest-singletons
     - talos-tp6-stylo-threads
-    - talos-tps
+    - talos-tabswitch
     # - talos-h1 Bug 1487031 - Disabled for not finding actionable regressions
     # - talos-h2 Bug 1487031 - Disabled for not finding actionable regressions
 
@@ -258,7 +258,7 @@ windows-talos:
     - talos-svgr
     - talos-tp5o
     - talos-xperf
-    - talos-tps
+    - talos-tabswitch
     # - talos-h1 Bug 1487031 - Disabled for not finding actionable regressions
 
 marionette-gpu-tests:
@@ -311,7 +311,7 @@ macosx64-talos:
     - talos-perf-reftest
     - talos-perf-reftest-singletons
     - talos-tp6-stylo-threads
-    # - talos-tps # Bug 1453007 times out
+    # - talos-tabswitch # Bug 1453007 times out
     # - talos-h1 # too long to unpack profile- Bug 1442893
 
 macosx64-qr-tests:
