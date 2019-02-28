@@ -130,7 +130,7 @@ export function addBreakpoint(
     recordEvent("add_breakpoint");
     let breakpointPosition = location;
     if (features.columnBreakpoints && location.column === undefined) {
-      await dispatch(setBreakpointPositions(location));
+      await dispatch(setBreakpointPositions(location.sourceId));
       breakpointPosition = getFirstVisibleBreakpointPosition(
         getState(),
         location
