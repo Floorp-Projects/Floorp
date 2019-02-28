@@ -1,10 +1,10 @@
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
-  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
-});
+ChromeUtils.defineModuleGetter(this, "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
+  "resource://testing-common/PlacesTestUtils.jsm");
+
 
 /**
  * This function can be called if the test needs to trigger frame dirtying
@@ -638,122 +638,4 @@ async function withPerfObserver(testFn, exceptions = {}, win = window) {
 
   let frames = await promiseFrames;
   reportUnexpectedFlicker(frames, exceptions.frames);
-}
-
-/**
- * This test ensures that there are no unexpected
- * uninterruptible reflows when typing into the URL bar
- * with the default values in Places.
- *
- * @param {bool} useAwesomebar
- *        Pass true if the legacy awesomebar is enabled.  Pass false if the
- *        quantumbar is enabled.
- * @param {bool} keyed
- *        Pass true to synthesize typing the search string one key at a time.
- * @param {array} expectedReflowsFirstOpen
- *        The array of expected reflow stacks when the panel is first opened.
- * @param {array} [expectedReflowsSecondOpen]
- *        The array of expected reflow stacks when the panel is subsequently
- *        opened, if you're testing opening the panel twice.
- */
-async function runUrlbarTest(useAwesomebar,
-                             keyed,
-                             expectedReflowsFirstOpen,
-                             expectedReflowsSecondOpen = null) {
-  const SEARCH_TERM = keyed ? "" : "urlbar-reflows-" + Date.now();
-  await addDummyHistoryEntries(SEARCH_TERM);
-
-  let win = await prepareSettledWindow();
-
-  let URLBar = win.gURLBar;
-
-  URLBar.focus();
-  URLBar.value = SEARCH_TERM;
-  let testFn = async function() {
-    if (useAwesomebar) {
-      let popup = URLBar.popup;
-      let oldInvalidate = popup.invalidate.bind(popup);
-      let oldResultsAdded = popup.onResultsAdded.bind(popup);
-      let oldSetTimeout = win.setTimeout;
-
-      // We need to invalidate the frame tree outside of the normal
-      // mechanism since invalidations and result additions to the
-      // URL bar occur without firing JS events (which is how we
-      // normally know to dirty the frame tree).
-      popup.invalidate = (reason) => {
-        dirtyFrame(win);
-        oldInvalidate(reason);
-      };
-
-      popup.onResultsAdded = () => {
-        dirtyFrame(win);
-        oldResultsAdded();
-      };
-
-      win.setTimeout = (fn, ms) => {
-        return oldSetTimeout(() => {
-          dirtyFrame(win);
-          fn();
-        }, ms);
-      };
-    }
-
-    let waitExtra = async () => {
-      // There are several setTimeout(fn, 0); calls inside autocomplete.xml
-      // that we need to wait for. Since those have higher priority than
-      // idle callbacks, we can be sure they will have run once this
-      // idle callback is called. The timeout seems to be required in
-      // automation - presumably because the machines can be pretty busy
-      // especially if it's GC'ing from previous tests.
-      await new Promise(resolve => win.requestIdleCallback(resolve, { timeout: 1000 }));
-    };
-
-    if (keyed) {
-      // Only keying in 6 characters because the number of reflows triggered
-      // is so high that we risk timing out the test if we key in any more.
-      let searchTerm = "ows-10";
-      for (let i = 0; i < searchTerm.length; ++i) {
-        let char = searchTerm[i];
-        EventUtils.synthesizeKey(char, {}, win);
-        await UrlbarTestUtils.promiseSearchComplete(win);
-        await waitExtra();
-      }
-    } else {
-      await UrlbarTestUtils.promiseAutocompleteResultPopup(win, URLBar.value,
-                                                           SimpleTest.waitForFocus);
-      await waitExtra();
-    }
-
-    await UrlbarTestUtils.promisePopupClose(win);
-  };
-
-  let dropmarkerRect = win.document.getAnonymousElementByAttribute(URLBar.textbox,
-    "anonid", "historydropmarker").getBoundingClientRect();
-  let textBoxRect = win.document.getAnonymousElementByAttribute(URLBar.textbox,
-    "anonid", "moz-input-box").getBoundingClientRect();
-  let expectedRects = {
-    filter: rects => rects.filter(r => !(
-      // We put text into the urlbar so expect its textbox to change.
-      (r.x1 >= textBoxRect.left && r.x2 <= textBoxRect.right &&
-       r.y1 >= textBoxRect.top && r.y2 <= textBoxRect.bottom) ||
-      // The dropmarker is displayed as active during some of the test.
-      // dropmarkerRect.left isn't always an integer, hence the - 1 and + 1
-      (r.x1 >= dropmarkerRect.left - 1 && r.x2 <= dropmarkerRect.right + 1 &&
-       r.y1 >= dropmarkerRect.top && r.y2 <= dropmarkerRect.bottom)
-      // XXX For some reason the awesomebar panel isn't in our screenshots,
-      // but that's where we actually expect many changes.
-    )),
-  };
-
-  info(`First opening, useAwesomebar=${useAwesomebar}`);
-  await withPerfObserver(testFn, {expectedReflows: expectedReflowsFirstOpen,
-                                  frames: expectedRects}, win);
-
-  if (expectedReflowsSecondOpen) {
-    info(`Second opening, useAwesomebar=${useAwesomebar}`);
-    await withPerfObserver(testFn, {expectedReflows: expectedReflowsSecondOpen,
-                                    frames: expectedRects}, win);
-  }
-
-  await BrowserTestUtils.closeWindow(win);
 }
