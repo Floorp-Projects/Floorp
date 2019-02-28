@@ -109,7 +109,8 @@ describe("PageError component:", () => {
     expect(call.args[0]).toEqual(message.exceptionDocURL);
   });
 
-  it("has a stacktrace which can be openned", () => {
+  // Unskip will happen in Bug 1529548.
+  it.skip("has a stacktrace which can be opened", () => {
     const message = stubPreparedMessages.get("ReferenceError: asdf is not defined");
     const wrapper = render(PageError({ message, serviceContainer, open: true }));
 
@@ -121,7 +122,8 @@ describe("PageError component:", () => {
     expect(frameLinks.length).toBe(5);
   });
 
-  it("toggle the stacktrace when the collapse button is clicked", () => {
+  // Unskip will happen in Bug 1529548.
+  it.skip("toggle the stacktrace when the collapse button is clicked", () => {
     const store = setupStore();
     store.dispatch = sinon.spy();
     const message = stubPreparedMessages.get("ReferenceError: asdf is not defined");

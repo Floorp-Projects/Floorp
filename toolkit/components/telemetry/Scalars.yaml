@@ -2465,16 +2465,22 @@ startup:
         restart:
           The user restarted the application, the same profile as previous will
           be used.
-        argument-profile
+        argument-profile:
           The profile was selected by the --profile command line argument.
-        argument-p
+        argument-p:
           The profile was selected by the -p command line argument.
-        firstrun-claimed-default
+        firstrun-claimed-default:
           A first run of a dedicated profiles build chose the old default
           profile to be the default for this install.
         firstrun-skipped-default:
           A first run of a dedicated profiles build skipped over the old default
           profile and created a new profile.
+        restart-claimed-default:
+          A first run of a dedicated profiles build after a restart chose the
+          old default profile to be the default for this install.
+        restart-skipped-default:
+          A first run of a dedicated profiles build after a restart skipped over
+          the old default profile and created a new profile.
         firstrun-created-default:
           A first run of the application created a new profile to use.
         default:

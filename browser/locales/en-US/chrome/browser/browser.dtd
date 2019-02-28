@@ -1131,9 +1131,12 @@ you can use these alternative items. Otherwise, their values should be empty.  -
      The first <image> tag is replaced with the icon for the add-ons menu.
      The second <image> tag is replaced with the icon for the toolbar menu. -->
 <!ENTITY addonPostInstallMessage.label "Manage your add-ons by clicking <image class='addon-addon-icon'/> in the <image class='addon-toolbar-icon'/> menu.">
+<!ENTITY addonPostInstall.incognito.label "Allow this extension to run in Private Windows.">
+<!ENTITY addonPostInstall.incognito.accesskey "A">
 
-<!ENTITY addonPrivateBrowsing.header.label "Extensions in Private Windows">
-<!ENTITY addonPrivateBrowsing.body.label "Extensions are not allowed to run by default in Private Windows. They won’t work while private browsing, and they won’t have access to your online activities. You can allow each extension to run in Private Windows by managing your settings.">
+<!ENTITY addonPrivateBrowsing.header2.label "Change to extensions in Private Windows">
+<!ENTITY addonPrivateBrowsing.body2.label "Any new extensions you add to &brandShorterName; won’t work in Private Windows unless you allow this in the settings.">
+<!ENTITY addonPrivateBrowsing.learnMore.label "Learn how to manage extension settings.">
 <!ENTITY addonPrivateBrowsing.okButton.label "Okay, Got It">
 <!ENTITY addonPrivateBrowsing.okButton.accesskey "O">
 <!ENTITY addonPrivateBrowsing.manageButton.label "Manage Extensions">

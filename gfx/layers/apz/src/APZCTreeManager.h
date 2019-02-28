@@ -492,7 +492,8 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
 
   void ProcessUnhandledEvent(LayoutDeviceIntPoint* aRefPoint,
                              ScrollableLayerGuid* aOutTargetGuid,
-                             uint64_t* aOutFocusSequenceNumber) override;
+                             uint64_t* aOutFocusSequenceNumber,
+                             LayersId* aOutLayersId) override;
 
   void UpdateWheelTransaction(LayoutDeviceIntPoint aRefPoint,
                               EventMessage aEventMessage) override;
@@ -578,6 +579,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   RefPtr<HitTestingTreeNode> GetRootNode() const;
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(
       const ScreenPoint& aPoint, gfx::CompositorHitTestInfo* aOutHitResult,
+      LayersId* aOutLayersId,
       HitTestingTreeNodeAutoLock* aOutScrollbarNode = nullptr);
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(
       const LayersId& aLayersId, const ScrollableLayerGuid::ViewID& aScrollId);
@@ -627,7 +629,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
       HitTestingTreeNode** aOutScrollbarNode);
   already_AddRefed<AsyncPanZoomController> GetAPZCAtPointWR(
       const ScreenPoint& aHitTestPoint,
-      gfx::CompositorHitTestInfo* aOutHitResult,
+      gfx::CompositorHitTestInfo* aOutHitResult, LayersId* aOutLayersId,
       HitTestingTreeNode** aOutScrollbarNode);
   AsyncPanZoomController* FindRootApzcForLayersId(LayersId aLayersId) const;
   AsyncPanZoomController* FindRootContentApzcForLayersId(
@@ -658,7 +660,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   already_AddRefed<AsyncPanZoomController> GetTouchInputBlockAPZC(
       const MultiTouchInput& aEvent,
       nsTArray<TouchBehaviorFlags>* aOutTouchBehaviors,
-      gfx::CompositorHitTestInfo* aOutHitResult,
+      gfx::CompositorHitTestInfo* aOutHitResult, LayersId* aOutLayersId,
       HitTestingTreeNodeAutoLock* aOutHitScrollbarNode);
   nsEventStatus ProcessTouchInput(MultiTouchInput& aInput,
                                   ScrollableLayerGuid* aOutTargetGuid,

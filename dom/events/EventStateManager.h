@@ -603,7 +603,8 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    *                    is true, a target is executed or focused.
    */
   bool LookForAccessKeyAndExecute(nsTArray<uint32_t>& aAccessCharCodes,
-                                  bool aIsTrustedEvent, bool aExecute);
+                                  bool aIsTrustedEvent, bool aIsRepeat,
+                                  bool aExecute);
 
   //---------------------------------------------
   // DocShell Focus Traversal Methods

@@ -953,7 +953,6 @@ bool SchemeIsAbout(nsIURI *aURI);
 bool SchemeIsBlob(nsIURI *aURI);
 bool SchemeIsFile(nsIURI *aURI);
 bool SchemeIsData(nsIURI *aURI);
-bool SchemeIsWYCIWYG(nsIURI *aURI);
 bool SchemeIsViewSource(nsIURI *aURI);
 bool SchemeIsResource(nsIURI *aURI);
 bool SchemeIsFTP(nsIURI *aURI);

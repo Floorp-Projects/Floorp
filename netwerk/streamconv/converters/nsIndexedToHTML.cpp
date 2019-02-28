@@ -95,14 +95,14 @@ nsIndexedToHTML::AsyncConvertData(const char* aFromType, const char* aToType,
 }
 
 NS_IMETHODIMP
-nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports* aContext) {
+nsIndexedToHTML::OnStartRequest(nsIRequest* request) {
   nsCString buffer;
-  nsresult rv = DoOnStartRequest(request, aContext, buffer);
+  nsresult rv = DoOnStartRequest(request, nullptr, buffer);
   if (NS_FAILED(rv)) {
     request->Cancel(rv);
   }
 
-  rv = mListener->OnStartRequest(request, aContext);
+  rv = mListener->OnStartRequest(request);
   if (NS_FAILED(rv)) return rv;
 
   // The request may have been canceled, and if that happens, we want to
@@ -112,7 +112,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports* aContext) {
 
   // Push our buffer to the listener.
 
-  rv = SendToListener(request, aContext, buffer);
+  rv = SendToListener(request, nullptr, buffer);
   return rv;
 }
 
@@ -145,7 +145,7 @@ nsresult nsIndexedToHTML::DoOnStartRequest(nsIRequest* request,
   rv = mParser->SetListener(this);
   if (NS_FAILED(rv)) return rv;
 
-  rv = mParser->OnStartRequest(request, aContext);
+  rv = mParser->OnStartRequest(request);
   if (NS_FAILED(rv)) return rv;
 
   nsAutoCString baseUri, titleUri;
@@ -641,19 +641,19 @@ nsresult nsIndexedToHTML::DoOnStartRequest(nsIRequest* request,
 }
 
 NS_IMETHODIMP
-nsIndexedToHTML::OnStopRequest(nsIRequest* request, nsISupports* aContext,
+nsIndexedToHTML::OnStopRequest(nsIRequest* request,
                                nsresult aStatus) {
   if (NS_SUCCEEDED(aStatus)) {
     nsCString buffer;
     buffer.AssignLiteral("</tbody></table></body></html>\n");
 
-    aStatus = SendToListener(request, aContext, buffer);
+    aStatus = SendToListener(request, nullptr, buffer);
   }
 
-  mParser->OnStopRequest(request, aContext, aStatus);
+  mParser->OnStopRequest(request, aStatus);
   mParser = nullptr;
 
-  return mListener->OnStopRequest(request, aContext, aStatus);
+  return mListener->OnStopRequest(request, aStatus);
 }
 
 nsresult nsIndexedToHTML::SendToListener(nsIRequest* aRequest,
@@ -662,15 +662,15 @@ nsresult nsIndexedToHTML::SendToListener(nsIRequest* aRequest,
   nsCOMPtr<nsIInputStream> inputData;
   nsresult rv = NS_NewCStringInputStream(getter_AddRefs(inputData), aBuffer);
   NS_ENSURE_SUCCESS(rv, rv);
-  return mListener->OnDataAvailable(aRequest, aContext, inputData, 0,
+  return mListener->OnDataAvailable(aRequest, inputData, 0,
                                     aBuffer.Length());
 }
 
 NS_IMETHODIMP
-nsIndexedToHTML::OnDataAvailable(nsIRequest* aRequest, nsISupports* aCtxt,
+nsIndexedToHTML::OnDataAvailable(nsIRequest* aRequest,
                                  nsIInputStream* aInput, uint64_t aOffset,
                                  uint32_t aCount) {
-  return mParser->OnDataAvailable(aRequest, aCtxt, aInput, aOffset, aCount);
+  return mParser->OnDataAvailable(aRequest, aInput, aOffset, aCount);
 }
 
 NS_IMETHODIMP

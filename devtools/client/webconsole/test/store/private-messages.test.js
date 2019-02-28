@@ -147,25 +147,21 @@ describe("private messages", () => {
 
   it("cleans networkMessagesUpdateById on PRIVATE_MESSAGES_CLEAR action", () => {
     const { dispatch, getState } = setupStore();
-    dispatch(actions.messagesAdd([
-      stubPackets.get("GET request"),
-      getPrivatePacket("XHR GET request"),
-    ]));
 
-    const state = getState();
-    const publicMessageId = getFirstMessage(state).id;
-    const privateMessageId = getLastMessage(state).id;
+    const publicActor = "network/public";
+    const privateActor = "network/private";
+    const publicPacket = {...stubPackets.get("GET request"), actor: publicActor};
+    const privatePacket = {...getPrivatePacket("XHR GET request"), actor: privateActor};
 
-    dispatch(actions.networkUpdateRequest(publicMessageId, {}));
-    dispatch(actions.networkUpdateRequest(privateMessageId, {}));
+    dispatch(actions.messagesAdd([publicPacket, privatePacket]));
 
     let networkUpdates = getAllNetworkMessagesUpdateById(getState());
-    expect(Object.keys(networkUpdates)).toEqual([publicMessageId, privateMessageId]);
+    expect(Object.keys(networkUpdates)).toEqual([publicActor, privateActor]);
 
     dispatch(actions.privateMessagesClear());
 
     networkUpdates = getAllNetworkMessagesUpdateById(getState());
-    expect(Object.keys(networkUpdates)).toEqual([publicMessageId]);
+    expect(Object.keys(networkUpdates)).toEqual([publicActor]);
   });
 
   it("releases private backend actors on PRIVATE_MESSAGES_CLEAR action", () => {

@@ -64,5 +64,12 @@ interface nsIScriptChannel : nsISupports
    * Setting this property after asyncOpen has been called on the
    * channel has no effect.
    */
-  attribute boolean executeAsync;   
+  attribute boolean executeAsync;
+
+  /**
+   * Check whether this script channel is a document load.  This is
+   * needed because script channels can lie about their
+   * LOAD_DOCUMENT_URI flag until they have run the script.
+   */
+  [notxpcom, nostdcall] readonly attribute boolean isDocumentLoad;
 };

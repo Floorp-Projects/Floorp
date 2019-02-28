@@ -193,6 +193,13 @@ static void AddLdconfigPaths(SandboxBroker::Policy* aPolicy) {
   AddPathsFromFile(aPolicy, ldconfigPath);
 }
 
+static void AddSharedMemoryPaths(SandboxBroker::Policy* aPolicy, pid_t aPid) {
+  std::string shmPath("/dev/shm");
+  if (base::SharedMemory::AppendPosixShmPrefix(&shmPath, aPid)) {
+    aPolicy->AddPrefix(rdwrcr, shmPath.c_str());
+  }
+}
+
 SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory() {
   // Policy entries that are the same in every process go here, and
   // are cached over the lifetime of the factory.
@@ -418,8 +425,8 @@ UniquePtr<SandboxBroker::Policy> SandboxBrokerPolicyFactory::GetContentPolicy(
   // in early startup.
 
   MOZ_ASSERT(NS_IsMainThread());
-  // File broker usage is controlled through a pref.
-  if (!IsContentSandboxEnabled()) {
+  // The file broker is used at level 2 and up.
+  if (GetEffectiveContentSandboxLevel() <= 1) {
     return nullptr;
   }
 
@@ -524,10 +531,7 @@ UniquePtr<SandboxBroker::Policy> SandboxBrokerPolicyFactory::GetContentPolicy(
   if (allowPulse) {
     policy->AddDir(rdwrcr, "/dev/shm");
   } else {
-    std::string shmPath("/dev/shm");
-    if (base::SharedMemory::AppendPosixShmPrefix(&shmPath, aPid)) {
-      policy->AddPrefix(rdwrcr, shmPath.c_str());
-    }
+    AddSharedMemoryPaths(policy.get(), aPid);
   }
 
 #  ifdef MOZ_WIDGET_GTK
@@ -579,6 +583,18 @@ void SandboxBrokerPolicyFactory::AddDynamicPathList(
       policy->AddDynamic(perms, trimPath.get());
     }
   }
+}
+
+/* static */ UniquePtr<SandboxBroker::Policy>
+SandboxBrokerPolicyFactory::GetUtilityPolicy(int aPid) {
+  auto policy = MakeUnique<SandboxBroker::Policy>();
+
+  AddSharedMemoryPaths(policy.get(), aPid);
+
+  if (policy->IsEmpty()) {
+    policy = nullptr;
+  }
+  return policy;
 }
 
 #endif  // MOZ_CONTENT_SANDBOX

@@ -3719,11 +3719,11 @@ Response.prototype =
     var response = this;
     var copyObserver =
       {
-        onStartRequest(request, cx) {
+        onStartRequest(request) {
           dumpn("*** preamble copying started");
         },
 
-        onStopRequest(request, cx, statusCode) {
+        onStopRequest(request, statusCode) {
           dumpn("*** preamble copying complete " +
                 "[status=0x" + statusCode.toString(16) + "]");
 
@@ -3770,11 +3770,11 @@ Response.prototype =
     var response = this;
     var copyObserver =
       {
-        onStartRequest(request, context) {
+        onStartRequest(request) {
           dumpn("*** onStartRequest");
         },
 
-        onStopRequest(request, cx, statusCode) {
+        onStopRequest(request, statusCode) {
           dumpn("*** onStopRequest [status=0x" + statusCode.toString(16) + "]");
 
           if (statusCode === Cr.NS_BINDING_ABORTED) {
@@ -3883,7 +3883,7 @@ function WriteThroughCopier(source, sink, observer, context) {
 
   // start copying
   try {
-    observer.onStartRequest(this, context);
+    observer.onStartRequest(this);
     this._waitToReadData();
     this._waitForSinkClosure();
   } catch (e) {
@@ -4246,7 +4246,7 @@ WriteThroughCopier.prototype =
 
           self._completed = true;
           try {
-            self._observer.onStopRequest(self, self._context, self.status);
+            self._observer.onStopRequest(self, self.status);
           } catch (e) {
             NS_ASSERT(false,
                       "how are we throwing an exception here?  we control " +

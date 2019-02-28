@@ -40,4 +40,7 @@ add_task(async () => {
   Assert.ok(localDir.equals(local), "Should have selected the right local dir.");
   Assert.ok(profile, "A named profile matches this.");
   Assert.equal(profile.name, "Profile1", "The right profile was matched.");
+
+  let service = getProfileService();
+  Assert.notEqual(service.defaultProfile, profile, "Should not be the default profile.");
 });

@@ -21,7 +21,7 @@ protocol PRDD
 parent:
 
   // args TBD, sent by UI process to initiate core settings
-  async Init();
+  async Init(MaybeFileDesc sandboxBroker);
 
   async InitProfiler(Endpoint<PProfilerChild> endpoint);
 

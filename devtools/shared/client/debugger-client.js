@@ -20,10 +20,8 @@ loader.lazyRequireGetter(this, "DebuggerSocket", "devtools/shared/security/socke
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
 loader.lazyRequireGetter(this, "RootFront", "devtools/shared/fronts/root", true);
-loader.lazyRequireGetter(this, "BrowsingContextTargetFront", "devtools/shared/fronts/targets/browsing-context", true);
 loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-client");
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/object-client");
-loader.lazyRequireGetter(this, "Pool", "devtools/shared/protocol", true);
 loader.lazyRequireGetter(this, "Front", "devtools/shared/protocol", true);
 
 /**
@@ -38,16 +36,6 @@ function DebuggerClient(transport) {
   // Map actor ID to client instance for each actor type.
   // To be removed once all clients are refactored to protocol.js
   this._clients = new Map();
-
-  // Pool of fronts instanciated by this class.
-  // This is useful for actors that have already been transitioned to protocol.js
-  // Once RootClient becomes a protocol.js actor, these actors can be attached to it
-  // instead of this pool.
-  // This Pool will automatically be added to this._pools via addActorPool once the first
-  // Front will be added to it (in attachTarget, ...).
-  // And it does not need to destroyed explicitly as all Pools are destroyed on client
-  // closing.
-  this._frontPool = new Pool(this);
 
   this._pendingRequests = new Map();
   this._activeRequests = new Map();
@@ -65,7 +53,11 @@ function DebuggerClient(transport) {
   this.mainRoot = null;
   this.expectReply("root", (packet) => {
     this.mainRoot = new RootFront(this, packet);
-    this._frontPool.manage(this.mainRoot);
+
+    // Root Front is a special case, managing itself as it doesn't have any parent.
+    // It will register itself to DebuggerClient as a Pool via Front._poolMap.
+    this.mainRoot.manage(this.mainRoot);
+
     this.emit("connected", packet.applicationType, packet.traits);
   });
 }
@@ -246,30 +238,6 @@ DebuggerClient.prototype = {
     detachClients();
 
     return deferred.promise;
-  },
-
-  /**
-   * Attach to a target actor:
-   *
-   *  - start watching for new documents (emits `tabNativated` messages)
-   *  - start watching for inner iframe updates (emits `frameUpdate` messages)
-   *  - retrieve the thread actor:
-   *    Instantiates a new ThreadActor that can be later attached to in order to
-   *    debug JS sources in the document.
-   *
-   * @param string targetActorForm
-   *        The target actor form for the tab to attach.
-   */
-  attachTarget: async function(targetActorForm) {
-    const actorID = targetActorForm.actor;
-    let front = this._frontPool.actor(actorID);
-    if (!front) {
-      front = new BrowsingContextTargetFront(this, targetActorForm);
-      this._frontPool.manage(front);
-    }
-
-    const response = await front.attach();
-    return [response, front];
   },
 
   /**

@@ -51,16 +51,16 @@ ResourceLoader.load = function(uri, doc) {
 };
 
 ResourceLoader.prototype = {
-  onDataAvailable(request, context, input, offset, count) {
+  onDataAvailable(request, input, offset, count) {
     let stream = Cc["@mozilla.org/scriptableinputstream;1"]
       .createInstance(Ci.nsIScriptableInputStream);
     stream.init(input);
     this.data += stream.read(count);
   },
 
-  onStartRequest(request, context) {},
+  onStartRequest(request) {},
 
-  onStopRequest(request, context, status) {
+  onStopRequest(request, status) {
     if (Components.isSuccessCode(status)) {
       var statusCode = request.QueryInterface(Ci.nsIHttpChannel).responseStatus;
       if (statusCode === 200) {

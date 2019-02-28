@@ -455,6 +455,12 @@ class EventListenerManager final : public EventListenerManagerBase {
   bool IsApzAwareListener(Listener* aListener);
   bool IsApzAwareEvent(nsAtom* aEvent);
 
+  /**
+   * Remove all event listeners from the event target this EventListenerManager
+   * is for.
+   */
+  void RemoveAllListeners();
+
  protected:
   void HandleEventInternal(nsPresContext* aPresContext, WidgetEvent* aEvent,
                            dom::Event** aDOMEvent,
@@ -580,7 +586,7 @@ class EventListenerManager final : public EventListenerManagerBase {
                                    nsAtom* aUserType,
                                    const EventListenerFlags& aFlags,
                                    bool aAllEvents = false);
-  void RemoveAllListeners();
+  void RemoveAllListenersSilently();
   void NotifyEventListenerRemoved(nsAtom* aUserType);
   const EventTypeData* GetTypeDataForIID(const nsIID& aIID);
   const EventTypeData* GetTypeDataForEventName(nsAtom* aName);

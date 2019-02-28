@@ -36,8 +36,7 @@ public class GuestProfileConfiguration implements RestrictionConfiguration {
             "file",
             "chrome",
             "resource",
-            "jar",
-            "wyciwyg"
+            "jar"
     );
 
     private static final List<String> BANNED_URLS = Arrays.asList(

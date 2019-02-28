@@ -423,10 +423,9 @@ class Typedef(object):
 
     def rustType(self, calltype):
         if self.name == 'nsresult':
-            return "%s::nserror::nsresult" % (calltype != 'in' and '*mut ' or '')
+            return "%s::nserror::nsresult" % ('*mut ' if 'out' in calltype else '')
 
-        return "%s%s" % (calltype != 'in' and '*mut ' or '',
-                         self.name)
+        return "%s%s" % ('*mut ' if 'out' in calltype else '', self.name)
 
     def __str__(self):
         return "typedef %s %s\n" % (self.type, self.name)
@@ -468,6 +467,8 @@ class Forward(object):
     def rustType(self, calltype):
         if rustBlacklistedForward(self.name):
             raise RustNoncompat("forward declaration %s is unsupported" % self.name)
+        if calltype == 'element':
+            return 'RefPtr<%s>' % self.name
         return "%s*const %s" % (calltype != 'in' and '*mut ' or '',
                                 self.name)
 
@@ -599,6 +600,11 @@ class Native(object):
             prefix += '*mut '
 
         if self.specialtype == 'nsid':
+            if 'element' in calltype:
+                if self.isPtr(calltype):
+                    raise IDLError("Array<nsIDPtr> not yet supported. "
+                                   "File an XPConnect bug if you need it.", self.location)
+                return self.nativename
             return prefix + self.nativename
         if self.specialtype in ['cstring', 'utf8string']:
             if 'element' in calltype:
@@ -762,6 +768,8 @@ class Interface(object):
                              '*' if 'out' in calltype else '')
 
     def rustType(self, calltype, const=False):
+        if calltype == 'element':
+            return 'RefPtr<%s>' % self.name
         return "%s*const %s" % ('*mut ' if 'out' in calltype else '',
                                 self.name)
 
@@ -1331,9 +1339,16 @@ class Array(object):
             return base
 
     def rustType(self, calltype):
-        # NOTE: To add Rust support, ensure 'element' is handled correctly in
-        # all rustType callees.
-        raise RustNoncompat("Array<...> types")
+        if calltype == 'legacyelement':
+            raise IDLError("[array] Array<T> is unsupported", self.location)
+
+        base = 'thin_vec::ThinVec<%s>' % self.type.rustType('element')
+        if 'out' in calltype:
+            return '*mut %s' % base
+        elif 'in' == calltype:
+            return '*const %s' % base
+        else:
+            return base
 
 
 TypeId = namedtuple('TypeId', 'name params')

@@ -28,7 +28,6 @@
 #include "expat.h"
 #include "nsINestedURI.h"
 #include "nsCharsetSource.h"
-#include "nsIWyciwygChannel.h"
 #include "nsIThreadRetargetableRequest.h"
 #include "nsPrintfCString.h"
 #include "nsNetUtil.h"
@@ -886,8 +885,7 @@ class MaybeRunCollector : public Runnable {
   nsCOMPtr<nsIDocShell> mDocShell;
 };
 
-nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest,
-                                             nsISupports* aContext) {
+nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
   MOZ_RELEASE_ASSERT(STREAM_NOT_STARTED == mStreamState,
                      "Got OnStartRequest when the stream had already started.");
   MOZ_ASSERT(
@@ -895,7 +893,7 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest,
       "Got OnStartRequest at the wrong stage in the executor life cycle.");
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   if (mObserver) {
-    mObserver->OnStartRequest(aRequest, aContext);
+    mObserver->OnStartRequest(aRequest);
   }
   mRequest = aRequest;
 
@@ -1037,8 +1035,7 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest,
     mFeedChardetIfEncoding = nullptr;
   }
 
-  nsCOMPtr<nsIWyciwygChannel> wyciwygChannel(do_QueryInterface(mRequest));
-  if (mCharsetSource < kCharsetFromUtf8OnlyMime && !wyciwygChannel) {
+  if (mCharsetSource < kCharsetFromUtf8OnlyMime) {
     // we aren't ready to commit to an encoding yet
     // leave converter uninstantiated for now
     return NS_OK;
@@ -1169,12 +1166,11 @@ class nsHtml5RequestStopper : public Runnable {
 };
 
 nsresult nsHtml5StreamParser::OnStopRequest(nsIRequest* aRequest,
-                                            nsISupports* aContext,
                                             nsresult status) {
   NS_ASSERTION(mRequest == aRequest, "Got Stop on wrong stream.");
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   if (mObserver) {
-    mObserver->OnStopRequest(aRequest, aContext, status);
+    mObserver->OnStopRequest(aRequest, status);
   }
   nsCOMPtr<nsIRunnable> stopper = new nsHtml5RequestStopper(this);
   if (NS_FAILED(mEventTarget->Dispatch(stopper, nsIThread::DISPATCH_NORMAL))) {
@@ -1311,7 +1307,6 @@ class nsHtml5DataAvailable : public Runnable {
 };
 
 nsresult nsHtml5StreamParser::OnDataAvailable(nsIRequest* aRequest,
-                                              nsISupports* aContext,
                                               nsIInputStream* aInStream,
                                               uint64_t aSourceOffset,
                                               uint32_t aLength) {
