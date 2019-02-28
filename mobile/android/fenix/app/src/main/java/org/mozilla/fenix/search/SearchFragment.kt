@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.search
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,12 +12,15 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_search.view.*
+import mozilla.components.feature.search.SearchUseCases
+import mozilla.components.feature.session.SessionUseCases
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.SearchAction
 import org.mozilla.fenix.components.toolbar.SearchState
 import org.mozilla.fenix.components.toolbar.ToolbarComponent
 import org.mozilla.fenix.components.toolbar.ToolbarUIView
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
@@ -24,19 +28,20 @@ import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.search.awesomebar.AwesomeBarAction
 import org.mozilla.fenix.search.awesomebar.AwesomeBarChange
 import org.mozilla.fenix.search.awesomebar.AwesomeBarComponent
-import org.mozilla.fenix.search.awesomebar.AwesomeBarState
 
 class SearchFragment : Fragment() {
     private lateinit var toolbarComponent: ToolbarComponent
     private lateinit var awesomeBarComponent: AwesomeBarComponent
+    private var sessionId: String? = null
+    private var isPrivate = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val sessionId = SearchFragmentArgs.fromBundle(arguments!!).sessionId
-        val isPrivate = (activity as HomeActivity).browsingModeManager.isPrivate
+        sessionId = SearchFragmentArgs.fromBundle(arguments!!).sessionId
+        isPrivate = (activity as HomeActivity).browsingModeManager.isPrivate
         val view = inflater.inflate(R.layout.fragment_search, container, false)
         val url = sessionId?.let {
             requireComponents.core.sessionManager.findSessionById(it)?.let {
@@ -51,10 +56,7 @@ class SearchFragment : Fragment() {
             isPrivate,
             SearchState(url, isEditing = true)
         )
-        awesomeBarComponent = AwesomeBarComponent(
-            view.search_layout, ActionBusFactory.get(this),
-            AwesomeBarState("", sessionId == null, isPrivate)
-        )
+        awesomeBarComponent = AwesomeBarComponent(view.search_layout, ActionBusFactory.get(this))
         ActionBusFactory.get(this).logMergedObservables()
         return view
     }
@@ -93,12 +95,43 @@ class SearchFragment : Fragment() {
         getAutoDisposeObservable<AwesomeBarAction>()
             .subscribe {
                 when (it) {
-                    is AwesomeBarAction.ItemSelected -> {
-                        requireComponents.core.sessionManager.selectedSession?.let { session ->
-                            (activity as HomeActivity).openToBrowser(session.id)
-                        }
+                    is AwesomeBarAction.URLTapped -> {
+                        getSessionUseCase(requireContext(), sessionId == null).invoke(it.url)
+                        navigateToBrowser()
+                    }
+                    is AwesomeBarAction.SearchTermsTapped -> {
+                        getSearchUseCase(requireContext(), sessionId == null).invoke(it.searchTerms)
+                        navigateToBrowser()
                     }
                 }
             }
+    }
+
+    private fun navigateToBrowser() {
+        requireComponents.core.sessionManager.selectedSession?.apply {
+            (activity as HomeActivity).openToBrowser(sessionId)
+        }
+    }
+
+    private fun getSearchUseCase(context: Context, useNewTab: Boolean): SearchUseCases.SearchUseCase {
+        if (!useNewTab) {
+            return context.components.useCases.searchUseCases.defaultSearch
+        }
+
+        return when (isPrivate) {
+            true -> context.components.useCases.searchUseCases.newPrivateTabSearch
+            false -> context.components.useCases.searchUseCases.newTabSearch
+        }
+    }
+
+    private fun getSessionUseCase(context: Context, useNewTab: Boolean): SessionUseCases.LoadUrlUseCase {
+        if (!useNewTab) {
+            return context.components.useCases.sessionUseCases.loadUrl
+        }
+
+        return when (isPrivate) {
+            true -> context.components.useCases.tabsUseCases.addPrivateTab
+            false -> context.components.useCases.tabsUseCases.addTab
+        }
     }
 }

@@ -11,10 +11,11 @@ import org.mozilla.fenix.mvi.Reducer
 import org.mozilla.fenix.mvi.UIComponent
 import org.mozilla.fenix.mvi.ViewState
 
-data class AwesomeBarState(val query: String, val useNewTab: Boolean = false, val isPrivate: Boolean) : ViewState
+data class AwesomeBarState(val query: String) : ViewState
 
 sealed class AwesomeBarAction : Action {
-    object ItemSelected : AwesomeBarAction()
+    data class URLTapped(val url: String) : AwesomeBarAction()
+    data class SearchTermsTapped(val searchTerms: String) : AwesomeBarAction()
 }
 
 sealed class AwesomeBarChange : Change {
@@ -24,7 +25,7 @@ sealed class AwesomeBarChange : Change {
 class AwesomeBarComponent(
     private val container: ViewGroup,
     bus: ActionBusFactory,
-    override var initialState: AwesomeBarState = AwesomeBarState("", isPrivate = false)
+    override var initialState: AwesomeBarState = AwesomeBarState("")
 ) : UIComponent<AwesomeBarState, AwesomeBarAction, AwesomeBarChange>(
     bus.getManagedEmitter(AwesomeBarAction::class.java),
     bus.getSafeManagedObservable(AwesomeBarChange::class.java)
@@ -35,12 +36,7 @@ class AwesomeBarComponent(
         }
     }
 
-    override fun initView() = AwesomeBarUIView(
-        initialState.useNewTab,
-        initialState.isPrivate,
-        container,
-        actionEmitter,
-        changesObservable)
+    override fun initView() = AwesomeBarUIView(container, actionEmitter, changesObservable)
 
     init {
         render(reducer)
