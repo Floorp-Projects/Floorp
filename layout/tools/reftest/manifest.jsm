@@ -426,13 +426,12 @@ function BuildConditionSandbox(aURL) {
     var info = gfxInfo.getInfo();
     var canvasBackend = readGfxInfo(info, "AzureCanvasBackend");
     var contentBackend = readGfxInfo(info, "AzureContentBackend");
-    var canvasAccelerated = readGfxInfo(info, "AzureCanvasAccelerated");
 
     sandbox.gpuProcess = gfxInfo.usingGPUProcess;
     sandbox.azureCairo = canvasBackend == "cairo";
     sandbox.azureSkia = canvasBackend == "skia";
     sandbox.skiaContent = contentBackend == "skia";
-    sandbox.azureSkiaGL = canvasAccelerated; // FIXME: assumes GL right now
+    sandbox.azureSkiaGL = false;
     // true if we are using the same Azure backend for rendering canvas and content
     sandbox.contentSameGfxBackendAsCanvas = contentBackend == canvasBackend
                                             || (contentBackend == "none" && canvasBackend == "cairo");

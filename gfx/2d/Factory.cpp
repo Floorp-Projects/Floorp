@@ -920,18 +920,6 @@ already_AddRefed<ScaledFont> Factory::CreateScaledFontForDWriteFont(
 
 #endif  // WIN32
 
-#ifdef USE_SKIA_GPU
-already_AddRefed<DrawTarget> Factory::CreateDrawTargetSkiaWithGrContext(
-    GrContext* aGrContext, const IntSize& aSize, SurfaceFormat aFormat) {
-  RefPtr<DrawTarget> newTarget = new DrawTargetSkia();
-  if (!newTarget->InitWithGrContext(aGrContext, aSize, aFormat)) {
-    return nullptr;
-  }
-  return newTarget.forget();
-}
-
-#endif  // USE_SKIA_GPU
-
 #ifdef USE_SKIA
 already_AddRefed<DrawTarget> Factory::CreateDrawTargetWithSkCanvas(
     SkCanvas* aCanvas) {
