@@ -27,7 +27,8 @@ import org.mozilla.fenix.mvi.UIView
 class TabsUIView(
     container: ViewGroup,
     actionEmitter: Observer<TabsAction>,
-    changesObservable: Observable<TabsChange>
+    changesObservable: Observable<TabsChange>,
+    private val isPrivate: Boolean
 ) :
     UIView<TabsState, TabsAction, TabsChange>(container, actionEmitter, changesObservable) {
 
@@ -65,6 +66,10 @@ class TabsUIView(
                 this.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
             }
 
+            delete_session_button.setOnClickListener {
+                actionEmitter.onNext(TabsAction.CloseAll(true))
+            }
+
             save_session_button.setOnClickListener {
                 actionEmitter.onNext(TabsAction.Archive)
             }
@@ -73,10 +78,11 @@ class TabsUIView(
 
     override fun updateView() = Consumer<TabsState> {
         tabsAdapter.sessions = it.sessions
+        val sessionButton = if (isPrivate) view.delete_session_button else view.save_session_button
 
         (if (it.sessions.isEmpty()) View.GONE else View.VISIBLE).also { visibility ->
             view.tabs_header.visibility = visibility
-            view.save_session_button.visibility = visibility
+            sessionButton.visibility = visibility
         }
     }
 

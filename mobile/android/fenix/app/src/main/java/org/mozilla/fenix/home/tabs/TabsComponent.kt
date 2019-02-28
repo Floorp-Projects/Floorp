@@ -17,6 +17,7 @@ import org.mozilla.fenix.mvi.ViewState
 class TabsComponent(
     private val container: ViewGroup,
     bus: ActionBusFactory,
+    private val isPrivate: Boolean,
     override var initialState: TabsState = TabsState(listOf())
 ) :
     UIComponent<TabsState, TabsAction, TabsChange>(
@@ -30,7 +31,7 @@ class TabsComponent(
         }
     }
 
-    override fun initView() = TabsUIView(container, actionEmitter, changesObservable)
+    override fun initView() = TabsUIView(container, actionEmitter, changesObservable, isPrivate)
     val tabList: RecyclerView
         get() = uiView.view.tabs_list as RecyclerView
 
@@ -48,6 +49,7 @@ fun Session.toSessionViewState(selected: Boolean): SessionViewState {
 
 sealed class TabsAction : Action {
     object Archive : TabsAction()
+    data class CloseAll(val private: Boolean) : TabsAction()
     data class Select(val sessionId: String) : TabsAction()
     data class Close(val sessionId: String) : TabsAction()
 }

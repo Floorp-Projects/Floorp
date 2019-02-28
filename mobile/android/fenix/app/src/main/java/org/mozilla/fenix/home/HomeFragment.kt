@@ -70,6 +70,7 @@ class HomeFragment : Fragment() {
         tabsComponent = TabsComponent(
             view.homeContainer,
             bus,
+            (activity as HomeActivity).browsingModeManager.isPrivate,
             TabsState(sessionManager.sessions.map { it.toSessionViewState(it == sessionManager.selectedSession) })
         )
         sessionsComponent = SessionsComponent(view.homeContainer, bus)
@@ -168,6 +169,7 @@ class HomeFragment : Fragment() {
         (activity as AppCompatActivity).supportActionBar?.hide()
     }
 
+    @SuppressWarnings("ComplexMethod")
     override fun onStart() {
         super.onStart()
         if (isAdded) {
@@ -187,6 +189,9 @@ class HomeFragment : Fragment() {
                             requireComponents.core.sessionManager.findSessionById(it.sessionId)?.let { session ->
                                 requireComponents.core.sessionManager.remove(session)
                             }
+                        }
+                        is TabsAction.CloseAll -> {
+                            requireComponents.useCases.tabsUseCases.removeAllTabsOfType.invoke(it.private)
                         }
                     }
                 }
