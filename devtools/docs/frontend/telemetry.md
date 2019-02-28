@@ -338,31 +338,29 @@ This is best shown via an example:
 "use strict";
 
 const { Toolbox } = require("devtools/client/framework/toolbox");
+const { TelemetryTestUtils } = ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm");
 
 const URL = "data:text/html;charset=utf8,browser_toolbox_telemetry_close.js";
-const OPTOUT = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT;
-const { SIDE, BOTTOM } = Toolbox.HostType;
-const TELEMETRY_DATA = [
+const { RIGHT, BOTTOM } = Toolbox.HostType;
+const DATA = [
   {
-    timestamp: null,
     category: "devtools.main",
     method: "close",
     object: "tools",
     value: null,
     extra: {
       host: "right",
-      width: "1440"
+      width: w => w > 0,
     }
   },
   {
-    timestamp: null,
     category: "devtools.main",
     method: "close",
     object: "tools",
     value: null,
     extra: {
       host: "bottom",
-      width: "1440"
+      width: w => w > 0,
     }
   }
 ];
@@ -372,8 +370,7 @@ add_task(async function() {
   Services.telemetry.clearEvents();
 
   // Ensure no events have been logged
-  const snapshot = Services.telemetry.snapshotEvents(OPTOUT, true);
-  ok(!snapshot.parent, "No events have been logged for the main process");
+  TelemetryTestUtils.assertNumberOfEvents(0);
 
   await openAndCloseToolbox("webconsole", SIDE);
   await openAndCloseToolbox("webconsole", BOTTOM);
@@ -391,27 +388,7 @@ async function openAndCloseToolbox(toolId, host) {
 }
 
 function checkResults() {
-  const snapshot = Services.telemetry.snapshotEvents(OPTOUT, true);
-  const events = snapshot.parent.filter(event => event[1] === "devtools.main" &&
-                                                 event[2] === "close" &&
-                                                 event[3] === "tools" &&
-                                                 event[4] === null
-  );
-
-  for (const i in TELEMETRY_DATA) {
-    const [ timestamp, category, method, object, value, extra ] = events[i];
-    const expected = TELEMETRY_DATA[i];
-
-    // ignore timestamp
-    ok(timestamp > 0, "timestamp is greater than 0");
-    is(category, expected.category, "category is correct");
-    is(method, expected.method, "method is correct");
-    is(object, expected.object, "object is correct");
-    is(value, expected.value, "value is correct");
-
-    is(extra.host, expected.extra.host, "host is correct");
-    ok(extra.width > 0, "width is greater than 0");
-  }
+  TelemetryTestUtils.assertEvents(DATA, {category: "devtools.main", method: "close", object: "tools"});
 }
 ```
 
