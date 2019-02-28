@@ -116,7 +116,7 @@ class TestCloseWindow(WindowManagerMixin, MarionetteTestCase):
               win.addEventListener("TabBrowserDiscarded", ev => {
                 arguments[0](true);
               }, { once: true});
-              win.gBrowser.discardBrowser(win.gBrowser.tabs[1].linkedBrowser);
+              win.gBrowser.discardBrowser(win.gBrowser.tabs[1]);
             """)
 
         window_handles = self.marionette.window_handles

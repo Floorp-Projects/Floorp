@@ -13,7 +13,13 @@ add_task(async function() {
    let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
    await ContentTask.spawn(browser, null, async function() {
      let a = content.document.createElement("a");
-     a.href = "javascript:document.write('spoof'); void(0);";
+     // newTabPromise won't resolve until it has a URL that's not "about:blank".
+     // But doing document.open() from inside that same document does not change
+     // the URL of the docshell.  So we need to do some URL change to cause
+     // newTabPromise to resolve, since the document is at about:blank the whole
+     // time, URL-wise.  Navigating to '#' should do the trick without changing
+     // anything else about the document involved.
+     a.href = "javascript:document.write('spoof'); location.href='#'; void(0);";
      a.textContent = "Some link";
      content.document.body.appendChild(a);
    });

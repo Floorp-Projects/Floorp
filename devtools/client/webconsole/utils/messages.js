@@ -101,6 +101,9 @@ function transformConsoleAPICallPacket(packet) {
         parameters = null;
       }
       break;
+    case "timeStamp":
+      type = MESSAGE_TYPE.NULL_MESSAGE;
+      break;
     case "time":
       parameters = null;
       if (timer && timer.error) {

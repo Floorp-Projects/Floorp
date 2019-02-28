@@ -1,27 +1,16 @@
 <html>
   <head>
     <script>
-      function run() {
+      function start() {
+        var length = history.length;
         document.open();
         document.write("<h5 id='dynamic'>document.written content</h5>");
         document.close();
-        window.history.go(-1);
+        opener.is(history.length, length,
+                  "document.open/close should not change history");
+        opener.nextTest();
+        window.close();
       }
-
-      function start() {
-        if (++opener.testCount == 1) {
-          setTimeout(run, 0);
-        }
-      }
-
-      window.addEventListener("pageshow",
-        function() {
-          ++opener.file_document_write_1_loadCount;
-          if (opener.file_document_write_1_loadCount == 2) {
-            opener.setTimeout("isTestDynamic()", 0);
-          }
-          opener.ok(opener.file_document_write_1_loadCount <= 2);
-        });
     </script>
   </head>
   <body onload="start();">

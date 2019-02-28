@@ -7828,7 +7828,7 @@ nsIFrame::FrameSearchResult nsTextFrame::PeekOffsetCharacter(
 
   if (!aOptions.mIgnoreUserStyleAll) {
     StyleUserSelect selectStyle;
-    IsSelectable(&selectStyle);
+    Unused << IsSelectable(&selectStyle);
     if (selectStyle == StyleUserSelect::All) {
       return CONTINUE_UNSELECTABLE;
     }
@@ -8018,7 +8018,7 @@ nsIFrame::FrameSearchResult nsTextFrame::PeekOffsetWord(
   NS_ASSERTION(aOffset && *aOffset <= contentLength, "aOffset out of range");
 
   StyleUserSelect selectStyle;
-  IsSelectable(&selectStyle);
+  Unused << IsSelectable(&selectStyle);
   if (selectStyle == StyleUserSelect::All) return CONTINUE_UNSELECTABLE;
 
   int32_t offset =

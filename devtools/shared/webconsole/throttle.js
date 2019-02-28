@@ -59,23 +59,23 @@ NetworkThrottleListener.prototype = {
   /**
    * @see nsIStreamListener.onStartRequest.
    */
-  onStartRequest: function(request, context) {
-    this.originalListener.onStartRequest(request, context);
+  onStartRequest: function(request) {
+    this.originalListener.onStartRequest(request);
     this.queue.start(this);
   },
 
   /**
    * @see nsIStreamListener.onStopRequest.
    */
-  onStopRequest: function(request, context, statusCode) {
-    this.pendingData.push({request, context, statusCode});
+  onStopRequest: function(request, statusCode) {
+    this.pendingData.push({request, statusCode});
     this.queue.dataAvailable(this);
   },
 
   /**
    * @see nsIStreamListener.onDataAvailable.
    */
-  onDataAvailable: function(request, context, inputStream, offset, count) {
+  onDataAvailable: function(request, inputStream, offset, count) {
     if (this.pendingException) {
       throw this.pendingException;
     }
@@ -87,7 +87,7 @@ NetworkThrottleListener.prototype = {
     const stream = new ArrayBufferInputStream();
     stream.setData(bytes, 0, count);
 
-    this.pendingData.push({request, context, stream, count});
+    this.pendingData.push({request, stream, count});
     this.queue.dataAvailable(this);
   },
 
@@ -110,11 +110,11 @@ NetworkThrottleListener.prototype = {
       return {length: 0, done: true};
     }
 
-    const {request, context, stream, count, statusCode} = this.pendingData[0];
+    const {request, stream, count, statusCode} = this.pendingData[0];
 
     if (statusCode !== undefined) {
       this.pendingData.shift();
-      this.originalListener.onStopRequest(request, context, statusCode);
+      this.originalListener.onStopRequest(request, statusCode);
       return {length: 0, done: true};
     }
 
@@ -123,7 +123,7 @@ NetworkThrottleListener.prototype = {
     }
 
     try {
-      this.originalListener.onDataAvailable(request, context, stream,
+      this.originalListener.onDataAvailable(request, stream,
                                             this.offset, bytesPermitted);
     } catch (e) {
       this.pendingException = e;

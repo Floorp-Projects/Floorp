@@ -72,7 +72,7 @@ nsFTPDirListingConv::AsyncConvertData(const char *aFromType,
 
 // nsIStreamListener implementation
 NS_IMETHODIMP
-nsFTPDirListingConv::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
+nsFTPDirListingConv::OnDataAvailable(nsIRequest *request,
                                      nsIInputStream *inStr,
                                      uint64_t sourceOffset, uint32_t count) {
   NS_ASSERTION(request, "FTP dir listing stream converter needs a request");
@@ -99,9 +99,9 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
   buffer[streamLen] = '\0';
 
   MOZ_LOG(gFTPDirListConvLog, LogLevel::Debug,
-          ("nsFTPDirListingConv::OnData(request = %p, ctxt = %p, inStr = %p, "
+          ("nsFTPDirListingConv::OnData(request = %p, inStr = %p, "
            "sourceOffset = %" PRIu64 ", count = %u)\n",
-           request, ctxt, inStr, sourceOffset, count));
+           request, inStr, sourceOffset, count));
 
   if (!mBuffer.IsEmpty()) {
     // we have data left over from a previous OnDataAvailable() call.
@@ -153,7 +153,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
   rv = NS_NewCStringInputStream(getter_AddRefs(inputData), indexFormat);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mFinalListener->OnDataAvailable(request, ctxt, inputData, 0,
+  rv = mFinalListener->OnDataAvailable(request, inputData, 0,
                                        indexFormat.Length());
 
   return rv;
@@ -161,18 +161,18 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
 
 // nsIRequestObserver implementation
 NS_IMETHODIMP
-nsFTPDirListingConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
+nsFTPDirListingConv::OnStartRequest(nsIRequest *request) {
   // we don't care about start. move along... but start masqeurading
   // as the http-index channel now.
-  return mFinalListener->OnStartRequest(request, ctxt);
+  return mFinalListener->OnStartRequest(request);
 }
 
 NS_IMETHODIMP
-nsFTPDirListingConv::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
+nsFTPDirListingConv::OnStopRequest(nsIRequest *request,
                                    nsresult aStatus) {
   // we don't care about stop. move along...
 
-  return mFinalListener->OnStopRequest(request, ctxt, aStatus);
+  return mFinalListener->OnStopRequest(request, aStatus);
 }
 
 // nsFTPDirListingConv methods

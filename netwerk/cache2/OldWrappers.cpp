@@ -496,13 +496,6 @@ nsresult GetCacheSessionNameForStoragePolicy(
         break;
     }
   }
-  // WYCIWYG
-  else if (scheme.EqualsLiteral("wyciwyg")) {
-    if (isPrivate)
-      sessionName.AssignLiteral("wyciwyg-private");
-    else
-      sessionName.AssignLiteral("wyciwyg");
-  }
   // FTP
   else if (scheme.EqualsLiteral("ftp")) {
     if (isPrivate)
@@ -621,7 +614,7 @@ nsresult _OldCacheLoad::Start() {
 
   // Consumers that can invoke this code as first and off the main thread
   // are responsible for initiating these two services on the main thread.
-  // Currently this is only nsWyciwygChannel.
+  // Currently no one does that.
 
   // XXX: Start the cache service; otherwise DispatchToCacheIOThread will
   // fail.
@@ -923,14 +916,7 @@ NS_IMETHODIMP _OldStorage::AsyncEvictStorage(
     rv = session->EvictEntries();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = GetCacheSession(NS_LITERAL_CSTRING("wyciwyg"), mWriteToDisk, mLoadInfo,
-                         mAppCache, getter_AddRefs(session));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = session->EvictEntries();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // This clears any data from scheme other then http, wyciwyg or ftp
+    // This clears any data from schemes other than http or ftp.
     rv = GetCacheSession(EmptyCString(), mWriteToDisk, mLoadInfo, mAppCache,
                          getter_AddRefs(session));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1019,9 +1005,6 @@ nsresult _OldStorage::AssembleCacheKey(nsIURI *aURI,
     if (!aCacheKey.IsEmpty()) {
       aCacheKey.AppendLiteral("uri=");
     }
-  } else if (aScheme.EqualsLiteral("wyciwyg")) {
-    rv = aURI->GetSpec(uriSpec);
-    NS_ENSURE_SUCCESS(rv, rv);
   } else {
     rv = aURI->GetAsciiSpec(uriSpec);
     NS_ENSURE_SUCCESS(rv, rv);

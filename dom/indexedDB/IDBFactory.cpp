@@ -802,21 +802,6 @@ nsresult IDBFactory::InitiateRequest(IDBOpenDBRequest* aRequest,
   return NS_OK;
 }
 
-void IDBFactory::RebindToNewWindow(nsPIDOMWindowInner* aNewWindow) {
-  MOZ_DIAGNOSTIC_ASSERT(aNewWindow);
-  MOZ_DIAGNOSTIC_ASSERT(mWindow);
-  MOZ_DIAGNOSTIC_ASSERT(aNewWindow != mWindow);
-
-  mWindow->UpdateActiveIndexedDBTransactionCount(-1 * mActiveTransactionCount);
-  mWindow->UpdateActiveIndexedDBDatabaseCount(-1 * mActiveDatabaseCount);
-
-  mWindow = aNewWindow;
-
-  mInnerWindowID = aNewWindow->WindowID();
-  mWindow->UpdateActiveIndexedDBTransactionCount(mActiveTransactionCount);
-  mWindow->UpdateActiveIndexedDBDatabaseCount(mActiveDatabaseCount);
-}
-
 void IDBFactory::DisconnectFromWindow(nsPIDOMWindowInner* aOldWindow) {
   MOZ_DIAGNOSTIC_ASSERT(aOldWindow);
   // If CC unlinks us first, then mWindow might be nullptr

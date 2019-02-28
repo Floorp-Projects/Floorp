@@ -281,8 +281,8 @@ void nsBaseChannel::ContinueHandleAsyncRedirect(nsresult result) {
 
   if (NS_FAILED(result) && mListener) {
     // Notify our consumer ourselves
-    mListener->OnStartRequest(this, nullptr);
-    mListener->OnStopRequest(this, nullptr, mStatus);
+    mListener->OnStartRequest(this);
+    mListener->OnStopRequest(this, mStatus);
     ChannelDone();
   }
 
@@ -739,7 +739,7 @@ static void CallUnknownTypeSniffer(void *aClosure, const uint8_t *aData,
 }
 
 NS_IMETHODIMP
-nsBaseChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
+nsBaseChannel::OnStartRequest(nsIRequest *request) {
   MOZ_ASSERT_IF(mRequest, request == mRequest);
 
   if (mPump) {
@@ -760,12 +760,12 @@ nsBaseChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
   SUSPEND_PUMP_FOR_SCOPE();
 
   if (mListener)  // null in case of redirect
-    return mListener->OnStartRequest(this, nullptr);
+    return mListener->OnStartRequest(this);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBaseChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
+nsBaseChannel::OnStopRequest(nsIRequest *request,
                              nsresult status) {
   // If both mStatus and status are failure codes, we keep mStatus as-is since
   // that is consistent with our GetStatus and Cancel methods.
@@ -777,7 +777,7 @@ nsBaseChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
   mPumpingData = false;
 
   if (mListener)  // null in case of redirect
-    mListener->OnStopRequest(this, nullptr, mStatus);
+    mListener->OnStopRequest(this, mStatus);
   ChannelDone();
 
   // No need to suspend pump in this scope since we will not be receiving
@@ -796,13 +796,13 @@ nsBaseChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 // nsBaseChannel::nsIStreamListener
 
 NS_IMETHODIMP
-nsBaseChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
+nsBaseChannel::OnDataAvailable(nsIRequest *request,
                                nsIInputStream *stream, uint64_t offset,
                                uint32_t count) {
   SUSPEND_PUMP_FOR_SCOPE();
 
   nsresult rv =
-      mListener->OnDataAvailable(this, nullptr, stream, offset, count);
+      mListener->OnDataAvailable(this, stream, offset, count);
   if (mSynthProgressEvents && NS_SUCCEEDED(rv)) {
     int64_t prog = offset + count;
     if (NS_IsMainThread()) {

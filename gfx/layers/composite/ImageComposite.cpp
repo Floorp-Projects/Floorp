@@ -112,6 +112,7 @@ int ImageComposite::ChooseImageIndex() {
     // or the immediately next one. We can assume that the frames not returned
     // have been dropped as they were too late to be displayed
     mDroppedFrames += result - mLastChosenImageIndex - 1;
+    PROFILER_ADD_MARKER("Video frames dropped", GRAPHICS);
   }
   mLastChosenImageIndex = result;
   return result;
@@ -182,6 +183,7 @@ uint32_t ImageComposite::ScanForLastFrameIndex(
   }
   if (dropped > 0) {
     mDroppedFrames += dropped;
+    PROFILER_ADD_MARKER("Video frames dropped", GRAPHICS);
   }
   if (newIndex >= aNewImages.Length()) {
     // Somehow none of those images should be rendered (can this happen?)

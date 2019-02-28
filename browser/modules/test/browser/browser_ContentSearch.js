@@ -5,7 +5,6 @@
 const TEST_MSG = "ContentSearchTest";
 const CONTENT_SEARCH_MSG = "ContentSearch";
 const TEST_CONTENT_SCRIPT_BASENAME = "contentSearch.js";
-const HANDOFF_TO_AWESOMEBAR_PREF = "browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar";
 
 /* import-globals-from ../../../components/search/test/browser/head.js */
 Services.scriptloader.loadSubScript(
@@ -23,9 +22,6 @@ add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.newtab.preload", false],
-      // Hack: set this pref to make sure the expected
-      // optimization for non-data URIs kicks in.
-      [HANDOFF_TO_AWESOMEBAR_PREF, true],
     ],
   });
 
@@ -398,8 +394,7 @@ function iconDataFromURI(uri) {
     return Promise.resolve(null);
   }
 
-  if (!uri.startsWith("data:") &&
-      Services.prefs.getBoolPref(HANDOFF_TO_AWESOMEBAR_PREF)) {
+  if (!uri.startsWith("data:")) {
     plainURIIconTested = true;
     return Promise.resolve(uri);
   }

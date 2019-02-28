@@ -151,6 +151,9 @@ namespace jit {
 // for access to a particular OperandId, and the register allocator will
 // generate the required code to fill that request.
 //
+// Input OperandIds should be considered as immutable, and should not be mutated
+// during the execution of a stub.
+//
 // There are also a number of RAII classes that interact with the register
 // allocator, in order to provide access to more registers than just those
 // provided for by the OperandIds.

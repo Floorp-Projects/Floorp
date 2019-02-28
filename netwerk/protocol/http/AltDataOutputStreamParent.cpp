@@ -42,21 +42,29 @@ mozilla::ipc::IPCResult AltDataOutputStreamParent::RecvWriteData(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult AltDataOutputStreamParent::RecvClose() {
+mozilla::ipc::IPCResult AltDataOutputStreamParent::RecvClose(
+    const nsresult& aStatus) {
   if (NS_FAILED(mStatus)) {
     if (mIPCOpen) {
       Unused << SendError(mStatus);
     }
     return IPC_OK();
   }
-  nsresult rv;
-  if (mOutputStream) {
-    rv = mOutputStream->Close();
-    if (NS_FAILED(rv) && mIPCOpen) {
-      Unused << SendError(rv);
-    }
-    mOutputStream = nullptr;
+
+  if (!mOutputStream) {
+    return IPC_OK();
   }
+
+  nsCOMPtr<nsIAsyncOutputStream> asyncOutputStream =
+      do_QueryInterface(mOutputStream);
+  MOZ_ASSERT(asyncOutputStream);
+
+  nsresult rv = asyncOutputStream->CloseWithStatus(aStatus);
+  if (NS_FAILED(rv) && mIPCOpen) {
+    Unused << SendError(rv);
+  }
+
+  mOutputStream = nullptr;
   return IPC_OK();
 }
 

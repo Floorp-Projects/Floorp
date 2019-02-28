@@ -16,8 +16,7 @@ class HLSResourceCallbacksSupport;
 
 class HLSDecoder final : public MediaDecoder {
  public:
-  // MediaDecoder interface.
-  explicit HLSDecoder(MediaDecoderInit& aInit);
+  static RefPtr<HLSDecoder> Create(MediaDecoderInit& aInit);
 
   // Returns true if the HLS backend is pref'ed on.
   static bool IsEnabled();
@@ -29,6 +28,7 @@ class HLSDecoder final : public MediaDecoder {
 
   nsresult Load(nsIChannel* aChannel);
 
+  // MediaDecoder interface.
   void Play() override;
 
   void Pause() override;
@@ -46,6 +46,8 @@ class HLSDecoder final : public MediaDecoder {
  private:
   friend class HLSResourceCallbacksSupport;
 
+  explicit HLSDecoder(MediaDecoderInit& aInit);
+  ~HLSDecoder();
   MediaDecoderStateMachine* CreateStateMachine();
 
   bool CanPlayThroughImpl() final {
@@ -53,6 +55,8 @@ class HLSDecoder final : public MediaDecoder {
     // For now we just return true for 'autoplay' can work.
     return true;
   }
+
+  static size_t sAllocatedInstances;  // Access only in the main thread.
 
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIURI> mURI;

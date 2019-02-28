@@ -389,19 +389,6 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   inline nsIDocShell* GetDocShell() const;
 
   /**
-   * Set a new document in the window. Calling this method will in most cases
-   * create a new inner window. The call will be forewarded to the outer window,
-   * if the inner window is not the current inner window an
-   * NS_ERROR_NOT_AVAILABLE error code will be returned. This may be called with
-   * a pointer to the current document, in that case the document remains
-   * unchanged, but a new inner window will be created.
-   *
-   * aDocument must not be null.
-   */
-  virtual nsresult SetNewDocument(Document* aDocument, nsISupports* aState,
-                                  bool aForceReuseInnerWindow) = 0;
-
-  /**
    * Call this to indicate that some node (this window, its document,
    * or content in that document) has a paint event listener.
    */

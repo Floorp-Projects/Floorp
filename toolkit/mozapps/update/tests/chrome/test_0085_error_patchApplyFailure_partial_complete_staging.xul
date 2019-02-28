@@ -25,13 +25,13 @@
 // button in the download's onStopRequest event listener.
 
 const testDownloadListener = {
-  onStartRequest(aRequest, aContext) { },
+  onStartRequest(aRequest) { },
 
   onProgress(aRequest, aContext, aProgress, aMaxProgress) { },
 
   onStatus(aRequest, aContext, aStatus, aStatusText) { },
 
-  onStopRequest(aRequest, aContext, aStatus) {
+  onStopRequest(aRequest, aStatus) {
     debugDump("clicking errorpatching page next button");
     gDocElem.getButton("next").click();
     gAUS.removeDownloadListener(this);

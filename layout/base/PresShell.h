@@ -671,6 +671,23 @@ class PresShell final : public nsIPresShell,
                                             WidgetGUIEvent* aGUIEvent);
 
     /**
+     * ComputeEventTargetFrameAndPresShellAtEventPoint() computes event
+     * target frame at the event point of aGUIEvent and set it to
+     * aEventTargetData.
+     *
+     * @param aRootFrameToHandleEvent   The root frame to handle aGUIEvent.
+     * @param aGUIEvent                 The handling event.
+     * @param aEventTargetData          [out] Its frame and PresShell will
+     *                                  be set.
+     * @return                          true if the caller can handle the
+     *                                  event.  Otherwise, false.
+     */
+    MOZ_CAN_RUN_SCRIPT
+    bool ComputeEventTargetFrameAndPresShellAtEventPoint(
+        nsIFrame* aRootFrameToHandleEvent, WidgetGUIEvent* aGUIEvent,
+        EventTargetData* aEventTargetData);
+
+    /**
      * MaybeDiscardEvent() checks whether it's safe to handle aGUIEvent right
      * now.  If it's not safe, this may notify somebody of discarding event if
      * necessary.

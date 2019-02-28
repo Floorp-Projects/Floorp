@@ -90,7 +90,29 @@ void HLSResourceCallbacksSupport::OnError(int aErrorCode) {
       }));
 }
 
-HLSDecoder::HLSDecoder(MediaDecoderInit& aInit) : MediaDecoder(aInit) {}
+size_t HLSDecoder::sAllocatedInstances = 0;
+
+// static
+RefPtr<HLSDecoder> HLSDecoder::Create(MediaDecoderInit& aInit) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  return sAllocatedInstances < StaticPrefs::MediaHlsMaxAllocations()
+             ? new HLSDecoder(aInit)
+             : nullptr;
+}
+
+HLSDecoder::HLSDecoder(MediaDecoderInit& aInit) : MediaDecoder(aInit) {
+  MOZ_ASSERT(NS_IsMainThread());
+  sAllocatedInstances++;
+  HLS_DEBUG("HLSDecoder", "HLSDecoder(): allocated=%zu", sAllocatedInstances);
+}
+
+HLSDecoder::~HLSDecoder() {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(sAllocatedInstances > 0);
+  sAllocatedInstances--;
+  HLS_DEBUG("HLSDecoder", "~HLSDecoder(): allocated=%zu", sAllocatedInstances);
+}
 
 MediaDecoderStateMachine* HLSDecoder::CreateStateMachine() {
   MOZ_ASSERT(NS_IsMainThread());

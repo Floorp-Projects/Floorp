@@ -88,7 +88,7 @@ function makeChan(headerIdx, bodyIdx) {
 
 function makeListener(headerIdx, bodyIdx) {
   var listener = {
-    onStartRequest : function test_onStartR(request, ctx) {
+    onStartRequest : function test_onStartR(request) {
       try {
         var chan = request.QueryInterface(Ci.nsIChannel);
 
@@ -122,7 +122,7 @@ function makeListener(headerIdx, bodyIdx) {
       do_throw("Should not get any data!");
     },
 
-    onStopRequest: function test_onStopR(request, ctx, status) {
+    onStopRequest: function test_onStopR(request, status) {
       // Advance to next test
       ++headerIdx;
       if (headerIdx == contentTypeHeaderList.length) {
