@@ -790,14 +790,14 @@ permalink: /changelog/
 
 * **feature-tabs**
   * Added support to remove all or specific types of tabs to the `TabsUseCases`.
-  
+
   ```kotlin
   // Remove all tabs
-  tabsUseCases.removeAllTabs()
+  tabsUseCases.removeAllTabs.invoke()
   // Remove all regular tabs
-  tabsUseCases.removeAllTabsOfType(private = false)
+  tabsUseCases.removeAllTabsOfType.invoke(private = false)
   // Remove all private tabs
-  tabsUseCases.removeAllTabsOfType(private = true)
+  tabsUseCases.removeAllTabsOfType.invoke(private = true)
   ```
 
 * **support-ktx**
