@@ -78,7 +78,7 @@ var f = wasmEvalText('(module (import $imp "a" "b" (result i64)) (func $f (resul
 assertErrorMessage(f, TypeError, /i64/);
 
 wasmFullPassI64('(module (func $run (result i64) (i64.const 123)))', 123);
-wasmFullPassI64('(module (func $run (param i64) (result i64) (get_local 0)))',
+wasmFullPassI64('(module (func $run (param i64) (result i64) (local.get 0)))',
                 '0x123400007fffffff',
                 {},
                 '(i64.const 0x123400007fffffff)');
@@ -180,7 +180,7 @@ assertEq(wasmEvalText('(module (func (param i32) (result i32) (get_local 0)) (ex
 assertEq(wasmEvalText('(module (func (param i32) (param i32) (result i32) (get_local 0)) (export "" 0))').exports[""](42, 43), 42);
 assertEq(wasmEvalText('(module (func (param i32) (param i32) (result i32) (get_local 1)) (export "" 0))').exports[""](42, 43), 43);
 
-wasmFailValidateText('(module (func (get_local 0)))', /get_local index out of range/);
+wasmFailValidateText('(module (func (get_local 0)))', /local.get index out of range/);
 wasmFailValidateText('(module (func (result f32) (local i32) (get_local 0)))', mismatchError("i32", "f32"));
 wasmFailValidateText('(module (func (result i32) (local f32) (get_local 0)))', mismatchError("f32", "i32"));
 wasmFailValidateText('(module (func (result f32) (param i32) (local f32) (get_local 0)))', mismatchError("i32", "f32"));
@@ -193,7 +193,7 @@ wasmFullPass('(module (func (result i32) (local i32) (get_local 0)) (export "run
 wasmFullPass('(module (func (result i32) (param i32) (local f32) (get_local 0)) (export "run" 0))', 0);
 wasmFullPass('(module (func (result f32) (param i32) (local f32) (get_local 1)) (export "run" 0))', 0);
 
-wasmFailValidateText('(module (func (set_local 0 (i32.const 0))))', /set_local index out of range/);
+wasmFailValidateText('(module (func (local.set 0 (i32.const 0))))', /local.set index out of range/);
 wasmFailValidateText('(module (func (local f32) (set_local 0 (i32.const 0))))', mismatchError("i32", "f32"));
 wasmFailValidateText('(module (func (local f32) (set_local 0 (nop))))', emptyStackError);
 wasmFailValidateText('(module (func (local i32) (local f32) (set_local 0 (get_local 1))))', mismatchError("f32", "i32"));

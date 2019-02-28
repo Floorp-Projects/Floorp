@@ -1954,7 +1954,7 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
       const GlobalDescVector& globals = env->globals;
       if (!d.readVarU32(&i)) {
         return d.fail(
-            "failed to read get_global index in initializer expression");
+            "failed to read global.get index in initializer expression");
       }
       if (i >= globals.length()) {
         return d.fail("global index out of range in initializer expression");

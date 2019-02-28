@@ -2463,7 +2463,7 @@ const Class WasmGlobalObject::class_ = {
   }
 
   MOZ_ASSERT(obj->isNewborn());
-  MOZ_ASSERT(obj->isTenured(), "assumed by set_global post barriers");
+  MOZ_ASSERT(obj->isTenured(), "assumed by global.set post barriers");
 
   // It's simpler to initialize the cell after the object has been created,
   // to avoid needing to root the cell before the object creation.
