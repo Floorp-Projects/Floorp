@@ -62,6 +62,25 @@ void MediaEngineWebRTC::EnumerateVideoDevices(
    * mVideoSources must be updated.
    */
   int num;
+#if defined(_ARM64_) && defined(XP_WIN)
+  // There are problems with using DirectShow on versions of Windows before
+  // 19H1 on arm64. This disables the camera on older versions of Windows.
+  if (aCapEngine == camera::CameraEngine) {
+    typedef ULONG (*RtlGetVersionFn)(LPOSVERSIONINFOEXW);
+    RtlGetVersionFn RtlGetVersion;
+    RtlGetVersion = (RtlGetVersionFn)GetProcAddress(GetModuleHandleA("ntdll"),
+                                                    "RtlGetVersion");
+    if (RtlGetVersion) {
+      OSVERSIONINFOEXW info;
+      info.dwOSVersionInfoSize = sizeof(info);
+      RtlGetVersion(&info);
+      // 19H1 is 18346
+      if (info.dwBuildNumber < 18346) {
+        return;
+      }
+    }
+  }
+#endif
   num = mozilla::camera::GetChildAndCall(
       &mozilla::camera::CamerasChild::NumberOfCaptureDevices, aCapEngine);
 

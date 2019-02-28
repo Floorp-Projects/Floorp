@@ -319,12 +319,12 @@ class CopierCallbacks final : public nsIRequestObserver {
 NS_IMPL_ISUPPORTS(CopierCallbacks, nsIRequestObserver)
 
 NS_IMETHODIMP
-CopierCallbacks::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
+CopierCallbacks::OnStartRequest(nsIRequest* aRequest) {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CopierCallbacks::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+CopierCallbacks::OnStopRequest(nsIRequest* aRequest,
                                nsresult aStatus) {
   mOwner->NotifyCopyComplete(aStatus);
   mOwner = nullptr;
@@ -932,12 +932,12 @@ TCPSocket::OnInputStreamReady(nsIAsyncInputStream* aStream) {
 }
 
 NS_IMETHODIMP
-TCPSocket::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) {
+TCPSocket::OnStartRequest(nsIRequest* aRequest) {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TCPSocket::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+TCPSocket::OnDataAvailable(nsIRequest* aRequest,
                            nsIInputStream* aStream, uint64_t aOffset,
                            uint32_t aCount) {
   if (mUseArrayBuffers) {
@@ -994,7 +994,7 @@ TCPSocket::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
 }
 
 NS_IMETHODIMP
-TCPSocket::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+TCPSocket::OnStopRequest(nsIRequest* aRequest,
                          nsresult aStatus) {
   mInputStreamPump = nullptr;
 

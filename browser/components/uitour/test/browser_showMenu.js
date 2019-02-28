@@ -3,6 +3,8 @@
 const CONTROL_CENTER_PANEL = gIdentityHandler._identityPopup;
 const CONTROL_CENTER_MENU_NAME = "controlCenter";
 
+const {UrlbarTestUtils} = ChromeUtils.import("resource://testing-common/UrlbarTestUtils.jsm");
+
 var gTestTab;
 var gContentAPI;
 var gContentWindow;
@@ -43,15 +45,9 @@ add_UITour_task(async function test_hideMenu_controlCenter() {
 });
 
 add_UITour_task(async function test_showMenu_hideMenu_urlbarPopup() {
-  let shownPromise = promisePanelElementShown(window, gURLBar.popup);
-  await showMenuPromise("urlbar");
-  await shownPromise;
-  is(gURLBar.popup.state, "open", "The urlbar popup should open after showMenu");
-  is(gURLBar.controller.searchString, "Firefox", "Search string is Firefox");
-  let hidePromise = promisePanelElementHidden(window, gURLBar.popup);
-  await gContentAPI.hideMenu("urlbar");
-  await hidePromise;
-  is(gURLBar.popup.state, "closed", "The urlbar popup should close after hideMenu");
+  await UrlbarTestUtils.promisePopupOpen(window, () => showMenuPromise("urlbar"));
+  is(gURLBar.value, "Firefox", "Search string is Firefox");
+  await UrlbarTestUtils.promisePopupClose(window, () => gContentAPI.hideMenu("urlbar"));
 });
 
 add_UITour_task(async function test_showMenu_hideMenu_pageActionPanel() {

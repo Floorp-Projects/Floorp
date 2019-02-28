@@ -24,8 +24,6 @@ const OUTBOUND_MESSAGE = INBOUND_MESSAGE;
 const MAX_LOCAL_SUGGESTIONS = 3;
 const MAX_SUGGESTIONS = 6;
 
-const HANDOFF_TO_AWESOMEBAR_PREF = "browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar";
-
 /**
  * ContentSearch receives messages named INBOUND_MESSAGE and sends messages
  * named OUTBOUND_MESSAGE.  The data of each message is expected to look like
@@ -532,13 +530,7 @@ var ContentSearch = {
     // If the URI is not a data: URI, there's no point in converting
     // it to an arraybuffer (which is used to optimize passing the data
     // accross processes): we can just pass the original URI, which is cheaper.
-    //
-    // There's a catch, though: the previous UI (search one-off buttons)
-    // doesn't work with .ico files. So, if the pref for the new UI
-    // is not toggled, we skip this optimization and let all icons be
-    // sent as array buffers.
-    if (!uri.startsWith("data:") &&
-        Services.prefs.getBoolPref(HANDOFF_TO_AWESOMEBAR_PREF)) {
+    if (!uri.startsWith("data:")) {
       return Promise.resolve(uri);
     }
 

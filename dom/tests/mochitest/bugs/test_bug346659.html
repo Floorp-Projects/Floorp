@@ -108,7 +108,7 @@ function messageReceiver(evt) {
       is(testResult, "undefined", "Props on new window's child should go away when loading");
       break;
     case 6:
-      is(testResult, "undefined", "Props on new window's child should go away when writing");
+      is(testResult, "6", "Props on new window's child should not go away when writing");
       break;
     case 7:
       is(testResult, "7", "Props on different-domain window opened from different-domain new window can stay");

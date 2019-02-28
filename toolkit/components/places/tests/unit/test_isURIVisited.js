@@ -19,7 +19,6 @@ const SCHEMES = {
   "chrome://browser/content/browser.xul?": false,
   "resource://": false,
   "data:,": false,
-  "wyciwyg:/0/http://": false,
   "javascript:": false,
 };
 

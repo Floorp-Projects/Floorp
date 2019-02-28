@@ -49,6 +49,10 @@ class SandboxPolicyBase : public sandbox::bpf_dsl::Policy {
     return Nothing();
   }
 #endif
+
+  // Returns true if the running kernel supports separate syscalls for
+  // socket operations, or false if it supports only socketcall(2).
+  static bool HasSeparateSocketCalls();
 };
 
 }  // namespace mozilla

@@ -1149,25 +1149,24 @@ class InterceptFailedOnStop : public nsIStreamListener {
       : mNext(arg), mChannel(chan) {}
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  NS_IMETHOD OnStartRequest(nsIRequest* aRequest,
-                            nsISupports* aContext) override {
-    return mNext->OnStartRequest(aRequest, aContext);
+  NS_IMETHOD OnStartRequest(nsIRequest* aRequest) override {
+    return mNext->OnStartRequest(aRequest);
   }
 
-  NS_IMETHOD OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+  NS_IMETHOD OnStopRequest(nsIRequest* aRequest,
                            nsresult aStatusCode) override {
     if (NS_FAILED(aStatusCode) && NS_SUCCEEDED(mChannel->mStatus)) {
       LOG(("HttpBaseChannel::InterceptFailedOnStop %p seting status %" PRIx32,
            mChannel, static_cast<uint32_t>(aStatusCode)));
       mChannel->mStatus = aStatusCode;
     }
-    return mNext->OnStopRequest(aRequest, aContext, aStatusCode);
+    return mNext->OnStopRequest(aRequest, aStatusCode);
   }
 
-  NS_IMETHOD OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
+  NS_IMETHOD OnDataAvailable(nsIRequest* aRequest,
                              nsIInputStream* aInputStream, uint64_t aOffset,
                              uint32_t aCount) override {
-    return mNext->OnDataAvailable(aRequest, aContext, aInputStream, aOffset,
+    return mNext->OnDataAvailable(aRequest, aInputStream, aOffset,
                                   aCount);
   }
 };
@@ -1667,39 +1666,6 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI* referrer,
 
   nsCOMPtr<nsIURI> referrerGrip;
   bool match;
-
-  //
-  // Strip off "wyciwyg://123/" from wyciwyg referrers.
-  //
-  // XXX this really belongs elsewhere since wyciwyg URLs aren't part of necko.
-  //   perhaps some sort of generic nsINestedURI could be used.  then, if an URI
-  //   fails the whitelist test, then we could check for an inner URI and try
-  //   that instead.  though, that might be too automatic.
-  //
-  rv = referrer->SchemeIs("wyciwyg", &match);
-  if (NS_FAILED(rv)) return rv;
-  if (match) {
-    nsAutoCString path;
-    rv = referrer->GetPathQueryRef(path);
-    if (NS_FAILED(rv)) return rv;
-
-    uint32_t pathLength = path.Length();
-    if (pathLength <= 2) return NS_ERROR_FAILURE;
-
-    // Path is of the form "//123/http://foo/bar", with a variable number of
-    // digits. To figure out where the "real" URL starts, search path for a
-    // '/', starting at the third character.
-    int32_t slashIndex = path.FindChar('/', 2);
-    if (slashIndex == kNotFound) return NS_ERROR_FAILURE;
-
-    // Replace |referrer| with a URI without wyciwyg://123/.
-    rv =
-        NS_NewURI(getter_AddRefs(referrerGrip),
-                  Substring(path, slashIndex + 1, pathLength - slashIndex - 1));
-    if (NS_FAILED(rv)) return rv;
-
-    referrer = referrerGrip.get();
-  }
 
   // Enforce Referrer whitelist
   if (!IsReferrerSchemeAllowed(referrer)) {
@@ -3297,7 +3263,7 @@ void HttpBaseChannel::DoNotifyListener() {
 
   if (mListener && !mOnStartRequestCalled) {
     nsCOMPtr<nsIStreamListener> listener = mListener;
-    listener->OnStartRequest(this, nullptr);
+    listener->OnStartRequest(this);
 
     mOnStartRequestCalled = true;
   }
@@ -3309,7 +3275,7 @@ void HttpBaseChannel::DoNotifyListener() {
 
   if (mListener && !mOnStopRequestCalled) {
     nsCOMPtr<nsIStreamListener> listener = mListener;
-    listener->OnStopRequest(this, nullptr, mStatus);
+    listener->OnStopRequest(this, mStatus);
 
     mOnStopRequestCalled = true;
   }

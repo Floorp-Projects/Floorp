@@ -20,6 +20,8 @@ class SandboxBrokerPolicyFactory {
                                                     bool aFileProcess);
 #endif
 
+  static UniquePtr<SandboxBroker::Policy> GetUtilityPolicy(int aPid);
+
  private:
   UniquePtr<const SandboxBroker::Policy> mCommonContentPolicy;
   static void AddDynamicPathList(SandboxBroker::Policy* policy,

@@ -1829,8 +1829,7 @@ NS_IMPL_ISUPPORTS(ThreatHitReportListener, nsIStreamListener,
                   nsIRequestObserver)
 
 NS_IMETHODIMP
-ThreatHitReportListener::OnStartRequest(nsIRequest* aRequest,
-                                        nsISupports* aContext) {
+ThreatHitReportListener::OnStartRequest(nsIRequest* aRequest) {
   if (!LOG_ENABLED()) {
     return NS_OK;  // Nothing to do!
   }
@@ -1871,7 +1870,6 @@ ThreatHitReportListener::OnStartRequest(nsIRequest* aRequest,
 
 NS_IMETHODIMP
 ThreatHitReportListener::OnDataAvailable(nsIRequest* aRequest,
-                                         nsISupports* aContext,
                                          nsIInputStream* aInputStream,
                                          uint64_t aOffset, uint32_t aCount) {
   return NS_OK;
@@ -1879,7 +1877,6 @@ ThreatHitReportListener::OnDataAvailable(nsIRequest* aRequest,
 
 NS_IMETHODIMP
 ThreatHitReportListener::OnStopRequest(nsIRequest* aRequest,
-                                       nsISupports* aContext,
                                        nsresult aStatus) {
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
   NS_ENSURE_TRUE(httpChannel, aStatus);

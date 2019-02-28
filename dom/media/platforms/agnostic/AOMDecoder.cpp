@@ -15,6 +15,7 @@
 #include "nsError.h"
 #include "prsystem.h"
 #include "ImageContainer.h"
+#include "nsThreadUtils.h"
 
 #include <algorithm>
 
@@ -47,17 +48,17 @@ static MediaResult InitContext(AOMDecoder& aAOMDecoder, aom_codec_ctx_t* aCtx,
                        RESULT_DETAIL("Couldn't get AV1 decoder interface."));
   }
 
-  int decode_threads = 2;
+  size_t decode_threads = 2;
   if (aInfo.mDisplay.width >= 2048) {
     decode_threads = 8;
   } else if (aInfo.mDisplay.width >= 1024) {
     decode_threads = 4;
   }
-  decode_threads = std::min(decode_threads, PR_GetNumberOfProcessors());
+  decode_threads = std::min(decode_threads, GetNumberOfProcessors());
 
   aom_codec_dec_cfg_t config;
   PodZero(&config);
-  config.threads = decode_threads;
+  config.threads = static_cast<unsigned int>(decode_threads);
   config.w = config.h = 0;  // set after decode
   config.allow_lowbitdepth = true;
 

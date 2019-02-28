@@ -1260,10 +1260,10 @@ class MozBrowser extends MozElementMixin(XULFrameElement) {
           }
 
           let menulist = document.getElementById(this.getAttribute("selectmenulist"));
-          menulist.menupopup.style.direction = data.direction;
-          this._selectParentHelper.populate(menulist, data.options, data.selectedIndex, this._fullZoom,
-            data.uaSelectBackgroundColor, data.uaSelectColor,
-            data.selectBackgroundColor, data.selectColor, data.selectTextShadow);
+          menulist.menupopup.style.direction = data.style.direction;
+          this._selectParentHelper.populate(menulist, data.options.options,
+            data.options.uniqueStyles, data.selectedIndex, this._fullZoom,
+            data.defaultStyle, data.style);
           this._selectParentHelper.open(this, menulist, data.rect, data.isOpenedViaTouch);
           break;
         }
@@ -1313,10 +1313,9 @@ class MozBrowser extends MozElementMixin(XULFrameElement) {
 
           let zoom = Services.prefs.getBoolPref("browser.zoom.full") ||
             this.isSyntheticDocument ? this._fullZoom : this._textZoom;
-          this._selectParentHelper.populate(menulist, data.options, data.selectedIndex,
-            zoom,
-            data.uaSelectBackgroundColor, data.uaSelectColor,
-            data.selectBackgroundColor, data.selectColor, data.selectTextShadow);
+          this._selectParentHelper.populate(menulist, data.options.options,
+            data.options.uniqueStyles, data.selectedIndex, zoom,
+            data.defaultStyle, data.style);
           this._selectParentHelper.open(this, menulist, data.rect, data.isOpenedViaTouch);
           break;
         }

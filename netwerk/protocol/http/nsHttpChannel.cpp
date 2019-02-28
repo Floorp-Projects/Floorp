@@ -1630,7 +1630,7 @@ nsresult nsHttpChannel::CallOnStartRequest() {
 
     if (mListener) {
       nsCOMPtr<nsIStreamListener> deleteProtector(mListener);
-      deleteProtector->OnStartRequest(this, nullptr);
+      deleteProtector->OnStartRequest(this);
     }
 
     mOnStartRequestCalled = true;
@@ -1702,7 +1702,7 @@ nsresult nsHttpChannel::CallOnStartRequest() {
     MOZ_ASSERT(!mOnStartRequestCalled,
                "We should not call OsStartRequest twice");
     nsCOMPtr<nsIStreamListener> deleteProtector(mListener);
-    rv = deleteProtector->OnStartRequest(this, nullptr);
+    rv = deleteProtector->OnStartRequest(this);
     mOnStartRequestCalled = true;
     if (NS_FAILED(rv)) return rv;
   } else {
@@ -7311,7 +7311,7 @@ nsHttpChannel::HasCrossOriginOpenerPolicyMismatch(bool *aMismatch) {
 }
 
 NS_IMETHODIMP
-nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
+nsHttpChannel::OnStartRequest(nsIRequest *request) {
   nsresult rv;
 
   MOZ_ASSERT(mRequestObserversCalled);
@@ -7535,7 +7535,7 @@ nsresult nsHttpChannel::ContinueOnStartRequest4(nsresult result) {
 }
 
 NS_IMETHODIMP
-nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
+nsHttpChannel::OnStopRequest(nsIRequest *request,
                              nsresult status) {
   AUTO_PROFILER_LABEL("nsHttpChannel::OnStopRequest", NETWORK);
 
@@ -7740,7 +7740,7 @@ nsresult nsHttpChannel::ContinueOnStopRequestAfterAuthRetry(
     if (mListener) {
       MOZ_ASSERT(!mOnStartRequestCalled,
                  "We should not call OnStartRequest twice.");
-      mListener->OnStartRequest(this, nullptr);
+      mListener->OnStartRequest(this);
       mOnStartRequestCalled = true;
     } else {
       NS_WARNING("OnStartRequest skipped because of null listener");
@@ -7943,7 +7943,7 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
     MOZ_ASSERT(mOnStartRequestCalled,
                "OnStartRequest should be called before OnStopRequest");
     MOZ_ASSERT(!mOnStopRequestCalled, "We should not call OnStopRequest twice");
-    mListener->OnStopRequest(this, nullptr, aStatus);
+    mListener->OnStopRequest(this, aStatus);
     mOnStopRequestCalled = true;
   }
 
@@ -8010,7 +8010,7 @@ class OnTransportStatusAsyncEvent : public Runnable {
 };
 
 NS_IMETHODIMP
-nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
+nsHttpChannel::OnDataAvailable(nsIRequest *request,
                                nsIInputStream *input, uint64_t offset,
                                uint32_t count) {
   nsresult rv;
@@ -8099,7 +8099,7 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
     }
 
     nsresult rv =
-        mListener->OnDataAvailable(this, nullptr, input, mLogicalOffset, count);
+        mListener->OnDataAvailable(this, input, mLogicalOffset, count);
     if (NS_SUCCEEDED(rv)) {
       // by contract mListener must read all of "count" bytes, but
       // nsInputStreamPump is tolerant to seekable streams that violate that

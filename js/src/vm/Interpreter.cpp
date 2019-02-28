@@ -4420,7 +4420,7 @@ bool js::GetProperty(JSContext* cx, HandleValue v, HandlePropertyName name,
 
   // Optimize common cases like (2).toString() or "foo".valueOf() to not
   // create a wrapper object.
-  if (v.isPrimitive() && !v.isNullOrUndefined() && !v.isBigInt()) {
+  if (v.isPrimitive() && !v.isNullOrUndefined()) {
     NativeObject* proto;
     if (v.isNumber()) {
       proto = GlobalObject::getOrCreateNumberPrototype(cx, cx->global());
@@ -4428,6 +4428,8 @@ bool js::GetProperty(JSContext* cx, HandleValue v, HandlePropertyName name,
       proto = GlobalObject::getOrCreateStringPrototype(cx, cx->global());
     } else if (v.isBoolean()) {
       proto = GlobalObject::getOrCreateBooleanPrototype(cx, cx->global());
+    } else if (v.isBigInt()) {
+      proto = GlobalObject::getOrCreateBigIntPrototype(cx, cx->global());
     } else {
       MOZ_ASSERT(v.isSymbol());
       proto = GlobalObject::getOrCreateSymbolPrototype(cx, cx->global());

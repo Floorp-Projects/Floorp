@@ -27,6 +27,7 @@ class MOZ_NON_TEMPORARY_CLASS ProcessRuntime final {
   ~ProcessRuntime() = default;
 
   explicit operator bool() const { return SUCCEEDED(mInitResult); }
+  HRESULT GetHResult() const { return mInitResult; }
 
   ProcessRuntime(ProcessRuntime&) = delete;
   ProcessRuntime(ProcessRuntime&&) = delete;

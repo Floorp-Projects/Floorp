@@ -45,11 +45,11 @@ function ChannelListener() {
 }
 
 ChannelListener.prototype = {
-  onStartRequest(request, context) { },
-  onDataAvailable(request, context, stream, offset, count) {
+  onStartRequest(request) { },
+  onDataAvailable(request, stream, offset, count) {
     do_throw("Should not get any data!");
   },
-  onStopRequest(request, context, status) {
+  onStopRequest(request, status) {
     var upgrade_insecure_header = false;
     try {
       if (request.getRequestHeader("Upgrade-Insecure-Requests")) {

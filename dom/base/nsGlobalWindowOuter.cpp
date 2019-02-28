@@ -1933,6 +1933,7 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
   }
 
   RefPtr<Document> oldDoc = mDoc;
+  MOZ_RELEASE_ASSERT(oldDoc != aDocument);
 
   AutoJSAPI jsapi;
   jsapi.Init();
@@ -2005,7 +2006,6 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
   NS_ASSERTION(!aState || wsh,
                "What kind of weird state are you giving me here?");
 
-  bool handleDocumentOpen = false;
   bool doomCurrentInner = false;
 
   JS::Rooted<JSObject*> newInnerGlobal(cx);
@@ -2016,9 +2016,7 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
     newInnerWindow = currentInner;
     newInnerGlobal = currentInner->GetWrapperPreserveColor();
 
-    if (aDocument != oldDoc) {
-      JS::ExposeObjectToActiveJS(newInnerGlobal);
-    }
+    JS::ExposeObjectToActiveJS(newInnerGlobal);
 
     // We're reusing the inner window, but this still counts as a navigation,
     // so all expandos and such defined on the outer window should go away.
@@ -2039,13 +2037,9 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
     nsIPrincipal* existing = nsJSPrincipals::get(JS::GetRealmPrincipals(realm));
     aDocument->NodePrincipal()->Equals(existing, &sameOrigin);
     MOZ_ASSERT(sameOrigin);
-    MOZ_ASSERT_IF(aDocument == oldDoc,
-                  xpc::GetRealmPrincipal(realm) == aDocument->NodePrincipal());
 #endif
-    if (aDocument != oldDoc) {
-      JS::SetRealmPrincipals(realm,
-                             nsJSPrincipals::get(aDocument->NodePrincipal()));
-    }
+    JS::SetRealmPrincipals(realm,
+                           nsJSPrincipals::get(aDocument->NodePrincipal()));
   } else {
     if (aState) {
       newInnerWindow = wsh->GetInnerWindow();
@@ -2091,10 +2085,6 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
     }
 
     if (currentInner && currentInner->GetWrapperPreserveColor()) {
-      if (oldDoc == aDocument) {
-        handleDocumentOpen = true;
-      }
-
       // Don't free objects on our current inner window if it's going to be
       // held in the bfcache.
       if (!currentInner->IsFrozen()) {
@@ -2221,26 +2211,25 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
 
   if (!aState) {
     if (reUseInnerWindow) {
-      if (newInnerWindow->mDoc != aDocument) {
-        newInnerWindow->mDoc = aDocument;
+      MOZ_RELEASE_ASSERT(newInnerWindow->mDoc != aDocument);
+      newInnerWindow->mDoc = aDocument;
 
-        // The storage objects contain the URL of the window. We have to
-        // recreate them when the innerWindow is reused.
-        newInnerWindow->mLocalStorage = nullptr;
-        newInnerWindow->mSessionStorage = nullptr;
-        newInnerWindow->mPerformance = nullptr;
+      // The storage objects contain the URL of the window. We have to
+      // recreate them when the innerWindow is reused.
+      newInnerWindow->mLocalStorage = nullptr;
+      newInnerWindow->mSessionStorage = nullptr;
+      newInnerWindow->mPerformance = nullptr;
 
-        // This must be called after nullifying the internal objects because
-        // here we could recreate them, calling the getter methods, and store
-        // them into the JS slots. If we nullify them after, the slot values and
-        // the objects will be out of sync.
-        newInnerWindow->ClearDocumentDependentSlots(cx);
+      // This must be called after nullifying the internal objects because
+      // here we could recreate them, calling the getter methods, and store
+      // them into the JS slots. If we nullify them after, the slot values and
+      // the objects will be out of sync.
+      newInnerWindow->ClearDocumentDependentSlots(cx);
 
-        // When replacing an initial about:blank document we call
-        // ExecutionReady again to update the client creation URL.
-        rv = newInnerWindow->ExecutionReady();
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+      // When replacing an initial about:blank document we call
+      // ExecutionReady again to update the client creation URL.
+      rv = newInnerWindow->ExecutionReady();
+      NS_ENSURE_SUCCESS(rv, rv);
     } else {
       newInnerWindow->InnerSetNewDocument(cx, aDocument);
 
@@ -2263,12 +2252,6 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
     newInnerWindow->mChromeEventHandler = mChromeEventHandler;
   }
 
-  // Handle any document.open() logic after we setup the new inner window
-  // so that any bound DETH objects can see the top window, document, etc.
-  if (handleDocumentOpen) {
-    newInnerWindow->MigrateStateForDocumentOpen(currentInner);
-  }
-
   // Tell the WindowGlobalParent that it should become the current window global
   // for our BrowsingContext if it isn't already.
   mInnerWindow->GetWindowGlobalChild()->SendBecomeCurrentWindowGlobal();
@@ -2276,7 +2259,7 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
   // We no longer need the old inner window.  Start its destruction if
   // its not being reused and clear our reference.
   if (doomCurrentInner) {
-    currentInner->FreeInnerObjects(handleDocumentOpen);
+    currentInner->FreeInnerObjects();
   }
   currentInner = nullptr;
 
