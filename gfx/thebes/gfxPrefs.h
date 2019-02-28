@@ -468,16 +468,8 @@ class gfxPrefs final {
 #endif // defined(MOZ_WIDGET_ANDROID)
   DECL_GFX_PREF(Live, "gfx.compositor.clearstate",             CompositorClearState, bool, false);
   DECL_GFX_PREF(Live, "gfx.compositor.glcontext.opaque",       CompositorGLContextOpaque, bool, false);
-  DECL_GFX_PREF(Live, "gfx.canvas.auto_accelerate.min_calls",  CanvasAutoAccelerateMinCalls, int32_t, 4);
-  DECL_GFX_PREF(Live, "gfx.canvas.auto_accelerate.min_frames", CanvasAutoAccelerateMinFrames, int32_t, 30);
-  DECL_GFX_PREF(Live, "gfx.canvas.auto_accelerate.min_seconds", CanvasAutoAccelerateMinSeconds, float, 5.0f);
-  DECL_GFX_PREF(Live, "gfx.canvas.azure.accelerated",          CanvasAzureAccelerated, bool, false);
-  DECL_GFX_PREF(Once, "gfx.canvas.azure.accelerated.limit",    CanvasAzureAcceleratedLimit, int32_t, 0);
   // 0x7fff is the maximum supported xlib surface size and is more than enough for canvases.
   DECL_GFX_PREF(Live, "gfx.canvas.max-size",                   MaxCanvasSize, int32_t, 0x7fff);
-  DECL_GFX_PREF(Once, "gfx.canvas.skiagl.cache-items",         CanvasSkiaGLCacheItems, int32_t, 256);
-  DECL_GFX_PREF(Once, "gfx.canvas.skiagl.cache-size",          CanvasSkiaGLCacheSize, int32_t, 96);
-  DECL_GFX_PREF(Once, "gfx.canvas.skiagl.dynamic-cache",       CanvasSkiaGLDynamicCache, bool, false);
 
   DECL_GFX_PREF(Live, "gfx.color_management.enablev4",         CMSEnableV4, bool, false);
   DECL_GFX_PREF(Live, "gfx.color_management.mode",             CMSMode, int32_t,-1);
