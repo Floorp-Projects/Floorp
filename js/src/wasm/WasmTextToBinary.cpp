@@ -1347,6 +1347,12 @@ WasmToken WasmTokenStream::next() {
         return WasmToken(WasmToken::GetLocal, begin, cur_);
       }
       if (consume(u"global")) {
+        if (consume(u".get")) {
+          return WasmToken(WasmToken::GetGlobal, begin, cur_);
+        }
+        if (consume(u".set")) {
+          return WasmToken(WasmToken::SetGlobal, begin, cur_);
+        }
         return WasmToken(WasmToken::Global, begin, cur_);
       }
       if (consume(u"grow_memory")) {
@@ -2113,6 +2119,12 @@ WasmToken WasmTokenStream::next() {
 
     case 'l':
       if (consume(u"local")) {
+        if (consume(u".get")) {
+          return WasmToken(WasmToken::GetLocal, begin, cur_);
+        }
+        if (consume(u".set")) {
+          return WasmToken(WasmToken::SetLocal, begin, cur_);
+        }
         return WasmToken(WasmToken::Local, begin, cur_);
       }
       if (consume(u"loop")) {
