@@ -5,7 +5,7 @@
 "use strict";
 
 /**
- * Check that logpoints call console.log.
+ * Check that logpoints generate console messages.
  */
 
 var gDebuggee;
@@ -27,6 +27,16 @@ function run_test() {
 }
 
 function test_simple_breakpoint() {
+  const rootActor = gClient.transport._serverConnection.rootActor;
+  const threadActor = rootActor._parameters.tabList._targetActors[0].threadActor;
+
+  let lastMessage;
+  threadActor._parent._consoleActor = {
+    onConsoleAPICall(message) {
+      lastMessage = message;
+    },
+  };
+
   gThreadClient.addOneTimeListener("paused", async function(event, packet) {
     const source = await getSourceById(
       gThreadClient,
@@ -36,25 +46,23 @@ function test_simple_breakpoint() {
     // Set a logpoint which should invoke console.log.
     gThreadClient.setBreakpoint({
       sourceUrl: source.url,
-      line: 4,
+      line: 3,
     }, { logValue: "a" });
 
     // Execute the rest of the code.
     gThreadClient.resume();
   });
 
-  // Sandboxes don't have a console available so we add our own.
   /* eslint-disable */
-  Cu.evalInSandbox("var console = { log: v => { this.logValue = v } };\n" + // 1
-                   "debugger;\n" + // 2
-                   "var a = 'three';\n" +  // 3
-                   "var b = 2;\n", // 4
+  Cu.evalInSandbox("debugger;\n" + // 1
+                   "var a = 'three';\n" +  // 2
+                   "var b = 2;\n", // 3
                    gDebuggee,
                    "1.8",
                    "test.js",
                    1);
   /* eslint-enable */
 
-  Assert.equal(gDebuggee.logValue, "three");
+  Assert.equal(lastMessage.arguments[0], "three");
   finishClient(gClient);
 }
