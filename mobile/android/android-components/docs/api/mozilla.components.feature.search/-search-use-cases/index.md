@@ -33,4 +33,5 @@ it to the [SessionManager](../../mozilla.components.browser.session/-session-man
 | Name | Summary |
 |---|---|
 | [defaultSearch](default-search.md) | `val defaultSearch: `[`DefaultSearchUseCase`](-default-search-use-case/index.md) |
+| [newPrivateTabSearch](new-private-tab-search.md) | `val newPrivateTabSearch: `[`NewTabSearchUseCase`](-new-tab-search-use-case/index.md) |
 | [newTabSearch](new-tab-search.md) | `val newTabSearch: `[`NewTabSearchUseCase`](-new-tab-search-use-case/index.md) |

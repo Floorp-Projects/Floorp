@@ -90,6 +90,7 @@ mozilla.components.concept.engine.history
 mozilla.components.concept.engine.permission
 mozilla.components.concept.engine.prompt
 mozilla.components.concept.engine.request
+mozilla.components.concept.engine.webextension
 mozilla.components.concept.engine.window
 mozilla.components.concept.fetch
 mozilla.components.concept.storage
@@ -139,6 +140,7 @@ mozilla.components.service.fxa
 mozilla.components.service.glean
 mozilla.components.service.glean.config
 mozilla.components.service.glean.debug
+mozilla.components.service.glean.scheduler
 mozilla.components.service.glean.storages
 mozilla.components.service.sync.logins
 mozilla.components.support.base.android
