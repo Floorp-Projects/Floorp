@@ -1712,7 +1712,10 @@ Search.prototype = {
     // Since the extension has no way to signale when it's done pushing
     // results, we add a timeout racing with the addition.
     let timeoutPromise = new Promise(resolve => {
-      setTimeout(resolve, MAXIMUM_ALLOWED_EXTENSION_TIME_MS);
+      let timer = setTimeout(resolve, MAXIMUM_ALLOWED_EXTENSION_TIME_MS);
+      // TODO Bug 1531268: Figure out why this cancel helps makes the tests
+      // stable.
+      promise.then(timer.cancel);
     });
     return Promise.race([timeoutPromise, promise]).catch(Cu.reportError);
   },
