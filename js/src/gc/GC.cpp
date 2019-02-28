@@ -6272,6 +6272,9 @@ class SweepActionSequence final : public SweepAction<Args...> {
   bool init(UniquePtr<Action>* acts, size_t count) {
     for (size_t i = 0; i < count; i++) {
       auto& action = acts[i];
+      if (!action) {
+        return false;
+      }
       if (action->shouldSkip()) {
         continue;
       }
