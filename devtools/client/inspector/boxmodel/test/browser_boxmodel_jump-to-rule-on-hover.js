@@ -16,6 +16,7 @@ const TEST_URI =
   <div id="box"></div>`;
 
 add_task(async function() {
+  await pushPref("devtools.layout.boxmodel.highlightProperty", true);
   await addTab("data:text/html," + encodeURIComponent(TEST_URI));
   const { inspector, boxmodel } = await openLayoutView();
   await selectNode("#box", inspector);
