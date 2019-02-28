@@ -183,7 +183,7 @@ class InfallibleAllocPolicy {
   }
 
   template <class T, typename P1>
-  static T* new_(P1 aP1) {
+  static T* new_(const P1& aP1) {
     void* mem = malloc_(sizeof(T));
     return new (mem) T(aP1);
   }
