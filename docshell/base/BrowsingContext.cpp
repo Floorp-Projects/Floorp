@@ -555,6 +555,14 @@ class RemoteLocationProxy
 
   constexpr RemoteLocationProxy()
       : RemoteObjectProxy(prototypes::id::Location) {}
+
+  void NoteChildren(JSObject* aProxy,
+                    nsCycleCollectionTraversalCallback& aCb) const override {
+    auto location =
+        static_cast<BrowsingContext::LocationProxy*>(GetNative(aProxy));
+    CycleCollectionNoteChild(aCb, location->GetBrowsingContext(),
+                             "js::GetObjectPrivate(obj)->GetBrowsingContext()");
+  }
 };
 
 static const RemoteLocationProxy sSingleton;
