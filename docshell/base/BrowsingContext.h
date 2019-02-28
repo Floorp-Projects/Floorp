@@ -20,6 +20,7 @@
 #include "nsWrapperCache.h"
 
 class nsGlobalWindowOuter;
+class nsIPrincipal;
 class nsOuterWindowProxy;
 class PickleIterator;
 
@@ -31,7 +32,6 @@ namespace mozilla {
 
 class ErrorResult;
 class LogModule;
-class OOMReporter;
 
 namespace ipc {
 class IProtocol;
@@ -267,7 +267,7 @@ class BrowsingContext : public nsWrapperCache,
   BrowsingContext* Window() { return Self(); }
   BrowsingContext* Self() { return this; }
   void Location(JSContext* aCx, JS::MutableHandle<JSObject*> aLocation,
-                OOMReporter& aError);
+                ErrorResult& aError);
   void Close(CallerType aCallerType, ErrorResult& aError);
   bool GetClosed(ErrorResult&) { return mClosed; }
   void Focus(ErrorResult& aError);
@@ -329,6 +329,33 @@ class BrowsingContext : public nsWrapperCache,
 
   BrowsingContext* TopLevelBrowsingContext();
 
+  friend class Location;
+  friend class RemoteLocationProxy;
+  /**
+   * LocationProxy is the class for the native object stored as a private in a
+   * RemoteLocationProxy proxy representing a Location object in a different
+   * process. It forwards all operations to its BrowsingContext and aggregates
+   * its refcount to that BrowsingContext.
+   */
+  class LocationProxy {
+   public:
+    MozExternalRefCountType AddRef() { return GetBrowsingContext()->AddRef(); }
+    MozExternalRefCountType Release() {
+      return GetBrowsingContext()->Release();
+    }
+
+    void SetHref(const nsAString& aHref, nsIPrincipal& aSubjectPrincipal,
+                 ErrorResult& aError);
+    void Replace(const nsAString& aUrl, nsIPrincipal& aSubjectPrincipal,
+                 ErrorResult& aError);
+
+   private:
+    BrowsingContext* GetBrowsingContext() {
+      return reinterpret_cast<BrowsingContext*>(
+          uintptr_t(this) - offsetof(BrowsingContext, mLocation));
+    }
+  };
+
   // Type of BrowsingContent
   const Type mType;
 
@@ -345,6 +372,7 @@ class BrowsingContext : public nsWrapperCache,
   // nsOuterWindowProxy handler, which will update the pointer from its
   // objectMoved hook and clear it from its finalize hook.
   JS::Heap<JSObject*> mWindowProxy;
+  LocationProxy mLocation;
 
   // This flag is only valid in the top level browsing context, it indicates
   // whether the corresponding document has been activated by user gesture.

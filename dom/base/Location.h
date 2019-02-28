@@ -29,7 +29,7 @@ namespace dom {
 
 class Location final : public nsISupports, public nsWrapperCache {
  public:
-  typedef Location RemoteProxy;
+  typedef BrowsingContext::LocationProxy RemoteProxy;
 
   Location(nsPIDOMWindowInner* aWindow, nsIDocShell* aDocShell);
 

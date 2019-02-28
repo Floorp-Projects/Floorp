@@ -32,6 +32,8 @@ class RemoteOuterWindowProxy
                                Window_Binding::sCrossOriginAttributes,
                                Window_Binding::sCrossOriginMethods> {
  public:
+  typedef RemoteObjectProxy Base;
+
   constexpr RemoteOuterWindowProxy()
       : RemoteObjectProxy(prototypes::id::Window) {}
 
@@ -45,17 +47,15 @@ class RemoteOuterWindowProxy
   // SpiderMonkey extensions
   bool getOwnEnumerablePropertyKeys(JSContext* cx, JS::Handle<JSObject*> proxy,
                                     JS::AutoIdVector& props) const final;
-  void finalize(JSFreeOp* aFop, JSObject* aProxy) const final;
-  const char* className(JSContext* aCx,
-                        JS::Handle<JSObject*> aProxy) const final;
 };
 
 static const RemoteOuterWindowProxy sSingleton;
 
-// Give RemoteOuterWindowProxyClass 2 reserved slots, like the other wrappers,
+// Give RemoteOuterWindowProxy 2 reserved slots, like the other wrappers,
 // so JSObject::swap can swap it with CrossCompartmentWrappers without requiring
 // malloc.
-const js::Class RemoteOuterWindowProxyClass =
+template <>
+const js::Class RemoteOuterWindowProxy::Base::sClass =
     PROXY_CLASS_DEF("Proxy", JSCLASS_HAS_RESERVED_SLOTS(2));
 
 bool GetRemoteOuterWindowProxy(JSContext* aCx, BrowsingContext* aContext,
@@ -63,30 +63,8 @@ bool GetRemoteOuterWindowProxy(JSContext* aCx, BrowsingContext* aContext,
   MOZ_ASSERT(!aContext->GetDocShell(),
              "Why are we creating a RemoteOuterWindowProxy?");
 
-  xpc::CompartmentPrivate* priv =
-      xpc::CompartmentPrivate::Get(JS::CurrentGlobalOrNull(aCx));
-  xpc::CompartmentPrivate::RemoteProxyMap& map = priv->GetRemoteProxyMap();
-  auto result = map.lookupForAdd(aContext);
-  if (result) {
-    aRetVal.set(result->value());
-    return true;
-  }
-
-  JS::Rooted<JSObject*> obj(
-      aCx, sSingleton.CreateProxyObject(aCx, aContext,
-                                        &RemoteOuterWindowProxyClass));
-  if (!obj) {
-    return false;
-  }
-  NS_ADDREF(aContext);
-
-  if (!map.add(result, aContext, obj)) {
-    JS_ReportOutOfMemory(aCx);
-    return false;
-  }
-
-  aRetVal.set(obj);
-  return true;
+  sSingleton.GetProxyObject(aCx, aContext, aRetVal);
+  return !!aRetVal;
 }
 
 static BrowsingContext* GetBrowsingContext(JSObject* aProxy) {
@@ -175,18 +153,6 @@ bool RemoteOuterWindowProxy::getOwnEnumerablePropertyKeys(
     JSContext* aCx, JS::Handle<JSObject*> aProxy,
     JS::AutoIdVector& aProps) const {
   return AppendIndexedPropertyNames(aCx, GetBrowsingContext(aProxy), aProps);
-}
-
-void RemoteOuterWindowProxy::finalize(JSFreeOp* aFop, JSObject* aProxy) const {
-  BrowsingContext* bc = GetBrowsingContext(aProxy);
-  RefPtr<BrowsingContext> self(dont_AddRef(bc));
-}
-
-const char* RemoteOuterWindowProxy::className(
-    JSContext* aCx, JS::Handle<JSObject*> aProxy) const {
-  MOZ_ASSERT(js::IsProxy(aProxy));
-
-  return "Object";
 }
 
 }  // namespace dom
