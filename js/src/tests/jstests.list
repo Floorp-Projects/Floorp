@@ -116,6 +116,24 @@ skip-if(!xulRuntime.shell) script test262/language/global-code/decl-var.js
 # %ThrowTypeError% should be anonymous
 skip script test262/built-ins/ThrowTypeError/name.js
 
+# BigInt typed arrays -- BigInt64Array, BigUint64Array -- aren't implemented
+# yet -- bug 1456569.
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-returns-throws.js
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species.js
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-use-default-ctor.js
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-custom-ctor-throws.js
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-custom-ctor-invocation.js
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-custom-ctor-returns-another-instance.js
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-ctor-inherited.js
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-ctor.js
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-custom-ctor-length.js
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-custom-ctor-length-throws.js
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-ctor-returns-throws.js
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-custom-ctor.js
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-abrupt.js
+skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-ctor-abrupt.js
+
+
 # Anonymous functions have own name property in SpiderMonkey
 skip script test262/language/expressions/assignment/fn-name-lhs-cover.js
 skip script test262/language/expressions/assignment/fn-name-lhs-member.js
@@ -1109,6 +1127,25 @@ skip script test262/annexB/language/eval-code/indirect/global-if-decl-else-decl-
 skip script test262/annexB/language/eval-code/indirect/global-block-decl-eval-global-existing-global-init.js
 skip script test262/annexB/language/eval-code/indirect/global-switch-case-eval-global-existing-global-init.js
 
+# Need to fix increment/decrement of arguments or eval -- bug 1530883.
+skip script test262/language/expressions/postfix-increment/eval.js
+skip script test262/language/expressions/postfix-increment/eval-nostrict.js
+skip script test262/language/expressions/postfix-increment/arguments-nostrict.js
+skip script test262/language/expressions/postfix-increment/arguments.js
+skip script test262/language/expressions/prefix-decrement/eval.js
+skip script test262/language/expressions/prefix-decrement/eval-nostrict.js
+skip script test262/language/expressions/prefix-decrement/arguments-nostrict.js
+skip script test262/language/expressions/prefix-decrement/arguments.js
+skip script test262/language/expressions/prefix-increment/eval.js
+skip script test262/language/expressions/prefix-increment/eval-nostrict.js
+skip script test262/language/expressions/prefix-increment/arguments-nostrict.js
+skip script test262/language/expressions/prefix-increment/arguments.js
+skip script test262/language/expressions/postfix-decrement/eval.js
+skip script test262/language/expressions/postfix-decrement/eval-nostrict.js
+skip script test262/language/expressions/postfix-decrement/arguments-nostrict.js
+skip script test262/language/expressions/postfix-decrement/arguments.js
+
+
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1340307
 skip script test262/language/module-code/instn-resolve-empty-export.js
 skip script test262/language/module-code/instn-resolve-empty-import.js
@@ -1186,6 +1223,15 @@ skip script test262/built-ins/Reflect/ownKeys/return-on-corresponding-order-larg
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1473229
 skip include test262/intl402/RelativeTimeFormat/prototype/formatToParts/jstests.list
 
+# SupportedLocales in the Intl spec returns a non-frozen array after
+# https://github.com/tc39/ecma402/pull/278 -- bug 1530848.
+skip script test262/intl402/RelativeTimeFormat/constructor/supportedLocalesOf/result-type.js
+skip script test262/intl402/supportedLocalesOf-returned-array-elements-are-not-frozen.js
+
+# Need to add "numberingSystem" to resolvedOptions() to address
+# https://github.com/tc39/test262/pull/2011 apparently -- bug 1521819.
+skip script test262/intl402/RelativeTimeFormat/prototype/resolvedOptions/order.js
+
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1508683
 skip script test262/built-ins/RegExp/prototype/multiline/cross-realm.js
 skip script test262/built-ins/RegExp/prototype/global/cross-realm.js
@@ -1196,6 +1242,10 @@ skip script test262/built-ins/RegExp/prototype/source/cross-realm.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1508684
 skip script test262/language/expressions/import.meta/syntax/invalid-assignment-target-update-expr.js
+
+# https://github.com/tc39/test262/pull/1995 seemingly needs SpiderMonkey changes
+# before we can run the updated test -- bug 1531091.
+skip script test262/intl402/Collator/missing-unicode-ext-value-defaults-to-true.js
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #

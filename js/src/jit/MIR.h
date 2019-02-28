@@ -4371,28 +4371,6 @@ class MTypeOf : public MUnaryInstruction, public BoxInputsPolicy::Data {
   bool canRecoverOnBailout() const override { return true; }
 };
 
-class MToAsync : public MUnaryInstruction, public SingleObjectPolicy::Data {
-  explicit MToAsync(MDefinition* unwrapped)
-      : MUnaryInstruction(classOpcode, unwrapped) {
-    setResultType(MIRType::Object);
-  }
-
- public:
-  INSTRUCTION_HEADER(ToAsync)
-  TRIVIAL_NEW_WRAPPERS
-};
-
-class MToAsyncGen : public MUnaryInstruction, public SingleObjectPolicy::Data {
-  explicit MToAsyncGen(MDefinition* unwrapped)
-      : MUnaryInstruction(classOpcode, unwrapped) {
-    setResultType(MIRType::Object);
-  }
-
- public:
-  INSTRUCTION_HEADER(ToAsyncGen)
-  TRIVIAL_NEW_WRAPPERS
-};
-
 class MToAsyncIter : public MBinaryInstruction,
                      public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>>::Data {
   explicit MToAsyncIter(MDefinition* iterator, MDefinition* nextMethod)
@@ -6802,9 +6780,9 @@ struct LambdaFunctionInfo {
     // right thing. We can't assert this off-thread in CodeGenerator,
     // because fun->isAsync() accesses the script/lazyScript and can race
     // with delazification on the main thread.
-    MOZ_ASSERT_IF(flags & JSFunction::EXTENDED,
-                  fun->isArrow() || fun->allowSuperProperty() ||
-                      fun->isSelfHostedBuiltin() || fun->isAsync());
+    MOZ_ASSERT_IF(flags & JSFunction::EXTENDED, fun->isArrow() ||
+                                                    fun->allowSuperProperty() ||
+                                                    fun->isSelfHostedBuiltin());
   }
 
   // Be careful when calling this off-thread. Don't call any JSFunction*
@@ -6932,10 +6910,8 @@ class MSlots : public MUnaryInstruction, public SingleObjectPolicy::Data {
 
 // Returns obj->elements.
 class MElements : public MUnaryInstruction, public SingleObjectPolicy::Data {
-  bool unboxed_;
-
-  explicit MElements(MDefinition* object, bool unboxed = false)
-      : MUnaryInstruction(classOpcode, object), unboxed_(unboxed) {
+  explicit MElements(MDefinition* object)
+      : MUnaryInstruction(classOpcode, object) {
     setResultType(MIRType::Elements);
     setMovable();
   }
@@ -6945,10 +6921,8 @@ class MElements : public MUnaryInstruction, public SingleObjectPolicy::Data {
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, object))
 
-  bool unboxed() const { return unboxed_; }
   bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins) &&
-           ins->toElements()->unboxed() == unboxed();
+    return congruentIfOperandsEqual(ins);
   }
   AliasSet getAliasSet() const override {
     return AliasSet::Load(AliasSet::ObjectFields);

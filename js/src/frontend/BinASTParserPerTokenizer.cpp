@@ -340,13 +340,15 @@ JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::buildFunction(
     BINJS_TRY(usedNames_.noteUse(cx_, dotGenerator, pc_->scriptId(),
                                  pc_->innermostScope()->id()));
 
-    BINJS_TRY_DECL(
-        dotGen, handler_.newName(dotGenerator,
-                                 tokenizer_->pos(tokenizer_->offset()), cx_));
+    if (funbox->isGenerator()) {
+      BINJS_TRY_DECL(
+          dotGen, handler_.newName(dotGenerator,
+                                   tokenizer_->pos(tokenizer_->offset()), cx_));
 
-    ListNode* stmtList =
-        &body->as<LexicalScopeNode>().scopeBody()->as<ListNode>();
-    BINJS_TRY(handler_.prependInitialYield(stmtList, dotGen));
+      ListNode* stmtList =
+          &body->as<LexicalScopeNode>().scopeBody()->as<ListNode>();
+      BINJS_TRY(handler_.prependInitialYield(stmtList, dotGen));
+    }
   }
 
   const bool canSkipLazyClosedOverBindings = false;

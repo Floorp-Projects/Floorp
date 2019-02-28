@@ -22,112 +22,6 @@
 
 using namespace js;
 
-#define UNWRAPPED_ASYNC_WRAPPED_SLOT 1
-#define WRAPPED_ASYNC_UNWRAPPED_SLOT 0
-
-// Async Iteration proposal 8.3.10 Runtime Semantics: EvaluateBody.
-static bool WrappedAsyncGenerator(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  RootedFunction wrapped(cx, &args.callee().as<JSFunction>());
-  RootedValue unwrappedVal(
-      cx, wrapped->getExtendedSlot(WRAPPED_ASYNC_UNWRAPPED_SLOT));
-
-  // Step 1.
-  InvokeArgs args2(cx);
-  if (!FillArgumentsFromArraylike(cx, args2, args)) {
-    return false;
-  }
-
-  RootedValue generatorVal(cx);
-  if (!Call(cx, unwrappedVal, args.thisv(), args2, &generatorVal)) {
-    return false;
-  }
-
-  // Step 2.
-  AsyncGeneratorObject* asyncGenObj =
-      AsyncGeneratorObject::create(cx, wrapped, generatorVal);
-  if (!asyncGenObj) {
-    return false;
-  }
-
-  // Step 3 (skipped).
-  // Done in AsyncGeneratorObject::create and generator.
-
-  // Step 4.
-  args.rval().setObject(*asyncGenObj);
-  return true;
-}
-
-JSObject* js::WrapAsyncGeneratorWithProto(JSContext* cx,
-                                          HandleFunction unwrapped,
-                                          HandleObject proto) {
-  MOZ_ASSERT(unwrapped->isAsync());
-  MOZ_ASSERT(proto,
-             "We need an explicit prototype to avoid the default"
-             "%FunctionPrototype% fallback in NewFunctionWithProto().");
-
-  // Create a new function with AsyncGeneratorPrototype, reusing the name and
-  // the length of `unwrapped`.
-
-  RootedAtom funName(cx, unwrapped->explicitName());
-  uint16_t length;
-  if (!JSFunction::getLength(cx, unwrapped, &length)) {
-    return nullptr;
-  }
-
-  JSFunction* wrapped = NewFunctionWithProto(
-      cx, WrappedAsyncGenerator, length, JSFunction::NATIVE_FUN, nullptr,
-      funName, proto, gc::AllocKind::FUNCTION_EXTENDED);
-  if (!wrapped) {
-    return nullptr;
-  }
-
-  if (unwrapped->hasInferredName()) {
-    wrapped->setInferredName(unwrapped->inferredName());
-  }
-
-  // Link them to each other to make GetWrappedAsyncGenerator and
-  // GetUnwrappedAsyncGenerator work.
-  unwrapped->setExtendedSlot(UNWRAPPED_ASYNC_WRAPPED_SLOT,
-                             ObjectValue(*wrapped));
-  wrapped->setExtendedSlot(WRAPPED_ASYNC_UNWRAPPED_SLOT,
-                           ObjectValue(*unwrapped));
-
-  return wrapped;
-}
-
-JSObject* js::WrapAsyncGenerator(JSContext* cx, HandleFunction unwrapped) {
-  RootedObject proto(cx,
-                     GlobalObject::getOrCreateAsyncGenerator(cx, cx->global()));
-  if (!proto) {
-    return nullptr;
-  }
-
-  return WrapAsyncGeneratorWithProto(cx, unwrapped, proto);
-}
-
-bool js::IsWrappedAsyncGenerator(JSFunction* fun) {
-  return fun->maybeNative() == WrappedAsyncGenerator;
-}
-
-JSFunction* js::GetWrappedAsyncGenerator(JSFunction* unwrapped) {
-  MOZ_ASSERT(unwrapped->isAsync());
-  return &unwrapped->getExtendedSlot(UNWRAPPED_ASYNC_WRAPPED_SLOT)
-              .toObject()
-              .as<JSFunction>();
-}
-
-JSFunction* js::GetUnwrappedAsyncGenerator(JSFunction* wrapped) {
-  MOZ_ASSERT(IsWrappedAsyncGenerator(wrapped));
-  JSFunction* unwrapped =
-      &wrapped->getExtendedSlot(WRAPPED_ASYNC_UNWRAPPED_SLOT)
-           .toObject()
-           .as<JSFunction>();
-  MOZ_ASSERT(unwrapped->isAsync());
-  return unwrapped;
-}
-
 // Async Iteration proposal 4.1.1 Await Fulfilled Functions.
 MOZ_MUST_USE bool js::AsyncGeneratorAwaitedFulfilled(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
@@ -269,9 +163,8 @@ static AsyncGeneratorObject* OrdinaryCreateFromConstructorAsynGen(
 }
 
 /* static */ AsyncGeneratorObject* AsyncGeneratorObject::create(
-    JSContext* cx, HandleFunction asyncGen, HandleValue generatorVal) {
-  MOZ_ASSERT(generatorVal.isObject());
-  MOZ_ASSERT(generatorVal.toObject().is<GeneratorObject>());
+    JSContext* cx, HandleFunction asyncGen) {
+  MOZ_ASSERT(asyncGen->isAsync() && asyncGen->isGenerator());
 
   AsyncGeneratorObject* asyncGenObj =
       OrdinaryCreateFromConstructorAsynGen(cx, asyncGen);
@@ -279,9 +172,8 @@ static AsyncGeneratorObject* OrdinaryCreateFromConstructorAsynGen(
     return nullptr;
   }
 
-  // Async Iteration proposal 6.4.3.2 AsyncGeneratorStart.
-  // Step 6.
-  asyncGenObj->setGenerator(generatorVal);
+  // ES2019 draft rev c2aad21fee7f5ddc89fdf7d3d305618ca3a13242
+  // 25.5.3.2 AsyncGeneratorStart.
 
   // Step 7.
   asyncGenObj->setSuspendedStart();
@@ -437,25 +329,31 @@ static MOZ_MUST_USE bool AsyncGeneratorYield(
 MOZ_MUST_USE bool js::AsyncGeneratorResume(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     CompletionKind completionKind, HandleValue argument) {
-  RootedValue generatorVal(cx, asyncGenObj->generatorVal());
+  MOZ_ASSERT(!asyncGenObj->isClosed(),
+             "closed generator when resuming async generator");
+  MOZ_ASSERT(asyncGenObj->isSuspended(),
+             "non-suspended generator when resuming async generator");
 
   // 11.4.3.5 steps 12-14, 16-20.
   HandlePropertyName funName = completionKind == CompletionKind::Normal
-                                   ? cx->names().GeneratorNext
+                                   ? cx->names().AsyncGeneratorNext
                                    : completionKind == CompletionKind::Throw
-                                         ? cx->names().GeneratorThrow
-                                         : cx->names().GeneratorReturn;
+                                         ? cx->names().AsyncGeneratorThrow
+                                         : cx->names().AsyncGeneratorReturn;
   FixedInvokeArgs<1> args(cx);
   args[0].set(argument);
-  RootedValue result(cx);
-  if (!CallSelfHostedFunction(cx, funName, generatorVal, args, &result)) {
+  RootedValue thisOrRval(cx, ObjectValue(*asyncGenObj));
+  if (!CallSelfHostedFunction(cx, funName, thisOrRval, args, &thisOrRval)) {
     // 11.4.3.2 step 5.d, f.
+    if (!asyncGenObj->isClosed()) {
+      asyncGenObj->setClosed();
+    }
     return AsyncGeneratorThrown(cx, asyncGenObj);
   }
 
   // 4.1 steps 2-9.
-  if (asyncGenObj->generatorObj()->isAfterAwait()) {
-    return AsyncGeneratorAwait(cx, asyncGenObj, result);
+  if (asyncGenObj->isAfterAwait()) {
+    return AsyncGeneratorAwait(cx, asyncGenObj, thisOrRval);
   }
 
   // The following code corresponds to the following 3 cases:
@@ -470,13 +368,13 @@ MOZ_MUST_USE bool js::AsyncGeneratorResume(
   // Note that IteratorComplete steps in 8.2.1 are done in bytecode.
 
   // 8.2.1 yield* steps 6.a.vii, 6.b.ii.7, 6.c.ix.
-  RootedObject resultObj(cx, &result.toObject());
+  RootedObject resultObj(cx, &thisOrRval.toObject());
   RootedValue value(cx);
   if (!GetProperty(cx, resultObj, resultObj, cx->names().value, &value)) {
     return false;
   }
 
-  if (asyncGenObj->generatorObj()->isAfterYield()) {
+  if (asyncGenObj->isAfterYield()) {
     return AsyncGeneratorYield(cx, asyncGenObj, value);
   }
 
@@ -545,9 +443,6 @@ static const JSFunctionSpec async_generator_methods[] = {
   RootedObject asyncGenerator(
       cx, NewSingletonObjectWithFunctionPrototype(cx, global));
   if (!asyncGenerator) {
-    return false;
-  }
-  if (!JSObject::setDelegate(cx, asyncGenerator)) {
     return false;
   }
   if (!LinkConstructorAndPrototype(cx, asyncGenerator, asyncGenProto,

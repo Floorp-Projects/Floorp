@@ -11364,24 +11364,6 @@ void CodeGenerator::visitOutOfLineTypeOfV(OutOfLineTypeOfV* ool) {
   masm.jump(ool->rejoin());
 }
 
-typedef JSObject* (*ToAsyncFn)(JSContext*, HandleFunction);
-static const VMFunction ToAsyncInfo =
-    FunctionInfo<ToAsyncFn>(js::WrapAsyncFunction, "ToAsync");
-
-void CodeGenerator::visitToAsync(LToAsync* lir) {
-  pushArg(ToRegister(lir->unwrapped()));
-  callVM(ToAsyncInfo, lir);
-}
-
-typedef JSObject* (*ToAsyncGenFn)(JSContext*, HandleFunction);
-static const VMFunction ToAsyncGenInfo =
-    FunctionInfo<ToAsyncGenFn>(js::WrapAsyncGenerator, "ToAsyncGen");
-
-void CodeGenerator::visitToAsyncGen(LToAsyncGen* lir) {
-  pushArg(ToRegister(lir->unwrapped()));
-  callVM(ToAsyncGenInfo, lir);
-}
-
 typedef JSObject* (*ToAsyncIterFn)(JSContext*, HandleObject, HandleValue);
 static const VMFunction ToAsyncIterInfo =
     FunctionInfo<ToAsyncIterFn>(js::CreateAsyncFromSyncIterator, "ToAsyncIter");

@@ -300,8 +300,9 @@ void TextureChild::Destroy(const TextureDeallocParams& aParams) {
 
 /* static */ Atomic<uint64_t> TextureClient::sSerialCounter(0);
 
-void DeallocateTextureClientSyncProxy(TextureDeallocParams params,
-                                      ReentrantMonitor* aBarrier, bool* aDone) {
+static void DeallocateTextureClientSyncProxy(TextureDeallocParams params,
+                                             ReentrantMonitor* aBarrier,
+                                             bool* aDone) {
   DeallocateTextureClient(params);
   ReentrantMonitorAutoEnter autoMon(*aBarrier);
   *aDone = true;
@@ -791,8 +792,8 @@ void TextureClient::SetAddedToCompositableClient() {
   }
 }
 
-void CancelTextureClientRecycle(uint64_t aTextureId,
-                                LayersIPCChannel* aAllocator) {
+static void CancelTextureClientRecycle(uint64_t aTextureId,
+                                       LayersIPCChannel* aAllocator) {
   if (!aAllocator) {
     return;
   }

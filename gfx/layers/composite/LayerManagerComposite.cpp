@@ -231,7 +231,7 @@ void LayerManagerComposite::PostProcessLayers(nsIntRegion& aOpaqueRegion) {
 // intermediate surface. We compute occlusions for leaves and intermediate
 // surfaces against the layer that they actually composite into so that we can
 // use the final (snapped) effective transform.
-bool ShouldProcessLayer(Layer* aLayer) {
+static bool ShouldProcessLayer(Layer* aLayer) {
   if (!aLayer->AsContainerLayer()) {
     return true;
   }
@@ -1406,8 +1406,8 @@ static void AddTransformedRegion(LayerIntRegion& aDest,
 // Async animations can move child layers without updating our visible region.
 // PostProcessLayers will recompute visible regions for layers with an
 // intermediate surface, but otherwise we need to do it now.
-void ComputeVisibleRegionForChildren(ContainerLayer* aContainer,
-                                     LayerIntRegion& aResult) {
+static void ComputeVisibleRegionForChildren(ContainerLayer* aContainer,
+                                            LayerIntRegion& aResult) {
   for (Layer* l = aContainer->GetFirstChild(); l; l = l->GetNextSibling()) {
     if (l->Extend3DContext()) {
       MOZ_ASSERT(l->AsContainerLayer());
