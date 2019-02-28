@@ -412,10 +412,12 @@ android-hw-aarch64-opt-unittests:
 android-hw-arm7-raptor:
     - raptor-speedometer-geckoview
     - raptor-tp6m-1-geckoview
+    - raptor-tp6m-2-geckoview
 
 android-hw-aarch64-raptor:
     - raptor-speedometer-geckoview
     - raptor-tp6m-1-geckoview
+    - raptor-tp6m-2-geckoview
 
 android-hw-arm7-raptor-power:
     - raptor-speedometer-geckoview-power
