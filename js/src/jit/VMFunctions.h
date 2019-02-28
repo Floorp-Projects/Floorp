@@ -781,13 +781,6 @@ struct OutParamToRootType<MutableHandleString> {
   static const VMFunction::RootType result = VMFunction::RootString;
 };
 
-template <class>
-struct MatchContext {};
-template <>
-struct MatchContext<JSContext*> {
-  static const bool valid = true;
-};
-
 // Extract the last element of a list of types.
 template <typename... ArgTypes>
 struct LastArg;
@@ -844,9 +837,9 @@ struct BitMask<Each, ResultType, Shift, HeadType, TailTypes...> {
 template <typename... Args>
 struct FunctionInfo;
 
-template <class R, class Context, typename... Args>
-struct FunctionInfo<R (*)(Context, Args...)> : public VMFunction {
-  typedef R (*pf)(Context, Args...);
+template <class R, typename... Args>
+struct FunctionInfo<R (*)(JSContext*, Args...)> : public VMFunction {
+  using pf = R (*)(JSContext*, Args...);
 
   static DataType returnType() { return TypeToDataType<R>::result; }
   static DataType outParam() {
@@ -874,8 +867,6 @@ struct FunctionInfo<R (*)(Context, Args...)> : public VMFunction {
                    argumentProperties(), argumentPassedInFloatRegs(),
                    argumentRootTypes(), outParam(), outParamRootType(),
                    returnType(), extraValuesToPop.numValues, NonTailCall) {
-    static_assert(MatchContext<Context>::valid,
-                  "Invalid cx type in VMFunction");
   }
   explicit FunctionInfo(pf fun, const char* name, MaybeTailCall expectTailCall,
                         PopValues extraValuesToPop = PopValues(0))
@@ -883,8 +874,6 @@ struct FunctionInfo<R (*)(Context, Args...)> : public VMFunction {
                    argumentProperties(), argumentPassedInFloatRegs(),
                    argumentRootTypes(), outParam(), outParamRootType(),
                    returnType(), extraValuesToPop.numValues, expectTailCall) {
-    static_assert(MatchContext<Context>::valid,
-                  "Invalid cx type in VMFunction");
   }
 };
 
