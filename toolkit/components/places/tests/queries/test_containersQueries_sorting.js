@@ -121,7 +121,9 @@ function cartProd(aSequences, aCallback) {
         // All element pointers are past the ends of their sequences.
         if (seqPtr < 0)
           done = true;
-      } else break;
+      } else {
+        break;
+      }
     }
   }
   return numProds;
@@ -171,8 +173,9 @@ function test_query_callback(aSequence) {
     // Date containers are always sorted by date descending.
     check_children_sorting(root,
                            Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING);
-  } else
+  } else {
     check_children_sorting(root, sortingMode.value);
+  }
 
   // Now Check sorting of the first child container.
   var container = root.getChild(0)
@@ -198,8 +201,9 @@ function test_query_callback(aSequence) {
     // duplicates filtering.
     check_children_sorting(container,
                            Ci.nsINavHistoryQueryOptions.SORT_BY_NONE);
-  } else
+  } else {
     check_children_sorting(container, sortingMode.value);
+  }
 
   container.containerOpen = false;
   root.containerOpen = false;
@@ -241,8 +245,9 @@ function test_result_sortingMode_change(aResult, aResultType, aOriginalSortingMo
       // Site containers don't have a good time property to sort by.
       check_children_sorting(root,
                              Ci.nsINavHistoryQueryOptions.SORT_BY_NONE);
-    } else
+    } else {
       check_children_sorting(root, aOriginalSortingMode.value);
+    }
 
     // Now Check sorting of the first child container.
     var container = root.getChild(0)
@@ -272,8 +277,9 @@ function test_result_sortingMode_change(aResult, aResultType, aOriginalSortingMo
               aOriginalSortingMode.value == Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING)) {
         // Site containers don't have a good time property to sort by.
         check_children_sorting(root, Ci.nsINavHistoryQueryOptions.SORT_BY_NONE);
-      } else
+      } else {
         check_children_sorting(root, aOriginalSortingMode.value);
+      }
 
       // Children should always be sorted.
       check_children_sorting(container, aForcedSortingMode.value);

@@ -903,8 +903,9 @@ nsUnknownContentTypeDialog.prototype = {
                                   .createInstance(nsITimer);
         this._saveToDiskTimer.initWithCallback(this, 0,
                                                nsITimer.TYPE_ONE_SHOT);
-      } else
+      } else {
         this.mLauncher.launchWithApplication(null, false);
+      }
 
       // Update user pref for this mime type (if necessary). We do not
       // store anything in the mime type preferences for the ambiguous

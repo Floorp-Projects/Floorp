@@ -67,6 +67,12 @@ balanced-listeners
 Checks that for every occurrence of 'addEventListener' or 'on' there is an
 occurrence of 'removeEventListener' or 'off' with the same event name.
 
+consistent-if-bracing
+---------------------
+
+Checks that if/elseif/else bodies are braced consistently, so either all bodies
+are braced or unbraced. Doesn't enforce either of those styles though.
+
 import-browser-window-globals
 -----------------------------
 

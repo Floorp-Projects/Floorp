@@ -66,8 +66,9 @@ PlacesTreeView.prototype = {
       // This triggers containerStateChanged which then builds the visible
       // section.
       this._rootNode.containerOpen = true;
-    } else
+    } else {
       this.invalidateContainer(this._rootNode);
+    }
 
     // "Activate" the sorting column and update commands.
     this.sortingChanged(this._result.sortingMode);
@@ -1191,9 +1192,9 @@ PlacesTreeView.prototype = {
             break;
           }
         }
-      } else if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR)
+      } else if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR) {
         properties += " separator";
-      else if (PlacesUtils.nodeIsURI(node)) {
+      } else if (PlacesUtils.nodeIsURI(node)) {
         properties += " " + PlacesUIUtils.guessUrlSchemeForUI(node.uri);
       }
 

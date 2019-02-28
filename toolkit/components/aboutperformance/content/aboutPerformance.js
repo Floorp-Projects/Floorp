@@ -408,9 +408,9 @@ var View = {
     this._fragment = document.createDocumentFragment();
   },
   displayEnergyImpact(elt, energyImpact) {
-    if (!energyImpact)
+    if (!energyImpact) {
       elt.textContent = "–";
-    else {
+    } else {
       let impact = "high";
       if (energyImpact < 1)
         impact = "low";

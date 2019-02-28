@@ -539,9 +539,9 @@ var tests = [
 
 function doNextTest() {
   /* global testCounter:true */
-  if (typeof testCounter == "undefined")
+  if (typeof testCounter == "undefined") {
     testCounter = 0;
-  else if (++testCounter == tests.length) {
+  } else if (++testCounter == tests.length) {
     SimpleTest.finish();
     return;
   }
@@ -561,8 +561,9 @@ function runTest(test) {
   if ("isIFrame" in test) {
     elem.contentDocument.designMode = "on";
     elem.contentWindow.focus();
-  } else
+  } else {
     elem.focus();
+  }
 
   var trans = SpecialPowers.Cc["@mozilla.org/widget/transferable;1"]
                            .createInstance(SpecialPowers.Ci.nsITransferable);

@@ -107,8 +107,9 @@ async function task_initializeBucket(bucket) {
           frecency = 0;
         else
           frecency = -1;
-      } else
+      } else {
         frecency = points;
+      }
       calculatedURI = uri("http://" + searchTerm + ".com/" +
         bonusName + ":" + bonusValue + "/cutoff:" + cutoff +
         "/weight:" + weight + "/frecency:" + frecency);
@@ -119,8 +120,9 @@ async function task_initializeBucket(bucket) {
           url: calculatedURI,
           title: matchTitle,
         });
-      } else
+      } else {
         matchTitle = calculatedURI.spec.substr(calculatedURI.spec.lastIndexOf("/") + 1);
+      }
       await PlacesTestUtils.addVisits({
         uri: calculatedURI,
         transition: visitType,

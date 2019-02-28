@@ -277,9 +277,9 @@ var gTests = [
         let Perms = Services.perms;
         let uri = gBrowser.selectedBrowser.documentURI;
         let devicePerms = Perms.testExactPermission(uri, aDevice);
-        if (aExpected === undefined)
+        if (aExpected === undefined) {
           is(devicePerms, Perms.UNKNOWN_ACTION, "no " + aDevice + " persistent permissions");
-        else {
+        } else {
           is(devicePerms, aExpected ? Perms.ALLOW_ACTION : Perms.DENY_ACTION,
              aDevice + " persistently " + (aExpected ? "allowed" : "denied"));
         }

@@ -142,9 +142,9 @@ function runTest() {
 }
 
 var isMac = ("nsILocalFileMac" in SpecialPowers.Ci);
-if (isMac)
+if (isMac) {
   SimpleTest.waitForFocus(runTest);
-else {
+} else {
   // This test is not yet supported on non-Mac platforms, see bug 574005.
   todo(false, "Test not supported on this platform");
   SimpleTest.finish();

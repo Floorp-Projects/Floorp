@@ -22,8 +22,9 @@ function Preferences(args) {
       this._defaultBranch = args.defaultBranch;
     if (args.privacyContext)
       this._privacyContext = args.privacyContext;
-  } else if (args)
+  } else if (args) {
     this._branchStr = args;
+  }
 }
 
 /**
@@ -406,8 +407,9 @@ PrefObserver.prototype = {
         this.callback.call(this.thisObject, prefValue);
       else
         this.callback(prefValue);
-    } else // typeof this.callback == "object" (nsIObserver)
+    } else { // typeof this.callback == "object" (nsIObserver)
       this.callback.observe(subject, topic, data);
+    }
   },
 };
 

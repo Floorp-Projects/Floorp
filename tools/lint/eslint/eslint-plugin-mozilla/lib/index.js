@@ -34,6 +34,7 @@ module.exports = {
     "avoid-Date-timing": require("../lib/rules/avoid-Date-timing"),
     "avoid-removeChild": require("../lib/rules/avoid-removeChild"),
     "balanced-listeners": require("../lib/rules/balanced-listeners"),
+    "consistent-if-bracing": require("../lib/rules/consistent-if-bracing"),
     "import-browser-window-globals":
       require("../lib/rules/import-browser-window-globals"),
     "import-content-task-globals":
