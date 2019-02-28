@@ -678,7 +678,7 @@
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
   list-style-image: url(chrome://browser/skin/arrow-left.svg) !important;
   -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
+  fill: var(--lwt-toolbarbutton-icon-fill, currentColor);
   fill-opacity: var(--toolbarbutton-icon-fill-opacity);
   color: inherit;
 }
