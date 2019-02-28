@@ -89,7 +89,7 @@ const reducers = {
     // "font-weight" if it is numeric and not a keyword.
     const weight = properties["font-weight"];
     if (axes.wght === undefined && parseFloat(weight).toString() === weight.toString()) {
-      axes.wght = weight;
+      axes.wght = parseFloat(weight);
     }
 
     // If not defined in font-variation-settings, setup "wdth" axis with the percentage
@@ -99,7 +99,7 @@ const reducers = {
     // If there's a match, the number is the second item in the match array.
     const match = stretch.trim().match(/^(\d+(.\d+)?)%$/);
     if (axes.wdth === undefined && match && match[1]) {
-      axes.wdth = match[1];
+      axes.wdth = parseFloat(match[1]);
     }
 
     return { ...state, axes, fonts, properties, id };

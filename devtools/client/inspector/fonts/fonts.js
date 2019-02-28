@@ -599,7 +599,7 @@ class FontInspector {
    *
    * @param  {String} tag
    *         Tag name of the font axis.
-   * @param  {String} value
+   * @param  {Number} value
    *         Value of the font axis.
    */
   onAxisUpdate(tag, value) {
@@ -608,7 +608,7 @@ class FontInspector {
     this.snapshotChanges();
 
     const writer = this.getWriterForProperty(tag);
-    writer(value);
+    writer(value.toString());
   }
 
   /**
@@ -616,7 +616,7 @@ class FontInspector {
    *
    * @param  {String} property
    *         CSS font property name.
-   * @param  {String} value
+   * @param  {Number} value
    *         CSS font property numeric value.
    * @param  {String|null} unit
    *         CSS unit or null
@@ -625,7 +625,7 @@ class FontInspector {
     value = (unit !== null) ? value + unit : value;
     this.store.dispatch(updateFontProperty(property, value));
     const writer = this.getWriterForProperty(property);
-    writer(value);
+    writer(value.toString());
   }
 
   /**
@@ -696,7 +696,7 @@ class FontInspector {
    *
    * @param  {String} property
    *         CSS font property name or axis name
-   * @param  {String|Number} value
+   * @param  {Number} value
    *         CSS font property value or axis value
    * @param  {String|undefined} fromUnit
    *         Optional CSS unit to convert from
@@ -713,11 +713,9 @@ class FontInspector {
         unit = toUnit;
       }
 
-      // Cast value to string.
-      this.onFontPropertyUpdate(property, value + "", unit);
+      this.onFontPropertyUpdate(property, value, unit);
     } else {
-      // Cast axis value to string.
-      this.onAxisUpdate(property, value + "");
+      this.onAxisUpdate(property, value);
     }
   }
 
