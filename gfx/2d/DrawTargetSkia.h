@@ -130,18 +130,6 @@ class DrawTargetSkia : public DrawTarget {
             SurfaceFormat aFormat, bool aUninitialized = false);
   bool Init(SkCanvas *aCanvas);
 
-#ifdef USE_SKIA_GPU
-  bool InitWithGrContext(GrContext *aGrContext, const IntSize &aSize,
-                         SurfaceFormat aFormat, bool aCached);
-  virtual bool InitWithGrContext(GrContext *aGrContext, const IntSize &aSize,
-                                 SurfaceFormat aFormat) override {
-    return InitWithGrContext(aGrContext, aSize, aFormat, false);
-  }
-
-  already_AddRefed<SourceSurface> OptimizeGPUSourceSurface(
-      SourceSurface *aSurface) const;
-#endif
-
   // Skia assumes that texture sizes fit in 16-bit signed integers.
   static size_t GetMaxSurfaceSize() { return 32767; }
 
@@ -163,8 +151,6 @@ class DrawTargetSkia : public DrawTarget {
                   const StrokeOptions *aStrokeOptions = nullptr,
                   const DrawOptions &aOptions = DrawOptions());
 
-  bool UsingSkiaGPU() const;
-
   struct PushedLayer {
     PushedLayer(bool aOldPermitSubpixelAA, SourceSurface *aMask)
         : mOldPermitSubpixelAA(aOldPermitSubpixelAA), mMask(aMask) {}
@@ -172,10 +158,6 @@ class DrawTargetSkia : public DrawTarget {
     RefPtr<SourceSurface> mMask;
   };
   std::vector<PushedLayer> mPushedLayers;
-
-#ifdef USE_SKIA_GPU
-  sk_sp<GrContext> mGrContext;
-#endif
 
   IntSize mSize;
   sk_sp<SkSurface> mSurface;
