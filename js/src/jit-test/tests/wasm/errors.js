@@ -106,9 +106,9 @@ test(I64TruncSF32Code, '(module (func (drop (i64.trunc_s/f32 (f32.const nan)))) 
 test(I64TruncSF64Code, '(module (func (drop (i64.trunc_s/f64 (f64.const nan)))) (start 0))', RuntimeError, /invalid conversion to integer/);
 test(I64TruncUF32Code, '(module (func (drop (i64.trunc_u/f32 (f32.const nan)))) (start 0))', RuntimeError, /invalid conversion to integer/);
 test(I64TruncUF64Code, '(module (func (drop (i64.trunc_u/f64 (f64.const nan)))) (start 0))', RuntimeError, /invalid conversion to integer/);
-test(CallIndirectCode, '(module (table 1 anyfunc) (func (call_indirect 0 (i32.const 0))) (start 0))', RuntimeError, /indirect call to null/);
-test(CallIndirectCode, '(module (table 1 anyfunc) (func (call_indirect 0 (i32.const 1))) (start 0))', RuntimeError, /index out of bounds/);
-test(CallIndirectCode, '(module (table anyfunc (elem $blah)) (func (call_indirect 0 (i32.const 0))) (func $blah (param i32)) (start 0))', RuntimeError, /indirect call signature mismatch/);
+test(CallIndirectCode, '(module (table 1 funcref) (func (call_indirect 0 (i32.const 0))) (start 0))', RuntimeError, /indirect call to null/);
+test(CallIndirectCode, '(module (table 1 funcref) (func (call_indirect 0 (i32.const 1))) (start 0))', RuntimeError, /index out of bounds/);
+test(CallIndirectCode, '(module (table funcref (elem $blah)) (func (call_indirect 0 (i32.const 0))) (func $blah (param i32)) (start 0))', RuntimeError, /indirect call signature mismatch/);
 testLoad(I32Load8S, 'i32.load8_s', 1, RuntimeError, /index out of bounds/);
 testLoad(I32Load8U, 'i32.load8_u', 1, RuntimeError, /index out of bounds/);
 testLoad(I32Load16S, 'i32.load16_s', 2, RuntimeError, /index out of bounds/);
@@ -145,7 +145,7 @@ var {stack, binary} = test(UnreachableCode, `(module
     (func $a unreachable)
     (func $b call $a)
     (func $c call $b)
-    (table anyfunc (elem $c))
+    (table funcref (elem $c))
     (func $d (call_indirect $v2v (i32.const 0)))
     (func $e call $d)
     (start $e)

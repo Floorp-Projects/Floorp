@@ -20,6 +20,7 @@
 
 #include "builtin/Array.h"
 #include "gc/Barrier.h"
+#include "js/GCVariant.h"
 #include "js/UniquePtr.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/Compartment.h"
@@ -174,6 +175,8 @@ class NewProxyCache {
 // In the presence of internal errors, we do not set the new object's metadata
 // (if it was even allocated) and reset to the previous state on the stack.
 
+// See below in namespace JS for the template specialization for
+// ImmediateMetadata and DelayMetadata.
 struct ImmediateMetadata {};
 struct DelayMetadata {};
 using PendingMetadata = JSObject*;
@@ -181,22 +184,14 @@ using PendingMetadata = JSObject*;
 using NewObjectMetadataState =
     mozilla::Variant<ImmediateMetadata, DelayMetadata, PendingMetadata>;
 
-class MOZ_RAII AutoSetNewObjectMetadata : private JS::CustomAutoRooter {
+class MOZ_RAII AutoSetNewObjectMetadata {
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
 
   JSContext* cx_;
-  NewObjectMetadataState prevState_;
+  Rooted<NewObjectMetadataState> prevState_;
 
   AutoSetNewObjectMetadata(const AutoSetNewObjectMetadata& aOther) = delete;
   void operator=(const AutoSetNewObjectMetadata& aOther) = delete;
-
- protected:
-  virtual void trace(JSTracer* trc) override {
-    if (prevState_.is<PendingMetadata>()) {
-      TraceRoot(trc, &prevState_.as<PendingMetadata>(),
-                "Object pending metadata");
-    }
-  }
 
  public:
   explicit AutoSetNewObjectMetadata(
@@ -293,6 +288,13 @@ class ObjectRealm {
 };
 
 }  // namespace js
+
+namespace JS {
+template <> struct GCPolicy<js::ImmediateMetadata>:
+  public IgnoreGCPolicy<js::ImmediateMetadata> {};
+template <> struct GCPolicy<js::DelayMetadata>:
+  public IgnoreGCPolicy<js::DelayMetadata> {};
+} // namespace JS
 
 class JS::Realm : public JS::shadow::Realm {
   JS::Zone* zone_;

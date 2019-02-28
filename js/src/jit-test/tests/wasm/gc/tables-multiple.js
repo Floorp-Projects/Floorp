@@ -14,8 +14,8 @@
 
 var ins = wasmEvalText(
     `(module
-      (table $t1 2 anyfunc)
-      (table $t2 2 anyfunc)
+      (table $t1 2 funcref)
+      (table $t2 2 funcref)
       (type $ftype (func (param i32) (result i32)))
       (elem $t1 (i32.const 0) $f1 $f2)
       (elem $t2 (i32.const 0) $f3 $f4)
@@ -44,11 +44,11 @@ assertEq(ins.g(1, 10), 14);
 var ins = wasmEvalText(
     `(module
       (gc_feature_opt_in 3)
-      (table $t0 (import "m" "t") 2 anyfunc)
-      (table $t1 (export "t1") 2 anyfunc)
+      (table $t0 (import "m" "t") 2 funcref)
+      (table $t1 (export "t1") 2 funcref)
       (table 1 anyref)
-      (table $t2 (export "t2") 3 anyfunc))`,
-    {m:{t: new WebAssembly.Table({element:"anyfunc", initial:2})}}).exports;
+      (table $t2 (export "t2") 3 funcref))`,
+    {m:{t: new WebAssembly.Table({element:"funcref", initial:2})}}).exports;
 
 assertEq(ins.t1 instanceof WebAssembly.Table, true);
 assertEq(ins.t1.length, 2);
@@ -58,22 +58,22 @@ assertEq(ins.t2.length, 3);
 // - multiple imported tables of misc type
 // - table.get and table.set can point to a table
 
-var exp = {m:{t0: new WebAssembly.Table({element:"anyfunc", initial:2}),
+var exp = {m:{t0: new WebAssembly.Table({element:"funcref", initial:2}),
               t1: new WebAssembly.Table({element:"anyref", initial:3}),
-              t2: new WebAssembly.Table({element:"anyfunc", initial:4}),
+              t2: new WebAssembly.Table({element:"funcref", initial:4}),
               t3: new WebAssembly.Table({element:"anyref", initial:5})}};
 var ins = wasmEvalText(
     `(module
       (gc_feature_opt_in 3)
 
-      (table $t0 (import "m" "t0") 2 anyfunc)
+      (table $t0 (import "m" "t0") 2 funcref)
       (type $id_i32_t (func (param i32) (result i32)))
       (func $id_i32 (param i32) (result i32) (get_local 0))
       (elem $t0 (i32.const 1) $id_i32)
 
       (table $t1 (import "m" "t1") 3 anyref)
 
-      (table $t2 (import "m" "t2") 4 anyfunc)
+      (table $t2 (import "m" "t2") 4 funcref)
       (type $id_f64_t (func (param f64) (result f64)))
       (func $id_f64 (param f64) (result f64) (get_local 0))
       (elem $t2 (i32.const 3) $id_f64)
@@ -185,7 +185,7 @@ assertEq(ins.exports.get(1), values[1]);
 //
 // Also tests:
 // - local tables can be exported and re-imported in another module
-// - table.copy between tables of anyfunc is possible without gc_feature_opt_in
+// - table.copy between tables of funcref is possible without gc_feature_opt_in
 
 var arg = 4;
 for (let [x,y,result,init] of [['(export "t")', '', arg*13, true],
@@ -195,7 +195,7 @@ for (let [x,y,result,init] of [['(export "t")', '', arg*13, true],
 {
     var otherins = wasmEvalText(
         `(module
-          (table $t (export "t") 2 anyfunc)
+          (table $t (export "t") 2 funcref)
           (type $fn1 (func (param i32) (result i32)))
           (func $f1 (param $n i32) (result i32)
            (i32.sub (get_local $n) (i32.const 11)))
@@ -203,9 +203,9 @@ for (let [x,y,result,init] of [['(export "t")', '', arg*13, true],
 
     let text =
         `(module
-          (table $t0 ${x} 2 anyfunc)
+          (table $t0 ${x} 2 funcref)
 
-          (table $t1 ${y} 2 anyfunc)
+          (table $t1 ${y} 2 funcref)
           (type $fn1 (func (param i32) (result i32)))
           (func $f1 (param $n i32) (result i32)
            (i32.mul (get_local $n) (i32.const 13)))
@@ -232,7 +232,7 @@ var ins = wasmEvalText(
       (gc_feature_opt_in 3)
       (import $t0 "m" "t0" (table 1 anyref))
       (import $t1 "m" "t1" (table 1 anyref))
-      (table $t2 (export "t2") 1 anyfunc)
+      (table $t2 (export "t2") 1 funcref)
       (func (export "f") (result i32)
        (table.grow $t0 (i32.const 1) (ref.null)))
       (func (export "g") (result i32)
@@ -250,12 +250,12 @@ ins.exports.t2.grow(3);
 assertEq(ins.exports.size(), 4);
 
 // - table.init on tables other than table 0
-// - gc_feature_opt_in not required for table.init on table(anyfunc) even with multiple tables
+// - gc_feature_opt_in not required for table.init on table(funcref) even with multiple tables
 
 var ins = wasmEvalText(
     `(module
-      (table $t0 2 anyfunc)
-      (table $t1 2 anyfunc)
+      (table $t0 2 funcref)
+      (table $t1 2 funcref)
       (elem passive $f0 $f1) ;; 0
       (type $ftype (func (param i32) (result i32)))
       (func $f0 (param i32) (result i32)
@@ -271,22 +271,22 @@ ins.exports.init();
 assertEq(ins.exports.call(0, 10), 130);
 assertEq(ins.exports.call(1, 10), -1);
 
-// - [white-box] if a multi-imported table of anyfunc is grown and the grown
+// - [white-box] if a multi-imported table of funcref is grown and the grown
 //   part is properly initialized with functions then calls through both tables
 //   in the grown area should succeed, ie, bounds checks should pass.  this is
 //   an interesting case because we cache the table bounds for the benefit of
 //   call_indirect, so here we're testing that the caches are updated properly
 //   even when a table is observed multiple times (also by multiple modules).
-//   there's some extra hair here because a table of anyfunc can be grown only
+//   there's some extra hair here because a table of funcref can be grown only
 //   from JS at the moment.
 // - also test that bounds checking continues to catch OOB calls
 
-var tbl = new WebAssembly.Table({element:"anyfunc", initial:2});
+var tbl = new WebAssembly.Table({element:"funcref", initial:2});
 var exp = {m:{t0: tbl, t1: tbl}};
 var ins = wasmEvalText(
     `(module
-      (import "m" "t0" (table $t0 2 anyfunc))
-      (import "m" "t1" (table $t1 2 anyfunc))
+      (import "m" "t0" (table $t0 2 funcref))
+      (import "m" "t1" (table $t1 2 funcref))
       (type $ftype (func (param f64) (result f64)))
       (func (export "f") (param $n f64) (result f64)
        (f64.mul (get_local $n) (f64.const 3.25)))
@@ -297,8 +297,8 @@ var ins = wasmEvalText(
     exp);
 var ins2 = wasmEvalText(
     `(module
-      (import "m" "t0" (table $t0 2 anyfunc))
-      (import "m" "t1" (table $t1 2 anyfunc))
+      (import "m" "t0" (table $t0 2 funcref))
+      (import "m" "t1" (table $t1 2 funcref))
       (type $ftype (func (param f64) (result f64)))
       (func (export "do0") (param $i i32) (param $n f64) (result f64)
        (call_indirect $t0 $ftype (get_local $n) (get_local $i)))
@@ -393,7 +393,7 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (table $t0 2 anyfunc)
+      (table $t0 2 funcref)
       (elem passive) ;; 0
       (func $f (result i32)
        (table.init 2 0 (i32.const 0) (i32.const 0) (i32.const 0))))`),
@@ -402,14 +402,14 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (table $t0 2 anyfunc)
+      (table $t0 2 funcref)
       (elem 2 (i32.const 0)))`),
                    WebAssembly.CompileError,
                    /table index out of range for element segment/);
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (table $t0 2 anyfunc)
+      (table $t0 2 funcref)
       (type $ft (func (param f64) (result i32)))
       (func $f (result i32)
        (call_indirect 2 $ft (f64.const 3.14) (i32.const 0))))`),
@@ -420,14 +420,14 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (table $t0 2 anyfunc)
+      (table $t0 2 funcref)
       (elem 0 passive (i32.const 0)))`),
                    SyntaxError,
                    /passive segment must not have a table/);
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (table $t0 2 anyfunc)
+      (table $t0 2 funcref)
       (elem passive) ;; 0
       (func $f (result i32)
        (table.init $t0 (i32.const 0) (i32.const 0) (i32.const 0))))`), // no segment
@@ -436,8 +436,8 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (table $t0 2 anyfunc)
-      (table $t1 2 anyfunc)
+      (table $t0 2 funcref)
+      (table $t1 2 funcref)
       (func $f
        (table.copy 0 (i32.const 0) (i32.const 0) (i32.const 2))))`), // target without source
                    SyntaxError,
@@ -445,8 +445,8 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (table $t0 2 anyfunc)
-      (table $t1 2 anyfunc)
+      (table $t0 2 funcref)
+      (table $t1 2 funcref)
       (func $f
        (table.copy (i32.const 0) 0 (i32.const 0) (i32.const 2))))`), // source without target
                    SyntaxError,

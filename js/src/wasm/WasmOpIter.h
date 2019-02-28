@@ -1351,7 +1351,7 @@ inline bool OpIter<Policy>::readGetLocal(const ValTypeVector& locals,
   }
 
   if (*id >= locals.length()) {
-    return fail("get_local index out of range");
+    return fail("local.get index out of range");
   }
 
   return push(locals[*id]);
@@ -1367,7 +1367,7 @@ inline bool OpIter<Policy>::readSetLocal(const ValTypeVector& locals,
   }
 
   if (*id >= locals.length()) {
-    return fail("set_local index out of range");
+    return fail("local.set index out of range");
   }
 
   return popWithType(locals[*id], value);
@@ -1383,7 +1383,7 @@ inline bool OpIter<Policy>::readTeeLocal(const ValTypeVector& locals,
   }
 
   if (*id >= locals.length()) {
-    return fail("set_local index out of range");
+    return fail("local.set index out of range");
   }
 
   return topWithType(locals[*id], value);
@@ -1398,7 +1398,7 @@ inline bool OpIter<Policy>::readGetGlobal(uint32_t* id) {
   }
 
   if (*id >= env_.globals.length()) {
-    return fail("get_global index out of range");
+    return fail("global.get index out of range");
   }
 
   return push(env_.globals[*id].type());
@@ -1413,7 +1413,7 @@ inline bool OpIter<Policy>::readSetGlobal(uint32_t* id, Value* value) {
   }
 
   if (*id >= env_.globals.length()) {
-    return fail("set_global index out of range");
+    return fail("global.set index out of range");
   }
 
   if (!env_.globals[*id].isMutable()) {
@@ -1432,7 +1432,7 @@ inline bool OpIter<Policy>::readTeeGlobal(uint32_t* id, Value* value) {
   }
 
   if (*id >= env_.globals.length()) {
-    return fail("set_global index out of range");
+    return fail("global.set index out of range");
   }
 
   if (!env_.globals[*id].isMutable()) {
@@ -1560,7 +1560,7 @@ inline bool OpIter<Policy>::readCallIndirect(uint32_t* funcTypeIndex,
     return fail("table index out of range for call_indirect");
   }
   if (env_.tables[*tableIndex].kind != TableKind::AnyFunction) {
-    return fail("indirect calls must go through a table of 'anyfunc'");
+    return fail("indirect calls must go through a table of 'funcref'");
   }
 
   if (!popWithType(ValType::I32, callee)) {
@@ -1961,7 +1961,7 @@ inline bool OpIter<Policy>::readMemOrTableInit(bool isMem, uint32_t* segIndex,
     // Element segments must carry functions exclusively and anyfunc is not
     // yet a subtype of anyref.
     if (env_.tables[*dstTableIndex].kind != TableKind::AnyFunction) {
-      return fail("only tables of 'anyfunc' may have element segments");
+      return fail("only tables of 'funcref' may have element segments");
     }
     if (*segIndex >= env_.elemSegments.length()) {
       return fail("table.init segment index out of range");
