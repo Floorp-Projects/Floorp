@@ -93,8 +93,9 @@ var tabPreviewPanelHelper = {
     if (host._prevFocus) {
       Services.focus.setFocus(host._prevFocus, Ci.nsIFocusManager.FLAG_NOSCROLL);
       host._prevFocus = null;
-    } else
+    } else {
       gBrowser.selectedBrowser.focus();
+    }
 
     if (host.tabToSelect) {
       gBrowser.selectedTab = host.tabToSelect;

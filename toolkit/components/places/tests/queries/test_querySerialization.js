@@ -504,7 +504,9 @@ function cartProd(aSequences, aCallback) {
         // All element pointers are past the ends of their sequences.
         if (seqPtr < 0)
           done = true;
-      } else break;
+      } else {
+        break;
+      }
     }
   }
   return numProds;
@@ -561,9 +563,9 @@ function choose(aSet, aHowMany, aCallback) {
       }
 
       // All pointers are adjacent and clustered all the way to the right.
-      if (pi < 0)
+      if (pi < 0) {
         done = true;
-      else {
+      } else {
         // pi = index of rightmost pointer with a gap between it and its
         // succeeding pointer.  Move it right and reset all succeeding pointers
         // so that they're adjacent to it.
@@ -594,12 +596,14 @@ function flagSwitchMatches(aQuery1, aQuery2) {
         if (aQuery1[p] instanceof Ci.nsIURI) {
           if (!aQuery1[p].equals(aQuery2[p]))
             return false;
-        } else if (aQuery1[p] !== aQuery2[p])
+        } else if (aQuery1[p] !== aQuery2[p]) {
           return false;
+        }
       }
     }
-  } else if (aQuery1[this.flag] || aQuery2[this.flag])
+  } else if (aQuery1[this.flag] || aQuery2[this.flag]) {
     return false;
+  }
 
   return true;
 }

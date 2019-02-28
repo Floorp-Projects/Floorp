@@ -281,9 +281,9 @@ class MozTranslationNotification extends MozElements.Notification {
   optionsShowing() {
     // Get the source language name.
     let lang;
-    if (this.state == Translation.STATE_OFFER)
+    if (this.state == Translation.STATE_OFFER) {
       lang = this._getAnonElt("detectedLanguage").value;
-    else {
+    } else {
       lang = this._getAnonElt("fromLanguage").value;
 
       // If we have never attempted to translate the page before the

@@ -864,9 +864,9 @@ var gDownloadingPage = {
    * When the user clicks the Pause/Resume button
    */
   onPause() {
-    if (this._paused)
+    if (this._paused) {
       gAUS.downloadUpdate(gUpdates.update, false);
-    else {
+    } else {
       var patch = gUpdates.update.selectedPatch;
       patch.QueryInterface(Ci.nsIWritablePropertyBag);
       patch.setProperty("status", this._pausedStatus);

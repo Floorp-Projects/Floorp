@@ -32,11 +32,11 @@ add_task(async function test_execute() {
 
 
   for (var visit of gVisits) {
-    if (visit.transition == TRANSITION_TYPED)
+    if (visit.transition == TRANSITION_TYPED) {
       PlacesUtils.history.markPageAsTyped(uri(visit.url));
-    else if (visit.transition == TRANSITION_BOOKMARK)
+    } else if (visit.transition == TRANSITION_BOOKMARK) {
       PlacesUtils.history.markPageAsFollowedBookmark(uri(visit.url));
-    else {
+    } else {
      // because it is a top level visit with no referrer,
      // it will result in TRANSITION_LINK
     }

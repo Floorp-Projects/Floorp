@@ -106,10 +106,10 @@ async function task_populateDB(aArray) {
       }
 
       if (qdata.isItemAnnotation) {
-        if (qdata.removeAnnotation)
+        if (qdata.removeAnnotation) {
           PlacesUtils.annotations.removeItemAnnotation(qdata.itemId,
                                                        qdata.annoName);
-        else {
+        } else {
           PlacesUtils.annotations.setItemAnnotation(qdata.itemId,
                                                     qdata.annoName,
                                                     qdata.annoVal,

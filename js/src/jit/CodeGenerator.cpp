@@ -8912,8 +8912,8 @@ void JitRuntime::generateDoubleToInt32ValueStub(MacroAssembler& masm) {
   masm.abiret();
 }
 
-bool JitRuntime::generateTLEventVM(MacroAssembler& masm, const VMFunction& f,
-                                   bool enter) {
+bool JitRuntime::generateTLEventVM(MacroAssembler& masm,
+                                   const VMFunctionData& f, bool enter) {
 #ifdef JS_TRACE_LOGGING
   bool vmEventEnabled = TraceLogTextIdEnabled(TraceLogger_VM);
   bool vmSpecificEventEnabled = TraceLogTextIdEnabled(TraceLogger_VMSpecific);

@@ -460,9 +460,9 @@
         for (var i = 0; i < container.childCount; ++i) {
           var child = container.getChild(i);
           var childURI = child.uri;
-          if (childURI == placeURI)
+          if (childURI == placeURI) {
             return child;
-          else if (PlacesUtils.nodeIsContainer(child)) {
+          } else if (PlacesUtils.nodeIsContainer(child)) {
             var nested = findNode(PlacesUtils.asContainer(child), nodesURIChecked);
             if (nested)
               return nested;
@@ -481,9 +481,9 @@
         return;
 
       var child = findNode(container, []);
-      if (child)
+      if (child) {
         this.selectNode(child);
-      else {
+      } else {
         // If the specified child could not be located, clear the selection
         var selection = this.view.selection;
         selection.clearSelection();

@@ -326,10 +326,10 @@ talos-tp6-stylo-threads:
         extra-options:
             - --suite=tp6-stylo-threads
 
-talos-tps:
-    description: "Talos page scroll (tps)"
-    try-name: tps
-    treeherder-symbol: T(tps)
+talos-tabswitch:
+    description: "Talos page scroll (tabswitch)"
+    try-name: tabswitch
+    treeherder-symbol: T(tabswitch)
     max-run-time: 900
     run-on-projects:
         by-test-platform:
@@ -338,7 +338,7 @@ talos-tps:
             default: ['mozilla-beta', 'trunk', 'try']
     mozharness:
         extra-options:
-            - --suite=tps
+            - --suite=tabswitch
 
 talos-xperf:
     description: "Talos xperf"

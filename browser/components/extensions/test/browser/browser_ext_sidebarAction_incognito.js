@@ -2,13 +2,12 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-async function testIncognito(incognitoOverride) {
+add_task(async function test_sidebarAction_not_allowed() {
   SpecialPowers.pushPrefEnv({set: [
     ["extensions.allowPrivateBrowsingByDefault", false],
   ]});
 
   let extension = ExtensionTestUtils.loadExtension({
-    incognitoOverride,
     manifest: {
       sidebar_action: {
         default_panel: "sidebar.html",
@@ -18,40 +17,40 @@ async function testIncognito(incognitoOverride) {
       browser.test.onMessage.addListener(async pbw => {
         await browser.test.assertRejects(browser.sidebarAction.setTitle({
           windowId: pbw.windowId, title: "test",
-        }), /Invalid window ID/, "should not be able to set title");
+        }), /Invalid window ID/, "should not be able to set title with windowId");
         await browser.test.assertRejects(browser.sidebarAction.setTitle({
           tabId: pbw.tabId, title: "test",
         }), /Invalid tab ID/, "should not be able to set title");
         await browser.test.assertRejects(browser.sidebarAction.getTitle({
           windowId: pbw.windowId,
-        }), /Invalid window ID/, "should not be able to get title");
+        }), /Invalid window ID/, "should not be able to get title with windowId");
         await browser.test.assertRejects(browser.sidebarAction.getTitle({
           tabId: pbw.tabId,
-        }), /Invalid tab ID/, "should not be able to get title");
+        }), /Invalid tab ID/, "should not be able to get title with tabId");
 
         await browser.test.assertRejects(browser.sidebarAction.setIcon({
           windowId: pbw.windowId, path: "test",
-        }), /Invalid window ID/, "should not be able to set icon");
+        }), /Invalid window ID/, "should not be able to set icon with windowId");
         await browser.test.assertRejects(browser.sidebarAction.setIcon({
           tabId: pbw.tabId, path: "test",
-        }), /Invalid tab ID/, "should not be able to set icon");
+        }), /Invalid tab ID/, "should not be able to set icon with tabId");
 
         await browser.test.assertRejects(browser.sidebarAction.setPanel({
           windowId: pbw.windowId, panel: "test",
-        }), /Invalid window ID/, "should not be able to set panel");
+        }), /Invalid window ID/, "should not be able to set panel with windowId");
         await browser.test.assertRejects(browser.sidebarAction.setPanel({
           tabId: pbw.tabId, panel: "test",
-        }), /Invalid tab ID/, "should not be able to set panel");
+        }), /Invalid tab ID/, "should not be able to set panel with tabId");
         await browser.test.assertRejects(browser.sidebarAction.getPanel({
           windowId: pbw.windowId,
-        }), /Invalid window ID/, "should not be able to get panel");
+        }), /Invalid window ID/, "should not be able to get panel with windowId");
         await browser.test.assertRejects(browser.sidebarAction.getPanel({
           tabId: pbw.tabId,
-        }), /Invalid tab ID/, "should not be able to get panel");
+        }), /Invalid tab ID/, "should not be able to get panel with tabId");
 
         await browser.test.assertRejects(browser.sidebarAction.isOpen({
           windowId: pbw.windowId,
-        }), /Invalid window ID/, "should not be able to determine openness");
+        }), /Invalid window ID/, "should not be able to determine openness with windowId");
 
         browser.test.notifyPass("pass");
       });
@@ -81,26 +80,14 @@ async function testIncognito(incognitoOverride) {
   let sidebarID = `${makeWidgetId(extension.id)}-sidebar-action`;
   ok(SidebarUI.sidebars.has(sidebarID), "sidebar exists in non-private window");
 
-  let winData = await getIncognitoWindow("about:blank");
+  let winData = await getIncognitoWindow();
 
   let hasSidebar = winData.win.SidebarUI.sidebars.has(sidebarID);
-  if (incognitoOverride == "spanning") {
-    ok(hasSidebar, "sidebar exists in private window");
-  } else {
-    ok(!hasSidebar, "sidebar does not exist in private window");
-    // Test API access to private window data.
-    extension.sendMessage(winData.details);
-    await extension.awaitFinish("pass");
-  }
+  ok(!hasSidebar, "sidebar does not exist in private window");
+  // Test API access to private window data.
+  extension.sendMessage(winData.details);
+  await extension.awaitFinish("pass");
 
   await BrowserTestUtils.closeWindow(winData.win);
   await extension.unload();
-}
-
-add_task(async function test_sidebarAction_not_allowed() {
-  await testIncognito();
-});
-
-add_task(async function test_sidebarAction_allowed() {
-  await testIncognito("spanning");
 });

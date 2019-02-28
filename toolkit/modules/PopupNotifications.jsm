@@ -875,8 +875,9 @@ PopupNotifications.prototype = {
           Cu.reportError(e);
           popupnotification.removeAttribute("origin");
         }
-      } else
+      } else {
         popupnotification.removeAttribute("origin");
+      }
 
       if (n.options.hideClose)
         popupnotification.setAttribute("closebuttonhidden", "true");

@@ -28,6 +28,8 @@ namespace js {
 namespace jit {
 
 class FrameSizeClass;
+struct VMFunctionData;
+enum class VMFunctionId;
 
 struct EnterJitData {
   explicit EnterJitData(JSContext* cx)
@@ -143,6 +145,10 @@ class JitRuntime {
   using VMWrapperMap = HashMap<const VMFunction*, uint32_t, VMFunction>;
   WriteOnceData<VMWrapperMap*> functionWrappers_;
 
+  // Maps VMFunctionId to the offset of the wrapper code in trampolineCode_.
+  using VMWrapperOffsets = Vector<uint32_t, 0, SystemAllocPolicy>;
+  VMWrapperOffsets functionWrapperOffsets_;
+
   // Global table of jitcode native address => bytecode address mappings.
   UnprotectedData<JitcodeGlobalTable*> jitcodeGlobalTable_;
 
@@ -190,15 +196,18 @@ class JitRuntime {
   JitCode* generateDebugTrapHandler(JSContext* cx);
   JitCode* generateBaselineDebugModeOSRHandler(
       JSContext* cx, uint32_t* noFrameRegPopOffsetOut);
+
   bool generateVMWrapper(JSContext* cx, MacroAssembler& masm,
-                         const VMFunction& f);
+                         const VMFunctionData& f, uint32_t* wrapperOffset);
+  bool generateVMWrappers(JSContext* cx, MacroAssembler& masm);
 
-  bool generateTLEventVM(MacroAssembler& masm, const VMFunction& f, bool enter);
+  bool generateTLEventVM(MacroAssembler& masm, const VMFunctionData& f,
+                         bool enter);
 
-  inline bool generateTLEnterVM(MacroAssembler& masm, const VMFunction& f) {
+  inline bool generateTLEnterVM(MacroAssembler& masm, const VMFunctionData& f) {
     return generateTLEventVM(masm, f, /* enter = */ true);
   }
-  inline bool generateTLExitVM(MacroAssembler& masm, const VMFunction& f) {
+  inline bool generateTLExitVM(MacroAssembler& masm, const VMFunctionData& f) {
     return generateTLEventVM(masm, f, /* enter = */ false);
   }
 
@@ -227,6 +236,12 @@ class JitRuntime {
   }
 
   TrampolinePtr getVMWrapper(const VMFunction& f) const;
+
+  TrampolinePtr getVMWrapper(const VMFunctionId funId) const {
+    MOZ_ASSERT(trampolineCode_);
+    return trampolineCode(functionWrapperOffsets_[size_t(funId)]);
+  }
+
   JitCode* debugTrapHandler(JSContext* cx);
   JitCode* getBaselineDebugModeOSRHandler(JSContext* cx);
   void* getBaselineDebugModeOSRHandlerAddress(JSContext* cx, bool popFrameReg);

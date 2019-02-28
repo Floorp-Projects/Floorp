@@ -220,5 +220,11 @@ bool FocusState::CanIgnoreKeyboardShortcutMisses() const {
   return IsCurrent(lock) && !mFocusHasKeyEventListeners;
 }
 
+LayersId FocusState::GetFocusLayersId() const {
+  MutexAutoLock lock(mMutex);
+
+  return mFocusLayersId;
+}
+
 }  // namespace layers
 }  // namespace mozilla

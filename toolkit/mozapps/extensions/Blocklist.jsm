@@ -1369,9 +1369,9 @@ var Blocklist = {
         if (!addon.disable)
           continue;
 
-        if (addon.item instanceof Ci.nsIPluginTag)
+        if (addon.item instanceof Ci.nsIPluginTag) {
           addon.item.enabledState = Ci.nsIPluginTag.STATE_DISABLED;
-        else {
+        } else {
           // This add-on is softblocked.
           addon.item.softDisabled = true;
           // We must revert certain prefs.
