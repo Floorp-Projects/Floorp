@@ -157,7 +157,7 @@ const GloballyBlockedPermissions = {
                                               Ci.nsISupportsWeakReference]),
       onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
         if (aWebProgress.isTopLevel) {
-          GloballyBlockedPermissions.remove(browser, id);
+          GloballyBlockedPermissions.remove(browser, id, prePath);
           browser.removeProgressListener(this);
         }
       },
@@ -165,9 +165,11 @@ const GloballyBlockedPermissions = {
   },
 
   // Removes a permission with the specified id for the specified browser.
-  remove(browser, id) {
+  remove(browser, id, prePath = null) {
     let entry = this._stateByBrowser.get(browser);
-    let prePath = browser.currentURI.prePath;
+    if (!prePath) {
+      prePath = browser.currentURI.prePath;
+    }
     if (entry && entry[prePath]) {
       delete entry[prePath][id];
     }
