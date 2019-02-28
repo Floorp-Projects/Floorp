@@ -19,7 +19,8 @@ object SupportUtils {
     enum class SumoTopic(
         internal val topicStr: String
     ) {
-        HELP("firefox-android-help")
+        HELP("firefox-android-help"),
+        PRIVATE_BROWSING_MYTHS("private-browsing-myths")
     }
 
     fun getSumoURLForTopic(context: Context, topic: SumoTopic): String {

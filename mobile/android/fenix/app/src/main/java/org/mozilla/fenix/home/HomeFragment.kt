@@ -8,6 +8,7 @@ import android.content.res.Resources
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.text.SpannableString
+import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
 import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
@@ -41,6 +42,7 @@ import org.mozilla.fenix.home.tabs.toSessionViewState
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
+import org.mozilla.fenix.settings.SupportUtils
 import kotlin.math.roundToInt
 
 fun SessionBundleStorage.archive(sessionManager: SessionManager) {
@@ -233,7 +235,9 @@ class HomeFragment : Fragment() {
         val linkStartIndex = descriptionText.indexOf("\n\n") + 2
         val linkAction = object : ClickableSpan() {
             override fun onClick(widget: View?) {
-                // TODO Go to SUMO page
+                requireComponents.useCases.tabsUseCases.addPrivateTab
+                    .invoke(SupportUtils.getSumoURLForTopic(context!!, SupportUtils.SumoTopic.PRIVATE_BROWSING_MYTHS))
+                (activity as HomeActivity).openToBrowser(requireComponents.core.sessionManager.selectedSession?.id)
             }
         }
         val textWithLink = SpannableString(descriptionText).apply {
@@ -242,6 +246,7 @@ class HomeFragment : Fragment() {
             val colorSpan = ForegroundColorSpan(private_session_description.currentTextColor)
             setSpan(colorSpan, linkStartIndex, descriptionText.length, 0)
         }
+        private_session_description.movementMethod = LinkMovementMethod.getInstance()
         private_session_description.text = textWithLink
     }
 
