@@ -115,6 +115,7 @@ data class SessionsState(val archivedSessions: List<ArchivedSession>) : ViewStat
 sealed class SessionsAction : Action {
     data class Select(val archivedSession: ArchivedSession) : SessionsAction()
     data class Delete(val archivedSession: ArchivedSession) : SessionsAction()
+    data class MenuTapped(val archivedSession: ArchivedSession) : SessionsAction()
 }
 
 sealed class SessionsChange : Change {

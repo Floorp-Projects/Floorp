@@ -54,6 +54,7 @@ fun SessionBundleStorage.archive(sessionManager: SessionManager) {
         new()
 }
 
+@SuppressWarnings("TooManyFunctions")
 class HomeFragment : Fragment() {
     private val bus = ActionBusFactory.get(this)
     private var sessionObserver: SessionManager.Observer? = null
@@ -210,6 +211,7 @@ class HomeFragment : Fragment() {
                         is SessionsAction.Delete -> {
                             requireComponents.core.sessionStorage.remove(it.archivedSession.bundle)
                         }
+                        is SessionsAction.MenuTapped -> openSessionMenu()
                     }
                 }
         }

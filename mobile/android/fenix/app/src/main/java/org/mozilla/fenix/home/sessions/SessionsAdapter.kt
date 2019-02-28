@@ -94,17 +94,14 @@ class SessionsAdapter(
         override val containerView: View? = view
     ) : RecyclerView.ViewHolder(view), LayoutContainer {
         private var session: ArchivedSession? = null
-        private lateinit var sessionMenu: SessionItemMenu
 
         init {
-            setupMenu()
-
             session_item.setOnClickListener {
                 session?.apply { actionEmitter.onNext(SessionsAction.Select(this)) }
             }
 
             session_card_overflow_button.setOnClickListener {
-                sessionMenu.menuBuilder.build(itemView.context).show(it)
+                session?.apply { actionEmitter.onNext(SessionsAction.MenuTapped(this)) }
             }
         }
 
@@ -120,16 +117,6 @@ class SessionsAdapter(
             session_card_extras.text = if (session.extrasLabel > 0) {
                 "+${session.extrasLabel} sites..."
             } else { "" }
-        }
-
-        private fun setupMenu() {
-            sessionMenu = SessionItemMenu(itemView.context) {
-                if (it is SessionItemMenu.Item.Delete) {
-                    session?.apply {
-                        actionEmitter.onNext(SessionsAction.Delete(this))
-                    }
-                }
-            }
         }
 
         companion object {
