@@ -33,15 +33,13 @@ class CanvasImageCache {
    */
   static void NotifyDrawImage(dom::Element* aImage,
                               dom::HTMLCanvasElement* aCanvas,
-                              SourceSurface* aSource, const gfx::IntSize& aSize,
-                              bool aIsAccelerated);
+                              SourceSurface* aSource, const gfx::IntSize& aSize);
 
   /**
    * Check whether aImage has recently been drawn any canvas. If we return
    * a non-null surface, then the same image was recently drawn into a canvas.
    */
-  static SourceSurface* LookupAllCanvas(dom::Element* aImage,
-                                        bool aIsAccelerated);
+  static SourceSurface* LookupAllCanvas(dom::Element* aImage);
 
   /**
    * Like the top above, but restricts the lookup to only aCanvas. This is
@@ -49,8 +47,7 @@ class CanvasImageCache {
    */
   static SourceSurface* LookupCanvas(dom::Element* aImage,
                                      dom::HTMLCanvasElement* aCanvas,
-                                     gfx::IntSize* aSizeOut,
-                                     bool aIsAccelerated);
+                                     gfx::IntSize* aSizeOut);
 };
 
 }  // namespace mozilla
