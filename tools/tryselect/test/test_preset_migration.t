@@ -11,9 +11,22 @@ Test migration of syntax preset
   $ ls $MOZBUILD_STATE_PATH/autotry.ini
   */mozbuild/autotry.ini (glob)
   $ ./mach try syntax $testargs --list-presets
-  no presets found
-  $ ./mach try syntax $testargs --preset foo
   migrating saved presets from '*/mozbuild/autotry.ini' to '*/mozbuild/try_presets.yml' (glob)
+  Presets from */mozbuild/try_presets.yml: (glob)
+  
+    foo:
+      builds: o
+      platforms:
+      - all
+      selector: syntax
+      tags:
+      - bar
+      talos:
+      - none
+      tests:
+      - mochitest
+    
+  $ ./mach try syntax $testargs --preset foo
   Commit message:
   try: -b o -p all -u mochitest -t none --tag bar
   
@@ -21,20 +34,6 @@ Test migration of syntax preset
   $ ls $MOZBUILD_STATE_PATH/autotry.ini
   */mozbuild/autotry.ini': No such file or directory (glob)
   [2]
-  $ ./mach try syntax $testargs --list-presets
-  foo:
-    builds: o
-    platforms:
-    - all
-    selector: syntax
-    tags:
-    - bar
-    talos:
-    - none
-    tests:
-    - mochitest
-  
- 
  Test migration of fuzzy preset
 
   $ rm $MOZBUILD_STATE_PATH/try_presets.yml
@@ -44,8 +43,7 @@ Test migration of syntax preset
   > EOF
   $ ls $MOZBUILD_STATE_PATH/autotry.ini
   */mozbuild/autotry.ini (glob)
-  $ ./mach try fuzzy $testargs --list-presets
-  no presets found
+
   $ ./mach try fuzzy $testargs --preset foo
   migrating saved presets from '*/mozbuild/autotry.ini' to '*/mozbuild/try_presets.yml' (glob)
   Commit message:
@@ -70,11 +68,13 @@ Test migration of syntax preset
   */mozbuild/autotry.ini': No such file or directory (glob)
   [2]
   $ ./mach try fuzzy $testargs --list-presets
-  foo:
-    query:
-    - '''foo | ''bar'
-    selector: fuzzy
+  Presets from */mozbuild/try_presets.yml: (glob)
   
+    foo:
+      query:
+      - '''foo | ''bar'
+      selector: fuzzy
+    
  
  Test unknown section prints message
 
