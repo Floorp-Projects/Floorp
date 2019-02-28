@@ -149,12 +149,12 @@ class DebuggerWeakMap
   // Expose those parts of HashMap public interface that are used by Debugger
   // methods.
 
-  typedef typename Base::Entry Entry;
-  typedef typename Base::Ptr Ptr;
-  typedef typename Base::AddPtr AddPtr;
-  typedef typename Base::Range Range;
-  typedef typename Base::Enum Enum;
-  typedef typename Base::Lookup Lookup;
+  using Entry = typename Base::Entry;
+  using Ptr = typename Base::Ptr;
+  using AddPtr = typename Base::AddPtr;
+  using Range = typename Base::Range;
+  using Enum = typename Base::Enum;
+  using Lookup = typename Base::Lookup;
 
   // Expose WeakMap public interface.
 
