@@ -14,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mozilla.components.service.glean.config.Configuration
+import mozilla.components.service.glean.firstrun.FileFirstRunDetector
 import mozilla.components.service.glean.ping.PingMaker
 import mozilla.components.service.glean.scheduler.PingUploadWorker
 import mozilla.components.service.glean.storages.StorageEngineManager
@@ -21,6 +22,7 @@ import org.json.JSONObject
 import org.junit.Assert
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
+import java.io.File
 import java.util.concurrent.ExecutionException
 
 /**
@@ -109,6 +111,13 @@ internal fun resetGlean(
     context: Context = ApplicationProvider.getApplicationContext(),
     config: Configuration = Configuration()
 ) {
+    // Clear all the stored data.
+    val storageManager = StorageEngineManager(applicationContext = context)
+    storageManager.clearAllStores()
+    // Clear the "first run" flag.
+    val firstRun = FileFirstRunDetector(File(context.applicationInfo.dataDir, Glean.GLEAN_DATA_DIR))
+    firstRun.reset()
+    // Init glean.
     Glean.initialized = false
     Glean.initialize(context, config)
 }

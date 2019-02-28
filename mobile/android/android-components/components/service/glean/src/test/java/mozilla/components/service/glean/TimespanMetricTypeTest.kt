@@ -1,8 +1,5 @@
 package mozilla.components.service.glean
 
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
-import mozilla.components.service.glean.storages.TimespansStorageEngine
 import org.junit.Test
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -16,15 +13,7 @@ class TimespanMetricTypeTest {
 
     @Before
     fun setUp() {
-        Glean.initialized = true
-        TimespansStorageEngine.applicationContext = ApplicationProvider.getApplicationContext()
-        // Clear the stored "user" preferences between tests.
-        ApplicationProvider.getApplicationContext<Context>()
-            .getSharedPreferences(TimespansStorageEngine.javaClass.canonicalName, Context.MODE_PRIVATE)
-            .edit()
-            .clear()
-            .apply()
-        TimespansStorageEngine.clearAllStores()
+        resetGlean()
     }
 
     @Test

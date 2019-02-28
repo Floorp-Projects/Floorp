@@ -24,12 +24,6 @@ class StringsStorageEngineTest {
     @Before
     fun setUp() {
         StringsStorageEngine.applicationContext = ApplicationProvider.getApplicationContext()
-        // Clear the stored "user" preferences between tests.
-        ApplicationProvider.getApplicationContext<Context>()
-            .getSharedPreferences(StringsStorageEngine.javaClass.canonicalName, Context.MODE_PRIVATE)
-            .edit()
-            .clear()
-            .apply()
         StringsStorageEngine.clearAllStores()
     }
 

@@ -9,7 +9,6 @@ import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.service.glean.CommonMetricData
 import mozilla.components.service.glean.Lifetime
-import mozilla.components.support.base.log.logger.Logger
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Test
@@ -23,35 +22,6 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class GenericScalarStorageEngineTest {
-
-    private class MockScalarStorageEngine(
-        override val logger: Logger = Logger("test")
-    ) : GenericScalarStorageEngine<Int>() {
-        override fun deserializeSingleMetric(metricName: String, value: Any?): Int? {
-            if (value is String) {
-                return value.toIntOrNull()
-            }
-
-            return value as? Int?
-        }
-
-        override fun serializeSingleMetric(
-            userPreferences: SharedPreferences.Editor?,
-            storeName: String,
-            value: Int,
-            extraSerializationData: Any?
-        ) {
-            userPreferences?.putInt(storeName, value)
-        }
-
-        fun record(
-            metricData: CommonMetricData,
-            value: Int
-        ) {
-            super.recordScalar(metricData, value)
-        }
-    }
-
     private data class GenericMetricType(
         override val disabled: Boolean,
         override val category: String,

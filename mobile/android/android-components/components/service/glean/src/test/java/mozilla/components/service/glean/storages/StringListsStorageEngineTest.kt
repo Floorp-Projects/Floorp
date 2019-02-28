@@ -24,14 +24,6 @@ class StringListsStorageEngineTest {
     @Before
     fun setUp() {
         StringListsStorageEngine.applicationContext = ApplicationProvider.getApplicationContext()
-        // Clear the stored "user" preferences between tests.
-        ApplicationProvider.getApplicationContext<Context>()
-            .getSharedPreferences(
-                StringListsStorageEngine.javaClass.canonicalName,
-                Context.MODE_PRIVATE)
-            .edit()
-            .clear()
-            .apply()
         StringListsStorageEngine.clearAllStores()
     }
 

@@ -26,12 +26,6 @@ class UuidsStorageEngineTest {
     @Before
     fun setUp() {
         UuidsStorageEngine.applicationContext = ApplicationProvider.getApplicationContext()
-        // Clear the stored "user" preferences between tests.
-        ApplicationProvider.getApplicationContext<Context>()
-            .getSharedPreferences(UuidsStorageEngine.javaClass.canonicalName, Context.MODE_PRIVATE)
-            .edit()
-            .clear()
-            .apply()
         UuidsStorageEngine.clearAllStores()
     }
 

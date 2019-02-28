@@ -50,12 +50,6 @@ class TimespansStorageEngineTest {
     @Before
     fun setUp() {
         TimespansStorageEngine.applicationContext = ApplicationProvider.getApplicationContext()
-        // Clear the stored "user" preferences between tests.
-        ApplicationProvider.getApplicationContext<Context>()
-            .getSharedPreferences(TimespansStorageEngine.javaClass.canonicalName, Context.MODE_PRIVATE)
-            .edit()
-            .clear()
-            .apply()
         TimespansStorageEngine.clearAllStores()
     }
 

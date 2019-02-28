@@ -139,7 +139,7 @@ class PingMakerTest {
     fun `seq number must be sequential`() {
         // NOTE: Using a "real" ApplicationContext here so that it will have
         // a working SharedPreferences implementation
-        var applicationContext = ApplicationProvider.getApplicationContext<Context>()
+        val applicationContext = ApplicationProvider.getApplicationContext<Context>()
         val maker = PingMaker(
             StorageEngineManager(
                 storageEngines = mapOf(

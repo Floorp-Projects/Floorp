@@ -34,8 +34,7 @@ class EventsStorageEngineTest {
 
     @Before
     fun setUp() {
-        Glean.initialized = false
-        Glean.initialize(ApplicationProvider.getApplicationContext())
+        resetGlean()
         assert(Glean.initialized)
         EventsStorageEngine.clearAllStores()
 

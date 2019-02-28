@@ -26,12 +26,6 @@ class DatetimesStorageEngineTest {
     @Before
     fun setUp() {
         DatetimesStorageEngine.applicationContext = ApplicationProvider.getApplicationContext()
-        // Clear the stored "user" preferences between tests.
-        ApplicationProvider.getApplicationContext<Context>()
-            .getSharedPreferences(DatetimesStorageEngine.javaClass.canonicalName, Context.MODE_PRIVATE)
-            .edit()
-            .clear()
-            .apply()
         DatetimesStorageEngine.clearAllStores()
     }
 

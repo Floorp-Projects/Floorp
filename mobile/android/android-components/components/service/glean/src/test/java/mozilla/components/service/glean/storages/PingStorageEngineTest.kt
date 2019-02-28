@@ -114,6 +114,7 @@ class PingStorageEngineTest {
     private fun testFailedCallback(path: String, pingData: String, config: Configuration): Boolean {
         assertTrue(pathNames.contains(path))
         assertEquals("dummy data", pingData)
+        assertEquals(Glean.configuration, config)
         return false
     }
 

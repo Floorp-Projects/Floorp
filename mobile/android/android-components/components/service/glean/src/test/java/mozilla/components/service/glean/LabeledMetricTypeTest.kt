@@ -8,7 +8,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import mozilla.components.service.glean.storages.BooleansStorageEngine
 import mozilla.components.service.glean.storages.CountersStorageEngine
-import mozilla.components.service.glean.storages.GenericScalarStorageEngine
+import mozilla.components.service.glean.storages.MockScalarStorageEngine
 import mozilla.components.service.glean.storages.StringListsStorageEngine
 import mozilla.components.service.glean.storages.StringsStorageEngine
 import mozilla.components.service.glean.storages.TimespansStorageEngine
@@ -20,7 +20,6 @@ import org.junit.runner.RunWith
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import java.util.UUID
-import mozilla.components.support.base.log.logger.Logger
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.`when`
@@ -32,34 +31,6 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class LabeledMetricTypeTest {
-    private class MockScalarStorageEngine(
-        override val logger: Logger = Logger("test")
-    ) : GenericScalarStorageEngine<Int>() {
-        override fun deserializeSingleMetric(metricName: String, value: Any?): Int? {
-            if (value is String) {
-                return value.toIntOrNull()
-            }
-
-            return value as? Int?
-        }
-
-        override fun serializeSingleMetric(
-            userPreferences: SharedPreferences.Editor?,
-            storeName: String,
-            value: Int,
-            extraSerializationData: Any?
-        ) {
-            userPreferences?.putInt(storeName, value)
-        }
-
-        fun record(
-            metricData: CommonMetricData,
-            value: Int
-        ) {
-            super.recordScalar(metricData, value)
-        }
-    }
-
     private data class GenericMetricType(
         override val disabled: Boolean,
         override val category: String,

@@ -4,11 +4,8 @@
 
 package mozilla.components.service.glean
 
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
-import mozilla.components.service.glean.storages.StringsStorageEngine
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -29,15 +26,7 @@ class StringMetricTypeTest {
 
     @Before
     fun setUp() {
-        Glean.initialized = true
-        StringsStorageEngine.applicationContext = ApplicationProvider.getApplicationContext()
-        // Clear the stored "user" preferences between tests.
-        ApplicationProvider.getApplicationContext<Context>()
-            .getSharedPreferences(StringsStorageEngine.javaClass.canonicalName, Context.MODE_PRIVATE)
-            .edit()
-            .clear()
-            .apply()
-        StringsStorageEngine.clearAllStores()
+        resetGlean()
     }
 
     @Test
