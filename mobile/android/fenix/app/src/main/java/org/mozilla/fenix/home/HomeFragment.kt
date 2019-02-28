@@ -95,11 +95,13 @@ class HomeFragment : Fragment() {
         val bundles = requireComponents.core.sessionStorage.bundles(temporaryNumberOfSessions)
 
         bundles.observe(this, Observer { sessionBundles ->
-            val archivedSessions = sessionBundles.mapNotNull { sessionBundle ->
-                sessionBundle.id?.let {
-                    ArchivedSession(it, sessionBundle, sessionBundle.lastSavedAt, sessionBundle.urls)
+            val archivedSessions = sessionBundles
+                .filter { it.id != requireComponents.core.sessionStorage.current()?.id }
+                .mapNotNull { sessionBundle ->
+                    sessionBundle.id?.let {
+                        ArchivedSession(it, sessionBundle, sessionBundle.lastSavedAt, sessionBundle.urls)
+                    }
                 }
-            }
 
             getManagedEmitter<SessionsChange>().onNext(SessionsChange.Changed(archivedSessions))
         })
