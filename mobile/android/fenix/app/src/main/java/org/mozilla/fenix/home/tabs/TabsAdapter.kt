@@ -13,12 +13,23 @@ import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.tab_list_row.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import mozilla.components.browser.icons.BrowserIcons
+import mozilla.components.browser.icons.IconRequest
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.increaseTapArea
+import kotlin.coroutines.CoroutineContext
 
 class TabsAdapter(private val actionEmitter: Observer<TabsAction>) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
+    lateinit var job: Job
 
     var sessions = listOf<SessionViewState>()
         set(value) {
@@ -29,7 +40,17 @@ class TabsAdapter(private val actionEmitter: Observer<TabsAction>) :
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
-        return TabViewHolder(view, actionEmitter)
+        return TabViewHolder(view, actionEmitter, job)
+    }
+
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+        super.onAttachedToRecyclerView(recyclerView)
+        job = Job()
+    }
+
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView)
+        job.cancel()
     }
 
     override fun getItemViewType(position: Int) = TabViewHolder.LAYOUT_ID
@@ -56,9 +77,13 @@ class TabsAdapter(private val actionEmitter: Observer<TabsAction>) :
     private class TabViewHolder(
         val view: View,
         actionEmitter: Observer<TabsAction>,
+        val job: Job,
         override val containerView: View? = view
     ) :
-        RecyclerView.ViewHolder(view), LayoutContainer {
+        RecyclerView.ViewHolder(view), LayoutContainer, CoroutineScope {
+
+        override val coroutineContext: CoroutineContext
+            get() = Dispatchers.IO + job
 
         var session: SessionViewState? = null
 
@@ -83,6 +108,13 @@ class TabsAdapter(private val actionEmitter: Observer<TabsAction>) :
 
         fun updateUrl(url: String) {
             text_url.text = url
+            launch(IO) {
+                val bitmap = BrowserIcons(favicon_image.context)
+                    .loadIcon(IconRequest(url)).await().bitmap
+                launch(Main) {
+                    favicon_image.setImageBitmap(bitmap)
+                }
+            }
         }
 
         fun updateSelected(selected: Boolean) {
