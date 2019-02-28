@@ -171,6 +171,12 @@ function getArrayLength(object) {
   // For typed arrays, `DevToolsUtils.getProperty` is not reliable because the `length`
   // getter could be shadowed by an own property, and `getOwnPropertyNames` is
   // unnecessarily slow. Obtain the `length` getter safely and call it manually.
+  if (isWorker) {
+    // Workers can't wrap debugger values into debuggees, so do the calculations
+    // in the debuggee itself.
+    const getter = object.proto.proto.getOwnPropertyDescriptor("length").get;
+    return getter.call(object).return;
+  }
   const typedProto = Object.getPrototypeOf(Uint8Array.prototype);
   const getter = Object.getOwnPropertyDescriptor(typedProto, "length").get;
   return getter.call(object.unsafeDereference());
