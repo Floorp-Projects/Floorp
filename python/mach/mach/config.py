@@ -380,7 +380,7 @@ class ConfigSettings(collections.Mapping):
             for k, v in settings.items():
                 if k in section:
                     raise ConfigException('Setting already registered: %s.%s' %
-                                          section_name, k)
+                                          (section_name, k))
 
                 section[k] = v
 
