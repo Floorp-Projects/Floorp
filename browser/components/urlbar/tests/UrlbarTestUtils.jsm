@@ -299,7 +299,7 @@ class UrlbarAbstraction {
     return BrowserTestUtils.waitForCondition(
       () => this.urlbar.controller.searchStatus >=
               Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH,
-      "waiting urlbar search to complete");
+      "waiting urlbar search to complete", 100, 50);
   }
 
   async promiseResultAt(index) {
