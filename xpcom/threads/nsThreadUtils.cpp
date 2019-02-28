@@ -117,6 +117,13 @@ PrioritizableRunnable::GetPriority(uint32_t* aPriority) {
   return NS_OK;
 }
 
+already_AddRefed<nsIRunnable> mozilla::CreateMediumHighRunnable(
+    already_AddRefed<nsIRunnable>&& aRunnable) {
+  nsCOMPtr<nsIRunnable> runnable = new PrioritizableRunnable(
+      std::move(aRunnable), nsIRunnablePriority::PRIORITY_MEDIUMHIGH);
+  return runnable.forget();
+}
+
 #endif  // XPCOM_GLUE_AVOID_NSPR
 
 //-----------------------------------------------------------------------------
