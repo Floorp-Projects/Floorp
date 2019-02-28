@@ -39,8 +39,8 @@
 #include "mozilla/JSONWriter.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/StackWalk.h"
-#include "mozilla/Vector.h"
 
 // CodeAddressService is defined entirely in the header, so this does not make
 // DMD depend on XPCOM's object file.
@@ -596,6 +596,9 @@ class StackTrace {
 
  public:
   StackTrace() : mLength(0) {}
+  StackTrace(const StackTrace& aOther) : mLength(aOther.mLength) {
+    PodCopy(mPcs, aOther.mPcs, mLength);
+  }
 
   uint32_t Length() const { return mLength; }
   const void* Pc(uint32_t i) const {
