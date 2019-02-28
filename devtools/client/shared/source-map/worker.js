@@ -1869,7 +1869,7 @@ function isnan (val) {
   return val !== val // eslint-disable-line no-self-compare
 }
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(25)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(27)))
 
 /***/ }),
 
@@ -2487,8 +2487,8 @@ module.exports = {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const networkRequest = __webpack_require__(27);
-const workerUtils = __webpack_require__(28);
+const networkRequest = __webpack_require__(25);
+const workerUtils = __webpack_require__(26);
 
 module.exports = {
   networkRequest,
@@ -2500,28 +2500,206 @@ module.exports = {
 /***/ 25:
 /***/ (function(module, exports) {
 
-var g;
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
-
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || Function("return this")() || (1,eval)("this");
-} catch(e) {
-	// This works if the window reference is available
-	if(typeof window === "object")
-		g = window;
+function networkRequest(url, opts) {
+  return fetch(url, {
+    cache: opts.loadFromCache ? "default" : "no-cache"
+  }).then(res => {
+    if (res.status >= 200 && res.status < 300) {
+      if (res.headers.get("Content-Type") === "application/wasm") {
+        return res.arrayBuffer().then(buffer => ({
+          content: buffer,
+          isDwarf: true
+        }));
+      }
+      return res.text().then(text => ({ content: text }));
+    }
+    return Promise.reject(`request failed with status ${res.status}`);
+  });
 }
 
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
+module.exports = networkRequest;
 
-module.exports = g;
+/***/ }),
 
+/***/ 26:
+/***/ (function(module, exports) {
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+function WorkerDispatcher() {
+  this.msgId = 1;
+  this.worker = null;
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+WorkerDispatcher.prototype = {
+  start(url, win = window) {
+    this.worker = new win.Worker(url);
+    this.worker.onerror = () => {
+      console.error(`Error in worker ${url}`);
+    };
+  },
+
+  stop() {
+    if (!this.worker) {
+      return;
+    }
+
+    this.worker.terminate();
+    this.worker = null;
+  },
+
+  task(method, { queue = false } = {}) {
+    const calls = [];
+    const push = args => {
+      return new Promise((resolve, reject) => {
+        if (queue && calls.length === 0) {
+          Promise.resolve().then(flush);
+        }
+
+        calls.push([args, resolve, reject]);
+
+        if (!queue) {
+          flush();
+        }
+      });
+    };
+
+    const flush = () => {
+      const items = calls.slice();
+      calls.length = 0;
+
+      if (!this.worker) {
+        return;
+      }
+
+      const id = this.msgId++;
+      this.worker.postMessage({
+        id,
+        method,
+        calls: items.map(item => item[0])
+      });
+
+      const listener = ({ data: result }) => {
+        if (result.id !== id) {
+          return;
+        }
+
+        if (!this.worker) {
+          return;
+        }
+
+        this.worker.removeEventListener("message", listener);
+
+        result.results.forEach((resultData, i) => {
+          const [, resolve, reject] = items[i];
+
+          if (resultData.error) {
+            reject(resultData.error);
+          } else {
+            resolve(resultData.response);
+          }
+        });
+      };
+
+      this.worker.addEventListener("message", listener);
+    };
+
+    return (...args) => push(args);
+  },
+
+  invoke(method, ...args) {
+    return this.task(method)(...args);
+  }
+};
+
+function workerHandler(publicInterface) {
+  return function (msg) {
+    const { id, method, calls } = msg.data;
+
+    Promise.all(calls.map(args => {
+      try {
+        const response = publicInterface[method].apply(undefined, args);
+        if (response instanceof Promise) {
+          return response.then(val => ({ response: val }),
+          // Error can't be sent via postMessage, so be sure to
+          // convert to string.
+          err => ({ error: err.toString() }));
+        }
+        return { response };
+      } catch (error) {
+        // Error can't be sent via postMessage, so be sure to convert to
+        // string.
+        return { error: error.toString() };
+      }
+    })).then(results => {
+      self.postMessage({ id, results });
+    });
+  };
+}
+
+function streamingWorkerHandler(publicInterface, { timeout = 100 } = {}, worker = self) {
+  let streamingWorker = (() => {
+    var _ref = _asyncToGenerator(function* (id, tasks) {
+      let isWorking = true;
+
+      const timeoutId = setTimeout(function () {
+        isWorking = false;
+      }, timeout);
+
+      const results = [];
+      while (tasks.length !== 0 && isWorking) {
+        const { callback, context, args } = tasks.shift();
+        const result = yield callback.call(context, args);
+        results.push(result);
+      }
+      worker.postMessage({ id, status: "pending", data: results });
+      clearTimeout(timeoutId);
+
+      if (tasks.length !== 0) {
+        yield streamingWorker(id, tasks);
+      }
+    });
+
+    return function streamingWorker(_x, _x2) {
+      return _ref.apply(this, arguments);
+    };
+  })();
+
+  return (() => {
+    var _ref2 = _asyncToGenerator(function* (msg) {
+      const { id, method, args } = msg.data;
+      const workerMethod = publicInterface[method];
+      if (!workerMethod) {
+        console.error(`Could not find ${method} defined in worker.`);
+      }
+      worker.postMessage({ id, status: "start" });
+
+      try {
+        const tasks = workerMethod(args);
+        yield streamingWorker(id, tasks);
+        worker.postMessage({ id, status: "done" });
+      } catch (error) {
+        worker.postMessage({ id, status: "error", error });
+      }
+    });
+
+    return function (_x3) {
+      return _ref2.apply(this, arguments);
+    };
+  })();
+}
+
+module.exports = {
+  WorkerDispatcher,
+  workerHandler,
+  streamingWorkerHandler
+};
 
 /***/ }),
 
@@ -2822,206 +3000,28 @@ module.exports = {
 /***/ 27:
 /***/ (function(module, exports) {
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+var g;
 
-function networkRequest(url, opts) {
-  return fetch(url, {
-    cache: opts.loadFromCache ? "default" : "no-cache"
-  }).then(res => {
-    if (res.status >= 200 && res.status < 300) {
-      if (res.headers.get("Content-Type") === "application/wasm") {
-        return res.arrayBuffer().then(buffer => ({
-          content: buffer,
-          isDwarf: true
-        }));
-      }
-      return res.text().then(text => ({ content: text }));
-    }
-    return Promise.reject(`request failed with status ${res.status}`);
-  });
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || Function("return this")() || (1,eval)("this");
+} catch(e) {
+	// This works if the window reference is available
+	if(typeof window === "object")
+		g = window;
 }
 
-module.exports = networkRequest;
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
 
-/***/ }),
+module.exports = g;
 
-/***/ 28:
-/***/ (function(module, exports) {
-
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
-
-function WorkerDispatcher() {
-  this.msgId = 1;
-  this.worker = null;
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-WorkerDispatcher.prototype = {
-  start(url, win = window) {
-    this.worker = new win.Worker(url);
-    this.worker.onerror = () => {
-      console.error(`Error in worker ${url}`);
-    };
-  },
-
-  stop() {
-    if (!this.worker) {
-      return;
-    }
-
-    this.worker.terminate();
-    this.worker = null;
-  },
-
-  task(method, { queue = false } = {}) {
-    const calls = [];
-    const push = args => {
-      return new Promise((resolve, reject) => {
-        if (queue && calls.length === 0) {
-          Promise.resolve().then(flush);
-        }
-
-        calls.push([args, resolve, reject]);
-
-        if (!queue) {
-          flush();
-        }
-      });
-    };
-
-    const flush = () => {
-      const items = calls.slice();
-      calls.length = 0;
-
-      if (!this.worker) {
-        return;
-      }
-
-      const id = this.msgId++;
-      this.worker.postMessage({
-        id,
-        method,
-        calls: items.map(item => item[0])
-      });
-
-      const listener = ({ data: result }) => {
-        if (result.id !== id) {
-          return;
-        }
-
-        if (!this.worker) {
-          return;
-        }
-
-        this.worker.removeEventListener("message", listener);
-
-        result.results.forEach((resultData, i) => {
-          const [, resolve, reject] = items[i];
-
-          if (resultData.error) {
-            reject(resultData.error);
-          } else {
-            resolve(resultData.response);
-          }
-        });
-      };
-
-      this.worker.addEventListener("message", listener);
-    };
-
-    return (...args) => push(args);
-  },
-
-  invoke(method, ...args) {
-    return this.task(method)(...args);
-  }
-};
-
-function workerHandler(publicInterface) {
-  return function (msg) {
-    const { id, method, calls } = msg.data;
-
-    Promise.all(calls.map(args => {
-      try {
-        const response = publicInterface[method].apply(undefined, args);
-        if (response instanceof Promise) {
-          return response.then(val => ({ response: val }),
-          // Error can't be sent via postMessage, so be sure to
-          // convert to string.
-          err => ({ error: err.toString() }));
-        }
-        return { response };
-      } catch (error) {
-        // Error can't be sent via postMessage, so be sure to convert to
-        // string.
-        return { error: error.toString() };
-      }
-    })).then(results => {
-      self.postMessage({ id, results });
-    });
-  };
-}
-
-function streamingWorkerHandler(publicInterface, { timeout = 100 } = {}, worker = self) {
-  let streamingWorker = (() => {
-    var _ref = _asyncToGenerator(function* (id, tasks) {
-      let isWorking = true;
-
-      const timeoutId = setTimeout(function () {
-        isWorking = false;
-      }, timeout);
-
-      const results = [];
-      while (tasks.length !== 0 && isWorking) {
-        const { callback, context, args } = tasks.shift();
-        const result = yield callback.call(context, args);
-        results.push(result);
-      }
-      worker.postMessage({ id, status: "pending", data: results });
-      clearTimeout(timeoutId);
-
-      if (tasks.length !== 0) {
-        yield streamingWorker(id, tasks);
-      }
-    });
-
-    return function streamingWorker(_x, _x2) {
-      return _ref.apply(this, arguments);
-    };
-  })();
-
-  return (() => {
-    var _ref2 = _asyncToGenerator(function* (msg) {
-      const { id, method, args } = msg.data;
-      const workerMethod = publicInterface[method];
-      if (!workerMethod) {
-        console.error(`Could not find ${method} defined in worker.`);
-      }
-      worker.postMessage({ id, status: "start" });
-
-      try {
-        const tasks = workerMethod(args);
-        yield streamingWorker(id, tasks);
-        worker.postMessage({ id, status: "done" });
-      } catch (error) {
-        worker.postMessage({ id, status: "error", error });
-      }
-    });
-
-    return function (_x3) {
-      return _ref2.apply(this, arguments);
-    };
-  })();
-}
-
-module.exports = {
-  WorkerDispatcher,
-  workerHandler,
-  streamingWorkerHandler
-};
 
 /***/ }),
 
@@ -4719,7 +4719,7 @@ const { getSourceMap } = __webpack_require__(267); /* This Source Code Form is s
 
 /* eslint camelcase: 0*/
 
-const { generatedToOriginalId } = __webpack_require__(69);
+const { generatedToOriginalId } = __webpack_require__(67);
 
 const xScopes = new Map();
 
@@ -4909,7 +4909,7 @@ module.exports = function(module) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(Buffer) {
-const punycode = __webpack_require__(67);
+const punycode = __webpack_require__(68);
 const tr46 = __webpack_require__(745);
 
 const infra = __webpack_require__(362);
@@ -6218,7 +6218,7 @@ module.exports.parseURL = function (input, options) {
 
 /***/ }),
 
-/***/ 51:
+/***/ 50:
 /***/ (function(module, exports) {
 
 var charenc = {
@@ -6259,6 +6259,94 @@ module.exports = charenc;
 /***/ }),
 
 /***/ 67:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+const md5 = __webpack_require__(78);
+
+function originalToGeneratedId(originalId) {
+  const match = originalId.match(/(.*)\/originalSource/);
+  return match ? match[1] : "";
+}
+
+function generatedToOriginalId(generatedId, url) {
+  return `${generatedId}/originalSource-${md5(url)}`;
+}
+
+function isOriginalId(id) {
+  return (/\/originalSource/.test(id)
+  );
+}
+
+function isGeneratedId(id) {
+  return !isOriginalId(id);
+}
+
+/**
+ * Trims the query part or reference identifier of a URL string, if necessary.
+ */
+function trimUrlQuery(url) {
+  const length = url.length;
+  const q1 = url.indexOf("?");
+  const q2 = url.indexOf("&");
+  const q3 = url.indexOf("#");
+  const q = Math.min(q1 != -1 ? q1 : length, q2 != -1 ? q2 : length, q3 != -1 ? q3 : length);
+
+  return url.slice(0, q);
+}
+
+// Map suffix to content type.
+const contentMap = {
+  js: "text/javascript",
+  jsm: "text/javascript",
+  mjs: "text/javascript",
+  ts: "text/typescript",
+  tsx: "text/typescript-jsx",
+  jsx: "text/jsx",
+  vue: "text/vue",
+  coffee: "text/coffeescript",
+  elm: "text/elm",
+  cljc: "text/x-clojure",
+  cljs: "text/x-clojurescript"
+};
+
+/**
+ * Returns the content type for the specified URL.  If no specific
+ * content type can be determined, "text/plain" is returned.
+ *
+ * @return String
+ *         The content type.
+ */
+function getContentType(url) {
+  url = trimUrlQuery(url);
+  const dot = url.lastIndexOf(".");
+  if (dot >= 0) {
+    const name = url.substring(dot + 1);
+    if (name in contentMap) {
+      return contentMap[name];
+    }
+  }
+  return "text/plain";
+}
+
+module.exports = {
+  originalToGeneratedId,
+  generatedToOriginalId,
+  isOriginalId,
+  isGeneratedId,
+  getContentType,
+  contentMapForTesting: contentMap
+};
+
+/***/ }),
+
+/***/ 68:
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(module, global) {var __WEBPACK_AMD_DEFINE_RESULT__;/*! https://mths.be/punycode v1.4.1 by @mathias */
@@ -6794,95 +6882,7 @@ module.exports = charenc;
 
 }(this));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42)(module), __webpack_require__(25)))
-
-/***/ }),
-
-/***/ 69:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-const md5 = __webpack_require__(80);
-
-function originalToGeneratedId(originalId) {
-  const match = originalId.match(/(.*)\/originalSource/);
-  return match ? match[1] : "";
-}
-
-function generatedToOriginalId(generatedId, url) {
-  return `${generatedId}/originalSource-${md5(url)}`;
-}
-
-function isOriginalId(id) {
-  return (/\/originalSource/.test(id)
-  );
-}
-
-function isGeneratedId(id) {
-  return !isOriginalId(id);
-}
-
-/**
- * Trims the query part or reference identifier of a URL string, if necessary.
- */
-function trimUrlQuery(url) {
-  const length = url.length;
-  const q1 = url.indexOf("?");
-  const q2 = url.indexOf("&");
-  const q3 = url.indexOf("#");
-  const q = Math.min(q1 != -1 ? q1 : length, q2 != -1 ? q2 : length, q3 != -1 ? q3 : length);
-
-  return url.slice(0, q);
-}
-
-// Map suffix to content type.
-const contentMap = {
-  js: "text/javascript",
-  jsm: "text/javascript",
-  mjs: "text/javascript",
-  ts: "text/typescript",
-  tsx: "text/typescript-jsx",
-  jsx: "text/jsx",
-  vue: "text/vue",
-  coffee: "text/coffeescript",
-  elm: "text/elm",
-  cljc: "text/x-clojure",
-  cljs: "text/x-clojurescript"
-};
-
-/**
- * Returns the content type for the specified URL.  If no specific
- * content type can be determined, "text/plain" is returned.
- *
- * @return String
- *         The content type.
- */
-function getContentType(url) {
-  url = trimUrlQuery(url);
-  const dot = url.lastIndexOf(".");
-  if (dot >= 0) {
-    const name = url.substring(dot + 1);
-    if (name in contentMap) {
-      return contentMap[name];
-    }
-  }
-  return "text/plain";
-}
-
-module.exports = {
-  originalToGeneratedId,
-  generatedToOriginalId,
-  isOriginalId,
-  isGeneratedId,
-  getContentType,
-  contentMapForTesting: contentMap
-};
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42)(module), __webpack_require__(27)))
 
 /***/ }),
 
@@ -6982,7 +6982,7 @@ const {
   isGeneratedId,
   isOriginalId,
   getContentType
-} = __webpack_require__(69);
+} = __webpack_require__(67);
 const { clearWasmXScopes } = __webpack_require__(368);
 
 async function getOriginalURLs(generatedSource) {
@@ -7951,7 +7951,7 @@ exports.implementation = class URLImpl {
 "use strict";
 
 
-const punycode = __webpack_require__(67);
+const punycode = __webpack_require__(68);
 const regexes = __webpack_require__(746);
 const mappingTable = __webpack_require__(747);
 
@@ -11048,7 +11048,7 @@ function property(path) {
 
 module.exports = sortBy;
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(25), __webpack_require__(42)(module)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(27), __webpack_require__(42)(module)))
 
 /***/ }),
 
@@ -13137,14 +13137,14 @@ module.exports = {
 
 /***/ }),
 
-/***/ 80:
+/***/ 78:
 /***/ (function(module, exports, __webpack_require__) {
 
 (function(){
-  var crypt = __webpack_require__(81),
-      utf8 = __webpack_require__(51).utf8,
-      isBuffer = __webpack_require__(82),
-      bin = __webpack_require__(51).bin,
+  var crypt = __webpack_require__(79),
+      utf8 = __webpack_require__(50).utf8,
+      isBuffer = __webpack_require__(80),
+      bin = __webpack_require__(50).bin,
 
   // The core
   md5 = function (message, options) {
@@ -13304,7 +13304,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 81:
+/***/ 79:
 /***/ (function(module, exports) {
 
 (function() {
@@ -13407,7 +13407,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 82:
+/***/ 80:
 /***/ (function(module, exports) {
 
 /*!
