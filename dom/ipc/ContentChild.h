@@ -188,12 +188,12 @@ class ContentChild final : public PContentChild,
       Endpoint<PVideoDecoderManagerChild>&& aVideoManager,
       nsTArray<uint32_t>&& namespaces);
 
-  virtual mozilla::ipc::IPCResult RecvAudioDefaultDeviceChange();
+  mozilla::ipc::IPCResult RecvAudioDefaultDeviceChange();
 
   mozilla::ipc::IPCResult RecvReinitRenderingForDeviceReset();
 
-  virtual mozilla::ipc::IPCResult RecvSetProcessSandbox(
-      const MaybeFileDesc& aBroker);
+  mozilla::ipc::IPCResult RecvSetProcessSandbox(
+      const Maybe<FileDescriptor>& aBroker);
 
   PBrowserChild* AllocPBrowserChild(const TabId& aTabId,
                                     const TabId& aSameTabGroupAs,
@@ -361,7 +361,7 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvNotifyAlertsObserver(const nsCString& aType,
                                                    const nsString& aData);
 
-  virtual mozilla::ipc::IPCResult RecvLoadProcessScript(const nsString& aURL);
+  mozilla::ipc::IPCResult RecvLoadProcessScript(const nsString& aURL);
 
   mozilla::ipc::IPCResult RecvAsyncMessage(const nsString& aMsg,
                                            InfallibleTArray<CpowEntry>&& aCpows,
@@ -576,7 +576,7 @@ class ContentChild final : public PContentChild,
 
   mozilla::ipc::IPCResult RecvRequestMemoryReport(
       const uint32_t& generation, const bool& anonymize,
-      const bool& minimizeMemoryUsage, const MaybeFileDesc& DMDFile);
+      const bool& minimizeMemoryUsage, const Maybe<FileDescriptor>& DMDFile);
 
   mozilla::ipc::IPCResult RecvSetXPCOMProcessAttributes(
       const XPCOMInitData& aXPCOMInit, const StructuredCloneData& aInitialData,

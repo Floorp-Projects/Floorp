@@ -78,7 +78,7 @@ class GPUChild final : public PGPUChild, public gfxVarReceiver {
   bool SendRequestMemoryReport(const uint32_t& aGeneration,
                                const bool& aAnonymize,
                                const bool& aMinimizeMemoryUsage,
-                               const MaybeFileDesc& aDMDFile);
+                               const Maybe<ipc::FileDescriptor>& aDMDFile);
 
   static void Destroy(UniquePtr<GPUChild>&& aChild);
 
