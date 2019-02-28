@@ -14,15 +14,15 @@ from mozboot.util import get_state_dir
 
 
 class PresetHandler(object):
-    config_path = os.path.join(get_state_dir(), "try_presets.yml")
 
-    def __init__(self):
+    def __init__(self, path):
+        self.path = path
         self._presets = {}
 
     @property
     def presets(self):
-        if not self._presets and os.path.isfile(self.config_path):
-            with open(self.config_path, 'r') as fh:
+        if not self._presets and os.path.isfile(self.path):
+            with open(self.path, 'r') as fh:
                 self._presets = yaml.safe_load(fh) or {}
 
         return self._presets
@@ -47,16 +47,16 @@ class PresetHandler(object):
             print("error: must set the $EDITOR environment variable to use --edit-presets")
             return
 
-        subprocess.call([os.environ['EDITOR'], self.config_path])
+        subprocess.call([os.environ['EDITOR'], self.path])
 
     def save(self, name, **data):
         self.presets[name] = data
 
-        with open(self.config_path, "w") as fh:
+        with open(self.path, "w") as fh:
             fh.write(str(self))
 
 
-presets = PresetHandler()
+presets = PresetHandler(os.path.join(get_state_dir(), "try_presets.yml"))
 
 
 def migrate_old_presets():
@@ -65,10 +65,10 @@ def migrate_old_presets():
     """
     from .selectors.syntax import AutoTry, SyntaxParser
     old_preset_path = os.path.join(get_state_dir(), 'autotry.ini')
-    if os.path.isfile(presets.config_path) or not os.path.isfile(old_preset_path):
+    if os.path.isfile(presets.path) or not os.path.isfile(old_preset_path):
         return
 
-    print("migrating saved presets from '{}' to '{}'".format(old_preset_path, presets.config_path))
+    print("migrating saved presets from '{}' to '{}'".format(old_preset_path, presets.path))
     config = ConfigParser.ConfigParser()
     config.read(old_preset_path)
 
