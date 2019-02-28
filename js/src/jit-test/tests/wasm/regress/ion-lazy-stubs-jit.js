@@ -3,7 +3,7 @@
         (func $add (result i32) (param i32) (param i32)
          get_local 0
         )
-        (table (export "table") 10 anyfunc)
+        (table (export "table") 10 funcref)
         (elem (i32.const 0) $add)
     )`).exports;
 
@@ -27,7 +27,7 @@
             i64.extend_s/i32
         )
 
-        (table (export "table") 10 anyfunc)
+        (table (export "table") 10 funcref)
         (elem (i32.const 0) $add $addi64)
     )`).exports;
 
