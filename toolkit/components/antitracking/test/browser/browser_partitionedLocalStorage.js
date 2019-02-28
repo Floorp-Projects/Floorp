@@ -47,11 +47,7 @@ AntiTracking.runTest("localStorage and Storage Access API",
   },
   async _ => {
     /* import-globals-from storageAccessAPIHelpers.js */
-    if (allowListed) {
-      await hasStorageAccessInitially();
-    } else {
-      await noStorageAccessInitially();
-    }
+    await noStorageAccessInitially();
 
     localStorage.foo = 42;
     ok(true, "LocalStorage is allowed");

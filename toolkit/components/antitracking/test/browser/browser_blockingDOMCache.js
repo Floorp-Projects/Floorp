@@ -37,11 +37,7 @@ AntiTracking.runTest("DOM Cache and Storage Access API",
   },
   async _ => {
     /* import-globals-from storageAccessAPIHelpers.js */
-    if (allowListed) {
-      await hasStorageAccessInitially();
-    } else {
-      await noStorageAccessInitially();
-    }
+    await noStorageAccessInitially();
 
     await caches.open("wow").then(
       _ => { ok(true, "DOM Cache can be used!"); },
