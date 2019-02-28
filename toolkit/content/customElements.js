@@ -500,6 +500,7 @@ const isDummyDocument = document.documentURI == "chrome://extensions/content/dum
 if (!isDummyDocument) {
   for (let script of [
     "chrome://global/content/elements/general.js",
+    "chrome://global/content/elements/checkbox.js",
     "chrome://global/content/elements/menu.js",
     "chrome://global/content/elements/notificationbox.js",
     "chrome://global/content/elements/popupnotification.js",

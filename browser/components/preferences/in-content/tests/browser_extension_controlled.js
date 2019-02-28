@@ -756,7 +756,7 @@ add_task(async function testExtensionControlledProxyConfig() {
         let manualControlContainer = controlGroup.querySelector("grid");
         return {
           manualControls: [
-            ...manualControlContainer.querySelectorAll("label:not([control=networkProxyNone])"),
+            ...manualControlContainer.querySelectorAll("label[data-l10n-id]:not([control=networkProxyNone])"),
             ...manualControlContainer.querySelectorAll("textbox:not(#networkProxyNone)"),
             ...manualControlContainer.querySelectorAll("checkbox"),
             ...doc.querySelectorAll("#networkProxySOCKSVersion > radio")],

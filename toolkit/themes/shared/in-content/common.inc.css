@@ -495,7 +495,7 @@ html|input[type="checkbox"]:not(:disabled):hover {
   border-color: var(--in-content-border-focus);
 }
 
-xul|*.checkbox-check[checked] {
+xul|checkbox[checked] > xul|*.checkbox-check {
   list-style-image: url("chrome://global/skin/icons/check.svg");
   -moz-context-properties: fill;
   fill: #2292d0;

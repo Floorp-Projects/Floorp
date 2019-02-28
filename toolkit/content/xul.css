@@ -181,12 +181,6 @@ popupnotification {
   display: none;
 }
 
-/********** checkbox **********/
-
-checkbox {
-  -moz-binding: url("chrome://global/content/bindings/checkbox.xml#checkbox");
-}
-
 /********** radio **********/
 
 radiogroup {
