@@ -26,6 +26,7 @@ import mozilla.components.feature.downloads.DownloadsFeature
 import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.feature.sitepermissions.SitePermissionsFeature
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.BrowsingModeManager
@@ -54,6 +55,7 @@ class BrowserFragment : Fragment(), BackHandler {
     private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
     private val customTabsToolbarFeature = ViewBoundFeatureWrapper<CustomTabsToolbarFeature>()
     private val toolbarIntegration = ViewBoundFeatureWrapper<ToolbarIntegration>()
+    private val sitePermissionsFeature = ViewBoundFeatureWrapper<SitePermissionsFeature>()
     var sessionId: String? = null
 
     override fun onCreateView(
@@ -165,6 +167,17 @@ class BrowserFragment : Fragment(), BackHandler {
             feature = (toolbarComponent.uiView as ToolbarUIView).toolbarIntegration,
             owner = this,
             view = view)
+
+        sitePermissionsFeature.set(
+            feature = SitePermissionsFeature(
+                anchorView = view.findInPageView,
+                sessionManager = sessionManager
+            ) { permissions ->
+                requestPermissions(permissions, REQUEST_CODE_APP_PERMISSIONS)
+            },
+            owner = this,
+            view = view
+        )
     }
 
     override fun onResume() {
@@ -203,6 +216,9 @@ class BrowserFragment : Fragment(), BackHandler {
             }
             REQUEST_CODE_PROMPT_PERMISSIONS -> promptsFeature.withFeature {
                 it.onPermissionsResult(permissions, grantResults)
+            }
+            REQUEST_CODE_APP_PERMISSIONS -> sitePermissionsFeature.withFeature {
+                it.onPermissionsResult(grantResults)
             }
         }
     }
@@ -257,6 +273,7 @@ class BrowserFragment : Fragment(), BackHandler {
     companion object {
         private const val REQUEST_CODE_DOWNLOAD_PERMISSIONS = 1
         private const val REQUEST_CODE_PROMPT_PERMISSIONS = 2
+        private const val REQUEST_CODE_APP_PERMISSIONS = 3
         private const val TOOLBAR_HEIGHT = 56f
         private const val REPORT_SITE_ISSUE_URL = "https://webcompat.com/issues/new?url=%s&label=browser-fenix"
     }
