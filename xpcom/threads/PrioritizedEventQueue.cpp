@@ -7,6 +7,7 @@
 #include "PrioritizedEventQueue.h"
 #include "mozilla/EventQueue.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsThreadManager.h"
 #include "nsXPCOMPrivate.h"  // for gXPCOMThreadsShutDown
 #include "InputEventStatistics.h"
@@ -16,12 +17,14 @@ using namespace mozilla;
 template <class InnerQueueT>
 PrioritizedEventQueue<InnerQueueT>::PrioritizedEventQueue(
     UniquePtr<InnerQueueT> aHighQueue, UniquePtr<InnerQueueT> aInputQueue,
+    UniquePtr<InnerQueueT> aMediumHighQueue,
     UniquePtr<InnerQueueT> aNormalQueue,
     UniquePtr<InnerQueueT> aDeferredTimersQueue,
     UniquePtr<InnerQueueT> aIdleQueue,
     already_AddRefed<nsIIdlePeriod> aIdlePeriod)
     : mHighQueue(std::move(aHighQueue)),
       mInputQueue(std::move(aInputQueue)),
+      mMediumHighQueue(std::move(aMediumHighQueue)),
       mNormalQueue(std::move(aNormalQueue)),
       mDeferredTimersQueue(std::move(aDeferredTimersQueue)),
       mIdleQueue(std::move(aIdleQueue)),
@@ -41,6 +44,9 @@ void PrioritizedEventQueue<InnerQueueT>::PutEvent(
   if (priority == EventQueuePriority::Input &&
       mInputQueueState == STATE_DISABLED) {
     priority = EventQueuePriority::Normal;
+  } else if (priority == EventQueuePriority::MediumHigh &&
+             !StaticPrefs::medium_high_event_queue_enabled()) {
+    priority = EventQueuePriority::Normal;
   }
 
   switch (priority) {
@@ -49,6 +55,9 @@ void PrioritizedEventQueue<InnerQueueT>::PutEvent(
       break;
     case EventQueuePriority::Input:
       mInputQueue->PutEvent(event.forget(), priority, aProofOfLock);
+      break;
+    case EventQueuePriority::MediumHigh:
+      mMediumHighQueue->PutEvent(event.forget(), priority, aProofOfLock);
       break;
     case EventQueuePriority::Normal:
       mNormalQueue->PutEvent(event.forget(), priority, aProofOfLock);
@@ -128,7 +137,8 @@ EventQueuePriority PrioritizedEventQueue<InnerQueueT>::SelectQueue(
   //
   // HIGH: if mProcessHighPriorityQueue
   // INPUT: if inputCount > 0 && TimeStamp::Now() > mInputHandlingStartTime
-  // NORMAL: if normalPending
+  // MEDIUMHIGH: if medium high pending
+  // NORMAL: if normal pending
   //
   // If we still don't have an event, then we take events from the queues
   // in the following order:
@@ -152,6 +162,11 @@ EventQueuePriority PrioritizedEventQueue<InnerQueueT>::SelectQueue(
                                  !mInputHandlingStartTime.IsNull() &&
                                  TimeStamp::Now() > mInputHandlingStartTime))) {
     queue = EventQueuePriority::Input;
+  } else if (!mMediumHighQueue->IsEmpty(aProofOfLock)) {
+    MOZ_ASSERT(
+        mInputQueueState != STATE_FLUSHING,
+        "Shouldn't consume medium high event when flushing input events");
+    queue = EventQueuePriority::MediumHigh;
   } else if (!mNormalQueue->IsEmpty(aProofOfLock)) {
     MOZ_ASSERT(mInputQueueState != STATE_FLUSHING,
                "Shouldn't consume normal event when flushing input events");
@@ -215,6 +230,12 @@ already_AddRefed<nsIRunnable> PrioritizedEventQueue<InnerQueueT>::GetEvent(
     return event.forget();
   }
 
+  if (queue == EventQueuePriority::MediumHigh) {
+    nsCOMPtr<nsIRunnable> event =
+        mMediumHighQueue->GetEvent(aPriority, aProofOfLock);
+    return event.forget();
+  }
+
   if (queue == EventQueuePriority::Normal) {
     nsCOMPtr<nsIRunnable> event =
         mNormalQueue->GetEvent(aPriority, aProofOfLock);
@@ -264,6 +285,7 @@ bool PrioritizedEventQueue<InnerQueueT>::IsEmpty(
   // deadline since that only determines whether an idle event is ready or not.
   return mHighQueue->IsEmpty(aProofOfLock) &&
          mInputQueue->IsEmpty(aProofOfLock) &&
+         mMediumHighQueue->IsEmpty(aProofOfLock) &&
          mNormalQueue->IsEmpty(aProofOfLock) &&
          mDeferredTimersQueue->IsEmpty(aProofOfLock) &&
          mIdleQueue->IsEmpty(aProofOfLock);
@@ -280,6 +302,8 @@ bool PrioritizedEventQueue<InnerQueueT>::HasReadyEvent(
     return mHighQueue->HasReadyEvent(aProofOfLock);
   } else if (queue == EventQueuePriority::Input) {
     return mInputQueue->HasReadyEvent(aProofOfLock);
+  } else if (queue == EventQueuePriority::MediumHigh) {
+    return mMediumHighQueue->HasReadyEvent(aProofOfLock);
   } else if (queue == EventQueuePriority::Normal) {
     return mNormalQueue->HasReadyEvent(aProofOfLock);
   }
