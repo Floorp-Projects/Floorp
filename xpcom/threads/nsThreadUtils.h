@@ -541,6 +541,9 @@ class PrioritizableRunnable : public Runnable, public nsIRunnablePriority {
   uint32_t mPriority;
 };
 
+extern already_AddRefed<nsIRunnable> CreateMediumHighRunnable(
+    already_AddRefed<nsIRunnable>&& aRunnable);
+
 namespace detail {
 
 // An event that can be used to call a C++11 functions or function objects,
