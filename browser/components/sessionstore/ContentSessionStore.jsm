@@ -18,8 +18,6 @@ ChromeUtils.defineModuleGetter(this, "ContentRestore",
   "resource:///modules/sessionstore/ContentRestore.jsm");
 ChromeUtils.defineModuleGetter(this, "SessionHistory",
   "resource://gre/modules/sessionstore/SessionHistory.jsm");
-ChromeUtils.defineModuleGetter(this, "Utils",
-  "resource://gre/modules/sessionstore/Utils.jsm");
 
 // A bound to the size of data to store for DOM Storage.
 const DOM_STORAGE_LIMIT_PREF = "browser.sessionstore.dom_storage_limit";
@@ -32,15 +30,6 @@ const PREF_INTERVAL = "browser.sessionstore.interval";
 
 const kNoIndex = Number.MAX_SAFE_INTEGER;
 const kLastIndex = Number.MAX_SAFE_INTEGER - 1;
-
-/**
- * A function that will recursively call |cb| to collect data for all
- * non-dynamic frames in the current frame/docShell tree.
- */
-function mapFrameTree(mm, callback) {
-  let [data] = Utils.mapFrameTree(mm.content, callback);
-  return data;
-}
 
 class Handler {
   constructor(store) {
@@ -341,7 +330,7 @@ class ScrollPositionListener extends Handler {
   }
 
   collect() {
-    return mapFrameTree(this.mm, SessionStoreUtils.collectScrollPosition);
+    return SessionStoreUtils.collectScrollPosition(this.mm.content);
   }
 }
 
@@ -379,7 +368,7 @@ class FormDataListener extends Handler {
   }
 
   collect() {
-    return mapFrameTree(this.mm, SessionStoreUtils.collectFormData);
+    return SessionStoreUtils.collectFormData(this.mm.content);
   }
 }
 
