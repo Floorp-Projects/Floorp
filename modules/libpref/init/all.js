@@ -896,8 +896,6 @@ pref("gfx.content.azure.backends", "skia");
 #endif
 #endif
 
-pref("gfx.canvas.skiagl.dynamic-cache", true);
-
 pref("gfx.text.disable-aa", false);
 
 pref("gfx.work-around-driver-bugs", true);

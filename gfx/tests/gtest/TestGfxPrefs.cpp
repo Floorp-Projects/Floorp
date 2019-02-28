@@ -45,9 +45,6 @@ TEST(GfxPrefs, OnceValues) {
   // Once boolean, default false
   ASSERT_FALSE(gfxPrefs::LayersDump());
 
-  // Once int32_t, default 95
-  ASSERT_TRUE(gfxPrefs::CanvasSkiaGLCacheSize() == 96);
-
   // Once uint32_t, default 5
   ASSERT_TRUE(gfxPrefs::APZMaxVelocityQueueSize() == 5);
 
