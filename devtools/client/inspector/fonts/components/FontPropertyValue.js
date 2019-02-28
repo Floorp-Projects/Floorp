@@ -289,6 +289,7 @@ class FontPropertyValue extends PureComponent {
       options.map(unit => {
         return dom.option(
           {
+            key: unit,
             value: unit,
           },
           unit
