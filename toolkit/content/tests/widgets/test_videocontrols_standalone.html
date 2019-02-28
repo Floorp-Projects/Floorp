@@ -27,9 +27,9 @@ popup.addEventListener("load", function() {
 
   is(popup.document.activeElement, video, "Document should load with focus moved to the video element.");
 
-  if (!video.paused)
+  if (!video.paused) {
     runTestVideo(video);
-  else {
+  } else {
     video.addEventListener("play", function() {
       runTestVideo(video);
     }, {once: true});
@@ -58,9 +58,9 @@ function runTestAudioPre() {
 
     is(popup.document.activeElement, audio, "Document should load with focus moved to the video element.");
 
-    if (!audio.paused)
+    if (!audio.paused) {
       runTestAudio(audio);
-    else {
+    } else {
       audio.addEventListener("play", function() {
         runTestAudio(audio);
       }, {once: true});

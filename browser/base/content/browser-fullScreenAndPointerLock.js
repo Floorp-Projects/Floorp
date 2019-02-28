@@ -517,9 +517,9 @@ var FullScreen = {
     // toggles chrome when moving mouse to the top, it doesn't go away again.
     if (aEvent.type == "popupshown" && !FullScreen._isChromeCollapsed &&
         aEvent.target.localName != "tooltip" && aEvent.target.localName != "window" &&
-        aEvent.target.getAttribute("nopreventnavboxhide") != "true")
+        aEvent.target.getAttribute("nopreventnavboxhide") != "true") {
       FullScreen._isPopupOpen = true;
-    else if (aEvent.type == "popuphidden" && aEvent.target.localName != "tooltip" &&
+    } else if (aEvent.type == "popuphidden" && aEvent.target.localName != "tooltip" &&
              aEvent.target.localName != "window") {
       FullScreen._isPopupOpen = false;
       // Try again to hide toolbar when we close the popup.

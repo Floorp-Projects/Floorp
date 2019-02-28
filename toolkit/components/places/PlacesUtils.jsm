@@ -1069,9 +1069,9 @@ var PlacesUtils = {
         for (let i = 0; i < parts.length; i = i + 2) {
           let uriString = parts[i];
           let titleString = "";
-          if (parts.length > i + 1)
+          if (parts.length > i + 1) {
             titleString = parts[i + 1];
-          else {
+          } else {
             // for drag and drop of files, try to use the leafName as title
             try {
               titleString = Services.io.newURI(uriString).QueryInterface(Ci.nsIURL)

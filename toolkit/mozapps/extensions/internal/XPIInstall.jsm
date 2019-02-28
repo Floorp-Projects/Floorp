@@ -2130,9 +2130,10 @@ var DownloadAddonInstall = class extends AddonInstall {
     if (this.state == AddonManager.STATE_DOWNLOAD_FAILED) {
       logger.debug("downloadFailed: removing temp file for " + this.sourceURI.spec);
       this.removeTemporaryFile();
-    } else
+    } else {
       logger.debug("downloadFailed: listener changed AddonInstall state for " +
           this.sourceURI.spec + " to " + this.state);
+    }
   }
 
   /**
@@ -2482,8 +2483,9 @@ UpdateChecker.prototype = {
         if (currentInstall.state == AddonManager.STATE_AVAILABLE) {
           logger.debug("Found an existing AddonInstall for " + this.addon.id);
           sendUpdateAvailableMessages(this, currentInstall);
-        } else
+        } else {
           sendUpdateAvailableMessages(this, null);
+        }
         return;
       }
 

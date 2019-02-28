@@ -660,15 +660,16 @@ var gPrivacyPane = {
     let mode;
     let getVal = aPref => Preferences.get(aPref).value;
 
-    if (getVal("privacy.history.custom"))
+    if (getVal("privacy.history.custom")) {
       mode = "custom";
-    else if (this._checkHistoryValues(this.prefsForKeepingHistory)) {
+    } else if (this._checkHistoryValues(this.prefsForKeepingHistory)) {
       if (getVal("browser.privatebrowsing.autostart"))
         mode = "dontremember";
       else
         mode = "remember";
-    } else
+    } else {
       mode = "custom";
+    }
 
     document.getElementById("historyMode").value = mode;
   },

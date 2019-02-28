@@ -1552,9 +1552,9 @@ var gMainPane = {
       let type = wrappedHandlerInfo.type;
 
       let handlerInfoWrapper;
-      if (type in this._handledTypes)
+      if (type in this._handledTypes) {
         handlerInfoWrapper = this._handledTypes[type];
-      else {
+      } else {
         handlerInfoWrapper = new HandlerInfoWrapper(type, wrappedHandlerInfo);
         this._handledTypes[type] = handlerInfoWrapper;
       }

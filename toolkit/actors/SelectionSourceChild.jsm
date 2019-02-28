@@ -129,9 +129,9 @@ class SelectionSourceChild extends ActorChild {
         // 1. ...<tag>]...   to   ...]<tag>...
         // 2. ...]</tag>...  to   ...</tag>]...
         if ((endOffset > 0 && endOffset < endContainer.data.length) ||
-            !endContainer.parentNode || !endContainer.parentNode.parentNode)
+            !endContainer.parentNode || !endContainer.parentNode.parentNode) {
           endContainer.insertData(endOffset, MARK_SELECTION_END);
-        else {
+        } else {
           tmpNode = dataDoc.createTextNode(MARK_SELECTION_END);
           endContainer = endContainer.parentNode;
           if (endOffset === 0)
@@ -153,9 +153,9 @@ class SelectionSourceChild extends ActorChild {
         // 2. ...[</tag>...  to   ...</tag>[...
         if ((startOffset > 0 && startOffset < startContainer.data.length) ||
             !startContainer.parentNode || !startContainer.parentNode.parentNode ||
-            startContainer != startContainer.parentNode.lastChild)
+            startContainer != startContainer.parentNode.lastChild) {
           startContainer.insertData(startOffset, MARK_SELECTION_START);
-        else {
+        } else {
           tmpNode = dataDoc.createTextNode(MARK_SELECTION_START);
           startContainer = startContainer.parentNode;
           if (startOffset === 0)

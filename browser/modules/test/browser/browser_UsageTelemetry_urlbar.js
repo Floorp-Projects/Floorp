@@ -44,9 +44,9 @@ async function clickURLBarSuggestion(resultTitle, button = 1) {
     if (result.displayed.title == resultTitle) {
       // This entry is the search suggestion we're looking for.
       let element = await UrlbarTestUtils.waitForAutocompleteResultAt(window, i);
-      if (button == 1)
+      if (button == 1) {
         EventUtils.synthesizeMouseAtCenter(element, {});
-      else if (button == 2) {
+      } else if (button == 2) {
         EventUtils.synthesizeMouseAtCenter(element, {type: "mousedown", button: 2});
       }
       return;

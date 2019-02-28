@@ -444,8 +444,9 @@
 
           col.mTargetCol = null;
         }
-      } else
+      } else {
         col.mDragGesturing = false;
+      }
 
       document.treecolDragging = null;
       col.removeAttribute("dragging");

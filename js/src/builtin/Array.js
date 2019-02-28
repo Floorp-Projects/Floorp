@@ -23,10 +23,10 @@ function ArrayIndexOf(searchElement/*, fromIndex*/) {
 
     var k;
     /* Step 7. */
-    if (n >= 0)
+    if (n >= 0) {
         k = n;
     /* Step 8. */
-    else {
+    } else {
         /* Step a. */
         k = len + n;
         /* Step b. */

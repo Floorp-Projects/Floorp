@@ -186,9 +186,9 @@ var gLanguagesDialog = {
 
     this._selectedItemID = selectedID;
 
-    if (preference.value == "")
+    if (preference.value == "") {
       preference.value = selectedID;
-    else {
+    } else {
       arrayOfPrefs.unshift(selectedID);
       preference.value = arrayOfPrefs.join(",");
     }

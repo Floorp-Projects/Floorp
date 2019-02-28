@@ -172,9 +172,10 @@ function checkMenuItem(actualItem, actualEnabled, expectedItem, expectedEnabled,
            "checking item #" + index / 2 + " (" + expectedItem + ") has checked attr");
         is(actualEnabled.disabled, expectedEnabled.disabled,
            "checking item #" + index / 2 + " (" + expectedItem + ") has disabled attr");
-    } else if (expectedEnabled != null)
+    } else if (expectedEnabled != null) {
         is(actualEnabled, expectedEnabled,
            "checking item #" + index / 2 + " (" + expectedItem + ") enabled state");
+    }
 }
 
 /*

@@ -110,9 +110,9 @@ class MozMenuList extends MenuBaseControl {
     if (popup)
       arr = popup.getElementsByAttribute("value", val);
 
-    if (arr && arr.item(0))
+    if (arr && arr.item(0)) {
       this.selectedItem = arr[0];
-    else {
+    } else {
       this.selectedItem = null;
       this.setAttribute("value", val);
     }
@@ -189,8 +189,9 @@ class MozMenuList extends MenuBaseControl {
     if (popup && 0 <= val) {
       if (val < popup.children.length)
         this.selectedItem = popup.children[val];
-    } else
+    } else {
       this.selectedItem = null;
+    }
     return val;
   }
 

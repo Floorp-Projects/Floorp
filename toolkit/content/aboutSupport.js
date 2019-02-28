@@ -1039,8 +1039,9 @@ Serializer.prototype = {
         let text = this._nodeText(child);
         this._appendText(text);
         hasText = hasText || !!text.trim();
-      } else if (child.nodeType == Node.ELEMENT_NODE)
+      } else if (child.nodeType == Node.ELEMENT_NODE) {
         this._serializeElement(child);
+      }
     }
 
     // For headings, draw a "line" underneath them so they stand out.

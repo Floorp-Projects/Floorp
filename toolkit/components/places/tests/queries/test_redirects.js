@@ -169,7 +169,9 @@ function cartProd(aSequences, aCallback) {
         // All element pointers are past the ends of their sequences.
         if (seqPtr < 0)
           done = true;
-      } else break;
+      } else {
+        break;
+      }
     }
   }
   return numProds;

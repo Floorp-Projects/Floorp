@@ -289,9 +289,8 @@ InlineSpellChecker.prototype = {
     this.mAddedWordStack.push(this.mMisspelling);
     if (this.mRemote)
       this.mRemote.addToDictionary();
-    else {
+    else
       this.mInlineSpellChecker.addWordToDictionary(this.mMisspelling);
-    }
   },
   // callback for removing the last added word to the dictionary LIFO fashion
   undoAddToDictionary() {

@@ -751,8 +751,9 @@ var PlacesUIUtils = {
         // Use (no title) for non-standard URIs (data:, javascript:, ...)
         title = "";
       }
-    } else
+    } else {
       title = aNode.title;
+    }
 
     return title || this.getString("noTitle");
   },
