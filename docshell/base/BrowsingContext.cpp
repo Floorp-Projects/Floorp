@@ -169,11 +169,11 @@ BrowsingContext::BrowsingContext(BrowsingContext* aParent,
                                  uint64_t aBrowsingContextId, Type aType)
     : mName(aName),
       mClosed(false),
-      mOpener(aOpener),
-      mIsActivatedByUserGesture(false),
       mType(aType),
       mBrowsingContextId(aBrowsingContextId),
-      mParent(aParent) {
+      mParent(aParent),
+      mOpener(aOpener),
+      mIsActivatedByUserGesture(false) {
   // Specify our group in our constructor. We will explicitly join the group
   // when we are registered, as doing so will take a reference.
   if (mParent) {
@@ -278,6 +278,22 @@ bool BrowsingContext::IsCached() { return sCachedBrowsingContexts->has(Id()); }
 void BrowsingContext::GetChildren(
     nsTArray<RefPtr<BrowsingContext>>& aChildren) {
   MOZ_ALWAYS_TRUE(aChildren.AppendElements(mChildren));
+}
+
+void BrowsingContext::SetOpener(BrowsingContext* aOpener) {
+  if (mOpener == aOpener) {
+    return;
+  }
+
+  mOpener = aOpener;
+
+  if (!XRE_IsContentProcess()) {
+    return;
+  }
+
+  auto cc = ContentChild::GetSingleton();
+  MOZ_DIAGNOSTIC_ASSERT(cc);
+  cc->SendSetOpenerBrowsingContext(this, aOpener);
 }
 
 // FindWithName follows the rules for choosing a browsing context,
@@ -461,7 +477,14 @@ void BrowsingContext::NotifyUserGestureActivation() {
   RefPtr<BrowsingContext> topLevelBC = TopLevelBrowsingContext();
   USER_ACTIVATION_LOG("Get top level browsing context 0x%08" PRIx64,
                       topLevelBC->Id());
-  topLevelBC->SetIsActivatedByUserGesture(true);
+  topLevelBC->SetUserGestureActivation();
+
+  if (!XRE_IsContentProcess()) {
+    return;
+  }
+  auto cc = ContentChild::GetSingleton();
+  MOZ_ASSERT(cc);
+  cc->SendSetUserGestureActivation(topLevelBC, true);
 }
 
 void BrowsingContext::NotifyResetUserGestureActivation() {
@@ -471,12 +494,33 @@ void BrowsingContext::NotifyResetUserGestureActivation() {
   RefPtr<BrowsingContext> topLevelBC = TopLevelBrowsingContext();
   USER_ACTIVATION_LOG("Get top level browsing context 0x%08" PRIx64,
                       topLevelBC->Id());
-  topLevelBC->SetIsActivatedByUserGesture(false);
+  topLevelBC->ResetUserGestureActivation();
+
+  if (!XRE_IsContentProcess()) {
+    return;
+  }
+  auto cc = ContentChild::GetSingleton();
+  MOZ_ASSERT(cc);
+  cc->SendSetUserGestureActivation(topLevelBC, false);
+}
+
+void BrowsingContext::SetUserGestureActivation() {
+  MOZ_ASSERT(!mParent, "Set user activation flag on non top-level context!");
+  USER_ACTIVATION_LOG(
+      "Set user gesture activation for browsing context 0x%08" PRIx64, Id());
+  mIsActivatedByUserGesture = true;
 }
 
 bool BrowsingContext::GetUserGestureActivation() {
   RefPtr<BrowsingContext> topLevelBC = TopLevelBrowsingContext();
-  return topLevelBC->GetIsActivatedByUserGesture();
+  return topLevelBC->mIsActivatedByUserGesture;
+}
+
+void BrowsingContext::ResetUserGestureActivation() {
+  MOZ_ASSERT(!mParent, "Clear user activation flag on non top-level context!");
+  USER_ACTIVATION_LOG(
+      "Reset user gesture activation for browsing context 0x%08" PRIx64, Id());
+  mIsActivatedByUserGesture = false;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(BrowsingContext)
@@ -533,7 +577,7 @@ Nullable<WindowProxyHolder> BrowsingContext::GetTop(ErrorResult& aError) {
 void BrowsingContext::GetOpener(JSContext* aCx,
                                 JS::MutableHandle<JS::Value> aOpener,
                                 ErrorResult& aError) const {
-  BrowsingContext* opener = GetOpener();
+  auto* opener = GetOpener();
   if (!opener) {
     aOpener.setNull();
     return;
