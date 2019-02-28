@@ -21,6 +21,12 @@ async function testIdentityState(hasException) {
   let promise = BrowserTestUtils.openNewForegroundTab({url: TRACKING_PAGE, gBrowser});
   let [tab] = await Promise.all([promise, waitForContentBlockingEvent()]);
 
+  if (hasException) {
+    let loaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, TRACKING_PAGE);
+    ContentBlocking.disableForCurrentPage();
+    await loaded;
+  }
+
   ok(!ContentBlocking.content.hasAttribute("detected"), "cryptominers are not detected");
   ok(BrowserTestUtils.is_hidden(ContentBlocking.iconBox), "icon box is not visible");
 
@@ -37,12 +43,24 @@ async function testIdentityState(hasException) {
   is(ContentBlocking.iconBox.hasAttribute("hasException"), hasException,
     "Shows an exception when appropriate");
 
+  if (hasException) {
+    let loaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, TRACKING_PAGE);
+    ContentBlocking.enableForCurrentPage();
+    await loaded;
+  }
+
   BrowserTestUtils.removeTab(tab);
 }
 
 async function testSubview(hasException) {
   let promise = BrowserTestUtils.openNewForegroundTab({url: TRACKING_PAGE, gBrowser});
   let [tab] = await Promise.all([promise, waitForContentBlockingEvent()]);
+
+  if (hasException) {
+    let loaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, TRACKING_PAGE);
+    ContentBlocking.disableForCurrentPage();
+    await loaded;
+  }
 
   promise = waitForContentBlockingEvent();
   await ContentTask.spawn(tab.linkedBrowser, {}, function() {
@@ -76,25 +94,23 @@ async function testSubview(hasException) {
 
   ok(true, "Main view was shown");
 
+  if (hasException) {
+    let loaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, TRACKING_PAGE);
+    ContentBlocking.enableForCurrentPage();
+    await loaded;
+  }
+
   BrowserTestUtils.removeTab(tab);
 }
 
 add_task(async function test() {
-  let uri = Services.io.newURI("https://example.org");
-
   Services.prefs.setBoolPref(CM_PREF, true);
 
   await testIdentityState(false);
-  Services.perms.add(uri, "trackingprotection", Services.perms.ALLOW_ACTION);
-  // TODO: This currently fails because of bug 1525458, fixing should allow us to re-enable it.
-  // await testIdentityState(true);
-  Services.perms.remove(uri, "trackingprotection");
+  await testIdentityState(true);
 
   await testSubview(false);
-  Services.perms.add(uri, "trackingprotection", Services.perms.ALLOW_ACTION);
-  // TODO: This currently fails because of bug 1525458, fixing should allow us to re-enable it.
-  // await testSubview(true);
-  Services.perms.remove(uri, "trackingprotection");
+  await testSubview(true);
 
   Services.prefs.clearUserPref(CM_PREF);
 });
