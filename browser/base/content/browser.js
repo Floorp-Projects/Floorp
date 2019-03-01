@@ -3244,7 +3244,7 @@ function BrowserReloadWithFlags(reloadFlags) {
   for (let tab of unchangedRemoteness) {
     SitePermissions.clearTemporaryPermissions(tab.linkedBrowser);
     // Also reset DOS mitigations for the basic auth prompt on reload.
-    delete tab.linkedBrowser.canceledAuthenticationPromptCounter;
+    delete tab.linkedBrowser.authPromptAbuseCounter;
   }
   PanelMultiView.hidePopup(gIdentityHandler._identityPopup);
 

@@ -26,6 +26,59 @@ const PROMPT_NOTNOW = 2;
 const PROMPT_NEVER = 3;
 
 /**
+ * A helper module to prevent modal auth prompt abuse.
+ */
+const PromptAbuseHelper = {
+  getBaseDomainOrFallback(hostname) {
+    try {
+      return Services.eTLD.getBaseDomainFromHost(hostname);
+    } catch (e) {
+      return hostname;
+    }
+  },
+
+  incrementPromptAbuseCounter(baseDomain, browser) {
+    if (!browser) {
+      return;
+    }
+
+    if (!browser.authPromptAbuseCounter) {
+      browser.authPromptAbuseCounter = {};
+    }
+
+    if (!browser.authPromptAbuseCounter[baseDomain]) {
+      browser.authPromptAbuseCounter[baseDomain] = 0;
+    }
+
+    browser.authPromptAbuseCounter[baseDomain] += 1;
+  },
+
+  resetPromptAbuseCounter(baseDomain, browser) {
+    if (!browser || !browser.authPromptAbuseCounter) {
+      return;
+    }
+
+    browser.authPromptAbuseCounter[baseDomain] = 0;
+  },
+
+  hasReachedAbuseLimit(baseDomain, browser) {
+    if (!browser || !browser.authPromptAbuseCounter) {
+      return false;
+    }
+
+    let abuseCounter = browser.authPromptAbuseCounter[baseDomain];
+    // Allow for setting -1 to turn the feature off.
+    if (this.abuseLimit < 0) {
+      return false;
+    }
+    return !!abuseCounter && abuseCounter >= this.abuseLimit;
+  },
+};
+
+XPCOMUtils.defineLazyPreferenceGetter(PromptAbuseHelper, "abuseLimit",
+                                      "prompts.authentication_dialog_abuse_limit");
+
+/**
  * Implements nsIPromptFactory
  *
  * Invoked by [toolkit/components/prompts/src/nsPrompter.js]
@@ -96,28 +149,6 @@ LoginManagerPromptFactory.prototype = {
       return;
     }
 
-    // Set up a counter for ensuring that the basic auth prompt can not
-    // be abused for DOS-style attacks. With this counter, each eTLD+1
-    // per browser will get a limited number of times a user can
-    // cancel the prompt until we stop showing it.
-    let browser = prompter._browser;
-    let baseDomain = null;
-    if (browser) {
-      try {
-        baseDomain = Services.eTLD.getBaseDomainFromHost(hostname);
-      } catch (e) {
-        baseDomain = hostname;
-      }
-
-      if (!browser.canceledAuthenticationPromptCounter) {
-        browser.canceledAuthenticationPromptCounter = {};
-      }
-
-      if (!browser.canceledAuthenticationPromptCounter[baseDomain]) {
-        browser.canceledAuthenticationPromptCounter[baseDomain] = 0;
-      }
-    }
-
     var self = this;
 
     var runnable = {
@@ -143,16 +174,6 @@ LoginManagerPromptFactory.prototype = {
           delete self._asyncPrompts[hashKey];
           prompt.inProgress = false;
           self._asyncPromptInProgress = false;
-
-          if (browser) {
-            // Reset the counter state if the user replied to a prompt and actually
-            // tried to login (vs. simply clicking any button to get out).
-            if (ok && (prompt.authInfo.username || prompt.authInfo.password)) {
-              browser.canceledAuthenticationPromptCounter[baseDomain] = 0;
-            } else {
-              browser.canceledAuthenticationPromptCounter[baseDomain] += 1;
-            }
-          }
         }
 
         for (var consumer of prompt.consumers) {
@@ -175,20 +196,8 @@ LoginManagerPromptFactory.prototype = {
       },
     };
 
-    var cancelDialogLimit = Services.prefs.getIntPref("prompts.authentication_dialog_abuse_limit");
-
-    let cancelationCounter = browser.canceledAuthenticationPromptCounter[baseDomain];
-    this.log("cancelationCounter =", cancelationCounter);
-    if (cancelDialogLimit && cancelationCounter >= cancelDialogLimit) {
-      this.log("Blocking auth dialog, due to exceeding dialog bloat limit");
-      delete this._asyncPrompts[hashKey];
-
-      // just make the runnable cancel all consumers
-      runnable.cancel = true;
-    } else {
-      this._asyncPromptInProgress = true;
-      prompt.inProgress = true;
-    }
+    this._asyncPromptInProgress = true;
+    prompt.inProgress = true;
 
     Services.tm.dispatchToMainThread(runnable);
     this.log("_doAsyncPrompt:run dispatched");
@@ -620,13 +629,35 @@ LoginManagerPrompter.prototype = {
     }
 
     var ok = canAutologin;
+    let browser = this._browser;
+    let baseDomain = PromptAbuseHelper.getBaseDomainOrFallback(hostname);
+
     if (!ok) {
+      if (PromptAbuseHelper.hasReachedAbuseLimit(baseDomain, browser)) {
+        this.log("Blocking auth dialog, due to exceeding dialog bloat limit");
+        return false;
+      }
+
+      // Set up a counter for ensuring that the basic auth prompt can not
+      // be abused for DOS-style attacks. With this counter, each eTLD+1
+      // per browser will get a limited number of times a user can
+      // cancel the prompt until we stop showing it.
+      PromptAbuseHelper.incrementPromptAbuseCounter(baseDomain, browser);
+
       if (this._chromeWindow) {
         PromptUtils.fireDialogEvent(this._chromeWindow, "DOMWillOpenModalDialog", this._browser);
       }
       ok = Services.prompt.promptAuth(this._chromeWindow,
                                       aChannel, aLevel, aAuthInfo,
                                       checkboxLabel, checkbox);
+    }
+
+    let [username, password] = this._GetAuthInfo(aAuthInfo);
+
+    // Reset the counter state if the user replied to a prompt and actually
+    // tried to login (vs. simply clicking any button to get out).
+    if (ok && (username || password)) {
+      PromptAbuseHelper.resetPromptAbuseCounter(baseDomain, browser);
     }
 
     // If there's a notification prompt, use it to allow the user to
@@ -639,8 +670,6 @@ LoginManagerPrompter.prototype = {
     }
 
     try {
-      var [username, password] = this._GetAuthInfo(aAuthInfo);
-
       if (!password) {
         this.log("No password entered, so won't offer to save.");
         return ok;
