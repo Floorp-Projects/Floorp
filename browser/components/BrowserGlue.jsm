@@ -3100,6 +3100,15 @@ var ContentBlockingCategoriesPrefs = {
     } else {
       Services.prefs.setStringPref(this.PREF_CB_CATEGORY, "custom");
     }
+
+    // If there is a custom policy which changes a related pref, then put the user in custom so
+    // they still have access to other content blocking prefs, and to keep our default definitions
+    // from changing.
+    let policy = Services.policies.getActivePolicies();
+    if (policy && (policy.EnableTrackingProtection ||
+        policy.Cookies)) {
+      Services.prefs.setStringPref(this.PREF_CB_CATEGORY, "custom");
+    }
   },
 
   updateCBCategory() {
