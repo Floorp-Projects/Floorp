@@ -556,7 +556,7 @@ nsresult WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
 
   int64_t next_tstamp = INT64_MIN;
   auto calculateNextTimestamp = [&](auto&& pushPacket, auto&& lastFrameTime,
-                                    auto&& trackEndTime) {
+                                    int64_t trackEndTime) {
     if (next_holder) {
       next_tstamp = next_holder->Timestamp();
       (this->*pushPacket)(next_holder);
@@ -570,8 +570,15 @@ nsresult WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
       // If we can't get frame's duration, it means either we need to wait for
       // more data for MSE case or this is the last frame for file resource
       // case.
-      MOZ_ASSERT(trackEndTime >= tstamp);
-      next_tstamp = trackEndTime;
+      if (tstamp > trackEndTime) {
+        // This shouldn't happen, but some muxers give incorrect durations to
+        // segments, then have samples appear beyond those durations.
+        WEBM_DEBUG("Found tstamp=%" PRIi64 " > trackEndTime=%" PRIi64
+                   " while calculating next timestamp! Indicates a bad mux! "
+                   "Will use tstamp value.",
+                   tstamp, trackEndTime);
+      }
+      next_tstamp = std::max<int64_t>(tstamp, trackEndTime);
     }
     lastFrameTime = Some(tstamp);
   };
