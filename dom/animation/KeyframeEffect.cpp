@@ -586,6 +586,25 @@ void KeyframeEffect::SetIsRunningOnCompositor(nsCSSPropertyID aProperty,
   }
 }
 
+void KeyframeEffect::SetIsRunningOnCompositor(
+    const nsCSSPropertyIDSet& aPropertySet, bool aIsRunning) {
+  for (AnimationProperty& property : mProperties) {
+    if (aPropertySet.HasProperty(property.mProperty)) {
+      MOZ_ASSERT(nsCSSProps::PropHasFlags(property.mProperty,
+                                          CSSPropFlags::CanAnimateOnCompositor),
+                 "Property being animated on compositor is a recognized "
+                 "compositor-animatable property");
+      property.mIsRunningOnCompositor = aIsRunning;
+      // We currently only set a performance warning message when animations
+      // cannot be run on the compositor, so if this animation is running
+      // on the compositor we don't need a message.
+      if (aIsRunning) {
+        property.mPerformanceWarning.reset();
+      }
+    }
+  }
+}
+
 void KeyframeEffect::ResetIsRunningOnCompositor() {
   for (AnimationProperty& property : mProperties) {
     property.mIsRunningOnCompositor = false;
