@@ -130,6 +130,19 @@ nsresult HTMLVideoElement::GetVideoSize(nsIntSize* size) {
   return NS_OK;
 }
 
+void HTMLVideoElement::Invalidate(bool aImageSizeChanged,
+                                  Maybe<nsIntSize>& aNewIntrinsicSize,
+                                  bool aForceInvalidate) {
+  HTMLMediaElement::Invalidate(aImageSizeChanged, aNewIntrinsicSize, aForceInvalidate);
+  if (mVisualCloneTarget) {
+    VideoFrameContainer* container =
+        mVisualCloneTarget->GetVideoFrameContainer();
+    if (container) {
+      container->Invalidate();
+    }
+  }
+}
+
 bool HTMLVideoElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                       const nsAString& aValue,
                                       nsIPrincipal* aMaybeScriptedPrincipal,
