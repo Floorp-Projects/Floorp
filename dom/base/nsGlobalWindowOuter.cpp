@@ -309,6 +309,7 @@ using mozilla::TimeStamp;
   PR_END_MACRO
 
 static LazyLogModule gDOMLeakPRLogOuter("DOMLeakOuter");
+extern LazyLogModule gPageCacheLog;
 
 static int32_t gOpenPopupSpamCount = 0;
 
@@ -7393,9 +7394,8 @@ already_AddRefed<nsISupports> nsGlobalWindowOuter::SaveWindowState() {
 
   nsCOMPtr<nsISupports> state = new WindowStateHolder(inner);
 
-#ifdef DEBUG_PAGE_CACHE
-  printf("saving window state, state = %p\n", (void*)state);
-#endif
+  MOZ_LOG(gPageCacheLog, LogLevel::Debug,
+          ("saving window state, state = %p", (void*)state));
 
   return state.forget();
 }
@@ -7409,9 +7409,8 @@ nsresult nsGlobalWindowOuter::RestoreWindowState(nsISupports* aState) {
   nsCOMPtr<WindowStateHolder> holder = do_QueryInterface(aState);
   NS_ENSURE_TRUE(holder, NS_ERROR_FAILURE);
 
-#ifdef DEBUG_PAGE_CACHE
-  printf("restoring window state, state = %p\n", (void*)holder);
-#endif
+  MOZ_LOG(gPageCacheLog, LogLevel::Debug,
+          ("restoring window state, state = %p", (void*)holder));
 
   // And we're ready to go!
   nsGlobalWindowInner* inner = GetCurrentInnerWindowInternal();

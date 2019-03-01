@@ -21,7 +21,10 @@
 #include "nsSHistory.h"
 
 #include "mozilla/net/ReferrerPolicy.h"
+#include "mozilla/Logging.h"
 #include "nsIReferrerInfo.h"
+
+extern mozilla::LazyLogModule gPageCacheLog;
 
 namespace dom = mozilla::dom;
 
