@@ -2,7 +2,7 @@
  * @licstart The following is the entire license notice for the
  * Javascript code in this page
  *
- * Copyright 2018 Mozilla Foundation
+ * Copyright 2019 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.2.15';
-var pdfjsBuild = 'ece6a31a';
+var pdfjsVersion = '2.2.42';
+var pdfjsBuild = '34022d2f';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -134,7 +134,7 @@ var pdfjsDisplayTextLayer = __w_pdfjs_require__(18);
 
 var pdfjsDisplayAnnotationLayer = __w_pdfjs_require__(19);
 
-var pdfjsDisplayDOMUtils = __w_pdfjs_require__(7);
+var pdfjsDisplayDisplayUtils = __w_pdfjs_require__(7);
 
 var pdfjsDisplaySVG = __w_pdfjs_require__(20);
 
@@ -170,11 +170,11 @@ exports.shadow = pdfjsSharedUtil.shadow;
 exports.Util = pdfjsSharedUtil.Util;
 exports.ReadableStream = pdfjsSharedUtil.ReadableStream;
 exports.URL = pdfjsSharedUtil.URL;
-exports.RenderingCancelledException = pdfjsDisplayDOMUtils.RenderingCancelledException;
-exports.getFilenameFromUrl = pdfjsDisplayDOMUtils.getFilenameFromUrl;
-exports.LinkTarget = pdfjsDisplayDOMUtils.LinkTarget;
-exports.addLinkAttributes = pdfjsDisplayDOMUtils.addLinkAttributes;
-exports.loadScript = pdfjsDisplayDOMUtils.loadScript;
+exports.RenderingCancelledException = pdfjsDisplayDisplayUtils.RenderingCancelledException;
+exports.getFilenameFromUrl = pdfjsDisplayDisplayUtils.getFilenameFromUrl;
+exports.LinkTarget = pdfjsDisplayDisplayUtils.LinkTarget;
+exports.addLinkAttributes = pdfjsDisplayDisplayUtils.addLinkAttributes;
+exports.loadScript = pdfjsDisplayDisplayUtils.loadScript;
 exports.GlobalWorkerOptions = pdfjsDisplayWorkerOptions.GlobalWorkerOptions;
 exports.apiCompatibilityParams = pdfjsDisplayAPICompatibility.apiCompatibilityParams;
 
@@ -188,15 +188,12 @@ exports.apiCompatibilityParams = pdfjsDisplayAPICompatibility.apiCompatibilityPa
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.toRomanNumerals = toRomanNumerals;
 exports.arrayByteLength = arrayByteLength;
 exports.arraysToBytes = arraysToBytes;
 exports.assert = assert;
 exports.bytesToString = bytesToString;
 exports.createPromiseCapability = createPromiseCapability;
 exports.deprecated = deprecated;
-exports.getInheritableProperty = getInheritableProperty;
-exports.getLookupTableFactory = getLookupTableFactory;
 exports.getVerbosityLevel = getVerbosityLevel;
 exports.info = info;
 exports.isArrayBuffer = isArrayBuffer;
@@ -235,7 +232,7 @@ Object.defineProperty(exports, "URL", {
     return _url_polyfill.URL;
   }
 });
-exports.createObjectURL = exports.FormatError = exports.XRefParseException = exports.XRefEntryException = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.NativeImageDecoding = exports.MissingPDFException = exports.MissingDataException = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VerbosityLevel = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = void 0;
+exports.createObjectURL = exports.FormatError = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.NativeImageDecoding = exports.MissingPDFException = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VerbosityLevel = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = void 0;
 
 __w_pdfjs_require__(2);
 
@@ -599,19 +596,6 @@ function shadow(obj, prop, value) {
   return value;
 }
 
-function getLookupTableFactory(initializer) {
-  var lookup;
-  return function () {
-    if (initializer) {
-      lookup = Object.create(null);
-      initializer(lookup);
-      initializer = null;
-    }
-
-    return lookup;
-  };
-}
-
 var PasswordException = function PasswordExceptionClosure() {
   function PasswordException(msg, code) {
     this.name = 'PasswordException';
@@ -679,47 +663,6 @@ var UnexpectedResponseException = function UnexpectedResponseExceptionClosure() 
 }();
 
 exports.UnexpectedResponseException = UnexpectedResponseException;
-
-var MissingDataException = function MissingDataExceptionClosure() {
-  function MissingDataException(begin, end) {
-    this.begin = begin;
-    this.end = end;
-    this.message = 'Missing data [' + begin + ', ' + end + ')';
-  }
-
-  MissingDataException.prototype = new Error();
-  MissingDataException.prototype.name = 'MissingDataException';
-  MissingDataException.constructor = MissingDataException;
-  return MissingDataException;
-}();
-
-exports.MissingDataException = MissingDataException;
-
-const XRefEntryException = function XRefEntryExceptionClosure() {
-  function XRefEntryException(msg) {
-    this.message = msg;
-  }
-
-  XRefEntryException.prototype = new Error();
-  XRefEntryException.prototype.name = 'XRefEntryException';
-  XRefEntryException.constructor = XRefEntryException;
-  return XRefEntryException;
-}();
-
-exports.XRefEntryException = XRefEntryException;
-
-var XRefParseException = function XRefParseExceptionClosure() {
-  function XRefParseException(msg) {
-    this.message = msg;
-  }
-
-  XRefParseException.prototype = new Error();
-  XRefParseException.prototype.name = 'XRefParseException';
-  XRefParseException.constructor = XRefParseException;
-  return XRefParseException;
-}();
-
-exports.XRefParseException = XRefParseException;
 
 let FormatError = function FormatErrorClosure() {
   function FormatError(msg) {
@@ -876,42 +819,6 @@ function isEvalSupported() {
   }
 }
 
-function getInheritableProperty({
-  dict,
-  key,
-  getArray = false,
-  stopWhenFound = true
-}) {
-  const LOOP_LIMIT = 100;
-  let loopCount = 0;
-  let values;
-
-  while (dict) {
-    const value = getArray ? dict.getArray(key) : dict.get(key);
-
-    if (value !== undefined) {
-      if (stopWhenFound) {
-        return value;
-      }
-
-      if (!values) {
-        values = [];
-      }
-
-      values.push(value);
-    }
-
-    if (++loopCount > LOOP_LIMIT) {
-      warn(`getInheritableProperty: maximum loop count exceeded for "${key}"`);
-      break;
-    }
-
-    dict = dict.get('Parent');
-  }
-
-  return values;
-}
-
 var Util = function UtilClosure() {
   function Util() {}
 
@@ -1019,29 +926,6 @@ var Util = function UtilClosure() {
 }();
 
 exports.Util = Util;
-const ROMAN_NUMBER_MAP = ['', 'C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM', '', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC', '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
-
-function toRomanNumerals(number, lowerCase = false) {
-  assert(Number.isInteger(number) && number > 0, 'The number should be a positive integer.');
-  let pos,
-      romanBuf = [];
-
-  while (number >= 1000) {
-    number -= 1000;
-    romanBuf.push('M');
-  }
-
-  pos = number / 100 | 0;
-  number %= 100;
-  romanBuf.push(ROMAN_NUMBER_MAP[pos]);
-  pos = number / 10 | 0;
-  number %= 10;
-  romanBuf.push(ROMAN_NUMBER_MAP[10 + pos]);
-  romanBuf.push(ROMAN_NUMBER_MAP[20 + number]);
-  const romanStr = romanBuf.join('');
-  return lowerCase ? romanStr.toLowerCase() : romanStr;
-}
-
 const PDFStringTranslateTable = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x2D8, 0x2C7, 0x2C6, 0x2D9, 0x2DD, 0x2DB, 0x2DA, 0x2DC, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x2022, 0x2020, 0x2021, 0x2026, 0x2014, 0x2013, 0x192, 0x2044, 0x2039, 0x203A, 0x2212, 0x2030, 0x201E, 0x201C, 0x201D, 0x2018, 0x2019, 0x201A, 0x2122, 0xFB01, 0xFB02, 0x141, 0x152, 0x160, 0x178, 0x17D, 0x131, 0x142, 0x153, 0x161, 0x17E, 0, 0x20AC];
 
 function stringToPDFString(str) {
@@ -1213,7 +1097,7 @@ exports.build = exports.version = exports.PDFPageProxy = exports.PDFDocumentProx
 
 var _util = __w_pdfjs_require__(1);
 
-var _dom_utils = __w_pdfjs_require__(7);
+var _display_utils = __w_pdfjs_require__(7);
 
 var _font_loader = __w_pdfjs_require__(8);
 
@@ -1308,7 +1192,7 @@ function getDocument(src) {
   }
 
   params.rangeChunkSize = params.rangeChunkSize || DEFAULT_RANGE_CHUNK_SIZE;
-  params.CMapReaderFactory = params.CMapReaderFactory || _dom_utils.DOMCMapReaderFactory;
+  params.CMapReaderFactory = params.CMapReaderFactory || _display_utils.DOMCMapReaderFactory;
   params.ignoreErrors = params.stopAtErrors !== true;
   params.pdfBug = params.pdfBug === true;
   const NativeImageDecoderValues = Object.values(_util.NativeImageDecoding);
@@ -1411,7 +1295,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.2.15',
+    apiVersion: '2.2.42',
     source: {
       data: source.data,
       url: source.url,
@@ -1634,7 +1518,7 @@ class PDFPageProxy {
     this.pageIndex = pageIndex;
     this._pageInfo = pageInfo;
     this._transport = transport;
-    this._stats = pdfBug ? new _dom_utils.StatTimer() : _dom_utils.DummyStatTimer;
+    this._stats = pdfBug ? new _display_utils.StatTimer() : _display_utils.DummyStatTimer;
     this._pdfBug = pdfBug;
     this.commonObjs = transport.commonObjs;
     this.objs = new PDFObjects();
@@ -1669,7 +1553,7 @@ class PDFPageProxy {
     rotation = this.rotate,
     dontFlip = false
   } = {}) {
-    return new _dom_utils.PageViewport({
+    return new _display_utils.PageViewport({
       viewBox: this.view,
       scale,
       rotation,
@@ -1703,7 +1587,7 @@ class PDFPageProxy {
     stats.time('Overall');
     this.pendingCleanup = false;
     const renderingIntent = intent === 'print' ? 'print' : 'display';
-    const canvasFactoryInstance = canvasFactory || new _dom_utils.DOMCanvasFactory();
+    const canvasFactoryInstance = canvasFactory || new _display_utils.DOMCanvasFactory();
     const webGLContext = new _webgl.WebGLContext({
       enable: enableWebGL
     });
@@ -1926,8 +1810,8 @@ class PDFPageProxy {
     this.objs.clear();
     this.annotationsPromise = null;
 
-    if (resetStats && this._stats instanceof _dom_utils.StatTimer) {
-      this._stats = new _dom_utils.StatTimer();
+    if (resetStats && this._stats instanceof _display_utils.StatTimer) {
+      this._stats = new _display_utils.StatTimer();
     }
 
     this.pendingCleanup = false;
@@ -1963,7 +1847,7 @@ class PDFPageProxy {
   }
 
   get stats() {
-    return this._stats instanceof _dom_utils.StatTimer ? this._stats : null;
+    return this._stats instanceof _display_utils.StatTimer ? this._stats : null;
   }
 
 }
@@ -2106,7 +1990,7 @@ const PDFWorker = function PDFWorkerClosure() {
     }
 
     const loader = fakeWorkerFilesLoader || function () {
-      return (0, _dom_utils.loadScript)(getWorkerSrc()).then(function () {
+      return (0, _display_utils.loadScript)(getWorkerSrc()).then(function () {
         return window.pdfjsWorker.WorkerMessageHandler;
       });
     };
@@ -2720,15 +2604,17 @@ class WorkerTransport {
         const img = new Image();
 
         img.onload = function () {
-          const width = img.width;
-          const height = img.height;
+          const {
+            width,
+            height
+          } = img;
           const size = width * height;
           const rgbaLength = size * 4;
           const buf = new Uint8ClampedArray(size * components);
-          const tmpCanvas = document.createElement('canvas');
+          let tmpCanvas = document.createElement('canvas');
           tmpCanvas.width = width;
           tmpCanvas.height = height;
-          const tmpCtx = tmpCanvas.getContext('2d');
+          let tmpCtx = tmpCanvas.getContext('2d');
           tmpCtx.drawImage(img, 0, 0);
           const data = tmpCtx.getImageData(0, 0, width, height).data;
 
@@ -2749,6 +2635,10 @@ class WorkerTransport {
             width,
             height
           });
+          tmpCanvas.width = 0;
+          tmpCanvas.height = 0;
+          tmpCanvas = null;
+          tmpCtx = null;
         };
 
         img.onerror = function () {
@@ -3074,7 +2964,7 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
         canvasInRendering.delete(this._canvas);
       }
 
-      this.callback(error || new _dom_utils.RenderingCancelledException(`Rendering cancelled, page ${this.pageNumber}`, 'canvas'));
+      this.callback(error || new _display_utils.RenderingCancelledException(`Rendering cancelled, page ${this.pageNumber}`, 'canvas'));
     }
 
     operatorListChanged() {
@@ -3148,9 +3038,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.2.15';
+const version = '2.2.42';
 exports.version = version;
-const build = 'ece6a31a';
+const build = '34022d2f';
 exports.build = build;
 
 /***/ }),
@@ -3165,6 +3055,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.addLinkAttributes = addLinkAttributes;
 exports.getFilenameFromUrl = getFilenameFromUrl;
+exports.isFetchSupported = isFetchSupported;
+exports.isValidFetchUrl = isValidFetchUrl;
 exports.loadScript = loadScript;
 exports.DummyStatTimer = exports.StatTimer = exports.DOMSVGFactory = exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_REL = exports.LinkTarget = exports.RenderingCancelledException = exports.PageViewport = void 0;
 
@@ -3227,53 +3119,38 @@ class DOMCMapReaderFactory {
     this.isCompressed = isCompressed;
   }
 
-  fetch({
+  async fetch({
     name
   }) {
     if (!this.baseUrl) {
-      return Promise.reject(new Error('The CMap "baseUrl" parameter must be specified, ensure that ' + 'the "cMapUrl" and "cMapPacked" API parameters are provided.'));
+      throw new Error('The CMap "baseUrl" parameter must be specified, ensure that ' + 'the "cMapUrl" and "cMapPacked" API parameters are provided.');
     }
 
     if (!name) {
-      return Promise.reject(new Error('CMap name must be specified.'));
+      throw new Error('CMap name must be specified.');
     }
 
-    return new Promise((resolve, reject) => {
-      let url = this.baseUrl + name + (this.isCompressed ? '.bcmap' : '');
-      let request = new XMLHttpRequest();
-      request.open('GET', url, true);
-
-      if (this.isCompressed) {
-        request.responseType = 'arraybuffer';
+    const url = this.baseUrl + name + (this.isCompressed ? '.bcmap' : '');
+    const compressionType = this.isCompressed ? _util.CMapCompressionType.BINARY : _util.CMapCompressionType.NONE;
+    return fetch(url).then(async response => {
+      if (!response.ok) {
+        throw new Error(response.statusText);
       }
 
-      request.onreadystatechange = () => {
-        if (request.readyState !== XMLHttpRequest.DONE) {
-          return;
-        }
+      let cMapData;
 
-        if (request.status === 200 || request.status === 0) {
-          let data;
+      if (this.isCompressed) {
+        cMapData = new Uint8Array((await response.arrayBuffer()));
+      } else {
+        cMapData = (0, _util.stringToBytes)((await response.text()));
+      }
 
-          if (this.isCompressed && request.response) {
-            data = new Uint8Array(request.response);
-          } else if (!this.isCompressed && request.responseText) {
-            data = (0, _util.stringToBytes)(request.responseText);
-          }
-
-          if (data) {
-            resolve({
-              cMapData: data,
-              compressionType: this.isCompressed ? _util.CMapCompressionType.BINARY : _util.CMapCompressionType.NONE
-            });
-            return;
-          }
-        }
-
-        reject(new Error('Unable to load ' + (this.isCompressed ? 'binary ' : '') + 'CMap at: ' + url));
+      return {
+        cMapData,
+        compressionType
       };
-
-      request.send(null);
+    }).catch(reason => {
+      throw new Error(`Unable to load ${this.isCompressed ? 'binary ' : ''}` + `CMap at: ${url}`);
     });
   }
 
@@ -3535,6 +3412,21 @@ class DummyStatTimer {
 }
 
 exports.DummyStatTimer = DummyStatTimer;
+
+function isFetchSupported() {
+  return typeof fetch !== 'undefined' && typeof Response !== 'undefined' && 'body' in Response.prototype && typeof ReadableStream !== 'undefined';
+}
+
+function isValidFetchUrl(url, baseUrl) {
+  try {
+    const {
+      protocol
+    } = baseUrl ? new _util.URL(url, baseUrl) : new _util.URL(url);
+    return protocol === 'http:' || protocol === 'https:';
+  } catch (ex) {
+    return false;
+  }
+}
 
 function loadScript(src) {
   return new Promise((resolve, reject) => {
@@ -4126,7 +4018,10 @@ function compileType3Glyph(imgData) {
 
       coords.push(p % width1);
       coords.push(p / width1 | 0);
-      --count;
+
+      if (!points[p]) {
+        --count;
+      }
     } while (p0 !== p);
 
     outlines.push(coords);
@@ -5127,7 +5022,9 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
     },
 
     get isFontSubpixelAAEnabled() {
-      var ctx = this.canvasFactory.create(10, 10).context;
+      const {
+        context: ctx
+      } = this.cachedCanvases.getCanvas('isFontSubpixelAAEnabled', 10, 10);
       ctx.scale(1.5, 1);
       ctx.fillText('I', 0, 10);
       var data = ctx.getImageData(0, 0, 10, 10).data;
@@ -8784,7 +8681,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.AnnotationLayer = void 0;
 
-var _dom_utils = __w_pdfjs_require__(7);
+var _display_utils = __w_pdfjs_require__(7);
 
 var _util = __w_pdfjs_require__(1);
 
@@ -8994,9 +8891,9 @@ class LinkAnnotationElement extends AnnotationElement {
       linkService
     } = this;
     let link = document.createElement('a');
-    (0, _dom_utils.addLinkAttributes)(link, {
+    (0, _display_utils.addLinkAttributes)(link, {
       url: data.url,
-      target: data.newWindow ? _dom_utils.LinkTarget.BLANK : linkService.externalLinkTarget,
+      target: data.newWindow ? _display_utils.LinkTarget.BLANK : linkService.externalLinkTarget,
       rel: linkService.externalLinkRel
     });
 
@@ -9648,7 +9545,7 @@ class FileAttachmentAnnotationElement extends AnnotationElement {
       filename,
       content
     } = this.data.file;
-    this.filename = (0, _dom_utils.getFilenameFromUrl)(filename);
+    this.filename = (0, _display_utils.getFilenameFromUrl)(filename);
     this.content = content;
 
     if (this.linkService.eventBus) {
@@ -9705,7 +9602,7 @@ class AnnotationLayer {
         downloadManager: parameters.downloadManager,
         imageResourcesPath: parameters.imageResourcesPath || '',
         renderInteractiveForms: parameters.renderInteractiveForms || false,
-        svgFactory: new _dom_utils.DOMSVGFactory()
+        svgFactory: new _display_utils.DOMSVGFactory()
       });
 
       if (element.isRenderable) {
@@ -9745,7 +9642,7 @@ exports.SVGGraphics = void 0;
 
 var _util = __w_pdfjs_require__(1);
 
-var _dom_utils = __w_pdfjs_require__(7);
+var _display_utils = __w_pdfjs_require__(7);
 
 var _is_node = _interopRequireDefault(__w_pdfjs_require__(21));
 
