@@ -162,12 +162,12 @@
 
 #pageAction-panel-pinTab,
 #pageAction-urlbar-pinTab {
-  list-style-image: url("resource://activity-stream/data/content/assets/glyph-pin-16.svg");
+  list-style-image: url("chrome://browser/skin/pin-tab.svg");
 }
 
 #pageAction-panel-pinTab[pinned],
 #pageAction-urlbar-pinTab[pinned] {
-  list-style-image: url("resource://activity-stream/data/content/assets/glyph-unpin-16.svg");
+  list-style-image: url("chrome://browser/skin/unpin-tab.svg");
 }
 
 #pageAction-panel-copyURL,
