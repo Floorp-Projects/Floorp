@@ -506,6 +506,67 @@ static_assert(sizeof(Vector<Incomplete, 0>) ==
 
 #endif  // DEBUG
 
+static void TestVectorBeginNonNull() {
+  // Vector::begin() should never return nullptr, to accommodate callers that
+  // (either for hygiene, or for semantic reasons) need a non-null pointer even
+  // for zero elements.
+
+  Vector<bool, 0> bvec0;
+  MOZ_RELEASE_ASSERT(bvec0.length() == 0);
+  MOZ_RELEASE_ASSERT(bvec0.begin() != nullptr);
+
+  Vector<bool, 1> bvec1;
+  MOZ_RELEASE_ASSERT(bvec1.length() == 0);
+  MOZ_RELEASE_ASSERT(bvec1.begin() != nullptr);
+
+  Vector<bool, 64> bvec64;
+  MOZ_RELEASE_ASSERT(bvec64.length() == 0);
+  MOZ_RELEASE_ASSERT(bvec64.begin() != nullptr);
+
+  Vector<int, 0> ivec0;
+  MOZ_RELEASE_ASSERT(ivec0.length() == 0);
+  MOZ_RELEASE_ASSERT(ivec0.begin() != nullptr);
+
+  Vector<int, 1> ivec1;
+  MOZ_RELEASE_ASSERT(ivec1.length() == 0);
+  MOZ_RELEASE_ASSERT(ivec1.begin() != nullptr);
+
+  Vector<int, 64> ivec64;
+  MOZ_RELEASE_ASSERT(ivec64.length() == 0);
+  MOZ_RELEASE_ASSERT(ivec64.begin() != nullptr);
+
+  Vector<long, 0> lvec0;
+  MOZ_RELEASE_ASSERT(lvec0.length() == 0);
+  MOZ_RELEASE_ASSERT(lvec0.begin() != nullptr);
+
+  Vector<long, 1> lvec1;
+  MOZ_RELEASE_ASSERT(lvec1.length() == 0);
+  MOZ_RELEASE_ASSERT(lvec1.begin() != nullptr);
+
+  Vector<long, 64> lvec64;
+  MOZ_RELEASE_ASSERT(lvec64.length() == 0);
+  MOZ_RELEASE_ASSERT(lvec64.begin() != nullptr);
+
+  // Vector<T, N> doesn't guarantee N inline elements -- the actual count is
+  // capped so that any Vector fits in a not-crazy amount of space -- so the
+  // code below won't overflow stacks or anything crazy.
+  struct VeryBig {
+    int array[16 * 1024 * 1024];
+  };
+
+  Vector<VeryBig, 0> vbvec0;
+  MOZ_RELEASE_ASSERT(vbvec0.length() == 0);
+  MOZ_RELEASE_ASSERT(vbvec0.begin() != nullptr);
+
+  Vector<VeryBig, 1> vbvec1;
+  MOZ_RELEASE_ASSERT(vbvec1.length() == 0);
+  MOZ_RELEASE_ASSERT(vbvec1.begin() != nullptr);
+
+  Vector<VeryBig, 64> vbvec64;
+  MOZ_RELEASE_ASSERT(vbvec64.length() == 0);
+  MOZ_RELEASE_ASSERT(vbvec64.begin() != nullptr);
+}
+
 int main() {
   VectorTesting::testReserved();
   VectorTesting::testConstRange();
@@ -516,4 +577,5 @@ int main() {
   VectorTesting::testReplaceRawBuffer();
   VectorTesting::testInsert();
   VectorTesting::testPodResizeToFit();
+  TestVectorBeginNonNull();
 }
