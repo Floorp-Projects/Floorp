@@ -87,6 +87,17 @@ macro_rules! declare_gl_apis {
                 rv
             })+
         }
+
+        impl<F: Fn(&Gl, &str, GLenum)> Gl for ErrorReactingGl<F> {
+            $($(unsafe $($garbo)*)* fn $name(&self $(, $arg:$t)*) $(-> $retty)* {
+                let rv = self.gl.$name($($arg,)*);
+                let error = self.gl.get_error();
+                if error != 0 {
+                    (self.callback)(&*self.gl, stringify!($name), error);
+                }
+                rv
+            })+
+        }
     }
 }
 
@@ -529,6 +540,8 @@ declare_gl_apis! {
     fn set_fence_apple(&self, fence: GLuint);
     fn finish_fence_apple(&self, fence: GLuint);
     fn test_fence_apple(&self, fence: GLuint);
+    fn test_object_apple(&self, object: GLenum, name: GLuint) -> GLboolean;
+    fn finish_object_apple(&self, object: GLenum, name: GLuint);
 
     // GL_ARB_blend_func_extended
     fn bind_frag_data_location_indexed(
@@ -548,6 +561,7 @@ declare_gl_apis! {
     fn get_debug_messages(&self) -> Vec<DebugMessage>;
 }
 
+//#[deprecated(since = "0.6.11", note = "use ErrorReactingGl instead")]
 pub struct ErrorCheckingGl {
     gl: Rc<Gl>,
 }
@@ -555,6 +569,18 @@ pub struct ErrorCheckingGl {
 impl ErrorCheckingGl {
     pub fn wrap(fns: Rc<Gl>) -> Rc<Gl> {
         Rc::new(ErrorCheckingGl { gl: fns }) as Rc<Gl>
+    }
+}
+
+/// A wrapper around GL context that calls a specified callback on each GL error.
+pub struct ErrorReactingGl<F> {
+    gl: Rc<Gl>,
+    callback: F,
+}
+
+impl<F: 'static + Fn(&Gl, &str, GLenum)> ErrorReactingGl<F> {
+    pub fn wrap(fns: Rc<Gl>, callback: F) -> Rc<Gl> {
+        Rc::new(ErrorReactingGl { gl: fns, callback }) as Rc<Gl>
     }
 }
 

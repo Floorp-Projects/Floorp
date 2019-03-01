@@ -1604,6 +1604,9 @@ impl Gl for GlesFns {
         unsafe {
             self.get_program_iv(program, ffi::INFO_LOG_LENGTH, &mut max_len);
         }
+        if max_len[0] == 0 {
+            return String::new();
+        }
         let mut result = vec![0u8; max_len[0] as usize];
         let mut result_len = 0 as GLsizei;
         unsafe {
@@ -1710,6 +1713,9 @@ impl Gl for GlesFns {
         let mut max_len = [0];
         unsafe {
             self.get_shader_iv(shader, ffi::INFO_LOG_LENGTH, &mut max_len);
+        }
+        if max_len[0] == 0 {
+            return String::new();
         }
         let mut result = vec![0u8; max_len[0] as usize];
         let mut result_len = 0 as GLsizei;
@@ -1976,6 +1982,16 @@ impl Gl for GlesFns {
     fn test_fence_apple(&self, _fence: GLuint) {
         panic!("not supported")
     }
+
+    fn test_object_apple(&self, _object: GLenum, _name: GLuint) -> GLboolean {
+        panic!("not supported")
+    }
+
+    fn finish_object_apple(&self, _object: GLenum, _name: GLuint) {
+        panic!("not supported")
+    }
+
+
 
     // GL_ARB_blend_func_extended
     fn bind_frag_data_location_indexed(
