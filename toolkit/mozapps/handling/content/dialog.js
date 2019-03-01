@@ -32,6 +32,38 @@ const {EnableDelayHelper} = ChromeUtils.import("resource://gre/modules/SharedPro
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {PrivateBrowsingUtils} = ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
+class MozHandler extends window.MozElements.MozRichlistitem {
+  connectedCallback() {
+    this.textContent = "";
+    this.appendChild(window.MozXULElement.parseXULToFragment(`
+      <vbox pack="center">
+        <image height="32" width="32"/>
+      </vbox>
+      <vbox flex="1">
+        <label class="name"/>
+        <label class="description"/>
+      </vbox>
+    `));
+    this.initializeAttributeInheritance();
+  }
+
+  static get inheritedAttributes() {
+    return {
+      "image": "src=image,disabled",
+      ".name": "value=name,disabled",
+      ".description": "value=description,disabled",
+    };
+  }
+
+  get label() {
+    return `${this.getAttribute("name")} ${this.getAttribute("description")}`;
+  }
+}
+
+customElements.define("mozapps-handler", MozHandler, {
+  extends: "richlistitem",
+});
+
 var dialog = {
   // Member Variables
 
@@ -122,8 +154,7 @@ var dialog = {
     var preferredHandler = this._handlerInfo.preferredApplicationHandler;
     for (let i = possibleHandlers.length - 1; i >= 0; --i) {
       let app = possibleHandlers.queryElementAt(i, Ci.nsIHandlerApp);
-      let elm = document.createElement("richlistitem");
-      elm.setAttribute("type", "handler");
+      let elm = document.createElement("richlistitem", {is: "mozapps-handler"});
       elm.setAttribute("name", app.name);
       elm.obj = app;
 
@@ -171,8 +202,7 @@ var dialog = {
     }
 
     if (this._handlerInfo.hasDefaultHandler) {
-      let elm = document.createElement("richlistitem");
-      elm.setAttribute("type", "handler");
+      let elm = document.createElement("richlistitem", {is: "mozapps-handler"});
       elm.id = "os-default-handler";
       elm.setAttribute("name", this._handlerInfo.defaultDescription);
 
@@ -203,8 +233,7 @@ var dialog = {
           }
         }
         if (!appAlreadyInHandlers) {
-          let elm = document.createElement("richlistitem");
-          elm.setAttribute("type", "handler");
+          let elm = document.createElement("richlistitem", {is: "mozapps-handler"});
           elm.setAttribute("name", handler.name);
           elm.obj = handler;
           items.insertBefore(elm, this._itemChoose);
@@ -245,8 +274,7 @@ var dialog = {
           }
         }
 
-        let elm = document.createElement("richlistitem");
-        elm.setAttribute("type", "handler");
+        let elm = document.createElement("richlistitem", {is: "mozapps-handler"});
         elm.setAttribute("name", fp.file.leafName);
         elm.setAttribute("image", "moz-icon://" + uri.spec + "?size=32");
         elm.obj = handlerApp;
