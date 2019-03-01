@@ -22,7 +22,7 @@ import type { ThunkArgs } from "../types";
 import type { Command } from "../../reducers/types";
 
 export function selectThread(thread: string) {
-  return { type: "SELECT_THREAD", thread }
+  return { type: "SELECT_THREAD", thread };
 }
 
 /**
