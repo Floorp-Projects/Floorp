@@ -9,29 +9,20 @@
     android:layout_height="wrap_content"
     android:layout_marginBottom="8dp"
     android:clipToPadding="false"
-    android:padding="10dp"
-    app:cardBackgroundColor="?attr/sessionBorderColor"
-    app:cardCornerRadius="10dp"
-    app:cardElevation="5dp"
-    app:cardUseCompatPadding="true">
+    app:cardCornerRadius="@dimen/tab_corner_radius"
+    app:cardElevation="5dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/item_tab"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_margin="2dp"
-        android:background="@drawable/session_border"
-        android:paddingTop="10dp">
+        android:layout_height="match_parent">
 
         <ImageView
             android:id="@+id/favicon_image"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:contentDescription="@string/favicon_content_description"
-            android:paddingStart="10dp"
-            android:paddingEnd="10dp"
-            android:src="@drawable/ic_link"
-            android:tint="@android:color/black"
+            android:layout_margin="10dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -39,15 +30,16 @@
             android:id="@+id/text_url"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="4dp"
             android:ellipsize="end"
             android:maxLines="1"
             android:textColor="?attr/toolbarTextColor"
             android:textSize="18sp"
+            android:layout_marginTop="4dp"
+            android:layout_marginStart="10dp"
             app:layout_constraintEnd_toStartOf="@id/close_tab_button"
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toEndOf="@id/favicon_image"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="@id/favicon_image" />
 
         <ImageView
             android:id="@+id/close_tab_button"
@@ -56,18 +48,32 @@
             android:contentDescription="@string/close_tab"
             android:paddingEnd="10dp"
             android:src="@drawable/ic_close"
+            android:layout_marginTop="1dp"
+            app:layout_constraintTop_toTopOf="@id/text_url"
             app:layout_constraintBottom_toBottomOf="@id/text_url"
             app:layout_constraintEnd_toEndOf="parent" />
 
         <ImageView
+            android:id="@+id/tab_background"
             android:layout_width="0dp"
             android:layout_height="100dp"
-            android:background="@drawable/session_background"
+            android:layout_marginTop="10dp"
             android:focusable="false"
+            android:adjustViewBounds="false"
+            android:scaleType="centerCrop"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/text_url" />
+            app:layout_constraintTop_toBottomOf="@id/favicon_image" />
 
+        <View
+            android:id="@+id/selected_border"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/session_border"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>

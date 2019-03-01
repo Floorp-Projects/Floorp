@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
@@ -21,7 +22,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.IconRequest
-import org.mozilla.fenix.DefaultThemeManager
+import org.jetbrains.anko.image
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.increaseTapArea
 import kotlin.coroutines.CoroutineContext
@@ -60,7 +61,7 @@ class TabsAdapter(private val actionEmitter: Observer<TabsAction>) :
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder) {
             is TabViewHolder -> {
-                holder.bindSession(sessions[position])
+                holder.bindSession(sessions[position], position)
             }
         }
     }
@@ -100,8 +101,9 @@ class TabsAdapter(private val actionEmitter: Observer<TabsAction>) :
             }
         }
 
-        fun bindSession(session: SessionViewState) {
+        fun bindSession(session: SessionViewState, position: Int) {
             this.session = session
+            updateTabBackground(position)
             updateUrl(session.url)
             updateSelected(session.selected)
         }
@@ -118,10 +120,12 @@ class TabsAdapter(private val actionEmitter: Observer<TabsAction>) :
         }
 
         fun updateSelected(selected: Boolean) {
-            if (selected)
-                DefaultThemeManager.resolveAttribute(R.attr.sessionBorderColor, view.context)
-            else
-                session_card.setCardBackgroundColor(view.context.getColor(android.R.color.transparent))
+            selected_border.visibility = if (selected) View.VISIBLE else View.GONE
+        }
+
+        fun updateTabBackground(id: Int) {
+            val background = availableBackgrounds[id % availableBackgrounds.size]
+            tab_background.image = ContextCompat.getDrawable(view.context, background)
         }
 
         companion object {
@@ -133,6 +137,9 @@ class TabsAdapter(private val actionEmitter: Observer<TabsAction>) :
     companion object {
         const val tab_url = "url"
         const val tab_selected = "selected"
+        private val availableBackgrounds = listOf(R.drawable.sessions_01, R.drawable.sessions_02,
+            R.drawable.sessions_03, R.drawable.sessions_04, R.drawable.sessions_05, R.drawable.sessions_06,
+            R.drawable.sessions_07, R.drawable.sessions_08)
     }
 }
 
