@@ -1506,14 +1506,13 @@ void nsXULWindow::SyncAttributesToWidget() {
 
   NS_ENSURE_TRUE_VOID(mWindow);
 
-  // "id" attribute for icon
-  windowElement->GetAttribute(NS_LITERAL_STRING("id"), attr);
-  if (attr.IsEmpty()) {
-    attr.AssignLiteral("default");
-  }
-  mWindow->SetIcon(attr);
+  // "icon" attribute
+  windowElement->GetAttribute(NS_LITERAL_STRING("icon"), attr);
+  if (!attr.IsEmpty()) {
+    mWindow->SetIcon(attr);
 
-  NS_ENSURE_TRUE_VOID(mWindow);
+    NS_ENSURE_TRUE_VOID(mWindow);
+  }
 
   // "drawtitle" attribute
   windowElement->GetAttribute(NS_LITERAL_STRING("drawtitle"), attr);
