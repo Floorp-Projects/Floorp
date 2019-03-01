@@ -213,6 +213,12 @@ class StringListsStorageEngineTest {
             ArgumentMatchers.eq(storageEngine::class.java.canonicalName),
             ArgumentMatchers.eq(Context.MODE_PRIVATE)
         )).thenReturn(sharedPreferences)
+        Mockito.`when`(context.getSharedPreferences(
+            ArgumentMatchers.eq("${storageEngine::class.java.canonicalName}.PingLifetime"),
+            ArgumentMatchers.eq(Context.MODE_PRIVATE)
+        )).thenReturn(ApplicationProvider.getApplicationContext<Context>()
+            .getSharedPreferences("${storageEngine::class.java.canonicalName}.PingLifetime",
+                Context.MODE_PRIVATE))
 
         storageEngine.applicationContext = context
         val snapshot = storageEngine.getSnapshot(storeName = "store1", clearStore = true)

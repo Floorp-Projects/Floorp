@@ -6,6 +6,7 @@ package mozilla.components.service.glean
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.test.core.app.ApplicationProvider
 import mozilla.components.service.glean.storages.BooleansStorageEngine
 import mozilla.components.service.glean.storages.CountersStorageEngine
 import mozilla.components.service.glean.storages.MockScalarStorageEngine
@@ -434,6 +435,12 @@ class LabeledMetricTypeTest {
             eq(MockScalarStorageEngine::class.java.canonicalName),
             eq(Context.MODE_PRIVATE)
         )).thenReturn(sharedPreferences)
+        `when`(context.getSharedPreferences(
+            eq("${MockScalarStorageEngine::class.java.canonicalName}.PingLifetime"),
+            eq(Context.MODE_PRIVATE)
+        )).thenReturn(ApplicationProvider.getApplicationContext<Context>()
+            .getSharedPreferences("${MockScalarStorageEngine::class.java.canonicalName}.PingLifetime",
+                Context.MODE_PRIVATE))
 
         val storageEngine = MockScalarStorageEngine()
         storageEngine.applicationContext = context

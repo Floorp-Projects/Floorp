@@ -44,7 +44,12 @@ internal abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
     // useful when debugging weird behaviours.
     abstract val logger: Logger
 
-    protected val userLifetimeStorage: SharedPreferences by lazy { deserializeUserLifetime() }
+    protected val userLifetimeStorage: SharedPreferences by lazy {
+        deserializeLifetime(Lifetime.User)
+    }
+    protected val pingLifetimeStorage: SharedPreferences by lazy {
+        deserializeLifetime(Lifetime.Ping)
+    }
 
     // Store a map for each lifetime as an array element:
     // Array[Lifetime] = Map[StorageName, ScalarType].
@@ -79,22 +84,32 @@ internal abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
     )
 
     /**
-     * Deserialize the metrics with a lifetime = User that are on disk.
+     * Deserialize the metrics with a particular lifetime that are on disk.
      * This will be called the first time a metric is used or before a snapshot is
      * taken.
      *
-     * @return A [SharedPreferences] reference that will be used to initialize [userLifetimeStorage]
+     * @param lifetime a [Lifetime] to deserialize
+     * @return A [SharedPreferences] reference that will be used to initialize [pingLifetimeStorage]
+     *         or [userLifetimeStorage] or null if an invalid lifetime is used.
      */
-    @Suppress("TooGenericExceptionCaught")
-    open fun deserializeUserLifetime(): SharedPreferences {
-        val prefs =
-            applicationContext.getSharedPreferences(this.javaClass.canonicalName, Context.MODE_PRIVATE)
+    @Suppress("TooGenericExceptionCaught", "ComplexMethod")
+    open fun deserializeLifetime(lifetime: Lifetime): SharedPreferences {
+        require(lifetime == Lifetime.Ping || lifetime == Lifetime.User) {
+            "deserializeLifetime does not support Lifetime.Application"
+        }
+
+        val prefsName = if (lifetime == Lifetime.Ping) {
+            "${this.javaClass.canonicalName}.PingLifetime"
+        } else {
+            this.javaClass.canonicalName
+        }
+        val prefs = applicationContext.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
 
         val metrics = try {
             prefs.all.entries
         } catch (e: NullPointerException) {
             // If we fail to deserialize, we can log the problem but keep on going.
-            logger.error("Failed to deserialize metric with 'user' lifetime")
+            logger.error("Failed to deserialize metric with ${lifetime.name} lifetime")
             return prefs
         }
 
@@ -111,10 +126,12 @@ internal abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
                 continue
             }
 
-            val storeData = dataStores[Lifetime.User.ordinal].getOrPut(storeName) { mutableMapOf() }
+            val storeData = dataStores[lifetime.ordinal].getOrPut(storeName) { mutableMapOf() }
             // Only set the stored value if we're able to deserialize the persisted data.
-            deserializeSingleMetric(metricName, metricValue)?.let {
-                storeData[metricName] = it
+            deserializeSingleMetric(metricName, metricValue)?.let { value ->
+                storeData?.let {
+                    it[metricName] = value
+                }
             } ?: logger.warn("Failed to deserialize $metricStoragePath")
         }
 
@@ -122,14 +139,15 @@ internal abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
     }
 
     /**
-     * Ensures that the user lifetime metrics (in [userLifetimeStorage]) is
+     * Ensures that the lifetime metrics in [pingLifetimeStorage] and [userLifetimeStorage] is
      * loaded.  This is a no-op if they are already loaded.
      */
-    private fun ensureUserLifetimeLoaded() {
-        // Make sure data with "user" lifetime is loaded.
+    private fun ensureAllLifetimesLoaded() {
+        // Make sure data with the provided lifetime is loaded.
         // We still need to catch exceptions here, as `getAll()` might throw.
         @Suppress("TooGenericExceptionCaught")
         try {
+            pingLifetimeStorage.all
             userLifetimeStorage.all
         } catch (e: NullPointerException) {
             // Intentionally left blank. We just want to fall through.
@@ -154,7 +172,7 @@ internal abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
     fun getSnapshot(storeName: String, clearStore: Boolean): GenericDataStorage<ScalarType>? {
         val allLifetimes: GenericDataStorage<ScalarType> = mutableMapOf()
 
-        ensureUserLifetimeLoaded()
+        ensureAllLifetimesLoaded()
 
         // Get the metrics for all the supported lifetimes.
         for (store in dataStores) {
@@ -165,6 +183,11 @@ internal abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
 
         if (clearStore) {
             // We only allow clearing metrics with the "ping" lifetime.
+            val editor = pingLifetimeStorage.edit()
+            dataStores[Lifetime.Ping.ordinal][storeName]?.keys?.forEach { key ->
+                editor.remove("$storeName#$key")
+            }
+            editor.apply()
             dataStores[Lifetime.Ping.ordinal].remove(storeName)
         }
 
@@ -194,8 +217,8 @@ internal abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
      *     those stores.
      */
     override fun getIdentifiersInStores(stores: List<String>) = sequence {
-        // Make sure data with "user" lifetime is loaded before getting the snapshot.
-        ensureUserLifetimeLoaded()
+        // Make sure data with "user" and "ping" lifetimes are loaded before getting the snapshot.
+        ensureAllLifetimesLoaded()
 
         dataStores.forEach { lifetime ->
             stores.forEach {
@@ -241,31 +264,35 @@ internal abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
 
         // Record a copy of the metric in all the needed stores.
         @SuppressLint("CommitPrefEdits")
-        val userPrefs: SharedPreferences.Editor? =
-            if (metricData.lifetime == Lifetime.User) userLifetimeStorage.edit() else null
-        metricData.getStorageNames().forEach {
-            val storeData = dataStores[metricData.lifetime.ordinal].getOrPut(it) { mutableMapOf() }
+        val editor: SharedPreferences.Editor? = when (metricData.lifetime) {
+            Lifetime.User -> userLifetimeStorage.edit()
+            Lifetime.Ping -> pingLifetimeStorage.edit()
+            else -> null
+        }
+        metricData.getStorageNames().forEach { store ->
+            val storeData = dataStores[metricData.lifetime.ordinal].getOrPut(store) { mutableMapOf() }
             // We support empty categories for enabling the internal use of metrics
             // when assembling pings in [PingMaker].
             val entryName = metricData.identifier
             val combinedValue = combine(storeData[entryName], value)
             storeData[entryName] = combinedValue
-            // Persist data with "user" lifetime
-            if (metricData.lifetime == Lifetime.User) {
+            // Persist data with "user" or "ping" lifetimes
+            editor?.let {
                 serializeSingleMetric(
-                    userPrefs,
-                    "$it#$entryName",
+                    it,
+                    "$store#$entryName",
                     combinedValue,
                     extraSerializationData
                 )
             }
         }
-        userPrefs?.apply()
+        editor?.apply()
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     override fun clearAllStores() {
         userLifetimeStorage.edit().clear().apply()
+        pingLifetimeStorage.edit().clear().apply()
         dataStores.forEach { it.clear() }
     }
 }

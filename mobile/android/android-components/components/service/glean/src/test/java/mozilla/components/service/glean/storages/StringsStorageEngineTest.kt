@@ -46,6 +46,12 @@ class StringsStorageEngineTest {
             eq(storageEngine::class.java.canonicalName),
             eq(Context.MODE_PRIVATE)
         )).thenReturn(sharedPreferences)
+        `when`(context.getSharedPreferences(
+            eq("${storageEngine::class.java.canonicalName}.PingLifetime"),
+            eq(Context.MODE_PRIVATE)
+        )).thenReturn(ApplicationProvider.getApplicationContext<Context>()
+            .getSharedPreferences("${storageEngine::class.java.canonicalName}.PingLifetime",
+                Context.MODE_PRIVATE))
 
         storageEngine.applicationContext = context
         val snapshot = storageEngine.getSnapshot(storeName = "store1", clearStore = true)
