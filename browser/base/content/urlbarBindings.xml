@@ -856,7 +856,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // TODO: When bug 1498553 is resolved, we should be able to
           // remove the !triggeringPrincipal condition here.
           if (!triggeringPrincipal || triggeringPrincipal.isSystemPrincipal) {
-            delete browser.canceledAuthenticationPromptCounter;
+            delete browser.authPromptAbuseCounter;
           }
 
           let params = {
