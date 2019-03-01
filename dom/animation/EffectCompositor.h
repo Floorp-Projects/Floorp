@@ -129,10 +129,10 @@ class EffectCompositor {
   bool HasPendingStyleUpdates() const;
 
   static bool HasAnimationsForCompositor(const nsIFrame* aFrame,
-                                         nsCSSPropertyID aProperty);
+                                         DisplayItemType aType);
 
   static nsTArray<RefPtr<dom::Animation>> GetAnimationsForCompositor(
-      const nsIFrame* aFrame, nsCSSPropertyID aProperty);
+      const nsIFrame* aFrame, const nsCSSPropertyIDSet& aPropertySet);
 
   static void ClearIsRunningOnCompositor(const nsIFrame* aFrame,
                                          nsCSSPropertyID aProperty);

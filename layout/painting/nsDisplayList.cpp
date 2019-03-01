@@ -67,6 +67,7 @@
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/HashTable.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/PendingAnimationTracker.h"
@@ -567,6 +568,62 @@ static void AddAnimationForProperty(nsIFrame* aFrame,
   }
 }
 
+// Let's use an example to explain this function:
+//
+// We have 4 playing animations (without any !important rule or transition):
+// Animation A: [ transform, rotate ].
+// Animation B: [ rotate, scale ].
+// Animation C: [ transform, margin-left ].
+// Animation D: [ opacity, margin-left ].
+//
+// Normally, GetAnimationsForCompositor(|transform-like properties|) returns:
+// [ Animation A, Animation B, Animation C ], which is the first argument of
+// this function.
+//
+// In this function, we want to re-organize the list as (Note: don't care
+// the order of properties):
+// [
+//   { rotate:    [ Animation A, Animation B ] },
+//   { scale:     [ Animation B ] },
+//   { transform: [ Animation A, Animation C ] },
+// ]
+//
+// Therefore, AddAnimationsForProperty() will append each animation property
+// into AnimationInfo,  as a final list of layers::Animation:
+// [
+//   { rotate: Animation A },
+//   { rotate: Animation B },
+//   { scale: Animation B },
+//   { transform: Animation A },
+//   { transform: Animation C },
+// ]
+//
+// And then, for each transaction, we send this list to the compositor thread.
+static HashMap<nsCSSPropertyID, nsTArray<RefPtr<dom::Animation>>>
+GroupAnimationsByProperty(const nsTArray<RefPtr<dom::Animation>>& aAnimations,
+                          const nsCSSPropertyIDSet& aPropertySet) {
+  HashMap<nsCSSPropertyID, nsTArray<RefPtr<dom::Animation>>> groupedAnims;
+  for (const RefPtr<dom::Animation>& anim : aAnimations) {
+    const KeyframeEffect* effect = anim->GetEffect()->AsKeyframeEffect();
+    MOZ_ASSERT(effect);
+    for (const AnimationProperty& property : effect->Properties()) {
+      if (!aPropertySet.HasProperty(property.mProperty)) {
+        continue;
+      }
+
+      auto animsForPropertyPtr = groupedAnims.lookupForAdd(property.mProperty);
+      if (!animsForPropertyPtr) {
+        DebugOnly<bool> rv =
+            groupedAnims.add(animsForPropertyPtr, property.mProperty,
+                             nsTArray<RefPtr<dom::Animation>>());
+        MOZ_ASSERT(rv, "Should have enough memory");
+      }
+      animsForPropertyPtr->value().AppendElement(anim);
+    }
+  }
+  return groupedAnims;
+}
+
 static void AddAnimationsForProperty(
     nsIFrame* aFrame, nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
     nsCSSPropertyID aProperty, AnimationInfo& aAnimationInfo, Send aSendFlag,
@@ -595,9 +652,11 @@ static void AddAnimationsForProperty(
   aAnimationInfo.SetAnimationGeneration(animationGeneration);
 
   EffectCompositor::ClearIsRunningOnCompositor(styleFrame, aProperty);
-  nsTArray<RefPtr<dom::Animation>> compositorAnimations =
-      EffectCompositor::GetAnimationsForCompositor(styleFrame, aProperty);
-  if (compositorAnimations.IsEmpty()) {
+  // FIXME: Will get the property set by nsDisplayItemType in the next patch.
+  const nsCSSPropertyIDSet propertySet = nsCSSPropertyIDSet{aProperty};
+  const nsTArray<RefPtr<dom::Animation>> matchedAnimations =
+      EffectCompositor::GetAnimationsForCompositor(styleFrame, propertySet);
+  if (matchedAnimations.IsEmpty()) {
     return;
   }
 
@@ -660,9 +719,16 @@ static void AddAnimationsForProperty(
       nsCSSProps::PropHasFlags(aProperty, CSSPropFlags::CanAnimateOnCompositor),
       "inconsistent property flags");
 
+  const HashMap<nsCSSPropertyID, nsTArray<RefPtr<dom::Animation>>>
+      compositorAnimations =
+          GroupAnimationsByProperty(matchedAnimations, propertySet);
+  // FIXME: Use for loop to iterate all entries in the next patch.
+  MOZ_ASSERT(compositorAnimations.has(aProperty));
+  const nsTArray<RefPtr<dom::Animation>>& animations =
+      compositorAnimations.lookup(aProperty)->value();
   // Add from first to last (since last overrides)
-  for (size_t animIdx = 0; animIdx < compositorAnimations.Length(); animIdx++) {
-    dom::Animation* anim = compositorAnimations[animIdx];
+  for (size_t animIdx = 0; animIdx < animations.Length(); animIdx++) {
+    dom::Animation* anim = animations[animIdx];
     if (!anim->IsRelevant()) {
       continue;
     }
@@ -973,7 +1039,7 @@ nsRect nsDisplayListBuilder::OutOfFlowDisplayData::ComputeVisibleRectForFrame(
 
   if (aFrame->IsTransformed() &&
       mozilla::EffectCompositor::HasAnimationsForCompositor(
-          aFrame, eCSSProperty_transform)) {
+          aFrame, DisplayItemType::TYPE_TRANSFORM)) {
     /**
      * Add a fuzz factor to the overflow rectangle so that elements only
      * just out of view are pulled into the display list, so they can be
@@ -1800,7 +1866,7 @@ nsDisplayListBuilder::AGRState nsDisplayListBuilder::IsAnimatedGeometryRoot(
 
   if (aFrame->IsTransformed()) {
     aIsAsync = EffectCompositor::HasAnimationsForCompositor(
-        aFrame, eCSSProperty_transform);
+        aFrame, DisplayItemType::TYPE_TRANSFORM);
     return AGR_YES;
   }
 
@@ -4513,7 +4579,7 @@ bool nsDisplayBackgroundColor::CanApplyOpacity() const {
   // Don't apply opacity if the background color is animated since the color is
   // going to be changed on the compositor.
   return !EffectCompositor::HasAnimationsForCompositor(
-      mFrame, eCSSProperty_background_color);
+      mFrame, DisplayItemType::TYPE_BACKGROUND_COLOR);
 }
 
 LayerState nsDisplayBackgroundColor::GetLayerState(
@@ -4526,7 +4592,7 @@ LayerState nsDisplayBackgroundColor::GetLayerState(
   }
 
   if (EffectCompositor::HasAnimationsForCompositor(
-          mFrame, eCSSProperty_background_color)) {
+          mFrame, DisplayItemType::TYPE_BACKGROUND_COLOR)) {
     return LAYER_ACTIVE_FORCE;
   }
 
@@ -5833,8 +5899,8 @@ static bool IsItemTooSmallForActiveLayer(nsIFrame* aFrame) {
 bool nsDisplayOpacity::NeedsActiveLayer(nsDisplayListBuilder* aBuilder,
                                         nsIFrame* aFrame,
                                         bool aEnforceMinimumSize) {
-  if (EffectCompositor::HasAnimationsForCompositor(aFrame,
-                                                   eCSSProperty_opacity) ||
+  if (EffectCompositor::HasAnimationsForCompositor(
+          aFrame, DisplayItemType::TYPE_OPACITY) ||
       (ActiveLayerTracker::IsStyleAnimated(
            aBuilder, aFrame, nsCSSPropertyIDSet::OpacityProperties()) &&
        !(aEnforceMinimumSize && IsItemTooSmallForActiveLayer(aFrame)))) {
@@ -5852,8 +5918,8 @@ void nsDisplayOpacity::ApplyOpacity(nsDisplayListBuilder* aBuilder,
 }
 
 bool nsDisplayOpacity::CanApplyOpacity() const {
-  return !EffectCompositor::HasAnimationsForCompositor(mFrame,
-                                                       eCSSProperty_opacity);
+  return !EffectCompositor::HasAnimationsForCompositor(
+      mFrame, DisplayItemType::TYPE_OPACITY);
 }
 
 /**
@@ -7646,8 +7712,8 @@ auto nsDisplayTransform::ShouldPrerenderTransformedContent(
   // might have only just had its transform animated in which case
   // the ActiveLayerManager may not have been notified yet.
   if (!ActiveLayerTracker::IsTransformMaybeAnimated(aFrame) &&
-      !EffectCompositor::HasAnimationsForCompositor(aFrame,
-                                                    eCSSProperty_transform)) {
+      !EffectCompositor::HasAnimationsForCompositor(
+          aFrame, DisplayItemType::TYPE_TRANSFORM)) {
     EffectCompositor::SetPerformanceWarning(
         aFrame, eCSSProperty_transform,
         AnimationPerformanceWarning(
@@ -8036,8 +8102,8 @@ bool nsDisplayTransform::MayBeAnimated(nsDisplayListBuilder* aBuilder,
   // already involved so there is less to be gained.
   // Therefore we check that the *post-transform* bounds of this item are
   // big enough to justify an active layer.
-  if (EffectCompositor::HasAnimationsForCompositor(mFrame,
-                                                   eCSSProperty_transform) ||
+  if (EffectCompositor::HasAnimationsForCompositor(
+          mFrame, DisplayItemType::TYPE_TRANSFORM) ||
       (ActiveLayerTracker::IsTransformAnimated(aBuilder, mFrame) &&
        !(aEnforceMinimumSize && IsItemTooSmallForActiveLayer(mFrame)))) {
     return true;

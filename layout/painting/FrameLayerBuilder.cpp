@@ -6044,8 +6044,11 @@ Size FrameLayerBuilder::ChooseScale(nsIFrame* aContainerFrame,
     // scale size for animation
     if (aContainerItem &&
         aContainerItem->GetType() == DisplayItemType::TYPE_TRANSFORM &&
-        EffectCompositor::HasAnimationsForCompositor(aContainerFrame,
-                                                     eCSSProperty_transform)) {
+        // FIXME: What we need is only transform, rotate, and scale, not
+        // translate, so it's be better to use a property set, instead of
+        // display item type here.
+        EffectCompositor::HasAnimationsForCompositor(
+            aContainerFrame, DisplayItemType::TYPE_TRANSFORM)) {
       nsSize displaySize =
           ComputeDesiredDisplaySizeForAnimation(aContainerFrame);
       // compute scale using the animation on the container, taking ancestors in
