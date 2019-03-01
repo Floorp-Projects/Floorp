@@ -199,18 +199,14 @@ bool TransactionBuilder::IsResourceUpdatesEmpty() const {
   return wr_transaction_resource_updates_is_empty(mTxn);
 }
 
-void TransactionBuilder::SetWindowParameters(
-    const LayoutDeviceIntSize& aWindowSize,
+void TransactionBuilder::SetDocumentView(
     const LayoutDeviceIntRect& aDocumentRect) {
-  wr::DeviceIntSize wrWindowSize;
-  wrWindowSize.width = aWindowSize.width;
-  wrWindowSize.height = aWindowSize.height;
-  wr::DeviceIntRect wrDocRect;
+  wr::FramebufferIntRect wrDocRect;
   wrDocRect.origin.x = aDocumentRect.x;
   wrDocRect.origin.y = aDocumentRect.y;
   wrDocRect.size.width = aDocumentRect.width;
   wrDocRect.size.height = aDocumentRect.height;
-  wr_transaction_set_window_parameters(mTxn, &wrWindowSize, &wrDocRect);
+  wr_transaction_set_document_view(mTxn, &wrDocRect);
 }
 
 void TransactionBuilder::UpdateScrollPosition(
@@ -293,7 +289,7 @@ already_AddRefed<WebRenderAPI> WebRenderAPI::Clone() {
 
 already_AddRefed<WebRenderAPI> WebRenderAPI::CreateDocument(
     LayoutDeviceIntSize aSize, int8_t aLayerIndex) {
-  wr::DeviceIntSize wrSize;
+  wr::FramebufferIntSize wrSize;
   wrSize.width = aSize.width;
   wrSize.height = aSize.height;
   wr::DocumentHandle* newDoc;
