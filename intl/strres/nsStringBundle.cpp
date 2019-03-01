@@ -304,7 +304,8 @@ void nsStringBundleBase::RegisterMemoryReporter() {
 }
 
 template <typename T, typename... Args>
-/* static */ already_AddRefed<T> nsStringBundleBase::Create(Args... args) {
+/* static */
+already_AddRefed<T> nsStringBundleBase::Create(Args... args) {
   RefPtr<T> bundle = new T(args...);
   bundle->RegisterMemoryReporter();
   return bundle.forget();

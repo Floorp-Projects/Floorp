@@ -568,7 +568,8 @@ already_AddRefed<nsCookieService> nsCookieService::GetSingleton() {
   return do_AddRef(gCookieService);
 }
 
-/* static */ void nsCookieService::AppClearDataObserverInit() {
+/* static */
+void nsCookieService::AppClearDataObserverInit() {
   nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
   nsCOMPtr<nsIObserver> obs = new AppClearDataObserver();
   observerService->AddObserver(obs, TOPIC_CLEAR_ORIGIN_DATA,

@@ -56,7 +56,8 @@ JSObject* OffscreenCanvas::WrapObject(JSContext* aCx,
   return OffscreenCanvas_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-/* static */ already_AddRefed<OffscreenCanvas> OffscreenCanvas::Constructor(
+/* static */
+already_AddRefed<OffscreenCanvas> OffscreenCanvas::Constructor(
     const GlobalObject& aGlobal, uint32_t aWidth, uint32_t aHeight,
     ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
@@ -279,9 +280,9 @@ nsCOMPtr<nsIGlobalObject> OffscreenCanvas::GetGlobalObject() {
   return workerPrivate->GlobalScope();
 }
 
-/* static */ already_AddRefed<OffscreenCanvas>
-OffscreenCanvas::CreateFromCloneData(nsIGlobalObject* aGlobal,
-                                     OffscreenCanvasCloneData* aData) {
+/* static */
+already_AddRefed<OffscreenCanvas> OffscreenCanvas::CreateFromCloneData(
+    nsIGlobalObject* aGlobal, OffscreenCanvasCloneData* aData) {
   MOZ_ASSERT(aData);
   RefPtr<OffscreenCanvas> wc =
       new OffscreenCanvas(aGlobal, aData->mWidth, aData->mHeight,
@@ -292,8 +293,9 @@ OffscreenCanvas::CreateFromCloneData(nsIGlobalObject* aGlobal,
   return wc.forget();
 }
 
-/* static */ bool OffscreenCanvas::PrefEnabledOnWorkerThread(JSContext* aCx,
-                                                             JSObject* aObj) {
+/* static */
+bool OffscreenCanvas::PrefEnabledOnWorkerThread(JSContext* aCx,
+                                                JSObject* aObj) {
   if (NS_IsMainThread()) {
     return true;
   }

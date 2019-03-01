@@ -21,7 +21,8 @@
 namespace mozilla {
 namespace net {
 
-/* static */ void UrlClassifierFeatureFactory::Shutdown() {
+/* static */
+void UrlClassifierFeatureFactory::Shutdown() {
   // We want to expose Features only in the parent process.
   if (!XRE_IsParentProcess()) {
     return;
@@ -36,7 +37,8 @@ namespace net {
   UrlClassifierFeatureTrackingProtection::MaybeShutdown();
 }
 
-/* static */ void UrlClassifierFeatureFactory::GetFeaturesFromChannel(
+/* static */
+void UrlClassifierFeatureFactory::GetFeaturesFromChannel(
     nsIChannel* aChannel,
     nsTArray<nsCOMPtr<nsIUrlClassifierFeature>>& aFeatures) {
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -79,7 +81,8 @@ namespace net {
   aFeatures.AppendElements(flashFeatures);
 }
 
-/* static */ void UrlClassifierFeatureFactory::GetPhishingProtectionFeatures(
+/* static */
+void UrlClassifierFeatureFactory::GetPhishingProtectionFeatures(
     nsTArray<RefPtr<nsIUrlClassifierFeature>>& aFeatures) {
   UrlClassifierFeaturePhishingProtection::MaybeCreate(aFeatures);
 }
@@ -90,7 +93,8 @@ UrlClassifierFeatureFactory::GetFeatureLoginReputation() {
   return UrlClassifierFeatureLoginReputation::MaybeGetOrCreate();
 }
 
-/* static */ already_AddRefed<nsIUrlClassifierFeature>
+/* static */
+already_AddRefed<nsIUrlClassifierFeature>
 UrlClassifierFeatureFactory::GetFeatureByName(const nsACString& aName) {
   if (!XRE_IsParentProcess()) {
     return nullptr;
@@ -143,8 +147,8 @@ UrlClassifierFeatureFactory::GetFeatureByName(const nsACString& aName) {
   return nullptr;
 }
 
-/* static */ void UrlClassifierFeatureFactory::GetFeatureNames(
-    nsTArray<nsCString>& aArray) {
+/* static */
+void UrlClassifierFeatureFactory::GetFeatureNames(nsTArray<nsCString>& aArray) {
   if (!XRE_IsParentProcess()) {
     return;
   }
@@ -195,7 +199,8 @@ UrlClassifierFeatureFactory::GetFeatureByName(const nsACString& aName) {
   }
 }
 
-/* static */ already_AddRefed<nsIUrlClassifierFeature>
+/* static */
+already_AddRefed<nsIUrlClassifierFeature>
 UrlClassifierFeatureFactory::CreateFeatureWithTables(
     const nsACString& aName, const nsTArray<nsCString>& aBlacklistTables,
     const nsTArray<nsCString>& aWhitelistTables) {
@@ -228,7 +233,8 @@ static const BlockingErrorCode sBlockingErrorCodes[] = {
 
 }  // namespace
 
-/* static */ bool UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(
+/* static */
+bool UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(
     nsresult aError) {
   // In theory we can iterate through the features, but at the moment, we can
   // just have a simple check here.
@@ -241,7 +247,8 @@ static const BlockingErrorCode sBlockingErrorCodes[] = {
   return false;
 }
 
-/* static */ bool UrlClassifierFeatureFactory::IsClassifierBlockingEventCode(
+/* static */
+bool UrlClassifierFeatureFactory::IsClassifierBlockingEventCode(
     uint32_t aEventCode) {
   for (const auto& blockingErrorCode : sBlockingErrorCodes) {
     if (aEventCode == blockingErrorCode.mBlockingEventCode) {
@@ -251,8 +258,8 @@ static const BlockingErrorCode sBlockingErrorCodes[] = {
   return false;
 }
 
-/* static */ uint32_t
-UrlClassifierFeatureFactory::GetClassifierBlockingEventCode(
+/* static */
+uint32_t UrlClassifierFeatureFactory::GetClassifierBlockingEventCode(
     nsresult aErrorCode) {
   for (const auto& blockingErrorCode : sBlockingErrorCodes) {
     if (aErrorCode == blockingErrorCode.mErrorCode) {

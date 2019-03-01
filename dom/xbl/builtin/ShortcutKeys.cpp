@@ -33,8 +33,8 @@ nsresult ShortcutKeys::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-/* static */ nsXBLPrototypeHandler* ShortcutKeys::GetHandlers(
-    HandlerType aType) {
+/* static */
+nsXBLPrototypeHandler* ShortcutKeys::GetHandlers(HandlerType aType) {
   if (!sInstance) {
     sInstance = new ShortcutKeys();
   }
@@ -42,7 +42,8 @@ nsresult ShortcutKeys::Observe(nsISupports* aSubject, const char* aTopic,
   return sInstance->EnsureHandlers(aType);
 }
 
-/* static */ nsAtom* ShortcutKeys::ConvertEventToDOMEventType(
+/* static */
+nsAtom* ShortcutKeys::ConvertEventToDOMEventType(
     const WidgetKeyboardEvent* aWidgetKeyboardEvent) {
   if (aWidgetKeyboardEvent->IsKeyDownOrKeyDownOnPlugin()) {
     return nsGkAtoms::keydown;

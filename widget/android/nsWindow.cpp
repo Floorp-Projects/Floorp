@@ -1154,7 +1154,8 @@ nsWindow::GeckoViewSupport::~GeckoViewSupport() {
   }
 }
 
-/* static */ void nsWindow::GeckoViewSupport::Open(
+/* static */
+void nsWindow::GeckoViewSupport::Open(
     const jni::Class::LocalRef& aCls, GeckoSession::Window::Param aWindow,
     jni::Object::Param aQueue, jni::Object::Param aCompositor,
     jni::Object::Param aDispatcher, jni::Object::Param aSessionAccessibility,
@@ -1319,13 +1320,14 @@ void nsWindow::InitNatives() {
   a11y::SessionAccessibility::Init();
 }
 
-/* static */ already_AddRefed<nsWindow> nsWindow::From(
-    nsPIDOMWindowOuter* aDOMWindow) {
+/* static */
+already_AddRefed<nsWindow> nsWindow::From(nsPIDOMWindowOuter* aDOMWindow) {
   nsCOMPtr<nsIWidget> widget = WidgetUtils::DOMWindowToWidget(aDOMWindow);
   return From(widget);
 }
 
-/* static */ already_AddRefed<nsWindow> nsWindow::From(nsIWidget* aWidget) {
+/* static */
+already_AddRefed<nsWindow> nsWindow::From(nsIWidget* aWidget) {
   // `widget` may be one of several different types in the parent
   // process, including the Android nsWindow, PuppetWidget, etc. To
   // ensure that the cast to the Android nsWindow is valid, we check that the

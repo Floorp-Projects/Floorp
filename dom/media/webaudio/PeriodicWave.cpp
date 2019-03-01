@@ -66,7 +66,8 @@ PeriodicWave::PeriodicWave(AudioContext* aContext, const float* aRealData,
   mCoefficients.mBufferFormat = AUDIO_FORMAT_FLOAT32;
 }
 
-/* static */ already_AddRefed<PeriodicWave> PeriodicWave::Constructor(
+/* static */
+already_AddRefed<PeriodicWave> PeriodicWave::Constructor(
     const GlobalObject& aGlobal, AudioContext& aAudioContext,
     const PeriodicWaveOptions& aOptions, ErrorResult& aRv) {
   if (aOptions.mReal.WasPassed() && aOptions.mImag.WasPassed() &&

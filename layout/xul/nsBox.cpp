@@ -74,7 +74,8 @@ nsBox::~nsBox() {
   MOZ_COUNT_DTOR(nsBox);
 }
 
-/* static */ void nsBox::Shutdown() {
+/* static */
+void nsBox::Shutdown() {
   gGotTheme = false;
   gTheme = nullptr;
 }
@@ -681,20 +682,23 @@ nsSize nsBox::BoundsCheck(const nsSize& aMinSize, const nsSize& aPrefSize,
       BoundsCheck(aMinSize.height, aPrefSize.height, aMaxSize.height));
 }
 
-/*static*/ nsIFrame* nsBox::GetChildXULBox(const nsIFrame* aFrame) {
+/*static*/
+nsIFrame* nsBox::GetChildXULBox(const nsIFrame* aFrame) {
   // box layout ends at box-wrapped frames, so don't allow these frames
   // to report child boxes.
   return aFrame->IsXULBoxFrame() ? aFrame->PrincipalChildList().FirstChild()
                                  : nullptr;
 }
 
-/*static*/ nsIFrame* nsBox::GetNextXULBox(const nsIFrame* aFrame) {
+/*static*/
+nsIFrame* nsBox::GetNextXULBox(const nsIFrame* aFrame) {
   return aFrame->GetParent() && aFrame->GetParent()->IsXULBoxFrame()
              ? aFrame->GetNextSibling()
              : nullptr;
 }
 
-/*static*/ nsIFrame* nsBox::GetParentXULBox(const nsIFrame* aFrame) {
+/*static*/
+nsIFrame* nsBox::GetParentXULBox(const nsIFrame* aFrame) {
   return aFrame->GetParent() && aFrame->GetParent()->IsXULBoxFrame()
              ? aFrame->GetParent()
              : nullptr;

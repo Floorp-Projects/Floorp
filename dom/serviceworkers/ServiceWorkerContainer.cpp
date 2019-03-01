@@ -81,8 +81,8 @@ bool IsServiceWorkersTestingEnabledInWindow(JSObject* const aGlobal) {
 
 }  // namespace
 
-/* static */ bool ServiceWorkerContainer::IsEnabled(JSContext* aCx,
-                                                    JSObject* aGlobal) {
+/* static */
+bool ServiceWorkerContainer::IsEnabled(JSContext* aCx, JSObject* aGlobal) {
   MOZ_ASSERT(NS_IsMainThread());
 
   JS::Rooted<JSObject*> global(aCx, aGlobal);

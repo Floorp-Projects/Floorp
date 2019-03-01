@@ -23,7 +23,8 @@ bool InProcessParent::sShutdown = false;
 // InProcess actor lifecycle management //
 //////////////////////////////////////////
 
-/* static */ InProcessChild* InProcessChild::Singleton() {
+/* static */
+InProcessChild* InProcessChild::Singleton() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!sSingleton) {
@@ -32,7 +33,8 @@ bool InProcessParent::sShutdown = false;
   return sSingleton;
 }
 
-/* static */ InProcessParent* InProcessParent::Singleton() {
+/* static */
+InProcessParent* InProcessParent::Singleton() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!sSingleton) {
@@ -41,7 +43,8 @@ bool InProcessParent::sShutdown = false;
   return sSingleton;
 }
 
-/* static */ void InProcessParent::Startup() {
+/* static */
+void InProcessParent::Startup() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (sShutdown) {
@@ -82,7 +85,8 @@ bool InProcessParent::sShutdown = false;
   InProcessChild::sSingleton = child.forget();
 }
 
-/* static */ void InProcessParent::Shutdown() {
+/* static */
+void InProcessParent::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!sSingleton || sShutdown) {
@@ -176,12 +180,14 @@ static IProtocol* GetOtherInProcessActor(IProtocol* aActor) {
   return otherActor;
 }
 
-/* static */ IProtocol* InProcessParent::ChildActorFor(IProtocol* aActor) {
+/* static */
+IProtocol* InProcessParent::ChildActorFor(IProtocol* aActor) {
   MOZ_ASSERT(aActor && aActor->GetSide() == ParentSide);
   return GetOtherInProcessActor(aActor);
 }
 
-/* static */ IProtocol* InProcessChild::ParentActorFor(IProtocol* aActor) {
+/* static */
+IProtocol* InProcessChild::ParentActorFor(IProtocol* aActor) {
   MOZ_ASSERT(aActor && aActor->GetSide() == ChildSide);
   return GetOtherInProcessActor(aActor);
 }

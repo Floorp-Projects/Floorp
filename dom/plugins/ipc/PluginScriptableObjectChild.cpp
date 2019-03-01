@@ -51,15 +51,14 @@ PluginScriptableObjectChild::HashIdentifier(const nsCString& aIdentifier) {
   return stored;
 }
 
-/* static */ void PluginScriptableObjectChild::UnhashIdentifier(
-    StoredIdentifier* aStored) {
+/* static */
+void PluginScriptableObjectChild::UnhashIdentifier(StoredIdentifier* aStored) {
   MOZ_ASSERT(sIdentifiers.Get(aStored->mIdentifier));
   sIdentifiers.Remove(aStored->mIdentifier);
 }
 
-/* static */ void PluginScriptableObjectChild::ClearIdentifiers() {
-  sIdentifiers.Clear();
-}
+/* static */
+void PluginScriptableObjectChild::ClearIdentifiers() { sIdentifiers.Clear(); }
 
 PluginScriptableObjectChild::StackIdentifier::StackIdentifier(
     const PluginIdentifier& aIdentifier)
@@ -1131,8 +1130,9 @@ void PluginScriptableObjectChild::UnregisterActor(NPObject* aObject) {
   }
 }
 
-/* static */ PluginScriptableObjectChild*
-PluginScriptableObjectChild::GetActorForNPObject(NPObject* aObject) {
+/* static */
+PluginScriptableObjectChild* PluginScriptableObjectChild::GetActorForNPObject(
+    NPObject* aObject) {
   AssertPluginThread();
   MOZ_ASSERT(aObject, "Null pointer!");
 
@@ -1145,7 +1145,8 @@ PluginScriptableObjectChild::GetActorForNPObject(NPObject* aObject) {
   return d->actor;
 }
 
-/* static */ void PluginScriptableObjectChild::RegisterObject(
+/* static */
+void PluginScriptableObjectChild::RegisterObject(
     NPObject* aObject, PluginInstanceChild* aInstance) {
   AssertPluginThread();
 
@@ -1158,8 +1159,8 @@ PluginScriptableObjectChild::GetActorForNPObject(NPObject* aObject) {
   d->instance = aInstance;
 }
 
-/* static */ void PluginScriptableObjectChild::UnregisterObject(
-    NPObject* aObject) {
+/* static */
+void PluginScriptableObjectChild::UnregisterObject(NPObject* aObject) {
   AssertPluginThread();
 
   sObjectMap->RemoveEntry(aObject);
@@ -1170,8 +1171,9 @@ PluginScriptableObjectChild::GetActorForNPObject(NPObject* aObject) {
   }
 }
 
-/* static */ PluginInstanceChild*
-PluginScriptableObjectChild::GetInstanceForNPObject(NPObject* aObject) {
+/* static */
+PluginInstanceChild* PluginScriptableObjectChild::GetInstanceForNPObject(
+    NPObject* aObject) {
   AssertPluginThread();
   if (!sObjectMap) {
     // All PluginInstanceChilds have been destroyed
@@ -1185,7 +1187,8 @@ PluginScriptableObjectChild::GetInstanceForNPObject(NPObject* aObject) {
   return d->instance;
 }
 
-/* static */ void PluginScriptableObjectChild::NotifyOfInstanceShutdown(
+/* static */
+void PluginScriptableObjectChild::NotifyOfInstanceShutdown(
     PluginInstanceChild* aInstance) {
   AssertPluginThread();
   if (!sObjectMap) {

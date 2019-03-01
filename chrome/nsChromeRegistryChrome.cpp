@@ -353,7 +353,8 @@ void nsChromeRegistryChrome::SendRegisteredChrome(
   }
 }
 
-/* static */ void nsChromeRegistryChrome::ChromePackageFromPackageEntry(
+/* static */
+void nsChromeRegistryChrome::ChromePackageFromPackageEntry(
     const nsACString& aPackageName, PackageEntry* aPackage,
     ChromePackage* aChromePackage, const nsCString& aSelectedSkin) {
   nsAutoCString appLocale;

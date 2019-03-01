@@ -3719,7 +3719,8 @@ void nsCycleCollector_forgetJSContext() {
   }
 }
 
-/* static */ CycleCollectedJSContext* CycleCollectedJSContext::Get() {
+/* static */
+CycleCollectedJSContext* CycleCollectedJSContext::Get() {
   CollectorData* data = sCollectorData.get();
   if (data) {
     return data->mContext;

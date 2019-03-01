@@ -40,7 +40,8 @@ using namespace mozilla;
 using mozilla::dom::Document;
 using mozilla::dom::Element;
 
-/* static */ const mozilla::gfx::Color SimpleTextContextPaint::sZero;
+/* static */
+const mozilla::gfx::Color SimpleTextContextPaint::sZero;
 
 gfxSVGGlyphs::gfxSVGGlyphs(hb_blob_t *aSVGTable, gfxFontEntry *aFontEntry)
     : mSVGData(aSVGTable), mFontEntry(aFontEntry) {
@@ -77,8 +78,8 @@ void gfxSVGGlyphs::DidRefresh() { mFontEntry->NotifyGlyphsChanged(); }
  *       (note that this is wrong if we have more than one intersection or two
  *        sets intersecting of size > 1 -- so... don't do that)
  */
-/* static */ int gfxSVGGlyphs::CompareIndexEntries(const void *aKey,
-                                                   const void *aEntry) {
+/* static */
+int gfxSVGGlyphs::CompareIndexEntries(const void *aKey, const void *aEntry) {
   const uint32_t key = *(uint32_t *)aKey;
   const IndexEntry *entry = (const IndexEntry *)aEntry;
 

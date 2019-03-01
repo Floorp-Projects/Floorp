@@ -155,9 +155,10 @@ bool CrashReporterHost::FinalizeCrashReport() {
   return true;
 }
 
-/* static */ void CrashReporterHost::NotifyCrashService(
-    GeckoProcessType aProcessType, int32_t aCrashType,
-    const nsString& aChildDumpID) {
+/* static */
+void CrashReporterHost::NotifyCrashService(GeckoProcessType aProcessType,
+                                           int32_t aCrashType,
+                                           const nsString& aChildDumpID) {
   if (!NS_IsMainThread()) {
     RefPtr<Runnable> runnable = NS_NewRunnableFunction(
         "ipc::CrashReporterHost::NotifyCrashService", [&]() -> void {

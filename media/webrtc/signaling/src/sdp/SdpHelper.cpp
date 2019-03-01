@@ -594,8 +594,8 @@ void SdpHelper::appendSdpParseErrors(
   *aErrorString += os.str();
 }
 
-/* static */ bool SdpHelper::GetPtAsInt(const std::string& ptString,
-                                        uint16_t* ptOutparam) {
+/* static */
+bool SdpHelper::GetPtAsInt(const std::string& ptString, uint16_t* ptOutparam) {
   char* end;
   unsigned long pt = strtoul(ptString.c_str(), &end, 10);
   size_t length = static_cast<size_t>(end - ptString.c_str());

@@ -22,7 +22,8 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-/* static */ already_AddRefed<MultipartBlobImpl> MultipartBlobImpl::Create(
+/* static */
+already_AddRefed<MultipartBlobImpl> MultipartBlobImpl::Create(
     nsTArray<RefPtr<BlobImpl>>&& aBlobImpls, const nsAString& aName,
     const nsAString& aContentType, ErrorResult& aRv) {
   RefPtr<MultipartBlobImpl> blobImpl =
@@ -35,7 +36,8 @@ using namespace mozilla::dom;
   return blobImpl.forget();
 }
 
-/* static */ already_AddRefed<MultipartBlobImpl> MultipartBlobImpl::Create(
+/* static */
+already_AddRefed<MultipartBlobImpl> MultipartBlobImpl::Create(
     nsTArray<RefPtr<BlobImpl>>&& aBlobImpls, const nsAString& aContentType,
     ErrorResult& aRv) {
   RefPtr<MultipartBlobImpl> blobImpl =

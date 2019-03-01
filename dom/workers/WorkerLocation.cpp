@@ -16,7 +16,8 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WorkerLocation)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WorkerLocation, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WorkerLocation, Release)
 
-/* static */ already_AddRefed<WorkerLocation> WorkerLocation::Create(
+/* static */
+already_AddRefed<WorkerLocation> WorkerLocation::Create(
     WorkerPrivate::LocationInfo& aInfo) {
   RefPtr<WorkerLocation> location =
       new WorkerLocation(NS_ConvertUTF8toUTF16(aInfo.mHref),

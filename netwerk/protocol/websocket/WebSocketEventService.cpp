@@ -173,15 +173,15 @@ class WebSocketClosedRunnable final : public WebSocketBaseRunnable {
   const nsString mReason;
 };
 
-/* static */ already_AddRefed<WebSocketEventService>
-WebSocketEventService::Get() {
+/* static */
+already_AddRefed<WebSocketEventService> WebSocketEventService::Get() {
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<WebSocketEventService> service = gWebSocketEventService.get();
   return service.forget();
 }
 
-/* static */ already_AddRefed<WebSocketEventService>
-WebSocketEventService::GetOrCreate() {
+/* static */
+already_AddRefed<WebSocketEventService> WebSocketEventService::GetOrCreate() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!gWebSocketEventService) {

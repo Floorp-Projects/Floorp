@@ -23,8 +23,8 @@ static size_t gNumChannels;
 // Whether children might be debugged and should not be treated as hung.
 static bool gChildrenAreDebugging;
 
-/* static */ void ChildProcessInfo::SetIntroductionMessage(
-    IntroductionMessage* aMessage) {
+/* static */
+void ChildProcessInfo::SetIntroductionMessage(IntroductionMessage* aMessage) {
   gIntroductionMessage = aMessage;
 }
 
@@ -345,7 +345,8 @@ Message::UniquePtr ChildProcessInfo::WaitUntilPaused() {
 
 // Runnable created on the main thread to handle any tasks sent by the replay
 // message loop thread which were not handled while the main thread was blocked.
-/* static */ void ChildProcessInfo::MaybeProcessPendingMessageRunnable() {
+/* static */
+void ChildProcessInfo::MaybeProcessPendingMessageRunnable() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MonitorAutoLock lock(*gMonitor);
   MOZ_RELEASE_ASSERT(gHasPendingMessageRunnable);

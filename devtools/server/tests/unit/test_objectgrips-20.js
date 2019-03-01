@@ -145,7 +145,20 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
       ["byteLength", 2],
       ["byteOffset", 0],
     ],
-  }, {
+  }];
+
+  for (const test of testCases) {
+    await test_object_grip(debuggee, client, threadClient, test);
+  }
+}));
+
+// These tests are not yet supported in workers.
+add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
+  debuggee.eval(function stopMe(arg1) {
+    debugger;
+  }.toString());
+
+  const testCases = [{
     evaledObject: `(() => {
       x = new Int8Array([1, 2]);
       Object.defineProperty(x, 'length', {value: 0});
@@ -171,7 +184,7 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   for (const test of testCases) {
     await test_object_grip(debuggee, client, threadClient, test);
   }
-}));
+}, { doNotRunWorker: true }));
 
 async function test_object_grip(debuggee, dbgClient, threadClient, testData = {}) {
   const {

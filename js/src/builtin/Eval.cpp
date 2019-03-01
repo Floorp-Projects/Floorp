@@ -49,7 +49,8 @@ static bool IsEvalCacheCandidate(JSScript* script) {
          !script->hasObjects();
 }
 
-/* static */ HashNumber EvalCacheHashPolicy::hash(const EvalCacheLookup& l) {
+/* static */
+HashNumber EvalCacheHashPolicy::hash(const EvalCacheLookup& l) {
   AutoCheckCannotGC nogc;
   uint32_t hash = l.str->hasLatin1Chars()
                       ? HashString(l.str->latin1Chars(nogc), l.str->length())
@@ -57,8 +58,9 @@ static bool IsEvalCacheCandidate(JSScript* script) {
   return AddToHash(hash, l.callerScript.get(), l.pc);
 }
 
-/* static */ bool EvalCacheHashPolicy::match(const EvalCacheEntry& cacheEntry,
-                                             const EvalCacheLookup& l) {
+/* static */
+bool EvalCacheHashPolicy::match(const EvalCacheEntry& cacheEntry,
+                                const EvalCacheLookup& l) {
   MOZ_ASSERT(IsEvalCacheCandidate(cacheEntry.script));
 
   return EqualStrings(cacheEntry.str, l.str) &&

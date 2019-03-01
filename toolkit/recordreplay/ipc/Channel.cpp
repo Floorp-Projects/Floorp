@@ -104,7 +104,8 @@ Channel::Channel(size_t aId, bool aMiddlemanRecording,
   Thread::SpawnNonRecordedThread(ThreadMain, this);
 }
 
-/* static */ void Channel::ThreadMain(void* aChannelArg) {
+/* static */
+void Channel::ThreadMain(void* aChannelArg) {
   Channel* channel = (Channel*)aChannelArg;
 
   static const int32_t MagicValue = 0x914522b9;

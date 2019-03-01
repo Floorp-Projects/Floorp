@@ -31,8 +31,8 @@ PermissionObserver::~PermissionObserver() {
   gInstance = nullptr;
 }
 
-/* static */ already_AddRefed<PermissionObserver>
-PermissionObserver::GetInstance() {
+/* static */
+already_AddRefed<PermissionObserver> PermissionObserver::GetInstance() {
   RefPtr<PermissionObserver> instance = gInstance;
   if (!instance) {
     instance = new PermissionObserver();

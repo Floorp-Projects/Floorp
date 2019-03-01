@@ -66,8 +66,9 @@ inline int32_t PseudoCompareType(nsIFrame* aFrame, nsIContent** aContent) {
   return 0;
 }
 
-/* static */ bool nsGenConList::NodeAfter(const nsGenConNode* aNode1,
-                                          const nsGenConNode* aNode2) {
+/* static */
+bool nsGenConList::NodeAfter(const nsGenConNode* aNode1,
+                             const nsGenConNode* aNode2) {
   nsIFrame* frame1 = aNode1->mPseudoFrame;
   nsIFrame* frame2 = aNode2->mPseudoFrame;
   if (frame1 == frame2) {

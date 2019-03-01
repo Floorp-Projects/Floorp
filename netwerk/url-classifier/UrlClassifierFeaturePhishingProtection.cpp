@@ -45,7 +45,8 @@ UrlClassifierFeaturePhishingProtection::UrlClassifierFeaturePhishingProtection(
           EmptyCString()) {  // aPrefSkipHosts
 }
 
-/* static */ void UrlClassifierFeaturePhishingProtection::GetFeatureNames(
+/* static */
+void UrlClassifierFeaturePhishingProtection::GetFeatureNames(
     nsTArray<nsCString>& aArray) {
   for (const PhishingProtectionFeature& feature :
        sPhishingProtectionFeaturesMap) {
@@ -55,7 +56,8 @@ UrlClassifierFeaturePhishingProtection::UrlClassifierFeaturePhishingProtection(
   }
 }
 
-/* static */ void UrlClassifierFeaturePhishingProtection::MaybeInitialize() {
+/* static */
+void UrlClassifierFeaturePhishingProtection::MaybeInitialize() {
   for (PhishingProtectionFeature& feature : sPhishingProtectionFeaturesMap) {
     if (!feature.mFeature && feature.mPref()) {
       feature.mFeature = new UrlClassifierFeaturePhishingProtection(feature);
@@ -64,7 +66,8 @@ UrlClassifierFeaturePhishingProtection::UrlClassifierFeaturePhishingProtection(
   }
 }
 
-/* static */ void UrlClassifierFeaturePhishingProtection::MaybeShutdown() {
+/* static */
+void UrlClassifierFeaturePhishingProtection::MaybeShutdown() {
   for (PhishingProtectionFeature& feature : sPhishingProtectionFeaturesMap) {
     if (feature.mFeature) {
       feature.mFeature->ShutdownPreferences();
@@ -73,7 +76,8 @@ UrlClassifierFeaturePhishingProtection::UrlClassifierFeaturePhishingProtection(
   }
 }
 
-/* static */ void UrlClassifierFeaturePhishingProtection::MaybeCreate(
+/* static */
+void UrlClassifierFeaturePhishingProtection::MaybeCreate(
     nsTArray<RefPtr<nsIUrlClassifierFeature>>& aFeatures) {
   MaybeInitialize();
 
@@ -86,7 +90,8 @@ UrlClassifierFeaturePhishingProtection::UrlClassifierFeaturePhishingProtection(
   }
 }
 
-/* static */ already_AddRefed<nsIUrlClassifierFeature>
+/* static */
+already_AddRefed<nsIUrlClassifierFeature>
 UrlClassifierFeaturePhishingProtection::GetIfNameMatches(
     const nsACString& aName) {
   MaybeInitialize();

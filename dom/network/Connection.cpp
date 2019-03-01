@@ -72,13 +72,14 @@ void Connection::Update(ConnectionType aType, bool aIsWifi,
   }
 }
 
-/* static */ Connection* Connection::CreateForWindow(
-    nsPIDOMWindowInner* aWindow) {
+/* static */
+Connection* Connection::CreateForWindow(nsPIDOMWindowInner* aWindow) {
   MOZ_ASSERT(aWindow);
   return new ConnectionMainThread(aWindow);
 }
 
-/* static */ already_AddRefed<Connection> Connection::CreateForWorker(
+/* static */
+already_AddRefed<Connection> Connection::CreateForWorker(
     WorkerPrivate* aWorkerPrivate, ErrorResult& aRv) {
   MOZ_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();

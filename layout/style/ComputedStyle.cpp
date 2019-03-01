@@ -319,8 +319,9 @@ struct ColorIndexSet {
 
 static const ColorIndexSet gVisitedIndices[2] = {{0, 0}, {1, 0}};
 
-/* static */ nscolor ComputedStyle::CombineVisitedColors(nscolor* aColors,
-                                                         bool aLinkIsVisited) {
+/* static */
+nscolor ComputedStyle::CombineVisitedColors(nscolor* aColors,
+                                            bool aLinkIsVisited) {
   if (NS_GET_A(aColors[1]) == 0) {
     // If the style-if-visited is transparent, then just use the
     // unvisited style rather than using the (meaningless) color
@@ -352,8 +353,8 @@ static const ColorIndexSet gVisitedIndices[2] = {{0, 0}, {1, 0}};
   }
 }
 
-/* static */ Maybe<StyleStructID> ComputedStyle::LookupStruct(
-    const nsACString& aName) {
+/* static */
+Maybe<StyleStructID> ComputedStyle::LookupStruct(const nsACString& aName) {
 #  define STYLE_STRUCT(name_) \
     if (aName.EqualsLiteral(#name_)) return Some(StyleStructID::name_);
 #  include "nsStyleStructList.h"

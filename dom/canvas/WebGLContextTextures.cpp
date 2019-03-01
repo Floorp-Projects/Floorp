@@ -160,7 +160,8 @@ bool ValidateTexImageTarget(WebGLContext* webgl, uint8_t funcDims,
   return true;
 }
 
-/*virtual*/ bool WebGLContext::IsTexParamValid(GLenum pname) const {
+/*virtual*/
+bool WebGLContext::IsTexParamValid(GLenum pname) const {
   switch (pname) {
     case LOCAL_GL_TEXTURE_MIN_FILTER:
     case LOCAL_GL_TEXTURE_MAG_FILTER:

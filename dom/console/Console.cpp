@@ -923,8 +923,10 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Console)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
-/* static */ already_AddRefed<Console> Console::Create(
-    JSContext* aCx, nsPIDOMWindowInner* aWindow, ErrorResult& aRv) {
+/* static */
+already_AddRefed<Console> Console::Create(JSContext* aCx,
+                                          nsPIDOMWindowInner* aWindow,
+                                          ErrorResult& aRv) {
   MOZ_ASSERT_IF(NS_IsMainThread(), aWindow);
 
   uint64_t outerWindowID = 0;
@@ -952,9 +954,12 @@ NS_INTERFACE_MAP_END
   return console.forget();
 }
 
-/* static */ already_AddRefed<Console> Console::CreateForWorklet(
-    JSContext* aCx, nsIGlobalObject* aGlobal, uint64_t aOuterWindowID,
-    uint64_t aInnerWindowID, ErrorResult& aRv) {
+/* static */
+already_AddRefed<Console> Console::CreateForWorklet(JSContext* aCx,
+                                                    nsIGlobalObject* aGlobal,
+                                                    uint64_t aOuterWindowID,
+                                                    uint64_t aInnerWindowID,
+                                                    ErrorResult& aRv) {
   WorkletThread::AssertIsOnWorkletThread();
 
   RefPtr<Console> console =
@@ -1101,40 +1106,42 @@ METHOD(GroupCollapsed, "groupCollapsed")
 
 #undef METHOD
 
-/* static */ void Console::Clear(const GlobalObject& aGlobal) {
+/* static */
+void Console::Clear(const GlobalObject& aGlobal) {
   const Sequence<JS::Value> data;
   Method(aGlobal, MethodClear, NS_LITERAL_STRING("clear"), data);
 }
 
-/* static */ void Console::GroupEnd(const GlobalObject& aGlobal) {
+/* static */
+void Console::GroupEnd(const GlobalObject& aGlobal) {
   const Sequence<JS::Value> data;
   Method(aGlobal, MethodGroupEnd, NS_LITERAL_STRING("groupEnd"), data);
 }
 
-/* static */ void Console::Time(const GlobalObject& aGlobal,
-                                const nsAString& aLabel) {
+/* static */
+void Console::Time(const GlobalObject& aGlobal, const nsAString& aLabel) {
   StringMethod(aGlobal, aLabel, Sequence<JS::Value>(), MethodTime,
                NS_LITERAL_STRING("time"));
 }
 
-/* static */ void Console::TimeEnd(const GlobalObject& aGlobal,
-                                   const nsAString& aLabel) {
+/* static */
+void Console::TimeEnd(const GlobalObject& aGlobal, const nsAString& aLabel) {
   StringMethod(aGlobal, aLabel, Sequence<JS::Value>(), MethodTimeEnd,
                NS_LITERAL_STRING("timeEnd"));
 }
 
-/* static */ void Console::TimeLog(const GlobalObject& aGlobal,
-                                   const nsAString& aLabel,
-                                   const Sequence<JS::Value>& aData) {
+/* static */
+void Console::TimeLog(const GlobalObject& aGlobal, const nsAString& aLabel,
+                      const Sequence<JS::Value>& aData) {
   StringMethod(aGlobal, aLabel, aData, MethodTimeLog,
                NS_LITERAL_STRING("timeLog"));
 }
 
-/* static */ void Console::StringMethod(const GlobalObject& aGlobal,
-                                        const nsAString& aLabel,
-                                        const Sequence<JS::Value>& aData,
-                                        MethodName aMethodName,
-                                        const nsAString& aMethodString) {
+/* static */
+void Console::StringMethod(const GlobalObject& aGlobal, const nsAString& aLabel,
+                           const Sequence<JS::Value>& aData,
+                           MethodName aMethodName,
+                           const nsAString& aMethodString) {
   RefPtr<Console> console = GetConsole(aGlobal);
   if (!console) {
     return;
@@ -1171,8 +1178,9 @@ void Console::StringMethodInternal(JSContext* aCx, const nsAString& aLabel,
   MethodInternal(aCx, aMethodName, aMethodString, data);
 }
 
-/* static */ void Console::TimeStamp(const GlobalObject& aGlobal,
-                                     const JS::Handle<JS::Value> aData) {
+/* static */
+void Console::TimeStamp(const GlobalObject& aGlobal,
+                        const JS::Handle<JS::Value> aData) {
   JSContext* cx = aGlobal.Context();
 
   ConsoleCommon::ClearException ce(cx);
@@ -1187,21 +1195,23 @@ void Console::StringMethodInternal(JSContext* aCx, const nsAString& aLabel,
   Method(aGlobal, MethodTimeStamp, NS_LITERAL_STRING("timeStamp"), data);
 }
 
-/* static */ void Console::Profile(const GlobalObject& aGlobal,
-                                   const Sequence<JS::Value>& aData) {
+/* static */
+void Console::Profile(const GlobalObject& aGlobal,
+                      const Sequence<JS::Value>& aData) {
   ProfileMethod(aGlobal, MethodProfile, NS_LITERAL_STRING("profile"), aData);
 }
 
-/* static */ void Console::ProfileEnd(const GlobalObject& aGlobal,
-                                      const Sequence<JS::Value>& aData) {
+/* static */
+void Console::ProfileEnd(const GlobalObject& aGlobal,
+                         const Sequence<JS::Value>& aData) {
   ProfileMethod(aGlobal, MethodProfileEnd, NS_LITERAL_STRING("profileEnd"),
                 aData);
 }
 
-/* static */ void Console::ProfileMethod(const GlobalObject& aGlobal,
-                                         MethodName aName,
-                                         const nsAString& aAction,
-                                         const Sequence<JS::Value>& aData) {
+/* static */
+void Console::ProfileMethod(const GlobalObject& aGlobal, MethodName aName,
+                            const nsAString& aAction,
+                            const Sequence<JS::Value>& aData) {
   RefPtr<Console> console = GetConsole(aGlobal);
   if (!console) {
     return;
@@ -1296,21 +1306,22 @@ void Console::ProfileMethodInternal(JSContext* aCx, MethodName aMethodName,
   }
 }
 
-/* static */ void Console::Assert(const GlobalObject& aGlobal, bool aCondition,
-                                  const Sequence<JS::Value>& aData) {
+/* static */
+void Console::Assert(const GlobalObject& aGlobal, bool aCondition,
+                     const Sequence<JS::Value>& aData) {
   if (!aCondition) {
     Method(aGlobal, MethodAssert, NS_LITERAL_STRING("assert"), aData);
   }
 }
 
-/* static */ void Console::Count(const GlobalObject& aGlobal,
-                                 const nsAString& aLabel) {
+/* static */
+void Console::Count(const GlobalObject& aGlobal, const nsAString& aLabel) {
   StringMethod(aGlobal, aLabel, Sequence<JS::Value>(), MethodCount,
                NS_LITERAL_STRING("count"));
 }
 
-/* static */ void Console::CountReset(const GlobalObject& aGlobal,
-                                      const nsAString& aLabel) {
+/* static */
+void Console::CountReset(const GlobalObject& aGlobal, const nsAString& aLabel) {
   StringMethod(aGlobal, aLabel, Sequence<JS::Value>(), MethodCountReset,
                NS_LITERAL_STRING("countReset"));
 }
@@ -1356,10 +1367,10 @@ void ReifyStack(JSContext* aCx, nsIStackFrame* aStack,
 }  // anonymous namespace
 
 // Queue a call to a console method. See the CALL_DELAY constant.
-/* static */ void Console::Method(const GlobalObject& aGlobal,
-                                  MethodName aMethodName,
-                                  const nsAString& aMethodString,
-                                  const Sequence<JS::Value>& aData) {
+/* static */
+void Console::Method(const GlobalObject& aGlobal, MethodName aMethodName,
+                     const nsAString& aMethodString,
+                     const Sequence<JS::Value>& aData) {
   RefPtr<Console> console = GetConsole(aGlobal);
   if (!console) {
     return;
@@ -2562,8 +2573,8 @@ bool Console::IsShuttingDown() const {
   return mStatus == eShuttingDown;
 }
 
-/* static */ already_AddRefed<Console> Console::GetConsole(
-    const GlobalObject& aGlobal) {
+/* static */
+already_AddRefed<Console> Console::GetConsole(const GlobalObject& aGlobal) {
   ErrorResult rv;
   RefPtr<Console> console = GetConsoleInternal(aGlobal, rv);
   if (NS_WARN_IF(rv.Failed()) || !console) {
@@ -2580,7 +2591,8 @@ bool Console::IsShuttingDown() const {
   return console.forget();
 }
 
-/* static */ already_AddRefed<Console> Console::GetConsoleInternal(
+/* static */
+already_AddRefed<Console> Console::GetConsoleInternal(
     const GlobalObject& aGlobal, ErrorResult& aRv) {
   // Window
   if (NS_IsMainThread()) {
@@ -2717,7 +2729,8 @@ bool Console::MonotonicTimer(JSContext* aCx, MethodName aMethodName,
   return true;
 }
 
-/* static */ already_AddRefed<ConsoleInstance> Console::CreateInstance(
+/* static */
+already_AddRefed<ConsoleInstance> Console::CreateInstance(
     const GlobalObject& aGlobal, const ConsoleInstanceOptions& aOptions) {
   RefPtr<ConsoleInstance> console =
       new ConsoleInstance(aGlobal.Context(), aOptions);

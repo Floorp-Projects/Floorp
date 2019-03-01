@@ -3255,8 +3255,8 @@ static const nsAttrValue::EnumTable kCORSAttributeTable[] = {
     {"use-credentials", CORS_USE_CREDENTIALS},
     {nullptr, 0}};
 
-/* static */ void Element::ParseCORSValue(const nsAString& aValue,
-                                          nsAttrValue& aResult) {
+/* static */
+void Element::ParseCORSValue(const nsAString& aValue, nsAttrValue& aResult) {
   DebugOnly<bool> success =
       aResult.ParseEnumValue(aValue, kCORSAttributeTable, false,
                              // default value is anonymous if aValue is
@@ -3265,7 +3265,8 @@ static const nsAttrValue::EnumTable kCORSAttributeTable[] = {
   MOZ_ASSERT(success);
 }
 
-/* static */ CORSMode Element::StringToCORSMode(const nsAString& aValue) {
+/* static */
+CORSMode Element::StringToCORSMode(const nsAString& aValue) {
   if (aValue.IsVoid()) {
     return CORS_NONE;
   }
@@ -3275,7 +3276,8 @@ static const nsAttrValue::EnumTable kCORSAttributeTable[] = {
   return CORSMode(val.GetEnumValue());
 }
 
-/* static */ CORSMode Element::AttrValueToCORSMode(const nsAttrValue* aValue) {
+/* static */
+CORSMode Element::AttrValueToCORSMode(const nsAttrValue* aValue) {
   if (!aValue) {
     return CORS_NONE;
   }
@@ -3409,7 +3411,8 @@ already_AddRefed<Animation> Element::Animate(
   return Animate(target, aContext, aKeyframes, aOptions, aError);
 }
 
-/* static */ already_AddRefed<Animation> Element::Animate(
+/* static */
+already_AddRefed<Animation> Element::Animate(
     const Nullable<ElementOrCSSPseudoElement>& aTarget, JSContext* aContext,
     JS::Handle<JSObject*> aKeyframes,
     const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
@@ -3518,9 +3521,10 @@ void Element::GetAnimations(const AnimationFilter& filter,
   aAnimations.Sort(AnimationPtrComparator<RefPtr<Animation>>());
 }
 
-/* static */ void Element::GetAnimationsUnsorted(
-    Element* aElement, PseudoStyleType aPseudoType,
-    nsTArray<RefPtr<Animation>>& aAnimations) {
+/* static */
+void Element::GetAnimationsUnsorted(Element* aElement,
+                                    PseudoStyleType aPseudoType,
+                                    nsTArray<RefPtr<Animation>>& aAnimations) {
   MOZ_ASSERT(aPseudoType == PseudoStyleType::NotPseudo ||
                  aPseudoType == PseudoStyleType::after ||
                  aPseudoType == PseudoStyleType::before,

@@ -567,7 +567,8 @@ const char* GetEnumName(const GLenum val, const char* const defaultRet) {
   return defaultRet;
 }
 
-/*static*/ void WebGLContext::EnumName(GLenum val, nsCString* out_name) {
+/*static*/
+void WebGLContext::EnumName(GLenum val, nsCString* out_name) {
   const char* name = GetEnumName(val, nullptr);
   if (name) {
     *out_name = name;

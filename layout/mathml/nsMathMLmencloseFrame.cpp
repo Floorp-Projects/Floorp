@@ -295,19 +295,24 @@ void nsMathMLmencloseFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   }
 }
 
-/* virtual */ nsresult nsMathMLmencloseFrame::MeasureForWidth(
-    DrawTarget* aDrawTarget, ReflowOutput& aDesiredSize) {
+/* virtual */
+nsresult nsMathMLmencloseFrame::MeasureForWidth(DrawTarget* aDrawTarget,
+                                                ReflowOutput& aDesiredSize) {
   return PlaceInternal(aDrawTarget, false, aDesiredSize, true);
 }
 
-/* virtual */ nsresult nsMathMLmencloseFrame::Place(
-    DrawTarget* aDrawTarget, bool aPlaceOrigin, ReflowOutput& aDesiredSize) {
+/* virtual */
+nsresult nsMathMLmencloseFrame::Place(DrawTarget* aDrawTarget,
+                                      bool aPlaceOrigin,
+                                      ReflowOutput& aDesiredSize) {
   return PlaceInternal(aDrawTarget, aPlaceOrigin, aDesiredSize, false);
 }
 
-/* virtual */ nsresult nsMathMLmencloseFrame::PlaceInternal(
-    DrawTarget* aDrawTarget, bool aPlaceOrigin, ReflowOutput& aDesiredSize,
-    bool aWidthOnly) {
+/* virtual */
+nsresult nsMathMLmencloseFrame::PlaceInternal(DrawTarget* aDrawTarget,
+                                              bool aPlaceOrigin,
+                                              ReflowOutput& aDesiredSize,
+                                              bool aWidthOnly) {
   ///////////////
   // Measure the size of our content using the base class to format like an
   // inferred mrow.

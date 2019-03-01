@@ -30,13 +30,15 @@ CanonicalBrowsingContext::CanonicalBrowsingContext(BrowsingContext* aParent,
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
 }
 
-/* static */ already_AddRefed<CanonicalBrowsingContext>
-CanonicalBrowsingContext::Get(uint64_t aId) {
+/* static */
+already_AddRefed<CanonicalBrowsingContext> CanonicalBrowsingContext::Get(
+    uint64_t aId) {
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
   return BrowsingContext::Get(aId).downcast<CanonicalBrowsingContext>();
 }
 
-/* static */ CanonicalBrowsingContext* CanonicalBrowsingContext::Cast(
+/* static */
+CanonicalBrowsingContext* CanonicalBrowsingContext::Cast(
     BrowsingContext* aContext) {
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
   return static_cast<CanonicalBrowsingContext*>(aContext);

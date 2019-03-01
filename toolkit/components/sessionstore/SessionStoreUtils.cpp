@@ -84,7 +84,8 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(DynamicFrameEventFilter)
 
 }  // anonymous namespace
 
-/* static */ void SessionStoreUtils::ForEachNonDynamicChildFrame(
+/* static */
+void SessionStoreUtils::ForEachNonDynamicChildFrame(
     const GlobalObject& aGlobal, WindowProxyHolder& aWindow,
     SessionStoreUtilsFrameCallback& aCallback, ErrorResult& aRv) {
   if (!aWindow.get()) {
@@ -130,7 +131,8 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(DynamicFrameEventFilter)
   }
 }
 
-/* static */ already_AddRefed<nsISupports>
+/* static */
+already_AddRefed<nsISupports>
 SessionStoreUtils::AddDynamicFrameFilteredListener(
     const GlobalObject& aGlobal, EventTarget& aTarget, const nsAString& aType,
     JS::Handle<JS::Value> aListener, bool aUseCapture, bool aMozSystemGroup,
@@ -159,7 +161,8 @@ SessionStoreUtils::AddDynamicFrameFilteredListener(
   return filter.forget();
 }
 
-/* static */ void SessionStoreUtils::RemoveDynamicFrameFilteredListener(
+/* static */
+void SessionStoreUtils::RemoveDynamicFrameFilteredListener(
     const GlobalObject& global, EventTarget& aTarget, const nsAString& aType,
     nsISupports* aListener, bool aUseCapture, bool aMozSystemGroup,
     ErrorResult& aRv) {
@@ -176,8 +179,10 @@ SessionStoreUtils::AddDynamicFrameFilteredListener(
   }
 }
 
-/* static */ void SessionStoreUtils::CollectDocShellCapabilities(
-    const GlobalObject& aGlobal, nsIDocShell* aDocShell, nsCString& aRetVal) {
+/* static */
+void SessionStoreUtils::CollectDocShellCapabilities(const GlobalObject& aGlobal,
+                                                    nsIDocShell* aDocShell,
+                                                    nsCString& aRetVal) {
   bool allow;
 
 #define TRY_ALLOWPROP(y)          \
@@ -206,7 +211,8 @@ SessionStoreUtils::AddDynamicFrameFilteredListener(
 #undef TRY_ALLOWPROP
 }
 
-/* static */ void SessionStoreUtils::RestoreDocShellCapabilities(
+/* static */
+void SessionStoreUtils::RestoreDocShellCapabilities(
     const GlobalObject& aGlobal, nsIDocShell* aDocShell,
     const nsCString& aDisallowCapabilities) {
   aDocShell->SetAllowPlugins(true);
@@ -267,9 +273,10 @@ static void CollectCurrentScrollPosition(JSContext* aCx, Document& aDocument,
   }
 }
 
-/* static */ void SessionStoreUtils::RestoreScrollPosition(
-    const GlobalObject& aGlobal, nsGlobalWindowInner& aWindow,
-    const CollectedData& aData) {
+/* static */
+void SessionStoreUtils::RestoreScrollPosition(const GlobalObject& aGlobal,
+                                              nsGlobalWindowInner& aWindow,
+                                              const CollectedData& aData) {
   if (!aData.mScroll.WasPassed()) {
     return;
   }
@@ -909,9 +916,10 @@ static Element* FindNodeByXPath(JSContext* aCx, Document& aDocument,
 }
 
 MOZ_CAN_RUN_SCRIPT_BOUNDARY
-/* static */ bool SessionStoreUtils::RestoreFormData(
-    const GlobalObject& aGlobal, Document& aDocument,
-    const CollectedData& aData) {
+/* static */
+bool SessionStoreUtils::RestoreFormData(const GlobalObject& aGlobal,
+                                        Document& aDocument,
+                                        const CollectedData& aData) {
   if (!aData.mUrl.WasPassed()) {
     return true;
   }
@@ -1092,7 +1100,8 @@ static void CollectedSessionStorageInternal(
   }
 }
 
-/* static */ void SessionStoreUtils::CollectSessionStorage(
+/* static */
+void SessionStoreUtils::CollectSessionStorage(
     const GlobalObject& aGlobal, WindowProxyHolder& aWindow,
     Record<nsString, Record<nsString, nsString>>& aRetVal) {
   nsTHashtable<nsCStringHashKey> visitedOrigins;
@@ -1100,7 +1109,8 @@ static void CollectedSessionStorageInternal(
                                   visitedOrigins, aRetVal);
 }
 
-/* static */ void SessionStoreUtils::RestoreSessionStorage(
+/* static */
+void SessionStoreUtils::RestoreSessionStorage(
     const GlobalObject& aGlobal, nsIDocShell* aDocShell,
     const Record<nsString, Record<nsString, nsString>>& aData) {
   for (auto& entry : aData.Entries()) {

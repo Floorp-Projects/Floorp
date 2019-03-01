@@ -66,7 +66,8 @@ class IPCStreamSourceChild final : public PChildToParentStreamChild,
 
 }  // anonymous namespace
 
-/* static */ PChildToParentStreamChild* IPCStreamSource::Create(
+/* static */
+PChildToParentStreamChild* IPCStreamSource::Create(
     nsIAsyncInputStream* aInputStream, dom::ContentChild* aManager) {
   MOZ_ASSERT(aInputStream);
   MOZ_ASSERT(aManager);
@@ -87,7 +88,8 @@ class IPCStreamSourceChild final : public PChildToParentStreamChild,
   return source;
 }
 
-/* static */ PChildToParentStreamChild* IPCStreamSource::Create(
+/* static */
+PChildToParentStreamChild* IPCStreamSource::Create(
     nsIAsyncInputStream* aInputStream, PBackgroundChild* aManager) {
   MOZ_ASSERT(aInputStream);
   MOZ_ASSERT(aManager);
@@ -105,8 +107,8 @@ class IPCStreamSourceChild final : public PChildToParentStreamChild,
   return source;
 }
 
-/* static */ IPCStreamSource* IPCStreamSource::Cast(
-    PChildToParentStreamChild* aActor) {
+/* static */
+IPCStreamSource* IPCStreamSource::Cast(PChildToParentStreamChild* aActor) {
   MOZ_ASSERT(aActor);
   return static_cast<IPCStreamSourceChild*>(aActor);
 }
@@ -167,7 +169,8 @@ void DeallocPParentToChildStreamChild(PParentToChildStreamChild* aActor) {
   delete aActor;
 }
 
-/* static */ IPCStreamDestination* IPCStreamDestination::Cast(
+/* static */
+IPCStreamDestination* IPCStreamDestination::Cast(
     PParentToChildStreamChild* aActor) {
   MOZ_ASSERT(aActor);
   return static_cast<IPCStreamDestinationChild*>(aActor);

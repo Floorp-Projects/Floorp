@@ -38,7 +38,8 @@ void VRGPUParent::ActorDestroy(ActorDestroyReason aWhy) {
 
 void VRGPUParent::DeferredDestroy() { mSelfRef = nullptr; }
 
-/* static */ RefPtr<VRGPUParent> VRGPUParent::CreateForGPU(
+/* static */
+RefPtr<VRGPUParent> VRGPUParent::CreateForGPU(
     Endpoint<PVRGPUParent>&& aEndpoint) {
   RefPtr<VRGPUParent> vcp = new VRGPUParent(aEndpoint.OtherPid());
   MessageLoop::current()->PostTask(NewRunnableMethod<Endpoint<PVRGPUParent>&&>(

@@ -163,8 +163,8 @@ nsresult EmailInputType::GetBadInputMessage(nsAString& aMessage) {
       nsContentUtils::eDOM_PROPERTIES, "FormValidationInvalidEmail", aMessage);
 }
 
-/* static */ bool EmailInputType::IsValidEmailAddressList(
-    const nsAString& aValue) {
+/* static */
+bool EmailInputType::IsValidEmailAddressList(const nsAString& aValue) {
   HTMLSplitOnSpacesTokenizer tokenizer(aValue, ',');
 
   while (tokenizer.hasMoreTokens()) {
@@ -176,7 +176,8 @@ nsresult EmailInputType::GetBadInputMessage(nsAString& aMessage) {
   return !tokenizer.separatorAfterCurrentToken();
 }
 
-/* static */ bool EmailInputType::IsValidEmailAddress(const nsAString& aValue) {
+/* static */
+bool EmailInputType::IsValidEmailAddress(const nsAString& aValue) {
   // Email addresses can't be empty and can't end with a '.' or '-'.
   if (aValue.IsEmpty() || aValue.Last() == '.' || aValue.Last() == '-') {
     return false;
@@ -240,9 +241,10 @@ nsresult EmailInputType::GetBadInputMessage(nsAString& aMessage) {
   return true;
 }
 
-/* static */ bool EmailInputType::PunycodeEncodeEmailAddress(
-    const nsAString& aEmail, nsAutoCString& aEncodedEmail,
-    uint32_t* aIndexOfAt) {
+/* static */
+bool EmailInputType::PunycodeEncodeEmailAddress(const nsAString& aEmail,
+                                                nsAutoCString& aEncodedEmail,
+                                                uint32_t* aIndexOfAt) {
   nsAutoCString value = NS_ConvertUTF16toUTF8(aEmail);
   *aIndexOfAt = (uint32_t)value.FindChar('@');
 

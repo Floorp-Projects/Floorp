@@ -339,8 +339,8 @@ static int32_t ConditionDimension(float aValue) {
   return 0;
 }
 
-/* static */ bool H264::DecodeSPS(const mozilla::MediaByteBuffer* aSPS,
-                                  SPSData& aDest) {
+/* static */
+bool H264::DecodeSPS(const mozilla::MediaByteBuffer* aSPS, SPSData& aDest) {
   if (!aSPS) {
     return false;
   }
@@ -513,7 +513,8 @@ static int32_t ConditionDimension(float aValue) {
   return true;
 }
 
-/* static */ bool H264::vui_parameters(BitReader& aBr, SPSData& aDest) {
+/* static */
+bool H264::vui_parameters(BitReader& aBr, SPSData& aDest) {
   aDest.aspect_ratio_info_present_flag = aBr.ReadBit();
   if (aDest.aspect_ratio_info_present_flag) {
     aDest.aspect_ratio_idc = aBr.ReadBits(8);
@@ -690,8 +691,9 @@ static int32_t ConditionDimension(float aValue) {
   return true;
 }
 
-/* static */ bool H264::DecodeSPSFromExtraData(
-    const mozilla::MediaByteBuffer* aExtraData, SPSData& aDest) {
+/* static */
+bool H264::DecodeSPSFromExtraData(const mozilla::MediaByteBuffer* aExtraData,
+                                  SPSData& aDest) {
   SPSNALIterator it(aExtraData);
   if (!it) {
     return false;
@@ -699,7 +701,8 @@ static int32_t ConditionDimension(float aValue) {
   return (*it).GetSPSData(aDest);
 }
 
-/* static */ bool H264::EnsureSPSIsSane(SPSData& aSPS) {
+/* static */
+bool H264::EnsureSPSIsSane(SPSData& aSPS) {
   bool valid = true;
   static const float default_aspect = 4.0f / 3.0f;
   if (aSPS.sample_ratio <= 0.0f || aSPS.sample_ratio > 6.0f) {
@@ -719,8 +722,8 @@ static int32_t ConditionDimension(float aValue) {
   return valid;
 }
 
-/* static */ uint32_t H264::ComputeMaxRefFrames(
-    const mozilla::MediaByteBuffer* aExtraData) {
+/* static */
+uint32_t H264::ComputeMaxRefFrames(const mozilla::MediaByteBuffer* aExtraData) {
   uint32_t maxRefFrames = 4;
   // Retrieve video dimensions from H264 SPS NAL.
   SPSData spsdata;
@@ -907,11 +910,13 @@ static int32_t ConditionDimension(float aValue) {
   return extradata.forget();
 }
 
-/* static */ bool H264::HasSPS(const mozilla::MediaByteBuffer* aExtraData) {
+/* static */
+bool H264::HasSPS(const mozilla::MediaByteBuffer* aExtraData) {
   return NumSPS(aExtraData) > 0;
 }
 
-/* static */ uint8_t H264::NumSPS(const mozilla::MediaByteBuffer* aExtraData) {
+/* static */
+uint8_t H264::NumSPS(const mozilla::MediaByteBuffer* aExtraData) {
   if (!aExtraData || aExtraData->IsEmpty()) {
     return 0;
   }
@@ -927,9 +932,9 @@ static int32_t ConditionDimension(float aValue) {
   return res.unwrap() & 0x1f;
 }
 
-/* static */ bool H264::CompareExtraData(
-    const mozilla::MediaByteBuffer* aExtraData1,
-    const mozilla::MediaByteBuffer* aExtraData2) {
+/* static */
+bool H264::CompareExtraData(const mozilla::MediaByteBuffer* aExtraData1,
+                            const mozilla::MediaByteBuffer* aExtraData2) {
   if (aExtraData1 == aExtraData2) {
     return true;
   }
@@ -968,8 +973,9 @@ static inline Result<Ok, nsresult> ReadSEIInt(BufferReader& aBr,
   return Ok();
 }
 
-/* static */ bool H264::DecodeRecoverySEI(const mozilla::MediaByteBuffer* aSEI,
-                                          SEIRecoveryData& aDest) {
+/* static */
+bool H264::DecodeRecoverySEI(const mozilla::MediaByteBuffer* aSEI,
+                             SEIRecoveryData& aDest) {
   if (!aSEI) {
     return false;
   }

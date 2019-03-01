@@ -1797,7 +1797,8 @@ nsresult EventSource::CreateAndDispatchSimpleEvent(const nsAString& aName) {
   return rv.StealNSResult();
 }
 
-/* static */ already_AddRefed<EventSource> EventSource::Constructor(
+/* static */
+already_AddRefed<EventSource> EventSource::Constructor(
     const GlobalObject& aGlobal, const nsAString& aURL,
     const EventSourceInit& aEventSourceInitDict, ErrorResult& aRv) {
   nsCOMPtr<nsPIDOMWindowInner> ownerWindow =

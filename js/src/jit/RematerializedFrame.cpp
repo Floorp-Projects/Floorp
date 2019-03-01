@@ -55,9 +55,10 @@ RematerializedFrame::RematerializedFrame(JSContext* cx, uint8_t* top,
                               &newTarget_, ReadFrame_Actuals, fallback);
 }
 
-/* static */ RematerializedFrame* RematerializedFrame::New(
-    JSContext* cx, uint8_t* top, InlineFrameIterator& iter,
-    MaybeReadFallback& fallback) {
+/* static */
+RematerializedFrame* RematerializedFrame::New(JSContext* cx, uint8_t* top,
+                                              InlineFrameIterator& iter,
+                                              MaybeReadFallback& fallback) {
   unsigned numFormals =
       iter.isFunctionFrame() ? iter.calleeTemplate()->nargs() : 0;
   unsigned argSlots = Max(numFormals, iter.numActualArgs());
@@ -81,7 +82,8 @@ RematerializedFrame::RematerializedFrame(JSContext* cx, uint8_t* top,
       RematerializedFrame(cx, top, iter.numActualArgs(), iter, fallback);
 }
 
-/* static */ bool RematerializedFrame::RematerializeInlineFrames(
+/* static */
+bool RematerializedFrame::RematerializeInlineFrames(
     JSContext* cx, uint8_t* top, InlineFrameIterator& iter,
     MaybeReadFallback& fallback, GCVector<RematerializedFrame*>& frames) {
   Rooted<GCVector<RematerializedFrame*>> tempFrames(
@@ -112,8 +114,8 @@ RematerializedFrame::RematerializedFrame(JSContext* cx, uint8_t* top,
   return true;
 }
 
-/* static */ void RematerializedFrame::FreeInVector(
-    GCVector<RematerializedFrame*>& frames) {
+/* static */
+void RematerializedFrame::FreeInVector(GCVector<RematerializedFrame*>& frames) {
   for (size_t i = 0; i < frames.length(); i++) {
     RematerializedFrame* f = frames[i];
     MOZ_ASSERT(!Debugger::inFrameMaps(f));

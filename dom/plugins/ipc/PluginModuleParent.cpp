@@ -347,8 +347,9 @@ void mozilla::plugins::TerminatePlugin(uint32_t aPluginId,
   }
 }
 
-/* static */ PluginLibrary* PluginModuleContentParent::LoadModule(
-    uint32_t aPluginId, nsPluginTag* aPluginTag) {
+/* static */
+PluginLibrary* PluginModuleContentParent::LoadModule(uint32_t aPluginId,
+                                                     nsPluginTag* aPluginTag) {
   PluginModuleMapping::NotifyLoadingModule loadingModule;
   nsAutoPtr<PluginModuleMapping> mapping(new PluginModuleMapping(aPluginId));
 
@@ -386,7 +387,8 @@ void mozilla::plugins::TerminatePlugin(uint32_t aPluginId,
   return parent;
 }
 
-/* static */ void PluginModuleContentParent::Initialize(
+/* static */
+void PluginModuleContentParent::Initialize(
     Endpoint<PPluginModuleParent>&& aEndpoint) {
   nsAutoPtr<PluginModuleMapping> moduleMapping(
       PluginModuleMapping::Resolve(aEndpoint.OtherPid()));
@@ -1753,7 +1755,8 @@ void PluginModuleChromeParent::CachedSettingChanged() {
   Unused << SendSettingChanged(settings);
 }
 
-/* static */ void PluginModuleChromeParent::CachedSettingChanged(
+/* static */
+void PluginModuleChromeParent::CachedSettingChanged(
     const char* aPref, PluginModuleChromeParent* aModule) {
   aModule->CachedSettingChanged();
 }

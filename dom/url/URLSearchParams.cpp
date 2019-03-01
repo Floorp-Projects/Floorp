@@ -86,15 +86,15 @@ void URLParams::Delete(const nsAString& aName) {
   }
 }
 
-/* static */ void URLParams::ConvertString(const nsACString& aInput,
-                                           nsAString& aOutput) {
+/* static */
+void URLParams::ConvertString(const nsACString& aInput, nsAString& aOutput) {
   if (NS_FAILED(UTF_8_ENCODING->DecodeWithoutBOMHandling(aInput, aOutput))) {
     MOZ_CRASH("Out of memory when converting URL params.");
   }
 }
 
-/* static */ void URLParams::DecodeString(const nsACString& aInput,
-                                          nsAString& aOutput) {
+/* static */
+void URLParams::DecodeString(const nsACString& aInput, nsAString& aOutput) {
   nsACString::const_iterator start, end;
   aInput.BeginReading(start);
   aInput.EndReading(end);
@@ -146,8 +146,8 @@ void URLParams::Delete(const nsAString& aName) {
   ConvertString(unescaped, aOutput);
 }
 
-/* static */ bool URLParams::Parse(const nsACString& aInput,
-                                   ForEachIterator& aIterator) {
+/* static */
+bool URLParams::Parse(const nsACString& aInput, ForEachIterator& aIterator) {
   nsACString::const_iterator start, end;
   aInput.BeginReading(start);
   aInput.EndReading(end);
@@ -225,9 +225,9 @@ class MOZ_STACK_CLASS ExtractURLParam final
  * @param aValue The value of the extracted parameter, void if not found.
  * @return Whether the parameter was found in the form-urlencoded.
  */
-/* static */ bool URLParams::Extract(const nsACString& aInput,
-                                     const nsAString& aName,
-                                     nsAString& aValue) {
+/* static */
+bool URLParams::Extract(const nsACString& aInput, const nsAString& aName,
+                        nsAString& aValue) {
   aValue.SetIsVoid(true);
   ExtractURLParam iterator(aName, aValue);
   return !URLParams::Parse(aInput, iterator);
@@ -320,7 +320,8 @@ JSObject* URLSearchParams::WrapObject(JSContext* aCx,
   return URLSearchParams_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-/* static */ already_AddRefed<URLSearchParams> URLSearchParams::Constructor(
+/* static */
+already_AddRefed<URLSearchParams> URLSearchParams::Constructor(
     const GlobalObject& aGlobal,
     const USVStringSequenceSequenceOrUSVStringUSVStringRecordOrUSVString& aInit,
     ErrorResult& aRv) {

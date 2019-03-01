@@ -447,7 +447,8 @@ void CustomElementRegistry::UnregisterUnresolvedElement(Element* aElement,
   }
 }
 
-/* static */ UniquePtr<CustomElementCallback>
+/* static */
+UniquePtr<CustomElementCallback>
 CustomElementRegistry::CreateCustomElementCallback(
     Document::ElementCallbackType aType, Element* aCustomElement,
     LifecycleCallbackArgs* aArgs,
@@ -508,7 +509,8 @@ CustomElementRegistry::CreateCustomElementCallback(
   return callback;
 }
 
-/* static */ void CustomElementRegistry::EnqueueLifecycleCallback(
+/* static */
+void CustomElementRegistry::EnqueueLifecycleCallback(
     Document::ElementCallbackType aType, Element* aCustomElement,
     LifecycleCallbackArgs* aArgs,
     LifecycleAdoptedCallbackArgs* aAdoptedCallbackArgs,
@@ -1078,8 +1080,10 @@ static void DoUpgrade(Element* aElement, CustomElementConstructor* aConstructor,
 }  // anonymous namespace
 
 // https://html.spec.whatwg.org/multipage/scripting.html#upgrades
-/* static */ void CustomElementRegistry::Upgrade(
-    Element* aElement, CustomElementDefinition* aDefinition, ErrorResult& aRv) {
+/* static */
+void CustomElementRegistry::Upgrade(Element* aElement,
+                                    CustomElementDefinition* aDefinition,
+                                    ErrorResult& aRv) {
   RefPtr<CustomElementData> data = aElement->GetCustomElementData();
   MOZ_ASSERT(data, "CustomElementData should exist");
 

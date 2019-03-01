@@ -87,8 +87,8 @@ ActivationContext::~ActivationContext() { Release(); }
   return reinterpret_cast<uintptr_t>(actCtx);
 }
 
-/* static */ HRESULT ActivationContext::GetCurrentManifestPath(
-    nsAString& aOutManifestPath) {
+/* static */
+HRESULT ActivationContext::GetCurrentManifestPath(nsAString& aOutManifestPath) {
   aOutManifestPath.Truncate();
 
   SIZE_T bytesNeeded;
@@ -197,7 +197,10 @@ void ActivationContextRegion::Activate() {
     return;
   }
 
-  BOOL activated = ::ActivateActCtx(mActCtx.mActCtx, &mActCookie);
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  BOOL activated =
+#endif
+    ::ActivateActCtx(mActCtx.mActCtx, &mActCookie);
   MOZ_DIAGNOSTIC_ASSERT(activated);
 }
 

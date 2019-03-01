@@ -21,8 +21,9 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(CSSRuleList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(CSSRuleList)
 
-/* virtual */ JSObject* CSSRuleList::WrapObject(
-    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
+/* virtual */
+JSObject* CSSRuleList::WrapObject(JSContext* aCx,
+                                  JS::Handle<JSObject*> aGivenProto) {
   return CSSRuleList_Binding::Wrap(aCx, this, aGivenProto);
 }
 

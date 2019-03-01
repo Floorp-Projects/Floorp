@@ -13,7 +13,8 @@
 namespace mozilla {
 namespace dom {
 
-/* static */ already_AddRefed<ChromeWorker> ChromeWorker::Constructor(
+/* static */
+already_AddRefed<ChromeWorker> ChromeWorker::Constructor(
     const GlobalObject& aGlobal, const nsAString& aScriptURL,
     ErrorResult& aRv) {
   JSContext* cx = aGlobal.Context();
@@ -33,8 +34,8 @@ namespace dom {
   return worker.forget();
 }
 
-/* static */ bool ChromeWorker::WorkerAvailable(JSContext* aCx,
-                                                JSObject* /* unused */) {
+/* static */
+bool ChromeWorker::WorkerAvailable(JSContext* aCx, JSObject* /* unused */) {
   // Chrome is always allowed to use workers, and content is never
   // allowed to use ChromeWorker, so all we have to check is the
   // caller.  However, chrome workers apparently might not have a

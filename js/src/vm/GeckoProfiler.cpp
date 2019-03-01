@@ -432,8 +432,8 @@ JS_FRIEND_API jsbytecode* ProfilingStackFrame::pc() const {
   return script ? script->offsetToPC(pcOffsetIfJS_) : nullptr;
 }
 
-/* static */ int32_t ProfilingStackFrame::pcToOffset(JSScript* aScript,
-                                                     jsbytecode* aPc) {
+/* static */
+int32_t ProfilingStackFrame::pcToOffset(JSScript* aScript, jsbytecode* aPc) {
   return aPc ? aScript->pcToOffset(aPc) : NullPCOffset;
 }
 

@@ -355,7 +355,8 @@ void nsBlockFrame::DestroyFrom(nsIFrame* aDestructRoot,
   nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
-/* virtual */ nsILineIterator* nsBlockFrame::GetLineIterator() {
+/* virtual */
+nsILineIterator* nsBlockFrame::GetLineIterator() {
   nsLineIterator* it = new nsLineIterator;
   if (!it) return nullptr;
 
@@ -574,7 +575,8 @@ void nsBlockFrame::GetChildLists(nsTArray<ChildList>* aLists) const {
   }
 }
 
-/* virtual */ bool nsBlockFrame::IsFloatContainingBlock() const { return true; }
+/* virtual */
+bool nsBlockFrame::IsFloatContainingBlock() const { return true; }
 
 static void ReparentFrameInternal(nsIFrame* aFrame,
                                   nsContainerFrame* aOldParent,
@@ -676,7 +678,8 @@ static bool RemoveFirstLine(nsLineList& aFromLines, nsFrameList& aFromFrames,
 //////////////////////////////////////////////////////////////////////
 // Reflow methods
 
-/* virtual */ void nsBlockFrame::MarkIntrinsicISizesDirty() {
+/* virtual */
+void nsBlockFrame::MarkIntrinsicISizesDirty() {
   nsBlockFrame* dirtyBlock = static_cast<nsBlockFrame*>(FirstContinuation());
   dirtyBlock->mMinWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
   dirtyBlock->mPrefWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
@@ -708,7 +711,8 @@ void nsBlockFrame::CheckIntrinsicCacheAgainstShrinkWrapState() {
   }
 }
 
-/* virtual */ nscoord nsBlockFrame::GetMinISize(gfxContext* aRenderingContext) {
+/* virtual */
+nscoord nsBlockFrame::GetMinISize(gfxContext* aRenderingContext) {
   nsIFrame* firstInFlow = FirstContinuation();
   if (firstInFlow != this) return firstInFlow->GetMinISize(aRenderingContext);
 
@@ -788,8 +792,8 @@ void nsBlockFrame::CheckIntrinsicCacheAgainstShrinkWrapState() {
   return mMinWidth;
 }
 
-/* virtual */ nscoord nsBlockFrame::GetPrefISize(
-    gfxContext* aRenderingContext) {
+/* virtual */
+nscoord nsBlockFrame::GetPrefISize(gfxContext* aRenderingContext) {
   nsIFrame* firstInFlow = FirstContinuation();
   if (firstInFlow != this) return firstInFlow->GetPrefISize(aRenderingContext);
 
@@ -888,8 +892,9 @@ nsRect nsBlockFrame::ComputeTightBounds(DrawTarget* aDrawTarget) const {
   return ComputeSimpleTightBounds(aDrawTarget);
 }
 
-/* virtual */ nsresult nsBlockFrame::GetPrefWidthTightBounds(
-    gfxContext* aRenderingContext, nscoord* aX, nscoord* aXMost) {
+/* virtual */
+nsresult nsBlockFrame::GetPrefWidthTightBounds(gfxContext* aRenderingContext,
+                                               nscoord* aX, nscoord* aXMost) {
   nsIFrame* firstInFlow = FirstContinuation();
   if (firstInFlow != this) {
     return firstInFlow->GetPrefWidthTightBounds(aRenderingContext, aX, aXMost);
@@ -3038,7 +3043,8 @@ static inline bool IsNonAutoNonZeroBSize(const StyleSize& aCoord) {
   return true;
 }
 
-/* virtual */ bool nsBlockFrame::IsSelfEmpty() {
+/* virtual */
+bool nsBlockFrame::IsSelfEmpty() {
   // Blocks which are margin-roots (including inline-blocks) cannot be treated
   // as empty for margin-collapsing and other purposes. They're more like
   // replaced elements.
@@ -6643,7 +6649,8 @@ nsLineBox* nsBlockFrame::GetFirstLineContaining(nscoord y) {
   return cursor.get();
 }
 
-/* virtual */ void nsBlockFrame::ChildIsDirty(nsIFrame* aChild) {
+/* virtual */
+void nsBlockFrame::ChildIsDirty(nsIFrame* aChild) {
   // See if the child is absolutely positioned
   if (aChild->GetStateBits() & NS_FRAME_OUT_OF_FLOW &&
       aChild->IsAbsolutelyPositioned()) {

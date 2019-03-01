@@ -2066,8 +2066,8 @@ void OpenVRSession::StopHapticTimer() {
   }
 }
 
-/*static*/ void OpenVRSession::HapticTimerCallback(nsITimer* aTimer,
-                                                   void* aClosure) {
+/*static*/
+void OpenVRSession::HapticTimerCallback(nsITimer* aTimer, void* aClosure) {
   /**
    * It is safe to use the pointer passed in aClosure to reference the
    * OpenVRSession object as the timer is canceled in OpenVRSession::Shutdown,

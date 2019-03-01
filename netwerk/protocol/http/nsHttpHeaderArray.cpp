@@ -317,10 +317,11 @@ nsresult nsHttpHeaderArray::VisitHeaders(
   return NS_OK;
 }
 
-/*static*/ nsresult nsHttpHeaderArray::ParseHeaderLine(const nsACString &line,
-                                                       nsHttpAtom *hdr,
-                                                       nsACString *headerName,
-                                                       nsACString *val) {
+/*static*/
+nsresult nsHttpHeaderArray::ParseHeaderLine(const nsACString &line,
+                                            nsHttpAtom *hdr,
+                                            nsACString *headerName,
+                                            nsACString *val) {
   //
   // BNF from section 4.2 of RFC 2616:
   //

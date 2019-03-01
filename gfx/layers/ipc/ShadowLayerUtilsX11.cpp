@@ -102,7 +102,8 @@ already_AddRefed<gfxXlibSurface> SurfaceDescriptorX11::OpenForeign() const {
   return surf->CairoStatus() ? nullptr : surf.forget();
 }
 
-/*static*/ void ShadowLayerForwarder::PlatformSyncBeforeUpdate() {
+/*static*/
+void ShadowLayerForwarder::PlatformSyncBeforeUpdate() {
   if (UsingXCompositing()) {
     // If we're using X surfaces, then we need to finish all pending
     // operations on the back buffers before handing them to the
@@ -112,7 +113,8 @@ already_AddRefed<gfxXlibSurface> SurfaceDescriptorX11::OpenForeign() const {
   }
 }
 
-/*static*/ void LayerManagerComposite::PlatformSyncBeforeReplyUpdate() {
+/*static*/
+void LayerManagerComposite::PlatformSyncBeforeReplyUpdate() {
   if (UsingXCompositing()) {
     // If we're using X surfaces, we need to finish all pending
     // operations on the *front buffers* before handing them back to
@@ -123,9 +125,8 @@ already_AddRefed<gfxXlibSurface> SurfaceDescriptorX11::OpenForeign() const {
   }
 }
 
-/*static*/ bool LayerManagerComposite::SupportsDirectTexturing() {
-  return false;
-}
+/*static*/
+bool LayerManagerComposite::SupportsDirectTexturing() { return false; }
 
 }  // namespace layers
 }  // namespace mozilla

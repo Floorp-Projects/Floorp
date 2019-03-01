@@ -249,7 +249,8 @@ void nsReflowStatus::UpdateTruncated(const ReflowInput& aReflowInput,
   }
 }
 
-/* static */ void nsIFrame::DestroyAnonymousContent(
+/* static */
+void nsIFrame::DestroyAnonymousContent(
     nsPresContext* aPresContext, already_AddRefed<nsIContent>&& aContent) {
   if (nsCOMPtr<nsIContent> content = aContent) {
     aPresContext->EventStateManager()->NativeAnonymousContentRemoved(content);
@@ -905,6 +906,22 @@ bool nsIFrame::HasDisplayItem(nsDisplayItem* aItem) {
 }
 
 void nsIFrame::RemoveDisplayItemDataForDeletion() {
+  // Destroying a WebRenderUserDataTable can cause destruction of other objects
+  // which can remove frame properties in their destructor. If we delete a frame
+  // property it runs the destructor of the stored object in the middle of
+  // updating the frame property table, so if the destruction of that object
+  // causes another update to the frame property table it would leave the frame
+  // property table in an inconsistent state. So we remove it from the table and
+  // then destroy it. (bug 1530657)
+  WebRenderUserDataTable* userDataTable =
+      RemoveProperty(WebRenderUserDataProperty::Key());
+  if (userDataTable) {
+    for (auto iter = userDataTable->Iter(); !iter.Done(); iter.Next()) {
+      iter.UserData()->RemoveFromTable();
+    }
+    delete userDataTable;
+  }
+
   FrameLayerBuilder::RemoveFrameFromLayerManager(this, DisplayItemData());
   DisplayItemData().Clear();
 
@@ -1016,8 +1033,8 @@ void nsIFrame::MarkNeedsDisplayItemRebuild() {
 }
 
 // Subclass hook for style post processing
-/* virtual */ void nsFrame::DidSetComputedStyle(
-    ComputedStyle* aOldComputedStyle) {
+/* virtual */
+void nsFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
   if (nsSVGUtils::IsInSVGTextSubtree(this)) {
     SVGTextFrame* svgTextFrame = static_cast<SVGTextFrame*>(
         nsLayoutUtils::GetClosestFrameOfType(this, LayoutFrameType::SVGText));
@@ -1358,7 +1375,8 @@ const nsIFrame::ChildListID nsIFrame::kSelectPopupList;
 const nsIFrame::ChildListID nsIFrame::kNoReflowPrincipalList;
 #endif
 
-/* virtual */ nsMargin nsIFrame::GetUsedMargin() const {
+/* virtual */
+nsMargin nsIFrame::GetUsedMargin() const {
   nsMargin margin(0, 0, 0, 0);
   if (((mState & NS_FRAME_FIRST_REFLOW) && !(mState & NS_FRAME_IN_REFLOW)) ||
       nsSVGUtils::IsInSVGTextSubtree(this))
@@ -1378,7 +1396,8 @@ const nsIFrame::ChildListID nsIFrame::kNoReflowPrincipalList;
   return margin;
 }
 
-/* virtual */ nsMargin nsIFrame::GetUsedBorder() const {
+/* virtual */
+nsMargin nsIFrame::GetUsedBorder() const {
   nsMargin border(0, 0, 0, 0);
   if (((mState & NS_FRAME_FIRST_REFLOW) && !(mState & NS_FRAME_IN_REFLOW)) ||
       nsSVGUtils::IsInSVGTextSubtree(this))
@@ -1406,7 +1425,8 @@ const nsIFrame::ChildListID nsIFrame::kNoReflowPrincipalList;
   return border;
 }
 
-/* virtual */ nsMargin nsIFrame::GetUsedPadding() const {
+/* virtual */
+nsMargin nsIFrame::GetUsedPadding() const {
   nsMargin padding(0, 0, 0, 0);
   if (((mState & NS_FRAME_FIRST_REFLOW) && !(mState & NS_FRAME_IN_REFLOW)) ||
       nsSVGUtils::IsInSVGTextSubtree(this))
@@ -1705,8 +1725,8 @@ bool nsIFrame::ComputeBorderRadii(const BorderRadius& aBorderRadius,
   return haveRadius;
 }
 
-/* static */ void nsIFrame::InsetBorderRadii(nscoord aRadii[8],
-                                             const nsMargin& aOffsets) {
+/* static */
+void nsIFrame::InsetBorderRadii(nscoord aRadii[8], const nsMargin& aOffsets) {
   NS_FOR_CSS_SIDES(side) {
     nscoord offset = aOffsets.Side(side);
     uint32_t hc1 = SideToHalfCorner(side, false, false);
@@ -1716,8 +1736,8 @@ bool nsIFrame::ComputeBorderRadii(const BorderRadius& aBorderRadius,
   }
 }
 
-/* static */ void nsIFrame::OutsetBorderRadii(nscoord aRadii[8],
-                                              const nsMargin& aOffsets) {
+/* static */
+void nsIFrame::OutsetBorderRadii(nscoord aRadii[8], const nsMargin& aOffsets) {
   auto AdjustOffset = [](const uint32_t aRadius, const nscoord aOffset) {
     // Implement the cubic formula to adjust offset when aOffset > 0 and
     // aRadius / aOffset < 1.
@@ -1746,10 +1766,10 @@ bool nsIFrame::ComputeBorderRadii(const BorderRadius& aBorderRadius,
   }
 }
 
-/* virtual */ bool nsIFrame::GetBorderRadii(const nsSize& aFrameSize,
-                                            const nsSize& aBorderArea,
-                                            Sides aSkipSides,
-                                            nscoord aRadii[8]) const {
+/* virtual */
+bool nsIFrame::GetBorderRadii(const nsSize& aFrameSize,
+                              const nsSize& aBorderArea, Sides aSkipSides,
+                              nscoord aRadii[8]) const {
   if (!mMayHaveRoundedCorners) {
     memset(aRadii, 0, sizeof(nscoord) * 8);
     return false;
@@ -5056,7 +5076,8 @@ nsresult nsFrame::GetCursor(const nsPoint& aPoint, nsIFrame::Cursor& aCursor) {
 
 // Resize and incremental reflow
 
-/* virtual */ void nsFrame::MarkIntrinsicISizesDirty() {
+/* virtual */
+void nsFrame::MarkIntrinsicISizesDirty() {
   // This version is meant only for what used to be box-to-block adaptors.
   // It should not be called by other derived classes.
   if (::IsXULBoxWrapped(this)) {
@@ -5083,27 +5104,31 @@ nsresult nsFrame::GetCursor(const nsPoint& aPoint, nsIFrame::Cursor& aCursor) {
   }
 }
 
-/* virtual */ nscoord nsFrame::GetMinISize(gfxContext* aRenderingContext) {
+/* virtual */
+nscoord nsFrame::GetMinISize(gfxContext* aRenderingContext) {
   nscoord result = 0;
   DISPLAY_MIN_INLINE_SIZE(this, result);
   return result;
 }
 
-/* virtual */ nscoord nsFrame::GetPrefISize(gfxContext* aRenderingContext) {
+/* virtual */
+nscoord nsFrame::GetPrefISize(gfxContext* aRenderingContext) {
   nscoord result = 0;
   DISPLAY_PREF_INLINE_SIZE(this, result);
   return result;
 }
 
-/* virtual */ void nsFrame::AddInlineMinISize(
-    gfxContext* aRenderingContext, nsIFrame::InlineMinISizeData* aData) {
+/* virtual */
+void nsFrame::AddInlineMinISize(gfxContext* aRenderingContext,
+                                nsIFrame::InlineMinISizeData* aData) {
   nscoord isize = nsLayoutUtils::IntrinsicForContainer(
       aRenderingContext, this, nsLayoutUtils::MIN_ISIZE);
   aData->DefaultAddInlineMinISize(this, isize);
 }
 
-/* virtual */ void nsFrame::AddInlinePrefISize(
-    gfxContext* aRenderingContext, nsIFrame::InlinePrefISizeData* aData) {
+/* virtual */
+void nsFrame::AddInlinePrefISize(gfxContext* aRenderingContext,
+                                 nsIFrame::InlinePrefISizeData* aData) {
   nscoord isize = nsLayoutUtils::IntrinsicForContainer(
       aRenderingContext, this, nsLayoutUtils::PREF_ISIZE);
   aData->DefaultAddInlinePrefISize(isize);
@@ -5336,11 +5361,13 @@ nsIFrame::IntrinsicISizeOffsetData nsIFrame::IntrinsicBSizeOffsets(
   return IntrinsicSizeOffsets(this, aPercentageBasis, false);
 }
 
-/* virtual */ IntrinsicSize nsFrame::GetIntrinsicSize() {
+/* virtual */
+IntrinsicSize nsFrame::GetIntrinsicSize() {
   return IntrinsicSize();  // default is width/height set to eStyleUnit_None
 }
 
-/* virtual */ nsSize nsFrame::GetIntrinsicRatio() { return nsSize(0, 0); }
+/* virtual */
+nsSize nsFrame::GetIntrinsicRatio() { return nsSize(0, 0); }
 
 /* virtual */
 LogicalSize nsFrame::ComputeSize(gfxContext* aRenderingContext, WritingMode aWM,
@@ -6058,9 +6085,9 @@ nsRect nsFrame::ComputeSimpleTightBounds(DrawTarget* aDrawTarget) const {
   return r;
 }
 
-/* virtual */ nsresult nsIFrame::GetPrefWidthTightBounds(gfxContext* aContext,
-                                                         nscoord* aX,
-                                                         nscoord* aXMost) {
+/* virtual */
+nsresult nsIFrame::GetPrefWidthTightBounds(gfxContext* aContext, nscoord* aX,
+                                           nscoord* aXMost) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -6249,7 +6276,8 @@ void nsFrame::PushDirtyBitToAbsoluteFrames() {
   GetAbsoluteContainingBlock()->MarkAllFramesDirty();
 }
 
-/* virtual */ bool nsFrame::CanContinueTextRun() const {
+/* virtual */
+bool nsFrame::CanContinueTextRun() const {
   // By default, a frame will *not* allow a text run to be continued
   // through it.
   return false;
@@ -6828,7 +6856,8 @@ void nsIFrame::InvalidateFrameWithRect(const nsRect& aRect,
   *rect = rect->Union(aRect);
 }
 
-/*static*/ uint8_t nsIFrame::sLayerIsPrerenderedDataKey;
+/*static*/
+uint8_t nsIFrame::sLayerIsPrerenderedDataKey;
 
 static bool DoesLayerHaveOutOfDateFrameMetrics(Layer* aLayer) {
   for (uint32_t i = 0; i < aLayer->GetScrollMetadataCount(); i++) {
@@ -7204,13 +7233,13 @@ bool nsIFrame::UpdateOverflow() {
   return false;
 }
 
-/* virtual */ bool nsFrame::ComputeCustomOverflow(
-    nsOverflowAreas& aOverflowAreas) {
+/* virtual */
+bool nsFrame::ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) {
   return true;
 }
 
-/* virtual */ void nsFrame::UnionChildOverflow(
-    nsOverflowAreas& aOverflowAreas) {
+/* virtual */
+void nsFrame::UnionChildOverflow(nsOverflowAreas& aOverflowAreas) {
   if (!DoesClipChildren() &&
       !(IsXULCollapsed() && (IsXULBoxFrame() || ::IsXULBoxWrapped(this)))) {
     nsLayoutUtils::UnionChildOverflow(this, aOverflowAreas);
@@ -7491,7 +7520,8 @@ bool nsIFrame::IsVisibleOrCollapsedForPainting() {
   return StyleVisibility()->IsVisibleOrCollapsed();
 }
 
-/* virtual */ bool nsFrame::IsEmpty() { return false; }
+/* virtual */
+bool nsFrame::IsEmpty() { return false; }
 
 bool nsIFrame::CachedIsEmpty() {
   MOZ_ASSERT(!(GetStateBits() & NS_FRAME_IS_DIRTY),
@@ -7499,7 +7529,8 @@ bool nsIFrame::CachedIsEmpty() {
   return IsEmpty();
 }
 
-/* virtual */ bool nsFrame::IsSelfEmpty() { return false; }
+/* virtual */
+bool nsFrame::IsSelfEmpty() { return false; }
 
 nsresult nsFrame::GetSelectionController(nsPresContext* aPresContext,
                                          nsISelectionController** aSelCon) {
@@ -8642,7 +8673,8 @@ nsView* nsIFrame::GetClosestView(nsPoint* aOffset) const {
   return nullptr;
 }
 
-/* virtual */ void nsFrame::ChildIsDirty(nsIFrame* aChild) {
+/* virtual */
+void nsFrame::ChildIsDirty(nsIFrame* aChild) {
   MOZ_ASSERT_UNREACHABLE(
       "should never be called on a frame that doesn't "
       "inherit from nsContainerFrame");
@@ -9524,7 +9556,8 @@ void nsFrame::GetFirstLeaf(nsPresContext* aPresContext, nsIFrame** aFrame) {
   }
 }
 
-/* virtual */ bool nsIFrame::IsFocusable(int32_t* aTabIndex, bool aWithMouse) {
+/* virtual */
+bool nsIFrame::IsFocusable(int32_t* aTabIndex, bool aWithMouse) {
   int32_t tabIndex = -1;
   if (aTabIndex) {
     *aTabIndex = -1;  // Default for early return is not focusable
@@ -9754,7 +9787,8 @@ nsFrame::RefreshSizeCache(nsBoxLayoutState& aState) {
   return NS_OK;
 }
 
-/* virtual */ nsILineIterator* nsFrame::GetLineIterator() { return nullptr; }
+/* virtual */
+nsILineIterator* nsFrame::GetLineIterator() { return nullptr; }
 
 nsSize nsFrame::GetXULPrefSize(nsBoxLayoutState& aState) {
   nsSize size(0, 0);
@@ -10241,7 +10275,8 @@ void nsIFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
   }
 }
 
-/* static */ nsChangeHint nsIFrame::UpdateStyleOfOwnedChildFrame(
+/* static */
+nsChangeHint nsIFrame::UpdateStyleOfOwnedChildFrame(
     nsIFrame* aChildFrame, ComputedStyle* aNewComputedStyle,
     ServoRestyleState& aRestyleState,
     const Maybe<ComputedStyle*>& aContinuationComputedStyle) {
@@ -10293,7 +10328,8 @@ void nsIFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
   return childHint;
 }
 
-/* static */ void nsIFrame::AddInPopupStateBitToDescendants(nsIFrame* aFrame) {
+/* static */
+void nsIFrame::AddInPopupStateBitToDescendants(nsIFrame* aFrame) {
   if (!aFrame->HasAnyStateBits(NS_FRAME_IN_POPUP) &&
       aFrame->TrackingVisibility()) {
     // Assume all frames in popups are visible.
@@ -10314,8 +10350,8 @@ void nsIFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
   }
 }
 
-/* static */ void nsIFrame::RemoveInPopupStateBitFromDescendants(
-    nsIFrame* aFrame) {
+/* static */
+void nsIFrame::RemoveInPopupStateBitFromDescendants(nsIFrame* aFrame) {
   if (!aFrame->HasAnyStateBits(NS_FRAME_IN_POPUP) ||
       nsLayoutUtils::IsPopup(aFrame)) {
     return;
@@ -10603,8 +10639,8 @@ void nsIFrame::DoUpdateStyleOfOwnedAnonBoxes(ServoRestyleState& aRestyleState) {
   }
 }
 
-/* virtual */ void nsIFrame::AppendDirectlyOwnedAnonBoxes(
-    nsTArray<OwnedAnonBox>& aResult) {
+/* virtual */
+void nsIFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) {
   MOZ_ASSERT(!(GetStateBits() & NS_FRAME_OWNS_ANON_BOXES));
   MOZ_ASSERT(false, "Why did this get called?");
 }
@@ -11845,9 +11881,11 @@ void nsFrame::DisplayIntrinsicSizeExit(nsIFrame* aFrame, const char* aType,
   DR_state->DeleteTreeNode(*treeNode);
 }
 
-/* static */ void nsFrame::DisplayReflowStartup() { DR_state = new DR_State(); }
+/* static */
+void nsFrame::DisplayReflowStartup() { DR_state = new DR_State(); }
 
-/* static */ void nsFrame::DisplayReflowShutdown() {
+/* static */
+void nsFrame::DisplayReflowShutdown() {
   delete DR_state;
   DR_state = nullptr;
 }
@@ -11860,10 +11898,13 @@ void DR_cookie::Change() const {
   }
 }
 
-/* static */ void* ReflowInput::DisplayInitConstraintsEnter(
-    nsIFrame* aFrame, ReflowInput* aState, nscoord aContainingBlockWidth,
-    nscoord aContainingBlockHeight, const nsMargin* aBorder,
-    const nsMargin* aPadding) {
+/* static */
+void* ReflowInput::DisplayInitConstraintsEnter(nsIFrame* aFrame,
+                                               ReflowInput* aState,
+                                               nscoord aContainingBlockWidth,
+                                               nscoord aContainingBlockHeight,
+                                               const nsMargin* aBorder,
+                                               const nsMargin* aPadding) {
   MOZ_ASSERT(aFrame, "non-null frame required");
   MOZ_ASSERT(aState, "non-null state required");
 
@@ -11894,9 +11935,10 @@ void DR_cookie::Change() const {
   return treeNode;
 }
 
-/* static */ void ReflowInput::DisplayInitConstraintsExit(nsIFrame* aFrame,
-                                                          ReflowInput* aState,
-                                                          void* aValue) {
+/* static */
+void ReflowInput::DisplayInitConstraintsExit(nsIFrame* aFrame,
+                                             ReflowInput* aState,
+                                             void* aValue) {
   MOZ_ASSERT(aFrame, "non-null frame required");
   MOZ_ASSERT(aState, "non-null state required");
 
@@ -11921,7 +11963,8 @@ void DR_cookie::Change() const {
   DR_state->DeleteTreeNode(*treeNode);
 }
 
-/* static */ void* SizeComputationInput::DisplayInitOffsetsEnter(
+/* static */
+void* SizeComputationInput::DisplayInitOffsetsEnter(
     nsIFrame* aFrame, SizeComputationInput* aState, nscoord aPercentBasis,
     WritingMode aCBWritingMode, const nsMargin* aBorder,
     const nsMargin* aPadding) {
@@ -11947,8 +11990,10 @@ void DR_cookie::Change() const {
   return treeNode;
 }
 
-/* static */ void SizeComputationInput::DisplayInitOffsetsExit(
-    nsIFrame* aFrame, SizeComputationInput* aState, void* aValue) {
+/* static */
+void SizeComputationInput::DisplayInitOffsetsExit(nsIFrame* aFrame,
+                                                  SizeComputationInput* aState,
+                                                  void* aValue) {
   MOZ_ASSERT(aFrame, "non-null frame required");
   MOZ_ASSERT(aState, "non-null state required");
 
@@ -11967,8 +12012,9 @@ void DR_cookie::Change() const {
   DR_state->DeleteTreeNode(*treeNode);
 }
 
-/* static */ void* ReflowInput::DisplayInitFrameTypeEnter(nsIFrame* aFrame,
-                                                          ReflowInput* aState) {
+/* static */
+void* ReflowInput::DisplayInitFrameTypeEnter(nsIFrame* aFrame,
+                                             ReflowInput* aState) {
   MOZ_ASSERT(aFrame, "non-null frame required");
   MOZ_ASSERT(aState, "non-null state required");
 
@@ -11979,9 +12025,9 @@ void DR_cookie::Change() const {
   return DR_state->CreateTreeNode(aFrame, aState);
 }
 
-/* static */ void ReflowInput::DisplayInitFrameTypeExit(nsIFrame* aFrame,
-                                                        ReflowInput* aState,
-                                                        void* aValue) {
+/* static */
+void ReflowInput::DisplayInitFrameTypeExit(nsIFrame* aFrame,
+                                           ReflowInput* aState, void* aValue) {
   MOZ_ASSERT(aFrame, "non-null frame required");
   MOZ_ASSERT(aState, "non-null state required");
 

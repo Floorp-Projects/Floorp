@@ -954,8 +954,9 @@ JSScript* ScriptPreloader::WaitForCachedScript(JSContext* cx,
   return script->GetJSScript(cx);
 }
 
-/* static */ void ScriptPreloader::OffThreadDecodeCallback(
-    JS::OffThreadToken* token, void* context) {
+/* static */
+void ScriptPreloader::OffThreadDecodeCallback(JS::OffThreadToken* token,
+                                              void* context) {
   auto cache = static_cast<ScriptPreloader*>(context);
 
   cache->mMonitor.AssertNotCurrentThreadOwns();

@@ -92,7 +92,8 @@ SchedulerEventTarget::IsOnCurrentThreadInfallible() {
   return NS_IsMainThread();
 }
 
-/* static */ nsresult SchedulerGroup::UnlabeledDispatch(
+/* static */
+nsresult SchedulerGroup::UnlabeledDispatch(
     TaskCategory aCategory, already_AddRefed<nsIRunnable>&& aRunnable) {
   if (NS_IsMainThread()) {
     return NS_DispatchToCurrentThread(std::move(aRunnable));
@@ -101,7 +102,8 @@ SchedulerEventTarget::IsOnCurrentThreadInfallible() {
   }
 }
 
-/* static */ void SchedulerGroup::MarkVsyncReceived() {
+/* static */
+void SchedulerGroup::MarkVsyncReceived() {
   if (gEarliestUnprocessedVsync) {
     // If we've seen a vsync already, but haven't handled it, keep the
     // older one.
@@ -118,9 +120,8 @@ SchedulerEventTarget::IsOnCurrentThreadInfallible() {
   gEarliestUnprocessedVsync = (TimeStamp::Now() - creation).ToMicroseconds();
 }
 
-/* static */ void SchedulerGroup::MarkVsyncRan() {
-  gEarliestUnprocessedVsync = 0;
-}
+/* static */
+void SchedulerGroup::MarkVsyncRan() { gEarliestUnprocessedVsync = 0; }
 
 MOZ_THREAD_LOCAL(bool) SchedulerGroup::sTlsValidatingAccess;
 
@@ -202,8 +203,8 @@ already_AddRefed<nsISerialEventTarget> SchedulerGroup::CreateEventTargetFor(
   return target.forget();
 }
 
-/* static */ SchedulerGroup* SchedulerGroup::FromEventTarget(
-    nsIEventTarget* aEventTarget) {
+/* static */
+SchedulerGroup* SchedulerGroup::FromEventTarget(nsIEventTarget* aEventTarget) {
   RefPtr<SchedulerEventTarget> target = do_QueryObject(aEventTarget);
   if (!target) {
     return nullptr;
@@ -223,7 +224,8 @@ nsresult SchedulerGroup::LabeledDispatch(
   return UnlabeledDispatch(aCategory, runnable.forget());
 }
 
-/*static*/ nsresult SchedulerGroup::InternalUnlabeledDispatch(
+/*static*/
+nsresult SchedulerGroup::InternalUnlabeledDispatch(
     TaskCategory aCategory, already_AddRefed<Runnable>&& aRunnable) {
   if (NS_IsMainThread()) {
     // NS_DispatchToCurrentThread will not leak the passed in runnable
@@ -250,7 +252,8 @@ nsresult SchedulerGroup::LabeledDispatch(
   return rv;
 }
 
-/* static */ void SchedulerGroup::SetValidatingAccess(ValidationType aType) {
+/* static */
+void SchedulerGroup::SetValidatingAccess(ValidationType aType) {
   bool validating = aType == StartValidation;
   sTlsValidatingAccess.set(validating);
 

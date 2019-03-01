@@ -96,8 +96,8 @@ bool nsBulletFrame::IsSelfEmpty() {
   return StyleList()->mCounterStyle.IsNone();
 }
 
-/* virtual */ void nsBulletFrame::DidSetComputedStyle(
-    ComputedStyle* aOldComputedStyle) {
+/* virtual */
+void nsBulletFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
   nsFrame::DidSetComputedStyle(aOldComputedStyle);
 
   imgRequestProxy* newRequest = StyleList()->GetListStyleImage();
@@ -1010,8 +1010,8 @@ void nsBulletFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aMetrics);
 }
 
-/* virtual */ nscoord nsBulletFrame::GetMinISize(
-    gfxContext* aRenderingContext) {
+/* virtual */
+nscoord nsBulletFrame::GetMinISize(gfxContext* aRenderingContext) {
   WritingMode wm = GetWritingMode();
   ReflowOutput reflowOutput(wm);
   DISPLAY_MIN_INLINE_SIZE(this, reflowOutput.ISize(wm));
@@ -1022,8 +1022,8 @@ void nsBulletFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   return reflowOutput.ISize(wm);
 }
 
-/* virtual */ nscoord nsBulletFrame::GetPrefISize(
-    gfxContext* aRenderingContext) {
+/* virtual */
+nscoord nsBulletFrame::GetPrefISize(gfxContext* aRenderingContext) {
   WritingMode wm = GetWritingMode();
   ReflowOutput metrics(wm);
   DISPLAY_PREF_INLINE_SIZE(this, metrics.ISize(wm));
@@ -1044,8 +1044,9 @@ static inline bool IsIgnoreable(const nsIFrame* aFrame, nscoord aISize) {
   return listStyle->mCounterStyle.IsNone() && !listStyle->GetListStyleImage();
 }
 
-/* virtual */ void nsBulletFrame::AddInlineMinISize(
-    gfxContext* aRenderingContext, nsIFrame::InlineMinISizeData* aData) {
+/* virtual */
+void nsBulletFrame::AddInlineMinISize(gfxContext* aRenderingContext,
+                                      nsIFrame::InlineMinISizeData* aData) {
   nscoord isize = nsLayoutUtils::IntrinsicForContainer(
       aRenderingContext, this, nsLayoutUtils::MIN_ISIZE);
   if (MOZ_LIKELY(!::IsIgnoreable(this, isize))) {
@@ -1053,8 +1054,9 @@ static inline bool IsIgnoreable(const nsIFrame* aFrame, nscoord aISize) {
   }
 }
 
-/* virtual */ void nsBulletFrame::AddInlinePrefISize(
-    gfxContext* aRenderingContext, nsIFrame::InlinePrefISizeData* aData) {
+/* virtual */
+void nsBulletFrame::AddInlinePrefISize(gfxContext* aRenderingContext,
+                                       nsIFrame::InlinePrefISizeData* aData) {
   nscoord isize = nsLayoutUtils::IntrinsicForContainer(
       aRenderingContext, this, nsLayoutUtils::PREF_ISIZE);
   if (MOZ_LIKELY(!::IsIgnoreable(this, isize))) {

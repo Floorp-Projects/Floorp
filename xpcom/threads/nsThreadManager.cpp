@@ -78,7 +78,8 @@ static bool sShutdownComplete;
 
 //-----------------------------------------------------------------------------
 
-/* static */ void nsThreadManager::ReleaseThread(void* aData) {
+/* static */
+void nsThreadManager::ReleaseThread(void* aData) {
   if (sShutdownComplete) {
     // We've already completed shutdown and released the references to all or
     // our TLS wrappers. Don't try to release them again.
@@ -179,7 +180,8 @@ StaticRefPtr<ShutdownObserveHelper> gShutdownObserveHelper;
   return sInstance;
 }
 
-/* static */ void nsThreadManager::InitializeShutdownObserver() {
+/* static */
+void nsThreadManager::InitializeShutdownObserver() {
   MOZ_ASSERT(!gShutdownObserveHelper);
 
   RefPtr<ShutdownObserveHelper> observer;

@@ -39,10 +39,10 @@ using namespace mozilla::ipc;
 /// The minimum scale we allow tabs to be rasterized at.
 static const float kMinPaintScale = 0.05f;
 
-/* static */ PaintFragment PaintFragment::Record(nsIDocShell* aDocShell,
-                                                 const IntRect& aRect,
-                                                 float aScale,
-                                                 nscolor aBackgroundColor) {
+/* static */
+PaintFragment PaintFragment::Record(nsIDocShell* aDocShell,
+                                    const IntRect& aRect, float aScale,
+                                    nscolor aBackgroundColor) {
   IntSize surfaceSize = aRect.Size();
   surfaceSize.width *= aScale;
   surfaceSize.height *= aScale;
@@ -126,11 +126,10 @@ PaintFragment::PaintFragment(IntSize aSize, ByteBuf&& aRecording,
       mRecording(std::move(aRecording)),
       mDependencies(std::move(aDependencies)) {}
 
-/* static */ void CrossProcessPaint::StartLocal(nsIDocShell* aRoot,
-                                                const IntRect& aRect,
-                                                float aScale,
-                                                nscolor aBackgroundColor,
-                                                dom::Promise* aPromise) {
+/* static */
+void CrossProcessPaint::StartLocal(nsIDocShell* aRoot, const IntRect& aRect,
+                                   float aScale, nscolor aBackgroundColor,
+                                   dom::Promise* aPromise) {
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
   aScale = std::max(aScale, kMinPaintScale);
 
@@ -151,11 +150,10 @@ PaintFragment::PaintFragment(IntSize aSize, ByteBuf&& aRecording,
       PaintFragment::Record(aRoot, aRect, aScale, aBackgroundColor));
 }
 
-/* static */ void CrossProcessPaint::StartRemote(dom::TabId aRoot,
-                                                 const IntRect& aRect,
-                                                 float aScale,
-                                                 nscolor aBackgroundColor,
-                                                 dom::Promise* aPromise) {
+/* static */
+void CrossProcessPaint::StartRemote(dom::TabId aRoot, const IntRect& aRect,
+                                    float aScale, nscolor aBackgroundColor,
+                                    dom::Promise* aPromise) {
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
   aScale = std::max(aScale, kMinPaintScale);
 

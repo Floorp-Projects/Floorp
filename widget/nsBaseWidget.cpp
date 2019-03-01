@@ -124,7 +124,8 @@ bool gDisableNativeTheme = false;
 int32_t nsIWidget::sPointerIdCounter = 0;
 
 // Some statics from nsIWidget.h
-/*static*/ uint64_t AutoObserverNotifier::sObserverId = 0;
+/*static*/
+uint64_t AutoObserverNotifier::sObserverId = 0;
 /*static*/ nsDataHashtable<nsUint64HashKey, nsCOMPtr<nsIObserver>>
     AutoObserverNotifier::sSavedObservers;
 
@@ -724,9 +725,11 @@ nsresult nsBaseWidget::SetWindowClipRegion(
   return NS_OK;
 }
 
-/* virtual */ void nsBaseWidget::PerformFullscreenTransition(
-    FullscreenTransitionStage aStage, uint16_t aDuration, nsISupports* aData,
-    nsIRunnable* aCallback) {
+/* virtual */
+void nsBaseWidget::PerformFullscreenTransition(FullscreenTransitionStage aStage,
+                                               uint16_t aDuration,
+                                               nsISupports* aData,
+                                               nsIRunnable* aCallback) {
   MOZ_ASSERT_UNREACHABLE(
       "Should never call PerformFullscreenTransition on nsBaseWidget");
 }
@@ -3042,8 +3045,8 @@ void IMENotification::TextChangeDataBase::Test() {
 // this.
 //
 //////////////////////////////////////////////////////////////
-/* static */ nsAutoString nsBaseWidget::debug_GuiEventToString(
-    WidgetGUIEvent* aGuiEvent) {
+/* static */
+nsAutoString nsBaseWidget::debug_GuiEventToString(WidgetGUIEvent* aGuiEvent) {
   NS_ASSERTION(nullptr != aGuiEvent, "cmon, null gui event.");
 
   nsAutoString eventName(NS_LITERAL_STRING("UNKNOWN"));
@@ -3199,15 +3202,15 @@ static int32_t _GetPrintCount() {
   return ++sCount;
 }
 //////////////////////////////////////////////////////////////
-/* static */ bool nsBaseWidget::debug_WantPaintFlashing() {
+/* static */
+bool nsBaseWidget::debug_WantPaintFlashing() {
   return debug_GetCachedBoolPref("nglayout.debug.paint_flashing");
 }
 //////////////////////////////////////////////////////////////
-/* static */ void nsBaseWidget::debug_DumpEvent(FILE* aFileOut,
-                                                nsIWidget* aWidget,
-                                                WidgetGUIEvent* aGuiEvent,
-                                                const char* aWidgetName,
-                                                int32_t aWindowID) {
+/* static */
+void nsBaseWidget::debug_DumpEvent(FILE* aFileOut, nsIWidget* aWidget,
+                                   WidgetGUIEvent* aGuiEvent,
+                                   const char* aWidgetName, int32_t aWindowID) {
   if (aGuiEvent->mMessage == eMouseMove) {
     if (!debug_GetCachedBoolPref("nglayout.debug.motion_event_dumping")) return;
   }
@@ -3228,11 +3231,11 @@ static int32_t _GetPrintCount() {
           aWindowID, aGuiEvent->mRefPoint.x, aGuiEvent->mRefPoint.y);
 }
 //////////////////////////////////////////////////////////////
-/* static */ void nsBaseWidget::debug_DumpPaintEvent(FILE* aFileOut,
-                                                     nsIWidget* aWidget,
-                                                     const nsIntRegion& aRegion,
-                                                     const char* aWidgetName,
-                                                     int32_t aWindowID) {
+/* static */
+void nsBaseWidget::debug_DumpPaintEvent(FILE* aFileOut, nsIWidget* aWidget,
+                                        const nsIntRegion& aRegion,
+                                        const char* aWidgetName,
+                                        int32_t aWindowID) {
   NS_ASSERTION(nullptr != aFileOut, "cmon, null output FILE");
   NS_ASSERTION(nullptr != aWidget, "cmon, the widget is null");
 
@@ -3248,9 +3251,11 @@ static int32_t _GetPrintCount() {
   fprintf(aFileOut, "\n");
 }
 //////////////////////////////////////////////////////////////
-/* static */ void nsBaseWidget::debug_DumpInvalidate(
-    FILE* aFileOut, nsIWidget* aWidget, const LayoutDeviceIntRect* aRect,
-    const char* aWidgetName, int32_t aWindowID) {
+/* static */
+void nsBaseWidget::debug_DumpInvalidate(FILE* aFileOut, nsIWidget* aWidget,
+                                        const LayoutDeviceIntRect* aRect,
+                                        const char* aWidgetName,
+                                        int32_t aWindowID) {
   if (!debug_GetCachedBoolPref("nglayout.debug.invalidate_dumping")) return;
 
   NS_ASSERTION(nullptr != aFileOut, "cmon, null output FILE");
