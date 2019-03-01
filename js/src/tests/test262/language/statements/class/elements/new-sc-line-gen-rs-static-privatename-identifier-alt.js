@@ -9,6 +9,7 @@ features: [class-static-fields-private, class, class-fields-public, generators]
 flags: [generated]
 includes: [propertyHelper.js]
 info: |
+    
     ClassElement :
       MethodDefinition
       static MethodDefinition

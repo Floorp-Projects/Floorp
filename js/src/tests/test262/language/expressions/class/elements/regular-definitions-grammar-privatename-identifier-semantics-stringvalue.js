@@ -8,6 +8,7 @@ esid: prod-FieldDefinition
 features: [class-fields-private, class, class-fields-public]
 flags: [generated]
 info: |
+    
     ClassElement :
       MethodDefinition
       static MethodDefinition
