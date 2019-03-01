@@ -318,12 +318,12 @@ class SVGContentUtils {
   static bool ParseInteger(const nsAString& aString, int32_t& aValue);
 
   /**
-   * Converts an nsStyleCoord into a userspace value.  Handles units
-   * Factor (straight userspace), Coord (dimensioned), and Percent (of
-   * aContent's SVG viewport)
+   * Converts an nsStyleCoord into a userspace value, resolving percentage
+   * values relative to aContent's SVG viewport.
    */
   static float CoordToFloat(dom::SVGElement* aContent,
-                            const nsStyleCoord& aCoord);
+                            const nsStyleCoord& aCoord,
+                            bool aClampNegativeCalc);
   /**
    * Parse the SVG path string
    * Returns a path

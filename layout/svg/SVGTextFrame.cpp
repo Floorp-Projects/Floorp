@@ -2371,8 +2371,8 @@ bool CharIterator::IsOriginalCharTrimmed() const {
     nsIContent* content = mFrameForTrimCheck->GetContent();
     nsTextFrame::TrimmedOffsets trim = mFrameForTrimCheck->GetTrimmedOffsets(
         content->GetText(),
-            (mPostReflow ? nsTextFrame::TrimmedOffsetFlags::kDefaultTrimFlags :
-                           nsTextFrame::TrimmedOffsetFlags::kNotPostReflow));
+        (mPostReflow ? nsTextFrame::TrimmedOffsetFlags::kDefaultTrimFlags
+                     : nsTextFrame::TrimmedOffsetFlags::kNotPostReflow));
     TrimOffsets(offset, length, trim);
     mTrimmedOffset = offset;
     mTrimmedLength = length;
@@ -3822,9 +3822,9 @@ nsresult SVGTextFrame::GetSubStringLength(nsIContent* aContent,
     // Trim the offset/length to remove any leading/trailing white space.
     uint32_t trimmedOffset = untrimmedOffset;
     uint32_t trimmedLength = untrimmedLength;
-    nsTextFrame::TrimmedOffsets trimmedOffsets =
-        frame->GetTrimmedOffsets(frame->GetContent()->GetText(),
-            nsTextFrame::TrimmedOffsetFlags::kNotPostReflow);
+    nsTextFrame::TrimmedOffsets trimmedOffsets = frame->GetTrimmedOffsets(
+        frame->GetContent()->GetText(),
+        nsTextFrame::TrimmedOffsetFlags::kNotPostReflow);
     TrimOffsets(trimmedOffset, trimmedLength, trimmedOffsets);
 
     textElementCharIndex += trimmedOffset - untrimmedOffset;
@@ -5006,7 +5006,7 @@ bool SVGTextFrame::ShouldRenderAsPath(nsTextFrame* aFrame,
   // Text has a stroke.
   if (style->HasStroke() &&
       SVGContentUtils::CoordToFloat(static_cast<SVGElement*>(GetContent()),
-                                    style->mStrokeWidth) > 0) {
+                                    style->mStrokeWidth, true) > 0) {
     return true;
   }
 

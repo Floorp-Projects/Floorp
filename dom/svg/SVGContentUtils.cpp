@@ -198,7 +198,8 @@ static DashState GetStrokeDashData(
     }
     for (uint32_t i = 0; i < dashArrayLength; i++) {
       Float dashLength =
-          SVGContentUtils::CoordToFloat(aElement, dasharray[i]) * pathScale;
+          SVGContentUtils::CoordToFloat(aElement, dasharray[i], true) *
+          pathScale;
       if (dashLength < 0.0) {
         return eContinuousStroke;  // invalid
       }
@@ -242,7 +243,8 @@ static DashState GetStrokeDashData(
     aStrokeOptions->mDashOffset = Float(aContextPaint->GetStrokeDashOffset());
   } else {
     aStrokeOptions->mDashOffset =
-        SVGContentUtils::CoordToFloat(aElement, aStyleSVG->mStrokeDashoffset) *
+        SVGContentUtils::CoordToFloat(aElement, aStyleSVG->mStrokeDashoffset,
+                                      false) *
         pathScale;
   }
 
@@ -343,7 +345,7 @@ Float SVGContentUtils::GetStrokeWidth(SVGElement* aElement,
     return aContextPaint->GetStrokeWidth();
   }
 
-  return SVGContentUtils::CoordToFloat(aElement, styleSVG->mStrokeWidth);
+  return SVGContentUtils::CoordToFloat(aElement, styleSVG->mStrokeWidth, true);
 }
 
 float SVGContentUtils::GetFontSize(Element* aElement) {
@@ -764,22 +766,34 @@ bool SVGContentUtils::ParseInteger(const nsAString& aString, int32_t& aValue) {
 }
 
 float SVGContentUtils::CoordToFloat(SVGElement* aContent,
-                                    const nsStyleCoord& aCoord) {
+                                    const nsStyleCoord& aCoord,
+                                    bool aClampNegativeCalc) {
   switch (aCoord.GetUnit()) {
-    case eStyleUnit_Factor:
-      // user units
-      return aCoord.GetFactorValue();
-
     case eStyleUnit_Coord:
       return nsPresContext::AppUnitsToFloatCSSPixels(aCoord.GetCoordValue());
 
     case eStyleUnit_Percent: {
       SVGViewportElement* ctx = aContent->GetCtx();
-      return ctx ? aCoord.GetPercentValue() *
-                       ctx->GetLength(SVGContentUtils::XY)
-                 : 0.0f;
+      if (!ctx) {
+        return 0.0f;
+      }
+      return aCoord.GetPercentValue() * ctx->GetLength(SVGContentUtils::XY);
+    }
+
+    case eStyleUnit_Calc: {
+      auto* calc = aCoord.GetCalcValue();
+      float result = nsPresContext::AppUnitsToFloatCSSPixels(calc->mLength);
+      if (calc->mHasPercent) {
+        SVGViewportElement* ctx = aContent->GetCtx();
+        if (!ctx) {
+          return 0.0f;
+        }
+        result += calc->mPercent * ctx->GetLength(SVGContentUtils::XY);
+      }
+      return aClampNegativeCalc ? std::max(result, 0.0f) : result;
     }
     default:
+      MOZ_ASSERT_UNREACHABLE("Unknown unit for SVG length");
       return 0.0f;
   }
 }
