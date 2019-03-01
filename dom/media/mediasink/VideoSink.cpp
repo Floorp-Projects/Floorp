@@ -171,6 +171,9 @@ void VideoSink::SetPlaying(bool aPlaying) {
     if (mContainer) {
       mContainer->ClearCachedResources();
     }
+    if (mSecondaryContainer) {
+      mSecondaryContainer->ClearCachedResources();
+    }
   }
 
   mAudioSink->SetPlaying(aPlaying);
@@ -298,20 +301,29 @@ void VideoSink::Redraw(const VideoInfo& aInfo) {
     return;
   }
 
+  auto now = TimeStamp::Now();
+
   RefPtr<VideoData> video = VideoQueue().PeekFront();
   if (video) {
     video->MarkSentToCompositor();
-    mContainer->SetCurrentFrame(video->mDisplay, video->mImage,
-                                TimeStamp::Now());
+    mContainer->SetCurrentFrame(video->mDisplay, video->mImage, now);
+    if (mSecondaryContainer) {
+      mSecondaryContainer->SetCurrentFrame(video->mDisplay, video->mImage, now);
+    }
     return;
   }
 
   // When we reach here, it means there are no frames in this video track.
   // Draw a blank frame to ensure there is something in the image container
   // to fire 'loadeddata'.
+
   RefPtr<Image> blank =
       mContainer->GetImageContainer()->CreatePlanarYCbCrImage();
-  mContainer->SetCurrentFrame(aInfo.mDisplay, blank, TimeStamp::Now());
+  mContainer->SetCurrentFrame(aInfo.mDisplay, blank, now);
+
+  if (mSecondaryContainer) {
+    mSecondaryContainer->SetCurrentFrame(aInfo.mDisplay, blank, now);
+  }
 }
 
 void VideoSink::TryUpdateRenderedVideoFrames() {
@@ -422,6 +434,10 @@ void VideoSink::RenderVideoFrames(int32_t aMaxFrames, int64_t aClockTime,
 
   if (images.Length() > 0) {
     mContainer->SetCurrentFrames(frames[0]->mDisplay, images);
+
+    if (mSecondaryContainer) {
+      mSecondaryContainer->SetCurrentFrames(frames[0]->mDisplay, images);
+    }
   }
 }
 
@@ -528,6 +544,21 @@ void VideoSink::MaybeResolveEndPromise() {
     }
     mEndPromiseHolder.ResolveIfExists(true, __func__);
   }
+}
+
+void VideoSink::SetSecondaryVideoContainer(VideoFrameContainer* aSecondary) {
+  AssertOwnerThread();
+  mSecondaryContainer = aSecondary;
+  if (!IsPlaying()) {
+    // If we're paused, try to send the current frame that we're
+    // paused at to the secondary container.
+    RenderVideoFrames(1);
+  }
+}
+
+void VideoSink::ClearSecondaryVideoContainer() {
+  AssertOwnerThread();
+  mSecondaryContainer = nullptr;
 }
 
 nsCString VideoSink::GetDebugInfo() {
