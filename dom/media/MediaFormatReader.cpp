@@ -7,6 +7,7 @@
 #include "MediaFormatReader.h"
 
 #include "AllocationPolicy.h"
+#include "GeckoProfiler.h"
 #include "MediaData.h"
 #include "MediaInfo.h"
 #include "VideoFrameContainer.h"
@@ -2631,6 +2632,7 @@ void MediaFormatReader::SkipVideoDemuxToNextKeyFrame(TimeUnit aTimeThreshold) {
 }
 
 void MediaFormatReader::VideoSkipReset(uint32_t aSkipped) {
+  PROFILER_ADD_MARKER("SkippedVideoDecode", GRAPHICS);
   MOZ_ASSERT(OnTaskQueue());
 
   // Some frames may have been output by the decoder since we initiated the

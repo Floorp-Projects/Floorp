@@ -896,8 +896,6 @@ pref("gfx.content.azure.backends", "skia");
 #endif
 #endif
 
-pref("gfx.canvas.skiagl.dynamic-cache", true);
-
 pref("gfx.text.disable-aa", false);
 
 pref("gfx.work-around-driver-bugs", true);
@@ -1462,7 +1460,7 @@ pref("javascript.options.unboxed_objects",  false);
 pref("javascript.options.baselinejit",      true);
 //Duplicated in JitOptions - ensure both match.
 pref("javascript.options.baselinejit.threshold", 10);
-#ifdef _ARM64_
+#ifdef NO_ION
 pref("javascript.options.ion",              false);
 #else
 pref("javascript.options.ion",              true);

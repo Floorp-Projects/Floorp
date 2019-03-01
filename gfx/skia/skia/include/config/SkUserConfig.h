@@ -154,12 +154,6 @@
 
 #define MOZ_SKIA
 
-#ifndef SK_SUPPORT_GPU
-#  ifdef USE_SKIA_GPU
-#    define SK_SUPPORT_GPU 1
-#  else
-#    define SK_SUPPORT_GPU 0
-#  endif
-#endif
+#define SK_SUPPORT_GPU 0
 
 #endif

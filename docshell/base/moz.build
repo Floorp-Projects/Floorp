@@ -108,6 +108,7 @@ LOCAL_INCLUDES += [
     '/docshell/shistory',
     '/dom/base',
     '/dom/bindings',
+    '/js/xpconnect/src',
     '/layout/base',
     '/layout/generic',
     '/layout/style',

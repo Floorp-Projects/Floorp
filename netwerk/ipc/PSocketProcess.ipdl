@@ -39,7 +39,7 @@ child:
   async RequestMemoryReport(uint32_t generation,
                             bool anonymize,
                             bool minimizeMemoryUsage,
-                            MaybeFileDesc DMDFile);
+                            FileDescriptor? DMDFile);
   async SetOffline(bool offline);
   async InitSocketProcessBridgeParent(ProcessId processId, Endpoint<PSocketProcessBridgeParent> endpoint);
   async InitProfiler(Endpoint<PProfilerChild> aEndpoint);

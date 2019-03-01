@@ -34,5 +34,5 @@ class OutputHandler(object):
             self.process_output(json.dumps(data))
 
     def process_output(self, line):
-        if "error" in line or "warning" in line or "raptor" in line:
+        if "raptor" in line:
             LOG.process_output(self.proc.pid, line)

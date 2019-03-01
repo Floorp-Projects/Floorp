@@ -44,7 +44,7 @@ registerCleanupFunction(() => {
  * @return {Array}
  */
 function getDeclarations(panelDoc, selector = "", containerNode = null) {
-  const els = panelDoc.querySelectorAll(`#sidebar-panel-changes .declaration${selector}`);
+  const els = panelDoc.querySelectorAll(`.changes__declaration${selector}`);
 
   return [...els]
     .filter(el => {
@@ -52,8 +52,8 @@ function getDeclarations(panelDoc, selector = "", containerNode = null) {
     })
     .map(el => {
       return {
-        property: el.querySelector(".declaration-name").textContent,
-        value: el.querySelector(".declaration-value").textContent,
+        property: el.querySelector(".changes__declaration-name").textContent,
+        value: el.querySelector(".changes__declaration-value").textContent,
       };
     });
 }

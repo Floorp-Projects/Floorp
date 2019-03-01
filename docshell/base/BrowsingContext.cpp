@@ -28,6 +28,7 @@
 #include "nsContentUtils.h"
 #include "nsScriptError.h"
 #include "nsThreadUtils.h"
+#include "xpcprivate.h"
 
 namespace mozilla {
 namespace dom {
@@ -547,9 +548,43 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(BrowsingContext)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(BrowsingContext, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(BrowsingContext, Release)
 
+class RemoteLocationProxy
+    : public RemoteObjectProxy<BrowsingContext::LocationProxy,
+                               Location_Binding::sCrossOriginAttributes,
+                               Location_Binding::sCrossOriginMethods> {
+ public:
+  typedef RemoteObjectProxy Base;
+
+  constexpr RemoteLocationProxy()
+      : RemoteObjectProxy(prototypes::id::Location) {}
+
+  void NoteChildren(JSObject* aProxy,
+                    nsCycleCollectionTraversalCallback& aCb) const override {
+    auto location =
+        static_cast<BrowsingContext::LocationProxy*>(GetNative(aProxy));
+    CycleCollectionNoteChild(aCb, location->GetBrowsingContext(),
+                             "js::GetObjectPrivate(obj)->GetBrowsingContext()");
+  }
+};
+
+static const RemoteLocationProxy sSingleton;
+
+// Give RemoteLocationProxy 2 reserved slots, like the other wrappers,
+// so JSObject::swap can swap it with CrossCompartmentWrappers without requiring
+// malloc.
+template <>
+const js::Class RemoteLocationProxy::Base::sClass =
+    PROXY_CLASS_DEF("Proxy", JSCLASS_HAS_RESERVED_SLOTS(2));
+
 void BrowsingContext::Location(JSContext* aCx,
                                JS::MutableHandle<JSObject*> aLocation,
-                               OOMReporter& aError) {}
+                               ErrorResult& aError) {
+  aError.MightThrowJSException();
+  sSingleton.GetProxyObject(aCx, &mLocation, aLocation);
+  if (!aLocation) {
+    aError.StealExceptionFromJSContext(aCx);
+  }
+}
 
 void BrowsingContext::Close(CallerType aCallerType, ErrorResult& aError) {
   // FIXME We need to set mClosed, but only once we're sending the
@@ -671,6 +706,28 @@ void BrowsingContext::Transaction::Commit(BrowsingContext* aBrowsingContext) {
   }
 
   Apply(aBrowsingContext);
+}
+
+void BrowsingContext::LocationProxy::SetHref(const nsAString& aHref,
+                                             nsIPrincipal& aSubjectPrincipal,
+                                             ErrorResult& aError) {
+  nsPIDOMWindowOuter* win = GetBrowsingContext()->GetDOMWindow();
+  if (!win || !win->GetLocation()) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+  win->GetLocation()->SetHref(aHref, aSubjectPrincipal, aError);
+}
+
+void BrowsingContext::LocationProxy::Replace(const nsAString& aUrl,
+                                             nsIPrincipal& aSubjectPrincipal,
+                                             ErrorResult& aError) {
+  nsPIDOMWindowOuter* win = GetBrowsingContext()->GetDOMWindow();
+  if (!win || !win->GetLocation()) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+  win->GetLocation()->Replace(aUrl, aSubjectPrincipal, aError);
 }
 
 }  // namespace dom
