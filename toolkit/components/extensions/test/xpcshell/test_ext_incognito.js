@@ -57,6 +57,7 @@ add_task(async function test_extension_incognito_privileged() {
 add_task(async function test_extension_incognito_spanning_grandfathered() {
   await AddonTestUtils.promiseStartupManager();
   Services.prefs.setBoolPref("extensions.allowPrivateBrowsingByDefault", true);
+  Services.prefs.setBoolPref("extensions.incognito.migrated", false);
 
   // This extension gets disabled before the "upgrade", it should not
   // get grandfathered permissions.
@@ -127,4 +128,5 @@ add_task(async function test_extension_incognito_spanning_grandfathered() {
   await wrapper.unload();
   await disabledWrapper.unload();
   Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
+  Services.prefs.clearUserPref("extensions.incognito.migrated");
 });

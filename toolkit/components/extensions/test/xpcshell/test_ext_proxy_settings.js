@@ -59,6 +59,7 @@ add_task(async function test_proxy_settings() {
         "<all_urls>",
       ],
     },
+    incognitoOverride: "spanning",
     useAddonManager: "temporary",
     background: `(${background})("${proxy.identity.primaryHost}", ${proxy.identity.primaryPort})`,
   });
