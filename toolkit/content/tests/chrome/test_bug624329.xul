@@ -121,7 +121,7 @@ function openContextMenu() {
 
         ok(x < mouseX,
            "menu left " + x + " should be left of click point " + mouseX);
-        var right = x + menu.boxObject.width;
+        var right = x + menu.getBoundingClientRect().width;
 
         if (platformIsMac) {
           // Rather than be constrained by the right hand screen edge, OSX menus flip
