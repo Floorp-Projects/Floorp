@@ -18,6 +18,7 @@
   const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
   const URL = "about:blank";
   let windowActorOptions = {
+    allFrames: true,
     parent: {
       moduleURI: "resource://testing-common/TestParent.jsm",
     },
