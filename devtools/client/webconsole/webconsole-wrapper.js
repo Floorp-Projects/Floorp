@@ -279,7 +279,8 @@ class WebConsoleWrapper {
           }),
           onViewSourceInStyleEditor: frame => this.toolbox.viewSourceInStyleEditor(
             frame.url,
-            frame.line
+            frame.line,
+            frame.column
           ).then(() => {
             this.telemetry.recordEvent("jump_to_source", "webconsole",
                                        null, { "session_id": this.toolbox.sessionId }
