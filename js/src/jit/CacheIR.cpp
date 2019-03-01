@@ -1613,7 +1613,7 @@ static void CheckDOMProxyExpandoDoesNotShadow(CacheIRWriter& writer,
 
   if (expandoVal.isUndefined()) {
     // Guard there's no expando object.
-    writer.guardType(expandoId, JSVAL_TYPE_UNDEFINED);
+    writer.guardType(expandoId, ValueType::Undefined);
   } else if (expandoVal.isObject()) {
     // Guard the proxy either has no expando object or, if it has one, that
     // the shape matches the current expando object.
@@ -2033,7 +2033,7 @@ bool GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId, HandleId id) {
   if (val_.isNumber()) {
     writer.guardIsNumber(valId);
   } else {
-    writer.guardType(valId, val_.extractNonDoubleType());
+    writer.guardType(valId, val_.type());
   }
   maybeEmitIdGuard(id);
 
@@ -3654,7 +3654,8 @@ static void EmitGuardUnboxedPropertyType(CacheIRWriter& writer,
     // Unboxed objects store NullValue as nullptr object.
     writer.guardIsObjectOrNull(valId);
   } else {
-    writer.guardType(valId, propType);
+    MOZ_ASSERT(propType <= JSVAL_TYPE_OBJECT);
+    writer.guardType(valId, ValueType(propType));
   }
 }
 
@@ -3754,7 +3755,7 @@ bool SetPropIRGenerator::tryAttachTypedObjectProperty(HandleObject obj,
       writer.guardIsObjectOrNull(rhsId);
       break;
     case ReferenceType::TYPE_STRING:
-      writer.guardType(rhsId, JSVAL_TYPE_STRING);
+      writer.guardType(rhsId, ValueType::String);
       break;
     case ReferenceType::TYPE_WASM_ANYREF:
       MOZ_CRASH();
@@ -4873,7 +4874,7 @@ bool TypeOfIRGenerator::tryAttachPrimitive(ValOperandId valId) {
   if (val_.isNumber()) {
     writer.guardIsNumber(valId);
   } else {
-    writer.guardType(valId, val_.extractNonDoubleType());
+    writer.guardType(valId, val_.type());
   }
 
   writer.loadStringResult(TypeName(js::TypeOfValue(val_), cx_->names()));
@@ -5755,7 +5756,7 @@ bool ToBoolIRGenerator::tryAttachInt32() {
   }
 
   ValOperandId valId(writer.setInputOperandId(0));
-  writer.guardType(valId, JSVAL_TYPE_INT32);
+  writer.guardType(valId, ValueType::Int32);
   writer.loadInt32TruthyResult(valId);
   writer.returnFromIC();
   trackAttached("ToBoolInt32");
@@ -5768,7 +5769,7 @@ bool ToBoolIRGenerator::tryAttachDouble() {
   }
 
   ValOperandId valId(writer.setInputOperandId(0));
-  writer.guardType(valId, JSVAL_TYPE_DOUBLE);
+  writer.guardType(valId, ValueType::Double);
   writer.loadDoubleTruthyResult(valId);
   writer.returnFromIC();
   trackAttached("ToBoolDouble");
@@ -5781,7 +5782,7 @@ bool ToBoolIRGenerator::tryAttachSymbol() {
   }
 
   ValOperandId valId(writer.setInputOperandId(0));
-  writer.guardType(valId, JSVAL_TYPE_SYMBOL);
+  writer.guardType(valId, ValueType::Symbol);
   writer.loadBooleanResult(true);
   writer.returnFromIC();
   trackAttached("ToBoolSymbol");
@@ -6031,7 +6032,7 @@ bool BinaryArithIRGenerator::tryAttachBitwise() {
       return writer.guardIsBoolean(id);
     }
     MOZ_ASSERT(val.isDouble());
-    writer.guardType(id, JSVAL_TYPE_DOUBLE);
+    writer.guardType(id, ValueType::Double);
     return writer.truncateDoubleToUInt32(id);
   };
 

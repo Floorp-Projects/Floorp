@@ -1213,7 +1213,7 @@ bool IonCacheIRCompiler::emitLoadUnboxedPropertyResult() {
   AutoOutputRegister output(*this);
   Register obj = allocator.useRegister(masm, reader.objOperandId());
 
-  JSValueType fieldType = reader.valueType();
+  JSValueType fieldType = reader.jsValueType();
   int32_t fieldOffset = int32StubField(reader.stubOffset());
   masm.loadUnboxedProperty(Address(obj, fieldOffset), fieldType, output);
   return true;
@@ -1671,7 +1671,7 @@ bool IonCacheIRCompiler::emitAllocateAndStoreDynamicSlot() {
 bool IonCacheIRCompiler::emitStoreUnboxedProperty() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   Register obj = allocator.useRegister(masm, reader.objOperandId());
-  JSValueType fieldType = reader.valueType();
+  JSValueType fieldType = reader.jsValueType();
   int32_t offset = int32StubField(reader.stubOffset());
   ConstantOrRegister val =
       allocator.useConstantOrRegister(masm, reader.valOperandId());

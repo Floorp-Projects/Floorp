@@ -721,7 +721,7 @@ bool BaselineCacheIRCompiler::emitLoadUnboxedPropertyResult() {
   Register obj = allocator.useRegister(masm, reader.objOperandId());
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
-  JSValueType fieldType = reader.valueType();
+  JSValueType fieldType = reader.jsValueType();
   Address fieldOffset(stubAddress(reader.stubOffset()));
   masm.load32(fieldOffset, scratch);
   masm.loadUnboxedProperty(BaseIndex(obj, scratch, TimesOne), fieldType,
@@ -1166,7 +1166,7 @@ bool BaselineCacheIRCompiler::emitAllocateAndStoreDynamicSlot() {
 bool BaselineCacheIRCompiler::emitStoreUnboxedProperty() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   ObjOperandId objId = reader.objOperandId();
-  JSValueType fieldType = reader.valueType();
+  JSValueType fieldType = reader.jsValueType();
   Address offsetAddr = stubAddress(reader.stubOffset());
 
   // Allocate the fixed registers first. These need to be fixed for
