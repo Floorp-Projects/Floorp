@@ -1275,6 +1275,7 @@ toolbarpaletteitem > toolbarbutton,
 toolbarpaletteitem > toolbaritem {
   /* Prevent children from getting events */
   pointer-events: none;
+  -moz-box-pack: center;
 }
 
 :root[customizing=true] .addon-banner-item,
