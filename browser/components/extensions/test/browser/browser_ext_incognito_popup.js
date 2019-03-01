@@ -4,6 +4,7 @@
 
 add_task(async function testIncognitoPopup() {
   let extension = ExtensionTestUtils.loadExtension({
+    incognitoOverride: "spanning",
     manifest: {
       "permissions": ["tabs"],
       "browser_action": {
