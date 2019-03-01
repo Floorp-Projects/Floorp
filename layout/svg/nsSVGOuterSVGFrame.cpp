@@ -146,8 +146,8 @@ NS_QUERYFRAME_TAIL_INHERITING(nsSVGDisplayContainerFrame)
 //----------------------------------------------------------------------
 // reflowing
 
-/* virtual */ nscoord nsSVGOuterSVGFrame::GetMinISize(
-    gfxContext* aRenderingContext) {
+/* virtual */
+nscoord nsSVGOuterSVGFrame::GetMinISize(gfxContext* aRenderingContext) {
   nscoord result;
   DISPLAY_MIN_INLINE_SIZE(this, result);
 
@@ -156,8 +156,8 @@ NS_QUERYFRAME_TAIL_INHERITING(nsSVGDisplayContainerFrame)
   return result;
 }
 
-/* virtual */ nscoord nsSVGOuterSVGFrame::GetPrefISize(
-    gfxContext* aRenderingContext) {
+/* virtual */
+nscoord nsSVGOuterSVGFrame::GetPrefISize(gfxContext* aRenderingContext) {
   nscoord result;
   DISPLAY_PREF_INLINE_SIZE(this, result);
 
@@ -197,7 +197,8 @@ NS_QUERYFRAME_TAIL_INHERITING(nsSVGDisplayContainerFrame)
   return result;
 }
 
-/* virtual */ IntrinsicSize nsSVGOuterSVGFrame::GetIntrinsicSize() {
+/* virtual */
+IntrinsicSize nsSVGOuterSVGFrame::GetIntrinsicSize() {
   // XXXjwatt Note that here we want to return the CSS width/height if they're
   // specified and we're embedded inside an nsIObjectLoadingContent.
 
@@ -226,7 +227,8 @@ NS_QUERYFRAME_TAIL_INHERITING(nsSVGDisplayContainerFrame)
   return intrinsicSize;
 }
 
-/* virtual */ nsSize nsSVGOuterSVGFrame::GetIntrinsicRatio() {
+/* virtual */
+nsSize nsSVGOuterSVGFrame::GetIntrinsicRatio() {
   // We only have an intrinsic size/ratio if our width and height attributes
   // are both specified and set to non-percentage values, or we have a viewBox
   // rect: http://www.w3.org/TR/SVGMobile12/coords.html#IntrinsicSizing
@@ -505,8 +507,8 @@ void nsSVGOuterSVGFrame::DidReflow(nsPresContext* aPresContext,
   PresShell()->SynthesizeMouseMove(false);
 }
 
-/* virtual */ void nsSVGOuterSVGFrame::UnionChildOverflow(
-    nsOverflowAreas& aOverflowAreas) {
+/* virtual */
+void nsSVGOuterSVGFrame::UnionChildOverflow(nsOverflowAreas& aOverflowAreas) {
   // See the comments in Reflow above.
 
   // WARNING!! Keep this in sync with Reflow above!

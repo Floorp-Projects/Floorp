@@ -602,7 +602,8 @@ static bool SlowIsPerMonitorDPIAware() {
          dpiAwareness == PROCESS_PER_MONITOR_DPI_AWARE;
 }
 
-/* static */ bool WinUtils::IsPerMonitorDPIAware() {
+/* static */
+bool WinUtils::IsPerMonitorDPIAware() {
   static bool perMonitorDPIAware = SlowIsPerMonitorDPIAware();
   return perMonitorDPIAware;
 }

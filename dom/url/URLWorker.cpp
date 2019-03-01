@@ -296,7 +296,8 @@ class ProtocolSetterRunnable : public WorkerMainThreadRunnable {
   nsCOMPtr<nsIURI> mRetval;
 };
 
-/* static */ already_AddRefed<URLWorker> URLWorker::Constructor(
+/* static */
+already_AddRefed<URLWorker> URLWorker::Constructor(
     const GlobalObject& aGlobal, const nsAString& aURL,
     const Optional<nsAString>& aBase, ErrorResult& aRv) {
   JSContext* cx = aGlobal.Context();
@@ -308,18 +309,20 @@ class ProtocolSetterRunnable : public WorkerMainThreadRunnable {
   return aRv.Failed() ? nullptr : url.forget();
 }
 
-/* static */ already_AddRefed<URLWorker> URLWorker::Constructor(
-    const GlobalObject& aGlobal, const nsAString& aURL, const nsAString& aBase,
-    ErrorResult& aRv) {
+/* static */
+already_AddRefed<URLWorker> URLWorker::Constructor(const GlobalObject& aGlobal,
+                                                   const nsAString& aURL,
+                                                   const nsAString& aBase,
+                                                   ErrorResult& aRv) {
   Optional<nsAString> base;
   base = &aBase;
 
   return Constructor(aGlobal, aURL, base, aRv);
 }
 
-/* static */ void URLWorker::CreateObjectURL(const GlobalObject& aGlobal,
-                                             Blob& aBlob, nsAString& aResult,
-                                             mozilla::ErrorResult& aRv) {
+/* static */
+void URLWorker::CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
+                                nsAString& aResult, mozilla::ErrorResult& aRv) {
   JSContext* cx = aGlobal.Context();
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
 
@@ -347,9 +350,9 @@ class ProtocolSetterRunnable : public WorkerMainThreadRunnable {
   }
 }
 
-/* static */ void URLWorker::RevokeObjectURL(const GlobalObject& aGlobal,
-                                             const nsAString& aUrl,
-                                             ErrorResult& aRv) {
+/* static */
+void URLWorker::RevokeObjectURL(const GlobalObject& aGlobal,
+                                const nsAString& aUrl, ErrorResult& aRv) {
   JSContext* cx = aGlobal.Context();
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
 
@@ -369,9 +372,9 @@ class ProtocolSetterRunnable : public WorkerMainThreadRunnable {
   }
 }
 
-/* static */ bool URLWorker::IsValidURL(const GlobalObject& aGlobal,
-                                        const nsAString& aUrl,
-                                        ErrorResult& aRv) {
+/* static */
+bool URLWorker::IsValidURL(const GlobalObject& aGlobal, const nsAString& aUrl,
+                           ErrorResult& aRv) {
   JSContext* cx = aGlobal.Context();
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
 

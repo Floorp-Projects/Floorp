@@ -281,15 +281,18 @@ class MutableWrappedPtrOperations<SavedFrame::Lookup, Wrapper>
   }
 };
 
-/* static */ bool SavedFrame::HashPolicy::hasHash(const Lookup& l) {
+/* static */
+bool SavedFrame::HashPolicy::hasHash(const Lookup& l) {
   return SavedFramePtrHasher::hasHash(l.parent);
 }
 
-/* static */ bool SavedFrame::HashPolicy::ensureHash(const Lookup& l) {
+/* static */
+bool SavedFrame::HashPolicy::ensureHash(const Lookup& l) {
   return SavedFramePtrHasher::ensureHash(l.parent);
 }
 
-/* static */ HashNumber SavedFrame::HashPolicy::hash(const Lookup& lookup) {
+/* static */
+HashNumber SavedFrame::HashPolicy::hash(const Lookup& lookup) {
   JS::AutoCheckCannotGC nogc;
   // Assume that we can take line mod 2^32 without losing anything of
   // interest.  If that assumption changes, we'll just need to start with 0
@@ -300,8 +303,8 @@ class MutableWrappedPtrOperations<SavedFrame::Lookup, Wrapper>
                    JSPrincipalsPtrHasher::hash(lookup.principals));
 }
 
-/* static */ bool SavedFrame::HashPolicy::match(SavedFrame* existing,
-                                                const Lookup& lookup) {
+/* static */
+bool SavedFrame::HashPolicy::match(SavedFrame* existing, const Lookup& lookup) {
   MOZ_ASSERT(existing);
 
   if (existing->getLine() != lookup.line) {
@@ -338,13 +341,14 @@ class MutableWrappedPtrOperations<SavedFrame::Lookup, Wrapper>
   return true;
 }
 
-/* static */ void SavedFrame::HashPolicy::rekey(Key& key, const Key& newKey) {
+/* static */
+void SavedFrame::HashPolicy::rekey(Key& key, const Key& newKey) {
   key = newKey;
 }
 
-/* static */ bool SavedFrame::finishSavedFrameInit(JSContext* cx,
-                                                   HandleObject ctor,
-                                                   HandleObject proto) {
+/* static */
+bool SavedFrame::finishSavedFrameInit(JSContext* cx, HandleObject ctor,
+                                      HandleObject proto) {
   return FreezeObject(cx, proto);
 }
 
@@ -400,7 +404,8 @@ const Class SavedFrame::protoClass_ = {
     JS_PSG("parent", SavedFrame::parentProperty, 0),
     JS_PS_END};
 
-/* static */ void SavedFrame::finalize(FreeOp* fop, JSObject* obj) {
+/* static */
+void SavedFrame::finalize(FreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
   JSPrincipals* p = obj->as<SavedFrame>().getPrincipals();
   if (p) {
@@ -534,7 +539,8 @@ void SavedFrame::initFromLookup(JSContext* cx,
   initPrincipals(lookup.principals());
 }
 
-/* static */ SavedFrame* SavedFrame::create(JSContext* cx) {
+/* static */
+SavedFrame* SavedFrame::create(JSContext* cx) {
   RootedGlobalObject global(cx, cx->global());
   cx->check(global);
 
@@ -575,8 +581,8 @@ uint32_t SavedFrame::wasmBytecodeOffset() {
   return getLine();
 }
 
-/* static */ bool SavedFrame::construct(JSContext* cx, unsigned argc,
-                                        Value* vp) {
+/* static */
+bool SavedFrame::construct(JSContext* cx, unsigned argc, Value* vp) {
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NO_CONSTRUCTOR,
                             "SavedFrame");
   return false;
@@ -1092,8 +1098,8 @@ JS_PUBLIC_API bool IsUnwrappedSavedFrame(JSObject* obj) {
 
 namespace js {
 
-/* static */ bool SavedFrame::sourceProperty(JSContext* cx, unsigned argc,
-                                             Value* vp) {
+/* static */
+bool SavedFrame::sourceProperty(JSContext* cx, unsigned argc, Value* vp) {
   THIS_SAVEDFRAME(cx, argc, vp, "(get source)", args, frame);
   JSPrincipals* principals = cx->realm()->principals();
   RootedString source(cx);
@@ -1109,8 +1115,8 @@ namespace js {
   return true;
 }
 
-/* static */ bool SavedFrame::sourceIdProperty(JSContext* cx, unsigned argc,
-                                             Value* vp) {
+/* static */
+bool SavedFrame::sourceIdProperty(JSContext* cx, unsigned argc, Value* vp) {
   THIS_SAVEDFRAME(cx, argc, vp, "(get sourceId)", args, frame);
   JSPrincipals* principals = cx->realm()->principals();
   uint32_t sourceId;
@@ -1123,8 +1129,8 @@ namespace js {
   return true;
 }
 
-/* static */ bool SavedFrame::lineProperty(JSContext* cx, unsigned argc,
-                                           Value* vp) {
+/* static */
+bool SavedFrame::lineProperty(JSContext* cx, unsigned argc, Value* vp) {
   THIS_SAVEDFRAME(cx, argc, vp, "(get line)", args, frame);
   JSPrincipals* principals = cx->realm()->principals();
   uint32_t line;
@@ -1137,8 +1143,8 @@ namespace js {
   return true;
 }
 
-/* static */ bool SavedFrame::columnProperty(JSContext* cx, unsigned argc,
-                                             Value* vp) {
+/* static */
+bool SavedFrame::columnProperty(JSContext* cx, unsigned argc, Value* vp) {
   THIS_SAVEDFRAME(cx, argc, vp, "(get column)", args, frame);
   JSPrincipals* principals = cx->realm()->principals();
   uint32_t column;
@@ -1151,9 +1157,9 @@ namespace js {
   return true;
 }
 
-/* static */ bool SavedFrame::functionDisplayNameProperty(JSContext* cx,
-                                                          unsigned argc,
-                                                          Value* vp) {
+/* static */
+bool SavedFrame::functionDisplayNameProperty(JSContext* cx, unsigned argc,
+                                             Value* vp) {
   THIS_SAVEDFRAME(cx, argc, vp, "(get functionDisplayName)", args, frame);
   JSPrincipals* principals = cx->realm()->principals();
   RootedString name(cx);
@@ -1170,8 +1176,8 @@ namespace js {
   return true;
 }
 
-/* static */ bool SavedFrame::asyncCauseProperty(JSContext* cx, unsigned argc,
-                                                 Value* vp) {
+/* static */
+bool SavedFrame::asyncCauseProperty(JSContext* cx, unsigned argc, Value* vp) {
   THIS_SAVEDFRAME(cx, argc, vp, "(get asyncCause)", args, frame);
   JSPrincipals* principals = cx->realm()->principals();
   RootedString asyncCause(cx);
@@ -1188,8 +1194,8 @@ namespace js {
   return true;
 }
 
-/* static */ bool SavedFrame::asyncParentProperty(JSContext* cx, unsigned argc,
-                                                  Value* vp) {
+/* static */
+bool SavedFrame::asyncParentProperty(JSContext* cx, unsigned argc, Value* vp) {
   THIS_SAVEDFRAME(cx, argc, vp, "(get asyncParent)", args, frame);
   JSPrincipals* principals = cx->realm()->principals();
   RootedObject asyncParent(cx);
@@ -1201,8 +1207,8 @@ namespace js {
   return true;
 }
 
-/* static */ bool SavedFrame::parentProperty(JSContext* cx, unsigned argc,
-                                             Value* vp) {
+/* static */
+bool SavedFrame::parentProperty(JSContext* cx, unsigned argc, Value* vp) {
   THIS_SAVEDFRAME(cx, argc, vp, "(get parent)", args, frame);
   JSPrincipals* principals = cx->realm()->principals();
   RootedObject parent(cx);
@@ -1214,8 +1220,8 @@ namespace js {
   return true;
 }
 
-/* static */ bool SavedFrame::toStringMethod(JSContext* cx, unsigned argc,
-                                             Value* vp) {
+/* static */
+bool SavedFrame::toStringMethod(JSContext* cx, unsigned argc, Value* vp) {
   THIS_SAVEDFRAME(cx, argc, vp, "toString", args, frame);
   JSPrincipals* principals = cx->realm()->principals();
   RootedString string(cx);
@@ -1806,9 +1812,10 @@ JSObject* SavedStacks::MetadataBuilder::build(
 
 const SavedStacks::MetadataBuilder SavedStacks::metadataBuilder;
 
-/* static */ ReconstructedSavedFramePrincipals
-    ReconstructedSavedFramePrincipals::IsSystem;
-/* static */ ReconstructedSavedFramePrincipals
+/* static */
+ReconstructedSavedFramePrincipals ReconstructedSavedFramePrincipals::IsSystem;
+/* static */
+ReconstructedSavedFramePrincipals
     ReconstructedSavedFramePrincipals::IsNotSystem;
 
 UniqueChars BuildUTF8StackString(JSContext* cx, JSPrincipals* principals,

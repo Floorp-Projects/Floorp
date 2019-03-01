@@ -46,15 +46,16 @@ nsJSPrincipals::Release() {
   return count;
 }
 
-/* static */ bool nsJSPrincipals::Subsume(JSPrincipals* jsprin,
-                                          JSPrincipals* other) {
+/* static */
+bool nsJSPrincipals::Subsume(JSPrincipals* jsprin, JSPrincipals* other) {
   bool result;
   nsresult rv = nsJSPrincipals::get(jsprin)->Subsumes(
       nsJSPrincipals::get(other), &result);
   return NS_SUCCEEDED(rv) && result;
 }
 
-/* static */ void nsJSPrincipals::Destroy(JSPrincipals* jsprin) {
+/* static */
+void nsJSPrincipals::Destroy(JSPrincipals* jsprin) {
   // The JS runtime can call this method during the last GC when
   // nsScriptSecurityManager is destroyed. So we must not assume here that
   // the security manager still exists.
@@ -101,9 +102,10 @@ JS_PUBLIC_API void JSPrincipals::dump() {
 
 #endif
 
-/* static */ bool nsJSPrincipals::ReadPrincipals(
-    JSContext* aCx, JSStructuredCloneReader* aReader,
-    JSPrincipals** aOutPrincipals) {
+/* static */
+bool nsJSPrincipals::ReadPrincipals(JSContext* aCx,
+                                    JSStructuredCloneReader* aReader,
+                                    JSPrincipals** aOutPrincipals) {
   uint32_t tag;
   uint32_t unused;
   if (!JS_ReadUint32Pair(aReader, &tag, &unused)) {
@@ -259,9 +261,11 @@ static bool ReadPrincipalInfo(JSStructuredCloneReader* aReader, uint32_t aTag,
   return true;
 }
 
-/* static */ bool nsJSPrincipals::ReadKnownPrincipalType(
-    JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
-    JSPrincipals** aOutPrincipals) {
+/* static */
+bool nsJSPrincipals::ReadKnownPrincipalType(JSContext* aCx,
+                                            JSStructuredCloneReader* aReader,
+                                            uint32_t aTag,
+                                            JSPrincipals** aOutPrincipals) {
   MOZ_ASSERT(aTag == SCTAG_DOM_NULL_PRINCIPAL ||
              aTag == SCTAG_DOM_SYSTEM_PRINCIPAL ||
              aTag == SCTAG_DOM_CONTENT_PRINCIPAL ||

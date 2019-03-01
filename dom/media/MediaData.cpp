@@ -302,11 +302,11 @@ PlanarYCbCrData ConstructPlanarYCbCrData(const VideoInfo& aInfo,
   return data;
 }
 
-/* static */ bool VideoData::SetVideoDataToImage(PlanarYCbCrImage* aVideoImage,
-                                                 const VideoInfo& aInfo,
-                                                 const YCbCrBuffer& aBuffer,
-                                                 const IntRect& aPicture,
-                                                 bool aCopyData) {
+/* static */
+bool VideoData::SetVideoDataToImage(PlanarYCbCrImage* aVideoImage,
+                                    const VideoInfo& aInfo,
+                                    const YCbCrBuffer& aBuffer,
+                                    const IntRect& aPicture, bool aCopyData) {
   if (!aVideoImage) {
     return false;
   }

@@ -880,8 +880,9 @@ MOZ_MUST_USE ReadableStream* CreateReadableStream(
 /**
  * Streams spec, 3.3.5. InitializeReadableStream ( stream )
  */
-MOZ_MUST_USE /* static */ ReadableStream* ReadableStream::create(
-    JSContext* cx, HandleObject proto /* = nullptr */) {
+MOZ_MUST_USE /* static */
+    ReadableStream*
+    ReadableStream::create(JSContext* cx, HandleObject proto /* = nullptr */) {
   // In the spec, InitializeReadableStream is always passed a newly created
   // ReadableStream object. We instead create it here and return it below.
   Rooted<ReadableStream*> stream(

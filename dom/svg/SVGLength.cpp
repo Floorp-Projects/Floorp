@@ -162,8 +162,9 @@ float SVGLength::GetUserUnitsPerUnit(const SVGElement* aElement,
   }
 }
 
-/* static */ float SVGLength::GetUserUnitsPerPercent(const SVGElement* aElement,
-                                                     uint8_t aAxis) {
+/* static */
+float SVGLength::GetUserUnitsPerPercent(const SVGElement* aElement,
+                                        uint8_t aAxis) {
   if (aElement) {
     dom::SVGViewportElement* viewportElement = aElement->GetCtx();
     if (viewportElement) {

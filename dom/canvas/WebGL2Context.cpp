@@ -30,13 +30,11 @@ UniquePtr<webgl::FormatUsageAuthority> WebGL2Context::CreateFormatUsage(
   return webgl::FormatUsageAuthority::CreateForWebGL2(gl);
 }
 
-/*static*/ bool WebGL2Context::IsSupported() {
-  return gfxPrefs::WebGL2Enabled();
-}
+/*static*/
+bool WebGL2Context::IsSupported() { return gfxPrefs::WebGL2Enabled(); }
 
-/*static*/ WebGL2Context* WebGL2Context::Create() {
-  return new WebGL2Context();
-}
+/*static*/
+WebGL2Context* WebGL2Context::Create() { return new WebGL2Context(); }
 
 JSObject* WebGL2Context::WrapObject(JSContext* cx,
                                     JS::Handle<JSObject*> givenProto) {

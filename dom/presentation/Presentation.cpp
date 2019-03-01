@@ -36,7 +36,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Presentation)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-/* static */ already_AddRefed<Presentation> Presentation::Create(
+/* static */
+already_AddRefed<Presentation> Presentation::Create(
     nsPIDOMWindowInner* aWindow) {
   RefPtr<Presentation> presentation = new Presentation(aWindow);
   return presentation.forget();
@@ -46,8 +47,9 @@ Presentation::Presentation(nsPIDOMWindowInner* aWindow) : mWindow(aWindow) {}
 
 Presentation::~Presentation() {}
 
-/* virtual */ JSObject* Presentation::WrapObject(
-    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
+/* virtual */
+JSObject* Presentation::WrapObject(JSContext* aCx,
+                                   JS::Handle<JSObject*> aGivenProto) {
   return Presentation_Binding::Wrap(aCx, this, aGivenProto);
 }
 

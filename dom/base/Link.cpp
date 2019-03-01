@@ -830,8 +830,8 @@ static const nsAttrValue::EnumTable kAsAttributeTable[] = {
     {"track", DESTINATION_TRACK},   {"video", DESTINATION_VIDEO},
     {"fetch", DESTINATION_FETCH},   {nullptr, 0}};
 
-/* static */ void Link::ParseAsValue(const nsAString &aValue,
-                                     nsAttrValue &aResult) {
+/* static */
+void Link::ParseAsValue(const nsAString &aValue, nsAttrValue &aResult) {
   DebugOnly<bool> success =
       aResult.ParseEnumValue(aValue, kAsAttributeTable, false,
                              // default value is a empty string
@@ -841,8 +841,8 @@ static const nsAttrValue::EnumTable kAsAttributeTable[] = {
   MOZ_ASSERT(success);
 }
 
-/* static */ nsContentPolicyType Link::AsValueToContentPolicy(
-    const nsAttrValue &aValue) {
+/* static */
+nsContentPolicyType Link::AsValueToContentPolicy(const nsAttrValue &aValue) {
   switch (aValue.GetEnumValue()) {
     case DESTINATION_INVALID:
       return nsIContentPolicy::TYPE_INVALID;

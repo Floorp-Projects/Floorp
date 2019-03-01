@@ -42,12 +42,11 @@ class FetchStream::WorkerShutdown final : public WorkerControlRunnable {
 NS_IMPL_ISUPPORTS(FetchStream, nsIInputStreamCallback, nsIObserver,
                   nsISupportsWeakReference)
 
-/* static */ void FetchStream::Create(JSContext* aCx,
-                                      FetchStreamHolder* aStreamHolder,
-                                      nsIGlobalObject* aGlobal,
-                                      nsIInputStream* aInputStream,
-                                      JS::MutableHandle<JSObject*> aStream,
-                                      ErrorResult& aRv) {
+/* static */
+void FetchStream::Create(JSContext* aCx, FetchStreamHolder* aStreamHolder,
+                         nsIGlobalObject* aGlobal, nsIInputStream* aInputStream,
+                         JS::MutableHandle<JSObject*> aStream,
+                         ErrorResult& aRv) {
   MOZ_DIAGNOSTIC_ASSERT(aCx);
   MOZ_DIAGNOSTIC_ASSERT(aStreamHolder);
   MOZ_DIAGNOSTIC_ASSERT(aInputStream);
@@ -359,7 +358,8 @@ FetchStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
   return NS_OK;
 }
 
-/* static */ nsresult FetchStream::RetrieveInputStream(
+/* static */
+nsresult FetchStream::RetrieveInputStream(
     JS::ReadableStreamUnderlyingSource* aUnderlyingReadableStreamSource,
     nsIInputStream** aInputStream) {
   MOZ_ASSERT(aUnderlyingReadableStreamSource);

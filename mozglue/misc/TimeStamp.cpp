@@ -43,11 +43,11 @@ struct TimeStampInitialization {
 
 static bool sFuzzyfoxEnabled;
 
-/* static */ bool TimeStamp::GetFuzzyfoxEnabled() { return sFuzzyfoxEnabled; }
+/* static */
+bool TimeStamp::GetFuzzyfoxEnabled() { return sFuzzyfoxEnabled; }
 
-/* static */ void TimeStamp::SetFuzzyfoxEnabled(bool aValue) {
-  sFuzzyfoxEnabled = aValue;
-}
+/* static */
+void TimeStamp::SetFuzzyfoxEnabled(bool aValue) { sFuzzyfoxEnabled = aValue; }
 
 // These variables store the frozen time (as a TimeStamp) for FuzzyFox that
 // will be reported if FuzzyFox is enabled.

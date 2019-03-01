@@ -239,7 +239,8 @@ void nsGenericHTMLFrameElement::UnbindFromTree(bool aDeep, bool aNullParent) {
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
-/* static */ int32_t nsGenericHTMLFrameElement::MapScrollingAttribute(
+/* static */
+int32_t nsGenericHTMLFrameElement::MapScrollingAttribute(
     const nsAttrValue* aValue) {
   int32_t mappedValue = nsIScrollable::Scrollbar_Auto;
   if (aValue && aValue->Type() == nsAttrValue::eEnum) {
@@ -265,7 +266,8 @@ static bool PrincipalAllowsBrowserFrame(nsIPrincipal* aPrincipal) {
   return permission == nsIPermissionManager::ALLOW_ACTION;
 }
 
-/* virtual */ nsresult nsGenericHTMLFrameElement::AfterSetAttr(
+/* virtual */
+nsresult nsGenericHTMLFrameElement::AfterSetAttr(
     int32_t aNameSpaceID, nsAtom* aName, const nsAttrValue* aValue,
     const nsAttrValue* aOldValue, nsIPrincipal* aMaybeScriptedPrincipal,
     bool aNotify) {
@@ -422,14 +424,14 @@ bool nsGenericHTMLFrameElement::BrowserFramesEnabled() {
  * needs to have the right attributes, and its creator must have the right
  * permissions.)
  */
-/* [infallible] */ nsresult nsGenericHTMLFrameElement::GetReallyIsBrowser(
-    bool* aOut) {
+/* [infallible] */
+nsresult nsGenericHTMLFrameElement::GetReallyIsBrowser(bool* aOut) {
   *aOut = mReallyIsBrowser;
   return NS_OK;
 }
 
-/* [infallible] */ NS_IMETHODIMP nsGenericHTMLFrameElement::GetIsolated(
-    bool* aOut) {
+/* [infallible] */
+NS_IMETHODIMP nsGenericHTMLFrameElement::GetIsolated(bool* aOut) {
   *aOut = true;
 
   if (!nsContentUtils::IsSystemPrincipal(NodePrincipal())) {

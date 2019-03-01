@@ -994,7 +994,8 @@ XPCJSContext::XPCJSContext()
   gTlsContext.set(this);
 }
 
-/* static */ XPCJSContext* XPCJSContext::Get() { return gTlsContext.get(); }
+/* static */
+XPCJSContext* XPCJSContext::Get() { return gTlsContext.get(); }
 
 #ifdef XP_WIN
 static size_t GetWindowsStackSize() {

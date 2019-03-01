@@ -17,7 +17,7 @@ assert.throws(TypeError, () => JSON.stringify(1n),
 // method.
 Object.defineProperty(BigInt.prototype, "toJSON", {
     get() {
-       "use strict";
+        "use strict";
         return () => typeof this;
     }
 });

@@ -321,9 +321,10 @@ PannerNode::PannerNode(AudioContext* aContext)
       AudioNodeStream::NO_STREAM_FLAGS, aContext->Graph());
 }
 
-/* static */ already_AddRefed<PannerNode> PannerNode::Create(
-    AudioContext& aAudioContext, const PannerOptions& aOptions,
-    ErrorResult& aRv) {
+/* static */
+already_AddRefed<PannerNode> PannerNode::Create(AudioContext& aAudioContext,
+                                                const PannerOptions& aOptions,
+                                                ErrorResult& aRv) {
   if (aAudioContext.CheckClosed(aRv)) {
     return nullptr;
   }

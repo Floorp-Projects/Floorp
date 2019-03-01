@@ -417,8 +417,9 @@ HTMLInputElement* nsNumberControlFrame::GetAnonTextControl() {
   return HTMLInputElement::FromNode(mTextField);
 }
 
-/* static */ nsNumberControlFrame*
-nsNumberControlFrame::GetNumberControlFrameForTextField(nsIFrame* aFrame) {
+/* static */
+nsNumberControlFrame* nsNumberControlFrame::GetNumberControlFrameForTextField(
+    nsIFrame* aFrame) {
   // If aFrame is the anon text field for an <input type=number> then we expect
   // the frame of its mContent's grandparent to be that input's frame. We
   // have to check for this via the content tree because we don't know whether
@@ -438,8 +439,9 @@ nsNumberControlFrame::GetNumberControlFrameForTextField(nsIFrame* aFrame) {
   return nullptr;
 }
 
-/* static */ nsNumberControlFrame*
-nsNumberControlFrame::GetNumberControlFrameForSpinButton(nsIFrame* aFrame) {
+/* static */
+nsNumberControlFrame* nsNumberControlFrame::GetNumberControlFrameForSpinButton(
+    nsIFrame* aFrame) {
   // If aFrame is a spin button for an <input type=number> then we expect the
   // frame of its mContent's great-grandparent to be that input's frame. We
   // have to check for this via the content tree because we don't know whether

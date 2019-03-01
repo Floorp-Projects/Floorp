@@ -84,8 +84,6 @@ const regularGrandfathered = [
 ];
 
 for (const {tag, canonical, maximized = canonical, minimized = canonical} of regularGrandfathered) {
-    assert.sameValue(Intl.getCanonicalLocales(tag)[0], canonical);
-
     const loc = new Intl.Locale(tag);
     assert.sameValue(loc.toString(), canonical);
 
@@ -128,7 +126,6 @@ for (const {tag} of regularGrandfathered) {
 
     for (const extra of extras) {
         const loc = new Intl.Locale(tag + "-" + extra);
-        assert.sameValue(loc.toString(), tag + "-" + extra);
 
         assert.sameValue(loc.maximize().toString(), tagMax + "-" + extra);
         assert.sameValue(loc.maximize().maximize().toString(), tagMax + "-" + extra);

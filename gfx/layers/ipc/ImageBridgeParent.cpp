@@ -48,7 +48,8 @@ StaticAutoPtr<mozilla::Monitor> sImageBridgesLock;
 
 static StaticRefPtr<ImageBridgeParent> sImageBridgeParentSingleton;
 
-/* static */ void ImageBridgeParent::Setup() {
+/* static */
+void ImageBridgeParent::Setup() {
   MOZ_ASSERT(NS_IsMainThread());
   if (!sImageBridgesLock) {
     sImageBridgesLock = new Monitor("ImageBridges");
@@ -67,7 +68,8 @@ ImageBridgeParent::ImageBridgeParent(MessageLoop* aLoop,
 
 ImageBridgeParent::~ImageBridgeParent() {}
 
-/* static */ ImageBridgeParent* ImageBridgeParent::CreateSameProcess() {
+/* static */
+ImageBridgeParent* ImageBridgeParent::CreateSameProcess() {
   base::ProcessId pid = base::GetCurrentProcId();
   RefPtr<ImageBridgeParent> parent =
       new ImageBridgeParent(CompositorThreadHolder::Loop(), pid);
@@ -83,7 +85,8 @@ ImageBridgeParent::~ImageBridgeParent() {}
   return parent;
 }
 
-/* static */ bool ImageBridgeParent::CreateForGPUProcess(
+/* static */
+bool ImageBridgeParent::CreateForGPUProcess(
     Endpoint<PImageBridgeParent>&& aEndpoint) {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_GPU);
 
@@ -99,7 +102,8 @@ ImageBridgeParent::~ImageBridgeParent() {}
   return true;
 }
 
-/* static */ void ImageBridgeParent::ShutdownInternal() {
+/* static */
+void ImageBridgeParent::ShutdownInternal() {
   // We make a copy because we don't want to hold the lock while closing and we
   // don't want the object to get freed underneath us.
   nsTArray<RefPtr<ImageBridgeParent>> actors;
@@ -118,7 +122,8 @@ ImageBridgeParent::~ImageBridgeParent() {}
   sImageBridgeParentSingleton = nullptr;
 }
 
-/* static */ void ImageBridgeParent::Shutdown() {
+/* static */
+void ImageBridgeParent::Shutdown() {
   CompositorThreadHolder::Loop()->PostTask(NS_NewRunnableFunction(
       "ImageBridgeParent::Shutdown",
       []() -> void { ImageBridgeParent::ShutdownInternal(); }));
@@ -203,7 +208,8 @@ mozilla::ipc::IPCResult ImageBridgeParent::RecvUpdate(
   return IPC_OK();
 }
 
-/* static */ bool ImageBridgeParent::CreateForContent(
+/* static */
+bool ImageBridgeParent::CreateForContent(
     Endpoint<PImageBridgeParent>&& aEndpoint) {
   MessageLoop* loop = CompositorThreadHolder::Loop();
 
@@ -318,7 +324,8 @@ class ProcessIdComparator {
   }
 };
 
-/* static */ bool ImageBridgeParent::NotifyImageComposites(
+/* static */
+bool ImageBridgeParent::NotifyImageComposites(
     nsTArray<ImageCompositeNotificationInfo>& aNotifications) {
   // Group the notifications by destination process ID and then send the
   // notifications in one message per group.

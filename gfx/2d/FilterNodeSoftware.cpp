@@ -438,8 +438,8 @@ static already_AddRefed<DataSourceSurface> GetDataSurfaceInRect(
   return target.forget();
 }
 
-/* static */ already_AddRefed<FilterNode> FilterNodeSoftware::Create(
-    FilterType aType) {
+/* static */
+already_AddRefed<FilterNode> FilterNodeSoftware::Create(FilterType aType) {
   RefPtr<FilterNodeSoftware> filter;
   switch (aType) {
     case FilterType::BLEND:

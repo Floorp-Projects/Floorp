@@ -384,7 +384,8 @@ JSObject* DOMException::WrapObject(JSContext* aCx,
   return DOMException_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-/* static */ already_AddRefed<DOMException> DOMException::Create(nsresult aRv) {
+/* static */
+already_AddRefed<DOMException> DOMException::Create(nsresult aRv) {
   nsCString name;
   nsCString message;
   uint16_t code;
@@ -393,7 +394,8 @@ JSObject* DOMException::WrapObject(JSContext* aCx,
   return inst.forget();
 }
 
-/* static */ already_AddRefed<DOMException> DOMException::Create(
+/* static */
+already_AddRefed<DOMException> DOMException::Create(
     nsresult aRv, const nsACString& aMessage) {
   nsCString name;
   nsCString message;

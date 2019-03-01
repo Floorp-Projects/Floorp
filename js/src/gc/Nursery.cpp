@@ -86,8 +86,8 @@ inline void js::NurseryChunk::poisonAfterSweep(size_t extent) {
   Poison(this, JS_SWEPT_NURSERY_PATTERN, extent, MemCheckKind::MakeNoAccess);
 }
 
-/* static */ inline js::NurseryChunk* js::NurseryChunk::fromChunk(
-    Chunk* chunk) {
+/* static */
+inline js::NurseryChunk* js::NurseryChunk::fromChunk(Chunk* chunk) {
   return reinterpret_cast<NurseryChunk*>(chunk);
 }
 
@@ -658,7 +658,8 @@ void js::Nursery::renderProfileJSON(JSONPrinter& json) const {
   json.endObject();
 }
 
-/* static */ void js::Nursery::printProfileHeader() {
+/* static */
+void js::Nursery::printProfileHeader() {
   fprintf(stderr, "MinorGC:               Reason  PRate Size        ");
 #define PRINT_HEADER(name, text) fprintf(stderr, " %6s", text);
   FOR_EACH_NURSERY_PROFILE_TIME(PRINT_HEADER)
@@ -666,8 +667,8 @@ void js::Nursery::renderProfileJSON(JSONPrinter& json) const {
   fprintf(stderr, "\n");
 }
 
-/* static */ void js::Nursery::printProfileDurations(
-    const ProfileDurations& times) {
+/* static */
+void js::Nursery::printProfileDurations(const ProfileDurations& times) {
   for (auto time : times) {
     fprintf(stderr, " %6" PRIi64, static_cast<int64_t>(time.ToMicroseconds()));
   }

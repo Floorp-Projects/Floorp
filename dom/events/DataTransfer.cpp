@@ -603,9 +603,10 @@ void DataTransfer::MozGetDataAt(JSContext* aCx, const nsAString& aFormat,
   }
 }
 
-/* static */ bool DataTransfer::PrincipalMaySetData(const nsAString& aType,
-                                                    nsIVariant* aData,
-                                                    nsIPrincipal* aPrincipal) {
+/* static */
+bool DataTransfer::PrincipalMaySetData(const nsAString& aType,
+                                       nsIVariant* aData,
+                                       nsIPrincipal* aPrincipal) {
   if (!nsContentUtils::IsSystemPrincipal(aPrincipal)) {
     DataTransferItem::eKind kind = DataTransferItem::KindFromData(aData);
     if (kind == DataTransferItem::KIND_OTHER) {

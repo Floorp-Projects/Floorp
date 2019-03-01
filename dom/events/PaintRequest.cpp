@@ -27,8 +27,9 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(PaintRequest)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(PaintRequest)
 
-/* virtual */ JSObject* PaintRequest::WrapObject(
-    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
+/* virtual */
+JSObject* PaintRequest::WrapObject(JSContext* aCx,
+                                   JS::Handle<JSObject*> aGivenProto) {
   return PaintRequest_Binding::Wrap(aCx, this, aGivenProto);
 }
 

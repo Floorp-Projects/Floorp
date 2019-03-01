@@ -208,8 +208,9 @@ void nsTreeColumn::Invalidate(ErrorResult& aRv) {
 
 nsIContent* nsTreeColumn::GetParentObject() const { return mContent; }
 
-/* virtual */ JSObject* nsTreeColumn::WrapObject(
-    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
+/* virtual */
+JSObject* nsTreeColumn::WrapObject(JSContext* aCx,
+                                   JS::Handle<JSObject*> aGivenProto) {
   return dom::TreeColumn_Binding::Wrap(aCx, this, aGivenProto);
 }
 
@@ -254,8 +255,9 @@ nsIContent* nsTreeColumns::GetParentObject() const {
   return mTree ? mTree->GetBaseElement() : nullptr;
 }
 
-/* virtual */ JSObject* nsTreeColumns::WrapObject(
-    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
+/* virtual */
+JSObject* nsTreeColumns::WrapObject(JSContext* aCx,
+                                    JS::Handle<JSObject*> aGivenProto) {
   return dom::TreeColumns_Binding::Wrap(aCx, this, aGivenProto);
 }
 

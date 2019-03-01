@@ -32,6 +32,12 @@ interface WorkerDebuggerGlobalScope : EventTarget {
 
   [Throws]
   void setConsoleEventHandler(AnyCallback? handler);
+
+  // base64 utility methods
+  [Throws]
+  DOMString btoa(DOMString btoa);
+  [Throws]
+  DOMString atob(DOMString atob);
 };
 
 // So you can debug while you debug

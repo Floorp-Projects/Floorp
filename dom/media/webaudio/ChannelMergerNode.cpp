@@ -64,7 +64,8 @@ ChannelMergerNode::ChannelMergerNode(AudioContext* aContext,
                                     aContext->Graph());
 }
 
-/* static */ already_AddRefed<ChannelMergerNode> ChannelMergerNode::Create(
+/* static */
+already_AddRefed<ChannelMergerNode> ChannelMergerNode::Create(
     AudioContext& aAudioContext, const ChannelMergerOptions& aOptions,
     ErrorResult& aRv) {
   if (aAudioContext.CheckClosed(aRv)) {

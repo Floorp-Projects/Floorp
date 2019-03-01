@@ -33,7 +33,8 @@ Storage::Storage(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
 
 Storage::~Storage() {}
 
-/* static */ bool Storage::StoragePrefIsEnabled() {
+/* static */
+bool Storage::StoragePrefIsEnabled() {
   return mozilla::Preferences::GetBool(kStorageEnabled);
 }
 
@@ -63,8 +64,9 @@ bool Storage::CanUseStorage(nsIPrincipal& aSubjectPrincipal) {
   return aSubjectPrincipal.Subsumes(mPrincipal);
 }
 
-/* virtual */ JSObject* Storage::WrapObject(JSContext* aCx,
-                                            JS::Handle<JSObject*> aGivenProto) {
+/* virtual */
+JSObject* Storage::WrapObject(JSContext* aCx,
+                              JS::Handle<JSObject*> aGivenProto) {
   return Storage_Binding::Wrap(aCx, this, aGivenProto);
 }
 
@@ -101,11 +103,13 @@ class StorageNotifierRunnable : public Runnable {
 
 }  // namespace
 
-/* static */ void Storage::NotifyChange(
-    Storage* aStorage, nsIPrincipal* aPrincipal, const nsAString& aKey,
-    const nsAString& aOldValue, const nsAString& aNewValue,
-    const char16_t* aStorageType, const nsAString& aDocumentURI,
-    bool aIsPrivate, bool aImmediateDispatch) {
+/* static */
+void Storage::NotifyChange(Storage* aStorage, nsIPrincipal* aPrincipal,
+                           const nsAString& aKey, const nsAString& aOldValue,
+                           const nsAString& aNewValue,
+                           const char16_t* aStorageType,
+                           const nsAString& aDocumentURI, bool aIsPrivate,
+                           bool aImmediateDispatch) {
   StorageEventInit dict;
   dict.mBubbles = false;
   dict.mCancelable = false;

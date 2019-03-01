@@ -20,7 +20,8 @@
 namespace mozilla {
 namespace dom {
 
-/* static */ bool HTMLFormControlsCollection::ShouldBeInElements(
+/* static */
+bool HTMLFormControlsCollection::ShouldBeInElements(
     nsIFormControl* aFormControl) {
   // For backwards compatibility (with 4.x and IE) we must not add
   // <input type=image> elements to the list of form controls in a
@@ -261,11 +262,11 @@ Element* HTMLFormControlsCollection::GetElementAt(uint32_t aIndex) {
   return mElements.SafeElementAt(aIndex, nullptr);
 }
 
-/* virtual */ nsINode* HTMLFormControlsCollection::GetParentObject() {
-  return mForm;
-}
+/* virtual */
+nsINode* HTMLFormControlsCollection::GetParentObject() { return mForm; }
 
-/* virtual */ Element* HTMLFormControlsCollection::GetFirstNamedElement(
+/* virtual */
+Element* HTMLFormControlsCollection::GetFirstNamedElement(
     const nsAString& aName, bool& aFound) {
   Nullable<OwningRadioNodeListOrElement> maybeResult;
   NamedGetter(aName, aFound, maybeResult);
@@ -315,7 +316,8 @@ void HTMLFormControlsCollection::GetSupportedNames(nsTArray<nsString>& aNames) {
   }
 }
 
-/* virtual */ JSObject* HTMLFormControlsCollection::WrapObject(
+/* virtual */
+JSObject* HTMLFormControlsCollection::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return HTMLFormControlsCollection_Binding::Wrap(aCx, this, aGivenProto);
 }

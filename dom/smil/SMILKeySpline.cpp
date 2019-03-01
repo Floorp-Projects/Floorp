@@ -46,12 +46,14 @@ void SMILKeySpline::CalcSampleValues() {
   }
 }
 
-/*static*/ double SMILKeySpline::CalcBezier(double aT, double aA1, double aA2) {
+/*static*/
+double SMILKeySpline::CalcBezier(double aT, double aA1, double aA2) {
   // use Horner's scheme to evaluate the Bezier polynomial
   return ((A(aA1, aA2) * aT + B(aA1, aA2)) * aT + C(aA1)) * aT;
 }
 
-/*static*/ double SMILKeySpline::GetSlope(double aT, double aA1, double aA2) {
+/*static*/
+double SMILKeySpline::GetSlope(double aT, double aA1, double aA2) {
   return 3.0 * A(aA1, aA2) * aT * aT + 2.0 * B(aA1, aA2) * aT + C(aA1);
 }
 

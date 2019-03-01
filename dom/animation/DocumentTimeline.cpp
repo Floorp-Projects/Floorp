@@ -47,7 +47,8 @@ JSObject* DocumentTimeline::WrapObject(JSContext* aCx,
   return DocumentTimeline_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-/* static */ already_AddRefed<DocumentTimeline> DocumentTimeline::Constructor(
+/* static */
+already_AddRefed<DocumentTimeline> DocumentTimeline::Constructor(
     const GlobalObject& aGlobal, const DocumentTimelineOptions& aOptions,
     ErrorResult& aRv) {
   Document* doc = AnimationUtils::GetCurrentRealmDocument(aGlobal.Context());

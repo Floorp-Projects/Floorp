@@ -3955,8 +3955,8 @@ void nsTreeBodyFrame::RemoveImageCacheEntry(int32_t aRowIndex,
   }
 }
 
-/* virtual */ void nsTreeBodyFrame::DidSetComputedStyle(
-    ComputedStyle* aOldComputedStyle) {
+/* virtual */
+void nsTreeBodyFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
   nsLeafBoxFrame::DidSetComputedStyle(aOldComputedStyle);
 
   // Clear the style cache; the pointers are no longer even valid

@@ -357,6 +357,7 @@ this.AntiTracking = {
                                   options.callbackAfterRemoval.toString() : null,
                                 accessRemoval: options.accessRemoval,
                                 iframeSandbox: options.iframeSandbox,
+                                allowList: options.allowList,
                                 doAccessRemovalChecks },
                               async function(obj) {
         let id = "id" + Math.random();
@@ -365,7 +366,8 @@ this.AntiTracking = {
           ifr.id = id;
           ifr.onload = function() {
             info("Sending code to the 3rd party content");
-            ifr.contentWindow.postMessage(obj.callback, "*");
+            let callback = obj.allowList + "!!!" + obj.callback;
+            ifr.contentWindow.postMessage(callback, "*");
           };
           if (typeof obj.iframeSandbox == "string") {
             ifr.setAttribute("sandbox", obj.iframeSandbox);

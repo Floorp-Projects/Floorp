@@ -74,7 +74,8 @@ UniquePtr<VelocityTracker> AndroidSpecificState::CreateVelocityTracker(
   return MakeUnique<SimpleVelocityTracker>(aAxis);
 }
 
-/* static */ void AndroidSpecificState::InitializeGlobalState() {
+/* static */
+void AndroidSpecificState::InitializeGlobalState() {
   // Not conditioned on gfxPrefs::APZUseChromeFlingPhysics() because
   // the pref is live.
   AndroidFlingPhysics::InitializeGlobalState();

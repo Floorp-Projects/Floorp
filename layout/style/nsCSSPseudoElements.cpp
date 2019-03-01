@@ -34,7 +34,8 @@ bool nsCSSPseudoElements::IsPseudoElement(nsAtom* aAtom) {
                                      kAtomCount_PseudoElements);
 }
 
-/* static */ bool nsCSSPseudoElements::IsCSS2PseudoElement(nsAtom* aAtom) {
+/* static */
+bool nsCSSPseudoElements::IsCSS2PseudoElement(nsAtom* aAtom) {
   // We don't implement this using PseudoElementHasFlags because callers
   // want to pass things that could be anon boxes.
   MOZ_ASSERT(IsPseudoElement(aAtom), "must be pseudo element");
@@ -50,8 +51,9 @@ bool nsCSSPseudoElements::IsPseudoElement(nsAtom* aAtom) {
   return result;
 }
 
-/* static */ PseudoStyleType nsCSSPseudoElements::GetPseudoType(
-    nsAtom* aAtom, EnabledState aEnabledState) {
+/* static */
+PseudoStyleType nsCSSPseudoElements::GetPseudoType(nsAtom* aAtom,
+                                                   EnabledState aEnabledState) {
   Maybe<uint32_t> index = nsStaticAtomUtils::Lookup(aAtom, GetAtomBase(),
                                                     kAtomCount_PseudoElements);
   if (index.isSome()) {
@@ -62,13 +64,15 @@ bool nsCSSPseudoElements::IsPseudoElement(nsAtom* aAtom) {
   return Type::NotPseudo;
 }
 
-/* static */ nsAtom* nsCSSPseudoElements::GetPseudoAtom(Type aType) {
+/* static */
+nsAtom* nsCSSPseudoElements::GetPseudoAtom(Type aType) {
   MOZ_ASSERT(PseudoStyle::IsPseudoElement(aType), "Unexpected type");
   size_t index = kAtomIndex_PseudoElements + static_cast<size_t>(aType);
   return nsGkAtoms::GetAtomByIndex(index);
 }
 
-/* static */ already_AddRefed<nsAtom> nsCSSPseudoElements::GetPseudoAtom(
+/* static */
+already_AddRefed<nsAtom> nsCSSPseudoElements::GetPseudoAtom(
     const nsAString& aPseudoElement) {
   if (DOMStringIsNull(aPseudoElement) || aPseudoElement.IsEmpty() ||
       aPseudoElement.First() != char16_t(':')) {
@@ -100,14 +104,15 @@ bool nsCSSPseudoElements::IsPseudoElement(nsAtom* aAtom) {
   return pseudo.forget();
 }
 
-/* static */ bool nsCSSPseudoElements::PseudoElementSupportsUserActionState(
+/* static */
+bool nsCSSPseudoElements::PseudoElementSupportsUserActionState(
     const Type aType) {
   return PseudoElementHasFlags(aType,
                                CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE);
 }
 
-/* static */ nsString nsCSSPseudoElements::PseudoTypeAsString(
-    Type aPseudoType) {
+/* static */
+nsString nsCSSPseudoElements::PseudoTypeAsString(Type aPseudoType) {
   switch (aPseudoType) {
     case PseudoStyleType::before:
       return NS_LITERAL_STRING("::before");
@@ -121,7 +126,8 @@ bool nsCSSPseudoElements::IsPseudoElement(nsAtom* aAtom) {
 }
 
 #ifdef DEBUG
-/* static */ void nsCSSPseudoElements::AssertAtoms() {
+/* static */
+void nsCSSPseudoElements::AssertAtoms() {
   nsStaticAtom* base = GetAtomBase();
 #  define CSS_PSEUDO_ELEMENT(name_, value_, flags_)                   \
     {                                                                 \

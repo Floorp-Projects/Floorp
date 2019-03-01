@@ -2380,6 +2380,34 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::bigIntLiteral(
 }
 
 template <typename Unit, class AnyCharsAccess>
+void GeneralTokenStreamChars<Unit,
+                             AnyCharsAccess>::consumeOptionalHashbangComment() {
+  MOZ_ASSERT(this->sourceUnits.atStart(),
+             "HashBangComment can only appear immediately at the start of a "
+             "Script or Module");
+
+  // HashbangComment ::
+  //   #!  SingleLineCommentChars_opt
+
+  if (!matchCodeUnit('#')) {
+    // HashbangComment is optional at start of Script or Module.
+    return;
+  }
+
+  if (!matchCodeUnit('!')) {
+    // # not followed by ! at start of Script or Module is an error, but normal
+    // parsing code will handle that error just fine if we let it.
+    ungetCodeUnit('#');
+    return;
+  }
+
+  // This doesn't consume a concluding LineTerminator, and it stops consuming
+  // just before any encoding error.  The subsequent |getToken| call will call
+  // |getTokenInternal| below which will handle these possibilities.
+  this->sourceUnits.consumeRestOfSingleLineComment();
+}
+
+template <typename Unit, class AnyCharsAccess>
 MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
     TokenKind* const ttp, const Modifier modifier) {
   // Assume we'll fail: success cases will overwrite this.

@@ -15,7 +15,8 @@
 using namespace mozilla;
 
 #ifdef MOZ_XUL
-/* static */ bool nsCSSAnonBoxes::IsTreePseudoElement(nsAtom* aPseudo) {
+/* static */
+bool nsCSSAnonBoxes::IsTreePseudoElement(nsAtom* aPseudo) {
   return StringBeginsWith(nsDependentAtomString(aPseudo),
                           NS_LITERAL_STRING(":-moz-tree-"));
 }
@@ -27,7 +28,8 @@ static nsStaticAtom* GetAtomBase() {
       nsGkAtoms::GetAtomByIndex(kAtomIndex_AnonBoxes));
 }
 
-/* static */ void nsCSSAnonBoxes::AssertAtoms() {
+/* static */
+void nsCSSAnonBoxes::AssertAtoms() {
   nsStaticAtom* base = GetAtomBase();
   size_t index = 0;
 #  define CSS_ANON_BOX(name_, value_)                                 \

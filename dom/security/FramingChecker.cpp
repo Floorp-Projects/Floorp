@@ -20,9 +20,10 @@
 
 using namespace mozilla;
 
-/* static */ bool FramingChecker::CheckOneFrameOptionsPolicy(
-    nsIHttpChannel* aHttpChannel, const nsAString& aPolicy,
-    nsIDocShell* aDocShell) {
+/* static */
+bool FramingChecker::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
+                                                const nsAString& aPolicy,
+                                                nsIDocShell* aDocShell) {
   static const char allowFrom[] = "allow-from";
   const uint32_t allowFromLen = ArrayLength(allowFrom) - 1;
   bool isAllowFrom =
@@ -204,9 +205,10 @@ static bool ShouldIgnoreFrameOptions(nsIChannel* aChannel,
 // Check if X-Frame-Options permits this document to be loaded as a subdocument.
 // This will iterate through and check any number of X-Frame-Options policies
 // in the request (comma-separated in a header, multiple headers, etc).
-/* static */ bool FramingChecker::CheckFrameOptions(nsIChannel* aChannel,
-                                                    nsIDocShell* aDocShell,
-                                                    nsIPrincipal* aPrincipal) {
+/* static */
+bool FramingChecker::CheckFrameOptions(nsIChannel* aChannel,
+                                       nsIDocShell* aDocShell,
+                                       nsIPrincipal* aPrincipal) {
   if (!aChannel || !aDocShell) {
     return true;
   }
@@ -268,9 +270,9 @@ static bool ShouldIgnoreFrameOptions(nsIChannel* aChannel,
   return true;
 }
 
-/* static */ void FramingChecker::ReportXFOViolation(
-    nsIDocShellTreeItem* aTopDocShellItem, nsIURI* aThisURI,
-    XFOHeader aHeader) {
+/* static */
+void FramingChecker::ReportXFOViolation(nsIDocShellTreeItem* aTopDocShellItem,
+                                        nsIURI* aThisURI, XFOHeader aHeader) {
   MOZ_ASSERT(aTopDocShellItem, "Need a top docshell");
 
   nsCOMPtr<nsPIDOMWindowOuter> topOuterWindow = aTopDocShellItem->GetWindow();

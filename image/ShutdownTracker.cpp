@@ -53,16 +53,16 @@ NS_IMPL_ISUPPORTS(ShutdownObserver, nsIObserver)
 // Public API
 ///////////////////////////////////////////////////////////////////////////////
 
-/* static */ void ShutdownTracker::Initialize() {
+/* static */
+void ShutdownTracker::Initialize() {
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
     os->AddObserver(new ShutdownObserver, "xpcom-will-shutdown", false);
   }
 }
 
-/* static */ bool ShutdownTracker::ShutdownHasStarted() {
-  return sShutdownHasStarted;
-}
+/* static */
+bool ShutdownTracker::ShutdownHasStarted() { return sShutdownHasStarted; }
 
 }  // namespace image
 }  // namespace mozilla

@@ -324,7 +324,8 @@ FlattenedConstraints::FlattenedConstraints(const NormalizedConstraints& aOther)
 // First, all devices have a minimum distance based on their deviceId.
 // If you have no other constraints, use this one. Reused by all device types.
 
-/* static */ bool MediaConstraintsHelper::SomeSettingsFit(
+/* static */
+bool MediaConstraintsHelper::SomeSettingsFit(
     const NormalizedConstraints& aConstraints,
     const nsTArray<RefPtr<MediaDevice>>& aDevices) {
   nsTArray<const NormalizedConstraintSet*> sets;
@@ -339,13 +340,15 @@ FlattenedConstraints::FlattenedConstraints(const NormalizedConstraints& aOther)
   return false;
 }
 
-/* static */ uint32_t MediaConstraintsHelper::GetMinimumFitnessDistance(
+/* static */
+uint32_t MediaConstraintsHelper::GetMinimumFitnessDistance(
     const NormalizedConstraintSet& aConstraints, const nsString& aDeviceId) {
   return FitnessDistance(aDeviceId, aConstraints.mDeviceId);
 }
 
 template <class ValueType, class NormalizedRange>
-/* static */ uint32_t MediaConstraintsHelper::FitnessDistance(
+/* static */
+uint32_t MediaConstraintsHelper::FitnessDistance(
     ValueType aN, const NormalizedRange& aRange) {
   if (aRange.mMin > aN || aRange.mMax < aN) {
     return UINT32_MAX;
@@ -359,7 +362,8 @@ template <class ValueType, class NormalizedRange>
 }
 
 template <class ValueType, class NormalizedRange>
-/* static */ uint32_t MediaConstraintsHelper::FeasibilityDistance(
+/* static */
+uint32_t MediaConstraintsHelper::FeasibilityDistance(
     ValueType aN, const NormalizedRange& aRange) {
   if (aRange.mMin > aN) {
     return UINT32_MAX;
@@ -382,7 +386,8 @@ template <class ValueType, class NormalizedRange>
 
 // Fitness distance returned as integer math * 1000. Infinity = UINT32_MAX
 
-/* static */ uint32_t MediaConstraintsHelper::FitnessDistance(
+/* static */
+uint32_t MediaConstraintsHelper::FitnessDistance(
     nsString aN, const NormalizedConstraintSet::StringRange& aParams) {
   if (!aParams.mExact.empty() &&
       aParams.mExact.find(aN) == aParams.mExact.end()) {
@@ -562,7 +567,8 @@ void LogConstraintRange(const NormalizedConstraintSet::Range<double>& aRange) {
   }
 }
 
-/* static */ void MediaConstraintsHelper::LogConstraints(
+/* static */
+void MediaConstraintsHelper::LogConstraints(
     const NormalizedConstraintSet& aConstraints) {
   auto& c = aConstraints;
   LOG("Constraints: {");

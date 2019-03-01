@@ -603,7 +603,8 @@ void XPC_WN_NoHelper_Finalize(js::FreeOp* fop, JSObject* obj) {
  * should mark any JS objects held by |wrapper| as members.
  */
 
-/* static */ void XPCWrappedNative::Trace(JSTracer* trc, JSObject* obj) {
+/* static */
+void XPCWrappedNative::Trace(JSTracer* trc, JSObject* obj) {
   const js::Class* clazz = js::GetObjectClass(obj);
   if (clazz->flags & JSCLASS_DOM_GLOBAL) {
     mozilla::dom::TraceProtoAndIfaceCache(trc, obj);

@@ -294,8 +294,8 @@ void Navigator::GetAppName(nsAString& aAppName, CallerType aCallerType) const {
  *
  * An empty array will be returned if there is no valid languages.
  */
-/* static */ void Navigator::GetAcceptLanguages(
-    nsTArray<nsString>& aLanguages) {
+/* static */
+void Navigator::GetAcceptLanguages(nsTArray<nsString>& aLanguages) {
   MOZ_ASSERT(NS_IsMainThread());
 
   aLanguages.Clear();
@@ -1594,8 +1594,9 @@ nsresult Navigator::GetPlatform(nsAString& aPlatform,
   return rv;
 }
 
-/* static */ nsresult Navigator::GetAppVersion(nsAString& aAppVersion,
-                                               bool aUsePrefOverriddenValue) {
+/* static */
+nsresult Navigator::GetAppVersion(nsAString& aAppVersion,
+                                  bool aUsePrefOverriddenValue) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (aUsePrefOverriddenValue) {
@@ -1637,8 +1638,8 @@ nsresult Navigator::GetPlatform(nsAString& aPlatform,
   return rv;
 }
 
-/* static */ void Navigator::AppName(nsAString& aAppName,
-                                     bool aUsePrefOverriddenValue) {
+/* static */
+void Navigator::AppName(nsAString& aAppName, bool aUsePrefOverriddenValue) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (aUsePrefOverriddenValue) {

@@ -97,8 +97,8 @@ bool nsSVGContainerFrame::ComputeCustomOverflow(
  * frames and marks them NS_FRAME_IS_DIRTY so that the next time that they
  * are painted their anonymous kid will first get the necessary reflow.
  */
-/* static */ void nsSVGContainerFrame::ReflowSVGNonDisplayText(
-    nsIFrame* aContainer) {
+/* static */
+void nsSVGContainerFrame::ReflowSVGNonDisplayText(nsIFrame* aContainer) {
   if (!(aContainer->GetStateBits() & NS_FRAME_IS_DIRTY)) {
     return;
   }

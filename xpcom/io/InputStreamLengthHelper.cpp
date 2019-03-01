@@ -64,8 +64,9 @@ class AvailableEvent final : public Runnable {
 
 }  // namespace
 
-/* static */ bool InputStreamLengthHelper::GetSyncLength(
-    nsIInputStream* aStream, int64_t* aLength) {
+/* static */
+bool InputStreamLengthHelper::GetSyncLength(nsIInputStream* aStream,
+                                            int64_t* aLength) {
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(aLength);
 
@@ -130,7 +131,8 @@ class AvailableEvent final : public Runnable {
   return true;
 }
 
-/* static */ void InputStreamLengthHelper::GetAsyncLength(
+/* static */
+void InputStreamLengthHelper::GetAsyncLength(
     nsIInputStream* aStream,
     const std::function<void(int64_t aLength)>& aCallback) {
   MOZ_ASSERT(aStream);

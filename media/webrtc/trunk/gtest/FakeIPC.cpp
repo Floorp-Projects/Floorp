@@ -12,9 +12,8 @@
 
 // The implementations can't be in the .h file for some annoying reason
 
-/* static */ void
-PlatformThread:: YieldCurrentThread()
-{
+/* static */
+void PlatformThread::YieldCurrentThread() {
 #ifdef WEBRTC_WIN
   Sleep(1);
 #else

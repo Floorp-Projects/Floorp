@@ -36,8 +36,9 @@ void AssemblerX86Shared::copyDataRelocationTable(uint8_t* dest) {
   }
 }
 
-/* static */ void AssemblerX86Shared::TraceDataRelocations(
-    JSTracer* trc, JitCode* code, CompactBufferReader& reader) {
+/* static */
+void AssemblerX86Shared::TraceDataRelocations(JSTracer* trc, JitCode* code,
+                                              CompactBufferReader& reader) {
   while (reader.more()) {
     size_t offset = reader.readUnsigned();
     MOZ_ASSERT(offset >= sizeof(void*) && offset <= code->instructionsSize());

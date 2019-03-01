@@ -66,7 +66,8 @@ gfxContext::gfxContext(DrawTarget* aTarget, const Point& aDeviceOffset)
   mDT->SetTransform(GetDTTransform());
 }
 
-/* static */ already_AddRefed<gfxContext> gfxContext::CreateOrNull(
+/* static */
+already_AddRefed<gfxContext> gfxContext::CreateOrNull(
     DrawTarget* aTarget, const mozilla::gfx::Point& aDeviceOffset) {
   if (!aTarget || !aTarget->IsValid()) {
     gfxCriticalNote << "Invalid target in gfxContext::CreateOrNull "
@@ -78,8 +79,9 @@ gfxContext::gfxContext(DrawTarget* aTarget, const Point& aDeviceOffset)
   return result.forget();
 }
 
-/* static */ already_AddRefed<gfxContext>
-gfxContext::CreatePreservingTransformOrNull(DrawTarget* aTarget) {
+/* static */
+already_AddRefed<gfxContext> gfxContext::CreatePreservingTransformOrNull(
+    DrawTarget* aTarget) {
   if (!aTarget || !aTarget->IsValid()) {
     gfxCriticalNote
         << "Invalid target in gfxContext::CreatePreservingTransformOrNull "

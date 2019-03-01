@@ -819,7 +819,8 @@ JSObject* HostResolveImportedModule(JSContext* aCx,
   return module;
 }
 
-/* static */ void ScriptLoader::ResolveImportedModule(
+/* static */
+void ScriptLoader::ResolveImportedModule(
     JSContext* aCx, JS::Handle<JS::Value> aReferencingPrivate,
     JS::Handle<JSString*> aSpecifier, JS::MutableHandle<JSObject*> aModuleOut) {
   MOZ_ASSERT(!aModuleOut);
@@ -2369,8 +2370,8 @@ nsresult ScriptLoader::FillCompileOptionsForRequest(
   return NS_OK;
 }
 
-/* static */ bool ScriptLoader::ShouldCacheBytecode(
-    ScriptLoadRequest* aRequest) {
+/* static */
+bool ScriptLoader::ShouldCacheBytecode(ScriptLoadRequest* aRequest) {
   using mozilla::TimeDuration;
   using mozilla::TimeStamp;
 
@@ -2745,7 +2746,8 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
   return rv;
 }
 
-/* static */ LoadedScript* ScriptLoader::GetActiveScript(JSContext* aCx) {
+/* static */
+LoadedScript* ScriptLoader::GetActiveScript(JSContext* aCx) {
   JS::Value value = JS::GetScriptedCallerPrivate(aCx);
   if (value.isUndefined()) {
     return nullptr;
@@ -3049,10 +3051,12 @@ bool ScriptLoader::ReadyToExecuteParserBlockingScripts() {
   return true;
 }
 
-/* static */ nsresult ScriptLoader::ConvertToUTF16(
-    nsIChannel* aChannel, const uint8_t* aData, uint32_t aLength,
-    const nsAString& aHintCharset, Document* aDocument, char16_t*& aBufOut,
-    size_t& aLengthOut) {
+/* static */
+nsresult ScriptLoader::ConvertToUTF16(nsIChannel* aChannel,
+                                      const uint8_t* aData, uint32_t aLength,
+                                      const nsAString& aHintCharset,
+                                      Document* aDocument, char16_t*& aBufOut,
+                                      size_t& aLengthOut) {
   if (!aLength) {
     aBufOut = nullptr;
     aLengthOut = 0;

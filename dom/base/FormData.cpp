@@ -278,12 +278,14 @@ void FormData::SetNameDirectoryPair(FormDataTuple* aData,
   aData->value.SetAsDirectory() = aDirectory;
 }
 
-/* virtual */ JSObject* FormData::WrapObject(
-    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
+/* virtual */
+JSObject* FormData::WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) {
   return FormData_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-/* static */ already_AddRefed<FormData> FormData::Constructor(
+/* static */
+already_AddRefed<FormData> FormData::Constructor(
     const GlobalObject& aGlobal,
     const Optional<NonNull<HTMLFormElement> >& aFormElement, ErrorResult& aRv) {
   RefPtr<FormData> formData = new FormData(aGlobal.GetAsSupports());

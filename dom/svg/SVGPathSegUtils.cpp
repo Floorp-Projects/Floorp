@@ -18,8 +18,8 @@ using namespace mozilla::gfx;
 static const float PATH_SEG_LENGTH_TOLERANCE = 0.0000001f;
 static const uint32_t MAX_RECURSION = 10;
 
-/* static */ void SVGPathSegUtils::GetValueAsString(const float* aSeg,
-                                                    nsAString& aValue) {
+/* static */
+void SVGPathSegUtils::GetValueAsString(const float* aSeg, nsAString& aValue) {
   // Adding new seg type? Is the formatting below acceptable for the new types?
   static_assert(
       NS_SVG_PATH_SEG_LAST_VALID_TYPE == PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL,
@@ -397,8 +397,9 @@ static TraverseFunc gTraverseFuncTable[NS_SVG_PATH_SEG_TYPE_COUNT] = {
     TraverseCurvetoQuadraticSmoothAbs,
     TraverseCurvetoQuadraticSmoothRel};
 
-/* static */ void SVGPathSegUtils::TraversePathSegment(
-    const float* aData, SVGPathTraversalState& aState) {
+/* static */
+void SVGPathSegUtils::TraversePathSegment(const float* aData,
+                                          SVGPathTraversalState& aState) {
   static_assert(
       MOZ_ARRAY_LENGTH(gTraverseFuncTable) == NS_SVG_PATH_SEG_TYPE_COUNT,
       "gTraverseFuncTable is out of date");

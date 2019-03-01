@@ -21,13 +21,11 @@ using namespace mozilla::gfx;
 Atomic<uint32_t> VRSystemManager::sDisplayBase(0);
 Atomic<uint32_t> VRSystemManager::sControllerBase(0);
 
-/* static */ uint32_t VRSystemManager::AllocateDisplayID() {
-  return ++sDisplayBase;
-}
+/* static */
+uint32_t VRSystemManager::AllocateDisplayID() { return ++sDisplayBase; }
 
-/* static */ uint32_t VRSystemManager::AllocateControllerID() {
-  return ++sControllerBase;
-}
+/* static */
+uint32_t VRSystemManager::AllocateControllerID() { return ++sControllerBase; }
 
 /**
  * VRSystemManager::NotifyVsync must be called even when a WebVR site is

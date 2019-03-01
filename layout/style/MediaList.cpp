@@ -77,8 +77,9 @@ void MediaList::GetText(nsAString& aMediaText) {
   Servo_MediaList_GetText(mRawList, &aMediaText);
 }
 
-/* static */ already_AddRefed<MediaList> MediaList::Create(
-    const nsAString& aMedia, CallerType aCallerType) {
+/* static */
+already_AddRefed<MediaList> MediaList::Create(const nsAString& aMedia,
+                                              CallerType aCallerType) {
   RefPtr<MediaList> mediaList = new MediaList(aMedia, aCallerType);
   return mediaList.forget();
 }

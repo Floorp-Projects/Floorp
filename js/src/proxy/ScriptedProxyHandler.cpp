@@ -166,8 +166,8 @@ static bool IsCompatiblePropertyDescriptor(JSContext* cx, bool extensible,
 }
 
 // Get the [[ProxyHandler]] of a scripted proxy.
-/* static */ JSObject* ScriptedProxyHandler::handlerObject(
-    const JSObject* proxy) {
+/* static */
+JSObject* ScriptedProxyHandler::handlerObject(const JSObject* proxy) {
   MOZ_ASSERT(proxy->as<ProxyObject>().handler() ==
              &ScriptedProxyHandler::singleton);
   return proxy->as<ProxyObject>()

@@ -874,7 +874,8 @@ void CompositorBridgeParent::ScheduleComposition() {
 
 // Go down the composite layer tree, setting properties to match their
 // content-side counterparts.
-/* static */ void CompositorBridgeParent::SetShadowProperties(Layer* aLayer) {
+/* static */
+void CompositorBridgeParent::SetShadowProperties(Layer* aLayer) {
   ForEachNode<ForwardIterator>(aLayer, [](Layer* layer) {
     if (Layer* maskLayer = layer->GetMaskLayer()) {
       SetShadowProperties(maskLayer);
@@ -1167,7 +1168,8 @@ CompositorBridgeParent::GetCompositorBridgeParentFromLayersId(
   return sIndirectLayerTrees[aLayersId].mParent;
 }
 
-/*static*/ RefPtr<CompositorBridgeParent>
+/*static*/
+RefPtr<CompositorBridgeParent>
 CompositorBridgeParent::GetCompositorBridgeParentFromWindowId(
     const wr::WindowId& aWindowId) {
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
@@ -1844,7 +1846,8 @@ static void EraseLayerState(LayersId aId) {
   }
 }
 
-/*static*/ void CompositorBridgeParent::DeallocateLayerTreeId(LayersId aId) {
+/*static*/
+void CompositorBridgeParent::DeallocateLayerTreeId(LayersId aId) {
   MOZ_ASSERT(NS_IsMainThread());
   // Here main thread notifies compositor to remove an element from
   // sIndirectLayerTrees. This removed element might be queried soon.
@@ -1880,7 +1883,8 @@ ScopedLayerTreeRegistration::~ScopedLayerTreeRegistration() {
   sIndirectLayerTrees.erase(mLayersId);
 }
 
-/*static*/ void CompositorBridgeParent::SetControllerForLayerTree(
+/*static*/
+void CompositorBridgeParent::SetControllerForLayerTree(
     LayersId aLayersId, GeckoContentController* aController) {
   // This ref is adopted by UpdateControllerForLayersId().
   aController->AddRef();
@@ -1889,8 +1893,9 @@ ScopedLayerTreeRegistration::~ScopedLayerTreeRegistration() {
       aLayersId, aController));
 }
 
-/*static*/ already_AddRefed<IAPZCTreeManager>
-CompositorBridgeParent::GetAPZCTreeManager(LayersId aLayersId) {
+/*static*/
+already_AddRefed<IAPZCTreeManager> CompositorBridgeParent::GetAPZCTreeManager(
+    LayersId aLayersId) {
   EnsureLayerTreeMapReady();
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   LayerTreeMap::iterator cit = sIndirectLayerTrees.find(aLayersId);
@@ -1914,7 +1919,8 @@ static void InsertVsyncProfilerMarker(TimeStamp aVsyncTimestamp) {
 }
 #endif
 
-/*static */ void CompositorBridgeParent::PostInsertVsyncProfilerMarker(
+/*static */
+void CompositorBridgeParent::PostInsertVsyncProfilerMarker(
     TimeStamp aVsyncTimestamp) {
 #if defined(MOZ_GECKO_PROFILER)
   // Called in the vsync thread
@@ -2156,7 +2162,8 @@ CompositorBridgeParent::GetIndirectShadowTree(LayersId aId) {
   return &cit->second;
 }
 
-/* static */ bool CompositorBridgeParent::CallWithIndirectShadowTree(
+/* static */
+bool CompositorBridgeParent::CallWithIndirectShadowTree(
     LayersId aId,
     const std::function<void(CompositorBridgeParent::LayerTreeState&)>& aFunc) {
   // Note that this does not make things universally threadsafe just because the
@@ -2196,8 +2203,8 @@ static CompositorBridgeParent::LayerTreeState* GetStateForRoot(
   return state;
 }
 
-/* static */ APZCTreeManagerParent*
-CompositorBridgeParent::GetApzcTreeManagerParentForRoot(
+/* static */
+APZCTreeManagerParent* CompositorBridgeParent::GetApzcTreeManagerParentForRoot(
     LayersId aContentLayersId) {
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   CompositorBridgeParent::LayerTreeState* state =
@@ -2205,7 +2212,8 @@ CompositorBridgeParent::GetApzcTreeManagerParentForRoot(
   return state ? state->mApzcTreeManagerParent : nullptr;
 }
 
-/* static */ GeckoContentController*
+/* static */
+GeckoContentController*
 CompositorBridgeParent::GetGeckoContentControllerForRoot(
     LayersId aContentLayersId) {
   MonitorAutoLock lock(*sIndirectLayerTreesLock);

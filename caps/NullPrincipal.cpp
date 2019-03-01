@@ -31,24 +31,25 @@ NS_IMPL_CLASSINFO(NullPrincipal, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
 NS_IMPL_QUERY_INTERFACE_CI(NullPrincipal, nsIPrincipal, nsISerializable)
 NS_IMPL_CI_INTERFACE_GETTER(NullPrincipal, nsIPrincipal, nsISerializable)
 
-/* static */ already_AddRefed<NullPrincipal>
-NullPrincipal::CreateWithInheritedAttributes(nsIPrincipal* aInheritFrom) {
+/* static */
+already_AddRefed<NullPrincipal> NullPrincipal::CreateWithInheritedAttributes(
+    nsIPrincipal* aInheritFrom) {
   MOZ_ASSERT(aInheritFrom);
   return CreateWithInheritedAttributes(
       Cast(aInheritFrom)->OriginAttributesRef(), false);
 }
 
-/* static */ already_AddRefed<NullPrincipal>
-NullPrincipal::CreateWithInheritedAttributes(nsIDocShell* aDocShell,
-                                             bool aIsFirstParty) {
+/* static */
+already_AddRefed<NullPrincipal> NullPrincipal::CreateWithInheritedAttributes(
+    nsIDocShell* aDocShell, bool aIsFirstParty) {
   MOZ_ASSERT(aDocShell);
 
   OriginAttributes attrs = nsDocShell::Cast(aDocShell)->GetOriginAttributes();
   return CreateWithInheritedAttributes(attrs, aIsFirstParty);
 }
 
-/* static */ already_AddRefed<NullPrincipal>
-NullPrincipal::CreateWithInheritedAttributes(
+/* static */
+already_AddRefed<NullPrincipal> NullPrincipal::CreateWithInheritedAttributes(
     const OriginAttributes& aOriginAttributes, bool aIsFirstParty) {
   RefPtr<NullPrincipal> nullPrin = new NullPrincipal();
   nsresult rv = nullPrin->Init(aOriginAttributes, aIsFirstParty);
@@ -56,7 +57,8 @@ NullPrincipal::CreateWithInheritedAttributes(
   return nullPrin.forget();
 }
 
-/* static */ already_AddRefed<NullPrincipal> NullPrincipal::Create(
+/* static */
+already_AddRefed<NullPrincipal> NullPrincipal::Create(
     const OriginAttributes& aOriginAttributes, nsIURI* aURI) {
   RefPtr<NullPrincipal> nullPrin = new NullPrincipal();
   nsresult rv = nullPrin->Init(aOriginAttributes, aURI);
@@ -65,8 +67,8 @@ NullPrincipal::CreateWithInheritedAttributes(
   return nullPrin.forget();
 }
 
-/* static */ already_AddRefed<NullPrincipal>
-NullPrincipal::CreateWithoutOriginAttributes() {
+/* static */
+already_AddRefed<NullPrincipal> NullPrincipal::CreateWithoutOriginAttributes() {
   return NullPrincipal::Create(OriginAttributes(), nullptr);
 }
 

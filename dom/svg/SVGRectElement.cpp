@@ -83,7 +83,8 @@ already_AddRefed<SVGAnimatedLength> SVGRectElement::Ry() {
 //----------------------------------------------------------------------
 // SVGElement methods
 
-/* virtual */ bool SVGRectElement::HasValidDimensions() const {
+/* virtual */
+bool SVGRectElement::HasValidDimensions() const {
   return mLengthAttributes[ATTR_WIDTH].IsExplicitlySet() &&
          mLengthAttributes[ATTR_WIDTH].GetAnimValInSpecifiedUnits() > 0 &&
          mLengthAttributes[ATTR_HEIGHT].IsExplicitlySet() &&

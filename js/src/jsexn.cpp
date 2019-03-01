@@ -546,7 +546,8 @@ static bool exn_toSource(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-/* static */ JSObject* ErrorObject::createProto(JSContext* cx, JSProtoKey key) {
+/* static */
+JSObject* ErrorObject::createProto(JSContext* cx, JSProtoKey key) {
   JSExnType type = ExnTypeFromProtoKey(key);
 
   if (type == JSEXN_ERR) {
@@ -564,8 +565,8 @@ static bool exn_toSource(JSContext* cx, unsigned argc, Value* vp) {
       cx, &ErrorObject::protoClasses[type], protoProto);
 }
 
-/* static */ JSObject* ErrorObject::createConstructor(JSContext* cx,
-                                                      JSProtoKey key) {
+/* static */
+JSObject* ErrorObject::createConstructor(JSContext* cx, JSProtoKey key) {
   JSExnType type = ExnTypeFromProtoKey(key);
   RootedObject ctor(cx);
 

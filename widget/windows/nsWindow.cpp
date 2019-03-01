@@ -1340,7 +1340,8 @@ BOOL CALLBACK nsWindow::EnumAllThreadWindowProc(HWND aWnd, LPARAM aParam) {
   return TRUE;
 }
 
-/* static*/ nsTArray<nsWindow*> nsWindow::EnumAllWindows() {
+/* static*/
+nsTArray<nsWindow*> nsWindow::EnumAllWindows() {
   nsTArray<nsWindow*> windows;
   EnumThreadWindows(GetCurrentThreadId(), EnumAllThreadWindowProc,
                     reinterpret_cast<LPARAM>(&windows));
@@ -3224,8 +3225,8 @@ class FullscreenTransitionData final : public nsISupports {
 
 NS_IMPL_ISUPPORTS0(FullscreenTransitionData)
 
-/* virtual */ bool nsWindow::PrepareForFullscreenTransition(
-    nsISupports** aData) {
+/* virtual */
+bool nsWindow::PrepareForFullscreenTransition(nsISupports** aData) {
   // We don't support fullscreen transition when composition is not
   // enabled, which could make the transition broken and annoying.
   // See bug 1184201.
@@ -3267,9 +3268,11 @@ NS_IMPL_ISUPPORTS0(FullscreenTransitionData)
   return true;
 }
 
-/* virtual */ void nsWindow::PerformFullscreenTransition(
-    FullscreenTransitionStage aStage, uint16_t aDuration, nsISupports* aData,
-    nsIRunnable* aCallback) {
+/* virtual */
+void nsWindow::PerformFullscreenTransition(FullscreenTransitionStage aStage,
+                                           uint16_t aDuration,
+                                           nsISupports* aData,
+                                           nsIRunnable* aCallback) {
   auto data = static_cast<FullscreenTransitionData*>(aData);
   nsCOMPtr<nsIRunnable> callback = aCallback;
   UINT msg = aStage == eBeforeFullscreenToggle ? WM_FULLSCREEN_TRANSITION_BEFORE
@@ -3278,7 +3281,8 @@ NS_IMPL_ISUPPORTS0(FullscreenTransitionData)
   ::PostMessage(data->mWnd, msg, wparam, (LPARAM)aDuration);
 }
 
-/* virtual */ void nsWindow::CleanupFullscreenTransition() {
+/* virtual */
+void nsWindow::CleanupFullscreenTransition() {
   MOZ_ASSERT(NS_IsMainThread(),
              "CleanupFullscreenTransition "
              "should only run on the main thread");

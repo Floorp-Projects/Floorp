@@ -885,7 +885,8 @@ bool Connection::findFunctionByInstance(nsISupports *aInstance) {
   return false;
 }
 
-/* static */ int Connection::sProgressHelper(void *aArg) {
+/* static */
+int Connection::sProgressHelper(void *aArg) {
   Connection *_this = static_cast<Connection *>(aArg);
   return _this->progressHandler();
 }

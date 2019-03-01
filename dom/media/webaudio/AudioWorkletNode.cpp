@@ -21,7 +21,8 @@ AudioWorkletNode::AudioWorkletNode(AudioContext* aAudioContext,
                 ChannelInterpretation::Speakers),
       mNodeName(aName) {}
 
-/* static */ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
+/* static */
+already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
     const GlobalObject& aGlobal, AudioContext& aAudioContext,
     const nsAString& aName, const AudioWorkletNodeOptions& aOptions,
     ErrorResult& aRv) {

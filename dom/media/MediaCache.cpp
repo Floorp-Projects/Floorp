@@ -103,13 +103,13 @@ class MediaCacheFlusher final : public nsIObserver,
   nsTArray<MediaCache*> mMediaCaches;
 };
 
-/* static */ StaticRefPtr<MediaCacheFlusher>
-    MediaCacheFlusher::gMediaCacheFlusher;
+/* static */
+StaticRefPtr<MediaCacheFlusher> MediaCacheFlusher::gMediaCacheFlusher;
 
 NS_IMPL_ISUPPORTS(MediaCacheFlusher, nsIObserver, nsISupportsWeakReference)
 
-/* static */ void MediaCacheFlusher::RegisterMediaCache(
-    MediaCache* aMediaCache) {
+/* static */
+void MediaCacheFlusher::RegisterMediaCache(MediaCache* aMediaCache) {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
   if (!gMediaCacheFlusher) {
@@ -128,8 +128,8 @@ NS_IMPL_ISUPPORTS(MediaCacheFlusher, nsIObserver, nsISupportsWeakReference)
   gMediaCacheFlusher->mMediaCaches.AppendElement(aMediaCache);
 }
 
-/* static */ void MediaCacheFlusher::UnregisterMediaCache(
-    MediaCache* aMediaCache) {
+/* static */
+void MediaCacheFlusher::UnregisterMediaCache(MediaCache* aMediaCache) {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
   gMediaCacheFlusher->mMediaCaches.RemoveElement(aMediaCache);
@@ -462,10 +462,13 @@ class MediaCache {
 };
 
 // Initialized to nullptr by non-local static initialization.
-/* static */ MediaCache* MediaCache::gMediaCache;
+/* static */
+MediaCache* MediaCache::gMediaCache;
 
-/* static */ StaticRefPtr<nsIThread> MediaCache::sThread;
-/* static */ bool MediaCache::sThreadInit = false;
+/* static */
+StaticRefPtr<nsIThread> MediaCache::sThread;
+/* static */
+bool MediaCache::sThreadInit = false;
 
 NS_IMETHODIMP
 MediaCacheFlusher::Observe(nsISupports* aSubject, char const* aTopic,
@@ -706,8 +709,8 @@ void MediaCache::CloseStreamsForPrivateBrowsing() {
       }));
 }
 
-/* static */ RefPtr<MediaCache> MediaCache::GetMediaCache(
-    int64_t aContentLength) {
+/* static */
+RefPtr<MediaCache> MediaCache::GetMediaCache(int64_t aContentLength) {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
   if (!sThreadInit) {

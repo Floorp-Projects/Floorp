@@ -81,16 +81,19 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(HeapSnapshot)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-/* virtual */ JSObject* HeapSnapshot::WrapObject(JSContext* aCx,
-                                                 HandleObject aGivenProto) {
+/* virtual */
+JSObject* HeapSnapshot::WrapObject(JSContext* aCx, HandleObject aGivenProto) {
   return HeapSnapshot_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 /*** Reading Heap Snapshots ***************************************************/
 
-/* static */ already_AddRefed<HeapSnapshot> HeapSnapshot::Create(
-    JSContext* cx, GlobalObject& global, const uint8_t* buffer, uint32_t size,
-    ErrorResult& rv) {
+/* static */
+already_AddRefed<HeapSnapshot> HeapSnapshot::Create(JSContext* cx,
+                                                    GlobalObject& global,
+                                                    const uint8_t* buffer,
+                                                    uint32_t size,
+                                                    ErrorResult& rv) {
   RefPtr<HeapSnapshot> snapshot = new HeapSnapshot(cx, global.GetAsSupports());
   if (!snapshot->init(cx, buffer, size)) {
     rv.Throw(NS_ERROR_UNEXPECTED);
@@ -1349,7 +1352,8 @@ static unsigned long msSinceProcessCreation(const TimeStamp& now) {
   return (unsigned long)duration.ToMilliseconds();
 }
 
-/* static */ already_AddRefed<nsIFile> HeapSnapshot::CreateUniqueCoreDumpFile(
+/* static */
+already_AddRefed<nsIFile> HeapSnapshot::CreateUniqueCoreDumpFile(
     ErrorResult& rv, const TimeStamp& now, nsAString& outFilePath,
     nsAString& outSnapshotId) {
   nsCOMPtr<nsIFile> file;
@@ -1462,7 +1466,8 @@ namespace dom {
 using namespace JS;
 using namespace devtools;
 
-/* static */ void ChromeUtils::SaveHeapSnapshotShared(
+/* static */
+void ChromeUtils::SaveHeapSnapshotShared(
     GlobalObject& global, const HeapSnapshotBoundaries& boundaries,
     nsAString& outFilePath, nsAString& outSnapshotId, ErrorResult& rv) {
   auto start = TimeStamp::Now();
@@ -1514,21 +1519,24 @@ using namespace devtools;
                         edgeCount);
 }
 
-/* static */ void ChromeUtils::SaveHeapSnapshot(
-    GlobalObject& global, const HeapSnapshotBoundaries& boundaries,
-    nsAString& outFilePath, ErrorResult& rv) {
+/* static */
+void ChromeUtils::SaveHeapSnapshot(GlobalObject& global,
+                                   const HeapSnapshotBoundaries& boundaries,
+                                   nsAString& outFilePath, ErrorResult& rv) {
   nsAutoString snapshotId;
   SaveHeapSnapshotShared(global, boundaries, outFilePath, snapshotId, rv);
 }
 
-/* static */ void ChromeUtils::SaveHeapSnapshotGetId(
+/* static */
+void ChromeUtils::SaveHeapSnapshotGetId(
     GlobalObject& global, const HeapSnapshotBoundaries& boundaries,
     nsAString& outSnapshotId, ErrorResult& rv) {
   nsAutoString filePath;
   SaveHeapSnapshotShared(global, boundaries, filePath, outSnapshotId, rv);
 }
 
-/* static */ already_AddRefed<HeapSnapshot> ChromeUtils::ReadHeapSnapshot(
+/* static */
+already_AddRefed<HeapSnapshot> ChromeUtils::ReadHeapSnapshot(
     GlobalObject& global, const nsAString& filePath, ErrorResult& rv) {
   auto start = TimeStamp::Now();
 

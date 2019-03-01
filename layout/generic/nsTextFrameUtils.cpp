@@ -44,8 +44,8 @@ static bool IsSpaceOrTabOrSegmentBreak(char16_t aCh) {
 }
 
 template <typename CharT>
-/* static */ bool nsTextFrameUtils::IsSkippableCharacterForTransformText(
-    CharT aChar) {
+/* static */
+bool nsTextFrameUtils::IsSkippableCharacterForTransformText(CharT aChar) {
   return aChar == ' ' || aChar == '\t' || aChar == '\n' || aChar == CH_SHY ||
          (aChar > 0xFF && IsBidiControl(aChar));
 }

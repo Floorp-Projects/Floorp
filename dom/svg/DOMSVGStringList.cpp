@@ -64,7 +64,8 @@ class MOZ_RAII AutoChangeStringListNotifier {
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-/* static */ already_AddRefed<DOMSVGStringList> DOMSVGStringList::GetDOMWrapper(
+/* static */
+already_AddRefed<DOMSVGStringList> DOMSVGStringList::GetDOMWrapper(
     SVGStringList* aList, SVGElement* aElement,
     bool aIsConditionalProcessingAttribute, uint8_t aAttrEnum) {
   RefPtr<DOMSVGStringList> wrapper =
@@ -82,8 +83,9 @@ DOMSVGStringList::~DOMSVGStringList() {
   SVGStringListTearoffTable().RemoveTearoff(&InternalList());
 }
 
-/* virtual */ JSObject* DOMSVGStringList::WrapObject(
-    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
+/* virtual */
+JSObject* DOMSVGStringList::WrapObject(JSContext* aCx,
+                                       JS::Handle<JSObject*> aGivenProto) {
   return SVGStringList_Binding::Wrap(aCx, this, aGivenProto);
 }
 

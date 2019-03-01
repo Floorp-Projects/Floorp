@@ -36,18 +36,21 @@ SystemGroupImpl::SystemGroupImpl() {
   CreateEventTargets(/* aNeedValidation = */ true);
 }
 
-/* static */ void SystemGroupImpl::InitStatic() {
+/* static */
+void SystemGroupImpl::InitStatic() {
   MOZ_ASSERT(!sSingleton);
   MOZ_ASSERT(NS_IsMainThread());
   sSingleton = new SystemGroupImpl();
 }
 
-/* static */ void SystemGroupImpl::ShutdownStatic() {
+/* static */
+void SystemGroupImpl::ShutdownStatic() {
   sSingleton->Shutdown(true);
   sSingleton = nullptr;
 }
 
-/* static */ SystemGroupImpl* SystemGroupImpl::Get() {
+/* static */
+SystemGroupImpl* SystemGroupImpl::Get() {
   MOZ_ASSERT(sSingleton);
   return sSingleton.get();
 }
@@ -58,24 +61,25 @@ void SystemGroup::Shutdown() { SystemGroupImpl::ShutdownStatic(); }
 
 bool SystemGroup::Initialized() { return SystemGroupImpl::Initialized(); }
 
-/* static */ nsresult SystemGroup::Dispatch(
-    TaskCategory aCategory, already_AddRefed<nsIRunnable>&& aRunnable) {
+/* static */
+nsresult SystemGroup::Dispatch(TaskCategory aCategory,
+                               already_AddRefed<nsIRunnable>&& aRunnable) {
   if (!SystemGroupImpl::Initialized()) {
     return NS_DispatchToMainThread(std::move(aRunnable));
   }
   return SystemGroupImpl::Get()->Dispatch(aCategory, std::move(aRunnable));
 }
 
-/* static */ nsISerialEventTarget* SystemGroup::EventTargetFor(
-    TaskCategory aCategory) {
+/* static */
+nsISerialEventTarget* SystemGroup::EventTargetFor(TaskCategory aCategory) {
   if (!SystemGroupImpl::Initialized()) {
     return GetMainThreadSerialEventTarget();
   }
   return SystemGroupImpl::Get()->EventTargetFor(aCategory);
 }
 
-/* static */ AbstractThread* SystemGroup::AbstractMainThreadFor(
-    TaskCategory aCategory) {
+/* static */
+AbstractThread* SystemGroup::AbstractMainThreadFor(TaskCategory aCategory) {
   MOZ_ASSERT(SystemGroupImpl::Initialized());
   return SystemGroupImpl::Get()->AbstractMainThreadFor(aCategory);
 }

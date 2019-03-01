@@ -2656,7 +2656,8 @@ static bool IsRubyAlignSpaceAround(nsIFrame* aRubyBase) {
  * Assign justification gaps for justification
  * opportunities across two frames.
  */
-/* static */ int nsLineLayout::AssignInterframeJustificationGaps(
+/* static */
+int nsLineLayout::AssignInterframeJustificationGaps(
     PerFrameData* aFrame, JustificationComputationState& aState) {
   PerFrameData* prev = aState.mLastParticipant;
   MOZ_ASSERT(prev);

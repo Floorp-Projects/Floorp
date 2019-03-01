@@ -34,7 +34,8 @@ NS_IMPL_ISUPPORTS(nsPrintingPromptService, nsIPrintingPromptService,
 
 StaticRefPtr<nsPrintingPromptService> sSingleton;
 
-/* static */ already_AddRefed<nsPrintingPromptService>
+/* static */
+already_AddRefed<nsPrintingPromptService>
 nsPrintingPromptService::GetSingleton() {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "The content process must use nsPrintingProxy");

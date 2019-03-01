@@ -222,7 +222,8 @@ JSObject* BroadcastChannel::WrapObject(JSContext* aCx,
   return BroadcastChannel_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-/* static */ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
+/* static */
+already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
     const GlobalObject& aGlobal, const nsAString& aChannel, ErrorResult& aRv) {
   nsCOMPtr<nsPIDOMWindowInner> window =
       do_QueryInterface(aGlobal.GetAsSupports());

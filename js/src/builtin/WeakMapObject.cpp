@@ -44,7 +44,8 @@ using namespace js;
   return true;
 }
 
-/* static */ bool WeakMapObject::has(JSContext* cx, unsigned argc, Value* vp) {
+/* static */
+bool WeakMapObject::has(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<WeakMapObject::is, WeakMapObject::has_impl>(cx,
                                                                           args);
@@ -72,7 +73,8 @@ using namespace js;
   return true;
 }
 
-/* static */ bool WeakMapObject::get(JSContext* cx, unsigned argc, Value* vp) {
+/* static */
+bool WeakMapObject::get(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<WeakMapObject::is, WeakMapObject::get_impl>(cx,
                                                                           args);
@@ -101,8 +103,8 @@ using namespace js;
   return true;
 }
 
-/* static */ bool WeakMapObject::delete_(JSContext* cx, unsigned argc,
-                                         Value* vp) {
+/* static */
+bool WeakMapObject::delete_(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<WeakMapObject::is, WeakMapObject::delete_impl>(
       cx, args);
@@ -127,7 +129,8 @@ using namespace js;
   return true;
 }
 
-/* static */ bool WeakMapObject::set(JSContext* cx, unsigned argc, Value* vp) {
+/* static */
+bool WeakMapObject::set(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<WeakMapObject::is, WeakMapObject::set_impl>(cx,
                                                                           args);
@@ -217,8 +220,8 @@ JS_PUBLIC_API bool JS::SetWeakMapEntry(JSContext* cx, HandleObject mapObj,
   return WeakCollectionPutEntryInternal(cx, rootedMap, key, val);
 }
 
-/* static */ bool WeakMapObject::construct(JSContext* cx, unsigned argc,
-                                           Value* vp) {
+/* static */
+bool WeakMapObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // ES6 draft rev 31 (15 Jan 2015) 23.3.1.1 step 1.

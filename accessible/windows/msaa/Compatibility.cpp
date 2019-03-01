@@ -166,7 +166,8 @@ uint32_t Compatibility::sConsumers = Compatibility::UNKNOWN;
 /**
  * This function is safe to call multiple times.
  */
-/* static */ void Compatibility::InitConsumers() {
+/* static */
+void Compatibility::InitConsumers() {
   HMODULE jawsHandle = ::GetModuleHandleW(L"jhook");
   if (jawsHandle) {
     sConsumers |=
@@ -203,7 +204,8 @@ uint32_t Compatibility::sConsumers = Compatibility::UNKNOWN;
     sConsumers &= ~Compatibility::UNKNOWN;
 }
 
-/* static */ bool Compatibility::HasKnownNonUiaConsumer() {
+/* static */
+bool Compatibility::HasKnownNonUiaConsumer() {
   InitConsumers();
   return sConsumers & ~(Compatibility::UNKNOWN | UIAUTOMATION);
 }

@@ -33,7 +33,8 @@ PresentationConnectionList::PresentationConnectionList(
   MOZ_ASSERT(aPromise);
 }
 
-/* virtual */ JSObject* PresentationConnectionList::WrapObject(
+/* virtual */
+JSObject* PresentationConnectionList::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return PresentationConnectionList_Binding::Wrap(aCx, this, aGivenProto);
 }

@@ -89,9 +89,11 @@ nsMathMLFrame::UpdatePresentationData(uint32_t aFlagsValues,
 // a MathMLChar. Frame classes that use this should ensure that the
 // extra leaf ComputedStyle given to the MathMLChars are accessible to
 // the Style System via the Get/Set AdditionalComputedStyle() APIs.
-/* static */ void nsMathMLFrame::ResolveMathMLCharStyle(
-    nsPresContext* aPresContext, nsIContent* aContent,
-    ComputedStyle* aParentComputedStyle, nsMathMLChar* aMathMLChar) {
+/* static */
+void nsMathMLFrame::ResolveMathMLCharStyle(nsPresContext* aPresContext,
+                                           nsIContent* aContent,
+                                           ComputedStyle* aParentComputedStyle,
+                                           nsMathMLChar* aMathMLChar) {
   PseudoStyleType pseudoType = PseudoStyleType::mozMathAnonymous;  // savings
   RefPtr<ComputedStyle> newComputedStyle;
   newComputedStyle = aPresContext->StyleSet()->ResolvePseudoElementStyle(
@@ -100,8 +102,9 @@ nsMathMLFrame::UpdatePresentationData(uint32_t aFlagsValues,
   aMathMLChar->SetComputedStyle(newComputedStyle);
 }
 
-/* static */ void nsMathMLFrame::GetEmbellishDataFrom(
-    nsIFrame* aFrame, nsEmbellishData& aEmbellishData) {
+/* static */
+void nsMathMLFrame::GetEmbellishDataFrom(nsIFrame* aFrame,
+                                         nsEmbellishData& aEmbellishData) {
   // initialize OUT params
   aEmbellishData.flags = 0;
   aEmbellishData.coreFrame = nullptr;
@@ -119,7 +122,8 @@ nsMathMLFrame::UpdatePresentationData(uint32_t aFlagsValues,
 
 // helper to get the presentation data of a frame, by possibly walking up
 // the frame hierarchy if we happen to be surrounded by non-MathML frames.
-/* static */ void nsMathMLFrame::GetPresentationDataFrom(
+/* static */
+void nsMathMLFrame::GetPresentationDataFrom(
     nsIFrame* aFrame, nsPresentationData& aPresentationData, bool aClimbTree) {
   // initialize OUT params
   aPresentationData.flags = 0;
@@ -154,9 +158,10 @@ nsMathMLFrame::UpdatePresentationData(uint32_t aFlagsValues,
       "bad MathML markup - could not find the top <math> element");
 }
 
-/* static */ void nsMathMLFrame::GetRuleThickness(DrawTarget* aDrawTarget,
-                                                  nsFontMetrics* aFontMetrics,
-                                                  nscoord& aRuleThickness) {
+/* static */
+void nsMathMLFrame::GetRuleThickness(DrawTarget* aDrawTarget,
+                                     nsFontMetrics* aFontMetrics,
+                                     nscoord& aRuleThickness) {
   nscoord xHeight = aFontMetrics->XHeight();
   char16_t overBar = 0x00AF;
   nsBoundingMetrics bm = nsLayoutUtils::AppUnitBoundsOfString(
@@ -168,9 +173,10 @@ nsMathMLFrame::UpdatePresentationData(uint32_t aFlagsValues,
   }
 }
 
-/* static */ void nsMathMLFrame::GetAxisHeight(DrawTarget* aDrawTarget,
-                                               nsFontMetrics* aFontMetrics,
-                                               nscoord& aAxisHeight) {
+/* static */
+void nsMathMLFrame::GetAxisHeight(DrawTarget* aDrawTarget,
+                                  nsFontMetrics* aFontMetrics,
+                                  nscoord& aAxisHeight) {
   gfxFont* mathFont = aFontMetrics->GetThebesFontGroup()->GetFirstMathFont();
   if (mathFont) {
     aAxisHeight = mathFont->MathTable()->Constant(
@@ -189,10 +195,11 @@ nsMathMLFrame::UpdatePresentationData(uint32_t aFlagsValues,
   }
 }
 
-/* static */ nscoord nsMathMLFrame::CalcLength(nsPresContext* aPresContext,
-                                               ComputedStyle* aComputedStyle,
-                                               const nsCSSValue& aCSSValue,
-                                               float aFontSizeInflation) {
+/* static */
+nscoord nsMathMLFrame::CalcLength(nsPresContext* aPresContext,
+                                  ComputedStyle* aComputedStyle,
+                                  const nsCSSValue& aCSSValue,
+                                  float aFontSizeInflation) {
   NS_ASSERTION(aCSSValue.IsLengthUnit(), "not a length unit");
 
   if (aCSSValue.IsPixelLengthUnit()) {
@@ -217,10 +224,12 @@ nsMathMLFrame::UpdatePresentationData(uint32_t aFlagsValues,
   return 0;
 }
 
-/* static */ void nsMathMLFrame::ParseNumericValue(
-    const nsString& aString, nscoord* aLengthValue, uint32_t aFlags,
-    nsPresContext* aPresContext, ComputedStyle* aComputedStyle,
-    float aFontSizeInflation) {
+/* static */
+void nsMathMLFrame::ParseNumericValue(const nsString& aString,
+                                      nscoord* aLengthValue, uint32_t aFlags,
+                                      nsPresContext* aPresContext,
+                                      ComputedStyle* aComputedStyle,
+                                      float aFontSizeInflation) {
   nsCSSValue cssValue;
 
   if (!nsMathMLElement::ParseNumericValue(aString, cssValue, aFlags,

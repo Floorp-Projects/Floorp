@@ -323,10 +323,9 @@ void nsPreflightCache::Clear() {
   mTable.Clear();
 }
 
-/* static */ bool nsPreflightCache::GetCacheKey(nsIURI* aURI,
-                                                nsIPrincipal* aPrincipal,
-                                                bool aWithCredentials,
-                                                nsACString& _retval) {
+/* static */
+bool nsPreflightCache::GetCacheKey(nsIURI* aURI, nsIPrincipal* aPrincipal,
+                                   bool aWithCredentials, nsACString& _retval) {
   NS_ASSERTION(aURI, "Null uri!");
   NS_ASSERTION(aPrincipal, "Null principal!");
 

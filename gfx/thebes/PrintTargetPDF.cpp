@@ -41,7 +41,8 @@ PrintTargetPDF::~PrintTargetPDF() {
   Finish();
 }
 
-/* static */ already_AddRefed<PrintTargetPDF> PrintTargetPDF::CreateOrNull(
+/* static */
+already_AddRefed<PrintTargetPDF> PrintTargetPDF::CreateOrNull(
     nsIOutputStream* aStream, const IntSize& aSizeInPoints) {
   cairo_surface_t* surface = cairo_pdf_surface_create_for_stream(
       write_func, (void*)aStream, aSizeInPoints.width, aSizeInPoints.height);

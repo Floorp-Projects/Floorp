@@ -46,8 +46,8 @@ bool PeerIdentity::Equals(const nsAString& aOtherString) const {
   return normHost == normOtherHost;
 }
 
-/* static */ void PeerIdentity::GetUser(const nsAString& aPeerIdentity,
-                                        nsAString& aUser) {
+/* static */
+void PeerIdentity::GetUser(const nsAString& aPeerIdentity, nsAString& aUser) {
   int32_t at = aPeerIdentity.FindChar('@');
   if (at >= 0) {
     aUser = Substring(aPeerIdentity, 0, at);
@@ -56,8 +56,8 @@ bool PeerIdentity::Equals(const nsAString& aOtherString) const {
   }
 }
 
-/* static */ void PeerIdentity::GetHost(const nsAString& aPeerIdentity,
-                                        nsAString& aHost) {
+/* static */
+void PeerIdentity::GetHost(const nsAString& aPeerIdentity, nsAString& aHost) {
   int32_t at = aPeerIdentity.FindChar('@');
   if (at >= 0) {
     aHost = Substring(aPeerIdentity, at + 1);
@@ -66,9 +66,10 @@ bool PeerIdentity::Equals(const nsAString& aOtherString) const {
   }
 }
 
-/* static */ void PeerIdentity::GetNormalizedHost(
-    const nsCOMPtr<nsIIDNService>& aIdnService, const nsAString& aHost,
-    nsACString& aNormalizedHost) {
+/* static */
+void PeerIdentity::GetNormalizedHost(const nsCOMPtr<nsIIDNService>& aIdnService,
+                                     const nsAString& aHost,
+                                     nsACString& aNormalizedHost) {
   const nsCString chost = NS_ConvertUTF16toUTF8(aHost);
   DebugOnly<nsresult> rv =
       aIdnService->ConvertUTF8toACE(chost, aNormalizedHost);

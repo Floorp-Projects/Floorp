@@ -1285,7 +1285,8 @@ nsIDocShell* nsPresContext::GetDocShell() const {
   return mDocument->GetDocShell();
 }
 
-/* virtual */ void nsPresContext::Detach() { SetLinkHandler(nullptr); }
+/* virtual */
+void nsPresContext::Detach() { SetLinkHandler(nullptr); }
 
 bool nsPresContext::BidiEnabled() const { return Document()->GetBidiEnabled(); }
 
@@ -1523,7 +1524,8 @@ void nsPresContext::UIResolutionChangedSync() {
   }
 }
 
-/*static*/ bool nsPresContext::UIResolutionChangedSubdocumentCallback(
+/*static*/
+bool nsPresContext::UIResolutionChangedSubdocumentCallback(
     dom::Document* aDocument, void* aData) {
   nsPresContext* pc = aDocument->GetPresContext();
   if (pc) {
@@ -2059,8 +2061,9 @@ void nsPresContext::NotifyInvalidation(TransactionId aTransactionId,
   transaction->mInvalidations.AppendElement(aRect);
 }
 
-/* static */ void nsPresContext::NotifySubDocInvalidation(
-    ContainerLayer* aContainer, const nsIntRegion* aRegion) {
+/* static */
+void nsPresContext::NotifySubDocInvalidation(ContainerLayer* aContainer,
+                                             const nsIntRegion* aRegion) {
   ContainerLayerPresContext* data = static_cast<ContainerLayerPresContext*>(
       aContainer->GetUserData(&gNotifySubDocInvalidationData));
   if (!data) {
@@ -2095,7 +2098,8 @@ void nsPresContext::SetNotifySubDocInvalidationData(
   aContainer->SetUserData(&gNotifySubDocInvalidationData, pres);
 }
 
-/* static */ void nsPresContext::ClearNotifySubDocInvalidationData(
+/* static */
+void nsPresContext::ClearNotifySubDocInvalidationData(
     ContainerLayer* aContainer) {
   aContainer->SetUserData(&gNotifySubDocInvalidationData, nullptr);
 }
@@ -2581,7 +2585,8 @@ nsRootPresContext::~nsRootPresContext() {
   CancelApplyPluginGeometryTimer();
 }
 
-/* virtual */ void nsRootPresContext::Detach() {
+/* virtual */
+void nsRootPresContext::Detach() {
   // XXXmats maybe also CancelApplyPluginGeometryTimer(); ?
   nsPresContext::Detach();
 }

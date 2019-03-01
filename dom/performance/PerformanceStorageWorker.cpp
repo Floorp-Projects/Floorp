@@ -81,8 +81,9 @@ class PerformanceStorageWorkerHolder final : public WorkerHolder {
 
 }  // namespace
 
-/* static */ already_AddRefed<PerformanceStorageWorker>
-PerformanceStorageWorker::Create(WorkerPrivate* aWorkerPrivate) {
+/* static */
+already_AddRefed<PerformanceStorageWorker> PerformanceStorageWorker::Create(
+    WorkerPrivate* aWorkerPrivate) {
   MOZ_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
 

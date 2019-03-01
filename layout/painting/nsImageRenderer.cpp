@@ -272,7 +272,8 @@ CSSSizeOrRatio nsImageRenderer::ComputeIntrinsicSize() {
   return result;
 }
 
-/* static */ nsSize nsImageRenderer::ComputeConcreteSize(
+/* static */
+nsSize nsImageRenderer::ComputeConcreteSize(
     const CSSSizeOrRatio& aSpecifiedSize, const CSSSizeOrRatio& aIntrinsicSize,
     const nsSize& aDefaultSize) {
   // The specified size is fully specified, just use that
@@ -330,9 +331,10 @@ CSSSizeOrRatio nsImageRenderer::ComputeIntrinsicSize() {
   return nsSize(width, aSpecifiedSize.mHeight);
 }
 
-/* static */ nsSize nsImageRenderer::ComputeConstrainedSize(
-    const nsSize& aConstrainingSize, const nsSize& aIntrinsicRatio,
-    FitType aFitType) {
+/* static */
+nsSize nsImageRenderer::ComputeConstrainedSize(const nsSize& aConstrainingSize,
+                                               const nsSize& aIntrinsicRatio,
+                                               FitType aFitType) {
   if (aIntrinsicRatio.width <= 0 && aIntrinsicRatio.height <= 0) {
     return aConstrainingSize;
   }
