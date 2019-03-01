@@ -240,6 +240,7 @@ struct JSWindowActorEventDecl
 struct JSWindowActorInfo
 {
   nsString name;
+  bool allFrames;
   nsCString url;
 
   JSWindowActorEventDecl[] events;
