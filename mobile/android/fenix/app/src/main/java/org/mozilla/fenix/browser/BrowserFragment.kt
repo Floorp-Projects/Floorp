@@ -200,13 +200,14 @@ class BrowserFragment : Fragment(), BackHandler {
             }
     }
 
-    @SuppressWarnings("ReturnCount")
     override fun onBackPressed(): Boolean {
-        if (findInPageIntegration.onBackPressed()) return true
-        if (sessionFeature.onBackPressed()) return true
-        if (customTabsToolbarFeature.onBackPressed()) return true
-
-        return false
+        return when {
+            findInPageIntegration.onBackPressed() -> true
+            sessionFeature.onBackPressed() -> true
+            requireComponents.core.sessionManager.selectedSession?.isCustomTabSession()
+                    ?: false && customTabsToolbarFeature.onBackPressed() -> true
+            else -> false
+        }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
