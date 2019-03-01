@@ -12,12 +12,10 @@ with Files("**"):
 generated = [
     'AccessibilityEvent',
     'AndroidBuild',
-    'AndroidGraphics',
     'AndroidInputType',
     'AndroidRect',
     'InetAddress',
     'JavaBuiltins',
-    'JavaExceptions',
     'KeyEvent',
     'MediaCodec',
     'MotionEvent',
