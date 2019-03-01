@@ -15,6 +15,7 @@
 
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
   const URL = "about:blank";
   let windowActorOptions = {
     parent: {
@@ -22,20 +23,14 @@
     },
     child: {
       moduleURI: "resource://testing-common/TestChild.jsm",
+      observers: [
+        "test-js-window-actor-child-observer",
+      ],
     },
   };
 
   add_task(async function registerWindowActor() {
     ok(ChromeUtils, "Should be able to get the ChromeUtils interface");
-    ChromeUtils.registerWindowActor("Test", windowActorOptions);
-    SimpleTest.doesThrow(() =>
-      ChromeUtils.registerWindowActor("Test", windowActorOptions),
-      "Should throw if register has duplicate name.");
-    ChromeUtils.unregisterWindowActor("Test");
-  });
-
-  add_task(async function getActor() {
-    // Test in-process getActor function
     ChromeUtils.registerWindowActor("Test", windowActorOptions);
     SimpleTest.doesThrow(() =>
       ChromeUtils.registerWindowActor("Test", windowActorOptions),
@@ -81,5 +76,23 @@
     await promise;
     ChromeUtils.unregisterWindowActor("Test");
   });
+
+  add_task(async function observers() {
+    // Test in-process observers notification
+    ChromeUtils.registerWindowActor("Test", windowActorOptions);
+    const TOPIC = "test-js-window-actor-child-observer";
+    Services.obs.notifyObservers(content.window, TOPIC, "dataString");
+
+    let child = content.window.getWindowGlobalChild();
+    let actorChild = child.getActor("Test");
+    ok(actorChild, "JSWindowActorChild should have value.");
+    let {subject, topic, data} = actorChild.lastObserved;
+
+    is(subject.getWindowGlobalChild().getActor("Test"), actorChild, "Should have been recieved on the right actor");
+    is(topic, TOPIC, "Topic matches");
+    is(data, "dataString", "Data matches");
+    ChromeUtils.unregisterWindowActor("Test");
+  });
+
   ]]></script>
 </window>
