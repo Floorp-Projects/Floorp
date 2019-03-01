@@ -317,6 +317,8 @@
 
 extern bool sDisablePrefetchHTTPSPref;
 
+mozilla::LazyLogModule gPageCacheLog("PageCache");
+
 namespace mozilla {
 namespace dom {
 
@@ -7636,16 +7638,21 @@ void Document::CollectDescendantDocuments(
   }
 }
 
-#ifdef DEBUG_bryner
-#  define DEBUG_PAGE_CACHE
-#endif
-
 bool Document::CanSavePresentation(nsIRequest* aNewRequest) {
   if (!IsBFCachingAllowed()) {
     return false;
   }
 
+  nsAutoCString uri;
+  if (MOZ_UNLIKELY(MOZ_LOG_TEST(gPageCacheLog, LogLevel::Verbose))) {
+    if (mDocumentURI) {
+      mDocumentURI->GetSpec(uri);
+    }
+  }
+
   if (EventHandlingSuppressed()) {
+    MOZ_LOG(gPageCacheLog, mozilla::LogLevel::Verbose,
+            ("Save of %s blocked on event handling suppression", uri.get()));
     return false;
   }
 
@@ -7656,6 +7663,8 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest) {
   // frozen.
   nsPIDOMWindowInner* win = GetInnerWindow();
   if (win && win->IsSuspended() && !win->IsFrozen()) {
+    MOZ_LOG(gPageCacheLog, mozilla::LogLevel::Verbose,
+            ("Save of %s blocked on suspended Window", uri.get()));
     return false;
   }
 
@@ -7664,6 +7673,8 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest) {
   if (piTarget) {
     EventListenerManager* manager = piTarget->GetExistingListenerManager();
     if (manager && manager->HasUnloadListeners()) {
+      MOZ_LOG(gPageCacheLog, mozilla::LogLevel::Verbose,
+              ("Save of %s blocked due to unload handlers", uri.get()));
       return false;
     }
   }
@@ -7700,14 +7711,15 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest) {
             continue;
           }
         }
-#ifdef DEBUG_PAGE_CACHE
-        nsAutoCString requestName, docSpec;
-        request->GetName(requestName);
-        if (mDocumentURI) mDocumentURI->GetSpec(docSpec);
 
-        printf("document %s has request %s\n", docSpec.get(),
-               requestName.get());
-#endif
+        if (MOZ_UNLIKELY(MOZ_LOG_TEST(gPageCacheLog, LogLevel::Verbose))) {
+          nsAutoCString requestName;
+          request->GetName(requestName);
+          MOZ_LOG(gPageCacheLog, LogLevel::Verbose,
+                  ("Save of %s blocked because document has request %s",
+                   uri.get(), requestName.get()));
+        }
+
         return false;
       }
     }
@@ -7716,12 +7728,16 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest) {
   // Check if we have active GetUserMedia use
   if (MediaManager::Exists() && win &&
       MediaManager::Get()->IsWindowStillActive(win->WindowID())) {
+    MOZ_LOG(gPageCacheLog, mozilla::LogLevel::Verbose,
+            ("Save of %s blocked due to GetUserMedia", uri.get()));
     return false;
   }
 
 #ifdef MOZ_WEBRTC
   // Check if we have active PeerConnections
   if (win && win->HasActivePeerConnections()) {
+    MOZ_LOG(gPageCacheLog, mozilla::LogLevel::Verbose,
+            ("Save of %s blocked due to PeerConnection", uri.get()));
     return false;
   }
 #endif  // MOZ_WEBRTC
@@ -7735,6 +7751,8 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest) {
   // Don't save presentations for documents containing MSE content, to
   // reduce memory usage.
   if (ContainsMSEContent()) {
+    MOZ_LOG(gPageCacheLog, mozilla::LogLevel::Verbose,
+            ("Save of %s blocked due to MSE use", uri.get()));
     return false;
   }
 
@@ -7746,6 +7764,8 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest) {
       // The aIgnoreRequest we were passed is only for us, so don't pass it on.
       bool canCache = subdoc ? subdoc->CanSavePresentation(nullptr) : false;
       if (!canCache) {
+        MOZ_LOG(gPageCacheLog, mozilla::LogLevel::Verbose,
+                ("Save of %s blocked due to subdocument blocked", uri.get()));
         return false;
       }
     }
@@ -7755,10 +7775,14 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest) {
     auto* globalWindow = nsGlobalWindowInner::Cast(win);
 #ifdef MOZ_WEBSPEECH
     if (globalWindow->HasActiveSpeechSynthesis()) {
+      MOZ_LOG(gPageCacheLog, mozilla::LogLevel::Verbose,
+              ("Save of %s blocked due to Speech use", uri.get()));
       return false;
     }
 #endif
     if (globalWindow->HasUsedVR()) {
+      MOZ_LOG(gPageCacheLog, mozilla::LogLevel::Verbose,
+              ("Save of %s blocked due to having used VR", uri.get()));
       return false;
     }
   }
