@@ -593,6 +593,19 @@ dictionary Base64URLEncodeOptions {
 };
 
 dictionary WindowActorOptions {
+  /**
+   * If this is set to `true`, allow this actor to be created for subframes,
+   * and not just toplevel window globals.
+   */
+  boolean allFrames = false;
+
+  /**
+   * If this is set to `true`, allow this actor to be created for window
+   * globals loaded in chrome browsing contexts, such as those used to load the
+   * tabbrowser.
+   */
+  boolean includeChrome = false;
+
   /** This fields are used for configuring individual sides of the actor. */
   required WindowActorSidedOptions parent;
   required WindowActorChildOptions child;
