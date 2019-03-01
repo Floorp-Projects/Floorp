@@ -1,14 +1,14 @@
 {
-    "llvm_revision": "353414",
+    "llvm_revision": "355016",
     "stages": "3",
     "build_libcxx": false,
     "build_type": "Release",
     "assertions": false,
-    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/tags/RELEASE_800/rc2",
-    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/tags/RELEASE_800/rc2",
-    "lld_repo": "https://llvm.org/svn/llvm-project/lld/tags/RELEASE_800/rc2",
-    "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/tags/RELEASE_800/rc2",
-    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/tags/RELEASE_800/rc2",
+    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/tags/RELEASE_800/rc3",
+    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/tags/RELEASE_800/rc3",
+    "lld_repo": "https://llvm.org/svn/llvm-project/lld/tags/RELEASE_800/rc3",
+    "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/tags/RELEASE_800/rc3",
+    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/tags/RELEASE_800/rc3",
     "python_path": "c:/mozilla-build/python/python.exe",
     "cc": "cl.exe",
     "cxx": "cl.exe",
@@ -17,7 +17,6 @@
       "workaround-issue38586.patch",
       "unpoison-thread-stacks.patch",
       "downgrade-mangling-error.patch",
-      "loosen-msvc-detection.patch",
-      "D57636.diff"
+      "loosen-msvc-detection.patch"
     ]
 }
