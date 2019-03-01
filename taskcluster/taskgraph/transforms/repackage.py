@@ -312,6 +312,7 @@ def make_job_description(config, jobs):
         if build_platform.startswith('win'):
             worker_type = 'aws-provisioner-v1/gecko-%s-b-win2012' % level
             run['use-magic-mh-args'] = False
+            run['use-caches'] = False
         else:
             if build_platform.startswith(('linux', 'macosx')):
                 worker_type = 'aws-provisioner-v1/gecko-%s-b-linux' % level
