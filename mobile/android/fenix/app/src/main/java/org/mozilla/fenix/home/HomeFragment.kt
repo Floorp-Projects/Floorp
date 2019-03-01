@@ -31,7 +31,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.home.sessions.ArchivedSession
-import org.mozilla.fenix.home.sessions.CurrentSessionBottomSheetFragment
+import org.mozilla.fenix.home.sessions.SessionBottomSheetFragment
 import org.mozilla.fenix.home.sessions.SessionsAction
 import org.mozilla.fenix.home.sessions.SessionsChange
 import org.mozilla.fenix.home.sessions.SessionsComponent
@@ -181,7 +181,11 @@ class HomeFragment : Fragment() {
                         is TabsAction.Archive -> {
                             requireComponents.core.sessionStorage.archive(requireComponents.core.sessionManager)
                         }
-                        is TabsAction.MenuTapped -> openSessionMenu()
+                        is TabsAction.MenuTapped -> {
+                            requireComponents.core.sessionStorage.current()
+                                ?.let { ArchivedSession(it.id!!, it, it.lastSavedAt, it.urls) }
+                                ?.also { openSessionMenu(it) }
+                        }
                         is TabsAction.Select -> {
                             val session = requireComponents.core.sessionManager.findSessionById(it.sessionId)
                             requireComponents.core.sessionManager.select(session!!)
@@ -211,7 +215,7 @@ class HomeFragment : Fragment() {
                         is SessionsAction.Delete -> {
                             requireComponents.core.sessionStorage.remove(it.archivedSession.bundle)
                         }
-                        is SessionsAction.MenuTapped -> openSessionMenu()
+                        is SessionsAction.MenuTapped -> openSessionMenu(it.archivedSession)
                     }
                 }
         }
@@ -319,12 +323,26 @@ class HomeFragment : Fragment() {
         )
     }
 
-    private fun openSessionMenu() {
-        CurrentSessionBottomSheetFragment().show(
-            requireActivity().supportFragmentManager,
-            CurrentSessionBottomSheetFragment.overflowFragmentTag
+    private fun openSessionMenu(archivedSession: ArchivedSession) {
+        val isCurrentSession = archivedSession.bundle.id == requireComponents.core.sessionStorage.current()?.id
+        SessionBottomSheetFragment().also {
+            it.archivedSession = archivedSession
+            it.isCurrentSession = isCurrentSession
+            it.onArchive = {
+                if (isCurrentSession) {
+                    requireComponents.core.sessionStorage.archive(requireComponents.core.sessionManager)
+                }
+            }
+            it.onDelete = {
+                if (isCurrentSession) {
+                    requireComponents.useCases.tabsUseCases.removeAllTabsOfType.invoke(false)
+                }
 
-        )
+                requireComponents.core.sessionStorage.remove(archivedSession.bundle)
+
+                true
+            }
+        }.show(requireActivity().supportFragmentManager, SessionBottomSheetFragment.overflowFragmentTag)
     }
 
     companion object {
