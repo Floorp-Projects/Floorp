@@ -317,7 +317,7 @@ class KeyframeEffect : public AnimationEffect {
   };
 
   MatchForCompositor IsMatchForCompositor(
-      nsCSSPropertyID aProperty, const nsIFrame* aFrame,
+      const nsCSSPropertyIDSet& aPropertySet, const nsIFrame* aFrame,
       const EffectSet& aEffects,
       AnimationPerformanceWarning::Type& aPerformanceWarning /* out */) const;
 
