@@ -46,7 +46,7 @@ add_task(async function test() {
   await showTooltipAndVerify(document.querySelectorAll(".request-list-item")[1]);
 
   info("Checking if the image thumbnail is hidden when mouse leaves the menu widget");
-  const requestsListContents = document.querySelector(".requests-list-contents");
+  const requestsListContents = document.querySelector(".requests-list-row-group");
   EventUtils.synthesizeMouse(requestsListContents, 0, 0, { type: "mousemove" },
                              monitor.panelWin);
   await waitUntil(() => !toolboxDoc.querySelector(".tooltip-container.tooltip-visible"));
