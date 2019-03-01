@@ -3556,6 +3556,17 @@ RefPtr<GenericPromise> MediaDecoderStateMachine::SetSink(
   return GenericPromise::CreateAndResolve(wasPlaying, __func__);
 }
 
+void MediaDecoderStateMachine::SetSecondaryVideoContainer(
+    const RefPtr<VideoFrameContainer>& aSecondary) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  RefPtr<MediaDecoderStateMachine> self = this;
+  Unused << InvokeAsync(OwnerThread(), __func__, [self, aSecondary]() {
+    self->mMediaSink->SetSecondaryVideoContainer(aSecondary);
+    return GenericPromise::CreateAndResolve(true, __func__);
+  });
+}
+
 TimeUnit MediaDecoderStateMachine::AudioEndTime() const {
   MOZ_ASSERT(OnTaskQueue());
   if (mMediaSink->IsStarted()) {
