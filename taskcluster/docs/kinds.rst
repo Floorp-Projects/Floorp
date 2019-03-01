@@ -462,6 +462,10 @@ mar-signing-l10n
 ----------------
 Mar-signing-l10n takes the complete update MARs and signs them for localized versions.
 
+mar-signing-autograph-stage
+---------------------------
+These tasks are only to test autograph-stage, when the autograph team asks for their staging environment to be tested.
+
 repackage-msi
 -------------
 Repackage-msi takes the signed full installer and produces an msi installer (that wraps the full installer)
