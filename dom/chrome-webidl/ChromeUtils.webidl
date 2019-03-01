@@ -609,6 +609,18 @@ dictionary WindowActorChildOptions : WindowActorSidedOptions {
    * it will trigger actor creation, and then forward the event to the actor.
    */
   record<DOMString, AddEventListenerOptions> events;
+
+ /**
+  * Array of observer topics to listen to. A observer will be added for each
+  * topic in the list.
+  *
+  * Observers in the list much use the nsGlobalWindowInner object as their topic,
+  * and the events will only be dispatched to the corresponding window actor. If
+  * additional observer notifications are needed with different listening
+  * conditions, please file a bug in DOM requesting support for the subject
+  * required to be added to JS WindowActor objects.
+  **/
+  sequence<ByteString> observers;
 };
 
 enum Base64URLDecodePadding {
