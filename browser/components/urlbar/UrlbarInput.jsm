@@ -879,7 +879,7 @@ class UrlbarInput {
     // remove the !triggeringPrincipal condition here.
     if (!params.triggeringPrincipal ||
         params.triggeringPrincipal.isSystemPrincipal) {
-      delete browser.canceledAuthenticationPromptCounter;
+      delete browser.authPromptAbuseCounter;
     }
 
     params.allowThirdPartyFixup = true;
