@@ -1093,7 +1093,10 @@ impl Device {
         // this on release builds because the synchronous call can stall the
         // pipeline.
         if cfg!(debug_assertions) {
-            gl = gl::ErrorCheckingGl::wrap(gl);
+            gl = gl::ErrorReactingGl::wrap(gl, |gl, name, code| {
+                Self::echo_driver_messages(gl);
+                panic!("Caught GL error {:x} at {}", code, name);
+            });
         }
 
         let mut max_texture_size = [0];
@@ -2799,8 +2802,8 @@ impl Device {
         supports_extension(&self.extensions, extension)
     }
 
-    pub fn echo_driver_messages(&self) {
-        for msg in self.gl.get_debug_messages() {
+    pub fn echo_driver_messages(gl: &gl::Gl) {
+        for msg in gl.get_debug_messages() {
             let level = match msg.severity {
                 gl::DEBUG_SEVERITY_HIGH => Level::Error,
                 gl::DEBUG_SEVERITY_MEDIUM => Level::Warn,
