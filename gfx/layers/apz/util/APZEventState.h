@@ -13,7 +13,6 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/layers/GeckoContentController.h"  // for APZStateChange
 #include "mozilla/layers/ScrollableLayerGuid.h"     // for ScrollableLayerGuid
-#include "mozilla/layers/TouchCounter.h"            // for TouchCounter
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"        // for NS_INLINE_DECL_REFCOUNTING
@@ -95,12 +94,10 @@ class APZEventState {
   nsWeakPtr mWidget;
   RefPtr<ActiveElementManager> mActiveElementManager;
   ContentReceivedInputBlockCallback mContentReceivedInputBlockCallback;
-  TouchCounter mTouchCounter;
   bool mPendingTouchPreventedResponse;
   ScrollableLayerGuid mPendingTouchPreventedGuid;
   uint64_t mPendingTouchPreventedBlockId;
   bool mEndTouchIsClick;
-  bool mFirstTouchCancelled;
   bool mTouchEndCancelled;
   int32_t mLastTouchIdentifier;
 

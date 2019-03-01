@@ -104,7 +104,6 @@ APZEventState::APZEventState(nsIWidget* aWidget,
       mPendingTouchPreventedResponse(false),
       mPendingTouchPreventedBlockId(0),
       mEndTouchIsClick(false),
-      mFirstTouchCancelled(false),
       mTouchEndCancelled(false),
       mLastTouchIdentifier(0) {
   nsresult rv;
@@ -338,22 +337,6 @@ void APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
       // for events that went through APZ (which should be all of them).
       MOZ_ASSERT(aEvent.mFlags.mHandledByAPZ);
 
-      // If the first touchstart event was preventDefaulted, ensure that any
-      // subsequent additional touchstart events also get preventDefaulted. This
-      // ensures that e.g. pinch zooming is prevented even if just the first
-      // touchstart was prevented by content.
-      if (mTouchCounter.GetActiveTouchCount() == 0) {
-        mFirstTouchCancelled = isTouchPrevented;
-      } else {
-        if (mFirstTouchCancelled && !isTouchPrevented) {
-          APZES_LOG(
-              "Propagating prevent-default from first-touch for block %" PRIu64
-              "\n",
-              aInputBlockId);
-        }
-        isTouchPrevented |= mFirstTouchCancelled;
-      }
-
       if (isTouchPrevented) {
         mContentReceivedInputBlockCallback(aGuid, aInputBlockId,
                                            isTouchPrevented);
@@ -388,11 +371,6 @@ void APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown touch event type");
       break;
-  }
-
-  mTouchCounter.Update(aEvent);
-  if (mTouchCounter.GetActiveTouchCount() == 0) {
-    mFirstTouchCancelled = false;
   }
 
   if (sentContentResponse && !isTouchPrevented &&

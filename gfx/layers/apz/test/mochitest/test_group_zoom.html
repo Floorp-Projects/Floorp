@@ -32,9 +32,6 @@ var prefs = [
   // Pinch-zooming currently requires meta viewport support (this requirement
   // will eventually be removed).
   ["dom.meta-viewport.enabled", true],
-  // Increase the content response timeout because some tests do preventDefault
-  // and we want to make sure APZ actually waits for them.
-  ["apz.content_response_timeout", 60000],
 ];
 
 // Increase the tap timeouts so the double-tap is still detected in case of
@@ -48,7 +45,6 @@ var doubletap_prefs = [
 var subtests = [
   {"file": "helper_bug1280013.html", "prefs": prefs},
   {"file": "helper_basic_zoom.html", "prefs": prefs},
-  {"file": "helper_zoom_prevented.html", "prefs": prefs},
   {"file": "helper_zoomed_pan.html", "prefs": prefs},
   {"file": "helper_fixed_position_scroll_hittest.html", "prefs": prefs},
   {"file": "helper_basic_doubletap_zoom.html", "prefs": doubletap_prefs},
