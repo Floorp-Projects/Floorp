@@ -48,9 +48,14 @@ class HTMLVideoElement final : public HTMLMediaElement {
 
   virtual nsresult Clone(NodeInfo*, nsINode** aResult) const override;
 
+  virtual void UnbindFromTree(bool aDeep = true,
+                              bool aNullParent = true) override;
+
   // Set size with the current video frame's height and width.
   // If there is no video frame, returns NS_ERROR_FAILURE.
   nsresult GetVideoSize(nsIntSize* size);
+
+  virtual void UpdateMediaSize(const nsIntSize& aSize) override;
 
   virtual nsresult SetAcceptHeader(nsIHttpChannel* aChannel) override;
 
@@ -129,6 +134,8 @@ class HTMLVideoElement final : public HTMLMediaElement {
 
   void SetMozIsOrientationLocked(bool aLock) { mIsOrientationLocked = aLock; }
 
+  void CloneElementVisually(HTMLVideoElement& aTarget, ErrorResult& rv);
+
  protected:
   virtual ~HTMLVideoElement();
 
@@ -177,6 +184,9 @@ class HTMLVideoElement final : public HTMLMediaElement {
 
   static bool IsVideoStatsEnabled();
   double TotalPlayTime() const;
+
+  virtual void MaybeBeginCloningVisually() override;
+  void EndCloningVisually();
 };
 
 }  // namespace dom

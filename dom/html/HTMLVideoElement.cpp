@@ -25,12 +25,14 @@
 #include "FrameStatistics.h"
 #include "MediaError.h"
 #include "MediaDecoder.h"
+#include "MediaDecoderStateMachine.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/WakeLock.h"
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/TimeRanges.h"
 #include "mozilla/dom/VideoPlaybackQuality.h"
+#include "mozilla/dom/VideoStreamTrack.h"
 
 #include <algorithm>
 #include <limits>
@@ -66,8 +68,22 @@ nsresult HTMLVideoElement::Clone(mozilla::dom::NodeInfo* aNodeInfo,
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(HTMLVideoElement,
                                                HTMLMediaElement)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLVideoElement, HTMLMediaElement,
-                                   mVisualCloneTarget, mVisualCloneSource)
+NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLVideoElement)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLVideoElement,
+                                                HTMLMediaElement)
+  if (tmp->mVisualCloneTarget) {
+    tmp->EndCloningVisually();
+  }
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mVisualCloneTarget)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mVisualCloneSource)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLVideoElement,
+                                                  HTMLMediaElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVisualCloneTarget)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVisualCloneSource)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 HTMLVideoElement::HTMLVideoElement(already_AddRefed<NodeInfo>&& aNodeInfo)
     : HTMLMediaElement(std::move(aNodeInfo)), mIsOrientationLocked(false) {
@@ -76,6 +92,15 @@ HTMLVideoElement::HTMLVideoElement(already_AddRefed<NodeInfo>&& aNodeInfo)
 
 HTMLVideoElement::~HTMLVideoElement() {
   DecoderDoctorLogger::LogDestruction(this);
+}
+
+void HTMLVideoElement::UpdateMediaSize(const nsIntSize& aSize) {
+  HTMLMediaElement::UpdateMediaSize(aSize);
+  // If we have a clone target, we should update its size as well.
+  if (mVisualCloneTarget) {
+    Maybe<nsIntSize> newSize = Some(aSize);
+    mVisualCloneTarget->Invalidate(true, newSize, true);
+  }
 }
 
 nsresult HTMLVideoElement::GetVideoSize(nsIntSize* size) {
@@ -137,6 +162,18 @@ HTMLVideoElement::IsAttributeMapped(const nsAtom* aAttribute) const {
 nsMapRuleToAttributesFunc HTMLVideoElement::GetAttributeMappingFunction()
     const {
   return &MapAttributesIntoRule;
+}
+
+void HTMLVideoElement::UnbindFromTree(bool aDeep, bool aNullParent) {
+  if (mVisualCloneSource) {
+    mVisualCloneSource->EndCloningVisually();
+    SetVisualCloneSource(nullptr);
+  } else if (mVisualCloneTarget) {
+    mVisualCloneTarget->SetVisualCloneSource(nullptr);
+    EndCloningVisually();
+  }
+
+  HTMLMediaElement::UnbindFromTree(aDeep, aNullParent);
 }
 
 nsresult HTMLVideoElement::SetAcceptHeader(nsIHttpChannel* aChannel) {
@@ -394,6 +431,74 @@ double HTMLVideoElement::TotalPlayTime() const {
   }
 
   return total;
+}
+
+void HTMLVideoElement::CloneElementVisually(HTMLVideoElement& aTargetVideo,
+                                            ErrorResult& rv) {
+  MOZ_ASSERT(!mUnboundFromTree,
+             "Can't clone a video that's not bound to a DOM tree.");
+  MOZ_ASSERT(!aTargetVideo.mUnboundFromTree,
+             "Can't clone to a video that's not bound to a DOM tree.");
+  if (mUnboundFromTree || aTargetVideo.mUnboundFromTree) {
+    rv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+
+  if (!SetVisualCloneTarget(&aTargetVideo)) {
+    rv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  if (!aTargetVideo.SetVisualCloneSource(this)) {
+    mVisualCloneTarget = nullptr;
+    rv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  aTargetVideo.SetMediaInfo(mMediaInfo);
+
+  MaybeBeginCloningVisually();
+}
+
+void HTMLVideoElement::MaybeBeginCloningVisually() {
+  if (!mVisualCloneTarget) {
+    return;
+  }
+
+  if (mDecoder) {
+    MediaDecoderStateMachine* mdsm = mDecoder->GetStateMachine();
+    VideoFrameContainer* container =
+        mVisualCloneTarget->GetVideoFrameContainer();
+    if (mdsm && container) {
+      mdsm->SetSecondaryVideoContainer(container);
+    }
+  } else if (mSrcStream) {
+    VideoFrameContainer* container =
+        mVisualCloneTarget->GetVideoFrameContainer();
+    if (container && mSelectedVideoStreamTrack) {
+      mSelectedVideoStreamTrack->AddVideoOutput(container);
+    }
+  }
+}
+
+void HTMLVideoElement::EndCloningVisually() {
+  MOZ_ASSERT(mVisualCloneTarget);
+
+  if (mDecoder) {
+    MediaDecoderStateMachine* mdsm = mDecoder->GetStateMachine();
+    if (mdsm) {
+      mdsm->SetSecondaryVideoContainer(nullptr);
+    }
+  } else if (mSrcStream) {
+    VideoFrameContainer* container =
+        mVisualCloneTarget->GetVideoFrameContainer();
+    if (container && mVisualCloneTarget->mSelectedVideoStreamTrack) {
+      mVisualCloneTarget->mSelectedVideoStreamTrack->RemoveVideoOutput(
+          container);
+    }
+  }
+
+  mVisualCloneTarget = nullptr;
 }
 
 }  // namespace dom
