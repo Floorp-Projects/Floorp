@@ -33,52 +33,50 @@ impl App {
     fn init(
         &mut self,
         api: &RenderApi,
+        framebuffer_size: DeviceIntSize,
         device_pixel_ratio: f32,
     ) {
         let init_data = vec![
             (
                 PipelineId(1, 0),
-                1,
+                -1,
                 ColorF::new(0.0, 1.0, 0.0, 1.0),
-                FramebufferIntPoint::new(0, 400),
+                DeviceIntPoint::new(0, 0),
             ),
             (
                 PipelineId(2, 0),
-                2,
+                -2,
                 ColorF::new(1.0, 1.0, 0.0, 1.0),
-                FramebufferIntPoint::new(200, 400),
+                DeviceIntPoint::new(200, 0),
             ),
             (
                 PipelineId(3, 0),
-                3,
+                -3,
                 ColorF::new(1.0, 0.0, 0.0, 1.0),
-                FramebufferIntPoint::new(200, 600),
+                DeviceIntPoint::new(200, 200),
             ),
             (
                 PipelineId(4, 0),
-                4,
+                -4,
                 ColorF::new(1.0, 0.0, 1.0, 1.0),
-                FramebufferIntPoint::new(0, 600),
+                DeviceIntPoint::new(0, 200),
             ),
         ];
 
         for (pipeline_id, layer, color, offset) in init_data {
-            let size = FramebufferIntSize::new(250, 250);
-            let bounds = FramebufferIntRect::new(offset, size);
+            let size = DeviceIntSize::new(250, 250);
+            let bounds = DeviceIntRect::new(offset, size);
 
             let document_id = api.add_document(size, layer);
             let mut txn = Transaction::new();
-            txn.set_document_view(bounds, device_pixel_ratio);
+            txn.set_window_parameters(framebuffer_size, bounds, device_pixel_ratio);
             txn.set_root_pipeline(pipeline_id);
             api.send_transaction(document_id, txn);
 
             self.documents.push(Document {
                 id: document_id,
                 pipeline_id,
-                content_rect: LayoutRect::new(
-                    LayoutPoint::origin(),
-                    bounds.size.to_f32() / TypedScale::new(device_pixel_ratio),
-                ),
+                content_rect: bounds.to_f32() / TypedScale::new(device_pixel_ratio),
                 color,
             });
         }
@@ -91,7 +89,7 @@ impl Example for App {
         api: &RenderApi,
         base_builder: &mut DisplayListBuilder,
         _txn: &mut Transaction,
-        framebuffer_size: FramebufferIntSize,
+        framebuffer_size: DeviceIntSize,
         _pipeline_id: PipelineId,
         _: DocumentId,
     ) {
@@ -100,7 +98,7 @@ impl Example for App {
                 base_builder.content_size().width;
             // this is the first run, hack around the boilerplate,
             // which assumes an example only needs one document
-            self.init(api,  device_pixel_ratio);
+            self.init(api, framebuffer_size, device_pixel_ratio);
         }
 
         for doc in &self.documents {

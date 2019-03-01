@@ -185,7 +185,7 @@ impl Example for App {
         api: &RenderApi,
         builder: &mut DisplayListBuilder,
         txn: &mut Transaction,
-        _: FramebufferIntSize,
+        _: DeviceIntSize,
         pipeline_id: PipelineId,
         _document_id: DocumentId,
     ) {
