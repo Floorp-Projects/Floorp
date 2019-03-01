@@ -240,7 +240,6 @@ UNIFIED_SOURCES += [
     'FileMediaResource.cpp',
     'GetUserMediaRequest.cpp',
     'GraphDriver.cpp',
-    'GraphRunner.cpp',
     'ImageToI420.cpp',
     'MediaCache.cpp',
     'MediaContainerType.cpp',

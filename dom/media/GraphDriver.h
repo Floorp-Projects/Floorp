@@ -55,16 +55,11 @@ static const int SCHEDULE_SAFETY_MARGIN_MS = 10;
 static const int AUDIO_TARGET_MS =
     2 * MEDIA_GRAPH_TARGET_PERIOD_MS + SCHEDULE_SAFETY_MARGIN_MS;
 
-class MediaStream;
 class MediaStreamGraphImpl;
 
 class AudioCallbackDriver;
 class OfflineClockDriver;
 class SystemClockDriver;
-
-namespace dom {
-enum class AudioContextOperation;
-}
 
 /**
  * A driver is responsible for the scheduling of the processing, the thread
@@ -185,15 +180,18 @@ class GraphDriver {
    */
   void EnsureNextIteration();
 
+  /**
+   * Same thing, but not locked.
+   */
+  void EnsureNextIterationLocked();
+
   MediaStreamGraphImpl* GraphImpl() const { return mGraphImpl; }
 
-#ifdef DEBUG
-  // True if the current thread is driving the MSG.
-  bool OnGraphThread();
-#endif
   // True if the current thread is the GraphDriver's thread.
+  // This is the thread that drives the MSG.
   virtual bool OnThread() = 0;
   // GraphDriver's thread has started and the thread is running.
+  // This is the thread that drives the MSG.
   virtual bool ThreadRunning() = 0;
 
  protected:
@@ -252,8 +250,6 @@ class ThreadedDriver : public GraphDriver {
   void RunThread();
   friend class MediaStreamGraphInitThreadRunnable;
   uint32_t IterationDuration() override { return MEDIA_GRAPH_TARGET_PERIOD_MS; }
-
-  nsIThread* Thread() { return mThread; }
 
   bool OnThread() override {
     return !mThread || mThread->EventTarget()->IsOnCurrentThread();
@@ -415,8 +411,6 @@ class AudioCallbackDriver : public GraphDriver,
   void EnqueueStreamAndPromiseForOperation(
       MediaStream* aStream, void* aPromise,
       dom::AudioContextOperation aOperation);
-
-  std::thread::id ThreadId() { return mAudioThreadId.load(); }
 
   bool OnThread() override {
     return mAudioThreadId.load() == std::this_thread::get_id();
