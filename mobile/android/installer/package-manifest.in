@@ -142,10 +142,6 @@
 @BINPATH@/modules/*
 @BINPATH@/actors/*
 
-; Security Reports
-@BINPATH@/components/SecurityReporter.manifest
-@BINPATH@/components/SecurityReporter.js
-
 ; [Browser Chrome Files]
 @BINPATH@/chrome/toolkit@JAREXT@
 @BINPATH@/chrome/toolkit.manifest

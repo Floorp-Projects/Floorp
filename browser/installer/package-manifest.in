@@ -215,10 +215,6 @@
 @RESPATH@/browser/actors/*
 @RESPATH@/actors/*
 
-; Security Reports
-@RESPATH@/components/SecurityReporter.manifest
-@RESPATH@/components/SecurityReporter.js
-
 ; ANGLE GLES-on-D3D rendering library
 #ifdef MOZ_ANGLE_RENDERER
 @BINPATH@/libEGL.dll
