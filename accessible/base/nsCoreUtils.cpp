@@ -11,9 +11,7 @@
 #include "nsIDocShellTreeOwner.h"
 #include "mozilla/dom/Document.h"
 #include "nsRange.h"
-#include "nsIBoxObject.h"
 #include "nsXULElement.h"
-#include "mozilla/dom/BoxObject.h"
 #include "nsIDocShell.h"
 #include "nsIObserverService.h"
 #include "nsIPresShell.h"
@@ -86,14 +84,9 @@ void nsCoreUtils::DispatchClickEvent(XULTreeElement *aTree, int32_t aRowIndex,
     return;
   }
 
-  nsCOMPtr<nsIBoxObject> tcBoxObj =
-      nsXULElement::FromNode(tcElm)->GetBoxObject(IgnoreErrors());
-
-  int32_t tcX = 0;
-  tcBoxObj->GetX(&tcX);
-
-  int32_t tcY = 0;
-  tcBoxObj->GetY(&tcY);
+  RefPtr<DOMRect> treeBodyRect = tcElm->GetBoundingClientRect();
+  int32_t tcX = (int32_t)treeBodyRect->X();
+  int32_t tcY = (int32_t)treeBodyRect->Y();
 
   // Dispatch mouse events.
   AutoWeakFrame tcFrame = tcElm->GetPrimaryFrame();
@@ -423,15 +416,6 @@ void nsCoreUtils::GetLanguageFor(nsIContent *aContent, nsIContent *aRootContent,
           !walkUp->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::lang,
                                         aLanguage)))
     walkUp = walkUp->GetParent();
-}
-
-already_AddRefed<nsIBoxObject> nsCoreUtils::GetTreeBodyBoxObject(
-    XULTreeElement *aTree) {
-  RefPtr<dom::Element> tcElm = aTree->GetTreeBody();
-  RefPtr<nsXULElement> tcXULElm = nsXULElement::FromNodeOrNull(tcElm);
-  if (!tcXULElm) return nullptr;
-
-  return tcXULElm->GetBoxObject(IgnoreErrors());
 }
 
 XULTreeElement *nsCoreUtils::GetTree(nsIContent *aContent) {
