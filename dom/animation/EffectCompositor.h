@@ -135,8 +135,6 @@ class EffectCompositor {
       const nsIFrame* aFrame, const nsCSSPropertyIDSet& aPropertySet);
 
   static void ClearIsRunningOnCompositor(const nsIFrame* aFrame,
-                                         nsCSSPropertyID aProperty);
-  static void ClearIsRunningOnCompositor(const nsIFrame* aFrame,
                                          DisplayItemType aType);
 
   // Update animation cascade results for the specified (pseudo-)element
