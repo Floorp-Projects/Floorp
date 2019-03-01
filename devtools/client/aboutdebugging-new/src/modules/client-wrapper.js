@@ -84,6 +84,7 @@ class ClientWrapper {
       deviceName: description.deviceName,
       isMultiE10s: description.isMultiE10s,
       name: description.brandName,
+      os: description.os,
       version: description.version,
     };
   }
