@@ -4,9 +4,7 @@
 
 // @flow
 
-import React from "react";
 import ReactDOM from "react-dom";
-
 import { onConnect } from "./client";
 import { teardownWorkers } from "./utils/bootstrap";
 import sourceQueue from "./utils/source-queue";
@@ -23,19 +21,19 @@ module.exports = {
     debuggerClient,
     sourceMaps,
     panel
-  }: any) => 
-  onConnect(
-    {
-      tab: { clientType: "firefox" },
-      tabConnection: {
-        tabTarget,
-        threadClient,
-        debuggerClient
-      }
-    },
-    sourceMaps,
-    panel
-  ),
+  }: any) =>
+    onConnect(
+      {
+        tab: { clientType: "firefox" },
+        tabConnection: {
+          tabTarget,
+          threadClient,
+          debuggerClient
+        }
+      },
+      sourceMaps,
+      panel
+    ),
   destroy: () => {
     unmountRoot();
     sourceQueue.clear();

@@ -63,6 +63,7 @@ export function formatCallStackFrames(
   return annotateFrames(formattedFrames);
 }
 
+// eslint-disable-next-line
 export const getCallStackFrames: State => Frame[] = (createSelector: any)(
   getFrames,
   getSources,

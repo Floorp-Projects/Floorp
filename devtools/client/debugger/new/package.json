@@ -1,15 +1,15 @@
 {
-  "name": "debugger.html",
+  "name": "debugger",
   "version": "0.6.0",
   "license": "MPL-2.0",
   "repository": {
-    "url": "git://github.com/firefox-devtools/debugger.html.git",
+    "url": "git://github.com/firefox-devtools/debugger.git",
     "type": "git"
   },
   "bugs": {
-    "url": "https://github.com/firefox-devtools/debugger.html/issues"
+    "url": "https://github.com/firefox-devtools/debugger/issues"
   },
-  "homepage": "https://github.com/firefox-devtools/debugger.html#readme",
+  "homepage": "https://github.com/firefox-devtools/debugger#readme",
   "engineStrict": true,
   "scripts": {
     "start": "node bin/dev-server",
@@ -23,7 +23,7 @@
     "lint:css": "stylelint \"src/components/**/*.css\"",
     "lint:js": "eslint *.js \"src/**/*.js\" \"packages/*/src/**/*.js\" --fix",
     "lint:jsx-a11y": "eslint *.js \"src/**/*.js\" \"packages/*/src/**/*.js\" --plugin=jsx-a11y --config=.eslintrc.jsx-a11y",
-    "lint:md": "remark -u devtools-linters/markdown/preset -qf *.md src configs docs",
+    "lint:md": "remark -u devtools-linters/markdown/preset -qf *.md src",
     "mochi": "mochii --mc ./firefox --interactive --default-test-path devtools/client/debugger/new",
     "mochid": "yarn mochi -- --jsdebugger --",
     "mochir": "yarn mochi -- --repeat 10 --",
