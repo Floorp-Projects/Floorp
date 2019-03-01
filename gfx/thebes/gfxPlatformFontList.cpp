@@ -1510,7 +1510,8 @@ void gfxPlatformFontList::ClearLangGroupPrefFonts() {
 // Support for memory reporting
 
 // this is also used by subclasses that hold additional font tables
-/*static*/ size_t gfxPlatformFontList::SizeOfFontFamilyTableExcludingThis(
+/*static*/
+size_t gfxPlatformFontList::SizeOfFontFamilyTableExcludingThis(
     const FontFamilyTable& aTable, MallocSizeOf aMallocSizeOf) {
   size_t n = aTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (auto iter = aTable.ConstIter(); !iter.Done(); iter.Next()) {
@@ -1522,7 +1523,8 @@ void gfxPlatformFontList::ClearLangGroupPrefFonts() {
   return n;
 }
 
-/*static*/ size_t gfxPlatformFontList::SizeOfFontEntryTableExcludingThis(
+/*static*/
+size_t gfxPlatformFontList::SizeOfFontEntryTableExcludingThis(
     const FontEntryTable& aTable, MallocSizeOf aMallocSizeOf) {
   size_t n = aTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (auto iter = aTable.ConstIter(); !iter.Done(); iter.Next()) {

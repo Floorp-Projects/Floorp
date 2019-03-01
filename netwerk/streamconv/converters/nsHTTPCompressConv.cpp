@@ -170,9 +170,11 @@ nsHTTPCompressConv::OnStopRequest(nsIRequest *request,
   return listener->OnStopRequest(request, status);
 }
 
-/* static */ nsresult nsHTTPCompressConv::BrotliHandler(
-    nsIInputStream *stream, void *closure, const char *dataIn, uint32_t,
-    uint32_t aAvail, uint32_t *countRead) {
+/* static */
+nsresult nsHTTPCompressConv::BrotliHandler(nsIInputStream *stream,
+                                           void *closure, const char *dataIn,
+                                           uint32_t, uint32_t aAvail,
+                                           uint32_t *countRead) {
   MOZ_ASSERT(stream);
   nsHTTPCompressConv *self = static_cast<nsHTTPCompressConv *>(closure);
   *countRead = 0;

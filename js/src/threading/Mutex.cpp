@@ -14,9 +14,11 @@ using namespace js;
 
 MOZ_THREAD_LOCAL(js::Mutex::MutexVector*) js::Mutex::HeldMutexStack;
 
-/* static */ bool js::Mutex::Init() { return HeldMutexStack.init(); }
+/* static */
+bool js::Mutex::Init() { return HeldMutexStack.init(); }
 
-/* static */ void js::Mutex::ShutDown() {
+/* static */
+void js::Mutex::ShutDown() {
   js_delete(HeldMutexStack.get());
   HeldMutexStack.set(nullptr);
 }

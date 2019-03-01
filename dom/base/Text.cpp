@@ -120,8 +120,10 @@ void Text::GetWholeText(nsAString& aWholeText, ErrorResult& aRv) {
   }
 }
 
-/* static */ already_AddRefed<Text> Text::Constructor(
-    const GlobalObject& aGlobal, const nsAString& aData, ErrorResult& aRv) {
+/* static */
+already_AddRefed<Text> Text::Constructor(const GlobalObject& aGlobal,
+                                         const nsAString& aData,
+                                         ErrorResult& aRv) {
   nsCOMPtr<nsPIDOMWindowInner> window =
       do_QueryInterface(aGlobal.GetAsSupports());
   if (!window || !window->GetDoc()) {

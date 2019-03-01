@@ -13,7 +13,8 @@
 namespace mozilla {
 namespace widget {
 
-/* static */ LayoutDeviceIntRect HeadlessScreenHelper::GetScreenRect() {
+/* static */
+LayoutDeviceIntRect HeadlessScreenHelper::GetScreenRect() {
   char* ev = PR_GetEnv("MOZ_HEADLESS_WIDTH");
   int width = 1366;
   if (ev) {

@@ -136,8 +136,9 @@ bool ImageCacheKey::SchemeIs(const char* aScheme) {
   return NS_SUCCEEDED(mURI->SchemeIs(aScheme, &matches)) && matches;
 }
 
-/* static */ void* ImageCacheKey::GetSpecialCaseDocumentToken(
-    Document* aDocument, nsIURI* aURI) {
+/* static */
+void* ImageCacheKey::GetSpecialCaseDocumentToken(Document* aDocument,
+                                                 nsIURI* aURI) {
   // Cookie-averse documents can never have storage granted to them.  Since they
   // may not have inner windows, they would require special handling below, so
   // just bail out early here.

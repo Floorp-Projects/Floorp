@@ -1397,7 +1397,8 @@ JSObject* MediaRecorder::WrapObject(JSContext* aCx,
   return MediaRecorder_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-/* static */ already_AddRefed<MediaRecorder> MediaRecorder::Constructor(
+/* static */
+already_AddRefed<MediaRecorder> MediaRecorder::Constructor(
     const GlobalObject& aGlobal, DOMMediaStream& aStream,
     const MediaRecorderOptions& aInitDict, ErrorResult& aRv) {
   nsCOMPtr<nsPIDOMWindowInner> ownerWindow =
@@ -1417,7 +1418,8 @@ JSObject* MediaRecorder::WrapObject(JSContext* aCx,
   return object.forget();
 }
 
-/* static */ already_AddRefed<MediaRecorder> MediaRecorder::Constructor(
+/* static */
+already_AddRefed<MediaRecorder> MediaRecorder::Constructor(
     const GlobalObject& aGlobal, AudioNode& aSrcAudioNode, uint32_t aSrcOutput,
     const MediaRecorderOptions& aInitDict, ErrorResult& aRv) {
   // Allow recording from audio node only when pref is on.

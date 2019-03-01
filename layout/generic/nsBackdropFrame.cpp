@@ -20,7 +20,8 @@ nsresult nsBackdropFrame::GetFrameName(nsAString& aResult) const {
 }
 #endif
 
-/* virtual */ ComputedStyle* nsBackdropFrame::GetParentComputedStyle(
+/* virtual */
+ComputedStyle* nsBackdropFrame::GetParentComputedStyle(
     nsIFrame** aProviderFrame) const {
   // Style context of backdrop pseudo-element does not inherit from
   // any element, per the Fullscreen API spec.
@@ -28,8 +29,9 @@ nsresult nsBackdropFrame::GetFrameName(nsAString& aResult) const {
   return nullptr;
 }
 
-/* virtual */ void nsBackdropFrame::BuildDisplayList(
-    nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists) {
+/* virtual */
+void nsBackdropFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                                       const nsDisplayListSet& aLists) {
   DO_GLOBAL_REFLOW_COUNT_DSP("nsBackdropFrame");
   // We want this frame to always be there even if its display value is
   // none or contents so that we can respond to style change on it. To
@@ -43,7 +45,8 @@ nsresult nsBackdropFrame::GetFrameName(nsAString& aResult) const {
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 }
 
-/* virtual */ LogicalSize nsBackdropFrame::ComputeAutoSize(
+/* virtual */
+LogicalSize nsBackdropFrame::ComputeAutoSize(
     gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
     nscoord aAvailableISize, const LogicalSize& aMargin,
     const LogicalSize& aBorder, const LogicalSize& aPadding,
@@ -59,10 +62,11 @@ nsresult nsBackdropFrame::GetFrameName(nsAString& aResult) const {
   return result;
 }
 
-/* virtual */ void nsBackdropFrame::Reflow(nsPresContext* aPresContext,
-                                           ReflowOutput& aDesiredSize,
-                                           const ReflowInput& aReflowInput,
-                                           nsReflowStatus& aStatus) {
+/* virtual */
+void nsBackdropFrame::Reflow(nsPresContext* aPresContext,
+                             ReflowOutput& aDesiredSize,
+                             const ReflowInput& aReflowInput,
+                             nsReflowStatus& aStatus) {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsBackdropFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);

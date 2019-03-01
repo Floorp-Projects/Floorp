@@ -386,7 +386,8 @@ OscillatorNode::OscillatorNode(AudioContext* aContext)
   mStream->AddMainThreadListener(this);
 }
 
-/* static */ already_AddRefed<OscillatorNode> OscillatorNode::Create(
+/* static */
+already_AddRefed<OscillatorNode> OscillatorNode::Create(
     AudioContext& aAudioContext, const OscillatorOptions& aOptions,
     ErrorResult& aRv) {
   if (aAudioContext.CheckClosed(aRv)) {

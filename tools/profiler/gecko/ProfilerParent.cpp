@@ -36,8 +36,8 @@ class ProfilerParentTracker final {
 
 UniquePtr<ProfilerParentTracker> ProfilerParentTracker::sInstance;
 
-/* static */ void ProfilerParentTracker::StartTracking(
-    ProfilerParent* aProfilerParent) {
+/* static */
+void ProfilerParentTracker::StartTracking(ProfilerParent* aProfilerParent) {
   if (!sInstance) {
     sInstance = MakeUnique<ProfilerParentTracker>();
     ClearOnShutdown(&sInstance);
@@ -45,14 +45,16 @@ UniquePtr<ProfilerParentTracker> ProfilerParentTracker::sInstance;
   sInstance->mProfilerParents.AppendElement(aProfilerParent);
 }
 
-/* static */ void ProfilerParentTracker::StopTracking(ProfilerParent* aParent) {
+/* static */
+void ProfilerParentTracker::StopTracking(ProfilerParent* aParent) {
   if (sInstance) {
     sInstance->mProfilerParents.RemoveElement(aParent);
   }
 }
 
 template <typename FuncType>
-/* static */ void ProfilerParentTracker::Enumerate(FuncType aIterFunc) {
+/* static */
+void ProfilerParentTracker::Enumerate(FuncType aIterFunc) {
   if (sInstance) {
     for (ProfilerParent* profilerParent : sInstance->mProfilerParents) {
       if (!profilerParent->mDestroyed) {
@@ -82,7 +84,8 @@ ProfilerParentTracker::~ProfilerParentTracker() {
   }
 }
 
-/* static */ Endpoint<PProfilerChild> ProfilerParent::CreateForProcess(
+/* static */
+Endpoint<PProfilerChild> ProfilerParent::CreateForProcess(
     base::ProcessId aOtherPid) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   Endpoint<PProfilerParent> parent;
@@ -173,8 +176,8 @@ ProfilerParent::GatherProfiles() {
   return results;
 }
 
-/* static */ void ProfilerParent::ProfilerStarted(
-    nsIProfilerStartParams* aParams) {
+/* static */
+void ProfilerParent::ProfilerStarted(nsIProfilerStartParams* aParams) {
   if (!NS_IsMainThread()) {
     return;
   }
@@ -198,7 +201,8 @@ ProfilerParent::GatherProfiles() {
   });
 }
 
-/* static */ void ProfilerParent::ProfilerStopped() {
+/* static */
+void ProfilerParent::ProfilerStopped() {
   if (!NS_IsMainThread()) {
     return;
   }
@@ -208,7 +212,8 @@ ProfilerParent::GatherProfiles() {
   });
 }
 
-/* static */ void ProfilerParent::ProfilerPaused() {
+/* static */
+void ProfilerParent::ProfilerPaused() {
   if (!NS_IsMainThread()) {
     return;
   }
@@ -218,7 +223,8 @@ ProfilerParent::GatherProfiles() {
   });
 }
 
-/* static */ void ProfilerParent::ProfilerResumed() {
+/* static */
+void ProfilerParent::ProfilerResumed() {
   if (!NS_IsMainThread()) {
     return;
   }

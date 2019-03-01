@@ -179,7 +179,8 @@ static nsCString GetDeviceModelId() {
 
 StaticRefPtr<nsHttpHandler> gHttpHandler;
 
-/* static */ already_AddRefed<nsHttpHandler> nsHttpHandler::GetInstance() {
+/* static */
+already_AddRefed<nsHttpHandler> nsHttpHandler::GetInstance() {
   if (!gHttpHandler) {
     gHttpHandler = new nsHttpHandler();
     DebugOnly<nsresult> rv = gHttpHandler->Init();
@@ -852,9 +853,9 @@ nsresult nsHttpHandler::AsyncOnChannelRedirect(
                                       mainThreadEventTarget);
 }
 
-/* static */ nsresult nsHttpHandler::GenerateHostPort(const nsCString &host,
-                                                      int32_t port,
-                                                      nsACString &hostLine) {
+/* static */
+nsresult nsHttpHandler::GenerateHostPort(const nsCString &host, int32_t port,
+                                         nsACString &hostLine) {
   return NS_GenerateHostPort(host, port, hostLine);
 }
 

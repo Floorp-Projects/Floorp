@@ -144,7 +144,8 @@ MediaExtendedMIMEType::MediaExtendedMIMEType(const MediaMIMEType& aType)
 MediaExtendedMIMEType::MediaExtendedMIMEType(MediaMIMEType&& aType)
     : mOriginalString(aType.AsString()), mMIMEType(std::move(aType)) {}
 
-/* static */ Maybe<double> MediaExtendedMIMEType::ComputeFractionalString(
+/* static */
+Maybe<double> MediaExtendedMIMEType::ComputeFractionalString(
     const nsAString& aFrac) {
   nsAutoString frac(aFrac);
   nsresult error;

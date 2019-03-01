@@ -17,7 +17,8 @@
 
 namespace mozilla {
 
-/* static */ nsTArray<UniquePtr<TrackInfo>> WebMDecoder::GetTracksInfo(
+/* static */
+nsTArray<UniquePtr<TrackInfo>> WebMDecoder::GetTracksInfo(
     const MediaContainerType& aType, MediaResult& aError) {
   nsTArray<UniquePtr<TrackInfo>> tracks;
   const bool isVideo = aType.Type() == MEDIAMIMETYPE("video/webm");
@@ -112,7 +113,8 @@ bool WebMDecoder::IsSupportedType(const MediaContainerType& aContainerType) {
   return true;
 }
 
-/* static */ nsTArray<UniquePtr<TrackInfo>> WebMDecoder::GetTracksInfo(
+/* static */
+nsTArray<UniquePtr<TrackInfo>> WebMDecoder::GetTracksInfo(
     const MediaContainerType& aType) {
   MediaResult rv = NS_OK;
   return GetTracksInfo(aType, rv);

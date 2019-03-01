@@ -193,7 +193,8 @@ void ComputedTimingFunction::AppendToString(nsAString& aResult) const {
   Servo_SerializeEasing(&timing, &aResult);
 }
 
-/* static */ int32_t ComputedTimingFunction::Compare(
+/* static */
+int32_t ComputedTimingFunction::Compare(
     const Maybe<ComputedTimingFunction>& aLhs,
     const Maybe<ComputedTimingFunction>& aRhs) {
   // We can't use |operator<| for const Maybe<>& here because

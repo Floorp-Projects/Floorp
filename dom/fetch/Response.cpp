@@ -80,8 +80,8 @@ Response::Response(nsIGlobalObject* aGlobal,
 
 Response::~Response() { mozilla::DropJSObjects(this); }
 
-/* static */ already_AddRefed<Response> Response::Error(
-    const GlobalObject& aGlobal) {
+/* static */
+already_AddRefed<Response> Response::Error(const GlobalObject& aGlobal) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<InternalResponse> error =
       InternalResponse::NetworkError(NS_ERROR_FAILURE);
@@ -89,9 +89,11 @@ Response::~Response() { mozilla::DropJSObjects(this); }
   return r.forget();
 }
 
-/* static */ already_AddRefed<Response> Response::Redirect(
-    const GlobalObject& aGlobal, const nsAString& aUrl, uint16_t aStatus,
-    ErrorResult& aRv) {
+/* static */
+already_AddRefed<Response> Response::Redirect(const GlobalObject& aGlobal,
+                                              const nsAString& aUrl,
+                                              uint16_t aStatus,
+                                              ErrorResult& aRv) {
   nsAutoString parsedURL;
 
   if (NS_IsMainThread()) {
@@ -158,7 +160,8 @@ Response::~Response() { mozilla::DropJSObjects(this); }
   return r.forget();
 }
 
-/*static*/ already_AddRefed<Response> Response::Constructor(
+/*static*/
+already_AddRefed<Response> Response::Constructor(
     const GlobalObject& aGlobal,
     const Optional<Nullable<fetch::ResponseBodyInit>>& aBody,
     const ResponseInit& aInit, ErrorResult& aRv) {

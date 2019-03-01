@@ -108,8 +108,8 @@ static uint32_t RoundupCodeLength(uint32_t codeLength) {
   return JS_ROUNDUP(codeLength, ExecutableCodePageSize);
 }
 
-/* static */ UniqueCodeBytes CodeSegment::AllocateCodeBytes(
-    uint32_t codeLength) {
+/* static */
+UniqueCodeBytes CodeSegment::AllocateCodeBytes(uint32_t codeLength) {
   if (codeLength > MaxCodeBytesPerProcess) {
     return nullptr;
   }
@@ -337,8 +337,9 @@ ModuleSegment::ModuleSegment(Tier tier, UniqueCodeBytes codeBytes,
       tier_(tier),
       trapCode_(base() + linkData.trapOffset) {}
 
-/* static */ UniqueModuleSegment ModuleSegment::create(
-    Tier tier, MacroAssembler& masm, const LinkData& linkData) {
+/* static */
+UniqueModuleSegment ModuleSegment::create(Tier tier, MacroAssembler& masm,
+                                          const LinkData& linkData) {
   uint32_t codeLength = masm.bytesNeeded();
 
   UniqueCodeBytes codeBytes = AllocateCodeBytes(codeLength);
@@ -353,8 +354,9 @@ ModuleSegment::ModuleSegment(Tier tier, UniqueCodeBytes codeBytes,
                                        linkData);
 }
 
-/* static */ UniqueModuleSegment ModuleSegment::create(
-    Tier tier, const Bytes& unlinkedBytes, const LinkData& linkData) {
+/* static */
+UniqueModuleSegment ModuleSegment::create(Tier tier, const Bytes& unlinkedBytes,
+                                          const LinkData& linkData) {
   uint32_t codeLength = unlinkedBytes.length();
 
   UniqueCodeBytes codeBytes = AllocateCodeBytes(codeLength);

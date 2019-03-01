@@ -21,8 +21,9 @@ using namespace js;
 
 using mozilla::Maybe;
 
-/* static */ bool GlobalObject::initAsyncFunction(
-    JSContext* cx, Handle<GlobalObject*> global) {
+/* static */
+bool GlobalObject::initAsyncFunction(JSContext* cx,
+                                     Handle<GlobalObject*> global) {
   if (global->getReservedSlot(ASYNC_FUNCTION_PROTO).isObject()) {
     return true;
   }

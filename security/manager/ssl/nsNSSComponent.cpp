@@ -989,10 +989,11 @@ static const CipherPref sCipherPrefs[] = {
 // This function will convert from pref values like 1, 2, ...
 // to the internal values of SSL_LIBRARY_VERSION_TLS_1_0,
 // SSL_LIBRARY_VERSION_TLS_1_1, ...
-/*static*/ void nsNSSComponent::FillTLSVersionRange(SSLVersionRange& rangeOut,
-                                                    uint32_t minFromPrefs,
-                                                    uint32_t maxFromPrefs,
-                                                    SSLVersionRange defaults) {
+/*static*/
+void nsNSSComponent::FillTLSVersionRange(SSLVersionRange& rangeOut,
+                                         uint32_t minFromPrefs,
+                                         uint32_t maxFromPrefs,
+                                         SSLVersionRange defaults) {
   rangeOut = defaults;
   // determine what versions are supported
   SSLVersionRange supported;
@@ -1998,7 +1999,8 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-/*static*/ nsresult nsNSSComponent::GetNewPrompter(nsIPrompt** result) {
+/*static*/
+nsresult nsNSSComponent::GetNewPrompter(nsIPrompt** result) {
   NS_ENSURE_ARG_POINTER(result);
   *result = nullptr;
 

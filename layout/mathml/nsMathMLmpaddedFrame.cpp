@@ -309,9 +309,9 @@ void nsMathMLmpaddedFrame::Reflow(nsPresContext* aPresContext,
   // NS_ASSERTION(aStatus.IsComplete(), "bad status");
 }
 
-/* virtual */ nsresult nsMathMLmpaddedFrame::Place(DrawTarget* aDrawTarget,
-                                                   bool aPlaceOrigin,
-                                                   ReflowOutput& aDesiredSize) {
+/* virtual */
+nsresult nsMathMLmpaddedFrame::Place(DrawTarget* aDrawTarget, bool aPlaceOrigin,
+                                     ReflowOutput& aDesiredSize) {
   nsresult rv = nsMathMLContainerFrame::Place(aDrawTarget, false, aDesiredSize);
   if (NS_MATHML_HAS_ERROR(mPresentationData.flags) || NS_FAILED(rv)) {
     DidReflowChildren(PrincipalChildList().FirstChild());
@@ -431,8 +431,9 @@ void nsMathMLmpaddedFrame::Reflow(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-/* virtual */ nsresult nsMathMLmpaddedFrame::MeasureForWidth(
-    DrawTarget* aDrawTarget, ReflowOutput& aDesiredSize) {
+/* virtual */
+nsresult nsMathMLmpaddedFrame::MeasureForWidth(DrawTarget* aDrawTarget,
+                                               ReflowOutput& aDesiredSize) {
   ProcessAttributes();
   return Place(aDrawTarget, false, aDesiredSize);
 }

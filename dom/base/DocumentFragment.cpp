@@ -88,7 +88,8 @@ void DocumentFragment::DumpContent(FILE* out, int32_t aIndent,
 }
 #endif
 
-/* static */ already_AddRefed<DocumentFragment> DocumentFragment::Constructor(
+/* static */
+already_AddRefed<DocumentFragment> DocumentFragment::Constructor(
     const GlobalObject& aGlobal, ErrorResult& aRv) {
   nsCOMPtr<nsPIDOMWindowInner> window =
       do_QueryInterface(aGlobal.GetAsSupports());

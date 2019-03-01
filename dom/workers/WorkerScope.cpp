@@ -976,6 +976,18 @@ void WorkerDebuggerGlobalScope::Dump(JSContext* aCx,
   }
 }
 
+void WorkerDebuggerGlobalScope::Atob(const nsAString& aAtob, nsAString& aOutput,
+                                     ErrorResult& aRv) const {
+  mWorkerPrivate->AssertIsOnWorkerThread();
+  aRv = nsContentUtils::Atob(aAtob, aOutput);
+}
+
+void WorkerDebuggerGlobalScope::Btoa(const nsAString& aBtoa, nsAString& aOutput,
+                                     ErrorResult& aRv) const {
+  mWorkerPrivate->AssertIsOnWorkerThread();
+  aRv = nsContentUtils::Btoa(aBtoa, aOutput);
+}
+
 nsresult WorkerDebuggerGlobalScope::Dispatch(
     TaskCategory aCategory, already_AddRefed<nsIRunnable>&& aRunnable) {
   return EventTargetFor(aCategory)->Dispatch(std::move(aRunnable),

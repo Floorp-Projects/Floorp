@@ -34,7 +34,8 @@ namespace mozilla {
 namespace layers {
 
 // public:
-/* static */ RefPtr<UiCompositorControllerChild>
+/* static */
+RefPtr<UiCompositorControllerChild>
 UiCompositorControllerChild::CreateForSameProcess(
     const LayersId& aRootLayerTreeId) {
   RefPtr<UiCompositorControllerChild> child =
@@ -48,7 +49,8 @@ UiCompositorControllerChild::CreateForSameProcess(
   return child;
 }
 
-/* static */ RefPtr<UiCompositorControllerChild>
+/* static */
+RefPtr<UiCompositorControllerChild>
 UiCompositorControllerChild::CreateForGPUProcess(
     const uint64_t& aProcessToken,
     Endpoint<PUiCompositorControllerChild>&& aEndpoint) {

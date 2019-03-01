@@ -885,24 +885,26 @@ SVGElement::IsAttributeMapped(const nsAtom* name) const {
 }
 
 // PresentationAttributes-FillStroke
-/* static */ const Element::MappedAttributeEntry SVGElement::sFillStrokeMap[] =
-    {{nsGkAtoms::fill},
-     {nsGkAtoms::fill_opacity},
-     {nsGkAtoms::fill_rule},
-     {nsGkAtoms::paint_order},
-     {nsGkAtoms::stroke},
-     {nsGkAtoms::stroke_dasharray},
-     {nsGkAtoms::stroke_dashoffset},
-     {nsGkAtoms::stroke_linecap},
-     {nsGkAtoms::stroke_linejoin},
-     {nsGkAtoms::stroke_miterlimit},
-     {nsGkAtoms::stroke_opacity},
-     {nsGkAtoms::stroke_width},
-     {nsGkAtoms::vector_effect},
-     {nullptr}};
+/* static */
+const Element::MappedAttributeEntry SVGElement::sFillStrokeMap[] = {
+    {nsGkAtoms::fill},
+    {nsGkAtoms::fill_opacity},
+    {nsGkAtoms::fill_rule},
+    {nsGkAtoms::paint_order},
+    {nsGkAtoms::stroke},
+    {nsGkAtoms::stroke_dasharray},
+    {nsGkAtoms::stroke_dashoffset},
+    {nsGkAtoms::stroke_linecap},
+    {nsGkAtoms::stroke_linejoin},
+    {nsGkAtoms::stroke_miterlimit},
+    {nsGkAtoms::stroke_opacity},
+    {nsGkAtoms::stroke_width},
+    {nsGkAtoms::vector_effect},
+    {nullptr}};
 
 // PresentationAttributes-Graphics
-/* static */ const Element::MappedAttributeEntry SVGElement::sGraphicsMap[] = {
+/* static */
+const Element::MappedAttributeEntry SVGElement::sGraphicsMap[] = {
     {nsGkAtoms::clip_path},
     {nsGkAtoms::clip_rule},
     {nsGkAtoms::colorInterpolation},
@@ -919,64 +921,70 @@ SVGElement::IsAttributeMapped(const nsAtom* name) const {
     {nullptr}};
 
 // PresentationAttributes-TextContentElements
-/* static */ const Element::MappedAttributeEntry
-    SVGElement::sTextContentElementsMap[] = {
-        // Properties that we don't support are commented out.
-        // { nsGkAtoms::alignment_baseline },
-        // { nsGkAtoms::baseline_shift },
-        {nsGkAtoms::direction},
-        {nsGkAtoms::dominant_baseline},
-        {nsGkAtoms::letter_spacing},
-        {nsGkAtoms::text_anchor},
-        {nsGkAtoms::text_decoration},
-        {nsGkAtoms::unicode_bidi},
-        {nsGkAtoms::word_spacing},
-        {nsGkAtoms::writing_mode},
-        {nullptr}};
+/* static */
+const Element::MappedAttributeEntry SVGElement::sTextContentElementsMap[] = {
+    // Properties that we don't support are commented out.
+    // { nsGkAtoms::alignment_baseline },
+    // { nsGkAtoms::baseline_shift },
+    {nsGkAtoms::direction},
+    {nsGkAtoms::dominant_baseline},
+    {nsGkAtoms::letter_spacing},
+    {nsGkAtoms::text_anchor},
+    {nsGkAtoms::text_decoration},
+    {nsGkAtoms::unicode_bidi},
+    {nsGkAtoms::word_spacing},
+    {nsGkAtoms::writing_mode},
+    {nullptr}};
 
 // PresentationAttributes-FontSpecification
-/* static */ const Element::MappedAttributeEntry
-    SVGElement::sFontSpecificationMap[] = {
-        {nsGkAtoms::font_family},      {nsGkAtoms::font_size},
-        {nsGkAtoms::font_size_adjust}, {nsGkAtoms::font_stretch},
-        {nsGkAtoms::font_style},       {nsGkAtoms::font_variant},
-        {nsGkAtoms::fontWeight},       {nullptr}};
+/* static */
+const Element::MappedAttributeEntry SVGElement::sFontSpecificationMap[] = {
+    {nsGkAtoms::font_family},      {nsGkAtoms::font_size},
+    {nsGkAtoms::font_size_adjust}, {nsGkAtoms::font_stretch},
+    {nsGkAtoms::font_style},       {nsGkAtoms::font_variant},
+    {nsGkAtoms::fontWeight},       {nullptr}};
 
 // PresentationAttributes-GradientStop
-/* static */ const Element::MappedAttributeEntry
-    SVGElement::sGradientStopMap[] = {
-        {nsGkAtoms::stop_color}, {nsGkAtoms::stop_opacity}, {nullptr}};
+/* static */
+const Element::MappedAttributeEntry SVGElement::sGradientStopMap[] = {
+    {nsGkAtoms::stop_color}, {nsGkAtoms::stop_opacity}, {nullptr}};
 
 // PresentationAttributes-Viewports
-/* static */ const Element::MappedAttributeEntry SVGElement::sViewportsMap[] = {
+/* static */
+const Element::MappedAttributeEntry SVGElement::sViewportsMap[] = {
     {nsGkAtoms::overflow}, {nsGkAtoms::clip}, {nullptr}};
 
 // PresentationAttributes-Makers
-/* static */ const Element::MappedAttributeEntry SVGElement::sMarkersMap[] = {
+/* static */
+const Element::MappedAttributeEntry SVGElement::sMarkersMap[] = {
     {nsGkAtoms::marker_end},
     {nsGkAtoms::marker_mid},
     {nsGkAtoms::marker_start},
     {nullptr}};
 
 // PresentationAttributes-Color
-/* static */ const Element::MappedAttributeEntry SVGElement::sColorMap[] = {
+/* static */
+const Element::MappedAttributeEntry SVGElement::sColorMap[] = {
     {nsGkAtoms::color}, {nullptr}};
 
 // PresentationAttributes-Filters
-/* static */ const Element::MappedAttributeEntry SVGElement::sFiltersMap[] = {
+/* static */
+const Element::MappedAttributeEntry SVGElement::sFiltersMap[] = {
     {nsGkAtoms::colorInterpolationFilters}, {nullptr}};
 
 // PresentationAttributes-feFlood
-/* static */ const Element::MappedAttributeEntry SVGElement::sFEFloodMap[] = {
+/* static */
+const Element::MappedAttributeEntry SVGElement::sFEFloodMap[] = {
     {nsGkAtoms::flood_color}, {nsGkAtoms::flood_opacity}, {nullptr}};
 
 // PresentationAttributes-LightingEffects
-/* static */ const Element::MappedAttributeEntry
-    SVGElement::sLightingEffectsMap[] = {{nsGkAtoms::lighting_color},
-                                         {nullptr}};
+/* static */
+const Element::MappedAttributeEntry SVGElement::sLightingEffectsMap[] = {
+    {nsGkAtoms::lighting_color}, {nullptr}};
 
 // PresentationAttributes-mask
-/* static */ const Element::MappedAttributeEntry SVGElement::sMaskMap[] = {
+/* static */
+const Element::MappedAttributeEntry SVGElement::sMaskMap[] = {
     {nsGkAtoms::mask_type}, {nullptr}};
 
 //----------------------------------------------------------------------
@@ -1334,8 +1342,9 @@ SVGViewportElement* SVGElement::GetCtx() const {
   return SVGContentUtils::GetNearestViewportElement(this);
 }
 
-/* virtual */ gfxMatrix SVGElement::PrependLocalTransformsTo(
-    const gfxMatrix& aMatrix, SVGTransformTypes aWhich) const {
+/* virtual */
+gfxMatrix SVGElement::PrependLocalTransformsTo(const gfxMatrix& aMatrix,
+                                               SVGTransformTypes aWhich) const {
   return aMatrix;
 }
 

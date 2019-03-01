@@ -1365,7 +1365,8 @@ nsresult nsHtml5StreamParser::OnDataAvailable(nsIRequest* aRequest,
   return rv;
 }
 
-/* static */ nsresult nsHtml5StreamParser::CopySegmentsToParser(
+/* static */
+nsresult nsHtml5StreamParser::CopySegmentsToParser(
     nsIInputStream* aInStream, void* aClosure, const char* aFromSegment,
     uint32_t aToOffset, uint32_t aCount, uint32_t* aWriteCount) {
   nsHtml5StreamParser* parser = static_cast<nsHtml5StreamParser*>(aClosure);

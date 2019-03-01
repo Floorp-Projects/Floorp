@@ -104,8 +104,9 @@ nsSize ShapeUtils::ComputeEllipseRadii(const StyleBasicShape& aBasicShape,
   return radii;
 }
 
-/* static */ nsRect ShapeUtils::ComputeInsetRect(
-    const StyleBasicShape& aBasicShape, const nsRect& aRefBox) {
+/* static */
+nsRect ShapeUtils::ComputeInsetRect(const StyleBasicShape& aBasicShape,
+                                    const nsRect& aRefBox) {
   MOZ_ASSERT(aBasicShape.GetShapeType() == StyleBasicShapeType::Inset,
              "The basic shape must be inset()!");
 
@@ -137,15 +138,17 @@ nsSize ShapeUtils::ComputeEllipseRadii(const StyleBasicShape& aBasicShape,
   return nsRect(x, y, width, height);
 }
 
-/* static */ bool ShapeUtils::ComputeInsetRadii(
-    const StyleBasicShape& aBasicShape, const nsRect& aInsetRect,
-    const nsRect& aRefBox, nscoord aRadii[8]) {
+/* static */
+bool ShapeUtils::ComputeInsetRadii(const StyleBasicShape& aBasicShape,
+                                   const nsRect& aInsetRect,
+                                   const nsRect& aRefBox, nscoord aRadii[8]) {
   const auto& radius = aBasicShape.GetRadius();
   return nsIFrame::ComputeBorderRadii(radius, aInsetRect.Size(), aRefBox.Size(),
                                       Sides(), aRadii);
 }
 
-/* static */ nsTArray<nsPoint> ShapeUtils::ComputePolygonVertices(
+/* static */
+nsTArray<nsPoint> ShapeUtils::ComputePolygonVertices(
     const StyleBasicShape& aBasicShape, const nsRect& aRefBox) {
   MOZ_ASSERT(aBasicShape.GetShapeType() == StyleBasicShapeType::Polygon,
              "The basic shape must be polygon()!");

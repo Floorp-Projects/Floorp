@@ -14,7 +14,8 @@
 namespace mozilla {
 namespace widget {
 
-/* static */ RefPtr<CompositorWidget> CompositorWidget::CreateLocal(
+/* static */
+RefPtr<CompositorWidget> CompositorWidget::CreateLocal(
     const CompositorWidgetInitData& aInitData,
     const layers::CompositorOptions& aOptions, nsIWidget* aWidget) {
   if (aInitData.type() ==

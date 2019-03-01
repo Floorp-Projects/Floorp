@@ -21,18 +21,21 @@
 namespace mozilla {
 namespace dom {
 
-/* static */ void FuzzingFunctions::GarbageCollect(const GlobalObject&) {
+/* static */
+void FuzzingFunctions::GarbageCollect(const GlobalObject&) {
   nsJSContext::GarbageCollectNow(JS::GCReason::COMPONENT_UTILS,
                                  nsJSContext::NonIncrementalGC,
                                  nsJSContext::NonShrinkingGC);
 }
 
-/* static */ void FuzzingFunctions::CycleCollect(const GlobalObject&) {
+/* static */
+void FuzzingFunctions::CycleCollect(const GlobalObject&) {
   nsJSContext::CycleCollectNow();
 }
 
-/* static */ void FuzzingFunctions::EnableAccessibility(const GlobalObject&,
-                                                        ErrorResult& aRv) {
+/* static */
+void FuzzingFunctions::EnableAccessibility(const GlobalObject&,
+                                           ErrorResult& aRv) {
   RefPtr<nsIAccessibilityService> a11y;
   nsresult rv;
 
@@ -69,7 +72,8 @@ static const ModifierKey kModifierKeys[] = {
     ModifierKey(MODIFIER_SYMBOLLOCK, KEY_NAME_INDEX_SymbolLock, true),
 };
 
-/* static */ Modifiers FuzzingFunctions::ActivateModifiers(
+/* static */
+Modifiers FuzzingFunctions::ActivateModifiers(
     TextInputProcessor* aTextInputProcessor, Modifiers aModifiers,
     nsIWidget* aWidget, ErrorResult& aRv) {
   MOZ_ASSERT(aTextInputProcessor);
@@ -114,7 +118,8 @@ static const ModifierKey kModifierKeys[] = {
   return activatedModifiers;
 }
 
-/* static */ Modifiers FuzzingFunctions::InactivateModifiers(
+/* static */
+Modifiers FuzzingFunctions::InactivateModifiers(
     TextInputProcessor* aTextInputProcessor, Modifiers aModifiers,
     nsIWidget* aWidget, ErrorResult& aRv) {
   MOZ_ASSERT(aTextInputProcessor);
@@ -159,9 +164,11 @@ static const ModifierKey kModifierKeys[] = {
   return inactivatedModifiers;
 }
 
-/* static */ void FuzzingFunctions::SynthesizeKeyboardEvents(
-    const GlobalObject&, const nsAString& aKeyValue,
-    const KeyboardEventInit& aDict, ErrorResult& aRv) {
+/* static */
+void FuzzingFunctions::SynthesizeKeyboardEvents(const GlobalObject&,
+                                                const nsAString& aKeyValue,
+                                                const KeyboardEventInit& aDict,
+                                                ErrorResult& aRv) {
   // Prepare keyboard event to synthesize first.
   uint32_t flags = 0;
   // Don't modify the given dictionary since caller may want to modify

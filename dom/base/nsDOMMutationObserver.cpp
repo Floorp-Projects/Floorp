@@ -545,7 +545,8 @@ class MutationObserverMicroTask final : public MicroTaskRunnable {
   }
 };
 
-/* static */ void nsDOMMutationObserver::QueueMutationObserverMicroTask() {
+/* static */
+void nsDOMMutationObserver::QueueMutationObserverMicroTask() {
   CycleCollectedJSContext* ccjs = CycleCollectedJSContext::Get();
   if (!ccjs) {
     return;

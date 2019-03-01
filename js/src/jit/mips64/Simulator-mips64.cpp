@@ -1141,7 +1141,8 @@ static void FlushICacheLocked(SimulatorProcess::ICacheMap& i_cache,
   }
 }
 
-/* static */ void SimulatorProcess::checkICacheLocked(SimInstruction* instr) {
+/* static */
+void SimulatorProcess::checkICacheLocked(SimInstruction* instr) {
   intptr_t address = reinterpret_cast<intptr_t>(instr);
   void* page = reinterpret_cast<void*>(address & (~CachePage::kPageMask));
   void* line = reinterpret_cast<void*>(address & (~CachePage::kLineMask));
@@ -1174,7 +1175,8 @@ bool SimulatorProcess::ICacheHasher::match(const Key& k, const Lookup& l) {
   return k == l;
 }
 
-/* static */ void SimulatorProcess::FlushICache(void* start_addr, size_t size) {
+/* static */
+void SimulatorProcess::FlushICache(void* start_addr, size_t size) {
   if (!ICacheCheckingDisableCount) {
     AutoLockSimulatorCache als;
     js::jit::FlushICacheLocked(icache(), start_addr, size);
@@ -1326,8 +1328,9 @@ SimulatorProcess::~SimulatorProcess() {
   }
 }
 
-/* static */ void* Simulator::RedirectNativeFunction(void* nativeFunction,
-                                                     ABIFunctionType type) {
+/* static */
+void* Simulator::RedirectNativeFunction(void* nativeFunction,
+                                        ABIFunctionType type) {
   Redirection* redirection = Redirection::Get(nativeFunction, type);
   return redirection->addressOfSwiInstruction();
 }

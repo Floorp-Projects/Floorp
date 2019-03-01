@@ -1545,7 +1545,8 @@ void AccessibleWrap::UpdateSystemCaretFor(Accessible* aAccessible) {
   UpdateSystemCaretFor(caretWnd, caretRect);
 }
 
-/* static */ void AccessibleWrap::UpdateSystemCaretFor(
+/* static */
+void AccessibleWrap::UpdateSystemCaretFor(
     ProxyAccessible* aProxy, const LayoutDeviceIntRect& aCaretRect) {
   ::DestroyCaret();
 
@@ -1555,7 +1556,8 @@ void AccessibleWrap::UpdateSystemCaretFor(Accessible* aAccessible) {
   UpdateSystemCaretFor(GetHWNDFor(outerDoc), aCaretRect);
 }
 
-/* static */ void AccessibleWrap::UpdateSystemCaretFor(
+/* static */
+void AccessibleWrap::UpdateSystemCaretFor(
     HWND aCaretWnd, const LayoutDeviceIntRect& aCaretRect) {
   if (!aCaretWnd || aCaretRect.IsEmpty()) {
     return;
@@ -1705,12 +1707,12 @@ bool AccessibleWrap::DispatchTextChangeToHandler(bool aIsInsert,
   return SUCCEEDED(hr);
 }
 
-/* static */ void AccessibleWrap::AssignChildIDTo(
-    NotNull<sdnAccessible*> aSdnAcc) {
+/* static */
+void AccessibleWrap::AssignChildIDTo(NotNull<sdnAccessible*> aSdnAcc) {
   aSdnAcc->SetUniqueID(sIDGen.GetID());
 }
 
-/* static */ void AccessibleWrap::ReleaseChildID(
-    NotNull<sdnAccessible*> aSdnAcc) {
+/* static */
+void AccessibleWrap::ReleaseChildID(NotNull<sdnAccessible*> aSdnAcc) {
   sIDGen.ReleaseID(aSdnAcc);
 }

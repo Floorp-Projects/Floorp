@@ -22,8 +22,8 @@ using namespace js;
  * a custom tracer to move the object's data pointer if its owner was moved and
  * stores its data inline.
  */
-/* static */ void ArrayBufferViewObject::trace(JSTracer* trc,
-                                               JSObject* objArg) {
+/* static */
+void ArrayBufferViewObject::trace(JSTracer* trc, JSObject* objArg) {
   NativeObject* obj = &objArg->as<NativeObject>();
   HeapSlot& bufSlot = obj->getFixedSlotRef(BUFFER_SLOT);
   TraceEdge(trc, &bufSlot, "ArrayBufferViewObject.buffer");
@@ -72,7 +72,8 @@ void ArrayBufferViewObject::setDataPointerUnshared(uint8_t* data) {
   setPrivate(data);
 }
 
-/* static */ ArrayBufferObjectMaybeShared* ArrayBufferViewObject::bufferObject(
+/* static */
+ArrayBufferObjectMaybeShared* ArrayBufferViewObject::bufferObject(
     JSContext* cx, Handle<ArrayBufferViewObject*> thisObject) {
   if (thisObject->is<TypedArrayObject>()) {
     Rooted<TypedArrayObject*> typedArray(cx,

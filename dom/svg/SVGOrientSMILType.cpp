@@ -17,7 +17,8 @@ namespace mozilla {
 using namespace dom::SVGAngle_Binding;
 using namespace dom::SVGMarkerElement_Binding;
 
-/*static*/ SVGOrientSMILType SVGOrientSMILType::sSingleton;
+/*static*/
+SVGOrientSMILType SVGOrientSMILType::sSingleton;
 
 void SVGOrientSMILType::Init(SMILValue& aValue) const {
   MOZ_ASSERT(aValue.IsNull(), "Unexpected value type");

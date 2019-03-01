@@ -239,8 +239,8 @@ JSObject* js::NewSingletonObjectWithFunctionPrototype(
   return obj;
 }
 
-/* static */ bool GlobalObject::initGenerators(JSContext* cx,
-                                               Handle<GlobalObject*> global) {
+/* static */
+bool GlobalObject::initGenerators(JSContext* cx, Handle<GlobalObject*> global) {
   if (global->getReservedSlot(GENERATOR_OBJECT_PROTO).isObject()) {
     return true;
   }

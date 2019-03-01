@@ -914,7 +914,8 @@ static nsresult NewImageChannel(
   return NS_OK;
 }
 
-/* static */ uint32_t imgCacheEntry::SecondsFromPRTime(PRTime prTime) {
+/* static */
+uint32_t imgCacheEntry::SecondsFromPRTime(PRTime prTime) {
   return uint32_t(int64_t(prTime) / int64_t(PR_USEC_PER_SEC));
 }
 
@@ -1158,7 +1159,8 @@ NS_IMPL_ISUPPORTS(imgLoader, imgILoader, nsIContentSniffer, imgICache,
 static imgLoader* gNormalLoader = nullptr;
 static imgLoader* gPrivateBrowsingLoader = nullptr;
 
-/* static */ already_AddRefed<imgLoader> imgLoader::CreateImageLoader() {
+/* static */
+already_AddRefed<imgLoader> imgLoader::CreateImageLoader() {
   // In some cases, such as xpctests, XPCOM modules are not automatically
   // initialized.  We need to make sure that our module is initialized before
   // we hand out imgLoader instances and code starts using them.

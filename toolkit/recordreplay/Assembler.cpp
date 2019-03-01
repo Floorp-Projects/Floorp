@@ -81,7 +81,8 @@ static void Push16(uint8_t** aIp, uint16_t aValue) {
   (*aIp) += 4;
 }
 
-/* static */ void Assembler::PatchJump(uint8_t* aIp, void* aTarget) {
+/* static */
+void Assembler::PatchJump(uint8_t* aIp, void* aTarget) {
   // Push the target literal onto the stack, 2 bytes at a time. This is
   // apparently the best way of getting an arbitrary 8 byte literal onto the
   // stack, as 4 byte literals we push will be sign extended to 8 bytes.
@@ -199,8 +200,8 @@ void Assembler::CompareValueWithRax(uint8_t aValue, size_t aWidth) {
 
 static const size_t MoveImmediateBytes = 10;
 
-/* static */ void Assembler::PatchMoveImmediateToRax(uint8_t* aIp,
-                                                     void* aValue) {
+/* static */
+void Assembler::PatchMoveImmediateToRax(uint8_t* aIp, void* aValue) {
   aIp[0] = 0x40 | (1 << 3);
   aIp[1] = 0xB8;
   *reinterpret_cast<void**>(aIp + 2) = aValue;
@@ -246,7 +247,8 @@ void Assembler::ExchangeByteRbxWithAddressAtRax() {
   NewInstruction(0x86, 0x18);
 }
 
-/* static */ /*ud_type*/ int Assembler::NormalizeRegister(
+/* static */ /*ud_type*/
+int Assembler::NormalizeRegister(
     /*ud_type*/ int aRegister) {
   if (aRegister >= UD_R_AL && aRegister <= UD_R_R15B) {
     return aRegister - UD_R_AL + UD_R_RAX;
@@ -263,23 +265,27 @@ void Assembler::ExchangeByteRbxWithAddressAtRax() {
   return UD_NONE;
 }
 
-/* static */ bool Assembler::CanPatchShortJump(uint8_t* aIp, void* aTarget) {
+/* static */
+bool Assembler::CanPatchShortJump(uint8_t* aIp, void* aTarget) {
   return (aIp + 2 - 128 <= aTarget) && (aIp + 2 + 127 >= aTarget);
 }
 
-/* static */ void Assembler::PatchShortJump(uint8_t* aIp, void* aTarget) {
+/* static */
+void Assembler::PatchShortJump(uint8_t* aIp, void* aTarget) {
   MOZ_RELEASE_ASSERT(CanPatchShortJump(aIp, aTarget));
   aIp[0] = 0xEB;
   aIp[1] = uint8_t(static_cast<uint8_t*>(aTarget) - aIp - 2);
 }
 
-/* static */ void Assembler::PatchJumpClobberRax(uint8_t* aIp, void* aTarget) {
+/* static */
+void Assembler::PatchJumpClobberRax(uint8_t* aIp, void* aTarget) {
   PatchMoveImmediateToRax(aIp, aTarget);
   aIp[10] = 0x50;  // push %rax
   aIp[11] = 0xC3;  // ret
 }
 
-/* static */ void Assembler::PatchClobber(uint8_t* aIp) {
+/* static */
+void Assembler::PatchClobber(uint8_t* aIp) {
   aIp[0] = 0xCC;  // int3
 }
 

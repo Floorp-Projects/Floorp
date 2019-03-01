@@ -82,7 +82,8 @@ nsresult SubstitutingURL::EnsureFile() {
   return net_GetFileFromURLSpec(spec, getter_AddRefs(mFile));
 }
 
-/* virtual */ nsStandardURL* SubstitutingURL::StartClone() {
+/* virtual */
+nsStandardURL* SubstitutingURL::StartClone() {
   SubstitutingURL* clone = new SubstitutingURL();
   return clone;
 }

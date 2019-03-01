@@ -450,7 +450,8 @@ nsWindow::~nsWindow() {
   Destroy();
 }
 
-/* static */ void nsWindow::ReleaseGlobals() {
+/* static */
+void nsWindow::ReleaseGlobals() {
   for (auto &cursor : gCursorCache) {
     if (cursor) {
       g_object_unref(cursor);
@@ -1239,7 +1240,8 @@ static void SetUserTimeAndStartupIDForActivatedWindow(GtkWidget *aWindow) {
   GTKToolkit->SetDesktopStartupID(EmptyCString());
 }
 
-/* static */ guint32 nsWindow::GetLastUserInputTime() {
+/* static */
+guint32 nsWindow::GetLastUserInputTime() {
   // gdk_x11_display_get_user_time/gtk_get_current_event_time tracks
   // button and key presses, DESKTOP_STARTUP_ID used to start the app,
   // drop events from external drags,
@@ -4674,8 +4676,8 @@ class FullscreenTransitionData {
   RefPtr<FullscreenTransitionWindow> mWindow;
 };
 
-/* static */ gboolean FullscreenTransitionData::TimeoutCallback(
-    gpointer aData) {
+/* static */
+gboolean FullscreenTransitionData::TimeoutCallback(gpointer aData) {
   bool finishing = false;
   auto data = static_cast<FullscreenTransitionData *>(aData);
   gdouble opacity = (TimeStamp::Now() - data->mStartTime) / data->mDuration;
@@ -4696,8 +4698,8 @@ class FullscreenTransitionData {
   return FALSE;
 }
 
-/* virtual */ bool nsWindow::PrepareForFullscreenTransition(
-    nsISupports **aData) {
+/* virtual */
+bool nsWindow::PrepareForFullscreenTransition(nsISupports **aData) {
   GdkScreen *screen = gtk_widget_get_screen(mShell);
   if (!gdk_screen_is_composited(screen)) {
     return false;
@@ -4706,9 +4708,11 @@ class FullscreenTransitionData {
   return true;
 }
 
-/* virtual */ void nsWindow::PerformFullscreenTransition(
-    FullscreenTransitionStage aStage, uint16_t aDuration, nsISupports *aData,
-    nsIRunnable *aCallback) {
+/* virtual */
+void nsWindow::PerformFullscreenTransition(FullscreenTransitionStage aStage,
+                                           uint16_t aDuration,
+                                           nsISupports *aData,
+                                           nsIRunnable *aCallback) {
   auto data = static_cast<FullscreenTransitionWindow *>(aData);
   // This will be released at the end of the last timeout callback for it.
   auto transitionData =

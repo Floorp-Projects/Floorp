@@ -341,7 +341,8 @@ TextOverflow::TextOverflow(nsDisplayListBuilder* aBuilder,
   // has overflow on that side.
 }
 
-/* static */ Maybe<TextOverflow> TextOverflow::WillProcessLines(
+/* static */
+Maybe<TextOverflow> TextOverflow::WillProcessLines(
     nsDisplayListBuilder* aBuilder, nsIFrame* aBlockFrame) {
   // Ignore 'text-overflow' for event and frame visibility processing.
   if (aBuilder->IsForEventDelivery() || aBuilder->IsForFrameVisibility() ||
@@ -760,13 +761,15 @@ void TextOverflow::PruneDisplayListContents(
   aList->AppendToTop(&saved);
 }
 
-/* static */ bool TextOverflow::HasClippedOverflow(nsIFrame* aBlockFrame) {
+/* static */
+bool TextOverflow::HasClippedOverflow(nsIFrame* aBlockFrame) {
   const nsStyleTextReset* style = aBlockFrame->StyleTextReset();
   return style->mTextOverflow.mLeft.mType == NS_STYLE_TEXT_OVERFLOW_CLIP &&
          style->mTextOverflow.mRight.mType == NS_STYLE_TEXT_OVERFLOW_CLIP;
 }
 
-/* static */ bool TextOverflow::CanHaveTextOverflow(nsIFrame* aBlockFrame) {
+/* static */
+bool TextOverflow::CanHaveTextOverflow(nsIFrame* aBlockFrame) {
   // Nothing to do for text-overflow:clip or if 'overflow-x/y:visible'.
   if (HasClippedOverflow(aBlockFrame) ||
       IsInlineAxisOverflowVisible(aBlockFrame)) {

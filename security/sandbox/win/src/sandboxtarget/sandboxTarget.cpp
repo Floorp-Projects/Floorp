@@ -12,7 +12,8 @@ namespace mozilla {
 
 // We need to define this function out of line so that clang-cl doesn't inline
 // it.
-/* static */ SandboxTarget* SandboxTarget::Instance() {
+/* static */
+SandboxTarget* SandboxTarget::Instance() {
   static SandboxTarget sb;
   return &sb;
 }

@@ -39,8 +39,8 @@
 #include "mozilla/JSONWriter.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/StackWalk.h"
-#include "mozilla/Vector.h"
 
 // CodeAddressService is defined entirely in the header, so this does not make
 // DMD depend on XPCOM's object file.
@@ -217,7 +217,8 @@ void DMDFuncs::StatusMsg(const char* aFmt, va_list aAp) {
 #endif
 }
 
-/* static */ void InfallibleAllocPolicy::ExitOnFailure(const void* aP) {
+/* static */
+void InfallibleAllocPolicy::ExitOnFailure(const void* aP) {
   if (!aP) {
     MOZ_CRASH("DMD out of memory; aborting");
   }
@@ -490,7 +491,8 @@ class Thread {
   bool InterceptsAreBlocked() const { return mBlockIntercepts; }
 };
 
-/* static */ Thread* Thread::Fetch() {
+/* static */
+Thread* Thread::Fetch() {
   Thread* t = static_cast<Thread*>(DMD_GET_TLS_DATA(gTlsIndex));
 
   if (MOZ_UNLIKELY(!t)) {
@@ -596,6 +598,9 @@ class StackTrace {
 
  public:
   StackTrace() : mLength(0) {}
+  StackTrace(const StackTrace& aOther) : mLength(aOther.mLength) {
+    PodCopy(mPcs, aOther.mPcs, mLength);
+  }
 
   uint32_t Length() const { return mLength; }
   const void* Pc(uint32_t i) const {

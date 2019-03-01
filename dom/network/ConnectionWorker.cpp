@@ -139,7 +139,8 @@ class NotifyRunnable : public WorkerRunnable {
 
 }  // anonymous namespace
 
-/* static */ already_AddRefed<ConnectionWorker> ConnectionWorker::Create(
+/* static */
+already_AddRefed<ConnectionWorker> ConnectionWorker::Create(
     WorkerPrivate* aWorkerPrivate, ErrorResult& aRv) {
   RefPtr<ConnectionWorker> c = new ConnectionWorker();
   c->mProxy = ConnectionProxy::Create(aWorkerPrivate, c);

@@ -33,7 +33,8 @@
 
 namespace mozilla {
 
-/*static*/ SVGNumberListSMILType SVGNumberListSMILType::sSingleton;
+/*static*/
+SVGNumberListSMILType SVGNumberListSMILType::sSingleton;
 
 //----------------------------------------------------------------------
 // nsISMILType implementation

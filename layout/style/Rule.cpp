@@ -65,7 +65,8 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(Rule)
   return tmp->IsCCLeaf() || tmp->IsKnownLive();
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
-/* virtual */ void Rule::DropSheetReference() { mSheet = nullptr; }
+/* virtual */
+void Rule::DropSheetReference() { mSheet = nullptr; }
 
 void Rule::SetCssText(const nsAString& aCssText) {
   // We used to throw for some rule types, but not all.  Specifically, we did

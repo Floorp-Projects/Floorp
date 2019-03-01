@@ -36,7 +36,8 @@ void SameProcessMessageQueue::Flush() {
   }
 }
 
-/* static */ SameProcessMessageQueue* SameProcessMessageQueue::Get() {
+/* static */
+SameProcessMessageQueue* SameProcessMessageQueue::Get() {
   if (!sSingleton) {
     sSingleton = new SameProcessMessageQueue();
   }

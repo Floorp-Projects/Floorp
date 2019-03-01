@@ -106,8 +106,8 @@ void AccessibleCaret::SetAppearance(Appearance aAppearance) {
   }
 }
 
-/* static */ nsAutoString AccessibleCaret::AppearanceString(
-    Appearance aAppearance) {
+/* static */
+nsAutoString AccessibleCaret::AppearanceString(Appearance aAppearance) {
   nsAutoString string;
   switch (aAppearance) {
     case Appearance::None:

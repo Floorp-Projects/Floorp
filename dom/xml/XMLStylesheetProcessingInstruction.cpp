@@ -73,8 +73,8 @@ void XMLStylesheetProcessingInstruction::GetCharset(nsAString& aCharset) {
   }
 }
 
-/* virtual */ void XMLStylesheetProcessingInstruction::OverrideBaseURI(
-    nsIURI* aNewBaseURI) {
+/* virtual */
+void XMLStylesheetProcessingInstruction::OverrideBaseURI(nsIURI* aNewBaseURI) {
   mOverriddenBaseURI = aNewBaseURI;
 }
 

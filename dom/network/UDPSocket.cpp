@@ -46,8 +46,10 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(UDPSocket)
   NS_INTERFACE_MAP_ENTRY(nsIUDPSocketInternal)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-/* static */ already_AddRefed<UDPSocket> UDPSocket::Constructor(
-    const GlobalObject& aGlobal, const UDPOptions& aOptions, ErrorResult& aRv) {
+/* static */
+already_AddRefed<UDPSocket> UDPSocket::Constructor(const GlobalObject& aGlobal,
+                                                   const UDPOptions& aOptions,
+                                                   ErrorResult& aRv) {
   nsCOMPtr<nsPIDOMWindowInner> ownerWindow =
       do_QueryInterface(aGlobal.GetAsSupports());
   if (!ownerWindow) {

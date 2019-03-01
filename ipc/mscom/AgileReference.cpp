@@ -158,7 +158,8 @@ AgileReference::Resolve(REFIID aIid, void** aOutInterface) const {
   return originalInterface->QueryInterface(aIid, aOutInterface);
 }
 
-/* static */ IGlobalInterfaceTable* AgileReference::ObtainGit() {
+/* static */
+IGlobalInterfaceTable* AgileReference::ObtainGit() {
   // Internally to COM, the Global Interface Table is a singleton, therefore we
   // don't worry about holding onto this reference indefinitely.
   static IGlobalInterfaceTable* sGit = []() -> IGlobalInterfaceTable* {

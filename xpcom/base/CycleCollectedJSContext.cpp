@@ -183,8 +183,8 @@ nsresult CycleCollectedJSContext::InitializeNonPrimary(
   return NS_OK;
 }
 
-/* static */ CycleCollectedJSContext* CycleCollectedJSContext::GetFor(
-    JSContext* aCx) {
+/* static */
+CycleCollectedJSContext* CycleCollectedJSContext::GetFor(JSContext* aCx) {
   // Cast from void* matching JS_SetContextPrivate.
   auto atomCache = static_cast<PerThreadAtomCache*>(JS_GetContextPrivate(aCx));
   // Down cast.

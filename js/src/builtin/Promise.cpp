@@ -2130,9 +2130,10 @@ static bool PromiseConstructor(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 // ES2016, 25.4.3.1. steps 3-11.
-/* static */ PromiseObject* PromiseObject::create(
-    JSContext* cx, HandleObject executor, HandleObject proto /* = nullptr */,
-    bool needsWrapping /* = false */) {
+/* static */
+PromiseObject* PromiseObject::create(JSContext* cx, HandleObject executor,
+                                     HandleObject proto /* = nullptr */,
+                                     bool needsWrapping /* = false */) {
   MOZ_ASSERT(executor->isCallable());
 
   RootedObject usedProto(cx, proto);
@@ -2220,8 +2221,8 @@ static bool PromiseConstructor(JSContext* cx, unsigned argc, Value* vp) {
 
 // ES2016, 25.4.3.1. skipping creation of resolution functions and executor
 // function invocation.
-/* static */ PromiseObject* PromiseObject::createSkippingExecutor(
-    JSContext* cx) {
+/* static */
+PromiseObject* PromiseObject::createSkippingExecutor(JSContext* cx) {
   return CreatePromiseObjectWithoutResolutionFunctions(cx);
 }
 
@@ -3175,8 +3176,8 @@ static bool Promise_reject(JSContext* cx, unsigned argc, Value* vp) {
 /**
  * Unforgeable version of ES2016, 25.4.4.4, Promise.reject.
  */
-/* static */ JSObject* PromiseObject::unforgeableReject(JSContext* cx,
-                                                        HandleValue value) {
+/* static */
+JSObject* PromiseObject::unforgeableReject(JSContext* cx, HandleValue value) {
   JSObject* promiseCtor = JS::GetPromiseConstructor(cx);
   if (!promiseCtor) {
     return nullptr;
@@ -3204,8 +3205,8 @@ static bool Promise_static_resolve(JSContext* cx, unsigned argc, Value* vp) {
 /**
  * Unforgeable version of ES2016, 25.4.4.5, Promise.resolve.
  */
-/* static */ JSObject* PromiseObject::unforgeableResolve(JSContext* cx,
-                                                         HandleValue value) {
+/* static */
+JSObject* PromiseObject::unforgeableResolve(JSContext* cx, HandleValue value) {
   JSObject* promiseCtor = JS::GetPromiseConstructor(cx);
   if (!promiseCtor) {
     return nullptr;
@@ -4485,9 +4486,9 @@ bool PromiseObject::dependentPromises(JSContext* cx,
   return true;
 }
 
-/* static */ bool PromiseObject::resolve(JSContext* cx,
-                                         Handle<PromiseObject*> promise,
-                                         HandleValue resolutionValue) {
+/* static */
+bool PromiseObject::resolve(JSContext* cx, Handle<PromiseObject*> promise,
+                            HandleValue resolutionValue) {
   MOZ_ASSERT(!PromiseHasAnyFlag(*promise, PROMISE_FLAG_ASYNC));
   if (promise->state() != JS::PromiseState::Pending) {
     return true;
@@ -4515,9 +4516,9 @@ bool PromiseObject::dependentPromises(JSContext* cx,
   return Call(cx, funVal, UndefinedHandleValue, resolutionValue, &dummy);
 }
 
-/* static */ bool PromiseObject::reject(JSContext* cx,
-                                        Handle<PromiseObject*> promise,
-                                        HandleValue rejectionValue) {
+/* static */
+bool PromiseObject::reject(JSContext* cx, Handle<PromiseObject*> promise,
+                           HandleValue rejectionValue) {
   MOZ_ASSERT(!PromiseHasAnyFlag(*promise, PROMISE_FLAG_ASYNC));
   if (promise->state() != JS::PromiseState::Pending) {
     return true;
@@ -4535,8 +4536,8 @@ bool PromiseObject::dependentPromises(JSContext* cx,
   return Call(cx, funVal, UndefinedHandleValue, rejectionValue, &dummy);
 }
 
-/* static */ void PromiseObject::onSettled(JSContext* cx,
-                                           Handle<PromiseObject*> promise) {
+/* static */
+void PromiseObject::onSettled(JSContext* cx, Handle<PromiseObject*> promise) {
   PromiseDebugInfo::setResolutionInfo(cx, promise);
 
   if (promise->state() == JS::PromiseState::Rejected &&
@@ -5039,7 +5040,8 @@ void OffThreadPromiseRuntimeState::init(
   MOZ_ASSERT(initialized());
 }
 
-/* static */ bool OffThreadPromiseRuntimeState::internalDispatchToEventLoop(
+/* static */
+bool OffThreadPromiseRuntimeState::internalDispatchToEventLoop(
     void* closure, JS::Dispatchable* d) {
   OffThreadPromiseRuntimeState& state =
       *reinterpret_cast<OffThreadPromiseRuntimeState*>(closure);

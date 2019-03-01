@@ -467,7 +467,8 @@ bool nsTextFragment::Append(const char16_t* aBuffer, uint32_t aLength,
   return true;
 }
 
-/* virtual */ size_t nsTextFragment::SizeOfExcludingThis(
+/* virtual */
+size_t nsTextFragment::SizeOfExcludingThis(
     mozilla::MallocSizeOf aMallocSizeOf) const {
   if (Is2b()) {
     return m2b->SizeOfIncludingThisIfUnshared(aMallocSizeOf);

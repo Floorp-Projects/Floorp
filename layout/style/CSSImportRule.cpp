@@ -60,7 +60,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CSSImportRule)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(css::Rule)
 
 #ifdef DEBUG
-/* virtual */ void CSSImportRule::List(FILE* out, int32_t aIndent) const {
+/* virtual */
+void CSSImportRule::List(FILE* out, int32_t aIndent) const {
   nsAutoCString str;
   for (int32_t i = 0; i < aIndent; i++) {
     str.AppendLiteral("  ");
@@ -79,11 +80,13 @@ void CSSImportRule::GetHref(nsAString& aHref) const {
   Servo_ImportRule_GetHref(mRawRule, &aHref);
 }
 
-/* virtual */ void CSSImportRule::GetCssText(nsAString& aCssText) const {
+/* virtual */
+void CSSImportRule::GetCssText(nsAString& aCssText) const {
   Servo_ImportRule_GetCssText(mRawRule, &aCssText);
 }
 
-/* virtual */ size_t CSSImportRule::SizeOfIncludingThis(
+/* virtual */
+size_t CSSImportRule::SizeOfIncludingThis(
     mozilla::MallocSizeOf aMallocSizeOf) const {
   // TODO Implement this!
   return aMallocSizeOf(this);
@@ -94,8 +97,9 @@ bool CSSImportRule::IsCCLeaf() const {
   return false;
 }
 
-/* virtual */ JSObject* CSSImportRule::WrapObject(
-    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
+/* virtual */
+JSObject* CSSImportRule::WrapObject(JSContext* aCx,
+                                    JS::Handle<JSObject*> aGivenProto) {
   return CSSImportRule_Binding::Wrap(aCx, this, aGivenProto);
 }
 

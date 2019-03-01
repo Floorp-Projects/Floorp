@@ -69,7 +69,8 @@
 
 using namespace mozilla;
 
-/* static */ int Thread::GetCurrentId() { return gettid(); }
+/* static */
+int Thread::GetCurrentId() { return gettid(); }
 
 void* GetStackTop(void* aGuess) { return aGuess; }
 

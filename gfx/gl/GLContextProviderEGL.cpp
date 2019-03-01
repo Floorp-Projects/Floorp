@@ -297,7 +297,8 @@ already_AddRefed<GLContext> GLContextEGLFactory::Create(
 }
 
 #if defined(MOZ_WAYLAND)
-/* static */ EGLSurface GLContextEGL::CreateEGLSurfaceForCompositorWidget(
+/* static */
+EGLSurface GLContextEGL::CreateEGLSurfaceForCompositorWidget(
     widget::CompositorWidget* aCompositorWidget, bool aForceAccelerated) {
   nsCString discardFailureId;
   if (!GLLibraryEGL::EnsureInitialized(false, &discardFailureId)) {
@@ -898,8 +899,9 @@ EGLSurface GLContextEGL::CreateCompatibleSurface(void* aWindow) {
   return GLContextProviderEGL::CreateEGLSurface(aWindow, mConfig);
 }
 
-/* static */ EGLSurface GLContextProviderEGL::CreateEGLSurface(
-    void* aWindow, EGLConfig aConfig) {
+/* static */
+EGLSurface GLContextProviderEGL::CreateEGLSurface(void* aWindow,
+                                                  EGLConfig aConfig) {
   // NOTE: aWindow is an ANativeWindow
   nsCString discardFailureId;
   if (!GLLibraryEGL::EnsureInitialized(false, &discardFailureId)) {
@@ -922,7 +924,8 @@ EGLSurface GLContextEGL::CreateCompatibleSurface(void* aWindow) {
   return surface;
 }
 
-/* static */ void GLContextProviderEGL::DestroyEGLSurface(EGLSurface surface) {
+/* static */
+void GLContextProviderEGL::DestroyEGLSurface(EGLSurface surface) {
   nsCString discardFailureId;
   if (!GLLibraryEGL::EnsureInitialized(false, &discardFailureId)) {
     MOZ_CRASH("GFX: Failed to load EGL library 5!");
@@ -1039,8 +1042,8 @@ static EGLConfig ChooseConfig(GLLibraryEGL* egl, CreateContextFlags flags,
   return config;
 }
 
-/*static*/ already_AddRefed<GLContextEGL>
-GLContextEGL::CreateEGLPBufferOffscreenContext(
+/*static*/
+already_AddRefed<GLContextEGL> GLContextEGL::CreateEGLPBufferOffscreenContext(
     CreateContextFlags flags, const mozilla::gfx::IntSize& size,
     const SurfaceCaps& minCaps, nsACString* const out_failureId) {
   bool forceEnableHardware =
@@ -1093,7 +1096,8 @@ GLContextEGL::CreateEGLPBufferOffscreenContext(
   return gl.forget();
 }
 
-/*static*/ already_AddRefed<GLContext> GLContextProviderEGL::CreateHeadless(
+/*static*/
+already_AddRefed<GLContext> GLContextProviderEGL::CreateHeadless(
     CreateContextFlags flags, nsACString* const out_failureId) {
   mozilla::gfx::IntSize dummySize = mozilla::gfx::IntSize(16, 16);
   SurfaceCaps dummyCaps = SurfaceCaps::Any();
@@ -1103,7 +1107,8 @@ GLContextEGL::CreateEGLPBufferOffscreenContext(
 
 // Under EGL, on Android, pbuffers are supported fine, though
 // often without the ability to texture from them directly.
-/*static*/ already_AddRefed<GLContext> GLContextProviderEGL::CreateOffscreen(
+/*static*/
+already_AddRefed<GLContext> GLContextProviderEGL::CreateOffscreen(
     const mozilla::gfx::IntSize& size, const SurfaceCaps& minCaps,
     CreateContextFlags flags, nsACString* const out_failureId) {
   bool forceEnableHardware =
@@ -1170,11 +1175,11 @@ GLContextEGL::CreateEGLPBufferOffscreenContext(
 // fail on many Tegra drivers (bug 759225) and 2) some mobile devices have a
 // very strict limit on global number of GL contexts (bug 754257) and 3) each
 // EGL context eats 750k on B2G (bug 813783)
-/*static*/ GLContext* GLContextProviderEGL::GetGlobalContext() {
-  return nullptr;
-}
+/*static*/
+GLContext* GLContextProviderEGL::GetGlobalContext() { return nullptr; }
 
-/*static*/ void GLContextProviderEGL::Shutdown() {
+/*static*/
+void GLContextProviderEGL::Shutdown() {
   const RefPtr<GLLibraryEGL> egl = GLLibraryEGL::Get();
   if (egl) {
     egl->Shutdown();

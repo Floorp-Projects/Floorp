@@ -184,8 +184,8 @@ nsPoint nsSVGIntegrationUtils::GetOffsetToBoundingBox(nsIFrame* aFrame) {
   return -nsLayoutUtils::GetAllInFlowRectsUnion(aFrame, aFrame).TopLeft();
 }
 
-/* static */ nsSize nsSVGIntegrationUtils::GetContinuationUnionSize(
-    nsIFrame* aNonSVGFrame) {
+/* static */
+nsSize nsSVGIntegrationUtils::GetContinuationUnionSize(nsIFrame* aNonSVGFrame) {
   NS_ASSERTION(!aNonSVGFrame->IsFrameOfType(nsIFrame::eSVG),
                "SVG frames should not get here");
   nsIFrame* firstFrame =
@@ -1186,8 +1186,8 @@ bool PaintFrameCallback::operator()(gfxContext* aContext,
   return true;
 }
 
-/* static */ already_AddRefed<gfxDrawable>
-nsSVGIntegrationUtils::DrawableFromPaintServer(
+/* static */
+already_AddRefed<gfxDrawable> nsSVGIntegrationUtils::DrawableFromPaintServer(
     nsIFrame* aFrame, nsIFrame* aTarget, const nsSize& aPaintServerSize,
     const IntSize& aRenderSize, const DrawTarget* aDrawTarget,
     const gfxMatrix& aContextMatrix, uint32_t aFlags) {

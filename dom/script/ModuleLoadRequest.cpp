@@ -50,7 +50,8 @@ static VisitedURLSet* NewVisitedSetForTopLevelImport(nsIURI* aURI) {
   return set;
 }
 
-/* static */ ModuleLoadRequest* ModuleLoadRequest::CreateTopLevel(
+/* static */
+ModuleLoadRequest* ModuleLoadRequest::CreateTopLevel(
     nsIURI* aURI, ScriptFetchOptions* aFetchOptions,
     const SRIMetadata& aIntegrity, nsIURI* aReferrer, ScriptLoader* aLoader) {
   return new ModuleLoadRequest(aURI, aFetchOptions, aIntegrity, aReferrer,
@@ -59,7 +60,8 @@ static VisitedURLSet* NewVisitedSetForTopLevelImport(nsIURI* aURI) {
                                aLoader, NewVisitedSetForTopLevelImport(aURI));
 }
 
-/* static */ ModuleLoadRequest* ModuleLoadRequest::CreateStaticImport(
+/* static */
+ModuleLoadRequest* ModuleLoadRequest::CreateStaticImport(
     nsIURI* aURI, ModuleLoadRequest* aParent) {
   auto request =
       new ModuleLoadRequest(aURI, aParent->mFetchOptions, SRIMetadata(),
@@ -73,7 +75,8 @@ static VisitedURLSet* NewVisitedSetForTopLevelImport(nsIURI* aURI) {
   return request;
 }
 
-/* static */ ModuleLoadRequest* ModuleLoadRequest::CreateDynamicImport(
+/* static */
+ModuleLoadRequest* ModuleLoadRequest::CreateDynamicImport(
     nsIURI* aURI, ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL,
     ScriptLoader* aLoader, JS::Handle<JS::Value> aReferencingPrivate,
     JS::Handle<JSString*> aSpecifier, JS::Handle<JSObject*> aPromise) {

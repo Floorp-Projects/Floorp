@@ -50,7 +50,8 @@ VRManagerChild::VRManagerChild()
 
 VRManagerChild::~VRManagerChild() { MOZ_ASSERT(NS_IsMainThread()); }
 
-/*static*/ void VRManagerChild::IdentifyTextureHost(
+/*static*/
+void VRManagerChild::IdentifyTextureHost(
     const TextureFactoryIdentifier& aIdentifier) {
   if (sVRManagerChildSingleton) {
     sVRManagerChildSingleton->mBackend = aIdentifier.mParentBackend;
@@ -64,17 +65,17 @@ layers::LayersBackend VRManagerChild::GetBackendType() const {
   return mBackend;
 }
 
-/*static*/ VRManagerChild* VRManagerChild::Get() {
+/*static*/
+VRManagerChild* VRManagerChild::Get() {
   MOZ_ASSERT(sVRManagerChildSingleton);
   return sVRManagerChildSingleton;
 }
 
-/* static */ bool VRManagerChild::IsCreated() {
-  return !!sVRManagerChildSingleton;
-}
+/* static */
+bool VRManagerChild::IsCreated() { return !!sVRManagerChildSingleton; }
 
-/* static */ bool VRManagerChild::InitForContent(
-    Endpoint<PVRManagerChild>&& aEndpoint) {
+/* static */
+bool VRManagerChild::InitForContent(Endpoint<PVRManagerChild>&& aEndpoint) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sVRManagerChildSingleton);
 
@@ -86,8 +87,8 @@ layers::LayersBackend VRManagerChild::GetBackendType() const {
   return true;
 }
 
-/* static */ bool VRManagerChild::ReinitForContent(
-    Endpoint<PVRManagerChild>&& aEndpoint) {
+/* static */
+bool VRManagerChild::ReinitForContent(Endpoint<PVRManagerChild>&& aEndpoint) {
   MOZ_ASSERT(NS_IsMainThread());
 
   ShutDown();
@@ -95,7 +96,8 @@ layers::LayersBackend VRManagerChild::GetBackendType() const {
   return InitForContent(std::move(aEndpoint));
 }
 
-/*static*/ void VRManagerChild::InitSameProcess() {
+/*static*/
+void VRManagerChild::InitSameProcess() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sVRManagerChildSingleton);
 
@@ -106,8 +108,8 @@ layers::LayersBackend VRManagerChild::GetBackendType() const {
                                  mozilla::ipc::ChildSide);
 }
 
-/* static */ void VRManagerChild::InitWithGPUProcess(
-    Endpoint<PVRManagerChild>&& aEndpoint) {
+/* static */
+void VRManagerChild::InitWithGPUProcess(Endpoint<PVRManagerChild>&& aEndpoint) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sVRManagerChildSingleton);
 
@@ -117,7 +119,8 @@ layers::LayersBackend VRManagerChild::GetBackendType() const {
   }
 }
 
-/*static*/ void VRManagerChild::ShutDown() {
+/*static*/
+void VRManagerChild::ShutDown() {
   MOZ_ASSERT(NS_IsMainThread());
   if (sVRManagerChildSingleton) {
     sVRManagerChildSingleton->Destroy();
@@ -125,8 +128,8 @@ layers::LayersBackend VRManagerChild::GetBackendType() const {
   }
 }
 
-/*static*/ void VRManagerChild::DeferredDestroy(
-    RefPtr<VRManagerChild> aVRManagerChild) {
+/*static*/
+void VRManagerChild::DeferredDestroy(RefPtr<VRManagerChild> aVRManagerChild) {
   aVRManagerChild->Close();
 }
 

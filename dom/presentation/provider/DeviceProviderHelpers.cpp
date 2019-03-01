@@ -18,8 +18,8 @@ static const char* const kFxTVPresentationAppUrls[] = {
     "app://fling-player.gaiamobile.org/index.html",
     "app://notification-receiver.gaiamobile.org/index.html", nullptr};
 
-/* static */ bool DeviceProviderHelpers::IsCommonlySupportedScheme(
-    const nsAString& aUrl) {
+/* static */
+bool DeviceProviderHelpers::IsCommonlySupportedScheme(const nsAString& aUrl) {
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aUrl);
   if (NS_FAILED(rv) || !uri) {
@@ -36,8 +36,8 @@ static const char* const kFxTVPresentationAppUrls[] = {
   return false;
 }
 
-/* static */ bool DeviceProviderHelpers::IsFxTVSupportedAppUrl(
-    const nsAString& aUrl) {
+/* static */
+bool DeviceProviderHelpers::IsFxTVSupportedAppUrl(const nsAString& aUrl) {
   // Check if matched with any presentation Apps on TV.
   for (uint32_t i = 0; kFxTVPresentationAppUrls[i]; i++) {
     if (aUrl.EqualsASCII(kFxTVPresentationAppUrls[i])) {

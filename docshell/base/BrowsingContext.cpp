@@ -80,7 +80,8 @@ BrowsingContext* BrowsingContext::TopLevelBrowsingContext() {
   return bc;
 }
 
-/* static */ void BrowsingContext::Init() {
+/* static */
+void BrowsingContext::Init() {
   if (!sBrowsingContexts) {
     sBrowsingContexts = new BrowsingContextMap<WeakPtr>();
     ClearOnShutdown(&sBrowsingContexts);
@@ -92,12 +93,11 @@ BrowsingContext* BrowsingContext::TopLevelBrowsingContext() {
   }
 }
 
-/* static */ LogModule* BrowsingContext::GetLog() {
-  return gBrowsingContextLog;
-}
+/* static */
+LogModule* BrowsingContext::GetLog() { return gBrowsingContextLog; }
 
-/* static */ already_AddRefed<BrowsingContext> BrowsingContext::Get(
-    uint64_t aId) {
+/* static */
+already_AddRefed<BrowsingContext> BrowsingContext::Get(uint64_t aId) {
   if (BrowsingContextMap<WeakPtr>::Ptr abc = sBrowsingContexts->lookup(aId)) {
     return do_AddRef(abc->value().get());
   }
@@ -109,7 +109,8 @@ CanonicalBrowsingContext* BrowsingContext::Canonical() {
   return CanonicalBrowsingContext::Cast(this);
 }
 
-/* static */ already_AddRefed<BrowsingContext> BrowsingContext::Create(
+/* static */
+already_AddRefed<BrowsingContext> BrowsingContext::Create(
     BrowsingContext* aParent, BrowsingContext* aOpener, const nsAString& aName,
     Type aType) {
   MOZ_DIAGNOSTIC_ASSERT(!aParent || aParent->mType == aType);
@@ -136,7 +137,8 @@ CanonicalBrowsingContext* BrowsingContext::Canonical() {
   return context.forget();
 }
 
-/* static */ already_AddRefed<BrowsingContext> BrowsingContext::CreateFromIPC(
+/* static */
+already_AddRefed<BrowsingContext> BrowsingContext::CreateFromIPC(
     BrowsingContext* aParent, BrowsingContext* aOpener, const nsAString& aName,
     uint64_t aId, ContentParent* aOriginProcess) {
   MOZ_DIAGNOSTIC_ASSERT(aOriginProcess || XRE_IsContentProcess(),

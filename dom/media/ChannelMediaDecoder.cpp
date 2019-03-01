@@ -73,8 +73,9 @@ void ChannelMediaDecoder::ResourceCallback::NotifyNetworkError(
   }
 }
 
-/* static */ void ChannelMediaDecoder::ResourceCallback::TimerCallback(
-    nsITimer* aTimer, void* aClosure) {
+/* static */
+void ChannelMediaDecoder::ResourceCallback::TimerCallback(nsITimer* aTimer,
+                                                          void* aClosure) {
   MOZ_ASSERT(NS_IsMainThread());
   ResourceCallback* thiz = static_cast<ResourceCallback*>(aClosure);
   MOZ_ASSERT(thiz->mDecoder);
@@ -417,8 +418,9 @@ ChannelMediaDecoder::ComputePlaybackRate(const MediaChannelStatistics& aStats,
   return {rate, reliable};
 }
 
-/* static */ void ChannelMediaDecoder::UpdatePlaybackRate(
-    const PlaybackRateInfo& aInfo, BaseMediaResource* aResource) {
+/* static */
+void ChannelMediaDecoder::UpdatePlaybackRate(const PlaybackRateInfo& aInfo,
+                                             BaseMediaResource* aResource) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   uint32_t rate = aInfo.mRate;
@@ -435,7 +437,8 @@ ChannelMediaDecoder::ComputePlaybackRate(const MediaChannelStatistics& aStats,
   aResource->SetPlaybackRate(rate);
 }
 
-/* static */ MediaStatistics ChannelMediaDecoder::GetStatistics(
+/* static */
+MediaStatistics ChannelMediaDecoder::GetStatistics(
     const PlaybackRateInfo& aInfo, BaseMediaResource* aRes,
     int64_t aPlaybackPosition) {
   MOZ_ASSERT(!NS_IsMainThread());

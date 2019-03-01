@@ -275,7 +275,8 @@ bool VorbisDataDecoder::IsVorbis(const nsACString& aMimeType) {
   return aMimeType.EqualsLiteral("audio/vorbis");
 }
 
-/* static */ const AudioConfig::Channel* VorbisDataDecoder::VorbisLayout(
+/* static */
+const AudioConfig::Channel* VorbisDataDecoder::VorbisLayout(
     uint32_t aChannels) {
   // From https://www.xiph.org/vorbis/doc/Vorbis_I_spec.html
   // Section 4.3.9.
