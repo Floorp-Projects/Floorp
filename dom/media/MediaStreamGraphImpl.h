@@ -31,6 +31,7 @@ class ShutdownTicket;
 
 template <typename T>
 class LinkedList;
+class GraphRunner;
 
 /**
  * A per-stream update message passed from the media graph thread to the
@@ -109,7 +110,21 @@ class MediaStreamGraphImpl : public MediaStreamGraph,
    * implement OfflineAudioContext.  They do not support MediaStream inputs.
    */
   explicit MediaStreamGraphImpl(GraphDriverType aGraphDriverRequested,
+                                GraphRunType aRunTypeRequested,
                                 TrackRate aSampleRate, AbstractThread* aWindow);
+
+  // Intended only for assertions, either on graph thread or not running (in
+  // which case we must be on the main thread).
+  bool OnGraphThreadOrNotRunning() const override;
+  bool OnGraphThread() const override;
+
+#ifdef DEBUG
+  /**
+   * True if we're on aDriver's thread, or if we're on mGraphRunner's thread
+   * and mGraphRunner is currently run by aDriver.
+   */
+  bool RunByGraphDriver(GraphDriver* aDriver);
+#endif
 
   /**
    * Unregisters memory reporting and deletes this instance. This should be
@@ -180,9 +195,17 @@ class MediaStreamGraphImpl : public MediaStreamGraph,
   bool UpdateMainThreadState();
 
   /**
-   * Returns true if this MediaStreamGraph should keep running
+   * Proxy method called by GraphDriver to iterate the graph.
+   * If this graph was created with GraphRunType SINGLE_THREAD, mGraphRunner
+   * will take care of calling OneIterationImpl from its thread. Otherwise,
+   * OneIterationImpl is called directly.
    */
   bool OneIteration(GraphTime aStateEnd);
+
+  /**
+   * Returns true if this MediaStreamGraph should keep running
+   */
+  bool OneIterationImpl(GraphTime aStateEnd);
 
   /**
    * Called from the driver, when the graph thread is about to stop, to tell
@@ -242,7 +265,7 @@ class MediaStreamGraphImpl : public MediaStreamGraph,
   void UpdateGraph(GraphTime aEndBlockingDecisions);
 
   void SwapMessageQueues() {
-    MOZ_ASSERT(CurrentDriver()->OnThread());
+    MOZ_ASSERT(OnGraphThread());
     MOZ_ASSERT(mFrontMessageQueue.IsEmpty());
     mMonitor.AssertCurrentThreadOwns();
     mFrontMessageQueue.SwapElements(mBackMessageQueue);
@@ -504,7 +527,7 @@ class MediaStreamGraphImpl : public MediaStreamGraph,
    * We can also switch from Revive() (on MainThread). Monitor must be held.
    */
   void SetCurrentDriver(GraphDriver* aDriver) {
-    MOZ_ASSERT(mDriver->OnThread() || !mDriver->ThreadRunning());
+    MOZ_ASSERT(RunByGraphDriver(mDriver) || !mDriver->ThreadRunning());
 #ifdef DEBUG
     mMonitor.AssertCurrentThreadOwns();
 #endif
@@ -588,7 +611,13 @@ class MediaStreamGraphImpl : public MediaStreamGraph,
   StreamSet AllStreams() { return StreamSet(*this); }
 
   // Data members
-  //
+
+  /*
+   * If set, the GraphRunner class handles handing over data from audio
+   * callbacks to a common single thread, shared across GraphDrivers.
+   */
+  const UniquePtr<GraphRunner> mGraphRunner;
+
   /**
    * Graphs own owning references to their driver, until shutdown. When a driver
    * switch occur, previous driver is either deleted, or it's ownership is
