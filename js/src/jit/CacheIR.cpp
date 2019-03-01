@@ -1279,7 +1279,7 @@ bool GetPropIRGenerator::tryAttachCrossCompartmentWrapper(HandleObject obj,
   }
 
   RootedObject unwrapped(cx_, Wrapper::wrappedObject(obj));
-  MOZ_ASSERT(unwrapped == UnwrapOneChecked(obj));
+  MOZ_ASSERT(unwrapped == UnwrapOneCheckedStatic(obj));
   MOZ_ASSERT(!IsCrossCompartmentWrapper(unwrapped),
              "CCWs must not wrap other CCWs");
 

@@ -530,8 +530,8 @@ void ReportError(JSContext* aCx, const char* aError) {
 
 bool IsWrapper(JSObject* obj) { return js::IsWrapper(obj); }
 
-JSObject* UnwrapObject(JSObject* obj, bool stopAtOuter) {
-  return js::CheckedUnwrap(obj, stopAtOuter);
+JSObject* UnwrapObjectStatic(JSObject* obj) {
+  return js::CheckedUnwrapStatic(obj);
 }
 
 JSObject* UncheckedUnwrapObject(JSObject* obj, bool stopAtOuter) {
