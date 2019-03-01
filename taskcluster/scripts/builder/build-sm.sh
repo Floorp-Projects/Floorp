@@ -7,7 +7,7 @@ source $(dirname $0)/sm-tooltool-config.sh
 : ${PYTHON:=python2.7}
 
 # Run the script
-export MOZ_UPLOAD_DIR="$UPLOAD_DIR"
+export MOZ_UPLOAD_DIR="$(cd "$UPLOAD_DIR"; pwd)"
 AUTOMATION=1 $PYTHON $SRCDIR/js/src/devtools/automation/autospider.py ${SPIDERMONKEY_PLATFORM:+--platform=$SPIDERMONKEY_PLATFORM} $SPIDERMONKEY_VARIANT
 BUILD_STATUS=$?
 
