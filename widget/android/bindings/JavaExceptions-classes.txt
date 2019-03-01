@@ -1,0 +1,2 @@
+[java.lang.IllegalStateException = skip:true]
+<init>(Ljava/lang/String;)V =

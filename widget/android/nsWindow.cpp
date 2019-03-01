@@ -8,6 +8,7 @@
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
 #include <math.h>
+#include <queue>
 #include <unistd.h>
 
 #include "mozilla/MiscEvents.h"
@@ -24,6 +25,8 @@
 #include "mozilla/Unused.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/layers/RenderTrace.h"
+#include "mozilla/gfx/DataSurfaceHelpers.h"
+#include "mozilla/gfx/2D.h"
 #include <algorithm>
 
 using mozilla::Unused;
@@ -31,6 +34,9 @@ using mozilla::dom::ContentChild;
 using mozilla::dom::ContentParent;
 
 #include "nsWindow.h"
+
+#include "AndroidGraphics.h"
+#include "JavaExceptions.h"
 
 #include "nsIBaseWindow.h"
 #include "nsIBrowserDOMWindow.h"
@@ -797,6 +803,7 @@ class nsWindow::LayerViewSupport final
   GeckoSession::Compositor::WeakRef mCompositor;
   Atomic<bool, ReleaseAcquire> mCompositorPaused;
   jni::Object::GlobalRef mSurface;
+  std::queue<java::GeckoResult::GlobalRef> mCapturePixelsResults;
 
   // In order to use Event::HasSameTypeAs in PostTo(), we cannot make
   // LayerViewEvent a template because each template instantiation is
@@ -857,7 +864,11 @@ class nsWindow::LayerViewSupport final
 
       uiThread->Dispatch(NS_NewRunnableFunction(
           "LayerViewSupport::OnDetach",
-          [compositor, disposer = RefPtr<Runnable>(aDisposer)] {
+          [compositor, disposer = RefPtr<Runnable>(aDisposer), result = &mCapturePixelsResults] {
+            while (!result->empty()) {
+              result->front()->CompleteExceptionally(java::sdk::IllegalStateException::New("The compositor has detached from the session").Cast<jni::Throwable>());
+              result->pop();
+            }
             compositor->OnCompositorDetached();
             disposer->Run();
           }));
@@ -880,6 +891,27 @@ class nsWindow::LayerViewSupport final
       child = window->GetUiCompositorControllerChild();
     }
     return child.forget();
+  }
+
+  int8_t* FlipScreenPixels(Shmem& aMem, const ScreenIntSize& aSize) {
+    const IntSize size(aSize.width, aSize.height);
+    RefPtr<DataSourceSurface> image = gfx::CreateDataSourceSurfaceFromData(
+      size, 
+      SurfaceFormat::B8G8R8A8, 
+      aMem.get<uint8_t>(), 
+      StrideForFormatAndWidth(SurfaceFormat::B8G8R8A8, aSize.width));
+    RefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
+      size, SurfaceFormat::B8G8R8A8);
+    drawTarget->SetTransform(Matrix::Scaling(1.0, -1.0) * Matrix::Translation(0, aSize.height));
+      
+    gfx::Rect drawRect(0, 0, aSize.width, aSize.height);
+    drawTarget->DrawSurface(image, drawRect, drawRect);
+
+    RefPtr<SourceSurface> snapshot = drawTarget->Snapshot();
+    RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
+    DataSourceSurface::ScopedMap* smap =
+      new DataSourceSurface::ScopedMap(data, DataSourceSurface::READ);
+    return reinterpret_cast<int8_t*>(smap->GetData());
   }
 
   /**
@@ -1078,28 +1110,37 @@ class nsWindow::LayerViewSupport final
     }
   }
 
-  void RequestScreenPixels() {
+  void RequestScreenPixels(jni::Object::Param aResult) {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
-    if (RefPtr<UiCompositorControllerChild> child =
-            GetUiCompositorControllerChild()) {
-      child->RequestScreenPixels();
+    mCapturePixelsResults.push(java::GeckoResult::GlobalRef(java::GeckoResult::LocalRef(aResult)));
+    if (mCapturePixelsResults.size() == 1) {
+      if (RefPtr<UiCompositorControllerChild> child =
+              GetUiCompositorControllerChild()) {
+        child->RequestScreenPixels();
+      }
     }
-  }
+  } 
 
   void RecvScreenPixels(Shmem&& aMem, const ScreenIntSize& aSize) {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
-
-    auto pixels =
-        mozilla::jni::IntArray::New(aMem.get<int>(), aMem.Size<int>());
-    auto compositor = GeckoSession::Compositor::LocalRef(mCompositor);
-    if (compositor) {
-      compositor->RecvScreenPixels(aSize.width, aSize.height, pixels);
+    auto aResult = java::GeckoResult::LocalRef(mCapturePixelsResults.front());
+    if (aResult) {
+      auto pixels =
+          mozilla::jni::ByteBuffer::New(FlipScreenPixels(aMem, aSize), aMem.Size<int8_t>());
+      auto bitmap = java::sdk::Bitmap::CreateBitmap(aSize.width, aSize.height, java::sdk::Config::ARGB_8888());
+      bitmap->CopyPixelsFromBuffer(pixels);
+      aResult->Complete(bitmap);
+      mCapturePixelsResults.pop();
     }
 
     // Pixels have been copied, so Dealloc Shmem
     if (RefPtr<UiCompositorControllerChild> child =
             GetUiCompositorControllerChild()) {
       child->DeallocPixelBuffer(aMem);
+
+      if (!mCapturePixelsResults.empty()) {
+        child->RequestScreenPixels();
+      }
     }
   }
 
