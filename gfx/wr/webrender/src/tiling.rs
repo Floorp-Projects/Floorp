@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorF, BorderStyle, MixBlendMode, PipelineId};
-use api::{DocumentLayer, FilterData, FilterOp, ImageFormat};
-use api::units::*;
+use api::{ColorF, BorderStyle, DeviceIntPoint, DeviceIntRect, DeviceIntSize, DevicePixelScale};
+use api::{DocumentLayer, FilterOp, FilterData, ImageFormat, DevicePoint};
+use api::{MixBlendMode, PipelineId, DeviceRect, LayoutSize, WorldRect};
 use batch::{AlphaBatchBuilder, AlphaBatchContainer, ClipBatcher, resolve_image};
 use clip::ClipStore;
 use clip_scroll_tree::{ClipScrollTree};
@@ -1132,10 +1132,9 @@ impl CompositeOps {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct Frame {
-    /// The origin on content produced by the render tasks.
-    pub content_origin: DeviceIntPoint,
-    /// The rectangle to show the frame in, on screen.
-    pub framebuffer_rect: FramebufferIntRect,
+    //TODO: share the fields with DocumentView struct
+    pub window_size: DeviceIntSize,
+    pub inner_rect: DeviceIntRect,
     pub background_color: Option<ColorF>,
     pub layer: DocumentLayer,
     pub passes: Vec<RenderPass>,

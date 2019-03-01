@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorF, DebugFlags, DocumentLayer, FontRenderMode, PremultipliedColorF};
-use api::{PipelineId, RasterSpace};
-use api::units::*;
+use api::{ColorF, DeviceIntPoint, DevicePixelScale, LayoutPixel, PicturePixel, RasterPixel};
+use api::{DeviceIntRect, DeviceIntSize, DocumentLayer, FontRenderMode, DebugFlags, PremultipliedColorF};
+use api::{LayoutPoint, LayoutRect, LayoutSize, PipelineId, RasterSpace, WorldPoint, WorldRect, WorldPixel};
 use clip::{ClipDataStore, ClipStore, ClipChainStack};
 use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
 use display_list_flattener::{DisplayListFlattener};
@@ -95,8 +95,9 @@ impl FrameGlobalResources {
 /// A builder structure for `tiling::Frame`
 #[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct FrameBuilder {
-    output_rect: DeviceIntRect,
+    screen_rect: DeviceIntRect,
     background_color: Option<ColorF>,
+    window_size: DeviceIntSize,
     root_pic_index: PictureIndex,
     /// Cache of surface tiles from the previous frame builder
     /// that can optionally be consumed by this frame builder.
@@ -222,7 +223,8 @@ impl FrameBuilder {
             hit_testing_runs: Vec::new(),
             prim_store: PrimitiveStore::new(&PrimitiveStoreStats::empty()),
             clip_store: ClipStore::new(),
-            output_rect: DeviceIntRect::zero(),
+            screen_rect: DeviceIntRect::zero(),
+            window_size: DeviceIntSize::zero(),
             background_color: None,
             root_pic_index: PictureIndex(0),
             pending_retained_tiles: RetainedTiles::new(),
@@ -253,8 +255,9 @@ impl FrameBuilder {
     }
 
     pub fn with_display_list_flattener(
-        output_rect: DeviceIntRect,
+        screen_rect: DeviceIntRect,
         background_color: Option<ColorF>,
+        window_size: DeviceIntSize,
         flattener: DisplayListFlattener,
     ) -> Self {
         FrameBuilder {
@@ -262,8 +265,9 @@ impl FrameBuilder {
             prim_store: flattener.prim_store,
             clip_store: flattener.clip_store,
             root_pic_index: flattener.root_pic_index,
-            output_rect,
+            screen_rect,
             background_color,
+            window_size,
             pending_retained_tiles: RetainedTiles::new(),
             config: flattener.config,
             globals: FrameGlobalResources::empty(),
@@ -471,8 +475,11 @@ impl FrameBuilder {
             .take_render_tasks();
 
         let root_render_task = RenderTask::new_picture(
-            RenderTaskLocation::Fixed(self.output_rect),
-            self.output_rect.size.to_f32(),
+            // The rect here is the whole window. If we were to use the screen_rect,
+            // any offset in that rect would doubly apply for cached pictures.
+            RenderTaskLocation::Fixed(DeviceIntRect::new(DeviceIntPoint::zero(),
+                                                         self.window_size).to_i32()),
+            self.window_size.to_f32(),
             self.root_pic_index,
             DeviceIntPoint::zero(),
             child_tasks,
@@ -499,7 +506,6 @@ impl FrameBuilder {
         pipelines: &FastHashMap<PipelineId, Arc<ScenePipeline>>,
         global_device_pixel_scale: DevicePixelScale,
         layer: DocumentLayer,
-        framebuffer_origin: FramebufferIntPoint,
         pan: WorldPoint,
         texture_cache_profile: &mut TextureCacheProfileCounters,
         gpu_cache_profile: &mut GpuCacheProfileCounters,
@@ -511,6 +517,10 @@ impl FrameBuilder {
     ) -> Frame {
         profile_scope!("build");
         profile_marker!("BuildFrame");
+        debug_assert!(
+            DeviceIntRect::new(DeviceIntPoint::zero(), self.window_size)
+                .contains_rect(&self.screen_rect)
+        );
 
         let mut profile_counters = FrameProfileCounters::new();
         profile_counters
@@ -536,8 +546,8 @@ impl FrameBuilder {
         );
         let mut surfaces = Vec::new();
 
-        let output_size = self.output_rect.size.to_i32();
-        let screen_world_rect = (self.output_rect.to_f32() / global_device_pixel_scale).round_out();
+        let screen_size = self.screen_rect.size.to_i32();
+        let screen_world_rect = (self.screen_rect.to_f32() / global_device_pixel_scale).round_out();
 
         let main_render_task_id = self.build_layer_screen_rects_and_cull_layers(
             screen_world_rect,
@@ -574,12 +584,12 @@ impl FrameBuilder {
 
             // Add passes as required for our cached render tasks.
             if !render_tasks.cacheable_render_tasks.is_empty() {
-                passes.push(RenderPass::new_off_screen(output_size, self.config.gpu_supports_fast_clears));
+                passes.push(RenderPass::new_off_screen(screen_size, self.config.gpu_supports_fast_clears));
                 for cacheable_render_task in &render_tasks.cacheable_render_tasks {
                     render_tasks.assign_to_passes(
                         *cacheable_render_task,
                         0,
-                        output_size,
+                        screen_size,
                         &mut passes,
                         self.config.gpu_supports_fast_clears,
                     );
@@ -589,11 +599,11 @@ impl FrameBuilder {
 
             if let Some(main_render_task_id) = main_render_task_id {
                 let passes_start = passes.len();
-                passes.push(RenderPass::new_main_framebuffer(output_size, self.config.gpu_supports_fast_clears));
+                passes.push(RenderPass::new_main_framebuffer(screen_size, self.config.gpu_supports_fast_clears));
                 render_tasks.assign_to_passes(
                     main_render_task_id,
                     passes_start,
-                    output_size,
+                    screen_size,
                     &mut passes,
                     self.config.gpu_supports_fast_clears,
                 );
@@ -649,11 +659,8 @@ impl FrameBuilder {
         resource_cache.end_frame(texture_cache_profile);
 
         Frame {
-            content_origin: self.output_rect.origin,
-            framebuffer_rect: FramebufferIntRect::new(
-                framebuffer_origin,
-                FramebufferIntSize::from_untyped(&self.output_rect.size.to_untyped()),
-            ),
+            window_size: self.window_size,
+            inner_rect: self.screen_rect,
             background_color: self.background_color,
             layer,
             profile_counters,

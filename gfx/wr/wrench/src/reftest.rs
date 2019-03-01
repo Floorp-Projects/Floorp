@@ -121,7 +121,7 @@ impl Display for Reftest {
 
 struct ReftestImage {
     data: Vec<u8>,
-    size: FramebufferIntSize,
+    size: DeviceIntSize,
 }
 enum ReftestImageComparison {
     Equal,
@@ -518,14 +518,14 @@ impl<'a> ReftestHarness<'a> {
         let size = img.dimensions();
         ReftestImage {
             data: img.into_raw(),
-            size: FramebufferIntSize::new(size.0 as i32, size.1 as i32),
+            size: DeviceIntSize::new(size.0 as i32, size.1 as i32),
         }
     }
 
     fn render_yaml(
         &mut self,
         filename: &Path,
-        size: FramebufferIntSize,
+        size: DeviceIntSize,
         font_render_mode: Option<FontRenderMode>,
         allow_mipmaps: bool,
     ) -> YamlRenderOutput {
@@ -548,10 +548,7 @@ impl<'a> ReftestHarness<'a> {
         );
 
         // taking the bottom left sub-rectangle
-        let rect = FramebufferIntRect::new(
-            FramebufferIntPoint::new(0, window_size.height - size.height),
-            size,
-        );
+        let rect = DeviceIntRect::new(DeviceIntPoint::new(0, window_size.height - size.height), size);
         let pixels = self.wrench.renderer.read_pixels_rgba8(rect);
         self.window.swap_buffers();
 

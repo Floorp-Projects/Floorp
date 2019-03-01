@@ -305,8 +305,9 @@ impl<'a> DisplayListFlattener<'a> {
         new_scene.pipelines = scene.pipelines.clone();
 
         FrameBuilder::with_display_list_flattener(
-            DeviceIntSize::from_untyped(&view.framebuffer_rect.size.to_untyped()).into(),
+            view.inner_rect,
             background_color,
+            view.window_size,
             flattener,
         )
     }

@@ -3,9 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use super::super::shader_source::SHADERS;
-use api::{ColorF, ImageDescriptor, ImageFormat, MemoryReport};
-use api::{TextureTarget, VoidPtrToSizeFn};
-use api::units::*;
+use api::{ColorF, ImageFormat, MemoryReport};
+use api::{DeviceIntPoint, DeviceIntRect, DeviceIntSize};
+use api::TextureTarget;
+use api::VoidPtrToSizeFn;
+use api::ImageDescriptor;
 use euclid::Transform3D;
 use gleam::gl;
 use internal_types::{FastHashMap, LayerIndex, RenderTargetInfo};
@@ -973,12 +975,7 @@ pub struct Device {
 pub enum DrawTarget<'a> {
     /// Use the device's default draw target, with the provided dimensions,
     /// which are used to set the viewport.
-    Default {
-        /// Target rectangle to draw.
-        rect: FramebufferIntRect,
-        /// Total size of the target.
-        total_size: FramebufferIntSize,
-    },
+    Default(DeviceIntSize),
     /// Use the provided texture.
     Texture {
         /// The target texture.
@@ -991,17 +988,10 @@ pub enum DrawTarget<'a> {
 }
 
 impl<'a> DrawTarget<'a> {
-    pub fn new_default(size: FramebufferIntSize) -> Self {
-        DrawTarget::Default {
-            rect: size.into(),
-            total_size: size,
-        }
-    }
-
     /// Returns true if this draw target corresponds to the default framebuffer.
     pub fn is_default(&self) -> bool {
         match *self {
-            DrawTarget::Default {..} => true,
+            DrawTarget::Default(..) => true,
             _ => false,
         }
     }
@@ -1009,22 +999,9 @@ impl<'a> DrawTarget<'a> {
     /// Returns the dimensions of this draw-target.
     pub fn dimensions(&self) -> DeviceIntSize {
         match *self {
-            DrawTarget::Default { total_size, .. } => DeviceIntSize::from_untyped(&total_size.to_untyped()),
+            DrawTarget::Default(d) => d,
             DrawTarget::Texture { texture, .. } => texture.get_dimensions(),
         }
-    }
-
-    pub fn to_framebuffer_rect(&self, device_rect: DeviceIntRect) -> FramebufferIntRect {
-        let mut fb_rect = FramebufferIntRect::from_untyped(&device_rect.to_untyped());
-        match *self {
-            DrawTarget::Default { ref rect, .. } => {
-                // perform a Y-flip here
-                fb_rect.origin.y = rect.origin.y + rect.size.height - fb_rect.origin.y - fb_rect.size.height;
-                fb_rect.origin.x += rect.origin.x;
-            }
-            DrawTarget::Texture { .. } => (),
-        }
-        fb_rect
     }
 
     /// Given a scissor rect, convert it to the right coordinate space
@@ -1033,25 +1010,27 @@ impl<'a> DrawTarget<'a> {
     pub fn build_scissor_rect(
         &self,
         scissor_rect: Option<DeviceIntRect>,
-        content_origin: DeviceIntPoint,
-    ) -> FramebufferIntRect {
+        framebuffer_target_rect: DeviceIntRect,
+    ) -> DeviceIntRect {
         let dimensions = self.dimensions();
 
         match scissor_rect {
-            Some(scissor_rect) => match *self {
-                DrawTarget::Default { ref rect, .. } => {
-                    self.to_framebuffer_rect(scissor_rect.translate(&-content_origin.to_vector()))
-                        .intersection(rect)
-                        .unwrap_or_else(FramebufferIntRect::zero)
-                }
-                DrawTarget::Texture { .. } => {
-                    FramebufferIntRect::from_untyped(&scissor_rect.to_untyped())
+            Some(scissor_rect) => {
+                // Note: `framebuffer_target_rect` needs a Y-flip before going to GL
+                if self.is_default() {
+                    let mut rect = scissor_rect
+                        .intersection(&framebuffer_target_rect.to_i32())
+                        .unwrap_or(DeviceIntRect::zero());
+                    rect.origin.y = dimensions.height as i32 - rect.origin.y - rect.size.height;
+                    rect
+                } else {
+                    scissor_rect
                 }
             }
             None => {
-                FramebufferIntRect::new(
-                    FramebufferIntPoint::zero(),
-                    FramebufferIntSize::from_untyped(&dimensions.to_untyped()),
+                DeviceIntRect::new(
+                    DeviceIntPoint::zero(),
+                    dimensions,
                 )
             }
         }
@@ -1075,7 +1054,7 @@ pub enum ReadTarget<'a> {
 impl<'a> From<DrawTarget<'a>> for ReadTarget<'a> {
     fn from(t: DrawTarget<'a>) -> Self {
         match t {
-            DrawTarget::Default { .. } => ReadTarget::Default,
+            DrawTarget::Default(..) => ReadTarget::Default,
             DrawTarget::Texture { texture, layer, .. } =>
                 ReadTarget::Texture { texture, layer },
         }
@@ -1449,17 +1428,14 @@ impl Device {
         &mut self,
         target: DrawTarget,
     ) {
-        let (fbo_id, rect, depth_available) = match target {
-            DrawTarget::Default { rect, .. } => (self.default_draw_fbo, rect, true),
+        let (fbo_id, dimensions, depth_available) = match target {
+            DrawTarget::Default(d) => (self.default_draw_fbo, d, true),
             DrawTarget::Texture { texture, layer, with_depth } => {
-                let rect = FramebufferIntRect::new(
-                    FramebufferIntPoint::zero(),
-                    FramebufferIntSize::from_untyped(&texture.get_dimensions().to_untyped()),
-                );
+                let dim = texture.get_dimensions();
                 if with_depth {
-                    (texture.fbos_with_depth[layer], rect, true)
+                    (texture.fbos_with_depth[layer], dim, true)
                 } else {
-                    (texture.fbos[layer], rect, false)
+                    (texture.fbos[layer], dim, false)
                 }
             }
         };
@@ -1467,10 +1443,10 @@ impl Device {
         self.depth_available = depth_available;
         self.bind_draw_target_impl(fbo_id);
         self.gl.viewport(
-            rect.origin.x,
-            rect.origin.y,
-            rect.size.width,
-            rect.size.height,
+            0,
+            0,
+            dimensions.width as _,
+            dimensions.height as _,
         );
     }
 
@@ -1821,10 +1797,7 @@ impl Device {
             }
         } else {
             // Note that zip() truncates to the shorter of the two iterators.
-            let rect = FramebufferIntRect::new(
-                FramebufferIntPoint::zero(),
-                FramebufferIntSize::from_untyped(&src.get_dimensions().to_untyped()),
-            );
+            let rect = DeviceIntRect::new(DeviceIntPoint::zero(), src.get_dimensions().to_i32());
             for (read_fbo, draw_fbo) in src.fbos.iter().zip(&dst.fbos) {
                 self.bind_read_target_impl(*read_fbo);
                 self.bind_draw_target_impl(*draw_fbo);
@@ -1981,8 +1954,8 @@ impl Device {
 
     pub fn blit_render_target(
         &mut self,
-        src_rect: FramebufferIntRect,
-        dest_rect: FramebufferIntRect,
+        src_rect: DeviceIntRect,
+        dest_rect: DeviceIntRect,
         filter: TextureFilter,
     ) {
         debug_assert!(self.inside_frame);
@@ -2011,8 +1984,8 @@ impl Device {
     /// origin-top-left).
     pub fn blit_render_target_invert_y(
         &mut self,
-        src_rect: FramebufferIntRect,
-        dest_rect: FramebufferIntRect,
+        src_rect: DeviceIntRect,
+        dest_rect: DeviceIntRect,
     ) {
         debug_assert!(self.inside_frame);
         self.gl.blit_framebuffer(
@@ -2264,7 +2237,7 @@ impl Device {
     /// Read rectangle of pixels into the specified output slice.
     pub fn read_pixels_into(
         &mut self,
-        rect: FramebufferIntRect,
+        rect: DeviceIntRect,
         format: ReadPixelsFormat,
         output: &mut [u8],
     ) {
@@ -2639,7 +2612,7 @@ impl Device {
         &self,
         color: Option<[f32; 4]>,
         depth: Option<f32>,
-        rect: Option<FramebufferIntRect>,
+        rect: Option<DeviceIntRect>,
     ) {
         let mut clear_bits = 0;
 
@@ -2706,7 +2679,7 @@ impl Device {
         self.gl.disable(gl::STENCIL_TEST);
     }
 
-    pub fn set_scissor_rect(&self, rect: FramebufferIntRect) {
+    pub fn set_scissor_rect(&self, rect: DeviceIntRect) {
         self.gl.scissor(
             rect.origin.x,
             rect.origin.y,
