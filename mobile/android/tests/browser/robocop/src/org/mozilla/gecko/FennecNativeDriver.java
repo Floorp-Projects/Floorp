@@ -13,6 +13,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.List;
@@ -20,21 +21,22 @@ import java.util.Map;
 import java.lang.StringBuffer;
 import java.lang.Math;
 
-import org.mozilla.geckoview.CompositorController;
 import org.mozilla.gecko.gfx.PanningPerfAPI;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.StrictModeContext;
+import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoView;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
 import android.util.Log;
 import android.view.View;
 
 import com.robotium.solo.Solo;
 
-public class FennecNativeDriver implements Driver, CompositorController.GetPixelsCallback {
+public class FennecNativeDriver implements Driver {
     private static final int FRAME_TIME_THRESHOLD = 25;     // allow 25ms per frame (40fps)
 
     private final Activity mActivity;
@@ -191,15 +193,10 @@ public class FennecNativeDriver implements Driver, CompositorController.GetPixel
     }
 
     private volatile boolean mGotPixelsResult;
-    private int mPixelsWidth;
-    private int mPixelsHeight;
-    private IntBuffer mPixelsResult;
+    private Bitmap mPixelsResult;
 
-    @Override
-    public synchronized void onPixelsResult(int aWidth, int aHeight, IntBuffer aPixels) {
-        mPixelsWidth = aWidth;
-        mPixelsHeight = aHeight;
-        mPixelsResult = aPixels;
+    public synchronized void onPixelsResult(final Bitmap aResult) {
+        mPixelsResult = aResult;
         mGotPixelsResult = true;
         notifyAll();
     }
@@ -259,7 +256,10 @@ public class FennecNativeDriver implements Driver, CompositorController.GetPixel
         view.post(new Runnable() {
             @Override
             public void run() {
-                view.getSession().getCompositorController().getPixels(FennecNativeDriver.this);
+                view.capturePixels().then( value -> {
+                    FennecNativeDriver.this.onPixelsResult(value);
+                    return null;
+                });
             }
         });
 
@@ -272,13 +272,12 @@ public class FennecNativeDriver implements Driver, CompositorController.GetPixel
             }
         }
 
-        final IntBuffer pixelBuffer = mPixelsResult;
-        int w = mPixelsWidth;
-        int h = mPixelsHeight;
+        final ByteBuffer pixelBuffer = ByteBuffer.allocate(mPixelsResult.getByteCount());
+        mPixelsResult.copyPixelsToBuffer(pixelBuffer);
+        int w = mPixelsResult.getWidth();
+        int h = mPixelsResult.getHeight();
 
         mGotPixelsResult = false;
-        mPixelsWidth = 0;
-        mPixelsHeight = 0;
         mPixelsResult = null;
 
 
@@ -291,9 +290,7 @@ public class FennecNativeDriver implements Driver, CompositorController.GetPixel
         // This allows the screen capture to be examined in the log output in a human
         // readable format.
         // logPixels(pixelBuffer, w, h);
-
-        // now we need to (1) flip the image, because GL likes to do things up-side-down,
-        // and (2) rearrange the bits from AGBR-8888 to ARGB-8888.
+        
         pixelBuffer.position(0);
         String mapFile = mRootPath + "/pixels.map";
 
@@ -304,13 +301,7 @@ public class FennecNativeDriver implements Driver, CompositorController.GetPixel
             fos = new FileOutputStream(mapFile);
             bos = new BufferedOutputStream(fos);
             dos = new DataOutputStream(bos);
-
-            for (int y = h - 1; y >= 0; y--) {
-                for (int x = 0; x < w; x++) {
-                    int agbr = pixelBuffer.get();
-                    dos.writeInt((agbr & 0xFF00FF00) | ((agbr >> 16) & 0x000000FF) | ((agbr << 16) & 0x00FF0000));
-                }
-            }
+            dos.write(pixelBuffer.array());
         } catch (IOException e) {
             throw new RoboCopException("exception with pixel writer on file: " + mapFile);
         } finally {
