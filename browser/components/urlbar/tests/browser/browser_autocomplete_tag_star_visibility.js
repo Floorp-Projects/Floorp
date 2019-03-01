@@ -81,12 +81,6 @@ add_task(async function() {
   }];
 
   for (let testcase of testcases) {
-    // TODO: Bug 1526051 - Fix searching for tags when suggest.bookmark is false.
-    if (UrlbarPrefs.get("quantumbar") &&
-        (testcase.tagName == "tagtest2" ||
-         testcase.tagName == "tagtest5")) {
-      continue;
-    }
     info(`Test case: ${testcase.description}`);
 
     await addTagItem(testcase.tagName);
@@ -103,7 +97,12 @@ add_task(async function() {
 
     Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.URL,
       "Should have a URL result type");
-    Assert.deepEqual(result.tags, [testcase.tagName],
+    // The Quantum Bar differs from the legacy urlbar in the fact that, if
+    // bookmarks are filtered out, it won't show tags for history results.
+    let expected_tags = UrlbarPrefs.get("quantumbar") &&
+                        !testcase.expected.typeImageVisible ?
+                        [] : [testcase.tagName];
+    Assert.deepEqual(result.tags, expected_tags,
       "Should have the expected tag");
 
     if (testcase.expected.typeImageVisible) {
