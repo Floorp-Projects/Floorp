@@ -3703,6 +3703,13 @@ window._gBrowser = {
       return this.replaceTabWithWindow(tabs[0], aOptions);
     }
 
+    // The order of the tabs is preserved.
+    // To avoid multiple tab-switch, the active tab is "moved" last, if applicable.
+    // If applicable, the active tab remains active in the new window.
+    let activeTab = gBrowser.selectedTab;
+    let inactiveTabs = tabs.filter(t => t != activeTab);
+    let activeTabNewIndex = tabs.indexOf(activeTab);
+
     // Play the closing animation for all selected tabs to give
     // immediate feedback while waiting for the new window to appear.
     if (this.animationsEnabled) {
@@ -3712,28 +3719,33 @@ window._gBrowser = {
       }
     }
 
-    // Create a new window and make it adopt the tabs, preserving their relative order.
-    // The initial tab of the new window will be selected, so it should adopt the
-    // selected tab of the original window, if applicable, or else the first moving tab.
-    // This avoids tab-switches in the new window, preserving tab laziness.
-    // However, to avoid multiple tab-switches in the original window, the other tabs
-    // should be adopted before the selected one.
-    let selectedTabIndex = Math.max(0, tabs.indexOf(gBrowser.selectedTab));
-    let selectedTab = tabs[selectedTabIndex];
-    let win = this.replaceTabWithWindow(selectedTab, aOptions);
-    win.addEventListener("before-initial-tab-adopted", () => {
-      for (let i = 0; i < tabs.length; ++i) {
-        if (i != selectedTabIndex) {
-          win.gBrowser.adoptTab(tabs[i], i);
-        }
+    let win;
+    let firstInactiveTab = inactiveTabs[0];
+
+    let adoptRemainingTabs = () => {
+      for (let i = 1; i < inactiveTabs.length; i++) {
+        win.gBrowser.adoptTab(inactiveTabs[i], i);
       }
+
+      if (activeTabNewIndex > -1) {
+        win.gBrowser.adoptTab(activeTab, activeTabNewIndex, true /* aSelectTab */);
+      }
+
       // Restore tab selection
       let winVisibleTabs = win.gBrowser.visibleTabs;
       let winTabLength = winVisibleTabs.length;
       win.gBrowser.addRangeToMultiSelectedTabs(winVisibleTabs[0],
                                                winVisibleTabs[winTabLength - 1]);
-      win.gBrowser.lockClearMultiSelectionOnce();
-    }, {once: true});
+    };
+
+    // Pending tabs don't get their docshell swapped, wait for their TabClose
+    if (firstInactiveTab.hasAttribute("pending")) {
+      firstInactiveTab.addEventListener("TabClose", adoptRemainingTabs, {once: true});
+    } else {
+      firstInactiveTab.linkedBrowser.addEventListener("EndSwapDocShells", adoptRemainingTabs, {once: true});
+    }
+
+    win = this.replaceTabWithWindow(firstInactiveTab, aOptions);
     return win;
   },
 
