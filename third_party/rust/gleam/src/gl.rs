@@ -15,6 +15,7 @@ use std::os::raw::{c_char, c_int, c_void};
 use std::ptr;
 use std::rc::Rc;
 use std::str;
+use std::time::{Duration, Instant};
 
 pub use ffi::types::*;
 pub use ffi::*;
@@ -94,6 +95,18 @@ macro_rules! declare_gl_apis {
                 let error = self.gl.get_error();
                 if error != 0 {
                     (self.callback)(&*self.gl, stringify!($name), error);
+                }
+                rv
+            })+
+        }
+
+        impl<F: Fn(&str, Duration)> Gl for ProfilingGl<F> {
+            $($(unsafe $($garbo)*)* fn $name(&self $(, $arg:$t)*) $(-> $retty)* {
+                let start = Instant::now();
+                let rv = self.gl.$name($($arg,)*);
+                let duration = Instant::now() - start;
+                if duration > self.threshold {
+                    (self.callback)(stringify!($name), duration);
                 }
                 rv
             })+
@@ -581,6 +594,20 @@ pub struct ErrorReactingGl<F> {
 impl<F: 'static + Fn(&Gl, &str, GLenum)> ErrorReactingGl<F> {
     pub fn wrap(fns: Rc<Gl>, callback: F) -> Rc<Gl> {
         Rc::new(ErrorReactingGl { gl: fns, callback }) as Rc<Gl>
+    }
+}
+
+/// A wrapper around GL context that times each call and invokes the callback
+/// if the call takes longer than the threshold.
+pub struct ProfilingGl<F> {
+    gl: Rc<Gl>,
+    threshold: Duration,
+    callback: F,
+}
+
+impl<F: 'static + Fn(&str, Duration)> ProfilingGl<F> {
+    pub fn wrap(fns: Rc<Gl>, threshold: Duration, callback: F) -> Rc<Gl> {
+        Rc::new(ProfilingGl { gl: fns, threshold, callback }) as Rc<Gl>
     }
 }
 
