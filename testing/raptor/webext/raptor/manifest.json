@@ -14,11 +14,13 @@
   "content_scripts": [
     {
       "matches": [
+                  "*://*.allrecipes.com/*",
                   "*://*.apple.com/*",
                   "*://*.amazon.com/*",
                   "*://*.bing.com/*",
                   "*://*.ebay.com/*",
                   "*://*.ebay-kleinanzeigen.de/*",
+                  "*://*.espn.com/*",
                   "*://*.facebook.com/*",
                   "*://*.google.com/*",
                   "*://*.imdb.com/*",
@@ -31,6 +33,7 @@
                   "*://*.tumblr.com/*",
                   "*://*.twitter.com/*",
                   "*://*.vice.com/*",
+                  "*://*.web.de/*",
                   "*://*.wikia.com/*",
                   "*://*.wikipedia.org/*",
                   "*://*.yahoo.com/*",
