@@ -1693,13 +1693,10 @@ bool nsIFrame::ComputeBorderRadii(const BorderRadius& aBorderRadius,
     nscoord length =
         SideIsVertical(side) ? aBorderArea.height : aBorderArea.width;
     nscoord sum = aRadii[hc1] + aRadii[hc2];
-    if (sum) {
-      haveRadius = true;
-      // avoid floating point division in the normal case
-      if (length < sum) {
-        ratio = std::min(ratio, double(length) / sum);
-      }
-    }
+    if (sum) haveRadius = true;
+
+    // avoid floating point division in the normal case
+    if (length < sum) ratio = std::min(ratio, double(length) / sum);
   }
   if (ratio < 1.0) {
     NS_FOR_CSS_HALF_CORNERS(corner) { aRadii[corner] *= ratio; }
