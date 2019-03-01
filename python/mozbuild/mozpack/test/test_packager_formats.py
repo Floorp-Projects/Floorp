@@ -238,6 +238,11 @@ RESULT_OMNIJAR['omni.foo'].update({
     )
 })
 
+RESULT_OMNIJAR_WITH_SUBPATH = {
+    k.replace('omni.foo', 'bar/omni.foo'): v
+    for k, v in RESULT_OMNIJAR.items()
+}
+
 CONTENTS_WITH_BASE = {
     'bases': {
         mozpath.join('base/root', b) if b else 'base/root': a
@@ -366,6 +371,14 @@ class TestFormatters(TestErrors, unittest.TestCase):
         fill_formatter(formatter, CONTENTS_WITH_BASE)
         self.assertEqual(get_contents(registry), RESULT_OMNIJAR_WITH_BASE)
         self.do_test_contents(formatter, CONTENTS_WITH_BASE)
+
+    def test_omnijar_formatter_with_subpath(self):
+        registry = FileRegistry()
+        formatter = OmniJarFormatter(registry, 'bar/omni.foo')
+
+        fill_formatter(formatter, CONTENTS)
+        self.assertEqual(get_contents(registry), RESULT_OMNIJAR_WITH_SUBPATH)
+        self.do_test_contents(formatter, CONTENTS)
 
     def test_omnijar_is_resource(self):
         def is_resource(base, path):
