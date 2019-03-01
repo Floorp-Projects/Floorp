@@ -36,6 +36,15 @@ pub type DeviceVector2D = TypedVector2D<f32, DevicePixel>;
 pub type DeviceSize = TypedSize2D<f32, DevicePixel>;
 pub type DeviceHomogeneousVector = HomogeneousVector<f32, DevicePixel>;
 
+/// Geometry in the coordinate system of the framebuffer in physical pixels.
+/// It's Y-flipped comparing to DevicePixel.
+#[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize)]
+pub struct FramebufferPixel;
+
+pub type FramebufferIntPoint = TypedPoint2D<i32, FramebufferPixel>;
+pub type FramebufferIntSize = TypedSize2D<i32, FramebufferPixel>;
+pub type FramebufferIntRect = TypedRect<i32, FramebufferPixel>;
+
 /// Geometry in the coordinate system of a Picture (intermediate
 /// surface) in physical pixels.
 #[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
