@@ -103,7 +103,7 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler {
   }
 
   void prepareVMCall(MacroAssembler& masm, const AutoSaveLiveRegisters&);
-  MOZ_MUST_USE bool callVM(MacroAssembler& masm, const VMFunction& fun);
+  void callVM(MacroAssembler& masm, const VMFunction& fun);
 
   MOZ_MUST_USE bool emitAddAndStoreSlotShared(CacheOp op);
 
@@ -324,7 +324,7 @@ void IonCacheIRCompiler::prepareVMCall(MacroAssembler& masm,
 #endif
 }
 
-bool IonCacheIRCompiler::callVM(MacroAssembler& masm, const VMFunction& fun) {
+void IonCacheIRCompiler::callVM(MacroAssembler& masm, const VMFunction& fun) {
   MOZ_ASSERT(calledPrepareVMCall_);
 
   TrampolinePtr code = cx_->runtime()->jitRuntime()->getVMWrapper(fun);
@@ -336,13 +336,12 @@ bool IonCacheIRCompiler::callVM(MacroAssembler& masm, const VMFunction& fun) {
   masm.callJit(code);
 
   // Remove rest of the frame left on the stack. We remove the return address
-  // which is implicitly poped when returning.
+  // which is implicitly popped when returning.
   int framePop = sizeof(ExitFrameLayout) - sizeof(void*);
 
   // Pop arguments from framePushed.
   masm.implicitPop(frameSize + framePop);
   masm.freeStack(IonICCallFrameLayout::Size());
-  return true;
 }
 
 bool IonCacheIRCompiler::init() {
@@ -1146,9 +1145,7 @@ bool IonCacheIRCompiler::emitCallProxyGetByValueResult() {
   masm.Push(idVal);
   masm.Push(obj);
 
-  if (!callVM(masm, ProxyGetPropertyByValueInfo)) {
-    return false;
-  }
+  callVM(masm, ProxyGetPropertyByValueInfo);
 
   masm.storeCallResultValue(output);
   return true;
@@ -1171,13 +1168,9 @@ bool IonCacheIRCompiler::emitCallProxyHasPropResult() {
   masm.Push(obj);
 
   if (hasOwn) {
-    if (!callVM(masm, ProxyHasOwnInfo)) {
-      return false;
-    }
+    callVM(masm, ProxyHasOwnInfo);
   } else {
-    if (!callVM(masm, ProxyHasInfo)) {
-      return false;
-    }
+    callVM(masm, ProxyHasInfo);
   }
 
   masm.storeCallResultValue(output);
@@ -1200,9 +1193,7 @@ bool IonCacheIRCompiler::emitCallNativeGetElementResult() {
   masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
   masm.Push(obj);
 
-  if (!callVM(masm, NativeGetElementInfo)) {
-    return false;
-  }
+  callVM(masm, NativeGetElementInfo);
 
   masm.storeCallResultValue(output);
   return true;
@@ -1301,9 +1292,7 @@ bool IonCacheIRCompiler::emitCallStringSplitResult() {
   masm.Push(ImmGCPtr(group));
   masm.Push(Imm32(INT32_MAX));
 
-  if (!callVM(masm, StringSplitHelperInfo)) {
-    return false;
-  }
+  callVM(masm, StringSplitHelperInfo);
 
   masm.storeCallResultValue(output);
   return true;
@@ -1331,11 +1320,8 @@ bool IonCacheIRCompiler::emitCompareStringResult() {
   masm.Push(right);
   masm.Push(left);
 
-  if (!callVM(masm, (op == JSOP_EQ || op == JSOP_STRICTEQ)
-                        ? StringsEqualInfo
-                        : StringsNotEqualInfo)) {
-    return false;
-  }
+  callVM(masm, (op == JSOP_EQ || op == JSOP_STRICTEQ) ? StringsEqualInfo
+                                                      : StringsNotEqualInfo);
 
   masm.storeCallBoolResult(output.typedReg().gpr());
   masm.bind(&done);
@@ -2203,7 +2189,8 @@ bool IonCacheIRCompiler::emitCallSetArrayLength() {
   masm.Push(val);
   masm.Push(obj);
 
-  return callVM(masm, SetArrayLengthInfo);
+  callVM(masm, SetArrayLengthInfo);
+  return true;
 }
 
 bool IonCacheIRCompiler::emitCallProxySet() {
@@ -2226,7 +2213,8 @@ bool IonCacheIRCompiler::emitCallProxySet() {
   masm.Push(id, scratch);
   masm.Push(obj);
 
-  return callVM(masm, ProxySetPropertyInfo);
+  callVM(masm, ProxySetPropertyInfo);
+  return true;
 }
 
 bool IonCacheIRCompiler::emitCallProxySetByValue() {
@@ -2248,7 +2236,8 @@ bool IonCacheIRCompiler::emitCallProxySetByValue() {
   masm.Push(idVal);
   masm.Push(obj);
 
-  return callVM(masm, ProxySetPropertyByValueInfo);
+  callVM(masm, ProxySetPropertyByValueInfo);
+  return true;
 }
 
 bool IonCacheIRCompiler::emitCallAddOrUpdateSparseElementHelper() {
@@ -2268,7 +2257,8 @@ bool IonCacheIRCompiler::emitCallAddOrUpdateSparseElementHelper() {
   masm.Push(id);
   masm.Push(obj);
 
-  return callVM(masm, AddOrUpdateSparseElementHelperInfo);
+  callVM(masm, AddOrUpdateSparseElementHelperInfo);
+  return true;
 }
 
 bool IonCacheIRCompiler::emitCallGetSparseElementResult() {
@@ -2284,9 +2274,7 @@ bool IonCacheIRCompiler::emitCallGetSparseElementResult() {
   masm.Push(id);
   masm.Push(obj);
 
-  if (!callVM(masm, GetSparseElementHelperInfo)) {
-    return false;
-  }
+  callVM(masm, GetSparseElementHelperInfo);
 
   masm.storeCallResultValue(output);
   return true;
@@ -2312,7 +2300,8 @@ bool IonCacheIRCompiler::emitMegamorphicSetElement() {
   masm.Push(idVal);
   masm.Push(obj);
 
-  return callVM(masm, SetObjectElementInfo);
+  callVM(masm, SetObjectElementInfo);
+  return true;
 }
 
 bool IonCacheIRCompiler::emitLoadTypedObjectResult() {
@@ -2590,9 +2579,7 @@ bool IonCacheIRCompiler::emitCallStringConcatResult() {
   masm.Push(rhs);
   masm.Push(lhs);
 
-  if (!callVM(masm, ConcatStringsInfo)) {
-    return false;
-  }
+  callVM(masm, ConcatStringsInfo);
 
   masm.tagValue(JSVAL_TYPE_STRING, ReturnReg, output.valueReg());
   return true;
@@ -2618,9 +2605,7 @@ bool IonCacheIRCompiler::emitCallStringObjectConcatResult() {
   masm.Push(rhs);
   masm.Push(lhs);
 
-  if (!callVM(masm, DoIonConcatStringObjectInfo)) {
-    return false;
-  }
+  callVM(masm, DoIonConcatStringObjectInfo);
 
   masm.storeCallResultValue(output);
   return true;
