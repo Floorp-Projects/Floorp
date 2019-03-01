@@ -191,9 +191,11 @@ nsresult nsManifestCheck::Begin() {
 // nsManifestCheck <public>
 //-----------------------------------------------------------------------------
 
-/* static */ nsresult nsManifestCheck::ReadManifest(
-    nsIInputStream *aInputStream, void *aClosure, const char *aFromSegment,
-    uint32_t aOffset, uint32_t aCount, uint32_t *aBytesConsumed) {
+/* static */
+nsresult nsManifestCheck::ReadManifest(nsIInputStream *aInputStream,
+                                       void *aClosure, const char *aFromSegment,
+                                       uint32_t aOffset, uint32_t aCount,
+                                       uint32_t *aBytesConsumed) {
   nsManifestCheck *manifestCheck = static_cast<nsManifestCheck *>(aClosure);
 
   nsresult rv;

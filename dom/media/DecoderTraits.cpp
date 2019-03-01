@@ -41,8 +41,8 @@
 
 namespace mozilla {
 
-/* static */ bool DecoderTraits::IsHttpLiveStreamingType(
-    const MediaContainerType& aType) {
+/* static */
+bool DecoderTraits::IsHttpLiveStreamingType(const MediaContainerType& aType) {
   const auto& mimeType = aType.Type();
   return  // For m3u8.
           // https://tools.ietf.org/html/draft-pantos-http-live-streaming-19#section-10
@@ -53,16 +53,17 @@ namespace mozilla {
       mimeType == MEDIAMIMETYPE("audio/x-mpegurl");
 }
 
-/* static */ bool DecoderTraits::IsMatroskaType(
-    const MediaContainerType& aType) {
+/* static */
+bool DecoderTraits::IsMatroskaType(const MediaContainerType& aType) {
   const auto& mimeType = aType.Type();
   // https://matroska.org/technical/specs/notes.html
   return mimeType == MEDIAMIMETYPE("audio/x-matroska") ||
          mimeType == MEDIAMIMETYPE("video/x-matroska");
 }
 
-/* static */ bool DecoderTraits::IsMP4SupportedType(
-    const MediaContainerType& aType, DecoderDoctorDiagnostics* aDiagnostics) {
+/* static */
+bool DecoderTraits::IsMP4SupportedType(const MediaContainerType& aType,
+                                       DecoderDoctorDiagnostics* aDiagnostics) {
 #ifdef MOZ_FMP4
   return MP4Decoder::IsSupportedType(aType, aDiagnostics);
 #else
@@ -314,7 +315,8 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType) {
          false;
 }
 
-/* static */ nsTArray<UniquePtr<TrackInfo>> DecoderTraits::GetTracksInfo(
+/* static */
+nsTArray<UniquePtr<TrackInfo>> DecoderTraits::GetTracksInfo(
     const MediaContainerType& aType) {
   // Container type with just the MIME type/subtype, no codecs.
   const MediaContainerType mimeType(aType.Type());

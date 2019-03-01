@@ -51,7 +51,8 @@ UrlClassifierFeatureFingerprinting::UrlClassifierFeatureFingerprinting()
   return FINGERPRINTING_FEATURE_NAME;
 }
 
-/* static */ void UrlClassifierFeatureFingerprinting::MaybeInitialize() {
+/* static */
+void UrlClassifierFeatureFingerprinting::MaybeInitialize() {
   UC_LOG(("UrlClassifierFeatureFingerprinting: MaybeInitialize"));
 
   if (!gFeatureFingerprinting) {
@@ -60,7 +61,8 @@ UrlClassifierFeatureFingerprinting::UrlClassifierFeatureFingerprinting()
   }
 }
 
-/* static */ void UrlClassifierFeatureFingerprinting::MaybeShutdown() {
+/* static */
+void UrlClassifierFeatureFingerprinting::MaybeShutdown() {
   UC_LOG(("UrlClassifierFeatureFingerprinting: MaybeShutdown"));
 
   if (gFeatureFingerprinting) {
@@ -69,7 +71,8 @@ UrlClassifierFeatureFingerprinting::UrlClassifierFeatureFingerprinting()
   }
 }
 
-/* static */ already_AddRefed<UrlClassifierFeatureFingerprinting>
+/* static */
+already_AddRefed<UrlClassifierFeatureFingerprinting>
 UrlClassifierFeatureFingerprinting::MaybeCreate(nsIChannel* aChannel) {
   MOZ_ASSERT(aChannel);
 
@@ -103,8 +106,7 @@ UrlClassifierFeatureFingerprinting::MaybeCreate(nsIChannel* aChannel) {
     return nullptr;
   }
 
-  if (!UrlClassifierCommon::ShouldEnableClassifier(
-          aChannel, AntiTrackingCommon::eFingerprinting)) {
+  if (!UrlClassifierCommon::ShouldEnableClassifier(aChannel)) {
     return nullptr;
   }
 
@@ -115,7 +117,8 @@ UrlClassifierFeatureFingerprinting::MaybeCreate(nsIChannel* aChannel) {
   return self.forget();
 }
 
-/* static */ already_AddRefed<nsIUrlClassifierFeature>
+/* static */
+already_AddRefed<nsIUrlClassifierFeature>
 UrlClassifierFeatureFingerprinting::GetIfNameMatches(const nsACString& aName) {
   if (!aName.EqualsLiteral(FINGERPRINTING_FEATURE_NAME)) {
     return nullptr;
@@ -135,23 +138,37 @@ UrlClassifierFeatureFingerprinting::ProcessChannel(nsIChannel* aChannel,
   NS_ENSURE_ARG_POINTER(aChannel);
   NS_ENSURE_ARG_POINTER(aShouldContinue);
 
+  bool isAllowListed =
+      IsAllowListed(aChannel, AntiTrackingCommon::eFingerprinting);
+
   // This is a blocking feature.
-  *aShouldContinue = false;
+  *aShouldContinue = isAllowListed;
 
-  UrlClassifierCommon::SetBlockedContent(aChannel, NS_ERROR_FINGERPRINTING_URI,
-                                         aList, EmptyCString(), EmptyCString());
-
-  UC_LOG(
-      ("UrlClassifierFeatureFingerprinting::ProcessChannel, cancelling "
-       "channel[%p]",
-       aChannel));
-  nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aChannel);
-
-  if (httpChannel) {
-    Unused << httpChannel->CancelByChannelClassifier(
-        NS_ERROR_FINGERPRINTING_URI);
+  if (isAllowListed) {
+    // Even with fingerprinting blocking disabled, we still want to show the
+    // user that there are unblocked trackers on the site, so notify the UI that
+    // we loaded tracking content.  UI code can treat this notification
+    // differently depending on whether fingerprinting blocking is enabled or
+    // not.
+    UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(
+        aChannel, nsIWebProgressListener::STATE_LOADED_FINGERPRINTING_CONTENT);
   } else {
-    Unused << aChannel->Cancel(NS_ERROR_FINGERPRINTING_URI);
+    UrlClassifierCommon::SetBlockedContent(aChannel,
+                                           NS_ERROR_FINGERPRINTING_URI, aList,
+                                           EmptyCString(), EmptyCString());
+
+    UC_LOG(
+        ("UrlClassifierFeatureFingerprinting::ProcessChannel, cancelling "
+         "channel[%p]",
+         aChannel));
+    nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aChannel);
+
+    if (httpChannel) {
+      Unused << httpChannel->CancelByChannelClassifier(
+          NS_ERROR_FINGERPRINTING_URI);
+    } else {
+      Unused << aChannel->Cancel(NS_ERROR_FINGERPRINTING_URI);
+    }
   }
 
   return NS_OK;

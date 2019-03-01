@@ -154,8 +154,9 @@ ExecutablePool* ExecutableAllocator::poolForSize(size_t n) {
   return pool;
 }
 
-/* static */ size_t ExecutableAllocator::roundUpAllocationSize(
-    size_t request, size_t granularity) {
+/* static */
+size_t ExecutableAllocator::roundUpAllocationSize(size_t request,
+                                                  size_t granularity) {
   if ((std::numeric_limits<size_t>::max() - granularity) <= request) {
     return OVERSIZE_ALLOCATION;
   }
@@ -257,16 +258,18 @@ void ExecutableAllocator::addSizeOfCode(JS::CodeSizes* sizes) const {
   }
 }
 
-/* static */ void ExecutableAllocator::reprotectPool(
-    JSRuntime* rt, ExecutablePool* pool, ProtectionSetting protection) {
+/* static */
+void ExecutableAllocator::reprotectPool(JSRuntime* rt, ExecutablePool* pool,
+                                        ProtectionSetting protection) {
   char* start = pool->m_allocation.pages;
   if (!ReprotectRegion(start, pool->m_freePtr - start, protection)) {
     MOZ_CRASH();
   }
 }
 
-/* static */ void ExecutableAllocator::poisonCode(
-    JSRuntime* rt, JitPoisonRangeVector& ranges) {
+/* static */
+void ExecutableAllocator::poisonCode(JSRuntime* rt,
+                                     JitPoisonRangeVector& ranges) {
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
 
 #ifdef DEBUG

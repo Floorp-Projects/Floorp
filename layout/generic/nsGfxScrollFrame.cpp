@@ -826,15 +826,15 @@ nscoord nsHTMLScrollFrame::GetIntrinsicVScrollbarWidth(
   return vScrollbarPrefSize.width;
 }
 
-/* virtual */ nscoord nsHTMLScrollFrame::GetMinISize(
-    gfxContext* aRenderingContext) {
+/* virtual */
+nscoord nsHTMLScrollFrame::GetMinISize(gfxContext* aRenderingContext) {
   nscoord result = mHelper.mScrolledFrame->GetMinISize(aRenderingContext);
   DISPLAY_MIN_INLINE_SIZE(this, result);
   return result + GetIntrinsicVScrollbarWidth(aRenderingContext);
 }
 
-/* virtual */ nscoord nsHTMLScrollFrame::GetPrefISize(
-    gfxContext* aRenderingContext) {
+/* virtual */
+nscoord nsHTMLScrollFrame::GetPrefISize(gfxContext* aRenderingContext) {
   nscoord result = mHelper.mScrolledFrame->GetPrefISize(aRenderingContext);
   DISPLAY_PREF_INLINE_SIZE(this, result);
   return NSCoordSaturatingAdd(result,
@@ -2636,8 +2636,9 @@ static nsPoint ClampAndAlignWithLayerPixels(
                               aCurrent.y));
 }
 
-/* static */ void ScrollFrameHelper::ScrollActivityCallback(nsITimer* aTimer,
-                                                            void* anInstance) {
+/* static */
+void ScrollFrameHelper::ScrollActivityCallback(nsITimer* aTimer,
+                                               void* anInstance) {
   ScrollFrameHelper* self = static_cast<ScrollFrameHelper*>(anInstance);
 
   // Fire the synth mouse move.
@@ -3156,13 +3157,19 @@ void ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder* aBuilder,
   }
 }
 
-/* static */ bool ScrollFrameHelper::sFrameVisPrefsCached = false;
-/* static */ uint32_t ScrollFrameHelper::sHorzExpandScrollPort = 0;
-/* static */ uint32_t ScrollFrameHelper::sVertExpandScrollPort = 1;
-/* static */ int32_t ScrollFrameHelper::sHorzScrollFraction = 2;
-/* static */ int32_t ScrollFrameHelper::sVertScrollFraction = 2;
+/* static */
+bool ScrollFrameHelper::sFrameVisPrefsCached = false;
+/* static */
+uint32_t ScrollFrameHelper::sHorzExpandScrollPort = 0;
+/* static */
+uint32_t ScrollFrameHelper::sVertExpandScrollPort = 1;
+/* static */
+int32_t ScrollFrameHelper::sHorzScrollFraction = 2;
+/* static */
+int32_t ScrollFrameHelper::sVertScrollFraction = 2;
 
-/* static */ void ScrollFrameHelper::EnsureFrameVisPrefsCached() {
+/* static */
+void ScrollFrameHelper::EnsureFrameVisPrefsCached() {
   if (!sFrameVisPrefsCached) {
     Preferences::AddUintVarCache(&sHorzExpandScrollPort,
                                  "layout.framevisibility.numscrollportwidths",

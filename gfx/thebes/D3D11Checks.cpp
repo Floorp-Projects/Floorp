@@ -25,8 +25,8 @@ namespace gfx {
 using namespace mozilla::widget;
 using mozilla::layers::AutoTextureLock;
 
-/* static */ bool D3D11Checks::DoesRenderTargetViewNeedRecreating(
-    ID3D11Device* aDevice) {
+/* static */
+bool D3D11Checks::DoesRenderTargetViewNeedRecreating(ID3D11Device* aDevice) {
   bool result = false;
   // CreateTexture2D is known to crash on lower feature levels, see bugs
   // 1170211 and 1089413.
@@ -131,7 +131,8 @@ using mozilla::layers::AutoTextureLock;
   return result;
 }
 
-/* static */ bool D3D11Checks::DoesDeviceWork() {
+/* static */
+bool D3D11Checks::DoesDeviceWork() {
   static bool checked = false;
   static bool result = false;
 
@@ -361,20 +362,21 @@ static bool DoesTextureSharingWorkInternal(ID3D11Device* device,
   return true;
 }
 
-/* static */ bool D3D11Checks::DoesTextureSharingWork(ID3D11Device* device) {
+/* static */
+bool D3D11Checks::DoesTextureSharingWork(ID3D11Device* device) {
   return DoesTextureSharingWorkInternal(
       device, DXGI_FORMAT_B8G8R8A8_UNORM,
       D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
 }
 
-/* static */ bool D3D11Checks::DoesAlphaTextureSharingWork(
-    ID3D11Device* device) {
+/* static */
+bool D3D11Checks::DoesAlphaTextureSharingWork(ID3D11Device* device) {
   return DoesTextureSharingWorkInternal(device, DXGI_FORMAT_R8_UNORM,
                                         D3D11_BIND_SHADER_RESOURCE);
 }
 
-/* static */ bool D3D11Checks::GetDxgiDesc(ID3D11Device* device,
-                                           DXGI_ADAPTER_DESC* out) {
+/* static */
+bool D3D11Checks::GetDxgiDesc(ID3D11Device* device, DXGI_ADAPTER_DESC* out) {
   RefPtr<IDXGIDevice> dxgiDevice;
   HRESULT hr =
       device->QueryInterface(__uuidof(IDXGIDevice), getter_AddRefs(dxgiDevice));
@@ -390,7 +392,8 @@ static bool DoesTextureSharingWorkInternal(ID3D11Device* device,
   return SUCCEEDED(dxgiAdapter->GetDesc(out));
 }
 
-/* static */ void D3D11Checks::WarnOnAdapterMismatch(ID3D11Device* device) {
+/* static */
+void D3D11Checks::WarnOnAdapterMismatch(ID3D11Device* device) {
   DXGI_ADAPTER_DESC desc;
   PodZero(&desc);
   GetDxgiDesc(device, &desc);
@@ -406,7 +409,8 @@ static bool DoesTextureSharingWorkInternal(ID3D11Device* device,
   }
 }
 
-/* static */ bool D3D11Checks::DoesRemotePresentWork(IDXGIAdapter* adapter) {
+/* static */
+bool D3D11Checks::DoesRemotePresentWork(IDXGIAdapter* adapter) {
   // Remote presentation was added in DXGI 1.2, for Windows 8 and the Platform
   // Update to Windows 7.
   RefPtr<IDXGIAdapter2> check;

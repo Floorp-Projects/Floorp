@@ -249,13 +249,15 @@ JSObject* DOMMediaStream::WrapObject(JSContext* aCx,
   return dom::MediaStream_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-/* static */ already_AddRefed<DOMMediaStream> DOMMediaStream::Constructor(
+/* static */
+already_AddRefed<DOMMediaStream> DOMMediaStream::Constructor(
     const GlobalObject& aGlobal, ErrorResult& aRv) {
   Sequence<OwningNonNull<MediaStreamTrack>> emptyTrackSeq;
   return Constructor(aGlobal, emptyTrackSeq, aRv);
 }
 
-/* static */ already_AddRefed<DOMMediaStream> DOMMediaStream::Constructor(
+/* static */
+already_AddRefed<DOMMediaStream> DOMMediaStream::Constructor(
     const GlobalObject& aGlobal, const DOMMediaStream& aStream,
     ErrorResult& aRv) {
   nsTArray<RefPtr<MediaStreamTrack>> tracks;
@@ -275,7 +277,8 @@ JSObject* DOMMediaStream::WrapObject(JSContext* aCx,
   return Constructor(aGlobal, nonNullTrackSeq, aRv);
 }
 
-/* static */ already_AddRefed<DOMMediaStream> DOMMediaStream::Constructor(
+/* static */
+already_AddRefed<DOMMediaStream> DOMMediaStream::Constructor(
     const GlobalObject& aGlobal,
     const Sequence<OwningNonNull<MediaStreamTrack>>& aTracks,
     ErrorResult& aRv) {

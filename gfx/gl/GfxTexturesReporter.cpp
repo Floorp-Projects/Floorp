@@ -51,8 +51,8 @@ std::string FormatBytes(size_t amount) {
   return stream.str();
 }
 
-/* static */ void GfxTexturesReporter::UpdateAmount(MemoryUse action,
-                                                    size_t amount) {
+/* static */
+void GfxTexturesReporter::UpdateAmount(MemoryUse action, size_t amount) {
   if (action == MemoryFreed) {
     MOZ_RELEASE_ASSERT(
         amount <= sAmount,

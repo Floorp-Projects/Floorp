@@ -3395,8 +3395,9 @@ static inline bool MustBeUInt32(MDefinition* def, MDefinition** pwrapped) {
   return false;
 }
 
-/* static */ bool MBinaryInstruction::unsignedOperands(MDefinition* left,
-                                                       MDefinition* right) {
+/* static */
+bool MBinaryInstruction::unsignedOperands(MDefinition* left,
+                                          MDefinition* right) {
   MDefinition* replace;
   if (!MustBeUInt32(left, &replace)) {
     return false;

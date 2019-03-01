@@ -46,7 +46,8 @@ already_AddRefed<DOMSVGTransformList> DOMSVGAnimatedTransformList::AnimVal() {
   return animVal.forget();
 }
 
-/* static */ already_AddRefed<DOMSVGAnimatedTransformList>
+/* static */
+already_AddRefed<DOMSVGAnimatedTransformList>
 DOMSVGAnimatedTransformList::GetDOMWrapper(SVGAnimatedTransformList* aList,
                                            SVGElement* aElement) {
   RefPtr<DOMSVGAnimatedTransformList> wrapper =
@@ -58,8 +59,8 @@ DOMSVGAnimatedTransformList::GetDOMWrapper(SVGAnimatedTransformList* aList,
   return wrapper.forget();
 }
 
-/* static */ DOMSVGAnimatedTransformList*
-DOMSVGAnimatedTransformList::GetDOMWrapperIfExists(
+/* static */
+DOMSVGAnimatedTransformList* DOMSVGAnimatedTransformList::GetDOMWrapperIfExists(
     SVGAnimatedTransformList* aList) {
   return sSVGAnimatedTransformListTearoffTable.GetTearoff(aList);
 }

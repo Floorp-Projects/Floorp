@@ -358,7 +358,8 @@ function getSourceForActor(actor: ActorId) {
 async function fetchWorkers(): Promise<Worker[]> {
   if (features.windowlessWorkers) {
     const options = {
-      breakpoints
+      breakpoints,
+      observeAsmJS: true
     };
 
     const newWorkerClients = await updateWorkerClients({

@@ -1988,7 +1988,8 @@ void nsMemoryReporterManager::HandleChildReport(
                              s->mHandleReportData);
 }
 
-/* static */ bool nsMemoryReporterManager::StartChildReport(
+/* static */
+bool nsMemoryReporterManager::StartChildReport(
     mozilla::MemoryReportingProcess* aChild,
     const PendingProcessesState* aState) {
   if (!aChild->IsAlive()) {
@@ -2065,8 +2066,8 @@ void nsMemoryReporterManager::EndProcessReport(uint32_t aGeneration,
   }
 }
 
-/* static */ void nsMemoryReporterManager::TimeoutCallback(nsITimer* aTimer,
-                                                           void* aData) {
+/* static */
+void nsMemoryReporterManager::TimeoutCallback(nsITimer* aTimer, void* aData) {
   nsMemoryReporterManager* mgr = static_cast<nsMemoryReporterManager*>(aData);
   PendingProcessesState* s = mgr->mPendingProcessesState;
 
@@ -2346,7 +2347,8 @@ nsMemoryReporterManager::GetResidentFast(int64_t* aAmount) {
 #endif
 }
 
-/*static*/ int64_t nsMemoryReporterManager::ResidentFast() {
+/*static*/
+int64_t nsMemoryReporterManager::ResidentFast() {
 #ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
   int64_t amount;
   nsresult rv = ResidentFastDistinguishedAmount(&amount);
@@ -2367,7 +2369,8 @@ nsMemoryReporterManager::GetResidentPeak(int64_t* aAmount) {
 #endif
 }
 
-/*static*/ int64_t nsMemoryReporterManager::ResidentPeak() {
+/*static*/
+int64_t nsMemoryReporterManager::ResidentPeak() {
 #ifdef HAVE_RESIDENT_PEAK_REPORTER
   int64_t amount = 0;
   nsresult rv = ResidentPeakDistinguishedAmount(&amount);
@@ -2388,7 +2391,8 @@ nsMemoryReporterManager::GetResidentUnique(int64_t* aAmount) {
 #endif
 }
 
-/*static*/ int64_t nsMemoryReporterManager::ResidentUnique() {
+/*static*/
+int64_t nsMemoryReporterManager::ResidentUnique() {
 #ifdef HAVE_RESIDENT_UNIQUE_REPORTER
   int64_t amount = 0;
   nsresult rv = ResidentUniqueDistinguishedAmount(&amount);

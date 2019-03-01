@@ -16,10 +16,13 @@
 namespace mozilla {
 namespace dom {
 
-/* static */ StaticRefPtr<PrioEncoder> PrioEncoder::sSingleton;
+/* static */
+StaticRefPtr<PrioEncoder> PrioEncoder::sSingleton;
 
-/* static */ PublicKey PrioEncoder::sPublicKeyA = nullptr;
-/* static */ PublicKey PrioEncoder::sPublicKeyB = nullptr;
+/* static */
+PublicKey PrioEncoder::sPublicKeyA = nullptr;
+/* static */
+PublicKey PrioEncoder::sPublicKeyB = nullptr;
 
 PrioEncoder::PrioEncoder() = default;
 PrioEncoder::~PrioEncoder() {
@@ -36,11 +39,11 @@ PrioEncoder::~PrioEncoder() {
   Prio_clear();
 }
 
-/* static */ void PrioEncoder::Encode(GlobalObject& aGlobal,
-                                      const nsCString& aBatchID,
-                                      const PrioParams& aPrioParams,
-                                      RootedDictionary<PrioEncodedData>& aData,
-                                      ErrorResult& aRv) {
+/* static */
+void PrioEncoder::Encode(GlobalObject& aGlobal, const nsCString& aBatchID,
+                         const PrioParams& aPrioParams,
+                         RootedDictionary<PrioEncodedData>& aData,
+                         ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   if (!global) {
     aRv.Throw(NS_ERROR_UNEXPECTED);

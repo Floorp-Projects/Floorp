@@ -16,7 +16,8 @@ extern "C" {
 
 namespace mozilla {
 
-/* static */ const std::string SipccSdpAttributeList::kEmptyString = "";
+/* static */
+const std::string SipccSdpAttributeList::kEmptyString = "";
 
 SipccSdpAttributeList::SipccSdpAttributeList(
     const SipccSdpAttributeList* sessionLevel)

@@ -115,9 +115,10 @@ GainNode::GainNode(AudioContext* aContext)
       aContext, engine, AudioNodeStream::NO_STREAM_FLAGS, aContext->Graph());
 }
 
-/* static */ already_AddRefed<GainNode> GainNode::Create(
-    AudioContext& aAudioContext, const GainOptions& aOptions,
-    ErrorResult& aRv) {
+/* static */
+already_AddRefed<GainNode> GainNode::Create(AudioContext& aAudioContext,
+                                            const GainOptions& aOptions,
+                                            ErrorResult& aRv) {
   if (aAudioContext.CheckClosed(aRv)) {
     return nullptr;
   }

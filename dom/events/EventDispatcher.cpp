@@ -642,7 +642,8 @@ void EventTargetChainItem::HandleEventTargetChain(
 
 static nsTArray<EventTargetChainItem>* sCachedMainThreadChain = nullptr;
 
-/* static */ void EventDispatcher::Shutdown() {
+/* static */
+void EventDispatcher::Shutdown() {
   delete sCachedMainThreadChain;
   sCachedMainThreadChain = nullptr;
 }
@@ -708,10 +709,13 @@ static bool ShouldClearTargets(WidgetEvent* aEvent) {
   return false;
 }
 
-/* static */ nsresult EventDispatcher::Dispatch(
-    nsISupports* aTarget, nsPresContext* aPresContext, WidgetEvent* aEvent,
-    Event* aDOMEvent, nsEventStatus* aEventStatus,
-    EventDispatchingCallback* aCallback, nsTArray<EventTarget*>* aTargets) {
+/* static */
+nsresult EventDispatcher::Dispatch(nsISupports* aTarget,
+                                   nsPresContext* aPresContext,
+                                   WidgetEvent* aEvent, Event* aDOMEvent,
+                                   nsEventStatus* aEventStatus,
+                                   EventDispatchingCallback* aCallback,
+                                   nsTArray<EventTarget*>* aTargets) {
   AUTO_PROFILER_LABEL("EventDispatcher::Dispatch", OTHER);
 
   NS_ASSERTION(aEvent, "Trying to dispatch without WidgetEvent!");
@@ -1112,9 +1116,12 @@ static bool ShouldClearTargets(WidgetEvent* aEvent) {
   return rv;
 }
 
-/* static */ nsresult EventDispatcher::DispatchDOMEvent(
-    nsISupports* aTarget, WidgetEvent* aEvent, Event* aDOMEvent,
-    nsPresContext* aPresContext, nsEventStatus* aEventStatus) {
+/* static */
+nsresult EventDispatcher::DispatchDOMEvent(nsISupports* aTarget,
+                                           WidgetEvent* aEvent,
+                                           Event* aDOMEvent,
+                                           nsPresContext* aPresContext,
+                                           nsEventStatus* aEventStatus) {
   if (aDOMEvent) {
     WidgetEvent* innerEvent = aDOMEvent->WidgetEventPtr();
     NS_ENSURE_TRUE(innerEvent, NS_ERROR_ILLEGAL_VALUE);

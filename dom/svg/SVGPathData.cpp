@@ -528,7 +528,8 @@ already_AddRefed<Path> SVGPathData::BuildPathForMeasuring() const {
 // We could simplify this function because this is only used by CSS motion path
 // and clip-path, which don't render the SVG Path. i.e. The returned path is
 // used as a reference.
-/* static */ already_AddRefed<Path> SVGPathData::BuildPath(
+/* static */
+already_AddRefed<Path> SVGPathData::BuildPath(
     const nsTArray<StylePathCommand>& aPath, PathBuilder* aBuilder,
     uint8_t aStrokeLineCap, Float aStrokeWidth, float aZoomFactor) {
   if (aPath.IsEmpty() || !aPath[0].IsMoveTo()) {

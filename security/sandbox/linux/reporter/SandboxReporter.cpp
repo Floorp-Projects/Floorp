@@ -74,7 +74,8 @@ SandboxReporter::~SandboxReporter() {
   close(mClientFd);
 }
 
-/* static */ SandboxReporter* SandboxReporter::Singleton() {
+/* static */
+SandboxReporter* SandboxReporter::Singleton() {
   static StaticMutex sMutex;
   StaticMutexAutoLock lock(sMutex);
 

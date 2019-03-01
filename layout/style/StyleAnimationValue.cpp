@@ -159,8 +159,10 @@ double AnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
   return distance < 0.0 ? 0.0 : distance;
 }
 
-/* static */ AnimationValue AnimationValue::FromString(
-    nsCSSPropertyID aProperty, const nsAString& aValue, Element* aElement) {
+/* static */
+AnimationValue AnimationValue::FromString(nsCSSPropertyID aProperty,
+                                          const nsAString& aValue,
+                                          Element* aElement) {
   MOZ_ASSERT(aElement);
 
   AnimationValue result;
@@ -193,14 +195,15 @@ double AnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
   return result;
 }
 
-/* static */ AnimationValue AnimationValue::Opacity(float aOpacity) {
+/* static */
+AnimationValue AnimationValue::Opacity(float aOpacity) {
   AnimationValue result;
   result.mServo = Servo_AnimationValue_Opacity(aOpacity).Consume();
   return result;
 }
 
-/* static */ AnimationValue AnimationValue::Transform(
-    nsCSSValueSharedList& aList) {
+/* static */
+AnimationValue AnimationValue::Transform(nsCSSValueSharedList& aList) {
   AnimationValue result;
   result.mServo = Servo_AnimationValue_Transform(aList).Consume();
   return result;

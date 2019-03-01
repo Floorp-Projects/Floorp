@@ -20,9 +20,11 @@
 namespace mozilla {
 namespace dom {
 
-/* static */ already_AddRefed<Worker> Worker::Constructor(
-    const GlobalObject& aGlobal, const nsAString& aScriptURL,
-    const WorkerOptions& aOptions, ErrorResult& aRv) {
+/* static */
+already_AddRefed<Worker> Worker::Constructor(const GlobalObject& aGlobal,
+                                             const nsAString& aScriptURL,
+                                             const WorkerOptions& aOptions,
+                                             ErrorResult& aRv) {
   JSContext* cx = aGlobal.Context();
 
   RefPtr<WorkerPrivate> workerPrivate = WorkerPrivate::Constructor(

@@ -479,8 +479,9 @@ inline nsresult ParseIPv4Number(const nsACString &input, int32_t base,
 }
 
 // IPv4 parser spec: https://url.spec.whatwg.org/#concept-ipv4-parser
-/* static */ nsresult nsStandardURL::NormalizeIPv4(const nsACString &host,
-                                                   nsCString &result) {
+/* static */
+nsresult nsStandardURL::NormalizeIPv4(const nsACString &host,
+                                      nsCString &result) {
   int32_t bases[4] = {10, 10, 10, 10};
   bool onlyBase10 = true;  // Track this as a special case
   int32_t dotIndex[3];     // The positions of the dots in the string

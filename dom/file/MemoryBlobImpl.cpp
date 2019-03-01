@@ -65,12 +65,14 @@ void MemoryBlobImpl::CreateInputStream(nsIInputStream** aStream,
                                                  aStream);
 }
 
-/* static */ StaticMutex MemoryBlobImpl::DataOwner::sDataOwnerMutex;
+/* static */
+StaticMutex MemoryBlobImpl::DataOwner::sDataOwnerMutex;
 
 /* static */ StaticAutoPtr<LinkedList<MemoryBlobImpl::DataOwner>>
     MemoryBlobImpl::DataOwner::sDataOwners;
 
-/* static */ bool MemoryBlobImpl::DataOwner::sMemoryReporterRegistered = false;
+/* static */
+bool MemoryBlobImpl::DataOwner::sMemoryReporterRegistered = false;
 
 MOZ_DEFINE_MALLOC_SIZE_OF(MemoryFileDataOwnerMallocSizeOf)
 
@@ -154,7 +156,8 @@ class MemoryBlobImplDataOwnerMemoryReporter final : public nsIMemoryReporter {
 
 NS_IMPL_ISUPPORTS(MemoryBlobImplDataOwnerMemoryReporter, nsIMemoryReporter)
 
-/* static */ void MemoryBlobImpl::DataOwner::EnsureMemoryReporterRegistered() {
+/* static */
+void MemoryBlobImpl::DataOwner::EnsureMemoryReporterRegistered() {
   sDataOwnerMutex.AssertCurrentThreadOwns();
   if (sMemoryReporterRegistered) {
     return;

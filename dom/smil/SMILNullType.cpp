@@ -11,7 +11,8 @@
 
 namespace mozilla {
 
-/*static*/ SMILNullType* SMILNullType::Singleton() {
+/*static*/
+SMILNullType* SMILNullType::Singleton() {
   static SMILNullType sSingleton;
   return &sSingleton;
 }

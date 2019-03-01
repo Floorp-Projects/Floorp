@@ -92,9 +92,10 @@ void ICUUtils::LanguageTagIterForContent::GetNext(nsACString& aBCP47LangTag) {
   aBCP47LangTag.Truncate();  // Signal iterator exhausted
 }
 
-/* static */ bool ICUUtils::LocalizeNumber(double aValue,
-                                           LanguageTagIterForContent& aLangTags,
-                                           nsAString& aLocalizedValue) {
+/* static */
+bool ICUUtils::LocalizeNumber(double aValue,
+                              LanguageTagIterForContent& aLangTags,
+                              nsAString& aLocalizedValue) {
   MOZ_ASSERT(aLangTags.IsAtStart(), "Don't call Next() before passing");
 
   static const int32_t kBufferSize = 256;
@@ -133,8 +134,9 @@ void ICUUtils::LanguageTagIterForContent::GetNext(nsACString& aBCP47LangTag) {
   return false;
 }
 
-/* static */ double ICUUtils::ParseNumber(
-    nsAString& aValue, LanguageTagIterForContent& aLangTags) {
+/* static */
+double ICUUtils::ParseNumber(nsAString& aValue,
+                             LanguageTagIterForContent& aLangTags) {
   MOZ_ASSERT(aLangTags.IsAtStart(), "Don't call Next() before passing");
 
   if (aValue.IsEmpty()) {
@@ -167,9 +169,9 @@ void ICUUtils::LanguageTagIterForContent::GetNext(nsACString& aBCP47LangTag) {
   return std::numeric_limits<float>::quiet_NaN();
 }
 
-/* static */ void ICUUtils::AssignUCharArrayToString(UChar* aICUString,
-                                                     int32_t aLength,
-                                                     nsAString& aMozString) {
+/* static */
+void ICUUtils::AssignUCharArrayToString(UChar* aICUString, int32_t aLength,
+                                        nsAString& aMozString) {
   // Both ICU's UnicodeString and Mozilla's nsAString use UTF-16, so we can
   // cast here.
 
@@ -181,7 +183,8 @@ void ICUUtils::LanguageTagIterForContent::GetNext(nsACString& aBCP47LangTag) {
   NS_ASSERTION((int32_t)aMozString.Length() == aLength, "Conversion failed");
 }
 
-/* static */ nsresult ICUUtils::UErrorToNsResult(const UErrorCode aErrorCode) {
+/* static */
+nsresult ICUUtils::UErrorToNsResult(const UErrorCode aErrorCode) {
   if (U_SUCCESS(aErrorCode)) {
     return NS_OK;
   }
@@ -199,7 +202,8 @@ void ICUUtils::LanguageTagIterForContent::GetNext(nsACString& aBCP47LangTag) {
 }
 
 #  if 0
-/* static */ Locale
+/* static */
+Locale
 ICUUtils::BCP47CodeToLocale(const nsAString& aBCP47Code)
 {
   MOZ_ASSERT(!aBCP47Code.IsEmpty(), "Don't pass an empty BCP 47 code");
@@ -249,7 +253,8 @@ ICUUtils::BCP47CodeToLocale(const nsAString& aBCP47Code)
   return locale;
 }
 
-/* static */ void
+/* static */
+void
 ICUUtils::ToMozString(UnicodeString& aICUString, nsAString& aMozString)
 {
   // Both ICU's UnicodeString and Mozilla's nsAString use UTF-16, so we can
@@ -266,7 +271,8 @@ ICUUtils::ToMozString(UnicodeString& aICUString, nsAString& aMozString)
                "Conversion failed");
 }
 
-/* static */ void
+/* static */
+void
 ICUUtils::ToICUString(nsAString& aMozString, UnicodeString& aICUString)
 {
   // Both ICU's UnicodeString and Mozilla's nsAString use UTF-16, so we can

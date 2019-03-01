@@ -30,13 +30,14 @@ SpanningCellSorter::~SpanningCellSorter() { delete[] mSortedHashTable; }
     HashTableHashKey, HashTableMatchEntry, PLDHashTable::MoveEntryStub,
     PLDHashTable::ClearEntryStub, nullptr};
 
-/* static */ PLDHashNumber SpanningCellSorter::HashTableHashKey(
-    const void *key) {
+/* static */
+PLDHashNumber SpanningCellSorter::HashTableHashKey(const void *key) {
   return HashGeneric(key);
 }
 
-/* static */ bool SpanningCellSorter::HashTableMatchEntry(
-    const PLDHashEntryHdr *hdr, const void *key) {
+/* static */
+bool SpanningCellSorter::HashTableMatchEntry(const PLDHashEntryHdr *hdr,
+                                             const void *key) {
   const HashTableEntry *entry = static_cast<const HashTableEntry *>(hdr);
   return NS_PTR_TO_INT32(key) == entry->mColSpan;
 }
@@ -73,8 +74,8 @@ bool SpanningCellSorter::AddCell(int32_t aColSpan, int32_t aRow, int32_t aCol) {
   return true;
 }
 
-/* static */ int SpanningCellSorter::SortArray(const void *a, const void *b,
-                                               void *closure) {
+/* static */
+int SpanningCellSorter::SortArray(const void *a, const void *b, void *closure) {
   int32_t spanA = (*static_cast<HashTableEntry *const *>(a))->mColSpan;
   int32_t spanB = (*static_cast<HashTableEntry *const *>(b))->mColSpan;
 

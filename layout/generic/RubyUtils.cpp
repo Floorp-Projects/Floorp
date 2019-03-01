@@ -15,18 +15,20 @@ using namespace mozilla;
 
 NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(ReservedISize, nscoord)
 
-/* static */ void RubyUtils::SetReservedISize(nsIFrame* aFrame,
-                                              nscoord aISize) {
+/* static */
+void RubyUtils::SetReservedISize(nsIFrame* aFrame, nscoord aISize) {
   MOZ_ASSERT(IsExpandableRubyBox(aFrame));
   aFrame->SetProperty(ReservedISize(), aISize);
 }
 
-/* static */ void RubyUtils::ClearReservedISize(nsIFrame* aFrame) {
+/* static */
+void RubyUtils::ClearReservedISize(nsIFrame* aFrame) {
   MOZ_ASSERT(IsExpandableRubyBox(aFrame));
   aFrame->RemoveProperty(ReservedISize());
 }
 
-/* static */ nscoord RubyUtils::GetReservedISize(nsIFrame* aFrame) {
+/* static */
+nscoord RubyUtils::GetReservedISize(nsIFrame* aFrame) {
   MOZ_ASSERT(IsExpandableRubyBox(aFrame));
   return aFrame->GetProperty(ReservedISize());
 }

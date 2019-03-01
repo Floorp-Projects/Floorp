@@ -37,7 +37,8 @@ static EGLSurface CreatePBufferSurface(GLLibraryEGL* egl, EGLDisplay display,
   return surface;
 }
 
-/*static*/ UniquePtr<SharedSurface_ANGLEShareHandle>
+/*static*/
+UniquePtr<SharedSurface_ANGLEShareHandle>
 SharedSurface_ANGLEShareHandle::Create(GLContext* gl, EGLConfig config,
                                        const gfx::IntSize& size,
                                        bool hasAlpha) {
@@ -299,7 +300,8 @@ bool SharedSurface_ANGLEShareHandle::ReadbackBySharedHandle(
 ////////////////////////////////////////////////////////////////////////////////
 // Factory
 
-/*static*/ UniquePtr<SurfaceFactory_ANGLEShareHandle>
+/*static*/
+UniquePtr<SurfaceFactory_ANGLEShareHandle>
 SurfaceFactory_ANGLEShareHandle::Create(
     GLContext* gl, const SurfaceCaps& caps,
     const RefPtr<layers::LayersIPCChannel>& allocator,

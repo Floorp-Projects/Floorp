@@ -17,10 +17,10 @@ using namespace ipc;
 
 namespace dom {
 
-/* static */ already_AddRefed<RemoteWorkerController>
-RemoteWorkerController::Create(const RemoteWorkerData& aData,
-                               RemoteWorkerObserver* aObserver,
-                               base::ProcessId aProcessId) {
+/* static */
+already_AddRefed<RemoteWorkerController> RemoteWorkerController::Create(
+    const RemoteWorkerData& aData, RemoteWorkerObserver* aObserver,
+    base::ProcessId aProcessId) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(aObserver);

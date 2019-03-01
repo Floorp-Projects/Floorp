@@ -91,7 +91,8 @@ static IntRect GetTransformedBounds(Layer* aLayer) {
   return bounds;
 }
 
-/* static */ Maybe<IntRect> ContainerLayerMLGPU::FindVisibleBounds(
+/* static */
+Maybe<IntRect> ContainerLayerMLGPU::FindVisibleBounds(
     Layer* aLayer, const Maybe<RenderTargetIntRect>& aClip) {
   AL_LOG("  visiting child %p\n", aLayer);
   AL_LOG_IF(aClip, "  parent clip: %s\n", Stringify(aClip.value()).c_str());

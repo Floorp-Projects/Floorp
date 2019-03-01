@@ -77,9 +77,9 @@ class MOZ_RAII AutoChangePathSegListNotifier {
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-/* static */ already_AddRefed<DOMSVGPathSegList>
-DOMSVGPathSegList::GetDOMWrapper(void* aList, SVGElement* aElement,
-                                 bool aIsAnimValList) {
+/* static */
+already_AddRefed<DOMSVGPathSegList> DOMSVGPathSegList::GetDOMWrapper(
+    void* aList, SVGElement* aElement, bool aIsAnimValList) {
   RefPtr<DOMSVGPathSegList> wrapper =
       SVGPathSegListTearoffTable().GetTearoff(aList);
   if (!wrapper) {
@@ -89,8 +89,8 @@ DOMSVGPathSegList::GetDOMWrapper(void* aList, SVGElement* aElement,
   return wrapper.forget();
 }
 
-/* static */ DOMSVGPathSegList* DOMSVGPathSegList::GetDOMWrapperIfExists(
-    void* aList) {
+/* static */
+DOMSVGPathSegList* DOMSVGPathSegList::GetDOMWrapperIfExists(void* aList) {
   return SVGPathSegListTearoffTable().GetTearoff(aList);
 }
 

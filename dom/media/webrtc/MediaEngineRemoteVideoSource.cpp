@@ -735,7 +735,8 @@ uint32_t MediaEngineRemoteVideoSource::GetFeasibilityDistance(
 
 // Find best capability by removing inferiors. May leave >1 of equal distance
 
-/* static */ void MediaEngineRemoteVideoSource::TrimLessFitCandidates(
+/* static */
+void MediaEngineRemoteVideoSource::TrimLessFitCandidates(
     nsTArray<CapabilityCandidate>& aSet) {
   uint32_t best = UINT32_MAX;
   for (auto& candidate : aSet) {

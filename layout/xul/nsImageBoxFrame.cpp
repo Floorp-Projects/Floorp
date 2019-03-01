@@ -154,7 +154,8 @@ nsImageBoxFrame::nsImageBoxFrame(ComputedStyle* aStyle,
 
 nsImageBoxFrame::~nsImageBoxFrame() {}
 
-/* virtual */ void nsImageBoxFrame::MarkIntrinsicISizesDirty() {
+/* virtual */
+void nsImageBoxFrame::MarkIntrinsicISizesDirty() {
   SizeNeedsRecalc(mImageSize);
   nsLeafBoxFrame::MarkIntrinsicISizesDirty();
 }
@@ -591,8 +592,8 @@ bool nsImageBoxFrame::CanOptimizeToImageLayer() {
 // When the ComputedStyle changes, make sure that all of our image is up to
 // date.
 //
-/* virtual */ void nsImageBoxFrame::DidSetComputedStyle(
-    ComputedStyle* aOldComputedStyle) {
+/* virtual */
+void nsImageBoxFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
   nsLeafBoxFrame::DidSetComputedStyle(aOldComputedStyle);
 
   // Fetch our subrect.

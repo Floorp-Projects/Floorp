@@ -168,7 +168,8 @@ void MediaTimer::Reject() {
  * that we never fire against a dangling closure.
  */
 
-/* static */ void MediaTimer::TimerCallback(nsITimer* aTimer, void* aClosure) {
+/* static */
+void MediaTimer::TimerCallback(nsITimer* aTimer, void* aClosure) {
   static_cast<MediaTimer*>(aClosure)->TimerFired();
 }
 

@@ -35,8 +35,8 @@ using namespace js;
 using mozilla::Maybe;
 using mozilla::Nothing;
 
-/* static */ DebuggerMemory* DebuggerMemory::create(JSContext* cx,
-                                                    Debugger* dbg) {
+/* static */
+DebuggerMemory* DebuggerMemory::create(JSContext* cx, Debugger* dbg) {
   Value memoryProtoValue =
       dbg->object->getReservedSlot(Debugger::JSSLOT_DEBUG_MEMORY_PROTO);
   RootedObject memoryProto(cx, &memoryProtoValue.toObject());
@@ -58,8 +58,8 @@ Debugger* DebuggerMemory::getDebugger() {
   return Debugger::fromJSObject(&dbgVal.toObject());
 }
 
-/* static */ bool DebuggerMemory::construct(JSContext* cx, unsigned argc,
-                                            Value* vp) {
+/* static */
+bool DebuggerMemory::construct(JSContext* cx, unsigned argc, Value* vp) {
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NO_CONSTRUCTOR,
                             "Debugger.Source");
   return false;
@@ -68,9 +68,9 @@ Debugger* DebuggerMemory::getDebugger() {
 /* static */ const Class DebuggerMemory::class_ = {
     "Memory", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_COUNT)};
 
-/* static */ DebuggerMemory* DebuggerMemory::checkThis(JSContext* cx,
-                                                       CallArgs& args,
-                                                       const char* fnName) {
+/* static */
+DebuggerMemory* DebuggerMemory::checkThis(JSContext* cx, CallArgs& args,
+                                          const char* fnName) {
   const Value& thisValue = args.thisv();
 
   if (!thisValue.isObject()) {
@@ -127,9 +127,9 @@ static bool undefined(CallArgs& args) {
   return true;
 }
 
-/* static */ bool DebuggerMemory::setTrackingAllocationSites(JSContext* cx,
-                                                             unsigned argc,
-                                                             Value* vp) {
+/* static */
+bool DebuggerMemory::setTrackingAllocationSites(JSContext* cx, unsigned argc,
+                                                Value* vp) {
   THIS_DEBUGGER_MEMORY(cx, argc, vp, "(set trackingAllocationSites)", args,
                        memory);
   if (!args.requireAtLeast(cx, "(set trackingAllocationSites)", 1)) {
@@ -161,18 +161,18 @@ static bool undefined(CallArgs& args) {
   return undefined(args);
 }
 
-/* static */ bool DebuggerMemory::getTrackingAllocationSites(JSContext* cx,
-                                                             unsigned argc,
-                                                             Value* vp) {
+/* static */
+bool DebuggerMemory::getTrackingAllocationSites(JSContext* cx, unsigned argc,
+                                                Value* vp) {
   THIS_DEBUGGER_MEMORY(cx, argc, vp, "(get trackingAllocationSites)", args,
                        memory);
   args.rval().setBoolean(memory->getDebugger()->trackingAllocationSites);
   return true;
 }
 
-/* static */ bool DebuggerMemory::drainAllocationsLog(JSContext* cx,
-                                                      unsigned argc,
-                                                      Value* vp) {
+/* static */
+bool DebuggerMemory::drainAllocationsLog(JSContext* cx, unsigned argc,
+                                         Value* vp) {
   THIS_DEBUGGER_MEMORY(cx, argc, vp, "drainAllocationsLog", args, memory);
   Debugger* dbg = memory->getDebugger();
 
@@ -256,18 +256,18 @@ static bool undefined(CallArgs& args) {
   return true;
 }
 
-/* static */ bool DebuggerMemory::getMaxAllocationsLogLength(JSContext* cx,
-                                                             unsigned argc,
-                                                             Value* vp) {
+/* static */
+bool DebuggerMemory::getMaxAllocationsLogLength(JSContext* cx, unsigned argc,
+                                                Value* vp) {
   THIS_DEBUGGER_MEMORY(cx, argc, vp, "(get maxAllocationsLogLength)", args,
                        memory);
   args.rval().setInt32(memory->getDebugger()->maxAllocationsLogLength);
   return true;
 }
 
-/* static */ bool DebuggerMemory::setMaxAllocationsLogLength(JSContext* cx,
-                                                             unsigned argc,
-                                                             Value* vp) {
+/* static */
+bool DebuggerMemory::setMaxAllocationsLogLength(JSContext* cx, unsigned argc,
+                                                Value* vp) {
   THIS_DEBUGGER_MEMORY(cx, argc, vp, "(set maxAllocationsLogLength)", args,
                        memory);
   if (!args.requireAtLeast(cx, "(set maxAllocationsLogLength)", 1)) {
@@ -297,16 +297,20 @@ static bool undefined(CallArgs& args) {
   return true;
 }
 
-/* static */ bool DebuggerMemory::getAllocationSamplingProbability(
-    JSContext* cx, unsigned argc, Value* vp) {
+/* static */
+bool DebuggerMemory::getAllocationSamplingProbability(JSContext* cx,
+                                                      unsigned argc,
+                                                      Value* vp) {
   THIS_DEBUGGER_MEMORY(cx, argc, vp, "(get allocationSamplingProbability)",
                        args, memory);
   args.rval().setDouble(memory->getDebugger()->allocationSamplingProbability);
   return true;
 }
 
-/* static */ bool DebuggerMemory::setAllocationSamplingProbability(
-    JSContext* cx, unsigned argc, Value* vp) {
+/* static */
+bool DebuggerMemory::setAllocationSamplingProbability(JSContext* cx,
+                                                      unsigned argc,
+                                                      Value* vp) {
   THIS_DEBUGGER_MEMORY(cx, argc, vp, "(set allocationSamplingProbability)",
                        args, memory);
   if (!args.requireAtLeast(cx, "(set allocationSamplingProbability)", 1)) {
@@ -344,26 +348,26 @@ static bool undefined(CallArgs& args) {
   return true;
 }
 
-/* static */ bool DebuggerMemory::getAllocationsLogOverflowed(JSContext* cx,
-                                                              unsigned argc,
-                                                              Value* vp) {
+/* static */
+bool DebuggerMemory::getAllocationsLogOverflowed(JSContext* cx, unsigned argc,
+                                                 Value* vp) {
   THIS_DEBUGGER_MEMORY(cx, argc, vp, "(get allocationsLogOverflowed)", args,
                        memory);
   args.rval().setBoolean(memory->getDebugger()->allocationsLogOverflowed);
   return true;
 }
 
-/* static */ bool DebuggerMemory::getOnGarbageCollection(JSContext* cx,
-                                                         unsigned argc,
-                                                         Value* vp) {
+/* static */
+bool DebuggerMemory::getOnGarbageCollection(JSContext* cx, unsigned argc,
+                                            Value* vp) {
   THIS_DEBUGGER_MEMORY(cx, argc, vp, "(get onGarbageCollection)", args, memory);
   return Debugger::getHookImpl(cx, args, *memory->getDebugger(),
                                Debugger::OnGarbageCollection);
 }
 
-/* static */ bool DebuggerMemory::setOnGarbageCollection(JSContext* cx,
-                                                         unsigned argc,
-                                                         Value* vp) {
+/* static */
+bool DebuggerMemory::setOnGarbageCollection(JSContext* cx, unsigned argc,
+                                            Value* vp) {
   THIS_DEBUGGER_MEMORY(cx, argc, vp, "(set onGarbageCollection)", args, memory);
   return Debugger::setHookImpl(cx, args, *memory->getDebugger(),
                                Debugger::OnGarbageCollection);

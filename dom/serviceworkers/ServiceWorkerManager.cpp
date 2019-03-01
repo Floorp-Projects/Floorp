@@ -1556,8 +1556,9 @@ ServiceWorkerManager::GetServiceWorkerRegistrationInfo(
   return registration.forget();
 }
 
-/* static */ nsresult ServiceWorkerManager::PrincipalToScopeKey(
-    nsIPrincipal* aPrincipal, nsACString& aKey) {
+/* static */
+nsresult ServiceWorkerManager::PrincipalToScopeKey(nsIPrincipal* aPrincipal,
+                                                   nsACString& aKey) {
   MOZ_ASSERT(aPrincipal);
 
   if (!BasePrincipal::Cast(aPrincipal)->IsCodebasePrincipal()) {
@@ -1572,7 +1573,8 @@ ServiceWorkerManager::GetServiceWorkerRegistrationInfo(
   return NS_OK;
 }
 
-/* static */ nsresult ServiceWorkerManager::PrincipalInfoToScopeKey(
+/* static */
+nsresult ServiceWorkerManager::PrincipalInfoToScopeKey(
     const PrincipalInfo& aPrincipalInfo, nsACString& aKey) {
   if (aPrincipalInfo.type() != PrincipalInfo::TContentPrincipalInfo) {
     return NS_ERROR_FAILURE;
@@ -1589,7 +1591,8 @@ ServiceWorkerManager::GetServiceWorkerRegistrationInfo(
   return NS_OK;
 }
 
-/* static */ void ServiceWorkerManager::AddScopeAndRegistration(
+/* static */
+void ServiceWorkerManager::AddScopeAndRegistration(
     const nsACString& aScope, ServiceWorkerRegistrationInfo* aInfo) {
   MOZ_ASSERT(aInfo);
   MOZ_ASSERT(aInfo->Principal());
@@ -1638,7 +1641,8 @@ ServiceWorkerManager::GetServiceWorkerRegistrationInfo(
   swm->NotifyListenersOnRegister(aInfo);
 }
 
-/* static */ bool ServiceWorkerManager::FindScopeForPath(
+/* static */
+bool ServiceWorkerManager::FindScopeForPath(
     const nsACString& aScopeKey, const nsACString& aPath,
     RegistrationDataPerPrincipal** aData, nsACString& aMatch) {
   MOZ_ASSERT(aData);
@@ -1660,8 +1664,9 @@ ServiceWorkerManager::GetServiceWorkerRegistrationInfo(
   return false;
 }
 
-/* static */ bool ServiceWorkerManager::HasScope(nsIPrincipal* aPrincipal,
-                                                 const nsACString& aScope) {
+/* static */
+bool ServiceWorkerManager::HasScope(nsIPrincipal* aPrincipal,
+                                    const nsACString& aScope) {
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (!swm) {
     return false;
@@ -1681,7 +1686,8 @@ ServiceWorkerManager::GetServiceWorkerRegistrationInfo(
   return data->mOrderedScopes.Contains(aScope);
 }
 
-/* static */ void ServiceWorkerManager::RemoveScopeAndRegistration(
+/* static */
+void ServiceWorkerManager::RemoveScopeAndRegistration(
     ServiceWorkerRegistrationInfo* aRegistration) {
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (!swm) {

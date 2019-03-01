@@ -221,8 +221,8 @@ RealmPrivate::RealmPrivate(JS::Realm* realm) : scriptability(realm) {
   mozilla::PodArrayZero(wrapperDenialWarnings);
 }
 
-/* static */ void RealmPrivate::Init(HandleObject aGlobal,
-                                     const SiteIdentifier& aSite) {
+/* static */
+void RealmPrivate::Init(HandleObject aGlobal, const SiteIdentifier& aSite) {
   MOZ_ASSERT(aGlobal);
   DebugOnly<const js::Class*> clasp = js::GetObjectClass(aGlobal);
   MOZ_ASSERT(clasp->flags &
@@ -604,8 +604,9 @@ bool CompartmentOriginInfo::IsSameOrigin(nsIPrincipal* aOther) const {
   return mOrigin->FastEquals(aOther);
 }
 
-/* static */ bool CompartmentOriginInfo::Subsumes(JS::Compartment* aCompA,
-                                                  JS::Compartment* aCompB) {
+/* static */
+bool CompartmentOriginInfo::Subsumes(JS::Compartment* aCompA,
+                                     JS::Compartment* aCompB) {
   CompartmentPrivate* apriv = CompartmentPrivate::Get(aCompA);
   CompartmentPrivate* bpriv = CompartmentPrivate::Get(aCompB);
   MOZ_ASSERT(apriv);
@@ -613,8 +614,9 @@ bool CompartmentOriginInfo::IsSameOrigin(nsIPrincipal* aOther) const {
   return apriv->originInfo.mOrigin->FastSubsumes(bpriv->originInfo.mOrigin);
 }
 
-/* static */ bool CompartmentOriginInfo::SubsumesIgnoringFPD(
-    JS::Compartment* aCompA, JS::Compartment* aCompB) {
+/* static */
+bool CompartmentOriginInfo::SubsumesIgnoringFPD(JS::Compartment* aCompA,
+                                                JS::Compartment* aCompB) {
   CompartmentPrivate* apriv = CompartmentPrivate::Get(aCompA);
   CompartmentPrivate* bpriv = CompartmentPrivate::Get(aCompB);
   MOZ_ASSERT(apriv);
@@ -815,9 +817,9 @@ void xpc_UnmarkSkippableJSHolders() {
   }
 }
 
-/* static */ void XPCJSRuntime::GCSliceCallback(JSContext* cx,
-                                                JS::GCProgress progress,
-                                                const JS::GCDescription& desc) {
+/* static */
+void XPCJSRuntime::GCSliceCallback(JSContext* cx, JS::GCProgress progress,
+                                   const JS::GCDescription& desc) {
   XPCJSRuntime* self = nsXPConnect::GetRuntimeInstance();
   if (!self) {
     return;
@@ -830,7 +832,8 @@ void xpc_UnmarkSkippableJSHolders() {
   }
 }
 
-/* static */ void XPCJSRuntime::DoCycleCollectionCallback(JSContext* cx) {
+/* static */
+void XPCJSRuntime::DoCycleCollectionCallback(JSContext* cx) {
   // The GC has detected that a CC at this point would collect a tremendous
   // amount of garbage that is being revivified unnecessarily.
   NS_DispatchToCurrentThread(
@@ -854,9 +857,9 @@ void XPCJSRuntime::CustomGCCallback(JSGCStatus status) {
   }
 }
 
-/* static */ void XPCJSRuntime::FinalizeCallback(JSFreeOp* fop,
-                                                 JSFinalizeStatus status,
-                                                 void* data) {
+/* static */
+void XPCJSRuntime::FinalizeCallback(JSFreeOp* fop, JSFinalizeStatus status,
+                                    void* data) {
   XPCJSRuntime* self = nsXPConnect::GetRuntimeInstance();
   if (!self) {
     return;
@@ -959,8 +962,8 @@ void XPCJSRuntime::CustomGCCallback(JSGCStatus status) {
   }
 }
 
-/* static */ void XPCJSRuntime::WeakPointerZonesCallback(JSContext* cx,
-                                                         void* data) {
+/* static */
+void XPCJSRuntime::WeakPointerZonesCallback(JSContext* cx, void* data) {
   // Called before each sweeping slice -- after processing any final marking
   // triggered by barriers -- to clear out any references to things that are
   // about to be finalized and update any pointers to moved GC things.
@@ -972,8 +975,10 @@ void XPCJSRuntime::CustomGCCallback(JSGCStatus status) {
   XPCWrappedNativeScope::UpdateWeakPointersInAllScopesAfterGC();
 }
 
-/* static */ void XPCJSRuntime::WeakPointerCompartmentCallback(
-    JSContext* cx, JS::Compartment* comp, void* data) {
+/* static */
+void XPCJSRuntime::WeakPointerCompartmentCallback(JSContext* cx,
+                                                  JS::Compartment* comp,
+                                                  void* data) {
   // Called immediately after the ZoneGroup weak pointer callback, but only
   // once for each compartment that is being swept.
   CompartmentPrivate* xpcComp = CompartmentPrivate::Get(comp);

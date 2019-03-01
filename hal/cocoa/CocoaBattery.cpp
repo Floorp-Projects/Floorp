@@ -125,8 +125,8 @@ SingletonDestroyer::Observe(nsISupports*, const char* aTopic, const char16_t*) {
 }
 }  // namespace
 
-/* static */ MacPowerInformationService*
-MacPowerInformationService::GetInstance() {
+/* static */
+MacPowerInformationService* MacPowerInformationService::GetInstance() {
   if (sInstance) {
     return sInstance;
   }

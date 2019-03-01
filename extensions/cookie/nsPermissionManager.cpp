@@ -896,7 +896,8 @@ NS_IMETHODIMP DeleteFromMozHostListener::HandleCompletion(uint16_t aReason) {
   return NS_OK;
 }
 
-/* static */ void nsPermissionManager::ClearOriginDataObserverInit() {
+/* static */
+void nsPermissionManager::ClearOriginDataObserverInit() {
   nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();
   observerService->AddObserver(new ClearOriginDataObserver(),
@@ -3231,8 +3232,9 @@ nsPermissionManager::SetPermissionsWithKey(const nsACString& aPermissionKey,
   return NS_OK;
 }
 
-/* static */ void nsPermissionManager::GetKeyForOrigin(
-    const nsACString& aOrigin, nsACString& aKey) {
+/* static */
+void nsPermissionManager::GetKeyForOrigin(const nsACString& aOrigin,
+                                          nsACString& aKey) {
   aKey.Truncate();
 
   // We only key origins for http, https, and ftp URIs. All origins begin with
@@ -3286,8 +3288,9 @@ nsPermissionManager::SetPermissionsWithKey(const nsACString& aPermissionKey,
   aKey.Append(suffix);
 }
 
-/* static */ void nsPermissionManager::GetKeyForPrincipal(
-    nsIPrincipal* aPrincipal, nsACString& aKey) {
+/* static */
+void nsPermissionManager::GetKeyForPrincipal(nsIPrincipal* aPrincipal,
+                                             nsACString& aKey) {
   nsAutoCString origin;
   nsresult rv = aPrincipal->GetOrigin(origin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -3297,8 +3300,10 @@ nsPermissionManager::SetPermissionsWithKey(const nsACString& aPermissionKey,
   GetKeyForOrigin(origin, aKey);
 }
 
-/* static */ void nsPermissionManager::GetKeyForPermission(
-    nsIPrincipal* aPrincipal, const nsACString& aType, nsACString& aKey) {
+/* static */
+void nsPermissionManager::GetKeyForPermission(nsIPrincipal* aPrincipal,
+                                              const nsACString& aType,
+                                              nsACString& aKey) {
   // Preload permissions have the "" key.
   if (IsPreloadPermission(aType)) {
     aKey.Truncate();
@@ -3308,7 +3313,8 @@ nsPermissionManager::SetPermissionsWithKey(const nsACString& aPermissionKey,
   GetKeyForPrincipal(aPrincipal, aKey);
 }
 
-/* static */ nsTArray<nsCString> nsPermissionManager::GetAllKeysForPrincipal(
+/* static */
+nsTArray<nsCString> nsPermissionManager::GetAllKeysForPrincipal(
     nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(aPrincipal);
 

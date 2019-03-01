@@ -13,7 +13,8 @@
 
 namespace mozilla {
 
-/*static*/ SVGViewBoxSMILType SVGViewBoxSMILType::sSingleton;
+/*static*/
+SVGViewBoxSMILType SVGViewBoxSMILType::sSingleton;
 
 void SVGViewBoxSMILType::Init(SMILValue& aValue) const {
   MOZ_ASSERT(aValue.IsNull(), "Unexpected value type");

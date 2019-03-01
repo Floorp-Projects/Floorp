@@ -288,11 +288,10 @@ static void ForEachPing(nsIContent* aContent, ForEachPingCallback aCallback,
 }
 
 // Spec: http://whatwg.org/specs/web-apps/current-work/#ping
-/*static*/ void nsPingListener::DispatchPings(nsIDocShell* aDocShell,
-                                              nsIContent* aContent,
-                                              nsIURI* aTarget,
-                                              nsIURI* aReferrer,
-                                              uint32_t aReferrerPolicy) {
+/*static*/
+void nsPingListener::DispatchPings(nsIDocShell* aDocShell, nsIContent* aContent,
+                                   nsIURI* aTarget, nsIURI* aReferrer,
+                                   uint32_t aReferrerPolicy) {
   SendPingInfo info;
 
   if (!PingsEnabled(&info.maxPings, &info.requireSameHost)) {

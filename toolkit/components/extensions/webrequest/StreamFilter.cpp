@@ -50,8 +50,10 @@ void StreamFilter::ForgetActor() {
   }
 }
 
-/* static */ already_AddRefed<StreamFilter> StreamFilter::Create(
-    GlobalObject& aGlobal, uint64_t aRequestId, const nsAString& aAddonId) {
+/* static */
+already_AddRefed<StreamFilter> StreamFilter::Create(GlobalObject& aGlobal,
+                                                    uint64_t aRequestId,
+                                                    const nsAString& aAddonId) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   MOZ_ASSERT(global);
 
@@ -251,8 +253,8 @@ void StreamFilter::FireErrorEvent(const nsAString& aError) {
  * Glue
  *****************************************************************************/
 
-/* static */ bool StreamFilter::IsAllowedInContext(JSContext* aCx,
-                                                   JSObject* /* unused */) {
+/* static */
+bool StreamFilter::IsAllowedInContext(JSContext* aCx, JSObject* /* unused */) {
   return nsContentUtils::CallerHasPermission(aCx,
                                              nsGkAtoms::webRequestBlocking);
 }

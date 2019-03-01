@@ -555,7 +555,8 @@ nsLineIterator::~nsLineIterator() {
   }
 }
 
-/* virtual */ void nsLineIterator::DisposeLineIterator() { delete this; }
+/* virtual */
+void nsLineIterator::DisposeLineIterator() { delete this; }
 
 nsresult nsLineIterator::Init(nsLineList& aLines, bool aRightToLeft) {
   mRightToLeft = aRightToLeft;

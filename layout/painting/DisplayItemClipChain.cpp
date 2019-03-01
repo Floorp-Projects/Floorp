@@ -62,7 +62,8 @@ uint32_t DisplayItemClipChain::Hash(const DisplayItemClipChain* aClip) {
   return hash;
 }
 
-/* static */ nsCString DisplayItemClipChain::ToString(
+/* static */
+nsCString DisplayItemClipChain::ToString(
     const DisplayItemClipChain* aClipChain) {
   nsAutoCString str;
   for (auto* sc = aClipChain; sc; sc = sc->mParent) {

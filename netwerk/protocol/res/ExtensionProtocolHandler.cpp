@@ -8,6 +8,8 @@
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/Promise-inl.h"
 #include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
@@ -49,6 +51,7 @@
 #endif
 
 #define EXTENSION_SCHEME "moz-extension"
+using mozilla::dom::Promise;
 using mozilla::ipc::FileDescriptor;
 
 namespace mozilla {
@@ -420,52 +423,101 @@ Result<Ok, nsresult> ExtensionProtocolHandler::SubstituteRemoteChannel(
   return Ok();
 }
 
+void OpenWhenReady(
+    Promise* aPromise, nsIStreamListener* aListener, nsIChannel* aChannel,
+    const std::function<nsresult(nsIStreamListener*, nsIChannel*)>& aCallback) {
+  nsCOMPtr<nsIStreamListener> listener(aListener);
+  nsCOMPtr<nsIChannel> channel(aChannel);
+
+  Unused << aPromise->ThenWithCycleCollectedArgs(
+      [channel, aCallback](
+          JSContext* aCx, JS::HandleValue aValue,
+          nsIStreamListener* aListener) -> already_AddRefed<Promise> {
+        nsresult rv = aCallback(aListener, channel);
+        if (NS_FAILED(rv)) {
+          CancelRequest(aListener, channel, rv);
+        }
+        return nullptr;
+      },
+      listener);
+}
+
 nsresult ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
                                                      nsILoadInfo* aLoadInfo,
                                                      nsIChannel** result) {
-  nsresult rv;
-  nsCOMPtr<nsIURL> url = do_QueryInterface(aURI, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   if (mUseRemoteFileChannels) {
     MOZ_TRY(SubstituteRemoteChannel(aURI, aLoadInfo, result));
   }
 
-  nsAutoCString ext;
-  rv = url->GetFileExtension(ext);
-  NS_ENSURE_SUCCESS(rv, rv);
+  auto* policy = EPS().GetByURL(aURI);
+  NS_ENSURE_TRUE(policy, NS_ERROR_UNEXPECTED);
 
-  if (!ext.LowerCaseEqualsLiteral("css")) {
+  RefPtr<dom::Promise> readyPromise(policy->ReadyPromise());
+
+  nsresult rv;
+  nsCOMPtr<nsIURL> url = do_QueryInterface(aURI, &rv);
+  MOZ_TRY(rv);
+
+  nsAutoCString ext;
+  MOZ_TRY(url->GetFileExtension(ext));
+
+  nsCOMPtr<nsIChannel> channel;
+  if (ext.LowerCaseEqualsLiteral("css")) {
+    // Filter CSS files to replace locale message tokens with localized strings.
+    static const auto convert = [](nsIStreamListener* listener,
+                                   nsIChannel* channel,
+                                   nsIChannel* origChannel) -> nsresult {
+      nsresult rv;
+      nsCOMPtr<nsIStreamConverterService> convService =
+          do_GetService(NS_STREAMCONVERTERSERVICE_CONTRACTID, &rv);
+      MOZ_TRY(rv);
+
+      nsCOMPtr<nsIURI> uri;
+      MOZ_TRY(channel->GetURI(getter_AddRefs(uri)));
+
+      const char* kFromType = "application/vnd.mozilla.webext.unlocalized";
+      const char* kToType = "text/css";
+
+      nsCOMPtr<nsIStreamListener> converter;
+      MOZ_TRY(convService->AsyncConvertData(kFromType, kToType, listener, uri,
+                                            getter_AddRefs(converter)));
+
+      return origChannel->AsyncOpen(converter);
+    };
+
+    channel = NS_NewSimpleChannel(
+        aURI, aLoadInfo, *result,
+        [readyPromise](nsIStreamListener* listener, nsIChannel* channel,
+                       nsIChannel* origChannel) -> RequestOrReason {
+          if (readyPromise) {
+            nsCOMPtr<nsIChannel> chan(channel);
+            OpenWhenReady(
+                readyPromise, listener, origChannel,
+                [chan](nsIStreamListener* aListener, nsIChannel* aChannel) {
+                  return convert(aListener, chan, aChannel);
+                });
+          } else {
+            MOZ_TRY(convert(listener, channel, origChannel));
+          }
+          return RequestOrReason(origChannel);
+        });
+  } else if (readyPromise) {
+    channel = NS_NewSimpleChannel(
+        aURI, aLoadInfo, *result,
+        [readyPromise](nsIStreamListener* listener, nsIChannel* channel,
+                       nsIChannel* origChannel) -> RequestOrReason {
+          OpenWhenReady(readyPromise, listener, origChannel,
+                        [](nsIStreamListener* aListener, nsIChannel* aChannel) {
+                          return aChannel->AsyncOpen(aListener);
+                        });
+
+          return RequestOrReason(origChannel);
+        });
+  } else {
     return NS_OK;
   }
 
-  // Filter CSS files to replace locale message tokens with localized strings.
-
-  nsCOMPtr<nsIChannel> channel = NS_NewSimpleChannel(
-      aURI, aLoadInfo, *result,
-      [](nsIStreamListener* listener, nsIChannel* channel,
-         nsIChannel* origChannel) -> RequestOrReason {
-        nsresult rv;
-        nsCOMPtr<nsIStreamConverterService> convService =
-            do_GetService(NS_STREAMCONVERTERSERVICE_CONTRACTID, &rv);
-        MOZ_TRY(rv);
-
-        nsCOMPtr<nsIURI> uri;
-        MOZ_TRY(channel->GetURI(getter_AddRefs(uri)));
-
-        const char* kFromType = "application/vnd.mozilla.webext.unlocalized";
-        const char* kToType = "text/css";
-
-        nsCOMPtr<nsIStreamListener> converter;
-        MOZ_TRY(convService->AsyncConvertData(kFromType, kToType, listener, uri,
-                                              getter_AddRefs(converter)));
-
-        MOZ_TRY(origChannel->AsyncOpen(converter));
-
-        return RequestOrReason(origChannel);
-      });
   NS_ENSURE_TRUE(channel, NS_ERROR_OUT_OF_MEMORY);
-
   if (aLoadInfo) {
     nsCOMPtr<nsILoadInfo> loadInfo =
         static_cast<LoadInfo*>(aLoadInfo)->CloneForNewRequest();
@@ -473,23 +525,20 @@ nsresult ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
   }
 
   channel.swap(*result);
-
   return NS_OK;
 }
 
-Result<Ok, nsresult> ExtensionProtocolHandler::AllowExternalResource(
-    nsIFile* aExtensionDir, nsIFile* aRequestedFile, bool* aResult) {
+Result<bool, nsresult> ExtensionProtocolHandler::AllowExternalResource(
+    nsIFile* aExtensionDir, nsIFile* aRequestedFile) {
   MOZ_ASSERT(!IsNeckoChild());
-  MOZ_ASSERT(aResult);
-  *aResult = false;
 
 #if defined(XP_WIN)
   // On Windows, dev builds don't use symlinks so we never need to
   // allow a resource from outside of the extension dir.
-  return Ok();
+  return false;
 #else
   if (!mozilla::IsDevelopmentBuild()) {
-    return Ok();
+    return false;
   }
 
   // On Mac and Linux unpackaged dev builds, system extensions use
@@ -497,30 +546,29 @@ Result<Ok, nsresult> ExtensionProtocolHandler::AllowExternalResource(
   // allow loading. Before we allow an unpacked extension to load a
   // resource outside of the extension dir, we make sure the extension
   // dir is within the app directory.
-  MOZ_TRY(AppDirContains(aExtensionDir, aResult));
-  if (!*aResult) {
-    return Ok();
+  bool result;
+  MOZ_TRY_VAR(result, AppDirContains(aExtensionDir));
+  if (!result) {
+    return false;
   }
 
 #  if defined(XP_MACOSX)
   // Additionally, on Mac dev builds, we make sure that the requested
   // resource is within the repo dir. We don't perform this check on Linux
   // because we don't have a reliable path to the repo dir on Linux.
-  MOZ_TRY(DevRepoContains(aRequestedFile, aResult));
-#  endif /* XP_MACOSX */
-
-  return Ok();
-#endif   /* defined(XP_WIN) */
+  return DevRepoContains(aRequestedFile);
+#  else /* XP_MACOSX */
+  return true;
+#  endif
+#endif /* defined(XP_WIN) */
 }
 
 #if defined(XP_MACOSX)
 // The |aRequestedFile| argument must already be Normalize()'d
-Result<Ok, nsresult> ExtensionProtocolHandler::DevRepoContains(
-    nsIFile* aRequestedFile, bool* aResult) {
+Result<bool, nsresult> ExtensionProtocolHandler::DevRepoContains(
+    nsIFile* aRequestedFile) {
   MOZ_ASSERT(mozilla::IsDevelopmentBuild());
   MOZ_ASSERT(!IsNeckoChild());
-  MOZ_ASSERT(aResult);
-  *aResult = false;
 
   // On the first invocation, set mDevRepo
   if (!mAlreadyCheckedDevRepo) {
@@ -533,21 +581,19 @@ Result<Ok, nsresult> ExtensionProtocolHandler::DevRepoContains(
     }
   }
 
+  bool result = false;
   if (mDevRepo) {
-    MOZ_TRY(mDevRepo->Contains(aRequestedFile, aResult));
+    MOZ_TRY(mDevRepo->Contains(aRequestedFile, &result));
   }
-
-  return Ok();
+  return result;
 }
 #endif /* XP_MACOSX */
 
 #if !defined(XP_WIN)
-Result<Ok, nsresult> ExtensionProtocolHandler::AppDirContains(
-    nsIFile* aExtensionDir, bool* aResult) {
+Result<bool, nsresult> ExtensionProtocolHandler::AppDirContains(
+    nsIFile* aExtensionDir) {
   MOZ_ASSERT(mozilla::IsDevelopmentBuild());
   MOZ_ASSERT(!IsNeckoChild());
-  MOZ_ASSERT(aResult);
-  *aResult = false;
 
   // On the first invocation, set mAppDir
   if (!mAlreadyCheckedAppDir) {
@@ -560,11 +606,11 @@ Result<Ok, nsresult> ExtensionProtocolHandler::AppDirContains(
     }
   }
 
+  bool result = false;
   if (mAppDir) {
-    MOZ_TRY(mAppDir->Contains(aExtensionDir, aResult));
+    MOZ_TRY(mAppDir->Contains(aExtensionDir, &result));
   }
-
-  return Ok();
+  return result;
 }
 #endif /* !defined(XP_WIN) */
 
@@ -683,8 +729,8 @@ Result<nsCOMPtr<nsIInputStream>, nsresult> ExtensionProtocolHandler::NewStream(
   bool isResourceFromExtensionDir = false;
   MOZ_TRY(extensionDir->Contains(requestedFile, &isResourceFromExtensionDir));
   if (!isResourceFromExtensionDir) {
-    bool isAllowed = false;
-    MOZ_TRY(AllowExternalResource(extensionDir, requestedFile, &isAllowed));
+    bool isAllowed;
+    MOZ_TRY_VAR(isAllowed, AllowExternalResource(extensionDir, requestedFile));
     if (!isAllowed) {
       LogExternalResourceError(extensionDir, requestedFile);
       return Err(NS_ERROR_FILE_ACCESS_DENIED);

@@ -86,9 +86,9 @@ static void IncrementIV(vector<uint8_t>& aIV) {
   BigEndian::writeUint64(&aIV[8], BigEndian::readUint64(&aIV[8]) + 1);
 }
 
-/* static */ void ClearKeyUtils::DecryptAES(const vector<uint8_t>& aKey,
-                                            vector<uint8_t>& aData,
-                                            vector<uint8_t>& aIV) {
+/* static */
+void ClearKeyUtils::DecryptAES(const vector<uint8_t>& aKey,
+                               vector<uint8_t>& aData, vector<uint8_t>& aIV) {
   assert(aIV.size() == CENC_KEY_LEN);
   assert(aKey.size() == CENC_KEY_LEN);
 
@@ -156,9 +156,10 @@ static bool EncodeBase64Web(vector<uint8_t> aBinary, string& aEncoded) {
   return true;
 }
 
-/* static */ void ClearKeyUtils::MakeKeyRequest(const vector<KeyId>& aKeyIDs,
-                                                string& aOutRequest,
-                                                SessionType aSessionType) {
+/* static */
+void ClearKeyUtils::MakeKeyRequest(const vector<KeyId>& aKeyIDs,
+                                   string& aOutRequest,
+                                   SessionType aSessionType) {
   assert(aKeyIDs.size() && aOutRequest.empty());
 
   aOutRequest.append("{\"kids\":[");
@@ -400,10 +401,10 @@ static bool ParseKeys(ParserContext& aCtx, vector<KeyIdPair>& aOutKeys) {
   return GetNextSymbol(aCtx) == ']';
 }
 
-/* static */ bool ClearKeyUtils::ParseJWK(const uint8_t* aKeyData,
-                                          uint32_t aKeyDataSize,
-                                          vector<KeyIdPair>& aOutKeys,
-                                          SessionType aSessionType) {
+/* static */
+bool ClearKeyUtils::ParseJWK(const uint8_t* aKeyData, uint32_t aKeyDataSize,
+                             vector<KeyIdPair>& aOutKeys,
+                             SessionType aSessionType) {
   ParserContext ctx;
   ctx.mIter = aKeyData;
   ctx.mEnd = aKeyData + aKeyDataSize;
@@ -471,9 +472,10 @@ static bool ParseKeyIds(ParserContext& aCtx, vector<KeyId>& aOutKeyIds) {
   return GetNextSymbol(aCtx) == ']';
 }
 
-/* static */ bool ClearKeyUtils::ParseKeyIdsInitData(
-    const uint8_t* aInitData, uint32_t aInitDataSize,
-    vector<KeyId>& aOutKeyIds) {
+/* static */
+bool ClearKeyUtils::ParseKeyIdsInitData(const uint8_t* aInitData,
+                                        uint32_t aInitDataSize,
+                                        vector<KeyId>& aOutKeyIds) {
   ParserContext ctx;
   ctx.mIter = aInitData;
   ctx.mEnd = aInitData + aInitDataSize;
@@ -526,8 +528,8 @@ static bool ParseKeyIds(ParserContext& aCtx, vector<KeyId>& aOutKeyIds) {
   }
 }
 
-/* static */ bool ClearKeyUtils::IsValidSessionId(const char* aBuff,
-                                                  uint32_t aLength) {
+/* static */
+bool ClearKeyUtils::IsValidSessionId(const char* aBuff, uint32_t aLength) {
   if (aLength > 10) {
     // 10 is the max number of characters in UINT32_MAX when
     // represented as a string; ClearKey session ids are integers.

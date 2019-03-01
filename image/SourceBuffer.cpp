@@ -256,7 +256,8 @@ nsresult SourceBuffer::Compact() {
   return NS_OK;
 }
 
-/* static */ size_t SourceBuffer::RoundedUpCapacity(size_t aCapacity) {
+/* static */
+size_t SourceBuffer::RoundedUpCapacity(size_t aCapacity) {
   // Protect against overflow.
   if (MOZ_UNLIKELY(SIZE_MAX - aCapacity < MIN_CHUNK_CAPACITY)) {
     return aCapacity;

@@ -31,7 +31,8 @@ static StaticMutex sMutex;
 /*
  * AudioNotificationReceiver Implementation
  */
-/* static */ void AudioNotificationReceiver::Register(
+/* static */
+void AudioNotificationReceiver::Register(
     DeviceChangeListener* aDeviceChangeListener) {
   MOZ_ASSERT(XRE_IsContentProcess());
 
@@ -45,7 +46,8 @@ static StaticMutex sMutex;
           aDeviceChangeListener);
 }
 
-/* static */ void AudioNotificationReceiver::Unregister(
+/* static */
+void AudioNotificationReceiver::Unregister(
     DeviceChangeListener* aDeviceChangeListener) {
   MOZ_ASSERT(XRE_IsContentProcess());
 
@@ -62,7 +64,8 @@ static StaticMutex sMutex;
           aDeviceChangeListener);
 }
 
-/* static */ void AudioNotificationReceiver::NotifyDefaultDeviceChanged() {
+/* static */
+void AudioNotificationReceiver::NotifyDefaultDeviceChanged() {
   MOZ_ASSERT(XRE_IsContentProcess());
 
   StaticMutexAutoLock lock(sMutex);

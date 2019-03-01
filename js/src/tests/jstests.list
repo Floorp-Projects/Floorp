@@ -1226,6 +1226,11 @@ skip script test262/built-ins/RegExp/prototype/ignoreCase/cross-realm.js
 skip script test262/built-ins/RegExp/prototype/unicode/cross-realm.js
 skip script test262/built-ins/RegExp/prototype/source/cross-realm.js
 
+# The Intl spec recently changed from canonicalizing locales using RFC 5646 to
+# using UTS 35.  This still needs to be implemented in bug 1522070.  See also
+# <https://github.com/tc39/ecma402/commit/77cd7634e6aef828b0d0a4d97dece622c5f8e01f>.
+skip script test262/intl402/Intl/getCanonicalLocales/non-iana-canon.js
+
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1508684
 skip script test262/language/expressions/import.meta/syntax/invalid-assignment-target-update-expr.js
 
@@ -1239,6 +1244,35 @@ skip script test262/intl402/Collator/missing-unicode-ext-value-defaults-to-true.
 
 # test262 importer merges all includes in a per directory shell.js file, breaking this harness test case.
 skip script test262/harness/detachArrayBuffer.js
+
+# The hashbang tests are usually raw tests -- which means they must be run
+# with no alterations.  (This because "#!" only denotes a single-line comment if
+# it appears at the very start of the script, and nowhere else.)  But jstests.py
+# expects to be told how tests should run, and what to expect from them, per the
+# // |reftest| comment on the first line -- exactly where the "#!" must appear
+# if it is to appear.  (Same for the various fake hashbangs that aren't
+# *actually* hashbangs, if they are to test what they were intended to test.)
+#
+# So for now -- until we can figure out a way to encode "this is a negative
+# test" in a way that doesn't require changing the raw source of the test --
+# these tests must be explicitly skipped.  See bug 1531202.
+skip script test262/language/comments/hashbang/escaped-hashbang.js
+skip script test262/language/comments/hashbang/preceding-hashbang.js
+skip script test262/language/comments/hashbang/escaped-hash-043.js
+skip script test262/language/comments/hashbang/preceding-line-comment.js
+skip script test262/language/comments/hashbang/escaped-hash-x23.js
+skip script test262/language/comments/hashbang/escaped-hash-u0023.js
+skip script test262/language/comments/hashbang/escaped-bang-u0021.js
+skip script test262/language/comments/hashbang/preceding-empty-statement.js
+skip script test262/language/comments/hashbang/escaped-bang-x21.js
+skip script test262/language/comments/hashbang/multi-line-comment.js
+skip script test262/language/comments/hashbang/escaped-bang-041.js
+skip script test262/language/comments/hashbang/preceding-directive-prologue.js
+skip script test262/language/comments/hashbang/preceding-multi-line-comment.js
+skip script test262/language/comments/hashbang/escaped-hash-u23.js
+skip script test262/language/comments/hashbang/escaped-bang-u21.js
+skip script test262/language/comments/hashbang/preceding-directive-prologue-sc.js
+skip script test262/language/comments/hashbang/preceding-whitespace.js
 
 
 ####################################################
