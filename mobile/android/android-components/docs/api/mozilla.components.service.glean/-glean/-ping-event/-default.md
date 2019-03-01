@@ -2,7 +2,7 @@
 
 # Default
 
-`Default` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/Glean.kt#L318)
+`Default` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/Glean.kt#L319)
 
 A periodic event to send the default ping
 

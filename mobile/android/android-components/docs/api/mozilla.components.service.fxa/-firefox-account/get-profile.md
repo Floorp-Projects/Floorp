@@ -2,7 +2,7 @@
 
 # getProfile
 
-`fun getProfile(ignoreCache: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): Deferred<`[`Profile`](../-profile/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L76)
+`fun getProfile(ignoreCache: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): Deferred<`[`Profile`](../-profile/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L107)
 
 Overrides [FirefoxAccountShaped.getProfile](../-firefox-account-shaped/get-profile.md)
 
@@ -21,7 +21,7 @@ The caller should then start the OAuth Flow again with the "profile" scope.
 **Return**
 Deferred&lt;[Profile](../-profile/index.md)&gt; representing the user's basic profile info
 
-`fun getProfile(): Deferred<`[`Profile`](../-profile/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L90)
+`fun getProfile(): Deferred<`[`Profile`](../-profile/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L121)
 
 Overrides [FirefoxAccountShaped.getProfile](../-firefox-account-shaped/get-profile.md)
 

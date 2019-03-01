@@ -2,7 +2,7 @@
 
 # SuggestionProvider
 
-`interface SuggestionProvider` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L119)
+`interface SuggestionProvider` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L137)
 
 A [SuggestionProvider](./index.md) is queried by an [AwesomeBar](../index.md) whenever the text in the address bar is changed by the user.
 It returns a list of [Suggestion](../-suggestion/index.md)s to be displayed by the [AwesomeBar](../index.md).
@@ -11,6 +11,7 @@ It returns a list of [Suggestion](../-suggestion/index.md)s to be displayed by t
 
 | Name | Summary |
 |---|---|
+| [id](id.md) | `abstract val id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>A unique ID used for identifying this provider. |
 | [shouldClearSuggestions](should-clear-suggestions.md) | `open val shouldClearSuggestions: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>If true an [AwesomeBar](../index.md) implementation can clear the previous suggestions of this provider as soon as the user continues to type. If this is false an [AwesomeBar](../index.md) implementation is allowed to keep the previous suggestions around until the provider returns a new list of suggestions for the updated text. |
 
 ### Functions

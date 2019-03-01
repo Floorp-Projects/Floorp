@@ -5,7 +5,7 @@
 | Name | Summary |
 |---|---|
 | [mozilla.components.feature.customtabs.AbstractCustomTabsService](../mozilla.components.feature.customtabs/-abstract-custom-tabs-service/index.md) | [Service](https://developer.android.com/reference/android/app/Service.html) providing Custom Tabs related functionality. |
-| [mozilla.components.service.fxa.AccessTokenInfo](../mozilla.components.service.fxa/-access-token-info/index.md) | The result of authentication with FxA via an OAuth flow. |
+| [mozilla.components.service.fxa.AccessTokenInfo](../mozilla.components.service.fxa/-access-token-info.md) |  |
 | [mozilla.components.service.fxa.AccountObserver](../mozilla.components.service.fxa/-account-observer/index.md) | Observer interface which lets its users monitor account state changes and major events. |
 | [mozilla.components.service.fxa.AccountState](../mozilla.components.service.fxa/-account-state/index.md) |  |
 | [mozilla.components.service.fxa.AccountStorage](../mozilla.components.service.fxa/-account-storage/index.md) |  |
@@ -239,7 +239,7 @@
 | [mozilla.components.browser.engine.gecko.NestedGeckoView](../mozilla.components.browser.engine.gecko/-nested-gecko-view/index.md) | geckoView that supports nested scrolls (for using in a CoordinatorLayout). |
 | [mozilla.components.browser.engine.system.NestedWebView](../mozilla.components.browser.engine.system/-nested-web-view/index.md) | WebView that supports nested scrolls (for using in a CoordinatorLayout). |
 | [mozilla.components.service.sync.logins.NoSuchRecordException](../mozilla.components.service.sync.logins/-no-such-record-exception.md) | This is thrown if `update()` is performed with a record whose ID does not exist. |
-| [mozilla.components.service.fxa.OAuthScopedKey](../mozilla.components.service.fxa/-o-auth-scoped-key/index.md) | Scoped key data. |
+| [mozilla.components.service.fxa.OAuthScopedKey](../mozilla.components.service.fxa/-o-auth-scoped-key.md) |  |
 | [mozilla.components.support.base.observer.Observable](../mozilla.components.support.base.observer/-observable/index.md) | Interface for observables. This interface is implemented by ObserverRegistry so that classes that want to be observable can implement the interface by delegation: |
 | [mozilla.components.support.base.observer.ObserverRegistry](../mozilla.components.support.base.observer/-observer-registry/index.md) | A helper for classes that want to get observed. This class keeps track of registered observers and can automatically unregister observers if a LifecycleOwner is provided. |
 | [mozilla.components.lib.fetch.okhttp.OkHttpClient](../mozilla.components.lib.fetch.okhttp/-ok-http-client/index.md) | [Client](../mozilla.components.concept.fetch/-client/index.md) implementation using OkHttp. |
@@ -261,6 +261,7 @@
 | [mozilla.components.lib.jexl.parser.ParserException](../mozilla.components.lib.jexl.parser/-parser-exception/index.md) |  |
 | [mozilla.components.concept.engine.permission.Permission](../mozilla.components.concept.engine.permission/-permission/index.md) | Represents all the different supported permission types. |
 | [mozilla.components.concept.engine.permission.PermissionRequest](../mozilla.components.concept.engine.permission/-permission-request/index.md) | Represents a permission request, used when engines need access to protected resources. Every request must be handled by either calling [grant](../mozilla.components.concept.engine.permission/-permission-request/grant.md) or [reject](../mozilla.components.concept.engine.permission/-permission-request/reject.md). |
+| [mozilla.components.service.fxa.PersistCallback](../mozilla.components.service.fxa/-persist-callback.md) |  |
 | [mozilla.components.service.glean.scheduler.PingUploadWorker](../mozilla.components.service.glean.scheduler/-ping-upload-worker/index.md) | This class is the worker class used by [WorkManager](#) to handle uploading the ping to the server. |
 | [mozilla.components.browser.storage.sync.PlacesHistoryStorage](../mozilla.components.browser.storage.sync/-places-history-storage/index.md) | Implementation of the [HistoryStorage](../mozilla.components.concept.storage/-history-storage/index.md) which is backed by a Rust Places lib via [PlacesConnection](#). |
 | [org.mozilla.telemetry.measurement.PocketIdMeasurement](../org.mozilla.telemetry.measurement/-pocket-id-measurement/index.md) | A unique, randomly generated UUID for this pocket client for fire-tv instance. This is distinct from the telemetry clientId. The clientId should not be able to be tied to the pocketId in any way. |

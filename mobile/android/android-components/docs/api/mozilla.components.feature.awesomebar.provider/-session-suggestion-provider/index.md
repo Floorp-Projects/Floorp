@@ -2,7 +2,7 @@
 
 # SessionSuggestionProvider
 
-`class SessionSuggestionProvider : `[`SuggestionProvider`](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/awesomebar/src/main/java/mozilla/components/feature/awesomebar/provider/SessionSuggestionProvider.kt#L15)
+`class SessionSuggestionProvider : `[`SuggestionProvider`](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/awesomebar/src/main/java/mozilla/components/feature/awesomebar/provider/SessionSuggestionProvider.kt#L16)
 
 A [AwesomeBar.SuggestionProvider](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) implementation that provides suggestions based on the sessions in the
 [SessionManager](../../mozilla.components.browser.session/-session-manager/index.md) (Open tabs).
@@ -12,6 +12,12 @@ A [AwesomeBar.SuggestionProvider](../../mozilla.components.concept.awesomebar/-a
 | Name | Summary |
 |---|---|
 | [&lt;init&gt;](-init-.md) | `SessionSuggestionProvider(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, selectTabUseCase: `[`SelectTabUseCase`](../../mozilla.components.feature.tabs/-tabs-use-cases/-select-tab-use-case/index.md)`)`<br>A [AwesomeBar.SuggestionProvider](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) implementation that provides suggestions based on the sessions in the [SessionManager](../../mozilla.components.browser.session/-session-manager/index.md) (Open tabs). |
+
+### Properties
+
+| Name | Summary |
+|---|---|
+| [id](id.md) | `val id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>A unique ID used for identifying this provider. |
 
 ### Inherited Properties
 
