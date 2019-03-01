@@ -3,7 +3,7 @@
 (function() {
     let g = newGlobal({newCompartment: true});
     let dbg = new Debugger(g);
-    g.eval(`o = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary('(module (gc_feature_opt_in 3) (func (result anyref) (param anyref) get_local 0) (export "" 0))')));`);
+    g.eval(`o = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary('(module (func (result anyref) (param anyref) get_local 0) (export "" 0))')));`);
 })();
 
 (function() {
@@ -12,7 +12,6 @@
 
     let src = `
       (module
-        (gc_feature_opt_in 3)
         (func (export "func") (result anyref) (param $ref anyref)
             get_local $ref
         )
