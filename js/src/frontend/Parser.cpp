@@ -3401,12 +3401,6 @@ GeneralParser<ParseHandler, Unit>::statementList(YieldHandling yieldHandling) {
   if (canHaveDirectives) {
     anyChars.clearSawOctalEscape();
   }
-
-  bool canHaveHashbangComment = pc_->atTopLevel();
-  if (canHaveHashbangComment) {
-    tokenStream.consumeOptionalHashbangComment();
-  }
-
   bool afterReturn = false;
   bool warnedAboutStatementsAfterReturn = false;
   uint32_t statementBegin = 0;

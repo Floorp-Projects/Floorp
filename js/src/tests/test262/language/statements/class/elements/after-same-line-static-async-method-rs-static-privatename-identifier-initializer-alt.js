@@ -9,6 +9,7 @@ features: [class-static-fields-private, class, class-fields-public, async-functi
 flags: [generated, async]
 includes: [propertyHelper.js]
 info: |
+    
     ClassElement :
       MethodDefinition
       static MethodDefinition

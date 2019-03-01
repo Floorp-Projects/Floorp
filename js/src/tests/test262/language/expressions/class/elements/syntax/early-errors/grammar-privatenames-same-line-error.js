@@ -11,6 +11,7 @@ negative:
   phase: parse
   type: SyntaxError
 info: |
+    
     ClassElement :
       MethodDefinition
       static MethodDefinition
