@@ -464,40 +464,46 @@ void RestyleManager::ContentRemoved(nsIContent* aOldChild,
 /**
  * Calculates the change hint and the restyle hint for a given content state
  * change.
+ *
+ * This is called from both Restyle managers.
  */
-static nsChangeHint ChangeForContentStateChange(const Element& aElement,
-                                                EventStates aStateMask) {
-  auto changeHint = nsChangeHint(0);
+void RestyleManager::ContentStateChangedInternal(const Element& aElement,
+                                                 EventStates aStateMask,
+                                                 nsChangeHint* aOutChangeHint) {
+  MOZ_ASSERT(!mInStyleRefresh);
+  MOZ_ASSERT(aOutChangeHint);
 
+  *aOutChangeHint = nsChangeHint(0);
   // Any change to a content state that affects which frames we construct
   // must lead to a frame reconstruct here if we already have a frame.
   // Note that we never decide through non-CSS means to not create frames
   // based on content states, so if we already don't have a frame we don't
   // need to force a reframe -- if it's needed, the HasStateDependentStyle
   // call will handle things.
-  if (nsIFrame* primaryFrame = aElement.GetPrimaryFrame()) {
+  nsIFrame* primaryFrame = aElement.GetPrimaryFrame();
+  if (primaryFrame) {
     // If it's generated content, ignore LOADING/etc state changes on it.
     if (!primaryFrame->IsGeneratedContentFrame() &&
         aStateMask.HasAtLeastOneOfStates(
             NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED |
             NS_EVENT_STATE_SUPPRESSED | NS_EVENT_STATE_LOADING)) {
-      return nsChangeHint_ReconstructFrame;
-    }
-
-    auto* disp = primaryFrame->StyleDisplay();
-    if (disp->HasAppearance()) {
-      nsPresContext* pc = primaryFrame->PresContext();
-      nsITheme* theme = pc->GetTheme();
-      if (theme &&
-          theme->ThemeSupportsWidget(pc, primaryFrame, disp->mAppearance)) {
-        bool repaint = false;
-        theme->WidgetStateChanged(primaryFrame, disp->mAppearance, nullptr,
-                                  &repaint, nullptr);
-        if (repaint) {
-          changeHint |= nsChangeHint_RepaintFrame;
+      *aOutChangeHint = nsChangeHint_ReconstructFrame;
+    } else {
+      auto* disp = primaryFrame->StyleDisplay();
+      if (disp->HasAppearance()) {
+        nsITheme* theme = PresContext()->GetTheme();
+        if (theme && theme->ThemeSupportsWidget(PresContext(), primaryFrame,
+                                                disp->mAppearance)) {
+          bool repaint = false;
+          theme->WidgetStateChanged(primaryFrame, disp->mAppearance, nullptr,
+                                    &repaint, nullptr);
+          if (repaint) {
+            *aOutChangeHint |= nsChangeHint_RepaintFrame;
+          }
         }
       }
     }
+
     primaryFrame->ContentStatesChanged(aStateMask);
   }
 
@@ -505,10 +511,8 @@ static nsChangeHint ChangeForContentStateChange(const Element& aElement,
     // Exposing information to the page about whether the link is
     // visited or not isn't really something we can worry about here.
     // FIXME: We could probably do this a bit better.
-    changeHint |= nsChangeHint_RepaintFrame;
+    *aOutChangeHint |= nsChangeHint_RepaintFrame;
   }
-
-  return changeHint;
 }
 
 /* static */ nsCString RestyleManager::RestyleHintToString(
@@ -3216,15 +3220,17 @@ void RestyleManager::ContentStateChanged(nsIContent* aContent,
     }
   }
 
-  if (auto changeHint = ChangeForContentStateChange(element, aChangedBits)) {
-    Servo_NoteExplicitHints(&element, nsRestyleHint(0), changeHint);
-  }
+  nsChangeHint changeHint;
+  ContentStateChangedInternal(element, aChangedBits, &changeHint);
 
   // Don't bother taking a snapshot if no rules depend on these state bits.
   //
   // We always take a snapshot for the LTR/RTL event states, since Servo doesn't
   // track those bits in the same way, and we know that :dir() rules are always
   // present in UA style sheets.
+  //
+  // FIXME(emilio): Doesn't this early-return drop the change hint on the floor?
+  // Should it?
   if (!aChangedBits.HasAtLeastOneOfStates(DIRECTION_STATES) &&
       !StyleSet()->HasStateDependency(element, aChangedBits)) {
     return;
@@ -3233,6 +3239,10 @@ void RestyleManager::ContentStateChanged(nsIContent* aContent,
   ServoElementSnapshot& snapshot = SnapshotFor(element);
   EventStates previousState = element.StyleState() ^ aChangedBits;
   snapshot.AddState(previousState);
+
+  if (changeHint) {
+    Servo_NoteExplicitHints(&element, nsRestyleHint(0), changeHint);
+  }
 
   // Assuming we need to invalidate cached style in getComputedStyle for
   // undisplayed elements, since we don't know if it is needed.

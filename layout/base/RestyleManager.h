@@ -456,6 +456,11 @@ class RestyleManager {
   void MaybeRestyleForEdgeChildChange(Element* aContainer,
                                       nsIContent* aChangedChild);
 
+  // TODO(emilio): there's no good reason this isn't part of ContentStateChanged
+  // now, or the change hint isn't returned instead of via an out-param, really.
+  void ContentStateChangedInternal(const Element&, EventStates aStateMask,
+                                   nsChangeHint* aOutChangeHint);
+
   bool IsDisconnected() const { return !mPresContext; }
 
   void IncrementRestyleGeneration() {
