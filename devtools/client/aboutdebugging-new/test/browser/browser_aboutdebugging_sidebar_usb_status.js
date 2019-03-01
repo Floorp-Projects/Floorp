@@ -21,14 +21,14 @@ add_task(async function() {
 
   const usbStatusElement = document.querySelector(".js-sidebar-usb-status");
   ok(usbStatusElement, "Sidebar shows the USB status element");
-  ok(usbStatusElement.textContent.includes("USB devices disabled"),
+  ok(usbStatusElement.textContent.includes("USB disabled"),
     "USB status element has the expected content");
 
   info("Install the adb extension and wait for the message to udpate");
   // Use "internal" as the install source to avoid triggering telemetry.
   adbAddon.install("internal");
-  await waitUntil(() => usbStatusElement.textContent.includes("USB devices enabled"));
-  // Right now we are resuming as soon as "USB devices enabled" is displayed, but ADB
+  await waitUntil(() => usbStatusElement.textContent.includes("USB enabled"));
+  // Right now we are resuming as soon as "USB enabled" is displayed, but ADB
   // might still be starting up. If we move to uninstall directly, the ADB startup will
   // fail and we will have an unhandled promise rejection.
   // See Bug 1498469.
@@ -36,7 +36,7 @@ add_task(async function() {
 
   info("Uninstall the adb extension and wait for the message to udpate");
   adbAddon.uninstall();
-  await waitUntil(() => usbStatusElement.textContent.includes("USB devices disabled"));
+  await waitUntil(() => usbStatusElement.textContent.includes("USB disabled"));
   await waitForAdbStop();
 
   await removeTab(tab);
