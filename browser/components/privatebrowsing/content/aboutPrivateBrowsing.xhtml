@@ -4,18 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -->
-<!DOCTYPE html [
-  <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
-  %htmlDTD;
-  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
-  %globalDTD;
-  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
-  %brandDTD;
-  <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
-  %browserDTD;
-  <!ENTITY % aboutPrivateBrowsingDTD SYSTEM "chrome://browser/locale/aboutPrivateBrowsing.dtd">
-  %aboutPrivateBrowsingDTD;
-]>
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml" class="private no-search-ui">
   <head>
@@ -23,49 +12,50 @@
     <link rel="icon" type="image/png" href="chrome://browser/skin/privatebrowsing/favicon.svg"/>
     <link rel="stylesheet" href="chrome://browser/content/aboutPrivateBrowsing.css" type="text/css" media="all"/>
     <link rel="stylesheet" href="chrome://browser/skin/privatebrowsing/aboutPrivateBrowsing.css" type="text/css" media="all"/>
+    <link rel="localization" href="branding/brand.ftl"/>
+    <link rel="localization" href="browser/aboutPrivateBrowsing.ftl"/>
     <script type="application/javascript" src="chrome://browser/content/aboutPrivateBrowsing.js"></script>
     <script type="application/javascript" src="chrome://browser/content/contentSearchUI.js"></script>
   </head>
 
-  <body dir="&locale.dir;">
-    <p class="showNormal">&aboutPrivateBrowsing.notPrivate;</p>
+  <body>
+    <p class="showNormal" data-l10n-id="about-private-browsing-not-private"></p>
     <button id="startPrivateBrowsing"
-            class="showNormal"
-            accesskey="&privatebrowsingpage.openPrivateWindow.accesskey;">&privatebrowsingpage.openPrivateWindow.label;</button>
+            class="showNormal" data-l10n-id="privatebrowsingpage-open-private-window-label"></button>
     <div class="showPrivate dontShowSearch container">
       <h1 class="title">
-        <span id="title">&privateBrowsing.title;</span>
+        <span id="title" data-l10n-id="private-browsing-title"></span>
       </h1>
       <section class="section-main">
-        <p>&aboutPrivateBrowsing.info.notsaved.before;<strong>&aboutPrivateBrowsing.info.notsaved.emphasize;</strong>&aboutPrivateBrowsing.info.notsaved.after;</p>
+        <p data-l10n-id="about-private-browsing-info-notsaved"></p>
         <ul class="list-row">
-          <li>&aboutPrivateBrowsing.info.visited;</li>
-          <li>&aboutPrivateBrowsing.info.cookies;</li>
-          <li>&aboutPrivateBrowsing.info.searches;</li>
-          <li>&aboutPrivateBrowsing.info.temporaryFiles;</li>
+          <li data-l10n-id="about-private-browsing-info-visited"></li>
+          <li data-l10n-id="about-private-browsing-info-cookies"></li>
+          <li data-l10n-id="about-private-browsing-info-searches"></li>
+          <li data-l10n-id="about-private-browsing-info-temporary-files"></li>
         </ul>
-        <p>&aboutPrivateBrowsing.info.saved.before;<strong>&aboutPrivateBrowsing.info.saved.emphasize;</strong>&aboutPrivateBrowsing.info.saved.after2;</p>
+        <p data-l10n-id="about-private-browsing-info-saved"></p>
         <ul class="list-row">
-          <li>&aboutPrivateBrowsing.info.bookmarks;</li>
-          <li>&aboutPrivateBrowsing.info.downloads;</li>
-          <li>&aboutPrivateBrowsing.info.clipboard;</li>
+          <li data-l10n-id="about-private-browsing-info-bookmarks"></li>
+          <li data-l10n-id="about-private-browsing-info-downloads"></li>
+          <li data-l10n-id="about-private-browsing-info-clipboard"></li>
         </ul>
-        <p>&aboutPrivateBrowsing.note.before;<strong>&aboutPrivateBrowsing.note.emphasize;</strong>&aboutPrivateBrowsing.note.after;</p>
+        <p data-l10n-id="about-private-browsing-note"></p>
       </section>
 
       <h2 id="tpSubHeader" class="about-subheader">
-        <span id="cbTitle">&contentBlocking.title;</span>
+        <span id="cbTitle" data-l10n-id="content-blocking-title"></span>
       </h2>
 
       <section id="tpSection" class="section-main">
-        <p id="cbDescription">&contentBlocking.description;</p>
+        <p id="cbDescription" data-l10n-id="content-blocking-description"></p>
         <p>
-          <a id="startTour" class="button">&trackingProtection.startTour1;</a>
+          <a id="startTour" class="button" data-l10n-id="tracking-protection-start-tour"></a>
         </p>
       </section>
 
       <section class="section-main">
-        <p class="about-info">&aboutPrivateBrowsing.learnMore3.before;<a id="learnMore" target="_blank">&aboutPrivateBrowsing.learnMore3.title;</a>&aboutPrivateBrowsing.learnMore3.after;</p>
+        <p class="about-info" data-l10n-id="about-private-browsing-learn-more"><a id="learnMore" target="_blank" data-l10n-name="learn-more"></a></p>
       </section>
     </div>
     <div class="showPrivate showSearch container">
@@ -74,20 +64,17 @@
         <div class="wordmark" />
       </div>
       <div class="search-inner-wrapper">
-        <button id="search-handoff-button" class="search-handoff-button" title="&aboutPrivateBrowsing.search.placeholder;" tabindex="-1">
-          <div class="fake-textbox">&aboutPrivateBrowsing.search.placeholder;</div>
+        <button id="search-handoff-button" class="search-handoff-button" tabindex="-1" data-l10n-id="about-private-browsing">
+          <div class="fake-textbox" data-l10n-id="about-private-browsing-search-placeholder"></div>
           <input id="fake-editable" class="fake-editable" tabindex="-1" aria-hidden="true" />
           <div class="fake-caret" />
         </button>
         <input id="dummy-input" class="dummy-input" type="search" />
       </div>
       <div class="info">
-        <h1>&aboutPrivateBrowsing.info.title;</h1>
-        <p>
-          &aboutPrivateBrowsing.info.description;
-          <br/>
-          <a id="private-browsing-myths">&aboutPrivateBrowsing.info.myths;</a>
-        </p>
+        <h1 data-l10n-id="about-private-browsing-info-title"></h1>
+        <p data-l10n-id="about-private-browsing-info-description"></p>
+        <a id="private-browsing-myths" data-l10n-id="about-private-browsing-info-myths"></a>
       </div>
     </div>
   </body>
