@@ -77,12 +77,11 @@ async function withNewWindow(callback) {
   let doc = win.document;
   let textbox = doc.importNode(document.getElementById("urlbar"), true);
   doc.documentElement.appendChild(textbox);
-  let panel = doc.importNode(document.getElementById("urlbar-results"), true);
-  doc.documentElement.appendChild(panel);
+  let popupset = doc.importNode(document.getElementById("mainPopupSet"), true);
+  doc.documentElement.appendChild(popupset);
 
   let inputOptions = {
     textbox,
-    panel,
     controller: fakeController,
   };
 

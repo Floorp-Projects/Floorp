@@ -48,6 +48,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
+  // TODO (Bug 1529552): Remove once old urlbar code goes away.
+  ReaderMode: "resource://gre/modules/ReaderMode.jsm",
   ReaderParent: "resource:///modules/ReaderParent.jsm",
   RFPHelper: "resource://gre/modules/RFPHelper.jsm",
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
@@ -79,11 +81,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 if (AppConstants.MOZ_CRASHREPORTER) {
   ChromeUtils.defineModuleGetter(this, "PluginCrashReporter",
     "resource:///modules/ContentCrashHandlers.jsm");
-}
-
-if (!Services.prefs.getBoolPref("browser.urlbar.quantumbar", false)) {
-  ChromeUtils.defineModuleGetter(this, "ReaderMode",
-    "resource://gre/modules/ReaderMode.jsm");
 }
 
 XPCOMUtils.defineLazyScriptGetter(this, "PlacesTreeView",
@@ -190,18 +187,82 @@ XPCOMUtils.defineLazyGetter(this, "gNavToolbox", () => {
   return document.getElementById("navigator-toolbox");
 });
 
-XPCOMUtils.defineLazyGetter(this, "gURLBar", () => {
-  let element = document.getElementById("urlbar");
+XPCOMUtils.defineLazyGetter(this, "gURLBar", () => gURLBarHandler.urlbar);
 
-  if (!Services.prefs.getBoolPref("browser.urlbar.quantumbar", false)) {
-    return element;
-  }
+/**
+ * Tracks the urlbar object, allowing to reinitiate it when necessary, e.g. on
+ * customization or when the quantumbar pref changes.
+ */
+var gURLBarHandler = {
+  /**
+   * The urlbar binding or object.
+   */
+  get urlbar() {
+    if (!this._urlbar) {
+      this.textbox = document.getElementById("urlbar");
+      this._updateBinding();
+      if (this.quantumbar) {
+        this._urlbar = new UrlbarInput({textbox: this.textbox});
+        if (this._lastValue) {
+          this._urlbar.value = this._lastValue;
+          delete this._lastValue;
+        }
+      } else {
+        this._urlbar = this.textbox;
+      }
+      gBrowser.tabContainer.addEventListener("TabSelect", this._urlbar);
+    }
+    return this._urlbar;
+  },
 
-  return new UrlbarInput({
-    textbox: element,
-    panel: document.getElementById("urlbar-results"),
-  });
-});
+  /**
+   * Invoked when the quantumbar pref changes.
+   */
+  handlePrefChange() {
+    this._updateBinding();
+    this._reset();
+  },
+
+  /**
+   * Invoked by CustomizationHandler when a customization ends.
+   */
+  customizeEnd() {
+    this._reset();
+  },
+
+  /**
+   * Rebuilds the textbox binding by detaching the element when necessary.
+   */
+  _updateBinding() {
+    let quantumbarApplied = this.textbox.getAttribute("quantumbar") == "true";
+    if (quantumbarApplied != this.quantumbar) {
+      let placeholder = document.createXULElement("toolbarpaletteitem");
+      let parent = this.textbox.parentNode;
+      parent.replaceChild(placeholder, this.textbox);
+      this.textbox.setAttribute("quantumbar", this.quantumbar);
+      parent.replaceChild(this.textbox, placeholder);
+    }
+  },
+
+  /**
+   *  Used to reset the gURLBar value.
+   */
+  _reset() {
+    if (this._urlbar) {
+      gBrowser.tabContainer.removeEventListener("TabSelect", this._urlbar);
+      if (this._urlbar.constructor.name == "UrlbarInput") {
+        this._lastValue = this._urlbar.value;
+        this._urlbar.uninit();
+      }
+      delete this._urlbar;
+      gURLBar = this.urlbar;
+    }
+  },
+};
+
+XPCOMUtils.defineLazyPreferenceGetter(gURLBarHandler, "quantumbar",
+                                      "browser.urlbar.quantumbar", false,
+                                      gURLBarHandler.handlePrefChange.bind(gURLBarHandler));
 
 // High priority notification bars shown at the top of the window.
 XPCOMUtils.defineLazyGetter(this, "gHighPriorityNotificationBox", () => {
@@ -1587,8 +1648,6 @@ var gBrowserInit = {
 
       PanicButtonNotifier.init();
     });
-
-    gBrowser.tabContainer.addEventListener("TabSelect", gURLBar);
 
     gBrowser.tabContainer.addEventListener("TabSelect", function() {
       for (let panel of document.querySelectorAll("panel[tabspecific='true']")) {
