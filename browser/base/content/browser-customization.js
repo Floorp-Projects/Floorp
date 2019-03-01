@@ -64,6 +64,8 @@ var CustomizationHandler = {
     cmd.removeAttribute("disabled");
 
     gBrowser.selectedBrowser.focus();
+
+    gURLBarHandler.customizeEnd();
   },
 };
 
