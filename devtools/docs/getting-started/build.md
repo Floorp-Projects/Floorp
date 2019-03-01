@@ -35,7 +35,7 @@ You will also need a lot of disk space (about ~40Gb free).
 
 ```bash
 cd ~ # or the folder where you store your projects, for example ~/projects
-hg clone http://hg.mozilla.org/mozilla-central
+hg clone https://hg.mozilla.org/mozilla-central
 ```
 
 ## Building and running locally
