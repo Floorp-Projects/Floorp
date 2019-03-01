@@ -1205,6 +1205,14 @@ class MediaStreamGraph {
     SYSTEM_THREAD_DRIVER,
     OFFLINE_THREAD_DRIVER
   };
+  // A MediaStreamGraph running an AudioWorklet must always be run from the
+  // same thread, in order to run js. To acheive this, create the graph with
+  // a SINGLE_THREAD RunType. DIRECT_DRIVER will run the graph directly off
+  // the GraphDriver's thread.
+  enum GraphRunType {
+    DIRECT_DRIVER,
+    SINGLE_THREAD,
+  };
   static const uint32_t AUDIO_CALLBACK_DRIVER_SHUTDOWN_TIMEOUT = 20 * 1000;
   static const TrackRate REQUEST_DEFAULT_SAMPLE_RATE = 0;
 
@@ -1324,8 +1332,8 @@ class MediaStreamGraph {
 
   // Intended only for assertions, either on graph thread or not running (in
   // which case we must be on the main thread).
-  bool OnGraphThreadOrNotRunning() const;
-  bool OnGraphThread() const;
+  virtual bool OnGraphThreadOrNotRunning() const = 0;
+  virtual bool OnGraphThread() const = 0;
 
   /**
    * Sample rate at which this graph runs. For real time graphs, this is

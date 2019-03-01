@@ -32,6 +32,7 @@
 #include "mozilla/Unused.h"
 #include "mtransport/runnable_utils.h"
 #include "VideoUtils.h"
+#include "GraphRunner.h"
 #include "Tracing.h"
 
 #include "webaudio/blink/DenormalDisabler.h"
@@ -1011,22 +1012,20 @@ void MediaStreamGraphImpl::ReevaluateInputDevice() {
   }
 }
 
-bool MediaStreamGraph::OnGraphThreadOrNotRunning() const {
+bool MediaStreamGraphImpl::OnGraphThreadOrNotRunning() const {
   // either we're on the right thread (and calling CurrentDriver() is safe),
   // or we're going to fail the assert anyway, so don't cross-check
   // via CurrentDriver().
-  MediaStreamGraphImpl const* graph =
-      static_cast<MediaStreamGraphImpl const*>(this);
-  return graph->mDetectedNotRunning ? NS_IsMainThread()
-                                    : graph->mDriver->OnThread();
+  return mDetectedNotRunning ? NS_IsMainThread() : OnGraphThread();
 }
 
-bool MediaStreamGraph::OnGraphThread() const {
+bool MediaStreamGraphImpl::OnGraphThread() const {
   // we're on the right thread (and calling mDriver is safe),
-  MediaStreamGraphImpl const* graph =
-      static_cast<MediaStreamGraphImpl const*>(this);
-  MOZ_ASSERT(graph->mDriver);
-  return graph->mDriver->OnThread();
+  MOZ_ASSERT(mDriver);
+  if (mGraphRunner && mGraphRunner->OnThread()) {
+    return true;
+  }
+  return mDriver->OnThread();
 }
 
 bool MediaStreamGraphImpl::ShouldUpdateMainThread() {
@@ -1379,13 +1378,23 @@ bool MediaStreamGraphImpl::UpdateMainThreadState() {
 }
 
 bool MediaStreamGraphImpl::OneIteration(GraphTime aStateEnd) {
+  if (mGraphRunner) {
+    return mGraphRunner->OneIteration(aStateEnd);
+  }
+
+  return OneIterationImpl(aStateEnd);
+}
+
+bool MediaStreamGraphImpl::OneIterationImpl(GraphTime aStateEnd) {
   TRACE_AUDIO_CALLBACK();
+
   // Changes to LIFECYCLE_RUNNING occur before starting or reviving the graph
   // thread, and so the monitor need not be held to check mLifecycleState.
   // LIFECYCLE_THREAD_NOT_STARTED is possible when shutting down offline
   // graphs that have not started.
   MOZ_DIAGNOSTIC_ASSERT(mLifecycleState <= LIFECYCLE_RUNNING);
   MOZ_ASSERT(OnGraphThread());
+
   WebCore::DenormalDisabler disabler;
 
   // Process graph message from the main thread for this iteration.
@@ -1498,6 +1507,10 @@ class MediaStreamGraphShutDownRunnable : public Runnable {
       MOZ_ASSERT(!mGraph->mDriver->AsAudioCallbackDriver()->InCallback());
     }
 #endif
+
+    if (mGraph->mGraphRunner) {
+      mGraph->mGraphRunner->Shutdown();
+    }
 
     mGraph->mDriver
         ->Shutdown();  // This will wait until it's shutdown since
@@ -3160,9 +3173,12 @@ void ProcessedMediaStream::DestroyImpl() {
 }
 
 MediaStreamGraphImpl::MediaStreamGraphImpl(GraphDriverType aDriverRequested,
+                                           GraphRunType aRunTypeRequested,
                                            TrackRate aSampleRate,
                                            AbstractThread* aMainThread)
     : MediaStreamGraph(aSampleRate),
+      mGraphRunner(aRunTypeRequested == SINGLE_THREAD ? new GraphRunner(this)
+                                                      : nullptr),
       mFirstCycleBreaker(0)
       // An offline graph is not initially processing.
       ,
@@ -3216,6 +3232,13 @@ AbstractThread* MediaStreamGraph::AbstractMainThread() {
   MOZ_ASSERT(static_cast<MediaStreamGraphImpl*>(this)->mAbstractMainThread);
   return static_cast<MediaStreamGraphImpl*>(this)->mAbstractMainThread;
 }
+
+#ifdef DEBUG
+bool MediaStreamGraphImpl::RunByGraphDriver(GraphDriver* aDriver) {
+  return aDriver->OnThread() ||
+         (mGraphRunner && mGraphRunner->RunByGraphDriver(aDriver));
+}
+#endif
 
 void MediaStreamGraphImpl::Destroy() {
   // First unregister from memory reporting.
@@ -3298,8 +3321,14 @@ MediaStreamGraph* MediaStreamGraph::GetInstance(
       // Uncommon case, only for some old configuration of webspeech.
       mainThread = AbstractThread::MainThread();
     }
-    graph =
-        new MediaStreamGraphImpl(aGraphDriverRequested, sampleRate, mainThread);
+
+    GraphRunType runType = DIRECT_DRIVER;
+    if (aGraphDriverRequested != OFFLINE_THREAD_DRIVER &&
+        Preferences::GetBool("dom.audioworklet.enabled", false)) {
+      runType = SINGLE_THREAD;
+    }
+    graph = new MediaStreamGraphImpl(aGraphDriverRequested, runType, sampleRate,
+                                     mainThread);
 
     uint32_t hashkey = WindowToHash(aWindow, sampleRate);
     gGraphs.Put(hashkey, graph);
@@ -3316,7 +3345,7 @@ MediaStreamGraph* MediaStreamGraph::CreateNonRealtimeInstance(
   MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
 
   MediaStreamGraphImpl* graph = new MediaStreamGraphImpl(
-      OFFLINE_THREAD_DRIVER, aSampleRate,
+      OFFLINE_THREAD_DRIVER, DIRECT_DRIVER, aSampleRate,
       aWindow->AsGlobal()->AbstractMainThreadFor(TaskCategory::Other));
 
   LOG(LogLevel::Debug, ("Starting up Offline MediaStreamGraph %p", graph));
