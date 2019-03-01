@@ -40,6 +40,7 @@ class UnpackFinder(BaseFinder):
     The UnpackFinder is populated with files from this Finder instance,
     or with files from a FileFinder using the given path as its root.
     '''
+
     def __init__(self, source, omnijar_name=None):
         if isinstance(source, BaseFinder):
             self._finder = source
@@ -90,7 +91,7 @@ class UnpackFinder(BaseFinder):
             if p.endswith('.xpi') and self._maybe_zip(f):
                 self._fill_with_jar(p[:-4], self._open_jar(p, f))
                 continue
-            if not p in jars:
+            if p not in jars:
                 self.files.add(p, f)
 
     def _fill_with_jar(self, base, jar):
@@ -126,11 +127,11 @@ class UnpackFinder(BaseFinder):
                 jar = [f for p, f in self._finder.find(jarpath)]
                 assert len(jar) == 1
                 jar = jar[0]
-            if not jarpath in jars:
+            if jarpath not in jars:
                 base = mozpath.splitext(jarpath)[0]
                 for j in self._open_jar(jarpath, jar):
                     self.files.add(mozpath.join(base,
-                                                     j.filename),
+                                                j.filename),
                                    DeflatedFile(j))
             jars.add(jarpath)
             self.kind = 'jar'

@@ -124,7 +124,7 @@ class InstallManifest(object):
         version = fileobj.readline().rstrip()
         if version not in ('1', '2', '3', '4', '5'):
             raise UnreadableInstallManifest('Unknown manifest version: %s' %
-                version)
+                                            version)
 
         for line in fileobj:
             line = line.rstrip()
@@ -167,8 +167,8 @@ class InstallManifest(object):
                 dest, source, deps, marker, defines, warnings = fields[1:]
 
                 self.add_preprocess(source, dest, deps, marker,
-                    self._decode_field_entry(defines),
-                    silence_missing_directive_warnings=bool(int(warnings)))
+                                    self._decode_field_entry(defines),
+                                    silence_missing_directive_warnings=bool(int(warnings)))
                 continue
 
             if record_type == self.CONTENT:
@@ -182,7 +182,7 @@ class InstallManifest(object):
             # forward-compatibility with those we will add in the future.
             if record_type >= 0:
                 raise UnreadableInstallManifest('Unknown record type: %d' %
-                    record_type)
+                                                record_type)
 
     def __len__(self):
         return len(self._dests)
@@ -294,7 +294,7 @@ class InstallManifest(object):
            <base>/foo/bar.h -> <dest>/foo/bar.h
         """
         self._add_entry(mozpath.join(dest, pattern),
-            (self.PATTERN_LINK, base, pattern, dest))
+                        (self.PATTERN_LINK, base, pattern, dest))
 
     def add_pattern_copy(self, base, pattern, dest):
         """Add a pattern match that results in copies.
@@ -302,7 +302,7 @@ class InstallManifest(object):
         See ``add_pattern_link()`` for usage.
         """
         self._add_entry(mozpath.join(dest, pattern),
-            (self.PATTERN_COPY, base, pattern, dest))
+                        (self.PATTERN_COPY, base, pattern, dest))
 
     def add_preprocess(self, source, dest, deps, marker='#', defines={},
                        silence_missing_directive_warnings=False):
@@ -427,12 +427,14 @@ class InstallManifest(object):
                 defines = self._decode_field_entry(entry[4])
                 if defines_override:
                     defines.update(defines_override)
-                registry.add(dest, PreprocessedFile(entry[1],
-                    depfile_path=entry[2],
-                    marker=entry[3],
-                    defines=defines,
-                    extra_depends=self._source_files,
-                    silence_missing_directive_warnings=bool(int(entry[5]))))
+                registry.add(dest, PreprocessedFile(
+                   entry[1],
+                   depfile_path=entry[2],
+                   marker=entry[3],
+                   defines=defines,
+                   extra_depends=self._source_files,
+                   silence_missing_directive_warnings=bool(int(entry[5])),
+                ))
 
                 continue
 
@@ -444,4 +446,4 @@ class InstallManifest(object):
                 continue
 
             raise Exception('Unknown install type defined in manifest: %d' %
-                install_type)
+                            install_type)
