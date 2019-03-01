@@ -541,7 +541,9 @@ const DownloadsIndicatorView = {
   },
 
   onCommand(aEvent) {
-    if (aEvent.type == "mousedown" && aEvent.button != 0) {
+    if ((aEvent.type == "mousedown" && aEvent.button != 0) ||
+        (aEvent.type == "keypress" &&
+         aEvent.key != " " && aEvent.key != "Enter")) {
       return;
     }
 
