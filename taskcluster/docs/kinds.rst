@@ -531,6 +531,10 @@ openh264-plugin
 -----
 Tasks used to build the openh264 plugin.
 
+openh264-signing
+----------------
+Signing for the openh264 plugin.
+
 webrender
 ---------
 Tasks used to do testing of WebRender standalone (without gecko). The
