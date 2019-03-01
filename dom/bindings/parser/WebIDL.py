@@ -2789,9 +2789,11 @@ class IDLTypedefType(IDLType):
 
 class IDLTypedef(IDLObjectWithIdentifier):
     def __init__(self, location, parentScope, innerType, name):
+        # Set self.innerType first, because IDLObjectWithIdentifier.__init__
+        # will call our __str__, which wants to use it.
+        self.innerType = innerType
         identifier = IDLUnresolvedIdentifier(location, name)
         IDLObjectWithIdentifier.__init__(self, location, parentScope, identifier)
-        self.innerType = innerType
 
     def __str__(self):
         return "Typedef %s %s" % (self.identifier.name, self.innerType)
