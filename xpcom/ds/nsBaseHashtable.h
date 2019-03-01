@@ -58,6 +58,7 @@ class nsBaseHashtable
 
   using nsTHashtable<EntryType>::Contains;
   using nsTHashtable<EntryType>::GetGeneration;
+  using nsTHashtable<EntryType>::IsEmpty;
   using nsTHashtable<EntryType>::SizeOfExcludingThis;
   using nsTHashtable<EntryType>::SizeOfIncludingThis;
 
