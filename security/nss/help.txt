@@ -6,7 +6,7 @@ Usage: build.sh [-h] [-c|-cc] [-v] [-j <n>] [--gyp|-g] [--opt|-o]
                 [--emit-llvm] [--no-zdefs] [--test] [--ct-verif]
                 [--nspr|--with-nspr=<include>:<lib>|--system-nspr]
                 [--system-sqlite] [--enable-fips] [--enable-libpkix]
-                [--mozpkix-only]
+                [--mozpkix-only] [-D<gyp-option>]
 
 This script builds NSS with gyp and ninja.
 
@@ -51,3 +51,4 @@ NSS build tool options:
     --enable-libpkix make libpkix part of the build
     --mozpkix-only   build only static mozpkix and mozpkix-test libraries
                      support for this build option is limited
+    -D<gyp-option>   pass an option directly to gyp

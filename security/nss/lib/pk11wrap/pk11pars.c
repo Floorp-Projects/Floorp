@@ -815,6 +815,10 @@ SECMOD_CreateModuleEx(const char *library, const char *moduleName,
 
     mod->internal = NSSUTIL_ArgHasFlag("flags", "internal", nssc);
     mod->isFIPS = NSSUTIL_ArgHasFlag("flags", "FIPS", nssc);
+    /* if the system FIPS mode is enabled, force FIPS to be on */
+    if (secmod_GetSystemFIPSEnabled()) {
+        mod->isFIPS = PR_TRUE;
+    }
     mod->isCritical = NSSUTIL_ArgHasFlag("flags", "critical", nssc);
     slotParams = NSSUTIL_ArgGetParamValue("slotParams", nssc);
     mod->slotInfo = NSSUTIL_ArgParseSlotInfo(mod->arena, slotParams,
