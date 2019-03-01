@@ -43,6 +43,8 @@ nsLookAndFeel::nsLookAndFeel()
       mAllowOverlayScrollbarsOverlapCached(false),
       mPrefersReducedMotion(-1),
       mPrefersReducedMotionCached(false),
+      mSystemUsesDarkTheme(-1),
+      mSystemUsesDarkThemeCached(false),
       mColorTextSelectBackground(0),
       mColorTextSelectBackgroundDisabled(0),
       mColorHighlight(0),
@@ -112,6 +114,7 @@ void nsLookAndFeel::RefreshImpl() {
     mUseOverlayScrollbarsCached = false;
     mAllowOverlayScrollbarsOverlapCached = false;
     mPrefersReducedMotionCached = false;
+    mSystemUsesDarkThemeCached = false;
   }
 
   // Fetch colors next time they are requested.
@@ -564,7 +567,11 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
       aResult = 1;
       break;
     case eIntID_SystemUsesDarkTheme:
-      aResult = SystemWantsDarkTheme();
+      if (!mSystemUsesDarkThemeCached) {
+        mSystemUsesDarkTheme = SystemWantsDarkTheme();
+        mSystemUsesDarkThemeCached = true;
+      }
+      aResult = mSystemUsesDarkTheme;
       break;
     case eIntID_PrefersReducedMotion:
       // Without native event loops,
@@ -622,10 +629,10 @@ bool nsLookAndFeel::AllowOverlayScrollbarsOverlap() { return (UseOverlayScrollba
 bool nsLookAndFeel::SystemWantsDarkTheme() {
   // This returns true if the macOS system appearance is set to dark mode on
   // 10.14+, false otherwise.
-  if (nsCocoaFeatures::OnMojaveOrLater()) {
-    return !![[NSUserDefaults standardUserDefaults] stringForKey:@"AppleInterfaceStyle"];
+  if (!nsCocoaFeatures::OnMojaveOrLater()) {
+    return false;
   }
-  return false;
+  return !![[NSUserDefaults standardUserDefaults] stringForKey:@"AppleInterfaceStyle"];
 }
 
 bool nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName, gfxFontStyle& aFontStyle) {
@@ -670,6 +677,11 @@ nsTArray<LookAndFeelInt> nsLookAndFeel::GetIntCacheImpl() {
   prefersReducedMotion.value = GetInt(eIntID_PrefersReducedMotion);
   lookAndFeelIntCache.AppendElement(prefersReducedMotion);
 
+  LookAndFeelInt systemUsesDarkTheme;
+  systemUsesDarkTheme.id = eIntID_SystemUsesDarkTheme;
+  systemUsesDarkTheme.value = GetInt(eIntID_SystemUsesDarkTheme);
+  lookAndFeelIntCache.AppendElement(systemUsesDarkTheme);
+
   return lookAndFeelIntCache;
 }
 
@@ -683,6 +695,10 @@ void nsLookAndFeel::SetIntCacheImpl(const nsTArray<LookAndFeelInt>& aLookAndFeel
       case eIntID_AllowOverlayScrollbarsOverlap:
         mAllowOverlayScrollbarsOverlap = entry.value;
         mAllowOverlayScrollbarsOverlapCached = true;
+        break;
+      case eIntID_SystemUsesDarkTheme:
+        mSystemUsesDarkTheme = entry.value;
+        mSystemUsesDarkThemeCached = true;
         break;
       case eIntID_PrefersReducedMotion:
         mPrefersReducedMotion = entry.value;
