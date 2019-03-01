@@ -690,7 +690,9 @@ nsresult WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
     }
     sample->mTimecode = TimeUnit::FromMicroseconds(tstamp);
     sample->mTime = TimeUnit::FromMicroseconds(tstamp);
-    sample->mDuration = TimeUnit::FromMicroseconds(next_tstamp - tstamp);
+    if (next_tstamp > tstamp) {
+      sample->mDuration = TimeUnit::FromMicroseconds(next_tstamp - tstamp);
+    }
     sample->mOffset = holder->Offset();
     sample->mKeyframe = isKeyframe;
     if (discardPadding && i == count - 1) {
