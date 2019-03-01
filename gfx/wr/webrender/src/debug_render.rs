@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ColorU, ColorF, ImageFormat, TextureTarget};
-use api::units::*;
+use api::{DeviceIntRect, DeviceRect, DevicePoint, DeviceSize, DeviceIntSize};
 use debug_font_data;
 use device::{Device, Program, Texture, TextureSlot, VertexDescriptor, ShaderError, VAO};
 use device::{TextureFilter, VertexAttribute, VertexAttributeKind, VertexUsageHint};
@@ -312,7 +312,7 @@ impl DebugRenderer {
     pub fn render(
         &mut self,
         device: &mut Device,
-        viewport_size: Option<FramebufferIntSize>,
+        viewport_size: Option<DeviceIntSize>,
     ) {
         if let Some(viewport_size) = viewport_size {
             device.disable_depth();
