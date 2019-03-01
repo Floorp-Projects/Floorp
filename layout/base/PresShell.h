@@ -642,6 +642,7 @@ class PresShell final : public nsIPresShell,
       RefPtr<PresShell> mPresShell;
       nsIFrame* mFrame;
       nsCOMPtr<nsIContent> mContent;
+      nsCOMPtr<nsIContent> mOverrideClickTarget;
     };
 
     /**
