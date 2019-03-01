@@ -9,6 +9,9 @@ package org.mozilla.geckoview;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.ref.WeakReference;
+import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.UUID;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
@@ -28,7 +31,6 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.Resources;
 import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -214,7 +216,12 @@ public class GeckoSession implements Parcelable {
         public native void setDefaultClearColor(int color);
 
         @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
-        /* package */ native void requestScreenPixels(final GeckoResult<Bitmap> result);
+        public native void requestScreenPixels();
+
+        @WrapForJNI(calledFrom = "ui")
+        private void recvScreenPixels(int width, int height, int[] pixels) {
+            GeckoSession.this.recvScreenPixels(width, height, pixels);
+        }
 
         @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
         public native void enableLayerUpdateNotifications(boolean enable);
@@ -4354,6 +4361,12 @@ public class GeckoSession implements Parcelable {
                 }
                 break;
             }
+        }
+    }
+
+    /* package */ void recvScreenPixels(int width, int height, int[] pixels) {
+        if (mController != null) {
+            mController.recvScreenPixels(width, height, pixels);
         }
     }
 
