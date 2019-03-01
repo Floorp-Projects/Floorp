@@ -117,6 +117,7 @@ EXPORTS += [
 
 EXPORTS.js += [
     '../public/AllocPolicy.h',
+    '../public/ArrayBuffer.h',
     '../public/BuildId.h',
     '../public/CallArgs.h',
     '../public/CallNonGenericMethod.h',
@@ -161,6 +162,7 @@ EXPORTS.js += [
     '../public/Result.h',
     '../public/RootingAPI.h',
     '../public/SavedFrameAPI.h',
+    '../public/SharedArrayBuffer.h',
     '../public/SliceBudget.h',
     '../public/SourceText.h',
     '../public/StableStringChars.h',

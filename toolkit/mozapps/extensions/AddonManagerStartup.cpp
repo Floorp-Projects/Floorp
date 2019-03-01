@@ -8,6 +8,7 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "js/ArrayBuffer.h"
 #include "js/JSON.h"
 #include "js/TracingAPI.h"
 #include "xpcpublic.h"
@@ -534,8 +535,8 @@ nsresult AddonManagerStartup::EncodeBlob(JS::HandleValue value, JSContext* cx,
 nsresult AddonManagerStartup::DecodeBlob(JS::HandleValue value, JSContext* cx,
                                          JS::MutableHandleValue result) {
   NS_ENSURE_TRUE(value.isObject() &&
-                     JS_IsArrayBufferObject(&value.toObject()) &&
-                     JS_ArrayBufferHasData(&value.toObject()),
+                     JS::IsArrayBufferObject(&value.toObject()) &&
+                     JS::ArrayBufferHasData(&value.toObject()),
                  NS_ERROR_INVALID_ARG);
 
   StructuredCloneData holder;
@@ -548,8 +549,8 @@ nsresult AddonManagerStartup::DecodeBlob(JS::HandleValue value, JSContext* cx,
     bool isShared;
 
     nsDependentCSubstring lz4(
-        reinterpret_cast<char*>(JS_GetArrayBufferData(obj, &isShared, nogc)),
-        JS_GetArrayBufferByteLength(obj));
+        reinterpret_cast<char*>(JS::GetArrayBufferData(obj, &isShared, nogc)),
+        JS::GetArrayBufferByteLength(obj));
 
     MOZ_TRY_VAR(data, DecodeLZ4(lz4, STRUCTURED_CLONE_MAGIC));
   }
