@@ -23,6 +23,7 @@ function setup_test_preference() {
   return SpecialPowers.pushPrefEnv({"set": [
     ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
     ["media.autoplay.enabled.user-gestures-needed", true],
+    ["media.autoplay.block-event.enabled", true],
     ["media.autoplay.block-webaudio", true],
     ["media.navigator.permission.fake", true],
   ]});
@@ -121,12 +122,17 @@ function createAudioContext() {
       resolve();
     }, {once: true});
   });
+  ac.notAllowedToStart = new Promise(resolve => {
+    ac.addEventListener("blocked", function() {
+      resolve();
+    }, {once: true});
+  });
 }
 
 async function checking_audio_context_running_state() {
   let ac = content.ac;
-  await new Promise(r => setTimeout(r, 2000));
-  is(ac.state, "suspended", "audio context is still suspended");
+  await ac.notAllowedToStart;
+  ok(ac.state === "suspended", `AudioContext is not started yet.`);
 }
 
 function resume_without_expected_success() {
