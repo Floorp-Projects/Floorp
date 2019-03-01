@@ -10,7 +10,6 @@
 // - multiple local tables of misc type: syntax, validation, instantiation
 // - element segments can point to a table
 // - call-indirect can specify a table and will use it
-// - be sure to test table stuff w/o gc_feature_opt_in so that we get ion coverage too
 
 var ins = wasmEvalText(
     `(module
@@ -43,7 +42,6 @@ assertEq(ins.g(1, 10), 14);
 
 var ins = wasmEvalText(
     `(module
-      (gc_feature_opt_in 3)
       (table $t0 (import "m" "t") 2 funcref)
       (table $t1 (export "t1") 2 funcref)
       (table 1 anyref)
@@ -64,8 +62,6 @@ var exp = {m:{t0: new WebAssembly.Table({element:"funcref", initial:2}),
               t3: new WebAssembly.Table({element:"anyref", initial:5})}};
 var ins = wasmEvalText(
     `(module
-      (gc_feature_opt_in 3)
-
       (table $t0 (import "m" "t0") 2 funcref)
       (type $id_i32_t (func (param i32) (result i32)))
       (func $id_i32 (param i32) (result i32) (get_local 0))
@@ -113,8 +109,6 @@ var exp = {m:{t0: new WebAssembly.Table({element:"anyref", initial:2}),
               t1: new WebAssembly.Table({element:"anyref", initial:3})}};
 var ins = wasmEvalText(
     `(module
-      (gc_feature_opt_in 3)
-
       (table $t0 (import "m" "t0") 2 anyref)
       (table $t1 (import "m" "t1") 3 anyref)
       (func (export "f") (result i32)
@@ -136,8 +130,6 @@ var exp = {m:{t0: new WebAssembly.Table({element:"anyref", initial:2}),
               t1: new WebAssembly.Table({element:"anyref", initial:3})}};
 var ins = wasmEvalText(
     `(module
-      (gc_feature_opt_in 3)
-
       (table $t0 (import "m" "t0") 2 anyref)
       (table $t1 (import "m" "t1") 3 anyref)
       (func (export "f") (param $dest i32) (param $src i32) (param $len i32)
@@ -154,7 +146,6 @@ assertEq(exp.m.t1.get(2), exp.m.t0.get(1));
 
 var ins = wasmEvalText(
     `(module
-      (gc_feature_opt_in 3)
       (table $t0 2 anyref)
       (table $t1 2 anyref)
       (func (export "copy") (param $dest i32) (param $src i32) (param $len i32)
@@ -185,7 +176,6 @@ assertEq(ins.exports.get(1), values[1]);
 //
 // Also tests:
 // - local tables can be exported and re-imported in another module
-// - table.copy between tables of funcref is possible without gc_feature_opt_in
 
 var arg = 4;
 for (let [x,y,result,init] of [['(export "t")', '', arg*13, true],
@@ -229,7 +219,6 @@ var exp = {m: {t0: tbl, t1:tbl}};
 
 var ins = wasmEvalText(
     `(module
-      (gc_feature_opt_in 3)
       (import $t0 "m" "t0" (table 1 anyref))
       (import $t1 "m" "t1" (table 1 anyref))
       (table $t2 (export "t2") 1 funcref)
@@ -250,7 +239,6 @@ ins.exports.t2.grow(3);
 assertEq(ins.exports.size(), 4);
 
 // - table.init on tables other than table 0
-// - gc_feature_opt_in not required for table.init on table(funcref) even with multiple tables
 
 var ins = wasmEvalText(
     `(module
@@ -333,7 +321,6 @@ assertErrorMessage(() => ins2.exports.do1(12, 2.0),
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (gc_feature_opt_in 3)
       (table $t0 2 anyref)
       (table $t1 2 anyref)
       (func $f (result anyref)
@@ -343,7 +330,6 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (gc_feature_opt_in 3)
       (table $t0 2 anyref)
       (table $t1 2 anyref)
       (func $f (param anyref)
@@ -353,7 +339,6 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (gc_feature_opt_in 3)
       (table $t0 2 anyref)
       (table $t1 2 anyref)
       (func $f (param anyref)
@@ -363,7 +348,6 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (gc_feature_opt_in 3)
       (table $t0 2 anyref)
       (table $t1 2 anyref)
       (func $f (param anyref)
@@ -373,7 +357,6 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (gc_feature_opt_in 3)
       (table $t0 2 anyref)
       (table $t1 2 anyref)
       (func $f (result i32)
@@ -383,7 +366,6 @@ assertErrorMessage(() => wasmEvalText(
 
 assertErrorMessage(() => wasmEvalText(
     `(module
-      (gc_feature_opt_in 3)
       (table $t0 2 anyref)
       (table $t1 2 anyref)
       (func $f (result i32)
