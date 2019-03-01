@@ -893,9 +893,6 @@ void VRSystemManagerExternal::PushState(VRBrowserState* aBrowserState,
       mExternalShmem->browserGenerationA++;
       memcpy((void*)&(mExternalShmem->browserState), (void*)aBrowserState,
             sizeof(VRBrowserState));
-      mExternalShmem->browserGenerationB++; mExternalShmem->browserGenerationA++;
-      memcpy((void*)&(mExternalShmem->browserState), (void*)aBrowserState,
-            sizeof(VRBrowserState));
       mExternalShmem->browserGenerationB++;
     }
 #endif  // defined(MOZ_WIDGET_ANDROID)
