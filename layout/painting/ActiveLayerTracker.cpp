@@ -100,12 +100,12 @@ class LayerActivity {
 
   static ActivityIndex GetActivityIndexForPropertySet(
       const nsCSSPropertyIDSet& aPropertySet) {
-    if (aPropertySet.Intersect(nsCSSPropertyIDSet::TransformLikeProperties())
-            .Equals(aPropertySet)) {
+    if (aPropertySet.IsSubsetOf(
+            nsCSSPropertyIDSet::TransformLikeProperties())) {
       return ACTIVITY_TRANSFORM;
     }
-    MOZ_ASSERT(aPropertySet.Intersect(nsCSSPropertyIDSet::OpacityProperties())
-                   .Equals(aPropertySet));
+    MOZ_ASSERT(
+        aPropertySet.IsSubsetOf(nsCSSPropertyIDSet::OpacityProperties()));
     return ACTIVITY_OPACITY;
   }
 
@@ -472,10 +472,8 @@ bool ActiveLayerTracker::IsStyleAnimated(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
     const nsCSSPropertyIDSet& aPropertySet) {
   MOZ_ASSERT(
-      aPropertySet.Intersect(nsCSSPropertyIDSet::TransformLikeProperties())
-              .Equals(aPropertySet) ||
-          aPropertySet.Intersect(nsCSSPropertyIDSet::OpacityProperties())
-              .Equals(aPropertySet),
+      aPropertySet.IsSubsetOf(nsCSSPropertyIDSet::TransformLikeProperties()) ||
+          aPropertySet.IsSubsetOf(nsCSSPropertyIDSet::OpacityProperties()),
       "Only subset of opacity or transform-like properties set calls this");
 
   const nsCSSPropertyIDSet transformSet =
