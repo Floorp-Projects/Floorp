@@ -3,7 +3,6 @@
 for ( let prefix of ['', '(table $prefix 0 32 funcref)']) {
     let mod = new WebAssembly.Module(wasmTextToBinary(
     `(module
-       (gc_feature_opt_in 3)
        ${prefix}
        (table $tbl 0 anyref)
        (import $item "m" "item" (func (result anyref)))
