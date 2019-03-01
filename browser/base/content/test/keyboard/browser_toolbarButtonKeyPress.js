@@ -266,3 +266,20 @@ add_task(async function testOverflowButtonPress() {
   await hidden;
   CustomizableUI.reset();
 });
+
+// Test activation of the Downloads button from the keyboard.
+// The Downloads panel should appear and focus should move inside it.
+add_task(async function testDownloadsButtonPress() {
+  DownloadsButton.unhide();
+  let button = document.getElementById("downloads-button");
+  forceFocus(button);
+  let panel = document.getElementById("downloadsPanel");
+  let focused = BrowserTestUtils.waitForEvent(panel, "focus", true);
+  EventUtils.synthesizeKey(" ");
+  await focused;
+  ok(true, "Focus inside Downloads panel after toolbar button pressed");
+  let hidden = BrowserTestUtils.waitForEvent(panel, "popuphidden");
+  panel.hidePopup();
+  await hidden;
+  DownloadsButton.hide();
+});
