@@ -26,7 +26,7 @@ export async function prettyPrint({ source, url }: PrettyPrintOpts) {
 
   assert(isJavaScript(source), "Can't prettify non-javascript files.");
 
-  return await _prettyPrint({
+  return _prettyPrint({
     url,
     indent,
     sourceText: source.text

@@ -14,7 +14,7 @@ export function dirname(path: string) {
 }
 
 export function isURL(str: string) {
-  return str.indexOf("://") !== -1;
+  return str.includes("://");
 }
 
 export function isAbsolute(str: string) {

@@ -829,7 +829,6 @@ class Tree extends Component {
         if (this.treeRef.current !== document.activeElement) {
           this.treeRef.current.focus();
         }
-        return;
     }
   }
 

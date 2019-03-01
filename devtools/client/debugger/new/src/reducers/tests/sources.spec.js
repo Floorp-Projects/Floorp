@@ -8,21 +8,16 @@ declare var it: (desc: string, func: () => void) => void;
 declare var expect: (value: any) => any;
 
 import update, { initialSourcesState, getDisplayedSources } from "../sources";
-import { foobar } from "../../test/fixtures";
 import type { Source } from "../../types";
 import { prefs } from "../../utils/prefs";
 import { makeMockSource } from "../../utils/test-mockup";
-
-
-
-const fakeSources = foobar.sources.sources;
 
 const extensionSource = {
   ...makeMockSource(),
   id: "extensionId",
   url: "http://example.com/script.js",
   actors: [{ actor: "extensionId-actor", source: "extensionId", thread: "foo" }]
-}
+};
 
 const firefoxExtensionSource = {
   ...makeMockSource(),

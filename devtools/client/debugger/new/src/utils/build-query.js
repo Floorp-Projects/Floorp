@@ -42,8 +42,6 @@ function buildFlags(caseSensitive: boolean, isGlobal: boolean): ?RegExp$flags {
   if (!caseSensitive && !isGlobal) {
     return "i";
   }
-
-  return;
 }
 
 export default function buildQuery(

@@ -191,7 +191,6 @@ class App extends Component<Props, State> {
       return;
     }
     openQuickOpen();
-    return;
   };
 
   onLayoutChange = () => {
