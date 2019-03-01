@@ -36,6 +36,7 @@ class nsAppShellService final : public nsIAppShellService, public nsIObserver {
   ~nsAppShellService();
 
   nsresult CreateHiddenWindowHelper(bool aIsPrivate);
+  void EnsureHiddenWindow();
   void EnsurePrivateHiddenWindow();
 
   nsresult JustCreateTopWindow(nsIXULWindow *aParent, nsIURI *aUrl,
