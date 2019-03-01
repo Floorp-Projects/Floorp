@@ -1516,6 +1516,10 @@ var gBrowserInit = {
 
     this._cancelDelayedStartup();
 
+    // Bug 1531854 - The hidden window is force-created here
+    // until all of its dependencies are handled.
+    Services.appShell.hiddenDOMWindow;
+
     // We need to set the OfflineApps message listeners up before we
     // load homepages, which might need them.
     OfflineApps.init();
