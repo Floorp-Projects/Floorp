@@ -118,7 +118,7 @@ function modified(event)
       event.attrName == "open") {
     gChangeMutation.hidden = true;
     // force a layout flush
-    document.documentElement.boxObject.width;
+    document.documentElement.clientWidth;
     gTriggerMutation = null;
     gChangeMutation = null;
   }

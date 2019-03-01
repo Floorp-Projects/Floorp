@@ -237,11 +237,7 @@ function checkPanelPosition(panel)
 
   var panelRect = panel.getBoundingClientRect();
   var anchorRect = anchor.getBoundingClientRect();
-  var contentBO = panel.firstChild.boxObject;
-  var contentRect = { top: contentBO.y,
-                      left: contentBO.x,
-                      bottom: contentBO.y + contentBO.height,
-                      right: contentBO.x + contentBO.width };
+  var contentRect = panel.firstChild.getBoundingClientRect();
   switch (expectedSide) {
     case "top":
       ok(contentRect.top > vwinpos + anchorRect.bottom * zoomFactor + 5, "panel content is below");

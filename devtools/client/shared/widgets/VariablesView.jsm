@@ -972,14 +972,6 @@ VariablesView.prototype = {
    * Gets the parent node holding this view.
    * @return Node
    */
-  get boxObject() {
-    return this._list.boxObject;
-  },
-
-  /**
-   * Gets the parent node holding this view.
-   * @return Node
-   */
   get parentNode() {
     return this._parent;
   },
