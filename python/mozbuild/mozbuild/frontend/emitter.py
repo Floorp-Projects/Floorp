@@ -1182,11 +1182,15 @@ class TreeMetadataEmitter(LoggingMixin):
         local_includes = []
         for local_include in context.get('LOCAL_INCLUDES', []):
             full_path = local_include.full_path
-            if (not isinstance(local_include, ObjDirPath) and
-                    not os.path.exists(full_path)):
-                raise SandboxValidationError('Path specified in LOCAL_INCLUDES '
-                    'does not exist: %s (resolved to %s)' % (local_include,
-                    full_path), context)
+            if not isinstance(local_include, ObjDirPath):
+                if not os.path.exists(full_path):
+                    raise SandboxValidationError('Path specified in LOCAL_INCLUDES '
+                        'does not exist: %s (resolved to %s)' % (local_include,
+                        full_path), context)
+                if not os.path.isdir(full_path):
+                    raise SandboxValidationError('Path specified in LOCAL_INCLUDES '
+                        'is a filename, but a directory is required: %s '
+                        '(resolved to %s)' % (local_include, full_path), context)
             if (full_path == context.config.topsrcdir or
                     full_path == context.config.topobjdir):
                 raise SandboxValidationError('Path specified in LOCAL_INCLUDES '
