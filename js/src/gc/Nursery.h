@@ -147,21 +147,11 @@ class Nursery {
   static const size_t SubChunkStep = gc::ArenaSize;
 
   /*
-   * SubChunkLimit is the lower limit of the nursery's capacity.
-   */
-#ifndef JS_GC_SMALL_CHUNK_SIZE
-  /*
    * 192K is conservative, not too low that root marking dominates.  The Limit
    * should be a multiple of the Step.
    */
   static const size_t SubChunkLimit = 192 * 1024;
-#else
-  /*
-   * With small chunk sizes (256K) we need to use smaller sub chunk limits and
-   * steps so that a full chunk minus one step is still larger than the limit.
-   */
-  static const size_t SubChunkLimit = 64 * 1024;
-#endif
+  static_assert(SubChunkLimit % SubChunkStep == 0, "The limit should be a multiple of the step");
 
   struct alignas(gc::CellAlignBytes) CellAlignedByte {
     char byte;
