@@ -1,0 +1,27 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.single_dep:loader
+
+transforms:
+    - taskgraph.transforms.name_sanity:transforms
+    - taskgraph.transforms.mar_signing:transforms
+    - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - repackage
+
+only-for-build-platforms:
+    - linux64-nightly/opt
+
+job-template:
+    shipping-phase: null
+    treeherder-group: ms-stage
+    treeherder:
+        tier: 3
+    description-suffix: 'autograph-stage mar signing test'
+    required_signoffs:
+        - mar-signing
+    run-on-projects: []
+    nightly: false

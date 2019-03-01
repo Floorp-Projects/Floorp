@@ -85,6 +85,7 @@ treeherder:
         'p': 'Partial generation'
         'ps': 'Partials signing'
         'ms': 'Complete MAR signing'
+        'ms-stage': 'Autograph-stage MAR signing test'
         'Rel': 'Release promotion'
         'Snap': 'Snap image generation'
         'langpack': 'Langpack sigatures and uploads'
