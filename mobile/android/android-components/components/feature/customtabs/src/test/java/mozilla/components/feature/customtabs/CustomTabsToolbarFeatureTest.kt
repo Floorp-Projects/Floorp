@@ -307,7 +307,7 @@ class CustomTabsToolbarFeatureTest {
     }
 
     @Test
-    fun `onBackPressed removes session`() {
+    fun `onBackPressed removes initialized session`() {
         val sessionId = "123"
         val session: Session = mock()
         val toolbar = BrowserToolbar(RuntimeEnvironment.application)
@@ -317,6 +317,8 @@ class CustomTabsToolbarFeatureTest {
         `when`(sessionManager.findSessionById(anyString())).thenReturn(session)
 
         val feature = spy(CustomTabsToolbarFeature(sessionManager, toolbar, sessionId) { closeExecuted = true })
+        feature.initialized = true
+
         val result = feature.onBackPressed()
 
         assertTrue(result)
@@ -334,6 +336,26 @@ class CustomTabsToolbarFeatureTest {
         `when`(sessionManager.findSessionById(anyString())).thenReturn(session)
 
         val feature = spy(CustomTabsToolbarFeature(sessionManager, toolbar, sessionId) { closeExecuted = true })
+
+        val result = feature.onBackPressed()
+
+        assertFalse(result)
+        assertFalse(closeExecuted)
+    }
+
+    @Test
+    fun `onBackPressed with uninitialized feature returns false`() {
+        val sessionId = "123"
+        val session: Session = mock()
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        val sessionManager: SessionManager = mock()
+        var closeExecuted = false
+        `when`(sessionManager.findSessionById(anyString())).thenReturn(session)
+
+        val feature = spy(CustomTabsToolbarFeature(sessionManager, toolbar, sessionId) {
+            closeExecuted = true
+        })
+        feature.initialized = false
 
         val result = feature.onBackPressed()
 

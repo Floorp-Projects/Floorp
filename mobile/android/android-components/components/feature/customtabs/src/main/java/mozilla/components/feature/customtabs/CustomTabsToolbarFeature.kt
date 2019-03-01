@@ -36,7 +36,7 @@ class CustomTabsToolbarFeature(
     private val closeListener: () -> Unit
 ) : LifecycleAwareFeature, BackHandler {
     private val context = toolbar.context
-    private var initialized = false
+    internal var initialized = false
     internal var readableColor = Color.WHITE
 
     override fun start() {
@@ -137,13 +137,20 @@ class CustomTabsToolbarFeature(
     override fun stop() {}
 
     /**
-     * Removes the current Custom Tabs session when the back button is pressed and returns true.
+     * When the back button is pressed if not initialized returns false,
+     * when initialized removes the current Custom Tabs session and returns true.
      * Should be called when the back button is pressed.
      */
-    override fun onBackPressed() = sessionManager.runWithSession(sessionId) {
-        closeListener.invoke()
-        remove(it)
-        true
+    override fun onBackPressed(): Boolean {
+        return if (!initialized) {
+            false
+        } else {
+            sessionManager.runWithSession(sessionId) {
+                closeListener.invoke()
+                remove(it)
+                true
+            }
+        }
     }
 
     companion object {

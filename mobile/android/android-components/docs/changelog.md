@@ -49,6 +49,9 @@ permalink: /changelog/
 
 * **browser-awesomebar**
   * [BrowserAwesomeBar](https://mozac.org/api/mozilla.components.browser.awesomebar/-browser-awesome-bar/) is now replacing suggestions "in-place" if their ids match. Additionally `BrowserAwesomeBar` now automatically scrolls to the top whenever the entered text changes.
+  
+* **feature-customtabs**
+ * Now returns false in `onBackPressed()` if feature is not initialized
 
 # 0.44.0
 
