@@ -167,7 +167,7 @@ class RequestListHeader extends Component {
     const { columns, scale, sort, sortBy, waterfallWidth } = this.props;
 
     return (
-      div({ className: "devtools-toolbar requests-list-headers-wrapper" },
+      div({ className: "devtools-toolbar requests-list-headers-group" },
         div({
           className: "devtools-toolbar requests-list-headers",
           onContextMenu: this.onContextMenu,

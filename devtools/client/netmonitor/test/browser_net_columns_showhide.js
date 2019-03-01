@@ -27,7 +27,7 @@ add_task(async function() {
     await requestData(item.id, "responseHeaders");
   }
 
-  const requestsContainer = document.querySelector(".requests-list-contents");
+  const requestsContainer = document.querySelector(".requests-list-row-group");
   ok(requestsContainer, "Container element exists as expected.");
   const headers = document.querySelector(".requests-list-headers");
 
@@ -61,7 +61,7 @@ async function testWhiteSpaceContextMenuItem(column, document, parent) {
 
   info(`Right clicking on white-space in the header to get the context menu`);
   EventUtils.sendMouseEvent({ type: "contextmenu" },
-    document.querySelector(".devtools-toolbar.requests-list-headers"));
+    document.querySelector(".requests-list-headers"));
 
   // Wait for next tick to do stuff async and force repaint.
   await waitForTick();
