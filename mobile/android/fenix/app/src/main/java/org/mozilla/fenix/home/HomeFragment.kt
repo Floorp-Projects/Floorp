@@ -339,8 +339,6 @@ class HomeFragment : Fragment() {
                 }
 
                 requireComponents.core.sessionStorage.remove(archivedSession.bundle)
-
-                true
             }
         }.show(requireActivity().supportFragmentManager, SessionBottomSheetFragment.overflowFragmentTag)
     }

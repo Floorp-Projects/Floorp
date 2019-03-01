@@ -19,7 +19,7 @@ class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer 
     var archivedSession: ArchivedSession? = null
     var isCurrentSession: Boolean = false
     private lateinit var tabTitles: String
-    var onDelete: ((ArchivedSession) -> Boolean)? = null
+    var onDelete: ((ArchivedSession) -> Unit)? = null
     var onArchive: (() -> Unit)? = null
 
     override val containerView: View?
@@ -51,13 +51,13 @@ class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer 
             visibility = if (isCurrentSession) View.VISIBLE else View.GONE
             setOnClickListener {
                 onArchive?.invoke()
+                dismiss()
             }
         }
 
         view.delete_session_button.setOnClickListener {
-            if (onDelete?.invoke(archivedSession!!) == true) {
-                dismiss()
-            }
+            onDelete?.invoke(archivedSession!!)
+            dismiss()
         }
 
         return view
