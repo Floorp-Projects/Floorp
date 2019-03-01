@@ -22,6 +22,8 @@ job-defaults:
     run-on-projects: []
     repo: 'https://github.com/cisco/openh264.git'
     revision: '2e1774ab6dc6c43debb0b5b628bdf122a391d521'
+    worker:
+        chain-of-trust: true
 
 jobs:
     linux32/opt:
@@ -130,7 +132,7 @@ jobs:
             - win64-clang-cl
     android-api-16/opt:
         attributes:
-            build_platform: android
+            build_platform: android-arm
             build_type: opt
         treeherder:
             platform: android-api-16/opt
@@ -157,7 +159,7 @@ jobs:
             - linux64-clang
     android-aarch64/opt:
         attributes:
-            build_platform: android
+            build_platform: android-aarch64
             build_type: opt
         treeherder:
             platform: android-5-0-aarch64/opt
@@ -184,7 +186,7 @@ jobs:
             - linux64-clang
     android-x86/opt:
         attributes:
-            build_platform: android
+            build_platform: android-x86
             build_type: opt
         treeherder:
             platform: android-4-2-x86/opt
@@ -211,7 +213,7 @@ jobs:
             - linux64-clang
     android-x86_64/opt:
         attributes:
-            build_platform: android
+            build_platform: android-x86_64
             build_type: opt
         treeherder:
             platform: android-5-0-x86_64/opt
