@@ -106,6 +106,13 @@
             'cmd/shlibsign/shlibsign.gyp:shlibsign',
           ],
           'conditions': [
+            [ 'comm_client==1', {
+              'dependencies': [
+                'cmd/smimetools/smimetools.gyp:cmsutil',
+              ],
+            }],
+          ],
+          'conditions': [
             [ 'mozilla_client==0', {
               'dependencies': [
                 'cmd/crlutil/crlutil.gyp:crlutil',
