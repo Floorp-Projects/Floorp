@@ -7,7 +7,6 @@
 
 const promise = require("devtools/shared/deprecated-sync-thenables");
 
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const {arg, DebuggerClient} = require("devtools/shared/client/debugger-client");
 const eventSource = require("devtools/shared/client/event-source");
 const {ThreadStateTypes} = require("devtools/shared/client/constants");
@@ -31,7 +30,6 @@ const noop = () => {};
 function ThreadClient(client, actor) {
   this.client = client;
   this._actor = actor;
-  this._frameCache = [];
   this._scriptCache = {};
   this._pauseGrips = {};
   this._threadGrips = {};
@@ -432,92 +430,12 @@ ThreadClient.prototype = {
   }),
 
   /**
-   * An array of cached frames. Clients can observe the framesadded and
-   * framescleared event to keep up to date on changes to this cache,
-   * and can fill it using the fillFrames method.
-   */
-  get cachedFrames() {
-    return this._frameCache;
-  },
-
-  /**
-   * true if there are more stack frames available on the server.
-   */
-  get moreFrames() {
-    return this.paused && (!this._frameCache || this._frameCache.length == 0
-          || !this._frameCache[this._frameCache.length - 1].oldest);
-  },
-
-  /**
    * Request the frame environment.
    *
    * @param frameId string
    */
   getEnvironment: function(frameId) {
     return this.request({ to: frameId, type: "getEnvironment" });
-  },
-
-  /**
-   * Ensure that at least total stack frames have been loaded in the
-   * ThreadClient's stack frame cache. A framesadded event will be
-   * sent when the stack frame cache is updated.
-   *
-   * @param total number
-   *        The minimum number of stack frames to be included.
-   * @param callback function
-   *        Optional callback function called when frames have been loaded
-   * @returns true if a framesadded notification should be expected.
-   */
-  fillFrames: function(total, callback = noop) {
-    this._assertPaused("fillFrames");
-    if (this._frameCache.length >= total) {
-      return false;
-    }
-
-    const numFrames = this._frameCache.length;
-
-    this.getFrames(numFrames, total - numFrames, (response) => {
-      if (response.error) {
-        callback(response);
-        return;
-      }
-
-      const threadGrips = DevToolsUtils.values(this._threadGrips);
-
-      for (const i in response.frames) {
-        const frame = response.frames[i];
-        if (!frame.where.source) {
-          // Older servers use urls instead, so we need to resolve
-          // them to source actors
-          for (const grip of threadGrips) {
-            if (grip instanceof SourceClient && grip.url === frame.url) {
-              frame.where.source = grip._form;
-            }
-          }
-        }
-
-        this._frameCache[frame.depth] = frame;
-      }
-
-      // If we got as many frames as we asked for, there might be more
-      // frames available.
-      this.emit("framesadded");
-
-      callback(response);
-    });
-
-    return true;
-  },
-
-  /**
-   * Clear the thread's stack frame cache. A framescleared event
-   * will be sent.
-   */
-  _clearFrames: function() {
-    if (this._frameCache.length > 0) {
-      this._frameCache = [];
-      this.emit("framescleared");
-    }
   },
 
   /**
@@ -648,7 +566,6 @@ ThreadClient.prototype = {
     // the packet around so it knows what to pause state to display
     // when it's initialized
     this._lastPausePacket = packet.type === "resumed" ? null : packet;
-    this._clearFrames();
     this._clearPauseGrips();
     packet.type === ThreadStateTypes.detached && this._clearThreadGrips();
     this.client._eventsEnabled && this.emit(packet.type, packet);
