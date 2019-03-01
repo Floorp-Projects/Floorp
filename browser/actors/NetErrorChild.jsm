@@ -623,6 +623,8 @@ class NetErrorChild extends ActorChild {
         } else {
           this.onClick(aEvent);
         }
+      } else if (this.isAboutCertError(doc)) {
+          this.recordClick(aEvent.originalTarget);
       }
       break;
     }
