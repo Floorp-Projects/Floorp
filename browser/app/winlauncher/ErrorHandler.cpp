@@ -695,6 +695,13 @@ static bool SendPing(const mozilla::LauncherError& aError) {
   }
 #endif  // defined(MOZ_LAUNCHER_PROCESS)
 
+  // We send this ping when the launcher process fails. After we start the
+  // SendPingThread, this thread falls back from running as the launcher process
+  // to running as the browser main thread. Once this happens, it will be unsafe
+  // to set up PoisonIOInterposer (since we have already spun up a background
+  // thread).
+  mozilla::SaveToEnv("MOZ_DISABLE_POISON_IO_INTERPOSER=1");
+
   // Capture aError and our module list into context for processing on another
   // thread.
   auto thdParam = mozilla::MakeUnique<PingThreadContext>(aError);
