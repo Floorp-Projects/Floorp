@@ -1184,7 +1184,7 @@ class SearchOneOffs {
     if (target.classList.contains("addengine-item")) {
       // On success, hide the panel and tell event listeners to reshow it to
       // show the new engine.
-      Services.search.addEngine(target.getAttribute("uri"), target.getAttribute("image"))
+      Services.search.addEngine(target.getAttribute("uri"), target.getAttribute("image"), false)
         .then(engine => {
           this._rebuild();
         })
