@@ -73,7 +73,7 @@ class JarStruct(object):
         '''
         assert self.MAGIC and isinstance(self.STRUCT, OrderedDict)
         self.size_fields = set(t for t in self.STRUCT.itervalues()
-                               if not t in JarStruct.TYPE_MAPPING)
+                               if t not in JarStruct.TYPE_MAPPING)
         self._values = {}
         if data:
             self._init_data(data)
@@ -102,7 +102,7 @@ class JarStruct(object):
                 value = data[offset:offset + size]
                 if isinstance(value, memoryview):
                     value = value.tobytes()
-            if not name in sizes:
+            if name not in sizes:
                 self._values[name] = value
             else:
                 sizes[name] = value
@@ -139,7 +139,7 @@ class JarStruct(object):
         '''
         serialized = struct.pack('<I', self.signature)
         sizes = dict((t, name) for name, t in self.STRUCT.iteritems()
-                     if not t in JarStruct.TYPE_MAPPING)
+                     if t not in JarStruct.TYPE_MAPPING)
         for name, t in self.STRUCT.iteritems():
             if t in JarStruct.TYPE_MAPPING:
                 format, size = JarStruct.TYPE_MAPPING[t]
@@ -170,7 +170,7 @@ class JarStruct(object):
         return self._values[key]
 
     def __setitem__(self, key, value):
-        if not key in self.STRUCT:
+        if key not in self.STRUCT:
             raise KeyError(key)
         if key in self.size_fields:
             raise AttributeError("can't set attribute")
@@ -202,6 +202,7 @@ class JarCdirEnd(JarStruct):
         ('comment_size', 'uint16'),
         ('comment', 'comment_size'),
     ])
+
 
 CDIR_END_SIZE = JarCdirEnd().size
 
@@ -260,6 +261,7 @@ class JarFileReader(object):
     File-like class for use by JarReader to give access to individual files
     within a Jar archive.
     '''
+
     def __init__(self, header, data):
         '''
         Initialize a JarFileReader. header is the local file header
@@ -341,6 +343,7 @@ class JarReader(object):
     Class with methods to read Jar files. Can open standard jar files as well
     as Mozilla jar files (see further details in the JarWriter documentation).
     '''
+
     def __init__(self, file=None, fileobj=None, data=None):
         '''
         Opens the given file as a Jar archive. Use the given file-like object
@@ -474,6 +477,7 @@ class JarWriter(object):
     archives as well as jar archives optimized for Gecko. See the documentation
     for the close() member function for a description of both layouts.
     '''
+
     def __init__(self, file=None, fileobj=None, compress=True, compress_level=9):
         '''
         Initialize a Jar archive in the given file. Use the given file-like
@@ -614,7 +618,7 @@ class JarWriter(object):
             compress = JAR_DEFLATED
         if compress is False:
             compress = JAR_STORED
-        if (isinstance(data, (JarFileReader, Deflater)) and \
+        if (isinstance(data, (JarFileReader, Deflater)) and
                 data.compress == compress):
             deflater = data
         else:
@@ -661,12 +665,12 @@ class JarWriter(object):
         '''
         new_contents = OrderedDict()
         for f in files:
-            if not f in self._contents:
+            if f not in self._contents:
                 continue
             new_contents[f] = self._contents[f]
             self._last_preloaded = f
         for f in self._contents:
-            if not f in new_contents:
+            if f not in new_contents:
                 new_contents[f] = self._contents[f]
         self._contents = new_contents
 
@@ -677,6 +681,7 @@ class Deflater(object):
     compressed unless the compressed form is smaller than the uncompressed
     data.
     '''
+
     def __init__(self, compress=True, compress_level=9):
         '''
         Initialize a Deflater. The compress argument determines how to
@@ -789,9 +794,9 @@ class Brotli(object):
     @staticmethod
     @memoize
     def brotli_tool():
-            from buildconfig import topobjdir, substs
-            return os.path.join(topobjdir, 'dist', 'host', 'bin',
-                               'bro' + substs.get('BIN_SUFFIX', ''))
+        from buildconfig import topobjdir, substs
+        return os.path.join(topobjdir, 'dist', 'host', 'bin',
+                            'bro' + substs.get('BIN_SUFFIX', ''))
 
     @staticmethod
     def run_brotli_tool(args, input):
@@ -811,7 +816,6 @@ class Brotli(object):
     @staticmethod
     def decompress(data):
         return Brotli.run_brotli_tool(['--decompress'], data)
-
 
 
 class BrotliCompress(object):
@@ -834,6 +838,7 @@ class JarLog(dict):
     access log as a list value. Only the first access to a given member of
     a jar is stored.
     '''
+
     def __init__(self, file=None, fileobj=None):
         if not fileobj:
             fileobj = open(file, 'r')
