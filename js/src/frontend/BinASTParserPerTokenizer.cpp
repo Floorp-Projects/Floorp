@@ -236,6 +236,10 @@ JS::Result<FunctionBox*> BinASTParserPerTokenizer<Tok>::buildFunctionBox(
 
     DeclarationKind declaredKind = ptr->value()->kind();
     if (DeclarationKindIsVar(declaredKind)) {
+      if (!pc_->atBodyLevel()) {
+        return raiseError(
+            "body-level FunctionDeclaration inside non-body-level context.");
+      }
       RedeclareVar(ptr, DeclarationKind::BodyLevelFunction);
     }
   }
