@@ -15,6 +15,7 @@ DevToolsModules(
     'closest-scripts.js',
     'css-grid-utils.js',
     'dbg-source.js',
+    'event-breakpoints.js',
     'event-loop.js',
     'function-call.js',
     'make-debugger.js',

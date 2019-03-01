@@ -611,6 +611,28 @@ ThreadClient.prototype = {
   }),
 
   /**
+   * Request to get the set of available event breakpoints.
+   */
+  getAvailableEventBreakpoints: DebuggerClient.requester({
+    type: "getAvailableEventBreakpoints",
+  }),
+
+  /**
+   * Request to get the IDs of the active event breakpoints.
+   */
+  getActiveEventBreakpoints: DebuggerClient.requester({
+    type: "getActiveEventBreakpoints",
+  }),
+
+  /**
+   * Request to set the IDs of the active event breakpoints.
+   */
+  setActiveEventBreakpoints: DebuggerClient.requester({
+    type: "setActiveEventBreakpoints",
+    ids: arg(0),
+  }),
+
+  /**
    * Return an instance of SourceClient for the given source actor form.
    */
   source: function(form) {
