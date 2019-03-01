@@ -4,6 +4,7 @@
 
 #include "jsfriendapi.h"
 
+#include "js/ArrayBuffer.h"  // JS::NewArrayBuffer
 #include "jsapi-tests/tests.h"
 #include "vm/ProxyObject.h"
 #include "vm/Realm.h"
@@ -66,7 +67,7 @@ BEGIN_TEST(testArrayBufferView_type) {
 }
 
 static JSObject* CreateDataView(JSContext* cx) {
-  JS::Rooted<JSObject*> buffer(cx, JS_NewArrayBuffer(cx, 8));
+  JS::Rooted<JSObject*> buffer(cx, JS::NewArrayBuffer(cx, 8));
   if (!buffer) {
     return nullptr;
   }
@@ -117,7 +118,7 @@ bool TestViewType(JSContext* cx) {
   JS::Rooted<JSObject*> buffer(cx);
   {
     AutoRealm ar(cx, otherGlobal);
-    buffer = JS_NewArrayBuffer(cx, 8);
+    buffer = JS::NewArrayBuffer(cx, 8);
     CHECK(buffer);
     CHECK(buffer->as<ArrayBufferObject>().byteLength() == 8);
   }

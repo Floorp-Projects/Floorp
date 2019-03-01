@@ -7,7 +7,10 @@
 #include "SDBConnection.h"
 
 #include "ActorsChild.h"
-#include "jsfriendapi.h"
+#include "jsfriendapi.h"     // JS_GetObjectAsArrayBufferView
+#include "js/ArrayBuffer.h"  // JS::{GetObjectAsArrayBuffer,IsArrayBufferObject}
+#include "js/RootingAPI.h"   // JS::{Handle,Rooted}
+#include "js/Value.h"        // JS::Value
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/BackgroundUtils.h"
@@ -29,7 +32,7 @@ nsresult GetWriteData(JSContext* aCx, JS::Handle<JS::Value> aValue,
     JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
 
     bool isView = false;
-    if (JS_IsArrayBufferObject(obj) ||
+    if (JS::IsArrayBufferObject(obj) ||
         (isView = JS_IsArrayBufferViewObject(obj))) {
       uint8_t* data;
       uint32_t length;
@@ -37,7 +40,7 @@ nsresult GetWriteData(JSContext* aCx, JS::Handle<JS::Value> aValue,
       if (isView) {
         JS_GetObjectAsArrayBufferView(obj, &length, &unused, &data);
       } else {
-        JS_GetObjectAsArrayBuffer(obj, &length, &data);
+        JS::GetObjectAsArrayBuffer(obj, &length, &data);
       }
 
       if (NS_WARN_IF(!aData.Assign(reinterpret_cast<char*>(data), length,
