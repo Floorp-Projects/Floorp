@@ -144,6 +144,7 @@ class XULTreeItemAccessibleBase : public AccessibleWrap {
   // Accessible
   virtual void Shutdown() override;
   virtual nsRect BoundsInAppUnits() const override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual nsIntRect BoundsInCSSPixels() const override;
   virtual GroupPos GroupPosition() override;
   virtual uint64_t NativeState() const override;
