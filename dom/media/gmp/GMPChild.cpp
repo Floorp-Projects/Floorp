@@ -331,33 +331,6 @@ bool GMPChild::GetUTF8LibPath(nsACString& aOutLibPath) {
 #endif
 }
 
-static nsCOMPtr<nsIFile> AppendFile(nsCOMPtr<nsIFile>&& aFile,
-                                    const nsString& aStr) {
-  return (aFile && NS_SUCCEEDED(aFile->Append(aStr))) ? aFile : nullptr;
-}
-
-static nsCOMPtr<nsIFile> CloneFile(const nsCOMPtr<nsIFile>& aFile) {
-  nsCOMPtr<nsIFile> clone;
-  return (aFile && NS_SUCCEEDED(aFile->Clone(getter_AddRefs(clone)))) ? clone
-                                                                      : nullptr;
-}
-
-static nsCOMPtr<nsIFile> GetParentFile(const nsCOMPtr<nsIFile>& aFile) {
-  nsCOMPtr<nsIFile> parent;
-  return (aFile && NS_SUCCEEDED(aFile->GetParent(getter_AddRefs(parent))))
-             ? parent
-             : nullptr;
-}
-
-#if defined(XP_WIN)
-static bool IsFileLeafEqualToASCII(const nsCOMPtr<nsIFile>& aFile,
-                                   const char* aStr) {
-  nsAutoString leafName;
-  return aFile && NS_SUCCEEDED(aFile->GetLeafName(leafName)) &&
-         leafName.EqualsASCII(aStr);
-}
-#endif
-
 #if defined(XP_WIN)
 #  define FIREFOX_FILE NS_LITERAL_STRING("firefox.exe")
 #  define XUL_LIB_FILE NS_LITERAL_STRING("xul.dll")
@@ -369,38 +342,25 @@ static bool IsFileLeafEqualToASCII(const nsCOMPtr<nsIFile>& aFile,
 #  define XUL_LIB_FILE NS_LITERAL_STRING("libxul.so")
 #endif
 
-static nsCOMPtr<nsIFile> GetFirefoxAppPath(
-    nsCOMPtr<nsIFile> aPluginContainerPath) {
-  MOZ_ASSERT(aPluginContainerPath);
 #if defined(XP_MACOSX)
-  // On MacOS the firefox binary is a few parent directories up from
-  // plugin-container.
+static bool GetFirefoxAppPath(nsCOMPtr<nsIFile> aPluginContainerPath,
+                              nsCOMPtr<nsIFile>& aOutFirefoxAppPath) {
   // aPluginContainerPath will end with something like:
   // xxxx/NightlyDebug.app/Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container
+  MOZ_ASSERT(aPluginContainerPath);
   nsCOMPtr<nsIFile> path = aPluginContainerPath;
   for (int i = 0; i < 4; i++) {
     nsCOMPtr<nsIFile> parent;
     if (NS_WARN_IF(NS_FAILED(path->GetParent(getter_AddRefs(parent))))) {
-      return nullptr;
+      return false;
     }
     path = parent;
   }
   MOZ_ASSERT(path);
-  return aOutFirefoxAppPath
-#else
-  nsCOMPtr<nsIFile> parent = GetParentFile(aPluginContainerPath);
-#  if XP_WIN
-  if (IsFileLeafEqualToASCII(parent, "i686")) {
-    // We must be on Windows on ARM64, where the plugin-container path will
-    // be in the 'i686' subdir. The firefox.exe is in the parent directory.
-    parent = GetParentFile(parent);
-  }
-#  endif
-  return parent;
-#endif
+  aOutFirefoxAppPath = path;
+  return true;
 }
 
-#if defined(XP_MACOSX)
 static bool GetSigPath(const int aRelativeLayers,
                        const nsString& aTargetSigFileName,
                        nsCOMPtr<nsIFile> aExecutablePath,
@@ -478,30 +438,15 @@ nsTArray<Pair<nsCString, nsCString>> GMPChild::MakeCDMHostVerificationPaths() {
     return paths;
   }
 
-#if defined(XP_WIN)
-  // On Windows on ARM64, we should also append the x86 plugin-container's
-  // xul.dll.
-  const bool isWindowsOnARM64 =
-      IsFileLeafEqualToASCII(GetParentFile(path), "i686");
-  if (isWindowsOnARM64) {
-    nsCOMPtr<nsIFile> x86XulPath =
-        AppendFile(GetParentFile(path), XUL_LIB_FILE);
-    if (FileExists(x86XulPath) && ResolveLinks(x86XulPath) &&
-        NS_SUCCEEDED(x86XulPath->GetPath(str))) {
-      nsCString filePath = NS_ConvertUTF16toUTF8(str);
-      nsCString sigFilePath = filePath + NS_LITERAL_CSTRING(".sig");
-      paths.AppendElement(
-          MakePair(std::move(filePath), std::move(sigFilePath)));
-    }
-  }
-#endif
-
   // Firefox application binary path.
-  nsCOMPtr<nsIFile> appDir = GetFirefoxAppPath(path);
-  path = AppendFile(CloneFile(appDir), FIREFOX_FILE);
-  if (FileExists(path) && ResolveLinks(path) &&
-      NS_SUCCEEDED(path->GetPath(str))) {
+  nsCOMPtr<nsIFile> appDir;
 #if defined(XP_MACOSX)
+  // On MacOS the firefox binary is a few parent directories up from
+  // plugin-container.
+  if (GetFirefoxAppPath(path, appDir) &&
+      NS_SUCCEEDED(appDir->Clone(getter_AddRefs(path))) &&
+      NS_SUCCEEDED(path->Append(FIREFOX_FILE)) && FileExists(path) &&
+      ResolveLinks(path) && NS_SUCCEEDED(path->GetPath(str))) {
     nsCString filePath = NS_ConvertUTF16toUTF8(str);
     nsCString sigFilePath;
     nsCOMPtr<nsIFile> sigFile;
@@ -515,19 +460,25 @@ nsTArray<Pair<nsCString, nsCString>> GMPChild::MakeCDMHostVerificationPaths() {
           nsCString(NS_ConvertUTF16toUTF8(str) + NS_LITERAL_CSTRING(".sig"));
     }
     paths.AppendElement(MakePair(std::move(filePath), std::move(sigFilePath)));
+  }
 #else
+  // Note: re-using 'path' var here, as on Windows/Linux we assume Firefox
+  // executable is in the same directory as plugin-container.
+  if (NS_SUCCEEDED(path->GetParent(getter_AddRefs(appDir))) &&
+      NS_SUCCEEDED(appDir->Clone(getter_AddRefs(path))) &&
+      NS_SUCCEEDED(path->Append(FIREFOX_FILE)) && FileExists(path) &&
+      ResolveLinks(path) && NS_SUCCEEDED(path->GetPath(str))) {
     paths.AppendElement(MakePair(
         nsCString(NS_ConvertUTF16toUTF8(str)),
         nsCString(NS_ConvertUTF16toUTF8(str) + NS_LITERAL_CSTRING(".sig"))));
-#endif
   }
-
+#endif
   // Libxul path. Note: re-using 'path' var here, as we assume libxul is in
   // the same directory as Firefox executable.
   appDir->GetPath(str);
-  path = AppendFile(CloneFile(appDir), XUL_LIB_FILE);
-  if (FileExists(path) && ResolveLinks(path) &&
-      NS_SUCCEEDED(path->GetPath(str))) {
+  if (NS_SUCCEEDED(appDir->Clone(getter_AddRefs(path))) &&
+      NS_SUCCEEDED(path->Append(XUL_LIB_FILE)) && FileExists(path) &&
+      ResolveLinks(path) && NS_SUCCEEDED(path->GetPath(str))) {
     nsCString filePath = NS_ConvertUTF16toUTF8(str);
     nsCString sigFilePath;
 #if defined(XP_MACOSX)
