@@ -9622,6 +9622,7 @@ exports.CSS_PROPERTIES = {
     "supports": [],
     "values": [
       "break-all",
+      "break-word",
       "inherit",
       "initial",
       "keep-all",

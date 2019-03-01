@@ -6649,7 +6649,6 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
     // Note that even if ComputeElementFromFrame() returns true,
     // eventTargetData.mContent can be nullptr here.
 
-    nsCOMPtr<nsIContent> overrideClickTarget;
     if (PointerEventHandler::IsPointerEventEnabled()) {
       // Dispatch pointer events from the mouse or touch events. Regarding
       // pointer events from mouse, we should dispatch those pointer events to
@@ -6667,7 +6666,8 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
                                   : eventTargetData.mFrame;
 
       if (pointerCapturingContent) {
-        overrideClickTarget = GetOverrideClickTarget(aGUIEvent, aFrame);
+        eventTargetData.mOverrideClickTarget =
+            GetOverrideClickTarget(aGUIEvent, aFrame);
         eventTargetData.mPresShell =
             PresShell::GetShellForEventTarget(nullptr, pointerCapturingContent);
         if (!eventTargetData.mPresShell) {
@@ -6736,8 +6736,8 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
     eventTargetData.mPresShell->PushCurrentEventInfo(eventTargetData.mFrame,
                                                      eventTargetData.mContent);
     EventHandler eventHandler(*eventTargetData.mPresShell);
-    nsresult rv = eventHandler.HandleEventInternal(aGUIEvent, aEventStatus,
-                                                   true, overrideClickTarget);
+    nsresult rv = eventHandler.HandleEventInternal(
+        aGUIEvent, aEventStatus, true, eventTargetData.mOverrideClickTarget);
 #ifdef DEBUG
     eventTargetData.mPresShell->ShowEventTargetDebug();
 #endif

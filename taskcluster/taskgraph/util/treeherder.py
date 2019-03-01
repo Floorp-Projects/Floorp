@@ -35,3 +35,21 @@ def replace_group(treeherder_symbol, new_group):
     """Add a suffix to a treeherder symbol that may contain a group."""
     _, symbol = split_symbol(treeherder_symbol)
     return join_symbol(new_group, symbol)
+
+
+def inherit_treeherder_from_dep(job, dep_job):
+    """Inherit treeherder defaults from dep_job"""
+    treeherder = job.get('treeherder', {})
+
+    dep_th_platform = dep_job.task.get('extra', {}).get(
+        'treeherder', {}).get('machine', {}).get('platform', '')
+    # XXX Doesn't yet support non-opt
+    treeherder.setdefault('platform',
+                          "{}/opt".format(dep_th_platform))
+    treeherder.setdefault(
+        'tier',
+        dep_job.task.get('extra', {}).get('treeherder', {}).get('tier', 1)
+    )
+    # Does not set symbol
+    treeherder.setdefault('kind', 'build')
+    return treeherder
