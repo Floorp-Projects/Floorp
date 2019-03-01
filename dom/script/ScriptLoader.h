@@ -341,6 +341,12 @@ class ScriptLoader final : public nsISupports {
 
   Document* GetDocument() const { return mDocument; }
 
+  /*
+   * Clear the map of loaded modules. Called when a Document object is reused
+   * for a different global.
+   */
+  void ClearModuleMap();
+
  private:
   virtual ~ScriptLoader();
 
