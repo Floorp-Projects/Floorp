@@ -456,7 +456,8 @@ public:
     }
 
     CGRGBPixel* getCG(const SkScalerContext_Mac& context, const SkGlyph& glyph,
-                      CGGlyph glyphID, size_t* rowBytesPtr, bool generateA8FromLCD);
+                      CGGlyph glyphID, size_t* rowBytesPtr, bool generateA8FromLCD,
+                      bool lightOnDark);
 
 private:
     enum {
@@ -1082,7 +1083,7 @@ SkScalerContext_Mac::SkScalerContext_Mac(sk_sp<SkTypeface_Mac> typeface,
 
 CGRGBPixel* Offscreen::getCG(const SkScalerContext_Mac& context, const SkGlyph& glyph,
                              CGGlyph glyphID, size_t* rowBytesPtr,
-                             bool generateA8FromLCD) {
+                             bool generateA8FromLCD, bool lightOnDark) {
     if (!fRGBSpace) {
         //It doesn't appear to matter what color space is specified.
         //Regular blends and antialiased text are always (s*a + d*(1-a))
@@ -1144,7 +1145,8 @@ CGRGBPixel* Offscreen::getCG(const SkScalerContext_Mac& context, const SkGlyph& 
         CGContextSetTextDrawingMode(fCG.get(), kCGTextFill);
 
         // Draw black on white to create mask. (Special path exists to speed this up in CG.)
-        CGContextSetGrayFillColor(fCG.get(), 0.0f, 1.0f);
+        // If light-on-dark is requested, draw white on black.
+        CGContextSetGrayFillColor(fCG.get(), lightOnDark ? 1.0f : 0.0f, 1.0f);
 
         // force our checks below to happen
         fDoAA = !doAA;
@@ -1167,7 +1169,8 @@ CGRGBPixel* Offscreen::getCG(const SkScalerContext_Mac& context, const SkGlyph& 
     image += (fSize.fHeight - glyph.fHeight) * fSize.fWidth;
 
     // Erase to white (or transparent black if it's a color glyph, to not composite against white).
-    uint32_t bgColor = (SkMask::kARGB32_Format != glyph.fMaskFormat) ? 0xFFFFFFFF : 0x00000000;
+    // For light-on-dark, instead erase to black.
+    uint32_t bgColor = (SkMask::kARGB32_Format != glyph.fMaskFormat) ? (lightOnDark ? 0xFF000000 : 0xFFFFFFFF) : 0x00000000;
     sk_memset_rect32(image, bgColor, glyph.fWidth, glyph.fHeight, rowBytes);
 
     float subX = 0;
@@ -1435,10 +1438,11 @@ void SkScalerContext_Mac::generateImage(const SkGlyph& glyph) {
 
     // FIXME: lcd smoothed un-hinted rasterization unsupported.
     bool requestSmooth = fRec.getHinting() != SkPaint::kNo_Hinting;
+    bool lightOnDark = (fRec.fFlags & SkScalerContext::kLightOnDark_Flag) != 0;
 
     // Draw the glyph
     size_t cgRowBytes;
-    CGRGBPixel* cgPixels = fOffscreen.getCG(*this, glyph, cgGlyph, &cgRowBytes, requestSmooth);
+    CGRGBPixel* cgPixels = fOffscreen.getCG(*this, glyph, cgGlyph, &cgRowBytes, requestSmooth, lightOnDark);
     if (cgPixels == nullptr) {
         return;
     }
@@ -1459,10 +1463,16 @@ void SkScalerContext_Mac::generateImage(const SkGlyph& glyph) {
         CGRGBPixel* addr = cgPixels;
         for (int y = 0; y < glyph.fHeight; ++y) {
             for (int x = 0; x < glyph.fWidth; ++x) {
-                int r = (addr[x] >> 16) & 0xFF;
-                int g = (addr[x] >>  8) & 0xFF;
-                int b = (addr[x] >>  0) & 0xFF;
-                addr[x] = (linear[r] << 16) | (linear[g] << 8) | linear[b];
+                int r = linear[(addr[x] >> 16) & 0xFF];
+                int g = linear[(addr[x] >>  8) & 0xFF];
+                int b = linear[(addr[x] >>  0) & 0xFF];
+                // If light-on-dark was requested, the mask is drawn inverted.
+                if (lightOnDark) {
+                    r = 255 - r;
+                    g = 255 - g;
+                    b = 255 - b;
+                }
+                addr[x] = (r << 16) | (g << 8) | b;
             }
             addr = SkTAddOffset<CGRGBPixel>(addr, cgRowBytes);
         }
@@ -2327,6 +2337,19 @@ SkScalerContext* SkTypeface_Mac::onCreateScalerContext(const SkScalerContextEffe
 }
 
 void SkTypeface_Mac::onFilterRec(SkScalerContextRec* rec) const {
+    if (rec->fMaskFormat == SkMask::kLCD16_Format ||
+        rec->fFlags & SkScalerContext::kGenA8FromLCD_Flag) {
+        SkColor color = rec->getLuminanceColor();
+        int r = SkColorGetR(color);
+        int g = SkColorGetG(color);
+        int b = SkColorGetB(color);
+        // Choose whether to draw using a light-on-dark mask based on observed
+        // color/luminance thresholds that CoreText uses.
+        if (r >= 85 && g >= 85 && b >= 85 && r + g + b >= 2 * 255) {
+            rec->fFlags |= SkScalerContext::kLightOnDark_Flag;
+        }
+    }
+
     if (rec->fFlags & SkScalerContext::kLCD_BGROrder_Flag ||
         rec->fFlags & SkScalerContext::kLCD_Vertical_Flag)
     {
