@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmGeneralizedTables()
+// |jit-test| skip-if: !wasmReftypesEnabled()
 
 // Note that negative tests not having to do with table indices have been taken
 // care of by tables-generalized.js.

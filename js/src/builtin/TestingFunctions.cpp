@@ -704,19 +704,6 @@ static bool WasmDebugSupport(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool WasmGeneralizedTables(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-#ifdef ENABLE_WASM_GENERALIZED_TABLES
-  // Generalized tables depend on anyref, though not currently on (ref T)
-  // types nor on structures or other GC-proposal features.
-  bool isSupported = wasm::HasReftypesSupport(cx);
-#else
-  bool isSupported = false;
-#endif
-  args.rval().setBoolean(isSupported);
-  return true;
-}
-
 static bool WasmCompileMode(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -4011,12 +3998,6 @@ static bool ShellCloneAndExecuteScript(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool IsSimdAvailable(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().set(BooleanValue(cx->jitSupportsSimd()));
-  return true;
-}
-
 static bool ByteSize(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   mozilla::MallocSizeOf mallocSizeOf = cx->runtime()->debuggerMallocSizeOf;
@@ -5928,10 +5909,6 @@ gc::ZealModeHelpText),
 "  Returns whether asm.js compilation is currently available or whether it is disabled\n"
 "  (e.g., by the debugger)."),
 
-    JS_FN_HELP("isSimdAvailable", IsSimdAvailable, 0, 0,
-"isSimdAvailable",
-"  Returns true if SIMD extensions are supported on this platform."),
-
     JS_FN_HELP("getJitCompilerOptions", GetJitCompilerOptions, 0, 0,
 "getJitCompilerOptions()",
 "  Return an object describing some of the JIT compiler options.\n"),
@@ -6009,12 +5986,6 @@ gc::ZealModeHelpText),
     JS_FN_HELP("wasmDebugSupport", WasmDebugSupport, 1, 0,
 "wasmDebugSupport(bool)",
 "  Returns a boolean indicating whether the WebAssembly compilers support debugging."),
-
-    JS_FN_HELP("wasmGeneralizedTables", WasmGeneralizedTables, 1, 0,
-"wasmGeneralizedTables(bool)",
-"  Returns a boolean indicating whether generalized tables are available.\n"
-"  This feature set includes 'anyref' as a table type, and new instructions\n"
-"  including table.get, table.set, table.grow, and table.size."),
 
     JS_FN_HELP("isLazyFunction", IsLazyFunction, 1, 0,
 "isLazyFunction(fun)",
