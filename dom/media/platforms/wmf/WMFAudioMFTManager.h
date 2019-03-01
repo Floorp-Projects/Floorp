@@ -49,6 +49,8 @@ class WMFAudioMFTManager : public MFTManager {
 
   const GUID& GetMFTGUID();
   const GUID& GetMediaSubtypeGUID();
+
+  bool mFirstFrame = true;
 };
 
 }  // namespace mozilla
