@@ -58,7 +58,7 @@ fun SessionBundleStorage.archive(sessionManager: SessionManager) {
 class HomeFragment : Fragment() {
     private val bus = ActionBusFactory.get(this)
     private var sessionObserver: SessionManager.Observer? = null
-    private lateinit var homeMenu: HomeMenu
+    private var homeMenu: HomeMenu? = null
     private lateinit var tabsComponent: TabsComponent
     private lateinit var sessionsComponent: SessionsComponent
 
@@ -114,7 +114,7 @@ class HomeFragment : Fragment() {
         }
 
         view.menuButton.setOnClickListener {
-            homeMenu.menuBuilder.build(requireContext()).show(
+            homeMenu?.menuBuilder?.build(requireContext())?.show(
                 anchor = it,
                 orientation = BrowserMenu.Orientation.DOWN)
         }
@@ -164,6 +164,11 @@ class HomeFragment : Fragment() {
                 BrowsingModeManager.Mode.Private -> BrowsingModeManager.Mode.Normal
             }
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        homeMenu = null
     }
 
     override fun onResume() {
