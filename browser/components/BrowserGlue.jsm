@@ -1443,9 +1443,11 @@ BrowserGlue.prototype = {
   },
 
   _sendMediaTelemetry() {
-    let win = Services.appShell.hiddenDOMWindow;
-    let v = win.document.createElementNS("http://www.w3.org/1999/xhtml", "video");
-    v.reportCanPlayTelemetry();
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
+    if (win) {
+      let v = win.document.createElementNS("http://www.w3.org/1999/xhtml", "video");
+      v.reportCanPlayTelemetry();
+    }
   },
 
   /**
