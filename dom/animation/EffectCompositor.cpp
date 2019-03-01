@@ -107,16 +107,15 @@ bool EffectCompositor::AllowCompositorAnimationsOnFrame(
 bool FindAnimationsForCompositor(
     const nsIFrame* aFrame, const nsCSSPropertyIDSet& aPropertySet,
     nsTArray<RefPtr<dom::Animation>>* aMatches /*out*/) {
-  MOZ_ASSERT(aPropertySet
-                     .Intersect(LayerAnimationInfo::GetCSSPropertiesFor(
-                         DisplayItemType::TYPE_TRANSFORM))
-                     .Equals(aPropertySet) ||
-                 aPropertySet.Equals(LayerAnimationInfo::GetCSSPropertiesFor(
-                     DisplayItemType::TYPE_OPACITY)) ||
-                 aPropertySet.Equals(LayerAnimationInfo::GetCSSPropertiesFor(
-                     DisplayItemType::TYPE_BACKGROUND_COLOR)),
-             "Should be the subset of transform-like properties, or opacity, "
-             "or background color");
+  MOZ_ASSERT(
+      aPropertySet.IsSubsetOf(LayerAnimationInfo::GetCSSPropertiesFor(
+          DisplayItemType::TYPE_TRANSFORM)) ||
+          aPropertySet.IsSubsetOf(LayerAnimationInfo::GetCSSPropertiesFor(
+              DisplayItemType::TYPE_OPACITY)) ||
+          aPropertySet.IsSubsetOf(LayerAnimationInfo::GetCSSPropertiesFor(
+              DisplayItemType::TYPE_BACKGROUND_COLOR)),
+      "Should be the subset of transform-like properties, or opacity, "
+      "or background color");
 
   MOZ_ASSERT(!aMatches || aMatches->IsEmpty(),
              "Matches array, if provided, should be empty");
