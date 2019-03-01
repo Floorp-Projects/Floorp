@@ -9,12 +9,13 @@
  */
 
 var EXPORTED_SYMBOLS = ["setTimeout", "setTimeoutWithTarget", "clearTimeout",
-                        "setInterval", "setIntervalWithTarget", "clearInterval"];
+                        "setInterval", "setIntervalWithTarget", "clearInterval",
+                        "requestIdleCallback", "cancelIdleCallback"];
 
 // This gives us >=2^30 unique timer IDs, enough for 1 per ms for 12.4 days.
 var gNextId = 1; // setTimeout and setInterval must return a positive integer
 
-var gTimerTable = new Map(); // int -> nsITimer
+var gTimerTable = new Map(); // int -> nsITimer or idleCallback
 
 // Don't generate this for every timer.
 var setTimeout_timerCallbackQI = ChromeUtils.generateQI([Ci.nsITimerCallback, Ci.nsINamed]);
@@ -86,3 +87,27 @@ var clearInterval = this.clearTimeout = function clearTimeout(aId) {
     gTimerTable.delete(aId);
   }
 };
+
+function requestIdleCallback(aCallback, aOptions) {
+  if (typeof aCallback !== "function") {
+    throw new Error("callback is not a function in requestIdleCallback");
+  }
+  let id = gNextId++;
+
+  let callback = (...aArgs) => {
+    if (gTimerTable.has(id)) {
+      gTimerTable.delete(id);
+      aCallback(...aArgs);
+    }
+  };
+
+  ChromeUtils.idleDispatch(callback, aOptions);
+  gTimerTable.set(id, callback);
+  return id;
+}
+
+function cancelIdleCallback(aId) {
+  if (gTimerTable.has(aId)) {
+    gTimerTable.delete(aId);
+  }
+}
