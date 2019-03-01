@@ -27,6 +27,28 @@
 namespace mozilla {
 namespace layers {
 
+class TextureClientForRawBufferAccessAllocationHelper
+    : public ITextureClientAllocationHelper {
+ public:
+  TextureClientForRawBufferAccessAllocationHelper(gfx::SurfaceFormat aFormat,
+                                                  gfx::IntSize aSize,
+                                                  TextureFlags aTextureFlags)
+      : ITextureClientAllocationHelper(aFormat, aSize, BackendSelector::Content,
+                                       aTextureFlags, ALLOC_DEFAULT) {}
+
+  bool IsCompatible(TextureClient* aTextureClient) override {
+    bool ret = aTextureClient->GetFormat() == mFormat &&
+               aTextureClient->GetSize() == mSize;
+    return ret;
+  }
+
+  already_AddRefed<TextureClient> Allocate(
+      KnowsCompositor* aAllocator) override {
+    return TextureClient::CreateForRawBufferAccess(
+        aAllocator, mFormat, mSize, gfx::BackendType::NONE, mTextureFlags);
+  }
+};
+
 already_AddRefed<Image> CreateSharedRGBImage(ImageContainer* aImageContainer,
                                              gfx::IntSize aSize,
                                              gfxImageFormat aImageFormat) {
@@ -61,9 +83,22 @@ SharedRGBImage::SharedRGBImage(ImageClient* aCompositable)
 SharedRGBImage::~SharedRGBImage() { MOZ_COUNT_DTOR(SharedRGBImage); }
 
 bool SharedRGBImage::Allocate(gfx::IntSize aSize, gfx::SurfaceFormat aFormat) {
+  static const uint32_t MAX_POOLED_VIDEO_COUNT = 5;
   mSize = aSize;
-  mTextureClient = mCompositable->CreateBufferTextureClient(
-      aFormat, aSize, gfx::BackendType::NONE, TextureFlags::DEFAULT);
+
+  if (!mCompositable->HasTextureClientRecycler()) {
+    // Initialize TextureClientRecycler
+    mCompositable->GetTextureClientRecycler()->SetMaxPoolSize(
+        MAX_POOLED_VIDEO_COUNT);
+  }
+
+  {
+    TextureClientForRawBufferAccessAllocationHelper helper(
+        aFormat, aSize, mCompositable->GetTextureFlags());
+    mTextureClient =
+        mCompositable->GetTextureClientRecycler()->CreateOrRecycle(helper);
+  }
+
   return !!mTextureClient;
 }
 
