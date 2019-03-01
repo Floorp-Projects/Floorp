@@ -3514,7 +3514,7 @@ window._gBrowser = {
     // because we only want to reset permissions on user reload.
     SitePermissions.clearTemporaryPermissions(browser);
     // Also reset DOS mitigations for the basic auth prompt on reload.
-    delete browser.canceledAuthenticationPromptCounter;
+    delete browser.authPromptAbuseCounter;
     PanelMultiView.hidePopup(gIdentityHandler._identityPopup);
     browser.reload();
   },
