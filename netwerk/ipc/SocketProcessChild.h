@@ -35,7 +35,8 @@ class SocketProcessChild final : public PSocketProcessChild {
   mozilla::ipc::IPCResult RecvPreferenceUpdate(const Pref& aPref);
   mozilla::ipc::IPCResult RecvRequestMemoryReport(
       const uint32_t& generation, const bool& anonymize,
-      const bool& minimizeMemoryUsage, const MaybeFileDesc& DMDFile);
+      const bool& minimizeMemoryUsage,
+      const Maybe<ipc::FileDescriptor>& DMDFile);
   mozilla::ipc::IPCResult RecvSetOffline(const bool& aOffline);
   mozilla::ipc::IPCResult RecvInitSocketProcessBridgeParent(
       const ProcessId& aContentProcessId,

@@ -167,8 +167,6 @@ class gfxWindowsPlatform : public gfxPlatform {
   void SchedulePaintIfDeviceReset() override;
   void CheckForContentOnlyDeviceReset();
 
-  bool AllowOpenGLCanvas() override;
-
   mozilla::gfx::BackendType GetContentBackendFor(
       mozilla::layers::LayersBackend aLayers) override;
 

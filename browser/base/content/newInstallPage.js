@@ -44,8 +44,6 @@ async function submitForm(event) {
   event.preventDefault();
 
   let input = document.getElementById("sync-input");
-  input.disabled = true;
-  document.getElementById("sync-button").disabled = true;
 
   let { flowId, flowBeginTime } = await metrics;
 
@@ -59,6 +57,7 @@ async function submitForm(event) {
   });
 
   window.open(requestURL, "_blank", "noopener");
+  document.getElementById("sync").hidden = true;
 }
 
 const endpoint = RPMGetFxAccountsEndpoint(ENTRYPOINT);

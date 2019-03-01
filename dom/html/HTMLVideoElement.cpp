@@ -35,14 +35,33 @@
 #include <algorithm>
 #include <limits>
 
-NS_IMPL_NS_NEW_HTML_ELEMENT(Video)
+nsGenericHTMLElement* NS_NewHTMLVideoElement(
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
+    mozilla::dom::FromParser aFromParser) {
+  mozilla::dom::HTMLVideoElement* element =
+      new mozilla::dom::HTMLVideoElement(std::move(aNodeInfo));
+  element->Init();
+  return element;
+}
 
 namespace mozilla {
 namespace dom {
 
 static bool sVideoStatsEnabled;
 
-NS_IMPL_ELEMENT_CLONE(HTMLVideoElement)
+nsresult HTMLVideoElement::Clone(mozilla::dom::NodeInfo* aNodeInfo,
+                                 nsINode** aResult) const {
+  *aResult = nullptr;
+  RefPtr<mozilla::dom::NodeInfo> ni(aNodeInfo);
+  HTMLVideoElement* it = new HTMLVideoElement(ni.forget());
+  it->Init();
+  nsCOMPtr<nsINode> kungFuDeathGrip = it;
+  nsresult rv = const_cast<HTMLVideoElement*>(this)->CopyInnerTo(it);
+  if (NS_SUCCEEDED(rv)) {
+    kungFuDeathGrip.swap(*aResult);
+  }
+  return rv;
+}
 
 HTMLVideoElement::HTMLVideoElement(already_AddRefed<NodeInfo>&& aNodeInfo)
     : HTMLMediaElement(std::move(aNodeInfo)), mIsOrientationLocked(false) {
@@ -308,7 +327,8 @@ void HTMLVideoElement::ReleaseVideoWakeLockIfExists() {
   }
 }
 
-void HTMLVideoElement::Init() {
+/* static */
+void HTMLVideoElement::InitStatics() {
   Preferences::AddBoolVarCache(&sVideoStatsEnabled,
                                "media.video_stats.enabled");
 }

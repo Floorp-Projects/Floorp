@@ -125,16 +125,6 @@ uint8_t* SourceSurfaceSkia::GetData() {
   if (!mImage) {
     return nullptr;
   }
-#ifdef USE_SKIA_GPU
-  if (mImage->isTextureBacked()) {
-    if (sk_sp<SkImage> raster =
-            ReadSkImage(mImage, MakeSkiaImageInfo(mSize, mFormat), mStride)) {
-      mImage = raster;
-    } else {
-      gfxCriticalError() << "Failed making Skia raster image for GPU surface";
-    }
-  }
-#endif
   SkPixmap pixmap;
   if (!mImage->peekPixels(&pixmap)) {
     gfxCriticalError() << "Failed accessing pixels for Skia raster image";

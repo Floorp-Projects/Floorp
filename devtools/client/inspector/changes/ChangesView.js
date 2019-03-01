@@ -147,6 +147,22 @@ class ChangesView {
   }
 
   /**
+   * Handler for the "Copy Declaration" option from the context menu.
+   * Builds a CSS declaration string with the property name and value, and copies it
+   * to the clipboard. The declaration is commented out if it is marked as removed.
+   *
+   * @param {DOMElement} element
+   *        Host element of a CSS declaration rendered the Changes panel.
+   */
+  copyDeclaration(element) {
+    const name = element.querySelector(".changes__declaration-name").textContent;
+    const value = element.querySelector(".changes__declaration-value").textContent;
+    const isRemoved = element.classList.contains("diff-remove");
+    const text = isRemoved ? `/* ${name}: ${value}; */` : `${name}: ${value};`;
+    clipboardHelper.copyString(text);
+  }
+
+  /**
    * Handler for the "Copy Rule" option from the context menu.
    * Gets the full content of the target CSS rule (including any changes applied)
    * and copies it to the clipboard.

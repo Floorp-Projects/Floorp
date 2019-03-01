@@ -113,10 +113,10 @@ class SocketProcessMemoryReporter : public MemoryReportingProcess {
 
   bool IsAlive() const override;
 
-  bool SendRequestMemoryReport(const uint32_t& aGeneration,
-                               const bool& aAnonymize,
-                               const bool& aMinimizeMemoryUsage,
-                               const dom::MaybeFileDesc& aDMDFile) override;
+  bool SendRequestMemoryReport(
+      const uint32_t& aGeneration, const bool& aAnonymize,
+      const bool& aMinimizeMemoryUsage,
+      const Maybe<mozilla::ipc::FileDescriptor>& aDMDFile) override;
 
   int32_t Pid() const override;
 

@@ -58,6 +58,10 @@ const TEST_DATA = [
 ];
 
 add_task(async function() {
+  // Bug 1517210: GC heuristics are broken for this test, so that the test ends up
+  // running out of memory if we don't force to reduce the GC side before/after the test.
+  Cu.forceShrinkingGC();
+
   requestLongerTimeout(4);
 
   info("Starting the test with the pref set to true before toolbox is opened");
@@ -79,6 +83,10 @@ add_task(async function() {
 
   info("Resetting " + PREF_UA_STYLES);
   Services.prefs.clearUserPref(PREF_UA_STYLES);
+
+  // Bug 1517210: GC heuristics are broken for this test, so that the test ends up
+  // running out of memory if we don't force to reduce the GC side before/after the test.
+  Cu.forceShrinkingGC();
 });
 
 async function setUserAgentStylesPref(val) {

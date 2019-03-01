@@ -1636,6 +1636,7 @@ void nsTextEditorState::SetSelectionRange(
     props.SetEnd(aEnd);
     props.SetDirection(aDirection);
   } else {
+    MOZ_ASSERT(mBoundFrame, "Our frame should still be valid");
     WeakPtr<nsTextEditorState> self(this);
     aRv = mBoundFrame->SetSelectionRange(aStart, aEnd, aDirection);
     if (aRv.Failed() || !self.get()) {
@@ -2461,9 +2462,8 @@ bool nsTextEditorState::SetValue(const nsAString& aValue,
 
   // TODO(emilio): It seems wrong to pass ValueChangeKind::Script if
   // BySetUserInput is in aFlags.
-  auto changeKind = (aFlags & eSetValue_Internal)
-    ? ValueChangeKind::Internal
-    : ValueChangeKind::Script;
+  auto changeKind = (aFlags & eSetValue_Internal) ? ValueChangeKind::Internal
+                                                  : ValueChangeKind::Script;
 
   // XXX Should we stop notifying "value changed" if mTextCtrlElement has
   //     been cleared?

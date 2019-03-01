@@ -109,11 +109,6 @@
 #    pragma GCC diagnostic ignored "-Wshadow"
 #  endif
 #  include "skia/include/core/SkGraphics.h"
-#  ifdef USE_SKIA_GPU
-#    include "skia/include/gpu/GrContext.h"
-#    include "skia/include/gpu/gl/GrGLInterface.h"
-#    include "SkiaGLGlue.h"
-#  endif
 #  ifdef MOZ_ENABLE_FREETYPE
 #    include "skia/include/ports/SkTypeface_cairo.h"
 #  endif
@@ -123,10 +118,6 @@
 #  endif
 static const uint32_t kDefaultGlyphCacheSize = -1;
 
-#endif
-
-#if !defined(USE_SKIA) || !defined(USE_SKIA_GPU)
-class mozilla::gl::SkiaGLGlue : public GenericAtomicRefCounted {};
 #endif
 
 #include "mozilla/Preferences.h"
@@ -448,7 +439,6 @@ void gfxPlatform::OnMemoryPressure(layers::MemoryPressureReason aWhy) {
   gfxGradientCache::PurgeAllCaches();
   gfxFontMissingGlyphs::Purge();
   PurgeSkiaFontCache();
-  PurgeSkiaGPUCache();
   if (XRE_IsParentProcess()) {
     layers::CompositorManagerChild* manager =
         CompositorManagerChild::GetInstance();
@@ -474,8 +464,6 @@ gfxPlatform::gfxPlatform()
   mGraphiteShapingEnabled = UNINITIALIZED_VALUE;
   mOpenTypeSVGEnabled = UNINITIALIZED_VALUE;
   mBidiNumeralOption = UNINITIALIZED_VALUE;
-
-  mSkiaGlue = nullptr;
 
   InitBackendPrefs(GetBackendPrefs());
 
@@ -888,7 +876,7 @@ void gfxPlatform::Init() {
         gfxPrefs::WebGLForceMSAA());
     // Prefs that don't fit into any of the other sections
     forcedPrefs.AppendPrintf("-T%d%d%d) ", gfxPrefs::AndroidRGB16Force(),
-                             gfxPrefs::CanvasAzureAccelerated(),
+                             0, // SkiaGL canvas no longer supported
                              gfxPrefs::ForceShmemTiles());
     ScopedGfxFeatureReporter::AppNote(forcedPrefs);
   }
@@ -1195,7 +1183,6 @@ void gfxPlatform::Shutdown() {
     gPlatform->mMemoryPressureObserver->Unregister();
     gPlatform->mMemoryPressureObserver = nullptr;
   }
-  gPlatform->mSkiaGlue = nullptr;
 
   if (XRE_IsParentProcess()) {
     gPlatform->mVsyncSource->Shutdown();
@@ -1577,114 +1564,7 @@ bool gfxPlatform::SupportsAzureContentForDrawTarget(DrawTarget* aTarget) {
     return false;
   }
 
-#ifdef USE_SKIA_GPU
-  // Skia content rendering doesn't support GPU acceleration, so we can't
-  // use the same backend if the current backend is accelerated.
-  if ((aTarget->GetType() == DrawTargetType::HARDWARE_RASTER) &&
-      (aTarget->GetBackendType() == BackendType::SKIA)) {
-    return false;
-  }
-#endif
-
   return SupportsAzureContentForType(aTarget->GetBackendType());
-}
-
-bool gfxPlatform::AllowOpenGLCanvas() {
-  // For now, only allow Skia+OpenGL, unless it's blocked.
-  // Allow acceleration on Skia if the preference is set, unless it's blocked
-  // as long as we have the accelerated layers
-
-  // The compositor backend is only set correctly in the parent process,
-  // so we let content process always assume correct compositor backend.
-  // The callers have to do the right thing.
-  //
-  // XXX Disable SkiaGL on WebRender, since there is a case that R8G8B8X8
-  // is used, but WebRender does not support R8G8B8X8.
-  bool correctBackend =
-      !XRE_IsParentProcess() ||
-      (mCompositorBackend == LayersBackend::LAYERS_OPENGL &&
-       (GetContentBackendFor(mCompositorBackend) == BackendType::SKIA));
-
-  if (gfxPrefs::CanvasAzureAccelerated() && correctBackend) {
-    nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
-    int32_t status;
-    nsCString discardFailureId;
-    return !gfxInfo || (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(
-                            nsIGfxInfo::FEATURE_CANVAS2D_ACCELERATION,
-                            discardFailureId, &status)) &&
-                        status == nsIGfxInfo::FEATURE_STATUS_OK);
-  }
-  return false;
-}
-
-void gfxPlatform::InitializeSkiaCacheLimits() {
-  if (AllowOpenGLCanvas()) {
-#ifdef USE_SKIA_GPU
-    bool usingDynamicCache = gfxPrefs::CanvasSkiaGLDynamicCache();
-    int cacheItemLimit = gfxPrefs::CanvasSkiaGLCacheItems();
-    uint64_t cacheSizeLimit =
-        std::max(gfxPrefs::CanvasSkiaGLCacheSize(), (int32_t)0);
-
-    // Prefs are in megabytes, but we want the sizes in bytes
-    cacheSizeLimit *= 1024 * 1024;
-
-    if (usingDynamicCache) {
-      if (mTotalSystemMemory < 512 * 1024 * 1024) {
-        // We need a very minimal cache on anything smaller than 512mb.
-        // Note the large jump as we cross 512mb (from 2mb to 32mb).
-        cacheSizeLimit = 2 * 1024 * 1024;
-      } else if (mTotalSystemMemory > 0) {
-        cacheSizeLimit = mTotalSystemMemory / 16;
-      }
-    }
-
-    // Ensure cache size doesn't overflow on 32-bit platforms.
-    cacheSizeLimit = std::min(cacheSizeLimit, (uint64_t)SIZE_MAX);
-
-#  ifdef DEBUG
-    printf_stderr("Determined SkiaGL cache limits: Size %" PRIu64
-                  ", Items: %i\n",
-                  cacheSizeLimit, cacheItemLimit);
-#  endif
-
-    mSkiaGlue->GetGrContext()->setResourceCacheLimits(cacheItemLimit,
-                                                      (size_t)cacheSizeLimit);
-#endif
-  }
-}
-
-SkiaGLGlue* gfxPlatform::GetSkiaGLGlue() {
-#ifdef USE_SKIA_GPU
-  // Check the accelerated Canvas is enabled for the first time,
-  // because the callers should check it before using.
-  if (!mSkiaGlue && !AllowOpenGLCanvas()) {
-    return nullptr;
-  }
-
-  if (!mSkiaGlue) {
-    /* Dummy context. We always draw into a FBO.
-     *
-     * FIXME: This should be stored in TLS or something, since there needs to be
-     * one for each thread using it. As it stands, this only works on the main
-     * thread.
-     */
-    RefPtr<GLContext> glContext;
-    nsCString discardFailureId;
-    glContext = GLContextProvider::CreateHeadless(
-        CreateContextFlags::REQUIRE_COMPAT_PROFILE |
-            CreateContextFlags::ALLOW_OFFLINE_RENDERER,
-        &discardFailureId);
-    if (!glContext) {
-      printf_stderr("Failed to create GLContext for SkiaGL!\n");
-      return nullptr;
-    }
-    mSkiaGlue = new SkiaGLGlue(glContext);
-    MOZ_ASSERT(mSkiaGlue->GetGrContext(), "No GrContext");
-    InitializeSkiaCacheLimits();
-  }
-#endif
-
-  return mSkiaGlue;
 }
 
 void gfxPlatform::PurgeSkiaFontCache() {
@@ -1695,19 +1575,6 @@ void gfxPlatform::PurgeSkiaFontCache() {
   }
 #endif
 }
-
-void gfxPlatform::PurgeSkiaGPUCache() {
-#ifdef USE_SKIA_GPU
-  if (!mSkiaGlue) return;
-
-  mSkiaGlue->GetGrContext()->freeGpuResources();
-  // GrContext::flush() doesn't call glFlush. Call it here.
-  mSkiaGlue->GetGLContext()->MakeCurrent();
-  mSkiaGlue->GetGLContext()->fFlush();
-#endif
-}
-
-bool gfxPlatform::HasEnoughTotalSystemMemoryForSkiaGL() { return true; }
 
 already_AddRefed<DrawTarget> gfxPlatform::CreateDrawTargetForBackend(
     BackendType aBackend, const IntSize& aSize, SurfaceFormat aFormat) {
@@ -3139,8 +3006,6 @@ void gfxPlatform::GetAzureBackendInfo(mozilla::widget::InfoObject& aObj) {
                         GetBackendName(mFallbackCanvasBackend));
     aObj.DefineProperty("AzureContentBackend", GetBackendName(mContentBackend));
   }
-
-  aObj.DefineProperty("AzureCanvasAccelerated", AllowOpenGLCanvas());
 }
 
 void gfxPlatform::GetApzSupportInfo(mozilla::widget::InfoObject& aObj) {

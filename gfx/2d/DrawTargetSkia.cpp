@@ -29,13 +29,6 @@
 #include "Swizzle.h"
 #include <algorithm>
 
-#ifdef USE_SKIA_GPU
-#  include "GLDefs.h"
-#  include "skia/include/gpu/GrContext.h"
-#  include "skia/include/gpu/GrTexture.h"
-#  include "skia/include/gpu/gl/GrGLInterface.h"
-#endif
-
 #ifdef MOZ_WIDGET_COCOA
 #  include "BorrowedContext.h"
 #  include <ApplicationServices/ApplicationServices.h>
@@ -649,11 +642,6 @@ void DrawTargetSkia::DrawSurface(SourceSurface* aSurface, const Rect& aDest,
 }
 
 DrawTargetType DrawTargetSkia::GetType() const {
-#ifdef USE_SKIA_GPU
-  if (mGrContext) {
-    return DrawTargetType::HARDWARE_RASTER;
-  }
-#endif
   return DrawTargetType::SOFTWARE_RASTER;
 }
 
@@ -700,10 +688,9 @@ void DrawTargetSkia::DrawSurfaceWithShadow(SourceSurface* aSurface,
   auto shadowDest = IntPoint::Round(aDest + aOffset);
 
   SkBitmap blurMask;
-  if (!UsingSkiaGPU() && ExtractAlphaBitmap(image, &blurMask)) {
-    // Prefer using our own box blur instead of Skia's when we're
-    // not using the GPU. It currently performs much better than
-    // SkBlurImageFilter or SkBlurMaskFilter on the CPU.
+  if (ExtractAlphaBitmap(image, &blurMask)) {
+    // Prefer using our own box blur instead of Skia's. It currently performs
+    // much better than SkBlurImageFilter or SkBlurMaskFilter on the CPU.
     AlphaBoxBlur blur(Rect(0, 0, blurMask.width(), blurMask.height()),
                       int32_t(blurMask.rowBytes()), aSigma, aSigma);
     blur.Blur(reinterpret_cast<uint8_t*>(blurMask.getPixels()));
@@ -1587,18 +1574,6 @@ already_AddRefed<SourceSurface> DrawTargetSkia::CreateSourceSurfaceFromData(
 already_AddRefed<DrawTarget> DrawTargetSkia::CreateSimilarDrawTarget(
     const IntSize& aSize, SurfaceFormat aFormat) const {
   RefPtr<DrawTargetSkia> target = new DrawTargetSkia();
-#ifdef USE_SKIA_GPU
-  if (UsingSkiaGPU()) {
-    // Try to create a GPU draw target first if we're currently using the GPU.
-    // Mark the DT as cached so that shadow DTs, extracted subrects, and similar
-    // can be reused.
-    if (target->InitWithGrContext(mGrContext.get(), aSize, aFormat, true)) {
-      return target.forget();
-    }
-    // Otherwise, just fall back to a software draw target.
-  }
-#endif
-
 #ifdef DEBUG
   if (!IsBackedByPixels(mCanvas)) {
     // If our canvas is backed by vector storage such as PDF then we want to
@@ -1620,57 +1595,9 @@ bool DrawTargetSkia::CanCreateSimilarDrawTarget(const IntSize& aSize,
   return size_t(std::max(aSize.width, aSize.height)) < GetMaxSurfaceSize();
 }
 
-bool DrawTargetSkia::UsingSkiaGPU() const {
-#ifdef USE_SKIA_GPU
-  return !!mGrContext;
-#else
-  return false;
-#endif
-}
-
-#ifdef USE_SKIA_GPU
-already_AddRefed<SourceSurface> DrawTargetSkia::OptimizeGPUSourceSurface(
-    SourceSurface* aSurface) const {
-  // Check if the underlying SkImage already has an associated GrTexture.
-  sk_sp<SkImage> image = GetSkImageForSurface(aSurface);
-  if (!image || image->isTextureBacked()) {
-    RefPtr<SourceSurface> surface(aSurface);
-    return surface.forget();
-  }
-
-  // Upload the SkImage to a GrTexture otherwise.
-  sk_sp<SkImage> texture = image->makeTextureImage(mGrContext.get(), nullptr);
-  if (texture) {
-    // Create a new SourceSurfaceSkia whose SkImage contains the GrTexture.
-    RefPtr<SourceSurfaceSkia> surface = new SourceSurfaceSkia();
-    if (surface->InitFromImage(texture, aSurface->GetFormat())) {
-      return surface.forget();
-    }
-  }
-
-  // The data was too big to fit in a GrTexture.
-  if (aSurface->GetType() == SurfaceType::SKIA) {
-    // It is already a Skia source surface, so just reuse it as-is.
-    RefPtr<SourceSurface> surface(aSurface);
-    return surface.forget();
-  }
-
-  // Wrap it in a Skia source surface so that can do tiled uploads on-demand.
-  RefPtr<SourceSurfaceSkia> surface = new SourceSurfaceSkia();
-  surface->InitFromImage(image);
-  return surface.forget();
-}
-#endif
-
 already_AddRefed<SourceSurface>
 DrawTargetSkia::OptimizeSourceSurfaceForUnknownAlpha(
     SourceSurface* aSurface) const {
-#ifdef USE_SKIA_GPU
-  if (UsingSkiaGPU()) {
-    return OptimizeGPUSourceSurface(aSurface);
-  }
-#endif
-
   if (aSurface->GetType() == SurfaceType::SKIA) {
     RefPtr<SourceSurface> surface(aSurface);
     return surface.forget();
@@ -1690,12 +1617,6 @@ DrawTargetSkia::OptimizeSourceSurfaceForUnknownAlpha(
 
 already_AddRefed<SourceSurface> DrawTargetSkia::OptimizeSourceSurface(
     SourceSurface* aSurface) const {
-#ifdef USE_SKIA_GPU
-  if (UsingSkiaGPU()) {
-    return OptimizeGPUSourceSurface(aSurface);
-  }
-#endif
-
   if (aSurface->GetType() == SurfaceType::SKIA) {
     RefPtr<SourceSurface> surface(aSurface);
     return surface.forget();
@@ -1714,48 +1635,9 @@ already_AddRefed<SourceSurface> DrawTargetSkia::OptimizeSourceSurface(
   return dataSurface.forget();
 }
 
-#ifdef USE_SKIA_GPU
-static inline GrGLenum GfxFormatToGrGLFormat(SurfaceFormat format) {
-  switch (format) {
-    case SurfaceFormat::B8G8R8A8:
-      return LOCAL_GL_BGRA8_EXT;
-    case SurfaceFormat::B8G8R8X8:
-      // We probably need to do something here.
-      return LOCAL_GL_BGRA8_EXT;
-    case SurfaceFormat::R5G6B5_UINT16:
-      return LOCAL_GL_RGB565;
-    case SurfaceFormat::A8:
-      return LOCAL_GL_ALPHA8;
-    default:
-      return LOCAL_GL_RGBA8;
-  }
-}
-#endif
-
 already_AddRefed<SourceSurface>
 DrawTargetSkia::CreateSourceSurfaceFromNativeSurface(
     const NativeSurface& aSurface) const {
-#ifdef USE_SKIA_GPU
-  if (aSurface.mType == NativeSurfaceType::OPENGL_TEXTURE && UsingSkiaGPU()) {
-    // Wrap the OpenGL texture id in a Skia texture handle.
-    GrGLTextureInfo texInfo;
-    texInfo.fTarget = LOCAL_GL_TEXTURE_2D;
-    texInfo.fID = (GrGLuint)(uintptr_t)aSurface.mSurface;
-    texInfo.fFormat = GfxFormatToGrGLFormat(aSurface.mFormat);
-    GrBackendTexture texDesc(aSurface.mSize.width, aSurface.mSize.height,
-                             GrMipMapped::kNo, texInfo);
-    sk_sp<SkImage> texture = SkImage::MakeFromAdoptedTexture(
-        mGrContext.get(), texDesc, kTopLeft_GrSurfaceOrigin,
-        GfxFormatToSkiaColorType(aSurface.mFormat),
-        GfxFormatToSkiaAlphaType(aSurface.mFormat));
-    RefPtr<SourceSurfaceSkia> newSurf = new SourceSurfaceSkia();
-    if (texture && newSurf->InitFromImage(texture, aSurface.mFormat)) {
-      return newSurf.forget();
-    }
-    return nullptr;
-  }
-#endif
-
   return nullptr;
 }
 
@@ -1838,55 +1720,6 @@ bool DrawTargetSkia::Init(SkCanvas* aCanvas) {
   return true;
 }
 
-#ifdef USE_SKIA_GPU
-/** Indicating a DT should be cached means that space will be reserved in Skia's
- * cache for the render target at creation time, with any unused resources
- * exceeding the cache limits being purged. When the DT is freed, it will then
- * be guaranteed to be kept around for subsequent allocations until it gets
- * incidentally purged.
- *
- * If it is not marked as cached, no space will be purged to make room for the
- * render target in the cache. When the DT is freed, If there is space within
- * the resource limits it may be added to the cache, otherwise it will be freed
- * immediately if the cache is already full.
- *
- * If you want to ensure that the resources will be kept around for reuse, it is
- * better to mark them as cached. Such resources should be short-lived to ensure
- * they don't permanently tie up cache resource limits. Long-lived resources
- * should generally be left as uncached.
- *
- * In neither case will cache resource limits affect whether the resource
- * allocation succeeds. The amount of in-use GPU resources is allowed to exceed
- * the size of the cache. Thus, only hard GPU out-of-memory conditions will
- * cause resource allocation to fail.
- */
-bool DrawTargetSkia::InitWithGrContext(GrContext* aGrContext,
-                                       const IntSize& aSize,
-                                       SurfaceFormat aFormat, bool aCached) {
-  MOZ_ASSERT(aGrContext, "null GrContext");
-
-  if (size_t(std::max(aSize.width, aSize.height)) > GetMaxSurfaceSize()) {
-    return false;
-  }
-
-  // Create a GPU rendertarget/texture using the supplied GrContext.
-  // MakeRenderTarget also implicitly clears the underlying texture on creation.
-  mSurface = SkSurface::MakeRenderTarget(aGrContext, SkBudgeted(aCached),
-                                         MakeSkiaImageInfo(aSize, aFormat));
-  if (!mSurface) {
-    return false;
-  }
-
-  mGrContext = sk_ref_sp(aGrContext);
-  mSize = aSize;
-  mFormat = aFormat;
-  mCanvas = mSurface->getCanvas();
-  SetPermitSubpixelAA(IsOpaque(mFormat));
-  return true;
-}
-
-#endif
-
 bool DrawTargetSkia::Init(unsigned char* aData, const IntSize& aSize,
                           int32_t aStride, SurfaceFormat aFormat,
                           bool aUninitialized) {
@@ -1914,16 +1747,6 @@ void DrawTargetSkia::SetTransform(const Matrix& aTransform) {
 }
 
 void* DrawTargetSkia::GetNativeSurface(NativeSurfaceType aType) {
-#ifdef USE_SKIA_GPU
-  if (aType == NativeSurfaceType::OPENGL_TEXTURE && mSurface) {
-    GrBackendTexture tex =
-        mSurface->getBackendTexture(SkSurface::kFlushRead_BackendHandleAccess);
-    GrGLTextureInfo info;
-    if (tex.getGLTextureInfo(&info)) {
-      return (void*)(uintptr_t)info.fID;
-    }
-  }
-#endif
   return nullptr;
 }
 
