@@ -170,7 +170,7 @@ enum class Op {
   TeeLocal = 0x22,
   GetGlobal = 0x23,
   SetGlobal = 0x24,
-  TableGet = 0x25,              // Generalized table ops,
+  TableGet = 0x25,              // Reftypes,
   TableSet = 0x26,              //   per proposal as of February 2019
 
   // Memory-related operators
@@ -382,7 +382,7 @@ enum class MiscOp {
   ElemDrop = 0x0d,
   TableCopy = 0x0e,
 
-  // Generalized table operations, per proposal as of February 2019.
+  // Reftypes, per proposal as of February 2019.
   TableGrow = 0x0f,
   TableSize = 0x10,
   // TableFill = 0x11, // reserved
