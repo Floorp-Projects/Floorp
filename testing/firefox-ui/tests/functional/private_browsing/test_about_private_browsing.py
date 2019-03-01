@@ -38,9 +38,9 @@ class TestAboutPrivateBrowsing(PuppeteerMixin, MarionetteTestCase):
             self.marionette.navigate('about:privatebrowsing')
 
             status_node = self.marionette.find_element(By.CSS_SELECTOR, 'p.showNormal')
-            # self.assertEqual(status_node.text,
-            #                 self.browser.localize_entity('aboutPrivateBrowsing.notPrivate'),
-            #                 'Status text indicates we are not in private browsing mode')
+            self.assertEqual(status_node.text,
+                             self.browser.localize_entity('aboutPrivateBrowsing.notPrivate'),
+                             'Status text indicates we are not in private browsing mode')
 
         def window_opener(win):
             with win.marionette.using_context('content'):
@@ -96,9 +96,9 @@ class TestAboutPrivateBrowsingWithSearch(PuppeteerMixin, MarionetteTestCase):
             self.marionette.navigate('about:privatebrowsing')
 
             status_node = self.marionette.find_element(By.CSS_SELECTOR, 'p.showNormal')
-            #self.assertEqual(status_node.text,
-            #                 self.browser.localize_entity('aboutPrivateBrowsing.notPrivate'),
-            #                 'Status text indicates we are not in private browsing mode')
+            self.assertEqual(status_node.text,
+                             self.browser.localize_entity('aboutPrivateBrowsing.notPrivate'),
+                             'Status text indicates we are not in private browsing mode')
 
         def window_opener(win):
             with win.marionette.using_context('content'):
