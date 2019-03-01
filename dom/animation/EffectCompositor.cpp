@@ -19,6 +19,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/EffectSet.h"
+#include "mozilla/LayerAnimationInfo.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ServoBindings.h"  // Servo_GetProperties_Overriding_Animation
 #include "mozilla/ServoStyleSet.h"
@@ -28,6 +29,7 @@
 #include "nsCSSPseudoElements.h"
 #include "nsCSSPropertyIDSet.h"
 #include "nsCSSProps.h"
+#include "nsDisplayItemTypes.h"
 #include "nsAtom.h"
 #include "nsIPresShell.h"
 #include "nsIPresShellInlines.h"
@@ -466,6 +468,21 @@ EffectCompositor::GetAnimationsForCompositor(const nsIFrame* aFrame,
              "If return value is true, matches array should be non-empty");
 
   return result;
+}
+
+/* static */
+void EffectCompositor::ClearIsRunningOnCompositor(const nsIFrame* aFrame,
+                                                  DisplayItemType aType) {
+  EffectSet* effects = EffectSet::GetEffectSet(aFrame);
+  if (!effects) {
+    return;
+  }
+
+  const nsCSSPropertyIDSet& propertySet =
+      LayerAnimationInfo::GetCSSPropertiesFor(aType);
+  for (KeyframeEffect* effect : *effects) {
+    effect->SetIsRunningOnCompositor(propertySet, false);
+  }
 }
 
 /* static */

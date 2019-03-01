@@ -245,6 +245,8 @@ class KeyframeEffect : public AnimationEffect {
   // Returns true if at least one property is being animated on compositor.
   bool IsRunningOnCompositor() const;
   void SetIsRunningOnCompositor(nsCSSPropertyID aProperty, bool aIsRunning);
+  void SetIsRunningOnCompositor(const nsCSSPropertyIDSet& aPropertySet,
+                                bool aIsRunning);
   void ResetIsRunningOnCompositor();
 
   // Returns true if this effect, applied to |aFrame|, contains properties
