@@ -18,9 +18,12 @@
 #include "nsAppShellCID.h"
 #include "nsIXULWindow.h"
 #include "mozilla/Services.h"
+#include "mozilla/WidgetUtils.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsString.h"
 #include "nsIWidget.h"
+#include "nsIWindowMediator.h"
+#include "nsPIDOMWindow.h"
 
 /* mingw currently doesn't support windows.ui.viewmanagement.h, so we disable it
  * until it's fixed. */
@@ -136,27 +139,31 @@ WindowsUIUtils::UpdateTabletModeState() {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIAppShellService> appShell(
-      do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
-  nsCOMPtr<nsIXULWindow> hiddenWindow;
-
-  nsresult rv = appShell->GetHiddenWindow(getter_AddRefs(hiddenWindow));
+  nsresult rv;
+  nsCOMPtr<nsIWindowMediator> winMediator(
+      do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv));
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  nsCOMPtr<nsIDocShell> docShell;
-  rv = hiddenWindow->GetDocShell(getter_AddRefs(docShell));
-  if (NS_FAILED(rv) || !docShell) {
-    return rv;
+  nsCOMPtr<nsIWidget> widget;
+  nsCOMPtr<mozIDOMWindowProxy> navWin;
+
+  rv = winMediator->GetMostRecentWindow(u"navigator:browser",
+                                        getter_AddRefs(navWin));
+  if (NS_FAILED(rv) || !navWin) {
+    // Fall back to the hidden window
+    nsCOMPtr<nsIAppShellService> appShell(
+      do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
+
+    rv = appShell->GetHiddenDOMWindow(getter_AddRefs(navWin));
+    if (NS_FAILED(rv) || !navWin) {
+      return rv;
+    }
   }
 
-  nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(docShell));
-
-  if (!baseWindow) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIWidget> widget;
-  baseWindow->GetMainWidget(getter_AddRefs(widget));
+  nsPIDOMWindowOuter* win = nsPIDOMWindowOuter::From(navWin);
+  widget = widget::WidgetUtils::DOMWindowToWidget(win);
 
   if (!widget) return NS_ERROR_FAILURE;
 
