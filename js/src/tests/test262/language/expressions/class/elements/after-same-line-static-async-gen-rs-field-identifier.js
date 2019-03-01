@@ -9,7 +9,6 @@ features: [class-fields-public, class, async-iteration]
 flags: [generated, async]
 includes: [propertyHelper.js]
 info: |
-    
     ClassElement :
       ...
       FieldDefinition ;

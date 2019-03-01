@@ -51,7 +51,8 @@ SVGPolyElement::IsAttributeMapped(const nsAtom* name) const {
 //----------------------------------------------------------------------
 // SVGElement methods
 
-/* virtual */ bool SVGPolyElement::HasValidDimensions() const {
+/* virtual */
+bool SVGPolyElement::HasValidDimensions() const {
   return !mPoints.GetAnimValue().IsEmpty();
 }
 

@@ -68,7 +68,8 @@ static IntRect ComputeBufferRect(const IntRect& aRequestedRect) {
   return rect;
 }
 
-/* static */ already_AddRefed<ContentClient> ContentClient::CreateContentClient(
+/* static */
+already_AddRefed<ContentClient> ContentClient::CreateContentClient(
     CompositableForwarder* aForwarder) {
   LayersBackend backend = aForwarder->GetCompositorBackendType();
   if (backend != LayersBackend::LAYERS_OPENGL &&

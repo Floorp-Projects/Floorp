@@ -40,7 +40,8 @@
 namespace mozilla {
 namespace dom {
 
-/* static */ void ChromeUtils::NondeterministicGetWeakMapKeys(
+/* static */
+void ChromeUtils::NondeterministicGetWeakMapKeys(
     GlobalObject& aGlobal, JS::Handle<JS::Value> aMap,
     JS::MutableHandle<JS::Value> aRetval, ErrorResult& aRv) {
   if (!aMap.isObject()) {
@@ -57,7 +58,8 @@ namespace dom {
   }
 }
 
-/* static */ void ChromeUtils::NondeterministicGetWeakSetKeys(
+/* static */
+void ChromeUtils::NondeterministicGetWeakSetKeys(
     GlobalObject& aGlobal, JS::Handle<JS::Value> aSet,
     JS::MutableHandle<JS::Value> aRetval, ErrorResult& aRv) {
   if (!aSet.isObject()) {
@@ -74,10 +76,11 @@ namespace dom {
   }
 }
 
-/* static */ void ChromeUtils::Base64URLEncode(
-    GlobalObject& aGlobal, const ArrayBufferViewOrArrayBuffer& aSource,
-    const Base64URLEncodeOptions& aOptions, nsACString& aResult,
-    ErrorResult& aRv) {
+/* static */
+void ChromeUtils::Base64URLEncode(GlobalObject& aGlobal,
+                                  const ArrayBufferViewOrArrayBuffer& aSource,
+                                  const Base64URLEncodeOptions& aOptions,
+                                  nsACString& aResult, ErrorResult& aRv) {
   size_t length = 0;
   uint8_t* data = nullptr;
   if (aSource.IsArrayBuffer()) {
@@ -103,10 +106,12 @@ namespace dom {
   }
 }
 
-/* static */ void ChromeUtils::Base64URLDecode(
-    GlobalObject& aGlobal, const nsACString& aString,
-    const Base64URLDecodeOptions& aOptions,
-    JS::MutableHandle<JSObject*> aRetval, ErrorResult& aRv) {
+/* static */
+void ChromeUtils::Base64URLDecode(GlobalObject& aGlobal,
+                                  const nsACString& aString,
+                                  const Base64URLDecodeOptions& aOptions,
+                                  JS::MutableHandle<JSObject*> aRetval,
+                                  ErrorResult& aRv) {
   Base64URLDecodePaddingPolicy paddingPolicy;
   switch (aOptions.mPadding) {
     case Base64URLDecodePadding::Require:
@@ -142,9 +147,9 @@ namespace dom {
   aRetval.set(buffer);
 }
 
-/* static */ void ChromeUtils::ReleaseAssert(GlobalObject& aGlobal,
-                                             bool aCondition,
-                                             const nsAString& aMessage) {
+/* static */
+void ChromeUtils::ReleaseAssert(GlobalObject& aGlobal, bool aCondition,
+                                const nsAString& aMessage) {
   // If the condition didn't fail, which is the likely case, immediately return.
   if (MOZ_LIKELY(aCondition)) {
     return;
@@ -170,10 +175,9 @@ namespace dom {
                           messageUtf8.get(), filenameUtf8.get(), lineNo);
 }
 
-/* static */ void ChromeUtils::WaiveXrays(GlobalObject& aGlobal,
-                                          JS::HandleValue aVal,
-                                          JS::MutableHandleValue aRetval,
-                                          ErrorResult& aRv) {
+/* static */
+void ChromeUtils::WaiveXrays(GlobalObject& aGlobal, JS::HandleValue aVal,
+                             JS::MutableHandleValue aRetval, ErrorResult& aRv) {
   JS::RootedValue value(aGlobal.Context(), aVal);
   if (!xpc::WrapperFactory::WaiveXrayAndWrap(aGlobal.Context(), &value)) {
     aRv.NoteJSContextException(aGlobal.Context());
@@ -182,10 +186,10 @@ namespace dom {
   }
 }
 
-/* static */ void ChromeUtils::UnwaiveXrays(GlobalObject& aGlobal,
-                                            JS::HandleValue aVal,
-                                            JS::MutableHandleValue aRetval,
-                                            ErrorResult& aRv) {
+/* static */
+void ChromeUtils::UnwaiveXrays(GlobalObject& aGlobal, JS::HandleValue aVal,
+                               JS::MutableHandleValue aRetval,
+                               ErrorResult& aRv) {
   if (!aVal.isObject()) {
     aRetval.set(aVal);
     return;
@@ -200,9 +204,9 @@ namespace dom {
   }
 }
 
-/* static */ void ChromeUtils::GetClassName(GlobalObject& aGlobal,
-                                            JS::HandleObject aObj, bool aUnwrap,
-                                            nsAString& aRetval) {
+/* static */
+void ChromeUtils::GetClassName(GlobalObject& aGlobal, JS::HandleObject aObj,
+                               bool aUnwrap, nsAString& aRetval) {
   JS::RootedObject obj(aGlobal.Context(), aObj);
   if (aUnwrap) {
     obj = js::UncheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
@@ -212,11 +216,11 @@ namespace dom {
       NS_ConvertUTF8toUTF16(nsDependentCString(js::GetObjectClass(obj)->name));
 }
 
-/* static */ void ChromeUtils::ShallowClone(GlobalObject& aGlobal,
-                                            JS::HandleObject aObj,
-                                            JS::HandleObject aTarget,
-                                            JS::MutableHandleObject aRetval,
-                                            ErrorResult& aRv) {
+/* static */
+void ChromeUtils::ShallowClone(GlobalObject& aGlobal, JS::HandleObject aObj,
+                               JS::HandleObject aTarget,
+                               JS::MutableHandleObject aRetval,
+                               ErrorResult& aRv) {
   JSContext* cx = aGlobal.Context();
 
   auto cleanup = MakeScopeExit([&]() { aRv.NoteJSContextException(cx); });
@@ -374,10 +378,11 @@ NS_IMPL_ISUPPORTS_INHERITED(IdleDispatchRunnable, IdleRunnable,
                             nsITimerCallback)
 }  // anonymous namespace
 
-/* static */ void ChromeUtils::IdleDispatch(const GlobalObject& aGlobal,
-                                            IdleRequestCallback& aCallback,
-                                            const IdleRequestOptions& aOptions,
-                                            ErrorResult& aRv) {
+/* static */
+void ChromeUtils::IdleDispatch(const GlobalObject& aGlobal,
+                               IdleRequestCallback& aCallback,
+                               const IdleRequestOptions& aOptions,
+                               ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   MOZ_ASSERT(global);
 
@@ -392,10 +397,12 @@ NS_IMPL_ISUPPORTS_INHERITED(IdleDispatchRunnable, IdleRunnable,
   }
 }
 
-/* static */ void ChromeUtils::Import(
-    const GlobalObject& aGlobal, const nsAString& aResourceURI,
-    const Optional<JS::Handle<JSObject*>>& aTargetObj,
-    JS::MutableHandle<JSObject*> aRetval, ErrorResult& aRv) {
+/* static */
+void ChromeUtils::Import(const GlobalObject& aGlobal,
+                         const nsAString& aResourceURI,
+                         const Optional<JS::Handle<JSObject*>>& aTargetObj,
+                         JS::MutableHandle<JSObject*> aRetval,
+                         ErrorResult& aRv) {
   RefPtr<mozJSComponentLoader> moduleloader = mozJSComponentLoader::Get();
   MOZ_ASSERT(moduleloader);
 
@@ -567,17 +574,19 @@ static bool DefineGetter(JSContext* aCx, JS::Handle<JSObject*> aTarget,
 }
 }  // namespace module_getter
 
-/* static */ void ChromeUtils::DefineModuleGetter(const GlobalObject& global,
-                                                  JS::Handle<JSObject*> target,
-                                                  const nsAString& id,
-                                                  const nsAString& resourceURI,
-                                                  ErrorResult& aRv) {
+/* static */
+void ChromeUtils::DefineModuleGetter(const GlobalObject& global,
+                                     JS::Handle<JSObject*> target,
+                                     const nsAString& id,
+                                     const nsAString& resourceURI,
+                                     ErrorResult& aRv) {
   if (!module_getter::DefineGetter(global.Context(), target, id, resourceURI)) {
     aRv.NoteJSContextException(global.Context());
   }
 }
 
-/* static */ void ChromeUtils::OriginAttributesToSuffix(
+/* static */
+void ChromeUtils::OriginAttributesToSuffix(
     dom::GlobalObject& aGlobal, const dom::OriginAttributesDictionary& aAttrs,
     nsCString& aSuffix)
 
@@ -586,7 +595,8 @@ static bool DefineGetter(JSContext* aCx, JS::Handle<JSObject*> aTarget,
   attrs.CreateSuffix(aSuffix);
 }
 
-/* static */ bool ChromeUtils::OriginAttributesMatchPattern(
+/* static */
+bool ChromeUtils::OriginAttributesMatchPattern(
     dom::GlobalObject& aGlobal, const dom::OriginAttributesDictionary& aAttrs,
     const dom::OriginAttributesPatternDictionary& aPattern) {
   OriginAttributes attrs(aAttrs);
@@ -594,7 +604,8 @@ static bool DefineGetter(JSContext* aCx, JS::Handle<JSObject*> aTarget,
   return pattern.Matches(attrs);
 }
 
-/* static */ void ChromeUtils::CreateOriginAttributesFromOrigin(
+/* static */
+void ChromeUtils::CreateOriginAttributesFromOrigin(
     dom::GlobalObject& aGlobal, const nsAString& aOrigin,
     dom::OriginAttributesDictionary& aAttrs, ErrorResult& aRv) {
   OriginAttributes attrs;
@@ -606,27 +617,32 @@ static bool DefineGetter(JSContext* aCx, JS::Handle<JSObject*> aTarget,
   aAttrs = attrs;
 }
 
-/* static */ void ChromeUtils::FillNonDefaultOriginAttributes(
+/* static */
+void ChromeUtils::FillNonDefaultOriginAttributes(
     dom::GlobalObject& aGlobal, const dom::OriginAttributesDictionary& aAttrs,
     dom::OriginAttributesDictionary& aNewAttrs) {
   aNewAttrs = aAttrs;
 }
 
-/* static */ bool ChromeUtils::IsOriginAttributesEqual(
+/* static */
+bool ChromeUtils::IsOriginAttributesEqual(
     dom::GlobalObject& aGlobal, const dom::OriginAttributesDictionary& aA,
     const dom::OriginAttributesDictionary& aB) {
   return IsOriginAttributesEqual(aA, aB);
 }
 
-/* static */ bool ChromeUtils::IsOriginAttributesEqual(
+/* static */
+bool ChromeUtils::IsOriginAttributesEqual(
     const dom::OriginAttributesDictionary& aA,
     const dom::OriginAttributesDictionary& aB) {
   return aA == aB;
 }
 
 #ifdef NIGHTLY_BUILD
-/* static */ void ChromeUtils::GetRecentJSDevError(
-    GlobalObject& aGlobal, JS::MutableHandleValue aRetval, ErrorResult& aRv) {
+/* static */
+void ChromeUtils::GetRecentJSDevError(GlobalObject& aGlobal,
+                                      JS::MutableHandleValue aRetval,
+                                      ErrorResult& aRv) {
   aRetval.setUndefined();
   auto runtime = CycleCollectedJSRuntime::Get();
   MOZ_ASSERT(runtime);
@@ -638,7 +654,8 @@ static bool DefineGetter(JSContext* aCx, JS::Handle<JSObject*> aTarget,
   }
 }
 
-/* static */ void ChromeUtils::ClearRecentJSDevError(GlobalObject&) {
+/* static */
+void ChromeUtils::ClearRecentJSDevError(GlobalObject&) {
   auto runtime = CycleCollectedJSRuntime::Get();
   MOZ_ASSERT(runtime);
 
@@ -846,9 +863,10 @@ already_AddRefed<Promise> ChromeUtils::RequestPerformanceMetrics(
 
 constexpr auto kSkipSelfHosted = JS::SavedFrameSelfHosted::Exclude;
 
-/* static */ void ChromeUtils::GetCallerLocation(
-    const GlobalObject& aGlobal, nsIPrincipal* aPrincipal,
-    JS::MutableHandle<JSObject*> aRetval) {
+/* static */
+void ChromeUtils::GetCallerLocation(const GlobalObject& aGlobal,
+                                    nsIPrincipal* aPrincipal,
+                                    JS::MutableHandle<JSObject*> aRetval) {
   JSContext* cx = aGlobal.Context();
 
   auto* principals = nsJSPrincipals::get(aPrincipal);
@@ -870,11 +888,12 @@ constexpr auto kSkipSelfHosted = JS::SavedFrameSelfHosted::Exclude;
       js::GetFirstSubsumedSavedFrame(cx, principals, frame, kSkipSelfHosted));
 }
 
-/* static */ void ChromeUtils::CreateError(const GlobalObject& aGlobal,
-                                           const nsAString& aMessage,
-                                           JS::Handle<JSObject*> aStack,
-                                           JS::MutableHandle<JSObject*> aRetVal,
-                                           ErrorResult& aRv) {
+/* static */
+void ChromeUtils::CreateError(const GlobalObject& aGlobal,
+                              const nsAString& aMessage,
+                              JS::Handle<JSObject*> aStack,
+                              JS::MutableHandle<JSObject*> aRetVal,
+                              ErrorResult& aRv) {
   if (aStack && !JS::IsMaybeWrappedSavedFrame(aStack)) {
     aRv.Throw(NS_ERROR_INVALID_ARG);
     return;
@@ -935,8 +954,9 @@ constexpr auto kSkipSelfHosted = JS::SavedFrameSelfHosted::Exclude;
   aRetVal.set(retVal);
 }
 
-/* static */ already_AddRefed<Promise> ChromeUtils::RequestIOActivity(
-    GlobalObject& aGlobal, ErrorResult& aRv) {
+/* static */
+already_AddRefed<Promise> ChromeUtils::RequestIOActivity(GlobalObject& aGlobal,
+                                                         ErrorResult& aRv) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(Preferences::GetBool(IO_ACTIVITY_ENABLED_PREF, false));
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
@@ -950,8 +970,10 @@ constexpr auto kSkipSelfHosted = JS::SavedFrameSelfHosted::Exclude;
   return domPromise.forget();
 }
 
-/* static */ bool ChromeUtils::HasReportingHeaderForOrigin(
-    GlobalObject& global, const nsAString& aOrigin, ErrorResult& aRv) {
+/* static */
+bool ChromeUtils::HasReportingHeaderForOrigin(GlobalObject& global,
+                                              const nsAString& aOrigin,
+                                              ErrorResult& aRv) {
   if (!XRE_IsParentProcess()) {
     aRv.Throw(NS_ERROR_FAILURE);
     return false;
@@ -961,8 +983,8 @@ constexpr auto kSkipSelfHosted = JS::SavedFrameSelfHosted::Exclude;
       NS_ConvertUTF16toUTF8(aOrigin));
 }
 
-/* static */ PopupBlockerState ChromeUtils::GetPopupControlState(
-    GlobalObject& aGlobal) {
+/* static */
+PopupBlockerState ChromeUtils::GetPopupControlState(GlobalObject& aGlobal) {
   switch (PopupBlocker::GetPopupControlState()) {
     case PopupBlocker::PopupControlState::openAllowed:
       return PopupBlockerState::OpenAllowed;
@@ -986,12 +1008,13 @@ constexpr auto kSkipSelfHosted = JS::SavedFrameSelfHosted::Exclude;
   }
 }
 
-/* static */ bool ChromeUtils::IsPopupTokenUnused(GlobalObject& aGlobal) {
+/* static */
+bool ChromeUtils::IsPopupTokenUnused(GlobalObject& aGlobal) {
   return PopupBlocker::IsPopupOpeningTokenUnused();
 }
 
-/* static */ double ChromeUtils::LastExternalProtocolIframeAllowed(
-    GlobalObject& aGlobal) {
+/* static */
+double ChromeUtils::LastExternalProtocolIframeAllowed(GlobalObject& aGlobal) {
   TimeStamp when = PopupBlocker::WhenLastExternalProtocolIframeAllowed();
   if (when.IsNull()) {
     return 0;
@@ -1001,30 +1024,35 @@ constexpr auto kSkipSelfHosted = JS::SavedFrameSelfHosted::Exclude;
   return duration.ToMilliseconds();
 }
 
-/* static */ void ChromeUtils::ResetLastExternalProtocolIframeAllowed(
+/* static */
+void ChromeUtils::ResetLastExternalProtocolIframeAllowed(
     GlobalObject& aGlobal) {
   PopupBlocker::ResetLastExternalProtocolIframeAllowed();
 }
 
-/* static */ void ChromeUtils::RegisterWindowActor(
-    const GlobalObject& aGlobal, const nsAString& aName,
-    const WindowActorOptions& aOptions, ErrorResult& aRv) {
+/* static */
+void ChromeUtils::RegisterWindowActor(const GlobalObject& aGlobal,
+                                      const nsAString& aName,
+                                      const WindowActorOptions& aOptions,
+                                      ErrorResult& aRv) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   RefPtr<JSWindowActorService> service = JSWindowActorService::GetSingleton();
   service->RegisterWindowActor(aName, aOptions, aRv);
 }
 
-/* static */ void ChromeUtils::UnregisterWindowActor(
-    const GlobalObject& aGlobal, const nsAString& aName) {
+/* static */
+void ChromeUtils::UnregisterWindowActor(const GlobalObject& aGlobal,
+                                        const nsAString& aName) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   RefPtr<JSWindowActorService> service = JSWindowActorService::GetSingleton();
   service->UnregisterWindowActor(aName);
 }
 
-/* static */ bool ChromeUtils::IsClassifierBlockingErrorCode(
-    GlobalObject& aGlobal, uint32_t aError) {
+/* static */
+bool ChromeUtils::IsClassifierBlockingErrorCode(GlobalObject& aGlobal,
+                                                uint32_t aError) {
   return net::UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(
       static_cast<nsresult>(aError));
 }

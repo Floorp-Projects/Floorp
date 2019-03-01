@@ -418,8 +418,8 @@ void nsJPEGEncoder::NotifyListener() {
   }
 }
 
-/* static */ void nsJPEGEncoderInternal::initDestination(
-    jpeg_compress_struct* cinfo) {
+/* static */
+void nsJPEGEncoderInternal::initDestination(jpeg_compress_struct* cinfo) {
   nsJPEGEncoder* that = static_cast<nsJPEGEncoder*>(cinfo->client_data);
   NS_ASSERTION(!that->mImageBuffer, "Image buffer already initialized");
 
@@ -431,8 +431,8 @@ void nsJPEGEncoder::NotifyListener() {
   cinfo->dest->free_in_buffer = that->mImageBufferSize;
 }
 
-/* static */ boolean nsJPEGEncoderInternal::emptyOutputBuffer(
-    jpeg_compress_struct* cinfo) {
+/* static */
+boolean nsJPEGEncoderInternal::emptyOutputBuffer(jpeg_compress_struct* cinfo) {
   nsJPEGEncoder* that = static_cast<nsJPEGEncoder*>(cinfo->client_data);
   NS_ASSERTION(that->mImageBuffer, "No buffer to empty!");
 
@@ -467,8 +467,8 @@ void nsJPEGEncoder::NotifyListener() {
   return 1;
 }
 
-/* static */ void nsJPEGEncoderInternal::termDestination(
-    jpeg_compress_struct* cinfo) {
+/* static */
+void nsJPEGEncoderInternal::termDestination(jpeg_compress_struct* cinfo) {
   nsJPEGEncoder* that = static_cast<nsJPEGEncoder*>(cinfo->client_data);
   if (!that->mImageBuffer) {
     return;
@@ -479,7 +479,8 @@ void nsJPEGEncoder::NotifyListener() {
   that->NotifyListener();
 }
 
-/* static */ void nsJPEGEncoderInternal::errorExit(jpeg_common_struct* cinfo) {
+/* static */
+void nsJPEGEncoderInternal::errorExit(jpeg_common_struct* cinfo) {
   nsresult error_code;
   encoder_error_mgr* err = (encoder_error_mgr*)cinfo->err;
 

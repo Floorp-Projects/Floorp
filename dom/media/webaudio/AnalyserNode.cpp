@@ -86,7 +86,8 @@ class AnalyserNodeEngine final : public AudioNodeEngine {
   uint32_t mChunksToProcess = 0;
 };
 
-/* static */ already_AddRefed<AnalyserNode> AnalyserNode::Create(
+/* static */
+already_AddRefed<AnalyserNode> AnalyserNode::Create(
     AudioContext& aAudioContext, const AnalyserOptions& aOptions,
     ErrorResult& aRv) {
   if (aAudioContext.CheckClosed(aRv)) {

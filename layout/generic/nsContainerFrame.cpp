@@ -364,7 +364,8 @@ void nsContainerFrame::BuildDisplayListForNonBlockChildren(
   }
 }
 
-/* virtual */ void nsContainerFrame::ChildIsDirty(nsIFrame* aChild) {
+/* virtual */
+void nsContainerFrame::ChildIsDirty(nsIFrame* aChild) {
   NS_ASSERTION(NS_SUBTREE_DIRTY(aChild), "child isn't actually dirty");
 
   AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
@@ -1633,7 +1634,8 @@ nsIFrame* nsContainerFrame::PullNextInFlowChild(
   return frame;
 }
 
-/* static */ void nsContainerFrame::ReparentFloatsForInlineChild(
+/* static */
+void nsContainerFrame::ReparentFloatsForInlineChild(
     nsIFrame* aOurLineContainer, nsIFrame* aFrame, bool aReparentSiblings,
     ReparentingDirection aDirection) {
   // XXXbz this would be better if it took a nsFrameList or a frame

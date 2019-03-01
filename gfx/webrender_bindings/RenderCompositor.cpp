@@ -23,7 +23,8 @@
 namespace mozilla {
 namespace wr {
 
-/* static */ UniquePtr<RenderCompositor> RenderCompositor::Create(
+/* static */
+UniquePtr<RenderCompositor> RenderCompositor::Create(
     RefPtr<widget::CompositorWidget>&& aWidget) {
 #ifdef XP_WIN
   if (gfx::gfxVars::UseWebRenderANGLE()) {

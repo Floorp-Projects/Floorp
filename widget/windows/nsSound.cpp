@@ -80,7 +80,8 @@ nsSoundPlayer::~nsSoundPlayer() { delete[] mSoundData; }
 
 mozilla::StaticRefPtr<nsISound> nsSound::sInstance;
 
-/* static */ already_AddRefed<nsISound> nsSound::GetInstance() {
+/* static */
+already_AddRefed<nsISound> nsSound::GetInstance() {
   if (!sInstance) {
     if (gfxPlatform::IsHeadless()) {
       sInstance = new mozilla::widget::HeadlessSound();

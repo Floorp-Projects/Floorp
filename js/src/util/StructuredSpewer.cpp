@@ -102,7 +102,8 @@ static bool MatchJSScript(JSScript* script, const char* pattern) {
   return result != nullptr;
 }
 
-/* static */ bool StructuredSpewer::enabled(JSScript* script) {
+/* static */
+bool StructuredSpewer::enabled(JSScript* script) {
   // We cannot call getenv under record/replay.
   if (mozilla::recordreplay::IsRecordingOrReplaying()) {
     return false;
@@ -139,8 +140,9 @@ void StructuredSpewer::startObject(JSContext* cx, const JSScript* script,
   json.endObject();
 }
 
-/* static */ void StructuredSpewer::spew(JSContext* cx, SpewChannel channel,
-                                         const char* fmt, ...) {
+/* static */
+void StructuredSpewer::spew(JSContext* cx, SpewChannel channel, const char* fmt,
+                            ...) {
   // Because we don't have a script here, use the singleton's
   // filter to determine if the channel is active.
   if (!cx->spewer().filter().enabled(channel)) {

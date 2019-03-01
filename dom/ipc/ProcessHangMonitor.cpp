@@ -1180,7 +1180,8 @@ bool ProcessHangMonitor::IsOnThread() {
   return NS_SUCCEEDED(mThread->IsOnCurrentThread(&on)) && on;
 }
 
-/* static */ PProcessHangMonitorParent* ProcessHangMonitor::AddProcess(
+/* static */
+PProcessHangMonitorParent* ProcessHangMonitor::AddProcess(
     ContentParent* aContentParent) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
@@ -1206,22 +1207,24 @@ bool ProcessHangMonitor::IsOnThread() {
   return CreateHangMonitorParent(aContentParent, std::move(parent));
 }
 
-/* static */ void ProcessHangMonitor::RemoveProcess(
-    PProcessHangMonitorParent* aParent) {
+/* static */
+void ProcessHangMonitor::RemoveProcess(PProcessHangMonitorParent* aParent) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   auto parent = static_cast<HangMonitorParent*>(aParent);
   parent->Shutdown();
   delete parent;
 }
 
-/* static */ void ProcessHangMonitor::ClearHang() {
+/* static */
+void ProcessHangMonitor::ClearHang() {
   MOZ_ASSERT(NS_IsMainThread());
   if (HangMonitorChild* child = HangMonitorChild::Get()) {
     child->ClearHang();
   }
 }
 
-/* static */ void ProcessHangMonitor::PaintWhileInterruptingJS(
+/* static */
+void ProcessHangMonitor::PaintWhileInterruptingJS(
     PProcessHangMonitorParent* aParent, dom::TabParent* aTabParent,
     bool aForceRepaint, const layers::LayersObserverEpoch& aEpoch) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
@@ -1229,7 +1232,8 @@ bool ProcessHangMonitor::IsOnThread() {
   parent->PaintWhileInterruptingJS(aTabParent, aForceRepaint, aEpoch);
 }
 
-/* static */ void ProcessHangMonitor::ClearPaintWhileInterruptingJS(
+/* static */
+void ProcessHangMonitor::ClearPaintWhileInterruptingJS(
     const layers::LayersObserverEpoch& aEpoch) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(XRE_IsContentProcess());
@@ -1239,7 +1243,8 @@ bool ProcessHangMonitor::IsOnThread() {
   }
 }
 
-/* static */ void ProcessHangMonitor::MaybeStartPaintWhileInterruptingJS() {
+/* static */
+void ProcessHangMonitor::MaybeStartPaintWhileInterruptingJS() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(XRE_IsContentProcess());
 

@@ -132,7 +132,8 @@ static UniqueChars MakeStringCopy(const char* s) {
   return UniqueChars(copy);
 }
 
-/* static */ UniqueChars TypeSet::TypeString(const TypeSet::Type type) {
+/* static */
+UniqueChars TypeSet::TypeString(const TypeSet::Type type) {
   if (type.isPrimitive() || type.isUnknown() || type.isAnyObject()) {
     return MakeStringCopy(NonObjectTypeString(type));
   }
@@ -151,7 +152,8 @@ static UniqueChars MakeStringCopy(const char* s) {
   return MakeStringCopy(buf);
 }
 
-/* static */ UniqueChars TypeSet::ObjectGroupString(const ObjectGroup* group) {
+/* static */
+UniqueChars TypeSet::ObjectGroupString(const ObjectGroup* group) {
   return TypeString(TypeSet::ObjectType(group));
 }
 
@@ -847,7 +849,8 @@ void TypeSet::print(FILE* fp) {
   }
 }
 
-/* static */ void TypeSet::readBarrier(const TypeSet* types) {
+/* static */
+void TypeSet::readBarrier(const TypeSet* types) {
   if (types->unknownObject()) {
     return;
   }
@@ -863,7 +866,8 @@ void TypeSet::print(FILE* fp) {
   }
 }
 
-/* static */ bool TypeSet::IsTypeMarked(JSRuntime* rt, TypeSet::Type* v) {
+/* static */
+bool TypeSet::IsTypeMarked(JSRuntime* rt, TypeSet::Type* v) {
   bool rv;
   if (v->isSingletonUnchecked()) {
     JSObject* obj = v->singletonNoBarrier();
@@ -965,8 +969,8 @@ TemporaryTypeSet* TypeSet::cloneWithoutObjects(LifoAlloc* alloc) {
   return res;
 }
 
-/* static */ TemporaryTypeSet* TypeSet::unionSets(TypeSet* a, TypeSet* b,
-                                                  LifoAlloc* alloc) {
+/* static */
+TemporaryTypeSet* TypeSet::unionSets(TypeSet* a, TypeSet* b, LifoAlloc* alloc) {
   TemporaryTypeSet* res = alloc->new_<TemporaryTypeSet>(
       a->baseFlags() | b->baseFlags(), static_cast<ObjectKey**>(nullptr));
   if (!res) {
@@ -989,9 +993,10 @@ TemporaryTypeSet* TypeSet::cloneWithoutObjects(LifoAlloc* alloc) {
   return res;
 }
 
-/* static */ TemporaryTypeSet* TypeSet::removeSet(TemporaryTypeSet* input,
-                                                  TemporaryTypeSet* removal,
-                                                  LifoAlloc* alloc) {
+/* static */
+TemporaryTypeSet* TypeSet::removeSet(TemporaryTypeSet* input,
+                                     TemporaryTypeSet* removal,
+                                     LifoAlloc* alloc) {
   // Only allow removal of primitives and the "AnyObject" flag.
   MOZ_ASSERT(!removal->unknown());
   MOZ_ASSERT_IF(!removal->unknownObject(), removal->getObjectCount() == 0);
@@ -1019,9 +1024,10 @@ TemporaryTypeSet* TypeSet::cloneWithoutObjects(LifoAlloc* alloc) {
   return res;
 }
 
-/* static */ TemporaryTypeSet* TypeSet::intersectSets(TemporaryTypeSet* a,
-                                                      TemporaryTypeSet* b,
-                                                      LifoAlloc* alloc) {
+/* static */
+TemporaryTypeSet* TypeSet::intersectSets(TemporaryTypeSet* a,
+                                         TemporaryTypeSet* b,
+                                         LifoAlloc* alloc) {
   TemporaryTypeSet* res;
   res = alloc->new_<TemporaryTypeSet>(a->baseFlags() & b->baseFlags(),
                                       static_cast<ObjectKey**>(nullptr));
@@ -1183,10 +1189,11 @@ CompilerConstraintList* js::NewCompilerConstraintList(
   return alloc.lifoAlloc()->new_<CompilerConstraintList>(alloc);
 }
 
-/* static */ bool TypeScript::FreezeTypeSets(
-    CompilerConstraintList* constraints, JSScript* script,
-    TemporaryTypeSet** pThisTypes, TemporaryTypeSet** pArgTypes,
-    TemporaryTypeSet** pBytecodeTypes) {
+/* static */
+bool TypeScript::FreezeTypeSets(CompilerConstraintList* constraints,
+                                JSScript* script, TemporaryTypeSet** pThisTypes,
+                                TemporaryTypeSet** pArgTypes,
+                                TemporaryTypeSet** pBytecodeTypes) {
   LifoAlloc* alloc = constraints->alloc();
   AutoSweepTypeScript sweep(script);
   TypeScript* typeScript = script->types();
@@ -3655,8 +3662,9 @@ bool JSScript::makeTypes(JSContext* cx) {
   return true;
 }
 
-/* static */ bool JSFunction::setTypeForScriptedFunction(
-    JSContext* cx, HandleFunction fun, bool singleton /* = false */) {
+/* static */
+bool JSFunction::setTypeForScriptedFunction(JSContext* cx, HandleFunction fun,
+                                            bool singleton /* = false */) {
   if (singleton) {
     if (!setSingleton(cx, fun)) {
       return false;
@@ -3758,7 +3766,8 @@ void PreliminaryObjectArrayWithTemplate::trace(JSTracer* trc) {
   TraceNullableEdge(trc, &shape_, "PreliminaryObjectArrayWithTemplate_shape");
 }
 
-/* static */ void PreliminaryObjectArrayWithTemplate::writeBarrierPre(
+/* static */
+void PreliminaryObjectArrayWithTemplate::writeBarrierPre(
     PreliminaryObjectArrayWithTemplate* objects) {
   Shape* shape = objects->shape();
 
@@ -3865,8 +3874,8 @@ void PreliminaryObjectArrayWithTemplate::maybeAnalyze(JSContext* cx,
 
 // Make a TypeNewScript for |group|, and set it up to hold the preliminary
 // objects created with the group.
-/* static */ bool TypeNewScript::make(JSContext* cx, ObjectGroup* group,
-                                      JSFunction* fun) {
+/* static */
+bool TypeNewScript::make(JSContext* cx, ObjectGroup* group, JSFunction* fun) {
   AutoSweepObjectGroup sweep(group);
   MOZ_ASSERT(cx->zone()->types.activeAnalysis);
   MOZ_ASSERT(!group->newScript(sweep));
@@ -3902,8 +3911,10 @@ void PreliminaryObjectArrayWithTemplate::maybeAnalyze(JSContext* cx,
 
 // Make a TypeNewScript with the same initializer list as |newScript| but with
 // a new template object.
-/* static */ TypeNewScript* TypeNewScript::makeNativeVersion(
-    JSContext* cx, TypeNewScript* newScript, PlainObject* templateObject) {
+/* static */
+TypeNewScript* TypeNewScript::makeNativeVersion(JSContext* cx,
+                                                TypeNewScript* newScript,
+                                                PlainObject* templateObject) {
   MOZ_RELEASE_ASSERT(cx->zone()->types.activeAnalysis);
 
   auto nativeNewScript = cx->make_unique<TypeNewScript>();
@@ -4352,7 +4363,8 @@ void TypeNewScript::trace(JSTracer* trc) {
   TraceNullableEdge(trc, &initializedGroup_, "TypeNewScript_initializedGroup");
 }
 
-/* static */ void TypeNewScript::writeBarrierPre(TypeNewScript* newScript) {
+/* static */
+void TypeNewScript::writeBarrierPre(TypeNewScript* newScript) {
   if (JS::RuntimeHeapIsCollecting()) {
     return;
   }
@@ -4690,8 +4702,8 @@ void ObjectGroup::sweep(const AutoSweepObjectGroup& sweep) {
   }
 }
 
-/* static */ void TypeScript::sweepTypes(const js::AutoSweepTypeScript& sweep,
-                                         Zone* zone) {
+/* static */
+void TypeScript::sweepTypes(const js::AutoSweepTypeScript& sweep, Zone* zone) {
   MOZ_ASSERT(typesGeneration() != zone->types.generation);
   setTypesGeneration(zone->types.generation);
 

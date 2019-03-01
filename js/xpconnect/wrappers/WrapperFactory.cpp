@@ -243,13 +243,15 @@ JSObject* WrapperFactory::WaiveXray(JSContext* cx, JSObject* objArg) {
   return waiver;
 }
 
-/* static */ bool WrapperFactory::AllowWaiver(JS::Compartment* target,
-                                              JS::Compartment* origin) {
+/* static */
+bool WrapperFactory::AllowWaiver(JS::Compartment* target,
+                                 JS::Compartment* origin) {
   return CompartmentPrivate::Get(target)->allowWaivers &&
          CompartmentOriginInfo::Subsumes(target, origin);
 }
 
-/* static */ bool WrapperFactory::AllowWaiver(JSObject* wrapper) {
+/* static */
+bool WrapperFactory::AllowWaiver(JSObject* wrapper) {
   MOZ_ASSERT(js::IsCrossCompartmentWrapper(wrapper));
   return AllowWaiver(js::GetObjectCompartment(wrapper),
                      js::GetObjectCompartment(js::UncheckedUnwrap(wrapper)));

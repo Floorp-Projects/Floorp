@@ -21,7 +21,8 @@ void FrameMetrics::RecalculateLayoutViewportOffset() {
                                             mLayoutViewport);
 }
 
-/* static */ void FrameMetrics::KeepLayoutViewportEnclosingVisualViewport(
+/* static */
+void FrameMetrics::KeepLayoutViewportEnclosingVisualViewport(
     const CSSRect& aVisualViewport, CSSRect& aLayoutViewport) {
   // If the visual viewport is contained within the layout viewport, we don't
   // need to make any adjustments, so we can exit early.

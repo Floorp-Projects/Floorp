@@ -180,7 +180,8 @@ void nsLayoutStylesheetCache::InitMemoryReporter() {
   mozilla::RegisterWeakMemoryReporter(this);
 }
 
-/* static */ nsLayoutStylesheetCache* nsLayoutStylesheetCache::Singleton() {
+/* static */
+nsLayoutStylesheetCache* nsLayoutStylesheetCache::Singleton() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!gStyleCache) {
@@ -310,7 +311,8 @@ void nsLayoutStylesheetCache::LoadSheet(nsIURI* aURI,
   }
 }
 
-/* static */ void nsLayoutStylesheetCache::InvalidatePreferenceSheets() {
+/* static */
+void nsLayoutStylesheetCache::InvalidatePreferenceSheets() {
   if (gStyleCache) {
     gStyleCache->mContentPreferenceSheet = nullptr;
     gStyleCache->mChromePreferenceSheet = nullptr;

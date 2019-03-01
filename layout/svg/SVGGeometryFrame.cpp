@@ -169,8 +169,8 @@ nsresult SVGGeometryFrame::AttributeChanged(int32_t aNameSpaceID,
   return NS_OK;
 }
 
-/* virtual */ void SVGGeometryFrame::DidSetComputedStyle(
-    ComputedStyle* aOldComputedStyle) {
+/* virtual */
+void SVGGeometryFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
   nsFrame::DidSetComputedStyle(aOldComputedStyle);
 
   if (aOldComputedStyle) {

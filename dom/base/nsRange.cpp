@@ -175,8 +175,9 @@ struct IsItemInRangeComparator {
   }
 };
 
-/* static */ bool nsRange::IsNodeSelected(nsINode* aNode, uint32_t aStartOffset,
-                                          uint32_t aEndOffset) {
+/* static */
+bool nsRange::IsNodeSelected(nsINode* aNode, uint32_t aStartOffset,
+                             uint32_t aEndOffset) {
   MOZ_ASSERT(aNode, "bad arg");
 
   nsINode* n = GetNextRangeCommonAncestor(aNode);
@@ -2155,9 +2156,10 @@ int16_t nsRange::CompareBoundaryPoints(uint16_t aHow, nsRange& aOtherRange,
                                        static_cast<int32_t>(otherOffset));
 }
 
-/* static */ nsresult nsRange::CloneParentsBetween(
-    nsINode* aAncestor, nsINode* aNode, nsINode** aClosestAncestor,
-    nsINode** aFarthestAncestor) {
+/* static */
+nsresult nsRange::CloneParentsBetween(nsINode* aAncestor, nsINode* aNode,
+                                      nsINode** aClosestAncestor,
+                                      nsINode** aFarthestAncestor) {
   NS_ENSURE_ARG_POINTER(
       (aAncestor && aNode && aClosestAncestor && aFarthestAncestor));
 
@@ -2804,7 +2806,8 @@ static nsresult GetPartialTextRect(nsLayoutUtils::RectCallback* aCallback,
   return NS_OK;
 }
 
-/* static */ void nsRange::CollectClientRectsAndText(
+/* static */
+void nsRange::CollectClientRectsAndText(
     nsLayoutUtils::RectCallback* aCollector, Sequence<nsString>* aTextList,
     nsRange* aRange, nsINode* aStartContainer, uint32_t aStartOffset,
     nsINode* aEndContainer, uint32_t aEndOffset, bool aClampToEdge,
@@ -3013,7 +3016,8 @@ nsINode* nsRange::GetRegisteredCommonAncestor() {
   return mRegisteredCommonAncestor;
 }
 
-/* static */ bool nsRange::AutoInvalidateSelection::sIsNested;
+/* static */
+bool nsRange::AutoInvalidateSelection::sIsNested;
 
 nsRange::AutoInvalidateSelection::~AutoInvalidateSelection() {
   if (!mCommonAncestor) {
@@ -3038,8 +3042,9 @@ nsRange::AutoInvalidateSelection::~AutoInvalidateSelection() {
   }
 }
 
-/* static */ already_AddRefed<nsRange> nsRange::Constructor(
-    const GlobalObject& aGlobal, ErrorResult& aRv) {
+/* static */
+already_AddRefed<nsRange> nsRange::Constructor(const GlobalObject& aGlobal,
+                                               ErrorResult& aRv) {
   nsCOMPtr<nsPIDOMWindowInner> window =
       do_QueryInterface(aGlobal.GetAsSupports());
   if (!window || !window->GetDoc()) {

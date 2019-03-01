@@ -56,17 +56,19 @@ class MemoryBlockCacheTelemetry final : public nsIObserver,
 };
 
 // Initialized to nullptr by non-local static initialization.
-/* static */ StaticRefPtr<MemoryBlockCacheTelemetry>
+/* static */
+StaticRefPtr<MemoryBlockCacheTelemetry>
     MemoryBlockCacheTelemetry::gMemoryBlockCacheTelemetry;
 
 // Initialized to 0 by non-local static initialization.
-/* static */ Atomic<size_t> MemoryBlockCacheTelemetry::gCombinedSizesWatermark;
+/* static */
+Atomic<size_t> MemoryBlockCacheTelemetry::gCombinedSizesWatermark;
 
 NS_IMPL_ISUPPORTS(MemoryBlockCacheTelemetry, nsIObserver,
                   nsISupportsWeakReference)
 
-/* static */ size_t MemoryBlockCacheTelemetry::NotifyCombinedSizeGrown(
-    size_t aNewSize) {
+/* static */
+size_t MemoryBlockCacheTelemetry::NotifyCombinedSizeGrown(size_t aNewSize) {
   // Ensure gMemoryBlockCacheTelemetry exists.
   if (!gMemoryBlockCacheTelemetry) {
     MOZ_ASSERT(NS_IsMainThread());

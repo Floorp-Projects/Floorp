@@ -39,7 +39,8 @@ UrlClassifierFeatureLoginReputation::UrlClassifierFeatureLoginReputation()
              : "";
 }
 
-/* static */ void UrlClassifierFeatureLoginReputation::MaybeShutdown() {
+/* static */
+void UrlClassifierFeatureLoginReputation::MaybeShutdown() {
   UC_LOG(("UrlClassifierFeatureLoginReputation: MaybeShutdown"));
 
   if (gFeatureLoginReputation) {
@@ -48,7 +49,8 @@ UrlClassifierFeatureLoginReputation::UrlClassifierFeatureLoginReputation()
   }
 }
 
-/* static */ nsIUrlClassifierFeature*
+/* static */
+nsIUrlClassifierFeature*
 UrlClassifierFeatureLoginReputation::MaybeGetOrCreate() {
   if (!StaticPrefs::browser_safebrowsing_passwords_enabled()) {
     return nullptr;
@@ -62,7 +64,8 @@ UrlClassifierFeatureLoginReputation::MaybeGetOrCreate() {
   return gFeatureLoginReputation;
 }
 
-/* static */ already_AddRefed<nsIUrlClassifierFeature>
+/* static */
+already_AddRefed<nsIUrlClassifierFeature>
 UrlClassifierFeatureLoginReputation::GetIfNameMatches(const nsACString& aName) {
   if (!aName.EqualsLiteral(LOGIN_REPUTATION_FEATURE_NAME)) {
     return nullptr;

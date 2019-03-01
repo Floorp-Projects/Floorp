@@ -1164,7 +1164,8 @@ void ContentChild::GetProcessName(nsACString& aName) const {
   aName.Assign(NS_ConvertUTF16toUTF8(mProcessName));
 }
 
-/* static */ void ContentChild::AppendProcessId(nsACString& aName) {
+/* static */
+void ContentChild::AppendProcessId(nsACString& aName) {
   if (!aName.IsEmpty()) {
     aName.Append(' ');
   }
@@ -2827,8 +2828,8 @@ void ContentChild::StartForceKillTimer() {
   }
 }
 
-/* static */ void ContentChild::ForceKillTimerCallback(nsITimer* aTimer,
-                                                       void* aClosure) {
+/* static */
+void ContentChild::ForceKillTimerCallback(nsITimer* aTimer, void* aClosure) {
   ProcessChild::QuickExit();
 }
 
@@ -3251,8 +3252,9 @@ mozilla::ipc::IPCResult ContentChild::RecvGetFilesResponse(
   return IPC_OK();
 }
 
-/* static */ void ContentChild::FatalErrorIfNotUsingGPUProcess(
-    const char* const aErrorMsg, base::ProcessId aOtherPid) {
+/* static */
+void ContentChild::FatalErrorIfNotUsingGPUProcess(const char* const aErrorMsg,
+                                                  base::ProcessId aOtherPid) {
   // If we're communicating with the same process or the UI process then we
   // want to crash normally. Otherwise we want to just warn as the other end
   // must be the GPU process and it crashing shouldn't be fatal for us.

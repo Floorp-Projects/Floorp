@@ -178,7 +178,8 @@ class DeferredDeleteVRChild : public Runnable {
   UniquePtr<VRChild> mChild;
 };
 
-/* static */ void VRChild::Destroy(UniquePtr<VRChild>&& aChild) {
+/* static */
+void VRChild::Destroy(UniquePtr<VRChild>&& aChild) {
   NS_DispatchToMainThread(new DeferredDeleteVRChild(std::move(aChild)));
 }
 

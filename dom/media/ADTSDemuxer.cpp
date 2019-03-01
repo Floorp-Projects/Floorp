@@ -729,8 +729,8 @@ double ADTSTrackDemuxer::AverageFrameLength() const {
   return 0.0;
 }
 
-/* static */ bool ADTSDemuxer::ADTSSniffer(const uint8_t* aData,
-                                           const uint32_t aLength) {
+/* static */
+bool ADTSDemuxer::ADTSSniffer(const uint8_t* aData, const uint32_t aLength) {
   if (aLength < 7) {
     return false;
   }

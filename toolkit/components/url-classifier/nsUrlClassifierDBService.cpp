@@ -1585,7 +1585,8 @@ NS_INTERFACE_MAP_BEGIN(nsUrlClassifierDBService)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURIClassifier)
 NS_INTERFACE_MAP_END
 
-/* static */ already_AddRefed<nsUrlClassifierDBService>
+/* static */
+already_AddRefed<nsUrlClassifierDBService>
 nsUrlClassifierDBService::GetInstance(nsresult* result) {
   *result = NS_OK;
   if (!sUrlClassifierDBService) {

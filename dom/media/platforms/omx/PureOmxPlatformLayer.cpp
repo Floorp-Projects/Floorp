@@ -74,7 +74,8 @@ bool PureOmxBufferData::ShouldUseEGLImage() {
   return (err != OMX_ErrorNotImplemented);
 }
 
-/* static */ bool PureOmxPlatformLayer::Init(void) {
+/* static */
+bool PureOmxPlatformLayer::Init(void) {
   if (!OmxCoreLibLinker::Link()) {
     return false;
   }
@@ -90,7 +91,8 @@ bool PureOmxBufferData::ShouldUseEGLImage() {
   return true;
 }
 
-/* static */ OMX_CALLBACKTYPE PureOmxPlatformLayer::sCallbacks = {
+/* static */
+OMX_CALLBACKTYPE PureOmxPlatformLayer::sCallbacks = {
     EventHandler, EmptyBufferDone, FillBufferDone};
 
 PureOmxPlatformLayer::PureOmxPlatformLayer(
@@ -252,9 +254,12 @@ nsresult PureOmxPlatformLayer::Shutdown() {
   return NS_OK;
 }
 
-/* static */ OMX_ERRORTYPE PureOmxPlatformLayer::EventHandler(
-    OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEventType,
-    OMX_U32 nData1, OMX_U32 nData2, OMX_PTR pEventData) {
+/* static */
+OMX_ERRORTYPE PureOmxPlatformLayer::EventHandler(OMX_HANDLETYPE hComponent,
+                                                 OMX_PTR pAppData,
+                                                 OMX_EVENTTYPE eEventType,
+                                                 OMX_U32 nData1, OMX_U32 nData2,
+                                                 OMX_PTR pEventData) {
   PureOmxPlatformLayer* self = static_cast<PureOmxPlatformLayer*>(pAppData);
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
       "mozilla::PureOmxPlatformLayer::EventHandler",
@@ -265,7 +270,8 @@ nsresult PureOmxPlatformLayer::Shutdown() {
   return NS_SUCCEEDED(rv) ? OMX_ErrorNone : OMX_ErrorUndefined;
 }
 
-/* static */ OMX_ERRORTYPE PureOmxPlatformLayer::EmptyBufferDone(
+/* static */
+OMX_ERRORTYPE PureOmxPlatformLayer::EmptyBufferDone(
     OMX_HANDLETYPE hComponent, OMX_IN OMX_PTR pAppData,
     OMX_IN OMX_BUFFERHEADERTYPE* pBuffer) {
   PureOmxPlatformLayer* self = static_cast<PureOmxPlatformLayer*>(pAppData);
@@ -276,7 +282,8 @@ nsresult PureOmxPlatformLayer::Shutdown() {
   return NS_SUCCEEDED(rv) ? OMX_ErrorNone : OMX_ErrorUndefined;
 }
 
-/* static */ OMX_ERRORTYPE PureOmxPlatformLayer::FillBufferDone(
+/* static */
+OMX_ERRORTYPE PureOmxPlatformLayer::FillBufferDone(
     OMX_OUT OMX_HANDLETYPE hComponent, OMX_OUT OMX_PTR pAppData,
     OMX_OUT OMX_BUFFERHEADERTYPE* pBuffer) {
   PureOmxPlatformLayer* self = static_cast<PureOmxPlatformLayer*>(pAppData);
@@ -335,8 +342,9 @@ static bool GetStandardComponentRole(const nsACString& aMimeType,
   return false;
 }
 
-/* static */ bool PureOmxPlatformLayer::FindStandardComponent(
-    const nsACString& aMimeType, nsACString* aComponentName) {
+/* static */
+bool PureOmxPlatformLayer::FindStandardComponent(const nsACString& aMimeType,
+                                                 nsACString* aComponentName) {
   nsAutoCString role;
   if (!GetStandardComponentRole(aMimeType, role)) return false;
 

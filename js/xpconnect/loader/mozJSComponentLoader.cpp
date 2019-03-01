@@ -1409,8 +1409,8 @@ size_t mozJSComponentLoader::ModuleEntry::SizeOfIncludingThis(
   return n;
 }
 
-/* static */ already_AddRefed<nsIFactory>
-mozJSComponentLoader::ModuleEntry::GetFactory(
+/* static */
+already_AddRefed<nsIFactory> mozJSComponentLoader::ModuleEntry::GetFactory(
     const mozilla::Module& module, const mozilla::Module::CIDEntry& entry) {
   const ModuleEntry& self = static_cast<const ModuleEntry&>(module);
   MOZ_ASSERT(self.getfactoryobj, "Handing out an uninitialized module?");

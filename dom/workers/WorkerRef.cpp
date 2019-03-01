@@ -98,7 +98,8 @@ void WorkerRef::Notify() {
 // ----------------------------------------------------------------------------
 // WeakWorkerRef
 
-/* static */ already_AddRefed<WeakWorkerRef> WeakWorkerRef::Create(
+/* static */
+already_AddRefed<WeakWorkerRef> WeakWorkerRef::Create(
     WorkerPrivate* aWorkerPrivate, std::function<void()>&& aCallback) {
   MOZ_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
@@ -142,7 +143,8 @@ WorkerPrivate* WeakWorkerRef::GetUnsafePrivate() const {
 // ----------------------------------------------------------------------------
 // StrongWorkerRef
 
-/* static */ already_AddRefed<StrongWorkerRef> StrongWorkerRef::Create(
+/* static */
+already_AddRefed<StrongWorkerRef> StrongWorkerRef::Create(
     WorkerPrivate* aWorkerPrivate, const char* aName,
     std::function<void()>&& aCallback) {
   MOZ_ASSERT(aWorkerPrivate);

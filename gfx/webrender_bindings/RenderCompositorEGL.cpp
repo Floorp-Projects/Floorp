@@ -19,7 +19,8 @@
 namespace mozilla {
 namespace wr {
 
-/* static */ UniquePtr<RenderCompositor> RenderCompositorEGL::Create(
+/* static */
+UniquePtr<RenderCompositor> RenderCompositorEGL::Create(
     RefPtr<widget::CompositorWidget> aWidget) {
   if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
     return nullptr;
@@ -56,7 +57,8 @@ RenderCompositorEGL::CreateGLContext(RefPtr<widget::CompositorWidget> aWidget) {
   return gl.forget();
 }
 
-/* static */ EGLSurface RenderCompositorEGL::CreateEGLSurface(
+/* static */
+EGLSurface RenderCompositorEGL::CreateEGLSurface(
     widget::CompositorWidget* aWidget) {
   EGLSurface surface = EGL_NO_SURFACE;
   surface = gl::GLContextEGL::CreateEGLSurfaceForCompositorWidget(

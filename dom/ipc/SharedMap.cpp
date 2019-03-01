@@ -433,10 +433,10 @@ JSObject* WritableSharedMap::WrapObject(JSContext* aCx,
   return MozWritableSharedMap_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-/* static */ already_AddRefed<SharedMapChangeEvent>
-SharedMapChangeEvent::Constructor(EventTarget* aEventTarget,
-                                  const nsAString& aType,
-                                  const MozSharedMapChangeEventInit& aInit) {
+/* static */
+already_AddRefed<SharedMapChangeEvent> SharedMapChangeEvent::Constructor(
+    EventTarget* aEventTarget, const nsAString& aType,
+    const MozSharedMapChangeEventInit& aInit) {
   RefPtr<SharedMapChangeEvent> event = new SharedMapChangeEvent(aEventTarget);
 
   bool trusted = event->Init(aEventTarget);

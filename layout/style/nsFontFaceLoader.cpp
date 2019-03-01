@@ -95,8 +95,8 @@ void nsFontFaceLoader::StartedLoading(nsIStreamLoader* aStreamLoader) {
   mStreamLoader = aStreamLoader;
 }
 
-/* static */ void nsFontFaceLoader::LoadTimerCallback(nsITimer* aTimer,
-                                                      void* aClosure) {
+/* static */
+void nsFontFaceLoader::LoadTimerCallback(nsITimer* aTimer, void* aClosure) {
   nsFontFaceLoader* loader = static_cast<nsFontFaceLoader*>(aClosure);
 
   MOZ_DIAGNOSTIC_ASSERT(!loader->mInLoadTimerCallback);

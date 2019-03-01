@@ -134,8 +134,9 @@ already_AddRefed<Gamepad> Gamepad::Clone(nsISupports* aParent) {
   return out.forget();
 }
 
-/* virtual */ JSObject* Gamepad::WrapObject(JSContext* aCx,
-                                            JS::Handle<JSObject*> aGivenProto) {
+/* virtual */
+JSObject* Gamepad::WrapObject(JSContext* aCx,
+                              JS::Handle<JSObject*> aGivenProto) {
   return Gamepad_Binding::Wrap(aCx, this, aGivenProto);
 }
 

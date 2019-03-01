@@ -97,7 +97,8 @@ nsresult ContentPrincipal::GetScriptLocation(nsACString& aStr) {
   return mCodebase->GetSpec(aStr);
 }
 
-/* static */ nsresult ContentPrincipal::GenerateOriginNoSuffixFromURI(
+/* static */
+nsresult ContentPrincipal::GenerateOriginNoSuffixFromURI(
     nsIURI* aURI, nsACString& aOriginNoSuffix) {
   if (!aURI) {
     return NS_ERROR_FAILURE;

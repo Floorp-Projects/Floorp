@@ -1437,7 +1437,8 @@ bool nsTableRowGroupFrame::ComputeCustomOverflow(
   return nsContainerFrame::ComputeCustomOverflow(aOverflowAreas);
 }
 
-/* virtual */ void nsTableRowGroupFrame::DidSetComputedStyle(
+/* virtual */
+void nsTableRowGroupFrame::DidSetComputedStyle(
     ComputedStyle* aOldComputedStyle) {
   nsContainerFrame::DidSetComputedStyle(aOldComputedStyle);
 
@@ -1556,15 +1557,18 @@ void nsTableRowGroupFrame::RemoveFrame(ChildListID aListID,
   mFrames.DestroyFrame(aOldFrame);
 }
 
-/* virtual */ nsMargin nsTableRowGroupFrame::GetUsedMargin() const {
+/* virtual */
+nsMargin nsTableRowGroupFrame::GetUsedMargin() const {
   return nsMargin(0, 0, 0, 0);
 }
 
-/* virtual */ nsMargin nsTableRowGroupFrame::GetUsedBorder() const {
+/* virtual */
+nsMargin nsTableRowGroupFrame::GetUsedBorder() const {
   return nsMargin(0, 0, 0, 0);
 }
 
-/* virtual */ nsMargin nsTableRowGroupFrame::GetUsedPadding() const {
+/* virtual */
+nsMargin nsTableRowGroupFrame::GetUsedPadding() const {
   return nsMargin(0, 0, 0, 0);
 }
 

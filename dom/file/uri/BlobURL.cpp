@@ -126,7 +126,8 @@ nsresult BlobURL::CloneInternal(
   return NS_OK;
 }
 
-/* virtual */ nsresult BlobURL::EqualsInternal(
+/* virtual */
+nsresult BlobURL::EqualsInternal(
     nsIURI* aOther, mozilla::net::nsSimpleURI::RefHandlingEnum aRefHandlingMode,
     bool* aResult) {
   if (!aOther) {

@@ -565,6 +565,8 @@ this.worker = new WorkerDebuggerLoader({
     "retrieveConsoleEvents": this.retrieveConsoleEvents,
     "setConsoleEventHandler": this.setConsoleEventHandler,
     "console": console,
+    "btoa": this.btoa,
+    "atob": this.atob,
   },
   loadSubScript: loadSubScript,
   modules: {

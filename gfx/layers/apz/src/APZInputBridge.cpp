@@ -27,7 +27,8 @@ static bool WillHandleMouseEvent(const WidgetMouseEventBase& aEvent) {
           aEvent.mMessage == eMouseHitTest);
 }
 
-/* static */ Maybe<APZWheelAction> APZInputBridge::ActionForWheelEvent(
+/* static */
+Maybe<APZWheelAction> APZInputBridge::ActionForWheelEvent(
     WidgetWheelEvent* aEvent) {
   if (!(aEvent->mDeltaMode == dom::WheelEvent_Binding::DOM_DELTA_LINE ||
         aEvent->mDeltaMode == dom::WheelEvent_Binding::DOM_DELTA_PIXEL ||

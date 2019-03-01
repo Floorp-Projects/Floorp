@@ -53,7 +53,8 @@ static PRLibrary* MozAVLink(nsIFile* aFile) {
   return lib;
 }
 
-/* static */ bool FFVPXRuntimeLinker::Init() {
+/* static */
+bool FFVPXRuntimeLinker::Init() {
   if (sLinkStatus) {
     return sLinkStatus == LinkStatus_SUCCEEDED;
   }
@@ -107,7 +108,8 @@ static PRLibrary* MozAVLink(nsIFile* aFile) {
   return false;
 }
 
-/* static */ already_AddRefed<PlatformDecoderModule>
+/* static */
+already_AddRefed<PlatformDecoderModule>
 FFVPXRuntimeLinker::CreateDecoderModule() {
   if (!Init()) {
     return nullptr;
@@ -115,7 +117,8 @@ FFVPXRuntimeLinker::CreateDecoderModule() {
   return FFmpegDecoderModule<FFVPX_VERSION>::Create(&sFFVPXLib);
 }
 
-/* static */ void FFVPXRuntimeLinker::GetRDFTFuncs(FFmpegRDFTFuncs* aOutFuncs) {
+/* static */
+void FFVPXRuntimeLinker::GetRDFTFuncs(FFmpegRDFTFuncs* aOutFuncs) {
   MOZ_ASSERT(sLinkStatus != LinkStatus_INIT);
   if (sFFVPXLib.av_rdft_init && sFFVPXLib.av_rdft_calc &&
       sFFVPXLib.av_rdft_end) {

@@ -84,9 +84,8 @@ ScreenHelperAndroid::ScreenHelperAndroid() {
 
 ScreenHelperAndroid::~ScreenHelperAndroid() { gHelper = nullptr; }
 
-/* static */ ScreenHelperAndroid* ScreenHelperAndroid::GetSingleton() {
-  return gHelper;
-}
+/* static */
+ScreenHelperAndroid* ScreenHelperAndroid::GetSingleton() { return gHelper; }
 
 void ScreenHelperAndroid::Refresh() {
   mScreens.Remove(0);

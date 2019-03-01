@@ -1051,8 +1051,8 @@ static void StripRundll32(nsString& aCommandString) {
 // to launch the associated application as it strips parameters and
 // rundll.exe from the string. Designed for retrieving display information
 // on a particular handler.
-/* static */ bool nsLocalFile::CleanupCmdHandlerPath(
-    nsAString& aCommandHandler) {
+/* static */
+bool nsLocalFile::CleanupCmdHandlerPath(nsAString& aCommandHandler) {
   nsAutoString handlerCommand(aCommandHandler);
 
   // Straight command path:

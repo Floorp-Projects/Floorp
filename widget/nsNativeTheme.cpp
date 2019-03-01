@@ -341,7 +341,8 @@ bool nsNativeTheme::IsDisabled(nsIFrame* aFrame, EventStates aEventStates) {
       eCaseMatters);
 }
 
-/* static */ bool nsNativeTheme::IsFrameRTL(nsIFrame* aFrame) {
+/* static */
+bool nsNativeTheme::IsFrameRTL(nsIFrame* aFrame) {
   if (!aFrame) {
     return false;
   }

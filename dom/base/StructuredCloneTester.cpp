@@ -33,11 +33,10 @@ StructuredCloneTester::StructuredCloneTester(nsISupports* aParent,
       mSerializable(aSerializable),
       mDeserializable(aDeserializable) {}
 
-/* static */ already_AddRefed<StructuredCloneTester>
-StructuredCloneTester::Constructor(const GlobalObject& aGlobal,
-                                   const bool aSerializable,
-                                   const bool aDeserializable,
-                                   ErrorResult& aRv) {
+/* static */
+already_AddRefed<StructuredCloneTester> StructuredCloneTester::Constructor(
+    const GlobalObject& aGlobal, const bool aSerializable,
+    const bool aDeserializable, ErrorResult& aRv) {
   RefPtr<StructuredCloneTester> sct = new StructuredCloneTester(
       aGlobal.GetAsSupports(), aSerializable, aDeserializable);
   return sct.forget();
@@ -47,7 +46,8 @@ bool StructuredCloneTester::Serializable() const { return mSerializable; }
 
 bool StructuredCloneTester::Deserializable() const { return mDeserializable; }
 
-/* static */ JSObject* StructuredCloneTester::ReadStructuredClone(
+/* static */
+JSObject* StructuredCloneTester::ReadStructuredClone(
     JSContext* aCx, JSStructuredCloneReader* aReader) {
   uint32_t serializable = 0;
   uint32_t deserializable = 0;

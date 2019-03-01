@@ -63,14 +63,16 @@ class MessagePortService::MessagePortServiceData final {
   bool mNextStepCloseAll;
 };
 
-/* static */ MessagePortService* MessagePortService::Get() {
+/* static */
+MessagePortService* MessagePortService::Get() {
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 
   return gInstance;
 }
 
-/* static */ MessagePortService* MessagePortService::GetOrCreate() {
+/* static */
+MessagePortService* MessagePortService::GetOrCreate() {
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 

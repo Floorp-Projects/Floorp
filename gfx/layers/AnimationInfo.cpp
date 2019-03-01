@@ -136,7 +136,8 @@ bool AnimationInfo::HasTransformAnimation() const {
   return false;
 }
 
-/* static */ Maybe<uint64_t> AnimationInfo::GetGenerationFromFrame(
+/* static */
+Maybe<uint64_t> AnimationInfo::GetGenerationFromFrame(
     nsIFrame* aFrame, DisplayItemType aDisplayItemKey) {
   MOZ_ASSERT(aFrame->IsPrimaryFrame() ||
              nsLayoutUtils::IsFirstContinuationOrIBSplitSibling(aFrame));
@@ -163,7 +164,8 @@ bool AnimationInfo::HasTransformAnimation() const {
   return Nothing();
 }
 
-/* static */ void AnimationInfo::EnumerateGenerationOnFrame(
+/* static */
+void AnimationInfo::EnumerateGenerationOnFrame(
     const nsIFrame* aFrame, const nsIContent* aContent,
     const CompositorAnimatableDisplayItemTypes& aDisplayItemTypes,
     const AnimationGenerationCallback& aCallback) {

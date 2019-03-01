@@ -3693,8 +3693,9 @@ static const JSFunctionSpec string_static_methods[] = {
     JS_SELF_HOSTED_FN("localeCompare", "String_static_localeCompare", 2, 0),
     JS_FS_END};
 
-/* static */ Shape* StringObject::assignInitialShape(
-    JSContext* cx, Handle<StringObject*> obj) {
+/* static */
+Shape* StringObject::assignInitialShape(JSContext* cx,
+                                        Handle<StringObject*> obj) {
   MOZ_ASSERT(obj->empty());
 
   return NativeObject::addDataProperty(cx, obj, cx->names().length, LENGTH_SLOT,

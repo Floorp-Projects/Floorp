@@ -506,6 +506,90 @@
     constructor() {
       super();
 
+      this.attachShadow({ mode: "open" });
+      this.shadowRoot.appendChild(MozXULElement.parseXULToFragment(`
+        <html:link rel="stylesheet" href="chrome://global/skin/tree.css" />
+        <html:slot name="treecols"></html:slot>
+        <stack class="tree-stack" flex="1">
+          <hbox class="tree-rows" flex="1">
+            <hbox flex="1" class="tree-bodybox">
+              <html:slot name="treechildren"></html:slot>
+            </hbox>
+            <scrollbar height="0" minwidth="0" minheight="0" orient="vertical" inherits="collapsed=hidevscroll" style="position:relative; z-index:2147483647;" oncontextmenu="event.stopPropagation(); event.preventDefault();" onclick="event.stopPropagation(); event.preventDefault();" ondblclick="event.stopPropagation();" oncommand="event.stopPropagation();"></scrollbar>
+          </hbox>
+          <textbox class="tree-input" left="0" top="0" hidden="true"></textbox>
+        </stack>
+        <hbox inherits="collapsed=hidehscroll">
+          <scrollbar orient="horizontal" flex="1" increment="16" style="position:relative; z-index:2147483647;" oncontextmenu="event.stopPropagation(); event.preventDefault();" onclick="event.stopPropagation(); event.preventDefault();" ondblclick="event.stopPropagation();" oncommand="event.stopPropagation();"></scrollbar>
+          <scrollcorner inherits="collapsed=hidevscroll" oncontextmenu="event.stopPropagation(); event.preventDefault();" onclick="event.stopPropagation(); event.preventDefault();" ondblclick="event.stopPropagation();" oncommand="event.stopPropagation();"></scrollcorner>
+        </hbox>
+      `));
+    }
+
+    static get observedAttributes() {
+      return [
+        "hidehscroll",
+        "hidevscroll",
+      ];
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+      if (this.isConnectedAndReady && oldValue != newValue) {
+        this._updateAttributes();
+      }
+    }
+
+    _updateAttributes() {
+      for (let [ el, attrs ] of this._inheritedAttributeMap.entries()) {
+        for (let attr of attrs) {
+          this.inheritAttribute(el, attr);
+        }
+      }
+    }
+
+    get _inheritedAttributeMap() {
+      if (!this.__inheritedAttributeMap) {
+        this.__inheritedAttributeMap = new Map();
+        for (let el of this.shadowRoot.querySelectorAll("[inherits]")) {
+          this.__inheritedAttributeMap.set(el, el.getAttribute("inherits").split(","));
+        }
+      }
+      return this.__inheritedAttributeMap;
+    }
+
+    connectedCallback() {
+      if (this.delayConnectedCallback()) {
+        return;
+      }
+      if (!this._eventListenersSetup) {
+        this._eventListenersSetup = true;
+        this.setupEventListeners();
+      }
+
+      this.setAttribute("hidevscroll", "true");
+      this.setAttribute("hidehscroll", "true");
+      this.setAttribute("clickthrough", "never");
+
+      this._updateAttributes();
+
+      this.pageUpOrDownMovesSelection = !/Mac/.test(navigator.platform);
+
+      this._inputField = null;
+
+      this._editingRow = -1;
+
+      this._editingColumn = null;
+
+      this._columnsDirty = true;
+
+      this._lastKeyTime = 0;
+
+      this._incrementalString = "";
+
+      this._touchY = -1;
+    }
+
+    setupEventListeners() {
       this.addEventListener("underflow", (event) => {
         // Scrollport event orientation
         // 0: vertical
@@ -608,7 +692,9 @@
         }
       });
 
-      this.addEventListener("select", (event) => { if (event.originalTarget == this) this.stopEditing(true); });
+      this.addEventListener("select", (event) => {
+        if (event.originalTarget == this) this.stopEditing(true);
+      });
 
       this.addEventListener("focus", (event) => {
         this.focused = true;
@@ -617,173 +703,141 @@
         }
       });
 
-      this.addEventListener("blur", (event) => { this.focused = false; });
-
-      this.addEventListener("blur", (event) => { if (event.originalTarget == this.inputField.inputField) this.stopEditing(true); }, true);
+      this.addEventListener("blur", (event) => {
+        this.focused = false;
+        if (event.originalTarget == this.inputField.inputField) {
+          this.stopEditing(true);
+        }
+      }, true);
 
       this.addEventListener("keydown", (event) => {
-        if (event.keyCode != KeyEvent.DOM_VK_RETURN) {
-          return;
-        }
+        switch (event.keyCode) {
+          case KeyEvent.DOM_VK_RETURN: {
+            if (this._handleEnter(event)) {
+              event.stopPropagation();
+              event.preventDefault();
+            }
+            break;
+          }
+          case KeyEvent.DOM_VK_ESCAPE: {
+            if (this._editingColumn) {
+              this.stopEditing(false);
+              this.focus();
+              event.stopPropagation();
+              event.preventDefault();
+            }
+            break;
+          }
+          case KeyEvent.DOM_VK_LEFT: {
+            if (this._editingColumn)
+              return;
 
-        if (this._handleEnter(event)) {
-          event.stopPropagation();
-          event.preventDefault();
-        }
-      });
+            let row = this.currentIndex;
+            if (row < 0)
+              return;
 
-      this.addEventListener("keydown", (event) => {
-        if (event.keyCode != KeyEvent.DOM_VK_ESCAPE) {
-          return;
-        }
+            if (this.changeOpenState(this.currentIndex, false)) {
+              event.preventDefault();
+              return;
+            }
+            let parentIndex = this.view.getParentIndex(this.currentIndex);
+            if (parentIndex >= 0) {
+              this.view.selection.select(parentIndex);
+              this.ensureRowIsVisible(parentIndex);
+              event.preventDefault();
+            }
+            break;
+          }
+          case KeyEvent.DOM_VK_RIGHT: {
+            if (this._editingColumn)
+              return;
 
-        if (this._editingColumn) {
-          this.stopEditing(false);
-          this.focus();
-          event.stopPropagation();
-          event.preventDefault();
-        }
-      });
+            let row = this.currentIndex;
+            if (row < 0)
+              return;
 
-      this.addEventListener("keydown", (event) => {
-        if (event.keyCode != KeyEvent.DOM_VK_LEFT) {
-          return;
-        }
+            if (this.changeOpenState(row, true)) {
+              event.preventDefault();
+              return;
+            }
+            let c = row + 1;
+            let view = this.view;
+            if (c < view.rowCount &&
+              view.getParentIndex(c) == row) {
+              // If already opened, select the first child.
+              // The getParentIndex test above ensures that the children
+              // are already populated and ready.
+              this.view.selection.timedSelect(c, this._selectDelay);
+              this.ensureRowIsVisible(c);
+              event.preventDefault();
+            }
+            break;
+          }
+          case KeyEvent.DOM_VK_UP: {
+            if (this._editingColumn)
+              return;
 
-        if (this._editingColumn)
-          return;
+            if (event.getModifierState("Shift")) {
+              this._moveByOffsetShift(-1, 0, event);
+            } else {
+              this._moveByOffset(-1, 0, event);
+            }
+            break;
+          }
+          case KeyEvent.DOM_VK_DOWN: {
+            if (this._editingColumn)
+              return;
+            if (event.getModifierState("Shift")) {
+              this._moveByOffsetShift(1, this.view.rowCount - 1, event);
+            } else {
+              this._moveByOffset(1, this.view.rowCount - 1, event);
+            }
+            break;
+          }
+          case KeyEvent.DOM_VK_PAGE_UP: {
+            if (this._editingColumn)
+              return;
 
-        var row = this.currentIndex;
-        if (row < 0)
-          return;
+            if (event.getModifierState("Shift")) {
+              this._moveByPageShift(-1, 0, event);
+            } else {
+              this._moveByPage(-1, 0, event);
+            }
+            break;
+          }
+          case KeyEvent.DOM_VK_PAGE_DOWN: {
+            if (this._editingColumn)
+              return;
 
-        if (this.changeOpenState(this.currentIndex, false)) {
-          event.preventDefault();
-          return;
-        }
-        var parentIndex = this.view.getParentIndex(this.currentIndex);
-        if (parentIndex >= 0) {
-          this.view.selection.select(parentIndex);
-          this.ensureRowIsVisible(parentIndex);
-          event.preventDefault();
-        }
-      });
+            if (event.getModifierState("Shift")) {
+              this._moveByPageShift(1, this.view.rowCount - 1, event);
+            } else {
+              this._moveByPage(1, this.view.rowCount - 1, event);
+            }
+            break;
+          }
+          case KeyEvent.DOM_VK_HOME: {
+            if (this._editingColumn)
+              return;
 
-      this.addEventListener("keydown", (event) => {
-        if (event.keyCode != KeyEvent.DOM_VK_RIGHT) {
-          return;
-        }
+            if (event.getModifierState("Shift")) {
+              this._moveToEdgeShift(0, event);
+            } else {
+              this._moveToEdge(0, event);
+            }
+            break;
+          }
+          case KeyEvent.DOM_VK_END: {
+            if (this._editingColumn)
+              return;
 
-        if (this._editingColumn)
-          return;
-
-        var row = this.currentIndex;
-        if (row < 0)
-          return;
-
-        if (this.changeOpenState(row, true)) {
-          event.preventDefault();
-          return;
-        }
-        var c = row + 1;
-        var view = this.view;
-        if (c < view.rowCount &&
-          view.getParentIndex(c) == row) {
-          // If already opened, select the first child.
-          // The getParentIndex test above ensures that the children
-          // are already populated and ready.
-          this.view.selection.timedSelect(c, this._selectDelay);
-          this.ensureRowIsVisible(c);
-          event.preventDefault();
-        }
-      });
-
-      this.addEventListener("keydown", (event) => {
-        if (event.keyCode != KeyEvent.DOM_VK_UP) {
-          return;
-        }
-
-        if (this._editingColumn)
-          return;
-
-        if (event.getModifierState("Shift")) {
-          this._moveByOffsetShift(-1, 0, event);
-        } else {
-          this._moveByOffset(-1, 0, event);
-        }
-      });
-
-      this.addEventListener("keydown", (event) => {
-        if (event.keyCode != KeyEvent.DOM_VK_DOWN) {
-          return;
-        }
-
-        if (this._editingColumn)
-          return;
-        if (event.getModifierState("Shift")) {
-          this._moveByOffsetShift(1, this.view.rowCount - 1, event);
-        } else {
-          this._moveByOffset(1, this.view.rowCount - 1, event);
-        }
-      });
-
-      this.addEventListener("keydown", (event) => {
-        if (event.keyCode != KeyEvent.DOM_VK_PAGE_UP) {
-          return;
-        }
-
-        if (this._editingColumn)
-          return;
-
-        if (event.getModifierState("Shift")) {
-          this._moveByPageShift(-1, 0, event);
-        } else {
-          this._moveByPage(-1, 0, event);
-        }
-      });
-
-      this.addEventListener("keydown", (event) => {
-        if (event.keyCode != KeyEvent.DOM_VK_PAGE_DOWN) {
-          return;
-        }
-
-        if (this._editingColumn)
-          return;
-
-        if (event.getModifierState("Shift")) {
-          this._moveByPageShift(1, this.view.rowCount - 1, event);
-        } else {
-          this._moveByPage(1, this.view.rowCount - 1, event);
-        }
-      });
-
-      this.addEventListener("keydown", (event) => {
-        if (event.keyCode != KeyEvent.DOM_VK_HOME) {
-          return;
-        }
-
-        if (this._editingColumn)
-          return;
-
-        if (event.getModifierState("Shift")) {
-          this._moveToEdgeShift(0, event);
-        } else {
-          this._moveToEdge(0, event);
-        }
-      });
-
-      this.addEventListener("keydown", (event) => {
-        if (event.keyCode != KeyEvent.DOM_VK_END) {
-          return;
-        }
-
-        if (this._editingColumn)
-          return;
-
-        if (event.getModifierState("Shift")) {
-          this._moveToEdgeShift(this.view.rowCount - 1, event);
-        } else {
-          this._moveToEdge(this.view.rowCount - 1, event);
+            if (event.getModifierState("Shift")) {
+              this._moveToEdgeShift(this.view.rowCount - 1, event);
+            } else {
+              this._moveToEdge(this.view.rowCount - 1, event);
+            }
+            break;
+          }
         }
       });
 
@@ -809,84 +863,6 @@
           event.preventDefault();
         }
       });
-
-      this.attachShadow({ mode: "open" });
-      this.shadowRoot.appendChild(MozXULElement.parseXULToFragment(`
-        <html:link rel="stylesheet" href="chrome://global/skin/tree.css" />
-        <html:slot name="treecols"></html:slot>
-        <stack class="tree-stack" flex="1">
-          <hbox class="tree-rows" flex="1">
-            <hbox flex="1" class="tree-bodybox">
-              <html:slot name="treechildren"></html:slot>
-            </hbox>
-            <scrollbar height="0" minwidth="0" minheight="0" orient="vertical" inherits="collapsed=hidevscroll" style="position:relative; z-index:2147483647;" oncontextmenu="event.stopPropagation(); event.preventDefault();" onclick="event.stopPropagation(); event.preventDefault();" ondblclick="event.stopPropagation();" oncommand="event.stopPropagation();"></scrollbar>
-          </hbox>
-          <textbox class="tree-input" left="0" top="0" hidden="true"></textbox>
-        </stack>
-        <hbox inherits="collapsed=hidehscroll">
-          <scrollbar orient="horizontal" flex="1" increment="16" style="position:relative; z-index:2147483647;" oncontextmenu="event.stopPropagation(); event.preventDefault();" onclick="event.stopPropagation(); event.preventDefault();" ondblclick="event.stopPropagation();" oncommand="event.stopPropagation();"></scrollbar>
-          <scrollcorner inherits="collapsed=hidevscroll" oncontextmenu="event.stopPropagation(); event.preventDefault();" onclick="event.stopPropagation(); event.preventDefault();" ondblclick="event.stopPropagation();" oncommand="event.stopPropagation();"></scrollcorner>
-        </hbox>
-      `));
-    }
-
-    static get observedAttributes() {
-      return [
-        "hidehscroll",
-        "hidevscroll",
-      ];
-    }
-
-    attributeChangedCallback(name, oldValue, newValue) {
-      if (this.isConnectedAndReady && oldValue != newValue) {
-        this._updateAttributes();
-      }
-    }
-
-    _updateAttributes() {
-      for (let [ el, attrs ] of this._inheritedAttributeMap.entries()) {
-        for (let attr of attrs) {
-          this.inheritAttribute(el, attr);
-        }
-      }
-    }
-
-    get _inheritedAttributeMap() {
-      if (!this.__inheritedAttributeMap) {
-        this.__inheritedAttributeMap = new Map();
-        for (let el of this.shadowRoot.querySelectorAll("[inherits]")) {
-          this.__inheritedAttributeMap.set(el, el.getAttribute("inherits").split(","));
-        }
-      }
-      return this.__inheritedAttributeMap;
-    }
-
-    connectedCallback() {
-      if (this.delayConnectedCallback()) {
-        return;
-      }
-
-      this.setAttribute("hidevscroll", "true");
-      this.setAttribute("hidehscroll", "true");
-      this.setAttribute("clickthrough", "never");
-
-      this._updateAttributes();
-
-      this.pageUpOrDownMovesSelection = !/Mac/.test(navigator.platform);
-
-      this._inputField = null;
-
-      this._editingRow = -1;
-
-      this._editingColumn = null;
-
-      this._columnsDirty = true;
-
-      this._lastKeyTime = 0;
-
-      this._incrementalString = "";
-
-      this._touchY = -1;
     }
 
     get body() {

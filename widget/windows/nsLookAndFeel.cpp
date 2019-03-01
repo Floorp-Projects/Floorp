@@ -107,7 +107,8 @@ nsLookAndFeel::~nsLookAndFeel() {}
 
 void nsLookAndFeel::NativeInit() { EnsureInit(); }
 
-/* virtual */ void nsLookAndFeel::RefreshImpl() {
+/* virtual */
+void nsLookAndFeel::RefreshImpl() {
   nsXPLookAndFeel::RefreshImpl();
 
   for (auto e = mSystemFontCache.begin(), end = mSystemFontCache.end();
@@ -810,7 +811,8 @@ void nsLookAndFeel::SetIntCacheImpl(
   }
 }
 
-/* static */ nsresult nsLookAndFeel::GetAccentColor(nscolor &aColor) {
+/* static */
+nsresult nsLookAndFeel::GetAccentColor(nscolor &aColor) {
   nsresult rv;
 
   if (!mDwmKey) {
@@ -844,7 +846,8 @@ void nsLookAndFeel::SetIntCacheImpl(
   return rv;
 }
 
-/* static */ nsresult nsLookAndFeel::GetAccentColorText(nscolor &aColor) {
+/* static */
+nsresult nsLookAndFeel::GetAccentColorText(nscolor &aColor) {
   nscolor accentColor;
   nsresult rv = GetAccentColor(accentColor);
   if (NS_WARN_IF(NS_FAILED(rv))) {

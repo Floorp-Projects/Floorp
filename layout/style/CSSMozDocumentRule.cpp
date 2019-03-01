@@ -14,8 +14,9 @@ namespace dom {
 
 using namespace mozilla::css;
 
-/* virtual */ JSObject* CSSMozDocumentRule::WrapObject(
-    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
+/* virtual */
+JSObject* CSSMozDocumentRule::WrapObject(JSContext* aCx,
+                                         JS::Handle<JSObject*> aGivenProto) {
   return CSSMozDocumentRule_Binding::Wrap(aCx, this, aGivenProto);
 }
 
@@ -86,7 +87,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CSSMozDocumentRule)
 NS_INTERFACE_MAP_END_INHERITING(css::ConditionRule)
 
 #ifdef DEBUG
-/* virtual */ void CSSMozDocumentRule::List(FILE* out, int32_t aIndent) const {
+/* virtual */
+void CSSMozDocumentRule::List(FILE* out, int32_t aIndent) const {
   nsAutoCString str;
   for (int32_t i = 0; i < aIndent; i++) {
     str.AppendLiteral("  ");
@@ -105,11 +107,13 @@ void CSSMozDocumentRule::SetConditionText(const nsAString& aConditionText,
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
-/* virtual */ void CSSMozDocumentRule::GetCssText(nsAString& aCssText) const {
+/* virtual */
+void CSSMozDocumentRule::GetCssText(nsAString& aCssText) const {
   Servo_MozDocumentRule_GetCssText(mRawRule, &aCssText);
 }
 
-/* virtual */ size_t CSSMozDocumentRule::SizeOfIncludingThis(
+/* virtual */
+size_t CSSMozDocumentRule::SizeOfIncludingThis(
     MallocSizeOf aMallocSizeOf) const {
   // TODO Implement this!
   return aMallocSizeOf(this);

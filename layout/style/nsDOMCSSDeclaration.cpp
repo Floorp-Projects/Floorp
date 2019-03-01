@@ -25,8 +25,9 @@ using namespace mozilla;
 
 nsDOMCSSDeclaration::~nsDOMCSSDeclaration() = default;
 
-/* virtual */ JSObject* nsDOMCSSDeclaration::WrapObject(
-    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
+/* virtual */
+JSObject* nsDOMCSSDeclaration::WrapObject(JSContext* aCx,
+                                          JS::Handle<JSObject*> aGivenProto) {
   return dom::CSS2Properties_Binding::Wrap(aCx, this, aGivenProto);
 }
 

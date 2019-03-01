@@ -12,8 +12,9 @@
 namespace mozilla {
 namespace gfx {
 
-/* static */ already_AddRefed<PrintTargetThebes>
-PrintTargetThebes::CreateOrNull(gfxASurface* aSurface) {
+/* static */
+already_AddRefed<PrintTargetThebes> PrintTargetThebes::CreateOrNull(
+    gfxASurface* aSurface) {
   MOZ_ASSERT(aSurface);
 
   if (!aSurface || aSurface->CairoStatus()) {

@@ -34,9 +34,9 @@ const char* SandboxBrokerCommon::OperationDescription[] = {
     "open",  "access", "stat",  "chmod",  "link",     "symlink",
     "mkdir", "rename", "rmdir", "unlink", "readlink", "connect"};
 
-/* static */ ssize_t SandboxBrokerCommon::RecvWithFd(int aFd, const iovec* aIO,
-                                                     size_t aNumIO,
-                                                     int* aPassedFdPtr) {
+/* static */
+ssize_t SandboxBrokerCommon::RecvWithFd(int aFd, const iovec* aIO,
+                                        size_t aNumIO, int* aPassedFdPtr) {
   struct msghdr msg = {};
   msg.msg_iov = const_cast<iovec*>(aIO);
   msg.msg_iovlen = aNumIO;
@@ -93,9 +93,9 @@ const char* SandboxBrokerCommon::OperationDescription[] = {
   return rv;
 }
 
-/* static */ ssize_t SandboxBrokerCommon::SendWithFd(int aFd, const iovec* aIO,
-                                                     size_t aNumIO,
-                                                     int aPassedFd) {
+/* static */
+ssize_t SandboxBrokerCommon::SendWithFd(int aFd, const iovec* aIO,
+                                        size_t aNumIO, int aPassedFd) {
   struct msghdr msg = {};
   msg.msg_iov = const_cast<iovec*>(aIO);
   msg.msg_iovlen = aNumIO;

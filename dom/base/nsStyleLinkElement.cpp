@@ -144,27 +144,28 @@ void nsStyleLinkElement::GetCharset(nsAString& aCharset) {
   aCharset.Truncate();
 }
 
-/* virtual */ void nsStyleLinkElement::OverrideBaseURI(nsIURI* aNewBaseURI) {
+/* virtual */
+void nsStyleLinkElement::OverrideBaseURI(nsIURI* aNewBaseURI) {
   MOZ_ASSERT_UNREACHABLE(
       "Base URI can't be overriden in this implementation "
       "of nsIStyleSheetLinkingElement.");
 }
 
-/* virtual */ void nsStyleLinkElement::SetLineNumber(uint32_t aLineNumber) {
+/* virtual */
+void nsStyleLinkElement::SetLineNumber(uint32_t aLineNumber) {
   mLineNumber = aLineNumber;
 }
 
-/* virtual */ uint32_t nsStyleLinkElement::GetLineNumber() {
-  return mLineNumber;
-}
+/* virtual */
+uint32_t nsStyleLinkElement::GetLineNumber() { return mLineNumber; }
 
-/* virtual */ void nsStyleLinkElement::SetColumnNumber(uint32_t aColumnNumber) {
+/* virtual */
+void nsStyleLinkElement::SetColumnNumber(uint32_t aColumnNumber) {
   mColumnNumber = aColumnNumber;
 }
 
-/* virtual */ uint32_t nsStyleLinkElement::GetColumnNumber() {
-  return mColumnNumber;
-}
+/* virtual */
+uint32_t nsStyleLinkElement::GetColumnNumber() { return mColumnNumber; }
 
 static uint32_t ToLinkMask(const nsAString& aLink) {
   // Keep this in sync with sRelValues in HTMLLinkElement.cpp

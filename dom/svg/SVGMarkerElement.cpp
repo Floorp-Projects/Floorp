@@ -148,7 +148,8 @@ void SVGMarkerElement::SetParentCoordCtxProvider(SVGViewportElement* aContext) {
   mViewBoxToViewportTransform = nullptr;
 }
 
-/* virtual */ bool SVGMarkerElement::HasValidDimensions() const {
+/* virtual */
+bool SVGMarkerElement::HasValidDimensions() const {
   return (!mLengthAttributes[MARKERWIDTH].IsExplicitlySet() ||
           mLengthAttributes[MARKERWIDTH].GetAnimValInSpecifiedUnits() > 0) &&
          (!mLengthAttributes[MARKERHEIGHT].IsExplicitlySet() ||

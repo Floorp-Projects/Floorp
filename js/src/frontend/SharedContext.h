@@ -184,6 +184,19 @@ class SharedContext {
   bool isEvalContext() const { return kind_ == Kind::Eval; }
   inline EvalSharedContext* asEvalContext();
 
+  bool isTopLevelContext() const {
+    switch (kind_) {
+      case Kind::Module:
+      case Kind::Global:
+      case Kind::Eval:
+        return true;
+      case Kind::FunctionBox:
+        break;
+    }
+    MOZ_ASSERT(kind_ == Kind::FunctionBox);
+    return false;
+  }
+
   ThisBinding thisBinding() const { return thisBinding_; }
 
   bool allowNewTarget() const { return allowNewTarget_; }

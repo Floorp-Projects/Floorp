@@ -2729,9 +2729,10 @@ static inline bool IsAutocompleteOff(const nsIContent* aContent) {
              NS_LITERAL_STRING("off"), eIgnoreCase);
 }
 
-/*static*/ nsresult nsContentUtils::GenerateStateKey(nsIContent* aContent,
-                                                     Document* aDocument,
-                                                     nsACString& aKey) {
+/*static*/
+nsresult nsContentUtils::GenerateStateKey(nsIContent* aContent,
+                                          Document* aDocument,
+                                          nsACString& aKey) {
   aKey.Truncate();
 
   uint32_t partID = aDocument ? aDocument->GetPartID() : 0;
@@ -3620,7 +3621,8 @@ static const char gPropertiesFiles[nsContentUtils::PropertiesFile_COUNT][56] = {
     "chrome://global/locale/security/security.properties",
     "chrome://necko/locale/necko.properties"};
 
-/* static */ nsresult nsContentUtils::EnsureStringBundle(PropertiesFile aFile) {
+/* static */
+nsresult nsContentUtils::EnsureStringBundle(PropertiesFile aFile) {
   if (!sStringBundles[aFile]) {
     if (!sStringBundleService) {
       nsresult rv =
@@ -3711,9 +3713,10 @@ nsresult nsContentUtils::FormatLocalizedString(
                                aResult);
 }
 
-/* static */ void nsContentUtils::LogSimpleConsoleError(
-    const nsAString& aErrorText, const char* classification,
-    bool aFromPrivateWindow) {
+/* static */
+void nsContentUtils::LogSimpleConsoleError(const nsAString& aErrorText,
+                                           const char* classification,
+                                           bool aFromPrivateWindow) {
   nsCOMPtr<nsIScriptError> scriptError =
       do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
   if (scriptError) {
@@ -3728,7 +3731,8 @@ nsresult nsContentUtils::FormatLocalizedString(
   }
 }
 
-/* static */ nsresult nsContentUtils::ReportToConsole(
+/* static */
+nsresult nsContentUtils::ReportToConsole(
     uint32_t aErrorFlags, const nsACString& aCategory,
     const Document* aDocument, PropertiesFile aFile, const char* aMessageName,
     const char16_t** aParams, uint32_t aParamsLength, nsIURI* aURI,
@@ -3752,13 +3756,14 @@ nsresult nsContentUtils::FormatLocalizedString(
                                      aColumnNumber);
 }
 
-/* static */ void nsContentUtils::ReportEmptyGetElementByIdArg(
-    const Document* aDoc) {
+/* static */
+void nsContentUtils::ReportEmptyGetElementByIdArg(const Document* aDoc) {
   ReportToConsole(nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), aDoc,
                   nsContentUtils::eDOM_PROPERTIES, "EmptyGetElementByIdParam");
 }
 
-/* static */ nsresult nsContentUtils::ReportToConsoleNonLocalized(
+/* static */
+nsresult nsContentUtils::ReportToConsoleNonLocalized(
     const nsAString& aErrorText, uint32_t aErrorFlags,
     const nsACString& aCategory, const Document* aDocument, nsIURI* aURI,
     const nsString& aSourceLine, uint32_t aLineNumber, uint32_t aColumnNumber,
@@ -3776,7 +3781,8 @@ nsresult nsContentUtils::FormatLocalizedString(
                                    aLineNumber, aColumnNumber, aLocationMode);
 }
 
-/* static */ nsresult nsContentUtils::ReportToConsoleByWindowID(
+/* static */
+nsresult nsContentUtils::ReportToConsoleByWindowID(
     const nsAString& aErrorText, uint32_t aErrorFlags,
     const nsACString& aCategory, uint64_t aInnerWindowID, nsIURI* aURI,
     const nsString& aSourceLine, uint32_t aLineNumber, uint32_t aColumnNumber,
@@ -5057,7 +5063,8 @@ void nsContentUtils::NotifyInstalledMenuKeyboardListener(bool aInstalling) {
   IMEStateManager::OnInstalledMenuKeyboardListener(aInstalling);
 }
 
-/* static */ bool nsContentUtils::SchemeIs(nsIURI* aURI, const char* aScheme) {
+/* static */
+bool nsContentUtils::SchemeIs(nsIURI* aURI, const char* aScheme) {
   nsCOMPtr<nsIURI> baseURI = NS_GetInnermostURI(aURI);
   NS_ENSURE_TRUE(baseURI, false);
 
@@ -6005,10 +6012,12 @@ bool nsContentUtils::CanAccessNativeAnon() {
   return LegacyIsCallerChromeOrNativeCode() || IsCallerContentXBL();
 }
 
-/* static */ nsresult nsContentUtils::DispatchXULCommand(
-    nsIContent* aTarget, bool aTrusted, Event* aSourceEvent,
-    nsIPresShell* aShell, bool aCtrl, bool aAlt, bool aShift, bool aMeta,
-    uint16_t aInputSource) {
+/* static */
+nsresult nsContentUtils::DispatchXULCommand(nsIContent* aTarget, bool aTrusted,
+                                            Event* aSourceEvent,
+                                            nsIPresShell* aShell, bool aCtrl,
+                                            bool aAlt, bool aShift, bool aMeta,
+                                            uint16_t aInputSource) {
   NS_ENSURE_STATE(aTarget);
   Document* doc = aTarget->OwnerDoc();
   nsPresContext* presContext = doc->GetPresContext();
@@ -9145,8 +9154,9 @@ bool nsContentUtils::IsSpecificAboutPage(JSObject* aGlobal, const char* aUri) {
   return spec.EqualsASCII(aUri);
 }
 
-/* static */ void nsContentUtils::SetScrollbarsVisibility(
-    nsIDocShell* aDocShell, bool aVisible) {
+/* static */
+void nsContentUtils::SetScrollbarsVisibility(nsIDocShell* aDocShell,
+                                             bool aVisible) {
   nsCOMPtr<nsIScrollable> scroller = do_QueryInterface(aDocShell);
 
   if (scroller) {
@@ -9165,8 +9175,9 @@ bool nsContentUtils::IsSpecificAboutPage(JSObject* aGlobal, const char* aUri) {
   }
 }
 
-/* static */ void nsContentUtils::GetPresentationURL(
-    nsIDocShell* aDocShell, nsAString& aPresentationUrl) {
+/* static */
+void nsContentUtils::GetPresentationURL(nsIDocShell* aDocShell,
+                                        nsAString& aPresentationUrl) {
   MOZ_ASSERT(aDocShell);
 
   // Simulate receiver context for web platform test
@@ -9221,8 +9232,8 @@ bool nsContentUtils::IsSpecificAboutPage(JSObject* aGlobal, const char* aUri) {
                             aPresentationUrl);
 }
 
-/* static */ nsIDocShell* nsContentUtils::GetDocShellForEventTarget(
-    EventTarget* aTarget) {
+/* static */
+nsIDocShell* nsContentUtils::GetDocShellForEventTarget(EventTarget* aTarget) {
   nsCOMPtr<nsPIDOMWindowInner> innerWindow;
 
   if (nsCOMPtr<nsINode> node = do_QueryInterface(aTarget)) {
@@ -9280,7 +9291,8 @@ bool nsContentUtils::IsSpecificAboutPage(JSObject* aGlobal, const char* aUri) {
  * that we may restrict the privileges of some pages unnecessarily in this
  * edge case.
  */
-/* static */ bool nsContentUtils::HttpsStateIsModern(Document* aDocument) {
+/* static */
+bool nsContentUtils::HttpsStateIsModern(Document* aDocument) {
   if (!aDocument) {
     return false;
   }
@@ -9339,7 +9351,8 @@ bool nsContentUtils::IsSpecificAboutPage(JSObject* aGlobal, const char* aUri) {
   return false;
 }
 
-/* static */ void nsContentUtils::TryToUpgradeElement(Element* aElement) {
+/* static */
+void nsContentUtils::TryToUpgradeElement(Element* aElement) {
   NodeInfo* nodeInfo = aElement->NodeInfo();
   RefPtr<nsAtom> typeAtom =
       aElement->GetCustomElementData()->GetCustomElementType();
@@ -9394,7 +9407,8 @@ static void DoCustomElementCreate(Element** aElement, Document* aDoc,
   element.forget(aElement);
 }
 
-/* static */ nsresult nsContentUtils::NewXULOrHTMLElement(
+/* static */
+nsresult nsContentUtils::NewXULOrHTMLElement(
     Element** aResult, mozilla::dom::NodeInfo* aNodeInfo,
     FromParser aFromParser, nsAtom* aIsAtom,
     mozilla::dom::CustomElementDefinition* aDefinition) {
@@ -9592,10 +9606,10 @@ CustomElementRegistry* nsContentUtils::GetCustomElementRegistry(
   return window->CustomElements();
 }
 
-/* static */ CustomElementDefinition*
-nsContentUtils::LookupCustomElementDefinition(Document* aDoc, nsAtom* aNameAtom,
-                                              uint32_t aNameSpaceID,
-                                              nsAtom* aTypeAtom) {
+/* static */
+CustomElementDefinition* nsContentUtils::LookupCustomElementDefinition(
+    Document* aDoc, nsAtom* aNameAtom, uint32_t aNameSpaceID,
+    nsAtom* aTypeAtom) {
   if (aNameSpaceID != kNameSpaceID_XUL && aNameSpaceID != kNameSpaceID_XHTML) {
     return nullptr;
   }
@@ -9609,8 +9623,9 @@ nsContentUtils::LookupCustomElementDefinition(Document* aDoc, nsAtom* aNameAtom,
                                                  aTypeAtom);
 }
 
-/* static */ void nsContentUtils::RegisterCallbackUpgradeElement(
-    Element* aElement, nsAtom* aTypeName) {
+/* static */
+void nsContentUtils::RegisterCallbackUpgradeElement(Element* aElement,
+                                                    nsAtom* aTypeName) {
   MOZ_ASSERT(aElement);
 
   Document* doc = aElement->OwnerDoc();
@@ -9620,8 +9635,9 @@ nsContentUtils::LookupCustomElementDefinition(Document* aDoc, nsAtom* aNameAtom,
   }
 }
 
-/* static */ void nsContentUtils::RegisterUnresolvedElement(Element* aElement,
-                                                            nsAtom* aTypeName) {
+/* static */
+void nsContentUtils::RegisterUnresolvedElement(Element* aElement,
+                                               nsAtom* aTypeName) {
   MOZ_ASSERT(aElement);
 
   Document* doc = aElement->OwnerDoc();
@@ -9631,8 +9647,8 @@ nsContentUtils::LookupCustomElementDefinition(Document* aDoc, nsAtom* aNameAtom,
   }
 }
 
-/* static */ void nsContentUtils::UnregisterUnresolvedElement(
-    Element* aElement) {
+/* static */
+void nsContentUtils::UnregisterUnresolvedElement(Element* aElement) {
   MOZ_ASSERT(aElement);
 
   nsAtom* typeAtom = aElement->GetCustomElementData()->GetCustomElementType();
@@ -9643,7 +9659,8 @@ nsContentUtils::LookupCustomElementDefinition(Document* aDoc, nsAtom* aNameAtom,
   }
 }
 
-/* static */ void nsContentUtils::EnqueueUpgradeReaction(
+/* static */
+void nsContentUtils::EnqueueUpgradeReaction(
     Element* aElement, CustomElementDefinition* aDefinition) {
   MOZ_ASSERT(aElement);
 
@@ -9659,7 +9676,8 @@ nsContentUtils::LookupCustomElementDefinition(Document* aDoc, nsAtom* aNameAtom,
   stack->EnqueueUpgradeReaction(aElement, aDefinition);
 }
 
-/* static */ void nsContentUtils::EnqueueLifecycleCallback(
+/* static */
+void nsContentUtils::EnqueueLifecycleCallback(
     Document::ElementCallbackType aType, Element* aCustomElement,
     LifecycleCallbackArgs* aArgs,
     LifecycleAdoptedCallbackArgs* aAdoptedCallbackArgs,
@@ -9673,8 +9691,8 @@ nsContentUtils::LookupCustomElementDefinition(Document* aDoc, nsAtom* aNameAtom,
       aType, aCustomElement, aArgs, aAdoptedCallbackArgs, aDefinition);
 }
 
-/* static */ bool nsContentUtils::AttemptLargeAllocationLoad(
-    nsIHttpChannel* aChannel) {
+/* static */
+bool nsContentUtils::AttemptLargeAllocationLoad(nsIHttpChannel* aChannel) {
   MOZ_ASSERT(aChannel);
 
   nsCOMPtr<nsILoadGroup> loadGroup;
@@ -9825,7 +9843,8 @@ nsContentUtils::LookupCustomElementDefinition(Document* aDoc, nsAtom* aNameAtom,
   return reloadSucceeded;
 }
 
-/* static */ void nsContentUtils::AppendDocumentLevelNativeAnonymousContentTo(
+/* static */
+void nsContentUtils::AppendDocumentLevelNativeAnonymousContentTo(
     Document* aDocument, nsTArray<nsIContent*>& aElements) {
   MOZ_ASSERT(aDocument);
 #ifdef DEBUG
@@ -9865,8 +9884,10 @@ static void AppendNativeAnonymousChildrenFromFrame(nsIFrame* aFrame,
   }
 }
 
-/* static */ void nsContentUtils::AppendNativeAnonymousChildren(
-    const nsIContent* aContent, nsTArray<nsIContent*>& aKids, uint32_t aFlags) {
+/* static */
+void nsContentUtils::AppendNativeAnonymousChildren(const nsIContent* aContent,
+                                                   nsTArray<nsIContent*>& aKids,
+                                                   uint32_t aFlags) {
   if (aContent->MayHaveAnonymousChildren()) {
     if (nsIFrame* primaryFrame = aContent->GetPrimaryFrame()) {
       // NAC created by the element's primary frame.
@@ -9897,7 +9918,8 @@ static void AppendNativeAnonymousChildrenFromFrame(nsIFrame* aFrame,
   }
 }
 
-/* static */ bool nsContentUtils::QueryTriggeringPrincipal(
+/* static */
+bool nsContentUtils::QueryTriggeringPrincipal(
     nsIContent* aLoadingNode, nsIPrincipal* aDefaultPrincipal,
     nsIPrincipal** aTriggeringPrincipal) {
   MOZ_ASSERT(aLoadingNode);
@@ -9943,7 +9965,8 @@ static void AppendNativeAnonymousChildrenFromFrame(nsIFrame* aFrame,
   return result;
 }
 
-/* static */ void nsContentUtils::GetContentPolicyTypeForUIImageLoading(
+/* static */
+void nsContentUtils::GetContentPolicyTypeForUIImageLoading(
     nsIContent* aLoadingNode, nsIPrincipal** aTriggeringPrincipal,
     nsContentPolicyType& aContentPolicyType, uint64_t* aRequestContextID) {
   MOZ_ASSERT(aRequestContextID);
@@ -9967,7 +9990,8 @@ static void AppendNativeAnonymousChildrenFromFrame(nsIFrame* aFrame,
   }
 }
 
-/* static */ nsresult nsContentUtils::CreateJSValueFromSequenceOfObject(
+/* static */
+nsresult nsContentUtils::CreateJSValueFromSequenceOfObject(
     JSContext* aCx, const Sequence<JSObject*>& aTransfer,
     JS::MutableHandle<JS::Value> aValue) {
   if (aTransfer.IsEmpty()) {
@@ -10103,7 +10127,8 @@ already_AddRefed<nsIPluginTag> nsContentUtils::PluginTagForType(
   return tag.forget();
 }
 
-/* static */ uint32_t nsContentUtils::HtmlObjectContentTypeForMIMEType(
+/* static */
+uint32_t nsContentUtils::HtmlObjectContentTypeForMIMEType(
     const nsCString& aMIMEType, bool aNoFakePlugin, nsIContent* aContent) {
   if (aMIMEType.IsEmpty()) {
     return nsIObjectLoadingContent::TYPE_NULL;
@@ -10140,9 +10165,9 @@ already_AddRefed<nsIPluginTag> nsContentUtils::PluginTagForType(
   return nsIObjectLoadingContent::TYPE_NULL;
 }
 
-/* static */ already_AddRefed<nsISerialEventTarget>
-nsContentUtils::GetEventTargetByLoadInfo(nsILoadInfo* aLoadInfo,
-                                         TaskCategory aCategory) {
+/* static */
+already_AddRefed<nsISerialEventTarget> nsContentUtils::GetEventTargetByLoadInfo(
+    nsILoadInfo* aLoadInfo, TaskCategory aCategory) {
   if (NS_WARN_IF(!aLoadInfo)) {
     return nullptr;
   }
@@ -10175,7 +10200,8 @@ nsContentUtils::GetEventTargetByLoadInfo(nsILoadInfo* aLoadInfo,
   return target.forget();
 }
 
-/* static */ bool nsContentUtils::IsLocalRefURL(const nsString& aString) {
+/* static */
+bool nsContentUtils::IsLocalRefURL(const nsString& aString) {
   return !aString.IsEmpty() && aString[0] == '#';
 }
 
@@ -10208,23 +10234,27 @@ static const uint64_t kIdBits = 64 - kIdProcessBits;
 // Tab ID is composed in a similar manner of Window ID.
 static uint64_t gNextTabId = 0;
 
-/* static */ uint64_t nsContentUtils::GenerateTabId() {
+/* static */
+uint64_t nsContentUtils::GenerateTabId() {
   return GenerateProcessSpecificId(++gNextTabId);
 }
 
 // Browsing context ID is composed in a similar manner of Window ID.
 static uint64_t gNextBrowsingContextId = 0;
 
-/* static */ uint64_t nsContentUtils::GenerateBrowsingContextId() {
+/* static */
+uint64_t nsContentUtils::GenerateBrowsingContextId() {
   return GenerateProcessSpecificId(++gNextBrowsingContextId);
 }
 
-/* static */ bool nsContentUtils::GetUserIsInteracting() {
+/* static */
+bool nsContentUtils::GetUserIsInteracting() {
   return UserInteractionObserver::sUserActive;
 }
 
-/* static */ bool nsContentUtils::GetSourceMapURL(nsIHttpChannel* aChannel,
-                                                  nsACString& aResult) {
+/* static */
+bool nsContentUtils::GetSourceMapURL(nsIHttpChannel* aChannel,
+                                     nsACString& aResult) {
   nsresult rv =
       aChannel->GetResponseHeader(NS_LITERAL_CSTRING("SourceMap"), aResult);
   if (NS_FAILED(rv)) {
@@ -10234,8 +10264,8 @@ static uint64_t gNextBrowsingContextId = 0;
   return NS_SUCCEEDED(rv);
 }
 
-/* static */ bool nsContentUtils::IsMessageInputEvent(
-    const IPC::Message& aMsg) {
+/* static */
+bool nsContentUtils::IsMessageInputEvent(const IPC::Message& aMsg) {
   if ((aMsg.type() & mozilla::dom::PBrowser::PBrowserStart) ==
       mozilla::dom::PBrowser::PBrowserStart) {
     switch (aMsg.type()) {
@@ -10313,8 +10343,8 @@ nsContentUtils::UserInteractionObserver::Observe(nsISupports* aSubject,
 Atomic<bool> nsContentUtils::UserInteractionObserver::sUserActive(false);
 NS_IMPL_ISUPPORTS(nsContentUtils::UserInteractionObserver, nsIObserver)
 
-/* static */ bool nsContentUtils::IsOverridingWindowName(
-    const nsAString& aName) {
+/* static */
+bool nsContentUtils::IsOverridingWindowName(const nsAString& aName) {
   return !aName.IsEmpty() && !aName.LowerCaseEqualsLiteral("_blank") &&
          !aName.LowerCaseEqualsLiteral("_top") &&
          !aName.LowerCaseEqualsLiteral("_parent") &&
@@ -10352,7 +10382,8 @@ static Result<Ok, nsresult> ExtractExceptionValues(
   return Ok();
 }
 
-/* static */ void nsContentUtils::ExtractErrorValues(
+/* static */
+void nsContentUtils::ExtractErrorValues(
     JSContext* aCx, JS::Handle<JS::Value> aValue, nsACString& aSourceSpecOut,
     uint32_t* aLineOut, uint32_t* aColumnOut, nsString& aMessageOut) {
   nsAutoString sourceSpec;
@@ -10361,7 +10392,8 @@ static Result<Ok, nsresult> ExtractExceptionValues(
   CopyUTF16toUTF8(sourceSpec, aSourceSpecOut);
 }
 
-/* static */ void nsContentUtils::ExtractErrorValues(
+/* static */
+void nsContentUtils::ExtractErrorValues(
     JSContext* aCx, JS::Handle<JS::Value> aValue, nsAString& aSourceSpecOut,
     uint32_t* aLineOut, uint32_t* aColumnOut, nsString& aMessageOut) {
   MOZ_ASSERT(aLineOut);
@@ -10419,7 +10451,8 @@ static Result<Ok, nsresult> ExtractExceptionValues(
 
 #undef EXTRACT_EXN_VALUES
 
-/* static */ bool nsContentUtils::ContentIsLink(nsIContent* aContent) {
+/* static */
+bool nsContentUtils::ContentIsLink(nsIContent* aContent) {
   if (!aContent || !aContent->IsElement()) {
     return false;
   }
@@ -10432,7 +10465,8 @@ static Result<Ok, nsresult> ExtractExceptionValues(
                                             nsGkAtoms::simple, eCaseMatters);
 }
 
-/* static */ already_AddRefed<ContentFrameMessageManager>
+/* static */
+already_AddRefed<ContentFrameMessageManager>
 nsContentUtils::TryGetTabChildGlobal(nsISupports* aFrom) {
   RefPtr<nsFrameLoaderOwner> frameLoaderOwner = do_QueryObject(aFrom);
   if (!frameLoaderOwner) {
@@ -10449,13 +10483,15 @@ nsContentUtils::TryGetTabChildGlobal(nsISupports* aFrom) {
   return manager.forget();
 }
 
-/* static */ uint32_t nsContentUtils::InnerOrOuterWindowCreated() {
+/* static */
+uint32_t nsContentUtils::InnerOrOuterWindowCreated() {
   MOZ_ASSERT(NS_IsMainThread());
   ++sInnerOrOuterWindowCount;
   return ++sInnerOrOuterWindowSerialCounter;
 }
 
-/* static */ void nsContentUtils::InnerOrOuterWindowDestroyed() {
+/* static */
+void nsContentUtils::InnerOrOuterWindowDestroyed() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sInnerOrOuterWindowCount > 0);
   --sInnerOrOuterWindowCount;
@@ -10468,8 +10504,10 @@ static bool JSONCreator(const char16_t* aBuf, uint32_t aLen, void* aData) {
   return true;
 }
 
-/* static */ bool nsContentUtils::StringifyJSON(
-    JSContext* aCx, JS::MutableHandle<JS::Value> aValue, nsAString& aOutStr) {
+/* static */
+bool nsContentUtils::StringifyJSON(JSContext* aCx,
+                                   JS::MutableHandle<JS::Value> aValue,
+                                   nsAString& aOutStr) {
   MOZ_ASSERT(aCx);
   aOutStr.Truncate();
   JS::RootedValue value(aCx, aValue.get());
@@ -10496,8 +10534,8 @@ bool nsContentUtils::
          nsThreadManager::MainThreadHasPendingHighPriorityEvents();
 }
 
-/* static */ bool nsContentUtils::IsURIInPrefList(nsIURI* aURI,
-                                                  const char* aPrefName) {
+/* static */
+bool nsContentUtils::IsURIInPrefList(nsIURI* aURI, const char* aPrefName) {
   MOZ_ASSERT(aPrefName);
 
   nsAutoCString blackList;
@@ -10506,8 +10544,8 @@ bool nsContentUtils::
   return IsURIInList(aURI, blackList);
 }
 
-/* static */ bool nsContentUtils::IsURIInList(nsIURI* aURI,
-                                              const nsCString& aBlackList) {
+/* static */
+bool nsContentUtils::IsURIInList(nsIURI* aURI, const nsCString& aBlackList) {
 #ifdef DEBUG
   nsAutoCString blackListLowerCase(aBlackList);
   ToLowerCase(blackListLowerCase);

@@ -22,8 +22,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FileSystem)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-/* static */ already_AddRefed<FileSystem> FileSystem::Create(
-    nsIGlobalObject* aGlobalObject)
+/* static */
+already_AddRefed<FileSystem> FileSystem::Create(nsIGlobalObject* aGlobalObject)
 
 {
   MOZ_ASSERT(aGlobalObject);

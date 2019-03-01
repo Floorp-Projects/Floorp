@@ -124,7 +124,8 @@ UrlClassifierFeatureTrackingAnnotation::UrlClassifierFeatureTrackingAnnotation()
   return TRACKING_ANNOTATION_FEATURE_NAME;
 }
 
-/* static */ void UrlClassifierFeatureTrackingAnnotation::MaybeInitialize() {
+/* static */
+void UrlClassifierFeatureTrackingAnnotation::MaybeInitialize() {
   MOZ_ASSERT(XRE_IsParentProcess());
   UC_LOG(("UrlClassifierFeatureTrackingAnnotation: MaybeInitialize"));
 
@@ -134,7 +135,8 @@ UrlClassifierFeatureTrackingAnnotation::UrlClassifierFeatureTrackingAnnotation()
   }
 }
 
-/* static */ void UrlClassifierFeatureTrackingAnnotation::MaybeShutdown() {
+/* static */
+void UrlClassifierFeatureTrackingAnnotation::MaybeShutdown() {
   UC_LOG(("UrlClassifierFeatureTrackingAnnotation: MaybeShutdown"));
 
   if (gFeatureTrackingAnnotation) {
@@ -143,7 +145,8 @@ UrlClassifierFeatureTrackingAnnotation::UrlClassifierFeatureTrackingAnnotation()
   }
 }
 
-/* static */ already_AddRefed<UrlClassifierFeatureTrackingAnnotation>
+/* static */
+already_AddRefed<UrlClassifierFeatureTrackingAnnotation>
 UrlClassifierFeatureTrackingAnnotation::MaybeCreate(nsIChannel* aChannel) {
   MOZ_ASSERT(aChannel);
 
@@ -154,8 +157,7 @@ UrlClassifierFeatureTrackingAnnotation::MaybeCreate(nsIChannel* aChannel) {
     return nullptr;
   }
 
-  if (!UrlClassifierCommon::ShouldEnableClassifier(
-          aChannel, AntiTrackingCommon::eTrackingAnnotations)) {
+  if (!UrlClassifierCommon::ShouldEnableClassifier(aChannel)) {
     return nullptr;
   }
 
@@ -167,7 +169,8 @@ UrlClassifierFeatureTrackingAnnotation::MaybeCreate(nsIChannel* aChannel) {
   return self.forget();
 }
 
-/* static */ already_AddRefed<nsIUrlClassifierFeature>
+/* static */
+already_AddRefed<nsIUrlClassifierFeature>
 UrlClassifierFeatureTrackingAnnotation::GetIfNameMatches(
     const nsACString& aName) {
   if (!aName.EqualsLiteral(TRACKING_ANNOTATION_FEATURE_NAME)) {
@@ -205,6 +208,9 @@ UrlClassifierFeatureTrackingAnnotation::ProcessChannel(nsIChannel* aChannel,
   bool isThirdPartyWithTopLevelWinURI =
       nsContentUtils::IsThirdPartyWindowOrChannel(nullptr, aChannel, chanURI);
 
+  bool isAllowListed =
+      IsAllowListed(aChannel, AntiTrackingCommon::eTrackingAnnotations);
+
   UC_LOG(
       ("UrlClassifierFeatureTrackingAnnotation::ProcessChannel, annotating "
        "channel[%p]",
@@ -212,17 +218,18 @@ UrlClassifierFeatureTrackingAnnotation::ProcessChannel(nsIChannel* aChannel,
 
   SetIsTrackingResourceHelper(aChannel, isThirdPartyWithTopLevelWinURI);
 
-  if (isThirdPartyWithTopLevelWinURI) {
+  if (isThirdPartyWithTopLevelWinURI || isAllowListed) {
     // Even with TP disabled, we still want to show the user that there
     // are unblocked trackers on the site, so notify the UI that we loaded
     // tracking content. UI code can treat this notification differently
     // depending on whether TP is enabled or disabled.
     UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(
         aChannel, nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT);
+  }
 
-    if (StaticPrefs::privacy_trackingprotection_lower_network_priority()) {
-      LowerPriorityHelper(aChannel);
-    }
+  if (isThirdPartyWithTopLevelWinURI &&
+      StaticPrefs::privacy_trackingprotection_lower_network_priority()) {
+    LowerPriorityHelper(aChannel);
   }
 
   return NS_OK;

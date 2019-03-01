@@ -105,9 +105,10 @@ static void WrapGdkFrameClockDispose(GObject* object) {
 }
 #endif
 
-/*static*/ gboolean nsAppShell::EventProcessorCallback(GIOChannel* source,
-                                                       GIOCondition condition,
-                                                       gpointer data) {
+/*static*/
+gboolean nsAppShell::EventProcessorCallback(GIOChannel* source,
+                                            GIOCondition condition,
+                                            gpointer data) {
   nsAppShell* self = static_cast<nsAppShell*>(data);
 
   unsigned char c;

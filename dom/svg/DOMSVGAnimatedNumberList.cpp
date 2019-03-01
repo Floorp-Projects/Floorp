@@ -59,7 +59,8 @@ already_AddRefed<DOMSVGNumberList> DOMSVGAnimatedNumberList::AnimVal() {
   return animVal.forget();
 }
 
-/* static */ already_AddRefed<DOMSVGAnimatedNumberList>
+/* static */
+already_AddRefed<DOMSVGAnimatedNumberList>
 DOMSVGAnimatedNumberList::GetDOMWrapper(SVGAnimatedNumberList* aList,
                                         dom::SVGElement* aElement,
                                         uint8_t aAttrEnum) {
@@ -72,8 +73,9 @@ DOMSVGAnimatedNumberList::GetDOMWrapper(SVGAnimatedNumberList* aList,
   return wrapper.forget();
 }
 
-/* static */ DOMSVGAnimatedNumberList*
-DOMSVGAnimatedNumberList::GetDOMWrapperIfExists(SVGAnimatedNumberList* aList) {
+/* static */
+DOMSVGAnimatedNumberList* DOMSVGAnimatedNumberList::GetDOMWrapperIfExists(
+    SVGAnimatedNumberList* aList) {
   return SVGAnimatedNumberListTearoffTable().GetTearoff(aList);
 }
 

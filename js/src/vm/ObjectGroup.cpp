@@ -109,7 +109,8 @@ void ObjectGroup::setAddendum(AddendumKind kind, void* addendum,
   addendum_ = addendum;
 }
 
-/* static */ bool ObjectGroup::useSingletonForClone(JSFunction* fun) {
+/* static */
+bool ObjectGroup::useSingletonForClone(JSFunction* fun) {
   if (!fun->isInterpreted()) {
     return false;
   }
@@ -164,9 +165,9 @@ void ObjectGroup::setAddendum(AddendumKind kind, void* addendum,
   return end - begin <= 100;
 }
 
-/* static */ bool ObjectGroup::useSingletonForNewObject(JSContext* cx,
-                                                        JSScript* script,
-                                                        jsbytecode* pc) {
+/* static */
+bool ObjectGroup::useSingletonForNewObject(JSContext* cx, JSScript* script,
+                                           jsbytecode* pc) {
   /*
    * Make a heuristic guess at a use of JSOP_NEW that the constructed object
    * should have a fresh group. We do this when the NEW is immediately
@@ -199,9 +200,10 @@ void ObjectGroup::setAddendum(AddendumKind kind, void* addendum,
   return false;
 }
 
-/* static */ bool ObjectGroup::useSingletonForAllocationSite(JSScript* script,
-                                                             jsbytecode* pc,
-                                                             JSProtoKey key) {
+/* static */
+bool ObjectGroup::useSingletonForAllocationSite(JSScript* script,
+                                                jsbytecode* pc,
+                                                JSProtoKey key) {
   /*
    * Objects created outside loops in global and eval scripts should have
    * singleton types. For now this is only done for plain objects, but not
@@ -249,8 +251,9 @@ bool GlobalObject::shouldSplicePrototype() {
   return staticPrototype() == nullptr;
 }
 
-/* static */ bool JSObject::splicePrototype(JSContext* cx, HandleObject obj,
-                                            Handle<TaggedProto> proto) {
+/* static */
+bool JSObject::splicePrototype(JSContext* cx, HandleObject obj,
+                               Handle<TaggedProto> proto) {
   MOZ_ASSERT(cx->compartment() == obj->compartment());
 
   /*
@@ -294,8 +297,8 @@ bool GlobalObject::shouldSplicePrototype() {
   return true;
 }
 
-/* static */ ObjectGroup* JSObject::makeLazyGroup(JSContext* cx,
-                                                  HandleObject obj) {
+/* static */
+ObjectGroup* JSObject::makeLazyGroup(JSContext* cx, HandleObject obj) {
   MOZ_ASSERT(obj->hasLazyGroup());
   MOZ_ASSERT(cx->compartment() == obj->compartment());
 
@@ -336,10 +339,10 @@ bool GlobalObject::shouldSplicePrototype() {
   return group;
 }
 
-/* static */ bool JSObject::setNewGroupUnknown(JSContext* cx,
-                                               ObjectGroupRealm& realm,
-                                               const js::Class* clasp,
-                                               JS::HandleObject obj) {
+/* static */
+bool JSObject::setNewGroupUnknown(JSContext* cx, ObjectGroupRealm& realm,
+                                  const js::Class* clasp,
+                                  JS::HandleObject obj) {
   ObjectGroup::setDefaultNewGroupUnknown(cx, realm, clasp, obj);
   return JSObject::setFlags(cx, obj, BaseShape::NEW_GROUP_UNKNOWN);
 }
@@ -472,10 +475,10 @@ MOZ_ALWAYS_INLINE ObjectGroup* ObjectGroupRealm::DefaultNewGroupCache::lookup(
   return nullptr;
 }
 
-/* static */ ObjectGroup* ObjectGroup::defaultNewGroup(JSContext* cx,
-                                                       const Class* clasp,
-                                                       TaggedProto proto,
-                                                       JSObject* associated) {
+/* static */
+ObjectGroup* ObjectGroup::defaultNewGroup(JSContext* cx, const Class* clasp,
+                                          TaggedProto proto,
+                                          JSObject* associated) {
   MOZ_ASSERT_IF(associated, proto.isObject());
   MOZ_ASSERT_IF(proto.isObject(),
                 cx->isInsideCurrentCompartment(proto.toObject()));
@@ -628,10 +631,11 @@ MOZ_ALWAYS_INLINE ObjectGroup* ObjectGroupRealm::DefaultNewGroupCache::lookup(
   return group;
 }
 
-/* static */ ObjectGroup* ObjectGroup::lazySingletonGroup(JSContext* cx,
-                                                          ObjectGroup* oldGroup,
-                                                          const Class* clasp,
-                                                          TaggedProto proto) {
+/* static */
+ObjectGroup* ObjectGroup::lazySingletonGroup(JSContext* cx,
+                                             ObjectGroup* oldGroup,
+                                             const Class* clasp,
+                                             TaggedProto proto) {
   ObjectGroupRealm& realm = oldGroup ? ObjectGroupRealm::get(oldGroup)
                                      : ObjectGroupRealm::getForNewObject(cx);
 
@@ -674,9 +678,11 @@ MOZ_ALWAYS_INLINE ObjectGroup* ObjectGroupRealm::DefaultNewGroupCache::lookup(
   return group;
 }
 
-/* static */ void ObjectGroup::setDefaultNewGroupUnknown(
-    JSContext* cx, ObjectGroupRealm& realm, const Class* clasp,
-    HandleObject obj) {
+/* static */
+void ObjectGroup::setDefaultNewGroupUnknown(JSContext* cx,
+                                            ObjectGroupRealm& realm,
+                                            const Class* clasp,
+                                            HandleObject obj) {
   // If the object already has a new group, mark that group as unknown.
   ObjectGroupRealm::NewTable* table = realm.defaultNewTable;
   if (table) {
@@ -691,9 +697,9 @@ MOZ_ALWAYS_INLINE ObjectGroup* ObjectGroupRealm::DefaultNewGroupCache::lookup(
 }
 
 #ifdef DEBUG
-/* static */ bool ObjectGroup::hasDefaultNewGroup(JSObject* proto,
-                                                  const Class* clasp,
-                                                  ObjectGroup* group) {
+/* static */
+bool ObjectGroup::hasDefaultNewGroup(JSObject* proto, const Class* clasp,
+                                     ObjectGroup* group) {
   ObjectGroupRealm::NewTable* table =
       ObjectGroupRealm::get(group).defaultNewTable;
 
@@ -732,8 +738,8 @@ inline const Class* GetClassForProtoKey(JSProtoKey key) {
   }
 }
 
-/* static */ ObjectGroup* ObjectGroup::defaultNewGroup(JSContext* cx,
-                                                       JSProtoKey key) {
+/* static */
+ObjectGroup* ObjectGroup::defaultNewGroup(JSContext* cx, JSProtoKey key) {
   JSObject* proto = nullptr;
   if (key != JSProto_Null) {
     proto = GlobalObject::getOrCreatePrototype(cx, key);
@@ -797,11 +803,10 @@ static inline TypeSet::Type GetValueTypeForTable(const Value& v) {
   return type;
 }
 
-/* static */ ArrayObject* ObjectGroup::newArrayObject(JSContext* cx,
-                                                      const Value* vp,
-                                                      size_t length,
-                                                      NewObjectKind newKind,
-                                                      NewArrayKind arrayKind) {
+/* static */
+ArrayObject* ObjectGroup::newArrayObject(JSContext* cx, const Value* vp,
+                                         size_t length, NewObjectKind newKind,
+                                         NewArrayKind arrayKind) {
   MOZ_ASSERT(newKind != SingletonObject);
 
   // If we are making a copy on write array, don't try to adjust the group as
@@ -1180,10 +1185,10 @@ PlainObject* js::NewPlainObjectWithProperties(JSContext* cx,
   return obj;
 }
 
-/* static */ JSObject* ObjectGroup::newPlainObject(JSContext* cx,
-                                                   IdValuePair* properties,
-                                                   size_t nproperties,
-                                                   NewObjectKind newKind) {
+/* static */
+JSObject* ObjectGroup::newPlainObject(JSContext* cx, IdValuePair* properties,
+                                      size_t nproperties,
+                                      NewObjectKind newKind) {
   // Watch for simple cases where we don't try to reuse plain object groups.
   if (newKind == SingletonObject || nproperties == 0 ||
       nproperties >= PropertyTree::MAX_HEIGHT) {
@@ -1446,7 +1451,8 @@ class ObjectGroupRealm::AllocationSiteTable
   explicit AllocationSiteTable(Zone* zone) : Base(zone) {}
 };
 
-/* static */ ObjectGroup* ObjectGroup::allocationSiteGroup(
+/* static */
+ObjectGroup* ObjectGroup::allocationSiteGroup(
     JSContext* cx, JSScript* scriptArg, jsbytecode* pc, JSProtoKey kind,
     HandleObject protoArg /* = nullptr */) {
   MOZ_ASSERT(!useSingletonForAllocationSite(scriptArg, pc, kind));
@@ -1543,8 +1549,10 @@ void ObjectGroupRealm::replaceAllocationSiteGroup(JSScript* script,
   }
 }
 
-/* static */ ObjectGroup* ObjectGroup::callingAllocationSiteGroup(
-    JSContext* cx, JSProtoKey key, HandleObject proto) {
+/* static */
+ObjectGroup* ObjectGroup::callingAllocationSiteGroup(JSContext* cx,
+                                                     JSProtoKey key,
+                                                     HandleObject proto) {
   MOZ_ASSERT_IF(proto, key == JSProto_Array);
 
   jsbytecode* pc;
@@ -1558,11 +1566,11 @@ void ObjectGroupRealm::replaceAllocationSiteGroup(JSScript* script,
   return defaultNewGroup(cx, key);
 }
 
-/* static */ bool ObjectGroup::setAllocationSiteObjectGroup(JSContext* cx,
-                                                            HandleScript script,
-                                                            jsbytecode* pc,
-                                                            HandleObject obj,
-                                                            bool singleton) {
+/* static */
+bool ObjectGroup::setAllocationSiteObjectGroup(JSContext* cx,
+                                               HandleScript script,
+                                               jsbytecode* pc, HandleObject obj,
+                                               bool singleton) {
   JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(obj->getClass());
   MOZ_ASSERT(key != JSProto_Null);
   MOZ_ASSERT(singleton == useSingletonForAllocationSite(script, pc, key));
@@ -1587,8 +1595,10 @@ void ObjectGroupRealm::replaceAllocationSiteGroup(JSScript* script,
   return true;
 }
 
-/* static */ ArrayObject* ObjectGroup::getOrFixupCopyOnWriteObject(
-    JSContext* cx, HandleScript script, jsbytecode* pc) {
+/* static */
+ArrayObject* ObjectGroup::getOrFixupCopyOnWriteObject(JSContext* cx,
+                                                      HandleScript script,
+                                                      jsbytecode* pc) {
   // Make sure that the template object for script/pc has a type indicating
   // that the object and its copies have copy on write elements.
   RootedArrayObject obj(
@@ -1624,8 +1634,9 @@ void ObjectGroupRealm::replaceAllocationSiteGroup(JSScript* script,
   return obj;
 }
 
-/* static */ ArrayObject* ObjectGroup::getCopyOnWriteObject(JSScript* script,
-                                                            jsbytecode* pc) {
+/* static */
+ArrayObject* ObjectGroup::getCopyOnWriteObject(JSScript* script,
+                                               jsbytecode* pc) {
   // getOrFixupCopyOnWriteObject should already have been called for
   // script/pc, ensuring that the template object has a group with the
   // COPY_ON_WRITE flag. We don't assert this here, due to a corner case
@@ -1638,10 +1649,9 @@ void ObjectGroupRealm::replaceAllocationSiteGroup(JSScript* script,
   return obj;
 }
 
-/* static */ bool ObjectGroup::findAllocationSite(JSContext* cx,
-                                                  const ObjectGroup* group,
-                                                  JSScript** script,
-                                                  uint32_t* offset) {
+/* static */
+bool ObjectGroup::findAllocationSite(JSContext* cx, const ObjectGroup* group,
+                                     JSScript** script, uint32_t* offset) {
   *script = nullptr;
   *offset = 0;
 
@@ -1813,7 +1823,8 @@ void ObjectGroupRealm::clearTables() {
   defaultNewGroupCache.purge();
 }
 
-/* static */ bool ObjectGroupRealm::PlainObjectTableSweepPolicy::needsSweep(
+/* static */
+bool ObjectGroupRealm::PlainObjectTableSweepPolicy::needsSweep(
     PlainObjectKey* key, PlainObjectEntry* entry) {
   if (!(JS::GCPolicy<PlainObjectKey>::needsSweep(key) ||
         entry->needsSweep(key->nproperties))) {

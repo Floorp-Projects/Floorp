@@ -968,7 +968,8 @@ nsresult nsMathMLmoFrame::Place(DrawTarget* aDrawTarget, bool aPlaceOrigin,
   return NS_OK;
 }
 
-/* virtual */ void nsMathMLmoFrame::MarkIntrinsicISizesDirty() {
+/* virtual */
+void nsMathMLmoFrame::MarkIntrinsicISizesDirty() {
   // if we get this, it may mean that something changed in the text
   // content. So blow away everything an re-build the automatic data
   // from the parent of our outermost embellished container (we ensure
@@ -991,8 +992,9 @@ nsresult nsMathMLmoFrame::Place(DrawTarget* aDrawTarget, bool aPlaceOrigin,
   nsMathMLContainerFrame::MarkIntrinsicISizesDirty();
 }
 
-/* virtual */ void nsMathMLmoFrame::GetIntrinsicISizeMetrics(
-    gfxContext* aRenderingContext, ReflowOutput& aDesiredSize) {
+/* virtual */
+void nsMathMLmoFrame::GetIntrinsicISizeMetrics(gfxContext* aRenderingContext,
+                                               ReflowOutput& aDesiredSize) {
   ProcessOperatorData();
   if (UseMathMLChar()) {
     uint32_t stretchHint =

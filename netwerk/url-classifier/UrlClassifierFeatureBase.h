@@ -10,6 +10,7 @@
 #include "nsIUrlClassifierFeature.h"
 #include "nsTArray.h"
 #include "nsString.h"
+#include "mozilla/AntiTrackingCommon.h"
 
 namespace mozilla {
 namespace net {
@@ -51,6 +52,10 @@ class UrlClassifierFeatureBase : public nsIUrlClassifierFeature {
 
   void InitializePreferences();
   void ShutdownPreferences();
+
+  bool IsAllowListed(
+      nsIChannel* aChannel,
+      AntiTrackingCommon::ContentBlockingAllowListPurpose aPurpose);
 
  private:
   nsCString mName;

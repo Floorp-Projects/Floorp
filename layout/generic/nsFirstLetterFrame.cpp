@@ -92,28 +92,30 @@ nsresult nsFirstLetterFrame::GetChildFrameContainingOffset(
 
 // Needed for non-floating first-letter frames and for the continuations
 // following the first-letter that we also use nsFirstLetterFrame for.
-/* virtual */ void nsFirstLetterFrame::AddInlineMinISize(
+/* virtual */
+void nsFirstLetterFrame::AddInlineMinISize(
     gfxContext* aRenderingContext, nsIFrame::InlineMinISizeData* aData) {
   DoInlineIntrinsicISize(aRenderingContext, aData, nsLayoutUtils::MIN_ISIZE);
 }
 
 // Needed for non-floating first-letter frames and for the continuations
 // following the first-letter that we also use nsFirstLetterFrame for.
-/* virtual */ void nsFirstLetterFrame::AddInlinePrefISize(
+/* virtual */
+void nsFirstLetterFrame::AddInlinePrefISize(
     gfxContext* aRenderingContext, nsIFrame::InlinePrefISizeData* aData) {
   DoInlineIntrinsicISize(aRenderingContext, aData, nsLayoutUtils::PREF_ISIZE);
   aData->mLineIsEmpty = false;
 }
 
 // Needed for floating first-letter frames.
-/* virtual */ nscoord nsFirstLetterFrame::GetMinISize(
-    gfxContext* aRenderingContext) {
+/* virtual */
+nscoord nsFirstLetterFrame::GetMinISize(gfxContext* aRenderingContext) {
   return nsLayoutUtils::MinISizeFromInline(this, aRenderingContext);
 }
 
 // Needed for floating first-letter frames.
-/* virtual */ nscoord nsFirstLetterFrame::GetPrefISize(
-    gfxContext* aRenderingContext) {
+/* virtual */
+nscoord nsFirstLetterFrame::GetPrefISize(gfxContext* aRenderingContext) {
   return nsLayoutUtils::PrefISizeFromInline(this, aRenderingContext);
 }
 
@@ -271,7 +273,8 @@ void nsFirstLetterFrame::Reflow(nsPresContext* aPresContext,
   NS_FRAME_SET_TRUNCATION(aReflowStatus, aReflowInput, aMetrics);
 }
 
-/* virtual */ bool nsFirstLetterFrame::CanContinueTextRun() const {
+/* virtual */
+bool nsFirstLetterFrame::CanContinueTextRun() const {
   // We can continue a text run through a first-letter frame.
   return true;
 }

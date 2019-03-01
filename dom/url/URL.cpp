@@ -32,9 +32,11 @@ JSObject* URL::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return URL_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-/* static */ already_AddRefed<URL> URL::Constructor(
-    const GlobalObject& aGlobal, const nsAString& aURL,
-    const Optional<nsAString>& aBase, ErrorResult& aRv) {
+/* static */
+already_AddRefed<URL> URL::Constructor(const GlobalObject& aGlobal,
+                                       const nsAString& aURL,
+                                       const Optional<nsAString>& aBase,
+                                       ErrorResult& aRv) {
   if (NS_IsMainThread()) {
     return URLMainThread::Constructor(aGlobal, aURL, aBase, aRv);
   }
@@ -42,9 +44,11 @@ JSObject* URL::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return URLWorker::Constructor(aGlobal, aURL, aBase, aRv);
 }
 
-/* static */ already_AddRefed<URL> URL::WorkerConstructor(
-    const GlobalObject& aGlobal, const nsAString& aURL, const nsAString& aBase,
-    ErrorResult& aRv) {
+/* static */
+already_AddRefed<URL> URL::WorkerConstructor(const GlobalObject& aGlobal,
+                                             const nsAString& aURL,
+                                             const nsAString& aBase,
+                                             ErrorResult& aRv) {
   return URLWorker::Constructor(aGlobal, aURL, aBase, aRv);
 }
 

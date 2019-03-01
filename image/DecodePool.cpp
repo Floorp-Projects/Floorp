@@ -36,8 +36,10 @@ namespace image {
 // DecodePool implementation.
 ///////////////////////////////////////////////////////////////////////////////
 
-/* static */ StaticRefPtr<DecodePool> DecodePool::sSingleton;
-/* static */ uint32_t DecodePool::sNumCores = 0;
+/* static */
+StaticRefPtr<DecodePool> DecodePool::sSingleton;
+/* static */
+uint32_t DecodePool::sNumCores = 0;
 
 NS_IMPL_ISUPPORTS(DecodePool, nsIObserver)
 
@@ -309,13 +311,15 @@ bool DecodePoolImpl::CreateThread() {
   return true;
 }
 
-/* static */ void DecodePool::Initialize() {
+/* static */
+void DecodePool::Initialize() {
   MOZ_ASSERT(NS_IsMainThread());
   sNumCores = max<int32_t>(PR_GetNumberOfProcessors(), 1);
   DecodePool::Singleton();
 }
 
-/* static */ DecodePool* DecodePool::Singleton() {
+/* static */
+DecodePool* DecodePool::Singleton() {
   if (!sSingleton) {
     MOZ_ASSERT(NS_IsMainThread());
     sSingleton = new DecodePool();
@@ -325,7 +329,8 @@ bool DecodePoolImpl::CreateThread() {
   return sSingleton;
 }
 
-/* static */ uint32_t DecodePool::NumberOfCores() { return sNumCores; }
+/* static */
+uint32_t DecodePool::NumberOfCores() { return sNumCores; }
 
 DecodePool::DecodePool() : mMutex("image::DecodePool") {
   // Determine the number of threads we want.

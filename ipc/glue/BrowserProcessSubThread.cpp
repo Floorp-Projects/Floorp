@@ -28,7 +28,8 @@ static const char* kBrowserThreadNames[BrowserProcessSubThread::ID_COUNT] = {
 #endif
 };
 
-/* static */ StaticMutex BrowserProcessSubThread::sLock;
+/* static */
+StaticMutex BrowserProcessSubThread::sLock;
 BrowserProcessSubThread* BrowserProcessSubThread::sBrowserThreads[ID_COUNT] = {
     nullptr,  // IO
 //  nullptr,  // FILE

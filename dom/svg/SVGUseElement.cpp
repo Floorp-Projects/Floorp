@@ -435,7 +435,8 @@ void SVGUseElement::UnlinkSource() {
 //----------------------------------------------------------------------
 // SVGElement methods
 
-/* virtual */ gfxMatrix SVGUseElement::PrependLocalTransformsTo(
+/* virtual */
+gfxMatrix SVGUseElement::PrependLocalTransformsTo(
     const gfxMatrix& aMatrix, SVGTransformTypes aWhich) const {
   // 'transform' attribute:
   gfxMatrix userToParent;
@@ -470,7 +471,8 @@ void SVGUseElement::UnlinkSource() {
   return childToUser * aMatrix;
 }
 
-/* virtual */ bool SVGUseElement::HasValidDimensions() const {
+/* virtual */
+bool SVGUseElement::HasValidDimensions() const {
   return (!mLengthAttributes[ATTR_WIDTH].IsExplicitlySet() ||
           mLengthAttributes[ATTR_WIDTH].GetAnimValInSpecifiedUnits() > 0) &&
          (!mLengthAttributes[ATTR_HEIGHT].IsExplicitlySet() ||

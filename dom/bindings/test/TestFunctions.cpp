@@ -15,25 +15,27 @@
 namespace mozilla {
 namespace dom {
 
-/* static */ TestFunctions* TestFunctions::Constructor(GlobalObject& aGlobal,
-                                                       ErrorResult& aRv) {
+/* static */
+TestFunctions* TestFunctions::Constructor(GlobalObject& aGlobal,
+                                          ErrorResult& aRv) {
   return new TestFunctions;
 }
 
-/* static */ void TestFunctions::ThrowUncatchableException(
-    GlobalObject& aGlobal, ErrorResult& aRv) {
+/* static */
+void TestFunctions::ThrowUncatchableException(GlobalObject& aGlobal,
+                                              ErrorResult& aRv) {
   aRv.ThrowUncatchableException();
 }
 
-/* static */ Promise* TestFunctions::PassThroughPromise(GlobalObject& aGlobal,
-                                                        Promise& aPromise) {
+/* static */
+Promise* TestFunctions::PassThroughPromise(GlobalObject& aGlobal,
+                                           Promise& aPromise) {
   return &aPromise;
 }
 
-/* static */ already_AddRefed<Promise>
-TestFunctions::PassThroughCallbackPromise(GlobalObject& aGlobal,
-                                          PromiseReturner& aCallback,
-                                          ErrorResult& aRv) {
+/* static */
+already_AddRefed<Promise> TestFunctions::PassThroughCallbackPromise(
+    GlobalObject& aGlobal, PromiseReturner& aCallback, ErrorResult& aRv) {
   return aCallback.Call(aRv);
 }
 

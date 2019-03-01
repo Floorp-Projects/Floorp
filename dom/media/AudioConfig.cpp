@@ -135,8 +135,8 @@ AudioConfig::ChannelLayout::SMPTEDefault(const ChannelLayout& aChannelLayout) {
   return SMPTEDefault(aChannelLayout.Map());
 }
 
-/* static */ ChannelLayout AudioConfig::ChannelLayout::SMPTEDefault(
-    ChannelMap aMap) {
+/* static */
+ChannelLayout AudioConfig::ChannelLayout::SMPTEDefault(ChannelMap aMap) {
   // First handle the most common cases.
   switch (aMap) {
     case LMONO_MAP:
@@ -272,8 +272,8 @@ bool AudioConfig::ChannelLayout::MappingTable(const ChannelLayout& aOther,
       return "unknown";
   }
 }
-/* static */ uint32_t AudioConfig::SampleSize(
-    AudioConfig::SampleFormat aFormat) {
+/* static */
+uint32_t AudioConfig::SampleSize(AudioConfig::SampleFormat aFormat) {
   switch (aFormat) {
     case FORMAT_U8:
       return 1;
@@ -293,8 +293,8 @@ bool AudioConfig::ChannelLayout::MappingTable(const ChannelLayout& aOther,
   }
 }
 
-/* static */ uint32_t AudioConfig::FormatToBits(
-    AudioConfig::SampleFormat aFormat) {
+/* static */
+uint32_t AudioConfig::FormatToBits(AudioConfig::SampleFormat aFormat) {
   switch (aFormat) {
     case FORMAT_U8:
       return 8;

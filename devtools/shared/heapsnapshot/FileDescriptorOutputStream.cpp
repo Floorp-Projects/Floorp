@@ -9,8 +9,9 @@
 namespace mozilla {
 namespace devtools {
 
-/* static */ already_AddRefed<FileDescriptorOutputStream>
-FileDescriptorOutputStream::Create(const ipc::FileDescriptor& fileDescriptor) {
+/* static */
+already_AddRefed<FileDescriptorOutputStream> FileDescriptorOutputStream::Create(
+    const ipc::FileDescriptor& fileDescriptor) {
   if (NS_WARN_IF(!fileDescriptor.IsValid())) return nullptr;
 
   auto rawFD = fileDescriptor.ClonePlatformHandle();
