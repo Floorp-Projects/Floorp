@@ -1408,9 +1408,6 @@ var gBrowserInit = {
     // avoid an about:blank flash.
     let tabToAdopt = this.getTabToAdopt();
     if (tabToAdopt) {
-      let evt = new CustomEvent("before-initial-tab-adopted", { bubbles: true });
-      gBrowser.tabpanels.dispatchEvent(evt);
-
       // Stop the about:blank load
       gBrowser.stop();
       // make sure it has a docshell
