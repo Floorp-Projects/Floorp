@@ -2805,13 +2805,15 @@ BrowserGlue.prototype = {
    * Open preferences even if there are no open windows.
    */
   _openPreferences(...args) {
-    if (Services.appShell.hiddenDOMWindow.openPreferences) {
-      Services.appShell.hiddenDOMWindow.openPreferences(...args);
+    let chromeWindow = BrowserWindowTracker.getTopWindow();
+    if (chromeWindow) {
+      chromeWindow.openPreferences(...args);
       return;
     }
 
-    let chromeWindow = BrowserWindowTracker.getTopWindow();
-    chromeWindow.openPreferences(...args);
+    if (Services.appShell.hiddenDOMWindow.openPreferences) {
+      Services.appShell.hiddenDOMWindow.openPreferences(...args);
+    }
   },
 
   _openURLInNewWindow(url) {
