@@ -30,6 +30,7 @@ add_task(async function() {
   // Open file:// page.
   let dir = getChromeDir(getResolvedURI(gTestPath));
   dir.append(TEST_FILE);
+  dir.normalize();
   const uriString = Services.io.newFileURI(dir).spec;
   await BrowserTestUtils.withNewTab(uriString, async function(fileBrowser) {
     // Get the file:// URI pid for comparison later.
