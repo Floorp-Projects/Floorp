@@ -291,3 +291,7 @@ attribute.
 update-channel
 ==============
 The update channel the build is configured to use.
+
+openh264_rev
+============
+Only used for openh264 plugin builds, used to signify the revision (and thus inform artifact name) of the given build.
