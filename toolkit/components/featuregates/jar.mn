@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 toolkit.jar:
-% resource featuregates %res/featuregates/
-  res/featuregates/FeatureGate.jsm (./FeatureGate.jsm)
-  res/featuregates/FeatureGateImplementation.jsm (./FeatureGateImplementation.jsm)
-  res/featuregates/feature_definitions.json (./feature_definitions.json)
+% resource featuregates %featuregates/
+  featuregates/FeatureGate.jsm (./FeatureGate.jsm)
+  featuregates/FeatureGateImplementation.jsm (./FeatureGateImplementation.jsm)
+  featuregates/feature_definitions.json (./feature_definitions.json)
