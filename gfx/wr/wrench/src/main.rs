@@ -278,11 +278,11 @@ fn make_window(
             };
 
             if angle {
-                let (window, context) = angle::Context::with_window(
+                let (_window, _context) = angle::Context::with_window(
                     window_builder, context_builder, events_loop
                 ).unwrap();
-                let gl = init(&context);
-                WindowWrapper::Angle(window, context, gl)
+                let gl = init(&_context);
+                WindowWrapper::Angle(_window, _context, gl)
             } else {
                 let window = glutin::GlWindow::new(window_builder, context_builder, events_loop)
                     .unwrap();
