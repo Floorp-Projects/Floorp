@@ -18,10 +18,5 @@ struct MemoryReport {
   nsCString desc;
 };
 
-union MaybeFileDesc {
-    FileDescriptor;
-    void_t;
-};
-
 }
 }

@@ -57,7 +57,6 @@ class CopyableCanvasRenderer : public CanvasRenderer {
  protected:
   RefPtr<gl::GLContext> mGLContext;
   RefPtr<PersistentBufferProvider> mBufferProvider;
-  UniquePtr<gl::SharedSurface> mGLFrontbuffer;
   RefPtr<AsyncCanvasRenderer> mAsyncRenderer;
 
   bool mIsAlphaPremultiplied;

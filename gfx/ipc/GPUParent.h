@@ -74,7 +74,8 @@ class GPUParent final : public PGPUParent {
   mozilla::ipc::IPCResult RecvNotifyGpuObservers(const nsCString& aTopic);
   mozilla::ipc::IPCResult RecvRequestMemoryReport(
       const uint32_t& generation, const bool& anonymize,
-      const bool& minimizeMemoryUsage, const MaybeFileDesc& DMDFile);
+      const bool& minimizeMemoryUsage,
+      const Maybe<ipc::FileDescriptor>& DMDFile);
   mozilla::ipc::IPCResult RecvShutdownVR();
 
   void ActorDestroy(ActorDestroyReason aWhy) override;

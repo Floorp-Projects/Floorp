@@ -16,7 +16,7 @@ add_task(async () => {
       startWithLastProfile: true,
     },
     profiles: [{
-      name: "Profile1",
+      name: PROFILE_DEFAULT,
       path: root.leafName,
       default: true,
     }, {
@@ -53,14 +53,14 @@ add_task(async () => {
   Assert.ok(rootDir.equals(root), "Should have selected the right root dir.");
   Assert.ok(localDir.equals(local), "Should have selected the right local dir.");
   Assert.ok(profile, "A named profile matches this.");
-  Assert.equal(profile.name, "Profile1", "The right profile was matched.");
+  Assert.equal(profile.name, PROFILE_DEFAULT, "The right profile was matched.");
 
   let service = getProfileService();
   Assert.equal(service.defaultProfile, profile, "Should be the default profile.");
   Assert.equal(service.currentProfile, profile, "Should be the current profile.");
 
   profileData = readProfilesIni();
-  Assert.equal(profileData.profiles[0].name, "Profile1", "Should be the right profile.");
+  Assert.equal(profileData.profiles[0].name, PROFILE_DEFAULT, "Should be the right profile.");
   Assert.ok(profileData.profiles[0].default, "Should still be the old default profile.");
 
   let hash = xreDirProvider.getInstallHash();

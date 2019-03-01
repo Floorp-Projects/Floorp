@@ -2568,7 +2568,7 @@ void ContentParent::InitInternal(ProcessPriority aInitialPriority) {
 
 #ifdef MOZ_CONTENT_SANDBOX
   bool shouldSandbox = true;
-  MaybeFileDesc brokerFd = void_t();
+  Maybe<FileDescriptor> brokerFd;
   // XXX: Checking the pref here makes it possible to enable/disable sandboxing
   // during an active session. Currently the pref is only used for testing
   // purpose. If the decision is made to permanently rely on the pref, this
@@ -2583,14 +2583,14 @@ void ContentParent::InitInternal(ProcessPriority aInitialPriority) {
     UniquePtr<SandboxBroker::Policy> policy =
         sSandboxBrokerPolicyFactory->GetContentPolicy(Pid(), isFileProcess);
     if (policy) {
-      brokerFd = FileDescriptor();
+      brokerFd = Some(FileDescriptor());
       mSandboxBroker =
-          SandboxBroker::Create(std::move(policy), Pid(), brokerFd);
+          SandboxBroker::Create(std::move(policy), Pid(), brokerFd.ref());
       if (!mSandboxBroker) {
         KillHard("SandboxBroker::Create failed");
         return;
       }
-      MOZ_ASSERT(static_cast<const FileDescriptor&>(brokerFd).IsValid());
+      MOZ_ASSERT(brokerFd.ref().IsValid());
     }
   }
 #  endif
@@ -3455,10 +3455,9 @@ bool ContentParent::DeallocPHeapSnapshotTempFileHelperParent(
   return true;
 }
 
-bool ContentParent::SendRequestMemoryReport(const uint32_t& aGeneration,
-                                            const bool& aAnonymize,
-                                            const bool& aMinimizeMemoryUsage,
-                                            const MaybeFileDesc& aDMDFile) {
+bool ContentParent::SendRequestMemoryReport(
+    const uint32_t& aGeneration, const bool& aAnonymize,
+    const bool& aMinimizeMemoryUsage, const Maybe<FileDescriptor>& aDMDFile) {
   // This automatically cancels the previous request.
   mMemoryReportRequest = MakeUnique<MemoryReportRequestHost>(aGeneration);
   Unused << PContentParent::SendRequestMemoryReport(

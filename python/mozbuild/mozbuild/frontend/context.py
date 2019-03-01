@@ -367,8 +367,7 @@ class AsmFlags(BaseCompileFlags):
         if (self._context.config.substs.get('MOZ_DEBUG') or
             self._context.config.substs.get('MOZ_DEBUG_SYMBOLS')):
             if self._context.get('USE_NASM'):
-                if (self._context.config.substs.get('OS_ARCH') == 'WINNT' and
-                    not self._context.config.substs.get('GNU_CC')):
+                if self._context.config.substs.get('OS_ARCH') == 'WINNT':
                     debug_flags += ['-F', 'cv8']
                 elif self._context.config.substs.get('OS_ARCH') != 'Darwin':
                     debug_flags += ['-F', 'dwarf']

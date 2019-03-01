@@ -2541,6 +2541,14 @@ impl Renderer {
         let mut frame_profiles = Vec::new();
         let mut profile_timers = RendererProfileTimers::new();
 
+        // The texture resolver scope should be outside of any rendering, including
+        // debug rendering. This ensures that when we return render targets to the
+        // pool via glInvalidateFramebuffer, we don't do any debug rendering after
+        // that point. Otherwise, the bind / invalidate / bind logic trips up the
+        // render pass logic in tiled / mobile GPUs, resulting in an extra copy /
+        // resolve step when the debug overlay is enabled.
+        self.texture_resolver.begin_frame();
+
         let profile_samplers = {
             let _gm = self.gpu_profile.start_marker("build samples");
             // Block CPU waiting for last frame's GPU profiles to arrive.
@@ -2575,58 +2583,62 @@ impl Renderer {
         });
 
         profile_timers.cpu_time.profile(|| {
-            let clear_depth_value = if self.are_documents_intersecting_depth() {
-                None
-            } else {
-                Some(1.0)
-            };
+            // If the documents don't intersect for depth, we can just do
+            // a single, global depth clear.
+            let clear_depth_per_doc = self.are_documents_intersecting_depth();
 
             //Note: another borrowck dance
             let mut active_documents = mem::replace(&mut self.active_documents, Vec::default());
             // sort by the document layer id
             active_documents.sort_by_key(|&(_, ref render_doc)| render_doc.frame.layer);
 
-            // don't clear the framebuffer if one of the rendered documents will overwrite it
-            if let Some(framebuffer_size) = framebuffer_size {
-                let needs_color_clear = !active_documents
-                    .iter()
-                    .any(|&(_, RenderedDocument { ref frame, .. })| {
-                        frame.background_color.is_some() &&
-                        frame.inner_rect.origin == DeviceIntPoint::zero() &&
-                        frame.inner_rect.size == framebuffer_size
-                    });
-
-                if needs_color_clear || clear_depth_value.is_some() {
-                    let clear_color = if needs_color_clear {
-                        self.clear_color.map(|color| color.to_array())
-                    } else {
-                        None
-                    };
-                    self.device.reset_draw_target();
-                    self.device.enable_depth_write();
-                    self.device.clear_target(clear_color, clear_depth_value, None);
-                    self.device.disable_depth_write();
-                }
-            }
-
             #[cfg(feature = "replay")]
             self.texture_resolver.external_images.extend(
                 self.owned_external_images.iter().map(|(key, value)| (*key, value.clone()))
             );
 
-            for &mut (_, RenderedDocument { ref mut frame, .. }) in &mut active_documents {
+            for (doc_index, (_, RenderedDocument { ref mut frame, .. })) in active_documents.iter_mut().enumerate() {
                 frame.profile_counters.reset_targets();
                 self.prepare_gpu_cache(frame);
                 assert!(frame.gpu_cache_frame_id <= self.gpu_cache_frame_id,
                     "Received frame depends on a later GPU cache epoch ({:?}) than one we received last via `UpdateGpuCache` ({:?})",
                     frame.gpu_cache_frame_id, self.gpu_cache_frame_id);
 
+                // Work out what color to clear the frame buffer for this document.
+                // The document's supplied clear color is used, unless:
+                //  (a) The document has no specified clear color AND
+                //  (b) We are rendering the first document.
+                // If both those conditions are true, the overall renderer
+                // clear color will be used, if specified.
+
+                // Get the default clear color from the renderer.
+                let mut fb_clear_color = if doc_index == 0 {
+                    self.clear_color
+                } else {
+                    None
+                };
+
+                // Override with document clear color if no overall clear
+                // color or not on the first document.
+                if fb_clear_color.is_none() {
+                    fb_clear_color = frame.background_color;
+                }
+
+                // Only clear the depth buffer for this document if this is
+                // the first document, or we need to clear depth per document.
+                let fb_clear_depth = if clear_depth_per_doc || doc_index == 0 {
+                    Some(1.0)
+                } else {
+                    None
+                };
+
                 self.draw_tile_frame(
                     frame,
                     framebuffer_size,
-                    clear_depth_value.is_some(),
                     cpu_frame_id,
-                    &mut results.stats
+                    &mut results.stats,
+                    fb_clear_color,
+                    fb_clear_depth,
                 );
 
                 if self.debug_flags.contains(DebugFlags::PROFILER_DBG) {
@@ -2733,6 +2745,12 @@ impl Renderer {
             if let Some(debug_renderer) = self.debug.try_get_mut() {
                 debug_renderer.render(&mut self.device, framebuffer_size);
             }
+            // See comment for texture_resolver.begin_frame() for explanation
+            // of why this must be done after all rendering, including debug
+            // overlays. The end_frame() call implicitly calls end_pass(), which
+            // should ensure any left over render targets get invalidated and
+            // returned to the pool correctly.
+            self.texture_resolver.end_frame(&mut self.device, cpu_frame_id);
             self.device.end_frame();
         });
         if framebuffer_size.is_some() {
@@ -3107,8 +3125,8 @@ impl Renderer {
         draw_target: DrawTarget,
         target: &ColorRenderTarget,
         framebuffer_target_rect: DeviceIntRect,
-        depth_is_ready: bool,
         clear_color: Option<[f32; 4]>,
+        clear_depth: Option<f32>,
         render_tasks: &RenderTaskTree,
         projection: &Transform3D<f32>,
         frame_id: GpuFrameId,
@@ -3134,12 +3152,9 @@ impl Renderer {
             self.device.disable_depth();
             self.set_blend(false, framebuffer_kind);
 
-            let depth_clear = if !depth_is_ready && target.needs_depth() {
+            if clear_depth.is_some() {
                 self.device.enable_depth_write();
-                Some(1.0)
-            } else {
-                None
-            };
+            }
 
             let clear_rect = if !draw_target.is_default() {
                 if self.enable_clear_scissor {
@@ -3169,9 +3184,13 @@ impl Renderer {
                 Some(rect)
             };
 
-            self.device.clear_target(clear_color, depth_clear, clear_rect);
+            self.device.clear_target(
+                clear_color,
+                clear_depth,
+                clear_rect,
+            );
 
-            if depth_clear.is_some() {
+            if clear_depth.is_some() {
                 self.device.disable_depth_write();
             }
         }
@@ -4042,9 +4061,10 @@ impl Renderer {
         &mut self,
         frame: &mut Frame,
         framebuffer_size: Option<DeviceIntSize>,
-        framebuffer_depth_is_ready: bool,
         frame_id: GpuFrameId,
         stats: &mut RendererStats,
+        fb_clear_color: Option<ColorF>,
+        fb_clear_depth: Option<f32>,
     ) {
         let _gm = self.gpu_profile.start_marker("tile frame draw");
 
@@ -4058,7 +4078,6 @@ impl Renderer {
         self.device.disable_stencil();
 
         self.bind_frame_data(frame);
-        self.texture_resolver.begin_frame();
 
         for (pass_index, pass) in frame.passes.iter_mut().enumerate() {
             let _gm = self.gpu_profile.start_marker(&format!("pass {}", pass_index));
@@ -4074,12 +4093,11 @@ impl Renderer {
                 &mut self.device,
             );
 
-            let (cur_alpha, cur_color) = match pass.kind {
+            match pass.kind {
                 RenderPassKind::MainFramebuffer(ref target) => {
                     if let Some(framebuffer_size) = framebuffer_size {
                         stats.color_target_count += 1;
 
-                        let clear_color = frame.background_color.map(|color| color.to_array());
                         let projection = Transform3D::ortho(
                             0.0,
                             framebuffer_size.width as f32,
@@ -4093,16 +4111,14 @@ impl Renderer {
                             DrawTarget::Default(framebuffer_size),
                             target,
                             frame.inner_rect,
-                            framebuffer_depth_is_ready,
-                            clear_color,
+                            fb_clear_color.map(|color| color.to_array()),
+                            fb_clear_depth,
                             &frame.render_tasks,
                             &projection,
                             frame_id,
                             stats,
                         );
                     }
-
-                    (None, None)
                 }
                 RenderPassKind::OffScreen { ref mut alpha, ref mut color, ref mut texture_cache } => {
                     let alpha_tex = self.allocate_target_texture(alpha, &mut frame.profile_counters);
@@ -4166,12 +4182,18 @@ impl Renderer {
                             ORTHO_FAR_PLANE,
                         );
 
+                        let clear_depth = if target.needs_depth() {
+                            Some(1.0)
+                        } else {
+                            None
+                        };
+
                         self.draw_color_target(
                             draw_target,
                             target,
                             frame.inner_rect,
-                            false,
                             Some([0.0, 0.0, 0.0, 0.0]),
+                            clear_depth,
                             &frame.render_tasks,
                             &projection,
                             frame_id,
@@ -4179,18 +4201,19 @@ impl Renderer {
                         );
                     }
 
-                    (alpha_tex, color_tex)
+                    // Only end the pass here and invalidate previous textures for
+                    // off-screen targets. Deferring return of the inputs to the
+                    // frame buffer until the implicit end_pass in end_frame allows
+                    // debug draw overlays to be added without triggering a copy
+                    // resolve stage in mobile / tiled GPUs.
+                    self.texture_resolver.end_pass(
+                        &mut self.device,
+                        alpha_tex,
+                        color_tex,
+                    );
                 }
-            };
-
-            self.texture_resolver.end_pass(
-                &mut self.device,
-                cur_alpha,
-                cur_color,
-            );
+            }
         }
-
-        self.texture_resolver.end_frame(&mut self.device, frame_id);
 
         if let Some(framebuffer_size) = framebuffer_size {
             self.draw_frame_debug_items(&frame.debug_items);

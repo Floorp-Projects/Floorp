@@ -728,6 +728,10 @@ package org.mozilla.geckoview {
   public static class GeckoSessionSettings.Key<T> {
   }
 
+  public class GeckoVRManager {
+    method @android.support.annotation.AnyThread public static synchronized void setExternalContext(long);
+  }
+
   @android.support.annotation.UiThread public class GeckoView extends android.widget.FrameLayout {
     ctor public GeckoView(android.content.Context);
     ctor public GeckoView(android.content.Context, android.util.AttributeSet);

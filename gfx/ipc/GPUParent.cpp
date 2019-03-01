@@ -444,7 +444,7 @@ void GPUParent::GetGPUProcessName(nsACString& aStr) {
 
 mozilla::ipc::IPCResult GPUParent::RecvRequestMemoryReport(
     const uint32_t& aGeneration, const bool& aAnonymize,
-    const bool& aMinimizeMemoryUsage, const MaybeFileDesc& aDMDFile) {
+    const bool& aMinimizeMemoryUsage, const Maybe<FileDescriptor>& aDMDFile) {
   nsAutoCString processName;
   GetGPUProcessName(processName);
 

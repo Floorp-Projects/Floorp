@@ -221,7 +221,6 @@ static void moz_container_unmap_wayland(MozContainer *container) {
 
   container->surface_needs_clear = true;
   container->ready_to_draw = false;
-  container->inital_draw_cb = nullptr;
 }
 
 static gint moz_container_get_scale(MozContainer *container) {

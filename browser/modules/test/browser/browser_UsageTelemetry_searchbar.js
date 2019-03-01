@@ -120,11 +120,9 @@ add_task(async function test_plainQuery() {
   TelemetryTestUtils.assertKeyedHistogramSum(search_hist, "other-MozSearch.searchbar", 1);
 
   // Also check events.
-  let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
-  events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
-  TelemetryTestUtils.assertEvents(events, [
-    ["navigation", "search", "searchbar", "enter", {engine: "other-MozSearch"}],
-  ]);
+  TelemetryTestUtils.assertEvents(
+    [{object: "searchbar", value: "enter", extra: {engine: "other-MozSearch"}}],
+    {category: "navigation", method: "search"});
 
   // Check the histograms as well.
   let resultMethods = resultMethodHist.snapshot();
@@ -167,11 +165,9 @@ add_task(async function test_oneOff_enter() {
   TelemetryTestUtils.assertKeyedHistogramSum(search_hist, "other-MozSearch2.searchbar", 1);
 
   // Also check events.
-  let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
-  events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
-  TelemetryTestUtils.assertEvents(events, [
-    ["navigation", "search", "searchbar", "oneoff", {engine: "other-MozSearch2"}],
-  ]);
+  TelemetryTestUtils.assertEvents(
+    [{object: "searchbar", value: "oneoff", extra: {engine: "other-MozSearch2"}}],
+    {category: "navigation", method: "search"});
 
   // Check the histograms as well.
   let resultMethods = resultMethodHist.snapshot();
@@ -283,11 +279,9 @@ add_task(async function test_suggestion_click() {
   TelemetryTestUtils.assertKeyedHistogramSum(search_hist, searchEngineId + ".searchbar", 1);
 
   // Also check events.
-  let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
-  events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
-  TelemetryTestUtils.assertEvents(events, [
-    ["navigation", "search", "searchbar", "suggestion", {engine: searchEngineId}],
-  ]);
+  TelemetryTestUtils.assertEvents(
+    [{object: "searchbar", value: "suggestion", extra: {engine: searchEngineId}}],
+    {category: "navigation", method: "search"});
 
   // Check the histograms as well.
   let resultMethods = resultMethodHist.snapshot();

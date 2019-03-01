@@ -8,12 +8,11 @@ var {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
-                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
-
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   ContextualIdentityService: "resource://gre/modules/ContextualIdentityService.jsm",
+  ExtensionSettingsStore: "resource://gre/modules/ExtensionSettingsStore.jsm",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
 });
 
@@ -31,9 +30,10 @@ Object.defineProperty(this, "BROWSER_NEW_TAB_URL", {
       }
       // If the extension does not have private browsing permission,
       // use about:privatebrowsing.
-      if (aboutNewTabService.newTabURL.startsWith("moz-extension")) {
-        let url = new URL(aboutNewTabService.newTabURL);
-        if (!WebExtensionPolicy.getByHostname(url.hostname).privateBrowsingAllowed) {
+      let extensionInfo = ExtensionSettingsStore.getSetting("url_overrides", "newTabURL");
+      if (extensionInfo) {
+        let policy = WebExtensionPolicy.getByID(extensionInfo.id);
+        if (!policy || !policy.privateBrowsingAllowed) {
           return "about:privatebrowsing";
         }
       }

@@ -1170,7 +1170,7 @@ class ContentParent final : public PContentParent,
   bool SendRequestMemoryReport(const uint32_t& aGeneration,
                                const bool& aAnonymize,
                                const bool& aMinimizeMemoryUsage,
-                               const MaybeFileDesc& aDMDFile) override;
+                               const Maybe<FileDescriptor>& aDMDFile) override;
 
   nsresult SaveRecording(nsIFile* aFile, bool* aRetval);
 

@@ -46,7 +46,7 @@ function StyleInspectorMenu(view, options) {
   this._onCopyColor = this._onCopyColor.bind(this);
   this._onCopyImageDataUrl = this._onCopyImageDataUrl.bind(this);
   this._onCopyLocation = this._onCopyLocation.bind(this);
-  this._onCopyPropertyDeclaration = this._onCopyPropertyDeclaration.bind(this);
+  this._onCopyDeclaration = this._onCopyDeclaration.bind(this);
   this._onCopyPropertyName = this._onCopyPropertyName.bind(this);
   this._onCopyPropertyValue = this._onCopyPropertyValue.bind(this);
   this._onCopyRule = this._onCopyRule.bind(this);
@@ -131,11 +131,11 @@ StyleInspectorMenu.prototype = {
       },
       visible: this._isImageUrl(),
     });
-    const copyPropDeclarationLabel = "styleinspector.contextmenu.copyPropertyDeclaration";
-    const menuitemCopyPropertyDeclaration = new MenuItem({
-      label: STYLE_INSPECTOR_L10N.getStr(copyPropDeclarationLabel),
+    const copyDeclarationLabel = "styleinspector.contextmenu.copyDeclaration";
+    const menuitemCopyDeclaration = new MenuItem({
+      label: STYLE_INSPECTOR_L10N.getStr(copyDeclarationLabel),
       click: () => {
-        this._onCopyPropertyDeclaration();
+        this._onCopyDeclaration();
       },
       visible: false,
     });
@@ -165,11 +165,11 @@ StyleInspectorMenu.prototype = {
     if (this.isRuleView && this._clickedNodeInfo) {
       switch (this._clickedNodeInfo.type) {
         case VIEW_NODE_PROPERTY_TYPE :
-          menuitemCopyPropertyDeclaration.visible = true;
+          menuitemCopyDeclaration.visible = true;
           menuitemCopyPropertyName.visible = true;
           break;
         case VIEW_NODE_VALUE_TYPE :
-          menuitemCopyPropertyDeclaration.visible = true;
+          menuitemCopyDeclaration.visible = true;
           menuitemCopyPropertyValue.visible = true;
           break;
         case VIEW_NODE_SELECTOR_TYPE :
@@ -187,7 +187,7 @@ StyleInspectorMenu.prototype = {
     menu.append(menuitemCopyColor);
     menu.append(menuitemCopyUrl);
     menu.append(menuitemCopyImageDataUrl);
-    menu.append(menuitemCopyPropertyDeclaration);
+    menu.append(menuitemCopyDeclaration);
     menu.append(menuitemCopyPropertyName);
     menu.append(menuitemCopyPropertyValue);
     menu.append(menuitemCopySelector);
@@ -409,9 +409,9 @@ StyleInspectorMenu.prototype = {
   },
 
   /**
-   * Copy the rule property declaration of the current clicked node.
+   * Copy the CSS declaration of the current clicked node.
    */
-  _onCopyPropertyDeclaration: function() {
+  _onCopyDeclaration: function() {
     if (!this._clickedNodeInfo) {
       return;
     }

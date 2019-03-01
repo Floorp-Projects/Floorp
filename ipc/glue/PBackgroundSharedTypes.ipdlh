@@ -30,6 +30,8 @@ struct ContentPrincipalInfo
 
   nsCString spec;
 
+  nsCString? domain;
+
   ContentSecurityPolicy[] securityPolicies;
 };
 

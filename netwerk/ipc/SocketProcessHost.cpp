@@ -307,7 +307,8 @@ bool SocketProcessMemoryReporter::IsAlive() const {
 
 bool SocketProcessMemoryReporter::SendRequestMemoryReport(
     const uint32_t& aGeneration, const bool& aAnonymize,
-    const bool& aMinimizeMemoryUsage, const dom::MaybeFileDesc& aDMDFile) {
+    const bool& aMinimizeMemoryUsage,
+    const Maybe<ipc::FileDescriptor>& aDMDFile) {
   MOZ_ASSERT(gIOService);
 
   if (!gIOService->mSocketProcess) {

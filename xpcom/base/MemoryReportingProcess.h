@@ -11,9 +11,9 @@
 #include "nscore.h"
 
 namespace mozilla {
-namespace dom {
-class MaybeFileDesc;
-}  // namespace dom
+namespace ipc {
+class FileDescriptor;
+}  // namespace ipc
 
 // Top-level process actors should implement this to integrate with
 // nsMemoryReportManager.
@@ -29,10 +29,10 @@ class MemoryReportingProcess {
 
   // Initiate a memory report request, returning true if a report was
   // successfully initiated and false otherwise.
-  virtual bool SendRequestMemoryReport(const uint32_t& aGeneration,
-                                       const bool& aAnonymize,
-                                       const bool& aMinimizeMemoryUsage,
-                                       const dom::MaybeFileDesc& aDMDFile) = 0;
+  virtual bool SendRequestMemoryReport(
+      const uint32_t& aGeneration, const bool& aAnonymize,
+      const bool& aMinimizeMemoryUsage,
+      const Maybe<mozilla::ipc::FileDescriptor>& aDMDFile) = 0;
 
   virtual int32_t Pid() const = 0;
 };

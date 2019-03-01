@@ -17,9 +17,9 @@
 
 namespace mozilla {
 
-namespace dom {
-class MaybeFileDesc;
-}  // namespace dom
+namespace ipc {
+class FileDescriptor;
+}  // namespace ipc
 
 // This must be called early, before glib creates any worker threads.
 // (See bug 1176099.)
@@ -46,7 +46,7 @@ struct ContentProcessSandboxParams {
   std::vector<int> mSyscallWhitelist;
 
   static ContentProcessSandboxParams ForThisProcess(
-      const dom::MaybeFileDesc& aBroker);
+      const Maybe<ipc::FileDescriptor>& aBroker);
 };
 
 // Call only if SandboxInfo::CanSandboxContent() returns true.

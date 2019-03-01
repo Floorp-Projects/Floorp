@@ -2000,7 +2000,7 @@ bool nsMemoryReporterManager::StartChildReport(
     return false;
   }
 
-  mozilla::dom::MaybeFileDesc dmdFileDesc = void_t();
+  Maybe<mozilla::ipc::FileDescriptor> dmdFileDesc;
 #ifdef MOZ_DMD
   if (!aState->mDMDDumpIdent.IsEmpty()) {
     FILE* dmdFile = nullptr;
@@ -2011,7 +2011,7 @@ bool nsMemoryReporterManager::StartChildReport(
       dmdFile = nullptr;
     }
     if (dmdFile) {
-      dmdFileDesc = mozilla::ipc::FILEToFileDescriptor(dmdFile);
+      dmdFileDesc = Some(mozilla::ipc::FILEToFileDescriptor(dmdFile));
       fclose(dmdFile);
     }
   }

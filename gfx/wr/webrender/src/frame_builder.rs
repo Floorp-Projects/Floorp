@@ -475,8 +475,11 @@ impl FrameBuilder {
             .take_render_tasks();
 
         let root_render_task = RenderTask::new_picture(
-            RenderTaskLocation::Fixed(self.screen_rect.to_i32()),
-            self.screen_rect.size.to_f32(),
+            // The rect here is the whole window. If we were to use the screen_rect,
+            // any offset in that rect would doubly apply for cached pictures.
+            RenderTaskLocation::Fixed(DeviceIntRect::new(DeviceIntPoint::zero(),
+                                                         self.window_size).to_i32()),
+            self.window_size.to_f32(),
             self.root_pic_index,
             DeviceIntPoint::zero(),
             child_tasks,

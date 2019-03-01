@@ -44,9 +44,6 @@ class gfxTextPerfMetrics;
 typedef struct FT_LibraryRec_* FT_Library;
 
 namespace mozilla {
-namespace gl {
-class SkiaGLGlue;
-}  // namespace gl
 namespace layers {
 class FrameStats;
 }
@@ -275,15 +272,6 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   bool SupportsAzureContentForType(mozilla::gfx::BackendType aType) {
     return BackendTypeBit(aType) & mContentBackendBitmask;
   }
-
-  /// This function also lets us know if the current preferences/platform
-  /// combination allows for both accelerated and not accelerated canvas
-  /// implementations.  If it does, and other relevant preferences are
-  /// asking for it, we will examine the commands in the first few seconds
-  /// of the canvas usage, and potentially change to accelerated or
-  /// non-accelerated canvas.
-  virtual bool AllowOpenGLCanvas();
-  virtual void InitializeSkiaCacheLimits();
 
   static bool AsyncPanZoomEnabled();
 
@@ -615,13 +603,9 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
    */
   mozilla::layers::DiagnosticTypes GetLayerDiagnosticTypes();
 
-  mozilla::gl::SkiaGLGlue* GetSkiaGLGlue();
-  void PurgeSkiaGPUCache();
   static void PurgeSkiaFontCache();
 
   static bool UsesOffMainThreadCompositing();
-
-  bool HasEnoughTotalSystemMemoryForSkiaGL();
 
   /**
    * Whether we want to adjust gfx parameters (currently just
@@ -934,7 +918,6 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   nsTArray<mozilla::layers::FrameStats> mFrameStats;
 
   RefPtr<mozilla::gfx::DrawEventRecorder> mRecorder;
-  RefPtr<mozilla::gl::SkiaGLGlue> mSkiaGlue;
 
   // Backend that we are compositing with. NONE, if no compositor has been
   // created yet.

@@ -78,11 +78,9 @@ add_task(async function test_abouthome_activitystream_simpleQuery() {
   TelemetryTestUtils.assertKeyedHistogramSum(search_hist, "other-MozSearch.abouthome", 1);
 
   // Also check events.
-  let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
-  events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
-  TelemetryTestUtils.assertEvents(events, [
-    ["navigation", "search", "about_home", "enter", {engine: "other-MozSearch"}],
-  ]);
+  TelemetryTestUtils.assertEvents(
+    [{object: "about_home", value: "enter", extra: {engine: "other-MozSearch"}}],
+    {category: "navigation", method: "search"});
 
   BrowserTestUtils.removeTab(tab);
 });
