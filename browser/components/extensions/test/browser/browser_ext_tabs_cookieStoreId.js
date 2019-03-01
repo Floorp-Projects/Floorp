@@ -31,6 +31,7 @@ add_task(async function() {
   ];
 
   let extension = ExtensionTestUtils.loadExtension({
+    incognitoOverride: "spanning",
     manifest: {
       "permissions": ["tabs", "cookies"],
     },
