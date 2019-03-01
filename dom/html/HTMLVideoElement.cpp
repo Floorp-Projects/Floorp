@@ -63,6 +63,12 @@ nsresult HTMLVideoElement::Clone(mozilla::dom::NodeInfo* aNodeInfo,
   return rv;
 }
 
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(HTMLVideoElement,
+                                               HTMLMediaElement)
+
+NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLVideoElement, HTMLMediaElement,
+                                   mVisualCloneTarget, mVisualCloneSource)
+
 HTMLVideoElement::HTMLVideoElement(already_AddRefed<NodeInfo>&& aNodeInfo)
     : HTMLMediaElement(std::move(aNodeInfo)), mIsOrientationLocked(false) {
   DecoderDoctorLogger::LogConstruction(this);
@@ -325,6 +331,37 @@ void HTMLVideoElement::ReleaseVideoWakeLockIfExists() {
     mScreenWakeLock = nullptr;
     return;
   }
+}
+
+bool HTMLVideoElement::SetVisualCloneTarget(
+    HTMLVideoElement* aVisualCloneTarget) {
+  MOZ_DIAGNOSTIC_ASSERT(!aVisualCloneTarget || !aVisualCloneTarget->mUnboundFromTree,
+                        "Can't set the clone target to a disconnected video "
+                        "element.");
+  MOZ_DIAGNOSTIC_ASSERT(!mVisualCloneSource,
+                        "Can't clone a video element that is already a clone.");
+  if (!aVisualCloneTarget ||
+      (!aVisualCloneTarget->mUnboundFromTree && !mVisualCloneSource)) {
+    mVisualCloneTarget = aVisualCloneTarget;
+    return true;
+  }
+  return false;
+}
+
+bool HTMLVideoElement::SetVisualCloneSource(
+    HTMLVideoElement* aVisualCloneSource) {
+  MOZ_DIAGNOSTIC_ASSERT(!aVisualCloneSource || !aVisualCloneSource->mUnboundFromTree,
+                        "Can't set the clone source to a disconnected video "
+                        "element.");
+  MOZ_DIAGNOSTIC_ASSERT(!mVisualCloneTarget,
+                        "Can't clone a video element that is already a "
+                        "clone.");
+  if (!aVisualCloneSource ||
+      (!aVisualCloneSource->mUnboundFromTree && !mVisualCloneTarget)) {
+    mVisualCloneSource = aVisualCloneSource;
+    return true;
+  }
+  return false;
 }
 
 /* static */
