@@ -122,8 +122,6 @@ client.attachThread(response.threadActor).then(function([response, threadClient]
   threadClient.addListener("paused", onPause);
   threadClient.addListener("resumed", fooListener);
   threadClient.addListener("detached", fooListener);
-  threadClient.addListener("framesadded", onFrames);
-  threadClient.addListener("framescleared", fooListener);
 
   // Resume the thread.
   threadClient.resume();
@@ -187,8 +185,6 @@ function debugTab() {
         threadClient.addListener("paused", onPause);
         threadClient.addListener("resumed", fooListener);
         threadClient.addListener("detached", fooListener);
-        threadClient.addListener("framesadded", onFrames);
-        threadClient.addListener("framescleared", fooListener);
 
         // Resume the thread.
         threadClient.resume();
@@ -210,28 +206,6 @@ function onTab() {
       debugTab();
     });
   });
-}
-
-/**
- * Handler for entering pause state.
- */
-function onPause() {
-  // Get the top 20 frames in the server's frame stack cache.
-  client.activeThread.fillFrames(20);
-  // Get the scripts loaded in the server's source script cache.
-  client.activeThread.fillScripts();
-}
-
-/**
- * Handler for framesadded events.
- */
-function onFrames() {
-  // Get the list of frames in the server.
-  for (let frame of client.activeThread.cachedFrames) {
-    // frame is a Debugger.Frame grip.
-    dump("frame: " + frame.toSource() + "\n");
-    inspectFrame(frame);
-  }
 }
 
 /**
