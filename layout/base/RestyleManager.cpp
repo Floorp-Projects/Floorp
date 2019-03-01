@@ -1097,7 +1097,7 @@ static void DoApplyRenderingChangeToTree(nsIFrame* aFrame,
           // data to the layer.
           MOZ_ASSERT(layer, "this can't happen if there's no layer");
           nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(
-              layer, nullptr, nullptr, aFrame, eCSSProperty_transform);
+              layer, nullptr, nullptr, aFrame, DisplayItemType::TYPE_TRANSFORM);
         }
       }
     }

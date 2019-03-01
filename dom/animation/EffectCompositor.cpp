@@ -513,19 +513,6 @@ void EffectCompositor::ClearIsRunningOnCompositor(const nsIFrame* aFrame,
 }
 
 /* static */
-void EffectCompositor::ClearIsRunningOnCompositor(const nsIFrame* aFrame,
-                                                  nsCSSPropertyID aProperty) {
-  EffectSet* effects = EffectSet::GetEffectSet(aFrame);
-  if (!effects) {
-    return;
-  }
-
-  for (KeyframeEffect* effect : *effects) {
-    effect->SetIsRunningOnCompositor(aProperty, false);
-  }
-}
-
-/* static */
 void EffectCompositor::MaybeUpdateCascadeResults(Element* aElement,
                                                  PseudoStyleType aPseudoType) {
   EffectSet* effects = EffectSet::GetEffectSet(aElement, aPseudoType);
