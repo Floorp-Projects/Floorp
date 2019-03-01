@@ -206,10 +206,12 @@ JSObject* WrapperFactory::GetXrayWaiver(HandleObject obj) {
   return scope->mWaiverWrapperMap->Find(obj);
 }
 
-JSObject* WrapperFactory::CreateXrayWaiver(JSContext* cx, HandleObject obj) {
-  // The caller is required to have already done a lookup.
+JSObject* WrapperFactory::CreateXrayWaiver(JSContext* cx, HandleObject obj,
+                                           bool allowExisting) {
+  // The caller is required to have already done a lookup, unless it's
+  // trying to replace an existing waiver.
   // NB: This implictly performs the assertions of GetXrayWaiver.
-  MOZ_ASSERT(!GetXrayWaiver(obj));
+  MOZ_ASSERT(bool(GetXrayWaiver(obj)) == allowExisting);
   XPCWrappedNativeScope* scope = ObjectScope(obj);
 
   JSAutoRealm ar(cx, obj);
@@ -830,33 +832,48 @@ bool WrapperFactory::WaiveXrayAndWrap(JSContext* cx,
  */
 
 static bool FixWaiverAfterTransplant(JSContext* cx, HandleObject oldWaiver,
-                                     HandleObject newobj) {
+                                     HandleObject newobj,
+                                     bool crossCompartmentTransplant) {
   MOZ_ASSERT(Wrapper::wrapperHandler(oldWaiver) == &XrayWaiver::singleton);
   MOZ_ASSERT(!js::IsCrossCompartmentWrapper(newobj));
 
-  // If the new compartment has a CCW for oldWaiver, nuke this CCW. This
-  // prevents confusing RemapAllWrappersForObject: it would call RemapWrapper
-  // with two same-compartment objects (the CCW and the new waiver).
-  //
-  // This can happen when loading a chrome page in a content frame and there
-  // exists a CCW from the chrome compartment to oldWaiver wrapping the window
-  // we just transplanted:
-  //
-  // Compartment 1  |  Compartment 2
-  // ----------------------------------------
-  // CCW1 -----------> oldWaiver --> CCW2 --+
-  // newWaiver                              |
-  // WindowProxy <--------------------------+
-  js::NukeCrossCompartmentWrapperIfExists(cx, js::GetObjectCompartment(newobj),
-                                          oldWaiver);
+  if (crossCompartmentTransplant) {
+    // If the new compartment has a CCW for oldWaiver, nuke this CCW. This
+    // prevents confusing RemapAllWrappersForObject: it would call RemapWrapper
+    // with two same-compartment objects (the CCW and the new waiver).
+    //
+    // This can happen when loading a chrome page in a content frame and there
+    // exists a CCW from the chrome compartment to oldWaiver wrapping the window
+    // we just transplanted:
+    //
+    // Compartment 1  |  Compartment 2
+    // ----------------------------------------
+    // CCW1 -----------> oldWaiver --> CCW2 --+
+    // newWaiver                              |
+    // WindowProxy <--------------------------+
+    js::NukeCrossCompartmentWrapperIfExists(
+        cx, js::GetObjectCompartment(newobj), oldWaiver);
+  } else {
+    // We kept the same object identity, so the waiver should be a
+    // waiver for our object, just in the wrong Realm.
+    MOZ_ASSERT(newobj == Wrapper::wrappedObject(oldWaiver));
+  }
 
-  // Create a waiver in the new compartment. We know there's not one already
-  // because we _just_ transplanted, which means that |newobj| was either
-  // created from scratch, or was previously cross-compartment wrapper (which
-  // should have no waiver). CreateXrayWaiver asserts this.
-  JSObject* newWaiver = WrapperFactory::CreateXrayWaiver(cx, newobj);
+  // Create a waiver in the new compartment. We know there's not one already in
+  // the crossCompartmentTransplant case because we _just_ transplanted, which
+  // means that |newobj| was either created from scratch, or was previously
+  // cross-compartment wrapper (which should have no waiver). On the other hand,
+  // in the !crossCompartmentTransplant case we know one already exists.
+  // CreateXrayWaiver asserts all this.
+  JSObject* newWaiver = WrapperFactory::CreateXrayWaiver(
+      cx, newobj, /* allowExisting = */ !crossCompartmentTransplant);
   if (!newWaiver) {
     return false;
+  }
+
+  if (!crossCompartmentTransplant) {
+    // CreateXrayWaiver should have updated the map to point to the new waiver.
+    MOZ_ASSERT(WrapperFactory::GetXrayWaiver(newobj) == newWaiver);
   }
 
   // Update all the cross-compartment references to oldWaiver to point to
@@ -865,30 +882,42 @@ static bool FixWaiverAfterTransplant(JSContext* cx, HandleObject oldWaiver,
     return false;
   }
 
-  // There should be no same-compartment references to oldWaiver, and we
-  // just remapped all cross-compartment references. It's dead, so we can
-  // remove it from the map.
-  XPCWrappedNativeScope* scope = ObjectScope(oldWaiver);
-  JSObject* key = Wrapper::wrappedObject(oldWaiver);
-  MOZ_ASSERT(scope->mWaiverWrapperMap->Find(key));
-  scope->mWaiverWrapperMap->Remove(key);
+  if (crossCompartmentTransplant) {
+    // There should be no same-compartment references to oldWaiver, and we
+    // just remapped all cross-compartment references. It's dead, so we can
+    // remove it from the map.
+    XPCWrappedNativeScope* scope = ObjectScope(oldWaiver);
+    JSObject* key = Wrapper::wrappedObject(oldWaiver);
+    MOZ_ASSERT(scope->mWaiverWrapperMap->Find(key));
+    scope->mWaiverWrapperMap->Remove(key);
+  }
+
   return true;
 }
 
 JSObject* TransplantObject(JSContext* cx, JS::HandleObject origobj,
                            JS::HandleObject target) {
   RootedObject oldWaiver(cx, WrapperFactory::GetXrayWaiver(origobj));
+  MOZ_ASSERT_IF(oldWaiver, GetNonCCWObjectRealm(oldWaiver) ==
+                               GetNonCCWObjectRealm(origobj));
   RootedObject newIdentity(cx, JS_TransplantObject(cx, origobj, target));
   if (!newIdentity || !oldWaiver) {
     return newIdentity;
   }
 
-  // If we transplanted within a compartment, oldWaiver is still valid.
-  if (newIdentity == origobj) {
-    return newIdentity;
+  bool crossCompartmentTransplant = (newIdentity != origobj);
+  if (!crossCompartmentTransplant) {
+    // We might still have been transplanted across realms within a single
+    // compartment.
+    if (GetNonCCWObjectRealm(oldWaiver) == GetNonCCWObjectRealm(newIdentity)) {
+      // The old waiver is same-realm with the new object; nothing else to do
+      // here.
+      return newIdentity;
+    }
   }
 
-  if (!FixWaiverAfterTransplant(cx, oldWaiver, newIdentity)) {
+  if (!FixWaiverAfterTransplant(cx, oldWaiver, newIdentity,
+                                crossCompartmentTransplant)) {
     return nullptr;
   }
   return newIdentity;

@@ -498,7 +498,9 @@ class JSObject2JSObjectMap {
     MOZ_ASSERT(key, "bad param");
     Map::AddPtr p = mTable.lookupForAdd(key);
     if (p) {
-      return p->value();
+      JSObject* oldValue = p->value();
+      p->value() = value;
+      return oldValue;
     }
     if (!mTable.add(p, key, value)) {
       return nullptr;
