@@ -494,7 +494,7 @@ static bool enableSharedMemory = SHARED_MEMORY_DEFAULT;
 static bool enableWasmBaseline = false;
 static bool enableWasmIon = false;
 static bool enableWasmCranelift = false;
-#ifdef ENABLE_WASM_REFTYPES
+#ifdef ENABLE_WASM_GC
 static bool enableWasmGc = false;
 #endif
 static bool enableWasmVerbose = false;
@@ -9883,7 +9883,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     }
   }
 
-#ifdef ENABLE_WASM_REFTYPES
+#ifdef ENABLE_WASM_GC
   enableWasmGc = op.getBoolOption("wasm-gc");
 #endif
   enableWasmVerbose = op.getBoolOption("wasm-verbose");
@@ -9902,7 +9902,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #ifdef ENABLE_WASM_CRANELIFT
       .setWasmCranelift(enableWasmCranelift)
 #endif
-#ifdef ENABLE_WASM_REFTYPES
+#ifdef ENABLE_WASM_GC
       .setWasmGc(enableWasmGc)
 #endif
       .setWasmVerbose(enableWasmVerbose)
@@ -10205,7 +10205,7 @@ static void SetWorkerContextOptions(JSContext* cx) {
 #ifdef ENABLE_WASM_CRANELIFT
       .setWasmCranelift(enableWasmCranelift)
 #endif
-#ifdef ENABLE_WASM_REFTYPES
+#ifdef ENABLE_WASM_GC
       .setWasmGc(enableWasmGc)
 #endif
       .setWasmVerbose(enableWasmVerbose)
@@ -10590,8 +10590,8 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption('\0', "test-wasm-await-tier2",
                         "Forcibly activate tiering and block "
                         "instantiation on completion of tier2")
-#ifdef ENABLE_WASM_REFTYPES
-      || !op.addBoolOption('\0', "wasm-gc", "Enable wasm GC features")
+#ifdef ENABLE_WASM_GC
+      || !op.addBoolOption('\0', "wasm-gc", "Enable experimental wasm GC features")
 #else
       || !op.addBoolOption('\0', "wasm-gc", "No-op")
 #endif
