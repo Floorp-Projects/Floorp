@@ -647,10 +647,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   void guardIsNumber(ValOperandId val) {
     writeOpWithOperandId(CacheOp::GuardIsNumber, val);
   }
-  void guardType(ValOperandId val, JSValueType type) {
+  void guardType(ValOperandId val, ValueType type) {
     writeOpWithOperandId(CacheOp::GuardType, val);
     static_assert(sizeof(type) == sizeof(uint8_t),
-                  "JSValueType should fit in a byte");
+                  "JS::ValueType should fit in a byte");
     buffer_.writeByte(uint32_t(type));
   }
   void guardIsObjectOrNull(ValOperandId val) {
@@ -1493,7 +1493,8 @@ class MOZ_RAII CacheIRReader {
 
   uint32_t stubOffset() { return buffer_.readByte() * sizeof(uintptr_t); }
   GuardClassKind guardClassKind() { return GuardClassKind(buffer_.readByte()); }
-  JSValueType valueType() { return JSValueType(buffer_.readByte()); }
+  JSValueType jsValueType() { return JSValueType(buffer_.readByte()); }
+  ValueType valueType() { return ValueType(buffer_.readByte()); }
   TypedThingLayout typedThingLayout() {
     return TypedThingLayout(buffer_.readByte());
   }
