@@ -663,11 +663,6 @@ enum class StyleWhiteSpace : uint8_t {
   PreSpace,
 };
 
-// See nsStyleText
-#define NS_STYLE_WORDBREAK_NORMAL 0
-#define NS_STYLE_WORDBREAK_BREAK_ALL 1
-#define NS_STYLE_WORDBREAK_KEEP_ALL 2
-
 // ruby-align, see nsStyleText
 #define NS_STYLE_RUBY_ALIGN_START 0
 #define NS_STYLE_RUBY_ALIGN_CENTER 1

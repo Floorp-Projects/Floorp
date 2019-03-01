@@ -2598,15 +2598,17 @@ void BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
                                                      const void* aTextPtr) {
   using mozilla::intl::LineBreaker;
 
-  // for word-break style
-  switch (mLineContainer->StyleText()->mWordBreak) {
-    case NS_STYLE_WORDBREAK_BREAK_ALL:
+  auto wordBreak = mLineContainer->StyleText()->EffectiveWordBreak();
+  switch (wordBreak) {
+    case StyleWordBreak::BreakAll:
       mLineBreaker.SetWordBreak(LineBreaker::kWordBreak_BreakAll);
       break;
-    case NS_STYLE_WORDBREAK_KEEP_ALL:
+    case StyleWordBreak::KeepAll:
       mLineBreaker.SetWordBreak(LineBreaker::kWordBreak_KeepAll);
       break;
+    case StyleWordBreak::Normal:
     default:
+      MOZ_ASSERT(wordBreak == StyleWordBreak::Normal);
       mLineBreaker.SetWordBreak(LineBreaker::kWordBreak_Normal);
       break;
   }
@@ -8315,7 +8317,7 @@ void nsTextFrame::AddInlineMinISizeForFlow(gfxContext* aRenderingContext,
     return;
   }
 
-  if (textStyle->mOverflowWrap == mozilla::StyleOverflowWrap::Anywhere &&
+  if (textStyle->EffectiveOverflowWrap() == StyleOverflowWrap::Anywhere &&
       textStyle->WordCanWrap(this)) {
     aData->OptionallyBreak();
     aData->mCurrentLine +=
