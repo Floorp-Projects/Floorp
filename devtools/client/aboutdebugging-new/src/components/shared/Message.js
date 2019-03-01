@@ -13,6 +13,7 @@ const { MESSAGE_LEVEL } = require("../../constants");
 const ICONS = {
   // Reuse the warning icon for errors. Waiting for the proper icon in Bug 1520191.
   [MESSAGE_LEVEL.ERROR]: "chrome://global/skin/icons/warning.svg",
+  [MESSAGE_LEVEL.INFO]: "chrome://devtools/skin/images/aboutdebugging-information.svg",
   [MESSAGE_LEVEL.WARNING]: "chrome://global/skin/icons/warning.svg",
 };
 
@@ -30,7 +31,7 @@ class Message extends PureComponent {
   }
 
   render() {
-    const { level } = this.props;
+    const { level, children } = this.props;
     const iconSrc = ICONS[level];
 
     return dom.aside(
@@ -43,7 +44,12 @@ class Message extends PureComponent {
           src: iconSrc,
         }
       ),
-      this.props.children
+      dom.div(
+        {
+          className: "message__body",
+        },
+        children
+      ),
     );
   }
 }

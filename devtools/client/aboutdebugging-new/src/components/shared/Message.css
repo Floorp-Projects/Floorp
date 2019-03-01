@@ -7,11 +7,15 @@
   --message-background-color: var(--error-60);
 }
 
+.message--level-info {
+  --message-color: var(--grey-90);
+  --message-background-color: var(--grey-20);
+}
+
 .message--level-warning {
   --message-color: var(--warning-90);
   --message-background-color: var(--warning-50);
 }
-
 
 /*
  * Layout of the message
@@ -32,10 +36,14 @@
   grid-template-columns: calc(var(--base-unit) * 6) 1fr;
   margin: calc(var(--base-unit) * 2) 0;
   padding: var(--base-unit);
-
   -moz-context-properties: fill;
 }
 
 .message__icon {
   margin: var(--base-unit);
+}
+
+.message__body {
+  font-size: var(--message-font-size);
+  font-weight: 400;
 }

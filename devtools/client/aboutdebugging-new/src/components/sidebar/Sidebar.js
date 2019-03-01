@@ -11,10 +11,11 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const { PAGE_TYPES, RUNTIMES } = require("../../constants");
+const { MESSAGE_LEVEL, PAGE_TYPES, RUNTIMES } = require("../../constants");
 const Types = require("../../types/index");
 loader.lazyRequireGetter(this, "ADB_ADDON_STATES", "devtools/shared/adb/adb-addon", true);
 
+const Message = createFactory(require("../shared/Message"));
 const SidebarItem = createFactory(require("./SidebarItem"));
 const SidebarFixedItem = createFactory(require("./SidebarFixedItem"));
 const SidebarRuntimeItem = createFactory(require("./SidebarRuntimeItem"));
@@ -42,14 +43,20 @@ class Sidebar extends PureComponent {
     const isAddonInstalled = this.props.adbAddonStatus === ADB_ADDON_STATES.INSTALLED;
     const localizationId = isAddonInstalled ? "about-debugging-sidebar-usb-enabled" :
                                               "about-debugging-sidebar-usb-disabled";
-    return Localized(
+    return Message(
       {
-        id: localizationId,
-      }, dom.aside(
-        {
-          className: "sidebar__devices__message js-sidebar-usb-status",
-        },
-        localizationId
+          level: MESSAGE_LEVEL.INFO,
+      },
+        Localized(
+          {
+            id: localizationId,
+          },
+          dom.div(
+            {
+              className: "js-sidebar-usb-status",
+            },
+            localizationId
+          )
       )
     );
   }
@@ -65,7 +72,7 @@ class Sidebar extends PureComponent {
         },
         dom.aside(
           {
-            className: "sidebar__devices__message js-sidebar-no-devices",
+            className: "sidebar__label js-sidebar-no-devices",
           },
           "No devices discovered"
         )
@@ -149,8 +156,8 @@ class Sidebar extends PureComponent {
         ),
         SidebarItem(
           {
+            className: "sidebar-item--overflow",
             isSelected: false,
-            key: "separator-0",
           },
           dom.hr({ className: "separator" }),
           this.renderAdbAddonStatus(),

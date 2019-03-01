@@ -21,11 +21,11 @@ about-debugging-sidebar-connect =
   .name = Connect
 
 # Text displayed in the about:debugging sidebar when USB devices discovery is enabled.
-about-debugging-sidebar-usb-enabled = USB devices enabled
+about-debugging-sidebar-usb-enabled = USB enabled
 
 # Text displayed in the about:debugging sidebar when USB devices discovery is disabled
 # (for instance because the mandatory ADB extension is not installed).
-about-debugging-sidebar-usb-disabled = USB devices disabled
+about-debugging-sidebar-usb-disabled = USB disabled
 
 # Connection status (connected) for runtime items in the sidebar
 aboutdebugging-sidebar-runtime-connection-status-connected = Connected

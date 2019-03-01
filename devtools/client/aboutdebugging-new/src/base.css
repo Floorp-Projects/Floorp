@@ -33,9 +33,9 @@
   --error-50: #ff0039;
   --error-60: #d70022;
   --highlight-50: #0a84ff;
-  --grey-20: #ededf0;
+  --grey-20: #ededf0; /* for ui, no special semantic */
   --grey-30: #d7d7db; /* for ui, no special semantic */
-  --grey-90: #0c0c0d;
+  --grey-90: #0c0c0d; /* for ui, no special semantic */
   --grey-90-a10: rgba(12, 12, 13, 0.1);
   --grey-90-a20: rgba(12, 12, 13, 0.2);
   --grey-90-a30: rgba(12, 12, 13, 0.3);
@@ -66,6 +66,7 @@
   --base-font-size: var(--body-10-font-size);
   --base-font-weight: var(--body-10-font-weight);
   --base-line-height: 1.8;
+  --message-font-size: 13px; /* Body 10 in Photon - https://design.firefox.com/photon/visuals/typography.html */
   --button-font-size: var(--base-font-size);
   --micro-font-size: 11px;
 

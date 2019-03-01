@@ -46,7 +46,7 @@ add_task(async function() {
   Assert.deepEqual(addon.installTelemetryInfo, { source: "about:debugging" },
     "Got the expected addon.installTelemetryInfo");
 
-  // Right now we are resuming as soon as "USB devices enabled" is displayed, but ADB
+  // Right now we are resuming as soon as "USB enabled" is displayed, but ADB
   // might still be starting up. If we move to uninstall directly, the ADB startup will
   // fail and we will have an unhandled promise rejection.
   // See Bug 1498469.
