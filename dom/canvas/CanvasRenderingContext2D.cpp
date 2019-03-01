@@ -222,25 +222,25 @@ class CanvasLinearGradient : public CanvasGradient {
 };
 
 bool CanvasRenderingContext2D::PatternIsOpaque(
-    CanvasRenderingContext2D::Style aStyle, bool* aIsColor) const {
+    CanvasRenderingContext2D::Style aStyle) const {
   const ContextState& state = CurrentState();
-  bool opaque = false;
-  bool color = false;
-  if (state.globalAlpha >= 1.0) {
-    if (state.patternStyles[aStyle] && state.patternStyles[aStyle]->mSurface) {
-      opaque = IsOpaque(state.patternStyles[aStyle]->mSurface->GetFormat());
-    } else if (!state.gradientStyles[aStyle]) {
-      // TODO: for gradient patterns we could check that all stops are opaque
-      // colors.
-      // it's a color pattern.
-      opaque = Color::FromABGR(state.colorStyles[aStyle]).a >= 1.0;
-      color = true;
-    }
+  if (state.globalAlpha < 1.0) {
+    return false;
   }
-  if (aIsColor) {
-    *aIsColor = color;
+
+  if (state.patternStyles[aStyle] && state.patternStyles[aStyle]->mSurface) {
+    return IsOpaque(state.patternStyles[aStyle]->mSurface->GetFormat());
   }
-  return opaque;
+
+  // TODO: for gradient patterns we could check that all stops are opaque
+  // colors.
+
+  if (!state.gradientStyles[aStyle]) {
+    // it's a color pattern.
+    return Color::FromABGR(state.colorStyles[aStyle]).a >= 1.0;
+  }
+
+  return false;
 }
 
 // This class is named 'GeneralCanvasPattern' instead of just
@@ -1167,8 +1167,7 @@ void CanvasRenderingContext2D::RestoreClipsAndTransformToTarget() {
   }
 }
 
-bool CanvasRenderingContext2D::EnsureTarget(
-    const gfx::Rect* aCoveredRect, bool aWillClear) {
+bool CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect) {
   if (AlreadyShutDown()) {
     gfxCriticalError() << "Attempt to render into a Canvas2d after shutdown.";
     SetErrorState();
@@ -1242,7 +1241,7 @@ bool CanvasRenderingContext2D::EnsureTarget(
   MOZ_ASSERT(newProvider);
 
   bool needsClear = !canDiscardContent;
-  if (newTarget->GetBackendType() == gfx::BackendType::SKIA && (needsClear || !aWillClear)) {
+  if (newTarget->GetBackendType() == gfx::BackendType::SKIA) {
     // Skia expects the unused X channel to contains 0xFF even for opaque
     // operations so we can't skip clearing in that case, even if we are going
     // to cover the entire canvas in the next drawing operation.
@@ -2347,7 +2346,7 @@ void CanvasRenderingContext2D::ClearRect(double aX, double aY, double aW,
 
   gfx::Rect clearRect(aX, aY, aW, aH);
 
-  EnsureTarget(&clearRect, RenderingMode::DefaultBackendMode, true);
+  EnsureTarget(&clearRect);
   if (!IsTargetValid()) {
     return;
   }
@@ -2414,14 +2413,11 @@ void CanvasRenderingContext2D::FillRect(double aX, double aY, double aW,
   state = nullptr;
 
   CompositionOp op = UsedOperation();
-  bool isColor;
   bool discardContent =
-      PatternIsOpaque(Style::FILL, &isColor) &&
+      PatternIsOpaque(Style::FILL) &&
       (op == CompositionOp::OP_OVER || op == CompositionOp::OP_SOURCE);
   const gfx::Rect fillRect(aX, aY, aW, aH);
-  EnsureTarget(discardContent ? &fillRect : nullptr,
-               RenderingMode::DefaultBackendMode,
-               discardContent && isColor);
+  EnsureTarget(discardContent ? &fillRect : nullptr);
   if (!IsTargetValid()) {
     return;
   }
