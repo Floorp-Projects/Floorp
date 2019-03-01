@@ -129,7 +129,7 @@ const previewers = {
     const items = grip.preview.items = [];
 
     for (let i = 0; i < length; ++i) {
-      if (raw && !isWorker) {
+      if (raw) {
         // Array Xrays filter out various possibly-unsafe properties (like
         // functions, and claim that the value is undefined instead. This
         // is generally the right thing for privileged code accessing untrusted
@@ -145,9 +145,8 @@ const previewers = {
           items.push(null);
         }
       } else {
-        // Workers do not have access to Cu, and when recording/replaying we
-        // don't have a raw object. In either case we do not need to deal with
-        // xray wrappers.
+        // When recording/replaying we don't have a raw object, but also don't
+        // need to deal with Xrays into the debuggee compartment.
         const value = DevToolsUtils.getProperty(obj, i);
         items.push(hooks.createValueGrip(value));
       }
@@ -458,9 +457,8 @@ previewers.Object = [
     const raw = obj.unsafeDereference();
 
     // The raw object will be null/unavailable when interacting with a
-    // replaying execution, and Cu is unavailable in workers. In either case we
-    // do not need to worry about xrays.
-    if (raw && !isWorker) {
+    // replaying execution.
+    if (raw) {
       const global = Cu.getGlobalForObject(DebuggerServer);
       const classProto = global[obj.class].prototype;
       // The Xray machinery for TypedArrays denies indexed access on the grounds
