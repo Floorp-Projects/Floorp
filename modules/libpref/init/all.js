@@ -1448,7 +1448,6 @@ pref("privacy.resistFingerprinting.reduceTimerPrecision.jitter", true);
 
 pref("dom.event.contextmenu.enabled",       true);
 pref("dom.event.clipboardevents.enabled",   true);
-pref("dom.event.highrestimestamp.enabled",  true);
 pref("dom.event.coalesce_mouse_move",       true);
 
 pref("javascript.enabled",                  true);
