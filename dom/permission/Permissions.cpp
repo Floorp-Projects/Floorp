@@ -88,8 +88,9 @@ already_AddRefed<Promise> Permissions::Query(JSContext* aCx,
   return promise.forget();
 }
 
-/* static */ nsresult Permissions::RemovePermission(
-    nsIPrincipal* aPrincipal, const nsACString& aPermissionType) {
+/* static */
+nsresult Permissions::RemovePermission(nsIPrincipal* aPrincipal,
+                                       const nsACString& aPermissionType) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();

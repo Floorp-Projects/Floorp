@@ -80,7 +80,8 @@ class nsNSSCertListEnumerator : public nsSimpleEnumerator {
 
 NS_IMPL_ISUPPORTS(nsNSSCertificate, nsIX509Cert, nsISerializable, nsIClassInfo)
 
-/*static*/ nsNSSCertificate* nsNSSCertificate::Create(CERTCertificate* cert) {
+/*static*/
+nsNSSCertificate* nsNSSCertificate::Create(CERTCertificate* cert) {
   if (cert)
     return new nsNSSCertificate(cert);
   else

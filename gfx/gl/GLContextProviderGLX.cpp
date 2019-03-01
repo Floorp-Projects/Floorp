@@ -1024,7 +1024,8 @@ static already_AddRefed<GLContextGLX> CreateOffscreenPixmapContext(
                                        config, true, surface);
 }
 
-/*static*/ already_AddRefed<GLContext> GLContextProviderGLX::CreateHeadless(
+/*static*/
+already_AddRefed<GLContext> GLContextProviderGLX::CreateHeadless(
     CreateContextFlags flags, nsACString* const out_failureId) {
   IntSize dummySize = IntSize(16, 16);
   SurfaceCaps dummyCaps = SurfaceCaps::Any();
@@ -1032,7 +1033,8 @@ static already_AddRefed<GLContextGLX> CreateOffscreenPixmapContext(
                                       out_failureId);
 }
 
-/*static*/ already_AddRefed<GLContext> GLContextProviderGLX::CreateOffscreen(
+/*static*/
+already_AddRefed<GLContext> GLContextProviderGLX::CreateOffscreen(
     const IntSize& size, const SurfaceCaps& minCaps, CreateContextFlags flags,
     nsACString* const out_failureId) {
   SurfaceCaps minBackbufferCaps = minCaps;
@@ -1055,12 +1057,14 @@ static already_AddRefed<GLContextGLX> CreateOffscreenPixmapContext(
   return gl.forget();
 }
 
-/*static*/ GLContext* GLContextProviderGLX::GetGlobalContext() {
+/*static*/
+GLContext* GLContextProviderGLX::GetGlobalContext() {
   // Context sharing not supported.
   return nullptr;
 }
 
-/*static*/ void GLContextProviderGLX::Shutdown() {}
+/*static*/
+void GLContextProviderGLX::Shutdown() {}
 
 } /* namespace gl */
 } /* namespace mozilla */

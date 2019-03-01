@@ -73,8 +73,9 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
   return wgc.forget();
 }
 
-/* static */ already_AddRefed<WindowGlobalChild>
-WindowGlobalChild::GetByInnerWindowId(uint64_t aInnerWindowId) {
+/* static */
+already_AddRefed<WindowGlobalChild> WindowGlobalChild::GetByInnerWindowId(
+    uint64_t aInnerWindowId) {
   if (!gWindowGlobalChildById) {
     return nullptr;
   }

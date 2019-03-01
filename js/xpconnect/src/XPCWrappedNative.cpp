@@ -6,14 +6,6 @@
 
 /* Wrapper object for reflecting native xpcom objects into JavaScript. */
 
-#if (__GNUC__ && __linux__ && __PPC64__ && _LITTLE_ENDIAN)
-// Stack protection generates incorrect code currently with gcc on ppc64le
-// (bug 1512162).
-#  define MOZ_GCC_STACK_PROTECTOR_DISABLED 1  // removed at end of file
-#  pragma GCC push_options
-#  pragma GCC optimize("no-stack-protector")
-#endif
-
 #include "xpcprivate.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "nsWrapperCacheInlines.h"
@@ -1836,11 +1828,4 @@ static void DEBUG_CheckClassInfoClaims(XPCWrappedNative* wrapper) {
     }
   }
 }
-#endif
-
-#if (MOZ_GCC_STACK_PROTECTOR_DISABLED)
-// Reenable stack protection in following modules, if we disabled it
-// (bug 1512162).
-#  pragma GCC pop_options
-#  undef MOZ_GCC_STACK_PROTECTOR_DISABLED
 #endif

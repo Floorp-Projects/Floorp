@@ -2850,8 +2850,9 @@ void nsGlobalWindowInner::GetOwnPropertyNames(JSContext* aCx,
   }
 }
 
-/* static */ bool nsGlobalWindowInner::IsPrivilegedChromeWindow(
-    JSContext* aCx, JSObject* aObj) {
+/* static */
+bool nsGlobalWindowInner::IsPrivilegedChromeWindow(JSContext* aCx,
+                                                   JSObject* aObj) {
   // For now, have to deal with XPConnect objects here.
   nsGlobalWindowInner* win = xpc::WindowOrNull(aObj);
   return win && win->IsChromeWindow() &&
@@ -2859,27 +2860,30 @@ void nsGlobalWindowInner::GetOwnPropertyNames(JSContext* aCx,
              nsContentUtils::GetSystemPrincipal();
 }
 
-/* static */ bool nsGlobalWindowInner::OfflineCacheAllowedForContext(
-    JSContext* aCx, JSObject* aObj) {
+/* static */
+bool nsGlobalWindowInner::OfflineCacheAllowedForContext(JSContext* aCx,
+                                                        JSObject* aObj) {
   return IsSecureContextOrObjectIsFromSecureContext(aCx, aObj) ||
          Preferences::GetBool("browser.cache.offline.insecure.enable");
 }
 
-/* static */ bool nsGlobalWindowInner::IsRequestIdleCallbackEnabled(
-    JSContext* aCx, JSObject* aObj) {
+/* static */
+bool nsGlobalWindowInner::IsRequestIdleCallbackEnabled(JSContext* aCx,
+                                                       JSObject* aObj) {
   // The requestIdleCallback should always be enabled for system code.
   return nsContentUtils::RequestIdleCallbackEnabled() ||
          nsContentUtils::IsSystemCaller(aCx);
 }
 
-/* static */ bool nsGlobalWindowInner::RegisterProtocolHandlerAllowedForContext(
+/* static */
+bool nsGlobalWindowInner::RegisterProtocolHandlerAllowedForContext(
     JSContext* aCx, JSObject* aObj) {
   return IsSecureContextOrObjectIsFromSecureContext(aCx, aObj) ||
          Preferences::GetBool("dom.registerProtocolHandler.insecure.enabled");
 }
 
-/* static */ bool nsGlobalWindowInner::DeviceSensorsEnabled(JSContext* aCx,
-                                                            JSObject* aObj) {
+/* static */
+bool nsGlobalWindowInner::DeviceSensorsEnabled(JSContext* aCx, JSObject* aObj) {
   return Preferences::GetBool("device.sensors.enabled");
 }
 
@@ -7214,7 +7218,8 @@ mozilla::dom::TabGroup* nsPIDOMWindowInner::TabGroup() {
   return nsGlobalWindowInner::Cast(this)->TabGroupInner();
 }
 
-/* static */ already_AddRefed<nsGlobalWindowInner> nsGlobalWindowInner::Create(
+/* static */
+already_AddRefed<nsGlobalWindowInner> nsGlobalWindowInner::Create(
     nsGlobalWindowOuter* aOuterWindow, bool aIsChrome) {
   RefPtr<nsGlobalWindowInner> window = new nsGlobalWindowInner(aOuterWindow);
   if (aIsChrome) {

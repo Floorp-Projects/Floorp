@@ -17,11 +17,10 @@
 namespace mozilla {
 namespace dom {
 
-/* static */ void ReportingUtils::Report(nsPIDOMWindowInner* aWindow,
-                                         nsAtom* aType,
-                                         const nsAString& aGroupName,
-                                         const nsAString& aURL,
-                                         ReportBody* aBody) {
+/* static */
+void ReportingUtils::Report(nsPIDOMWindowInner* aWindow, nsAtom* aType,
+                            const nsAString& aGroupName, const nsAString& aURL,
+                            ReportBody* aBody) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aBody);

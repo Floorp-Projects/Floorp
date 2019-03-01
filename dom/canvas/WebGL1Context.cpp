@@ -11,9 +11,8 @@
 
 namespace mozilla {
 
-/*static*/ WebGL1Context* WebGL1Context::Create() {
-  return new WebGL1Context();
-}
+/*static*/
+WebGL1Context* WebGL1Context::Create() { return new WebGL1Context(); }
 
 WebGL1Context::WebGL1Context() : WebGLContext() {}
 

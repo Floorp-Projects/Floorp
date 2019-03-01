@@ -245,7 +245,8 @@ nsMemoryInfoDumper::nsMemoryInfoDumper() {}
 
 nsMemoryInfoDumper::~nsMemoryInfoDumper() {}
 
-/* static */ void nsMemoryInfoDumper::Initialize() {
+/* static */
+void nsMemoryInfoDumper::Initialize() {
 #if defined(MOZ_SUPPORTS_RT_SIGNALS)
   SignalPipeWatcher* sw = SignalPipeWatcher::GetSingleton();
 

@@ -18,7 +18,8 @@ bool SMILCompositor::KeyEquals(KeyTypePointer aKey) const {
   return aKey && aKey->Equals(mKey);
 }
 
-/*static*/ PLDHashNumber SMILCompositor::HashKey(KeyTypePointer aKey) {
+/*static*/
+PLDHashNumber SMILCompositor::HashKey(KeyTypePointer aKey) {
   // Combine the 3 values into one numeric value, which will be hashed.
   // NOTE: We right-shift one of the pointers by 2 to get some randomness in
   // its 2 lowest-order bits. (Those shifted-off bits will always be 0 since

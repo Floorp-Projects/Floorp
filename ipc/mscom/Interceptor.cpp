@@ -192,10 +192,10 @@ static detail::LiveSet& GetLiveSet() {
 
 MOZ_THREAD_LOCAL(bool) Interceptor::tlsCreatingStdMarshal;
 
-/* static */ HRESULT Interceptor::Create(STAUniquePtr<IUnknown> aTarget,
-                                         IInterceptorSink* aSink,
-                                         REFIID aInitialIid,
-                                         void** aOutInterface) {
+/* static */
+HRESULT Interceptor::Create(STAUniquePtr<IUnknown> aTarget,
+                            IInterceptorSink* aSink, REFIID aInitialIid,
+                            void** aOutInterface) {
   MOZ_ASSERT(aOutInterface && aTarget && aSink);
   if (!aOutInterface) {
     return E_INVALIDARG;
@@ -812,8 +812,8 @@ Interceptor::AddRef() { return WeakReferenceSupport::AddRef(); }
 ULONG
 Interceptor::Release() { return WeakReferenceSupport::Release(); }
 
-/* static */ HRESULT Interceptor::DisconnectRemotesForTarget(
-    IUnknown* aTarget) {
+/* static */
+HRESULT Interceptor::DisconnectRemotesForTarget(IUnknown* aTarget) {
   MOZ_ASSERT(aTarget);
 
   detail::LiveSetAutoLock lock(GetLiveSet());

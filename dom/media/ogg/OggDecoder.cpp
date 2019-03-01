@@ -49,7 +49,8 @@ bool OggDecoder::IsSupportedType(const MediaContainerType& aContainerType) {
   return true;
 }
 
-/* static */ nsTArray<UniquePtr<TrackInfo>> OggDecoder::GetTracksInfo(
+/* static */
+nsTArray<UniquePtr<TrackInfo>> OggDecoder::GetTracksInfo(
     const MediaContainerType& aType) {
   nsTArray<UniquePtr<TrackInfo>> tracks;
   if (!IsSupportedType(aType)) {

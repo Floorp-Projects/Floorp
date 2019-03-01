@@ -18,6 +18,7 @@ namespace mozilla {
 enum class EventQueuePriority {
   High,
   Input,
+  MediumHigh,
   Normal,
   DeferredTimers,
   Idle,

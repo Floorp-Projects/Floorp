@@ -61,24 +61,28 @@ void Blob::MakeValidBlobType(nsAString& aType) {
   }
 }
 
-/* static */ Blob* Blob::Create(nsISupports* aParent, BlobImpl* aImpl) {
+/* static */
+Blob* Blob::Create(nsISupports* aParent, BlobImpl* aImpl) {
   MOZ_ASSERT(aImpl);
 
   return aImpl->IsFile() ? new File(aParent, aImpl) : new Blob(aParent, aImpl);
 }
 
-/* static */ already_AddRefed<Blob> Blob::CreateStringBlob(
-    nsISupports* aParent, const nsACString& aData,
-    const nsAString& aContentType) {
+/* static */
+already_AddRefed<Blob> Blob::CreateStringBlob(nsISupports* aParent,
+                                              const nsACString& aData,
+                                              const nsAString& aContentType) {
   RefPtr<BlobImpl> blobImpl = StringBlobImpl::Create(aData, aContentType);
   RefPtr<Blob> blob = Blob::Create(aParent, blobImpl);
   MOZ_ASSERT(!blob->mImpl->IsFile());
   return blob.forget();
 }
 
-/* static */ already_AddRefed<Blob> Blob::CreateMemoryBlob(
-    nsISupports* aParent, void* aMemoryBuffer, uint64_t aLength,
-    const nsAString& aContentType) {
+/* static */
+already_AddRefed<Blob> Blob::CreateMemoryBlob(nsISupports* aParent,
+                                              void* aMemoryBuffer,
+                                              uint64_t aLength,
+                                              const nsAString& aContentType) {
   RefPtr<Blob> blob = Blob::Create(
       aParent, new MemoryBlobImpl(aMemoryBuffer, aLength, aContentType));
   MOZ_ASSERT(!blob->mImpl->IsFile());
@@ -190,7 +194,8 @@ JSObject* Blob::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return Blob_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-/* static */ already_AddRefed<Blob> Blob::Constructor(
+/* static */
+already_AddRefed<Blob> Blob::Constructor(
     const GlobalObject& aGlobal, const Optional<Sequence<BlobPart>>& aData,
     const BlobPropertyBag& aBag, ErrorResult& aRv) {
   RefPtr<MultipartBlobImpl> impl = new MultipartBlobImpl();

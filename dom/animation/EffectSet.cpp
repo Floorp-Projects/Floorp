@@ -14,8 +14,9 @@
 
 namespace mozilla {
 
-/* static */ void EffectSet::PropertyDtor(void* aObject, nsAtom* aPropertyName,
-                                          void* aPropertyValue, void* aData) {
+/* static */
+void EffectSet::PropertyDtor(void* aObject, nsAtom* aPropertyName,
+                             void* aPropertyValue, void* aData) {
   EffectSet* effectSet = static_cast<EffectSet*>(aPropertyValue);
 
 #ifdef DEBUG
@@ -33,8 +34,9 @@ void EffectSet::Traverse(nsCycleCollectionTraversalCallback& aCallback) {
   }
 }
 
-/* static */ EffectSet* EffectSet::GetEffectSet(const dom::Element* aElement,
-                                                PseudoStyleType aPseudoType) {
+/* static */
+EffectSet* EffectSet::GetEffectSet(const dom::Element* aElement,
+                                   PseudoStyleType aPseudoType) {
   if (!aElement->MayHaveAnimations()) {
     return nullptr;
   }
@@ -43,7 +45,8 @@ void EffectSet::Traverse(nsCycleCollectionTraversalCallback& aCallback) {
   return static_cast<EffectSet*>(aElement->GetProperty(propName));
 }
 
-/* static */ EffectSet* EffectSet::GetEffectSet(const nsIFrame* aFrame) {
+/* static */
+EffectSet* EffectSet::GetEffectSet(const nsIFrame* aFrame) {
   Maybe<NonOwningAnimationTarget> target =
       EffectCompositor::GetAnimationElementAndPseudoForFrame(aFrame);
 
@@ -54,8 +57,9 @@ void EffectSet::Traverse(nsCycleCollectionTraversalCallback& aCallback) {
   return GetEffectSet(target->mElement, target->mPseudoType);
 }
 
-/* static */ EffectSet* EffectSet::GetOrCreateEffectSet(
-    dom::Element* aElement, PseudoStyleType aPseudoType) {
+/* static */
+EffectSet* EffectSet::GetOrCreateEffectSet(dom::Element* aElement,
+                                           PseudoStyleType aPseudoType) {
   EffectSet* effectSet = GetEffectSet(aElement, aPseudoType);
   if (effectSet) {
     return effectSet;
@@ -79,8 +83,9 @@ void EffectSet::Traverse(nsCycleCollectionTraversalCallback& aCallback) {
   return effectSet;
 }
 
-/* static */ void EffectSet::DestroyEffectSet(dom::Element* aElement,
-                                              PseudoStyleType aPseudoType) {
+/* static */
+void EffectSet::DestroyEffectSet(dom::Element* aElement,
+                                 PseudoStyleType aPseudoType) {
   nsAtom* propName = GetEffectSetPropertyAtom(aPseudoType);
   EffectSet* effectSet =
       static_cast<EffectSet*>(aElement->GetProperty(propName));
@@ -100,7 +105,8 @@ void EffectSet::UpdateAnimationGeneration(nsPresContext* aPresContext) {
       aPresContext->RestyleManager()->GetAnimationGeneration();
 }
 
-/* static */ nsAtom** EffectSet::GetEffectSetPropertyAtoms() {
+/* static */
+nsAtom** EffectSet::GetEffectSetPropertyAtoms() {
   static nsAtom* effectSetPropertyAtoms[] = {
       nsGkAtoms::animationEffectsProperty,
       nsGkAtoms::animationEffectsForBeforeProperty,
@@ -109,8 +115,8 @@ void EffectSet::UpdateAnimationGeneration(nsPresContext* aPresContext) {
   return effectSetPropertyAtoms;
 }
 
-/* static */ nsAtom* EffectSet::GetEffectSetPropertyAtom(
-    PseudoStyleType aPseudoType) {
+/* static */
+nsAtom* EffectSet::GetEffectSetPropertyAtom(PseudoStyleType aPseudoType) {
   switch (aPseudoType) {
     case PseudoStyleType::NotPseudo:
       return nsGkAtoms::animationEffectsProperty;

@@ -17,8 +17,8 @@ namespace dom {
 StaticAutoPtr<ControllerConnectionCollection>
     ControllerConnectionCollection::sSingleton;
 
-/* static */ ControllerConnectionCollection*
-ControllerConnectionCollection::GetSingleton() {
+/* static */
+ControllerConnectionCollection* ControllerConnectionCollection::GetSingleton() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!sSingleton) {

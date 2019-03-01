@@ -52,8 +52,9 @@ static uint16_t GetMeetOrSliceForString(const nsAString& aMeetOrSlice) {
   return SVG_MEETORSLICE_UNKNOWN;
 }
 
-/* static */ nsresult SVGPreserveAspectRatio::FromString(
-    const nsAString& aString, SVGPreserveAspectRatio* aValue) {
+/* static */
+nsresult SVGPreserveAspectRatio::FromString(const nsAString& aString,
+                                            SVGPreserveAspectRatio* aValue) {
   nsWhitespaceTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tokenizer(
       aString);
   if (tokenizer.whitespaceBeforeFirstToken() || !tokenizer.hasMoreTokens()) {

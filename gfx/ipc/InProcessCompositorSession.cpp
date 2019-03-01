@@ -23,8 +23,8 @@ InProcessCompositorSession::InProcessCompositorSession(
   GPUProcessManager::Get()->RegisterInProcessSession(this);
 }
 
-/* static */ RefPtr<InProcessCompositorSession>
-InProcessCompositorSession::Create(
+/* static */
+RefPtr<InProcessCompositorSession> InProcessCompositorSession::Create(
     nsBaseWidget* aWidget, LayerManager* aLayerManager,
     const LayersId& aRootLayerTreeId, CSSToLayoutDeviceScale aScale,
     const CompositorOptions& aOptions, bool aUseExternalSurfaceSize,

@@ -35,8 +35,8 @@ NS_INTERFACE_MAP_BEGIN(InputStreamLengthWrapper)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
 NS_INTERFACE_MAP_END
 
-/* static */ already_AddRefed<nsIInputStream>
-InputStreamLengthWrapper::MaybeWrap(
+/* static */
+already_AddRefed<nsIInputStream> InputStreamLengthWrapper::MaybeWrap(
     already_AddRefed<nsIInputStream> aInputStream, int64_t aLength) {
   nsCOMPtr<nsIInputStream> inputStream = std::move(aInputStream);
   MOZ_ASSERT(inputStream);

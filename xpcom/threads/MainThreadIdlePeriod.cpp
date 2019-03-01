@@ -53,8 +53,7 @@ MainThreadIdlePeriod::GetIdlePeriodHint(TimeStamp* aIdleDeadline) {
   return NS_OK;
 }
 
-/* static */ float MainThreadIdlePeriod::GetLongIdlePeriod() {
-  return kLongIdlePeriodMS;
-}
+/* static */
+float MainThreadIdlePeriod::GetLongIdlePeriod() { return kLongIdlePeriodMS; }
 
 }  // namespace mozilla

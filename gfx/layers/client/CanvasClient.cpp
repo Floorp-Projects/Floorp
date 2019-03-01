@@ -32,7 +32,8 @@ using namespace mozilla::gl;
 namespace mozilla {
 namespace layers {
 
-/* static */ already_AddRefed<CanvasClient> CanvasClient::CreateCanvasClient(
+/* static */
+already_AddRefed<CanvasClient> CanvasClient::CreateCanvasClient(
     CanvasClientType aType, CompositableForwarder* aForwarder,
     TextureFlags aFlags) {
   switch (aType) {

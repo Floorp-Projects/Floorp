@@ -39,7 +39,8 @@
 namespace mozilla {
 namespace dom {
 
-/* static */ void XMLHttpRequestWorker::StateData::trace(JSTracer* aTrc) {
+/* static */
+void XMLHttpRequestWorker::StateData::trace(JSTracer* aTrc) {
   JS::TraceEdge(aTrc, &mResponse, "XMLHttpRequestWorker::StateData::mResponse");
 }
 
@@ -1460,7 +1461,8 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(XMLHttpRequestWorker,
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mStateData.mResponse)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-/* static */ already_AddRefed<XMLHttpRequest> XMLHttpRequestWorker::Construct(
+/* static */
+already_AddRefed<XMLHttpRequest> XMLHttpRequestWorker::Construct(
     const GlobalObject& aGlobal, const MozXMLHttpRequestParameters& aParams,
     ErrorResult& aRv) {
   JSContext* cx = aGlobal.Context();

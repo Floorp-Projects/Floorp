@@ -263,7 +263,8 @@ void LookupCache::GetCacheInfo(nsIUrlClassifierCacheInfo** aCache) const {
   info.forget(aCache);
 }
 
-/* static */ bool LookupCache::IsCanonicalizedIP(const nsACString& aHost) {
+/* static */
+bool LookupCache::IsCanonicalizedIP(const nsACString& aHost) {
   // The canonicalization process will have left IP addresses in dotted
   // decimal with no surprises.
   uint32_t i1, i2, i3, i4;
@@ -276,8 +277,9 @@ void LookupCache::GetCacheInfo(nsIUrlClassifierCacheInfo** aCache) const {
   return false;
 }
 
-/* static */ nsresult LookupCache::GetLookupFragments(
-    const nsACString& aSpec, nsTArray<nsCString>* aFragments)
+/* static */
+nsresult LookupCache::GetLookupFragments(const nsACString& aSpec,
+                                         nsTArray<nsCString>* aFragments)
 
 {
   aFragments->Clear();
@@ -379,8 +381,9 @@ void LookupCache::GetCacheInfo(nsIUrlClassifierCacheInfo** aCache) const {
   return NS_OK;
 }
 
-/* static */ nsresult LookupCache::GetHostKeys(const nsACString& aSpec,
-                                               nsTArray<nsCString>* aHostKeys) {
+/* static */
+nsresult LookupCache::GetHostKeys(const nsACString& aSpec,
+                                  nsTArray<nsCString>* aHostKeys) {
   nsACString::const_iterator begin, end, iter;
   aSpec.BeginReading(begin);
   aSpec.EndReading(end);

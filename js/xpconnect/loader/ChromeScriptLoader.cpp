@@ -249,7 +249,8 @@ AsyncScriptCompiler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
 namespace mozilla {
 namespace dom {
 
-/* static */ already_AddRefed<Promise> ChromeUtils::CompileScript(
+/* static */
+already_AddRefed<Promise> ChromeUtils::CompileScript(
     GlobalObject& aGlobal, const nsAString& aURL,
     const CompileScriptOptionsDictionary& aOptions, ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());

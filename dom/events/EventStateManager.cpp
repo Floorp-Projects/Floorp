@@ -3951,16 +3951,18 @@ class MOZ_STACK_CLASS ESMEventCB : public EventDispatchingCallback {
   nsCOMPtr<nsIContent> mTarget;
 };
 
-/*static*/ bool EventStateManager::IsHandlingUserInput() {
+/*static*/
+bool EventStateManager::IsHandlingUserInput() {
   return sUserInputEventDepth > 0;
 }
 
-/*static*/ bool EventStateManager::IsHandlingKeyboardInput() {
+/*static*/
+bool EventStateManager::IsHandlingKeyboardInput() {
   return sUserKeyboardEventDepth > 0;
 }
 
-/*static*/ void EventStateManager::StartHandlingUserInput(
-    EventMessage aMessage) {
+/*static*/
+void EventStateManager::StartHandlingUserInput(EventMessage aMessage) {
   ++sUserInputEventDepth;
   ++sUserInputCounter;
   if (sUserInputEventDepth == 1) {
@@ -3971,8 +3973,8 @@ class MOZ_STACK_CLASS ESMEventCB : public EventDispatchingCallback {
   }
 }
 
-/*static*/ void EventStateManager::StopHandlingUserInput(
-    EventMessage aMessage) {
+/*static*/
+void EventStateManager::StopHandlingUserInput(EventMessage aMessage) {
   --sUserInputEventDepth;
   if (sUserInputEventDepth == 0) {
     sHandlingInputStart = TimeStamp();
@@ -4295,7 +4297,8 @@ void EventStateManager::GeneratePointerEnterExit(EventMessage aMessage,
   GenerateMouseEnterExit(&pointerEvent);
 }
 
-/* static */ void EventStateManager::UpdateLastRefPointOfMouseEvent(
+/* static */
+void EventStateManager::UpdateLastRefPointOfMouseEvent(
     WidgetMouseEvent* aMouseEvent) {
   if (aMouseEvent->mMessage != eMouseMove &&
       aMouseEvent->mMessage != ePointerMove) {
@@ -4326,8 +4329,8 @@ void EventStateManager::GeneratePointerEnterExit(EventMessage aMessage,
   }
 }
 
-/* static */ void
-EventStateManager::ResetPointerToWindowCenterWhilePointerLocked(
+/* static */
+void EventStateManager::ResetPointerToWindowCenterWhilePointerLocked(
     WidgetMouseEvent* aMouseEvent) {
   MOZ_ASSERT(sIsPointerLocked);
   if ((aMouseEvent->mMessage != eMouseMove &&
@@ -4369,7 +4372,8 @@ EventStateManager::ResetPointerToWindowCenterWhilePointerLocked(
   }
 }
 
-/* static */ void EventStateManager::UpdateLastPointerPosition(
+/* static */
+void EventStateManager::UpdateLastPointerPosition(
     WidgetMouseEvent* aMouseEvent) {
   if (aMouseEvent->mMessage != eMouseMove) {
     return;
@@ -4463,8 +4467,9 @@ OverOutElementsWrapper* EventStateManager::GetWrapperByEventID(
       .OrInsert([]() { return new OverOutElementsWrapper(); });
 }
 
-/* static */ void EventStateManager::SetPointerLock(nsIWidget* aWidget,
-                                                    nsIContent* aElement) {
+/* static */
+void EventStateManager::SetPointerLock(nsIWidget* aWidget,
+                                       nsIContent* aElement) {
   // NOTE: aElement will be nullptr when unlocking.
   sIsPointerLocked = !!aElement;
 

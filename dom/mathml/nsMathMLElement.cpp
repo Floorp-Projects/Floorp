@@ -209,9 +209,10 @@ nsMapRuleToAttributesFunc nsMathMLElement::GetAttributeMappingFunction() const {
   return &MapMathMLAttributesInto;
 }
 
-/* static */ bool nsMathMLElement::ParseNamedSpaceValue(const nsString& aString,
-                                                        nsCSSValue& aCSSValue,
-                                                        uint32_t aFlags) {
+/* static */
+bool nsMathMLElement::ParseNamedSpaceValue(const nsString& aString,
+                                           nsCSSValue& aCSSValue,
+                                           uint32_t aFlags) {
   int32_t i = 0;
   // See if it is one of the 'namedspace' (ranging -7/18em, -6/18, ... 7/18em)
   if (aString.EqualsLiteral("veryverythinmathspace")) {
@@ -289,10 +290,10 @@ nsMapRuleToAttributesFunc nsMathMLElement::GetAttributeMappingFunction() const {
 //   number, representing a terminating decimal number (a type of rational
 //   number)"
 //
-/* static */ bool nsMathMLElement::ParseNumericValue(const nsString& aString,
-                                                     nsCSSValue& aCSSValue,
-                                                     uint32_t aFlags,
-                                                     Document* aDocument) {
+/* static */
+bool nsMathMLElement::ParseNumericValue(const nsString& aString,
+                                        nsCSSValue& aCSSValue, uint32_t aFlags,
+                                        Document* aDocument) {
   nsAutoString str(aString);
   str.CompressWhitespace();  // aString is const in this code...
 

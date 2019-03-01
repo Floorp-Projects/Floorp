@@ -393,7 +393,8 @@ nsScriptErrorBase::GetNotes(nsIArray** aNotes) {
   return NS_OK;
 }
 
-/* static */ bool nsScriptErrorBase::ComputeIsFromPrivateWindow(
+/* static */
+bool nsScriptErrorBase::ComputeIsFromPrivateWindow(
     nsGlobalWindowInner* aWindow) {
   // Never mark exceptions from chrome windows as having come from private
   // windows, since we always want them to be reported.

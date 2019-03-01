@@ -28,7 +28,8 @@ using namespace mozilla::layout;
 
 #define NO_SIDE 100
 
-/* virtual */ nscoord nsTableWrapperFrame::GetLogicalBaseline(
+/* virtual */
+nscoord nsTableWrapperFrame::GetLogicalBaseline(
     WritingMode aWritingMode) const {
   nsIFrame* kid = mFrames.FirstChild();
   if (!kid) {
@@ -286,8 +287,8 @@ static nsSize GetContainingBlockSize(const ReflowInput& aOuterRI) {
   return size;
 }
 
-/* virtual */ nscoord nsTableWrapperFrame::GetMinISize(
-    gfxContext* aRenderingContext) {
+/* virtual */
+nscoord nsTableWrapperFrame::GetMinISize(gfxContext* aRenderingContext) {
   nscoord iSize = nsLayoutUtils::IntrinsicForContainer(
       aRenderingContext, InnerTableFrame(), nsLayoutUtils::MIN_ISIZE);
   DISPLAY_MIN_INLINE_SIZE(this, iSize);
@@ -306,8 +307,8 @@ static nsSize GetContainingBlockSize(const ReflowInput& aOuterRI) {
   return iSize;
 }
 
-/* virtual */ nscoord nsTableWrapperFrame::GetPrefISize(
-    gfxContext* aRenderingContext) {
+/* virtual */
+nscoord nsTableWrapperFrame::GetPrefISize(gfxContext* aRenderingContext) {
   nscoord maxISize;
   DISPLAY_PREF_INLINE_SIZE(this, maxISize);
 

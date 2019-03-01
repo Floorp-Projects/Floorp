@@ -153,7 +153,8 @@ void GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo) {
 
 UPowerClient* UPowerClient::sInstance = nullptr;
 
-/* static */ UPowerClient* UPowerClient::GetInstance() {
+/* static */
+UPowerClient* UPowerClient::GetInstance() {
   if (!sInstance) {
     sInstance = new UPowerClient();
   }
@@ -317,9 +318,9 @@ void UPowerClient::UpdateTrackedDeviceSync() {
   g_ptr_array_free(devices, true);
 }
 
-/* static */ void UPowerClient::DeviceChanged(DBusGProxy* aProxy,
-                                              const gchar* aObjectPath,
-                                              UPowerClient* aListener) {
+/* static */
+void UPowerClient::DeviceChanged(DBusGProxy* aProxy, const gchar* aObjectPath,
+                                 UPowerClient* aListener) {
   if (!aListener->mTrackedDevice) {
     return;
   }
@@ -335,14 +336,15 @@ void UPowerClient::UpdateTrackedDeviceSync() {
   aListener->GetDevicePropertiesAsync(aListener->mTrackedDeviceProxy);
 }
 
-/* static */ void UPowerClient::PropertiesChanged(DBusGProxy* aProxy,
-                                                  const gchar*, GHashTable*,
-                                                  char**,
-                                                  UPowerClient* aListener) {
+/* static */
+void UPowerClient::PropertiesChanged(DBusGProxy* aProxy, const gchar*,
+                                     GHashTable*, char**,
+                                     UPowerClient* aListener) {
   aListener->GetDevicePropertiesAsync(aListener->mTrackedDeviceProxy);
 }
 
-/* static */ DBusHandlerResult UPowerClient::ConnectionSignalFilter(
+/* static */
+DBusHandlerResult UPowerClient::ConnectionSignalFilter(
     DBusConnection* aConnection, DBusMessage* aMessage, void* aData) {
   if (dbus_message_is_signal(aMessage, DBUS_INTERFACE_LOCAL, "Disconnected")) {
     static_cast<UPowerClient*>(aData)->StopListening();
@@ -369,8 +371,10 @@ GHashTable* UPowerClient::GetDevicePropertiesSync(DBusGProxy* aProxy) {
   return hashTable;
 }
 
-/* static */ void UPowerClient::GetDevicePropertiesCallback(
-    DBusGProxy* aProxy, DBusGProxyCall* aCall, void* aData) {
+/* static */
+void UPowerClient::GetDevicePropertiesCallback(DBusGProxy* aProxy,
+                                               DBusGProxyCall* aCall,
+                                               void* aData) {
   GError* error = nullptr;
   GHashTable* hashTable = nullptr;
   GType typeGHashTable =

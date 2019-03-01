@@ -109,8 +109,9 @@ void WindowGlobalParent::Init(const WindowGlobalInit& aInit) {
   }
 }
 
-/* static */ already_AddRefed<WindowGlobalParent>
-WindowGlobalParent::GetByInnerWindowId(uint64_t aInnerWindowId) {
+/* static */
+already_AddRefed<WindowGlobalParent> WindowGlobalParent::GetByInnerWindowId(
+    uint64_t aInnerWindowId) {
   if (!gWindowGlobalParentsById) {
     return nullptr;
   }

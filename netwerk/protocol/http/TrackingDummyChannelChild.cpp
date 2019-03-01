@@ -13,7 +13,8 @@
 namespace mozilla {
 namespace net {
 
-/* static */ bool TrackingDummyChannelChild::Create(
+/* static */
+bool TrackingDummyChannelChild::Create(
     nsIHttpChannel* aChannel, nsIURI* aURI,
     const std::function<void(bool)>& aCallback) {
   MOZ_ASSERT(NS_IsMainThread());

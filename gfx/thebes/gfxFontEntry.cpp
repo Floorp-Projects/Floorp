@@ -471,7 +471,8 @@ void gfxFontEntry::FontTableHashEntry::Clear() {
 
 // a hb_destroy_func for hb_blob_create
 
-/* static */ void gfxFontEntry::FontTableHashEntry::DeleteFontTableBlobData(
+/* static */
+void gfxFontEntry::FontTableHashEntry::DeleteFontTableBlobData(
     void* aBlobData) {
   delete static_cast<FontTableBlobData*>(aBlobData);
 }
@@ -542,8 +543,9 @@ hb_blob_t* gfxFontEntry::GetFontTable(uint32_t aTag) {
 
 // callback for HarfBuzz to get a font table (in hb_blob_t form)
 // from the font entry (passed as aUserData)
-/*static*/ hb_blob_t* gfxFontEntry::HBGetTable(hb_face_t* face, uint32_t aTag,
-                                               void* aUserData) {
+/*static*/
+hb_blob_t* gfxFontEntry::HBGetTable(hb_face_t* face, uint32_t aTag,
+                                    void* aUserData) {
   gfxFontEntry* fontEntry = static_cast<gfxFontEntry*>(aUserData);
 
   // bug 589682 - ignore the GDEF table in buggy fonts (applies to
@@ -561,7 +563,8 @@ hb_blob_t* gfxFontEntry::GetFontTable(uint32_t aTag) {
   return fontEntry->GetFontTable(aTag);
 }
 
-/*static*/ void gfxFontEntry::HBFaceDeletedCallback(void* aUserData) {
+/*static*/
+void gfxFontEntry::HBFaceDeletedCallback(void* aUserData) {
   gfxFontEntry* fe = static_cast<gfxFontEntry*>(aUserData);
   fe->ForgetHBFace();
 }
@@ -594,8 +597,9 @@ hb_face_t* gfxFontEntry::GetHBFace() {
   return nullptr;
 }
 
-/*static*/ void gfxFontEntry::GrReleaseTable(const void* aAppFaceHandle,
-                                             const void* aTableBuffer) {
+/*static*/
+void gfxFontEntry::GrReleaseTable(const void* aAppFaceHandle,
+                                  const void* aTableBuffer) {
   gfxFontEntry* fontEntry =
       static_cast<gfxFontEntry*>(const_cast<void*>(aAppFaceHandle));
   void* value;
@@ -1789,7 +1793,8 @@ gfxFontFamily::~gfxFontFamily() {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-/*static*/ void gfxFontFamily::ReadOtherFamilyNamesForFace(
+/*static*/
+void gfxFontFamily::ReadOtherFamilyNamesForFace(
     const nsACString& aFamilyName, const char* aNameData, uint32_t aDataLength,
     nsTArray<nsCString>& aOtherFamilyNames, bool useFullName) {
   const gfxFontUtils::NameHeader* nameHeader =

@@ -566,10 +566,10 @@ GetFilesHelperParent::~GetFilesHelperParent() {
                                     mContentParent.forget());
 }
 
-/* static */ already_AddRefed<GetFilesHelperParent>
-GetFilesHelperParent::Create(const nsID& aUUID, const nsAString& aDirectoryPath,
-                             bool aRecursiveFlag, ContentParent* aContentParent,
-                             ErrorResult& aRv) {
+/* static */
+already_AddRefed<GetFilesHelperParent> GetFilesHelperParent::Create(
+    const nsID& aUUID, const nsAString& aDirectoryPath, bool aRecursiveFlag,
+    ContentParent* aContentParent, ErrorResult& aRv) {
   MOZ_ASSERT(aContentParent);
 
   RefPtr<GetFilesHelperParent> helper =

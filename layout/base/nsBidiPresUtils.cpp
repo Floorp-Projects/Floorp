@@ -1301,9 +1301,12 @@ void nsBidiPresUtils::ResolveParagraphWithinBlock(BidiParagraphData* aBpd) {
   aBpd->ResetData();
 }
 
-/* static */ nscoord nsBidiPresUtils::ReorderFrames(
-    nsIFrame* aFirstFrameOnLine, int32_t aNumFramesOnLine, WritingMode aLineWM,
-    const nsSize& aContainerSize, nscoord aStart) {
+/* static */
+nscoord nsBidiPresUtils::ReorderFrames(nsIFrame* aFirstFrameOnLine,
+                                       int32_t aNumFramesOnLine,
+                                       WritingMode aLineWM,
+                                       const nsSize& aContainerSize,
+                                       nscoord aStart) {
   nsSize containerSize(aContainerSize);
 
   // If this line consists of a line frame, reorder the line frame's children.
@@ -1466,7 +1469,8 @@ void nsBidiPresUtils::IsFirstOrLast(
   }
 }
 
-/* static */ void nsBidiPresUtils::RepositionRubyContentFrame(
+/* static */
+void nsBidiPresUtils::RepositionRubyContentFrame(
     nsIFrame* aFrame, WritingMode aFrameWM,
     const LogicalMargin& aBorderPadding) {
   const nsFrameList& childList = aFrame->PrincipalChildList();
@@ -1500,7 +1504,8 @@ void nsBidiPresUtils::IsFirstOrLast(
   }
 }
 
-/* static */ nscoord nsBidiPresUtils::RepositionRubyFrame(
+/* static */
+nscoord nsBidiPresUtils::RepositionRubyFrame(
     nsIFrame* aFrame, const nsContinuationStates* aContinuationStates,
     const WritingMode aContainerWM, const LogicalMargin& aBorderPadding) {
   LayoutFrameType frameType = aFrame->Type();
@@ -1561,7 +1566,8 @@ void nsBidiPresUtils::IsFirstOrLast(
   return icoord;
 }
 
-/* static */ nscoord nsBidiPresUtils::RepositionFrame(
+/* static */
+nscoord nsBidiPresUtils::RepositionFrame(
     nsIFrame* aFrame, bool aIsEvenLevel, nscoord aStartOrEnd,
     const nsContinuationStates* aContinuationStates, WritingMode aContainerWM,
     bool aContainerReverseDir, const nsSize& aContainerSize) {
@@ -1673,9 +1679,11 @@ void nsBidiPresUtils::InitContinuationStates(
   }
 }
 
-/* static */ nscoord nsBidiPresUtils::RepositionInlineFrames(
-    BidiLineData* aBld, WritingMode aLineWM, const nsSize& aContainerSize,
-    nscoord aStart) {
+/* static */
+nscoord nsBidiPresUtils::RepositionInlineFrames(BidiLineData* aBld,
+                                                WritingMode aLineWM,
+                                                const nsSize& aContainerSize,
+                                                nscoord aStart) {
   nscoord start = aStart;
   nsIFrame* frame;
   int32_t count = aBld->mVisualFrames.Length();

@@ -1482,7 +1482,8 @@ static nsIntRegion ResultChangeRegionForPrimitive(
       PrimitiveAttributesMatcher(aDescription, aInputChangeRegions));
 }
 
-/* static */ nsIntRegion FilterSupport::ComputeResultChangeRegion(
+/* static */
+nsIntRegion FilterSupport::ComputeResultChangeRegion(
     const FilterDescription& aFilter, const nsIntRegion& aSourceGraphicChange,
     const nsIntRegion& aFillPaintChange,
     const nsIntRegion& aStrokePaintChange) {
@@ -1692,7 +1693,8 @@ nsIntRegion FilterSupport::PostFilterExtentsForPrimitive(
       PrimitiveAttributesMatcher(aDescription, aInputExtents));
 }
 
-/* static */ nsIntRegion FilterSupport::ComputePostFilterExtents(
+/* static */
+nsIntRegion FilterSupport::ComputePostFilterExtents(
     const FilterDescription& aFilter,
     const nsIntRegion& aSourceGraphicExtents) {
   const nsTArray<FilterPrimitiveDescription>& primitives = aFilter.mPrimitives;
@@ -1858,7 +1860,8 @@ static nsIntRegion SourceNeededRegionForPrimitive(
       aDescription, aResultNeededRegion, aInputIndex));
 }
 
-/* static */ void FilterSupport::ComputeSourceNeededRegions(
+/* static */
+void FilterSupport::ComputeSourceNeededRegions(
     const FilterDescription& aFilter, const nsIntRegion& aResultNeededRegion,
     nsIntRegion& aSourceGraphicNeededRegion,
     nsIntRegion& aFillPaintNeededRegion,

@@ -1124,7 +1124,8 @@ nsresult nsWindowCommandRegistration::RegisterWindowCommands(
   return rv;
 }
 
-/* static */ bool nsGlobalWindowCommands::FindScrollCommand(
+/* static */
+bool nsGlobalWindowCommands::FindScrollCommand(
     const char *aCommandName, KeyboardScrollAction *aOutAction) {
   // Search for a keyboard scroll action to do for this command in
   // browseCommands and physicalBrowseCommands. Each command exists in only one

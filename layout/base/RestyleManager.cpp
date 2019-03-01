@@ -511,8 +511,8 @@ static nsChangeHint ChangeForContentStateChange(const Element& aElement,
   return changeHint;
 }
 
-/* static */ nsCString RestyleManager::RestyleHintToString(
-    nsRestyleHint aHint) {
+/* static */
+nsCString RestyleManager::RestyleHintToString(nsRestyleHint aHint) {
   nsCString result;
   bool any = false;
   const char* names[] = {"Self",           "SomeDescendants",
@@ -545,7 +545,8 @@ static nsChangeHint ChangeForContentStateChange(const Element& aElement,
 }
 
 #ifdef DEBUG
-/* static */ nsCString RestyleManager::ChangeHintToString(nsChangeHint aHint) {
+/* static */
+nsCString RestyleManager::ChangeHintToString(nsChangeHint aHint) {
   nsCString result;
   bool any = false;
   const char* names[] = {"RepaintFrame",
@@ -1855,8 +1856,8 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
   aChangeList.Clear();
 }
 
-/* static */ uint64_t RestyleManager::GetAnimationGenerationForFrame(
-    nsIFrame* aFrame) {
+/* static */
+uint64_t RestyleManager::GetAnimationGenerationForFrame(nsIFrame* aFrame) {
   EffectSet* effectSet = EffectSet::GetEffectSet(aFrame);
   return effectSet ? effectSet->GetAnimationGeneration() : 0;
 }
@@ -1870,7 +1871,8 @@ void RestyleManager::IncrementAnimationGeneration() {
   }
 }
 
-/* static */ void RestyleManager::AddLayerChangesForAnimation(
+/* static */
+void RestyleManager::AddLayerChangesForAnimation(
     nsIFrame* aFrame, nsIContent* aContent, nsChangeHint aHintForThisFrame,
     nsStyleChangeList& aChangeListToProcess) {
   if (!aFrame || !aContent) {
@@ -2373,8 +2375,9 @@ void RestyleManager::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
   // if we do, we need to re-selector-match them here.
 }
 
-/* static */ void RestyleManager::ClearServoDataFromSubtree(
-    Element* aElement, IncludeRoot aIncludeRoot) {
+/* static */
+void RestyleManager::ClearServoDataFromSubtree(Element* aElement,
+                                               IncludeRoot aIncludeRoot) {
   if (aElement->HasServoData()) {
     StyleChildrenIterator it(aElement);
     for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
@@ -2392,8 +2395,8 @@ void RestyleManager::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
   }
 }
 
-/* static */ void RestyleManager::ClearRestyleStateFromSubtree(
-    Element* aElement) {
+/* static */
+void RestyleManager::ClearRestyleStateFromSubtree(Element* aElement) {
   if (aElement->HasAnyOfFlags(Element::kAllServoDescendantBits)) {
     StyleChildrenIterator it(aElement);
     for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {

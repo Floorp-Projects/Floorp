@@ -2213,7 +2213,8 @@ bool TabParent::SendPasteTransferable(
       aDataTransfer, aIsPrivateData, aRequestingPrincipal, aContentPolicyType);
 }
 
-/*static*/ TabParent* TabParent::GetFrom(nsFrameLoader* aFrameLoader) {
+/*static*/
+TabParent* TabParent::GetFrom(nsFrameLoader* aFrameLoader) {
   if (!aFrameLoader) {
     return nullptr;
   }
@@ -2221,15 +2222,18 @@ bool TabParent::SendPasteTransferable(
   return static_cast<TabParent*>(remoteBrowser);
 }
 
-/*static*/ TabParent* TabParent::GetFrom(nsITabParent* aTabParent) {
+/*static*/
+TabParent* TabParent::GetFrom(nsITabParent* aTabParent) {
   return static_cast<TabParent*>(aTabParent);
 }
 
-/*static*/ TabParent* TabParent::GetFrom(PBrowserParent* aTabParent) {
+/*static*/
+TabParent* TabParent::GetFrom(PBrowserParent* aTabParent) {
   return static_cast<TabParent*>(aTabParent);
 }
 
-/*static*/ TabParent* TabParent::GetFrom(nsIContent* aContent) {
+/*static*/
+TabParent* TabParent::GetFrom(nsIContent* aContent) {
   RefPtr<nsFrameLoaderOwner> loaderOwner = do_QueryObject(aContent);
   if (!loaderOwner) {
     return nullptr;
@@ -2238,7 +2242,8 @@ bool TabParent::SendPasteTransferable(
   return GetFrom(frameLoader);
 }
 
-/*static*/ TabId TabParent::GetTabIdFrom(nsIDocShell* docShell) {
+/*static*/
+TabId TabParent::GetTabIdFrom(nsIDocShell* docShell) {
   nsCOMPtr<nsITabChild> tabChild(TabChild::GetFrom(docShell));
   if (tabChild) {
     return static_cast<TabChild*>(tabChild.get())->GetTabId();
@@ -3384,7 +3389,8 @@ void TabParent::LiveResizeStarted() { SuppressDisplayport(true); }
 
 void TabParent::LiveResizeStopped() { SuppressDisplayport(false); }
 
-/* static */ size_t TabParent::gNumActiveRecordReplayTabs;
+/* static */
+size_t TabParent::gNumActiveRecordReplayTabs;
 
 void TabParent::SetIsActiveRecordReplayTab(bool aIsActive) {
   if (aIsActive != mIsActiveRecordReplayTab) {

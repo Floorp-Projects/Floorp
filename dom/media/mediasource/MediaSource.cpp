@@ -141,7 +141,8 @@ nsresult MediaSource::IsTypeSupported(const nsAString& aType,
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
-/* static */ already_AddRefed<MediaSource> MediaSource::Constructor(
+/* static */
+already_AddRefed<MediaSource> MediaSource::Constructor(
     const GlobalObject& aGlobal, ErrorResult& aRv) {
   nsCOMPtr<nsPIDOMWindowInner> window =
       do_QueryInterface(aGlobal.GetAsSupports());
@@ -360,8 +361,9 @@ void MediaSource::EndOfStream(const MediaResult& aError) {
   mDecoder->DecodeError(aError);
 }
 
-/* static */ bool MediaSource::IsTypeSupported(const GlobalObject& aOwner,
-                                               const nsAString& aType) {
+/* static */
+bool MediaSource::IsTypeSupported(const GlobalObject& aOwner,
+                                  const nsAString& aType) {
   MOZ_ASSERT(NS_IsMainThread());
   DecoderDoctorDiagnostics diagnostics;
   nsresult rv = IsTypeSupported(aType, &diagnostics);
@@ -376,12 +378,13 @@ void MediaSource::EndOfStream(const MediaResult& aError) {
   return NS_SUCCEEDED(rv);
 }
 
-/* static */ bool MediaSource::Enabled(JSContext* cx, JSObject* aGlobal) {
+/* static */
+bool MediaSource::Enabled(JSContext* cx, JSObject* aGlobal) {
   return Preferences::GetBool("media.mediasource.enabled");
 }
 
-/* static */ bool MediaSource::ExperimentalEnabled(JSContext* cx,
-                                                   JSObject* aGlobal) {
+/* static */
+bool MediaSource::ExperimentalEnabled(JSContext* cx, JSObject* aGlobal) {
   return Preferences::GetBool("media.mediasource.experimental.enabled");
 }
 

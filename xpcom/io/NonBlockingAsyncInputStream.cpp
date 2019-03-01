@@ -57,7 +57,8 @@ NS_INTERFACE_MAP_BEGIN(NonBlockingAsyncInputStream)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
 NS_INTERFACE_MAP_END
 
-/* static */ nsresult NonBlockingAsyncInputStream::Create(
+/* static */
+nsresult NonBlockingAsyncInputStream::Create(
     already_AddRefed<nsIInputStream> aInputStream,
     nsIAsyncInputStream** aResult) {
   MOZ_DIAGNOSTIC_ASSERT(aResult);

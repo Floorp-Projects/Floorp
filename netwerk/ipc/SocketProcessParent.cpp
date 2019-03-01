@@ -31,7 +31,8 @@ SocketProcessParent::~SocketProcessParent() {
   sSocketProcessParent = nullptr;
 }
 
-/* static */ SocketProcessParent* SocketProcessParent::GetSingleton() {
+/* static */
+SocketProcessParent* SocketProcessParent::GetSingleton() {
   MOZ_ASSERT(NS_IsMainThread());
 
   return sSocketProcessParent;
@@ -140,8 +141,8 @@ class DeferredDeleteSocketProcessParent : public Runnable {
   UniquePtr<SocketProcessParent> mParent;
 };
 
-/* static */ void SocketProcessParent::Destroy(
-    UniquePtr<SocketProcessParent>&& aParent) {
+/* static */
+void SocketProcessParent::Destroy(UniquePtr<SocketProcessParent>&& aParent) {
   NS_DispatchToMainThread(
       new DeferredDeleteSocketProcessParent(std::move(aParent)));
 }

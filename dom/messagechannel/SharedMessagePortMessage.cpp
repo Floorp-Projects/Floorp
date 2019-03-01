@@ -19,7 +19,8 @@ using namespace ipc;
 
 namespace dom {
 
-/* static */ void SharedMessagePortMessage::FromSharedToMessagesChild(
+/* static */
+void SharedMessagePortMessage::FromSharedToMessagesChild(
     MessagePortChild* aActor,
     const nsTArray<RefPtr<SharedMessagePortMessage>>& aData,
     nsTArray<ClonedMessageData>& aArray) {
@@ -36,7 +37,8 @@ namespace dom {
   }
 }
 
-/* static */ bool SharedMessagePortMessage::FromMessagesToSharedChild(
+/* static */
+bool SharedMessagePortMessage::FromMessagesToSharedChild(
     nsTArray<ClonedMessageData>& aArray,
     FallibleTArray<RefPtr<SharedMessagePortMessage>>& aData) {
   MOZ_ASSERT(aData.IsEmpty());
@@ -57,7 +59,8 @@ namespace dom {
   return true;
 }
 
-/* static */ bool SharedMessagePortMessage::FromSharedToMessagesParent(
+/* static */
+bool SharedMessagePortMessage::FromSharedToMessagesParent(
     MessagePortParent* aActor,
     const nsTArray<RefPtr<SharedMessagePortMessage>>& aData,
     FallibleTArray<ClonedMessageData>& aArray) {
@@ -79,7 +82,8 @@ namespace dom {
   return true;
 }
 
-/* static */ bool SharedMessagePortMessage::FromMessagesToSharedParent(
+/* static */
+bool SharedMessagePortMessage::FromMessagesToSharedParent(
     nsTArray<ClonedMessageData>& aArray,
     FallibleTArray<RefPtr<SharedMessagePortMessage>>& aData) {
   MOZ_ASSERT(aData.IsEmpty());

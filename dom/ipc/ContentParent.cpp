@@ -629,7 +629,8 @@ ContentParent::PreallocateProcess() {
   return process->LaunchSubprocessAsync(PROCESS_PRIORITY_PREALLOC);
 }
 
-/*static*/ void ContentParent::StartUp() {
+/*static*/
+void ContentParent::StartUp() {
   // We could launch sub processes from content process
   // FIXME Bug 1023701 - Stop using ContentParent static methods in
   // child process
@@ -656,7 +657,8 @@ ContentParent::PreallocateProcess() {
 #endif
 }
 
-/*static*/ void ContentParent::ShutDown() {
+/*static*/
+void ContentParent::ShutDown() {
   // No-op for now.  We rely on normal process shutdown and
   // ClearOnShutdown() to clean up our state.
   sCanLaunchSubprocesses = false;
@@ -670,8 +672,8 @@ ContentParent::PreallocateProcess() {
 #endif
 }
 
-/*static*/ uint32_t ContentParent::GetPoolSize(
-    const nsAString& aContentProcessType) {
+/*static*/
+uint32_t ContentParent::GetPoolSize(const nsAString& aContentProcessType) {
   if (!sBrowserContentParents) {
     return 0;
   }
@@ -692,7 +694,8 @@ ContentParent::PreallocateProcess() {
   return *sBrowserContentParents->LookupOrAdd(aContentProcessType);
 }
 
-/*static*/ uint32_t ContentParent::GetMaxProcessCount(
+/*static*/
+uint32_t ContentParent::GetMaxProcessCount(
     const nsAString& aContentProcessType) {
   if (aContentProcessType.EqualsLiteral("web")) {
     return GetMaxWebProcessCount();
@@ -714,13 +717,15 @@ ContentParent::PreallocateProcess() {
   return static_cast<uint32_t>(maxContentParents);
 }
 
-/*static*/ bool ContentParent::IsMaxProcessCountReached(
+/*static*/
+bool ContentParent::IsMaxProcessCountReached(
     const nsAString& aContentProcessType) {
   return GetPoolSize(aContentProcessType) >=
          GetMaxProcessCount(aContentProcessType);
 }
 
-/*static*/ void ContentParent::ReleaseCachedProcesses() {
+/*static*/
+void ContentParent::ReleaseCachedProcesses() {
   if (!GetPoolSize(NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE))) {
     return;
   }
@@ -752,7 +757,8 @@ ContentParent::PreallocateProcess() {
   }
 }
 
-/*static*/ already_AddRefed<ContentParent> ContentParent::MinTabSelect(
+/*static*/
+already_AddRefed<ContentParent> ContentParent::MinTabSelect(
     const nsTArray<ContentParent*>& aContentParents, ContentParent* aOpener,
     int32_t aMaxContentParents) {
   uint32_t maxSelectable =
@@ -789,12 +795,10 @@ static bool CreateTemporaryRecordingFile(nsAString& aResult) {
          !NS_FAILED(file->GetPath(aResult));
 }
 
-/*static*/ already_AddRefed<ContentParent>
-ContentParent::GetNewOrUsedBrowserProcess(Element* aFrameElement,
-                                          const nsAString& aRemoteType,
-                                          ProcessPriority aPriority,
-                                          ContentParent* aOpener,
-                                          bool aPreferUsed) {
+/*static*/
+already_AddRefed<ContentParent> ContentParent::GetNewOrUsedBrowserProcess(
+    Element* aFrameElement, const nsAString& aRemoteType,
+    ProcessPriority aPriority, ContentParent* aOpener, bool aPreferUsed) {
   // Figure out if this process will be recording or replaying, and which file
   // to use for the recording.
   RecordReplayState recordReplayState = eNotRecordingOrReplaying;
@@ -904,8 +908,8 @@ ContentParent::GetNewOrUsedBrowserProcess(Element* aFrameElement,
   return p.forget();
 }
 
-/*static*/ already_AddRefed<ContentParent>
-ContentParent::GetNewOrUsedJSPluginProcess(
+/*static*/
+already_AddRefed<ContentParent> ContentParent::GetNewOrUsedJSPluginProcess(
     uint32_t aPluginID, const hal::ProcessPriority& aPriority) {
   RefPtr<ContentParent> p;
   if (sJSPluginContentParents) {
@@ -930,7 +934,8 @@ ContentParent::GetNewOrUsedJSPluginProcess(
   return p.forget();
 }
 
-/*static*/ ProcessPriority ContentParent::GetInitialProcessPriority(
+/*static*/
+ProcessPriority ContentParent::GetInitialProcessPriority(
     Element* aFrameElement) {
   // Frames with mozapptype == critical which are expecting a system message
   // get FOREGROUND_HIGH priority.
@@ -950,7 +955,8 @@ ContentParent::GetNewOrUsedJSPluginProcess(
 #if defined(XP_WIN)
 extern const wchar_t* kPluginWidgetContentParentProperty;
 
-/*static*/ void ContentParent::SendAsyncUpdate(nsIWidget* aWidget) {
+/*static*/
+void ContentParent::SendAsyncUpdate(nsIWidget* aWidget) {
   if (!aWidget || aWidget->Destroyed()) {
     return;
   }
@@ -1074,10 +1080,12 @@ mozilla::ipc::IPCResult ContentParent::RecvLaunchRDDProcess(
   return IPC_OK();
 }
 
-/*static*/ TabParent* ContentParent::CreateBrowser(
-    const TabContext& aContext, Element* aFrameElement,
-    ContentParent* aOpenerContentParent, TabParent* aSameTabGroupAs,
-    uint64_t aNextTabParentId) {
+/*static*/
+TabParent* ContentParent::CreateBrowser(const TabContext& aContext,
+                                        Element* aFrameElement,
+                                        ContentParent* aOpenerContentParent,
+                                        TabParent* aSameTabGroupAs,
+                                        uint64_t aNextTabParentId) {
   AUTO_PROFILER_LABEL("ContentParent::CreateBrowser", OTHER);
 
   if (!sCanLaunchSubprocesses) {
@@ -2212,7 +2220,8 @@ void ContentParent::LaunchSubprocessInternal(
   }
 }
 
-/* static */ bool ContentParent::LaunchSubprocessSync(
+/* static */
+bool ContentParent::LaunchSubprocessSync(
     hal::ProcessPriority aInitialPriority) {
   bool retval;
   LaunchSubprocessInternal(aInitialPriority, mozilla::AsVariant(&retval));
@@ -2717,7 +2726,8 @@ void ContentParent::SetInputPriorityEventEnabled(bool aEnabled) {
   Unused << SendResumeInputEventQueue();
 }
 
-/*static*/ bool ContentParent::IsInputEventQueueSupported() {
+/*static*/
+bool ContentParent::IsInputEventQueueSupported() {
   static bool sSupported = false;
   static bool sInitialized = false;
   if (!sInitialized) {
@@ -3326,8 +3336,8 @@ bool ContentParent::DeallocPRemoteSpellcheckEngineParent(
   return true;
 }
 
-/* static */ void ContentParent::ForceKillTimerCallback(nsITimer* aTimer,
-                                                        void* aClosure) {
+/* static */
+void ContentParent::ForceKillTimerCallback(nsITimer* aTimer, void* aClosure) {
   // We don't want to time out the content process during XPCShell tests. This
   // is the easiest way to ensure that.
   if (PR_GetEnv("XPCSHELL_TEST_PROFILE_DIR")) {
@@ -4464,8 +4474,10 @@ void ContentParent::NotifyUpdatedFonts() {
   }
 }
 
-/*static*/ void ContentParent::UnregisterRemoteFrame(
-    const TabId& aTabId, const ContentParentId& aCpId, bool aMarkedDestroying) {
+/*static*/
+void ContentParent::UnregisterRemoteFrame(const TabId& aTabId,
+                                          const ContentParentId& aCpId,
+                                          bool aMarkedDestroying) {
   if (XRE_IsParentProcess()) {
     ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
     ContentParent* cp = cpm->GetContentProcessById(aCpId);
@@ -5087,9 +5099,11 @@ ContentParent::RecvNotifyPushSubscriptionModifiedObservers(
   return IPC_OK();
 }
 
-/* static */ void ContentParent::BroadcastBlobURLRegistration(
-    const nsACString& aURI, BlobImpl* aBlobImpl, nsIPrincipal* aPrincipal,
-    ContentParent* aIgnoreThisCP) {
+/* static */
+void ContentParent::BroadcastBlobURLRegistration(const nsACString& aURI,
+                                                 BlobImpl* aBlobImpl,
+                                                 nsIPrincipal* aPrincipal,
+                                                 ContentParent* aIgnoreThisCP) {
   nsCString uri(aURI);
   IPC::Principal principal(aPrincipal);
 
@@ -5111,7 +5125,8 @@ ContentParent::RecvNotifyPushSubscriptionModifiedObservers(
   }
 }
 
-/* static */ void ContentParent::BroadcastBlobURLUnregistration(
+/* static */
+void ContentParent::BroadcastBlobURLUnregistration(
     const nsACString& aURI, ContentParent* aIgnoreThisCP) {
   nsCString uri(aURI);
 

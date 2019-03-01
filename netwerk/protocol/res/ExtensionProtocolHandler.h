@@ -152,12 +152,9 @@ class ExtensionProtocolHandler final
    *        nsIFile for which Normalize() has already been called.
    * @param aRequestedFile the requested web-accessible resource file. Argument
    *        must be an nsIFile for which Normalize() has already been called.
-   * @param aResult outparam set to true when the load of the requested file
-   *        should be allowed.
    */
-  Result<Ok, nsresult> AllowExternalResource(nsIFile* aExtensionDir,
-                                             nsIFile* aRequestedFile,
-                                             bool* aResult);
+  Result<bool, nsresult> AllowExternalResource(nsIFile* aExtensionDir,
+                                               nsIFile* aRequestedFile);
 
 #if defined(XP_MACOSX)
   /**
@@ -171,10 +168,8 @@ class ExtensionProtocolHandler final
    *
    * @param aRequestedFile the requested web-accessible resource file. Argument
    *        must be an nsIFile for which Normalize() has already been called.
-   * @param aResult outparam set to true on development builds when the
-   *        requested file resides in the repo.
    */
-  Result<Ok, nsresult> DevRepoContains(nsIFile* aRequestedFile, bool* aResult);
+  Result<bool, nsresult> DevRepoContains(nsIFile* aRequestedFile);
 
   // On development builds, this points to development repo. Lazily set.
   nsCOMPtr<nsIFile> mDevRepo;
@@ -198,10 +193,8 @@ class ExtensionProtocolHandler final
    *
    * @param aExtensionDir the extension directory. Argument must be an
    *        nsIFile for which Normalize() has already been called.
-   * @param aResult outparam set to true on development builds when the
-   *        requested file resides in the repo.
    */
-  Result<Ok, nsresult> AppDirContains(nsIFile* aExtensionDir, bool* aResult);
+  Result<bool, nsresult> AppDirContains(nsIFile* aExtensionDir);
 
   // On development builds, cache the NS_GRE_DIR repo. Lazily set.
   nsCOMPtr<nsIFile> mAppDir;

@@ -185,8 +185,9 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromRegistry(const nsString& fileType,
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Looks up the type for the extension aExt and compares it to aType
-/* static */ bool nsOSHelperAppService::typeFromExtEquals(const char16_t* aExt,
-                                                          const char* aType) {
+/* static */
+bool nsOSHelperAppService::typeFromExtEquals(const char16_t* aExt,
+                                             const char* aType) {
   if (!aType) return false;
   nsAutoString fileExtToUse;
   if (aExt[0] != char16_t('.')) fileExtToUse = char16_t('.');

@@ -51,8 +51,8 @@ class GLManagerCompositor : public GLManager {
   RefPtr<CompositorOGL> mImpl;
 };
 
-/* static */ GLManager* GLManager::CreateGLManager(
-    LayerManagerComposite* aManager) {
+/* static */
+GLManager* GLManager::CreateGLManager(LayerManagerComposite* aManager) {
   if (aManager && aManager->GetCompositor()->GetBackendType() ==
                       LayersBackend::LAYERS_OPENGL) {
     return new GLManagerCompositor(

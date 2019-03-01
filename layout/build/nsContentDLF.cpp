@@ -259,7 +259,8 @@ nsContentDLF::CreateInstanceForDocument(nsISupports* aContainer,
   return NS_OK;
 }
 
-/* static */ already_AddRefed<Document> nsContentDLF::CreateBlankDocument(
+/* static */
+already_AddRefed<Document> nsContentDLF::CreateBlankDocument(
     nsILoadGroup* aLoadGroup, nsIPrincipal* aPrincipal,
     nsDocShell* aContainer) {
   // create a new blank HTML document

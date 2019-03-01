@@ -208,9 +208,11 @@ webgl::ShaderValidator* WebGLContext::CreateShaderValidator(
 
 namespace webgl {
 
-/*static*/ ShaderValidator* ShaderValidator::Create(
-    GLenum shaderType, ShShaderSpec spec, ShShaderOutput outputLanguage,
-    const ShBuiltInResources& resources, ShCompileOptions compileOptions) {
+/*static*/
+ShaderValidator* ShaderValidator::Create(GLenum shaderType, ShShaderSpec spec,
+                                         ShShaderOutput outputLanguage,
+                                         const ShBuiltInResources& resources,
+                                         ShCompileOptions compileOptions) {
   ShHandle handle =
       sh::ConstructCompiler(shaderType, spec, outputLanguage, &resources);
   MOZ_RELEASE_ASSERT(handle);

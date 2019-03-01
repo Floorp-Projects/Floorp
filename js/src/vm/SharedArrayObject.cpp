@@ -296,7 +296,8 @@ uint32_t SharedArrayBufferObject::wasmBoundsCheckLimit() const {
 }
 #endif
 
-/* static */ void SharedArrayBufferObject::addSizeOfExcludingThis(
+/* static */
+void SharedArrayBufferObject::addSizeOfExcludingThis(
     JSObject* obj, mozilla::MallocSizeOf mallocSizeOf, JS::ClassInfo* info) {
   // Divide the buffer size by the refcount to get the fraction of the buffer
   // owned by this thread. It's conceivable that the refcount might change in
@@ -309,7 +310,8 @@ uint32_t SharedArrayBufferObject::wasmBoundsCheckLimit() const {
       buf.byteLength() / buf.rawBufferObject()->refcount();
 }
 
-/* static */ void SharedArrayBufferObject::copyData(
+/* static */
+void SharedArrayBufferObject::copyData(
     Handle<SharedArrayBufferObject*> toBuffer, uint32_t toIndex,
     Handle<SharedArrayBufferObject*> fromBuffer, uint32_t fromIndex,
     uint32_t count) {

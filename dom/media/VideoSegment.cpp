@@ -41,7 +41,8 @@ void VideoFrame::TakeFrom(VideoFrame* aFrame) {
   mPrincipalHandle = aFrame->mPrincipalHandle;
 }
 
-/* static */ already_AddRefed<Image> VideoFrame::CreateBlackImage(
+/* static */
+already_AddRefed<Image> VideoFrame::CreateBlackImage(
     const gfx::IntSize& aSize) {
   RefPtr<ImageContainer> container =
       LayerManager::CreateImageContainer(ImageContainer::ASYNCHRONOUS);
