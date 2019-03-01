@@ -80,6 +80,7 @@ const DEBUG_TARGET_PANE = {
 
 const MESSAGE_LEVEL = {
   ERROR: "error",
+  INFO: "info",
   WARNING: "warning",
 };
 
