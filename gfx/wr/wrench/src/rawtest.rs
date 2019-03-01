@@ -4,7 +4,7 @@
 
 use {WindowWrapper, NotifierEvent};
 use blob;
-use euclid::{TypedRect, TypedSize2D, TypedPoint2D, point2, size2};
+use euclid::{point2, size2, rect};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicIsize, Ordering};
 use std::sync::mpsc::Receiver;
@@ -17,17 +17,6 @@ pub struct RawtestHarness<'a> {
     window: &'a mut WindowWrapper,
 }
 
-fn point<T: Copy, U>(x: T, y: T) -> TypedPoint2D<T, U> {
-    TypedPoint2D::new(x, y)
-}
-
-fn size<T: Copy, U>(x: T, y: T) -> TypedSize2D<T, U> {
-    TypedSize2D::new(x, y)
-}
-
-fn rect<T: Copy, U>(x: T, y: T, width: T, height: T) -> TypedRect<T, U> {
-    TypedRect::new(point(x, y), size(width, height))
-}
 
 impl<'a> RawtestHarness<'a> {
     pub fn new(wrench: &'a mut Wrench,
@@ -56,7 +45,7 @@ impl<'a> RawtestHarness<'a> {
         self.test_zero_height_window();
     }
 
-    fn render_and_get_pixels(&mut self, window_rect: DeviceIntRect) -> Vec<u8> {
+    fn render_and_get_pixels(&mut self, window_rect: FramebufferIntRect) -> Vec<u8> {
         self.rx.recv().unwrap();
         self.wrench.render();
         self.wrench.renderer.read_pixels_rgba8(window_rect)
@@ -113,8 +102,8 @@ impl<'a> RawtestHarness<'a> {
         builder.push_image(
             &info,
             &SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id),
-            size(64.0, 64.0),
-            size(64.0, 64.0),
+            size2(64.0, 64.0),
+            size2(64.0, 64.0),
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             img,
@@ -142,8 +131,8 @@ impl<'a> RawtestHarness<'a> {
         builder.push_image(
             &info,
             &SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id),
-            size(1024.0, 1024.0),
-            size(1024.0, 1024.0),
+            size2(1024.0, 1024.0),
+            size2(1024.0, 1024.0),
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             img,
@@ -168,8 +157,8 @@ impl<'a> RawtestHarness<'a> {
         builder.push_image(
             &info,
             &SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id),
-            size(1024.0, 1024.0),
-            size(1024.0, 1024.0),
+            size2(1024.0, 1024.0),
+            size2(1024.0, 1024.0),
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             img,
@@ -207,8 +196,8 @@ impl<'a> RawtestHarness<'a> {
         builder.push_image(
             &info,
             &SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id),
-            size(151., 56.0),
-            size(151.0, 56.0),
+            size2(151., 56.0),
+            size2(151.0, 56.0),
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             blob_img.as_image(),
@@ -236,10 +225,10 @@ impl<'a> RawtestHarness<'a> {
 
         let window_size = self.window.get_inner_size();
 
-        let test_size = DeviceIntSize::new(800, 800);
+        let test_size = FramebufferIntSize::new(800, 800);
 
-        let window_rect = DeviceIntRect::new(
-            DeviceIntPoint::new(0, window_size.height - test_size.height),
+        let window_rect = FramebufferIntRect::new(
+            FramebufferIntPoint::new(0, window_size.height - test_size.height),
             test_size,
         );
 
@@ -266,7 +255,7 @@ impl<'a> RawtestHarness<'a> {
 
         let info = LayoutPrimitiveInfo::new(rect(0., -9600.0, 1510.000031, 111256.));
 
-        let image_size = size(1510., 111256.);
+        let image_size = size2(1510., 111256.);
 
         let root_space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
         let clip_id = builder.define_clip(
@@ -355,13 +344,13 @@ impl<'a> RawtestHarness<'a> {
         assert_eq!(self.wrench.device_pixel_ratio, 1.);
 
         let window_size = self.window.get_inner_size();
-        let test_size = DeviceIntSize::new(800, 800);
-        let window_rect = DeviceIntRect::new(
-            DeviceIntPoint::new(0, window_size.height - test_size.height),
+        let test_size = FramebufferIntSize::new(800, 800);
+        let window_rect = FramebufferIntRect::new(
+            point2(0, window_size.height - test_size.height),
             test_size,
         );
         let layout_size = LayoutSize::new(800.0, 800.0);
-        let image_size = size(800.0, 800.0);
+        let image_size = size2(800.0, 800.0);
         let info = LayoutPrimitiveInfo::new(rect(0.0, 0.0, 800.0, 800.0));
         let space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
 
@@ -448,10 +437,9 @@ impl<'a> RawtestHarness<'a> {
 
         let window_size = self.window.get_inner_size();
 
-        let test_size = DeviceIntSize::new(800, 800);
-
-        let window_rect = DeviceIntRect::new(
-            DeviceIntPoint::new(0, window_size.height - test_size.height),
+        let test_size = FramebufferIntSize::new(800, 800);
+        let window_rect = FramebufferIntRect::new(
+            point2(0, window_size.height - test_size.height),
             test_size,
         );
         let space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
@@ -472,7 +460,7 @@ impl<'a> RawtestHarness<'a> {
 
         let info = LayoutPrimitiveInfo::new(rect(0., 0.0, 1510., 1510.));
 
-        let image_size = size(1510., 1510.);
+        let image_size = size2(1510., 1510.);
 
         // setup some malicious image size parameters
         builder.push_image(
@@ -498,7 +486,7 @@ impl<'a> RawtestHarness<'a> {
 
         let info = LayoutPrimitiveInfo::new(rect(-10000., 0.0, 1510., 1510.));
 
-        let image_size = size(1510., 1510.);
+        let image_size = size2(1510., 1510.);
 
         // setup some malicious image size parameters
         builder.push_image(
@@ -529,7 +517,7 @@ impl<'a> RawtestHarness<'a> {
 
         let info = LayoutPrimitiveInfo::new(rect(0., 0.0, 1510., 1510.));
 
-        let image_size = size(1510., 1510.);
+        let image_size = size2(1510., 1510.);
 
         // setup some malicious image size parameters
         builder.push_image(
@@ -563,10 +551,9 @@ impl<'a> RawtestHarness<'a> {
         let blob_img;
         let window_size = self.window.get_inner_size();
 
-        let test_size = DeviceIntSize::new(400, 400);
-
-        let window_rect = DeviceIntRect::new(
-            DeviceIntPoint::new(0, window_size.height - test_size.height),
+        let test_size = FramebufferIntSize::new(400, 400);
+        let window_rect = FramebufferIntRect::new(
+            FramebufferIntPoint::new(0, window_size.height - test_size.height),
             test_size,
         );
         let layout_size = LayoutSize::new(400., 400.);
@@ -599,8 +586,8 @@ impl<'a> RawtestHarness<'a> {
         builder.push_image(
             &info,
             &space_and_clip,
-            size(200.0, 200.0),
-            size(0.0, 0.0),
+            size2(200.0, 200.0),
+            size2(0.0, 0.0),
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             blob_img.as_image(),
@@ -623,8 +610,8 @@ impl<'a> RawtestHarness<'a> {
         builder.push_image(
             &info,
             &space_and_clip,
-            size(200.0, 200.0),
-            size(0.0, 0.0),
+            size2(200.0, 200.0),
+            size2(0.0, 0.0),
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             blob_img.as_image(),
@@ -655,10 +642,9 @@ impl<'a> RawtestHarness<'a> {
         let (blob_img, blob_img2);
         let window_size = self.window.get_inner_size();
 
-        let test_size = DeviceIntSize::new(400, 400);
-
-        let window_rect = DeviceIntRect::new(
-            point(0, window_size.height - test_size.height),
+        let test_size = FramebufferIntSize::new(400, 400);
+        let window_rect = FramebufferIntRect::new(
+            point2(0, window_size.height - test_size.height),
             test_size,
         );
         let layout_size = LayoutSize::new(400., 400.);
@@ -711,8 +697,8 @@ impl<'a> RawtestHarness<'a> {
             builder.push_image(
                 &info,
                 &space_and_clip,
-                size(200.0, 200.0),
-                size(0.0, 0.0),
+                size2(200.0, 200.0),
+                size2(0.0, 0.0),
                 ImageRendering::Auto,
                 AlphaType::PremultipliedAlpha,
                 blob_img.as_image(),
@@ -721,8 +707,8 @@ impl<'a> RawtestHarness<'a> {
             builder.push_image(
                 &info2,
                 &space_and_clip,
-                size(200.0, 200.0),
-                size(0.0, 0.0),
+                size2(200.0, 200.0),
+                size2(0.0, 0.0),
                 ImageRendering::Auto,
                 AlphaType::PremultipliedAlpha,
                 blob_img2.as_image(),
@@ -786,10 +772,9 @@ impl<'a> RawtestHarness<'a> {
         println!("\tblob update test...");
         let window_size = self.window.get_inner_size();
 
-        let test_size = DeviceIntSize::new(400, 400);
-
-        let window_rect = DeviceIntRect::new(
-            point(0, window_size.height - test_size.height),
+        let test_size = FramebufferIntSize::new(400, 400);
+        let window_rect = FramebufferIntRect::new(
+            point2(0, window_size.height - test_size.height),
             test_size,
         );
         let layout_size = LayoutSize::new(400., 400.);
@@ -814,8 +799,8 @@ impl<'a> RawtestHarness<'a> {
         builder.push_image(
             &info,
             &space_and_clip,
-            size(200.0, 200.0),
-            size(0.0, 0.0),
+            size2(200.0, 200.0),
+            size2(0.0, 0.0),
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             blob_img.as_image(),
@@ -842,8 +827,8 @@ impl<'a> RawtestHarness<'a> {
         builder.push_image(
             &info,
             &space_and_clip,
-            size(200.0, 200.0),
-            size(0.0, 0.0),
+            size2(200.0, 200.0),
+            size2(0.0, 0.0),
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             blob_img.as_image(),
@@ -868,8 +853,8 @@ impl<'a> RawtestHarness<'a> {
         builder.push_image(
             &info,
             &space_and_clip,
-            size(200.0, 200.0),
-            size(0.0, 0.0),
+            size2(200.0, 200.0),
+            size2(0.0, 0.0),
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             blob_img.as_image(),
@@ -888,10 +873,9 @@ impl<'a> RawtestHarness<'a> {
         println!("\tsave/restore...");
         let window_size = self.window.get_inner_size();
 
-        let test_size = DeviceIntSize::new(400, 400);
-
-        let window_rect = DeviceIntRect::new(
-            DeviceIntPoint::new(0, window_size.height - test_size.height),
+        let test_size = FramebufferIntSize::new(400, 400);
+        let window_rect = FramebufferIntRect::new(
+            point2(0, window_size.height - test_size.height),
             test_size,
         );
         let layout_size = LayoutSize::new(400., 400.);
@@ -984,10 +968,9 @@ impl<'a> RawtestHarness<'a> {
         println!("\tblur cache...");
         let window_size = self.window.get_inner_size();
 
-        let test_size = DeviceIntSize::new(400, 400);
-
-        let window_rect = DeviceIntRect::new(
-            DeviceIntPoint::new(0, window_size.height - test_size.height),
+        let test_size = FramebufferIntSize::new(400, 400);
+        let window_rect = FramebufferIntRect::new(
+            point2(0, window_size.height - test_size.height),
             test_size,
         );
         let layout_size = LayoutSize::new(400., 400.);
@@ -1037,9 +1020,9 @@ impl<'a> RawtestHarness<'a> {
         let path = "../captures/test";
         let layout_size = LayoutSize::new(400., 400.);
         let dim = self.window.get_inner_size();
-        let window_rect = DeviceIntRect::new(
-            point(0, dim.height - layout_size.height as i32),
-            size(layout_size.width as i32, layout_size.height as i32),
+        let window_rect = FramebufferIntRect::new(
+            point2(0, dim.height - layout_size.height as i32),
+            size2(layout_size.width as i32, layout_size.height as i32),
         );
 
         // 1. render some scene
@@ -1058,8 +1041,8 @@ impl<'a> RawtestHarness<'a> {
         builder.push_image(
             &LayoutPrimitiveInfo::new(rect(300.0, 70.0, 150.0, 50.0)),
             &SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id),
-            size(150.0, 50.0),
-            size(0.0, 0.0),
+            size2(150.0, 50.0),
+            size2(0.0, 0.0),
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             image,
@@ -1120,7 +1103,7 @@ impl<'a> RawtestHarness<'a> {
         println!("\tzero height test...");
 
         let layout_size = LayoutSize::new(120.0, 0.0);
-        let window_size = DeviceIntSize::new(layout_size.width as i32, layout_size.height as i32);
+        let window_size = FramebufferIntSize::new(layout_size.width as i32, layout_size.height as i32);
         let doc_id = self.wrench.api.add_document(window_size, 1);
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);

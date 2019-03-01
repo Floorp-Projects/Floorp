@@ -199,19 +199,24 @@ impl Transaction {
         self.notifications.push(event);
     }
 
-    pub fn set_window_parameters(
+    /// Setup the output region in the framebuffer for a given document.
+    pub fn set_document_view(
         &mut self,
-        window_size: DeviceIntSize,
-        inner_rect: DeviceIntRect,
+        framebuffer_rect: FramebufferIntRect,
         device_pixel_ratio: f32,
     ) {
         self.scene_ops.push(
-            SceneMsg::SetWindowParameters {
-                window_size,
-                inner_rect,
+            SceneMsg::SetDocumentView {
+                framebuffer_rect,
                 device_pixel_ratio,
             },
         );
+    }
+
+    /// Enable copying of the output of this pipeline id to
+    /// an external texture for callers to consume.
+    pub fn enable_frame_output(&mut self, pipeline_id: PipelineId, enable: bool) {
+        self.scene_ops.push(SceneMsg::EnableFrameOutput(pipeline_id, enable));
     }
 
     /// Scrolls the scrolling layer under the `cursor`
@@ -276,12 +281,6 @@ impl Transaction {
     /// setting them on the transaction but can do them incrementally.
     pub fn append_dynamic_properties(&mut self, properties: DynamicProperties) {
         self.frame_ops.push(FrameMsg::AppendDynamicProperties(properties));
-    }
-
-    /// Enable copying of the output of this pipeline id to
-    /// an external texture for callers to consume.
-    pub fn enable_frame_output(&mut self, pipeline_id: PipelineId, enable: bool) {
-        self.frame_ops.push(FrameMsg::EnableFrameOutput(pipeline_id, enable));
     }
 
     /// Consumes this object and just returns the frame ops.
@@ -585,6 +584,7 @@ pub enum SceneMsg {
     SetPageZoom(ZoomFactor),
     SetRootPipeline(PipelineId),
     RemovePipeline(PipelineId),
+    EnableFrameOutput(PipelineId, bool),
     SetDisplayList {
         list_descriptor: BuiltDisplayListDescriptor,
         epoch: Epoch,
@@ -594,9 +594,8 @@ pub enum SceneMsg {
         content_size: LayoutSize,
         preserve_frame_state: bool,
     },
-    SetWindowParameters {
-        window_size: DeviceIntSize,
-        inner_rect: DeviceIntRect,
+    SetDocumentView {
+        framebuffer_rect: FramebufferIntRect,
         device_pixel_ratio: f32,
     },
 }
@@ -607,7 +606,6 @@ pub enum FrameMsg {
     UpdateEpoch(PipelineId, Epoch),
     HitTest(Option<PipelineId>, WorldPoint, HitTestFlags, MsgSender<HitTestResult>),
     SetPan(DeviceIntPoint),
-    EnableFrameOutput(PipelineId, bool),
     Scroll(ScrollLocation, WorldPoint),
     ScrollNodeWithId(LayoutPoint, di::ExternalScrollId, ScrollClamping),
     GetScrollNodeState(MsgSender<Vec<ScrollNodeState>>),
@@ -623,7 +621,8 @@ impl fmt::Debug for SceneMsg {
             SceneMsg::SetDisplayList { .. } => "SceneMsg::SetDisplayList",
             SceneMsg::SetPageZoom(..) => "SceneMsg::SetPageZoom",
             SceneMsg::RemovePipeline(..) => "SceneMsg::RemovePipeline",
-            SceneMsg::SetWindowParameters { .. } => "SceneMsg::SetWindowParameters",
+            SceneMsg::EnableFrameOutput(..) => "SceneMsg::EnableFrameOutput",
+            SceneMsg::SetDocumentView { .. } => "SceneMsg::SetDocumentView",
             SceneMsg::SetRootPipeline(..) => "SceneMsg::SetRootPipeline",
         })
     }
@@ -638,7 +637,6 @@ impl fmt::Debug for FrameMsg {
             FrameMsg::Scroll(..) => "FrameMsg::Scroll",
             FrameMsg::ScrollNodeWithId(..) => "FrameMsg::ScrollNodeWithId",
             FrameMsg::GetScrollNodeState(..) => "FrameMsg::GetScrollNodeState",
-            FrameMsg::EnableFrameOutput(..) => "FrameMsg::EnableFrameOutput",
             FrameMsg::UpdateDynamicProperties(..) => "FrameMsg::UpdateDynamicProperties",
             FrameMsg::AppendDynamicProperties(..) => "FrameMsg::AppendDynamicProperties",
             FrameMsg::SetPinchZoom(..) => "FrameMsg::SetPinchZoom",
@@ -675,7 +673,6 @@ bitflags!{
 pub struct CapturedDocument {
     pub document_id: DocumentId,
     pub root_pipeline_id: Option<PipelineId>,
-    pub window_size: DeviceIntSize,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -727,7 +724,7 @@ pub enum ApiMsg {
     /// Adds a new document namespace.
     CloneApiByClient(IdNamespace),
     /// Adds a new document with given initial size.
-    AddDocument(DocumentId, DeviceIntSize, DocumentLayer),
+    AddDocument(DocumentId, FramebufferIntSize, DocumentLayer),
     /// A message targeted at a particular document.
     UpdateDocument(DocumentId, TransactionMsg),
     /// Deletes an existing document.
@@ -1046,7 +1043,7 @@ impl RenderApi {
         RenderApiSender::new(self.api_sender.clone(), self.payload_sender.clone())
     }
 
-    pub fn add_document(&self, initial_size: DeviceIntSize, layer: DocumentLayer) -> DocumentId {
+    pub fn add_document(&self, initial_size: FramebufferIntSize, layer: DocumentLayer) -> DocumentId {
         let new_id = self.next_unique_id();
         let document_id = DocumentId(self.namespace_id, new_id);
 
@@ -1224,18 +1221,34 @@ impl RenderApi {
         rx.recv().unwrap()
     }
 
-    pub fn set_window_parameters(
+    /// Setup the output region in the framebuffer for a given document.
+    pub fn set_document_view(
         &self,
         document_id: DocumentId,
-        window_size: DeviceIntSize,
-        inner_rect: DeviceIntRect,
+        framebuffer_rect: FramebufferIntRect,
         device_pixel_ratio: f32,
     ) {
         self.send_scene_msg(
             document_id,
-            SceneMsg::SetWindowParameters { window_size, inner_rect, device_pixel_ratio, },
+            SceneMsg::SetDocumentView { framebuffer_rect, device_pixel_ratio },
         );
     }
+
+    /// Setup the output region in the framebuffer for a given document.
+    /// Enable copying of the output of this pipeline id to
+    /// an external texture for callers to consume.
+    pub fn enable_frame_output(
+        &self,
+        document_id: DocumentId,
+        pipeline_id: PipelineId,
+        enable: bool,
+    ) {
+        self.send_scene_msg(
+            document_id,
+            SceneMsg::EnableFrameOutput(pipeline_id, enable),
+        );
+    }
+
 
     pub fn get_scroll_node_state(&self, document_id: DocumentId) -> Vec<ScrollNodeState> {
         let (tx, rx) = channel::msg_channel().unwrap();
