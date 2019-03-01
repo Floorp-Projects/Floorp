@@ -1169,7 +1169,7 @@ struct ElemSegment : AtomicRefCounted<ElemSegment> {
   WASM_DECLARE_SERIALIZABLE(ElemSegment)
 };
 
-// NullFuncIndex represents the case when an element segment (of type anyfunc)
+// NullFuncIndex represents the case when an element segment (of type funcref)
 // contains a null element.
 constexpr uint32_t NullFuncIndex = UINT32_MAX;
 static_assert(NullFuncIndex > MaxFuncs, "Invariant");

@@ -3121,7 +3121,7 @@ static bool EmitMemOrTableInit(FunctionCompiler& f, bool isMem) {
 #endif  // ENABLE_WASM_BULKMEM_OPS
 
 #ifdef ENABLE_WASM_REFTYPES
-// Note, table.{get,grow,set} on table(anyfunc) are currently rejected by the
+// Note, table.{get,grow,set} on table(funcref) are currently rejected by the
 // verifier.
 
 static bool EmitTableGet(FunctionCompiler& f) {
@@ -3798,14 +3798,8 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
 #endif
 #ifdef ENABLE_WASM_REFTYPES
       case uint16_t(Op::RefNull):
-        if (!f.env().gcTypesEnabled()) {
-          return f.iter().unrecognizedOpcode(&op);
-        }
         CHECK(EmitRefNull(f));
       case uint16_t(Op::RefIsNull):
-        if (!f.env().gcTypesEnabled()) {
-          return f.iter().unrecognizedOpcode(&op);
-        }
         CHECK(EmitRefIsNull(f));
 #endif
 

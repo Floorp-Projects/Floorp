@@ -701,11 +701,7 @@ static bool WasmReftypesEnabled(JSContext* cx, unsigned argc, Value* vp) {
 
 static bool WasmGcEnabled(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-#ifdef ENABLE_WASM_GC
-  args.rval().setBoolean(wasm::HasReftypesSupport(cx));
-#else
-  args.rval().setBoolean(false);
-#endif
+  args.rval().setBoolean(wasm::HasGcSupport(cx));
   return true;
 }
 
@@ -6032,15 +6028,15 @@ gc::ZealModeHelpText),
 "This will return true early if compilation isn't two-tiered. "),
 
     JS_FN_HELP("wasmReftypesEnabled", WasmReftypesEnabled, 1, 0,
-"wasmReftypesEnabled(bool)",
+"wasmReftypesEnabled()",
 "  Returns a boolean indicating whether the WebAssembly reftypes proposal is enabled."),
 
     JS_FN_HELP("wasmGcEnabled", WasmGcEnabled, 1, 0,
-"wasmGcEnabled(bool)",
+"wasmGcEnabled()",
 "  Returns a boolean indicating whether the WebAssembly GC types proposal is enabled."),
 
     JS_FN_HELP("wasmDebugSupport", WasmDebugSupport, 1, 0,
-"wasmDebugSupport(bool)",
+"wasmDebugSupport()",
 "  Returns a boolean indicating whether the WebAssembly compilers support debugging."),
 
     JS_FN_HELP("isLazyFunction", IsLazyFunction, 1, 0,

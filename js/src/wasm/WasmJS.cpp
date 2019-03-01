@@ -65,6 +65,19 @@ bool wasm::HasReftypesSupport(JSContext* cx) {
   }
 #endif
 #ifdef ENABLE_WASM_REFTYPES
+  return true;
+#else
+  return false;
+#endif
+}
+
+bool wasm::HasGcSupport(JSContext* cx) {
+#ifdef ENABLE_WASM_CRANELIFT
+  if (cx->options().wasmCranelift()) {
+    return false;
+  }
+#endif
+#ifdef ENABLE_WASM_GC
   return cx->options().wasmGc() && cx->options().wasmBaseline();
 #else
   return false;
@@ -2356,7 +2369,7 @@ bool WasmTableObject::growImpl(JSContext* cx, const CallArgs& args) {
                           oldLength + delta);
       } else {
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                                 JSMSG_WASM_BAD_TBL_GROW_INIT, "anyfunc");
+                                 JSMSG_WASM_BAD_TBL_GROW_INIT, "funcref");
         return false;
       }
       break;
