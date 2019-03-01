@@ -308,6 +308,8 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   // Returns true if the decoder can't participate in suspend-video-decoder.
   bool HasSuspendTaint() const;
 
+  void SetCloningVisually(bool aIsCloningVisually);
+
   void UpdateVideoDecodeMode();
 
   void SetIsBackgroundVideoDecodingAllowed(bool aAllowed);
@@ -561,6 +563,10 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   // True if the decoder has a suspend taint - meaning suspend-video-decoder is
   // disabled.
   bool mHasSuspendTaint;
+
+  // True if the decoder is sending video to a secondary container, and should
+  // not suspend the decoder.
+  bool mIsCloningVisually;
 
   MediaDecoderOwner::NextFrameStatus mNextFrameStatus =
       MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
