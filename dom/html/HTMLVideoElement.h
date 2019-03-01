@@ -22,6 +22,9 @@ class VideoPlaybackQuality;
 
 class HTMLVideoElement final : public HTMLMediaElement {
  public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLVideoElement, HTMLMediaElement)
+
   typedef mozilla::dom::NodeInfo NodeInfo;
 
   explicit HTMLVideoElement(already_AddRefed<NodeInfo>&& aNodeInfo);
@@ -150,6 +153,25 @@ class HTMLVideoElement final : public HTMLMediaElement {
   bool mIsOrientationLocked;
 
  private:
+  bool SetVisualCloneTarget(HTMLVideoElement* aCloneTarget);
+  bool SetVisualCloneSource(HTMLVideoElement* aCloneSource);
+
+  // For video elements, we can clone the frames being played to
+  // a secondary video element. If we're doing that, we hold a
+  // reference to the video element we're cloning to in
+  // mVisualCloneSource.
+  //
+  // Please don't set this to non-nullptr values directly - use
+  // SetVisualCloneTarget() instead.
+  RefPtr<HTMLVideoElement> mVisualCloneTarget;
+  // If this video is the clone target of another video element,
+  // then mVisualCloneSource points to that originating video
+  // element.
+  //
+  // Please don't set this to non-nullptr values directly - use
+  // SetVisualCloneTarget() instead.
+  RefPtr<HTMLVideoElement> mVisualCloneSource;
+
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                     MappedDeclarations&);
 
