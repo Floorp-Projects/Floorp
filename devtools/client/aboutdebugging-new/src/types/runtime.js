@@ -19,6 +19,12 @@ const runtimeInfo = {
   // name of runtime such as "Firefox Nightly"
   name: PropTypes.string.isRequired,
 
+  // operating system on which the runtime runs such as "Android", "Linux"
+  os: PropTypes.string.isRequired,
+
+  // runtime type, for instance "network", "usb" ...
+  type: PropTypes.string.isRequired,
+
   // version of runtime
   version: PropTypes.string.isRequired,
 };
