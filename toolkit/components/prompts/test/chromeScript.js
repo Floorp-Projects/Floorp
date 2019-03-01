@@ -165,7 +165,7 @@ function dismissSelect(ui, action) {
 function dismissPrompt(ui, action) {
   if (action.setCheckbox) {
     // Annoyingly, the prompt code is driven by oncommand.
-    ui.checkbox.setChecked(true);
+    ui.checkbox.checked = true;
     ui.checkbox.doCommand();
   }
 

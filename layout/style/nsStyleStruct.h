@@ -1455,8 +1455,12 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
   mozilla::StyleTextJustify mTextJustify;
   uint8_t mTextTransform;  // NS_STYLE_TEXT_TRANSFORM_*
   mozilla::StyleWhiteSpace mWhiteSpace;
-  uint8_t mWordBreak;  // NS_STYLE_WORDBREAK_*
-  mozilla::StyleOverflowWrap mOverflowWrap;
+
+ private:
+  mozilla::StyleWordBreak mWordBreak = mozilla::StyleWordBreak::Normal;
+  mozilla::StyleOverflowWrap mOverflowWrap = mozilla::StyleOverflowWrap::Normal;
+
+ public:
   mozilla::StyleHyphens mHyphens;
   uint8_t mRubyAlign;           // NS_STYLE_RUBY_ALIGN_*
   uint8_t mRubyPosition;        // NS_STYLE_RUBY_POSITION_*
@@ -1481,6 +1485,20 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
   RefPtr<nsCSSShadowArray> mTextShadow;  // nullptr in case of a zero-length
 
   nsString mTextEmphasisStyleString;
+
+  mozilla::StyleWordBreak EffectiveWordBreak() const {
+    if (mWordBreak == mozilla::StyleWordBreak::BreakWord) {
+      return mozilla::StyleWordBreak::Normal;
+    }
+    return mWordBreak;
+  }
+
+  mozilla::StyleOverflowWrap EffectiveOverflowWrap() const {
+    if (mWordBreak == mozilla::StyleWordBreak::BreakWord) {
+      return mozilla::StyleOverflowWrap::Anywhere;
+    }
+    return mOverflowWrap;
+  }
 
   bool WhiteSpaceIsSignificant() const {
     return mWhiteSpace == mozilla::StyleWhiteSpace::Pre ||
@@ -1516,8 +1534,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
     if (!WhiteSpaceCanWrapStyle()) {
       return false;
     }
-    return mOverflowWrap == mozilla::StyleOverflowWrap::BreakWord ||
-           mOverflowWrap == mozilla::StyleOverflowWrap::Anywhere;
+    auto owrap = EffectiveOverflowWrap();
+    return owrap == mozilla::StyleOverflowWrap::BreakWord ||
+           owrap == mozilla::StyleOverflowWrap::Anywhere;
   }
 
   bool HasTextEmphasis() const { return !mTextEmphasisStyleString.IsEmpty(); }
