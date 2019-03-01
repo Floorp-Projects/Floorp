@@ -689,6 +689,33 @@ class PresShell final : public nsIPresShell,
         EventTargetData* aEventTargetData);
 
     /**
+     * DispatchPrecedingPointerEvent() dispatches preceding pointer event for
+     * aGUIEvent if Pointer Events is enabled.
+     *
+     * @param aFrameForPresShell        Set aFrame of HandleEvent() which
+     *                                  called this method.
+     * @param aGUIEvent                 The handled event.
+     * @param aPointerCapturingContent  The content which is capturing pointer
+     *                                  events if there is.  Otherwise, nullptr.
+     * @param aDontRetargetEvents       Set aDontRetargetEvents of
+     *                                  HandleEvent() which called this method.
+     * @param aEventTargetData          [in/out] Event target data of
+     *                                  aGUIEvent.  If pointer event listeners
+     *                                  change the DOM tree or reframe the
+     *                                  target, updated by this method.
+     * @param aEventStatus              [in/out] The event status of aGUIEvent.
+     * @return                          true if the caller can handle the
+     *                                  event.  Otherwise, false.
+     */
+    MOZ_CAN_RUN_SCRIPT
+    bool DispatchPrecedingPointerEvent(nsIFrame* aFrameForPresShell,
+                                       WidgetGUIEvent* aGUIEvent,
+                                       nsIContent* aPointerCapturingContent,
+                                       bool aDontRetargetEvents,
+                                       EventTargetData* aEventTargetData,
+                                       nsEventStatus* aEventStatus);
+
+    /**
      * MaybeDiscardEvent() checks whether it's safe to handle aGUIEvent right
      * now.  If it's not safe, this may notify somebody of discarding event if
      * necessary.

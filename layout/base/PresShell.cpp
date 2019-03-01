@@ -6649,65 +6649,13 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
     // Note that even if ComputeElementFromFrame() returns true,
     // eventTargetData.mContent can be nullptr here.
 
-    if (PointerEventHandler::IsPointerEventEnabled()) {
-      // Dispatch pointer events from the mouse or touch events. Regarding
-      // pointer events from mouse, we should dispatch those pointer events to
-      // the same target as the source mouse events. We pass the frame found
-      // in hit test to PointerEventHandler and dispatch pointer events to it.
-      //
-      // Regarding pointer events from touch, the behavior is different. Touch
-      // events are dispatched to the same target as the target of touchstart.
-      // Multiple touch points must be dispatched to the same document. Pointer
-      // events from touch can be dispatched to different documents. We Pass the
-      // original frame to PointerEventHandler, reentry PresShell::HandleEvent,
-      // and do hit test for each point.
-      nsIFrame* targetFrame = aGUIEvent->mClass == eTouchEventClass
-                                  ? aFrame
-                                  : eventTargetData.mFrame;
-
-      if (pointerCapturingContent) {
-        eventTargetData.mOverrideClickTarget =
-            GetOverrideClickTarget(aGUIEvent, aFrame);
-        eventTargetData.mPresShell =
-            PresShell::GetShellForEventTarget(nullptr, pointerCapturingContent);
-        if (!eventTargetData.mPresShell) {
-          // If we can't process event for the capturing content, release
-          // the capture.
-          PointerEventHandler::ReleaseIfCaptureByDescendant(
-              pointerCapturingContent);
-          return NS_OK;
-        }
-
-        targetFrame = pointerCapturingContent->GetPrimaryFrame();
-        eventTargetData.mFrame = targetFrame;
-      }
-
-      AutoWeakFrame weakTargetFrame(targetFrame);
-      AutoWeakFrame weakFrame(eventTargetData.mFrame);
-      nsCOMPtr<nsIContent> targetContent;
-      PointerEventHandler::DispatchPointerFromMouseOrTouch(
-          eventTargetData.mPresShell, eventTargetData.mFrame,
-          eventTargetData.mContent, aGUIEvent, aDontRetargetEvents,
-          aEventStatus, getter_AddRefs(targetContent));
-
-      if (!weakTargetFrame.IsAlive() && aGUIEvent->mClass == eMouseEventClass) {
-        // Spec only defines that mouse events must be dispatched to the same
-        // target as the pointer event. If the target is no longer participating
-        // in its ownerDocument's tree, fire the event at the original target's
-        // nearest ancestor node
-        if (!targetContent) {
-          return NS_OK;
-        }
-        // XXX Why don't we reset eventTargetData.mContent here?
-        eventTargetData.mFrame = targetContent->GetPrimaryFrame();
-        eventTargetData.mPresShell = PresShell::GetShellForEventTarget(
-            eventTargetData.mFrame, targetContent);
-        if (!eventTargetData.mPresShell) {
-          return NS_OK;
-        }
-      } else if (!weakFrame.IsAlive()) {
-        return NS_OK;
-      }
+    // Dispatch a pointer event if Pointer Events is enabled.  Note that if
+    // pointer event listeners change the layout, eventTargetData is
+    // automatically updated.
+    if (!DispatchPrecedingPointerEvent(
+            aFrame, aGUIEvent, pointerCapturingContent, aDontRetargetEvents,
+            &eventTargetData, aEventStatus)) {
+      return NS_OK;
     }
 
     // frame could be null after dispatching pointer events.
@@ -6942,6 +6890,89 @@ bool PresShell::EventHandler::ComputeEventTargetFrameAndPresShellAtEventPoint(
       GetFrameToHandleNonTouchEvent(aRootFrameToHandleEvent, aGUIEvent);
   aEventTargetData->SetFrameAndComputePresShell(targetFrame);
   return !!aEventTargetData->mFrame;
+}
+
+bool PresShell::EventHandler::DispatchPrecedingPointerEvent(
+    nsIFrame* aFrameForPresShell, WidgetGUIEvent* aGUIEvent,
+    nsIContent* aPointerCapturingContent, bool aDontRetargetEvents,
+    EventTargetData* aEventTargetData, nsEventStatus* aEventStatus) {
+  MOZ_ASSERT(aFrameForPresShell);
+  MOZ_ASSERT(aGUIEvent);
+  MOZ_ASSERT(aEventTargetData);
+  MOZ_ASSERT(aEventStatus);
+
+  if (!PointerEventHandler::IsPointerEventEnabled()) {
+    return true;
+  }
+
+  // Dispatch pointer events from the mouse or touch events. Regarding
+  // pointer events from mouse, we should dispatch those pointer events to
+  // the same target as the source mouse events. We pass the frame found
+  // in hit test to PointerEventHandler and dispatch pointer events to it.
+  //
+  // Regarding pointer events from touch, the behavior is different. Touch
+  // events are dispatched to the same target as the target of touchstart.
+  // Multiple touch points must be dispatched to the same document. Pointer
+  // events from touch can be dispatched to different documents. We Pass the
+  // original frame to PointerEventHandler, reentry PresShell::HandleEvent,
+  // and do hit test for each point.
+  nsIFrame* targetFrame = aGUIEvent->mClass == eTouchEventClass
+                              ? aFrameForPresShell
+                              : aEventTargetData->mFrame;
+
+  if (aPointerCapturingContent) {
+    aEventTargetData->mOverrideClickTarget =
+        GetOverrideClickTarget(aGUIEvent, aFrameForPresShell);
+    aEventTargetData->mPresShell =
+        PresShell::GetShellForEventTarget(nullptr, aPointerCapturingContent);
+    if (!aEventTargetData->mPresShell) {
+      // If we can't process event for the capturing content, release
+      // the capture.
+      PointerEventHandler::ReleaseIfCaptureByDescendant(
+          aPointerCapturingContent);
+      return false;
+    }
+
+    targetFrame = aPointerCapturingContent->GetPrimaryFrame();
+    aEventTargetData->mFrame = targetFrame;
+  }
+
+  AutoWeakFrame weakTargetFrame(targetFrame);
+  AutoWeakFrame weakFrame(aEventTargetData->mFrame);
+  nsCOMPtr<nsIContent> targetContent;
+  PointerEventHandler::DispatchPointerFromMouseOrTouch(
+      aEventTargetData->mPresShell, aEventTargetData->mFrame,
+      aEventTargetData->mContent, aGUIEvent, aDontRetargetEvents, aEventStatus,
+      getter_AddRefs(targetContent));
+
+  // If the target frame is alive, the caller should keep handling the event
+  // unless event target frame is destroyed.
+  if (weakTargetFrame.IsAlive()) {
+    return weakFrame.IsAlive();
+  }
+
+  // If the event is not a mouse event, the caller should keep handling the
+  // event unless event target frame is destroyed.  Note that this case is
+  // not defined by the spec.
+  if (aGUIEvent->mClass != eMouseEventClass) {
+    return weakFrame.IsAlive();
+  }
+
+  // Spec defines that mouse events must be dispatched to the same target as
+  // the pointer event. If the target is no longer participating in its
+  // ownerDocument's tree, fire the event at the original target's nearest
+  // ancestor node
+  if (!targetContent) {
+    return false;
+  }
+
+  // XXX Why don't we reset aEventTargetData->mContent here?
+  aEventTargetData->mFrame = targetContent->GetPrimaryFrame();
+  aEventTargetData->mPresShell = PresShell::GetShellForEventTarget(
+      aEventTargetData->mFrame, targetContent);
+
+  // If new target PresShel is not found, we cannot keep handling the event.
+  return !!aEventTargetData->mPresShell;
 }
 
 bool PresShell::EventHandler::MaybeHandleEventWithAccessibleCaret(
