@@ -27,6 +27,10 @@ class TestChild extends JSWindowActorChild {
     this.sendAsyncMessage("event", { type: aEvent.type });
   }
 
+  observe(subject, topic, data) {
+    this.lastObserved = {subject, topic, data};
+  }
+
   show() {
     return "TestChild";
   }
