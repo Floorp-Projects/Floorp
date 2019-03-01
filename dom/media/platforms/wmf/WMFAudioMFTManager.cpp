@@ -256,6 +256,18 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutData) {
     return E_FAIL;
   }
 
+  UINT32 discontinuity = false;
+  sample->GetUINT32(MFSampleExtension_Discontinuity, &discontinuity);
+  if (mFirstFrame || discontinuity) {
+    // Update the output type, in case this segment has a different
+    // rate. This also triggers on the first sample, which can have a
+    // different rate than is advertised in the container, and sometimes we
+    // don't get a MF_E_TRANSFORM_STREAM_CHANGE when the rate changes.
+    hr = UpdateOutputType();
+    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+    mFirstFrame = false;
+  }
+
   TimeUnit pts = GetSampleTime(sample);
   NS_ENSURE_TRUE(pts.IsValid(), E_FAIL);
 
