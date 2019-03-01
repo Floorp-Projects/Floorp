@@ -96,6 +96,12 @@ class Sidebar extends PureComponent {
       const isSelected = selectedPage === PAGE_TYPES.RUNTIME &&
         runtime.id === selectedRuntimeId;
 
+      let name = runtime.name;
+      if (runtime.type === RUNTIMES.USB && runtimeHasDetails) {
+        // Update the name to be same to the runtime page.
+        name = runtime.runtimeDetails.info.name;
+      }
+
       return SidebarRuntimeItem({
         deviceName: runtime.extra.deviceName,
         dispatch,
@@ -104,7 +110,7 @@ class Sidebar extends PureComponent {
         isConnected: runtimeHasDetails,
         isSelected,
         isUnknown: runtime.isUnknown,
-        name: runtime.name,
+        name,
         runtimeId: runtime.id,
       });
     });

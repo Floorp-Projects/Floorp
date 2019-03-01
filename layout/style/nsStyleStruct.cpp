@@ -3698,8 +3698,6 @@ nsStyleText::nsStyleText(const Document& aDocument)
       mTextJustify(StyleTextJustify::Auto),
       mTextTransform(NS_STYLE_TEXT_TRANSFORM_NONE),
       mWhiteSpace(StyleWhiteSpace::Normal),
-      mWordBreak(NS_STYLE_WORDBREAK_NORMAL),
-      mOverflowWrap(StyleOverflowWrap::Normal),
       mHyphens(StyleHyphens::Manual),
       mRubyAlign(NS_STYLE_RUBY_ALIGN_SPACE_AROUND),
       mRubyPosition(NS_STYLE_RUBY_POSITION_OVER),

@@ -95,19 +95,19 @@ add_task(async function testLazyTabs() {
   let newTabs = newWindow.gBrowser.tabs;
 
   isnot(newTabs[0].linkedPanel, "", `New tab 0 should continue not being lazy`);
-  // FIXME: bug 1521923 - First inactive tab to be moved into another window loses laziness
-  todo_is(newTabs[1].linkedPanel, "", `New tab 1 should continue being lazy`);
-  for (let i = 2; i < numTabs; ++i) {
+  for (let i = 1; i < numTabs; ++i) {
     is(newTabs[i].linkedPanel, "", `New tab ${i} should continue being lazy`);
   }
 
   is(newTabs[0].linkedBrowser.currentURI.spec, `http://example.com/?0`,
     `New tab 0 should have the right URL`);
-  todo_is(SessionStore.getLazyTabValue(newTabs[1], "url"), `http://example.com/?1`,
-    `New tab 1 should have the right lazy URL`);
-  for (let i = 2; i < numTabs; ++i) {
+  for (let i = 1; i < numTabs; ++i) {
     is(SessionStore.getLazyTabValue(newTabs[i], "url"), `http://example.com/?${i}`,
       `New tab ${i} should have the right lazy URL`);
+  }
+
+  for (let i = 0; i < numTabs; ++i) {
+    ok(newTabs[i].multiselected, `New tab ${i} should be multiselected`);
   }
 
   BrowserTestUtils.closeWindow(newWindow);

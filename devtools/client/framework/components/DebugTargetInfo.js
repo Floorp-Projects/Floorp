@@ -17,10 +17,10 @@ class DebugTargetInfo extends PureComponent {
   static get propTypes() {
     return {
       deviceDescription: PropTypes.shape({
+        brandName: PropTypes.string.isRequired,
         channel: PropTypes.string.isRequired,
         connectionType: PropTypes.string.isRequired,
         deviceName: PropTypes.string,
-        name: PropTypes.string.isRequired,
         version: PropTypes.string.isRequired,
       }).isRequired,
       L10N: PropTypes.object.isRequired,
@@ -30,11 +30,11 @@ class DebugTargetInfo extends PureComponent {
 
   getRuntimeText() {
     const { deviceDescription, L10N } = this.props;
-    const { name, version, connectionType } = deviceDescription;
+    const { brandName, version, connectionType } = deviceDescription;
 
     return (connectionType === CONNECTION_TYPES.THIS_FIREFOX)
       ? L10N.getFormatStr("toolbox.debugTargetInfo.runtimeLabel.thisFirefox", version)
-      : L10N.getFormatStr("toolbox.debugTargetInfo.runtimeLabel", name, version);
+      : L10N.getFormatStr("toolbox.debugTargetInfo.runtimeLabel", brandName, version);
   }
 
   getAssetsForConnectionType() {
