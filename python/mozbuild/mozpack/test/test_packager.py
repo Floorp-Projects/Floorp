@@ -243,7 +243,8 @@ class TestSimplePackager(unittest.TestCase):
                 '<RDF>\n<... em:unpack=\'false\'>\n<...>\n</RDF>')
             packager.add('addon11/install.rdf', install_rdf_addon11)
 
-        we_manifest = GeneratedFile('{"manifest_version": 2, "name": "Test WebExtension", "version": "1.0"}')
+        we_manifest = GeneratedFile(
+            '{"manifest_version": 2, "name": "Test WebExtension", "version": "1.0"}')
         # hybrid and hybrid2 are both bootstrapped extensions with
         # embedded webextensions, they differ in the order in which
         # the manifests are added to the packager.
@@ -365,8 +366,8 @@ class TestSimplePackager(unittest.TestCase):
             packager.close()
 
         self.assertEqual(e.exception.message,
-            'Error: "bar/baz.manifest" is included from "base.manifest", '
-            'which is outside "bar"')
+                         'Error: "bar/baz.manifest" is included from "base.manifest", '
+                         'which is outside "bar"')
 
         # bar/ is detected as a separate base because of chrome.manifest that
         # is included nowhere, but top-level includes another manifest inside
@@ -384,8 +385,8 @@ class TestSimplePackager(unittest.TestCase):
             packager.close()
 
         self.assertEqual(e.exception.message,
-            'Error: "bar/baz.manifest" is included from "base.manifest", '
-            'which is outside "bar"')
+                         'Error: "bar/baz.manifest" is included from "base.manifest", '
+                         'which is outside "bar"')
 
         # bar/ is detected as a separate base because of chrome.manifest that
         # is included nowhere, but chrome.manifest includes baz.manifest from
@@ -487,13 +488,13 @@ class TestComponent(unittest.TestCase):
         self.do_split('trailingspace ', 'trailingspace', {})
         self.do_split(' leadingspace', 'leadingspace', {})
         self.do_split(' trim ', 'trim', {})
-        self.do_split(' trim key="value"', 'trim', {'key':'value'})
-        self.do_split(' trim empty=""', 'trim', {'empty':''})
-        self.do_split(' trim space=" "', 'trim', {'space':' '})
+        self.do_split(' trim key="value"', 'trim', {'key': 'value'})
+        self.do_split(' trim empty=""', 'trim', {'empty': ''})
+        self.do_split(' trim space=" "', 'trim', {'space': ' '})
         self.do_split('component key="value"  key2="second" ',
-                      'component', {'key':'value', 'key2':'second'})
-        self.do_split( 'trim key="  value with spaces   "  key2="spaces again"',
-                       'trim', {'key':'  value with spaces   ', 'key2': 'spaces again'})
+                      'component', {'key': 'value', 'key2': 'second'})
+        self.do_split('trim key="  value with spaces   "  key2="spaces again"',
+                      'trim', {'key': '  value with spaces   ', 'key2': 'spaces again'})
 
     def do_split_error(self, string):
         self.assertRaises(ValueError, Component._split_component_and_options, string)
