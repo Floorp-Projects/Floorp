@@ -10,14 +10,14 @@ async function test_autocomplete(data) {
   info(desc);
 
   await promiseAutocompleteResultPopup(typed);
-  is(gURLBar.textValue, autofilled, "autofilled value is as expected");
+  Assert.equal(gURLBar.textValue, autofilled, "autofilled value is as expected");
 
   let promiseLoad =
     BrowserTestUtils.waitForDocLoadAndStopIt(waitForUrl, gBrowser.selectedBrowser);
 
   keys.forEach(([key, mods]) => EventUtils.synthesizeKey(key, mods));
 
-  is(gURLBar.textValue, modified, "value is as expected");
+  Assert.equal(gURLBar.textValue, modified, "value is as expected");
 
   await promiseLoad;
   gURLBar.blur();
