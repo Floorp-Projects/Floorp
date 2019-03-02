@@ -1593,6 +1593,7 @@ class TestAttributesOnTypes : public nsISupports, public nsWrapperCache {
   void Foo(uint8_t arg);
   void Bar(uint8_t arg);
   void Baz(const nsAString& arg);
+  void ArgWithAttr(uint8_t arg1, const Optional<uint8_t>& arg2);
 };
 
 }  // namespace dom
