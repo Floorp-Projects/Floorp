@@ -584,6 +584,23 @@ class PresShell final : public nsIPresShell,
         PresShell& aPresShell);
 
     /**
+     * HandleEventUsingCoordinates() handles aGUIEvent whose
+     * IsUsingCoordinates() returns true with the following helper methods.
+     *
+     * @param aFrameForPresShell        The frame for mPresShell.
+     * @param aGUIEvent                 The handling event.  Make sure that
+     *                                  its IsUsingCoordinates() returns true.
+     * @param aEventStatus              The status of aGUIEvent.
+     * @param aDontRetargetEvents       true if we've already retarget document.
+     *                                  Otherwise, false.
+     */
+    MOZ_CAN_RUN_SCRIPT
+    nsresult HandleEventUsingCoordinates(nsIFrame* aFrameForPresShell,
+                                         WidgetGUIEvent* aGUIEvent,
+                                         nsEventStatus* aEventStatus,
+                                         bool aDontRetargetEvents);
+
+    /**
      * EventTargetData struct stores a set of a PresShell (event handler),
      * a frame (to handle the event) and a content (event target for the frame).
      */
