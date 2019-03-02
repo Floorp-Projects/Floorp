@@ -2094,9 +2094,15 @@ class IDLType(IDLObject):
         IDLObject.__init__(self, location)
         self.name = name
         self.builtin = False
+        self.clamp = False
+        self.treatNullAsEmpty = False
+        self.enforceRange = False
+        self._extendedAttrDict = {}
 
     def __eq__(self, other):
-        return other and self.builtin == other.builtin and self.name == other.name
+        return (other and self.builtin == other.builtin and self.name == other.name and
+                          self.clamp == other.clamp and self.enforceRange == other.enforceRange and
+                          self.treatNullAsEmpty == other.treatNullAsEmpty)
 
     def __ne__(self, other):
         return not self == other
@@ -2222,12 +2228,14 @@ class IDLType(IDLObject):
         assert self.tag() == IDLType.Tags.callback
         return self.nullable() and self.inner.callback._treatNonObjectAsNull
 
-    def addExtendedAttributes(self, attrs):
-        if len(attrs) != 0:
-            raise WebIDLError("There are no extended attributes that are "
-                              "allowed on types, for now (but this is "
-                              "changing; see bug 1359269)",
+    def withExtendedAttributes(self, attrs):
+        if len(attrs) > 0:
+            raise WebIDLError("Extended attributes on types only supported for builtins",
                               [attrs[0].location, self.location])
+        return self
+
+    def getExtendedAttribute(self, name):
+        return self._extendedAttrDict.get(name, None)
 
     def resolveType(self, parentScope):
         pass
@@ -3105,10 +3113,59 @@ class IDLBuiltinType(IDLType):
         Types.ReadableStream: IDLType.Tags.interface,
     }
 
-    def __init__(self, location, name, type):
+    def __init__(self, location, name, type, clamp=False, enforceRange=False, treatNullAsEmpty=False,
+                 attrLocation=[]):
+        """
+        The mutually exclusive clamp/enforceRange/treatNullAsEmpty arguments are used to create instances
+        of this type with the appropriate attributes attached. Use .clamped(), .rangeEnforced(), and .treatNullAs().
+
+        attrLocation is an array of source locations of these attributes for error reporting.
+        """
         IDLType.__init__(self, location, name)
         self.builtin = True
         self._typeTag = type
+        self._clamped = None
+        self._rangeEnforced = None
+        self._withTreatNullAs = None
+        if self.isNumeric():
+            if clamp:
+                self.clamp = True
+                self.name = "Clamped" + self.name
+                self._extendedAttrDict["Clamp"] = True
+            elif enforceRange:
+                self.enforceRange = True
+                self.name = "RangeEnforced" + self.name
+                self._extendedAttrDict["EnforceRange"] = True
+        elif clamp or enforceRange:
+            raise WebIDLError("Non-numeric types cannot be [Clamp] or [EnforceRange]", attrLocation)
+        if self.isDOMString():
+            if treatNullAsEmpty:
+                self.treatNullAsEmpty = True
+                self.name = "NullIsEmpty" + self.name
+                self._extendedAttrDict["TreatNullAs"] = ["EmptyString"]
+        elif treatNullAsEmpty:
+            raise WebIDLError("Non-string types cannot be [TreatNullAs]", attrLocation)
+
+    def clamped(self, attrLocation):
+        if not self._clamped:
+            self._clamped = IDLBuiltinType(self.location, self.name,
+                                           self._typeTag, clamp=True,
+                                           attrLocation=attrLocation)
+        return self._clamped
+
+    def rangeEnforced(self, attrLocation):
+        if not self._rangeEnforced:
+            self._rangeEnforced = IDLBuiltinType(self.location, self.name,
+                                           self._typeTag, enforceRange=True,
+                                           attrLocation=attrLocation)
+        return self._rangeEnforced
+
+    def withTreatNullAs(self, attrLocation):
+        if not self._withTreatNullAs:
+            self._withTreatNullAs = IDLBuiltinType(self.location, self.name,
+                                           self._typeTag, treatNullAsEmpty=True,
+                                           attrLocation=attrLocation)
+        return self._withTreatNullAs
 
     def isPrimitive(self):
         return self._typeTag <= IDLBuiltinType.Types.double
@@ -3243,6 +3300,45 @@ class IDLBuiltinType(IDLType):
 
     def _getDependentObjects(self):
         return set()
+
+    def withExtendedAttributes(self, attrs):
+        ret = self
+        for attribute in attrs:
+            identifier = attribute.identifier()
+            if identifier == "Clamp":
+                if not attribute.noArguments():
+                    raise WebIDLError("[Clamp] must take no arguments",
+                                      [attribute.location])
+                if ret.enforceRange or self.enforceRange:
+                    raise WebIDLError("[EnforceRange] and [Clamp] are mutually exclusive",
+                                      [self.location, attribute.location])
+                ret = self.clamped([self.location, attribute.location])
+            elif identifier == "EnforceRange":
+                if not attribute.noArguments():
+                    raise WebIDLError("[EnforceRange] must take no arguments",
+                                      [attribute.location])
+                if ret.clamp or self.clamp:
+                    raise WebIDLError("[EnforceRange] and [Clamp] are mutually exclusive",
+                                      [self.location, attribute.location])
+                ret = self.rangeEnforced([self.location, attribute.location])
+            elif identifier == "TreatNullAs":
+                if not self.isDOMString():
+                    raise WebIDLError("[TreatNullAs] only allowed on DOMStrings",
+                                      [self.location, attribute.location])
+                assert not self.nullable()
+                if not attribute.hasValue():
+                    raise WebIDLError("[TreatNullAs] must take an identifier argument"
+                                      [attribute.location])
+                value = attribute.value()
+                if value != 'EmptyString':
+                    raise WebIDLError("[TreatNullAs] must take the identifier "
+                                      "'EmptyString', not '%s'" % value,
+                                      [attribute.location])
+                ret = self.withTreatNullAs([self.location, attribute.location])
+            else:
+                raise WebIDLError("Unhandled extended attribute on type",
+                                  [self.location, attribute.location])
+        return ret
 
 BuiltinTypes = {
     IDLBuiltinType.Types.byte:
@@ -5815,7 +5911,6 @@ class Parser(Tokenizer):
             # We're at the end of the list
             p[0] = []
             return
-        # Add our extended attributes
         p[2].addExtendedAttributes(p[1])
         p[0] = [p[2]]
         p[0].extend(p[3])
@@ -5927,7 +6022,7 @@ class Parser(Tokenizer):
 
     def p_Typedef(self, p):
         """
-            Typedef : TYPEDEF Type IDENTIFIER SEMICOLON
+            Typedef : TYPEDEF TypeWithExtendedAttributes IDENTIFIER SEMICOLON
         """
         typedef = IDLTypedef(self.getLocation(p, 1), self.globalScope(),
                              p[2], p[3])
@@ -6020,8 +6115,8 @@ class Parser(Tokenizer):
 
     def p_Iterable(self, p):
         """
-            Iterable : ITERABLE LT Type GT SEMICOLON
-                     | ITERABLE LT Type COMMA Type GT SEMICOLON
+            Iterable : ITERABLE LT TypeWithExtendedAttributes GT SEMICOLON
+                     | ITERABLE LT TypeWithExtendedAttributes COMMA TypeWithExtendedAttributes GT SEMICOLON
         """
         location = self.getLocation(p, 2)
         identifier = IDLUnresolvedIdentifier(location, "__iterable",
@@ -6037,7 +6132,7 @@ class Parser(Tokenizer):
 
     def p_Setlike(self, p):
         """
-            Setlike : ReadOnly SETLIKE LT Type GT SEMICOLON
+            Setlike : ReadOnly SETLIKE LT TypeWithExtendedAttributes GT SEMICOLON
         """
         readonly = p[1]
         maplikeOrSetlikeType = p[2]
@@ -6051,7 +6146,7 @@ class Parser(Tokenizer):
 
     def p_Maplike(self, p):
         """
-            Maplike : ReadOnly MAPLIKE LT Type COMMA Type GT SEMICOLON
+            Maplike : ReadOnly MAPLIKE LT TypeWithExtendedAttributes COMMA TypeWithExtendedAttributes GT SEMICOLON
         """
         readonly = p[1]
         maplikeOrSetlikeType = p[2]
@@ -6089,7 +6184,7 @@ class Parser(Tokenizer):
 
     def p_AttributeRest(self, p):
         """
-            AttributeRest : ReadOnly ATTRIBUTE Type AttributeName SEMICOLON
+            AttributeRest : ReadOnly ATTRIBUTE TypeWithExtendedAttributes AttributeName SEMICOLON
         """
         location = self.getLocation(p, 2)
         readonly = p[1]
@@ -6571,6 +6666,12 @@ class Parser(Tokenizer):
         """
         p[0] = self.handleNullable(p[1], p[2])
 
+    def p_TypeWithExtendedAttributes(self, p):
+        """
+            TypeWithExtendedAttributes : ExtendedAttributeList Type
+        """
+        p[0] = p[2].withExtendedAttributes(p[1])
+
     def p_SingleTypeNonAnyType(self, p):
         """
             SingleType : NonAnyType
@@ -6593,9 +6694,9 @@ class Parser(Tokenizer):
 
     def p_UnionMemberTypeNonAnyType(self, p):
         """
-            UnionMemberType : NonAnyType
+            UnionMemberType : ExtendedAttributeList NonAnyType
         """
-        p[0] = p[1]
+        p[0] = p[2].withExtendedAttributes(p[1])
 
     def p_UnionMemberType(self, p):
         """
@@ -6645,7 +6746,7 @@ class Parser(Tokenizer):
 
     def p_NonAnyTypeSequenceType(self, p):
         """
-            NonAnyType : SEQUENCE LT Type GT Null
+            NonAnyType : SEQUENCE LT TypeWithExtendedAttributes GT Null
         """
         innerType = p[3]
         type = IDLSequenceType(self.getLocation(p, 1), innerType)
@@ -6661,7 +6762,7 @@ class Parser(Tokenizer):
 
     def p_NonAnyTypeRecordType(self, p):
         """
-            NonAnyType : RECORD LT StringType COMMA Type GT Null
+            NonAnyType : RECORD LT StringType COMMA TypeWithExtendedAttributes GT Null
         """
         keyType = p[3]
         valueType = p[5]
