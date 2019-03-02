@@ -39,8 +39,6 @@ let sourceActors: { [ActorId]: SourceId };
 let breakpoints: { [string]: Object };
 let supportsWasm: boolean;
 
-let shouldWaitForWorkers = false;
-
 type Dependencies = {
   threadClient: ThreadClient,
   tabTarget: TabTarget,
@@ -89,10 +87,6 @@ function lookupConsoleClient(thread: string) {
     return tabTarget.activeConsole;
   }
   return workerClients[thread].console;
-}
-
-function listWorkerThreadClients() {
-  return Object.values(workerClients).map(({ thread }) => thread);
 }
 
 function resume(thread: string): Promise<*> {
@@ -172,10 +166,6 @@ function locationKey(location) {
   return `${(sourceUrl: any)}:${(sourceId: any)}:${line}:${(column: any)}`;
 }
 
-function waitForWorkers(shouldWait) {
-  shouldWaitForWorkers = shouldWait;
-}
-
 async function setBreakpoint(
   location: BreakpointLocation,
   options: BreakpointOptions
@@ -189,14 +179,8 @@ async function setBreakpoint(
   // setting its breakpoint, but this leads to more consistent behavior if the
   // user sets a breakpoint and immediately starts interacting with the page.
   // If the main thread stops responding then we're toast regardless.
-  if (shouldWaitForWorkers) {
-    for (const thread of listWorkerThreadClients()) {
-      await thread.setBreakpoint(location, options);
-    }
-  } else {
-    for (const thread of listWorkerThreadClients()) {
-      thread.setBreakpoint(location, options);
-    }
+  for (const { thread } of (Object.values(workerClients): any)) {
+    thread.setBreakpoint(location, options);
   }
 }
 
@@ -206,14 +190,8 @@ async function removeBreakpoint(location: BreakpointLocation) {
 
   // Remove breakpoints without waiting for the thread to respond, for the same
   // reason as in setBreakpoint.
-  if (shouldWaitForWorkers) {
-    for (const thread of listWorkerThreadClients()) {
-      await thread.removeBreakpoint(location);
-    }
-  } else {
-    for (const thread of listWorkerThreadClients()) {
-      thread.removeBreakpoint(location);
-    }
+  for (const { thread } of (Object.values(workerClients): any)) {
+    thread.removeBreakpoint(location);
   }
 }
 
@@ -471,8 +449,7 @@ const clientCommands = {
   getMainThread,
   sendPacket,
   setSkipPausing,
-  setEventListenerBreakpoints,
-  waitForWorkers
+  setEventListenerBreakpoints
 };
 
 export { setupCommands, clientCommands };
