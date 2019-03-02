@@ -420,47 +420,10 @@ class IDLObjectWithIdentifier(IDLObject):
         if parentScope:
             self.resolve(parentScope)
 
-        self.treatNullAs = "Default"
-
     def resolve(self, parentScope):
         assert isinstance(parentScope, IDLScope)
         assert isinstance(self.identifier, IDLUnresolvedIdentifier)
         self.identifier.resolve(parentScope, self)
-
-    def checkForStringHandlingExtendedAttributes(self, attrs,
-                                                 isDictionaryMember=False,
-                                                 isOptional=False):
-        """
-        A helper function to deal with TreatNullAs.  Returns the list
-        of attrs it didn't handle itself.
-        """
-        assert isinstance(self, IDLArgument) or isinstance(self, IDLAttribute)
-        unhandledAttrs = list()
-        for attr in attrs:
-            if not attr.hasValue():
-                unhandledAttrs.append(attr)
-                continue
-
-            identifier = attr.identifier()
-            value = attr.value()
-            if identifier == "TreatNullAs":
-                if not self.type.isDOMString() or self.type.nullable():
-                    raise WebIDLError("[TreatNullAs] is only allowed on "
-                                      "arguments or attributes whose type is "
-                                      "DOMString",
-                                      [self.location])
-                if isDictionaryMember:
-                    raise WebIDLError("[TreatNullAs] is not allowed for "
-                                      "dictionary members", [self.location])
-                if value != 'EmptyString':
-                    raise WebIDLError("[TreatNullAs] must take the identifier "
-                                      "'EmptyString', not '%s'" % value,
-                                      [self.location])
-                self.treatNullAs = value
-            else:
-                unhandledAttrs.append(attr)
-
-        return unhandledAttrs
 
 
 class IDLObjectWithScope(IDLObjectWithIdentifier, IDLScope):
@@ -3561,6 +3524,10 @@ class IDLValue(IDLObject):
             # extra normalization step.
             assert self.type.isDOMString()
             return self
+        elif self.type.isDOMString() and type.treatNullAsEmpty:
+            # TreatNullAsEmpty is a different type for resolution reasons,
+            # however once you have a value it doesn't matter
+            return self
         elif self.type.isString() and type.isByteString():
             # Allow ByteStrings to use a default value like DOMString.
             # No coercion is required as Codegen.py will handle the
@@ -4238,7 +4205,7 @@ class IDLAttribute(IDLInterfaceMember):
             assert not isinstance(t.name, IDLUnresolvedIdentifier)
             self.type = t
 
-        if self.readonly and (self.type.clamp or self.type.enforceRange):
+        if self.readonly and (self.type.clamp or self.type.enforceRange or self.type.treatNullAsEmpty):
             raise WebIDLError("A readonly attribute cannot be [Clamp] or [EnforceRange]",
                               [self.location])
         if self.type.isDictionary() and not self.getExtendedAttribute("Cached"):
@@ -4565,10 +4532,6 @@ class IDLAttribute(IDLInterfaceMember):
         self.type.resolveType(parentScope)
         IDLObjectWithIdentifier.resolve(self, parentScope)
 
-    def addExtendedAttributes(self, attrs):
-        attrs = self.checkForStringHandlingExtendedAttributes(attrs)
-        IDLInterfaceMember.addExtendedAttributes(self, attrs)
-
     def hasLenientThis(self):
         return self.lenientThis
 
@@ -4607,13 +4570,10 @@ class IDLArgument(IDLObjectWithIdentifier):
         assert not variadic or not defaultValue
 
     def addExtendedAttributes(self, attrs):
-        attrs = self.checkForStringHandlingExtendedAttributes(
-            attrs,
-            isDictionaryMember=self.dictionaryMember,
-            isOptional=self.optional)
         for attribute in attrs:
             identifier = attribute.identifier()
-            if self.allowTypeAttributes and (identifier == "EnforceRange" or identifier == "Clamp"):
+            if self.allowTypeAttributes and (identifier == "EnforceRange" or identifier == "Clamp" or
+                                             identifier == "TreatNullAs"):
                 self.type = self.type.withExtendedAttributes([attribute])
             elif identifier == "TreatNonCallableAsNull":
                 self._allowTreatNonCallableAsNull = True
@@ -4666,6 +4626,8 @@ class IDLArgument(IDLObjectWithIdentifier):
                 # codegen doesn't have to special-case this.
                 self.defaultValue = IDLUndefinedValue(self.location)
 
+        if self.dictionaryMember and self.type.treatNullAsEmpty:
+            raise WebIDLError("Dictionary members cannot be [TreatNullAs]", [self.location])
         # Now do the coercing thing; this needs to happen after the
         # above creation of a default value.
         if self.defaultValue:

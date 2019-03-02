@@ -13,8 +13,7 @@ interface MediaList {
   // Bug 824857 should remove this.
   stringifier;
 
-  [TreatNullAs=EmptyString]
-           attribute DOMString        mediaText;
+           attribute [TreatNullAs=EmptyString] DOMString        mediaText;
 
   readonly attribute unsigned long    length;
   getter DOMString?  item(unsigned long index);
