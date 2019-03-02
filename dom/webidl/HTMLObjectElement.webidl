@@ -68,8 +68,8 @@ partial interface HTMLObjectElement {
   [CEReactions, Pure, SetterThrows]
            attribute DOMString codeType;
 
-  [CEReactions, Pure, SetterThrows]
-           attribute [TreatNullAs=EmptyString] DOMString border;
+  [CEReactions, TreatNullAs=EmptyString, Pure, SetterThrows]
+           attribute DOMString border;
 };
 
 partial interface HTMLObjectElement {

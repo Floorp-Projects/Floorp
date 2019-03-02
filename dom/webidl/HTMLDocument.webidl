@@ -42,11 +42,11 @@ interface HTMLDocument : Document {
   [Throws]
   DOMString queryCommandValue(DOMString commandId);
 
-  [CEReactions] attribute [TreatNullAs=EmptyString] DOMString fgColor;
-  [CEReactions] attribute [TreatNullAs=EmptyString] DOMString linkColor;
-  [CEReactions] attribute [TreatNullAs=EmptyString] DOMString vlinkColor;
-  [CEReactions] attribute [TreatNullAs=EmptyString] DOMString alinkColor;
-  [CEReactions] attribute [TreatNullAs=EmptyString] DOMString bgColor;
+  [CEReactions, TreatNullAs=EmptyString] attribute DOMString fgColor;
+  [CEReactions, TreatNullAs=EmptyString] attribute DOMString linkColor;
+  [CEReactions, TreatNullAs=EmptyString] attribute DOMString vlinkColor;
+  [CEReactions, TreatNullAs=EmptyString] attribute DOMString alinkColor;
+  [CEReactions, TreatNullAs=EmptyString] attribute DOMString bgColor;
 
   void clear();
 

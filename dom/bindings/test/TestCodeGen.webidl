@@ -783,8 +783,8 @@ interface TestInterface {
   void dontEnforceRangeOrClamp(byte arg);
   void doEnforceRange([EnforceRange] byte arg);
   void doClamp([Clamp] byte arg);
-  attribute [EnforceRange] byte enforcedByte;
-  attribute [Clamp] byte clampedByte;
+  [EnforceRange] attribute byte enforcedByte;
+  [Clamp] attribute byte clampedByte;
 
   // Typedefs
   const myLong myLongConstant = 5;
@@ -1314,27 +1314,4 @@ interface TestCEReactionsInterface {
   getter long item(unsigned long index);
   getter DOMString (DOMString name);
   readonly attribute unsigned long length;
-};
-
-typedef [EnforceRange] octet OctetRange;
-typedef [Clamp] octet OctetClamp;
-typedef [TreatNullAs=EmptyString] DOMString NullEmptyString;
-
-dictionary TestAttributesOnDictionaryMembers {
-  [Clamp] octet a;
-  [ChromeOnly, Clamp] octet b;
-  required [Clamp] octet c;
-  [ChromeOnly] octet d;
-  // ChromeOnly doesn't mix with required, so we can't
-  // test [ChromeOnly] required [Clamp] octet e
-};
-
-interface TestAttributesOnTypes {
-  void foo(OctetClamp thingy);
-  void bar(OctetRange thingy);
-  void baz(NullEmptyString thingy);
-  attribute [Clamp] octet someAttr;
-  void argWithAttr([Clamp] octet arg0, optional [Clamp] octet arg1);
-  // There aren't any argument-only attributes that we can test here,
-  // TreatNonCallableAsNull isn't compatible with Clamp-able types
 };
