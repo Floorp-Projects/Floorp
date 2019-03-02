@@ -6,7 +6,7 @@
 
 "use strict";
 
-const { Cc, Ci, Cu } = require("chrome");
+const { Cu } = require("chrome");
 const Services = require("Services");
 const { Pool } = require("devtools/shared/protocol");
 const { LazyPool, createExtraActors } = require("devtools/shared/protocol/lazy-pool");
@@ -542,13 +542,16 @@ RootActor.prototype = {
     // If the request doesn't contains id parameter or id is 0
     // (id == 0, based on onListProcesses implementation)
     if ((!("id" in request)) || request.id === 0) {
-      // Check if we are running on xpcshell.
+      // Check if we are running on xpcshell. hiddenDOMWindow is going to throw on it.
       // When running on xpcshell, there is no valid browsing context to attach to
       // and so ParentProcessTargetActor doesn't make sense as it inherits from
       // BrowsingContextTargetActor. So instead use ContentProcessTargetActor, which
       // matches xpcshell needs.
-      const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
-      const isXpcshell = env.exists("XPCSHELL_TEST_PROFILE_DIR");
+      let isXpcshell = true;
+      try {
+        isXpcshell = !Services.wm.getMostRecentWindow(null) &&
+                     !Services.appShell.hiddenDOMWindow;
+      } catch (e) {}
 
       if (!isXpcshell && this._parentProcessTargetActor &&
           (!this._parentProcessTargetActor.docShell ||

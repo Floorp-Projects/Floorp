@@ -9,6 +9,15 @@ Unreleased
 
 ### Removed
 
+- Dropped support for legacy Selenium web element references
+
+  The legacy way of serialising web elements, using `{"ELEMENT": <UUID>}`,
+  has been removed in this release.  This may break older Selenium
+  clients and clients which are otherwise not compatible with the
+  WebDriver standard.
+
+  Thanks to Shivam Singhal for this patch.
+
 - Removed `--webdriver-port` command-line option
 
   `--webdriver-port <PORT>` was an undocumented alias for `--port`,
