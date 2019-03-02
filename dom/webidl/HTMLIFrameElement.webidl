@@ -49,10 +49,10 @@ partial interface HTMLIFrameElement {
   [CEReactions, SetterThrows, Pure]
            attribute DOMString longDesc;
 
-  [CEReactions, SetterThrows, Pure]
-           attribute [TreatNullAs=EmptyString] DOMString marginHeight;
-  [CEReactions, SetterThrows, Pure]
-           attribute [TreatNullAs=EmptyString] DOMString marginWidth;
+  [CEReactions, TreatNullAs=EmptyString, SetterThrows, Pure]
+           attribute DOMString marginHeight;
+  [CEReactions, TreatNullAs=EmptyString, SetterThrows, Pure]
+           attribute DOMString marginWidth;
 };
 
 partial interface HTMLIFrameElement {

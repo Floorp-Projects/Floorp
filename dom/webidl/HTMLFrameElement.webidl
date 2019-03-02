@@ -29,10 +29,10 @@ interface HTMLFrameElement : HTMLElement {
   readonly attribute Document? contentDocument;
   readonly attribute WindowProxy? contentWindow;
 
-  [CEReactions, SetterThrows]
-  attribute [TreatNullAs=EmptyString] DOMString marginHeight;
-  [CEReactions, SetterThrows]
-  attribute [TreatNullAs=EmptyString] DOMString marginWidth;
+  [CEReactions, TreatNullAs=EmptyString, SetterThrows]
+  attribute DOMString marginHeight;
+  [CEReactions, TreatNullAs=EmptyString, SetterThrows]
+  attribute DOMString marginWidth;
 };
 
 HTMLFrameElement implements MozFrameLoaderOwner;
