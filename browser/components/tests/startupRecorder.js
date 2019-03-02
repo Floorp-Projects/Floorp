@@ -49,7 +49,6 @@ function startupRecorder() {
       "image-loading": new Set(),
     },
     code: {},
-    extras: {},
     prefStats: {},
   };
   this.done = new Promise(resolve => { this._resolve = resolve; });
@@ -73,9 +72,6 @@ startupRecorder.prototype = {
           return false;
         }
       }),
-    };
-    this.data.extras[name] = {
-      hiddenWindowLoaded: Services.appShell.hasHiddenWindow,
     };
   },
 

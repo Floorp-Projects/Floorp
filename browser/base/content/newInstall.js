@@ -17,16 +17,15 @@ function init() {
 
 let gHidden = [];
 let gCollapsed = [];
+let hiddenDoc = Services.appShell.hiddenDOMWindow.document;
 
 function hideItem(id) {
-  let hiddenDoc = Services.appShell.hiddenDOMWindow.document;
   let element = hiddenDoc.getElementById(id);
   element.hidden = true;
   gHidden.push(element);
 }
 
 function collapseItem(id) {
-  let hiddenDoc = Services.appShell.hiddenDOMWindow.document;
   let element = hiddenDoc.getElementById(id);
   element.collapsed = true;
   gCollapsed.push(element);
