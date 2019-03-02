@@ -1593,6 +1593,8 @@ class TestAttributesOnTypes : public nsISupports, public nsWrapperCache {
   void Foo(uint8_t arg);
   void Bar(uint8_t arg);
   void Baz(const nsAString& arg);
+  uint8_t SomeAttr();
+  void SetSomeAttr(uint8_t);
   void ArgWithAttr(uint8_t arg1, const Optional<uint8_t>& arg2);
 };
 
