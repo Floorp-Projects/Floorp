@@ -7500,20 +7500,17 @@ void nsContentUtils::TransferableToIPCTransferable(
       } else if (nsCOMPtr<nsISupportsCString> ctext = do_QueryInterface(data)) {
         nsAutoCString dataAsString;
         ctext->GetData(dataAsString);
-        IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
-        item->flavor() = flavorStr;
 
         Shmem dataAsShmem = ConvertToShmem(aChild, aParent, dataAsString);
         if (!dataAsShmem.IsReadable() || !dataAsShmem.Size<char>()) {
           continue;
         }
 
+        IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
+        item->flavor() = flavorStr;
         item->data() = dataAsShmem;
       } else if (nsCOMPtr<nsIInputStream> stream = do_QueryInterface(data)) {
         // Images to be pasted on the clipboard are nsIInputStreams
-        IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
-        item->flavor() = flavorStr;
-
         nsCString imageData;
         NS_ConsumeStream(stream, UINT32_MAX, imageData);
 
@@ -7522,6 +7519,8 @@ void nsContentUtils::TransferableToIPCTransferable(
           continue;
         }
 
+        IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
+        item->flavor() = flavorStr;
         item->data() = imageDataShmem;
       } else if (nsCOMPtr<imgIContainer> image = do_QueryInterface(data)) {
         // Images to be placed on the clipboard are imgIContainers.
@@ -7570,13 +7569,17 @@ void nsContentUtils::TransferableToIPCTransferable(
           if (aInSyncMessage) {
             nsAutoCString type;
             if (IsFileImage(file, type)) {
-              IPCDataTransferItem* item =
-                  aIPCDataTransfer->items().AppendElement();
-              item->flavor() = type;
               nsAutoCString data;
               SlurpFileToString(file, data);
 
               Shmem dataAsShmem = ConvertToShmem(aChild, aParent, data);
+              if (!dataAsShmem.IsReadable() || !dataAsShmem.Size<char>()) {
+                continue;
+              }
+
+              IPCDataTransferItem* item =
+                  aIPCDataTransfer->items().AppendElement();
+              item->flavor() = type;
               item->data() = dataAsShmem;
             }
 

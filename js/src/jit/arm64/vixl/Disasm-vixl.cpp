@@ -26,6 +26,7 @@
 
 #include "jit/arm64/vixl/Disasm-vixl.h"
 
+#include "mozilla/Sprintf.h"
 #include <cstdlib>
 
 namespace vixl {

@@ -474,6 +474,10 @@ button.warning {
   -moz-box-align: center;
 }
 
+.addon-view[type="theme"] .icon:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
+
 .content-container {
   -moz-box-align: center;
 }
