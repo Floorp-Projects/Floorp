@@ -3678,7 +3678,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       ReservedRooted<PropertyName*> name(&rootName0, script->getName(REGS.pc));
       ReservedRooted<JSObject*> val(&rootObject1, &REGS.sp[-1].toObject());
 
-      if (!InitGetterSetterOperation(cx, REGS.pc, obj, name, val)) {
+      if (!InitPropGetterSetterOperation(cx, REGS.pc, obj, name, val)) {
         goto error;
       }
 
@@ -3696,7 +3696,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       ReservedRooted<Value> idval(&rootValue0, REGS.sp[-2]);
       ReservedRooted<JSObject*> val(&rootObject1, &REGS.sp[-1].toObject());
 
-      if (!InitGetterSetterOperation(cx, REGS.pc, obj, idval, val)) {
+      if (!InitElemGetterSetterOperation(cx, REGS.pc, obj, idval, val)) {
         goto error;
       }
 
@@ -4932,9 +4932,9 @@ unsigned js::GetInitDataPropAttrs(JSOp op) {
   MOZ_CRASH("Unknown data initprop");
 }
 
-bool js::InitGetterSetterOperation(JSContext* cx, jsbytecode* pc,
-                                   HandleObject obj, HandleId id,
-                                   HandleObject val) {
+static bool InitGetterSetterOperation(JSContext* cx, jsbytecode* pc,
+                                      HandleObject obj, HandleId id,
+                                      HandleObject val) {
   MOZ_ASSERT(val->isCallable());
 
   JSOp op = JSOp(*pc);
@@ -4957,16 +4957,17 @@ bool js::InitGetterSetterOperation(JSContext* cx, jsbytecode* pc,
   return DefineAccessorProperty(cx, obj, id, nullptr, val, attrs);
 }
 
-bool js::InitGetterSetterOperation(JSContext* cx, jsbytecode* pc,
-                                   HandleObject obj, HandlePropertyName name,
-                                   HandleObject val) {
+bool js::InitPropGetterSetterOperation(JSContext* cx, jsbytecode* pc,
+                                       HandleObject obj,
+                                       HandlePropertyName name,
+                                       HandleObject val) {
   RootedId id(cx, NameToId(name));
   return InitGetterSetterOperation(cx, pc, obj, id, val);
 }
 
-bool js::InitGetterSetterOperation(JSContext* cx, jsbytecode* pc,
-                                   HandleObject obj, HandleValue idval,
-                                   HandleObject val) {
+bool js::InitElemGetterSetterOperation(JSContext* cx, jsbytecode* pc,
+                                       HandleObject obj, HandleValue idval,
+                                       HandleObject val) {
   RootedId id(cx);
   if (!ToPropertyKey(cx, idval, &id)) {
     return false;

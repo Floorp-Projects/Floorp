@@ -23,13 +23,38 @@ namespace jit {
   _(BaselineGetFunctionThis, js::jit::BaselineGetFunctionThis)               \
   _(BaselineThrowInitializedThis, js::jit::BaselineThrowInitializedThis)     \
   _(BaselineThrowUninitializedThis, js::jit::BaselineThrowUninitializedThis) \
+  _(BindVarOperation, js::BindVarOperation)                                  \
   _(CheckIsCallable, js::jit::CheckIsCallable)                               \
   _(CheckOverRecursedBaseline, js::jit::CheckOverRecursedBaseline)           \
+  _(CloneRegExpObject, js::CloneRegExpObject)                                \
+  _(DefFunOperation, js::DefFunOperation)                                    \
+  _(DefLexicalOperation, js::DefLexicalOperation)                            \
+  _(DefVarOperation, js::DefVarOperation)                                    \
+  _(DeleteElementNonStrict, js::DeleteElementJit<false>)                     \
+  _(DeleteElementStrict, js::DeleteElementJit<true>)                         \
+  _(DeleteNameOperation, js::DeleteNameOperation)                            \
+  _(DeletePropertyNonStrict, js::DeletePropertyJit<false>)                   \
+  _(DeletePropertyStrict, js::DeletePropertyJit<true>)                       \
+  _(GetImportOperation, js::GetImportOperation)                              \
   _(GetNonSyntacticGlobalThis, js::GetNonSyntacticGlobalThis)                \
+  _(InitElemGetterSetterOperation, js::InitElemGetterSetterOperation)        \
+  _(InitPropGetterSetterOperation, js::InitPropGetterSetterOperation)        \
   _(InterruptCheck, js::jit::InterruptCheck)                                 \
   _(IonCompileScriptForBaseline, js::jit::IonCompileScriptForBaseline)       \
+  _(Lambda, js::Lambda)                                                      \
+  _(LambdaArrow, js::LambdaArrow)                                            \
+  _(MutatePrototype, js::jit::MutatePrototype)                               \
+  _(NewArrayCopyOnWriteOperation, js::NewArrayCopyOnWriteOperation)          \
+  _(NewDenseCopyOnWriteArray, js::NewDenseCopyOnWriteArray)                  \
+  _(OptimizeSpreadCall, js::OptimizeSpreadCall)                              \
+  _(ProcessCallSiteObjOperation, js::ProcessCallSiteObjOperation)            \
+  _(SetFunctionName, js::SetFunctionName)                                    \
+  _(SetIntrinsicOperation, js::SetIntrinsicOperation)                        \
+  _(SetPropertySuper, js::SetPropertySuper)                                  \
+  _(SingletonObjectLiteralOperation, js::SingletonObjectLiteralOperation)    \
   _(ThrowBadDerivedReturn, js::jit::ThrowBadDerivedReturn)                   \
-  _(ThrowCheckIsObject, js::ThrowCheckIsObject)
+  _(ThrowCheckIsObject, js::ThrowCheckIsObject)                              \
+  _(ThrowRuntimeLexicalError, js::jit::ThrowRuntimeLexicalError)
 
 enum class VMFunctionId {
 #define DEF_ID(name, fp) name,
