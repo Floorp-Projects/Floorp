@@ -24,7 +24,7 @@ interface CSSStyleDeclaration {
   DOMString getPropertyValue(DOMString property);
   DOMString getPropertyPriority(DOMString property);
   [CEReactions, NeedsSubjectPrincipal=NonSystem, Throws]
-  void setProperty(DOMString property, [TreatNullAs=EmptyString] DOMString value, [TreatNullAs=EmptyString] optional DOMString priority = "");
+  void setProperty(DOMString property, [TreatNullAs=EmptyString] DOMString value, optional [TreatNullAs=EmptyString] DOMString priority = "");
   [CEReactions, Throws]
   DOMString removeProperty(DOMString property);
 
