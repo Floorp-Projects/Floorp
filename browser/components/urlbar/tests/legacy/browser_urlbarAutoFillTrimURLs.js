@@ -1,10 +1,5 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
-
 // This test ensures that autoFilled values are not trimmed, unless the user
 // selects from the autocomplete popup.
-
-"use strict";
 
 add_task(async function setup() {
   const PREF_TRIMURL = "browser.urlbar.trimURLs";
@@ -42,40 +37,28 @@ async function promiseTestResult(test) {
 
   await promiseSearch(test.search);
 
-  Assert.equal(gURLBar.inputField.value, test.autofilledValue,
-    `Autofilled value is as expected for search '${test.search}'`);
+  is(gURLBar.inputField.value, test.autofilledValue,
+     `Autofilled value is as expected for search '${test.search}'`);
 
-  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
+  let result = gURLBar.popup.richlistbox.getItemAtIndex(0);
 
-  Assert.equal(result.displayed.title, test.resultListDisplayTitle,
-    `Autocomplete result should have displayed title as expected for search '${test.search}'`);
+  is(result._titleText.textContent, test.resultListDisplayTitle,
+     `Autocomplete result should have displayed title as expected for search '${test.search}'`);
 
-  if (!UrlbarPrefs.get("quantumbar") && test.resultListActionText == "Visit") {
-    Assert.equal(result.displayed.action, "",
-      `Autocomplete action text should be empty for search '${test.search}'`);
+  is(result._actionText.textContent, test.resultListActionText,
+     `Autocomplete action text should be as expected for search '${test.search}'`);
+
+  is(result.getAttribute("type"), test.resultListType,
+     `Autocomplete result should have searchengine for the type for search '${test.search}'`);
+
+  let actualValue = gURLBar.mController.getFinalCompleteValueAt(0);
+  let actualAction = PlacesUtils.parseActionUrl(actualValue);
+  let expectedAction = PlacesUtils.parseActionUrl(test.finalCompleteValue);
+  Assert.equal(!!actualAction, !!expectedAction);
+  if (actualAction) {
+    Assert.deepEqual(actualAction, expectedAction);
   } else {
-    Assert.equal(result.displayed.action, test.resultListActionText,
-      `Autocomplete action text should be as expected for search '${test.search}'`);
-  }
-
-  Assert.equal(result.type, test.resultListType,
-    `Autocomplete result should have searchengine for the type for search '${test.search}'`);
-
-  if (UrlbarPrefs.get("quantumbar")) {
-    Assert.equal(result.url, test.expectedUrl, "Should have the correct URL");
-  } else {
-    let actualValue = gURLBar.mController.getFinalCompleteValueAt(0);
-    let actualAction = PlacesUtils.parseActionUrl(actualValue);
-    let expectedAction = PlacesUtils.parseActionUrl(test.finalCompleteValue);
-    Assert.equal(!!actualAction, !!expectedAction,
-      "Should have an action if expected");
-    if (actualAction) {
-      Assert.deepEqual(actualAction, expectedAction,
-        "Should have the correct action details");
-    } else {
-      Assert.equal(actualValue, test.finalCompleteValue,
-        "Should have the correct action details");
-    }
+    Assert.equal(actualValue, test.finalCompleteValue);
   }
 }
 
@@ -84,7 +67,7 @@ const tests = [{
     autofilledValue: "http://",
     resultListDisplayTitle: "http://",
     resultListActionText: "Search with Google",
-    resultListType: UrlbarUtils.RESULT_TYPE.SEARCH,
+    resultListType: "searchengine",
     finalCompleteValue: 'moz-action:searchengine,{"engineName":"Google","input":"http%3A%2F%2F","searchQuery":"http%3A%2F%2F"}',
   },
   {
@@ -92,7 +75,7 @@ const tests = [{
     autofilledValue: "https://",
     resultListDisplayTitle: "https://",
     resultListActionText: "Search with Google",
-    resultListType: UrlbarUtils.RESULT_TYPE.SEARCH,
+    resultListType: "searchengine",
     finalCompleteValue: 'moz-action:searchengine,{"engineName":"Google","input":"https%3A%2F%2F","searchQuery":"https%3A%2F%2F"}',
   },
   {
@@ -100,7 +83,7 @@ const tests = [{
     autofilledValue: "autofilltrimurl.com/",
     resultListDisplayTitle: "www.autofilltrimurl.com",
     resultListActionText: "Visit",
-    resultListType: UrlbarUtils.RESULT_TYPE.URL,
+    resultListType: "",
     finalCompleteValue: "http://www.autofilltrimurl.com/",
   },
   {
@@ -108,7 +91,7 @@ const tests = [{
     autofilledValue: "http://autofilltrimurl.com/",
     resultListDisplayTitle: "www.autofilltrimurl.com",
     resultListActionText: "Visit",
-    resultListType: UrlbarUtils.RESULT_TYPE.URL,
+    resultListType: "",
     finalCompleteValue: "http://www.autofilltrimurl.com/",
   },
   {
@@ -116,7 +99,7 @@ const tests = [{
     autofilledValue: "secureautofillurl.com/",
     resultListDisplayTitle: "https://www.secureautofillurl.com",
     resultListActionText: "Visit",
-    resultListType: UrlbarUtils.RESULT_TYPE.URL,
+    resultListType: "",
     finalCompleteValue: "https://www.secureautofillurl.com/",
   },
   {
@@ -124,7 +107,7 @@ const tests = [{
     autofilledValue: "https://secureautofillurl.com/",
     resultListDisplayTitle: "https://www.secureautofillurl.com",
     resultListActionText: "Visit",
-    resultListType: UrlbarUtils.RESULT_TYPE.URL,
+    resultListType: "",
     finalCompleteValue: "https://www.secureautofillurl.com/",
   },
 ];
@@ -137,13 +120,10 @@ add_task(async function autofill_tests() {
 
 add_task(async function autofill_complete_domain() {
   await promiseSearch("http://www.autofilltrimurl.com");
-  Assert.equal(gURLBar.inputField.value, "http://www.autofilltrimurl.com/",
-    "Should have the correct autofill value");
+  is(gURLBar.inputField.value, "http://www.autofilltrimurl.com/", "Autofilled value is as expected");
 
   // Now ensure selecting from the popup correctly trims.
-  Assert.equal(UrlbarTestUtils.getResultCount(window), 2,
-    "Should have the correct matches");
+  is(gURLBar.controller.matchCount, 2, "Found the expected number of matches");
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  Assert.equal(gURLBar.inputField.value, "www.autofilltrimurl.com/whatever",
-    "Should have applied trim correctly");
+  is(gURLBar.inputField.value, "www.autofilltrimurl.com/whatever", "trim was applied correctly");
 });

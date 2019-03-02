@@ -1,6 +1,3 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
-
 // This test makes sure that when the user starts typing origins and URLs, the
 // case of the user's search string is preserved inside the origin part of the
 // autofilled string.
@@ -71,7 +68,7 @@ add_task(async function urlPort() {
 
 async function cleanUp() {
   EventUtils.synthesizeKey("KEY_Escape");
-  await UrlbarTestUtils.promisePopupClose(window);
+  await promisePopupHidden(gURLBar.popup);
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.history.clear();
 }
