@@ -185,9 +185,8 @@ var DownloadsCommon = {
    * HistoryDownloadsData objects, depending on the privacy status of the
    * specified window and on whether history downloads should be included.
    *
-   * @param [optional] window
+   * @param window
    *        The browser window which owns the download button.
-   *        If not given, the privacy status will be assumed as non-private.
    * @param [optional] history
    *        True to include history downloads when the window is public.
    * @param [optional] privateAll
@@ -198,7 +197,7 @@ var DownloadsCommon = {
    *        `kMaxHistoryResultsForLimitedView`.
    */
   getData(window, history = false, privateAll = false, limited = false) {
-    let isPrivate = window && PrivateBrowsingUtils.isContentWindowPrivate(window);
+    let isPrivate = PrivateBrowsingUtils.isContentWindowPrivate(window);
     if (isPrivate && !privateAll) {
       return PrivateDownloadsData;
     }

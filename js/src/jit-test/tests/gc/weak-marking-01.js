@@ -13,6 +13,7 @@ function basicSweeping() {
   wm1.set(hold, {'name': 'val2'});
   wm1.set({'name': 'obj3'}, {'name': 'val3'});
 
+  finishgc();
   startgc(100000, 'shrinking');
   gcslice();
 
@@ -36,6 +37,7 @@ function weakGraph() {
   wm1.set(obj4, obj1); // This edge will be cleared
   obj1 = obj3 = obj4 = undefined;
 
+  finishgc();
   startgc(100000, 'shrinking');
   gcslice();
 
@@ -64,6 +66,7 @@ function deadWeakMap() {
   obj1 = obj3 = obj4 = undefined;
   wm1 = undefined;
 
+  finishgc();
   startgc(100000, 'shrinking');
   gcslice();
 
@@ -91,6 +94,7 @@ function deadKeys() {
   obj1 = obj3 = undefined;
   var initialCount = finalizeCount();
 
+  finishgc();
   startgc(100000, 'shrinking');
   gcslice();
 
@@ -124,6 +128,7 @@ function weakKeysRealloc() {
   obj2 = undefined;
 
   var initialCount = finalizeCount();
+  finishgc();
   startgc(100000, 'shrinking');
   gcslice();
   assertEq(finalizeCount(), initialCount + 1);
@@ -142,6 +147,7 @@ function deletedKeys() {
   for (var i = 0; i < 1000; i++)
     wm.set(g.Object.create(null), i);
 
+  finishgc();
   startgc(100, 'shrinking');
   for (var key of nondeterministicGetWeakMapKeys(wm)) {
     if (wm.get(key) % 2)
@@ -171,6 +177,7 @@ function incrementalAdds() {
   obj2 = undefined;
 
   var obj3 = [];
+  finishgc();
   startgc(100, 'shrinking');
   var M = 10;
   var N = 800;

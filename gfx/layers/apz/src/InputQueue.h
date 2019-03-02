@@ -11,10 +11,10 @@
 #include "DragTracker.h"
 #include "InputData.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/layers/TouchCounter.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
-#include "TouchCounter.h"
 
 namespace mozilla {
 

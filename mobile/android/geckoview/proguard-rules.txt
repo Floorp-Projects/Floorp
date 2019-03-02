@@ -86,6 +86,9 @@
 
 # GeckoView specific rules.
 
+# Keep everthing in org.mozilla.geckoview
+-keep class org.mozilla.geckoview.** { *; }
+
 -keep class org.mozilla.gecko.SysInfo {
     *;
 }

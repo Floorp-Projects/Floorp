@@ -38,9 +38,6 @@ NS_IMETHODIMP
 nsCryptoHash::Init(uint32_t algorithm) {
   HASH_HashType hashType;
   switch (algorithm) {
-    case nsICryptoHash::MD2:
-      hashType = HASH_AlgMD2;
-      break;
     case nsICryptoHash::MD5:
       hashType = HASH_AlgMD5;
       break;
@@ -85,8 +82,6 @@ nsCryptoHash::Init(uint32_t algorithm) {
 
 NS_IMETHODIMP
 nsCryptoHash::InitWithString(const nsACString &aAlgorithm) {
-  if (aAlgorithm.LowerCaseEqualsLiteral("md2")) return Init(nsICryptoHash::MD2);
-
   if (aAlgorithm.LowerCaseEqualsLiteral("md5")) return Init(nsICryptoHash::MD5);
 
   if (aAlgorithm.LowerCaseEqualsLiteral("sha1"))
