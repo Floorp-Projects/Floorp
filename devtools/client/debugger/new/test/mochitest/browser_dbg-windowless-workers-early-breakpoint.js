@@ -9,6 +9,11 @@ add_task(async function() {
 
   const workerSource = findSource(dbg, "simple-worker.js");
 
+  // NOTE: by default we do not wait on worker
+  // commands to complete because the thread could be
+  // shutting down.
+  dbg.client.waitForWorkers(true);
+
   await addBreakpoint(dbg, workerSource, 1);
   invokeInTab("startWorker");
   await waitForPaused(dbg, "simple-worker.js");
