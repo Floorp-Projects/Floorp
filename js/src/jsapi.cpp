@@ -3770,7 +3770,7 @@ JS_PUBLIC_API bool JS::ModuleInstantiate(JSContext* cx,
                                          JS::HandleObject moduleArg) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  cx->check(moduleArg);
+  cx->releaseCheck(moduleArg);
   return ModuleObject::Instantiate(cx, moduleArg.as<ModuleObject>());
 }
 
@@ -3778,7 +3778,7 @@ JS_PUBLIC_API bool JS::ModuleEvaluate(JSContext* cx,
                                       JS::HandleObject moduleArg) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  cx->check(moduleArg);
+  cx->releaseCheck(moduleArg);
   return ModuleObject::Evaluate(cx, moduleArg.as<ModuleObject>());
 }
 
@@ -5162,7 +5162,7 @@ JS_PUBLIC_API bool JS_GetPendingException(JSContext* cx,
 JS_PUBLIC_API void JS_SetPendingException(JSContext* cx, HandleValue value) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  cx->check(value);
+  cx->releaseCheck(value);
   cx->setPendingException(value);
 }
 
