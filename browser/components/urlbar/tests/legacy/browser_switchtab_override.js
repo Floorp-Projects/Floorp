@@ -2,13 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/**
- * This test ensures that overriding switch-to-tab correctly loads the page
- * rather than switching to it.
- */
-
-"use strict";
-
 const TEST_PATH = getRootDirectory(gTestPath)
   .replace("chrome://mochitests/content", "http://example.org/");
 const TEST_URL = `${TEST_PATH}dummy_page.html`;
@@ -28,16 +21,28 @@ add_task(async function test_switchtab_override() {
   });
 
   info("Wait for autocomplete");
-  await promiseAutocompleteResultPopup("dummy_page");
+  let deferred = PromiseUtils.defer();
+  let onSearchComplete = gURLBar.onSearchComplete;
+  registerCleanupFunction(() => {
+    gURLBar.onSearchComplete = onSearchComplete;
+  });
+  gURLBar.onSearchComplete = function() {
+    ok(gURLBar.popupOpen, "The autocomplete popup is correctly open");
+    onSearchComplete.apply(gURLBar);
+    deferred.resolve();
+  };
+
+  gURLBar.focus();
+  gURLBar.value = "dummy_pag";
+  EventUtils.sendString("e");
+  await deferred.promise;
 
   info("Select second autocomplete popup entry");
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  let result = await UrlbarTestUtils.getDetailsOfResultAt(window,
-    UrlbarTestUtils.getSelectedIndex(window));
-  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.TAB_SWITCH);
+  ok(/moz-action:switchtab/.test(gURLBar.value), "switch to tab entry found");
 
   info("Override switch-to-tab");
-  let deferred = PromiseUtils.defer();
+  deferred = PromiseUtils.defer();
   // In case of failure this would switch tab.
   let onTabSelect = event => {
     deferred.reject(new Error("Should have overridden switch to tab"));
