@@ -340,14 +340,21 @@ var gSearchResultsPane = {
         matchesFound = matchesFound || result;
       }
 
-      // Collecting data from boxObject / label / description
+      // Collecting data from anonymous content / label / description
       let nodeSizes = [];
       let allNodeText = "";
       let runningSize = 0;
-      let accessKeyTextNodes = this.textNodeDescendants(nodeObject.boxObject);
+
+      let accessKeyTextNodes = [];
+      let anons = document.getAnonymousNodes(nodeObject);
+      if (anons) {
+        for (let anon of anons) {
+          accessKeyTextNodes.push(...this.textNodeDescendants(anon));
+        }
+      }
 
       if (nodeObject.tagName == "label" || nodeObject.tagName == "description") {
-        accessKeyTextNodes.push(...this.textNodeDescendants(nodeObject));
+        accessKeyTextNodes.push(...simpleTextNodes);
       }
 
       for (let node of accessKeyTextNodes) {

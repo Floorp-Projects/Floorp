@@ -59,7 +59,6 @@ main {
 }
 
 .packet header {
-  display: flex;
   background-color: var(--theme-toolbar-background-alt);
   border-top: var(--default-border);
   color: var(--theme-body-color);
@@ -69,6 +68,12 @@ main {
 .packet header::before {
   display: inline-block;
   padding-right: 0.5rem;
+}
+
+.packet header .copy-label {
+  margin: 0 0.5em;
+  padding-inline-start: 0.5em;
+  border-inline-start: 1px solid rgba(0,0,0, 0.2);
 }
 
 .packet header.packet-expanded::before {
@@ -84,6 +89,10 @@ main {
   margin-right: 0.5rem;
 }
 
+.packet header + .packet-rep {
+  padding-top: 1rem;
+}
+
 .packet .packet-rep {
-  padding: 1rem;
+  padding-inline-start: 1rem;
 }

@@ -558,22 +558,6 @@ set_config('ENABLE_WASM_REFTYPES', depends_if('--enable-wasm-reftypes')(lambda x
 set_define('ENABLE_WASM_REFTYPES', depends_if('--enable-wasm-reftypes')(lambda x: True))
 
 
-# Support for WebAssembly generalized tables (anyref tables, multiple tables).
-# ============================================================================
-
-@depends(milestone.is_nightly, '--enable-wasm-reftypes')
-def default_wasm_generalized_tables(is_nightly, reftypes):
-    if reftypes and is_nightly:
-        return True
-
-js_option('--enable-wasm-generalized-tables',
-          default=default_wasm_generalized_tables,
-          help='{Enable|Disable} WebAssembly generalized reference tables')
-
-set_config('ENABLE_WASM_GENERALIZED_TABLES', depends_if('--enable-wasm-generalized-tables')(lambda x: True))
-set_define('ENABLE_WASM_GENERALIZED_TABLES', depends_if('--enable-wasm-generalized-tables')(lambda x: True))
-
-
 # Support for WebAssembly GC.
 # ===========================
 

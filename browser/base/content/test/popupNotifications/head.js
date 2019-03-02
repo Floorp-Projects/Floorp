@@ -185,7 +185,7 @@ function checkPopup(popup, notifyObj) {
     return;
   let icon = notification.querySelector(".popup-notification-icon");
   if (notifyObj.id == "geolocation") {
-    isnot(icon.boxObject.width, 0, "icon for geo displayed");
+    isnot(icon.getBoundingClientRect().width, 0, "icon for geo displayed");
     ok(popup.anchorNode.classList.contains("notification-anchor-icon"),
        "notification anchored to icon");
   }

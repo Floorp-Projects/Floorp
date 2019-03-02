@@ -1629,7 +1629,7 @@ already_AddRefed<DrawTarget> gfxPlatform::CreateOffscreenContentDrawTarget(
   // thread force it's initialization. See bug 1526045 and bug 1521368.
   dt->ClearRect(gfx::Rect());
   if (!dt->IsValid()) {
-
+    return nullptr;
   }
   return dt.forget();
 }
