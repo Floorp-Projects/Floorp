@@ -1209,6 +1209,24 @@ static bool StartGC(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool FinishGC(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (args.length() > 0) {
+    RootedObject callee(cx, &args.callee());
+    ReportUsageErrorASCII(cx, callee, "Wrong number of arguments");
+    return false;
+  }
+
+  JSRuntime* rt = cx->runtime();
+  if (rt->gc.isIncrementalGCInProgress()) {
+    rt->gc.finishGC(JS::GCReason::DEBUG_GC);
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
+
 static bool GCSlice(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -5852,6 +5870,10 @@ gc::ZealModeHelpText),
 "  Start an incremental GC and run a slice that processes about n objects.\n"
 "  If 'shrinking' is passesd as the optional second argument, perform a\n"
 "  shrinking GC rather than a normal GC."),
+
+    JS_FN_HELP("finishgc", FinishGC, 0, 0,
+"finishgc()",
+"   Finish an in-progress incremental GC, if none is running then do nothing."),
 
     JS_FN_HELP("gcslice", GCSlice, 1, 0,
 "gcslice([n])",

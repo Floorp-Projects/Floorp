@@ -6,6 +6,7 @@
 
 package org.mozilla.geckoview;
 
+import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
 import android.support.annotation.UiThread;
 import android.view.Surface;
@@ -117,5 +118,32 @@ public class GeckoDisplay {
     public boolean shouldPinOnScreen() {
         ThreadUtils.assertOnUiThread();
         return session.getDisplay() == this && session.shouldPinOnScreen();
+    }
+
+    /**
+     * Request a {@link Bitmap} of the visible portion of the web page currently being
+     * rendered.
+     *
+     * Returned {@link Bitmap} will have the same dimensions as the {@link Surface} the
+     * {@link GeckoDisplay} is currently using.
+     *
+     * If the {@link GeckoSession#isCompositorReady} is false the {@link GeckoResult} will complete
+     * with an {@link IllegalStateException}.
+     *
+     * This function must be called on the UI thread.
+     *
+     * @return A {@link GeckoResult} that completes with a {@link Bitmap} containing
+     * the pixels and size information of the currently visible rendered web page.
+     */
+    @UiThread
+    public @NonNull GeckoResult<Bitmap> capturePixels() {
+        ThreadUtils.assertOnUiThread();
+        if (!session.isCompositorReady()) {
+            return GeckoResult.fromException(
+                    new IllegalStateException("Compositor must be ready before pixels can be captured"));
+        }
+        GeckoResult<Bitmap> result = new GeckoResult<>();
+        session.mCompositor.requestScreenPixels(result);
+        return result;
     }
 }

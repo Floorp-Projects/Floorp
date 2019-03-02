@@ -6659,22 +6659,10 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
     }
 
     // frame could be null after dispatching pointer events.
-    if (aGUIEvent->mClass == eTouchEventClass) {
-      if (aGUIEvent->mMessage == eTouchStart) {
-        WidgetTouchEvent* touchEvent = aGUIEvent->AsTouchEvent();
-        if (nsIFrame* newFrame =
-                TouchManager::SuppressInvalidPointsAndGetTargetedFrame(
-                    touchEvent)) {
-          eventTargetData.SetFrameAndComputePresShellAndContent(newFrame,
-                                                                aGUIEvent);
-        }
-      } else if (PresShell* newShell =
-                     PresShell::GetShellForTouchEvent(aGUIEvent)) {
-        // Touch events (except touchstart) are dispatching to the captured
-        // element. Get correct shell from it.
-        eventTargetData.mPresShell = newShell;
-      }
-    }
+    // XXX Despite of this comment, we update the event target data outside
+    //     DispatchPrecedingPointerEvent().  Can we make it call
+    //     UpdateTouchEventTarget()?
+    eventTargetData.UpdateTouchEventTarget(aGUIEvent);
 
     // Handle the event in the correct shell.
     // We pass the subshell's root frame as the frame to start from. This is
@@ -10864,4 +10852,33 @@ bool PresShell::EventHandler::EventTargetData::ComputeElementFromFrame(
 
   // If we found an element, target it.  Otherwise, target *nothing*.
   return !!mContent;
+}
+
+void PresShell::EventHandler::EventTargetData::UpdateTouchEventTarget(
+    WidgetGUIEvent* aGUIEvent) {
+  MOZ_ASSERT(aGUIEvent);
+
+  if (aGUIEvent->mClass != eTouchEventClass) {
+    return;
+  }
+
+  if (aGUIEvent->mMessage == eTouchStart) {
+    WidgetTouchEvent* touchEvent = aGUIEvent->AsTouchEvent();
+    nsIFrame* newFrame =
+        TouchManager::SuppressInvalidPointsAndGetTargetedFrame(touchEvent);
+    if (!newFrame) {
+      return;  // XXX Why don't we stop handling the event in this case?
+    }
+    SetFrameAndComputePresShellAndContent(newFrame, aGUIEvent);
+    return;
+  }
+
+  PresShell* newPresShell = PresShell::GetShellForTouchEvent(aGUIEvent);
+  if (!newPresShell) {
+    return;  // XXX Why don't we stop handling the event in this case?
+  }
+
+  // Touch events (except touchstart) are dispatching to the captured
+  // element. Get correct shell from it.
+  mPresShell = newPresShell;
 }

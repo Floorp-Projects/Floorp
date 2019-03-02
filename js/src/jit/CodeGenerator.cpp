@@ -6212,6 +6212,12 @@ void CodeGenerator::visitOutOfLineNewArray(OutOfLineNewArray* ool) {
   masm.jump(ool->rejoin());
 }
 
+typedef ArrayObject* (*NewArrayCopyOnWriteFn)(JSContext*, HandleArrayObject,
+                                              gc::InitialHeap);
+static const VMFunction NewArrayCopyOnWriteInfo =
+    FunctionInfo<NewArrayCopyOnWriteFn>(js::NewDenseCopyOnWriteArray,
+                                        "NewDenseCopyOnWriteArray");
+
 void CodeGenerator::visitNewArrayCopyOnWrite(LNewArrayCopyOnWrite* lir) {
   Register objReg = ToRegister(lir->output());
   Register tempReg = ToRegister(lir->temp());
@@ -6725,7 +6731,7 @@ void CodeGenerator::visitInitElem(LInitElem* lir) {
 typedef bool (*InitElemGetterSetterFn)(JSContext*, jsbytecode*, HandleObject,
                                        HandleValue, HandleObject);
 static const VMFunction InitElemGetterSetterInfo =
-    FunctionInfo<InitElemGetterSetterFn>(InitGetterSetterOperation,
+    FunctionInfo<InitElemGetterSetterFn>(InitElemGetterSetterOperation,
                                          "InitElemGetterSetterOperation");
 
 void CodeGenerator::visitInitElemGetterSetter(LInitElemGetterSetter* lir) {
@@ -6757,7 +6763,7 @@ void CodeGenerator::visitMutateProto(LMutateProto* lir) {
 typedef bool (*InitPropGetterSetterFn)(JSContext*, jsbytecode*, HandleObject,
                                        HandlePropertyName, HandleObject);
 static const VMFunction InitPropGetterSetterInfo =
-    FunctionInfo<InitPropGetterSetterFn>(InitGetterSetterOperation,
+    FunctionInfo<InitPropGetterSetterFn>(InitPropGetterSetterOperation,
                                          "InitPropGetterSetterOperation");
 
 void CodeGenerator::visitInitPropGetterSetter(LInitPropGetterSetter* lir) {
