@@ -563,6 +563,7 @@
   vertical-align: middle;
 }
 
+.ruleview-property.ruleview-changed,
 .ruleview-property[dirty] {
   border-left-color: var(--theme-highlight-green);
 }

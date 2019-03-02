@@ -26,6 +26,7 @@ class SkMaskFilter;
 class SkPathEffect;
 class SkScalerContext;
 class SkScalerContext_DW;
+class SkTypeface_Mac;
 
 enum SkScalerContextFlags : uint32_t {
     kNone                      = 0,
@@ -207,6 +208,7 @@ private:
     // TODO: get rid of these bad friends.
     friend class SkScalerContext;
     friend class SkScalerContext_DW;
+    friend class SkTypeface_Mac;
 
     SkColor getLuminanceColor() const {
         return fLumBits;
@@ -251,6 +253,8 @@ public:
         // Generate A8 from LCD source (for GDI and CoreGraphics).
         // only meaningful if fMaskFormat is kA8
         kGenA8FromLCD_Flag        = 0x0800, // could be 0x200 (bit meaning dependent on fMaskFormat)
+
+        kLightOnDark_Flag         = 0x8000, // Moz + Mac only, used to distinguish different mask dilations
     };
 
     // computed values

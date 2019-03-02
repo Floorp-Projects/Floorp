@@ -8,9 +8,7 @@ const CopyWebpackPlugin = require("copy-webpack-plugin");
 
 const getConfig = require("./bin/getConfig");
 const mozillaCentralMappings = require("./configs/mozilla-central-mappings");
-const { NormalModuleReplacementPlugin } = require("webpack");
 const path = require("path");
-var Visualizer = require("webpack-visualizer-plugin");
 const ObjectRestSpreadPlugin = require("@sucrase/webpack-object-rest-spread-plugin");
 
 const isProduction = process.env.NODE_ENV === "production";
@@ -75,26 +73,8 @@ if (!isProduction) {
   webpackConfig.module.rules = webpackConfig.module.rules || [];
 } else {
   webpackConfig.output.libraryTarget = "umd";
-
-  if (process.env.vis) {
-    const viz = new Visualizer({
-      filename: "webpack-stats.html"
-    });
-    webpackConfig.plugins.push(viz);
-  }
-
-  const mappings = [
-    [/\.\/mocha/, "./mochitest"],
-    [/\.\.\/utils\/mocha/, "../utils/mochitest"],
-    [/\.\/utils\/mocha/, "./utils/mochitest"],
-    [/\.\/percy-stub/, "./percy-webpack"]
-  ];
-
   extra.excludeMap = mozillaCentralMappings;
-
-  mappings.forEach(([regex, res]) => {
-    webpackConfig.plugins.push(new NormalModuleReplacementPlugin(regex, res));
-  });
+  extra.recordsPath = "bin/module-manifest.json";
 }
 
 module.exports = toolbox.toolboxConfig(webpackConfig, envConfig, extra);

@@ -24,7 +24,7 @@ import type { UIState } from "./ui";
 import type { QuickOpenState } from "./quick-open";
 
 export type State = {
-  ast: Record<ASTState>,
+  ast: ASTState,
   breakpoints: BreakpointsState,
   expressions: Record<ExpressionState>,
   debuggee: DebuggeeState,

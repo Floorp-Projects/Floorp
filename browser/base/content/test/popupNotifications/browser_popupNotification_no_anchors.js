@@ -25,7 +25,7 @@ var tests = [
     },
     onShown(popup) {
       checkPopup(popup, this.notifyObj);
-      is(document.getElementById("geo-notification-icon").boxObject.width, 0,
+      is(document.getElementById("geo-notification-icon").getBoundingClientRect().width, 0,
          "geo anchor shouldn't be visible");
       is(popup.anchorNode.id, "identity-icon",
          "notification anchored to identity icon");
@@ -55,7 +55,7 @@ var tests = [
       await promiseTabLoadEvent(gBrowser.selectedTab, "about:blank");
 
       checkPopup(popup, this.notifyObj);
-      is(document.getElementById("geo-notification-icon").boxObject.width, 0,
+      is(document.getElementById("geo-notification-icon").getBoundingClientRect().width, 0,
          "geo anchor shouldn't be visible");
       is(popup.anchorNode.id, "identity-icon",
          "notification anchored to identity icon");
@@ -82,12 +82,12 @@ var tests = [
       });
       this.notification = showNotification(this.notifyObj);
 
-      is(document.getElementById("geo-notification-icon").boxObject.width, 0,
+      is(document.getElementById("geo-notification-icon").getBoundingClientRect().width, 0,
          "geo anchor shouldn't be visible");
 
       await promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
 
-      isnot(document.getElementById("geo-notification-icon").boxObject.width, 0,
+      isnot(document.getElementById("geo-notification-icon").getBoundingClientRect().width, 0,
             "geo anchor should be visible");
 
       EventUtils.synthesizeMouse(document.getElementById("geo-notification-icon"), 2, 2, {});
@@ -123,7 +123,7 @@ var tests = [
         EventUtils.sendString("*");
         await hidden;
 
-        is(document.getElementById("geo-notification-icon").boxObject.width, 0,
+        is(document.getElementById("geo-notification-icon").getBoundingClientRect().width, 0,
            "geo anchor shouldn't be visible");
 
         // Moving focus to the next control should show the notifications again,

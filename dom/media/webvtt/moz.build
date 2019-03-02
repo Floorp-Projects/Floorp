@@ -11,9 +11,12 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'webvtt'
 
-EXTRA_COMPONENTS += [
-  'WebVTT.manifest',
-  'WebVTTParserWrapper.js',
+EXTRA_JS_MODULES += [
+  'WebVTTParserWrapper.jsm',
+]
+
+XPCOM_MANIFESTS += [
+  'components.conf',
 ]
 
 EXTRA_JS_MODULES += [

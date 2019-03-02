@@ -18,7 +18,6 @@
 
 class nsRange;
 class nsTreeColumn;
-class nsIBoxObject;
 class nsIFrame;
 class nsIDocShell;
 class nsIWidget;
@@ -54,8 +53,9 @@ class nsCoreUtils {
    * @param  aRowIndex    [in] row index
    * @param  aColumn      [in] column object
    * @param  aPseudoElm   [in] pseudo element inside the cell, see
-   *                       nsITreeBoxObject for available values
+   *                       XULTreeElement for available values
    */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   static void DispatchClickEvent(mozilla::dom::XULTreeElement *aTree,
                                  int32_t aRowIndex, nsTreeColumn *aColumn,
                                  const nsAString &aPseudoElt = EmptyString());
@@ -240,12 +240,6 @@ class nsCoreUtils {
    */
   static void GetLanguageFor(nsIContent *aContent, nsIContent *aRootContent,
                              nsAString &aLanguage);
-
-  /**
-   * Return box object for XUL treechildren element of the given tree.
-   */
-  static already_AddRefed<nsIBoxObject> GetTreeBodyBoxObject(
-      mozilla::dom::XULTreeElement *aTree);
 
   /**
    * Return tree from any levels DOMNode under the XUL tree.

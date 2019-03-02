@@ -18,17 +18,13 @@
   height: 13px;
   width: 11px;
   vertical-align: top;
-}
-
-.column-breakpoint.active svg {
-  fill: var(--blue-50);
+  fill: var(--blue-40);
   stroke: var(--blue-60);
 }
 
 .column-breakpoint.disabled svg {
-  fill: var(--blue-50);
-  stroke: var(--blue-40);
-  fill-opacity: 0.5;
+  fill-opacity: 0.7;
+  stroke-opacity: 0.7;
 }
 
 .column-breakpoint.has-condition svg {
@@ -50,4 +46,8 @@
   fill: var(--blue-50);
   stroke: var(--blue-60);
   fill-opacity: 0.5;
+}
+
+.img.column-marker {
+  background-image: url(/images/column-marker.svg);
 }

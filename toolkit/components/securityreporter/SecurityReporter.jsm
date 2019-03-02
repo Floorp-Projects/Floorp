@@ -31,9 +31,6 @@ function getDERString(cert) {
 function SecurityReporter() { }
 
 SecurityReporter.prototype = {
-  classDescription: "Security reporter component",
-  classID:          Components.ID("{8a997c9a-bea1-11e5-a1fa-be6aBc8e7f8b}"),
-  contractID:       "@mozilla.org/securityreporter;1",
   QueryInterface: ChromeUtils.generateQI([Ci.nsISecurityReporter]),
   reportTLSError(transportSecurityInfo, hostname, port) {
     // don't send if there's no transportSecurityInfo (since the report cannot
@@ -104,4 +101,4 @@ SecurityReporter.prototype = {
   },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SecurityReporter]);
+var EXPORTED_SYMBOLS = ["SecurityReporter"];

@@ -95,5 +95,5 @@ export type BreakpointAction =
   | {|
       type: "ADD_BREAKPOINT_POSITIONS",
       positions: BreakpointPositions,
-      location: SourceLocation
+      sourceId: string
     |};

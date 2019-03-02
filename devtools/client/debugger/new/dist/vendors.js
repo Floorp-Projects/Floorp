@@ -7,7 +7,7 @@
 		var a = typeof exports === 'object' ? factory(require("devtools/client/shared/vendor/react-prop-types"), require("devtools/client/shared/vendor/react"), require("devtools/client/shared/vendor/react-dom-factories"), require("devtools/client/shared/vendor/lodash"), require("Services"), require("devtools/client/shared/vendor/react-dom"), require("devtools/shared/flags")) : factory(root["devtools/client/shared/vendor/react-prop-types"], root["devtools/client/shared/vendor/react"], root["devtools/client/shared/vendor/react-dom-factories"], root["devtools/client/shared/vendor/lodash"], root["Services"], root["devtools/client/shared/vendor/react-dom"], root["devtools/shared/flags"]);
 		for(var i in a) (typeof exports === 'object' ? exports : root)[i] = a[i];
 	}
-})(typeof self !== 'undefined' ? self : this, function(__WEBPACK_EXTERNAL_MODULE_0__, __WEBPACK_EXTERNAL_MODULE_1__, __WEBPACK_EXTERNAL_MODULE_2__, __WEBPACK_EXTERNAL_MODULE_10__, __WEBPACK_EXTERNAL_MODULE_20__, __WEBPACK_EXTERNAL_MODULE_24__, __WEBPACK_EXTERNAL_MODULE_68__) {
+})(typeof self !== 'undefined' ? self : this, function(__WEBPACK_EXTERNAL_MODULE_0__, __WEBPACK_EXTERNAL_MODULE_1__, __WEBPACK_EXTERNAL_MODULE_2__, __WEBPACK_EXTERNAL_MODULE_10__, __WEBPACK_EXTERNAL_MODULE_20__, __WEBPACK_EXTERNAL_MODULE_24__, __WEBPACK_EXTERNAL_MODULE_71__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "/assets/build";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 761);
+/******/ 	return __webpack_require__(__webpack_require__.s = 762);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -96,7 +96,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_10__;
 
 /***/ }),
 
-/***/ 100:
+/***/ 101:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -124,7 +124,7 @@ const { Component, createFactory } = _react2.default; /* This Source Code Form i
                                                        * License, v. 2.0. If a copy of the MPL was not distributed with this
                                                        * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-__webpack_require__(101);
+__webpack_require__(102);
 
 // depth
 const AUTO_EXPAND_DEPTH = 0;
@@ -901,7 +901,6 @@ class Tree extends Component {
         if (this.treeRef.current !== document.activeElement) {
           this.treeRef.current.focus();
         }
-        return;
     }
   }
 
@@ -1063,14 +1062,14 @@ exports.default = Tree;
 
 /***/ }),
 
-/***/ 101:
+/***/ 102:
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
 
 /***/ }),
 
-/***/ 108:
+/***/ 109:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1090,11 +1089,11 @@ var _react = __webpack_require__(1);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _tab = __webpack_require__(109);
+var _tab = __webpack_require__(110);
 
 var _tab2 = _interopRequireDefault(_tab);
 
-var _tabList = __webpack_require__(222);
+var _tabList = __webpack_require__(224);
 
 var _tabList2 = _interopRequireDefault(_tabList);
 
@@ -1234,7 +1233,7 @@ TabList.defaultProps = {
 
 /***/ }),
 
-/***/ 109:
+/***/ 110:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1253,11 +1252,11 @@ var _react = __webpack_require__(1);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _ref2 = __webpack_require__(220);
+var _ref2 = __webpack_require__(222);
 
 var _ref3 = _interopRequireDefault(_ref2);
 
-var _tab = __webpack_require__(221);
+var _tab = __webpack_require__(223);
 
 var _tab2 = _interopRequireDefault(_tab);
 
@@ -1306,7 +1305,7 @@ Tab.defaultProps = {
 
 /***/ }),
 
-/***/ 110:
+/***/ 111:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1362,7 +1361,7 @@ TabPanels.defaultProps = {
 
 /***/ }),
 
-/***/ 111:
+/***/ 112:
 /***/ (function(module, exports, __webpack_require__) {
 
 (function() {
@@ -1426,30 +1425,30 @@ TabPanels.defaultProps = {
 
 /***/ }),
 
-/***/ 130:
+/***/ 131:
 /***/ (function(module, exports, __webpack_require__) {
 
-const SplitBox = __webpack_require__(214);
+const SplitBox = __webpack_require__(216);
 
 module.exports = SplitBox;
 
 /***/ }),
 
-/***/ 131:
+/***/ 132:
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {(function() {
   var Query, defaultPathSeparator, filter, matcher, parseOptions, pathScorer, preparedQueryCache, scorer;
 
-  filter = __webpack_require__(226);
+  filter = __webpack_require__(228);
 
-  matcher = __webpack_require__(227);
+  matcher = __webpack_require__(229);
 
   scorer = __webpack_require__(48);
 
   pathScorer = __webpack_require__(63);
 
-  Query = __webpack_require__(111);
+  Query = __webpack_require__(112);
 
   preparedQueryCache = null;
 
@@ -1550,11 +1549,11 @@ module.exports = SplitBox;
 
 }).call(this);
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(50)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(52)))
 
 /***/ }),
 
-/***/ 132:
+/***/ 133:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1564,7 +1563,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _Svg = __webpack_require__(231);
+var _Svg = __webpack_require__(233);
 
 var _Svg2 = _interopRequireDefault(_Svg);
 
@@ -1580,7 +1579,7 @@ exports.default = _Svg2.default; /* This Source Code Form is subject to the term
 
 /***/ }),
 
-/***/ 154:
+/***/ 155:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1816,7 +1815,7 @@ module.exports = Menu;
 
 /***/ }),
 
-/***/ 155:
+/***/ 156:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1854,7 +1853,7 @@ module.exports = p;
 
 /***/ }),
 
-/***/ 156:
+/***/ 157:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1927,7 +1926,7 @@ module.exports = MenuItem;
 
 /***/ }),
 
-/***/ 157:
+/***/ 158:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2116,7 +2115,7 @@ exports.PrefsHelper = PrefsHelper;
 
 /***/ }),
 
-/***/ 158:
+/***/ 159:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2364,7 +2363,24 @@ module.exports = KeyShortcuts;
 
 /***/ }),
 
-/***/ 159:
+/***/ 16:
+/***/ (function(module, exports, __webpack_require__) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const networkRequest = __webpack_require__(25);
+const workerUtils = __webpack_require__(26);
+
+module.exports = {
+  networkRequest,
+  workerUtils
+};
+
+/***/ }),
+
+/***/ 160:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2385,24 +2401,7 @@ exports.register = function (window) {};
 
 /***/ }),
 
-/***/ 16:
-/***/ (function(module, exports, __webpack_require__) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const networkRequest = __webpack_require__(27);
-const workerUtils = __webpack_require__(28);
-
-module.exports = {
-  networkRequest,
-  workerUtils
-};
-
-/***/ }),
-
-/***/ 160:
+/***/ 161:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2595,7 +2594,7 @@ exports.key = key;
 
 /***/ }),
 
-/***/ 161:
+/***/ 162:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2912,7 +2911,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 162:
+/***/ 163:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3252,7 +3251,7 @@ module.exports = Telemetry;
 
 /***/ }),
 
-/***/ 163:
+/***/ 164:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3272,7 +3271,7 @@ module.exports = Telemetry;
 
 
 
-const punycode = __webpack_require__(67);
+const punycode = __webpack_require__(68);
 
 /**
  * Gets a readble Unicode hostname from a hostname.
@@ -3371,7 +3370,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 172:
+/***/ 173:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3423,7 +3422,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_20__;
 
 /***/ }),
 
-/***/ 211:
+/***/ 213:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3444,9 +3443,9 @@ var _reactDom = __webpack_require__(24);
 
 var _reactDom2 = _interopRequireDefault(_reactDom);
 
-var _reactLifecyclesCompat = __webpack_require__(212);
+var _reactLifecyclesCompat = __webpack_require__(214);
 
-var _PropTypes = __webpack_require__(213);
+var _PropTypes = __webpack_require__(215);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -4027,7 +4026,7 @@ exports.default = (0, _reactLifecyclesCompat.polyfill)(Transition);
 
 /***/ }),
 
-/***/ 212:
+/***/ 214:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4195,7 +4194,7 @@ function polyfill(Component) {
 
 /***/ }),
 
-/***/ 213:
+/***/ 215:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4252,7 +4251,7 @@ var classNamesShape = exports.classNamesShape = _propTypes2.default.oneOfType([_
 
 /***/ }),
 
-/***/ 214:
+/***/ 216:
 /***/ (function(module, exports, __webpack_require__) {
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -4261,12 +4260,12 @@ var classNamesShape = exports.classNamesShape = _propTypes2.default.oneOfType([_
 
 const React = __webpack_require__(1);
 const ReactDOM = __webpack_require__(24);
-const Draggable = React.createFactory(__webpack_require__(215));
+const Draggable = React.createFactory(__webpack_require__(217));
 const { Component } = React;
 const PropTypes = __webpack_require__(0);
 const dom = __webpack_require__(2);
 
-__webpack_require__(216);
+__webpack_require__(218);
 
 /**
  * This component represents a Splitter. The splitter supports vertical
@@ -4510,7 +4509,7 @@ module.exports = SplitBox;
 
 /***/ }),
 
-/***/ 215:
+/***/ 217:
 /***/ (function(module, exports, __webpack_require__) {
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -4583,14 +4582,14 @@ module.exports = Draggable;
 
 /***/ }),
 
-/***/ 216:
+/***/ 218:
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
 
 /***/ }),
 
-/***/ 219:
+/***/ 221:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4600,7 +4599,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _tabList = __webpack_require__(108);
+var _tabList = __webpack_require__(109);
 
 Object.defineProperty(exports, 'TabList', {
   enumerable: true,
@@ -4609,7 +4608,7 @@ Object.defineProperty(exports, 'TabList', {
   }
 });
 
-var _tabPanels = __webpack_require__(110);
+var _tabPanels = __webpack_require__(111);
 
 Object.defineProperty(exports, 'TabPanels', {
   enumerable: true,
@@ -4618,7 +4617,7 @@ Object.defineProperty(exports, 'TabPanels', {
   }
 });
 
-var _tab = __webpack_require__(109);
+var _tab = __webpack_require__(110);
 
 Object.defineProperty(exports, 'Tab', {
   enumerable: true,
@@ -4627,7 +4626,7 @@ Object.defineProperty(exports, 'Tab', {
   }
 });
 
-var _tabs = __webpack_require__(223);
+var _tabs = __webpack_require__(225);
 
 Object.defineProperty(exports, 'Tabs', {
   enumerable: true,
@@ -4640,7 +4639,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 /***/ }),
 
-/***/ 220:
+/***/ 222:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4660,21 +4659,21 @@ exports.default = _propTypes2.default.object;
 
 /***/ }),
 
-/***/ 221:
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-
-/***/ 222:
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-
 /***/ 223:
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+
+/***/ 224:
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+
+/***/ 225:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4694,15 +4693,15 @@ var _react = __webpack_require__(1);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _uniqueId = __webpack_require__(224);
+var _uniqueId = __webpack_require__(226);
 
 var _uniqueId2 = _interopRequireDefault(_uniqueId);
 
-var _tabList = __webpack_require__(108);
+var _tabList = __webpack_require__(109);
 
 var _tabList2 = _interopRequireDefault(_tabList);
 
-var _tabPanels = __webpack_require__(110);
+var _tabPanels = __webpack_require__(111);
 
 var _tabPanels2 = _interopRequireDefault(_tabPanels);
 
@@ -4779,7 +4778,7 @@ Tabs.defaultProps = {
 
 /***/ }),
 
-/***/ 224:
+/***/ 226:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4798,14 +4797,14 @@ function uniqueId() {
 
 /***/ }),
 
-/***/ 225:
+/***/ 227:
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
 
 /***/ }),
 
-/***/ 226:
+/***/ 228:
 /***/ (function(module, exports, __webpack_require__) {
 
 (function() {
@@ -4815,7 +4814,7 @@ function uniqueId() {
 
   pathScorer = __webpack_require__(63);
 
-  Query = __webpack_require__(111);
+  Query = __webpack_require__(112);
 
   pluckCandidates = function(a) {
     return a.candidate;
@@ -4862,7 +4861,7 @@ function uniqueId() {
 
 /***/ }),
 
-/***/ 227:
+/***/ 229:
 /***/ (function(module, exports, __webpack_require__) {
 
 (function() {
@@ -5084,13 +5083,13 @@ function uniqueId() {
 
 /***/ }),
 
-/***/ 231:
+/***/ 233:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var _svgInlineReact = __webpack_require__(232);
+var _svgInlineReact = __webpack_require__(234);
 
 var _svgInlineReact2 = _interopRequireDefault(_svgInlineReact);
 
@@ -5104,8 +5103,8 @@ const React = __webpack_require__(1);
 
 
 const svg = {
-  breakpoint: __webpack_require__(234),
-  "column-marker": __webpack_require__(235)
+  breakpoint: __webpack_require__(236),
+  "column-marker": __webpack_require__(237)
 };
 
 function Svg({ name, className, onClick, "aria-label": ariaLabel }) {
@@ -5131,7 +5130,7 @@ module.exports = Svg;
 
 /***/ }),
 
-/***/ 232:
+/***/ 234:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5151,7 +5150,7 @@ var _react2 = _interopRequireDefault(_react);
 
 var _propTypes = __webpack_require__(0);
 
-var _util = __webpack_require__(233);
+var _util = __webpack_require__(235);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -5230,7 +5229,7 @@ InlineSVG.propTypes = {
 
 /***/ }),
 
-/***/ 233:
+/***/ 235:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5291,14 +5290,14 @@ function extractSVGProps(src) {
 
 /***/ }),
 
-/***/ 234:
+/***/ 236:
 /***/ (function(module, exports) {
 
 module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 60 15\"><path d=\"M53.07.5H1.5c-.54 0-1 .46-1 1v12c0 .54.46 1 1 1h51.57c.58 0 1.15-.26 1.53-.7l4.7-6.3-4.7-6.3c-.38-.44-.95-.7-1.53-.7z\"></path></svg>"
 
 /***/ }),
 
-/***/ 235:
+/***/ 237:
 /***/ (function(module, exports) {
 
 module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 11 13\"><path d=\"M5.07.5H1.5c-.54 0-1 .46-1 1v10c0 .54.46 1 1 1h3.57c.58 0 1.15-.26 1.53-.7l3.7-5.3-3.7-5.3C6.22.76 5.65.5 5.07.5z\"></path></svg>"
@@ -5313,86 +5312,6 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_24__;
 /***/ }),
 
 /***/ 25:
-/***/ (function(module, exports) {
-
-var g;
-
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
-
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || Function("return this")() || (1,eval)("this");
-} catch(e) {
-	// This works if the window reference is available
-	if(typeof window === "object")
-		g = window;
-}
-
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
-
-
-/***/ }),
-
-/***/ 26:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(process) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-const flag = __webpack_require__(68);
-
-function isBrowser() {
-  return typeof window == "object";
-}
-
-function isNode() {
-  return process && process.release && process.release.name == 'node';
-}
-
-function isDevelopment() {
-  if (!isNode() && isBrowser()) {
-    const href = window.location ? window.location.href : "";
-    return href.match(/^file:/) || href.match(/localhost:/);
-  }
-
-  return "production" != "production";
-}
-
-function isTesting() {
-  return flag.testing;
-}
-
-function isFirefoxPanel() {
-  return !isDevelopment();
-}
-
-function isFirefox() {
-  return (/firefox/i.test(navigator.userAgent)
-  );
-}
-
-module.exports = {
-  isDevelopment,
-  isTesting,
-  isFirefoxPanel,
-  isFirefox
-};
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(50)))
-
-/***/ }),
-
-/***/ 27:
 /***/ (function(module, exports) {
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -5420,7 +5339,7 @@ module.exports = networkRequest;
 
 /***/ }),
 
-/***/ 28:
+/***/ 26:
 /***/ (function(module, exports) {
 
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
@@ -5598,6 +5517,86 @@ module.exports = {
 
 /***/ }),
 
+/***/ 27:
+/***/ (function(module, exports) {
+
+var g;
+
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || Function("return this")() || (1,eval)("this");
+} catch(e) {
+	// This works if the window reference is available
+	if(typeof window === "object")
+		g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
+
+
+/***/ }),
+
+/***/ 30:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(process) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+const flag = __webpack_require__(71);
+
+function isBrowser() {
+  return typeof window == "object";
+}
+
+function isNode() {
+  return process && process.release && process.release.name == 'node';
+}
+
+function isDevelopment() {
+  if (!isNode() && isBrowser()) {
+    const href = window.location ? window.location.href : "";
+    return href.match(/^file:/) || href.match(/localhost:/);
+  }
+
+  return "production" != "production";
+}
+
+function isTesting() {
+  return flag.testing;
+}
+
+function isFirefoxPanel() {
+  return !isDevelopment();
+}
+
+function isFirefox() {
+  return (/firefox/i.test(navigator.userAgent)
+  );
+}
+
+module.exports = {
+  isDevelopment,
+  isTesting,
+  isFirefoxPanel,
+  isFirefox
+};
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(52)))
+
+/***/ }),
+
 /***/ 31:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -5752,7 +5751,7 @@ function inToolbox() {
 }
 
 if (!inToolbox()) {
-  __webpack_require__(225);
+  __webpack_require__(227);
 }
 
 function createPopup(doc) {
@@ -5892,16 +5891,16 @@ module.exports = {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const Menu = __webpack_require__(154);
-const MenuItem = __webpack_require__(156);
-const { PrefsHelper } = __webpack_require__(157);
-const KeyShortcuts = __webpack_require__(158);
-const { ZoomKeys } = __webpack_require__(159);
+const Menu = __webpack_require__(155);
+const MenuItem = __webpack_require__(157);
+const { PrefsHelper } = __webpack_require__(158);
+const KeyShortcuts = __webpack_require__(159);
+const { ZoomKeys } = __webpack_require__(160);
 const EventEmitter = __webpack_require__(46);
-const asyncStorage = __webpack_require__(160);
-const SourceUtils = __webpack_require__(161);
-const Telemetry = __webpack_require__(162);
-const { getUnicodeHostname, getUnicodeUrlPath, getUnicodeUrl } = __webpack_require__(163);
+const asyncStorage = __webpack_require__(161);
+const SourceUtils = __webpack_require__(162);
+const Telemetry = __webpack_require__(163);
+const { getUnicodeHostname, getUnicodeUrlPath, getUnicodeUrl } = __webpack_require__(164);
 
 module.exports = {
   KeyShortcuts,
@@ -5962,7 +5961,7 @@ module.exports = function(module) {
 var EventEmitter = function EventEmitter() {};
 module.exports = EventEmitter;
 
-const promise = __webpack_require__(155);
+const promise = __webpack_require__(156);
 
 /**
  * Decorate an object with event emitter functionality.
@@ -6415,7 +6414,7 @@ EventEmitter.prototype = {
 
 /***/ }),
 
-/***/ 50:
+/***/ 52:
 /***/ (function(module, exports) {
 
 // shim for using process in browser
@@ -6783,7 +6782,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
 
 /***/ }),
 
-/***/ 67:
+/***/ 68:
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(module, global) {var __WEBPACK_AMD_DEFINE_RESULT__;/*! https://mths.be/punycode v1.4.1 by @mathias */
@@ -7319,14 +7318,14 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
 
 }(this));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42)(module), __webpack_require__(25)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42)(module), __webpack_require__(27)))
 
 /***/ }),
 
-/***/ 68:
+/***/ 71:
 /***/ (function(module, exports) {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_68__;
+module.exports = __WEBPACK_EXTERNAL_MODULE_71__;
 
 /***/ }),
 
@@ -7336,7 +7335,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_68__;
 "use strict";
 
 
-var _tree = __webpack_require__(100);
+var _tree = __webpack_require__(101);
 
 var _tree2 = _interopRequireDefault(_tree);
 
@@ -7350,15 +7349,15 @@ module.exports = {
 
 /***/ }),
 
-/***/ 761:
+/***/ 762:
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(762);
+module.exports = __webpack_require__(763);
 
 
 /***/ }),
 
-/***/ 762:
+/***/ 763:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7373,7 +7372,7 @@ var _devtoolsComponents = __webpack_require__(73);
 
 var devtoolsComponents = _interopRequireWildcard(_devtoolsComponents);
 
-var _devtoolsConfig = __webpack_require__(763);
+var _devtoolsConfig = __webpack_require__(764);
 
 var devtoolsConfig = _interopRequireWildcard(_devtoolsConfig);
 
@@ -7381,7 +7380,7 @@ var _devtoolsContextmenu = __webpack_require__(33);
 
 var devtoolsContextmenu = _interopRequireWildcard(_devtoolsContextmenu);
 
-var _devtoolsEnvironment = __webpack_require__(26);
+var _devtoolsEnvironment = __webpack_require__(30);
 
 var devtoolsEnvironment = _interopRequireWildcard(_devtoolsEnvironment);
 
@@ -7393,15 +7392,15 @@ var _devtoolsUtils = __webpack_require__(16);
 
 var devtoolsUtils = _interopRequireWildcard(_devtoolsUtils);
 
-var _fuzzaldrinPlus = __webpack_require__(131);
+var _fuzzaldrinPlus = __webpack_require__(132);
 
 var fuzzaldrinPlus = _interopRequireWildcard(_fuzzaldrinPlus);
 
-var _Transition = __webpack_require__(211);
+var _Transition = __webpack_require__(213);
 
 var transition = _interopRequireWildcard(_Transition);
 
-var _tabs = __webpack_require__(219);
+var _tabs = __webpack_require__(221);
 
 var reactAriaComponentsTabs = _interopRequireWildcard(_tabs);
 
@@ -7413,15 +7412,15 @@ var _classnames = __webpack_require__(6);
 
 var _classnames2 = _interopRequireDefault(_classnames);
 
-var _devtoolsSplitter = __webpack_require__(130);
+var _devtoolsSplitter = __webpack_require__(131);
 
 var _devtoolsSplitter2 = _interopRequireDefault(_devtoolsSplitter);
 
-var _lodashMove = __webpack_require__(172);
+var _lodashMove = __webpack_require__(173);
 
 var _lodashMove2 = _interopRequireDefault(_lodashMove);
 
-var _Svg = __webpack_require__(132);
+var _Svg = __webpack_require__(133);
 
 var _Svg2 = _interopRequireDefault(_Svg);
 
@@ -7475,22 +7474,6 @@ const vendored = exports.vendored = {
 
 /***/ }),
 
-/***/ 763:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const feature = __webpack_require__(764);
-
-module.exports = feature;
-
-/***/ }),
-
 /***/ 764:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -7501,9 +7484,25 @@ module.exports = feature;
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const feature = __webpack_require__(765);
+
+module.exports = feature;
+
+/***/ }),
+
+/***/ 765:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 const { get: pick, set: put } = __webpack_require__(10);
-const fs = __webpack_require__(765);
-const path = __webpack_require__(766);
+const fs = __webpack_require__(766);
+const path = __webpack_require__(767);
 
 let config;
 /**
@@ -7543,14 +7542,14 @@ module.exports = {
 
 /***/ }),
 
-/***/ 765:
+/***/ 766:
 /***/ (function(module, exports) {
 
 
 
 /***/ }),
 
-/***/ 766:
+/***/ 767:
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -7778,7 +7777,7 @@ var substr = 'ab'.substr(-1) === 'b'
     }
 ;
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(50)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(52)))
 
 /***/ })
 

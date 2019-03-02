@@ -56,6 +56,8 @@ function getDeclarationState(declaration, ruleId) {
     isNameValid: declaration.isNameValid(),
     // Whether or not the the declaration is overridden.
     isOverridden: !!declaration.overridden,
+    // Whether or not the declaration is changed by the user.
+    isPropertyChanged: declaration.isPropertyChanged,
     // The declaration's property name.
     name: declaration.name,
     // The declaration's priority (either "important" or an empty string).
